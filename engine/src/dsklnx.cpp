@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "card.h"
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 //#include "param.h"
 #include "handler.h"
 #include "util.h"
@@ -41,6 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "player.h"
 #include "text.h"
+#include "variable.h"
 
 #include <sys/utsname.h>
 #include <sys/ioctl.h>
@@ -3220,9 +3221,7 @@ public:
         {
             MCAutoStringRef t_handler;
             /* UNCHECKED */ MCStringFormat(&t_handler, LAUNCH_URL_SCRIPT, p_document);
-            MCExecPoint ep (NULL, NULL, NULL) ;
             MCdefaultstackptr->domess(*t_handler);
-            MCresult->eval(ep);
         }
     }
 

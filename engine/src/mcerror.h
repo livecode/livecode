@@ -21,7 +21,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	ERROR_H
 
 class MCScriptPoint;
-class MCExecPoint;
 
 class MCError
 {

@@ -242,12 +242,10 @@ void MCNetworkEvalHostNameToAddress(MCExecContext& ctxt, MCStringRef p_hostname,
 
 void MCNetworkEvalHostName(MCExecContext& ctxt, MCStringRef& r_string)
 {
-#ifndef _MOBILE
 	if (MCS_hn(r_string))
 		return;
 
 	ctxt.Throw();
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -634,11 +632,8 @@ void MCNetworkExecReturnValueAndUrlResult(MCExecContext& ctxt, MCValueRef p_resu
 void MCNetworkExecReturnValueAndUrlResultFromVar(MCExecContext& ctxt, MCValueRef p_result, MCVarref *p_variable)
 {
     MCAutoValueRef t_value;
-	if (!p_variable -> eval(ctxt, &t_value))
-	{
-		ctxt . LegacyThrow(EE_RETURN_BADEXP);
-		return;
-	}
+    if (!ctxt . EvalExprAsValueRef(p_variable, EE_RETURN_BADEXP, &t_value))
+        return;
 	
 	ctxt . SetTheResultToValue(p_result);
 	MCurlresult -> set(ctxt, *t_value);
@@ -778,13 +773,7 @@ void MCNetworkSetAllowDatagramBroadcasts(MCExecContext& ctxt, bool p_value)
 
 void MCNetworkExecSetUrl(MCExecContext& ctxt, MCStringRef p_value, MCStringRef p_url)
 {
-    MCExecPoint ep(nil, nil, nil);
-    MCExecPoint ep2(nil, nil, nil);
-    
-    ep . setvalueref(p_url);
-    ep2 . setvalueref(p_value);
-    
-	MCU_puturl(ep, ep2);
+    MCU_puturl(ctxt, p_url, p_value);
 }
 
 void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef p_value, int p_where, MCStringRef p_url)

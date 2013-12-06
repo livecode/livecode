@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -154,14 +154,12 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 		return -1;
 
 	popupanswerdialog_t ctxt;
-    /* UNCHECKED */ MCMemoryAllocate(p_button_count * sizeof(MCStringRef), ctxt . buttons);
 	ctxt . buttons = p_buttons;
-	for (uindex_t i = 0; i < p_button_count; i++)
-		ctxt . buttons[i] = MCValueRetain(p_buttons[i]);
 	ctxt . button_count = p_button_count;
 	ctxt . type = p_type;
-	ctxt . title = MCValueRetain(p_title);
-	ctxt . message = MCValueRetain(p_message);
+    // may be nil
+	ctxt . title = p_title;
+	ctxt . message = p_message;
 	
 	MCIPhoneRunOnMainFiber(dopopupanswerdialog_prewait, &ctxt);
 	
@@ -170,12 +168,7 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 		MCscreen -> wait(1.0, True, True);
 	
 	MCIPhoneRunOnMainFiber(dopopupanswerdialog_postwait, &ctxt);
-	
-    for (uindex_t i = 0; i < p_button_count; i++)
-		MCValueRelease(ctxt . buttons[i]);
-    /* UNCHECKED */ MCMemoryDeallocate(ctxt . buttons);
-    MCValueRelease(ctxt . title);
-    MCValueRelease(ctxt . message);
+    
 	return ctxt . result;
 }
 

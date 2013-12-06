@@ -282,8 +282,7 @@ bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar)
         
         if (t_success)
         {
-            MCExecPoint ep(nil, nil, nil);
-            MCExecContext ctxt(ep);
+            MCExecContext ctxt(nil, nil, nil);
 			
             t_success = MCD_convert_to_datetime(ctxt, (MCNumberRef)*t_int_startdate, CF_SECONDS, CF_SECONDS, r_calendar.mcstartdate);
         }
@@ -299,8 +298,7 @@ bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar)
         
         if (t_success)
         {
-            MCExecPoint ep(nil, nil, nil);
-            MCExecContext ctxt(ep);
+            MCExecContext ctxt(nil, nil, nil);
 			
             t_success = MCD_convert_to_datetime(ctxt, *t_int_enddate, CF_SECONDS, CF_SECONDS, r_calendar.mcenddate);
         }

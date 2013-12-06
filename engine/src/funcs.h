@@ -21,8 +21,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	FUNCTIONS_H
 
 #include "express.h"
+#include "executionerrors.h"
+#include "parseerrors.h"
+#include "mcerror.h"
 
 #include "exec.h"
+#include "param.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -32,7 +36,7 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	Parse_stat parsetarget(MCScriptPoint &spt, Boolean the,
 	                       Boolean needone, MCChunk *&chunk);
-	Exec_stat params_to_doubles(MCExecPoint& ep, MCParameter *p_params, real64_t*& r_doubles, uindex_t& r_count);
+    bool params_to_doubles(MCExecContext& ctxt, MCParameter *p_params, real64_t*& r_doubles, uindex_t& r_count);
 	
 	// General method for compiling a function that maps to a single method.
 	// The variadic argument list should be the MCExpression's the function
@@ -54,7 +58,7 @@ class MCUnaryFunction: public MCFunction
 public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const = 0;
 	virtual MCExpression *getmethodarg(void) const = 0;
-	virtual void compile(MCSyntaxFactoryRef ctxt);
+    virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 
 // Helper class that simplifies compiling of functions taking a variable number of of MCParameters.
@@ -64,78 +68,172 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const = 0;
 	virtual MCParameter *getmethodarg(void) const = 0;
 	virtual void compile(MCSyntaxFactoryRef ctxt);
+
+    bool params_to_doubles(MCExecContext &ctxt, real64_t *&r_doubles, uindex_t &r_count);
+
+protected:
+    MCParameter* params;
 };
+
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCArrayDecode: public MCUnaryFunction
+// Helper class that simplifies evaluation of functions not taking any arguments.
+extern MCError *MCperror;
+
+template<typename ReturnType, void (*EvalFunction)(MCExecContext&, typename MCExecValueTraits<ReturnType>::out_type)>
+class MCConstantFunctionCtxt: public MCConstantFunction
 {
-	MCExpression *source;
 public:
-	MCArrayDecode()
+	void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 	{
-		source = NULL;
+		ReturnType t_result;
+		EvalFunction(ctxt, t_result);
+		if (!ctxt . HasError())
+			MCExecValueTraits<ReturnType>::set(r_value, t_result);
 	}
-	virtual ~MCArrayDecode();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCArraysEvalArrayDecodeMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
 };
 
-class MCArrayEncode: public MCUnaryFunction
+template<typename ParamType,
+         typename ReturnType,
+         void (*EvalFunction)(MCExecContext&, typename MCExecValueTraits<ParamType>::in_type, typename MCExecValueTraits<ReturnType>::out_type),
+         Exec_errors EvalError,
+         Parse_errors ParseError,
+         MCExecMethodInfo*& MethodInfo>
+class MCUnaryFunctionCtxt: public MCUnaryFunction
 {
-	MCExpression *source;
 public:
-	MCArrayEncode()
-	{
-		source = NULL;
-	}
-	virtual ~MCArrayEncode();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCArraysEvalArrayEncodeMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCUnaryFunctionCtxt() { m_expression = nil; }
+
+    virtual ~MCUnaryFunctionCtxt() { delete m_expression; }
+
+    virtual Parse_stat parse(MCScriptPoint &sp, Boolean the)
+    {
+        if (get1param(sp, &m_expression, the) != PS_NORMAL)
+        {
+            MCperror -> add(ParseError, sp);
+            return PS_ERROR;
+        }
+
+        return PS_NORMAL;
+    }
+
+    virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+    {
+        ReturnType t_result;
+        ParamType t_param;
+
+        if (!MCExecValueTraits<ParamType>::eval(ctxt, m_expression, EvalError, t_param))
+            return;
+
+        EvalFunction(ctxt, t_param, t_result);
+
+        MCExecValueTraits<ParamType>::release(t_param);
+
+        if (!ctxt . HasError())
+            MCExecValueTraits<ReturnType>::set(r_value, t_result);
+    }
+
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return MethodInfo; }
+    virtual MCExpression *getmethodarg(void) const { return m_expression; }
+
+protected:
+    MCExpression *m_expression;
 };
 
-class MCBase64Decode : public MCUnaryFunction
+template<void (*EvalExprMethod)(MCExecContext &, real64_t*, uindex_t, real64_t&),
+         Exec_errors EvalError,
+         Parse_errors ParseError,
+         MCExecMethodInfo*& MethodInfo>
+class MCParamFunctionCtxt: public MCParamFunction
 {
-	MCExpression *source;
 public:
-	MCBase64Decode()
-	{
-		source = NULL;
-	}
-	virtual ~MCBase64Decode();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalBase64DecodeMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCParamFunctionCtxt()
+    {
+        params = nil;
+    }
+
+    virtual ~MCParamFunctionCtxt()
+    {
+        while (params != nil)
+        {
+            MCParameter *tparams = params;
+            params = params->getnext();
+            delete tparams;
+        }
+    }
+
+    virtual Parse_stat parse(MCScriptPoint &sp, Boolean the)
+    {
+        initpoint(sp);
+
+        if (getparams(sp, &params) != PS_NORMAL)
+        {
+            MCperror->add(ParseError, line, pos);
+            return PS_ERROR;
+        }
+        return PS_NORMAL;
+    }
+
+    void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+    {
+        MCAutoArray<real64_t> t_values;
+        real64_t t_result;
+
+        if (!params_to_doubles(ctxt, t_values.PtrRef(), t_values.SizeRef()))
+        {
+            ctxt . LegacyThrow(EvalError);
+            return;
+        }
+
+        EvalExprMethod(ctxt, t_values.Ptr(), t_values.Size(), t_result);
+
+        if (!ctxt . HasError())
+        {
+            r_value . double_value = t_result;
+            r_value . type = kMCExecValueTypeDouble;
+        }
+    }
+
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return MethodInfo; }
+    virtual MCParameter *getmethodarg(void) const { return params; }
 };
 
-class MCBase64Encode : public MCUnaryFunction
+////////////////////////////////////////////////////////////////////////////////
+
+class MCArrayDecode: public MCUnaryFunctionCtxt<MCStringRef, MCArrayRef, MCArraysEvalArrayDecode, EE_ARRAYDECODE_BADSOURCE, PE_ARRAYDECODE_BADPARAM, kMCArraysEvalArrayDecodeMethodInfo>
+{
+public:
+    MCArrayDecode(){}
+    virtual ~MCArrayDecode(){}
+};
+
+class MCArrayEncode: public MCUnaryFunctionCtxt<MCArrayRef, MCStringRef, MCArraysEvalArrayEncode, EE_ARRAYENCODE_BADSOURCE, PE_ARRAYENCODE_BADPARAM, kMCArraysEvalArrayEncodeMethodInfo>
+{
+public:
+    MCArrayEncode(){}
+    virtual ~MCArrayEncode(){}
+};
+
+class MCBase64Decode : public MCUnaryFunctionCtxt<MCStringRef, MCDataRef, MCFiltersEvalBase64Decode, EE_BASE64DECODE_BADSOURCE, PE_BASE64DECODE_BADPARAM, kMCFiltersEvalBase64DecodeMethodInfo>
+{
+public:
+    MCBase64Decode() {}
+    virtual ~MCBase64Decode(){}
+};
+
+class MCBase64Encode : public MCUnaryFunctionCtxt<MCDataRef, MCStringRef, MCFiltersEvalBase64Encode, EE_BASE64ENCODE_BADSOURCE, PE_BASE64ENCODE_BADPARAM, kMCFiltersEvalBase64EncodeMethodInfo>
 {
 	MCExpression *source;
 public:
-	MCBase64Encode()
-	{
-		source = NULL;
-	}
-	virtual ~MCBase64Encode();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalBase64EncodeMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCBase64Encode(){}
+    virtual ~MCBase64Encode(){}
 };
 
 class MCBaseConvert : public MCFunction
 {
 	MCExpression *source;
 	MCExpression *sourcebase;
-	MCExpression *destbase;
+    MCExpression *destbase;
 public:
 	MCBaseConvert()
 	{
@@ -143,7 +241,7 @@ public:
 	}
 	virtual ~MCBaseConvert();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -157,7 +255,7 @@ public:
 	}
 	virtual ~MCBinaryEncode();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -171,61 +269,43 @@ public:
 	}
 	virtual ~MCBinaryDecode();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCBuildNumber : public MCConstantFunction
+class MCBuildNumber : public MCConstantFunctionCtxt<integer_t, MCEngineEvalBuildNumber>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalBuildNumberMethodInfo; }
 };
 
-class MCCachedUrls : public MCConstantFunction
+class MCCachedUrls : public MCConstantFunctionCtxt<MCStringRef, MCNetworkEvalCachedUrls>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCNetworkEvalCachedUrlsMethodInfo; }
 };
 
-class MCCapsLockKey : public MCConstantFunction
+class MCCapsLockKey : public MCConstantFunctionCtxt<MCNameRef, MCInterfaceEvalCapsLockKey>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalCapsLockKeyMethodInfo; }
 };
 
-class MCCharToNum : public MCUnaryFunction
+class MCCharToNum : public MCUnaryFunctionCtxt<MCValueRef, uinteger_t, MCStringsEvalCharToNum, EE_CHARTONUM_BADSOURCE, PE_CHARTONUM_BADPARAM, kMCStringsEvalCharToNumMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCCharToNum()
-	{
-		source = NULL;
-	}
-	virtual ~MCCharToNum();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalCharToNumMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCCharToNum(){}
+    virtual ~MCCharToNum(){}
 };
 
-class MCByteToNum : public MCUnaryFunction
+class MCByteToNum : public MCUnaryFunctionCtxt<MCStringRef, integer_t, MCStringsEvalByteToNum, EE_BYTETONUM_BADSOURCE, PE_BYTETONUM_BADPARAM, kMCStringsEvalByteToNumMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCByteToNum()
-	{
-		source = NULL;
-	}
-	virtual ~MCByteToNum();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalByteToNumMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCByteToNum(){}
+    virtual ~MCByteToNum(){}
 };
 
 class MCChunkOffset : public MCFunction
@@ -242,37 +322,28 @@ public:
 	}
 	virtual ~MCChunkOffset();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCClipboard : public MCConstantFunction
+class MCClipboard : public MCConstantFunctionCtxt<MCNameRef, MCPasteboardEvalClipboard>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCPasteboardEvalClipboardMethodInfo; }
 };
 
-class MCCompress : public MCUnaryFunction
+class MCCompress : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, MCFiltersEvalCompress, EE_COMPRESS_BADSOURCE, PE_COMPRESS_BADPARAM, kMCFiltersEvalCompressMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCCompress()
-	{
-		source = NULL;
-	}
-	virtual ~MCCompress();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalCompressMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCCompress(){}
+    virtual ~MCCompress(){}
 };
 
-class MCConstantNames : public MCConstantFunction
+class MCConstantNames : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalConstantNames>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalConstantNamesMethodInfo; }
 
 };
@@ -313,181 +384,170 @@ public:
 	}
 };
 
-class MCClickChar : public MCConstantFunction
+class MCClickChar : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalClickChar>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickCharMethodInfo; }
 };
 
-class MCClickCharChunk : public MCConstantFunction
+class MCClickCharChunk : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalClickCharChunk>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickCharChunkMethodInfo; }
 };
 
-class MCClickChunk : public MCConstantFunction
+class MCClickChunk : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalClickChunk>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickChunkMethodInfo; }
 };
 
-class MCClickField : public MCConstantFunction
+class MCClickField : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalClickField>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickFieldMethodInfo; }
 };
 
-class MCClickH : public MCConstantFunction
+class MCClickH : public MCConstantFunctionCtxt<integer_t, MCInterfaceEvalClickH>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	//virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickHMethodInfo; }
 };
 
-class MCClickLine : public MCConstantFunction
+class MCClickLine : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalClickLine>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickLineMethodInfo; }
 };
 
-class MCClickLoc : public MCConstantFunction
+class MCClickLoc : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalClickLoc>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickLocMethodInfo; }
 };
 
-class MCClickStack : public MCConstantFunction
+class MCClickStack : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalClickStack>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickStackMethodInfo; }
 };
 
-class MCClickText : public MCConstantFunction
+class MCClickText : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalClickText>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickTextMethodInfo; }
 };
 
-class MCClickV : public MCConstantFunction
+class MCClickV : public MCConstantFunctionCtxt<integer_t, MCInterfaceEvalClickV>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickVMethodInfo; }
 };
 
-class MCColorNames : public MCConstantFunction
+class MCColorNames : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalColorNames>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalColorNamesMethodInfo; }
 
 };
 
-class MCCommandNames : public MCConstantFunction
+class MCCommandNames : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalCommandNames>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalCommandNamesMethodInfo; }
 
 };
 
-class MCCommandKey : public MCConstantFunction
+class MCCommandKey : public MCConstantFunctionCtxt<MCNameRef, MCInterfaceEvalCommandKey>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalCommandKeyMethodInfo; }
 };
 
-class MCControlKey : public MCConstantFunction
+class MCControlKey : public MCConstantFunctionCtxt<MCNameRef, MCInterfaceEvalControlKey>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalControlKeyMethodInfo; }
 };
 
-class MCDate : public MCConstantFunction
+class MCDate : public MCConstantFunctionCtxt<MCStringRef, MCDateTimeEvalDate>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCDateTimeEvalDateMethodInfo; }
 
 };
 
-class MCDateFormat : public MCConstantFunction
+class MCDateFormat : public MCConstantFunctionCtxt<MCStringRef, MCDateTimeEvalDateFormat>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCDateTimeEvalDateFormatMethodInfo; }
 
 };
 
-class MCDecompress : public MCUnaryFunction
+class MCDecompress : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, MCFiltersEvalDecompress, EE_DECOMPRESS_BADSOURCE, PE_DECOMPRESS_BADPARAM, kMCFiltersEvalDecompressMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCDecompress()
-	{
-		source = NULL;
-	}
-	virtual ~MCDecompress();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	static Exec_stat do_decompress(MCExecPoint& ep, uint2, uint2);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalDecompressMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCDecompress(){}
+    virtual ~MCDecompress(){}
 };
 
-class MCDirectories : public MCConstantFunction
+class MCDirectories : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalDirectories>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalDirectoriesMethodInfo; }
 
 };
 
-class MCDiskSpace : public MCConstantFunction
+class MCDiskSpace : public MCConstantFunctionCtxt<double, MCFilesEvalDiskSpace>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalDiskSpaceMethodInfo; }
 
 };
 
-class MCDNSServers : public MCConstantFunction
+class MCDNSServers : public MCConstantFunctionCtxt<MCStringRef, MCNetworkEvalDNSServers>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCNetworkEvalDNSServersMethodInfo; }
 
 };
 
-class MCDragDestination: public MCConstantFunction
+class MCDragDestination: public MCConstantFunctionCtxt<MCStringRef, MCPasteboardEvalDragDestination>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCPasteboardEvalDragDestinationMethodInfo; }
 
 };
 
-class MCDragSource: public MCConstantFunction
+class MCDragSource: public MCConstantFunctionCtxt<MCStringRef, MCPasteboardEvalDragSource>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCPasteboardEvalDragSourceMethodInfo; }
 
 };
 
-class MCDriverNames : public MCConstantFunction
+class MCDriverNames : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalDriverNames>
 {
 	MCExpression *type;
 public:
@@ -497,12 +557,12 @@ public:
 	}
 	virtual ~MCDriverNames();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalDriverNamesMethodInfo; }
 
 };
 
-class MCDrives : public MCConstantFunction
+class MCDrives : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalDrives>
 {
 	MCExpression *type;
 public:
@@ -512,65 +572,56 @@ public:
 	}
 	virtual ~MCDrives();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalDrivesMethodInfo; }
 
 };
 
-class MCDropChunk: public MCConstantFunction
+class MCDropChunk: public MCConstantFunctionCtxt<MCStringRef, MCPasteboardEvalDropChunk>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCPasteboardEvalDropChunkMethodInfo; }
 
 };
 
-class MCQTEffects : public MCConstantFunction
+class MCQTEffects : public MCConstantFunctionCtxt<MCStringRef, MCMultimediaEvalQTEffects>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMultimediaEvalQTEffectsMethodInfo; }
 
 };
 
-class MCRecordCompressionTypes: public MCConstantFunction
+class MCRecordCompressionTypes: public MCConstantFunctionCtxt<MCStringRef, MCMultimediaEvalRecordCompressionTypes>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMultimediaEvalRecordCompressionTypesMethodInfo; }
 
 };
 
-class MCRecordLoudness : public MCConstantFunction
+class MCRecordLoudness : public MCConstantFunctionCtxt<integer_t, MCMultimediaEvalRecordLoudness>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMultimediaEvalRecordLoudnessMethodInfo; }
 
 };
 
-class MCEnvironment : public MCConstantFunction
+class MCEnvironment : public MCConstantFunctionCtxt<MCNameRef, MCEngineEvalEnvironment>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalEnvironmentMethodInfo; }
 
 };
 
-class MCEncrypt : public MCUnaryFunction
+class MCEncrypt : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCSecurityEvalEncrypt, EE_ENCRYPT_BADSOURCE, PE_ENCRYPT_BADPARAM, kMCSecurityEvalEncryptMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCEncrypt()
-	{
-		source = NULL;
-	}
-	virtual ~MCEncrypt();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCSecurityEvalEncryptMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCEncrypt(){}
+    virtual ~MCEncrypt(){}
 };
 
 class MCExists : public MCFunction
@@ -583,55 +634,37 @@ public:
 	}
 	virtual ~MCExists();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCExtents : public MCUnaryFunction
+class MCExtents : public MCUnaryFunctionCtxt<MCArrayRef, MCStringRef, MCArraysEvalExtents, EE_EXTENTS_BADSOURCE, PE_EXTENTS_BADPARAM, kMCArraysEvalExtentsMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCExtents()
-	{
-		source = NULL;
-	}
-	virtual ~MCExtents();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCArraysEvalExtentsMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCExtents(){}
+    virtual ~MCExtents(){}
 };
 
-class MCTheFiles : public MCConstantFunction
+class MCTheFiles : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalFiles>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalFilesMethodInfo; }
 
 };
 
-class MCFlushEvents : public MCUnaryFunction
+class MCFlushEvents : public MCUnaryFunctionCtxt<MCNameRef, MCStringRef, MCInterfaceEvalFlushEvents, EE_FLUSHEVENTS_BADTYPE, PE_FLUSHEVENTS_BADPARAM, kMCInterfaceEvalFlushEventsMethodInfo>
 {
-	MCExpression *type;
 public:
-	MCFlushEvents()
-	{
-		type = NULL;
-	}
-	virtual ~MCFlushEvents();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalFlushEventsMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return type; }
+    MCFlushEvents(){}
+    virtual ~MCFlushEvents(){}
 };
 
-class MCFocusedObject : public MCConstantFunction
+class MCFocusedObject : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalFocusedObject>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalFocusedObjectMethodInfo; }
 
 };
@@ -646,43 +679,25 @@ public:
 	}
 	virtual ~MCFontNames();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCTextEvalFontNamesMethodInfo; }
 	virtual MCExpression *getmethodarg(void) const { return type; }
 };
 
-class MCFontLanguage : public MCUnaryFunction
+class MCFontLanguage : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCTextEvalFontNames, EE_FONTNAMES_BADTYPE, PE_FONTNAMES_BADPARAM, kMCTextEvalFontLanguageMethodInfo>
 {
-	MCExpression *fontname;
 public:
-	MCFontLanguage()
-	{
-		fontname = NULL;
-	}
-	virtual ~MCFontLanguage();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCTextEvalFontLanguageMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return fontname; }
+    MCFontLanguage(){}
+    virtual ~MCFontLanguage(){}
 };
 
 
-class MCFontSizes : public MCUnaryFunction
+class MCFontSizes : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCTextEvalFontSizes, EE_FONTSIZES_BADFONTNAME, PE_FONTSIZES_BADPARAM, kMCTextEvalFontSizesMethodInfo>
 {
-	MCExpression *fontname;
 public:
-	MCFontSizes()
-	{
-		fontname = NULL;
-	}
-	virtual ~MCFontSizes();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCTextEvalFontSizesMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return fontname; }
+    MCFontSizes(){}
+    virtual ~MCFontSizes(){}
 };
 
 class MCFontStyles : public MCFunction
@@ -696,7 +711,7 @@ public:
 	}
 	virtual ~MCFontStyles();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	
 	virtual void compile(MCSyntaxFactoryRef);
 };
@@ -711,141 +726,105 @@ public:
 	}
 	virtual ~MCFormat();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCFoundChunk : public MCConstantFunction
+class MCFoundChunk : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalFoundChunk>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalFoundChunkMethodInfo; }
 
 };
 
-class MCFoundField : public MCConstantFunction
+class MCFoundField : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalFoundField>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalFoundFieldMethodInfo; }
 };
 
-class MCFoundLine : public MCConstantFunction
+class MCFoundLine : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalFoundLine>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalFoundLineMethodInfo; }
 
 };
 
-class MCFoundLoc : public MCConstantFunction
+class MCFoundLoc : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalFoundLoc>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalFoundLocMethodInfo; }
 
 };
 
-class MCFoundText : public MCConstantFunction
+class MCFoundText : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalFoundText>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalFoundTextMethodInfo; }
 
 
 };
 
-class MCFunctionNames : public MCConstantFunction
+class MCFunctionNames : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalFunctionNames>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalFunctionNamesMethodInfo; }
 };
 
-class MCGlobalLoc : public MCUnaryFunction
+class MCGlobalLoc : public MCUnaryFunctionCtxt<MCPoint, MCPoint, MCInterfaceEvalGlobalLoc, EE_GLOBALLOC_NAP, PE_GLOBALLOC_BADPOINT, kMCInterfaceEvalGlobalLocMethodInfo>
 {
-	MCExpression *point;
 public:
-	MCGlobalLoc()
-	{
-		point = NULL;
-	}
-	virtual ~MCGlobalLoc();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalGlobalLocMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return point; }
+    MCGlobalLoc(){}
+    virtual ~MCGlobalLoc(){}
 };
 
-class MCGlobals : public MCConstantFunction
+class MCGlobals : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalGlobalNames>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalGlobalNamesMethodInfo; }
 
 };
 
-class MCHasMemory : public MCUnaryFunction
+class MCHasMemory : public MCUnaryFunctionCtxt<uinteger_t, bool, MCLegacyEvalHasMemory, EE_HASMEMORY_BADAMOUNT, PE_HASMEMORY_BADPARAM, kMCLegacyEvalHasMemoryMethodInfo>
 {
-	MCExpression *amount;
 public:
-	MCHasMemory()
-	{
-		amount = NULL;
-	}
-	virtual ~MCHasMemory();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalHasMemoryMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return amount; }
+    MCHasMemory(){}
+    virtual ~MCHasMemory(){}
 };
 
-class MCHeapSpace : public MCConstantFunction
+class MCHeapSpace : public MCConstantFunctionCtxt<integer_t, MCLegacyEvalHeapSpace>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalHeapSpaceMethodInfo; }
 
 };
 
-class MCHostAddress : public MCUnaryFunction
+class MCHostAddress : public MCUnaryFunctionCtxt<MCNameRef, MCStringRef, MCNetworkEvalHostAddress, EE_HOSTADDRESS_BADSOCKET, PE_HOSTADDRESS_BADSOCKET, kMCNetworkEvalHostAddressMethodInfo>
 {
-	MCExpression *socket;
 public:
-	MCHostAddress()
-	{
-		socket = NULL;
-	}
-	virtual ~MCHostAddress();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCNetworkEvalHostAddressMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return socket; }
+    MCHostAddress(){}
+    virtual ~MCHostAddress(){}
 };
 
-class MCHostAtoN : public MCUnaryFunction
+class MCHostAtoN : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCNetworkEvalHostAddressToName, EE_HOSTATON_BADADDRESS, PE_HOSTATON_BADADDRESS, kMCNetworkEvalHostAddressToNameMethodInfo>
 {
-	MCExpression *address;
 public:
-	MCHostAtoN()
-	{
-		address = NULL;
-	}
-	virtual ~MCHostAtoN();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCNetworkEvalHostAddressToNameMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return address; }
+    MCHostAtoN(){}
+    virtual ~MCHostAtoN(){}
 };
 
-class MCHostName : public MCConstantFunction
+class MCHostName : public MCConstantFunctionCtxt<MCStringRef, MCNetworkEvalHostName>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCNetworkEvalHostNameMethodInfo; }
 
 };
@@ -862,7 +841,7 @@ public:
 	}
 	virtual ~MCHostNtoA();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 
 	virtual void compile(MCSyntaxFactoryRef);
 };
@@ -872,7 +851,7 @@ class MCInsertScripts : public MCConstantFunction
 protected:
 	Boolean front;
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return front == True ? kMCEngineEvalFrontScriptsMethodInfo : kMCEngineEvalBackScriptsMethodInfo; }
 };
 
@@ -894,10 +873,10 @@ public:
 	}
 };
 
-class MCInterrupt : public MCConstantFunction
+class MCInterrupt : public MCConstantFunctionCtxt<bool, MCEngineEvalInterrupt>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalInterruptMethodInfo; }
 
 };
@@ -916,40 +895,22 @@ public:
 	}
 	virtual ~MCIntersect();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCIsoToMac : public MCUnaryFunction
+class MCIsoToMac : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, MCFiltersEvalIsoToMac, EE_ISOTOMAC_BADSOURCE, PE_ISOTOMAC_BADPARAM, kMCFiltersEvalIsoToMacMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCIsoToMac()
-	{
-		source = NULL;
-	}
-	virtual ~MCIsoToMac();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalIsoToMacMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCIsoToMac(){}
+    virtual ~MCIsoToMac(){}
 };
 
-class MCIsNumber : public MCUnaryFunction
+class MCIsNumber : public MCUnaryFunctionCtxt<MCStringRef, bool, MCLegacyEvalIsNumber, EE_ISNUMBER_BADSOURCE, PE_ISNUMBER_BADPARAM, kMCLegacyEvalIsNumberMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCIsNumber()
-	{
-		source = NULL;
-	}
-	virtual ~MCIsNumber();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalIsNumberMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCIsNumber(){}
+    virtual ~MCIsNumber(){}
 };
 
 class MCKeys : public MCFunction
@@ -964,36 +925,27 @@ public:
 	}
 	virtual ~MCKeys();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCKeysDown : public MCConstantFunction
+class MCKeysDown : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalKeysDown>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalKeysDownMethodInfo; }
 
 };
 
-class MCLength : public MCUnaryFunction
+class MCLength : public MCUnaryFunctionCtxt<MCStringRef, integer_t, MCStringsEvalLength, EE_LENGTH_BADSOURCE, PE_LENGTH_BADPARAM, kMCStringsEvalLengthMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCLength()
-	{
-		source = NULL;
-	}
-	virtual ~MCLength();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalLengthMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCLength(){}
+    virtual ~MCLength(){}
 };
 
-class MCLicensed : public MCConstantFunction
+class MCLicensed : public MCConstantFunctionCtxt<bool, MCLegacyEvalLicensed>
 {
 	MCExpression *source;
 public:
@@ -1003,61 +955,43 @@ public:
 	}
 	virtual ~MCLicensed();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalLicensedMethodInfo; }
 };
 
-class MCLocalLoc : public MCUnaryFunction
+class MCLocalLoc : public MCUnaryFunctionCtxt<MCPoint, MCPoint, MCInterfaceEvalLocalLoc, EE_LOCALLOC_NAP, PE_LOCALLOC_BADPOINT, kMCInterfaceEvalLocalLocMethodInfo>
 {
-	MCExpression *point;
 public:
-	MCLocalLoc()
-	{
-		point = NULL;
-	}
-	virtual ~MCLocalLoc();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalLocalLocMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return point; }
+    MCLocalLoc(){}
+    virtual ~MCLocalLoc(){}
 };
 
-class MCLocals : public MCConstantFunction
+class MCLocals : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalLocalNames>
 {
 public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalLocalNamesMethodInfo; }
 };
 
-class MCMachine : public MCConstantFunction
+class MCMachine : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalMachine>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalMachineMethodInfo; }
 };
 
-class MCMacToIso : public MCUnaryFunction
+class MCMacToIso : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, MCFiltersEvalMacToIso, EE_MACTOISO_BADSOURCE, PE_MACTOISO_BADPARAM, kMCFiltersEvalMacToIsoMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCMacToIso()
-	{
-		source = NULL;
-	}
-	virtual ~MCMacToIso();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalMacToIsoMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCMacToIso(){}
+    virtual ~MCMacToIso(){}
 };
 
-class MCMainStacks : public MCConstantFunction
+class MCMainStacks : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalMainStacks>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMainStacksMethodInfo; }
 };
 
@@ -1073,7 +1007,7 @@ public:
 	}
 	virtual ~MCMatch();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1096,58 +1030,46 @@ public:
 };
 
 
-class MCMe : public MCConstantFunction
+class MCMe : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalMe>
 {
 public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalMeMethodInfo; }
 };
 
-class MCMenuObject : public MCConstantFunction
+class MCMenuObject : public MCConstantFunctionCtxt<MCStringRef, MCLegacyEvalMenuObject>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalMenuObjectMethodInfo; }
 };
 
-class MCMenus : public MCConstantFunction
+class MCMenus : public MCConstantFunctionCtxt<MCStringRef, MCLegacyEvalMenus>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalMenusMethodInfo; }
 };
 
-class MCMerge : public MCUnaryFunction
+class MCMerge : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCStringsEvalMerge, EE_MERGE_BADSOURCE, PE_MERGE_BADPARAM, kMCStringsEvalMergeMethodInfo>
 {
 public:
-	MCExpression *source;
-public:
-	MCMerge()
-	{
-		source = NULL;
-	}
-	virtual ~MCMerge();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	Exec_stat doscript(MCExecPoint &);
-	void deletestatements(MCStatement *statements);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalMergeMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCMerge(){}
+    virtual ~MCMerge(){}
 };
 
-class MCMillisecs : public MCConstantFunction
+class MCMillisecs : public MCConstantFunctionCtxt<double, MCDateTimeEvalMilliseconds>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCDateTimeEvalMillisecondsMethodInfo; }
 };
 
-class MCMonthNames : public MCConstantFunction
+class MCMonthNames : public MCConstantFunctionCtxt<MCStringRef, MCDateTimeEvalMonthNames>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCDateTimeEvalMonthNamesMethodInfo; }
 };
 
@@ -1161,344 +1083,273 @@ public:
 	}
 	virtual ~MCMouse();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCMouseChar : public MCConstantFunction
+class MCMouseChar : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalMouseChar>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMouseCharMethodInfo; }
 };
 
-class MCMouseCharChunk : public MCConstantFunction
+class MCMouseCharChunk : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalMouseCharChunk>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMouseCharChunkMethodInfo; }
 };
 
-class MCMouseChunk : public MCConstantFunction
+class MCMouseChunk : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalMouseChunk>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMouseChunkMethodInfo; }
 };
 
-class MCMouseClick : public MCConstantFunction
+class MCMouseClick : public MCConstantFunctionCtxt<bool, MCInterfaceEvalMouseClick>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMouseClickMethodInfo; }
 };
 
-class MCMouseColor : public MCConstantFunction
+class MCMouseColor : public MCConstantFunctionCtxt<MCColor, MCInterfaceEvalMouseColor>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMouseColorMethodInfo; }
 };
 
-class MCMouseControl : public MCConstantFunction
+class MCMouseControl : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalMouseControl>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMouseControlMethodInfo; }
 };
 
-class MCMouseH : public MCConstantFunction
+class MCMouseH : public MCConstantFunctionCtxt<integer_t, MCInterfaceEvalMouseH>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMouseHMethodInfo; }
 };
 
-class MCMouseLine : public MCConstantFunction
+class MCMouseLine : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalMouseLine>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMouseLineMethodInfo; }
 };
 
-class MCMouseLoc : public MCConstantFunction
+class MCMouseLoc : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalMouseLoc>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMouseLocMethodInfo; }
 };
 
-class MCMouseStack : public MCConstantFunction
+class MCMouseStack : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalMouseStack>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMouseStackMethodInfo; }
 };
 
-class MCMouseText : public MCConstantFunction
+class MCMouseText : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalMouseText>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMouseTextMethodInfo; }
 };
 
-class MCMouseV : public MCConstantFunction
+class MCMouseV : public MCConstantFunctionCtxt<integer_t, MCInterfaceEvalMouseV>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMouseVMethodInfo; }
 };
 
-class MCMovie : public MCConstantFunction
+class MCMovie : public MCConstantFunctionCtxt<MCStringRef, MCMultimediaEvalMovie>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMultimediaEvalMovieMethodInfo; }
 };
 
-class MCMovingControls : public MCConstantFunction
+class MCMovingControls : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalMovingControls>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMovingControlsMethodInfo; }
 };
 
-class MCNativeCharToNum : public MCUnaryFunction
+class MCNativeCharToNum : public MCUnaryFunctionCtxt<MCStringRef, uinteger_t, MCStringsEvalNativeCharToNum, EE_CHARTONUM_BADSOURCE, PE_CHARTONUM_BADPARAM, kMCStringsEvalNumToCharMethodInfo> // FIXME
 {
-    MCExpression *source;
 public:
-    MCNativeCharToNum()
-    {
-        source = NULL;
-    }
-    virtual ~MCNativeCharToNum();
-    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
-    virtual Exec_stat eval(MCExecPoint &);
-    
-    virtual MCExecMethodInfo *getmethodinfo() const { return kMCStringsEvalCharToNumMethodInfo; } // FIXME
-    virtual MCExpression *getmethodarg() const { return source; }
+    MCNativeCharToNum(){}
+    virtual ~MCNativeCharToNum(){}
 };
 
-class MCNumToChar: public MCFunction
+class MCNumToChar: public MCUnaryFunctionCtxt<uinteger_t, MCValueRef, MCStringsEvalNumToChar, EE_NUMTOCHAR_BADSOURCE, PE_NUMTOCHAR_BADPARAM, kMCStringsEvalNumToCharMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCNumToChar()
-	{
-		source = NULL;
-	}
-	virtual ~MCNumToChar();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalNumToCharMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCNumToChar(){}
+    virtual ~MCNumToChar(){}
 };
 
-class MCNumToNativeChar : public MCFunction
+class MCNumToNativeChar : public MCUnaryFunctionCtxt<uinteger_t, MCStringRef, MCStringsEvalNumToNativeChar,
+    EE_NUMTOCHAR_BADSOURCE, PE_NUMTOCHAR_BADPARAM, kMCStringsEvalNumToCharMethodInfo> // FIXME
 {
-    MCExpression *source;
 public:
-    MCNumToNativeChar()
-    {
-        source = NULL;
-    }
-    virtual ~MCNumToNativeChar();
-    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
-    virtual Exec_stat eval(MCExecPoint &);
-    
-    virtual MCExecMethodInfo *getmethodinfo() const { return kMCStringsEvalNumToCharMethodInfo; } // FIXME
-    virtual MCExpression *getmethodarg() const { return source; }
+    MCNumToNativeChar(){}
+    virtual ~MCNumToNativeChar(){}
 };
 
-class MCNumToUnicodeChar : public MCFunction
+class MCNumToUnicodeChar : public MCUnaryFunctionCtxt<uinteger_t, MCStringRef, MCStringsEvalNumToUnicodeChar,
+    EE_NUMTOCHAR_BADSOURCE, PE_NUMTOCHAR_BADPARAM, kMCStringsEvalNumToCharMethodInfo> // FIXME
 {
-    MCExpression *source;
 public:
-    MCNumToUnicodeChar()
-    {
-        source = NULL;
-    }
-    virtual ~MCNumToUnicodeChar();
-    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
-    virtual Exec_stat eval(MCExecPoint &);
-    
-    virtual MCExecMethodInfo *getmethodinfo() const { return kMCStringsEvalNumToCharMethodInfo; } // FIXME
-    virtual MCExpression *getmethodarg() const { return source; }
+    MCNumToUnicodeChar(){}
+    virtual ~MCNumToUnicodeChar(){}
 };
 
-class MCNumToByte: public MCFunction
+class MCNumToByte: public MCUnaryFunctionCtxt<integer_t, MCStringRef, MCStringsEvalNumToByte, EE_NUMTOBYTE_BADSOURCE, PE_NUMTOBYTE_BADPARAM, kMCStringsEvalNumToByteMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCNumToByte(void)
-	{
-		source = NULL;
-	}
-	virtual ~MCNumToByte(void);
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalNumToByteMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCNumToByte(void){}
+    virtual ~MCNumToByte(){}
 };
 
-class MCOpenFiles : public MCConstantFunction
+class MCOpenFiles : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalOpenFiles>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalOpenFilesMethodInfo; }
 };
 
-class MCOpenProcesses : public MCConstantFunction
+class MCOpenProcesses : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalOpenProcesses>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalOpenProcessesMethodInfo; }
 };
 
-class MCOpenProcessIds : public MCConstantFunction
+class MCOpenProcessIds : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalOpenProcessesIds>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalOpenProcessesIdsMethodInfo; }
 };
 
-class MCOpenSockets : public MCConstantFunction
+class MCOpenSockets : public MCConstantFunctionCtxt<MCStringRef, MCNetworkEvalOpenSockets>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCNetworkEvalOpenSocketsMethodInfo; }
 };
 
-class MCOpenStacks : public MCConstantFunction
+class MCOpenStacks : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalOpenStacks>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalOpenStacksMethodInfo; }
 };
 
-class MCOptionKey : public MCConstantFunction
+class MCOptionKey : public MCConstantFunctionCtxt<MCNameRef, MCInterfaceEvalOptionKey>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalOptionKeyMethodInfo; }
 };
 
-class MCParam : public MCUnaryFunction
+class MCParam : public MCUnaryFunctionCtxt<integer_t, MCValueRef, MCEngineEvalParam, EE_PARAM_BADINDEX, PE_PARAM_BADPARAM, kMCEngineEvalParamMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCParam()
-	{
-		source = NULL;
-	}
-	virtual ~MCParam();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalParamMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCParam(){}
+    virtual ~MCParam(){}
 };
 
-class MCParamCount : public MCConstantFunction
+class MCParamCount : public MCConstantFunctionCtxt<integer_t, MCEngineEvalParamCount>
 {
 public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalParamCountMethodInfo; }
 };
 
-class MCParams : public MCConstantFunction
+class MCParams : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalParams>
 {
 public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalParamsMethodInfo; }
 };
 
-class MCPeerAddress : public MCUnaryFunction
+class MCPeerAddress : public MCUnaryFunctionCtxt<MCNameRef, MCStringRef, MCNetworkEvalPeerAddress, EE_HOSTADDRESS_BADSOCKET, PE_PEERADDRESS_BADSOCKET, kMCNetworkEvalPeerAddressMethodInfo>
 {
-	MCExpression *socket;
 public:
-	MCPeerAddress()
-	{
-		socket = NULL;
-	}
-	virtual ~MCPeerAddress();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCNetworkEvalPeerAddressMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return socket; }
+    MCPeerAddress(){}
+    virtual ~MCPeerAddress(){}
 };
 
-class MCPendingMessages : public MCConstantFunction
+class MCPendingMessages : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalPendingMessages>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalPendingMessagesMethodInfo; }
 };
 
-class MCPid : public MCConstantFunction
+class MCPid : public MCConstantFunctionCtxt<integer_t, MCFilesEvalProcessId>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalProcessIdMethodInfo; }
 };
 
-class MCPlatform : public MCConstantFunction
+class MCPlatform : public MCConstantFunctionCtxt<MCNameRef, MCEngineEvalPlatform>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalPlatformMethodInfo; }
 };
 
+
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of populationStdDev
-class MCPopulationStdDev : public MCFunction
+class MCPopulationStdDev : public MCParamFunctionCtxt<MCMathEvalPopulationStdDev, EE_POP_STDDEV_BADSOURCE, PE_POP_STDDEV_BADPARAM, kMCMathEvalPopulationStdDevMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCPopulationStdDev()
-	{
-		params = NULL;
-	}
-	virtual ~MCPopulationStdDev();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    MCPopulationStdDev(){}
+    virtual ~MCPopulationStdDev(){}
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of populationVariance
-class MCPopulationVariance : public MCFunction
+class MCPopulationVariance : public MCParamFunctionCtxt<MCMathEvalPopulationVariance, EE_POP_VARIANCE_BADSOURCE, PE_POP_VARIANCE_BADPARAM, kMCMathEvalPopulationVarianceMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCPopulationVariance()
-	{
-		params = NULL;
-	}
-	virtual ~MCPopulationVariance();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    MCPopulationVariance(){}
+    virtual ~MCPopulationVariance(){}
 };
 
-class MCProcessor : public MCConstantFunction
+class MCProcessor : public MCConstantFunctionCtxt<MCNameRef, MCEngineEvalProcessor>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalProcessorMethodInfo; }
 };
 
-class MCPropertyNames : public MCConstantFunction
+class MCPropertyNames : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalPropertyNames>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalPropertyNamesMethodInfo; }
 };
 
-class MCQTVersion : public MCConstantFunction
+class MCQTVersion : public MCConstantFunctionCtxt<MCStringRef, MCMultimediaEvalQTVersion>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMultimediaEvalQTVersionMethodInfo; }
 };
 
@@ -1514,42 +1365,42 @@ public:
 	}
 	virtual ~MCReplaceText();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCTheResult : public MCConstantFunction
+class MCTheResult : public MCConstantFunctionCtxt<MCValueRef, MCEngineEvalResult>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalResultMethodInfo; }
 };
 
-class MCScreenColors : public MCConstantFunction
+class MCScreenColors : public MCConstantFunctionCtxt<double, MCInterfaceEvalScreenColors>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalScreenColorsMethodInfo; }
 };
 
-class MCScreenDepth : public MCConstantFunction
+class MCScreenDepth : public MCConstantFunctionCtxt<integer_t, MCInterfaceEvalScreenDepth>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalScreenDepthMethodInfo; }
 };
 
-class MCScreenLoc : public MCConstantFunction
+class MCScreenLoc : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalScreenLoc>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalScreenLocMethodInfo; }
 };
 
-class MCScreenName : public MCConstantFunction
+class MCScreenName : public MCConstantFunctionCtxt<MCNameRef, MCInterfaceEvalScreenName>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalScreenNameMethodInfo; }
 };
 
@@ -1562,37 +1413,38 @@ public:
 	{
 	}
 
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
-
+#ifdef LEGACY_EXEC
 	static void evaluate(MCExecPoint&, bool working, bool plural, bool effective);
+#endif
 };
 
-class MCScreenType : public MCConstantFunction
+class MCScreenType : public MCConstantFunctionCtxt<MCNameRef, MCLegacyEvalScreenType>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalScreenTypeMethodInfo; }
 };
 
-class MCScreenVendor : public MCConstantFunction
+class MCScreenVendor : public MCConstantFunctionCtxt<MCNameRef, MCLegacyEvalScreenVendor>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalScreenVendorMethodInfo; }
 };
 
-class MCScriptLimits : public MCConstantFunction
+class MCScriptLimits : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalScriptLimits>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalScriptLimitsMethodInfo; }
 };
 
-class MCSeconds : public MCConstantFunction
+class MCSeconds : public MCConstantFunctionCtxt<double, MCDateTimeEvalSeconds>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCDateTimeEvalSecondsMethodInfo; }
 };
 
@@ -1610,7 +1462,7 @@ public:
 	}
 	virtual ~MCSelectedButton();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1624,21 +1476,21 @@ public:
 	}
 	virtual ~MCSelectedChunk();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCSelectedField : public MCConstantFunction
+class MCSelectedField : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalSelectedField>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalSelectedFieldMethodInfo; }
 };
 
-class MCSelectedImage : public MCConstantFunction
+class MCSelectedImage : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalSelectedImage>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalSelectedImageMethodInfo; }
 };
 
@@ -1652,7 +1504,7 @@ public:
 	}
 	virtual ~MCSelectedLine();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1666,14 +1518,14 @@ public:
 	}
 	virtual ~MCSelectedLoc();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCSelectedObject : public MCConstantFunction
+class MCSelectedObject : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalSelectedObject>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalSelectedObjectMethodInfo; }
 };
 
@@ -1687,65 +1539,56 @@ public:
 	}
 	virtual ~MCSelectedText();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCShell : public MCUnaryFunction
+class MCShell : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCFilesEvalShell, EE_SHELL_BADSOURCE, PE_SHELL_BADPARAM, kMCFilesEvalShellMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCShell()
-	{
-		source = NULL;
-	}
-	virtual ~MCShell();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalShellMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCShell(){}
+    virtual ~MCShell(){}
 };
 
-class MCShiftKey : public MCConstantFunction
+class MCShiftKey : public MCConstantFunctionCtxt<MCNameRef, MCInterfaceEvalShiftKey>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalShiftKeyMethodInfo; }
 };
 
-class MCSound : public MCConstantFunction
+class MCSound : public MCConstantFunctionCtxt<MCStringRef, MCMultimediaEvalSound>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMultimediaEvalSoundMethodInfo; }
 };
 
-class MCStacks : public MCConstantFunction
+class MCStacks : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalStacks>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalStacksMethodInfo; }
 };
 
-class MCStackSpace : public MCConstantFunction
+class MCStackSpace : public MCConstantFunctionCtxt<integer_t, MCLegacyEvalStackSpace>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCLegacyEvalStackSpaceMethodInfo; }
 };
 
-class MCSysError : public MCConstantFunction
+class MCSysError : public MCConstantFunctionCtxt<uinteger_t, MCEngineEvalSysError>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalSysErrorMethodInfo; }
 };
 
-class MCSystemVersion : public MCConstantFunction
+class MCSystemVersion : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalSystemVersion>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalSystemVersionMethodInfo; }
 };
 
@@ -1754,7 +1597,7 @@ class MCTarget : public MCConstantFunction
 	Boolean contents;
 public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return contents == True ? kMCEngineEvalTargetContentsMethodInfo : kMCEngineEvalTargetMethodInfo; }
 };
 
@@ -1769,61 +1612,43 @@ public:
 	}
 	~MCOwner(void);
 	virtual Parse_stat parse(MCScriptPoint&, Boolean the);
-	virtual Exec_stat eval(MCExecPoint&);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCTempName : public MCConstantFunction
+class MCTempName : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalTempName>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalTempNameMethodInfo; }
 };
 
-class MCTicks : public MCConstantFunction
+class MCTicks : public MCConstantFunctionCtxt<double, MCDateTimeEvalTicks>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCDateTimeEvalTicksMethodInfo; }
 };
 
-class MCTheTime : public MCConstantFunction
+class MCTheTime : public MCConstantFunctionCtxt<MCStringRef, MCDateTimeEvalTime>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCDateTimeEvalTimeMethodInfo; }
 };
 
-class MCToLower : public MCUnaryFunction
+class MCToLower : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCStringsEvalToLower, EE_TOLOWER_BADSOURCE, PE_TOLOWER_BADPARAM, kMCStringsEvalToLowerMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCToLower()
-	{
-		source = NULL;
-	}
-	virtual ~MCToLower();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalToLowerMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCToLower(){}
+    virtual ~MCToLower(){}
 };
 
-class MCToUpper : public MCUnaryFunction
+class MCToUpper : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCStringsEvalToUpper, EE_TOUPPER_BADSOURCE, PE_TOUPPER_BADPARAM, kMCStringsEvalToUpperMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCToUpper()
-	{
-		source = NULL;
-	}
-	virtual ~MCToUpper();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCStringsEvalToUpperMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCToUpper(){}
+    virtual ~MCToUpper(){}
 };
 
 class MCTopStack : public MCFunction
@@ -1836,24 +1661,16 @@ public:
 	}
 	virtual ~MCTopStack();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCUnicodeCharToNum : public MCUnaryFunction
+class MCUnicodeCharToNum : public MCUnaryFunctionCtxt<MCStringRef, uinteger_t, MCStringsEvalUnicodeCharToNum,
+    EE_CHARTONUM_BADSOURCE, PE_CHARTONUM_BADPARAM, kMCStringsEvalCharToNumMethodInfo> // FIXME
 {
-    MCExpression *source;
 public:
-    MCUnicodeCharToNum()
-    {
-        source = NULL;
-    }
-    virtual ~MCUnicodeCharToNum();
-    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
-    virtual Exec_stat eval(MCExecPoint &);
-    
-    virtual MCExecMethodInfo *getmethodinfo() const { return kMCStringsEvalCharToNumMethodInfo; } // FIXME
-    virtual MCExpression *getmethodarg() const { return source; }
+    MCUnicodeCharToNum(){}
+    virtual ~MCUnicodeCharToNum(){}
 };
 
 class MCUniDecode : public MCFunction
@@ -1868,7 +1685,7 @@ public:
 	}
 	virtual ~MCUniDecode();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1884,56 +1701,29 @@ public:
 	}
 	virtual ~MCUniEncode();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCUrlDecode : public MCUnaryFunction
+class MCUrlDecode : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCFiltersEvalUrlDecode, EE_URLDECODE_BADSOURCE, PE_URLDECODE_BADPARAM, kMCFiltersEvalUrlDecodeMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCUrlDecode()
-	{
-		source = NULL;
-	}
-	virtual ~MCUrlDecode();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalUrlDecodeMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCUrlDecode(){}
+    virtual ~MCUrlDecode(){}
 };
 
-class MCUrlEncode : public MCUnaryFunction
+class MCUrlEncode : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCFiltersEvalUrlEncode, EE_URLENCODE_BADSOURCE, PE_URLENCODE_BADPARAM, kMCFiltersEvalUrlEncodeMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCUrlEncode()
-	{
-		source = NULL;
-	}
-	virtual ~MCUrlEncode();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalUrlEncodeMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCUrlEncode(){}
+    virtual ~MCUrlEncode(){}
 };
 
-class MCUrlStatus : public MCUnaryFunction
+class MCUrlStatus : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCNetworkEvalUrlStatus, EE_URLSTATUS_BADSOURCE, PE_URLSTATUS_BADPARAM, kMCNetworkEvalUrlStatusMethodInfo>
 {
-	MCExpression *url;
 public:
-	MCUrlStatus()
-	{
-		url = NULL;
-	}
-	virtual ~MCUrlStatus();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCNetworkEvalUrlStatusMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return url; }
+    MCUrlStatus(){}
+    virtual ~MCUrlStatus(){}
 };
 
 class MCValue : public MCFunction
@@ -1948,36 +1738,36 @@ public:
 	}
 	virtual ~MCValue();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCVariables : public MCConstantFunction
+class MCVariables : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalVariableNames>
 {
 public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalVariableNamesMethodInfo; }
 };
 
-class MCVersion : public MCConstantFunction
+class MCVersion : public MCConstantFunctionCtxt<MCNameRef, MCEngineEvalVersion>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCEngineEvalVersionMethodInfo; }
 };
 
-class MCWaitDepth : public MCConstantFunction
+class MCWaitDepth : public MCConstantFunctionCtxt<integer_t, MCInterfaceEvalWaitDepth>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalWaitDepthMethodInfo; }
 };
 
-class MCWeekDayNames : public MCConstantFunction
+class MCWeekDayNames : public MCConstantFunctionCtxt<MCStringRef, MCDateTimeEvalWeekDayNames>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCDateTimeEvalWeekDayNamesMethodInfo; }
 };
 
@@ -1993,58 +1783,31 @@ public:
 	}
 	virtual ~MCWithin();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
 // platform specific functions in funcs.cpp
 
-class MCMCISendString : public MCUnaryFunction
+class MCMCISendString : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCMultimediaEvalMCISendString, EE_MCISENDSTRING_BADSOURCE, PE_MCISENDSTRING_BADPARAM, kMCMultimediaEvalMCISendStringMethodInfo>
 {
-	MCExpression *string;
 public:
-	MCMCISendString()
-	{
-		string = NULL;
-	}
-	virtual ~MCMCISendString();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMultimediaEvalMCISendStringMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return string; }
+    MCMCISendString(){}
+    virtual ~MCMCISendString(){}
 };
 
-class MCDeleteRegistry : public MCUnaryFunction
+class MCDeleteRegistry : public MCUnaryFunctionCtxt<MCStringRef, bool, MCFilesEvalDeleteRegistry, EE_SETREGISTRY_BADEXP, PE_SETREGISTRY_BADPARAM, kMCFilesEvalDeleteRegistryMethodInfo>
 {
-	MCExpression *key;
 public:
-	MCDeleteRegistry()
-	{
-		key = NULL;
-	}
-	virtual ~MCDeleteRegistry();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalDeleteRegistryMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return key; }
+    MCDeleteRegistry(){}
+    virtual ~MCDeleteRegistry(){}
 };
 
-class MCListRegistry : public MCUnaryFunction
+class MCListRegistry : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCFilesEvalListRegistry, EE_SETREGISTRY_BADEXP, PE_SETREGISTRY_BADPARAM, kMCFilesEvalListRegistryMethodInfo>
 {
-	MCExpression *key;
 public:
-	MCListRegistry()
-	{
-		key = NULL;
-	}
-	virtual ~MCListRegistry();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalListRegistryMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return key; }
+    MCListRegistry(){}
+    virtual ~MCListRegistry(){}
 };
 
 class MCQueryRegistry : public MCFunction
@@ -2058,7 +1821,7 @@ public:
 	}
 	virtual ~MCQueryRegistry();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -2074,7 +1837,7 @@ public:
 	}
 	virtual ~MCSetRegistry();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -2092,7 +1855,7 @@ public:
 	}
 	virtual ~MCCopyResource();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -2108,7 +1871,7 @@ public:
 	}
 	virtual ~MCDeleteResource();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -2124,7 +1887,7 @@ public:
 	}
 	virtual ~MCGetResource();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -2139,7 +1902,7 @@ public:
 	}
 	virtual ~MCGetResources();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &e);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -2158,120 +1921,66 @@ public:
 	}
 	virtual ~MCSetResource();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCSpecialFolderPath : public MCUnaryFunction
+class MCSpecialFolderPath : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCFilesEvalSpecialFolderPath, EE_SPECIALFOLDERPATH_BADPARAM, PE_SPECIALFOLDERPATH_BADTYPE, kMCFilesEvalSpecialFolderPathMethodInfo>
 {
-	MCExpression *type;
 public:
-	MCSpecialFolderPath()
-	{
-		type = NULL;
-	}
-	virtual ~MCSpecialFolderPath();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalSpecialFolderPathMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return type; }
+    MCSpecialFolderPath(){}
+    virtual ~MCSpecialFolderPath(){}
 };
 
-class MCShortFilePath : public MCUnaryFunction
+class MCShortFilePath : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCFilesEvalShortFilePath, EE_SHORTFILEPATH_BADSOURCE, PE_SHORTFILEPATH_BADPARAM, kMCFilesEvalShortFilePathMethodInfo>
 {
-	MCExpression *type;
 public:
-	MCShortFilePath()
-	{
-		type = NULL;
-	}
-	virtual ~MCShortFilePath();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalShortFilePathMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return type; }
+    MCShortFilePath(){}
+    virtual ~MCShortFilePath(){}
 };
 
-class MCLongFilePath : public MCUnaryFunction
+class MCLongFilePath : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCFilesEvalLongFilePath, EE_LONGFILEPATH_BADSOURCE, PE_LONGFILEPATH_BADPARAM, kMCFilesEvalLongFilePathMethodInfo>
 {
-	MCExpression *type;
 public:
-	MCLongFilePath()
-	{
-		type = NULL;
-	}
-	virtual ~MCLongFilePath();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalLongFilePathMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return type; }
+    MCLongFilePath(){}
+    virtual ~MCLongFilePath(){}
 };
 
-class MCAlternateLanguages : public MCConstantFunction
+class MCAlternateLanguages : public MCConstantFunctionCtxt<MCStringRef, MCScriptingEvalAlternateLanguages>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCScriptingEvalAlternateLanguagesMethodInfo; }
 };
 
-class MCAliasReference: public MCUnaryFunction
+class MCAliasReference: public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCFilesEvalAliasReference, EE_ALIASREFERENCE_BADSOURCE, PE_ALIASREFERENCE_BADPARAM, kMCFilesEvalAliasReferenceMethodInfo>
 {
-	MCExpression *type;
 public:
-	MCAliasReference()
-	{
-		type = NULL;
-	}
-	virtual ~MCAliasReference();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalAliasReferenceMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return type; }
+    MCAliasReference(){}
+    virtual ~MCAliasReference(){}
 };
 
-class MCCipherNames : public MCConstantFunction
+class MCCipherNames : public MCConstantFunctionCtxt<MCStringRef, MCSecurityEvalCipherNames>
 {
 public:
-	virtual Exec_stat eval(MCExecPoint &);
+	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCSecurityEvalCipherNamesMethodInfo; }
 };
 
 // Math functions in funcsm.cpp
 
-class MCAbsFunction : public MCUnaryFunction
+class MCAbsFunction : public MCUnaryFunctionCtxt<double, double, MCMathEvalAbs, EE_ABS_BADSOURCE, PE_ABS_BADPARAM, kMCMathEvalAbsMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCAbsFunction()
-	{
-		source = NULL;
-	}
-	virtual ~MCAbsFunction();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalAbsMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCAbsFunction(){}
+    virtual ~MCAbsFunction(){}
 };
 
-class MCAcos : public MCUnaryFunction
+class MCAcos : public MCUnaryFunctionCtxt<double, double, MCMathEvalAcos, EE_ACOS_BADSOURCE, PE_ACOS_BADPARAM, kMCMathEvalAcosMethodInfo>
 {
-	MCExpression *source;
-public:
-	MCAcos()
-	{
-		source = NULL;
-	}
-	virtual ~MCAcos();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalAcosMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	public:
+	MCAcos(){}	
+	virtual ~MCAcos(){}
 };
 
 class MCAnnuity : public MCFunction
@@ -2285,54 +1994,30 @@ public:
 	}
 	virtual ~MCAnnuity();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of arithmeticMean
-class MCArithmeticMean : public MCFunction
+class MCArithmeticMean : public MCParamFunctionCtxt<MCMathEvalArithmeticMean, EE_AVERAGE_BADSOURCE, PE_AVERAGE_BADPARAM, kMCMathEvalArithmeticMeanMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCArithmeticMean()
-	{
-		params = NULL;
-	}
-	virtual ~MCArithmeticMean();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    MCArithmeticMean(){}
+    virtual ~MCArithmeticMean(){}
 };
 
-class MCAsin : public MCUnaryFunction
+class MCAsin : public MCUnaryFunctionCtxt<double, double, MCMathEvalAsin, EE_ASIN_BADSOURCE, PE_ASIN_BADPARAM, kMCMathEvalAsinMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCAsin()
-	{
-		source = NULL;
-	}
-	virtual ~MCAsin();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalAsinMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCAsin(){}
+	virtual ~MCAsin(){}
 };
 
-class MCAtan : public MCUnaryFunction
+class MCAtan : public MCUnaryFunctionCtxt<double, double, MCMathEvalAtan, EE_ATAN_BADSOURCE, PE_ATAN_BADPARAM, kMCMathEvalAtanMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCAtan()
-	{
-		source = NULL;
-	}
-	virtual ~MCAtan();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalAtanMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCAtan(){}
+	virtual ~MCAtan(){}
 };
 
 class MCAtan2 : public MCFunction
@@ -2346,25 +2031,16 @@ public:
 	}
 	virtual ~MCAtan2();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of averageDev (was average)
-class MCAvgDev : public MCFunction
+class MCAvgDev : public MCParamFunctionCtxt<MCMathEvalAverageDeviation, EE_AVERAGE_BADSOURCE, PE_AVERAGE_BADPARAM, kMCMathEvalAverageMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCAvgDev()
-	{
-		params = NULL;
-	}
-	virtual ~MCAvgDev();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalAverageMethodInfo; }
-	virtual MCParameter *getmethodarg(void) const { return params; }
+    MCAvgDev(){}
+    virtual ~MCAvgDev(){}
 };
 
 class MCCompound : public MCFunction
@@ -2378,180 +2054,87 @@ public:
 	}
 	virtual ~MCCompound();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCCos : public MCUnaryFunction
+class MCCos : public MCUnaryFunctionCtxt<double, double, MCMathEvalCos, EE_COS_BADSOURCE, PE_COS_BADPARAM, kMCMathEvalCosMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCCos()
-	{
-		source = NULL;
-	}
-	virtual ~MCCos();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalCosMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCCos(){}
+	virtual ~MCCos(){}
 };
 
-class MCExp : public MCUnaryFunction
+class MCExp : public MCUnaryFunctionCtxt<double, double, MCMathEvalExp, EE_EXP_BADSOURCE, PE_EXP_BADPARAM, kMCMathEvalExpMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCExp()
-	{
-		source = NULL;
-	}
-	virtual ~MCExp();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalExpMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCExp(){}
+	virtual ~MCExp(){}
 };
 
-class MCExp1 : public MCUnaryFunction
+class MCExp1 : public MCUnaryFunctionCtxt<double, double, MCMathEvalExp1, EE_EXP1_BADSOURCE, PE_EXP1_BADPARAM, kMCMathEvalExp1MethodInfo>
 {
-	MCExpression *source;
 public:
-	MCExp1()
-	{
-		source = NULL;
-	}
-	virtual ~MCExp1();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalExp1MethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCExp1(){}
+	virtual ~MCExp1(){}
 };
 
-class MCExp2 : public MCUnaryFunction
+class MCExp2 : public MCUnaryFunctionCtxt<double, double, MCMathEvalExp2, EE_EXP2_BADSOURCE, PE_EXP2_BADPARAM, kMCMathEvalExp2MethodInfo>
 {
-	MCExpression *source;
 public:
-	MCExp2()
-	{
-		source = NULL;
-	}
-	virtual ~MCExp2();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalExp2MethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCExp2(){}
+	virtual ~MCExp2(){}
 };
 
-class MCExp10 : public MCUnaryFunction
+class MCExp10 : public MCUnaryFunctionCtxt<double, double, MCMathEvalExp10, EE_EXP10_BADSOURCE, PE_EXP10_BADPARAM, kMCMathEvalExp10MethodInfo>
 {
-	MCExpression *source;
 public:
-	MCExp10()
-	{
-		source = NULL;
-	}
-	virtual ~MCExp10();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalExp10MethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCExp10(){}
+	virtual ~MCExp10(){}
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of geometricMean
-class MCGeometricMean : public MCFunction
+class MCGeometricMean : public MCParamFunctionCtxt<MCMathEvalGeometricMean, EE_GEO_MEAN_BADSOURCE, PE_GEO_MEAN_BADPARAM, kMCMathEvalGeometricMeanMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCGeometricMean()
-	{
-		params = NULL;
-	}
-	virtual ~MCGeometricMean();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    MCGeometricMean(){}
+    virtual ~MCGeometricMean(){}
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of harmonicMean
-class MCHarmonicMean : public MCFunction
+class MCHarmonicMean : public MCParamFunctionCtxt<MCMathEvalHarmonicMean, EE_HAR_MEAN_BADSOURCE, PE_HAR_MEAN_BADPARAM, kMCMathEvalHarmonicMeanMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCHarmonicMean()
-	{
-		params = NULL;
-	}
-	virtual ~MCHarmonicMean();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    MCHarmonicMean(){}
+    virtual ~MCHarmonicMean(){}
 };
 
-class MCLn : public MCUnaryFunction
+class MCLn : public MCUnaryFunctionCtxt<double, double, MCMathEvalLn, EE_LN_BADSOURCE, PE_LN_BADPARAM, kMCMathEvalLnMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCLn()
-	{
-		source = NULL;
-	}
-	virtual ~MCLn();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalLnMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCLn(){}
+	virtual ~MCLn(){}
 };
 
-class MCLn1 : public MCUnaryFunction
+class MCLn1 : public MCUnaryFunctionCtxt<double, double, MCMathEvalLn1, EE_LN1_BADSOURCE, PE_LN1_BADPARAM, kMCMathEvalLn1MethodInfo>
 {
-	MCExpression *source;
 public:
-	MCLn1()
-	{
-		source = NULL;
-	}
-	virtual ~MCLn1();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalLn1MethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCLn1(){}
+	virtual ~MCLn1(){}
 };
 
-class MCLog2 : public MCUnaryFunction
+class MCLog2 : public MCUnaryFunctionCtxt<double, double, MCMathEvalLog2, EE_LOG2_BADSOURCE, PE_LOG2_BADPARAM, kMCMathEvalLog2MethodInfo>
 {
-	MCExpression *source;
 public:
-	MCLog2()
-	{
-		source = NULL;
-	}
-	virtual ~MCLog2();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalLog2MethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCLog2(){}
+	virtual ~MCLog2(){}
 };
 
-class MCLog10 : public MCUnaryFunction
+class MCLog10 : public MCUnaryFunctionCtxt<double, double, MCMathEvalLog10, EE_LOG10_BADSOURCE, PE_LOG10_BADPARAM, kMCMathEvalLog10MethodInfo>
 {
-	MCExpression *source;
 public:
-	MCLog10()
-	{
-		source = NULL;
-	}
-	virtual ~MCLog10();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalLog10MethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCLog10(){}
+	virtual ~MCLog10(){}
 };
 
 class MCMatrixMultiply : public MCFunction
@@ -2566,104 +2149,50 @@ public:
 	}
 	virtual ~MCMatrixMultiply();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCMaxFunction : public MCParamFunction
+class MCMaxFunction : public MCParamFunctionCtxt<MCMathEvalMax, EE_MAX_BADSOURCE, PE_MAX_BADPARAM, kMCMathEvalMaxMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCMaxFunction()
-	{
-		params = NULL;
-	}
-	virtual ~MCMaxFunction();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalMaxMethodInfo; }
-	virtual MCParameter *getmethodarg(void) const { return params; }
+    MCMaxFunction(){}
+    virtual ~MCMaxFunction(){}
 };
 
-class MCMedian : public MCParamFunction
+class MCMedian : public MCParamFunctionCtxt<MCMathEvalMedian, EE_MEDIAN_BADSOURCE, PE_MEDIAN_BADPARAM, kMCMathEvalMedianMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCMedian()
-	{
-		params = NULL;
-	}
-	virtual ~MCMedian();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalMedianMethodInfo; }
-	virtual MCParameter *getmethodarg(void) const { return params; }
+    MCMedian(){}
+    virtual ~MCMedian(){}
 };
 
-class MCMD5Digest : public MCUnaryFunction
+class MCMD5Digest : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, MCFiltersEvalMD5Digest, EE_MD5DIGEST_BADSOURCE, PE_MD5DIGEST_BADPARAM, kMCFiltersEvalMD5DigestMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCMD5Digest()
-	{
-		source = NULL;
-	}
-	virtual ~MCMD5Digest();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalMD5DigestMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCMD5Digest(){}
+	virtual ~MCMD5Digest(){}
 };
 
-class MCSHA1Digest : public MCUnaryFunction
+class MCSHA1Digest : public MCUnaryFunctionCtxt<MCDataRef, MCDataRef, MCFiltersEvalSHA1Digest, EE_SHA1DIGEST_BADSOURCE, PE_SHA1DIGEST_BADPARAM, kMCFiltersEvalSHA1DigestMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCSHA1Digest()
-	{
-		source = NULL;
-	}
-	virtual ~MCSHA1Digest();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFiltersEvalSHA1DigestMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCSHA1Digest(){}
+	virtual ~MCSHA1Digest(){}
 };
 
-class MCMinFunction : public MCParamFunction
+class MCMinFunction : public MCParamFunctionCtxt<MCMathEvalMin, EE_MIN_BADSOURCE, PE_MIN_BADPARAM, kMCMathEvalMinMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCMinFunction()
-	{
-		params = NULL;
-	}
-	virtual ~MCMinFunction();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalMinMethodInfo; }
-	virtual MCParameter *getmethodarg(void) const { return params; }
+    MCMinFunction(){}
+    virtual ~MCMinFunction(){}
 };
 
-class MCRandom : public MCUnaryFunction
+class MCRandom : public MCUnaryFunctionCtxt<double, double, MCMathEvalRandom, EE_RANDOM_BADSOURCE, PE_RANDOM_BADPARAM, kMCMathEvalRandomMethodInfo>
 {
-	MCExpression *limit;
 public:
-	MCRandom()
-	{
-		limit = NULL;
-	}
-	virtual ~MCRandom();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalRandomMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return limit; }
+	MCRandom(){}
+	virtual ~MCRandom(){}
 };
 
 class MCRound : public MCFunction
@@ -2677,68 +2206,38 @@ public:
 	}
 	virtual ~MCRound();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCSin : public MCUnaryFunction
+class MCSin : public MCUnaryFunctionCtxt<double, double, MCMathEvalSin, EE_SIN_BADSOURCE, PE_SIN_BADPARAM, kMCMathEvalSinMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCSin()
-	{
-		source = NULL;
-	}
-	virtual ~MCSin();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalSinMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCSin(){}
+	virtual ~MCSin(){}
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of sampleStdDev (was stdDev)
-class MCSampleStdDev : public MCFunction
+class MCSampleStdDev : public MCParamFunctionCtxt<MCMathEvalSampleStdDev, EE_STDDEV_BADSOURCE, PE_STDDEV_BADPARAM, kMCMathEvalSampleStdDevMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCSampleStdDev()
-	{
-		params = NULL;
-	}
-	virtual ~MCSampleStdDev();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    MCSampleStdDev(){}
+    virtual ~MCSampleStdDev(){}
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of sampleVariance
-class MCSampleVariance : public MCFunction
+class MCSampleVariance : public MCParamFunctionCtxt<MCMathEvalPopulationVariance, EE_VARIANCE_BADSOURCE, PE_VARIANCE_BADPARAM, kMCMathEvalPopulationVarianceMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCSampleVariance()
-	{
-		params = NULL;
-	}
-	virtual ~MCSampleVariance();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+    MCSampleVariance(){}
+    virtual ~MCSampleVariance(){}
 };
 
-class MCSqrt : public MCUnaryFunction
+class MCSqrt : public MCUnaryFunctionCtxt<double, double, MCMathEvalSqrt, EE_SQRT_BADSOURCE, PE_SQRT_BADPARAM, kMCMathEvalSqrtMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCSqrt()
-	{
-		source = NULL;
-	}
-	virtual ~MCSqrt();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalSqrtMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCSqrt(){}
+	virtual ~MCSqrt(){}
 };
 
 class MCStatRound : public MCFunction
@@ -2752,56 +2251,29 @@ public:
 	}
 	virtual ~MCStatRound();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCStdDev : public MCParamFunction
+class MCStdDev : public MCParamFunctionCtxt<MCMathEvalSampleStdDev, EE_STDDEV_BADSOURCE, PE_STDDEV_BADPARAM, kMCMathEvalSampleStdDevMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCStdDev()
-	{
-		params = NULL;
-	}
-	virtual ~MCStdDev();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalMinMethodInfo; }
-	virtual MCParameter *getmethodarg(void) const { return params; }
+    MCStdDev(){}
+    virtual ~MCStdDev(){}
 };
 
-class MCSum : public MCParamFunction
+class MCSum : public MCParamFunctionCtxt<MCMathEvalSum, EE_SUM_BADSOURCE, PE_SUM_BADPARAM, kMCMathEvalSumMethodInfo>
 {
-	MCParameter *params;
 public:
-	MCSum()
-	{
-		params = NULL;
-	}
-	virtual ~MCSum();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalSumMethodInfo; }
-	virtual MCParameter *getmethodarg(void) const { return params; }
+    MCSum(){}
+    virtual ~MCSum(){}
 };
 
-class MCTan : public MCUnaryFunction
+class MCTan : public MCUnaryFunctionCtxt<double, double, MCMathEvalTan, EE_TAN_BADSOURCE, PE_TAN_BADPARAM, kMCMathEvalTanMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCTan()
-	{
-		source = NULL;
-	}
-	virtual ~MCTan();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalTanMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCTan(){}
+	virtual ~MCTan(){}
 };
 
 class MCTextHeightSum : public MCFunction
@@ -2814,40 +2286,22 @@ public:
 	}
 	virtual ~MCTextHeightSum();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCTranspose : public MCUnaryFunction
+class MCTranspose : public MCUnaryFunctionCtxt<MCArrayRef, MCArrayRef, MCArraysEvalTransposeMatrix, EE_TRANSPOSE_BADSOURCE, PE_TRANSPOSE_BADPARAM, kMCArraysEvalTransposeMatrixMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCTranspose()
-	{
-		source = NULL;
-	}
-	virtual ~MCTranspose();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCArraysEvalTransposeMatrixMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+	MCTranspose(){}
+	virtual ~MCTranspose(){}
 };
 
-class MCTrunc : public MCUnaryFunction
+class MCTrunc : public MCUnaryFunctionCtxt<double, double, MCMathEvalTrunc, EE_TRUNC_BADSOURCE, PE_TRUNC_BADPARAM, kMCMathEvalTruncMethodInfo>
 {
-	MCExpression *source;
 public:
-	MCTrunc()
-	{
-		source = NULL;
-	}
-	virtual ~MCTrunc();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCMathEvalTruncMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return source; }
+    MCTrunc(){}
+    virtual ~MCTrunc(){}
 };
 
 class MCHTTPProxyForURL: public MCFunction
@@ -2869,7 +2323,7 @@ public:
 	virtual ~MCHTTPProxyForURL(void);
 
 	virtual Parse_stat parse(MCScriptPoint& sp, Boolean the);
-	virtual Exec_stat eval(MCExecPoint& ep);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
 
 private:
@@ -2877,41 +2331,32 @@ private:
 	static char *PACmyIpAddress(const char* const* p_arguments, unsigned int p_argument_count);
 };
 
-class MCRandomBytes: public MCUnaryFunction
+class MCRandomBytes: public MCUnaryFunctionCtxt<uinteger_t, MCDataRef, MCSecurityEvalRandomBytes, EE_RANDOMBYTES_BADCOUNT, PE_RANDOMBYTES_BADPARAM, kMCSecurityEvalRandomBytesMethodInfo>
 {
-	MCExpression *byte_count;
 public:
-	MCRandomBytes(void)
-	{
-		byte_count = NULL;
-	}
-	virtual ~MCRandomBytes(void);
-	virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &ep);
-
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCSecurityEvalRandomBytesMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return byte_count; }
+    MCRandomBytes(void){}
+    virtual ~MCRandomBytes(void){}
 };
 
 // MW-2012-10-08: [[ HitTest ]] controlAtLoc and controlAtScreenLoc function.
 class MCControlAtLoc: public MCUnaryFunction
 {
-	MCExpression *location;
+    MCExpression *location;
 	bool is_screen : 1;
 	
 public:
-	MCControlAtLoc(bool p_is_screen)
-	{
-		location = NULL;
+    MCControlAtLoc(bool p_is_screen)
+    {
+        location = NULL;
 		is_screen = p_is_screen;
 	}
 	
-	virtual ~MCControlAtLoc(void);
-	virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &ep);
+    virtual ~MCControlAtLoc();
+    Parse_stat parse(MCScriptPoint &sp, Boolean the);
+    virtual void eval_ctxt(MCExecContext &ctxt);
 	
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return is_screen ? kMCInterfaceEvalControlAtScreenLocMethodInfo : kMCInterfaceEvalControlAtLocMethodInfo; }
-	virtual MCExpression *getmethodarg(void) const { return location; }
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return is_screen ? kMCInterfaceEvalControlAtScreenLocMethodInfo : kMCInterfaceEvalControlAtLocMethodInfo; }
+    virtual MCExpression *getmethodarg(void) const { return location; }
 };
 
 // MW-20113-05-08: [[ Uuid ]] The uuid generation function.
@@ -2931,7 +2376,7 @@ public:
 	
 	virtual ~MCUuidFunc(void);
 	virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &ep);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 };
 
 // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
@@ -2953,7 +2398,7 @@ public:
     
     virtual ~MCMeasureText(void);
 	virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &ep);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 };
 
 #endif

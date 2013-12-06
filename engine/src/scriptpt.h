@@ -62,9 +62,12 @@ class MCScriptPoint
 public:
 	MCScriptPoint(MCScriptPoint &sp);
 	MCScriptPoint(MCObject *, MCHandlerlist *, MCStringRef script);
+#ifdef LEGACY_EXEC
 	MCScriptPoint(MCExecPoint &ep);
-	MCScriptPoint(MCExecContext &ctxt);
-	MCScriptPoint(const MCString &s);
+    MCScriptPoint(const MCString &s);
+#endif
+    MCScriptPoint(MCExecContext &ctxt);
+    MCScriptPoint(MCExecContext &ctxt, MCStringRef p_string);
 	MCScriptPoint(MCStringRef p_string);
 
 	~MCScriptPoint();

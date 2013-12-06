@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "exec.h"
 #include "stacklst.h"
 #include "undolst.h"
@@ -185,20 +185,19 @@ void MCImage::startmag(int2 x, int2 y)
 	MCmagimage = this;
 	state |= CS_MAGNIFY;
 
-    MCExecPoint ep(this, NULL, NULL);
-    MCExecContext ctxt(ep);
+    MCExecContext ctxt(this, nil, nil);
     
-    sptr->setintprop(ctxt, 0, P_MAX_WIDTH, False, rect.width * MCmagnification);
+    sptr->SetMaxWidth(ctxt, rect.width * MCmagnification);
 
-    sptr->setintprop(ctxt, 0, P_MAX_HEIGHT, False, rect.width * MCmagnification);
+    sptr->SetMaxHeight(ctxt, rect.height * MCmagnification);
 
 	uint2 ssize = MCU_min(32, rect.width);
 	
-    sptr->setintprop(ctxt, 0, P_WIDTH, False, ssize * MCmagnification);
+    sptr->SetWidth(ctxt, ssize * MCmagnification);
 
 	ssize = MCU_min(32, rect.height);
 
-    sptr->setintprop(ctxt, 0, P_HEIGHT, False, ssize * MCmagnification);
+    sptr->SetHeight(ctxt, ssize * MCmagnification);
 
 
 	MCRectangle drect = sptr->getrect();

@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "util.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "debug.h"
 #include "param.h"
 #include "osspec.h"
@@ -128,7 +128,9 @@ static uint2 shift_keysyms[] =
 		/* 0xD8 */ 0x0000, 0x0000, 0x0000, 0x007B, 0x007C, 0x007D, 0x0022
     };
 
+#ifdef LEGACY_EXEC
 static bool build_pick_string(MCExecPoint& p_ep, HMENU p_menu, UINT32 p_command);
+#endif
 
 void MCScreenDC::appendevent(MCEventnode *tptr)
 {
@@ -559,10 +561,13 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					t_result = 0;
 				else
 				{
-					MCExecPoint t_ep;
-					MCresult -> eval(t_ep);
+                    MCExecContext ctxt(nil, nil, nil);
+                    MCAutoValueRef t_value;
+					/* UNCHECKED */ MCresult -> eval(ctxt, &t_value);
+                    MCAutoStringRef t_string;
+                    /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
 					
-					if (t_ep . getsvalue() == "background")
+                    if (MCStringIsEqualToCString(*t_string, "background", kMCCompareCaseless))
 						t_result = (LRESULT)HWND_BOTTOM;
 					else
 						t_result = MCdefaultstackptr -> getwindow() == NULL ? (LRESULT)HWND_BOTTOM : (LRESULT)(MCdefaultstackptr -> getwindow() -> handle . window);

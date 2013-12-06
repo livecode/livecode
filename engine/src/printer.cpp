@@ -23,10 +23,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "card.h"
 #include "globals.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "stack.h"
 #include "mcerror.h"
 #include "util.h"
+#include "variable.h"
 
 #include "context.h"
 

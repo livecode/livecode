@@ -20,159 +20,148 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	EXECPOINT_H
 #define	EXECPOINT_H
 
-#ifndef __MC_VARIABLE__
-#include "variable.h"
-#endif
+#include "exec.h"
 
 #define EP_PAD 256
 #define EP_MASK 0xFFFFFF00
 
 class MCExecPoint
 {
-	MCObject *curobj;
+#ifdef LEGACY_EXEC
+    MCObject *curobj;
 
-	// MW-2009-01-30: [[ Inherited parentScripts ]]
-	// We store a reference to the parentScript use which is the current context
-	// so we can retrieve the correct script locals. If this is NULL, then we
-	// are not in parentScript context.
-	MCParentScriptUse *parentscript;
+    // MW-2009-01-30: [[ Inherited parentScripts ]]
+    // We store a reference to the parentScript use which is the current context
+    // so we can retrieve the correct script locals. If this is NULL, then we
+    // are not in parentScript context.
+    MCParentScriptUse *parentscript;
 
-	MCHandlerlist *curhlist;
-	MCHandler *curhandler;
-	uint2 nffw;
-	uint2 nftrailing;
-	uint2 nfforce;
-	uint2 cutoff;
-	uint2 line;
-	Boolean convertoctals;
-	Boolean casesensitive;
-	Boolean wholematches;
-	Boolean usesystemdate;
-	Boolean useunicode;
-	Boolean deletearray;
-	char itemdel;
-	char columndel;
-	char linedel;
-	char rowdel;
+    MCHandlerlist *curhlist;
+    MCHandler *curhandler;
+    uint2 nffw;
+    uint2 nftrailing;
+    uint2 nfforce;
+    uint2 cutoff;
+    uint2 line;
+    Boolean convertoctals;
+    Boolean casesensitive;
+    Boolean wholematches;
+    Boolean usesystemdate;
+    Boolean useunicode;
+    Boolean deletearray;
+    char itemdel;
+    char columndel;
+    char linedel;
+    char rowdel;
 
-	MCValueRef value;
+#endif
+    MCExecContext m_ec;
+    MCValueRef value;
 
 public:
-	MCExecPoint()
-	{
-		memset(this, 0, sizeof(MCExecPoint));
-		itemdel = ',';
-		columndel = '\t';
-		linedel = '\n';
-		rowdel = '\n';
-		nffw = 8;
-		nftrailing = 6;
-		cutoff = 35;
-		value = MCValueRetain(kMCEmptyString);
+    MCExecPoint(MCExecContext ctxt):
+        m_ec(ctxt)
+    {
+        value = MCValueRetain(kMCEmptyString);
 	}
-	MCExecPoint(const MCExecPoint &ep)
+
+    MCExecPoint(const MCExecPoint &ep):
+        m_ec(ep . m_ec)
 	{
-		*this = ep;
-		value = MCValueRetain(kMCEmptyString);
+        *this = ep;
+        value = MCValueRetain(ep . value);
 	}
-	MCExecPoint(MCObject *object, MCHandlerlist *hlist, MCHandler *handler)
-	{
-		memset(this, 0, sizeof(MCExecPoint));
-		curobj = object;
-		curhlist = hlist;
-		curhandler = handler;
-		itemdel = ',';
-		columndel = '\t';
-		linedel = '\n';
-		rowdel = '\n';
-		nffw = 8;
-		nftrailing = 6;
-		cutoff = 35;
-		value = MCValueRetain(kMCEmptyString);
-	}
-	void restore(const MCExecPoint &ep)
-	{
-		curobj = ep.curobj;
-		curhlist = ep.curhlist;
-		curhandler = ep.curhandler;
-	}
+
+    MCExecPoint(MCObject *object, MCHandlerlist *hlist, MCHandler *handler):
+        m_ec(object, hlist, handler)
+    {
+        value = MCValueRetain(kMCEmptyString);
+    }
+
 	~MCExecPoint()
-	{
-		MCValueRelease(value);
+    {
+        MCValueRelease(value);
 	}
+
+    MCExecContext GetEC() const
+    {
+        return m_ec;
+    }
+
 	void sethlist(MCHandlerlist *hl)
 	{
-		curhlist = hl;
+        m_ec . SetHandlerList(hl);
 	}
 	void sethandler(MCHandler *newhandler)
 	{
-		curhandler = newhandler;
+        m_ec . SetHandler(newhandler);
 	}
 
 	MCObject *getobj() const
 	{
-		return curobj;
+        return m_ec . GetObject();
 	}
 	MCHandlerlist *gethlist() const
 	{
-		return curhlist;
+        return m_ec . GetHandlerList();
 	}
 	MCHandler *gethandler() const
 	{
-		return curhandler;
+        return m_ec . GetHandler();
 	}
 	uint2 getnffw() const
 	{
-		return nffw;
+        return m_ec . GetNumberFormatWidth();
 	}
 	uint2 getnftrailing() const
 	{
-		return nftrailing;
+        return m_ec . GetNumberFormatTrailing();
 	}
 	uint2 getnfforce() const
 	{
-		return nfforce;
+        return m_ec . GetNumberFormatForce();
 	}
 	Boolean getcasesensitive() const
 	{
-		return casesensitive;
+        return m_ec . GetCaseSensitive();
 	}
 	uint2 getcutoff() const
 	{
-		return cutoff;
+        return m_ec . GetCutOff();
 	}
 	Boolean getconvertoctals() const
 	{
-		return convertoctals;
+        return m_ec . GetConvertOctals();
 	}
 	char getitemdel() const
 	{
-		return itemdel;
+        return m_ec . GetItemDelimiter();
 	}
 	char getcolumndel() const
 	{
-		return columndel;
+        return m_ec . GetColumnDelimiter();
 	}
 	char getrowdel() const
 	{
-		return rowdel;
+        return m_ec . GetRowDelimiter();
 	}
 	char getlinedel()
 	{
-		return linedel;
+        return m_ec . GetLineDelimiter();
 	}
 	Boolean getwholematches() const
 	{
-		return wholematches;
+        return m_ec . GetWholeMatches();
 	}
 	Boolean getusesystemdate() const
 	{
-		return usesystemdate;
+        return m_ec . GetUseSystemDate();
 	}
 	Boolean getuseunicode() const
 	{
-		return useunicode;
+        return m_ec . GetUseUnicode();
 	}
+#ifdef LEGACY_EXEC
 	Exec_stat setcasesensitive(uint2 line, uint2 pos)
 	{
 		return getboolean(casesensitive, line, pos, EE_PROPERTY_NAB);
@@ -201,47 +190,49 @@ public:
 	{
 		return getboolean(wholematches, line, pos, EE_PROPERTY_NAB);
 	}
+#endif
 
-	void setcasesensitive(bool p_value) {casesensitive = p_value;}
-	void setconvertoctals(bool p_value) {convertoctals = p_value;}
-	void setwholematches(bool p_value) {wholematches = p_value;}
-	void setuseunicode(bool p_value) {useunicode = p_value;}
-	void setusesystemdate(bool p_value) {usesystemdate = p_value;}
-	void setcutoff(uint2 p_value) {cutoff = p_value;}
-	void setitemdel(char_t p_value) {itemdel = p_value;}
-	void setcolumndel(char_t p_value) {columndel = p_value;}
-	void setlinedel(char_t p_value) {linedel = p_value;}
-	void setrowdel(char_t p_value) {rowdel = p_value;}
-	void setnumberformat(uint2 fw, uint2 trailing, uint2 force) {nffw = fw; nftrailing = trailing; nfforce = force;}
+    void setcasesensitive(bool p_value) { m_ec . SetCaseSensitive(p_value);}
+    void setconvertoctals(bool p_value) { m_ec . SetConvertOctals(p_value);}
+    void setwholematches(bool p_value) { m_ec . SetWholeMatches(p_value);}
+    void setuseunicode(bool p_value) { m_ec . SetUseUnicode(p_value);}
+    void setusesystemdate(bool p_value) { m_ec . SetUseSystemDate(p_value);}
+    void setcutoff(uint2 p_value) { m_ec . SetCutOff(p_value);}
+    void setitemdel(char_t p_value) { m_ec . SetItemDelimiter(p_value);}
+    void setcolumndel(char_t p_value) { m_ec . SetColumnDelimiter(p_value);}
+    void setlinedel(char_t p_value) { m_ec . SetLineDelimiter(p_value);}
+    void setrowdel(char_t p_value) { m_ec . SetRowDelimiter(p_value);}
+    void setnumberformat(uint2 fw, uint2 trailing, uint2 force) {m_ec . SetNumberFormat(fw, trailing, force);}
 
 	void setobj(MCObject *p_object)
 	{
-		curobj = p_object;
+        m_ec . SetObject(p_object);
 	}
 
 	void setline(uint2 l)
 	{
-		line = l;
+        m_ec . SetLine(l);
 	}
 	uint2 getline()
 	{
-		return line;
+        return m_ec . GetLine();
 	}
 
 	MCParentScriptUse *getparentscript(void) const
 	{
-		return parentscript;
+        return m_ec . GetParentScript();
 	}
 
 	void setparentscript(MCParentScriptUse *obj)
 	{
-		parentscript = obj;
+        m_ec . SetParentScript(obj);
 	}
 
 	void setnumberformat();
 
 	//////////
 
+#ifdef LEGACY_EXEC
 	// Returns true if the exec point contains the empty value.
 	bool isempty(void) const;
 	// Returns true if the exec point contains a (non-empty) array.
@@ -303,6 +294,7 @@ public:
 	void fill(uint4 s, char c, uint4 n);
 	void texttobinary();
 	void binarytotext();
+#endif
 
 #if 0
 	Boolean isempty(void) const
@@ -451,8 +443,6 @@ public:
 	void binarytotext();
 	void parseURL(Url_type &urltype, const char *&hostname, const char *&rname, uint4 &port, const char *&auth);
 
-#endif
-
 	void utf16toutf8(void);
 	void utf8toutf16(void);
 
@@ -465,14 +455,14 @@ public:
 	// MW-2012-02-16: [[ IntrinsicUnicode ]] Maps the content to unicode or native
 	//   depending on 'want_unicode'. Content is assumed to be in unicode if 'is_unicode'
 	//   is true; otherwise it is assumed to be native.
-	void mapunicode(bool is_unicode, bool want_unicode);
+    void mapunicode(bool is_unicode, bool want_unicode);
 	
 	// MW-2011-06-22: [[ SERVER ]] Provides augmented functionality for finding
 	//   variables if there is no handler (i.e. global server scope).
-	Parse_stat findvar(MCNameRef p_name, MCVarref** r_var);
+    Parse_stat findvar(MCNameRef p_name, MCVarref** r_var);
 
-	// MW-2013-11-08: [[ RefactorIt ]] Returns the 'it' varref for the current context.
-	MCVarref *getit(void);
+    // MW-2013-11-08: [[ RefactorIt ]] Returns the 'it' varref for the current context.
+    MCVarref *getit(void);
 	
 	//////////
 
@@ -555,6 +545,7 @@ public:
 	bool copyaspoint(MCPoint& r_value);
 	bool copyasrect(MCRectangle& r_value);
 
+#endif
 	// Variant methods.
 
 	// Set the ep to the contents of value.
@@ -565,12 +556,13 @@ public:
 	bool setvalueref_nullable(MCValueRef value);
 	// Make a copy of the contents of the ep as a value.
 	bool copyasvalueref(MCValueRef& r_value);
-	
+
+#ifdef LEGACY_EXEC
 	// These two methods attempt to convert the given value to a string and return
 	// false if this fails. Note that failure to be the given type and exception
 	// failure are both returned as false (hence these are slightly sloppy).
 	bool convertvaluereftostring(MCValueRef value, MCStringRef& r_string);
-	bool convertvaluereftonumber(MCValueRef value, MCNumberRef& r_number);
+    bool convertvaluereftonumber(MCValueRef value, MCNumberRef& r_number);
 
 	// This method attempts to convert the given value to an numeric type. Returning false
 	// if this is not possible. Note that this method does not throw, so a false
@@ -583,7 +575,7 @@ public:
 	// This method attempts to convert the given value to a boolean. Returning false
 	// if this is not possible. Note that this method does not throw, so a false
 	// return value really means the value cannot be a boolean.
-	bool convertvaluereftoboolean(MCValueRef value, MCBooleanRef& r_boolean);
+    bool convertvaluereftoboolean(MCValueRef value, MCBooleanRef& r_boolean);
 
 	// Array methods.
 
@@ -593,7 +585,7 @@ public:
 	// Copy the contents of the ep as an array - non arrays convert to empty array.
 	bool copyasarrayref(MCArrayRef& r_array);
 	// Copy the contents of the ep as a mutable array - non arrays convert to empty array.
-	bool copyasmutablearrayref(MCArrayRef& r_array);
+    bool copyasmutablearrayref(MCArrayRef& r_array);
 
 	// Set the ep to a string containing the list of keys from the given array.
 	bool listarraykeys(MCArrayRef array, char delimiter);
@@ -601,7 +593,7 @@ public:
 	bool fetcharrayelement(MCArrayRef array, MCNameRef key);
 	// Store the contents of the ep as the given key in the given array.
 	bool storearrayelement(MCArrayRef array, MCNameRef key);
-	bool appendarrayelement(MCArrayRef array, MCNameRef key);
+    bool appendarrayelement(MCArrayRef array, MCNameRef key);
 
 	// Compatibility methods - these should eventually be phased out.
 
@@ -640,8 +632,10 @@ private:
 	bool converttoboolean(void);
 	bool converttoarray(void);
 	bool converttomutablearray(void);
+#endif
 };
 
+#ifdef LEGACY_EXEC
 inline void MCExecPoint::utf16toutf8(void)
 {
 	dounicodetomultibyte(false, false);
@@ -673,5 +667,6 @@ inline void MCExecPoint::nativetoutf8(void)
 	nativetoutf16();
 	utf16toutf8();
 }
+#endif
 
 #endif

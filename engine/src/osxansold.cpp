@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "exec.h"
 #include "mcerror.h"
 #include "util.h"
@@ -32,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "stacklst.h"
 #include "osspec.h"
+#include "variable.h"
 
 #include "globals.h"
 #include "dispatch.h"
@@ -63,13 +64,17 @@ void getFSSpecFromAEDesc(AEDesc &inDesc, FSSpec &outValue);
 pascal void navEventProc(NavEventCallbackMessage callBackSelector,
                          NavCBRecPtr callBackParms,
                          NavCallBackUserData callBackUD);
+#ifdef LEGACY_EXEC
 OSErr navOpenFile(const char *prompt, Boolean hasDefaultPath,
                   const FSSpecPtr defaultDirFspec, short numTypes,
                   SFTypeList filetypes, MCExecPoint &ep, Boolean oneSelection,
                   Boolean sheet);
+#endif
 OSErr navAnswerFolder(MCStringRef prompt, Boolean hasDefaultPath, const FSRef *p_default_fsref, MCExecContext &ctxt, Boolean sheet);
+#ifdef LEGACY_EXEC
 OSErr navSaveFile(char *prompt, char *defaultDir,
                   char *proposedName, MCExecPoint &ep, Boolean sheet);
+#endif
 
 struct FilterRecord
 {

@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "font.h"
 #include "sellst.h"
@@ -681,6 +681,7 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 		MCControl::timer(mptr, params);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCScrollbar::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	switch (which)
@@ -741,7 +742,9 @@ Exec_stat MCScrollbar::getprop_legacy(uint4 parid, Properties which, MCExecPoint
 	}
 	return ES_NORMAL;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCScrollbar::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = True;
@@ -891,6 +894,7 @@ Exec_stat MCScrollbar::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep
 	}
 	return ES_NORMAL;
 }
+#endif
 
 MCControl *MCScrollbar::clone(Boolean attach, Object_pos p, bool invisible)
 {

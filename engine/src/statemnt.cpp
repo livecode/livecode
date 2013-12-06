@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "uidc.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "hndlrlst.h"
 #include "handler.h"
 #include "scriptpt.h"
@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 
 #include "syntax.h"
+#include "redraw.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,10 +57,20 @@ Parse_stat MCStatement::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCStatement::exec(MCExecPoint &ep)
 {
-	fprintf(stderr, "ERROR: tried to exec a statement\n");
-	return ES_ERROR;
+	MCExecContext ctxt(ep);
+	exec_ctxt(ctxt);
+	if (!ctxt . HasError())
+        return ctxt . GetExecStat();
+	return ctxt . Catch(line, pos);
+}
+#endif
+
+void MCStatement::exec_ctxt(MCExecContext&)
+{
+	fprintf(stderr, "ERROR: exec method for statement not implemented properly\n");
 }
 
 uint4 MCStatement::linecount()
@@ -386,7 +397,7 @@ Parse_stat MCComref::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-
+#if /* MCComref::exec */ LEGACY_EXEC
 Exec_stat MCComref::exec(MCExecPoint &ep)
 {
 	if (MCscreen->abortkey())
@@ -420,8 +431,8 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 		resolved = true;
     }
     
-	MCExecContext ctxt(ep);
 	Exec_stat stat;
+    MCExecContext ctxt(ep);
 	MCParameter *tptr = params;
 	while (tptr != NULL)
 	{
@@ -519,6 +530,12 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 	if (added)
 		MCnexecutioncontexts--;
 	return stat;
+}
+#endif
+
+void MCComref::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, name, line, pos, platform_message, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

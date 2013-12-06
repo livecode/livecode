@@ -525,6 +525,7 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 					t_arg_count -= 1;
 				}
 					
+            MCMemoryDeallocate(t_string);
 			free(t_format);
 		}
 		
@@ -2452,7 +2453,7 @@ void __MCStringDestroy(__MCString *self)
 
 bool __MCStringCopyDescription(__MCString *self, MCStringRef& r_desc)
 {
-	return MCStringFormat(r_desc, "\"%s\"", self -> chars);
+	return MCStringFormat(r_desc, "\"%@\"", self);
 }
 
 hash_t __MCStringHash(__MCString *self)
@@ -2654,6 +2655,7 @@ static bool __MCStringIsValidSurrogatePair(MCStringRef self, uindex_t p_index)
 MCStringRef kMCEmptyString;
 MCStringRef kMCTrueString;
 MCStringRef kMCFalseString;
+MCStringRef kMCMixedString;
 
 bool __MCStringInitialize(void)
 {
@@ -2664,6 +2666,9 @@ bool __MCStringInitialize(void)
 		return false;
 
 	if (!MCStringCreateWithNativeChars((const char_t *)"false", 5, kMCFalseString))
+		return false;
+    
+    if (!MCStringCreateWithNativeChars((const char_t *)"mixed", 5, kMCMixedString))
 		return false;
 
 	return true;
@@ -2677,6 +2682,8 @@ void __MCStringFinalize(void)
 	kMCTrueString = nil;
 	MCValueRelease(kMCEmptyString);
 	kMCEmptyString = nil;
+    MCValueRelease(kMCMixedString);
+    kMCMixedString = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -21,7 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "image.h"
@@ -186,13 +187,17 @@ Boolean MCScreenDC::open()
 	MChilitecolor.red = MChilitecolor.green = 0x0000;
 	MChilitecolor.blue = 0x8080;
 
-	MCExecPoint ep;
-	ep.setstaticcstring("HKEY_CURRENT_USER\\Control Panel\\Colors\\Hilight");
-	MCS_query_registry(ep);
-	if (ep.getsvalue().getlength())
+    MCExecContext ctxt(nil, nil, nil);
+    MCStringRef t_key;
+    t_key = MCSTR("HKEY_CURRENT_USER\\Control Panel\\Colors\\Hilight");
+    MCAutoValueRef t_value;
+    MCAutoStringRef t_type, t_error;
+    /* UNCHECKED */ MCS_query_registry(t_key, &t_value, &t_type, &t_error);
+
+	if (!MCValueIsEmpty(*t_value))
 	{
 		MCAutoStringRef t_string;
-		/* UNCHECKED */ ep.copyasstringref(&t_string);
+		/* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
 		MCAutoStringRef t_string_mutable;
 		MCStringMutableCopy(*t_string, &t_string_mutable);
 		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_string_mutable, ' ', ',', kMCCompareExact);
@@ -204,17 +209,21 @@ Boolean MCScreenDC::open()
 	alloccolor(MCaccentcolor);
 	
 	background_pixel.red = background_pixel.green = background_pixel.blue = 0xC0C0;
+    MCStringRef t_key2;
 
 	if (MCmajorosversion > 400)
-		ep.setstaticcstring("HKEY_CURRENT_USER\\Control Panel\\Colors\\MenuBar");
+		t_key2 = MCSTR("HKEY_CURRENT_USER\\Control Panel\\Colors\\MenuBar");
 	else
-		ep.setstaticcstring("HKEY_CURRENT_USER\\Control Panel\\Colors\\Menu");
+		t_key2 = MCSTR("HKEY_CURRENT_USER\\Control Panel\\Colors\\Menu");
 
-	MCS_query_registry(ep);
-	if (ep.getsvalue().getlength())
+	MCAutoValueRef t_value2;
+    MCAutoStringRef t_type2, t_error2;
+    /* UNCHECKED */ MCS_query_registry(t_key2, &t_value2, &t_type2, &t_error2);
+
+	if (!MCValueIsEmpty(*t_value2))
 	{
 		MCAutoStringRef t_string;
-		/* UNCHECKED */ ep.copyasstringref(&t_string);
+		/* UNCHECKED */ ctxt . ConvertToString(*t_value2, &t_string);
 		MCAutoStringRef t_string_mutable;
 		MCStringMutableCopy(*t_string, &t_string_mutable);
 		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_string_mutable, ' ', ',', kMCCompareExact);

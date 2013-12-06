@@ -91,6 +91,9 @@ public:
 	// Store the contents of the ep as the given property.
 	bool storeelement(MCExecPoint& ep, MCNameRef name);
 
+    bool fetchelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef& r_value);
+    bool storeelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef p_value);
+    
 	//////////
 
 	// Returns the (old-style) serialized size of the array. If 'nested_only'

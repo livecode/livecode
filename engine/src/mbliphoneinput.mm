@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -1615,8 +1615,10 @@ MCNativeControlType MCiOSMultiLineControl::GetType(void)
 bool datadetectortypes_from_string(const char *p_list, UIDataDetectorTypes &r_types);
 bool datadetectortypes_to_string(UIDataDetectorTypes p_types, char *&r_list);
 
+#ifdef LEGACY_EXEC
 Exec_stat scroller_set_property(UIScrollView *p_view, MCRectangle32 &x_content_rect, MCNativeControlProperty p_property, MCExecPoint&ep);
 Exec_stat scroller_get_property(UIScrollView *p_view, const MCRectangle32 &p_content_rect, MCNativeControlProperty p_property, MCExecPoint &ep);
+#endif
 
 void MCiOSMultiLineControl::SetEditable(MCExecContext& ctxt, bool p_value)
 {

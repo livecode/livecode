@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "scriptpt.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "hndlrlst.h"
 #include "handler.h"
 #include "cmds.h"
@@ -36,6 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "newobj.h"
 #include "mcerror.h"
 #include "util.h"
+#include "variable.h"
 
 #include "globals.h"
 
@@ -87,6 +88,7 @@ MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)
 	token_nameref = nil;
 }
 
+#ifdef LEGACY_EXEC
 MCScriptPoint::MCScriptPoint(MCExecPoint &ep)
 {
 	MCAutoStringRef t_string_script;
@@ -106,12 +108,6 @@ MCScriptPoint::MCScriptPoint(MCExecPoint &ep)
 	token_nameref = nil;
 }
 
-MCScriptPoint::MCScriptPoint(MCExecContext &ctxt)
-{
-	// Placement new because constructors can't be delegated without C++11
-	new (this) MCScriptPoint(ctxt.GetEP());
-}
-
 MCScriptPoint::MCScriptPoint(const MCString &s)
 {
 	MCAutoStringRef t_string_script;
@@ -129,6 +125,39 @@ MCScriptPoint::MCScriptPoint(const MCString &s)
 	in_tag = False;
 	was_in_tag = False;
 	token_nameref = nil;
+}
+#endif
+
+MCScriptPoint::MCScriptPoint(MCExecContext &ctxt)
+{
+    script = MCValueRetain(kMCEmptyData);
+    curobj = ctxt . GetObject();
+    curhlist = ctxt . GetHandlerList();
+    curhandler = ctxt . GetHandler();
+    curptr = tokenptr = backupptr = (const uint1 *)MCDataGetBytePtr(script);
+    line = pos = 0;
+    escapes = False;
+    tagged = False;
+    in_tag = False;
+    was_in_tag = False;
+    token_nameref = nil;
+}
+
+MCScriptPoint::MCScriptPoint(MCExecContext &ctxt, MCStringRef p_string)
+{
+    char *t_utf8_string;
+    /* UNCHECKED */ MCStringConvertToUTF8String(p_string, t_utf8_string);
+    /* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_utf8_string, strlen(t_utf8_string) + 1, script);
+    curobj = ctxt . GetObject();
+    curhlist = ctxt . GetHandlerList();
+    curhandler = ctxt . GetHandler();
+    curptr = tokenptr = backupptr = (const uint1 *)MCDataGetBytePtr(script);
+    line = pos = 0;
+    escapes = False;
+    tagged = False;
+    in_tag = False;
+    was_in_tag = False;
+    token_nameref = nil;
 }
 
 MCScriptPoint::MCScriptPoint(MCStringRef p_string)

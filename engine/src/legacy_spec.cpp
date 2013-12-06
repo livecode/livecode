@@ -19,8 +19,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 #include "osspec.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
+#include "variable.h"
 
 #include "exec.h"
 
@@ -65,6 +66,7 @@ const char *MCS_tmpnam()
 	return fname;
 }
 
+#ifdef LEGACY_SPEC
 void MCS_getspecialfolder(MCExecPoint &ep)
 {
 	MCExecContext ctxt(ep);
@@ -78,7 +80,9 @@ void MCS_getspecialfolder(MCExecPoint &ep)
 	}
 	/* UNCHECKED */ ep.setvalueref(*t_special_folder_path);
 }
+#endif
 
+#ifdef LEGACY_EXEC
 void MCS_getentries(MCExecPoint& ep, bool p_files, bool p_detailed)
 {
 	MCAutoListRef t_list;
@@ -88,6 +92,7 @@ void MCS_getentries(MCExecPoint& ep, bool p_files, bool p_detailed)
 	else
 		ep . clear();
 }
+#endif
 
 Boolean MCS_exists(const char *path, Boolean file)
 {

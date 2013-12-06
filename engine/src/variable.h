@@ -75,7 +75,7 @@ public:
 	uint32_t getnfilled(void) const;
 
 	//
-
+#ifdef LEGACY_EXEC
 	// Perform an iterated function on the keys of the value.
 	// PRECONDITION: this is initialized
 	Exec_stat dofunc(MCExecPoint& ep, Functions func, uint4 &nparams, real8 &n, real8 oldn, void *titems);
@@ -84,6 +84,7 @@ public:
 	//    this = this op <ep>
 	// PRECONDITION: this is initialized
 	Exec_stat factorarray(MCExecPoint &ep, Operators op);
+#endif
 
 	// Copy any keys from v not present in this
 	// PRECONDITION: this is initialized
@@ -95,11 +96,12 @@ public:
 	// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
     Exec_stat intersectarray(MCVariableArray& v, bool p_recursive);
 
+#ifdef LEGACY_EXEC
 	// Set the value of the variable to the result of va * vb, considered as
 	// matrices.
 	// PRECONDITION: this is uninitialized
 	Exec_stat matrixmultiply(MCExecPoint& ep, MCVariableArray& va, MCVariableArray& vb);
-	
+#endif
 	// Set the value of the variable to the transpose of the value contained in v.
 	// PRECONDITION: this is uninitialized
 	Exec_stat transpose(MCVariableArray& v);
@@ -135,14 +137,17 @@ public:
 	// PRECONDITION: this is uninitialized
 	bool copytable(const MCVariableArray &v);
 
+#ifdef LEGACY_EXEC
 	// Return the list of extents of the array into ep
 	// PRECONDITION: this is initialized
 	void getextents(MCExecPoint& ep);
+#endif
 
 	// Return a list of keys of the array (used by xcommands)
 	// PRECONDITION: this is initialized
 	void getkeys(char **keylist, uint4 kcount);
 
+#ifdef LEGACY_EXEC
 	// Return a list of keys into ep
 	// PRECONDITION: this is initialized
 	void getkeys(MCExecPoint& ep);
@@ -150,6 +155,8 @@ public:
 	// Iterate over the hash elements in the array
 	// PRECONDITION: this is initialized
 	MCHashentry *getnextelement(uint4 &l, MCHashentry *e, Boolean donumeric, MCExecPoint &ep);
+#endif
+
 
 	// Iterate over the keys in the array
 	// PRECONDITION: this is initialized
@@ -160,25 +167,31 @@ public:
 	// PRECONDITION: this is initialized
 	MCHashentry *getnextkey(MCHashentry *e) const;
 
+#ifdef LEGACY_EXEC
 	// Combine the elements of the array and return a string
 	// PRECONDITION: this is initialized
 	void combine(MCExecPoint& ep, char e, char k, char*& r_buffer, uint32_t& r_length);
+#endif
 
 	// Set the array to the result of splitting the given value.
 	// PRECONDITION: this is uninitialized
 	void split(const MCString& s, char e, char k);
 
+#ifdef LEGACY_EXEC
 	// Combine the elements of the array column-wise and return a string.
 	// PRECONDITION: this is initialized
 	void combine_column(MCExecPoint& ep, char r, char c, char*& r_buffer, uint32_t& r_length);
+#endif
 
 	// Set the array to the result of splitting the given value column-wise
 	// PRECONDITION: this is uninitialized
 	void split_column(const MCString& s, char r, char c);
 
+#ifdef LEGACY_EXEC
 	// Combine the elements of the array as a set and return a string
 	// PRECONDITION: this is initialized
 	void combine_as_set(MCExecPoint& ep, char e, char*& r_buffer, uint32_t& r_length);
+#endif
 
 	// Set the array to the result of splitting the given value as a set.
 	// PRECONDITION: this is uninitialized
@@ -619,12 +632,19 @@ public:
     bool remove(MCExecContext& ctxt);
     
 	// Converts the value in the variable to an array of strings.
+    bool converttoarrayofstrings(MCExecContext& ctxt);
+#ifdef LEGACY_EXEC
 	bool converttoarrayofstrings(MCExecPoint& ep);
+#endif
+#ifdef LEGACY_EXEC
 	// Converts the value in the variable to an array of numbers.
 	bool converttoarrayofnumbers(MCExecPoint& ep);
+#endif
 
 	// Converts the value to a (mutable) string.
+#ifdef LEGACY_EXEC
 	bool converttomutablestring(MCExecPoint& ep);
+#endif
     bool converttomutablestring(MCExecContext& ctxt);
 	// Converts the value to a (mutable) array.
 	bool converttomutablearray(void);
@@ -686,14 +706,19 @@ public:
 	// transiently.
 	void grab(char *p_buffer, uint4 p_length);
 
+#ifdef LEGACY_EXEC
     Exec_stat eval(MCExecPoint& ep);
     Exec_stat eval(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+
     Exec_stat set(MCExecPoint& ep);
     Exec_stat set(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+
     Exec_stat append(MCExecPoint& ep);
     Exec_stat append(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+
     Exec_stat remove(MCExecPoint& ep);
     Exec_stat remove(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+#endif
 
 	// Apply any changes to the value to the 'special' part of the var.
 	// i.e. if it is an environment variable or the msg variable
@@ -765,10 +790,12 @@ public:
 
 	//
 
+#ifdef LEGACY_EXEC
 	Exec_stat eval(MCExecPoint& ep);
 	Exec_stat set(MCExecPoint& ep);
 	Exec_stat append(MCExecPoint& ep);
 	Exec_stat remove(MCExecPoint& ep);
+#endif
     
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
 	bool remove(MCExecContext& ctxt);
@@ -856,12 +883,20 @@ public:
 		isscriptlocal = False;
 		isplain = true;
 	}
-	virtual ~MCVarref();
-	
+    virtual ~MCVarref();
+#ifdef LEGACY_EXEC
 	virtual Exec_stat eval(MCExecPoint &);
-    bool eval(MCExecContext& ctxt, MCValueRef& r_value);
+#endif
+    
+    void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
+#ifdef LEGACY_EXEC
 	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
+#endif
+    bool evalcontainer(MCExecContext &ctxt, MCContainer*& r_container);
+#ifdef LEGACY_EXEC
 	virtual MCVariable *evalvar(MCExecPoint& ep);
+#endif
+    virtual MCVariable *evalvar(MCExecContext& ctxt);
 	
 	virtual void compile(MCSyntaxFactoryRef);
 	virtual void compile_in(MCSyntaxFactoryRef);
@@ -877,22 +912,30 @@ public:
 
 	Boolean getisscriptlocal() { return isscriptlocal; };
 
+#ifdef LEGACY_EXEC
 	Exec_stat set(MCExecPoint &, Boolean append = False);
+#endif
     bool set(MCExecContext& ctxt, MCValueRef p_value, bool p_append = false);
 	Parse_stat parsearray(MCScriptPoint &);
 	Exec_stat sets(const MCString &s);
 	void clear();
 	void clearuql();
+#ifdef LEGACY_EXEC
 	Exec_stat dofree(MCExecPoint &);
+#endif
     bool dofree(MCExecContext& ctxt);
     
 	bool getisplain(void) const { return isplain; }
 	
 private:
+#ifdef LEGACY_EXEC
 	MCVariable *fetchvar(MCExecPoint& ep);
+#endif
     MCVariable *fetchvar(MCExecContext& ctxt);
 
+#ifdef LEGACY_EXEC
 	Exec_stat resolve(MCExecPoint& ep, MCContainer*& r_container);
+#endif
     bool resolve(MCExecContext& ctxt, MCContainer*& r_container);
 };
 
@@ -927,9 +970,14 @@ public:
 	// Override all methods that require the value of the variable. These
 	// just ensure 'compute' is called on the MCDeferredVar before the
 	// super-class methods with the same name are invoked.
+#ifdef LEGACY_EXEC
 	virtual Exec_stat eval(MCExecPoint&);
 	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
 	virtual MCVariable *evalvar(MCExecPoint& ep);
+#endif
+    virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
+    virtual bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
+    virtual MCVariable *evalvar(MCExecContext& ctxt);
 };
 
 ///////////////////////////////////////////////////////////////////////////////

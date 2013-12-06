@@ -165,9 +165,9 @@ extern Boolean MCF_setslantlongstring(uint2 &style, MCStringRef data);
 extern Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
 	                                   uint4 &flags, MCStringRef &fname,
 	                                   uint2 &height, uint2 &size, uint2 &style);
-extern Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep,
-	                                     uint4 flags, MCStringRef name,
-	                                     uint2 height, uint2 size, uint2 style);
+extern Exec_stat MCF_unparsetextatts(Properties which,
+                                     uint4 flags, MCStringRef name,
+	                                     uint2 height, uint2 size, uint2 style, MCValueRef &r_result);
 
 extern Exec_stat MCF_parsetextstyle(MCStringRef data, Font_textstyle &style);
 extern const char *MCF_unparsetextstyle(Font_textstyle style);

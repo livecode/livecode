@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -154,8 +154,10 @@ public:
     void Play();
     
 	MPMoviePlayerController *GetController(void);
-	
+
+#ifdef LEGACY_EXEC
 	static bool FormatTimeInterval(MCExecPoint& ep, NSTimeInterval interval);
+#endif
 	
 protected:
 	virtual ~MCiOSPlayerControl(void);
@@ -258,8 +260,7 @@ static void MCIPhoneImportUIImage(UIImage *p_image, int32_t p_max_width, int32_t
 	MCtemplateimage->setparent(NULL);
 	iptr -> attach(OP_CENTER, false);
 
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
+	MCExecContext ctxt(nil, nil, nil);
 	MCAutoDataRef t_dataref;
 	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)[t_data bytes], [t_data length], &t_dataref);
 	iptr -> setdataprop(ctxt, 0, P_TEXT, false, *t_dataref);	
@@ -285,6 +286,7 @@ static void content_to_url(MCStringRef p_file, NSURL*& r_url)
 	r_url = t_url;
 }
 
+#ifdef LEGACY_EXEC
 bool MCiOSPlayerControl::FormatTimeInterval(MCExecPoint& ep, NSTimeInterval p_interval)
 {
 	if (p_interval == -1)
@@ -293,6 +295,7 @@ bool MCiOSPlayerControl::FormatTimeInterval(MCExecPoint& ep, NSTimeInterval p_in
 		ep . setnvalue((int32_t)(p_interval * 1000));
 	return true;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

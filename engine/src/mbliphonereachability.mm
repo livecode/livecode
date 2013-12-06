@@ -21,7 +21,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 #include "stack.h"
 #include "card.h"

@@ -29,10 +29,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "object.h"
 #include "context.h"
 #include "globals.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "stack.h"
 #include "region.h"
 #include "osspec.h"
+#include "variable.h"
  
 #include "card.h"
 #include "mcerror.h"
@@ -599,10 +600,17 @@ MCPrinterResult MCPSPrinterDevice::Bookmark(const char *title, double x, double 
 
 char * getdefaultprinter(void)
 {
-	MCExecPoint ep ( NULL, NULL, NULL ) ;
+    MCAutoValueRef t_value;
+    MCExecContext ctxt(nil, nil, nil);
+    MCAutoStringRef t_string;
+    char *t_cstring;
+
 	MCdefaultstackptr->domess(MCSTR(DEFAULT_PRINTER_SCRIPT));
-	MCresult->eval(ep);
-	return strdup(ep.getcstring());
+
+    /* UNCHECKED */ MCresult->eval(ctxt, &t_value);
+    /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+    /* UNCHECKED */  MCStringConvertToCString(*t_string, t_cstring);
+    return t_cstring;
 }
 
 void MCPSPrinter::DoInitialize(void)
