@@ -326,13 +326,10 @@ static void MCFontMeasureTextCallback(MCFontRef p_font, const char *p_text, uint
     MCGFont t_font;
 	t_font = MCFontStructToMCGFont(p_font->fontstruct);
 	
-<<<<<<< HEAD
-	// MW-2013-12-04: [[ Bug 11549 ]] Make sure unicode text is short-aligned.
-=======
 	// MW-2013-12-04: [[ Bug 11535 ]] Pass through the fixed advance.
 	t_font . fixed_advance = p_font -> fixed_advance;
 	
->>>>>>> origin/bugfix-11535
+	// MW-2013-12-04: [[ Bug 11549 ]] Make sure unicode text is short-aligned.
 	MCExecPoint ep;
 	ep . setsvalue(MCString(p_text, p_length));
 	if (!p_is_unicode)
