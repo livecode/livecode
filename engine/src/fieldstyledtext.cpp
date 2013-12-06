@@ -603,19 +603,16 @@ static bool copy_element_as_color_if_non_empty(MCExecContext& ctxt, MCArrayRef a
 	return MCscreen -> parsecolor(*t_string, r_value, nil);
 }
 
-void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_style, const char *p_initial, const char *p_final, MCStringRef p_metadata, bool p_is_unicode)
+void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_style, MCStringRef p_string, MCStringRef p_metadata)
 {
 	// Do nothing if there is no text to add
-	findex_t t_length = p_final - p_initial;
-	if (t_length == 0)
+	if (MCStringIsEmpty(p_string))
         return;
 
     MCExecContext ctxt(nil, nil, nil);
 
 	// Create a block for the text we wish to append
-	MCAutoStringRef t_text;
-	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_initial, p_final-p_initial, p_is_unicode?kMCStringEncodingUTF16:kMCStringEncodingNative, false, &t_text);
-	MCBlock *t_block = p_paragraph->AppendText(*t_text);
+	MCBlock *t_block = p_paragraph->AppendText(p_string);
 		
 	// Now set the block styles.
 	
@@ -695,7 +692,7 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 		MCF_parsetextatts(P_TEXT_STYLE, *t_string, flags, &fname, height, size, style);
 
         MCInterfaceTextStyle t_style;
-        t_style . style;
+        t_style . style = style;
         t_block -> SetTextStyle(ctxt, t_style);
 	}
 
@@ -760,54 +757,48 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 	t_paragraph = x_paragraphs -> prev();
 	
 	// Now loop through each newline delimited chunk in the text.
-	const char *t_text_ptr;
 	uint32_t t_text_length;
-
-	// Fetch either the text entry, or the unicodeText entry and set the is unicode bool
-	// appropriately.
-	bool t_is_unicode;
-	t_is_unicode = false;
+    uindex_t t_start_index;
 
 	if (!MCArrayFetchValue(p_block_value, false, MCNAME("text"), t_valueref) || MCValueIsEmpty(t_valueref))
-	{
 		/* UNCKECKED */ MCArrayFetchValue(p_block_value, false, MCNAME("unicodeText"), t_valueref);
-		t_is_unicode = true;
-	}
+    
 	if (MCValueIsEmpty(t_valueref) || MCValueGetTypeCode(t_valueref) == kMCValueTypeCodeArray)
 		return;
 	
 	MCAutoStringRef t_temp;
 	/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_temp);
-    MCAutoPointer<char> t_temp_cstr;
-    /* UNCHECKED */ MCStringConvertToCString(*t_temp, &t_temp_cstr);
-	t_text_ptr = *t_temp_cstr;
+    
+    t_start_index = 0;
 	t_text_length = MCStringGetLength(*t_temp);
-	while(t_text_length != 0)
+	while(t_start_index < t_text_length)
 	{
 		bool t_add_paragraph;
-		const char *t_text_initial_ptr;
-		const char *t_text_final_ptr;
-		t_text_initial_ptr = t_text_ptr;
-		if (MCU_strchr(t_text_ptr, t_text_length, '\n', t_is_unicode))
+		uindex_t t_text_initial_start_index;
+		uindex_t t_text_end_index;
+		t_text_initial_start_index = t_start_index;
+        
+		if (MCStringFirstIndexOfChar(*t_temp, '\n', t_start_index, kMCStringOptionCompareCaseless, t_text_end_index))
 		{
-			t_text_final_ptr = t_text_ptr;
 			// MW-2012-05-17: [[ Bug ]] Make sure we reduce the remaining text length since
 			//   we are advancing ptr - otherwise we get random chars at the end of paragraph
 			//   sometimes.
-			t_text_ptr += (t_is_unicode ? 2 : 1);
-			t_text_length -= (t_is_unicode ? 2 : 1);
+			t_start_index = t_text_end_index + 1;
+			t_text_length -= (t_text_end_index - t_text_initial_start_index);
 			t_add_paragraph = true;
 		}
 		else
 		{
-			t_text_ptr += t_text_length;
+			t_start_index += t_text_length;
 			t_text_length = 0;
-			t_text_final_ptr = t_text_ptr;
+			t_text_end_index = t_start_index;
 			t_add_paragraph = false;
 		}
 
 		// We now add the range initial...final as a block.
-		parsestyledtextappendblock(t_paragraph, *t_style_entry, t_text_initial_ptr, t_text_final_ptr, *t_metadata, t_is_unicode);
+        MCAutoStringRef t_substring;
+        MCStringCopySubstring(*t_temp, MCRangeMake(t_text_initial_start_index, t_text_end_index - t_text_initial_start_index), &t_substring);
+		parsestyledtextappendblock(t_paragraph, *t_style_entry, *t_substring, *t_metadata);
 
 		// And, if we need a new paragraph, add it.
 		if (t_add_paragraph)
