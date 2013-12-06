@@ -151,13 +151,12 @@ MCFontStruct *MCNewFontlist::getfont(MCNameRef p_family, uint2& p_size, uint2 p_
 	t_font -> size = p_size;
 	t_font -> style = p_style;
 	t_font -> next = m_fonts;
-	t_font -> unicode = False;
 	m_fonts = t_font;
 
     uindex_t t_offset;
     MCAutoStringRef t_family_name;
     MCStringRef t_family_string = MCNameGetString(p_family);
-    if (MCStringFirstIndexOfChar(t_family_string, ',', 0, kMCStringOptionCompareCaseless, t_offset)
+    if (MCStringFirstIndexOfChar(t_family_string, ',', 0, kMCStringOptionCompareCaseless, t_offset))
         {
             MCStringCopySubstring(t_family_string, MCRangeMake(0, t_offset), &t_family_name);
             t_family_string = *t_family_name;
@@ -165,7 +164,7 @@ MCFontStruct *MCNewFontlist::getfont(MCNameRef p_family, uint2& p_size, uint2 p_
 
 	t_font -> description = pango_font_description_new();
     MCAutoStringRefAsSysString t_font_family;
-    /* UNCHECKED */ t_font_family.Lock(t_family_name);
+    /* UNCHECKED */ t_font_family.Lock(t_family_string);
     pango_font_description_set_family(t_font -> description, *t_font_family);
 	pango_font_description_set_absolute_size(t_font -> description, p_size * PANGO_SCALE);
 	if ((p_style & (FA_ITALIC | FA_OBLIQUE)) != 0)

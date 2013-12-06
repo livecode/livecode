@@ -1265,7 +1265,7 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 	memcpy(text, p_mark -> text . data , l);
 	
 	bool t_is_unicode;
-	t_is_unicode = f -> unicode || p_mark -> text . unicode_override;
+	t_is_unicode = p_mark -> text . unicode_override;
     
 	MCAutoStringRef t_text_string;
 	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_mark -> text . data, p_mark -> text . length, t_is_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative, false, &t_text_string);
