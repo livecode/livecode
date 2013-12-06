@@ -4235,7 +4235,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 				return stat;
 	}
 	if (flags & F_LABEL)
-		if ((stat = IO_write_stringref(label, stream, hasunicode())) != IO_NORMAL)
+        if ((stat = IO_write_stringref(label, stream)) != IO_NORMAL)
 			return stat;
 	if (flags & F_LABEL_WIDTH)
 		if ((stat = IO_write_uint2(labelwidth, stream)) != IO_NORMAL)
@@ -4254,7 +4254,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if ((stat = IO_write_nameref(menuname, stream)) != IO_NORMAL)
 		return stat;
 	if (flags & F_MENU_STRING)
-		if ((stat = IO_write_stringref(menustring, stream, hasunicode())) != IO_NORMAL)
+        if ((stat = IO_write_stringref(menustring, stream)) != IO_NORMAL)
 			return stat;
 	menubutton |= family << 4;
 	if ((stat = IO_write_uint1(menubutton, stream)) != IO_NORMAL)
@@ -4272,7 +4272,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint2(menulines, stream)) != IO_NORMAL)
 			return stat;
 
-	if ((stat = IO_write_stringref(acceltext, stream, hasunicode())) != IO_NORMAL)
+    if ((stat = IO_write_stringref(acceltext, stream)) != IO_NORMAL)
 		return stat;
 
 	if ((stat = IO_write_uint2(accelkey, stream)) != IO_NORMAL)

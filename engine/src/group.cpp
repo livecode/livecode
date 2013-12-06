@@ -3060,7 +3060,7 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if ((stat = MCObject::save(stream, p_part, p_force_ext)) != IO_NORMAL)
 		return stat;
 	if (flags & F_LABEL)
-		if ((stat = IO_write_stringref(label, stream, hasunicode())) != IO_NORMAL)
+        if ((stat = IO_write_stringref(label, stream)) != IO_NORMAL)
 			return stat;
 	if (flags & F_MARGINS)
 	{

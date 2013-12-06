@@ -332,24 +332,35 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	flags &= ~F_VISITED;
 	// MW-2012-01-26: [[ FlaggedField ]] Make sure we don't save the flagged flag.
 	flags &= ~F_FLAGGED;
-
+	
+    // The "has unicode" flag depends on whether the paragraph is native
+	bool t_is_unicode;
+    if (MCStringIsNative(parent->GetInternalStringRef()))
+	{
+		t_is_unicode = false;
+        flags &= ~F_HAS_UNICODE;
+	}
+    else
+	{
+		t_is_unicode = true;
+        flags |= F_HAS_UNICODE;
+	}
+	
 	// MW-2012-02-17: [[ SplitTextAttrs ]] If we have unicode, or one of the font attr are
 	//   set then we must serialize a font.
-	//if ((flags & (F_FATTR_MASK | F_HAS_UNICODE)) != 0)
-	if (true)
+	bool t_need_font;
+	if ((flags & (F_FATTR_MASK | F_HAS_UNICODE)) != 0)
 	{
 		// Add in the font record flag.
 		flags |= F_FONT;
 
 		// Invert the font attr flags (from has to inherit).
 		flags = (flags & ~F_FATTR_MASK) | (~(flags & F_FATTR_MASK) & F_FATTR_MASK);
+		
+		t_need_font = true;
 	}
-
-    // The "has unicode" flag depends on whether the paragraph is native
-    if (MCStringIsNative(parent->GetInternalStringRef()))
-        flags &= ~F_HAS_UNICODE;
-    else
-        flags |= F_HAS_UNICODE;
+	else
+		t_need_font = false;
     
 	if ((stat = IO_write_uint4(flags, stream)) != IO_NORMAL)
 		return stat;
@@ -358,8 +369,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 
 	// MW-2012-02-17: [[ SplitTextAttrs ]] If any one of the font attrs are set, or we
 	//   are unicode we must serialize a font.
-	//if ((flags & (F_FATTR_MASK | F_HAS_UNICODE)) != 0)
-	if (true)
+	if (t_need_font)
 	{
 		// MW-2012-02-17: [[ SplitTextAttrs ]] Compute the attrs to write out.
 		MCNameRef t_fontname;
@@ -386,10 +396,10 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
 	//   strings.
 	if (flags & F_HAS_LINK)
-		if ((stat = IO_write_stringref(atts->linktext, stream, false)) != IO_NORMAL)
+        if ((stat = IO_write_stringref(atts->linktext, stream)) != IO_NORMAL)
 			return stat;
 	if (flags & F_HAS_IMAGE)
-		if ((stat = IO_write_stringref(atts->imagesource, stream, false)) != IO_NORMAL)
+        if ((stat = IO_write_stringref(atts->imagesource, stream)) != IO_NORMAL)
 			return stat;
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended block then emit the
@@ -397,13 +407,16 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	if (t_is_ext)
 	{
 		if (flags & F_HAS_METADATA)
-			if ((stat = IO_write_stringref(atts -> metadata, stream, false)) != IO_NORMAL)
+            if ((stat = IO_write_stringref(atts -> metadata, stream)) != IO_NORMAL)
 				return stat;
 	}
 	
-	if ((stat = IO_write_uint2(m_index, stream)) != IO_NORMAL)
+	uint32_t t_index_size;
+	t_index_size = t_is_unicode ? sizeof(unichar_t) : sizeof(char_t);
+	
+	if ((stat = IO_write_uint2(m_index * t_index_size, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_write_uint2(m_size, stream)) != IO_NORMAL)
+	if ((stat = IO_write_uint2(m_size * t_index_size, stream)) != IO_NORMAL)
 		return stat;
 
 	return IO_NORMAL;
