@@ -2124,10 +2124,8 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		return ep.getreal8(MCgamma, line, pos, EE_PROPERTY_NAN);
 
 	// IM-2013-12-04: [[ PixelScale ]] Enable setting of pixelScale to override default system value
+	// IM-2013-12-06: [[ PixelScale ]] Remove handling of empty pixelScale - should always have a numeric value
 	case P_PIXEL_SCALE:
-		if (ep.isempty())
-			MCResSetUseSystemScale(true);
-		else
 		{
 			real64_t t_scale;
 			stat = ep.getreal8(t_scale, line, pos, EE_PROPERTY_NAN);
