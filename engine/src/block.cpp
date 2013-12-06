@@ -1073,10 +1073,12 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		ull = a->underline;
 	}
 
-	if (flags & F_HAS_COLOR && atts->color->pixel != MAXUINT4)
+	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+	if (flags & F_HAS_COLOR)
 		t_foreground_color = atts -> color;
 
-	if (flags & F_HAS_BACK_COLOR && atts->backcolor->pixel != MAXUINT4)
+	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+	if (flags & F_HAS_BACK_COLOR)
 		dc->setbackground(*atts->backcolor);
 
 	if (t_foreground_color != NULL)
@@ -1145,7 +1147,8 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		dc -> setclip(t_sel_clip);
 		
 		// Change the hilite color (if necessary).
-		if (!(flags & F_HAS_COLOR) || atts->color->pixel == MAXUINT4)
+		// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+		if (!(flags & F_HAS_COLOR))
 		{
 			if (IsMacLF() && !f->isautoarm())
 			{
@@ -1164,10 +1167,11 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		// Draw the selected text.
 		drawstring(dc, x, cx, y, index, size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
 		
+		// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
 		// Revert to the previous clip and foreground color.
 		if (t_foreground_color != NULL)
 			dc->setforeground(*t_foreground_color);
-		else if (!(flags & F_HAS_COLOR) || atts->color->pixel == MAXUINT4)
+		else if (!(flags & F_HAS_COLOR))
 			f->setforeground(dc, DI_FORE, False, True);
 		dc-> setclip(t_old_clip);
 	}
@@ -1221,10 +1225,12 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		dc -> setclip(t_old_clip);
 	}
 	
-	if (flags & F_HAS_BACK_COLOR && atts->backcolor->pixel != MAXUINT4)
+	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+	if (flags & F_HAS_BACK_COLOR)
 		dc->setbackground(MCzerocolor);
 
-	if (flags & F_HAS_COLOR && atts->color->pixel != MAXUINT4 || fontstyle & FA_LINK)
+	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+	if (flags & F_HAS_COLOR || fontstyle & FA_LINK)
 		f->setforeground(dc, DI_FORE, False, True);
 
 	// MW-2010-01-06: If there is link text, then draw a link
