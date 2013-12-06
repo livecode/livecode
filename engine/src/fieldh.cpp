@@ -440,7 +440,13 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 						t_explicit_line_break = true, t_data . m_range . length -= 1;
 				}
 				
-				if (!p_callback(p_context, kMCFieldExportEventUnicodeRun, t_data))
+                MCFieldExportEventType t_export_type;
+                if (MCStringIsNative(t_data . m_text))
+                    t_export_type = kMCFieldExportEventNativeRun;
+                else
+                    t_export_type = kMCFieldExportEventUnicodeRun;
+                
+				if (!p_callback(p_context, t_export_type, t_data))
 					return false;
 
 				// If we just processed the last block on the line then emit a line break.
