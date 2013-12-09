@@ -287,7 +287,7 @@ bool MCCapsuleFillNoCopy(MCCapsuleRef self, const void *p_data, uint32_t p_data_
 	return MCCapsuleFillCommon(self, p_data_length, 0, p_finished, true, p_data, nil);
 }
 
-bool MCCapsuleFillFromFile(MCCapsuleRef self, const char *p_path, uint32_t p_offset, bool p_finished)
+bool MCCapsuleFillFromFile(MCCapsuleRef self, MCStringRef p_path, uint32_t p_offset, bool p_finished)
 {
 	MCAssert(self != nil);
 	MCAssert(p_path != nil);
@@ -299,9 +299,7 @@ bool MCCapsuleFillFromFile(MCCapsuleRef self, const char *p_path, uint32_t p_off
 	t_stream = nil;
 	if (t_success)
 	{
-		MCAutoStringRef p_path_string;
-		/* UNCHECKED */ MCStringCreateWithCString(p_path, &p_path_string);
-		t_stream = MCS_open(*p_path_string, kMCSOpenFileModeRead, True, False, 0);
+		t_stream = MCS_open(p_path, kMCSOpenFileModeRead, True, False, 0);
 		if (t_stream == nil)
 			t_success = false;
 	}
