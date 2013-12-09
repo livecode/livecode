@@ -1321,7 +1321,7 @@ static uint32_t measure_array_entry(MCNameRef p_key, MCValueRef p_value)
 		t_size += 8;
 		break;
 	case kMCValueTypeCodeArray:
-		t_size += MCArrayMeasureForStream((MCArrayRef)p_value, false);
+		t_size += MCArrayMeasureForStreamLegacy((MCArrayRef)p_value, false);
 		break;
 	default:
 		MCAssert(false);
@@ -1345,7 +1345,7 @@ static bool measure_array(void *p_context, MCArrayRef p_array, MCNameRef p_key, 
 	return true;
 }
 
-uint32_t MCArrayMeasureForStream(MCArrayRef self, bool p_nested_only)
+uint32_t MCArrayMeasureForStreamLegacy(MCArrayRef self, bool p_nested_only)
 {
 	measure_array_context_t ctxt;
 	ctxt . size = 0;
@@ -1372,14 +1372,14 @@ static bool is_array_nested(void *p_context, MCArrayRef p_array, MCNameRef p_key
 	return true;
 }
 
-bool MCArrayIsNested(MCArrayRef self)
+bool MCArrayIsNestedLegacy(MCArrayRef self)
 {
 	// The 'is_array_nested' method terminates when it encounters an array value;
 	// therefore if the array is nested, it will return false.
 	return !MCArrayApply(self, is_array_nested, nil);
 }
 
-IO_stat MCArrayLoadFromHandle(MCArrayRef self, IO_handle p_stream)
+IO_stat MCArrayLoadFromHandleLegacy(MCArrayRef self, IO_handle p_stream)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -1408,27 +1408,27 @@ IO_stat MCArrayLoadFromHandle(MCArrayRef self, IO_handle p_stream)
 		t_nprops = t_nfilled;
 		while(t_nprops-- && t_stat == IO_NORMAL)
 		{
+			MCNewAutoNameRef t_name;
+			MCAutoValueRef t_value;
+
 			char *t_key = nil;
 			uint32_t t_length = 0;
 			
 			// IM-2013-04-04 loadkeys() would previously translate the key string,
 			// so we pass p_translate = true.
-			t_stat = IO_read_string(t_key, t_length, p_stream, 1, true, true);
-			
-			MCNewAutoNameRef t_name;
+			t_stat = IO_read_string_legacy_full(t_key, t_length, p_stream, 1, true, true);
 			if (t_stat == IO_NORMAL)
 				if (!MCNameCreateWithOldString(MCString(t_key, t_length), &t_name))
 					t_stat = IO_ERROR;
 			
 			MCMemoryDeallocate(t_key);
-
+			
 			char *t_buffer = nil;
 			if (t_stat == IO_NORMAL)
-				t_stat = IO_read_string(t_buffer, t_length, p_stream, t_size, false, false);
-
-			MCAutoStringRef t_value;
+				t_stat = IO_read_string_legacy_full(t_buffer, t_length, p_stream, t_size, false, false);
+			
 			if (t_stat == IO_NORMAL)
-				if (!MCStringCreateWithNativeChars((const char_t *)t_buffer, t_length, &t_value))
+				if (!MCStringCreateWithNativeChars((const char_t *)t_buffer, t_length, (MCStringRef&)&t_value))
 					t_stat = IO_ERROR;
 			
 			MCMemoryDeallocate(t_buffer);
@@ -1444,7 +1444,7 @@ IO_stat MCArrayLoadFromHandle(MCArrayRef self, IO_handle p_stream)
 	return t_stat;
 }
 
-IO_stat MCArrayLoadFromStream(MCArrayRef self, MCObjectInputStream& p_stream)
+IO_stat MCArrayLoadFromStreamLegacy(MCArrayRef self, MCObjectInputStream& p_stream)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -1471,7 +1471,7 @@ IO_stat MCArrayLoadFromStream(MCArrayRef self, MCObjectInputStream& p_stream)
 
 		MCAutoStringRef t_key;
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . ReadStringRef(&t_key);
+			t_stat = p_stream . ReadStringRefNew(&t_key, false);
 
 		MCNewAutoNameRef t_key_name;
 		if (t_stat == IO_NORMAL)
@@ -1542,7 +1542,7 @@ IO_stat MCArrayLoadFromStream(MCArrayRef self, MCObjectInputStream& p_stream)
 					if (!MCArrayCreateMutable(t_array))
 						t_stat = IO_ERROR;
 					if (t_stat == IO_NORMAL)
-						t_stat = MCArrayLoadFromStream(t_array, p_stream);
+						t_stat = MCArrayLoadFromStreamLegacy(t_array, p_stream);
 					if (t_stat == IO_NORMAL)
 						t_value = t_array;
 					else
@@ -1620,7 +1620,7 @@ static bool save_array_to_handle(void *p_context, MCArrayRef p_array, MCNameRef 
 				t_stat = IO_write_uint1(0, t_stream);
 		}
 		else
-			t_stat = IO_write_string(t_key_string, t_stream, 1);
+			t_stat = IO_write_cstring_legacy(t_key_string, t_stream, 1);
 	}
 
 	MCAutoStringRef t_string;
@@ -1636,13 +1636,13 @@ static bool save_array_to_handle(void *p_context, MCArrayRef p_array, MCNameRef 
 		else
 			t_size = 2;
 		
-		t_stat = IO_write_string(MCStringGetOldString(*t_string), t_stream, t_size, false);
+		t_stat = IO_write_string_legacy_full(MCStringGetOldString(*t_string), t_stream, t_size, false);
 	}
-
+	
 	return t_stat == IO_NORMAL;
 }
 
-IO_stat MCArraySaveToHandle(MCArrayRef self, IO_handle p_stream)
+IO_stat MCArraySaveToHandleLegacy(MCArrayRef self, IO_handle p_stream)
 {
 	array_info_context_t t_info;
 	t_info . is_large = false;
@@ -1723,7 +1723,7 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 	if (t_stat == IO_NORMAL)
 		t_stat = ctxt -> stream -> WriteU32(measure_array_entry(p_key, p_value) - 1);
 	if (t_stat == IO_NORMAL)
-		t_stat = ctxt -> stream -> WriteStringRef(MCNameGetString(p_key));
+		t_stat = ctxt -> stream -> WriteStringRefNew(MCNameGetString(p_key), false);
 	if (t_stat == IO_NORMAL)
 		switch((Value_format)t_type)
 		{
@@ -1738,7 +1738,7 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 			t_stat = ctxt -> stream -> WriteFloat64(MCNumberFetchAsReal((MCNumberRef)p_value));
 			break;
 		case VF_ARRAY:
-			t_stat = MCArraySaveToStream((MCArrayRef)p_value, false, *(ctxt -> stream));
+			t_stat = MCArraySaveToStreamLegacy((MCArrayRef)p_value, false, *(ctxt -> stream));
 			break;
 		default:
 			MCAssert(false);
@@ -1748,7 +1748,7 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 	return t_stat == IO_NORMAL;
 }
 
-IO_stat MCArraySaveToStream(MCArrayRef self, bool p_nested_only, MCObjectOutputStream& p_stream)
+IO_stat MCArraySaveToStreamLegacy(MCArrayRef self, bool p_nested_only, MCObjectOutputStream& p_stream)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;

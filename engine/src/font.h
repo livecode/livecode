@@ -79,10 +79,10 @@ void MCLogicalFontTableFinalize(void);
 void MCLogicalFontTableBuild(MCObject *root, uint32_t part);
 
 // Read the logical font table from a stream. It replaces any existing font table.
-IO_stat MCLogicalFontTableLoad(IO_handle stream);
+IO_stat MCLogicalFontTableLoad(IO_handle stream, uint32_t version);
 
 // Save the logical font table out to a stream.
-IO_stat MCLogicalFontTableSave(IO_handle stream);
+IO_stat MCLogicalFontTableSave(IO_handle stream, uint32_t version);
 
 // Finish with the logical font table.
 void MCLogicalFontTableFinish(void);

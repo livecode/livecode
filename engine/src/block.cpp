@@ -120,7 +120,7 @@ bool MCBlock::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_vi
 
 // MW-2012-03-04: [[ StackFile5500 ]] If 'is_ext' is true then the record is an extended
 //   record.
-IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
+IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 {
 	IO_stat stat;
 
@@ -156,7 +156,7 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 	//   is a font record to read.
 	if (flags & F_FONT)
     {
-		if (strncmp(version, "1.3", 3) > 0)
+		if (version > 1300)
 		{
 			uint2 t_font_index;
 			if ((stat = IO_read_uint2(&t_font_index, stream)) != IO_NORMAL)
@@ -180,8 +180,10 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 		}
 		else
 		{
-			// MW_2012-02-17: [[ LogFonts ]] Read a nameref directly.
-			if ((stat = IO_read_nameref(atts->fontname, stream)) != IO_NORMAL)
+			// MW-2012-02-17: [[ LogFonts ]] Read a nameref directly.
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] This path only happens sfv < 1300
+			//   so is legacy.
+			if ((stat = IO_read_nameref_legacy(atts->fontname, stream, false)) != IO_NORMAL)
 				return stat;
 			if ((stat = IO_read_uint2(&atts->fontsize, stream)) != IO_NORMAL)
 				return stat;
@@ -201,8 +203,10 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 		{
 			// MW-2012-01-06: [[ Block Changes ]] We no longer use the color name
 			//   so load, delete and unset the flag.
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] The storage of this is ignored,
+			//   so is legacy,
 			char *colorname;
-			if ((stat = IO_read_string(colorname, stream)) != IO_NORMAL)
+			if ((stat = IO_read_cstring_legacy(colorname, stream, 2)) != IO_NORMAL)
 				return stat;
 			delete colorname;
 			flags &= ~F_HAS_COLOR_NAME;
@@ -213,12 +217,14 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 		atts->backcolor = new MCColor;
 		if ((stat = IO_read_mccolor(*atts->backcolor, stream)) != IO_NORMAL)
 			return stat;
-		if (strncmp(version, "2.0", 3) < 0 || flags & F_HAS_BACK_COLOR_NAME)
+		if (version < 2000 || flags & F_HAS_BACK_COLOR_NAME)
 		{
 			// MW-2012-01-06: [[ Block Changes ]] We no longer use the backcolor name
 			//   so load, delete and unset the flag.
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] The storage of this is ignored,
+			//   so is legacy,
 			char *backcolorname;
-			if ((stat = IO_read_string(backcolorname, stream)) != IO_NORMAL)
+			if ((stat = IO_read_cstring_legacy(backcolorname, stream, 2)) != IO_NORMAL)
 				return stat;
 			delete backcolorname;
 			flags &= ~F_HAS_BACK_COLOR_NAME;
@@ -232,14 +238,16 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 	//   strings.
 	if (flags & F_HAS_LINK)
 	{
-		if ((stat = IO_read_stringref(atts->linktext, stream, false)) != IO_NORMAL)
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+		if ((stat = IO_read_stringref_new(atts->linktext, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> linktext, atts -> linktext);
 	}
 
 	if (flags & F_HAS_IMAGE)
 	{
-		if ((stat = IO_read_stringref(atts->imagesource, stream, false)) != IO_NORMAL)
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+		if ((stat = IO_read_stringref_new(atts->imagesource, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> imagesource, atts -> imagesource);
 	}
@@ -248,7 +256,8 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 	//   it in.
 	if (flags & F_HAS_METADATA)
 	{
-		if ((stat = IO_read_stringref(atts->metadata, stream, false)) != IO_NORMAL)
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+		if ((stat = IO_read_stringref_new(atts->metadata, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> metadata, atts -> metadata);
 	}
@@ -395,19 +404,22 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 
 	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
 	//   strings.
-	if (flags & F_HAS_LINK)
-        if ((stat = IO_write_stringref(atts->linktext, stream)) != IO_NORMAL)
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+    if (flags & F_HAS_LINK)
+        if ((stat = IO_write_stringref_new(atts->linktext, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
-	if (flags & F_HAS_IMAGE)
-        if ((stat = IO_write_stringref(atts->imagesource, stream)) != IO_NORMAL)
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+    if (flags & F_HAS_IMAGE)
+        if ((stat = IO_write_stringref_new(atts->imagesource, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended block then emit the
 	//   new attributes.
 	if (t_is_ext)
 	{
-		if (flags & F_HAS_METADATA)
-            if ((stat = IO_write_stringref(atts -> metadata, stream)) != IO_NORMAL)
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+        if (flags & F_HAS_METADATA)
+            if ((stat = IO_write_stringref_new(atts -> metadata, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 				return stat;
 	}
 	

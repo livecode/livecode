@@ -434,7 +434,7 @@ IO_stat MCEPS::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCEPS::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length)
+IO_stat MCEPS::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
 {
 	return defaultextendedload(p_stream, p_version, p_length);
 }
@@ -451,7 +451,8 @@ IO_stat MCEPS::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		return stat;
 	if ((stat = IO_write(postscript, sizeof(char), size, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_write_string(prolog, stream)) != IO_NORMAL)
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] EPS is always ASCII so legacy.
+	if ((stat = IO_write_cstring_legacy(prolog, stream, 2)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_write_int4(MCU_r8toi4(xscale), stream)) != IO_NORMAL)
 		return stat;
@@ -564,7 +565,7 @@ void MCEPS::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_spr
 		drawselected(dc);
 }
 
-IO_stat MCEPS::load(IO_handle stream, const char *version)
+IO_stat MCEPS::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 
@@ -578,7 +579,8 @@ IO_stat MCEPS::load(IO_handle stream, const char *version)
 	if ((stat = IO_read(postscript, size, stream)) != IO_NORMAL)
 		return stat;
 	postscript[size] = '\0';
-	if ((stat = IO_read_string(prolog, stream)) != IO_NORMAL)
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] EPS is always ASCII so legacy.
+	if ((stat = IO_read_cstring_legacy(prolog, stream, 2)) != IO_NORMAL)
 		return stat;
 	int4 i;
 	if ((stat = IO_read_int4(&i, stream)) != IO_NORMAL)
@@ -609,7 +611,7 @@ IO_stat MCEPS::load(IO_handle stream, const char *version)
 		if ((stat = image->load(stream, version)) != IO_NORMAL)
 			return stat;
 	}
-	if (strncmp(version, "1.3", 3) > 0)
+	if (version > 1300)
 	{
 		if ((stat = IO_read_uint2(&curpage, stream)) != IO_NORMAL)
 			return stat;
@@ -623,7 +625,7 @@ IO_stat MCEPS::load(IO_handle stream, const char *version)
 					return stat;
 		}
 	}
-	return loadpropsets(stream);
+	return loadpropsets(stream, version);
 }
 
 void MCEPS::setextents()

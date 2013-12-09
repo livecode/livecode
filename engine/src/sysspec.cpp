@@ -601,7 +601,7 @@ void MCS_copyresourcefork(MCStringRef p_source, MCStringRef p_dst)
 		return;
     }
     
-    MCresult -> sets("not supported");
+//    MCresult -> sets("not supported");
 }
 
 bool MCS_deleteresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_error)

@@ -1597,8 +1597,9 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 
 		for (uint16_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
 			t_stat = p_stream . WriteColor(s_control_colors[i]);
+		// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		for (uint16_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
-			t_stat = p_stream . WriteStringRef(s_control_color_names[i] != nil ? s_control_color_names[i] : kMCEmptyString);
+			t_stat = p_stream . WriteStringRefNew(s_control_color_names[i] != nil ? s_control_color_names[i] : kMCEmptyString, MCstackfileversion >= 7000);
 		
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . WriteU16(s_control_pixmap_count);
@@ -1614,7 +1615,7 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return t_stat;
 }
 
-IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -1653,7 +1654,8 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 				t_stat = p_stream . ReadColor(s_control_colors[i]);
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
 			{
-				t_stat = p_stream . ReadStringRef(s_control_color_names[i]);
+				// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+				t_stat = p_stream . ReadStringRefNew(s_control_color_names[i], p_version >= 7000);
 				if (t_stat == IO_NORMAL && MCStringIsEmpty(s_control_color_names[i]))
 				{
 					MCValueRelease(s_control_color_names[i]);
@@ -1797,10 +1799,11 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (stat != IO_NORMAL)
 		return stat;
 
-
+	
 	if (flags & F_HAS_FILENAME)
-	{
-        if ((stat = IO_write_stringref(filename, stream)) != IO_NORMAL)
+    {
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+        if ((stat = IO_write_stringref_new(filename, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
 	}
 	else
@@ -1881,7 +1884,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return savepropsets(stream);
 }
 
-IO_stat MCImage::load(IO_handle stream, const char *version)
+IO_stat MCImage::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 
@@ -1903,7 +1906,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 		return stat;
 
 //---- Conversion from pre-2.7 behaviour to new behaviour
-	if (ink & 0x80 && strncmp(version, "2.7", 3) < 0)
+	if ((ink & 0x80) != 0 && version < 2700)
 	{
 		blendlevel = 100 - (ink & 0x7F);
 		ink = GXblendSrcOver;
@@ -1911,8 +1914,9 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 	
 	if (flags & F_HAS_FILENAME)
 	{
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		MCAutoStringRef t_filename;
-		if ((stat = IO_read_stringref(&t_filename, stream, false)) != IO_NORMAL)
+		if ((stat = IO_read_stringref_new(&t_filename, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
 
 		/* UNCHECKED */ setfilename(*t_filename);
@@ -1936,7 +1940,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 				/* UNCHECKED */ MCMemoryAllocate(t_compressed->size, t_compressed->data);
 				if (IO_read(t_compressed->data, t_compressed->size, stream) != IO_NORMAL)
 					return IO_ERROR;
-				if (strncmp(version, "1.4", 3) == 0)
+				if (version == 1400)
 				{
 					if ((ncolors == 16 || ncolors == 256) && noblack())
 						flags |= F_NEED_FIXING;
@@ -2057,7 +2061,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 		s_have_control_colors = false;
 	}
 
-	return loadpropsets(stream);
+	return loadpropsets(stream, version);
 }
 
 // MW-2012-03-28: [[ Bug 10130 ]] This is a no-op as the image object has no

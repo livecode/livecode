@@ -2341,7 +2341,7 @@ IO_stat MCGraphic::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return t_stat;
 }
 
-IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -2513,13 +2513,27 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			if ((stat = IO_write_int1(dashes[i], stream)) != IO_NORMAL)
 				return stat;
 	}
-	if (flags & F_G_LABEL)
-        if ((stat = IO_write_stringref(label, stream)) != IO_NORMAL)
-			return stat;
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
+	//   legacy unicode output.
+    if (flags & F_G_LABEL)
+	{
+		if (MCstackfileversion < 7000)
+		{
+			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
+				return stat;
+		}
+		else
+		{
+			if ((stat = IO_write_stringref_new(label, stream, true)) != IO_NORMAL)
+				return stat;
+		}
+	}
+
 	return savepropsets(stream);
 }
 
-IO_stat MCGraphic::load(IO_handle stream, const char *version)
+IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 {
 	uint2 i;
 	IO_stat stat;
@@ -2530,7 +2544,7 @@ IO_stat MCGraphic::load(IO_handle stream, const char *version)
 
 //---- 2.7+:
 //  . F_G_ANTI_ALIASED now defined
-	if (strncmp(version, "2.7", 3) < 0)
+	if (version < 2700)
 		flags &= ~F_G_ANTI_ALIASED;
 //----
 
@@ -2593,9 +2607,9 @@ IO_stat MCGraphic::load(IO_handle stream, const char *version)
 					return stat;
 			}
 		}
-		if (strncmp(version, "1.4", 3) < 0)
+		if (version < 1400)
 			loaddashes = True;
-		if (strncmp(version, "1.4", 3) <= 0)
+		if (version <= 1400)
 			arrowsize = DEFAULT_ARROW_SIZE;
 		break;
 	}
@@ -2623,10 +2637,22 @@ IO_stat MCGraphic::load(IO_handle stream, const char *version)
 			}
 		}
 	}
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
+	//   legacy unicode output.
 	if (flags & F_G_LABEL)
 	{
-		if ((stat = IO_read_stringref(label, stream, hasunicode())) != IO_NORMAL)
-			return stat;
-	}
-	return loadpropsets(stream);
+		if (version < 7000)
+		{
+			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
+				return stat;
+		}
+		else
+		{
+			if ((stat = IO_read_stringref_new(label, stream, true)) != IO_NORMAL)
+				return stat;
+		}
+    }
+	
+    return loadpropsets(stream, version);
 }
