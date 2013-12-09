@@ -309,6 +309,7 @@ bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, ui
     const char *t_title = nil;
     bool t_has_selection = false;
     uint32_t t_selected_index = 0;
+    r_result_count = 0;
     
     t_success = MCJavaInitList(t_env, t_joptionlist);
     
@@ -341,8 +342,9 @@ bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, ui
         {
             if (t_success)
             {
-                r_result_count = 1;
-                *r_result = s_selected_index + 1;
+                MCAutoArray<uindex_t> t_indices;
+                t_indices . Push(s_selected_index + 1);
+                t_indices . Take(r_result, r_result_count);
             }
         }
         

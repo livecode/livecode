@@ -817,7 +817,15 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
     case kMCStringEncodingNative:
         return MCStringConvertToNative(self, (char_t*&)r_bytes, r_byte_count);
     case kMCStringEncodingUTF16:
-        return MCStringConvertToUnicode(self, (unichar_t*&)r_bytes, r_byte_count);
+        {
+            uindex_t t_char_count;
+            if (MCStringConvertToUnicode(self, (unichar_t*&)r_bytes, t_char_count))
+            {
+                r_byte_count = t_char_count * sizeof(unichar_t);
+                return true;
+            }
+            return false;
+        }
     case kMCStringEncodingUTF8:
         return MCStringConvertToUTF8(self, (char*&)r_bytes, r_byte_count);
     case kMCStringEncodingUTF32:
