@@ -116,7 +116,7 @@ void MCOrientationExecLockOrientation(MCExecContext& ctxt)
 
 void MCOrientationExecUnlockOrientation(MCExecContext& ctxt)
 {
-	MCSystemLockOrientation();
+	MCSystemUnlockOrientation();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
