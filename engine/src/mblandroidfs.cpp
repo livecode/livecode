@@ -399,15 +399,19 @@ bool MCAndroidSystem::GetTemporaryFileName(MCStringRef &r_tmp_name)
 
 Boolean MCAndroidSystem::GetStandardFolder(MCNameRef p_folder, MCStringRef &r_folder)
 {
-	MCAutoStringRef t_stdfolder;
 	if (MCNameIsEqualToCString(p_folder, "engine", kMCCompareExact))
-		MCStringCopy(MCcmd, &t_stdfolder);
-	else
-		MCAndroidEngineCall("getSpecialFolderPath", "xx", &(&t_stdfolder), MCNameGetString(p_folder));
-
+    {
+        MCLog("GetStandardFolder(\"%@\") -> \"%@\"", MCNameGetString(p_folder), MCcmd);
+		return MCStringCopy(MCcmd, r_folder);
+    }
+    
+ 	MCAutoStringRef t_stdfolder;
+    MCAndroidEngineCall("getSpecialFolderPath", "xx", &(&t_stdfolder), MCNameGetString(p_folder));
+    
     MCLog("GetStandardFolder(\"%@\") -> \"%@\"", p_folder, *t_stdfolder == nil ? kMCEmptyString : *t_stdfolder);
     
-	return MCStringCopy(*t_stdfolder, r_folder);
+	r_folder = MCValueRetain(*t_stdfolder == nil ? kMCEmptyString : *t_stdfolder);
+    return True;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
