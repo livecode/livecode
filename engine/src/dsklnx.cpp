@@ -571,19 +571,20 @@ public:
                 if (!(stream->flags & IO_FAKE))
                     delete stream->buffer;
             }
-    #ifndef NOMMAP
+#ifndef NOMMAP
             else
             {
                 munmap((char *)stream->buffer, stream->len);
                 close(stream->fd);
             }
-    #endif
-
+#endif
+            
         }
         else
             fclose(stream->fptr);
         delete stream;
         stream = NULL;
+        return IO_NORMAL;
 #endif /* MCS_close_dsk_lnx */
         if (m_fptr != NULL)
             fclose(m_fptr);
@@ -1013,8 +1014,12 @@ public:
     virtual bool GetVersion(MCStringRef& r_string)
     {
 #ifdef /* MCS_getsystemversion_dsk_lnx */ LEGACY_SYSTEM
+        static char *buffer;
         uname(&u);
-        return MCStringFormat(r_string, "%s %s", u.sysname, u.release);
+        if (buffer == NULL)
+            buffer = new char[strlen(u.sysname) + strlen(u.release) + 2];
+        sprintf(buffer, "%s %s", u.sysname, u.release);
+        return buffer;
 #endif /* MCS_getsystemversion_dsk_lnx */
         struct utsname u;
         uname(&u);
@@ -1028,7 +1033,7 @@ public:
     {
 #ifdef /* MCS_getmachine_dsk_lnx */ LEGACY_SYSTEM
         uname(&u);
-        return MCStringCreateWithNativeChars((const char_t *)u.machine, MCCStringLength(u.machine), r_string);
+        return u.machine;
 #endif /* MCS_getmachine_dsk_lnx */
         struct utsname u;
         uname(&u);
@@ -1038,7 +1043,11 @@ public:
     virtual MCNameRef GetProcessor(void)
     {
 #ifdef /* MCS_getprocessor_dsk_lnx */ LEGACY_SYSTEM
-        return MCN_unknown;
+#ifdef __LP64__
+        return "x86_64";
+#else
+        return "x86";
+#endif
 #endif /* MCS_getprocessor_dsk_lnx */
 #ifdef __LP64__
         return MCN_x86_64;
@@ -1050,9 +1059,12 @@ public:
     virtual bool GetAddress(MCStringRef& r_address)
     {
 #ifdef /* MCS_getaddress_dsk_lnx */ LEGACY_SYSTEM
-        static struct utsname u;
+        static char *buffer;
         uname(&u);
-        return MCStringFormat(r_address, "%s:%s", u.nodename, MCStringGetCString(MCcmd));
+        if (buffer == NULL)
+            buffer = new char[strlen(u.nodename) + strlen(MCcmd) + 4];
+        sprintf(buffer, "%s:%s", u.nodename, MCcmd);
+        return buffer;
 #endif /* MCS_getaddress_dsk_lnx */
         struct utsname u;
         uname(&u);
@@ -1197,11 +1209,10 @@ public:
     virtual Boolean CreateFolder(MCStringRef p_path)
     {
 #ifdef /* MCS_mkdir_dsk_lnx */ LEGACY_SYSTEM
-        MCAutoStringRef t_resolved_path_string;
-        if (MCS_resolvepath(p_path, &t_resolved_path_string))
-            return mkdir(MCStringGetCString(*t_resolved_path_string, 0777)) == 0;
-
-        return false;
+        char *newpath = MCS_resolvepath(path);
+        Boolean done = mkdir(path, 0777) == 0;
+        delete newpath;
+        return done;
 #endif /* MCS_mkdir_dsk_lnx */
         MCAutoStringRefAsSysString t_path;
         MCAutoStringRef t_resolved_path_string;
@@ -1217,11 +1228,10 @@ public:
     virtual Boolean DeleteFolder(MCStringRef p_path)
     {
 #ifdef /* MCS_rmdir_dsk_lnx */ LEGACY_SYSTEM
-        MCAutoStringRef t_resolved_path_string;
-        if (MCS_resolvepath(p_path, &t_resolved_path_string))
-            return rmdir(MCStringGetCString(*t_resolved_path_string)) == 0;
-
-        return false;
+        char *newpath = MCS_resolvepath(path);
+        Boolean done = rmdir(path) == 0;
+        delete newpath;
+        return done;
 #endif /* MCS_rmdir_dsk_lnx */
         MCAutoStringRefAsSysString t_path;
         MCAutoStringRef t_resolved_path_string;
@@ -1237,9 +1247,9 @@ public:
     virtual Boolean DeleteFile(MCStringRef p_path)
     {
 #ifdef /* MCS_unlink_dsk_lnx */ LEGACY_SYSTEM
-        MCAutoStringRef t_resolved_path;
-        MCS_resolvepath(p_path, &t_resolved_path);
-        Boolean done = unlink(MCStringGetCString(*t_resolved_path)) == 0;
+        char *newpath = MCS_resolvepath(path);
+        Boolean done = unlink(newpath) == 0;
+        delete newpath;
         return done;
 #endif /* MCS_unlink_dsk_lnx */
         MCAutoStringRefAsSysString t_path;
@@ -1253,25 +1263,25 @@ public:
     virtual Boolean RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name)
     {
 #ifdef /* MCS_rename_dsk_lnx */ LEGACY_SYSTEM
-        MCAutoStringRef t_old_resolved_path, t_new_resolved_path;
-        MCS_resolvepath(p_oname, &t_old_resolved_path);
-        MCS_resolvepath(p_nname, &t_new_resolved_path);
-    #ifndef NORENAME
-
-        Boolean done = rename(MCStringGetCString(*t_old_resolved_path), MCStringGetCString(*t_new_resolved_path)) == 0;
-    #else
+        char *oldpath = MCS_resolvepath(oname);
+        char *newpath = MCS_resolvepath(nname);
+#ifndef NORENAME
+        
+        Boolean done = rename(oldpath, newpath) == 0;
+#else
         // doesn't work on directories
         Boolean done = True;
-        if (link(MCStringGetCString(*t_old_resolved_path), MCStringGetCString(*t_new_resolved_path)) != 0)
+        if (link(oldpath, newpath) != 0)
             done = False;
         else
-            if (unlink(MCStringGetCString(*t_old_resolved_path)) != 0)
+            if (unlink(oldpath) != 0)
             {
-                unlink(MCStringGetCString(*t_new_resolved_path));
+                unlink(newpath);
                 done = False;
             }
-    #endif
-
+#endif
+        delete oldpath;
+        delete newpath;
         return done;
 #endif /* MCS_rename_dsk_lnx */
         MCAutoStringRef t_old_resolved_path, t_new_resolved_path;
@@ -1306,7 +1316,7 @@ public:
     virtual Boolean BackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
     {
 #ifdef /* MCS_backup_dsk_lnx */ LEGACY_SYSTEM
-        return MCS_rename(p_oname, p_nname);
+        return MCS_rename(oname, nname);
 #endif /* MCS_backup_dsk_lnx */
         return MCS_rename(p_old_name, p_new_name);
     }
@@ -1314,7 +1324,7 @@ public:
     virtual Boolean UnbackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
     {
 #ifdef /* MCS_unbackup_dsk_lnx */ LEGACY_SYSTEM
-        return MCS_rename(p_oname, p_nname);
+	return MCS_rename(oname, nname);
 #endif /* MCS_unbackup_dsk_lnx */
         return MCS_rename(p_old_name, p_new_name);
     }
@@ -1343,7 +1353,11 @@ public:
     virtual Boolean ResolveAlias(MCStringRef p_target, MCStringRef& r_dest)
     {
 #ifdef /* MCS_resolvealias_dsk_lnx */ LEGACY_SYSTEM
-        return MCS_resolvepath(p_path, r_resolved);
+        char *tpath = ep.getsvalue().clone();
+        char *dest = MCS_resolvepath(tpath);
+        delete tpath;
+        ep.copysvalue(dest, strlen(dest));
+        delete dest;
 #endif /* MCS_resolvealias_dsk_lnx */
         return MCS_resolvepath(p_target, r_dest);
     }
@@ -1351,13 +1365,9 @@ public:
     virtual bool GetCurrentFolder(MCStringRef& r_path)
     {
 #ifdef /* MCS_getcurdir_dsk_lnx */ LEGACY_SYSTEM
-        MCAutoNativeCharArray t_buffer;
-        if (!t_buffer.New(PATH_MAX + 1))
-            return false;
-        if (NULL == getcwd((char*)t_buffer.Chars(), PATH_MAX + 1))
-            return false;
-        t_buffer.Shrink(MCCStringLength((const char*)t_buffer.Chars()));
-        return t_buffer.CreateStringAndRelease(r_path);
+        char *dptr = new char[PATH_MAX + 2];
+        getcwd(dptr, PATH_MAX);
+        return dptr;
 #endif /* MCS_getcurdir_dsk_lnx */
         MCAutoArray<char> t_buffer;
         if (!t_buffer.New(PATH_MAX + 1))
@@ -1371,11 +1381,10 @@ public:
     virtual Boolean SetCurrentFolder(MCStringRef p_path)
     {
 #ifdef /* MCS_setcurdir_dsk_lnx */ LEGACY_SYSTEM
-        MCAutoStringRef t_new_path;
-        if (MCS_resolvepath(p_path, &t_new_path))
-            return chdir(MCStringGetCString(*t_new_path)) == 0;
-
-        return false;
+        char *newpath = MCS_resolvepath(path);
+        Boolean done = chdir(newpath) == 0;
+        delete newpath;
+        return done;
 #endif /* MCS_setcurdir_dsk_lnx */
         MCAutoStringRef t_new_path;
         if (MCS_resolvepath(p_path, &t_new_path))
@@ -1392,20 +1401,25 @@ public:
     virtual Boolean GetStandardFolder(MCNameRef p_type, MCStringRef& r_folder)
     {
 #ifdef /* MCS_getspecialfolder_dsk_lnx */ LEGACY_SYSTEM
-        MCAutoStringRef t_home, t_tilde;
-        if (!MCStringCreateWithCString("~", &t_tilde) ||
-            !MCS_resolvepath(*t_tilde, &t_home))
-            return false;
-
-        if (MCStringIsEqualTo(p_type, MCNameGetString(MCN_desktop), kMCStringOptionCompareCaseless))
-            return MCStringFormat(r_path, "%s/Desktop", MCStringGetCString(*t_home));
-        else if (MCStringIsEqualTo(p_type, MCNameGetString(MCN_home), kMCStringOptionCompareCaseless))
-            return MCStringCopy(*t_home, r_path);
-        else if (MCStringIsEqualTo(p_type, MCNameGetString(MCN_temporary), kMCStringOptionCompareCaseless))
-            return MCStringCreateWithCString("/tmp", r_path);
-
-        r_path = MCValueRetain(kMCEmptyString);
-        return true;
+        char *c_dir = MCS_resolvepath("~/");
+        
+        if ( ep.getsvalue() == "desktop" )
+        {
+            ep.clear();
+            ep.appendcstring(c_dir);
+            ep.appendcstring("/Desktop");
+        }
+        else if ( ep.getsvalue() == "home" )
+            ep.setcstring(c_dir);
+        else if (ep.getsvalue() == "temporary")
+            ep.setcstring("/tmp");
+        else
+        {
+            MCresult->sets("not supported");
+            ep.clear();
+        }
+        
+        delete c_dir ;
 #endif /* MCS_getspecialfolder_dsk_lnx */
         MCAutoStringRef t_home, t_tilde;
         if (!MCStringCreateWithCString("~", &t_tilde) ||
@@ -1434,8 +1448,8 @@ public:
     virtual Boolean GetDevices(MCStringRef& r_devices)
     {
 #ifdef /* MCS_getdevices_dsk_lnx */ LEGACY_SYSTEM
-        r_list = MCValueRetain(kMCEmptyList);
-        return true;
+        ep.clear();
+        return True;
 #endif /* MCS_getdevices_dsk_lnx */
         r_devices = MCValueRetain(kMCEmptyString);
         return true;
@@ -1444,8 +1458,8 @@ public:
     virtual Boolean GetDrives(MCStringRef& r_drives)
     {
 #ifdef /* MCS_getdrives_dsk_lnx */ LEGACY_SYSTEM
-        r_list = MCValueRetain(kMCEmptyList);
-        return true;
+        ep.clear();
+        return True;
 #endif /* MCS_getdrives_dsk_lnx */
         r_drives = MCValueRetain(kMCEmptyString);
         return true;
@@ -1454,21 +1468,22 @@ public:
     virtual Boolean FileExists(MCStringRef p_path)
     {
 #ifdef /* MCS_exists_dsk_lnx */ LEGACY_SYSTEM
-        if (MCStringGetLength(p_path) == 0)
-            return false;
-
-        MCAutoStringRef t_resolved;
-        if (!MCS_resolvepath(p_path, &t_resolved))
-            return false;
-
-        bool t_found;
-        struct stat64 buf;
         // MM-2011-08-24: [[ Bug 9691 ]] Updated to use stat64 so no longer fails on files larger than 2GB
-        t_found = stat64(MCStringGetCString(*t_resolved), &buf) == 0;
-        if (t_found)
-            t_found = p_is_file == ((buf.st_mode & S_IFDIR) == 0);
-
-        return t_found;
+        char *newpath = MCS_resolvepath(path);
+        struct stat64 buf;
+        
+        Boolean found = stat64(newpath, &buf) == 0;
+        if (found)
+            if (file)
+            {
+                if (buf.st_mode & S_IFDIR)
+                    found = False;
+            }
+            else
+                if (!(buf.st_mode & S_IFDIR))
+                    found = False;
+        delete newpath;
+        return found;
 #endif /* MCS_exists_dsk_lnx */
         if (MCStringGetLength(p_path) == 0)
             return false;
@@ -1568,14 +1583,13 @@ public:
     virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map)
     {
 #ifdef /* MCS_open_dsk_lnx */ LEGACY_SYSTEM
-        MCAutoStringRef t_resolved_path;
-        MCS_resolvepath(path, &t_resolved_path);
+        char *newpath = MCS_resolvepath(path);
         IO_handle handle = NULL;
-    #ifndef NOMMAP
-
-        if (map && MCmmap && !driver && p_mode == kMCSOpenFileModeRead)
+        
+#ifndef NOMMAP
+        if (map && MCmmap && !driver && strequal(mode, IO_READ_MODE))
         {
-            int fd = open(MCStringGetCString(*t_resolved_path), O_RDONLY);
+            int fd = open(newpath, O_RDONLY);
             struct stat64 buf;
             if (fd != -1 && !fstat64(fd, &buf))
             {
@@ -1584,10 +1598,12 @@ public:
                 {
                     char *buffer = (char *)mmap(NULL, len, PROT_READ, MAP_SHARED,
                                                 fd, offset);
+                    
                     // MW-2013-05-02: [[ x64 ]] Make sure we use the MAP_FAILED constant
                     //   rather than '-1'.
-                    if (t_buffer != MAP_FAILED)
+                    if (buffer != MAP_FAILED)
                     {
+                        delete newpath;
                         handle = new IO_header(NULL, buffer, len, fd, 0);
                         return handle;
                     }
@@ -1595,29 +1611,19 @@ public:
                 close(fd);
             }
         }
-    #endif
-        const char *t_mode;
-        if (p_mode == kMCSOpenFileModeRead)
-            t_mode = IO_READ_MODE;
-        else if (p_mode == kMCSOpenFileModeWrite)
-            t_mode = IO_WRITE_MODE;
-        else if (p_mode == kMCSOpenFileModeUpdate)
-            t_mode = IO_UPDATE_MODE;
-        else if (p_mode == kMCSOpenFileModeAppend)
-            t_mode = IO_APPEND_MODE;
-
-        FILE *fptr = fopen(MCStringGetCString(*t_resolved_path), t_mode);
-        if (fptr == NULL && !strequal(t_mode, IO_READ_MODE))
-            fptr = fopen(MCStringGetCString(*t_resolved_path), IO_CREATE_MODE);
+#endif
+        FILE *fptr = fopen(newpath, mode);
+        if (fptr == NULL && !strequal(mode, IO_READ_MODE))
+            fptr = fopen(newpath, IO_CREATE_MODE);
         if (driver)
             configureSerialPort((short)fileno(fptr));
+        delete newpath;
         if (fptr != NULL)
         {
             handle = new IO_header(fptr, NULL, 0, 0, 0);
             if (offset > 0)
                 fseek(handle->fptr, offset, SEEK_SET);
         }
-        delete t_mode;
         return handle;
 #endif /* MCS_open_dsk_lnx */
         IO_handle t_handle;
@@ -1731,7 +1737,7 @@ public:
     virtual bool GetTemporaryFileName(MCStringRef& r_tmp_name)
     {
 #ifdef /* MCS_tmpnam_dsk_lnx */ LEGACY_SYSTEM
-        return MCStringCreateWithCString(tmpnam(NULL), r_path);
+	return tmpnam(NULL);
 #endif /* MCS_tmpnam_dsk_lnx */
         return MCStringCreateWithSysString(tmpnam(NULL), r_tmp_name);
     }
@@ -1792,57 +1798,62 @@ public:
     virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 #ifdef /* MCS_getentries_dsk_lnx */ LEGACY_SYSTEM
-        MCAutoListRef t_list;
-        if (!MCListCreateMutable('\n', &t_list))
-            return false;
-
         uint4 flag = files ? S_IFREG : S_IFDIR;
         DIR *dirptr;
-
+        
         if ((dirptr = opendir(".")) == NULL)
         {
-            return false;
+            *dptr = MCU_empty();
+            return;
         }
-
+        
         struct dirent64 *direntp;
-
-        bool t_success = true;
-
-        while (t_success && (direntp = readdir64(dirptr)) != NULL)
+        
+        char *tptr = new char[ENTRIES_CHUNK];
+        tptr[0] = '\0';
+        uint4 nchunks = 1;
+        uint4 size = 0;
+        MCExecPoint ep(NULL, NULL, NULL);
+        while ((direntp = readdir64(dirptr)) != NULL)
         {
-            if (MCCStringEqual(direntp->d_name, "."))
+            if (strequal(direntp->d_name, "."))
                 continue;
             struct stat64 buf;
             stat64(direntp->d_name, &buf);
             if (buf.st_mode & flag)
             {
+                char tbuf[PATH_MAX * 3 + U4L * 5 + 21];
+                uint4 tsize;
                 if (islong)
                 {
-                    MCAutoStringRef t_detailed_string;
-                    MCAutoStringRef t_filename_string;
-                    MCAutoStringRef t_urlencoded_string;
-
-                    t_success =  MCStringCreateWithNativeChars((char_t*)direntp->d_name, MCCStringLength(direntp->d_name), &t_filename_string);
-                    if (t_success)
-                        t_success = MCFiltersUrlEncode(*t_filename_string, &t_urlencoded_string);
-                    if (t_success)
-                        t_success = MCStringFormat(&t_detailed_string,
-                            "%*.*s,%lld,,,%ld,%ld,,%d,%d,%03o,",
-                                MCStringGetLength(*t_urlencoded_string), MCStringGetLength(*t_urlencoded_string),
-                            MCStringGetNativeCharPtr(*t_urlencoded_string),
-                            buf.st_size, (long)buf.st_mtime, (long)buf.st_atime,
-                            (int)buf.st_uid, (int)buf.st_gid,
+                    ep.copysvalue(direntp->d_name, strlen(direntp->d_name));
+                    MCU_urlencode(ep);
+                    sprintf(tbuf, "%*.*s,%lld,,,%ld,%ld,,%d,%d,%03o,",
+                            (int)ep.getsvalue().getlength(), (int)ep.getsvalue().getlength(),
+                            ep.getsvalue().getstring(),buf.st_size, (long)buf.st_mtime,
+                            (long)buf.st_atime, (int)buf.st_uid, (int)buf.st_gid,
                             (unsigned int)buf.st_mode & 0777);
-                    if (t_success)
-                        t_success = MCListAppend(*t_list, *t_detailed_string);
+                    tsize = strlen(tbuf) + 1;
                 }
                 else
-                    t_success = MCListAppendCString(*t_list, direntp->d_name);
+                    tsize = strlen(direntp->d_name) + 1;
+                if (size + tsize > nchunks * ENTRIES_CHUNK)
+                {
+                    MCU_realloc((char **)&tptr, nchunks * ENTRIES_CHUNK,
+                                (nchunks + 1) * ENTRIES_CHUNK, sizeof(char));
+                    nchunks++;
+                }
+                if (size)
+                    tptr[size - 1] = '\n';
+                if (islong)
+                    strcpy(&tptr[size], tbuf);
+                else
+                    strcpy(&tptr[size], direntp->d_name);
+                size += tsize;
             }
         }
         closedir(dirptr);
-
-        return t_success && MCListCopy(*t_list, r_list);
+        *dptr = tptr;
 #endif /* MCS_getentries_dsk_lnx */
         DIR *dirptr;
 
@@ -1894,73 +1905,68 @@ public:
     virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path)
     {
 #ifdef /* MCS_resolvepath_dsk_lnx */ LEGACY_SYSTEM
-        if (MCStringGetLength(p_path) == 0)
-            return MCS_getcurdir(r_resolved);
-
-        MCAutoStringRef t_tilde_path;
-        if (MCStringGetCharAtIndex(p_path, 0) == '~')
+        if (path == NULL)
+            return MCS_getcurdir();
+        char *tildepath;
+        if (path[0] == '~')
         {
-            uindex_t t_user_end;
-            if (!MCStringFirstIndexOfChar(p_path, '/', 0, kMCStringOptionCompareExact, t_user_end))
-                t_user_end = MCStringGetLength(p_path);
-
-            // Prepend user name
-            struct passwd *t_password;
-            if (t_user_end == 1)
-                t_password = getpwuid(getuid());
-            else
+            char *tpath = strclone(path);
+            char *tptr = strchr(tpath, '/');
+            if (tptr == NULL)
             {
-                MCAutoStringRef t_username;
-                if (!MCStringCopySubstring(p_path, MCRangeMake(1, t_user_end - 1), &t_username))
-                    return false;
-
-                t_password = getpwnam(MCStringGetCString(*t_username));
-            }
-
-            if (t_password != NULL)
-            {
-                if (!MCStringCreateMutable(0, &t_tilde_path) ||
-                    !MCStringAppendNativeChars(*t_tilde_path, (const char_t *)t_password->pw_dir, MCCStringLength(t_password->pw_dir)) ||
-                    !MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMake(t_user_end, MCStringGetLength(p_path) - t_user_end)))
-                    return false;
+                tpath[0] = '\0';
+                tptr = tpath;
             }
             else
-                t_tilde_path = p_path;
-        }
-        else
-            t_tilde_path = p_path;
-
-        // IM-2012-07-23
-        // Keep (somewhat odd) semantics of the original function for now
-        if (!MCS_is_link(*t_tilde_path))
-            return MCStringCopy(*t_tilde_path, r_resolved);
-
-        MCAutoStringRef t_newname;
-        if (!MCS_readlink(*t_tilde_path, &t_newname))
-            return false;
-
-        if (MCStringGetCharAtIndex(*t_newname, 0) != '/')
-        {
-            MCAutoStringRef t_resolved;
-
-            uindex_t t_last_component;
-            uindex_t t_path_length;
-
-            t_path_length = MCStringGetLength(p_path);
-
-            if (MCStringLastIndexOfChar(p_path, '/', t_path_length, kMCStringOptionCompareExact, t_last_component))
-                t_last_component++;
+                *tptr++ = '\0';
+            
+            struct passwd *pw;
+            if (*(tpath + 1) == '\0')
+                pw = getpwuid(getuid());
             else
-                t_last_component = 0;
-
-            if (!MCStringMutableCopySubstring(p_path, MCRangeMake(0, t_last_component), &t_resolved) ||
-                !MCStringAppend(*t_resolved, *t_newname))
-                return false;
-
-            return MCStringCopy(*t_resolved, r_resolved);
+                pw = getpwnam(tpath + 1);
+            if (pw == NULL)
+                return NULL;
+            tildepath = new char[strlen(pw->pw_dir) + strlen(tptr) + 2];
+            strcpy(tildepath, pw->pw_dir);
+            if (*tptr)
+            {
+                strcat(tildepath, "/");
+                strcat(tildepath, tptr);
+            }
+            delete tpath;
         }
         else
-            return MCStringCopy(*t_newname, r_resolved);
+            tildepath = strclone(path);
+        
+        struct stat64 buf;
+        if (lstat64(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
+            return tildepath;
+        int4 size;
+        char *newname = new char[PATH_MAX + 2];
+        if ((size = readlink(tildepath, newname, PATH_MAX)) < 0)
+        {
+            delete tildepath;
+            delete newname;
+            return NULL;
+        }
+        delete tildepath;
+        newname[size] = '\0';
+        if (newname[0] != '/')
+        {
+            char *fullpath = new char[strlen(path) + strlen(newname) + 2];
+            strcpy(fullpath, path);
+            char *sptr = strrchr(fullpath, '/');
+            if (sptr == NULL)
+                sptr = fullpath;
+            else
+                sptr++;
+            strcpy(sptr, newname);
+            delete newname;
+            newname = MCS_resolvepath(fullpath);
+            delete fullpath;
+        }
+        return newname;
 #endif /* MCS_resolvepath_dsk_lnx */
         if (MCStringGetLength(p_path) == 0)
         {
@@ -2043,7 +2049,6 @@ public:
     virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
     {
 #ifdef /* MCS_longfilepath_dsk_lnx */ LEGACY_SYSTEM
-        return MCStringCopy(p_path, r_long_path);
 #endif /* MCS_longfilepath_dsk_lnx */
         return MCStringCopy(p_path, r_long_path);
     }
@@ -2051,7 +2056,6 @@ public:
     virtual bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path)
     {
 #ifdef /* MCS_shortfilepath_dsk_lnx */ LEGACY_SYSTEM
-        return MCStringCopy(p_path, r_short_path);
 #endif /* MCS_shortfilepath_dsk_lnx */
         return MCStringCopy(p_path, r_short_path);
     }
@@ -2069,7 +2073,7 @@ public:
             {
                 MCU_realloc((char **)&MCprocesses, MCnprocesses,
                             MCnprocesses + 1, sizeof(Streamnode));
-                MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(MCM_shell);
+                MCprocesses[MCnprocesses].name = strclone("shell");
                 MCprocesses[MCnprocesses].mode = OM_NEITHER;
                 MCprocesses[MCnprocesses].ohandle = NULL;
                 MCprocesses[MCnprocesses].ihandle = NULL;
@@ -2085,7 +2089,7 @@ public:
                     close(2);
                     dup(toparent[1]);
                     close(toparent[1]);
-                    execl(MCStringGetCString(MCshellcmd), MCStringGetCString(MCshellcmd), "-s", NULL);
+                    execl(MCshellcmd, MCshellcmd, "-s", NULL);
                     _exit(-1);
                 }
                 MCS_checkprocesses();
@@ -2100,7 +2104,7 @@ public:
                 {
                     if (MCprocesses[index].pid > 0)
                         MCS_kill(MCprocesses[index].pid, SIGKILL);
-
+                    
                     MCprocesses[index].pid = 0;
                     MCeerror->add
                     (EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
@@ -2122,10 +2126,8 @@ public:
             (EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
             return IO_ERROR;
         }
-        char *buffer;
-        uint4 buffersize;
-        buffer = (char *)malloc(4096);
-        buffersize = 4096;
+        char *buffer = ep.getbuffer(0);
+        uint4 buffersize = ep.getbuffersize();
         uint4 size = 0;
         if (MCS_shellread(toparent[0], buffer, buffersize, size) != IO_NORMAL)
         {
@@ -2134,10 +2136,11 @@ public:
             close(toparent[0]);
             if (MCprocesses[index].pid != 0)
                 MCS_kill(MCprocesses[index].pid, SIGKILL);
-            ep.grabbuffer(buffer, buffersize);
+            ep.setbuffer(buffer, buffersize);
             return IO_ERROR;
         }
-        ep.grabbuffer(buffer, size);
+        ep.setbuffer(buffer, buffersize);
+        ep.setlength(size);
         close(toparent[0]);
         MCS_checkprocesses();
         if (MCprocesses[index].pid != 0)
@@ -2164,12 +2167,11 @@ public:
         {
             MCExecPoint ep2(ep);
             ep2.setint(MCprocesses[index].retcode);
-            MCresult->set(ep2);
+            MCresult->store(ep2, False);
         }
         else
             MCresult->clear(False);
         return IO_NORMAL;
-
 #endif /* MCS_runcmd_dsk_lnx */
         IO_cleanprocesses();
         int tochild[2];
@@ -2354,7 +2356,87 @@ public:
 
     virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4& p_output_length, uint4& r_used)
     {
-#ifdef /* MCSTextConvertToUnicode_dsk_lnx */ LEGACY_SYSTEM
+#ifdef /* MCSTextConvertToUnicode_dsk_lnx */ LEGACY_SYSTEM        
+        if (p_input_length == 0)
+        {
+            r_used = 0;
+            return true;
+        }
+        
+        if (p_output_length == 0)
+        {
+            r_used = p_input_length * 4;
+            return false;
+        }
+        
+        const char *t_encoding;
+        t_encoding = NULL;
+        
+        if (p_input_encoding >= kMCTextEncodingWindowsNative)
+        {
+            struct { uint4 codepage; const char *encoding; } s_codepage_map[] =
+            {
+                {437, "CP437" },
+                {850, "CP850" },
+                {932, "CP932" },
+                {949, "CP949" },
+                {1361, "CP1361" },
+                {936, "CP936" },
+                {950, "CP950" },
+                {1253, "WINDOWS-1253" },
+                {1254, "WINDOWS-1254" },
+                {1258, "WINDOWS-1258" },
+                {1255, "WINDOWS-1255" },
+                {1256, "WINDOWS-1256" },
+                {1257, "WINDOWS-1257" },
+                {1251, "WINDOWS-1251" },
+                {874, "CP874" },
+                {1250, "WINDOWS-1250" },
+                {1252, "WINDOWS-1252" },
+                {10000, "MACINTOSH" }
+            };
+            
+            for(uint4 i = 0; i < sizeof(s_codepage_map) / sizeof(s_codepage_map[0]); ++i)
+                if (s_codepage_map[i] . codepage == p_input_encoding - kMCTextEncodingWindowsNative)
+                {
+                    t_encoding = s_codepage_map[i] . encoding;
+                    break;
+                }
+            
+        }
+        else if (p_input_encoding >= kMCTextEncodingMacNative)
+            t_encoding = "MACINTOSH";
+        
+        iconv_t t_converter;
+        t_converter = fetch_converter(t_encoding);
+        
+        if (t_converter == NULL)
+        {
+            r_used = 0;
+            return true;
+        }
+        
+        char *t_in_bytes;
+        char *t_out_bytes;
+        size_t t_in_bytes_left;
+        size_t t_out_bytes_left;
+        
+        t_in_bytes = (char *)p_input;
+        t_in_bytes_left = p_input_length;
+        t_out_bytes = (char *)p_output;
+        t_out_bytes_left = p_output_length;
+        
+        iconv(t_converter, NULL, NULL, &t_out_bytes, &t_out_bytes_left);
+        
+        if (iconv(t_converter, &t_in_bytes, &t_in_bytes_left, &t_out_bytes, &t_out_bytes_left) == (size_t)-1)
+        {
+            r_used = 4 * p_input_length;
+            return false;
+        }
+        
+        r_used = p_output_length - t_out_bytes_left;
+        
+        return true;
 #endif /* MCSTextConvertToUnicode_dsk_lnx */
         if (p_input_length == 0)
         {
@@ -2499,11 +2581,11 @@ public:
         uint2 index = MCnprocesses;
         MCU_realloc((char **)&MCprocesses, MCnprocesses, MCnprocesses + 1,
                     sizeof(Streamnode));
-        MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(name);
+        MCprocesses[MCnprocesses].name = name;
         MCprocesses[MCnprocesses].mode = mode;
         MCprocesses[MCnprocesses].ihandle = NULL;
         MCprocesses[MCnprocesses].ohandle = NULL;
-
+        
         if (!elevated)
         {
             int tochild[2];
@@ -2529,7 +2611,7 @@ public:
                     uint2 argc = 0;
                     if (doc == NULL || *doc == '\0')
                     {
-                        char *sptr = strclone(MCNameGetCString(name));
+                        char *sptr = name;
                         while (*sptr)
                         {
                             while (isspace(*sptr))
@@ -2554,8 +2636,8 @@ public:
                     else
                     {
                         argv = new char *[3];
-                        argv[0] = (char *)MCNameGetCString(name);
-                        argv[1] = (char *)doc;
+                        argv[0] = name;
+                        argv[1] = doc;
                         argc = 2;
                     }
                     argv[argc] = NULL;
@@ -2582,7 +2664,7 @@ public:
                     }
                     else
                         close(0);
-                    execvp(argv[0], argv);
+                    execvp(name, argv);
                     _exit(-1);
                 }
                 MCS_checkprocesses();
@@ -2603,7 +2685,7 @@ public:
         {
             extern bool MCSystemOpenElevatedProcess(const char *p_command, int32_t& r_pid, int32_t& r_input_fd, int32_t& r_output_fd);
             int32_t t_pid, t_input_fd, t_output_fd;
-            if (MCSystemOpenElevatedProcess(MCNameGetCString(name), t_pid, t_input_fd, t_output_fd))
+            if (MCSystemOpenElevatedProcess(name, t_pid, t_input_fd, t_output_fd))
             {
                 MCprocesses[MCnprocesses++] . pid = t_pid;
                 MCS_checkprocesses();
@@ -2614,21 +2696,24 @@ public:
                 }
                 else
                     close(t_input_fd);
-
+                
                 if (writing)
                     MCprocesses[index] . ohandle = MCS_dopen(t_output_fd, IO_WRITE_MODE);
                 else
                     close(t_output_fd);
-
+                
                 noerror = True;
             }
             else
                 noerror = False;
         }
+        delete doc;
         if (!noerror || MCprocesses[index].pid == -1)
         {
             if (noerror)
                 MCprocesses[index].pid = 0;
+            else
+                delete name;
             MCresult->sets("not opened");
         }
         else
@@ -2827,15 +2912,14 @@ public:
         struct sigaction action;
         memset((char *)&action, 0, sizeof(action));
         action.sa_handler = (void (*)(int))SIG_IGN;
-
+        
         sigaction(SIGCHLD, &action, NULL);
         while (MCnprocesses--)
         {
-            MCNameDelete(MCprocesses[MCnprocesses] . name);
-            MCprocesses[MCnprocesses] . name = nil;
+            delete MCprocesses[MCnprocesses].name;
             if (MCprocesses[MCnprocesses].pid != 0
-                    && (MCprocesses[MCnprocesses].ihandle != NULL
-                        || MCprocesses[MCnprocesses].ohandle != NULL))
+		        && (MCprocesses[MCnprocesses].ihandle != NULL
+		            || MCprocesses[MCnprocesses].ohandle != NULL))
             {
                 kill(MCprocesses[MCnprocesses].pid, SIGKILL);
                 waitpid(MCprocesses[MCnprocesses].pid, NULL, 0);
@@ -3133,12 +3217,11 @@ public:
     virtual void LaunchDocument(MCStringRef p_document)
     {
 #ifdef /* MCS_launch_document_dsk_lnx */ LEGACY_SYSTEM
-
         const char * p_mime_type ;
         const char * p_command ;
         GList * p_args = NULL;
         GnomeVFSMimeApplication * p_gvfs ;
-
+        
         if ( MCuselibgnome)
         {
             if ( gnome_vfs_initialized() )
@@ -3147,17 +3230,19 @@ public:
                 p_gvfs = gnome_vfs_mime_get_default_application_for_uri( p_document, p_mime_type);
                 if ( p_gvfs != NULL)
                 {
-                    p_args = g_list_append ( p_args, (char *)p_document );
+                    p_args = g_list_append ( p_args, p_document );
                     gnome_vfs_mime_application_launch( p_gvfs, p_args);
                     g_list_free ( p_args ) ;
-
+                    
                 }
             }
-            else
+            else 
                 MCresult -> sets("not supported");
+            delete p_document;
         }
-        else
+        else 
         {
+            // p_document will be deleted by MCS_launch_url ()
             MCS_launch_url (p_document);
         }
 #endif /* MCS_launch_document_dsk_lnx */
@@ -3205,9 +3290,12 @@ public:
             /* UNCHECKED */ MCCStringFormat(t_handler, LAUNCH_URL_SCRIPT, p_document);
             MCExecPoint ep (NULL, NULL, NULL) ;
             MCdefaultstackptr->domess(t_handler);
-            MCresult->eval(ep);
+            MCresult->fetch(ep);
             MCCStringFree(t_handler);
         }
+        
+        // MW-2007-12-13: <p_document> is owned by the callee
+        delete p_document;
 #endif /* MCS_launch_url_dsk_lnx */
         GError *err = NULL;
         if (MCuselibgnome)
@@ -3245,14 +3333,10 @@ public:
     virtual bool GetDNSservers(MCListRef& r_list)
     {
 #ifdef /* MCS_getDNSservers_dsk_lnx */ LEGACY_SYSTEM
-        MCAutoListRef t_list;
-
-        MCresult->clear();
+        ep . clear();
+        MCresult->store(ep, False);
         MCdefaultstackptr->domess(DNS_SCRIPT);
-
-        return MCListCreateMutable('\n', &t_list) &&
-            MCListAppend(*t_list, MCresult->getvalueref()) &&
-            MCListCopy(*t_list, r_list);
+        MCresult->fetch(ep);
 #endif /* MCS_getDNSservers_dsk_lnx */
         MCAutoListRef t_list;
 

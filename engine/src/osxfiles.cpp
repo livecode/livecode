@@ -76,8 +76,7 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 		MCresult->sets("can't open file");
 	else
 	{
-		char *buffer;
-		/* UNCHECKED */ ep . reserve(buf . st_size, buffer); 
+		char *buffer = ep.getbuffer(buf.st_size);
 		if (buffer == NULL)
 		{
 			ep.clear();
@@ -93,7 +92,7 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 			}
 			else
 			{
-				ep . commit(tsize);
+				ep.setlength(tsize);
 				if (!binary)
 					ep.texttobinary();
 				MCresult->clear(False);
