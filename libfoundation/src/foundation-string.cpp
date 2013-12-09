@@ -98,6 +98,17 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
             return MCStringCreateWithNativeChars(p_bytes, p_byte_count, r_string);
         case kMCStringEncodingUTF16:
             return MCStringCreateWithChars((unichar_t *)p_bytes, p_byte_count / 2, r_string);
+        case kMCStringEncodingUTF16BE:
+        {
+            unichar_t *t_buffer;
+            uindex_t t_length = p_byte_count / 2;
+            MCMemoryAllocate(t_length * sizeof(unichar_t), t_buffer);
+
+            for (uindex_t i = 0; i < t_length; i++)
+                t_buffer[i] = (unichar_t)MCSwapInt16HostToBig(((unichar_t *)p_bytes)[i]);
+            return MCStringCreateWithChars(t_buffer, t_length, r_string);
+        }
+            
         case kMCStringEncodingUTF8:
         {
             unichar_t *t_chars;
