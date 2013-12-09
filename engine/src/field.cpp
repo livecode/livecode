@@ -2881,8 +2881,8 @@ findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
 void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, findex_t p_start, findex_t p_count)
 {
     // Get the first paragraph for this instance of the field
-    MCParagraph *t_pg;
-    t_pg = resolveparagraphs(p_part_id);
+    MCParagraph *t_pg, *t_first_para;
+    t_first_para = t_pg = resolveparagraphs(p_part_id);
     
     // Loop through the paragraphs until we've gone x_si code units in
     uindex_t t_index = 0;
@@ -2934,6 +2934,14 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
         p_count -= t_pg_cp.length;
         x_ei += t_pg->gettextlength();
         t_pg = t_pg->next();
+        
+        // Have we reached the first paragraph of the field again?
+        if (t_pg == t_first_para)
+        {
+            // End index was too large. Clamp it and stop looping.
+            p_count = 0;
+            break;
+        }
         
         // Count the number of codepoints in the next paragraph
         /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), MCRangeMake(0, t_pg->gettextlength()), t_pg_cp);

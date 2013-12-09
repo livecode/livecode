@@ -8666,7 +8666,7 @@ static bool startprocess_create_argv(char *name, char *doc, uint32_t & r_argc, c
 	char **argv;
 	argc = 0;
 	argv = nil;
-	if (doc == NULL)
+	if (doc == NULL || *doc == '\0')
 	{
 		char *sptr = name;
 		while (*sptr)
@@ -9083,10 +9083,13 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 				"-elevated-slave",
 				nil
 			};
-            char *t_mccmd;
-            /* UNCHECKED */ MCStringConvertToCString(MCcmd, t_mccmd);
-			t_status = AuthorizationExecuteWithPrivileges(t_auth, t_mccmd, kAuthorizationFlagDefaults, t_arguments, &t_stream);
-            delete t_mccmd;
+            
+            MCAutoPointer<char> t_cmd;
+            uindex_t t_ignored;
+            
+            /* UNCHECKED */ MCStringConvertToUTF8(MCcmd, &t_cmd, t_ignored);
+            
+			t_status = AuthorizationExecuteWithPrivileges(t_auth, *t_cmd, kAuthorizationFlagDefaults, t_arguments, &t_stream);
 		}
 		
 		uint32_t t_pid;
