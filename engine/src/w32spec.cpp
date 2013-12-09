@@ -63,7 +63,7 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 	ep.clear();
 	delete tpath;
 	HANDLE hf = CreateFileA(newpath, GENERIC_READ, FILE_SHARE_READ, NULL,
-	                       OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	delete newpath;
 	if (hf == INVALID_HANDLE_VALUE)
 	{
@@ -74,13 +74,10 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 	{
 		DWORD fsize;
 		DWORD nread = 0;
-		char *buf;
-		fsize = GetFileSize(hf, NULL);
-		if (fsize != 0xFFFFFFFF)
-			ep.reserve(fsize, buf);
-		if (fsize == 0xFFFFFFFF
-		        || !ReadFile(hf, buf, fsize, &nread, NULL)
-		        || nread != fsize)
+		if ((fsize = GetFileSize(hf, NULL)) == 0xFFFFFFFF
+            || ep.getbuffer(fsize) == NULL
+            || !ReadFile(hf, ep.getbuffer(fsize), fsize, &nread, NULL)
+            || nread != fsize)
 		{
 			ep.clear();
 			MCS_seterrno(GetLastError());
@@ -88,7 +85,7 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 		}
 		else
 		{
-			ep.commit(fsize);
+			ep.setlength(fsize);
 			if (!binary)
 				ep.texttobinary();
 			MCresult->clear(False);

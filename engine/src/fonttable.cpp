@@ -210,7 +210,7 @@ void MCLogicalFontTableFinish(void)
 	s_logical_font_table = nil;
 }
 
-IO_stat MCLogicalFontTableLoad(IO_handle p_stream)
+IO_stat MCLogicalFontTableLoad(IO_handle p_stream, uint32_t p_version)
 {
 	// Delete any existing font table.
 	MCLogicalFontTableFinish();
@@ -237,60 +237,54 @@ IO_stat MCLogicalFontTableLoad(IO_handle p_stream)
 		// Iterate t_count times to load each entry in.
 		for(uint32_t i = 0; i < t_count && t_stat == IO_NORMAL; i++)
 		{
-			char *t_textfont;
+			MCAutoStringRef t_textfont_string;
 			uint2 t_textsize, t_textstyle;
-			t_textfont = nil;
 
 			// Read in the textSize, textStyle and (original) textFont props.
 			t_stat = IO_read_uint2(&t_textsize, p_stream);
 			if (t_stat == IO_NORMAL)
 				t_stat = IO_read_uint2(&t_textstyle, p_stream);
+			
+			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 			if (t_stat == IO_NORMAL)
-				t_stat = IO_read_string(t_textfont, p_stream);
+				t_stat = IO_read_stringref_new(&t_textfont_string, p_stream, p_version >= 7000);
 
 			// Now convert the textFont string into a name, splitting off the
 			// lang tag (if any).
-			MCNameRef t_textfont_name;
+			MCAutoStringRef t_textfont;
 			bool t_is_unicode;
 			if (t_stat == IO_NORMAL)
 			{
-				// MW-2012-02-17: [[ Bug ]] It seems possible for the textFont string
-				//   to be empty in some cases - so handle this case carefully.
-				const char *t_textfont_tag;
-				if (t_textfont != nil)
+				uindex_t t_offset;
+				if (MCStringFirstIndexOfChar(*t_textfont_string, ',', 0, kMCStringOptionCompareExact, t_offset))
 				{
-					t_textfont_tag = strchr(t_textfont, ',');
-					if (t_textfont_tag == nil)
-					{
-						t_textfont_tag = t_textfont + strlen(t_textfont);
-						t_is_unicode = false;
-					}
-					else
-						t_is_unicode = true;
+					if (!MCStringCopySubstring(*t_textfont_string, MCRangeMake(0, t_offset), &t_textfont))
+						t_stat = IO_ERROR;
+					t_is_unicode = true;
 				}
 				else
 				{
-					t_textfont_tag = nil;
+					t_textfont = *t_textfont_string;
 					t_is_unicode = false;
 				}
 
-				if (!MCNameCreateWithOldString(MCString(t_textfont, t_textfont_tag - t_textfont), t_textfont_name))
-					t_stat = IO_ERROR;
 			}
+				
+			MCNameRef t_textfont_name;
+			if (t_stat == IO_NORMAL)
+				if (!MCNameCreate(*t_textfont, t_textfont_name))
+					t_stat = IO_ERROR;
 
 			// Set the appropriate table entry.
 			if (t_stat == IO_NORMAL)
 				MCLogicalFontTableSetEntry(i, t_textfont_name, t_textstyle, t_textsize, t_is_unicode);
-
-			// Cleanup the (temporary) original textFont string.
-			delete t_textfont;
 		}
 	}
 
 	return t_stat;
 }
 
-IO_stat MCLogicalFontTableSave(IO_handle p_stream)
+IO_stat MCLogicalFontTableSave(IO_handle p_stream, uint32_t p_version)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -327,9 +321,10 @@ IO_stat MCLogicalFontTableSave(IO_handle p_stream)
 				else
 					t_unicode_textfont = MCNameGetString(t_textfont);
 			}
-
-			if (t_stat == IO_NORMAL)
-				t_stat = IO_write_stringref(*t_unicode_textfont, p_stream, false);
+			
+			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+            if (t_stat == IO_NORMAL)
+                t_stat = IO_write_stringref_new(*t_unicode_textfont, p_stream, p_version >= 7000);
 		}
 
 	return t_stat;

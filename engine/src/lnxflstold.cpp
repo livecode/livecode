@@ -385,42 +385,20 @@ MCOldFontnode::MCOldFontnode(MCNameRef fname_n, uint2 &size, uint2 style)
 	
 	memset(&font, 0, sizeof(MCFontStruct));
 	
-	font.charset = 0;
 	if (MCnoui)
 		return;
-
-	Boolean t_is_unicode = False;
 
 	// MW-2005-02-08: We aren't going to use XMBTEXT for now, instead we will
 	//   search for an appropriate ISO10646 font if in 'encoding mode'.
 	char *temp;
 	/* UNCHECKED */ MCStringConvertToCString(MCNameGetString(reqname), temp);
-	sprintf(fontname, "-*-%s-%s-%s-%s--%d-*-*-*-*-*-iso8859-%d",
-		        temp, MCF_getweightstring(style),
+	sprintf(fontname, "-*-%.*s-%s-%s-%s--%d-*-*-*-*-*-iso8859-%d",
+		        strchr(temp, ',') - temp, temp, MCF_getweightstring(style),
 		        MCF_getslantshortstring(style),
 		        MCF_getexpandstring(style), size, MCcharset);
 	
 	if ((fs = XLoadQueryFont(MCdpy, fontname)) == NULL)
 		fs = lookup(MCNameGetString(reqname), size, style);
-	else
-		font.unicode = t_is_unicode;
-
-	if (fs == NULL)
-		if ((fs = XLoadQueryFont(MCdpy, temp)) != NULL)
-		{
-			if (pixelsize == 0)
-				pixelsize = XInternAtom(MCdpy, "PIXEL_SIZE", True);
-			uint2 i = fs->n_properties;
-			while (i--)
-				if (fs->properties[i].name == pixelsize)
-				{
-					size = reqsize = fs->properties[i].card32;
-					break;
-				}
-			size = reqsize = fs->ascent + fs->descent - 2;
-		}
-	// need to set this for unicode fonts
-	// font.unicode = True;
 
 	if (fs == NULL)
 		if ((fs = XLoadQueryFont(MCdpy, temp)) != NULL)
@@ -452,11 +430,6 @@ MCOldFontnode::MCOldFontnode(MCNameRef fname_n, uint2 &size, uint2 style)
 
 	font.ascent = fs -> ascent;
 	font.descent = fs -> descent;
-
-	font.unicode = t_is_unicode;
-	if (t_is_unicode)
-		font.charset = LCH_UNICODE;
-	delete temp;
 }
 
 MCOldFontnode::MCOldFontnode()
@@ -724,7 +697,7 @@ int4 MCOldFontlist::ctxt_textwidth(MCFontStruct *of, const char *s, uint2 l, boo
 	MCOldFontStruct *f;
 	f = static_cast<MCOldFontStruct *>(of);
 
-	bool useUnicode = (f->max_byte1 > 0 || f->unicode) || p_unicode_override;
+	bool useUnicode = f->max_byte1 > 0 || p_unicode_override;
 
 	if ( useUnicode )
 	{

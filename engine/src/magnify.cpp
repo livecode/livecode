@@ -144,12 +144,12 @@ void MCMagnify::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p
 		MCmagimage->magredrawrect(dc, dirty);
 }
 
-IO_stat MCMagnify::load(IO_handle stream, const char *version)
+IO_stat MCMagnify::load(IO_handle stream, uint32_t version)
 {
 	return MCObject::load(stream, version);
 }
 
-IO_stat MCMagnify::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length)
+IO_stat MCMagnify::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
 {
 	return defaultextendedload(p_stream, p_version, p_length);
 }

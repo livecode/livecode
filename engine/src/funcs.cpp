@@ -3458,17 +3458,28 @@ Parse_stat MCMe::parse(MCScriptPoint &sp, Boolean the)
 		else
 			if (*sptr == '[' && ++sptr < eptr && *sptr == '[')
 			{
+                // AL-2013-10-15 [[ Bug 11274 ]] Merge function should ignore square bracket if part of inner expression
+                uint4 t_skip;
+                t_skip = 0;
 				pstart = sptr - 1;
 				sptr++;
 				while (sptr < eptr)
-					if (*sptr == ']' && ++sptr < eptr && *sptr == ']')
+                {
+                    if (*sptr == '[')
+                        t_skip++;
+					else if (*sptr == ']')
 					{
-						match = True;
-						isexpression = True;
-						break;
+                        if (t_skip > 0)
+                            t_skip--;
+                        else if (++sptr < eptr && *sptr == ']')
+                        {
+                            match = True;
+                            isexpression = True;
+                            break;
+                        }
 					}
-					else
-						sptr++;
+                    sptr++;
+                }
 				if (!match)
 					sptr = pstart + 2;//no end tags (stray ?>) jump back)
 			}
@@ -5644,6 +5655,29 @@ void MCWithin::compile(MCSyntaxFactoryRef ctxt)
 }
 
 // platform specific functions
+MCMCISendString::~MCMCISendString()
+{
+	delete string;
+}
+
+Parse_stat MCMCISendString::parse(MCScriptPoint &sp, Boolean the)
+{
+	if (!the)
+	{
+		if (get1param(sp, &string, the) != PS_NORMAL)
+		{
+			MCperror->add
+			(PE_MCISENDSTRING_BADPARAM, sp);
+			return PS_ERROR;
+		}
+	}
+	else
+		initpoint(sp);
+	return PS_NORMAL;
+}
+
+void MCMCISendString::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
 #ifdef /* MCMCISendString */ LEGACY_EXEC
 	if (string->eval(ep) != ES_NORMAL)
 	{
@@ -5670,6 +5704,28 @@ void MCWithin::compile(MCSyntaxFactoryRef ctxt)
 
 	return ES_NORMAL;
 #endif /* MCMCISendString */
+    
+    MCAutoStringRef t_string, t_result;
+
+    if (!MCExecValueTraits<MCStringRef>::eval(ctxt, string, EE_MCISENDSTRING_BADSOURCE, &t_string))
+        return;
+    
+    MCMultimediaEvalMCISendString(ctxt, *t_string, &t_result);
+    
+    if (!ctxt . HasError())
+        MCExecValueTraits<MCStringRef>::set(r_value, *t_result);
+}
+
+void MCMCISendString::compile(MCSyntaxFactoryRef ctxt)
+{
+    MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+    
+    string -> compile(ctxt);
+    
+    MCSyntaxFactoryEvalMethod(ctxt, kMCMultimediaEvalMCISendStringMethodInfo);
+    
+    MCSyntaxFactoryEndExpression(ctxt);
+}
 
 #ifdef /* MCDeleteRegistry */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_REGISTRY_WRITE)

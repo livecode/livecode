@@ -381,6 +381,10 @@ void add_dialog_filters(GtkWidget *dialog, MCStringRef *p_types, uint4 p_type_co
             t_filter_name = get_filter_name(*t_type_str);
             t_filter_masks = get_filter_masks(*t_type_str);
 
+            // [[ bug 11268 ]] - Ensure there is a filter alongside with the name
+            if (t_filter_masks == nil)
+                continue;
+
 			filter = gtk_file_filter_new();
 			gtk_file_filter_set_name(filter, t_filter_name);
 			
@@ -666,9 +670,16 @@ int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringR
             }
 
             MCAutoStringRefAsSysString t_folder_sys, t_name_sys;
-            /* UNCHECKED */ t_folder_sys.Lock(*t_folder);
+
+            if (t_folder_exists)
+            {
+                /* UNCHECKED */ t_folder_sys.Lock(*t_folder);
+                gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), *t_folder_sys);
+            }
+            else
+                gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), G_last_saved_path);
+
             /* UNCHECKED */ t_name_sys.Lock(*t_name);
-            gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), t_folder_exists ? *t_folder_sys : G_last_saved_path);
             gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), *t_name_sys);
 		}
 	}

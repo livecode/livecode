@@ -101,27 +101,49 @@ void MCLoadableImageRep::PremultiplyFrames()
 	m_premultiplied = true;
 }
 
+void MCLoadableImageRep::UnpremultiplyFrames()
+{
+	if (!m_premultiplied)
+		return;
+	
+	for (uindex_t i = 0; i < m_frame_count; i++)
+		MCImageBitmapUnpremultiply(m_frames[i].image);
+	
+	m_premultiplied = false;
+}
+
 bool MCLoadableImageRep::EnsureImageFrames(bool p_premultiplied)
 {
+	// IM-2013-11-05: [[ RefactorGraphics ]] Rework to allow LoadImageFrames to return either
+	// premultiplied or non-premultiplied bitmaps 
 	if (m_frames != nil)
 	{
-		if (p_premultiplied)
+		if (p_premultiplied == m_premultiplied)
+			return true;
+		
+		if (m_premultiplied == m_frames_premultiplied)
 		{
-			if (!m_premultiplied)
+			if (p_premultiplied)
 				PremultiplyFrames();
-
+			else
+				UnpremultiplyFrames();
+			
 			return true;
 		}
 
-		if (!m_premultiplied)
-			return true;
-
-		MCLog("<%p> discarding premultiplied image frames", this);
+		MCLog("<%p> discarding %s image frames", this, m_premultiplied ? "premultiplied" : "unpremultiplied");
 		ReleaseFrames();
 	}
 	
-	if (!LoadImageFrames(m_frames, m_frame_count))
+	if (!LoadImageFrames(m_frames, m_frame_count, m_frames_premultiplied))
 		return false;
+	
+	m_premultiplied = m_frames_premultiplied;
+	
+	if (p_premultiplied)
+		PremultiplyFrames();
+	else
+		UnpremultiplyFrames();
 	
 	s_cache_size += GetFrameByteCount();
 	
@@ -396,6 +418,24 @@ bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *
 	}
 	
 	return t_success;
+}
+
+// IM-2013-11-05: [[ RefactorGraphics ]] Create new resampled image rep and add to the cache list
+bool MCImageRepGetResampled(MCGFloat p_h_scale, MCGFloat p_v_scale, MCImageRep *p_source, MCImageRep *&r_rep)
+{
+	bool t_success = true;
+	
+	MCCachedImageRep *t_rep = new MCResampledImageRep(p_h_scale, p_v_scale, p_source);
+	
+	t_success = t_rep != nil;
+	if (t_success)
+	{
+		MCCachedImageRep::AddRep(t_rep);
+		r_rep = t_rep->Retain();
+	}
+	
+	return t_success;
+	
 }
 
 ////////////////////////////////////////////////////////////////////////////////

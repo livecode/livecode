@@ -232,7 +232,7 @@ public:
 
 	// MW-2012-03-04: [[ StackFile5500 ]] If 'is_ext' is true then this paragraph
 	//   has an attribute extension.
-	IO_stat load(IO_handle stream, const char *version, bool is_ext);
+	IO_stat load(IO_handle stream, uint32_t version, bool is_ext);
 	IO_stat save(IO_handle stream, uint4 p_part);
 	
 	// MW-2012-02-14: [[ FontRefs ]] Now takes the parent fontref so it can compute
@@ -572,7 +572,7 @@ public:
 	// Clears the paragraph attributes.
 	void clearattrs(void);
 	// Unserializes the paragraph attributes from stream.
-	IO_stat loadattrs(IO_handle stream);
+	IO_stat loadattrs(IO_handle stream, uint32_t version);
 	// Serializes the paragraph attributes into stream.
 	IO_stat saveattrs(IO_handle stream);
 	// MW-2012-02-21: [[ FieldExport ]] Fills in the appropriate members of the

@@ -53,6 +53,8 @@ bool MCImageQuantizeColors(MCImageBitmap *p_bitmap, MCImagePaletteSettings *p_pa
 
 bool MCImageScaleBitmap(MCImageBitmap *p_src_bitmap, uindex_t p_width, uindex_t p_height, uint8_t p_quality, MCImageBitmap *&r_scaled);
 bool MCImageRotateBitmap(MCImageBitmap *p_src, real64_t p_angle, uint8_t p_quality, uint32_t p_backing_color, MCImageBitmap *&r_rotated);
+// IM-2013-11-07: [[ RefactorGraphics ]] Flip the pixels of the given image in the specified directions
+void MCImageFlipBitmapInPlace(MCImageBitmap *p_bitmap, bool p_horizontal, bool p_vertical);
 
 // Image format encode / decode function
 bool MCImageEncodeGIF(MCImageBitmap *p_image, IO_handle p_stream, bool p_dither, uindex_t &r_bytes_written);
@@ -289,6 +291,10 @@ class MCImage : public MCControl
 	friend class MCHcbmap;
 	
 	MCImageRep *m_rep;
+	// IM-2013-11-05: [[ RefactorGraphics ]] Resampled image rep used to store cached
+	// best-quality scaled image
+	MCResampledImageRep *m_resampled_rep;
+	MCImageRep *m_locked_rep;
 	MCImageFrame *m_locked_frame;
 	MCImageBitmap *m_transformed_bitmap;
 	uint32_t m_image_opened;
@@ -395,8 +401,8 @@ public:
 	virtual bool recomputefonts(MCFontRef parent_font);
 
 	// virtual functions from MCControl
-	IO_stat load(IO_handle stream, const char *version);
-	IO_stat extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_length);
+	IO_stat load(IO_handle stream, uint32_t version);
+	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
 	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
 	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
 
@@ -445,6 +451,9 @@ public:
 	bool getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight);
 	void getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight);
 
+	// IM-2013-11-06: [[ RefactorGraphics ]] get the image rep & transform used to render the image
+	bool get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, MCGAffineTransform &r_transform);
+	
 	MCGFloat getscalefactor(void);
 	
 	// IM-2013-10-30: [[ FullscreenMode ]] Returns the stack device scale or 1.0 if image object not attached

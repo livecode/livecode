@@ -158,8 +158,19 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 	LOGFONTW logfont;
 	memset(&logfont, 0, sizeof(LOGFONTW));
 
+    
+    //parse font and encoding
+    MCStringRef t_name = MCNameGetString(fname);
+    MCAutoStringRef t_font_name;
+    uindex_t t_offset;
+	if (MCStringFirstIndexOfChar(t_name, ',', 0, kMCCompareExact, t_offset))
+    {
+        MCStringCopySubstring(t_name, MCRangeMake(0, t_offset), &t_font_name);
+        t_name = *t_font_name;
+    }
+    
 	MCAutoStringRefAsWString t_fname_wstr;
-	if (!t_fname_wstr.Lock(MCNameGetString(fname)))
+	if (!t_fname_wstr.Lock(t_name))
 		return;
 
 	// Copy the family name
@@ -170,26 +181,15 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 	//   is chosen - otherwise things like WingDings don't work!
 	logfont.lfCharSet = DEFAULT_CHARSET;
 
-	//parse font and encoding
-	font->charset = 0;
-	font->unicode = False;
-
 	HDC hdc;
-	if (printer)
-	{
-#ifdef _DESKTOP
-		// MM-2013-09-13:: [[ RefactorGraphics ]] Tweak to get things compiling for server.
-		hdc = static_cast<MCWindowsPrinter *>(MCsystemprinter) -> GetDC();
-		logfont.lfHeight = -size;
-#endif
-	}
-	else
-	{
-		MCScreenDC *pms = (MCScreenDC *)MCscreen;
-		hdc = pms->getsrchdc();
-		logfont.lfHeight = MulDiv(MulDiv(size, 7, 8),
-		                          SCREEN_WIDTH_FOR_FONT_USE, 72);
-	}
+
+	// MW-2013-11-07: [[ Bug 11393 ]] 'printer' in the fontstruct now means use ideal
+	//   metrics for rendering and measuring.
+	MCScreenDC *pms = (MCScreenDC *)MCscreen;
+	hdc = pms->getsrchdc();
+	logfont.lfHeight = MulDiv(MulDiv(size, 7, 8),
+	                          SCREEN_WIDTH_FOR_FONT_USE, 72);
+
 	logfont.lfWeight = weighttable[MCF_getweightint(style)];
 	if (style & FA_ITALIC)
 		logfont.lfItalic = TRUE;
@@ -230,42 +230,6 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 	font->ascent = MulDiv(tm.tmAscent, 15, 16);
 	font->descent = tm.tmDescent;
 	font->printer = printer;
-	if (!printer)
-	{
-		INT table[256];
-		uint2 i;
-		if (GetCharWidth32W(hdc, 0, 255, table))
-		{
-			for (i = 0 ; i < 256 ; i++)
-			{
-				font->widths[i] = (uint1)table[i];
-				
-				// MW-2012-09-21: [[ Bug 3884 ]] If a single char width > 255 then mark
-				//   the font as wide.
-				if (table[i] > 255)
-					font->wide = True;
-			}
-		}
-		else
-		{// must be Window 95
-			MCScreenDC *pms = (MCScreenDC *)MCscreen;
-			for (i = 0 ; i < 256 ; i++)
-			{
-				// 32-bit quantity ensures upper 16 bits == L""
-				uint32_t c = i;
-
-				SIZE tsize;
-				GetTextExtentPoint32W(hdc, (LPCWSTR)&c, (int)1, &tsize);
-				font->widths[i] = (uint1)tsize.cx;
-				
-				// MW-2012-09-21: [[ Bug 3884 ]] If a single char width > 255 then mark
-				//   the font as wide.
-				if (tsize.cx > 255)
-					font->wide = True;
-					
-			}
-		}
-	}
 }
 
 MCFontnode::~MCFontnode()

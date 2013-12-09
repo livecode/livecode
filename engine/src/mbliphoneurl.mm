@@ -178,7 +178,10 @@ bool UrlRequestSetHTTPHeader(MCStringRef p_key, MCStringRef p_value, void *p_con
 	{
         NSHTTPURLResponse *t_http_response = (NSHTTPURLResponse*)response;
         NSInteger t_status_code = [t_http_response statusCode];
-		if (t_status_code == 200)
+        // MERG-2013-11-06: [[ AllowPartialContentResponse ]] Allow response code 206 to be returned in a url request where a range was requested
+		// MW-2013-11-06: [[ Bug 11399 ]] For parity with libUrl all statuscodes in the 200
+		//   range should try and load (even if there ends up being nothing to load).
+		if (t_status_code >= 200 && t_status_code < 300)
 			m_loading = true;
         else if (t_status_code >= 400)
         {

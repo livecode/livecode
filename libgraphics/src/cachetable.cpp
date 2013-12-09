@@ -27,7 +27,7 @@ static hash_t MCGHashBytes(const void *p_bytes, size_t length)
 {
     // 32-bit FNV-1a hash algorithm
     const uint32_t t_prime = 16777619;
-    const uint32_t t_bias = 2166136261;
+    const uint32_t t_bias = 2166136261U;
     
     const uint8_t *t_data = (const uint8_t*)p_bytes;
     uint32_t t_hash = t_bias;

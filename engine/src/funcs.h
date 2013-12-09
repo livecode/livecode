@@ -1789,11 +1789,18 @@ public:
 
 // platform specific functions in funcs.cpp
 
-class MCMCISendString : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCMultimediaEvalMCISendString, EE_MCISENDSTRING_BADSOURCE, PE_MCISENDSTRING_BADPARAM, kMCMultimediaEvalMCISendStringMethodInfo>
+class MCMCISendString : public MCFunction
 {
+	MCExpression *string;
 public:
-    MCMCISendString(){}
-    virtual ~MCMCISendString(){}
+	MCMCISendString()
+	{
+		string = NULL;
+	}
+	virtual ~MCMCISendString();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+    virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue &r_value);
+    virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCDeleteRegistry : public MCUnaryFunctionCtxt<MCStringRef, bool, MCFilesEvalDeleteRegistry, EE_SETREGISTRY_BADEXP, PE_SETREGISTRY_BADPARAM, kMCFilesEvalDeleteRegistryMethodInfo>

@@ -120,7 +120,7 @@ bool MCBlock::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_vi
 
 // MW-2012-03-04: [[ StackFile5500 ]] If 'is_ext' is true then the record is an extended
 //   record.
-IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
+IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 {
 	IO_stat stat;
 
@@ -156,7 +156,7 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 	//   is a font record to read.
 	if (flags & F_FONT)
     {
-		if (strncmp(version, "1.3", 3) > 0)
+		if (version > 1300)
 		{
 			uint2 t_font_index;
 			if ((stat = IO_read_uint2(&t_font_index, stream)) != IO_NORMAL)
@@ -180,8 +180,10 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 		}
 		else
 		{
-			// MW_2012-02-17: [[ LogFonts ]] Read a nameref directly.
-			if ((stat = IO_read_nameref(atts->fontname, stream)) != IO_NORMAL)
+			// MW-2012-02-17: [[ LogFonts ]] Read a nameref directly.
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] This path only happens sfv < 1300
+			//   so is legacy.
+			if ((stat = IO_read_nameref_legacy(atts->fontname, stream, false)) != IO_NORMAL)
 				return stat;
 			if ((stat = IO_read_uint2(&atts->fontsize, stream)) != IO_NORMAL)
 				return stat;
@@ -201,8 +203,10 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 		{
 			// MW-2012-01-06: [[ Block Changes ]] We no longer use the color name
 			//   so load, delete and unset the flag.
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] The storage of this is ignored,
+			//   so is legacy,
 			char *colorname;
-			if ((stat = IO_read_string(colorname, stream)) != IO_NORMAL)
+			if ((stat = IO_read_cstring_legacy(colorname, stream, 2)) != IO_NORMAL)
 				return stat;
 			delete colorname;
 			flags &= ~F_HAS_COLOR_NAME;
@@ -213,12 +217,14 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 		atts->backcolor = new MCColor;
 		if ((stat = IO_read_mccolor(*atts->backcolor, stream)) != IO_NORMAL)
 			return stat;
-		if (strncmp(version, "2.0", 3) < 0 || flags & F_HAS_BACK_COLOR_NAME)
+		if (version < 2000 || flags & F_HAS_BACK_COLOR_NAME)
 		{
 			// MW-2012-01-06: [[ Block Changes ]] We no longer use the backcolor name
 			//   so load, delete and unset the flag.
+			// MW-2013-11-19: [[ UnicodeFileFormat ]] The storage of this is ignored,
+			//   so is legacy,
 			char *backcolorname;
-			if ((stat = IO_read_string(backcolorname, stream)) != IO_NORMAL)
+			if ((stat = IO_read_cstring_legacy(backcolorname, stream, 2)) != IO_NORMAL)
 				return stat;
 			delete backcolorname;
 			flags &= ~F_HAS_BACK_COLOR_NAME;
@@ -232,14 +238,16 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 	//   strings.
 	if (flags & F_HAS_LINK)
 	{
-		if ((stat = IO_read_stringref(atts->linktext, stream, false)) != IO_NORMAL)
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+		if ((stat = IO_read_stringref_new(atts->linktext, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> linktext, atts -> linktext);
 	}
 
 	if (flags & F_HAS_IMAGE)
 	{
-		if ((stat = IO_read_stringref(atts->imagesource, stream, false)) != IO_NORMAL)
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+		if ((stat = IO_read_stringref_new(atts->imagesource, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> imagesource, atts -> imagesource);
 	}
@@ -248,7 +256,8 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 	//   it in.
 	if (flags & F_HAS_METADATA)
 	{
-		if ((stat = IO_read_stringref(atts->metadata, stream, false)) != IO_NORMAL)
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+		if ((stat = IO_read_stringref_new(atts->metadata, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> metadata, atts -> metadata);
 	}
@@ -332,24 +341,35 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	flags &= ~F_VISITED;
 	// MW-2012-01-26: [[ FlaggedField ]] Make sure we don't save the flagged flag.
 	flags &= ~F_FLAGGED;
-
+	
+    // The "has unicode" flag depends on whether the paragraph is native
+	bool t_is_unicode;
+    if (MCStringIsNative(parent->GetInternalStringRef()))
+	{
+		t_is_unicode = false;
+        flags &= ~F_HAS_UNICODE;
+	}
+    else
+	{
+		t_is_unicode = true;
+        flags |= F_HAS_UNICODE;
+	}
+	
 	// MW-2012-02-17: [[ SplitTextAttrs ]] If we have unicode, or one of the font attr are
 	//   set then we must serialize a font.
-	//if ((flags & (F_FATTR_MASK | F_HAS_UNICODE)) != 0)
-	if (true)
+	bool t_need_font;
+	if ((flags & (F_FATTR_MASK | F_HAS_UNICODE)) != 0)
 	{
 		// Add in the font record flag.
 		flags |= F_FONT;
 
 		// Invert the font attr flags (from has to inherit).
 		flags = (flags & ~F_FATTR_MASK) | (~(flags & F_FATTR_MASK) & F_FATTR_MASK);
+		
+		t_need_font = true;
 	}
-
-    // The "has unicode" flag depends on whether the paragraph is native
-    if (MCStringIsNative(parent->GetInternalStringRef()))
-        flags &= ~F_HAS_UNICODE;
-    else
-        flags |= F_HAS_UNICODE;
+	else
+		t_need_font = false;
     
 	if ((stat = IO_write_uint4(flags, stream)) != IO_NORMAL)
 		return stat;
@@ -358,8 +378,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 
 	// MW-2012-02-17: [[ SplitTextAttrs ]] If any one of the font attrs are set, or we
 	//   are unicode we must serialize a font.
-	//if ((flags & (F_FATTR_MASK | F_HAS_UNICODE)) != 0)
-	if (true)
+	if (t_need_font)
 	{
 		// MW-2012-02-17: [[ SplitTextAttrs ]] Compute the attrs to write out.
 		MCNameRef t_fontname;
@@ -385,25 +404,31 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 
 	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
 	//   strings.
-	if (flags & F_HAS_LINK)
-		if ((stat = IO_write_stringref(atts->linktext, stream, false)) != IO_NORMAL)
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+    if (flags & F_HAS_LINK)
+        if ((stat = IO_write_stringref_new(atts->linktext, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
-	if (flags & F_HAS_IMAGE)
-		if ((stat = IO_write_stringref(atts->imagesource, stream, false)) != IO_NORMAL)
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+    if (flags & F_HAS_IMAGE)
+        if ((stat = IO_write_stringref_new(atts->imagesource, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended block then emit the
 	//   new attributes.
 	if (t_is_ext)
 	{
-		if (flags & F_HAS_METADATA)
-			if ((stat = IO_write_stringref(atts -> metadata, stream, false)) != IO_NORMAL)
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+        if (flags & F_HAS_METADATA)
+            if ((stat = IO_write_stringref_new(atts -> metadata, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 				return stat;
 	}
 	
-	if ((stat = IO_write_uint2(m_index, stream)) != IO_NORMAL)
+	uint32_t t_index_size;
+	t_index_size = t_is_unicode ? sizeof(unichar_t) : sizeof(char_t);
+	
+	if ((stat = IO_write_uint2(m_index * t_index_size, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_write_uint2(m_size, stream)) != IO_NORMAL)
+	if ((stat = IO_write_uint2(m_size * t_index_size, stream)) != IO_NORMAL)
 		return stat;
 
 	return IO_NORMAL;
@@ -713,6 +738,9 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, findex_t& r_break_index, bool& r_break
 			}
 		}
 
+		// MW-2013-11-07: [[ Bug 11393 ]] Previous per-platform implementations all fold into the optimized
+		//   case now (previously iOS / Windows printer were measuring break by break, which is what we do
+		//   generally now).
 		if (t_this_char == '\t')
 		{
 			twidth += gettabwidth(x + twidth, initial_i);
@@ -720,32 +748,11 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, findex_t& r_break_index, bool& r_break
 			t_last_break_i = i;
 		}
 		else
-		{
-#ifdef _IOS_MOBILE
-			// MW-2012-02-01: [[ Bug 9982 ]] iOS uses sub-pixel positioning, so make sure we measure
-			//   complete runs.
-			MCRange t_range;
-			t_range = MCRangeMake(t_last_break_i, i - t_last_break_i);
-			twidth = t_last_break_width + MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
-#else
-#ifdef TARGET_PLATFORM_WINDOWS
-			// MW-2009-04-23: [[ Bug ]] For printing, we measure complete runs of text otherwise we get
-			//   positioning issues.
-			if (MCFontHasPrinterMetrics(m_font))
-            {
-                MCRange t_range;
-                t_range = MCRangeMake(t_last_break_i, i - t_last_break_i);
-                twidth = t_last_break_width + MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
-            }
-			else
-#endif
-			{
-                MCRange t_range;
-                t_range = MCRangeMake(initial_i, i - initial_i);
-                twidth += MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
-            }
-#endif
-		}
+        {
+            MCRange t_range;
+            t_range = MCRangeMake(initial_i, i - initial_i);
+            twidth += MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
+        }
 
 		if (t_can_fit && twidth > maxwidth)
 			break;
@@ -1640,9 +1647,11 @@ findex_t MCBlock::GetCursorIndex(int2 x, int2 cx, Boolean chunk, Boolean last)
 	findex_t tlen = 0;
 	uint2 twidth = 0;
 	uint2 toldwidth = 0;
-#ifdef _IOS_MOBILE
+
 	// MW-2012-02-01: [[ Bug 9982 ]] iOS uses sub-pixel positioning, so make sure we measure
 	//   complete runs.
+	// MW-2013-11-07: [[ Bug 11393 ]] We only want to measure complete runs now regardless of
+	//   platform.
 	int32_t t_last_width;
 	t_last_width = 0;
 	while(i < m_index + m_size)
@@ -1666,39 +1675,11 @@ findex_t MCBlock::GetCursorIndex(int2 x, int2 cx, Boolean chunk, Boolean last)
 		
 		i = t_new_i;
 	}
-#else
-	while (i < m_index + m_size)
-	{
-		if (parent->GetCodepointAtIndex(i) == '\t')
-			cwidth = gettabwidth(x, i);
-		else
-		{
-#if defined(_MACOSX)
-			tlen = parent->IncrementIndex(i) - m_index;
-			twidth = MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), MCRangeMake(m_index, tlen));
-			cwidth = twidth - toldwidth;
-			toldwidth = twidth;
-#else
-			cwidth = MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(),
-                                                MCRangeMake(i, parent->IncrementIndex(i) - i));
-#endif
-		}
-		if (chunk)
-		{
-			if (cx < cwidth)
-				break;
-		}
-		else
-		{
-			if (cx < cwidth >> 1)
-				break;
-		}
-		cx -= cwidth;
-		x += cwidth;
-		i = parent->IncrementIndex(i);
-	}
-#endif
-	return i;
+
+	if (i == m_index + m_size && last && (m_index + m_size != parent->gettextlength()))
+        return i - parent->DecrementIndex(i);
+	else
+		return i;
 }
 
 uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)

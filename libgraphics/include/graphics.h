@@ -48,13 +48,21 @@ typedef uint32_t MCGPixelFormat;
 // IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
 #if defined(ANDROID) || defined(TARGET_SUBPLATFORM_IPHONE)
 #define kMCGPixelFormatNative kMCGPixelFormatRGBA
+// IM-2013-11-01: [[ Bug 11198 ]] Set PPC pixel format to ARGB
+#elif defined(__ppc__)
+#define kMCGPixelFormatNative kMCGPixelFormatARGB
 #else
 #define kMCGPixelFormatNative kMCGPixelFormatBGRA
 #endif
 
+// IM-2013-11-01: [[ RefactorGraphics ]] Reverse component shift values on big-endian architectures
 static inline uint32_t __MCGPixelPackComponents(uint8_t p_1, uint8_t p_2, uint8_t p_3, uint8_t p_4)
 {
+#ifdef __LITTLE_ENDIAN__
 	return p_1 | (p_2 << 8) | (p_3 << 16) | (p_4 << 24);
+#else
+	return (p_1 << 24) | (p_2 << 16) | (p_3 << 8) | p_4;
+#endif
 }
 
 static inline uint32_t MCGPixelPack(MCGPixelFormat p_format, uint8_t p_red, uint8_t p_green, uint8_t p_blue, uint8_t p_alpha)
@@ -80,12 +88,20 @@ static inline uint32_t MCGPixelPackNative(uint8_t p_red, uint8_t p_green, uint8_
 	return MCGPixelPack(kMCGPixelFormatNative, p_red, p_green, p_blue, p_alpha);
 }
 
+// IM-2013-11-01: [[ RefactorGraphics ]] Reverse component shift values on big-endian architectures
 static inline void __MCGPixelUnpackComponents(uint32_t p_pixel, uint8_t &r_1, uint8_t &r_2, uint8_t &r_3, uint8_t &r_4)
 {
-	r_1 = p_pixel & 0xFF;
-	r_2 = (p_pixel >> 8) & 0xFF;
+#ifdef __LITTLE_ENDIAN__
+	r_1 = (p_pixel >>  0) & 0xFF;
+	r_2 = (p_pixel >>  8) & 0xFF;
 	r_3 = (p_pixel >> 16) & 0xFF;
 	r_4 = (p_pixel >> 24) & 0xFF;
+#else
+	r_1 = (p_pixel >> 24) & 0xFF;
+	r_2 = (p_pixel >> 16) & 0xFF;
+	r_3 = (p_pixel >>  8) & 0xFF;
+	r_4 = (p_pixel >>  0) & 0xFF;
+#endif
 }
 
 static inline void MCGPixelUnpack(MCGPixelFormat p_format, uint32_t p_pixel, uint8_t &r_red, uint8_t &r_green, uint8_t &r_blue, uint8_t &r_alpha)
@@ -115,20 +131,54 @@ static inline void MCGPixelUnpackNative(uint32_t p_pixel, uint8_t &r_red, uint8_
 	return MCGPixelUnpack(kMCGPixelFormatNative, p_pixel, r_red, r_green, r_blue, r_alpha);
 }
 
+// IM-2013-11-01: [[ RefactorGraphics ]] Reverse component shift values on big-endian architectures
 static inline uint8_t MCGPixelGetAlpha(MCGPixelFormat p_format, uint32_t p_pixel)
 {
+#ifdef __LITTLE_ENDIAN__
 	if (p_format & kMCGPixelAlphaPositionFirst)
 		return p_pixel & 0xFF;
 	else
 		return p_pixel >> 24;
+#else
+	if ((p_format & kMCGPixelAlphaPositionFirst) == 0)
+		return p_pixel & 0xFF;
+	else
+		return p_pixel >> 24;
+#endif
 }
 
+// IM-2013-11-01: [[ RefactorGraphics ]] Reverse component shift values on big-endian architectures
 static inline uint8_t MCGPixelGetNativeAlpha(uint32_t p_pixel)
 {
-#if kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst
-	return p_pixel & 0xFF;
+#ifdef __LITTLE_ENDIAN__
+	#if kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst
+		return p_pixel & 0xFF;
+	#else
+		return p_pixel >> 24;
+	#endif
 #else
-	return p_pixel >> 24;
+	#if (kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst) == 0
+		return p_pixel & 0xFF;
+	#else
+		return p_pixel >> 24;
+	#endif
+#endif
+}
+
+static inline uint32_t MCGPixelSetNativeAlpha(uint32_t p_pixel, uint8_t p_new_alpha)
+{
+#ifdef __LITTLE_ENDIAN__
+	#if kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst
+		return (p_pixel & 0xFFFFFF00) | p_new_alpha;
+	#else
+		return (p_pixel & 0x00FFFFFF) | (p_new_alpha << 24);
+	#endif
+#else
+	#if (kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst) == 0
+		return (p_pixel & 0xFFFFFF00) | p_new_alpha;
+	#else
+		return (p_pixel & 0x00FFFFFF) | (p_new_alpha << 24);
+	#endif
 #endif
 }
 
@@ -379,6 +429,7 @@ struct MCGFont
 	int32_t		ascent;
 	int32_t		descent;
 	uint8_t		style;
+	bool		ideal : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -672,6 +723,16 @@ MCGSize MCGSizeApplyAffineTransform(const MCGSize& p_size, const MCGAffineTransf
 static inline bool MCGAffineTransformIsEqual(const MCGAffineTransform &p_left, const MCGAffineTransform &p_right)
 {
 	return p_left.a == p_right.a && p_left.b == p_right.b && p_left.c == p_right.c && p_left.d == p_right.d && p_left.tx == p_right.tx && p_left.ty == p_right.ty;
+}
+
+static inline bool MCGAffineTransformIsRectangular(const MCGAffineTransform &p_transform)
+{
+	return p_transform.b == 0.0 && p_transform.c == 0.0;
+}
+
+static inline bool MCGAffineTransformIsIdentity(const MCGAffineTransform &p_transform)
+{
+	return p_transform.a == 1.0 && p_transform.b == 0.0 && p_transform.c == 0.0 && p_transform.d == 1.0 && p_transform.tx == 0.0 && p_transform.ty == 0.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -190,7 +190,7 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 			case 'd':
 				if (t_success)
                 {
-                    MCAutoStringRef t_data;
+                    MCAutoDataRef t_data;
                     /* UNCHECKED */ ctxt . ConvertToData(*t_value, &t_data);
                     *(va_arg(t_args, MCDataRef *)) = MCValueRetain(*t_data);
                 }

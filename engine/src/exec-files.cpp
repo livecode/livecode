@@ -1735,7 +1735,11 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 	case FU_ITEM:
 	case FU_LINE:
 	case FU_WORD:
-		r_stat = IO_write_stringref(p_data, p_stream);
+		{
+			MCAutoStringRefAsCString t_output;
+			/* UNCHECKED */ t_output . Lock(p_data);
+			r_stat = MCS_write(*t_output, sizeof(char), strlen(*t_output), IO_stdout);
+		}
 		break;
 	default:
 		{

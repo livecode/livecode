@@ -58,9 +58,10 @@ static int dilateMask(const uint8_t *src, int src_y_stride, uint8_t *dst, int ra
 // radii is 254 pixels.
 void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius, int width, int height, int& r_new_width, int& r_new_height)
 {
-	int new_width = width + 2 * xradius;
+/*
+    int new_width = width + 2 * xradius;
 	int new_height = height + 2 * yradius;
-
+    
 	// Compute the x distance of each pixel from the nearest set pixel.
 	uint8_t *xd;
 	xd = new uint8_t[new_width * height];
@@ -117,7 +118,7 @@ void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius
 				xdptr[x] = ((xradius - x) + xdptr[xradius]);
 			else
 				xdptr[x] = 255;
-
+            
 			if (xdptr[width + xradius - 1] + x + 1 < 255)
 				xdptr[width + xradius + x] = xdptr[width + xradius - 1] + x + 1;
 			else
@@ -126,7 +127,7 @@ void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius
 	}
 	
 	unsigned int rf;
-	rf = xradius * xradius * yradius * yradius;	
+	rf = xradius * xradius * yradius * yradius;
 	
 	memset(dst, 0, new_width * new_height);
 	
@@ -193,6 +194,158 @@ void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius
 			}
 		}
 	}
+	
+	r_new_width = new_width;
+	r_new_height = new_height;
+*/
+    int new_width = width + 2 * xradius;
+	int new_height = height + 2 * yradius;
+
+    // Allocate memory for the loop
+    size_t t_mem_size = new_width * new_height;
+    uint8_t *buffer = new uint8_t[t_mem_size];
+
+    // All the destination pixels are set to the infinite distance initially
+    memset(buffer, 255, t_mem_size);
+    
+    // Only this part of the buffer can have non-zero x distances
+    uint8_t *xd = buffer + new_width * yradius;
+    
+	// Compute the x distance of each pixel from the nearest set pixel
+	for(int y = 0; y < height; y++)
+	{
+		uint8_t *xdptr;
+		xdptr = xd + new_width * y;
+		
+		const uint8_t *sptr;
+		sptr = src + width * y;
+        
+        int x = 0;
+        int next = 0;
+        while (x < new_width)
+        {
+            // Scan along the line for the next pixel that is set in the source mask
+            while (next < width && sptr[next] == 0)
+                next++;
+            
+            // If no more set pixels in the source mask, go to the end of the line
+            int dnext;
+            if (next >= width)
+                dnext = new_width;
+            else
+                dnext = next + xradius;    // Account for position shift between src and dst
+            
+            // If we're starting at the left edge, there isn't a mask point there
+            int distance = dnext - x;
+            int halfway = distance / 2;
+            if (x == 0)
+                halfway = 0;
+            
+            // If we're ending at the right edge, there isn't a mask point there
+            if (dnext >= new_width)
+                halfway = distance;
+            
+            int i;
+            for (i = 0; i < halfway; i++)
+                xdptr[x + i] = SkMin32(i, 255);
+            for (; i < distance; i++)
+                xdptr[x + i] = SkMin32(distance - i, 255);
+            
+            // Move on to the next pixel
+            //
+            // Optimisation: scan for the next clear pixel in the mask
+            //      Avoids excessive processing for rows of non-zero pixels
+            x = dnext;
+            next = next + 1;
+            while (next < width && sptr[next + 1] != 0)
+            {
+                xdptr[x] = 0;
+                x++, next++;
+            }
+        }
+	}
+    
+    // Destination pointer stride
+    int ydstride = new_width;
+	
+    // a-squared, b-squared and a-squared*b-squared
+	uint32_t aa, bb, aabb;
+    aa = xradius * xradius;
+    bb = yradius * yradius;
+    aabb = aa*bb;
+    
+    // Look-up tables for pre-calculated multiplications
+    uint32_t t_xlut[256], t_ylut[256];
+    for (int i = 0; i < 256; i++)
+        t_xlut[i] = bb*i*i, t_ylut[i] = aa*i*i;
+    
+    // Ensure that the "infinite" distance never compares < anything else
+    t_xlut[255] = 0xFFFFFFFF;
+	
+	memset(dst, 0, new_width * new_height);
+    
+    // X distance array
+    const uint8_t *xdist = buffer;
+	
+    // Be careful:
+    //
+    //  Minor, seemingly inconsequential, changes to this loop can slow it down
+    //  considerably. On the other hand, they could speed it up...
+    int offset = 0;
+    for (int y = 0; y < new_height; y++)
+    {
+        for (int x = 0; x < new_width; x++, offset++)
+        {
+            // Starting at this position, scan down for a pixel that is within
+            // the dilation radius.
+            int ny = y;
+            int noffset = offset;
+            int max = SkMin32(new_height, y + yradius);
+            do
+            {
+                uint8_t xval, yval;
+                xval = xdist[noffset];
+                yval = ny - y;
+                
+                // Note the ordering of the comparison to avoid overflow
+                if (t_xlut[xval] < aabb - t_ylut[yval])
+                {
+                    dst[offset] = 255;
+                    break;
+                }
+                
+                ny += 1;
+                noffset += ydstride;
+            }
+            while (ny < max);
+            
+            // Early escape to avoid processing another loop
+            if (dst[offset])
+                continue;
+            
+            // Starting at this position, scan up for a pixel that is within
+            // the dilation radius
+            ny = y - 1;
+            noffset = offset - ydstride;
+            int min = SkMax32(0, y - yradius);
+            while (ny >= min)
+            {
+                uint8_t xval, yval;
+                xval = xdist[noffset];
+                yval = y - ny;
+                
+                // Note the ordering of the comparison to avoid overflow
+                if (t_xlut[xval] < aabb - t_ylut[yval])
+                {
+                    dst[offset] = 255;
+                    break;
+                }
+                
+                ny -= 1;
+                noffset -= ydstride;
+            }
+        }
+    }
 	
 	r_new_width = new_width;
 	r_new_height = new_height;

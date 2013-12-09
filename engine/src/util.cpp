@@ -1311,46 +1311,41 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 
 bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
 {
+	if (name == nil || MCNameIsEmpty(name) || MCNameIsEmpty(test))
+		return false;
+
+	if (MCNameIsEqualTo(name, test, kMCCompareCaseless))
+		return true;
+
+    bool match = false;
+	static const char *nametable[] =
+	    {
+	        MCstackstring, MCaudiostring,
+	        MCvideostring, MCbackgroundstring,
+	        MCcardstring, MCnullstring,
+	        MCgroupstring, MCnullstring,
+	        MCbuttonstring, MCnullstring,
+	        MCnullstring, MCscrollbarstring,
+	        MCimagestring, MCgraphicstring,
+	        MCepsstring, MCmagnifierstring,
+	        MCcolorstring, MCfieldstring
+	    };
+
+    MCStringRef t_name, t_test;
+    t_name = MCNameGetString(name);
+    t_test = MCNameGetString(test);
+    uindex_t t_offset, t_name_length;
+    t_name_length = MCStringGetLength(t_name);
     
-    if (name == nil || MCNameIsEmpty(name) ||test == nil)
-        return false;
-    
-    if (MCNameIsEqualTo(name, test, kMCCompareCaseless))
-        return true;
-    
-    Boolean match = false;
-    
-    static const char *nametable[] =
-    {
-        MCstackstring, MCaudiostring,
-        MCvideostring, MCbackgroundstring,
-        MCcardstring, MCnullstring,
-        MCgroupstring, MCnullstring,
-        MCbuttonstring, MCnullstring,
-        MCnullstring, MCscrollbarstring,
-        MCimagestring, MCgraphicstring,
-        MCepsstring, MCmagnifierstring,
-        MCcolorstring, MCfieldstring
-    };
-    
-    
-    // MW-2013-07-29: [[ Bug 11068 ]] Make sure that we only match a reference
-    //   of the form 'field "..."', and throw an error if not.
-    
-    MCAutoStringRef t_pattern;
-    
-    MCStringFormat(&t_pattern, "%@ \"%@\"", MCSTR(nametable[type - CT_STACK]), name);
-    
-    if (MCStringContains(MCNameGetString(test), *t_pattern, kMCCompareCaseless))
-    {
-        uindex_t t_quotes;
-        /* UNCHECKED */ MCStringFirstIndexOfChar(MCNameGetString(test), '"', 0, kMCCompareExact, t_quotes);
-        if (MCStringGetLength(MCNameGetString(test)) - t_quotes == MCStringGetLength(MCNameGetString(name)) + 2)
-            match = true;
-        if (!match)
-            MCLog("[[ Bug 11068 ]] match name '%@' to '%@' attempted and failed due to better checking", name, test);
-    }
-    return match;
+	if (MCStringFirstIndexOfChar(t_test, '"', 0, kMCCompareExact, t_offset) &&
+        MCStringGetLength(t_test) - t_offset > t_name_length + 1 &&
+        MCStringGetNativeCharAtIndex(t_test, t_offset + t_name_length + 1) == '"' &&
+        MCStringSubstringIsEqualTo(t_test, MCRangeMake(t_offset + 1, t_name_length), t_name, kMCCompareCaseless) &&
+        t_offset >= (int)strlen(nametable[type - CT_STACK]) &&
+        MCStringSubstringIsEqualTo(t_test, MCRangeMake(0, strlen(nametable[type - CT_STACK])), MCSTR(nametable[type - CT_STACK]), kMCCompareCaseless))
+            match = True;
+
+	return match;
 }
 
 void MCU_snap(int2 &p)

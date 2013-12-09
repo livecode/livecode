@@ -24,6 +24,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	image.cpp \
 	imagelist.cpp \
 	image_rep.cpp image_rep_encoded.cpp image_rep_mutable.cpp image_rep_densitymapped.cpp \
+	image_rep_resampled.cpp \
 	imagebitmap.cpp ipng.cpp irle.cpp itransform.cpp iutil.cpp \
 	keywords.cpp line.cpp literal.cpp magnify.cpp mcerror.cpp \
 	mcio.cpp mcstring.cpp mctheme.cpp newobj.cpp mcutility.cpp newobj.cpp\

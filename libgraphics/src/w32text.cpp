@@ -318,7 +318,7 @@ void MCGPlatformFinalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
+static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
 {
 	if (!MCGContextIsValid(self))
 		return;	
@@ -414,18 +414,138 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 
 	if (t_success)
 		t_success = w32_draw_text_using_mask_to_context_at_device_location(self, p_text, p_length, t_device_location, t_clipped_bounds, t_gdicontext);
-		//t_success = w32_draw_opaque_text_to_context_at_device_location(self, p_text, p_length, t_device_location, t_clipped_bounds, t_gdicontext);
-		//t_success = w32_draw_text_to_context_at_device_location(self, p_text, p_length, t_device_location, t_clipped_bounds, t_gdicontext);
 
 	DeleteDC(t_gdicontext);
 	self -> is_valid = t_success;
 }
 
-MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
+static bool __MCGContextTracePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont& p_font, MCGPathRef& r_path)
 {
-	//if (!MCGContextIsValid(self))
-	//	return 0.0;	
+	bool t_success;
+	t_success = true;
 	
+	HDC t_gdicontext;
+	t_gdicontext = NULL;
+	if (t_success)
+	{
+		t_gdicontext = CreateCompatibleDC(NULL);
+		t_success = t_gdicontext != NULL;
+	}
+	
+	HFONT t_new_font;
+	if (t_success)
+	{
+		LOGFONTA t_font;
+		GetObjectA(p_font . fid, sizeof(LOGFONTA), &t_font);
+		t_font . lfHeight = -256;
+
+		t_new_font = CreateFontIndirectA(&t_font);
+		t_success = SelectObject(t_gdicontext, t_new_font) != NULL;
+	}
+
+	TEXTMETRICA t_metrics;
+	if (t_success)
+		t_success = GetTextMetricsA(t_gdicontext, &t_metrics);
+
+	if (t_success)
+	{
+		BeginPath(t_gdicontext);
+		SetBkMode(t_gdicontext, TRANSPARENT);
+		SetTextAlign(t_gdicontext, TA_BASELINE);
+		TextOutW(t_gdicontext, 0, 0, p_text, p_length / 2);
+		EndPath(t_gdicontext);
+
+		int t_count;
+		t_count = GetPath(t_gdicontext, NULL, NULL, 0);
+
+		POINT *t_points;
+		BYTE *t_types;
+		t_points = new POINT[t_count];
+		t_types = new BYTE[t_count];
+		GetPath(t_gdicontext, t_points, t_types, t_count);
+
+		MCGPathCreateMutable(r_path);
+		for(int i = 0; i < t_count;)
+		{
+			switch(t_types[i] & ~PT_CLOSEFIGURE)
+			{
+			case PT_MOVETO:
+				MCGPathMoveTo(r_path, MCGPointMake(t_points[i] . x * p_font . size / 256.0f, t_points[i] . y * p_font . size / 256.0f));
+				i += 1;
+				break;
+
+			case PT_LINETO:
+				MCGPathLineTo(r_path, MCGPointMake(t_points[i] . x * p_font . size / 256.0f, t_points[i] . y * p_font . size / 256.0f));
+				if (t_types[i] & PT_CLOSEFIGURE)
+					MCGPathCloseSubpath(r_path);
+				i += 1;
+				break;
+
+			case PT_BEZIERTO:
+				MCGPathCubicTo(r_path,
+								MCGPointMake(t_points[i] . x * p_font . size / 256.0f, t_points[i] . y * p_font . size / 256.0f),
+								MCGPointMake(t_points[i + 1] . x * p_font . size / 256.0f, t_points[i + 1] . y * p_font . size / 256.0f),
+								MCGPointMake(t_points[i + 2] . x * p_font . size / 256.0f, t_points[i + 2] . y * p_font . size / 256.0f));
+				if (t_types[i] & PT_CLOSEFIGURE)
+					MCGPathCloseSubpath(r_path);
+				i += 3;
+				break;
+			}
+		}
+
+		MCGPathCopyAndRelease(r_path, r_path);
+
+		delete t_points;
+		delete t_types;
+	}
+
+	DeleteDC(t_gdicontext);
+	DeleteObject(t_new_font);
+
+	return true;
+}
+
+// MW-2013-11-07: [[ Bug 11393 ]] Render the text using ideal metrics. At the moment
+//   this works by tracing the path at 256px size, converting to a MCGPath (scaled)
+//   then filling as a path. At some point it would be worth upgrading this code path
+//   to use GDI+/DirectWrite (depending on Windows version) as these should give better
+//   quality and performance (particularly for smaller < 15pt text sizes).
+static void __MCGContextDrawPlatformTextIdeal(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
+{
+	if (!MCGContextIsValid(self))
+		return;	
+
+	MCGPathRef t_path;
+	__MCGContextTracePlatformText(self, p_text, p_length, p_font, t_path);
+
+	MCGContextSave(self);
+	MCGContextTranslateCTM(self, p_location . x, p_location . y);
+	MCGContextBeginPath(self);
+	MCGContextAddPath(self, t_path);
+	MCGContextSetShouldAntialias(self, true);
+	MCGContextFill(self);
+	MCGContextRestore(self);
+
+	MCGPathRelease(t_path);
+}
+
+// MW-2013-11-07: [[ Bug 11393 ]] What codepath we use depends on whether we are
+//   using ideal metrics or not.
+void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont& p_font)
+{
+	if (p_font . ideal)
+	{
+		__MCGContextDrawPlatformTextIdeal(self, p_text, p_length, p_location, p_font);
+		return;
+	}
+
+	__MCGContextDrawPlatformTextScreen(self, p_text, p_length, p_location, p_font);
+}
+
+//////////
+
+MCGFloat __MCGContextMeasurePlatformTextScreen(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
+{	
 	bool t_success;
 	t_success = true;
 	
@@ -442,18 +562,70 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 	
 	if (t_success)
 		t_success = SelectObject(t_gdicontext, p_font . fid) != NULL;
+
+	SIZE t_size;
+	if (t_success)
+		t_success = GetTextExtentPoint32W(t_gdicontext, (LPCWSTR)p_text, p_length >> 1, &t_size);
+	
+	DeleteDC(t_gdicontext);
+	
+	if (t_success)
+		return t_size . cx;
+	else
+		return 0.0;
+}
+
+// MW-2013-11-07: [[ Bug 11393 ]] Measure the text using 'ideal' metrics these
+//   are essentially the font metrics at 256 pixels high, scaled linearly to
+//   the requested font size.
+MCGFloat __MCGContextMeasurePlatformTextIdeal(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
+{	
+	bool t_success;
+	t_success = true;
+	
+	HDC t_gdicontext;
+	t_gdicontext = NULL;
+	if (t_success)
+	{
+		t_gdicontext = CreateCompatibleDC(NULL);
+		t_success = t_gdicontext != NULL;
+	}
+	
+	if (t_success)
+		t_success = SetGraphicsMode(t_gdicontext, GM_ADVANCED) != 0;
+	
+	HFONT t_new_font;
+	if (t_success)
+	{
+		LOGFONTA t_font;
+		GetObjectA(p_font . fid, sizeof(LOGFONTA), &t_font);
+		t_font . lfHeight = -256;
+
+		t_new_font = CreateFontIndirectA(&t_font);
+		t_success = SelectObject(t_gdicontext, t_new_font) != NULL;
+	}
 	
 	SIZE t_size;
 	if (t_success)
 		t_success = GetTextExtentPoint32W(t_gdicontext, (LPCWSTR)p_text, p_length >> 1, &t_size);
 	
 	DeleteDC(t_gdicontext);
-	//self -> is_valid = t_success;
+	DeleteObject(t_new_font);
 	
 	if (t_success)
-		return t_size . cx;
+		return t_size . cx * p_font . size / 256.0f;
 	else
 		return 0.0;
+}
+
+// MW-2013-11-07: [[ Bug 11393 ]] What codepath we use depends on whether we are
+//   using ideal metrics or not.
+MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
+{
+	if (p_font . ideal)
+		return __MCGContextMeasurePlatformTextIdeal(self, p_text, p_length, p_font);
+
+	return __MCGContextMeasurePlatformTextScreen(self, p_text, p_length, p_font);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

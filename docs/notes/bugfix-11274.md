@@ -1,0 +1,1 @@
+# Merge function should ignore square bracket if part of inner expression

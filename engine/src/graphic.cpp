@@ -1479,20 +1479,12 @@ void MCGraphic::draw_lines(MCDC *dc, MCPoint *pts, uint2 npts)
 			if (count > 1)
 				dc->drawlines(&pts[i], count, pts[i].x == pts[i + count - 1].x && pts[i].y == pts[i + count - 1].y);
 			else
-			{
-				MCPoint t_dot[2];
-				t_dot[0] = pts[i];
-				t_dot[1] = pts[i];
-				dc -> drawlines(&t_dot[0], 2, false);
-			}
+				// MM-2013-11-21: [[ Bug 11395 ]] Pass single point to draw lines, indicating we want to draw a dot.
+				dc -> drawlines(&pts[i], 1, false);			
 		}
 		else if (getcapstyle() != CapButt)
-		{
-			MCPath *t_path;
-			t_path = MCPath::create_dot(pts[i] . x, pts[i] . y, true);
-			dc -> drawpath(t_path);
-			t_path -> release();
-		}
+			// MM-2013-11-21: [[ Bug 11395 ]] Pass single point to draw lines, indicating we want to draw a dot.
+			dc -> drawlines(&pts[i], 1, false);			
 			
 		i += count + 1;
 	}
@@ -1837,6 +1829,10 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		trect = MCU_reduce_rect(trect, borderwidth);
 	if (points == NULL && getstyleint(flags) == F_REGULAR)
 	{
+		// MM-2013-11-19: [[ Bug 11470 ]] For regular polygons, we need to inset the rect as before so we can calculate the points correctly.
+		if (linesize != 0)
+			trect = MCU_reduce_rect(trect, linesize >> 1);
+		
 		if (npoints <= nsides)
 		{
 			npoints = nsides + 1;
@@ -1867,10 +1863,26 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		switch (getstyleint(flags))
 		{
 		case F_G_RECTANGLE:
-			dc->fillrect(trect);
+			// MM-2013-11-14: [[ Bug 11426 ]] Make sure we take account border width when filling.
+			if (linesize != 0)
+			{
+				dc->setlineatts(linesize, LineSolid, CapButt, JoinBevel);
+				dc->fillrect(trect, true);
+				dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
+			}
+			else				
+				dc->fillrect(trect);
 			break;
 		case F_ROUNDRECT:
-			dc->fillroundrect(trect, roundradius);
+			// MM-2013-11-14: [[ Bug 11426 ]] Make sure we take account border width when filling.
+			if (linesize != 0)
+			{
+				dc->setlineatts(linesize, LineSolid, CapButt, JoinBevel);
+				dc->fillroundrect(trect, roundradius, true);
+				dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
+			}
+			else				
+				dc->fillroundrect(trect, roundradius);
 			break;
 		case F_REGULAR:
 			dc->fillpolygon(points, npoints);
@@ -1880,7 +1892,15 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 			fill_polygons(dc, realpoints, nrealpoints);
 			break;
 		case F_OVAL:
-			dc->fillarc(trect, startangle, arcangle);
+			// MM-2013-11-14: [[ Bug 11426 ]] Make sure we take account border width when filling.
+			if (linesize != 0)
+			{
+				dc->setlineatts(linesize, LineSolid, CapButt, JoinBevel);
+				dc->fillarc(trect, startangle, arcangle, true);
+				dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
+			}
+			else				
+				dc->fillarc(trect, startangle, arcangle);
 			break;
 		}
 		if (m_fill_gradient != NULL)
@@ -1905,8 +1925,8 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		{
 		case F_G_RECTANGLE:
 			dc->setlineatts(linesize, lstyle, CapButt, JoinMiter);
-				dc->setmiterlimit(10.0);
-				// MW-2013-09-06: [[ RefactorGraphics ]] Make sure we draw on the inside of the rect.
+			dc->setmiterlimit(10.0);
+			// MW-2013-09-06: [[ RefactorGraphics ]] Make sure we draw on the inside of the rect.
 			dc->drawrect(trect, true);
 			break;
 		case F_ROUNDRECT:
@@ -2321,7 +2341,7 @@ IO_stat MCGraphic::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return t_stat;
 }
 
-IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -2493,13 +2513,27 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			if ((stat = IO_write_int1(dashes[i], stream)) != IO_NORMAL)
 				return stat;
 	}
-	if (flags & F_G_LABEL)
-		if ((stat = IO_write_stringref(label, stream, hasunicode())) != IO_NORMAL)
-			return stat;
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
+	//   legacy unicode output.
+    if (flags & F_G_LABEL)
+	{
+		if (MCstackfileversion < 7000)
+		{
+			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
+				return stat;
+		}
+		else
+		{
+			if ((stat = IO_write_stringref_new(label, stream, true)) != IO_NORMAL)
+				return stat;
+		}
+	}
+
 	return savepropsets(stream);
 }
 
-IO_stat MCGraphic::load(IO_handle stream, const char *version)
+IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 {
 	uint2 i;
 	IO_stat stat;
@@ -2510,7 +2544,7 @@ IO_stat MCGraphic::load(IO_handle stream, const char *version)
 
 //---- 2.7+:
 //  . F_G_ANTI_ALIASED now defined
-	if (strncmp(version, "2.7", 3) < 0)
+	if (version < 2700)
 		flags &= ~F_G_ANTI_ALIASED;
 //----
 
@@ -2573,9 +2607,9 @@ IO_stat MCGraphic::load(IO_handle stream, const char *version)
 					return stat;
 			}
 		}
-		if (strncmp(version, "1.4", 3) < 0)
+		if (version < 1400)
 			loaddashes = True;
-		if (strncmp(version, "1.4", 3) <= 0)
+		if (version <= 1400)
 			arrowsize = DEFAULT_ARROW_SIZE;
 		break;
 	}
@@ -2603,10 +2637,22 @@ IO_stat MCGraphic::load(IO_handle stream, const char *version)
 			}
 		}
 	}
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
+	//   legacy unicode output.
 	if (flags & F_G_LABEL)
 	{
-		if ((stat = IO_read_stringref(label, stream, hasunicode())) != IO_NORMAL)
-			return stat;
-	}
-	return loadpropsets(stream);
+		if (version < 7000)
+		{
+			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
+				return stat;
+		}
+		else
+		{
+			if ((stat = IO_read_stringref_new(label, stream, true)) != IO_NORMAL)
+				return stat;
+		}
+    }
+	
+    return loadpropsets(stream, version);
 }

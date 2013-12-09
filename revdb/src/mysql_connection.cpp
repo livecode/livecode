@@ -351,9 +351,10 @@ Bool DBConnection_MYSQL::IsError()
 }
 
 /*getErrorMessage- return error string*/
-char *DBConnection_MYSQL::getErrorMessage()
+char *DBConnection_MYSQL::getErrorMessage(Bool p_last)
 {
-	if (IsError() == True)
+    // AL-2013-11-08 [[ Bug 11149 ]] Make sure most recent error string is available to revDatabaseConnectResult
+	if (p_last || IsError() == True)
 	{
 		if (m_error != NULL)
 			return m_error;

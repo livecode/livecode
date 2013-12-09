@@ -147,6 +147,7 @@ MC_EXEC_DEFINE_GET_METHOD(Engine, SecureMode, 1)
 MC_EXEC_DEFINE_SET_METHOD(Engine, SecureMode, 1)
 MC_EXEC_DEFINE_GET_METHOD(Engine, SecurityCategories, 1)
 MC_EXEC_DEFINE_GET_METHOD(Engine, SecurityPermissions, 1)
+MC_EXEC_DEFINE_SET_METHOD(Engine, SecurityPermissions, 1)
 MC_EXEC_DEFINE_GET_METHOD(Engine, RecursionLimit, 1)
 MC_EXEC_DEFINE_SET_METHOD(Engine, RecursionLimit, 1)
 MC_EXEC_DEFINE_GET_METHOD(Engine, Address, 1)
@@ -205,7 +206,6 @@ static MCExecSetTypeElementInfo _kMCEngineSecurityCategoriesElementInfo[] =
 	{ "process", MC_SECUREMODE_PROCESS },
 	{ "registryRead", MC_SECUREMODE_REGISTRY_READ },
 	{ "registryWrite", MC_SECUREMODE_REGISTRY_WRITE },
-	{ "stack", MC_SECUREMODE_STACK },
 	{ "printing", MC_SECUREMODE_PRINT },	
 	{ "privacy", MC_SECUREMODE_PRIVACY },
 	{ "applescript", MC_SECUREMODE_APPLESCRIPT },
@@ -1536,6 +1536,12 @@ void MCEngineGetSecurityCategories(MCExecContext& ctxt, intset_t& r_value)
 void MCEngineGetSecurityPermissions(MCExecContext& ctxt, intset_t& r_value)
 {
 	r_value = MCsecuremode;
+}
+
+void MCEngineSetSecurityPermissions(MCExecContext& ctxt, intset_t p_value)
+{
+	// MW-2013-11-05: [[ Bug 11114 ]] Reinstate ability to set the securityPermissions.
+    MCsecuremode |= (~p_value) & MC_SECUREMODE_ALL;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

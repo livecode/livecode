@@ -970,14 +970,14 @@ void MCStatRound::compile(MCSyntaxFactoryRef ctxt)
 		compile_with_args(ctxt, kMCMathEvalStatRoundMethodInfo, source);
 }
 
-#ifdef /* MCStdDev */ LEGACY_EXEC
+#ifdef /* MCSampleStdDev */ LEGACY_EXEC
 	if (evalparams(F_STD_DEV, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_STDDEV_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-#endif /* MCStdDev */
+#endif /* MCSampleStdDev */
 
 #ifdef /* MCSum */ LEGACY_EXEC
 	if (evalparams(F_SUM, params, ep) != ES_NORMAL)

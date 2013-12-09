@@ -1381,7 +1381,7 @@ Exec_stat MCPass::exec(MCExecPoint &ep)
 	else
 		return ES_PASS;
 }
-#endif
+#endif /* MCPass::exec */
 
 uint4 MCPass::linecount()
 {

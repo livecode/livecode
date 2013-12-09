@@ -161,14 +161,14 @@ public:
 	virtual void drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image) = 0;
     virtual void drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image) = 0;
 	virtual void drawrect(const MCRectangle& rect, bool inside = false) = 0;
-	virtual void fillrect(const MCRectangle& rect) = 0;
+	virtual void fillrect(const MCRectangle& rect, bool inside = false) = 0;
 	virtual void fillrects(MCRectangle *rects, uint2 nrects) = 0;
 	virtual void fillpolygon(MCPoint *points, uint2 npoints) = 0;
 	virtual void drawroundrect(const MCRectangle& rect, uint2 radius, bool inside = false) = 0;
-	virtual void fillroundrect(const MCRectangle& rect, uint2 radius) = 0;
+	virtual void fillroundrect(const MCRectangle& rect, uint2 radius, bool inside = false) = 0;
 	virtual void drawarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside = false) = 0;
 	virtual void drawsegment(const MCRectangle& rect, uint2 start, uint2 angle, bool inside = false) = 0;
-	virtual void fillarc(const MCRectangle& rect, uint2 start, uint2 angle) = 0;
+	virtual void fillarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside = false) = 0;
 
 	virtual void drawpath(MCPath *path) = 0;
 	virtual void fillpath(MCPath *path, bool p_evenodd = true) = 0;

@@ -356,7 +356,10 @@ bool MCCreatePersonData(MCExecPoint& ep, ABRecordRef p_person, MCVariableValue *
 					
 					t_label = ABMultiValueCopyLabelAtIndex(t_values, j);
 					
-					if (label_to_name(t_label, t_label_name))
+                    // FG-2013-11-26 [[ Bugfix 11511 ]]
+                    // ABMultiValueCopyLabelAtIndex returns a null pointer if
+                    // there is no label for the given index.
+					if (t_label != nil && label_to_name(t_label, t_label_name))
 					{
 						CFTypeRef t_multi_value;
 						t_multi_value = ABMultiValueCopyValueAtIndex(t_values, j);

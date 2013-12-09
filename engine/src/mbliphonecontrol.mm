@@ -368,12 +368,13 @@ Exec_stat MCiOSControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
 			int2 i1, i2, i3, i4;
 			if (MCU_stoi2x4(ep . getsvalue(), i1, i2, i3, i4))
 			{
-				float t_scale;
-				t_scale = MCIPhoneGetNativeControlScale();
-				
-				if (m_view != nil)
-					[m_view setFrame: CGRectMake((float)i1 / t_scale, (float)i2 / t_scale, (float)(i3 - i1) / t_scale, (float)(i4 - i2) / t_scale)];
-			}
+                // MM-2013-11-26: [[ Bug 11485 ]] The rect of the control is passed in user space. Convert to device space when setting on view.
+                MCGRectangle t_rect;
+                t_rect = MCNativeControlUserRectToDeviceRect(MCGRectangleMake(i1, i2, i3 - i1, i4 -i2));
+                
+                if (m_view != nil)
+					[m_view setFrame: CGRectMake(t_rect . origin . x, t_rect . origin . y, t_rect . size . width, t_rect . size . height)];
+            }
 			else
 			{
 				MCeerror->add(EE_OBJECT_NAR, 0, 0, ep . getsvalue());
@@ -464,13 +465,14 @@ Exec_stat MCiOSControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 		{
 			if (m_view != nil)
 			{
-				CGRect t_rect;
-				t_rect = [m_view frame];
-				
-				float t_scale;
-				t_scale = MCIPhoneGetNativeControlScale();
-				
-				ep . setrectangle(t_rect.origin.x * t_scale, t_rect.origin.y * t_scale, (t_rect.origin.x + t_rect.size.width) * t_scale, (t_rect.origin.y + t_rect.size.height) * t_scale);
+                // MM-2013-11-26: [[ Bug 11485 ]] The user expects the rect of the control to be returned in user space, so convert the views rect from device space.
+				CGRect t_dev_rect;
+				t_dev_rect = [m_view frame];
+                
+                MCGRectangle t_user_rect;
+                t_user_rect = MCNativeControlUserRectFromDeviceRect(MCGRectangleMake(t_dev_rect . origin . x, t_dev_rect . origin . y, t_dev_rect . size. width, t_dev_rect . size . height));
+                
+				ep . setrectangle(t_user_rect.origin.x, t_user_rect.origin.y, t_user_rect.origin.x + t_user_rect.size.width, t_user_rect.origin.y + t_user_rect.size.height);
 			}
 			return ES_NORMAL;
 			
@@ -501,3 +503,24 @@ Exec_stat MCiOSControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 	return ES_ERROR;
 }
 #endif /* MCiOSControl::Get */
+
+////////////////////////////////////////////////////////////////////////////////
+
+// MM-2013-11-26: [[ Bug 11485 ]] When converting between user and device space on iOS,
+//   we must take into account if the user wants their coord to be scaled (iPhoneUseDeviceResolution) and and scale resulting from fullscreen mode.
+
+MCGAffineTransform MCNativeControlUserToDeviceTransform()
+{
+    float t_scale;
+    t_scale = 1 / MCIPhoneGetNativeControlScale();
+    return MCGAffineTransformScale(MCdefaultstackptr -> view_getviewtransform(), t_scale, t_scale);
+}
+
+MCGAffineTransform MCNativeControlUserFromDeviceTransform()
+{
+    float t_scale;
+    t_scale = MCIPhoneGetNativeControlScale();
+    return MCGAffineTransformScale(MCGAffineTransformInvert(MCdefaultstackptr -> view_getviewtransform()), t_scale, t_scale);
+}
+
+////////////////////////////////////////////////////////////////////////////////

@@ -1499,11 +1499,24 @@ void MCGContextClipToRect(MCGContextRef self, MCGRectangle p_rect)
 
 MCGRectangle MCGContextGetClipBounds(MCGContextRef self)
 {	
-	SkRect t_clip;
-	self -> layer -> canvas -> getClipBounds(&t_clip);
-	// Skia outsets the clip returned by 1 pixel to take account of anti-aliasing (it appears)
-	t_clip . inset(1, 1);
-	return MCGRectangleMake(t_clip . x(), t_clip . y(), t_clip . width(), t_clip . height());
+	// MM-2013-11-25: [[ Bug 11496 ]] When using getClipBounds, Skia outsets the clip by 1 pixel to take account of antialiasing.
+	//  This is worked out by get the device clip, outsetting and revesing the transform on the canvas, meanining if there is a scale factor, the outset is scaled.
+	//  Instead, we just fetch the device clip and reverse the transform ourselves.
+	SkIRect t_dev_i_clip;
+	self -> layer -> canvas -> getClipDeviceBounds(&t_dev_i_clip);	
+	SkRect t_dev_clip;
+	t_dev_clip = SkRect::MakeLTRB(SkIntToScalar(t_dev_i_clip . left()), SkIntToScalar(t_dev_i_clip . top()), SkIntToScalar(t_dev_i_clip . right()), SkIntToScalar(t_dev_i_clip . bottom()));
+	
+	const SkMatrix t_transfom = self -> layer -> canvas -> getTotalMatrix();
+	SkMatrix t_inverse_transform;
+	if (t_transfom . invert(&t_inverse_transform))
+	{
+		SkRect t_clip;
+		t_inverse_transform . mapRect(&t_clip, t_dev_clip);
+		return MCGRectangleMake(t_clip . x(), t_clip . y(), t_clip . width(), t_clip . height());
+	}
+	else
+		return MCGRectangleMake(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 MCGRectangle MCGContextGetDeviceClipBounds(MCGContextRef self)
@@ -2082,13 +2095,10 @@ void MCGContextAddDot(MCGContextRef self, MCGPoint p_location)
 	t_success = true;
 	
 	if (t_success)
-	{
+	{		
+		// MM-2013-11-25: [[ Bug 11395 ]] Updated dot drawing to be half pixel rectangle.
 		MCGContextEnsurePath(self);
-		
-		MCGSize t_radii;
-		t_radii . width = 1.0f;
-		t_radii . height = 1.0f;
-		MCGPathAddEllipse(self -> path, p_location, t_radii, 0.0f);
+		MCGPathAddRectangle(self -> path, MCGRectangleMake(p_location . x, p_location. y, 0.25f, 0.25f));
 		t_success = MCGPathIsValid(self -> path);
 	}	
 	
@@ -2132,7 +2142,8 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
 	{
 		if (p_gradient != NULL)
 		{
-			t_filter = p_gradient -> filter;
+			// MM-2013-11-19: [[ Bug 11471 ]] We're now using legacy gradient code for all gradients which manages quality directly.
+			//  No need to set the image filter here.
 			t_success = MCGGradientToSkShader(p_gradient, MCGContextGetClipBounds(self), t_shader);
 		}
 		else if (p_pattern != NULL)
@@ -2217,11 +2228,14 @@ static bool MCGContextSetupStrokePaint(MCGContextRef self, SkPaint &r_paint)
 	{				
 		r_paint . setStyle(SkPaint::kStroke_Style);
 		r_paint . setAntiAlias(self -> state -> should_antialias);
-		r_paint . setStrokeWidth(MCGFloatToSkScalar(self -> state -> stroke_attr . width));
 		r_paint . setStrokeMiter(MCGFloatToSkScalar(self -> state -> stroke_attr . miter_limit));
 		r_paint . setStrokeJoin(MCGJoinStyleToSkJoinStyle(self -> state -> stroke_attr . join_style));
 		r_paint . setStrokeCap(MCGCapStyleToSkCapStyle(self -> state -> stroke_attr . cap_style));	
 		r_paint . setPathEffect(t_dash_effect);
+		
+		// MM-2013-11-26: [[ Bug 11512 ]] Don't draw 1 pixel lines as hairlines, as these don't scale.
+		//  There also appear to be a few issues with non-antialiased harline paths (11514, 11497).
+		r_paint . setStrokeWidth(MCGFloatToSkScalar(self -> state -> stroke_attr . width));
 		
 		SkXfermode *t_blend_mode;
 		t_blend_mode = MCGBlendModeToSkXfermode(self -> state -> blend_mode);
@@ -2669,12 +2683,22 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 		
 		MCMemoryCopy(t_key_ptr, p_text, p_length);
 		t_key_ptr += p_length;
+
 		MCMemoryCopy(t_key_ptr, &p_length, sizeof(p_length));
 		t_key_ptr += sizeof(p_length);
+
 		MCMemoryCopy(t_key_ptr, &p_font . fid, sizeof(p_font . fid));
 		t_key_ptr += sizeof(p_font . fid);
-		MCMemoryCopy(t_key_ptr, &p_font . size, sizeof(p_font . size));
+
+		// MW-2013-11-07: [[ Bug 11393 ]] Make sure we take into account the 'ideal' flag
+		//   when looking up metrics.
+		// MW-2013-11-12: [[ Bug 11415 ]] Make sure we use p_font.size and not t_size if not
+		//   ideal - otherwise uninitialized values abound...
+		int16_t t_size;
+		t_size = p_font . ideal ? -p_font . size : p_font . size;
+		MCMemoryCopy(t_key_ptr, &t_size, sizeof(p_font . size));
 		t_key_ptr += sizeof(p_font . size);
+
 		MCMemoryCopy(t_key_ptr, &p_font . style, sizeof(p_font . style));
 		t_key_ptr += sizeof(p_font . style);
 		

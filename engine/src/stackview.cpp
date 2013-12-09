@@ -44,18 +44,11 @@ static MCStackFullscreenModeNames s_fullscreenmode_names[] = {
 	{"", kMCStackFullscreenResize},
 	
 	// MW-2013-10-31: [[ Bug 11336 ]] Change the modes to be camel-case.
+	// IM-2013-11-20: [[ FullscreenMode ]] Rename showAll to letterbox and remove two-word mode synonyms
 	{"exactFit", kMCStackFullscreenExactFit},
-	{"showAll", kMCStackFullscreenShowAll},
+	{"letterbox", kMCStackFullscreenLetterbox},
 	{"noBorder", kMCStackFullscreenNoBorder},
 	{"noScale", kMCStackFullscreenNoScale},
-	
-	// MW-2013-10-31: [[ Bug 1136 ]] REMOVE FOR RELEASE - these are here
-	//   for continuity between dp-2 and the next build, will be removed
-	//   for release.
-	{"exact fit", kMCStackFullscreenExactFit},
-	{"show all", kMCStackFullscreenShowAll},
-	{"no border", kMCStackFullscreenNoBorder},
-	{"no scale", kMCStackFullscreenNoScale},
 
 	{nil, kMCStackFullscreenModeNone},
 };
@@ -240,7 +233,7 @@ MCRectangle MCStack::view_constrainstackviewport(const MCRectangle &p_rect)
 			break;
 
 		case kMCStackFullscreenExactFit:
-		case kMCStackFullscreenShowAll:
+		case kMCStackFullscreenLetterbox:
 		case kMCStackFullscreenNoBorder:
 			// scaling modes should return the requested stack rect
 			t_new_rect = t_stackrect;
@@ -272,7 +265,7 @@ MCGAffineTransform view_get_stack_transform(MCStackFullscreenMode p_mode, MCRect
 	case kMCStackFullscreenExactFit:
 		return MCGAffineTransformMakeScale((MCGFloat)p_screen_rect.width / (MCGFloat)p_stack_rect.width, (MCGFloat)p_screen_rect.height / (MCGFloat)p_stack_rect.height);
 
-	case kMCStackFullscreenShowAll:
+	case kMCStackFullscreenLetterbox:
 		t_scale = MCMin((MCGFloat)p_screen_rect.width / (MCGFloat)p_stack_rect.width, (MCGFloat)p_screen_rect.height / (MCGFloat)p_stack_rect.height);
 		t_transform = MCGAffineTransformMakeTranslation(-(MCGFloat)p_stack_rect.width / 2.0, -(MCGFloat)p_stack_rect.height / 2.0);
 		t_transform = MCGAffineTransformScale(t_transform, t_scale, t_scale);

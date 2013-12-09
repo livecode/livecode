@@ -37,7 +37,7 @@ Exec_stat MCLiteral::eval(MCExecPoint &ep)
 {
     MCExecValueTraits<MCNameRef>::set(r_value, value);
 }
-#endif
+#endif /* MCLiteral::eval */ 
 
 void MCLiteral::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {

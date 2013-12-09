@@ -459,17 +459,22 @@ static void drawthemetabs(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRect
 	{
 		MCThemeDrawInfo t_info;
 		t_info . dest = drect;
-	
+		
 		converttonativerect(drect, t_info . tab_pane . bounds);
 		
 		t_info . tab_pane . state = (widgetinfo.state & WTHEME_STATE_DISABLED) != 0 ? kThemeStateInactive: kThemeStateActive;
-
+		
 		dc -> drawtheme(THEME_DRAW_TYPE_TAB_PANE, &t_info);
-		}
-		else
-		{
+	}
+	else
+	{
 		MCThemeDrawInfo t_info;
 		t_info.dest = drect;
+		
+		// MM-2012-11-18: [[ Bug 11456 ]] The height in the dest rect is based on font size.
+		//   However, on OS X, tab buttons are always 22 pixels high, irrespective of font size. Was causing clipping with small font sizes.
+		t_info . dest . height = 22;
+				
 		converttonativerect(drect, t_info . tab . bounds);
 		t_info . tab . is_hilited = (widgetinfo . state & WTHEME_STATE_HILITED) != 0;
 		t_info . tab . is_disabled = (widgetinfo . state & WTHEME_STATE_DISABLED) != 0;
@@ -477,8 +482,8 @@ static void drawthemetabs(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRect
 		t_info . tab . is_first = (widgetinfo . attributes & WTHEME_ATT_FIRSTTAB) != 0;
 		t_info . tab . is_last = (widgetinfo . attributes & WTHEME_ATT_LASTTAB) != 0;
 		dc -> drawtheme(THEME_DRAW_TYPE_TAB, &t_info);
-		}
-			}
+	}
+}
 
 static Widget_Part HitTestScrollControls(const MCWidgetInfo &winfo, int2 mx,int2 my, const MCRectangle &drect)
 {
@@ -1030,7 +1035,7 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	CGContextRef t_cgcontext = nil;
 	CGColorSpaceRef t_colorspace = nil;
 	MCRectangle t_rect;
-	
+
 	t_rect = p_info_ptr->dest;
 	
 	t_success = MCImageBitmapCreate(t_rect.width, t_rect.height, t_bitmap);

@@ -1112,6 +1112,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\image_rep_resampled.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\imagebitmap.cpp"
 				>
 			</File>

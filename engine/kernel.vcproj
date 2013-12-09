@@ -372,6 +372,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\image_rep_resampled.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\imagebitmap.cpp"
 				>
 			</File>
@@ -929,6 +933,10 @@
 			</File>
 			<File
 				RelativePath="src\gradient.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\graphics_util.h"
 				>
 			</File>
 			<File

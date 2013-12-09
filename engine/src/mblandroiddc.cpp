@@ -133,9 +133,6 @@ static jobject s_android_view_class = nil;
 // If this is false, then it means the engine broke somehow.
 static bool s_engine_running = false;
 
-// The current height of the keyboard (if visible)
-static float s_current_keyboard_height = 0.0f;
-
 int32_t g_android_keyboard_type = 1;
 
 static void android_process(void);
@@ -265,6 +262,10 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& r_displays, u
 	// The workarea is the rect of the screen
 	// not covered by any OS furniture, the viewport the whole area of the sreen.
 
+	// IM-2013-11-15: [[ Bug 10485 ]] Use appropriate java method to get (effective) working screenrect
+	if (p_effective)
+		MCAndroidEngineCall("getEffectiveWorkareaAsString", "s", &t_rect_string);
+	else
 	MCAndroidEngineCall("getWorkareaAsString", "s", &t_rect_string);
 	MCU_stoi2x4(t_rect_string, t_left, t_top, t_right, t_bottom);
 
@@ -280,10 +281,8 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& r_displays, u
 	s_display.device_viewport.y = t_top;
 	s_display.device_viewport.width = t_right - t_left;
 	s_display.device_viewport.height = t_bottom - t_top;
-	if (p_effective)
-		s_display.device_viewport.height -= s_current_keyboard_height;
 
-	MCLog("getdisplays: workarea(%d,%d,%d,%d) viewport(%d,%d,%d,%d)",
+	MCLog("getdisplays(effective=%s): workarea(%d,%d,%d,%d) viewport(%d,%d,%d,%d)", p_effective?"true":"false",
 		s_display.device_workarea.x, s_display.device_workarea.y, s_display.device_workarea.width, s_display.device_workarea.height,
 		s_display.device_viewport.x, s_display.device_viewport.y, s_display.device_viewport.width, s_display.device_viewport.height);
 
@@ -516,13 +515,13 @@ public:
 		MCRectangle t_rect = MCRegionGetBoundingBox(m_region);
 		if (s_android_bitmap == nil)
 			return false;
-		
+
 		if (m_pixels != nil)
 			return false;
-		
+
 		if (AndroidBitmap_lockPixels(s_java_env, s_android_bitmap, &m_pixels) < 0)
 			return false;
-		
+
 		return true;
 	}
 	
@@ -548,10 +547,10 @@ public:
 				MCGContextClipToRect(m_locked_context, MCRectangleToMCGRectangle(m_locked_area));
 				
 				r_context = m_locked_context;
-				
-				return true;
-			}
-			
+
+		return true;
+	}
+
 			UnlockPixels(false);
 		}
 		
@@ -562,7 +561,7 @@ public:
 	{
 		if (m_locked_context == nil)
 			return;
-		
+
 		MCGContextRelease(m_locked_context);
 		m_locked_context = nil;
 		
@@ -578,15 +577,15 @@ public:
 		t_area = MCU_intersect_rect(MCRegionGetBoundingBox(p_area), MCRegionGetBoundingBox(m_region));
 
 		m_locked_area = t_area;
-		
+
 		r_raster.width = t_area.width;
 		r_raster.height = t_area.height;
 		r_raster.stride = s_android_bitmap_stride;
 		r_raster.pixels = (uint8_t*)m_pixels + t_area.y * s_android_bitmap_stride + t_area.x * sizeof(uint32_t);
 		r_raster.format = kMCGRasterFormat_ARGB;
-		
+
 		m_locked = true;
-		
+
 		return true;
 	}
 
@@ -608,7 +607,7 @@ public:
 
 	bool LockTarget(MCStackSurfaceTargetType p_type, void*& r_target)
 	{
-		return false;
+			return false;
 	}
 
 	void UnlockTarget(void)
@@ -618,27 +617,27 @@ public:
 	bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
 	{
 		bool t_success = true;
-		
+
 		MCGContextRef t_context = nil;
 		MCRegionRef t_region = nil;
-		
+
 		t_success = MCRegionCreate(t_region);
-		
+
 		if (t_success)
 			t_success = MCRegionSetRect(t_region, MCGRectangleGetIntegerBounds(p_dst_rect));
-		
+
 		if (t_success)
 			t_success = LockGraphics(t_region, t_context);
-		
+
 		if (t_success)
-		{
+	{
 			MCGContextSetBlendMode(t_context, p_blend);
 			MCGContextSetOpacity(t_context, p_alpha);
 			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNearest);
 		}
-		
+
 		UnlockGraphics();
-		
+
 		MCRegionDestroy(t_region);
 		
 		return t_success;
@@ -668,14 +667,14 @@ public:
 	{
 		if (m_buffer_pixels != nil)
 			return false;
-		
+
 		m_buffer_stride = s_android_bitmap_width * sizeof(uint32_t);
 		if (!MCMemoryAllocate(s_android_bitmap_height * m_buffer_stride, m_buffer_pixels))
 			return false;
-		
+
 		return true;
 	}
-	
+
 	void Unlock()
 	{
 		if (m_buffer_pixels == nil)
@@ -706,10 +705,10 @@ public:
 	{
 		if (m_locked_context == nil)
 			return;
-		
+
 		MCGContextRelease(m_locked_context);
 		m_locked_context = nil;
-		
+
 		UnlockPixels();
 	}
 
@@ -717,7 +716,7 @@ public:
 	{
 		if (m_locked)
 			return false;
-		
+
 		r_raster.width = s_android_bitmap_width;
 		r_raster.height = s_android_bitmap_height;
 		r_raster.stride = m_buffer_stride;
@@ -725,7 +724,7 @@ public:
 		r_raster.format = kMCGRasterFormat_ARGB;
 
 		m_locked = true;
-		
+
 		return true;
 	}
 
@@ -733,7 +732,7 @@ public:
 	{
 		UnlockPixels(true);
 	}
-	
+
 	void UnlockPixels(bool p_update)
 	{
 		if (!m_locked)
@@ -979,27 +978,27 @@ void MCStack::preservescreenforvisualeffect(const MCRectangle& p_rect)
 	if (t_surface . Lock())
 	{
 		MCGRaster t_raster;
-		// Lock the whole surface of the bitmap.
+	// Lock the whole surface of the bitmap.
 		if (t_surface . LockPixels(t_actual_region, t_raster))
-		{
-			// We need the contents of the last presented framebuffer. To ensure
-			// we get that, force an (OpenGL) update before reading the pixels.
+	{
+		// We need the contents of the last presented framebuffer. To ensure
+		// we get that, force an (OpenGL) update before reading the pixels.
 			device_updatewindow(t_actual_region);
-			
-			// Fetch the contents of the framebuffer.
+
+		// Fetch the contents of the framebuffer.
 			glReadPixels(0, 0, s_android_bitmap_width, s_android_bitmap_height, GL_RGBA, GL_UNSIGNED_BYTE, t_raster . pixels);
-			
-			// glReadPixels gives us the bitmap the wrong way up, so swap it round.
-			void *t_scanline;
+
+		// glReadPixels gives us the bitmap the wrong way up, so swap it round.
+		void *t_scanline;
 			/* UNCHECKED */ t_scanline = malloc(t_raster . stride);
-			for(int y = 0; y < s_android_bitmap_height / 2; y++)
-			{
+		for(int y = 0; y < s_android_bitmap_height / 2; y++)
+		{
 				memcpy(t_scanline, (char *)t_raster . pixels + y * t_raster . stride, t_raster . stride);
 				memcpy((char *)t_raster . pixels + y * t_raster . stride, (char *)t_raster . pixels + (s_android_bitmap_height - y - 1) * t_raster . stride, t_raster . stride);
 				memcpy((char *)t_raster . pixels + (s_android_bitmap_height - y - 1) * t_raster . stride, t_scanline, t_raster . stride);
-			}
-			free(t_scanline);
 		}
+		free(t_scanline);
+	}
 		t_surface . Unlock();
 	}
 
@@ -1418,7 +1417,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 		case kMCJavaTypeMCStringUnicode:
 			{
 				jstring t_java_string;
-			t_java_string = (jstring)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
+				t_java_string = (jstring)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
 				if (t_cleanup_java_refs && t_env -> ExceptionCheck())
 				{
 					t_exception_thrown = true;
@@ -1969,7 +1968,6 @@ struct MCKeyboardActivatedEvent: public MCCustomEvent
 	
 	void Dispatch(void)
 	{
-		s_current_keyboard_height = m_height;
 		MCdefaultstackptr -> getcurcard() -> message(MCM_keyboard_activated);
 	}
 	
@@ -1986,7 +1984,6 @@ struct MCKeyboardDeactivatedEvent: public MCCustomEvent
 	
 	void Dispatch(void)
 	{
-		s_current_keyboard_height = 0.0;
 		MCdefaultstackptr -> getcurcard() -> message(MCM_keyboard_deactivated);
 	}
 };

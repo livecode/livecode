@@ -33,7 +33,7 @@ Exec_stat MCConstant::eval(MCExecPoint &ep)
 	else
         MCExecValueTraits<double>::set(r_value, nvalue);
 }
-#endif
+#endif /* MCConstant::eval */
 
 void MCConstant::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {

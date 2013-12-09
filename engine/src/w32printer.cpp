@@ -746,8 +746,22 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			MCFontStruct *f;
 			f = MCFontGetFontStruct(p_mark->text.font);
 
+			// MW-2013-11-07: [[ Bug 11393 ]] If using 'ideal' metrics, then make the font
+			//   at -size (using the screen font causes size / placement issues).
+			MCSysFontHandle t_new_font;
+			if (f -> printer)
+			{
+				LOGFONTA t_font;
+				GetObjectA(f -> fid, sizeof(LOGFONTA), &t_font);
+				t_font . lfHeight = -f -> size;
+
+				t_new_font = (MCSysFontHandle)CreateFontIndirectA(&t_font);
+			}
+			else
+				t_new_font = f -> fid;
+
 			HGDIOBJ t_old_font;
-			t_old_font = SelectObject(t_dc, f -> fid);
+			t_old_font = SelectObject(t_dc, t_new_font);
 			SetTextColor(t_dc, colour_to_pixel(p_mark -> fill -> colour));
 			if (p_mark -> text . background != NULL)
 			{
@@ -756,12 +770,16 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			}
 			else
 				SetBkMode(t_dc, TRANSPARENT);
-			if (f -> unicode || p_mark -> text . unicode_override)
+			if (p_mark -> text . unicode_override)
 				TextOutW(t_dc, p_mark -> text . position . x, p_mark -> text . position . y, (LPCWSTR)p_mark -> text . data, p_mark -> text . length >> 1);
 			else
 				TextOutA(t_dc, p_mark -> text . position . x, p_mark -> text . position . y, (LPCSTR)p_mark -> text . data, p_mark -> text . length);
 
 			SelectObject(t_dc, t_old_font);
+
+			// MW-2013-11-07: [[ Bug 11393 ]] Delete the font if we had to create a new one.
+			if (t_new_font != f -> fid)
+				DeleteObject(t_new_font);
 		}
 		break;
 

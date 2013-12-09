@@ -508,9 +508,9 @@ bool MCImageRepGetDensityMapped(MCStringRef p_filename, MCImageRep *&r_rep)
 	bool t_success = true;
 	
 	MCImageRep *t_rep = nil;
-	
+
     MCAutoPointer<char>t_base, t_extension;
-	t_base =t_extension = nil;
+	t_base = t_extension = nil;
 	
 	MCGFloat t_density;
 	

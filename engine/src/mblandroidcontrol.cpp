@@ -108,15 +108,24 @@ jobject MCAndroidControl::GetView(void)
 
 bool MCAndroidControl::GetViewRect(jobject p_view, int16_t &r_left, int16_t &r_top, int16_t &r_right, int16_t &r_bottom)
 {
+    MCGRectangle t_rect;
+    
     int32_t t_value;
     MCAndroidObjectRemoteCall(p_view, "getLeft", "i", &t_value);
-    r_left = t_value;
+    t_rect . origin . x = t_value;
     MCAndroidObjectRemoteCall(p_view, "getTop", "i", &t_value);
-    r_top = t_value;
+    t_rect . origin . y = t_value;
     MCAndroidObjectRemoteCall(p_view, "getRight", "i", &t_value);
-    r_right = t_value;
+    t_rect . size . width  = t_value - t_rect . origin . x;
     MCAndroidObjectRemoteCall(p_view, "getBottom", "i", &t_value);
-    r_bottom = t_value;
+    t_rect . size . width  = t_value - t_rect . origin . y;
+    
+    // MM-2013-11-26: [[ Bug 11485 ]] The rect of the view is set in device space. The user expects the rect to be in user space, so convert before returning.
+    t_rect = MCNativeControlUserRectFromDeviceRect(t_rect);
+    r_left = t_rect . origin . x;
+    r_top = t_rect . origin . y;
+    r_right = t_rect . origin . x + t_rect . size . width;
+    r_bottom = t_rect . origin . y + t_rect . size . height;
     
     return true;
 }
@@ -135,15 +144,14 @@ bool MCAndroidControl::GetViewBackgroundColor(jobject p_view, uint16_t &r_red, u
 void MCAndroidControl::SetRect(MCExecContext& ctxt, MCRectangle p_rect)
 {
     int16_t i1, i2, i3, i4;
-    // MM-2013-09-30: [[ Bug 11227 ]] Make sure we take into account device scale when positioning native controls.
-    //   We take into account the scale at this point as it's most convenient. This way, we assume that the on the Java
-    //   side everything is in pixels. A better abtraction may be needed going forward (if there is to be more drawing on the java side).
-    MCGFloat t_device_scale;
-    t_device_scale = MCResGetDeviceScale();
-    i1 = (int16_t) p_rect . x * t_device_scale;
-    i2 = (int16_t) p_rect . y * t_device_scale;
-    i3 = (int16_t) p_rect . x + p_rect . width * t_device_scale;
-    i4 = (int16_t) p_rect . y + p_rect . height * t_device_scale;
+
+    // MM-2013-11-26: [[ Bug 11485 ]] The rect of the control is passed in user space. Convert to device space when setting on view.
+    MCGRectangle t_rect;
+    t_rect = MCNativeControlUserRectToDeviceRect(MCGRectangleMake(p_rect . x, p_rect . y, p_rect . width, p_rect . height));
+    i1 = (int16_t) t_rect . origin . x;
+    i2 = (int16_t) t_rect . origin . y;
+    i3 = (int16_t) t_rect . origin . x + t_rect . size . width;
+    i4 = (int16_t) t_rect . origin . y + t_rect . size . height;
     
     if (m_view != nil)
         MCAndroidObjectRemoteCall(m_view, "setRect", "viiii", nil, i1, i2, i3, i4);
@@ -221,16 +229,14 @@ Exec_stat MCAndroidControl::Set(MCNativeControlProperty p_property, MCExecPoint 
             int16_t i1, i2, i3, i4;
             if (MCU_stoi2x4(ep.getsvalue(), i1, i2, i3, i4))
             {
-                // MM-2013-09-30: [[ Bug 11227 ]] Make sure we take into account device scale when positioning native controls.
-                //   We take into account the scale at this point as it's most convenient. This way, we assume that the on the Java
-                //   side everything is in pixels. A better abtraction may be needed going forward (if there is to be more drawing on the java side).
-                MCGFloat t_device_scale;
-                t_device_scale = MCResGetDeviceScale();
-                i1 = (int16_t) i1 * t_device_scale;
-                i1 = (int16_t) i2 * t_device_scale;
-                i1 = (int16_t) i3 * t_device_scale;
-                i1 = (int16_t) i4 * t_device_scale;
-
+                // MM-2013-11-26: [[ Bug 11485 ]] The rect of the control is passed in user space. Convert to device space when setting on view.
+                MCGRectangle t_rect;
+                t_rect = MCNativeControlUserRectToDeviceRect(MCGRectangleMake(i1, i2, i3 - i1, i4 -i2));
+                i1 = (int16_t) t_rect . origin . x;
+                i2 = (int16_t) t_rect . origin . y;
+                i3 = (int16_t) t_rect . origin . x + t_rect . size . width;
+                i4 = (int16_t) t_rect . origin . y + t_rect . size . height;
+                
                 if (m_view != nil)
                     MCAndroidObjectRemoteCall(m_view, "setRect", "viiii", nil, i1, i2, i3, i4);
             }
@@ -316,15 +322,6 @@ Exec_stat MCAndroidControl::Get(MCNativeControlProperty p_property, MCExecPoint 
             {
                 int16_t i1, i2, i3, i4;
                 GetViewRect(m_view, i1, i2, i3, i4);
-                
-                // MM-2013-09-30: [[ Bug 11227 ]] Make sure we take into account device scale when positioning native controls.
-                MCGFloat t_device_scale;
-                t_device_scale = MCResGetDeviceScale();
-                i1 = (int16_t) i1 / t_device_scale;
-                i1 = (int16_t) i2 / t_device_scale;
-                i1 = (int16_t) i3 / t_device_scale;
-                i1 = (int16_t) i4 / t_device_scale;
-                
                 MCExecPointSetRect(ep, i1, i2, i3, i4);
             }
             return ES_NORMAL;
@@ -457,3 +454,20 @@ void MCAndroidControl::HandleNotifyEvent(MCNameRef p_message)
 		ChangeTarget(t_old_target);
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// MM-2013-11-26: [[ Bug 11485 ]] When positioning native controls on Android,
+//   we must take into account the pixel density of the device and any scaling by way of the fullscreen mode.
+
+MCGAffineTransform MCNativeControlUserToDeviceTransform()
+{
+    return MCGAffineTransformConcat(MCdefaultstackptr -> view_getviewtransform(), MCResGetDeviceTransform());
+}
+
+MCGAffineTransform MCNativeControlUserFromDeviceTransform()
+{
+    return MCGAffineTransformInvert(MCGAffineTransformConcat(MCdefaultstackptr -> view_getviewtransform(), MCResGetDeviceTransform()));
+}
+
+////////////////////////////////////////////////////////////////////////////////

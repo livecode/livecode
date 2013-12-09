@@ -66,7 +66,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define STACK_EXTRA_ORIGININFO (1U << 0)
 
-IO_stat MCStack::load_substacks(IO_handle stream, const char *version)
+IO_stat MCStack::load_substacks(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 
@@ -103,7 +103,7 @@ IO_stat MCStack::load_substacks(IO_handle stream, const char *version)
 	return IO_NORMAL;
 }
 
-IO_stat MCStack::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCStack::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
@@ -135,7 +135,7 @@ IO_stat MCStack::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 	return t_stat;
 }
 
-IO_stat MCStack::load(IO_handle stream, const char *version, uint1 type)
+IO_stat MCStack::load(IO_handle stream, uint32_t version, uint1 type)
 {
 	IO_stat stat;
 	
@@ -160,13 +160,13 @@ IO_stat MCStack::load(IO_handle stream, const char *version, uint1 type)
 	return stat;
 }
 
-IO_stat MCStack::load_stack(IO_handle stream, const char *version)
+IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 	
 //---- 2.7+:
 //  . F_OPAQUE now valid - default true
-	if (strncmp(version, "2.7", 3) < 0)
+	if (version < 2700)
 	{
 		flags |= F_OPAQUE;
 	}
@@ -176,20 +176,27 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 		state |= CS_TRANSLATED;
 	if ((stat = IO_read_uint4(&iconid, stream)) != IO_NORMAL)
 		return stat;
-	if (strncmp(version, "1.0", 3) > 0)
+	if (version > 1000)
 	{
 		if (flags & F_TITLE)
 		{
-			// MW-2012-03-04: [[ StackFile5500 ]] If the version is 5.5 or above, then the
-			//   stack title will be UTF-8 already.
-			if (strncmp(version, "5.5", 3) >= 0)
+			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+			if (version >= 7000)
 			{
-				if ((stat = IO_read_stringref_utf8(title, stream)) != IO_NORMAL)
+				if ((stat = IO_read_stringref_new(title, stream, true)) != IO_NORMAL)
+					return stat;
+			}
+			else if (version >= 5500)
+			{
+				// MW-2012-03-04: [[ StackFile5500 ]] If the version is 5.5 or above, then the
+				//   stack title will be UTF-8 already.
+				if ((stat = IO_read_stringref_legacy_utf8(title, stream)) != IO_NORMAL)
 					return stat;
 			}
 			else
 			{
-				if ((stat = IO_read_stringref(title, stream, false)) != IO_NORMAL)
+				// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv < 5500, then legacy string
+				if ((stat = IO_read_stringref_legacy(title, stream, false)) != IO_NORMAL)
 					return stat;
 			}
 		}
@@ -204,7 +211,7 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 	}
 	else
 		flags &= ~(F_TITLE | F_DECORATIONS);
-	if (strncmp(version, "2.3", 3) < 0)
+	if (version < 2300)
 		flags &= ~(F_SHOW_BORDER | F_3D | F_OPAQUE | F_FORMAT_FOR_PRINTING);
 	if (flags & F_RESIZABLE)
 	{
@@ -219,11 +226,14 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 		if (maxwidth == 1280 && maxheight == 1024)
 			maxwidth = maxheight = MAXUINT2;
 	}
-	if ((stat = IO_read_stringref(externalfiles, stream, false)) != IO_NORMAL)
+	
+	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+	if ((stat = IO_read_stringref_new(externalfiles, stream, version >= 7000)) != IO_NORMAL)
 		return stat;
-	if (strncmp(version, "1.3", 3) > 0)
+	
+	if (version > 1300)
 	{
-		if ((stat = MCLogicalFontTableLoad(stream)) != IO_NORMAL)
+		if ((stat = MCLogicalFontTableLoad(stream, version)) != IO_NORMAL)
 			return stat;
 
 		// MW-2012-02-17: [[ LogFonts ]] Now we have a fonttable, we can resolve the
@@ -236,41 +246,52 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 			loadfontattrs(s_last_font_index);
 		}
 	}
-
+	
+	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (flags & F_STACK_FILES)
 	{
 		MCAutoStringRef sf;
-		if ((stat = IO_read_stringref(&sf, stream)) != IO_NORMAL)
+		if ((stat = IO_read_stringref_new(&sf, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
 		setstackfiles(*sf);
 		
 	}
+	
+	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (flags & F_MENU_BAR)
 	{
 		MCNameRef t_menubar;
-		if ((stat = IO_read_nameref(t_menubar, stream)) != IO_NORMAL)
+		if ((stat = IO_read_nameref_new(t_menubar, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
 		MCNameDelete(_menubar);
 		_menubar = t_menubar;
 	}
+	
 	if (flags & F_LINK_ATTS)
 	{
 		linkatts = new Linkatts;
 		memset(linkatts, 0, sizeof(Linkatts));
+		
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_mccolor(linkatts->color, stream)) != IO_NORMAL
-		        || (stat = IO_read_stringref(linkatts->colorname, stream, false)) != IO_NORMAL)
+		        || (stat = IO_read_stringref_new(linkatts->colorname, stream, version >= 7000)) != IO_NORMAL)
 			return stat;
+		
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_mccolor(linkatts->hilitecolor, stream)) != IO_NORMAL
-		        || (stat=IO_read_stringref(linkatts->hilitecolorname, stream, false))!=IO_NORMAL)
+		        || (stat=IO_read_stringref_new(linkatts->hilitecolorname, stream, version >= 7000))!=IO_NORMAL)
 			return stat;
+		
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
-		        || (stat=IO_read_stringref(linkatts->visitedcolorname, stream, false))!=IO_NORMAL)
+		        || (stat=IO_read_stringref_new(linkatts->visitedcolorname, stream, version >= 7000))!=IO_NORMAL)
 			return stat;
+		
 		if ((stat = IO_read_uint1(&linkatts->underline, stream)) != IO_NORMAL)
 			return stat;
 	}
 
-	if ((stat = loadpropsets(stream)) != IO_NORMAL)
+	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
 		return stat;
 
 	mode_load();
@@ -540,9 +561,11 @@ IO_stat MCStack::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (stat != IO_NORMAL)
 		return stat;
 	
-	if ((stat = IO_write_string(NULL, stream)) != IO_NORMAL)
+	// MW-2013-11-20: [[ UnicodeFileFormat ]] These are for backwards compatibility
+	//   so legacy.
+	if ((stat = IO_write_cstring_legacy(NULL, stream, 2)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_write_string(NULL, stream)) != IO_NORMAL)
+	if ((stat = IO_write_cstring_legacy(NULL, stream, 2)) != IO_NORMAL)
 		return stat;
 
 //---- 2.7+:
@@ -565,16 +588,22 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		return stat;
 	if (flags & F_TITLE)
 	{
-		// MW-2012-03-04: [[ StackFile5500 ]] If the stackfile version is 5.5, then
-		//   write out UTF-8 directly.
-		if (MCstackfileversion >= 5500)
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+		if (MCstackfileversion >= 7000)
 		{
-			if ((stat = IO_write_stringref_utf8(title, stream)) != IO_NORMAL)
+			if ((stat = IO_write_stringref_new(title, stream, true)) != IO_NORMAL)
+				return stat;
+		}
+		else if (MCstackfileversion >= 5500)
+		{
+			// MW-2012-03-04: [[ StackFile5500 ]] If the stackfile version is 5.5, then
+			//   write out UTF-8 directly.
+			if ((stat = IO_write_stringref_legacy_utf8(title, stream)) != IO_NORMAL)
 				return stat;
 		}
 		else
-		{
-			if ((stat = IO_write_stringref(title, stream, false)) != IO_NORMAL)
+        {
+            if ((stat = IO_write_stringref_legacy(title, stream, false)) != IO_NORMAL)
 				return stat;
 		}
 	}
@@ -596,36 +625,48 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 			return stat;
 		if ((stat = IO_write_uint2(maxheight, stream)) != IO_NORMAL)
 			return stat;
-	}
-	if ((stat = IO_write_stringref(externalfiles, stream, false)) != IO_NORMAL)
+    }
+	
+	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+    if ((stat = IO_write_stringref_new(externalfiles, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 		return stat;
 
 	// MW-2012-02-17: [[ LogFonts ]] Save the stack's logical font table.
-	if ((stat = MCLogicalFontTableSave(stream)) != IO_NORMAL)
+	if ((stat = MCLogicalFontTableSave(stream, MCstackfileversion)) != IO_NORMAL)
 		return stat;
-
+	
+	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (flags & F_STACK_FILES)
 	{
 		MCAutoStringRef t_sf;
 		if (!getstackfiles(&t_sf))
 			return IO_ERROR;
-		if ((stat = IO_write_stringref(*t_sf, stream)) != IO_NORMAL)
+		if ((stat = IO_write_stringref_new(*t_sf, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
 	}
+	
+	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (flags & F_MENU_BAR)
-		if ((stat = IO_write_nameref(_menubar, stream)) != IO_NORMAL)
+		if ((stat = IO_write_nameref_new(_menubar, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
+	
 	if (flags & F_LINK_ATTS)
 	{
-		if ((stat = IO_write_mccolor(linkatts->color, stream)) != IO_NORMAL
-		        || (stat = IO_write_stringref(linkatts->colorname, stream, false)) != IO_NORMAL)
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+        if ((stat = IO_write_mccolor(linkatts->color, stream)) != IO_NORMAL
+                || (stat = IO_write_stringref_new(linkatts->colorname, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
-		if ((stat = IO_write_mccolor(linkatts->hilitecolor, stream)) != IO_NORMAL
-		        || (stat=IO_write_stringref(linkatts->hilitecolorname, stream, false))!=IO_NORMAL)
+		
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+        if ((stat = IO_write_mccolor(linkatts->hilitecolor, stream)) != IO_NORMAL
+                || (stat=IO_write_stringref_new(linkatts->hilitecolorname, stream, MCstackfileversion >= 7000))!=IO_NORMAL)
 			return stat;
-		if ((stat = IO_write_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
-		        || (stat=IO_write_stringref(linkatts->visitedcolorname, stream, false))!=IO_NORMAL)
+		
+		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+        if ((stat = IO_write_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
+                || (stat=IO_write_stringref_new(linkatts->visitedcolorname, stream, MCstackfileversion >= 7000))!=IO_NORMAL)
 			return stat;
+		
 		if ((stat = IO_write_uint1(linkatts->underline, stream)) != IO_NORMAL)
 			return stat;
 	}

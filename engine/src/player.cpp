@@ -1192,7 +1192,7 @@ IO_stat MCPlayer::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	return defaultextendedsave(p_stream, p_part);
 }
 
-IO_stat MCPlayer::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
+IO_stat MCPlayer::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
 	return defaultextendedload(p_stream, p_version, p_remaining);
 }
@@ -1205,30 +1205,38 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint1(OT_PLAYER, stream)) != IO_NORMAL)
 			return stat;
 		if ((stat = MCControl::save(stream, p_part, p_force_ext)) != IO_NORMAL)
+            return stat;
+		
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+        if ((stat = IO_write_stringref_new(filename, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
-		if ((stat = IO_write_stringref(filename, stream, false)) != IO_NORMAL)
-			return stat;
+		
 		if ((stat = IO_write_uint4(starttime, stream)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_uint4(endtime, stream)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_int4((int4)(rate / 10.0 * MAXINT4),
 		                          stream)) != IO_NORMAL)
-			return stat;
-		if ((stat = IO_write_stringref(userCallbackStr, stream, false)) != IO_NORMAL)
+            return stat;
+		
+		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+        if ((stat = IO_write_stringref_new(userCallbackStr, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
 	}
 	return savepropsets(stream);
 }
 
-IO_stat MCPlayer::load(IO_handle stream, const char *version)
+IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_read_stringref(filename, stream, false)) != IO_NORMAL)
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+	if ((stat = IO_read_stringref_new(filename, stream, version >= 7000)) != IO_NORMAL)
 		return stat;
+	
 	if ((stat = IO_read_uint4(&starttime, stream)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_read_uint4(&endtime, stream)) != IO_NORMAL)
@@ -1237,9 +1245,12 @@ IO_stat MCPlayer::load(IO_handle stream, const char *version)
 	if ((stat = IO_read_int4(&trate, stream)) != IO_NORMAL)
 		return stat;
 	rate = (real8)trate * 10.0 / MAXINT4;
-	if ((stat = IO_read_stringref(userCallbackStr, stream, false)) != IO_NORMAL)
+	
+	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
+	if ((stat = IO_read_stringref_new(userCallbackStr, stream, version >= 7000)) != IO_NORMAL)
 		return stat;
-	return loadpropsets(stream);
+	
+	return loadpropsets(stream, version);
 }
 
 // MW-2011-09-23: Ensures the buffering state is consistent with current flags
@@ -2498,6 +2509,10 @@ void MCPlayer::unbufferDraw()
 	SetMovieDrawingCompleteProc((Movie)theMovie, 0, NULL, 0);
 
 	MCRectangle trect = MCU_reduce_rect(rect, flags & F_SHOW_BORDER ? borderwidth : 0);
+	
+	// IM-2011-11-12: [[ Bug 11320 ]] Transform player rect to device coords
+	trect = MCRectangleGetTransformedBounds(trect, getstack()->getdevicetransform());
+	
 #ifdef _WINDOWS
 	MoveWindow((HWND)hwndMovie, trect.x, trect.y, trect.width, trect.height, False);
 	ShowWindow((HWND)hwndMovie, SW_SHOW);
@@ -2533,9 +2548,7 @@ void MCPlayer::unbufferDraw()
 		MCMemoryDelete(m_offscreen);
 		m_offscreen = nil;
 	}
-	// MW-2011-11-30: [[ Bug 9887 ]] Make sure the player rect is adjusted to account for
-	//   menubar.
-	trect . y -= getstack() -> getscroll();
+	
 	setMCposition(trect);
 	if (flags & F_SHOW_BADGE) //if the showbadge is supposed to be on, restore it
 		showbadge(True);
@@ -2765,8 +2778,12 @@ Boolean MCPlayer::qt_prepare(void)
 	
 	Rect movieRect, playingRect;
 	GetMovieBox((Movie)theMovie, &movieRect);
+	
 	MCRectangle trect = resize(RectToMCRectangle(movieRect));
 
+	// IM-2011-11-12: [[ Bug 11320 ]] Transform player rect to device coords
+	trect = MCRectangleGetTransformedBounds(trect, getstack()->getdevicetransform());
+	
 #ifdef _WINDOWS
 	hwndMovie = (MCSysWindowHandle)create_player_child_window(trect, (HWND)getstack()->getrealwindow(), MC_QTVIDEO_WIN_CLASS_NAME);
 	trect.x = trect.y = 0;
@@ -2784,10 +2801,6 @@ Boolean MCPlayer::qt_prepare(void)
 #elif defined _MACOSX
 	SetMovieGWorld((Movie)theMovie, GetWindowPort((WindowPtr)getstack()->getqtwindow()), GetMainDevice());
 #endif
-	
-	// MW-2011-11-30: [[ Bug 9887 ]] Make sure the player rect is adjusted to account for
-	//   menubar.
-	trect.y -= getstack() -> getscroll();
 	
 	//set the movie playing rect
 	playingRect.left = trect.x;
@@ -2965,9 +2978,9 @@ void MCPlayer::qt_setrect(const MCRectangle& nrect)
 		MoveWindow((HWND)hwndMovie, trect.x, trect.y, trect.width, trect.height, False);
 		trect.x = trect.y = 0;
 #endif
-		// MW-2011-11-30: [[ Bug 9887 ]] Make sure the player rect is adjusted to account for
-		//   menubar.
-		trect . y -= getstack() -> getscroll();
+		// IM-2011-11-12: [[ Bug 11320 ]] Transform player rect to device coords
+		trect = MCRectangleGetTransformedBounds(trect, getstack()->getdevicetransform());
+		
 		setMCposition(trect);
 	}
 }

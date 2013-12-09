@@ -297,7 +297,7 @@ void MCVisualEffect::exec_ctxt(MCExecContext &ctxt)
 	effectptr -> arguments = t_arguments;
 	
 	return ES_NORMAL;
-#endif
+#endif /* MCVisualEffect */
 
 	MCAutoStringRef t_name;
     if (!ctxt . EvalExprAsStringRef(nameexp, EE_VISUAL_BADEXP, &t_name))

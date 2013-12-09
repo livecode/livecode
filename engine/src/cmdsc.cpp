@@ -2790,7 +2790,7 @@ void MCRedo::exec_ctxt(MCExecContext &)
 {
 #ifdef /* MCRedo */ LEGACY_EXEC
     return ES_NORMAL;
-#endif
+#endif /* MCRedo */
 }
 
 MCRemove::~MCRemove()
