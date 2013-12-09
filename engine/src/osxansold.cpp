@@ -89,7 +89,7 @@ struct FilterRecord
         {
     
             MCValueRef t_value;
-            /* UNCHECKED */ MCArrayFetchValueAtIndex(extensions, t_index, t_value);
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(extensions, t_index + 1, t_value);
             MCAutoStringRef t_substring;
             /* UNCHECKED */ MCStringCopySubstring((MCStringRef)t_value, MCRangeMake(0, t_length), &t_substring);
             if (MCStringIsEqualToCString((MCStringRef)t_value, "*", kMCCompareExact) || MCStringIsEqualToCString(*t_substring, p_extension, kMCCompareExact))
@@ -105,7 +105,7 @@ struct FilterRecord
         {
             
             MCValueRef t_value;
-            /* UNCHECKED */ MCArrayFetchValueAtIndex(file_types, t_index, t_value);
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(file_types, t_index + 1, t_value);
             MCAutoStringRef t_substring;
             /* UNCHECKED */ MCStringCopySubstring((MCStringRef)t_value, MCRangeMake(0, 4), &t_substring);
             if (MCStringIsEqualToCString((MCStringRef)t_value, "*", kMCCompareExact) || MCStringIsEqualToCString(*t_substring, p_type, kMCCompareExact))
@@ -589,7 +589,7 @@ static void build_filter_records_from_types(MCStringRef *p_types, uint4 p_type_c
 			continue;
         
         MCValueRef t_first;
-        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_type, 0, t_first);
+        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_type, 1, t_first);
         r_filter_records[t_type_index] . tag = MCValueRetain((MCStringRef)t_first);
         
         if (t_index < 2)
@@ -597,8 +597,8 @@ static void build_filter_records_from_types(MCStringRef *p_types, uint4 p_type_c
             /* UNCHECKED */ MCArrayCreateMutable(r_filter_records[t_type_index] . extensions);
             /* UNCHECKED */ MCArrayCreateMutable(r_filter_records[t_type_index] . file_types);
             
-            /* UNCHECKED */ MCArrayStoreValueAtIndex(r_filter_records[t_type_index] . extensions, 0, MCSTR("*"));
-            /* UNCHECKED */ MCArrayStoreValueAtIndex(r_filter_records[t_type_index] . file_types, 0, MCSTR("*"));
+            /* UNCHECKED */ MCArrayStoreValueAtIndex(r_filter_records[t_type_index] . extensions, 1, MCSTR("*"));
+            /* UNCHECKED */ MCArrayStoreValueAtIndex(r_filter_records[t_type_index] . file_types, 1, MCSTR("*"));
         }
         else
 		{
@@ -684,7 +684,7 @@ int MCA_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filt
         {
             MCAutoStringRef t_file_type;
             /* UNCHECKED */ MCStringCopySubstring(p_filter, MCRangeMake(t_index * 4, 4), &t_file_type);
-            MCArrayStoreValueAtIndex(t_filters[0] . file_types, t_index, *t_file_type);
+            MCArrayStoreValueAtIndex(t_filters[0] . file_types, t_index + 1, *t_file_type);
         }
 
 		t_filter_count = 1;        
@@ -724,7 +724,7 @@ int MCA_ask_file_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_
         {
             MCAutoStringRef t_file_type;
             /* UNCHECKED */ MCStringCopySubstring(p_filter, MCRangeMake(t_index * 4, 4), &t_file_type);
-            MCArrayStoreValueAtIndex(t_filters[0] . file_types, t_index, *t_file_type);
+            MCArrayStoreValueAtIndex(t_filters[0] . file_types, t_index + 1, *t_file_type);
         }
         
         t_filter_count = 1;

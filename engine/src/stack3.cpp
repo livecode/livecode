@@ -752,7 +752,7 @@ Exec_stat MCStack::resubstack(MCStringRef p_data)
 	for (uindex_t i = 0; i < t_count; i++)
 	{
 		MCValueRef t_val;
-		/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, i, t_val);
+        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, i + 1, t_val);
 		
 		// If tsub is one of the existing substacks of the stack, it is set to
 		// non-null, as it needs to be removed.
