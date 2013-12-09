@@ -37,7 +37,7 @@ bool MCHTTPParseHeaders(MCStringRef p_headers, MCHTTPParseHeaderCallback p_callb
     {
         // Note: 'lines' is an array of strings
         MCValueRef t_lineval = nil;
-        if (!MCArrayFetchValueAtIndex(*t_lines, i, t_lineval))
+        if (!MCArrayFetchValueAtIndex(*t_lines, i + 1, t_lineval))
             t_success = false;
         MCStringRef t_line = (MCStringRef)(t_lineval);
         
