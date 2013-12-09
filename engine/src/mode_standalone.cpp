@@ -312,16 +312,13 @@ extern void MCAndroidEngineRemoteCall(const char *, const char *, void *, ...);
 
 IO_stat MCDispatch::startup(void)
 {
-    char *t_mccmd;
-    /* UNCHECKED */ MCStringConvertToCString(MCcmd, t_mccmd);
 	startdir = MCS_getcurdir();
-	enginedir = t_mccmd;
+    /* UNCHECKED */ MCStringConvertToCString(MCcmd, enginedir);
 	char *eptr = strrchr(enginedir, PATH_SEPARATOR);
 	if (eptr != NULL)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-	char *openpath = t_mccmd; //point to MCcmd string
 
 	// set up image cache before the first stack is opened
 	MCCachedImageRep::init();
@@ -357,7 +354,6 @@ IO_stat MCDispatch::startup(void)
 		
 		MCS_close(t_stream);
 		
-		/* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
 		MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
 		
 		t_stack -> extraopen(false);
@@ -410,18 +406,15 @@ IO_stat MCDispatch::startup(void)
 		//   0..2044 from project section
 		//   spill file
 		//   rest from project section
-		char *t_spill;
-		t_spill = (char *)malloc(strlen(openpath) + 5);
-		sprintf(t_spill, "%s.dat", openpath);
+		MCAutoStringRef t_spill;
+        /* UNCHECKED */ MCStringFormat(&t_spill, "%@.dat", MCcmd);
 		if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&MCcapsule . data, 2044, false) ||
-			!MCCapsuleFillFromFile(t_capsule, t_spill, 0, false) ||
+			!MCCapsuleFillFromFile(t_capsule, *t_spill, 0, false) ||
 			!MCCapsuleFillNoCopy(t_capsule, (const uint8_t *)&MCcapsule . data + 2044, 2048, true))
 		{
-			free(t_spill);
 			MCCapsuleClose(t_capsule);
 			return IO_ERROR;
 		}
-		free(t_spill);
 	}
 	
 	// Process the capsule
@@ -431,7 +424,6 @@ IO_stat MCDispatch::startup(void)
 		return IO_ERROR;
 	}
 
-	/* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_info . stack;
 	MCCapsuleClose(t_capsule);
 
@@ -495,7 +487,6 @@ IO_stat MCDispatch::startup(void)
 		}
 		MCS_close(t_stream);
 		
-		/* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
 		MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
 		
 		t_stack -> extraopen(false);
@@ -536,16 +527,13 @@ IO_stat MCDispatch::startup(void)
 		//   0..2044 from project section
 		//   spill file
 		//   rest from project section
-		char *t_spill;
-		t_spill = (char *)malloc(strlen(openpath) + 5);
-		sprintf(t_spill, "%s.dat", openpath);
+		MCAutoStringRef t_spill;
+        /* UNCHECKED */ MCStringFormat(&t_spill, "%@.dat", MCcmd);
 		if (!MCCapsuleFillFromFile(t_capsule, t_spill, 0, true))
 		{
-			free(t_spill);
 			MCCapsuleClose(t_capsule);
 			return IO_ERROR;
 		}
-		free(t_spill);
 	}
 
 	// Process the capsule
@@ -555,7 +543,6 @@ IO_stat MCDispatch::startup(void)
 		return IO_ERROR;
 	}
 
-	/* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_info . stack;
 	MCCapsuleClose(t_capsule);
 

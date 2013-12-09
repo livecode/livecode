@@ -106,7 +106,7 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
 
             for (uindex_t i = 0; i < t_length; i++)
                 t_buffer[i] = (unichar_t)MCSwapInt16HostToBig(((unichar_t *)p_bytes)[i]);
-            return MCStringCreateWithChars(t_buffer, t_length, r_string);
+            return MCStringCreateWithCharsAndRelease(t_buffer, t_length, r_string);
         }
             
         case kMCStringEncodingUTF8:
