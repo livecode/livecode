@@ -1443,18 +1443,13 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 					t_exception_thrown = true;
 					t_success = false;
 				}
-
-                char *t_cstring;
-				if (t_success)
-                    t_success = MCJavaStringToNative(t_env, t_java_string, t_cstring);
+            
+                MCStringRef t_string;
                 if (t_success)
-				{
-					MCStringRef t_string;
-                    t_success = MCStringCreateWithCString(t_cstring, t_string);
+                    t_success = MCJavaStringToStringRef(t_env, t_java_string, t_string);
+                
+                if (t_success)
 					*((MCStringRef *)context -> return_value) = t_string;
-				}
-
-				delete t_cstring;
 
 				t_env -> DeleteLocalRef(t_java_string);
 			}
