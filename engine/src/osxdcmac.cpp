@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
@@ -33,7 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "sellst.h"
 #include "button.h"
 #include "group.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 #include "debug.h"
 #include "image.h"
@@ -1664,7 +1664,6 @@ public:
 			/* UNCHECKED */ MCStringCreateMutable(0, t_newname);
 			uint2 submenutitlelen = 0;
 
-			MCExecPoint ep;
 			for (int i = 0; i <= curMenuLevel; i++)
 			{
 				if (!MCStringIsEmpty(curMenuStruct[i].tag))

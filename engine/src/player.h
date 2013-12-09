@@ -166,8 +166,10 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void setrect(const MCRectangle &nrect);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
+#ifdef LEGACY_EXEC
 	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+#endif
 
 	// MW-2011-09-23: [[ Bug ]] Implement buffer / unbuffer at the point of
 	//   selection to stop redraw issues.
@@ -216,11 +218,15 @@ public:
 	MCRectangle getpreferredrect();
 	uint2 getloudness();
 	void setloudness();
+#ifdef LEGACY_EXEC
 	void gettracks(MCExecPoint &ep);
 	void getenabledtracks(MCExecPoint &ep);
+#endif
 	Boolean setenabledtracks(MCStringRef s);
+#ifdef LEGACY_EXEC
 	void getnodes(MCExecPoint &ep);
 	void gethotspots(MCExecPoint &ep);
+#endif
 	bool geteffectlist(MCStringRef& r_string);
 	void recordsound(MCStringRef fname);
 	bool getrecordloudness(integer_t& r_loudness);
@@ -479,8 +485,10 @@ public:
 	MCRectangle qt_getpreferredrect(void);
 	uint2 qt_getloudness(void);
 	void qt_setloudness(uint2 loudn);
+#ifdef LEGACY_EXEC
 	void qt_gettracks(MCExecPoint& ep);
 	void qt_getenabledtracks(MCExecPoint& ep);
+#endif
     void qt_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks);
 	Boolean qt_setenabledtracks(MCStringRef s);
 	void qt_draw(MCDC *dc, const MCRectangle& dirty);

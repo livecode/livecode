@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "scriptpt.h"
 #include "visual.h"
 #include "mcerror.h"
@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "syntax.h"
 #include "exec.h"
 #include "exec-interface.h"
+#include "variable.h"
 
 MCEffectList::~MCEffectList()
 {
@@ -200,9 +201,9 @@ Parse_stat MCVisualEffect::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-Exec_stat MCVisualEffect::exec(MCExecPoint &ep)
+void MCVisualEffect::exec_ctxt(MCExecContext &ctxt)
 {
-#if 0	
+#ifdef /* MCVisualEffect */ LEGACY_EXEC
 	MCEffectList *effectptr = MCcur_effects;
 
 	if (nameexp -> eval(ep) != ES_NORMAL)
@@ -296,30 +297,18 @@ Exec_stat MCVisualEffect::exec(MCExecPoint &ep)
 	effectptr -> arguments = t_arguments;
 	
 	return ES_NORMAL;
-#else
+#endif
 
 	MCAutoStringRef t_name;
+    if (!ctxt . EvalExprAsStringRef(nameexp, EE_VISUAL_BADEXP, &t_name))
+        return;
 
-	if (nameexp -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror -> add(EE_VISUAL_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep . copyasstringref(&t_name);
+    MCAutoStringRef t_sound;
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(soundexp, EE_VISUAL_BADEXP, &t_sound))
+        return;
 
-	MCAutoStringRef t_sound;
-
-	if (soundexp != NULL)
-	{
-		if (soundexp->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_VISUAL_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep.copyasstringref(&t_sound);
-	}
-
-	MCScriptPoint spt(ep);
+    // Was previously setting the ScriptPoint to the content of EP after having evaluated nameexp
+    MCScriptPoint spt(ctxt . GetObject(), ctxt . GetHandlerList(), *t_name);
 	MCerrorlock++;
 
 	// reset values so expression parsing can proceed
@@ -340,21 +329,16 @@ Exec_stat MCVisualEffect::exec(MCExecPoint &ep)
 	if (speed == VE_NORMAL)
 		speed = oldspeed;
 	
-	MCerrorlock--;
+    MCerrorlock--;
 
-	MCExecContext ctxt(ep);	
 	MCAutoArray<MCInterfaceVisualEffectArgument> t_args_array;
 
 	for(KeyValue *t_parameter = parameters; t_parameter != nil; t_parameter = t_parameter -> next)
 	{
 		MCInterfaceVisualEffectArgument t_argument;
 		MCAutoStringRef t_value;
-		if (t_parameter -> value -> eval(ep) != ES_NORMAL)
-		{
-			MCeerror -> add(EE_VISUAL_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep . copyasstringref(&t_value);
+        if (!ctxt . EvalExprAsStringRef(t_parameter -> value, EE_VISUAL_BADEXP, &t_value))
+            return;
 
 		MCAutoStringRef t_key;
 		/* UNCHECKED */ MCStringCreateWithCString(t_parameter -> key, &t_key);
@@ -372,13 +356,7 @@ Exec_stat MCVisualEffect::exec(MCExecPoint &ep)
 
 	MCInterfaceExecVisualEffect(ctxt, t_effect);
 
-	MCInterfaceVisualEffectFree(ctxt, t_effect);
-	
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
-#endif
+    MCInterfaceVisualEffectFree(ctxt, t_effect);
 }
 
 void MCVisualEffect::compile(MCSyntaxFactoryRef ctxt)

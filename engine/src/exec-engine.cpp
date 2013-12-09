@@ -676,8 +676,12 @@ void MCEngineEvalValueWithObject(MCExecContext& ctxt, MCStringRef p_script, MCOb
 
 void MCEngineExecSet(MCExecContext& ctxt, MCProperty *p_target, MCValueRef p_value)
 {
-	/* UNCHECKED */ ctxt . GetEP() . setvalueref(p_value);
-	if (p_target -> set(ctxt . GetEP()) != ES_NORMAL)
+    MCExecValue t_value;
+    t_value . valueref_value = MCValueRetain(p_value);
+    t_value . type = kMCExecValueTypeValueRef;
+	
+    p_target -> set(ctxt, t_value);
+    if (ctxt . HasError())
 	{
 		ctxt . LegacyThrow(EE_SET_BADSET);
 		return;
@@ -716,15 +720,11 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
 		else if (p_where == PT_AFTER)
 			p_var . variable -> set(ctxt, p_value, true);
 		else
-		{
-            MCAutoValueRef t_value;
-			if (!p_var . variable -> eval(ctxt, &t_value))
-				return;
-			
-			MCAutoStringRef t_string;
-            if (!ctxt . ConvertToMutableString(*t_value, &t_string))
+        {
+            MCAutoStringRef t_string;
+            if (!ctxt . EvalExprAsMutableStringRef(p_var . variable, EE_ENGINE_PUT_BADVARIABLE, &t_string))
                 return;
-            
+
 			MCAutoStringRef t_value_string;
 			if (!ctxt . ConvertToString(p_value, &t_value_string))
 			{
@@ -737,13 +737,9 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
 		}
 	}
 	else
-	{
-        MCAutoValueRef t_value;
-        if (!p_var . variable -> eval(ctxt, &t_value))
-            return;
-		
+    {
         MCAutoStringRef t_string;
-        if (!ctxt . ConvertToMutableString(*t_value, &t_string))
+        if (!ctxt . EvalExprAsMutableStringRef(p_var . variable, EE_ENGINE_PUT_BADVARIABLE, &t_string))
             return;
         
         MCAutoStringRef t_value_string;
@@ -776,7 +772,7 @@ void MCEngineExecDo(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		ctxt.GetEP().setline(p_line);
+		ctxt.SetLine(p_line);
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
@@ -911,21 +907,14 @@ void MCEngineExecWaitUntil(MCExecContext& ctxt, MCExpression *p_condition, bool 
 {
 	while(True)
 	{
-		MCAutoValueRef t_evaluated;
-		MCAutoBooleanRef t_evaluated_as_boolean;
+        bool t_stop;
 		
 		MCU_play();
-		
-		if (!ctxt . EvaluateExpression(p_condition, &t_evaluated))
-			return;
-		
-		if (!ctxt . ForceToBoolean(*t_evaluated, &t_evaluated_as_boolean))
-		{
-			ctxt . Throw();
-			return;
-		}
 
-		if (*t_evaluated_as_boolean == kMCTrue)
+        if (!ctxt . EvalExprAsBool(p_condition, EE_WAIT_BADEXP, t_stop))
+            return;
+
+        if (t_stop == true)
 			return;
 
 		if (MCscreen->wait(WAIT_INTERVAL, p_messages, True))
@@ -940,21 +929,14 @@ void MCEngineExecWaitWhile(MCExecContext& ctxt, MCExpression *p_condition, bool 
 {
 	while(True)
 	{
-		MCAutoValueRef t_evaluated;
-		MCAutoBooleanRef t_evaluated_as_boolean;
+        bool t_continue;
 		
 		MCU_play();
 		
-		if (!ctxt . EvaluateExpression(p_condition, &t_evaluated))
-			return;
-		
-		if (!ctxt . ForceToBoolean(*t_evaluated, &t_evaluated_as_boolean))
-		{
-			ctxt . Throw();
-			return;
-		}
+        if (!ctxt . EvalExprAsBool(p_condition, EE_WAIT_BADEXP, t_continue))
+            return;
 
-		if (*t_evaluated_as_boolean == kMCFalse)
+        if (t_continue == false)
 			return;
 
 		if (MCscreen->wait(WAIT_INTERVAL, p_messages, True))
@@ -976,12 +958,12 @@ void MCEngineExecDeleteVariable(MCExecContext& ctxt, MCVarref *p_target)
 void MCEngineExecDeleteVariableChunks(MCExecContext& ctxt, MCVariableChunkPtr *p_chunks, uindex_t p_chunk_count)
 {
 	for(uindex_t i = 0; i < p_chunk_count; i++)
-	{
-        MCValueRef t_value;
-		p_chunks[i] . variable -> eval(ctxt, t_value);
-        
+    {
         MCAutoStringRef t_string;
-        if (ctxt . ConvertToMutableString(t_value, &t_string) && MCStringReplace(*t_string, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start), kMCEmptyString))
+        if (!ctxt . EvalExprAsMutableStringRef(p_chunks[i] . variable, EE_ENGINE_DELETE_BADVARCHUNK, &t_string))
+            return;
+
+        if (MCStringReplace(*t_string, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start), kMCEmptyString))
         {
             p_chunks[i] . variable -> set(ctxt, *t_string, false);
         }
@@ -1267,10 +1249,11 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
 
 			if (t_params != NULL)
 			{
-				t_params->eval(ctxt . GetEP());
-                MCAutoStringRef t_value;
-				ctxt . GetEP() . copyasstringref(&t_value);
-                MCStringFormat(&tptr, "%@ %@", *t_message, *t_value);
+                MCAutoValueRef t_value;
+				/* UNCHECKED */ t_params->eval(ctxt, &t_value);
+                MCAutoStringRef t_value_string;
+				ctxt . ConvertToString(*t_value, &t_value_string);
+                MCStringFormat(&tptr, "%@ %@", *t_message, *t_value_string);
 				
 			}
             else
@@ -1614,27 +1597,27 @@ void MCEngineGetStacksInUse(MCExecContext& ctxt, MCStringRef &r_value)
 
 bool MCEngineEvalValueAsObject(MCValueRef p_value, bool p_strict, MCObjectPtr& r_object, bool& r_parse_error)
 {
-    MCExecPoint ep(nil,nil,nil);
-    ep . setvalueref(p_value);
-    MCScriptPoint sp(ep);
+    MCExecContext ctxt(nil, nil, nil);
+    MCAutoStringRef t_string;
+    ctxt . ConvertToString(p_value, &t_string);
+    MCScriptPoint sp(ctxt, *t_string);
+
     MCChunk *tchunk = new MCChunk(False);
     MCerrorlock++;
     Symbol_type type;
-    Exec_stat stat;
     
     bool t_parse_error;
+    bool t_success;
     t_parse_error = tchunk->parse(sp, False) == PS_NORMAL;
-    if (!t_parse_error && (!p_strict || sp.next(type) == PS_EOF))
-        stat = ES_NORMAL;
-    else
-        stat = ES_ERROR;
+    t_success = (!t_parse_error && (!p_strict || sp.next(type) == PS_EOF));
+
     MCerrorlock--;
-    if (stat == ES_NORMAL)
-        stat = tchunk->getobj(ep, r_object, False);
+    if (t_success)
+        t_success = tchunk->getobj(ctxt, r_object, False);
     delete tchunk;
     
     r_parse_error = t_parse_error;
-    return stat == ES_NORMAL;
+    return t_success;
 }
 
 void MCEngineEvalValueAsObject(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_object)
@@ -1780,19 +1763,10 @@ void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, MCMarkedTex
 		ctxt . LegacyThrow(EE_CHUNK_BADCONTAINER);
 		return;
 	}
-    
-    MCAutoValueRef t_value;
-    if (!p_variable -> eval(ctxt, &t_value))
-    {
-        ctxt . LegacyThrow(EE_CHUNK_SETCANTGETDEST);
+
+    if (!ctxt . EvalExprAsStringRef(p_variable, EE_CHUNK_SETCANTGETDEST, r_mark . text))
         return;
-    }
-    
-    if (!ctxt . ConvertToString(*t_value, r_mark . text))
-    {
-        ctxt . LegacyThrow(EE_CHUNK_SETCANTGETDEST);
-        return;
-    }
+
     r_mark . start = 0;
     r_mark . finish = MAXUINT4;
 }

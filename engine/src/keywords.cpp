@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "scriptpt.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "exec.h"
 #include "debug.h"
 #include "hndlrlst.h"
@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "newobj.h"
 #include "cmds.h"
 #include "redraw.h"
+#include "variable.h"
 
 #include "globals.h"
 
@@ -419,6 +420,7 @@ Parse_stat MCIf::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#ifdef /* MCIf::exec */ LEGACY_EXEC
 Exec_stat MCIf::exec(MCExecPoint &ep)
 {
 	MCExecContext ctxt(ep);
@@ -485,6 +487,12 @@ Exec_stat MCIf::exec(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+}
+#endif /* MCIf::exec */
+
+void MCIf::exec_ctxt(MCExecContext &ctxt)
+{
+    MCKeywordsExecIf(ctxt, cond, thenstatements, elsestatements, line, pos);
 }
 
 uint4 MCIf::linecount()
@@ -763,6 +771,7 @@ Parse_stat MCRepeat::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#ifdef /* MCRepeat::exec */ LEGACY_EXEC
 Exec_stat MCRepeat::exec(MCExecPoint &ep)
 {
 	real8 endn = 0.0;
@@ -773,14 +782,13 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 	const char *sptr;
 	Boolean donumeric = False;
 	Exec_stat stat;
-
+	MCExecContext ctxt(ep);
 	MCAutoArrayRef t_array;
 	MCNameRef t_key;
 	MCValueRef t_value;
 	uintptr_t t_iterator;
 	uint4 l;
-	
-	MCExecContext ctxt(ep);
+
 	switch (form)
 	{
 	case RF_FOR:
@@ -1198,6 +1206,31 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 	delete sp;
 	return ES_NORMAL;
 }
+#endif /* MCRepeat::exec */
+
+void MCRepeat::exec_ctxt(MCExecContext& ctxt)
+{
+    switch (form)
+	{
+        case RF_FOR:
+            MCKeywordsExecRepeatFor(ctxt, statements, endcond, loopvar, each, line, pos);
+            break;
+        case RF_WITH:
+            MCKeywordsExecRepeatWith(ctxt, statements, step, startcond, endcond, loopvar, stepval, line, pos);
+            break;
+        case RF_FOREVER:
+            MCKeywordsExecRepeatForever(ctxt, statements, line, pos);
+            break;
+        case RF_UNTIL:
+            MCKeywordsExecRepeatUntil(ctxt, statements, endcond, line, pos);
+            break;
+        case RF_WHILE:
+            MCKeywordsExecRepeatWhile(ctxt, statements, endcond, line, pos);
+            break;
+        default:
+            break;
+    }
+}
 
 uint4 MCRepeat::linecount()
 {
@@ -1251,6 +1284,7 @@ Parse_stat MCExit::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#ifdef /* MCExit::exec */ LEGACY_EXEC
 Exec_stat MCExit::exec(MCExecPoint &ep)
 {
 	if (exit == ES_EXIT_ALL)
@@ -1259,6 +1293,12 @@ Exec_stat MCExit::exec(MCExecPoint &ep)
 		return ES_NORMAL;
 	}
 	return exit;
+}
+#endif /* MCExit::exec */
+
+void MCExit::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecExit(ctxt, exit);
 }
 
 uint4 MCExit::linecount()
@@ -1287,9 +1327,17 @@ Parse_stat MCNext::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+
+#ifdef /* MCNext::exec */ LEGACY_EXEC
 Exec_stat MCNext::exec(MCExecPoint &ep)
 {
 	return ES_NEXT_REPEAT;
+}
+#endif /* MCNext::exec */
+
+void MCNext::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecNext(ctxt);
 }
 
 uint4 MCNext::linecount()
@@ -1325,6 +1373,7 @@ Parse_stat MCPass::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#ifdef /* MCPass::exec */ LEGACY_EXEC
 Exec_stat MCPass::exec(MCExecPoint &ep)
 {
 	if (all)
@@ -1332,15 +1381,31 @@ Exec_stat MCPass::exec(MCExecPoint &ep)
 	else
 		return ES_PASS;
 }
+#endif
 
 uint4 MCPass::linecount()
 {
 	return 0;
 }
 
+void MCPass::exec_ctxt(MCExecContext& ctxt)
+{
+	if (all)
+		MCKeywordsExecPassAll(ctxt);
+	else
+		MCKeywordsExecPass(ctxt);
+}
+
+#if /* MCBreak::exec */ LEGACY_EXEC
 Exec_stat MCBreak::exec(MCExecPoint &ep)
 {
 	return ES_EXIT_SWITCH;
+}
+#endif /* MCBreak::exec */
+
+void MCBreak::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecBreak(ctxt);
 }
 
 uint4 MCBreak::linecount()
@@ -1474,6 +1539,7 @@ Parse_stat MCSwitch::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#if /* MCSwitch::exec */ LEGACY_EXEC
 Exec_stat MCSwitch::exec(MCExecPoint &ep)
 {
 	MCExecPoint ep2(ep);
@@ -1577,6 +1643,12 @@ Exec_stat MCSwitch::exec(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 }
+#endif /* MCSwitch::exec */
+
+void MCSwitch::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecSwitch(ctxt, cond, cases, ncases, defaultcase, caseoffsets, statements, getline(), getpos());
+}
 
 uint4 MCSwitch::linecount()
 {
@@ -1600,6 +1672,7 @@ Parse_stat MCThrowKeyword::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#if /* MCThrowKeyword::exec */ LEGACY_EXEC
 Exec_stat MCThrowKeyword::exec(MCExecPoint &ep)
 {
 	if (error->eval(ep) != ES_NORMAL)
@@ -1612,6 +1685,16 @@ Exec_stat MCThrowKeyword::exec(MCExecPoint &ep)
 		MCeerror->copystringref(*t_value, True);
     }
 	return ES_ERROR;
+}
+#endif /* MCThrowKeyword::exec */
+
+void MCThrowKeyword::exec_ctxt(MCExecContext& ctxt)
+{
+	MCAutoStringRef t_error;
+	if (!ctxt . EvalExprAsStringRef(error, EE_THROW_BADERROR, &t_error))
+		return;
+	
+	MCKeywordsExecThrow(ctxt, *t_error);
 }
 
 uint4 MCThrowKeyword::linecount()
@@ -1747,6 +1830,7 @@ Parse_stat MCTry::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+#ifdef /* MCTry::exec */ LEGACY_EXEC
 Exec_stat MCTry::exec(MCExecPoint &ep)
 {
 	MCExecContext ctxt(ep);
@@ -1870,9 +1954,17 @@ Exec_stat MCTry::exec(MCExecPoint &ep)
 	MCtrylock--;
 	return retcode;
 }
+#endif /* MCTry::exec */ 
+
+void MCTry::exec_ctxt(MCExecContext& ctxt)
+{
+    MCKeywordsExecTry(ctxt, trystatements, catchstatements, finallystatements, errorvar, line, pos);
+}
 
 uint4 MCTry::linecount()
 {
 	return countlines(trystatements) + countlines(catchstatements)
 	       + countlines(finallystatements);
 }
+
+////////////////////////////////////////////////////////////////////////////////

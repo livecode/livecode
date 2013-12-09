@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "scriptpt.h"
 #include "util.h"
 #include "date.h"
@@ -240,94 +240,72 @@ Parse_errors MCAsk::parse_file(MCScriptPoint& sp)
 	return t_error;
 }
 
-static bool evaluate_stringref(MCExecPoint &ep, MCExpression *p_expr, uint16_t p_err, int p_line, int p_pos, MCStringRef &r_value)
+void MCAsk::exec_ctxt(class MCExecContext& ctxt)
 {
-	if (p_expr != nil)
-	{
-		if (p_expr->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(p_err, p_line, p_pos);
-			return false;
-		}
-		/* UNCHECKED */ ep.copyasstringref(r_value);
-	}
-	return true;
-}
-
-Exec_stat MCAsk::exec(class MCExecPoint& ep)
-{
-	Exec_errors t_error = EE_UNDEFINED;
-	
-	MCExecContext ctxt(ep);
-	
-	MCAutoStringRef t_title;
-	if (!evaluate_stringref(ep, title, EE_ANSWER_BADTITLE, line, pos, &t_title))
-		return ES_ERROR;
+    
+    MCAutoStringRef t_title;
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(title, EE_ANSWER_BADTITLE, &t_title))
+        return;
 
 	switch(mode)
 	{
-	case AT_PASSWORD:
-	case AT_CLEAR:
-	{
-		MCAutoStringRef t_prompt, t_answer;
-		if (!evaluate_stringref(ep, password . prompt, EE_ASK_BADREPLY, line, pos, &t_prompt))
-			return ES_ERROR;
-		if (!evaluate_stringref(ep, password . answer, EE_ASK_BADREPLY, line, pos, &t_answer))
-			return ES_ERROR;
-		MCDialogExecAskPassword(ctxt, mode == AT_CLEAR, *t_prompt, *t_answer, password . hint, *t_title, sheet == True);
+        case AT_PASSWORD:
+        case AT_CLEAR:
+        {
+            MCAutoStringRef t_prompt, t_answer;
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(password . prompt, EE_ASK_BADREPLY, &t_prompt))
+                return;
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(password . answer, EE_ASK_BADREPLY, &t_answer))
+                return;
+            MCDialogExecAskPassword(ctxt, mode == AT_CLEAR, *t_prompt, *t_answer, password . hint, *t_title, sheet == True);
+        }
+            break;
+            
+        case AT_FILE:
+        {
+            MCAutoStringRef t_prompt, t_initial, t_filter;
+            MCAutoStringRefArray t_types;
+            
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(file.prompt, EE_ANSWER_BADQUESTION, &t_prompt))
+                return;
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(file.initial, EE_ANSWER_BADQUESTION, &t_initial))
+                return;
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(file.filter, EE_ANSWER_BADQUESTION, &t_filter))
+                return;
+            
+            if (file . type_count > 0)
+            {
+                /* UNCHECKED */ t_types.Extend(file.type_count);
+                for (uindex_t i = 0; i < file.type_count; i++)
+                {
+                    if (!ctxt . EvalOptionalExprAsNullableStringRef(file.types[i], EE_ANSWER_BADQUESTION, t_types[i]))
+                        return;
+                }
+            }
+            
+            if (t_types.Count() > 0)
+                MCDialogExecAskFileWithTypes(ctxt, *t_prompt, *t_initial, *t_types, t_types . Count(), *t_title, sheet == True);
+            else if (*t_filter != nil)
+                MCDialogExecAskFileWithFilter(ctxt, *t_prompt, *t_initial, *t_filter, *t_title, sheet == True);
+            else
+                MCDialogExecAskFile(ctxt, *t_prompt, *t_initial, *t_title, sheet == True);
+        }
+            break;
+            
+        default:
+        {
+            MCAutoStringRef t_prompt, t_answer;
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(question . prompt, EE_ASK_BADREPLY, &t_prompt))
+                return;
+            if (!ctxt . EvalOptionalExprAsNullableStringRef(question . answer, EE_ASK_BADREPLY, &t_answer))
+                return;
+            MCDialogExecAskQuestion(ctxt, mode, *t_prompt, *t_answer, question . hint, *t_title, sheet == True);
+        }
+            break;
 	}
-	break;
-
-	case AT_FILE:
-	{
-		MCAutoStringRef t_prompt, t_initial, t_filter;
-		MCAutoStringRefArray t_types;
-		
-		if (!evaluate_stringref(ep, file.prompt, EE_ANSWER_BADQUESTION, line, pos, &t_prompt))
-			return ES_ERROR;
-		if (!evaluate_stringref(ep, file.initial, EE_ANSWER_BADQUESTION, line, pos, &t_initial))
-			return ES_ERROR;
-		if (!evaluate_stringref(ep, file.filter, EE_ANSWER_BADQUESTION, line, pos, &t_filter))
-			return ES_ERROR;
-		
-		if (file . type_count > 0)
-		{
-			/* UNCHECKED */ t_types.Extend(file.type_count);
-			for (uindex_t i = 0; i < file.type_count; i++)
-			{
-				if (!evaluate_stringref(ep, file.types[i], EE_ANSWER_BADQUESTION, line, pos, t_types[i]))
-					return ES_ERROR;
-			}
-		}
-
-		if (t_types.Count() > 0)
-			MCDialogExecAskFileWithTypes(ctxt, *t_prompt, *t_initial, *t_types, t_types . Count(), *t_title, sheet == True);
-		else if (*t_filter != nil)
-			MCDialogExecAskFileWithFilter(ctxt, *t_prompt, *t_initial, *t_filter, *t_title, sheet == True);
-		else
-			MCDialogExecAskFile(ctxt, *t_prompt, *t_initial, *t_title, sheet == True);
-	}
-	break;
-
-	default:
-	{
-		MCAutoStringRef t_prompt, t_answer;
-		if (!evaluate_stringref(ep, question . prompt, EE_ASK_BADREPLY, line, pos, &t_prompt))
-			return ES_ERROR;
-		if (!evaluate_stringref(ep, question . answer, EE_ASK_BADREPLY, line, pos, &t_answer))
-			return ES_ERROR;
-		MCDialogExecAskQuestion(ctxt, mode, *t_prompt, *t_answer, question . hint, *t_title, sheet == True);
-	}
-	break;
-	}
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-	
-	return ctxt . Catch(line, pos);
 }
 
-#ifdef /* MCAsk::exec_question */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAsk::exec_question(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -364,9 +342,9 @@ Exec_errors MCAsk::exec_question(MCExecPoint& ep, const char *p_title)
 
 	return t_error;
 }
-#endif /* MCAsk::exec_question */
+#endif
 
-#ifdef /* MCAsk::exec_password */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAsk::exec_password(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -403,9 +381,9 @@ Exec_errors MCAsk::exec_password(MCExecPoint& ep, const char *p_title)
 	
 	return t_error;
 }
-#endif /* MCAsk::exec_password */
+#endif
 
-#ifdef /* MCAsk::exec_file */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAsk::exec_file(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -470,9 +448,9 @@ Exec_errors MCAsk::exec_file(MCExecPoint& ep, const char *p_title)
 	
 	return t_error;
 }
-#endif /* MCAsk::exec_file */
+#endif
 
-#ifdef /* MCAsk::exec_custom */ LEGACY_EXEC
+#ifdef LEGACY_EXEC
 Exec_errors MCAsk::exec_custom(MCExecPoint& ep, bool& p_cancelled, const MCString& p_stack, const char *p_type, unsigned int p_count, ...)
 {
 	ep . setstringf("ask %s", p_type);
@@ -514,7 +492,7 @@ Exec_errors MCAsk::exec_custom(MCExecPoint& ep, bool& p_cancelled, const MCStrin
 
 	return EE_UNDEFINED;
 }
-#endif /* MCAsk::exec_custom */
+#endif
 
 void MCAsk::compile(MCSyntaxFactoryRef ctxt)
 {

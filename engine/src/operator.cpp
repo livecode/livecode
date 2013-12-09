@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uidc.h"
 #include "scriptpt.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "chunk.h"
 #include "operator.h"
 #include "mcerror.h"
@@ -95,121 +95,99 @@ void MCMultiBinaryOperator::compile(MCSyntaxFactoryRef ctxt)
 //  Logical operators
 //
 
-Exec_stat MCAnd::eval(MCExecPoint &ep)
+void MCAnd::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCAnd */ LEGACY_EXEC
-	Boolean state1;
-	Boolean state2 = False;
+    Boolean state1;
+    Boolean state2 = False;
 
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_AND_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	state1 = ep.getsvalue() == MCtruemcstring;
-	if (state1)
-	{
-		if (right->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_AND_BADRIGHT, line, pos);
-			return ES_ERROR;
-		}
-		state2 = ep.getsvalue() == MCtruemcstring;
-	}
-	ep.setboolean(state1 && state2);
-	return ES_NORMAL;
+    if (left->eval(ep) != ES_NORMAL)
+    {
+        MCeerror->add(EE_AND_BADLEFT, line, pos);
+        return ES_ERROR;
+    }
+    state1 = ep.getsvalue() == MCtruemcstring;
+    if (state1)
+    {
+        if (right->eval(ep) != ES_NORMAL)
+        {
+            MCeerror->add(EE_AND_BADRIGHT, line, pos);
+            return ES_ERROR;
+        }
+        state2 = ep.getsvalue() == MCtruemcstring;
+    }
+    ep.setboolean(state1 && state2);
+    return ES_NORMAL;
 #endif /* MCAnd */
 
+    bool t_result;
+    bool t_left, t_right;
 
-	MCExecContext ctxt(ep);
-	bool t_result;
-	bool t_left, t_right;
+    if (!ctxt . EvalExprAsNonStrictBool(left, EE_AND_BADLEFT, t_left))
+        return;
 
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_AND_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	if (!ep.copyasbool(t_left))
-		t_left = false;
+    /* CONDITIONAL EVALUATION */
+    if(t_left)
+    {
+        if (!ctxt . EvalExprAsNonStrictBool(right, EE_AND_BADRIGHT, t_right))
+            return;
 
-	/* CONDITIONAL EVALUATION */
-	if (t_left && right->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_AND_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	if (!ep.copyasbool(t_right))
-		t_right = false;
+        MCLogicEvalAnd(ctxt, t_left, t_right, t_result);
+    }
+    else
+        t_result = false;
 
-	MCLogicEvalAnd(ctxt, t_left, t_right, t_result);
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+    if (!ctxt . HasError())
+        MCExecValueTraits<bool>::set(r_value, t_result);
 }
 
-Exec_stat MCOr::eval(MCExecPoint &ep)
+
+void MCOr::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCOr */ LEGACY_EXEC
-	Boolean state1;
-	Boolean state2 = False;
+    Boolean state1;
+    Boolean state2 = False;
 
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_OR_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	state1 = ep.getsvalue() == MCtruemcstring;
-	if (!state1)
-	{
-		if (right->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_OR_BADRIGHT, line, pos);
-			return ES_ERROR;
-		}
-		state2 = ep.getsvalue() == MCtruemcstring;
-	}
-	ep.setboolean(state1 || state2);
-	return ES_NORMAL;
+    if (left->eval(ep) != ES_NORMAL)
+    {
+        MCeerror->add(EE_OR_BADLEFT, line, pos);
+        return ES_ERROR;
+    }
+    state1 = ep.getsvalue() == MCtruemcstring;
+    if (!state1)
+    {
+        if (right->eval(ep) != ES_NORMAL)
+        {
+            MCeerror->add(EE_OR_BADRIGHT, line, pos);
+            return ES_ERROR;
+        }
+        state2 = ep.getsvalue() == MCtruemcstring;
+    }
+    ep.setboolean(state1 || state2);
+    return ES_NORMAL;
 #endif /* MCOr */
 
+    bool t_result;
+    bool t_left, t_right;
 
-	MCExecContext ctxt(ep);
-	bool t_result;
-	bool t_left, t_right;
+    if (!ctxt . EvalExprAsNonStrictBool(left, EE_OR_BADLEFT, t_left))
+        return;
 
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_OR_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	if (!ep.copyasbool(t_left))
-		t_left = false;
+    if (!t_left)
+    {
+        if (!ctxt . EvalExprAsNonStrictBool(right, EE_OR_BADRIGHT, t_right))
+            return;
 
-	/* CONDITIONAL EVALUATION */
-	if (!t_left && right->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_OR_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	if (!ep.copyasbool(t_right))
-		t_right = false;
+        MCLogicEvalOr(ctxt, t_left, t_right, t_result);
+    }
+    else
+        t_result = true;
 
-	MCLogicEvalOr(ctxt, t_left, t_right, t_result);
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+    if (!ctxt.HasError())
+        MCExecValueTraits<bool>::set(r_value, t_result);
 }
 
-Exec_stat MCNot::eval(MCExecPoint &ep)
+void MCNot::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCNot */ LEGACY_EXEC
 	if (right->eval(ep) != ES_NORMAL)
@@ -221,29 +199,16 @@ Exec_stat MCNot::eval(MCExecPoint &ep)
 	ep.setboolean(!state);
 	return ES_NORMAL;
 #endif /* MCNot */
+    bool t_right;
+    bool t_result;
 
+    if (!ctxt . EvalExprAsNonStrictBool(right, EE_NOT_BADRIGHT, t_right))
+        return;
 
-	MCExecContext ctxt(ep);
-	bool t_result;
-	bool t_right;
+    MCLogicEvalNot(ctxt, t_right, t_result);
 
-	if (right->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_NOT_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-
-	if (!ep.copyasbool(t_right))
-		t_right = false;
-	
-	MCLogicEvalNot(ctxt, t_right, t_result);
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+    if (!ctxt . HasError())
+        MCExecValueTraits<bool>::set(r_value, t_result);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -251,8 +216,6 @@ Exec_stat MCNot::eval(MCExecPoint &ep)
 //  Bitwise operators
 //
 
-Exec_stat MCAndBits::eval(MCExecPoint &ep)
-{
 #ifdef /* MCAndBits */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL )
 	{
@@ -270,38 +233,6 @@ Exec_stat MCAndBits::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCAndBits */
 
-
-	MCExecContext ctxt(ep);
-	uinteger_t t_result;
-	uinteger_t t_left, t_right;
-
-	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ANDBITS_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasuint(t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ANDBITS_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasuint(t_right);
-
-	MCMathEvalBitwiseAnd(ctxt, t_left, t_right, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCNotBits::eval(MCExecPoint &ep)
-{
 #ifdef /* MCNotBits */ LEGACY_EXEC
 	if (right->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -312,31 +243,6 @@ Exec_stat MCNotBits::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCNotBits */
 
-
-	MCExecContext ctxt(ep);
-	uinteger_t t_result;
-	uinteger_t t_right;
-
-	if (right->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_NOTBITS_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasuint(t_right);
-
-	MCMathEvalBitwiseNot(ctxt, t_right, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCOrBits::eval(MCExecPoint &ep)
-{
 #ifdef /* MCOrBits */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -354,38 +260,6 @@ Exec_stat MCOrBits::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCOrBits */
 
-
-	MCExecContext ctxt(ep);
-	uinteger_t t_result;
-	uinteger_t t_left, t_right;
-
-	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ORBITS_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasuint(t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_ORBITS_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasuint(t_right);
-
-	MCMathEvalBitwiseOr(ctxt, t_left, t_right, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCXorBits::eval(MCExecPoint &ep)
-{
 #ifdef /* MCXorBits */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -403,43 +277,11 @@ Exec_stat MCXorBits::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCXorBits */
 
-
-	MCExecContext ctxt(ep);
-	uinteger_t t_result;
-	uinteger_t t_left, t_right;
-
-	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_XORBITS_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasuint(t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_XORBITS_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasuint(t_right);
-
-	MCMathEvalBitwiseXor(ctxt, t_left, t_right, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  String operators
 //
 
-Exec_stat MCConcat::eval(MCExecPoint &ep)
-{
 #ifdef /* MCConcat */ LEGACY_EXEC
 	MCExecPoint ep2(ep1);
 	if (left->eval(ep1) != ES_NORMAL)
@@ -457,38 +299,6 @@ Exec_stat MCConcat::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCConcat */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_left, t_right;
-	MCAutoStringRef t_result;
-
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CONCAT_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_left);
-
-	if (right->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CONCAT_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_right);
-
-	MCStringsEvalConcatenate(ctxt, *t_left, *t_right, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCConcatSpace::eval(MCExecPoint &ep)
-{
 #ifdef /* MCConcatSpace */ LEGACY_EXEC
 	MCExecPoint ep2(ep1);
 	if (left->eval(ep1) != ES_NORMAL)
@@ -506,38 +316,6 @@ Exec_stat MCConcatSpace::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCConcatSpace */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_left, t_right;
-	MCAutoStringRef t_result;
-
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CONCAT_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_left);
-
-	if (right->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CONCAT_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_right);
-
-	MCStringsEvalConcatenateWithSpace(ctxt, *t_left, *t_right, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCItem::eval(MCExecPoint &ep)
-{
 #ifdef /* MCItem */ LEGACY_EXEC
 	if (left->eval(ep1) != ES_NORMAL)
 	{
@@ -560,43 +338,6 @@ Exec_stat MCItem::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCItem */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_left, t_right;
-	MCAutoStringRef t_result;
-
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CONCAT_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_left);
-
-	if (right != nil)
-	{
-		if (right->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_CONCAT_BADRIGHT, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep.copyasstringref(&t_right);
-	}
-	else
-		t_right = kMCEmptyString;
-
-	MCStringsEvalConcatenateWithComma(ctxt, *t_left, *t_right, &t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-Exec_stat MCContains::eval(MCExecPoint &ep)
-{
 #ifdef /* MCContains */ LEGACY_EXEC
 	MCExecPoint ep2(ep1);
 	if (right->eval(ep1) != ES_NORMAL)
@@ -615,50 +356,20 @@ Exec_stat MCContains::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCContains */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_left, t_right;
-	bool t_result;
-
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CONCAT_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_left);
-
-	if (right->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_CONCAT_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_right);
-
-	MCStringsEvalContains(ctxt, *t_left, *t_right, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
 Parse_stat MCBeginsEndsWith::parse(MCScriptPoint& sp, Boolean the)
 {
-	initpoint(sp);
+    initpoint(sp);
 
-	if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) != PS_NORMAL)
-	{
-		MCperror -> add(PE_BEGINSENDS_NOWITH, sp);
-		return PS_ERROR;
-	}
+    if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) != PS_NORMAL)
+    {
+        MCperror -> add(PE_BEGINSENDS_NOWITH, sp);
+        return PS_ERROR;
+    }
 
-	return PS_NORMAL;
+    return PS_NORMAL;
 }
 
-Exec_stat MCBeginsWith::eval(MCExecPoint& ep)
+void MCBeginsWith::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCBeginsWith */ LEGACY_EXEC
 	MCExecPoint ep2(ep1);
@@ -693,41 +404,23 @@ Exec_stat MCBeginsWith::eval(MCExecPoint& ep)
 	return ES_NORMAL;
 #endif /* MCBeginsWith */
 
+    MCAutoStringRef t_left, t_right;
+    bool t_result;
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_left, t_right;
-	bool t_result;
+    if (!ctxt . EvalExprAsStringRef(left, EE_BEGINSENDS_BADLEFT, &t_left)
+            || !ctxt . EvalExprAsStringRef(right, EE_BEGINSENDS_BADRIGHT, &t_right))
+        return;
 
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_BEGINSENDS_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_left);
-    
-	if (right->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_BEGINSENDS_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_right);
-    
-	MCStringsEvalBeginsWith(ctxt, *t_left, *t_right, t_result);
-    
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setboolean(t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt.Catch(line, pos);
+    MCStringsEvalBeginsWith(ctxt, *t_left, *t_right, t_result);
+
+    MCExecValueTraits<bool>::set(r_value, t_result);
 }
 
-Exec_stat MCEndsWith::eval(MCExecPoint& ep)
+void MCEndsWith::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCEndsWith */ LEGACY_EXEC
-	MCExecPoint ep2(ep1);
-	if (right->eval(ep1) != ES_NORMAL)
+    MCExecPoint ep2(ep1);
+    if (right->eval(ep1) != ES_NORMAL)
 	{
 		MCeerror->add(EE_BEGINSENDS_BADRIGHT, line, pos);
 		return ES_ERROR;
@@ -758,34 +451,16 @@ Exec_stat MCEndsWith::eval(MCExecPoint& ep)
 	return ES_NORMAL;
 #endif /* MCEndsWith */
 
+    MCAutoStringRef t_left, t_right;
+    bool t_result;
 
-	MCExecContext ctxt(ep);
-	MCAutoStringRef t_left, t_right;
-	bool t_result;
+    if (!ctxt . EvalExprAsStringRef(left, EE_BEGINSENDS_BADLEFT, &t_left)
+            || !ctxt . EvalExprAsStringRef(right, EE_BEGINSENDS_BADRIGHT, &t_right))
+        return;
 
-	if (left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_BEGINSENDS_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_left);
+    MCStringsEvalEndsWith(ctxt, *t_left, *t_right, t_result);
 
-	if (right->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_BEGINSENDS_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasstringref(&t_right);
-
-	MCStringsEvalEndsWith(ctxt, *t_left, *t_right, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+    MCExecValueTraits<bool>::set(r_value, t_result);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -795,8 +470,6 @@ Exec_stat MCEndsWith::eval(MCExecPoint& ep)
 
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the left or right can be an array or number so we use 'tona'.
-Exec_stat MCDiv::eval(MCExecPoint &ep)
-{
 #ifdef /* MCDiv */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -850,72 +523,9 @@ Exec_stat MCDiv::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCDiv */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoValueRef t_left, t_right;
-	MCAutoValueRef t_result;
-
-	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_DIV_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_DIV_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_right);
-
-	if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-			MCMathEvalDivArrayByArray(ctxt, (MCArrayRef)*t_left, (MCArrayRef)*t_right, (MCArrayRef&)t_result);
-		else
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalDivArrayByNumber(ctxt, (MCArrayRef)*t_left, t_real, (MCArrayRef&)t_result);
-		}
-	}
-	else
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-		{
-			MCeerror->add(EE_DIV_MISMATCH, line, pos);
-			return ES_ERROR;
-		}
-		else
-		{
-			real64_t t_real_result = 0.0;
-			real64_t t_left_real, t_right_real;
-			t_left_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			t_right_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalDiv(ctxt, t_left_real, t_right_real, t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)&t_result);
-		}
-	}
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-void MCDiv::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
-{
-	static MCExecMethodInfo *s_methods[] = { kMCMathEvalDivMethodInfo, kMCMathEvalDivArrayByNumberMethodInfo, kMCMathEvalDivArrayByArrayMethodInfo };
-	r_methods = s_methods;
-	r_count = 3;
-}
-
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the left or right can be an array or number so we use 'tona'.
-Exec_stat MCMinus::eval(MCExecPoint &ep)
+void MCMinus::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCMinus */ LEGACY_EXEC
 	if (left == NULL)
@@ -962,77 +572,72 @@ Exec_stat MCMinus::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCMinus */
 
+    MCExecValue t_left, t_right;
 
-	MCExecContext ctxt(ep);
-	MCAutoValueRef t_left, t_right;
-	MCAutoValueRef t_result;
+    if (left == nil)
+    {
+        MCExecValueTraits<double>::set(t_left, 0.0);
+    }
+    else if (left -> eval_ctxt(ctxt, t_left), ctxt . HasError()
+             || !ctxt . ConvertToNumberOrArray(t_left))
+    {
+        ctxt . LegacyThrow(EE_MINUS_BADLEFT);
+        return;
+    }
 
-	if (left == nil)
-	{
-		/* UNCHECKED */ ep.setnvalue(0);
-	}
-	else if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_MINUS_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_left);
+    if (right -> eval_ctxt(ctxt, t_right), ctxt . HasError()
+            || !ctxt . ConvertToNumberOrArray(t_right))
+    {
+        ctxt . LegacyThrow(EE_MINUS_BADRIGHT);
+        MCValueRelease(t_left . valueref_value);
+        return;
+    }
 
-	if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_MINUS_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_right);
+    if (t_left. type == kMCExecValueTypeArrayRef)
+    {
+        MCArrayRef t_result;
 
-	if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-			MCMathEvalSubtractArrayFromArray(ctxt, (MCArrayRef)*t_left, (MCArrayRef)*t_right, (MCArrayRef&)t_result);
-		else
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalSubtractNumberFromArray(ctxt, (MCArrayRef)*t_left, t_real, (MCArrayRef&)t_result);
-		}
-	}
-	else
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-		{
-			MCeerror->add(EE_MINUS_MISMATCH, line, pos);
-			return ES_ERROR;
-		}
-		else
-		{
-			real64_t t_real_result = 0.0;
-			real64_t t_left_real, t_right_real;
-			t_left_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			t_right_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalSubtract(ctxt, t_left_real, t_right_real, t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
-		}
-	}
+        if (t_right . type == kMCExecValueTypeArrayRef)
+            MCMathEvalSubtractArrayFromArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, t_result);
+        else
+            MCMathEvalSubtractNumberFromArray(ctxt, t_left . arrayref_value, t_right . double_value, t_result);
 
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
+        if (!ctxt . HasError())
+            MCExecValueTraits<MCArrayRef>::set(r_value, t_result);
+    }
+    else
+    {
+        if (t_right . type == kMCExecValueTypeArrayRef)
+            ctxt . LegacyThrow(EE_MINUS_MISMATCH);
+        else
+        {
+            real64_t t_real_result = 0.0;
+            MCMathEvalSubtract(ctxt, t_left . double_value, t_right . double_value, t_real_result);
 
-	return ctxt.Catch(line, pos);
+            if (!ctxt . HasError())
+                MCExecValueTraits<double>::set(r_value, (double)t_real_result);
+        }
+    }
+
+    if (ctxt . HasError())
+        return;
+
+    if (t_left . type == kMCValueTypeCodeArray)
+        MCValueRelease(t_left . valueref_value);
+    if (t_right . type == kMCValueTypeCodeArray)
+        MCValueRelease(t_right . valueref_value);
 }
 
 void MCMinus::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
 {
-	static MCExecMethodInfo *s_methods[] = { kMCMathEvalSubtractMethodInfo, kMCMathEvalSubtractNumberFromArrayMethodInfo, kMCMathEvalSubtractArrayFromArrayMethodInfo };
-	r_methods = s_methods;
-	r_count = 3;
+    static MCExecMethodInfo *s_methods[] = { kMCMathEvalSubtractMethodInfo, kMCMathEvalSubtractNumberFromArrayMethodInfo, kMCMathEvalSubtractArrayFromArrayMethodInfo };
+    r_methods = s_methods;
+    r_count = 3;
 }
+
 
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the left or right can be an array or number so we use 'tona'.
-Exec_stat MCMod::eval(MCExecPoint &ep)
-{
 #ifdef /* MCMod */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -1083,73 +688,8 @@ Exec_stat MCMod::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCMod */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoValueRef t_left, t_right;
-	MCAutoValueRef t_result;
-
-	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_MOD_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_MOD_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_right);
-
-	if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-			MCMathEvalModArrayByArray(ctxt, (MCArrayRef)*t_left, (MCArrayRef)*t_right, (MCArrayRef&)t_result);
-		else
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalModArrayByNumber(ctxt, (MCArrayRef)*t_left, t_real, (MCArrayRef&)t_result);
-		}
-	}
-	else
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-		{
-			MCeerror->add(EE_MOD_MISMATCH, line, pos);
-			return ES_ERROR;
-		}
-		else
-		{
-			real64_t t_real_result = 0.0;
-			real64_t t_left_real, t_right_real;
-			t_left_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			t_right_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalMod(ctxt, t_left_real, t_right_real, t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
-		}
-	}
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-void MCMod::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
-{
-	static MCExecMethodInfo *s_methods[] = { kMCMathEvalModMethodInfo, kMCMathEvalModArrayByNumberMethodInfo, kMCMathEvalModArrayByArrayMethodInfo };
-	r_methods = s_methods;
-	r_count = 3;
-}
-
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the left or right can be an array or number so we use 'tona'.
-Exec_stat MCWrap::eval(MCExecPoint &ep)
-{
 #ifdef /* MCWrap */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -1202,73 +742,8 @@ Exec_stat MCWrap::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCWrap */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoValueRef t_left, t_right;
-	MCAutoValueRef t_result;
-
-	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_WRAP_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_WRAP_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_right);
-
-	if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-			MCMathEvalWrapArrayByArray(ctxt, (MCArrayRef)*t_left, (MCArrayRef)*t_right, (MCArrayRef&)t_result);
-		else
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalWrapArrayByNumber(ctxt, (MCArrayRef)*t_left, t_real, (MCArrayRef&)t_result);
-		}
-	}
-	else
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-		{
-			MCeerror->add(EE_WRAP_MISMATCH, line, pos);
-			return ES_ERROR;
-		}
-		else
-		{
-			real64_t t_real_result = 0.0;
-			real64_t t_left_real, t_right_real;
-			t_left_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			t_right_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalWrap(ctxt, t_left_real, t_right_real, t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
-		}
-	}
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-void MCWrap::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
-{
-	static MCExecMethodInfo *s_methods[] = { kMCMathEvalWrapMethodInfo, kMCMathEvalWrapArrayByNumberMethodInfo, kMCMathEvalWrapArrayByArrayMethodInfo };
-	r_methods = s_methods;
-	r_count = 3;
-}
-
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the left or right can be an array or number so we use 'tona'.
-Exec_stat MCOver::eval(MCExecPoint &ep)
-{
 #ifdef /* MCOver */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -1319,73 +794,8 @@ Exec_stat MCOver::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCOver */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoValueRef t_left, t_right;
-	MCAutoValueRef t_result;
-
-	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_OVER_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_OVER_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_right);
-
-	if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-			MCMathEvalOverArrayByArray(ctxt, (MCArrayRef)*t_left, (MCArrayRef)*t_right, (MCArrayRef&)t_result);
-		else
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalOverArrayByNumber(ctxt, (MCArrayRef)*t_left, t_real, (MCArrayRef&)t_result);
-		}
-	}
-	else
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-		{
-			MCeerror->add(EE_OVER_MISMATCH, line, pos);
-			return ES_ERROR;
-		}
-		else
-		{
-			real64_t t_real_result = 0.0;
-			real64_t t_left_real, t_right_real;
-			t_left_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			t_right_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalOver(ctxt, t_left_real, t_right_real, t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)&t_result);
-		}
-	}
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-void MCOver::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
-{
-	static MCExecMethodInfo *s_methods[] = { kMCMathEvalOverMethodInfo, kMCMathEvalOverArrayByNumberMethodInfo, kMCMathEvalOverArrayByArrayMethodInfo };
-	r_methods = s_methods;
-	r_count = 3;
-}
-
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the left or right can be an array or number so we use 'tona'.
-Exec_stat MCPlus::eval(MCExecPoint &ep)
-{
 #ifdef /* MCPlus */ LEGACY_EXEC
 	if (left == NULL)
 		ep.setnvalue(0);
@@ -1431,77 +841,8 @@ Exec_stat MCPlus::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCPlus */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoValueRef t_left, t_right;
-	MCAutoValueRef t_result;
-
-	if (left == nil)
-    {
-		/* UNCHECKED */ ep.setnvalue(0);
-	}
-	else if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_PLUS_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_left);
-    
-	if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_PLUS_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_right);
-    
-	if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-			MCMathEvalAddArrayToArray(ctxt, (MCArrayRef)*t_left, (MCArrayRef)*t_right, (MCArrayRef&)&t_result);
-		else
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalAddNumberToArray(ctxt, (MCArrayRef)*t_left, t_real, (MCArrayRef&)&t_result);
-		}
-	}
-	else
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			MCMathEvalAddNumberToArray(ctxt, (MCArrayRef)*t_right, t_real, (MCArrayRef&)&t_result);
-		}
-		else
-		{
-			real64_t t_real_result = 0.0;
-			real64_t t_left_real, t_right_real;
-			t_left_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			t_right_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalAdd(ctxt, t_left_real, t_right_real, t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
-		}
-	}
-    
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-    
-	return ctxt.Catch(line, pos);
-}
-
-void MCPlus::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
-{
-	static MCExecMethodInfo *s_methods[] = { kMCMathEvalAddMethodInfo, kMCMathEvalAddNumberToArrayMethodInfo, kMCMathEvalAddArrayToArrayMethodInfo };
-	r_methods = s_methods;
-	r_count = 3;
-}
-
 // MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
 //   Here the left or right can be an array or number so we use 'tona'.
-Exec_stat MCTimes::eval(MCExecPoint &ep)
-{
 #ifdef /* MCTimes */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -1546,71 +887,6 @@ Exec_stat MCTimes::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCTimes */
 
-
-	MCExecContext ctxt(ep);
-	MCAutoValueRef t_left, t_right;
-	MCAutoValueRef t_result;
-
-	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_TIMES_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
-	{
-		MCeerror->add(EE_TIMES_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasvalueref(&t_right);
-
-	if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeArray)
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-			MCMathEvalMultiplyArrayByArray(ctxt, (MCArrayRef)*t_left, (MCArrayRef)*t_right, (MCArrayRef&)t_result);
-		else
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalMultiplyArrayByNumber(ctxt, (MCArrayRef)*t_left, t_real, (MCArrayRef&)t_result);
-		}
-	}
-	else
-	{
-		if (MCValueGetTypeCode(*t_right) == kMCValueTypeCodeArray)
-		{
-			real64_t t_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			MCMathEvalMultiplyArrayByNumber(ctxt, (MCArrayRef)*t_right, t_real, (MCArrayRef&)t_result);
-		}
-		else
-		{
-			real64_t t_real_result = 0.0;
-			real64_t t_left_real, t_right_real;
-			t_left_real = MCNumberFetchAsReal((MCNumberRef) *t_left);
-			t_right_real = MCNumberFetchAsReal((MCNumberRef) *t_right);
-			MCMathEvalMultiply(ctxt, t_left_real, t_right_real, t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
-		}
-	}
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setvalueref(*t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
-void MCTimes::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
-{
-	static MCExecMethodInfo *s_methods[] = { kMCMathEvalMultiplyMethodInfo, kMCMathEvalMultiplyArrayByNumberMethodInfo, kMCMathEvalMultiplyArrayByArrayMethodInfo };
-	r_methods = s_methods;
-	r_count = 3;
-}
-
-Exec_stat MCPow::eval(MCExecPoint &ep)
-{
 #ifdef /* MCPow */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -1635,195 +911,140 @@ Exec_stat MCPow::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCPow */
 
-	MCExecContext ctxt(ep);
-	real64_t t_left, t_right;
-	real64_t t_result;
-
-	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_POW_BADLEFT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_left);
-
-	if (right->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
-	{
-		MCeerror->add(EE_POW_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
-	/* UNCHECKED */ ep.copyasdouble(t_right);
-
-	MCMathEvalPower(ctxt, t_left, t_right, t_result);
-
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setnvalue(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Comparison operators
 //
 
+#ifdef LEGACY_EXEC
 static bool eval_comparison_factors(MCExecPoint& ep, MCExpression *p_left, MCExpression *p_right, MCValueRef& r_left, MCValueRef& r_right)
 {
-	MCValueRef t_left, t_right;
-	if (p_left->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_FACTOR_BADLEFT, 0, 0);
-		return false;
-	}
+    MCValueRef t_left, t_right;
+    if (p_left->eval(ep) != ES_NORMAL)
+    {
+        MCeerror->add(EE_FACTOR_BADLEFT, 0, 0);
+        return false;
+    }
 
-	/* UNCHECKED */ ep . copyasvalueref(t_left);
+    /* UNCHECKED */ ep . copyasvalueref(t_left);
 
-	if (p_right->eval(ep) != ES_NORMAL)
-	{
-		MCValueRelease(t_left);
-		MCeerror->add(EE_FACTOR_BADRIGHT, 0, 0);
-		return false;
-	}
+    if (p_right->eval(ep) != ES_NORMAL)
+    {
+        MCValueRelease(t_left);
+        MCeerror->add(EE_FACTOR_BADRIGHT, 0, 0);
+        return false;
+    }
 
-	/* UNCHECKED */ ep . copyasvalueref(t_right);
+    /* UNCHECKED */ ep . copyasvalueref(t_right);
 
-	r_left = t_left;
-	r_right = t_right;
+    r_left = t_left;
+    r_right = t_right;
 
-	return true;
+    return true;
 }
+#endif
 
-Exec_stat MCEqual::eval(MCExecPoint &ep)
-{
-	MCAutoValueRef t_left, t_right;
-	if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
-		return ES_ERROR;
-
-	MCExecContext ctxt(ep);
-
-	bool t_result;
-	MCLogicEvalIsEqualTo(ctxt, *t_left, *t_right, t_result);
-	if (!ctxt . HasError())
-	{
-		ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
-Exec_stat MCGreaterThan::eval(MCExecPoint &ep)
-{
-	MCAutoValueRef t_left, t_right;
-	if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
-		return ES_ERROR;
-
-	MCExecContext ctxt(ep);
-
-	bool t_result;
-	MCLogicEvalIsGreaterThan(ctxt, *t_left, *t_right, t_result);
-	if (!ctxt . HasError())
-	{
-		ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-
+#ifdef /* MCGreaterThanEqual */ LEGACY_EXEC
 Exec_stat MCGreaterThanEqual::eval(MCExecPoint &ep)
 {
-	MCAutoValueRef t_left, t_right;
-	if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
-		return ES_ERROR;
+    MCAutoValueRef t_left, t_right;
+    if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
+        return ES_ERROR;
 
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(ep);
 
-	bool t_result;
-	MCLogicEvalIsGreaterThanOrEqualTo(ctxt, *t_left, *t_right, t_result);
-	if (!ctxt . HasError())
-	{
-		ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
+    bool t_result;
+    MCLogicEvalIsGreaterThanOrEqualTo(ctxt, *t_left, *t_right, t_result);
+    if (!ctxt . HasError())
+    {
+        ep . setboolean(t_result);
+        return ES_NORMAL;
+    }
 
-	return ctxt . Catch(line, pos);
+    return ctxt . Catch(line, pos);
 }
+#endif /* MCGreaterThanEqual */
 
+#ifdef /* MCLessThan */ LEGACY_EXEC
 Exec_stat MCLessThan::eval(MCExecPoint &ep)
 {
-	MCAutoValueRef t_left, t_right;
-	if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
-		return ES_ERROR;
+    MCAutoValueRef t_left, t_right;
+    if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
+        return ES_ERROR;
 
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(ep);
 
-	bool t_result;
-	MCLogicEvalIsLessThan(ctxt, *t_left, *t_right, t_result);
-	if (!ctxt . HasError())
-	{
-		ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
+    bool t_result;
+    MCLogicEvalIsLessThan(ctxt, *t_left, *t_right, t_result);
+    if (!ctxt . HasError())
+    {
+        ep . setboolean(t_result);
+        return ES_NORMAL;
+    }
 
-	return ctxt . Catch(line, pos);
+    return ctxt . Catch(line, pos);
 }
+#endif /* MCLessThan */
 
+#ifdef /* MCLessThanEqual */ LEGACY_EXEC
 Exec_stat MCLessThanEqual::eval(MCExecPoint &ep)
 {
-	MCAutoValueRef t_left, t_right;
-	if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
-		return ES_ERROR;
+    MCAutoValueRef t_left, t_right;
+    if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
+        return ES_ERROR;
 
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(ep);
 
-	bool t_result;
-	MCLogicEvalIsLessThanOrEqualTo(ctxt, *t_left, *t_right, t_result);
-	if (!ctxt . HasError())
-	{
-		ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
+    bool t_result;
+    MCLogicEvalIsLessThanOrEqualTo(ctxt, *t_left, *t_right, t_result);
+    if (!ctxt . HasError())
+    {
+        ep . setboolean(t_result);
+        return ES_NORMAL;
+    }
 
-	return ctxt . Catch(line, pos);
+    return ctxt . Catch(line, pos);
 }
+#endif /* MCLessThanEqual */
 
+#ifdef /* MCNotEqual */ LEGACY_EXEC
 Exec_stat MCNotEqual::eval(MCExecPoint &ep)
 {
-	MCAutoValueRef t_left, t_right;
-	if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
-		return ES_ERROR;
+    MCAutoValueRef t_left, t_right;
+    if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
+        return ES_ERROR;
 
-	MCExecContext ctxt(ep);
+    MCExecContext ctxt(ep);
 
-	bool t_result;
-	MCLogicEvalIsNotEqualTo(ctxt, *t_left, *t_right, t_result);
-	if (!ctxt . HasError())
-	{
-		ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
+    bool t_result;
+    MCLogicEvalIsNotEqualTo(ctxt, *t_left, *t_right, t_result);
+    if (!ctxt . HasError())
+    {
+        ep . setboolean(t_result);
+        return ES_NORMAL;
+    }
 
-	return ctxt . Catch(line, pos);
+    return ctxt . Catch(line, pos);
 }
+#endif /* MCNotEqual */
 
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Miscellaneous operators
 //
 
-Exec_stat MCGrouping::eval(MCExecPoint &ep)
+void MCGrouping::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
-	if (right != NULL)
-		return right->eval(ep);
-	else
-	{
-		MCeerror->add
-		(EE_GROUPING_BADRIGHT, line, pos);
-		return ES_ERROR;
-	}
+    if (right != NULL)
+    {
+        MCValueRef t_value;
+        if (!ctxt . EvalExprAsValueRef(right, EE_GROUPING_BADRIGHT, t_value))
+            return;
+
+        MCExecValueTraits<MCValueRef>::set(r_value, t_value);
+    }
+    else
+        ctxt . LegacyThrow(EE_GROUPING_BADRIGHT);
 }
 
 void MCGrouping::compile(MCSyntaxFactoryRef ctxt)
@@ -1979,6 +1200,7 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
+#if 0
 Exec_stat MCIs::eval(MCExecPoint &ep)
 {
 #ifdef /* MCIs */ LEGACY_EXEC
@@ -2493,6 +1715,226 @@ Exec_stat MCIs::eval(MCExecPoint &ep)
 
 	return ctxt . Catch(line, pos);
 }
+#else
+
+void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+{
+    bool t_result;
+
+    // Implementation of 'is a <type>'
+    if (valid != IV_UNDEFINED)
+    {
+        MCAutoValueRef t_value;
+
+        if (!ctxt . EvalExprAsValueRef(right, EE_IS_BADLEFT, &t_value))
+            return;
+
+        switch (valid)
+        {
+        case IV_ARRAY:
+            if (form == IT_NORMAL)
+                MCArraysEvalIsAnArray(ctxt, *t_value, t_result);
+            else
+                MCArraysEvalIsNotAnArray(ctxt, *t_value, t_result);
+            break;
+        case IV_COLOR:
+            if (form == IT_NORMAL)
+                MCGraphicsEvalIsAColor(ctxt, *t_value, t_result);
+            else
+                MCGraphicsEvalIsNotAColor(ctxt, *t_value, t_result);
+            break;
+        case IV_DATE:
+            if (form == IT_NORMAL)
+                MCDateTimeEvalIsADate(ctxt, *t_value, t_result);
+            else
+                MCDateTimeEvalIsNotADate(ctxt, *t_value, t_result);
+            break;
+        case IV_INTEGER:
+            if (form == IT_NORMAL)
+                MCMathEvalIsAnInteger(ctxt, *t_value, t_result);
+            else
+                MCMathEvalIsNotAnInteger(ctxt, *t_value, t_result);
+            break;
+        case IV_NUMBER:
+            if (form == IT_NORMAL)
+                MCMathEvalIsANumber(ctxt, *t_value, t_result);
+            else
+                MCMathEvalIsNotANumber(ctxt, *t_value, t_result);
+            break;
+        case IV_LOGICAL:
+            if (form == IT_NORMAL)
+                MCLogicEvalIsABoolean(ctxt, *t_value, t_result);
+            else
+                MCLogicEvalIsNotABoolean(ctxt, *t_value, t_result);
+            break;
+        case IV_POINT:
+            if (form == IT_NORMAL)
+                MCGraphicsEvalIsAPoint(ctxt, *t_value, t_result);
+            else
+                MCGraphicsEvalIsNotAPoint(ctxt, *t_value, t_result);
+            break;
+        case IV_RECT:
+            if (form == IT_NORMAL)
+                MCGraphicsEvalIsARectangle(ctxt, *t_value, t_result);
+            else
+                MCGraphicsEvalIsNotARectangle(ctxt, *t_value, t_result);
+            break;
+        // MERG-2013-06-24: [[ IsAnAsciiString ]] Implementation for ascii string
+        //   check.
+        case IV_ASCII:
+            if (form == IT_NORMAL)
+                MCStringsEvalIsAscii(ctxt, *t_value, t_result);
+            else
+                MCStringsEvalIsNotAscii(ctxt, *t_value, t_result);
+            break;
+        }
+
+        if (!ctxt . HasError())
+            MCExecValueTraits<bool>::set(r_value, t_result);
+
+        return;
+    }
+
+    // Implementation of 'is'
+    if (form == IT_NORMAL || form == IT_NOT)
+    {
+        MCAutoValueRef t_left, t_right;
+
+        if (!ctxt . EvalExprAsValueRef(left, EE_FACTOR_BADLEFT, &t_left)
+                || !ctxt . EvalExprAsValueRef(right, EE_FACTOR_BADRIGHT, &t_right))
+            return;
+
+        if (form == IT_NORMAL)
+            MCLogicEvalIsEqualTo(ctxt, *t_left, *t_right, t_result);
+        else
+            MCLogicEvalIsNotEqualTo(ctxt, *t_left, *t_right, t_result);
+    }
+
+
+    // The rest
+    switch (form)
+    {
+    case IT_AMONG:
+    case IT_NOT_AMONG:
+        if (delimiter == CT_KEY)
+        {
+            MCAutoArrayRef t_array;
+            MCNewAutoNameRef t_name;
+
+            if (!ctxt . EvalExprAsNameRef(left, EE_IS_BADLEFT, &t_name))
+                return;
+
+            if (!ctxt . EvalExprAsArrayRef(right, EE_IS_BADRIGHT, &t_array))
+                return;
+
+            if (form == IT_AMONG)
+                MCArraysEvalIsAmongTheKeysOf(ctxt, *t_name, *t_array, t_result);
+            else
+                MCArraysEvalIsNotAmongTheKeysOf(ctxt, *t_name, *t_array, t_result);
+        }
+        else
+        {
+            MCAutoStringRef t_left, t_right;
+
+            if (!ctxt . EvalExprAsStringRef(left, EE_IS_BADLEFT, &t_left))
+                return;
+
+            if (!ctxt . EvalExprAsStringRef(right, EE_IS_BADRIGHT, &t_right))
+                return;
+
+            switch (delimiter)
+            {
+            case CT_TOKEN:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheTokensOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheTokensOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_WORD:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheWordsOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheWordsOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_LINE:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheLinesOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheLinesOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_ITEM:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheItemsOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheItemsOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            }
+        }
+        break;
+    case IT_AMONG_THE_CLIPBOARD_DATA:
+    case IT_NOT_AMONG_THE_CLIPBOARD_DATA:
+    case IT_AMONG_THE_DRAG_DATA:
+    case IT_NOT_AMONG_THE_DRAG_DATA:
+        {
+            MCNewAutoNameRef t_right;
+
+            if (!ctxt . EvalExprAsNameRef(right, EE_IS_BADLEFT, &t_right))
+                return;
+
+            if (form == IT_AMONG_THE_CLIPBOARD_DATA)
+                MCPasteboardEvalIsAmongTheKeysOfTheClipboardData(ctxt, *t_right, t_result);
+            else if (form == IT_NOT_AMONG_THE_CLIPBOARD_DATA)
+                MCPasteboardEvalIsNotAmongTheKeysOfTheClipboardData(ctxt, *t_right, t_result);
+            else if (form == IT_AMONG_THE_DRAG_DATA)
+                MCPasteboardEvalIsAmongTheKeysOfTheDragData(ctxt, *t_right, t_result);
+            else if (form == IT_NOT_AMONG_THE_DRAG_DATA)
+                MCPasteboardEvalIsNotAmongTheKeysOfTheDragData(ctxt, *t_right, t_result);
+        }
+        break;
+    case IT_IN:
+    case IT_NOT_IN:
+        {
+            MCAutoStringRef t_left, t_right;
+
+            if (!ctxt . EvalExprAsStringRef(left, EE_IS_BADLEFT, &t_left))
+                return;
+
+            if (!ctxt . EvalExprAsStringRef(right, EE_IS_BADRIGHT, &t_right))
+                return;
+
+            if (form == IT_IN)
+                MCStringsEvalContains(ctxt, *t_right, *t_left, t_result);
+            else
+                MCStringsEvalDoesNotContain(ctxt, *t_right, *t_left,t_result);
+        }
+        break;
+    case IT_WITHIN:
+    case IT_NOT_WITHIN:
+        {
+            MCPoint t_point;
+            MCRectangle t_rectangle;
+
+            if (!ctxt . EvalExprAsPoint(left, EE_IS_BADLEFT, t_point))
+                return;
+
+            if (!ctxt . EvalExprAsRectangle(right, EE_IS_BADRIGHT, t_rectangle))
+                return;
+
+            if (form == IT_WITHIN)
+                MCGraphicsEvalIsWithin(ctxt, t_point, t_rectangle, t_result);
+            else
+                MCGraphicsEvalIsNotWithin(ctxt, t_point, t_rectangle, t_result);
+        }
+        break;
+    default:
+        break;
+    }
+
+    if (!ctxt . HasError())
+        MCExecValueTraits<bool>::set(r_value, t_result);
+}
+
+#endif
 
 void MCIs::compile(MCSyntaxFactoryRef ctxt)
 {
@@ -2659,7 +2101,7 @@ Parse_stat MCThere::parse(MCScriptPoint &sp, Boolean the)
 	return PS_BREAK;
 }
 
-Exec_stat MCThere::eval(MCExecPoint &ep)
+void MCThere::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCThere */ LEGACY_EXEC
 	Boolean found;
@@ -2706,20 +2148,14 @@ Exec_stat MCThere::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCThere */
 
-
-	MCExecContext ctxt(ep);
 	bool t_result;
 
 	if (object == NULL)
 	{
-		MCAutoStringRef t_string;
+        MCAutoStringRef t_string;
 
-		if (right->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_THERE_BADSOURCE, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep.copyasstringref(&t_string);
+        if (!ctxt . EvalExprAsStringRef(right, EE_THERE_BADSOURCE, &t_string))
+            return;
 
 		switch (mode)
 		{
@@ -2751,13 +2187,8 @@ Exec_stat MCThere::eval(MCExecPoint &ep)
 			MCInterfaceEvalThereIsNotAnObject(ctxt, object, t_result);
 	}
 
-	if (!ctxt.HasError())
-	{
-		/* UNCHECKED */ ep.setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt.Catch(line, pos);
+    if (!ctxt.HasError())
+        MCExecValueTraits<bool>::set(r_value, t_result);
 }
 
 void MCThere::compile(MCSyntaxFactoryRef ctxt)

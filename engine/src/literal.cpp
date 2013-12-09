@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "literal.h"
 #include "scriptpt.h"
-#include "execpt.h"
+//#include "execpt.h"
 
 #include "syntax.h"
 
@@ -32,10 +32,17 @@ Parse_stat MCLiteral::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
+#ifdef /* MCLiteral::eval */ LEGACY_EXEC
 Exec_stat MCLiteral::eval(MCExecPoint &ep)
 {
-	ep.setvalueref(value);
-	return ES_NORMAL;
+    MCExecValueTraits<MCNameRef>::set(r_value, value);
+}
+#endif
+
+void MCLiteral::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+	r_value . type = kMCExecValueTypeNameRef;
+	r_value . nameref_value = MCValueRetain(value);
 }
 
 void MCLiteral::compile(MCSyntaxFactoryRef ctxt)
@@ -52,7 +59,7 @@ Parse_stat MCLiteralNumber::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCLiteralNumber::eval(MCExecPoint &ep)
+void MCLiteralNumber::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 	// IM-2013-05-02: *TODO* the bugfix here cannot be applied to the syntax
 	// refactor branch as MCExecPoint::setboth() does not exist there
@@ -62,9 +69,10 @@ Exec_stat MCLiteralNumber::eval(MCExecPoint &ep)
 	if (nvalue == BAD_NUMERIC)
 		ep.setvalueref_nullable(value);
 	else
-		ep.setboth(MCNameGetOldString(value), nvalue);
-#else
-	ep.setvalueref_nullable(value);
-#endif
+        ep.setboth(MCNameGetOldString(value), nvalue);
 	return ES_NORMAL;
+#else
+	r_value . type = kMCExecValueTypeNameRef;
+	r_value . nameref_value = MCValueRetain(value);
+#endif
 }

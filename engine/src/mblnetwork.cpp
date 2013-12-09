@@ -63,9 +63,8 @@ static bool MCS_mbl_hostNameToAddress(MCStringRef p_hostname, MCSystemHostResolv
 	for(uint32_t i = 0; ptr[i] != NULL; i++)
 	{
 		MCAutoStringRef t_address;
-		MCAutoPointer<char> t_addr_str;
-        t_addr_str = inet_ntoa(*ptr[i]);
-		if (!MCStringCreateWithCString(*t_addr_str, &t_address))
+        const char *t_addr_str = inet_ntoa(*ptr[i]);
+		if (!MCStringCreateWithCString(t_addr_str, &t_address))
 			return false;
 		if (!p_callback(p_context, *t_address))
 			return false;
@@ -162,6 +161,8 @@ bool MCS_hn(MCStringRef& r_string)
     t_hostname.New(256);
 	if (gethostname((char*)t_hostname.Chars(), 256) != 0)
         return false;
+   
+    t_hostname.Shrink(MCCStringLength((char*)t_hostname.Chars()));
     
 	return t_hostname.CreateStringAndRelease(r_string);
 }

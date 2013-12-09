@@ -36,6 +36,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 #include "path.h"
 
+#include "exec-interface.h"
+
 // Default MCBlock constructor - makes a block with everything initialized
 // to zero.
 MCBlock::MCBlock(void)
@@ -1044,13 +1046,19 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 
 				cx += twidth;
 				x += twidth;
+// FRAGILE ???
+                // Adjust for the tab character.
+                eptr = parent->IncrementIndex(eptr);
+                findex_t sl = eptr - sptr;
 
-				// Adjust for the tab character.
-				eptr = parent->IncrementIndex(eptr);
-				findex_t sl = eptr - sptr;
-				
-				sptr += sl;
-				size -= sl;
+                sptr += sl;
+                size -= sl;
+
+                // Adjust for the tab character.
+//				l = parent->IncrementIndex(eptr);
+
+//				sptr = l;
+//                size = length - l;
 			}
 		}
 
@@ -1360,6 +1368,7 @@ bool MCBlock::hasfontattrs(void) const
 	return (flags & F_HAS_ALL_FATTR) != 0;
 }
 
+#ifdef LEGACY_EXEC
 void MCBlock::setatts(Properties which, void *value)
 {
 	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
@@ -1525,6 +1534,7 @@ void MCBlock::setatts(Properties which, void *value)
 		atts = nil;
 	}
 }
+#endif
 
 Boolean MCBlock::getshift(int2 &out)
 {
@@ -2020,6 +2030,7 @@ void MCBlock::exportattrs(MCFieldCharacterStyle& x_style)
 //   those described by the style struct.
 void MCBlock::importattrs(const MCFieldCharacterStyle& p_style)
 {
+    MCExecContext ctxt(nil, nil, nil);
 	if (p_style . has_text_color)
 	{
 		MCColor t_color;
@@ -2035,22 +2046,24 @@ void MCBlock::importattrs(const MCFieldCharacterStyle& p_style)
 		setbackcolor(&t_color);
 	}
 	if (p_style . has_link_text)
-		setatts(P_LINK_TEXT, (void *)p_style . link_text);
+        SetLinktext(ctxt, p_style . link_text);
 	if (p_style . has_image_source)
-		setatts(P_IMAGE_SOURCE, (void *)p_style . image_source);
-	if (p_style . has_metadata)
-		setatts(P_METADATA, (void *)p_style . metadata);
-	if (p_style . has_text_font)
-    {
-        MCAutoPointer<char> t_text_font;
-        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(p_style . text_font), &t_text_font);
-		setatts(P_TEXT_FONT, (void *)*t_text_font)
-        ;
-    }
+        SetImageSource(ctxt, p_style . image_source);
+    if (p_style . has_metadata)
+        SetMetadata(ctxt, p_style . metadata);
+    if (p_style . has_text_font)
+        SetTextFont(ctxt, MCNameGetString(p_style . text_font));
 	if (p_style . has_text_style)
-		setatts(P_TEXT_STYLE, (void *)p_style . text_style);
-	if (p_style . has_text_size)
-		setatts(P_TEXT_SIZE, (void *)p_style . text_size);
+    {
+        MCInterfaceTextStyle t_style;
+        t_style . style = p_style . text_style;
+        SetTextStyle(ctxt, t_style);
+    }
+    if (p_style . has_text_size)
+    {
+        uinteger_t t_size = p_style . text_size;
+        SetTextSize(ctxt, &t_size);
+    }
 	// MW-2012-05-09: [[ Bug ]] Setting the textShift of a block is done with 'setshift'
 	//   not 'setatts'.
 	if (p_style . has_text_shift)
@@ -2156,7 +2169,8 @@ void MCBlock::SetRange(findex_t p_index, findex_t p_length)
 {
 	m_index = p_index;
 	m_size = p_length;
-	
+	width = 0;
+    
 	// Update the 'has tabs' flag
 	uindex_t t_where;
 	if (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', m_index, kMCStringOptionCompareExact, t_where)

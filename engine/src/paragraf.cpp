@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "line.h"
 #include "field.h"
 #include "paragraf.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "mcerror.h"
 #include "unicode.h"
@@ -1259,6 +1259,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	}
 }
 
+#ifdef LEGACY_EXEC
 Boolean MCParagraph::getatts(findex_t si, findex_t ei, Font_textstyle textstyle, const char *&fname,
                              uint2 &size, uint2 &fstyle, const MCColor *&color,
                              const MCColor *&backcolor, int2 &shift, bool& specstyle,
@@ -1411,7 +1412,9 @@ Boolean MCParagraph::getatts(findex_t si, findex_t ei, Font_textstyle textstyle,
 	
 	return ahas || chas || bchas || shas;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 void MCParagraph::setatts(findex_t si, findex_t ei, Properties p, void *value, bool p_from_html)
 {
 	bool t_blocks_changed;
@@ -1514,6 +1517,7 @@ void MCParagraph::setatts(findex_t si, findex_t ei, Properties p, void *value, b
 		needs_layout = true;
 	}
 }
+#endif
 
 // MW-2008-03-27: [[ Bug 5093 ]] Rewritten to more correctly insert blocks around
 //   imagesource characters.
@@ -1552,9 +1556,10 @@ MCBlock *MCParagraph::indextoblock(findex_t tindex, Boolean forinsert)
 					// first
 					if (t_block == blocks)
 					{
+                        MCExecContext ctxt(nil, nil, nil);
 						MCBlock *t_new_block;
 						t_new_block = new MCBlock(*t_block);
-						t_new_block -> setatts(P_IMAGE_SOURCE, (void *)kMCEmptyString);
+                        t_new_block -> SetImageSource(ctxt, kMCEmptyString);
 
 						// MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
 						//   fontref so it can compute its.
@@ -1579,9 +1584,10 @@ MCBlock *MCParagraph::indextoblock(findex_t tindex, Boolean forinsert)
 					// then we may need to insert a new block if there are no more.
 					if (t_block -> next() == blocks)
 					{
+                        MCExecContext ctxt(nil, nil, nil);
 						MCBlock *t_new_block;
 						t_new_block = new MCBlock(*t_block);
-						t_new_block -> setatts(P_IMAGE_SOURCE, (void *)kMCEmptyString);
+                        t_new_block -> SetImageSource(ctxt, kMCEmptyString);
 
 						// MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
 						//   fontref so it can compute its.
@@ -1973,8 +1979,8 @@ void MCParagraph::finsertnobreak(MCStringRef p_string, MCRange t_range)
 		}
 
 		// Move the focusedindex to the end of the insert.
-		focusedindex += t_new_length;
-	}
+        focusedindex += t_new_length;
+    }
     
     // New text so a re-layout is necessary
     needs_layout = true;
@@ -3437,6 +3443,7 @@ bool MCParagraph::getflagstate(uint32_t flag, findex_t si, findex_t ei, bool& r_
 // This method accumulates the ranges of the paragraph that have 'flagged' set
 // to true. The output is placed in ep as a return-delimited list, with indices
 // adjusted by the 'delta'.
+#ifdef LEGACY_EXEC
 void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, findex_t si, findex_t ei, int32_t p_delta)
 {
 	// If the paragraph is empty, there is nothing to do.
@@ -3504,6 +3511,7 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, findex_t
 		bptr -> GetRange(i, l);
 	}
 }
+#endif
 
 // This method accumulates the ranges of the paragraph that have 'flagged' set
 // to true. The output is placed in the uinteger_t array, with indices

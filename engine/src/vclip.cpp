@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "date.h"
 #include "sellst.h"
@@ -92,6 +92,7 @@ const char *MCVideoClip::gettypestring()
 	return MCvideostring;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCVideoClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	switch (which)
@@ -124,7 +125,9 @@ Exec_stat MCVideoClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint
 	}
 	return ES_NORMAL;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCVideoClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	MCString data = ep.getsvalue();
@@ -176,6 +179,7 @@ Exec_stat MCVideoClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep
 	}
 	return MCObject::setprop_legacy(parid, p, ep, effective);
 }
+#endif
 
 Boolean MCVideoClip::del()
 {
@@ -221,7 +225,7 @@ Boolean MCVideoClip::import(MCStringRef fname, IO_handle fstream)
 {
     uindex_t t_last_slash;
     MCStringRef t_path;
-    if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, 0, kMCCompareExact, t_last_slash))
+    if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_last_slash))
         /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMake(t_last_slash + 1, MCStringGetLength(fname) - t_last_slash - 1), t_path);
     else
         t_path = MCValueRetain(fname);

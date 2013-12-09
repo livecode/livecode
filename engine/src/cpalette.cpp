@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "sellst.h"
 #include "stack.h"
@@ -174,6 +174,7 @@ Boolean MCColors::mup(uint2 which)
 	return True;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCColors::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	switch (which)
@@ -227,6 +228,7 @@ Exec_stat MCColors::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 	}
 	return ES_NORMAL;
 }
+#endif
 
 Boolean MCColors::count(Chunk_term type, MCObject *stop, uint2 &num)
 {

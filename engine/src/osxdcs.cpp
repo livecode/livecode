@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "button.h"
 #include "scrolbar.h"
 #include "util.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "stacklst.h"
 #include "sellst.h"
 #include "mode.h"

@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uidc.h"
 #include "scriptpt.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "mcerror.h"
 #include "param.h"
 #include "object.h"
@@ -36,6 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 
 #include "syntax.h"
+#include "statemnt.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -59,14 +60,28 @@ MCVarref *MCExpression::getrootvarref(void)
 	return NULL;
 }
 
+#ifdef LEGACY_EXEC
 MCVariable *MCExpression::evalvar(MCExecPoint& ep)
 {
 	return NULL;
 }
+#endif
 
+MCVariable *MCExpression::evalvar(MCExecContext& ctxt)
+{
+    return NULL;
+}
+
+#ifdef LEGACY_EXEC
 Exec_stat MCExpression::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 {
 	return ES_ERROR;
+}
+#endif
+
+bool MCExpression::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
+{
+    return false;
 }
 
 Parse_stat MCExpression::getexps(MCScriptPoint &sp, MCExpression *earray[],
@@ -576,9 +591,110 @@ Parse_stat MCExpression::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCExpression::eval(MCExecPoint &ep)
 {
-	return ES_ERROR;
+    MCAssert(false);
+    MCExecContext ctxt(ep . GetEC());
+	
+	MCAutoValueRef t_value;
+	eval_valueref(ctxt, &t_value);
+	if (!ctxt . HasError())
+    {
+        ep . setvalueref(*t_value);
+		return ES_NORMAL;
+    }
+	
+	return ctxt . Catch(line, pos);
+}
+#endif
+
+void MCExpression::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    fprintf(stderr, "ERROR: eval method for expression not implemented properly\n");
+}
+
+void MCExpression::eval_typed(MCExecContext& ctxt, MCExecValueType p_type, void *r_value)
+{
+	MCExecValue t_value;
+	eval_ctxt(ctxt, t_value);
+	if (!ctxt . HasError())
+		MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , p_type, r_value);
+}
+
+void MCExpression::eval_valueref(MCExecContext& ctxt, MCValueRef& r_value)
+{
+	eval_typed(ctxt, kMCExecValueTypeValueRef, &r_value);
+}
+
+void MCExpression::eval_booleanref(MCExecContext& ctxt, MCBooleanRef& r_value)
+{
+	eval_typed(ctxt, kMCExecValueTypeBooleanRef, &r_value);
+}
+
+void MCExpression::eval_stringref(MCExecContext& ctxt, MCStringRef& r_value)
+{
+	eval_typed(ctxt, kMCExecValueTypeStringRef, &r_value);
+}
+
+void MCExpression::eval_dataref(MCExecContext& ctxt, MCDataRef& r_value)
+{
+	eval_typed(ctxt, kMCExecValueTypeDataRef, &r_value);
+}
+
+void MCExpression::eval_nameref(MCExecContext& ctxt, MCNameRef& r_value)
+{
+	eval_typed(ctxt, kMCExecValueTypeNameRef, &r_value);
+}
+
+void MCExpression::eval_numberref(MCExecContext& ctxt, MCNumberRef& r_value)
+{
+	eval_typed(ctxt, kMCExecValueTypeNumberRef, &r_value);
+}
+
+void MCExpression::eval_arrayref(MCExecContext& ctxt, MCArrayRef& r_value)
+{
+	eval_typed(ctxt, kMCExecValueTypeArrayRef, &r_value);
+}
+
+void MCExpression::eval_bool(MCExecContext& ctxt, bool& r_value)
+{
+    eval_typed(ctxt, kMCExecValueTypeBool, &r_value);
+}
+
+void MCExpression::eval_uint(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	eval_typed(ctxt, kMCExecValueTypeUInt, &r_value);
+}
+
+void MCExpression::eval_int(MCExecContext& ctxt, integer_t& r_value)
+{
+	eval_typed(ctxt, kMCExecValueTypeInt, &r_value);
+}
+
+void MCExpression::eval_double(MCExecContext& ctxt, double& r_value)
+{
+	eval_typed(ctxt, kMCExecValueTypeDouble, &r_value);
+}
+
+void MCExpression::eval_char(MCExecContext& ctxt, char_t& r_value)
+{
+	eval_typed(ctxt, kMCExecValueTypeChar, &r_value);
+}
+
+void MCExpression::eval_point(MCExecContext& ctxt, MCPoint& r_value)
+{
+	eval_typed(ctxt, kMCExecValueTypePoint, &r_value);
+}
+
+void MCExpression::eval_color(MCExecContext& ctxt, MCColor& r_value)
+{
+	eval_typed(ctxt, kMCExecValueTypeColor, &r_value);
+}
+
+void MCExpression::eval_rectangle(MCExecContext& ctxt, MCRectangle& r_value)
+{
+	eval_typed(ctxt, kMCExecValueTypeRectangle, &r_value);
 }
 
 void MCExpression::initpoint(MCScriptPoint &sp)
@@ -648,6 +764,7 @@ Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
+#if /* MCFuncref::eval */ LEGACY_EXEC
 Exec_stat MCFuncref::eval(MCExecPoint &ep)
 {
 	MCExecContext ctxt(ep);
@@ -784,7 +901,7 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 		if (added)
 			MCnexecutioncontexts--;
 	}
-	
+     
 	// MW-2007-08-09: [[ Bug 5705 ]] Throws inside private functions don't trigger an
 	//   exception.
 	if (stat != ES_NORMAL && stat != ES_PASS && stat != ES_EXIT_HANDLER)
@@ -794,8 +911,32 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 	}
 
 	MCresult->eval(ep);
-
+    
 	return ES_NORMAL;
+}
+#endif
+
+void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, name, line, pos, platform_message, true);
+    
+    Exec_stat stat = ctxt . GetExecStat();
+    
+   	// MW-2007-08-09: [[ Bug 5705 ]] Throws inside private functions don't trigger an
+	//   exception.
+	if (stat != ES_NORMAL && stat != ES_PASS && stat != ES_EXIT_HANDLER)
+	{
+		ctxt . LegacyThrow(EE_FUNCTION_BADFUNCTION, name);
+		return;
+	}
+
+	if (MCresult->eval(ctxt, r_value . valueref_value))
+	{
+        r_value . type = kMCExecValueTypeValueRef;
+		return;
+    }
+    
+    ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

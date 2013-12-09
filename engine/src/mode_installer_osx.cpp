@@ -129,7 +129,7 @@ void MCSystemRequestUserAttention(void)
 }
 
 // MM-2011-04-04: Added prototype.
-void MCSystemBalloonNotification(const char *p_title, const char *p_message)
+void MCSystemBalloonNotification(MCStringRef p_title, MCStringRef p_message)
 {
 }
 

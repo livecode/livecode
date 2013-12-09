@@ -473,7 +473,7 @@ public:
 
 
 	// Various helper functions
-    
+#ifdef LEGACY_EXEC
 	static bool ParseColor(MCExecPoint& ep, uint16_t &r_red, uint16_t &r_green, uint16_t &r_blue, uint16_t &r_alpha);
 	static bool FormatColor(MCExecPoint& ep, uint16_t p_red, uint16_t p_green, uint16_t p_blue, uint16_t p_alpha);
     
@@ -500,7 +500,7 @@ public:
     
     static bool ParseRange(MCExecPoint &ep, uint32_t &r_start, uint32_t &r_length);
     static bool FormatRange(MCExecPoint &ep, uint32_t p_start, uint32_t p_length);
-
+#endif
     // MM-2012-02-22: Clean up all controls
     static void Finalize(void);
 
@@ -529,6 +529,8 @@ private:
 void MCNativeControlInitialize(void);
 void MCNativeControlFinalize(void);
 
+#ifdef LEGACY_EXEC
 bool MCExecPointSetRect(MCExecPoint &ep, int2 p_left, int2 p_top, int2 p_right, int2 p_bottom);
+#endif
 
 #endif // __MC_MOBILE_CONTROL__

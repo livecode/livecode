@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "tooltip.h"
@@ -66,6 +66,43 @@ MCLicenseParameters MClicenseparameters =
 	10, 10, 50, 10,
 	0,
 	NULL,
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Property tables specific to SERVER mode
+//
+
+MCPropertyInfo MCObject::kModeProperties[] =
+{
+};
+
+MCObjectPropertyTable MCObject::kModePropertyTable =
+{
+	nil,
+	0,
+	nil,
+};
+
+MCPropertyInfo MCStack::kModeProperties[] =
+{
+};
+
+MCObjectPropertyTable MCStack::kModePropertyTable =
+{
+	nil,
+	0,
+	nil,
+};
+
+MCPropertyInfo MCProperty::kModeProperties[] =
+{
+};
+
+MCPropertyTable MCProperty::kModePropertyTable =
+{
+	0,
+	nil,
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -93,7 +93,7 @@ MCStringRef MCAdGetInneractiveKey(void)
 
 bool MCAdInneractiveKeyIsNil(void)
 {
-    return s_inneractive_ad_key != nil && MCStringGetLength(s_inneractive_ad_key) != 0;
+    return s_inneractive_ad_key == nil || MCStringIsEmpty(s_inneractive_ad_key);
 }
 
 bool MCAdSetInneractiveKey(MCStringRef p_new_key)

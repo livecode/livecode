@@ -1030,7 +1030,10 @@ uindex_t MCLocaleBreakIteratorAdvance(MCBreakIteratorRef p_iter)
 {
     MCAssert(p_iter != nil);
     
-    return p_iter->m_icu_iter.next();
+    // Advance the iterator and check to see whether it has finished
+    int32_t t_result;
+    t_result = p_iter->m_icu_iter.next();
+    return (t_result == icu::BreakIterator::DONE) ? kMCLocaleBreakIteratorDone : t_result;
 }
 
 

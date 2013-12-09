@@ -305,12 +305,12 @@ static MCExecCustomTypeInfo _kMCInterfaceStackPasswordTypeInfo =
 static MCExecEnumTypeElementInfo _kMCInterfaceStackFullscreenModeElementInfo[] =
 {
 	{"", kMCStackFullscreenResize},
-	{"exact fit", kMCStackFullscreenExactFit},
-	{"show all", kMCStackFullscreenShowAll},
-	{"no border", kMCStackFullscreenNoBorder},
-	{"no scale", kMCStackFullscreenNoScale},
+	{"exactfit", kMCStackFullscreenExactFit},
+	{"showall", kMCStackFullscreenShowAll},
+	{"noborder", kMCStackFullscreenNoBorder},
+	{"noscale", kMCStackFullscreenNoScale},
     
-	{nil, kMCStackFullscreenModeNone},
+	{"", kMCStackFullscreenModeNone, true},
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceStackFullscreenModeTypeInfo =
@@ -2043,7 +2043,7 @@ void MCStack::SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_c
 
 void MCStack::SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
 {
-    MCObject::SetBackColor(ctxt, r_color);
+	MCObject::SetBackColor(ctxt, r_color);
     MCRedrawDirtyScreen();
 }
 
@@ -2154,4 +2154,11 @@ void MCStack::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_st
 {
     MCObject::SetTextStyle(ctxt, p_style);
     MCRedrawDirtyScreen();
+}
+
+void MCStack::GetKey(MCExecContext& ctxt, bool& r_value)
+{
+    // OK-2010-02-11: [[Bug 8610]] - Passkey property more useful if it returns
+    //   whether or not the script is available.
+    r_value = iskeyed();
 }

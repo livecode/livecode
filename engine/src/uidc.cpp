@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "param.h"
 #include "globals.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "object.h"
 #include "stack.h"
 #include "card.h"
@@ -1432,11 +1432,11 @@ Boolean MCUIDC::parsecolor(MCStringRef s, MCColor& color, MCStringRef *cname)
 	}
 	
 	int2 i1, i2, i3;
-	Boolean done;
-    char *temp;
-    /* UNCHECKED */ MCStringConvertToCString(s, temp);
-	const char *sptr = temp;
-	uint4 l = MCStringGetLength(s);
+    Boolean done;
+    MCAutoPointer<char> temp;
+    /* UNCHECKED */ MCStringConvertToCString(s, &temp);
+    const char *sptr = *temp;
+    uint4 l = strlen(sptr);
 	
 	// check for numeric first argument
 	i1 = MCU_strtol(sptr, l, ',', done);
@@ -1528,11 +1528,13 @@ Boolean MCUIDC::parsecolors(const MCString &s, MCColor *colors,
 }
 #endif
 
+#ifdef LEGACY_EXEC
 Boolean MCUIDC::getcolors(MCExecPoint &ep)
 {
 		ep.setstaticcstring("fixed");
 		return True;
 }
+#endif
 
 #ifdef LEGACY_EXEC
 Boolean MCUIDC::setcolors(const MCString &values)

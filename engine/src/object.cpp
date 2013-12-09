@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
@@ -748,21 +748,23 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
 		if (stat == ES_NOT_HANDLED && !handler.getpass())
 		{
             MCAutoStringRef t_mptr_string;
-            t_mptr_string = MCNameGetString(mptr);
+            MCStringRef t_mptr_name;
+            t_mptr_name = MCNameGetString(mptr);
             
 			if (params != nil)
-			{
-				MCExecPoint ep(this, NULL, NULL);
-				params->eval(ep);
+            {
+                MCExecContext ctxt(this, nil, nil);
+                MCAutoValueRef t_value_valueref;
+				/* UNCHECKED */ params->eval(ctxt, &t_value_valueref);
                 MCAutoStringRef t_value;
-				ep . copyasstringref(&t_value);
-				MCStringFormat(&t_mptr_string, "%@ %@", mptr, *t_value);
+                /* UNCHECKED */ ctxt . ConvertToString(*t_value_valueref, &t_value);
+                MCStringFormat(&t_mptr_string, "%@ %@", t_mptr_name, *t_value);
 			}
 
 			MCHandler *t_handler;
 			t_handler = findhandler(HT_MESSAGE, mptr);
 			if (t_handler == NULL || !t_handler -> isprivate())
-				domess(*t_mptr_string);
+				domess(*t_mptr_string != nil ? *t_mptr_string : t_mptr_name);
 
 		}
 		if (stat == ES_ERROR && !MCNameIsEqualTo(mptr, MCM_error_dialog, kMCCompareCaseless))
@@ -831,15 +833,14 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 	
 	scriptdepth++;
 	if (scriptdepth == 255)
-		MCfreescripts = False; // prevent recursion wrap
-	MCExecPoint ep(this, hlist, hptr);
-	MCExecContext ctxt(ep);
+        MCfreescripts = False; // prevent recursion wrap
+    MCExecContext ctxt(this, hlist, hptr);
 	if (MCtracestackptr != NULL && MCtracereturn)
 	{
 		Boolean oldtrace = MCtrace;
 		if (MCtracestackptr == getstack())
 			MCtrace = True;
-		stat = hptr->exec(ep, params);
+		stat = hptr->exec(ctxt, params);
 		if (MCtrace && !oldtrace)
 		{
 			MCB_done(ctxt);
@@ -847,23 +848,24 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 		}
 	}
 	else
-		stat = hptr->exec(ep, params);
+		stat = hptr->exec(ctxt, params);
 	if (stat == ES_ERROR)
 	{
 		// MW-2011-06-23: [[ SERVER ]] If the handler has a file index, it
 		//   isn't attached to an object. So record the error slightly
 		//   differently.
 		if (hptr -> getfileindex() == 0)
-		{
-			MCExecPoint ep(this, NULL, NULL);
-			getprop(0, P_LONG_ID, ep, False);
-			MCeerror->add(EE_OBJECT_NAME, 0, 0, ep.getsvalue());
+        {
+            MCExecContext ctxt(this, nil, nil);
+            MCAutoStringRef t_id;
+			getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+            MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 		}
 		else
 		{
-			char t_buffer[U2L];
-			sprintf(t_buffer, "%u", hptr -> getfileindex());
-			MCeerror -> add(EE_SCRIPT_FILEINDEX, 0, 0, t_buffer);
+            MCAutoStringRef t_error;
+            MCStringFormat(&t_error, "%u", hptr -> getfileindex());
+            MCeerror -> add(EE_SCRIPT_FILEINDEX, 0, 0, *t_error);
 		}
 	}
 	scriptdepth--;
@@ -892,15 +894,14 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 	if (t_parentscript_object->scriptdepth == 255)
 		MCfreescripts = False; // prevent recursion wrap
 
-	MCExecPoint ep(this, t_parentscript_object -> hlist, hptr);
-	MCExecContext ctxt(ep);
-	ep.setparentscript(parentscript);
+    MCExecContext ctxt(this, t_parentscript_object -> hlist, hptr);
+	ctxt.SetParentScript(parentscript);
 	if (MCtracestackptr != NULL && MCtracereturn)
 	{
 		Boolean oldtrace = MCtrace;
 		if (MCtracestackptr == getstack())
 			MCtrace = True;
-		stat = hptr->exec(ep, params);
+		stat = hptr->exec(ctxt, params);
 		if (MCtrace && !oldtrace)
 		{
 			MCB_done(ctxt);
@@ -908,12 +909,13 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 		}
 	}
 	else
-		stat = hptr->exec(ep, params);
+		stat = hptr->exec(ctxt, params);
 	if (stat == ES_ERROR)
-	{
-		MCExecPoint ep(this, NULL, NULL);
-		parentscript -> GetParent() -> GetObject() -> getprop(0, P_LONG_ID, ep, False);
-		MCeerror->add(EE_OBJECT_NAME, 0, 0, ep.getsvalue());
+    {
+        MCExecContext ctxt(this, nil, nil);
+        MCAutoStringRef t_id;
+        parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+        MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 	}
 	scriptdepth--;
 	t_parentscript_object->scriptdepth--;
@@ -1201,9 +1203,10 @@ void MCObject::setstate(Boolean on, uint4 newstate)
 
 Exec_stat MCObject::setsprop(Properties which, MCStringRef s)
 {
-	MCExecPoint ep(this, NULL, NULL);
-	ep.setvalueref(s);
-	return setprop(0, which, ep, False);
+    MCExecContext ctxt(this, nil, nil);
+    setstringprop(ctxt, 0, which, False, s);
+    
+    return ctxt . HasError() ? ES_ERROR : ES_NORMAL;
 }
 
 void MCObject::help()
@@ -2039,11 +2042,12 @@ void MCObject::senderror()
 {
 	MCAutoStringRef t_perror;
 	if (!MCperror->isempty())
-	{
-		MCExecPoint ep(this, NULL, NULL);
-		MCerrorptr->getprop(0, P_LONG_ID, ep, False);
+    {
+        MCExecContext ctxt(this, nil, nil);
+        MCAutoStringRef t_id;
+		MCerrorptr->getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
 		MCperror->add
-		(PE_OBJECT_NAME, 0, 0, ep.getsvalue());
+        (PE_OBJECT_NAME, 0, 0, *t_id);
 		/* UNCHECKED */ MCperror->copyasstringref(&t_perror);
 		MCperror->clear();
 	}
@@ -2062,20 +2066,23 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 	    {
 	        "undefined", "message", "function", "getprop", "setprop"
 	    };
-	MCmessagemessages = False;
-	MCExecPoint ep(this, NULL, NULL);
-	MCresult->eval(ep);
+    MCmessagemessages = False;
+
+    MCExecContext ctxt(this, nil, nil);
+    MCAutoValueRef t_value;
+	MCresult->eval(ctxt, &t_value);
 
 	if (h)
 		message_with_valueref_args(MCM_message_handled, MCSTR(htypes[htype]), m);
 	else
 		message_with_valueref_args(MCM_message_not_handled, MCSTR(htypes[htype]), m);
 
-	MCresult->set(ep);
+	MCresult->set(ctxt, *t_value);
 
 	MCmessagemessages = True;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::names_old(Properties which, MCExecPoint& ep, uint32_t parid)
 {
 	MCAutoValueRef t_name;
@@ -2085,11 +2092,11 @@ Exec_stat MCObject::names_old(Properties which, MCExecPoint& ep, uint32_t parid)
 	/* CHECK MCERROR */
 	return ES_ERROR;
 }
+#endif
 
 bool MCObject::names(Properties which, MCValueRef& r_name_val)
 {
-	MCStringRef &r_name = (MCStringRef&)
-	r_name_val;
+	MCStringRef &r_name = (MCStringRef&)r_name_val;
 	
 	const char *itypestring = gettypestring();
 	MCAutoPointer<char> tmptypestring;
@@ -2225,10 +2232,11 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 			{
 				hashandlers |= HH_DEAD_SCRIPT;
 				if (report && parent != NULL)
-				{
-					MCExecPoint ep(this, NULL, NULL);
-					getprop(0, P_LONG_ID, ep, False);
-					MCperror->add(PE_OBJECT_NAME, 0, 0, ep.getsvalue());
+                {
+                    MCExecContext ctxt(this, nil, nil);
+                    MCAutoStringRef t_id;
+					getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+                    MCperror->add(PE_OBJECT_NAME, 0, 0, *t_id);
 					MCAutoStringRef t_string;
 					/* UNCHECKED */ MCperror->copyasstringref(&t_string);
 					message_with_valueref_args(MCM_script_error, *t_string);
@@ -2546,11 +2554,12 @@ Exec_stat MCObject::domess(MCStringRef sptr)
 	MCObject *oldtargetptr = MCtargetptr;
 	MCtargetptr = this;
 	MCHandler *hptr;
-	handlist->findhandler(HT_MESSAGE, MCM_message, hptr);
-	MCExecPoint ep(this, handlist, hptr);
+    handlist->findhandler(HT_MESSAGE, MCM_message, hptr);
+
+    MCExecContext ctxt(this, handlist, hptr);
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
-	Exec_stat stat = hptr->exec(ep, NULL);
+	Exec_stat stat = hptr->exec(ctxt, NULL);
 	MClockerrors = oldlock;
 	delete handlist;
 	MCtargetptr = oldtargetptr;
@@ -2587,7 +2596,7 @@ void MCObject::eval(MCExecContext &ctxt, MCStringRef p_script, MCValueRef &r_val
 	Boolean oldlock = MClockerrors;
 	MClockerrors = True;
 	
-	if (hptr->exec(ctxt.GetEP(), NULL) != ES_NORMAL)
+	if (hptr->exec(ctxt, NULL) != ES_NORMAL)
 	{
 		r_value = MCSTR("Error parsing expression\n");
 		ctxt.Throw();

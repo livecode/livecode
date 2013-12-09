@@ -25,6 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "objectstream.h"
 #include "util.h"
+#include "variable.h"
 
 #include "exec.h"
 

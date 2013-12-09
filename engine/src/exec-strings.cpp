@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 #include "handler.h"
+#include "variable.h"
 #include "hndlrlst.h"
 
 #include "scriptpt.h"
@@ -1373,38 +1374,38 @@ bool MCWildcardMatcher::match(MCStringRef s)
 	return MCStringsExecWildcardMatch(s, pattern, casesensitive);
 }
 
-MCStringRef MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, bool p_without, char_t p_delimiter, MCPatternMatcher *p_matcher)
+void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, bool p_without, char_t p_delimiter, MCPatternMatcher *p_matcher, MCStringRef &r_result)
 {
 	uint32_t t_length = MCStringGetLength(p_source);
 	if (t_length == 0)
-		return kMCEmptyString;
+        MCStringCopy(kMCEmptyString, r_result);
 
 	uint4 offset = 0;
-	MCStringRef t_output;
-	MCStringCreateMutable(0, t_output);
+    MCAutoStringRef t_output;
+    MCStringCreateMutable(0, &t_output);
 
 	// OK-2010-01-11: Bug 7649 - Filter command was incorrectly removing empty lines.
 	// Now ignores delimiter for matching but includes it in the append.
 
 	uindex_t t_return_offset = 0;
-	uindex_t t_last_offset = 0;
-	MCStringRef t_line;
+    uindex_t t_last_offset = 0;
 	bool t_found = true;
     bool t_success = true;
 	while (t_found && t_success)
 	{
+        MCAutoStringRef t_line;
 		t_found = MCStringFirstIndexOfChar(p_source, p_delimiter, t_last_offset, kMCCompareCaseless, t_return_offset);
 		if (!t_found) //last line or item
-			t_success = MCStringCopySubstring(p_source, MCRangeMake(t_last_offset, t_length - t_last_offset), t_line);
+            t_success = MCStringCopySubstring(p_source, MCRangeMake(t_last_offset, t_length - t_last_offset), &t_line);
 		else
-			t_success = MCStringCopySubstring(p_source, MCRangeMake(t_last_offset, t_return_offset - t_last_offset), t_line);
+            t_success = MCStringCopySubstring(p_source, MCRangeMake(t_last_offset, t_return_offset - t_last_offset), &t_line);
         
-		if (t_success && p_matcher -> match(t_line) != p_without)
+        if (t_success && p_matcher -> match(*t_line) != p_without)
 		{
 			if (!t_found)
-				t_success = MCStringAppend(t_output, t_line);
+                t_success = MCStringAppend(*t_output, *t_line);
 			else
-				t_success = MCStringAppendSubstring(t_output, p_source, MCRangeMake(t_last_offset, 1 + t_return_offset - t_last_offset));
+                t_success = MCStringAppendSubstring(*t_output, p_source, MCRangeMake(t_last_offset, 1 + t_return_offset - t_last_offset));
 		}
 		t_last_offset = t_return_offset + 1;
 	}
@@ -1413,12 +1414,12 @@ MCStringRef MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_sour
     {
         // IM-2013-07-26: [[ Bug 10774 ]] if filterlines fails throw a "no memory" error
         ctxt . LegacyThrow(EE_NO_MEMORY);
-        return kMCEmptyString;
+        MCStringCopy(kMCEmptyString, r_result);
     }
-    else if (MCStringGetLength(t_output) != 0)
-		return t_output;
+    else if (MCStringGetLength(*t_output) != 0)
+        MCStringCopy(*t_output, r_result);
 	else
-		return kMCEmptyString;
+        MCStringCopy(kMCEmptyString, r_result);
 }
 
 void MCStringsExecFilterWildcard(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCStringRef &r_result)
@@ -1427,7 +1428,7 @@ void MCStringsExecFilterWildcard(MCExecContext& ctxt, MCStringRef p_source, MCSt
 	MCPatternMatcher *matcher;
     matcher = new MCWildcardMatcher(p_pattern, ctxt . GetCaseSensitive());
     
-	MCStringCopy(MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), matcher), r_result);
+    MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), matcher, r_result);
 }
 
 void MCStringsExecFilterRegex(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCStringRef &r_result)
@@ -1443,7 +1444,7 @@ void MCStringsExecFilterRegex(MCExecContext& ctxt, MCStringRef p_source, MCStrin
         return;
     }
     
-	MCStringCopy(MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), matcher), r_result);
+    MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), matcher, r_result);
 }
 
 void MCStringsExecFilterWildcardIntoIt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines)

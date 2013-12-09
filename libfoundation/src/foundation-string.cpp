@@ -525,6 +525,7 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 					t_arg_count -= 1;
 				}
 					
+            MCMemoryDeallocate(t_string);
 			free(t_format);
 		}
 		
@@ -952,11 +953,15 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
         
         // Find the next boundary
         t_boundary = MCLocaleBreakIteratorAdvance(t_iter);
-        if (t_boundary == 0)
+        if (t_boundary == kMCLocaleBreakIteratorDone)
         {
-            // Something went wrong
+            // Ran out of string to process
             MCLocaleBreakIteratorRelease(t_iter);
-            return false;
+            if (t_counter < p_in_range.offset)
+                t_units = MCRangeMake(self -> char_count, 0);
+            else
+                t_units.length = self -> char_count - t_units.offset;
+            break;
         }
         
         // Have we found the end of the requested grapheme range?
@@ -2448,7 +2453,7 @@ void __MCStringDestroy(__MCString *self)
 
 bool __MCStringCopyDescription(__MCString *self, MCStringRef& r_desc)
 {
-	return MCStringFormat(r_desc, "\"%s\"", self -> chars);
+	return MCStringFormat(r_desc, "\"%@\"", self);
 }
 
 hash_t __MCStringHash(__MCString *self)
@@ -2650,6 +2655,7 @@ static bool __MCStringIsValidSurrogatePair(MCStringRef self, uindex_t p_index)
 MCStringRef kMCEmptyString;
 MCStringRef kMCTrueString;
 MCStringRef kMCFalseString;
+MCStringRef kMCMixedString;
 
 bool __MCStringInitialize(void)
 {
@@ -2660,6 +2666,9 @@ bool __MCStringInitialize(void)
 		return false;
 
 	if (!MCStringCreateWithNativeChars((const char_t *)"false", 5, kMCFalseString))
+		return false;
+    
+    if (!MCStringCreateWithNativeChars((const char_t *)"mixed", 5, kMCMixedString))
 		return false;
 
 	return true;
@@ -2673,6 +2682,8 @@ void __MCStringFinalize(void)
 	kMCTrueString = nil;
 	MCValueRelease(kMCEmptyString);
 	kMCEmptyString = nil;
+    MCValueRelease(kMCMixedString);
+    kMCMixedString = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

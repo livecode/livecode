@@ -63,7 +63,7 @@ void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		ctxt.GetEP().setline(p_line);
+		ctxt.SetLine(p_line);
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
@@ -215,7 +215,7 @@ void MCDebuggingGetDebugContext(MCExecContext& ctxt, MCStringRef& r_value)
 		t_success = MCListAppend(*t_list, MCexecutioncontexts[MCdebugcontext]->GetHandler()->getname());
 
 	if (t_success)
-		t_success = MCListAppendInteger(*t_list, MCexecutioncontexts[MCdebugcontext]->GetEP().getline());
+        t_success = MCListAppendInteger(*t_list, MCexecutioncontexts[MCdebugcontext] -> GetLine());
 	
 	if (t_success)
 		t_success = MCListCopyAsString(*t_list, r_value);
@@ -256,7 +256,7 @@ void MCDebuggingSetDebugContext(MCExecContext& ctxt, MCStringRef p_value)
 			for (uint2 i = 0; i < MCnexecutioncontexts; i++)
 			{
 				if (MCexecutioncontexts[i] -> GetObject() == t_object . object && 
-					MCexecutioncontexts[i] -> GetEP().getline() == t_line)
+                    MCexecutioncontexts[i] -> GetLine() == t_line)
 				{
 					MCdebugcontext = i;
 					break;
@@ -315,7 +315,7 @@ void MCDebuggingGetExecutionContexts(MCExecContext& ctxt, MCStringRef& r_value)
 			if (t_success)
 			{
 				MCAutoStringRef t_line;
-				t_success = MCStringFormat(&t_line, "%d", MCexecutioncontexts[i]->GetEP().getline()) &&
+                t_success = MCStringFormat(&t_line, "%d", MCexecutioncontexts[i] -> GetLine()) &&
 							MCListAppend(*t_context, *t_line);
 			}
 			

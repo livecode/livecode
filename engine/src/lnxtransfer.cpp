@@ -24,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 
 #include "transfer.h"
-#include "execpt.h" 
+//#include "execpt.h" 
 #include "exec.h" 
 #include "dispatch.h"
 #include "image.h"

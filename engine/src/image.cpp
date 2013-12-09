@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "undolst.h"
 #include "sellst.h"
@@ -618,6 +618,7 @@ void MCImageSetMask(MCImageBitmap *p_bitmap, uint8_t *p_mask_data, uindex_t p_ma
 	MCImageBitmapCheckTransparency(p_bitmap);
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	uint2 i;
@@ -878,7 +879,9 @@ Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 	}
 	return ES_NORMAL;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = False;
@@ -1282,6 +1285,7 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	}
 	return ES_NORMAL;
 }
+#endif
 
 void MCImage::select()
 {
@@ -2596,6 +2600,7 @@ uint32_t MCImage::getcompression()
 	return t_compression;
 }
 
+#ifdef LEGACY_EXEC
 MCString MCImage::getrawdata()
 {
 	if (m_rep == nil || m_rep->GetType() != kMCImageRepResident)
@@ -2606,6 +2611,21 @@ MCString MCImage::getrawdata()
 	static_cast<MCResidentImageRep*>(m_rep)->GetData(t_data, t_size);
 	
 	return MCString((char*)t_data, t_size);
+}
+#endif 
+
+void MCImage::getrawdata(MCDataRef& r_data)
+{
+ 	if (m_rep == nil || m_rep->GetType() != kMCImageRepResident)
+    {
+        r_data = MCValueRetain(kMCEmptyData);
+    }
+	
+	void *t_data;
+	uindex_t t_size;
+	static_cast<MCResidentImageRep*>(m_rep)->GetData(t_data, t_size);
+	
+	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)t_data, t_size, r_data);
 }
 
 bool MCImage::getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)

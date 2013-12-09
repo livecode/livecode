@@ -93,10 +93,12 @@ public:
 	virtual void setrect(const MCRectangle &nrect);
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
+#ifdef LEGACY_EXEC
 	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
+#endif
 
 	// virtual functions from MCControl
 	IO_stat load(IO_handle stream, const char *version);
@@ -150,10 +152,8 @@ public:
 	void DoGetLabel(MCExecContext& ctxt, bool to_unicode, bool effective, MCStringRef r_string);
 	void DoSetLabel(MCExecContext& ctxt, bool to_unicode, MCStringRef p_label);
     
-    void DoGetGradientFillArray(MCExecContext& ctxt, MCGradientFill *p_fill, MCArrayRef& r_array);
-    void DoSetGradientFillArray(MCExecContext& ctxt, MCGradientFill *p_fill, Draw_index p_di, MCArrayRef p_array);
-    void DoGetGradientFillElement(MCExecContext& ctxt, MCGradientFill *p_fill, MCNameRef p_prop, MCValueRef& r_value);
-    void DoSetGradientFillElement(MCExecContext& ctxt, MCGradientFill *p_fill, Draw_index p_di, MCNameRef p_prop, MCValueRef p_value);
+    void DoGetGradientFill(MCExecContext& ctxt, MCGradientFill*& p_fill, MCNameRef p_prop, MCExecValue& r_value);
+    void DoSetGradientFill(MCExecContext& ctxt, MCGradientFill*& p_fill, Draw_index p_di, MCNameRef p_prop, MCExecValue p_value);
     
     void DoCopyPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points, uindex_t& r_count, MCPoint*& r_points);
 
@@ -212,14 +212,10 @@ public:
 	void GetFilled(MCExecContext& ctxt, bool& r_setting);
 	void SetFilled(MCExecContext& ctxt, bool setting);
     
-    void GetGradientFill(MCExecContext& ctxt, MCArrayRef& r_array);
-    void SetGradientFill(MCExecContext& ctxt, MCArrayRef p_array);
-    void GetGradientFillElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
-    void SetGradientFillElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
-    void GetGradientStroke(MCExecContext& ctxt, MCArrayRef& r_array);
-    void SetGradientStroke(MCExecContext& ctxt, MCArrayRef p_array);
-    void GetGradientStrokeElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
-    void SetGradientStrokeElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
+    void GetGradientFillProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue& r_value);
+    void SetGradientFillProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue p_value);
+    void GetGradientStrokeProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue& r_value);
+    void SetGradientStrokeProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue p_value);
     
     void GetMarkerPoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points);
     void SetMarkerPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points);
@@ -229,5 +225,10 @@ public:
     void SetPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points);
     void GetRelativePoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points);
     void SetRelativePoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points);
+    
+    virtual void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+    virtual void SetForePattern(MCExecContext& ctxt, uinteger_t* pattern);
+    virtual void SetBackPattern(MCExecContext& ctxt, uinteger_t* pattern);
 };
 #endif

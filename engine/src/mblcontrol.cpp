@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -496,6 +496,7 @@ bool MCNativeControl::CreateWithType(MCNativeControlType p_type, MCNativeControl
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef LEGACY_EXEC
 bool MCExecPointSetRect(MCExecPoint &ep, int2 p_left, int2 p_top, int2 p_right, int2 p_bottom)
 {
 	char *t_buffer = nil;
@@ -793,6 +794,7 @@ bool MCNativeControl::FormatRange(MCExecPoint &ep, uint32_t p_start, uint32_t p_
     
     return true;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

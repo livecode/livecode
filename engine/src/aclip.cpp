@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "date.h"
 #include "sellst.h"
@@ -189,11 +189,11 @@ void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
 			delete this;
 	}
 }
-
+ #ifdef LEGACY_EXEC
 Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	switch (which)
-	{
+    {
 #ifdef /* MCAudioClip::getprop */ LEGACY_EXEC
 	case P_SIZE:
 		ep.setint(size);
@@ -253,21 +253,23 @@ Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint
 		}
 		else
 			ep.setint(loudness);
-		break;
+        break;
 #endif /* MCAudioClip::getprop */
 	default:
 		return MCObject::getprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
+#endif
 
+#ifdef LEGACY_EXEC
 Exec_stat MCAudioClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	int2 i1;
 	MCString data = ep.getsvalue();
 
 	switch (p)
-	{
+    {
 #ifdef /* MCAudioClip::setprop */ LEGACY_EXEC
 	case P_PLAY_DESTINATION:
 	case P_PLAY_LOUDNESS:
@@ -340,13 +342,14 @@ Exec_stat MCAudioClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep
 #endif
 
 		}
-		return ES_NORMAL;
+        return ES_NORMAL;
 #endif /* MCAudioClip::setprop */
 	default:
 		break;
 	}
 	return MCObject::setprop_legacy(parid, p, ep, effective);
 }
+#endif
 
 Boolean MCAudioClip::del()
 {
@@ -370,8 +373,9 @@ void MCAudioClip::init()
 #endif
 	if (supported)
 	{
-		MCExecPoint ep;
-		getprop(0, P_PLAY_LOUDNESS, ep, False);
+        uinteger_t t_loudness;
+        MCExecContext ctxt(nil, nil, nil);
+		getuintprop(ctxt, 0, P_PLAY_LOUDNESS, False, t_loudness);
 	}
 }
 
@@ -608,7 +612,7 @@ Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
 	}
     uindex_t t_sep;
     MCStringRef t_fname;
-    if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, 0, kMCCompareExact, t_sep))
+    if (MCStringLastIndexOfChar(fname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_sep))
         /* UNCHECKED */ MCStringCopySubstring(fname, MCRangeMake(t_sep + 1, MCStringGetLength(fname) - (t_sep + 1)), t_fname);
     else
         t_fname = MCValueRetain(fname);

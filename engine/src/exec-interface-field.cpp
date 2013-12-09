@@ -595,8 +595,8 @@ void MCField::GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width)
 {
 	if (opened)
 	{
-		r_width = textwidth + rect.width - getfwidth()
-		          + leftmargin + rightmargin
+		uint2 fwidth = getfwidth();
+		r_width = textwidth + rect.width - fwidth + leftmargin + rightmargin
 		          + (flags & F_VSCROLLBAR ? (flags & F_DONT_WRAP ? 0 : -vscrollbar->getrect().width) : 0);
 	}
 	else
@@ -998,12 +998,8 @@ void MCField::SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInt
 		p_part = 0;
     
     // First ensure the flagged property is false along the whole range.   
-    MCExecPoint ep(nil, nil, nil);
-    ep . setboolean(False);
-    settextatts(p_part, P_FLAGGED, ep, nil, si, ei, false);
-    // All remaining ranges will have flagged set to true.
-    ep . setboolean(True);
-    
+    SetFlaggedOfCharChunk(ctxt, p_part, si, ei, false);
+    // All remaining ranges will have flagged set to true.    
     for (uindex_t i = 0; i < p_ranges . count; i++)
     {
         // MW-2012-02-24: [[ FieldChars ]] Convert char indices to field indices.
@@ -1014,7 +1010,7 @@ void MCField::SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInt
         
         // MW-2012-03-23: [[ Bug 10118 ]] Both range_start and range_end are already
         //   offset from the start of the field.
-        settextatts(p_part, P_FLAGGED, ep, nil, MCU_max(si, t_range_start), MCU_min(ei, t_range_end), false);
+        SetFlaggedOfCharChunk(ctxt, p_part, MCU_max(si, t_range_start), MCU_min(ei, t_range_end), true);
     }
 }
 

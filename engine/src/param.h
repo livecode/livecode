@@ -66,19 +66,33 @@ public:
 	void clear_argument(void);
 
 	// Evaluate the value *stored* in the parameter - i.e. Used by
-	// the callee in a function/command invocation.
-	Exec_stat eval_argument(MCExecPoint& ep);
-	MCVariable *eval_argument_var(void);
+    // the callee in a function/command invocation.
+#ifdef LEGACY_EXEC
+    Exec_stat eval_argument(MCExecPoint& ep);
+#endif
+    MCVariable *eval_argument_var(void);
+
+    bool eval_argument(MCExecContext& ctxt, MCValueRef &r_value);
 
 	// Set the value of the parameter to be used by the callee.
+    void set_argument(MCExecContext& ctxt, MCValueRef p_value);
+#ifdef LEGACY_EXEC
 	void set_argument(MCExecPoint& ep);
+#endif
 	void set_argument_var(MCVariable* var);
 
 	// Evaluate the value of the given parameter in the context of
 	// <ep>.
+#ifdef LEGACY_EXEC
 	Exec_stat eval(MCExecPoint& ep);
+
 	Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
 	MCVariable *evalvar(MCExecPoint& ep);
+#endif
+
+    bool eval(MCExecContext& ctxt, MCValueRef &r_value);
+    bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
+    MCVariable *evalvar(MCExecContext& ctxt);
 
 	Parse_stat parse(MCScriptPoint &);
 

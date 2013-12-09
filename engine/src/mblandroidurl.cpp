@@ -160,9 +160,8 @@ bool MCSystemPostUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCS
 
 	if (t_success)
 	{
-		MCString t_data = MCDataGetOldString(p_data);
 		MCAndroidEngineCall("setURLTimeout", "vi", nil, (int32_t)MCsockettimeout);
-		MCAndroidEngineCall("postURL", "bixxd", &t_success, t_info->id, p_url, MChttpheaders, &t_data);
+		MCAndroidEngineCall("postURL", "bixxd", &t_success, t_info->id, p_url, MChttpheaders, p_data);
 	}
 
 	return t_success;
@@ -179,9 +178,8 @@ bool MCSystemPutUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSy
     {
         t_info->upload_byte_count = p_length;
         
-		MCString t_data = MCDataGetOldString(p_data);
         MCAndroidEngineCall("setURLTimeout", "vi", nil, (int32_t)MCsockettimeout);
-        MCAndroidEngineCall("putURL", "bixxd", &t_success, t_info->id, p_url, MChttpheaders, &t_data);
+        MCAndroidEngineCall("putURL", "bixxd", &t_success, t_info->id, p_url, MChttpheaders, p_data);
     }
     
     return t_success;

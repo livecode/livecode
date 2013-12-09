@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -112,9 +112,11 @@ UIView *MCiOSControl::GetView(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
 #define MCColorComponentToFloat(c) ((c) / 65535.0)
 #define MCFloatToColorComponent(f) ((f) * 65535)
 
+#ifdef LEGACY_EXEC
 Exec_stat MCiOSControl::ParseColor(MCExecPoint& ep, UIColor*& r_color)
 {
 	float t_red, t_green, t_blue, t_alpha;
@@ -138,6 +140,7 @@ Exec_stat MCiOSControl::ParseColor(MCExecPoint& ep, UIColor*& r_color)
 	
 	return ES_NORMAL;
 }
+#endif
 
 bool MCiOSControl::ParseColor(const MCNativeControlColor& p_color, UIColor*& r_color)
 {
@@ -153,6 +156,7 @@ bool MCiOSControl::ParseColor(const MCNativeControlColor& p_color, UIColor*& r_c
 	return true;
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCiOSControl::FormatColor(MCExecPoint& ep, UIColor *p_color)
 {
 	CGColorRef t_bgcolor;
@@ -177,6 +181,7 @@ Exec_stat MCiOSControl::FormatColor(MCExecPoint& ep, UIColor *p_color)
 	
 	return ES_NORMAL;
 }
+#endif
 
 bool MCiOSControl::FormatColor(const UIColor* p_color, MCNativeControlColor& r_color)
 {
@@ -196,6 +201,7 @@ bool MCiOSControl::FormatColor(const UIColor* p_color, MCNativeControlColor& r_c
 	return true;
 }
 
+#ifdef LEGACY_EXEC
 bool MCiOSControl::ParseString(MCExecPoint& ep, NSString*& r_string)
 {
 	r_string = [NSString stringWithCString: ep . getcstring() encoding: NSMacOSRomanStringEncoding];
@@ -255,6 +261,11 @@ bool MCiOSControl::FormatRange(MCExecPoint &ep, NSRange r_range)
 {
     return MCNativeControl::FormatRange(ep, r_range.location + 1, r_range.length);
 }
+#endif
+
+#define MCColorComponentToFloat(c) ((c) / 65535.0)
+#define MCFloatToColorComponent(f) ((f) * 65535)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

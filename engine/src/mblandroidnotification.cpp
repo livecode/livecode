@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "uidc.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "globals.h"
 #include "stack.h"
 
@@ -40,8 +40,7 @@ bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_al
 {
     int64_t t_id = -1;
     int32_t t_seconds;
-    MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
+	MCExecContext ctxt(nil, nil, nil);
     
     MCAutoValueRef t_val;
 	/* UNCHECKED */ MCD_convert_from_datetime(ctxt, p_date, CF_SECONDS, CF_UNDEFINED, &t_val);

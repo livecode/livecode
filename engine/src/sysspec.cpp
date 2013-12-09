@@ -24,7 +24,7 @@
 
 #include "param.h"
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "object.h"
 #include "socket.h"
@@ -299,6 +299,7 @@ bool MCS_query_registry(MCStringRef p_key, MCValueRef& r_value, MCStringRef& r_t
 	return MCStringCreateWithCString("not supported", r_error);
 }
 
+#ifdef LEGACY_EXEC
 /* LEGACY */
 void MCS_query_registry(MCExecPoint &dest)
 {
@@ -318,6 +319,7 @@ void MCS_query_registry(MCExecPoint &dest)
 		MCresult->clear();
 	}
 }
+#endif
 
 bool MCS_set_registry(MCStringRef p_key, MCValueRef p_value, MCSRegistryValueType p_type, MCStringRef& r_error)
 {
@@ -1113,18 +1115,20 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 
     if (t_success)
     {
-        MCExecPoint ep(nil, nil, nil);
         MCAutoStringRef t_string;
         
 		t_buffer . Shrink(t_size);
 		t_success = t_buffer . CreateStringAndRelease(&t_string);
         
-        ep . setvalueref(*t_string);
-        ep . texttobinary();
+        MCAutoDataRef t_data;
+        if (t_success)
+            t_success = MCStringEncode(*t_string, kMCStringEncodingNative, false, &t_data);
         
-        t_success = ep.copyasstring(r_text);
+        if (t_success)
+            t_success =  MCStringCreateWithBytes(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), kMCStringEncodingNative, false, r_text);
+        
         MCresult -> clear(False);
-        ep.clear();
+       
     }
 
 	t_file -> Close();
@@ -1212,10 +1216,7 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
     
     // Need to convert the string to a binary string
     MCAutoDataRef t_data;
-    MCExecPoint ep(nil, nil, nil);
-    /* UNCHECKED */ ep . setvalueref(p_string);
-    ep . binarytotext();
-    /* UNCHECKED */ ep . copyasdataref(&t_data);
+    /* UNCHECKED */ MCStringEncode(p_string, kMCStringEncodingNative, false, &t_data);
     
 	if (!t_file -> Write(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data)))
 		MCresult -> sets("error writing file");

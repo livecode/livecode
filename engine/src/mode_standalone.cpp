@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "dispatch.h"
 #include "stack.h"
 #include "tooltip.h"
@@ -110,6 +110,43 @@ MCLicenseParameters MClicenseparameters =
 // We don't include error string in this mode
 const char *MCparsingerrors = "";
 const char *MCexecutionerrors = "";
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Property tables specific to STANDALONE mode
+//
+
+MCPropertyInfo MCObject::kModeProperties[] =
+{
+};
+
+MCObjectPropertyTable MCObject::kModePropertyTable =
+{
+	nil,
+	0,
+	nil,
+};
+
+MCPropertyInfo MCStack::kModeProperties[] =
+{
+};
+
+MCObjectPropertyTable MCStack::kModePropertyTable =
+{
+	nil,
+	0,
+	nil,
+};
+
+MCPropertyInfo MCProperty::kModeProperties[] =
+{
+};
+
+MCPropertyTable MCProperty::kModePropertyTable =
+{
+	0,
+	nil,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -303,8 +340,11 @@ IO_stat MCDispatch::startup(void)
 #else
         MCAutoStringRef t_path;
         uindex_t t_last_slash;
-        /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', 0, kMCCompareExact, t_last_slash);
-        /* UNCHECKED */ MCStringFormat(&t_path, "%.*@/iphone_test.livecode", MCRangeMake(0, t_last_slash), MCcmd);
+        /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_last_slash);
+        // temporary fix until ranged formats for stringrefs is working
+        MCAutoStringRef t_dir;
+        /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_dir);
+        /* UNCHECKED */ MCStringFormat(&t_path, "%@/iphone_test.livecode", *t_dir);
         t_stream = MCS_open(*t_path, kMCSOpenFileModeRead, False, False, 0);
 #endif
 		
@@ -553,6 +593,7 @@ void MCStack::mode_destroy(void)
 {
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
@@ -562,6 +603,7 @@ Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, 
 {
 	return ES_NOT_HANDLED;
 }
+#endif
 
 void MCStack::mode_load(void)
 {
@@ -645,16 +687,17 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 //  Implementation of MCObject::mode_get/setprop for STANDALONE mode.
 //
 
+#ifdef LEGACY_EXEC
 Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCProperty::mode_eval/mode_set for STANDALONE mode.
 //
-
+#ifdef LEGACY_EXEC
 Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 {
 	return ES_NOT_HANDLED;
@@ -664,7 +707,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 {
 	return ES_NOT_HANDLED;
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of mode hooks for STANDALONE mode.

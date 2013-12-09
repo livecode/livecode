@@ -22,7 +22,7 @@
 #include "globdefs.h"
 #include "objdefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "exec.h"
 #include "globals.h"
 #include "system.h"
@@ -476,18 +476,20 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 				char *sptr = new char[rSize + 1];
 				sptr[rSize] = '\0';
 				AEGetParamPtr(aePtr, keyDirectObject, typeChar, &rType, sptr, rSize, &rSize);
-				MCExecPoint ep(MCdefaultstackptr->getcard(), NULL, NULL);
+                MCExecContext ctxt(MCdefaultstackptr -> getcard(), nil, nil);
                 MCAutoStringRef t_sptr;
                 /* UNCHECKED */ MCStringCreateWithCString(sptr, &t_sptr);
 				if (aeid == kAEDoScript)
 				{
-					MCdefaultstackptr->getcard()->domess(*t_sptr);
-					MCresult->eval(ep);
-					AEPutParamPtr(reply, '----', typeChar, ep.getsvalue().getstring(), ep.getsvalue().getlength());
+                    MCdefaultstackptr->getcard()->domess(*t_sptr);
+                    MCAutoValueRef t_value;
+                    MCAutoDataRef t_data;
+                    /* UNCHECKED */ MCresult->eval(ctxt, &t_value);
+                    /* UNCHECKED */ ctxt . ConvertToData(*t_value, &t_data);
+                    AEPutParamPtr(reply, '----', typeChar, MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data));
 				}
 				else
-				{
-					MCExecContext ctxt(ep);
+                {
 					MCAutoValueRef t_val;
 					MCAutoStringRef t_string;
 					MCdefaultstackptr->getcard()->eval(ctxt, *t_sptr, &t_val);
@@ -5985,8 +5987,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         kFSCatInfoDataSizes |
         kFSCatInfoRsrcSizes |
         kFSCatInfoNodeFlags;
-        
-        MCExecPoint t_tmp_context(NULL, NULL, NULL);
+
         OSErr t_oserror;
         do
         {
@@ -6004,7 +6005,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 char* t_native_name;
                 uint4 t_native_length;
                 t_native_length = 0;
-                MCS_utf16tonative((const unsigned short *)t_names[t_i] . unicode, t_names[t_i] . length, t_native_name, t_native_length);
+                MCS_utf16tonative((const unsigned short *)t_names[t_i] . unicode, t_names[t_i] . length * 2, t_native_name, t_native_length);
                 // MCS_utf16tonative return a non nul-terminated string
                 t_native_name[t_native_length] = '\0';
                 

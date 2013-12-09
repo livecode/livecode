@@ -28,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "handler.h"
 #include "util.h"
 #include "globals.h"
@@ -602,7 +602,7 @@ static pascal OSErr DoAppPreferences(const AppleEvent *theAppleEvent, AppleEvent
 	MCGroup *mb = MCmenubar != NULL ? MCmenubar : MCdefaultmenubar;
 	if (mb == NULL)
 		return errAEEventNotHandled;
-	MCButton *bptr = (MCButton *)mb->findname(CT_MENU, "Edit");
+    MCButton *bptr = (MCButton *)mb->findname(CT_MENU, MCNAME("Edit"));
 	if (bptr == NULL)
 		return errAEEventNotHandled;
 	if (bptr != NULL)

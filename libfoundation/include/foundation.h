@@ -1316,6 +1316,9 @@ extern MCStringRef kMCTrueString;
 // The default string for the 'false' boolean value.
 extern MCStringRef kMCFalseString;
 
+// The default string for the 'mixed' value of chunk properties.
+extern MCStringRef kMCMixedString;
+
 /////////
 
 // Creates an MCStringRef wrapping the given constant c-string. Note that

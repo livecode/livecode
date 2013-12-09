@@ -26,21 +26,21 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "paragraf.h"
 #include "cdata.h"
 #include "mcerror.h"
-#include "execpt.h"
+//#include "execpt.h"
 #include "exec.h"
 #include "util.h"
 #include "MCBlock.h"
 
 #include "globals.h"
 #include "unicode.h"
+#include "exec-interface.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Context for styled text export.
 struct export_styled_text_t
 {
-	// A temporary ep for array manipulation.
-	MCExecPoint ep;
+    //MCExecContext ctxt;
 	// Whether a request was made for effective styles.
 	bool effective;
 	// Whether a request was made for formatted form.
@@ -61,6 +61,118 @@ struct export_styled_text_t
 	
 };
 
+// Copy the styles from the struct into the array.
+static void export_styled_text_paragraph_style(MCArrayRef p_style_array, const MCFieldParagraphStyle& p_style, bool p_effective)
+{
+	if (p_style . has_text_align || p_effective)
+	{
+        MCAutoValueRef t_value;
+		MCF_unparsetextatts(P_TEXT_ALIGN, p_style . text_align << F_ALIGNMENT_SHIFT, nil, 0, 0, 0, &t_value);
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("textAlign"), *t_value);
+	}
+	if (p_style . has_list_style)
+	{
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("listStyle"), MCSTR(MCliststylestrings[p_style . list_style]));
+    
+		// MW-2012-02-22: [[ Bug ]] The listDepth property is stored internally as depth - 1, so adjust.
+        MCAutoNumberRef t_depth;
+        /* UNCHECKED */ MCNumberCreateWithInteger(p_style . list_depth + 1, &t_depth);
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("listDepth"), *t_depth);
+		if (p_style . has_list_indent)
+		{
+            MCAutoNumberRef t_indent;
+            /* UNCHECKED */ MCNumberCreateWithInteger(p_style . list_indent, &t_indent);
+            /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("listIndent"), *t_indent);
+		}
+	}
+	if (!p_style . has_list_indent && (p_style . has_first_indent || p_effective))
+	{
+        MCAutoNumberRef t_first_indent;
+        /* UNCHECKED */ MCNumberCreateWithInteger(p_style . first_indent, &t_first_indent);
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("firstIndent"), *t_first_indent);
+	}
+	if (p_style . has_left_indent || p_effective)
+	{
+        MCAutoNumberRef t_left_indent;
+        /* UNCHECKED */ MCNumberCreateWithInteger(p_style . left_indent, &t_left_indent);
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("leftIndent"), *t_left_indent);
+	}
+	if (p_style . has_list_index)
+	{
+        MCAutoNumberRef t_index;
+        /* UNCHECKED */ MCNumberCreateWithInteger(p_style . list_index, &t_index);
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("listIndex"), *t_index);
+	}
+	if (p_style . has_right_indent || p_effective)
+	{
+        MCAutoNumberRef t_right_indent;
+        /* UNCHECKED */ MCNumberCreateWithInteger(p_style . right_indent, &t_right_indent);
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("rightIndent"), *t_right_indent);
+	}
+	if (p_style . has_space_above || p_effective)
+	{
+        MCAutoNumberRef t_space_above;
+        /* UNCHECKED */ MCNumberCreateWithInteger(p_style . space_above, &t_space_above);
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("spaceAbove"), *t_space_above);
+	}
+	if (p_style . has_space_below || p_effective)
+	{
+        MCAutoNumberRef t_space_below;
+        /* UNCHECKED */ MCNumberCreateWithInteger(p_style . space_below, &t_space_below);
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("spaceBelow"), *t_space_below);
+	}
+	if (p_style . has_tabs || p_effective)
+	{
+        MCAutoStringRef t_string;
+		MCField::formattabstops(P_TAB_STOPS, p_style . tabs, p_style . tab_count, &t_string);
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("tabStops"), *t_string);
+	}
+	if (p_style . has_background_color)
+	{
+        MCAutoStringRef t_string;
+        uint32_t r = (p_style . background_color >> 16) & 0xFF;
+        uint32_t g = (p_style . background_color >> 8) & 0xFF;
+        uint32_t b = (p_style . background_color >> 0) & 0xFF;
+        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("backgroundColor"), *t_string);
+	}
+	if (p_style . has_border_width || p_effective)
+	{
+        MCAutoNumberRef t_border_width;
+        /* UNCHECKED */ MCNumberCreateWithInteger(p_style . border_width, &t_border_width);
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("borderWidth"), *t_border_width);
+    }
+	if (p_style . has_hgrid || p_effective)
+	{
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("hGrid"), p_style . hgrid == True ? kMCTrue : kMCFalse);
+	}
+	if (p_style . has_vgrid || p_effective)
+	{
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("vGrid"), p_style . vgrid == True ? kMCTrue : kMCFalse);
+	}
+	if (p_style . has_border_color || p_effective)
+	{
+        MCAutoStringRef t_string;
+        uint32_t r = (p_style . border_color >> 16) & 0xFF;
+        uint32_t g = (p_style . border_color >> 8) & 0xFF;
+        uint32_t b = (p_style . border_color >> 0) & 0xFF;
+        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("borderColor"), *t_string);
+	}
+	if (p_style . has_dont_wrap || p_effective)
+	{
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("dontWrap"), p_style . dont_wrap == True ? kMCTrue : kMCFalse);
+	}
+	if (p_style . has_padding || p_effective)
+	{
+        MCAutoNumberRef t_padding;
+        /* UNCHECKED */ MCNumberCreateWithInteger(p_style . padding, &t_padding);
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("padding"), *t_padding);
+    }
+}
+
+
+#ifdef LEGACY_EXEC
 // Copy the styles from the struct into the array.
 static void export_styled_text_paragraph_style(MCExecPoint& ep, MCArrayRef p_style_array, const MCFieldParagraphStyle& p_style, bool p_effective)
 {
@@ -153,49 +265,58 @@ static void export_styled_text_paragraph_style(MCExecPoint& ep, MCArrayRef p_sty
 		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "padding");
 	}
 }
+#endif
 
 // Copy the styles from the struct into the array.
-static void export_styled_text_character_style(MCExecPoint& ep, MCArrayRef p_style_array, const MCFieldCharacterStyle& p_style, bool p_effective)
+static void export_styled_text_character_style(MCArrayRef p_style_array, const MCFieldCharacterStyle& p_style, bool p_effective)
 {
 	if (p_style . has_text_color || p_effective)
 	{
-		ep . setpixel(p_style . text_color);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "textColor");
+        MCAutoStringRef t_string;
+        uint32_t r = (p_style . text_color >> 16) & 0xFF;
+        uint32_t g = (p_style . text_color >> 8) & 0xFF;
+        uint32_t b = (p_style . text_color >> 0) & 0xFF;
+        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("textColor"), *t_string);
 	}
 	if (p_style . has_background_color)
 	{
-		ep . setpixel(p_style . background_color);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "backgroundColor");
+        MCAutoStringRef t_string;
+        uint32_t r = (p_style . background_color >> 16) & 0xFF;
+        uint32_t g = (p_style . background_color >> 8) & 0xFF;
+        uint32_t b = (p_style . background_color >> 0) & 0xFF;
+        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("backgroundColor"), *t_string);
 	}
 	if (p_style . has_link_text)
 	{
-		ep . setvalueref(p_style . link_text);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "linkText");
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("linkText"), p_style . link_text);
 	}
 	if (p_style . has_image_source)
 	{
-		ep . setvalueref(p_style . image_source);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "imageSource");
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("imageSource"), p_style . image_source);
 	}
 	if (p_style . has_text_font || p_effective)
 	{
-		ep . setvalueref(p_style . text_font);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "textFont");
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("textFont"), p_style . text_font);
 	}
 	if (p_style . has_text_style || p_effective)
 	{
-		MCF_unparsetextatts(P_TEXT_STYLE, ep, 0, nil, 0, 0, p_style . text_style);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "textStyle");
+        MCAutoValueRef t_value;
+		MCF_unparsetextatts(P_TEXT_STYLE, 0, nil, 0, 0, p_style . text_style, &t_value);
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("textStyle"), *t_value);
 	}
 	if (p_style . has_text_size || p_effective)
 	{
-		ep . setint(p_style . text_size);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "textSize");
+        MCAutoNumberRef t_text_size;
+        /* UNCHECKED */ MCNumberCreateWithInteger(p_style . text_size, &t_text_size);
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("textSize"), *t_text_size);
 	}
 	if (p_style . has_text_shift)
 	{
-		ep . setint(p_style . text_shift);
-		/* UNCHECKED */ ep . storearrayelement_cstring(p_style_array, "textShift");
+        MCAutoNumberRef t_text_shift;
+        /* UNCHECKED */ MCNumberCreateWithInteger(p_style . text_shift, &t_text_shift);
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("textShift"), *t_text_shift);
 	}
 }
 
@@ -218,24 +339,21 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
 		{
 			MCAutoArrayRef t_paragraph_style_array;
 			/* UNCHECKED */ MCArrayCreateMutable(&t_paragraph_style_array);
-			export_styled_text_paragraph_style(ctxt . ep, *t_paragraph_style_array, p_event_data . paragraph_style, ctxt . effective);
-			/* UNCHECKED */ ctxt . ep . setvalueref(*t_paragraph_style_array);
-			ctxt . ep . storearrayelement_cstring(ctxt . paragraph_array, "style");
+			export_styled_text_paragraph_style(*t_paragraph_style_array, p_event_data . paragraph_style, ctxt . effective);
+            /* UNCHECKED */ MCArrayStoreValue(ctxt . paragraph_array, true, MCNAME("style"), *t_paragraph_style_array);
 		}
 
 		// MW-2012-11-13: [[ ParaMetadata ]] If the paragraph has metadata, then apply it.
 		if (p_event_data . has_paragraph_style && p_event_data . paragraph_style . has_metadata)
 		{
-			/* UNCHECKED */ ctxt . ep . setvalueref(p_event_data . paragraph_style . metadata);
-			ctxt . ep . storearrayelement_cstring(ctxt . paragraph_array, "metadata");
+            /* UNCHECKED */ MCArrayStoreValue(ctxt . paragraph_array, true, MCNAME("metadata"), p_event_data . paragraph_style . metadata);
 		}
 		
 		// MW-2012-03-05: [[ HiddenText ]] If the paragraph is hidden, mark it as such in the
 		//   array.
 		if (p_event_data . paragraph_style . hidden)
 		{
-			ctxt . ep . setboolean(true);
-			ctxt . ep . storearrayelement_cstring(ctxt . paragraph_array, "hidden");
+            /* UNCHECKED */ MCArrayStoreValue(ctxt . paragraph_array, true, MCNAME("hidden"), kMCTrue);
 		}
 
 		// Now create the 'runs' entry in the paragraph array.
@@ -248,28 +366,24 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
 	{
 		if (ctxt . last_run != nil)
 		{
-			/* UNCHECKED */ ctxt . ep . setvalueref(ctxt . last_run);
-			/* UNCHECKED */ ctxt . ep . storearrayindex(ctxt . runs_array, ctxt . run_index);
+            /* UNCHECKED */ MCArrayStoreValueAtIndex(ctxt . runs_array, ctxt . run_index, ctxt . last_run);
 			MCValueRelease(ctxt . last_run);
 			ctxt . last_run = nil;
 		}
 
-		/* UNCHECKED */ ctxt . ep . setvalueref(ctxt . runs_array);
-		/* UNCHECKED */ ctxt . ep . storearrayelement_cstring(ctxt . paragraph_array, "runs");
+        /* UNCHECKED */ MCArrayStoreValue(ctxt . paragraph_array, true, MCNAME("runs"), ctxt . runs_array);
 		MCValueRelease(ctxt . runs_array);
 		ctxt . runs_array = nil;
 
-		/* UNCHECKED */ ctxt . ep . setvalueref(ctxt . paragraph_array);
-		/* UNCHECKED */ ctxt . ep . storearrayindex(ctxt . paragraphs_array, ctxt . paragraph_index);
+        /* UNCHECKED */ MCArrayStoreValueAtIndex(ctxt . paragraphs_array, ctxt . paragraph_index, ctxt . paragraph_array);
 		MCValueRelease(ctxt . paragraph_array);
 		ctxt . paragraph_array = nil;
 	}
 	else if (p_event_type == kMCFieldExportEventNativeRun || p_event_type == kMCFieldExportEventUnicodeRun)
 	{
 		if (ctxt . last_run != nil)
-		{	
-			/* UNCHECKED */ ctxt . ep . setvalueref(ctxt . last_run);
-			/* UNCHECKED */ ctxt . ep . storearrayindex(ctxt . runs_array, ctxt . run_index);
+		{
+            /* UNCHECKED */ MCArrayStoreValueAtIndex(ctxt . runs_array, ctxt . run_index, ctxt . last_run);
 			MCValueRelease(ctxt . last_run);
 			ctxt . last_run = nil;
 		}
@@ -285,15 +399,12 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
 		// Depending on whether its unicode or not.
 		MCAutoStringRef t_string;
 		/* UNCHECKED */ MCStringCopySubstring(p_event_data.m_text, p_event_data.m_range, &t_string);
-		ctxt.ep.setvalueref(*t_string);
-	
-		/* UNCHECKED */ ctxt . ep . storearrayelement_cstring(ctxt . last_run, p_event_type == kMCFieldExportEventUnicodeRun ? "unicodeText" : "text");
+        /* UNCHECKED */ MCArrayStoreValue(ctxt . last_run, true, p_event_type == kMCFieldExportEventUnicodeRun ? MCNAME("unicodeText") : MCNAME("text"), *t_string);
 
 		// Set the block's 'metadata' entry in the block's run array.
 		if (p_event_data . character_style . has_metadata)
 		{
-			ctxt . ep . setvalueref(p_event_data . character_style . metadata);
-			/* UNCHECKED */ ctxt . ep . storearrayelement_cstring(ctxt . last_run, "metadata");
+            MCArrayStoreValue(ctxt . last_run, true, MCNAME("metadata"), p_event_data . character_style . metadata);
 		}
 
 		// Now if the block has any attributes then build the array.
@@ -301,9 +412,9 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
 		{
 			MCAutoArrayRef t_run_style_array;
 			/* UNCHECKED */ MCArrayCreateMutable(&t_run_style_array);
-			export_styled_text_character_style(ctxt . ep, *t_run_style_array, p_event_data . character_style, ctxt . effective);
-			/* UNCHECKED */ ctxt . ep . setvalueref(*t_run_style_array);
-			/* UNCHECKED */ ctxt . ep . storearrayelement_cstring(ctxt . last_run, "style");
+			export_styled_text_character_style(*t_run_style_array, p_event_data . character_style, ctxt . effective);
+            
+            MCArrayStoreValue(ctxt . last_run, true, MCNAME("style"), *t_run_style_array);
 		}
 	}
 	else if (p_event_type == kMCFieldExportEventLineBreak)
@@ -324,13 +435,17 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
 		{
 			uint16_t t_vtab;
 			t_vtab = 11;
-			ctxt . ep . setstaticbytes(&t_vtab, 2);
-			/* UNCHECKED */ ctxt . ep . appendarrayelement_cstring(ctxt . last_run, "unicodeText");
+            MCAutoStringRef t_string;
+            /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)&t_vtab, 2, &t_string);
+            MCValueRef t_value;
+            MCArrayFetchValue(ctxt . last_run, true, MCNAME("unicodeText"), t_value);
 		}
 		else
 		{
-			ctxt . ep . setstaticcstring("\x0b");
-			/* UNCHECKED */ ctxt . ep . appendarrayelement_cstring(ctxt . last_run, "text");
+            MCStringRef t_string;
+            t_string = MCSTR("\x0b");
+            MCValueRef t_value;
+            /* UNCHECKED */ MCArrayStoreValue(ctxt . last_run, true, MCNAME("text"), t_value);
 		}
 	}
 
@@ -352,6 +467,7 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
 // block. If the block has no non-default styles then the style key is not
 // present.
 //
+#ifdef LEGACY_EXEC
 void MCField::exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective)
 {
 	MCAutoArrayRef t_array;
@@ -361,6 +477,7 @@ void MCField::exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_
 	else
 		ep . clear();
 }
+#endif
 
 bool MCField::exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array)
 {
@@ -406,6 +523,7 @@ bool MCField::exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int3
 //			else if tEntry is an array then
 //				append tEntry["text"] with style tEntry["style"]
 //
+#ifdef LEGACY_EXEC
 MCParagraph *MCField::styledtexttoparagraphs(MCExecPoint& ep)
 {	
 	// Get the array itself, and if it is not a sequence, do nothing.
@@ -416,6 +534,7 @@ MCParagraph *MCField::styledtexttoparagraphs(MCExecPoint& ep)
 	else
 		return styledtexttoparagraphs(*t_array);
 }
+#endif
 
 MCParagraph *MCField::styledtexttoparagraphs(MCArrayRef p_array)
 {	
@@ -484,31 +603,28 @@ static bool copy_element_as_color_if_non_empty(MCExecContext& ctxt, MCArrayRef a
 	return MCscreen -> parsecolor(*t_string, r_value, nil);
 }
 
-void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_style, const char *p_initial, const char *p_final, MCStringRef p_metadata, bool p_is_unicode)
+void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_style, MCStringRef p_string, MCStringRef p_metadata)
 {
 	// Do nothing if there is no text to add
-	findex_t t_length = p_final - p_initial;
-	if (t_length == 0)
+	if (MCStringIsEmpty(p_string))
         return;
 
-	MCExecPoint ep(NULL, NULL, NULL);
-	MCExecContext ctxt(ep);
-	
+    MCExecContext ctxt(nil, nil, nil);
+
 	// Create a block for the text we wish to append
-	MCAutoStringRef t_text;
-	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_initial, p_final-p_initial, p_is_unicode?kMCStringEncodingUTF16:kMCStringEncodingNative, false, &t_text);
-	MCBlock *t_block = p_paragraph->AppendText(*t_text);
+	MCBlock *t_block = p_paragraph->AppendText(p_string);
 		
 	// Now set the block styles.
 	
 	// Set metadata
 	if (p_metadata != nil)
-		t_block -> setatts(P_METADATA, (void *)p_metadata);
+        t_block -> SetMetadata(ctxt, p_metadata);
 
 	if (p_style == nil)
 		return;
 
 	MCValueRef t_valueref;
+    t_valueref = nil;
 
 	// Set foreground
 	{
@@ -549,17 +665,17 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	if (!MCValueIsEmpty(t_valueref))
 	{
 		MCAutoStringRef t_string;
-		/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_string);
-        MCAutoPointer<char> temp;
-        /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
-		t_block -> setatts(P_TEXT_FONT, (void *)*temp);
+        /* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_string);
+        t_block -> SetTextFont(ctxt, *t_string);
 	}
 	
 	// Set textsize
 	{
 		MCAutoNumberRef t_number;
+        uinteger_t t_size;
 		convert_array_value_to_number_if_non_empty(ctxt, p_style, MCNAME("textSize"), &t_number);
-		t_block -> setatts(P_TEXT_SIZE, (void *)MCNumberFetchAsInteger(*t_number));
+        t_size = MCNumberFetchAsUnsignedInteger(*t_number);
+        t_block -> SetTextSize(ctxt, &t_size);
 	}
 	
 	// Set textstyle
@@ -571,31 +687,36 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 		MCAutoStringRef fname;
 		uint2 height;
 		uint2 size;
-		uint2 style;
+        uint2 style;
 
 		MCF_parsetextatts(P_TEXT_STYLE, *t_string, flags, &fname, height, size, style);
 
-		t_block -> setatts(P_TEXT_STYLE, (void *)style);
+        MCInterfaceTextStyle t_style;
+        t_style . style = style;
+        t_block -> SetTextStyle(ctxt, t_style);
 	}
 
 	// Set linktext
 	if (MCArrayFetchValue(p_style, false, MCNAME("linkText"), t_valueref))
 	{	
-		t_block -> setatts(P_LINK_TEXT, (void *)t_valueref);
+        MCAutoStringRef t_string;
+        if (ctxt . ConvertToString(t_valueref, &t_string))
+            t_block -> SetLinktext(ctxt, *t_string);
 	}
 
 	// Set imagesource
 	if (MCArrayFetchValue(p_style, false, MCNAME("imageSource"), t_valueref))
 	{
-		t_block -> setatts(P_IMAGE_SOURCE, (void *)t_valueref);
+        MCAutoStringRef t_string;
+        if (ctxt . ConvertToString(t_valueref, &t_string))
+            t_block -> SetImageSource(ctxt, *t_string);
 	}
 
 }
 
 void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& x_paragraphs)
-{	
-	MCExecPoint ep(NULL, NULL, NULL);
-	MCExecContext ctxt(ep);
+{
+    MCExecContext ctxt(nil, nil, nil);
 	// If the value is a sequence, recurse for each element.
 	if (MCArrayIsSequence(p_block_value))
 	{
@@ -613,6 +734,7 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 	}
 	
 	MCValueRef t_valueref;
+    t_valueref = nil;
 	MCAutoArrayRef t_style_entry;   
 
 	// Set foreground
@@ -623,68 +745,60 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 		/* UNCHECKED */ MCArrayCopyAndRelease(t_array, &t_style_entry);	
 	}
 	// Get the metadata (if any)
-	MCStringRef t_metadata;
+	MCAutoStringRef t_metadata;
 	if (MCArrayFetchValue(p_block_value, false, MCNAME("metadata"), t_valueref) && !MCValueIsEmpty(t_valueref))
 	{
 		MCAutoStringRef t_string;
-		/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_string);
-		t_metadata = MCValueRetain(*t_string);
+		if (ctxt . ConvertToString(t_valueref, &t_string))
+            t_metadata = *t_string;
 	}	
 	// If there are no paragraphs yet, create one.
 	MCParagraph *t_paragraph;
 	t_paragraph = x_paragraphs -> prev();
 	
 	// Now loop through each newline delimited chunk in the text.
-	const char *t_text_ptr;
 	uint32_t t_text_length;
-
-	// Fetch either the text entry, or the unicodeText entry and set the is unicode bool
-	// appropriately.
-	bool t_is_unicode;
-	t_is_unicode = false;
+    uindex_t t_start_index;
 
 	if (!MCArrayFetchValue(p_block_value, false, MCNAME("text"), t_valueref) || MCValueIsEmpty(t_valueref))
-	{
 		/* UNCKECKED */ MCArrayFetchValue(p_block_value, false, MCNAME("unicodeText"), t_valueref);
-		t_is_unicode = true;
-	}
+    
 	if (MCValueIsEmpty(t_valueref) || MCValueGetTypeCode(t_valueref) == kMCValueTypeCodeArray)
 		return;
 	
 	MCAutoStringRef t_temp;
 	/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_temp);
-    MCAutoPointer<char> t_temp_cstr;
-    /* UNCHECKED */ MCStringConvertToCString(*t_temp, &t_temp_cstr);
-	t_text_ptr = *t_temp_cstr;
+    
+    t_start_index = 0;
 	t_text_length = MCStringGetLength(*t_temp);
-	while(t_text_length != 0)
+	while(t_start_index < t_text_length)
 	{
 		bool t_add_paragraph;
-		const char *t_text_initial_ptr;
-		const char *t_text_final_ptr;
-		t_text_initial_ptr = t_text_ptr;
-		if (MCU_strchr(t_text_ptr, t_text_length, '\n', t_is_unicode))
+		uindex_t t_text_initial_start_index;
+		uindex_t t_text_end_index;
+		t_text_initial_start_index = t_start_index;
+        
+		if (MCStringFirstIndexOfChar(*t_temp, '\n', t_start_index, kMCStringOptionCompareCaseless, t_text_end_index))
 		{
-			t_text_final_ptr = t_text_ptr;
 			// MW-2012-05-17: [[ Bug ]] Make sure we reduce the remaining text length since
 			//   we are advancing ptr - otherwise we get random chars at the end of paragraph
 			//   sometimes.
-			t_text_ptr += (t_is_unicode ? 2 : 1);
-			t_text_length -= (t_is_unicode ? 2 : 1);
+			t_start_index = t_text_end_index + 1;
+			t_text_length -= (t_text_end_index - t_text_initial_start_index);
 			t_add_paragraph = true;
 		}
 		else
 		{
-			t_text_ptr += t_text_length;
+			t_start_index += t_text_length;
 			t_text_length = 0;
-			t_text_final_ptr = t_text_ptr;
+			t_text_end_index = t_start_index;
 			t_add_paragraph = false;
 		}
 
 		// We now add the range initial...final as a block.
-		parsestyledtextappendblock(t_paragraph, *t_style_entry, t_text_initial_ptr, t_text_final_ptr, t_metadata, t_is_unicode);
-		
-		MCValueRelease(t_metadata);
+        MCAutoStringRef t_substring;
+        MCStringCopySubstring(*t_temp, MCRangeMake(t_text_initial_start_index, t_text_end_index - t_text_initial_start_index), &t_substring);
+		parsestyledtextappendblock(t_paragraph, *t_style_entry, *t_substring, *t_metadata);
 
 		// And, if we need a new paragraph, add it.
 		if (t_add_paragraph)
@@ -724,10 +838,9 @@ void MCField::parsestyledtextarray(MCArrayRef p_styled_text, bool p_paragraph_br
 		if (!MCArrayFetchValue((MCArrayRef)t_entry, false, MCN_metadata, t_metadata_val))
 			t_metadata_val = nil;
 		if (t_metadata_val != nil)
-		{
-			MCExecPoint ep;
-			ep.setvalueref(t_metadata_val);
-            /* UNCHECKED */ ep.copyasstringref(&t_metadata);
+        {
+            MCExecContext ctxt(nil, nil, nil);
+            /* UNCHECKED */ ctxt . ConvertToString(t_metadata_val, &t_metadata);
 		}
 
 		// If the array looks like a paragraph array, then treat it as such.
