@@ -1238,6 +1238,9 @@ void MCIPhoneUseDeviceResolution(bool p_use, bool p_controls_too)
 	
 	MCIPhoneConfigureContentScale(MCIPhoneGetResolutionScale());
 	
+	// IM-2013-12-10: [[ Bug 11571 ]] Update the pixelScale to the new device scale. Avoid doing any stack updates in the main thread.
+	MCResSetPixelScale(MCResGetSystemScale(), false);
+	
 	// This doesn't do an immediate resize, so is fine for the main thread. (no
 	// script called).
 	static_cast<MCScreenDC *>(MCscreen) -> do_fit_window(false, true);
