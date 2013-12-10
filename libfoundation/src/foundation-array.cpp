@@ -461,7 +461,7 @@ bool MCArrayRemoveValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNa
 			// If the array isn't mutable, then make a mutable copy replacing the existing
 			// value.
 			MCArrayRef t_mutable_array;
-			if (!MCArrayIsMutable((MCArrayRef)self))
+            if (!MCArrayIsMutable((MCArrayRef)t_value))
 			{
 				if (!MCArrayMutableCopyAndRelease((MCArrayRef)t_value, t_mutable_array))
 					return false;
