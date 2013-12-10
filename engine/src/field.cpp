@@ -1636,7 +1636,7 @@ void MCField::formattabstops(Properties which, uint16_t *tabs, uint16_t tab_coun
 	if (r_result != nil)
         MCValueRelease(r_result);
     MCAutoListRef t_list;
-    /* UNCHECKED */ MCListCreateMutable(EC_COMMA, &t_list);
+    /* UNCHECKED */ MCListCreateMutable(',', &t_list);
 	if (which == P_TAB_STOPS)
 	{
 		for(uint32_t i = 0 ; i < tab_count ; i++)

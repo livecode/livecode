@@ -787,7 +787,7 @@ Exec_stat MCF_unparsetextatts(Properties which, uint4 flags, MCStringRef name, u
 			if (r_result != nil)
                 MCValueRelease(r_result);
             MCAutoListRef t_list;
-            /* UNCHECKED */ MCListCreateMutable(EC_COMMA, &t_list);
+            /* UNCHECKED */ MCListCreateMutable(',', &t_list);
 			if (MCF_getweightint(style) != MCFW_MEDIUM)
                 MCListAppendCString(*t_list, MCF_getweightstring(style));
 			if (style & FA_ITALIC || style & FA_OBLIQUE)

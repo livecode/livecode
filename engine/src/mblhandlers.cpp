@@ -704,7 +704,7 @@ Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters)
 	MCAutoListRef t_orientation_list;
 
 	if (t_success)
-		t_success = MCListCreateMutable(EC_COMMA, &t_orientation_list);
+		t_success = MCListCreateMutable(',', &t_orientation_list);
 
 	for (uint32_t j = 0; s_orientation_names[j] != nil; j++)
 	{
@@ -5897,7 +5897,7 @@ Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_paramet
 	MCCameraFeaturesType t_features_set;
     t_features_set = (MCCameraFeaturesType)t_result;
     MCAutoListRef t_list;
-    /* UNCHECKED */ MCListCreateMutable(EC_COMMA, &t_list);
+    /* UNCHECKED */ MCListCreateMutable(',', &t_list);
     
 	if ((t_features_set & kMCCameraFeaturePhoto) != 0)
         /* UNCHECKED */ MCListAppendCString(*t_list, "photo");
@@ -5928,7 +5928,7 @@ Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
     t_features_set = (MCCamerasFeaturesType)t_features;
     
     MCAutoListRef t_list;
-    /* UNCHECKED */ MCListCreateMutable(EC_COMMA, &t_list);
+    /* UNCHECKED */ MCListCreateMutable(',', &t_list);
     
 	if ((t_features_set & kMCCamerasFeatureFrontPhoto) != 0)
         /* UNCHECKED */ MCListAppendCString(*t_list, "front photo");
@@ -6256,7 +6256,7 @@ bool list_native_controls(void *context, MCNativeControl* p_control)
 Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters)
 {
     MCAutoListRef t_list;
-    MCListCreateMutable(EC_RETURN, &t_list);
+    MCListCreateMutable('\n', &t_list);
 	MCNativeControl::List(list_native_controls, *t_list);
     
 	MCExecContext ctxt(nil, nil, nil);
