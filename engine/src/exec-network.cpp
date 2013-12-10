@@ -525,11 +525,13 @@ void MCNetworkExecReadFromSocket(MCExecContext& ctxt, MCNameRef p_socket, uint4 
 		// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
 		ctxt . SetTheResultToEmpty();
 
-		MCAutoDataRef t_data;
-		MCAutoPointer<char> t_sentinel;
-        /* UNCHECKED */ MCStringConvertToCString(p_sentinel, &t_sentinel);
+        MCAutoDataRef t_data;
 		if (p_sentinel != nil)
-			MCS_read_socket(MCsockets[t_index], ctxt, p_count, *t_sentinel, p_message, &t_data);
+        {
+            MCAutoPointer<char> t_sentinel;
+            /* UNCHECKED */ MCStringConvertToCString(p_sentinel, &t_sentinel);
+            MCS_read_socket(MCsockets[t_index], ctxt, p_count, *t_sentinel, p_message, &t_data);
+        }
 		else
 			MCS_read_socket(MCsockets[t_index], ctxt, 0, nil, p_message, &t_data);
 
