@@ -294,7 +294,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             
             // if we couldn't find enough delimiters, set r_add to the number of
             // additional delimiters required and set the offset to the end
-            if (t_offset > 0 && t_offset < t_length && p_first > 0)
+            if (p_first > 0)
             {
                 t_offset = t_length;
                 r_add = p_first;
