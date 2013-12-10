@@ -5965,6 +5965,7 @@ bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
         MCMarkedText t_mark;
         t_mark . finish = INDEX_MAX;
         t_mark . start = 0;
+        t_mark . changed = false;
         r_chunk . object = t_object.object;
         r_chunk . part_id = t_object.part_id;
         r_chunk . chunk = CT_UNDEFINED;
