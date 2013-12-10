@@ -739,7 +739,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
 	else
     {
         MCAutoStringRef t_string;
-        if (!ctxt . EvalExprAsMutableStringRef(p_var . variable, EE_ENGINE_PUT_BADVARIABLE, &t_string))
+        if (!MCStringMutableCopy(p_var . mark . text, &t_string))
             return;
         
         MCAutoStringRef t_value_string;

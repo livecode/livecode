@@ -122,7 +122,7 @@ public:
 #ifdef LEGACY_EXEC
     /* WRAPPER */ Exec_stat mark(MCExecPoint &ep, Boolean force, Boolean wholechunk, MCMarkedText& r_mark, bool includechars = true);
 #endif
-    void mark(MCExecContext &ctxt, Boolean force, Boolean wholechunk, MCMarkedText& x_mark, bool includechars = true);
+    void mark(MCExecContext &ctxt, bool set, Boolean wholechunk, MCMarkedText& x_mark, bool includechars = true);
 #ifdef LEGACY_EXEC
 	Exec_stat mark_legacy(MCExecPoint &, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool include_characters = true);
 

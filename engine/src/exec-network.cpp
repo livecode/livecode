@@ -604,11 +604,8 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef p_value, int p_whe
 	}
 	else
 	{
-		MCAutoStringRef t_old_data;
-		/* UNCHECKED */ MCU_geturl(ctxt, p_chunk.url, &t_old_data);
-		
 		MCStringRef t_string;
-		/* UNCHECKED */ MCStringMutableCopy(*t_old_data, t_string);
+		/* UNCHECKED */ MCStringMutableCopy(p_chunk . mark . text, t_string);
 		/* UNCHECKED */ MCStringReplace(t_string, MCRangeMake(p_chunk.mark.start, p_chunk.mark.finish - p_chunk.mark.start), p_value);
 		/* UNCHECKED */ MCStringCopyAndRelease(t_string, &t_new_value);
 	}

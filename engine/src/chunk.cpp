@@ -3553,9 +3553,10 @@ Exec_stat MCChunk::mark(MCExecPoint &ep, Boolean force, Boolean wholechunk, MCMa
 }
 #endif
 
-void MCChunk::mark(MCExecContext &ctxt, Boolean force, Boolean wholechunk, MCMarkedText& x_mark, bool includechars)
+void MCChunk::mark(MCExecContext &ctxt, bool force, Boolean wholechunk, MCMarkedText& x_mark, bool includechars)
 {
     int4 t_first, t_last;
+    x_mark . changed = false;
     
     if (cline != nil)
     {
@@ -3572,10 +3573,10 @@ void MCChunk::mark(MCExecContext &ctxt, Boolean force, Boolean wholechunk, MCMar
             else
                 t_last = t_first;
             
-            MCStringsMarkLinesOfTextByRange(ctxt, t_first, t_last, x_mark);
+            MCStringsMarkLinesOfTextByRange(ctxt, t_first, t_last, force, x_mark);
         }
         else
-            MCStringsMarkLinesOfTextByOrdinal(ctxt, cline -> etype, x_mark);
+            MCStringsMarkLinesOfTextByOrdinal(ctxt, cline -> etype, force, x_mark);
     }
     
     if (item != nil)
@@ -3593,10 +3594,10 @@ void MCChunk::mark(MCExecContext &ctxt, Boolean force, Boolean wholechunk, MCMar
             else
                 t_last = t_first;
             
-            MCStringsMarkItemsOfTextByRange(ctxt, t_first, t_last, x_mark);
+            MCStringsMarkItemsOfTextByRange(ctxt, t_first, t_last, force, x_mark);
         }
         else
-            MCStringsMarkItemsOfTextByOrdinal(ctxt, item -> etype, x_mark);
+            MCStringsMarkItemsOfTextByOrdinal(ctxt, item -> etype, force, x_mark);
     }
     
     if (word != nil)
@@ -3614,10 +3615,10 @@ void MCChunk::mark(MCExecContext &ctxt, Boolean force, Boolean wholechunk, MCMar
             else
                 t_last = t_first;
             
-            MCStringsMarkWordsOfTextByRange(ctxt, t_first, t_last, x_mark);
+            MCStringsMarkWordsOfTextByRange(ctxt, t_first, t_last, force, x_mark);
         }
         else
-            MCStringsMarkWordsOfTextByOrdinal(ctxt, word -> etype, x_mark);
+            MCStringsMarkWordsOfTextByOrdinal(ctxt, word -> etype, force, x_mark);
     }
     
     if (token != nil)
@@ -3635,10 +3636,10 @@ void MCChunk::mark(MCExecContext &ctxt, Boolean force, Boolean wholechunk, MCMar
             else
                 t_last = t_first;
             
-            MCStringsMarkTokensOfTextByRange(ctxt, t_first, t_last, x_mark);
+            MCStringsMarkTokensOfTextByRange(ctxt, t_first, t_last, force, x_mark);
         }
         else
-            MCStringsMarkTokensOfTextByOrdinal(ctxt, token -> etype, x_mark);
+            MCStringsMarkTokensOfTextByOrdinal(ctxt, token -> etype, force, x_mark);
     }
     
     if (character != nil)
@@ -3656,10 +3657,10 @@ void MCChunk::mark(MCExecContext &ctxt, Boolean force, Boolean wholechunk, MCMar
             else
                 t_last = t_first;
             
-            MCStringsMarkCharsOfTextByRange(ctxt, t_first, t_last, x_mark);
+            MCStringsMarkCharsOfTextByRange(ctxt, t_first, t_last, force, x_mark);
         }
         else
-            MCStringsMarkCharsOfTextByOrdinal(ctxt, character -> etype, x_mark);
+            MCStringsMarkCharsOfTextByOrdinal(ctxt, character -> etype, force, x_mark);
     }
 }
 #ifdef LEGACY_EXEC

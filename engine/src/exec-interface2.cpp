@@ -3308,6 +3308,7 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
         p_object . object -> getstringprop(ctxt, p_object . part_id, P_TEXT, False, r_mark . text);
         r_mark . start = 0;
         r_mark . finish = MCStringGetLength(r_mark . text);
+        r_mark . changed = false;
     	return;
     }
     r_mark . text = nil;
