@@ -268,15 +268,15 @@ uint32_t get_orientation_set(uint32_t p_orientations)
 {
 	uint32_t t_orientations = 0;
 	if (p_orientations & (1 << kMCDisplayOrientationPortrait))
-		t_orientations |= ORIENTATION_PORTRAIT_BIT;
+		t_orientations |= ORIENTATION_PORTRAIT;
 	if (p_orientations & (1 << kMCDisplayOrientationPortraitUpsideDown))
-		t_orientations |= ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT;
+		t_orientations |= ORIENTATION_PORTRAIT_UPSIDE_DOWN;
 	if (p_orientations & (1 << kMCDisplayOrientationLandscapeRight))
-		t_orientations |= ORIENTATION_LANDSCAPE_RIGHT_BIT;
+		t_orientations |= ORIENTATION_LANDSCAPE_RIGHT;
 	if (p_orientations & (1 << kMCDisplayOrientationLandscapeLeft))
-		t_orientations |= ORIENTATION_LANDSCAPE_LEFT_BIT;
+		t_orientations |= ORIENTATION_LANDSCAPE_LEFT;
 	if (p_orientations & (1 << kMCDisplayOrientationFaceUp))
-		t_orientations |= ORIENTATION_FACE_UP_BIT;
+		t_orientations |= ORIENTATION_FACE_UP;
 
 	return t_orientations;
 }
@@ -284,16 +284,16 @@ uint32_t get_orientation_set(uint32_t p_orientations)
 uint32_t get_android_orientations(uint32_t p_orientations)
 {
 	uint32_t t_orientations = 0;
-	if (p_orientations & (1 << kMCDisplayOrientationPortrait))
-		t_orientations |= ORIENTATION_PORTRAIT_BIT;
-	if (p_orientations & (1 << kMCDisplayOrientationPortraitUpsideDown))
-		t_orientations |= ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT;
-	if (p_orientations & (1 << kMCDisplayOrientationLandscapeRight))
-		t_orientations |= ORIENTATION_LANDSCAPE_RIGHT_BIT;
-	if (p_orientations & (1 << kMCDisplayOrientationLandscapeLeft))
-		t_orientations |= ORIENTATION_LANDSCAPE_LEFT_BIT;
-	if (p_orientations & (1 << kMCDisplayOrientationFaceUp))
-		t_orientations |= ORIENTATION_FACE_UP_BIT;
+	if (p_orientations & (ORIENTATION_PORTRAIT))
+		t_orientations |= 1 << kMCDisplayOrientationPortrait;
+	if (p_orientations & (ORIENTATION_PORTRAIT_UPSIDE_DOWN))
+		t_orientations |= 1 << kMCDisplayOrientationPortraitUpsideDown;
+	if (p_orientations & (ORIENTATION_LANDSCAPE_RIGHT))
+		t_orientations |= 1 << kMCDisplayOrientationLandscapeRight;
+	if (p_orientations & (ORIENTATION_LANDSCAPE_LEFT))
+		t_orientations |= 1 << kMCDisplayOrientationLandscapeLeft;
+	if (p_orientations & (ORIENTATION_FACE_UP))
+		t_orientations |= 1 << kMCDisplayOrientationFaceUp;
 
 	return t_orientations;
 }

@@ -695,7 +695,7 @@ static bool MCS_downloadurl_callback(void *p_context, MCSystemUrlStatus p_status
 	else if (p_status == kMCSystemUrlStatusLoading)
 	{
 		context -> length += MCStringGetLength(*t_data);
-        IO_write_stringref(*t_data, context -> output);
+        IO_write_stringref_legacy(*t_data, context -> output, false);
 	}
 	
 	send_url_progress(context -> object, p_status, context -> url, context -> length, context -> total, *t_data);

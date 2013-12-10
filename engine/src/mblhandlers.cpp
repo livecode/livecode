@@ -762,17 +762,17 @@ Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameter
             /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_orientations_array, i + 1, t_orien_value);
 			MCStringRef t_orientation = (MCStringRef)(t_orien_value);
             if (MCStringIsEqualToCString(t_orientation, "portrait", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_PORTRAIT_BIT;
+                t_orientations_set |= ORIENTATION_PORTRAIT;
             else if (MCStringIsEqualToCString(t_orientation, "portrait upside down", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT;
+                t_orientations_set |= ORIENTATION_PORTRAIT_UPSIDE_DOWN;
             else if (MCStringIsEqualToCString(t_orientation, "landscape right", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_LANDSCAPE_RIGHT_BIT;
+                t_orientations_set |= ORIENTATION_LANDSCAPE_RIGHT;
             else if (MCStringIsEqualToCString(t_orientation, "landscape left", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_LANDSCAPE_LEFT_BIT;
+                t_orientations_set |= ORIENTATION_LANDSCAPE_LEFT;
             else if (MCStringIsEqualToCString(t_orientation, "face up", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_FACE_UP_BIT;
+                t_orientations_set |= ORIENTATION_FACE_UP;
             else if (MCStringIsEqualToCString(t_orientation, "face down", kMCCompareCaseless))
-                t_orientations_set |= ORIENTATION_FACE_DOWN_BIT;
+                t_orientations_set |= ORIENTATION_FACE_DOWN;
             
         }
 	}
