@@ -6261,7 +6261,7 @@ Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters)
     
 	MCExecContext ctxt(nil, nil, nil);
 	MCAutoStringRef t_value;
-	/* UNCHECKED */ MCListCopyAsStringAndRelease(*t_list, &t_value);
+	/* UNCHECKED */ MCListCopyAsString(*t_list, &t_value);
     ctxt . SetTheResultToValue(*t_value);
     
 	return ES_NORMAL;
