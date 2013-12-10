@@ -90,7 +90,7 @@ bool apk_get_file_offset(MCStringRef p_apk_path, int32_t &r_offset)
 	return true;
 }
 
-bool apk_get_current_folder(MCStringRef r_folder)
+bool apk_get_current_folder(MCStringRef& r_folder)
 {
 	if (s_current_apk_folder != nil)
 		return MCStringCopy(s_current_apk_folder, r_folder);
@@ -118,15 +118,15 @@ bool apk_set_current_folder(MCStringRef p_apk_path)
 bool apk_list_folder_entries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
 {
 	bool t_success = true;
-	char* t_list = nil;
+	MCAutoStringRef t_list;
     MCAutoStringRef t_current_folder;
     
     if (!apk_get_current_folder(&t_current_folder))
         return false;
     
-	MCAndroidEngineCall("getAssetFolderEntryList", "sx", &t_list, &(&t_current_folder));
+	MCAndroidEngineCall("getAssetFolderEntryList", "xx", &(&t_list), *t_current_folder);
 
-	t_success = t_list != nil;
+	t_success = *t_list != nil;
 
 	// getAssetFolderEntryList returns entries in the following format:
 	// each entry comprises two lines - the filename on the first line,
@@ -152,8 +152,7 @@ bool apk_list_folder_entries(MCSystemListFolderEntriesCallback p_callback, void 
 	t_entry . group_id = t_stat . st_gid;
 	t_entry . permissions = t_stat . st_mode & 0444;
 
-	char *t_next_entry;
-	t_next_entry = t_list;
+	char *t_next_entry = strclone(MCStringGetCString(*t_list));
 	while (t_success && t_next_entry[0] != '\0')
 	{
 		uint32_t t_next_index = 0;
@@ -197,7 +196,6 @@ bool apk_list_folder_entries(MCSystemListFolderEntriesCallback p_callback, void 
 		}
 	}
 
-	MCCStringFree(t_list);
 	return t_success;
 }
 
@@ -401,15 +399,19 @@ bool MCAndroidSystem::GetTemporaryFileName(MCStringRef &r_tmp_name)
 
 Boolean MCAndroidSystem::GetStandardFolder(MCNameRef p_folder, MCStringRef &r_folder)
 {
-	MCAutoStringRef t_stdfolder;
 	if (MCNameIsEqualToCString(p_folder, "engine", kMCCompareExact))
-		MCStringCopy(MCcmd, &t_stdfolder);
-	else
-		MCAndroidEngineCall("getSpecialFolderPath", "xx", &(&t_stdfolder), MCNameGetString(p_folder));
-
+    {
+        MCLog("GetStandardFolder(\"%@\") -> \"%@\"", MCNameGetString(p_folder), MCcmd);
+		return MCStringCopy(MCcmd, r_folder);
+    }
+    
+ 	MCAutoStringRef t_stdfolder;
+    MCAndroidEngineCall("getSpecialFolderPath", "xx", &(&t_stdfolder), MCNameGetString(p_folder));
+    
     MCLog("GetStandardFolder(\"%@\") -> \"%@\"", p_folder, *t_stdfolder == nil ? kMCEmptyString : *t_stdfolder);
     
-	return MCStringCopy(*t_stdfolder, r_folder);
+	r_folder = MCValueRetain(*t_stdfolder == nil ? kMCEmptyString : *t_stdfolder);
+    return True;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

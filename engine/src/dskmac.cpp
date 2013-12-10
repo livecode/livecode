@@ -968,7 +968,7 @@ static void configureSerialPort(int sRefNum)
     {
         // Note: 't_settings' is an array of strings
         MCValueRef t_settingval = nil;
-        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_settings, i, t_settingval);
+        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_settings, i + 1, t_settingval);
         MCStringRef t_setting = (MCStringRef)t_settingval;
         parseSerialControlStr(t_setting, &theTermios);
     }

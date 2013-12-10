@@ -378,7 +378,7 @@ bool MCImageParseColourList(MCStringRef p_input, uint32_t &r_ncolours, MCColor *
         for (uindex_t i = 0; i < t_nlines; i++)
         {
             MCValueRef t_line = nil;
-            /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_lines, i, t_line);
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_lines, i + 1, t_line);
             MCStringRef t_color;
             t_color = (MCStringRef)t_line;
                             

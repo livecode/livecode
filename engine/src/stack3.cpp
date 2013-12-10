@@ -752,7 +752,7 @@ Exec_stat MCStack::resubstack(MCStringRef p_data)
 	for (uindex_t i = 0; i < t_count; i++)
 	{
 		MCValueRef t_val;
-		/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, i, t_val);
+        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, i + 1, t_val);
 		
 		// If tsub is one of the existing substacks of the stack, it is set to
 		// non-null, as it needs to be removed.
@@ -1642,17 +1642,24 @@ void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
         MCExecContext ctxt(this, nil, nil);
 		MCAutoStringRef t_label;
 		MCStringRef t_name = nil;
-		focused->getstringprop(ctxt, 0, P_LABEL, true, &t_label);
+		if (focused -> gettype() == CT_FIELD)
+			/* UNCHECKED */ static_cast<MCField *>(focused) -> selectedtext(&t_label);
+		else
+			focused->getstringprop(ctxt, 0, P_LABEL, true, &t_label);
 		t_name = MCNameGetString(focused->getname());
-		if (!MCStringIsEmpty(t_name))
-		{
+		if (!MCStringIsEmpty(t_name) && t_has_tags)
+			r_string = MCValueRetain(t_name);
+		else
+			r_string = MCValueRetain(*t_label);
+
+/*		{
 			// If the name exists, use it in preference to the label
 			if (t_has_tags && !MCStringIsEqualTo(*t_label, t_name, kMCStringOptionCompareExact))
 				r_string = MCValueRetain(t_name);
 			else 
 				r_string = MCValueRetain(*t_label);
-		}
-			
+		}*/
+
 		if (focused->gettype() == CT_FIELD)
 		{
 			MCField *f = (MCField *)focused;

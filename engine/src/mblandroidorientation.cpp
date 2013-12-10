@@ -69,7 +69,7 @@ static const char *s_orientation_names[] = {
 	"landscape left",
 	"portrait upside down",
 	"landscape right",
-	nil
+	""
 //	"face up",
 };
 

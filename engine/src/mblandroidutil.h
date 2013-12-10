@@ -38,7 +38,7 @@ void MCAndroidBreakWait();
 //   's' : const char * in native encoding -> String object type
 //   'S' : const MCString * in native encoding -> String object type
 //   'U' : const MCString * in unicode encoding -> String object type
-//   'd' : const MCString * containing binary data -> byte[] object type
+//   'd' : MCDataRef containing binary data -> byte[] object type
 //   'i' : int32_t -> int type
 //   'j' : int64_t -> int type
 //   'b' : bool -> boolean type

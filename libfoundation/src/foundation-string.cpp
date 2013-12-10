@@ -138,6 +138,17 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
             return MCStringCreateWithNativeChars(p_bytes, p_byte_count, r_string);
         case kMCStringEncodingUTF16:
             return MCStringCreateWithChars((unichar_t *)p_bytes, p_byte_count / 2, r_string);
+        case kMCStringEncodingUTF16BE:
+        {
+            unichar_t *t_buffer;
+            uindex_t t_length = p_byte_count / 2;
+            MCMemoryAllocate(t_length * sizeof(unichar_t), t_buffer);
+
+            for (uindex_t i = 0; i < t_length; i++)
+                t_buffer[i] = (unichar_t)MCSwapInt16HostToBig(((unichar_t *)p_bytes)[i]);
+            return MCStringCreateWithCharsAndRelease(t_buffer, t_length, r_string);
+        }
+            
         case kMCStringEncodingUTF8:
         {
             unichar_t *t_chars;
@@ -1045,7 +1056,15 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
     case kMCStringEncodingNative:
         return MCStringConvertToNative(self, (char_t*&)r_bytes, r_byte_count);
     case kMCStringEncodingUTF16:
-        return MCStringConvertToUnicode(self, (unichar_t*&)r_bytes, r_byte_count);
+        {
+            uindex_t t_char_count;
+            if (MCStringConvertToUnicode(self, (unichar_t*&)r_bytes, t_char_count))
+            {
+                r_byte_count = t_char_count * sizeof(unichar_t);
+                return true;
+            }
+            return false;
+        }
     case kMCStringEncodingUTF8:
         return MCStringConvertToUTF8(self, (char*&)r_bytes, r_byte_count);
     case kMCStringEncodingUTF32:

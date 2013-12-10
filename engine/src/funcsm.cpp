@@ -84,7 +84,7 @@ bool MCParamFunction::params_to_doubles(MCExecContext& ctxt, real64_t *&r_double
                 return false;
             }
 
-            for (uinteger_t i = 0 ; i < MCArrayGetCount(*t_array) ; ++i)
+            for (uinteger_t i = 1 ; i <= MCArrayGetCount(*t_array) ; ++i)
             {
                 MCValueRef t_value;
                 /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, i, t_value);

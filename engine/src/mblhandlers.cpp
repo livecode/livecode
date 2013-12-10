@@ -759,7 +759,7 @@ Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameter
         {
             // Note: 't_orientations_array' is an array of strings
 			MCValueRef t_orien_value = nil;
-			/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_orientations_array, i, t_orien_value);
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_orientations_array, i + 1, t_orien_value);
 			MCStringRef t_orientation = (MCStringRef)(t_orien_value);
             if (MCStringIsEqualToCString(t_orientation, "portrait", kMCCompareCaseless))
                 t_orientations_set |= ORIENTATION_PORTRAIT_BIT;
@@ -2970,18 +2970,23 @@ Exec_stat MCHandleStartBusyIndicator(void *p_context, MCParameter *p_parameters)
     MCBusyIndicatorExecStart(t_ctxt, kMCBusyIndicatorSquare, t_label, t_opacity);
     return t_ctxt.GetStat();
 #endif /* MCHandleStartBusyIndicator */
+    
     bool t_success = true;
     MCAutoStringRef t_indicator_string;
     MCAutoStringRef t_label;    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "xx", &(&t_indicator_string), &(&t_label));
+
+    if (t_success && p_parameters)
+        t_success = MCParseParameters(p_parameters, "x", &(&t_indicator_string));
+                                      
+    if (t_success && p_parameters)
+        t_success = MCParseParameters(p_parameters, "x", &(&t_label));
     
     intenum_t t_indicator;
-    if(t_success)
+    if (t_success)
         t_success = MCBusyIndicatorTypeFromString(*t_indicator_string);
     
     int32_t t_opacity = -1;
-    if(t_success)
+    if (t_success && p_parameters)
     {
         t_success = MCParseParameters(p_parameters, "i", &t_opacity);
         if (t_opacity < 0 || t_opacity > 100)
