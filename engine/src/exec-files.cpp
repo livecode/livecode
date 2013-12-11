@@ -1115,7 +1115,7 @@ void MCFilesExecPerformReadFor(MCExecContext& ctxt, IO_handle p_stream, int4 p_i
 			real4 *r4ptr = (real4 *)t_current.Chars();
 			for (uint4 i = 0 ; i < p_count ; i++)
 			{
-				t_num_chars = sprintf(buffer, "%d", r4ptr[i]);
+				t_num_chars = sprintf(buffer, "%f", r4ptr[i]);
 				if (i != 0)
 					MCStringAppendNativeChar(t_buffer, ',');
 				MCStringAppendNativeChars(t_buffer, (char_t *)buffer, t_num_chars);
@@ -1128,7 +1128,7 @@ void MCFilesExecPerformReadFor(MCExecContext& ctxt, IO_handle p_stream, int4 p_i
 			real8 *r8ptr = (real8 *)t_current.Chars();
 			for (uint4 i = 0 ; i < p_count ; i++)
 			{
-				t_num_chars = sprintf(buffer, "%d", r8ptr[i]);
+				t_num_chars = sprintf(buffer, "%lf", r8ptr[i]);
 				if (i != 0)
 					MCStringAppendNativeChar(t_buffer, ',');
 				MCStringAppendNativeChars(t_buffer, (char_t *)buffer, t_num_chars);
