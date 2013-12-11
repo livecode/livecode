@@ -1268,7 +1268,10 @@ enum
 	kMCStringEncodingUTF32LE,
 	// The UTF-32 string encoding in big endian byte-order.
 	kMCStringEncodingUTF32BE,
-
+    
+    kMCStringEncodingUTF16,
+    kMCStringEncodingUTF32,
+    
 	// Map 'native' encoding to the appropriate concrete encoding depending
 	// on platform.
 #ifdef __WINDOWS_1252__
@@ -1277,18 +1280,6 @@ enum
 	kMCStringEncodingNative = kMCStringEncodingMacRoman,
 #elif defined(__ISO_8859_1__)
 	kMCStringEncodingNative = kMCStringEncodingISO8859_1,
-#endif
-
-	// Map UTF-16 and UTF-32 encoding to the appropriate concrete encoding
-	// depending on host byte-order.
-#ifdef __LITTLE_ENDIAN__
-	kMCStringEncodingUTF16 = kMCStringEncodingUTF16LE,
-	kMCStringEncodingUTF32 = kMCStringEncodingUTF32LE,
-#elif defined(__BIG_ENDIAN__)
-	kMCStringEncodingUTF16 = kMCStringEncodingUTF16BE,
-	kMCStringEncodingUTF32 = kMCStringEncodingUTF32BE,
-#else
-#error Processor endian-type not defined
 #endif
 };
 
