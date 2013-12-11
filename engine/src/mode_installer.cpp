@@ -259,10 +259,12 @@ public:
 			// MM-2011-03-23: Refactored code to use method call.
 			MCAutoStringRef t_payload_file;
             uindex_t t_last_slash;
-            /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_last_slash);
-            /* FRAGILE */ if (MCStringFormat(&t_payload_file, "%.*@/payload", MCRangeMake(0, t_last_slash), MCcmd))
+            if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_last_slash))
+                t_last_slash = UINDEX_MAX;
+            MCRange t_range = MCRangeMake(0, t_last_slash);
+            /* FRAGILE */ if (MCStringFormat(&t_payload_file, "%*@/payload", &t_range, MCcmd))
 			{
-				MCAutoStringRefAsUTF8String t_utf8_payload_file;
+                MCAutoStringRefAsUTF8String t_utf8_payload_file;
                 /* UNCHECKED */ t_utf8_payload_file . Lock(*t_payload_file);
                 mmap_payload_from_file(*t_utf8_payload_file, t_payload_data, t_payload_size);
 				if(t_payload_data == nil)
@@ -533,9 +535,12 @@ public:
 	void exec_ctxt(MCExecContext& ctxt)
 	{
         MCAutoStringRef t_name;
-        if (!ctxt . EvalExprAsStringRef(m_item_expr, EE_PUT_BADEXP, &t_name));
-            return;
 
+        if (!ctxt . EvalExprAsStringRef(m_item_expr, EE_PUT_BADEXP, &t_name))
+        {
+            return;
+        }
+        
 		if (s_payload_minizip != nil)
 		{
 			MCMiniZipItemInfo t_info;
@@ -546,10 +551,14 @@ public:
                 ctxt . SetItToValue(*t_string);
 			}
 			else
-				ctxt . SetTheResultToCString("describe failed");
+            {
+                ctxt . SetTheResultToCString("describe failed");
+            }
 		}
 		else
-			ctxt . SetTheResultToCString("payload not open");
+        {
+            ctxt . SetTheResultToCString("payload not open");
+        }
 
 		return;
 	}
@@ -1348,25 +1357,20 @@ IO_stat MCDispatch::startup(void)
 			return IO_ERROR;
 		}
 	}
-	else
-	{
-		// Capsule is spilled fill from:
-		//   0..2044 from project section
-		//   spill file
-		//   rest from project section
-		char *t_spill;
-		t_spill = (char *)malloc(strlen(openpath) + 5);
-		sprintf(t_spill, "%s.dat", openpath);
-		if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&t_project_info -> data, 2044, false) ||
-			!MCCapsuleFillFromFile(t_capsule, t_spill, 0, false) ||
-			!MCCapsuleFillNoCopy(t_capsule, (const uint8_t *)&t_project_info -> data + 2044, 2048, true))
-		{
-			free(t_spill);
-			MCCapsuleClose(t_capsule);
-			return IO_ERROR;
-		}
-		free(t_spill);
-	}
+    else
+    {
+        // Capsule is spilled fill from:
+        //   0..2044 from project section
+        //   spill file
+        //   rest from project section
+        MCAutoStringRef t_spill;
+        /* UNCHECKED */ MCStringFormat(&t_spill, "%@.dat", MCcmd);
+        if (!MCCapsuleFillFromFile(t_capsule, *t_spill, 0, true))
+        {
+            MCCapsuleClose(t_capsule);
+            return IO_ERROR;
+        }
+    }
 
 	// Process the capsule
 	if (!MCCapsuleProcess(t_capsule))

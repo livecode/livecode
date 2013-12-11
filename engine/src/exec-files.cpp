@@ -1115,7 +1115,7 @@ void MCFilesExecPerformReadFor(MCExecContext& ctxt, IO_handle p_stream, int4 p_i
 			real4 *r4ptr = (real4 *)t_current.Chars();
 			for (uint4 i = 0 ; i < p_count ; i++)
 			{
-				t_num_chars = sprintf(buffer, "%d", r4ptr[i]);
+				t_num_chars = sprintf(buffer, "%f", r4ptr[i]);
 				if (i != 0)
 					MCStringAppendNativeChar(t_buffer, ',');
 				MCStringAppendNativeChars(t_buffer, (char_t *)buffer, t_num_chars);
@@ -1128,7 +1128,7 @@ void MCFilesExecPerformReadFor(MCExecContext& ctxt, IO_handle p_stream, int4 p_i
 			real8 *r8ptr = (real8 *)t_current.Chars();
 			for (uint4 i = 0 ; i < p_count ; i++)
 			{
-				t_num_chars = sprintf(buffer, "%d", r8ptr[i]);
+				t_num_chars = sprintf(buffer, "%lf", r8ptr[i]);
 				if (i != 0)
 					MCStringAppendNativeChar(t_buffer, ',');
 				MCStringAppendNativeChars(t_buffer, (char_t *)buffer, t_num_chars);
@@ -1241,9 +1241,9 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 			if (p_index != -1)
 				MCS_checkprocesses();
 
-			if (MCStringGetNativeCharAtIndex(p_sentinel, 0) == '\0' || ((r_stat == IO_ERROR || r_stat == IO_EOF) && (p_index == -1 || MCprocesses[p_index].pid == 0)))
+			if (MCStringIsEmpty(p_sentinel) || ((r_stat == IO_ERROR || r_stat == IO_EOF) && (p_index == -1 || MCprocesses[p_index].pid == 0)))
 			{
-				r_stat = IO_EOF;
+                r_stat = IO_EOF;
 				break;
 			}
 			t_duration -= READ_INTERVAL;
@@ -1738,7 +1738,7 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 		{
 			MCAutoStringRefAsCString t_output;
 			/* UNCHECKED */ t_output . Lock(p_data);
-			r_stat = MCS_write(*t_output, sizeof(char), strlen(*t_output), IO_stdout);
+			r_stat = MCS_write(*t_output, sizeof(char), strlen(*t_output), p_stream);
 		}
 		break;
 	default:
