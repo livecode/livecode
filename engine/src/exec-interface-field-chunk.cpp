@@ -695,6 +695,7 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
 
             // MCParagraph scope
             {
+                ei = MCU_min(ei, pgptr -> gettextlength());
                 bool t_blocks_changed;
                 t_blocks_changed = false;
 

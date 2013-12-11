@@ -3314,6 +3314,7 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
         
         r_mark . start = t_cp_range.offset;
         r_mark . finish = t_cp_range.offset + t_cp_range.length;
+        r_mark . changed = false;
     	return;
     }
     r_mark . text = nil;

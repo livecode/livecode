@@ -3156,28 +3156,43 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
 	if (p_chunk . chunk == CT_UNDEFINED && p_where == PT_INTO)
 	{
 		p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, p_string);
+        return;
 	}
-	else
-	{
-        MCField *t_field;
-        t_field = static_cast<MCField *>(p_chunk . object);
-		integer_t t_start, t_finish;
-		if (p_where == PT_INTO)
-			t_start = p_chunk . mark . start, t_finish = p_chunk . mark . finish;
-		else if (p_where == PT_AFTER)
-			t_start = t_finish = p_chunk . mark . finish;
-		else /* PT_BEFORE */
-			t_start = t_finish = p_chunk . mark . start;
-		findex_t t_si, t_ei;
-        t_si = 0;
-        t_ei = INT32_MAX;
-        t_field -> resolvechars(p_chunk . part_id, t_si, t_ei, t_start, t_finish - t_start);
-		if (t_field -> settextindex(p_chunk . part_id, t_si, t_ei, p_string, False) != ES_NORMAL)
-		{
-			ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
-			return;
-		}
-	}
+ 
+    // we have a field chunk
+    MCField *t_field;
+    t_field = static_cast<MCField *>(p_chunk . object);
+    integer_t t_start, t_finish;
+    if (p_where == PT_INTO)
+        t_start = p_chunk . mark . start, t_finish = p_chunk . mark . finish;
+    else if (p_where == PT_AFTER)
+        t_start = t_finish = p_chunk . mark . finish;
+    else /* PT_BEFORE */
+        t_start = t_finish = p_chunk . mark . start;
+    
+    // if we forced new delimiters, then reset the text of the field
+    if (p_chunk . mark . changed)
+    {
+        MCAutoStringRef t_string;
+        if (!MCStringMutableCopy(p_chunk . mark . text, &t_string))
+            return;
+        
+        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_chunk . mark . start, p_chunk . mark . finish - p_chunk . mark . start), p_string);
+        
+        p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_string);
+        return;
+    }
+    
+    // otherwise just alter the contents of the marked range
+    findex_t t_si, t_ei;
+    t_si = 0;
+    t_ei = INT32_MAX;
+    t_field -> resolvechars(p_chunk . part_id, t_si, t_ei, t_start, t_finish - t_start);
+    if (t_field -> settextindex(p_chunk . part_id, t_si, t_ei, p_string, False) != ES_NORMAL)
+    {
+        ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
+        return;
+    }
 }
 
 void MCInterfaceExecPutUnicodeIntoField(MCExecContext& ctxt, MCDataRef p_data, int p_where, MCObjectChunkPtr p_chunk)

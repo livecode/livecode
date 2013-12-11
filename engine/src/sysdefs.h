@@ -1267,6 +1267,7 @@ struct MCMarkedText
 {
     MCStringRef text;
     uint32_t start, finish;
+    bool changed;
 };
 
 struct MCObjectChunkPtr

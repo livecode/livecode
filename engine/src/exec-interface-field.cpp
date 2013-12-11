@@ -199,7 +199,7 @@ void MCField::Redraw(bool reset, int4 xoffset, int4 yoffset)
 	if (!opened)
 		return;
 
-	recompute();
+	do_recompute(reset);
 	if (reset)
 		resetparagraphs();
 	hscroll(xoffset, False);
