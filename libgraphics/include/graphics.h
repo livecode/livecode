@@ -147,6 +147,21 @@ static inline uint8_t MCGPixelGetAlpha(MCGPixelFormat p_format, uint32_t p_pixel
 #endif
 }
 
+static inline uint32_t MCGPixelSetAlpha(MCGPixelFormat p_format, uint32_t p_pixel, uint8_t p_new_alpha)
+{
+#ifdef __LITTLE_ENDIAN__
+	if (p_format & kMCGPixelAlphaPositionFirst)
+		return (p_pixel & 0xFFFFFF00) | p_new_alpha;
+	else
+		return (p_pixel & 0x00FFFFFF) | (p_new_alpha << 24);
+#else
+	if ((p_format & kMCGPixelAlphaPositionFirst) == 0)
+		return (p_pixel & 0xFFFFFF00) | p_new_alpha;
+	else
+		return (p_pixel & 0x00FFFFFF) | (p_new_alpha << 24);
+#endif
+}
+
 // IM-2013-11-01: [[ RefactorGraphics ]] Reverse component shift values on big-endian architectures
 static inline uint8_t MCGPixelGetNativeAlpha(uint32_t p_pixel)
 {
