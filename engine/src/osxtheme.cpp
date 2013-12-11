@@ -1007,9 +1007,12 @@ bool MCNativeTheme::drawmetalbackground(MCContext *p_context, const MCRectangle&
 	
 	Window t_window;
 	t_window = p_object -> getstack() -> getwindow();
+	// COCOA-TODO: metalbackground drawing
+#ifdef OLD_MAC
 	if (t_window  != nil)
 		p_info . background . state = IsWindowHilited((WindowPtr)t_window -> handle . window) ? kThemeStateActive : kThemeStateInactive;
 	else
+#endif
 		p_info . background . state = kThemeStateActive;
 
 	MCRectangle t_clip;

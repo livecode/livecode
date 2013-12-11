@@ -56,11 +56,13 @@ extern void MCRemoteColorDialog(MCExecPoint& ep, const char *p_title, uint32_t p
 ////////////////////////////////////////////////////////////////////////////////
 // MM-2012-08-30: [[ Bug 10293 ]] Reinstate old file dialog code for tiger
 
+#ifdef OLD_MAC
 int MCA_file_tiger(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options);
 int MCA_file_with_types_tiger(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options);
 int MCA_ask_file_tiger(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options);
 int MCA_ask_file_with_types_tiger(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options);
 int MCA_folder_tiger(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial, unsigned int p_options);
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -510,7 +512,7 @@ static int display_modal_dialog(MCExecPoint &ep, NSSavePanel *p_panel, const cha
 	{
         // MM-2012-04-02: [[ Bug 10136 ]] Cocoa/carbon window incompatibility.
 		NSWindow *t_window;
-		t_window = (NSWindow *) MCCreateNSWindow(MCtopstackptr->getwindow()->handle.window);
+		t_window = (NSWindow *)(MCtopstackptr -> getwindow());
 		
 		DialogDelegate *t_delegate;
 		t_delegate = [[DialogDelegate alloc] init];
@@ -672,8 +674,10 @@ int MCA_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const c
 		return t_result;
 		
 	}
+#ifdef OLD_MAC
 	else
 		return MCA_file_tiger(ep, p_title, p_prompt, p_filter, p_initial, p_options);
+#endif
 }
 
 int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options)
@@ -684,8 +688,10 @@ int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prom
 		t_result = MCA_do_file_dialog(ep, p_title == NULL ? "" : p_title, p_prompt == NULL ? "" : p_prompt, p_types, p_type_count, p_initial, p_options | MCA_OPTION_RETURN_FILTER);
 		return t_result;
 	}
+#ifdef OLD_MAC
 	else
 		return MCA_file_with_types_tiger(ep, p_title, p_prompt, p_types, p_type_count, p_initial, p_options);
+#endif
 }
 
 int MCA_ask_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
@@ -701,8 +707,10 @@ int MCA_ask_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, con
 		/* UNCHECKED */ MCMemoryDeleteArray(t_types);
 		return t_result;
 	}
+#ifdef OLD_MAC
 	else
 		return MCA_ask_file_tiger(ep, p_title, p_prompt, p_filter, p_initial, p_options);
+#endif
 }
 
 int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options)
@@ -713,8 +721,10 @@ int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_
 		t_result = MCA_do_file_dialog(ep, p_title == NULL ? "" : p_title, p_prompt == NULL ? "" : p_prompt, p_types, p_type_count, p_initial == NULL ? "" : p_initial, p_options | MCA_OPTION_RETURN_FILTER | MCA_OPTION_SAVE_DIALOG);
 		return t_result;
 	}
+#ifdef OLD_MAC
 	else
 		return MCA_ask_file_with_types_tiger(ep, p_title, p_prompt, p_types, p_type_count, p_initial, p_options);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -780,8 +790,10 @@ int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const
 		
 		return noErr;
 	}
+#ifdef OLD_MAC
 	else
 		return MCA_folder_tiger(ep, p_title, p_prompt, p_initial, p_options);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -870,6 +882,8 @@ void MCA_getcolordialogcolors(MCExecPoint& p_ep)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#ifdef OLD_MAC
 // MM-2012-04-02: Added new MC*Window functions which wrap the corresponding cocoa/carbon window calls.
 //  If a NSWindow has been fetched for the given WinowdRef, the use the appropriate cocoa call.
 //  Otherwise use the carbon call (as before).  Fixes bug associated with sheet (cocoa) file dialogs [[ 10136 ]].
@@ -947,3 +961,4 @@ void MCBringWindowToFront(void *p_window)
 	else
 		BringToFront((WindowPtr)p_window);		
 }
+#endif

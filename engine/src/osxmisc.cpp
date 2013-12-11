@@ -41,6 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  REFACTORED FROM STACKLST.CPP
 //
 
+#ifdef OLD_MAC
 extern void dohilitewindow(WindowRef p_window, Boolean p_hilite);
 
 extern bool WindowIsInControlGroup(WindowRef p_window);
@@ -87,7 +88,9 @@ void MCStacklist::ensureinputfocus(Window window)
 	if (t_browsers_found && window != NULL)
 		SetUserFocusWindow((WindowPtr)window -> handle . window);
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCStacklist::hidepalettes(Boolean hide)
 {
 	active = !hide;
@@ -119,6 +122,7 @@ void MCStacklist::hidepalettes(Boolean hide)
 	}
 	while (tptr != stacks);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -262,7 +266,9 @@ void MCMacEnableScreenUpdates(void)
 
 bool MCMacIsWindowVisible(Window window)
 {
-	return IsWindowVisible((WindowPtr)window -> handle . window);
+	// COCOA-TODO: MCMacIsWindowVisible
+	//return IsWindowVisible((WindowPtr)window -> handle . window);
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -270,6 +276,7 @@ bool MCMacIsWindowVisible(Window window)
 //  REFACTORED FROM BUTTON.CPP
 //
 
+#ifdef MAC_MOVED
 bool MCMacGetMenuItemTag(MenuHandle mh, uint2 mitem, MCString &s)
 {
 	UInt32 t_propsize;
@@ -602,6 +609,7 @@ void MCButton::getmacmenuitemtextfromaccelerator(short menuid, uint2 key, uint1 
 {
 	::getmacmenuitemtextfromaccelerator(GetMenu(menuid), key, mods, s, isunicode, issubmenu);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //

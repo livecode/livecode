@@ -39,6 +39,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ///////////////////////////////////////////////////////////////////////////////
 
+DragTrackingHandlerUPP MCScreenDC::dragmoveUPP;
+DragReceiveHandlerUPP MCScreenDC::dragdropUPP;
+
+///////////////////////////////////////////////////////////////////////////////
+
 MCMacOSXDragPasteboard::MCMacOSXDragPasteboard(DragRef p_drag)
 {
 	m_drag = p_drag;
@@ -378,8 +383,26 @@ static uint4 keystate_to_modifierstate(SInt16 p_keys)
 	return t_modifiers;
 }
 
+void MCScreenDC::open_dragdrop(void)
+{
+	dragdropUPP = NewDragReceiveHandlerUPP(DragReceiveHandler);
+	InstallReceiveHandler(dragdropUPP, NULL, NULL);
+	dragmoveUPP = NewDragTrackingHandlerUPP(DragTrackingHandler);
+	InstallTrackingHandler(dragmoveUPP, NULL, NULL);
+}
+
+void MCScreenDC::close_dragdrop(void)
+{
+	RemoveReceiveHandler(dragdropUPP, NULL);
+	RemoveTrackingHandler(dragmoveUPP, NULL);
+	DisposeDragTrackingHandlerUPP(dragmoveUPP);
+	DisposeDragReceiveHandlerUPP(dragdropUPP);
+}
+
 pascal OSErr MCScreenDC::DragTrackingHandler(DragTrackingMessage p_message, WindowRef p_window, void *p_context, DragRef p_drag)
 {
+	// COCOA-TODO: Redo dragtracking
+#ifdef OLD_MAC
 	_Drawable _dw;
 	_dw.type = DC_WINDOW;
 	_dw.handle.window = (MCSysWindowHandle)p_window;
@@ -457,10 +480,13 @@ pascal OSErr MCScreenDC::DragTrackingHandler(DragTrackingMessage p_message, Wind
 	SetDragDropAction(p_drag, t_mac_action);
 	
 	return t_mac_action == kDragActionNothing ? (OSErr)dragNotAcceptedErr : (OSErr)noErr;
+#endif
 }
 
 pascal OSErr MCScreenDC::DragReceiveHandler(WindowPtr p_window, void *p_context, DragRef p_drag)
 {
+	// COCOA-TODO: Redo DragReceive
+#ifdef OLD_MAC
 	_Drawable _dw;
 	_dw.type = DC_WINDOW;
 	_dw.handle.window = (MCSysWindowHandle)p_window;
@@ -502,4 +528,5 @@ pascal OSErr MCScreenDC::DragReceiveHandler(WindowPtr p_window, void *p_context,
 	PostEvent(mouseUp, 0);
 	
 	return t_mac_action == kDragActionNothing ? dragNotAcceptedErr : noErr;
+#endif
 }

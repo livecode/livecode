@@ -32,6 +32,35 @@ struct MCMacOSXColorTransform
 	bool is_cmyk;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+void MCScreenDC::open_colormapping(void)
+{
+	CMGetDefaultProfileBySpace(cmRGBData, &m_dst_profile);
+	
+	CMProfileLocation t_location;
+	t_location . locType = cmPathBasedProfile;
+	strcpy(t_location . u . pathLoc . path, "/System/Library/ColorSync/Profiles/sRGB Profile.icc");
+	CMOpenProfile(&m_srgb_profile, &t_location);
+}
+
+void MCScreenDC::close_colormapping(void)
+{
+	if (m_dst_profile != nil)
+	{
+		CMCloseProfile(m_dst_profile);
+		m_dst_profile = nil;
+	}
+	
+	if (m_srgb_profile != nil)
+	{
+		CMCloseProfile(m_srgb_profile);
+		m_srgb_profile = nil;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCColorTransformRef MCScreenDC::createcolortransform(const MCColorSpaceInfo& p_info)
 {
 	bool t_success;

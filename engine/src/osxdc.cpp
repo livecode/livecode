@@ -45,12 +45,15 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef MAC_MOVED
 // IM-2013-08-01: [[ ResIndependence ]] OSX implementation currently returns 1.0
 MCGFloat MCResGetDeviceScale(void)
 {
 	return 1.0;
 }
+#endif
 
+#ifdef MAC_MOVED
 MCScreenDC::MCScreenDC()
 {
 	cursorhidden = false ;
@@ -102,7 +105,9 @@ MCScreenDC::MCScreenDC()
 	
 	MCNotifyInitialize();
 }
+#endif
 
+#ifdef MAC_MOVED
 MCScreenDC::~MCScreenDC()
 {
 	MCNotifyFinalize();
@@ -117,12 +122,16 @@ MCScreenDC::~MCScreenDC()
 	if (bgw != NULL)
 		DisposeGWorld(bgw);
 }
+#endif
 
+#ifdef MAC_MOVED
 uint2 MCScreenDC::getdepth(void)
 {
 	return devdepth;
 }
+#endif
 
+#ifdef MAC_MOVED
 bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 {
 	switch(p_feature)
@@ -145,10 +154,12 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 
 	return false;
 }
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef MAC_MOVED
 // TD-2013-07-01 [[ DynamicFonts ]]
 bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
 {	
@@ -189,9 +200,11 @@ bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_
     
     return (t_status == noErr);
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef MAC_MOVED
 void MCScreenDC::listprinters(MCExecPoint& ep)
 {
 	ep . clear();
@@ -215,9 +228,11 @@ MCPrinter *MCScreenDC::createprinter(void)
 {
 	return new MCMacOSXPrinter;
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef MAC_MOVED
 MCStack *MCScreenDC::device_getstackatpoint(int32_t x, int32_t y)
 {
 	Point t_location;
@@ -237,10 +252,13 @@ MCStack *MCScreenDC::device_getstackatpoint(int32_t x, int32_t y)
 		
 	return MCdispatcher -> findstackd(&d);
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef MAC_MOVED
 CFStringRef MCScreenDC::convertutf8tocf(const char *p_utf8_string)
 {
 	return CFStringCreateWithCString(kCFAllocatorDefault, p_utf8_string, kCFStringEncodingUTF8);
 }
+#endif

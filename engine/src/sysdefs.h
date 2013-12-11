@@ -688,7 +688,7 @@ struct MCBitmap
 
 ////////////////////////////////////////
 
-#if !defined(_LINUX_DESKTOP) && !defined(_LINUX_SERVER)
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 enum
 {
     DC_WINDOW,
@@ -715,8 +715,12 @@ struct _ExtendedDrawable: public _Drawable
 typedef  _Drawable *        Window;
 typedef  _Drawable *        Pixmap;
 typedef  _Drawable *        Drawable;
-#else
+#elif defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
 
+typedef MCSysWindowHandle Window;
+typedef MCSysWindowHandle Drawable;
+
+#else
 // MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
 #ifndef __LP64__
 	#if !defined(Window)

@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "globals.h"
 #include "util.h"
+#include "eventqueue.h"
 
 #include <unistd.h>
 #include <Cocoa/Cocoa.h>
@@ -54,23 +55,38 @@ void X_main_loop(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int main(int argc, char *argv[], char *envp[])
+@interface com_runrev_livecode_MCAppDelegate: NSObject<NSApplicationDelegate>
 {
-	extern bool MCS_mac_elevation_bootstrap_main(int argc, char* argv[]);
-	if (argc == 2 && strcmp(argv[1], "-elevated-slave") == 0)
-		if (!MCS_mac_elevation_bootstrap_main(argc, argv))
-			return -1;
+	int m_argc;
+	char **m_argv;
+	char **m_envp;
+}
+
+- (void)applicationDidFinishLaunching: (NSNotification *)notification;
+
+- (void)applicationWillTerminate: (NSNotification *)notification;
+
+@end
+
+@implementation com_runrev_livecode_MCAppDelegate
+
+- (id)initWithArgc:(int)argc argv:(char**)argv envp:(char **)envp
+{
+	self = [super init];
+	if (self == nil)
+		return nil;
 	
-	// MW-2011-08-18: [[ Bug ]] Make sure we initialize Cocoa on startup.
-	NSApplicationLoad();
+	m_argc = argc;
+	m_argv = argv;
+	m_envp = envp;
 	
-	NSAutoreleasePool *t_pool;
-	t_pool = [[NSAutoreleasePool alloc] init];
-		
-	if (!X_init(argc, argv, envp))
+	return self;
+}
+
+- (void)applicationDidFinishLaunching: (NSNotification *)notification
+{
+	if (!X_init(m_argc, m_argv, m_envp))
 	{
-		[t_pool release];
-		
 		if (MCresult != NULL && MCresult -> getvalue() . is_string())
 		{
 			char *t_message;
@@ -79,14 +95,74 @@ int main(int argc, char *argv[], char *envp[])
 		}
 		exit(-1);
 	}
-
-	X_main_loop();
 	
-	t_pool = [[NSAutoreleasePool alloc] init];
-	int t_exit_code = X_close();
-	[t_pool release];
+	[self performSelector: @selector(runMainLoop) withObject: nil afterDelay: 0];
+}
 
+- (void)applicationWillTerminate: (NSNotification *)notification
+{
+	int t_exit_code = X_close();
 	exit(t_exit_code);
+}
+
+- (NSApplicationTerminateReply)applicationShouldTerminate: (NSApplication *)sender
+{
+	// If we haven't already asked to quit, then post a quit request.
+	if (!MCquit)
+	{
+		MCEventQueuePostQuitApp();
+		return NSTerminateCancel;
+	}
+	
+	return NSTerminateNow;
+}
+
+- (void)applicationWillBecomeActive:(NSNotification *)notification
+{
+	MCEventQueuePostResumeApp();
+}
+
+- (void)applicationDidResignActive:(NSNotification *)notification
+{
+	MCEventQueuePostSuspendApp();
+}
+
+- (void)runMainLoop
+{
+	X_main_loop();
+	[[NSApplication sharedApplication] terminate: self];
+}
+
+@end
+
+int main(int argc, char *argv[], char *envp[])
+{
+	extern bool MCS_mac_elevation_bootstrap_main(int argc, char* argv[]);
+	if (argc == 2 && strcmp(argv[1], "-elevated-slave") == 0)
+		if (!MCS_mac_elevation_bootstrap_main(argc, argv))
+			return -1;
+	
+	NSAutoreleasePool *t_pool;
+	t_pool = [[NSAutoreleasePool alloc] init];
+	
+	// Create the normal NSApplication object.
+	NSApplication *t_application;
+	t_application = [NSApplication sharedApplication];
+	
+	// Setup our delegate
+	com_runrev_livecode_MCAppDelegate *t_delegate;
+	t_delegate = [[[com_runrev_livecode_MCAppDelegate alloc] initWithArgc: argc argv: argv envp: envp] autorelease];
+	
+	// Assign our delegate
+	[t_application setDelegate: t_delegate];
+	
+	// Run the application - this never returns!
+	[t_application run];
+	
+	// Drain the autorelease pool.
+	[t_pool release];
+	
+	return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

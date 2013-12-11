@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "dispatch.h"
 #include "eventqueue.h"
+#include "debug.h"
 
 #include "graphics_util.h"
 
@@ -45,6 +46,10 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
 enum MCEventType
 {
 	kMCEventTypeNotify,
+	
+	kMCEventTypeQuitApp,
+	kMCEventTypeSuspendApp,
+	kMCEventTypeResumeApp,
 	
 	kMCEventTypeWindowReshape,
 
@@ -237,7 +242,34 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 	case kMCEventTypeNotify:
 		t_event -> notify . callback(t_event -> notify . state, true);
 		break;
+			
+	case kMCEventTypeQuitApp:
+	{
+		switch(MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
+		{
+			case ES_PASS:
+			case ES_NOT_HANDLED:
+				MCdefaultstackptr->getcard()->message(MCM_shut_down);
+				MCquit = True;
+				MCexitall = True;
+				MCtracestackptr = NULL;
+				MCtraceabort = True;
+				MCtracereturn = True;
+				break;
+			default:
+				break;
+		}
+	}
+	break;
 
+	case kMCEventTypeSuspendApp:
+		MCdefaultstackptr->getcard()->message(MCM_suspend);
+		break;
+		
+	case kMCEventTypeResumeApp:
+		MCdefaultstackptr->getcard()->message(MCM_resume);
+		break;
+			
 	case kMCEventTypeWindowReshape:
 		t_event -> window . stack -> view_configure(true);
 		break;
@@ -247,7 +279,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		{
 			if (MCmousestackptr != t_event -> mouse . stack)
 			{
-			MCmousestackptr = t_event -> mouse . stack;
+				MCmousestackptr = t_event -> mouse . stack;
 				MCmousestackptr -> enter();
 			}
 
@@ -378,7 +410,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			t_mouseloc = MCPointMake(t_event->mouse.position.x, t_event->mouse.position.y);
 			
 			// IM-2013-10-03: [[ FullscreenMode ]] Transform mouseloc based on the mousestack
-			t_mouseloc = MCmousestackptr->view_viewtostackloc(t_mouseloc);
+			t_mouseloc = MCmousestackptr->windowtostackloc(t_mouseloc);
 			
 			MCmousex = t_mouseloc.x;
 			MCmousey = t_mouseloc.y;
@@ -848,6 +880,8 @@ bool MCEventQueuePostMouseFocus(MCStack *p_stack, uint32_t p_time, bool p_inside
 	
 	t_event -> mouse . focus . inside = p_inside;
 
+	MCLog("MouseFocus(%p, %d, %d)", p_stack, p_time, p_inside);
+	
 	return true;
 }
 
@@ -860,7 +894,9 @@ bool MCEventQueuePostMousePress(MCStack *p_stack, uint32_t p_time, uint32_t p_mo
 	t_event -> mouse . press . modifiers = p_modifiers;
 	t_event -> mouse . press . state = p_state;
 	t_event -> mouse . press . button = p_button;
-
+	
+	MCLog("MousePress(%p, %d, %d, %d, %d)", p_stack, p_time, p_modifiers, p_state, p_button);
+	
 	return true;
 }
 
@@ -908,7 +944,9 @@ bool MCEventQueuePostMousePosition(MCStack *p_stack, uint32_t p_time, uint32_t p
 	t_event -> mouse . position . modifiers = p_modifiers;
 	t_event -> mouse . position . x = p_x;
 	t_event -> mouse . position . y = p_y;
-
+	
+	MCLog("MousePosition(%p, %d, %d, %d, %d)", p_stack, p_time, p_modifiers, p_x, p_y);
+	
 	return true;
 }
 
@@ -960,6 +998,24 @@ bool MCEventQueuePostImeCompose(MCStack *p_stack, bool p_enabled, uint32_t p_off
 	MCMemoryCopy(t_new_chars, p_chars, sizeof(uint16_t) * p_char_count);
 
 	return true;
+}
+
+bool MCEventQueuePostQuitApp(void)
+{
+	MCEvent *t_event;
+	return MCEventQueuePost(kMCEventTypeQuitApp, t_event);
+}
+
+bool MCEventQueuePostSuspendApp(void)
+{
+	MCEvent *t_event;
+	return MCEventQueuePost(kMCEventTypeSuspendApp, t_event);
+}
+
+bool MCEventQueuePostResumeApp(void)
+{
+	MCEvent *t_event;
+	return MCEventQueuePost(kMCEventTypeResumeApp, t_event);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

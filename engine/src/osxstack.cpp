@@ -51,22 +51,27 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef OLD_MAC
 // MW-2011-09-13: [[ Redraw ]] If non-nil, this pixmap is used in the next
 //   HIView update.
 // IM-2013-06-19: [[ RefactorGraphics ]] Now using callback function to update
 //   the HIView instead of a Pixmap
 static MCStackUpdateCallback s_update_callback = nil;
 static void *s_update_context = nil;
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
 extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
 extern bool MCGRasterToCGImage(const MCGRaster &p_raster, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
 
+#ifdef OLD_MAC
 OSStatus MCRevolutionStackViewCreate(MCStack *p_stack, ControlRef* r_control);
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef OLD_MAC
 extern EventHandlerUPP MCS_weh;
 
 RgnHandle getWindowContentRegion(WindowRef window,RgnHandle contentRegion)
@@ -186,6 +191,7 @@ static pascal long WindowMaskProc(short varCode, WindowRef window, short message
 	}
 	return 0;
 }
+#endif
 
 void UnloadBundle(CFBundleRef theBundle)
 {
@@ -250,17 +256,17 @@ CFBundleRef LoadBundle(const char *tpath)
 
 MCStack *MCStack::findstackd(Window w)
 {
-	if (w == NULL)
+	if (w == DNULL)
 		return NULL;
-	if ((window != DNULL) && (w->handle.window == window->handle.window))
+	
+	if (w == window)
 		return this;
 	if (substacks != NULL)
 	{
 		MCStack *tptr = substacks;
 		do
 		{
-			if ((tptr->window != DNULL) &&
-			        (w->handle.window == tptr->window->handle.window))
+			if (w == tptr->window)
 				return tptr;
 			tptr = (MCStack *)tptr->next();
 		}
@@ -272,7 +278,7 @@ MCStack *MCStack::findstackd(Window w)
 MCStack *MCStack::findchildstackd(Window w,uint2 &ccount,uint2 cindex)
 {
 	Window pwindow = getparentwindow();
-	if (pwindow != DNULL && w->handle.window == pwindow->handle.window)
+	if (pwindow != DNULL && w == pwindow)
 		if  (++ccount == cindex)
 			return this;
 	if (substacks != NULL)
@@ -281,7 +287,7 @@ MCStack *MCStack::findchildstackd(Window w,uint2 &ccount,uint2 cindex)
 		do
 		{
 			pwindow = tptr->getparentwindow();
-			if (pwindow != DNULL && w->handle.window == pwindow->handle.window)
+			if (pwindow != DNULL && w == pwindow)
 			{
 				ccount++;
 				if (ccount == cindex)
@@ -294,6 +300,7 @@ MCStack *MCStack::findchildstackd(Window w,uint2 &ccount,uint2 cindex)
 	return NULL;
 }
 
+#ifdef MAC_MOVED
 void MCStack::realize()
 { //create window
 	if (!MCnoui && MCModeMakeLocalWindows())
@@ -506,6 +513,7 @@ void MCStack::realize()
 	}
 	start_externals();
 }
+#endif
 
 void MCStack::setsizehints()
 {
@@ -515,6 +523,7 @@ void MCStack::sethints(void)
 {
 }
 
+#ifdef MAC_MOVED
 MCRectangle MCStack::device_getwindowrect() const
 {
     MCRectangle t_rect;
@@ -529,7 +538,9 @@ MCRectangle MCStack::device_getwindowrect() const
     
     return t_rect;
 }
+#endif
 
+#ifdef OLD_MAC
 void MCStackGetWindowRect(WindowPtr p_window, MCRectangle &r_rect)
 {
 	Rect t_winrect;
@@ -547,7 +558,9 @@ void MCStackGetWindowRect(WindowPtr p_window, MCRectangle &r_rect)
 	r_rect.width = t_winrect.right - t_winrect.left;
 	r_rect.height = t_winrect.bottom - t_winrect.top;
 }
+#endif
 
+#ifdef MAC_MOVED
 // IM-2013-09-23: [[ FullscreenMode ]] Factor out device-specific window sizing
 MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
 {
@@ -575,6 +588,7 @@ MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
 	
 	return t_win_rect;
 }
+#endif
 
 void MCStack::setgeom()
 {
@@ -656,6 +670,7 @@ void MCStack::clearscroll(void)
 	syncscroll();
 }
 
+#ifdef OLD_MAC
 void MCStack::syncscroll(void)
 {
 	// If we have no window, no need to adjust the HIView.
@@ -687,6 +702,7 @@ void MCStack::syncscroll(void)
 	SendEventToEventTarget(t_event, GetWindowEventTarget((WindowPtr)window -> handle . window));
 	ReleaseEvent(t_event);
 }
+#endif
 
 // MW-2011-09-13: [[ Masks ]] The windowshape is now stored in a 'WindowMask'
 //   struct. We don't distinguish between 1-bit and 8-bit masks on Mac.
@@ -710,7 +726,7 @@ void MCStack::getminmax(Rect *r)
 	r->bottom = maxheight > MAXINT2 ? MAXINT2 : maxheight;
 }
 
-
+#ifdef OLD_MAC
 void  MCStack::getWinstyle(uint32_t &wstyle, uint32_t &wclass)
 {
 	wclass = kDocumentWindowClass;
@@ -790,14 +806,18 @@ void  MCStack::getWinstyle(uint32_t &wstyle, uint32_t &wclass)
 }
 
 void MCRevolutionStackViewRelink(WindowPtr p_window, MCStack *p_stack);
+#endif
 
+#ifdef MAC_MOVED
 void MCStack::start_externals()
 {
 	if (window != NULL)
 		MCRevolutionStackViewRelink((WindowPtr)window -> handle . window, this);
 	loadexternals();
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCStack::stop_externals()
 {
 	Boolean oldlock = MClockmessages;
@@ -824,6 +844,7 @@ void MCStack::stop_externals()
 	if (window != NULL)
 		MCRevolutionStackViewRelink((WindowPtr)window -> handle . window, NULL);
 }
+#endif
 
 void MCStack::openwindow(Boolean p_override)
 {
@@ -831,6 +852,7 @@ void MCStack::openwindow(Boolean p_override)
 		MCscreen -> openwindow(window, p_override);
 }
 
+#ifdef MAC_MOVED
 void MCStack::setopacity(uint1 p_level)
 {
 	if (!MCModeMakeLocalWindows())
@@ -839,18 +861,22 @@ void MCStack::setopacity(uint1 p_level)
 	if (window != NULL)
 		SetWindowAlpha((WindowPtr)window -> handle . window, p_level / 255.0);
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCStack::updatemodifiedmark(void)
 {
 	if (!MCModeMakeLocalWindows())
 		return;
-	
+
 	if (window != NULL)
 		SetWindowModified((WindowPtr)window -> handle . window, getextendedstate(ECS_MODIFIED_MARK));
 }
+#endif
 
 void MCStack::redrawicon()
 {
+#ifdef OLD_MAC
 	// MW-2005-07-18: It is possible for this to be called if window == NULL in which
 	//   case bad things can happen - so don't let this occur.
 	if (iconid != 0 && window != NULL)
@@ -881,12 +907,14 @@ void MCStack::redrawicon()
 			}
 		}
 	}
+#endif
 }
 
 void MCStack::enablewindow(bool p_enable)
 {
 }
 
+#ifdef MAC_MOVED
 // MW-2011-09-11: [[ Redraw ]] Force an immediate update of the window within the given
 //   region. The actual rendering is done by deferring to the 'redrawwindow' method.
 void MCStack::device_updatewindow(MCRegionRef p_region)
@@ -939,7 +967,9 @@ void MCStack::device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdat
 	s_update_callback = nil;
 	s_update_context = nil;
 }
+#endif
 
+#ifdef MAC_MOVED
 ////////////////////////////////////////////////////////////////////////////////
 
 static inline CGRect MCGRectangleToCGRect(MCGRectangle p_rect)
@@ -1275,9 +1305,11 @@ public:
 		return true;
 	}
 };
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef OLD_MAC
 #define kHIRevolutionStackViewClassID CFSTR("com.runrev.revolution.stackview")
 
 OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p_event, void *p_data);
@@ -1570,6 +1602,7 @@ void MCRevolutionStackViewRelink(WindowRef p_window, MCStack *p_new_stack)
 	SendEventToEventTarget(t_event, GetControlEventTarget(t_view));
 	ReleaseEvent(t_event);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

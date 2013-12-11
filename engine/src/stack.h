@@ -781,7 +781,7 @@ public:
 #elif defined(_MAC_DESKTOP)
 	MCSysWindowHandle getrealwindow()
 	{
-		return window->handle.window;
+		return window;
 	}
 	MCSysWindowHandle getqtwindow(void);
 	void showmenubar();

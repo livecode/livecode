@@ -1032,7 +1032,10 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
 		if (p_window_modal && p_owner != NULL)
 		{
 			t_sheet_done_callback = NewPMSheetDoneUPP(SheetDoneCallback);
+			// COCOA-TODO: PMSessionUseSheets
+#ifdef OLD_MAC
 			PMSessionUseSheets(m_session, (WindowPtr)p_owner -> handle . window, t_sheet_done_callback);
+#endif
 			
 			c_sheet_pending = true;
 			c_sheet_accepted = false;

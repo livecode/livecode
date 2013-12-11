@@ -462,7 +462,7 @@ Window MCStack::getwindow()
 
 Window MCStack::getparentwindow()
 {
-#if defined(_MACOSX) || defined(_WINDOWS)
+#if defined(_WINDOWS)
 	if (parentwindow != DNULL)
 	{
 		if (MCdispatcher->findstackd(parentwindow) == NULL)
@@ -483,7 +483,7 @@ Window MCStack::getparentwindow()
 
 void MCStack::setparentwindow(Window w)
 {
-#if defined(_MACOSX) || defined(_WINDOWS)
+#if defined(_WINDOWS)
 	if (w != DNULL && w->handle.window != 0)
 	{
 		if (parentwindow == DNULL)
@@ -1738,7 +1738,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			else if (MCtopstackptr -> getwindow() != NULL)
 				parentptr = MCtopstackptr;
 		}
-		
+
 		extern bool MCMacIsWindowVisible(Window window);
 		if (parentptr == NULL || parentptr -> getwindow() == NULL || !MCMacIsWindowVisible(parentptr -> getwindow()))
 			wm = WM_MODAL;

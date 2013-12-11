@@ -36,6 +36,10 @@ bool MCEventQueueGetMouseClick(uint32_t p_button);
 typedef void (*MCEventQueueNotifyCallback)(void *state, bool dispatch);
 bool MCEventQueuePostNotify(MCEventQueueNotifyCallback callback, void *state);
 
+bool MCEventQueuePostQuitApp(void);
+bool MCEventQueuePostSuspendApp(void);
+bool MCEventQueuePostResumeApp(void);
+
 bool MCEventQueuePostWindowReshape(MCStack *stack);
 
 bool MCEventQueuePostMouseFocus(MCStack *stack, uint32_t time, bool inside);

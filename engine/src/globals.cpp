@@ -368,8 +368,6 @@ Boolean MCexitall;
 int4 MCretcode;
 Boolean MCrecording;
 
-Boolean MCantialiasedtextworkaround = False;
-
 // MW-2012-03-08: [[ StackFile5500 ]] Make stackfile version 5.5 the default.
 uint4 MCstackfileversion = 5500;
 
@@ -740,7 +738,6 @@ void X_clear_globals(void)
 	MCexitall = False;
 	MCretcode = 0;
 	MCrecording = False;
-	MCantialiasedtextworkaround = False;
 	// MW-2012-03-08: [[ StackFile5500 ]] Make 5.5 stackfile version the default.
 	MCstackfileversion = 5500;
 	MClook = LF_MOTIF;

@@ -540,11 +540,9 @@ void MCStacklist::refresh(void)
 	while(t_node != stacks);
 }
 
-#if !defined(_MAC_DESKTOP)
 void MCStacklist::ensureinputfocus(Window window)
 {
 }
-#endif
 
 void MCStacklist::purgefonts()
 {

@@ -50,6 +50,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 
+#ifdef OLD_MAC
 extern "C"
 {
 	OSStatus HMGetHelpMenu(MenuRef *outHelpMenu,
@@ -356,7 +357,9 @@ static Boolean isKeyPressed(unsigned char *km, uint1 keycode)
 {
 	return (km[keycode >> 3] >> (keycode & 7)) & 1;
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::getkeysdown(MCExecPoint &ep)
 {
 	ep.clear();
@@ -385,7 +388,9 @@ void MCScreenDC::getkeysdown(MCExecPoint &ep)
 		}
 	}
 }
+#endif
 
+#ifdef OLD_MAC
 void MCScreenDC::mode_globaltolocal(Point& p)
 {
 	CGrafPtr oldport;
@@ -399,7 +404,9 @@ void MCScreenDC::mode_globaltolocal(Point& p)
 	p.v = p.v / MCResGetDeviceScale();
 	p.h = p.h / MCResGetDeviceScale();
 }
+#endif
 
+#ifdef OLD_MAC
 void MCScreenDC::mfocus(EventRecord *event, Point p, Boolean dispatch, bool post_or_handle)
 {
 	if (!mdown && !grabbed)
@@ -486,7 +493,9 @@ void MCScreenDC::mfocus(EventRecord *event, Point p, Boolean dispatch, bool post
 				}
 	}
 }
+#endif
 
+#ifdef MAC_MOVED
 static void domenu(short menu, short item)
 {
 	MenuHandle mhandle = GetMenuHandle(menu);
@@ -602,8 +611,9 @@ static void domenu(short menu, short item)
 		}
 	}
 }
+#endif
 
-
+#ifdef OLD_MAC
 Boolean MCScreenDC::dispatchevent(EventRecord &event, Boolean dispatch,
                                   Boolean &abort, Boolean &reset)
 {
@@ -1074,7 +1084,9 @@ Boolean MCScreenDC::dispatchevent(EventRecord &event, Boolean dispatch,
 	}
 	return handled;
 }
+#endif
 
+#ifdef OLD_MAC
 // If this global is true, it means that we are in a WNE and can dispatch
 // events.
 bool g_osx_dispatch_event = false;
@@ -1243,7 +1255,9 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 	else
 		return False;
 }
+#endif
 
+#ifdef OLD_MAC
 void MCScreenDC::activatewindow(Window window)
 {
 	if (activewindow->handle.window != NULL
@@ -1313,7 +1327,9 @@ void MCScreenDC::activatewindow(Window window)
 	
 	MCdispatcher->wkfocus(activewindow);
 }
+#endif
 
+#ifdef OLD_MAC
 void MCScreenDC::doredraw(EventRecord &event, bool p_update_called)
 {
 	if ((WindowPtr)event.message != backdrop_window)
@@ -1346,7 +1362,9 @@ void MCScreenDC::doredraw(EventRecord &event, bool p_update_called)
 		EndUpdate((WindowPtr)event.message);
 	SetGWorld(oldport, olddevice);
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::copybits(Drawable s, Drawable d, int2 sx, int2 sy,
                           uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop)
 {
@@ -1378,7 +1396,9 @@ void MCScreenDC::copybits(Drawable s, Drawable d, int2 sx, int2 sy,
 	if (d->type == DC_BITMAP)
 		UnlockPixels(dpm);
 }
+#endif
 
+#ifdef MAC_MOVED
 /**************************************************************************
     * Following functions create and handle menus.  These menus are MC       *
     * stack-based menus i.e. menus attached to a stack.  In Buttom.cpp file  *
@@ -2021,10 +2041,9 @@ void MCScreenDC::updatemenubar(Boolean force)
 	DrawMenuBar();
 	HiliteMenu(0);
 }
+#endif
 
-
-
-
+#ifdef OLD_MAC
 void MCScreenDC::clearmdown(uint2 which)
 {
 	// MW-2009-10-27: Fix to make sure remote popup menus work more like we expect.
@@ -2036,7 +2055,9 @@ void MCScreenDC::clearmdown(uint2 which)
 		MCdispatcher->wmup(mousewindow, which);
 	}
 }
+#endif
 
+#ifdef OLD_MAC
 void MCScreenDC::setdnddata(DragReference theDrag)
 {
 	if (!owndnd || theDrag != dnddata)
@@ -2046,7 +2067,9 @@ void MCScreenDC::setdnddata(DragReference theDrag)
 		MCdragsource = NULL;
 	}
 }
+#endif
 
+#ifdef MAC_MOVED
 pascal  OSErr TSMOffsetToPosition(const AppleEvent *theAppleEvent,
                                   AppleEvent *reply, long handlerRefcon)
 {
@@ -2459,4 +2482,5 @@ pascal OSErr TSMUnicodeNotFromInputHandler(const AppleEvent *theAppleEvent,
 	AEDisposeDesc(&text);
 	return  noErr;
 }
+#endif
 #endif

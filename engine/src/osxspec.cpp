@@ -173,6 +173,7 @@ static OSErr osacompile(MCString &s, ComponentInstance compinstance, OSAID &id);
 static OSErr osaexecute(MCString &s,ComponentInstance compinstance, OSAID id);
 /***************************************************************************/
 
+#ifdef OLD_MAC
 EventHandlerUPP MCS_weh;
 
 bool WindowIsInControlGroup(WindowRef p_window)
@@ -357,6 +358,7 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 	}
 	return eventNotHandledErr;
 }
+#endif
 
 static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refCon)
 {
@@ -975,9 +977,10 @@ void MCS_init()
 		}
 	}
 
-
+#ifdef OLD_MAC
 	MCS_weh = NewEventHandlerUPP(WinEvtHndlr);
-
+#endif
+	
 	// MW-2005-04-04: [[CoreImage]] Load in CoreImage extension
 	extern void MCCoreImageRegister(void);
 	if (MCmajorosversion >= 0x1040)
@@ -1010,8 +1013,9 @@ void MCS_shutdown()
 		CloseComponent(osacomponents[i].compinstance);
 	delete osacomponents;
 
-
+#ifdef OLD_MAC
 	DisposeEventHandlerUPP(MCS_weh);
+#endif
 }
 
 void MCS_seterrno(int value)

@@ -28,7 +28,6 @@
 		4C4D3DF417E355B50012FB12 /* osxflst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880160B80A4F800200116 /* osxflst.cpp */; };
 		4C4D3E0117E358230012FB12 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DB3856E1714422200D3F102 /* Carbon.framework */; };
 		4C6F241E1529B33000C5AFB6 /* osxsnapshot.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4C6F241D1529B33000C5AFB6 /* osxsnapshot.mm */; };
-		4CAA94D015EF6E64007CD4C5 /* osxansold.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CAA94CF15EF6E64007CD4C5 /* osxansold.cpp */; };
 		4CC1535714E7FB91009FA80E /* paragrafattr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1535614E7FB91009FA80E /* paragrafattr.cpp */; };
 		4CC1536214E7FE1D009FA80E /* fieldstyledtext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */; };
 		4D00C6290CE1F27300341AD3 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D00C6280CE1F27300341AD3 /* SystemConfiguration.framework */; };
@@ -317,6 +316,13 @@
 		4D8BED0211B959F500DED42A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
 		4D8BED0311B95A0300DED42A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
 		4D8BED4811B95A1000DED42A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
+		4D9317A3185720810073ABA8 /* osxdc-cocoa.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D9317A2185720810073ABA8 /* osxdc-cocoa.mm */; };
+		4D9317A9185720E80073ABA8 /* osxdc-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D9317A8185720E80073ABA8 /* osxdc-legacy.cpp */; };
+		4D9317B7185728F10073ABA8 /* osxdc-carbon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D9317B6185728F10073ABA8 /* osxdc-carbon.cpp */; };
+		4D93185E18573ADD0073ABA8 /* osxdc-menu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D93185D18573ADD0073ABA8 /* osxdc-menu.mm */; };
+		4D93186018573AEF0073ABA8 /* osxdc-textinput.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D93185F18573AEF0073ABA8 /* osxdc-textinput.mm */; };
+		4D9318C0185749E70073ABA8 /* osxdc-window.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D9318BF185749E70073ABA8 /* osxdc-window.mm */; };
+		4D931B751857698B0073ABA8 /* osxdc-stack.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D931B741857698B0073ABA8 /* osxdc-stack.mm */; };
 		4D982B1213C1CDC10066119A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D982B1113C1CDC10066119A /* CoreServices.framework */; };
 		4D982B1913C1CDD20066119A /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D982B1813C1CDD20066119A /* ApplicationServices.framework */; };
 		4DAB7D280FF3A0100009F91E /* md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7D270FF3A0100009F91E /* md5.cpp */; };
@@ -443,10 +449,6 @@
 		4DEE2AD90FDE42710009423C /* osxans.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880190B80A4F800200116 /* osxans.mm */; };
 		4DEE2ADA0FDE42710009423C /* osxcoreimage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880140B80A4F800200116 /* osxcoreimage.cpp */; };
 		4DEE2ADB0FDE42710009423C /* osxclipboard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BD980CCF74C800D74FDB /* osxclipboard.cpp */; };
-		4DEE2ADE0FDE42710009423C /* osxdc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880150B80A4F800200116 /* osxdc.cpp */; };
-		4DEE2AE00FDE42710009423C /* osxdce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880200B80A4F800200116 /* osxdce.cpp */; };
-		4DEE2AE10FDE42710009423C /* osxdcmac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D58801A0B80A4F800200116 /* osxdcmac.cpp */; };
-		4DEE2AE20FDE42710009423C /* osxdcs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880130B80A4F800200116 /* osxdcs.cpp */; };
 		4DEE2AE30FDE42710009423C /* osxdnd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BE370CCF789000D74FDB /* osxdnd.cpp */; };
 		4DEE2AE40FDE42710009423C /* osxfiles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D03C2160BC5803900026EA7 /* osxfiles.cpp */; };
 		4DEE2AE50FDE42710009423C /* osxflst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880160B80A4F800200116 /* osxflst.cpp */; };
@@ -1213,6 +1215,14 @@
 		4D8BEC3F11B9379500DED42A /* osxicon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = osxicon.cpp; path = src/osxicon.cpp; sourceTree = "<group>"; };
 		4D8BEC4411B9389C00DED42A /* bsdiff_build.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bsdiff_build.cpp; path = src/bsdiff_build.cpp; sourceTree = "<group>"; };
 		4D8BED0111B959F500DED42A /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		4D9317A2185720810073ABA8 /* osxdc-cocoa.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "osxdc-cocoa.mm"; path = "src/osxdc-cocoa.mm"; sourceTree = "<group>"; };
+		4D9317A8185720E80073ABA8 /* osxdc-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "osxdc-legacy.cpp"; path = "src/osxdc-legacy.cpp"; sourceTree = "<group>"; };
+		4D9317B6185728F10073ABA8 /* osxdc-carbon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "osxdc-carbon.cpp"; path = "src/osxdc-carbon.cpp"; sourceTree = "<group>"; };
+		4D93185D18573ADD0073ABA8 /* osxdc-menu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "osxdc-menu.mm"; path = "src/osxdc-menu.mm"; sourceTree = "<group>"; };
+		4D93185F18573AEF0073ABA8 /* osxdc-textinput.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "osxdc-textinput.mm"; path = "src/osxdc-textinput.mm"; sourceTree = "<group>"; };
+		4D9318BF185749E70073ABA8 /* osxdc-window.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "osxdc-window.mm"; path = "src/osxdc-window.mm"; sourceTree = "<group>"; };
+		4D931B741857698B0073ABA8 /* osxdc-stack.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "osxdc-stack.mm"; path = "src/osxdc-stack.mm"; sourceTree = "<group>"; };
+		4D931E5A185894D10073ABA8 /* osxdc-stack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "osxdc-stack.h"; path = "src/osxdc-stack.h"; sourceTree = "<group>"; };
 		4D9797D10D1845B700CD2DD0 /* itransform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = itransform.cpp; path = src/itransform.cpp; sourceTree = "<group>"; };
 		4D982A4513C1B9A90066119A /* srvmac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvmac.cpp; path = src/srvmac.cpp; sourceTree = "<group>"; };
 		4D982B1113C1CDC10066119A /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
@@ -1797,12 +1807,10 @@
 				4D5880200B80A4F800200116 /* osxdce.cpp */,
 				4D58801A0B80A4F800200116 /* osxdcmac.cpp */,
 				4D5880130B80A4F800200116 /* osxdcs.cpp */,
-				4D61BE370CCF789000D74FDB /* osxdnd.cpp */,
 				4D4F9E6613CDFB8100B9B15D /* osxfield.cpp */,
 				4D03C2160BC5803900026EA7 /* osxfiles.cpp */,
 				4D5880160B80A4F800200116 /* osxflst.cpp */,
 				4D587F5C0B809A2D00200116 /* osxflst.h */,
-				4D8BEC3F11B9379500DED42A /* osxicon.cpp */,
 				4D4F9E3913CDF24A00B9B15D /* osximage.cpp */,
 				4D4F9E3A13CDF24A00B9B15D /* osxmisc.cpp */,
 				4D4F9E1113CDEC5600B9B15D /* osxprefix.h */,
@@ -1810,14 +1818,25 @@
 				4D2192430C63871D0027A96D /* osxprinter.h */,
 				4D61BD990CCF74C800D74FDB /* osxscript.cpp */,
 				4D407C0B15F8D15600AA3ABC /* osxscriptold.cpp */,
-				4C6F241D1529B33000C5AFB6 /* osxsnapshot.mm */,
 				4D58801C0B80A4F800200116 /* osxspec.cpp */,
-				4D58801B0B80A4F800200116 /* osxstack.cpp */,
 				4DCFFD1B10CE8F5800FA2262 /* osxtextlayout.cpp */,
 				4D5880180B80A4F800200116 /* osxtheme.cpp */,
 				4D4F9E4D13CDF6EA00B9B15D /* osxtheme.h */,
 				4D61BD9A0CCF74C800D74FDB /* osxtransfer.mm */,
 				4D61BDAA0CCF74EF00D74FDB /* osxtransfer.h */,
+				4D61BE370CCF789000D74FDB /* osxdnd.cpp */,
+				4C6F241D1529B33000C5AFB6 /* osxsnapshot.mm */,
+				4D8BEC3F11B9379500DED42A /* osxicon.cpp */,
+				4D9317A2185720810073ABA8 /* osxdc-cocoa.mm */,
+				4D9317A8185720E80073ABA8 /* osxdc-legacy.cpp */,
+				4D9317B6185728F10073ABA8 /* osxdc-carbon.cpp */,
+				4D93185D18573ADD0073ABA8 /* osxdc-menu.mm */,
+				4D93185F18573AEF0073ABA8 /* osxdc-textinput.mm */,
+				4D9318BF185749E70073ABA8 /* osxdc-window.mm */,
+				4D931B741857698B0073ABA8 /* osxdc-stack.mm */,
+				4D58801B0B80A4F800200116 /* osxstack.cpp */,
+				4D05B90E13E06AAC001CD82A /* dskosxmain.mm */,
+				4D931E5A185894D10073ABA8 /* osxdc-stack.h */,
 			);
 			name = "Desktop - Mac";
 			sourceTree = "<group>";
@@ -2098,7 +2117,6 @@
 			children = (
 				4D05B90C13E06AAB001CD82A /* dsklnxmain.cpp */,
 				4D05B90D13E06AAB001CD82A /* dskmain.cpp */,
-				4D05B90E13E06AAC001CD82A /* dskosxmain.mm */,
 				4D05B90F13E06AAC001CD82A /* dskw32main.cpp */,
 				4DE7ED0D13B33B7F002634F5 /* dskspec.cpp */,
 			);
@@ -3353,10 +3371,6 @@
 				4DEE2AD90FDE42710009423C /* osxans.mm in Sources */,
 				4DEE2ADA0FDE42710009423C /* osxcoreimage.cpp in Sources */,
 				4DEE2ADB0FDE42710009423C /* osxclipboard.cpp in Sources */,
-				4DEE2ADE0FDE42710009423C /* osxdc.cpp in Sources */,
-				4DEE2AE00FDE42710009423C /* osxdce.cpp in Sources */,
-				4DEE2AE10FDE42710009423C /* osxdcmac.cpp in Sources */,
-				4DEE2AE20FDE42710009423C /* osxdcs.cpp in Sources */,
 				4DEE2AE30FDE42710009423C /* osxdnd.cpp in Sources */,
 				4DEE2AE40FDE42710009423C /* osxfiles.cpp in Sources */,
 				4DEE2AE50FDE42710009423C /* osxflst.cpp in Sources */,
@@ -3442,7 +3456,6 @@
 				4D377262150785AF000B0EB0 /* fieldhtml.cpp in Sources */,
 				4D37727E150787EA000B0EB0 /* fieldrtf.cpp in Sources */,
 				4C6F241E1529B33000C5AFB6 /* osxsnapshot.mm in Sources */,
-				4CAA94D015EF6E64007CD4C5 /* osxansold.cpp in Sources */,
 				4D407C0C15F8D15600AA3ABC /* osxscriptold.cpp in Sources */,
 				4DCB65721653B2F700E438E6 /* stackcache.cpp in Sources */,
 				4D83871E1678B2C9003BEC7C /* ibmp.cpp in Sources */,
@@ -3461,6 +3474,13 @@
 				E8988A8A17FDD5B700F640F4 /* stackview.cpp in Sources */,
 				4D1AA1E5181556180075FC5E /* bitmapeffect.cpp in Sources */,
 				E85130F4180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */,
+				4D9317A3185720810073ABA8 /* osxdc-cocoa.mm in Sources */,
+				4D9317A9185720E80073ABA8 /* osxdc-legacy.cpp in Sources */,
+				4D9317B7185728F10073ABA8 /* osxdc-carbon.cpp in Sources */,
+				4D93185E18573ADD0073ABA8 /* osxdc-menu.mm in Sources */,
+				4D93186018573AEF0073ABA8 /* osxdc-textinput.mm in Sources */,
+				4D9318C0185749E70073ABA8 /* osxdc-window.mm in Sources */,
+				4D931B751857698B0073ABA8 /* osxdc-stack.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

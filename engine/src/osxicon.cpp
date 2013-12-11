@@ -33,6 +33,38 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ///////////////////////////////////////////////////////////////////////////////
 
+EventHandlerUPP MCScreenDC::s_icon_menu_event_handler_upp;
+
+///////////////////////////////////////////////////////////////////////////////
+
+void MCScreenDC::open_iconmenu(void)
+{	
+	EventTypeSpec t_menu_event_specs[1];
+	t_menu_event_specs[0] . eventClass = kEventClassMenu;
+	t_menu_event_specs[0] . eventKind = kEventMenuPopulate;
+	
+	CreateNewMenu(0, 0, &f_icon_menu);
+	s_icon_menu_event_handler_upp = NewEventHandlerUPP((EventHandlerProcPtr)handleiconmenuevent);
+	InstallEventHandler(GetMenuEventTarget(f_icon_menu), s_icon_menu_event_handler_upp, 1, t_menu_event_specs, NULL, NULL);
+	
+	t_menu_event_specs[0] . eventClass = kEventClassCommand;
+	t_menu_event_specs[0] . eventKind = kEventCommandProcess;
+	InstallEventHandler(GetApplicationEventTarget(), s_icon_menu_event_handler_upp, 1, t_menu_event_specs, NULL, NULL);
+	
+	SetApplicationDockTileMenu(f_icon_menu);
+}
+
+void MCScreenDC::close_iconmenu(void)
+{
+	SetApplicationDockTileMenu(NULL);
+	ReleaseMenu(f_icon_menu);
+	DisposeEventHandlerUPP(s_icon_menu_event_handler_upp);
+	f_icon_menu = NULL;
+	s_icon_menu_event_handler_upp = NULL;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 void MCScreenDC::seticon(uint4 p_icon)
 {
 	if (p_icon != 0)

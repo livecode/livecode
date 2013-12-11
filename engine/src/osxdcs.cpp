@@ -87,10 +87,13 @@ static MCColor accentcolors[8];
 
 ////////
 
+#ifdef MAC_MOVED
 void MCScreenDC::setstatus(const char *status)
 { //No action
 }
+#endif
 
+#ifdef OLD_MAC
 Boolean MCScreenDC::open()
 {
 	owndnd = False;
@@ -264,7 +267,9 @@ Boolean MCScreenDC::open()
 	
 	return True;
 }
+#endif
 
+#ifdef OLD_MAC
 Boolean MCScreenDC::close(Boolean force)
 {
 	if (m_dst_profile != nil)
@@ -334,12 +339,16 @@ Boolean MCScreenDC::close(Boolean force)
 	opened = False;
 	return True;
 }
+#endif
 
+#ifdef MAC_MOVED
 const char *MCScreenDC::getdisplayname()
 {
 	return "local Mac";
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::grabpointer(Window w)
 {
 	grabbed = True;
@@ -349,7 +358,9 @@ void MCScreenDC::ungrabpointer()
 {
 	grabbed = False;
 }
+#endif
 
+#ifdef MAC_MOVED
 uint16_t MCScreenDC::device_getwidth(void)
 {
 	GDHandle mainScreen = GetMainDevice();
@@ -369,7 +380,9 @@ uint16_t MCScreenDC::device_getheight(void)
 	HUnlock((Handle)mainScreen);
 	return sheight;
 }
+#endif
 
+#ifdef MAC_MOVED
 uint2 MCScreenDC::getmaxpoints()
 {//max points defined in a polygon on Mac quick Draw
 	return 32767;
@@ -379,7 +392,9 @@ uint2 MCScreenDC::getvclass()
 {
 	return DirectColor;
 }
+#endif
 
+#ifdef MAC_MOVED
 MCColor* MCScreenDC::getaccentcolors()
 {
 	
@@ -415,13 +430,17 @@ MCColor* MCScreenDC::getaccentcolors()
 	MClook = LF_MAC;
 	return NULL;
 }
+#endif
 
+#ifdef OLD_MAC
 static void getMouseLoc(Point *mouseLoc)
 {
 	GetMouse(mouseLoc);
 	LocalToGlobal(mouseLoc);
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::enactraisewindows(void)
 {
 	if (MCraisewindows)
@@ -683,7 +702,9 @@ void MCScreenDC::setname(Window w, const char *newname)
 		CFRelease(t_title);
 	}
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::setcmap(MCStack *sptr)
 {// no action
 }
@@ -703,19 +724,25 @@ void MCScreenDC::flush(Window w)
 			QDFlushPortBuffer(GetWindowPort((WindowPtr)w->handle.window), NULL);
 	}
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::beep()
 {
 	SndSetSysBeepState(sysBeepEnable | sysBeepSynchronous);
 	SysBeep(beepduration / 16);
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::setinputfocus(Window window)
 {
 	if (window->handle.window != activewindow->handle.window)
 		activatewindow(window);
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::freepixmap(Pixmap &p)
 {
 	if (p != DNULL)
@@ -770,7 +797,9 @@ void MCScreenDC::unlockpixmap(Pixmap p_pixmap, void *p_bits, uint4 p_stride)
 	HUnlock((Handle)t_src_pixmap);
 	UnlockPixels(t_src_pixmap);
 }
+#endif
 
+#ifdef MAC_MOVED
 bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 {//get the client window's geometry in screen coord
 	if (w == DNULL || w->handle.window == 0)
@@ -788,7 +817,9 @@ bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 
 	return true;
 }
+#endif
 
+#ifdef MAC_MOVED
 Boolean MCScreenDC::getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d)
 {
 	if (p != DNULL)
@@ -803,12 +834,16 @@ Boolean MCScreenDC::getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d)
 	}
 	return False;
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::setgraphicsexposures(Boolean on, MCStack *sptr)
 {
 	ge = on;
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::copyarea(Drawable s, Drawable d, int2 depth,
                           int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx,
                           int2 dy, uint4 rop)
@@ -858,7 +893,9 @@ void MCScreenDC::copyarea(Drawable s, Drawable d, int2 depth,
 	}
 	SetGWorld(oldport, olddevice);
 }
+#endif
 
+#ifdef MAC_MOVED
 uint4 MCScreenDC::dtouint4(Drawable d)
 {
 	if (d == DNULL)
@@ -877,7 +914,9 @@ Boolean MCScreenDC::uint4towindow(uint4 id, Window &w)
 	w->handle.window = (MCSysWindowHandle)id;
 	return True;
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::getbeep(uint4 which, MCExecPoint &ep)
 {
 	long v;
@@ -917,17 +956,23 @@ void MCScreenDC::setbeep(uint4 which, int4 beep)
 		break;
 	}
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::getvendorstring(MCExecPoint &ep)
 {
 	ep.setstaticcstring("Mac OS");
 }
+#endif
 
+#ifdef MAC_MOVED
 uint2 MCScreenDC::getpad()
 { //return the boundary each scan line is padded to.
 	return 32;
 }
+#endif
 
+#ifdef MAC_MOVED
 Window MCScreenDC::getroot()
 {
 	static Drawable mydrawable;
@@ -938,7 +983,9 @@ Window MCScreenDC::getroot()
 	mydrawable->handle.window = (MCSysWindowHandle)wMgrPort; //broken
 	return mydrawable;
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::enablebackdrop(bool p_hard)
 {
 	if (!MCModeMakeLocalWindows())
@@ -1210,7 +1257,9 @@ void MCScreenDC::redrawbackdrop(MCContext *p_context, const MCRectangle& p_dirty
 		backdrop_badge -> drawme(p_context, 0, 0, t_rect . width, t_rect . height, 32, getheight() - 32 - t_rect . height);
 	}
 }
+#endif
 
+#ifdef MAC_MOVED
 // MW-2007-8-29: [[ Bug 4691 ]] Make sure the working screenrect is adjusted appropriately when we show/hide the menubar
 void MCScreenDC::hidemenu()
 {
@@ -1235,3 +1284,4 @@ void MCScreenDC::showmenu()
 		s_monitor_count = 0;
 	}
 }
+#endif

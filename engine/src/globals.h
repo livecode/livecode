@@ -360,7 +360,6 @@ extern char *MCsslcertificates;
 extern char *MCdefaultnetworkinterface;
 extern uint4 MCstackfileversion;
 extern uint4 MCmajorosversion;
-extern Boolean MCantialiasedtextworkaround;
 extern uint4 MCqtidlerate;
 
 extern uint4 MCiconid;

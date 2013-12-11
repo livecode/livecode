@@ -603,7 +603,7 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 #ifdef _MACOSX
 MCSysWindowHandle MCStack::getqtwindow(void)
 {
-	return window->handle.window;
+	return window;
 }
 #endif
 

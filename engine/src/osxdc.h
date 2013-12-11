@@ -48,20 +48,9 @@ enum Mac_platform {
     MP_POWERPC
 };
 
-//for displaying and building MAC menus, wihich includes hierachical menu
-
-#define MAX_SUBMENU_DEPTH  31    //for Hierachical menus
-
-#define SUB_MENU_START_ID  257   //the ID of the first sub menu. MAC allows from 1 to 235
-#define SUB_MENU_LAST_ID 20000
-#define MENUIDSIZE 2
-#define MENUIDOFFSET 3
-
-#define MAIN_MENU_LAST_ID  32
-#define MAIN_MENU_FIRST_ID 2
-
 typedef struct OpaqueScrapRef*          ScrapRef;
 
+#ifdef OLD_MAC
 typedef struct
 {
 	MenuHandle mh;
@@ -75,6 +64,7 @@ typedef struct
 	uint2 after; //insert new menu item after this number
 }
 MenuStructure;
+#endif
 
 class MCEventnode : public MCDLlist
 {
@@ -175,13 +165,16 @@ static inline MCRectangle MCMacRectToMCRect(const Rect &p_rect)
 
 class MCScreenDC : public MCUIDC
 {
+#ifdef OLD_MAC
 	Boolean ownselection;
 	uint2 devdepth;
 	uint2 linesize;
 	MCEventnode *pendingevents;
 	MCVisualInfo *vis;
+#endif
 	uint2 beeppitch;
 	uint2 beepduration;
+#if OLD_MAC
 	Boolean grabbed;  //mouse is grabbed
 	Boolean mdown;  //mouse is down
 	Boolean doubleclick;
@@ -199,9 +192,11 @@ class MCScreenDC : public MCUIDC
 	Boolean menuBarHidden; //flag to indicat is the menu bar is hidden
 	static uint2 ink_table_m[];
 	static uint2 ink_table_c[];
+#endif
 	Handle menuBar;	 //Handle to menu for the entire MC app
 	MenuHandle appleMenu;  //handle to Apple menu
 	WindowPtr invisibleWin;
+#if OLD_MAC
 	Boolean bgmode;
 
 	bool backdrop_hard;
@@ -214,9 +209,10 @@ class MCScreenDC : public MCUIDC
 	MCColor backdrop_colour;
 	MCPatternRef backdrop_pattern;
 	MCImage *backdrop_badge;
+#endif
 	
-	MenuRef f_icon_menu;
-	
+	MenuRef f_icon_menu;	
+
 	//
 
 	// Universal Procedure Pointers for clipboard and drag-drop
@@ -234,6 +230,7 @@ class MCScreenDC : public MCUIDC
 	// drag-drop code to call TrackDrag
 	EventRecord m_drag_event;
 
+#ifdef OLD_MAC
 	// Used to indicate whether we've down drag detection for the current click
 	bool m_drag_click;
 
@@ -246,6 +243,7 @@ class MCScreenDC : public MCUIDC
 	bool m_in_resize;
 	
 	//
+#endif
 	
 	// MW-2009-12-22: The default destination profile
 	CMProfileRef m_dst_profile;
@@ -253,12 +251,14 @@ class MCScreenDC : public MCUIDC
 	
 	//
 
+#ifdef OLD_MAC
 	// To make sure we don't end up deleting windows while inside system event
 	// handlers, we accumulate all deletions into a list and then delete at
 	// suitable moments.
 	static WindowRef *c_window_deletions;
 	static unsigned int c_window_deletion_count;
-
+#endif
+	
 	//
 
 	static EventHandlerUPP s_icon_menu_event_handler_upp;
@@ -266,10 +266,11 @@ class MCScreenDC : public MCUIDC
 	// for storing non-application main menu IDs. Only member 33 to 235
 	// are used to keep track of the ids that are being used for submenus
 	// and button's menus such as Pop-up, option, and pulldows
-
 	static uint2 submenuIDs[20000];
 	
+#ifdef OLD_MAC
 	GWorldPtr bgw;
+#endif
 	
 	////TSM - TEXT SERVICES MANAGER DOCUMENT
 	static TSMDocumentID tsmdocument;
@@ -279,14 +280,19 @@ class MCScreenDC : public MCUIDC
 	static AEEventHandlerUPP TSMUnicodeNotFromInputUPP;
 	static DragReceiveHandlerUPP dragdropUPP;
 	static DragTrackingHandlerUPP dragmoveUPP;
+#ifdef OLD_MAC
 	Boolean owndnd;
 	DragReference dnddata;
 	
 	Boolean cursorhidden ;
+#endif
+	
 	Boolean menubarhidden ;
 	
 protected:
+#ifdef OLD_MAC
 	uint2 opened;
+#endif
 	
 public:
 	static MCDisplay *s_monitor_displays;
@@ -299,12 +305,16 @@ public:
 	MCScreenDC();
 	virtual ~MCScreenDC();
 	
+#ifdef OLD_MAC
 	Boolean getmenubarhidden(void) { return menubarhidden; };
-
+#endif
+	
 	virtual bool hasfeature(MCPlatformFeature p_feature);
 	
 			// in macdcs.cc   Screen routines
+#ifdef OLD_MAC
 	virtual void setstatus(const char *status);
+#endif
 	
 	virtual Boolean open();
 	virtual Boolean close(Boolean force);
@@ -338,12 +348,15 @@ public:
 	virtual void uniconifywindow(Window window);
 	
 	virtual void setname(Window window, const char *newname);
+#ifdef OLD_MAC
 	virtual void setcmap(MCStack *sptr);
 	virtual void sync(Window w);
 	virtual void flush(Window w);
+#endif
 	virtual void beep();
 	virtual void setinputfocus(Window window);
 
+#ifdef OLD_MAC
 	virtual void freepixmap(Pixmap &pixmap);
 	virtual Pixmap createpixmap(uint2 width, uint2 height,
 	                            uint2 depth, Boolean purge);
@@ -357,6 +370,7 @@ public:
 	virtual void copyarea(Drawable source, Drawable dest, int2 depth,
 	                      int2 sx, int2 sy, uint2 sw, uint2 sh,
 	                      int2 dx, int2 dy, uint4 rop);
+#endif
 	
 	virtual MCColorTransformRef createcolortransform(const MCColorSpaceInfo& info);
 	virtual void destroycolortransform(MCColorTransformRef transform);
@@ -371,7 +385,11 @@ public:
 	virtual void setbeep(uint4 property, int4 beep);
 	virtual void getvendorstring(MCExecPoint &ep);
 	virtual uint2 getpad();
+	
+#ifdef OLD_MAC
 	virtual Window getroot();
+#endif
+	
 	virtual MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window,
 	                           const char *displayname);
 
@@ -385,7 +403,10 @@ public:
 
 	virtual MCColor *getaccentcolors();
 
+#ifdef OLD_MAC
 	virtual void expose();
+#endif
+	
 	virtual Boolean abortkey();
 	virtual uint2 querymods();
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
@@ -394,8 +415,12 @@ public:
 	virtual void flushevents(uint2 e);
 	virtual void updatemenubar(Boolean force);
 	virtual Boolean istripleclick();
+	
+#ifdef OLD_MAC
 	virtual uint1 fontnametocharset(const char *oldfontname);
 	virtual char *charsettofontname(uint1 chharset, const char *oldfontname);
+#endif
+	
 	virtual void clearIME(Window w);
 	virtual void openIME();
 	virtual void activateIME(Boolean activate);
@@ -443,10 +468,12 @@ public:
 
 
 	void drawdefaultbutton(const MCRectangle &trect);
+#ifdef OLD_MAC
 	void setbgmode(Boolean on)
 	{
 		bgmode = on;
 	}
+#endif
 
 	void copybits(Drawable s, Drawable d, int2 sx, int2 sy,
 	              uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop);
@@ -463,19 +490,52 @@ public:
 	
 	void enactraisewindows(void);
 	
-	WindowPtr getinvisiblewin()
-	{
-		return invisibleWin;
-	}
+	WindowPtr getinvisiblewin();
+	
+#ifdef OLD_MAC
 	Boolean getowndnd()
 	{
 		return owndnd;
 	}
+#endif
 	
 	// This routine converts a UTF-8 string into a CFString suitable for passing
 	// to Carbon APIs. The caller is responsible for CFRelease'ing the string.
 	static CFStringRef convertutf8tocf(const char *p_utf8_string);
 
+	//////////
+	
+	// These methods provide the information so that the correct stream of events
+	// can be generated.
+	
+	// This is invoked when the modifier keys change.
+	void event_modifierschanged(uint32_t modifiers);
+	
+	// This is invoked when the state of a mouse button changes.
+	void event_mousepress(uint32_t button, bool pressed);
+	
+	// This is invoked when we receive a mouse-move event.
+	void event_mousemove(MCPoint screen_loc);
+	
+	// This is invoked when the mouse transitions into and out of one of our
+	// window's visible rects.
+	void event_mousefocus(bool inside);
+	
+	MCStack *event_windowtostack(Window window);
+	Window event_stacktowindow(MCStack *stack);
+	MCPoint event_globaltolocal(MCStack *stack, MCPoint location);
+	MCPoint event_localtoglobal(MCStack *stack, MCPoint location);
+	
+	Window event_getwindowatpoint(MCPoint location);
+	
+#if 0
+	// mousepress should be invoked when the state of a mouse button changes
+	void event_mousepress(uint32_t timestamp, uint32_t button, bool pressed);
+	// mousemove should be invoked when the mouse changes location
+	void event_mousemove(uint32_t timestamp,  MCGPoint location, bool within);
+	void event_mousefocus(uint32_t timestamp, MCStack *stack, bool inside);
+#endif
+	
 private:
 	void updatebackdrop(const MCRectangle& p_region);
 	void redrawbackdrop(MCContext *p_context, const MCRectangle& p_dirty);
@@ -489,5 +549,22 @@ private:
 	
 	static pascal OSErr DragTrackingHandler(DragTrackingMessage p_message, WindowRef p_window, void *p_context, DragRef p_drag);
 	static pascal OSErr DragReceiveHandler(WindowPtr p_window, void *p_context, DragRef p_drag);
+	
+	//////////
+	
+	bool collectevent(double p_max_wait);
+	
+	//////////
+	
+	void open_menus(void);
+	void close_menus(void);
+	void open_textinput(void);
+	void close_textinput(void);
+	void open_dragdrop(void);
+	void close_dragdrop(void);
+	void open_iconmenu(void);
+	void close_iconmenu(void);
+	void open_colormapping(void);
+	void close_colormapping(void);
 };
 #endif

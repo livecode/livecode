@@ -42,8 +42,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 
+#ifdef MAC_MOVED
 Boolean tripleclick = False;
+#endif
 
+#ifdef MAC_MOVED
 MCDisplay *MCScreenDC::s_monitor_displays = NULL;
 uint4 MCScreenDC::s_monitor_count = 0;
 
@@ -138,7 +141,9 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& p_displays, u
 	
 	return true;
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode mode)
 {	
 	MCRectangle srect;
@@ -195,7 +200,9 @@ void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode 
 		rect.y = screenRect.bottom - rect.height - sb;
 	}
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::expose()
 {
 	SetGWorld(GetWindowPort(getinvisiblewin()), GetMainDevice());
@@ -204,7 +211,9 @@ void MCScreenDC::expose()
 	while (GetNextEvent(updateMask, &event))
 		doredraw(event);
 }
+#endif
 
+#ifdef MAC_MOVED
 Boolean MCScreenDC::abortkey()
 { /* check for Command-. system abort key */
 	if (MCabortscript)
@@ -234,7 +243,9 @@ Boolean MCScreenDC::abortkey()
 		MCS_handle_sockets();
 	return False;
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::device_querymouse(int2 &x, int2 &y)
 {
 	CGrafPtr oldport;
@@ -248,12 +259,16 @@ void MCScreenDC::device_querymouse(int2 &x, int2 &y)
 	x = mloc.h;
 	y = mloc.v;
 }
+#endif
 
+#ifdef MAC_UNUSED
 static Boolean isKeyPressed(unsigned char *km, uint1 keycode)
 {
 	return (km[keycode >> 3] >> (keycode & 7)) & 1;
 }
+#endif
 
+#ifdef MAC_MOVED
 // MW-2008-06-12: Updated to use more modern GetCurrentKeyModifiers function
 //   to fetch the modifier state.
 uint2 MCScreenDC::querymods()
@@ -284,7 +299,9 @@ uint2 MCScreenDC::querymods()
 		
 	return state;
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::device_setmouse(int2 x, int2 y)
 { //move mouse/cursor to new (x,y) location
 
@@ -293,7 +310,9 @@ void MCScreenDC::device_setmouse(int2 x, int2 y)
 	point.y = y;
 	CGWarpMouseCursorPosition(point);
 }
+#endif
 
+#ifdef MAC_MOVED
 // MW-2008-06-12: [[ Bug 6396 ]] Make sure r_abort is set to False if
 //   the first two checks against 'button' fail. Also update the code
 //   to use GetCurrentButtonState
@@ -330,7 +349,9 @@ Boolean MCScreenDC::getmouse(uint2 button, Boolean& r_abort)
 		
 	return False;
 }
+#endif
 
+#ifdef MAC_MOVED
 Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 {/* check which mouse is down & set the modifier key states.            *
 	  * check the pendingevents queue first, if there's events in the queue *
@@ -417,8 +438,9 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 	}
 	return value;
 }
+#endif
 
-
+#if MAC_MOVED
 Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
 	MCwaitdepth++;
@@ -476,8 +498,10 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 
 	return abort;
 }
+#endif
 
 
+#ifdef MAC_MOVED
 void MCScreenDC::flushevents(uint2 e)
 {
 	static int event_types[FE_LAST] = { 0, mouseDown, mouseUp,
@@ -510,12 +534,16 @@ void MCScreenDC::flushevents(uint2 e)
 		while (!done || tptr != pendingevents);
 	}
 }
+#endif
 
+#ifdef MAC_MOVED
 Boolean MCScreenDC::istripleclick()
 {
 	return tripleclick;
 }
+#endif
 
+#ifdef MAC_MOVED
 uint1 MCScreenDC::fontnametocharset(const char *oldfontname)
 {
 	// MW-2006-06-09: [[ Bug 3670 ]] Fixed length buffer can cause a crash
@@ -531,7 +559,9 @@ uint1 MCScreenDC::fontnametocharset(const char *oldfontname)
 	GetFNum(reqnamePascal, &ffamilyid);
 	return MCS_langidtocharset(FontToScript(ffamilyid));
 }
+#endif
 
+#ifdef MAC_MOVED
 char *MCScreenDC::charsettofontname(uint1 charset, const char *oldfontname)
 {
 	char *fname = new char[255];
@@ -552,7 +582,9 @@ char *MCScreenDC::charsettofontname(uint1 charset, const char *oldfontname)
 	}
 	return fname;
 }
+#endif
 
+#ifdef MAC_MOVED
 void MCScreenDC::openIME()
 {
 	if (tsmdocument)
@@ -592,3 +624,5 @@ void MCScreenDC::closeIME()
 	DeleteTSMDocument(tsmdocument);
 	tsmdocument = 0;
 }
+#endif
+

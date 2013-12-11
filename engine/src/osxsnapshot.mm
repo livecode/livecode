@@ -340,6 +340,7 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, MCGFloat p_scale_factor
 			t_snapshot = t_bitmap;
 		}
 	}
+#ifdef OLD_MAC
 	else
 	{
 		Rect t_src_rect, t_dst_rect;
@@ -375,6 +376,7 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, MCGFloat p_scale_factor
 		
 		t_snapshot = snapimage;
 	}
+#endif
 
 	return t_snapshot;
 }
