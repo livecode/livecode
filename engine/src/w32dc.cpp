@@ -262,10 +262,32 @@ MCStack *MCScreenDC::device_getstackatpoint(int32_t x, int32_t y)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// IM-2013-08-08: [[ ResIndependence ]] Windows implementation currently returns 1.0
+bool MCWin32GetScreenDPI(uint32_t &r_dpi)
+{
+	HDC t_dc;
+	t_dc = GetDC(NULL);
+
+	if (t_dc == NULL)
+		return false;
+
+	r_dpi = GetDeviceCaps(t_dc, LOGPIXELSX);
+
+	ReleaseDC(NULL, t_dc);
+
+	return true;
+}
+
+#define NORMAL_DENSITY (96.0)
+
+// IM-2013-12-11: [[ HiDPI ]] Calculate system scale based on normal dpi of 96
 MCGFloat MCResGetSystemScale(void)
 {
-	return 1.0;
+	uint32_t t_dpi;
+	if (!MCWin32GetScreenDPI(t_dpi))
+		// Default to 1.0 scale on error
+		return 1.0;
+
+	return (MCGFloat)t_dpi / NORMAL_DENSITY;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
