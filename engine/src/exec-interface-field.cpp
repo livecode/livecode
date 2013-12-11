@@ -846,66 +846,9 @@ void MCField::SetThreeDHilite(MCExecContext& ctxt, bool setting)
 		Redraw();
 }
 
-void MCField::DoGetTextState(MCExecContext& ctxt, Properties which, uint32_t part, MCInterfaceTriState& r_state)
-{
-   	bool t_first, t_state;
-	t_first = true;
-	t_state = false;
-    
-	findex_t t_line_index;
-	findex_t ei = INT32_MAX;
-	findex_t si = 0;
-	MCParagraph *pgptr = getcarddata(fdata, part, True)->getparagraphs();
-	MCParagraph *sptr = indextoparagraph(pgptr, si, ei, &t_line_index);
-    
-	do
-	{
-		// Fetch the flag state of the current paragraph, breaking if
-		// the state has changed and this is not the first one we look at.
-		bool t_new_state;
-		t_new_state = false;
-		if (!sptr -> getflagstate(which == P_ENCODING ? F_HAS_UNICODE : F_FLAGGED, si, ei, t_new_state) ||
-			(!t_first && t_state != t_new_state))
-			break;
-		
-		// If we are the first para, then store the state.
-		if (t_first)
-		{
-			t_state = t_new_state;
-			t_first = false;
-		}
-        
-		// Reduce ei until we get to zero, advancing through the paras.
-		ei -= sptr->gettextlengthcr();
-		sptr = sptr->next();
-	}
-	while(ei > 0);
-	
-	if (ei <= 0)
-    {
-		r_state . type = kMCInterfaceTriStateBoolean;
-        r_state . state = t_state;
-    }
-	else
-    {
-        r_state . type = kMCInterfaceTriStateMixed;
-		r_state . mixed = Mixed;
-    }
-}
-
 void MCField::GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encoding)
 {
-    MCInterfaceTriState t_state;
-    DoGetTextState(ctxt, P_ENCODING, part, t_state);
-    if (t_state . type == kMCInterfaceTriStateBoolean)
-        r_encoding = t_state . state ? 1 : 0;
-    else
-        r_encoding = t_state . mixed;
-}
-
-void MCField::GetFlagged(MCExecContext& ctxt, uint32_t part, MCInterfaceTriState& r_flagged)
-{
-    DoGetTextState(ctxt, P_FLAGGED, part, r_flagged);
+    GetEncodingOfCharChunk(ctxt, part, 0, INDEX_MAX, r_encoding);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -947,44 +890,9 @@ void MCField::SetHilitedLines(MCExecContext& ctxt, uindex_t p_count, uinteger_t*
 
 void MCField::GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterfaceFlaggedRanges& r_ranges)
 {
-    MCAutoArray<MCInterfaceFlaggedRange> t_ranges;
-    
-    findex_t t_line_index, t_char_index, si, ei;
-    si = 0;
-    ei = INT32_MAX;
-    
     if (flags & F_SHARED_TEXT)
 		p_part = 0;
-	MCParagraph *pgptr = getcarddata(fdata, p_part, True)->getparagraphs();
-    MCParagraph *sptr = indextoparagraph(pgptr, si, ei, &t_line_index);
-    
-    // The ranges are adjusted by the index of the first char (i.e. they are
-    // relative to the start of the range.
-    int32_t t_index_offset;
-    t_index_offset = -countchars(p_part, 0, si);
-    
-    // Loop through the paragraphs until the range is exhausted.
-    do
-    {
-        MCInterfaceFlaggedRanges t_para_ranges;
-        // Fetch the flagged ranges into ep between si and ei (sptr relative)
-        // making sure the ranges are adjusted to the start of the range.
-        sptr -> getflaggedranges(p_part, si, ei, t_index_offset, t_para_ranges);
-        
-        for (uindex_t i = 0; i < t_para_ranges . count; i++)
-            t_ranges . Push(t_para_ranges . ranges[i]);
-        
-        // Increment the offset by the size of the paragraph.
-        t_index_offset += sptr -> gettextlengthcr();
-        
-        // Reduce ei until we get to zero, advancing through the paras.
-        si = 0;
-        ei -= sptr -> gettextlengthcr();
-        sptr = sptr -> next();
-    }
-    while(ei > 0);
-    
-    t_ranges . Take(r_ranges . ranges, r_ranges . count);
+    GetFlaggedRangesOfCharChunk(ctxt, p_part, 0, INDEX_MAX, r_ranges);
 }
 
 void MCField::SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceFlaggedRanges& p_ranges)
