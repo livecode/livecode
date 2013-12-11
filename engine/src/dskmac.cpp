@@ -5669,16 +5669,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         else if (MCStringGetLength(MCNameGetString(p_type)) == 4)
         {
             t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetNativeCharPtr(MCNameGetString(p_type))));
-			
-            uindex_t t_i;
-            for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
-                if (t_mac_folder == sysfolderlist[t_i] . macfolder)
-                {
-                    t_domain = sysfolderlist[t_i] . domain;
-                    t_mac_folder = sysfolderlist[t_i] . mactag;
-                    t_found_folder = true;
-                    break;
-                }
+            t_domain = kOnAppropriateDisk;
+            t_found_folder = true;
         }
         
         FSRef t_folder_ref;
