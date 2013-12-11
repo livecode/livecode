@@ -529,7 +529,7 @@ IO_stat MCDispatch::startup(void)
 		//   rest from project section
 		MCAutoStringRef t_spill;
         /* UNCHECKED */ MCStringFormat(&t_spill, "%@.dat", MCcmd);
-		if (!MCCapsuleFillFromFile(t_capsule, t_spill, 0, true))
+		if (!MCCapsuleFillFromFile(t_capsule, *t_spill, 0, true))
 		{
 			MCCapsuleClose(t_capsule);
 			return IO_ERROR;
