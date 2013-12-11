@@ -4223,14 +4223,14 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
 
 void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
 {
-    MCAutoStringRef t_text;
+    MCAutoValueRef t_text;
 
     if (source != NULL && url == NULL && stack == NULL && background == NULL && card == NULL
         && group == NULL && object == NULL)
     {
         if (desttype != DT_OWNER)
         {
-            if (!ctxt . EvalExprAsStringRef(source, EE_CHUNK_CANTGETSOURCE, &t_text))
+            if (!ctxt . EvalExprAsValueRef(source, EE_CHUNK_CANTGETSOURCE, &t_text))
                 return;
         }
         else
@@ -4245,12 +4245,12 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                 return;
             }
 
-            MCEngineEvalOwner(ctxt, t_object, &t_text);
+            MCEngineEvalOwner(ctxt, t_object, (MCStringRef&)&t_text);
         }
     }
     else if (destvar != NULL)
     {
-        if (!ctxt . EvalExprAsStringRef(destvar, EE_CHUNK_CANTGETDEST, &t_text))
+        if (!ctxt . EvalExprAsValueRef(destvar, EE_CHUNK_CANTGETDEST, &t_text))
             return;
     }
     else
@@ -4283,51 +4283,51 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
             switch (function)
             {
                 case F_CLICK_CHUNK:
-                    MCInterfaceEvalClickChunk(ctxt, &t_text);
+                    MCInterfaceEvalClickChunk(ctxt, (MCStringRef&)&t_text);
                     break;
                 case F_CLICK_CHAR_CHUNK:
-                    MCInterfaceEvalClickCharChunk(ctxt, &t_text);
+                    MCInterfaceEvalClickCharChunk(ctxt, (MCStringRef&)&t_text);
                     break;
                 case F_CLICK_LINE:
-                    MCInterfaceEvalClickLine(ctxt, &t_text);
+                    MCInterfaceEvalClickLine(ctxt, (MCStringRef&)&t_text);
                     break;
                 case F_CLICK_TEXT:
-                    MCInterfaceEvalClickText(ctxt, &t_text);
+                    MCInterfaceEvalClickText(ctxt, (MCStringRef&)&t_text);
                     break;
                 case F_SELECTED_CHUNK:
-                    MCInterfaceEvalSelectedChunk(ctxt, &t_text);
+                    MCInterfaceEvalSelectedChunk(ctxt, (MCStringRef&)&t_text);
                     break;
                 case F_SELECTED_LINE:
-                    MCInterfaceEvalSelectedLine(ctxt, &t_text);
+                    MCInterfaceEvalSelectedLine(ctxt, (MCStringRef&)&t_text);
                     break;
                 case F_SELECTED_TEXT:
-                    MCInterfaceEvalSelectedText(ctxt, &t_text);
+                    MCInterfaceEvalSelectedText(ctxt, (MCStringRef&)&t_text);
                     break;
                 case F_FOUND_CHUNK:
-                    MCInterfaceEvalFoundChunk(ctxt, &t_text);
+                    MCInterfaceEvalFoundChunk(ctxt, (MCStringRef&)&t_text);
                     break;
                 case F_FOUND_LINE:
-                    MCInterfaceEvalFoundLine(ctxt, &t_text);
+                    MCInterfaceEvalFoundLine(ctxt, (MCStringRef&)&t_text);
                     break;
                 case F_FOUND_TEXT:
-                    MCInterfaceEvalFoundText(ctxt, &t_text);
+                    MCInterfaceEvalFoundText(ctxt, (MCStringRef&)&t_text);
                     break;
                 case F_MOUSE_CHUNK:
-                    MCInterfaceEvalMouseChunk(ctxt, &t_text);
+                    MCInterfaceEvalMouseChunk(ctxt, (MCStringRef&)&t_text);
                     break;
                 case F_MOUSE_LINE:
-                    MCInterfaceEvalMouseLine(ctxt, &t_text);
+                    MCInterfaceEvalMouseLine(ctxt, (MCStringRef&)&t_text);
                     break;
                 case F_MOUSE_CHAR_CHUNK:
-                    MCInterfaceEvalMouseCharChunk(ctxt, &t_text);
+                    MCInterfaceEvalMouseCharChunk(ctxt, (MCStringRef&)&t_text);
                     break;
                 case F_MOUSE_TEXT:
-                    MCInterfaceEvalMouseText(ctxt, &t_text);
+                    MCInterfaceEvalMouseText(ctxt, (MCStringRef&)&t_text);
                     break;
                 default:
                     MCMarkedText t_mark;
                     MCInterfaceMarkContainer(ctxt, t_object, t_mark);
-                    MCStringsEvalTextChunk(ctxt, t_mark, &t_text);
+                    MCStringsEvalTextChunk(ctxt, t_mark, (MCStringRef&)&t_text);
                     MCValueRelease(t_mark . text);
                     break;
             }
@@ -4338,8 +4338,16 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
     {
         if (cline != NULL || item != NULL || word != NULL || token != NULL || character != NULL)
         {
+            // Must be a string ref
+            MCAutoStringRef t_text_str;
+            if (!ctxt . ConvertToString(*t_text, &t_text_str))
+            {
+                ctxt.Throw();
+                return;
+            }
+            
             MCMarkedText t_new_mark;
-            t_new_mark . text = MCValueRetain(*t_text);
+            t_new_mark . text = MCValueRetain(*t_text_str);
             t_new_mark . start = 0;
             t_new_mark . finish = MAXUINT4;
             mark(ctxt, false, false, t_new_mark);
@@ -4348,14 +4356,14 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
             r_text . stringref_value = MCValueRetain(*t_string);
         }
         else
-            r_text . stringref_value = MCValueRetain(*t_text);
+            r_text . valueref_value = MCValueRetain(*t_text);
     }
     else
         r_text . stringref_value = MCValueRetain(kMCEmptyString);
 
     if (!ctxt . HasError())
     {
-        r_text . type = kMCExecValueTypeStringRef;
+        r_text . type = kMCExecValueTypeValueRef;
     }
 }
 
@@ -4927,16 +4935,28 @@ void MCChunk::count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, u
     }
     else
     {
-        MCAutoStringRef t_string;
+        MCAutoValueRef t_value;
 
         // MW-2009-07-22: If the value of the chunk is an array, then either
         //   the count will be zero (if a string chunk has been requested),
         //   otherwise it will be the count of the keys...
         // SN-2013-11-5: Apperently eval() is no longer able to return an array
-        if (!ctxt . EvalExprAsStringRef(this, EE_CHUNK_BADEXPRESSION, &t_string))
+        if (!ctxt . EvalExprAsValueRef(this, EE_CHUNK_BADEXPRESSION, &t_value))
             return;
 
-        MCStringsCountChunks(ctxt, tocount, *t_string, r_count);
+        if (MCValueGetTypeCode(*t_value) == kMCValueTypeCodeArray)
+            r_count = MCArrayGetCount((MCArrayRef)*t_value);
+        else
+        {
+            MCAutoStringRef t_string;
+            if (!ctxt . ConvertToString(*t_value, &t_string))
+            {
+                ctxt.LegacyThrow(EE_CHUNK_BADEXPRESSION);
+                return;
+            }
+
+            MCStringsCountChunks(ctxt, tocount, *t_string, r_count);
+        }
     }
 }
 
