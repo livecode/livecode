@@ -4244,7 +4244,7 @@ void MCRead::exec_ctxt(MCExecContext& ctxt)
                     MCNetworkExecReadFromSocketFor(ctxt, *t_source, size, unit, *t_message);
                     break;
                 case OA_STDIN:
-                    MCFilesExecReadFromStdinFor(ctxt, size, unit);
+                    MCFilesExecReadFromStdinFor(ctxt, size, unit, t_max_wait, timeunits);
                     break;
                 default:
                     break;
@@ -4282,7 +4282,7 @@ void MCRead::exec_ctxt(MCExecContext& ctxt)
                     MCNetworkExecReadFromSocketUntil(ctxt, *t_source, *t_sentinel, *t_message);
                     break;
                 case OA_STDIN:
-                    MCFilesExecReadFromStdinUntil(ctxt, *t_sentinel);
+                    MCFilesExecReadFromStdinUntil(ctxt, *t_sentinel, t_max_wait, timeunits);
                     break;
                 default:
                     break;

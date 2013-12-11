@@ -3751,8 +3751,8 @@ void MCFilesExecOpenElevatedProcess(MCExecContext& ctxt, MCNameRef p_process, in
 
 void MCFilesExecRename(MCExecContext& ctxt, MCStringRef from, MCStringRef to);
 
-void MCFilesExecReadFromStdinFor(MCExecContext& ctxt, uint4 p_count, int p_unit_type);
-void MCFilesExecReadFromStdinUntil(MCExecContext& ctxt, MCStringRef p_sentinel);
+void MCFilesExecReadFromStdinFor(MCExecContext& ctxt, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units);
+void MCFilesExecReadFromStdinUntil(MCExecContext& ctxt, MCStringRef p_sentinel, double p_max_wait, int p_time_units);
 void MCFilesExecReadFromFileOrDriverFor(MCExecContext& ctxt, bool p_driver, MCNameRef p_file, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units);
 void MCFilesExecReadFromFileOrDriverUntil(MCExecContext& ctxt, bool p_driver, MCNameRef p_file, MCStringRef p_sentinel, double p_max_wait, int p_time_units);
 void MCFilesExecReadFromFileOrDriverAtFor(MCExecContext& ctxt, bool p_driver, MCNameRef p_file, int64_t p_at, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units);
