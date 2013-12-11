@@ -28,7 +28,7 @@ MCGFloat MCResGetSystemScale(void);
 MCGFloat MCResGetPixelScale(void);
 
 // IM-2013-12-04: [[ PixelScale ]] Set the screen scaling factor
-void MCResSetPixelScale(MCGFloat p_scale);
+void MCResSetPixelScale(MCGFloat p_scale, bool p_send_update = true);
 
 // IM-2013-12-04: [[ PixelScale ]] Set whether or not to use the system pixel scale
 void MCResSetUseSystemScale(bool p_use_scale);

@@ -42,7 +42,7 @@ MCGFloat MCResGetPixelScale(void)
 		return s_res_pixel_scale;
 }
 
-void MCResSetPixelScale(MCGFloat p_scale)
+void MCResSetPixelScale(MCGFloat p_scale, bool p_send_update)
 {
 	MCGFloat t_old_scale;
 	t_old_scale = MCResGetPixelScale();
@@ -50,7 +50,7 @@ void MCResSetPixelScale(MCGFloat p_scale)
 	s_res_pixel_scale = p_scale;
 	s_res_use_system_scale = false;
 	
-	if (p_scale != t_old_scale)
+	if (p_send_update && p_scale != t_old_scale)
 		MCResHandleScaleChanged();
 }
 
