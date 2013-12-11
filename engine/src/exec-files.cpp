@@ -1241,9 +1241,9 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 			if (p_index != -1)
 				MCS_checkprocesses();
 
-			if (MCStringGetNativeCharAtIndex(p_sentinel, 0) == '\0' || ((r_stat == IO_ERROR || r_stat == IO_EOF) && (p_index == -1 || MCprocesses[p_index].pid == 0)))
+			if (MCStringIsEmpty(p_sentinel) || ((r_stat == IO_ERROR || r_stat == IO_EOF) && (p_index == -1 || MCprocesses[p_index].pid == 0)))
 			{
-				r_stat = IO_EOF;
+                r_stat = IO_EOF;
 				break;
 			}
 			t_duration -= READ_INTERVAL;
