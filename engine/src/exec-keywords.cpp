@@ -366,6 +366,9 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
     if (!ctxt . TryToEvaluateExpression(endcond, line, pos, EE_REPEAT_BADFORCOND, &t_condition))
         return;
     
+    bool t_sequence_array;
+    t_sequence_array = false;
+    
     if (loopvar != NULL)
     {
         if (each == FU_ELEMENT || each == FU_KEY)
@@ -373,10 +376,20 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             if (!ctxt . ConvertToArray(*t_condition, &t_array))
                 return;
             
-            t_iterator = 0;
-            
-            if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
-                return;
+            // If this is a numerical array, do it in order
+            if (each == FU_ELEMENT && MCArrayIsSequence(*t_array))
+            {
+                t_sequence_array = true;
+                t_iterator = 1;
+                if (!MCArrayFetchValueAtIndex(*t_array, t_iterator, t_value))
+                    return;
+            }
+            else
+            {
+                t_iterator = 0;
+                if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
+                    return;
+            }
         }
         else
         {
@@ -423,8 +436,16 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                 case FU_ELEMENT:
                 {
                     loopvar -> set(ctxt, t_value);
-                    if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
-                        endnext = true;
+                    if (t_sequence_array)
+                    {
+                        if (!MCArrayFetchValueAtIndex(*t_array, ++t_iterator, t_value))
+                            endnext = true;
+                    }
+                    else
+                    {
+                        if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
+                            endnext = true;
+                    }
                 }
                     break;
                 default:
