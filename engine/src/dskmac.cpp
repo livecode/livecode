@@ -2101,17 +2101,19 @@ public:
             if (ferror(m_stream))
             {
                 clearerr(m_stream);
+                m_is_eof = false;
                 
                 if (errno == EAGAIN)
-                    return false;
+                    return true;
                 
                 if (errno == EINTR)
                 {
                     toread -= nread;
                     continue;
                 }
-                else
-                    return false;
+                
+                // A "real" error occurred
+                return false;
             }
             if (feof(m_stream))
             {
