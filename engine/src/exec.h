@@ -2778,16 +2778,16 @@ void MCInterfaceExecShowMenuBar(MCExecContext& ctxt);
 void MCInterfaceExecShowTaskBar(MCExecContext& ctxt);
 
 void MCInterfaceExecPopupButton(MCExecContext& ctxt, MCButton *p_target, MCPoint *p_at);
-void MCInterfaceExecDrawerStack(MCExecContext& ctxt, MCStack *p_target, MCStringRef parent, bool p_parent_is_thisstack, int p_at, int p_aligned);
-void MCInterfaceExecDrawerStackByName(MCExecContext& ctxt, MCStringRef p_target, MCStringRef parent, bool p_parent_is_thisstack, int p_at, int p_aligned);
-void MCInterfaceExecDrawerStackLegacy(MCExecContext& ctxt, MCStack *p_target, MCStringRef parent, bool p_parent_is_thisstack, intenum_t p_at, intenum_t p_aligned);
-void MCInterfaceExecDrawerStackByNameLegacy(MCExecContext& ctxt, MCStringRef p_target, MCStringRef parent, bool p_parent_is_thisstack, intenum_t p_at, intenum_t p_aligned);
-void MCInterfaceExecSheetStack(MCExecContext& ctxt, MCStack *p_target, MCStringRef parent, bool p_parent_is_thisstack);
-void MCInterfaceExecSheetStackByName(MCExecContext& ctxt, MCStringRef p_target, MCStringRef parent, bool p_parent_is_thisstack);
+void MCInterfaceExecDrawerStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef parent, bool p_parent_is_thisstack, int p_at, int p_aligned);
+void MCInterfaceExecDrawerStackByName(MCExecContext& ctxt, MCNameRef p_target, MCNameRef parent, bool p_parent_is_thisstack, int p_at, int p_aligned);
+void MCInterfaceExecDrawerStackLegacy(MCExecContext& ctxt, MCStack *p_target, MCNameRef parent, bool p_parent_is_thisstack, intenum_t p_at, intenum_t p_aligned);
+void MCInterfaceExecDrawerStackByNameLegacy(MCExecContext& ctxt, MCNameRef p_target, MCNameRef parent, bool p_parent_is_thisstack, intenum_t p_at, intenum_t p_aligned);
+void MCInterfaceExecSheetStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef parent, bool p_parent_is_thisstack);
+void MCInterfaceExecSheetStackByName(MCExecContext& ctxt, MCNameRef p_target, MCNameRef parent, bool p_parent_is_thisstack);
 void MCInterfaceExecOpenStack(MCExecContext& ctxt, MCStack *p_target, int p_mode);
-void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCStringRef p_target, int p_mode);
+void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_target, int p_mode);
 void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *p_at, int p_mode);
-void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCStringRef p_target, MCPoint *p_at, int p_mode);
+void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCNameRef p_target, MCPoint *p_at, int p_mode);
 
 void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCStack *p_owner, MCStringRef p_new_name, bool p_force_invisible);
 void MCInterfaceExecCreateStackWithGroup(MCExecContext& ctxt, MCGroup *p_group_to_copy, MCStringRef p_new_name, bool p_force_invisible);
