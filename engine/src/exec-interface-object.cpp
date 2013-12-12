@@ -2611,7 +2611,10 @@ void MCObject::GetEffectiveTextFont(MCExecContext& ctxt, MCStringRef& r_font)
 void MCObject::GetTextSize(MCExecContext& ctxt, uinteger_t*& r_size)
 {
 	if ((m_font_flags & FF_HAS_TEXTSIZE) == 0)
+    {
+        r_size = nil;
 		return;
+    }
 
 	uint2 fontsize, fontstyle;
 	MCNameRef fontname;
