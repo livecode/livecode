@@ -116,10 +116,6 @@ const char *MCexecutionerrors = "";
 //  Property tables specific to STANDALONE mode
 //
 
-MCPropertyInfo MCObject::kModeProperties[] =
-{
-};
-
 MCObjectPropertyTable MCObject::kModePropertyTable =
 {
 	nil,
@@ -127,19 +123,11 @@ MCObjectPropertyTable MCObject::kModePropertyTable =
 	nil,
 };
 
-MCPropertyInfo MCStack::kModeProperties[] =
-{
-};
-
 MCObjectPropertyTable MCStack::kModePropertyTable =
 {
 	nil,
 	0,
 	nil,
-};
-
-MCPropertyInfo MCProperty::kModeProperties[] =
-{
 };
 
 MCPropertyTable MCProperty::kModePropertyTable =

@@ -333,7 +333,7 @@ void MCSystemBalloonNotification(MCStringRef p_title, MCStringRef p_message)
 	// We can specify the title (appears in bold next to the icon) and the body of the balloon.
 	if (p_title != nil)
     {
-        t_title . Lock(p_title)
+        t_title . Lock(p_title);
 		MCMemoryCopy(t_nidata . szInfoTitle, *t_title, 63 * sizeof(WCHAR));
     }
 	else
@@ -347,7 +347,7 @@ void MCSystemBalloonNotification(MCStringRef p_title, MCStringRef p_message)
 		t_nidata . szInfo[0] = '\0';
 
 	// Call with NIM_MODIFY to flag that we want to update an existing taskbar icon.
-	Shell_NotifyIconW(NIM_MODIFY, (PNOTIFYICONDATAA) &t_nidata);
+	Shell_NotifyIconW(NIM_MODIFY, (PNOTIFYICONDATAW) &t_nidata);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
