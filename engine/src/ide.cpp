@@ -681,7 +681,7 @@ void MCIdeScriptConfigure::exec_ctxt(MCExecContext &ctxt)
                 /* UNCHECKED */ MCStringFormat(t_attr_key_string, "%s attributes", s_script_class_names[t_class]);
                 /* UNCHECKED */ MCNameCreateAndRelease(t_attr_key_string, &t_attr_key);
 
-                if (ctxt . CopyElementAsString(*t_settings, *t_attr_key, false, &t_attr_value))
+                if (ctxt . CopyOptElementAsString(*t_settings, *t_attr_key, false, &t_attr_value))
                 {
                     for(uint4 t_attribute = 0; t_attribute < SCRIPT_STYLE_ATTRIBUTE_COUNT; ++t_attribute)
                         if (MCStringContains(*t_attr_value, MCSTR(s_script_style_attribute_names[t_attribute]), kMCStringOptionCompareCaseless))
@@ -692,10 +692,10 @@ void MCIdeScriptConfigure::exec_ctxt(MCExecContext &ctxt)
                 MCNewAutoNameRef t_colour_key;
                 MCAutoStringRef t_colour_value;
 
-                /* UNCHECKED */ MCStringFormat(t_colour_key_string, "%s color", s_script_keywords[t_class]);
+                /* UNCHECKED */ MCStringFormat(t_colour_key_string, "%s color", s_script_class_names[t_class]);
                 /* UNCHECKED */ MCNameCreateAndRelease(t_colour_key_string, &t_colour_key);
 
-                if (ctxt . CopyElementAsString(*t_settings, *t_colour_key, false, &t_colour_value))
+                if (ctxt . CopyOptElementAsString(*t_settings, *t_colour_key, false, &t_colour_value))
                 {
                     MCscreen -> parsecolor(*t_colour_value, t_style . colour, nil);
                 }
@@ -734,7 +734,7 @@ void MCIdeScriptConfigure::exec_ctxt(MCExecContext &ctxt)
                 MCStringFormat(t_attr_key_string, "%s attributes", s_script_keywords[t_keyword]);
                 MCNameCreate(t_attr_key_string, &t_attr_key);
 
-                if (ctxt . CopyElementAsString(*t_settings, *t_attr_key, false, &t_attr_value))
+                if (ctxt . CopyOptElementAsString(*t_settings, *t_attr_key, false, &t_attr_value))
                 {
                     for(uint4 t_attribute = 0; t_attribute < SCRIPT_STYLE_ATTRIBUTE_COUNT; ++t_attribute)
                         if (MCStringContains(*t_attr_value, MCSTR(s_script_style_attribute_names[t_attribute]), kMCStringOptionCompareCaseless))
@@ -751,7 +751,7 @@ void MCIdeScriptConfigure::exec_ctxt(MCExecContext &ctxt)
                 /* UNCHECKED */ MCStringFormat(t_colour_key_string, "%s color", s_script_keywords[t_keyword]);
                 /* UNCHECKED */ MCNameCreateAndRelease(t_colour_key_string, &t_colour_key);
 
-                if (ctxt . CopyElementAsString(*t_settings, *t_colour_key, false, &t_colour_value))
+                if (ctxt . CopyOptElementAsString(*t_settings, *t_colour_key, false, &t_colour_value))
                 {
                     if (MCscreen -> parsecolor(*t_colour_value, t_style . colour, nil))
                         t_changed = true;

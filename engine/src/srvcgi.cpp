@@ -1772,7 +1772,7 @@ bool MCServerGetSessionIdFromCookie(MCStringRef &r_id)
 	MCAutoNameRef t_key;
 	/* UNCHECKED */ MCNameCreate(*t_name, &t_key);
 		
-	if (!ctxt.CopyElementAsString((MCArrayRef)t_cookie_array -> getvalueref(), *t_key, false, r_id))
+	if (!ctxt.CopyElementAsOptString((MCArrayRef)t_cookie_array -> getvalueref(), *t_key, false, r_id))
 		return false;
 	
 	return true;
