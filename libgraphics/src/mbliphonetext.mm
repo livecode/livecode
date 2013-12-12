@@ -192,9 +192,9 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
         t_float_text_bounds . origin . y = -p_font . ascent;
         t_float_text_bounds . size . width = MCGContextMeasurePlatformText(self, p_text, p_length, p_font);
         
-        // MM-2013-11-11: [[ Bug 11413 ]] Fudge to make sure fonts with descent are not clipped.
+        // MM-2013-11-11: [[ Bug 11413 11572 ]] Fudge to make sure fonts with descent are not clipped.
         //   It appears that each version of iOS is a little different. Updated fudge to be a factor of the font size rather than a fixed value.
-        t_float_text_bounds . size . height = ceilf([t_font lineHeight]) + ceilf(0.06f * p_font . size);
+        t_float_text_bounds . size . height = ceilf([t_font lineHeight]) + ceilf(0.20f * p_font . size);
                 
         // MM-2013-10-24: [[ Bug 11310 ]] It appears that you can only get the typographic bounds of a UIFont, which is causing horizontal clipping for italic fonts
         //   (and possibly further clipping issues for other fonts). Fudge for italic fonts by adding the width of w to bounds.
