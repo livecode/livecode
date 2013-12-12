@@ -1815,8 +1815,13 @@ bool MCObject::GetColor(MCExecContext& ctxt, Properties which, bool effective, M
 		get_interface_color(colors[i], colornames[i], r_color);
 		return true;	
 	}
-	else if (effective && parent != NULL)
-		return parent -> GetColor(ctxt, which, effective, r_color);
+	else if (effective)
+    {
+        if (parent != NULL)
+            return parent -> GetColor(ctxt, which, effective, r_color);
+        else
+            return MCdispatcher -> GetColor(ctxt, which, effective, r_color);
+    }
 	else
 	{
 		r_color . name = MCValueRetain(kMCEmptyString);

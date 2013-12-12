@@ -2109,6 +2109,18 @@ MCFontlist *MCFontlistGetCurrent(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCDispatch::GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color)
+{
+    if (which == P_FORE_COLOR)
+        GetDefaultForeColor(ctxt, r_color);
+    else if (which == P_BACK_COLOR)
+        GetDefaultBackColor(ctxt, r_color);
+    else
+        r_color . name = MCValueRetain(kMCEmptyString);
+    
+    return true;
+}
+
 void MCDispatch::GetDefaultTextFont(MCExecContext& ctxt, MCStringRef& r_font)
 {
 	if (MCStringCreateWithCString(DEFAULT_TEXT_FONT, r_font))

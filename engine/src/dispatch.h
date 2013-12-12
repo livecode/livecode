@@ -212,6 +212,8 @@ public:
 
 	////////// PROPERTY ACCESSORS
 
+    bool GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color);
+    
 	void GetDefaultTextFont(MCExecContext& ctxt, MCStringRef& r_font);
 	void GetDefaultTextSize(MCExecContext& ctxt, uinteger_t& r_size);
 	void GetDefaultTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style);
