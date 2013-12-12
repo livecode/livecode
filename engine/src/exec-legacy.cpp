@@ -482,7 +482,7 @@ void MCLegacySetRevRuntimeBehaviour(MCExecContext& ctxt, uint4 p_value)
 
 void MCLegacyGetHcImportStat(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	r_value = MCValueRetain(MChcstat);
+	r_value = MCValueRetain(MChcstat != nil ? MChcstat : kMCEmptyString);
 }
 
 void MCLegacySetHcImportStat(MCExecContext& ctxt, MCStringRef p_value)
@@ -492,9 +492,8 @@ void MCLegacySetHcImportStat(MCExecContext& ctxt, MCStringRef p_value)
 
 void MCLegacyGetScriptTextFont(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	r_value = MCValueRetain(MCscriptfont);
+	r_value = MCValueRetain(MCscriptfont != nil ? MCscriptfont : kMCEmptyString);
 }
-
 
 void MCLegacySetScriptTextFont(MCExecContext& ctxt, MCStringRef p_value)
 {
