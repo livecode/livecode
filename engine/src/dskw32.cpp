@@ -4081,6 +4081,9 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			}
 		}
 #endif /* MCS_checkprocesses_dsk_w32 */
+
+	// TODO : refactor Windows checkprocesses code 
+	/*
         uint2 i;
         for (i = 0 ; i < MCnprocesses ; i++)
             if (MCprocesses[i].phandle != NULL)
@@ -4112,7 +4115,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                         MCprocesses[i].thandle = NULL;
                     }
                 }
-            }
+            }*/
     }
     
 	virtual uint32_t GetSystemError(void)

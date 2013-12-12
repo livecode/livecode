@@ -658,7 +658,7 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
 {
 	MCAutoStringRef t_path;
 	
-	if (MCNameIsEqualToCString(p_type, "temporary", kMCCompareExact))
+	if (MCNameIsEqualToCString(p_type, "temporary", kMCCompareCaseless))
 	{
         MCAutoStringRef t_temp;
         MCStringCreateWithCFString((CFStringRef)NSTemporaryDirectory() , &t_temp);
@@ -670,23 +670,23 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
         else
             /* UNCHECKED */ MCStringCopy(*t_temp, &t_path);
 	}
-	else if (MCNameIsEqualToCString(p_type, "documents", kMCCompareExact))
+	else if (MCNameIsEqualToCString(p_type, "documents", kMCCompareCaseless))
 	{
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
         MCStringCreateWithCFString((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
 	}
-	else if (MCNameIsEqualToCString(p_type, "home", kMCCompareExact))
+	else if (MCNameIsEqualToCString(p_type, "home", kMCCompareCaseless))
 	{
         MCStringCreateWithCFString((CFStringRef)NSHomeDirectory() , &t_path);
 	}
-	else if (MCNameIsEqualToCString(p_type, "cache", kMCCompareExact))
+	else if (MCNameIsEqualToCString(p_type, "cache", kMCCompareCaseless))
 	{
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
 		MCStringCreateWithCFString((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
 	}
-	else if (MCNameIsEqualToCString(p_type, "engine", kMCCompareExact))
+	else if (MCNameIsEqualToCString(p_type, "engine", kMCCompareCaseless))
 	{
 		extern MCStringRef MCcmd;
         uindex_t t_index;
@@ -695,7 +695,7 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
         /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_index), &t_path);
                     
 	}
-	else if (MCNameIsEqualToCString(p_type, "library", kMCCompareExact))
+	else if (MCNameIsEqualToCString(p_type, "library", kMCCompareCaseless))
 	{
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
