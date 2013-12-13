@@ -533,7 +533,7 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 #endif
 		else
         {
-			if (message_with_valueref_args(MCM_key_down, p_string) == ES_NORMAL)
+			if (!MCStringIsEmpty(p_string) && message_with_valueref_args(MCM_key_down, p_string) == ES_NORMAL)
 				return True;
         }
 		break;
