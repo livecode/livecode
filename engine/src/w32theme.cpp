@@ -34,6 +34,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "w32theme.h"
 #include "w32context.h"
 
+#include "graphics_util.h"
+
 #include <uxtheme.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1763,6 +1765,7 @@ typedef struct
 {
 	MCThemeDrawType type;
 	MCThemeDrawInfo *info;
+	MCPoint origin;
 } MCGDIThemeDrawContext;
 
 bool MCWin32ThemeDrawBuffered(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInfo *p_info_ptr)
@@ -1837,14 +1840,70 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	int32_t t_x, t_y;
 	uint32_t t_width, t_height;
 
+	MCGRectangle t_dst;
+
+	MCRectangle t_old_bounds, t_old_interior, t_old_clip;
+	t_old_bounds = p_info_ptr->bounds;
+	t_old_clip = p_info_ptr->clip;
+	t_old_interior = p_info_ptr->interior;
+
+	MCGAffineTransform t_transform;
+	t_transform = MCGContextGetDeviceTransform(p_context);
+
+	// IM-2013-12-13: [[ HiDPI ]] Improve scaled UI appearance by rendering at transformed size.
+	if (MCGAffineTransformIsRectangular(t_transform))
+	{
+		// render theme elements at scaled size
+
+		MCGRectangle t_scaled_bounds;
+		t_scaled_bounds = MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_info_ptr->bounds), t_transform);
+
+		MCGRectangle t_scaled_interior;
+		t_scaled_interior = MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_info_ptr->interior), t_transform);
+
+		MCGRectangle t_scaled_clip;
+		t_scaled_clip = MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_info_ptr->clip), t_transform);
+
+		MCRectangle t_int_bounds;
+		t_int_bounds = MCGRectangleGetIntegerInterior(t_scaled_bounds);
+
+		MCRectangle t_int_interior;
+		t_int_interior = MCGRectangleGetIntegerBounds(t_scaled_interior);
+
+		MCRectangle t_int_clip;
+		t_int_clip = MCGRectangleGetIntegerBounds(t_scaled_clip);
+		t_int_clip = MCU_intersect_rect(t_int_clip, t_int_bounds);
+
+
+		t_width = t_int_clip.width;
+		t_height = t_int_clip.height;
+
+		p_info_ptr->bounds = t_int_bounds;
+		p_info_ptr->interior = t_int_interior;
+		p_info_ptr->clip = t_int_clip;
+
+		t_x = t_int_clip.x;
+		t_y = t_int_clip.y;
+
+		t_dst = MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(t_int_clip), MCGAffineTransformInvert(t_transform));
+	}
+	else
+	{
+		// render at normalsize & draw into target rect
+		t_x = p_info_ptr->bounds.x;
+		t_y = p_info_ptr->bounds.y;
+
+		t_width = p_info_ptr->bounds.width;
+		t_height = p_info_ptr->bounds.height;
+
+		t_dst = MCGRectangleMake(t_x, t_y, t_width, t_height);
+	}
+
 	MCGDIThemeDrawContext t_context;
 	t_context.type = p_type;
 	t_context.info = p_info_ptr;
+	t_context.origin = MCPointMake(t_x, t_y);
 
-	t_x = p_info_ptr->bounds.x;
-	t_y = p_info_ptr->bounds.y;
-	t_width = p_info_ptr->bounds.width;
-	t_height = p_info_ptr->bounds.height;
 
 	// render theme to bitmap
 	t_success = MCGDIDrawAlpha(t_width, t_height, MCGDIDrawTheme, &t_context, t_bitmap);
@@ -1857,9 +1916,12 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 		t_raster.pixels = t_bitmap->data;
 		t_raster.format = kMCGRasterFormat_ARGB;
 
-		MCGRectangle t_dst = MCGRectangleMake(t_x, t_y, t_width, t_height);
 		MCGContextDrawPixels(p_context, t_raster, t_dst, kMCGImageFilterNearest);
 	}
+
+	p_info_ptr->bounds = t_old_bounds;
+	p_info_ptr->interior = t_old_interior;
+	p_info_ptr->clip = t_old_clip;
 
 	MCImageFreeBitmap(t_bitmap);
 
@@ -1874,17 +1936,23 @@ void MCGDIDrawTheme(HDC p_dc, void *p_context)
 
 	HRGN t_clip_region = NULL;
 
+	// IM-2013-12-13: [[ HiDPI ]] Use context origin to offset drawing rects
 	int32_t t_xoff, t_yoff;
-	t_xoff = p_info.bounds.x;
-	t_yoff = p_info.bounds.y;
+	t_xoff = t_context->origin.x;
+	t_yoff = t_context->origin.y;
+
+	MCRectangle t_bounds, t_interior, t_clip;
+	t_bounds = MCU_offset_rect(p_info.bounds, -t_xoff, -t_yoff);
+	t_interior = MCU_offset_rect(p_info.interior, -t_xoff, -t_yoff);
+	t_clip = MCU_offset_rect(p_info.clip, -t_xoff, -t_yoff);
 
 	if (p_info . clip_interior)
 	{
 		HRGN t_outside_region;
-		t_outside_region = CreateRectRgn(0, 0, p_info.bounds.width, p_info.bounds.height);
+		t_outside_region = CreateRectRgn(t_bounds.x, t_bounds.y, t_bounds.x + t_bounds.width, t_bounds.y + t_bounds.height);
 
 		HRGN t_inside_region;
-		t_inside_region = CreateRectRgn(p_info . interior . x - t_xoff, p_info . interior . y - t_yoff, p_info . interior . x + p_info . interior . width - t_xoff, p_info . interior . y + p_info . interior . height - t_yoff);
+		t_inside_region = CreateRectRgn(t_interior.x, t_interior.y, t_interior.x + t_interior.width, t_interior.y + t_interior.height);
 
 		CombineRgn(t_inside_region, t_outside_region, t_inside_region, RGN_DIFF);
 		DeleteObject(t_outside_region);
@@ -1899,8 +1967,8 @@ void MCGDIDrawTheme(HDC p_dc, void *p_context)
 
 	RECT t_widget_rect;
 	RECT t_clip_rect;
-	SetRect(&t_widget_rect, 0, 0, p_info . bounds . width, p_info . bounds . height);
-	SetRect(&t_clip_rect, p_info . clip . x - t_xoff, p_info . clip . y - t_yoff, p_info . clip . x + p_info . clip . width - t_xoff, p_info . clip . y + p_info . clip . height - t_yoff);
+	SetRect(&t_widget_rect, t_bounds.x, t_bounds.y, t_bounds.x + t_bounds.width, t_bounds.y + t_bounds.height);
+	SetRect(&t_clip_rect, t_clip.x, t_clip.y, t_clip.x + t_clip.width, t_clip.y + t_clip.height);
 	drawThemeBG(p_info . theme, p_dc, p_info . part, p_info . state, &t_widget_rect, &t_clip_rect);
 
 	RestoreDC(p_dc, -1);
