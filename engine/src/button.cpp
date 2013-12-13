@@ -3035,7 +3035,7 @@ MCRange MCButton::getmenurange()
 	}
 	while (i < menuhistory);
 		
-	return MCRangeMake(sptr, t_search.offset);
+	return MCRangeMake(sptr, t_search.offset - sptr);
 }
 
 void MCButton::makemenu(sublist *bstack, int2 &stackdepth, uint2 menuflags, MCFontRef fontref)
