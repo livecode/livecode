@@ -262,7 +262,7 @@ void MCScrollbar::SetEndValue(MCExecContext& ctxt, MCStringRef p_value)
 		return;
 	}
 	
-	if (!MCU_stor8(p_value, startvalue))
+	if (!MCU_stor8(p_value, endvalue))
 	{
 		ctxt . LegacyThrow(EE_OBJECT_NAN);
 		return;
@@ -273,7 +273,7 @@ void MCScrollbar::SetEndValue(MCExecContext& ctxt, MCStringRef p_value)
 	else
 	{
 		flags |= F_HAS_VALUES;
-		MCValueAssign(startstring, p_value);
+		MCValueAssign(endstring, p_value);
 	}
 	update(thumbpos, MCM_scrollbar_drag);
 	Redraw();
