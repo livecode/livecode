@@ -43,14 +43,20 @@ MC_EXEC_DEFINE_EVAL_METHOD(Logic, IsNotABoolean, 2)
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool MCLogicIsEqualTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef p_right, bool& r_result)
-{
+{    
 	// If the two value ptrs are the same, we are done.
 	if (p_left == p_right)
 	{
 		r_result = true;
 		return true;
 	}
-
+    
+    if (MCValueIsEmpty(p_left) != MCValueIsEmpty(p_right))
+    {
+        r_result = false;
+        return true;
+    }
+    
 	bool t_left_array, t_right_array;
 	t_left_array = MCValueGetTypeCode(p_left) == kMCValueTypeCodeArray && p_left != kMCEmptyArray;
 	t_right_array = MCValueGetTypeCode(p_right) == kMCValueTypeCodeArray &&	p_right != kMCEmptyArray;
@@ -100,7 +106,7 @@ static bool MCLogicIsEqualTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef 
 		r_result = true;
 		return true;
 	}
-
+    
 	// If both can be numbers, then compare them as that.
 	bool t_left_converted, t_right_converted;
 	real64_t t_left_num, t_right_num;
