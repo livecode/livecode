@@ -1815,8 +1815,13 @@ bool MCObject::GetColor(MCExecContext& ctxt, Properties which, bool effective, M
 		get_interface_color(colors[i], colornames[i], r_color);
 		return true;	
 	}
-	else if (effective && parent != NULL)
-		return parent -> GetColor(ctxt, which, effective, r_color);
+	else if (effective)
+    {
+        if (parent != NULL)
+            return parent -> GetColor(ctxt, which, effective, r_color);
+        else
+            return MCdispatcher -> GetColor(ctxt, which, effective, r_color);
+    }
 	else
 	{
 		r_color . name = MCValueRetain(kMCEmptyString);
@@ -2606,7 +2611,10 @@ void MCObject::GetEffectiveTextFont(MCExecContext& ctxt, MCStringRef& r_font)
 void MCObject::GetTextSize(MCExecContext& ctxt, uinteger_t*& r_size)
 {
 	if ((m_font_flags & FF_HAS_TEXTSIZE) == 0)
+    {
+        r_size = nil;
 		return;
+    }
 
 	uint2 fontsize, fontstyle;
 	MCNameRef fontname;

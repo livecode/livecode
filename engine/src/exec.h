@@ -674,7 +674,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 { prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyThunkGetCustomType(MC##module##Get##tag, MC##type), nil },
 
 #define DEFINE_RO_EFFECTIVE_PROPERTY(prop, type, module, tag) \
-{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyThunkGet##type(MC##module##Get##tag), nil },
+{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyThunkGet##type(MC##module##GetEffective##tag), nil },
 
 #define DEFINE_RO_ARRAY_PROPERTY(prop, type, module, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyThunkArrayGet##type(MC##module##Get##tag), nil, false, true, kMCPropertyInfoChunkTypeNone },
@@ -731,11 +731,8 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define DEFINE_RO_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(obj, Get##tag, MC##type), nil, true, false, kMCPropertyInfoChunkTypeNone },
 
-#define DEFINE_RW_OBJ_EFFECTIVE_CUSTOM_PROPERTY(prop, type, obj, tag) \
-{ prop, true, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(obj, Get##tag, MC##type), (void *)MCPropertyObjectThunkSetCustomType(obj, Set##tag, MC##type), true, false, kMCPropertyInfoChunkTypeNone },
-
 #define DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(prop, type, obj, tag) \
-{ prop, true, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(obj, Get##tag, MC##type), nil, true, false, kMCPropertyInfoChunkTypeNone },
+{ prop, true, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(obj, GetEffective##tag, MC##type), nil, true, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectPartThunkGetCustomType(obj, Get##tag, MC##type), (void *)MCPropertyObjectPartThunkSetCustomType(obj, Set##tag, MC##type), false, false, kMCPropertyInfoChunkTypeNone },
@@ -787,7 +784,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), nil, true, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(prop, type, obj, tag) \
-{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, Get##tag), nil, true, false, kMCPropertyInfoChunkTypeNone },
+{ prop, true, kMCPropertyType##type, nil, (void *)MCPropertyObjectListThunkGet##type(obj, GetEffective##tag), nil, true, false, kMCPropertyInfoChunkTypeNone },
 
 #define DEFINE_WO_OBJ_CHUNK_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, nil, (void *)MCPropertyObjectChunkThunkSet##type(obj, Set##tag##OfCharChunk), false, false, true },
@@ -2785,16 +2782,16 @@ void MCInterfaceExecShowMenuBar(MCExecContext& ctxt);
 void MCInterfaceExecShowTaskBar(MCExecContext& ctxt);
 
 void MCInterfaceExecPopupButton(MCExecContext& ctxt, MCButton *p_target, MCPoint *p_at);
-void MCInterfaceExecDrawerStack(MCExecContext& ctxt, MCStack *p_target, MCStringRef parent, bool p_parent_is_thisstack, int p_at, int p_aligned);
-void MCInterfaceExecDrawerStackByName(MCExecContext& ctxt, MCStringRef p_target, MCStringRef parent, bool p_parent_is_thisstack, int p_at, int p_aligned);
-void MCInterfaceExecDrawerStackLegacy(MCExecContext& ctxt, MCStack *p_target, MCStringRef parent, bool p_parent_is_thisstack, intenum_t p_at, intenum_t p_aligned);
-void MCInterfaceExecDrawerStackByNameLegacy(MCExecContext& ctxt, MCStringRef p_target, MCStringRef parent, bool p_parent_is_thisstack, intenum_t p_at, intenum_t p_aligned);
-void MCInterfaceExecSheetStack(MCExecContext& ctxt, MCStack *p_target, MCStringRef parent, bool p_parent_is_thisstack);
-void MCInterfaceExecSheetStackByName(MCExecContext& ctxt, MCStringRef p_target, MCStringRef parent, bool p_parent_is_thisstack);
+void MCInterfaceExecDrawerStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef parent, bool p_parent_is_thisstack, int p_at, int p_aligned);
+void MCInterfaceExecDrawerStackByName(MCExecContext& ctxt, MCNameRef p_target, MCNameRef parent, bool p_parent_is_thisstack, int p_at, int p_aligned);
+void MCInterfaceExecDrawerStackLegacy(MCExecContext& ctxt, MCStack *p_target, MCNameRef parent, bool p_parent_is_thisstack, intenum_t p_at, intenum_t p_aligned);
+void MCInterfaceExecDrawerStackByNameLegacy(MCExecContext& ctxt, MCNameRef p_target, MCNameRef parent, bool p_parent_is_thisstack, intenum_t p_at, intenum_t p_aligned);
+void MCInterfaceExecSheetStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef parent, bool p_parent_is_thisstack);
+void MCInterfaceExecSheetStackByName(MCExecContext& ctxt, MCNameRef p_target, MCNameRef parent, bool p_parent_is_thisstack);
 void MCInterfaceExecOpenStack(MCExecContext& ctxt, MCStack *p_target, int p_mode);
-void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCStringRef p_target, int p_mode);
+void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_target, int p_mode);
 void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *p_at, int p_mode);
-void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCStringRef p_target, MCPoint *p_at, int p_mode);
+void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCNameRef p_target, MCPoint *p_at, int p_mode);
 
 void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCStack *p_owner, MCStringRef p_new_name, bool p_force_invisible);
 void MCInterfaceExecCreateStackWithGroup(MCExecContext& ctxt, MCGroup *p_group_to_copy, MCStringRef p_new_name, bool p_force_invisible);

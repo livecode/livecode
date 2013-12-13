@@ -881,7 +881,7 @@ void MCGraphic::SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& c
         MCGradientFillFree(m_stroke_gradient);
         m_stroke_gradient = nil;
     }
-    return MCObject::SetForeColor(ctxt, color);
+    MCObject::SetForeColor(ctxt, color);
 }
 
 void MCGraphic::SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color)
@@ -891,7 +891,7 @@ void MCGraphic::SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& c
         MCGradientFillFree(m_stroke_gradient);
         m_stroke_gradient = nil;
     }
-    return MCObject::SetBackColor(ctxt, color);
+    MCObject::SetBackColor(ctxt, color);
 }
 
 void MCGraphic::SetForePattern(MCExecContext& ctxt, uinteger_t* pattern)
@@ -901,7 +901,7 @@ void MCGraphic::SetForePattern(MCExecContext& ctxt, uinteger_t* pattern)
         MCGradientFillFree(m_stroke_gradient);
         m_stroke_gradient = nil;
     }
-    return MCObject::SetBackPattern(ctxt, pattern);
+    MCObject::SetBackPattern(ctxt, pattern);
 }
 
 void MCGraphic::SetBackPattern(MCExecContext& ctxt, uinteger_t* pattern)
@@ -911,6 +911,6 @@ void MCGraphic::SetBackPattern(MCExecContext& ctxt, uinteger_t* pattern)
         MCGradientFillFree(m_stroke_gradient);
         m_stroke_gradient = nil;
     }
-    return MCObject::SetBackPattern(ctxt, pattern);
+    MCObject::SetBackPattern(ctxt, pattern);
 }
 

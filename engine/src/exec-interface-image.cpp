@@ -163,6 +163,7 @@ void MCImage::SetAlwaysBuffer(MCExecContext& ctxt, bool setting)
 
 void MCImage::GetImagePixmapId(MCExecContext& ctxt, uinteger_t*& r_id)
 {
+    r_id = nil;
 }
 
 void MCImage::SetImagePixmapId(MCExecContext& ctxt, uinteger_t* p_id)
@@ -171,6 +172,7 @@ void MCImage::SetImagePixmapId(MCExecContext& ctxt, uinteger_t* p_id)
 
 void MCImage::GetMaskPixmapId(MCExecContext& ctxt, uinteger_t*& r_id)
 {
+    r_id = nil;
 }
 
 void MCImage::SetMaskPixmapId(MCExecContext& ctxt, uinteger_t* p_id)

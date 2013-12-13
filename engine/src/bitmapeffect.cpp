@@ -923,7 +923,7 @@ static void MCBitmapEffectStoreProperty(MCExecContext& ctxt, MCBitmapEffect& x_e
         {
             uinteger_t t_value;
             MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeUInt, &t_value);
-            MCBitmapEffectsSetUIntProperty(x_effect, p_prop, p_value . uint_value, r_dirty);
+            MCBitmapEffectsSetUIntProperty(x_effect, p_prop, t_value, r_dirty);
         }
             break;
             
@@ -942,7 +942,7 @@ bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
     bool t_is_array;
     t_is_array = MCNameIsEqualTo(p_index, kMCEmptyName, kMCCompareCaseless);
 
-    if (t_is_array && p_value . type == kMCExecValueTypeStringRef && MCStringIsEmpty(p_value . stringref_value))
+    if (t_is_array && p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
     {
         if (self == nil || (self -> mask & (1 << t_type)) == 0)
 			return true;

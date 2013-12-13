@@ -1051,24 +1051,34 @@ void MCButton::SetText(MCExecContext& ctxt, MCStringRef p_text)
 {
 	if (MCStringIsEqualTo(menustring, p_text, kMCStringOptionCompareExact))
 	{
-		resetlabel();
+		if (resetlabel())
+            Redraw();
 		return;
 	}
 	
 	freemenu(False);
 	MCValueAssign(menustring, p_text);
 	if (!MCStringIsEmpty(p_text))
+    {
+        flags |= F_MENU_STRING;
 		findmenu(true);
-	
+    }
+	else
+    {
+        flags &= ~F_MENU_STRING;
+    }
 	menuhistory = 1;
+    
+    bool t_dirty = (resetlabel() || menumode == WM_TOP_LEVEL);
+    
 	if (parent != NULL && parent->gettype() == CT_GROUP)
 	{
 		parent->setstate(True, CS_NEED_UPDATE);
 		if ((parent == MCmenubar || parent == MCdefaultmenubar) && !MClockmenus)
 			MCscreen->updatemenubar(True);
 	}
-	
-	Redraw();
+	if (t_dirty)
+        Redraw();
 }
 
 void MCButton::GetUnicodeText(MCExecContext& ctxt, MCDataRef& r_text)

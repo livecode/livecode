@@ -2793,7 +2793,7 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 #endif /* MCSubwindow */
 
 	MCObject *optr;
-	MCAutoStringRef optr_name;
+	MCNewAutoNameRef optr_name;
 	uint4 parid;
 	MCresult->clear(False);
     MCerrorlock++;
@@ -2804,7 +2804,7 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 	        || optr->gettype() != CT_BUTTON && optr->gettype() != CT_STACK)
 	{
 		MCerrorlock--;
-        if (!ctxt . EvalExprAsStringRef(target, EE_SUBWINDOW_BADEXP, &optr_name))
+        if (!ctxt . EvalExprAsNameRef(target, EE_SUBWINDOW_BADEXP, &optr_name))
             return;
     }
 	else
@@ -2833,7 +2833,7 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 		case WM_MODELESS:
 		case WM_PALETTE:
 		case WM_MODAL:
-			if (optr == nil)
+			if (*optr_name != nil)
 				MCInterfaceExecOpenStackByName(ctxt, *optr_name, mode);
 			else
 				MCInterfaceExecOpenStack(ctxt, (MCStack *)optr, mode);
@@ -2842,13 +2842,13 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 		case WM_DRAWER:
 			{
 				MCerrorlock++;
-				MCAutoStringRef t_parent_name;
-                if (!ctxt . EvalOptionalExprAsNullableStringRef(parent, EE_SUBWINDOW_BADEXP, &t_parent_name))
+				MCNewAutoNameRef t_parent_name;
+                if (!ctxt . EvalOptionalExprAsNullableNameRef(parent, EE_SUBWINDOW_BADEXP, &t_parent_name))
                     return;
 
 				if (mode == WM_SHEET)
 				{
-					if (optr == nil)
+					if (*optr_name != nil)
 						MCInterfaceExecSheetStackByName(ctxt, *optr_name, *t_parent_name, thisstack == True);
 					else
 						MCInterfaceExecSheetStack(ctxt, (MCStack *)optr, *t_parent_name, thisstack == True);

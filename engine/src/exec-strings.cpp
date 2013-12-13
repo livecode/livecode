@@ -1045,6 +1045,29 @@ void MCStringsEvalIsNotAmongTheWordsOf(MCExecContext& ctxt, MCStringRef p_word, 
 	r_result = !MCStringsIsAmongTheSplitChunksOf(ctxt, p_word, p_string, CT_WORD);
 }
 
+
+static bool MCStringsIsAmongTheChunksOfRange(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, Chunk_term p_chunk_type, MCStringOptions p_options, MCRange p_range)
+{
+	MCRange t_range;
+	if (!MCStringFind(p_string, p_range, p_chunk, p_options, &t_range))
+		return false;
+    
+	char_t t_delimiter;
+	t_delimiter = p_chunk_type == CT_ITEM ? ctxt . GetItemDelimiter() : ctxt . GetLineDelimiter();
+	
+    // if there is no delimiter to the left then continue searching the string.
+	if (t_range . offset != 0 &&
+		MCStringGetNativeCharAtIndex(p_string, t_range . offset - 1) != t_delimiter)
+		return MCStringsIsAmongTheChunksOfRange(ctxt, p_chunk, p_string, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
+    
+    // if there is no delimiter to the right then continue searching the string.
+	if (t_range . offset + t_range . length != MCStringGetLength(p_string) &&
+		MCStringGetNativeCharAtIndex(p_string, t_range . offset + t_range . length) != t_delimiter)
+		return MCStringsIsAmongTheChunksOfRange(ctxt, p_chunk, p_string, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
+    
+	return true;
+}
+
 // MW-2013-01-21: The (current) behavior of 'is among' compares chunks if
 //   the pattern is empty. Otherwise, it (essentially) searches for the
 //   pattern in the string and ensures it has a delimiter either side.
@@ -1057,22 +1080,7 @@ static bool MCStringsIsAmongTheChunksOf(MCExecContext& ctxt, MCStringRef p_chunk
 	MCStringOptions t_options;
 	t_options = ctxt.GetCaseSensitive() ? kMCStringOptionCompareExact: kMCStringOptionCompareCaseless;
 	
-	MCRange t_range;
-	if (!MCStringFind(p_string, MCRangeMake(0, MCStringGetLength(p_string)), p_chunk, t_options, &t_range))
-		return false;
-		
-	char_t t_delimiter;
-	t_delimiter = p_chunk_type == CT_ITEM ? ctxt . GetItemDelimiter() : ctxt . GetLineDelimiter();
-	
-	if (t_range . offset != 0 &&
-		MCStringGetNativeCharAtIndex(p_string, t_range . offset - 1) != t_delimiter)
-		return false;
-		
-	if (t_range . offset + t_range . length != MCStringGetLength(p_string) &&
-		MCStringGetNativeCharAtIndex(p_string, t_range . offset + t_range . length) != t_delimiter)
-		return false;
-		
-	return true;
+    return MCStringsIsAmongTheChunksOfRange(ctxt, p_chunk, p_string, p_chunk_type, t_options, MCRangeMake(0, UINDEX_MAX));
 }
 
 void MCStringsEvalIsAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_line, MCStringRef p_string, bool& r_result)

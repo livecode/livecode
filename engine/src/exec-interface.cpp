@@ -2733,6 +2733,9 @@ void MCInterfaceExecPopupButton(MCExecContext& ctxt, MCButton *p_target, MCPoint
 
 void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p_parent, MCRectangle p_rect, int p_at, int p_aligned, int p_mode)
 {
+	if (p_mode != WM_PULLDOWN && p_mode != WM_POPUP && p_mode != WM_OPTION)
+    	MCU_watchcursor(ctxt . GetObject()->getstack(), False);
+        
 	// MW-2007-05-01: Reverting this as it causes problems :o(
 	//stackptr -> setflag(True, F_VISIBLE);
 
@@ -2756,14 +2759,14 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 		MCdefaultstackptr = olddefault;
 }
 
-void MCInterfaceExecDrawerOrSheetStack(MCExecContext& ctxt, MCStack *p_target, MCStringRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, int p_mode)
+void MCInterfaceExecDrawerOrSheetStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, int p_mode)
 {
 	MCStack *parentptr;
     parentptr = nil;
     
     if (p_parent_name != nil)
     {
-        parentptr = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_parent_name));
+        parentptr = ctxt . GetObject()->getstack()->findstackname(p_parent_name);
         if (parentptr == nil)
         {
             ctxt . LegacyThrow(EE_SUBWINDOW_BADEXP);
@@ -2786,15 +2789,15 @@ void MCInterfaceExecDrawerOrSheetStack(MCExecContext& ctxt, MCStack *p_target, M
 			MCInterfaceExecSubwindow(ctxt, p_target, parentptr, parentptr->getrect(), p_at, p_aligned, WM_DRAWER);
 	}
 	else if (MCdefaultstackptr->getopened() || MCtopstackptr == NULL)
-		MCInterfaceExecSubwindow(ctxt, p_target, MCdefaultstackptr, MCdefaultstackptr->getrect(), p_at, p_aligned, WM_DRAWER);
+		MCInterfaceExecSubwindow(ctxt, p_target, MCdefaultstackptr, MCdefaultstackptr->getrect(), p_at, p_aligned, p_mode);
 	else
-		MCInterfaceExecSubwindow(ctxt, p_target, MCtopstackptr, MCtopstackptr->getrect(), p_at, p_aligned, WM_DRAWER);
+		MCInterfaceExecSubwindow(ctxt, p_target, MCtopstackptr, MCtopstackptr->getrect(), p_at, p_aligned, p_mode);
 }
 
-void MCInterfaceExecDrawerOrSheetStackByName(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, int p_mode)
+void MCInterfaceExecDrawerOrSheetStackByName(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, int p_mode)
 {
 	MCStack *sptr;
-	sptr = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_name));
+	sptr = ctxt . GetObject()->getstack()->findstackname(p_name);
 
 	if (sptr == nil)
 	{
@@ -2806,32 +2809,32 @@ void MCInterfaceExecDrawerOrSheetStackByName(MCExecContext& ctxt, MCStringRef p_
 	MCInterfaceExecDrawerOrSheetStack(ctxt, sptr, p_parent_name, p_parent_is_thisstack, p_at, p_aligned, p_mode);
 }
 
-void MCInterfaceExecDrawerStack(MCExecContext& ctxt, MCStack *p_target, MCStringRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned)
+void MCInterfaceExecDrawerStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned)
 {	
 	MCInterfaceExecDrawerOrSheetStack(ctxt, p_target, p_parent_name, p_parent_is_thisstack, p_at, p_aligned, WM_DRAWER);
 }
 
-void MCInterfaceExecDrawerStackByName(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned)
+void MCInterfaceExecDrawerStackByName(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned)
 {	
 	MCInterfaceExecDrawerOrSheetStackByName(ctxt, p_name, p_parent_name, p_parent_is_thisstack, p_at, p_aligned, WM_DRAWER);
 }
 
-void MCInterfaceExecDrawerStackLegacy(MCExecContext& ctxt, MCStack *p_target, MCStringRef parent, bool p_parent_is_thisstack, intenum_t p_at, intenum_t p_aligned)
+void MCInterfaceExecDrawerStackLegacy(MCExecContext& ctxt, MCStack *p_target, MCNameRef parent, bool p_parent_is_thisstack, intenum_t p_at, intenum_t p_aligned)
 {
 	MCInterfaceExecDrawerStack(ctxt, p_target, parent, p_parent_is_thisstack, (int)p_at, (int)p_aligned);
 }
 
-void MCInterfaceExecDrawerStackByNameLegacy(MCExecContext& ctxt, MCStringRef p_name, MCStringRef parent, bool p_parent_is_thisstack, intenum_t p_at, intenum_t p_aligned)
+void MCInterfaceExecDrawerStackByNameLegacy(MCExecContext& ctxt, MCNameRef p_name, MCNameRef parent, bool p_parent_is_thisstack, intenum_t p_at, intenum_t p_aligned)
 {
 	MCInterfaceExecDrawerStackByName(ctxt, p_name, parent, p_parent_is_thisstack, (int)p_at, (int)p_aligned);
 }
 
-void MCInterfaceExecSheetStack(MCExecContext& ctxt, MCStack *p_target, MCStringRef p_parent_name, bool p_parent_is_thisstack)
+void MCInterfaceExecSheetStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef p_parent_name, bool p_parent_is_thisstack)
 {
 	MCInterfaceExecDrawerOrSheetStack(ctxt, p_target, p_parent_name, p_parent_is_thisstack, WP_DEFAULT, OP_CENTER, WM_SHEET);
 }
 
-void MCInterfaceExecSheetStackByName(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_parent_name, bool p_parent_is_thisstack)
+void MCInterfaceExecSheetStackByName(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_parent_name, bool p_parent_is_thisstack)
 {
 	MCInterfaceExecDrawerOrSheetStackByName(ctxt, p_name, p_parent_name, p_parent_is_thisstack, WP_DEFAULT, OP_CENTER, WM_SHEET);
 }
@@ -2844,10 +2847,10 @@ void MCInterfaceExecOpenStack(MCExecContext& ctxt, MCStack *p_target, int p_mode
 		MCInterfaceExecSubwindow(ctxt, p_target, nil, MCtopstackptr->getrect(), WP_DEFAULT, OP_NONE, p_mode);
 }
 
-void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCStringRef p_name, int p_mode)
+void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_name, int p_mode)
 {
 	MCStack *sptr;
-	sptr = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_name));
+	sptr = ctxt . GetObject()->getstack()->findstackname(p_name);
 
 	if (sptr == nil)
 	{
@@ -2861,9 +2864,6 @@ void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCStringRef p_name, int
 
 void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *p_at, int p_mode)
 {
-	Boolean oldtrace = MCtrace;
-	MCU_watchcursor(ctxt . GetObject()->getstack(), False);
-
 	// MW-2007-04-10: [[ Bug 4260 ]] We shouldn't attempt to attach a menu to a control that is descendent of itself
 	if (MCtargetptr -> getstack() == p_target)
 	{
@@ -2884,15 +2884,14 @@ void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *
 		if (!MCabortscript)
 			return;
 
-		MCtrace = oldtrace;
 		ctxt . Throw();	
 	}
 }
 
-void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCStringRef p_name, MCPoint *p_at, int p_mode)
+void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCNameRef p_name, MCPoint *p_at, int p_mode)
 {
 	MCStack *sptr;
-	sptr = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_name));
+	sptr = ctxt . GetObject()->getstack()->findstackname(p_name);
 
 	if (sptr == nil)
 	{

@@ -160,7 +160,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_STATUS_ICON_MENU, String, Interface, StatusIconMenu)
 	DEFINE_RW_ENUM_PROPERTY(P_PROCESS_TYPE, InterfaceProcessType, Interface, ProcessType)
 	DEFINE_RW_PROPERTY(P_STACK_LIMIT, UInt32, Engine, StackLimit)
-	DEFINE_RO_EFFECTIVE_PROPERTY(P_STACK_LIMIT, UInt32,Engine, StackLimit)
+	DEFINE_RO_EFFECTIVE_PROPERTY(P_STACK_LIMIT, UInt32, Engine, StackLimit)
 	DEFINE_RW_PROPERTY(P_IMAGE_CACHE_LIMIT, UInt32, Graphics, ImageCacheLimit)
 	DEFINE_RO_PROPERTY(P_IMAGE_CACHE_USAGE, UInt32, Graphics, ImageCacheUsage)
 	DEFINE_RW_PROPERTY(P_ALLOW_DATAGRAM_BROADCASTS, Bool, Network, AllowDatagramBroadcasts)
