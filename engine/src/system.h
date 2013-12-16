@@ -30,6 +30,13 @@ enum
 	kMCSystemFileModeNulTerminate = 1 << 16
 };
 
+enum
+{
+    kMCSystemFileSeekSet = 1,
+    kMCSystemFileSeekCurrent = 0,
+    kMCSystemFileSeekEnd = -1,
+};
+
 struct MCDateTime;
 struct MCDateTimeLocale;
 
