@@ -175,9 +175,10 @@ MCParagraph::~MCParagraph()
 
 MCBlock* MCParagraph::AppendText(MCStringRef p_string)
 {
-	// Ensure the block list has been set up
-	inittext();
-	
+    // Ensure the block list has been set up
+    if (blocks == nil)
+        inittext();
+    
 	// Is the last block empty or does a new one need to be created?
 	MCBlock *t_block = blocks->prev();
 	if (t_block->GetLength() > 0)

@@ -7910,11 +7910,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         t_cf_document = NULL;
         if (t_success)
         {
-            char *t_doc;
-            /* UNCHECKED */ MCStringConvertToCString(p_document, t_doc);
-            t_cf_document = CFStringCreateWithCStringNoCopy(kCFAllocatorDefault, t_doc, kCFStringEncodingMacRoman, kCFAllocatorNull);
-            delete t_doc;
-            if (t_cf_document == NULL)
+            if (!MCStringConvertToCFStringRef(p_document, t_cf_document))
                 t_success = false;
         }
         

@@ -730,27 +730,6 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                         t_blocks_changed = true;
                     }
 
-//                  TODO: what to do with the image source property, as there is a need for p_from_html?
-//                                case P_IMAGE_SOURCE:
-//                    {
-//                                bptr->setatts(p, value);
-
-//                    // MW-2008-04-03: [[ Bug ]] Only add an extra block if this is coming from
-//                    //   html parsing.
-//                    if (p_from_html)
-//                    {
-//                        MCBlock *tbptr = new MCBlock(*bptr); // need a new empty block
-//                        tbptr->freerefs();                   // for HTML continuation
-//                        // MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
-//                        //   fontref so it can compute its.
-//                        if (opened)
-//                            tbptr->open(parent -> getfontref());
-//                        bptr->append(tbptr);
-//                        tbptr->SetRange(ei, 0);
-//                        t_blocks_changed = true;
-//                    }
-//                }
-
                     T::setter(ctxt, bptr, p_setter, p_value);
 
                     // MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
