@@ -23,6 +23,7 @@ PropList;
 
 static PropList stackprops[] =
     {
+    	// MDW-2013-12-15 [[ bugfix_acceleratedRendering ]] missing from stack properties
   		{"acceleratedrendering", P_ACCELERATED_RENDERING},
 		{"altId", P_ALT_ID},
         {"alwaysBuffer", P_ALWAYS_BUFFER},
