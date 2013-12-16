@@ -1287,7 +1287,19 @@ hash_t MCStringHash(MCStringRef self, MCStringOptions p_options)
 
 bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_options)
 {
-	if (p_options != kMCStringOptionCompareExact)
+	if (self == p_other)
+        return true;
+    
+    if (self -> chars == nil)
+    {
+        return p_other -> chars == nil;
+    }
+    else if (p_other -> chars == nil)
+    {
+        return false;
+    }
+    
+    if (p_options != kMCStringOptionCompareExact)
 		return MCStrCharsEqualCaseless(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
 	return MCStrCharsEqualExact(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
 }
