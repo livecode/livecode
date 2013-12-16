@@ -941,7 +941,7 @@ public:
     
 		MCSystemListProcesses(ListProcessCallback, &t_state);
         
-		MCresult -> set(ctxt, &t_module_str);
+		MCresult -> set(ctxt, t_state.list);
         
 		delete t_module;
 	}
