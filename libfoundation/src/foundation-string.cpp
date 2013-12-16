@@ -1441,11 +1441,11 @@ bool MCStringLastIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_
     
     bool t_result;
     if (p_options == kMCStringOptionCompareExact)
-        t_result = MCStrCharsLastIndexOfCharExact(self -> chars, self -> char_count - p_before, p_needle, r_offset);
+        t_result = MCStrCharsLastIndexOfCharExact(self -> chars, p_before, p_needle, r_offset);
     else if (p_options == kMCStringOptionCompareNonliteral)
-        t_result = MCStrCharsLastIndexOfCharNonliteral(self -> chars, self -> char_count - p_before, p_needle, r_offset);
+        t_result = MCStrCharsLastIndexOfCharNonliteral(self -> chars, p_before, p_needle, r_offset);
     else
-        t_result = MCStrCharsLastIndexOfCharCaseless(self -> chars, self -> char_count - p_before, p_needle, r_offset);
+        t_result = MCStrCharsLastIndexOfCharCaseless(self -> chars, p_before, p_needle, r_offset);
 
     return t_result;
 }
