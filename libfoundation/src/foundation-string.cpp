@@ -463,7 +463,8 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 					
 					if (*t_format_ptr == '@')
 					{
-						t_has_range = true;
+						t_format_start_ptr = t_format_ptr;
+                        t_has_range = true;
 						break;
 					}
 				}
@@ -555,9 +556,9 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 			
 			MCAutoStringRef t_string;
 			if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeString)
-				t_string = MCValueRetain((MCStringRef)t_value);
+				t_string = (MCStringRef)t_value;
 			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeName)
-				t_string = MCValueRetain(MCNameGetString((MCNameRef)t_value));
+				t_string = MCNameGetString((MCNameRef)t_value);
 			else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNumber)
 				if (MCNumberIsInteger((MCNumberRef)t_value))
 					/* UNCHECKED */ MCStringFormat(&t_string, "%d", MCNumberFetchAsInteger((MCNumberRef)t_value));
