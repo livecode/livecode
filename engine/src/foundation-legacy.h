@@ -23,6 +23,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCString;
+
 typedef MCStringOptions     MCCompareOptions;
 #define kMCCompareExact     kMCStringOptionCompareExact
 #define kMCCompareCaseless  kMCStringOptionCompareCaseless
