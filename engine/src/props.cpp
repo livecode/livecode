@@ -23,7 +23,8 @@ PropList;
 
 static PropList stackprops[] =
     {
-        {"altId", P_ALT_ID},
+  		{"acceleratedrendering", P_ACCELERATED_RENDERING},
+		{"altId", P_ALT_ID},
         {"alwaysBuffer", P_ALWAYS_BUFFER},
 		{"backColor", P_BACK_COLOR},
 		{"backPattern", P_BACK_PATTERN},
