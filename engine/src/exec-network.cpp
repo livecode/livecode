@@ -585,31 +585,55 @@ void MCNetworkExecWriteToSocket(MCExecContext& ctxt, MCNameRef p_socket, MCStrin
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef p_value, int p_where, MCUrlChunkPtr p_chunk)
+void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_where, MCUrlChunkPtr p_chunk)
 {
-	MCAutoStringRef t_new_value;
+	MCAutoValueRef t_new_value;
 	if (p_chunk . chunk == CT_UNDEFINED)
 	{
 		if (p_where == PT_INTO)
 			t_new_value = p_value;
 		else
 		{
-			MCStringRef t_old_data;
-			/* UNCHECKED */ MCU_geturl(ctxt, p_chunk.url, t_old_data);
-			/* UNCHECKED */ MCStringMutableCopyAndRelease(t_old_data, t_old_data);
-			if (p_where == PT_AFTER)
-				/* UNCHECKED */ MCStringAppend(t_old_data, p_value);
-			else
-				/* UNCHECKED */ MCStringPrepend(t_old_data, p_value);
-			/* UNCHECKED */ MCStringCopyAndRelease(t_old_data, &t_new_value);
+			MCAutoValueRef t_old_data;
+			/* UNCHECKED */ MCU_geturl(ctxt, p_chunk.url, &t_old_data);
+            
+            if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString
+                && MCValueGetTypeCode(*t_old_data) == kMCValueTypeCodeString)
+            {
+                // Both old and new are strings
+                if (p_where == PT_AFTER)
+                    MCStringFormat((MCStringRef&)&t_new_value, "%@%@", *t_old_data, p_value);
+                else
+                    MCStringFormat((MCStringRef&)&t_new_value, "%@%@", p_value, *t_old_data);
+            }
+            else
+            {
+                // Not strings, treat as data
+                MCDataRef t_old, t_new;
+                MCAutoDataRef t_value;
+                
+                /* UNCHECKED */ ctxt.ConvertToData(*t_old_data, t_old);
+                /* UNCHECKED */ ctxt.ConvertToData(p_value, &t_value);
+                
+                /* UNCHECKED */ MCDataMutableCopyAndRelease(t_old, t_new);
+                if (p_where == PT_AFTER)
+                    /* UNCHECKED */ MCDataAppend(t_new, *t_value);
+                else
+                    /* UNCHECKED */ MCDataPrepend(t_new, *t_value);
+                
+                /* UNCHECKED */ MCDataCopyAndRelease(t_new, (MCDataRef&)&t_new_value);
+            }
 		}
 	}
 	else
 	{
-		MCStringRef t_string;
+        MCAutoStringRef t_value;
+        /* UNCHECKED */ ctxt . ConvertToString(p_value, &t_value);
+        
+        MCStringRef t_string;
 		/* UNCHECKED */ MCStringMutableCopy(p_chunk . mark . text, t_string);
-		/* UNCHECKED */ MCStringReplace(t_string, MCRangeMake(p_chunk.mark.start, p_chunk.mark.finish - p_chunk.mark.start), p_value);
-		/* UNCHECKED */ MCStringCopyAndRelease(t_string, &t_new_value);
+		/* UNCHECKED */ MCStringReplace(t_string, MCRangeMake(p_chunk.mark.start, p_chunk.mark.finish - p_chunk.mark.start), *t_value);
+		/* UNCHECKED */ MCStringCopyAndRelease(t_string, (MCStringRef&)&t_new_value);
 	}
 	
 	ctxt.SetTheResultToValue(*t_new_value);
@@ -770,34 +794,62 @@ void MCNetworkSetAllowDatagramBroadcasts(MCExecContext& ctxt, bool p_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCNetworkExecSetUrl(MCExecContext& ctxt, MCStringRef p_value, MCStringRef p_url)
+void MCNetworkExecSetUrl(MCExecContext& ctxt, MCValueRef p_value, MCStringRef p_url)
 {
     MCU_puturl(ctxt, p_url, p_value);
 }
 
-void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef p_value, int p_where, MCStringRef p_url)
+void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_where, MCStringRef p_url)
 {
     if (p_where == PT_INTO)
         MCNetworkExecSetUrl(ctxt, p_value, p_url);
     else
     {
-        MCAutoStringRef t_string;
-        MCU_geturl(ctxt, p_url, &t_string);
+        MCAutoValueRef t_old_data;
+        /* UNCHECKED */ MCU_geturl(ctxt, p_url, &t_old_data);
         
-        MCAutoStringRef t_new_value;
-        MCStringMutableCopy(*t_string, &t_new_value);
-        
-        if (p_where == PT_AFTER)
-            MCStringAppend(*t_new_value, p_value);
+        if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString
+            && MCValueGetTypeCode(*t_old_data) == kMCValueTypeCodeString)
+        {
+            MCAutoStringRef t_new_value;
+            
+            // Both old and new are strings
+            if (p_where == PT_AFTER)
+                MCStringFormat(&t_new_value, "%@%@", *t_old_data, p_value);
+            else
+                MCStringFormat(&t_new_value, "%@%@", p_value, *t_old_data);
+            
+            MCNetworkExecSetUrl(ctxt, *t_new_value, p_url);
+        }
         else
-            MCStringPrepend(*t_new_value, p_value);
-        MCNetworkExecSetUrl(ctxt, *t_new_value, p_url);
+        {
+            // Not strings, treat as data
+            MCDataRef t_old, t_new;
+            MCAutoDataRef t_value, t_new_value;
+            
+            /* UNCHECKED */ ctxt.ConvertToData(*t_old_data, t_old);
+            /* UNCHECKED */ ctxt.ConvertToData(p_value, &t_value);
+            
+            /* UNCHECKED */ MCDataMutableCopyAndRelease(t_old, t_new);
+            if (p_where == PT_AFTER)
+            /* UNCHECKED */ MCDataAppend(t_new, *t_value);
+            else
+            /* UNCHECKED */ MCDataPrepend(t_new, *t_value);
+            
+            /* UNCHECKED */ MCDataCopyAndRelease(t_new, &t_new_value);
+            
+            MCNetworkExecSetUrl(ctxt, *t_new_value, p_url);
+        }
     }
 }
 
 void MCNetworkMarkUrl(MCExecContext& ctxt, MCStringRef p_url, MCMarkedText& r_mark)
 {
-    MCU_geturl(ctxt, p_url, r_mark . text);
+    MCAutoValueRef t_data;
+
+    MCU_geturl(ctxt, p_url, &t_data);
+    /* UNCHECKED */ ctxt . ConvertToString(*t_data, r_mark . text);
+    
     r_mark . start = 0;
     r_mark . finish = MAXUINT4;
 }

@@ -4008,7 +4008,7 @@ void MCNetworkExecReadFromSocketUntil(MCExecContext& ctxt, MCNameRef p_socket, M
 
 void MCNetworkExecWriteToSocket(MCExecContext& ctxt, MCNameRef p_socket, MCStringRef p_data, MCNameRef p_message);
 
-void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef value, int prep, MCUrlChunkPtr url);
+void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef value, int prep, MCUrlChunkPtr url);
 
 void MCNetworkExecReturnValueAndUrlResult(MCExecContext& ctxt, MCValueRef value, MCValueRef url_result);
 void MCNetworkExecReturnValueAndUrlResultFromVar(MCExecContext& ctxt, MCValueRef result, MCVarref *variable);
@@ -4031,7 +4031,7 @@ void MCNetworkGetNetworkInterfaces(MCExecContext& ctxt, MCStringRef& r_value);
 void MCNetworkGetAllowDatagramBroadcasts(MCExecContext& ctxt, bool& r_value);
 void MCNetworkSetAllowDatagramBroadcasts(MCExecContext& ctxt, bool p_value);
 
-void MCNetworkExecSetUrl(MCExecContext& ctxt, MCStringRef p_value, MCStringRef p_url);
+void MCNetworkExecSetUrl(MCExecContext& ctxt, MCValueRef p_value, MCStringRef p_url);
 void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef p_value, int p_where, MCStringRef p_url);
 
 void MCNetworkMarkUrl(MCExecContext& ctxt, MCStringRef p_url, MCMarkedText& r_mark);

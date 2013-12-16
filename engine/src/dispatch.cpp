@@ -1592,23 +1592,33 @@ check:
             MCExecContext default_ctxt(MCdefaultstackptr, nil, nil);
             MCExecContext *ctxt = MCECptr == NULL ? &default_ctxt : MCECptr;
 
-            MCAutoStringRef t_output;
+            MCAutoValueRef t_output;
             MCU_geturl(*ctxt, MCNameGetString(p_name), &t_output);
 			if (MCresult->isempty())
             {
                 MCAutoDataRef t_data;
 
-                if (MCStringIsNative(*t_output))
+                if (MCValueGetTypeCode(*t_output) == kMCValueTypeCodeData)
                 {
-                    const char_t *t_bytes = MCStringGetNativeCharPtr(*t_output);
-                    MCDataCreateWithBytes((byte_t*)t_bytes, MCStringGetLength(*t_output), &t_data);
+                    t_data = (MCDataRef)*t_output;
                 }
                 else
                 {
-                    const unichar_t *t_bytes = MCStringGetCharPtr(*t_output);
-                    MCDataCreateWithBytes((byte_t*)t_bytes, MCStringGetLength(*t_output) * 2, &t_data);
+                    MCAutoStringRef t_output_str;
+                    /* UNCHECKED */ ctxt -> ConvertToString(*t_output, &t_output_str);
+                    
+                    if (MCStringIsNative(*t_output_str))
+                    {
+                        const char_t *t_bytes = MCStringGetNativeCharPtr(*t_output_str);
+                        MCDataCreateWithBytes((byte_t*)t_bytes, MCStringGetLength(*t_output_str), &t_data);
+                    }
+                    else
+                    {
+                        const unichar_t *t_bytes = MCStringGetCharPtr(*t_output_str);
+                        MCDataCreateWithBytes((byte_t*)t_bytes, MCStringGetLength(*t_output_str) * 2, &t_data);
+                    }
                 }
-
+                
 				iptr = new MCImage;
                 iptr->appendto(imagecache);
                 iptr->SetText(*ctxt, *t_data);

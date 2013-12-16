@@ -4256,7 +4256,7 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
     }
     else
     {
-        MCAutoStringRef t_url_output;
+        MCAutoValueRef t_url_output;
         if (url != NULL)
         {
             MCAutoStringRef t_target;

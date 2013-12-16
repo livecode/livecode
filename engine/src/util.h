@@ -199,7 +199,7 @@ extern Exec_stat MCU_change_color(MCColor &c, MCStringRef&n, MCExecPoint &ep, ui
 #ifdef LEGACY_EXEC
 extern void MCU_get_color(MCExecPoint &ep, MCStringRef name, MCColor &c);
 #endif
-extern void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output);
+extern void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCValueRef &r_output);
 extern void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 	                       real8 tn, real8 oldn, MCSortnode *titems);
 // MW-2013-07-01: [[ Bug 10975 ]] This method returns true if the given string could be a url
@@ -208,7 +208,7 @@ extern bool MCU_couldbeurl(const MCString& potential_url);
 #ifdef LEGACY_EXEC
 extern void MCU_geturl(MCExecPoint &ep);
 #endif
-extern void MCU_puturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef p_data);
+extern void MCU_puturl(MCExecContext& ctxt, MCStringRef p_target, MCValueRef p_data);
 #ifdef LEGACY_EXEC
 extern void MCU_puturl(MCExecPoint &ep, MCExecPoint &data);
 #endif
