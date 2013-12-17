@@ -1899,7 +1899,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		else
 		{
             MCStringRef t_key3;
-            t_key = MCSTR("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
+            t_key3 = MCSTR("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
             MCAutoStringRef t_type3, t_error3;
             MCAutoValueRef t_value3;
             MCS_query_registry(t_key3, &t_value3, &t_type3, &t_error3);
