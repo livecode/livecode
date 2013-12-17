@@ -47,7 +47,7 @@ MCCameraFeaturesType MCSystemGetSpecificCameraFeatures(MCCameraSourceType p_sour
     MCAutoStringRef t_camera_dir;
 	uindex_t t_offset = 0;
     
-	MCAndroidEngineCall("getCameraDirections", "x", &t_camera_dir);
+	MCAndroidEngineCall("getCameraDirections", "x", &(&t_camera_dir));
     
     bool t_cam_exists = false;
 
@@ -67,7 +67,7 @@ MCCamerasFeaturesType MCSystemGetAllCameraFeatures()
     MCAutoStringRef t_camera_dir;
 	uindex_t t_offset = 0;
     
-	MCAndroidEngineCall("getCameraDirections", "x", &t_camera_dir);
+	MCAndroidEngineCall("getCameraDirections", "x", &(&t_camera_dir));
     
     uint32_t t_features;
     t_features = 0;

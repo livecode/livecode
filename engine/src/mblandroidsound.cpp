@@ -198,19 +198,19 @@ bool MCSystemSoundChannelStatus(MCStringRef p_channel, intenum_t& r_status)
 
 bool MCSystemSoundOnChannel(MCStringRef p_channel, MCStringRef &r_sound)
 {
-    MCAndroidEngineRemoteCall("getSoundOnChannel", "xx", r_sound, p_channel);
+    MCAndroidEngineRemoteCall("getSoundOnChannel", "xx", &r_sound, p_channel);
     return true;
 }
 
 bool MCSystemNextSoundOnChannel(MCStringRef p_channel, MCStringRef &r_sound)
 {
-    MCAndroidEngineRemoteCall("getNextSoundOnChannel", "xx", r_sound, p_channel);
+    MCAndroidEngineRemoteCall("getNextSoundOnChannel", "xx", &r_sound, p_channel);
     return true;
 }
 
 bool MCSystemListSoundChannels(MCStringRef &r_channels)
 {
-    MCAndroidEngineRemoteCall("getSoundChannels", "x", r_channels);
+    MCAndroidEngineRemoteCall("getSoundChannels", "x", &r_channels);
     return true;
 }
 

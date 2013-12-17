@@ -256,7 +256,7 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& r_displays, u
 	static MCDisplay s_display;
 	memset(&s_display, 0, sizeof(MCDisplay));
 
-	char *t_rect_string = nil;
+	MCAutoStringRef t_rect_string;
 	int2 t_left, t_top, t_right, t_bottom;
 
 	// The workarea is the rect of the screen
@@ -264,18 +264,19 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& r_displays, u
 
 	// IM-2013-11-15: [[ Bug 10485 ]] Use appropriate java method to get (effective) working screenrect
 	if (p_effective)
-		MCAndroidEngineCall("getEffectiveWorkareaAsString", "s", &t_rect_string);
+		MCAndroidEngineCall("getEffectiveWorkareaAsString", "x", &(&t_rect_string));
 	else
-	MCAndroidEngineCall("getWorkareaAsString", "s", &t_rect_string);
-	MCU_stoi2x4(t_rect_string, t_left, t_top, t_right, t_bottom);
+        MCAndroidEngineCall("getWorkareaAsString", "x", &(&t_rect_string));
+	MCU_stoi2x4(*t_rect_string, t_left, t_top, t_right, t_bottom);
 
 	s_display.device_workarea.x = t_left;
 	s_display.device_workarea.y = t_top;
 	s_display.device_workarea.width = t_right - t_left;
 	s_display.device_workarea.height = t_bottom - t_top;
 
-	MCAndroidEngineCall("getViewportAsString", "s", &t_rect_string);
-	MCU_stoi2x4(t_rect_string, t_left, t_top, t_right, t_bottom);
+    MCAutoStringRef t_viewport_string;
+	MCAndroidEngineCall("getViewportAsString", "x", &(&t_viewport_string));
+	MCU_stoi2x4(*t_viewport_string, t_left, t_top, t_right, t_bottom);
 
 	s_display.device_viewport.x = t_left;
 	s_display.device_viewport.y = t_top;

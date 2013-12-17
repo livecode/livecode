@@ -794,17 +794,15 @@ bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data
 
 bool MCS_getnetworkinterfaces(MCStringRef& r_interfaces)
 {
-	char *t_network_interfaces = NULL;
-	
-	MCAndroidEngineCall("getNetworkInterfaces", "s", &t_network_interfaces);
+    MCAutoStringRef t_interfaces;
+	MCAndroidEngineCall("getNetworkInterfaces", "x", &(&t_interfaces));
 
-	if (t_network_interfaces == NULL)
-	{
+	if (*t_interfaces == nil)
 		r_interfaces = MCValueRetain(kMCEmptyString);
-		return true;
-	}
 	else
-		return MCStringCreateWithCString(t_network_interfaces, r_interfaces);
+		r_interfaces = MCValueRetain(*t_interfaces);
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
