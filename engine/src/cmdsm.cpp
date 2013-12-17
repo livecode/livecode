@@ -1369,12 +1369,14 @@ void MCSetOp::exec_ctxt(MCExecContext &ctxt)
     if (!ctxt . EvalExprAsValueRef(source, EE_ARRAYOP_BADEXP, &t_src_value))
         return;
 
+    MCValueRef t_source;
+    
     if (!MCValueIsArray(*t_src_value))
-    {
-        MCValueRelease(*t_src_value);
-        MCValueCopy((MCValueRef)kMCEmptyString, &t_src_value);
-    }
-
+        t_source = kMCEmptyString;
+    else
+        t_source = *t_src_value;
+    
+    
 	MCAutoPointer<MCContainer> t_container;
     if (!destvar -> evalcontainer(ctxt, &t_container))
 	{
@@ -1393,7 +1395,7 @@ void MCSetOp::exec_ctxt(MCExecContext &ctxt)
         return;
 
 	MCAutoArrayRef t_src_array;
-    if (!ctxt . ConvertToArray(*t_src_value, &t_src_array))
+    if (!ctxt . ConvertToArray(t_source, &t_src_array))
         return;
 
 	if (intersect)
