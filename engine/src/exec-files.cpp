@@ -485,11 +485,15 @@ void MCFilesEvalSetRegistryWithType(MCExecContext& ctxt, MCStringRef p_key, MCVa
 	if (t_type == kMCSRegistryValueTypeSz || t_type == kMCSRegistryValueTypeMultiSz
 		|| t_type == kMCSRegistryValueTypeExpandSz || t_type == kMCSRegistryValueTypeLink)
 	{
-		/* UNCHECKED */ ctxt.ConvertToData(p_value, (MCDataRef&)&t_converted);
-	}
-	else
-	{
 		/* UNCHECKED */ ctxt.ConvertToString(p_value, (MCStringRef&)&t_converted);
+	}
+    else if (t_type == kMCSRegistryValueTypeNone)
+    {
+        // Nothing needs to be converted
+    }
+	else    // Includes REG_BINARY, REG_DWORD (and variants), REG_QWORD
+	{
+		/* UNCHECKED */ ctxt.ConvertToData(p_value, (MCDataRef&)&t_converted);
 	}
 
 	MCAutoStringRef t_error;
