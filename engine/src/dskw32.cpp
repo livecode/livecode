@@ -325,16 +325,14 @@ bool MCS_registry_split_key(MCStringRef p_path, MCStringRef& r_root, MCStringRef
 	uindex_t t_length = MCStringGetLength(p_path);
 	uindex_t t_path_offset = t_length;
 	uindex_t t_value_offset = t_length;
-	if (MCStringLastIndexOfChar(p_path, '\\', MCStringGetLength(p_path), kMCStringOptionCompareExact, t_value_offset))
+	if (MCStringLastIndexOfChar(p_path, '\\', t_length, kMCStringOptionCompareExact, t_value_offset))
 	{
 		if (MCStringFirstIndexOfChar(p_path, '\\', 0, kMCStringOptionCompareExact, t_path_offset))
 		{
 			if (t_value_offset > t_path_offset)
 				t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_path_offset + 1, t_value_offset - t_path_offset - 1), r_key);
-			else
-				t_value_offset = t_length;
 		}
-		t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_value_offset + 1, t_length), r_value);
+		t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_value_offset + 1, t_length - t_value_offset - 1), r_value);
 	}
 	return t_success && MCStringCopySubstring(p_path, MCRangeMake(0, t_path_offset), r_root);
 }
@@ -931,11 +929,33 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 				MCS_registry_type_to_string(t_type, r_type);
             }
         }
-        else
+        else if (err == ERROR_FILE_NOT_FOUND)
+        {
+            // The query may have been for a value that is really a key, either
+            // with or without a default/un-named value attached to it. Try
+            // opening the path to the value as a key.
+            MCAutoStringRef t_alt_key;
+            MCAutoStringRefAsWString t_alt_key_wstr;
+            if (MCStringIsEmpty(*t_key))
+                t_alt_key = *t_value;
+            else
+                /* UNCHECKED */ MCStringFormat(&t_alt_key, "%@\\%@", *t_key, *t_value);
+            /* UNCHECKED */ t_alt_key_wstr.Lock(*t_alt_key);
+            
+            MCAutoRegistryKey t_alt_regkey;
+            err = RegOpenKeyExW(t_hkey, *t_alt_key_wstr, 0, t_access_mode, &t_alt_regkey);
+            if (err == ERROR_SUCCESS)
+            {
+                // Key exists
+                r_value = MCValueRetain(kMCEmptyString);
+                MCS_registry_type_to_string(REG_NONE, r_type);
+            }
+        }
+        
+        if (err != ERROR_SUCCESS)
         {
             errno = err;
             r_error = MCSTR("can't find key");
-			r_value = MCValueRetain(kMCNull);
             return true;
         }
         
