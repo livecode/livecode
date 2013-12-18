@@ -1365,7 +1365,7 @@ IO_stat MCDispatch::startup(void)
 		return IO_ERROR;
 	}
 
-	/* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
+	///* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_info . stack;
 	MCCapsuleClose(t_capsule);
 
