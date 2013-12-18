@@ -177,7 +177,7 @@ bool __MCLocaleInitialize()
     t_success = true;
     
     // DIRTY EVIL HACK FOR TESTING
-    u_setDataDirectory("/Users/frasergordon/Workspace/livecode/prebuilt/data/icu");
+    //u_setDataDirectory("/Users/frasergordon/Workspace/livecode/prebuilt/data/icu");
     
     // Create the well-known locales
     // The default locale to be used needs to be determined using setlocale
