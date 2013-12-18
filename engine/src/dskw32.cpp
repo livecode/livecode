@@ -620,13 +620,13 @@ bool MCS_path_exists(MCStringRef p_path, bool p_is_file)
     // MW-2008-01-15: [[ Bug 4981 ]] - It seems that stat will fail for checking
     //   a folder 'C:' and requires that it be 'C:\'
 	// TODO: still necessary with GetFileAttributes instead of stat?
-    if (MCStringGetLength(p_path) == 2 && MCStringGetCharAtIndex(p_path, 1) == ':')
+    /*if (MCStringGetLength(p_path) == 2 && MCStringGetCharAtIndex(p_path, 1) == ':')
     {
         MCAutoStringRef t_drive_string;
         return MCStringMutableCopy(p_path, &t_drive_string) &&
         MCStringAppendChar(*t_drive_string, '\\') &&
         MCS_native_path_exists(*t_drive_string, p_is_file);
-    }
+    }*/
     
     // OK-2007-12-05 : Bug 5555, modified to allow paths with trailing backslashes on Windows.
 	// TODO: still necessary with GetFileAttributes instead of stat?
