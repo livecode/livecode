@@ -66,7 +66,7 @@ MCScriptPoint::MCScriptPoint(MCObject *o, MCHandlerlist *hl, MCStringRef s)
 	tagged = False;
 	in_tag = False;
 	was_in_tag = False;
-	token_nameref = nil;
+	token_nameref = MCValueRetain(kMCEmptyName);
 }
 
 MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)
@@ -85,7 +85,7 @@ MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)
 	tagged = sp.tagged;
 	in_tag = sp.in_tag;
 	was_in_tag = sp.was_in_tag;
-	token_nameref = nil;
+	token_nameref = MCValueRetain(kMCEmptyName);
 }
 
 #ifdef LEGACY_EXEC
@@ -140,7 +140,7 @@ MCScriptPoint::MCScriptPoint(MCExecContext &ctxt)
     tagged = False;
     in_tag = False;
     was_in_tag = False;
-    token_nameref = nil;
+    token_nameref = MCValueRetain(kMCEmptyName);
 }
 
 MCScriptPoint::MCScriptPoint(MCExecContext &ctxt, MCStringRef p_string)
@@ -157,7 +157,7 @@ MCScriptPoint::MCScriptPoint(MCExecContext &ctxt, MCStringRef p_string)
     tagged = False;
     in_tag = False;
     was_in_tag = False;
-    token_nameref = nil;
+    token_nameref = MCValueRetain(kMCEmptyName);
 }
 
 MCScriptPoint::MCScriptPoint(MCStringRef p_string)
@@ -174,7 +174,7 @@ MCScriptPoint::MCScriptPoint(MCStringRef p_string)
 	tagged = False;
 	in_tag = False;
 	was_in_tag = False;
-	token_nameref = nil;
+	token_nameref = MCValueRetain(kMCEmptyName);
 }
 
 MCScriptPoint& MCScriptPoint::operator =(const MCScriptPoint& sp)
@@ -189,20 +189,20 @@ MCScriptPoint& MCScriptPoint::operator =(const MCScriptPoint& sp)
 	token = sp.token;
 	line = sp.line;
 	pos = sp.pos;
+    MCValueAssign(token_nameref, sp.token_nameref);
 	return *this;
 }
 
 MCScriptPoint::~MCScriptPoint()
 {
-	MCNameDelete(token_nameref);
+	MCValueRelease(token_nameref);
 	MCValueRelease(script);
 }
 
 void MCScriptPoint::cleartoken(void)
 {
 	token . setlength(0);
-	MCNameDelete(token_nameref);
-	token_nameref = nil;
+	MCValueAssign(token_nameref, kMCEmptyName);
 }
 
 bool MCScriptPoint::token_is_cstring(const char *p_cstring)
@@ -217,10 +217,12 @@ MCString MCScriptPoint::gettoken_oldstring(void)
 
 MCNameRef MCScriptPoint::gettoken_nameref(void)
 {
-	MCAutoStringRef t_string_token;
-	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)token . getstring(), token . getlength(), kMCStringEncodingUTF8, false, &t_string_token);
-	if (token_nameref == nil)
+	if (MCNameIsEmpty(token_nameref))
+    {
+        MCAutoStringRef t_string_token;
+        /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)token . getstring(), token . getlength(), kMCStringEncodingUTF8, false, &t_string_token);
 		/* UNCHECKED */ MCNameCreate(*t_string_token, token_nameref);
+    }
 	return token_nameref;
 }
 
