@@ -38,9 +38,7 @@ static bool make_tmp_fifo_pair(char*& r_name)
 	t_success = true;
 
 	char *t_name;
-	t_name = nil;
-	if (t_success)
-		t_success = MCCStringFormat(t_name, "/tmp/revtalk-%d", getpid());
+	t_name = strclone("/tmp/revtalk-XXXXXX");
 
 	if (t_success &&
 		mkdtemp(t_name) == nil)

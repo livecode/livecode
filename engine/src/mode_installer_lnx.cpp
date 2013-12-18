@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "osspec.h"
+#include "util.h"
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -65,8 +66,10 @@ bool MCSystemListProcesses(MCSystemListProcessesCallback p_callback, void* p_con
 				break;
 
 			// Work out if the entry is a process id
-			uint32_t t_pid;
-			if (!MCCStringToCardinal(t_entry -> d_name, t_pid))
+			int32_t t_pid;
+            MCAutoStringRef t_dname;
+            /* UNCHECKED */ MCStringCreateWithCString(t_entry -> d_name, &t_dname);
+			if (!MCU_strtol(*t_dname, t_pid))
 				continue;
 
 			// Work out the full path ("/proc/<int>") and stat so we can
@@ -79,11 +82,9 @@ bool MCSystemListProcesses(MCSystemListProcessesCallback p_callback, void* p_con
 				continue;
 
 			// We have a viable process to report. First fetch its path
-			char t_exe_link[6 + I4L + 4 + 1];
-			char *t_exe_path;
-			t_exe_path = nil;
-			sprintf(t_path, "/proc/%u/exe", t_pid);
-			if (!MCFileSystemPathResolve(t_exe_link, t_exe_path))
+            MCAutoStringRef t_exe_link, t_exe_path;
+            /* UNCHECKED */ MCStringFormat(&t_exe_link, "/proc/%u/exe", t_pid);
+			if (!MCS_resolvepath(*t_exe_link, &t_exe_path))
 			{
 				t_success = false;
 				break;
@@ -112,9 +113,9 @@ bool MCSystemListProcesses(MCSystemListProcessesCallback p_callback, void* p_con
 			else
 				t_status[0] = '\0';
 
-			t_success = p_callback(p_context, t_pid, t_exe_path, t_status);
-
-			MCCStringFree(t_exe_path);
+            MCAutoStringRefAsSysString t_exe_path_sys;
+            /* UNCHECKED */ t_exe_path_sys.Lock(*t_exe_path);
+			t_success = p_callback(p_context, t_pid, *t_exe_path_sys, t_status);
 		}
 	}
 
