@@ -228,7 +228,7 @@ void MCArraysDoUnion(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p_s
 			continue;
         }
         
-		if (!MCArrayStoreValue(p_dst_array, ctxt . GetCaseSensitive(), t_key, t_src_value))
+		if (!MCArrayStoreValue(p_dst_array, ctxt . GetCaseSensitive(), t_key, MCValueRetain(t_src_value)))
 		{
 			ctxt . Throw();
 			return;

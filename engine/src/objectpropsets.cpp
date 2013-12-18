@@ -131,8 +131,7 @@ bool MCObjectPropertySet::store(MCExecPoint& ep)
 bool MCObjectPropertySet::store(MCArrayRef p_array)
 {
 	MCValueRelease(m_props);
-    m_props = MCValueRetain(p_array);
-	return true;
+    return MCArrayMutableCopy(p_array, m_props);
 }
 
 #ifdef LEGACY_EXEC
@@ -164,6 +163,7 @@ bool MCObjectPropertySet::restrict(MCStringRef p_string)
     bool t_success;
     t_success = true;
     MCArrayRef t_new_props;
+    MCArrayCreateMutable(t_new_props);
     if (!MCStringSplit(p_string, MCSTR("\n"), nil, kMCCompareExact, t_new_props))
         return false;
     uinteger_t t_size;

@@ -120,8 +120,9 @@ bool MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRe
 	{
 		r_result = s_popup_dialog_text;
 		s_popup_dialog_text = nil;
-	}
-	return true;
+        return true;
+    }
+    return false;
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAskDialogDone(JNIEnv *env, jobject object, jstring result) __attribute__((visibility("default")));

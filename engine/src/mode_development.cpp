@@ -1922,23 +1922,28 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
         };
         
         MClicenseparameters . deploy_targets = 0;
-        
+
         uint32_t t_target_count;
         char **t_targets;
         t_target_count = 0;
         t_targets = nil;
-        if (MCCStringSplit(MCStringGetCString((MCStringRef)t_value), ',', t_targets, t_target_count))
+        
+        MCAutoStringRef t_params;
+        if (ctxt . ConvertToString(t_value, &t_params))
         {
-            for(uint32_t i = 0; i < t_target_count; i++)
+            if (MCCStringSplit(MCStringGetCString(*t_params), ',', t_targets, t_target_count))
             {
-                for(uint32_t j = 0; j < sizeof(s_deploy_map) / sizeof(s_deploy_map[0]); j++)
-                    if (MCCStringEqualCaseless(s_deploy_map[j] . tag, t_targets[i]))
-                    {
-                        MClicenseparameters . deploy_targets |= s_deploy_map[j] . value;
-                        break;
-                    }
+                for(uint32_t i = 0; i < t_target_count; i++)
+                {
+                    for(uint32_t j = 0; j < sizeof(s_deploy_map) / sizeof(s_deploy_map[0]); j++)
+                        if (MCCStringEqualCaseless(s_deploy_map[j] . tag, t_targets[i]))
+                        {
+                            MClicenseparameters . deploy_targets |= s_deploy_map[j] . value;
+                            break;
+                        }
+                }
+                MCCStringArrayFree(t_targets, t_target_count);
             }
-            MCCStringArrayFree(t_targets, t_target_count);
         }
     }
     

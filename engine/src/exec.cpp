@@ -2493,13 +2493,10 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             MCExecEnumTypeInfo *t_enum_info;
             t_enum_info = (MCExecEnumTypeInfo *)prop -> type_info;
-            
-            MCAutoStringRef t_string;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_string));
-            
+
             intenum_t t_value;
             intenum_t* t_value_ptr;
-            if (MCStringIsEmpty(*t_string))
+            if (p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
                 t_value_ptr = nil;
             else
             {
