@@ -4513,7 +4513,9 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                         }
                         
                         // Write out the cmd line and env strings
-                        if (write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * (MCStringGetLength(*t_cmdline) + 1), MCStringGetCharPtr(*t_cmdline)) &&
+                        MCAutoStringRefAsWString t_cmdline_wstr;
+                        t_cmdline_wstr.Lock(*t_cmdline);
+                        if (write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * (MCStringGetLength(*t_cmdline) + 1), *t_cmdline_wstr) &&
                             write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * t_env_length, lpEnvStrings))
                         {
                             // Now we should have a process id and handle waiting for us.
