@@ -596,8 +596,14 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCMovie;
 	case F_MOVING_CONTROLS:
 		return new MCMovingControls;
+    case F_NATIVE_CHAR_TO_NUM:
+        return new MCNativeCharToNum;
 	case F_NUM_TO_CHAR:
 		return new MCNumToChar;
+    case F_NUM_TO_NATIVE_CHAR:
+        return new MCNumToNativeChar;
+    case F_NUM_TO_UNICODE_CHAR:
+        return new MCNumToUnicodeChar;
 	case F_NUM_TO_BYTE:
 		return new MCNumToByte;
 	case F_OFFSET:
@@ -755,6 +761,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCTranspose;
 	case F_TRUNC:
 		return new MCTrunc;
+    case F_UNICODE_CHAR_TO_NUM:
+        return new MCUnicodeCharToNum;
 	case F_VALUE:
 		return new MCValue;
 	case F_VARIABLES:

@@ -1278,7 +1278,6 @@ void MCBinaryEncode::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCByteToNum */
 
-
 MCChunkOffset::~MCChunkOffset()
 {
 	delete part;

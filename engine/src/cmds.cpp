@@ -2307,7 +2307,7 @@ void MCSort::additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort
 			MCStringRef t_fixed, t_mutable;
 			/* UNCHECKED */ ctxt.ConvertToString(*t_value, t_fixed);
 			/* UNCHECKED */ MCStringMutableCopyAndRelease(t_fixed, t_mutable);
-			/* UNCHECKED */ MCStringLowercase(t_mutable);
+			/* UNCHECKED */ MCStringLowercase(t_mutable, kMCSystemLocale);
 			/* UNCHECKED */ MCStringCopyAndRelease(t_fixed, items[nitems].svalue);
 		}
 		break;

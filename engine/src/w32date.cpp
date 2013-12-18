@@ -31,6 +31,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
+#include "foundation-locale.h"
+
 #if !defined(LOCALE_SSHORTTIME)
 #define LOCALE_SSHORTTIME             0x00000079   // Returns the preferred short time format (ie: no seconds, just h:mm)
 #endif
@@ -395,6 +397,18 @@ const MCDateTimeLocale *MCS_getdatetimelocale(void)
 {
 	windows_cache_locale();
 	return s_datetime_locale;
+}
+
+MCLocaleRef MCS_getsystemlocale()
+{
+	// Get the identifier for the system locale
+	LCID t_system_lcid;
+	t_system_lcid = GetUserDefaultLCID();
+
+	// Create a locale object
+	MCLocaleRef t_locale;
+	/* UNCHECKED */ MCLocaleCreateWithLCID(t_system_lcid, t_locale);
+	return t_locale;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

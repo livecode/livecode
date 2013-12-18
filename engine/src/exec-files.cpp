@@ -485,11 +485,15 @@ void MCFilesEvalSetRegistryWithType(MCExecContext& ctxt, MCStringRef p_key, MCVa
 	if (t_type == kMCSRegistryValueTypeSz || t_type == kMCSRegistryValueTypeMultiSz
 		|| t_type == kMCSRegistryValueTypeExpandSz || t_type == kMCSRegistryValueTypeLink)
 	{
-		/* UNCHECKED */ ctxt.ConvertToData(p_value, (MCDataRef&)&t_converted);
-	}
-	else
-	{
 		/* UNCHECKED */ ctxt.ConvertToString(p_value, (MCStringRef&)&t_converted);
+	}
+    else if (t_type == kMCSRegistryValueTypeNone)
+    {
+        // Nothing needs to be converted
+    }
+	else    // Includes REG_BINARY, REG_DWORD (and variants), REG_QWORD
+	{
+		/* UNCHECKED */ ctxt.ConvertToData(p_value, (MCDataRef&)&t_converted);
 	}
 
 	MCAutoStringRef t_error;
@@ -1497,7 +1501,7 @@ void MCFilesExecReadFor(MCExecContext& ctxt, IO_handle p_stream, index_t p_index
 	}
 }
 
-void MCFilesExecReadFromStdin(MCExecContext& ctxt, MCStringRef p_sentinel, uint4 p_count, int p_unit_type, uint2 p_repeat_form)
+void MCFilesExecReadFromStdin(MCExecContext& ctxt, MCStringRef p_sentinel, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units, uint2 p_repeat_form)
 {
 	IO_stat t_stat = IO_NORMAL;
 	MCAutoStringRef t_output;
@@ -1515,10 +1519,10 @@ void MCFilesExecReadFromStdin(MCExecContext& ctxt, MCStringRef p_sentinel, uint4
 	switch (p_repeat_form)
 	{
 	case RF_FOR:
-		MCFilesExecReadFor(ctxt, IO_stdin, -1, p_count, p_unit_type, MAXUINT4, 0, &t_output, t_stat);
+		MCFilesExecReadFor(ctxt, IO_stdin, -1, p_count, p_unit_type, p_max_wait, p_time_units, &t_output, t_stat);
 		break;
 	case RF_UNTIL:
-		MCFilesExecReadUntil(ctxt, IO_stdin, -1, p_sentinel, MAXUINT4, 0, true, &t_output, t_stat);
+		MCFilesExecReadUntil(ctxt, IO_stdin, -1, p_sentinel, p_max_wait, p_time_units, true, &t_output, t_stat);
 		break;
 	default:
 		break;
@@ -1526,14 +1530,14 @@ void MCFilesExecReadFromStdin(MCExecContext& ctxt, MCStringRef p_sentinel, uint4
 	MCFilesExecReadComplete(ctxt, *t_output, t_stat, True);
 }
 
-void MCFilesExecReadFromStdinFor(MCExecContext& ctxt, uint4 p_count, int p_unit_type)
+void MCFilesExecReadFromStdinFor(MCExecContext& ctxt, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units)
 {
-	MCFilesExecReadFromStdin(ctxt, nil, p_count, p_unit_type, RF_FOR);
+	MCFilesExecReadFromStdin(ctxt, nil, p_count, p_unit_type, p_max_wait, p_time_units, RF_FOR);
 }
 
-void MCFilesExecReadFromStdinUntil(MCExecContext& ctxt, MCStringRef p_sentinel)
+void MCFilesExecReadFromStdinUntil(MCExecContext& ctxt, MCStringRef p_sentinel, double p_max_wait, int p_time_units)
 {
-	MCFilesExecReadFromStdin(ctxt, p_sentinel, 0, 0, RF_UNTIL);
+	MCFilesExecReadFromStdin(ctxt, p_sentinel, 0, 0, p_max_wait, p_time_units, RF_UNTIL);
 }
 
 void MCFilesExecReadGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_end, int64_t p_at, IO_handle &r_stream, Boolean &r_textmode, IO_stat &r_stat)

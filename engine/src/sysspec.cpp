@@ -944,13 +944,13 @@ IO_stat MCS_writeat(const void *p_buffer, uint32_t p_size, uint32_t p_pos, IO_ha
     
     t_old_pos = p_stream -> Tell();
     
-    t_success = p_stream -> Seek(p_pos, 1);
+    t_success = p_stream -> Seek(p_pos, kMCSystemFileSeekSet);
     
     if (t_success)
         t_success = p_stream -> Write(p_buffer, p_size);
     
     if (t_success)
-        t_success = p_stream -> Seek(t_old_pos, 1);
+        t_success = p_stream -> Seek(t_old_pos, kMCSystemFileSeekSet);
     
     if (!t_success)
         return IO_ERROR;
@@ -1004,7 +1004,7 @@ IO_handle MCS_open(const char *p_path, const char *p_mode, Boolean p_map, Boolea
         return NULL;
     
     if (p_offset != 0)
-        t_handle -> Seek(p_offset, 1);
+        t_handle -> Seek(p_offset, kMCSystemFileSeekSet);
     
     return new IO_header(t_handle, 0);;
 }
@@ -1040,9 +1040,9 @@ IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_
 #endif
 
     if (p_mode == kMCSystemFileModeAppend)
-        t_handle -> Seek(0, SEEK_END);
+        t_handle -> Seek(0, kMCSystemFileSeekEnd);
     else if (p_offset > 0)
-        t_handle -> Seek(p_offset, SEEK_SET);
+        t_handle -> Seek(p_offset, kMCSystemFileSeekSet);
 	
 	return t_handle;
 }
@@ -1061,21 +1061,21 @@ IO_stat MCS_putback(char p_char, IO_handle p_stream)
 
 IO_stat MCS_seek_cur(IO_handle p_stream, int64_t p_offset)
 {
-    if (!p_stream -> Seek(p_offset, 0))
+    if (!p_stream -> Seek(p_offset, kMCSystemFileSeekCurrent))
         return IO_ERROR;
     return IO_NORMAL;
 }
 
 IO_stat MCS_seek_set(IO_handle p_stream, int64_t p_offset)
 {
-    if (!p_stream -> Seek(p_offset, 1))
+    if (!p_stream -> Seek(p_offset, kMCSystemFileSeekSet))
         return IO_ERROR;
     return IO_NORMAL;
 }
 
 IO_stat MCS_seek_end(IO_handle p_stream, int64_t p_offset)
 {
-    if (!p_stream -> Seek(p_offset, -1))
+    if (!p_stream -> Seek(p_offset, kMCSystemFileSeekEnd))
         return IO_ERROR;
     return IO_NORMAL;
 }
@@ -1502,6 +1502,17 @@ void MCS_unloadmodule(MCSysModuleHandle p_module)
 {
 	MCsystem -> UnloadModule(p_module);
 }
+
+// TODO: move somewhere better
+#ifdef _LINUX_DESKTOP
+MCLocaleRef MCS_getsystemlocale()
+{
+    // TODO: implement properly
+    MCLocaleRef t_locale;
+    /* UNCHECKED */ MCLocaleCreateWithName(MCSTR("en_US"), t_locale);
+    return t_locale;
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -248,7 +248,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
-#define __HUGE__ 1 
+#define __HUGE__ 1
+#elif defined(__arm__)
+#define __32_BIT__ 1
+#define __LITTLE_ENDIAN__ 1
+#define __ARM__ 1
+#define __SMALL__ 1 
 #endif
 
 // Native char set
@@ -535,6 +540,9 @@ typedef struct __MCArray *MCArrayRef;
 typedef struct __MCList *MCListRef;
 typedef struct __MCSet *MCSetRef;
 typedef struct __MCStream *MCStreamRef;
+
+// Forward declaration
+typedef struct __MCLocale* MCLocaleRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1308,6 +1316,9 @@ extern MCStringRef kMCMixedString;
 // the c-string must be a C static string.
 MCStringRef MCSTR(const char *string);
 
+const char *MCStringGetCString(MCStringRef p_string);
+bool MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCStringOptions options);
+
 // Create an immutable string from the given bytes, interpreting them using
 // the specified encoding.
 bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
@@ -1326,7 +1337,7 @@ bool MCStringCreateWithNativeChars(const char_t *chars, uindex_t char_count, MCS
 bool MCStringCreateWithNativeCharsAndRelease(char_t *chars, uindex_t char_count, MCStringRef& r_string);
 
 // Create an immutable string from the given (native) c-string.
-bool MCStringCreateWithCString(const char_t *cstring, MCStringRef& r_string);
+bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
 bool MCStringCreateWithCStringAndRelease(char_t *cstring, MCStringRef& r_string);
 
 #ifdef __HAS_CORE_FOUNDATION__
@@ -1446,6 +1457,18 @@ uindex_t MCStringGetChars(MCStringRef string, MCRange range, unichar_t *chars);
 // returns the number of chars generated. If 'chars' is nil, just the number of chars
 // that would be generated is returned. Any unmappable chars get generated as '?'.
 uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, char_t *chars);
+
+// Maps from a codepoint (character) range to a code unit (StringRef) range
+bool MCStringMapCodepointIndices(MCStringRef, MCRange p_codepoint_range, MCRange& r_string_range);
+
+// Maps from a code unit (StringRef) range to a codepoint (character) range
+bool MCStringUnmapCodepointIndices(MCStringRef, MCRange p_string_range, MCRange &r_codepoint_range);
+
+// Maps from a grapheme (visual character) range to a code unit (StringRef) range
+bool MCStringMapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_grapheme_range, MCRange& r_string_range);
+
+// Maps from a code unit (StringRef) range to a grapheme (visual character) range
+bool MCStringUnmapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange& r_grapheme_range);
 
 
 /////////
@@ -1581,12 +1604,12 @@ bool MCStringFold(MCStringRef string, MCStringOptions options);
 // Lowercase the string.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
-bool MCStringLowercase(MCStringRef string);
+bool MCStringLowercase(MCStringRef string, MCLocaleRef p_in_locale);
 
 // Uppercase the string.
 //
 // Note that 'string' must be mutable, it is a fatal runtime error if it is not.
-bool MCStringUppercase(MCStringRef string);
+bool MCStringUppercase(MCStringRef string, MCLocaleRef p_in_locale);
 
 /////////
 

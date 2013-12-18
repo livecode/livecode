@@ -43,10 +43,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "scrolbar.h"
 #include "paragraf.h"
-#include "block.h"
+#include "MCBlock.h"
 #include "variable.h"
-
-//#include "exec-interface.h"
 
 #include <stddef.h> // offsetof
 
@@ -740,7 +738,8 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                         bptr->open(pgptr -> getparent() -> getfontref());
                     bptr = bptr->next();
                 }
-                while (t_block_index + t_block_length < ei);
+                while (t_block_index + t_block_length < (t_pg_length-1) // Length of paragraph without CR
+                       && t_block_index + t_block_length < ei);
 
                 if (t_blocks_changed)
                     pgptr -> setDirty();

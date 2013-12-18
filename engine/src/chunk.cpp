@@ -4256,7 +4256,7 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
     }
     else
     {
-        MCAutoStringRef t_url_output;
+        MCAutoValueRef t_url_output;
         if (url != NULL)
         {
             MCAutoStringRef t_target;
@@ -5929,7 +5929,11 @@ Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_f
         && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
 		t_function = true;
 
-    if (!t_function && cline == NULL && item == NULL
+    // This block seems to be an early exit if resolving the indices isn't
+    // required. However, doing so seriously confuses the field code when
+    // attempting to insert text after a field as it ends up trying to insert
+    // text at an index of INDEX_MAX and going into a (near-)infinite loop.
+    /*if (!t_function && cline == NULL && item == NULL
         && token == NULL && word == NULL && character == NULL)
     {
         MCMarkedText t_mark;
@@ -5940,7 +5944,7 @@ Exec_stat MCChunk::evalobjectchunk(MCExecPoint& ep, bool p_whole_chunk, bool p_f
         r_chunk . chunk = CT_UNDEFINED;
         r_chunk . mark = t_mark;
         return ES_NORMAL;
-    }
+    }*/
     
     MCExecContext ctxt(ep);
     if (t_function)

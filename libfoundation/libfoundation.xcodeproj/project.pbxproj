@@ -22,6 +22,8 @@
 		4D7FA7A81594E09500EEF440 /* foundation-unicodechars.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA79B1594E09500EEF440 /* foundation-unicodechars.cpp */; };
 		4D7FA7A91594E09500EEF440 /* foundation-value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA79C1594E09500EEF440 /* foundation-value.cpp */; };
 		4DB3EBE416A5C00800E90D30 /* foundation-string-cf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DB3EBE316A5C00800E90D30 /* foundation-string-cf.cpp */; };
+		721CAAA81834D10D00858545 /* foundation-locale.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 721CAAA61834D10D00858545 /* foundation-locale.cpp */; };
+		721CAAA91834D10D00858545 /* foundation-unicode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 721CAAA71834D10D00858545 /* foundation-unicode.cpp */; };
 		76EF31A8181E7E0A00FAC195 /* foundation-data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D17A9C517C22DD30024CCA8 /* foundation-data.cpp */; };
 /* End PBXBuildFile section */
 
@@ -64,6 +66,11 @@
 		4DF42A520B04862E003F2D95 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DF42A530B04862E003F2D95 /* Global.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DF42A560B04862E003F2D95 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = SOURCE_ROOT; };
+		721CAAA61834D10D00858545 /* foundation-locale.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-locale.cpp"; path = "src/foundation-locale.cpp"; sourceTree = "<group>"; };
+		721CAAA71834D10D00858545 /* foundation-unicode.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-unicode.cpp"; path = "src/foundation-unicode.cpp"; sourceTree = "<group>"; };
+		721CAAAA1834D13300858545 /* foundation-locale.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-locale.h"; path = "include/foundation-locale.h"; sourceTree = "<group>"; };
+		721CAAAB1834D13300858545 /* foundation-unicode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-unicode.h"; path = "include/foundation-unicode.h"; sourceTree = "<group>"; };
+		721CAAAC18350B0E00858545 /* foundation-unicode-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-unicode-private.h"; path = "src/foundation-unicode-private.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,6 +92,8 @@
 				4D7FA7AC1594E09F00EEF440 /* foundation-stdlib.h */,
 				4D58375B18069F4B006DE6A2 /* foundation-objc.h */,
 				4D7FA7AD1594E09F00EEF440 /* foundation.h */,
+				721CAAAA1834D13300858545 /* foundation-locale.h */,
+				721CAAAB1834D13300858545 /* foundation-unicode.h */,
 			);
 			name = Headers;
 			sourceTree = "<group>";
@@ -137,6 +146,9 @@
 				4D7FA79B1594E09500EEF440 /* foundation-unicodechars.cpp */,
 				4D7FA79C1594E09500EEF440 /* foundation-value.cpp */,
 				4D5837A21806A024006DE6A2 /* foundation-objc.mm */,
+				721CAAA61834D10D00858545 /* foundation-locale.cpp */,
+				721CAAA71834D10D00858545 /* foundation-unicode.cpp */,
+				721CAAAC18350B0E00858545 /* foundation-unicode-private.h */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -207,6 +219,8 @@
 				4DB3EBE416A5C00800E90D30 /* foundation-string-cf.cpp in Sources */,
 				4D5837A31806A024006DE6A2 /* foundation-objc.mm in Sources */,
 				76EF31A8181E7E0A00FAC195 /* foundation-data.cpp in Sources */,
+				721CAAA81834D10D00858545 /* foundation-locale.cpp in Sources */,
+				721CAAA91834D10D00858545 /* foundation-unicode.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -231,6 +245,30 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				HEADER_SEARCH_PATHS = (
+					"\"$(SOLUTION_DIR)/engine/include\"",
+					"\"$(SOLUTION_DIR)/libfoundation/include\"",
+					"\"$(SOLUTION_DIR)/libexternal/include\"",
+					"\"$(SOLUTION_DIR)/libexternalv1/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libz/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpng/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libjpeg/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpcre/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libcairo/src\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libsqlite/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libmysql/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libgif/include\"",
+					"\"$(SOLUTION_DIR)/libgraphics/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/config\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/core\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/effects\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpq/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libiodbc/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
+					"$(SOLUTION_DIR)/prebuilt/include",
+				);
 				PRODUCT_NAME = foundation;
 			};
 			name = Debug;
@@ -239,6 +277,30 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				HEADER_SEARCH_PATHS = (
+					"\"$(SOLUTION_DIR)/engine/include\"",
+					"\"$(SOLUTION_DIR)/libfoundation/include\"",
+					"\"$(SOLUTION_DIR)/libexternal/include\"",
+					"\"$(SOLUTION_DIR)/libexternalv1/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libz/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpng/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libjpeg/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpcre/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libcairo/src\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libsqlite/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libmysql/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libgif/include\"",
+					"\"$(SOLUTION_DIR)/libgraphics/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/config\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/core\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/effects\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpq/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libiodbc/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
+					"$(SOLUTION_DIR)/prebuilt/include",
+				);
 				PRODUCT_NAME = foundation;
 			};
 			name = Release;

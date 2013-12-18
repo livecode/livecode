@@ -1234,22 +1234,11 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 
 		case ST_TEXT:
 			{
-                char *t1, *t2;
-                /* UNCHECKED */ MCStringConvertToCString(b1->svalue, t1);
-                /* UNCHECKED */ MCStringConvertToCString(b2->svalue, t2);
-				const char *s1, *s2;
-				s1 = t1;
-				s2 = t2;
-				
-				// WARNING:
-				//
-				// This provides codepoint order sorting (not lexical sorting)
-				// for strings. It will not, however, do the right thing with
-				// UTF-16LE strings (the encoding used on x86 and ARM)...
-				int result = strcmp(s1, s2);
-                
-				delete t1;
-                delete t2;
+				// This mode performs the comparison in a locale-independent,
+                // case-sensitive manner. The strings are sorted by order of
+                // codepoint values rather than any lexical sorting order.
+                compare_t result = MCStringCompareTo(b1->svalue, b2->svalue, kMCStringOptionCompareExact);
+
 				first = reverse ? result >= 0 : result <= 0;
 				break;
 			}
@@ -2416,27 +2405,25 @@ bool MCU_couldbeurl(const MCString& p_potential_url)
 	return true;
 }
 
-void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output)
+void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCValueRef &r_output)
 {
 	MCAutoStringRef t_filename;
 	if (MCStringGetLength(p_target) > 5 && MCStringBeginsWithCString(p_target, (const char_t*)"file:", kMCCompareCaseless))
 	{
 		MCStringCopySubstring(p_target, MCRangeMake(5, MCStringGetLength(p_target)-5), &t_filename);
-		if (MCS_loadtextfile(*t_filename, r_output))
+		if (MCS_loadtextfile(*t_filename, (MCStringRef&)r_output))
 			return;
 	}
 	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
-        MCAutoDataRef t_data;
 		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
-		if (MCS_loadbinaryfile(*t_filename, &t_data))
-			if (ctxt.ConvertToString(*t_data, r_output))
-				return;
+		if (MCS_loadbinaryfile(*t_filename, (MCDataRef&)r_output))
+			return;
 	}
 	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
 		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);	
-		MCS_loadresfile(*t_filename, r_output);
+		MCS_loadresfile(*t_filename, (MCStringRef&)r_output);
 		return;
 	}
     else
@@ -2474,13 +2461,14 @@ void MCU_geturl(MCExecPoint &ep)
 }
 #endif
 
-void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCStringRef p_data)
+void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 {
 	if (MCStringBeginsWithCString(p_url, (const char_t*)"file:", kMCCompareCaseless))
 	{
-		MCAutoStringRef t_path;
+		MCAutoStringRef t_path, t_data;
+        /* UNCHECKED */ ctxt . ConvertToString(p_data, &t_data);
 		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(5, MCStringGetLength(p_url) - 5), &t_path);
-		MCS_savetextfile(*t_path, p_data);
+		MCS_savetextfile(*t_path, *t_data);
 	}
 	else if (MCStringBeginsWithCString(p_url, (const char_t*)"binfile:", kMCCompareCaseless))
 	{

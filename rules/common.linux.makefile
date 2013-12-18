@@ -31,10 +31,12 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/thirdparty/libcurl/include \
 	$(SOLUTION_DIR)/thirdparty/libskia/include/core \
 	$(SOLUTION_DIR)/thirdparty/libskia/include/config \
-	$(SOLUTION_DIR)/thirdparty/libskia/include/effects
+	$(SOLUTION_DIR)/thirdparty/libskia/include/effects \
+	$(SOLUTION_DIR)/prebuilt/include
 	
 GLOBAL_LIBS=\
-	$(PREBUILT_LIB_DIR)
+	$(PREBUILT_LIB_DIR) \
+	$(SOLUTION_DIR)/prebuilt/lib/linux/$(ARCH)
 
 ifeq ($(MODE),debug)
 	DEFINES+=_DEBUG

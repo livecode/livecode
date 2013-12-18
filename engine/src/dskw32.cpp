@@ -325,16 +325,14 @@ bool MCS_registry_split_key(MCStringRef p_path, MCStringRef& r_root, MCStringRef
 	uindex_t t_length = MCStringGetLength(p_path);
 	uindex_t t_path_offset = t_length;
 	uindex_t t_value_offset = t_length;
-	if (MCStringLastIndexOfChar(p_path, '\\', MCStringGetLength(p_path), kMCStringOptionCompareExact, t_value_offset))
+	if (MCStringLastIndexOfChar(p_path, '\\', t_length, kMCStringOptionCompareExact, t_value_offset))
 	{
 		if (MCStringFirstIndexOfChar(p_path, '\\', 0, kMCStringOptionCompareExact, t_path_offset))
 		{
 			if (t_value_offset > t_path_offset)
 				t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_path_offset + 1, t_value_offset - t_path_offset - 1), r_key);
-			else
-				t_value_offset = t_length;
 		}
-		t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_value_offset + 1, t_length), r_value);
+		t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_value_offset + 1, t_length - t_value_offset - 1), r_value);
 	}
 	return t_success && MCStringCopySubstring(p_path, MCRangeMake(0, t_path_offset), r_root);
 }
@@ -622,13 +620,13 @@ bool MCS_path_exists(MCStringRef p_path, bool p_is_file)
     // MW-2008-01-15: [[ Bug 4981 ]] - It seems that stat will fail for checking
     //   a folder 'C:' and requires that it be 'C:\'
 	// TODO: still necessary with GetFileAttributes instead of stat?
-    if (MCStringGetLength(p_path) == 2 && MCStringGetCharAtIndex(p_path, 1) == ':')
+    /*if (MCStringGetLength(p_path) == 2 && MCStringGetCharAtIndex(p_path, 1) == ':')
     {
         MCAutoStringRef t_drive_string;
         return MCStringMutableCopy(p_path, &t_drive_string) &&
         MCStringAppendChar(*t_drive_string, '\\') &&
         MCS_native_path_exists(*t_drive_string, p_is_file);
-    }
+    }*/
     
     // OK-2007-12-05 : Bug 5555, modified to allow paths with trailing backslashes on Windows.
 	// TODO: still necessary with GetFileAttributes instead of stat?
@@ -931,11 +929,33 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 				MCS_registry_type_to_string(t_type, r_type);
             }
         }
-        else
+        else if (err == ERROR_FILE_NOT_FOUND)
+        {
+            // The query may have been for a value that is really a key, either
+            // with or without a default/un-named value attached to it. Try
+            // opening the path to the value as a key.
+            MCAutoStringRef t_alt_key;
+            MCAutoStringRefAsWString t_alt_key_wstr;
+            if (MCStringIsEmpty(*t_key))
+                t_alt_key = *t_value;
+            else
+                /* UNCHECKED */ MCStringFormat(&t_alt_key, "%@\\%@", *t_key, *t_value);
+            /* UNCHECKED */ t_alt_key_wstr.Lock(*t_alt_key);
+            
+            MCAutoRegistryKey t_alt_regkey;
+            err = RegOpenKeyExW(t_hkey, *t_alt_key_wstr, 0, t_access_mode, &t_alt_regkey);
+            if (err == ERROR_SUCCESS)
+            {
+                // Key exists
+                r_value = MCValueRetain(kMCEmptyString);
+                MCS_registry_type_to_string(REG_NONE, r_type);
+            }
+        }
+        
+        if (err != ERROR_SUCCESS)
         {
             errno = err;
             r_error = MCSTR("can't find key");
-			r_value = MCValueRetain(kMCNull);
             return true;
         }
         
@@ -1879,7 +1899,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		else
 		{
             MCStringRef t_key3;
-            t_key = MCSTR("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
+            t_key3 = MCSTR("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
             MCAutoStringRef t_type3, t_error3;
             MCAutoValueRef t_value3;
             MCS_query_registry(t_key3, &t_value3, &t_type3, &t_error3);
@@ -4493,7 +4513,9 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                         }
                         
                         // Write out the cmd line and env strings
-                        if (write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * (MCStringGetLength(*t_cmdline) + 1), MCStringGetCharPtr(*t_cmdline)) &&
+                        MCAutoStringRefAsWString t_cmdline_wstr;
+                        t_cmdline_wstr.Lock(*t_cmdline);
+                        if (write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * (MCStringGetLength(*t_cmdline) + 1), *t_cmdline_wstr) &&
                             write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * t_env_length, lpEnvStrings))
                         {
                             // Now we should have a process id and handle waiting for us.
@@ -5151,15 +5173,15 @@ int MCS_windows_elevation_bootstrap_main(HINSTANCE hInstance, HINSTANCE hPrevIns
 	if (t_success)
 	{
 		PROCESS_INFORMATION piProcInfo;
-		STARTUPINFOA siStartInfo;
-		memset(&siStartInfo, 0, sizeof(STARTUPINFOA));
-		siStartInfo.cb = sizeof(STARTUPINFOA);
+		STARTUPINFOW siStartInfo;
+		memset(&siStartInfo, 0, sizeof(STARTUPINFOW));
+		siStartInfo.cb = sizeof(STARTUPINFOW);
 		siStartInfo.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
 		siStartInfo.wShowWindow = SW_HIDE;
 		siStartInfo.hStdInput = t_fromparent_read;
 		siStartInfo.hStdOutput = t_toparent_write;
 		siStartInfo.hStdError = t_toparent_write_dup;
-		if (CreateProcessA(NULL, (LPSTR)t_cmd_line, NULL, NULL, TRUE, CREATE_NEW_CONSOLE | CREATE_SUSPENDED, t_env_strings, NULL, &siStartInfo, &piProcInfo))
+		if (CreateProcessW(NULL, (LPWSTR)t_cmd_line, NULL, NULL, TRUE, CREATE_NEW_CONSOLE | CREATE_SUSPENDED, t_env_strings, NULL, &siStartInfo, &piProcInfo))
 		{
 			t_process_handle = piProcInfo . hProcess;
 			t_process_id = piProcInfo . dwProcessId;

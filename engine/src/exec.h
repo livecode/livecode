@@ -1982,8 +1982,12 @@ extern MCExecMethodInfo *kMCStringsEvalCharsOfTextByOrdinalMethodInfo;
 void MCStringsEvalToLower(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_lower);
 void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_lower);
 
-void MCStringsEvalNumToChar(MCExecContext& ctxt, integer_t codepoint, MCStringRef& r_character);
-void MCStringsEvalCharToNum(MCExecContext& ctxt, MCStringRef character, MCValueRef& r_codepoint);
+void MCStringsEvalNumToChar(MCExecContext& ctxt, uinteger_t codepoint, MCValueRef& r_character);
+void MCStringsEvalNumToNativeChar(MCExecContext& ctxt, uinteger_t codepoint, MCStringRef& r_character);
+void MCStringsEvalNumToUnicodeChar(MCExecContext& ctxt, uinteger_t codepoint, MCStringRef& r_character);
+void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef character, uinteger_t& r_codepoint);
+void MCStringsEvalNativeCharToNum(MCExecContext& ctxt, MCStringRef character, uinteger_t& r_codepoint);
+void MCStringsEvalUnicodeCharToNum(MCExecContext& ctxt, MCStringRef character, uinteger_t& r_codepoint);
 void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t codepoint, MCStringRef& r_byte);
 void MCStringsEvalByteToNum(MCExecContext& ctxt, MCStringRef byte, integer_t& r_codepoint);
 
@@ -3744,8 +3748,8 @@ void MCFilesExecOpenElevatedProcess(MCExecContext& ctxt, MCNameRef p_process, in
 
 void MCFilesExecRename(MCExecContext& ctxt, MCStringRef from, MCStringRef to);
 
-void MCFilesExecReadFromStdinFor(MCExecContext& ctxt, uint4 p_count, int p_unit_type);
-void MCFilesExecReadFromStdinUntil(MCExecContext& ctxt, MCStringRef p_sentinel);
+void MCFilesExecReadFromStdinFor(MCExecContext& ctxt, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units);
+void MCFilesExecReadFromStdinUntil(MCExecContext& ctxt, MCStringRef p_sentinel, double p_max_wait, int p_time_units);
 void MCFilesExecReadFromFileOrDriverFor(MCExecContext& ctxt, bool p_driver, MCNameRef p_file, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units);
 void MCFilesExecReadFromFileOrDriverUntil(MCExecContext& ctxt, bool p_driver, MCNameRef p_file, MCStringRef p_sentinel, double p_max_wait, int p_time_units);
 void MCFilesExecReadFromFileOrDriverAtFor(MCExecContext& ctxt, bool p_driver, MCNameRef p_file, int64_t p_at, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units);
@@ -4004,7 +4008,7 @@ void MCNetworkExecReadFromSocketUntil(MCExecContext& ctxt, MCNameRef p_socket, M
 
 void MCNetworkExecWriteToSocket(MCExecContext& ctxt, MCNameRef p_socket, MCStringRef p_data, MCNameRef p_message);
 
-void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef value, int prep, MCUrlChunkPtr url);
+void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef value, int prep, MCUrlChunkPtr url);
 
 void MCNetworkExecReturnValueAndUrlResult(MCExecContext& ctxt, MCValueRef value, MCValueRef url_result);
 void MCNetworkExecReturnValueAndUrlResultFromVar(MCExecContext& ctxt, MCValueRef result, MCVarref *variable);
@@ -4027,7 +4031,7 @@ void MCNetworkGetNetworkInterfaces(MCExecContext& ctxt, MCStringRef& r_value);
 void MCNetworkGetAllowDatagramBroadcasts(MCExecContext& ctxt, bool& r_value);
 void MCNetworkSetAllowDatagramBroadcasts(MCExecContext& ctxt, bool p_value);
 
-void MCNetworkExecSetUrl(MCExecContext& ctxt, MCStringRef p_value, MCStringRef p_url);
+void MCNetworkExecSetUrl(MCExecContext& ctxt, MCValueRef p_value, MCStringRef p_url);
 void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCStringRef p_value, int p_where, MCStringRef p_url);
 
 void MCNetworkMarkUrl(MCExecContext& ctxt, MCStringRef p_url, MCMarkedText& r_mark);

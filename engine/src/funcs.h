@@ -294,7 +294,7 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalCapsLockKeyMethodInfo; }
 };
 
-class MCCharToNum : public MCUnaryFunctionCtxt<MCStringRef, MCValueRef, MCStringsEvalCharToNum, EE_CHARTONUM_BADSOURCE, PE_CHARTONUM_BADPARAM, kMCStringsEvalCharToNumMethodInfo>
+class MCCharToNum : public MCUnaryFunctionCtxt<MCValueRef, uinteger_t, MCStringsEvalCharToNum, EE_CHARTONUM_BADSOURCE, PE_CHARTONUM_BADPARAM, kMCStringsEvalCharToNumMethodInfo>
 {
 public:
     MCCharToNum(){}
@@ -1185,11 +1185,34 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalMovingControlsMethodInfo; }
 };
 
-class MCNumToChar: public MCUnaryFunctionCtxt<integer_t, MCStringRef, MCStringsEvalNumToChar, EE_NUMTOCHAR_BADSOURCE, PE_NUMTOCHAR_BADPARAM, kMCStringsEvalNumToCharMethodInfo>
+class MCNativeCharToNum : public MCUnaryFunctionCtxt<MCStringRef, uinteger_t, MCStringsEvalNativeCharToNum, EE_CHARTONUM_BADSOURCE, PE_CHARTONUM_BADPARAM, kMCStringsEvalNumToCharMethodInfo> // FIXME
+{
+public:
+    MCNativeCharToNum(){}
+    virtual ~MCNativeCharToNum(){}
+};
+
+class MCNumToChar: public MCUnaryFunctionCtxt<uinteger_t, MCValueRef, MCStringsEvalNumToChar, EE_NUMTOCHAR_BADSOURCE, PE_NUMTOCHAR_BADPARAM, kMCStringsEvalNumToCharMethodInfo>
 {
 public:
     MCNumToChar(){}
     virtual ~MCNumToChar(){}
+};
+
+class MCNumToNativeChar : public MCUnaryFunctionCtxt<uinteger_t, MCStringRef, MCStringsEvalNumToNativeChar,
+    EE_NUMTOCHAR_BADSOURCE, PE_NUMTOCHAR_BADPARAM, kMCStringsEvalNumToCharMethodInfo> // FIXME
+{
+public:
+    MCNumToNativeChar(){}
+    virtual ~MCNumToNativeChar(){}
+};
+
+class MCNumToUnicodeChar : public MCUnaryFunctionCtxt<uinteger_t, MCStringRef, MCStringsEvalNumToUnicodeChar,
+    EE_NUMTOCHAR_BADSOURCE, PE_NUMTOCHAR_BADPARAM, kMCStringsEvalNumToCharMethodInfo> // FIXME
+{
+public:
+    MCNumToUnicodeChar(){}
+    virtual ~MCNumToUnicodeChar(){}
 };
 
 class MCNumToByte: public MCUnaryFunctionCtxt<integer_t, MCStringRef, MCStringsEvalNumToByte, EE_NUMTOBYTE_BADSOURCE, PE_NUMTOBYTE_BADPARAM, kMCStringsEvalNumToByteMethodInfo>
@@ -1640,6 +1663,14 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
+};
+
+class MCUnicodeCharToNum : public MCUnaryFunctionCtxt<MCStringRef, uinteger_t, MCStringsEvalUnicodeCharToNum,
+    EE_CHARTONUM_BADSOURCE, PE_CHARTONUM_BADPARAM, kMCStringsEvalCharToNumMethodInfo> // FIXME
+{
+public:
+    MCUnicodeCharToNum(){}
+    virtual ~MCUnicodeCharToNum(){}
 };
 
 class MCUniDecode : public MCFunction

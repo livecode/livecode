@@ -169,6 +169,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		}
 	}
 	
+    // Ensure the command line variable gets set
+    /* UNCHECKED */ MCStringCreateWithWString(lpWCmdLine, MCcmdline);
+    
 	// Convert the WStrings (UTF-16) into StringRefs
 	argv.New(argc);
 	for (int i = 0; i < argc; i++)

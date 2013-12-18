@@ -80,10 +80,10 @@ inline FourCharCode FourCharCodeFromString(const char *p_string)
 	return MCSwapInt32HostToNetwork(*(FourCharCode *)p_string);
 }
 
-bool FourCharCodeFromString(MCStringRef p_string, uindex_t p_start, uint32& r_four_char_code)
+bool FourCharCodeFromString(MCStringRef p_string, uindex_t p_start, uint32_t& r_four_char_code)
 {
     char *temp;
-    uint32 t_four_char_code;
+    uint32_t t_four_char_code;
     if (!MCStringConvertToCString(p_string, temp))
         return false;
     
@@ -1050,8 +1050,8 @@ static void MCS_mac_setfiletype(MCStringRef p_new_path)
 	if (FSGetCatalogInfo(&t_fsref, kFSCatInfoFinderInfo, &t_catalog, NULL, NULL, NULL) == noErr)
 	{
 		// Set the creator and filetype of the catalog.
-        FourCharCodeFromString(MCfiletype, 4, (uint32&)((FileInfo *) t_catalog . finderInfo) -> fileType);
-        FourCharCodeFromString(MCfiletype, 0, (uint32&)((FileInfo *) t_catalog . finderInfo) -> fileCreator);
+        FourCharCodeFromString(MCfiletype, 4, (uint32_t&)((FileInfo *) t_catalog . finderInfo) -> fileType);
+        FourCharCodeFromString(MCfiletype, 0, (uint32_t&)((FileInfo *) t_catalog . finderInfo) -> fileCreator);
         
 		FSSetCatalogInfo(&t_fsref, kFSCatInfoFinderInfo, &t_catalog);
 	}
@@ -1549,11 +1549,8 @@ bool MCS_mac_FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)
 	CopyPascalStringToC(fSpec->name, (char*)t_name.Chars());
     
     /* UNCHECKED */ t_name.CreateStringAndRelease(&t_filename_std);
-    
 	/* UNCHECKED */ MCS_pathfromnative(*t_filename_std, &t_filename);
-    
-    /* UNCHECKED */ MCStringConvertToCString(*t_filename, t_char_ptr);
-    
+
 	char oldchar = fSpec->name[0];
 	Boolean dontappendname = False;
 	fSpec->name[0] = '\0';
@@ -1583,18 +1580,19 @@ bool MCS_mac_FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)
 	}
 	else
 		errno = FSRefMakePath(&ref, (unsigned char *)t_char_ptr, PATH_MAX);
-	uint4 destlen;
-	char *tutfpath;
-	destlen = PATH_MAX;
-	MCS_utf8tonative(t_char_ptr, strlen(t_char_ptr), tutfpath, destlen);
-	tutfpath[destlen] = '\0';
+    
+    MCAutoStringRef t_path_str;
+    /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)t_char_ptr, strlen(t_char_ptr), kMCStringEncodingUTF8, false, &t_path_str);
+    
 	if (!dontappendname)
 	{
-		if (tutfpath[destlen - 1] != '/')
-			strcat(tutfpath, "/");
-		strcat(tutfpath, (char*)t_name.Chars());
+		/* UNCHECKED */ MCStringFormat(r_path, "%@/%@", *t_path_str, *t_filename);
 	}
-	return tutfpath;
+    else
+    {
+        r_path = MCValueRetain(*t_path_str);
+    }
+	return true;
 }
 
 static void MCS_openresourcefork_with_fsref(FSRef *p_ref, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref, MCStringRef& r_error)
@@ -1683,8 +1681,8 @@ static bool MCS_mac_openresourcefile_with_fsref(FSRef& p_ref, SInt8 p_permission
 		}
 		else
 		{
-            FourCharCodeFromString(MCfiletype, 0, (uint32&)t_creator);
-            FourCharCodeFromString(MCfiletype, 4, (uint32&)t_ftype);
+            FourCharCodeFromString(MCfiletype, 0, (uint32_t&)t_creator);
+            FourCharCodeFromString(MCfiletype, 4, (uint32_t&)t_ftype);
 		}
 		/* DEPRECATED */ FSpCreateResFile(&fspec, t_creator, t_ftype, smRoman);
 		
@@ -1746,8 +1744,8 @@ static const char *MCS_mac_openresourcefile_with_fsref(FSRef *p_ref, SInt8 permi
 			}
 			else
 			{
-                FourCharCodeFromString(MCfiletype, 0, (uint32&)creator);
-                FourCharCodeFromString(MCfiletype, 4, (uint32&)ftype);
+                FourCharCodeFromString(MCfiletype, 0, (uint32_t&)creator);
+                FourCharCodeFromString(MCfiletype, 4, (uint32_t&)ftype);
 			}
 			FSpCreateResFile(&fspec, creator, ftype, smRoman);
 			
@@ -2653,7 +2651,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             newflags |= resChanged;
         
         ResType rtype;
-        /* UNCHECKED */ FourCharCodeFromString(p_type, 0, (uint32&)rtype);
+        /* UNCHECKED */ FourCharCodeFromString(p_type, 0, (uint32_t&)rtype);
         // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
         rtype = (ResType)MCSwapInt32HostToNetwork(rtype);
         short rid = 0;
@@ -2802,7 +2800,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         
         ResType rtype;
-        /* UNCHECKED */ FourCharCodeFromString(p_type, 0, (uint32&)rtype);
+        /* UNCHECKED */ FourCharCodeFromString(p_type, 0, (uint32_t&)rtype);
         
         // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
         rtype = (ResType)MCSwapInt32HostToNetwork(rtype);
@@ -3269,7 +3267,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
 #endif /* MCS_deleteresource_dsk_mac */
         ResType restype;
         short rfRefNum;
-        /* UNCHECKED */ FourCharCodeFromString(p_type, 0, (uint32&)restype);
+        /* UNCHECKED */ FourCharCodeFromString(p_type, 0, (uint32_t&)restype);
         
         MCAutoStringRef t_error;
         if (!MCS_mac_openresourcefile_with_path(p_source, fsRdWrPerm, true, rfRefNum, &t_error))
@@ -3719,8 +3717,8 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         AEEventClass ac;
         AEEventID aid;
         
-        /* UNCHECKED */ FourCharCodeFromString(p_eventtype, 0, (uint32&)ac);
-        /* UNCHECKED */ FourCharCodeFromString(p_eventtype, 4, (uint32&)aid);
+        /* UNCHECKED */ FourCharCodeFromString(p_eventtype, 0, (uint32_t&)ac);
+        /* UNCHECKED */ FourCharCodeFromString(p_eventtype, 4, (uint32_t&)aid);
                
         AECreateAppleEvent(ac, aid, &receiver, kAutoGenerateReturnID,
                            kAnyTransactionID, &ae);
@@ -3850,7 +3848,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         //at any one time only either keyword or error is set
         if (p_keyword != NULL)
         {
-            /* UNCHECKED */ FourCharCodeFromString(p_keyword, 0, (uint32&)replykeyword);
+            /* UNCHECKED */ FourCharCodeFromString(p_keyword, 0, (uint32_t&)replykeyword);
         }
         else
         {
@@ -4027,7 +4025,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                 else
                 {
                     AEKeyword key;
-                    /* UNCHECKED */ FourCharCodeFromString(p_message, MCStringGetLength(p_message) - sizeof(AEKeyword), (uint32&)key);
+                    /* UNCHECKED */ FourCharCodeFromString(p_message, MCStringGetLength(p_message) - sizeof(AEKeyword), (uint32_t&)key);
                     char *info;
                     
                     if (key == keyAddressAttr || key == keyEventClassAttr
@@ -5058,10 +5056,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         }
         
         if (!t_error)
-            t_error = !FourCharCodeFromString(MCfiletype, 4, (uint32&)((FileInfo *) t_dst_catalog . finderInfo) -> fileType);
+            t_error = !FourCharCodeFromString(MCfiletype, 4, (uint32_t&)((FileInfo *) t_dst_catalog . finderInfo) -> fileType);
         
         if (!t_error)
-            t_error = !FourCharCodeFromString(MCfiletype, 0, (uint32&)((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator);
+            t_error = !FourCharCodeFromString(MCfiletype, 0, (uint32_t&)((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator);
         
         bool t_created_dst;
         t_created_dst = false;
@@ -5671,16 +5669,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         else if (MCStringGetLength(MCNameGetString(p_type)) == 4)
         {
             t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetNativeCharPtr(MCNameGetString(p_type))));
-			
-            uindex_t t_i;
-            for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
-                if (t_mac_folder == sysfolderlist[t_i] . macfolder)
-                {
-                    t_domain = sysfolderlist[t_i] . domain;
-                    t_mac_folder = sysfolderlist[t_i] . mactag;
-                    t_found_folder = true;
-                    break;
-                }
+            t_domain = kOnAppropriateDisk;
+            t_found_folder = true;
         }
         
         FSRef t_folder_ref;
@@ -8666,7 +8656,7 @@ static bool startprocess_create_argv(char *name, char *doc, uint32_t & r_argc, c
 	char **argv;
 	argc = 0;
 	argv = nil;
-	if (doc == NULL)
+	if (doc == NULL || *doc == '\0')
 	{
 		char *sptr = name;
 		while (*sptr)
@@ -8723,7 +8713,7 @@ static bool startprocess_write_cstring_to_fd(int fd, char *string)
 	return true;
 }
 
-static bool startprocess_read_uint32_from_fd(int fd, uint32_t& r_value)
+static bool startprocess_read_uint32_t_from_fd(int fd, uint32_t& r_value)
 {
 	uint32_t value;
 	if (read(fd, &value, sizeof(uint32_t)) != sizeof(uint32_t))
@@ -8735,7 +8725,7 @@ static bool startprocess_read_uint32_from_fd(int fd, uint32_t& r_value)
 static bool startprocess_read_cstring_from_fd(int fd, char*& r_cstring)
 {
 	uint32_t t_length;
-	if (!startprocess_read_uint32_from_fd(fd, t_length))
+	if (!startprocess_read_uint32_t_from_fd(fd, t_length))
 		return false;
 	
 	char *t_string;
@@ -8755,7 +8745,7 @@ bool MCS_mac_elevation_bootstrap_main(int argc, char *argv[])
 {
 	// Read the argument count
 	uint32_t t_arg_count;
-	startprocess_read_uint32_from_fd(fileno(stdin), t_arg_count);
+	startprocess_read_uint32_t_from_fd(fileno(stdin), t_arg_count);
 	
 	// Read the arguments
 	char **t_args;
@@ -9083,10 +9073,13 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 				"-elevated-slave",
 				nil
 			};
-            char *t_mccmd;
-            /* UNCHECKED */ MCStringConvertToCString(MCcmd, t_mccmd);
-			t_status = AuthorizationExecuteWithPrivileges(t_auth, t_mccmd, kAuthorizationFlagDefaults, t_arguments, &t_stream);
-            delete t_mccmd;
+            
+            MCAutoPointer<char> t_cmd;
+            uindex_t t_ignored;
+            
+            /* UNCHECKED */ MCStringConvertToUTF8(MCcmd, &t_cmd, t_ignored);
+            
+			t_status = AuthorizationExecuteWithPrivileges(t_auth, *t_cmd, kAuthorizationFlagDefaults, t_arguments, &t_stream);
 		}
 		
 		uint32_t t_pid;
@@ -9105,7 +9098,7 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 			startprocess_write_uint32_to_fd(fileno(t_stream), t_argc);
 			for(uint32_t i = 0; i < t_argc; i++)
 				startprocess_write_cstring_to_fd(fileno(t_stream), t_argv[i]);
-			if (!startprocess_read_uint32_from_fd(fileno(t_stream), t_pid))
+			if (!startprocess_read_uint32_t_from_fd(fileno(t_stream), t_pid))
 				t_status = errAuthorizationToolExecuteFailure;
 			
 			delete t_name_dup;

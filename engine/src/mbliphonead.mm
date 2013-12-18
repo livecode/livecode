@@ -446,7 +446,7 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_ty
             t_success = MCNameCreateWithCString("age", &t_age_key);
         if (t_success)
             if (MCArrayFetchValue(p_meta_data, false, *t_age_key, t_value))
-                [t_meta_data setObject:[NSString stringWithMCStringRef: (MCStringRef)t_value)] forKey:[NSNumber numberWithInt:Key_Age]];
+                [t_meta_data setObject:[NSString stringWithMCStringRef: ((MCStringRef)t_value)] forKey:[NSNumber numberWithInt:Key_Age]];
 
         MCNewAutoNameRef t_dist_id_key;
         if (t_success)

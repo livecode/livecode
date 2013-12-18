@@ -23,6 +23,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "date.h"
 
+#include "foundation-locale.h"
+
 #include <CoreFoundation/CoreFoundation.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,9 +73,35 @@ bool MCS_secondstodatetime(double p_seconds, MCDateTime& r_datetime)
 	return true;
 }
 
+// REMOVE ME
 const MCDateTimeLocale *MCS_getdatetimelocale(void)
 {
 	return do_cache_locale();
+}
+
+MCLocaleRef MCS_getsystemlocale()
+{
+    // Get the system locale
+    CFLocaleRef t_cf_locale;
+    t_cf_locale = CFLocaleCopyCurrent();
+    
+    // From this, extract the locale identifier
+    CFStringRef t_cf_locale_id;
+    t_cf_locale_id = CFLocaleGetIdentifier(t_cf_locale);
+    CFRelease(t_cf_locale);
+    
+    // And turn this into a StringRef
+    MCAutoStringRef t_locale_id;
+    if (!MCStringCreateWithCFString(t_cf_locale_id, &t_locale_id))
+        return nil;
+    
+    // Finally, construct a Locale object using this name
+    MCLocaleRef t_locale;
+    if (!MCLocaleCreateWithName(*t_locale_id, t_locale))
+        return nil;
+    
+    // Done
+    return t_locale;
 }
 	
 ////////////////////////////////////////////////////////////////////////////////

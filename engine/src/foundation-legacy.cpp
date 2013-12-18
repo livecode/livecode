@@ -694,33 +694,9 @@ bool MCValueIsArray(MCValueRef p_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCStringCreateWithCString(const char* p_cstring, MCStringRef& r_string)
-{
-	return MCStringCreateWithNativeChars((const char_t*)p_cstring, MCCStringLength(p_cstring), r_string);
-}
-
-
 bool MCStringCreateWithOldString(const MCString& p_old_string, MCStringRef& r_string)
 {
 	return MCStringCreateWithNativeChars((const char_t *)p_old_string . getstring(), p_old_string . getlength(), r_string);
-}
-
-bool MCStringCreateWithCStringAndRelease(char_t* p_cstring, MCStringRef& r_string)
-{
-	return MCStringCreateWithNativeCharsAndRelease(p_cstring, MCCStringLength((const char *)p_cstring), r_string);
-}
-
-const char *MCStringGetCString(MCStringRef p_string)
-{
-    if (p_string == nil)
-        return nil;
-  
-	const char *t_cstring;
-	t_cstring = (const char *)MCStringGetNativeCharPtr(p_string);
-	
-	MCAssert(t_cstring != nil);
-
-	return t_cstring;
 }
 
 MCString MCStringGetOldString(MCStringRef p_string)
@@ -729,11 +705,6 @@ MCString MCStringGetOldString(MCStringRef p_string)
 	t_cstring = MCStringGetCString(p_string);
 
 	return MCString(t_cstring, MCStringGetLength(p_string));
-}
-
-bool MCStringIsEqualToCString(MCStringRef p_string, const char *p_cstring, MCCompareOptions p_options)
-{
-	return MCStringIsEqualToNativeChars(p_string, (const char_t *)p_cstring, strlen(p_cstring), p_options);
 }
 
 bool MCStringIsEqualToOldString(MCStringRef p_string, const MCString& p_oldstring, MCCompareOptions p_options)

@@ -20,71 +20,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-compare_t MCUnicodeCharsCompareExact(const unichar_t *p_left, uindex_t p_left_length, const unichar_t *p_right, uindex_t p_right_length)
-{
-	for(;;)
-	{
-		if (p_left_length == 0 || p_right_length == 0)
-			break;
-		
-		compare_t d;
-		d = *p_left++ - *p_right++;
-		if (d != 0)
-			return d;
-		
-		p_left_length -= 1;
-		p_right_length -= 1;
-	}
-	
-	return p_left_length - p_right_length;
-}
-
-compare_t MCUnicodeCharsCompareCaseless(const unichar_t *p_left, uindex_t p_left_length, const unichar_t *p_right, uindex_t p_right_length)
-{
-	for(;;)
-	{
-		if (p_left_length == 0 || p_right_length == 0)
-			break;
-		
-		compare_t d;
-		d = MCUnicodeCharFold(*p_left++) - MCUnicodeCharFold(*p_right++);
-		if (d != 0)
-			return d;
-		
-		p_left_length -= 1;
-		p_right_length -= 1;
-	}
-	
-	return p_left_length - p_right_length;
-}
-
-bool MCUnicodeCharsEqualExact(const unichar_t *p_left, uindex_t p_left_length, const unichar_t *p_right, uindex_t p_right_length)
-{
-	if (p_left_length != p_right_length)
-		return false;
-	
-	if (p_left == p_right)
-		return true;
-	
-	return MCUnicodeCharsCompareExact(p_left, p_left_length, p_right, p_right_length) == 0;
-}
-
-bool MCUnicodeCharsEqualCaseless(const unichar_t *p_left, uindex_t p_left_length, const unichar_t *p_right, uindex_t p_right_length)
-{
-	if (p_left_length != p_right_length)
-		return false;
-	
-	if (p_left == p_right)
-		return true;
-	
-	return MCUnicodeCharsCompareCaseless(p_left, p_left_length, p_right, p_right_length) == 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 uindex_t MCUnicodeCharsSharedPrefixExact(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_prefix, uindex_t p_prefix_length)
 {
-	uindex_t t_count;
+	// TODO: use ICU
+    // Unfortunately, this is less than trivial as ICU doesn't provide a
+    // mechanism for returning the index where the strings became unequal.
+    
+    uindex_t t_count;
 	t_count = 0;
 	for(;;)
 	{
@@ -107,7 +49,11 @@ uindex_t MCUnicodeCharsSharedPrefixExact(const unichar_t *p_string, uindex_t p_s
 
 uindex_t MCUnicodeCharsSharedPrefixCaseless(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_prefix, uindex_t p_prefix_length)
 {
-	uindex_t t_count;
+    // TODO: use ICU
+    // Unfortunately, this is less than trivial as ICU doesn't provide a
+    // mechanism for returning the index where the strings became unequal.
+    
+    uindex_t t_count;
 	t_count = 0;
 	for(;;)
 	{
@@ -130,7 +76,11 @@ uindex_t MCUnicodeCharsSharedPrefixCaseless(const unichar_t *p_string, uindex_t 
 
 uindex_t MCUnicodeCharsSharedSuffixExact(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_suffix, uindex_t p_suffix_length)
 {
-	p_string += p_string_length;
+    // TODO: use ICU
+    // Unfortunately, this is less than trivial as ICU doesn't provide a
+    // mechanism for returning the index where the strings became unequal.
+    
+    p_string += p_string_length;
 	p_suffix += p_suffix_length;
 	
 	uindex_t t_count;
@@ -156,7 +106,11 @@ uindex_t MCUnicodeCharsSharedSuffixExact(const unichar_t *p_string, uindex_t p_s
 
 uindex_t MCUnicodeCharsSharedSuffixCaseless(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_suffix, uindex_t p_suffix_length)
 {
-	p_string += p_string_length;
+    // TODO: use ICU
+    // Unfortunately, this is less than trivial as ICU doesn't provide a
+    // mechanism for returning the index where the strings became unequal.
+    
+    p_string += p_string_length;
 	p_suffix += p_suffix_length;
 	
 	uindex_t t_count;

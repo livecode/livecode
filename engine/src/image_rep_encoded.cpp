@@ -168,9 +168,9 @@ bool MCReferencedImageRep::GetDataStream(IO_handle &r_stream)
 		m_url_load_attempted = true;
 
         MCExecContext ctxt(MCdefaultstackptr, nil, nil);
-        MCAutoStringRef t_data;
+        MCAutoValueRef t_data;
         MCU_geturl(ctxt, m_file_name, &t_data);
-        if (ctxt.HasError() || MCStringIsEmpty(*t_data))
+        if (ctxt.HasError() || MCValueIsEmpty(*t_data))
             return false;
         MCAutoDataRef t_dataref;
         /* UNCHECKED */ ctxt . ConvertToData(*t_data, &t_dataref);

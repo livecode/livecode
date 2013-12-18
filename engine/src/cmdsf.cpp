@@ -671,7 +671,7 @@ void MCEncryptionOp::exec_ctxt(MCExecContext &ctxt)
 		MCAutoStringRef t_passphrase;
         if (!ctxt . EvalOptionalExprAsNullableStringRef(rsa_passphrase, EE_OPEN_BADNAME, &t_passphrase))
             return;
-		
+
         MCAutoStringRef t_data;
         if (!ctxt . EvalExprAsStringRef(source, EE_OPEN_BADNAME, &t_data))
             return;
@@ -698,7 +698,6 @@ void MCEncryptionOp::exec_ctxt(MCExecContext &ctxt)
 
 		MCAutoStringRef t_iv;
 		MCAutoStringRef t_salt;
-
         if (!ctxt . EvalOptionalExprAsNullableStringRef(salt, EE_OPEN_BADNAME, &t_salt))
             return;
 
@@ -4245,7 +4244,7 @@ void MCRead::exec_ctxt(MCExecContext& ctxt)
                     MCNetworkExecReadFromSocketFor(ctxt, *t_source, size, unit, *t_message);
                     break;
                 case OA_STDIN:
-                    MCFilesExecReadFromStdinFor(ctxt, size, unit);
+                    MCFilesExecReadFromStdinFor(ctxt, size, unit, t_max_wait, timeunits);
                     break;
                 default:
                     break;
@@ -4283,7 +4282,7 @@ void MCRead::exec_ctxt(MCExecContext& ctxt)
                     MCNetworkExecReadFromSocketUntil(ctxt, *t_source, *t_sentinel, *t_message);
                     break;
                 case OA_STDIN:
-                    MCFilesExecReadFromStdinUntil(ctxt, *t_sentinel);
+                    MCFilesExecReadFromStdinUntil(ctxt, *t_sentinel, t_max_wait, timeunits);
                     break;
                 default:
                     break;

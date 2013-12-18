@@ -606,7 +606,7 @@ public:
 			ExtractContext t_context;
 			t_context . target = MCtargetptr -> gethandle();
 			t_context . name = *t_item;
-			t_context . var = ctxt . GetEP().getit() -> evalvar(ctxt);
+            t_context . var = ctxt . GetIt() -> evalvar(ctxt);
 			t_context . stream = nil;
 
 			if (!MCStringIsEmpty(*t_file))
@@ -630,8 +630,6 @@ public:
 		}
 		else
 			ctxt . SetTheResultToCString("payload not open");
-
-		return ES_NORMAL;
 	}
 
 private:
@@ -655,8 +653,7 @@ private:
 		}
 		else
 		{
-			MCExecPoint ep(NULL, NULL, NULL);
-			MCExecContext ctxt(ep);
+			MCExecContext ctxt;
 			MCAutoStringRef t_data;
 			/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)p_data, p_data_length, kMCStringEncodingNative, false, &t_data);
 			MCStringRef t_value;
@@ -944,7 +941,7 @@ public:
     
 		MCSystemListProcesses(ListProcessCallback, &t_state);
         
-		MCresult -> set(ctxt, &t_module_str);
+		MCresult -> set(ctxt, t_state.list);
         
 		delete t_module;
 	}
@@ -1295,7 +1292,8 @@ IO_stat MCDispatch::startup(void)
 	t_project_info = (MCCapsuleInfo *)MCExecutableFindSection(PROJECT_SECTION_NAME);
 	if (t_project_info == nil || t_project_info -> size <= sizeof(MCCapsuleInfo))
 	{
-#ifdef _DEBUG
+//#ifdef _DEBUG
+#if false
 		MCStack *t_stack;
 		IO_handle t_stream;
 		t_stream = MCS_open(getenv("TEST_STACK"), IO_READ_MODE, False, False, 0);
@@ -1367,7 +1365,7 @@ IO_stat MCDispatch::startup(void)
 		return IO_ERROR;
 	}
 
-	/* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
+	///* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_info . stack;
 	MCCapsuleClose(t_capsule);
 
@@ -1588,7 +1586,7 @@ bool MCModeShouldCheckCantStandalone(void)
 }
 
 // The standalone mode doesn't have a message box redirect feature
-bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt)
+bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef)
 {
 	return false;
 }
