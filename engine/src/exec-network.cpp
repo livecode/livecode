@@ -636,7 +636,8 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_wher
 		/* UNCHECKED */ MCStringCopyAndRelease(t_string, (MCStringRef&)&t_new_value);
 	}
 	
-	ctxt.SetTheResultToValue(*t_new_value);
+	//ctxt.SetTheResultToValue(*t_new_value);
+    ctxt.SetTheResultToEmpty();
 
 	/* UNCHECKED */ MCU_puturl(ctxt, p_chunk.url, *t_new_value);
 }
