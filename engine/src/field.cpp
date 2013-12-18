@@ -2886,9 +2886,9 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     
     // Loop through the paragraphs until we've gone x_si code units in
     uindex_t t_index = 0;
-    while ((t_index + t_pg->gettextlength()) < x_si)
+    while ((t_index + t_pg->gettextlengthcr()) < x_si)
     {
-        t_index += t_pg->gettextlength();
+        t_index += t_pg->gettextlengthcr();
         t_pg = t_pg->next();
     }
     
@@ -2896,7 +2896,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     MCRange t_cp_range, t_cu_range;
     t_cu_range = MCRangeMake(0, x_si - t_index);
     /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), t_cu_range, t_cp_range);
-    
+
     // Because we measure codepoints from the beginning of the paragraph,
     // increase the number of codepoints we want to skip to account for this.
     p_start += t_cp_range.length;
@@ -2904,15 +2904,17 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     // Loop until we get to the starting paragraph (or reach the end of the field)
     MCRange t_pg_cp;
     /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), MCRangeMake(0, t_pg->gettextlength()), t_pg_cp);
+    t_pg_cp.length++;   // Implicit paragraph break
     while (t_pg_cp.length < p_start)
     {
         // Move to the next paragraph
         p_start -= t_pg_cp.length;
-        x_si += t_pg->gettextlength();
+        x_si += t_pg->gettextlengthcr();
         t_pg = t_pg->next();
         
         // Count the number of codepoints in the next paragraph
         /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), MCRangeMake(0, t_pg->gettextlength()), t_pg_cp);
+        t_pg_cp.length++;   // Implicit paragraph break
         
         // If we've reached end of the last paragraph, end the loop
         if (t_pg == t_first_para)
@@ -2943,7 +2945,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     {
         // Move to the next paragraph
         p_count -= t_pg_cp.length;
-        x_ei += t_pg->gettextlength();
+        x_ei += t_pg->gettextlengthcr();
         t_pg = t_pg->next();
         
         // Have we reached the first paragraph of the field again?
@@ -2956,6 +2958,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
         
         // Count the number of codepoints in the next paragraph
         /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), MCRangeMake(0, t_pg->gettextlength()), t_pg_cp);
+        t_pg_cp.length++;   // Implicit paragraph break
     }
     
     // We know the codepoint offset into the paragraph and need to convert this
