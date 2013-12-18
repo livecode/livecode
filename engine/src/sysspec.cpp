@@ -1503,6 +1503,17 @@ void MCS_unloadmodule(MCSysModuleHandle p_module)
 	MCsystem -> UnloadModule(p_module);
 }
 
+// TODO: move somewhere better
+#ifdef _LINUX_DESKTOP
+MCLocaleRef MCS_getsystemlocale()
+{
+    // TODO: implement properly
+    MCLocaleRef t_locale;
+    /* UNCHECKED */ MCLocaleCreateWithName(MCSTR("en_US"), t_locale);
+    return t_locale;
+}
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCS_changeprocesstype(bool p_to_foreground)
