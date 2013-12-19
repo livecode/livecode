@@ -65,7 +65,7 @@ standalone: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecu
 installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel revsecurity
 	$(MAKE) -C ./engine -f Makefile.installer installer
 
-server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel kernel-server revsecurity
+server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore libgraphics kernel-server revsecurity
 	$(MAKE) -C ./engine -f Makefile.server server-community
 
 ###############################################################################
