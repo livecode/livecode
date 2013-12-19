@@ -544,6 +544,10 @@ void MCImage::setrect(const MCRectangle &nrect)
 	MCRectangle orect = rect;
 	rect = nrect;
 
+	// IM-2013-12-17: [[ Bug 11604 ]] Notify mutable image rep of change in image rect
+	if (m_rep != nil && m_rep->GetType() == kMCImageRepMutable)
+		static_cast<MCMutableImageRep*>(m_rep)->owner_rect_changed(rect);
+	
 	if (!(state & CS_SIZE) || !(state & CS_EDITED))
 	{
 		// IM-2013-04-15: [[ BZ 10827 ]] if the image has rotation then apply_transform()

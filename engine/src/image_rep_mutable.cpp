@@ -39,23 +39,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
+#include "graphics_util.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void surface_combine_blendSrcOver_masked(void *p_dst, int32_t p_dst_stride, const void *p_src, uint32_t p_src_stride, uint32_t p_width, uint32_t p_height, uint8_t p_opacity);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-/* OVERHAUL - REVISIT: should move this to shared util code as will probably be
- * useful elsewhere */
-static inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
-{
-	MCGRectangle t_rect;
-	t_rect . origin . x = (MCGFloat) p_rect . x;
-	t_rect . origin . y = (MCGFloat) p_rect . y;
-	t_rect . size . width = (MCGFloat) p_rect . width;
-	t_rect . size . height = (MCGFloat) p_rect . height;
-	return t_rect;
-}
 
 bool MCImageAllocMask(uint32_t p_width, uint32_t p_height, MCGRaster &r_mask)
 {
@@ -1900,6 +1890,13 @@ void MCMutableImageRep::image_freeundo(Ustruct *us)
 	MCLog("MCMutableImage::image_free_undo(%p) - freeing image %p", us, m_undo_image);
 	MCImageFreeBitmap(m_undo_image);
 	m_undo_image = nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCMutableImageRep::owner_rect_changed(const MCRectangle &p_new_rect)
+{
+	rect = p_new_rect;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
