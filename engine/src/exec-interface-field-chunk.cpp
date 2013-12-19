@@ -2687,6 +2687,9 @@ void MCBlock::SetTextFont(MCExecContext& ctxt, MCStringRef p_fontname)
     }
     else
     {
+        if (atts == nil)
+            atts = new Blockatts;
+        
         flags |= F_HAS_FNAME;
         /* UNCHECKED */ MCNameCreate(p_fontname, atts -> fontname);
     }
