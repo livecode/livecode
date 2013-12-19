@@ -16,6 +16,6 @@ LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \
 	$(LOCAL_PATH)/../prebuilt/include
 
-LOCAL_EXPORT_LDLIBS := -L$(LOCAL_PATH)/../prebuilt/lib/android/armv6 -licui18n -licuio -licule -liculx -licutest -licutu -licuuc -licudata
+LOCAL_EXPORT_LDLIBS := -L$(LOCAL_PATH)/../prebuilt/lib/android/armv6 -licui18n -licuio -licule -liculx -licuuc -licudata
 
 include $(BUILD_STATIC_LIBRARY)
