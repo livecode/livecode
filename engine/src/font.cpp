@@ -315,7 +315,8 @@ void MCFontBreakText(MCFontRef p_font, const char *p_text, uint32_t p_length, bo
 
 struct font_measure_text_context
 {
-    uint32_t m_width;
+	// MW-2013-12-19: [[ Bug 11606 ]] Make sure we use a float to accumulate the width.
+    MCGFloat m_width;
 };
 
 static void MCFontMeasureTextCallback(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, font_measure_text_context *ctxt)
@@ -340,19 +341,26 @@ static void MCFontMeasureTextCallback(MCFontRef p_font, const char *p_text, uint
     ctxt -> m_width += MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
 }
 
-int32_t MCFontMeasureText(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode)
+MCGFloat MCFontMeasureTextFloat(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode)
 {
     font_measure_text_context ctxt;
     ctxt.m_width = 0;
     
     MCFontBreakText(p_font, p_text, p_length, p_is_unicode, (MCFontBreakTextCallback)MCFontMeasureTextCallback, &ctxt);
-    return ctxt.m_width;
+	
+	return ctxt . m_width;
+}
+
+int32_t MCFontMeasureText(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode)
+{
+    return (int32_t)floorf(MCFontMeasureTextFloat(p_font, p_text, p_length, p_is_unicode));
 }
 
 struct font_draw_text_context
 {
     MCGContextRef m_gcontext;
-    int32_t x;
+	// MW-2013-12-19: [[ Bug 11606 ]] Make sure we use a float to accumulate the x-offset.
+    MCGFloat x;
     int32_t y;
 };
 
