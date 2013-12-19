@@ -602,6 +602,17 @@ bool MCExecContext::CopyOptElementAsFilepathArray(MCArrayRef p_array, MCNameRef 
 	return CopyElementAsFilepathArray(p_array, p_name, p_case_sensitive, r_path_array); 
 }
 
+bool MCExecContext::CopyOptElementAsArray(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCArrayRef &r_array)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+    {
+        r_array = MCValueRetain(kMCEmptyArray);
+        return true;
+    }
+	return (ConvertToArray(t_val, r_array));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_output)

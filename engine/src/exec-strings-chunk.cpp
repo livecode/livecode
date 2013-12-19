@@ -831,7 +831,7 @@ void MCStringsEvalTextChunk(MCExecContext& ctxt, MCMarkedText p_source, MCString
     ctxt . Throw();
 }
 
-void MCStringsMarkTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, MCMarkedText& x_mark)
+void MCStringsMarkTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
     // The incoming indices are for codepoints
     MCRange t_cp_range, t_cu_range;
@@ -847,7 +847,7 @@ void MCStringsMarkTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type,
     
     int4 t_add;
     int4 t_start, t_end;
-    MCStringsMarkTextChunk(ctxt, *t_string, p_chunk_type, t_first, t_chunk_count, t_start, t_end, p_whole_chunk, false, true, t_add);
+    MCStringsMarkTextChunk(ctxt, *t_string, p_chunk_type, t_first, t_chunk_count, t_start, t_end, p_whole_chunk, p_further_chunks, true, t_add);
     
     // The indices returned by MarkTextChunk are code unit indices
     t_cu_range.offset += t_start;
@@ -861,7 +861,7 @@ void MCStringsMarkTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type,
         MCStringsAddChunks(ctxt, p_chunk_type, t_add, x_mark);
 }
 
-void MCStringsMarkTextChunkByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, MCMarkedText& x_mark)
+void MCStringsMarkTextChunkByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
     // The incoming indices are for codepoints
     MCRange t_cp_range, t_cu_range;
@@ -877,7 +877,7 @@ void MCStringsMarkTextChunkByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_typ
     
     int4 t_add;
     int4 t_start, t_end;
-    MCStringsMarkTextChunk(ctxt, *t_string, p_chunk_type, t_first, t_chunk_count, t_start, t_end, p_whole_chunk, false, true, t_add);
+    MCStringsMarkTextChunk(ctxt, *t_string, p_chunk_type, t_first, t_chunk_count, t_start, t_end, p_whole_chunk, p_further_chunks, true, t_add);
     
     // The indices returned by MarkTextChunk are code unit indices
     t_cu_range.offset += t_start;
@@ -891,54 +891,54 @@ void MCStringsMarkTextChunkByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_typ
         MCStringsAddChunks(ctxt, p_chunk_type, t_add, x_mark);
 }
 
-void MCStringsMarkLinesOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, MCMarkedText& x_mark)
+void MCStringsMarkLinesOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
-    MCStringsMarkTextChunkByRange(ctxt, CT_LINE, p_first, p_last, p_force, p_whole_chunk, x_mark);
+    MCStringsMarkTextChunkByRange(ctxt, CT_LINE, p_first, p_last, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
-void MCStringsMarkLinesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, MCMarkedText& x_mark)
+void MCStringsMarkLinesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
-    MCStringsMarkTextChunkByOrdinal(ctxt, CT_LINE, p_ordinal_type, p_force, p_whole_chunk, x_mark);
+    MCStringsMarkTextChunkByOrdinal(ctxt, CT_LINE, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
-void MCStringsMarkItemsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, MCMarkedText& x_mark)
+void MCStringsMarkItemsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
-    MCStringsMarkTextChunkByRange(ctxt, CT_ITEM, p_first, p_last, p_force, p_whole_chunk, x_mark);
+    MCStringsMarkTextChunkByRange(ctxt, CT_ITEM, p_first, p_last, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
-void MCStringsMarkItemsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, MCMarkedText& x_mark)
+void MCStringsMarkItemsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
-    MCStringsMarkTextChunkByOrdinal(ctxt, CT_ITEM, p_ordinal_type, p_force, p_whole_chunk, x_mark);
+    MCStringsMarkTextChunkByOrdinal(ctxt, CT_ITEM, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
-void MCStringsMarkWordsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, MCMarkedText& x_mark)
+void MCStringsMarkWordsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
-    MCStringsMarkTextChunkByRange(ctxt, CT_WORD, p_first, p_last, p_force, p_whole_chunk, x_mark);
+    MCStringsMarkTextChunkByRange(ctxt, CT_WORD, p_first, p_last, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
-void MCStringsMarkWordsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, MCMarkedText& x_mark)
+void MCStringsMarkWordsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
-    MCStringsMarkTextChunkByOrdinal(ctxt, CT_WORD, p_ordinal_type, p_force, p_whole_chunk, x_mark);
+    MCStringsMarkTextChunkByOrdinal(ctxt, CT_WORD, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
-void MCStringsMarkTokensOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, MCMarkedText& x_mark)
+void MCStringsMarkTokensOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
-    MCStringsMarkTextChunkByRange(ctxt, CT_TOKEN, p_first, p_last, p_force, p_whole_chunk, x_mark);
+    MCStringsMarkTextChunkByRange(ctxt, CT_TOKEN, p_first, p_last, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
-void MCStringsMarkTokensOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, MCMarkedText& x_mark)
+void MCStringsMarkTokensOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
-    MCStringsMarkTextChunkByOrdinal(ctxt, CT_TOKEN, p_ordinal_type, p_force, p_whole_chunk, x_mark);
+    MCStringsMarkTextChunkByOrdinal(ctxt, CT_TOKEN, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
-void MCStringsMarkCharsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, MCMarkedText& x_mark)
+void MCStringsMarkCharsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
-    MCStringsMarkTextChunkByRange(ctxt, CT_CHARACTER, p_first, p_last, p_force, p_whole_chunk, x_mark);
+    MCStringsMarkTextChunkByRange(ctxt, CT_CHARACTER, p_first, p_last, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
-void MCStringsMarkCharsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, MCMarkedText& x_mark)
+void MCStringsMarkCharsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
-    MCStringsMarkTextChunkByOrdinal(ctxt, CT_CHARACTER, p_ordinal_type, p_force, p_whole_chunk, x_mark);
+    MCStringsMarkTextChunkByOrdinal(ctxt, CT_CHARACTER, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
 bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_chunk_type, uindex_t t_length, MCRange& x_range, bool p_not_first, bool& r_last)
