@@ -1075,7 +1075,8 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 		t_raster.format = kMCGRasterFormat_ARGB;
 		
 		MCGRectangle t_dst = MCGRectangleMake(t_rect.x, t_rect.y, t_raster.width, t_raster.height);
-		MCGContextDrawPixels(p_context, t_raster, t_dst, kMCGImageFilterNearest);
+		// MM-2013-12-16: [[ Bug 11567 ]] Use bilinear filter when drawing theme elements.
+		MCGContextDrawPixels(p_context, t_raster, t_dst, kMCGImageFilterBilinear);
 	}
 	
 	if (t_colorspace != nil)
