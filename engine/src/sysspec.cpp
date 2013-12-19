@@ -136,12 +136,8 @@ void MCS_init(void)
 	signal(SIGFPE, handle_signal);
     
 #endif // _SERVER
-    
-#if defined(_SERVER) || defined(_MOBILE)
+
 	MCS_common_init();
-#else
-    MCsystem -> Initialize();
-#endif
 }
 
 void MCS_shutdown(void)
