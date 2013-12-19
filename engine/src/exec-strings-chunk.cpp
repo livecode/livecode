@@ -262,12 +262,12 @@ void MCStringsGetExtentsByExpression(MCExecContext& ctxt, Chunk_term p_chunk_typ
 void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_chunk_type, integer_t p_first, integer_t p_count, integer_t& r_start, integer_t& r_end, bool p_whole_chunk, bool p_further_chunks, bool p_include_chars, integer_t& r_add)
 {
     r_add = 0;
-    if (p_count == 0)
+    /*if (p_count == 0)
     {
         r_start = 0;
         r_end = 0;
         return;
-    }
+    }*/
     
     uindex_t t_length = MCStringGetLength(p_string);
     

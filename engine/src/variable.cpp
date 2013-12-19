@@ -1338,10 +1338,10 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer*& r_container)
 
 					for(uindex_t t_index = 1; t_index <= t_length; t_index += 1)
                     {
-                        MCAutoValueRef t_value_fetched;
-                        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, t_index, &t_value_fetched);
+                        MCValueRef t_value_fetched;
+                        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, t_index, t_value_fetched);
 
-                        if (!ctxt . ConvertToName(*t_value_fetched, t_path[t_path_length++]))
+                        if (!ctxt . ConvertToName(t_value_fetched, t_path[t_path_length++]))
                         {
                             ctxt . LegacyThrow(EE_VARIABLE_BADINDEX);
 							break;
