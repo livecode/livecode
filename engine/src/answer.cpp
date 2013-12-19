@@ -292,7 +292,7 @@ Parse_errors MCAnswer::parse_notify(MCScriptPoint& sp)
 void MCAnswer::exec_ctxt(MCExecContext& ctxt)
 {
 	MCAutoStringRef t_title;
-    if (!ctxt . EvalOptionalExprAsNullableStringRef(title, EE_ANSWER_BADTITLE, &t_title))
+    if (!ctxt . EvalOptionalExprAsStringRef(title, kMCEmptyString, EE_ANSWER_BADTITLE, &t_title))
         return;
         
     switch(mode)
@@ -330,11 +330,11 @@ void MCAnswer::exec_ctxt(MCExecContext& ctxt)
 		{
 			MCAutoStringRef t_prompt, t_initial, t_filter;
 			MCAutoStringRefArray t_types;
-            if (!ctxt . EvalOptionalExprAsNullableStringRef(file.prompt, EE_ANSWER_BADQUESTION, &t_prompt))
+            if (!ctxt . EvalOptionalExprAsStringRef(file.prompt, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_prompt))
                 return;
-			if (!ctxt . EvalOptionalExprAsNullableStringRef(file.initial, EE_ANSWER_BADQUESTION, &t_initial))
+			if (!ctxt . EvalOptionalExprAsStringRef(file.initial, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_initial))
                 return;
-			if (!ctxt . EvalOptionalExprAsNullableStringRef(file.filter, EE_ANSWER_BADQUESTION, &t_filter))
+			if (!ctxt . EvalOptionalExprAsStringRef(file.filter, kMCEmptyString, EE_ANSWER_BADQUESTION, &t_filter))
                 return;
             
             /* UNCHECKED */ t_types.Extend(file.type_count);
