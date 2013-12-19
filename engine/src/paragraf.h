@@ -674,6 +674,9 @@ public:
 	//   MCHcfield::buildf
 	void setatts(uint2 si, uint2 ei, Properties which, void *value, bool from_html = false);
 
+	void restricttoline(int32_t& si, int32_t& ei);
+	int32_t heightoflinewithindex(int32_t si, uint2 fixedheight);
+	
 	uint2 getopened()
 	{
 		return opened;

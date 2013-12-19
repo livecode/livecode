@@ -279,6 +279,10 @@ void MCScreenDC::closewindow(Window w)
 
 void MCScreenDC::destroywindow(Window &w)
 {
+	NSObject *t_delegate;
+	t_delegate = [(NSWindow *)w delegate];
+	[(NSWindow *)w setDelegate: nil];
+	[t_delegate release];
 	[(NSWindow *)w release];
 	w = nil;
 	

@@ -45,8 +45,11 @@
 #include "osxprinter.h"
 #include "resolution.h"
 
+#include <Cocoa/Cocoa.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef OLD_MAC
 //for displaying and building MAC menus, wihich includes hierachical menu
 
 #define MAX_SUBMENU_DEPTH  31    //for Hierachical menus
@@ -60,11 +63,124 @@
 #define MAIN_MENU_FIRST_ID 2
 
 uint2 MCScreenDC::submenuIDs[SUB_MENU_LAST_ID];
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+@interface com_runrev_livecode_MCCocoaMenuDelegate: NSObject<NSMenuDelegate>
+
+- (void)menuWillOpen: (NSMenu *)menu;
+
+- (void)menuItemSelected: (id)sender;
+
+@end
+
+// This structure holds info about each currently set main menu.
+struct MCCocoaMainMenuInfo
+{
+	NSMenuItem *menu_item;
+	MCObjectHandle *target;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+// This is the delegate that is used to capture the 'willOpen' event.
+static com_runrev_livecode_MCCocoaMenuDelegate *s_menu_delegate = nil;
+
+// This is the sequence of menus that are currently installed in the menubar.
+static MCCocoaMainMenuInfo *s_menubar = nil;
+static uindex_t s_menubar_size = 0;
+
+////////////////////////////////////////////////////////////////////////////////
+
+@implementation com_runrev_livecode_MCCocoaMenuDelegate
+
+- (void)menuNeedsUpdate: (NSMenu *)menu
+{	
+	if ([menu supermenu] == [NSApp mainMenu])
+	{
+		NSMenuItem *t_menu_item;
+		t_menu_item = [[NSApp mainMenu] itemAtIndex: [[NSApp mainMenu] indexOfItemWithSubmenu: menu]];
+		
+		NSInteger t_tag;
+		t_tag = [t_menu_item tag];
+		
+		if (t_tag != 0)
+		{
+			// Remember to adjust the tag by -1 since the app menu is tag 0.
+			MCObjectHandle *t_target;
+			t_target = s_menubar[t_tag - 1] . target;
+			
+			//
+			// COCOA-TODO: Only dispatch if we are not in a blocking wait
+			if (t_target -> Exists())
+				t_target -> Get() -> message_with_args(MCM_mouse_down, "");
+			///* UNCHECKED */ MCEventQueuePostUpdateMenu(t_target);
+		}
+		else
+		{
+			// COCOA-TODO: Handle app menu.
+		}
+	}
+	else
+	{
+		// COCOA-TODO: Other menu types.
+	}
+}
+
+- (void)menuWillOpen: (NSMenu *)menu
+{
+}
+
+- (void)menuItemSelected: (id)sender
+{
+	NSMenuItem *t_item;
+	t_item = (NSMenuItem *)sender;
+	
+	NSMutableString *t_pick;
+	t_pick = [[NSMutableString alloc] init];
+	[t_pick insertString: [t_item representedObject] atIndex: 0];
+	for(;;)
+	{
+		NSMenuItem *t_parent_item;
+		t_parent_item = [t_item parentItem];
+		
+		// If the parent item's menu is the main menu, we are done.
+		if ([t_parent_item menu] == [NSApp mainMenu])
+			break;
+		
+		[t_pick insertString: @"|" atIndex: 0];
+		[t_pick insertString: [t_parent_item representedObject] atIndex: 0];
+		
+		t_item = t_parent_item;
+	}
+	
+	NSInteger t_tag;
+	t_tag = [[t_item parentItem] tag];
+	
+	if (t_tag != 0)
+		MCEventQueuePostMenuPick(s_menubar[t_tag - 1] . target, [t_pick cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+	
+	[t_pick release];
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////
+
+static NSString *nsstring_from_mcstring(const MCString& p_string, bool p_is_unicode)
+{
+	if (p_is_unicode)
+		return [NSString stringWithCharacters: (const unichar *)p_string . getstring() length: p_string . getlength() / 2];
+
+	return [[[NSString alloc] initWithBytes: p_string . getstring() length: p_string . getlength() encoding: NSMacOSRomanStringEncoding] autorelease];
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCScreenDC::open_menus(void)
 {
+#if OLD_MAC
 	//get handle of application menu bar
 	menuBar = GetMenuBar();
 	SetMenuBar(menuBar);  //set menu bar as current menulist
@@ -80,9 +196,362 @@ void MCScreenDC::open_menus(void)
 	submenuIDs[0] = 1;
 	submenuIDs[checkMark] = 1;
 	submenuIDs[diamondMark] = 1;
+#endif
+	
+	
+	// Initialize the application menu (which is always index 0). The application
+	// menu has structure:
+	//
+	//     About <app name>
+	//     ----
+	//     Preferences... / Apple-,
+	//     ----
+	//     Services
+	//     ----
+	//     Hide <app name> / Apple-H
+	//     Hide Others     / Opt-Apple-H
+	//     Show All
+	//     ----
+	//     Quit <app name> / Apple-Q
+	//
+	
+	// COCOA-TODO: Fetch name from bundle (?)
+	NSString *t_app_name;
+	t_app_name = [[NSProcessInfo processInfo] processName];
+	
+	NSMenu *t_app_menu;
+	t_app_menu = [[NSMenu alloc] initWithTitle: t_app_name];
+	[t_app_menu addItemWithTitle: [@"Quit " stringByAppendingString: t_app_name] action: @selector(terminate:) keyEquivalent:@"q"];
+	
+	NSMenuItem *t_app_menu_item;
+	t_app_menu_item = [[NSMenuItem alloc] initWithTitle: t_app_name action: nil keyEquivalent: @""];
+	[t_app_menu_item setSubmenu: t_app_menu];
+	[t_app_menu release];
+	 
+	NSMenu *t_menubar;
+	t_menubar = [[NSMenu alloc] initWithTitle: @""];
+	[t_menubar addItem: t_app_menu_item];
+	[t_app_menu_item release];
+	
+	[NSApp setMainMenu: t_menubar];
+	[t_menubar release];
+	
+	// Create the delegate.
+	s_menu_delegate = [[com_runrev_livecode_MCCocoaMenuDelegate alloc] init];
 }
 
 void MCScreenDC::close_menus(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCCocoaMenuCallback: public IParseMenuCallback
+{
+	NSMenu *m_root_menu;
+	
+	NSMenu **m_menus;
+	uindex_t m_menu_depth;
+	
+public:
+	MCCocoaMenuCallback(NSMenu *p_root_menu)
+	{
+		m_root_menu = p_root_menu;
+		m_menus = nil;
+		m_menu_depth = 0;
+	}
+	
+	~MCCocoaMenuCallback(void)
+	{
+		assert(m_menu_depth == 0);
+		MCMemoryDeleteArray(m_menus);
+	}
+	
+	NSMenu *TopMenu(void)
+	{
+		return m_menus[m_menu_depth - 1];
+	}
+	
+	// This method takes ownership of the menu.
+	void PushMenu(NSMenu *p_menu)
+	{
+		/* UNCHECKED */ MCMemoryResizeArray(m_menu_depth + 1, m_menus, m_menu_depth);
+		m_menus[m_menu_depth - 1] = p_menu;;
+	}
+	
+	void PushNewMenu(void)
+	{
+		NSMenu *t_menu;
+		t_menu = [[NSMenu alloc] init];
+		
+		// If we have a menu already, then we have some work to do.
+		if (m_menu_depth > 0)
+		{
+			NSMenu *t_top_menu;
+			t_top_menu = TopMenu();
+			// If the top-most menu has no items, add an empty one.
+			if ([t_top_menu numberOfItems] == 0)
+				[t_top_menu addItemWithTitle: @"" action: nil keyEquivalent: @""];
+			
+			// Set the last item's submenu.
+			[[t_top_menu itemAtIndex: [t_top_menu numberOfItems] - 1] setSubmenu: t_menu];
+		}
+		
+		// Push the menu on the stack.
+		PushMenu(t_menu);
+	}
+	
+	void PopMenu(void)
+	{
+		[m_menus[m_menu_depth - 1] release];
+		m_menu_depth -= 1;
+	}
+	
+	virtual bool Start(void)
+	{
+		PushMenu([m_root_menu retain]);
+		
+		return true;
+	}
+	
+	virtual bool ProcessItem(MCMenuItem *p_menuitem)
+	{
+		// Make sure the depth of menus we are at is the same as the menuitem.
+		while(p_menuitem -> depth > m_menu_depth - 1)
+			PushNewMenu();
+		while(p_menuitem -> depth < m_menu_depth - 1)
+			PopMenu();
+		
+		NSString *t_item_title;
+		t_item_title = nsstring_from_mcstring(p_menuitem -> label, p_menuitem -> is_unicode);
+		
+		NSMenuItem *t_item;
+		if ([t_item_title isEqualTo: @"-"])
+			t_item = [NSMenuItem separatorItem];
+		else
+		{
+			NSString *t_item_tag;
+			t_item_tag = nsstring_from_mcstring(p_menuitem -> tag, false);
+			
+			NSString *t_item_key;
+			t_item_key = @"";
+			
+			NSInteger t_item_state;
+			bool t_use_diamond;
+			t_item_state = NSOffState;
+			t_use_diamond = false;
+			if (p_menuitem -> is_hilited)
+			{
+				t_item_state = NSOnState;
+				if (p_menuitem -> is_radio)
+					t_use_diamond = true;
+			}
+			
+			t_item = [[NSMenuItem alloc] initWithTitle: t_item_title action: @selector(menuItemSelected:) keyEquivalent: t_item_key];
+			
+			[t_item setRepresentedObject: t_item_tag];
+			[t_item setEnabled: !p_menuitem -> is_disabled];
+			[t_item setState: t_item_state];
+			[t_item setTarget: s_menu_delegate];
+			if (t_use_diamond)
+				; // COCOA-TODO; use setOnStateImage to set to diamond
+		}
+		
+		// Add the item to the top menu.
+		[TopMenu() addItem: t_item];
+		
+		return true;
+	}
+	
+	virtual bool End(bool p_has_tags)
+	{
+		while(m_menu_depth > 0)
+			PopMenu();
+		
+		return true;
+	}
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCScreenDC::updatemenubar(Boolean force)
+{
+	// Original logic taken from previous port - only update the menubar if
+	// appropriate.
+	
+	MCGroup *newMenuGroup; //pointer to the menu group
+	static MCGroup *curMenuGroup = NULL; //current menu bar handle
+	if (MCdefaultmenubar == NULL)   // the menu of first stack opened becomes
+		MCdefaultmenubar = MCmenubar; // the default menu bar automatically
+	//get current menu group
+	if (MCmenubar != NULL)
+		newMenuGroup = MCmenubar;
+	else
+		newMenuGroup = MCdefaultmenubar;
+	
+	//if doesn't need update and not force update then exit
+	if (newMenuGroup == NULL || newMenuGroup == curMenuGroup && !force && !curMenuGroup->getstate(CS_NEED_UPDATE))
+		return;
+
+	// Count the number of menus.
+	uint2 t_menu_count;
+	t_menu_count = 0;
+	newMenuGroup -> count(CT_MENU, NULL, t_menu_count);
+	
+	// The index of the menu in the menubar.
+	uindex_t t_menu_index;
+	t_menu_index = 0;
+	
+	// We construct the new menubar as we go along.
+	MCCocoaMainMenuInfo *t_new_menubar;
+	uindex_t t_new_menubar_size;
+	t_new_menubar = nil;
+	t_new_menubar_size = 0;
+	
+	// Loop through and create the menuitems for the main menu. We defer creation
+	// of the menu itself until it's actually needed.
+	for(uindex_t t_menu_button_index = 0; t_menu_button_index < t_menu_count; t_menu_button_index++)
+	{
+		// Fetch the button representing the menu.
+		MCButton *t_menu_button;
+		uint2 t_menu_button_index_i;
+		t_menu_button_index_i = (uint2)t_menu_button_index;
+		t_menu_button = (MCButton *)newMenuGroup -> findnum(CT_MENU, t_menu_button_index_i);
+		if (t_menu_button == NULL)
+			break;
+		
+		// Remove any menu shortcuts for the current button.
+		MCstacks -> deleteaccelerator(t_menu_button, t_menu_button -> getstack());
+		
+		// Get the menu title.
+		MCString t_menu_title;
+		bool t_is_unicode;
+		t_menu_button -> getlabeltext(t_menu_title, t_is_unicode);
+		
+		// If the menu button is not visible, or has not title then continue.
+		if (t_menu_title . getlength() == 0 ||
+			!t_menu_button -> getflag(F_VISIBLE))
+			continue;
+		
+		// Extend the new menubar by one menu.
+		/* UNCHECKED */ MCMemoryResizeArray(t_new_menubar_size + 1, t_new_menubar, t_new_menubar_size);
+		
+		// Convert the title to a string
+		NSString *t_menu_title_string;
+		t_menu_title_string = nsstring_from_mcstring(t_menu_title, t_is_unicode);
+		
+		// COCOA-TODO: Change to using object handles for search.
+		
+		// See if we have an existing menu with the same title.
+		uindex_t t_old_menu_index;
+		for(t_old_menu_index = 0; t_old_menu_index < s_menubar_size; t_old_menu_index++)
+			if ([[s_menubar[t_old_menu_index] . menu_item title] isEqualTo: t_menu_title_string])
+				break;
+		
+		NSMenuItem *t_menubar_item;
+		if (t_old_menu_index == s_menubar_size)
+		{
+			// We didn't find an existing menu, so make one.
+			NSMenu *t_menubar_menu;
+			t_menubar_item = [[NSMenuItem allocWithZone: [NSMenu menuZone]] initWithTitle: t_menu_title_string action: NULL keyEquivalent: @""];
+			t_menubar_menu = [[NSMenu allocWithZone: [NSMenu menuZone]] initWithTitle: t_menu_title_string];
+			[t_menubar_menu setDelegate: s_menu_delegate];
+			[t_menubar_menu setAutoenablesItems: NO];
+			[t_menubar_item setSubmenu: t_menubar_menu];
+			[t_menubar_menu release];
+		}
+		else
+		{
+			// We found an existing menu, so take it.
+			t_menubar_item = s_menubar[t_old_menu_index] . menu_item;
+			s_menubar[t_old_menu_index] . menu_item = nil;
+			s_menubar[t_old_menu_index] . target -> Release();
+			s_menubar[t_old_menu_index] . target = nil;
+		}
+		
+		// Now we have a menu to populate, do so - first remove all the existing
+		// items, and then repopulate.
+		[[t_menubar_item submenu] removeAllItems];
+		
+		MCCocoaMenuCallback t_callback([t_menubar_item submenu]);
+		MCString t_menu_string;
+		t_menu_button -> getmenustring(t_menu_string);
+		MCParseMenuString(t_menu_string, &t_callback, t_menu_button -> hasunicode(), WM_PULLDOWN);
+		
+		if (t_menu_button -> isdisabled())
+			[t_menubar_item setEnabled: NO];
+		
+		// Set the tag of the menu.
+		[t_menubar_item setTag: t_menu_index + 1];
+		
+		t_new_menubar[t_menu_index] . menu_item = t_menubar_item;
+		t_new_menubar[t_menu_index] . target = t_menu_button -> gethandle();
+		
+		t_menu_index++;
+	}
+	
+	// Remove all deleted menus from the menubar.
+	for(uindex_t i = 0; i < s_menubar_size; i++)
+	{
+		// Skip reused menus.
+		if (s_menubar[i] . menu_item == nil)
+			continue;
+		
+		// Remove the item from the mainMenu.
+		[[NSApp mainMenu] removeItem: s_menubar[i] . menu_item];
+		
+		// Release the item.
+		[s_menubar[i] . menu_item release];
+		s_menubar[i] . target -> Release();
+		
+		// Clear the location for cleanliness.
+		s_menubar[i] . menu_item = nil;
+		s_menubar[i] . target = nil;
+	}
+	
+	// Now make sure all the menus are in the right order. Note that the
+	// application menu is index 0, so user menus start at index 1.
+	for(uindex_t i = 0; i < t_new_menubar_size; i++)
+	{
+		// Get the index of the item in the menubar.
+		NSInteger t_existing_index;
+		t_existing_index = [[NSApp mainMenu] indexOfItem: t_new_menubar[i] . menu_item];
+		
+		// If the item is already in the correct place, do nothing.
+		if (t_existing_index != i + 1)
+		{		
+			if ([[NSApp mainMenu] numberOfItems] == 0)
+				[[NSApp mainMenu] addItem: t_new_menubar[i] . menu_item];
+			else
+				[[NSApp mainMenu] insertItem: t_new_menubar[i] . menu_item atIndex: i + 1];
+		}
+
+		[[t_new_menubar[i] . menu_item submenu] update];
+	}
+	
+	// Finally release the old menubar array and update the mainmenu.
+	MCMemoryDeleteArray(s_menubar);
+	
+	s_menubar = t_new_menubar;
+	s_menubar_size = t_new_menubar_size;
+	
+	[[NSApp mainMenu] update];
+}
+
+void MCButton::macopenmenu(void)
+{
+}
+
+void MCButton::macfreemenu(void)
+{
+}
+
+Bool MCButton::macfindmenu(bool p_just_for_accel)
+{
+	return False;
+}
+
+void MCButton::getmacmenuitemtextfromaccelerator(short menuid, uint2 key, uint1 mods, MCString &s, bool isunicode, bool issubmenu)
 {
 }
 
@@ -133,6 +602,7 @@ static KeyGlyph key_glyphs[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if 0
 static void domenu(short menu, short item)
 {
 	MenuHandle mhandle = GetMenuHandle(menu);
@@ -1230,5 +1700,6 @@ void MCButton::getmacmenuitemtextfromaccelerator(short menuid, uint2 key, uint1 
 {
 	::getmacmenuitemtextfromaccelerator(GetMenu(menuid), key, mods, s, isunicode, issubmenu);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////

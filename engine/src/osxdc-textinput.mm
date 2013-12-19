@@ -44,6 +44,8 @@
 #include "osxprinter.h"
 #include "resolution.h"
 
+#include <Cocoa/Cocoa.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 TSMDocumentID MCScreenDC::tsmdocument = 0;
@@ -56,6 +58,7 @@ AEEventHandlerUPP MCScreenDC::TSMUnicodeNotFromInputUPP;
 
 void MCScreenDC::open_textinput(void)
 {
+#ifdef OLD_MAC
 	//TSM - INIT TSM APPLICATION AND INSTALL REQUIRED APPLEVENT HANDLERS
 	TSMPositionToOffsetUPP = NewAEEventHandlerUPP(TSMPositionToOffset);
 	TSMOffsetToPositionUPP = NewAEEventHandlerUPP(TSMOffsetToPosition);
@@ -71,10 +74,12 @@ void MCScreenDC::open_textinput(void)
 	AEInstallEventHandler(kTextServiceClass, kUnicodeNotFromInputMethod,
 	                      TSMUnicodeNotFromInputUPP, 0L , False);
 	openIME();
+#endif
 }
 
 void MCScreenDC::close_textinput(void)
 {
+#ifdef OLD_MAC
 	//TSM - closes down TSM for this app and removes appleevents
 	AERemoveEventHandler(kTextServiceClass, kPos2Offset,
 	                     TSMPositionToOffsetUPP, False);
@@ -89,12 +94,14 @@ void MCScreenDC::close_textinput(void)
 	DisposeAEEventHandlerUPP(TSMUpdateHandlerUPP);
 	DisposeAEEventHandlerUPP(TSMUnicodeNotFromInputUPP);
 	closeIME();
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCScreenDC::openIME()
 {
+#ifdef OLD_MAC
 	if (tsmdocument)
 		return;
 	InterfaceTypeList supportedTypes;
@@ -103,10 +110,12 @@ void MCScreenDC::openIME()
 	else
 		supportedTypes[0] = kTextService;
 	NewTSMDocument(1, supportedTypes, &tsmdocument, NULL);
+#endif
 }
 
 void MCScreenDC::activateIME(Boolean activate)
 {
+#ifdef OLD_MAC
 	if (tsmdocument)
 	{
 		if (activate)
@@ -117,21 +126,29 @@ void MCScreenDC::activateIME(Boolean activate)
 		else
 			DeactivateTSMDocument(tsmdocument);
 	}
+#endif
+	[[(NSWindow *)(MCactivefield -> getstack() -> getwindow()) contentView] setUseInputMethod: activate == True];
 }
 
 void MCScreenDC::clearIME(Window w)
 {
+#ifdef OLD_MAC
 	if (tsmdocument)
 		FixTSMDocument(tsmdocument);
+#endif
+	[[[(NSWindow *)(MCactivefield -> getstack() -> getwindow()) contentView] inputContext] discardMarkedText];
 }
 
 void MCScreenDC::closeIME()
 {
+#ifdef OLD_MAC
 	if (!tsmdocument)
 		return;
 	DeleteTSMDocument(tsmdocument);
 	tsmdocument = 0;
+#endif
 }
+
 pascal  OSErr TSMOffsetToPosition(const AppleEvent *theAppleEvent,
                                   AppleEvent *reply, long handlerRefcon)
 {

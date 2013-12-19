@@ -192,9 +192,9 @@ class MCScreenDC : public MCUIDC
 	Boolean menuBarHidden; //flag to indicat is the menu bar is hidden
 	static uint2 ink_table_m[];
 	static uint2 ink_table_c[];
-#endif
 	Handle menuBar;	 //Handle to menu for the entire MC app
 	MenuHandle appleMenu;  //handle to Apple menu
+#endif
 	WindowPtr invisibleWin;
 #if OLD_MAC
 	Boolean bgmode;
@@ -552,7 +552,7 @@ private:
 	
 	//////////
 	
-	bool collectevent(double p_max_wait);
+	bool collectevent(double p_max_wait, bool p_no_dispatch);
 	
 	//////////
 	

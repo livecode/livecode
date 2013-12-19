@@ -381,6 +381,7 @@ public:
 	
 	// IM-2013-10-10: [[ FullscreenMode ]] Reconfigure view after window rect changes
 	void view_configure(bool p_user);
+	void view_configure_with_rect(bool p_user, MCRectangle rect);
 	
 	// IM-2013-10-10: [[ FullscreenMode ]] Update the on-screen bounds of the view
 	void view_setrect(const MCRectangle &p_new_rect);

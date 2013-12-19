@@ -380,10 +380,14 @@ void MCStack::view_configure(bool p_user)
 {
 	MCRectangle t_view_rect;
 	mode_getrealrect(t_view_rect);
-	
-	if (!MCU_equal_rect(t_view_rect, m_view_rect))
+	view_configure_with_rect(p_user, t_view_rect);
+}
+
+void MCStack::view_configure_with_rect(bool p_user, MCRectangle p_view_rect)
+{
+	if (!MCU_equal_rect(p_view_rect, m_view_rect))
 	{
-		m_view_rect = t_view_rect;
+		m_view_rect = p_view_rect;
 		view_on_rect_changed();
 	}
 	configure(p_user);

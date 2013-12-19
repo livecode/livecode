@@ -19,10 +19,33 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface com_runrev_livecode_MCStackView: NSView
+@interface com_runrev_livecode_MCStackWindowDelegate: NSObject<NSWindowDelegate>
+{
+	MCStack *m_stack;
+}
+
+- (id)init;
+- (void)dealloc;
+
+- (void)setStack: (MCStack *)stack;
+- (MCStack *)stack;
+
+- (NSSize)windowWillResize: (NSWindow *)window toSize: (NSSize)frameSize;
+- (void)windowDidMove: (NSNotification *)notification;
+- (void)windowDidMiniaturize: (NSNotification *)notification;
+- (void)windowDidDeminiaturize: (NSNotification *)notification;
+- (void)windowShouldClose: (id)sender;
+- (void)windowDidBecomeKey: (NSNotification *)notification;
+- (void)windowDidResignKey: (NSNotification *)notification;
+
+@end
+
+@interface com_runrev_livecode_MCStackView: NSView<NSTextInputClient>
 {
 	MCStack *m_stack;
 	NSTrackingArea *m_tracking_area;
+	
+	bool m_use_input_method : 1;
 }
 
 - (id)initWithFrame:(NSRect)frameRect;
@@ -31,7 +54,9 @@
 - (void)updateTrackingAreas;
 
 - (BOOL)isFlipped;
+
 - (BOOL)acceptsFirstMouse:(NSEvent *)theEvent;
+- (BOOL)acceptsFirstResponder;
 
 - (void)mouseDown: (NSEvent *)event;
 - (void)mouseUp: (NSEvent *)event;
@@ -58,6 +83,23 @@
 
 //////////
 
+- (void)insertText:(id)aString replacementRange:(NSRange)replacementRange;
+- (void)doCommandBySelector:(SEL)aSelector;
+- (void)setMarkedText:(id)aString selectedRange:(NSRange)selectedRange replacementRange:(NSRange)replacementRange;
+- (void)unmarkText;
+- (NSRange)selectedRange;
+- (NSRange)markedRange;
+- (BOOL)hasMarkedText;
+- (NSAttributedString *)attributedSubstringForProposedRange:(NSRange)aRange actualRange:(NSRangePointer)actualRange;
+- (NSArray*)validAttributesForMarkedText;
+- (NSRect)firstRectForCharacterRange:(NSRange)aRange actualRange:(NSRangePointer)actualRange;
+- (NSUInteger)characterIndexForPoint:(NSPoint)aPoint;
+
+//////////
+
+- (void)setUseInputMethod: (BOOL)shouldUse;
+- (BOOL)useInputMethod;
+
 - (void)setStack: (MCStack *)stack;
 - (MCStack *)stack;
 
@@ -73,6 +115,8 @@
 
 - (MCPoint)localToGlobal: (MCPoint)location;
 - (MCPoint)globalToLocal: (MCPoint)location;
+- (MCRectangle)localRectToGlobal: (MCRectangle)location;
+- (MCRectangle)globalRectToLocal: (MCRectangle)location;
 - (MCStack *)stack;
 
 @end
@@ -81,8 +125,8 @@ MCPoint NSPointToMCPointGlobal(NSPoint p);
 NSPoint NSPointFromMCPointGlobal(MCPoint p);
 MCPoint NSPointToMCPointLocal(NSView *view, NSPoint p);
 NSPoint NSPointFromMCPointLocal(NSView *view, MCPoint p);
-NSRect NSRectFromMCRectangleLocal(MCRectangle r);
-MCRectangle NSRectToMCRectangleLocal(NSRect r);
+NSRect NSRectFromMCRectangleLocal(NSView *view, MCRectangle r);
+MCRectangle NSRectToMCRectangleLocal(NSView *view, NSRect r);
 NSRect NSRectFromMCRectangleGlobal(MCRectangle r);
 MCRectangle NSRectToMCRectangleGlobal(NSRect r);
 

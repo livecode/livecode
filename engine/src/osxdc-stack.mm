@@ -100,14 +100,14 @@ NSPoint NSPointFromMCPointLocal(NSView *view, MCPoint p)
 	return r;
 }
 
-NSRect NSRectFromMCRectangleLocal(MCRectangle r)
+NSRect NSRectFromMCRectangleLocal(NSView *view, MCRectangle r)
 {
-	return NSMakeRect(r . x, r . y, r . width, r . height);
+	return NSMakeRect(r . x, [view bounds] . size . height - (r . y + r . height), r . width, r . height);
 }
 
-MCRectangle NSRectToMCRectangleLocal(NSRect r)
+MCRectangle NSRectToMCRectangleLocal(NSView *view, NSRect r)
 {
-	return MCU_make_rect(r . origin . x, r . origin . y, r . size . width, r . size . height);
+	return MCU_make_rect(r . origin . x, [view bounds] . size . height - (r . origin . y + r . size . height), r . size . width, r . size . height);
 }
 
 NSRect NSRectFromMCRectangleGlobal(MCRectangle r)
@@ -458,6 +458,86 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@implementation com_runrev_livecode_MCStackWindowDelegate
+
+- (id)init
+{
+	m_stack = nil;
+}
+
+- (void)dealloc
+{
+	[super dealloc];
+}
+
+- (void)setStack: (MCStack *)stack
+{
+	m_stack = stack;
+}
+
+- (MCStack *)stack
+{
+	return m_stack;
+}
+
+- (NSSize)windowWillResize: (NSWindow *)window toSize: (NSSize)frameSize
+{
+/*	if (m_stack == nil)
+		return frameSize;
+	
+	NSRect t_frame;
+	t_frame = [window frame];
+	t_frame . size = frameSize;
+	
+	NSRect t_content;
+	t_content = [window contentRectForFrameRect: t_frame];
+	
+	MCRectangle t_rect;
+	t_rect = m_stack -> getrect();
+	t_rect . width = t_content . size . width;
+	t_rect . height = t_content . size . height;
+	
+	m_stack -> view_configure_with_rect(true, t_rect);*/
+	return frameSize;
+}
+
+- (void)windowDidMove: (NSNotification *)notification
+{
+	if (m_stack == nil)
+		return;
+	/* UNCHECKED */ MCEventQueuePostWindowReshape(m_stack);
+}
+
+- (void)windowDidMiniaturize: (NSNotification *)notification
+{
+}
+
+- (void)windowDidDeminiaturize: (NSNotification *)notification
+{
+}
+
+- (void)windowShouldClose: (id)sender
+{
+}
+
+- (void)windowDidBecomeKey: (NSNotification *)notification
+{
+	if (m_stack == nil)
+		return;
+	
+	/* UNCHECKED */ MCEventQueuePostKeyFocus(m_stack, true);
+}
+
+- (void)windowDidResignKey: (NSNotification *)notification
+{
+	if (m_stack == nil)
+		return;
+	
+	/* UNCHECKED */ MCEventQueuePostKeyFocus(m_stack, false);
+}
+
+@end
+
 @implementation com_runrev_livecode_MCStackView
 
 - (id)initWithFrame:(NSRect)frameRect
@@ -468,6 +548,9 @@ public:
 	
 	m_stack = nil;
 	m_tracking_area = nil;
+	m_use_input_method = false;
+	
+	return self;
 }
 
 - (void)dealloc
@@ -475,6 +558,28 @@ public:
 	[m_tracking_area release];
 	[super dealloc];
 }
+
+- (void)setStack: (MCStack *)stack
+{
+	m_stack = stack;
+}
+
+- (MCStack *)stack
+{
+	return m_stack;
+}
+
+- (void)setUseInputMethod: (BOOL)useInputMethod
+{
+	m_use_input_method = (useInputMethod == YES);
+}
+
+- (BOOL)useInputMethod
+{
+	return m_use_input_method;
+}
+
+//////////
 
 - (void)updateTrackingAreas
 {
@@ -501,22 +606,27 @@ public:
 	[self addTrackingArea: m_tracking_area];
 }
 
-- (void)setStack: (MCStack *)stack
-{
-	m_stack = stack;
-}
-
-- (MCStack *)stack
-{
-	return m_stack;
-}
-
 - (BOOL)isFlipped
 {
 	return NO;
 }
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)theEvent
+{
+	return YES;
+}
+
+- (BOOL)acceptsFirstResponder
+{
+	return YES;
+}
+
+- (BOOL)becomeFirstResponder
+{
+	return YES;
+}
+
+- (BOOL)resignFirstResponder
 {
 	return YES;
 }
@@ -598,12 +708,45 @@ public:
 
 - (void)keyDown: (NSEvent *)event
 {
-	[super keyDown: event];
+	if (m_use_input_method)
+	{
+		if ([[self inputContext] handleEvent: event])
+			return;
+	}
+	
+	[self handleKeyPress: event pressed: YES];
 }
 
 - (void)keyUp: (NSEvent *)event
 {
-	[super keyUp: event];
+#if NOT_USED
+	if (m_use_input_method)
+	{
+		if ([[self inputContext] handleEvent: event])
+			return;
+	}
+	
+	[self handleKeyPress: event pressed: NO];
+#endif
+}
+
+- (void)setFrameSize: (NSSize)size
+{
+	[super setFrameSize: size];
+	
+	if (m_stack == nil)
+		return;
+	
+	MCRectangle t_rect;
+	t_rect = m_stack -> getrect();
+	t_rect . width = size . width;
+	t_rect . height = size . height;
+	
+	// COCOA-TODO: Only dispatch if we are not in a blocking wait
+	m_stack -> view_configure_with_rect(true, t_rect);
+	
+	if ([[self window] inLiveResize])
+		[NSApp stop: self];
 }
 
 // COCOA-TODO: Improve dirty rect calc
@@ -617,7 +760,7 @@ public:
 	
 	MCRegionRef t_dirty_rgn;
 	MCRegionCreate(t_dirty_rgn);
-	MCRegionSetRect(t_dirty_rgn, NSRectToMCRectangleLocal(dirtyRect));
+	MCRegionSetRect(t_dirty_rgn, NSRectToMCRectangleLocal(self, dirtyRect));
 	
 	// IM-2013-08-23: [[ ResIndependence ]] provide surface height in device scale
 	MCGFloat t_scale;
@@ -644,6 +787,186 @@ public:
 	
 	// Restore the context state
 	CGContextRestoreGState(t_graphics);
+}
+
+//////////
+
+- (void)insertText:(id)aString replacementRange:(NSRange)replacementRange
+{
+	MCLog("insertText('', (%d, %d))", replacementRange . location, replacementRange . length);
+	if (replacementRange . location == NSNotFound)
+	{
+		NSRange t_marked_range;
+		t_marked_range = [self markedRange];
+		if (t_marked_range . location != NSNotFound)
+			replacementRange = t_marked_range;
+		else
+			replacementRange = [self selectedRange];
+	}
+	
+	int32_t si, ei;
+	si = 0;
+	ei = INT32_MAX;
+	MCactivefield -> resolvechars(0, si, ei, replacementRange . location, replacementRange . length);
+	
+	NSString *t_string;
+	if ([aString isKindOfClass: [NSAttributedString class]])
+		t_string = [aString string];
+	else
+		t_string = aString;
+	
+	NSUInteger t_length;
+	t_length = [t_string length];
+	
+	unichar *t_chars;
+	t_chars = new unichar[t_length];
+	
+	[t_string getCharacters: t_chars range: NSMakeRange(0, t_length)];
+	
+	MCactivefield -> settextindex(0,
+								  si,
+								  ei,
+								  MCString((char *)t_chars, t_length * 2),
+								  True,
+								  true);
+    
+	delete t_chars;
+	
+	[self unmarkText];
+	[[self inputContext] invalidateCharacterCoordinates];
+}
+
+- (void)doCommandBySelector:(SEL)aSelector
+{
+	MCLog("doCommandBySelector:", 0);
+}
+
+- (void)setMarkedText:(id)aString selectedRange:(NSRange)newSelection replacementRange:(NSRange)replacementRange
+{
+	MCLog("setMarkedText('', (%d, %d), (%d, %d)", newSelection . location, newSelection . length, replacementRange . location, replacementRange . length);
+	
+	/*if (replacementRange . location == NSNotFound)
+	{
+		NSRange t_marked_range;
+		t_marked_range = [self markedRange];
+		if (t_marked_range . location != NSNotFound)
+			replacementRange = t_marked_range;
+		else
+			replacementRange = [self selectedRange];
+	}
+	
+	int32_t si, ei;
+	si = ei = 0;
+	MCactivefield -> resolvechars(0, si, ei, replacementRange . location, replacementRange . length);
+	
+	NSString *t_string;
+	if ([aString isKindOfClass: [NSAttributedString class]])
+		t_string = [aString string];
+	else
+		t_string = aString;
+	
+	NSUInteger t_length;
+	t_length = [t_string length];
+	
+	unichar *t_chars;
+	t_chars = new unichar[t_length];
+	
+	[t_string getCharacters: t_chars range: NSMakeRange(0, t_length)];
+	
+	MCactivefield -> stopcomposition(True, False);
+	
+	if ([t_string length] == 0)
+		[self unmarkText];
+	else
+	{
+		MCactivefield -> startcomposition();
+		MCactivefield -> finsertnew(FT_IMEINSERT, MCString((char *)t_chars, t_length * 2), 0, true);
+	}
+	
+	MCactivefield -> seltext(replacementRange . location + newSelection . location,
+							 replacementRange . location + newSelection . location + newSelection . length,
+							 False);
+	
+	[[self inputContext] invalidateCharacterCoordinates];*/
+}
+
+- (void)unmarkText
+{
+	MCLog("unmarkText", 0);
+	MCactivefield -> stopcomposition(False, False);
+	[[self inputContext] discardMarkedText];
+}
+
+- (NSRange)selectedRange
+{
+	if (MCactivefield == nil)
+		return NSMakeRange(NSNotFound, 0);
+	
+	int4 si, ei;
+	MCactivefield -> selectedmark(False, si, ei, False, False);
+	MCLog("selectedRange() = (%d, %d)", si, ei - si);
+	return NSMakeRange(si, ei - si);
+}
+
+- (NSRange)markedRange
+{
+	int4 si, ei;
+	if (MCactivefield -> getcompositionrange(si, ei))
+		return NSMakeRange(si, ei - si);
+	return NSMakeRange(NSNotFound, 0);
+}
+
+- (BOOL)hasMarkedText
+{
+	MCLog("hasMarkedText", 0);
+	return [self markedRange] . location != NSNotFound;
+}
+
+- (NSAttributedString *)attributedSubstringForProposedRange:(NSRange)aRange actualRange:(NSRangePointer)actualRange
+{
+	MCLog("attributedSubstringForProposedRange(%d, %d -> %d, %d) = '%s'", aRange . location, aRange . length, 0, 0, "");
+	
+	
+	
+	return NULL;
+}
+
+- (NSArray*)validAttributesForMarkedText
+{
+	MCLog("validAttributesForMarkedText() = []", nil);
+	return [NSArray array];
+}
+
+- (NSRect)firstRectForCharacterRange:(NSRange)aRange actualRange:(NSRangePointer)actualRange
+{
+	int32_t t_si, t_ei;
+	t_si = aRange . location;
+	t_ei = aRange . location + aRange . length;
+	
+	MCRectangle t_rect;
+	t_rect = MCactivefield -> firstRectForCharacterRange(t_si, t_ei);
+	
+	if (actualRange != nil)
+		*actualRange = NSMakeRange(t_si, t_ei - t_si);
+	
+	MCLog("firstRectForCharacterRange(%d, %d -> %d, %d) = %d, %d, %d, %d", aRange . location, aRange . length, t_si, t_ei - t_si, t_rect . x, t_rect . y, t_rect . width, t_rect . height);
+	
+	return NSRectFromMCRectangleGlobal([self localRectToGlobal: t_rect]);
+}
+
+- (NSUInteger)characterIndexForPoint:(NSPoint)aPoint
+{
+	MCPoint t_location;
+	t_location = [self localToGlobal: NSPointToMCPointGlobal(aPoint)];
+	
+	int32_t si, ei;
+	
+	if (!MCactivefield -> locmarkpoint(t_location, False, False, False, False, si, ei))
+		si = 0;
+	
+	MCLog("characterIndexForPoint(%d, %d) = %d", t_location . x, t_location . y, si);
+	
+	return si;
 }
 
 //////////
@@ -675,6 +998,18 @@ public:
 
 - (void)handleKeyPress: (NSEvent *)event pressed: (BOOL)pressed
 {
+	if (!pressed)
+		return;
+	
+	if (m_stack == nil)
+		return;
+	
+	uint32_t t_char_code, t_key_code;
+	t_key_code = [event keyCode];
+	if ([[event characters] length] >= 1)
+		t_char_code = [[event characters] characterAtIndex: 0];
+	
+	/* UNCHECKED */ MCEventQueuePostKeyPress(m_stack, 0, t_char_code, t_key_code);
 }
 
 @end
@@ -691,6 +1026,29 @@ public:
 	return NSPointToMCPointLocal(self, [self convertPoint: [[self window] convertScreenToBase: NSPointFromMCPointGlobal(location)] fromView: nil]);
 }
 
+- (MCRectangle)localRectToGlobal: (MCRectangle)rect
+{
+	NSRect t_win_rect;
+	t_win_rect = [self convertRect: NSRectFromMCRectangleLocal(self, rect) toView: nil];
+	
+	NSRect t_screen_rect;
+	t_screen_rect . origin = [[self window] convertBaseToScreen: t_win_rect . origin];
+	t_screen_rect . size = t_win_rect . size;
+	
+	return NSRectToMCRectangleGlobal(t_screen_rect);
+}
+
+- (MCRectangle)globalRectToLocal: (MCRectangle)rect
+{
+	NSRect t_screen_rect;
+	t_screen_rect = NSRectFromMCRectangleGlobal(rect);
+	
+	NSRect t_win_rect;
+	t_win_rect . origin = [[self window] convertScreenToBase: t_screen_rect . origin];
+	t_win_rect . size = t_screen_rect . size;
+	return NSRectToMCRectangleLocal(self, [self convertRect: t_win_rect fromView: nil]);
+}
+
 - (MCStack *)stack
 {
 	return nil;
@@ -699,6 +1057,32 @@ public:
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// We have:
+//   topLevel
+//   topLevelLocked
+//   modeless
+//   closed
+//			=> document
+//   palette => floating
+//
+//   modal => modal
+//
+//   drawer => drawer
+//
+//   sheet => sheet
+//
+// decorations & UTILITY => system
+// decorations & CLOSE
+// decorations & METAL
+// decorations & NOSHADOW
+// decorations & MINIMIZE
+// decorations & MAXIMIZE
+// decorations & LIVERESIZING
+// decorations & RESIZABLE
+
+// TITLE
+// MENU
 
 void MCStack::realize(void)
 {
@@ -713,12 +1097,112 @@ void MCStack::realize(void)
 		// Sort out name ?
 		
 		loadwindowshape();
-	
+		
+		// Compute the level of the window
+		int32_t t_window_level;
+		if (getflag(F_DECORATIONS) && (decorations & WD_UTILITY) != 0)
+			t_window_level = kCGUtilityWindowLevelKey;
+		else if (mode == WM_PALETTE)
+			t_window_level = kCGFloatingWindowLevelKey;
+		else if (mode == WM_MODAL || mode == WM_SHEET)
+			t_window_level = kCGModalPanelWindowLevelKey;
+		else if (mode == WM_PULLDOWN || mode == WM_OPTION || mode == WM_COMBO)
+			t_window_level = kCGPopUpMenuWindowLevelKey;
+		else if (mode == WM_CASCADE)
+			t_window_level = kCGPopUpMenuWindowLevelKey;
+		else if (mode == WM_TOOLTIP)
+			t_window_level = kCGStatusWindowLevelKey;
+		else if (mode == WM_SHEET)
+			; // COCOA-TODO
+		else if (mode == WM_DRAWER)
+			; // COCOA-TODO
+		else
+			t_window_level = kCGNormalWindowLevelKey;
+		
+		bool t_has_titlebox, t_has_closebox, t_has_collapsebox, t_has_zoombox, t_has_sizebox;
+		if (getflag(F_DECORATIONS))
+		{
+			t_has_titlebox = (decorations & WD_TITLE) != 0;
+			t_has_closebox = (decorations & WD_CLOSE) != 0;
+			t_has_collapsebox = (decorations & WD_MINIMIZE) != 0;
+			t_has_zoombox = (decorations & WD_MAXIMIZE) == 0;
+			t_has_sizebox = getflag(F_RESIZABLE);
+		}
+		else
+		{
+			t_has_titlebox = t_has_closebox = t_has_collapsebox = t_has_zoombox = t_has_sizebox = false;
+			if (t_window_level == kCGNormalWindowLevelKey)
+			{
+				t_has_titlebox = true;
+				t_has_closebox = true;
+				t_has_zoombox = true;
+				t_has_collapsebox = true;
+				t_has_sizebox = true;
+			}
+			else if (t_window_level == kCGFloatingWindowLevelKey ||
+					 t_window_level == kCGUtilityWindowLevelKey)
+			{
+				t_has_titlebox = true;
+				t_has_closebox = true;
+				t_has_collapsebox = true;
+			}
+		}
+		
+		if (getflag(F_DECORATIONS) && ((decorations & (WD_TITLE | WD_MENU | WD_CLOSE | WD_MINIMIZE | WD_MAXIMIZE)) == 0))
+			t_has_sizebox = false;
+		
+		// If the window has a windowshape, we don't have any decorations.
+		if (m_window_shape != nil)
+			t_has_titlebox = t_has_closebox = t_has_collapsebox = t_has_zoombox = t_has_sizebox = false;
+		
+		// If the window is not normal, utility or floating we don't have close or zoom boxes.
+		if (t_window_level != kCGNormalWindowLevelKey &&
+			t_window_level != kCGUtilityWindowLevelKey &&
+			t_window_level != kCGFloatingWindowLevelKey)
+		{
+			t_has_closebox = false;
+			t_has_zoombox = false;
+		}
+		
+		// If the window is not normal level, we don't have a collapse box.
+		if (t_window_level != kCGNormalWindowLevelKey)
+			t_has_collapsebox = false;
+		
+		// If the window is not one that would be expected to be resizable, don't give it
+		// a size box.
+		if (t_window_level != kCGNormalWindowLevelKey &&
+			t_window_level != kCGFloatingWindowLevelKey &&
+			t_window_level != kCGUtilityWindowLevelKey &&
+			t_window_level != kCGModalPanelWindowLevelKey)
+			/*t_window_level != kCGSheet / Drawer*/
+			t_has_sizebox = false;
+		
+		// Compute the style of the window
+		NSUInteger t_window_style;
+		t_window_style = NSBorderlessWindowMask;
+		if (t_has_titlebox)
+			t_window_style |= NSTitledWindowMask;
+		if (t_has_closebox)
+			t_window_style |= NSClosableWindowMask;
+		if (t_has_collapsebox)
+			t_window_style |= NSMiniaturizableWindowMask;
+		if (t_has_sizebox)
+			t_window_style |= NSResizableWindowMask;
+		if (t_window_level == kCGFloatingWindowLevelKey)
+			t_window_style |= NSUtilityWindowMask;
+		
 		NSRect t_rect;
 		t_rect = NSRectFromMCRectangleGlobal(t_device_rect);
-		
+
 		NSWindow *t_window;
-		t_window = [[NSWindow alloc] initWithContentRect: t_rect styleMask: NSTitledWindowMask backing: NSBackingStoreBuffered defer: YES];
+		if (t_window_level != kCGFloatingWindowLevelKey)
+			t_window = [[NSWindow alloc] initWithContentRect: t_rect styleMask: t_window_style backing: NSBackingStoreBuffered defer: YES];
+		else
+			t_window = [[NSPanel alloc] initWithContentRect: t_rect styleMask: t_window_style backing: NSBackingStoreBuffered defer: YES];
+		
+		com_runrev_livecode_MCStackWindowDelegate *t_delegate;
+		t_delegate = [[com_runrev_livecode_MCStackWindowDelegate alloc] init];
+		[t_window setDelegate: t_delegate];
 		
 		// Set the stack window
 		window = (MCSysWindowHandle)t_window;
@@ -726,8 +1210,20 @@ void MCStack::realize(void)
 		// Create the content view
 		[t_window setContentView: [[[com_runrev_livecode_MCStackView alloc] initWithFrame: NSZeroRect] autorelease]];
 		
+		// Configure properties of the window now its been created.
 		if (m_window_shape != nil)
 			[t_window setOpaque: NO];
+		
+		if ((decorations & WD_NOSHADOW) != 0)
+			[t_window setHasShadow: NO];
+		
+		if ((decorations & WD_LIVERESIZING) != 0)
+			; // COCOA-TODO
+		
+		if (t_has_zoombox)
+			[[t_window standardWindowButton: NSWindowZoomButton] setEnabled: NO];
+		
+		[t_window setLevel: t_window_level];
 		
 		setopacity(blendlevel * 255 / 100);
 		
@@ -783,6 +1279,7 @@ void MCStack::syncscroll(void)
 void MCStack::start_externals()
 {
 	[[(NSWindow *)window contentView] setStack: this];
+	[[(NSWindow *)window delegate] setStack: this];
 	loadexternals();
 }
 
@@ -810,6 +1307,7 @@ void MCStack::stop_externals()
 	unloadexternals();
 	
 	[[(NSWindow *)window contentView] setStack: nil];
+	[[(NSWindow *)window delegate] setStack: nil];
 }
 
 void MCStack::setopacity(uint1 p_level)
@@ -839,7 +1337,7 @@ void MCStack::device_updatewindow(MCRegionRef p_region)
 	t_view = [(NSWindow *)window contentView];
 	
 	if (!getextendedstate(ECS_MASK_CHANGED) || s_update_callback != nil)
-		[t_view setNeedsDisplayInRect: NSRectFromMCRectangleLocal(MCRegionGetBoundingBox(p_region))];
+		[t_view setNeedsDisplayInRect: NSRectFromMCRectangleLocal(t_view, MCRegionGetBoundingBox(p_region))];
 	else
 	{
 		[t_view setNeedsDisplay: YES];

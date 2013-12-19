@@ -40,6 +40,9 @@ bool MCEventQueuePostQuitApp(void);
 bool MCEventQueuePostSuspendApp(void);
 bool MCEventQueuePostResumeApp(void);
 
+bool MCEventQueuePostUpdateMenu(MCObjectHandle *target);
+bool MCEventQueuePostMenuPick(MCObjectHandle *target, const char *pick_string);
+
 bool MCEventQueuePostWindowReshape(MCStack *stack);
 
 bool MCEventQueuePostMouseFocus(MCStack *stack, uint32_t time, bool inside);

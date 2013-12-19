@@ -2052,13 +2052,12 @@ void MCField::loctext(MCExecPoint &ep, Boolean click)
 	else
 		ep.clear();
 }
-
+				 
 Boolean MCField::locmark(Boolean wholeline, Boolean wholeword,
                          Boolean click, Boolean chunk, Boolean inc_cr, int4 &si, int4 &ei)
 {
-	MCRectangle frect = getfrect();
 	int4 cx, cy;
-
+	
 	// MW-2012-01-25: [[ FieldMetrics ]] Fetch which co-ords should be used.
 	if (click)
 	{
@@ -2071,10 +2070,25 @@ Boolean MCField::locmark(Boolean wholeline, Boolean wholeword,
 		cy = MCmousey;
 	}
 
+	MCPoint p;
+	p . x = cx;
+	p . y = cy;
+	
+	return locmarkpoint(p, wholeline, wholeword, chunk, inc_cr, si, ei);
+}
+
+Boolean MCField::locmarkpoint(MCPoint p, Boolean wholeline, Boolean wholeword, Boolean chunk, Boolean inc_cr, int4 &si, int4 &ei)
+{
+	MCRectangle frect = getfrect();
+	int4 cx, cy;
+	
+	cx = p . x;
+	cy = p . y;
+	
 	// MW-2012-01-25: [[ FieldMetrics ]] Convert them to field coords.
 	cx -= getcontentx();
 	cy -= getcontenty() + cury;
-
+	
 	MCParagraph *pgptr = paragraphs;
 	si = 0;
 	while (pgptr != curparagraph)
@@ -2763,6 +2777,49 @@ void MCField::insertparagraph(MCParagraph *newtext)
 	firstparagraph = lastparagraph = NULL;
 	setfocus(x, y);
 	state |= CS_CHANGED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCRectangle MCField::firstRectForCharacterRange(int32_t& si, int32_t& ei)
+{
+	MCParagraph *pgptr = resolveparagraphs(0);
+	
+	// These will be paragraph relative (after indextoparagraph).
+	int32_t t_si, t_ei;
+	t_si = si;
+	t_ei = ei;
+	
+	// Fetch the paragraph and indicies within it.
+	int4 t_line_index;
+	MCParagraph *sptr;
+	sptr = indextoparagraph(pgptr, t_si, t_ei, &t_line_index);
+	
+	// Restrict the range to the line t_si starts on.
+	sptr -> restricttoline(t_si, t_ei);
+	
+	// Now update the output range (the indices get munged in what follows)
+	si = si + t_si;
+	ei = si + t_ei;
+	
+	// Get the x, y of the initial index.
+	int2 x, y;
+	sptr->indextoloc(t_si, fixedheight, x, y);
+	
+	// Get the offset for computing card coords.
+	int4 yoffset = getcontenty() + paragraphtoy(sptr);
+	
+	// Get the extent of the range.
+	int2 minx, maxx;
+	sptr -> getxextents(t_si, t_ei, minx, maxx);
+	
+	MCRectangle t_rect;
+	t_rect . x = minx + getcontentx();
+	t_rect . y = y + yoffset;
+	t_rect . width = maxx - minx;
+	t_rect . height = sptr -> heightoflinewithindex(t_si, fixedheight);
+	
+	return t_rect;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

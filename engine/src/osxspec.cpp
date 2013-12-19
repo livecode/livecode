@@ -865,8 +865,10 @@ void MCS_init()
 	
 	//
 
+#ifdef OLD_MAC
 	MoreMasters();
 	InitCursor();
+#endif
 	MCinfinity = HUGE_VAL;
 
 	long response;

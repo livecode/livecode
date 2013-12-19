@@ -398,16 +398,16 @@ void MCMacBreakWait(void)
 
 // This method waits for an event for at most p_max_wait seconds. If an event
 // is collected in that time, it returns true.
-bool MCScreenDC::collectevent(real8 p_max_wait)
+bool MCScreenDC::collectevent(real8 p_max_wait, bool p_no_dispatch)
 {
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
-
+	
 	NSEvent *t_event;
-	t_event = [NSApp nextEventMatchingMask:NSAnyEventMask
+	t_event = [NSApp nextEventMatchingMask: p_no_dispatch ? 0 : NSAnyEventMask
 								 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_max_wait]
-									inMode:NSDefaultRunLoopMode
-								   dequeue:YES];
+									inMode: NSDefaultRunLoopMode
+								   dequeue: YES];
 	
 	if (t_event != nil)
 		[NSApp sendEvent: t_event];
@@ -485,7 +485,7 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		
 		// Wait for t_sleep seconds and collect at most one event. If an event
 		// is collected and anyevent is True, then we are done.
-		if (collectevent(t_sleep) && anyevent)
+		if (collectevent(t_sleep, dispatch == False) && anyevent)
 			done = True;
 		
 		// If 'quit' has been set then we must have got a finalization request
@@ -522,22 +522,6 @@ MCStack *MCScreenDC::device_getstackatpoint(int32_t x, int32_t y)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCScreenDC::grabpointer(Window w)
-{
-#ifdef OLD_MAC
-	grabbed = True;
-#endif
-}
-
-void MCScreenDC::ungrabpointer()
-{
-#ifdef OLD_MAC
-	grabbed = False;
-#endif
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 // Our mouse handling code relies on getting a stream of mouse move messages
 // with screen co-ordinates, and mouse press messages indicating button state
 // changes. As we need to handle things like mouse grabbing, and windows popping
@@ -562,6 +546,37 @@ static uint32_t s_mouse_buttons = 0;
 // This is the window location in the mouse window that we last posted
 // a position event for.
 static MCPoint s_mouse_position = { INT16_MIN, INT16_MAX };
+
+// This is the last screen location we received a mouse move message for.
+static MCPoint s_mouse_screen_position;
+
+void MCScreenDC::grabpointer(Window w)
+{
+	// If we are grabbing for the given window already, do nothing.
+	if (s_mouse_grabbed && w == s_mouse_window)
+		return;
+	
+	// If the mouse window is already w, then just grab.
+	if (w == s_mouse_window)
+	{
+		s_mouse_grabbed = true;
+		return;
+	}
+	
+	// Otherwise do nothing - the mouse window must be w for us to grab.
+	// (If we don't have this rule, then strange things could happen with
+	//  mouse presses in different windows!).
+}
+
+void MCScreenDC::ungrabpointer(void)
+{
+	// If buttons are down, then ungrab will happen when they are released.
+	if (s_mouse_buttons != 0)
+		return;
+	
+	// Otherwise just turn off the grabbed flag.
+	s_mouse_grabbed = false;
+}
 
 void MCScreenDC::event_modifierschanged(uint32_t modifiers)
 {
@@ -674,6 +689,9 @@ void MCScreenDC::event_mousemove(MCPoint p_screen_loc)
 			s_mouse_position = t_window_loc;
 		}
 	}
+	
+	// Regardless of whether we posted a mouse move, update the screen mouse position.
+	s_mouse_screen_position = p_screen_loc;
 }
 
 MCStack *MCScreenDC::event_windowtostack(Window window)

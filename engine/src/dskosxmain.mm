@@ -151,7 +151,7 @@ int main(int argc, char *argv[], char *envp[])
 	
 	// Setup our delegate
 	com_runrev_livecode_MCAppDelegate *t_delegate;
-	t_delegate = [[[com_runrev_livecode_MCAppDelegate alloc] initWithArgc: argc argv: argv envp: envp] autorelease];
+	t_delegate = [[com_runrev_livecode_MCAppDelegate alloc] initWithArgc: argc argv: argv envp: envp];
 	
 	// Assign our delegate
 	[t_application setDelegate: t_delegate];

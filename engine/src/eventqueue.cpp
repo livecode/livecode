@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dispatch.h"
 #include "eventqueue.h"
 #include "debug.h"
+#include "group.h"
 
 #include "graphics_util.h"
 
@@ -50,6 +51,9 @@ enum MCEventType
 	kMCEventTypeQuitApp,
 	kMCEventTypeSuspendApp,
 	kMCEventTypeResumeApp,
+	
+	kMCEventTypeUpdateMenu,
+	kMCEventTypeMenuPick,
 	
 	kMCEventTypeWindowReshape,
 
@@ -89,6 +93,18 @@ struct MCEvent
 		{
 			MCStack *stack;
 		} window;
+		
+		struct
+		{
+			MCObjectHandle *target;
+			union 
+			{
+				struct
+				{
+					char *string;
+				} pick;
+			};
+		} menu;
 		
 		struct
 		{
@@ -269,6 +285,24 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 	case kMCEventTypeResumeApp:
 		MCdefaultstackptr->getcard()->message(MCM_resume);
 		break;
+			
+	case kMCEventTypeUpdateMenu:
+	{
+		MCObject *t_target;
+		t_target = t_event -> menu . target -> Get();
+		if (t_target != nil)
+			t_target->message_with_args(MCM_mouse_down, "");
+	}
+	break;
+
+	case kMCEventTypeMenuPick:
+	{
+		MCObject *t_target;
+		t_target = t_event -> menu . target -> Get();
+		if (t_target != nil)
+			t_target->message_with_args(MCM_menu_pick, t_event -> menu . pick . string);
+	}
+	break;
 			
 	case kMCEventTypeWindowReshape:
 		t_event -> window . stack -> view_configure(true);
@@ -580,8 +614,17 @@ static void MCEventQueueDestroyEvent(MCEvent *p_event)
 {
 	if (p_event -> type == kMCEventTypeImeCompose)
 		MCMemoryDeleteArray(p_event -> ime . compose . chars);
+	else if (p_event -> type == kMCEventTypeUpdateMenu)
+	{
+		p_event -> menu . target -> Release();
+	}
+	else if (p_event -> type == kMCEventTypeMenuPick)
+	{
+		p_event -> menu . target -> Release();
+		delete p_event -> menu . pick . string;
+	}
 #ifdef _MOBILE
-	if (p_event -> type == kMCEventTypeCustom)
+	else if (p_event -> type == kMCEventTypeCustom)
 		p_event -> custom . event -> Destroy();
 #endif
 	
@@ -880,7 +923,7 @@ bool MCEventQueuePostMouseFocus(MCStack *p_stack, uint32_t p_time, bool p_inside
 	
 	t_event -> mouse . focus . inside = p_inside;
 
-	MCLog("MouseFocus(%p, %d, %d)", p_stack, p_time, p_inside);
+	//MCLog("MouseFocus(%p, %d, %d)", p_stack, p_time, p_inside);
 	
 	return true;
 }
@@ -895,7 +938,7 @@ bool MCEventQueuePostMousePress(MCStack *p_stack, uint32_t p_time, uint32_t p_mo
 	t_event -> mouse . press . state = p_state;
 	t_event -> mouse . press . button = p_button;
 	
-	MCLog("MousePress(%p, %d, %d, %d, %d)", p_stack, p_time, p_modifiers, p_state, p_button);
+	//MCLog("MousePress(%p, %d, %d, %d, %d)", p_stack, p_time, p_modifiers, p_state, p_button);
 	
 	return true;
 }
@@ -945,7 +988,7 @@ bool MCEventQueuePostMousePosition(MCStack *p_stack, uint32_t p_time, uint32_t p
 	t_event -> mouse . position . x = p_x;
 	t_event -> mouse . position . y = p_y;
 	
-	MCLog("MousePosition(%p, %d, %d, %d, %d)", p_stack, p_time, p_modifiers, p_x, p_y);
+	//MCLog("MousePosition(%p, %d, %d, %d, %d)", p_stack, p_time, p_modifiers, p_x, p_y);
 	
 	return true;
 }
@@ -1016,6 +1059,27 @@ bool MCEventQueuePostResumeApp(void)
 {
 	MCEvent *t_event;
 	return MCEventQueuePost(kMCEventTypeResumeApp, t_event);
+}
+
+bool MCEventQueuePostUpdateMenu(MCObjectHandle *p_target)
+{
+	MCEvent *t_event;
+	if (!MCEventQueuePost(kMCEventTypeUpdateMenu, t_event))
+		return false;
+	p_target -> Retain();
+	t_event -> menu . target = p_target;
+	return true;
+}
+
+bool MCEventQueuePostMenuPick(MCObjectHandle *p_target, const char *p_string)
+{
+	MCEvent *t_event;
+	if (!MCEventQueuePost(kMCEventTypeMenuPick, t_event))
+		return false;
+	p_target -> Retain();
+	t_event -> menu . target = p_target;
+	t_event -> menu . pick . string = strdup(p_string);
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

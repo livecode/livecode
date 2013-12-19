@@ -2316,12 +2316,21 @@ void MCField::startcomposition()
 	composelength = 0;
 }
 
+bool MCField::getcompositionrange(int32_t& si, int32_t& ei)
+{
+	if (!composing)
+		return false;
+	
+	si = composeoffset;
+	ei = si + composelength;
+
+	return true;
+}
+
 void MCField::setcompositioncursoroffset(uint2 coffset)
 {
 	composecursorindex = coffset;
 }
-
-
 
 void MCField::setcompositionconvertingrange(uint1 si, uint1 ei)
 {
