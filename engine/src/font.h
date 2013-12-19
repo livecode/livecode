@@ -53,6 +53,9 @@ int32_t MCFontGetDescent(MCFontRef font);
 
 typedef void (*MCFontBreakTextCallback)(MCFontRef font, const char *start, uindex_t length, bool is_unicode, void *ctxt);
 void MCFontBreakText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, MCFontBreakTextCallback callback, void *callback_data);
+// MW-2013-12-19: [[ Bug 11606 ]] This returns the unrounded width of the text as a float - its used by
+//   the field to calculate accumulated width of text in blocks.
+MCGFloat MCFontMeasureTextFloat(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode);
 int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode);
 void MCFontDrawText(MCGContextRef ctxt, int32_t x, int32_t y, const char *p_chars, uint32_t p_char_count, MCFontRef p_font, bool is_unicode);
 
