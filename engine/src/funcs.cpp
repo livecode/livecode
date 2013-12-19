@@ -761,7 +761,7 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     MCAutoDataRef t_data;
     if (params->getnext() != nil)
 	{
-		if (!params->getnext()->eval(ctxt, &t_data_valueref) || ctxt .ConvertToData(*t_data_valueref, &t_data))
+		if (!params->getnext()->eval(ctxt, &t_data_valueref) || !ctxt .ConvertToData(*t_data_valueref, &t_data))
 		{
 			ctxt . LegacyThrow(EE_BINARYD_BADPARAM);
 			return;
