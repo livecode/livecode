@@ -1673,7 +1673,8 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	t_dest.size.width = p_info->crect.width;
 	t_dest.size.height = p_info->crect.height;
 
-	MCGContextDrawPixels(p_context, t_raster, t_dest, kMCGImageFilterNearest);
+	// MM-2013-12-16: [[ Bug 11567 ]] Use bilinear filter when drawing theme elements.
+	MCGContextDrawPixels(p_context, t_raster, t_dest, kMCGImageFilterBilinear);
 	
 	if (!t_cached)
 		((MCScreenDC*)MCscreen)->destroyimage(t_argb_image);
