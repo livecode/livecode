@@ -27,6 +27,12 @@ abstract class NativeControl
     protected View m_control_view;
     protected int m_alpha;
     
+    // MM-2013-12-17: [[ Bug 11609 ]] Store the rect of the control rather than trying to calculate when requested.
+    private int m_left;
+    private int m_top;
+    private int m_right;
+    private int m_bottom;
+    
     public NativeControl(NativeControlModule p_module)
     {
         m_alpha = 255;
@@ -47,6 +53,10 @@ abstract class NativeControl
     public void setRect(int left, int top, int right, int bottom)
     {
         m_module.setNativeControlRect(getView(), left, top, right, bottom);
+        m_left = left;
+        m_top = top;
+        m_right = right;
+        m_bottom = bottom;
     }
     
     public void setVisible(boolean p_visible)
@@ -68,22 +78,22 @@ abstract class NativeControl
     
     public int getLeft()
     {
-        return m_control_view.getLeft();
+        return m_left;
     }
     
     public int getTop()
     {
-        return m_control_view.getTop();
+        return m_top;
     }
     
     public int getRight()
     {
-        return m_control_view.getRight();
+        return m_right;
     }
     
     public int getBottom()
     {
-        return m_control_view.getBottom();
+        return m_bottom;
     }
     
     public boolean getVisible()
