@@ -697,7 +697,7 @@ void MCButton::drawcheck(MCDC *dc, MCRectangle &srect, Boolean white)
 		// fall through
 	case LF_WIN95:
 		if (flags & F_AUTO_ARM)
-			trect = MCU_reduce_rect(trect, 1);
+			trect = MCU_reduce_rect(trect, 2);
 		else
 		{
 			draw3d(dc, trect, ETCH_SUNKEN, DEFAULT_BORDER);
