@@ -285,7 +285,8 @@ MCGAffineTransform view_get_stack_transform(MCStackFullscreenMode p_mode, MCRect
 		// offset so stack is centered in screen
 		MCRectangle t_rect;
 		t_rect = MCU_center_rect(p_screen_rect, p_stack_rect);
-		return MCGAffineTransformMakeTranslation(t_rect.x, t_rect.y);
+		// IM-2013-12-19: [[ Bug 11590 ]] Adjust for screen rect origins other than 0,0
+		return MCGAffineTransformMakeTranslation(t_rect.x - p_screen_rect.x, t_rect.y - p_screen_rect.y);
 	}
 }
 
@@ -371,8 +372,7 @@ MCRectangle MCStack::view_setstackviewport(const MCRectangle &p_rect)
 		t_display = MCscreen -> getnearestdisplay(p_rect);
 
 		t_view_rect = MCscreen->fullscreenrect(t_display);
-		t_view_rect . x = t_view_rect . y = 0;
-		
+		// IM-2013-12-19: [[ Bug 11590 ]] Removed adjustment of screen rect to 0,0 origin
 	}
 	else
 	{
