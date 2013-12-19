@@ -704,7 +704,7 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	if (t_success && t_project_section == NULL)
 		t_success = MCDeployThrow(kMCDeployErrorLinuxNoProjectSection);
 
-	if (t_success && p_params . payload != NULL && t_payload_section == NULL)
+	if (t_success && (!MCStringIsEmpty(p_params . payload)) && t_payload_section == NULL)
 		t_success = MCDeployThrow(kMCDeployErrorLinuxNoPayloadSection);
 
 	// Next check that there are no sections after the project section.

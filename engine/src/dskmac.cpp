@@ -3464,7 +3464,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         short fRefNum;
         MCS_mac_openresourcefork_with_path(p_filename, fsRdPerm, false, &fRefNum, &t_open_res_error_string); // RESFORK
         
-        if (!MCStringIsEmpty(*t_open_res_error_string))
+        if (*t_open_res_error_string != nil)
         {
             MCresult -> setvalueref(*t_open_res_error_string);
             return;
@@ -3547,14 +3547,14 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         bool t_fork_opened;
         t_fork_opened = false;
         
-        if (*t_error != nil)
+        if (*t_error == nil)
         {
             MCS_mac_openresourcefork_with_path(p_path, fsWrPerm, true, &t_fork_ref, &t_error); // RESFORK
-            if (MCStringGetLength(*t_error))
+            if (*t_error == nil)
                 t_fork_opened = true;
         }
         
-        if (*t_error != nil)
+        if (*t_error == nil)
         {
             OSErr t_os_error;
             ByteCount t_actual_count;
@@ -3568,7 +3568,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         if (t_fork_opened)
             FSCloseFork(t_fork_ref);
         
-        if (MCStringGetLength(*t_error) != 0)
+        if (*t_error != nil)
 		/* UNCHECKED */ MCresult -> setvalueref(*t_error);
         else
             MCresult -> clear(False);

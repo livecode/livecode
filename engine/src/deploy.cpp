@@ -118,12 +118,12 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 	MCValueAssign(stackfile, t_temp_string);
 	MCValueRelease(t_temp_string);
 	
-	if (!ctxt.CopyElementAsFilepathArray(p_array, MCNAME("auxillary_stackfiles"), false, t_temp_array))
+	if (!ctxt.CopyOptElementAsFilepathArray(p_array, MCNAME("auxillary_stackfiles"), false, t_temp_array))
 		return false;
 	MCValueAssign(auxillary_stackfiles, t_temp_array);
 	MCValueRelease(t_temp_array);
 	
-	if (!ctxt.CopyElementAsArray(p_array, MCNAME("externals"), false, t_temp_array))
+	if (!ctxt.CopyOptElementAsArray(p_array, MCNAME("externals"), false, t_temp_array))
 		return false;
 	MCValueAssign(externals, t_temp_array);
 	MCValueRelease(t_temp_array);
@@ -133,7 +133,7 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 	MCValueAssign(startup_script, t_temp_string);
 	MCValueRelease(t_temp_string);
 	
-	if (!ctxt.CopyElementAsArray(p_array, MCNAME("redirects"), false, t_temp_array))
+	if (!ctxt.CopyOptElementAsArray(p_array, MCNAME("redirects"), false, t_temp_array))
 		return false;
 	MCValueAssign(redirects, t_temp_array);
 	MCValueRelease(t_temp_array);
@@ -168,7 +168,7 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 	MCValueAssign(output, t_temp_string);
 	MCValueRelease(t_temp_string);
 	
-	if (!ctxt.CopyElementAsArray(p_array, MCNAME("version"), false, t_temp_array))
+	if (!ctxt.CopyOptElementAsArray(p_array, MCNAME("version"), false, t_temp_array))
 		return false;
 	MCValueAssign(version_info, t_temp_array);
 	MCValueRelease(t_temp_array);
@@ -267,7 +267,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 		}
 			
 	// Now add the startup script, if any.
-	if (t_success && p_params . startup_script != nil)
+	if (t_success && (!MCStringIsEmpty(p_params . startup_script)))
 		t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeStartupScript, p_params . startup_script);
 
 	// Now a digest
