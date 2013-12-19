@@ -2860,7 +2860,7 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 #ifdef _MACOSX
 		        && !(state & CS_DELETE_STACK))
 #else
-				&& externalfiles != NULL && !(state & CS_DELETE_STACK))
+				&& !MCStringIsEmpty(externalfiles) && !(state & CS_DELETE_STACK))
 #endif
 			realize();
 	}
@@ -2932,7 +2932,7 @@ void MCStack::recompute()
 
 void MCStack::loadexternals(void)
 {
-	if (externalfiles == NULL || m_externals != NULL || !MCSecureModeCanAccessExternal())
+	if (MCStringIsEmpty(externalfiles) || m_externals != NULL || !MCSecureModeCanAccessExternal())
 		return;
 
 	m_externals = new MCExternalHandlerList;

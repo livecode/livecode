@@ -380,7 +380,7 @@ bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data
 		MCscreen -> wait(60.0, False, True);
 
 	if ([ctxt . delegate isSuccessful])
-        r_save_result = kMCEmptyString;
+        r_save_result = MCValueRetain(kMCEmptyString);
     else
 		MCStringCreateWithCString("export failed", r_save_result);
 

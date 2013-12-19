@@ -414,6 +414,7 @@ public:
     MCAutoStringRefAsCString(void)
     {
         m_ref = nil;
+        m_cstring = nil;
     }
     
     ~MCAutoStringRefAsCString(void)

@@ -669,7 +669,7 @@ void MCEncryptionOp::exec_ctxt(MCExecContext &ctxt)
             return;
 
 		MCAutoStringRef t_passphrase;
-        if (!ctxt . EvalOptionalExprAsNullableStringRef(rsa_passphrase, EE_OPEN_BADNAME, &t_passphrase))
+        if (!ctxt . EvalOptionalExprAsStringRef(rsa_passphrase, kMCEmptyString, EE_OPEN_BADNAME, &t_passphrase))
             return;
 
         MCAutoStringRef t_data;
@@ -698,10 +698,10 @@ void MCEncryptionOp::exec_ctxt(MCExecContext &ctxt)
 
 		MCAutoStringRef t_iv;
 		MCAutoStringRef t_salt;
-        if (!ctxt . EvalOptionalExprAsNullableStringRef(salt, EE_OPEN_BADNAME, &t_salt))
+        if (!ctxt . EvalOptionalExprAsStringRef(salt, kMCEmptyString, EE_OPEN_BADNAME, &t_salt))
             return;
 
-        if (!ctxt . EvalOptionalExprAsNullableStringRef(iv, EE_OPEN_BADNAME, &t_iv))
+        if (!ctxt . EvalOptionalExprAsStringRef(iv, kMCEmptyString, EE_OPEN_BADNAME, &t_iv))
             return;
 
         MCAutoStringRef t_data;
