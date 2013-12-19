@@ -930,8 +930,8 @@ Window MCScreenDC::getroot()
 	return RootWindow(dpy, getscreen());
 }
 
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
-                               const char *displayname)
+/* OVERHAUL - REVISIT: p_scale_factor parameter currently ignored */
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, const char *displayname)
 {
 	Display *olddpy = dpy;
 	Colormap oldcmap = cmap;
