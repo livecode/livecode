@@ -476,17 +476,41 @@ bool MCNewFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_co
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2013-12-19: [[ Bug 11559 ]] This is used if the necessary font libs
+//   cannot be loaded.
+class MCDummyFontlist: public MCFontlist
+{
+public:
+	MCDummyFontlist() {}
+	~MCDummyFontlist() {}
+	
+	virtual bool create(void) { return true; }
+	virtual void destroy(void) {}
+	
+	virtual MCFontStruct *getfont(const MCString &fname, uint2 &size, uint2 style, Boolean printer) { return nil; }
+	virtual void getfontnames(MCExecPoint &ep, char *type) { ep . clear(); }
+	virtual void getfontsizes(const char *fname, MCExecPoint &ep) { ep . clear(); }
+	virtual void getfontstyles(const char *fname, uint2 fsize, MCExecPoint &ep) { ep . clear(); }
+	virtual bool getfontstructinfo(const char *&r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font) { return false; }
+	virtual void getfontreqs(MCFontStruct *f, const char*& r_name, uint2& r_size, uint2& r_style) { r_name = ""; r_size = 0; r_style = 0; }
+	
+	virtual int4 ctxt_textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override) { return 0; }
+	virtual bool ctxt_layouttext(const unichar_t *chars, uint32_t char_count, MCFontStruct *font, MCTextLayoutCallback callback, void *context) { return false; }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCFontlist *MCFontlistCreateNew(void)
 {
-	if (!MCuseXft)
-		return nil;
-
 	MCNewFontlist *t_fontlist;
 	t_fontlist = new MCNewFontlist;
 	if (!t_fontlist -> create())
 	{
 		delete t_fontlist;
-		return nil;
+		
+		// MW-2013-12-19: [[ Bug 11559 ]] If we couldn't setup the proper fontlist
+		//   then return a dummy one.
+		return new MCDummyFontlist;
 	}
 
 	return t_fontlist;
