@@ -1192,7 +1192,7 @@ void MCFilesExecPerformReadFor(MCExecContext& ctxt, IO_handle p_stream, int4 p_i
 		}
 		break; 
 	default:
-		t_current.Shrink(size);
+		t_current.Shrink(tsize);
 		/* UNCHECKED */ t_current.CreateStringAndRelease(r_output);
 		return;
 	}
@@ -1540,7 +1540,7 @@ void MCFilesExecReadFromStdinUntil(MCExecContext& ctxt, MCStringRef p_sentinel, 
 	MCFilesExecReadFromStdin(ctxt, p_sentinel, 0, 0, p_max_wait, p_time_units, RF_UNTIL);
 }
 
-void MCFilesExecReadGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_end, int64_t p_at, IO_handle &r_stream, Boolean &r_textmode, IO_stat &r_stat)
+void MCFilesExecReadGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_end, int64_t p_at, bool p_has_at, IO_handle &r_stream, Boolean &r_textmode, IO_stat &r_stat)
 {
 	uindex_t t_index;
 	if (!IO_findfile(p_name, t_index) || MCfiles[t_index].mode == OM_APPEND
@@ -1552,32 +1552,24 @@ void MCFilesExecReadGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_e
 	r_stream = MCfiles[t_index].ihandle;
 	r_textmode = MCfiles[t_index].textmode;
 
-	if (p_at == nil)
-	{
-#ifdef OLD_IO_HANDLE
-		if (r_stream->flags & IO_WRITTEN)
-		{
-			r_stream->flags &= ~IO_WRITTEN;
-			MCS_sync(r_stream);
-		}
-#endif
-	}
-	else
-	{
+	if (p_has_at)
+    {
 		if (p_is_end)
 			r_stat = MCS_seek_end(r_stream, p_at);
 		else
 			r_stat = MCS_seek_set(r_stream, p_at);
 	}
+    else
+        MCS_sync(r_stream);
 }
 
-void MCFilesExecReadFromFileOrDriverFor(MCExecContext& ctxt, bool p_driver, bool p_is_end, MCNameRef p_file, int64_t p_at, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units)
+void MCFilesExecReadFromFileOrDriverFor(MCExecContext& ctxt, bool p_driver, bool p_is_end, MCNameRef p_file, int64_t p_at, bool p_has_at, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units)
 {
 	IO_handle t_stream = NULL;
 	Boolean t_textmode = False;
 	IO_stat t_stat = IO_NORMAL;
 	
-	MCFilesExecReadGetStream(ctxt, p_file, p_is_end, p_at, t_stream, t_textmode, t_stat);	
+	MCFilesExecReadGetStream(ctxt, p_file, p_is_end, p_at, p_has_at, t_stream, t_textmode, t_stat);
 	
 	if (t_stream == NULL)
 		return;
@@ -1598,13 +1590,13 @@ void MCFilesExecReadFromFileOrDriverFor(MCExecContext& ctxt, bool p_driver, bool
 #endif
 }
 
-void MCFilesExecReadFromFileOrDriverUntil(MCExecContext& ctxt, bool p_driver, bool p_is_end, MCNameRef p_file, MCStringRef p_sentinel, int64_t p_at, double p_max_wait, int p_time_units)
+void MCFilesExecReadFromFileOrDriverUntil(MCExecContext& ctxt, bool p_driver, bool p_is_end, MCNameRef p_file, MCStringRef p_sentinel, int64_t p_at, bool p_has_at, double p_max_wait, int p_time_units)
 {
 	IO_handle t_stream = NULL;
 	Boolean t_textmode = False;
 	IO_stat t_stat = IO_NORMAL;
 	
-	MCFilesExecReadGetStream(ctxt, p_file, p_is_end, p_at, t_stream, t_textmode, t_stat);		
+	MCFilesExecReadGetStream(ctxt, p_file, p_is_end, p_at, p_has_at, t_stream, t_textmode, t_stat);
 	
 	if (t_stream == NULL)
 		return;
@@ -1638,42 +1630,42 @@ void MCFilesExecReadFromFileOrDriverUntil(MCExecContext& ctxt, bool p_driver, bo
 
 void MCFilesExecReadFromFileOrDriverFor(MCExecContext& ctxt, bool p_driver, MCNameRef p_file, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units)
 {
-	MCFilesExecReadFromFileOrDriverFor(ctxt, p_driver, false, p_file, nil, p_count, p_unit_type, p_max_wait, p_time_units);
+	MCFilesExecReadFromFileOrDriverFor(ctxt, p_driver, false, p_file, 0, false, p_count, p_unit_type, p_max_wait, p_time_units);
 }
 
 void MCFilesExecReadFromFileOrDriverUntil(MCExecContext& ctxt, bool p_driver, MCNameRef p_file, MCStringRef p_sentinel, double p_max_wait, int p_time_units)
 {
-	MCFilesExecReadFromFileOrDriverUntil(ctxt, p_driver, false, p_file, p_sentinel, nil, p_max_wait, p_time_units);
+	MCFilesExecReadFromFileOrDriverUntil(ctxt, p_driver, false, p_file, p_sentinel, 0, false, p_max_wait, p_time_units);
 }
 
 void MCFilesExecReadFromFileOrDriverAtFor(MCExecContext& ctxt, bool p_driver, MCNameRef p_file, int64_t p_at, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units)
 {
-	MCFilesExecReadFromFileOrDriverFor(ctxt, p_driver, false, p_file, p_at, p_count, p_unit_type, p_max_wait, p_time_units);
+	MCFilesExecReadFromFileOrDriverFor(ctxt, p_driver, false, p_file, p_at, true, p_count, p_unit_type, p_max_wait, p_time_units);
 }
 
 void MCFilesExecReadFromFileOrDriverAtUntil(MCExecContext& ctxt, bool p_driver, MCNameRef p_file, int64_t p_at, MCStringRef p_sentinel, double p_max_wait, int p_time_units)
 {
-	MCFilesExecReadFromFileOrDriverUntil(ctxt, p_driver, false, p_file, p_sentinel, p_at, p_max_wait, p_time_units);
+	MCFilesExecReadFromFileOrDriverUntil(ctxt, p_driver, false, p_file, p_sentinel, p_at, true, p_max_wait, p_time_units);
 }
 
 void MCFilesExecReadFromFileOrDriverAtEndFor(MCExecContext& ctxt, bool p_driver, MCNameRef p_file, int64_t p_at, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units)
 {
-	MCFilesExecReadFromFileOrDriverFor(ctxt, p_driver, true, p_file, p_at, p_count, p_unit_type, p_max_wait, p_time_units);
+	MCFilesExecReadFromFileOrDriverFor(ctxt, p_driver, true, p_file, p_at, true, p_count, p_unit_type, p_max_wait, p_time_units);
 }
 
 void MCFilesExecReadFromFileOrDriverAtEndForLegacy(MCExecContext& ctxt, bool p_driver, MCNameRef p_file, intenum_t p_eof, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units)
 {
-	MCFilesExecReadFromFileOrDriverFor(ctxt, p_driver, true, p_file, 0, p_count, p_unit_type, p_max_wait, p_time_units);
+	MCFilesExecReadFromFileOrDriverFor(ctxt, p_driver, true, p_file, 0, true, p_count, p_unit_type, p_max_wait, p_time_units);
 }
 
 void MCFilesExecReadFromFileOrDriverAtEndUntil(MCExecContext& ctxt, bool p_driver, MCNameRef p_file, int64_t p_at, MCStringRef p_sentinel, double p_max_wait, int p_time_units)
 {
-	MCFilesExecReadFromFileOrDriverUntil(ctxt, p_driver, true, p_file, p_sentinel, p_at, p_max_wait, p_time_units);
+	MCFilesExecReadFromFileOrDriverUntil(ctxt, p_driver, true, p_file, p_sentinel, p_at, true, p_max_wait, p_time_units);
 }
 
 void MCFilesExecReadFromFileOrDriverAtEndUntilLegacy(MCExecContext& ctxt, bool p_driver, MCNameRef p_file, intenum_t p_eof, MCStringRef p_sentinel, double p_max_wait, int p_time_units)
 {
-	MCFilesExecReadFromFileOrDriverUntil(ctxt, p_driver, true, p_file, p_sentinel, 0, p_max_wait, p_time_units);
+	MCFilesExecReadFromFileOrDriverUntil(ctxt, p_driver, true, p_file, p_sentinel, 0, true, p_max_wait, p_time_units);
 }
 
 
@@ -1817,7 +1809,7 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 	}
 }
 
-void MCFilesExecWriteGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_end, int64_t p_at, IO_handle &r_stream, Boolean &r_textmode, IO_stat &r_stat)
+void MCFilesExecWriteGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_end, int64_t p_at, bool p_has_at, IO_handle &r_stream, Boolean &r_textmode, IO_stat &r_stat)
 {
 	uindex_t t_index;
 	if (!IO_findfile(p_name, t_index) || MCfiles[t_index].mode == OM_NEITHER || 
@@ -1829,7 +1821,7 @@ void MCFilesExecWriteGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_
 	r_stream = MCfiles[t_index].ohandle;
 	r_textmode = MCfiles[t_index].textmode;
 
-	if (p_at != nil)
+	if (p_has_at)
 		if (p_at < 0)
 			MCS_seek_end(r_stream, p_at);
 		else
@@ -1860,14 +1852,14 @@ void MCFilesExecWriteToStderr(MCExecContext& ctxt, MCStringRef p_data, int p_uni
 }
 
 
-void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStringRef p_data, bool p_is_end, int p_unit_type, int64_t p_at)
+void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStringRef p_data, bool p_is_end, int p_unit_type, int64_t p_at, bool p_has_at)
 {
 	
 	IO_handle t_stream = NULL;
 	Boolean t_textmode = False;
 	IO_stat t_stat = IO_NORMAL;
 	
-	MCFilesExecWriteGetStream(ctxt, p_file, p_is_end, p_at, t_stream, t_textmode, t_stat);		
+	MCFilesExecWriteGetStream(ctxt, p_file, p_is_end, p_at, p_has_at, t_stream, t_textmode, t_stat);
 	
 	if (t_stream == NULL)
 		return;
@@ -1905,22 +1897,22 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 
 void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStringRef p_data, int p_unit_type)
 {
-	MCFilesExecWriteToFileOrDriver(ctxt, p_file, p_data, false, p_unit_type, nil);
+	MCFilesExecWriteToFileOrDriver(ctxt, p_file, p_data, false, p_unit_type, 0, false);
 }
 
 void MCFilesExecWriteToFileOrDriverAt(MCExecContext& ctxt, MCNameRef p_file, MCStringRef p_data, int p_unit_type, int64_t p_at)
 {
-	MCFilesExecWriteToFileOrDriver(ctxt, p_file, p_data, false, p_unit_type, p_at);
+	MCFilesExecWriteToFileOrDriver(ctxt, p_file, p_data, false, p_unit_type, p_at, true);
 }
 
 void MCFilesExecWriteToFileOrDriverAtEnd(MCExecContext& ctxt, MCNameRef p_file, MCStringRef p_data, int p_unit_type)
 {
-	MCFilesExecWriteToFileOrDriver(ctxt, p_file, p_data, true, p_unit_type, nil);
+	MCFilesExecWriteToFileOrDriver(ctxt, p_file, p_data, true, p_unit_type, 0, false);
 }
 
 void MCFilesExecWriteToFileOrDriverAtEndLegacy(MCExecContext& ctxt, MCNameRef p_file, MCStringRef p_data, int p_unit_type, intenum_t p_eof)
 {
-	MCFilesExecWriteToFileOrDriver(ctxt, p_file, p_data, true, p_unit_type, nil);
+	MCFilesExecWriteToFileOrDriver(ctxt, p_file, p_data, true, p_unit_type, 0, false);
 }
 
 void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStringRef p_data, int p_unit_type)

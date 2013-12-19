@@ -1117,7 +1117,7 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoLinkEditSegment);
 	if (t_success && t_project_segment == NULL)
 		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoProjectSegment);
-	if (t_success && p_params . payload != NULL && t_payload_segment == NULL)
+	if (t_success && !(MCStringIsEmpty(p_params . payload)) && t_payload_segment == NULL)
 		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoPayloadSegment);
 	
 	// MW-2013-05-04: [[ iOSDeployMisc ]] If 'misc' segment is present but not between
@@ -1169,7 +1169,7 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 	if (t_success && t_payload_segment != NULL)
 	{
 		t_payload_offset = x_offset + t_output_offset;
-		if (p_params . payload != nil)
+		if (!MCStringIsEmpty(p_params . payload))
 			t_success = MCDeployWritePayload(p_params, p_big_endian, p_output, t_payload_offset, t_payload_size);
 		if (t_success)
 			t_output_offset += (t_payload_size + 4095) & ~4095;
@@ -1673,21 +1673,21 @@ Exec_stat MCDeployToMacOSX(const MCDeployParameters& p_params)
 
 	// MW-2013-06-13: First check that we either have 'engine' or (ppc and/or x86).
 	if (t_success &&
-		(p_params . engine != NULL && (p_params . engine_ppc != NULL || p_params . engine_x86 != NULL)))
+		(!MCStringIsEmpty(p_params . engine) && (!MCStringIsEmpty(p_params . engine_ppc) || !MCStringIsEmpty(p_params . engine_x86))))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
 	// MW-2013-06-13: Next check that we have at least one engine.
 	if (t_success &&
-		(p_params . engine == NULL && p_params . engine_ppc == NULL && p_params . engine_x86 == NULL))
+		(MCStringIsEmpty(p_params . engine) && MCStringIsEmpty(p_params . engine_ppc) && MCStringIsEmpty(p_params . engine_x86)))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
 	// Now open the files.
 	MCDeployFileRef t_engine, t_engine_ppc, t_engine_x86, t_output;
 	t_engine = t_engine_ppc = t_engine_x86 = t_output = NULL;
 	if (t_success &&
-		(p_params . engine != NULL && !MCDeployFileOpen(p_params . engine, kMCSOpenFileModeRead, t_engine) ||
-		 p_params . engine_ppc != NULL && !MCDeployFileOpen(p_params . engine_ppc, kMCSOpenFileModeRead, t_engine_ppc) ||
-		 p_params . engine_x86 != NULL && !MCDeployFileOpen(p_params . engine_x86, kMCSOpenFileModeRead, t_engine_x86)))
+		((!MCStringIsEmpty(p_params . engine) && !MCDeployFileOpen(p_params . engine, kMCSOpenFileModeRead, t_engine)) ||
+		 (!MCStringIsEmpty(p_params . engine_ppc) && !MCDeployFileOpen(p_params . engine_ppc, kMCSOpenFileModeRead, t_engine_ppc)) ||
+		 (!MCStringIsEmpty(p_params . engine_x86) && !MCDeployFileOpen(p_params . engine_x86, kMCSOpenFileModeRead, t_engine_x86))))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
 	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeWrite, t_output))
@@ -1823,7 +1823,7 @@ Exec_stat MCDeployToIOS(const MCDeployParameters& p_params, bool p_embedded)
 	MCDeployFileRef t_engine, t_output;
 	t_engine = t_output = NULL;
 	if (t_success &&
-		(p_params . engine == NULL || !MCDeployFileOpen(p_params . engine, kMCSOpenFileModeRead, t_engine)))
+		((MCStringIsEmpty(p_params . engine)) || !MCDeployFileOpen(p_params . engine, kMCSOpenFileModeRead, t_engine)))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
 	// Make sure we can open the output file.

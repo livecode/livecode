@@ -3557,9 +3557,11 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
 {
     int4 t_first, t_last;
     x_mark . changed = false;
+    bool t_further_chunks = false;
     
     if (cline != nil)
     {
+        t_further_chunks = (item != nil || word != nil || character != nil);
         if (cline -> etype == CT_RANGE || cline -> etype == CT_EXPRESSION)
         {
             if (!ctxt . EvalExprAsInt(cline -> startpos, EE_CHUNK_BADRANGESTART, t_first))
@@ -3573,14 +3575,15 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
             else
                 t_last = t_first;
             
-            MCStringsMarkLinesOfTextByRange(ctxt, t_first, t_last, force, wholechunk, x_mark);
+            MCStringsMarkLinesOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
         }
         else
-            MCStringsMarkLinesOfTextByOrdinal(ctxt, cline -> etype, force, wholechunk, x_mark);
+            MCStringsMarkLinesOfTextByOrdinal(ctxt, cline -> etype, force, wholechunk, t_further_chunks, x_mark);
     }
     
     if (item != nil)
     {
+        t_further_chunks = (word != nil || character != nil);
         if (item -> etype == CT_RANGE || item -> etype == CT_EXPRESSION)
         {
             if (!ctxt . EvalExprAsInt(item -> startpos, EE_CHUNK_BADRANGESTART, t_first))
@@ -3594,14 +3597,15 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
             else
                 t_last = t_first;
             
-            MCStringsMarkItemsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, x_mark);
+            MCStringsMarkItemsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
         }
         else
-            MCStringsMarkItemsOfTextByOrdinal(ctxt, item -> etype, force, wholechunk, x_mark);
+            MCStringsMarkItemsOfTextByOrdinal(ctxt, item -> etype, force, wholechunk, t_further_chunks, x_mark);
     }
     
     if (word != nil)
     {
+        t_further_chunks = (character != nil);
         if (word -> etype == CT_RANGE || word -> etype == CT_EXPRESSION)
         {
             if (!ctxt . EvalExprAsInt(word -> startpos, EE_CHUNK_BADRANGESTART, t_first))
@@ -3615,10 +3619,10 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
             else
                 t_last = t_first;
             
-            MCStringsMarkWordsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, x_mark);
+            MCStringsMarkWordsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
         }
         else
-            MCStringsMarkWordsOfTextByOrdinal(ctxt, word -> etype, force, wholechunk, x_mark);
+            MCStringsMarkWordsOfTextByOrdinal(ctxt, word -> etype, force, wholechunk, t_further_chunks, x_mark);
     }
     
     if (token != nil)
@@ -3636,10 +3640,10 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
             else
                 t_last = t_first;
             
-            MCStringsMarkTokensOfTextByRange(ctxt, t_first, t_last, force, wholechunk, x_mark);
+            MCStringsMarkTokensOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
         }
         else
-            MCStringsMarkTokensOfTextByOrdinal(ctxt, token -> etype, force, wholechunk, x_mark);
+            MCStringsMarkTokensOfTextByOrdinal(ctxt, token -> etype, force, wholechunk, t_further_chunks, x_mark);
     }
     
     if (character != nil)
@@ -3657,10 +3661,10 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
             else
                 t_last = t_first;
             
-            MCStringsMarkCharsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, x_mark);
+            MCStringsMarkCharsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
         }
         else
-            MCStringsMarkCharsOfTextByOrdinal(ctxt, character -> etype, force, wholechunk, x_mark);
+            MCStringsMarkCharsOfTextByOrdinal(ctxt, character -> etype, force, wholechunk, t_further_chunks, x_mark);
     }
 }
 #ifdef LEGACY_EXEC
