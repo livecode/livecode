@@ -1816,18 +1816,18 @@ void MCObject::GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MC
 void MCModeSetRevCrashReportSettings(MCExecContext& ctxt, MCArrayRef p_settings)
 {
     bool t_case_sensitive = ctxt . GetCaseSensitive();
-    MCAutoValueRef t_verbose, t_filename;
-    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("verbose"), &t_verbose))
-        MCcrashreportverbose = (MCBooleanRef)*t_verbose == kMCTrue;
+    MCValueRef t_verbose, t_filename;
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("verbose"), t_verbose))
+        MCcrashreportverbose = (MCBooleanRef)t_verbose == kMCTrue;
     
-    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("filename"), &t_filename))
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("filename"), t_filename))
     {
         if (MCcrashreportfilename != nil)
             MCValueRelease(MCcrashreportfilename);
-        if (MCStringIsEmpty((MCStringRef)*t_filename))
+        if (MCStringIsEmpty((MCStringRef)t_filename))
             MCcrashreportfilename = nil;
         else
-            MCcrashreportfilename = MCValueRetain((MCStringRef)*t_filename);
+            MCcrashreportfilename = MCValueRetain((MCStringRef)t_filename);
     }
 }
 
@@ -2119,15 +2119,15 @@ void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
 
 void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCNameRef p_key, MCStringRef& r_info)
 {
-    MCAutoValueRef t_value;
+    MCValueRef t_value;
     if (MClicenseparameters . addons == nil ||
-        !MCArrayFetchValue(MClicenseparameters . addons, ctxt . GetCaseSensitive(), p_key, &t_value))
+        !MCArrayFetchValue(MClicenseparameters . addons, ctxt . GetCaseSensitive(), p_key, t_value))
         {
             r_info = MCValueRetain(kMCEmptyString);
             return;
         }
     
-    if (ctxt . ConvertToString(*t_value, r_info))
+    if (ctxt . ConvertToString(t_value, r_info))
         return;
     
     ctxt . Throw();

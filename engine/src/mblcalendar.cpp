@@ -157,13 +157,13 @@ bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar)
     {
         MCNewAutoNameRef t_key_allday;
         MCNameCreateWithCString("allday", &t_key_allday);
-        MCAutoValueRef t_str_allday;
+        MCValueRef t_str_allday;
     
-        t_success = MCArrayFetchValue(p_array, false, *t_key_allday, &t_str_allday);
+        t_success = MCArrayFetchValue(p_array, false, *t_key_allday, t_str_allday);
         
         if (t_success)
         {
-            if (MCStringIsEqualTo((MCStringRef)*t_str_allday, kMCTrueString, kMCCompareCaseless))
+            if (MCStringIsEqualTo((MCStringRef)t_str_allday, kMCTrueString, kMCCompareCaseless))
                 r_calendar.mcallday = true;
             else
                 r_calendar.mcallday = false;
@@ -174,48 +174,48 @@ bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar)
     {
         MCNewAutoNameRef t_key_note;
         MCNameCreateWithCString("note", &t_key_note);
-        MCAutoValueRef t_str_note;
+        MCValueRef t_str_note;
         
-        t_success = MCArrayFetchValue(p_array, false, *t_key_note, &t_str_note);
+        t_success = MCArrayFetchValue(p_array, false, *t_key_note, t_str_note);
         
         if (t_success)
-            t_success = MCStringCopy((MCStringRef)*t_str_note, r_calendar.mcnote);
+            t_success = MCStringCopy((MCStringRef)t_str_note, r_calendar.mcnote);
     }
     
     if (t_success)
     {
         MCNewAutoNameRef t_key_title;
         MCNameCreateWithCString("title", &t_key_title);
-        MCAutoValueRef t_str_title;
+        MCValueRef t_str_title;
         
-        t_success = MCArrayFetchValue(p_array, false, *t_key_title, &t_str_title);
+        t_success = MCArrayFetchValue(p_array, false, *t_key_title, t_str_title);
         
         if (t_success)
-            t_success = MCStringCopy((MCStringRef)*t_str_title, r_calendar.mctitle);
+            t_success = MCStringCopy((MCStringRef)t_str_title, r_calendar.mctitle);
     }
     
     if (t_success)
     {
         MCNewAutoNameRef t_key_location;
         MCNameCreateWithCString("location", &t_key_location);
-        MCAutoValueRef t_str_location;
+        MCValueRef t_str_location;
         
-        t_success = MCArrayFetchValue(p_array, false, *t_key_location, &t_str_location);
+        t_success = MCArrayFetchValue(p_array, false, *t_key_location, t_str_location);
         
         if (t_success)
-            t_success = MCStringCopy((MCStringRef)*t_str_location, r_calendar.mclocation);
+            t_success = MCStringCopy((MCStringRef)t_str_location, r_calendar.mclocation);
     }
     
     if (t_success)
     {
         MCNewAutoNameRef t_key_calendar;
         MCNameCreateWithCString("calendar", &t_key_calendar);
-        MCAutoValueRef t_str_calendar;
+        MCValueRef t_str_calendar;
         
-        t_success = MCArrayFetchValue(p_array, false, *t_key_calendar, &t_str_calendar);
+        t_success = MCArrayFetchValue(p_array, false, *t_key_calendar, t_str_calendar);
         
         if (t_success)
-            t_success = MCStringCopy((MCStringRef)*t_str_calendar, r_calendar.mccalendar);
+            t_success = MCStringCopy((MCStringRef)t_str_calendar, r_calendar.mccalendar);
     }
     
     if (t_success)
@@ -226,65 +226,65 @@ bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar)
         MCNameCreateWithCString("frequency", &t_key_frequency);
         MCNameCreateWithCString("frequencycount", &t_key_frequency_count);
         MCNameCreateWithCString("frequencyinterval", &t_key_frequency_interval);
-        MCAutoValueRef t_str_frequency;
-        MCAutoValueRef t_int_frequency_count;
-        MCAutoValueRef t_int_frequency_interval;
+        MCValueRef t_str_frequency;
+        MCValueRef t_int_frequency_count;
+        MCValueRef t_int_frequency_interval;
         
-        t_success = MCArrayFetchValue(p_array, false, *t_key_frequency, &t_str_frequency);
-        
-        if (t_success)
-            t_success = MCStringCopy((MCStringRef)*t_str_frequency, r_calendar.mcfrequency);
+        t_success = MCArrayFetchValue(p_array, false, *t_key_frequency, t_str_frequency);
         
         if (t_success)
-            t_success = MCArrayFetchValue(p_array, false, *t_key_frequency_count, &t_int_frequency_count);
+            t_success = MCStringCopy((MCStringRef)t_str_frequency, r_calendar.mcfrequency);
+        
+        if (t_success)
+            t_success = MCArrayFetchValue(p_array, false, *t_key_frequency_count, t_int_frequency_count);
             
         if (t_success)
-            r_calendar.mcfrequencycount = MCNumberFetchAsInteger((MCNumberRef)*t_int_frequency_count);
+            r_calendar.mcfrequencycount = MCNumberFetchAsInteger((MCNumberRef)t_int_frequency_count);
         
         if (t_success)
-            t_success = MCArrayFetchValue(p_array, false, *t_key_frequency_interval, &t_int_frequency_interval);
+            t_success = MCArrayFetchValue(p_array, false, *t_key_frequency_interval, t_int_frequency_interval);
         
         if (t_success)
-            r_calendar.mcfrequencyinterval = MCNumberFetchAsInteger((MCNumberRef)*t_int_frequency_interval);
+            r_calendar.mcfrequencyinterval = MCNumberFetchAsInteger((MCNumberRef)t_int_frequency_interval);
     }
     
     if (t_success)
     {
         MCNewAutoNameRef t_key_alert1;
         MCNameCreateWithCString("alert1", &t_key_alert1);
-        MCAutoValueRef t_int_alert1;
+        MCValueRef t_int_alert1;
         
-        t_success = MCArrayFetchValue(p_array, false, *t_key_alert1, &t_int_alert1);
+        t_success = MCArrayFetchValue(p_array, false, *t_key_alert1, t_int_alert1);
         
         if (t_success)
-            r_calendar.mcalert1 = MCNumberFetchAsInteger((MCNumberRef)*t_int_alert1);
+            r_calendar.mcalert1 = MCNumberFetchAsInteger((MCNumberRef)t_int_alert1);
     }
     
     if (t_success)
     {
         MCNewAutoNameRef t_key_alert2;
         MCNameCreateWithCString("alert2", &t_key_alert2);
-        MCAutoValueRef t_int_alert2;
+        MCValueRef t_int_alert2;
         
-        t_success = MCArrayFetchValue(p_array, false, *t_key_alert2, &t_int_alert2);
+        t_success = MCArrayFetchValue(p_array, false, *t_key_alert2, t_int_alert2);
         
         if (t_success)
-            r_calendar.mcalert2 = MCNumberFetchAsInteger((MCNumberRef)*t_int_alert2);
+            r_calendar.mcalert2 = MCNumberFetchAsInteger((MCNumberRef)t_int_alert2);
     }
     
     if (t_success)
     {
         MCNewAutoNameRef t_key_startdate;
         MCNameCreateWithCString("startdate", &t_key_startdate);
-        MCAutoValueRef t_int_startdate;
+        MCValueRef t_int_startdate;
         
-        t_success = MCArrayFetchValue(p_array, false, *t_key_startdate, &t_int_startdate);
+        t_success = MCArrayFetchValue(p_array, false, *t_key_startdate, t_int_startdate);
         
         if (t_success)
         {
             MCExecContext ctxt(nil, nil, nil);
 			
-            t_success = MCD_convert_to_datetime(ctxt, (MCNumberRef)*t_int_startdate, CF_SECONDS, CF_SECONDS, r_calendar.mcstartdate);
+            t_success = MCD_convert_to_datetime(ctxt, (MCNumberRef)t_int_startdate, CF_SECONDS, CF_SECONDS, r_calendar.mcstartdate);
         }
     }
     
@@ -292,15 +292,15 @@ bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar)
     {
         MCNewAutoNameRef t_key_enddate;
         MCNameCreateWithCString("enddate", &t_key_enddate);
-        MCAutoValueRef t_int_enddate;
+        MCValueRef t_int_enddate;
         
-        t_success = MCArrayFetchValue(p_array, false, *t_key_enddate, &t_int_enddate);
+        t_success = MCArrayFetchValue(p_array, false, *t_key_enddate, t_int_enddate);
         
         if (t_success)
         {
             MCExecContext ctxt(nil, nil, nil);
 			
-            t_success = MCD_convert_to_datetime(ctxt, *t_int_enddate, CF_SECONDS, CF_SECONDS, r_calendar.mcenddate);
+            t_success = MCD_convert_to_datetime(ctxt, t_int_enddate, CF_SECONDS, CF_SECONDS, r_calendar.mcenddate);
         }
     }
     
