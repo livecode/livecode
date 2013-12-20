@@ -325,7 +325,7 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 	
 	bool t_success;
 	t_success = true;
-	
+
 	HDC t_gdicontext;
 	t_gdicontext = NULL;
 	if (t_success)
@@ -342,11 +342,24 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 	
 	SIZE t_size;
 	if (t_success)
-		t_success = GetTextExtentPoint32W(t_gdicontext, (LPCWSTR)p_text, p_length >> 1, &t_size);
+		t_success = GetTextExtentPoint32W(t_gdicontext, (LPCWSTR)p_text, p_length, &t_size);
 	
 	TEXTMETRICA t_metrics;
 	if (t_success)
 		t_success = GetTextMetricsA(t_gdicontext, &t_metrics);
+
+	// MM-2013-12-16: [[ Bug 11564 ]] Take into account any overhang of italic text to prevent clipping.
+	MCGFloat t_overhang;
+	if (t_success)
+	{
+		uindex_t t_length;
+		t_length = p_length >> 1;
+		ABCFLOAT t_abc_widths;
+		if (GetCharABCWidthsFloatW(t_gdicontext, *(p_text + t_length), *(p_text + t_length),&t_abc_widths) != 0)
+			t_overhang = t_abc_widths . abcfA + t_abc_widths . abcfC;
+		else
+			t_overhang = 0.0f;
+	}
 	
 	MCGIntRectangle t_text_bounds, t_clipped_bounds;
 	MCGAffineTransform t_transform;
@@ -356,7 +369,7 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 		MCGRectangle t_float_text_bounds;
 		t_float_text_bounds . origin . x = 0;
 		t_float_text_bounds . origin . y = -t_metrics . tmAscent;
-		t_float_text_bounds . size . width = t_size . cx;
+		t_float_text_bounds . size . width = t_size . cx + t_overhang;
 		t_float_text_bounds . size . height = t_metrics . tmAscent + t_metrics . tmDescent;
 		
 		t_transform = MCGContextGetDeviceTransform(self);
