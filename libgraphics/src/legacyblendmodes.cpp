@@ -1276,7 +1276,7 @@ typedef void (*surface_combiner_t)(void *p_dst, int32_t p_dst_stride, const void
 //   GXnotSrcBic == GXand
 //   GXcopy == GXblendSrc
 
-static surface_combiner_t s_surface_combiners[] =
+/*static surface_combiner_t s_surface_combiners[] =
 {
 	surface_combine<OPERATION_CLEAR, true, true>,
 	surface_combine<OPERATION_AND, true, true>,
@@ -1332,9 +1332,9 @@ static surface_combiner_t s_surface_combiners[] =
 	surface_combine<OPERATION_BLEND_SOFT_LIGHT, true, true>,
 	surface_combine<OPERATION_BLEND_DIFFERENCE, true, true>,
 	surface_combine<OPERATION_BLEND_EXCLUSION, true, true>,
-};
+};*/
 
-/*typedef uint32_t (*pixel_combiner_t)(uint32_t dst, uint32_t src);
+typedef uint32_t (*pixel_combiner_t)(uint32_t dst, uint32_t src);
 
 static pixel_combiner_t s_pixel_combiners[] =
 {
@@ -1389,7 +1389,7 @@ static pixel_combiner_t s_pixel_combiners[] =
 	pixel_combine<OPERATION_BLEND_SOFT_LIGHT, true, true>,
 	pixel_combine<OPERATION_BLEND_DIFFERENCE, true, true>,
 	pixel_combine<OPERATION_BLEND_EXCLUSION, true, true>,
-};*/
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1519,7 +1519,7 @@ bool MCGLegacyBlendMode::asMode(Mode* mode) const
     return false;
 }
 
-void MCGLegacyBlendMode::xfer32(SkPMColor dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const
+/*void MCGLegacyBlendMode::xfer32(SkPMColor dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const
 {
 	if (aa == NULL)
 		s_surface_combiners[m_function](dst, count * 4, src, count * 4, count, 1, 0xFF);
@@ -1537,12 +1537,13 @@ void MCGLegacyBlendMode::xfer16(uint16_t dst[], const SkPMColor src[], int count
 
 void MCGLegacyBlendMode::xferA8(SkAlpha dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const
 {
-}
+}*/
 
-/*SkPMColor MCGLegacyBlendMode::xferColor(SkPMColor src, SkPMColor dst) const
+// MM-2013-12-05: [[ Bug 11505 ]] Implement xferColor rather than xfer32. This way we don't ignore the alpha component of the mask.
+SkPMColor MCGLegacyBlendMode::xferColor(SkPMColor src, SkPMColor dst) const
 {
 	return s_pixel_combiners[m_function](dst, src);
-}*/
+}
 
 MCGLegacyBlendMode::MCGLegacyBlendMode(SkFlattenableReadBuffer& buffer) : SkXfermode(buffer)
 {

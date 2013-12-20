@@ -56,6 +56,7 @@ static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFon
 	ATSUFontID t_font_id;
 	Fixed t_font_size;
 	Boolean t_font_is_italic;
+	ATSUTextMeasurement t_imposed_width;
     if (t_err == noErr)
     {
         t_font_size = p_font . size << 16;
@@ -66,6 +67,13 @@ static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFon
 		t_style = p_font . style & ~italic;
 		t_font_is_italic = p_font . style & italic;
 		
+		// MW-2013-12-05: [[ Bug 11535 ]] Set the imposed width to the fixed advance width
+		//   if non-zero. Otherwise use the glyph advance.
+		if (p_font . fixed_advance != 0)
+			t_imposed_width = p_font . fixed_advance << 16;
+		else
+			t_imposed_width = kATSUseGlyphAdvance;
+			
 		// if the specified font can't be found, just use the default
 		// MM-2013-09-16: [[ Bug 11283 ]] Do the same for font styles - if the font/style paring cannot be found, try font with no style.
 		t_err = ATSUFONDtoFontID((short)(intptr_t)p_font . fid, t_style, &t_font_id);
@@ -81,50 +89,35 @@ static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFon
 		kATSUFontTag,
 		kATSUSizeTag,
 		kATSUQDItalicTag,
+		kATSUImposeWidthTag,
 	};
 	ByteCount t_sizes[] =
 	{
 		sizeof(ATSUFontID),
 		sizeof(Fixed),
 		sizeof(Boolean),
+		sizeof(ATSUTextMeasurement),
 	};
 	ATSUAttributeValuePtr t_attrs[] =
 	{
 		&t_font_id,
 		&t_font_size,
 		&t_font_is_italic,
+		&t_imposed_width,
 	};
 	if (t_err == noErr)
 		t_err = ATSUSetAttributes(s_style, sizeof(t_tags) / sizeof(ATSUAttributeTag), t_tags, t_sizes, t_attrs);
-    
-	// MW-2013-11-15: [[ Bug 11444 ]] It seems setting these makes things *less* like QuickDraw!
-	/*ATSLineLayoutOptions t_layout_options;
-    t_layout_options = kATSLineFractDisable;
-	ATSUAttributeTag t_layout_tags[] =
-	{
-		kATSULineLayoutOptionsTag,
-	};
-	ByteCount t_layout_sizes[] =
-	{
-		sizeof(ATSLineLayoutOptions),
-	};
-	ATSUAttributeValuePtr t_layout_attrs[] =
-	{
-		&t_layout_options,
-	};*/
 	if (t_err == noErr)
 		t_err = ATSUSetTextPointerLocation(s_layout, (const UniChar *) p_text, 0, p_length / 2, p_length / 2);
 	if (t_err == noErr)
 		t_err = ATSUSetRunStyle(s_layout, s_style, 0, p_length / 2);
 	if (t_err == noErr)
 		t_err = ATSUSetTransientFontMatching(s_layout, true);
-	/*if (t_err == noErr)
-		t_err = ATSUSetLayoutControls(s_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);*/
 	
 	return t_err == noErr;
 }
 
-static bool osx_measure_text_substring_width(uindex_t p_length, int32_t &r_width)
+static bool osx_measure_text_substring_width(uindex_t p_length, MCGFloat &r_width)
 {
 	if (s_layout == NULL || s_style == NULL)
 		return false;
@@ -132,12 +125,13 @@ static bool osx_measure_text_substring_width(uindex_t p_length, int32_t &r_width
     OSStatus t_err;
 	t_err = noErr;
     
-	int32_t t_width;	
+	MCGFloat t_width;	
 	if (t_err == noErr)
 	{
 		ATSUTextMeasurement t_before, t_after, t_ascent, t_descent;
 		t_err = ATSUGetUnjustifiedBounds(s_layout, 0, p_length / 2, &t_before, &t_after, &t_ascent, &t_descent);
-		t_width = (t_after + 0xffff) >> 16;		
+		
+		t_width = t_after / 65536.0f;		
 	}
 	
     if (t_err == noErr)         
@@ -425,7 +419,7 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
     if (t_success)
         t_success = osx_prepare_text(p_text, p_length, p_font);
 	
-    int32_t t_width;
+    MCGFloat t_width;
     t_width = 0;
     if (t_success)
         t_success = osx_measure_text_substring_width(p_length, t_width);

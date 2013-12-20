@@ -197,7 +197,7 @@ void MCScreenDC::handle_mouse_press(uint32_t p_time, uint32_t p_modifiers, int32
 
 		// IM-2013-08-02: [[ ResIndependence]] scale mouse coords to user space
 		MCGFloat t_scale;
-		t_scale = MCResGetDeviceScale();
+		t_scale = MCResGetPixelScale();
 		
 		MCEventQueuePostMousePosition((MCStack *)m_current_window, p_time, p_modifiers, x / t_scale, y / t_scale);
 	}
@@ -218,7 +218,7 @@ void MCScreenDC::handle_mouse_move(uint32_t p_time, uint32_t p_modifiers, int32_
 
 	// IM-2013-08-02: [[ ResIndependence]] scale mouse coords to user space
 	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
+	t_scale = MCResGetPixelScale();
 	
 	MCEventQueuePostMousePosition((MCStack *)m_current_window, p_time, p_modifiers, x / t_scale, y / t_scale);
 }
@@ -294,7 +294,7 @@ void MCScreenDC::process_touch(MCEventTouchPhase p_phase, void *p_touch_handle, 
 	t_touch -> timestamp = p_timestamp;
 	
 	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
+	t_scale = MCResGetPixelScale();
 	
 	// IM-2013-08-02: [[ ResIndependence]] scale touch coords to user space
 	MCEventQueuePostTouch((MCStack *)m_current_window, p_phase, t_touch -> ident, 1, p_x / t_scale, p_y / t_scale);

@@ -104,7 +104,7 @@ static float s_current_keyboard_height = 0.0f;
 
 // IM-2013-07-18: [[ ResIndependence ]] if using the device resolution
 // then 1 pixel == 1 point, otherwise scale
-MCGFloat MCResGetDeviceScale()
+MCGFloat MCResGetSystemScale()
 {
 	return s_iphone_use_device_resolution ? 1.0 : s_iphone_device_scale;
 }
@@ -1237,6 +1237,9 @@ void MCIPhoneUseDeviceResolution(bool p_use, bool p_controls_too)
 	}
 	
 	MCIPhoneConfigureContentScale(MCIPhoneGetResolutionScale());
+	
+	// IM-2013-12-10: [[ Bug 11571 ]] Update the pixelScale to the new device scale. Avoid doing any stack updates in the main thread.
+	MCResSetPixelScale(MCResGetSystemScale(), false);
 	
 	// This doesn't do an immediate resize, so is fine for the main thread. (no
 	// script called).

@@ -159,7 +159,7 @@ static bool revandroid_getAssetOffsetAndLength(JNIEnv *env, jobject object, cons
 
 // IM-2013-07-26: [[ ResIndependence ]] return the device scale - this is initialised
 // on screen open
-MCGFloat MCResGetDeviceScale(void)
+MCGFloat MCResGetSystemScale(void)
 {
 	return s_android_device_scale;
 }

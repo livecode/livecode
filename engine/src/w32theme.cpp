@@ -1816,7 +1816,9 @@ bool MCWin32ThemeDrawBuffered(MCGContextRef p_context, MCThemeDrawType p_type, M
 		t_raster.format = kMCGRasterFormat_ARGB;
 
 		MCGRectangle t_dst = MCGRectangleMake(t_x, t_y, t_width, t_height);
-		MCGContextDrawPixels(p_context, t_raster, t_dst, kMCGImageFilterNearest);
+		
+		// MM-2013-12-16: [[ Bug 11567 ]] Use bilinear filter when drawing theme elements.
+		MCGContextDrawPixels(p_context, t_raster, t_dst, kMCGImageFilterBilinear);
 	}
 
 	if (t_buffer != nil)
@@ -1858,7 +1860,9 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 		t_raster.format = kMCGRasterFormat_ARGB;
 
 		MCGRectangle t_dst = MCGRectangleMake(t_x, t_y, t_width, t_height);
-		MCGContextDrawPixels(p_context, t_raster, t_dst, kMCGImageFilterNearest);
+		
+		// MM-2013-12-16: [[ Bug 11567 ]] Use bilinear filter when drawing theme elements.
+		MCGContextDrawPixels(p_context, t_raster, t_dst, kMCGImageFilterBilinear);
 	}
 
 	MCImageFreeBitmap(t_bitmap);

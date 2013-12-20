@@ -60,7 +60,7 @@ extern "C" int initialise_weak_link_Xinerama(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCGFloat MCResGetDeviceScale(void)
+MCGFloat MCResGetSystemScale(void)
 {
 	// IM-2013-08-12: [[ ResIndependence ]] Linux implementation currently returns 1.0
 	return 1.0;

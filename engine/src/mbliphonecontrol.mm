@@ -294,7 +294,9 @@ Exec_stat MCiOSControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
                 MCGRectangle t_user_rect;
                 t_user_rect = MCNativeControlUserRectFromDeviceRect(MCGRectangleMake(t_dev_rect . origin . x, t_dev_rect . origin . y, t_dev_rect . size. width, t_dev_rect . size . height));
                 
-				ep . setrectangle(t_user_rect.origin.x, t_user_rect.origin.y, t_user_rect.origin.x + t_user_rect.size.width, t_user_rect.origin.y + t_user_rect.size.height);
+				ep . setrectangle((int32_t) roundf(t_user_rect.origin.x), (int32_t) roundf(t_user_rect.origin.y),
+                                  (int32_t) (roundf(t_user_rect.origin.x) + roundf(t_user_rect.size.width)),
+                                  (int32_t) (roundf(t_user_rect.origin.y) + roundf(t_user_rect.size.height)));
 			}
 			return ES_NORMAL;
 			
@@ -339,14 +341,14 @@ MCGAffineTransform MCNativeControlUserToDeviceTransform()
 {
     float t_scale;
     t_scale = 1 / MCIPhoneGetNativeControlScale();
-    return MCGAffineTransformScale(MCdefaultstackptr -> view_getviewtransform(), t_scale, t_scale);
+    return MCGAffineTransformScale(MCdefaultstackptr -> getviewtransform(), t_scale, t_scale);
 }
 
 MCGAffineTransform MCNativeControlUserFromDeviceTransform()
 {
     float t_scale;
     t_scale = MCIPhoneGetNativeControlScale();
-    return MCGAffineTransformScale(MCGAffineTransformInvert(MCdefaultstackptr -> view_getviewtransform()), t_scale, t_scale);
+    return MCGAffineTransformScale(MCGAffineTransformInvert(MCdefaultstackptr -> getviewtransform()), t_scale, t_scale);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

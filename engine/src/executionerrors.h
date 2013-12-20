@@ -2432,6 +2432,10 @@ enum Exec_errors
 	// IM-2013-09-22: [[ FullscreenMode ]]
 	// {EE-0800} fullscreenmode: not a valid mode
 	EE_STACK_BADFULLSCREENMODE,
+	
+	// IM-2013-12-04: [[ PixelScale ]]
+	// {EE-0801} pixelScale: not a valid scale value
+	EE_PROPERTY_BADPIXELSCALE,
 };
 
 extern const char *MCexecutionerrors;

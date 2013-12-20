@@ -81,20 +81,21 @@ bool MCAndroidControl::GetViewRect(jobject p_view, int16_t &r_left, int16_t &r_t
     
     int32_t t_value;
     MCAndroidObjectRemoteCall(p_view, "getLeft", "i", &t_value);
-    t_rect . origin . x = t_value;
+    t_rect . origin . x = (MCGFloat) t_value;
     MCAndroidObjectRemoteCall(p_view, "getTop", "i", &t_value);
-    t_rect . origin . y = t_value;
+    t_rect . origin . y = (MCGFloat) t_value;
     MCAndroidObjectRemoteCall(p_view, "getRight", "i", &t_value);
-    t_rect . size . width  = t_value - t_rect . origin . x;
+    t_rect . size . width  = (MCGFloat) t_value - t_rect . origin . x;
     MCAndroidObjectRemoteCall(p_view, "getBottom", "i", &t_value);
-    t_rect . size . width  = t_value - t_rect . origin . y;
+    t_rect . size . height  = (MCGFloat) t_value - t_rect . origin . y;
     
     // MM-2013-11-26: [[ Bug 11485 ]] The rect of the view is set in device space. The user expects the rect to be in user space, so convert before returning.
     t_rect = MCNativeControlUserRectFromDeviceRect(t_rect);
-    r_left = t_rect . origin . x;
-    r_top = t_rect . origin . y;
-    r_right = t_rect . origin . x + t_rect . size . width;
-    r_bottom = t_rect . origin . y + t_rect . size . height;
+    
+    r_left = (int16_t) roundf(t_rect . origin . x);
+    r_top = (int16_t) roundf(t_rect . origin . y);
+    r_right = (int16_t) roundf(t_rect . size . width) + r_left;
+    r_bottom = (int16_t) roundf(t_rect . size . height) + r_top;
     
     return true;
 }
@@ -121,11 +122,12 @@ Exec_stat MCAndroidControl::Set(MCNativeControlProperty p_property, MCExecPoint 
             {
                 // MM-2013-11-26: [[ Bug 11485 ]] The rect of the control is passed in user space. Convert to device space when setting on view.
                 MCGRectangle t_rect;
-                t_rect = MCNativeControlUserRectToDeviceRect(MCGRectangleMake(i1, i2, i3 - i1, i4 -i2));
-                i1 = (int16_t) t_rect . origin . x;
-                i2 = (int16_t) t_rect . origin . y;
-                i3 = (int16_t) t_rect . origin . x + t_rect . size . width;
-                i4 = (int16_t) t_rect . origin . y + t_rect . size . height;
+                t_rect = MCGRectangleMake(i1, i2, i3 - i1, i4 -i2);
+                t_rect = MCNativeControlUserRectToDeviceRect(t_rect);
+                i1 = (int16_t) roundf(t_rect . origin . x);
+                i2 = (int16_t) roundf(t_rect . origin . y);
+                i3 = (int16_t) roundf(t_rect . size . width) + i1;
+                i4 = (int16_t) roundf(t_rect . size . height) + i2;
                 
                 if (m_view != nil)
                     MCAndroidObjectRemoteCall(m_view, "setRect", "viiii", nil, i1, i2, i3, i4);
@@ -354,12 +356,12 @@ void MCAndroidControl::HandleNotifyEvent(MCNameRef p_message)
 
 MCGAffineTransform MCNativeControlUserToDeviceTransform()
 {
-    return MCGAffineTransformConcat(MCdefaultstackptr -> view_getviewtransform(), MCResGetDeviceTransform());
+    return MCdefaultstackptr -> getdevicetransform();
 }
 
 MCGAffineTransform MCNativeControlUserFromDeviceTransform()
 {
-    return MCGAffineTransformInvert(MCGAffineTransformConcat(MCdefaultstackptr -> view_getviewtransform(), MCResGetDeviceTransform()));
+    return MCGAffineTransformInvert(MCdefaultstackptr -> getdevicetransform());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

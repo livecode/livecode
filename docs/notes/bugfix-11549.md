@@ -1,0 +1,1 @@
+# Text fails to render if a single native encoded character is followed by a unicode character in a field in certain cases.
