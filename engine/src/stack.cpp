@@ -184,6 +184,7 @@ MCPropertyInfo MCStack::kProperties[] =
     DEFINE_RW_OBJ_ENUM_PROPERTY(P_FULLSCREENMODE, InterfaceStackFullscreenMode, MCStack, FullscreenMode)
     
     DEFINE_RO_OBJ_PROPERTY(P_KEY, Bool, MCStack, Key)
+    DEFINE_RO_OBJ_PROPERTY(P_PASSWORD, BinaryString, MCStack, Password)
 };
 
 MCObjectPropertyTable MCStack::kPropertyTable =

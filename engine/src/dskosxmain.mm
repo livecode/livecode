@@ -90,6 +90,7 @@ int main(int argc, char *argv[], char *envp[])
 		i++;
 	}
 	
+	/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_count);
 	t_new_envp[i] = nil;
 		
 	

@@ -154,8 +154,6 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	m_locked_frame = nil;
 	m_needs = nil;
 
-	filename = nil;
-
 	if (iref.isediting())
 	{
 		MCImageBitmap *t_bitmap = nil;
@@ -205,8 +203,7 @@ MCImage::~MCImage()
 		m_resampled_rep = nil;
 	}
 	
-	if (filename != nil)
-        MCValueRelease(filename);
+	MCValueRelease(filename);
 }
 
 Chunk_term MCImage::gettype() const
@@ -2292,8 +2289,7 @@ bool MCImage::setfilename(MCStringRef p_filename)
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 		flags &= ~F_HAS_FILENAME;
 		
-		MCValueRelease(filename);
-		filename = nil;
+		MCValueAssign(filename, p_filename);
 		
 		return true;
 	}

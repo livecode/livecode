@@ -2171,6 +2171,11 @@ void MCStack::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_st
     MCRedrawDirtyScreen();
 }
 
+void MCStack::GetPassword(MCExecContext& ctxt, MCDataRef& r_value)
+{
+	r_value = MCValueRetain(kMCEmptyData);
+}
+
 void MCStack::GetKey(MCExecContext& ctxt, bool& r_value)
 {
     // OK-2010-02-11: [[Bug 8610]] - Passkey property more useful if it returns
