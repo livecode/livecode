@@ -352,10 +352,8 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 	MCGFloat t_overhang;
 	if (t_success)
 	{
-		uindex_t t_length;
-		t_length = p_length >> 1;
 		ABCFLOAT t_abc_widths;
-		if (GetCharABCWidthsFloatW(t_gdicontext, *(p_text + t_length), *(p_text + t_length),&t_abc_widths) != 0)
+		if (GetCharABCWidthsFloatW(t_gdicontext, *(p_text + p_length - 1), *(p_text + p_length - 1), &t_abc_widths) != 0)
 			t_overhang = t_abc_widths . abcfA + t_abc_widths . abcfC;
 		else
 			t_overhang = 0.0f;
