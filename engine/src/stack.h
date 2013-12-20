@@ -1036,6 +1036,7 @@ public:
 	void GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& p_size);
 	void SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t* p_size);
 
+	void GetPassword(MCExecContext& ctxt, MCDataRef& r_value);
     void GetKey(MCExecContext& ctxt, bool& r_value);
     
     virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
