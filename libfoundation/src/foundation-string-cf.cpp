@@ -34,17 +34,17 @@ bool MCStringCreateWithCFString(CFStringRef p_cf_string, MCStringRef& r_string)
 	t_string_length = CFStringGetLength(p_cf_string);
 	
 	CFIndex t_buffer_size;
-	t_buffer_size = CFStringGetMaximumSizeForEncoding(t_string_length, kCFStringEncodingMacRoman) + 1;
+	t_buffer_size = CFStringGetMaximumSizeForEncoding(t_string_length, kCFStringEncodingUTF16) + 1;
 	
-	MCAutoPointer<char_t> t_buffer;
+	MCAutoPointer<unichar_t> t_buffer;
 	t_success = MCMemoryNewArray(t_buffer_size, &t_buffer);
 	
 	CFIndex t_used_size;
 	if (t_success)
-		CFStringGetBytes(p_cf_string, CFRangeMake(0, t_string_length), kCFStringEncodingMacRoman, '?', false, (UInt8*)*t_buffer, t_buffer_size, &t_used_size);
+		CFStringGetBytes(p_cf_string, CFRangeMake(0, t_string_length), kCFStringEncodingUTF16, '?', false, (UInt8*)*t_buffer, t_buffer_size, &t_used_size);
 	
 	if (t_success)
-		t_success = MCStringCreateWithNativeChars(*t_buffer, t_used_size, r_string);
+		t_success = MCStringCreateWithChars(*t_buffer, t_used_size, r_string);
 	
 	return t_success;
 }
