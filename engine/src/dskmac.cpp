@@ -5821,8 +5821,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         return s_last_path;
 #endif /* MCS_tmpnam_dsk_mac */
-        bool t_success = false;
-        MCStringRef t_temp_file_auto;
+        bool t_success = true;
+        MCAutoStringRef t_temp_file_auto;
         FSRef t_folder_ref;
         char* t_temp_file_chars;
         
@@ -5830,19 +5830,17 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         if (t_success && FSFindFolder(kOnSystemDisk, kTemporaryFolderType, TRUE, &t_folder_ref) == noErr)
         {
+            MCAutoStringRef t_path;
             int t_fd;
-            t_success = MCS_mac_fsref_to_path(t_folder_ref, t_temp_file_auto);
+            t_success = MCS_mac_fsref_to_path(t_folder_ref, &t_path);
             
             if (t_success)
-                t_success = MCStringMutableCopyAndRelease(t_temp_file_auto, t_temp_file_auto);
-            
-            if (t_success)
-                t_success = MCStringAppendFormat(t_temp_file_auto, "/tmp.%d.XXXXXXXX", getpid());
+                t_success = MCStringFormat(&t_temp_file_auto, "%@/tmp.%d.XXXXXXXX", *t_path, getpid());
             
             if (t_success)
             {
                 MCAutoPointer<char> temp;
-                /* UNCHECKED */ MCStringConvertToCString(t_temp_file_auto, &temp);
+                /* UNCHECKED */ MCStringConvertToCString(*t_temp_file_auto, &temp);
                 t_success = MCMemoryAllocateCopy(*temp, strlen(*temp) + 1, t_temp_file_chars);
                 
             }
@@ -5867,7 +5865,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             r_tmp_name = MCValueRetain(kMCEmptyString);
         
         MCMemoryDeallocate(t_temp_file_chars);
-        MCValueRelease(t_temp_file_auto);
         
         return t_success;
     }

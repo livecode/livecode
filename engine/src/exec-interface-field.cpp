@@ -848,7 +848,23 @@ void MCField::SetThreeDHilite(MCExecContext& ctxt, bool setting)
 
 void MCField::GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encoding)
 {
-    GetEncodingOfCharChunk(ctxt, part, 0, INDEX_MAX, r_encoding);
+    MCParagraph *pgptr = paragraphs;
+    intenum_t t_encoding, t_next;
+    
+    pgptr -> GetEncoding(ctxt, t_encoding);
+    pgptr = pgptr -> next();
+    
+    while (pgptr != paragraphs);
+    {
+        pgptr -> GetEncoding(ctxt, t_next);
+        if (t_next != t_encoding)
+        {
+            r_encoding = 2; // mixed
+            return;
+        }
+        pgptr = pgptr -> next();
+    }
+    r_encoding = t_encoding;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

@@ -925,7 +925,7 @@ void MCIdeExtract::exec_ctxt(MCExecContext& ctxt)
 	if (!ctxt . HasError())
 		t_stat = MCDeployExtractMacOSX(*t_filename, *t_segment, *t_section, t_data, t_data_size);
 	
-	if (!ctxt . HasError())
+	if (t_stat == ES_NORMAL)
 	{
         MCAutoStringRef t_string;
         /* UNCHECKED */ MCStringCreateWithCString((char *)t_data, &t_string);

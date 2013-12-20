@@ -2460,7 +2460,7 @@ IO_stat hc_import(MCStringRef name, IO_handle stream, MCStack *&sptr)
 	delete hcstak;
 	if (!MClockerrors && MCStringGetLength(MChcstat) != startlen)
 	{
-		MCStack *tptr = MCdefaultstackptr->findstackname_oldstring(MChcstatnamestring);
+		MCStack *tptr = MCdefaultstackptr->findstackname(MCN_hcstat);
 		if (tptr != NULL)
 		{
 			sptr->open();

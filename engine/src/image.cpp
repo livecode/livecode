@@ -1687,7 +1687,7 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 
 IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 {
-	if (MCStringIsEmpty(filename))
+	if (filename != nil && MCStringIsEmpty(filename))
 		flags |= F_HAS_FILENAME;
 	else
 		flags &= ~F_HAS_FILENAME;

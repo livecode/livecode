@@ -1434,8 +1434,10 @@ void MCInterfaceGetDefaultStack(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCInterfaceSetDefaultStack(MCExecContext& ctxt, MCStringRef p_value)
 {
+    MCNewAutoNameRef t_name;
+    MCNameCreate(p_value, &t_name);
 	MCStack *sptr;
-	sptr = MCdefaultstackptr->findstackname_oldstring(MCStringGetOldString(p_value));
+	sptr = MCdefaultstackptr->findstackname(*t_name);
 	
 	if (sptr == nil)
 	{

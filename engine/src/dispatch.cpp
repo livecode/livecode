@@ -375,7 +375,7 @@ bool MCDispatch::getmainstacknames(MCListRef& r_list)
 		MCAutoValueRef t_string;
 		if (!tstk->names(P_SHORT_NAME, &t_string))
 			return false;
-		if (!MCListAppend(*t_list, *t_string))
+		if (!MCListAppend(*t_list, (MCStringRef)*t_string))
 			return false;
 		tstk = (MCStack *)tstk->next();
 	}

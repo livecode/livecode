@@ -1243,10 +1243,10 @@ MCStack *MCStack::findstackname(MCNameRef p_name)
 		return MCdispatcher->findstackname(p_name);
 }
 
-/* LEGACY */ MCStack *MCStack::findstackname_oldstring(const MCString &s)
+MCStack *MCStack::findstackname_string(MCStringRef p_string)
 {
 	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
+	/* UNCHECKED */ MCNameCreate(p_string, &t_name);
 	return findstackname(*t_name);
 }
 
@@ -1282,13 +1282,6 @@ MCStack *MCStack::findsubstackname(MCNameRef p_name)
         while (tptr != sptr->substacks);
 	}
 	return NULL;
-}
-
-/* LEGACY */ MCStack *MCStack::findsubstackname_oldstring(const MCString &s)
-{
-	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
-	return findsubstackname(*t_name);
 }
 
 MCStack *MCStack::findstackid(uint4 fid)

@@ -220,7 +220,7 @@ void MCImage::canceldraw(void)
 
 void MCImage::startmag(int2 x, int2 y)
 {
-	MCStack *sptr = getstack()->findstackname_oldstring("Magnify");
+	MCStack *sptr = getstack()->findstackname(MCNAME("Magnify"));
 	if (sptr == NULL)
 		return;
 	if (MCmagimage != NULL)
@@ -266,7 +266,7 @@ void MCImage::endmag(Boolean close)
 	MCmagimage = NULL;
 	if (close)
 	{
-		MCStack *sptr = getstack()->findstackname_oldstring("Magnify");
+		MCStack *sptr = getstack()->findstackname(MCNAME("Magnify"));
 		if (sptr != NULL)
 			sptr->close();
 	}

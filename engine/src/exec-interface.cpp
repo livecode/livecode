@@ -4126,7 +4126,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 			if (MCU_stoui4(p_window, win) && MCscreen->uint4towindow(win, w))
 				oldstack = MCdispatcher->findstackd(w);
 			else
-				oldstack = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_window));
+				oldstack = ctxt . GetObject()->getstack()->findstackname_string(p_window);
 		}
 		
 		if (oldstack == NULL || !oldstack->getopened())

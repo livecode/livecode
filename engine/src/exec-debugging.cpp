@@ -144,7 +144,7 @@ void MCDebuggingSetTraceStack(MCExecContext& ctxt, MCStringRef p_value)
 	}
 
 	MCStack *sptr;
-	sptr = MCdefaultstackptr->findstackname_oldstring(MCStringGetOldString(p_value));
+	sptr = MCdefaultstackptr->findstackname_string(p_value);
 	
 	if (sptr == nil)
 	{

@@ -273,6 +273,7 @@ extern MCNameRef MCN_titled;
 extern MCNameRef MCN_warning;
 
 extern MCNameRef MCN_messagename;
+extern MCNameRef MCN_hcstat;
 
 extern MCNameRef MCM_apple_event;
 extern MCNameRef MCM_arrow_key;

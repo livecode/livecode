@@ -980,7 +980,6 @@ bool MCGradientFillSetProperties(MCExecContext& ctxt, MCGradientFill*& x_gradien
                 
                 if (MCArrayFetchValue(*t_array, kMCCompareExact, MCNAME(gradientprops[tablesize].token), t_prop_value))
                 {
-                    MCLog(gradientprops[tablesize].token, nil);
                     MCExecValue t_value;
                     t_value . valueref_value = MCValueRetain(t_prop_value);
                     t_value . type = kMCExecValueTypeValueRef;

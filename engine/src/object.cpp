@@ -2134,7 +2134,7 @@ bool MCObject::names(Properties which, MCValueRef& r_name_val)
 				if (MCdispatcher->ismainstack(t_this))
 				{
 					if (!isunnamed())
-						return MCStringFormat(r_name, "stack \"%s\"", getname_cstring());
+						return MCStringFormat(r_name, "stack \"%@\"", getname());
 					r_name = MCValueRetain(kMCEmptyString);
 					return true;
 				}
@@ -2172,7 +2172,7 @@ bool MCObject::names(Properties which, MCValueRef& r_name_val)
 	case P_ABBREV_NAME:
 		if (isunnamed())
             return names(P_ABBREV_ID, r_name_val);
-		return MCStringFormat(r_name, "%s \"%s\"", itypestring, getname_cstring());
+		return MCStringFormat(r_name, "%s \"%@\"", itypestring, getname());
 	case P_SHORT_NAME:
             if (isunnamed())
                 return names(P_ABBREV_ID, r_name_val);

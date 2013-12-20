@@ -533,11 +533,7 @@ MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term et
 	if (etype == CT_STACK)
         return NULL;
 	else
-    {
-        MCNewAutoNameRef t_name;
-        MCNameCreate(p_value, &t_name);
-        sptr = MCdefaultstackptr->findstackname(*t_name);
-    }
+        sptr = MCdefaultstackptr->findstackname_string(p_value);
 
 	if (sptr != NULL)
 		return sptr;
@@ -996,7 +992,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 		switch (stack->etype)
 		{
 		case CT_HELP:
-			sptr = MCdefaultstackptr->findstackname_oldstring(MChelpnamestring);
+			sptr = MCdefaultstackptr->findstackname(MCNAME("help"));
 			break;
 		case CT_HOME:
 			t_is_home = true;

@@ -164,7 +164,6 @@ const char *MCuntitledstring = "Untitled";
 const char *MCapplicationstring = "LiveCode";
 const char *MChelpnamestring = "Help";
 const char *MChomenamestring = "Home";
-const char *MChcstatnamestring = "HyperCard Import Status";
 const char *MCdonestring = "done";
 const char *MCnullstring = "";
 const char *MCintersectstring = "intersect";
@@ -327,7 +326,7 @@ MCNameRef MCN_titled;
 MCNameRef MCN_warning;
 
 MCNameRef MCN_messagename;
-
+MCNameRef MCN_hcstat;
 MCNameRef MCM_apple_event;
 MCNameRef MCM_arrow_key;
 MCNameRef MCM_backspace_key;
@@ -758,7 +757,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("warning", MCN_warning);
 
 	/* UNCHECKED */ MCNameCreateWithCString("Message Box", MCN_messagename);
-	
+	/* UNCHECKED */ MCNameCreateWithCString("HyperCard Import Status", MCN_hcstat);
 	/* UNCHECKED */ MCNameCreateWithCString("appleEvent", MCM_apple_event);
 	/* UNCHECKED */ MCNameCreateWithCString("arrowKey", MCM_arrow_key);
 	/* UNCHECKED */ MCNameCreateWithCString("backspaceKey", MCM_backspace_key);
@@ -1190,7 +1189,8 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_warning);
 	
 	MCNameDelete(MCN_messagename);
-
+    MCNameDelete(MCN_hcstat);
+    
 	MCNameDelete(MCM_apple_event);
 	MCNameDelete(MCM_arrow_key);
 	MCNameDelete(MCM_backspace_key);

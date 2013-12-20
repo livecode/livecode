@@ -253,7 +253,7 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
         
         // Process this chunk of text
         MCRange t_range;
-        t_range = MCRangeMake(t_offset, t_index);
+        t_range = MCRangeMake(t_offset, t_break_point);
         p_callback(p_font, p_text, t_range, p_callback_data);
         
         // Explicitly show breaking points
