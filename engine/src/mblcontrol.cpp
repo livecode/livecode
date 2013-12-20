@@ -739,6 +739,7 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
 Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleControlCreate */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
 	
@@ -799,10 +800,12 @@ Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters)
 	delete t_type_name;
 	
 	return ES_NORMAL;
+#endif /* MCHandleControlCreate */
 }
 
 Exec_stat MCHandleControlDelete(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleControlDelete */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
 	
@@ -824,10 +827,12 @@ Exec_stat MCHandleControlDelete(void *context, MCParameter *p_parameters)
 	delete t_control_name;
 	
 	return ES_NORMAL;
+#endif /* MCHandleControlDelete */
 }
 
 Exec_stat MCHandleControlSet(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleControlSet */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
 	
@@ -856,10 +861,12 @@ Exec_stat MCHandleControlSet(void *context, MCParameter *p_parameters)
 	delete t_control_name;
 	
 	return ES_NORMAL;
+#endif /* MCHandleControlSet */
 }
 
 Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleControlGet */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
 	
@@ -891,10 +898,12 @@ Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters)
 	
 	return ES_NORMAL;
 	
+#endif /* MCHandleControlGet */
 }
 
 Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleControlDo */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
 	
@@ -919,10 +928,12 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
 	delete t_control_name;
 	
 	return ES_NORMAL;
+#endif /* MCHandleControlDo */
 }
 
 Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleControlTarget */ LEGACY_EXEC
 	MCNativeControl *t_target;
 	t_target = MCNativeControl::CurrentTarget();
 	if (t_target != nil)
@@ -936,10 +947,12 @@ Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters)
 		MCresult -> clear();
 	
 	return ES_NORMAL;
+#endif /* MCHandleControlTarget */
 }
 
 bool list_native_controls(void *context, MCNativeControl* p_control)
 {
+#ifdef /* list_native_controls */ LEGACY_EXEC
 	MCExecPoint *ep;
 	ep = (MCExecPoint *)context;
 	
@@ -949,14 +962,77 @@ bool list_native_controls(void *context, MCNativeControl* p_control)
 		ep -> concatuint(p_control -> GetId(), EC_RETURN, ep -> isempty());
 	
 	return true;
+#endif /* list_native_controls */
 }
 
 Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleControlList */ LEGACY_EXEC
 	MCExecPoint ep(nil, nil, nil);
 	MCNativeControl::List(list_native_controls, &ep);
 	MCresult -> store(ep, False);
 	return ES_NORMAL;
+#endif /* MCHandleControlList */
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// MM-2013-11-26: [[ Bug 11485 ]] Added functions for converting between user and device space.
+
+MCGRectangle MCNativeControlUserRectToDeviceRect(const MCGRectangle &p_user_rect)
+{
+    MCGAffineTransform t_transform;
+    t_transform = MCNativeControlUserToDeviceTransform();
+    return MCGRectangleApplyAffineTransform(p_user_rect, t_transform);
+}
+
+MCGRectangle MCNativeControlUserRectFromDeviceRect(const MCGRectangle &p_device_rect)
+{
+    MCGAffineTransform t_transform;
+    t_transform = MCNativeControlUserFromDeviceTransform();
+    return MCGRectangleApplyAffineTransform(p_device_rect, t_transform);
+}
+
+MCGPoint MCNativeControlUserPointToDevicePoint(const MCGPoint &p_user_point)
+{
+    MCGAffineTransform t_transform;
+    t_transform = MCNativeControlUserToDeviceTransform();
+    return MCGPointApplyAffineTransform(p_user_point, t_transform);
+}
+
+MCGPoint MCNativeControlUserPointFromDevicePoint(const MCGPoint &p_device_point)
+{
+    MCGAffineTransform t_transform;
+    t_transform = MCNativeControlUserFromDeviceTransform();
+    return MCGPointApplyAffineTransform(p_device_point, t_transform);
+}
+
+int32_t MCNativeControlUserXLocToDeviceXLoc(int32_t p_user_x_loc)
+{
+    MCGPoint t_loc;
+    t_loc = MCNativeControlUserPointToDevicePoint(MCGPointMake((MCGFloat) p_user_x_loc, 0.0f));
+    return (int32_t) t_loc . x;
+}
+
+int32_t MCNativeControlUserXLocFromDeviceXLoc(int32_t p_device_x_loc)
+{
+    MCGPoint t_loc;
+    t_loc = MCNativeControlUserPointFromDevicePoint(MCGPointMake((MCGFloat) p_device_x_loc, 0.0f));
+    return (int32_t) t_loc . x;
+}
+
+int32_t MCNativeControlUserYLocToDeviceYLoc(int32_t p_user_y_loc)
+{
+    MCGPoint t_loc;
+    t_loc = MCNativeControlUserPointToDevicePoint(MCGPointMake(0.0f, (MCGFloat) p_user_y_loc));
+    return (int32_t) t_loc . y;
+}
+
+int32_t MCNativeControlUserYLocFromDeviceYLoc(int32_t p_device_y_loc)
+{
+    MCGPoint t_loc;
+    t_loc = MCNativeControlUserPointFromDevicePoint(MCGPointMake(0.0f, (MCGFloat) p_device_y_loc));
+    return (int32_t) t_loc . y;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

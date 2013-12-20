@@ -24,7 +24,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "stacklst.h"
 #include "stack.h"
-#include "contextscalewrapper.h"
 #include "text.h"
 #include "button.h"
 #include "hc.h"
@@ -33,34 +32,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 
 #include "osxdc.h"
-#include "osxcontext.h"
 #include "osxtheme.h"
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//  REFACTORED FROM WIDGET.CPP
-//
-
-void *MCWidgetContextLockNative(MCContext *p_context)
-{
-	return static_cast<MCQuickDrawContext *>(p_context) -> qd_get_port();
-}
-
-void MCWidgetContextUnlockNative(MCContext *p_context)
-{
-}
-
-void MCWidgetContextBeginOffscreen(MCContext *p_context, void*& r_dc)
-{
-}
-
-void MCWidgetContextEndOffscreen(MCContext *p_context, void* p_dc)
-{
-}
-
-void MCWidgetInvalidateRect(Window window, const MCRectangle& rect)
-{
-}
+#include "resolution.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -144,42 +118,6 @@ void MCStacklist::hidepalettes(Boolean hide)
 		tptr = tptr->next();
 	}
 	while (tptr != stacks);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  REFACTORED FROM CONTEXTSCALEWRAPPER.CPP
-//
-
-extern CGImageRef PixMapToCGImage(PixMapHandle p_pixmap, bool p_grayscale, bool p_with_alpha = false);
-void MCContextScaleWrapper::drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p_parameters)
-{
-		// MW-2009-06-14: Previously this was attempting to extract the clip region from
-	//   the theme parameters. Unfortunately, it seems that these are not 'correct'
-	//   (well, correct enough for clipping). Instead we just temporary create a context
-	//   that covers the size of the unscaled clip and use that. (We throw it again
-	//   immediately after using, so its not very much less efficient).
-	MCRectangle t_bounds;
-	t_bounds = getclip();
-
-	MCContext *t_context = MCscreen->creatememorycontext(t_bounds.width, t_bounds.height, true, true);
-	t_context->setorigin(t_bounds.x, t_bounds.y);
-	t_context->setclip(t_bounds);
-	t_context->drawtheme(p_type, p_parameters);
-	
-	CGImageRef t_image = PixMapToCGImage(((MCQuickDrawContext*)t_context)->qd_get_pixmap(), false, true);
-	
-	CGContextRef ctx = ((MCQuickDrawContext*)m_context)->lock_as_cg();
-	if (ctx)
-	{
-		CGRect t_rect = CGRectMake(t_bounds.x * scale, t_bounds.y * scale, t_bounds.width * scale, t_bounds.height * scale);
-		CGContextClipToRect(ctx, t_rect);
-		CGContextDrawImage(ctx, t_rect, t_image);
-		((MCQuickDrawContext*)m_context)->unlock_as_cg(ctx);
-	}
-	
-	CGImageRelease(t_image);
-	MCscreen->freecontext(t_context);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -553,6 +491,13 @@ void MCButton::macopenmenu(void)
 			break;
 	}
 	
+	// IM-2013-08-16: [[ ResIndependence ]] scale menu location to device coords
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	tmenux = tmenux * t_scale;
+	tmenuy = tmenuy * t_scale;
+	
 	// MW-2007-12-11: [[ Bug 5670 ]] Make sure we notify things higher up in the call chain
 	//   that the mdown actually did result in a menu being popped up!
 	extern bool MCosxmenupoppedup;
@@ -785,14 +730,128 @@ void MCMacScaleImageBox(void *p_src_ptr, uint4 p_src_stride, void *p_dst_ptr, ui
 //  MISC 
 //
 
-void MCMacApplyPatternToFillImage(MCContext *ctxt, const MCRectangle& rect)
+bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPatternRef &r_pattern)
 {
-	((MCQuickDrawContext *)ctxt) -> fillrect_with_native_function(rect, notSrcBic);
-}
+	bool t_success = true;
+	
+	static MCPatternRef s_patterns[8] = {nil, nil, nil, nil, nil, nil, nil, nil};
+	
+	ThemeBrush t_themebrush = 0;
+	uint32_t t_index = 0;
+	
+	switch (p_mode)
+	{
+		case WM_TOP_LEVEL:
+		case WM_TOP_LEVEL_LOCKED:
+			t_themebrush = kThemeBrushDocumentWindowBackground;
+			t_index = 0;
+			break;
+			
+		case WM_MODELESS:
+			if (p_active)
+			{
+				t_themebrush = kThemeBrushModelessDialogBackgroundActive;
+				t_index = 1;
+			}
+			else
+			{
+				t_themebrush = kThemeBrushModelessDialogBackgroundInactive;
+				t_index = 2;
+			}
+			break;
+			
+		case WM_PALETTE:
+			if (p_active)
+			{
+				t_themebrush = kThemeBrushUtilityWindowBackgroundActive;
+				t_index = 3;
+			}
+			else
+			{
+				t_themebrush = kThemeBrushUtilityWindowBackgroundInactive;
+				t_index = 4;
+			}
+			break;
+			
+		case WM_DRAWER:
+			t_themebrush = kThemeBrushDrawerBackground;
+			t_index = 5;
+			break;
+			
+		case WM_MODAL:
+		case WM_SHEET:
+		default:
+			if (p_active)
+			{
+				t_themebrush = kThemeBrushDialogBackgroundActive;
+				t_index = 6;
+			}
+			else
+			{
+				t_themebrush = kThemeBrushDialogBackgroundInactive;
+				t_index = 7;
+			}
+			break;
+	}
+	
+	if (s_patterns[t_index] != nil)
+	{
+		r_pattern = s_patterns[t_index];
+		return true;
+	}
+	
+	CGrafPtr t_gworld = nil;
+	PixMapHandle t_pixmap = nil;
+	
+	Rect t_bounds;
+	SetRect(&t_bounds, 0, 0, 64, 64);
+	
+	NewGWorld(&t_gworld, 32, &t_bounds, nil, nil, MCmajorosversion >= 0x1040 ? kNativeEndianPixMap : 0);
 
-Pixmap MCMacThemeGetBackgroundPixmap(Window_mode mode, Boolean active)
-{
-	return ((MCScreenDC *)MCscreen) -> getbackpm(mode, active);
+	CGrafPtr t_oldport;
+	GDHandle t_olddevice;
+	GetGWorld(&t_oldport, &t_olddevice);
+	
+	SetGWorld(t_gworld, NULL);
+	t_pixmap = GetGWorldPixMap(t_gworld);
+	LockPixels(t_pixmap);
+	
+	SetThemeBackground(t_themebrush, 32, True);
+	EraseRect(&t_bounds);
+	UnlockPixels(t_pixmap);
+	
+	SetGWorld(t_oldport, t_olddevice);
+	
+	void *t_bits = nil;
+	uint32_t t_stride = 0;
+	
+	t_bits = GetPixBaseAddr(t_pixmap);
+	t_stride = GetPixRowBytes(t_pixmap);
+	
+	MCGImageRef t_image;
+	t_image = nil;
+	
+	MCGRaster t_raster;
+	t_raster.width = t_bounds.right - t_bounds.left;
+	t_raster.height = t_bounds.bottom - t_bounds.top;
+	t_raster.pixels = t_bits;
+	t_raster.stride = t_stride;
+	t_raster.format = kMCGRasterFormat_ARGB;
+	
+	t_success = MCGImageCreateWithRaster(t_raster, t_image);
+
+	// IM-2013-08-14: [[ ResIndependence ]] create MCPattern wrapper
+	if (t_success)
+		t_success = MCPatternCreate(t_image, 1.0, r_pattern);
+
+	MCGImageRelease(t_image);
+	
+	if (t_success)
+		s_patterns[t_index] = r_pattern;
+	
+	DisposeGWorld(t_gworld);
+	
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

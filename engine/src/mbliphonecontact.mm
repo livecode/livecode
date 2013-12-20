@@ -276,7 +276,10 @@ bool MCCreatePersonData(MCExecPoint& ep, ABRecordRef p_person, MCVariableValue *
 					
 					t_label = ABMultiValueCopyLabelAtIndex(t_values, j);
 					
-					if (label_to_name(t_label, t_label_name))
+                    // FG-2013-11-26 [[ Bugfix 11511 ]]
+                    // ABMultiValueCopyLabelAtIndex returns a null pointer if
+                    // there is no label for the given index.
+					if (t_label != nil && label_to_name(t_label, t_label_name))
 					{
 						CFTypeRef t_multi_value;
 						t_multi_value = ABMultiValueCopyValueAtIndex(t_values, j);
@@ -347,7 +350,7 @@ bool MCCreatePerson(MCExecPoint &p_ep, MCVariableValue *p_contact, ABRecordRef &
 					for (uindex_t j = 0; t_success && j < ELEMENTS(s_label_map); j++)
 					{
 						if (t_prop_array->fetch_element_if_exists(ep, MCNameGetOldString(*s_label_map[j].name), false))
-						{
+					{
 							MCVariableValue *t_indexed_array = ep.getarray();
 							if (t_indexed_array != nil)
 							{
@@ -435,7 +438,7 @@ bool MCContactAddContact(MCVariableValue *p_contact, int32_t& r_chosen)
 		r_chosen = t_id;
 	
 	if (t_contact != nil)
-		CFRelease(t_contact);
+	CFRelease(t_contact);
 	if (t_address_book != nil)
 		CFRelease(t_address_book);
 	

@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dispatch.h"
 #include "eventqueue.h"
 
+#include "graphics_util.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -238,7 +239,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		break;
 
 	case kMCEventTypeWindowReshape:
-		t_event -> window . stack -> configure(True);
+		t_event -> window . stack -> view_configure(true);
 		break;
 			
 	case kMCEventTypeMouseFocus:
@@ -314,9 +315,20 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			
 				// If the press was 'released' i.e. cancelled then we stop messages, mup then
 				// dispatch a mouseRelease message ourselves.
-				t_target -> setstate(True, CS_NO_MESSAGES);
-				t_target -> mup(t_event -> mouse . press . button + 1);
-				t_target -> setstate(False, CS_NO_MESSAGES);
+                
+                // FG-2013-10-09 [[ Bugfix 11208 ]]
+                // CS_NO_MESSAGES only applies to the target and not the controls it contains
+                // so the mouse up message (on mouseUp) sets sent when it isn't desired
+                // Hopefully nobody depends on the old behaviour...
+            
+                //t_target -> setstate(True, CS_NO_MESSAGES);
+				//t_target -> mup(t_event -> mouse . press . button + 1);
+				//t_target -> setstate(False, CS_NO_MESSAGES);
+                
+                bool old_lock = MClockmessages;
+                MClockmessages = true;
+                t_target -> mup(t_event -> mouse . press . button + 1);
+                MClockmessages = old_lock;
 				
 				t_target -> message_with_args(MCM_mouse_release, t_event -> mouse . press . button + 1);
 			}
@@ -357,13 +369,21 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		{
 			MCeventtime = t_event -> mouse . time;
 			MCmodifierstate = t_event -> mouse . position . modifiers;
-			MCmousex = t_event -> mouse . position . x;
-			MCmousey = t_event -> mouse . position . y;
 
 			MCObject *t_target;
 			t_target = t_menu != nil ? t_menu : MCmousestackptr;
+			
+			// IM-2013-09-30: [[ FullscreenMode ]] Translate mouse location to stack coords
+			MCPoint t_mouseloc;
+			t_mouseloc = MCPointMake(t_event->mouse.position.x, t_event->mouse.position.y);
+			
+			// IM-2013-10-03: [[ FullscreenMode ]] Transform mouseloc based on the mousestack
+			t_mouseloc = MCmousestackptr->view_viewtostackloc(t_mouseloc);
+			
+			MCmousex = t_mouseloc.x;
+			MCmousey = t_mouseloc.y;
 
-			t_target -> mfocus(t_event -> mouse . position . x, t_event -> mouse . position . y);
+			t_target -> mfocus(t_mouseloc . x, t_mouseloc . y);
 		}
 		break;
 
@@ -966,6 +986,11 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
 	
 	MCObject *t_target;
 	t_target = nil;
+	
+	// IM-2013-09-30: [[ FullscreenMode ]] Translate touch location to stack coords
+	MCPoint t_touch_loc;
+	t_touch_loc = p_stack->view_viewtostackloc(MCPointMake(x, y));
+	
 	if (p_phase != kMCEventTouchPhaseBegan)
 	{
 		for(t_touch = s_touches; t_touch != nil; t_previous_touch = t_touch, t_touch = t_touch -> next)
@@ -999,7 +1024,7 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
 		t_touch -> next = s_touches;
 		t_touch -> id = p_id;
 		
-		t_target = p_stack -> getcurcard() -> hittest(x, y);
+		t_target = p_stack -> getcurcard() -> hittest(t_touch_loc.x, t_touch_loc.y);
 		t_touch -> target = t_target -> gethandle();
 		
 		s_touches = t_touch;
@@ -1013,7 +1038,7 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
 				t_target -> message_with_args(MCM_touch_start, p_id);
 				break;
 			case kMCEventTouchPhaseMoved:
-				t_target -> message_with_args(MCM_touch_move, p_id, x, y);
+				t_target -> message_with_args(MCM_touch_move, p_id, t_touch_loc.x, t_touch_loc.y);
 				break;
 			case kMCEventTouchPhaseEnded:
 				t_target -> message_with_args(MCM_touch_end, p_id);

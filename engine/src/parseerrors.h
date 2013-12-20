@@ -1618,6 +1618,27 @@ enum Parse_errors
 
 	// {PE-0530} variance: bad parameters
 	PE_VARIANCE_BADPARAM,
+    
+    // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+    // {PE-0531} measureText: no object
+    PE_MEASURE_TEXT_NOOBJECT,
+
+    // {PE-0532} measureText: bad text parameter
+    PE_MEASURE_TEXT_BADTEXT,
+
+    // {PE-0533} measureText: bad mode parameter
+    PE_MEASURE_TEXT_BADMODE,
+
+	// MERG-2013-10-04: [[ ResolveImage ]] resolve image relative to object.
+    // {PE-0534} resolve image: bad image reference
+	PE_RESOLVE_BADIMAGE,
+
+    // {PE-0535} resolve image: bad object reference
+	PE_RESOLVE_BADOBJECT,
+	
+	// MERG-2013-10-04: [[ EditScriptAt ]] edit script of object at.
+    // {EE-0536} edit script: no at expression
+	PE_EDIT_NOAT,
 };
 
 extern const char *MCparsingerrors;

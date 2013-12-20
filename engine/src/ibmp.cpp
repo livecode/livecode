@@ -28,10 +28,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "core.h"
 
-#ifdef __LITTLE_ENDIAN__
+#if kMCGPixelFormatNative == kMCGPixelFormatBGRA
 #define NATIVE_IMAGE_FORMAT EX_RAW_BGRA
-#else
+#elif kMCGPixelFormatNative == kMCGPixelFormatRGBA
+#define NATIVE_IMAGE_FORMAT EX_RAW_RGBA
+#elif kMCGPixelFormatNative == kMCGPixelFormatARGB
 #define NATIVE_IMAGE_FORMAT EX_RAW_ARGB
+#elif kMCGPixelFormatNative == kMCGPixelFormatABGR
+#define NATIVE_IMAGE_FORMAT EX_RAW_ABGR
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -207,6 +211,13 @@ static void MCBitmapConvertRow(uint8_t *p_dst, const uint8_t *p_src, uint32_t p_
 			r = *p_src++;
 			a = 0xFF;
 			break;
+		case EX_RAW_BGRX:
+			b = *p_src++;
+			g = *p_src++;
+			r = *p_src++;
+			a = 0xFF;
+			p_src++;
+			break;
 		case EX_RAW_GRAY:
 			r = g = b = *p_src++;
 			a = 0xFF;
@@ -248,6 +259,12 @@ static void MCBitmapConvertRow(uint8_t *p_dst, const uint8_t *p_src, uint32_t p_
 			*p_dst++ = b;
 			*p_dst++ = g;
 			*p_dst++ = r;
+			break;
+		case EX_RAW_BGRX:
+			*p_dst++ = b;
+			*p_dst++ = g;
+			*p_dst++ = r;
+			*p_dst++ = 0;
 			break;
 		case EX_RAW_GRAY:
 			// simple averaging
@@ -537,7 +554,8 @@ bool bmp_read_color_table(IO_handle p_stream, uindex_t &x_bytes_read, uint32_t p
 	{
 		uindex_t t_byte_count = t_color_size;
 		t_success = IO_NORMAL == MCS_read(t_color, sizeof(uint8_t), t_byte_count, p_stream);
-		*t_dst_ptr++ = t_color[0] | (t_color[1] << 8) | (t_color[2] << 16) | 0xFF000000;
+		MCBitmapConvertRow<EX_RAW_RGB, NATIVE_IMAGE_FORMAT>((uint8_t*)t_dst_ptr, t_color, 1);
+		*t_dst_ptr++ = MCGPixelPackNative(t_color[2], t_color[1], t_color[0], 255);
 	}
 
 	if (t_success)
@@ -767,11 +785,11 @@ bool bmp_read_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p
 		t_success = IO_NORMAL == MCS_read(t_src_buffer, sizeof(uint8_t), t_src_stride, p_stream);
 		if (t_success)
 		{
-			uint8_t *t_src_row = t_src_buffer;
-			uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
-
 			if (p_depth <= 8)
 			{
+				uint8_t *t_src_row = t_src_buffer;
+				uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
+				
 				uint32_t t_current_shift = t_first_shift;
 				uint8_t t_byte = 0;
 
@@ -780,7 +798,7 @@ bool bmp_read_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p
 					*t_dst_row++ = p_color_table[(*t_src_row >> t_current_shift) & t_pixel_mask];
 					if (t_current_shift == 0)
 					{
-						*t_src_row++;
+						t_src_row++;
 						t_current_shift = t_first_shift;
 					}
 					else
@@ -789,11 +807,10 @@ bool bmp_read_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p
 			}
 			else
 			{
-				for (uint32_t x = 0; x < p_bitmap->width; x++)
-				{
-					*t_dst_row++ = t_src_row[0] | (t_src_row[1] << 8) | (t_src_row[2] << 16) | 0xFF000000;
-					t_src_row += p_depth / 8;
-				}
+				if (p_depth == 24)
+					MCBitmapConvertRow<EX_RAW_BGR, NATIVE_IMAGE_FORMAT>(t_dst_ptr, t_src_buffer, p_bitmap->width);
+				else
+					MCBitmapConvertRow<EX_RAW_BGRX, NATIVE_IMAGE_FORMAT>(t_dst_ptr, t_src_buffer, p_bitmap->width);
 			}
 		}
 
@@ -865,7 +882,7 @@ static void bmp_convert_bitfield_row(uint32_t *p_dst, const uint8_t *p_src, uint
 		g = (g * 0xFF) / t_g_max;
 		b = (b * 0xFF) / t_b_max;
 
-		*p_dst++ = a << 24 | r << 16 | g << 8 | b;
+		*p_dst++ = MCGPixelPackNative(r, g, b, a);
 	}
 }
 
@@ -1668,6 +1685,9 @@ bool MCImageDecodeXBM(IO_handle p_stream, MCPoint &r_hotspot, char *&r_name, MCI
 		t_success = MCMemoryAllocate(t_stride, t_row_buffer);
 	}
 
+	uint32_t t_black_pixel, t_white_pixel;
+	t_black_pixel = MCGPixelPackNative(0, 0, 0, 255);
+	t_white_pixel = MCGPixelPackNative(255, 255, 255, 255);
 	for (uindex_t y = 0 ; t_success && y < t_height ; y++)
 	{
 		uindex_t t_stride = (t_width + 7) >> 3;
@@ -1700,7 +1720,7 @@ bool MCImageDecodeXBM(IO_handle p_stream, MCPoint &r_hotspot, char *&r_name, MCI
 			while (x--)
 			{
 				uint8_t t_index = *t_index_ptr--;
-				*t_pixel_ptr-- = t_index == 0 ? 0xFF000000 : 0xFFFFFFFF;
+				*t_pixel_ptr-- = t_index == 0 ? t_black_pixel : t_white_pixel;
 			}
 		}
 		t_dst_ptr += t_bitmap->stride;
@@ -1835,10 +1855,7 @@ static bool xpm_parse_color(const char *p_line, uindex_t p_color_start, uindex_t
 		MCColor t_color;
 		if (MCscreen->lookupcolor(MCString(p_line + p_color_start, p_color_end - p_color_start), &t_color))
 		{
-			r_color = 0xFF000000 |
-				((t_color.red & 0xFF00) << 8) |
-				(t_color.green & 0xFF00) |
-				(t_color.blue >> 8);
+			r_color = MCGPixelPackNative(t_color.red >> 8, t_color.green >> 8, t_color.blue >> 8, 255);
 			return true;
 		}
 		if (MCCStringEqualSubstring(p_line + p_color_start, "none", p_color_end - p_color_start))
@@ -1848,16 +1865,22 @@ static bool xpm_parse_color(const char *p_line, uindex_t p_color_start, uindex_t
 		}
 		return false;
 	}
+	
+	// are there enough bytes for a rrggbb hex string?
+	if (p_color_end - p_color_start < 6)
+		return false;
+	
 	uint32_t t_value = 0;
-	for (uindex_t i = p_color_start + 1; i < p_color_end; i += 2)
+	uint8_t t_color[3];
+	for (uint32_t i = 0; i < 3; i++)
 	{
 		uint8_t t_high, t_low;
-		if (!hex_value(p_line[i], t_high) || !hex_value(p_line[i + 1], t_low))
+		if (!hex_value(p_line[p_color_start + i * 2], t_high) || !hex_value(p_line[p_color_start + i * 2 + 1], t_low))
 			return false;
-		t_value = (t_value << 8) | (t_high << 4) | t_low;
+		t_color[i] = (t_high << 4) | t_low;
 	}
 
-	r_color = t_value | 0xFF000000;
+	r_color = MCGPixelPackNative(t_color[0], t_color[1], t_color[2], 255);
 	return true;
 }
 
@@ -2192,7 +2215,7 @@ bool MCImageDecodeXPM(IO_handle p_stream, MCImageBitmap *&r_bitmap)
 			for (uindex_t i = 0; i < t_chars_per_pixel; i++)
 				t_index = (t_index << 8) | t_line[t_row_start++];
 			bool t_found_color = false;
-			uint32_t t_color = 0xFF000000;
+			uint32_t t_color = MCGPixelPackNative(0, 0, 0, 255);
 			for (uindex_t i = 0; !t_found_color && i < t_color_count; i++)
 			{
 				if (t_color_chars[i] == t_index)
@@ -2327,6 +2350,9 @@ bool MCImageDecodeXWD(IO_handle stream, char *&r_name, MCImageBitmap *&r_bitmap)
 			MCU_getshift(fh.blue_mask, blueshift, bluebits);
 		}
 
+		uint32_t t_black, t_white;
+		t_black = MCGPixelPackNative(0, 0, 0, 255);
+		t_white = MCGPixelPackNative(255, 255, 255, 255);
 		uint2 y;
 		for (y = 0 ; y < t_height ; y++)
 		{
@@ -2341,32 +2367,41 @@ bool MCImageDecodeXWD(IO_handle stream, char *&r_name, MCImageBitmap *&r_bitmap)
 				switch (fh.bits_per_pixel)
 				{
 				case 1:
-					*dptr++ = 0x80 >> (x & 0x7) & oneptr[x >> 3] ? 0xFFFFFFFF : 0xFF000000;
+					*dptr++ = 0x80 >> (x & 0x7) & oneptr[x >> 3] ? t_white : t_black;
 					break;
 				case 4:
 					pixel = oneptr[x >> 1] >> 4 * (x & 1) & 0x0F;
-					*dptr++ = 0xFF000000 | (colors[pixel].red & 0xFF00) << 8
-							  | colors[pixel].green & 0xFF00 | (colors[pixel].blue >> 8);
+					*dptr++ = MCGPixelPackNative(colors[pixel].red >> 8, colors[pixel].green >> 8,
+										   colors[pixel].blue >> 8, 255);
 					break;
 				case 8:
 					pixel = oneptr[x];
-					*dptr++ = 0xFF000000 | (colors[pixel].red & 0xFF00) << 8
-							  | colors[pixel].green & 0xFF00 | colors[pixel].blue >> 8;
+					*dptr++ = MCGPixelPackNative(colors[pixel].red >> 8, colors[pixel].green >> 8,
+										   colors[pixel].blue >> 8, 255);
 					break;
 				case 16:
 					pixel = twoptr[x];
-					*dptr++ = 0xFF000000 | 
-						((pixel & fh.red_mask) >> redshift) << (24 - redbits)
-						| ((pixel & fh.green_mask) >> greenshift) << (16 - greenbits)
-						| ((pixel & fh.blue_mask) >> blueshift) << (8 - bluebits);
+					*dptr++ = MCGPixelPackNative(
+										   ((pixel & fh.red_mask) >> redshift) << (8 - redbits),
+										   ((pixel & fh.green_mask) >> greenshift) << (8 - greenbits),
+										   ((pixel & fh.blue_mask) >> blueshift) << (8 - bluebits),
+										   255);
 					break;
 				case 32:
 					if (MCswapbytes)
 						swap_uint4(&fourptr[x]);
-					*dptr++ = 0xFF000000 | fourptr[x];
+					*dptr++ = MCGPixelPackNative(
+										   (fourptr[x] >> 24) & 0xFF,
+										   (fourptr[x] >> 16) & 0xFF,
+										   (fourptr[x] >> 8) & 0xFF,
+										   255);
 					break;
 				default:
-					*dptr++ = 0xFF000000 | fourptr[x];
+					*dptr++ = MCGPixelPackNative(
+										   (fourptr[x] >> 24) & 0xFF,
+										   (fourptr[x] >> 16) & 0xFF,
+										   (fourptr[x] >> 8) & 0xFF,
+										   255);
 					break;
 				}
 			}

@@ -63,9 +63,6 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size, uint2 style)
 	reqstyle = style;
 	char *tmpname;
 	font = new MCFontStruct; //create MCFont structure
-	font->unicode = False;
-	font->charset = 0;
-	font->wide = False;
 	
 	// MW-2005-05-10: Update this to FM type
 	FMFontFamily ffamilyid;		    //font family ID
@@ -77,17 +74,13 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size, uint2 style)
 	{
 		*sptr = '\0';
 		sptr++;
-		font->charset = MCU_languagetocharset(sptr);
-		if (font->charset)
-			font->unicode = True;
 	}
 	StringPtr reqnamePascal = c2pstr(tmpname);
 	
 	// MW-2005-05-10: Update this call to FM rountines
 	ffamilyid = FMGetFontFamilyFromName(reqnamePascal);
 	delete tmpname;
-	if (font->charset && font->charset != LCH_UNICODE && FontToScript(ffamilyid) != MCS_charsettolangid(font->charset))
-		ffamilyid = GetScriptVariable(MCS_charsettolangid(font->charset),smScriptAppFond);
+	
 	if (ffamilyid == 0)
 	{ //font does not exist
 		uint2 i;     // check the font mapping table
@@ -123,7 +116,6 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size, uint2 style)
 	TextFace(tstyle);
 	TextSize(size);  //set text size
 
-	font->wide = False;
 	font->fid = (MCSysFontHandle)ffamilyid;
 	font->size = size;
 	font->style = tstyle;
@@ -142,22 +134,7 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size, uint2 style)
 	
 	if (finfo.ascent + finfo.descent > size)
 		font->ascent++;
-	
-	// use  GetScriptManagerVariable(smEnabled) to detect 16-bit fonts
-	if (!font->charset)
-		for (i = 0 ; i < 256 ; i++)
-		{
 
-			{
-				char c = i;
-				short w = TextWidth(&c, 0, 1);
-				// MW-2012-09-21: [[ Bug 3884 ]] If a single char width > 255 then mark
-				//   the font as wide.
-				if (w > 255)
-					font->wide = True;
-				font->widths[i] = (uint1)w;
-			}
-		}
 	SetGWorld(oldport, olddevice);
 }
 

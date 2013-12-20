@@ -29,7 +29,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "dispatch.h"
 #include "hndlrlst.h"
-#include "pxmaplst.h"
 #include "cardlst.h"
 
 #include "stack.h"
@@ -181,12 +180,12 @@ char *MCpencolorname;
 MCColor MCbrushcolor;
 char *MCbrushcolorname;
 uint4 MCpenpmid = PI_PATTERNS;
-Pixmap MCpenpm;
+MCPatternRef MCpenpattern;
 uint4 MCbrushpmid = PI_PATTERNS;
-Pixmap MCbrushpm;
+MCPatternRef MCbrushpattern;
 uint4 MCbackdroppmid;
-Pixmap MCbackdroppm;
-MCPixmaplist *MCpatterns;
+MCPatternRef MCbackdroppattern;
+MCImageList *MCpatternlist;
 MCColor MCaccentcolor;
 char *MCaccentcolorname;
 MCColor MChilitecolor = { 0, 0, 0, 0x8080, 0, 0 };
@@ -373,9 +372,6 @@ Boolean MCantialiasedtextworkaround = False;
 
 // MW-2012-03-08: [[ StackFile5500 ]] Make stackfile version 5.5 the default.
 uint4 MCstackfileversion = 5500;
-
-uint1 MCleftmasks[8] = {0xFF, 0x7F, 0x3f, 0x1F, 0x0F, 0x07, 0x03, 0x01};
-uint1 MCrightmasks[8] = {0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE, 0xFF};
 
 #if defined(_WINDOWS)
 uint2 MClook = LF_WIN95;
@@ -567,12 +563,12 @@ void X_clear_globals(void)
 	memset(&MCbrushcolor, 0, sizeof(MCColor));
 	MCbrushcolorname = nil;
 	MCpenpmid = PI_PATTERNS;
-	MCpenpm = nil;
+	MCpenpattern = nil;
 	MCbrushpmid = PI_PATTERNS;
-	MCbrushpm = nil;
+	MCbrushpattern = nil;
 	MCbackdroppmid = 0;
-	MCbackdroppm = nil;
-	MCpatterns = nil;
+	MCbackdroppattern = nil;
+	MCpatternlist = nil;
 	memset(&MCaccentcolor, 0, sizeof(MCColor));
 	MCaccentcolorname = nil;
 	memset(&MChilitecolor, 0, sizeof(MCColor));
@@ -663,6 +659,7 @@ void X_clear_globals(void)
 	MCtemplatescrollbar = nil;
 	MCtemplateplayer = nil;
 	MCtemplateimage = nil;
+	MCtemplatefield = nil;
 	MCmagimage = nil;
 	MCmagnifier = nil;
 	MCdragsource = nil;
@@ -810,11 +807,8 @@ void X_clear_globals(void)
 	MCnullmcstring = NULL;
 
 	// MW-2013-03-11: [[ Bug 10713 ]] Make sure we reset the regex cache globals to nil.
-	for(uindex_t i = 0; i < PATTERN_CACHE_SIZE; i++)
-	{
-		MCregexpatterns[i] = nil;
-		MCregexcache[i] = nil;
-	}
+	// JS-2013-07-01: [[ EnhancedFilter ]] Refactored regex caching mechanism.
+	MCR_clearcache();
 
 	for(uint32_t i = 0; i < PI_NCURSORS; i++)
 		MCcursors[i] = nil;
@@ -850,7 +844,7 @@ bool X_open(int argc, char *argv[], char *envp[])
 	
 	////
 
-	MCpatterns = new MCPixmaplist;
+	MCpatternlist = new MCImageList();
 
 	/* UNCHECKED */ MCVariable::ensureglobal(MCN_msg, MCmb);
 	MCmb -> setmsg();
@@ -945,7 +939,25 @@ bool X_open(int argc, char *argv[], char *envp[])
 	
 	// MW-2012-02-14: [[ FontRefs ]] Open the dispatcher after we have an open
 	//   screen, otherwise we don't have a root fontref!
+	// MW-2013-08-07: [[ Bug 10995 ]] Configure fonts based on platform.
+#if defined(TARGET_PLATFORM_WINDOWS)
+	if (MCmajorosversion >= 0x0600)
+	{
+		// Vista onwards
+		MCdispatcher -> setfontattrs("Segoe UI", 12, FA_DEFAULT_STYLE);
+	}
+	else
+	{
+		// Pre-Vista
+		MCdispatcher -> setfontattrs("Tahoma", 11, FA_DEFAULT_STYLE);
+	}
+#elif defined(TARGET_PLATFORM_MACOS_X)
+	MCdispatcher -> setfontattrs("Lucida Grande", 11, FA_DEFAULT_STYLE);
+#elif defined(TARGET_PLATFORM_LINUX)
+	MCdispatcher -> setfontattrs("Helvetica", 12, FA_DEFAULT_STYLE);
+#else
 	MCdispatcher -> setfontattrs(DEFAULT_TEXT_FONT, DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
+#endif
 	MCdispatcher -> open();
 
 	// This is here because it relies on MCscreen being initialized.
@@ -970,6 +982,9 @@ bool X_open(int argc, char *argv[], char *envp[])
 	MCsystemprinter = MCprinter = MCscreen -> createprinter();
 	MCprinter -> Initialize();
 
+	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
+	MCGraphicsInitialize();
+	
 	// MW-2009-07-02: Clear the result as a startup failure will be indicated
 	//   there.
 	MCresult -> clear();
@@ -1070,7 +1085,7 @@ int X_close(void)
 	delete IO_stdin;
 	delete IO_stdout;
 	delete IO_stderr;
-	delete MCpatterns;
+	delete MCpatternlist;
 	delete MCresult;
 	delete MCurlresult;
 	delete MCdialogdata;
@@ -1091,12 +1106,8 @@ int X_close(void)
 		MCglobals = MCglobals->getnext();
 		delete tvar;
 	}
-	uint2 i;
-	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
-	{
-		delete MCregexpatterns[i];
-		MCR_free(MCregexcache[i]);
-	}
+	// JS-2013-06-21: [[ EnhancedFilter ]] refactored regex caching mechanism
+    MCR_clearcache();
 	delete MCperror;
 	delete MCeerror;
 
@@ -1170,6 +1181,9 @@ int X_close(void)
 	
 	MCU_finalize_names();
 	MCNameFinalize();
+	
+	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
+	MCGraphicsFinalize();
     
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions

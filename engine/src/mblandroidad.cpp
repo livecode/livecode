@@ -43,6 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblandroidjava.h"
 
 #include "mblad.h"
+#include "resolution.h"
 
 #ifdef FEATURE_INNERACTIVE
 
@@ -143,11 +144,24 @@ MCAdTopLeft MCAndroidInneractiveAd::GetTopLeft()
     MCAdTopLeft t_top_left = {0,0};
     MCAndroidObjectRemoteCall(m_view, "getLeft", "i", &t_top_left.x);
     MCAndroidObjectRemoteCall(m_view, "getTop", "i", &t_top_left.y);
+    
+    // MM-2013-09-30: [[ Bug 11227 ]] Make sure we take into account device scale when positioning ads.
+    MCGFloat t_device_scale;
+    t_device_scale = MCResGetDeviceScale();
+    t_top_left . x = (uint32_t) t_top_left . x / t_device_scale;
+    t_top_left . y = (uint32_t) t_top_left . y / t_device_scale;
+
     return t_top_left;     
 }
 
 void MCAndroidInneractiveAd::SetTopLeft(MCAdTopLeft p_top_left)
-{    
+{
+    // MM-2013-09-30: [[ Bug 11227 ]] Make sure we take into account device scale when positioning ads.
+    MCGFloat t_device_scale;
+    t_device_scale = MCResGetDeviceScale();
+    p_top_left . x = (uint32_t) p_top_left . x * t_device_scale;
+    p_top_left . y = (uint32_t) p_top_left . y * t_device_scale;
+    
     MCAndroidObjectRemoteCall(m_view, "setTopLeft", "vii", nil, p_top_left.x, p_top_left.y);
 }
 

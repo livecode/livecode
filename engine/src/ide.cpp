@@ -1025,7 +1025,7 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		t_first_line = t_start;
 		t_last_line = t_end;
 	}
-
+	
 	uint4 t_old_nesting, t_new_nesting;
 	t_old_nesting = t_new_nesting = t_state -> GetCommentNesting(t_first_line);
 
@@ -1035,10 +1035,17 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 	uint4 t_line;
 	t_line = t_first_line;
 	
+	// MW-2013-10-24: [[ FasterField ]] We calculate the initial height of all the affected
+	//   paragraphs.
+	int32_t t_initial_height;
+	t_initial_height = 0;
+	
 	MCExecPoint ep;
 
 	for(t_line = t_first_line, t_paragraph = t_first_paragraph; t_line <= t_last_line; t_line++, t_paragraph = t_paragraph -> next())
 	{
+		t_initial_height += t_paragraph -> getheight(t_target -> getfixedheight());
+		
 		// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
 		//   works.
 		char *t_text;
@@ -1059,6 +1066,8 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 	if (p_mutate)
 		while(t_paragraph != t_sentinal_paragraph && t_new_nesting != t_old_nesting)
 		{
+			t_initial_height += t_paragraph -> getheight(t_target -> getfixedheight());
+			
 			// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
 			//   works.
 			char *t_text;
@@ -1078,15 +1087,42 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 			t_line++;
 		}
 
+	// MW-2013-10-24: [[ FasterField ]] Rather than recomputing and redrawing all
+	//   let's be a little more selective - only relaying out and redrawing the
+	//   paragraphs that have changed.
+	
+	// MW-2013-10-24: [[ FasterField ]] Calculate the final height of the affected paragraphs.
+	int32_t t_final_height;
+	t_final_height = 0;
 	do
 	{
 		t_paragraph = t_paragraph -> prev();
-		t_paragraph -> layout();
+		t_paragraph -> layout(false);
+		t_final_height += t_paragraph -> getheight(t_target -> getfixedheight());
 	}
 	while(t_paragraph != t_first_paragraph);
-
-	// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-	t_target -> layer_redrawall();
+	
+	// MW-2013-10-24: [[ FasterField ]] Get the y offset of the initial paragraph
+	int32_t t_paragraph_y;
+	t_paragraph_y = t_target -> getcontenty() + t_target -> paragraphtoy(t_first_paragraph);
+	
+	// MW-2013-10-24: [[ FasterField ]] If the final height has changed, then recompute and
+	//   redraw everything from initial paragraph down. Otherwise, just redraw the affected
+	//   paragraphs.
+	MCRectangle drect;
+	drect = t_target -> getfrect();
+	if (t_initial_height != t_final_height)
+	{
+		t_target -> do_recompute(false);
+		drect . height -= t_paragraph_y - drect . y;
+	}
+	else
+		drect . height = t_initial_height;
+	drect . y = t_paragraph_y;
+		
+	t_target -> removecursor();
+	t_target -> layer_redrawrect(drect);
+	t_target -> replacecursor(False, True);
 }
 
 Exec_stat MCIdeScriptColourize::exec(MCExecPoint& p_exec)

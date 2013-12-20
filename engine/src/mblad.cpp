@@ -328,15 +328,17 @@ void MCAd::Finalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
 void MCAdExecRegisterWithInneractive(MCExecContext& ctxt, const char *p_key)
 {
+#ifdef /* MCAdExecRegisterWithInneractive */ LEGACY_EXEC
     MCCStringFree(s_inneractive_ad_key);
     /* UNCHECKED */ MCCStringClone(p_key, s_inneractive_ad_key);
+#endif /* MCAdExecRegisterWithInneractive */
 }
 
 void MCAdExecCreateAd(MCExecContext& ctxt, const char *p_name, MCAdType p_type, MCAdTopLeft p_top_left, MCVariableValue *p_meta_data)
-{    
+{
+#ifdef /* MCAdExecCreateAd */ LEGACY_EXEC
     bool t_success;
     t_success = true;
     
@@ -389,11 +391,13 @@ void MCAdExecCreateAd(MCExecContext& ctxt, const char *p_name, MCAdType p_type, 
     }
 
 	if (!t_success)
-		ctxt.SetTheResultToStaticCString("could not create ad"); 
+		ctxt.SetTheResultToStaticCString("could not create ad");
+#endif /* MCAdExecCreateAd */
 }
 
 void MCAdExecDeleteAd(MCExecContext& ctxt, const char *p_name)
 {
+#ifdef /* MCAdExecDeleteAd */ LEGACY_EXEC
     if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
     {
         ctxt.SetTheResultToStaticCString("not registered with ad service");
@@ -406,10 +410,12 @@ void MCAdExecDeleteAd(MCExecContext& ctxt, const char *p_name)
         ctxt.SetTheResultToStaticCString("could not find ad");
     else 
         t_ad->Release();
+#endif /* MCAdExecDeleteAd */
 }
 
 bool MCAdGetTopLeftOfAd(MCExecContext& ctxt, const char *p_name, MCAdTopLeft &r_top_left)
 {
+#ifdef /* MCAdGetTopLeftOfAd */ LEGACY_EXEC
     if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
     {
         ctxt.SetTheResultToStaticCString("not registered with ad service");
@@ -428,10 +434,12 @@ bool MCAdGetTopLeftOfAd(MCExecContext& ctxt, const char *p_name, MCAdTopLeft &r_
         r_top_left = t_ad->GetTopLeft();    
         return true;
     }
+#endif /* MCAdGetTopLeftOfAd */
 }
 
 void MCAdSetTopLeftOfAd(MCExecContext& ctxt, const char *p_name, MCAdTopLeft p_top_left)
 {
+#ifdef /* MCAdSetTopLeftOfAd */ LEGACY_EXEC
     if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
     {
         ctxt.SetTheResultToStaticCString("not registered with ad service");
@@ -443,11 +451,12 @@ void MCAdSetTopLeftOfAd(MCExecContext& ctxt, const char *p_name, MCAdTopLeft p_t
     if (!MCAd::FindByNameOrId(p_name, t_ad))
         ctxt.SetTheResultToStaticCString("could not find ad");
     else
-        t_ad->SetTopLeft(p_top_left);    
+        t_ad->SetTopLeft(p_top_left);
+#endif /* MCAdSetTopLeftOfAd */
 }
-
 bool MCAdGetVisibleOfAd(MCExecContext& ctxt, const char *p_name, bool &r_visible)
 {
+#ifdef /* MCAdGetVisibleOfAd */ LEGACY_EXEC
     if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
     {
         ctxt.SetTheResultToStaticCString("not registered with ad service");
@@ -466,10 +475,12 @@ bool MCAdGetVisibleOfAd(MCExecContext& ctxt, const char *p_name, bool &r_visible
         r_visible = t_ad->GetVisible();
         return true;
     }
+#endif /* MCAdGetVisibleOfAd */
 }
 
 void MCAdSetVisibleOfAd(MCExecContext& ctxt, const char *p_name, bool p_visible)
 {
+#ifdef /* MCAdSetVisibleOfAd */ LEGACY_EXEC
     if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
     {
         ctxt.SetTheResultToStaticCString("not registered with ad service");
@@ -481,11 +492,13 @@ void MCAdSetVisibleOfAd(MCExecContext& ctxt, const char *p_name, bool p_visible)
     if (!MCAd::FindByNameOrId(p_name, t_ad))
         ctxt.SetTheResultToStaticCString("could not find ad");
     else
-        t_ad->SetVisible(p_visible);     
+        t_ad->SetVisible(p_visible);
+#endif /* MCAdSetVisibleOfAd */
 }
 
 bool MCAdGetAds(MCExecContext& ctxt, char*& r_ads)
-{    
+{
+#ifdef /* MCAdGetAds */ LEGACY_EXEC
     bool t_success;
     t_success = true;
 	for(MCAd *t_ad = s_ads; t_ad != nil && t_success; t_ad = t_ad->GetNext())
@@ -497,12 +510,14 @@ bool MCAdGetAds(MCExecContext& ctxt, char*& r_ads)
                 t_success = MCCStringAppendFormat(r_ads, "\n%s", t_ad->GetName());
         }
     return t_success;
+#endif /* MCAdGetAds */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Exec_stat MCHandleAdRegister(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAdRegister */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
     
@@ -521,11 +536,13 @@ Exec_stat MCHandleAdRegister(void *context, MCParameter *p_parameters)
     MCCStringFree(t_key);
     
     return t_ctxt.GetStat();
+#endif /* MCHandleAdRegister */
 }
 
 
 Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAdCreate */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
 		
@@ -570,10 +587,12 @@ Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
     MCCStringFree(t_ad);
 	    
     return t_ctxt.GetStat();
+#endif /* MCHandleAdCreate */
 }
 
 Exec_stat MCHandleAdDelete(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAdDelete */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
     
@@ -592,10 +611,12 @@ Exec_stat MCHandleAdDelete(void *context, MCParameter *p_parameters)
     MCCStringFree(t_ad);
     
     return t_ctxt.GetStat();
+#endif /* MCHandleAdDelete */
 }
 
 Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAdGetVisible */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
     
@@ -619,10 +640,12 @@ Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters)
     MCCStringFree(t_ad);
     
     return t_ctxt.GetStat();
+#endif /* MCHandleAdGetVisible */
 }
 
 Exec_stat MCHandleAdSetVisible(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAdSetVisible */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
     
@@ -643,10 +666,12 @@ Exec_stat MCHandleAdSetVisible(void *context, MCParameter *p_parameters)
     MCCStringFree(t_ad);
     
     return t_ctxt.GetStat();
+#endif /* MCHandleAdSetVisible */
 }
 
 Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAdGetTopLeft */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
     
@@ -678,10 +703,12 @@ Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
     MCCStringFree(t_ad);
     
     return t_ctxt.GetStat();
+#endif /* MCHandleAdGetTopLeft */
 }
 
 Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAdSetTopLeft */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
     
@@ -707,10 +734,12 @@ Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters)
     MCCStringFree(t_ad);
     
     return t_ctxt.GetStat();
+#endif /* MCHandleAdSetTopLeft */
 }
 
 Exec_stat MCHandleAds(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAds */ LEGACY_EXEC
     bool t_success;
     t_success = true;
     
@@ -730,6 +759,7 @@ Exec_stat MCHandleAds(void *context, MCParameter *p_parameters)
         MCresult->store(ep, False);
     
     return t_ctxt.GetStat();
+#endif /* MCHandleAds */
 }
 
 ////////////////////////////////////////////////////////////////////////////////

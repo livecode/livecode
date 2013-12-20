@@ -347,10 +347,23 @@ Exec_stat MCNativeInputControl::Set(MCNativeControlProperty p_property, MCExecPo
 			return ES_NORMAL;
 			
 		case kMCNativeControlPropertyFontSize:
+        {
 			if (!ParseInteger(ep, t_integer))
 				return ES_ERROR;
-			[t_field setFont: [[t_field font] fontWithSize: t_integer]];
+            
+            // FG-2013-11-06 [[ Bugfix 11285 ]]
+            // On iOS7 devices, UITextView controls were having their font size
+            // properties ignored because [t_field font] was returning nil when
+            // no text had been added to the control yet.
+            UIFont* t_font = [t_field font];
+            if (t_font == nil)
+                t_font = [UIFont systemFontOfSize: t_integer];
+            else
+                t_font = [t_font fontWithSize: t_integer];
+            
+			[t_field setFont: t_font];
 			return ES_NORMAL;
+        }
 			
 		case kMCNativeControlPropertyTextAlign:
 			if (!ParseEnum(ep, s_textalign_enum, t_enum))
@@ -859,7 +872,7 @@ void MCNativeMultiLineControl::HandleScrollEvent(void)
 	int32_t t_x, t_y;
 	m_post_scroll_event = true;
 	if (t_target != nil && MCScrollViewGetContentOffset(GetView(), t_x, t_y))
-	{
+{
 		MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
 		t_target->message_with_args(MCM_scroller_did_scroll, m_content_rect.x + t_x, m_content_rect.y + t_y);

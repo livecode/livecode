@@ -315,26 +315,34 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
 Exec_stat MCHandleCanMakePurchase(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleCanMakePurchase */ LEGACY_EXEC
 	MCresult -> sets(MCU_btos( MCStoreCanMakePurchase() ));
 	return ES_NORMAL;
+#endif /* MCHandleCanMakePurchase */
 }
 
 Exec_stat MCHandleEnablePurchaseUpdates(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleEnablePurchaseUpdates */ LEGACY_EXEC
 	MCStoreEnablePurchaseUpdates();
 	return ES_NORMAL;
+#endif /* MCHandleEnablePurchaseUpdates */
 }
 
 Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleDisablePurchaseUpdates */ LEGACY_EXEC
 	MCStoreDisablePurchaseUpdates();
 	return ES_NORMAL;
+#endif /* MCHandleDisablePurchaseUpdates */
 }
 
 Exec_stat MCHandleRestorePurchases(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleRestorePurchases */ LEGACY_EXEC
 	MCStoreRestorePurchases();
 	return ES_NORMAL;
+#endif /* MCHandleRestorePurchases */
 }
 
 static bool list_purchases(void *context, MCPurchase* p_purchase)
@@ -349,14 +357,17 @@ static bool list_purchases(void *context, MCPurchase* p_purchase)
 
 Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePurchaseList */ LEGACY_EXEC
 	MCExecPoint ep(nil, nil, nil);
 	MCPurchaseList(list_purchases, &ep);
 	MCresult -> store(ep, False);
 	return ES_NORMAL;
+#endif /* MCHandlePurchaseList */
 }
 
 Exec_stat MCHandlePurchaseCreate(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePurchaseCreate */ LEGACY_EXEC
 	bool t_success = true;
 	char *t_product_id = nil;
 	MCPurchase *t_purchase = nil;
@@ -373,10 +384,12 @@ Exec_stat MCHandlePurchaseCreate(void *context, MCParameter *p_parameters)
 	MCCStringFree(t_product_id);
     
 	return ES_NORMAL;
+#endif /* MCHandlePurchaseCreate */
 }
 
 Exec_stat MCHandlePurchaseState(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePurchaseState */ LEGACY_EXEC
 	bool t_success = true;
 	
 	uint32_t t_id;
@@ -395,10 +408,12 @@ Exec_stat MCHandlePurchaseState(void *context, MCParameter *p_parameters)
 		MCresult -> sets(t_state);
 	
 	return ES_NORMAL;
+#endif /* MCHandlePurchaseState */
 }
 
 Exec_stat MCHandlePurchaseError(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePurchaseError */ LEGACY_EXEC
 	bool t_success = true;
 	
 	uint32_t t_id;
@@ -420,10 +435,12 @@ Exec_stat MCHandlePurchaseError(void *context, MCParameter *p_parameters)
 		MCCStringFree(t_error);
 	
 	return ES_NORMAL;
+#endif /* MCHandlePurchaseError */
 }
 
 Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePurchaseSet */ LEGACY_EXEC
 	bool t_success = true;
 	
 	uint32_t t_id;
@@ -450,10 +467,12 @@ Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters)
 	MCCStringFree(t_prop_name);
 	
 	return ES_NORMAL;
+#endif /* MCHandlePurchaseSet */
 }
 
 Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePurchaseGet */ LEGACY_EXEC
 	bool t_success = true;
 	
 	uint32_t t_id;
@@ -482,10 +501,12 @@ Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters)
 	MCCStringFree(t_prop_name);
 	
 	return ES_NORMAL;
+#endif /* MCHandlePurchaseGet */
 }
 
 Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePurchaseSendRequest */ LEGACY_EXEC
 	bool t_success = true;
 	
 	uint32_t t_id;
@@ -501,10 +522,12 @@ Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters)
 		t_success = MCPurchaseSendRequest(t_purchase);
 	
 	return ES_NORMAL;
+#endif /* MCHandlePurchaseSendRequest */
 }
 
 Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePurchaseConfirmDelivery */ LEGACY_EXEC
 	bool t_success = true;
 	
 	uint32_t t_id;
@@ -520,4 +543,5 @@ Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_paramete
 		t_success = MCPurchaseConfirmDelivery(t_purchase);
 	
 	return ES_NORMAL;
+#endif /* MCHandlePurchaseConfirmDelivery */
 }

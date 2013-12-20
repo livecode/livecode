@@ -56,6 +56,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 #include "stacksecurity.h"
 
+#include "graphics_util.h"
+
 #define UNLICENSED_TIME 6.0
 #ifdef _DEBUG_MALLOC_INC
 #define LICENSED_TIME 1.0
@@ -129,6 +131,7 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 {
 	switch (which)
 	{
+#ifdef /* MCDispatch::getprop */ LEGACY_EXEC
 	case P_BACK_PIXEL:
 		ep.setint(MCscreen->background_pixel.pixel & 0xFFFFFF);
 		return ES_NORMAL;
@@ -180,6 +183,7 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 	case P_TEXT_STYLE:
 		ep.setstaticcstring(MCplainstring);
 		return ES_NORMAL;
+#endif /* MCDispatch::getprop */ 
 	default:
 		MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
 		return ES_ERROR;
@@ -188,7 +192,9 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 
 Exec_stat MCDispatch::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
+#ifdef /* MCDispatch::setprop */ LEGACY_EXEC
 	return ES_NORMAL;
+#endif /* MCDispatch::setprop */
 }
 
 // bogus "cut" call actually checks license
@@ -475,7 +481,19 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 	MCStack *t_stack = nil;
 	/* UNCHECKED */ MCStackSecurityCreateStack(t_stack);
 	t_stack -> setparent(this);
-	t_stack -> setfilename(strclone(MCcmd));
+	
+	// MM-2013-10-30: [[ Bug 11333 ]] Set the filename of android mainstack to apk/mainstack (previously was just apk).
+	//   This solves relative file path referencing issues.
+#ifdef TARGET_SUBPLATFORM_ANDROID
+    char *t_filename;
+    /* UNCHECKED */ MCMemoryNewArray(MCCStringLength(MCcmd) + 11, t_filename);
+    MCCStringFormat(t_filename, "%s/mainstack", MCcmd);
+	t_stack -> setfilename(t_filename);
+#else
+   	t_stack -> setfilename(strclone(MCcmd));
+#endif
+	
+	
 	if (IO_read_uint1(&type, stream) != IO_NORMAL
 	        || type != OT_STACK && type != OT_ENCRYPT_STACK
 	        || t_stack->load(stream, version, type) != IO_NORMAL)
@@ -1007,12 +1025,20 @@ void MCDispatch::wkup(Window w, const char *string, KeySym key)
 
 void MCDispatch::wmfocus_stack(MCStack *target, int2 x, int2 y)
 {
+	// IM-2013-09-23: [[ FullscreenMode ]] transform view -> stack coordinates
+	MCPoint t_stackloc;
 	if (menu != NULL)
-		menu->mfocus(x, y);
+	{
+		t_stackloc = menu->getstack()->windowtostackloc(MCPointMake(x, y));
+		menu->mfocus(t_stackloc.x, t_stackloc.y);
+	}
 	else
 	{
 		if (target != NULL)
-			target->mfocus(x, y);
+		{
+			t_stackloc = target->windowtostackloc(MCPointMake(x, y));
+			target->mfocus(t_stackloc.x, t_stackloc.y);
+		}
 	}
 }
 
@@ -1192,12 +1218,17 @@ MCDragAction MCDispatch::wmdragmove(Window w, int2 x, int2 y)
 	static uint4 s_old_modifiers = 0;
 
 	MCStack *target = findstackd(w);
-	if (MCmousex != x || MCmousey != y || MCmodifierstate != s_old_modifiers)
+	
+	// IM-2013-10-08: [[ FullscreenMode ]] Translate mouse location to stack coords
+	MCPoint t_mouseloc;
+	t_mouseloc = target->windowtostackloc(MCPointMake(x, y));
+	
+	if (MCmousex != t_mouseloc.x || MCmousey != t_mouseloc.y || MCmodifierstate != s_old_modifiers)
 	{
-		MCmousex = x;
-		MCmousey = y;
+		MCmousex = t_mouseloc.x;
+		MCmousey = t_mouseloc.y;
 		s_old_modifiers = MCmodifierstate;
-		target -> mfocus(x, y);
+		target -> mfocus(t_mouseloc.x, t_mouseloc.y);
 	}
 	return MCdragaction;
 }
@@ -1242,7 +1273,7 @@ void MCDispatch::configure(Window w)
 {
 	MCStack *target = findstackd(w);
 	if (target != NULL)
-		target->configure(True);
+		target->view_configure(true);
 }
 
 void MCDispatch::enter(Window w)
@@ -1264,11 +1295,15 @@ void MCDispatch::redraw(Window w, MCRegionRef p_dirty_region)
 MCFontStruct *MCDispatch::loadfont(const MCString &fname, uint2 &size,
                                    uint2 style, Boolean printer)
 {
-#ifdef _LINUX
+#if defined(_LINUX_DESKTOP)
 	if (fonts == NULL)
 		fonts = MCFontlistCreateNew();
 	if (fonts == NULL)
 		fonts = MCFontlistCreateOld();
+#elif defined(_LINUX_SERVER)
+	// MM-2013-09-13: [[ RefactorGraphics ]] Server font support.
+	if (fonts == NULL)
+		fonts = MCFontlistCreateNew();
 #else
 	if (fonts == nil)
 		fonts = new MCFontlist;
@@ -1957,6 +1992,12 @@ void MCDispatch::freeprinterfonts()
 	fonts->freeprinterfonts();
 }
 #endif
+
+void MCDispatch::flushfonts(void)
+{
+	delete fonts;
+	fonts = nil;
+}
 
 MCFontlist *MCFontlistGetCurrent(void)
 {
