@@ -85,17 +85,17 @@ struct MCCapsuleInfo
 
 #if defined(_WINDOWS)
 #pragma section(".project", read, discard)
-__declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = {};
+__declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = { 0 };
 #elif defined(_LINUX)
-__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {};
+__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = { 0 };
 #elif defined(_MACOSX)
-__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {};
+__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = { 0 };
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
-__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {};
+__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = { 0 };
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
-__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {};
+__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = { 0 };
 #elif defined(TARGET_PLATFORM_MOBILE)
-MCCapsuleInfo MCcapsule = {};
+MCCapsuleInfo MCcapsule = { 0 };
 #endif
 
 MCLicenseParameters MClicenseparameters =
@@ -436,7 +436,8 @@ IO_stat MCDispatch::startup(void)
 		MCStack *t_stack;
 		IO_handle t_stream;
 		t_stream = MCS_open(getenv("TEST_STACK"), IO_READ_MODE, False, False, 0);
-		if (MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
+		if (t_stream == nil ||
+			MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone stack");
 			return IO_ERROR;
