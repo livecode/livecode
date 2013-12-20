@@ -325,7 +325,7 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 	
 	bool t_success;
 	t_success = true;
-	
+
 	HDC t_gdicontext;
 	t_gdicontext = NULL;
 	if (t_success)
@@ -342,11 +342,22 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 	
 	SIZE t_size;
 	if (t_success)
-		t_success = GetTextExtentPoint32W(t_gdicontext, (LPCWSTR)p_text, p_length >> 1, &t_size);
+		t_success = GetTextExtentPoint32W(t_gdicontext, (LPCWSTR)p_text, p_length, &t_size);
 	
 	TEXTMETRICA t_metrics;
 	if (t_success)
 		t_success = GetTextMetricsA(t_gdicontext, &t_metrics);
+
+	// MM-2013-12-16: [[ Bug 11564 ]] Take into account any overhang of italic text to prevent clipping.
+	MCGFloat t_overhang;
+	if (t_success)
+	{
+		ABCFLOAT t_abc_widths;
+		if (GetCharABCWidthsFloatW(t_gdicontext, *(p_text + p_length - 1), *(p_text + p_length - 1), &t_abc_widths) != 0)
+			t_overhang = t_abc_widths . abcfA + t_abc_widths . abcfC;
+		else
+			t_overhang = 0.0f;
+	}
 	
 	MCGIntRectangle t_text_bounds, t_clipped_bounds;
 	MCGAffineTransform t_transform;
@@ -356,7 +367,7 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 		MCGRectangle t_float_text_bounds;
 		t_float_text_bounds . origin . x = 0;
 		t_float_text_bounds . origin . y = -t_metrics . tmAscent;
-		t_float_text_bounds . size . width = t_size . cx;
+		t_float_text_bounds . size . width = t_size . cx + t_overhang;
 		t_float_text_bounds . size . height = t_metrics . tmAscent + t_metrics . tmDescent;
 		
 		t_transform = MCGContextGetDeviceTransform(self);
@@ -452,7 +463,19 @@ static bool __MCGContextTracePlatformText(MCGContextRef self, const unichar_t *p
 		BeginPath(t_gdicontext);
 		SetBkMode(t_gdicontext, TRANSPARENT);
 		SetTextAlign(t_gdicontext, TA_BASELINE);
-		TextOutW(t_gdicontext, 0, 0, p_text, p_length / 2);
+		if (p_font . fixed_advance == 0)
+			TextOutW(t_gdicontext, 0, 0, p_text, p_length / 2);
+		else
+		{
+			// MW-2013-12-05: [[ Bug 11535 ]] If fixed advance, then make the advance
+			//   width of each char fixed_advance.
+			INT *t_dxs;
+			/* UNCHECKED */ MCMemoryNewArray(p_length / 2, t_dxs);
+			for(uindex_t i = 0; i < p_length / 2; i++)
+				t_dxs[i] = p_font . fixed_advance * 256 / p_font . size;
+			ExtTextOutW(t_gdicontext, 0, 0, 0, NULL, p_text, p_length / 2, t_dxs);
+			MCMemoryDeleteArray(t_dxs);
+		}
 		EndPath(t_gdicontext);
 
 		int t_count;
@@ -583,6 +606,13 @@ MCGFloat __MCGContextMeasurePlatformTextIdeal(MCGContextRef self, const unichar_
 	bool t_success;
 	t_success = true;
 	
+	// MW-2013-12-05: [[ Bug 11535 ]] If fixed advance, then the width of the string
+	//   is taken to be char_count * fixed_advance. (Note this isn't necessarily
+	//   correct for combining chars, but the fixed width fonts on Windows don't seem
+	//   to combine).
+	if (p_font . fixed_advance != 0)
+		return p_font . fixed_advance * (p_length >> 1);
+
 	HDC t_gdicontext;
 	t_gdicontext = NULL;
 	if (t_success)
@@ -608,7 +638,7 @@ MCGFloat __MCGContextMeasurePlatformTextIdeal(MCGContextRef self, const unichar_
 	SIZE t_size;
 	if (t_success)
 		t_success = GetTextExtentPoint32W(t_gdicontext, (LPCWSTR)p_text, p_length >> 1, &t_size);
-	
+
 	DeleteDC(t_gdicontext);
 	DeleteObject(t_new_font);
 	

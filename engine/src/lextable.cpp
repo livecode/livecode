@@ -1206,6 +1206,8 @@ LT factor_table[] =
         {"penpat", TT_PROPERTY, P_PEN_PATTERN},
         {"penpattern", TT_PROPERTY, P_PEN_PATTERN},
         {"penwidth", TT_PROPERTY, P_PEN_WIDTH},
+		// IM-2013-12-04: [[ PixelScale ]] The "pixelScale" token
+		{"pixelscale", TT_PROPERTY, P_PIXEL_SCALE},
         {"pixmapid", TT_PROPERTY, P_PIXMAP_ID},
 		{"plaintext", TT_PROPERTY, P_PLAIN_TEXT},
         {"platform", TT_FUNCTION, F_PLATFORM},
@@ -1514,6 +1516,8 @@ LT factor_table[] =
         {"system", TT_PROPERTY, P_SYSTEM},
         {"systemcolorselector", TT_PROPERTY, P_SYSTEM_CS},
         {"systemfileselector", TT_PROPERTY, P_SYSTEM_FS},
+		// IM-2013-12-04: [[ PixelScale ]] The "pixelScale" token
+		{"systempixelscale", TT_PROPERTY, P_SYSTEM_PIXEL_SCALE},
 		{"systemprintselector", TT_PROPERTY, P_SYSTEM_PS},
         {"systemversion", TT_FUNCTION, F_SYSTEM_VERSION},
         {"systemwindow", TT_PROPERTY, P_SYSTEM_WINDOW},

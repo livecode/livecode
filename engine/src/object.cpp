@@ -4212,9 +4212,11 @@ void MCObject::mapfont(void)
 		parent -> mapfont();
 	}
 	
+	// MW-2013-12-19: [[ Bug 11606 ]] Make sure we check for a stack using ideal layout
+	//   as this requires new font computation.
 	// If we have a font setting, then we create a new font. Otherwise we just
 	// copy the parent's font.
-	if (hasfontattrs())
+	if (hasfontattrs() || (gettype() == CT_STACK && static_cast<MCStack *>(this) -> getuseideallayout()))
 	{
 		// MW-2012-02-19: [[ SplitTextAttrs ]] Compute the attrs to write out. If we don't
 		//   have all of the attrs, fetch the inherited ones.
@@ -4229,8 +4231,10 @@ void MCObject::mapfont(void)
 		// If the parent has printer metrics, make sure we do too.
 		// MW-2012-08-30: [[ Bug 10295 ]] If this is a stack and it has formatForPrinting
 		//   set, make sure we create a printer font.
+		// MW-2013-12-04: [[ Bug 11513 ]] Make sure we check for ideal layout, rather than
+		//   just for formatForPrinting.
 		if (parent != nil && MCFontHasPrinterMetrics(parent -> m_font) ||
-			gettype() == CT_STACK && getflag(F_FORMAT_FOR_PRINTING))
+			gettype() == CT_STACK && ((MCStack *)this) -> getuseideallayout())
 			t_font_style |= kMCFontStylePrinterMetrics;
 
 		// Create our font.

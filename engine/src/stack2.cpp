@@ -2463,7 +2463,7 @@ void MCStack::device_redrawwindow(MCStackSurface *p_surface, MCRegionRef p_regio
 			
 			// scale user -> device space
 			MCGFloat t_scale;
-			t_scale = MCResGetDeviceScale();
+			t_scale = MCResGetPixelScale();
 			MCGContextScaleCTM(t_context, t_scale, t_scale);
 			
 			view_render(t_context, t_rect);

@@ -1108,7 +1108,7 @@ public:
 			
 			// IM-2013-08-29: [[ ResIndependence ]] scale mask to device coords
 			MCGFloat t_scale;
-			t_scale = MCResGetDeviceScale();
+			t_scale = MCResGetPixelScale();
 			
 			MCGFloat t_mask_height, t_mask_width;
 			t_mask_width = CGImageGetWidth(t_mask) * t_scale;
@@ -1465,7 +1465,7 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 				{
 					// IM-2013-08-23: [[ ResIndependence ]] provide surface height in device scale
 					MCGFloat t_scale;
-					t_scale = MCResGetDeviceScale();
+					t_scale = MCResGetPixelScale();
 					
 					// IM-2013-10-10: [[ FullscreenMode ]] Use height of view instead of card
 					int32_t t_surface_height;

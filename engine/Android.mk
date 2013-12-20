@@ -30,8 +30,11 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	keywords.cpp line.cpp literal.cpp magnify.cpp mcerror.cpp \
 	mcio.cpp mcstring.cpp mctheme.cpp newobj.cpp mcutility.cpp \
 	object.cpp objectpropsets.cpp objptr.cpp operator.cpp paragraf.cpp paragrafattr.cpp param.cpp \
-	property.cpp pickle.cpp regex.cpp \
-	scriptpt.cpp scrolbar.cpp scrollbardraw.cpp sellst.cpp \
+	property.cpp pickle.cpp \
+	regex.cpp \
+	resolution.cpp \
+	scriptpt.cpp \
+	scrolbar.cpp scrollbardraw.cpp sellst.cpp \
 	stack.cpp \
 	stack2.cpp \
 	stack3.cpp \

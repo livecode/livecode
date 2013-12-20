@@ -147,7 +147,7 @@ MCAdTopLeft MCAndroidInneractiveAd::GetTopLeft()
     
     // MM-2013-09-30: [[ Bug 11227 ]] Make sure we take into account device scale when positioning ads.
     MCGFloat t_device_scale;
-    t_device_scale = MCResGetDeviceScale();
+    t_device_scale = MCResGetPixelScale();
     t_top_left . x = (uint32_t) t_top_left . x / t_device_scale;
     t_top_left . y = (uint32_t) t_top_left . y / t_device_scale;
 
@@ -158,7 +158,7 @@ void MCAndroidInneractiveAd::SetTopLeft(MCAdTopLeft p_top_left)
 {
     // MM-2013-09-30: [[ Bug 11227 ]] Make sure we take into account device scale when positioning ads.
     MCGFloat t_device_scale;
-    t_device_scale = MCResGetDeviceScale();
+    t_device_scale = MCResGetPixelScale();
     p_top_left . x = (uint32_t) p_top_left . x * t_device_scale;
     p_top_left . y = (uint32_t) p_top_left . y * t_device_scale;
     

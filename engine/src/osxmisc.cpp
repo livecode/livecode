@@ -493,7 +493,7 @@ void MCButton::macopenmenu(void)
 	
 	// IM-2013-08-16: [[ ResIndependence ]] scale menu location to device coords
 	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
+	t_scale = MCResGetPixelScale();
 	
 	tmenux = tmenux * t_scale;
 	tmenuy = tmenuy * t_scale;
