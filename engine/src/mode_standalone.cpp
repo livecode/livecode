@@ -85,17 +85,17 @@ struct MCCapsuleInfo
 
 #if defined(_WINDOWS)
 #pragma section(".project", read, discard)
-__declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = {};
+__declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = { 0 };
 #elif defined(_LINUX)
-__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {};
+__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = { 0 };
 #elif defined(_MACOSX)
-__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {};
+__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = { 0 };
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
-__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {};
+__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = { 0 };
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
-__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {};
+__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = { 0 };
 #elif defined(TARGET_PLATFORM_MOBILE)
-MCCapsuleInfo MCcapsule = {};
+MCCapsuleInfo MCcapsule = { 0 };
 #endif
 
 MCLicenseParameters MClicenseparameters =
@@ -436,7 +436,8 @@ IO_stat MCDispatch::startup(void)
 		MCStack *t_stack;
 		IO_handle t_stream;
 		t_stream = MCS_open(getenv("TEST_STACK"), IO_READ_MODE, False, False, 0);
-		if (MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
+		if (t_stream == nil ||
+			MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone stack");
 			return IO_ERROR;
@@ -470,13 +471,18 @@ IO_stat MCDispatch::startup(void)
 
 	if (((MCcapsule . size) & (1U << 31)) == 0)
 	{
-		// Capsule is not spilled - just use the project section.
-		// MW-2010-05-08: Capsule size includes 'size' field, so need to adjust
-		if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&MCcapsule . data, MCcapsule . size - sizeof(uint32_t), true))
+		if (MCcapsule . size != 0)
 		{
-			MCCapsuleClose(t_capsule);
-			return IO_ERROR;
+			// Capsule is not spilled - just use the project section.
+			// MW-2010-05-08: Capsule size includes 'size' field, so need to adjust
+			if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&MCcapsule . data, MCcapsule . size - sizeof(uint32_t), true))
+			{
+				MCCapsuleClose(t_capsule);
+				return IO_ERROR;
+			}
 		}
+		else
+			return IO_ERROR;
 	}
 	else
 	{
