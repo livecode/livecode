@@ -161,6 +161,10 @@ public:
 	uint32_t GetDataCompression();
 
 	// implementation
+	
+	// IM-2013-12-17: [[ Bug 11604 ]] Notify image rep when the image object is moved
+	void owner_rect_changed(const MCRectangle &p_new_rect);
+	
 	bool copy_selection(MCImageBitmap *&r_bitmap);
 
 	Boolean image_mfocus(int2 x, int2 y);

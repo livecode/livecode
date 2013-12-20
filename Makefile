@@ -53,7 +53,7 @@ kernel-standalone: kernel
 kernel-development: kernel
 	$(MAKE) -C ./engine -f Makefile.kernel-development libkernel-development
 
-kernel-server:
+kernel-server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore libgraphics
 	$(MAKE) -C ./engine -f Makefile.kernel-server libkernel-server
 
 development: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel kernel-development revsecurity
@@ -65,7 +65,7 @@ standalone: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecu
 installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel revsecurity
 	$(MAKE) -C ./engine -f Makefile.installer installer
 
-server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel kernel-server revsecurity
+server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel-server revsecurity libgraphics
 	$(MAKE) -C ./engine -f Makefile.server server-community
 
 ###############################################################################

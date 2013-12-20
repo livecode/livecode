@@ -803,8 +803,8 @@ static bool WindowsIsCompositionEnabled(void)
 }
 
 bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
-                               const char *displayname)
+/* OVERHAUL - REVISIT: p_scale_factor parameter currently ignored */
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, const char *displayname)
 {
 	bool t_is_composited;
 	t_is_composited = WindowsIsCompositionEnabled();

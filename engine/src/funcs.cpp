@@ -5595,17 +5595,12 @@ MCMCISendString::~MCMCISendString()
 
 Parse_stat MCMCISendString::parse(MCScriptPoint &sp, Boolean the)
 {
-	if (!the)
-	{
-		if (get1param(sp, &string, the) != PS_NORMAL)
-		{
-			MCperror->add
-			(PE_MCISENDSTRING_BADPARAM, sp);
-			return PS_ERROR;
-		}
-	}
-	else
-		initpoint(sp);
+    if (get1param(sp, &string, the) != PS_NORMAL)
+    {
+        MCperror->add
+                (PE_MCISENDSTRING_BADPARAM, sp);
+        return PS_ERROR;
+    }
 	return PS_NORMAL;
 }
 

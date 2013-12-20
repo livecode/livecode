@@ -40,10 +40,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	char *t_text;
 	t_text = nil;
 	if (t_success)
-	{
-		p_length = p_length / 2;
-		t_success = MCCStringFromUnicodeSubstring(p_text, p_length, t_text);
-	}
+		t_success = MCCStringFromUnicodeSubstring(p_text, p_length / 2, t_text);
 	
 	if (t_success)
 	{
@@ -63,7 +60,10 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_typeface = (SkTypeface *) p_font . fid;
 		t_paint . setTypeface(t_typeface);
 		
-		self -> layer -> canvas -> drawText(t_text, p_length, MCGCoordToSkCoord(p_location . x), MCGCoordToSkCoord(p_location . y), t_paint);
+		// MM-2013-12-05: [[ Bug 11527 ]] Make sure we calculate the UTF-8 string length correctly.
+		uindex_t t_length;
+		t_length = MCCStringLength(t_text);
+		self -> layer -> canvas -> drawText(t_text, t_length, MCGCoordToSkCoord(p_location . x), MCGCoordToSkCoord(p_location . y), t_paint);
 	}
 	
 	MCCStringFree(t_text);
@@ -81,10 +81,7 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 	char *t_text;
 	t_text = nil;
 	if (t_success)
-	{
-		p_length = p_length / 2;
-		t_success = MCCStringFromUnicodeSubstring(p_text, p_length, t_text);
-	}
+		t_success = MCCStringFromUnicodeSubstring(p_text, p_length / 2, t_text);
 	
 	MCGFloat t_width;
 	t_width = 0.0;
@@ -97,7 +94,10 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 		t_typeface = (SkTypeface *) p_font . fid;
 		t_paint . setTypeface(t_typeface);
 		
-		t_width =  (MCGFloat) t_paint . measureText(t_text, p_length);
+		// MM-2013-12-05: [[ Bug 11527 ]] Make sure we calculate the UTF-8 string length correctly.
+		uindex_t t_length;
+		t_length = MCCStringLength(t_text);
+		t_width =  (MCGFloat) t_paint . measureText(t_text, t_length);
 	}
 	
 	MCCStringFree(t_text);

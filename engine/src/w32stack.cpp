@@ -684,7 +684,7 @@ bool MCWin32ApplyMaskToRasterRegion(MCGRaster &p_raster, uint32_t p_x_origin, ui
 		// will be defined by the opaque parts of the mask - areas outside will be unaffected. Instead we
 		// draw a solid rectangle over the intended areas using the mask as a pattern.
 		MCGFloat t_scale;
-		t_scale = MCResGetDeviceScale();
+		t_scale = MCResGetPixelScale();
 
 		MCGContextSetFillPattern(t_gcontext, t_mask_image, MCGAffineTransformMakeScale(t_scale, t_scale), kMCGImageFilterNearest);
 		MCGContextTranslateCTM(t_gcontext, -(MCGFloat)p_x_origin, -(MCGFloat)p_y_origin);

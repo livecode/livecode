@@ -213,8 +213,18 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size,
 	GetTextMetricsA(hdc, &tm);
 	font->fid = (MCSysFontHandle)newfont;
 	font->size = size;
-	font->ascent = MulDiv(tm.tmAscent, 15, 16);
-	font->descent = tm.tmDescent;
+	// MW-2013-12-19: [[ Bug 11606 ]] Use Mac-style metric adjustment in printer (ideal
+	//   layout mode).
+	if (!printer)
+	{
+		font->ascent = MulDiv(tm.tmAscent, 15, 16);
+		font->descent = tm.tmDescent;
+	}
+	else
+	{
+		font -> ascent = size - 1;
+		font -> descent = size * 2 / 14 + 1;
+	}
 	font->printer = printer;
 }
 
