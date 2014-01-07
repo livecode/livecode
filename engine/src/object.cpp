@@ -2671,7 +2671,9 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 
 	MCGContextConcatCTM(t_gcontext, t_transform);
 	
-	MCContext *t_context = new MCGraphicsContext(t_gcontext);
+	// MW-2014-01-07: [[ bug 11632 ]] Use the offscreen variant of the context so its
+	//   type field is appropriate for use by the player.
+	MCContext *t_context = new MCOffscreenGraphicsContext(t_gcontext);
 	t_context -> setclip(r);
 
 	// MW-2011-01-29: [[ Bug 9355 ]] Make sure we only open a control if it needs it!
