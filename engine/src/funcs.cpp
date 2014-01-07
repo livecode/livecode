@@ -790,7 +790,14 @@ void MCBinaryDecode::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
                 return;
             }
 			if (t_results[i] != nil)
+            {
+                // SN-2014-01-07: need to specify the variable is no longer a UQL,
+                //  otherwise the variable name is used instead of its value
+                t_var -> clearuql();
+                
 	            /* UNCHECKED */ t_var->setvalueref(t_results[i]);
+            }
+            
             t_params = t_params->getnext();
         }
     }
@@ -3352,7 +3359,14 @@ void MCMatch::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
                 ctxt . LegacyThrow(EE_MATCH_BADDEST);
                 return;
             }
+            
+            // SN-2014-01-07: Matching texts are not considered as text variables
+            //  and their name is used in the Livecode script instead or their content,
+            //  if the regex catches them but leaves them as UQL
+            t_var -> clearuql();
+            
             /* UNCHECKED */ t_var->setvalueref(t_results[i]);
+            
             t_result_params = t_result_params->getnext();
         }
     }
