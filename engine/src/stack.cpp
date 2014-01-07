@@ -86,6 +86,7 @@ MCPropertyInfo MCStack::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_CANT_PEEK, Bool, MCStack, CantPeek)
 	DEFINE_RW_OBJ_PROPERTY(P_DESTROY_STACK, Bool, MCStack, DestroyStack)
 	DEFINE_RW_OBJ_PROPERTY(P_DESTROY_WINDOW, Bool, MCStack, DestroyWindow)
+    DEFINE_RW_OBJ_PROPERTY(P_DYNAMIC_PATHS, Bool, MCStack, DynamicPaths)
 	DEFINE_RW_OBJ_PROPERTY(P_ALWAYS_BUFFER, Bool, MCStack, AlwaysBuffer)
 	DEFINE_RW_OBJ_PROPERTY(P_LABEL, String, MCStack, Label)
 	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_LABEL, BinaryString, MCStack, UnicodeLabel)
