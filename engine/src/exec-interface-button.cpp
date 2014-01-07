@@ -80,7 +80,7 @@ enum MCInterfaceButtonStyle
 static MCExecEnumTypeElementInfo _kMCInterfaceButtonStyleElementInfo[] =
 {	
 	{ MCstandardstring, kMCButtonStyleStandard, false },
-	{ "", kMCButtonStyleStandard, false},
+	{ "", kMCButtonStyleStandard, true },
 	{ MCmenustring, kMCButtonStyleMenu, false },
 	{ MCpopupstring, kMCButtonStylePopup, false },
 	{ MCcheckboxstring, kMCButtonStyleCheck, false },

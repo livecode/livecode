@@ -1707,7 +1707,7 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
 			while (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', sptr, kMCStringOptionCompareExact, eptr))
 			{
 				// Break if we've gone past the end of this block
-				if (eptr > (m_index + l))
+				if (eptr >= (m_index + l))
 					break;
 				
 				MCRange t_range;

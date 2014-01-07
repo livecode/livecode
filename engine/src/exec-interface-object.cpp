@@ -3995,7 +3995,12 @@ void MCObject::GetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCSt
     ctxt . Throw();
 }
 
-void MCObject::GetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_array)
+void MCObject::GetCustomProperties(MCExecContext& ctxt, MCValueRef& r_array)
+{
+    GetCustomPropertiesElement(ctxt, kMCEmptyName, r_array);
+}
+
+void MCObject::GetCustomPropertiesElement(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_array)
 {
     MCObjectPropertySet *t_propset;
     if (findpropset(p_index, true, t_propset))
@@ -4030,7 +4035,12 @@ void MCObject::SetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCSt
     /* UNCHECKED */ t_propset -> restrict(p_string);
 }
 
-void MCObject::SetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_array)
+void MCObject::SetCustomProperties(MCExecContext& ctxt, MCValueRef p_array)
+{
+    SetCustomPropertiesElement(ctxt, kMCEmptyName, p_array);
+}
+
+void MCObject::SetCustomPropertiesElement(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_array)
 {
     MCObjectPropertySet *t_propset;
     if  (!MCValueIsArray(p_array))

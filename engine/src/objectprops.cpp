@@ -227,7 +227,8 @@ MCPropertyInfo MCObject::kProperties[] =
     
     DEFINE_RW_OBJ_ARRAY_PROPERTY(P_TEXT_STYLE, Bool, MCObject, TextStyleElement)
     DEFINE_RW_OBJ_ARRAY_PROPERTY(P_CUSTOM_KEYS, String, MCObject, CustomKeysElement)
-    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_CUSTOM_PROPERTIES, Any, MCObject, CustomProperties)
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_CUSTOM_PROPERTIES, Any, MCObject, CustomPropertiesElement)
+    DEFINE_RW_OBJ_PROPERTY(P_CUSTOM_PROPERTIES, Any, MCObject, CustomProperties)
     
     DEFINE_RW_OBJ_PROPERTY(P_CUSTOM_KEYS, String, MCObject, CustomKeys) 
     

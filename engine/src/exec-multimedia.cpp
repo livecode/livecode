@@ -184,6 +184,7 @@ void MCMultimediaEvalMCISendString(MCExecContext& ctxt, MCStringRef p_command, M
 {
 	MCAutoStringRef t_result;
 	bool t_error;
+    t_error = false;
 	if (MCS_mcisendstring(p_command, &t_result, t_error))
 	{
 		if (!t_error)
