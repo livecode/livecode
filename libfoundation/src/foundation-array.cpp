@@ -720,6 +720,11 @@ static bool __MCArrayResolveIndirect(__MCArray *self)
 				self -> key_values[i] . value = (uintptr_t)MCValueRetain((MCValueRef)t_contents -> key_values[i] . value);
 				self -> key_values[i] . key = MCValueRetain(t_contents -> key_values[i] . key);
 			}
+            else
+            {
+                // Ensure we don't break any hash chains
+                self -> key_values[i] = t_contents -> key_values[i];
+            }
 		}
 	}
 
