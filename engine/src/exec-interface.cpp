@@ -1781,6 +1781,9 @@ void MCInterfaceExecClickCmd(MCExecContext& ctxt, uint2 p_button, MCPoint p_loca
 	MCscreen->getmouseloc(t_old_mousestack, t_old_mouseloc);
 	MCscreen->setmouseloc(MCdefaultstackptr, t_view_clickloc);
     
+    // need to lock mods here to ensure MCmodifierstate determines the modifiers
+    MCscreen -> setlockmods(True);
+    
 	MCmodifierstate = p_modifiers;
 	MCbuttonstate |= 0x1L << (p_button - 1);
     
@@ -1813,6 +1816,8 @@ void MCInterfaceExecClickCmd(MCExecContext& ctxt, uint2 p_button, MCPoint p_loca
 		if (t_old_mousestack != NULL)
 			MCdispatcher->wmfocus_stack(t_old_mousestack, t_old_mouseloc.x, t_old_mouseloc.y);
 	}
+    // return lock mods to false
+    MCscreen -> setlockmods(False);
 	if (abort)
 	{
 		ctxt . LegacyThrow(EE_CLICK_ABORT);
