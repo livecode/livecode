@@ -1065,15 +1065,17 @@ public:
 
     void GetCustomKeys(MCExecContext& ctxt, MCStringRef& r_string);
     void SetCustomKeys(MCExecContext& ctxt, MCStringRef p_string);
+    void GetCustomProperties(MCExecContext& ctxt, MCValueRef &r_array);
+    void SetCustomProperties(MCExecContext& ctxt, MCValueRef p_array);
     
 	////////// ARRAY PROPS
     
     void GetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool& r_element);
     void SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool p_element);
     void GetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCStringRef& r_string);
-    void GetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_array);
+    void GetCustomPropertiesElement(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_array);
     void SetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCStringRef p_string);
-    void SetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_array);
+    void SetCustomPropertiesElement(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_array);
     
     ////////// MODE SPECIFIC PROPS
     
