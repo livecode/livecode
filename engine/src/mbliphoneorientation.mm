@@ -74,13 +74,13 @@ uint32_t get_orientation_set(uint32_t p_orientations)
 {
 	uint32_t t_orientations = 0;
 
-	if (p_orientations & (UIInterfaceOrientationMaskPortrait))
+	if (p_orientations & (1 << UIInterfaceOrientationPortrait))
 		t_orientations |= ORIENTATION_PORTRAIT;
-	if (p_orientations & (UIInterfaceOrientationMaskPortraitUpsideDown))
+	if (p_orientations & (1 << UIInterfaceOrientationPortraitUpsideDown))
 		t_orientations |= ORIENTATION_PORTRAIT_UPSIDE_DOWN;
-	if (p_orientations & (UIInterfaceOrientationMaskLandscapeRight))
+	if (p_orientations & (1 << UIInterfaceOrientationLandscapeRight))
 		t_orientations |= ORIENTATION_LANDSCAPE_RIGHT;
-	if (p_orientations & (UIInterfaceOrientationMaskLandscapeLeft))
+	if (p_orientations & (1 << UIInterfaceOrientationLandscapeLeft))
 		t_orientations |= ORIENTATION_LANDSCAPE_LEFT;
 
 	return t_orientations;
@@ -90,13 +90,13 @@ uint32_t get_iphone_orientations(uint32_t p_orientations)
 {
 	uint32_t t_orientations = 0;
 	if (p_orientations & (1 << ORIENTATION_PORTRAIT_BIT))
-		t_orientations |= UIInterfaceOrientationMaskPortrait;
+		t_orientations |= 1 << UIInterfaceOrientationPortrait;
 	if (p_orientations & (1 << ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT))
-		t_orientations |= UIInterfaceOrientationMaskPortraitUpsideDown;
+		t_orientations |= 1 << UIInterfaceOrientationPortraitUpsideDown;
 	if (p_orientations & (1 << ORIENTATION_LANDSCAPE_RIGHT_BIT))
-		t_orientations |= UIInterfaceOrientationMaskLandscapeRight;
+		t_orientations |= 1 << UIInterfaceOrientationLandscapeRight;
 	if (p_orientations & (1 << ORIENTATION_LANDSCAPE_LEFT_BIT))
-		t_orientations |= UIInterfaceOrientationMaskLandscapeLeft;
+		t_orientations |= 1 << UIInterfaceOrientationLandscapeLeft;
 
 	return t_orientations;
 }
