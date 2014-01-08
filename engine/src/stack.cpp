@@ -2911,7 +2911,11 @@ bool MCStack::lockshape(MCObjectShape& r_shape)
 	r_shape . type = kMCObjectShapeRectangle;
 	
 	// Object shapes are in card-relative co-ords.
-	r_shape . bounds = MCU_make_rect(0, getscroll(), rect . width, rect . height);
+	r_shape . bounds = MCRectangleMake(0, 0, rect . width, rect . height);
+	
+	// IM-2014-01-08: [[ StackScale ]] convert stack coords to card coords
+	r_shape . bounds = MCRectangleGetTransformedBounds(r_shape . bounds, MCGAffineTransformInvert(gettransform()));
+	
 	r_shape . rectangle = r_shape . bounds;
 	
 	return true;
