@@ -2823,6 +2823,7 @@ void MCInterfaceEvalGroupOfCardOrStackById(MCExecContext& ctxt, MCObjectPtr p_ca
     {
         r_group . object = t_group;
         r_group . part_id = t_part_id;
+        return;
     }
     
     ctxt . LegacyThrow(EE_CHUNK_NOBACKGROUND);
