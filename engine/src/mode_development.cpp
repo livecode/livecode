@@ -1840,13 +1840,13 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
     MCValueRef t_value;
     MCStringRef t_string;
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("token"), t_value) && ctxt . ConvertToString(t_value, t_string))
-        MCCStringClone(MCStringGetCString(t_string), MClicenseparameters . license_token);
+        MCStringConvertToCString(t_string, MClicenseparameters . license_token);
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("name"), t_value) && ctxt . ConvertToString(t_value, t_string))
-        MCCStringClone(MCStringGetCString(t_string), MClicenseparameters . license_name);
+        MCStringConvertToCString(t_string, MClicenseparameters . license_name);
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("organization"), t_value) && ctxt . ConvertToString(t_value, t_string))
-        MCCStringClone(MCStringGetCString(t_string), MClicenseparameters . license_organization);
+        MCStringConvertToCString(t_string, MClicenseparameters . license_organization);
     
     MCValueRelease(t_string);
     
@@ -1922,27 +1922,26 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
         };
         
         MClicenseparameters . deploy_targets = 0;
-
-        uint32_t t_target_count;
-        char **t_targets;
-        t_target_count = 0;
-        t_targets = nil;
         
         MCAutoStringRef t_params;
         if (ctxt . ConvertToString(t_value, &t_params))
         {
-            if (MCCStringSplit(MCStringGetCString(*t_params), ',', t_targets, t_target_count))
+            MCAutoArrayRef t_split_strings;
+            MCValueRef t_fetched_string;
+            if (MCStringSplit(*t_params, MCSTR(","), nil, kMCCompareExact, &t_split_strings))
             {
-                for(uint32_t i = 0; i < t_target_count; i++)
+                for(uint32_t i = 0; i < MCArrayGetCount(*t_split_strings); i++)
                 {
+                    // Fetch the string value created with MCStringSplit
+                    MCArrayFetchValueAtIndex(*t_split_strings, i+1, t_fetched_string);
+                    
                     for(uint32_t j = 0; j < sizeof(s_deploy_map) / sizeof(s_deploy_map[0]); j++)
-                        if (MCCStringEqualCaseless(s_deploy_map[j] . tag, t_targets[i]))
+                        if (MCStringIsEqualToCString((MCStringRef)t_fetched_string, s_deploy_map[j] . tag, kMCStringOptionCompareCaseless))
                         {
                             MClicenseparameters . deploy_targets |= s_deploy_map[j] . value;
                             break;
                         }
                 }
-                MCCStringArrayFree(t_targets, t_target_count);
             }
         }
     }
