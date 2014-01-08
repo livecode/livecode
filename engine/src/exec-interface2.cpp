@@ -3316,7 +3316,7 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
         // Ensure the length is returned in codepoints
         MCRange t_cu_range, t_cp_range;
         t_cu_range = MCRangeMake(0, MCStringGetLength(r_mark . text));
-        /* UNCHECKED */ MCStringUnmapCodepointIndices(r_mark . text, t_cu_range, t_cp_range);
+        /* UNCHECKED */ MCStringUnmapIndices(r_mark . text, kMCDefaultCharChunkType, t_cu_range, t_cp_range);
         
         r_mark . start = t_cp_range.offset;
         r_mark . finish = t_cp_range.offset + t_cp_range.length;
@@ -3414,7 +3414,7 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
     // Ensure that the returned indices are in codepoints (not code units)
     MCRange t_cp_range, t_cu_range;
     t_cu_range = MCRangeMake(start, end);
-    /* UNCHECKED */ MCStringUnmapCodepointIndices(r_mark . text, t_cu_range, t_cp_range);
+    /* UNCHECKED */ MCStringUnmapIndices(r_mark . text, kMCDefaultCharChunkType, t_cu_range, t_cp_range);
     
     r_mark . start = t_cp_range . offset;
     r_mark . finish  = t_cp_range . offset + t_cp_range . length;

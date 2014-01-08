@@ -148,7 +148,7 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
             // Convert from code unit indices to codepoint indices
             MCRange t_cu_range, t_cp_range;
             t_cu_range = MCRangeMake(0, MCStringGetLength(p_string));
-            /* UNCHECKED */ MCStringUnmapCodepointIndices(p_string, t_cu_range, t_cp_range);
+            /* UNCHECKED */ MCStringUnmapIndices(p_string, kMCDefaultCharChunkType, t_cu_range, t_cp_range);
             
             nchunks = t_cp_range.length;
             break;
@@ -404,7 +404,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
                 // Resolve the indices
                 MCRange t_cp_range, t_cu_range;
                 t_cp_range = MCRangeMake(p_first, p_count);
-                MCStringMapCodepointIndices(p_string, t_cp_range, t_cu_range);
+                MCStringMapIndices(p_string, kMCDefaultCharChunkType, t_cp_range, t_cu_range);
         
                 r_start = t_cu_range.offset;
                 r_end = t_cu_range.offset + t_cu_range.length;
@@ -823,7 +823,7 @@ void MCStringsEvalTextChunk(MCExecContext& ctxt, MCMarkedText p_source, MCString
     // The incoming indices are for codepoints
     MCRange t_cp_range, t_cu_range;
     t_cp_range = MCRangeMake(p_source . start, p_source . finish - p_source . start);
-    /* UNCHECKED */ MCStringMapCodepointIndices(p_source . text, t_cp_range, t_cu_range);
+    /* UNCHECKED */ MCStringMapIndices(p_source . text, kMCDefaultCharChunkType, t_cp_range, t_cu_range);
     
     if (MCStringCopySubstring(p_source . text, t_cu_range, r_string))
         return;
@@ -836,7 +836,7 @@ void MCStringsMarkTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type,
     // The incoming indices are for codepoints
     MCRange t_cp_range, t_cu_range;
     t_cp_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
-    /* UNCHECKED */ MCStringMapCodepointIndices(x_mark . text, t_cp_range, t_cu_range);
+    /* UNCHECKED */ MCStringMapIndices(x_mark . text, kMCDefaultCharChunkType, t_cp_range, t_cu_range);
     
     MCAutoStringRef t_string;
     MCStringCopySubstring(x_mark . text, t_cu_range, &t_string);
@@ -852,7 +852,7 @@ void MCStringsMarkTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type,
     // The indices returned by MarkTextChunk are code unit indices
     t_cu_range.offset += t_start;
     t_cu_range.length = t_end - t_start;
-    /* UNCHECKED */ MCStringUnmapCodepointIndices(x_mark . text, t_cu_range, t_cp_range);
+    /* UNCHECKED */ MCStringUnmapIndices(x_mark . text, kMCDefaultCharChunkType, t_cu_range, t_cp_range);
     
     x_mark . start = t_cp_range.offset;
     x_mark . finish = t_cp_range.offset + t_cp_range.length;
@@ -866,7 +866,7 @@ void MCStringsMarkTextChunkByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_typ
     // The incoming indices are for codepoints
     MCRange t_cp_range, t_cu_range;
     t_cp_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
-    /* UNCHECKED */ MCStringMapCodepointIndices(x_mark . text, t_cp_range, t_cu_range);
+    /* UNCHECKED */ MCStringMapIndices(x_mark . text, kMCDefaultCharChunkType, t_cp_range, t_cu_range);
     
     MCAutoStringRef t_string;
     MCStringCopySubstring(x_mark . text, t_cu_range, &t_string);
@@ -882,7 +882,7 @@ void MCStringsMarkTextChunkByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_typ
     // The indices returned by MarkTextChunk are code unit indices
     t_cu_range.offset += t_start;
     t_cu_range.length = t_end - t_start;
-    /* UNCHECKED */ MCStringUnmapCodepointIndices(x_mark . text, t_cu_range, t_cp_range);
+    /* UNCHECKED */ MCStringUnmapIndices(x_mark . text, kMCDefaultCharChunkType, t_cu_range, t_cp_range);
     
     x_mark . start = t_cp_range.offset;
     x_mark . finish = t_cp_range.offset + t_cp_range.length;
