@@ -132,6 +132,9 @@ MCStack::MCStack()
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
+	
+	// IM-2014-01-07: [[ StackScale ]]
+	m_scale_factor = 1.0;
 
 	cursoroverride = false ;
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
@@ -318,6 +321,9 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	// MW-2010-11-17: [[ Valgrind ]] Uninitialized value.
 	cursoroverride = false;
 
+	// IM-2014-01-07: [[ StackScale ]]
+	m_scale_factor = sref.getscalefactor();
+	
 	view_copy(sref);
 
 	mode_copy(sref);
@@ -1050,6 +1056,11 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_FULLSCREENMODE:
 		ep.setsvalue(MCStackFullscreenModeToString(view_getfullscreenmode()));
 		break;
+			
+	// IM-2014-01-07: [[ StackScale ]] Add stack scalefactor property
+	case P_SCALE_FACTOR:
+		ep.setnvalue(getscalefactor());
+		break;
 		
 	case P_LONG_ID:
 	case P_LONG_NAME:
@@ -1616,6 +1627,28 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 				purgefonts();
 		}
 		break;
+			
+	// IM-2014-01-07: [[ StackScale ]] Add stack scalefactor property
+	case P_SCALE_FACTOR:
+		{
+			real64_t t_scale;
+			
+			Exec_stat t_stat;
+			t_stat = ep.getreal8(t_scale, 0, 0, EE_PROPERTY_NAN);
+			
+			if (t_stat != ES_NORMAL)
+				return t_stat;
+			
+			if (t_scale <= 0)
+			{
+				MCeerror->add(EE_STACK_BADSCALEFACTOR, 0, 0, t_scale);
+				return ES_ERROR;
+			}
+			
+			setscalefactor(t_scale);
+		}
+		break;
+			
 	case P_NAME:
 		{
 			// MW-2008-10-28: [[ ParentScripts ]] If this stack has its 'has parentscripts'
@@ -2861,38 +2894,14 @@ char *MCStack::resolve_filename(const char *filename)
 
 MCRectangle MCStack::recttoroot(const MCRectangle& p_rect)
 {
-	// IM-2013-10-08: [[ FullscreenMode ]] Use view transform when converting stack -> global coords
-	MCRectangle t_view_rect;
-	t_view_rect = view_getrect();
-	
-	MCRectangle t_rect = p_rect;
-	t_rect.y -= getscroll();
-	
-	MCRectangle t_screen_rect;
-	t_screen_rect = MCRectangleGetTransformedBounds(t_rect, view_getviewtransform());
-	
-	t_screen_rect.x += t_view_rect.x;
-	t_screen_rect.y += t_view_rect.y;
-	
-	return t_screen_rect;
+	// IM-2014-01-07: [[ StackScale ]] Use stack->root transform to convert coords
+	return MCRectangleGetTransformedBounds(p_rect, getroottransform());
 }
 
 MCRectangle MCStack::rectfromroot(const MCRectangle& p_rect)
 {
-	// IM-2013-10-08: [[ FullscreenMode ]] Use view transform when converting global -> stack coords
-	MCRectangle t_view_rect;
-	t_view_rect = view_getrect();
-	
-	MCRectangle t_screen_rect;
-	t_screen_rect = p_rect;
-	t_screen_rect.x -= t_view_rect.x;
-	t_screen_rect.y -= t_view_rect.y;
-	
-	MCRectangle t_rect;
-	t_rect = MCRectangleGetTransformedBounds(t_screen_rect, MCGAffineTransformInvert(view_getviewtransform()));
-	t_rect.y += getscroll();
-	
-	return t_rect;
+	// IM-2014-01-07: [[ StackScale ]] Use root->stack transform to convert coords
+	return MCRectangleGetTransformedBounds(p_rect, MCGAffineTransformInvert(getroottransform()));
 }
 
 // MW-2011-09-20: [[ Collision ]] The stack's shape is its rect. At some point it

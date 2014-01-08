@@ -225,6 +225,9 @@ protected:
 	//   drawn to the screen on the next update.
 	MCRegionRef m_view_update_region;
 	
+	// IM-2014-01-07: [[ StackScale ]] the drawing scale of the stack
+	MCGFloat m_scale_factor;
+	
 public:
 	Boolean menuwindow;
 
@@ -436,7 +439,21 @@ public:
 	MCPoint stacktogloballoc(const MCPoint &p_stackloc) const;
 	MCPoint globaltostackloc(const MCPoint &p_globalloc) const;
 
+	//////////
+	
+	// IM-2014-01-07: [[ StackScale ]] Get / Set the content scale of the stack
+	MCGFloat getscalefactor() const;
+	void setscalefactor(MCGFloat p_scale);
+	
+	// IM-2014-01-07: [[ StackScale ]] Return the card rect after scale adjustment
+	MCRectangle getcardrect() const;
+	// IM-2014-01-07: [[ StackScale ]] Update the rect of the current card to fit the stack
+	void updatecardsize();
+	
+	//////////
+	
 	void setgeom();
+	
 	//////////
 	
     virtual MCRectangle getrectangle(bool p_effective) const;

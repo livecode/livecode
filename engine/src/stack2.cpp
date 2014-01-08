@@ -125,13 +125,18 @@ void MCStack::resize(uint2 oldw, uint2 oldh)
 {
 	uint2 newy = getscroll();
 	
+	// IM-2014-01-07: [[ StackScale ]] compare old & new card rects and notify if changed
+	MCRectangle t_new_cardrect;
+	t_new_cardrect = getcardrect();
+	
+	MCRectangle t_old_cardrect;
+	t_old_cardrect = curcard->getrect();
+	
 	// MW-2011-08-18: [[ Redraw ]] Use global screen lock, rather than stack.
 	MCRedrawLockScreen();
-	if (curcard->getrect().width != rect.width || curcard->getrect().height != rect.height + newy)
+	if (t_old_cardrect.width != t_new_cardrect.width || t_old_cardrect.height != t_new_cardrect.height)
 	{
-		// MW-2011-08-19: [[ Layers ]] Notify of change in size of canvas.
-		//   This call also calls MCCard::resize to update the rect.
-		curcard -> layer_setviewport(0, 0, rect . width, rect . height + newy);
+		updatecardsize();
 
 		// MM-2012-09-05: [[ Property Listener ]] Make sure resizing a stack sends the propertyChanged message to any listeners.
 		//    This effects both the current card and the stack.
@@ -828,7 +833,7 @@ void MCStack::startedit(MCGroup *group)
 	}
 
 	curcard->open();
-	curcard->resize(rect.width, rect.height + getscroll());
+	updatecardsize();
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
 	dirtywindowname();
@@ -866,7 +871,7 @@ void MCStack::stopedit()
 	uncacheobjectbyid(oldcard);
 	
 	curcard->open();
-	curcard->resize(rect.width, rect.height + getscroll());
+	updatecardsize();
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
 	oldcard->scheduledelete();
@@ -1909,7 +1914,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	// MW-2011-09-12: [[ MacScroll / Bug 5268 ]] Make sure the scroll of the stack
 	//   reflects what it should be taking into account menu settings.
 	applyscroll();
-	curcard->resize(rect.width, rect.height + getscroll());
+	updatecardsize();
 	
 	MCCard *startcard = curcard;
 
@@ -2429,11 +2434,15 @@ void MCStack::applyupdates(void)
 
 void MCStack::render(MCGContextRef p_context, const MCRectangle &p_rect)
 {
-	// IM-2013-10-11: [[ FullscreenMode ]] Apply transform & modify redraw rect to account for stack scroll
-	MCGContextTranslateCTM(p_context, 0.0, -(MCGFloat)getscroll());
+	// IM-2014-01-07: [[ StackScale ]] Apply stack transform to context
+	MCGAffineTransform t_transform;
+	t_transform = gettransform();
+	
+	MCGContextConcatCTM(p_context, t_transform);
+
+	// IM-2014-01-07: [[ StackScale ]] Use inverse stack transform to get redraw rect in card coords
 	MCRectangle t_rect;
-	t_rect = p_rect;
-	t_rect.y += getscroll();
+	t_rect = MCRectangleGetTransformedBounds(p_rect, MCGAffineTransformInvert(t_transform));
 	
 	MCGraphicsContext *t_old_context = nil;
 	t_old_context = new MCGraphicsContext(p_context);
@@ -2595,8 +2604,17 @@ void MCStack::updatewindow(MCRegionRef p_region)
 
 MCGAffineTransform MCStack::gettransform(void) const
 {
+	MCGAffineTransform t_transform;
 	// IM-2013-10-11: [[ FullscreenMode ]] Add scroll offset to stack transform
-	return MCGAffineTransformMakeTranslation(0.0, -(MCGFloat)getscroll());
+	t_transform = MCGAffineTransformMakeTranslation(0.0, -(MCGFloat)getscroll());
+	
+	// IM-2014-01-07: [[ StackScale ]] Concat stack scale factor to stack transform
+	MCGFloat t_scale;
+	t_scale = getscalefactor();
+	
+	t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeScale(t_scale, t_scale), t_transform);
+	
+	return t_transform;
 }
 
 MCGAffineTransform MCStack::getviewtransform(void) const
@@ -2665,55 +2683,74 @@ MCRectangle MCStack::constrainstackrecttoscreen(const MCRectangle &p_rect)
 
 MCPoint MCStack::windowtostackloc(const MCPoint &p_windowloc) const
 {
-	MCPoint t_stackloc;
-	t_stackloc = view_viewtostackloc(p_windowloc);
-	
-	// IM-2013-10-09: [[ FullscreenMode ]] Adjust loc by stack scroll
-	t_stackloc.y += getscroll();
-	
-	return t_stackloc;
+	// IM-2014-01-07: [[ StackScale ]] Use view->stack transform to convert coords
+	return MCGPointToMCPoint(MCGPointApplyAffineTransform(MCPointToMCGPoint(p_windowloc), MCGAffineTransformInvert(getviewtransform())));
 }
 
 MCPoint MCStack::stacktowindowloc(const MCPoint &p_stackloc) const
 {
-	MCPoint t_windowloc;
-	t_windowloc = p_stackloc;
-	
-	// IM-2013-10-09: [[ FullscreenMode ]] Adjust loc by stack scroll
-	t_windowloc.y -= getscroll();
-	t_windowloc = view_stacktoviewloc(t_windowloc);
-	
-	return t_windowloc;
+	// IM-2014-01-07: [[ StackScale ]] Use stack->view transform to convert coords
+	return MCGPointToMCPoint(MCGPointApplyAffineTransform(MCPointToMCGPoint(p_stackloc), getviewtransform()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPoint MCStack::globaltostackloc(const MCPoint &p_windowloc) const
 {
-	MCPoint t_loc;
-	t_loc = p_windowloc;
-
-	MCRectangle t_view_rect;
-	t_view_rect = view_getrect();
-
-	t_loc.x -= t_view_rect.x;
-	t_loc.y -= t_view_rect.y;
-	
-	return windowtostackloc(t_loc);
+	// IM-2014-01-07: [[ StackScale ]] Use root->stack transform to convert coords
+	return MCGPointToMCPoint(MCGPointApplyAffineTransform(MCPointToMCGPoint(p_windowloc), MCGAffineTransformInvert(getroottransform())));
 }
 
 MCPoint MCStack::stacktogloballoc(const MCPoint &p_stackloc) const
 {
-	MCPoint t_loc;
-	t_loc = stacktowindowloc(p_stackloc);
-	
-	MCRectangle t_view_rect;
-	t_view_rect = view_getrect();
+	// IM-2014-01-07: [[ StackScale ]] Use stack->root transform to convert coords
+	return MCGPointToMCPoint(MCGPointApplyAffineTransform(MCPointToMCGPoint(p_stackloc), getroottransform()));
+}
 
-	t_loc.x += t_view_rect.x;
-	t_loc.y += t_view_rect.y;
+////////////////////////////////////////////////////////////////////////////////
+
+MCGFloat MCStack::getscalefactor() const
+{
+	return m_scale_factor;
+}
+
+void MCStack::setscalefactor(MCGFloat p_scale)
+{
+	if (p_scale == m_scale_factor)
+		return;
 	
-	return t_loc;
+	m_scale_factor = p_scale;
+	
+	if (getopened() && isvisible())
+	{
+		// IM-2014-01-07: [[ StackScale ]] call resize() to update the card geometry
+		resize(rect.width, rect.height);
+		dirtyall();
+	}
+}
+
+MCRectangle MCStack::getcardrect() const
+{
+	MCRectangle t_stackrect;
+	t_stackrect = MCRectangleMake(0, 0, rect.width, rect.height);
+	
+	MCRectangle t_cardrect;
+	t_cardrect = MCRectangleGetTransformedBounds(t_stackrect, MCGAffineTransformInvert(gettransform()));
+	
+	t_cardrect.x = t_cardrect.y = 0;
+	t_cardrect.height += getscroll();
+	
+	return t_cardrect;
+}
+
+void MCStack::updatecardsize()
+{
+	MCRectangle t_cardrect;
+	t_cardrect = getcardrect();
+	
+	// MW-2011-08-19: [[ Layers ]] Notify of change in size of canvas.
+	//   This call also calls MCCard::resize to update the rect.
+	curcard -> layer_setviewport(0, 0, t_cardrect.width, t_cardrect.height);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
