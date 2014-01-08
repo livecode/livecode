@@ -1470,6 +1470,18 @@ bool MCStringMapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_grapheme_ran
 // Maps from a code unit (StringRef) range to a grapheme (visual character) range
 bool MCStringUnmapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange& r_grapheme_range);
 
+// Flexible grapheme/codepoint/codeunit mapping used for "char" chunk expressions
+enum MCCharChunkType
+{
+    kMCCharChunkTypeCodeunit,   // UTF-16 code units
+    kMCCharChunkTypeCodepoint,  // Unicode codepoint values
+    kMCCharChunkTypeGrapheme,   // Graphical character boundaries
+};
+
+const MCCharChunkType kMCDefaultCharChunkType = kMCCharChunkTypeGrapheme;
+
+bool MCStringMapIndices(MCStringRef, MCCharChunkType, MCRange p_char_range, MCRange &r_codeunit_range);
+bool MCStringUnmapIndices(MCStringRef, MCCharChunkType, MCRange p_codeunit_range, MCRange &r_char_range);
 
 /////////
 
