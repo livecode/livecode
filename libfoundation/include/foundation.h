@@ -1850,9 +1850,10 @@ bool MCListAppendNativeChars(MCListRef list, const char_t *chars, uindex_t char_
 bool MCListAppendFormat(MCListRef list, const char *format, ...);
 
 // Make an immutable copy of the list.
-// Note that this method is fragile at the moment and should only be used to
-// copy a list out of an autolistref that is about to be deallocated.
 bool MCListCopy(MCListRef list, MCListRef& r_new_list);
+
+// Makes an immutable copy of the list and release the list
+bool MCListCopyAndRelease(MCListRef list, MCListRef& r_new_list);
 
 // Make a copy of the list as a string.
 bool MCListCopyAsString(MCListRef list, MCStringRef& r_string);
