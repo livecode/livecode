@@ -62,7 +62,7 @@ static void __MCStringClampRange(MCStringRef string, MCRange& x_range);
 static void __MCStringNativize(MCStringRef string);
 
 // This method marks the string as changed.
-static void __MCStringChanged(MCStringRef string);
+static void __MCStringChanged(MCStringRef string, bool simple = false);
 
 // Converts two surrogate pair code units into a codepoint
 static codepoint_t __MCStringSurrogatesToCodepoint(unichar_t p_lead, unichar_t p_trail);
@@ -314,6 +314,9 @@ bool MCStringCreateWithNativeChars(const char_t *p_chars, uindex_t p_char_count,
 		MCMemoryDelete(self);
 	}
 
+    if (t_success)
+        self -> flags |= kMCStringFlagIsSimple;
+    
 	return t_success;
 }
 
@@ -952,39 +955,23 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
         return false;
     }
     
-    // Move through the string until the indices have been resolved
-    uindex_t t_counter = 0;
-    MCRange t_units = MCRangeMake(0, 0);
-    bool t_done = false;
-    uindex_t t_boundary = 0;
-    while (!t_done)
+    // Advance to the beginning of the specified range
+    uindex_t t_start;
+    t_start = MCLocaleBreakIteratorNext(t_iter, p_in_range.offset);
+    if (t_start == kMCLocaleBreakIteratorDone)
     {
-        // Have we found the start of the requested grapheme range?
-        if (t_counter == p_in_range.offset)
-            t_units.offset = t_boundary;
-        
-        // Find the next boundary
-        t_boundary = MCLocaleBreakIteratorAdvance(t_iter);
-        if (t_boundary == kMCLocaleBreakIteratorDone)
-        {
-            // Ran out of string to process
-            MCLocaleBreakIteratorRelease(t_iter);
-            if (t_counter < p_in_range.offset)
-                t_units = MCRangeMake(self -> char_count, 0);
-            else
-                t_units.length = self -> char_count - t_units.offset;
-            break;
-        }
-        
-        // Have we found the end of the requested grapheme range?
-        if (t_counter == p_in_range.offset + p_in_range.length)
-        {
-            t_units.length = t_boundary;
-            t_done = true;
-        }
-        
-        t_counter++;
+        r_out_range = MCRangeMake(self -> char_count, 0);
+        return true;
     }
+    
+    // Advance to the end of the specified range
+    uindex_t t_end;
+    t_end = MCLocaleBreakIteratorNext(t_iter, p_in_range.length);
+    if (t_end == kMCLocaleBreakIteratorDone)
+        t_end = self -> char_count;
+    
+    MCRange t_units;
+    t_units = MCRangeMake(t_start, t_end - t_start);
     
     // All done
     MCLocaleBreakIteratorRelease(t_iter);
@@ -1013,36 +1000,82 @@ bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
         return false;
     }
     
-    // Move through the string until the indices have been resolved
-    MCRange t_graphemes = MCRangeMake(0, 0);
-    bool t_done = false;
-    uindex_t t_boundaries, t_units;
-    t_boundaries = 0;
-    t_units = 0;
-    while (!t_done)
+    // Count how many graphemes it takes to reach or exceed the offset
+    uindex_t t_start, t_offset;
+    t_start = 0;
+    t_offset = 0;
+    while (t_offset < p_in_range.offset)
     {
-        // Have we found the start of the requested code unit range?
-        if (t_units == p_in_range.offset)
-            t_graphemes.offset = t_boundaries;
+        t_offset++;
+        if (MCLocaleBreakIteratorIsBoundary(t_iter, t_offset))
+            t_start++;
         
-        // Have we found the end of the requested code unit range?
-        if (t_units == p_in_range.offset + p_in_range.length)
+        if (t_offset >= self -> char_count)
         {
-            t_graphemes.length = t_units - t_graphemes.offset;
-            t_done = true;
+            r_out_range = MCRangeMake(t_offset, 0);
+            return true;
         }
-        
-        // If this is a boundary, increment the boundary counter
-        if (MCLocaleBreakIteratorIsBoundary(t_iter, t_units))
-            t_boundaries++;
-        
-        t_units++;
     }
     
+    // Count how many more it takes to accomodate all the code units
+    uindex_t t_end;
+    t_end = 0;
+    while (t_offset < p_in_range.offset + p_in_range.length)
+    {
+        t_offset++;
+        if (MCLocaleBreakIteratorIsBoundary(t_iter, t_offset))
+            t_end++;
+        
+        if (t_offset >= self -> char_count)
+            break;
+    }
+    
+    MCRange t_graphemes;
+    t_graphemes = MCRangeMake(t_start, t_end);
+
     // All done
     MCLocaleBreakIteratorRelease(t_iter);
     r_out_range = t_graphemes;
     return true;
+}
+
+extern MCLocaleRef kMCBasicLocale;
+bool MCStringMapIndices(MCStringRef self, MCCharChunkType p_type, MCRange p_char_range, MCRange &r_cu_range)
+{
+    switch (p_type)
+    {
+        case kMCCharChunkTypeCodeunit:
+            r_cu_range = p_char_range;
+            return true;
+            
+        case kMCCharChunkTypeCodepoint:
+            return MCStringMapCodepointIndices(self, p_char_range, r_cu_range);
+            
+        case kMCCharChunkTypeGrapheme:
+            return MCStringMapGraphemeIndices(self, kMCBasicLocale, p_char_range, r_cu_range);
+    }
+    
+    MCAssert(false);
+    return false;
+}
+
+bool MCStringUnmapIndices(MCStringRef self, MCCharChunkType p_type, MCRange p_cu_range, MCRange &r_char_range)
+{
+    switch (p_type)
+    {
+        case kMCCharChunkTypeCodeunit:
+            r_char_range = p_cu_range;
+            return true;
+            
+        case kMCCharChunkTypeCodepoint:
+            return MCStringUnmapCodepointIndices(self, p_cu_range, r_char_range);
+            
+        case kMCCharChunkTypeGrapheme:
+            return MCStringUnmapGraphemeIndices(self, kMCBasicLocale, p_cu_range, r_char_range);
+    }
+    
+    MCAssert(false);
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1739,7 +1772,12 @@ bool MCStringAppend(MCStringRef self, MCStringRef p_suffix)
 		// Now copy the chars across (including the NUL).
 		MCMemoryCopy(self -> chars + self -> char_count - p_suffix -> char_count, p_suffix -> chars, (p_suffix -> char_count + 1) * sizeof(strchar_t));
 		
-		__MCStringChanged(self);
+        // Is the string still simple? Appending may have created a valid surrogate pair.
+        bool t_simple = (self -> flags & kMCStringFlagIsSimple)
+                        && (p_suffix -> flags & kMCStringFlagIsSimple)
+                        && !__MCStringIsValidSurrogatePair(self, self -> char_count - p_suffix -> char_count - 1);
+        
+		__MCStringChanged(self, t_simple);
 		
 		// We succeeded.
 		return true;
@@ -1770,8 +1808,13 @@ bool MCStringAppendSubstring(MCStringRef self, MCStringRef p_suffix, MCRange p_r
 		// Set the NULL
 		self -> chars[ self -> char_count ] = '\0';
 		
-		__MCStringChanged(self);
-		
+        // Is the string still simple? Appending may have created a valid surrogate pair.
+        bool t_simple = (self -> flags & kMCStringFlagIsSimple)
+                        && (p_suffix -> flags & kMCStringFlagIsSimple)
+                        && !__MCStringIsValidSurrogatePair(self, self -> char_count - p_range . length - 1);
+        
+		__MCStringChanged(self, t_simple);
+        
 		// We succeeded.
 		return true;
 	}
@@ -1797,7 +1840,10 @@ bool MCStringAppendNativeChars(MCStringRef self, const char_t *p_chars, uindex_t
 	// Set the NULL
 	self -> chars[self -> char_count] = '\0';
 	
-	__MCStringChanged(self);
+    // Appending native chars cannot change the simple status
+    bool t_simple = self -> flags & kMCStringFlagIsSimple;
+    
+	__MCStringChanged(self, t_simple);
 	
 	// We succeeded.
 	return true;
@@ -1847,7 +1893,12 @@ bool MCStringPrepend(MCStringRef self, MCStringRef p_prefix)
 		// Now copy the chars across.
 		MCMemoryCopy(self -> chars, p_prefix -> chars, p_prefix -> char_count * sizeof(strchar_t));
 		
-		__MCStringChanged(self);
+        // Is the string still simple? Prepending may have created a valid surrogate pair.
+        bool t_simple = (self -> flags & kMCStringFlagIsSimple)
+                        && (p_prefix -> flags & kMCStringFlagIsSimple)
+                        && !__MCStringIsValidSurrogatePair(self, p_prefix -> char_count - 1);
+        
+		__MCStringChanged(self, t_simple);
 
 		// We succeeded.
 		return true;
@@ -1875,6 +1926,11 @@ bool MCStringPrependSubstring(MCStringRef self, MCStringRef p_prefix, MCRange p_
 		// Now copy the chars across.
 		MCMemoryCopy(self -> chars, p_prefix -> chars + p_range . offset, p_range . length * sizeof(strchar_t));
 		
+        // Is the string still simple? Prepending may have created a valid surrogate pair.
+        bool t_simple = (self -> flags & kMCStringFlagIsSimple)
+                        && (p_prefix -> flags & kMCStringFlagIsSimple)
+                        && !__MCStringIsValidSurrogatePair(self, p_range . length - 1);
+        
 		__MCStringChanged(self);
 
 		// We succeeded.
@@ -1899,7 +1955,10 @@ bool MCStringPrependNativeChars(MCStringRef self, const char_t *p_chars, uindex_
 	for(uindex_t i = 0; i < p_char_count; i++)
 		self -> chars[i] = MCUnicodeCharMapFromNative(p_chars[i]);
 	
-	__MCStringChanged(self);
+    // Prepending native chars cannot change the simple status
+    bool t_simple = self -> flags & kMCStringFlagIsSimple;
+    
+	__MCStringChanged(self, t_simple);
 	
 	// We succeeded.
 	return true;
@@ -1947,7 +2006,13 @@ bool MCStringInsert(MCStringRef self, uindex_t p_at, MCStringRef p_substring)
 		// Now copy the chars across.
 		MCMemoryCopy(self -> chars + p_at, p_substring -> chars, p_substring -> char_count * sizeof(strchar_t));
 		
-		__MCStringChanged(self);
+        // Inserting creates two points where valid surrogate pairs may have been generated
+        bool t_simple = (self -> flags & kMCStringFlagIsSimple)
+                        && (p_substring -> flags & kMCStringFlagIsSimple)
+                        && !__MCStringIsValidSurrogatePair(self, p_at - 1)
+                        && !__MCStringIsValidSurrogatePair(self, p_at + p_substring -> char_count - 1);
+        
+		__MCStringChanged(self, t_simple);
 		
 		// We succeeded.
 		return true;
@@ -1975,7 +2040,13 @@ bool MCStringInsertSubstring(MCStringRef self, uindex_t p_at, MCStringRef p_subs
 		// Now copy the chars across.
 		MCMemoryCopy(self -> chars + p_at, p_substring -> chars + p_range . offset, p_range . length * sizeof(strchar_t));
 		
-		__MCStringChanged(self);
+        // Inserting creates two points where valid surrogate pairs may have been generated
+        bool t_simple = (self -> flags & kMCStringFlagIsSimple)
+                        && (p_substring -> flags & kMCStringFlagIsSimple)
+                        && !__MCStringIsValidSurrogatePair(self, p_at - 1)
+                        && !__MCStringIsValidSurrogatePair(self, p_at + p_range . length - 1);
+        
+		__MCStringChanged(self, t_simple);
 		
 		// We succeeded.
 		return true;
@@ -2001,7 +2072,10 @@ bool MCStringInsertNativeChars(MCStringRef self, uindex_t p_at, const char_t *p_
 	for(uindex_t i = 0; i < p_char_count; i++)
 		self -> chars[p_at + i] = MCUnicodeCharMapFromNative(p_chars[i]);
 	
-	__MCStringChanged(self);
+    // Inserting native chars cannot change simple status
+    bool t_simple = (self -> flags & kMCStringFlagIsSimple);
+    
+	__MCStringChanged(self, t_simple);
 	
 	// We succeeded.
 	return true;
@@ -2631,10 +2705,13 @@ static void __MCStringNativize(MCStringRef self)
 		self -> flags &= ~kMCStringFlagIsNative;
 }
 
-static void __MCStringChanged(MCStringRef self)
+static void __MCStringChanged(MCStringRef self, bool simple)
 {
 	// String changed to assume that it is no longer simple
-    self -> flags &= ~kMCStringFlagIsSimple;
+    if (simple)
+        self -> flags |=  kMCStringFlagIsSimple;
+    else
+        self -> flags &= ~kMCStringFlagIsSimple;
     
     MCMemoryDeleteArray(self -> native_chars);
 	self -> native_chars = nil;
@@ -2664,7 +2741,8 @@ static unsigned int __MCStringCodepointToSurrogates(codepoint_t p_codepoint, uni
 static bool __MCStringIsValidSurrogatePair(MCStringRef self, uindex_t p_index)
 {
     // Check that the string is long enough
-    if ((p_index + 1) >= self -> char_count)
+    // (Double-checking here is due to possible unsigned wrapping)
+    if (p_index >= self -> char_count || (p_index + 1) >= self -> char_count)
         return false;
     
     // Check for a valid leading surrogate
