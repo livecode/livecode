@@ -2757,7 +2757,7 @@ void MCObject::SetShowBorder(MCExecContext& ctxt, bool setting)
 
 void MCObject::GetShowFocusBorder(MCExecContext& ctxt, bool& r_setting)
 {
-	r_setting = (extraflags & EF_NO_FOCUS_BORDER) != True;
+	r_setting = (extraflags & EF_NO_FOCUS_BORDER) == False;
 }
 
 void MCObject::SetShowFocusBorder(MCExecContext& ctxt, bool setting)
@@ -2940,7 +2940,7 @@ void MCObject::GetEffectiveVisible(MCExecContext& ctxt, uint32_t part, bool& r_s
 
 void MCObject::GetInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 {
-	r_setting = (flags & F_VISIBLE) != True;
+	r_setting = (flags & F_VISIBLE) == False;
 }
 
 void MCObject::SetInvisible(MCExecContext& ctxt, uint32_t part, bool setting)
@@ -2957,7 +2957,7 @@ void MCObject::GetEffectiveInvisible(MCExecContext& ctxt, uint32_t part, bool& r
 
 void MCObject::GetEnabled(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 {
-	r_setting = (flags & F_DISABLED) != True;
+	r_setting = (flags & F_DISABLED) == False;
 }
 
 void MCObject::SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting)

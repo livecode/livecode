@@ -1859,6 +1859,28 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+        case kMCPropertyTypeOptionalBool:
+        {
+            bool t_value;
+            bool *t_value_ptr;
+            t_value_ptr = &t_value;
+            ((void(*)(MCExecContext&, void *, bool*&))prop -> getter)(ctxt, mark, t_value_ptr);
+            if (!ctxt . HasError())
+            {
+                if (t_value_ptr != nil)
+                {
+                    r_value . bool_value = t_value;
+                    r_value . type = kMCExecValueTypeBool;
+                }
+                else
+                {
+                    r_value . stringref_value = MCValueRetain(kMCEmptyString);
+                    r_value . type = kMCExecValueTypeStringRef;
+                }
+            }
+        }
+            break;
+            
         case kMCPropertyTypeOptionalInt16:
         {
             integer_t t_value;
@@ -2548,6 +2570,24 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 ((void(*)(MCExecContext&, void *, void *))prop -> setter)(ctxt, mark, t_value);
                 ((MCExecCustomTypeFreeProc)t_custom_info -> free)(ctxt, t_value);
             }
+        }
+            break;
+            
+        case kMCPropertyTypeMixedOptionalBool:
+        case kMCPropertyTypeOptionalBool:
+        {
+            bool t_value;
+            bool *t_value_ptr;
+            if (p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
+                t_value_ptr = nil;
+            else
+            {
+                t_value_ptr = &t_value;
+                MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeBool, &t_value);
+            }
+            
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, bool*))prop -> setter)(ctxt, mark, t_value_ptr);
         }
             break;
             

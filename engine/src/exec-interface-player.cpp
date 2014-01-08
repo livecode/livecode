@@ -444,7 +444,7 @@ void MCPlayer::GetShowSelection(MCExecContext& ctxt, bool& r_setting)
 void MCPlayer::SetShowSelection(MCExecContext& ctxt, bool setting)
 {
 	//means make QT movie editable
-	if (changeflag(setting, F_PLAY_SELECTION))
+	if (changeflag(setting, F_SHOW_SELECTION))
 		editmovie((flags & F_SHOW_SELECTION) != 0);
 }
 

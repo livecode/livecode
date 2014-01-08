@@ -901,7 +901,7 @@ void MCGraphic::SetForePattern(MCExecContext& ctxt, uinteger_t* pattern)
         MCGradientFillFree(m_stroke_gradient);
         m_stroke_gradient = nil;
     }
-    MCObject::SetBackPattern(ctxt, pattern);
+    MCObject::SetForePattern(ctxt, pattern);
 }
 
 void MCGraphic::SetBackPattern(MCExecContext& ctxt, uinteger_t* pattern)

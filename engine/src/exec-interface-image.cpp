@@ -121,14 +121,10 @@ void MCImage::SetHotSpot(MCExecContext& ctxt, MCPoint p_spot)
 
 void MCImage::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
 {
-	if (m_rep == nil || m_rep->GetType() != kMCImageRepReferenced)
-	{
-		r_name = MCValueRetain(kMCEmptyString);
-		return;
-	}
-
-	r_name = MCValueRetain(filename);
-
+    if (getflag(F_HAS_FILENAME))
+        r_name = MCValueRetain(filename);
+    else
+        r_name = MCValueRetain(kMCEmptyString);
 }
 
 void MCImage::SetFileName(MCExecContext& ctxt, MCStringRef p_name)

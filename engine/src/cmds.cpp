@@ -871,7 +871,7 @@ void MCFind::exec_ctxt(MCExecContext& ctxt)
 #endif /* MCFind */
 
     MCAutoStringRef t_needle;
-    if (ctxt . EvalExprAsStringRef(tofind, EE_FIND_BADSTRING, &t_needle))
+    if (!ctxt . EvalExprAsStringRef(tofind, EE_FIND_BADSTRING, &t_needle))
         return;
 
     MCInterfaceExecFind(ctxt, mode, *t_needle, field);

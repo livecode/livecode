@@ -227,6 +227,7 @@ enum MCPropertyType
 	kMCPropertyTypeSet,
 	kMCPropertyTypeEnum,
 	kMCPropertyTypeCustom,
+    kMCPropertyTypeOptionalBool,
     kMCPropertyTypeOptionalUInt8,
 	kMCPropertyTypeOptionalInt16,
 	kMCPropertyTypeOptionalUInt16,
@@ -474,6 +475,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 
 #define MCPropertyObjectThunkGetAny(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCValueRef&)
 #define MCPropertyObjectThunkGetBool(obj, mth) MCPropertyObjectThunkImp(obj, mth, bool&)
+#define MCPropertyObjectThunkGetOptionalBool(obj, mth) MCPropertyObjectThunkImp(obj, mth, bool*&)
 #define MCPropertyObjectThunkGetInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t&)
 #define MCPropertyObjectThunkGetInt32(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t&)
 #define MCPropertyObjectThunkGetInt32X4(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t*)
@@ -505,6 +507,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 
 #define MCPropertyObjectThunkSetAny(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCValueRef)
 #define MCPropertyObjectThunkSetBool(obj, mth) MCPropertyObjectThunkImp(obj, mth, bool)
+#define MCPropertyObjectThunkSetOptionalBool(obj, mth) MCPropertyObjectThunkImp(obj, mth, bool*)
 #define MCPropertyObjectThunkSetInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t)
 #define MCPropertyObjectThunkSetInt32(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t)
 #define MCPropertyObjectThunkSetInt32X4(obj, mth) MCPropertyObjectThunkImp(obj, mth, integer_t*)
