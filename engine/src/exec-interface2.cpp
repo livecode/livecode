@@ -3350,10 +3350,7 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
     if (p_object . object -> gettype() != CT_FIELD)
         return;
     
-    // MCInterfaceMarkObject gives us the size of the text in codepoints which
-    // isn't what we want at the moment (the field deals with code units)
-    /* MCInterfaceMarkObject(ctxt, p_object, p_whole_chunk, r_mark); */
-    p_object . object -> getstringprop(ctxt, p_object . part_id, P_TEXT, False, r_mark . text);
+    MCInterfaceMarkObject(ctxt, p_object, p_whole_chunk, r_mark);
     
     MCField *t_field;
     t_field = (MCField *)p_object . object;
@@ -3361,8 +3358,8 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
     //   line chunks to include the CR at the end.
     
     findex_t start, end;
-    start = 0;
-    end = MCStringGetLength(r_mark . text);
+    start = r_mark . start;
+    end = r_mark . finish;
 
 	Boolean wholeline = True;
 	Boolean wholeword = True;
@@ -3407,7 +3404,7 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
 	}
     
     r_mark . start = start;
-    r_mark . finish  = end;
+    r_mark . finish = end;
 }
 
 void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCStringRef &r_text)

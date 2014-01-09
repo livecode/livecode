@@ -3699,7 +3699,7 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
         else
             MCStringsMarkCharsOfTextByOrdinal(ctxt, character -> etype, force, wholechunk, t_further_chunks, x_mark);
     }
-#ifdef BYTE_CHUNK
+
     if (codepoint != nil)
     {
         if (codepoint -> etype == CT_RANGE || codepoint -> etype == CT_EXPRESSION)
@@ -3741,7 +3741,7 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
         else
             MCStringsMarkCodeunitsOfTextByOrdinal(ctxt, codeunit -> etype, force, wholechunk, t_further_chunks, x_mark);
     }
-#endif
+
 }
 
 #ifdef BYTE_CHUNK

@@ -602,13 +602,14 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
 		unselect(False, True);
 		focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 	}
-	findex_t oldsi = si;
 	
 	MCParagraph *toppgptr = fptr->getparagraphs();
 
 	MCParagraph *pgptr;
 	pgptr = verifyindices(toppgptr, si, ei);
 	
+    findex_t oldsi = si;
+    
 	// MW-2013-10-24: [[ FasterField ]] If affect_many is true then multiple
 	//   paragraphs have been affected, so we need to redraw everything below
 	//   the initial one. We also store the initial height of the paragraph

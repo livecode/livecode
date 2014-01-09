@@ -144,15 +144,22 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
             break;
             
         case CT_CHARACTER:
+        case CT_CODEPOINT:
         {
-            // Convert from code unit indices to codepoint indices
-            MCRange t_cu_range, t_cp_range;
+            // Convert from code unit indices to appropriate indices
+            MCRange t_cu_range, t_range;
             t_cu_range = MCRangeMake(0, MCStringGetLength(p_string));
-            /* UNCHECKED */ MCStringUnmapIndices(p_string, kMCCharChunkTypeGrapheme, t_cu_range, t_cp_range);
+            /* UNCHECKED */ MCStringUnmapIndices(p_string, p_chunk_type == CT_CHARACTER ? kMCCharChunkTypeGrapheme : kMCCharChunkTypeCodepoint, t_cu_range, t_range);
             
-            nchunks = t_cp_range.length;
-            break;
+            nchunks = t_range.length;
         }
+            break;
+            
+        case CT_CODEUNIT:
+        {
+            nchunks = MCStringGetLength(p_string);
+        }
+            break;
     }
     
     r_count = nchunks;
@@ -398,17 +405,25 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             break;
             
         case CT_CHARACTER:
+        case CT_CODEPOINT:
             if (p_include_chars)
             {
                 // Resolve the indices
                 MCRange t_cp_range, t_cu_range;
                 t_cp_range = MCRangeMake(p_first, p_count);
-                MCStringMapIndices(p_string, kMCCharChunkTypeGrapheme, t_cp_range, t_cu_range);
+                MCStringMapIndices(p_string, p_chunk_type == CT_CHARACTER ? kMCCharChunkTypeGrapheme : kMCCharChunkTypeCodepoint, t_cp_range, t_cu_range);
         
                 r_start = t_cu_range.offset;
                 r_end = t_cu_range.offset + t_cu_range.length;
                 //r_start = p_first;
                 //r_end = p_first + p_count;
+            }
+            return;
+        case CT_CODEUNIT:
+            if (p_include_chars)
+            {
+                r_start = p_first;
+                r_end = p_first + p_count;
             }
             return;
         default:
