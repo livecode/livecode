@@ -2158,29 +2158,47 @@ inline void strmove(char *p_dest, const char *p_src)
 	*p_dest = 0;
 }
 
+// SN-2014-01-09: Same as above, handling unicode chars
+// Returns the characters suppressed in case the string is the same
+inline index_t strmove(unichar_t *p_dest, const unichar_t *p_src, bool p_same_string)
+{
+	while(*p_src != 0)
+		*p_dest++ = *p_src++;
+	*p_dest = 0;
+    
+    if (p_same_string)
+        return p_src - p_dest;
+    else
+        return 0;
+}
+
 // MW-2004-11-26: Replace strcpy with strmov - overalapping regions (VG)
 void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 {
-    char *t_in;
-    /* UNCHECKED */ MCStringConvertToCString(in, t_in);
-	char *cstr = t_in;
+    MCAutoPointer<unichar_t> t_in;
+    uindex_t t_length;
+    t_length = MCStringGetLength(in);
+    
+    /* UNCHECKED */ MCMemoryNew(t_length* sizeof(unichar_t), (void*&)&t_in);
+    t_length = MCStringGetChars(in, MCRangeMake(0, t_length), *t_in);
 
-	char *fptr = cstr; //pointer to search forward in curdir
+    unichar_t *string_ptr = *t_in;
+	unichar_t *fptr = string_ptr; //pointer to search forward in curdir
 	while (*fptr)
 	{
 		if (*fptr == '/' && *(fptr + 1) == '.'
 		        && *(fptr + 2) == '.' && *(fptr + 3) == '/')
 		{//look for "/../" pattern
-			if (fptr == cstr)
-				strmove(fptr, fptr + 3);
+			if (fptr == string_ptr)
+				t_length -= strmove(fptr, fptr + 3, true);
 			else
 			{
-				char *bptr = fptr - 1;
+				unichar_t *bptr = fptr - 1;
 				while (True)
 				{ //search backword for '/'
 					if (*bptr == '/')
 					{
-						strmove(bptr, fptr + 3);
+						t_length -= strmove(bptr, fptr + 3, true);
 						fptr = bptr;
 						break;
 					}
@@ -2191,20 +2209,20 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 		}
 		else
 			if (*fptr == '/' && *(fptr + 1) == '.' && *(fptr + 2) == '/')
-				strmove(fptr, fptr + 2); //erase the '/./'
+				t_length -= strmove(fptr, fptr + 2, true); //erase the '/./'
 			else
 #ifdef _MACOSX
 				if (*fptr == '/' && *(fptr + 1) == '/')
 #else
-				if (fptr != cstr && *fptr == '/' && *(fptr + 1) == '/')
+				if (fptr != string_ptr && *fptr == '/' && *(fptr + 1) == '/')
 #endif
 
-					strmove(fptr, fptr + 1); //erase the extra '/'
+					t_length -= strmove(fptr, fptr + 1, true); //erase the extra '/'
 				else
 					fptr++;
 	}
-	/* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t *)cstr, r_out);
-
+    
+    /* UNCHECKED */ MCStringCreateWithChars(string_ptr, t_length, r_out);
 }
 
 bool MCFiltersBase64Encode(MCDataRef p_src, MCStringRef& r_dst);
