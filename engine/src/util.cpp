@@ -2112,29 +2112,22 @@ Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef mess, MCParameter *pa
 bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 {
 #ifdef _WIN32
-	uindex_t t_length = MCStringGetLength(p_path);
-	if (t_length == 0)
+	if (MCStringIsEmpty(p_path))
 		return MCStringCopy(p_path, r_native_path);
 
-	MCAutoNativeCharArray t_path;
-	if (!t_path.New(t_length))
-		return false;
-
-    //TOCHECK
-	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
-	char_t *t_dst = t_path.Chars();
+	unichar_t *t_dst;
+	uindex_t t_length;
+	t_length = MCStringGetChars(p_path, MCRangeMake(0, t_length), t_dst);
 
 	for (uindex_t i = 0; i < t_length; i++)
 	{
-		if (t_src[i] == '/')
+		if (t_dst[i] == '/')
 			t_dst[i] = '\\';
-		else if (t_src[i] == '\\')
+		else if (t_dst[i] == '\\')
 			t_dst[i] = '/';
-		else
-			t_dst[i] = t_src[i];
 	}
 
-	return t_path.CreateStringAndRelease(r_native_path);
+	return MCStringCreateWithChars(t_dst, t_length, r_native_path);
 #else
 	return MCStringCopy(p_path, r_native_path);
 #endif
