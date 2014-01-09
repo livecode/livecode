@@ -3314,13 +3314,8 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
     {
         p_object . object -> getstringprop(ctxt, p_object . part_id, P_TEXT, False, r_mark . text);
         
-        // Ensure the length is returned in codepoints
-        MCRange t_cu_range, t_cp_range;
-        t_cu_range = MCRangeMake(0, MCStringGetLength(r_mark . text));
-        /* UNCHECKED */ MCStringUnmapIndices(r_mark . text, kMCDefaultCharChunkType, t_cu_range, t_cp_range);
-        
-        r_mark . start = t_cp_range.offset;
-        r_mark . finish = t_cp_range.offset + t_cp_range.length;
+        r_mark . start = 0;
+        r_mark . finish = MCStringGetLength(r_mark . text);
         r_mark . changed = false;
     	return;
     }
@@ -3338,7 +3333,6 @@ void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMa
         case CT_IMAGE:
         case CT_AUDIO_CLIP:
         case CT_VIDEO_CLIP:
-            // TODO: this needs to return codepoint indices too
             p_container . object -> getstringprop(ctxt, p_container . part_id, P_TEXT, False, r_mark . text);
             r_mark . start = 0;
             r_mark . finish = MCStringGetLength(r_mark . text);
@@ -3412,13 +3406,8 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
             break;
 	}
     
-    // Ensure that the returned indices are in codepoints (not code units)
-    MCRange t_cp_range, t_cu_range;
-    t_cu_range = MCRangeMake(start, end);
-    /* UNCHECKED */ MCStringUnmapIndices(r_mark . text, kMCDefaultCharChunkType, t_cu_range, t_cp_range);
-    
-    r_mark . start = t_cp_range . offset;
-    r_mark . finish  = t_cp_range . offset + t_cp_range . length;
+    r_mark . start = start;
+    r_mark . finish  = end;
 }
 
 void MCInterfaceEvalTextOfContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCStringRef &r_text)

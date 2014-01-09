@@ -45,6 +45,10 @@ class MCChunk : public MCExpression
 	MCCRef *item;
 	MCCRef *word;
 	MCCRef *character;
+    // AL-2013-01-08 [[ CharChunks ]] Add 'codepoint, codeunit and byte' to chunk types
+    MCCRef *codepoint;
+    MCCRef *codeunit;
+    MCCRef *byte;
 	
 	// MW-2008-03-05: [[ Owner Reference ]] If desttype == DT_OWNER, then this pointer will
 	//   be an MCChunk, otherwise it will be an MCExpression.

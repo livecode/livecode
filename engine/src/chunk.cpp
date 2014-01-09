@@ -128,6 +128,7 @@ MCChunk::MCChunk(Boolean isforset)
 {
 	url = stack = background = card = group = object = NULL;
 	cline = item = word = token = character = NULL;
+    codepoint = codeunit = byte = NULL;
 	source = NULL;
 	destvar = NULL;
 	destobj = NULL;
@@ -168,6 +169,9 @@ MCChunk::~MCChunk()
 	delete word;
 	delete token;
 	delete character;
+    delete codepoint;
+    delete codeunit;
+    delete byte;
 	delete source;
 	delete destvar;
 }
@@ -251,7 +255,8 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 				//   object resolves correctly.
 				if (desttype != DT_ISDEST && (cline != NULL || item != NULL
 				                              || word != NULL || token != NULL
-				                              || character != NULL) &&
+				                              || character != NULL || codepoint != NULL
+                                              || codeunit != NULL || byte != NULL) &&
 											 (stack == nil && background == nil &&
 											  card == nil && group == nil &&
 											  object == nil))
@@ -452,6 +457,15 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 					case CT_CHARACTER:
 						character = curref;
 						break;
+                    case CT_CODEPOINT:
+                        codepoint = curref;
+                        break;
+                    case CT_CODEUNIT:
+                        codeunit = curref;
+                        break;
+                    case CT_BYTE:
+                        byte = curref;
+                        break;
 					default: /* curref->otype */
 						fprintf(stderr, "MCChunk: ERROR bad chunk type %d\n", nterm);
 						break;
@@ -498,7 +512,8 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						{}
 					}
 					else if (cline != NULL || item != NULL || word != NULL
-						        || token != NULL || character != NULL)
+                             || token != NULL || character != NULL || codepoint != NULL
+                             || codeunit != NULL || byte != NULL)
 					{
 						sp.backup();
 						if (sp.parseexp(True, False, &source) != PS_NORMAL)
@@ -677,6 +692,24 @@ MCVarref *MCChunk::getrootvarref(void)
 
 void MCChunk::take_components(MCChunk *tchunk)
 {
+    if (tchunk->byte != NULL)
+	{
+		delete byte;
+		byte = tchunk->byte;
+		tchunk->byte = NULL;
+    }
+    if (tchunk->codeunit != NULL)
+	{
+		delete codeunit;
+		codeunit = tchunk->codeunit;
+		tchunk->codeunit = NULL;
+    }
+    if (tchunk->codepoint != NULL)
+	{
+		delete codepoint;
+		codepoint = tchunk->codepoint;
+		tchunk->codepoint = NULL;
+    }
 	if (tchunk->character != NULL)
 	{
 		delete character;
@@ -3561,7 +3594,7 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
     
     if (cline != nil)
     {
-        t_further_chunks = (item != nil || word != nil || character != nil);
+        t_further_chunks = (item != nil || word != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil);
         if (cline -> etype == CT_RANGE || cline -> etype == CT_EXPRESSION)
         {
             if (!ctxt . EvalExprAsInt(cline -> startpos, EE_CHUNK_BADRANGESTART, t_first))
@@ -3583,7 +3616,7 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
     
     if (item != nil)
     {
-        t_further_chunks = (word != nil || character != nil);
+        t_further_chunks = (word != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil);
         if (item -> etype == CT_RANGE || item -> etype == CT_EXPRESSION)
         {
             if (!ctxt . EvalExprAsInt(item -> startpos, EE_CHUNK_BADRANGESTART, t_first))
@@ -3605,7 +3638,7 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
     
     if (word != nil)
     {
-        t_further_chunks = (character != nil);
+        t_further_chunks = (character != nil || codepoint != nil || codeunit != nil || byte != nil);
         if (word -> etype == CT_RANGE || word -> etype == CT_EXPRESSION)
         {
             if (!ctxt . EvalExprAsInt(word -> startpos, EE_CHUNK_BADRANGESTART, t_first))
@@ -3666,7 +3699,58 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
         else
             MCStringsMarkCharsOfTextByOrdinal(ctxt, character -> etype, force, wholechunk, t_further_chunks, x_mark);
     }
+#ifdef BYTE_CHUNK
+    if (codepoint != nil)
+    {
+        if (codepoint -> etype == CT_RANGE || codepoint -> etype == CT_EXPRESSION)
+        {
+            if (!ctxt . EvalExprAsInt(codepoint -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+                return;
+            
+            if (codepoint -> etype == CT_RANGE)
+            {
+                if (!ctxt . EvalExprAsInt(codepoint -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                    return;
+            }
+            else
+                t_last = t_first;
+            
+            MCStringsMarkCodepointsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
+        }
+        else
+           MCStringsMarkCodepointsOfTextByOrdinal(ctxt, codepoint -> etype, force, wholechunk, t_further_chunks, x_mark);
+    }
+    
+    if (codeunit != nil)
+    {
+        if (codeunit -> etype == CT_RANGE || codeunit -> etype == CT_EXPRESSION)
+        {
+            if (!ctxt . EvalExprAsInt(codeunit -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+                return;
+            
+            if (codeunit -> etype == CT_RANGE)
+            {
+                if (!ctxt . EvalExprAsInt(codeunit -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                    return;
+            }
+            else
+                t_last = t_first;
+            
+            MCStringsMarkCodeunitsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
+        }
+        else
+            MCStringsMarkCodeunitsOfTextByOrdinal(ctxt, codeunit -> etype, force, wholechunk, t_further_chunks, x_mark);
+    }
+#endif
 }
+
+#ifdef BYTE_CHUNK
+void MCChunk::markbytes(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedText& x_mark, bool includechars)
+{
+    
+}
+#endif
+
 #ifdef LEGACY_EXEC
 // MW-2012-02-23: [[ FieldChars ]] Added the 'includechars' flag, if true any char chunk
 //   will be processed; otherwise it will be ignored.
@@ -4341,7 +4425,8 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
 
     if (*t_text != nil)
     {
-        if (cline != NULL || item != NULL || word != NULL || token != NULL || character != NULL)
+        if (cline != nil || item != nil || word != nil || token != nil ||
+            character != nil || codepoint != nil || codeunit != nil || byte != nil)
         {
             // Must be a string ref
             MCAutoStringRef t_text_str;
@@ -5254,8 +5339,9 @@ bool MCChunk::getobjforprop(MCExecContext& ctxt, MCObject*& r_object, uint4& r_p
         && function != F_SELECTED_IMAGE
         && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
 		tfunction = True;
-	if (!tfunction && cline == NULL && item == NULL
-        && word == NULL && token == NULL && character == NULL)
+	if (!tfunction && cline == nil && item == nil
+        && word == nil && token == nil && character == nil
+        && codepoint == nil && codeunit == nil && byte == nil)
 	{
 		r_object = objptr;
 		r_parid = parid;
@@ -5813,6 +5899,12 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
 
 Chunk_term MCChunk::getlastchunktype(void)
 {
+    if (byte != nil)
+        return CT_BYTE;
+    if (codeunit != nil)
+        return CT_CODEUNIT;
+    if (codepoint != nil)
+        return CT_CODEPOINT;
 	if (character != nil)
 		return CT_CHARACTER;
 	if (item != nil)
@@ -5987,8 +6079,9 @@ bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
         && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
         t_function = true;
 
-    if (!t_function && cline == NULL && item == NULL
-        && token == NULL && word == NULL && character == NULL)
+    if (!t_function && cline == nil && item == nil
+        && token == nil && word == nil && character == nil
+        && codepoint == nil && codeunit == nil && byte == nil)
     {
         MCMarkedText t_mark;
         t_mark . finish = INDEX_MAX;
@@ -6256,30 +6349,29 @@ Exec_stat MCChunk::select(MCExecPoint &ep, Preposition_type where, Boolean text,
 //
 bool MCChunk::istextchunk(void) const
 {
-	Boolean tfunction;
-	
-	if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
+    bool t_function = false;
+    if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
         && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
         && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
         && function != F_SELECTED_IMAGE
-		&& function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
-		tfunction = True;
-	else
-		tfunction = False;
-		
-	if (!tfunction && cline == NULL && item == NULL
-	        && token == NULL && word == NULL && character == NULL)
-		return false;
-
-	return true;
+        && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
+        t_function = true;
+    
+    if (!t_function && cline == nil && item == nil
+        && token == nil && word == nil && character == nil
+        && codepoint == nil && codeunit == nil && byte == nil)
+        return false;
+    
+    return true;
 }
 
 // MW-2012-01-25: [[ ParaStyles ]] Returns true if this is an explicit 'line' chunk.
 // MW-2012-02-13: [[ Bug ]] Some function chunks should also be treated as lines.
 bool MCChunk::islinechunk(void) const
 {
-	// If we have any of item, token, word or character entries then we are not a line.
-	if (item != nil || token != nil || word != nil || character != nil)
+	// If we have any of item, token, word, character, codepoint, codeunit or byte entries then we are not a line.
+	if (item != nil || token != nil || word != nil || character != nil
+        || codepoint != nil || codeunit != nil || byte != nil)
 		return false;
 
 	// If there is a line entry, then we must be a line.
@@ -6301,7 +6393,8 @@ bool MCChunk::isvarchunk(void) const
 	if (source != nil)
 		return false;
 	
-	if (cline != nil || item != nil || token != nil || word != nil || character != nil)
+	if (cline != nil || item != nil || token != nil || word != nil || character != nil
+        || codepoint != nil || codeunit != nil || byte != nil)
 		return false;
 	
 	if (destvar != nil)
@@ -6320,8 +6413,9 @@ bool MCChunk::issubstringchunk(void) const
 	if (destvar == nil)
 		return false;
 
-	if (cline != NULL || item != NULL || token != NULL
-	            || word != NULL || character != NULL)
+	if (cline != nil || item != nil || token != nil
+        || word != nil || character != nil
+        || codepoint != nil || codeunit != nil || byte != nil)
 		return true;
 
 	return false;
