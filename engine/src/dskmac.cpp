@@ -492,9 +492,12 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
                 {
 					MCAutoValueRef t_val;
 					MCAutoStringRef t_string;
+                    MCAutoPointer<char_t> t_cstring;
+                    uindex_t t_length;
 					MCdefaultstackptr->getcard()->eval(ctxt, *t_sptr, &t_val);
 					/* UNCHECKED */ ctxt.ConvertToString(*t_val, &t_string);
-					AEPutParamPtr(reply, '----', typeChar, MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string));
+                    MCStringConvertToNative(*t_string, &t_cstring, t_length);
+					AEPutParamPtr(reply, '----', typeChar, (char*)*t_cstring, t_length);
 				}
 				delete sptr;
 			}
@@ -1295,6 +1298,7 @@ Boolean MCS_mac_nodelay(int4 p_fd)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#if 0
 static bool MCS_mac_path2std(MCStringRef p_path, MCStringRef& r_stdpath)
 {
 	uindex_t t_length = MCStringGetLength(p_path);
@@ -1320,6 +1324,7 @@ static bool MCS_mac_path2std(MCStringRef p_path, MCStringRef& r_stdpath)
     
 	return t_path.CreateStringAndRelease(r_stdpath);
 }
+#endif
 
 OSErr MCS_mac_pathtoref(MCStringRef p_path, FSRef& r_ref)
 {
@@ -2937,7 +2942,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         errno = noErr;
         
         ResType rtype, type;
-        if (p_type != nil)
+        if (p_type != nil && MCStringIsNative(p_type))
         { //get the resource info specified by the resource type
             // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
             rtype = MCSwapInt32HostToNetwork(*(uint32_t*)MCStringGetNativeCharPtr(p_type));
@@ -3126,7 +3131,8 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         
         UseResFile(*destFileRefNum);
         
-        if (MCStringGetLength(p_type) != 4)
+        if (MCStringGetLength(p_type) != 4 ||
+            !MCStringIsNative(p_type))
         {
             //copying the entire resource file
             short resTypeCount = Count1Types();
@@ -5666,7 +5672,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         if (MCS_mac_specialfolder_to_mac_folder(MCNameGetString(p_type), t_mac_folder, t_domain))
             t_found_folder = true;
-        else if (MCStringGetLength(MCNameGetString(p_type)) == 4)
+        else if (MCStringGetLength(MCNameGetString(p_type)) == 4 &&
+                 MCStringIsNative(MCNameGetString(p_type)))
         {
             t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetNativeCharPtr(MCNameGetString(p_type))));
             t_domain = kOnAppropriateDisk;
@@ -6075,17 +6082,14 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             {
                 MCSystemFolderEntry t_entry;
                 
-                char* t_native_name;
-                uint4 t_native_length;
-                t_native_length = 0;
-                MCS_utf16tonative((const unsigned short *)t_names[t_i] . unicode, t_names[t_i] . length * 2, t_native_name, t_native_length);
-                // MCS_utf16tonative return a non nul-terminated string
-                t_native_name[t_native_length] = '\0';
+                MCStringRef t_unicode_name;
                 
-                // MW-2008-02-27: [[ Bug 5920 ]] Make sure we convert Finder to POSIX style paths
-                for(uint4 i = 0; i < t_native_length; ++i)
-                    if (t_native_name[i] == '/')
-                        t_native_name[i] = ':';                
+                // MW-2008-02-27: [[ Bug 5920 ]] Make sure we convert Finder to POSIX style paths                
+                for(uint4 i = 0; i < t_names[t_i] . length; ++i)
+                    if (t_names[t_i] . unicode[i] == '/')
+                        t_names[t_i] . unicode[i] = ':';
+                
+                MCStringCreateWithChars(t_names[t_i] . unicode, t_names[t_i] . length, t_unicode_name);
 
                 FSPermissionInfo *t_permissions;
                 t_permissions = (FSPermissionInfo *)&(t_catalog_infos[t_i] . permissions);
@@ -6125,7 +6129,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     t_backup_time += kCFAbsoluteTimeIntervalSince1970;
                 }
                 
-                t_entry.name = t_native_name;
+                t_entry.name = t_unicode_name;
                 t_entry.data_size = t_catalog_infos[t_i] . dataLogicalSize;
                 t_entry.resource_size = t_catalog_infos[t_i] . rsrcLogicalSize;
                 t_entry.creation_time = (uint32_t)t_creation_time;
@@ -6140,6 +6144,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 t_entry.is_folder = t_catalog_infos[t_i] . nodeFlags & kFSNodeIsDirectoryMask;
             
                 p_callback(x_context, &t_entry);
+                
+                MCValueRelease(t_unicode_name);
             }
         } while(t_oserror != errFSNoMoreItems);
         

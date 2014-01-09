@@ -408,36 +408,44 @@ bool MCArraysSplitIndexes(MCNameRef p_key, integer_t*& r_indexes, uindex_t& r_co
 	if (t_string_len == 0)
 		return true;
 
-	const char *t_sptr;
-	const char *t_eptr;
-	t_sptr = (const char*)MCStringGetNativeCharPtr(t_string);
-	t_eptr = t_sptr + t_string_len;
-
 	r_all_integers = true;
-
+    
+    uindex_t t_start, t_finish;    
+    t_start = 0;
+    t_finish = 0;
+    
 	for(;;)
 	{
-		const char *t_element_end;
-		t_element_end = strchr(t_sptr, ',');
-		if (t_element_end == nil)
-			t_element_end = t_eptr;
-		
+        if (!MCStringFirstIndexOfChar(t_string, ',', t_start, kMCCompareExact, t_finish))
+            t_finish = t_string_len;
+        		
 		if (!MCMemoryResizeArray(r_count + 1, r_indexes, r_count))
 			return false;
 
 		Boolean t_done;
-		uinteger_t t_length = t_element_end - t_sptr;
-		r_indexes[r_count - 1] = MCU_strtol(t_sptr, t_length, '\0', t_done, False, False);
-		if (!t_done)
-		{
-			r_all_integers = false;
-			break;
-		}
+        
+        MCAutoStringRef t_substring;
+        MCAutoNumberRef t_number;
+        integer_t t_converted;
+        MCStringCopySubstring(t_string, MCRangeMake(t_start, t_finish - t_start), &t_substring);
+        
+        if (!MCNumberParse(*t_substring, &t_number))
+        {
+            t_converted = 0;
+            r_all_integers = false;
+            break;
+        }
+        else
+        {
+            t_converted = MCNumberFetchAsInteger(*t_number);
+        }
+        
+		r_indexes[r_count - 1] = t_converted;
 
-		if (t_element_end + 1 >= t_eptr)
+		if (t_finish >= t_string_len)
 			break;
 
-		t_sptr = t_element_end + 1;
+		t_start = t_finish + 1;
 	}
 
 	return true;

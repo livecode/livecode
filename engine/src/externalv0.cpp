@@ -676,6 +676,9 @@ struct get_array_element_t
 
 static bool get_array_element(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
 {
+    if (!MCStringIsNative((MCStringRef)p_value))
+        return false;
+    
 	get_array_element_t *ctxt;
 	ctxt = (get_array_element_t *)p_context;
 

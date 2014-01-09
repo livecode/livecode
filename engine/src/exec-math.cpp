@@ -141,10 +141,9 @@ void MCMathEvalBaseConvert(MCExecContext& ctxt, MCStringRef p_source, integer_t 
 	bool t_error;
 	t_error = false;
 
-	const char_t *t_string;
+    char_t* t_string;
 	uint4 t_length;
-	t_string = MCStringGetNativeCharPtr(p_source);
-	t_length = MCStringGetLength(p_source);
+	/* UNCHECKED */ MCStringConvertToNative(p_source, t_string, t_length);
 
 	if (t_length == 0)
 		t_error = true;
@@ -178,6 +177,8 @@ void MCMathEvalBaseConvert(MCExecContext& ctxt, MCStringRef p_source, integer_t 
 	
 		i += 1;
 	}
+    
+    delete[] t_string;
 
 	if (t_error)
 	{

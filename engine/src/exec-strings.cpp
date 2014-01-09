@@ -489,6 +489,11 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 	MCAutoStringRef t_result;
 	bool t_success = true;
 
+    if (!MCStringIsNative(p_format))
+    {
+        ctxt.LegacyThrow(EE_FORMAT_BADSOURCE);
+        return;
+    }
 	const char *format = (const char*) MCStringGetNativeCharPtr(p_format);
 
 	t_success = MCStringCreateMutable(0, &t_result);

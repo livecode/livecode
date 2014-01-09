@@ -2120,6 +2120,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 	if (!t_path.New(t_length))
 		return false;
 
+    //TOCHECK
 	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
 	char_t *t_dst = t_path.Chars();
 

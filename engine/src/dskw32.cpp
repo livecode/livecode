@@ -737,6 +737,7 @@ bool dns_servers_from_registry(MCListRef& r_list)
     
 	const char_t *t_chars;
 	uindex_t t_char_count;
+    //TOCHECK
 	t_chars = MCStringGetNativeCharPtr(t_string);
 	t_char_count = MCStringGetLength(t_string);
     
