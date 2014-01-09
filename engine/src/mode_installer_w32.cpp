@@ -290,14 +290,14 @@ void MCSystemCancelRequestUserAttention(void)
 
 // MM-2011-03-24: Extended the standard NOTIFYICONDATAA struct to include 
 // extra fields for balloon title, icon and message.  These are (currently) ifdeffed out.
-typedef struct _NOTIFYICONDATA500A {
+typedef struct _NOTIFYICONDATA500W {
     DWORD cbSize;
     HWND hWnd;
     UINT uID;
     UINT uFlags;
     UINT uCallbackMessage;
     HICON hIcon;
-    CHAR   szTip[128];
+    WCHAR szTip[64];
     DWORD dwState;
     DWORD dwStateMask;
     WCHAR   szInfo[256];
@@ -307,16 +307,16 @@ typedef struct _NOTIFYICONDATA500A {
     } DUMMYUNIONNAME;
     WCHAR   szInfoTitle[64];
     DWORD dwInfoFlags;
-} NOTIFYICONDATA500A, *PNOTIFYICONDATA500A;
+} NOTIFYICONDATA500W, *PNOTIFYICONDATA500W;
 
 // MM-2011-03-24: Added.  Displays a balloon popup above the taskbar icon containing the given message and title.
 void MCSystemBalloonNotification(MCStringRef p_title, MCStringRef p_message)
 {
 	// Shell_NotifyIconA uses the cbSize of the struct passed to determine what fields have been set
 	// allowing us to use the extended NOTIFYICONDATA500A struct with the extra fields for balloons.
-	NOTIFYICONDATA500A t_nidata;
-	MCMemoryClear(&t_nidata, sizeof(NOTIFYICONDATA500A));
-	t_nidata . cbSize = sizeof(NOTIFYICONDATA500A);
+	NOTIFYICONDATA500W t_nidata;
+	MCMemoryClear(&t_nidata, sizeof(NOTIFYICONDATA500W));
+	t_nidata . cbSize = sizeof(NOTIFYICONDATA500W);
 
 	// Fecth the window handle that we have bound the taskbar icon to.
 	// Only one task bar icon has been created within this window hanlde, with ID 1.
