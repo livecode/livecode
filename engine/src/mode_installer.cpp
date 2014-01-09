@@ -866,8 +866,8 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef bool (*MCSystemListProcessesCallback)(void *context, uint32_t id, const char *path, const char *description);
-typedef bool (*MCSystemListProcessModulesCallback)(void *context, const char *path);
+typedef bool (*MCSystemListProcessesCallback)(void *context, uint32_t id, MCStringRef path, MCStringRef description);
+typedef bool (*MCSystemListProcessModulesCallback)(void *context, MCStringRef path);
 
 bool MCSystemListProcesses(MCSystemListProcessesCallback p_callback, void* p_context);
 bool MCSystemListProcessModules(uint32_t p_process_id, MCSystemListProcessModulesCallback p_callback, void *p_context);
@@ -932,18 +932,13 @@ public:
         if (!ctxt . EvalExprAsStringRef(m_module, EE_INTERNAL_TASKS_BADMODULE, &t_module_str))
             return;
         
-		char *t_module;
-        /* UNCHECKED */ MCStringConvertToCString(*t_module_str, t_module);
-        
 		State t_state;
-		t_state . module = t_module;
+		t_state . module = *t_module_str;
 		/* UNCHECKED */ MCListCreateMutable('\n', t_state.list);
     
 		MCSystemListProcesses(ListProcessCallback, &t_state);
         
 		MCresult -> set(ctxt, t_state.list);
-        
-		delete t_module;
 	}
     
 private:
@@ -951,22 +946,20 @@ private:
 
 	struct State
 	{
-		char *module;
+		MCStringRef module;
 		MCListRef list;
 		bool found;
 	};
 
-	static bool ListProcessModulesCallback(void *p_state, const char *p_module)
+	static bool ListProcessModulesCallback(void *p_state, MCStringRef p_module)
 	{
 		State *state;
 		state = (State *)p_state;
-		state -> found = MCCStringEqualCaseless(state -> module, p_module);
-		if (state -> found)
-			return false;
-		return true;
+        state -> found = MCStringCompareTo(state -> module, p_module, kMCStringOptionCompareCaseless);
+		return !state -> found;
 	}
 
-	static bool ListProcessCallback(void *p_state, uint32_t p_id, const char *p_path, const char *p_desc)
+	static bool ListProcessCallback(void *p_state, uint32_t p_id, MCStringRef p_path, MCStringRef p_desc)
 	{
 		State *state;
 		state = (State *)p_state;
@@ -974,7 +967,7 @@ private:
 		MCSystemListProcessModules(p_id, ListProcessModulesCallback, state);
 		if (state -> found)
 		{
-            MCListAppendFormat(state ->list, "%s,%s", p_path, p_desc);
+            MCListAppendFormat(state ->list, "%@,%@", p_path, p_desc);
         }
 
 		return true;
@@ -983,8 +976,8 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemCanDeleteKey(const char *key);
-bool MCSystemCanDeleteFile(const char *file);
+bool MCSystemCanDeleteKey(MCStringRef key);
+bool MCSystemCanDeleteFile(MCStringRef file);
 
 class MCInternalCanDeleteKey: public MCStatement
 {
@@ -1017,10 +1010,8 @@ public:
         MCAutoStringRef t_string;
         if (!ctxt . EvalExprAsStringRef(m_key, EE_INTERNAL_DELETE_BADKEY, &t_string))
             return;
-        MCAutoPointer<char> temp;
-        /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
         
-        MCresult -> setvalueref(MCSystemCanDeleteKey(*temp) == true ? kMCTrue : kMCFalse);
+        MCresult -> setvalueref(MCSystemCanDeleteKey(*t_string) == true ? kMCTrue : kMCFalse);
 
 		return;
 	}
@@ -1061,10 +1052,8 @@ public:
         MCAutoStringRef t_string;
         if (!ctxt . EvalExprAsStringRef(m_file, EE_INTERNAL_DELETE_BADFILENAME, &t_string))
             return;
-        MCAutoPointer<char> temp;
-        /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
-        
-        MCresult -> setvalueref(MCSystemCanDeleteFile(*temp) == true ? kMCTrue : kMCFalse);
+
+        MCresult -> setvalueref(MCSystemCanDeleteFile(*t_string) == true ? kMCTrue : kMCFalse);
         
 		return;
 	}
@@ -1293,7 +1282,7 @@ IO_stat MCDispatch::startup(void)
 	if (t_project_info == nil || t_project_info -> size <= sizeof(MCCapsuleInfo))
 	{
 //#ifdef _DEBUG
-#if false
+#if 0
 		MCStack *t_stack;
 		IO_handle t_stream;
 		t_stream = MCS_open(getenv("TEST_STACK"), IO_READ_MODE, False, False, 0);

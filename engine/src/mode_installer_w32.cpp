@@ -29,12 +29,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef bool (*MCSystemListProcessesCallback)(void *context, uint32_t id, const char *path, const char *description);
-typedef bool (*MCSystemListProcessModulesCallback)(void *context, const char *path);
+typedef bool (*MCSystemListProcessesCallback)(void *context, uint32_t id, MCStringRef path, MCStringRef description);
+typedef bool (*MCSystemListProcessModulesCallback)(void *context, MCStringRef path);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool WindowsGetModuleFileNameEx(HANDLE p_process, HMODULE p_module, char*& r_path)
+static bool WindowsGetModuleFileNameEx(HANDLE p_process, HMODULE p_module, MCStringRef& r_path)
 {
 	bool t_success;
 	t_success = true;
@@ -42,7 +42,7 @@ static bool WindowsGetModuleFileNameEx(HANDLE p_process, HMODULE p_module, char*
 	// For some unfathomable reason, it is not possible find out how big a
 	// buffer you might need for a module file name. Instead we loop until
 	// we are sure we have the whole thing.
-	char *t_path;
+	WCHAR *t_path;
 	uint32_t t_path_length;
 	t_path_length = 0;
 	t_path = nil;
@@ -60,7 +60,7 @@ static bool WindowsGetModuleFileNameEx(HANDLE p_process, HMODULE p_module, char*
 		{
 			// If the buffer is too small, the result will equal the input
 			// buffer size.
-			t_result = GetModuleFileNameExA(p_process, p_module, t_path, t_path_length);
+			t_result = GetModuleFileNameExW(p_process, p_module, t_path, t_path_length);
 			if (t_result == 0)
 				t_success = false;
 			else if (t_result == t_path_length)
@@ -72,23 +72,26 @@ static bool WindowsGetModuleFileNameEx(HANDLE p_process, HMODULE p_module, char*
 	}
 
 	if (t_success)
-		r_path = t_path;
-	else
-		MCMemoryDeleteArray(t_path);
+		t_success = MCStringCreateWithWString(t_path, r_path);
+	
+	MCMemoryDeleteArray(t_path);
 
 	return t_success;
 }
 
-static bool WindowsGetModuleDescription(const char *p_path, char*& r_description)
+static bool WindowsGetModuleDescription(MCStringRef p_path, MCStringRef& r_description)
 {
 	bool t_success;
 	t_success = true;
 
+    MCAutoStringRefAsWString t_path;
+    /* UNCHECKED */ t_path.Lock(p_path);
+    
 	DWORD t_size;
 	t_size = 0;
 	if (t_success)
 	{
-		t_size = GetFileVersionInfoSizeA(p_path, nil);
+		t_size = GetFileVersionInfoSizeW(*t_path, nil);
 		if (t_size == 0)
 			t_success = false;
 	}
@@ -99,20 +102,20 @@ static bool WindowsGetModuleDescription(const char *p_path, char*& r_description
 		t_success = MCMemoryAllocate(t_size, t_data);
 
 	if (t_success &&
-		!GetFileVersionInfoA(p_path, 0, t_size, t_data))
+		!GetFileVersionInfoW(*t_path, 0, t_size, t_data))
 		t_success = false;
 
 	UINT t_desc_length;
-	char *t_desc;
+	WCHAR *t_desc;
 	t_desc_length = 0;
 	t_desc = nil;
 	if (t_success &&
-		!VerQueryValueA(t_data, "\\StringFileInfo\\040904b0\\FileDescription", (void **)&t_desc, &t_desc_length))
+		!VerQueryValueW(t_data, L"\\StringFileInfo\\040904b0\\FileDescription", (void **)&t_desc, &t_desc_length))
 		t_success = false;
 
-	if (t_success)
-		t_success = MCCStringCloneSubstring(t_desc, t_desc_length, r_description);
-
+    if (t_success)
+        t_success = MCStringCreateWithWString(t_desc, r_description);
+    
 	MCMemoryDeallocate(t_data);
 	
 	return t_success;
@@ -156,18 +159,14 @@ bool MCSystemListProcesses(MCSystemListProcessesCallback p_callback, void* p_con
 			DWORD t_bytes_used;
 			if (EnumProcessModules(t_process, &t_module, sizeof(HMODULE), &t_bytes_used))
 			{
-				char *t_process_path;
-				t_process_path = nil;
-				if (WindowsGetModuleFileNameEx(t_process, t_module, t_process_path))
+				MCAutoStringRef t_process_path;
+				if (WindowsGetModuleFileNameEx(t_process, t_module, &t_process_path))
 				{
-					char *t_process_description;
-					t_process_description = nil;
-					WindowsGetModuleDescription(t_process_path, t_process_description);
+					MCAutoStringRef t_process_description;
+					WindowsGetModuleDescription(t_process_path, &t_process_description);
 
-					t_success = p_callback(p_context, t_process_ids[i], t_process_path, t_process_description);
+					t_success = p_callback(p_context, t_process_ids[i], *t_process_path, *t_process_description);
 
-					MCCStringFree(t_process_description);
-					MCCStringFree(t_process_path);
 				}
 			}
 			CloseHandle(t_process);
@@ -218,12 +217,10 @@ bool MCSystemListProcessModules(uint32_t p_process_id, MCSystemListProcessModule
 
 	for(uint32_t i = 0; i < t_module_count && t_success; i++)
 	{
-		char *t_module_path;
-		t_module_path = nil;
-		if (WindowsGetModuleFileNameEx(t_process, t_modules[i], t_module_path))
+		MCAutoStringRef t_module_path;
+		if (WindowsGetModuleFileNameEx(t_process, t_modules[i], &t_module_path))
 		{
-			t_success = p_callback(p_context, t_module_path);
-			MCCStringFree(t_module_path);
+			t_success = p_callback(p_context, *t_module_path);
 		}
 	}
 
@@ -237,14 +234,14 @@ bool MCSystemListProcessModules(uint32_t p_process_id, MCSystemListProcessModule
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemCanDeleteKey(const char *p_key)
+bool MCSystemCanDeleteKey(MCStringRef p_key)
 {
 	HKEY t_key;
-	if (MCCStringBeginsWith(p_key, "HKCU\\"))
+	if (MCStringBeginsWithCString(p_key, "HKCU\\", kMCCompareCaseless))
 		t_key = HKEY_CURRENT_USER;
-	else if (MCCStringBeginsWith(p_key, "HKCR\\"))
+	else if (MCStringBeginsWithCString(p_key, "HKCR\\", kMCCompareCaseless))
 		t_key = HKEY_CLASSES_ROOT;
-	else if (MCCStringBeginsWith(p_key, "HKLM\\"))
+	else if (MCStringBeginsWithCString(p_key, "HKLM\\", kMCCompareCaseless))
 		t_key = HKEY_LOCAL_MACHINE;
 	else
 		return false;
@@ -252,8 +249,11 @@ bool MCSystemCanDeleteKey(const char *p_key)
 	HKEY t_subkey;
 	t_subkey = nil;
 
+    MCAutoStringRefAsWString t_key_wstr;
+    /* UNCHECKED */ t_key_wstr.Lock(p_key);
+    
 	LONG t_result;
-	t_result = RegOpenKeyExA(t_key, p_key + 5, 0, DELETE, &t_subkey);
+	t_result = RegOpenKeyExW(t_key, *t_key_wstr + 5, 0, DELETE, &t_subkey);
 
 	if (t_result == ERROR_FILE_NOT_FOUND || t_subkey != nil)
 	{
@@ -264,10 +264,13 @@ bool MCSystemCanDeleteKey(const char *p_key)
 	return false;
 }
 
-bool MCSystemCanDeleteFile(const char *p_file)
+bool MCSystemCanDeleteFile(MCStringRef p_file)
 {
-	HANDLE t_file;
-	t_file = CreateFileA(p_file, DELETE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	MCAutoStringRefAsWString t_file_wstr;
+    /* UNCHECKED */ t_file_wstr.Lock(p_file);
+    
+    HANDLE t_file;
+	t_file = CreateFileW(*t_file_wstr, DELETE, 0, NULL, OPEN_EXISTING, 0, NULL);
 	if (t_file != INVALID_HANDLE_VALUE)
 	{
 		CloseHandle(t_file);
