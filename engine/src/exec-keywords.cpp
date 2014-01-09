@@ -352,6 +352,7 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
 {
     MCAutoArrayRef t_array;
     MCAutoStringRef t_string;
+    MCAutoDataRef t_data;
     MCRange t_chunk_range;
     t_chunk_range = MCRangeMake(0,0);
     uindex_t t_length = 0;
@@ -359,6 +360,7 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
 	MCNameRef t_key;
 	MCValueRef t_value;
 	uintptr_t t_iterator;
+    const byte_t *t_data_ptr;
     Parse_stat ps;
     MCScriptPoint *sp = nil;
     int4 count = 0;
@@ -391,6 +393,14 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                     return;
             }
         }
+        else if (each == FU_BYTE)
+        {
+            if (!ctxt . ConvertToData(*t_condition, &t_data))
+                return;
+            
+            t_length = MCDataGetLength(*t_data);
+            t_data_ptr = MCDataGetBytePtr(*t_data);
+        }
         else
         {
             if (!ctxt . ConvertToString(*t_condition, &t_string))
@@ -418,6 +428,7 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
     while (!done)
     {
         MCAutoStringRef t_unit;
+        MCAutoDataRef t_byte;
         if (loopvar != NULL)
         {
             switch (each)
@@ -448,6 +459,13 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                     }
                 }
                     break;
+                
+                case FU_BYTE:
+                {
+                    MCDataCreateWithBytes(t_data_ptr++, 1, &t_byte);
+                }
+                    break;
+                    
                 default:
                 {
                     switch (each)
@@ -463,6 +481,12 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                             break;
                         case FU_TOKEN:
                             t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_TOKEN, t_length, t_chunk_range, t_found, endnext);
+                            break;
+                        case FU_CODEPOINT:
+                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_CODEPOINT, t_length, t_chunk_range, t_found, endnext);
+                            break;
+                        case FU_CODEUNIT:
+                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_CODEUNIT, t_length, t_chunk_range, t_found, endnext);
                             break;
                         case FU_CHARACTER:
                         default:
@@ -483,8 +507,10 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             // MW-2011-02-08: [[ Bug ]] Make sure we don't use 't_unit' if the repeat type is 'key' or
             //   'element'.
             // Set the loop variable to whatever the value was in the last iteration.
+            if (each == FU_BYTE)
+                loopvar -> set(ctxt, *t_byte);
             if (each != FU_ELEMENT && each != FU_KEY)
-                loopvar->set(ctxt, *t_unit);
+                loopvar -> set(ctxt, *t_unit);
         }
         else
             done = count-- == 0;

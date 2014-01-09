@@ -2035,12 +2035,16 @@ static LT tool_table[] =
 
 static LT unit_table[] =
     {
-		{"byte", TT_UNDEFINED, FU_CHARACTER},
-		{"bytes", TT_UNDEFINED, FU_CHARACTER},
+		{"byte", TT_UNDEFINED, FU_BYTE},
+		{"bytes", TT_UNDEFINED, FU_BYTE},
         {"char", TT_UNDEFINED, FU_CHARACTER},
         {"character", TT_UNDEFINED, FU_CHARACTER},
         {"characters", TT_UNDEFINED, FU_CHARACTER},
         {"chars", TT_UNDEFINED, FU_CHARACTER},
+        {"codepoint", TT_UNDEFINED, FU_CODEPOINT},
+        {"codepoints", TT_UNDEFINED, FU_CODEPOINT},
+        {"codeunit", TT_UNDEFINED, FU_CODEUNIT},
+        {"codeunit", TT_UNDEFINED, FU_CODEUNIT},
         {"element", TT_UNDEFINED, FU_ELEMENT},
         {"int1", TT_UNDEFINED, FU_INT1},
         {"int1s", TT_UNDEFINED, FU_INT1},

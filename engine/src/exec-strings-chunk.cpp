@@ -1046,10 +1046,12 @@ void MCStringsMarkBytesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal
 
 bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_chunk_type, uindex_t t_length, MCRange& x_range, bool p_not_first, bool& r_last)
 {
+    // incoming indices are code unit indices
+    
     uindex_t t_end_index = t_length - 1;
     uindex_t t_offset = x_range . offset + x_range . length;
     
-    if (p_not_first && p_chunk_type != CT_CHARACTER)
+    if (p_not_first && p_chunk_type != CT_CHARACTER && p_chunk_type != CT_CODEPOINT && p_chunk_type != CT_CODEUNIT)
         t_offset++;
 
     if (t_offset >= t_length)
@@ -1120,6 +1122,22 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             return true;
             
         case CT_CHARACTER:
+        case CT_CODEPOINT:
+        {
+            x_range . length = 1;
+            // offset is already in code units so avoid remapping up to there.
+            uindex_t t_cu_offset = x_range . offset;
+            MCAutoStringRef t_string;
+            MCStringCopySubstring(p_string, MCRangeMake(x_range . offset, UINDEX_MAX), &t_string);
+            x_range . offset = 0;
+            MCStringMapIndices(*t_string, p_chunk_type == CT_CHARACTER ? kMCCharChunkTypeGrapheme : kMCCharChunkTypeCodepoint, x_range, x_range);
+            
+            // restore original offset.
+            x_range . offset += t_cu_offset;
+        }
+            return true;
+            
+        case CT_CODEUNIT:
             x_range . length = 1;
             return true;
             
