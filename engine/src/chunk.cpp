@@ -3742,14 +3742,27 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
             MCStringsMarkCodeunitsOfTextByOrdinal(ctxt, codeunit -> etype, force, wholechunk, t_further_chunks, x_mark);
     }
 
+    if (byte != nil)
+    {
+        if (byte -> etype == CT_RANGE || byte -> etype == CT_EXPRESSION)
+        {
+            if (!ctxt . EvalExprAsInt(byte -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+                return;
+            
+            if (byte -> etype == CT_RANGE)
+            {
+                if (!ctxt . EvalExprAsInt(byte -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                    return;
+            }
+            else
+                t_last = t_first;
+            
+            MCStringsMarkBytesOfTextByRange(ctxt, t_first, t_last, x_mark);
+        }
+        else
+            MCStringsMarkBytesOfTextByOrdinal(ctxt, byte -> etype, x_mark);
+    }
 }
-
-#ifdef BYTE_CHUNK
-void MCChunk::markbytes(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedText& x_mark, bool includechars)
-{
-    
-}
-#endif
 
 #ifdef LEGACY_EXEC
 // MW-2012-02-23: [[ FieldChars ]] Added the 'includechars' flag, if true any char chunk
@@ -4441,9 +4454,11 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
             t_new_mark . start = 0;
             t_new_mark . finish = MAXUINT4;
             mark(ctxt, false, false, t_new_mark);
-            MCAutoStringRef t_string;
-            MCStringsEvalTextChunk(ctxt, t_new_mark, &t_string);
-            r_text . stringref_value = MCValueRetain(*t_string);
+            
+            if (byte == nil)
+                MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value);
+            else
+                MCStringsEvalByteChunk(ctxt, t_new_mark, r_text . dataref_value);
         }
         else
             r_text . valueref_value = MCValueRetain(*t_text);

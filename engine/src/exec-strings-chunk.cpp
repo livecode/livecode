@@ -154,14 +154,18 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
             nchunks = t_range.length;
         }
             break;
-            
+        
         case CT_CODEUNIT:
+        case CT_BYTE:
         {
+            // this is not necessarily the actual number of bytes in the string,
+            // but since the string will be nativised when converted to data, it
+            // is the number we need.
             nchunks = MCStringGetLength(p_string);
         }
             break;
     }
-    
+
     r_count = nchunks;
 }
 
@@ -862,6 +866,23 @@ void MCStringsEvalTextChunk(MCExecContext& ctxt, MCMarkedText p_source, MCString
     ctxt . Throw();
 }
 
+void MCStringsEvalByteChunk(MCExecContext& ctxt, MCMarkedText p_source, MCDataRef& r_bytes)
+{
+    if (p_source . text == nil)
+        return;
+    
+    MCAutoDataRef t_data;
+    if (!ctxt . ConvertToData(p_source . text, &t_data))
+        return;
+    
+    // The incoming indices are byte indices
+    const byte_t *bytes = MCDataGetBytePtr(*t_data);
+    if (MCDataCreateWithBytes(bytes + p_source . start, p_source . finish - p_source. start, r_bytes))
+        return;
+    
+    ctxt . Throw();
+}
+
 void MCStringsMarkTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
     // The incoming indices are for codeunits
@@ -986,6 +1007,41 @@ void MCStringsMarkCodeunitsOfTextByRange(MCExecContext& ctxt, integer_t p_first,
 void MCStringsMarkCodeunitsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
     MCStringsMarkTextChunkByOrdinal(ctxt, CT_CODEUNIT, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
+}
+
+void MCStringsMarkBytesOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedText& x_mark)
+{
+    // The incoming indices are for codeunits
+    MCRange t_cu_range;
+    t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
+    
+    MCAutoStringRef t_string;
+    MCStringCopySubstring(x_mark . text, t_cu_range, &t_string);
+    
+    int4 t_first;
+    int4 t_chunk_count;
+    MCStringsGetExtentsByRange(ctxt, CT_BYTE, p_first, p_last, *t_string, t_first, t_chunk_count);
+    
+    // convert codeunit indices to byte indices
+    x_mark . start = x_mark . start + t_first;
+    x_mark . finish = x_mark . start + t_chunk_count;
+}
+
+void MCStringsMarkBytesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark)
+{
+    // The incoming indices are for codeunits
+    MCRange t_cu_range;
+    t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
+    
+    MCAutoStringRef t_string;
+    MCStringCopySubstring(x_mark . text, t_cu_range, &t_string);
+    
+    int4 t_first;
+    int4 t_chunk_count;
+    MCStringsGetExtentsByOrdinal(ctxt, CT_BYTE, p_ordinal_type, *t_string, t_first, t_chunk_count);
+    
+    x_mark . start = x_mark . start + t_first;
+    x_mark . finish = x_mark . start + t_chunk_count;
 }
 
 bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_chunk_type, uindex_t t_length, MCRange& x_range, bool p_not_first, bool& r_last)
