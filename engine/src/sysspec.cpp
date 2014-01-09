@@ -753,8 +753,7 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	{		
 #ifdef _WIN32
 		/* UNCHECKED */ MCStringFormat(t_detailed_string,
-                                       "%*s,%I64d,,%ld,%ld,%ld,,,,%03o,",
-                                       p_entry -> name_length * 2,
+                                       "%@,%I64d,,%ld,%ld,%ld,,,,%03o,",
                                        p_entry -> name,
                                        p_entry -> data_size,
                                        p_entry -> creation_time,
