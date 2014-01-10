@@ -379,6 +379,9 @@ bool    MCLocaleBreakIteratorSetText(MCBreakIteratorRef, MCStringRef);
 // Returns the index of the next break point or zero if not possible
 uindex_t MCLocaleBreakIteratorAdvance(MCBreakIteratorRef);
 
+// Advances by n boundaries
+uindex_t MCLocaleBreakIteratorNext(MCBreakIteratorRef, uindex_t p_count);
+
 // Returns whether the given index into the iterator's text is a boundary
 bool    MCLocaleBreakIteratorIsBoundary(MCBreakIteratorRef, uindex_t);
 

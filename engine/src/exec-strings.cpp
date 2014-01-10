@@ -297,7 +297,7 @@ void MCStringsEvalLength(MCExecContext& ctxt, MCStringRef p_string, integer_t& r
 	// Ensure that the returned length is in codepoints
     MCRange t_cp_range, t_cu_range;
     t_cu_range = MCRangeMake(0, MCStringGetLength(p_string));
-    /* UNCHECKED */ MCStringUnmapCodepointIndices(p_string, t_cu_range, t_cp_range);
+    /* UNCHECKED */ MCStringUnmapIndices(p_string, kMCDefaultCharChunkType, t_cu_range, t_cp_range);
     
     r_length = t_cp_range.length;
 }

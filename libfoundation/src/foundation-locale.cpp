@@ -57,13 +57,16 @@ public:
 
 struct __MCBreakIterator
 {
-    // The ICU brake iterator object
+    // The ICU break iterator object
     icu::BreakIterator& m_icu_iter;
+    
+    // String currently being used by the break iterator
+    icu::UnicodeString* m_icu_string;
     
 public:
     
     __MCBreakIterator(icu::BreakIterator& p_icu_iter)
-    : m_icu_iter(p_icu_iter)
+    : m_icu_iter(p_icu_iter), m_icu_string(nil)
     {
         ;
     }
@@ -71,6 +74,7 @@ public:
     ~__MCBreakIterator()
     {
         delete &m_icu_iter;
+        delete m_icu_string;
     }
 };
 
@@ -1018,11 +1022,14 @@ bool MCLocaleBreakIteratorSetText(MCBreakIteratorRef p_iter, MCStringRef p_strin
     MCAssert(p_iter != nil);
     MCAssert(p_string != nil);
     
-    icu::UnicodeString t_string;
-    if (!MCStringConvertToICUString(p_string, t_string))
+    icu::UnicodeString *t_string = new icu::UnicodeString;
+    if (!MCStringConvertToICUString(p_string, *t_string))
         return false;
-    
-    p_iter->m_icu_iter.setText(t_string);
+
+    delete p_iter->m_icu_string;
+    p_iter->m_icu_string = t_string;
+
+    p_iter->m_icu_iter.setText(*t_string);
     return true;
 }
 
@@ -1036,10 +1043,21 @@ uindex_t MCLocaleBreakIteratorAdvance(MCBreakIteratorRef p_iter)
     return (t_result == icu::BreakIterator::DONE) ? kMCLocaleBreakIteratorDone : t_result;
 }
 
+uindex_t MCLocaleBreakIteratorNext(MCBreakIteratorRef p_iter, uindex_t p_count)
+{
+    MCAssert(p_iter != nil);
+    
+    int32_t t_result;
+    t_result = p_iter->m_icu_iter.next(p_count);
+    return (t_result == icu::BreakIterator::DONE) ? kMCLocaleBreakIteratorDone : t_result;
+}
 
 bool MCLocaleBreakIteratorIsBoundary(MCBreakIteratorRef p_iter, uindex_t p_index)
 {
     MCAssert(p_iter != nil);
+
+    bool t_result;
+    t_result = !!p_iter->m_icu_iter.isBoundary(p_index);
     
-    return !!p_iter->m_icu_iter.isBoundary(p_index);
+    return t_result;
 }

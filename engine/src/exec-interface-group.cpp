@@ -343,9 +343,9 @@ void MCGroup::GetUnboundedHScroll(MCExecContext& ctxt, bool& r_setting)
 void MCGroup::SetUnboundedHScroll(MCExecContext& ctxt, bool setting)
 {
 	bool t_dirty;
-	t_dirty = changeflag(setting, P_UNBOUNDED_HSCROLL);
+	t_dirty = changeflag(setting, F_UNBOUNDED_HSCROLL);
 	
-	if (opened && !getflag(P_UNBOUNDED_HSCROLL))
+	if (opened && !getflag(F_UNBOUNDED_HSCROLL))
 		hscroll(0, True);
 
 	if (t_dirty)
@@ -360,9 +360,9 @@ void MCGroup::GetUnboundedVScroll(MCExecContext& ctxt, bool& r_setting)
 void MCGroup::SetUnboundedVScroll(MCExecContext& ctxt, bool setting)
 {
 	bool t_dirty;
-	t_dirty = changeflag(setting, P_UNBOUNDED_VSCROLL);
+	t_dirty = changeflag(setting, F_UNBOUNDED_VSCROLL);
 	
-	if (opened && !getflag(P_UNBOUNDED_VSCROLL))
+	if (opened && !getflag(F_UNBOUNDED_VSCROLL))
 		hscroll(0, True);
 
 	if (t_dirty)
@@ -585,7 +585,7 @@ void MCGroup::SetBackSize(MCExecContext& ctxt, MCPoint p_size)
 
 void MCGroup::GetSelectGroupedControls(MCExecContext& ctxt, bool& r_setting)
 {
-	r_setting = (flags & F_SELECT_GROUP) != True;
+	r_setting = (flags & F_SELECT_GROUP) == False;
 }
 
 void MCGroup::SetSelectGroupedControls(MCExecContext& ctxt, bool setting)

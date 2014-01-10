@@ -1684,11 +1684,6 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 
 IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 {
-	if (filename != nil && MCStringIsEmpty(filename))
-		flags |= F_HAS_FILENAME;
-	else
-		flags &= ~F_HAS_FILENAME;
-
 	IO_stat stat;
 
 	recompress();
@@ -2411,7 +2406,7 @@ bool MCImage::setcompressedbitmap(MCImageCompressedBitmap *p_compressed)
 	{
 		setrep(t_rep);
 		t_rep->Release();
-		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
+		flags &= ~(F_HAS_FILENAME | F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 		flags |= p_compressed->compression;
 
 		if (p_compressed->compression == F_RLE)

@@ -1679,6 +1679,9 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 {
 	uint2 oldstate = MCmodifierstate;
 	MCmodifierstate = p_modifiers;
+    // AL-2014-01-07 need to lock mods here to ensure MCmodifierstate determines the modifiers
+    MCscreen -> setlockmods(True);
+    
 	MCdefaultstackptr->kfocus();
 	uint2 i;
 	MCStringRef t_string = nil;
@@ -1705,7 +1708,9 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 		if (MCscreen->wait(delay, False, False))
 			ctxt . LegacyThrow(EE_TYPE_ABORT);
 	}
-
+    
+    // AL-2014-01-07 return lock mods to false
+    MCscreen -> setlockmods(False);
 	MCmodifierstate = oldstate;
 	return;
 }
@@ -1781,7 +1786,7 @@ void MCInterfaceExecClickCmd(MCExecContext& ctxt, uint2 p_button, MCPoint p_loca
 	MCscreen->getmouseloc(t_old_mousestack, t_old_mouseloc);
 	MCscreen->setmouseloc(MCdefaultstackptr, t_view_clickloc);
     
-    // need to lock mods here to ensure MCmodifierstate determines the modifiers
+    // AL-2014-01-07 need to lock mods here to ensure MCmodifierstate determines the modifiers
     MCscreen -> setlockmods(True);
     
 	MCmodifierstate = p_modifiers;
@@ -1816,7 +1821,7 @@ void MCInterfaceExecClickCmd(MCExecContext& ctxt, uint2 p_button, MCPoint p_loca
 		if (t_old_mousestack != NULL)
 			MCdispatcher->wmfocus_stack(t_old_mousestack, t_old_mouseloc.x, t_old_mouseloc.y);
 	}
-    // return lock mods to false
+    // AL-2014-01-07 return lock mods to false
     MCscreen -> setlockmods(False);
 	if (abort)
 	{
@@ -3070,7 +3075,7 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 				t_stack->names(P_SHORT_NAME, &t_short_name);
 				/* UNCHECKED */ ctxt.ConvertToString(*t_short_name, &t_short_name_str);
 				MCAutoStringRef t_new_name;
-				MCStringMutableCopyAndRelease(*t_short_name_str, &t_new_name);
+				MCStringMutableCopy(*t_short_name_str, &t_new_name);
 				MCStringPrependNativeChars(*t_new_name, (const char_t *)MCcopystring, strlen(MCcopystring));
 				t_object->setstringprop(ctxt, 0, P_NAME, False, *t_new_name);
 			}

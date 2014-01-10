@@ -75,8 +75,53 @@ bool MCListAppend(MCListRef self, MCValueRef p_value)
 
 bool MCListCopy(MCListRef self, MCListRef& r_list)
 {
-	r_list = MCValueRetain(self);
+	MCAssert(self != nil);
+    
+    // If we are immutable, just bump the reference count
+    if (!self -> flags & kMCListFlagIsMutable)
+    {
+        r_list = MCValueRetain(self);
+        return true;
+    }
+    
+    // Create a new list
+    MCListRef t_new_list;
+    if (!MCListCreateMutable(self -> delimiter, t_new_list))
+        return false;
+    
+    // Mark the new list as immutable
+    t_new_list -> flags &= ~kMCListFlagIsMutable;
+    
+    // Create an immutable copy of the list contents
+    if (self -> buffer == nil)
+    {
+        t_new_list -> buffer = nil;
+    }
+    else if (!MCStringCopy(self -> buffer, t_new_list -> buffer))
+    {
+        MCValueRelease(t_new_list);
+        return false;
+    }
+    
+    r_list = t_new_list;
 	return true;
+}
+
+bool MCListCopyAndRelease(MCListRef self, MCListRef& r_list)
+{
+    // If there are no other references, just clear the mutable flag
+    if (self -> references == 1)
+    {
+        self -> flags &= ~kMCListFlagIsMutable;
+        r_list = self;
+        return true;
+    }
+    
+    // Otherwise perform a normal copy operation followed by a release
+    if (!MCListCopy(self, r_list))
+        return false;
+    MCValueRelease(self);
+    return true;
 }
 
 bool MCListCopyAsString(MCListRef self, MCStringRef& r_string)
@@ -188,7 +233,10 @@ bool __MCListCopyDescription(__MCList *self, MCStringRef& r_string)
 
 bool __MCListImmutableCopy(__MCList *self, bool p_release, __MCList*& r_immutable_value)
 {
-	return false;
+	if (!p_release)
+        return MCListCopy(self, r_immutable_value);
+    
+    return MCListCopyAndRelease(self, r_immutable_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

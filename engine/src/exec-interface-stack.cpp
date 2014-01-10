@@ -60,7 +60,7 @@ static MCExecEnumTypeElementInfo _kMCInterfaceStackStyleElementInfo[] =
 	{ MCmovablestring, WM_MODAL, false },
 	{ MCsheetstring, WM_SHEET, false },
 	{ MCdrawerstring, WM_DRAWER, true },
-	{ MCtoplevelstring, WM_TOP_LEVEL, true },
+	{ MCtoplevelstring, WM_TOP_LEVEL, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceStackStyleTypeInfo =
@@ -584,8 +584,11 @@ void MCStack::SetStyle(MCExecContext& ctxt, intenum_t p_style)
 	case WM_MODELESS:
 		flags |= WM_MODELESS - WM_TOP_LEVEL_LOCKED;
 		break;
+    case WM_MODAL:
+    case WM_SHEET:
+        flags |= WM_MODAL - WM_TOP_LEVEL_LOCKED;
+        break;
 	default:
-		flags |= WM_MODAL - WM_TOP_LEVEL_LOCKED;
 		break;
 	}
 
@@ -822,7 +825,7 @@ void MCStack::SetMetal(MCExecContext& ctxt, bool setting)
 
 void MCStack::GetShadow(MCExecContext& ctxt, bool& r_setting)
 {
-	r_setting = !(flags & F_DECORATIONS) && decorations & WD_NOSHADOW;
+	r_setting = (flags & F_DECORATIONS && decorations & WD_NOSHADOW) == False;
 }
 
 void MCStack::SetShadow(MCExecContext& ctxt, bool setting)
@@ -927,27 +930,29 @@ void MCStack::GetRecentCards(MCExecContext& ctxt, MCStringRef& r_cards)
 
 void MCStack::GetIconic(MCExecContext& ctxt, bool& r_setting)
 {
-	r_setting = getstate(CS_ICONIC) == True;
+	r_setting = getstate(CS_ICONIC) != False;
 }
 
 void MCStack::SetIconic(MCExecContext& ctxt, bool setting)
 {
 	uint4 newstate = state;
 	
-	if (setting != ((newstate & CS_ICONIC) == True) && opened)
+	if (setting != ((newstate & CS_ICONIC) == True))
 	{
 		if (setting)
 			newstate |= CS_ICONIC;
 		else
 			newstate &= ~CS_ICONIC;
-
-		//SMR 1261 don't set state to allow iconify() to take care of housekeeping
-		// need to check X11 to make sure MCStack::iconify() (in stack2.cpp) is called when this prop is set
-		sethints();
-		if (newstate & CS_ICONIC)
-			MCscreen->iconifywindow(window);
-		else
-			MCscreen->uniconifywindow(window);
+        if (opened)
+        {
+            //SMR 1261 don't set state to allow iconify() to take care of housekeeping
+            // need to check X11 to make sure MCStack::iconify() (in stack2.cpp) is called when this prop is set
+            sethints();
+            if (newstate & CS_ICONIC)
+                MCscreen->iconifywindow(window);
+            else
+                MCscreen->uniconifywindow(window);
+        }
 	}
 }
 
@@ -1719,33 +1724,46 @@ void MCStack::GetEffectiveLinkVisitedColor(MCExecContext& ctxt, MCInterfaceNamed
 	get_interface_color(la->color, la->colorname, r_color);
 }
 
-void MCStack::GetUnderlineLinks(MCExecContext& ctxt, bool& r_value)
+void MCStack::GetUnderlineLinks(MCExecContext& ctxt, bool*& r_value)
 {
 	if (linkatts == nil)
-		r_value = false;
+		r_value = nil;
 	else
 	{
 		Linkatts *la = getlinkatts();
-		r_value = la->underline == True;
+		*r_value = la->underline == True;
 	}
 }
 
-void MCStack::SetUnderlineLinks(MCExecContext& ctxt, bool p_value)
+void MCStack::SetUnderlineLinks(MCExecContext& ctxt, bool* p_value)
 {
-	if (linkatts == NULL)
-	{
-		linkatts = new Linkatts;
-		memcpy(linkatts, &MClinkatts, sizeof(Linkatts));
-		linkatts->colorname = (MCStringRef)MCValueRetain(MClinkatts.colorname);
-		linkatts->hilitecolorname = (MCStringRef)MCValueRetain(MClinkatts.hilitecolorname);
-		linkatts->visitedcolorname = (MCStringRef)MCValueRetain(MClinkatts.visitedcolorname);
-		MCscreen->alloccolor(linkatts->color);
-		MCscreen->alloccolor(linkatts->hilitecolor);
-		MCscreen->alloccolor(linkatts->visitedcolor);
-	}
+    if (p_value == nil)
+    {
+        if (linkatts == NULL)
+            return;
 
-	linkatts->underline = p_value;
+        MCValueRelease(linkatts->colorname);
+        MCValueRelease(linkatts->hilitecolorname);
+        MCValueRelease(linkatts->visitedcolorname);
+        delete linkatts;
+        linkatts = nil;
+    }
+    else
+    {
+        if (linkatts == nil)
+        {
+            /* UNCHECKED */ linkatts = new Linkatts;
+            MCMemoryCopy(linkatts, &MClinkatts, sizeof(Linkatts));
+            linkatts->colorname = MClinkatts.colorname == nil ? nil : MCValueRetain(MClinkatts.colorname);
+            linkatts->hilitecolorname = MClinkatts.hilitecolorname == nil ? nil : MCValueRetain(MClinkatts.hilitecolorname);
+            linkatts->visitedcolorname = MClinkatts.visitedcolorname == nil ? nil : MCValueRetain(MClinkatts.visitedcolorname);
+            MCscreen->alloccolor(linkatts->color);
+            MCscreen->alloccolor(linkatts->hilitecolor);
+            MCscreen->alloccolor(linkatts->visitedcolor);
+        }
 
+        linkatts->underline = *p_value;
+    }
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
 }

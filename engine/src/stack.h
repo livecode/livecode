@@ -650,7 +650,7 @@ public:
 	void flip(uint2 count);
 	bool sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 	               MCExpression *by, Boolean marked);
-	void breakstring(MCStringRef, MCStringRef*& dest, uint2 &nstrings,
+	void breakstring(MCStringRef, MCStringRef*& dest, uindex_t &nstrings,
 	                 Find_mode fmode);
 	Boolean findone(MCExecContext &ctxt, Find_mode mode, MCStringRef *strings,
 	                uint2 nstrings, MCChunk *field, Boolean firstcard);
@@ -1009,8 +1009,8 @@ public:
 	void GetLinkVisitedColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
 	void SetLinkVisitedColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
 	void GetEffectiveLinkVisitedColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
-	void GetUnderlineLinks(MCExecContext& ctxt, bool& r_value);
-	void SetUnderlineLinks(MCExecContext& ctxt, bool p_value);
+	void GetUnderlineLinks(MCExecContext& ctxt, bool*& r_value);
+	void SetUnderlineLinks(MCExecContext& ctxt, bool* p_value);
 	void GetEffectiveUnderlineLinks(MCExecContext& ctxt, bool& r_value);
 	void GetWindowShape(MCExecContext& ctxt, uinteger_t& r_shape);
 	void SetWindowShape(MCExecContext& ctxt, uinteger_t p_shape);

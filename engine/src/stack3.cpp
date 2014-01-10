@@ -1869,10 +1869,9 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 	return ES_NORMAL;
 }
 
-void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstrings, Find_mode fmode)
+void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uindex_t &nstrings, Find_mode fmode)
 {
-    MCStringRef *tdest_str = nil;
-	nstrings = 0;
+    MCAutoArray<MCStringRef> t_strings;
 	switch (fmode)
 	{
 	case FM_NORMAL:
@@ -1891,17 +1890,17 @@ void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstring
             
 			while(remaining_chars > 0)
 			{
-				while(!isspace(MCStringGetNativeCharAtIndex(source, l)))
+				while(remaining_chars > 0 && !isspace(MCStringGetNativeCharAtIndex(source, l)))
                 {
 					l++;
-                    remaining_chars --;
+                    remaining_chars--;
                 }
                 
-				MCU_realloc((char **)&tdest_str, nstrings, nstrings + 1, sizeof(MCStringRef));
+                MCStringRef t_word;
                 uindex_t t_word_length;
                 t_word_length = l - t_word_start;
-                /* UNCHECKED */ MCStringCopySubstring(source, MCRangeMake(t_word_start, t_word_length), tdest_str[nstrings]);
-				nstrings++;
+                /* UNCHECKED */ MCStringCopySubstring(source, MCRangeMake(t_word_start, t_word_length), t_word);
+				t_strings . Push(t_word);
         
                 uindex_t t_space_start, t_spaces_length;
                 t_space_start = l;
@@ -1917,13 +1916,7 @@ void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstring
 	default:
 		break;
 	}
-	if (nstrings == 0)
-	{
-        tdest_str = new MCStringRef;
-		tdest_str[0] = MCValueRetain(source);
-		nstrings = 1;
-	}
-	dest = tdest_str;
+    t_strings . Take(dest, nstrings);
 }
 
 Boolean MCStack::findone(MCExecContext &ctxt, Find_mode fmode,
@@ -1979,7 +1972,7 @@ void MCStack::find(MCExecContext &ctxt, Find_mode fmode,
                    MCStringRef tofind, MCChunk *field)
 {
 	MCStringRef *strings = NULL;
-	uint2 nstrings;
+	uindex_t nstrings;
 	breakstring(tofind, strings, nstrings, fmode);
 	MCCard *ocard = curcard;
 	Boolean firstcard = MCfoundfield != NULL;
@@ -1988,7 +1981,10 @@ void MCStack::find(MCExecContext &ctxt, Find_mode fmode,
 	{
 		if (findone(ctxt, fmode, strings, nstrings, field, firstcard))
 		{
-			delete strings;
+			for (uindex_t i = 0; i < nstrings; i++)
+                MCValueRelease(strings[i]);
+            delete strings;
+            
 			MCField *newfound = MCfoundfield;
 			if (curcard != ocard)
 			{
@@ -2029,7 +2025,7 @@ void MCStack::markfind(MCExecContext &ctxt, Find_mode fmode,
 	if (MCfoundfield != NULL)
 		MCfoundfield->clearfound();
 	MCStringRef *strings = NULL;
-	uint2 nstrings;
+	uindex_t nstrings;
 	breakstring(tofind, strings, nstrings, fmode);
 	MCCard *ocard = curcard;
 	do

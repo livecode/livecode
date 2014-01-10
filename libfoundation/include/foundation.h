@@ -1470,6 +1470,18 @@ bool MCStringMapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_grapheme_ran
 // Maps from a code unit (StringRef) range to a grapheme (visual character) range
 bool MCStringUnmapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange& r_grapheme_range);
 
+// Flexible grapheme/codepoint/codeunit mapping used for "char" chunk expressions
+enum MCCharChunkType
+{
+    kMCCharChunkTypeCodeunit,   // UTF-16 code units
+    kMCCharChunkTypeCodepoint,  // Unicode codepoint values
+    kMCCharChunkTypeGrapheme,   // Graphical character boundaries
+};
+
+const MCCharChunkType kMCDefaultCharChunkType = kMCCharChunkTypeGrapheme;
+
+bool MCStringMapIndices(MCStringRef, MCCharChunkType, MCRange p_char_range, MCRange &r_codeunit_range);
+bool MCStringUnmapIndices(MCStringRef, MCCharChunkType, MCRange p_codeunit_range, MCRange &r_char_range);
 
 /////////
 
@@ -1838,9 +1850,10 @@ bool MCListAppendNativeChars(MCListRef list, const char_t *chars, uindex_t char_
 bool MCListAppendFormat(MCListRef list, const char *format, ...);
 
 // Make an immutable copy of the list.
-// Note that this method is fragile at the moment and should only be used to
-// copy a list out of an autolistref that is about to be deallocated.
 bool MCListCopy(MCListRef list, MCListRef& r_new_list);
+
+// Makes an immutable copy of the list and release the list
+bool MCListCopyAndRelease(MCListRef list, MCListRef& r_new_list);
 
 // Make a copy of the list as a string.
 bool MCListCopyAsString(MCListRef list, MCStringRef& r_string);

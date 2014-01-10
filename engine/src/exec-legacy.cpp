@@ -713,7 +713,7 @@ void MCLegacyGetUserModify(MCExecContext& ctxt, bool& r_value)
 
 void MCLegacySetUserModify(MCExecContext& ctxt, bool p_value)
 {
-	MCusermodify = p_value ? True : False;
+	MCusermodify = True;
 }
 
 void MCLegacyGetLockColormap(MCExecContext& ctxt, bool& r_value)

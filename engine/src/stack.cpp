@@ -153,7 +153,7 @@ MCPropertyInfo MCStack::kProperties[] =
 	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_LINK_HILITE_COLOR, InterfaceNamedColor, MCStack, LinkHiliteColor)
 	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_LINK_VISITED_COLOR, InterfaceNamedColor, MCStack, LinkVisitedColor)
 	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_LINK_VISITED_COLOR, InterfaceNamedColor, MCStack, LinkVisitedColor)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_UNDERLINE_LINKS, Bool, MCStack, UnderlineLinks)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_UNDERLINE_LINKS, OptionalBool, MCStack, UnderlineLinks)
 	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_UNDERLINE_LINKS, Bool, MCStack, UnderlineLinks)
 
 	DEFINE_RW_OBJ_PROPERTY(P_WINDOW_SHAPE, UInt32, MCStack, WindowShape)
@@ -2995,9 +2995,9 @@ bool MCStack::resolve_relative_path(MCStringRef p_path, MCStringRef& r_resolved)
             // If the relative path begins with "./" or ".\", we must remove this, otherwise
 			// certain system calls will get confused by the path.
 			if (MCStringBeginsWith(p_path, MCSTR("./"), kMCCompareExact) || MCStringBeginsWith(p_path, MCSTR(".\\"), kMCCompareExact))
-				/* UNCHECKED */ MCStringAppendSubstring(*t_new_filename, filename, MCRangeMake(2, MCStringGetLength(filename) - 2));
+				/* UNCHECKED */ MCStringAppendSubstring(*t_new_filename, p_path, MCRangeMake(2, MCStringGetLength(p_path) - 2));
 			else
-				/* UNCHECKED */ MCStringAppend(*t_new_filename, filename);
+				/* UNCHECKED */ MCStringAppend(*t_new_filename, p_path);
             
 			r_resolved = MCValueRetain(*t_new_filename);
 			return true;

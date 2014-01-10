@@ -2858,7 +2858,7 @@ findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
         MCRange t_cp_range, t_cu_range;
         t_cu_range = MCRangeMake(si, t_pg->gettextlength() - si);
         si = 0;
-        /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), t_cu_range, t_cp_range);
+        /* UNCHECKED */ MCStringUnmapIndices(t_pg->GetInternalStringRef(), kMCDefaultCharChunkType, t_cu_range, t_cp_range);
         t_count += t_cp_range.length;
         
         // Move on to the next paragraph
@@ -2869,7 +2869,7 @@ findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
     // Count the number of codepoints in the final paragraph
     MCRange t_cp_range, t_cu_range;
     t_cu_range = MCRangeMake(si, ei - si);
-    /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), t_cu_range, t_cp_range);
+    /* UNCHECKED */ MCStringUnmapIndices(t_pg->GetInternalStringRef(), kMCDefaultCharChunkType, t_cu_range, t_cp_range);
     t_count += t_cp_range.length;
     
     // Return the number of codepoints that we encountered
@@ -2895,7 +2895,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     // We now need to calculate how many codepoints into the paragraph we are
     MCRange t_cp_range, t_cu_range;
     t_cu_range = MCRangeMake(0, x_si - t_index);
-    /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), t_cu_range, t_cp_range);
+    /* UNCHECKED */ MCStringUnmapIndices(t_pg->GetInternalStringRef(), kMCDefaultCharChunkType, t_cu_range, t_cp_range);
 
     // Because we measure codepoints from the beginning of the paragraph,
     // increase the number of codepoints we want to skip to account for this.
@@ -2903,7 +2903,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     
     // Loop until we get to the starting paragraph (or reach the end of the field)
     MCRange t_pg_cp;
-    /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), MCRangeMake(0, t_pg->gettextlength()), t_pg_cp);
+    /* UNCHECKED */ MCStringUnmapIndices(t_pg->GetInternalStringRef(), kMCDefaultCharChunkType, MCRangeMake(0, t_pg->gettextlength()), t_pg_cp);
     t_pg_cp.length++;   // Implicit paragraph break
     while (t_pg_cp.length < p_start)
     {
@@ -2913,7 +2913,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
         t_pg = t_pg->next();
         
         // Count the number of codepoints in the next paragraph
-        /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), MCRangeMake(0, t_pg->gettextlength()), t_pg_cp);
+        /* UNCHECKED */ MCStringUnmapIndices(t_pg->GetInternalStringRef(), kMCDefaultCharChunkType, MCRangeMake(0, t_pg->gettextlength()), t_pg_cp);
         t_pg_cp.length++;   // Implicit paragraph break
         
         // If we've reached end of the last paragraph, end the loop
@@ -2931,7 +2931,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     // We know the codepoint offset into the paragraph and need to convert
     // this back into a code unit offset.
     t_cp_range = MCRangeMake(0, p_start);
-    /* UNCHECKED */ MCStringMapCodepointIndices(t_pg->GetInternalStringRef(), t_cp_range, t_cu_range);
+    /* UNCHECKED */ MCStringMapIndices(t_pg->GetInternalStringRef(), kMCDefaultCharChunkType, t_cp_range, t_cu_range);
     x_si += t_cu_range.length;
     
     // Now we need to do it again but measuring ahead p_count codepoints. Again,
@@ -2957,14 +2957,14 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
         }
         
         // Count the number of codepoints in the next paragraph
-        /* UNCHECKED */ MCStringUnmapCodepointIndices(t_pg->GetInternalStringRef(), MCRangeMake(0, t_pg->gettextlength()), t_pg_cp);
+        /* UNCHECKED */ MCStringUnmapIndices(t_pg->GetInternalStringRef(), kMCDefaultCharChunkType, MCRangeMake(0, t_pg->gettextlength()), t_pg_cp);
         t_pg_cp.length++;   // Implicit paragraph break
     }
     
     // We know the codepoint offset into the paragraph and need to convert this
     // back into a code unit offset.
     t_cp_range = MCRangeMake(0, p_count);
-    /* UNCHECKED */ MCStringMapCodepointIndices(t_pg->GetInternalStringRef(), t_cp_range, t_cu_range);
+    /* UNCHECKED */ MCStringMapIndices(t_pg->GetInternalStringRef(), kMCDefaultCharChunkType, t_cp_range, t_cu_range);
     x_ei += t_cu_range.length;
     
     //x_si += p_start;
