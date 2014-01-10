@@ -396,25 +396,112 @@ void MCMacBreakWait(void)
 			atStart:NO];
 }
 
+static EventRef *s_event_queue = nil;
+static uindex_t s_event_queue_length = 0;
+
 // This method waits for an event for at most p_max_wait seconds. If an event
 // is collected in that time, it returns true.
 bool MCScreenDC::collectevent(real8 p_max_wait, bool p_no_dispatch)
 {
+	/*if (p_no_dispatch)
+	{
+		EventTypeSpec t_event_types[] = { { 'FOOB', 'FOOB' } };
+		OSStatus t_err;
+		EventRef t_event;
+		//t_err = ReceiveNextEvent(1, t_event_types, p_max_wait, False, &t_event);
+		
+		double t_end_time;
+		t_end_time = MCS_time() + p_max_wait;
+		for(;;)
+		{
+			double t_time_now;
+			t_time_now = MCS_time();
+			if (t_time_now >= t_end_time)
+				break;
+			t_err = ReceiveNextEvent(0, nil, t_end_time - t_time_now, TRUE, &t_event);
+		
+			DebugPrintEvent(t_event);
+			ReleaseEvent(t_event);
+		}
+		
+		return false;
+	}*/
+	
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
 	
 	NSEvent *t_event;
-	t_event = [NSApp nextEventMatchingMask: p_no_dispatch ? 0 : NSAnyEventMask
+	t_event = [NSApp nextEventMatchingMask: p_no_dispatch ? NSApplicationDefinedMask : NSAnyEventMask
 								 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_max_wait]
-									inMode: NSDefaultRunLoopMode
+									inMode: p_no_dispatch ? NSEventTrackingRunLoopMode /*@"NoDispatchRunLoopMode"*/ : NSDefaultRunLoopMode
 								   dequeue: YES];
 	
 	if (t_event != nil)
 		[NSApp sendEvent: t_event];
 	
+	NSLog(@"Processed event");
+	
 	[t_pool release];
 
 	return t_event != nil;
+
+#if 0
+	NSRunLoop *t_runloop;
+	t_runloop = [NSRunLoop currentRunLoop];
+	
+	BOOL t_something_happened;
+	t_something_happened = [t_runloop runMode: p_no_dispatch ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: p_max_wait]];
+	
+	NSLog(@"Processed event - %d", t_something_happened);
+	
+	return t_something_happened == YES;
+#endif
+	
+/*	bool t_got_event;
+	t_got_event = false;
+	
+	if (p_no_dispatch || s_event_queue_length == 0)
+	{
+		OSStatus t_err;
+		EventRef t_event;
+		t_event = nil;
+		t_err = ReceiveNextEvent(0, nil, p_max_wait, TRUE, &t_event);
+		if (t_event != nil)
+		{
+			MCMemoryResizeArray(s_event_queue_length + 1, s_event_queue, s_event_queue_length);
+			s_event_queue[s_event_queue_length - 1] = t_event;
+			t_got_event = true;
+		}
+	}
+	
+	if (!p_no_dispatch && s_event_queue_length > 0)
+	{
+		EventRef t_event;
+		t_event = s_event_queue[0];
+		MCMemoryMove(s_event_queue, s_event_queue + 1, sizeof(s_event_queue[0]) * (s_event_queue_length - 1));
+		s_event_queue_length -= 1;
+		
+		NSEvent *t_ns_event;
+		t_ns_event = [NSEvent eventWithEventRef: t_event];
+		if (t_ns_event != nil)
+			[NSApp sendEvent: t_ns_event];
+		else
+			SendEventToEventTarget(t_event, GetEventDispatcherTarget());
+		
+		t_got_event = true;
+	}
+	
+	return t_got_event;
+	
+	/*NSAutoreleasePool *t_pool;
+	t_pool = [[NSAutoreleasePool alloc] init];
+	
+	BOOL t_handled;
+	t_handled = [[NSRunLoop currentRunLoop] runMode: p_no_dispatch ? @"NoDispatchRunLoopMode" : NSDefaultRunLoopMode beforeDate: [NSDate dateWithTimeIntervalSinceNow: p_max_wait]];
+	
+	[t_pool release];
+
+	return t_handled == YES;*/
 }
 
 // Wait for 'duration' seconds, collecting events in that time. If 'dispatch'
