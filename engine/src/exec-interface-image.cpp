@@ -574,7 +574,7 @@ void MCImage::SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 		{
 			t_success = MCImageBitmapCreate(rect.width, rect.height, t_copy);
 			if (t_success)
-					MCImageBitmapSet(t_copy, MCGPixelPackNative(0, 0, 0, 255)); // set to opaque black
+                MCImageBitmapSet(t_copy, MCGPixelPackNative(0, 0, 0, 255)); // set to opaque black
 		}
 		
 		if (t_success)
@@ -586,7 +586,6 @@ void MCImage::SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 		MCImageFreeBitmap(t_copy);
 		
 		resetimage();
-		Redraw();
 	}
 }
 
@@ -608,6 +607,7 @@ void MCImage::GetAlphaData(MCExecContext& ctxt, MCDataRef& r_data)
 void MCImage::SetAlphaData(MCExecContext& ctxt, MCDataRef p_data)
 {
 	SetTransparencyData(ctxt, false, p_data);
+    Redraw();
 }
 
 void MCImage::GetResizeQuality(MCExecContext& ctxt, intenum_t& r_quality)
