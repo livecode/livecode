@@ -2117,6 +2117,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 
 	unichar_t *t_dst;
 	uindex_t t_length;
+    t_dst = new unichar_t[t_length + 1];
 	t_length = MCStringGetChars(p_path, MCRangeMake(0, t_length), t_dst);
 
 	for (uindex_t i = 0; i < t_length; i++)
@@ -2127,7 +2128,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 			t_dst[i] = '/';
 	}
 
-	return MCStringCreateWithChars(t_dst, t_length, r_native_path);
+    return MCStringCreateWithCharsAndRelease(t_dst, t_length, r_native_path);
 #else
 	return MCStringCopy(p_path, r_native_path);
 #endif
