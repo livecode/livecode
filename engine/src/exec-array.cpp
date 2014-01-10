@@ -421,26 +421,19 @@ bool MCArraysSplitIndexes(MCNameRef p_key, integer_t*& r_indexes, uindex_t& r_co
         		
 		if (!MCMemoryResizeArray(r_count + 1, r_indexes, r_count))
 			return false;
-
-		Boolean t_done;
         
         MCAutoStringRef t_substring;
         MCAutoNumberRef t_number;
-        integer_t t_converted;
         MCStringCopySubstring(t_string, MCRangeMake(t_start, t_finish - t_start), &t_substring);
         
         if (!MCNumberParse(*t_substring, &t_number))
         {
-            t_converted = 0;
+            r_indexes[r_count - 1] = 0;
             r_all_integers = false;
             break;
         }
         else
-        {
-            t_converted = MCNumberFetchAsInteger(*t_number);
-        }
-        
-		r_indexes[r_count - 1] = t_converted;
+            r_indexes[r_count - 1] = MCNumberFetchAsInteger(*t_number);
 
 		if (t_finish >= t_string_len)
 			break;
