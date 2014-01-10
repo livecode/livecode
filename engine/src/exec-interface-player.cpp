@@ -470,12 +470,12 @@ void MCPlayer::GetTimeScale(MCExecContext& ctxt, uinteger_t& r_scale)
 	r_scale = gettimescale();
 }
 
-void MCPlayer::GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height)
+void MCPlayer::GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height)
 {
 	r_height = getpreferredrect() . height;
 }
 
-void MCPlayer::GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width)
+void MCPlayer::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width)
 {
 	r_width = getpreferredrect() . width;
 }

@@ -661,8 +661,8 @@ public:
 	void SetVScrollbar(MCExecContext& ctxt, bool setting);
 	void GetScrollbarWidth(MCExecContext& ctxt, uinteger_t& r_width);
 	void SetScrollbarWidth(MCExecContext& ctxt, uinteger_t p_width);
-	void GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width);
-	void GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height);
+	void GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width);
+	void GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height);
 	void GetListBehavior(MCExecContext& ctxt, bool& r_setting);
 	void SetListBehavior(MCExecContext& ctxt, bool setting);
 	void GetMultipleHilites(MCExecContext& ctxt, bool& r_setting);

@@ -611,8 +611,8 @@ public:
 	void SetConstantMask(MCExecContext& ctxt, bool setting);
 	void GetRepeatCount(MCExecContext& ctxt, integer_t& r_count);
 	void SetRepeatCount(MCExecContext& ctxt, integer_t p_count);
-	void GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height);
-	void GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width);
+	void GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height);
+	void GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width);
 	void GetText(MCExecContext& ctxt, MCDataRef& r_text);
 	void SetText(MCExecContext& ctxt, MCDataRef p_text);
 	void GetImageData(MCExecContext& ctxt, MCDataRef& r_data);

@@ -294,7 +294,7 @@ void MCImage::SetRepeatCount(MCExecContext& ctxt, integer_t p_count)
 	}
 }
 
-void MCImage::GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height)
+void MCImage::GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height)
 {
 	uindex_t t_width = 0, t_height = 0;
     /* UNCHECKED */ getsourcegeometry(t_width, t_height);
@@ -302,7 +302,7 @@ void MCImage::GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height)
 	r_height = t_height;
 }
 
-void MCImage::GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width)
+void MCImage::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width)
 {
 	uindex_t t_width = 0, t_height = 0;
     /* UNCHECKED */ getsourcegeometry(t_width, t_height);

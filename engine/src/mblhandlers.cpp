@@ -6220,6 +6220,7 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
     {
         p_parameters -> eval(ctxt, t_value);
         t_success = t_params . Push(t_value);
+        p_parameters = p_parameters -> getnext();
     }
 
 	if (t_success)

@@ -866,7 +866,7 @@ void MCButton::SetMnemonic(MCExecContext& ctxt, uinteger_t p_mnemonic)
 	Redraw();
 }
 
-void MCButton::GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width)
+void MCButton::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width)
 {
 	// MW-2012-02-16: [[ FontRefs ]] As 'formatted' properties require
 	//   access to the font, we must be open before we can compute them.
@@ -908,7 +908,7 @@ void MCButton::GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width)
 	else
 		r_width = 0;
 }
-void MCButton::GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height)
+void MCButton::GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height)
 {
 	// MW-2012-02-16: [[ FontRefs ]] As 'formatted' properties require
 	//   access to the font, we must be open before we can compute them.

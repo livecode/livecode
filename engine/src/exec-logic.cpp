@@ -51,12 +51,6 @@ static bool MCLogicIsEqualTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef 
 		return true;
 	}
     
-    if (MCValueIsEmpty(p_left) != MCValueIsEmpty(p_right))
-    {
-        r_result = false;
-        return true;
-    }
-    
 	bool t_left_array, t_right_array;
 	t_left_array = MCValueGetTypeCode(p_left) == kMCValueTypeCodeArray && p_left != kMCEmptyArray;
 	t_right_array = MCValueGetTypeCode(p_right) == kMCValueTypeCodeArray &&	p_right != kMCEmptyArray;
@@ -131,6 +125,13 @@ static bool MCLogicIsEqualTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef 
 		return true;
 	}
 
+    // If only one value is empty by this point, then they are not equal
+    if (MCValueIsEmpty(p_left) != MCValueIsEmpty(p_right))
+    {
+        r_result = false;
+        return true;
+    }
+    
 	// Otherwise, convert both to strings and compare.
 	MCAutoStringRef t_left_str, t_right_str;
 	if (ctxt . ForceToString(p_left, &t_left_str) &&

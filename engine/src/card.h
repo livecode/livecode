@@ -291,8 +291,8 @@ public:
     void GetChildControlIds(MCExecContext& ctxt, MCStringRef& r_ids);
 	void GetFormattedLeft(MCExecContext& ctxt, integer_t& r_value);
 	void GetFormattedTop(MCExecContext& ctxt, integer_t& r_value);
-	void GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_value);
-	void GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_value);
+	void GetFormattedHeight(MCExecContext& ctxt, integer_t& r_value);
+	void GetFormattedWidth(MCExecContext& ctxt, integer_t& r_value);
 	void GetFormattedRect(MCExecContext& ctxt, MCRectangle& r_rect);
 	void GetDefaultButton(MCExecContext& ctxt, MCStringRef& r_button);
     
