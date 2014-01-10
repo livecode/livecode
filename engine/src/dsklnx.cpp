@@ -1869,13 +1869,16 @@ public:
         while (t_success && (direntp = readdir64(dirptr)) != NULL)
         {
             MCSystemFolderEntry p_entry;
+            MCStringRef t_unicode_name;
 
             if (MCCStringEqual(direntp->d_name, "."))
                 continue;
             struct stat buf;
             stat(direntp->d_name, &buf);
 
-            p_entry.name = direntp -> d_name;
+            MCStringCreateWithSysString(direntp -> d_name, t_unicode_name);
+
+            p_entry.name = t_unicode_name;
             p_entry.data_size = buf.st_size;
             p_entry.modification_time = (uint32_t)buf.st_mtime;
             p_entry.access_time = (uint32_t)buf.st_atime;
@@ -1885,6 +1888,8 @@ public:
             p_entry.is_folder = S_ISDIR(buf.st_mode);
 
             t_success = p_callback(x_context, &p_entry);
+
+            MCValueRelease(t_unicode_name);
         }
 
         closedir(dirptr);

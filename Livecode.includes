@@ -1,7 +1,6 @@
 engine/include
 engine/src
 lcidlc/src
-libcore/include
 libexternal/include/revolution
 libexternalv1/include
 libfoundation/include
