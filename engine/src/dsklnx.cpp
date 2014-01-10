@@ -1876,9 +1876,11 @@ public:
             struct stat buf;
             stat(direntp->d_name, &buf);
 
-            MCStringCreateWithSysString(direntp -> d_name, t_unicode_name);
+            if (direntp -> d_name != nil && MCStringCreateWithSysString(direntp -> d_name, t_unicode_name))
+                p_entry.name = t_unicode_name;
+            else
+                p_entry.name = kMCEmptyString;
 
-            p_entry.name = t_unicode_name;
             p_entry.data_size = buf.st_size;
             p_entry.modification_time = (uint32_t)buf.st_mtime;
             p_entry.access_time = (uint32_t)buf.st_atime;

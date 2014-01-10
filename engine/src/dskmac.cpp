@@ -6089,7 +6089,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     if (t_names[t_i] . unicode[i] == '/')
                         t_names[t_i] . unicode[i] = ':';
                 
-                MCStringCreateWithChars(t_names[t_i] . unicode, t_names[t_i] . length, t_unicode_name);
+                if (t_names[t_i] . length != 0)
+                    MCStringCreateWithChars(t_names[t_i] . unicode, t_names[t_i] . length, t_unicode_name);
+                else
+                    t_unicode_name = (MCStringRef)MCValueRetain(kMCEmptyString);
 
                 FSPermissionInfo *t_permissions;
                 t_permissions = (FSPermissionInfo *)&(t_catalog_infos[t_i] . permissions);

@@ -3379,10 +3379,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			MCSystemFolderEntry t_entry;
 
 			MCStringRef t_unicode_name;
-			if (MCStringCreateWithChars(data.cFileName, wcslen(data.cFileName), t_unicode_name))
+
+            if (data.cFileName && MCStringCreateWithChars(data.cFileName, wcslen(data.cFileName), t_unicode_name))
 				t_entry.name = t_unicode_name;		// MCStringRef is now in use to handle the unicode chars
 			else
-				t_entry.name = kMCEmptyString;
+                t_entry.name = kMCEmptyString;
+
 			t_entry.data_size = (uint64_t(data.nFileSizeHigh) << 32) | data.nFileSizeLow;
 			t_entry.resource_size = 0;			// Doesn't exist
 			t_entry.creation_time = FiletimeToUnix(data.ftCreationTime);
