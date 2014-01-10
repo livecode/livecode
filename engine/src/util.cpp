@@ -2175,21 +2175,21 @@ inline index_t strmove(unichar_t *p_dest, const unichar_t *p_src, bool p_same_st
 // MW-2004-11-26: Replace strcpy with strmov - overalapping regions (VG)
 void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 {
-    MCAutoPointer<unichar_t> t_in;
+    unichar_t *t_unicode_str;
     uindex_t t_length;
     t_length = MCStringGetLength(in);
     
-    /* UNCHECKED */ MCMemoryNew(t_length* sizeof(unichar_t), (void*&)&t_in);
-    t_length = MCStringGetChars(in, MCRangeMake(0, t_length), *t_in);
+    t_unicode_str = new unichar_t[t_length + 1];
+    t_length = MCStringGetChars(in, MCRangeMake(0, t_length), t_unicode_str);
+    t_unicode_str[t_length] = 0;
 
-    unichar_t *string_ptr = *t_in;
-	unichar_t *fptr = string_ptr; //pointer to search forward in curdir
-	while (*fptr)
+    unichar_t *fptr = t_unicode_str; //pointer to search forward in curdir
+    while (*fptr)
 	{
 		if (*fptr == '/' && *(fptr + 1) == '.'
 		        && *(fptr + 2) == '.' && *(fptr + 3) == '/')
 		{//look for "/../" pattern
-			if (fptr == string_ptr)
+            if (fptr == t_unicode_str)
 				t_length -= strmove(fptr, fptr + 3, true);
 			else
 			{
@@ -2214,7 +2214,7 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 #ifdef _MACOSX
 				if (*fptr == '/' && *(fptr + 1) == '/')
 #else
-				if (fptr != string_ptr && *fptr == '/' && *(fptr + 1) == '/')
+                if (fptr != t_unicode_str && *fptr == '/' && *(fptr + 1) == '/')
 #endif
 
 					t_length -= strmove(fptr, fptr + 1, true); //erase the extra '/'
@@ -2222,7 +2222,8 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 					fptr++;
 	}
     
-    /* UNCHECKED */ MCStringCreateWithChars(string_ptr, t_length, r_out);
+    /* UNCHECKED */ MCStringCreateWithChars(t_unicode_str, t_length, r_out);
+    delete[] t_unicode_str;
 }
 
 bool MCFiltersBase64Encode(MCDataRef p_src, MCStringRef& r_dst);
