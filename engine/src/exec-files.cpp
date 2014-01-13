@@ -296,18 +296,17 @@ void MCFilesEvalShortFilePath(MCExecContext& ctxt, MCStringRef p_path, MCStringR
 		return;
 	}
 
-	if (MCS_shortfilepath(p_path, r_short_path))
-	{
-		if (MCStringGetLength(r_short_path) == 0)
-			ctxt.SetTheResultToCString("can't get");
-		else
-			ctxt.SetTheResultToEmpty();
-
-		return;
-	}
-
-	ctxt.Throw();
+    // Failure of this function isn't really an error
+    r_short_path = nil;
+	/* UNCHECKED */ MCS_shortfilepath(p_path, r_short_path);
+	
+    if (r_short_path == nil || MCStringIsEmpty(r_short_path))
+		ctxt.SetTheResultToCString("can't get");
+	else
+		ctxt.SetTheResultToEmpty();
+	return;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

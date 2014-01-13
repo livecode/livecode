@@ -118,6 +118,10 @@ static bool WindowsGetModuleDescription(MCStringRef p_path, MCStringRef& r_descr
     
 	MCMemoryDeallocate(t_data);
 	
+    // Make sure a description gets set
+    if (!t_success)
+        r_description = MCValueRetain(kMCEmptyString);
+    
 	return t_success;
 }
 
@@ -163,7 +167,7 @@ bool MCSystemListProcesses(MCSystemListProcessesCallback p_callback, void* p_con
 				if (WindowsGetModuleFileNameEx(t_process, t_module, &t_process_path))
 				{
 					MCAutoStringRef t_process_description;
-					WindowsGetModuleDescription(t_process_path, &t_process_description);
+					WindowsGetModuleDescription(*t_process_path, &t_process_description);
 
 					t_success = p_callback(p_context, t_process_ids[i], *t_process_path, *t_process_description);
 
@@ -237,11 +241,11 @@ bool MCSystemListProcessModules(uint32_t p_process_id, MCSystemListProcessModule
 bool MCSystemCanDeleteKey(MCStringRef p_key)
 {
 	HKEY t_key;
-	if (MCStringBeginsWithCString(p_key, "HKCU\\", kMCCompareCaseless))
+	if (MCStringBeginsWithCString(p_key, (const char_t*)"HKCU\\", kMCCompareCaseless))
 		t_key = HKEY_CURRENT_USER;
-	else if (MCStringBeginsWithCString(p_key, "HKCR\\", kMCCompareCaseless))
+	else if (MCStringBeginsWithCString(p_key, (const char_t*)"HKCR\\", kMCCompareCaseless))
 		t_key = HKEY_CLASSES_ROOT;
-	else if (MCStringBeginsWithCString(p_key, "HKLM\\", kMCCompareCaseless))
+	else if (MCStringBeginsWithCString(p_key, (const char_t*)"HKLM\\", kMCCompareCaseless))
 		t_key = HKEY_LOCAL_MACHINE;
 	else
 		return false;
