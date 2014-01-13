@@ -746,12 +746,22 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 			break;
 	}
 
+	uint2 t_trailing_index;
+	t_trailing_index = t_break_index;
+
 	// We now have a suitable break point in t_break_index. This could be index if
 	// there are none in the block. We now loop forward until we get to the end of
 	// any suitable run of spaces.
 	while(t_break_index < index + size && textisspace(&text[t_break_index]))
 		t_break_index += indexincrement(t_break_index);
-    	
+	
+	if (t_break_index == index + size)
+	{
+		twidth_float += MCFontMeasureTextFloat(m_font, &text[t_trailing_index], t_break_index - t_trailing_index, hasunicode());
+		twidth = (int32_t)floorf(twidth_float);
+		width = twidth;
+	}
+	
 	r_break_fits = t_can_fit;
 	r_break_index = t_break_index;
 	

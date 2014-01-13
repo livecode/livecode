@@ -1770,7 +1770,7 @@ Exec_stat MCField::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	case P_RECTANGLE:
 		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
-		dirty = reset = True;
+		//dirty = reset = True;
 		break;
 	case P_FIRST_INDENT:
 		if (!MCU_stoi2(data, i1))
@@ -1973,6 +1973,8 @@ Exec_stat MCField::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	}
 	if (dirty && opened)
 	{
+		if (reset)
+			MCLog("Recomputing field %p due to prop %d", this, p);
 		do_recompute(reset);
 		if (reset)
 			resetparagraphs();
@@ -2581,6 +2583,8 @@ void MCField::recompute()
 
 void MCField::do_recompute(bool p_force_layout)
 {
+	MCLog("Doing recompute for field %p", this);
+	
 	if (!opened)
 		return;
 
