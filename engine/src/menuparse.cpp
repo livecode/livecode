@@ -452,7 +452,7 @@ void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCMenuIt
 	uindex_t t_length;
 	t_length = MCStringGetLength(p_string);
 	
-	if (MCStringLastIndexOfChar(p_string, '|', x_offset, kMCStringOptionCompareExact, t_tag)
+	if (MCStringLastIndexOfChar(p_string, '|', t_length, kMCStringOptionCompareExact, t_tag)
 		&& (t_length - t_tag) > 1)
 	{
 		MCStringRef t_tag_str = nil;

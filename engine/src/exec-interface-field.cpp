@@ -591,7 +591,7 @@ void MCField::SetScrollbarWidth(MCExecContext& ctxt, uinteger_t p_width)
 	}
 }
 
-void MCField::GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width)
+void MCField::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width)
 {
 	if (opened)
 	{
@@ -603,7 +603,7 @@ void MCField::GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width)
 		r_width = 0;
 }
 
-void MCField::GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height)
+void MCField::GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height)
 {
 	if (opened)
 	{

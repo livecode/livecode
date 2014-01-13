@@ -270,8 +270,8 @@ MCPropertyInfo MCButton::kProperties[] =
 	DEFINE_RW_OBJ_SET_PROPERTY(P_ACCELERATOR_MODIFIERS, InterfaceButtonAcceleratorModifiers, MCButton, AcceleratorModifiers)
 	
 	DEFINE_RW_OBJ_PROPERTY(P_MNEMONIC, UInt16, MCButton, Mnemonic)
-	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_WIDTH, UInt16, MCButton, FormattedWidth)
-	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_HEIGHT, UInt16, MCButton, FormattedHeight)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_WIDTH, Int16, MCButton, FormattedWidth)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_HEIGHT, Int16, MCButton, FormattedHeight)
 	DEFINE_RW_OBJ_PROPERTY(P_DEFAULT, Bool, MCButton, Default)
 	DEFINE_RW_OBJ_PROPERTY(P_TEXT, String, MCButton, Text)
 	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TEXT, String, MCButton, Text)

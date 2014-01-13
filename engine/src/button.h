@@ -422,8 +422,8 @@ public:
 	void SetAcceleratorModifiers(MCExecContext& ctxt, intset_t p_mods);
 	void GetMnemonic(MCExecContext& ctxt, uinteger_t& r_mnemonic);
 	void SetMnemonic(MCExecContext& ctxt, uinteger_t p_mnemonic);
-	void GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width);
-	void GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height);
+	void GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width);
+	void GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height);
 	void GetDefault(MCExecContext& ctxt, bool& r_setting);
 	void SetDefault(MCExecContext& ctxt, bool setting);
 	virtual void SetTextFont(MCExecContext& ctxt, MCStringRef p_font);
