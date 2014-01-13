@@ -1251,6 +1251,10 @@ enum Chunk_term {
     CT_WORD,
     CT_TOKEN,
     CT_CHARACTER,
+    // AL-2013-01-08 [[ CharChunks ]] Add 'codepoint, codeunit and byte' to chunk types
+    CT_CODEPOINT,
+    CT_CODEUNIT,
+    CT_BYTE,
     CT_TYPES,
 	CT_KEY
 };
@@ -1261,12 +1265,12 @@ struct MCObjectPtr
 	uint32_t part_id;
 };
 
-// NOTE: the indices in this structure are *codepoint* indices and not UTF-16
-// code unit indices. As such, they need mapping before being used on StringRefs
+// NOTE: the indices in this structure are UTF-16 code unit indices.
 struct MCMarkedText
 {
     MCStringRef text;
     uint32_t start, finish;
+    // flag if the contents of the string have changed due to forcing additional delimiters
     bool changed;
 };
 

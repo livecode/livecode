@@ -45,6 +45,10 @@ class MCChunk : public MCExpression
 	MCCRef *item;
 	MCCRef *word;
 	MCCRef *character;
+    // AL-2013-01-08 [[ CharChunks ]] Add 'codepoint, codeunit and byte' to chunk types
+    MCCRef *codepoint;
+    MCCRef *codeunit;
+    MCCRef *byte;
 	
 	// MW-2008-03-05: [[ Owner Reference ]] If desttype == DT_OWNER, then this pointer will
 	//   be an MCChunk, otherwise it will be an MCExpression.
@@ -123,6 +127,7 @@ public:
     /* WRAPPER */ Exec_stat mark(MCExecPoint &ep, Boolean force, Boolean wholechunk, MCMarkedText& r_mark, bool includechars = true);
 #endif
     void mark(MCExecContext &ctxt, bool set, bool wholechunk, MCMarkedText& x_mark, bool includechars = true);
+    void markbytes(MCExecContext &ctxt, MCMarkedText& x_mark);
 #ifdef LEGACY_EXEC
 	Exec_stat mark_legacy(MCExecPoint &, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool include_characters = true);
 
