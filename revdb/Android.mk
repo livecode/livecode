@@ -20,7 +20,7 @@ LOCAL_C_INCLUDES := \
 
 LOCAL_CPPFLAGS += -frtti -fexceptions
 
-LOCAL_STATIC_LIBRARIES := libexternal libcore
+LOCAL_STATIC_LIBRARIES := libexternal
 
 LOCAL_LDLIBS += -lz -llog \
 	 $(call host-path,$(ANDROID_NDK)/sources/cxx-stl/gnu-libstdc++/libs/$(TARGET_ARCH_ABI)/libstdc++.a)
