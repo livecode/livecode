@@ -188,11 +188,16 @@ bool apk_list_folder_entries(MCSystemListFolderEntriesCallback p_callback, void 
 		}
 		if (t_success)
 		{
-			t_entry.name = t_fname;
+            // SN-2014-01-13: [[ RefactorUnicode ]] Asset filenames are in ASCII
+            MCStringRef t_assetFile;
+            MCStringCreateWithCString(t_fname, t_assetFile);
+            
+			t_entry.name = t_assetFile;
 			t_entry.data_size = t_size;
 			t_entry.is_folder = t_is_folder;
 
 			t_success = p_callback(p_context, &t_entry);
+            MCValueRelease(t_assetFile);
 		}
 	}
 
@@ -506,8 +511,11 @@ bool MCAndroidSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_call
 		
 		struct stat t_stat;
 		stat(t_dir_entry -> d_name, &t_stat);
+        
+        MCStringRef t_unicode_str;
+        MCStringCreateWithBytes((byte_t*)t_dir_entry -> d_name, strlen(t_dir_entry -> d_name), kMCStringEncodingUTF8, false, t_unicode_str);        
 		
-		t_entry . name = t_dir_entry -> d_name;
+		t_entry . name = t_unicode_str;
 		t_entry . data_size = t_stat . st_size;
 		t_entry . resource_size = 0;
 		t_entry . modification_time = t_stat . st_mtime;
@@ -518,6 +526,7 @@ bool MCAndroidSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_call
 		t_entry . is_folder = (t_stat . st_mode & S_IFDIR) != 0;
 		
 		t_success = p_callback(p_context, &t_entry);
+        MCValueRelease(t_unicode_str);
 	}
 	
 	closedir(t_dir);
