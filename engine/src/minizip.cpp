@@ -478,7 +478,7 @@ bool MCMiniZipExtractItem(MCMiniZipRef self, MCStringRef p_item_name, MCMiniZipE
 bool MCMiniZipThrow(MCMiniZipError p_error)
 {
 	s_error = p_error;
-	return true;
+	return false;
 }
 
 MCMiniZipError MCMiniZipCatch(void)
