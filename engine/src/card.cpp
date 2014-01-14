@@ -586,7 +586,11 @@ Boolean MCCard::mdown(uint2 which)
 	if (mfocused != NULL)
 	{
 		MCControl *oldfocused = mfocused->getref();
-
+        
+        // AL-2013-01-14: [[ Bug 11343 ]] Add timer if the object handles mouseStillDown in the behavior chain.
+        if (oldfocused -> handlesmessage(MCM_mouse_still_down))
+            MCscreen->addtimer(oldfocused, MCM_idle, MCidleRate);
+        
 		// MW-2007-12-11: [[ Bug 5670 ]] Reset our notification var so we can check it after
 #ifdef _MACOSX
 		MCosxmenupoppedup = false;
@@ -611,6 +615,10 @@ Boolean MCCard::mdown(uint2 which)
 	}
 	else
 	{
+        // AL-2013-01-14: [[ Bug 11343 ]] Add timer to the card if it handles mouseStillDown in the behavior chain.
+        if (handlesmessage(MCM_mouse_still_down))
+            MCscreen->addtimer(this, MCM_idle, MCidleRate);
+        
 		switch (which)
 		{
 		case Button1:
