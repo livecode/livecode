@@ -78,7 +78,7 @@ server: libz libgif  libjpeg libpcre libpng libopenssl libexternal libfoundation
 libcairopdf:
 	$(MAKE) -C ./thirdparty/libcairo libcairopdf
 
-revpdfprinter: libcairopdf libcore
+revpdfprinter: libcairopdf
 	$(MAKE) -C ./revpdfprinter revpdfprinter
 
 ###############################################################################

@@ -20,9 +20,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "regex.h"
 
-#include <pcre.h>
+#include "pcre.h"
 
-#define pcre_free free
+#define pcre16_free free
 
 
 
@@ -189,7 +189,7 @@ regerror(int errcode, const regex_t *preg, MCStringRef &errbuf)
 
 void regfree(regex_t *preg)
 {
-	(pcre_free)(preg->re_pcre);
+    (pcre16_free)(preg->re_pcre);
 }
 
 /*************************************************
@@ -214,18 +214,18 @@ int regcomp(regex_t *preg, MCStringRef pattern, int cflags)
 
 	if ((cflags & REG_ICASE) != 0)
 		options |= PCRE_CASELESS;
-	if ((cflags & REG_NEWLINE) != 0)
+    if ((cflags & REG_NEWLINE) != 0)
 		options |= PCRE_MULTILINE;
-    MCAutoPointer<char> t_pattern;
-    /* UNCHECKED */ MCStringConvertToCString(pattern, &t_pattern);
-	preg->re_pcre = pcre_compile(*t_pattern, options, &errorptr, &erroffset, NULL);
+
+    // SN-2014-01-14: [[ libpcre update ]]
+    preg->re_pcre = pcre16_compile(MCStringGetCharPtr(pattern), options, &errorptr, &erroffset, NULL);
 	preg->re_erroffset = erroffset;
 
 	if (preg->re_pcre == NULL)
 		return eint[erroffset];
 
-	preg->re_nsub = pcre_info((const pcre *)preg->re_pcre, NULL, NULL);
-	return 0;
+//    [[ libpcre udpate ]] SN-2014-01-10: pcre_info() is deprecated, must be replaced with pcre_fullinfo()
+    return pcre16_fullinfo((const pcre16 *)preg->re_pcre, NULL, PCRE_INFO_CAPTURECOUNT, &preg->re_nsub);
 }
 
 /*************************************************
@@ -247,7 +247,7 @@ int regexec(regex_t *preg, MCStringRef string, int len, size_t nmatch,
 	if ((eflags & REG_NOTBOL) != 0)
 		options |= PCRE_NOTBOL;
 	if ((eflags & REG_NOTEOL) != 0)
-		options |= PCRE_NOTEOL;
+        options |= PCRE_NOTEOL;
 
 	preg->re_erroffset = (size_t)(-1);   /* Only has meaning after compile */
 	if (nmatch > 0)
@@ -257,9 +257,8 @@ int regexec(regex_t *preg, MCStringRef string, int len, size_t nmatch,
 			return REG_ESPACE;
 	}
 
-    MCAutoPointer<char> t_string;
-    /* UNCHECKED */ MCStringConvertToCString(string, &t_string);
-	rc = pcre_exec((const pcre *)preg->re_pcre, NULL, *t_string, len, 0, options,
+    // [[ libprce update ]] SN-2014-01-14: now handles unicode-encoded input
+    rc = pcre16_exec((const pcre16 *)preg->re_pcre, NULL, MCStringGetCharPtr(string), len, 0, options,
 	               ovector, nmatch * 3);
 
 	if (rc == 0)
