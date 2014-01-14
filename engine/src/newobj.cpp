@@ -745,6 +745,10 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCTarget;
 	case F_TEMP_NAME:
 		return new MCTempName;
+    case F_TEXT_DECODE:
+        return new MCTextDecode;
+    case F_TEXT_ENCODE:
+        return new MCTextEncode;
 	case F_TEXT_HEIGHT_SUM:
 		return new MCTextHeightSum;
 	case F_TICKS:

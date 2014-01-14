@@ -1623,6 +1623,36 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalTempNameMethodInfo; }
 };
 
+class MCTextDecode : public MCFunction
+{
+    MCExpression *m_data;
+    MCExpression *m_encoding;
+public:
+    MCTextDecode()
+    {
+        m_data = m_encoding = NULL;
+    }
+    virtual ~MCTextDecode();
+    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
+    virtual void eval_ctxt(MCExecContext&, MCExecValue&);
+    virtual void compile(MCSyntaxFactoryRef);
+};
+
+class MCTextEncode : public MCFunction
+{
+    MCExpression *m_string;
+    MCExpression *m_encoding;
+public:
+    MCTextEncode()
+    {
+        m_string = m_encoding = NULL;
+    }
+    virtual ~MCTextEncode();
+    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
+    virtual void eval_ctxt(MCExecContext&, MCExecValue&);
+    virtual void compile(MCSyntaxFactoryRef);
+};
+
 class MCTicks : public MCConstantFunctionCtxt<double, MCDateTimeEvalTicks>
 {
 public:

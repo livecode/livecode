@@ -1935,6 +1935,8 @@ extern MCExecMethodInfo *kMCStringsEvalNumToCharMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalCharToNumMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalNumToByteMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalByteToNumMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalTextDecodeMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalTextEncodeMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalLengthMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalMatchTextMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalMatchChunkMethodInfo;
@@ -1993,6 +1995,9 @@ void MCStringsEvalNativeCharToNum(MCExecContext& ctxt, MCStringRef character, ui
 void MCStringsEvalUnicodeCharToNum(MCExecContext& ctxt, MCStringRef character, uinteger_t& r_codepoint);
 void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t codepoint, MCStringRef& r_byte);
 void MCStringsEvalByteToNum(MCExecContext& ctxt, MCStringRef byte, integer_t& r_codepoint);
+
+void MCStringsEvalTextDecode(MCExecContext& ctxt, MCStringRef p_encoding, MCDataRef p_encoded_text, MCStringRef& r_decoded_text);
+void MCStringsEvalTextEncode(MCExecContext& ctxt, MCStringRef p_encoding, MCStringRef p_decoded_text, MCDataRef& r_encoded_text);
 
 void MCStringsEvalLength(MCExecContext& ctxt, MCStringRef p_string, integer_t& r_length);
 

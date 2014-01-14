@@ -2530,7 +2530,25 @@ enum Exec_errors
     EE_INTERNAL_DELETE_BADKEY,
 
     // {EE-820} MCHandler: error in expression
-    EE_HANDLER_BADEXP
+    EE_HANDLER_BADEXP,
+    
+    // {EE-0821} textDecode: bad data expression
+    EE_TEXTDECODE_BADDATA,
+    
+    // {EE-0822} textDecode: bad text encoding expression
+    EE_TEXTDECODE_BADENCODING,
+    
+    // {EE-0823} textDecode: could not decode data
+    EE_TEXTDECODE_FAILED,
+    
+    // {EE-0824} textEncode: bad text expression
+    EE_TEXTENCODE_BADTEXT,
+    
+    // {EE-0825} textEncode: bad text encoding expression
+    EE_TEXTENCODE_BADENCODING,
+    
+    // {EE-0826} textEncode: could not encode text
+    EE_TEXTENCODE_FAILED,
 };
 
 extern const char *MCexecutionerrors;

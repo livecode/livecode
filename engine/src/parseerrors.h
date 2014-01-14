@@ -1639,6 +1639,13 @@ enum Parse_errors
 	// MERG-2013-10-04: [[ EditScriptAt ]] edit script of object at.
     // {EE-0536} edit script: no at expression
 	PE_EDIT_NOAT,
+    
+    // {PE-0537} textDecode: bad parameters
+    PE_TEXTDECODE_BADPARAM,
+    
+    // {PE-0538} textEncode: bad parameters
+    PE_TEXTENCODE_BADPARAM,
+    
 };
 
 extern const char *MCparsingerrors;
