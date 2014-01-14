@@ -218,7 +218,7 @@ int regcomp(regex_t *preg, MCStringRef pattern, int cflags)
 		options |= PCRE_MULTILINE;
 
     // SN-2014-01-14: [[ libpcre update ]]
-    preg->re_pcre = pcre16_compile(MCStringGetCharPtr(pattern), options, &errorptr, &erroffset, NULL);
+    preg->re_pcre = pcre16_compile((PCRE_SPTR16)MCStringGetCharPtr(pattern), options, &errorptr, &erroffset, NULL);
 	preg->re_erroffset = erroffset;
 
 	if (preg->re_pcre == NULL)
@@ -258,7 +258,7 @@ int regexec(regex_t *preg, MCStringRef string, int len, size_t nmatch,
 	}
 
     // [[ libprce update ]] SN-2014-01-14: now handles unicode-encoded input
-    rc = pcre16_exec((const pcre16 *)preg->re_pcre, NULL, MCStringGetCharPtr(string), len, 0, options,
+    rc = pcre16_exec((const pcre16 *)preg->re_pcre, NULL, (PCRE_SPTR16)MCStringGetCharPtr(string), len, 0, options,
 	               ovector, nmatch * 3);
 
 	if (rc == 0)
