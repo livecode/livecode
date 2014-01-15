@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __MC_GRAPHICS__
 
 #include "foundation.h"
+#include "foundation-auto.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

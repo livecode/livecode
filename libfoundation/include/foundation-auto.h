@@ -268,7 +268,7 @@ public:
     
     bool Lock(MCStringRef p_string)
     {
-        return MCStringConvertToUTF8String(p_string, m_utf8string);
+        return MCStringConvertToUTF8(p_string, m_utf8string, m_size);
     }
     
     void Unlock(void)
@@ -282,8 +282,14 @@ public:
         return m_utf8string;
     }
     
+    uindex_t Size()
+    {
+        return m_size;
+    }
+    
 private:
     char *m_utf8string;
+    uindex_t m_size;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

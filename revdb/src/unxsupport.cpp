@@ -19,7 +19,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "unxsupport.h"
 #include <stdlib.h>
-#include <core.h>
 
 void FreeDatabaseDriver( DATABASEREC *tdatabaserec)
 {
