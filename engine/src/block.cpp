@@ -48,6 +48,9 @@ MCBlock::MCBlock(void)
 	m_index = m_size = 0;
 	width = 0;
 	opened = 0;
+    origin = 0;
+    tabpos = 0;
+    direction_level = 0;
 
 	// MW-2012-02-14: [[ FontRefs ]] The font for the block starts off nil.
 	m_font = nil;
@@ -99,6 +102,9 @@ MCBlock::MCBlock(const MCBlock &bref) : MCDLlist(bref)
 	m_size = bref.m_size;
 	width = 0;
 	opened = 0;
+    origin = 0;
+    tabpos = 0;
+    direction_level = bref.direction_level;
 
 	// MW-2012-02-14: [[ FontRefs ]] The font for the block starts off nil.
 	m_font = nil;
@@ -607,6 +613,10 @@ Boolean MCBlock::sameatts(MCBlock *bptr, bool p_persistent_only)
 			(bptr -> atts -> shift != atts -> shift))
 		return False;
 
+    // Ensure that the direction level matches
+    if (direction_level != bptr -> direction_level)
+        return False;
+    
 	// Everything matches, so these two blocks must be the same.
 	return True;
 }
@@ -974,7 +984,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 
 			t_cell_clip = MCU_intersect_rect(t_cell_clip, t_old_clip);
 			dc -> setclip(t_cell_clip);
-            dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True);
+            dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True, is_rtl());
 
 			// Only draw the various boxes/lines if there is any content.
 			if (t_next_index - t_index > 0)
@@ -1049,7 +1059,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 				twidth = MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
 				twidth += gettabwidth(cx + twidth, eptr);
 
-                dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True);
+                dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True, is_rtl());
 
 				cx += twidth;
 				x += twidth;
@@ -1071,7 +1081,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 
 		MCRange t_range;
 		t_range = MCRangeMake(sptr, size);
-        dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True);
+        dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True, is_rtl());
 
 		// Apply strike/underline.
 		if ((style & FA_UNDERLINE) != 0)
@@ -1622,21 +1632,30 @@ void MCBlock::setbackcolor(const MCColor *newcolor)
 	}
 }
 
-uint2 MCBlock::GetCursorX(int2 x, findex_t fi)
+uint2 MCBlock::GetCursorX(findex_t fi)
 {
 	findex_t j = fi - m_index;
 	if (j > m_size)
 		j = m_size;
-	return getsubwidth(NULL, x, m_index, j);
+    
+    // [[ BiDi Support ]]
+    // If the block is RTL, x decreases as fi increases
+    if (is_rtl())
+        return origin + width - getsubwidth(NULL, tabpos, m_index, j);
+    else
+        return origin + getsubwidth(NULL, tabpos, m_index, j);
 }
 
-findex_t MCBlock::GetCursorIndex(int2 x, int2 cx, Boolean chunk, Boolean last)
+findex_t MCBlock::GetCursorIndex(int2 x, Boolean chunk, Boolean last)
 {
-	// MW-2007-07-05: [[ Bug 5099 ]] If we have an image and are unicode, the char
+    // The x coordinate is relative to the line, not ourselves
+    x -= getorigin();
+    
+    // MW-2007-07-05: [[ Bug 5099 ]] If we have an image and are unicode, the char
 	//   we replace is two bytes long
 	if (flags & F_HAS_IMAGE && atts->image != NULL)
     {
-		if (chunk || cx < atts->image->getrect().width >> 1)
+		if (chunk || x < atts->image->getrect().width >> 1)
 			return m_index;
 		else
 			return m_index + 1;
@@ -1656,11 +1675,13 @@ findex_t MCBlock::GetCursorIndex(int2 x, int2 cx, Boolean chunk, Boolean last)
 	t_last_width = 0;
 	while(i < m_index + m_size)
 	{		
-		int32_t t_new_i;
+		// TODO: broken for RTL
+        
+        int32_t t_new_i;
 		t_new_i = parent->IncrementIndex(i);
 		
 		int32_t t_new_width;
-		t_new_width = GetCursorX(x, t_new_i);
+		t_new_width = GetCursorX(t_new_i) - origin;
 		
 		int32_t t_pos;
 		if (chunk)
@@ -1668,7 +1689,7 @@ findex_t MCBlock::GetCursorIndex(int2 x, int2 cx, Boolean chunk, Boolean last)
 		else
 			t_pos = (t_last_width + t_new_width) / 2;
 			
-		if (cx < t_pos)
+		if (x < t_pos)
 			break;
 			
 		t_last_width = t_new_width;

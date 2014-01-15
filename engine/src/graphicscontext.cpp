@@ -1142,7 +1142,7 @@ void MCGraphicsContext::drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef
     drawtext_substring(x, y, p_string, t_range, p_font, image);
 }	
 
-void MCGraphicsContext::drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean p_image)
+void MCGraphicsContext::drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean p_image, bool p_rtl)
 {
     // MW-2013-10-29: [[ Bug 11338 ]] If 'image' is true, then render the background
 	//   rect.
@@ -1157,7 +1157,7 @@ void MCGraphicsContext::drawtext_substring(int2 x, int2 y, MCStringRef p_string,
 		MCGContextRestore(m_gcontext);
 	}
     
-	MCFontDrawTextSubstring(m_gcontext, x, y, p_string, p_range, p_font);
+	MCFontDrawTextSubstring(m_gcontext, x, y, p_string, p_range, p_font, p_rtl);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

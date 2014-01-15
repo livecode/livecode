@@ -34,6 +34,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphics_util.h"
 #include "unicode.h"
 
+#include "foundation-unicode.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #define kMCFontBreakTextCharLimit   64
@@ -156,7 +158,7 @@ int32_t MCFontGetDescent(MCFontRef self)
 	return self -> fontstruct -> descent;
 }
 
-void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFontBreakTextCallback p_callback, void *p_callback_data)
+void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFontBreakTextCallback p_callback, void *p_callback_data, bool p_rtl)
 {
     // Scan forward in the string for possible break locations. Breaks are
     // assigned a quality value as some locations are better for breaking than
@@ -171,6 +173,8 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
     // Unicode support is added and a proper breaking algorithm implemented.
     uint32_t t_stride;
     t_stride = kMCFontBreakTextCharLimit;
+    
+    uindex_t t_end = p_range.offset + p_range.length;
     
     uindex_t t_length = p_range.length;
     uindex_t t_offset = p_range.offset;
@@ -191,11 +195,19 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
             codepoint_t t_char;
             uindex_t t_advance;
             
-            t_char = MCStringGetCharAtIndex(p_text, t_offset + t_index);
-            if (0xD800 <= t_char && t_char < 0xDC00)
+            if (p_rtl)
+                t_char = MCStringGetCharAtIndex(p_text, t_end - t_index - t_offset);
+            else
+                t_char = MCStringGetCharAtIndex(p_text, t_offset + t_index);
+            
+            if (MCUnicodeCodepointIsHighSurrogate(t_char))
             {
                 // Surrogate pair
-                t_char = ((t_char - 0xD800) << 10) + (MCStringGetCharAtIndex(p_text, t_offset + t_index + 1) - 0xDC00);
+                if (p_rtl)
+                    t_char = MCUnicodeSurrogatesToCodepoint(t_char, MCStringGetCharAtIndex(p_text, t_end - t_index - t_offset - 1));
+                else
+                    t_char = MCUnicodeSurrogatesToCodepoint(t_char, MCStringGetCharAtIndex(p_text, t_offset + t_index + 1));
+                
                 t_advance = 2;
             }
             else
@@ -253,7 +265,10 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
         
         // Process this chunk of text
         MCRange t_range;
-        t_range = MCRangeMake(t_offset, t_break_point);
+        if (p_rtl)
+            t_range = MCRangeMake(t_end - t_offset - t_break_point, t_break_point);
+        else
+            t_range = MCRangeMake(t_offset, t_break_point);
         p_callback(p_font, p_text, t_range, p_callback_data);
         
         // Explicitly show breaking points
@@ -292,7 +307,7 @@ int32_t MCFontMeasureTextSubstring(MCFontRef p_font, MCStringRef p_string, MCRan
     font_measure_text_context ctxt;
     ctxt.m_width = 0;
     
-    MCFontBreakText(p_font, p_string, p_range, (MCFontBreakTextCallback)MCFontMeasureTextCallback, &ctxt);
+    MCFontBreakText(p_font, p_string, p_range, (MCFontBreakTextCallback)MCFontMeasureTextCallback, &ctxt, false);
     
     return ctxt . m_width;
 }
@@ -302,6 +317,7 @@ struct font_draw_text_context
     MCGContextRef m_gcontext;
     int32_t x;
     int32_t y;
+    bool rtl;
 };
 
 static void MCFontDrawTextCallback(MCFontRef p_font, MCStringRef p_text, MCRange p_range, font_draw_text_context *ctxt)
@@ -311,26 +327,27 @@ static void MCFontDrawTextCallback(MCFontRef p_font, MCStringRef p_text, MCRange
 
 	// The drawing is done on the UTF-16 form of the text
 	
-	MCGContextDrawPlatformText(ctxt->m_gcontext, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, MCGPointMake(ctxt->x, ctxt->y), t_font);
+	MCGContextDrawPlatformText(ctxt->m_gcontext, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, MCGPointMake(ctxt->x, ctxt->y), t_font, ctxt->rtl);
     
     // The draw position needs to be advanced
     ctxt -> x += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, t_font);
 }
 
-void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCFontRef font)
+void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCFontRef font, bool p_rtl)
 {
 	MCRange t_range = MCRangeMake(0, MCStringGetLength(p_text));
-	return MCFontDrawTextSubstring(p_gcontext, x, y, p_text, t_range, font);
+	return MCFontDrawTextSubstring(p_gcontext, x, y, p_text, t_range, font, p_rtl);
 }
 
-void MCFontDrawTextSubstring(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef p_font)
+void MCFontDrawTextSubstring(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef p_font, bool p_rtl)
 {
     font_draw_text_context ctxt;
     ctxt.x = x;
     ctxt.y = y;
     ctxt.m_gcontext = p_gcontext;
+    ctxt.rtl = p_rtl;
     
-    MCFontBreakText(p_font, p_text, p_range, (MCFontBreakTextCallback)MCFontDrawTextCallback, &ctxt);
+    MCFontBreakText(p_font, p_text, p_range, (MCFontBreakTextCallback)MCFontDrawTextCallback, &ctxt, p_rtl);
 }
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 p_text_style)

@@ -40,6 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "exec-interface.h"
 
+#include "foundation-unicode.h"
+
 const char *ER_reverse[256] =
     {
         "&#0;", "&#1;", "&#2;", "&#3;", "&#4;",
@@ -242,6 +244,184 @@ bool MCParagraph::TextFindNextParagraph(MCStringRef p_string, findex_t p_after, 
 	
 	r_next = p_after + 1;
 	return true;
+}
+
+void MCParagraph::SetBlockDirectionLevel(findex_t si, findex_t ei, uint8_t level)
+{
+    findex_t t_block_index, t_block_length;
+    MCBlock *bptr = indextoblock(si, False);
+    do
+    {
+        bptr->GetRange(t_block_index, t_block_length);
+        if (t_block_index < si)
+        {
+            // Starts part of the way through this block
+            MCBlock *tbptr = new MCBlock(*bptr);
+            bptr->append(tbptr);
+            bptr->SetRange(t_block_index, si - t_block_index);
+            tbptr->SetRange(si, t_block_length - (si - t_block_index));
+            bptr = bptr->next();
+        }
+        else
+        {
+            bptr->close();
+        }
+        
+        if (t_block_index + t_block_length > ei)
+        {
+            // Ends part of the way through this block
+            MCBlock *tbptr = new MCBlock(*bptr);
+            if (getopened())
+                tbptr->open(getparent()->getfontref());
+            bptr->append(tbptr);
+            bptr->SetRange(t_block_index, ei - t_block_index);
+            tbptr->SetRange(ei, t_block_length - ei + t_block_index);
+        }
+        
+        if (getopened())
+            bptr->open(getparent()->getfontref());
+        bptr->SetDirectionLevel(level);
+        bptr = bptr->next();
+    }
+    while (t_block_index + t_block_length < gettextlength()
+           && t_block_index + t_block_length < ei);
+}
+
+void MCParagraph::resolvetextdirections()
+{
+    // TODO:
+    //  The bulk of the Unicode BiDirectional algorithm (as described in TR9)
+    //  should be implemented here in order to provide proper BiDi support.
+    //  Instead, the algorithm here is fairly trivial but works in simple cases.
+    
+    // TODO: do we have a forced base direction?
+    uint8_t t_base_level;
+    t_base_level = firststrongisolate(0);
+    
+    uindex_t t_length;
+    t_length = MCStringGetLength(m_text);
+    
+    // Map every codepoint in the string to its bidi class
+    MCAutoArray<uint8_t> t_classes;
+    /* UNCHECKED */ t_classes.New(t_length);
+    MCUnicodeGetProperty(MCStringGetCharPtr(m_text), t_length, kMCUnicodePropertyBidiClass, kMCUnicodePropertyTypeUint8, t_classes.Ptr());
+   
+    // Create an array to store the BiDi level of each character
+    MCAutoArray<uint8_t> t_levels;
+    /* UNCHECKED */ t_levels.New(t_length);
+    
+    // PROPER BIDI ALGORITHM SHOULD START HERE
+    
+    // Scan through the classes, resolving any non-strong classn to the last level
+    uint8_t t_last_level = t_base_level;
+    for (uindex_t i = 0; i < t_length; i++)
+    {
+        if (t_classes[i] == kMCUnicodeDirectionLeftToRight)
+        {
+            // In RTL paragraphs, LTR text should be embedded within the RTL
+            t_last_level = t_levels[i] = (t_base_level == 0) ? 0 : 2;
+        }
+        else if (t_classes[i] == kMCUnicodeDirectionRightToLeft
+                 || t_classes[i] == kMCUnicodeDirectionRightToLeftArabic)
+        {
+            t_last_level = t_levels[i] = 1;
+        }
+        else
+        {
+            // Force to the most recent direction
+            t_levels[i] = t_last_level;
+        }
+    }
+    
+    // PROPER BIDI ALGORITHM SHOULD END HERE
+    
+    // Using the calculated levels, do the appropriate block creation
+    uindex_t i = 0;
+    while (i < t_length)
+    {
+        // Scan forward for the next change in direction level
+        uint8_t t_cur_level;
+        uindex_t t_run_length;
+        t_cur_level = t_levels[i];
+        t_run_length = 1;
+        while (i + t_run_length < t_length && t_levels[i + t_run_length] == t_cur_level)
+            t_run_length++;
+        
+        // Set the direction level attribute for this run
+        SetBlockDirectionLevel(i, i + t_run_length, t_cur_level);
+        
+        // Next block
+        i += t_run_length;
+    }
+}
+
+uint8_t MCParagraph::firststrongisolate(uindex_t p_offset) const
+{
+    // From TR9:
+    //  P1. Split the text into separate paragraphs. A paragraph separator is
+    //      kept with the previous paragraph. Within each paragraph, apply all
+    //      the other rules of this algorithm. (Already done by this stage)
+    //
+    //  P2. In each paragraph, find the first character of type L, AL, or R
+    //      while skipping over any characters between an isolate initiator and
+    //      its matching PDI or, if it has no matching PDI, the end of the
+    //      paragraph.
+    //
+    //  P3. If a character is found in P2 and it is of type AL or R, then set
+    //      the paragraph embedding level to one; otherwise, set it to zero
+    
+    bool t_found = false;
+    uindex_t t_depth = 0;
+    uint8_t t_level = 0;
+    while (!t_found && p_offset < MCStringGetLength(m_text))
+    {
+        codepoint_t t_char;
+        t_char = MCStringGetCharAtIndex(m_text, p_offset);
+        
+        // Get the surrogate pair, if required
+        uindex_t t_increment = 1;
+        codepoint_t t_low;
+        if (MCUnicodeCodepointIsHighSurrogate(t_char) &&
+            MCUnicodeCodepointIsLowSurrogate(t_low = MCStringGetCharAtIndex(m_text, p_offset + 1)))
+        {
+            t_char = MCUnicodeSurrogatesToCodepoint(t_char, t_low);
+            t_increment = 2;
+        }
+        
+        // Get the directional category for this codepoint
+        int32_t t_dir;
+        t_dir = MCUnicodeGetIntegerProperty(t_char, kMCUnicodePropertyBidiClass);
+        
+        // Is this an isolate initiator?
+        if (t_dir == kMCUnicodeDirectionLeftToRightIsolate
+            || t_dir == kMCUnicodeDirectionRightToLeftIsolate)
+        {
+            t_depth++;
+        }
+        
+        // Is this an isolate terminator?
+        if (t_dir == kMCUnicodeDirectionPopDirectionalIsolate && t_depth > 0)
+        {
+            t_depth--;
+        }
+        
+        // Is this a codepoint with a strong direction?
+        if (t_depth == 0 && t_dir == kMCUnicodeDirectionLeftToRight)
+        {
+            t_level = 0;
+            t_found = true;
+        }
+        else if (t_depth == 0 && (t_dir == kMCUnicodeDirectionRightToLeft
+                    || t_dir == kMCUnicodeDirectionRightToLeftArabic))
+        {
+            t_level = 1;
+            t_found = true;
+        }
+        
+        p_offset += t_increment;
+    }
+    
+    return t_level;
 }
 
 bool MCParagraph::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor)
@@ -728,6 +908,9 @@ void MCParagraph::layout(bool p_force)
 	if (!needs_layout && !p_force)
 		return;
 
+    // Update the text direction properties of the paragraph
+    resolvetextdirections();
+    
 	if (getdontwrap())
 		noflow();
 	else

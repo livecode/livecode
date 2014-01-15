@@ -62,7 +62,10 @@ protected:
 	Blockatts *atts;
 	findex_t m_index, m_size;
 	uint2 width;
+    uint2 origin;
 	uint2 opened;
+    uint2 tabpos;           // Pixel offset to use when calculating tabstops
+    uint8_t direction_level;
 
 	// MW-2012-02-14: [[ FontRefs ]] The concrete font to use for the block.
 	//   (only valid when the block is open).
@@ -253,6 +256,47 @@ public:
 	}
 
 	bool imagechanged(MCImage *p_image, bool p_deleting);
+    
+    ////////// BIDIRECTIONAL SUPPORT
+    
+    uint2 getorigin() const
+    {
+        return origin;
+    }
+    
+    void setorigin(uint2 o)
+    {
+        origin = o;
+    }
+    
+    uint2 GetDirectionLevel() const
+    {
+        return direction_level;
+    }
+    
+    void SetDirectionLevel(uint8_t l)
+    {
+        direction_level = l;
+    }
+    
+    bool is_rtl() const
+    {
+        // If odd, text is right-to-left, otherwise left-to-right
+        return GetDirectionLevel() & 1;
+    }
+    
+    uint2 getwidth(MCDC *dc = NULL)
+    {
+        if (is_rtl())
+            return getwidth(dc, origin - width);
+        else
+            return getwidth(dc, origin);
+    }
+    
+    void settabpos(uint2 offset)
+    {
+        tabpos = offset;
+    }
 	
 	////////////////////
 	
@@ -272,10 +316,10 @@ public:
 	void MoveRange(findex_t t_index_offset, findex_t t_length_offset); 
 	
 	// Translates from a pixel position to a cursor index
-	findex_t GetCursorIndex(int2 x, int2 cx, Boolean chunk, Boolean last);
+	findex_t GetCursorIndex(int2 x, Boolean chunk, Boolean last);
 	
 	// Returns the x coordinate of the cursor
-	uint2 GetCursorX(int2 x, findex_t fi);
+	uint2 GetCursorX(findex_t fi);
 	
 	// Moves the index forwards by one codepoint, possibly changing block
 	MCBlock *AdvanceIndex(findex_t &x_index);
@@ -295,7 +339,7 @@ public:
 	{
 		return flags & F_HAS_UNICODE;
 	}
-
+    
     //////////
 
     void GetLinkText(MCExecContext& ctxt, MCStringRef& r_linktext);

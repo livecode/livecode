@@ -201,14 +201,7 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 	firstblock = p_first;
 	lastblock = t_break_block;
 	
-	t_block = firstblock;
-	do
-	{
-		setscents(t_block);
-		width += t_block -> getwidth(NULL, width);
-		t_block = t_block -> next();
-	}
-	while(t_block != lastblock -> next());
+	ResolveDisplayOrder();
 	
 	dirtywidth = width;
 	
@@ -223,19 +216,23 @@ void MCLine::appendall(MCBlock *bptr)
 	width = 0;
 	bptr = lastblock;
 	ascent = descent = 0;
-	do
+    ResolveDisplayOrder();
+	/*do
 	{
-		bptr = (MCBlock *)bptr->next();
+		// TODO: RTL support
+        
+        bptr = (MCBlock *)bptr->next();
 		setscents(bptr);
+        bptr -> setorigin(width);
 		width += bptr->getwidth(NULL, width);
 	}
-	while (bptr != lastblock);
+	while (bptr != lastblock);*/
 	dirtywidth = MCU_max(width, oldwidth);
 }
 
 void MCLine::draw(MCDC *dc, int2 x, int2 y, findex_t si, findex_t ei, MCStringRef p_string, uint2 pstyle)
 {
-	int2 cx = 0;
+	//int2 cx = 0;
 	MCBlock *bptr = (MCBlock *)firstblock->prev();
 	
 	uint32_t t_flags;
@@ -297,10 +294,10 @@ void MCLine::draw(MCDC *dc, int2 x, int2 y, findex_t si, findex_t ei, MCStringRe
 		}
 		
 		// Pass the computed flags to the block to draw.
-		bptr->draw(dc, x, cx, y, si, ei, p_string, pstyle, t_flags);
+		bptr->draw(dc, x + bptr->getorigin(), bptr->getorigin(), y, si, ei, p_string, pstyle, t_flags);
 		
 		uint2 twidth;
-		twidth = bptr->getwidth(dc, cx);
+		twidth = bptr->getwidth(dc);
 		
 		if (bptr -> getflagged())
 		{
@@ -331,8 +328,8 @@ void MCLine::draw(MCDC *dc, int2 x, int2 y, findex_t si, findex_t ei, MCStringRe
 			parent->getparent()->setforeground(dc, DI_FORE, False, True);
 		}
 		
-		x += twidth;
-		cx += twidth;
+		//x += twidth;
+		//cx += twidth;
 	}
 	while (bptr != lastblock);
 }
@@ -372,22 +369,20 @@ void MCLine::GetRange(findex_t &i, findex_t &l)
 
 uint2 MCLine::GetCursorX(findex_t fi)
 {
-	uint2 x = 0;
 	MCBlock *bptr = (MCBlock *)firstblock;
 	findex_t i, l;
 	bptr->GetRange(i, l);
 	while (fi > i + l && bptr != lastblock)
 	{
-		x += bptr->getwidth(NULL, x);
 		bptr = (MCBlock *)bptr->next();
 		bptr->GetRange(i, l);
 	}
-	return x + bptr->GetCursorX(x, fi);
+	return bptr->GetCursorX(fi);
 }
 
 findex_t MCLine::GetCursorIndex(int2 cx, Boolean chunk)
 {
-	uint2 x = 0;
+	/*uint2 x = 0;
 	MCBlock *bptr = firstblock;
 	int2 bwidth = bptr->getwidth(NULL, x);
 	while (cx > bwidth && bptr != lastblock)
@@ -398,7 +393,26 @@ findex_t MCLine::GetCursorIndex(int2 cx, Boolean chunk)
 		bwidth = bptr->getwidth(NULL, x);
 	}
 
-	return bptr->GetCursorIndex(x, cx, chunk, bptr == lastblock);
+	return bptr->GetCursorIndex(x, cx, chunk, bptr == lastblock);*/
+    
+    // BIDIRECTIONAL SUPPORT -
+    //  Blocks cannot be assumed to be in visual order
+    
+    // TODO: when cx > line width, return the last block in visual order
+    
+    MCBlock *bptr = firstblock;
+    while (bptr != lastblock)
+    {
+        if (cx >= bptr->getorigin() && cx < bptr->getorigin() + bptr->getwidth())
+        {
+            // This is the block we want
+            break;
+        }
+        
+        bptr = bptr->next();
+    }
+    
+    return bptr->GetCursorIndex(cx, chunk, bptr == lastblock);
 }
 
 uint2 MCLine::getwidth()
@@ -426,4 +440,124 @@ uint2 MCLine::getdescent()
 void MCLine::setwidth(uint2 p_new_width)
 {
 	width = p_new_width;
+}
+
+void MCLine::ResolveDisplayOrder()
+{
+    // Count the number of blocks in the line
+    uindex_t t_block_count;
+    t_block_count = 1;
+    MCBlock *bptr;
+    bptr = firstblock;
+    while (bptr != lastblock)
+    {
+        t_block_count++;
+        bptr = bptr->next();
+    }
+    
+    // Create an array to store the blocks in visual order
+    MCAutoArray<MCBlock *> t_visual_order;
+    /* UNCHECKED */ t_visual_order.New(t_block_count);
+    
+    // Initialise the visual order to be the logical order. Also take this
+    // opportunity to find the highest and lowest direction level in the line.
+    uint8_t t_max_level, t_min_level;
+    t_max_level = 0;
+    t_min_level = 255;
+    bptr = firstblock;
+    for (uindex_t i = 0; i < t_block_count; i++)
+    {
+        uint8_t t_level;
+        t_level = bptr->GetDirectionLevel();
+        if (t_level > t_max_level)
+            t_max_level = t_level;
+        
+        if (t_level < t_min_level)
+            t_min_level = t_level;
+        
+        t_visual_order[i] = bptr;
+        bptr = bptr->next();
+    }
+    
+    // Unicode Bidi Algorithm rule L2:
+    //  "From the highest level found in the text to the lowest odd level on each line,
+    //   including intermediate levels not actually present in the text, reverse any
+    //   contiguous sequence of characters that are at that level or higher."
+    //
+    // We don't actually reverse the text here, just the ordering of the blocks.
+    // To avoid creating a new stringref, a simple flag is used to indicate reversal.
+    
+    // Adjust the min level to be the minimum odd level
+    t_min_level += (t_min_level & 1) ? 0 : 1;
+    
+    for (uindex_t i = t_max_level; i > t_min_level; i--)
+    {
+        // Scan the block list for a block at this level or higher
+        uindex_t j = 0;
+        while (j < t_block_count)
+        {
+            // Not at the desired level; move to the next block
+            if (t_visual_order[j]->GetDirectionLevel() < i)
+            {
+                j++;
+                continue;
+            }
+            
+            // Scan for the last contigious block at or above this level
+            uindex_t t_length;
+            t_length = 0;
+            while (j + t_length < t_block_count && t_visual_order[j + t_length]->GetDirectionLevel() >= i)
+                t_length++;
+            
+            // Reverse the affected section of the visual order array
+            uindex_t t_even, t_pivot, t_stride;
+            t_even = 1 - (t_length & 1);
+            t_stride = t_length >> 1;
+            t_pivot = j + t_stride;
+            while (t_stride > 0)
+            {
+                uindex_t t_low, t_high;
+                t_low = t_pivot - t_stride;
+                t_high = t_pivot + t_stride - t_even;
+                
+                // TODO: toggle the "reversed" flag on the block
+                
+                MCBlock *temp = t_visual_order[t_low];
+                t_visual_order[t_low] = t_visual_order[t_high];
+                t_visual_order[t_high] = t_visual_order[t_low];
+                
+                t_stride--;
+            }
+            
+            // This run of blocks has been reversed
+            j += t_length;
+        }
+    }
+    
+    // The blocks are now in visual order. Calculate their positions (and also
+    // the width of this line). A second pass will be needed to resolve the
+    // offsets to be used when calculating tabstops.
+    for (uindex_t i = 0; i < t_block_count; i++)
+    {
+        bptr = t_visual_order[i];
+        setscents(bptr);
+        bptr -> setorigin(width);
+        width += bptr -> getwidth(NULL);
+    }
+    
+    // Tabs are always done using the dominant paragraph direction
+    bool t_para_is_rtl;
+    t_para_is_rtl = parent->getbasetextdirection() == kMCFieldTextDirectionRTL;
+    
+    uint2 t_tabpos = (t_para_is_rtl) ? width : 0;
+    
+    // Tell each block what pixel offset it should use when calculating tabstops
+    for (uindex_t i = 0; i < t_block_count; i++)
+    {
+        bptr -> settabpos(t_tabpos);
+        if (t_para_is_rtl)
+            t_tabpos -= bptr->getwidth(NULL);
+        else
+            t_tabpos += bptr->getwidth(NULL);
+    }
 }

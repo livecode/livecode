@@ -52,13 +52,13 @@ int32_t MCFontGetAscent(MCFontRef font);
 int32_t MCFontGetDescent(MCFontRef font);
 
 typedef void (*MCFontBreakTextCallback)(MCFontRef font, MCStringRef p_text, MCRange p_range, void *ctxt);
-void MCFontBreakText(MCFontRef font, MCStringRef p_text, MCRange p_range, MCFontBreakTextCallback callback, void *callback_data);
+void MCFontBreakText(MCFontRef font, MCStringRef p_text, MCRange p_range, MCFontBreakTextCallback callback, void *callback_data, bool p_rtl);
 
 int32_t MCFontMeasureText(MCFontRef font, MCStringRef p_text);
 int32_t MCFontMeasureTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range);
 
 void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCFontRef font);
-void MCFontDrawTextSubstring(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef font);
+void MCFontDrawTextSubstring(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef font, bool p_rtl);
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 text_style);
 uint16_t MCFontStyleToTextStyle(MCFontStyle font_style);

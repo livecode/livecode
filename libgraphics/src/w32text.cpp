@@ -531,9 +531,11 @@ static void __MCGContextDrawPlatformTextIdeal(MCGContextRef self, const unichar_
 
 // MW-2013-11-07: [[ Bug 11393 ]] What codepath we use depends on whether we are
 //   using ideal metrics or not.
-void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont& p_font)
+void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont& p_font, bool p_rtl)
 {
-	if (p_font . ideal)
+	// TODO: RTL
+    
+    if (p_font . ideal)
 	{
 		__MCGContextDrawPlatformTextIdeal(self, p_text, p_length, p_location, p_font);
 		return;

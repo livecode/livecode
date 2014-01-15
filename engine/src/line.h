@@ -60,7 +60,7 @@ public:
 		r_last = lastblock;
 	}
 	
-	//////////
+    //////////
 	
 	void GetRange(findex_t &r_index, findex_t &r_length);
 	findex_t GetOffset();
@@ -102,6 +102,12 @@ public:
 	{
 		return (MCLine *)MCDLlist::remove((MCDLlist *&)list);
 	}
+    
+private:
+    
+    ////////// BIDIRECTIONAL SUPPORT
+    
+    void ResolveDisplayOrder();
 };
 
 #endif
