@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "sserialize_osx.h"
 
 #include "graphicscontext.h"
+#include "debug.h"
 
 #include <cups/ppd.h>
 #include <pwd.h>
@@ -1239,8 +1240,19 @@ static OSStatus OSX_PMSessionGetCGGraphicsContext(PMPrintSession p_session, CGCo
 
 static OSStatus OSX_PMSessionBeginCGDocument(PMPrintSession p_session, PMPrintSettings p_settings, PMPageFormat p_format)
 {
-	if (&PMSessionBeginCGDocument != NULL)
-		return PMSessionBeginCGDocument(p_session, p_settings, p_format);
+    // AL-2014-01-15: [[ Bug 9940 ]] The dialog that opens here is modal, thereby preventing
+    // further action in the debugger. So if we are debugging, use the NoDialog version.
+    
+    if (MCtrace || MCnbreakpoints)
+    {
+        if (&PMSessionBeginCGDocumentNoDialog != NULL)
+            return PMSessionBeginCGDocumentNoDialog(p_session, p_settings, p_format);
+    }
+    else
+    {
+        if (&PMSessionBeginCGDocument != NULL)
+            return PMSessionBeginCGDocument(p_session, p_settings, p_format);
+    }
 	
 	CFStringRef t_context_strings[1];
 	t_context_strings[0] = kPMGraphicsContextCoreGraphics;
