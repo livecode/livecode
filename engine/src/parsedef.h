@@ -248,7 +248,10 @@ enum Factor_rank {
 
 enum File_unit {
     FU_UNDEFINED,
+    FU_BYTE,
     FU_CHARACTER,
+    FU_CODEPOINT,
+    FU_CODEUNIT,
     FU_INT1,
     FU_INT2,
     FU_INT4,

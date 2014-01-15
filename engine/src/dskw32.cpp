@@ -1008,8 +1008,8 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
                 MCS_seterrno(GetLastError());
                 /* RESULT */ //MCresult->sets("can't delete value");
 				r_error = MCSTR("can't delete value");
-                return true;
             }
+            return true;
         }
         else
         {
@@ -3675,11 +3675,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			return false;
 		}
 
-		MCAutoStringRef t_short_path;
-		if (!MCStringCreateWithChars(t_buffer.Ptr(), t_result, &t_short_path))
-			return false;
-
-		return MCS_pathfromnative(*t_short_path, r_short_path);
+		return MCStringCreateWithChars(t_buffer.Ptr(), t_result, r_short_path);
     }
     
 	virtual bool Shell(MCStringRef p_command, MCDataRef& r_data, int& r_retcode)
@@ -5181,7 +5177,7 @@ int MCS_windows_elevation_bootstrap_main(HINSTANCE hInstance, HINSTANCE hPrevIns
 		siStartInfo.hStdInput = t_fromparent_read;
 		siStartInfo.hStdOutput = t_toparent_write;
 		siStartInfo.hStdError = t_toparent_write_dup;
-		if (CreateProcessW(NULL, (LPWSTR)t_cmd_line, NULL, NULL, TRUE, CREATE_NEW_CONSOLE | CREATE_SUSPENDED, t_env_strings, NULL, &siStartInfo, &piProcInfo))
+		if (CreateProcessW(NULL, (LPWSTR)t_cmd_line, NULL, NULL, TRUE, CREATE_UNICODE_ENVIRONMENT | CREATE_NEW_CONSOLE | CREATE_SUSPENDED, t_env_strings, NULL, &siStartInfo, &piProcInfo))
 		{
 			t_process_handle = piProcInfo . hProcess;
 			t_process_id = piProcInfo . dwProcessId;
