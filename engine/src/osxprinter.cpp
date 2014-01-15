@@ -1244,30 +1244,9 @@ static OSStatus OSX_PMSessionBeginCGDocument(PMPrintSession p_session, PMPrintSe
     // further action in the debugger. So if we are debugging, use the NoDialog version.
     
     if (MCtrace || MCnbreakpoints)
-    {
-        if (&PMSessionBeginCGDocumentNoDialog != NULL)
-            return PMSessionBeginCGDocumentNoDialog(p_session, p_settings, p_format);
-    }
+        return PMSessionBeginCGDocumentNoDialog(p_session, p_settings, p_format);
     else
-    {
-        if (&PMSessionBeginCGDocument != NULL)
-            return PMSessionBeginCGDocument(p_session, p_settings, p_format);
-    }
-	
-	CFStringRef t_context_strings[1];
-	t_context_strings[0] = kPMGraphicsContextCoreGraphics;
-	
-	CFArrayRef t_context_array;
-	t_context_array = CFArrayCreate(kCFAllocatorDefault, (const void **)t_context_strings, 1, &kCFTypeArrayCallBacks);
-	
-	OSStatus t_err;
-	t_err = PMSessionSetDocumentFormatGeneration(p_session, kPMDocumentFormatPDF, t_context_array, NULL);
-	CFRelease(t_context_array);
-	
-	if (t_err == noErr)
-		return PMSessionBeginDocument(p_session, p_settings, p_format);
-	
-	return t_err;
+        return PMSessionBeginCGDocument(p_session, p_settings, p_format);
 }
 
 static void OSX_CGContextAddRoundedRect(CGContextRef p_context, CGRect p_rect, float p_radius)
