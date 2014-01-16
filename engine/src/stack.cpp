@@ -133,9 +133,6 @@ MCStack::MCStack()
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
 	
-	// IM-2014-01-07: [[ StackScale ]]
-	m_scale_factor = 1.0;
-
 	cursoroverride = false ;
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
 
@@ -321,9 +318,6 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	// MW-2010-11-17: [[ Valgrind ]] Uninitialized value.
 	cursoroverride = false;
 
-	// IM-2014-01-07: [[ StackScale ]]
-	m_scale_factor = sref.getscalefactor();
-	
 	view_copy(sref);
 
 	mode_copy(sref);
@@ -1000,7 +994,10 @@ void MCStack::setrect(const MCRectangle &nrect)
 
 	// IM-2013-09-23: [[ FullscreenMode ]] Use view to determine adjusted stack size
 	MCRectangle t_new_rect;
-	t_new_rect = view_constrainstackviewport(nrect);
+	MCRectangle t_view_rect;
+	MCGAffineTransform t_transform;
+	// IM-2014-01-16: [[ StackScale ]] Get new rect size from view
+	view_calculate_viewports(nrect, t_new_rect, t_view_rect, t_transform);
 	
 	if (rect.x != t_new_rect.x || rect.y != t_new_rect.y)
 		state |= CS_BEEN_MOVED;
@@ -1028,6 +1025,11 @@ void MCStack::setrect(const MCRectangle &nrect)
 		}
 		else
 			setgeom();
+	}
+	else
+	{
+		// IM-2014-01-16: [[ StackView ]] Ensure view is updated with new stack rect
+		view_setstackviewport(nrect);
 	}
 	
 	// MW-2012-10-23: [[ Bug 10461 ]] Make sure we do this *after* the stack has been resized
@@ -1059,7 +1061,7 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			
 	// IM-2014-01-07: [[ StackScale ]] Add stack scalefactor property
 	case P_SCALE_FACTOR:
-		ep.setnvalue(getscalefactor());
+		ep.setnvalue(view_get_content_scale());
 		break;
 		
 	case P_LONG_ID:
@@ -1582,18 +1584,12 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			bool v_changed = (getextendedstate(ECS_FULLSCREEN) != t_bval);
 			if ( v_changed)
 			{
+				// IM-2014-01-16: [[ StackScale ]] Save the old rect here as view_setfullscreen() will update the stack rect
+				if (t_bval)
+					old_rect = rect;
+				
 				setextendedstate(t_bval, ECS_FULLSCREEN);
 				view_setfullscreen(t_bval);
-				
-				// MW-2012-10-04: [[ Bug 10436 ]] Use 'setrect' to change the rect
-				//   field.
-				if ( bval )
-					old_rect = rect ;
-				else if (( old_rect.width > 0 ) && ( old_rect.height > 0 ))
-					setrect(old_rect);
-				
-				if ( opened > 0 ) 
-					reopenwindow();
 			}
 		}
 	break;
@@ -1615,13 +1611,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			}
 
 			if (t_mode != view_getfullscreenmode())
-			{
 				view_setfullscreenmode(t_mode);
-				if (view_getfullscreen() && opened > 0)
-					// IM-2013-10-04: [[ FullscreenMode ]] Change the rect back to old_rect,
-					// rather than reopening the window.
-					setrect(old_rect);
-			}
 
 			if ((t_ideal_layout != getuseideallayout()) && opened)
 				purgefonts();
@@ -1645,7 +1635,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 				return ES_ERROR;
 			}
 			
-			setscalefactor(t_scale);
+			view_set_content_scale(t_scale);
 		}
 		break;
 			
@@ -2720,7 +2710,11 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 #else
 				&& externalfiles != NULL && !(state & CS_DELETE_STACK))
 #endif
+		{
+			// IM-2014-01-16: [[ StackScale ]] Ensure view has the current stack rect
+			view_setstackviewport(rect);
 			realize();
+		}
 	}
 
 	// MW-2009-01-28: [[ Bug ]] Card and stack parentScripts don't work.

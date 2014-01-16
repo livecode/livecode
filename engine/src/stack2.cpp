@@ -167,15 +167,9 @@ void MCStack::configure(Boolean user)
 #endif
 	Boolean beenchanged = False;
 	MCRectangle trect;
-	// IM-2013-09-30: [[ FullscreenMode ]] Use view methods for fullscreen stacks
-	if (view_getfullscreen())
-		trect = view_setstackviewport(old_rect);
-	else
-	{
-		// IM-2013-10-09: [[ FullscreenMode ]] Non-fullscreen stacks should use
-		// the whole view rect
-		trect = view_getrect();
-	}
+	// IM-2014-01-16: [[ StackScale ]] Get stack viewport from the view
+	trect = view_getstackviewport();
+	
 	if (trect.width != 0 && trect.height != 0
 	        && (trect.width != rect.width || trect.height != rect.height))
 	{
@@ -1640,15 +1634,14 @@ void MCStack::reopenwindow()
 	if (getstyleint(flags) != 0)
 		mode = (Window_mode)(getstyleint(flags) + WM_TOP_LEVEL_LOCKED);
 
-	// IM-2013-09-30: [[ FullscreenMode ]] Restore old rect when changing fullscreen modes
-	if (view_getfullscreen())
-		rect = old_rect;
-	
 	// MW-2011-08-18: [[ Redraw ]] Use global screen lock
 	MCRedrawLockScreen();
 	realize();
 	sethints();
-	setgeom();
+	
+	// IM-2014-01-16: [[ StackScale ]] Call configure to update the stack rect after fullscreen change
+	configure(True);
+	
 	MCRedrawUnlockScreen();
 
 	dirtywindowname();
@@ -1769,6 +1762,10 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	}
 	else
 		setparentwindow(parentptr->getw());
+	
+	// IM-2014-01-16: [[ StackScale ]] Ensure view has the current stack rect
+	view_setstackviewport(rect);
+	
 	if (window == DNULL)
 		realize();
 
@@ -2608,12 +2605,6 @@ MCGAffineTransform MCStack::gettransform(void) const
 	// IM-2013-10-11: [[ FullscreenMode ]] Add scroll offset to stack transform
 	t_transform = MCGAffineTransformMakeTranslation(0.0, -(MCGFloat)getscroll());
 	
-	// IM-2014-01-07: [[ StackScale ]] Concat stack scale factor to stack transform
-	MCGFloat t_scale;
-	t_scale = getscalefactor();
-	
-	t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeScale(t_scale, t_scale), t_transform);
-	
 	return t_transform;
 }
 
@@ -2708,26 +2699,6 @@ MCPoint MCStack::stacktogloballoc(const MCPoint &p_stackloc) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-MCGFloat MCStack::getscalefactor() const
-{
-	return m_scale_factor;
-}
-
-void MCStack::setscalefactor(MCGFloat p_scale)
-{
-	if (p_scale == m_scale_factor)
-		return;
-	
-	m_scale_factor = p_scale;
-	
-	if (getopened() && isvisible())
-	{
-		// IM-2014-01-07: [[ StackScale ]] call resize() to update the card geometry
-		resize(rect.width, rect.height);
-		dirtyall();
-	}
-}
 
 MCRectangle MCStack::getcardrect() const
 {
