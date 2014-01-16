@@ -489,21 +489,34 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 	MCAutoStringRef t_result;
 	bool t_success = true;
 
-    if (!MCStringIsNative(p_format))
-    {
-        ctxt.LegacyThrow(EE_FORMAT_BADSOURCE);
-        return;
-    }
-	const char *format = (const char*) MCStringGetNativeCharPtr(p_format);
+    MCAutoStringRefAsWString t_wide_string;
+    t_wide_string . Lock(p_format);
+
+    const unichar_t *t_pos = *t_wide_string;
+    const unichar_t *format = *t_wide_string;
 
 	t_success = MCStringCreateMutable(0, &t_result);
 
 	while (t_success && *format != '\0')
 	{
 		MCValueRef t_value = nil;
+
+        // All the unicode chars must be ignored from the format, and just copied
+        const unichar_t* t_start;
+        t_start = format;
+        while (*format && *format >= 256)
+            format++;
+
+        // Case in which a copy of unicode characters is needed
+        if (format != t_start)
+        {
+            t_success = MCStringAppendChars(*t_result, t_start, format - t_start);
+            continue;
+        }
+
 		if (*format == '\\')
 		{
-			char_t t_result_char = 0;
+            char_t t_result_char = 0;
 			switch (*++format)
 			{
 			case 'a':
@@ -540,48 +553,74 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 				t_result_char = '"';
 				break;
 			case 'x':
-				if (isxdigit(*++format))
-				{
-					char buffer[3];
-					char *end;
-					memcpy(buffer, format, 2);
-					buffer[2] = '\0';
-					t_result_char = (char)strtoul(buffer, (char **)&end, 16);
-					format += end - buffer - 1;
+                if (isxdigit(*++format))
+                {
+                    // The next 2 chars are supposed to be hexadecimal digits
+                    // MCNumberParseUnicodeChars expects a '0xFF' format to recognize a
+                    // hexadecimal input
+                    unichar_t t_hexa_num[5];
+                    t_hexa_num[0] = '0';
+                    t_hexa_num[1] = 'x';
+                    memcpy(&t_hexa_num[1], format, 2*sizeof(unichar_t));
+                    t_hexa_num[4] = '\0';
+
+                    MCAutoNumberRef t_number;
+                    /* UNCHECKED */ MCNumberParseUnicodeChars(t_hexa_num, 4, &t_number);
+
+                    t_result_char = MCNumberFetchAsUnsignedInteger(*t_number);
+                    format += 2;
 				}
 				break;
 			default:
-				if (isdigit((uint1)*format))
+                if (isdigit(*format))
 				{
-					const char *sptr = format;
-					while (isdigit((uint1)*format) && format - sptr < 3)
+                    const unichar_t *sptr = format;
+                    while (isdigit(*format) && format - sptr < 3)
 						t_result_char = (t_result_char << 3) + (*format++ - '0');
 					format--;
 				}
 				break;
 			}
-			t_success = MCStringAppendNativeChars(*t_result, &t_result_char, 1);
+            t_success = MCStringAppendNativeChar(*t_result, t_result_char);
 			format++;
 			continue;
 		}
 		else if (*format != '%')
 		{
-			const char *startptr = format;
+            const unichar_t *startptr = format;
 			while (*format && *format != '%' && *format != '\\')
 				format++;
-			t_success = MCStringAppendNativeChars(*t_result, (const char_t*)startptr, format - startptr);
+            t_success = MCStringAppendChars(*t_result, startptr, format - startptr);
 			continue;
 		}
 		else if (format[1] == '%')
 		{
-			t_success = MCStringAppendNativeChars(*t_result, (const char_t*)format, 1);
+            t_success = MCStringAppendChars(*t_result, format, 1);
 			format += 2;
 			continue;
 		}
 		else
-		{
-			char newFormat[40];
-			char *dptr = newFormat;
+        {
+            // We need to create a substring containing all the following non-unicode chars
+            // which much be parsed as a format.
+            const unichar_t* t_unicode_start;
+            t_unicode_start = format;
+
+            while (*format && *format < 256)
+                format++;
+
+            MCAutoStringRef t_substring;
+            MCAutoStringRefAsNativeChars t_auto_native;
+            char_t* t_native_format;
+            uindex_t t_cformat_length;
+            char_t* t_cstart;
+
+            /* UNCHECKED */ MCStringCreateWithChars(t_unicode_start, format - t_start, &t_substring);
+            /* UNCHECKED */ t_auto_native . Lock(*t_substring, t_native_format, t_cformat_length);
+            t_cstart = t_native_format;
+
+            char newFormat[40];
+            char *dptr = newFormat;
 
 			integer_t width = 0;
 			uinteger_t precision = 0;
@@ -590,16 +629,16 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 			uinteger_t whichValue = PTR_VALUE;
 			const char *end;
 
-			*dptr++ = *format++;
-			while (*format == '-' || *format == '#' || *format == '0'
-				|| *format == ' ' || *format == '+')
-				*dptr++ = *format++;
-			if (isdigit((uint1)*format))
+            *dptr++ = *t_native_format++;
+            while (*t_native_format == '-' || *t_native_format == '#' || *t_native_format == '0'
+                || *t_native_format == ' ' || *t_native_format == '+')
+                *dptr++ = *t_native_format++;
+            if (isdigit((uint1)*t_native_format))
 			{
-				width = strtol(format, (char **)&end, 10);
-				format = end;
+                width = strtol((const char*)t_native_format, (char **)&end, 10);
+                t_native_format = (char_t*)end;
 			}
-			else if (*format == '*')
+            else if (*t_native_format == '*')
 			{
 				if (!PopParam(p_params, p_param_count, t_value) || !ctxt.ConvertToInteger(t_value, width))
 				{
@@ -607,7 +646,7 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 					return;
 				}
 				t_value = nil;
-				format++;
+                t_native_format++;
 			}
 			if (width != 0)
 			{
@@ -615,14 +654,14 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 				while (*++dptr)
 					;
 			}
-			if (*format == '.')
-				*dptr++ = *format++;
-			if (isdigit((uint1)*format))
+            if (*t_native_format == '.')
+                *dptr++ = *t_native_format++;
+            if (isdigit((uint1)*t_native_format))
 			{
-				precision = strtoul(format, (char **)&end, 10);
-				format = end;
+                precision = strtoul((const char*)t_native_format, (char **)&end, 10);
+                t_native_format = (char_t*)end;
 			}
-			else if (*format == '*')
+            else if (*t_native_format == '*')
 			{
 				if (!PopParam(p_params, p_param_count, t_value) || !ctxt.ConvertToUnsignedInteger(t_value, precision))
 				{
@@ -630,7 +669,7 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 					return;
 				}
 				t_value = nil;
-				format++;
+                t_native_format++;
 			}
 			if (precision != 0)
 			{
@@ -638,17 +677,17 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 				while (*++dptr)
 					;
 			}
-			if (*format == 'l')
-				format++;
+            if (*t_native_format == 'l')
+                t_native_format++;
 			else
-				if (*format == 'h')
+                if (*t_native_format == 'h')
 				{
 					useShort = true;
-					*dptr++ = *format++;
+                    *dptr++ = *t_native_format++;
 				}
-			*dptr++ = *format;
+            *dptr++ = *t_native_format;
 			*dptr = 0;
-			switch (*format)
+            switch (*t_native_format)
 			{
 			case 'i':
 				dptr[-1] = 'd';
@@ -673,7 +712,7 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 				ctxt.LegacyThrow(EE_FORMAT_BADSOURCE);
 				return;
 			}
-			format++;
+            t_native_format++;
 			switch (whichValue)
 			{
 			case DOUBLE_VALUE:
@@ -705,11 +744,16 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 					return;
 				}
 
-                MCAutoPointer<char> temp;
-                    /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
-				t_success = MCStringAppendFormat(*t_result, newFormat, *temp);
+                MCAutoStringRefAsCString t_cstring;
+                t_success = t_cstring . Lock(*t_string);
+                if (t_success)
+                    t_success = MCStringAppendFormat(*t_result, newFormat, *t_cstring);
 				break;
 			}
+
+            // Update the position in the unicode format depending
+            // on what has been parsed
+            format = t_unicode_start + (t_native_format - t_cstart);
 		}
 	}
 

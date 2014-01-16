@@ -1266,11 +1266,12 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		
 		// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
 		//   works.
+        MCAutoStringRefAsNativeChars t_auto_native;
 		char_t *t_text;
-		uindex_t t_length;
+        uindex_t t_length;
 		uint4 t_nesting, t_min_nesting;
-        
-        MCStringConvertToNative(t_paragraph->GetInternalStringRef(), t_text, t_length);
+
+        t_auto_native . Lock(t_paragraph -> GetInternalStringRef(), t_text, t_length);
         
 		t_paragraph -> clearzeros();
 		tokenize(t_text, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
@@ -1278,9 +1279,7 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		t_old_nesting += t_state -> GetCommentDelta(t_line);
 		if (p_mutate)
 			t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
-		t_new_nesting = t_nesting;
-        
-        delete t_text;
+        t_new_nesting = t_nesting;
 	}
 
 	if (p_mutate)
@@ -1290,11 +1289,12 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 			
 			// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
 			//   works.
+            MCAutoStringRefAsNativeChars t_auto_native;
 			char_t *t_text;
 			uindex_t t_length;
 			uint4 t_nesting, t_min_nesting;
             
-            MCStringConvertToNative(t_paragraph->GetInternalStringRef(), t_text, t_length);
+            /* UNCHECKED */ t_auto_native . Lock(t_paragraph -> GetInternalStringRef(), t_text, t_length);
             
 			t_paragraph -> clearzeros();
 			tokenize(t_text, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
@@ -1304,9 +1304,7 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 			t_new_nesting = t_nesting;
 
 			t_paragraph = t_paragraph -> next();
-			t_line++;
-            
-            delete t_text;
+            t_line++;
 		}
 
 	// MW-2013-10-24: [[ FasterField ]] Rather than recomputing and redrawing all

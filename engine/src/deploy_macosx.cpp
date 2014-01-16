@@ -2580,11 +2580,11 @@ Exec_stat MCDeployExtractMacOSX(MCStringRef p_filename, MCStringRef p_segment, M
 	// Next just run the callback to get the offset of the section within the
 	// file.
 	MCDeployExtractContext t_context;
-    MCAutoPointer<char> t_section;
-    MCAutoPointer<char> t_segment;
+    MCAutoStringRefAsCString t_section;
+    MCAutoStringRefAsCString t_segment;
     
 	if (t_success)
-		t_success = MCStringConvertToCString(p_section, &t_section) && MCStringConvertToCString(p_segment, &t_segment);
+        t_success = t_section . Lock(p_section) && t_segment . Lock(p_segment);
     
     if (t_success)
     {

@@ -492,12 +492,15 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
                 {
 					MCAutoValueRef t_val;
 					MCAutoStringRef t_string;
-                    MCAutoPointer<char_t> t_cstring;
-                    uindex_t t_length;
+                    MCAutoStringRefAsNativeChars t_auto_native;
+                    char* t_native;
+                    uindex_t t_native_length;
+
 					MCdefaultstackptr->getcard()->eval(ctxt, *t_sptr, &t_val);
 					/* UNCHECKED */ ctxt.ConvertToString(*t_val, &t_string);
-                    MCStringConvertToNative(*t_string, &t_cstring, t_length);
-					AEPutParamPtr(reply, '----', typeChar, (char*)*t_cstring, t_length);
+                    /* UNCHECKED */ t_auto_native . Lock(t_string, t_native, t_native_length);
+
+                    AEPutParamPtr(reply, '----', typeChar, t_native, t_native_length);
 				}
 				delete sptr;
 			}
@@ -2942,10 +2945,13 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         errno = noErr;
         
         ResType rtype, type;
-        if (p_type != nil && MCStringIsNative(p_type))
+        MCAutoStringRefAsCString t_cstring;
+        /* UNCHECKED */ t_cstring . Lock(p_type);
+
+        if (p_type != nil)
         { //get the resource info specified by the resource type
             // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
-            rtype = MCSwapInt32HostToNetwork(*(uint32_t*)MCStringGetNativeCharPtr(p_type));
+            rtype = MCSwapInt32HostToNetwork(*(uint32_t*)*t_string);
             t_success = getResourceInfo(*t_list, rtype);
         }
         else

@@ -94,7 +94,7 @@ int main(int argc, char *argv[], char *envp[])
             MCresult -> eval(ctxt, &t_result);
             ctxt . ConvertToString(*t_result, &t_string);
             MCAutoStringRefAsSysString t_autostring;
-            t_autostring . Lock(*t_string);
+            /* UNCHECKED */ t_autostring . Lock(*t_string);
             fprintf(stderr, "Startup error - %s\n", *t_autostring);
 		}
 		exit(-1);

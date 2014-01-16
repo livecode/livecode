@@ -810,8 +810,8 @@ static bool MCDeploySignWindowsAddOpusInfo(const MCDeploySignParameters& p_param
 	if (t_success && p_params . description != nil)
     {
         MCAutoStringRefAsUTF8String t_utf8_string;
-        t_utf8_string . Lock(p_params . description);
-        t_success = MCDeployBuildSpcString(*t_utf8_string, false, t_opus -> description);
+        t_success = t_utf8_string . Lock(p_params . description)
+                && MCDeployBuildSpcString(*t_utf8_string, false, t_opus -> description);
     }
 	
 	if (t_success && p_params . url != nil)
@@ -1406,7 +1406,7 @@ bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_P
 #else
     MCAutoStringRefAsUTF8String t_private_key;
 #endif
-    t_private_key . Lock(p_filename);
+    t_success = t_private_key . Lock(p_filename);
 
 	// First try and open the input file
 	BIO *t_input;
@@ -1487,11 +1487,12 @@ bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_P
 		// Compute the passkey. This is done by taking the first 16 bytes
 		// of SHA1(salt & passphrase).
 		uint8_t t_passkey[EVP_MAX_KEY_LENGTH];
-		EVP_MD_CTX t_md;
-        MCAutoStringRefAsCString t_passphrase;
-        t_passphrase . Lock(p_passphrase);
+        EVP_MD_CTX t_md;
 		if (t_success && EVP_DigestInit(&t_md, EVP_sha1()))
-		{
+        {
+            MCAutoStringRefAsCString t_passphrase;
+            t_success = t_passphrase . Lock(p_passphrase);
+
 			EVP_DigestUpdate(&t_md, t_salt, t_header . salt_length);
             EVP_DigestUpdate(&t_md, *t_passphrase, strlen(*t_passphrase));
 			EVP_DigestFinal(&t_md, t_passkey, NULL);

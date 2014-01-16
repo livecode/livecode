@@ -237,15 +237,13 @@ void MCRevRelicense::exec_ctxt(MCExecContext& ctxt)
         return;
 	}
 	
-	if (MClicenseparameters . license_token == NULL || strlen(MClicenseparameters . license_token) == 0)
+    if (MClicenseparameters . license_token == NULL || MCStringIsEmpty(MClicenseparameters . license_token))
 	{
 		ctxt . SetTheResultToCString("no token");
 		return;
 	}
-	
-	MCAutoStringRef license_token_string;
-	/* UNCHECKED */ MCStringCreateWithCString(MClicenseparameters . license_token, &license_token_string);
-	if (!MCS_unlink(*license_token_string))
+
+    if (!MCS_unlink(MClicenseparameters . license_token))
 	{
 		ctxt . SetTheResultToCString("token deletion failed");
 		return;
@@ -1839,14 +1837,17 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
     bool t_case_sensitive = ctxt . GetCaseSensitive();
     MCValueRef t_value;
     MCStringRef t_string;
-    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("token"), t_value) && ctxt . ConvertToString(t_value, t_string))
-        MCStringConvertToCString(t_string, MClicenseparameters . license_token);
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("token"), t_value)
+            && ctxt . ConvertToString(t_value, t_string))
+        MClicenseparameters . license_token = MCValueRetain(t_string);
     
-    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("name"), t_value) && ctxt . ConvertToString(t_value, t_string))
-        MCStringConvertToCString(t_string, MClicenseparameters . license_name);
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("name"), t_value)
+            && ctxt . ConvertToString(t_value, t_string))
+        MClicenseparameters . license_name = MCValueRetain(t_string);
     
-    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("organization"), t_value) && ctxt . ConvertToString(t_value, t_string))
-        MCStringConvertToCString(t_string, MClicenseparameters . license_organization);
+    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("organization"), t_value)
+            && ctxt . ConvertToString(t_value, t_string))
+        MClicenseparameters . license_organization = MCValueRetain(t_string);
     
     MCValueRelease(t_string);
     
@@ -2082,7 +2083,7 @@ void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
     t_success = MCStringCreateMutable(0, &t_info);
     
     if (t_success)
-        t_success = MCStringAppendFormat(*t_info, "%s\n%s\n%s\n%u\n", MClicenseparameters . license_name, MClicenseparameters . license_organization, s_class_types[MClicenseparameters . license_class], MClicenseparameters . license_multiplicity);
+        t_success = MCStringAppendFormat(*t_info, "%@\n%@\n%s\n%u\n", MClicenseparameters . license_name, MClicenseparameters . license_organization, s_class_types[MClicenseparameters . license_class], MClicenseparameters . license_multiplicity);
     
     if (MClicenseparameters . deploy_targets != 0)
     {
@@ -2109,8 +2110,8 @@ void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
     }
     
     if (t_success)
-        if (MCStringAppendFormat(*t_info, "\n%s", MCnullmcstring == MClicenseparameters . license_token ? "Global" : "Local") &&
-            MCStringCopy(*t_info, r_info))
+        if (MCStringAppendFormat(*t_info, "\n%s", MCStringIsEmpty(MClicenseparameters . license_token) ? "Global" : "Local") &&
+                MCStringCopy(*t_info, r_info))
             return;
     
     ctxt . Throw();
