@@ -199,6 +199,9 @@ typedef struct __MCSysWindowHandle *MCSysWindowHandle;
 typedef struct __MCSysFontHandle *MCSysFontHandle;
 typedef struct __MCSysContextHandle *MCSysContextHandle;
 
+typedef class MCPlatformWindow *MCPlatformWindowRef;
+typedef class MCPlatformSurface *MCPlatformSurfaceRef;
+
 typedef void *MCColorTransformRef;
 typedef struct MCCursor *MCCursorRef;
 
@@ -717,7 +720,7 @@ typedef  _Drawable *        Pixmap;
 typedef  _Drawable *        Drawable;
 #elif defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
 
-typedef MCSysWindowHandle Window;
+typedef MCPlatformWindowRef Window;
 typedef MCSysWindowHandle Drawable;
 
 #else

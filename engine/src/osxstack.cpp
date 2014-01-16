@@ -256,7 +256,7 @@ CFBundleRef LoadBundle(const char *tpath)
 
 MCStack *MCStack::findstackd(Window w)
 {
-	if (w == DNULL)
+	if (w == NULL)
 		return NULL;
 	
 	if (w == window)
@@ -278,7 +278,7 @@ MCStack *MCStack::findstackd(Window w)
 MCStack *MCStack::findchildstackd(Window w,uint2 &ccount,uint2 cindex)
 {
 	Window pwindow = getparentwindow();
-	if (pwindow != DNULL && w == pwindow)
+	if (pwindow != NULL && w == pwindow)
 		if  (++ccount == cindex)
 			return this;
 	if (substacks != NULL)
@@ -287,7 +287,7 @@ MCStack *MCStack::findchildstackd(Window w,uint2 &ccount,uint2 cindex)
 		do
 		{
 			pwindow = tptr->getparentwindow();
-			if (pwindow != DNULL && w == pwindow)
+			if (pwindow != NULL && w == pwindow)
 			{
 				ccount++;
 				if (ccount == cindex)
@@ -598,7 +598,7 @@ void MCStack::setgeom()
 	
 	// MW-2009-09-25: Ensure things are the right size when doing
 	//   remote dialog/menu windows.
-	if (window == DNULL)
+	if (window == NULL)
 	{
 		// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
 		MCRedrawLockScreen();
@@ -848,7 +848,7 @@ void MCStack::stop_externals()
 
 void MCStack::openwindow(Boolean p_override)
 {
-	if (MCModeMakeLocalWindows() && window != DNULL)
+	if (MCModeMakeLocalWindows() && window != NULL)
 		MCscreen -> openwindow(window, p_override);
 }
 

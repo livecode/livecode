@@ -115,6 +115,12 @@ bool MCRegionOffset(MCRegionRef self, int32_t p_dx, int32_t p_dy)
 	return true;
 }
 
+bool MCRegionUnion(MCRegionRef self, MCRegionRef x, MCRegionRef y)
+{
+	UnionRgn((RgnHandle)x, (RgnHandle)y, (RgnHandle)self);
+	return true;
+}
+
 #ifdef OLD_GRAPHICS
 bool MCRegionCalculateMask(MCRegionRef self, int32_t w, int32_t h, MCBitmap*& r_mask)
 {

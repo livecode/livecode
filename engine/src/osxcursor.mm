@@ -30,6 +30,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <Cocoa/Cocoa.h>
 
+// COCOA-TODO: Move to platform.
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);

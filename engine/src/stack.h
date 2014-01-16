@@ -281,7 +281,7 @@ public:
 	// device interface
 
 	MCRectangle device_getwindowrect() const;
-	MCRectangle device_setgeom(const MCRectangle &p_rect);
+	void device_setgeom(const MCRectangle &p_rect);
 	
 	// IM-2013-08-29: [[ ResIndependence ]] add device-specific version of updatewindow.
 	//   device_updatewindow takes a region in device coordinates.
@@ -780,10 +780,7 @@ public:
 	void getstyle(uint32_t &wstyle, uint32_t &exstyle);
 	void constrain(intptr_t lp);
 #elif defined(_MAC_DESKTOP)
-	MCSysWindowHandle getrealwindow()
-	{
-		return window;
-	}
+	MCSysWindowHandle getrealwindow();
 	MCSysWindowHandle getqtwindow(void);
 	void showmenubar();
 	void getWinstyle(uint32_t &wstyle, uint32_t &wclass);

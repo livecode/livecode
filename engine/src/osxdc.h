@@ -43,6 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define fixmaskrop(a) (a)
 #define fixmaskcolor(a) (a)
 
+#if OLD_MAC
 enum Mac_platform {
     MP_68K,
     MP_POWERPC
@@ -567,4 +568,6 @@ private:
 	void open_colormapping(void);
 	void close_colormapping(void);
 };
+#endif
+
 #endif

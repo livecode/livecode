@@ -1410,7 +1410,7 @@ MCStack *MCDispatch::findchildstackd(Window w,uint2 cindex)
 
 MCStack *MCDispatch::findstackd(Window w)
 {
-	if (w == DNULL)
+	if (w == NULL)
 		return NULL;
 	
 	if (stacks != NULL)

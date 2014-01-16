@@ -867,7 +867,9 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
 //  REFACTORED FROM GLOBALS.CPP
 //
 
+#ifdef OLD_MAC
 MCUIDC *MCCreateScreenDC(void)
 {
 	return new MCScreenDC;
 }
+#endif

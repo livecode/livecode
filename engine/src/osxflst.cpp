@@ -42,6 +42,8 @@ typedef struct _x2MacFont
 }
 X2MacFontTable;
 
+extern WindowPtr MCMacGetInvisibleWindow(void);
+
 static X2MacFontTable XMfonts[MAX_XFONT2MACFONT] = { // X to Mac font table
             { "Charter", "Courier" },
             { "Clean", "Courier" },
@@ -99,8 +101,8 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size, uint2 style)
 	CGrafPtr oldport;
 	GDHandle olddevice;
 	GetGWorld(&oldport, &olddevice);
-	MCScreenDC *pms = (MCScreenDC *)MCscreen;
-	SetGWorld(GetWindowPort(pms->getinvisiblewin()), GetMainDevice());
+	//MCScreenDC *pms = (MCScreenDC *)MCscreen;
+	SetGWorld(GetWindowPort(MCMacGetInvisibleWindow()), GetMainDevice());
 	TextFont(ffamilyid);
 
 	Style tstyle = 0;

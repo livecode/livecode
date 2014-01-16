@@ -503,7 +503,7 @@ Window MCStacklist::restack(MCStack *sptr)
 		if (bottompalette != NULL)
 			return bottompalette->getstack()->getwindow();
 	}
-	return DNULL;
+	return NULL;
 }
 
 void MCStacklist::restartidle()

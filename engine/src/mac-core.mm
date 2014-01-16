@@ -1,0 +1,531 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+#include <Cocoa/Cocoa.h>
+
+#include "core.h"
+#include "typedefs.h"
+#include "platform.h"
+#include "platform-internal.h"
+
+#include "mac-internal.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+@implementation com_runrev_livecode_MCApplicationDelegate
+
+//////////
+
+- (id)initWithArgc:(int)argc argv:(char**)argv envp:(char **)envp
+{
+	self = [super init];
+	if (self == nil)
+		return nil;
+	
+	m_argc = argc;
+	m_argv = argv;
+	m_envp = envp;
+	
+	return self;
+}
+
+//////////
+
+- (NSError *)application:(NSApplication *)application willPresentError:(NSError *)error
+{
+}
+
+//////////
+
+- (BOOL)applicationShouldHandleReopen:(NSApplication *)sender hasVisibleWindows:(BOOL)flag
+{
+	return NO;
+}
+
+//////////
+
+- (void)applicationWillFinishLaunching: (NSNotification *)notification
+{
+}
+
+- (void)applicationDidFinishLaunching: (NSNotification *)notification
+{
+	// Dispatch the startup callback.
+	int t_error_code;
+	char *t_error_message;
+	MCPlatformCallbackSendApplicationStartup(m_argc, m_argv, m_envp, t_error_code, t_error_message);
+	
+	// If the error code is non-zero, startup failed so quit.
+	if (t_error_code != 0)
+	{
+		// If the error message is non-nil, report it in a suitable way.
+		if (t_error_message!= nil)
+		{
+			fprintf(stderr, "Startup error - %s\n", t_error_message);
+			free(t_error_message);
+		}
+			
+		// Now exit the application with the appropriate code.
+		exit(t_error_code);
+	}
+
+	// We started up successfully, so queue the root runloop invocation
+	// message.
+	[self performSelector: @selector(runMainLoop) withObject: nil afterDelay: 0];
+}
+
+- (void)runMainLoop
+{
+	MCPlatformCallbackSendApplicationRun();
+	[NSApp terminate: self];
+}
+
+//////////
+
+// This is sent when the last window closes - as LiveCode apps are expected
+// to control termination (via quit), we always say 'NO' don't close.
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
+{
+	return NO;
+}
+
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
+{
+	// There is an NSApplicationTerminateReplyLater result code which will place
+	// the runloop in a modal loop for exit dialogs. We'll try the simpler
+	// option for now of just sending the callback and seeing what AppKit does
+	// with the (eventual) event loop that will result...
+	bool t_terminate;
+	MCPlatformCallbackSendApplicationShutdownRequest(t_terminate);
+	
+	if (t_terminate)
+		return NSTerminateNow;
+	
+	return NSTerminateCancel;
+}
+
+- (void)applicationWillTerminate:(NSNotification *)notification
+{
+	// Dispatch the shutdown callback.
+	int t_exit_code;
+	MCPlatformCallbackSendApplicationShutdown(t_exit_code);
+	
+	// Now exit the application with the appropriate code.
+	exit(t_exit_code);
+}
+
+// Dock menu handling.
+- (NSMenu *)applicationDockMenu:(NSApplication *)sender
+{
+	return nil;
+}
+
+//////////
+
+- (void)applicationWillHide:(NSNotification *)notification;
+{
+}
+
+- (void)applicationDidHide:(NSNotification *)notification;
+{
+}
+
+- (void)applicationWillUnhide:(NSNotification *)notification;
+{
+}
+
+- (void)applicationDidUnhide:(NSNotification *)notification
+{
+}
+
+//////////
+
+- (void)applicationWillBecomeActive:(NSNotification *)notification
+{
+}
+
+- (void)applicationDidBecomeActive:(NSNotification *)notification
+{
+}
+
+- (void)applicationWillResignActive:(NSNotification *)notification
+{
+}
+
+- (void)applicationDidResignActive:(NSNotification *)notification
+{
+}
+
+//////////
+
+- (void)applicationWillUpdate:(NSNotification *)notification
+{
+}
+
+- (void)applicationDidUpdate:(NSNotification *)notification
+{
+}
+
+//////////
+
+- (void)applicationDidChangeScreenParameters:(NSNotification *)notification
+{
+}
+
+//////////
+
+- (BOOL)application:(NSApplication *)sender openFile:(NSString *)filename
+{
+	return NO;
+}
+
+- (void)application:(NSApplication *)sender openFiles:(NSArray *)filenames
+{
+	[NSApp replyToOpenOrPrint: NSApplicationDelegateReplyCancel];
+}
+
+- (BOOL)application:(NSApplication *)sender openTempFile:(NSString *)filename
+{
+	return NO;
+}
+
+- (BOOL)applicationShouldOpenUntitledFile:(NSApplication *)sender
+{
+	return NO;
+}
+
+- (BOOL)applicationOpenUntitledFile:(NSApplication *)sender
+{
+	return NO;
+}
+
+- (BOOL)application:(id)sender openFileWithoutUI:(NSString *)filename
+{
+	return NO;
+}
+
+//////////
+
+- (NSApplicationPrintReply)application:(NSApplication *)application printFiles:(NSArray *)fileNames withSettings:(NSDictionary *)printSettings showPrintPanels:(BOOL)showPrintPanels
+{
+	return NSPrintingCancelled;
+}
+
+//////////
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *p_value)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCPlatformBreakWait(void)
+{
+	//NSLog(@"Application -> BreakWait()");
+	
+	// COCOA-TODO: Make this not leak!
+	[NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined
+										location:NSMakePoint(0, 0)
+								   modifierFlags:0
+									   timestamp:0
+									windowNumber:0
+										 context:NULL
+										 subtype:0
+										   data1:0
+										   data2:0]
+			 atStart:NO];
+}
+
+bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
+{
+	//NSLog(@"Application -> WaitForEvent(%lf, %d)", p_duration, p_blocking);
+	
+	NSAutoreleasePool *t_pool;
+	t_pool = [[NSAutoreleasePool alloc] init];
+	
+	NSEvent *t_event;
+	t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
+								 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
+									inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
+								   dequeue: YES];
+	
+	if (t_event != nil)
+		[NSApp sendEvent: t_event];
+	
+	[t_pool release];
+	
+	return t_event != nil;
+}
+
+bool MCPlatformGetAbortKeyPressed(void)
+{
+	return false;
+}
+
+bool MCPlatformGetTripleClickOccurred(void)
+{
+	return false;
+}
+
+bool MCPlatformGetMouseButtonState(uindex_t button)
+{
+	return false;
+}
+
+bool MCPlatformGetMouseClick(uindex_t button)
+{
+	return false;
+}
+
+void MCPlatformGetMousePosition(MCPoint& r_location)
+{
+}
+
+void MCPlatformSetMousePosition(MCPoint p_location)
+{
+}
+
+void MCPlatformGetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window)
+{
+	NSPoint t_loc_cocoa;
+	MCMacPlatformMapScreenMCPointToNSPoint(p_loc, t_loc_cocoa);
+	
+	NSInteger t_number;
+	t_number = [NSWindow windowNumberAtPoint: t_loc_cocoa belowWindowWithWindowNumber: 0];
+	
+	NSWindow *t_window;
+	t_window = [NSApp windowWithWindowNumber: t_number];
+	
+	if (t_window != nil &&
+		[[t_window delegate] isKindOfClass: [MCWindowDelegate class]])
+		r_window = [(MCWindowDelegate *)[t_window delegate] platformWindow];
+	else
+		r_window = nil;
+}
+
+uint32_t MCPlatformGetEventTime(void)
+{
+	return [[NSApp currentEvent] timestamp] * 1000.0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Our mouse handling code relies on getting a stream of mouse move messages
+// with screen co-ordinates, and mouse press messages indicating button state
+// changes. As we need to handle things like mouse grabbing, and windows popping
+// up and moving under the mouse we don't rely on enter/leave from the OS,
+// instead we do it ourselves to ensure we never get into unpleasant situations.
+
+// For this to work, we just need the OS to provide us with:
+//   - mouse press messages within our own windows
+//   - mouse move messages when the mouse moves over our windows *and* when
+//     the mouse is down and the mouse is outside our windows.
+
+// If this is true, then the mouse is currently grabbed so we should defer
+// switching active window until ungrabbed.
+static bool s_mouse_grabbed = false;
+
+// This is the currently active window (the one receiving mouse events).
+static MCPlatformWindowRef s_mouse_window = nil;
+
+// This is the current mask of buttons that are pressed.
+static uint32_t s_mouse_buttons = 0;
+
+// This is the window location in the mouse window that we last posted
+// a position event for.
+static MCPoint s_mouse_position = { INT16_MIN, INT16_MAX };
+
+// This is the last screen location we received a mouse move message for.
+static MCPoint s_mouse_screen_position;
+
+void MCPlatformGrabPointer(MCPlatformWindowRef p_window)
+{
+	// If we are grabbing for the given window already, do nothing.
+	if (s_mouse_grabbed && p_window == s_mouse_window)
+		return;
+	
+	// If the mouse window is already w, then just grab.
+	if (p_window == s_mouse_window)
+	{
+		s_mouse_grabbed = true;
+		return;
+	}
+	
+	// Otherwise do nothing - the mouse window must be w for us to grab.
+	// (If we don't have this rule, then strange things could happen with
+	//  mouse presses in different windows!).
+}
+
+void MCPlatformUngrabPointer(void)
+{
+	// If buttons are down, then ungrab will happen when they are released.
+	if (s_mouse_buttons != 0)
+		return;
+	
+	// Otherwise just turn off the grabbed flag.
+	s_mouse_grabbed = false;
+}
+
+void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
+{
+	bool t_state;
+	t_state = (s_mouse_buttons & (1 << p_button)) != 0;
+	
+	// If the state is not different from the new state, do nothing.
+	if (p_new_state == t_state)
+		return;
+	
+	// Update the state.
+	if (p_new_state)
+		s_mouse_buttons |= (1 << p_button);
+	else
+		s_mouse_buttons &= ~(1 << p_button);
+	
+	// If we are grabbed, and mouse buttons are zero, then ungrab.
+	if (s_mouse_buttons == 0)
+		s_mouse_grabbed = false;
+	
+	// If mouse buttons are non-zero, then grab.
+	if (s_mouse_buttons != 0)
+		s_mouse_grabbed = true;
+	
+	// Determine the press state - this can be down, up or release. If
+	// the new state is 'up', then we must dispatch a release message
+	// if the mouse location is not within the window.
+	if (p_new_state)
+		MCPlatformCallbackSendMouseDown(s_mouse_window, p_button);
+	else
+	{
+		MCPoint t_global_pos;
+		MCPlatformMapPointFromWindowToScreen(s_mouse_window, s_mouse_position, t_global_pos);
+		
+		Window t_new_mouse_window;
+		MCPlatformGetWindowAtPoint(t_global_pos, t_new_mouse_window);
+		
+		if (t_new_mouse_window == s_mouse_window)
+			MCPlatformCallbackSendMouseUp(s_mouse_window, p_button);
+		else
+			MCPlatformCallbackSendMouseRelease(s_mouse_window, p_button);
+	}
+}
+
+void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
+{
+	// First compute the window that should be active now.
+	MCPlatformWindowRef t_new_mouse_window;
+	if (s_mouse_grabbed)
+	{
+		// If the mouse is grabbed, the mouse window does not change.
+		t_new_mouse_window = s_mouse_window;
+	}
+	else
+	{
+		// If the mouse is not grabbed, then we must determine which of our
+		// window views we are now over.
+		MCPlatformGetWindowAtPoint(p_screen_loc, t_new_mouse_window);
+	}
+	
+	// If the mouse window has changed, then we must exit/enter.
+	if (t_new_mouse_window != s_mouse_window)
+	{
+		if (s_mouse_window != nil)
+			MCPlatformCallbackSendMouseLeave(s_mouse_window);
+		
+		if (t_new_mouse_window != nil)
+			MCPlatformCallbackSendMouseEnter(t_new_mouse_window);
+		
+		if (s_mouse_window != nil)
+			MCPlatformReleaseWindow(s_mouse_window);
+		
+		s_mouse_window = t_new_mouse_window;
+		
+		if (s_mouse_window != nil)
+			MCPlatformRetainWindow(s_mouse_window);
+	}
+	
+	// If we have a new mouse window, then translate screen loc and update.
+	if (s_mouse_window != nil)
+	{
+		MCPoint t_window_loc;
+		MCPlatformMapPointFromScreenToWindow(s_mouse_window, p_screen_loc, t_window_loc);
+		
+		if (t_window_loc . x != s_mouse_position . x ||
+			t_window_loc . y != s_mouse_position . y)
+		{
+			MCPlatformCallbackSendMouseMove(s_mouse_window, t_window_loc);
+			s_mouse_position = t_window_loc;
+		}
+	}
+	
+	// Regardless of whether we posted a mouse move, update the screen mouse position.
+	s_mouse_screen_position = p_screen_loc;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint p, NSPoint& r_point)
+{
+	r_point = NSMakePoint(p . x, 1440 - p . y);
+}
+
+void MCMacPlatformMapScreenNSPointToMCPoint(NSPoint p, MCPoint& r_point)
+{
+	r_point . x = p . x;
+	r_point . y = 1440 - p . y;
+}
+
+void MCMacPlatformMapScreenMCRectangleToNSRect(MCRectangle r, NSRect& r_rect)
+{
+	r_rect = NSMakeRect(r . x, 1440 - (r . y + r . height), r . width, r . height);
+}
+
+void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect r, MCRectangle& r_rect)
+{
+	r_rect = MCRectangleMake(r . origin . x, 1440 - (r . origin . y + r . size . height), r . size . width, r . size . height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int main(int argc, char *argv[], char *envp[])
+{
+	// COCOA-TODO: Elevated slave.
+	
+	NSAutoreleasePool *t_pool;
+	t_pool = [[NSAutoreleasePool alloc] init];
+	
+	// Create the normal NSApplication object.
+	NSApplication *t_application;
+	t_application = [NSApplication sharedApplication];
+	
+	// Setup our delegate
+	com_runrev_livecode_MCApplicationDelegate *t_delegate;
+	t_delegate = [[com_runrev_livecode_MCApplicationDelegate alloc] initWithArgc: argc argv: argv envp: envp];
+	
+	// Assign our delegate
+	[t_application setDelegate: t_delegate];
+	
+	// Run the application - this never returns!
+	[t_application run];
+	
+	// Drain the autorelease pool.
+	[t_pool release];
+	
+	return 0;
+}

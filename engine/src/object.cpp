@@ -1868,7 +1868,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 		stat = MCU_dofrontscripts(HT_MESSAGE, mess, paramptr);
 		Window mywindow = mystack->getw();
 		if ((stat == ES_NOT_HANDLED || stat == ES_PASS)
-		        && (MCtracewindow == DNULL
+		        && (MCtracewindow == NULL
 		            || memcmp(&mywindow, &MCtracewindow, sizeof(Window))))
 		{
 			// PASS STATE FIX

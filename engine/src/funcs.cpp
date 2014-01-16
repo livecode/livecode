@@ -3784,7 +3784,7 @@ Exec_stat MCMouseColor::eval(MCExecPoint &ep)
 	int2 mx, my;
 	MCscreen->querymouse(mx, my);
 	MCColor c;
-	MCscreen->dropper(DNULL, mx, my, &c);
+	MCscreen->dropper(NULL, mx, my, &c);
 	ep.setcolor(c);
 	return ES_NORMAL;
 #endif /* MCMouseColor */

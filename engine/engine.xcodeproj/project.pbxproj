@@ -27,7 +27,6 @@
 		4C10D85416BFB1DC00D25197 /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C10D76D16BF9BFA00D25197 /* graphicscontext.cpp */; };
 		4C4D3DF417E355B50012FB12 /* osxflst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880160B80A4F800200116 /* osxflst.cpp */; };
 		4C4D3E0117E358230012FB12 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DB3856E1714422200D3F102 /* Carbon.framework */; };
-		4C6F241E1529B33000C5AFB6 /* osxsnapshot.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4C6F241D1529B33000C5AFB6 /* osxsnapshot.mm */; };
 		4CC1535714E7FB91009FA80E /* paragrafattr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1535614E7FB91009FA80E /* paragrafattr.cpp */; };
 		4CC1536214E7FE1D009FA80E /* fieldstyledtext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */; };
 		4D00C6290CE1F27300341AD3 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D00C6280CE1F27300341AD3 /* SystemConfiguration.framework */; };
@@ -37,7 +36,6 @@
 		4D055BE01079F732007F6E13 /* libcore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D055BB51079F6E7007F6E13 /* libcore.a */; };
 		4D055BF31079F748007F6E13 /* libcore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D055BB51079F6E7007F6E13 /* libcore.a */; };
 		4D05B91013E06AB3001CD82A /* dskmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D05B90D13E06AAB001CD82A /* dskmain.cpp */; };
-		4D05B91113E06AB4001CD82A /* dskosxmain.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D05B90E13E06AAC001CD82A /* dskosxmain.mm */; };
 		4D17F4371042877000C49A3B /* externalv0.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D17F4351042877000C49A3B /* externalv0.cpp */; };
 		4D17F4381042877000C49A3B /* externalv1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D17F4361042877000C49A3B /* externalv1.cpp */; };
 		4D1AA1E5181556180075FC5E /* bitmapeffect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7B350FE120060009F91E /* bitmapeffect.cpp */; };
@@ -302,8 +300,6 @@
 		4D7740DD1226AB35001C9150 /* osxcisupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D5881B90B80C79600200116 /* osxcisupport.mm */; };
 		4D81A4C411171F6B008AE3F1 /* objectprops.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D81A4C111171F6A008AE3F1 /* objectprops.cpp */; };
 		4D81A4C511171F6B008AE3F1 /* variablevalue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D81A4C211171F6B008AE3F1 /* variablevalue.cpp */; };
-		4D81A4C611171F6B008AE3F1 /* osxcolor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D81A4C311171F6B008AE3F1 /* osxcolor.cpp */; };
-		4D81A4C911171FD6008AE3F1 /* osxcursor.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D81A4C811171FD6008AE3F1 /* osxcursor.mm */; };
 		4D83871E1678B2C9003BEC7C /* ibmp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D8387191678B2C9003BEC7C /* ibmp.cpp */; };
 		4D83871F1678B2C9003BEC7C /* image_rep_encoded.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D83871A1678B2C9003BEC7C /* image_rep_encoded.cpp */; };
 		4D8387201678B2C9003BEC7C /* image_rep_mutable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D83871B1678B2C9003BEC7C /* image_rep_mutable.cpp */; };
@@ -312,17 +308,9 @@
 		4D8589F9173AAA0900B20951 /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D8589AA173A856600B20951 /* uuid.cpp */; };
 		4D8B47990BE7B3240046CD2F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8B47960BE7B3240046CD2F /* Cocoa.framework */; };
 		4D8B479A0BE7B3240046CD2F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8B47960BE7B3240046CD2F /* Cocoa.framework */; };
-		4D8BEC4011B9379500DED42A /* osxicon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D8BEC3F11B9379500DED42A /* osxicon.cpp */; };
 		4D8BED0211B959F500DED42A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
 		4D8BED0311B95A0300DED42A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
 		4D8BED4811B95A1000DED42A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
-		4D9317A3185720810073ABA8 /* osxdc-cocoa.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D9317A2185720810073ABA8 /* osxdc-cocoa.mm */; };
-		4D9317A9185720E80073ABA8 /* osxdc-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D9317A8185720E80073ABA8 /* osxdc-legacy.cpp */; };
-		4D9317B7185728F10073ABA8 /* osxdc-carbon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D9317B6185728F10073ABA8 /* osxdc-carbon.cpp */; };
-		4D93185E18573ADD0073ABA8 /* osxdc-menu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D93185D18573ADD0073ABA8 /* osxdc-menu.mm */; };
-		4D93186018573AEF0073ABA8 /* osxdc-textinput.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D93185F18573AEF0073ABA8 /* osxdc-textinput.mm */; };
-		4D9318C0185749E70073ABA8 /* osxdc-window.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D9318BF185749E70073ABA8 /* osxdc-window.mm */; };
-		4D931B751857698B0073ABA8 /* osxdc-stack.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D931B741857698B0073ABA8 /* osxdc-stack.mm */; };
 		4D982B1213C1CDC10066119A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D982B1113C1CDC10066119A /* CoreServices.framework */; };
 		4D982B1913C1CDD20066119A /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D982B1813C1CDD20066119A /* ApplicationServices.framework */; };
 		4DAB7D280FF3A0100009F91E /* md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7D270FF3A0100009F91E /* md5.cpp */; };
@@ -376,6 +364,17 @@
 		4DE18D870B82296A0086DB92 /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5880850B80BDF000200116 /* QuickTime.framework */; };
 		4DE18D880B82296A0086DB92 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881200B80BF1E00200116 /* IOKit.framework */; };
 		4DE7ED0E13B33B7F002634F5 /* dskspec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE7ED0D13B33B7F002634F5 /* dskspec.cpp */; };
+		4DECC93C18856C7500463D52 /* mac-core.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DECC93B18856C7500463D52 /* mac-core.mm */; };
+		4DECC93F18856CB100463D52 /* desktop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DECC93E18856CB100463D52 /* desktop.cpp */; };
+		4DECC9AC18857A9100463D52 /* platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DECC9AB18857A9100463D52 /* platform.cpp */; };
+		4DECC9E71885803D00463D52 /* desktop-dc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DECC9E61885803D00463D52 /* desktop-dc.cpp */; };
+		4DECC9E91885808100463D52 /* desktop-stack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DECC9E81885808100463D52 /* desktop-stack.cpp */; };
+		4DECCA511885958300463D52 /* osxstack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D58801B0B80A4F800200116 /* osxstack.cpp */; };
+		4DECCA5B188595F500463D52 /* desktop-menu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DECCA5A188595F500463D52 /* desktop-menu.cpp */; };
+		4DECD0C81886E4FD00463D52 /* mac-window.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DECD0C71886E4FD00463D52 /* mac-window.mm */; };
+		4DECD1351886F0FF00463D52 /* mac-surface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DECD1341886F0FF00463D52 /* mac-surface.mm */; };
+		4DECD1FD1887F24E00463D52 /* platform-window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DECD1FC1887F24E00463D52 /* platform-window.cpp */; };
+		4DECD26E188807E400463D52 /* platform-surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DECD26D188807E400463D52 /* platform-surface.cpp */; };
 		4DEE2A8D0FDE42710009423C /* aclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E870B8096FD00200116 /* aclip.cpp */; };
 		4DEE2A8E0FDE42710009423C /* answer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E730B8096FD00200116 /* answer.cpp */; };
 		4DEE2A8F0FDE42710009423C /* ask.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E5C0B8096FD00200116 /* ask.cpp */; };
@@ -448,14 +447,10 @@
 		4DEE2AD80FDE42710009423C /* operator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E340B8096FD00200116 /* operator.cpp */; };
 		4DEE2AD90FDE42710009423C /* osxans.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880190B80A4F800200116 /* osxans.mm */; };
 		4DEE2ADA0FDE42710009423C /* osxcoreimage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880140B80A4F800200116 /* osxcoreimage.cpp */; };
-		4DEE2ADB0FDE42710009423C /* osxclipboard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BD980CCF74C800D74FDB /* osxclipboard.cpp */; };
-		4DEE2AE30FDE42710009423C /* osxdnd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BE370CCF789000D74FDB /* osxdnd.cpp */; };
 		4DEE2AE40FDE42710009423C /* osxfiles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D03C2160BC5803900026EA7 /* osxfiles.cpp */; };
 		4DEE2AE50FDE42710009423C /* osxflst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880160B80A4F800200116 /* osxflst.cpp */; };
 		4DEE2AE60FDE42710009423C /* osxprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D2192420C63871D0027A96D /* osxprinter.cpp */; };
-		4DEE2AE70FDE42710009423C /* osxscript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BD990CCF74C800D74FDB /* osxscript.cpp */; };
 		4DEE2AE80FDE42710009423C /* osxspec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D58801C0B80A4F800200116 /* osxspec.cpp */; };
-		4DEE2AE90FDE42710009423C /* osxstack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D58801B0B80A4F800200116 /* osxstack.cpp */; };
 		4DEE2AEA0FDE42710009423C /* osxtheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880180B80A4F800200116 /* osxtheme.cpp */; };
 		4DEE2AEB0FDE42710009423C /* osxtransfer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BD9A0CCF74C800D74FDB /* osxtransfer.mm */; };
 		4DEE2AEC0FDE42710009423C /* paragraf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E690B8096FD00200116 /* paragraf.cpp */; };
@@ -499,7 +494,6 @@
 		4DF65E3310016337005A19CA /* capsule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DF65E2F10016337005A19CA /* capsule.cpp */; };
 		4DFD495313BA2B89008DB91F /* libcore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D055BB51079F6E7007F6E13 /* libcore.a */; };
 		4DFD495B13BA2BC0008DB91F /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DFD495A13BA2BC0008DB91F /* CoreFoundation.framework */; };
-		4DFDDAB71074D70900FAE527 /* eventqueue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFDDAB61074D70900FAE527 /* eventqueue.cpp */; };
 		4DFFC7E013DD8A91006233A4 /* syscfdate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7DE13DD8A91006233A4 /* syscfdate.cpp */; };
 		4DFFC7E113DD8A91006233A4 /* sysunxnetwork.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7DF13DD8A91006233A4 /* sysunxnetwork.cpp */; };
 		4DFFC7E713DD8AB9006233A4 /* objectpropsets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC7E613DD8AB9006233A4 /* objectpropsets.cpp */; };
@@ -1348,6 +1342,19 @@
 		4DE2AB01100CCA9300A69884 /* deploy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = deploy.h; path = src/deploy.h; sourceTree = "<group>"; };
 		4DE663070BF9C1E50084FE0B /* Standalone-Info.plist */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.plist.xml; name = "Standalone-Info.plist"; path = "rsrc/Standalone-Info.plist"; sourceTree = "<group>"; };
 		4DE7ED0D13B33B7F002634F5 /* dskspec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskspec.cpp; path = src/dskspec.cpp; sourceTree = "<group>"; };
+		4DECC93B18856C7500463D52 /* mac-core.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-core.mm"; path = "src/mac-core.mm"; sourceTree = "<group>"; };
+		4DECC93E18856CB100463D52 /* desktop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = desktop.cpp; path = src/desktop.cpp; sourceTree = "<group>"; };
+		4DECC94018856DB400463D52 /* platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = platform.h; path = src/platform.h; sourceTree = "<group>"; };
+		4DECC94218856FE000463D52 /* mac-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "mac-internal.h"; path = "src/mac-internal.h"; sourceTree = "<group>"; };
+		4DECC9A918857A3900463D52 /* platform-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "platform-internal.h"; path = "src/platform-internal.h"; sourceTree = "<group>"; };
+		4DECC9AB18857A9100463D52 /* platform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = platform.cpp; path = src/platform.cpp; sourceTree = "<group>"; };
+		4DECC9E61885803D00463D52 /* desktop-dc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "desktop-dc.cpp"; path = "src/desktop-dc.cpp"; sourceTree = "<group>"; };
+		4DECC9E81885808100463D52 /* desktop-stack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "desktop-stack.cpp"; path = "src/desktop-stack.cpp"; sourceTree = "<group>"; };
+		4DECCA5A188595F500463D52 /* desktop-menu.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "desktop-menu.cpp"; path = "src/desktop-menu.cpp"; sourceTree = "<group>"; };
+		4DECD0C71886E4FD00463D52 /* mac-window.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-window.mm"; path = "src/mac-window.mm"; sourceTree = "<group>"; };
+		4DECD1341886F0FF00463D52 /* mac-surface.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-surface.mm"; path = "src/mac-surface.mm"; sourceTree = "<group>"; };
+		4DECD1FC1887F24E00463D52 /* platform-window.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "platform-window.cpp"; path = "src/platform-window.cpp"; sourceTree = "<group>"; };
+		4DECD26D188807E400463D52 /* platform-surface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "platform-surface.cpp"; path = "src/platform-surface.cpp"; sourceTree = "<group>"; };
 		4DEE29F60FDE41BE0009423C /* libkernel.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libkernel.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DEE2B3D0FDE44510009423C /* mode_standalone.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mode_standalone.cpp; path = src/mode_standalone.cpp; sourceTree = "<group>"; };
 		4DEE2B3F0FDE44510009423C /* mode_development.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mode_development.cpp; path = src/mode_development.cpp; sourceTree = "<group>"; };
@@ -1837,6 +1844,19 @@
 				4D58801B0B80A4F800200116 /* osxstack.cpp */,
 				4D05B90E13E06AAC001CD82A /* dskosxmain.mm */,
 				4D931E5A185894D10073ABA8 /* osxdc-stack.h */,
+				4DECC94018856DB400463D52 /* platform.h */,
+				4DECC9AB18857A9100463D52 /* platform.cpp */,
+				4DECC9A918857A3900463D52 /* platform-internal.h */,
+				4DECD1FC1887F24E00463D52 /* platform-window.cpp */,
+				4DECD26D188807E400463D52 /* platform-surface.cpp */,
+				4DECC93E18856CB100463D52 /* desktop.cpp */,
+				4DECC9E61885803D00463D52 /* desktop-dc.cpp */,
+				4DECC9E81885808100463D52 /* desktop-stack.cpp */,
+				4DECCA5A188595F500463D52 /* desktop-menu.cpp */,
+				4DECC94218856FE000463D52 /* mac-internal.h */,
+				4DECC93B18856C7500463D52 /* mac-core.mm */,
+				4DECD0C71886E4FD00463D52 /* mac-window.mm */,
+				4DECD1341886F0FF00463D52 /* mac-surface.mm */,
 			);
 			name = "Desktop - Mac";
 			sourceTree = "<group>";
@@ -3282,6 +3302,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D221F46171D632600E7E557 /* startupstack.cpp in Sources */,
+				4DECC9AC18857A9100463D52 /* platform.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3370,14 +3391,10 @@
 				4DEE2AD80FDE42710009423C /* operator.cpp in Sources */,
 				4DEE2AD90FDE42710009423C /* osxans.mm in Sources */,
 				4DEE2ADA0FDE42710009423C /* osxcoreimage.cpp in Sources */,
-				4DEE2ADB0FDE42710009423C /* osxclipboard.cpp in Sources */,
-				4DEE2AE30FDE42710009423C /* osxdnd.cpp in Sources */,
 				4DEE2AE40FDE42710009423C /* osxfiles.cpp in Sources */,
 				4DEE2AE50FDE42710009423C /* osxflst.cpp in Sources */,
 				4DEE2AE60FDE42710009423C /* osxprinter.cpp in Sources */,
-				4DEE2AE70FDE42710009423C /* osxscript.cpp in Sources */,
 				4DEE2AE80FDE42710009423C /* osxspec.cpp in Sources */,
-				4DEE2AE90FDE42710009423C /* osxstack.cpp in Sources */,
 				4DEE2AEA0FDE42710009423C /* osxtheme.cpp in Sources */,
 				4DEE2AEB0FDE42710009423C /* osxtransfer.mm in Sources */,
 				4DEE2AEC0FDE42710009423C /* paragraf.cpp in Sources */,
@@ -3420,18 +3437,14 @@
 				4D17F4371042877000C49A3B /* externalv0.cpp in Sources */,
 				4D17F4381042877000C49A3B /* externalv1.cpp in Sources */,
 				4DC66D8B1045D41700D1CFA3 /* notify.cpp in Sources */,
-				4DFDDAB71074D70900FAE527 /* eventqueue.cpp in Sources */,
 				3C0A3CC410BAF6120074D630 /* iquantization.cpp in Sources */,
 				4D6A00F010C578C600FA48D2 /* customprinter.cpp in Sources */,
 				4DCFFD1C10CE8F5800FA2262 /* osxtextlayout.cpp in Sources */,
 				4DCFFD2E10CE927700FA2262 /* iquantize_new.cpp in Sources */,
 				4D81A4C411171F6B008AE3F1 /* objectprops.cpp in Sources */,
 				4D81A4C511171F6B008AE3F1 /* variablevalue.cpp in Sources */,
-				4D81A4C611171F6B008AE3F1 /* osxcolor.cpp in Sources */,
-				4D81A4C911171FD6008AE3F1 /* osxcursor.mm in Sources */,
 				3C03ED921134205A009DE406 /* socket_resolve.cpp in Sources */,
 				4D2A583D1198727F00135143 /* internal.cpp in Sources */,
-				4D8BEC4011B9379500DED42A /* osxicon.cpp in Sources */,
 				4D7740DD1226AB35001C9150 /* osxcisupport.mm in Sources */,
 				4DADCD5B12392EAF003CD17C /* sha1.cpp in Sources */,
 				4DB98626130C09D6008A03DC /* mcutility.cpp in Sources */,
@@ -3444,7 +3457,6 @@
 				4DFFC7E713DD8AB9006233A4 /* objectpropsets.cpp in Sources */,
 				4DFFC7EF13DD8AFC006233A4 /* name.cpp in Sources */,
 				4D05B91013E06AB3001CD82A /* dskmain.cpp in Sources */,
-				4D05B91113E06AB4001CD82A /* dskosxmain.mm in Sources */,
 				4DDB66591413993500E5C84C /* sysosxregion.cpp in Sources */,
 				4DDB666F14139FF500E5C84C /* tilecache.cpp in Sources */,
 				4DDB66721413A02000E5C84C /* redraw.cpp in Sources */,
@@ -3455,7 +3467,6 @@
 				4D592DEB14EED23600EADBB6 /* fonttable.cpp in Sources */,
 				4D377262150785AF000B0EB0 /* fieldhtml.cpp in Sources */,
 				4D37727E150787EA000B0EB0 /* fieldrtf.cpp in Sources */,
-				4C6F241E1529B33000C5AFB6 /* osxsnapshot.mm in Sources */,
 				4D407C0C15F8D15600AA3ABC /* osxscriptold.cpp in Sources */,
 				4DCB65721653B2F700E438E6 /* stackcache.cpp in Sources */,
 				4D83871E1678B2C9003BEC7C /* ibmp.cpp in Sources */,
@@ -3474,13 +3485,16 @@
 				E8988A8A17FDD5B700F640F4 /* stackview.cpp in Sources */,
 				4D1AA1E5181556180075FC5E /* bitmapeffect.cpp in Sources */,
 				E85130F4180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */,
-				4D9317A3185720810073ABA8 /* osxdc-cocoa.mm in Sources */,
-				4D9317A9185720E80073ABA8 /* osxdc-legacy.cpp in Sources */,
-				4D9317B7185728F10073ABA8 /* osxdc-carbon.cpp in Sources */,
-				4D93185E18573ADD0073ABA8 /* osxdc-menu.mm in Sources */,
-				4D93186018573AEF0073ABA8 /* osxdc-textinput.mm in Sources */,
-				4D9318C0185749E70073ABA8 /* osxdc-window.mm in Sources */,
-				4D931B751857698B0073ABA8 /* osxdc-stack.mm in Sources */,
+				4DECC93C18856C7500463D52 /* mac-core.mm in Sources */,
+				4DECC93F18856CB100463D52 /* desktop.cpp in Sources */,
+				4DECC9E71885803D00463D52 /* desktop-dc.cpp in Sources */,
+				4DECC9E91885808100463D52 /* desktop-stack.cpp in Sources */,
+				4DECCA511885958300463D52 /* osxstack.cpp in Sources */,
+				4DECCA5B188595F500463D52 /* desktop-menu.cpp in Sources */,
+				4DECD0C81886E4FD00463D52 /* mac-window.mm in Sources */,
+				4DECD1351886F0FF00463D52 /* mac-surface.mm in Sources */,
+				4DECD1FD1887F24E00463D52 /* platform-window.cpp in Sources */,
+				4DECD26E188807E400463D52 /* platform-surface.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
