@@ -467,9 +467,8 @@ void MCNativeTheme::getscrollbarrects(const MCWidgetInfo & winfo,
 		real8 range = sbinfo->endvalue - sbinfo->startvalue;
 		if (winfo.attributes & WTHEME_ATT_SBVERTICAL)
 		{
-            // AL-2014-01-16: [[ Bug 11677 ]] No need to make thumb disappear at specific width/height ratio
-			// if ( (sbinfo->thumbsize != 0 ) && srect.height > srect.width * 3)
-            if ( (sbinfo->thumbsize != 0 ) )
+            // AL-2014-01-16: [[ Bug 11677 ]] No need to make slider thumb disappear at specific width/height ratio
+			if (slider || ((sbinfo->thumbsize != 0 ) && srect.height > srect.width * 3))
 			{
 				sbthumbrect.x = srect.x + troughBorder;
 				sbthumbrect.width = trackwidth;
@@ -554,9 +553,8 @@ void MCNativeTheme::getscrollbarrects(const MCWidgetInfo & winfo,
 		}
 		else
 		{
-            // AL-2014-01-16: [[ Bug 11677 ]] No need to make thumb disappear at specific width/height ratio
-			//if ( (sbinfo->thumbsize != 0 ) && srect.width > srect.height * 3)
-            if ( (sbinfo->thumbsize != 0 ) )
+            // AL-2014-01-16: [[ Bug 11677 ]] No need to make slider thumb disappear at specific width/height ratio
+			if (slider || ((sbinfo->thumbsize != 0 ) && srect.width > srect.height * 3))
 			{
 				sbthumbrect.y = srect.y + troughBorder;
 				sbthumbrect.height = trackheight;
