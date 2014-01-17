@@ -45,9 +45,18 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// IM-2013-08-01: [[ ResIndependence ]] OSX implementation currently returns 1.0
+bool MCOSXGetScreenBackingScale(MCGFloat &r_scale);
+
+// IM-2014-01-17: [[ HiDPI ]] The backing scale can be used here if OS version is >= 10.7
 MCGFloat MCResGetSystemScale(void)
 {
+	if (MCmajorosversion >= 0x1070)
+	{
+		MCGFloat t_scale;
+		if (MCOSXGetScreenBackingScale(t_scale))
+			return t_scale;
+	}
+	
 	return 1.0;
 }
 

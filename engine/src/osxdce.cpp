@@ -58,6 +58,9 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& p_displays, u
 	uint32_t t_display_count;
 	t_display_count = 0;
 	
+	MCGFloat t_device_scale;
+	t_device_scale = MCResGetSystemScale();
+	
 	if (s_monitor_count != 0)
 	{
 		t_displays = s_monitor_displays;
@@ -90,18 +93,20 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& p_displays, u
 						t_index = t_current_index++;
 						
 					t_displays[t_index] . index = t_index;
-						
-					t_displays[t_index] . device_viewport . x = (*t_device) -> gdRect . left;
-					t_displays[t_index] . device_viewport . y = (*t_device) -> gdRect . top;
-					t_displays[t_index] . device_viewport . width = (*t_device) -> gdRect . right - (*t_device) -> gdRect . left;
-					t_displays[t_index] . device_viewport . height = (*t_device) -> gdRect . bottom - (*t_device) -> gdRect . top;
+					
+					MCRectangle t_logical_rect;
+					t_logical_rect = MCMacRectToMCRect((*t_device)->gdRect);
+					
+					// IM-2014-01-17: [[ HiDPI ]] Scale logical screen coords to device pixels
+					t_displays[t_index] . device_viewport = MCRectangleGetScaledBounds(t_logical_rect, t_device_scale);
 				
 					Rect t_workarea;
 					GetAvailableWindowPositioningBounds(t_device, &t_workarea);
-					t_displays[t_index] . device_workarea . x = t_workarea . left;
-					t_displays[t_index] . device_workarea . y = t_workarea . top;
-					t_displays[t_index] . device_workarea . width = t_workarea . right - t_workarea . left;
-					t_displays[t_index] . device_workarea . height = t_workarea . bottom - t_workarea . top;
+					
+					t_logical_rect = MCMacRectToMCRect(t_workarea);
+					
+					// IM-2014-01-17: [[ HiDPI ]] Scale logical screen coords to device pixels
+					t_displays[t_index] . device_workarea = MCRectangleGetScaledBounds(t_logical_rect, t_device_scale);
 					
 					HUnlock((Handle)t_device);
 				}
@@ -123,11 +128,14 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& p_displays, u
 		
 		MCU_set_rect(t_display . device_viewport, 0, 0, device_getwidth(), device_getheight());
 		GetAvailableWindowPositioningBounds(GetMainDevice(), &t_workarea);
+		
+		MCRectangle t_logical_rect;
+		t_logical_rect = MCMacRectToMCRect(t_workarea);
+		
 		t_display . index = 0;
-		t_display . device_workarea . x = t_workarea . left;
-		t_display . device_workarea . y = t_workarea . top;
-		t_display . device_workarea . width = t_workarea . right - t_workarea . left;
-		t_display . device_workarea . height = t_workarea . bottom - t_workarea . top;
+		
+		// IM-2014-01-17: [[ HiDPI ]] Scale logical screen coords to device pixels
+		t_display . device_workarea = MCRectangleGetScaledBounds(t_logical_rect, t_device_scale);
 		
 		t_displays = &t_display;
 		t_display_count = 1;
@@ -245,8 +253,13 @@ void MCScreenDC::device_querymouse(int2 &x, int2 &y)
 	Point mloc;
 	GetMouse(&mloc);      //get local mouse position
 	SetGWorld(oldport, olddevice);
-	x = mloc.h;
-	y = mloc.v;
+	
+	// IM-2014-01-17: [[ HiDPI ]] Scale logical screen coords to device pixels
+	MCGFloat t_scale;
+	t_scale = MCResGetSystemScale();
+	
+	x = mloc.h * t_scale;
+	y = mloc.v * t_scale;
 }
 
 static Boolean isKeyPressed(unsigned char *km, uint1 keycode)
