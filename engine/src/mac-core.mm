@@ -348,12 +348,30 @@ static MCPlatformWindowRef s_mouse_window = nil;
 // This is the current mask of buttons that are pressed.
 static uint32_t s_mouse_buttons = 0;
 
+// This is the number of successive clicks detected on the primary button.
+static uint32_t s_mouse_click_count = 0;
+
+// This is the button of the last click (mouseDown then mouseUp) that was
+// detected.
+static uint32_t s_mouse_last_click_button = 0;
+
+// This is the time of the last mouseUp, used to detect multiple clicks.
+static uint32_t s_mouse_last_click_time = 0;
+
+// This is the screen position of the last click, used to detect multiple
+// clicks.
+static MCPoint s_mouse_last_click_screen_position = { 0, 0 };
+
 // This is the window location in the mouse window that we last posted
 // a position event for.
 static MCPoint s_mouse_position = { INT16_MIN, INT16_MAX };
 
 // This is the last screen location we received a mouse move message for.
 static MCPoint s_mouse_screen_position;
+
+// COCOA-TODO: Clean up this external dependency.
+extern uint2 MCdoubledelta;
+extern uint2 MCdoubletime;
 
 void MCPlatformGrabPointer(MCPlatformWindowRef p_window)
 {
@@ -410,7 +428,28 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
 	// the new state is 'up', then we must dispatch a release message
 	// if the mouse location is not within the window.
 	if (p_new_state)
-		MCPlatformCallbackSendMouseDown(s_mouse_window, p_button);
+	{
+		// Get the time of the mouse press event.
+		uint32_t t_event_time;
+		t_event_time = MCPlatformGetEventTime();
+		
+		// If the click occured within the double click time and double click
+		// radius *and* if the button is the same as the last clicked button
+		// then increment the click count.
+		if (t_event_time - s_mouse_last_click_time < MCdoubletime &&
+			MCU_abs(s_mouse_last_click_screen_position . x - s_mouse_screen_position . x) < MCdoubledelta &&
+			MCU_abs(s_mouse_last_click_screen_position . y - s_mouse_screen_position . y) < MCdoubledelta &&
+			s_mouse_last_click_button == p_button)
+			s_mouse_click_count += 1;
+		else
+			s_mouse_click_count = 0;
+		
+		// Update the last click position / button.
+		s_mouse_last_click_button = p_button;
+		s_mouse_last_click_screen_position = s_mouse_screen_position;
+		
+		MCPlatformCallbackSendMouseDown(s_mouse_window, p_button, s_mouse_click_count);
+	}
 	else
 	{
 		MCPoint t_global_pos;
@@ -420,9 +459,22 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
 		MCPlatformGetWindowAtPoint(t_global_pos, t_new_mouse_window);
 		
 		if (t_new_mouse_window == s_mouse_window)
-			MCPlatformCallbackSendMouseUp(s_mouse_window, p_button);
+		{
+			// If this is the same button as the last mouseDown, then
+			// update the click time.
+			if (p_button == s_mouse_last_click_button)
+				s_mouse_last_click_time = MCPlatformGetEventTime();
+			
+			MCPlatformCallbackSendMouseUp(s_mouse_window, p_button, s_mouse_click_count);
+		}
 		else
+		{
+			// Any release causes us to cancel multi-click tracking.
+			s_mouse_click_count = 0;
+			s_mouse_last_click_time = 0;
+			
 			MCPlatformCallbackSendMouseRelease(s_mouse_window, p_button);
+		}
 	}
 }
 

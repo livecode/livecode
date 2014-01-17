@@ -190,12 +190,15 @@ void MCPlatformCallbackSendWindowUniconify(MCPlatformWindowRef window);
 void MCPlatformCallbackSendWindowFocus(MCPlatformWindowRef window);
 void MCPlatformCallbackSendWindowUnfocus(MCPlatformWindowRef window);
 
-void MCPlatformCallbackSendMouseDown(MCPlatformWindowRef window, uint32_t button);
-void MCPlatformCallbackSendMouseUp(MCPlatformWindowRef window, uint32_t button);
+void MCPlatformCallbackSendMouseDown(MCPlatformWindowRef window, uint32_t button, uint32_t count);
+void MCPlatformCallbackSendMouseUp(MCPlatformWindowRef window, uint32_t button, uint32_t count);
 void MCPlatformCallbackSendMouseRelease(MCPlatformWindowRef window, uint32_t button);
 void MCPlatformCallbackSendMouseEnter(MCPlatformWindowRef window);
 void MCPlatformCallbackSendMouseLeave(MCPlatformWindowRef window);
 void MCPlatformCallbackSendMouseMove(MCPlatformWindowRef window, MCPoint location);
+
+void MCPlatformCallbackSendMenuUpdate(MCPlatformMenuRef menu);
+void MCPlatformCallbackSendMenuSelect(MCPlatformMenuRef menu, uindex_t item);
 
 ////////////////////////////////////////////////////////////////////////////////
 

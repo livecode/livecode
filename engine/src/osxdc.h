@@ -23,6 +23,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "uidc.h"
 #include "osxflst.h"
 
+#include "desktop-dc.h"
+
+#if OLD_MAC
+
 #define kHICommandPreferences 'pref'
 
 #define XLOOKUPSTRING_SIZE 32
@@ -43,7 +47,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define fixmaskrop(a) (a)
 #define fixmaskcolor(a) (a)
 
-#if OLD_MAC
 enum Mac_platform {
     MP_68K,
     MP_POWERPC

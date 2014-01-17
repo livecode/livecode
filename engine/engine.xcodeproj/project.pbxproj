@@ -339,6 +339,7 @@
 		4DB386141714426200D3F102 /* libpcre.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7999171348CD000BCF78 /* libpcre.a */; };
 		4DB98626130C09D6008A03DC /* mcutility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DB98625130C09D6008A03DC /* mcutility.cpp */; };
 		4DC66D8B1045D41700D1CFA3 /* notify.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DC66D8A1045D41700D1CFA3 /* notify.cpp */; };
+		4DC6E30518896CFB00FD43C3 /* mac-menu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DC6E30418896CFB00FD43C3 /* mac-menu.mm */; };
 		4DCB65721653B2F700E438E6 /* stackcache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCB65711653B2F700E438E6 /* stackcache.cpp */; };
 		4DCFFD1C10CE8F5800FA2262 /* osxtextlayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCFFD1B10CE8F5800FA2262 /* osxtextlayout.cpp */; };
 		4DCFFD2E10CE927700FA2262 /* iquantize_new.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCFFD2D10CE927700FA2262 /* iquantize_new.cpp */; };
@@ -1262,6 +1263,7 @@
 		4DB968A5135DFDA900DCAE93 /* mblandroidtextlayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtextlayout.cpp; path = src/mblandroidtextlayout.cpp; sourceTree = "<group>"; };
 		4DB98625130C09D6008A03DC /* mcutility.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mcutility.cpp; path = src/mcutility.cpp; sourceTree = "<group>"; };
 		4DC66D8A1045D41700D1CFA3 /* notify.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = notify.cpp; path = src/notify.cpp; sourceTree = "<group>"; };
+		4DC6E30418896CFB00FD43C3 /* mac-menu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-menu.mm"; path = "src/mac-menu.mm"; sourceTree = "<group>"; };
 		4DC999C00D3BBA29003942CC /* rtf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = rtf.cpp; path = src/rtf.cpp; sourceTree = "<group>"; };
 		4DCA084D11E8DAC7005CF640 /* deploy_dmg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = deploy_dmg.cpp; path = src/deploy_dmg.cpp; sourceTree = "<group>"; };
 		4DCA5E6D0EB879AD005197A1 /* parentscript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = parentscript.cpp; path = src/parentscript.cpp; sourceTree = "<group>"; };
@@ -1355,6 +1357,7 @@
 		4DECD1341886F0FF00463D52 /* mac-surface.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-surface.mm"; path = "src/mac-surface.mm"; sourceTree = "<group>"; };
 		4DECD1FC1887F24E00463D52 /* platform-window.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "platform-window.cpp"; path = "src/platform-window.cpp"; sourceTree = "<group>"; };
 		4DECD26D188807E400463D52 /* platform-surface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "platform-surface.cpp"; path = "src/platform-surface.cpp"; sourceTree = "<group>"; };
+		4DECDC2518894CAA00463D52 /* desktop-dc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "desktop-dc.h"; path = "src/desktop-dc.h"; sourceTree = "<group>"; };
 		4DEE29F60FDE41BE0009423C /* libkernel.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libkernel.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DEE2B3D0FDE44510009423C /* mode_standalone.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mode_standalone.cpp; path = src/mode_standalone.cpp; sourceTree = "<group>"; };
 		4DEE2B3F0FDE44510009423C /* mode_development.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mode_development.cpp; path = src/mode_development.cpp; sourceTree = "<group>"; };
@@ -1850,6 +1853,7 @@
 				4DECD1FC1887F24E00463D52 /* platform-window.cpp */,
 				4DECD26D188807E400463D52 /* platform-surface.cpp */,
 				4DECC93E18856CB100463D52 /* desktop.cpp */,
+				4DECDC2518894CAA00463D52 /* desktop-dc.h */,
 				4DECC9E61885803D00463D52 /* desktop-dc.cpp */,
 				4DECC9E81885808100463D52 /* desktop-stack.cpp */,
 				4DECCA5A188595F500463D52 /* desktop-menu.cpp */,
@@ -1857,6 +1861,7 @@
 				4DECC93B18856C7500463D52 /* mac-core.mm */,
 				4DECD0C71886E4FD00463D52 /* mac-window.mm */,
 				4DECD1341886F0FF00463D52 /* mac-surface.mm */,
+				4DC6E30418896CFB00FD43C3 /* mac-menu.mm */,
 			);
 			name = "Desktop - Mac";
 			sourceTree = "<group>";
@@ -3495,6 +3500,7 @@
 				4DECD1351886F0FF00463D52 /* mac-surface.mm in Sources */,
 				4DECD1FD1887F24E00463D52 /* platform-window.cpp in Sources */,
 				4DECD26E188807E400463D52 /* platform-surface.cpp in Sources */,
+				4DC6E30518896CFB00FD43C3 /* mac-menu.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

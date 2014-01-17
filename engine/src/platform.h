@@ -94,6 +94,17 @@ enum MCPlatformPropertyType
 	
 	kMCPlatformPropertyTypeWindowStyle,
 	kMCPlatformPropertyTypeWindowMask,
+	
+	kMCPlatformPropertyTypeMenuRef,
+	kMCPlatformPropertyTypeAccelerator,
+	kMCPlatformPropertyTypeMenuItemHighlight,
+	kMCPlatformPropertyTypeMenuItemAction,
+};
+
+typedef uint32_t MCPlatformAccelerator;
+enum
+{
+	kMCPlatformAcceleratorNone,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -159,6 +170,64 @@ typedef class MCPlatformWindowMask *MCPlatformWindowMaskRef;
 void MCPlatformWindowMaskCreate(int32_t width, int32_t height, int32_t stride, void *bits, MCPlatformWindowMaskRef& r_mask);
 void MCPlatformWindowMaskRetain(MCPlatformWindowMaskRef mask);
 void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef mask);
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct MCPlatformMenu *MCPlatformMenuRef;
+
+enum MCPlatformMenuItemProperty
+{
+	kMCPlatformMenuItemPropertyUnknown,
+	
+	kMCPlatformMenuItemPropertyTitle,
+	kMCPlatformMenuItemPropertyTag,
+	kMCPlatformMenuItemPropertyAction,
+	kMCPlatformMenuItemPropertyAccelerator,
+	kMCPlatformMenuItemPropertyEnabled,
+	kMCPlatformMenuItemPropertySubmenu,
+	kMCPlatformMenuItemPropertyHighlight,
+};
+
+enum MCPlatformMenuItemHighlight
+{
+	kMCPlatformMenuItemHighlightNone,
+	kMCPlatformMenuItemHighlightTick,
+	kMCPlatformMenuItemHighlightDiamond,
+	kMCPlatformMenuItemHighlightBar,
+};
+
+enum MCPlatformMenuItemAction
+{
+	kMCPlatformMenuItemActionNone,
+	
+	kMCPlatformMenuItemActionQuit,
+};
+
+void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu);
+void MCPlatformRetainMenu(MCPlatformMenuRef menu);
+void MCPlatformReleaseMenu(MCPlatformMenuRef menu);
+
+void MCPlatformSetMenuTitle(MCPlatformMenuRef menu, const char *title);
+
+void MCPlatformCountMenuItems(MCPlatformMenuRef menu, uindex_t& r_count);
+
+void MCPlatformAddMenuItem(MCPlatformMenuRef menu, uindex_t where);
+void MCPlatformAddMenuSeparatorItem(MCPlatformMenuRef menu, uindex_t where);
+void MCPlatformRemoveMenuItem(MCPlatformMenuRef menu, uindex_t where);
+void MCPlatformRemoveAllMenuItems(MCPlatformMenuRef menu);
+
+void MCPlatformGetMenuParent(MCPlatformMenuRef menu, MCPlatformMenuRef& r_parent, uindex_t& r_index);
+
+void MCPlatformGetMenuItemProperty(MCPlatformMenuRef menu, uindex_t index, MCPlatformMenuItemProperty property, MCPlatformPropertyType type, void *r_value);
+void MCPlatformSetMenuItemProperty(MCPlatformMenuRef menu, uindex_t index, MCPlatformMenuItemProperty property, MCPlatformPropertyType type, const void *value);
+
+//////////
+
+void MCPlatformShowMenubar(void);
+void MCPlatformHideMenubar(void);
+
+void MCPlatformSetMenubar(MCPlatformMenuRef menu);
+void MCPlatformGetMenubar(MCPlatformMenuRef menu);
 
 ////////////////////////////////////////////////////////////////////////////////
 

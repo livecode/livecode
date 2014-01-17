@@ -1125,7 +1125,7 @@ public:
 
 	T*& operator & (void)
 	{
-		MCAssert(m_ptr == nil);
+		assert(m_ptr == nil);
 		return m_ptr;
 	}
 
@@ -1146,6 +1146,11 @@ public:
 		m_ptr = nil;
 	}
 
+	T*& PtrRef(void)
+	{
+		return m_ptr;
+	}
+	
 private:
 	T *m_ptr;
 };

@@ -296,7 +296,6 @@
 	
 //////////
 
-// COCOA-TODO: Improve dirty rect calc
 - (void)drawRect: (NSRect)dirtyRect
 {
 	MCMacPlatformWindow *t_window;
@@ -596,10 +595,12 @@ void MCMacPlatformWindow::DoUpdate(void)
 
 void MCMacPlatformWindow::DoIconify(void)
 {
+	[m_window_handle miniaturize: nil];
 }
 
 void MCMacPlatformWindow::DoUniconify(void)
 {
+	[m_window_handle deminiaturize: nil];
 }
 
 void MCMacPlatformWindow::DoMapContentRectToFrameRect(MCRectangle p_content, MCRectangle& r_frame)
@@ -663,6 +664,7 @@ void MCMacPlatformWindow::ComputeCocoaStyle(NSUInteger& r_cocoa_style)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// COCOA-TODO: Implement window masks.
 void MCPlatformWindowMaskCreate(int32_t p_width, int32_t p_height, int32_t p_stride, void *p_bits, MCPlatformWindowMaskRef& r_mask)
 {
 	r_mask = nil;

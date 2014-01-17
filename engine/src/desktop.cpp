@@ -126,8 +126,6 @@ void MCPlatformHandleWindowUnfocus(MCPlatformWindowRef p_window)
 ////////////////////////////////////////////////////////////////////////////////
 
 extern Boolean tripleclick;
-static uint32_t s_click_time = 0;
-static uint32_t s_click_count = 0;
 
 void MCPlatformHandleMouseEnter(MCPlatformWindowRef p_window)
 {
@@ -195,7 +193,7 @@ void MCPlatformHandleMouseMove(MCPlatformWindowRef p_window, MCPoint p_location)
 	}
 }
 
-void MCPlatformHandleMouseDown(MCPlatformWindowRef p_window, uint32_t p_button)
+void MCPlatformHandleMouseDown(MCPlatformWindowRef p_window, uint32_t p_button, uint32_t p_count)
 {
 	MCStack *t_stack;
 	t_stack = MCdispatcher -> findstackd(p_window);
@@ -209,13 +207,6 @@ void MCPlatformHandleMouseDown(MCPlatformWindowRef p_window, uint32_t p_button)
 	{
 		MCbuttonstate |= (1 << p_button);
 		
-		if (MCPlatformGetEventTime() - s_click_time < MCdoubletime &&
-			MCU_abs(MCclicklocx - MCmousex) < MCdoubledelta &&
-			MCU_abs(MCclicklocy - MCmousey) < MCdoubledelta)
-			s_click_count += 1;
-		else
-			s_click_count = 0;
-		
 		MCeventtime = MCPlatformGetEventTime();
 		MCclicklocx = MCmousex;
 		MCclicklocy = MCmousey;
@@ -224,18 +215,18 @@ void MCPlatformHandleMouseDown(MCPlatformWindowRef p_window, uint32_t p_button)
 		MCObject *t_target;
 		t_target = t_menu != nil ? t_menu : MCclickstackptr;
 		
-		tripleclick = s_click_count == 2;
+		tripleclick = p_count == 2;
 		
-		MCLog("MouseDown(%p, %d, %d)", t_target, p_button, s_click_count);
+		MCLog("MouseDown(%p, %d, %d)", t_target, p_button, p_count);
 		
-		if (s_click_count != 1)
+		if (p_count != 1)
 			t_target -> mdown(p_button + 1);
 		else
 			t_target -> doubledown(p_button + 1);
 	}
 }
 
-void MCPlatformHandleMouseUp(MCPlatformWindowRef p_window, uint32_t p_button)
+void MCPlatformHandleMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, uint32_t p_count)
 {
 	MCStack *t_stack;
 	t_stack = MCdispatcher -> findstackd(p_window);
@@ -251,14 +242,12 @@ void MCPlatformHandleMouseUp(MCPlatformWindowRef p_window, uint32_t p_button)
 		
 		MCeventtime = MCPlatformGetEventTime();
 		
-		s_click_time = MCeventtime;
-		
 		MCObject *t_target;
 		t_target = t_menu != nil ? t_menu : MCclickstackptr;
 		
-		MCLog("MouseUp(%p, %d, %d)", t_target, p_button, s_click_count);
+		MCLog("MouseUp(%p, %d, %d)", t_target, p_button, p_count);
 		
-		if (s_click_count != 1)
+		if (p_count != 1)
 			t_target -> mup(p_button + 1);
 		else
 			t_target -> doubleup(p_button + 1);
@@ -277,8 +266,6 @@ void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_butto
 	
 	if (MCmousestackptr == t_stack || t_menu != nil)
 	{
-		s_click_count = 0;
-		s_click_time = 0;
 		tripleclick = False;
 		
 		// If the press was 'released' i.e. cancelled then we stop messages, mup then

@@ -142,6 +142,9 @@ typedef int32_t index_t;
 #define INT64_MAX 0x7FFFFFFFFFFFFFFFLL
 #endif
 
+#define UINDEX_MIN UINT32_MIN
+#define UINDEX_MAX UINT32_MAX
+
 // Pointer defines
 
 // MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
