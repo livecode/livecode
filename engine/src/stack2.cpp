@@ -2314,22 +2314,21 @@ void MCStack::dirtyrect(const MCRectangle& p_dirty_rect)
 	if (curcard == nil)
 		return;
 
-	// Make sure the dirty rect falls within the card bounds.
-	MCRectangle t_actual_dirty_rect;
-	t_actual_dirty_rect = MCU_intersect_rect(curcard -> getrect(), p_dirty_rect);
-	if (MCU_empty_rect(t_actual_dirty_rect))
-		return;
+	// IM-2013-12-19: [[ ShowAll ]] clip the transformed dirty rect to the visible viewport
+	MCRectangle t_dirty_rect;
+	t_dirty_rect = MCRectangleGetTransformedBounds(p_dirty_rect, gettransform());
+	
+	t_dirty_rect = MCU_intersect_rect(view_getstackvisiblerect(), t_dirty_rect);
 
 	// Make sure the dirty rect falls within the windowshape bounds.
 	if (m_window_shape != nil)
-	{
-		t_actual_dirty_rect = MCU_intersect_rect(MCU_make_rect(0, 0, m_window_shape -> width, m_window_shape -> height), t_actual_dirty_rect);
-		if (MCU_empty_rect(t_actual_dirty_rect))
-			return;
-	}
+		t_dirty_rect = MCU_intersect_rect(MCU_make_rect(0, 0, m_window_shape -> width, m_window_shape -> height), t_dirty_rect);
 
+	if (MCU_empty_rect(t_dirty_rect))
+		return;
+	
 	MCRectangle t_view_rect;
-	t_view_rect = MCRectangleGetTransformedBounds(t_actual_dirty_rect, getviewtransform());
+	t_view_rect = MCRectangleGetTransformedBounds(t_dirty_rect, view_getviewtransform());
 	
 	view_dirty_rect(t_view_rect);
 }
@@ -2714,6 +2713,14 @@ MCPoint MCStack::stacktogloballoc(const MCPoint &p_stackloc) const
 	t_loc.y += t_view_rect.y;
 	
 	return t_loc;
+}
+
+MCRectangle MCStack::getvisiblerect(void)
+{
+	MCRectangle t_rect;
+	t_rect = view_getstackviewport();
+	
+	return MCRectangleGetTransformedBounds(t_rect, MCGAffineTransformInvert(gettransform()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
