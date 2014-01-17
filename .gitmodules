@@ -6,4 +6,4 @@
 	url = https://github.com/runrev/livecode-ide
 [submodule "thirdparty"]
 	path = thirdparty
-	url = https://github.com/runrev/livecode-thirdparty
+	url = https://github.com/runrevmichael/livecode-thirdparty
