@@ -159,6 +159,9 @@ public:
 	void redraw(Window w, MCRegionRef dirty_region);
 	MCFontStruct *loadfont(const MCString &fname, uint2 &size, uint2 style, Boolean printer);
 
+	// IM-2013-12-04: [[ PixelScale ]] Reset window size of all open stacks
+	void sync_stack_windows();
+	
 	// This method iterates through all stacks and ensures none have a reference
 	// to one of the ones in MCcursors.
 	void clearcursors(void);
@@ -200,6 +203,9 @@ public:
 	// Iterate through all stacks and substacks, invoking the callback for each one.
 	bool foreachstack(MCForEachStackCallback p_callback, void *p_state);
 
+	// Recreate the fontlist.
+	void flushfonts(void);
+	
 	MCStack *getstacks(void)
 	{
 		return stacks;

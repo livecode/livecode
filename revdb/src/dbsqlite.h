@@ -85,7 +85,7 @@ class DBConnection_SQLITE : public CDBConnection
 		void transBegin();
 		void transCommit();
 		void transRollback();
-		char *getErrorMessage();
+		char *getErrorMessage(Bool p_last);
 
 		int basicExec(const char *q, unsigned int *rows = 0);
 

@@ -172,6 +172,9 @@ public class Engine extends View implements EngineApi
 		{
 			public void onScreenOrientationChanged(int orientation)
 			{
+				// IM-2013-11-15: [[ Bug 10485 ]] Record the change in orientation
+				updateOrientation(orientation);
+				
 				doOrientationChanged(orientation);
 				if (m_wake_on_event)
 					doProcess(false);
@@ -1043,20 +1046,104 @@ public class Engine extends View implements EngineApi
 		return (WindowManager)getContext().getSystemService(Context.WINDOW_SERVICE);
 	}
 
-	public String getViewportAsString()
+	// IM-2013-11-15: [[ Bug 10485 ]] Refactor to return the viewport as Rect
+	public Rect getViewport()
 	{
 		DisplayMetrics t_metrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(t_metrics);
-		return rectToString(0, 0, t_metrics.widthPixels, t_metrics.heightPixels);
+		
+		return new Rect(0, 0, t_metrics.widthPixels, t_metrics.heightPixels);
+	}
+	
+	public String getViewportAsString()
+	{
+		return rectToString(getViewport());
 	}
 
-	private Rect getWorkarea()
+	// IM-2013-11-15: [[ Bug 10485 ]] Rename to "effective" as the returned value accounts
+	// for the keyboard if visible
+	private Rect getEffectiveWorkarea()
 	{
 		Rect t_workrect = new Rect();
 		getGlobalVisibleRect(t_workrect);
 		return t_workrect;
 	}
 
+	public String getEffectiveWorkareaAsString()
+	{
+		return rectToString(getEffectiveWorkarea());
+	}
+	
+	private boolean m_know_portrait_size = false;
+	private boolean m_know_landscape_size = false;
+	private boolean m_know_statusbar_size = false;
+	
+	private Rect m_portrait_rect;
+	private Rect m_landscape_rect;
+	private int m_statusbar_size;
+	
+	// IM-2013-11-15: [[ Bug 10485 ]] Return the known work area, updating with new values
+	// if requested.
+	private Rect getWorkarea(boolean p_update, int p_new_width, int p_new_height)
+	{
+		// If the keyboard is visible when the orientation changes, the reported size may be wrong
+		// so we either use the known size for the current orientation or make our best guess
+		// based on the total screen height being reduced by the same amount in either orientation.
+		Rect t_working_rect;
+		t_working_rect = null;
+		
+		Rect t_viewport;
+		t_viewport = getViewport();
+		
+		boolean t_portrait = t_viewport.height() > t_viewport.width();
+
+		// We have new values and the keyboard isn't showing so update any sizes we don't already know
+		if (p_update && !m_keyboard_visible)
+		{
+			t_working_rect = new Rect(0, 0, p_new_width, p_new_height);
+			
+			if (t_portrait && !m_know_portrait_size)
+			{
+				m_portrait_rect = t_working_rect;
+				m_know_portrait_size = true;
+			}
+			else if (!t_portrait && !m_know_landscape_size)
+			{
+				m_landscape_rect = t_working_rect;
+				m_know_landscape_size = true;
+			}
+			
+			if (!m_know_statusbar_size)
+			{
+				m_statusbar_size = t_viewport.height() - p_new_height;
+				m_know_statusbar_size = true;
+			}
+		}
+		else
+		{
+			if (t_portrait && m_know_portrait_size)
+				t_working_rect = m_portrait_rect;
+			else if (!t_portrait && m_know_landscape_size)
+				t_working_rect = m_landscape_rect;
+		}
+		
+		// If we don't have a known size for the current orientation, compute by subtracting
+		// the height of the screen furniture from the viewport rect.
+		if (t_working_rect == null)
+		{
+			t_working_rect = new Rect(t_viewport);
+			if (m_know_statusbar_size)
+				t_working_rect.bottom -= m_statusbar_size;
+		}
+		
+		return t_working_rect;
+	}
+	
+	public Rect getWorkarea()
+	{
+		return getWorkarea(false, 0, 0);
+	}
+	
 	public String getWorkareaAsString()
 	{
 		return rectToString(getWorkarea());
@@ -1144,24 +1231,61 @@ public class Engine extends View implements EngineApi
 		return true;
 	}
 
+	private boolean m_keyboard_sizechange = false;
+	private boolean m_orientation_sizechange = false;
+	
+	private boolean m_keyboard_visible = false;
+	
+	void updateKeyboardVisible(boolean p_visible)
+	{
+		if (p_visible == m_keyboard_visible)
+			return;
+		
+		// Log.i(TAG, "updateKeyboardVisible(" + p_visible + ")");
+		
+		m_keyboard_visible = p_visible;
+		
+		// IM-2013-11-15: [[ Bug 10485 ]] Notify engine when keyboard visiblity changes
+		if (p_visible)
+			doKeyboardShown(0);
+		else
+			doKeyboardHidden();
+		
+		m_keyboard_sizechange = true;
+	}
+	
+	void updateOrientation(int p_orientation)
+	{
+		// Log.i(TAG, "updateOrientation(" + p_orientation + ")");
+		
+		m_orientation_sizechange = true;
+	}
+	
 	@Override
 	protected void onSizeChanged(int w, int h, int oldw, int oldh)
 	{
-		// If the height changes, we assume its a keyboard show event so don't
-		// resize but do send notifications.
-		if (w == oldw && h != oldh)
-		{
-			if (h > oldh)
-				doKeyboardHidden();
-			else
-				doKeyboardShown(oldh - h);
-			return;
-		}
+		// Log.i(TAG, "onSizeChanged({" + w + "x" + h + "}, {" + oldw + ", " + oldh + "})");
 		
-		m_bitmap_view . resizeBitmap(w, h);
-
-		doReconfigure(w, h, m_bitmap_view . getBitmap());
-
+		// IM-2013-11-15: [[ Bug 10485 ]] As we can't determine directly if the resize is due to the keyboard
+		// being made visible, we use a rule of thumb that anything larger than 100 pixels must be the keyboard.
+		int t_height_diff = getContainer().getRootView().getHeight() - getContainer().getHeight();
+		updateKeyboardVisible(t_height_diff > 100);
+		
+		Rect t_rect;
+		t_rect = null;
+		
+		if ((oldw == 0 && oldh == 0) || m_orientation_sizechange)
+			t_rect = getWorkarea(true, w, h);
+		
+		m_keyboard_sizechange = m_orientation_sizechange = false;
+		
+		if (t_rect == null)
+			return;
+		
+		m_bitmap_view . resizeBitmap(t_rect.width(), t_rect.height());
+		
+		doReconfigure(t_rect.width(), t_rect.height(), m_bitmap_view . getBitmap());
+		
 		// Make sure we trigger handling
 		if (m_wake_on_event)
 			doProcess(false);
@@ -1271,6 +1395,11 @@ public class Engine extends View implements EngineApi
 	public void setURLTimeout(int p_timeout)
 	{
         m_network_module.setURLTimeout(p_timeout);
+	}
+	
+	public void setURLSSLVerification(boolean p_enabled)
+	{
+		m_network_module.setURLSSLVerification(p_enabled);
 	}
 
 	public boolean loadURL(int p_id, String p_url, String p_headers)

@@ -286,6 +286,7 @@ Parse_stat MCPrint::parse(MCScriptPoint &sp)
 
 Exec_stat MCPrint::exec(MCExecPoint &ep)
 {
+#ifdef /* MCPrint */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_PRINT)
 	{
 		MCeerror->add(EE_PRINT_NOPERM, line, pos);
@@ -622,4 +623,5 @@ Exec_stat MCPrint::exec(MCExecPoint &ep)
 	MCU_unwatchcursor(ep.getobj()->getstack(), True);
 	
 	return t_exec_stat;
+#endif /* MCPrint */
 }

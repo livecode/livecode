@@ -41,6 +41,97 @@ void MCScreenDC::seticonmenu(const char *p_menu)
 {
 }
 
+bool MCImageCreateIcon(MCImageBitmap *p_bitmap, uint32_t p_width, uint32_t p_height, bool p_cursor, uint32_t p_xhot, uint32_t p_yhot, HICON &r_icon)
+{
+	bool t_success = true;
+
+	HICON t_icon = nil;
+	HBITMAP t_bitmap = nil;
+	HBITMAP t_mask = nil;
+	HDC t_dc = nil;
+
+	void *t_bits = nil;
+	MCGContextRef t_context = nil;
+
+	// create dest bitmap at specified size
+	BITMAPV4HEADER t_bmp_header;
+	MCMemoryClear(&t_bmp_header, sizeof(BITMAPV4HEADER));
+	t_bmp_header . bV4Size = sizeof(BITMAPV4HEADER);
+	t_bmp_header . bV4Width = p_width;
+	t_bmp_header . bV4Height = -(signed)p_height;
+	t_bmp_header . bV4Planes = 1;
+	t_bmp_header . bV4BitCount = 32;
+	t_bmp_header . bV4V4Compression = BI_BITFIELDS;
+	t_bmp_header . bV4AlphaMask = 0xFF000000;
+	t_bmp_header . bV4RedMask   = 0x00FF0000;
+	t_bmp_header . bV4GreenMask = 0x0000FF00;
+	t_bmp_header . bV4BlueMask  = 0x000000FF;
+	//t_bmp_header . bV4CSType = LCS_WINDOWS_COLOR_SPACE;
+
+	t_success = nil != (t_dc = GetDC(NULL));
+
+	if (t_success)
+		t_success = nil != (t_bitmap = CreateDIBSection(t_dc, (BITMAPINFO*)&t_bmp_header, DIB_RGB_COLORS, &t_bits, NULL, 0));
+
+	if (t_success)
+		t_success = MCGContextCreateWithPixels(p_width, p_height, p_width * sizeof(uint32_t), t_bits, true, t_context);
+
+	if (t_success)
+	{
+		// draw image onto dib at the given size
+		MCGRaster t_raster;
+		t_raster.width = p_bitmap->width;
+		t_raster.height = p_bitmap->height;
+		t_raster.stride = p_bitmap->stride;
+		t_raster.pixels = p_bitmap->data;
+		t_raster.format = kMCGRasterFormat_ARGB;
+
+		MCGRectangle t_dst = MCGRectangleMake(0, 0, p_width, p_height);
+		MCGContextDrawPixels(t_context, t_raster, t_dst, kMCGImageFilterNearest);
+	}
+
+	MCGContextRelease(t_context);
+
+	if (t_dc != nil)
+		ReleaseDC(NULL, t_dc);
+
+	// mask is unused but has to be present in the ICONINFO struct
+	if (t_success)
+		t_success = nil != (t_mask = CreateBitmap(p_width, p_height, 1, 1, NULL));
+
+	if (t_success)
+	{
+		ICONINFO t_icon_data;
+		if (p_cursor)
+		{
+			t_icon_data . fIcon = FALSE;
+			t_icon_data . xHotspot = p_xhot;
+			t_icon_data . yHotspot = p_yhot;
+		}
+		else
+		{
+			t_icon_data . fIcon = TRUE;
+			t_icon_data . xHotspot = 0;
+			t_icon_data . yHotspot = 0;
+		}
+		t_icon_data . hbmMask = t_mask;
+		t_icon_data . hbmColor = t_bitmap;
+
+		t_success = nil != (t_icon = CreateIconIndirect(&t_icon_data));
+	}
+
+	if (t_bitmap != nil)
+		DeleteObject(t_bitmap);
+
+	if (t_mask != nil)
+		DeleteObject(t_mask);
+
+	if (t_success)
+		r_icon = t_icon;
+
+	return t_success;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static HICON create_status_icon(uint32_t p_icon_id)
@@ -50,86 +141,28 @@ static HICON create_status_icon(uint32_t p_icon_id)
 	if (t_image == nil)
 		return nil;
 
-	int t_image_width, t_image_height;
-	t_image->openimage();
+	HICON t_icon;
+	t_icon = nil;
+
+	int t_width, t_height;
+	t_width = GetSystemMetrics(SM_CXICON);
+	t_height = GetSystemMetrics(SM_CYICON);
+
+	bool t_success = true;
 
 	MCImageBitmap *t_bitmap = nil;
-	Pixmap t_drawdata = nil, t_drawmask = nil;
-	MCBitmap *t_maskimagealpha = nil;
-	/* UNCHECKED */ t_image->lockbitmap(t_bitmap);
-	/* UNCHECKED */ MCImageSplitPixmaps(t_bitmap, t_drawdata, t_drawmask, t_maskimagealpha);
-	t_image_width = t_bitmap->width;
-	t_image_height = t_bitmap->height;
+	t_image->openimage();
+	t_success = t_image->lockbitmap(t_bitmap, true);
+	if (t_success)
+		t_success = MCImageCreateIcon(t_bitmap, t_width, t_height, false, 0, 0, t_icon);
 	t_image->unlockbitmap(t_bitmap);
 
 	t_image->closeimage();
 
-	if (t_maskimagealpha != nil)
-		MCscreen->destroyimage(t_maskimagealpha);
-	MCscreen->freepixmap(t_drawmask);
-
-
-	int t_width, t_height;
-	HDC t_dc;
-	t_dc = GetDC(NULL);
-
-	t_width = GetSystemMetrics(SM_CXICON);
-	t_height = GetSystemMetrics(SM_CYICON);
-
-	HBITMAP t_data;
-	HBITMAP t_mask;
-	HICON t_icon;
-	t_icon = nil;
-
-	// This won't work on Win98/ME - seperate code-path needed.
-	t_data = CreateCompatibleBitmap(t_dc, t_width, t_height);
-	t_mask = CreateBitmap(t_width, t_height, 1, 1, NULL);
-
-	if (t_data != NULL && t_mask != NULL)
-	{
-		HDC t_src_dc, t_dst_dc;
-		t_src_dc = CreateCompatibleDC(t_dc);
-		t_dst_dc = CreateCompatibleDC(t_dc);
-
-		if (t_src_dc != NULL && t_dst_dc != NULL)
-		{
-			HGDIOBJ t_old_src, t_old_dst;
-
-			t_old_src = SelectObject(t_src_dc, t_drawdata -> handle . pixmap);
-			t_old_dst = SelectObject(t_dst_dc, t_data);
-
-			StretchBlt(t_dst_dc, 0, 0, t_width, t_height, t_src_dc, 0, 0, t_image_width, t_image_height, SRCCOPY);
-
-			SelectObject(t_dst_dc, t_old_dst);
-			SelectObject(t_src_dc, t_old_src);
-
-			ICONINFO t_icon_data;
-			t_icon_data . fIcon = TRUE;
-			t_icon_data . xHotspot = 0;
-			t_icon_data . yHotspot = 0;
-			t_icon_data . hbmMask = t_mask;
-			t_icon_data . hbmColor = t_data;
-			t_icon = CreateIconIndirect(&t_icon_data);
-		}
-
-		if (t_src_dc != NULL)
-			DeleteDC(t_src_dc);
-
-		if (t_dst_dc != NULL)
-			DeleteDC(t_dst_dc);
-	}
-
-	ReleaseDC(NULL, t_dc);
-
-	if (t_data != NULL)
-		DeleteObject(t_data);
-
-	if (t_mask != NULL)
-		DeleteObject(t_mask);
-
-	MCscreen->freepixmap(t_drawdata);
-
-	return t_icon;
+	if (t_success)
+		return t_icon;
+	else
+		return NULL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

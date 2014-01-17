@@ -260,6 +260,7 @@ static void export_image(void *p_context)
 	[t_data release];
 }
 
+#ifdef /* MCHandleExportImageToAlbumIphone */ LEGACY_EXEC
 Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 {
 	if (p_parameters == nil)
@@ -298,7 +299,7 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 		MCImage *t_image;
 		t_image = static_cast<MCImage *>(objptr);
 		if (t_image -> getcompression() != F_PNG &&
-			t_image -> getcompression() != F_JPEG &&
+		t_image -> getcompression() != F_JPEG &&
 			t_image -> getcompression() != F_GIF)
 		{
 			MCresult -> sets("not a supported format");
@@ -326,6 +327,7 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 	
 	return ES_NORMAL;
 }
+#endif /* MCHandleExportImageToAlbumIphone */
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -457,6 +459,7 @@ bool MCIPhoneSystem::TextConvertToUnicode(uint32_t p_input_encoding, const void 
 
 static Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSetStatusBarStyle */ LEGACY_EXEC
 	MCExecPoint ep(nil, nil, nil);
 	
 	UIStatusBarStyle t_style;
@@ -475,20 +478,25 @@ static Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_paramet
 	[MCIPhoneGetApplication() switchToStatusBarStyle: t_style];
 	
 	return ES_NORMAL;
+#endif /* MCHandleSetStatusBarStyle */
 }
 
 Exec_stat MCHandleShowStatusBar(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleShowStatusBar */ LEGACY_EXEC
 	[MCIPhoneGetApplication() switchToStatusBarVisibility: YES];
 	
 	return ES_NORMAL;
+#endif /* MCHandleShowStatusBar */
 }
 
 Exec_stat MCHandleHideStatusBar(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleHideStatusBar */ LEGACY_EXEC
 	[MCIPhoneGetApplication() switchToStatusBarVisibility: NO];
 	
 	return ES_NORMAL;
+#endif /* MCHandleHideStatusBar */
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -501,7 +509,7 @@ static const char *s_orientation_names[] =
 {
 	"unknown", "portrait", "portrait upside down", "landscape right", "landscape left", "face up", "face down", nil
 };
-
+/*
 extern bool MCIPhonePickMedia(bool p_allow_multiple_items, MPMediaType p_media_types, NSString*& r_media_returned);
 
 // HC-2011-10-12 [[ Media Picker ]] Implementation of media picker functionality.
@@ -568,7 +576,9 @@ static Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameter
 	}
 	return ES_NORMAL;
 }
+*/
 
+#ifdef /* MCHandleCameraFeaturesIphone */ LEGACY_EXEC
 static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
 {
 	extern Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_parameters);
@@ -628,9 +638,11 @@ static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters
 	MCresult -> copysvalue([t_string cStringUsingEncoding: NSMacOSRomanStringEncoding]);
 	return ES_NORMAL;
 }
+#endif /* MCHandleCameraFeaturesIphone */
 
 static Exec_stat MCHandleDeviceResolution(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleDeviceResolution */ LEGACY_EXEC
 	UIScreenMode *t_mode;
 	t_mode = [[UIScreen mainScreen] currentMode];
 		
@@ -643,10 +655,12 @@ static Exec_stat MCHandleDeviceResolution(void *context, MCParameter *p_paramete
 	MCresult -> copysvalue(t_size);
 
 	return ES_NORMAL;
+#endif /* MCHandleDeviceResolution */
 }
 
 static Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleUseDeviceResolution */ LEGACY_EXEC
 	MCExecPoint ep(nil, nil, nil);
 	
 	bool t_use_device_res;
@@ -671,27 +685,35 @@ static Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_param
 	MCIPhoneUseDeviceResolution(t_use_device_res, t_use_control_device_res);
 	
 	return ES_NORMAL;
+#endif /* MCHandleUseDeviceResolution */
 }
 
 static Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleDeviceScale */ LEGACY_EXEC
 	MCresult -> setnvalue(MCIPhoneGetDeviceScale());
 	
 	return ES_NORMAL;
+#endif /* MCHandleDeviceScale */
 }
 
+#ifdef /* MCHandleDeviceOrientationIphone */ LEGACY_EXEC
 static Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters)
 {
 	MCresult -> sets(s_orientation_names[[[UIDevice currentDevice] orientation]]);
 	return ES_NORMAL;
 }
+#endif /* MCHandleDeviceOrientationIphone */
 
+#ifdef /* MCHandleOrientationIphone */ LEGACY_EXEC
 static Exec_stat MCHandleOrientation(void *context, MCParameter *p_parameters)
 {
 	MCresult -> sets(s_orientation_names[(int)MCIPhoneGetOrientation()]);
 	return ES_NORMAL;
 }
+#endif /* MCHandleOrientationIphone */
 
+#ifdef /* MCHandleAllowedOrientationsIphone */ LEGACY_EXEC
 static Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters)
 {
 	uint32_t t_orientations;
@@ -706,13 +728,17 @@ static Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_param
 	
 	return ES_NORMAL;
 }
+#endif /* MCHandleAllowedOrientationsIphone */
 
+#ifdef /* MCHandleOrientationLockedIphone */ LEGACY_EXEC
 static Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_parameters)
 {
 	MCresult -> sets(MCU_btos(((int)[MCIPhoneGetApplication() orientationLocked]) == YES));
 	return ES_NORMAL;
 }
+#endif /* MCHandleOrientationLockedIphone */
 
+#ifdef /* MCHandleLockUnlockOrientation */ LEGACY_EXEC
 static Exec_stat MCHandleLockUnlockOrientation(void *context, MCParameter *p_parameters)
 {
 	if ((bool)context)
@@ -721,7 +747,9 @@ static Exec_stat MCHandleLockUnlockOrientation(void *context, MCParameter *p_par
 		[MCIPhoneGetApplication() unlockOrientation];
 	return ES_NORMAL;
 }
+#endif /* MCHandleLockUnlockOrientation */
 
+#ifdef /* MCHandleSetAllowedOrientationsIphone */ LEGACY_EXEC
 static Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameters)
 {
 	bool t_success;
@@ -757,12 +785,16 @@ static Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_pa
 	
 	return ES_NORMAL;
 }
+#endif /* MCHandleSetAllowedOrientationsIphone */
 
 static Exec_stat MCHandleRotateInterface(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleRotateInterface */ LEGACY_EXEC
 	return ES_NORMAL;
+#endif /* MCHandleRotateInterface */
 }
 
+#ifdef /* MCHandleLibUrlDownloadToFileIphone */ LEGACY_EXEC
 static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters)
 {
 	char *t_url, *t_filename;
@@ -794,9 +826,27 @@ static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_para
     
 	return ES_NORMAL;
 }
+#endif /* MCHandleLibUrlDownloadToFileIphone */
+
+// MW-2013-10-02: [[ MobileSSLVerify ]] Handle libUrlSetSSLVerification for iOS.
+static Exec_stat MCHandleLibUrlSetSSLVerification(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+	
+	bool t_enabled;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "b", &t_enabled);
+	
+	extern void MCS_seturlsslverification(bool enabled);
+	if (t_success)
+		MCS_seturlsslverification(t_enabled);
+	
+	return ES_NORMAL;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-
+#ifdef /* MCHandleSetKeyboardTypeIphone */ LEGACY_EXEC
 static Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters)
 {
 	MCExecPoint ep(nil, nil, nil);
@@ -830,9 +880,11 @@ static Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_paramete
 	}
 	return ES_NORMAL;
 }
+#endif /* MCHandleSetKeyboardTypeIphone */
 
 static Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSetKeyboardReturnKey */ LEGACY_EXEC
 	MCExecPoint ep(nil, nil, nil);
 	
 	if (p_parameters != nil)
@@ -865,10 +917,12 @@ static Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_par
 		MCIPhoneSetReturnKeyType(t_type);
 	}
 	return ES_NORMAL;
+#endif /* MCHandleSetKeyboardReturnKey */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef /* MCHandleCurrentLocaleIphone */ LEGACY_EXEC
 static Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
 {
 	NSString *t_current_locale_id = nil;
@@ -883,7 +937,9 @@ static Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
 	
 	return ES_NORMAL;
 }
+#endif /* MCHandleCurrentLocaleIphone */
 
+#ifdef /* MCHandlePreferredLanguagesIphone */ LEGACY_EXEC
 static Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parameters)
 {
 	bool t_success;
@@ -912,11 +968,13 @@ static Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parame
 	
 	return ES_NORMAL;
 }
+#endif /* MCHandlePreferredLanguagesIphone */
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
 
+#ifdef /* MCHandleLockIdleTimerIphone */ LEGACY_EXEC
 static Exec_stat MCHandleLockIdleTimer(void *context, MCParameter *p_parameters)
 {
 	g_idle_timer++;
@@ -924,7 +982,9 @@ static Exec_stat MCHandleLockIdleTimer(void *context, MCParameter *p_parameters)
 		[[UIApplication sharedApplication] setIdleTimerDisabled:YES];
 	return ES_NORMAL;
 }
+#endif /* MCHandleLockIdleTimerIphone */
 
+#ifdef /* MCHandleUnlockIdleTimerIphone */ LEGACY_EXEC
 static Exec_stat MCHandleUnlockIdleTimer(void *context, MCParameter *p_paramters)
 {
 	if (g_idle_timer == 1)
@@ -933,7 +993,9 @@ static Exec_stat MCHandleUnlockIdleTimer(void *context, MCParameter *p_paramters
 		g_idle_timer--;	
 	return ES_NORMAL;
 }
+#endif /* MCHandleUnlockIdleTimerIphone */
 
+#ifdef /* MCHandleIdleTimerLockedIphone */ LEGACY_EXEC
 static Exec_stat MCHandleIdleTimerLocked(void *context, MCParameter *p_paramters)
 {
 	MCExecPoint ep(nil, nil, nil);
@@ -943,9 +1005,11 @@ static Exec_stat MCHandleIdleTimerLocked(void *context, MCParameter *p_paramters
 		MCresult -> sets(MCfalsestring);
 	return ES_NORMAL;
 }
+#endif /* MCHandleIdleTimerLockedIphone */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef /* MCHandleClearTouchesIphone */ LEGACY_EXEC
 static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
 {
 	MCscreen -> wait(1/25.0, False, False);
@@ -953,11 +1017,13 @@ static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
 	MCEventQueueClearTouches();
 	return ES_NORMAL;
 }
+#endif /* MCHandleClearTouchesIphone */
 
 ////////////////////////////////////////////////////////////////////////////////
 
 static Exec_stat MCHandleSystemIdentifier(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSystemIdentifier */ LEGACY_EXEC
     // MM-2013-05-21: [[ Bug 10895 ]] The method uniqueIdentifier of UIDevice is now deprecated (as of May 2013).
     //  Calling the method dynamically prevents apps from being rejected by the app store
     //  but preserves functionality for testing and backwards compatibility.
@@ -965,6 +1031,7 @@ static Exec_stat MCHandleSystemIdentifier(void *context, MCParameter *p_paramete
     t_identifier = objc_msgSend([UIDevice currentDevice], sel_getUid("uniqueIdentifier"));
     MCresult -> copysvalue([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding]);
     return ES_NORMAL;
+#endif /* MCHandleSystemIdentifier */
 }
 
 // MM-2013-05-21: [[ Bug 10895 ]] Added iphoneIdentifierForVendor as an initial replacement for iphoneSystemIdentifier.
@@ -984,6 +1051,7 @@ static Exec_stat MCHandleIdentifierForVendor(void *context, MCParameter *p_param
 
 static Exec_stat MCHandleApplicationIdentifier(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleApplicationIdentifier */ LEGACY_EXEC
 	// Get the plist
 	NSDictionary *t_plist;
 	t_plist = [[NSBundle mainBundle] infoDictionary];
@@ -994,6 +1062,7 @@ static Exec_stat MCHandleApplicationIdentifier(void *context, MCParameter *p_par
 	MCresult -> copysvalue([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding]);
 	
 	return ES_NORMAL;	
+#endif /* MCHandleApplicationIdentifier */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1003,6 +1072,7 @@ extern const char *MCReachabilityGetTarget(void);
 
 static Exec_stat MCHandleSetReachabilityTarget(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSetReachabilityTarget */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
 	
@@ -1016,18 +1086,22 @@ static Exec_stat MCHandleSetReachabilityTarget(void *context, MCParameter *p_par
 	
 	MCCStringFree(t_hostname);
 	return t_success ? ES_NORMAL : ES_ERROR;
+#endif /* MCHandleSetReachabilityTarget */
 }
 
 static Exec_stat MCHandleReachabilityTarget(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleReachabilityTarget */ LEGACY_EXEC
 	MCresult -> copysvalue(MCReachabilityGetTarget());
 	return ES_NORMAL;
+#endif /* MCHandleReachabilityTarget */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 static Exec_stat MCHandleSetRedrawInterval(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSetRedrawInterval */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
 	
@@ -1046,12 +1120,14 @@ static Exec_stat MCHandleSetRedrawInterval(void *context, MCParameter *p_paramet
 	}
 	
 	return ES_NORMAL;
+#endif /* MCHandleSetRedrawInterval */
 }
 
 // MW-2012-02-15: [[ Bug 9985 ]] Handler method for the 'iphoneSetAnimateAutorotation'
 //   command.
 static Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSetAnimateAutorotation */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
 	
@@ -1063,6 +1139,7 @@ static Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_pa
 		[MCIPhoneGetApplication() setAnimateAutorotation: t_enabled];
 	
 	return ES_NORMAL;
+#endif /* MCHandleSetAnimateAutorotation */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1550,6 +1627,9 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{true, "mobileComposeHtmlMail", MCHandleComposeHtmlMail, nil},
 	
 	{true, "libUrlDownloadToFile", MCHandleLibUrlDownloadToFile, nil},
+	
+	// MW-2013-10-02: [[ MobileSSLVerify ]] Added support for libUrlSetSSLVerification.
+	{true, "libUrlSetSSLVerification", MCHandleLibUrlSetSSLVerification, nil},
 	
 	{false, "iphoneSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
 	{false, "iphoneShowStatusBar", MCHandleShowStatusBar, nil},

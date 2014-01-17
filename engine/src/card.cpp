@@ -31,7 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objptr.h"
 #include "sellst.h"
 #include "stacklst.h"
-#include "pxmaplst.h"
 #include "undolst.h"
 #include "group.h"
 #include "button.h"
@@ -673,7 +672,11 @@ Boolean MCCard::mdown(uint2 which)
 				cptr = new MCImage(*MCtemplateimage);
 				break;
 			case T_DROPPER:
-				MCscreen->dropper(getw(), MCmousex, MCmousey, NULL);
+				// IM-2013-09-23: [[ FullscreenMode ]] Get mouse loc in view coordinates
+				MCStack *t_mousestack;
+				MCPoint t_mouseloc;
+				MCscreen->getmouseloc(t_mousestack, t_mouseloc);
+				MCscreen->dropper(getw(), t_mouseloc.x, t_mouseloc.y, NULL);
 				message(MCM_color_changed);
 				break;
 			case T_BRUSH:
@@ -903,6 +906,7 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
 
 	switch (which)
 	{
+#ifdef /* MCCard::getprop */ LEGACY_EXEC
 	case P_NUMBER:
 	case P_LAYER:
 		getstack()->count(CT_CARD, CT_UNDEFINED, this, num);
@@ -950,7 +954,7 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
     case P_CONTROL_IDS:
     case P_CHILD_CONTROL_NAMES:
     case P_CHILD_CONTROL_IDS:
-		// MERG-2015-05-01: [[ ChildControlProps ]] Add ability to list both
+		// MERG-2013-05-01: [[ ChildControlProps ]] Add ability to list both
 		//   immediate and all descendent controls of a card.
 			
         ep.clear();
@@ -969,6 +973,14 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
             
             bool t_controls;
 			t_controls = which == P_CHILD_CONTROL_NAMES ||  which == P_CHILD_CONTROL_IDS || which == P_CONTROL_NAMES || which == P_CONTROL_IDS;
+            
+            // MERG-2013-11-03: [[ ChildControlProps ]] No need to assign value to t_prop in each iteration
+            Properties t_prop;
+            if (which == P_BACKGROUND_NAMES || which == P_SHARED_GROUP_NAMES || which == P_GROUP_NAMES || which == P_CONTROL_NAMES || which == P_CHILD_CONTROL_NAMES)
+                t_prop = P_SHORT_NAME;
+            else
+                t_prop = P_SHORT_ID;
+            
 			do
 			{
 				MCObject *t_object;
@@ -987,19 +999,16 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
                 else if (!t_controls)
 					continue;
                 
-				Properties t_prop;
-				if (which == P_BACKGROUND_NAMES || which == P_SHARED_GROUP_NAMES || which == P_GROUP_NAMES || which == P_CONTROL_NAMES || which == P_CHILD_CONTROL_NAMES)
-					t_prop = P_SHORT_NAME;
-				else
-					t_prop = P_SHORT_ID;
-
 				t_object->getprop(0, t_prop, t_other_ep, False);
 				ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
                 
                 if (t_object->gettype() == CT_GROUP && (which == P_CONTROL_IDS || which == P_CONTROL_NAMES))
                 {
                     t_object->getprop(parid, which, t_other_ep, false);
-                    ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
+                    
+                    // MERG-2013-11-03: [[ ChildControlProps ]] Handle empty groups
+                    if (!t_other_ep.isempty())
+                        ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
                 }
 			}
 			while (optr != objptrs);
@@ -1029,6 +1038,7 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
 	case P_UNICODE_TOOL_TIP:
 		MCeerror->add(EE_OBJECT_SETNOPROP, 0, 0);
 		return ES_ERROR;
+#endif /* MCCard::getprop */
 	default:
 		return MCObject::getprop(parid, which, ep, effective);
 	}
@@ -1043,6 +1053,7 @@ Exec_stat MCCard::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolea
 
 	switch (which)
 	{
+#ifdef /* MCCard::setprop */ LEGACY_EXEC
 	// MW-2011-09-20: [[ Bug 9741 ]] Make sure we update the card completely if
 	//   any of these are set.
 	case P_FORE_PIXEL:
@@ -1103,7 +1114,7 @@ Exec_stat MCCard::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolea
 	case P_SHADOW:
 	case P_LOCK_LOCATION:
 	case P_TOOL_TIP:
-	// MW-2012-03-13: [[ UnicodeToolTip ]] Card's don't have tooltips.
+	// MW-2012-03-13: [[ UnicodeToolTip ]] Cards don't have tooltips.
 	case P_UNICODE_TOOL_TIP:
 		MCeerror->add(EE_OBJECT_SETNOPROP, 0, 0);
 		return ES_ERROR;
@@ -1150,6 +1161,7 @@ Exec_stat MCCard::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolea
 			return ES_ERROR;
 		}
 		break;
+#endif /* MCCard::setprop */
 	default:
 		return MCObject::setprop(parid, which, ep, effective);
 	}
@@ -2634,10 +2646,78 @@ void MCCard::drawcardborder(MCDC *dc, const MCRectangle &dirty)
 //-----------------------------------------------------------------------------
 //  Redraw Management
 
-void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
+// IM-2013-09-13: [[ RefactorGraphics ]] Factor out card background drawing to separate method
+void MCCard::drawbackground(MCContext *p_context, const MCRectangle &p_dirty)
 {
+	if (MCcurtheme != nil && getstack() -> ismetal() && MCcurtheme -> drawmetalbackground(p_context, p_dirty, rect, parent))
+		return;
+	
+	// IM-2013-09-13: [[ RefactorGraphics ]] [[ Bug 11175 ]] Rework card background drawing to handle transparent background patterns
+	// transparent backgrounds will now draw on top of the stack background, which in turn draws on top of solid black if transparent
+	MCColor color;
+	MCPatternRef t_pattern = nil;
+	int2 x, y;
+	
+	MCPatternRef t_stack_pattern = nil;
+	int16_t t_stack_x, t_stack_y;
+	
 	Window_mode wm = getstack()->getmode();
 	
+	Boolean t_hilite;
+	t_hilite = MClook == LF_WIN95 && (wm == WM_COMBO || wm == WM_OPTION);
+	
+	bool t_opaque;
+	t_opaque = getforecolor(DI_BACK, False, t_hilite, color, t_pattern, x, y, p_context, this) || MCPatternIsOpaque(t_pattern);
+	
+	// If the card background is a pattern with transparency, then draw the stack background first
+	if (!t_opaque)
+	{
+		t_opaque = parent->getforecolor(DI_BACK, False, t_hilite, color, t_stack_pattern, t_stack_x, t_stack_y, p_context, parent) || MCPatternIsOpaque(t_stack_pattern);
+		
+		// And if the stack background is a pattern with transparency, then fill with black first
+		if (!t_opaque)
+		{
+			p_context->setforeground(p_context->getblack());
+			p_context->setfillstyle(FillSolid, nil, 0, 0);
+			p_context->fillrect(p_dirty);
+		}
+		
+		if (t_stack_pattern != nil)
+			p_context->setfillstyle(FillTiled, t_stack_pattern, t_stack_x, t_stack_y);
+		else
+		{
+			p_context->setforeground(color);
+			p_context->setfillstyle(FillSolid, nil, 0, 0);
+		}
+		
+		p_context->fillrect(p_dirty);
+	}
+	
+	if (t_pattern != nil)
+		p_context->setfillstyle(FillTiled, t_pattern, x, y);
+	else
+	{
+		p_context->setforeground(color);
+		p_context->setfillstyle(FillSolid, nil, 0, 0);
+	}
+	
+	p_context->fillrect(p_dirty);
+}
+
+// IM-2013-09-13: [[ RefactorGraphics ]] Factor out card selection rect drawing to separate method
+void MCCard::drawselectionrect(MCContext *p_context)
+{
+	p_context->setlineatts(0, LineDoubleDash, CapButt, JoinBevel);
+	p_context->setforeground(p_context->getblack());
+	p_context->setbackground(p_context->getwhite());
+	p_context->setdashes(0, dashlist, 2);
+	p_context->drawrect(selrect);
+	p_context->setlineatts(0, LineSolid, CapButt, JoinBevel);
+	p_context->setbackground(MCzerocolor);
+}
+
+void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
+{
 	bool t_draw_cardborder;
 	t_draw_cardborder = true;
 
@@ -2646,12 +2726,8 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 	if (MCcurtheme != nil && getstack() -> menuwindow &&
 		MCcurtheme -> drawmenubackground(dc, dirty, getrect(), true))
 		t_draw_cardborder = false;
-	else if (MCcurtheme == nil || !getstack() -> ismetal() ||
-		!MCcurtheme -> drawmetalbackground(dc, dirty, rect, parent))
-	{
-		setforeground(dc, DI_BACK, False, MClook == LF_WIN95 && (wm == WM_COMBO || wm == WM_OPTION));
-		dc -> fillrect(dirty);
-	}
+	else
+		drawbackground(dc, dirty);
 
 	if (objptrs != NULL)
 	{
@@ -2672,15 +2748,7 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 		drawcardborder(dc, dirty);
 	
 	if (getstate(CS_SIZE))
-	{
-		dc->setlineatts(0, LineDoubleDash, CapButt, JoinBevel);
-		dc->setforeground(dc->getblack());
-		dc->setbackground(dc->getwhite());
-		dc->setdashes(0, dashlist, 2);
-		dc->drawrect(selrect);
-		dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
-		dc->setbackground(MCzerocolor);
-	}
+		drawselectionrect(dc);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

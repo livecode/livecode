@@ -3,7 +3,7 @@
   <name>edit</name>
   <type>command</type>
   <syntax>
-    <example>edit [the] script of <i>object</i></example>
+    <example>edit [the] script of <i>object</i> [at line,column]</example>
   </syntax>
   <library></library>
   <objects>
@@ -23,6 +23,7 @@
   </references>
   <history>
     <introduced version="1.0">Added.</introduced>
+    <introduced version="6.5">Added optional at syntax.</introduced>
   </history>
   <platforms>
     <mac/>
@@ -40,9 +41,9 @@
   <examples>
     <example>edit the script of the mouseStack</example>
     <example>edit the script of this card</example>
-    <example>edit the script of player "Show Me"</example>
+    <example>edit the script of player "Show Me" at 100,0</example>
   </examples>
   <description>
-    <p>Use the <b>edit</b> <glossary tag="command">command</glossary> in the <glossary tag="development environment">development environment</glossary> to open the LiveCode <glossary tag="script editor">script editor</glossary> with the <property tag="script">script</property> of the specified <glossary tag="object">object</glossary>.</p><p/><p><b>Parameters:</b></p><p>The <i>object</i> is any <href tag="reference/object_reference.rev">object reference</href>.</p><p/><p><b>Comments:</b></p><p>The <b>edit</b> <glossary tag="command">command</glossary> is equivalent to selecting the object and choosing Object menu<img src="202656"/>Object Script<important/>. If the script ed is not open, the <b>edit</b> command opens a window that shows the <a/>script.</p>
+    <p>Use the <b>edit</b> <glossary tag="command">command</glossary> in the <glossary tag="development environment">development environment</glossary> to open the LiveCode <glossary tag="script editor">script editor</glossary> with the <property tag="script">script</property> of the specified <glossary tag="object">object</glossary>.</p><p/><p><b>Parameters:</b></p><p>The <i>object</i> is any <href tag="reference/object_reference.rev">object reference</href>.</p><p>Usint the optional at syntax will pass the subsequent items to the editScript handler as a second parameter. By convention the first two parameters should be a line number and a column character offset from the start of the line.</p><p/><p><b>Comments:</b></p><p>The <b>edit</b> <glossary tag="command">command</glossary> is equivalent to selecting the object and choosing Object menu<img src="202656"/>Object Script<important/>. If the script ed is not open, the <b>edit</b> command opens a window that shows the <a/>script.</p>
   </description>
 </doc>

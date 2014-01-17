@@ -174,6 +174,7 @@ Exec_stat MCAudioClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, B
 {
 	switch (which)
 	{
+#ifdef /* MCAudioClip::getprop */ LEGACY_EXEC
 	case P_SIZE:
 		ep.setint(size);
 		break;
@@ -233,6 +234,7 @@ Exec_stat MCAudioClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, B
 		else
 			ep.setint(loudness);
 		break;
+#endif /* MCAudioClip::getprop */ 
 	default:
 		return MCObject::getprop(parid, which, ep, effective);
 	}
@@ -246,6 +248,7 @@ Exec_stat MCAudioClip::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boole
 
 	switch (p)
 	{
+#ifdef /* MCAudioClip::setprop */ LEGACY_EXEC
 	case P_PLAY_DESTINATION:
 	case P_PLAY_LOUDNESS:
 		if (p == P_PLAY_DESTINATION)
@@ -318,6 +321,7 @@ Exec_stat MCAudioClip::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boole
 
 		}
 		return ES_NORMAL;
+#endif /* MCAudioClip::setprop */
 	default:
 		break;
 	}

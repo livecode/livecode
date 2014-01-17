@@ -87,11 +87,13 @@ public:
 
 	// Copy any keys from v not present in this
 	// PRECONDITION: this is initialized
-	Exec_stat unionarray(MCVariableArray& v);
+    // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+	Exec_stat unionarray(MCVariableArray& v, bool p_recursive);
 
 	// Remove any keys in this not present in v
 	// PRECONDITION: this is initialized
-	Exec_stat intersectarray(MCVariableArray& v);
+	// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+    Exec_stat intersectarray(MCVariableArray& v, bool p_recursive);
 
 	// Set the value of the variable to the result of va * vb, considered as
 	// matrices.
@@ -370,8 +372,10 @@ public:
 	Exec_stat split_as_set(char e, MCExecPoint& ep);
 
 	Exec_stat factorarray(MCExecPoint& ep, Operators op);
-	Exec_stat unionarray(MCVariableValue& v);
-	Exec_stat intersectarray(MCVariableValue& v);
+    
+	// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+    Exec_stat unionarray(MCVariableValue& v, bool recursive);
+	Exec_stat intersectarray(MCVariableValue& v, bool recursive);
 
 	Exec_stat transpose(MCVariableValue& v);
 

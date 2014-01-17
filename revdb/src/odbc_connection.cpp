@@ -510,7 +510,7 @@ void DBConnection_ODBC::SetError(SQLHSTMT p_statement)
 }
 
 /*getErrorMessage- return error string*/
-char *DBConnection_ODBC::getErrorMessage()
+char *DBConnection_ODBC::getErrorMessage(Bool p_last)
 {
 	if (IsError() == True) return errmsg;
 	else return (char *)DBNullValue;

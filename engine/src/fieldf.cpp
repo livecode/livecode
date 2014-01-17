@@ -577,7 +577,7 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 			{
 				p_context->setforeground(p_context->getwhite());
 				p_context->setbackground(p_context->getblack());
-				p_context->setfillstyle(FillSolid, DNULL, 0, 0);
+				p_context->setfillstyle(FillSolid, nil, 0, 0);
 				p_context->setlineatts(0, LineDoubleDash, CapButt, JoinBevel);
 				p_context->setdashes(0, dotlist, 2);
 				p_context->setfunction(GXxor);
@@ -842,7 +842,7 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
 		return;
 	
 	uint2 t_current_style;
-	Pixmap t_current_pixmap;
+	MCPatternRef t_current_pixmap;
 	int2 t_current_x;
 	int2 t_current_y;
 	dc -> getfillstyle(t_current_style, t_current_pixmap, t_current_x, t_current_y);
@@ -856,8 +856,9 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
 	if (MCU_abs(t_offset_y) > 32767 || MCU_abs(t_offset_x) > 32767)
 	{
 		uint2 t_width, t_height, t_depth;
-		MCscreen -> getpixmapgeometry(t_current_pixmap, t_width, t_height, t_depth);
-		
+		t_width = MCGImageGetWidth(t_current_pixmap->image) / t_current_pixmap->scale;
+		t_height = MCGImageGetHeight(t_current_pixmap->image) / t_current_pixmap->scale;
+
 		t_offset_x %= t_width;
 		if (t_offset_x < 0)
 			t_offset_x += t_width;
@@ -914,44 +915,21 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 		trect = MCU_intersect_rect(trect, textrect);
 		if (flags & F_FIXED_HEIGHT && (flags & F_SHOW_LINES || state & CS_SIZE))
 		{
-			if (dc -> gettype() == CONTEXT_TYPE_PRINTER)
+			dc->setforeground(dc->getblack());
+			dc->setlineatts(1, LineOnOffDash, CapButt, JoinBevel);
+			dc->setdashes(0, dotlist, 2);
+			
+			int2 x, y;
+			x = textrect . x - 2 - textx;
+			y = cury + frect.y + fixeda - TEXT_Y_OFFSET;
+			while(y <= trect.y + trect.height)
 			{
-				dc->setforeground(dc->getblack());
-				dc->setlineatts(1, LineOnOffDash, CapButt, JoinBevel);
-				dc->setdashes(0, dotlist, 2);
-				
-				int2 x, y;
-				x = textrect . x - 2 - textx;
-				y = cury + frect.y + fixeda - TEXT_Y_OFFSET;
-				while(y <= trect.y + trect.height)
-				{
-					if (y >= trect.y)
-						dc -> drawline(x, y, x + MCU_max(textrect . width + 4, textwidth), y);
-					y += fixedheight;
-				}
-				
-				dc -> setlineatts(0, LineSolid, CapButt, JoinBevel);
-				
+				if (y >= trect.y)
+					dc -> drawline(x, y, x + MCU_max(textrect . width + 4, textwidth), y);
+				y += fixedheight;
 			}
-			else
-			{
-				setforeground(dc, DI_BACK, False);
-				dc->setbackground(dc->getblack());
-				dc->setfillstyle(FillOpaqueStippled, DNULL, 0, 0);
-				MCRectangle xrect;
-				xrect.x = textrect.x - 2 - textx;
-				xrect.y = cury + frect.y + fixeda - TEXT_Y_OFFSET;
-				xrect.width = MCU_max(textrect.width + 4, textwidth);
-				xrect.height = 1;
-				while (xrect.y <= trect.y + trect.height)
-				{
-					if (xrect.y >= trect.y)
-						dc->fillrect(xrect);
-					xrect.y += fixedheight;
-				}
-				dc->setfillstyle(FillSolid, DNULL, 0, 0);
-				dc->setbackground(MCzerocolor);
-			}
+			
+			dc -> setlineatts(0, LineSolid, CapButt, JoinBevel);
 		}
 
 		uint2 fontstyle;
@@ -1631,7 +1609,7 @@ void MCField::updateparagraph(Boolean flow, Boolean all, Boolean dodraw)
 			oldheight = focusedparagraph->getheight(fixedheight);
 		
 		// MW-2012-01-25: [[ ParaStyles ]] Get the paragraph to flow itself.
-		focusedparagraph -> layout();
+		focusedparagraph -> layout(all);
 		uint2 newheight = focusedparagraph->getheight(fixedheight);
 		if (newheight != oldheight)
 		{
@@ -1845,7 +1823,7 @@ void MCField::fdel(Field_translations function, const char *string, KeySym key)
 	}
 	if (oldwidth == textwidth)
 	{
-		recompute();
+		do_recompute(true);
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
 	}
@@ -2312,7 +2290,7 @@ void MCField::typetext(const MCString &newtext)
 	state |= CS_CHANGED;
 	if (newtext.getlength() && focusedparagraph->finsertnew(newtext, false))
 	{
-		recompute();
+		do_recompute(true);
 		int4 endindex = oldfocused + newtext.getlength();
 		int4 junk;
 		MCParagraph *newfocused = indextoparagraph(focusedparagraph, endindex, junk);

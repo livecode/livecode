@@ -37,7 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "cardlst.h"
-#include "pxmaplst.h"
 #include "dispatch.h"
 #include "property.h"
 #include "mcerror.h"
@@ -50,7 +49,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "osspec.h"
 #include "redraw.h"
-
+#include "ans.h"
+#include "font.h"
 #include "mctheme.h"
 
 #include "globals.h"
@@ -59,6 +59,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "iquantization.h"
 
 #include "regex.h"
+
+#include "resolution.h"
 
 MCProperty::MCProperty()
 {
@@ -426,8 +428,8 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_STACK_FILE_TYPE:
 	case P_STACK_FILE_VERSION:
 	case P_SECURE_MODE:
-	case P_SECURITY_CATEGORIES: // RUNTIME only
-	case P_SECURITY_PERMISSIONS: // RUNTIME only
+	case P_SECURITY_CATEGORIES:
+	case P_SECURITY_PERMISSIONS:
 	case P_SERIAL_CONTROL_STRING:
 	case P_EDIT_SCRIPTS:
 	case P_COLOR_WORLD:
@@ -443,6 +445,8 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_RANDOM_SEED:
 	case P_ADDRESS:
 	case P_STACKS_IN_USE:
+    // TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
+    case P_FONTFILES_IN_USE:
 	case P_RELAYER_GROUPED_CONTROLS:
 	case P_SELECTION_MODE:
 	case P_SELECTION_HANDLE_COLOR:
@@ -522,6 +526,14 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_IMAGE_CACHE_LIMIT:
 	case P_IMAGE_CACHE_USAGE:
 	case P_REV_PROPERTY_LISTENER_THROTTLE_TIME: // DEVELOPMENT only
+
+	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+	case P_COLOR_DIALOG_COLORS:
+
+	// IM-2013-12-04: [[ PixelScale ]] Add support for global pixelScale and systemPixelScale properties
+	case P_PIXEL_SCALE:
+	case P_SYSTEM_PIXEL_SCALE:
+
 		break;
 
 	case P_REV_CRASH_REPORT_SETTINGS: // DEVELOPMENT only
@@ -821,8 +833,8 @@ Exec_stat MCProperty::resolveprop(MCExecPoint& ep, Properties& r_which, MCNameRe
 
 Exec_stat MCProperty::set(MCExecPoint &ep)
 {
+#ifdef /* MCProperty::set */ LEGACY_EXEC
 	MCImage *newim;
-	Pixmap newpm;
 	int2 mx, my;
 	uint2 tir;
 	Exec_stat stat;
@@ -1429,11 +1441,8 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		if (ep.getsvalue() != MCbackdropcolor)
 		{
 			delete MCbackdropcolor;
-			if (MCbackdroppm != DNULL)
-			{
-				MCpatterns->freepat(MCbackdroppm);
-				MCbackdroppm = DNULL;
-			}
+			if (MCbackdroppattern != nil)
+				MCpatternlist->freepat(MCbackdroppattern);
 			if (ep.getsvalue() != "none" && ep.getsvalue() != "0")
 			{
 				MCColor t_colour;
@@ -1448,24 +1457,24 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 						MCbackdroppmid = tmp;
 						if (MCbackdroppmid < PI_END)
 							MCbackdroppmid += PI_PATTERNS;
-						newpm = MCpatterns->allocpat(MCbackdroppmid, parent);
-						if (newpm != None)
-							MCbackdroppm = newpm;
+						MCPatternRef t_new_pattern = MCpatternlist->allocpat(MCbackdroppmid, parent);
+						if (t_new_pattern != nil)
+							MCbackdroppattern = t_new_pattern;
 					}
 				}
-				if (MCbackdroppm == DNULL && MCscreen -> parsecolor(MCbackdropcolor, &t_colour, &t_colour_name))
+				if (MCbackdroppattern == nil && MCscreen -> parsecolor(MCbackdropcolor, &t_colour, &t_colour_name))
 				{
 					delete t_colour_name;
 				}
 				else
 					t_colour . red = t_colour . green = t_colour . blue = 0;
-				MCscreen -> configurebackdrop(t_colour, MCbackdroppm, nil);
+				MCscreen -> configurebackdrop(t_colour, MCbackdroppattern, nil);
 				MCscreen -> enablebackdrop();
 			}
 			else
 			{
 				MCscreen -> disablebackdrop();
-				MCscreen -> configurebackdrop(MCscreen -> getwhite(), NULL, nil);
+				MCscreen -> configurebackdrop(MCscreen -> getwhite(), nil, nil);
 				MCbackdropcolor = NULL;
 			}
 		}
@@ -1719,6 +1728,54 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			MCstackfileversion = version;
 		}
 		return ES_NORMAL;
+	// MW-2013-11-05: [[ Bug 11114 ]] Reinstate ability to set the securityPermissions.
+	case P_SECURITY_PERMISSIONS:
+		uint4 t_secmode;
+		t_secmode = 0;
+		
+		const char *t_modes;
+		t_modes = ep . getcstring();
+		while(t_modes[0] != '\0')
+		{
+			const char *t_next_mode;
+			t_next_mode = strchr(t_modes, ',');
+			if (t_next_mode == NULL)
+				t_next_mode = t_modes + strlen(t_modes);
+			
+			MCString t_token(t_modes, t_next_mode - t_modes);
+			
+			// MW-2009-06-29: If the token is empty, ignore it.
+			if (t_token . getlength() != 0)
+			{
+				int i = 0;
+				int t_bitmask = 1;
+				while (i < MC_SECUREMODE_MODECOUNT)
+				{
+					if (t_token == MCsecuremode_strings[i])
+					{
+						t_secmode |= t_bitmask;
+						break;
+					}
+					i++;
+					t_bitmask <<= 1;
+				}
+				
+				if (i == MC_SECUREMODE_MODECOUNT)
+				{
+					// MW-2009-06-29: Pass the token as a hint.
+					MCeerror -> add(EE_SECUREMODE_BADCATEGORY, line, pos, t_token);
+					return ES_ERROR;
+				}
+			}
+			
+			if (*t_next_mode == ',')
+				t_modes = t_next_mode + 1;
+			else
+				t_modes = t_next_mode;
+		}
+		
+		MCsecuremode |= (~t_secmode) & MC_SECUREMODE_ALL;
+		break;
 	case P_SECURE_MODE:
 		MCnofiles = True;
 		MCsecuremode = MC_SECUREMODE_ALL;
@@ -2065,6 +2122,27 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		break;
 	case P_SCREEN_GAMMA:
 		return ep.getreal8(MCgamma, line, pos, EE_PROPERTY_NAN);
+
+	// IM-2013-12-04: [[ PixelScale ]] Enable setting of pixelScale to override default system value
+	// IM-2013-12-06: [[ PixelScale ]] Remove handling of empty pixelScale - should always have a numeric value
+	case P_PIXEL_SCALE:
+		{
+			real64_t t_scale;
+			stat = ep.getreal8(t_scale, line, pos, EE_PROPERTY_NAN);
+			
+			if (stat != ES_NORMAL)
+				return stat;
+			
+			if (t_scale <= 0)
+			{
+				MCeerror->add(EE_PROPERTY_BADPIXELSCALE, line, pos, t_scale);
+				return ES_ERROR;
+			}
+			
+			MCResSetPixelScale(t_scale);
+		}
+		break;
+
 	case P_SHELL_COMMAND:
 		delete MCshellcmd;
 		MCshellcmd = ep.getsvalue().clone();
@@ -2166,8 +2244,10 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			}
 			else
 			{
+				// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
+				//   no reason not to use the cache.
 				regexp *t_net_int_regex;
-				t_net_int_regex = MCR_compile("\\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b");
+				t_net_int_regex = MCR_compile("\\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b", True /* casesensitive */);
 				int t_net_int_valid;
 				t_net_int_valid = MCR_exec(t_net_int_regex, ep.getsvalue().getstring(), ep.getsvalue().getlength());
 				MCR_free(t_net_int_regex);			
@@ -2339,6 +2419,11 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	case P_ALLOW_DATAGRAM_BROADCASTS:
 		return ep . getboolean(MCallowdatagrambroadcasts, line, pos, EE_PROPERTY_NAB);
 	
+		// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+	case P_COLOR_DIALOG_COLORS:
+		MCA_setcolordialogcolors(ep);
+		return ES_NORMAL;
+
 	case P_BRUSH_COLOR:
 	case P_BRUSH_BACK_COLOR:
 	case P_BRUSH_PATTERN:
@@ -2382,41 +2467,40 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			switch (which)
 			{
 			case P_BRUSH_PATTERN:
-				if (ep.getuint4(MCbrushpmid, line, pos,
-				                EE_PROPERTY_BRUSHPATNAN) != ES_NORMAL)
-					return ES_ERROR;
-				if (MCbrushpmid < PI_END)
-					MCbrushpmid += PI_PATTERNS;
-				newpm = MCpatterns->allocpat(MCbrushpmid, parent);
-				if (newpm == None)
 				{
-					MCeerror->add
-					(EE_PROPERTY_BRUSHPATNOIMAGE, line, pos,
-					 ep.getsvalue());
-					return ES_ERROR;
-				}
-				MCeditingimage = nil;
+					if (ep.getuint4(MCbrushpmid, line, pos, EE_PROPERTY_BRUSHPATNAN) != ES_NORMAL)
+						return ES_ERROR;
+					if (MCbrushpmid < PI_END)
+						MCbrushpmid += PI_PATTERNS;
+					MCPatternRef t_new_pattern = MCpatternlist->allocpat(MCbrushpmid, parent);
+					if (t_new_pattern == None)
+					{
+						MCeerror->add(EE_PROPERTY_BRUSHPATNOIMAGE, line, pos, ep.getsvalue());
+						return ES_ERROR;
+					}
+					MCeditingimage = nil;
 
-				MCpatterns->freepat(MCbrushpm);
-				MCbrushpm = newpm;
+					MCpatternlist->freepat(MCbrushpattern);
+					MCbrushpattern = t_new_pattern;
+				}
 				break;
 			case P_PEN_PATTERN:
-				if (ep.getuint4(MCpenpmid, line, pos,
-				                EE_PROPERTY_PENPATNAN) != ES_NORMAL)
-					return ES_ERROR;
-				if (MCpenpmid < PI_END)
-					MCpenpmid += PI_PATTERNS;
-				newpm = MCpatterns->allocpat(MCpenpmid, parent);
-				if (newpm == None)
 				{
-					MCeerror->add
-					(EE_PROPERTY_PENPATNOIMAGE, line, pos, ep.getsvalue());
-					return ES_ERROR;
-				}
-				MCeditingimage = nil;
+					if (ep.getuint4(MCpenpmid, line, pos, EE_PROPERTY_PENPATNAN) != ES_NORMAL)
+						return ES_ERROR;
+					if (MCpenpmid < PI_END)
+						MCpenpmid += PI_PATTERNS;
+					MCPatternRef t_new_pattern = MCpatternlist->allocpat(MCpenpmid, parent);
+					if (t_new_pattern == None)
+					{
+						MCeerror->add(EE_PROPERTY_PENPATNOIMAGE, line, pos, ep.getsvalue());
+						return ES_ERROR;
+					}
+					MCeditingimage = nil;
 
-				MCpatterns->freepat(MCpenpm);
-				MCpenpm = newpm;
+					MCpatternlist->freepat(MCpenpattern);
+					MCpenpattern = t_new_pattern;
+				}
 				break;
 			case P_BRUSH_BACK_COLOR:
 			case P_PEN_BACK_COLOR:
@@ -2441,14 +2525,14 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 
 					if (which == P_BRUSH_COLOR)
 					{
-						MCpatterns->freepat(MCbrushpm);
+						MCpatternlist->freepat(MCbrushpattern);
 						MCbrushcolor = color;
 						delete MCbrushcolorname;
 						MCbrushcolorname = name;
 					}
 					else
 					{
-						MCpatterns->freepat(MCpenpm);
+						MCpatternlist->freepat(MCpenpattern);
 						MCpencolor = color;
 						delete MCpencolorname;
 						MCpencolorname = name;
@@ -2679,10 +2763,12 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCProperty::set */
 }
 
 Exec_stat MCProperty::eval(MCExecPoint &ep)
 {
+#ifdef /* MCProperty::eval */ LEGACY_EXEC
 	uint2 i = 0;
 	int2 mx, my;
 	MCExecPoint ep2(ep);
@@ -3558,6 +3644,16 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 	case P_SCREEN_GAMMA:
 		ep.setr8(MCgamma, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
 		break;
+
+	// IM-2013-12-04: [[ PixelScale ]] Global property pixelScale returns the current pixel scale
+	case P_PIXEL_SCALE:
+		ep.setnvalue(MCResGetPixelScale());
+		break;
+	// IM-2013-12-04: [[ PixelScale ]] Global property systemPixelScale returns the pixel scale as determined by the OS
+	case P_SYSTEM_PIXEL_SCALE:
+		ep.setnvalue(MCResGetSystemScale());
+		break;
+
 	case P_SHELL_COMMAND:
 		ep.setsvalue(MCshellcmd);
 		break;
@@ -3575,8 +3671,14 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			MCusing[i]->getprop(0, P_SHORT_NAME, ep2, effective);
 			ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i == MCnusing - 1);
 		}
-		break;
-	case P_RELAYER_GROUPED_CONTROLS:
+        break;
+            
+    // TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
+    case P_FONTFILES_IN_USE:
+        // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontListLoaded
+        return MCFontListLoaded(ep);
+        break;
+    case P_RELAYER_GROUPED_CONTROLS:
 		ep.setboolean(MCrelayergrouped);
 		break;
 	case P_SELECTION_MODE:
@@ -3860,6 +3962,9 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 	case P_PROCESS_TYPE:
 	case P_STACK_LIMIT:
 	case P_ALLOW_DATAGRAM_BROADCASTS:
+	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+	case P_COLOR_DIALOG_COLORS:
+
 		if (target == NULL)
 		{
 			switch (which)
@@ -4012,6 +4117,10 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			case P_ALLOW_DATAGRAM_BROADCASTS:
 				ep . setboolean(MCallowdatagrambroadcasts);
 				break;
+				// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+			case P_COLOR_DIALOG_COLORS:
+				MCA_getcolordialogcolors(ep);
+				break;
 			default:
 				break;
 			}
@@ -4094,6 +4203,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCProperty::eval */
 }
 
 ////////////////////////////////////////////////////////////////////////////////

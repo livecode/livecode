@@ -109,7 +109,7 @@ public:
 	void setprintmode(void);
 
 	void setclip(const MCRectangle& rect);
-	const MCRectangle& getclip(void) const;
+	MCRectangle getclip(void) const;
 	void clearclip(void);
 
 	void setorigin(int2 x, int2 y);

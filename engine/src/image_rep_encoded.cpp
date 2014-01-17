@@ -37,7 +37,7 @@ MCEncodedImageRep::~MCEncodedImageRep()
 {
 }
 
-bool MCEncodedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count)
+bool MCEncodedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)
 {
 	bool t_success = true;
 
@@ -59,18 +59,25 @@ bool MCEncodedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_fra
 	if (t_stream != nil)
 		MCS_close(t_stream);
 
+	MCImageFrame *t_frames;
+	t_frames = nil;
+	
+	uindex_t t_frame_count;
+	t_frame_count = 0;
+	
 	if (t_success)
 	{
 		if (t_compressed != nil)
-			t_success = MCImageDecompress(t_compressed, r_frames, r_frame_count);
+			t_success = MCImageDecompress(t_compressed, t_frames, t_frame_count);
 		else
 		{
-			t_success = MCMemoryNewArray(1, r_frames);
+			t_success = MCMemoryNewArray(1, t_frames);
 			if (t_success)
 			{
-				r_frames[0].image = t_bitmap;
+				t_frames[0].image = t_bitmap;
+				t_frames[0].density = 1.0;
 				t_bitmap = nil;
-				r_frame_count = 1;
+				t_frame_count = 1;
 			}
 		}
 	}
@@ -78,13 +85,17 @@ bool MCEncodedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_fra
 	if (t_success)
 	{
 
-		m_width = r_frames[0].image->width;
-		m_height = r_frames[0].image->height;
+		m_width = t_frames[0].image->width;
+		m_height = t_frames[0].image->height;
 
 		if (t_compressed != nil)
 			m_compression = t_compressed->compression;
 
 		m_have_geometry = true;
+		
+		r_frames = t_frames;
+		r_frame_count = t_frame_count;
+		r_frames_premultiplied = false;
 	}
 
 	MCCStringFree(t_name);
@@ -98,7 +109,7 @@ bool MCEncodedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_fra
 bool MCEncodedImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
 {
 	MCImageFrame *t_frame = nil;
-	if (!LockImageFrame(0, t_frame))
+	if (!LockImageFrame(0, m_premultiplied, 1.0, t_frame))
 		return false;
 
 	r_width = t_frame->image->width;
@@ -118,7 +129,7 @@ uint32_t MCEncodedImageRep::GetDataCompression()
 		return m_compression;
 
 	MCImageFrame *t_frame = nil;
-	if (LockImageFrame(0, t_frame))
+	if (LockImageFrame(0, m_premultiplied, 1.0, t_frame))
 		UnlockImageFrame(0, t_frame);
 
 	return m_compression;
@@ -126,9 +137,10 @@ uint32_t MCEncodedImageRep::GetDataCompression()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCReferencedImageRep::MCReferencedImageRep(const char *p_file_name)
+MCReferencedImageRep::MCReferencedImageRep(const char *p_file_name, const char *p_search_key)
 {
 	/* UNCHECKED */ MCCStringClone(p_file_name, m_file_name);
+	/* UNCHECKED */ MCCStringClone(p_search_key, m_search_key);
 	m_url_data = nil;
 	
 	// MW-2013-09-25: [[ Bug 10983 ]] No load has yet been attempted.
@@ -138,6 +150,8 @@ MCReferencedImageRep::MCReferencedImageRep(const char *p_file_name)
 MCReferencedImageRep::~MCReferencedImageRep()
 {
 	MCCStringFree(m_file_name);
+	MCCStringFree(m_search_key);
+	
 	MCMemoryDeallocate(m_url_data);
 }
 
@@ -211,7 +225,7 @@ bool MCVectorImageRep::Render(MCDC *p_context, bool p_embed, MCRectangle &p_imag
 	return true;
 }
 
-bool MCVectorImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count)
+bool MCVectorImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)
 {
 	/* OVERHAUL - REVISIT - should be able to render into an image context
 	but we need to know the size of image required first */
@@ -235,6 +249,11 @@ bool MCVectorImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
 	return t_success;
 }
 
+uint32_t MCVectorImageRep::GetDataCompression()
+{
+	return F_PICT;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCCompressedImageRep::MCCompressedImageRep(MCImageCompressedBitmap *p_compressed)
@@ -248,7 +267,7 @@ MCCompressedImageRep::~MCCompressedImageRep()
 	MCImageFreeCompressedBitmap(m_compressed);
 }
 
-bool MCCompressedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count)
+bool MCCompressedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)
 {
 	bool t_success = true;
 
@@ -259,8 +278,11 @@ bool MCCompressedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_
 
 	if (t_success)
 	{
+		t_frame->density = 1.0;
+		
 		r_frames = t_frame;
 		r_frame_count = 1;
+		r_frames_premultiplied = false;
 	}
 	else
 		MCImageFreeFrames(t_frame, 1);
@@ -274,6 +296,11 @@ bool MCCompressedImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_heig
 	r_height = m_compressed->height;
 
 	return true;
+}
+
+uint32_t MCCompressedImageRep::GetDataCompression()
+{
+	return F_RLE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
