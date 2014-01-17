@@ -2436,6 +2436,10 @@ enum Exec_errors
 	// IM-2013-12-04: [[ PixelScale ]]
 	// {EE-0801} pixelScale: not a valid scale value
 	EE_PROPERTY_BADPIXELSCALE,
+	
+	// IM-2014-01-07: [[ StackScale ]]
+	// {EE-0802} scaleFactor: not a valid scale value
+	EE_STACK_BADSCALEFACTOR,
 };
 
 extern const char *MCexecutionerrors;

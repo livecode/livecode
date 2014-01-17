@@ -1372,6 +1372,8 @@ LT factor_table[] =
         {"sb", TT_CHUNK, CT_SCROLLBAR},
         {"sbs", TT_CLASS, CT_SCROLLBAR},
         {"scale", TT_PROPERTY, P_SCALE},
+		// IM-2014-01-07: [[ StackScale ]] New property for 'scalefactor'
+		{"scalefactor", TT_PROPERTY, P_SCALE_FACTOR},
         {"scaleindependently", TT_PROPERTY, P_SCALE_INDEPENDENTLY},
 		{"screen", TT_PROPERTY, P_SCREEN},
         {"screencolors", TT_FUNCTION, F_SCREEN_COLORS},

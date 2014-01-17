@@ -392,7 +392,12 @@ void MCStack::realize()
 		// IM-2013-09-23: [[ FullscreenMode ]] Don't change stack rect if fullscreen
 		/* CODE DELETED */
 
-		wrect = getwrect(rect, wstyle, exstyle);
+		// IM-2013-08-01: [[ ResIndependence ]] scale stack rect to device coords
+		// IM-2014-01-16: [[ StackScale ]] Use scaled view rect as window size
+		MCRectangle t_device_rect;
+		t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(view_getrect()));
+
+		wrect = getwrect(t_device_rect, wstyle, exstyle);
 		LONG x = wrect.left;
 		LONG y = wrect.top;
 		LONG width = wrect.right - wrect.left;
@@ -432,7 +437,7 @@ void MCStack::realize()
 		{
 			MCRegionRef t_region;
 			t_region = (MCRegionRef)m_window_shape -> handle;
-			MCRegionOffset(t_region, rect . x - wrect . left, rect . y - wrect . top);
+			MCRegionOffset(t_region, t_device_rect . x - wrect . left, t_device_rect . y - wrect . top);
 			MCRegionSetAsWindowShape(t_region, window->handle.window);
 
 			// The window now owns the region.

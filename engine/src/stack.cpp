@@ -132,7 +132,7 @@ MCStack::MCStack()
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
-
+	
 	cursoroverride = false ;
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
 
@@ -994,7 +994,10 @@ void MCStack::setrect(const MCRectangle &nrect)
 
 	// IM-2013-09-23: [[ FullscreenMode ]] Use view to determine adjusted stack size
 	MCRectangle t_new_rect;
-	t_new_rect = view_constrainstackviewport(nrect);
+	MCRectangle t_view_rect;
+	MCGAffineTransform t_transform;
+	// IM-2014-01-16: [[ StackScale ]] Get new rect size from view
+	view_calculate_viewports(nrect, t_new_rect, t_view_rect, t_transform);
 	
 	if (rect.x != t_new_rect.x || rect.y != t_new_rect.y)
 		state |= CS_BEEN_MOVED;
@@ -1023,6 +1026,11 @@ void MCStack::setrect(const MCRectangle &nrect)
 		else
 			setgeom();
 	}
+	else
+	{
+		// IM-2014-01-16: [[ StackView ]] Ensure view is updated with new stack rect
+		view_setstackviewport(nrect);
+	}
 	
 	// MW-2012-10-23: [[ Bug 10461 ]] Make sure we do this *after* the stack has been resized
 	//   otherwise we get cases where the card size isn't updated.
@@ -1049,6 +1057,11 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	// IM-2013-09-23: [[ FullscreenMode ]] Add stack fullscreenMode property
 	case P_FULLSCREENMODE:
 		ep.setsvalue(MCStackFullscreenModeToString(view_getfullscreenmode()));
+		break;
+			
+	// IM-2014-01-07: [[ StackScale ]] Add stack scalefactor property
+	case P_SCALE_FACTOR:
+		ep.setnvalue(view_get_content_scale());
 		break;
 		
 	case P_LONG_ID:
@@ -1571,18 +1584,12 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			bool v_changed = (getextendedstate(ECS_FULLSCREEN) != t_bval);
 			if ( v_changed)
 			{
+				// IM-2014-01-16: [[ StackScale ]] Save the old rect here as view_setfullscreen() will update the stack rect
+				if (t_bval)
+					old_rect = rect;
+				
 				setextendedstate(t_bval, ECS_FULLSCREEN);
 				view_setfullscreen(t_bval);
-				
-				// MW-2012-10-04: [[ Bug 10436 ]] Use 'setrect' to change the rect
-				//   field.
-				if ( bval )
-					old_rect = rect ;
-				else if (( old_rect.width > 0 ) && ( old_rect.height > 0 ))
-					setrect(old_rect);
-				
-				if ( opened > 0 ) 
-					reopenwindow();
 			}
 		}
 	break;
@@ -1604,18 +1611,34 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			}
 
 			if (t_mode != view_getfullscreenmode())
-			{
 				view_setfullscreenmode(t_mode);
-				if (view_getfullscreen() && opened > 0)
-					// IM-2013-10-04: [[ FullscreenMode ]] Change the rect back to old_rect,
-					// rather than reopening the window.
-					setrect(old_rect);
-			}
 
 			if ((t_ideal_layout != getuseideallayout()) && opened)
 				purgefonts();
 		}
 		break;
+			
+	// IM-2014-01-07: [[ StackScale ]] Add stack scalefactor property
+	case P_SCALE_FACTOR:
+		{
+			real64_t t_scale;
+			
+			Exec_stat t_stat;
+			t_stat = ep.getreal8(t_scale, 0, 0, EE_PROPERTY_NAN);
+			
+			if (t_stat != ES_NORMAL)
+				return t_stat;
+			
+			if (t_scale <= 0)
+			{
+				MCeerror->add(EE_STACK_BADSCALEFACTOR, 0, 0, t_scale);
+				return ES_ERROR;
+			}
+			
+			view_set_content_scale(t_scale);
+		}
+		break;
+			
 	case P_NAME:
 		{
 			// MW-2008-10-28: [[ ParentScripts ]] If this stack has its 'has parentscripts'
@@ -2687,7 +2710,11 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 #else
 				&& externalfiles != NULL && !(state & CS_DELETE_STACK))
 #endif
+		{
+			// IM-2014-01-16: [[ StackScale ]] Ensure view has the current stack rect
+			view_setstackviewport(rect);
 			realize();
+		}
 	}
 
 	// MW-2009-01-28: [[ Bug ]] Card and stack parentScripts don't work.
@@ -2861,38 +2888,14 @@ char *MCStack::resolve_filename(const char *filename)
 
 MCRectangle MCStack::recttoroot(const MCRectangle& p_rect)
 {
-	// IM-2013-10-08: [[ FullscreenMode ]] Use view transform when converting stack -> global coords
-	MCRectangle t_view_rect;
-	t_view_rect = view_getrect();
-	
-	MCRectangle t_rect = p_rect;
-	t_rect.y -= getscroll();
-	
-	MCRectangle t_screen_rect;
-	t_screen_rect = MCRectangleGetTransformedBounds(t_rect, view_getviewtransform());
-	
-	t_screen_rect.x += t_view_rect.x;
-	t_screen_rect.y += t_view_rect.y;
-	
-	return t_screen_rect;
+	// IM-2014-01-07: [[ StackScale ]] Use stack->root transform to convert coords
+	return MCRectangleGetTransformedBounds(p_rect, getroottransform());
 }
 
 MCRectangle MCStack::rectfromroot(const MCRectangle& p_rect)
 {
-	// IM-2013-10-08: [[ FullscreenMode ]] Use view transform when converting global -> stack coords
-	MCRectangle t_view_rect;
-	t_view_rect = view_getrect();
-	
-	MCRectangle t_screen_rect;
-	t_screen_rect = p_rect;
-	t_screen_rect.x -= t_view_rect.x;
-	t_screen_rect.y -= t_view_rect.y;
-	
-	MCRectangle t_rect;
-	t_rect = MCRectangleGetTransformedBounds(t_screen_rect, MCGAffineTransformInvert(view_getviewtransform()));
-	t_rect.y += getscroll();
-	
-	return t_rect;
+	// IM-2014-01-07: [[ StackScale ]] Use root->stack transform to convert coords
+	return MCRectangleGetTransformedBounds(p_rect, MCGAffineTransformInvert(getroottransform()));
 }
 
 // MW-2011-09-20: [[ Collision ]] The stack's shape is its rect. At some point it
@@ -2902,7 +2905,11 @@ bool MCStack::lockshape(MCObjectShape& r_shape)
 	r_shape . type = kMCObjectShapeRectangle;
 	
 	// Object shapes are in card-relative co-ords.
-	r_shape . bounds = MCU_make_rect(0, getscroll(), rect . width, rect . height);
+	r_shape . bounds = MCRectangleMake(0, 0, rect . width, rect . height);
+	
+	// IM-2014-01-08: [[ StackScale ]] convert stack coords to card coords
+	r_shape . bounds = MCRectangleGetTransformedBounds(r_shape . bounds, MCGAffineTransformInvert(gettransform()));
+	
 	r_shape . rectangle = r_shape . bounds;
 	
 	return true;
