@@ -2718,7 +2718,7 @@ MCPoint MCStack::stacktogloballoc(const MCPoint &p_stackloc) const
 MCRectangle MCStack::getvisiblerect(void)
 {
 	MCRectangle t_rect;
-	t_rect = view_getstackviewport();
+	t_rect = view_getstackvisiblerect();
 	
 	return MCRectangleGetTransformedBounds(t_rect, MCGAffineTransformInvert(gettransform()));
 }
