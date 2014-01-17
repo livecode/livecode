@@ -783,6 +783,9 @@ bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 	GetRegionBounds(r, &windowRect);
 	DisposeRgn(r);
 	drect = MCMacRectToMCRect(windowRect);
+	
+	// IM-2014-01-17: [[ HiDPI ]] Scale logical screen coords to device pixels
+	drect = MCRectangleGetScaledInterior(drect, MCResGetSystemScale());
 	if (drect.height == 0)
 		drect.x = drect.y = -1; // windowshaded, so don't move it
 

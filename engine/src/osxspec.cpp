@@ -261,7 +261,11 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 				else
 					t_changed = true;
 				if (t_changed)
+				{
+					// IM-2014-01-17: [[ HiDPI ]] // Reset windows in case of screen DPI change
+					MCdispatcher -> sync_stack_windows();
 					MCscreen -> delaymessage(MCdefaultstackptr -> getcurcard(), MCM_desktop_changed);
+				}
 			}
 		}
 		else if (GetEventKind(event) == kEventWindowCollapsed && sptr != NULL)

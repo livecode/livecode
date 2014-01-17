@@ -315,8 +315,9 @@ void MCStack::realize()
 
 		// IM-2013-08-01: [[ ResIndependence ]] scale stack rect to device coords
 		// IM-2014-01-16: [[ StackScale ]] Use scaled view rect as window size
+	// IM-2014-01-17: [[ HiDPI ]] Scale device pixels to logical screen coords
 		MCRectangle t_device_rect;
-		t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(view_getrect()));
+		t_device_rect = MCRectangleGetScaledInterior(view_getrect(), MCResGetPixelScale() / MCResGetSystemScale());
 		
 		Rect wrect;
 		wrect = MCRectToMacRect(t_device_rect);
@@ -341,7 +342,9 @@ void MCStack::realize()
 		uint32_t wattributes;
 		getWinstyle(wattributes,wclass);
 		
-		wattributes |= kWindowCompositingAttribute;
+		// IM-2014-01-17: [[ HiDPI ]] Add frameworkscaled flag when creating window to
+		// enable Hi-DPI rendering
+		wattributes |= kWindowCompositingAttribute | kWindowFrameworkScaledAttribute;
 
 		long testdecorations = WD_TITLE | WD_MENU | WD_CLOSE | WD_MINIMIZE | WD_MAXIMIZE;
 
@@ -528,7 +531,8 @@ MCRectangle MCStack::device_getwindowrect() const
     
 	t_rect = MCMacRectToMCRect(t_winrect);
     
-    return t_rect;
+	// IM-2014-01-17: [[ HiDPI ]] Scale logical screen coords to device pixels
+    return MCRectangleGetScaledBounds(t_rect, MCResGetSystemScale());
 }
 
 void MCStackGetWindowRect(WindowPtr p_window, MCRectangle &r_rect)
@@ -547,6 +551,9 @@ void MCStackGetWindowRect(WindowPtr p_window, MCRectangle &r_rect)
 	r_rect.y = t_topleft.v;
 	r_rect.width = t_winrect.right - t_winrect.left;
 	r_rect.height = t_winrect.bottom - t_winrect.top;
+	
+	// IM-2014-01-17: [[ HiDPI ]] Scale logical screen coords to device pixels
+	r_rect = MCRectangleGetScaledBounds(r_rect, MCResGetSystemScale());
 }
 
 // IM-2013-09-23: [[ FullscreenMode ]] Factor out device-specific window sizing
@@ -555,24 +562,28 @@ MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
 	MCRectangle t_win_rect;
 	MCStackGetWindowRect((WindowPtr)window->handle.window, t_win_rect);
 	
+	// IM-2014-01-17: [[ HiDPI ]] Scale device pixels to logical screen coords
+	MCRectangle t_logical_rect;
+	t_logical_rect = MCRectangleGetScaledInterior(p_rect, 1 / MCResGetSystemScale());
+	
 	if (IsWindowVisible((WindowPtr)window->handle.window))
 	{
 		if (mode != WM_SHEET && mode != WM_DRAWER
 			&& (p_rect.x != t_win_rect.x || p_rect.y != t_win_rect.y))
 		{
-			MoveWindow((WindowPtr)window->handle.window, p_rect.x, p_rect.y, False);
+			MoveWindow((WindowPtr)window->handle.window, t_logical_rect.x, t_logical_rect.y, False);
 //			state |= CS_BEEN_MOVED;
 		}
 	}
 	else
 	{
 		if (mode != WM_SHEET && mode != WM_DRAWER)
-			MoveWindow((WindowPtr)window->handle.window, p_rect.x, p_rect.y, False);
+			MoveWindow((WindowPtr)window->handle.window, t_logical_rect.x, t_logical_rect.y, False);
 //		state &= ~CS_BEEN_MOVED;
 	}
 
 	if (p_rect.width != t_win_rect.width || p_rect.height != t_win_rect.height)
-		SizeWindow((WindowPtr)window->handle.window, p_rect.width, p_rect.height, True);
+		SizeWindow((WindowPtr)window->handle.window, t_logical_rect.width, t_logical_rect.height, True);
 	
 	return t_win_rect;
 }
@@ -888,6 +899,9 @@ void MCStack::enablewindow(bool p_enable)
 {
 }
 
+
+extern bool MCRegionTransform(MCRegionRef p_region, const MCGAffineTransform &p_transform, MCRegionRef &r_transformed_region);
+
 // MW-2011-09-11: [[ Redraw ]] Force an immediate update of the window within the given
 //   region. The actual rendering is done by deferring to the 'redrawwindow' method.
 void MCStack::device_updatewindow(MCRegionRef p_region)
@@ -898,15 +912,20 @@ void MCStack::device_updatewindow(MCRegionRef p_region)
 	HIViewRef t_view;
 	GetIndexedSubControl(t_root, 1, &t_view);
 	
+	// IM-2014-01-17: [[ HiDPI ]] Scale device pixels to logical screen coords
+	MCRegionRef t_device_region;
+	MCRegionTransform(p_region, MCGAffineTransformMakeScale(1 / MCResGetSystemScale(), 1 / MCResGetSystemScale()), t_device_region);
 	// MW-2011-10-07: [[ Bug 9792 ]] If the mask hasn't changed, use the update region,
 	//   else redraw the whole view.
 	if (!getextendedstate(ECS_MASK_CHANGED) || s_update_callback != nil)
-		HIViewSetNeedsDisplayInRegion(t_view, (RgnHandle)p_region, TRUE);
+		HIViewSetNeedsDisplayInRegion(t_view, (RgnHandle)t_device_region, TRUE);
 	else
 	{
 		HIViewSetNeedsDisplay(t_view, TRUE);
 		DisableScreenUpdates();
 	}
+	
+	MCRegionDestroy(t_device_region);
 	
 	HIViewRender(t_view);
 	
@@ -1464,6 +1483,16 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 				// draw something.
 				if (t_graphics != nil)
 				{
+					MCGFloat t_backing_scale;
+					t_backing_scale = MCResGetSystemScale();
+					
+					// IM-2014-01-17: [[ HiDPI ]] Transform CGContext to draw in device pixel coords
+					CGContextScaleCTM(t_graphics, 1 / t_backing_scale, 1 / t_backing_scale);
+					
+					// IM-2014-01-17: [[ HiDPI ]] Scale logical screen coords to device pixels
+					MCRegionRef t_logical_rgn;
+					/* UNCHECKED */ MCRegionTransform((MCRegionRef)t_dirty_rgn, MCGAffineTransformMakeScale(t_backing_scale, t_backing_scale), t_logical_rgn);
+					
 					// IM-2013-08-23: [[ ResIndependence ]] provide surface height in device scale
 					MCGFloat t_scale;
 					t_scale = MCResGetPixelScale();
@@ -1483,20 +1512,22 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 					// Save the context state
 					CGContextSaveGState(t_graphics);
 					
-					MCMacStackSurface t_surface(t_context -> stack, t_surface_height, (MCRegionRef)t_dirty_rgn, t_graphics);
+					MCMacStackSurface t_surface(t_context -> stack, t_surface_height, t_logical_rgn, t_graphics);
 					
 					if (t_surface.Lock())
 					{
 						// If we don't have an update pixmap, then use redrawwindow.
 						if (s_update_callback == nil)
-							t_context -> stack -> device_redrawwindow(&t_surface, (MCRegionRef)t_dirty_rgn);
+							t_context -> stack -> device_redrawwindow(&t_surface, t_logical_rgn);
 						else
-							s_update_callback(&t_surface, (MCRegionRef)t_dirty_rgn, s_update_context);
+							s_update_callback(&t_surface, t_logical_rgn, s_update_context);
 						t_surface.Unlock();
 					}
 
 					// Restore the context state
 					CGContextRestoreGState(t_graphics);
+					
+					MCRegionDestroy(t_logical_rgn);
 				}
 				
 				// MW-2011-11-23: [[ Bug ]] Force a redraw of the players on the stack

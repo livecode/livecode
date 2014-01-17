@@ -105,6 +105,16 @@ inline MCRectangle MCRectangleGetTransformedInterior(const MCRectangle &p_rect, 
 	return MCGRectangleGetIntegerInterior(MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_rect), p_transform));
 }
 
+static inline MCRectangle MCRectangleGetScaledBounds(const MCRectangle &p_rect, MCGFloat p_scale)
+{
+	return MCRectangleGetTransformedBounds(p_rect, MCGAffineTransformMakeScale(p_scale, p_scale));
+}
+
+static inline MCRectangle MCRectangleGetScaledInterior(const MCRectangle &p_rect, MCGFloat p_scale)
+{
+	return MCRectangleGetTransformedInterior(p_rect, MCGAffineTransformMakeScale(p_scale, p_scale));
+}
+
 inline MCPoint MCPointTransform(const MCPoint &p_point, const MCGAffineTransform &p_transform)
 {
 	return MCGPointToMCPoint(MCGPointApplyAffineTransform(MCPointToMCGPoint(p_point), p_transform));
