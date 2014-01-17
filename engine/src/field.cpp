@@ -2173,7 +2173,7 @@ void MCField::undo(Ustruct *us)
 
 		seltext(ei - us->ud.text.newchars, ei, False);
 		pgptr = cloneselection();
-		settextindex_oldstring(0, ei - us->ud.text.newchars, ei, MCnullmcstring, True);
+        settextindex(0, ei - us->ud.text.newchars, ei, kMCEmptyString, True);
 		ei -= us->ud.text.newchars;
 		us->ud.text.newchars = 0;
 		if (us->ud.text.data != NULL)
