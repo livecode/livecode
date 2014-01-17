@@ -145,7 +145,7 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 		
 		SkBitmap t_bitmap;
 		t_bitmap . setConfig(SkBitmap::kARGB_8888_Config, p_bounds . width, p_bounds . height);
-		t_bitmap . setIsOpaque(false);
+        t_bitmap . setAlphaType(kPremul_SkAlphaType);
 		t_bitmap . setPixels(t_rgb_data);
 		p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
 	}
@@ -236,7 +236,7 @@ static bool w32_draw_text_to_context_at_device_location(MCGContextRef p_context,
 		
 		SkBitmap t_bitmap;
 		t_bitmap . setConfig(SkBitmap::kA8_Config, p_bounds . width, p_bounds . height);
-		t_bitmap . setIsOpaque(false);
+        t_bitmap . setAlphaType(kPremul_SkAlphaType);
 		t_bitmap . setPixels(t_data);
 		p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, 
 											  p_bounds . y + p_location . y, &t_paint);

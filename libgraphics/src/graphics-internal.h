@@ -501,7 +501,7 @@ public:
 	virtual bool asCoeff(Coeff* src, Coeff* dst) const;
 	virtual bool asMode(Mode* mode) const;
 	
-    virtual Factory getFactory() { return CreateProc; }
+    virtual Factory getFactory() const { return CreateProc; }
     virtual void flatten(SkFlattenableWriteBuffer&);
 	
 protected:
@@ -540,7 +540,7 @@ public:
 protected:
     MCGLegacyGradientShader(SkFlattenableReadBuffer& );
     virtual void flatten(SkFlattenableWriteBuffer& );
-    virtual Factory getFactory() { return CreateProc; }
+    virtual Factory getFactory() const { return CreateProc; }
 	
 	MCGGradientRef			m_gradient_ref;
 	int32_t					m_y;

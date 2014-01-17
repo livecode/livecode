@@ -28,7 +28,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <SkColorFilter.h>
 #include <SkDevice.h>
 #include <SkImageFilter.h>
-#include <SkSingleInputImageFilter.h>
 #include <SkOffsetImageFilter.h>
 #include <SkBlurImageFilter.h>
 #include <SkTypeface.h>
@@ -351,7 +350,10 @@ bool MCGContextCreate(uint32_t p_width, uint32_t p_height, bool p_alpha, MCGCont
 {
 	SkBitmap t_bitmap;
 	t_bitmap . setConfig(SkBitmap::kARGB_8888_Config, p_width, p_height);
-	t_bitmap . setIsOpaque(!p_alpha);
+    if (!p_alpha)
+        t_bitmap . setAlphaType(kOpaque_SkAlphaType);
+    else
+        t_bitmap . setAlphaType(kPremul_SkAlphaType);
 	
 	if (t_bitmap . allocPixels())
 		return MCGContextCreateWithBitmap(t_bitmap, r_context);
@@ -372,7 +374,10 @@ bool MCGContextCreateWithPixels(uint32_t p_width, uint32_t p_height, uint32_t p_
 {	
 	SkBitmap t_bitmap;
 	t_bitmap . setConfig(SkBitmap::kARGB_8888_Config, p_width, p_height, p_stride);
-	t_bitmap . setIsOpaque(!p_alpha);
+    if (!p_alpha)
+        t_bitmap . setAlphaType(kOpaque_SkAlphaType);
+    else
+        t_bitmap . setAlphaType(kPremul_SkAlphaType);
 	t_bitmap . setPixels(p_pixels);
 	
 	return MCGContextCreateWithBitmap(t_bitmap, r_context);	
@@ -467,132 +472,6 @@ void MCGContextSetShouldAntialias(MCGContextRef self, bool p_should_antialias)
 	
 	self -> state -> should_antialias = p_should_antialias;
 }
-////////////////////////////////////////////////////////////////////////////////
-
-class MCGMaskExtractImageFilter : public SkSingleInputImageFilter
-{
-public:
-    MCGMaskExtractImageFilter(SkMaskFilter *p_blur_filter, bool p_invert, SkImageFilter *p_input) : SkSingleInputImageFilter(p_input)
-	{
-		m_blur_filter = p_blur_filter;
-		m_invert = p_invert;
-		if (m_blur_filter != NULL)
-			m_blur_filter -> ref();
-	}
-	
-	~MCGMaskExtractImageFilter()
-	{
-		if (m_blur_filter != NULL)
-			m_blur_filter -> unref();
-	}	
-	
-protected:
-    virtual bool onFilterImage(Proxy *p_proxy, const SkBitmap &p_source, const SkMatrix &p_ctm, SkBitmap *r_result, SkIPoint *r_offset)
-	{		
-		bool t_success;
-		t_success = true;
-		
-		SkBitmap t_mask;
-		SkIPoint t_offset;
-		if (t_success)
-		{
-			SkBitmap t_source = this -> getInputResult(p_proxy, p_source, p_ctm, r_offset);
-			
-			if (m_invert)
-			{		
-				t_source . lockPixels();
-				for (uint32_t y = 0; y < t_source . height(); y++)
-				{
-					for (uint32_t x = 0; x < t_source . width(); x++)
-					{
-						uint32_t *t_pxl;
-						t_pxl = t_source . getAddr32(x, y);			
-						*t_pxl = (*t_pxl & 0x00FFFFFF) | ((255 - ((*t_pxl >> 24) & 0xFF)) << 24);
-					}
-				}
-				t_source . unlockPixels();				
-			}
-			
-			if (m_blur_filter != NULL)
-			{
-				SkPaint t_paint;
-				t_paint . setMaskFilter(m_blur_filter);
-				t_success = t_source . extractAlpha(&t_mask, &t_paint, NULL, &t_offset);
-			}
-			else	
-				t_success = t_source . extractAlpha(&t_mask, NULL, NULL, &t_offset);
-		}
-		
-		if (t_success)
-		{
-			*r_result = t_mask;
-			r_offset -> fX += t_offset . fX;
-			r_offset -> fY += t_offset . fY;
-		}
-		
-		return t_success;
-	}
-	
-	virtual bool onFilterBounds(const SkIRect &p_source, const SkMatrix &p_ctm, SkIRect *r_dst)
-	{
-		*r_dst = p_source;
-		return true;
-	}
-	
-private:
-	SkMaskFilter *m_blur_filter;
-	bool m_invert;
-};
-
-class MCGMaskInvertImageFilter : public SkSingleInputImageFilter
-{
-public:
-    MCGMaskInvertImageFilter(SkImageFilter *p_input) : SkSingleInputImageFilter(p_input)
-	{		
-	}
-	
-	~MCGMaskInvertImageFilter()
-	{
-	}	
-	
-protected:	
-	MCGMaskInvertImageFilter(SkFlattenableReadBuffer &p_read_buffer) : SkSingleInputImageFilter(p_read_buffer)
-	{
-	}
-	
-    virtual void flatten(SkFlattenableWriteBuffer &p_write_buffer) const
-	{
-	}	
-	
-    virtual bool onFilterImage(Proxy *p_proxy, const SkBitmap &p_source, const SkMatrix &p_ctm, SkBitmap *r_result, SkIPoint *r_offset)
-	{				
-		SkBitmap t_source = this -> getInputResult(p_proxy, p_source, p_ctm, r_offset);
-		if (t_source . config() != SkBitmap::kA8_Config)
-			return false;		
-		
-		t_source . lockPixels();
-		for (uint32_t y = 0; y < t_source . height(); y++)
-		{
-			for (uint32_t x = 0; x < t_source . width(); x++)
-			{
-				uint8_t *t_pxl;
-				t_pxl = t_source . getAddr8(x, y);			
-				if (*t_pxl != 255 && *t_pxl != 0)
-					*t_pxl = 255 - *t_pxl;				
-			}
-		}
-		t_source . unlockPixels();
-		
-		*r_result = t_source;		
-		return true;
-	}
-	
-	virtual bool onFilterBounds(const SkIRect &p_source, const SkMatrix &p_ctm, SkIRect *r_dst)
-	{
-		*r_dst = p_source;
-		return true;
-	}
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Layer attributes and manipulation - bitmap effect options would be added here also.
@@ -650,7 +529,7 @@ void MCGContextBegin(MCGContextRef self, bool p_need_layer)
 	// Create a suitable bitmap.
 	SkBitmap t_new_bitmap;
 	t_new_bitmap . setConfig(SkBitmap::kARGB_8888_Config, t_device_clip . width(), t_device_clip . height());
-	t_new_bitmap . setIsOpaque(false);
+    t_new_bitmap . setAlphaType(kPremul_SkAlphaType);
 	if (!t_new_bitmap . allocPixels())
 	{
 		self -> is_valid = false;
@@ -879,7 +758,7 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	// Create a suitable bitmap.
 	SkBitmap t_new_bitmap;
 	t_new_bitmap . setConfig(SkBitmap::kARGB_8888_Config, t_layer_clip . right - t_layer_clip . left, t_layer_clip . bottom - t_layer_clip . top);
-	t_new_bitmap . setIsOpaque(false);
+    t_new_bitmap . setAlphaType(kPremul_SkAlphaType);
 	if (!t_new_bitmap . allocPixels())
 	{
 		self -> is_valid = false;
@@ -2148,7 +2027,7 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
 		}
 		else if (p_pattern != NULL)
 		{
-			t_filter = p_pattern -> filter;
+			//t_filter = p_pattern -> filter;
 			t_success = MCGPatternToSkShader(p_pattern, t_shader);
 		}
 		else if (p_paint_style == kMCGPaintStyleStippled)
@@ -2164,19 +2043,19 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
 		r_paint . setShader(t_shader);
 		r_paint . setMaskFilter(t_stipple);
 		
+        // MM-2014-01-09: [[ Bug 11402 ]] Updated filters to use Skia's new filter levels.
 		switch (t_filter)
 		{
 			case kMCGImageFilterNearest:
-				r_paint . setFilterBitmap(false);
+                r_paint . setFilterLevel(SkPaint::kLow_FilterLevel);
 				break;
 			case kMCGImageFilterBilinear:
-				r_paint . setFilterBitmap(true);
+                r_paint . setFilterLevel(SkPaint::kMedium_FilterLevel);
 				break;
 			case kMCGImageFilterBicubic:
-				// TODO: Set filter explicitly based on filter settings.
-				r_paint . setFilterBitmap(true);
+                r_paint . setFilterLevel(SkPaint::kHigh_FilterLevel);
 				break;
-		}		
+		}
 	}
 	
 	if (t_shader != NULL)
@@ -2494,21 +2373,21 @@ static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap,
 
 	if (t_success)
 	{
+        // MM-2014-01-09: [[ Bug 11402 ]] Updated filters to use Skia's new filter levels.
 		switch (p_filter)
 		{
-		case kMCGImageFilterNearest:
-			t_paint . setAntiAlias(false);
-			t_paint . setFilterBitmap(false);
-			break;
-		case kMCGImageFilterBilinear:
-			t_paint . setAntiAlias(true);
-			t_paint . setFilterBitmap(true);
-			break;
-		case kMCGImageFilterBicubic:
-			// TODO: Set filter explicitly based on filter settings.
-			t_paint . setAntiAlias(true);
-			t_paint . setFilterBitmap(true);
-			break;
+            case kMCGImageFilterNearest:
+                t_paint . setAntiAlias(false);
+                t_paint . setFilterLevel(SkPaint::kLow_FilterLevel);
+                break;
+            case kMCGImageFilterBilinear:
+                t_paint . setAntiAlias(true);
+                t_paint . setFilterLevel(SkPaint::kMedium_FilterLevel);
+                break;
+            case kMCGImageFilterBicubic:
+                t_paint . setAntiAlias(true);
+                t_paint . setFilterLevel(SkPaint::kHigh_FilterLevel);
+                break;
 		}
 
 		SkRect t_src_rect;
@@ -2654,7 +2533,7 @@ void MCGTextMeasureCacheCompact(void)
 }
 
 MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
-{		
+{
 	if (p_length == 0 || p_text == NULL)
 		return 0.0;
 	
@@ -2738,8 +2617,133 @@ bool MCGContextCopyImage(MCGContextRef self, MCGImageRef &r_image)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
 #if 0
+
+class MCGMaskExtractImageFilter : public SkSingleInputImageFilter
+{
+public:
+    MCGMaskExtractImageFilter(SkMaskFilter *p_blur_filter, bool p_invert, SkImageFilter *p_input) : SkSingleInputImageFilter(p_input)
+	{
+		m_blur_filter = p_blur_filter;
+		m_invert = p_invert;
+		if (m_blur_filter != NULL)
+			m_blur_filter -> ref();
+	}
+	
+	~MCGMaskExtractImageFilter()
+	{
+		if (m_blur_filter != NULL)
+			m_blur_filter -> unref();
+	}
+	
+protected:
+    virtual bool onFilterImage(Proxy *p_proxy, const SkBitmap &p_source, const SkMatrix &p_ctm, SkBitmap *r_result, SkIPoint *r_offset)
+	{
+		bool t_success;
+		t_success = true;
+		
+		SkBitmap t_mask;
+		SkIPoint t_offset;
+		if (t_success)
+		{
+			SkBitmap t_source = this -> getInputResult(p_proxy, p_source, p_ctm, r_offset);
+			
+			if (m_invert)
+			{
+				t_source . lockPixels();
+				for (uint32_t y = 0; y < t_source . height(); y++)
+				{
+					for (uint32_t x = 0; x < t_source . width(); x++)
+					{
+						uint32_t *t_pxl;
+						t_pxl = t_source . getAddr32(x, y);
+						*t_pxl = (*t_pxl & 0x00FFFFFF) | ((255 - ((*t_pxl >> 24) & 0xFF)) << 24);
+					}
+				}
+				t_source . unlockPixels();
+			}
+			
+			if (m_blur_filter != NULL)
+			{
+				SkPaint t_paint;
+				t_paint . setMaskFilter(m_blur_filter);
+				t_success = t_source . extractAlpha(&t_mask, &t_paint, NULL, &t_offset);
+			}
+			else
+				t_success = t_source . extractAlpha(&t_mask, NULL, NULL, &t_offset);
+		}
+		
+		if (t_success)
+		{
+			*r_result = t_mask;
+			r_offset -> fX += t_offset . fX;
+			r_offset -> fY += t_offset . fY;
+		}
+		
+		return t_success;
+	}
+	
+	virtual bool onFilterBounds(const SkIRect &p_source, const SkMatrix &p_ctm, SkIRect *r_dst)
+	{
+		*r_dst = p_source;
+		return true;
+	}
+	
+private:
+	SkMaskFilter *m_blur_filter;
+	bool m_invert;
+};
+
+class MCGMaskInvertImageFilter : public SkSingleInputImageFilter
+{
+public:
+    MCGMaskInvertImageFilter(SkImageFilter *p_input) : SkSingleInputImageFilter(p_input)
+	{
+	}
+	
+	~MCGMaskInvertImageFilter()
+	{
+	}
+	
+protected:
+	MCGMaskInvertImageFilter(SkFlattenableReadBuffer &p_read_buffer) : SkSingleInputImageFilter(p_read_buffer)
+	{
+	}
+	
+    virtual void flatten(SkFlattenableWriteBuffer &p_write_buffer) const
+	{
+	}
+	
+    virtual bool onFilterImage(Proxy *p_proxy, const SkBitmap &p_source, const SkMatrix &p_ctm, SkBitmap *r_result, SkIPoint *r_offset)
+	{
+		SkBitmap t_source = this -> getInputResult(p_proxy, p_source, p_ctm, r_offset);
+		if (t_source . config() != SkBitmap::kA8_Config)
+			return false;
+		
+		t_source . lockPixels();
+		for (uint32_t y = 0; y < t_source . height(); y++)
+		{
+			for (uint32_t x = 0; x < t_source . width(); x++)
+			{
+				uint8_t *t_pxl;
+				t_pxl = t_source . getAddr8(x, y);
+				if (*t_pxl != 255 && *t_pxl != 0)
+					*t_pxl = 255 - *t_pxl;
+			}
+		}
+		t_source . unlockPixels();
+		
+		*r_result = t_source;
+		return true;
+	}
+	
+	virtual bool onFilterBounds(const SkIRect &p_source, const SkMatrix &p_ctm, SkIRect *r_dst)
+	{
+		*r_dst = p_source;
+		return true;
+	}
+};
+
 static bool MCGContextConfigureLayerPaint(MCGColor p_color, MCGBlendMode p_blend_mode, bool p_should_antialias, SkPaint *r_paint)
 {
 	bool t_success;
