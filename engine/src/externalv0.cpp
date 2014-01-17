@@ -96,7 +96,7 @@ struct MCExternalAllocPool
 
 void MCExternalDeallocatePool(MCExternalAllocPool *p_pool)
 {
-    for (int i = 0; i < p_pool -> size; ++i)
+    for (unsigned int i = 0; i < p_pool -> size; ++i)
         MCMemoryDeleteArray(p_pool -> strings[i]);
 
     MCMemoryDeleteArray(p_pool -> strings);
@@ -107,7 +107,7 @@ void MCExternalDeallocatePool(MCExternalAllocPool *p_pool)
 
 bool MCExternalAddAllocatedString(MCExternalAllocPool *p_pool, char* p_string)
 {
-    if (MCMemoryResizeArray(p_pool -> size + 1, p_pool -> strings, p_pool -> size))
+    if (!MCMemoryResizeArray(p_pool -> size + 1, p_pool -> strings, p_pool -> size))
         return false;
 
     p_pool -> strings[p_pool -> size - 1] = p_string;
@@ -726,7 +726,12 @@ static bool get_array_element(void *p_context, MCArrayRef p_array, MCNameRef p_k
 	get_array_element_t *ctxt;
 	ctxt = (get_array_element_t *)p_context;
 
-	ctxt -> keys[ctxt -> index] = (char *)MCNameGetCString(p_key);
+	char* t_key;
+	MCStringConvertToCString(MCNameGetString(p_key), t_key);
+
+	ctxt -> keys[ctxt -> index] = t_key;
+	MCExternalAddAllocatedString(MCexternalallocpool, t_key);
+
 	if (ctxt -> strings != nil)
 	{
         // The value needs to be converted as a C-string
