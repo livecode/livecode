@@ -105,12 +105,14 @@ void MCError::append(MCError& p_other)
 	MCU_addline(buffer, p_other . buffer, strlen(buffer) == 0);
 }
 
+#ifdef LEGACY_EXEC
 const MCString &MCError::getsvalue()
 {
-	if (!thrown)
-		svalue.set(buffer, strlen(buffer));
-	return svalue;
+    if (!thrown)
+        svalue.set(buffer, strlen(buffer));
+    return svalue;
 }
+#endif
 
 void MCError::copystringref(MCStringRef s, Boolean t)
 {

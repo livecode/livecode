@@ -50,6 +50,7 @@ public:
 		return next;
 	}
 
+#ifdef LEGACY_EXEC
 	void sets_argument(const MCString& string)
 	{
 		/* UNCHECKED */ setoldstring_argument(string);
@@ -61,6 +62,8 @@ public:
 	}
 	
 	bool setoldstring_argument(const MCString& string);
+#endif
+
 	void setvalueref_argument(MCValueRef name);
 	void setn_argument(real8 n);
 	void clear_argument(void);

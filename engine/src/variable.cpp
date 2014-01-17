@@ -792,6 +792,7 @@ bool MCContainer::clear(void)
 	return set_valueref(kMCEmptyString);
 }
 
+#ifdef LEGACY_EXEC
 bool MCContainer::set_oldstring(const MCString& p_string)
 {
 	MCAutoStringRef t_string;
@@ -804,6 +805,7 @@ bool MCContainer::set_cstring(const char *p_string)
 {
 	return set_oldstring(p_string);
 }
+#endif
 
 bool MCContainer::set_real(double p_real)
 {
