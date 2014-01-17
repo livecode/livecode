@@ -49,6 +49,7 @@ static MCStackFullscreenModeNames s_fullscreenmode_names[] = {
 	{"letterbox", kMCStackFullscreenLetterbox},
 	{"noBorder", kMCStackFullscreenNoBorder},
 	{"noScale", kMCStackFullscreenNoScale},
+	{"showAll", kMCStackFullscreenShowAll},
 
 	{nil, kMCStackFullscreenModeNone},
 };
@@ -132,6 +133,7 @@ void MCStack::view_init(void)
 	m_view_fullscreenmode = kMCStackFullscreenModeDefault;
 
 	m_view_adjusted_stack_rect = m_view_requested_stack_rect = m_view_rect = MCRectangleMake(0, 0, 0, 0);
+	m_view_stack_visible_rect = MCRectangleMake(0, 0, 0, 0);
 	
 	// MW-2011-08-26: [[ TileCache ]] Stacks start off with no tilecache.
 	m_view_tilecache = nil;
@@ -152,6 +154,8 @@ void MCStack::view_copy(const MCStack &p_view)
 
 	m_view_requested_stack_rect = p_view.m_view_requested_stack_rect;
 	m_view_adjusted_stack_rect = p_view.m_view_adjusted_stack_rect;
+	
+	m_view_stack_visible_rect = p_view.m_view_stack_visible_rect;
 	
 	// MW-2011-08-26: [[ TileCache ]] Stacks start off with no tilecache.
 	m_view_tilecache = nil;
@@ -271,6 +275,7 @@ MCRectangle MCStack::view_constrainstackviewport(const MCRectangle &p_rect)
 		case kMCStackFullscreenExactFit:
 		case kMCStackFullscreenLetterbox:
 		case kMCStackFullscreenNoBorder:
+		case kMCStackFullscreenShowAll:
 			// scaling modes should return the requested stack rect
 			t_new_rect = t_stackrect;
 			break;
@@ -302,6 +307,7 @@ MCGAffineTransform view_get_stack_transform(MCStackFullscreenMode p_mode, MCRect
 		return MCGAffineTransformMakeScale((MCGFloat)p_screen_rect.width / (MCGFloat)p_stack_rect.width, (MCGFloat)p_screen_rect.height / (MCGFloat)p_stack_rect.height);
 
 	case kMCStackFullscreenLetterbox:
+	case kMCStackFullscreenShowAll:
 		t_scale = MCMin((MCGFloat)p_screen_rect.width / (MCGFloat)p_stack_rect.width, (MCGFloat)p_screen_rect.height / (MCGFloat)p_stack_rect.height);
 		t_transform = MCGAffineTransformMakeTranslation(-(MCGFloat)p_stack_rect.width / 2.0, -(MCGFloat)p_stack_rect.height / 2.0);
 		t_transform = MCGAffineTransformScale(t_transform, t_scale, t_scale);
@@ -360,13 +366,13 @@ void MCStack::view_setrect(const MCRectangle &p_rect)
 	// IM-2014-01-16: [[ StackScale ]] Update window geometry if we have a window
 	if (getopened() && window != nil)
 	{
-		// IM-2013-10-03: [[ FullscreenMode ]] if the view rect has changed, update the window geometry
-		MCRectangle t_device_rect;
-		t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(m_view_rect));
-		
-		// IM-2013-10-08: [[ FullscreenMode ]] Update window size hints when setting the view geometry.
-		setsizehints();
-		device_setgeom(t_device_rect);
+	// IM-2013-10-03: [[ FullscreenMode ]] if the view rect has changed, update the window geometry
+	MCRectangle t_device_rect;
+	t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(m_view_rect));
+	
+	// IM-2013-10-08: [[ FullscreenMode ]] Update window size hints when setting the view geometry.
+	setsizehints();
+	device_setgeom(t_device_rect);
 	}
 	
 	view_on_rect_changed();
@@ -397,7 +403,7 @@ void MCStack::view_sync_window_geometry(void)
 void MCStack::view_calculate_viewports(const MCRectangle &p_stack_rect, MCRectangle &r_adjusted_stack_rect, MCRectangle &r_view_rect, MCGAffineTransform &r_transform)
 {
 	MCRectangle t_view_rect;
-	
+
 	MCGAffineTransform t_transform;
 	t_transform = MCGAffineTransformMakeScale(m_view_content_scale, m_view_content_scale);
 	
@@ -417,7 +423,7 @@ void MCStack::view_calculate_viewports(const MCRectangle &p_stack_rect, MCRectan
 		
 		const MCDisplay *t_display;
 		t_display = MCscreen -> getnearestdisplay(t_stack_rect);
-		
+
 		t_view_rect = MCscreen->fullscreenrect(t_display);
 		// IM-2013-12-19: [[ Bug 11590 ]] Removed adjustment of screen rect to 0,0 origin
 	}
@@ -434,7 +440,7 @@ void MCStack::view_calculate_viewports(const MCRectangle &p_stack_rect, MCRectan
 	// IM-2014-01-16: [[ StackScale ]] append scale transform to fullscreenmode transform
 	r_transform = MCGAffineTransformConcat(view_get_stack_transform(t_mode, t_stack_rect, t_view_rect), t_transform);
 }
-
+	
 void MCStack::view_update_transform(void)
 {
 	MCRectangle t_view_rect;
@@ -443,10 +449,18 @@ void MCStack::view_update_transform(void)
 	// IM-2014-01-16: [[ StackScale ]] Use utility method to calculate new values
 	view_calculate_viewports(m_view_requested_stack_rect, m_view_adjusted_stack_rect, t_view_rect, t_transform);
 	
+	// IM-2013-12-20: [[ ShowAll ]] Calculate new stack visible rect
+	MCRectangle t_stack_visible_rect;
+	t_stack_visible_rect = MCRectangleGetTransformedBounds(MCRectangleMake(0, 0, t_view_rect.width, t_view_rect.height), MCGAffineTransformInvert(t_transform));
+	if (m_view_fullscreenmode == kMCStackFullscreenLetterbox || m_view_fullscreenmode == kMCStackFullscreenNoScale)
+		t_stack_visible_rect = MCU_intersect_rect(t_stack_visible_rect, MCRectangleMake(0, 0, m_view_adjusted_stack_rect.width, m_view_adjusted_stack_rect.height));
+	
 	// IM-2013-10-03: [[ FullscreenMode ]] if the transform has changed, redraw everything
-	if (!MCGAffineTransformIsEqual(t_transform, m_view_transform))
+	// IM-2013-12-20: [[ ShowAll ]] if the stack viewport has changed, redraw everything
+	if (!MCU_equal_rect(t_stack_visible_rect, m_view_stack_visible_rect) || !MCGAffineTransformIsEqual(t_transform, m_view_transform))
 	{
 		m_view_transform = t_transform;
+		m_view_stack_visible_rect = t_stack_visible_rect;
 		
 		view_dirty_all();
 	}
@@ -494,6 +508,11 @@ MCRectangle MCStack::view_getstackviewport()
 	return m_view_adjusted_stack_rect;
 }
 
+MCRectangle MCStack::view_getstackvisiblerect(void)
+{
+	return m_view_stack_visible_rect;
+}
+
 void MCStack::view_render(MCGContextRef p_target, MCRectangle p_rect)
 {
 	// redraw borders if visible
@@ -501,21 +520,18 @@ void MCStack::view_render(MCGContextRef p_target, MCRectangle p_rect)
 	// scale & position stack redraw rect
 	// update stack region
 	// IM-2014-01-16: [[ StackScale ]] Transform redraw rect to stack coords in all cases
-	MCRectangle t_update_rect;
-	t_update_rect = MCRectangleGetTransformedBounds(p_rect, MCGAffineTransformInvert(m_view_transform));
-	
-	MCGContextSave(p_target);
-	MCGContextConcatCTM(p_target, m_view_transform);
-	
+		MCRectangle t_update_rect;
+		t_update_rect = MCRectangleGetTransformedBounds(p_rect, MCGAffineTransformInvert(m_view_transform));
+		
+		MCGContextSave(p_target);
+		MCGContextConcatCTM(p_target, m_view_transform);
+		
 	if (view_getfullscreen())
 	{
 		
-		// IM-2013-10-14: [[ FullscreenMode ]] Logical stack rect has 0,0 origin
-		MCRectangle t_stack_rect;
-		t_stack_rect = m_view_adjusted_stack_rect;
-		t_stack_rect.x = t_stack_rect.y = 0;
-		
-		if (!MCU_rect_in_rect(t_update_rect, t_stack_rect))
+		// IM-2013-12-19: [[ ShowAll ]] Check if the view background needs to be drawn
+		// IM-2013-12-20: [[ ShowAll ]] Draw the stack into its viewport
+		if (!MCU_rect_in_rect(t_update_rect, m_view_stack_visible_rect))
 		{
 			// IM-2013-10-08: [[ FullscreenMode ]] draw the view backdrop if the render area
 			// falls outside the stack rect
@@ -525,13 +541,14 @@ void MCStack::view_render(MCGContextRef p_target, MCRectangle p_rect)
 			MCGContextFill(p_target);
 		}
 
-		t_update_rect = MCU_intersect_rect(t_update_rect, MCRectangleMake(0, 0, m_view_adjusted_stack_rect.width, m_view_adjusted_stack_rect.height));
+		t_update_rect = MCU_intersect_rect(t_update_rect, m_view_stack_visible_rect);
+		
 		MCGContextClipToRect(p_target, MCRectangleToMCGRectangle(t_update_rect));
 	}
 
-	render(p_target, t_update_rect);
-	MCGContextRestore(p_target);
-}
+		render(p_target, t_update_rect);
+		MCGContextRestore(p_target);
+	}
 
 // IM-2013-10-14: [[ FullscreenMode ]] Move update region tracking into view abstraction
 void MCStack::view_updatewindow(void)

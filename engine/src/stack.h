@@ -69,6 +69,7 @@ enum MCStackSurfaceTargetType
 ////////////////////////////////////////////////////////////////////////////////
 
 // IM-2013-09-23: [[ FullscreenMode ]] Available fullscreen modes
+// IM-2013-12-16: [[ ShowAll ]] Add showAll mode to fullscreen modes
 enum MCStackFullscreenMode
 {
 	kMCStackFullscreenModeNone,
@@ -78,6 +79,7 @@ enum MCStackFullscreenMode
 	kMCStackFullscreenLetterbox,	// "letterbox"	whole stack is shown, scaled to take up as much screen space as possible. Both full width and height are visible
 	kMCStackFullscreenNoBorder,		// "noBorder"	scaled to cover whole screen, top+bottom or left+right of stack may be clipped
 	kMCStackFullscreenNoScale,		// "noScale"	stack is centered on screen with no scaling
+	kMCStackFullscreenShowAll,		// "showAll"	whole stack is shown, scaled to take up as much screen space as possible. Visible areas outside the stack rect will be drawn.
 };
 
 extern const char *MCStackFullscreenModeToString(MCStackFullscreenMode p_mode);
@@ -212,6 +214,8 @@ protected:
 	MCRectangle m_view_requested_stack_rect;
 	MCRectangle m_view_adjusted_stack_rect;
 	MCRectangle m_view_rect;
+	// IM-2013-12-20: [[ ShowAll ]] The visible area of the stack
+	MCRectangle m_view_stack_visible_rect;
 
 	// IM-2013-10-14: [[ FullscreenMode ]] Indicates whether the view needs to be redrawn
 	bool m_view_need_redraw;
@@ -320,6 +324,9 @@ public:
 	MCRectangle view_getstackviewport(void);
 	// Set the visible stack region. Returns modified rect if constrained by fullscreen mode
 	MCRectangle view_setstackviewport(const MCRectangle &p_viewport);
+
+	// IM-2013-12-19: [[ ShowAll ]] Return the visible area of the view into which the stack will be rendered
+	MCRectangle view_getstackvisiblerect(void);
 
 	// Return the visible stack region constrained by the fullscreen settings
 	MCRectangle view_constrainstackviewport(const MCRectangle &p_viewport);
@@ -436,6 +443,9 @@ public:
 	// IM-2013-10-30: [[ FullscreenMode ]] Return the maximum horizontal / vertical scaling
 	// factor of the stack -> device coordinate transform
 	MCGFloat getdevicescale(void) const;
+	
+	// IM-2013-12-20: [[ ShowAll ]] Return the visible area of the stack contents
+	MCRectangle getvisiblerect(void);
 	
 	//////////
 	
