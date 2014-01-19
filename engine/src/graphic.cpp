@@ -367,7 +367,28 @@ Boolean MCGraphic::doubleup(uint2 which)
 
 void MCGraphic::setrect(const MCRectangle &nrect)
 {
-	if (realpoints != NULL)
+	// MDW-2014-01-19: [[ feature_rect_points ]] set the points of rectangles and rounded rectangles
+	if (getstyleint(flags) == F_G_RECTANGLE || getstyleint(flags) == F_ROUNDRECT)
+	{
+		nrealpoints = 4;
+		realpoints = new MCPoint[nrealpoints];
+		realpoints[0].x = nrect.x;
+		realpoints[0].y = nrect.y;
+		realpoints[1].x = nrect.x + nrect.width;
+		realpoints[1].y = nrect.y;
+		realpoints[2].x = nrect.x + nrect.width;
+		realpoints[2].y = nrect.y + nrect.height;
+		realpoints[3].x = nrect.x;
+		realpoints[3].y = nrect.y + nrect.height;
+		if (oldpoints == NULL)
+		{
+			oldpoints = new MCPoint[nrealpoints];
+			uint2 i = nrealpoints;
+			while (i--)
+				oldpoints[i] = realpoints[i];
+		}
+	}
+	else if (realpoints != NULL)
 	{
 		if (nrect.width != rect.width || nrect.height != rect.height)
 		{
@@ -410,26 +431,6 @@ void MCGraphic::setrect(const MCRectangle &nrect)
 		}
 		else
 			MCU_offset_points(realpoints, nrealpoints, nrect.x - rect.x, nrect.y - rect.y);
-	}
-	else if (getstyleint(flags) == F_G_RECTANGLE || getstyleint(flags) == F_ROUNDRECT)
-	{
-		nrealpoints = 4;
-		realpoints = new MCPoint[nrealpoints];
-		realpoints[0].x = nrect.x;
-		realpoints[0].y = nrect.y;
-		realpoints[1].x = nrect.x + nrect.width;
-		realpoints[1].y = nrect.y;
-		realpoints[2].x = nrect.x + nrect.width;
-		realpoints[2].y = nrect.y + nrect.height;
-		realpoints[3].x = nrect.x;
-		realpoints[3].y = nrect.y + nrect.height;
-		if (oldpoints == NULL)
-		{
-			oldpoints = new MCPoint[nrealpoints];
-			uint2 i = nrealpoints;
-			while (i--)
-				oldpoints[i] = realpoints[i];
-		}
 	}
 	if (m_fill_gradient != NULL)
 		setgradientrect(m_fill_gradient, nrect);
