@@ -506,7 +506,9 @@ static char *set_field_by_name(const char *arg1, const char *arg2,
 		*retval = xresFail;
 	else
 	{
-		fptr->settext_oldstring(fptr->getcard()->getid(), arg3, False);
+        MCAutoStringRef t_string;
+        MCStringCreateWithBytes((byte_t*)arg3, strlen(arg3), kMCStringEncodingUTF8, false, &t_string);
+        fptr->settext(fptr->getcard()->getid(), *t_string, False);
 		*retval = xresSucc;
 	}
 	return NULL;
@@ -520,7 +522,9 @@ static char *set_field_by_num(const char *arg1, const char *arg2,
 		*retval = xresFail;
 	else
 	{
-		fptr->settext_oldstring(fptr->getcard()->getid(), arg3, False);
+        MCAutoStringRef t_string;
+        MCStringCreateWithBytes((byte_t*)arg3, strlen(arg3), kMCStringEncodingUTF8, false, &t_string);
+        fptr->settext(fptr->getcard()->getid(), *t_string, False);
 		*retval = xresSucc;
 	}
 	return NULL;
@@ -534,7 +538,9 @@ static char *set_field_by_id(const char *arg1, const char *arg2,
 		*retval = xresFail;
 	else
 	{
-		fptr->settext_oldstring(fptr->getcard()->getid(), arg3, False);
+        MCAutoStringRef t_string;
+        MCStringCreateWithBytes((byte_t*)arg3, strlen(arg3), kMCStringEncodingUTF8, false, &t_string);
+        fptr->settext(fptr->getcard()->getid(), *t_string, False);
 		*retval = xresSucc;
 	}
 	return NULL;

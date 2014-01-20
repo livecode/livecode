@@ -434,17 +434,16 @@ void MCServerDebugBreakpoint(MCStringRef p_action, MCStringRef p_file, uint32_t 
 
 void MCServerDebugGet(MCStringRef p_property, MCStringRef& r_result)
 {
-	const char *t_result;
-	t_result = NULL;
+    MCStringRef t_error;
 	
 	if (MCStringIsEqualToCString(p_property, "execution error", kMCCompareExact))
-		t_result = MCeerror -> getsvalue() . getstring();
+        /* UNCHECKED */ MCeerror -> copyasstringref(t_error);
 	else if (MCStringIsEqualToCString(p_property, "parse error", kMCCompareExact))
-		t_result = MCperror -> getsvalue() . getstring();
+        MCperror -> copyasstringref(t_error);
 	else if (MCStringIsEqualToCString(p_property, "files", kMCCompareExact))
-		t_result = "";
-	
-	/* UNCHECKED */  MCStringCreateWithCString(t_result, r_result);
+        t_error = MCValueRetain(kMCEmptyString);
+
+    r_result = t_error;
 }
 
 void MCServerDebugPut(MCStringRef p_property, MCStringRef p_value)

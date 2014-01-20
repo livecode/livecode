@@ -427,8 +427,8 @@ public:
 	void GetCallbacks(MCExecContext& ctxt, MCStringRef& r_callbacks);
 	void SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks);
 	void GetTimeScale(MCExecContext& ctxt, uinteger_t& r_scale);
-	void GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height);
-	void GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width);
+	void GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height);
+	void GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width);
 	void GetMovieControllerId(MCExecContext& ctxt, integer_t& r_id);
 	void SetMovieControllerId(MCExecContext& ctxt, integer_t p_id);
 	void GetPlayLoudness(MCExecContext& ctxt, uinteger_t& r_loudness);

@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 template<typename T> class MCAutoValueRefBase
 {
 public:
+
 	MCAutoValueRefBase(void)
 	{
 		m_value = nil;
@@ -208,6 +209,7 @@ public:
     MCAutoStringRefAsWString(void)
     {
         m_ref = nil;
+        m_wstring = nil;
     }
     
     ~MCAutoStringRefAsWString(void)

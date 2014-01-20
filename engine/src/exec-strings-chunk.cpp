@@ -144,17 +144,28 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
             break;
             
         case CT_CHARACTER:
+        case CT_CODEPOINT:
         {
-            // Convert from code unit indices to codepoint indices
-            MCRange t_cu_range, t_cp_range;
+            // Convert from code unit indices to appropriate indices
+            MCRange t_cu_range, t_range;
             t_cu_range = MCRangeMake(0, MCStringGetLength(p_string));
-            /* UNCHECKED */ MCStringUnmapIndices(p_string, kMCDefaultCharChunkType, t_cu_range, t_cp_range);
+            /* UNCHECKED */ MCStringUnmapIndices(p_string, p_chunk_type == CT_CHARACTER ? kMCCharChunkTypeGrapheme : kMCCharChunkTypeCodepoint, t_cu_range, t_range);
             
-            nchunks = t_cp_range.length;
-            break;
+            nchunks = t_range.length;
         }
+            break;
+        
+        case CT_CODEUNIT:
+        case CT_BYTE:
+        {
+            // this is not necessarily the actual number of bytes in the string,
+            // but since the string will be nativised when converted to data, it
+            // is the number we need.
+            nchunks = MCStringGetLength(p_string);
+        }
+            break;
     }
-    
+
     r_count = nchunks;
 }
 
@@ -329,10 +340,9 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
                     r_end++;
                 else if (r_start > 0 && !r_add)
                     r_start--;
-                return;
             }
         }
-            return;
+            break;
             
         case CT_WORD:
         {
@@ -371,7 +381,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             while (r_end > r_start && isspace(MCStringGetNativeCharAtIndex(p_string, r_end - 1)))
                 r_end--;
         }
-            return;
+            break;
             
         case CT_TOKEN:
         {
@@ -396,15 +406,16 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             r_end = t_pos + MCStringGetLength(sp.gettoken_stringref());
             MCerrorlock--;
         }
-            return;
+            break;
             
         case CT_CHARACTER:
+        case CT_CODEPOINT:
             if (p_include_chars)
             {
                 // Resolve the indices
                 MCRange t_cp_range, t_cu_range;
                 t_cp_range = MCRangeMake(p_first, p_count);
-                MCStringMapIndices(p_string, kMCDefaultCharChunkType, t_cp_range, t_cu_range);
+                MCStringMapIndices(p_string, p_chunk_type == CT_CHARACTER ? kMCCharChunkTypeGrapheme : kMCCharChunkTypeCodepoint, t_cp_range, t_cu_range);
         
                 r_start = t_cu_range.offset;
                 r_end = t_cu_range.offset + t_cu_range.length;
@@ -412,9 +423,23 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
                 //r_end = p_first + p_count;
             }
             return;
+        case CT_CODEUNIT:
+            if (p_include_chars)
+            {
+                r_start = p_first;
+                r_end = p_first + p_count;
+            }
+            return;
         default:
             MCAssert(false);
     }
+    
+    // for line, item, word and token, start and end are codepoint indices, so map them back to codeunits.
+    MCRange t_cp_range, t_cu_range;
+    t_cp_range = MCRangeMake(r_start, r_end - r_start);
+    MCStringMapIndices(p_string, kMCCharChunkTypeCodepoint, t_cp_range, t_cu_range);
+    r_start = t_cu_range . offset;
+    r_end = t_cu_range . offset + t_cu_range . length;
 }
 
 void MCStringsGetTextChunk(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, integer_t p_count, bool p_eval_mutable, MCStringRef& r_result)
@@ -805,13 +830,24 @@ void MCStringsAddChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, uindex_t p
     /* UNCHECKED */ MCStringMutableCopyAndRelease(x_text . text, &t_string);
     t_delimiter = p_chunk_type == CT_LINE ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter();
     uindex_t t_count = p_to_add;
+    
+    // incoming indices are codeunits, so map to codepoints before adding delimiters
+    MCRange t_cu_range, t_cp_range;
+    t_cu_range = MCRangeMake(x_text . start, x_text . finish - x_text . start);
+    MCStringUnmapIndices(x_text . text, kMCCharChunkTypeCodepoint, t_cu_range, t_cp_range);
+    
     while (t_count--)
-    {
-        MCStringInsertNativeChar(*t_string, x_text . finish, t_delimiter);
-    }
+        /* UNCHECKED */ MCStringInsertNativeChar(*t_string, t_cp_range . offset + t_cp_range . length, t_delimiter);
+    
     /* UNCHECKED */ MCStringCopy(*t_string, x_text . text);
-    x_text . start += p_to_add;
-    x_text . finish += p_to_add;
+    
+    // adjust indices and map back to codeunits
+    t_cp_range . offset += p_to_add;
+    MCStringMapIndices(x_text . text, kMCCharChunkTypeCodepoint, t_cp_range, t_cu_range);
+    x_text . start = t_cu_range . offset;
+    x_text . finish = t_cu_range . offset + t_cu_range . length;
+    
+    // the text has changed
     x_text . changed = true;
 }
 
@@ -819,11 +855,10 @@ void MCStringsEvalTextChunk(MCExecContext& ctxt, MCMarkedText p_source, MCString
 {
     if (p_source . text == nil)
         return;
-    
-    // The incoming indices are for codepoints
-    MCRange t_cp_range, t_cu_range;
-    t_cp_range = MCRangeMake(p_source . start, p_source . finish - p_source . start);
-    /* UNCHECKED */ MCStringMapIndices(p_source . text, kMCDefaultCharChunkType, t_cp_range, t_cu_range);
+
+    // The incoming indices are for codeunits
+    MCRange t_cu_range;
+    t_cu_range = MCRangeMake(p_source . start, p_source . finish - p_source . start);
     
     if (MCStringCopySubstring(p_source . text, t_cu_range, r_string))
         return;
@@ -831,12 +866,28 @@ void MCStringsEvalTextChunk(MCExecContext& ctxt, MCMarkedText p_source, MCString
     ctxt . Throw();
 }
 
+void MCStringsEvalByteChunk(MCExecContext& ctxt, MCMarkedText p_source, MCDataRef& r_bytes)
+{
+    if (p_source . text == nil)
+        return;
+    
+    MCAutoDataRef t_data;
+    if (!ctxt . ConvertToData(p_source . text, &t_data))
+        return;
+    
+    // The incoming indices are byte indices
+    const byte_t *bytes = MCDataGetBytePtr(*t_data);
+    if (MCDataCreateWithBytes(bytes + p_source . start, p_source . finish - p_source. start, r_bytes))
+        return;
+    
+    ctxt . Throw();
+}
+
 void MCStringsMarkTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
-    // The incoming indices are for codepoints
-    MCRange t_cp_range, t_cu_range;
-    t_cp_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
-    /* UNCHECKED */ MCStringMapIndices(x_mark . text, kMCDefaultCharChunkType, t_cp_range, t_cu_range);
+    // The incoming indices are for codeunits
+    MCRange t_cu_range;
+    t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
     
     MCAutoStringRef t_string;
     MCStringCopySubstring(x_mark . text, t_cu_range, &t_string);
@@ -852,10 +903,9 @@ void MCStringsMarkTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type,
     // The indices returned by MarkTextChunk are code unit indices
     t_cu_range.offset += t_start;
     t_cu_range.length = t_end - t_start;
-    /* UNCHECKED */ MCStringUnmapIndices(x_mark . text, kMCDefaultCharChunkType, t_cu_range, t_cp_range);
     
-    x_mark . start = t_cp_range.offset;
-    x_mark . finish = t_cp_range.offset + t_cp_range.length;
+    x_mark . start = t_cu_range.offset;
+    x_mark . finish = t_cu_range.offset + t_cu_range.length;
     
     if (p_force)
         MCStringsAddChunks(ctxt, p_chunk_type, t_add, x_mark);
@@ -863,10 +913,9 @@ void MCStringsMarkTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type,
 
 void MCStringsMarkTextChunkByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
-    // The incoming indices are for codepoints
-    MCRange t_cp_range, t_cu_range;
-    t_cp_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
-    /* UNCHECKED */ MCStringMapIndices(x_mark . text, kMCDefaultCharChunkType, t_cp_range, t_cu_range);
+    // The incoming indices are for codeunits
+    MCRange t_cu_range;
+    t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
     
     MCAutoStringRef t_string;
     MCStringCopySubstring(x_mark . text, t_cu_range, &t_string);
@@ -882,10 +931,9 @@ void MCStringsMarkTextChunkByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_typ
     // The indices returned by MarkTextChunk are code unit indices
     t_cu_range.offset += t_start;
     t_cu_range.length = t_end - t_start;
-    /* UNCHECKED */ MCStringUnmapIndices(x_mark . text, kMCDefaultCharChunkType, t_cu_range, t_cp_range);
     
-    x_mark . start = t_cp_range.offset;
-    x_mark . finish = t_cp_range.offset + t_cp_range.length;
+    x_mark . start = t_cu_range.offset;
+    x_mark . finish = t_cu_range.offset + t_cu_range.length;
 
     if (p_force)
         MCStringsAddChunks(ctxt, p_chunk_type, t_add, x_mark);
@@ -941,12 +989,69 @@ void MCStringsMarkCharsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal
     MCStringsMarkTextChunkByOrdinal(ctxt, CT_CHARACTER, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
+void MCStringsMarkCodepointsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByRange(ctxt, CT_CODEPOINT, p_first, p_last, p_force, p_whole_chunk, p_further_chunks, x_mark);
+}
+
+void MCStringsMarkCodepointsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByOrdinal(ctxt, CT_CODEPOINT, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
+}
+
+void MCStringsMarkCodeunitsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByRange(ctxt, CT_CODEUNIT, p_first, p_last, p_force, p_whole_chunk, p_further_chunks, x_mark);
+}
+
+void MCStringsMarkCodeunitsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByOrdinal(ctxt, CT_CODEUNIT, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
+}
+
+void MCStringsMarkBytesOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedText& x_mark)
+{
+    // The incoming indices are for codeunits
+    MCRange t_cu_range;
+    t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
+    
+    MCAutoStringRef t_string;
+    MCStringCopySubstring(x_mark . text, t_cu_range, &t_string);
+    
+    int4 t_first;
+    int4 t_chunk_count;
+    MCStringsGetExtentsByRange(ctxt, CT_BYTE, p_first, p_last, *t_string, t_first, t_chunk_count);
+    
+    // convert codeunit indices to byte indices
+    x_mark . start = x_mark . start + t_first;
+    x_mark . finish = x_mark . start + t_chunk_count;
+}
+
+void MCStringsMarkBytesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark)
+{
+    // The incoming indices are for codeunits
+    MCRange t_cu_range;
+    t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
+    
+    MCAutoStringRef t_string;
+    MCStringCopySubstring(x_mark . text, t_cu_range, &t_string);
+    
+    int4 t_first;
+    int4 t_chunk_count;
+    MCStringsGetExtentsByOrdinal(ctxt, CT_BYTE, p_ordinal_type, *t_string, t_first, t_chunk_count);
+    
+    x_mark . start = x_mark . start + t_first;
+    x_mark . finish = x_mark . start + t_chunk_count;
+}
+
 bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_chunk_type, uindex_t t_length, MCRange& x_range, bool p_not_first, bool& r_last)
 {
+    // incoming indices are code unit indices
+    
     uindex_t t_end_index = t_length - 1;
     uindex_t t_offset = x_range . offset + x_range . length;
     
-    if (p_not_first && p_chunk_type != CT_CHARACTER)
+    if (p_not_first && p_chunk_type != CT_CHARACTER && p_chunk_type != CT_CODEPOINT && p_chunk_type != CT_CODEUNIT)
         t_offset++;
 
     if (t_offset >= t_length)
@@ -1017,6 +1122,22 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             return true;
             
         case CT_CHARACTER:
+        case CT_CODEPOINT:
+        {
+            x_range . length = 1;
+            // offset is already in code units so avoid remapping up to there.
+            uindex_t t_cu_offset = x_range . offset;
+            MCAutoStringRef t_string;
+            MCStringCopySubstring(p_string, MCRangeMake(x_range . offset, UINDEX_MAX), &t_string);
+            x_range . offset = 0;
+            MCStringMapIndices(*t_string, p_chunk_type == CT_CHARACTER ? kMCCharChunkTypeGrapheme : kMCCharChunkTypeCodepoint, x_range, x_range);
+            
+            // restore original offset.
+            x_range . offset += t_cu_offset;
+        }
+            return true;
+            
+        case CT_CODEUNIT:
             x_range . length = 1;
             return true;
             

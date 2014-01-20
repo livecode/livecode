@@ -808,7 +808,7 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
 // MW-2005-05-27: We'll use a static (I know bad me) to store the version
 //   of the shell dll.
 	static int s_shell_version = -1;
-	static MCStringRef s_last_folder = NULL;
+	static MCStringRef s_last_folder = MCValueRetain(kMCEmptyString);
 
 	MCAutoStringRef t_native_filename;
 
@@ -898,7 +898,7 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
 		MCAutoStringRef t_std_path;
 		/* UNCHECKED */ MCS_pathfromnative(s_last_folder, &t_std_path);
 
-		r_result = MCValueRetain(*t_std_path);
+		r_value = MCValueRetain(*t_std_path);
 	}
 	else
 		r_result = MCSTR(MCcancelstring);

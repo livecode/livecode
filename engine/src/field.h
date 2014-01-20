@@ -399,10 +399,8 @@ public:
 	MCParagraph *resolveparagraphs(uint4 parid);
 
     void setparagraphs(MCParagraph *newpgptr, uint4 parid);
-	Exec_stat settext(uint4 parid, MCStringRef p_text, Boolean p_formatted);
-	Exec_stat settext_oldstring(uint4 parid, const MCString &newtext, Boolean formatted, Boolean asunicode = False);
-	// MW-2012-02-23: [[ PutUnicode ]] Added parameter to specify whether 'is' is unicode or native.
-	Exec_stat settextindex_oldstring(uint4 parid, findex_t si, findex_t ei, const MCString &s, Boolean undoing, bool asunicode = false);
+    // SN-2014-01-17: [[ Unicodification ]] Suppressed old string version of settext and settextindex
+    Exec_stat settext(uint4 parid, MCStringRef p_text, Boolean p_formatted);
 	Exec_stat settextindex(uint4 parid, findex_t si, findex_t ei, MCStringRef s, Boolean undoing);
 	void getlinkdata(MCRectangle &r, MCBlock *&sb, MCBlock *&eb);
     
@@ -661,8 +659,8 @@ public:
 	void SetVScrollbar(MCExecContext& ctxt, bool setting);
 	void GetScrollbarWidth(MCExecContext& ctxt, uinteger_t& r_width);
 	void SetScrollbarWidth(MCExecContext& ctxt, uinteger_t p_width);
-	void GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width);
-	void GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height);
+	void GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width);
+	void GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height);
 	void GetListBehavior(MCExecContext& ctxt, bool& r_setting);
 	void SetListBehavior(MCExecContext& ctxt, bool setting);
 	void GetMultipleHilites(MCExecContext& ctxt, bool& r_setting);

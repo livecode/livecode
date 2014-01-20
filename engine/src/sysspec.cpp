@@ -505,7 +505,7 @@ Boolean MCS_createalias(MCStringRef p_target, MCStringRef p_alias)
     MCAutoStringRef t_target_resolved, t_alias_resolved;
     MCAutoStringRef t_target_native, t_alias_native;
     
-    if (!MCS_resolvepath(p_target, &t_target_resolved) || !MCS_resolvepath(p_target, &t_alias_resolved))
+    if (!MCS_resolvepath(p_target, &t_target_resolved) || !MCS_resolvepath(p_alias, &t_alias_resolved))
         return False;
     
     if (!MCS_pathtonative(*t_target_resolved, &t_target_native) || !MCS_pathtonative(*t_alias_resolved, &t_alias_native))

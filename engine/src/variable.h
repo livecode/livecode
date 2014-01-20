@@ -805,8 +805,10 @@ public:
 	//
 
 	bool clear(void);
+#ifdef LEGACY_EXEC
 	bool set_oldstring(const MCString& string);
 	bool set_cstring(const char *cstring);
+#endif
 	bool set_real(double real);
 
 	bool set_valueref(MCValueRef value);

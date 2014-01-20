@@ -95,8 +95,8 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_HSCROLLBAR, Bool, MCField, HScrollbar)
 	DEFINE_RW_OBJ_PROPERTY(P_VSCROLLBAR, Bool, MCField, VScrollbar)
 	DEFINE_RW_OBJ_PROPERTY(P_SCROLLBAR_WIDTH, UInt16, MCField, ScrollbarWidth)
-	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_WIDTH, UInt16, MCField, FormattedWidth)
-	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_HEIGHT, UInt16, MCField, FormattedHeight)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_WIDTH, Int16, MCField, FormattedWidth)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_HEIGHT, Int16, MCField, FormattedHeight)
 	DEFINE_RW_OBJ_PROPERTY(P_LIST_BEHAVIOR, Bool, MCField, ListBehavior)
 	DEFINE_RW_OBJ_PROPERTY(P_MULTIPLE_HILITES, Bool, MCField, MultipleHilites)
 	DEFINE_RW_OBJ_PROPERTY(P_NONCONTIGUOUS_HILITES, Bool, MCField, NoncontiguousHilites)
@@ -2173,7 +2173,7 @@ void MCField::undo(Ustruct *us)
 
 		seltext(ei - us->ud.text.newchars, ei, False);
 		pgptr = cloneselection();
-		settextindex_oldstring(0, ei - us->ud.text.newchars, ei, MCnullmcstring, True);
+        settextindex(0, ei - us->ud.text.newchars, ei, kMCEmptyString, True);
 		ei -= us->ud.text.newchars;
 		us->ud.text.newchars = 0;
 		if (us->ud.text.data != NULL)

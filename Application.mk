@@ -13,6 +13,9 @@ APP_OPTIM := debug
 APP_CFLAGS += -D_MOBILE -DTARGET_PLATFORM_MOBILE -DTARGET_SUBPLATFORM_ANDROID -D_DEBUG -DANDROID_NDK -fvisibility=hidden -g
 APP_STL := gnustl_static
 
+# ICU needs some of the STL that Bionic doesn't provide
+APP_STL := gnustl_static
+
 else
 
 APP_PROJECT_PATH := $(call my-dir)/_build/android/release

@@ -251,13 +251,13 @@ void MCCard::GetFormattedTop(MCExecContext& ctxt, integer_t& r_value)
 	r_value = minrect . y;
 }
 
-void MCCard::GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_value)
+void MCCard::GetFormattedHeight(MCExecContext& ctxt, integer_t& r_value)
 {
 	MCRectangle minrect = computecrect();
 	r_value = minrect . height;
 }
 
-void MCCard::GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_value)
+void MCCard::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_value)
 {
 	MCRectangle minrect = computecrect();
 	r_value = minrect . width;
