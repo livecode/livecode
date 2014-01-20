@@ -1183,13 +1183,26 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, findex_t si, findex_t ei, 
 			int2 t_start_dx;
 			t_start_dx = getsubwidth(dc, cx, m_index, si - m_index);
 			
-			t_sel_clip . x = x + t_start_dx;
-			t_sel_clip . width = (t_old_clip . x + t_old_clip . width) - t_sel_clip . x;
-			
-			MCRectangle t_clip;
-			t_clip = t_old_clip;
-			t_clip . width = (x + t_start_dx) - t_clip . x;
-			dc -> setclip(t_clip);
+            MCRectangle t_unsel_clip;
+            t_unsel_clip = t_old_clip;
+            
+            if (is_rtl())
+            {
+                t_unsel_clip . x = x + width - t_start_dx;
+                t_unsel_clip . width = t_start_dx;
+                t_sel_clip . x = x;
+                t_sel_clip . width = t_unsel_clip . x - t_sel_clip . x;
+            }
+            else
+            {
+                t_unsel_clip . x = x;
+                t_unsel_clip . width = t_start_dx;
+                t_sel_clip . x = t_unsel_clip . x + t_unsel_clip . width;
+                t_sel_clip . width = width - t_start_dx;
+            }
+
+            t_unsel_clip = MCU_intersect_rect(t_unsel_clip, t_old_clip);
+			dc -> setclip(t_unsel_clip);
 			drawstring(dc, x, cx, y, m_index, m_size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
 		}
 
@@ -1199,17 +1212,31 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, findex_t si, findex_t ei, 
 			int32_t t_end_dx;
 			t_end_dx = getsubwidth(dc, cx, m_index, ei - m_index);
 			
-			t_sel_clip . width = (x + t_end_dx) - t_sel_clip . x;
-			
-			MCRectangle t_clip;
-			t_clip = t_old_clip;
-			t_clip . x = x + t_end_dx;
-			t_clip . width = (t_old_clip . x + t_old_clip . width) - t_clip . x;
-			dc -> setclip(t_clip);
+            MCRectangle t_unsel_clip;
+            t_unsel_clip = t_old_clip;
+            
+            if (is_rtl())
+            {
+                t_unsel_clip . x = x;
+                t_unsel_clip . width = width - t_end_dx;
+                t_sel_clip . x = t_unsel_clip . x + t_unsel_clip . width;
+                t_sel_clip . width = t_sel_clip . width - (width - t_end_dx);
+            }
+            else
+            {
+                t_unsel_clip . x = x + t_end_dx;
+                t_unsel_clip . width = width - t_end_dx;
+                // Unchanged: t_sel_clip . x
+                t_sel_clip . width = x + t_end_dx - t_sel_clip . x;
+            }
+
+			t_unsel_clip = MCU_intersect_rect(t_unsel_clip, t_old_clip);
+			dc -> setclip(t_unsel_clip);
 			drawstring(dc, x, cx, y, m_index, m_size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
 		}
 		
 		// Now use the clip rect we've computed for the selected portion.
+        t_sel_clip = MCU_intersect_rect(t_sel_clip, t_old_clip);
 		dc -> setclip(t_sel_clip);
 		
 		// Change the hilite color (if necessary).
