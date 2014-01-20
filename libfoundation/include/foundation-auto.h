@@ -270,7 +270,7 @@ public:
     
     bool Lock(MCStringRef p_string)
     {
-        return MCStringConvertToUTF8String(p_string, m_utf8string);
+        return MCStringConvertToUTF8(p_string, m_utf8string, m_size);
     }
     
     void Unlock(void)
@@ -284,8 +284,14 @@ public:
         return m_utf8string;
     }
     
+    uindex_t Size()
+    {
+        return m_size;
+    }
+    
 private:
     char *m_utf8string;
+    uindex_t m_size;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -458,6 +464,55 @@ public:
 private:
     MCStringRef m_ref;
     char *m_cstring;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCAutoStringRefAsNativeChars
+{
+public:
+    MCAutoStringRefAsNativeChars(void)
+    {
+        m_string = nil;
+    }
+
+    ~MCAutoStringRefAsNativeChars(void)
+    {
+        Unlock();
+    }
+
+    bool Lock(MCStringRef p_string, char_t *&r_chars, uindex_t &r_length)
+    {
+        bool t_success;
+        t_success = true;
+
+        uindex_t t_length;
+        if (MCStringIsNative(p_string))
+        {
+            t_length = MCStringGetLength(p_string);
+            t_success =  MCMemoryNewArray(t_length, m_string);
+            memcpy(m_string, (const char*)MCStringGetNativeCharPtr(p_string), t_length);
+        }
+        else
+            t_success =  MCStringConvertToNative(p_string, (char_t*&)m_string, t_length);
+
+        if (t_success)
+        {
+            r_chars = (char_t*)m_string;
+            r_length = t_length;
+        }
+
+        return t_success;
+    }
+
+    void Unlock(void)
+    {
+        MCMemoryDeleteArray(m_string);
+        m_string = nil;
+    }
+
+private:
+    char *m_string;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

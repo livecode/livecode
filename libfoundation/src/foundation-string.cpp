@@ -248,6 +248,7 @@ bool MCStringCreateWithChars(const unichar_t *p_chars, uindex_t p_char_count, MC
 	if (t_success)
 	{
 		MCStrCharsMapFromUnicode(p_chars, p_char_count, self -> chars, self -> char_count);
+        self -> native_chars = nil;
 
 		r_string = self;
 	}
@@ -303,6 +304,7 @@ bool MCStringCreateWithNativeChars(const char_t *p_chars, uindex_t p_char_count,
 	if (t_success)
 	{
 		MCStrCharsMapFromNative(self -> chars, p_chars, p_char_count);
+        self -> native_chars = nil;
 		self -> char_count = p_char_count;
 
 		r_string = self;

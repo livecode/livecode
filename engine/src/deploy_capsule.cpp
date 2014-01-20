@@ -185,7 +185,11 @@ bool MCDeployCapsuleDefine(MCDeployCapsuleRef self, MCCapsuleSectionType p_type,
 
 bool MCDeployCapsuleDefineString(MCDeployCapsuleRef self, MCCapsuleSectionType p_type, MCStringRef p_string)
 {
-	return MCDeployCapsuleDefine(self, p_type, MCStringGetNativeCharPtr(p_string), MCStringGetLength(p_string));
+    MCAutoStringRefAsNativeChars t_auto_native;
+    uindex_t t_length;
+    char_t* t_native;
+    /* UNCHECKED */ t_auto_native . Lock(p_string, t_native, t_length);
+    return MCDeployCapsuleDefine(self, p_type, t_native, t_length);
 }
 
 bool MCDeployCapsuleDefineFromFile(MCDeployCapsuleRef self, MCCapsuleSectionType p_type, MCDeployFileRef p_file)

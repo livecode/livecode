@@ -750,17 +750,11 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	
 	MCStringRef t_detailed_string;
 	if (t_state -> details)
-	{
-		MCAutoStringRef t_filename_string;
-		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_entry->name, MCCStringLength(p_entry->name), &t_filename_string);
-		MCAutoStringRef t_urlencoded_string;
-		/* UNCHECKED */ MCFiltersUrlEncode(*t_filename_string, &t_urlencoded_string);
-		
+	{		
 #ifdef _WIN32
 		/* UNCHECKED */ MCStringFormat(t_detailed_string,
-                                       "%*.*s,%I64d,,%ld,%ld,%ld,,,,%03o,",
-                                       MCStringGetLength(*t_urlencoded_string), MCStringGetLength(*t_urlencoded_string),
-                                       MCStringGetNativeCharPtr(*t_urlencoded_string),
+                                       "%@,%I64d,,%ld,%ld,%ld,,,,%03o,",
+                                       p_entry -> name,
                                        p_entry -> data_size,
                                        p_entry -> creation_time,
                                        p_entry -> modification_time,
@@ -768,9 +762,8 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
                                        p_entry -> permissions);
 #else
 		/* UNCHECKED */ MCStringFormat(t_detailed_string,
-                                       "%*.*s,%lld,,,%u,%u,,%d,%d,%03o,",
-                                       MCStringGetLength(*t_urlencoded_string), MCStringGetLength(*t_urlencoded_string),
-                                       MCStringGetNativeCharPtr(*t_urlencoded_string),
+                                       "%@,%lld,,,%u,%u,,%d,%d,%03o,",
+                                       p_entry -> name,
                                        p_entry -> data_size,
                                        p_entry -> modification_time, p_entry -> access_time,
                                        p_entry -> user_id, p_entry -> group_id,
@@ -783,7 +776,7 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 		MCValueRelease(t_detailed_string);
 	}
 	else
-    /* UNCHECKED */ MCListAppendCString(t_state->list, p_entry->name);
+    /* UNCHECKED */ MCListAppendFormat(t_state->list, "%@", p_entry -> name);
 	
 	return true;
 }

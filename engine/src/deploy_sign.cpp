@@ -430,10 +430,22 @@ template<typename T> static bool i2d(int (*p_i2d)(T *, unsigned char **), T *p_o
 
 // This method loads a X.509v3 certificate stored in an empty PKCS#7 SignedData
 // structure.
-static bool MCDeployCertificateLoad(const char *p_passphrase, const char *p_certificate, PKCS7*& r_chain)
+static bool MCDeployCertificateLoad(MCStringRef p_passphrase, MCStringRef p_certificate, PKCS7*& r_chain)
 {
+    // SN-2014-01-10: The certificate filename can be in unicode.
+    // As a char* is required, the conversion must be done.
+    // On Mac, UTF8 suits the filesystem encoding requirements
+    // On Windows, BIO_new_file expects a UFT-8 path
+    // On Linux, a SysString is used
+#ifdef _LINUX
+    MCAutoStringRefAsSysString t_certificate;
+#else
+    MCAutoStringRefAsUTF8String t_certificate;
+#endif
+    t_certificate . Lock(p_certificate);
+
 	BIO *t_file;
-	t_file = BIO_new_file(p_certificate, "rb");
+    t_file = BIO_new_file(*t_certificate, "rb");
 	if (t_file == nil)
 		return MCDeployThrowOpenSSL(kMCDeployErrorNoCertificate);
 
@@ -460,14 +472,14 @@ static bool MCDeployCertificateLoad(const char *p_passphrase, const char *p_cert
 
 // This method loads a private key stored in either PKCS#8 format, or in a the
 // Microsoft PVK format.
-static bool MCDeploySignLoadPVK(const char *, const char *, EVP_PKEY*&);
-static bool MCDeployPrivateKeyLoad(const char *p_passphrase, const char *p_privatekey, EVP_PKEY*& r_private_key)
+static bool MCDeploySignLoadPVK(MCStringRef, MCStringRef, EVP_PKEY*&);
+static bool MCDeployPrivateKeyLoad(MCStringRef p_passphrase, MCStringRef p_privatekey, EVP_PKEY*& r_private_key)
 {
 	return MCDeploySignLoadPVK(p_privatekey, p_passphrase, r_private_key);
 }
 
 // This method loads a PKCS#12 privatekey/certificate pair.
-static bool MCDeployCertStoreLoad(const char *p_passphrase, const char *p_store, PKCS7*& r_certificate, EVP_PKEY*& r_private_key)
+static bool MCDeployCertStoreLoad(MCStringRef p_passphrase, MCStringRef p_store, PKCS7*& r_certificate, EVP_PKEY*& r_private_key)
 {
 	return false;
 }
@@ -796,7 +808,11 @@ static bool MCDeploySignWindowsAddOpusInfo(const MCDeploySignParameters& p_param
 	}
 
 	if (t_success && p_params . description != nil)
-		t_success = MCDeployBuildSpcString((const char *)MCStringGetNativeCharPtr(p_params . description), false, t_opus -> description);
+    {
+        MCAutoStringRefAsUTF8String t_utf8_string;
+        t_success = t_utf8_string . Lock(p_params . description)
+                && MCDeployBuildSpcString(*t_utf8_string, false, t_opus -> description);
+    }
 	
 	if (t_success && p_params . url != nil)
 	{
@@ -1060,17 +1076,17 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 	t_cert_chain = nil;
 	t_privatekey = nil;
 	if (t_success && p_params . certstore != nil)
-		t_success = MCDeployCertStoreLoad((const char *)MCStringGetNativeCharPtr(p_params . passphrase),
-										  (const char *)MCStringGetNativeCharPtr(p_params . certstore),
+        t_success = MCDeployCertStoreLoad(p_params . passphrase,
+                                          p_params . certstore,
 										  t_cert_chain, t_privatekey);
 	else if (t_success)
 		t_success =
-			MCDeployCertificateLoad((const char *)MCStringGetNativeCharPtr(p_params . passphrase),
-									(const char *)MCStringGetNativeCharPtr(p_params . certificate),
+            MCDeployCertificateLoad(p_params . passphrase,
+                                    p_params . certificate,
 									t_cert_chain) &&
-			MCDeployPrivateKeyLoad((const char *)MCStringGetNativeCharPtr(p_params . passphrase),
-								   (const char *)MCStringGetNativeCharPtr(p_params . privatekey),
-								   t_privatekey);
+            MCDeployPrivateKeyLoad(p_params . passphrase,
+                                   p_params . privatekey,
+                                   t_privatekey);
 
 	// Next we check the input file, and compute the hash, writing out the new
 	// version of the executable as we go.
@@ -1375,17 +1391,29 @@ static bool read_le_bignum(uint8_t*& x_data, uint32_t p_bytes, BIGNUM*& r_bignum
 	return true;
 }
 
-bool MCDeploySignLoadPVK(const char *p_filename, const char *p_passphrase, EVP_PKEY*& r_key)
+bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_PKEY*& r_key)
 {
 	bool t_success;
 	t_success = true;
+
+    // SN-2014-01-10: The private key filename can be in unicode.
+    // As a char* is required, the conversion must be done.
+    // On Mac, UTF8 suits the filesystem encoding requirements
+    // On Windows, BIO_new_file expects a UFT-8 path
+    // On Linux, a SysString is used
+#ifdef _LINUX
+    MCAutoStringRefAsSysString t_private_key;
+#else
+    MCAutoStringRefAsUTF8String t_private_key;
+#endif
+    t_success = t_private_key . Lock(p_filename);
 
 	// First try and open the input file
 	BIO *t_input;
 	t_input = nil;
 	if (t_success)
 	{
-		t_input = BIO_new_file(p_filename, "rb");
+        t_input = BIO_new_file(*t_private_key, "rb");
 		if (t_input == nil)
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorNoPrivateKey);
 	}
@@ -1459,11 +1487,14 @@ bool MCDeploySignLoadPVK(const char *p_filename, const char *p_passphrase, EVP_P
 		// Compute the passkey. This is done by taking the first 16 bytes
 		// of SHA1(salt & passphrase).
 		uint8_t t_passkey[EVP_MAX_KEY_LENGTH];
-		EVP_MD_CTX t_md;
+        EVP_MD_CTX t_md;
 		if (t_success && EVP_DigestInit(&t_md, EVP_sha1()))
-		{
+        {
+            MCAutoStringRefAsCString t_passphrase;
+            t_success = t_passphrase . Lock(p_passphrase);
+
 			EVP_DigestUpdate(&t_md, t_salt, t_header . salt_length);
-			EVP_DigestUpdate(&t_md, p_passphrase, strlen(p_passphrase));
+            EVP_DigestUpdate(&t_md, *t_passphrase, strlen(*t_passphrase));
 			EVP_DigestFinal(&t_md, t_passkey, NULL);
 		}
 

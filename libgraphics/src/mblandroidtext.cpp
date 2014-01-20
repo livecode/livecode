@@ -40,15 +40,15 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		return;	
 	
 	bool t_success;
-	t_success = true;	
-	
-	char *t_text;
-	t_text = nil;
-	if (t_success)
-	{
-		p_length = p_length / 2;
-		t_success = MCCStringFromUnicodeSubstring(p_text, p_length, t_text);
-	}
+	t_success = true;        
+    
+    MCAutoStringRef t_unicode_string;
+    MCAutoStringRefAsUTF8String t_utf8_string;
+    
+    t_success = MCStringCreateWithChars(p_text, p_length / 2, &t_unicode_string);
+    
+    if (t_success)
+        t_success = t_utf8_string . Lock(*t_unicode_string);
 	
 	if (t_success)
 	{
@@ -68,10 +68,9 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_typeface = (SkTypeface *) p_font . fid;
 		t_paint . setTypeface(t_typeface);
 		
-		self -> layer -> canvas -> drawText(t_text, p_length, MCGCoordToSkCoord(p_location . x), MCGCoordToSkCoord(p_location . y), t_paint);
+		self -> layer -> canvas -> drawText(*t_utf8_string, t_utf8_string . Size(), MCGCoordToSkCoord(p_location . x), MCGCoordToSkCoord(p_location . y), t_paint);
 	}
 	
-	MCCStringFree(t_text);
 	self -> is_valid = t_success;
 }
 
@@ -81,16 +80,16 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 	//	return 0.0;
 	
 	bool t_success;
-	t_success = true;	
-	
-	char *t_text;
-	t_text = nil;
-	if (t_success)
-	{
-		p_length = p_length / 2;
-		t_success = MCCStringFromUnicodeSubstring(p_text, p_length, t_text);
-	}
-	
+	t_success = true;
+    
+    MCAutoStringRef t_unicode_string;
+    MCAutoStringRefAsUTF8String t_utf8_string;
+    
+    t_success = MCStringCreateWithChars(p_text, p_length / 2, &t_unicode_string);
+    
+    if (t_success)
+        t_success = t_utf8_string . Lock(*t_unicode_string);
+    
 	MCGFloat t_width;
 	t_width = 0.0;
 	if (t_success)
@@ -102,10 +101,9 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 		t_typeface = (SkTypeface *) p_font . fid;
 		t_paint . setTypeface(t_typeface);
 		
-		t_width =  (MCGFloat) t_paint . measureText(t_text, p_length);
+		t_width =  (MCGFloat) t_paint . measureText(*t_utf8_string, t_utf8_string . Size());
 	}
 	
-	MCCStringFree(t_text);
 	//self -> is_valid = t_success;
 	return t_width;
 }

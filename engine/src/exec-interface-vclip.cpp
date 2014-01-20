@@ -96,7 +96,8 @@ void MCVideoClip::GetText(MCExecContext& ctxt, MCStringRef& r_text)
 void MCVideoClip::SetText(MCExecContext& ctxt, MCStringRef p_text)
 {
 	delete frames;
-	size = MCStringGetLength(p_text);
-	frames = new uint1[size];
-	memcpy(frames, MCStringGetNativeCharPtr(p_text), size);
+    
+    uindex_t t_size;
+    MCStringConvertToNative(p_text, frames, t_size);
+    size = t_size;
 }

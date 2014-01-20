@@ -141,29 +141,30 @@ void MCMathEvalBaseConvert(MCExecContext& ctxt, MCStringRef p_source, integer_t 
 	bool t_error;
 	t_error = false;
 
-	const char_t *t_string;
-	uint4 t_length;
-	t_string = MCStringGetNativeCharPtr(p_source);
-	t_length = MCStringGetLength(p_source);
+    MCAutoStringRefAsNativeChars t_auto_native;
+    char_t* t_native;
+    uindex_t t_length;
 
-	if (t_length == 0)
+    t_error = !t_auto_native . Lock(p_source, t_native, t_length);
+
+    if (!t_error && t_length == 0)
 		t_error = true;
 	
 	uint4 i;
 	if (!t_error)
 	{
-		if (t_string[0] == '+')
+        if (t_native[0] == '+')
 			i = 1;
-		else if (t_string[0] == '-')
+        else if (t_native[0] == '-')
 			i = 1, negative = True;
 		else
 			i = 0;
 	}
 	
-	while(!t_error && i < t_length)
+    while(!t_error && i < t_length)
 	{
 		value *= p_source_base;
-		char_t source = MCS_toupper(t_string[i]);
+        char_t source = MCS_toupper(t_native[i]);
 		if (isdigit((uint1)source))
 		{
 			if (source - '0' >= p_source_base)

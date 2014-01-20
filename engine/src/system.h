@@ -42,7 +42,7 @@ struct MCDateTimeLocale;
 
 struct MCSystemFolderEntry
 {
-	const char *name;
+	MCStringRef name;
 	int64_t data_size;
 	int64_t resource_size;
 	uint32_t creation_time;
