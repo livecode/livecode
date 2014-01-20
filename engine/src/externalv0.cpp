@@ -68,7 +68,7 @@ typedef struct _Xternal
 struct MCstring
 {
 	const char *sptr;
-	int length;
+    int length;
 };
 
 struct MCarray
@@ -77,6 +77,44 @@ struct MCarray
 	MCstring *strings;
 	char **keys;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// New struct allowing to allocate memory when it's needed, and which ensures
+// the memory is then free'd properly.
+
+struct MCExternalAllocPool
+{
+    unsigned int size;
+    char **strings;
+
+    MCExternalAllocPool()
+    {
+        size = 0;
+        strings = nil;
+    }
+};
+
+void MCExternalDeallocatePool(MCExternalAllocPool *p_pool)
+{
+    for (unsigned int i = 0; i < p_pool -> size; ++i)
+        MCMemoryDeleteArray(p_pool -> strings[i]);
+
+    MCMemoryDeleteArray(p_pool -> strings);
+
+    delete p_pool;
+    p_pool = nil;
+}
+
+bool MCExternalAddAllocatedString(MCExternalAllocPool *p_pool, char* p_string)
+{
+    if (!MCMemoryResizeArray(p_pool -> size + 1, p_pool -> strings, p_pool -> size))
+        return false;
+
+    p_pool -> strings[p_pool -> size - 1] = p_string;
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 typedef char *(*XCB)(const char *arg1, const char *arg2, const char *arg3, int *retval);
 typedef int (*SECURITYHANDLER)(const char *);
@@ -87,6 +125,8 @@ typedef void (*SHUTDOWNXTABLE)(void);
 
 extern XCB MCcbs[];
 extern SECURITYHANDLER MCsecuritycbs[];
+
+static MCExternalAllocPool* MCexternalallocpool = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -109,7 +149,7 @@ private:
 	const char *m_name;
 	_Xternal *m_table;
 	void (*m_free)(void *);
-	void (*m_shutdown)(void);
+    void (*m_shutdown)(void);
 };
 
 
@@ -138,7 +178,7 @@ bool MCExternalV0::Prepare(void)
 
 	GETXTABLE t_getter;
 	t_getter = (GETXTABLE)MCS_resolvemodulesymbol(m_module, MCSTR("getXtable"));
-	t_getter(MCcbs, deleter, &m_name, &m_table, &m_free);
+    t_getter(MCcbs, deleter, &m_name, &m_table, &m_free);
 	
 	CONFIGURESECURITY t_conf_security;
 	t_conf_security = (CONFIGURESECURITY)MCS_resolvemodulesymbol(m_module, MCSTR("configureSecurity"));
@@ -223,7 +263,14 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
 			p_parameters = p_parameters -> getnext();
 		}
 
+        // Handling of memory allocation for C-strings
+        MCExternalAllocPool *t_old_pool = MCexternalallocpool;
+        MCexternalallocpool = new MCExternalAllocPool;
+
 		(t_handler -> call)(args, nargs, &retval, &Xpass, &Xerr);
+
+        MCExternalDeallocatePool(MCexternalallocpool);
+        MCexternalallocpool = t_old_pool;
 
 		// MW-2011-03-02: [[ Bug ]] Memory leak as we aren't freeing any error string that
 		//   is returned.
@@ -459,7 +506,9 @@ static char *set_field_by_name(const char *arg1, const char *arg2,
 		*retval = xresFail;
 	else
 	{
-		fptr->settext_oldstring(fptr->getcard()->getid(), arg3, False);
+        MCAutoStringRef t_string;
+        MCStringCreateWithBytes((byte_t*)arg3, strlen(arg3), kMCStringEncodingUTF8, false, &t_string);
+        fptr->settext(fptr->getcard()->getid(), *t_string, False);
 		*retval = xresSucc;
 	}
 	return NULL;
@@ -473,7 +522,9 @@ static char *set_field_by_num(const char *arg1, const char *arg2,
 		*retval = xresFail;
 	else
 	{
-		fptr->settext_oldstring(fptr->getcard()->getid(), arg3, False);
+        MCAutoStringRef t_string;
+        MCStringCreateWithBytes((byte_t*)arg3, strlen(arg3), kMCStringEncodingUTF8, false, &t_string);
+        fptr->settext(fptr->getcard()->getid(), *t_string, False);
 		*retval = xresSucc;
 	}
 	return NULL;
@@ -487,7 +538,9 @@ static char *set_field_by_id(const char *arg1, const char *arg2,
 		*retval = xresFail;
 	else
 	{
-		fptr->settext_oldstring(fptr->getcard()->getid(), arg3, False);
+        MCAutoStringRef t_string;
+        MCStringCreateWithBytes((byte_t*)arg3, strlen(arg3), kMCStringEncodingUTF8, false, &t_string);
+        fptr->settext(fptr->getcard()->getid(), *t_string, False);
 		*retval = xresSucc;
 	}
 	return NULL;
@@ -671,7 +724,7 @@ struct get_array_element_t
 	uindex_t index;
 	uindex_t limit;
 	char **keys;
-	MCstring *strings;
+    MCstring *strings;
 };
 
 static bool get_array_element(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
@@ -679,11 +732,28 @@ static bool get_array_element(void *p_context, MCArrayRef p_array, MCNameRef p_k
 	get_array_element_t *ctxt;
 	ctxt = (get_array_element_t *)p_context;
 
-	ctxt -> keys[ctxt -> index] = (char *)MCNameGetCString(p_key);
+	char* t_key;
+	MCStringConvertToCString(MCNameGetString(p_key), t_key);
+
+	ctxt -> keys[ctxt -> index] = t_key;
+	MCExternalAddAllocatedString(MCexternalallocpool, t_key);
+
 	if (ctxt -> strings != nil)
 	{
-		ctxt -> strings[ctxt -> index] . length = MCStringGetLength((MCStringRef)p_value);
-		ctxt -> strings[ctxt -> index] . sptr = (const char *)MCStringGetNativeCharPtr((MCStringRef)p_value);
+        // The value needs to be converted as a C-string
+        uindex_t t_length;
+        char_t *t_chars;
+        MCAutoStringRef t_string;
+
+        if (!MCECptr -> ConvertToString(p_value, &t_string))
+            t_string = kMCEmptyString;
+
+        /* UNCHECKED */ MCStringConvertToNative(*t_string, t_chars, t_length);
+
+        ctxt -> strings[ctxt -> index] . length = (int)t_length;
+        ctxt -> strings[ctxt -> index] . sptr = (const char*)t_chars;
+
+        MCExternalAddAllocatedString(MCexternalallocpool, (char*)t_chars);
 	}
 	ctxt -> index++;
 
@@ -710,11 +780,8 @@ static char *get_array(const char *arg1, const char *arg2,
 	if (!var -> isarray())
 		return NULL;
 
-	if (!var -> converttoarrayofstrings(*MCECptr))
-		return NULL;
-
-	MCArrayRef t_array;
-	t_array = (MCArrayRef)var -> getvalueref();
+    MCArrayRef t_array;
+    t_array = (MCArrayRef)var -> getvalueref();
 	if (t_array == nil)
 		return NULL;
 
@@ -730,7 +797,7 @@ static char *get_array(const char *arg1, const char *arg2,
 	t_ctxt . index = 0;
 	t_ctxt . limit = value -> nelements;
 	t_ctxt . keys = value -> keys;
-	t_ctxt . strings = value -> strings;
+    t_ctxt . strings = value -> strings;
 	MCArrayApply(t_array, get_array_element, &t_ctxt);
 
 	return NULL;

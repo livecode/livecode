@@ -185,14 +185,16 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 					        || te->type != TT_STATEMENT)
 					{
 						uint2 newmode;
-						if (!MCU_stoui2(sp.gettoken_oldstring(), newmode)
+                        MCAutoNumberRef t_mode;
+
+                        if (!MCNumberParse(sp.gettoken_stringref(), &t_mode)
 						        || newmode < 1 || newmode >= WM_LAST)
 						{
 							MCperror->add
 							(PE_GO_NOMODE, sp);
 							return PS_ERROR;
 						}
-						mode = (Window_mode)newmode;
+                        mode = (Window_mode)MCNumberFetchAsUnsignedInteger(*t_mode);
 						return PS_NORMAL;
 					}
 					switch (te->which)

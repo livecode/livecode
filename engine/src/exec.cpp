@@ -274,7 +274,10 @@ bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
     if (!ConvertToString(p_value, &t_string))
         return false;
     
-	return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string), r_data);
+    if (MCStringIsNative(*t_string))
+        return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string), r_data);
+    else
+        return MCDataCreateWithBytes((const byte_t *)MCStringGetCharPtr(*t_string), MCStringGetLength(*t_string) * 2, r_data);
 }
 
 bool MCExecContext::ConvertToName(MCValueRef p_value, MCNameRef& r_name)
@@ -2955,13 +2958,17 @@ void MCExecParseSet(MCExecContext& ctxt, MCExecSetTypeInfo *p_info, MCExecValue 
     intset_t t_value = 0;
     char **t_elements;
     uindex_t t_element_count;
-    MCCStringSplit(MCStringGetCString(*t_string), ',', t_elements, t_element_count);
+    MCAutoArrayRef t_split_strings;
     
-    for (uindex_t i = 0; i < t_element_count; i++)
+    MCStringSplit(*t_string, MCSTR(","), nil, kMCStringOptionCompareExact, &t_split_strings);
+    
+    for (uindex_t i = 0; i < MCArrayGetCount(*t_split_strings); i++)
     {
         for (uindex_t j = 0; j < p_info -> count; j++)
         {
-            if (MCU_strcasecmp(t_elements[i], p_info -> elements[j] . tag) == 0)
+            MCValueRef t_current_string;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_split_strings, i + 1, t_current_string);
+            if (MCStringIsEqualToCString((MCStringRef)t_current_string, p_info -> elements[j] . tag, kMCCompareExact))
             {
                 t_value |= 1 << p_info -> elements[j] . bit;
                 break;

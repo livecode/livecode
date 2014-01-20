@@ -56,9 +56,9 @@ enum
 
 struct MCLicenseParameters
 {
-	char *license_token;
-	char *license_name;
-	char *license_organization;
+    MCStringRef license_token;
+    MCStringRef license_name;
+    MCStringRef license_organization;
 	uint32_t license_class;
 	uint4 license_multiplicity;
 

@@ -2580,10 +2580,16 @@ Exec_stat MCDeployExtractMacOSX(MCStringRef p_filename, MCStringRef p_segment, M
 	// Next just run the callback to get the offset of the section within the
 	// file.
 	MCDeployExtractContext t_context;
+    MCAutoStringRefAsCString t_section;
+    MCAutoStringRefAsCString t_segment;
+    
 	if (t_success)
-	{
-		t_context . section = (const char *)MCStringGetNativeCharPtr(p_section);
-		t_context . segment = (const char *)MCStringGetNativeCharPtr(p_segment);
+        t_success = t_section . Lock(p_section) && t_segment . Lock(p_segment);
+    
+    if (t_success)
+    {
+        t_context . section = (const char*) *t_section;
+		t_context . segment = (const char*) *t_segment;
 		t_context . offset = 0;
 		t_context . size = 0;
 		t_context . error = false;

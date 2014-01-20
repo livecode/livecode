@@ -1169,7 +1169,9 @@ Exec_stat MCObject::setscriptprop(MCExecPoint& ep)
 			}
 			if (!MCperror->isempty())
 			{
-				MCresult->copysvalue(MCperror->getsvalue());
+                MCAutoStringRef t_error;
+                /* UNCHECKED */ MCperror -> copyasstringref(&t_error);
+                MCresult->setvalueref(*t_error);
 				MCperror->clear();
 			}
 			else

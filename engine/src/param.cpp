@@ -42,6 +42,7 @@ Parse_stat MCParameter::parse(MCScriptPoint &sp)
 }
 /////////
 
+#ifdef LEGACY_EXEC
 bool MCParameter::setoldstring_argument(const MCString& p_string)
 {
 	MCStringRef t_string_ref;
@@ -51,6 +52,7 @@ bool MCParameter::setoldstring_argument(const MCString& p_string)
 	value = t_string_ref;
 	return true;
 }
+#endif
 
 void MCParameter::setvalueref_argument(MCValueRef p_value)
 {

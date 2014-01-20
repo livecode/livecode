@@ -659,16 +659,18 @@ bool MCUnicodeLowercase(MCLocaleRef p_locale,
     
     // Allocate the output buffer
     MCAutoArray<unichar_t> t_buffer;
-    if (!t_buffer.New(t_input.length()))
+    if (!t_buffer.New(t_input.length() + 1))
         return false;
     
     // Extract the converted characters
-    t_input.extract(t_buffer.Ptr(), t_buffer.Size(), t_error);
+    t_input.extract(t_buffer.Ptr(), t_input.length(), t_error);
     if (U_FAILURE(t_error))
         return false;
     
     // Done
     t_buffer.Take(r_out, r_out_length);
+    r_out_length--;
+    r_out[r_out_length] = 0;
     return true;
 }
 

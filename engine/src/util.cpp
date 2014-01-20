@@ -2112,28 +2112,23 @@ Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef mess, MCParameter *pa
 bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 {
 #ifdef _WIN32
-	uindex_t t_length = MCStringGetLength(p_path);
-	if (t_length == 0)
+	if (MCStringIsEmpty(p_path))
 		return MCStringCopy(p_path, r_native_path);
 
-	MCAutoNativeCharArray t_path;
-	if (!t_path.New(t_length))
-		return false;
-
-	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
-	char_t *t_dst = t_path.Chars();
+	unichar_t *t_dst;
+	uindex_t t_length;
+    t_dst = new unichar_t[t_length + 1];
+	t_length = MCStringGetChars(p_path, MCRangeMake(0, t_length), t_dst);
 
 	for (uindex_t i = 0; i < t_length; i++)
 	{
-		if (t_src[i] == '/')
+		if (t_dst[i] == '/')
 			t_dst[i] = '\\';
-		else if (t_src[i] == '\\')
+		else if (t_dst[i] == '\\')
 			t_dst[i] = '/';
-		else
-			t_dst[i] = t_src[i];
 	}
 
-	return t_path.CreateStringAndRelease(r_native_path);
+    return MCStringCreateWithCharsAndRelease(t_dst, t_length, r_native_path);
 #else
 	return MCStringCopy(p_path, r_native_path);
 #endif
@@ -2164,29 +2159,47 @@ inline void strmove(char *p_dest, const char *p_src)
 	*p_dest = 0;
 }
 
+// SN-2014-01-09: Same as above, handling unicode chars
+// Returns the characters suppressed in case the string is the same
+inline index_t strmove(unichar_t *p_dest, const unichar_t *p_src, bool p_same_string)
+{
+	while(*p_src != 0)
+		*p_dest++ = *p_src++;
+	*p_dest = 0;
+    
+    if (p_same_string)
+        return p_src - p_dest;
+    else
+        return 0;
+}
+
 // MW-2004-11-26: Replace strcpy with strmov - overalapping regions (VG)
 void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 {
-    char *t_in;
-    /* UNCHECKED */ MCStringConvertToCString(in, t_in);
-	char *cstr = t_in;
+    unichar_t *t_unicode_str;
+    uindex_t t_length;
+    t_length = MCStringGetLength(in);
+    
+    t_unicode_str = new unichar_t[t_length + 1];
+    t_length = MCStringGetChars(in, MCRangeMake(0, t_length), t_unicode_str);
+    t_unicode_str[t_length] = 0;
 
-	char *fptr = cstr; //pointer to search forward in curdir
-	while (*fptr)
+    unichar_t *fptr = t_unicode_str; //pointer to search forward in curdir
+    while (*fptr)
 	{
 		if (*fptr == '/' && *(fptr + 1) == '.'
 		        && *(fptr + 2) == '.' && *(fptr + 3) == '/')
 		{//look for "/../" pattern
-			if (fptr == cstr)
-				strmove(fptr, fptr + 3);
+            if (fptr == t_unicode_str)
+				t_length -= strmove(fptr, fptr + 3, true);
 			else
 			{
-				char *bptr = fptr - 1;
+				unichar_t *bptr = fptr - 1;
 				while (True)
 				{ //search backword for '/'
 					if (*bptr == '/')
 					{
-						strmove(bptr, fptr + 3);
+						t_length -= strmove(bptr, fptr + 3, true);
 						fptr = bptr;
 						break;
 					}
@@ -2197,20 +2210,21 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 		}
 		else
 			if (*fptr == '/' && *(fptr + 1) == '.' && *(fptr + 2) == '/')
-				strmove(fptr, fptr + 2); //erase the '/./'
+				t_length -= strmove(fptr, fptr + 2, true); //erase the '/./'
 			else
 #ifdef _MACOSX
 				if (*fptr == '/' && *(fptr + 1) == '/')
 #else
-				if (fptr != cstr && *fptr == '/' && *(fptr + 1) == '/')
+                if (fptr != t_unicode_str && *fptr == '/' && *(fptr + 1) == '/')
 #endif
 
-					strmove(fptr, fptr + 1); //erase the extra '/'
+					t_length -= strmove(fptr, fptr + 1, true); //erase the extra '/'
 				else
 					fptr++;
 	}
-	/* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t *)cstr, r_out);
-
+    
+    /* UNCHECKED */ MCStringCreateWithChars(t_unicode_str, t_length, r_out);
+    delete[] t_unicode_str;
 }
 
 bool MCFiltersBase64Encode(MCDataRef p_src, MCStringRef& r_dst);

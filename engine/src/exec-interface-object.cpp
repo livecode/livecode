@@ -811,7 +811,7 @@ static void MCInterfaceShadowFormat(MCExecContext& ctxt, const MCInterfaceShadow
 	if (p_input . flag)
 		r_output = (MCStringRef)MCValueRetain(kMCTrue);
 	else
-		r_output = (MCStringRef)MCValueRetain(kMCTrue);
+		r_output = (MCStringRef)MCValueRetain(kMCFalse);
 }
 
 static void MCInterfaceShadowFree(MCExecContext& ctxt, MCInterfaceShadow& p_input)
@@ -1368,7 +1368,10 @@ void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
 				}
 				if (!MCperror->isempty())
 				{
-					ctxt . SetTheResultToCString(MCperror->getsvalue() . getstring());
+                    MCAutoStringRef t_error;
+                    MCperror -> copyasstringref(&t_error);
+
+                    ctxt . SetTheResultToValue(*t_error);
 					MCperror->clear();
 				}
 				else
@@ -3135,8 +3138,6 @@ void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effect
             else
             {
                 MCAutoStringRef t_string_prop;
-                // MERG-2013-05-07: [[ RevisedPropsProp ]] Special-case the props that could
-                //   be either Unicode or native (ensure minimal encoding is used).
                 // MERG-2013-06-24: [[ RevisedPropsProp ]] Treat the short name specially to ensure
                 //   round-tripping. If the name is empty, then return empty for 'name'.
                 switch ((Properties)table[tablesize].value) {
@@ -3148,33 +3149,6 @@ void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effect
 
                         t_value = (MCValueRef)*t_string_prop;
                         break;
-                    case P_LABEL:
-                        getstringprop(ctxt, part, P_UNICODE_LABEL, p_effective, &t_string_prop);
-                        if (!MCStringIsNative(*t_string_prop))
-                        {
-                            if (gettype() == CT_STACK)
-                                t_token = "unicodeTitle";
-                            else
-                                t_token = "unicodeLabel";
-                        }
-                        t_value = *t_string_prop;
-                        break;
-                    case P_TOOL_TIP:
-                        getstringprop(ctxt, part, P_UNICODE_TOOL_TIP, p_effective, &t_string_prop);
-                        if (!MCStringIsNative(*t_string_prop))
-                            t_token = "unicodeToolTip";
-                        t_value = (MCValueRef)*t_string_prop;
-                        break;
-                    case P_TEXT:
-                        if (gettype() == CT_BUTTON)
-                        {
-                            getstringprop(ctxt, part, P_UNICODE_TEXT, p_effective, &t_string_prop);
-                            if (!MCStringIsNative(*t_string_prop))
-                                t_token = "unicodeText";
-
-                            t_value = (MCValueRef)*t_string_prop;
-                            break;
-                        }
                     default:
                     {
                         getvariantprop(ctxt, part, (Properties)table[tablesize].value, p_effective, &t_value);

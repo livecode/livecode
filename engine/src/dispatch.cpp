@@ -1429,11 +1429,13 @@ MCStack *MCDispatch::findstackname(MCNameRef p_name)
 		
 		// Remove all special characters from the input string
 		// TODO: what about other 'special' chars added by unicode?
+        //  => the unicode chars shouldn't be changed
 		MCStringRef t_replace = MCSTR("\r\n\t *?<>/\\()[]{}|'`\"");
 		MCRange t_range = MCRangeMake(0, MCStringGetLength(t_replace));
+        uindex_t t_offset;
 		for (uindex_t i = 0; i < MCStringGetLength(*t_name); i++)
 		{
-			if (MCStringCountChar(t_replace, t_range, MCStringGetCharAtIndex(*t_name, i), kMCStringOptionCompareExact))
+			if (MCStringFirstIndexOfChar(t_replace, MCStringGetCharAtIndex(*t_name, i), 0, kMCStringOptionCompareExact, t_offset))
 				/* UNCHECKED */ MCStringReplace(*t_name, MCRangeMake(i, 1), MCSTR("_"));
 		}
 		

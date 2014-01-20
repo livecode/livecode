@@ -685,7 +685,7 @@ public:
 	virtual MCExpression *getmethodarg(void) const { return type; }
 };
 
-class MCFontLanguage : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCTextEvalFontNames, EE_FONTNAMES_BADTYPE, PE_FONTNAMES_BADPARAM, kMCTextEvalFontLanguageMethodInfo>
+class MCFontLanguage : public MCUnaryFunctionCtxt<MCStringRef, MCNameRef, MCTextEvalFontLanguage, EE_FONTSIZES_BADFONTNAME, PE_FONTNAMES_BADPARAM, kMCTextEvalFontLanguageMethodInfo>
 {
 public:
     MCFontLanguage(){}

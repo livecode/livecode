@@ -1400,7 +1400,7 @@ bool MCStringCopySubstringAndRelease(MCStringRef string, MCRange range, MCString
 bool MCStringMutableCopySubstring(MCStringRef string, MCRange range, MCStringRef& r_substring);
 
 // Copy a substring of the given string as mutable, releasing the original.
-bool MCStringMutableCopyAndRelease(MCStringRef string, MCRange range, MCStringRef& r_substring);
+bool MCStringMutableCopySubstringAndRelease(MCStringRef string, MCRange range, MCStringRef& r_substring);
 
 /////////
 

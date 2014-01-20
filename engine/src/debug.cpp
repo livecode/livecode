@@ -231,7 +231,10 @@ void MCB_prepmessage(MCExecContext &ctxt, MCNameRef mess, uint2 line, uint2 pos,
 		MCAutoValueRef t_val;
 		ctxt.GetObject()->names(P_LONG_ID, &t_val);
 		MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_val);
-		p4.sets_argument(MCeerror->getsvalue());
+
+        MCAutoStringRef t_error;
+        MCeerror -> copyasstringref(&t_error);
+        p4.setvalueref_argument(*t_error);
 	}
 	else if (!MCStringIsEmpty(p_info))
 	{
