@@ -316,7 +316,12 @@ void MCParagraph::resolvetextdirections()
     uint8_t t_last_level = t_base_level;
     for (uindex_t i = 0; i < t_length; i++)
     {
-        if (t_classes[i] == kMCUnicodeDirectionLeftToRight)
+        if (t_classes[i] == kMCUnicodeDirectionSegmentSeparator)
+        {
+            // Tab character. Reset to paragraph base direction
+            t_last_level = t_levels[i] = t_base_level;
+        }
+        else if (t_classes[i] == kMCUnicodeDirectionLeftToRight)
         {
             // In RTL paragraphs, LTR text should be embedded within the RTL
             t_last_level = t_levels[i] = (t_base_level == 0) ? 0 : 2;
