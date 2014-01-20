@@ -490,7 +490,7 @@ void MCLine::ResolveDisplayOrder()
     // Adjust the min level to be the minimum odd level
     t_min_level += (t_min_level & 1) ? 0 : 1;
     
-    for (uindex_t i = t_max_level; i > t_min_level; i--)
+    for (uindex_t i = t_max_level; i >= t_min_level; i--)
     {
         // Scan the block list for a block at this level or higher
         uindex_t j = 0;
@@ -520,11 +520,11 @@ void MCLine::ResolveDisplayOrder()
                 t_low = t_pivot - t_stride;
                 t_high = t_pivot + t_stride - t_even;
                 
-                // TODO: toggle the "reversed" flag on the block
+                // TODO: toggle the "reversed" flag on the block or is the encoding enough?
                 
                 MCBlock *temp = t_visual_order[t_low];
                 t_visual_order[t_low] = t_visual_order[t_high];
-                t_visual_order[t_high] = t_visual_order[t_low];
+                t_visual_order[t_high] = temp;
                 
                 t_stride--;
             }
