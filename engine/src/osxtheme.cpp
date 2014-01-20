@@ -31,9 +31,20 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxdc.h"
 #include "osxtheme.h"
 
+#include "graphics_util.h"
+
 #ifndef _IOS_MOBILE
 #define CGFloat float
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline CGAffineTransform MCGAffineTransformToCGAffineTransform(const MCGAffineTransform &p_transform)
+{
+	return CGAffineTransformMake(p_transform.a, p_transform.b, p_transform.c, p_transform.d, p_transform.tx, p_transform.ty);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 static ThemeButtonKind getthemebuttonpartandstate(const MCWidgetInfo &winfo, ThemeButtonDrawInfo &bNewInfo,const MCRectangle &drect,Rect &macR);
 static void drawthemebutton(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRectangle &drect);
@@ -1043,7 +1054,51 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 
 	t_rect = p_info_ptr->dest;
 	
-	t_success = MCImageBitmapCreate(t_rect.width, t_rect.height, t_bitmap);
+	MCGAffineTransform t_transform;
+	t_transform = MCGContextGetDeviceTransform(p_context);
+	
+	CGAffineTransform t_cg_transform;
+	t_cg_transform = CGAffineTransformIdentity;
+	
+	MCGRectangle t_dst;
+	uint32_t t_width, t_height;
+	int32_t t_x, t_y;
+	
+	// IM-2014-01-20: [[ HiDPI ]] Improve scaled UI appearance by rendering to the temporary bitmap with the scale transform.
+	if (MCGAffineTransformIsRectangular(t_transform))
+	{
+		// Copy the MCGContext transform to be applied to the CGContext
+		t_cg_transform = MCGAffineTransformToCGAffineTransform(t_transform);
+		
+		// calculate transformed destination rect and device buffer size & origin
+		MCGRectangle t_scaled_bounds;
+		t_scaled_bounds = MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(t_rect), t_transform);
+		
+		MCRectangle t_int_bounds;
+		t_int_bounds = MCGRectangleGetIntegerBounds(t_scaled_bounds);
+		
+		t_width = t_int_bounds.width;
+		t_height = t_int_bounds.height;
+		
+		t_x = t_int_bounds.x;
+		t_y = t_int_bounds.y;
+		
+		// Caculate new destination rect for temporary image
+		t_dst = MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(t_int_bounds), MCGAffineTransformInvert(t_transform));
+	}
+	else
+	{
+		// render at normal size & draw into target rect
+		t_x = t_rect.x;
+		t_y = t_rect.y;
+		
+		t_width = t_rect.width;
+		t_height = t_rect.height;
+		
+		t_dst = MCGRectangleMake(t_x, t_y, t_width, t_height);
+	}
+	
+	t_success = MCImageBitmapCreate(t_width, t_height, t_bitmap);
 	
 	if (t_success)
 		t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceRGB());
@@ -1060,9 +1115,16 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	
 	if (t_success)
 	{
-		CGContextTranslateCTM(t_cgcontext, 0, (CGFloat)t_rect.height);
+		// Invert y-axis origin to top-left of bitmap
+		CGContextTranslateCTM(t_cgcontext, 0, (CGFloat)t_height);
 		CGContextScaleCTM(t_cgcontext, 1.0, -1.0);
-		CGContextTranslateCTM(t_cgcontext, -(CGFloat)t_rect.x, -(CGFloat)t_rect.y);
+		
+		// Relocate origin to top-left of destination rect
+		CGContextTranslateCTM(t_cgcontext, -(CGFloat)t_x, -(CGFloat)t_y);
+		
+		// Apply any scaling transform from the graphics context
+		CGContextConcatCTM(t_cgcontext, t_cg_transform);
+		
 		MCMacDrawTheme(p_type, *p_info_ptr, t_cgcontext);
 		
 		CGContextRelease(t_cgcontext);
@@ -1074,7 +1136,6 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 		t_raster.stride = t_bitmap->stride;
 		t_raster.format = kMCGRasterFormat_ARGB;
 		
-		MCGRectangle t_dst = MCGRectangleMake(t_rect.x, t_rect.y, t_raster.width, t_raster.height);
 		MCGContextDrawPixels(p_context, t_raster, t_dst, kMCGImageFilterNearest);
 	}
 	
