@@ -1011,19 +1011,19 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 		else
 			delete newtheme;
 	}
-
-	MCsystemprinter = MCprinter = MCscreen -> createprinter();
-	MCprinter -> Initialize();
-
-	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
-	MCGraphicsInitialize();
-    
     // Create the basic locale and the system locale
     if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
         return false;
     kMCSystemLocale = MCS_getsystemlocale();
     if (kMCSystemLocale == nil)
         return false;
+
+	MCsystemprinter = MCprinter = MCscreen -> createprinter();
+	MCprinter -> Initialize();
+
+	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
+	MCGraphicsInitialize();
+
 	
 	// MW-2009-07-02: Clear the result as a startup failure will be indicated
 	//   there.
@@ -1204,9 +1204,9 @@ int X_close(void)
 	MCExternal::Cleanup();
 
 	// Cleanup the MClicenseparameters block
-	delete MClicenseparameters . license_token;
-	delete MClicenseparameters . license_name;
-	delete MClicenseparameters . license_organization;
+    MCValueRelease(MClicenseparameters . license_token);
+    MCValueRelease(MClicenseparameters . license_name);
+    MCValueRelease(MClicenseparameters . license_organization);
 	MCValueRelease(MClicenseparameters . addons);
 
 	// Cleanup the startup stacks list

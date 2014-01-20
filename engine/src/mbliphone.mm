@@ -835,8 +835,11 @@ bool MCIPhoneSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callb
 		
 		struct stat t_stat;
 		stat(t_dir_entry -> d_name, &t_stat);
+                
+        MCStringRef t_unicode_str;
+        MCStringCreateWithBytes((byte_t*)t_dir_entry -> d_name, strlen(t_dir_entry -> d_name), kMCStringEncodingUTF8, false, t_unicode_str);
 		
-		t_entry . name = t_dir_entry -> d_name;
+		t_entry . name = t_unicode_str;
 		t_entry . data_size = t_stat . st_size;
 		t_entry . resource_size = 0;
 		t_entry . modification_time = t_stat . st_mtime;
@@ -847,6 +850,8 @@ bool MCIPhoneSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callb
 		t_entry . is_folder = (t_stat . st_mode & S_IFDIR) != 0;
 		
 		t_success = p_callback(p_context, &t_entry);
+        
+        MCValueRelease(t_unicode_str);
 	}
 	
 	closedir(t_dir);

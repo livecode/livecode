@@ -12,7 +12,6 @@ LOCAL_SRC_FILES := $(addprefix src/,revdb.cpp unxsupport.cpp database.cpp dbdriv
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \
-	$(LOCAL_PATH)/../libcore/include \
 	$(LOCAL_PATH)/../libexternal/include \
 	$(LOCAL_PATH)/../thirdparty/libzip/include \
 	$(ANDROID_NDK)/sources/cxx-stl/gnu-libstdc++/include \

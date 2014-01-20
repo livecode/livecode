@@ -708,7 +708,10 @@ int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringR
 int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
     MCAutoStringRef t_resolved;
-    /* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved);
+    if (p_initial != nil)
+        /* UNCHECKED */ MCS_resolvepath(p_initial, &t_resolved);
+    else
+        MCS_getcurdir(&t_resolved);
 
     if (!MCModeMakeLocalWindows())
     {

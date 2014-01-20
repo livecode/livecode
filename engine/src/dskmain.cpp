@@ -164,7 +164,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 				fprintf(stderr, "%s: bad display name\n", *t_mccmd_utf8);
 				return False;
 			}
-			MCdisplayname = strclone((const char *)MCStringGetNativeCharPtr(argv[i]));
+            /* UNCHECKED */ MCStringConvertToCString(argv[i], MCdisplayname);
 			continue;
 		}
 		
@@ -186,7 +186,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 				fprintf(stderr, "%s: bad geometry\n", *t_mccmd_utf8);
 				return False;
 			}
-			geometry = strclone((const char *)MCStringGetNativeCharPtr(argv[i]));
+            /* UNCHECKED */ MCStringConvertToCString(argv[i], geometry);
 			continue;
 		}
 		

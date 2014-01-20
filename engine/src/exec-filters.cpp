@@ -66,12 +66,13 @@ bool MCFiltersBase64Decode(MCStringRef p_src, MCDataRef& r_dst)
 {
 	MCAutoByteArray buffer;
 
-	uint32_t l;
-	const char_t *s = nil;
-	char_t *p = nil;
+    uint32_t l;
+    MCAutoStringRefAsNativeChars t_native;
+    char_t *s = nil;
+    byte_t *p = nil;
 
-	l = MCStringGetLength(p_src);
-	s = MCStringGetNativeCharPtr(p_src);
+    if (!t_native . Lock(p_src, s, l))
+        return false;
 
 	if (!buffer . New(l))
 		return false;
@@ -410,10 +411,16 @@ static const char *url_table[256] =
 
 bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result)
 {
-	const char_t *s = MCStringGetNativeCharPtr(p_source);
-	uint4 l = MCStringGetLength(p_source);
-	int4 size = l + 1;
-	size += size / 4;
+    MCAutoStringRefAsNativeChars t_native;
+    char_t *s;
+    uint4 l;
+    int4 size;
+
+    if (!t_native . Lock(p_source, s, l))
+        return false;
+
+    size = l + 1;
+    size += size / 4;
 
 	MCAutoNativeCharArray buffer;
 	if (!buffer . New(size))
@@ -446,11 +453,13 @@ bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result)
 
 bool MCFiltersUrlDecode(MCStringRef p_source, MCStringRef& r_result)
 {
-	MCAutoNativeCharArray t_buffer;
-	const char_t *t_srcptr;
+    MCAutoStringRefAsNativeChars t_native;
+    MCAutoNativeCharArray t_buffer;
+    char_t *t_srcptr;
 	uindex_t t_srclen;
-	t_srcptr = MCStringGetNativeCharPtr(p_source);
-	t_srclen = MCStringGetLength(p_source);
+
+    if (!t_native . Lock(p_source, t_srcptr, t_srclen))
+        return false;
 
 	if (!t_buffer.New(t_srclen))
 		return false;
@@ -564,6 +573,7 @@ static void MCU_gettemplate(const char_t *&format, char_t &cmd, uindex_t &count)
 	if (isdigit(*format))
 		count = strtoul((char*)format, (char **)&format, 10);
 	else
+    {
 		if (*format == '*')
 		{
 			count = BINARY_ALL;
@@ -571,6 +581,39 @@ static void MCU_gettemplate(const char_t *&format, char_t &cmd, uindex_t &count)
 		}
 		else
 			count = 1;
+    }
+}
+
+static void MCU_gettemplate(MCStringRef format, uindex_t &p_offset, unichar_t &cmd, uindex_t &count)
+{
+	cmd = MCStringGetCharAtIndex(format, p_offset++);
+	if (isdigit(MCStringGetCharAtIndex(format, p_offset)))
+    {
+        MCAutoNumberRef t_number;
+        uindex_t t_number_size;
+        t_number_size = 1;
+
+        while (isdigit(MCStringGetCharAtIndex(format, p_offset + t_number_size)))
+            t_number_size++;
+
+        if (MCNumberParseUnicodeChars(MCStringGetCharPtr(format) + p_offset, t_number_size, &t_number))
+        {        
+            count = MCNumberFetchAsUnsignedInteger(*t_number);
+            p_offset += t_number_size;
+        }
+        else
+            count = 0;
+    }
+	else
+    {
+		if (MCStringGetCharAtIndex(format, p_offset) == '*')
+		{
+			count = BINARY_ALL;
+			p_offset++;
+		}
+		else
+			count = 1;
+    }
 }
 
 void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCDataRef p_data, MCValueRef *r_results, uindex_t p_result_count, integer_t& r_done)
@@ -581,7 +624,10 @@ void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCData
 		return;
 	}
 
-	const char_t *fptr = MCStringGetNativeCharPtr(p_format);
+    uindex_t t_format_length;
+    uindex_t t_format_index;
+    t_format_length = MCStringGetLength(p_format);
+    t_format_index = 0;
 
 	const byte_t *t_data_ptr = MCDataGetBytePtr(p_data);
 	uindex_t length = MCDataGetLength(p_data);
@@ -592,12 +638,12 @@ void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCData
 
 	bool t_success = true;
 
-	while (t_success && *fptr && offset < length)
+	while (t_success && t_format_index < t_format_length && offset < length)
 	{
-		char_t cmd;
+		unichar_t cmd;
 		uindex_t count;
 
-		MCU_gettemplate(fptr, cmd, count);
+		MCU_gettemplate(p_format, t_format_index, cmd, count);
 		if (count == 0 && cmd != '@')
 			continue;
 
@@ -932,18 +978,22 @@ bool pad_array(MCAutoByteArray& p_chars, char_t p_pad, size_t p_count)
 
 void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValueRef *p_params, uindex_t p_param_count, MCDataRef& r_string)
 {
-	const char_t *fptr = MCStringGetNativeCharPtr(p_format);
-
 	MCAutoByteArray t_buffer;
 	uindex_t t_index = 0;
+    
+    uindex_t t_format_index;
+    uindex_t t_format_length;
+    t_format_length = MCStringGetLength(p_format);
+    t_format_index = 0;
 
 	bool t_success = true;
 
-	while (t_success && *fptr)
+	while (t_success && t_format_index < t_format_length)
 	{
-		char_t cmd;
+		unichar_t cmd;
 		uindex_t count;
-		MCU_gettemplate(fptr, cmd, count);
+        
+		MCU_gettemplate(p_format, t_format_index, cmd, count);
 		if (count == 0 && cmd != '@')
 		{
 			t_index++;
@@ -971,8 +1021,12 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 				t_success = ctxt.ForceToString(t_value, &t_string);
 				if (!t_success)
 					break;
-				const char_t *t_char_ptr = MCStringGetNativeCharPtr(*t_string);
-				uindex_t length = MCStringGetLength(*t_string);
+                                
+                MCAutoStringRefAsNativeChars t_auto_native;
+                char_t* t_native;
+                uindex_t t_length;
+                /* UNCHECKED */ t_auto_native . Lock(*t_string, t_native, t_length);
+
 				switch (cmd)
 				{
 				case 'a':
@@ -980,16 +1034,16 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 					{
 						char_t pad = cmd == 'a' ? '\0' : ' ';
 						if (count == BINARY_ALL)
-							count = length;
+                            count = t_length;
 						else
 							if (count == BINARY_NOCOUNT)
 								count = 1;
-						if (length >= count)
-							t_success = append_to_array(t_buffer, t_char_ptr, count);
+                        if (t_length >= count)
+                            t_success = append_to_array(t_buffer, t_native, count);
 						else
 						{
-							t_success = append_to_array(t_buffer, t_char_ptr, length) &&
-								pad_array(t_buffer, pad, count - length);
+                            t_success = append_to_array(t_buffer, t_native, t_length) &&
+                                pad_array(t_buffer, pad, count - t_length);
 						}
 						break;
 					}
@@ -997,7 +1051,7 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 				case 'B':
 					{
 						if (count == BINARY_ALL)
-							count = length;
+                            count = t_length;
 						else
 							if (count == BINARY_NOCOUNT)
 								count = 1;
@@ -1009,20 +1063,20 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 						char_t *cursor = t_buffer.Bytes() + t_char_count;
 						char_t *buffer_end = cursor + t_output_count;
 						uint1 value = 0;
-						if (count > length)
-							count = length;
+                        if (count > t_length)
+                            count = t_length;
 						uindex_t offset;
 						bool t_bigendian = cmd == 'B';
 						for (offset = 0 ; offset < count ; offset++)
 						{
 							value = t_bigendian ? (value << 1) : (value >> 1);
-							if (t_char_ptr[offset] == '1')
+                            if (t_native[offset] == '1')
 								value |= t_bigendian ? 1 : 0x80;
 							else
-								if (t_char_ptr[offset] != '0')
+                                if (t_native[offset] != '0')
 								{
-									ctxt.LegacyThrow(EE_BINARYE_BADFORMAT, t_value);
-									return;
+                                    ctxt.LegacyThrow(EE_BINARYE_BADFORMAT, t_value);
+                                    return;
 								}
 							if ((offset + 1) % 8 == 0)
 							{
@@ -1047,7 +1101,7 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 					{
 						int c;
 						if (count == BINARY_ALL)
-							count = length;
+                            count = t_length;
 						else
 							if (count == BINARY_NOCOUNT)
 								count = 1;
@@ -1059,19 +1113,19 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 						char_t *cursor = t_buffer.Bytes() + t_char_count;
 						char_t *buffer_end = cursor + t_output_count;
 						uint1 value = 0;
-						if (count > length)
-							count = length;
+                        if (count > t_length)
+                            count = t_length;
 						uindex_t offset;
 						bool t_bigendian = cmd == 'H';
 						for (offset = 0 ; offset < count ; offset++)
 						{
 							value = t_bigendian ? (value << 4) : (value >> 4);
-							if (!isxdigit(t_char_ptr[offset]))
+                            if (!isxdigit(t_native[offset]))
 							{
-								ctxt.LegacyThrow(EE_BINARYE_BADFORMAT, t_value);
+                                ctxt.LegacyThrow(EE_BINARYE_BADFORMAT, t_value);
 								return;
 							}
-							c = t_char_ptr[offset] - '0';
+                            c = t_native[offset] - '0';
 							if (c > 9)
 								c += ('0' - 'A') + 10;
 							if (c > 16)
@@ -1098,13 +1152,13 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 				case 'x':
 					{
 						if (count == BINARY_ALL)
-							count = length;
+                            count = t_length;
 						else
 							if (count == BINARY_NOCOUNT)
 								count = 1;
 						t_success = pad_array(t_buffer, '\0', count);
 					}
-				}
+                }
 			}
 			break;
 		case 'c':

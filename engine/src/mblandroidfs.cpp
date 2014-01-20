@@ -152,8 +152,19 @@ bool apk_list_folder_entries(MCSystemListFolderEntriesCallback p_callback, void 
 	t_entry . group_id = t_stat . st_gid;
 	t_entry . permissions = t_stat . st_mode & 0444;
 
-	char *t_next_entry = strclone(MCStringGetCString(*t_list));
-	while (t_success && t_next_entry[0] != '\0')
+    uindex_t t_length;
+    char* t_next_entry;
+    MCAutoStringRefAsUTF8String t_utf8_files;
+    
+    t_success = t_utf8_files . Lock(*t_list);
+    
+    if (t_success)
+    {
+        t_next_entry = *t_utf8_files;
+        t_length = t_utf8_files . Size();
+    }
+    
+	while (t_success && t_length != 0)
 	{
 		uint32_t t_next_index = 0;
 		uint32_t t_size_index = 0;
@@ -188,11 +199,16 @@ bool apk_list_folder_entries(MCSystemListFolderEntriesCallback p_callback, void 
 		}
 		if (t_success)
 		{
-			t_entry.name = t_fname;
+            // SN-2014-01-13: [[ RefactorUnicode ]] Asset filenames are in ASCII
+            MCStringRef t_assetFile;
+            MCStringCreateWithCString(t_fname, t_assetFile);
+            
+			t_entry.name = t_assetFile;
 			t_entry.data_size = t_size;
 			t_entry.is_folder = t_is_folder;
 
 			t_success = p_callback(p_context, &t_entry);
+            MCValueRelease(t_assetFile);
 		}
 	}
 
@@ -294,6 +310,9 @@ bool MCAndroidSystem::GetCurrentFolder(MCStringRef& r_path)
 
 		if (NULL == getcwd((char*)t_folder_char . Chars(), PATH_MAX + 1))
 			return false;
+        
+        // SN-2014-01-15: avoid to create an MCString with junk chars in the end
+        t_folder_char . Resize(strlen((char*)t_folder_char . Chars()));
         
         return t_folder_char.CreateString(r_path);
     }
@@ -506,8 +525,11 @@ bool MCAndroidSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_call
 		
 		struct stat t_stat;
 		stat(t_dir_entry -> d_name, &t_stat);
+        
+        MCStringRef t_unicode_str;
+        MCStringCreateWithBytes((byte_t*)t_dir_entry -> d_name, strlen(t_dir_entry -> d_name), kMCStringEncodingUTF8, false, t_unicode_str);        
 		
-		t_entry . name = t_dir_entry -> d_name;
+		t_entry . name = t_unicode_str;
 		t_entry . data_size = t_stat . st_size;
 		t_entry . resource_size = 0;
 		t_entry . modification_time = t_stat . st_mtime;
@@ -518,6 +540,7 @@ bool MCAndroidSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_call
 		t_entry . is_folder = (t_stat . st_mode & S_IFDIR) != 0;
 		
 		t_success = p_callback(p_context, &t_entry);
+        MCValueRelease(t_unicode_str);
 	}
 	
 	closedir(t_dir);

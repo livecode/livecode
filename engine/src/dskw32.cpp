@@ -735,9 +735,9 @@ bool dns_servers_from_registry(MCListRef& r_list)
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
     
-	const char_t *t_chars;
+	const unichar_t *t_chars;
 	uindex_t t_char_count;
-	t_chars = MCStringGetNativeCharPtr(t_string);
+	t_chars = MCStringGetCharPtr(t_string);
 	t_char_count = MCStringGetLength(t_string);
     
 	uindex_t t_start = 0;
@@ -746,14 +746,18 @@ bool dns_servers_from_registry(MCListRef& r_list)
 	{
 		if (t_chars[i] == ' ' || t_chars[i] == ',' || t_chars[i] == '\n')
 		{
-			if (!MCListAppendNativeChars(*t_list, t_chars + t_start, i - t_start))
+			MCAutoStringRef t_substring;
+			if (!MCStringCopySubstring(t_string, MCRangeMake(t_start, i - t_start), &t_substring) || 
+					!MCListAppend(*t_list, *t_substring))
 				return false;
 			t_start = i + 1;
 		}
 	}
 	if (t_start < t_char_count)
 	{
-		if (!MCListAppendNativeChars(*t_list, t_chars + t_start, t_char_count - t_start))
+		MCAutoStringRef t_final_string;
+		if (!MCStringCopySubstring(t_string, MCRangeMake(t_start, MCStringGetLength(t_string) - t_start), &t_final_string) ||
+			!MCListAppend(*t_list, *t_final_string))
 			return false;
 	}
     
@@ -3371,8 +3375,16 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 			// Retrieve as many of the file attributes as Windows supports
 			// The MCSystemFolderEntry::name field is a C string :-(
+			// It's actually an array of wchar, so it allows unicode characters...
 			MCSystemFolderEntry t_entry;
-			t_entry.name = NULL;				/* FIXME */
+
+			MCStringRef t_unicode_name;
+
+            if (data.cFileName && MCStringCreateWithChars(data.cFileName, wcslen(data.cFileName), t_unicode_name))
+				t_entry.name = t_unicode_name;		// MCStringRef is now in use to handle the unicode chars
+			else
+                t_entry.name = kMCEmptyString;
+
 			t_entry.data_size = (uint64_t(data.nFileSizeHigh) << 32) | data.nFileSizeLow;
 			t_entry.resource_size = 0;			// Doesn't exist
 			t_entry.creation_time = FiletimeToUnix(data.ftCreationTime);
@@ -3392,6 +3404,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 			// Hand the structure to the callback
 			p_callback(x_context, &t_entry);
+
+			MCValueRelease(t_unicode_name);
 		}
 		while (FindNextFileW(ffh, &data));
 		FindClose(ffh);
