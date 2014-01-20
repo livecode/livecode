@@ -213,7 +213,13 @@ void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef p_character, uintege
 	// This function has to be backwards compatible and do the broken stuff...
     MCAutoDataRef t_data;
     ctxt.ConvertToData(p_character, &t_data);
-    if (ctxt.GetUseUnicode())
+    // In case of empty string as input, the result must be 0
+    if (MCDataIsEmpty(*t_data))
+    {
+        r_codepoint = 0;
+        return;
+    }
+    else if (ctxt.GetUseUnicode())
     {
         if (MCDataGetLength(*t_data) >= 2)
         {
@@ -234,10 +240,17 @@ void MCStringsEvalCharToNum(MCExecContext& ctxt, MCValueRef p_character, uintege
 
 void MCStringsEvalNativeCharToNum(MCExecContext& ctxt, MCStringRef p_character, uinteger_t& r_codepoint)
 {
-    // Only accept strings containing a single character
+    // An empty string must return 0
+    if (MCStringIsEmpty(p_character))
+    {
+        r_codepoint = 0;
+        return;
+    }
+    // Otherwise, only accept strings containing a single character
     if (MCStringGetLength(p_character) == 1)
     {
         r_codepoint = MCStringGetNativeCharAtIndex(p_character, 0);
+        return;
     }
     
     ctxt.Throw();
@@ -265,6 +278,12 @@ void MCStringsEvalUnicodeCharToNum(MCExecContext& ctxt, MCStringRef p_character,
         r_codepoint = MCStringGetCodepointAtIndex(p_character, 0);
         return;
     }
+    else if (MCStringIsEmpty(p_character))
+    {
+        // Empty string must return 0
+        r_codepoint = 0;
+        return;
+    }
     
     ctxt.Throw();
 }
@@ -281,7 +300,12 @@ void MCStringsEvalNumToByte(MCExecContext& ctxt, integer_t p_byte, MCStringRef& 
 
 void MCStringsEvalByteToNum(MCExecContext& ctxt, MCStringRef p_byte, integer_t& r_codepoint)
 {
-	if (MCStringGetLength(p_byte) == 1)
+    if (MCStringIsEmpty(p_byte))
+    {
+        r_codepoint = 0;
+        return;
+    }
+    else if (MCStringGetLength(p_byte) == 1)
 	{
 		r_codepoint = MCStringGetNativeCharAtIndex(p_byte, 0);
 		return;
