@@ -1672,30 +1672,29 @@ findex_t MCBlock::GetCursorIndex(int2 x, Boolean chunk, Boolean last)
 	// MW-2013-11-07: [[ Bug 11393 ]] We only want to measure complete runs now regardless of
 	//   platform.
 	int32_t t_last_width;
-	t_last_width = 0;
-	while(i < m_index + m_size)
-	{		
-		// TODO: broken for RTL
+	t_last_width = is_rtl() ? width : 0;
+    
+    while(i < m_index + m_size)
+    {
+        findex_t t_new_i;
+        t_new_i = parent->IncrementIndex(i);
         
-        int32_t t_new_i;
-		t_new_i = parent->IncrementIndex(i);
-		
-		int32_t t_new_width;
-		t_new_width = GetCursorX(t_new_i) - origin;
-		
-		int32_t t_pos;
-		if (chunk)
-			t_pos = t_new_width;
-		else
-			t_pos = (t_last_width + t_new_width) / 2;
-			
-		if (x < t_pos)
-			break;
-			
-		t_last_width = t_new_width;
-		
-		i = t_new_i;
-	}
+        int32_t t_new_width;
+        t_new_width = GetCursorX(t_new_i) - origin;
+        
+        int32_t t_pos;
+        if (chunk)
+            t_pos = t_new_width;
+        else
+            t_pos = (t_last_width + t_new_width) / 2;
+        
+        if ((is_rtl() && x >= t_pos) || (!is_rtl() && x < t_pos))
+            break;
+        
+        t_last_width = t_new_width;
+        
+        i = t_new_i;
+    }
 
 	if (i == m_index + m_size && last && (m_index + m_size != parent->gettextlength()))
         return i - parent->DecrementIndex(i);

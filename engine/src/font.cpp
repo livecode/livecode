@@ -177,7 +177,7 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
     uindex_t t_end = p_range.offset + p_range.length;
     
     uindex_t t_length = p_range.length;
-    uindex_t t_offset = p_range.offset;
+    uindex_t t_offset = (p_rtl) ? 0 : p_range.offset;
     
     while (t_length > 0)
     {
