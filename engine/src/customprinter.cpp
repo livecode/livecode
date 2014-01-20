@@ -1000,7 +1000,10 @@ void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 	t_is_unicode = p_mark -> text . unicode_override;
 
 	MCAutoStringRef t_text_str;
-	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_mark -> text . data, p_mark -> text . length, t_is_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative, false, &t_text_str);
+    if (p_mark -> text . unicode_override)
+        /* UNCHECKED */ MCStringCreateWithChars((const unichar_t*)p_mark -> text . data, p_mark -> text . length, &t_text_str);
+    else
+        /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)p_mark -> text . data, p_mark -> text . length, &t_text_str);
 
 	unichar_t *t_chars;
 	uindex_t t_char_count;
