@@ -757,7 +757,7 @@ void MCButton::SetMenuName(MCExecContext& ctxt, MCNameRef p_name)
 
 	if (opened)
 	{
-		if (findmenu(true))
+		if (findmenu(true) && menu != nil)
 			menu->installaccels(getstack());
 	}
 }
