@@ -420,8 +420,10 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 	MCParameter p1, p2, p3;
 	MCAutoStringRef s1;
 	MCAutoStringRef s2;
+    MCAutoStringRef s3;
     
     /* UNCHECKED */ FourCharCodeToStringRef(aeclass, &s1);
+    /* UNCHECKED */ MCStringCreateWithCString(p3val, &s3);
 	
 	p1.setvalueref_argument(*s1);
 	p1.setnext(&p2);
@@ -430,7 +432,7 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 	
 	p2.setvalueref_argument(*s2);
 	p2.setnext(&p3);
-	p3.sets_argument(p3val);
+	p3.setvalueref_argument(*s3);
 	/*for "appleEvent class, id, sender" message to inform script that
      there is an AE arrived */
 	Exec_stat stat = MCdefaultstackptr->getcard()->message(MCM_apple_event, &p1);
