@@ -350,6 +350,7 @@ void MCPlatformWindow::MapPointFromWindowToScreen(MCPoint p_window_point, MCPoin
 
 void MCPlatformWindow::HandleCloseRequest(void)
 {
+	MCPlatformCallbackSendWindowCloseRequest(this);
 }
 
 void MCPlatformWindow::HandleRedraw(MCPlatformSurfaceRef p_surface, MCRegionRef p_region)

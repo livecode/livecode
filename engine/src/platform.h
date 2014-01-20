@@ -27,6 +27,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// COCOA-TODO: Remove external declaration.
+struct MCImageBitmap;
+
+////////////////////////////////////////////////////////////////////////////////
+
 enum MCPlatformCallbackType
 {
 	kMCPlatformCallbackApplicationStartup,
@@ -85,6 +90,7 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeUnknown,
 	
 	kMCPlatformPropertyTypeBool,
+	kMCPlatformPropertyTypeInt32,
 	kMCPlatformPropertyTypeFloat,
 	kMCPlatformPropertyTypeDouble,
 	kMCPlatformPropertyTypeRectangle,
@@ -99,6 +105,7 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeAccelerator,
 	kMCPlatformPropertyTypeMenuItemHighlight,
 	kMCPlatformPropertyTypeMenuItemAction,
+	kMCPlatformPropertyTypeCursorImageSupport,
 };
 
 typedef uint32_t MCPlatformAccelerator;
@@ -113,6 +120,14 @@ enum
 //
 // TODO-REVIEW: Perhaps these would be better classed as metrics?
 
+enum MCPlatformCursorImageSupport
+{
+	kMCPlatformCursorImageSupportMonochrome,
+	kMCPlatformCursorImageSupportBilevel,
+	kMCPlatformCursorImageSupportColor,
+	kMCPlatformCursorImageSupportAlpha,
+};
+
 enum MCPlatformSystemProperty
 {
 	kMCPlatformSystemPropertyUnknown,
@@ -122,6 +137,9 @@ enum MCPlatformSystemProperty
 	
 	kMCPlatformSystemPropertyHiliteColor,
 	kMCPlatformSystemPropertyAccentColor,
+	
+	kMCPlatformSystemPropertyMaximumCursorSize,
+	kMCPlatformSystemPropertyCursorImageSupport,
 };
 
 void MCPlatformGetSystemProperty(MCPlatformSystemProperty property, MCPlatformPropertyType type, void *value);
@@ -228,6 +246,28 @@ void MCPlatformHideMenubar(void);
 
 void MCPlatformSetMenubar(MCPlatformMenuRef menu);
 void MCPlatformGetMenubar(MCPlatformMenuRef menu);
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef class MCPlatformCursor *MCPlatformCursorRef;
+
+enum MCPlatformStandardCursor
+{
+	kMCPlatformStandardCursorUnknown,
+	
+	kMCPlatformStandardCursorArrow,
+	kMCPlatformStandardCursorWatch,
+	kMCPlatformStandardCursorCross,
+	kMCPlatformStandardCursorIBeam,
+};
+
+void MCPlatformCreateStandardCursor(MCPlatformStandardCursor standard_cusor, MCPlatformCursorRef& r_cursor);
+void MCPlatformCreateCustomCursor(MCImageBitmap *image, MCPoint hot_spot, MCPlatformCursorRef& r_cursor);
+void MCPlatformRetainCursor(MCPlatformCursorRef cursor);
+void MCPlatformReleaseCursor(MCPlatformCursorRef cursor);
+
+void MCPlatformShowCursor(MCPlatformCursorRef cursor);
+void MCPlatformHideCursor(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 

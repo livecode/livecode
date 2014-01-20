@@ -112,6 +112,29 @@ struct MCPlatformMenu
 	MCMenuDelegate *menu_delegate;
 };
 
+// Helper method that frees anything associated with an NSMenuItem in an NSMenu
+// (at the moment, this is the submenu).
+static void MCPlatformDestroyMenuItem(MCPlatformMenuRef p_menu, uindex_t p_index)
+{
+	NSMenuItem *t_item;
+	t_item = [p_menu -> menu itemAtIndex: p_index];
+	
+	NSMenu *t_submenu;
+	t_submenu = [t_item submenu];
+	if (t_submenu == nil)
+		return;
+	
+	MCPlatformMenuRef t_submenu_ref;
+	t_submenu_ref = [(MCMenuDelegate *)[t_submenu delegate] platformMenuRef];
+	
+	// Update the submenu pointer (so we don't have any dangling
+	// refs).
+	[t_item setSubmenu: nil];
+	
+	// Now release the platform menu.
+	MCPlatformReleaseMenu(t_submenu_ref);
+}
+
 void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu)
 {
 	MCPlatformMenuRef t_menu;
@@ -122,6 +145,9 @@ void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu)
 	t_menu -> menu = [[NSMenu alloc] initWithTitle: @""];
 	t_menu -> menu_delegate = [[MCMenuDelegate alloc] initWithPlatformMenuRef: t_menu];
 	[t_menu -> menu setDelegate: t_menu -> menu_delegate];
+	
+	// We don't use autoenablement.
+	[t_menu -> menu setAutoenablesItems: NO];
 	
 	r_menu = t_menu;
 }
@@ -136,6 +162,10 @@ void MCPlatformReleaseMenu(MCPlatformMenuRef p_menu)
 	p_menu -> references -= 1;
 	if (p_menu -> references != 0)
 		return;
+	
+	// Release any submenus.
+	for(uindex_t i = 0; i < [p_menu -> menu numberOfItems]; i++)
+		MCPlatformDestroyMenuItem(p_menu, i);
 	
 	[p_menu -> menu release];
 	[p_menu -> menu_delegate release];
@@ -160,7 +190,14 @@ void MCPlatformAddMenuItem(MCPlatformMenuRef p_menu, uindex_t p_where)
 	if (p_where > t_count)
 		p_where = t_count;
 	
-	[p_menu -> menu insertItemWithTitle: @"" action: @selector(menuItemSelected:) keyEquivalent: @"" atIndex: p_where];
+	NSMenuItem *t_item;
+	t_item = [[NSMenuItem alloc] initWithTitle: @"" action: @selector(menuItemSelected:) keyEquivalent: @""];
+	
+	// Make sure we set the target of the action (to the delegate).
+	[t_item setTarget: p_menu -> menu_delegate];
+	
+	// Insert the item in the menu.
+	[p_menu -> menu insertItem: t_item atIndex: p_where];
 }
 
 void MCPlatformAddMenuSeparatorItem(MCPlatformMenuRef p_menu, uindex_t p_where)
@@ -176,7 +213,15 @@ void MCPlatformAddMenuSeparatorItem(MCPlatformMenuRef p_menu, uindex_t p_where)
  
 void MCPlatformRemoveMenuItem(MCPlatformMenuRef p_menu, uindex_t p_where)
 {
+	MCPlatformDestroyMenuItem(p_menu, p_where);
 	[p_menu -> menu removeItemAtIndex: p_where];
+}
+
+void MCPlatformRemoveAllMenuItems(MCPlatformMenuRef p_menu)
+{
+	for(uindex_t i = 0; i < [p_menu -> menu numberOfItems]; i++)
+		MCPlatformDestroyMenuItem(p_menu, i);
+	[p_menu -> menu removeAllItems];
 }
 
 void MCPlatformGetMenuParent(MCPlatformMenuRef p_menu, MCPlatformMenuRef& r_parent, uindex_t& r_index)
@@ -195,6 +240,18 @@ void MCPlatformGetMenuParent(MCPlatformMenuRef p_menu, MCPlatformMenuRef& r_pare
 
 void MCPlatformGetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, MCPlatformMenuItemProperty p_property, MCPlatformPropertyType p_type, void *r_value)
 {
+	NSMenuItem *t_item;
+	t_item = [p_menu -> menu itemAtIndex: p_index];
+	
+	switch(p_property)
+	{
+		case kMCPlatformMenuItemPropertyTag:
+			*(char **)r_value = strdup([(NSString *)[t_item representedObject] cStringUsingEncoding: NSUTF8StringEncoding]);
+			break;
+		default:
+			assert(false);
+			break;
+	}
 }
 
 void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, MCPlatformMenuItemProperty p_property, MCPlatformPropertyType p_type, const void *p_value)
@@ -220,8 +277,27 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 			[t_item setEnabled: *(bool *)p_value];
 			break;
 		case kMCPlatformMenuItemPropertySubmenu:
+		{
+			// Make sure we decrement the associated platformmenuref's count, and
+			// increment the new one's (but the other way around, in case they are
+			// the same).
+			MCPlatformMenuRef t_submenu_ref;
+			t_submenu_ref = *(MCPlatformMenuRef *)p_value;
+			
+			MCPlatformRetainMenu(t_submenu_ref);
+			
+			NSMenu *t_current_submenu;
+			t_current_submenu = [t_item submenu];
+			if (t_current_submenu != nil)
+			{
+				MCPlatformMenuRef t_current_submenu_ref;
+				t_current_submenu_ref = [(MCMenuDelegate *)[t_current_submenu delegate] platformMenuRef];
+				MCPlatformReleaseMenu(t_current_submenu_ref);
+			}
+			
 			[t_item setSubmenu: (*(MCPlatformMenuRef *)p_value) -> menu];
-			break;
+		}
+		break;
 		case kMCPlatformMenuItemPropertyHighlight:
 			// COCOA-TODO
 			break;

@@ -93,6 +93,11 @@ void MCPlatformHandleApplicationRun(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformHandleWindowCloseRequest(MCPlatformWindowRef p_window)
+{
+	MCdispatcher -> wclose(p_window);
+}
+
 void MCPlatformHandleWindowReshape(MCPlatformWindowRef p_window)
 {
 	MCdispatcher -> wreshape(p_window);

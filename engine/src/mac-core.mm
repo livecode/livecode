@@ -532,25 +532,27 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define SCREEN_HEIGHT 1200
+
 void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint p, NSPoint& r_point)
 {
-	r_point = NSMakePoint(p . x, 1440 - p . y);
+	r_point = NSMakePoint(p . x, SCREEN_HEIGHT - p . y);
 }
 
 void MCMacPlatformMapScreenNSPointToMCPoint(NSPoint p, MCPoint& r_point)
 {
 	r_point . x = p . x;
-	r_point . y = 1440 - p . y;
+	r_point . y = SCREEN_HEIGHT - p . y;
 }
 
 void MCMacPlatformMapScreenMCRectangleToNSRect(MCRectangle r, NSRect& r_rect)
 {
-	r_rect = NSMakeRect(r . x, 1440 - (r . y + r . height), r . width, r . height);
+	r_rect = NSMakeRect(r . x, SCREEN_HEIGHT - (r . y + r . height), r . width, r . height);
 }
 
 void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect r, MCRectangle& r_rect)
 {
-	r_rect = MCRectangleMake(r . origin . x, 1440 - (r . origin . y + r . size . height), r . size . width, r . size . height);
+	r_rect = MCRectangleMake(r . origin . x, SCREEN_HEIGHT - (r . origin . y + r . size . height), r . size . width, r . size . height);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

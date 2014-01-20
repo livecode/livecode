@@ -37,6 +37,8 @@
 #include "resolution.h"
 #include "redraw.h"
 #include "notify.h"
+#include "dispatch.h"
+#include "image.h"
 
 #include "desktop-dc.h"
 
@@ -384,21 +386,80 @@ void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode 
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCPlatformStandardCursor theme_cursorlist[PI_NCURSORS] =
+{
+	kMCPlatformStandardCursorArrow, kMCPlatformStandardCursorArrow,
+	kMCPlatformStandardCursorArrow, kMCPlatformStandardCursorArrow, kMCPlatformStandardCursorArrow, kMCPlatformStandardCursorWatch, kMCPlatformStandardCursorWatch,
+	kMCPlatformStandardCursorCross, kMCPlatformStandardCursorArrow, kMCPlatformStandardCursorIBeam, kMCPlatformStandardCursorArrow, kMCPlatformStandardCursorArrow,
+	kMCPlatformStandardCursorArrow, kMCPlatformStandardCursorCross, kMCPlatformStandardCursorWatch, kMCPlatformStandardCursorArrow   
+};
+
 void MCScreenDC::resetcursors()
 {
+	// MW-2010-09-10: Make sure no stacks reference one of the standard cursors.
+	MCdispatcher -> clearcursors();
+
+	int32_t t_cursor_size;
+	MCPlatformGetSystemProperty(kMCPlatformSystemPropertyMaximumCursorSize, kMCPlatformPropertyTypeInt32, &t_cursor_size);
+	MCcursormaxsize = t_cursor_size;
+	
+	MCPlatformCursorImageSupport t_image_support;
+	MCPlatformGetSystemProperty(kMCPlatformSystemPropertyCursorImageSupport, kMCPlatformPropertyTypeCursorImageSupport, &t_image_support);
+	MCcursorcanbealpha = MCcursorcanbecolor = MCcursorbwonly = False;
+	switch(t_image_support)
+	{
+	case kMCPlatformCursorImageSupportAlpha:
+		MCcursorcanbealpha = True;
+	case kMCPlatformCursorImageSupportColor:
+		MCcursorcanbecolor = True;
+		break;
+	case kMCPlatformCursorImageSupportBilevel:
+		MCcursorbwonly = False;
+		break;
+	case kMCPlatformCursorImageSupportMonochrome:
+		MCcursorbwonly = True;
+		break;
+	};
+	
+	for(uindex_t i = 0; i < PI_NCURSORS; i++)
+	{
+		freecursor(MCcursors[i]);
+		MCcursors[i] = nil;
+		
+		MCImage *im;
+		if (i == PI_NONE)
+			MCcursors[i] = nil;
+		else if ((im = (MCImage *)MCdispatcher->getobjid(CT_IMAGE, i)) != NULL)
+			MCcursors[i] = im -> createcursor();
+		else if (i < PI_BUSY1)
+			MCPlatformCreateStandardCursor(theme_cursorlist[i], MCcursors[i]);
+		else
+			MCPlatformCreateStandardCursor(kMCPlatformStandardCursorWatch, MCcursors[i]);
+	}
 }
 
 void MCScreenDC::setcursor(Window w, MCCursorRef c)
 {
+	// Disable cursor setting when we are a drag-target
+	if (MCdispatcher -> isdragtarget())
+		return;
+		
+	if (c == nil)
+		MCPlatformHideCursor();
+	else
+		MCPlatformShowCursor(c);
 }
 
 MCCursorRef MCScreenDC::createcursor(MCImageBitmap *image, int2 xhot, int2 yhot)
 {
-	return nil;
+	MCCursorRef t_cursor;
+	MCPlatformCreateCustomCursor(image, MCPointMake(xhot, yhot), t_cursor);
+	return t_cursor;
 }
 
 void MCScreenDC::freecursor(MCCursorRef c)
 {
+	MCPlatformReleaseCursor(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

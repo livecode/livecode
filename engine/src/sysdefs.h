@@ -201,9 +201,15 @@ typedef struct __MCSysContextHandle *MCSysContextHandle;
 
 typedef class MCPlatformWindow *MCPlatformWindowRef;
 typedef class MCPlatformSurface *MCPlatformSurfaceRef;
+typedef class MCPlatformCursor *MCPlatformCursorRef;
 
 typedef void *MCColorTransformRef;
+
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
+typedef MCPlatformCursorRef MCCursorRef;
+#else
 typedef struct MCCursor *MCCursorRef;
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //

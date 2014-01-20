@@ -245,7 +245,6 @@ static void populate_menubar_menu_from_button(MCPlatformMenuRef p_menubar, uinde
 	MCMenuBuilderCallback t_callback(p_menu);
 	MCParseMenuString(t_menu_string, &t_callback, p_menu_button -> hasunicode(), WM_PULLDOWN);
 }
-									  
 
 void MCScreenDC::updatemenubar(Boolean force)
 {
@@ -327,6 +326,10 @@ void MCScreenDC::updatemenubar(Boolean force)
 		// Populate it.
 		populate_menubar_menu_from_button(t_new_menubar, t_menu_index, t_menu, t_menu_button);
 		
+		// Setting the submenu of the menu bar will have inc'd the refcount so
+		// we can release.
+		MCPlatformReleaseMenu(t_menu);
+		
 		// Extend the new menubar targets array by one.
 		/* UNCHECKED */ MCMemoryResizeArray(t_new_menubar_target_count + 1, t_new_menubar_targets, t_new_menubar_target_count);
 		t_new_menubar_targets[t_menu_index] = t_menu_button -> gethandle();
@@ -383,8 +386,6 @@ void MCScreenDC::showmenu()
 
 void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
 {
-	return;
-	
 	// We get MenuUpdate callbacks for all menus before they open, however at
 	// the moment we are only interested in ones directly in the menubar. So
 	// fetch the menu's parent and see what it is.
@@ -402,7 +403,7 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
 	if (s_menubar_targets[t_parent_menu_index] -> Exists())
 	{
 		s_menubar_lock_count += 1;
-		//s_menubar_targets[t_parent_menu_index] -> Get() -> message_with_args(MCM_mouse_down, "");
+		s_menubar_targets[t_parent_menu_index] -> Get() -> message_with_args(MCM_mouse_down, "");
 		s_menubar_lock_count -= 1;
 	}
 	
@@ -410,7 +411,8 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
 	// menu button still exists!
 	if (s_menubar_targets[t_parent_menu_index] -> Exists())
 	{
-		//populate_menubar_menu_from_button(s_menubar, t_parent_menu_index, p_menu, (MCButton *)s_menubar_targets[t_parent_menu_index] -> Get());
+		MCPlatformRemoveAllMenuItems(p_menu);
+		populate_menubar_menu_from_button(s_menubar, t_parent_menu_index, p_menu, (MCButton *)s_menubar_targets[t_parent_menu_index] -> Get());
 	}
 }
 
