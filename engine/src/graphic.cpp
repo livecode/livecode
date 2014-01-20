@@ -1813,13 +1813,19 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		int2 cy = trect.y + (trect.height >> 1);
 		real8 factor = 2.0 * M_PI / (real8)nsides;
 		uint2 i;
+		// MDW-2013-01-19: [[ feature_polygon points ]] allow regular polygons to have points
+		if (NULL == realpoints)
+			realpoints = new MCPoint[nsides];
 		for (i = 0 ; i < nsides ; i++)
 		{
 			real8 iangle = rangle + (real8)i * factor;
 			points[i].x = cx + (int2)(cos(iangle) * dx);
 			points[i].y = cy + (int2)(sin(iangle) * dy);
+			realpoints[i] = points[i];
 		}
 		points[nsides] = points[0];
+		realpoints[nsides] = points[0];
+		nrealpoints = nsides;
 	}
 	if (flags & F_OPAQUE)
 	{
