@@ -411,12 +411,12 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 
 			// Otherwise 'char_code' is the unicode codepoint, so first map to
 			// UTF-16 (not done properly yet...)
-			uint2 t_unichar;
-			t_unichar = (uint2)t_event -> key . press . char_code;
+			unichar_t t_unichar;
+			t_unichar = (unichar_t)t_event -> key . press . char_code;
 
-			// If we successfully map to native, then we can dispatch as a normal kdown
+			// Now the string is created with the appropriate unicode-capable function
 			MCAutoStringRef t_buffer;
-			MCStringFormat(&t_buffer, "%lc", t_unichar);
+            MCStringCreateWithChars(&t_unichar, 1, &t_buffer);
 			t_target -> kdown(*t_buffer, t_event -> key . press . key_code);
 			t_target -> kup(*t_buffer, t_event -> key . press . key_code);
 		}
