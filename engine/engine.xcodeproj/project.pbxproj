@@ -267,6 +267,7 @@
 		4D407C0C15F8D15600AA3ABC /* osxscriptold.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D407C0B15F8D15600AA3ABC /* osxscriptold.cpp */; };
 		4D432F1F141A2DFE001164F9 /* tilecachesw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D432F1E141A2DFE001164F9 /* tilecachesw.cpp */; };
 		4D433504141BC5FC001164F9 /* tilecachecg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D433503141BC5FC001164F9 /* tilecachecg.cpp */; };
+		4D444FB5188DCB4400C7B349 /* mac-cursor.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D444FB4188DCB4400C7B349 /* mac-cursor.mm */; };
 		4D4F9E3B13CDF24A00B9B15D /* osximage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9E3913CDF24A00B9B15D /* osximage.cpp */; };
 		4D4F9E3C13CDF24A00B9B15D /* osxmisc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9E3A13CDF24A00B9B15D /* osxmisc.cpp */; };
 		4D4F9E6713CDFB8100B9B15D /* osxfield.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9E6613CDFB8100B9B15D /* osxfield.cpp */; };
@@ -902,6 +903,7 @@
 		4D407C0B15F8D15600AA3ABC /* osxscriptold.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = osxscriptold.cpp; path = src/osxscriptold.cpp; sourceTree = "<group>"; };
 		4D432F1E141A2DFE001164F9 /* tilecachesw.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tilecachesw.cpp; path = src/tilecachesw.cpp; sourceTree = "<group>"; };
 		4D433503141BC5FC001164F9 /* tilecachecg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tilecachecg.cpp; path = src/tilecachecg.cpp; sourceTree = "<group>"; };
+		4D444FB4188DCB4400C7B349 /* mac-cursor.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-cursor.mm"; path = "src/mac-cursor.mm"; sourceTree = "<group>"; };
 		4D46ABC210159FF800A1321A /* deploy_sign.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = deploy_sign.cpp; path = src/deploy_sign.cpp; sourceTree = "<group>"; };
 		4D4F9DE313CDE10A00B9B15D /* sysdefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sysdefs.h; path = src/sysdefs.h; sourceTree = "<group>"; };
 		4D4F9DFA13CDE63000B9B15D /* surface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = surface.cpp; path = src/surface.cpp; sourceTree = "<group>"; };
@@ -1862,6 +1864,7 @@
 				4DECD0C71886E4FD00463D52 /* mac-window.mm */,
 				4DECD1341886F0FF00463D52 /* mac-surface.mm */,
 				4DC6E30418896CFB00FD43C3 /* mac-menu.mm */,
+				4D444FB4188DCB4400C7B349 /* mac-cursor.mm */,
 			);
 			name = "Desktop - Mac";
 			sourceTree = "<group>";
@@ -3501,6 +3504,7 @@
 				4DECD1FD1887F24E00463D52 /* platform-window.cpp in Sources */,
 				4DECD26E188807E400463D52 /* platform-surface.cpp in Sources */,
 				4DC6E30518896CFB00FD43C3 /* mac-menu.mm in Sources */,
+				4D444FB5188DCB4400C7B349 /* mac-cursor.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
