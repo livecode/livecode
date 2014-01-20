@@ -237,8 +237,16 @@ MCStringRef MCScriptPoint::gettoken_stringref(void)
 
 Parse_stat MCScriptPoint::skip_space()
 {
-	while (type_table[*curptr] == ST_SPC)
-		curptr++;
+	for(;;)
+	{
+		if (curptr[0] == 0xC2 && curptr[1] == 0xA0)
+			curptr += 2;
+		else if (type_table[*curptr] == ST_SPC)
+			curptr++;
+		else
+			break;
+	}
+	
 	switch (type_table[*curptr])
 	{
 	case ST_COM:
