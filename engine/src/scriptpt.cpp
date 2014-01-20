@@ -210,10 +210,12 @@ bool MCScriptPoint::token_is_cstring(const char *p_cstring)
 	return MCStringIsEqualToCString(gettoken_stringref(), p_cstring, kMCCompareCaseless);
 }
 
+#ifdef LEGACY_EXEC
 MCString MCScriptPoint::gettoken_oldstring(void)
 {
-	return token;
+    return token;
 }
+#endif
 
 MCNameRef MCScriptPoint::gettoken_nameref(void)
 {
@@ -878,15 +880,22 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 		switch (type)
 		{
 		case ST_NUM:
+        {
 			real8 nvalue;
-			if (!MCU_stor8(gettoken_oldstring(), nvalue))
+            MCAutoNumberRef t_number;
+
+            if (!MCNumberParse(gettoken_stringref(), &t_number))
 			{
 				MCperror->add(PE_EXPRESSION_NOTLITERAL, *this);
 				return PS_ERROR;
-			}
+            }
+
+            nvalue = MCNumberFetchAsReal(*t_number);
+
 			newfact = insertfactor(new MCLiteralNumber(gettoken_nameref(), nvalue), curfact, top);
 			newfact->parse(*this, doingthe);
 			needfact = False;
+        }
 			break;
 		case ST_LIT:
 			newfact = insertfactor(new MCLiteral(gettoken_nameref()), curfact, top);
@@ -1103,7 +1112,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 						*this = thesp;
 						MCerrorlock--;
 
-						if (gettoken_oldstring().getlength() == 0)
+                        if (MCStringIsEmpty(gettoken_stringref()))
 						{
 							MCperror->add(PE_EXPRESSION_NOTFACT, *this);
 							return PS_ERROR;

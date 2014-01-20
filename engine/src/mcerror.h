@@ -49,7 +49,9 @@ public:
 	void add(uint2 id, uint2 line, uint2 pos, const char *);
 	void add(uint2 id, uint2 line, uint2 pos, MCValueRef);
 	void append(MCError& string);
-	const MCString &getsvalue();
+#ifdef LEGACY_EXEC
+    const MCString &getsvalue();
+#endif
 	void copystringref(MCStringRef s, Boolean t);
 	bool copyasstringref(MCStringRef &r_string);
 	void clear();

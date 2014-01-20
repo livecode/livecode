@@ -136,22 +136,16 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 	MCU_sort(items.Ptr(), nitems, dir, form);
 	if (type == CT_ITEM)
 	{
-		char *newtext = new char[itemsize + 1];
-		*newtext = '\0';
-		uint4 i;
-		uint4 tlength = 0;
-		for (i = 0 ; i < nitems ; i++)
-		{
-			uint4 length = strlen((const char *)items[i].data);
-			strncpy(&newtext[tlength], (const char *)items[i].data, length);
-			tlength += length;
+        MCAutoListRef t_item_list;
+        MCListCreateMutable(ctxt . GetItemDelimiter(), &t_item_list);
 
-			if (i < nitems - 1)
-				newtext[tlength++] = ctxt . GetItemDelimiter();
-			newtext[tlength] = '\0';
-		}
-		settext_oldstring(parid, newtext, False);
-		delete newtext;
+        for (int i = 0; i < nitems; ++i)
+            /* UNCHECKED */ MCListAppendNativeChars(*t_item_list, (const char_t *)items[i].data, strlen((const char *)items[i].data));
+
+        MCAutoStringRef t_string_list;
+        /* UNCHECKED */ MCListCopyAsString(*t_item_list, &t_string_list);
+
+        settext(parid, *t_string_list, False);
 	}
 	else if (nitems > 0)
 	{
@@ -460,15 +454,7 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid)
 		fptr->setparagraphs(newpgptr);
 }
 
-Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean p_formatted)
-{
-	if (MCStringGetCharPtr(p_text) != nil)
-		return settext_oldstring(parid, MCString((const char*)MCStringGetCharPtr(p_text), MCStringGetLength(p_text) * sizeof(unichar_t)), p_formatted, true);
-		
-	return settext_oldstring(parid, MCStringGetOldString(p_text), p_formatted, false);
-}
-
-Exec_stat MCField::settext_oldstring(uint4 parid, const MCString &s, Boolean formatted, Boolean isunicode)
+Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean formatted)
 {
 	state &= ~CS_CHANGED;
 	if (opened)
@@ -479,77 +465,74 @@ Exec_stat MCField::settext_oldstring(uint4 parid, const MCString &s, Boolean for
 		clearfound();
 		fdata->setparagraphs(paragraphs);
 		unselect(False, True);
-	}
+    }
+
 	MCParagraph *pgptr = NULL;
-	if (s.getlength())
-	{
-		const char *sptr = s.getstring();
-		uint4 l = s.getlength();
+    if (MCStringGetLength(p_text))
+    {
+        uindex_t t_text_length;
+        uindex_t t_start;
+
+        t_text_length = MCStringGetLength(p_text);
+        t_start = 0;
+
 		while (True)
 		{
-			const char *eptr = sptr;
+            uindex_t t_pos;
+            t_pos = t_start;
+
 			if (formatted)
-				while (l)
+                while (t_pos < t_text_length)
 				{
-					if (MCU_strchr(eptr, l, '\n', isunicode) && l)
-					{
-						if (l && MCU_comparechar(eptr + MCU_charsize(isunicode), '\n',
-						                         isunicode))
-							break;
-						else
-						{
-							eptr += MCU_charsize(isunicode);
-							l -= MCU_charsize(isunicode);
-						}
-					}
-					else
-					{
-						eptr += l;
-						l = 0;
-					}
+                    uindex_t t_pos;
+                    if (MCStringFirstIndexOfChar(p_text, '\n', t_pos, kMCStringOptionCompareExact, t_pos))
+                    {
+                        if (MCStringGetCharAtIndex(p_text, t_pos + 1) == '\n')
+                            break;
+                        else
+                            ++t_pos;
+                    }
+                    else
+                        t_pos = t_text_length;
 				}
 			else
-				if (!MCU_strchr(eptr, l, '\n', isunicode))
-				{
-					eptr += l;
-					l = 0;
-				}
-			uint4 length = eptr - sptr;
-			if (length > PARAGRAPH_MAX_LEN - 2)
-			{
-				length = PARAGRAPH_MAX_LEN - 2;
-				eptr = sptr + length;
+            {
+                if (!MCStringFirstIndexOfChar(p_text, '\n', t_start, kMCStringOptionCompareExact, t_pos))
+                    t_pos = t_text_length;
+            }
+
+            if (t_pos > PARAGRAPH_MAX_LEN - 2)
+                t_pos = PARAGRAPH_MAX_LEN - 2;
+
+            MCStringRef t_paragraph_text;
+            if (t_pos != t_start)
+                MCStringCopySubstring(p_text, MCRangeMake(t_start, t_pos - t_start), t_paragraph_text);
+            else
+                t_paragraph_text = MCValueRetain(kMCEmptyString);
+
+            if (formatted)
+            {
+                /* UNCHECKED */ MCStringMutableCopyAndRelease(t_paragraph_text, t_paragraph_text);
+                MCStringFindAndReplaceChar(t_paragraph_text, '\n', ' ', kMCStringOptionCompareExact);
 			}
-			char *pgtext = new char[length ? length : 1];
-			memcpy(pgtext, sptr, length);
-			if (formatted)
-			{
-				char *tptr = pgtext;
-				while (*tptr)
-				{
-					if (*tptr == '\n')
-						*tptr = ' ';
-					tptr++;
-				}
-			}
+
 			MCParagraph *tpgptr = new MCParagraph;
 			tpgptr->setparent(this);
 			tpgptr->appendto(pgptr);
 
 			// MW-2012-02-16: [[ IntrinsicUnicode ]] Make sure we pass the correct setting for
 			//   'unicode'.
-			MCAutoStringRef t_text;
-			/* UNCHECKED */ MCStringCreateWithBytes((const char_t*)pgtext, length, isunicode?kMCStringEncodingUTF16:kMCStringEncodingNative, false, &t_text);
-			tpgptr->settext(*t_text);
-			if (l)
+            // SN-2014-01-17: [[ Unicodification ]] Now input is directly handled as a unicode input
+            tpgptr->settext(t_paragraph_text);
+
+            MCValueRelease(t_paragraph_text);
+
+            if (t_pos < t_text_length)
 			{
-				sptr = eptr + MCU_charsize(isunicode);
-				l -= MCU_charsize(isunicode);
-				if (formatted && l)
-				{
-					sptr+=MCU_charsize(isunicode);
-					l-=MCU_charsize(isunicode);
-				}
+                t_start = t_pos + 1;
+
+                if (formatted && t_pos < t_text_length)
+                    ++t_start;
 			}
 			else
 				break;
@@ -564,6 +547,8 @@ Exec_stat MCField::settext_oldstring(uint4 parid, const MCString &s, Boolean for
 	return ES_NORMAL;
 }
 
+
+
 // On input (si, ei) are relative to p_top
 // On output we return the paragraph in which si is placed, and (si, ei) is
 // relative to it.
@@ -574,15 +559,6 @@ MCParagraph *MCField::verifyindices(MCParagraph *p_top, findex_t& si, findex_t& 
 	t_start_pg = indextoparagraph(p_top, si, ei);
 
 	return t_start_pg;
-}
-
-Exec_stat MCField::settextindex_oldstring(uint4 parid, findex_t si, findex_t ei, const MCString &s, Boolean undoing, bool p_as_unicode)
-{
-    MCAutoStringRef t_string;
-    /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)s.getstring(), s.getlength(),
-                                            p_as_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative,
-                                            false, &t_string);
-    return settextindex(parid, si, ei, *t_string, undoing);
 }
 
 Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringRef p_text, Boolean undoing)

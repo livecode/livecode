@@ -2312,9 +2312,8 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
         t_success = ctxt . EvalExprAsStringRef(m_script, EE_IDE_BADSCRIPT, &t_script);
 
     // First try a (command) call.
-    char *t_call_error;
+    MCAutoStringRef t_call_error;
     uint2 t_call_pos;
-    t_call_error = nil;
     if (t_success)
     {
         // SP takes a copy of the string in this form.
@@ -2351,7 +2350,7 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
             t_call -> parse(sp) != PS_NORMAL ||
             sp . next(t_type) != PS_EOF)
         {
-            t_call_error = MCperror -> getsvalue() . clone();
+            MCperror -> copyasstringref(&t_call_error);
             t_call_pos = sp . getline() * 1000 + sp . getpos();
         }
 
@@ -2359,9 +2358,8 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
     }
 
     // First try an expression.
-    char *t_expr_error;
+    MCAutoStringRef t_expr_error;
     uint2 t_expr_pos;
-    t_expr_error = nil;
     if (t_success)
     {
         // SP takes a copy of the string in this form.
@@ -2377,7 +2375,7 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
         if (sp . parseexp(False, True, &t_expr) != PS_NORMAL ||
             sp . next(t_type) != PS_EOF)
         {
-            t_expr_error = MCperror -> getsvalue() . clone();
+            MCperror -> copyasstringref(&t_expr_error);
             t_expr_pos = sp . getline() * 1000 + sp . getpos();
         }
 
@@ -2385,9 +2383,8 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
     }
 
     // Now try a command.
-    char *t_cmd_error;
+    MCAutoStringRef t_cmd_error;
     uint2 t_cmd_pos;
-    t_cmd_error = nil;
     if (t_success)
     {
         // SP takes a copy of the string in ep in this form.
@@ -2414,7 +2411,7 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
             t_statement -> parse(sp) != PS_NORMAL ||
             sp . next(t_type) != PS_EOF)
         {
-            t_cmd_error = MCperror -> getsvalue() . clone();
+            MCperror -> copyasstringref(&t_cmd_error);
             t_cmd_pos = sp . getline() * 1000 + sp . getpos();
         }
 
@@ -2422,28 +2419,24 @@ void MCIdeScriptClassify::exec_ctxt(MCExecContext &ctxt)
     }
 
     // If we have a call expression, then its a command.
-    if (t_call_error == nil ||
-        t_cmd_error == nil)
+    if (*t_call_error == nil ||
+        *t_cmd_error == nil)
         ctxt . SetItToValue(MCSTR("command"));
-    else if (t_expr_error == nil)
+    else if (*t_expr_error == nil)
         ctxt . SetItToValue(MCSTR("expression"));
     else
     {
-        const char *t_error;
+        MCStringRef t_error;
         if (t_expr_pos > MCU_max(t_call_pos, t_cmd_pos))
-            t_error = t_expr_error;
+            t_error = *t_expr_error;
         else if (t_call_pos > t_cmd_pos)
-            t_error = t_call_error;
+            t_error = *t_call_error;
         else
-            t_error = t_cmd_error;
+            t_error = *t_cmd_error;
 
-        ctxt . SetTheResultToCString(t_error);
+        ctxt . SetTheResultToValue(t_error);
         ctxt . SetItToValue(MCSTR("neither"));
     }
-
-    delete t_expr_error;
-    delete t_cmd_error;
-    delete t_call_error;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

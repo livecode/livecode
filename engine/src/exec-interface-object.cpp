@@ -1368,7 +1368,10 @@ void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
 				}
 				if (!MCperror->isempty())
 				{
-					ctxt . SetTheResultToCString(MCperror->getsvalue() . getstring());
+                    MCAutoStringRef t_error;
+                    MCperror -> copyasstringref(&t_error);
+
+                    ctxt . SetTheResultToValue(*t_error);
 					MCperror->clear();
 				}
 				else
