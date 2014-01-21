@@ -502,7 +502,9 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextRotateCTM(t_img_context, t_angle);
 			CGContextTranslateCTM(t_img_context, -t_offset . width, -t_offset . height);
 			
-			float t_scale = MCIPhoneGetResolutionScale();
+            // MM-2013-01-10: [[ Bug 11653 ]] As above, our rects are also in device pixels, so use the device scale when working out x and y of bounds.
+            float t_scale;
+            t_scale = MCIPhoneGetDeviceScale();
 			CGContextScaleCTM(t_img_context, t_scale, t_scale);
 			
 #ifndef USE_UNDOCUMENTED_METHODS
