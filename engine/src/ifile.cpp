@@ -488,9 +488,6 @@ bool MCImageGetFileRepForStackContext(const char *p_filename, MCStack *p_stack, 
 				
 				MCCStringFree(t_path);
 				t_path = nil;
-				
-				if (t_success)
-					t_success = t_rep != nil;
 			}
 		}
 	}

@@ -559,6 +559,11 @@ bool MCImageRepGetDensityMapped(const char *p_filename, MCImageRep *&r_rep)
 		}
 	}
 	
+    // AL-2014-01-17: [[ Bug 11684 ]] If we couldn't get an image rep, then
+    // we weren't successful.
+    if (t_success)
+        t_success = t_rep != nil;
+    
 	if (t_success)
 	{
 		r_rep = t_rep;
