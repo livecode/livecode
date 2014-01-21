@@ -1142,6 +1142,7 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 
 	MCAutoStringRef t_element_del;
 	MCAutoStringRef t_key_del;
+    codepoint_t t_delim_char;
 	uint4 chunk;
 	chunk = mode;
 	switch(chunk)
@@ -1156,6 +1157,25 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
                     return;
 			}
 		break;
+        case TYPE_ROW:
+            t_delim_char = ctxt.GetRowDelimiter();
+            /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)&t_delim_char, 4, kMCStringEncodingUTF32, false, &t_element_del);
+            break;
+        case TYPE_COLUMN:
+            t_delim_char = ctxt.GetColumnDelimiter();
+            /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)&t_delim_char, 4, kMCStringEncodingUTF32, false, &t_element_del);
+            break;
+        case TYPE_LINE:
+            t_delim_char = ctxt.GetLineDelimiter();
+            /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)&t_delim_char, 4, kMCStringEncodingUTF32, false, &t_element_del);
+            break;
+        case TYPE_ITEM:
+            t_delim_char = ctxt.GetItemDelimiter();
+            /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)&t_delim_char, 4, kMCStringEncodingUTF32, false, &t_element_del);
+            break;
+        case TYPE_WORD:
+        case TYPE_TOKEN:
+        case TYPE_CHARACTER:
 		default:
             ctxt . Throw();
             return;
@@ -1187,8 +1207,6 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 		{
 			if (chunk == TYPE_COLUMN)
 				MCArraysExecCombineByColumn(ctxt, *t_array, &t_string);
-			else if (chunk == TYPE_ROW)
-				MCArraysExecCombineByColumn(ctxt, *t_array, &t_string);
 			else
 				MCArraysExecCombine(ctxt, *t_array, *t_element_del, *t_key_del, &t_string);
 		}
@@ -1209,8 +1227,6 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 		{
 			if (chunk == TYPE_COLUMN)
 				MCArraysExecSplitByColumn(ctxt, *t_string, &t_array);
-			else if (chunk == TYPE_ROW)
-				MCArraysExecSplitByRow(ctxt, *t_string, &t_array);
 			else
 				MCArraysExecSplit(ctxt, *t_string, *t_element_del, *t_key_del, &t_array);
 		}
@@ -1244,8 +1260,6 @@ void MCArrayOp::compile(MCSyntaxFactoryRef ctxt)
 		{
 			if (mode == TYPE_COLUMN)
 				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineByColumnMethodInfo, 0, 0);
-			else if (mode == TYPE_ROW)
-				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineByColumnMethodInfo, 0, 0);
 			else
 				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineMethodInfo, 0, 1, 2, 0);
 		}
@@ -1258,8 +1272,6 @@ void MCArrayOp::compile(MCSyntaxFactoryRef ctxt)
 		{
 			if (mode == TYPE_COLUMN)
 				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecSplitByColumnMethodInfo, 0, 0);
-			else if (mode == TYPE_ROW)
-				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecSplitByRowMethodInfo, 0, 0);
 			else
 				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecSplitMethodInfo, 0, 1, 2, 0);
 		}
