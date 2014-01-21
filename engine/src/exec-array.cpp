@@ -158,7 +158,30 @@ void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStri
 
 void MCArraysExecCombineAsSet(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_element_delimiter, MCStringRef& r_string)
 {
-	ctxt . Unimplemented();
+	// String into which the combined keys are accumulated
+    MCAutoStringRef t_string;
+    
+    // The array keys are not added in any particular order
+    MCNameRef t_key;
+    MCValueRef t_value_ignored;
+    uintptr_t t_iterator = 0;
+    while (MCArrayIterate(p_array, t_iterator, t_key, t_value_ignored))
+    {
+        bool t_success;
+        t_success = true;
+        if (*t_string == nil)
+            t_success = MCStringMutableCopy(MCNameGetString(t_key), &t_string);
+        else
+            t_success = MCStringAppendFormat(*t_string, "%@%@", p_element_delimiter, t_key);
+        
+        if (!t_success)
+        {
+            ctxt . Throw();
+            return;
+        }
+    }
+    
+    r_string = MCValueRetain(*t_string);
 }
 
 //////////
@@ -178,7 +201,39 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
 
 void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_element_delimiter, MCArrayRef& r_array)
 {
-	ctxt . Unimplemented();
+	// Split the incoming string into its components
+    MCAutoArrayRef t_keys;
+    if (!MCStringSplit(p_string, p_element_delimiter, nil, ctxt . GetCaseSensitive() ? kMCStringOptionCompareExact : kMCStringOptionCompareCaseless, &t_keys))
+    {
+        ctxt . Throw();
+        return;
+    }
+    
+    // The new array, with keys equal to the components of the string
+    MCAutoArrayRef t_array;
+    if (!MCArrayCreateMutable(&t_array))
+    {
+        ctxt . Throw();
+        return;
+    }
+    
+    MCNameRef t_key_ignored;
+    MCValueRef t_value;
+    uintptr_t t_iterator = 0;
+    while (MCArrayIterate(*t_keys, t_iterator, t_key_ignored, t_value))
+    {
+        // The value stored at each key is a boolean "true"
+        MCNewAutoNameRef t_keyname;
+        if (!ctxt . ConvertToName(t_value, &t_keyname)
+            || !MCArrayStoreValue(*t_array, ctxt . GetCaseSensitive(), *t_keyname, kMCTrue))
+        {
+            ctxt . Throw();
+            return;
+        }
+        
+    }
+    
+    r_array = MCValueRetain(*t_array);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
