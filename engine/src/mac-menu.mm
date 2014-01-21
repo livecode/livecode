@@ -37,6 +37,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// The menuref currently set as the menubar.
+static MCPlatformMenuRef s_menubar = nil;
+
+////////////////////////////////////////////////////////////////////////////////
+
 @interface com_runrev_livecode_MCMenuDelegate: NSObject<NSMenuDelegate>
 {
 	MCPlatformMenuRef m_menu;
@@ -109,6 +114,11 @@ struct MCPlatformMenu
 	uint32_t references;
 	NSMenu *menu;
 	MCMenuDelegate *menu_delegate;
+	
+	// If the menu is being used as a menubar then this is true. When this
+	// is the case, some items will be hidden and a (API-wise) invisible
+	// menu will be inserted at the front (the application menu).
+	bool is_menubar : 1;
 };
 
 // Helper method that frees anything associated with an NSMenuItem in an NSMenu
@@ -134,6 +144,24 @@ static void MCPlatformDestroyMenuItem(MCPlatformMenuRef p_menu, uindex_t p_index
 	MCPlatformReleaseMenu(t_submenu_ref);
 }
 
+// Map the incoming index to the internal menu item index (taking into account
+// whether the menu is the menubar).
+static void MCPlatformMapMenuItemIndex(MCPlatformMenuRef p_menu, uindex_t& x_index)
+{
+	// If the menu is the menubar, adjust for the application menu (always first).
+	if (p_menu -> is_menubar)
+		x_index += 1;
+}
+
+// Clamp the incoming index to an internal menu item insertion index (taking into
+// account whether the menu is the menubar).
+static void MCPlatformClampMenuItemIndex(MCPlatformMenuRef p_menu, uindex_t& x_index)
+{
+	if (x_index < UINDEX_MAX && p_menu -> is_menubar)
+		x_index += 1;
+	x_index = MCMin((unsigned)[p_menu -> menu numberOfItems], x_index);
+}
+
 void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu)
 {
 	MCPlatformMenuRef t_menu;
@@ -144,6 +172,7 @@ void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu)
 	t_menu -> menu = [[NSMenu alloc] initWithTitle: @""];
 	t_menu -> menu_delegate = [[MCMenuDelegate alloc] initWithPlatformMenuRef: t_menu];
 	[t_menu -> menu setDelegate: t_menu -> menu_delegate];
+	t_menu -> is_menubar = false;
 	
 	// We don't use autoenablement.
 	[t_menu -> menu setAutoenablesItems: NO];
@@ -179,15 +208,15 @@ void MCPlatformSetMenuTitle(MCPlatformMenuRef p_menu, const char *p_title)
 void MCPlatformCountMenuItems(MCPlatformMenuRef p_menu, uindex_t& r_count)
 {
 	r_count = [p_menu -> menu numberOfItems];
+	
+	// If the menu is the menubar, then we've inserted the application menu.
+	if (p_menu -> is_menubar)
+		r_count -= 1;
 }
 
 void MCPlatformAddMenuItem(MCPlatformMenuRef p_menu, uindex_t p_where)
 {
-	uindex_t t_count;
-	t_count = [p_menu -> menu numberOfItems];
-	
-	if (p_where > t_count)
-		p_where = t_count;
+	MCPlatformClampMenuItemIndex(p_menu, p_where);
 	
 	NSMenuItem *t_item;
 	t_item = [[NSMenuItem alloc] initWithTitle: @"" action: @selector(menuItemSelected:) keyEquivalent: @""];
@@ -201,17 +230,15 @@ void MCPlatformAddMenuItem(MCPlatformMenuRef p_menu, uindex_t p_where)
 
 void MCPlatformAddMenuSeparatorItem(MCPlatformMenuRef p_menu, uindex_t p_where)
 {
-	uindex_t t_count;
-	t_count = [p_menu -> menu numberOfItems];
-	
-	if (p_where > t_count)
-		p_where = t_count;
+	MCPlatformClampMenuItemIndex(p_menu, p_where);
 	
 	[p_menu -> menu insertItem: [NSMenuItem separatorItem] atIndex: p_where];
 }
  
 void MCPlatformRemoveMenuItem(MCPlatformMenuRef p_menu, uindex_t p_where)
 {
+	MCPlatformMapMenuItemIndex(p_menu, p_where);
+	
 	MCPlatformDestroyMenuItem(p_menu, p_where);
 	[p_menu -> menu removeItemAtIndex: p_where];
 }
@@ -235,10 +262,14 @@ void MCPlatformGetMenuParent(MCPlatformMenuRef p_menu, MCPlatformMenuRef& r_pare
 	
 	r_index = [t_parent indexOfItemWithSubmenu: p_menu -> menu];
 	r_parent = [(MCMenuDelegate *)[t_parent delegate] platformMenuRef];
+	if (r_parent -> is_menubar)
+		r_index -= 1;
 }
 
 void MCPlatformGetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, MCPlatformMenuItemProperty p_property, MCPlatformPropertyType p_type, void *r_value)
 {
+	MCPlatformMapMenuItemIndex(p_menu, p_index);
+	
 	NSMenuItem *t_item;
 	t_item = [p_menu -> menu itemAtIndex: p_index];
 	
@@ -255,6 +286,8 @@ void MCPlatformGetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 
 void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, MCPlatformMenuItemProperty p_property, MCPlatformPropertyType p_type, const void *p_value)
 {
+	MCPlatformMapMenuItemIndex(p_menu, p_index);
+	
 	NSMenuItem *t_item;
 	t_item = [p_menu -> menu itemAtIndex: p_index];
 	
@@ -305,6 +338,58 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 
 //////////
 
+static void MCPlatformStartUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
+{
+	if (p_menu -> is_menubar)
+		return;
+	
+	// COCOA-TODO: Finish app menu support.
+	
+	// Initialize the application menu (which is always index 0). The application
+	// menu has structure:
+	//
+	//     About <app name>
+	//     ----
+	//     Preferences... / Apple-,
+	//     ----
+	//     Services
+	//     ----
+	//     Hide <app name> / Apple-H
+	//     Hide Others     / Opt-Apple-H
+	//     Show All
+	//     ----
+	//     Quit <app name> / Apple-Q
+	//
+	
+	// COCOA-TODO: Fetch name from bundle (?)
+	NSString *t_app_name;
+	t_app_name = [[NSProcessInfo processInfo] processName];
+	
+	NSMenu *t_app_menu;
+	t_app_menu = [[NSMenu alloc] initWithTitle: t_app_name];
+	[t_app_menu addItemWithTitle: [@"Quit " stringByAppendingString: t_app_name] action: @selector(terminate:) keyEquivalent:@"q"];
+	
+	NSMenuItem *t_app_menu_item;
+	t_app_menu_item = [[NSMenuItem alloc] initWithTitle: t_app_name action: nil keyEquivalent: @""];
+	[t_app_menu_item setSubmenu: t_app_menu];
+	[t_app_menu release];
+	
+	[p_menu -> menu insertItem: t_app_menu_item atIndex: 0];
+	[t_app_menu_item release];
+	
+	p_menu -> is_menubar = true;
+}
+
+static void MCPlatformStopUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
+{
+	if (!p_menu -> is_menubar)
+		return;
+	
+	[p_menu -> menu removeItemAtIndex: 0];
+	
+	p_menu -> is_menubar = false;
+}
+
 void MCPlatformShowMenubar(void)
 {
 	ShowMenuBar();
@@ -317,13 +402,33 @@ void MCPlatformHideMenubar(void)
 
 void MCPlatformSetMenubar(MCPlatformMenuRef p_menu)
 {
-	[NSApp setMainMenu: p_menu -> menu];
+	if (p_menu == s_menubar)
+		return;
+	
+	MCPlatformMenuRef t_old_menubar;
+	t_old_menubar = s_menubar;
+	s_menubar = nil;
+	
+	if (p_menu != nil)
+	{
+		MCPlatformStartUsingMenuAsMenubar(p_menu);
+		[NSApp setMainMenu: p_menu -> menu];
+		MCPlatformRetainMenu(p_menu);
+		s_menubar = p_menu;
+	}
+	else
+		[NSApp setMainMenu: nil];
+	
+	if (t_old_menubar != nil)
+	{
+		MCPlatformStopUsingMenuAsMenubar(t_old_menubar);
+		MCPlatformReleaseMenu(t_old_menubar);
+	}
 }
 
 void MCPlatformGetMenubar(MCPlatformMenuRef& r_menu)
 {
-	r_menu = nil;
+	r_menu = s_menubar;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////

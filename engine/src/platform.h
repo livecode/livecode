@@ -114,12 +114,6 @@ enum
 	kMCPlatformAcceleratorNone,
 };
 
-////////////////////////////////////////////////////////////////////////////////
-
-// System properties are settings that can be queried from the system.
-//
-// TODO-REVIEW: Perhaps these would be better classed as metrics?
-
 enum MCPlatformCursorImageSupport
 {
 	kMCPlatformCursorImageSupportMonochrome,
@@ -127,6 +121,13 @@ enum MCPlatformCursorImageSupport
 	kMCPlatformCursorImageSupportColor,
 	kMCPlatformCursorImageSupportAlpha,
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+// System properties are settings that can be queried from the system.
+//
+// TODO-REVIEW: Perhaps these would be better classed as metrics?
+//   Or perhaps MCPlatformQuery(...)
 
 enum MCPlatformSystemProperty
 {
@@ -219,6 +220,16 @@ enum MCPlatformMenuItemAction
 	kMCPlatformMenuItemActionNone,
 	
 	kMCPlatformMenuItemActionQuit,
+	kMCPlatformMenuItemActionAbout,
+	kMCPlatformMenuItemActionPreferences,
+	
+	kMCPlatformMenuItemActionUndo,
+	kMCPlatformMenuItemActionRedo,
+	kMCPlatformMenuItemActionCut,
+	kMCPlatformMenuItemActionCopy,
+	kMCPlatformMenuItemActionPaste,
+	kMCPlatformMenuItemActionClear,
+	kMCPlatformMenuItemActionSelectAll,
 };
 
 void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu);

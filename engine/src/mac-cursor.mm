@@ -15,11 +15,13 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <Cocoa/Cocoa.h>
+#include <Carbon/Carbon.h>
 
 #include "core.h"
 #include "globdefs.h"
 #include "region.h"
 #include "graphics.h"
+#include "imagebitmap.h"
 
 #include "platform.h"
 #include "platform-internal.h"
@@ -63,17 +65,17 @@ static NSImage *CreateNSImageFromCGImage(CGImageRef p_image)
     return t_new_image;
 }
 
-void MCPlatformCreateStandardCursor(MCPlatformStandardCursor standard_cusor, MCPlatformCursorRef& r_cursor)
+void MCPlatformCreateStandardCursor(MCPlatformStandardCursor p_standard_cursor, MCPlatformCursorRef& r_cursor)
 {
 	MCPlatformCursorRef t_cursor;
 	/* UNCHECKED */ MCMemoryNew(t_cursor);
 	t_cursor -> references = 1;
 	t_cursor -> is_standard = true;
-	t_cursor -> standard = standard_cursor;
+	t_cursor -> standard = p_standard_cursor;
 	r_cursor = t_cursor;
 }
 
-void MCPlatformCreateCustomCursor(MCImageBitmap *image, MCPoint hot_spot, MCPlatformCursorRef& r_cursor)
+void MCPlatformCreateCustomCursor(MCImageBitmap *p_image, MCPoint p_hotspot, MCPlatformCursorRef& r_cursor)
 {
 	MCPlatformCursorRef t_cursor;
 	/* UNCHECKED */ MCMemoryNew(t_cursor);
@@ -92,12 +94,13 @@ void MCPlatformCreateCustomCursor(MCImageBitmap *image, MCPoint hot_spot, MCPlat
 
 	// MW-2010-10-12: [[ Bug 8994 ]] If the hotspot is outwith the cursor rect, we get a
 	//   duff cursor.
-	p_hotspot_x = MCU_max(0, MCU_min((int32_t)p_image -> width - 1, p_hotspot_x));
-	p_hotspot_y = MCU_max(0, MCU_min((int32_t)p_image -> height - 1, p_hotspot_y));
+	NSPoint t_ns_hotspot;
+	t_ns_hotspot . x = MCU_max(0, MCU_min((int32_t)p_image -> width - 1, p_hotspot . x));
+	t_ns_hotspot . y = MCU_max(0, MCU_min((int32_t)p_image -> height - 1, p_hotspot . y));
 	
 	NSCursor *t_nscursor = nil;
 	
-	t_nscursor = [[NSCursor alloc] initWithImage:t_cursor_image hotSpot: NSMakePoint(p_hotspot_x, p_hotspot_y)];
+	t_nscursor = [[NSCursor alloc] initWithImage:t_cursor_image hotSpot: t_ns_hotspot];
 	
 	[t_cursor_image release];
 	
@@ -106,26 +109,26 @@ void MCPlatformCreateCustomCursor(MCImageBitmap *image, MCPoint hot_spot, MCPlat
 	r_cursor = t_cursor;
 }
 
-void MCPlatformRetainCursor(MCPlatformCursorRef cursor)
+void MCPlatformRetainCursor(MCPlatformCursorRef p_cursor)
 {
 	p_cursor -> references += 1;
 }
 
-void MCPlatformReleaseCursor(MCPlatformCursorRef cursor)
+void MCPlatformReleaseCursor(MCPlatformCursorRef p_cursor)
 {
 	p_cursor -> references -= 1;
 	if (p_cursor -> references > 0)
 		return;
 		
 	if (!p_cursor -> is_standard)
-		[p_cursor -> cursor release ];
+		[p_cursor -> custom release ];
 		
 	MCMemoryDelete(p_cursor);
 }
 
-void MCPlatformShowCursor(MCPlatformCursorRef cursor)
+void MCPlatformShowCursor(MCPlatformCursorRef p_cursor)
 {
-	[NSCursor show];
+	[NSCursor unhide];
 	if (p_cursor -> is_standard)
 	{
 		switch(p_cursor -> standard)
@@ -148,7 +151,7 @@ void MCPlatformShowCursor(MCPlatformCursorRef cursor)
 		}
 	}
 	else
-		[p_cursor -> custom set]
+		[p_cursor -> custom set];
 }
 
 void MCPlatformHideCursor(void)

@@ -15,6 +15,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <Cocoa/Cocoa.h>
+#include <Carbon/Carbon.h>
 
 #include "core.h"
 #include "typedefs.h"
@@ -230,8 +231,40 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *p_value)
+void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *r_value)
 {
+	switch(p_property)
+	{
+		case kMCPlatformSystemPropertyDoubleClickInterval:
+			*(double *)r_value = GetDblTime() * 1000.0 / 60.0;
+			break;
+			
+		case kMCPlatformSystemPropertyCaretBlinkInterval:
+			*(double *)r_value = GetCaretTime() * 1000.0 / 60.0;
+			break;
+			
+		case kMCPlatformSystemPropertyHiliteColor:
+		{
+			RGBColor hiliteRGB;
+			LMGetHiliteRGB(&hiliteRGB);
+			((MCColor *)r_value) -> red = hiliteRGB.red;
+			((MCColor *)r_value) -> green = hiliteRGB.green;
+			((MCColor *)r_value) -> blue = hiliteRGB.blue;
+		}
+		break;
+			
+		case kMCPlatformSystemPropertyAccentColor:
+			// COCOA-TODO: GetAccentColor
+			break;
+			
+		case kMCPlatformSystemPropertyMaximumCursorSize:
+			*(int32_t *)r_value = 256;
+			break;
+		
+		case kMCPlatformSystemPropertyCursorImageSupport:
+			*(MCPlatformCursorImageSupport *)r_value = kMCPlatformCursorImageSupportAlpha; 
+			break;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -583,3 +616,5 @@ int main(int argc, char *argv[], char *envp[])
 	
 	return 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////

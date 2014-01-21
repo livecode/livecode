@@ -40,6 +40,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static struct { const char *tag; MCPlatformMenuItemAction action; } s_known_menu_item_tags[] =
+{
+	{ "About", kMCPlatformMenuItemActionAbout },
+	{ "Preferences", kMCPlatformMenuItemActionPreferences },
+	
+	// COCOA-TODO: Add other standard actions.
+};
+
 static char *utf8cstring_from_mcstring(const MCString& p_string, bool p_is_unicode)
 {
 	MCExecPoint ep(nil, nil, nil);
@@ -54,13 +62,15 @@ static char *utf8cstring_from_mcstring(const MCString& p_string, bool p_is_unico
 class MCMenuBuilderCallback: public IParseMenuCallback
 {
 	MCPlatformMenuRef m_root_menu;
+	const char *m_menu_title;
 	
 	MCPlatformMenuRef *m_menus;
 	uindex_t m_menu_depth;
 
 public:
-	MCMenuBuilderCallback(MCPlatformMenuRef p_root_menu)
+	MCMenuBuilderCallback(const char *p_menu_title, MCPlatformMenuRef p_root_menu)
 	{
+		m_menu_title = p_menu_title;
 		m_root_menu = p_root_menu;
 		m_menus = nil;
 		m_menu_depth = 0;
@@ -128,6 +138,29 @@ public:
 		return true;
 	}
 	
+	MCPlatformMenuItemAction ComputeAction(const char *p_item_title, const char *p_item_tag)
+	{
+		// First check to see if the item tag is known.
+		for(uindex_t i = 0; i < sizeof(s_known_menu_item_tags) / sizeof(s_known_menu_item_tags[0]); i++)
+			if (MCU_strcasecmp(p_item_tag, s_known_menu_item_tags[i] . tag) == 0)
+				return s_known_menu_item_tags[i] . action;
+		
+		// If the menu title is "Edit" and the item title begins with "Preferences"
+		// then tag with the preferences action.
+		if (MCU_strcasecmp(m_menu_title, "Edit") == 0 &&
+			MCU_strncasecmp(p_item_title, "Preferences", 11) == 0)
+			return kMCPlatformMenuItemActionPreferences;
+		
+		// If the menu title is "Help" and the item title begins with "About"
+		// then tag with the about aciton.
+		if (MCU_strcasecmp(m_menu_title, "Help") == 0 &&
+			MCU_strncasecmp(p_item_title, "About", 5) == 0)
+			return kMCPlatformMenuItemActionAbout;
+		
+		// There is no known action tied to the given tag.
+		return kMCPlatformMenuItemActionNone;
+	}
+	
 	virtual bool ProcessItem(MCMenuItem *p_menuitem)
 	{
 		// Make sure the depth of menus we are at is the same as the menuitem.
@@ -165,8 +198,12 @@ public:
 					t_item_highlight = kMCPlatformMenuItemHighlightTick;
 			}
 			
+			MCPlatformMenuItemAction t_action;
+			t_action = ComputeAction(*t_item_title, *t_item_tag);
+			
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeUTF8CString, &t_item_title . PtrRef());
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeUTF8CString, &t_item_tag . PtrRef());
+			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyAction, kMCPlatformPropertyTypeMenuItemAction, &t_action);
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyAccelerator, kMCPlatformPropertyTypeAccelerator, &t_item_accelerator);
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyEnabled, kMCPlatformPropertyTypeBool, &t_item_enabled);
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyHighlight, kMCPlatformPropertyTypeMenuItemHighlight, &t_item_highlight);
@@ -242,7 +279,7 @@ static void populate_menubar_menu_from_button(MCPlatformMenuRef p_menubar, uinde
 	MCPlatformSetMenuItemProperty(p_menubar, p_menubar_index, kMCPlatformMenuItemPropertyEnabled, kMCPlatformPropertyTypeBool, &t_menu_enabled);
 	
 	// Now build the menu from the spec string.
-	MCMenuBuilderCallback t_callback(p_menu);
+	MCMenuBuilderCallback t_callback(*t_menu_title_string, p_menu);
 	MCParseMenuString(t_menu_string, &t_callback, p_menu_button -> hasunicode(), WM_PULLDOWN);
 }
 
@@ -268,9 +305,7 @@ void MCScreenDC::updatemenubar(Boolean force)
 	//if doesn't need update and not force update then exit
 	if (newMenuGroup == NULL || newMenuGroup == curMenuGroup && !force && !curMenuGroup->getstate(CS_NEED_UPDATE))
 		return;
-	
-	MCLog("Updating menubar...", 0);
-	
+
 	// Count the number of menus.
 	uint2 t_menu_count;
 	t_menu_count = 0;

@@ -459,6 +459,9 @@ MCCursorRef MCScreenDC::createcursor(MCImageBitmap *image, int2 xhot, int2 yhot)
 
 void MCScreenDC::freecursor(MCCursorRef c)
 {
+	if (c == nil)
+		return;
+	
 	MCPlatformReleaseCursor(c);
 }
 
