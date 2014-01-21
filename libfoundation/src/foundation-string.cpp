@@ -852,11 +852,19 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
         return true;
     }
     
+    // If the string has not yet been scanned for simplicity, scan the whole
+    // thing (assuming multiple mapping requests will be made)
+    uindex_t t_scan_end;
+    if (self -> flags & kMCStringFlagIsChecked)
+        t_scan_end = p_in_range.offset + p_in_range.length;
+    else
+        t_scan_end = self -> char_count;
+    
     // Scan through the string, counting the number of codepoints
     bool t_is_simple = true;
     uindex_t t_counter = 0;
     MCRange t_units = MCRangeMake(0, 0);
-    while (t_counter < p_in_range.offset + p_in_range.length)
+    while (t_counter < t_scan_end)
     {
         // Is this a single code unit or a valid surrogate pair?
         uindex_t t_length;
@@ -868,7 +876,7 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
         // Update the appropriate field of the output
         if (t_counter < p_in_range.offset)
             t_units.offset += t_length;
-        else
+        else if (t_counter < p_in_range.offset + p_in_range.length)
             t_units.length += t_length;
         
         // Make sure we haven't exceeded the length of the string
@@ -887,7 +895,7 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
     }
     
     // If no surrogates were found, mark the string as simple
-    if (t_is_simple && t_units.offset + t_units.length == self -> char_count)
+    if (t_is_simple && t_scan_end == self -> char_count)
         self -> flags |= kMCStringFlagIsSimple;
     
     // All done
