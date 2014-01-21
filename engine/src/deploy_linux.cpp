@@ -661,7 +661,7 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	t_engine = t_output = NULL;
 	if (t_success && !MCDeployFileOpen(p_params . engine, kMCSOpenFileModeRead, t_engine))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
-	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeWrite, t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeCreate, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
 	// Now read in the main ELF header

@@ -1580,6 +1580,27 @@ public:
         return umask(p_mask);
     }
 
+    virtual IO_handle DeployOpen(MCStringRef p_path, intenum_t p_mode)
+    {
+        if (p_mode != kMCSOpenFileModeCreate)
+            return OpenFile(p_path, p_mode, False);
+        
+        FILE *fptr;
+        IO_handle t_handle;
+        t_handle = NULL;
+        
+        MCAutoStringRefAsUTF8String t_path_utf;
+        if (!t_path_utf.Lock(p_path))
+            return NULL;
+        
+        fptr = fopen(*t_path_utf, "wb+");
+        
+        if (fptr != nil)
+            t_handle = new MCStdioFileHandle(fptr);
+        
+        return t_handle;
+    }
+    
     virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map)
     {
 #ifdef /* MCS_open_dsk_lnx */ LEGACY_SYSTEM

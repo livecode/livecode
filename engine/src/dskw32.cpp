@@ -2871,7 +2871,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 #endif /* MCS_umask_dsk_w32 */
         return _umask(p_mask);
     }
-	
+    
 	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map)
     {
 #ifdef /* MCS_open_dsk_w32 */ LEGACY_SYSTEM

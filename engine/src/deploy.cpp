@@ -128,7 +128,7 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 	MCValueAssign(externals, t_temp_array);
 	MCValueRelease(t_temp_array);
 	
-	if (!ctxt.CopyOptElementAsString(p_array, MCNAME("startup_script"), false, startup_script))
+	if (!ctxt.CopyOptElementAsString(p_array, MCNAME("startup_script"), false, t_temp_string))
 		return false;
 	MCValueAssign(startup_script, t_temp_string);
 	MCValueRelease(t_temp_string);
@@ -215,7 +215,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	// Open the spill file, if required
 	MCDeployFileRef t_spill;
 	t_spill = NULL;
-	if (t_success && !MCStringIsEmpty(p_params . spill) && !MCDeployFileOpen(p_params . spill, kMCSOpenFileModeWrite, t_spill))
+	if (t_success && !MCStringIsEmpty(p_params . spill) && !MCDeployFileOpen(p_params . spill, kMCSOpenFileModeCreate, t_spill))
 		t_success = MCDeployThrow(kMCDeployErrorNoSpill);
 
 	// First create our deployment capsule
@@ -320,7 +320,7 @@ bool MCDeployWriteProject(const MCDeployParameters& p_params, bool p_to_network,
 	{
 		uint32_t t_swapped_size;
 		t_swapped_size = t_project_size;
-		if (p_params . spill != NULL)
+		if (!MCStringIsEmpty(p_params . spill))
 			t_swapped_size |= 1U << 31;
 		MCDeployByteSwap32(p_to_network, t_swapped_size); 
 		t_success = MCDeployFileWriteAt(p_output, &t_swapped_size, sizeof(uint32_t), p_output_offset);

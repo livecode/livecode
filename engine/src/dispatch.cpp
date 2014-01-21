@@ -843,7 +843,7 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 	{
 
 		MCAutoStringRef t_homename;
-		if (MCS_getenv(MCSTR("HOME"), &t_homename))
+		if (MCS_getenv(MCSTR("HOME"), &t_homename) && !MCStringIsEmpty(*t_homename))
 		{
 			MCAutoStringRef t_trimmed_homename;
 			if (MCStringGetCharAtIndex(*t_homename, MCStringGetLength(*t_homename) - 1) == '/')
