@@ -196,7 +196,86 @@ void MCArraysExecSplit(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_
 
 void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArrayRef& r_array)
 {
-	ctxt . Unimplemented();
+    codepoint_t t_row_delim, t_column_delim;
+    t_row_delim = ctxt . GetRowDelimiter();
+    t_column_delim = ctxt . GetColumnDelimiter();
+    
+    // Output array
+    MCAutoArrayRef t_array;
+    if (!MCArrayCreateMutable(&t_array))
+    {
+        ctxt . Throw();
+        return;
+    }
+    
+    // Temporary array for storing columns
+    MCAutoArray<MCStringRef> t_temp_array;
+    
+    // Iterate over the rows of the input string
+    uindex_t t_offset, t_length;
+    t_offset = 0;
+    t_length = MCStringGetLength(p_string);
+    while (t_offset < t_length)
+    {
+        // Find the end of this row
+        uindex_t t_row_end;
+        if (!MCStringFirstIndexOfChar(p_string, t_row_delim, t_offset, ctxt . GetCaseSensitive(), t_row_end))
+            t_row_end = t_length;
+        
+        // Iterate over the cells of this row
+        uindex_t t_cell_offset, t_column_index;
+        t_cell_offset = t_offset;
+        t_column_index = 0;
+        while (t_cell_offset < t_row_end)
+        {
+            // Find the end of this cell
+            uindex_t t_cell_end;
+            if (!MCStringFirstIndexOfChar(p_string, t_column_delim, t_cell_offset, ctxt . GetCaseSensitive(), t_cell_end) || t_cell_end > t_row_end)
+                t_cell_end = t_row_end;
+            
+            // Check that the output array has a slot for this column
+            if (t_temp_array.Size() <= t_column_index)
+                t_temp_array.Extend(t_column_index + 1);
+            
+            // Check that a string has been created to store this column
+            bool t_success;
+            MCRange t_range;
+            t_range = MCRangeMake(t_cell_offset, t_cell_end - t_cell_offset);
+            if (t_temp_array[t_column_index] == nil)
+                t_success = MCStringMutableCopySubstring(p_string, t_range, t_temp_array[t_column_index]);
+            else
+            {
+                t_success = MCStringAppendChar(t_temp_array[t_column_index], t_row_delim);
+                if (t_success)
+                    t_success = MCStringAppendFormat(t_temp_array[t_column_delim], "%*@", t_range, p_string);
+            }
+            
+            if (!t_success)
+            {
+                ctxt . Throw();
+                return;
+            }
+            
+            // Next cell
+            t_column_index++;
+            t_cell_offset = t_cell_end;
+        }
+        
+        // Next row
+        t_offset = t_row_end;
+    }
+    
+    // Convert the temporary array into a "proper" array
+    for (uindex_t i = 0; i < t_temp_array.Size(); i++)
+    {
+        if (!MCArrayStoreValueAtIndex(*t_array, i, t_temp_array[i]))
+        {
+            ctxt . Throw();
+            return;
+        }
+    }
+    
+    MCArrayCopy(*t_array, r_array);
 }
 
 void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_element_delimiter, MCArrayRef& r_array)
