@@ -1759,6 +1759,10 @@ Exec_stat MCField::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 		if (setsbprop(p, data, textx, texty, scrollbarwidth,
 		              hscrollbar, vscrollbar, dirty) == ES_ERROR)
 			return ES_ERROR;
+		// MW-2014-01-06: [[ Bug 11576 ]] Make sure we force a relayout if the layout width
+		//   has changed due to the vscrollbar visibility / width changing.
+		if (dirty && (which == P_VSCROLLBAR || which == P_SCROLLBAR_WIDTH))
+			reset = True;
 		break;
 	case P_MARGINS:
 	case P_LEFT_MARGIN:
