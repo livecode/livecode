@@ -1567,7 +1567,8 @@ void MCControl::enter()
 	}
 	else
 		message(MCM_mouse_enter);
-	if (hashandlers & HH_MOUSE_WITHIN && !(hashandlers & HH_IDLE))
+    // AL-2013-01-14: [[ Bug 11343 ]] Add timer if the object handles mouseWithin in the behavior chain.
+	if (handlesmessage(MCM_mouse_within) && !(hashandlers & HH_IDLE))
 		MCscreen->addtimer(this, MCM_idle, MCidleRate);
 	if (getstack()->gettool(this) == T_BROWSE)
 		MCtooltip->settip(tooltip);
