@@ -523,6 +523,18 @@ template<typename T> void SetCharPropOfCharChunkOfParagraph(MCExecContext& ctxt,
     }
 #endif
 
+    // Sanity check for lengths
+    uindex_t t_para_len;
+    t_para_len = p_paragraph->gettextlength();
+    if (si > t_para_len)
+    {
+        si = ei = t_para_len;
+    }
+    else if (ei > t_para_len)
+    {
+        ei = t_para_len;
+    }
+    
     bool t_blocks_changed;
     t_blocks_changed = false;
 
