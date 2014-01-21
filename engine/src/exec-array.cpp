@@ -151,17 +151,6 @@ void MCArraysExecCombine(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_
 	ctxt . Throw();
 }
 
-void MCArraysExecCombineByRow(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string)
-{
-	char_t t_row_char;
-	t_row_char = ctxt . GetRowDelimiter();
-
-	MCAutoStringRef t_row_del;
-	MCStringCreateWithNativeChars(&t_row_char, 1, &t_row_del);
-
-	MCArraysExecCombine(ctxt, p_array, *t_row_del, nil, r_string);
-}
-
 void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string)
 {
 	ctxt . Unimplemented();
@@ -180,17 +169,6 @@ void MCArraysExecSplit(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_
 		return;
 
 	ctxt . Throw();
-}
-
-void MCArraysExecSplitByRow(MCExecContext& ctxt, MCStringRef p_string, MCArrayRef& r_array)
-{
-	char_t t_row_char;
-	t_row_char = ctxt . GetRowDelimiter();
-
-	MCAutoStringRef t_row_del;
-	MCStringCreateWithNativeChars(&t_row_char, 1, &t_row_del);
-
-	MCArraysExecSplit(ctxt, p_string, *t_row_del, nil, r_array);
 }
 
 void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArrayRef& r_array)

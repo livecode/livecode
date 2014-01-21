@@ -1207,8 +1207,6 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 		{
 			if (chunk == TYPE_COLUMN)
 				MCArraysExecCombineByColumn(ctxt, *t_array, &t_string);
-			else if (chunk == TYPE_ROW)
-				MCArraysExecCombineByColumn(ctxt, *t_array, &t_string);
 			else
 				MCArraysExecCombine(ctxt, *t_array, *t_element_del, *t_key_del, &t_string);
 		}
@@ -1229,8 +1227,6 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 		{
 			if (chunk == TYPE_COLUMN)
 				MCArraysExecSplitByColumn(ctxt, *t_string, &t_array);
-			else if (chunk == TYPE_ROW)
-				MCArraysExecSplitByRow(ctxt, *t_string, &t_array);
 			else
 				MCArraysExecSplit(ctxt, *t_string, *t_element_del, *t_key_del, &t_array);
 		}
@@ -1264,8 +1260,6 @@ void MCArrayOp::compile(MCSyntaxFactoryRef ctxt)
 		{
 			if (mode == TYPE_COLUMN)
 				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineByColumnMethodInfo, 0, 0);
-			else if (mode == TYPE_ROW)
-				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineByColumnMethodInfo, 0, 0);
 			else
 				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineMethodInfo, 0, 1, 2, 0);
 		}
@@ -1278,8 +1272,6 @@ void MCArrayOp::compile(MCSyntaxFactoryRef ctxt)
 		{
 			if (mode == TYPE_COLUMN)
 				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecSplitByColumnMethodInfo, 0, 0);
-			else if (mode == TYPE_ROW)
-				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecSplitByRowMethodInfo, 0, 0);
 			else
 				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecSplitMethodInfo, 0, 1, 2, 0);
 		}
