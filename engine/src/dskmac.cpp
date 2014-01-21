@@ -6565,6 +6565,27 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             return MCStringCopy(*t_newname, r_resolved_path);
     }
 	
+    virtual IO_handle DeployOpen(MCStringRef p_path, intenum_t p_mode)
+    {
+        if (p_mode != kMCSOpenFileModeCreate)
+            return OpenFile(p_path, p_mode, False);
+        
+        FILE *fptr;
+        IO_handle t_handle;
+        t_handle = NULL;
+        
+        MCAutoStringRefAsUTF8String t_path_utf;
+        if (!t_path_utf.Lock(p_path))
+            return NULL;
+        
+        fptr = fopen(*t_path_utf, IO_CREATE_MODE);
+
+        if (fptr != nil)
+            t_handle = new MCStdioFileHandle(fptr);
+        
+        return t_handle;
+    }
+    
 	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map)
     {
 #ifdef /* MCS_open_dsk_mac */ LEGACY_SYSTEM
@@ -6649,7 +6670,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (fptr != NULL)
         {
             created = False;
-            if (p_mode != kMCSystemFileModeRead)
+            if (p_mode != kMCSOpenFileModeRead)
             {
                 fclose(fptr);
                 fptr = NULL;

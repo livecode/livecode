@@ -999,6 +999,10 @@ IO_handle MCS_open(const char *p_path, const char *p_mode, Boolean p_map, Boolea
 }
 #endif 
 
+IO_handle MCS_deploy_open(MCStringRef path, intenum_t p_mode)
+{
+    return MCsystem -> DeployOpen(path, p_mode);
+}
 
 IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_driver, uint32_t p_offset)
 {

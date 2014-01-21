@@ -453,6 +453,11 @@ struct MCSystemInterface
 	virtual Boolean ChangePermissions(MCStringRef p_path, uint2 p_mask) = 0;
 	virtual uint2 UMask(uint2 p_mask) = 0;
 	
+    virtual IO_handle DeployOpen(MCStringRef p_path, intenum_t p_mode)
+    {
+        return OpenFile(p_path, p_mode, False);
+    }
+    
 	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map) = 0;
 	virtual IO_handle OpenFd(uint32_t fd, intenum_t p_mode) = 0;
     virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode) = 0;
