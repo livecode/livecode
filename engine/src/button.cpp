@@ -498,6 +498,10 @@ void MCButton::close()
 			tabs = NULL;
 			ntabs = 0;
 		}
+		// AL-2013-01-13 [[ Bug 11363 ]] Close menu on button close. 
+		if (state & CS_SUBMENU)
+			closemenu(True, True);
+
 		freemenu(False);
 		if (entry != NULL)
 		{
