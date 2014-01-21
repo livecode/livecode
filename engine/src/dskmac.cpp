@@ -847,7 +847,7 @@ static bool MCS_mac_specialfolder_to_mac_folder(MCStringRef p_type, uint32_t& r_
 	{
 		if (MCStringIsEqualTo(p_type, MCNameGetString(*(sysfolderlist[i].token)), kMCStringOptionCompareCaseless))
 		{
-			r_folder = sysfolderlist[i].macfolder;
+			r_folder = sysfolderlist[i].mactag;
 			r_domain = sysfolderlist[i].domain;
             return true;
 		}
