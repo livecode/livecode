@@ -447,7 +447,6 @@ void MCGraphicsContext::setbackground(const MCColor& c)
 
 void MCGraphicsContext::setdashes(uint16_t p_offset, const uint8_t *p_dashes, uint16_t p_length)
 {
-	//MCGFloat *t_lengths;
 	MCMemoryDeleteArray(m_dash_lengths);
 	m_dash_lengths = nil;
 	m_dash_count = 0;
@@ -506,6 +505,12 @@ void MCGraphicsContext::getfillstyle(uint2& style, MCPatternRef& p, int2& x, int
 
 void MCGraphicsContext::setlineatts(uint2 linesize, uint2 linestyle, uint2 capstyle, uint2 joinstyle)
 {
+	// MM-2014-01-21: [[ Bug 11671 ]]
+	if (capstyle & NoStartCap)
+		capstyle = capstyle ^ NoStartCap;
+	if (capstyle & NoEndCap)
+		capstyle = capstyle ^ NoEndCap;	
+	
 	// IM-2013-09-03: [[ RefactorGraphics ]] track the current linewidth setting
 	m_line_width = linesize;
 	m_line_style = linestyle;
