@@ -70,8 +70,10 @@ public:
 	// Add the given region to the window's dirty region.
 	void Invalidate(MCRegionRef region);
 	
-	// Make the window visible.
+	// Make the window visible as a normal window.
 	void Show(void);
+	void ShowAsSheet(MCPlatformWindowRef parent);
+	void ShowAsDrawer(MCPlatformWindowRef parent, MCPlatformWindowEdge edge);
 	
 	// Make the window invisible.
 	void Hide(void);
@@ -174,6 +176,9 @@ protected:
 		bool m_is_focused : 1;
 		bool m_is_iconified : 1;
 	};
+	MCPlatformWindowClass m_class;
+	MCPlatformWindowRef m_parent_window;
+	MCPlatformWindowEdge m_parent_window_edge;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

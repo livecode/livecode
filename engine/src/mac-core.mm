@@ -565,7 +565,7 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define SCREEN_HEIGHT 1200
+#define SCREEN_HEIGHT 1440
 
 void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint p, NSPoint& r_point)
 {

@@ -295,6 +295,25 @@ enum MCPlatformWindowStyle
 	kMCPlatformWindowStyleToolTip,
 };
 
+enum MCPlatformWindowClass
+{
+	kMCPlatformWindowClassNone,
+	kMCPlatformWindowClassNormal,
+	kMCPlatfowmWindowClassDialog,
+	kMCPlatformWindowClassSheet,
+	kMCPlatformWindowClassDrawer,
+};
+
+enum MCPlatformWindowEdge
+{
+	kMCPlatformWindowEdgeNone,
+	
+	KMCPlatformWindowEdgeTop,
+	kMCPlatformWindowEdgeLeft,
+	kMCPlatformWindowEdgeBottom,
+	kMCPlatformWindowEdgeRight,
+};
+
 void MCPlatformCreateWindow(MCPlatformWindowRef& r_window);
 void MCPlatformRetainWindow(MCPlatformWindowRef window);
 void MCPlatformReleaseWindow(MCPlatformWindowRef window);
@@ -303,6 +322,8 @@ void MCPlatformInvalidateWindow(MCPlatformWindowRef window, MCRegionRef region);
 void MCPlatformUpdateWindow(MCPlatformWindowRef window);
 
 void MCPlatformShowWindow(MCPlatformWindowRef window);
+void MCPlatformShowWindowAsSheet(MCPlatformWindowRef window, MCPlatformWindowRef parent_window);
+void MCPlatformShowWindowAsDrawer(MCPlatformWindowRef window, MCPlatformWindowRef parent_window, MCPlatformWindowEdge edge);
 void MCPlatformHideWindow(MCPlatformWindowRef window);
 void MCPlatformFocusWindow(MCPlatformWindowRef window);
 void MCPlatformRaiseWindow(MCPlatformWindowRef window);
