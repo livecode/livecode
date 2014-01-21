@@ -1150,7 +1150,7 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 					{
 						t_keyword[t_klength] = '#';
 						t_klength++;
-						t_index++;
+						t_char = next_valid_char(p_text, t_index);
 					}
 					t_end = t_index;
 					if (t_class == COLOURIZE_CLASS_KEYWORD)
