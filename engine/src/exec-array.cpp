@@ -181,7 +181,7 @@ void MCArraysExecCombineAsSet(MCExecContext& ctxt, MCArrayRef p_array, MCStringR
         }
     }
     
-    r_string = MCValueRetain(*t_string);
+    MCStringCopy(*t_string, r_string);
 }
 
 //////////
@@ -233,7 +233,7 @@ void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringR
         
     }
     
-    r_array = MCValueRetain(*t_array);
+    MCArrayCopy(*t_array, r_array);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
