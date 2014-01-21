@@ -112,5 +112,15 @@ private:
 	uint32_t m_dash_count;
 };
 
+// MW-2014-01-07: [[ Bug 11632 ]] The player object distinguishes between 'screen' and 'offscreen' - in the
+//   latter case it caches the bitmap and blits it rather than relying on the OS to overlay it. This derived
+//   class handles this case by changing the 'type' appropriately.
+class MCOffscreenGraphicsContext: public MCGraphicsContext
+{
+public:
+	MCOffscreenGraphicsContext(MCGContextRef ctxt): MCGraphicsContext(ctxt) {}
+
+	virtual MCContextType gettype(void) const { return CONTEXT_TYPE_OFFSCREEN; }
+};
 
 #endif
