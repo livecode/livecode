@@ -447,20 +447,25 @@ void MCGraphicsContext::setbackground(const MCColor& c)
 
 void MCGraphicsContext::setdashes(uint16_t p_offset, const uint8_t *p_dashes, uint16_t p_length)
 {
-	//MCGFloat *t_lengths;
 	MCMemoryDeleteArray(m_dash_lengths);
 	m_dash_lengths = nil;
 	m_dash_count = 0;
 	m_dash_phase = (MCGFloat)p_offset;
-
+	
 	if (p_length > 0)
 	{
 		m_dash_count = p_length;
 		/* UNCHECKED */ MCMemoryNewArray(m_dash_count, m_dash_lengths);
 		for (uint32_t i = 0; i < m_dash_count; i++)
-			m_dash_lengths[i] = (MCGFloat) p_dashes[i];
+		{
+			// MM-2014-01-21: [[ Bug 11695 ]] Fudge a dash length of 0 to 0.01 - was used previoulsy as start/end cap.
+			if (p_dashes[i] == 0)
+				m_dash_lengths[i] = (MCGFloat) (p_dashes[i] + 0.01f);
+			else
+				m_dash_lengths[i] = (MCGFloat) p_dashes[i];
+		}
 	}
-
+	
 	if (m_line_style != LineSolid)
 		MCGContextSetStrokeDashes(m_gcontext, m_dash_phase, m_dash_lengths, m_dash_count);
 }
