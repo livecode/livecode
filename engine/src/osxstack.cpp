@@ -315,7 +315,7 @@ void MCStack::realize()
 
 		// IM-2013-08-01: [[ ResIndependence ]] scale stack rect to device coords
 		// IM-2014-01-16: [[ StackScale ]] Use scaled view rect as window size
-	// IM-2014-01-17: [[ HiDPI ]] Scale device pixels to logical screen coords
+		// IM-2014-01-17: [[ HiDPI ]] Scale device pixels to logical screen coords
 		MCRectangle t_device_rect;
 		t_device_rect = MCRectangleGetScaledInterior(view_getrect(), MCResGetPixelScale() / MCResGetSystemScale());
 		
@@ -345,7 +345,7 @@ void MCStack::realize()
 		// IM-2014-01-17: [[ HiDPI ]] Add frameworkscaled flag when creating window to
 		// enable Hi-DPI rendering
 		wattributes |= kWindowCompositingAttribute | kWindowFrameworkScaledAttribute;
-
+		
 		long testdecorations = WD_TITLE | WD_MENU | WD_CLOSE | WD_MINIMIZE | WD_MAXIMIZE;
 
 		if (m_window_shape != NULL)
@@ -1383,7 +1383,6 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 			// MW-2011-09-12: [[ MacScroll ]] Make sure the top of the HIView takes into
 			//   account the scroll.
 			
-			// IM-2013-08-13: [[ ResIndependence ]] scale new stack window size to device space
 			MCRectangle t_stack_rect;
 			t_stack_rect = t_context->stack->getrect();
 			
@@ -1391,8 +1390,13 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 			MCRectangle t_rect;
 			t_rect = MCRectangleMake(0, 0, t_stack_rect.width, t_stack_rect.height);
 			
+			// IM-2013-08-13: [[ ResIndependence ]] scale new stack window size to device space
+			// IM-2014-01-21: [[ HiDPI ]] Scale device pixels to logical screen coords
+			MCGFloat t_scale;
+			t_scale = MCResGetPixelScale() / MCResGetSystemScale();
+			
 			MCRectangle t_device_rect;
-			t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_rect));
+			t_device_rect = MCRectangleGetScaledInterior(t_rect, t_scale);
 			
 			Rect t_bounds;
 			t_bounds = MCRectToMacRect(t_device_rect);
