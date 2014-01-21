@@ -1281,24 +1281,31 @@ private:
 	// keep chars before offset but skip all chars until next new line
 	void RemoveComment(uindex_t p_offset)
 	{
-		bool t_new_line = false;
+		// IM-2014-01-16: [[ Bug 11675 ]] Rework to avoid infinite loop when skipping comment
+		bool t_new_line;
+		t_new_line = false;
+		
+		uindex_t t_start;
+		t_start = m_start + p_offset;
+		
 		while (!t_new_line)
 		{
-			uindex_t t_start = m_start + p_offset;
-			while (!t_new_line && t_start < m_end)
+			uindex_t t_index;
+			t_index = 0;
+			
+			while (!t_new_line && t_start + t_index < m_end)
 			{
-				t_new_line = m_buffer[t_start] == '\n' || m_buffer[t_start] == '\r';
-				t_start++;
+				t_new_line = m_buffer[t_start + t_index] == '\n' || m_buffer[t_start + t_index] == '\r';
+				t_index++;
 			}
-			m_end = t_start;
-			if (t_new_line && t_start < m_end)
-				MCMemoryMove(m_buffer + m_start + p_offset, m_buffer + t_start, m_end - t_start);
 
-			m_end = t_start;
+			MCMemoryMove(m_buffer + t_start, m_buffer + t_start + t_index, t_index);
+
+			m_end -= t_index;
 
 			// fetch next char or end comment at eof
 			if (!t_new_line)
-				t_new_line = !Ensure(1);
+				t_new_line = !Ensure(p_offset + 1);
 		}
 	}
 
