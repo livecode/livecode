@@ -167,17 +167,12 @@ static bool MCFileFilterCreate(MCStringRef p_desc, MCFileFilter*& r_filter)
             self -> tag = MCValueRetain(t_items[0]);
     }
     
-    MCStringRef t_filetype;
-    MCStringRef t_extension;
-    
 	if (t_success)
 	{
         if (t_items . Count() < 2)
         {
-            MCStringCreateWithNativeChars((char_t *)"*", 1, t_filetype);
-            MCStringCreateWithNativeChars((char_t *)"*", 1, t_extension);
-            self -> filetypes = &t_filetype;
-            self -> extensions = &t_extension;
+            self -> filetypes = new MCStringRef(MCSTR("*"));
+            self -> extensions = new MCStringRef(MCSTR("*"));
             self -> extension_count = 1;
             self -> filetypes_count = 1;
         }
@@ -198,8 +193,7 @@ static bool MCFileFilterCreate(MCStringRef p_desc, MCFileFilter*& r_filter)
 		if (self -> extension_count == 1 && MCStringIsEmpty(self -> extensions[0]) && (t_items . Count() == 2 || (self -> filetypes_count == 1 && MCStringIsEmpty(self -> filetypes[0]))))
 		{
 			MCValueRelease(self -> extensions[0]);
-			/* UNCHECKED */ MCStringCreateWithNativeChars((char_t *)"*", 1, t_extension);
-            self -> extensions = &t_extension;
+            self -> extensions[0] = MCSTR("*");
 		}
 	}
     
