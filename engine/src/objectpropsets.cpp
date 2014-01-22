@@ -162,10 +162,14 @@ bool MCObjectPropertySet::restrict(MCStringRef p_string)
 {
     bool t_success;
     t_success = true;
+    MCAutoArrayRef t_split;
     MCArrayRef t_new_props;
-    MCArrayCreateMutable(t_new_props);
-    if (!MCStringSplit(p_string, MCSTR("\n"), nil, kMCCompareExact, t_new_props))
+    if (!MCStringSplit(p_string, MCSTR("\n"), nil, kMCCompareExact, &t_split))
         return false;
+    
+    if (!MCArrayMutableCopy(*t_split, t_new_props))
+        return false;
+    
     uinteger_t t_size;
     t_size = MCArrayGetCount(t_new_props);
     for (index_t i = 0; i < t_size && t_success; i++)
