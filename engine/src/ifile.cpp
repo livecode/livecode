@@ -490,6 +490,9 @@ bool MCImageGetFileRepForStackContext(const char *p_filename, MCStack *p_stack, 
 				t_path = nil;
 			}
 		}
+        // AL-2014-01-17: [[ Bug 11684 ]] If image file isn't found, return false
+        if (t_success)
+            t_success = t_rep != nil;
 	}
 	
 	if (t_success)
