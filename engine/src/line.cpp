@@ -178,10 +178,15 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 			  t_break_block -> textisspace(&t_text[t_break_index]))
 			t_break_index++;
 		
-		// Get the next block.
-		MCBlock *t_next_block;
-		t_next_block = t_break_block -> next();
-		
+		if (t_break_index < (t_break_block -> getindex() + t_break_block -> getsize()))
+			break;
+
+        // Get the next non empty block.
+        MCBlock *t_next_block;
+        t_next_block = t_break_block -> next();
+        while(t_next_block -> getsize() == 0 && t_next_block != p_sentinal)
+            t_next_block = t_next_block -> next();
+
 		// If we are at the end of the list of blocks there is nothing more to do.
 		if (t_next_block == p_sentinal)
 			break;
@@ -193,6 +198,7 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 		
 		// The next block starts with a space, so advance the break block.
 		t_break_block = t_next_block;
+		t_break_index = t_break_block -> getindex();
 	}
 	
 	// MW-2012-02-21: [[ LineBreak ]] Check to see if there is a vtab char before the
