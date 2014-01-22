@@ -523,6 +523,18 @@ template<typename T> void SetCharPropOfCharChunkOfParagraph(MCExecContext& ctxt,
     }
 #endif
 
+    // Sanity check for lengths
+    uindex_t t_para_len;
+    t_para_len = p_paragraph->gettextlength();
+    if (si > t_para_len)
+    {
+        si = ei = t_para_len;
+    }
+    else if (ei > t_para_len)
+    {
+        ei = t_para_len;
+    }
+    
     bool t_blocks_changed;
     t_blocks_changed = false;
 
@@ -695,7 +707,8 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
 
             // MCParagraph scope
             {
-                ei = MCU_min(ei, pgptr -> gettextlength());
+                uindex_t t_ei;
+                t_ei = MCU_min(ei, pgptr -> gettextlength());
                 bool t_blocks_changed;
                 t_blocks_changed = false;
 
@@ -717,7 +730,7 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                     }
                     else
                         bptr->close();
-                    if (t_block_index + t_block_length > ei)
+                    if (t_block_index + t_block_length > t_ei)
                     {
                         MCBlock *tbptr = new MCBlock(*bptr);
                         // MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
@@ -725,8 +738,8 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                         if (pgptr -> getopened())
                             tbptr->open(pgptr -> getparent() -> getfontref());
                         bptr->append(tbptr);
-                        bptr->SetRange(t_block_index, ei - t_block_index);
-                        tbptr->SetRange(ei, t_block_length - ei + t_block_index);
+                        bptr->SetRange(t_block_index, t_ei - t_block_index);
+                        tbptr->SetRange(t_ei, t_block_length - t_ei + t_block_index);
                         t_blocks_changed = true;
                     }
 
@@ -739,7 +752,7 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                     bptr = bptr->next();
                 }
                 while (t_block_index + t_block_length < (t_pg_length-1) // Length of paragraph without CR
-                       && t_block_index + t_block_length < ei);
+                       && t_block_index + t_block_length < t_ei);
 
                 if (t_blocks_changed)
                     pgptr -> setDirty();
@@ -1877,7 +1890,7 @@ void MCField::GetEffectiveBackColorOfCharChunk(MCExecContext& ctxt, uint32_t p_p
 
 void MCField::SetBackColorOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceNamedColor& color)
 {
-    SetCharPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, true, p_part_id, si, ei, &MCBlock::SetBackColor, color);
+    SetCharPropOfCharChunk< PodFieldPropType<MCInterfaceNamedColor> >(ctxt, this, false, p_part_id, si, ei, &MCBlock::SetBackColor, color);
 }
 
 //////////
@@ -2806,11 +2819,7 @@ void MCBlock::SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor &p_c
     {
         if (MCStringIsEmpty(p_color . name)) // no color set
         {
-            if (flags & F_HAS_BACK_COLOR)
-            {
-                delete atts -> color;
-                flags &= ~F_HAS_BACK_COLOR;
-            }
+            setbackcolor(nil);
             return;
         }
         MCscreen -> parsecolor(p_color . name, t_color, nil);

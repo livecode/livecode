@@ -85,6 +85,8 @@ enum
 	kMCStringFlagIsNative = 1 << 2,
     // If set, the string contains no non-BMP characters
     kMCStringFlagIsSimple = 1 << 3,
+    // If set, the string has been checked for simplicity
+    kMCStringFlagIsChecked = 1 << 4,
 };
 
 
