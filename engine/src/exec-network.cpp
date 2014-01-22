@@ -192,7 +192,7 @@ void MCNetworkEvalPeerAddress(MCExecContext& ctxt, MCNameRef p_socket, MCStringR
 			return;
 	}
 
-	ctxt.Throw();
+	// Backwards compatibility: never throws an error
 #endif
 }
 

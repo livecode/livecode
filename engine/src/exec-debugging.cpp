@@ -233,7 +233,7 @@ void MCDebuggingSetDebugContext(MCExecContext& ctxt, MCStringRef p_value)
 	t_in_quotes = false;
 	uindex_t t_offset;
 
-	for (t_offset = 0; t_offset < t_length; t_offset++)
+	/*for (t_offset = 0; t_offset < t_length; t_offset++)
 	{
 		if (!t_in_quotes && MCStringGetNativeCharAtIndex(p_value, t_offset) == ',')
 			break;
@@ -241,8 +241,10 @@ void MCDebuggingSetDebugContext(MCExecContext& ctxt, MCStringRef p_value)
 		if (MCStringGetNativeCharAtIndex(p_value, t_offset) == '"')
 			t_in_quotes = !t_in_quotes;
 	}
-
-	if (t_offset < t_length)
+     
+    if (t_offset < t_length)*/
+    
+	if (MCStringLastIndexOfChar(p_value, ',', t_length, kMCStringOptionCompareExact, t_offset))
 	{
 		MCAutoStringRef t_head;
 		MCAutoStringRef t_tail;
