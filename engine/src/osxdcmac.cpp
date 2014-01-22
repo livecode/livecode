@@ -764,15 +764,19 @@ Boolean MCScreenDC::dispatchevent(EventRecord &event, Boolean dispatch,
 			{
 				if (buffer[0] > 0 && buffer[0] != 127
 						&& keysyms[(event.message & keyCodeMask) >> 8] < 0xFF00)
+                {
 					if (buffer[0] >= 32)
 						keysym = buffer[0];
 					else
 						keysym = buffer[0] + 64;
-					else
-						if (MCmodifierstate & MS_SHIFT || MCmodifierstate & MS_CAPS_LOCK)
-							keysym = shift_keysyms[(event.message & keyCodeMask) >> 8];
-						else
-							keysym = keysyms[(event.message & keyCodeMask) >> 8];
+                }
+                else
+                {
+                    if (MCmodifierstate & MS_SHIFT || MCmodifierstate & MS_CAPS_LOCK)
+                        keysym = shift_keysyms[(event.message & keyCodeMask) >> 8];
+                    else
+                        keysym = keysyms[(event.message & keyCodeMask) >> 8];
+                }
 				/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)buffer, XLOOKUPSTRING_SIZE, &t_string);
 				MCdispatcher->wkup(activewindow, *t_string, keysym);
 				reset = True;
@@ -2263,7 +2267,7 @@ pascal OSErr TSMUnicodeNotFromInputHandler(const AppleEvent *theAppleEvent,
 	imetext[imetextsize] = '\0';
 
 	// Do ASCII codepoints the old-fashioned way
-	if (imetextsize == 2 && *(const unichar_t*)imetext < 0x7F)
+	if (imetextsize == 2 && *(const unichar_t*)imetext <= 0x7F)
 	{
 		delete[] imetext;
 		return paramErr;
