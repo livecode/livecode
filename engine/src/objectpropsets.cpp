@@ -31,6 +31,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_delimiter, MCStringRef*& r_array, uindex_t& r_count);
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCObjectPropertySet::clone(MCObjectPropertySet*& r_set)
 {
 	MCObjectPropertySet *t_new_set;
@@ -162,32 +166,26 @@ bool MCObjectPropertySet::restrict(MCStringRef p_string)
 {
     bool t_success;
     t_success = true;
-    MCAutoArrayRef t_split;
-    MCArrayRef t_new_props;
-    if (!MCStringSplit(p_string, MCSTR("\n"), nil, kMCCompareExact, &t_split))
+    MCAutoStringRefArray t_split;
+    if (!MCStringsSplit(p_string, '\n', t_split . PtrRef(), t_split . CountRef()))
         return false;
     
-    if (!MCArrayMutableCopy(*t_split, t_new_props))
-        return false;
-    
+    MCAutoArrayRef t_new_props;
+    MCArrayCreateMutable(&t_new_props);
     uinteger_t t_size;
-    t_size = MCArrayGetCount(t_new_props);
+    t_size = t_split . Count();
     for (index_t i = 0; i < t_size && t_success; i++)
     {
-        MCValueRef t_key_valueref;
-        if (t_success)
-            t_success = MCArrayFetchValueAtIndex(t_new_props, i + 1, t_key_valueref);
         MCNewAutoNameRef t_key_name;
         if (t_success)
-            t_success = MCNameCreate((MCStringRef)t_key_valueref, &t_key_name);
+            t_success = MCNameCreate(t_split[i], &t_key_name);
         MCValueRef t_value;
+        if (!MCArrayFetchValue(m_props, false, *t_key_name, t_value))
+            t_value = MCValueRetain(kMCEmptyString);
         if (t_success)
-            t_success = MCArrayFetchValue(m_props, false, *t_key_name, t_value);
-        if (t_success)
-            t_success = MCArrayStoreValue(t_new_props, false, *t_key_name, t_value);
+            t_success = MCArrayStoreValue(*t_new_props, false, *t_key_name, t_value);
     }
-    MCValueRelease(m_props);
-    m_props = t_new_props;
+    MCValueAssign(m_props, *t_new_props);
     return t_success;
 }
 
