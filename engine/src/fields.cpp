@@ -579,9 +579,26 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
 		focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 	}
 
-    findex_t oldsi = si;
-    
-	MCParagraph *toppgptr = fptr->getparagraphs();
+    MCParagraph *toppgptr = fptr->getparagraphs();
+
+    findex_t oldsi;
+    // 'put after' puts at PARAGRAPH_MAX_LEN...
+    if (si == PARAGRAPH_MAX_LEN)
+    {
+        MCParagraph* t_paragraph;
+        t_paragraph = fptr -> getparagraphs();
+        oldsi = 0;
+        // Loop up to the penultimate paragraph
+        while (t_paragraph -> next() != toppgptr)
+        {
+            oldsi += t_paragraph -> gettextlengthcr();
+            t_paragraph = t_paragraph -> next();
+        }
+        // Add the length of the last paragraph
+        oldsi += t_paragraph -> gettextlength();
+    }
+    else
+        oldsi = si;
 
 	MCParagraph *pgptr;
 	pgptr = verifyindices(toppgptr, si, ei);
