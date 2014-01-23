@@ -943,7 +943,7 @@ Exec_stat MCHandler::getvarnames(MCExecPoint& ep, Boolean all)
 
 void MCHandler::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value)
 {
-	MCScriptPoint sp(p_expression);
+    MCScriptPoint sp(ctxt, p_expression);
 	sp.sethandler(this);
     MCExpression *exp = NULL;
     Symbol_type type;
