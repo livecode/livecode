@@ -70,10 +70,8 @@ public:
 	// Add the given region to the window's dirty region.
 	void Invalidate(MCRegionRef region);
 	
-	// Make the window visible as a normal window.
+	// Make the window visible as the given class.
 	void Show(void);
-	void ShowAsSheet(MCPlatformWindowRef parent);
-	void ShowAsDrawer(MCPlatformWindowRef parent, MCPlatformWindowEdge edge);
 	
 	// Make the window invisible.
 	void Hide(void);
@@ -110,6 +108,9 @@ public:
 	void HandleUniconify(void);
 	void HandleFocus(void);
 	void HandleUnfocus(void);
+	
+	void HandleKeyDown(MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
+	void HandleKeyUp(MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 	
 	//////////
 	
@@ -176,7 +177,6 @@ protected:
 		bool m_is_focused : 1;
 		bool m_is_iconified : 1;
 	};
-	MCPlatformWindowClass m_class;
 	MCPlatformWindowRef m_parent_window;
 	MCPlatformWindowEdge m_parent_window_edge;
 };
@@ -202,6 +202,9 @@ void MCPlatformCallbackSendMouseRelease(MCPlatformWindowRef window, uint32_t but
 void MCPlatformCallbackSendMouseEnter(MCPlatformWindowRef window);
 void MCPlatformCallbackSendMouseLeave(MCPlatformWindowRef window);
 void MCPlatformCallbackSendMouseMove(MCPlatformWindowRef window, MCPoint location);
+
+void MCPlatformCallbackSendKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
+void MCPlatformCallbackSendKeyUp(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 
 void MCPlatformCallbackSendMenuUpdate(MCPlatformMenuRef menu);
 void MCPlatformCallbackSendMenuSelect(MCPlatformMenuRef menu, uindex_t item);

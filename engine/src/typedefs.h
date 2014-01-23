@@ -116,6 +116,8 @@ typedef double real64_t;
 typedef uint32_t uindex_t;
 typedef int32_t index_t;
 
+typedef uint32_t codepoint_t;
+
 #ifndef UINT8_MAX
 #define UINT8_MIN 0
 #define UINT8_MAX 255

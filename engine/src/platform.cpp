@@ -16,6 +16,9 @@ void MCPlatformHandleWindowFocus(MCPlatformWindowRef window);
 void MCPlatformHandleWindowUnfocus(MCPlatformWindowRef window);
 void MCPlatformHandleWindowRedraw(MCPlatformWindowRef window, MCPlatformSurfaceRef surface, MCRegionRef dirty_rgn);
 
+void MCPlatformHandleKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
+void MCPlatformHandleKeyUp(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
+
 void MCPlatformHandleMouseEnter(MCPlatformWindowRef window);
 void MCPlatformHandleMouseLeave(MCPlatformWindowRef window);
 void MCPlatformHandleMouseDown(MCPlatformWindowRef window, uint32_t button, uint32_t count);
@@ -132,6 +135,20 @@ void MCPlatformCallbackSendMouseMove(MCPlatformWindowRef p_window, MCPoint p_loc
 {
 	MCLog("Window(%p) -> MouseMove([%d, %d])", p_window, p_location . x, p_location . y);
 	MCPlatformHandleMouseMove(p_window, p_location);
+}
+
+//////////
+
+void MCPlatformCallbackSendKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
+{
+	MCLog("Window(%p) -> KeyDown(%04x, %06x, %06x)", p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
+	MCPlatformHandleKeyDown(p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
+}
+
+void MCPlatformCallbackSendKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
+{
+	MCLog("Window(%p) -> KeyUp(%04x, %06x, %06x)", p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
+	MCPlatformHandleKeyUp(p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
 }
 
 //////////

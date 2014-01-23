@@ -404,6 +404,16 @@ void MCPlatformWindow::HandleUnfocus(void)
 	MCPlatformCallbackSendWindowUnfocus(this);
 }
 
+void MCPlatformWindow::HandleKeyDown(MCPlatformKeyCode p_key_code, codepoint_t p_mapped_char, codepoint_t p_unmapped_char)
+{
+	MCPlatformCallbackSendKeyDown(this, p_key_code, p_mapped_char, p_unmapped_char);
+}
+
+void MCPlatformWindow::HandleKeyUp(MCPlatformKeyCode p_key_code, codepoint_t p_mapped_char, codepoint_t p_unmapped_char)
+{
+	MCPlatformCallbackSendKeyUp(this, p_key_code, p_mapped_char, p_unmapped_char);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Platform Window Procedural Wrappers

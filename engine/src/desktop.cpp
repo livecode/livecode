@@ -23,6 +23,7 @@
 #include "typedefs.h"
 #include "parsedef.h"
 #include "objdefs.h"
+#include "unicode.h"
 
 #include "execpt.h"
 #include "scriptpt.h"
@@ -293,6 +294,112 @@ void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_butto
 		
 		t_target -> message_with_args(MCM_mouse_release, p_button + 1);
 	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCPlatformHandleKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
+{
+	switch(p_key_code)
+	{
+		case kMCPlatformKeyCodeLeftShift:
+		case kMCPlatformKeyCodeRightShift:
+			MCmodifierstate |= MS_SHIFT;
+			return;
+		case kMCPlatformKeyCodeLeftControl:
+		case kMCPlatformKeyCodeRightControl:
+			// COCOA-TODO: Where should the control/command remapping happen?
+			MCmodifierstate |= MS_MOD2;
+			return;
+		case kMCPlatformKeyCodeLeftAlt:
+		case kMCPlatformKeyCodeRightAlt:
+			MCmodifierstate |= MS_MOD1;
+			return;
+		case kMCPlatformKeyCodeLeftMeta:
+		case kMCPlatformKeyCodeRightMeta:
+			// COCOA-TODO: Where should the control/command remapping happen?
+			MCmodifierstate |= MS_CONTROL;
+			return;
+		case kMCPlatformKeyCodeCapsLock:
+			MCmodifierstate |= MS_CAPS_LOCK;
+			return;
+	}
+	
+	if (p_mapped_codepoint == 0xffffffffU)
+	{
+		MCdispatcher -> wkdown(p_window, MCnullstring, p_key_code);
+		return;
+	}
+	
+	if (p_mapped_codepoint <= 0xffff)
+	{
+		uint16_t t_unicode_char;
+		t_unicode_char = p_mapped_codepoint & 0xffff;
+		
+		uint8_t t_native_char[2];
+		if (MCUnicodeMapToNative(&t_unicode_char, 1, t_native_char[0]))
+		{
+			t_native_char[1] = '\0';
+			MCdispatcher -> wkdown(p_window, (const char *)t_native_char, p_key_code);
+			return;
+		}
+	}
+	
+	if (!MCdispatcher -> wkdown(p_window, MCnullstring, p_key_code))
+		if (MCactivefield != nil)
+		{
+			// Handle unicode
+		}
+}
+
+void MCPlatformHandleKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
+{
+	switch(p_key_code)
+	{
+		case kMCPlatformKeyCodeLeftShift:
+		case kMCPlatformKeyCodeRightShift:
+			MCmodifierstate &= ~MS_SHIFT;
+			return;
+		case kMCPlatformKeyCodeLeftControl:
+		case kMCPlatformKeyCodeRightControl:
+			// COCOA-TODO: Where should the control/command remapping happen?
+			MCmodifierstate &= ~MS_MOD2;
+			return;
+		case kMCPlatformKeyCodeLeftAlt:
+		case kMCPlatformKeyCodeRightAlt:
+			MCmodifierstate &= ~MS_MOD1;
+			return;
+		case kMCPlatformKeyCodeLeftMeta:
+		case kMCPlatformKeyCodeRightMeta:
+			// COCOA-TODO: Where should the control/command remapping happen?
+			MCmodifierstate &= ~MS_CONTROL;
+			return;
+		case kMCPlatformKeyCodeCapsLock:
+			MCmodifierstate &= ~MS_CAPS_LOCK;
+			return;
+	}
+	
+	if (p_mapped_codepoint == 0xffffffffU)
+	{
+		MCdispatcher -> wkup(p_window, MCnullstring, p_key_code);
+		return;
+	}
+	
+	if (p_mapped_codepoint <= 0xffff)
+	{
+		uint16_t t_unicode_char;
+		t_unicode_char = p_mapped_codepoint & 0xffff;
+		
+		uint8_t t_native_char[2];
+		if (MCUnicodeMapToNative(&t_unicode_char, 1, t_native_char[0]))
+		{
+			t_native_char[1] = '\0';
+			MCdispatcher -> wkup(p_window, (const char *)t_native_char, p_key_code);
+			return;
+		}
+	}
+	
+	MCdispatcher -> wkup(p_window, MCnullstring, p_key_code);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

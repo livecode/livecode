@@ -16,10 +16,13 @@
 
 #include <Cocoa/Cocoa.h>
 
+#include <Carbon/Carbon.h>
+
 #include "core.h"
 #include "globdefs.h"
 #include "region.h"
 #include "graphics.h"
+#include "unicode.h"
 
 #include "platform.h"
 #include "platform-internal.h"
@@ -244,14 +247,98 @@
 
 - (void)flagsChanged: (NSEvent *)event
 {
+	// The type of modifier key is determined by the cocoa defined flags:
+	//   NSAlphaShiftKeyMask (CapsLock)
+	//   NSShiftKeyMask
+	//   NSControlKeyMask
+	//   NSAlternateKeyMask
+	//   NSCommandKeyMask
+	//   NSNumericPadKeyMask
+	//   NSHelpKeyMask
+	//   NSFunctionKeyMask
+	
+	// Whether it is the left or right variant is determined by other bits (which
+	// don't seem to have defines anywhere...):
+	//   left-control = 1 << 0
+	//   left-alt = 1 << 5
+	//   left-command = 1 << 2
+	//   right-command = 1 << 4
+	//   right-alt = 1 << 6
+	//   right-control = 1 << 13
+	
+	/*NSUInteger t_flags;
+	t_flags = [event modifierFlags];
+	
+	MCPlatformKeyCode t_key_code;
+	if ((t_flags & NSAlphaShiftKeyMask) != 0)
+		t_key_code = kMCPlatformKeyCodeCapsLock;
+	else if ((*/
+	//NSLog(@"Flags = %08x, KeyCode = %04x", [event modifierFlags], [event keyCode]);
+	
+	// The keyCode of the event contains the key that causes the change,
+	// where as the modifierFlags will indicate whether it is a down or up.
+	NSUInteger t_modifier_flag;
+	MCPlatformKeyCode t_key_code;
+	switch([event keyCode])
+	{
+		case kVK_Shift:
+			t_key_code = kMCPlatformKeyCodeLeftShift;
+			t_modifier_flag = NSShiftKeyMask;
+			break;
+		case kVK_RightShift:
+			t_key_code = kMCPlatformKeyCodeRightShift;
+			t_modifier_flag = NSShiftKeyMask;
+			break;
+		case kVK_Option:
+			t_key_code = kMCPlatformKeyCodeLeftAlt;
+			t_modifier_flag = NSAlternateKeyMask;
+			break;
+		case kVK_RightOption:
+			t_key_code = kMCPlatformKeyCodeRightAlt;
+			t_modifier_flag = NSAlternateKeyMask;
+			break;
+		case kVK_Control:
+			t_key_code = kMCPlatformKeyCodeLeftControl;
+			t_modifier_flag = NSControlKeyMask;
+			break;
+		case kVK_RightControl:
+			t_key_code = kMCPlatformKeyCodeRightControl;
+			t_modifier_flag = NSControlKeyMask;
+			break;
+		case kVK_Command:
+			t_key_code = kMCPlatformKeyCodeLeftMeta;
+			t_modifier_flag = NSCommandKeyMask;
+			break;
+		case 0x0036: /* kVK_RightCommand */
+			t_key_code = kMCPlatformKeyCodeRightMeta;
+			t_modifier_flag = NSCommandKeyMask;
+			break;
+		case kVK_Function: // COCOA-TODO
+		case kVK_Help: // COCOA-TODO
+		// ?? NSNumericPadMask ?? // COCOA-TODO
+		default:
+			// We don't recognise this modifier, so ignore it.
+			return;
+	}
+	
+	// Send a key up or key down event depending on whether the flag is now
+	// set.
+	MCMacPlatformWindow *t_window;
+	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	if (([event modifierFlags] & t_modifier_flag) != 0)
+		t_window -> ProcessKeyDown(t_key_code, 0xffffffffU, 0xffffffffU);
+	else
+		t_window -> ProcessKeyUp(t_key_code, 0xffffffffU, 0xffffffffU);
 }
 
 - (void)keyDown: (NSEvent *)event
 {
+	[self handleKeyPress: event isDown: YES];
 }
 
 - (void)keyUp: (NSEvent *)event
 {
+	[self handleKeyPress: event isDown: NO];
 }
 
 //////////
@@ -277,6 +364,50 @@
 	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
 	
 	t_window -> ProcessMousePress([event buttonNumber], pressed == YES);
+}
+					 
+- (void)handleKeyPress: (NSEvent *)event isDown: (BOOL)pressed
+{	
+	MCPlatformKeyCode t_key_code;
+	MCMacMapKeyCode([event keyCode], t_key_code);
+	
+	codepoint_t t_mapped_codepoint;
+	if (!MCMacMapNSStringToCodepoint([event characters], t_mapped_codepoint))
+		t_mapped_codepoint = 0xffffffffU;
+	
+	codepoint_t t_unmapped_codepoint;
+	if (!MCMacMapNSStringToCodepoint([event charactersIgnoringModifiers], t_unmapped_codepoint))
+		t_unmapped_codepoint = 0xffffffffU;
+
+	// The unicode range 0xF700 - 0xF8FF is reserved by the system to indicate
+	// keys which have no printable value, but represent an action (such as F11,
+	// PageUp etc.). We don't want this mapping as we do it ourselves from the
+	// keycode, so if the mapped codepoint is in this range we reset it.
+	if (t_mapped_codepoint >= 0xf700 && t_mapped_codepoint < 0xf8ff)
+		t_mapped_codepoint = t_unmapped_codepoint = 0xffffffffU;
+	
+	// Now, if we have an unmapped codepoint, but no mapped codepoint then we
+	// propagate the unmapped codepoint as the mapped codepoint. This is so that
+	// dead-keys (when input methods are turned off) propagate an appropriate
+	// char (e.g. alt-e generates no mapped codepoint, but we want an e).
+	if (t_mapped_codepoint == 0xffffffffU)
+		t_mapped_codepoint = t_unmapped_codepoint;
+	
+	// Finally we process.
+	MCMacPlatformWindow *t_window;
+	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	if (pressed)
+		t_window -> ProcessKeyDown(t_key_code, t_mapped_codepoint, t_unmapped_codepoint);
+	else
+		t_window -> ProcessKeyUp(t_key_code, t_mapped_codepoint, t_unmapped_codepoint);
+	
+#if 0
+	NSLog(@"Keycode = %04x", [event keyCode]);
+	if ([[event characters] length] > 0)
+		NSLog(@"Chars[0] = %04x (length = %d)", [[event characters] characterAtIndex: 0], [[event characters] length]);
+	if ([[event charactersIgnoringModifiers] length] > 0)
+		NSLog(@"CharsIgnoringMods[0] = %04x (length = %d)", [[event charactersIgnoringModifiers] characterAtIndex: 0], [[event charactersIgnoringModifiers] length]);
+#endif
 }
 
 //////////
@@ -425,6 +556,16 @@ void MCMacPlatformWindow::ProcessMouseMove(NSPoint p_location_cocoa)
 void MCMacPlatformWindow::ProcessMousePress(NSInteger p_button, bool p_is_down)
 {
 	MCMacPlatformHandleMousePress(p_button, p_is_down);
+}
+
+void MCMacPlatformWindow::ProcessKeyDown(MCPlatformKeyCode p_key_code, codepoint_t p_unmapped_char, codepoint_t p_mapped_char)
+{
+	HandleKeyDown(p_key_code, p_unmapped_char, p_mapped_char);
+}
+
+void MCMacPlatformWindow::ProcessKeyUp(MCPlatformKeyCode p_key_code, codepoint_t p_unmapped_char, codepoint_t p_mapped_char)
+{
+	HandleKeyUp(p_key_code, p_unmapped_char, p_mapped_char);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -676,6 +817,186 @@ void MCPlatformWindowMaskRetain(MCPlatformWindowMaskRef p_mask)
 
 void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef p_mask)
 {
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPlatformKeyCode s_mac_keycode_map[] =
+{
+	/* 0x00 */ kMCPlatformKeyCodeA,
+	/* 0x01 */ kMCPlatformKeyCodeS,
+	/* 0x02 */ kMCPlatformKeyCodeD,
+	/* 0x03 */ kMCPlatformKeyCodeF,
+	/* 0x04 */ kMCPlatformKeyCodeH,
+	/* 0x05 */ kMCPlatformKeyCodeG,
+	/* 0x06 */ kMCPlatformKeyCodeZ,
+	/* 0x07 */ kMCPlatformKeyCodeX,
+	/* 0x08 */ kMCPlatformKeyCodeC,
+	/* 0x09 */ kMCPlatformKeyCodeV,
+	/* 0x0A */ kMCPlatformKeyCodeISOSection,
+	/* 0x0B */ kMCPlatformKeyCodeB,
+	/* 0x0C */ kMCPlatformKeyCodeQ,
+	/* 0x0D */ kMCPlatformKeyCodeW,
+	/* 0x0E */ kMCPlatformKeyCodeE,
+	/* 0x0F */ kMCPlatformKeyCodeR,
+	/* 0x10 */ kMCPlatformKeyCodeY,
+	/* 0x11 */ kMCPlatformKeyCodeT,
+	/* 0x12 */ kMCPlatformKeyCode1,
+	/* 0x13 */ kMCPlatformKeyCode2,
+	/* 0x14 */ kMCPlatformKeyCode3,
+	/* 0x15 */ kMCPlatformKeyCode4,
+	/* 0x16 */ kMCPlatformKeyCode6,
+	/* 0x17 */ kMCPlatformKeyCode5,
+	/* 0x18 */ kMCPlatformKeyCodeEqual,
+	/* 0x19 */ kMCPlatformKeyCode9,
+	/* 0x1A */ kMCPlatformKeyCode7,
+	/* 0x1B */ kMCPlatformKeyCodeMinus,
+	/* 0x1C */ kMCPlatformKeyCode8,
+	/* 0x1D */ kMCPlatformKeyCode0,
+	/* 0x1E */ kMCPlatformKeyCodeRightBracket,
+	/* 0x1F */ kMCPlatformKeyCodeO,
+	/* 0x20 */ kMCPlatformKeyCodeU,
+	/* 0x21 */ kMCPlatformKeyCodeLeftBracket,
+	/* 0x22 */ kMCPlatformKeyCodeI,
+	/* 0x23 */ kMCPlatformKeyCodeP,
+	/* 0x24 */ kMCPlatformKeyCodeReturn,
+	/* 0x25 */ kMCPlatformKeyCodeL,
+	/* 0x26 */ kMCPlatformKeyCodeJ,
+	/* 0x27 */ kMCPlatformKeyCodeQuote,
+	/* 0x28 */ kMCPlatformKeyCodeK,
+	/* 0x29 */ kMCPlatformKeyCodeSemicolon,
+	/* 0x2A */ kMCPlatformKeyCodeBackslash,
+	/* 0x2B */ kMCPlatformKeyCodeComma,
+	/* 0x2C */ kMCPlatformKeyCodeSlash,
+	/* 0x2D */ kMCPlatformKeyCodeN,
+	/* 0x2E */ kMCPlatformKeyCodeM,
+	/* 0x2F */ kMCPlatformKeyCodePeriod,
+	/* 0x30 */ kMCPlatformKeyCodeTab,
+	/* 0x31 */ kMCPlatformKeyCodeSpace,
+	/* 0x32 */ kMCPlatformKeyCodeGrave,
+	/* 0x33 */ kMCPlatformKeyCodeBackspace,
+	/* 0x34 */ kMCPlatformKeyCodeUndefined,
+	/* 0x35 */ kMCPlatformKeyCodeEscape,
+	/* 0x36 */ kMCPlatformKeyCodeRightCommand,
+	/* 0x37 */ kMCPlatformKeyCodeLeftCommand,
+	/* 0x38 */ kMCPlatformKeyCodeLeftShift,
+	/* 0x39 */ kMCPlatformKeyCodeCapsLock,
+	/* 0x3A */ kMCPlatformKeyCodeLeftOption,
+	/* 0x3B */ kMCPlatformKeyCodeLeftControl,
+	/* 0x3C */ kMCPlatformKeyCodeRightShift,
+	/* 0x3D */ kMCPlatformKeyCodeRightOption,
+	/* 0x3E */ kMCPlatformKeyCodeRightControl,
+	/* 0x3F */ kMCPlatformKeyCodeFunction,
+	/* 0x40 */ kMCPlatformKeyCodeF17,
+	/* 0x41 */ kMCPlatformKeyCodeKeypadDecimal,
+	/* 0x42 */ kMCPlatformKeyCodeUndefined,
+	/* 0x43 */ kMCPlatformKeyCodeKeypadMultiply,
+	/* 0x44 */ kMCPlatformKeyCodeUndefined,
+	/* 0x45 */ kMCPlatformKeyCodeKeypadAdd,
+	/* 0x46 */ kMCPlatformKeyCodeUndefined,
+	/* 0x47 */ kMCPlatformKeyCodeNumLock, // COCO-TODO: This should be keypad-clear - double-check!
+	/* 0x48 */ kMCPlatformKeyCodeVolumeUp,
+	/* 0x49 */ kMCPlatformKeyCodeVolumeDown,
+	/* 0x4A */ kMCPlatformKeyCodeMute,
+	/* 0x4B */ kMCPlatformKeyCodeKeypadDivide,
+	/* 0x4C */ kMCPlatformKeyCodeKeypadEnter,
+	/* 0x4D */ kMCPlatformKeyCodeUndefined,
+	/* 0x4E */ kMCPlatformKeyCodeKeypadSubtract,
+	/* 0x4F */ kMCPlatformKeyCodeF18,
+	/* 0x50 */ kMCPlatformKeyCodeF19,
+	/* 0x51 */ kMCPlatformKeyCodeKeypadEqual,
+	/* 0x52 */ kMCPlatformKeyCodeKeypad0,
+	/* 0x53 */ kMCPlatformKeyCodeKeypad1,
+	/* 0x54 */ kMCPlatformKeyCodeKeypad2,
+	/* 0x55 */ kMCPlatformKeyCodeKeypad3,
+	/* 0x56 */ kMCPlatformKeyCodeKeypad4,
+	/* 0x57 */ kMCPlatformKeyCodeKeypad5,
+	/* 0x58 */ kMCPlatformKeyCodeKeypad6,
+	/* 0x59 */ kMCPlatformKeyCodeKeypad7,
+	/* 0x5A */ kMCPlatformKeyCodeF20,
+	/* 0x5B */ kMCPlatformKeyCodeKeypad8,
+	/* 0x5C */ kMCPlatformKeyCodeKeypad9,
+	/* 0x5D */ kMCPlatformKeyCodeJISYen,
+	/* 0x5E */ kMCPlatformKeyCodeJISUnderscore,
+	/* 0x5F */ kMCPlatformKeyCodeJISKeypadComma,
+	/* 0x60 */ kMCPlatformKeyCodeF5,
+	/* 0x61 */ kMCPlatformKeyCodeF6,
+	/* 0x62 */ kMCPlatformKeyCodeF7,
+	/* 0x63 */ kMCPlatformKeyCodeF3,
+	/* 0x64 */ kMCPlatformKeyCodeF8,
+	/* 0x65 */ kMCPlatformKeyCodeF9,
+	/* 0x66 */ kMCPlatformKeyCodeJISEisu,
+	/* 0x67 */ kMCPlatformKeyCodeF11,
+	/* 0x68 */ kMCPlatformKeyCodeJISKana,
+	/* 0x69 */ kMCPlatformKeyCodeF13,
+	/* 0x6A */ kMCPlatformKeyCodeF16,
+	/* 0x6B */ kMCPlatformKeyCodeF14,
+	/* 0x6C */ kMCPlatformKeyCodeUndefined,
+	/* 0x6D */ kMCPlatformKeyCodeF10,
+	/* 0x6E */ kMCPlatformKeyCodeUndefined,
+	/* 0x6F */ kMCPlatformKeyCodeF12,
+	/* 0x70 */ kMCPlatformKeyCodeUndefined,
+	/* 0x71 */ kMCPlatformKeyCodeF15,
+	/* 0x72 */ kMCPlatformKeyCodeHelp,
+	/* 0x73 */ kMCPlatformKeyCodeBegin,
+	/* 0x74 */ kMCPlatformKeyCodePrevious,
+	/* 0x75 */ kMCPlatformKeyCodeDelete,
+	/* 0x76 */ kMCPlatformKeyCodeF4,
+	/* 0x77 */ kMCPlatformKeyCodeEnd,
+	/* 0x78 */ kMCPlatformKeyCodeF2,
+	/* 0x79 */ kMCPlatformKeyCodeNext,
+	/* 0x7A */ kMCPlatformKeyCodeF1,
+	/* 0x7B */ kMCPlatformKeyCodeLeft,
+	/* 0x7C */ kMCPlatformKeyCodeRight,
+	/* 0x7D */ kMCPlatformKeyCodeDown,
+	/* 0x7E */ kMCPlatformKeyCodeUp,
+	/* 0x7F */ kMCPlatformKeyCodeUndefined,
+};
+
+bool MCMacMapKeyCode(uint32_t p_mac_keycode, MCPlatformKeyCode& r_keycode)
+{
+	if (p_mac_keycode > 0x7f)
+		return false;
+	
+	if (s_mac_keycode_map[p_mac_keycode] == kMCPlatformKeyCodeUndefined)
+		return false;
+	
+	r_keycode = s_mac_keycode_map[p_mac_keycode];
+
+	return true;
+}
+
+bool MCMacMapNSStringToCodepoint(NSString *p_string, codepoint_t& r_codepoint)
+{
+	// If the length of the string is zero, do nothing.
+	if ([p_string length] == 0)
+		return false;
+	
+	// If the length of the string > 0 then do nothing.
+	if ([p_string length] > 2)
+		return false;
+	
+	// If the length of the string is one, its easy.
+	if ([p_string length] == 1)
+	{
+		r_codepoint = [p_string characterAtIndex: 0];
+		return true;
+	}
+	
+	// Otherwise check for surrogate pairs.
+	unichar t_high, t_low;
+	t_high = [p_string characterAtIndex: 0];
+	t_low = [p_string characterAtIndex: 1];
+	
+	// If we don't have a high then a low, do nothing.
+	if (!MCUnicodeCodepointIsHighSurrogate(t_high) ||
+		!MCUnicodeCodepointIsLowSurrogate(t_low))
+		return false;
+	
+	// We have a valid surrogate pair so return its value!
+	r_codepoint = ((t_high - 0xD800) << 10) | (t_low - 0xDC00);
+	
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

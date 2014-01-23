@@ -133,6 +133,7 @@ class MCMacPlatformSurface;
 
 - (void)handleMouseMove: (NSEvent *)event;
 - (void)handleMousePress: (NSEvent *)event isDown: (BOOL)pressed;
+- (void)handleKeyPress: (NSEvent *)event isDown: (BOOL)pressed;
 
 //////////
 
@@ -200,6 +201,9 @@ public:
 	void ProcessMouseMove(NSPoint location);
 	void ProcessMousePress(NSInteger button, bool is_down);
 	
+	void ProcessKeyDown(MCPlatformKeyCode key_code, codepoint_t unmapped_char, codepoint_t mapped_char);
+	void ProcessKeyUp(MCPlatformKeyCode key_code, codepoint_t unmapped_char, codepoint_t mapped_char);
+	
 protected:
 	virtual void DoRealize(void);
 	virtual void DoSynchronize(void);
@@ -256,6 +260,9 @@ private:
 
 void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_is_down);
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_location);
+
+bool MCMacMapKeyCode(uint32_t mac_key_code, MCPlatformKeyCode& r_key_code);
+bool MCMacMapNSStringToCodepoint(NSString *string, codepoint_t& r_codepoint);
 
 void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint point, NSPoint& r_point);
 void MCMacPlatformMapScreenNSPointToMCPoint(NSPoint point, MCPoint& r_point);
