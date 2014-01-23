@@ -1064,15 +1064,28 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	uint32_t t_width, t_height;
 	int32_t t_x, t_y;
 	
-	// IM-2014-01-20: [[ HiDPI ]] Improve scaled UI appearance by rendering to the temporary bitmap with the scale transform.
+	// IM-2014-01-23: [[ HiDPI ]] OSX theme rendering only supports 2x scale transform,
+	// so limit transform scale to 1.0 or 2.0
+	MCGFloat t_ui_scale;
+	t_ui_scale = 1.0;
+	
 	if (MCGAffineTransformIsRectangular(t_transform))
 	{
-		// Copy the MCGContext transform to be applied to the CGContext
-		t_cg_transform = MCGAffineTransformToCGAffineTransform(t_transform);
+		MCGFloat t_transform_scale;
+		t_transform_scale = MCMax(MCAbs(t_transform.a), MCAbs(t_transform.d));
 		
-		// calculate transformed destination rect and device buffer size & origin
+		if (t_transform_scale > 1.0)
+			t_ui_scale = 2.0;
+	}
+	
+	// IM-2014-01-20: [[ HiDPI ]] Improve scaled UI appearance by rendering to the temporary bitmap with the scale transform.
+	if (t_ui_scale != 1.0)
+	{
+		t_cg_transform = CGAffineTransformMakeScale(t_ui_scale, t_ui_scale);
+		
+		// calculate scaled destination rect and device buffer size & origin
 		MCGRectangle t_scaled_bounds;
-		t_scaled_bounds = MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(t_rect), t_transform);
+		t_scaled_bounds = MCGRectangleScale(MCRectangleToMCGRectangle(t_rect), t_ui_scale);
 		
 		MCRectangle t_int_bounds;
 		t_int_bounds = MCGRectangleGetIntegerBounds(t_scaled_bounds);
@@ -1084,7 +1097,7 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 		t_y = t_int_bounds.y;
 		
 		// Caculate new destination rect for temporary image
-		t_dst = MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(t_int_bounds), MCGAffineTransformInvert(t_transform));
+		t_dst = MCGRectangleScale(MCRectangleToMCGRectangle(t_int_bounds), 1 / t_ui_scale);
 	}
 	else
 	{
@@ -1122,7 +1135,7 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 		// Relocate origin to top-left of destination rect
 		CGContextTranslateCTM(t_cgcontext, -(CGFloat)t_x, -(CGFloat)t_y);
 		
-		// Apply any scaling transform from the graphics context
+		// Apply UI scaling transform
 		CGContextConcatCTM(t_cgcontext, t_cg_transform);
 		
 		MCMacDrawTheme(p_type, *p_info_ptr, t_cgcontext);
