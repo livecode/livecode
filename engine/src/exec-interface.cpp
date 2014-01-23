@@ -3947,7 +3947,10 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 
 	// Next, populate the MCSortnodes with all the items to be sorted
     for (uindex_t i = 0; i < t_chunks . Count(); i++)
+    {
         MCInterfaceExecSortAddItem(ctxt, t_items . Ptr(), t_item_count, p_form, t_chunks[i], p_by);
+        t_items[t_item_count - 1] . data = (void *)t_chunks[i];
+    }
 
 	// Sort the array
 	MCU_sort(t_items.Ptr(), t_item_count, p_direction, (Sort_type)p_form);
@@ -3958,14 +3961,7 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 
     uindex_t i;
 	for (i = 0; i < t_item_count; i++)
-        if (p_form == ST_TEXT)
-            MCListAppend(*t_list, t_items[i] . svalue);
-        else
-        {
-            MCAutoStringRef t_number;
-            ctxt . ConvertToString(t_items[i] . nvalue, &t_number);
-            MCListAppend(*t_list, *t_number);
-        }
+        MCListAppend(*t_list, (MCStringRef)t_items[i] . data);
 
     if (t_trailing_delim || i < t_item_count - 1)
         MCListAppend(*t_list, kMCEmptyString);
