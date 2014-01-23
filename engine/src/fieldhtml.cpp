@@ -973,9 +973,6 @@ struct import_html_t
 	uint8_t *bytes;
 	uint32_t byte_count;
 	uint32_t byte_capacity;
-	
-	// If true, then the input html must be considered to be encoded in utf-8.
-	bool is_utf8;
 };
 
 static void import_html_copy_style(const MCFieldCharacterStyle& p_src, MCFieldCharacterStyle& r_dst)
@@ -1482,16 +1479,14 @@ static void import_html_append_utf8_chars(import_html_t& ctxt, const char *p_cha
 		if (t_next_ptr - p_chars > 0)
 		{
             // Convert UTF8 to UTF16.
-            MCAutoStringRef t_utf8_string;
-            MCAutoDataRef t_utf16_data;
-            /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)p_chars,  t_next_ptr - p_chars, &t_utf8_string);
-            /* UNCHECKED */ MCStringEncode(*t_utf8_string, kMCStringEncodingUTF16, false, &t_utf16_data);
+            MCAutoStringRef t_string;
+            /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_chars, t_next_ptr - p_chars, kMCStringEncodingUTF8, false, &t_string);
 			
 			// Append the chars one by one.
-			const uint16_t *t_unicode_chars;
-			uint32_t t_unicode_char_count;
-			t_unicode_chars = (const uint16_t *)MCDataGetBytePtr(*t_utf16_data);
-			t_unicode_char_count = MCDataGetLength(*t_utf16_data) / 2;
+			const unichar_t *t_unicode_chars;
+			uindex_t t_unicode_char_count;
+			t_unicode_chars = MCStringGetCharPtr(*t_string);
+			t_unicode_char_count = MCStringGetLength(*t_string);
 			for(uindex_t i = 0; i < t_unicode_char_count; i++)
 				import_html_append_unicode_char(ctxt, t_unicode_chars[i]);
 		}
@@ -1935,10 +1930,11 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 MCParagraph *MCField::importhtmltext(MCStringRef p_data)
 {
     MCAutoPointer<char> t_data;
-    /* UNCHECKED */ MCStringConvertToCString(p_data, &t_data);
+    uindex_t t_length;
+    /* UNCHECKED */ MCStringConvertToUTF8(p_data, &t_data, t_length);
 	const char *t_ptr, *t_limit;
 	t_ptr = *t_data;
-	t_limit = t_ptr + MCStringGetLength(p_data);
+	t_limit = t_ptr + t_length;
 	
 	import_html_t ctxt;
 	memset(&ctxt, 0, sizeof(import_html_t));
@@ -1973,13 +1969,10 @@ MCParagraph *MCField::importhtmltext(MCStringRef p_data)
 			t_ptr += 1;
 		}
 		
-		// If we found any native chars to output, do so.
+		// If we found any chars to output, do so.
 		if (t_start_ptr != t_ptr)
 		{
-			if (!ctxt . is_utf8)
-				import_html_append_native_chars(ctxt, t_start_ptr, t_ptr - t_start_ptr);
-			else
-				import_html_append_utf8_chars(ctxt, t_start_ptr, t_ptr - t_start_ptr);
+            import_html_append_utf8_chars(ctxt, t_start_ptr, t_ptr - t_start_ptr);
 			t_saw_start_tag = false;
 		}
 		
@@ -2026,23 +2019,8 @@ MCParagraph *MCField::importhtmltext(MCStringRef p_data)
 					break;
 					
 				// MW-2012-11-19: Add support for UTF-8 htmlText.
+                // [[ Unicodify ]] Everything is now UTF8.
 				case kImportHtmlTagMeta:
-					if (!t_tag . is_terminator)
-					{
-						bool t_is_utf8;
-						t_is_utf8 = false;
-						for(uint32_t i = 0; i < t_tag . attr_count; i++)
-							if (t_tag . attrs[i] . type == kImportHtmlAttrContent || t_tag . attrs[i] . type == kImportHtmlAttrCharset)
-								if (MCCStringContains(t_tag . attrs[i] . value, "utf-8"))
-								{
-									t_is_utf8 = true;
-									break;
-								}
-								
-						// If the charset of content attr contained 'utf-8' then switch
-						// to that mode.
-						ctxt . is_utf8 = t_is_utf8;
-					}
 					break;
 				
 				// The <li> tag causes a paragraph break.
