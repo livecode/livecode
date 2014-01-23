@@ -559,7 +559,7 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 		if (MCModeShouldQueueOpeningStacks())
 		{
 			MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
-			MCValueAssign(MCstacknames[MCnstacks++], *t_full_path_name);
+			MCstacknames[MCnstacks++] = MCValueRetain(*t_full_path_name);
 		}
 		else
 		{
