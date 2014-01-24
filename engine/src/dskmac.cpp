@@ -8034,7 +8034,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         for (i = 0; i < osancomponents; i++)
         {
             if (l == strlen(osacomponents[i].compname)
-                && !MCStringIsEqualToCString(p_language, osacomponents[i].compname, kMCCompareCaseless))
+                && MCStringIsEqualToCString(p_language, osacomponents[i].compname, kMCCompareCaseless))
             {
                 posacomp = &osacomponents[i];
                 break;

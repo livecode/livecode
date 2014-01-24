@@ -360,7 +360,7 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
 	MCNameRef t_key;
 	MCValueRef t_value;
 	uintptr_t t_iterator;
-    const byte_t *t_data_ptr;
+    const byte_t *t_data_ptr, *t_data_end;
     Parse_stat ps;
     MCScriptPoint *sp = nil;
     int4 count = 0;
@@ -400,6 +400,7 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             
             t_length = MCDataGetLength(*t_data);
             t_data_ptr = MCDataGetBytePtr(*t_data);
+            t_data_end = t_data_ptr + t_length;
         }
         else
         {
@@ -463,6 +464,8 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                 case FU_BYTE:
                 {
                     MCDataCreateWithBytes(t_data_ptr++, 1, &t_byte);
+                    if (t_data_ptr == t_data_end)
+                        endnext = true;
                 }
                     break;
                     
@@ -509,7 +512,7 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             // Set the loop variable to whatever the value was in the last iteration.
             if (each == FU_BYTE)
                 loopvar -> set(ctxt, *t_byte);
-            if (each != FU_ELEMENT && each != FU_KEY)
+            else if (each != FU_ELEMENT && each != FU_KEY)
                 loopvar -> set(ctxt, *t_unit);
         }
         else
@@ -518,11 +521,16 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
         if (!done)
             MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);
         
-        if (done)
+        if (endnext)
         {
             // Reset the loop variable to whatever the value was in the last iteration.
-            if (loopvar != nil && each != FU_ELEMENT && each != FU_KEY)
-                loopvar->set(ctxt, *t_unit);
+            if (loopvar != nil)
+            {
+                if (each == FU_BYTE)
+                    loopvar -> set(ctxt, *t_byte);
+                else if (each != FU_ELEMENT && each != FU_KEY)
+                    loopvar -> set(ctxt, *t_unit);
+            }
         }
         
         done = done || endnext;

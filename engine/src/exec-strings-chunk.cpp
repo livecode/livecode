@@ -1071,7 +1071,10 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             
             // calculate the length of the line / item
             if (!MCStringFirstIndexOfChar(p_string, t_delimiter, t_offset, kMCCompareExact, t_offset))
+            {
                 x_range . length = t_length - t_offset;
+                r_last = true;
+            }
             else
                 x_range . length = t_offset - x_range . offset;
         }
@@ -1089,6 +1092,9 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
                 return false;
             
             MCStringsSkipWord(ctxt, p_string, false, t_offset);
+            
+            if (t_offset == t_length)
+                r_last = true;
             
             x_range . length = t_offset - x_range . offset;
         }
@@ -1113,7 +1119,10 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             t_pos += sp . getindex();
 
             if (ps == PS_ERROR || ps == PS_EOF)
+            {
                 x_range . length = t_length - t_offset;
+                r_last = true;
+            }
             else
                 x_range . length = MCStringGetLength(sp.gettoken_stringref());
             
@@ -1134,11 +1143,18 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             
             // restore original offset.
             x_range . offset += t_cu_offset;
+            
+            if (t_offset == t_end_index)
+                r_last = true;
         }
             return true;
             
         case CT_CODEUNIT:
             x_range . length = 1;
+            
+            if (t_offset == t_end_index)
+                r_last = true;
+            
             return true;
             
         default:
