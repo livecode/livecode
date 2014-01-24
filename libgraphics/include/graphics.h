@@ -721,6 +721,25 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef context, const unichar_t *t
 ////////////////////////////////////////////////////////////////////////////////
 
 // Transforms
+
+static inline void MCGAffineTransformSet(MCGAffineTransform &x_transform, MCGFloat a, MCGFloat b, MCGFloat c, MCGFloat d, MCGFloat tx, MCGFloat ty)
+{
+	x_transform.a = a;
+	x_transform.b = b;
+	x_transform.c = c;
+	x_transform.d = d;
+	x_transform.tx = tx;
+	x_transform.ty = ty;
+}
+
+static inline MCGAffineTransform MCGAffineTransformMake(MCGFloat a, MCGFloat b, MCGFloat c, MCGFloat d, MCGFloat tx, MCGFloat ty)
+{
+	MCGAffineTransform t_transform;
+	MCGAffineTransformSet(t_transform, a, b, c, d, tx, ty);
+	
+	return t_transform;
+}
+
 MCGAffineTransform MCGAffineTransformMakeIdentity(void);
 MCGAffineTransform MCGAffineTransformMakeRotation(MCGFloat p_angle);
 MCGAffineTransform MCGAffineTransformMakeTranslation(MCGFloat p_xoffset, MCGFloat p_yoffset);

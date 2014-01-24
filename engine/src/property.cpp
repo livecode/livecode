@@ -3651,7 +3651,11 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 		break;
 	// IM-2013-12-04: [[ PixelScale ]] Global property systemPixelScale returns the pixel scale as determined by the OS
 	case P_SYSTEM_PIXEL_SCALE:
-		ep.setnvalue(MCResGetSystemScale());
+		// IM-2014-01-24: [[ HiDPI ]] systemPixelScale now returns the maximum scale on all displays
+		MCGFloat t_scale;
+		t_scale = 1.0;
+		/* UNCHECKED */ MCscreen->getmaxdisplayscale(t_scale);
+		ep.setnvalue(t_scale);
 		break;
 
 	case P_SHELL_COMMAND:

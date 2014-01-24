@@ -1043,13 +1043,43 @@ MCTheme *MCThemeCreateNative(void)
 
 extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
 
+// IM-2014-01-24: [[ HiDPI ]] Factor out creation of CGBitmapContext for MCImageBitmap
+bool MCOSXCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context)
+{
+	bool t_success;
+	t_success = true;
+	
+	CGContextRef t_cgcontext = nil;
+	CGColorSpaceRef t_colorspace = nil;
+	
+	t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceRGB());
+	
+	if (t_success)
+	{
+		// IM-2013-08-21: [[ RefactorGraphics ]] Refactor CGImage creation code to be pixel-format independent
+		CGBitmapInfo t_bitmap_info;
+		t_bitmap_info = MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true);
+		
+		t_success = nil != (t_cgcontext = CGBitmapContextCreate(p_bitmap->data, p_bitmap->width, p_bitmap->height, 8, p_bitmap->stride, t_colorspace, t_bitmap_info));
+	}
+	
+	if (t_colorspace != nil)
+		CGColorSpaceRelease(t_colorspace);
+	
+	
+	if (t_success)
+		r_context = t_cgcontext;
+	
+	return t_success;
+}
+		
+
 bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInfo *p_info_ptr)
 {
 	bool t_success = true;
 	
 	MCImageBitmap *t_bitmap = nil;
 	CGContextRef t_cgcontext = nil;
-	CGColorSpaceRef t_colorspace = nil;
 	MCRectangle t_rect;
 
 	t_rect = p_info_ptr->dest;
@@ -1072,7 +1102,7 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	if (MCGAffineTransformIsRectangular(t_transform))
 	{
 		MCGFloat t_transform_scale;
-		t_transform_scale = MCMax(MCAbs(t_transform.a), MCAbs(t_transform.d));
+		t_transform_scale = MCGAffineTransformGetEffectiveScale(t_transform);
 		
 		if (t_transform_scale > 1.0)
 			t_ui_scale = 2.0;
@@ -1114,22 +1144,16 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	t_success = MCImageBitmapCreate(t_width, t_height, t_bitmap);
 	
 	if (t_success)
-		t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceRGB());
-	
-	if (t_success)
 	{
-		// IM-2013-08-21: [[ RefactorGraphics ]] Refactor CGImage creation code to be pixel-format independent
-		CGBitmapInfo t_bitmap_info;
-		t_bitmap_info = MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true);
-
 		MCImageBitmapClear(t_bitmap);
-		t_success = nil != (t_cgcontext = CGBitmapContextCreate(t_bitmap->data, t_bitmap->width, t_bitmap->height, 8, t_bitmap->stride, t_colorspace, t_bitmap_info));
+		
+		t_success = MCOSXCreateCGContextForBitmap(t_bitmap, t_cgcontext);
 	}
 	
 	if (t_success)
 	{
 		// Invert y-axis origin to top-left of bitmap
-		CGContextTranslateCTM(t_cgcontext, 0, (CGFloat)t_height);
+		CGContextTranslateCTM(t_cgcontext, 0, (CGFloat)t_bitmap->height);
 		CGContextScaleCTM(t_cgcontext, 1.0, -1.0);
 		
 		// Relocate origin to top-left of destination rect
@@ -1151,9 +1175,6 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 		
 		MCGContextDrawPixels(p_context, t_raster, t_dst, kMCGImageFilterNearest);
 	}
-	
-	if (t_colorspace != nil)
-		CGColorSpaceRelease(t_colorspace);
 	
 	if (t_bitmap != nil)
 		MCImageFreeBitmap(t_bitmap);

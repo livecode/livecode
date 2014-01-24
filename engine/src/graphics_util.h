@@ -120,6 +120,11 @@ inline MCPoint MCPointTransform(const MCPoint &p_point, const MCGAffineTransform
 	return MCGPointToMCPoint(MCGPointApplyAffineTransform(MCPointToMCGPoint(p_point), p_transform));
 }
 
+inline MCGFloat MCGAffineTransformGetEffectiveScale(const MCGAffineTransform &p_transform)
+{
+	return MCMax(MCAbs(p_transform.a), MCAbs(p_transform.d));
+}
+
 #if defined(TARGET_SUBPLATFORM_ANDROID)
 
 #include "mblandroidtypeface.h"

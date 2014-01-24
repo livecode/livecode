@@ -336,78 +336,71 @@ MCRectangle MCUIDC::fullscreenrect(const MCDisplay *p_display)
 	return p_display->viewport;
 }
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 uint2 MCUIDC::getwidth()
 {
-	MCGFloat t_scale;
-	t_scale = MCResGetPixelScale();
-	
-	return ceil(device_getwidth() / t_scale) ;
+	return platform_getwidth();
 }
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 uint2 MCUIDC::getheight()
 {
-	MCGFloat t_scale;
-	t_scale = MCResGetPixelScale();
-	
-	return ceil(device_getheight() / t_scale);
+	return platform_getheight();
 }
 
 //////////
 
-uint16_t MCUIDC::device_getwidth()
+uint16_t MCUIDC::platform_getwidth()
 {
 	return 1;
 }
 
-uint16_t MCUIDC::device_getheight()
+uint16_t MCUIDC::platform_getheight()
 {
 	return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uint4 MCUIDC::getdisplays(const MCDisplay*& p_rectangles, bool p_effective)
+MCDisplay *MCUIDC::s_displays = NULL;
+uint4 MCUIDC::s_display_count = 0;
+bool MCUIDC::s_display_info_effective = false;
+
+// IM-2014-01-24: [[ HiDPI ]] Refactor to implement caching of display info in MCUIDC instead of subclasses
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+uint4 MCUIDC::getdisplays(const MCDisplay *&r_displays, bool p_effective)
 {
-	MCDisplay *t_displays;
-	t_displays = nil;
+	if (p_effective != s_display_info_effective)
+		cleardisplayinfocache();
 	
-	uint32_t t_count;
-	t_count = 0;
-	
-	if (!device_getdisplays(p_effective, t_displays, t_count))
-		return 0;
-	
-	for (uint32_t i = 0; i < t_count; i++)
+	if (s_displays == nil)
 	{
-		t_displays[i].viewport = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_displays[i].device_viewport));
-		t_displays[i].workarea = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_displays[i].device_workarea));
+		/* UNCHECKED */ platform_getdisplays(p_effective, s_displays, s_display_count);
+		s_display_info_effective = p_effective;
 	}
 	
-	p_rectangles = t_displays;
-	
-	return t_count;
+	r_displays = s_displays;
+	return s_display_count;
+}
+
+void MCUIDC::cleardisplayinfocache(void)
+{
+	MCMemoryDeleteArray(s_displays);
+	s_displays = nil;
+	s_display_count = 0;
 }
 
 //////////
 
-bool MCUIDC::device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
+bool MCUIDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
 {
 	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 const MCDisplay *MCUIDC::getnearestdisplay(const MCRectangle& p_rectangle)
-{
-	MCRectangle t_device_rect;
-	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_rectangle));
-	
-	return device_getnearestdisplay(t_device_rect);
-}
-
-//////////
-
-const MCDisplay *MCUIDC::device_getnearestdisplay(const MCRectangle& p_rectangle)
 {
 	MCDisplay const *t_displays;
 	uint4 t_display_count;
@@ -422,7 +415,7 @@ const MCDisplay *MCUIDC::device_getnearestdisplay(const MCRectangle& p_rectangle
 	for(uint4 t_display = 0; t_display < t_display_count; ++t_display)
 	{
 		MCRectangle t_workarea;
-		t_workarea = t_displays[t_display] . device_workarea;
+		t_workarea = t_displays[t_display] . workarea;
 		
 		MCRectangle t_intersection;
 		uint4 t_area, t_distance;
@@ -457,19 +450,46 @@ const MCDisplay *MCUIDC::device_getnearestdisplay(const MCRectangle& p_rectangle
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-01-24: [[ HiDPI ]] Return the maximum pixel scale of all displays in use
+bool MCUIDC::getmaxdisplayscale(MCGFloat &r_scale)
+{
+	const MCDisplay *t_displays;
+	t_displays = nil;
+	
+	uint32_t t_count;
+	t_count = 0;
+	
+	t_count = MCscreen->getdisplays(t_displays, false);
+	
+	MCGFloat t_scale;
+	if (t_count == 0)
+		t_scale = 1.0;
+	else
+		t_scale = t_displays[0].pixel_scale;
+	
+	for (uint32_t i = 1; i < t_count; i++)
+		if (t_displays[i].pixel_scale > t_scale)
+			t_scale = t_displays[i].pixel_scale;
+	
+	r_scale = t_scale;
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 Boolean MCUIDC::getwindowgeometry(Window p_window, MCRectangle &r_rect)
 {
-	MCRectangle t_rect;
-	if (!device_getwindowgeometry(p_window, t_rect))
+	if (!platform_getwindowgeometry(p_window, r_rect))
 		return False;
 	
-	r_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_rect));
 	return True;
 }
 
 //////////
 
-bool MCUIDC::device_getwindowgeometry(Window p_window, MCRectangle &r_rect)
+bool MCUIDC::platform_getwindowgeometry(Window p_window, MCRectangle &r_rect)
 {
 	r_rect = MCU_make_rect(0, 0, 32, 32);
 	return true;
@@ -477,67 +497,54 @@ bool MCUIDC::device_getwindowgeometry(Window p_window, MCRectangle &r_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 void MCUIDC::boundrect(MCRectangle &x_rect, Boolean p_title, Window_mode p_mode)
 {
-	MCRectangle t_rect;
-	t_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(x_rect));
-	
-	MCscreen->device_boundrect(t_rect, p_title, p_mode);
-	
-	x_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_rect));
+	platform_boundrect(x_rect, p_title, p_mode);
 }
 
 //////////
 
-void MCUIDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+void MCUIDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
 { }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 void MCUIDC::querymouse(int2 &x, int2 &y)
 {
-	int16_t t_x, t_y;
-	device_querymouse(t_x, t_y);
-	
-	MCGFloat t_scale;
-	t_scale = MCResGetPixelScale();
-	x = t_x / t_scale;
-	y = t_y / t_scale;
+	platform_querymouse(x, y);
 }
 
 //////////
 
-void MCUIDC::device_querymouse(int2 &x, int2 &y)
+void MCUIDC::platform_querymouse(int2 &x, int2 &y)
 { }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 void MCUIDC::setmouse(int2 x, int2 y)
 {
-	MCGFloat t_scale;
-	t_scale = MCResGetPixelScale();
-	
-	device_setmouse(x * t_scale, y * t_scale);
+	platform_setmouse(x, y);
 }
 
 //////////
 
-void MCUIDC::device_setmouse(int2 x, int2 y)
+void MCUIDC::platform_setmouse(int2 x, int2 y)
 { }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 MCStack *MCUIDC::getstackatpoint(int32_t x, int32_t y)
 {
-	MCGFloat t_scale;
-	t_scale = MCResGetPixelScale();
-
-	return device_getstackatpoint(x * t_scale, y * t_scale);
+	return platform_getstackatpoint(x, y);
 }
 
 //////////
 
-MCStack *MCUIDC::device_getstackatpoint(int32_t x, int32_t y)
+MCStack *MCUIDC::platform_getstackatpoint(int32_t x, int32_t y)
 {
 	return nil;
 }

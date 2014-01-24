@@ -16,13 +16,14 @@
 
 #include "graphics.h"
 
-#include <objc/objc-runtime.h>
 #include <AppKit/AppKit.h>
+
+////////////////////////////////////////////////////////////////////////////////
 
 typedef float (*backingScaleFactorIMP)(id);
 
-// IM-2014-01-17: [[ HiDPI ]] returns the maximum backing scale of all attached screens
-bool MCOSXGetScreenBackingScale(MCGFloat &r_scale)
+// IM-2014-01-23; [[ HiDPI ]] Returns the backing scale of the display. Note that this will only be available on OSX versions 10.7 and later.
+bool MCOSXGetDisplayPixelScale(NSScreen *p_display, MCGFloat &r_scale)
 {
 	static backingScaleFactorIMP s_backingScaleFactor = nil;
 	static bool s_initialized = false;
@@ -42,35 +43,8 @@ bool MCOSXGetScreenBackingScale(MCGFloat &r_scale)
 	if (s_backingScaleFactor == nil)
 		return false;
 	
-	
-	MCGFloat t_max_scale;
-	bool t_have_max;
-	t_have_max = false;
-	
-	NSArray *t_screens;
-	t_screens = [NSScreen screens];
-	
-	if (t_screens == nil)
-		return false;
-	
-	for (uindex_t i = 0; i < t_screens.count; i++)
-	{
-		NSScreen *t_screen;
-		t_screen = [t_screens objectAtIndex:i];
-		
-		MCGFloat t_screen_scale;
-//		t_screen_scale = [t_screen backingScaleFactor];
-		t_screen_scale = s_backingScaleFactor(t_screen);
-		
-		if (!t_have_max || t_max_scale < t_screen_scale)
-		{
-			t_max_scale = t_screen_scale;
-			t_have_max = true;
-		}
-	}
-	
-	if (t_have_max)
-		r_scale = t_max_scale;
-	
-	return t_have_max;
+	r_scale = s_backingScaleFactor(p_display);
+	return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////

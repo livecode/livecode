@@ -25,7 +25,8 @@
 #include "graphics.h"
 #include "resolution.h"
 
-static bool s_res_use_system_scale = true;
+// IM-2014-01-24: [[ HiDPI ]] Removed unused "use system pixel scale" functions
+
 static MCGFloat s_res_pixel_scale = 1.0;
 
 void MCResHandleScaleChanged()
@@ -36,10 +37,7 @@ void MCResHandleScaleChanged()
 
 MCGFloat MCResGetPixelScale(void)
 {
-	if (s_res_use_system_scale)
-		return MCResGetSystemScale();
-	else
-		return s_res_pixel_scale;
+	return s_res_pixel_scale;
 }
 
 void MCResSetPixelScale(MCGFloat p_scale, bool p_send_update)
@@ -48,24 +46,7 @@ void MCResSetPixelScale(MCGFloat p_scale, bool p_send_update)
 	t_old_scale = MCResGetPixelScale();
 	
 	s_res_pixel_scale = p_scale;
-	s_res_use_system_scale = false;
 	
 	if (p_send_update && p_scale != t_old_scale)
-		MCResHandleScaleChanged();
-}
-
-bool MCResGetUseSystemScale(void)
-{
-	return s_res_use_system_scale;
-}
-
-void MCResSetUseSystemScale(bool p_use_scale)
-{
-	MCGFloat t_old_scale;
-	t_old_scale = MCResGetPixelScale();
-	
-	s_res_use_system_scale = p_use_scale;
-	
-	if (t_old_scale != MCResGetPixelScale())
 		MCResHandleScaleChanged();
 }

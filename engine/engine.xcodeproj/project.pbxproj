@@ -444,7 +444,7 @@
 		4DEE2ADA0FDE42710009423C /* osxcoreimage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880140B80A4F800200116 /* osxcoreimage.cpp */; };
 		4DEE2ADB0FDE42710009423C /* osxclipboard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BD980CCF74C800D74FDB /* osxclipboard.cpp */; };
 		4DEE2ADE0FDE42710009423C /* osxdc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880150B80A4F800200116 /* osxdc.cpp */; };
-		4DEE2AE00FDE42710009423C /* osxdce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880200B80A4F800200116 /* osxdce.cpp */; };
+		4DEE2AE00FDE42710009423C /* osxdce.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880200B80A4F800200116 /* osxdce.mm */; };
 		4DEE2AE10FDE42710009423C /* osxdcmac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D58801A0B80A4F800200116 /* osxdcmac.cpp */; };
 		4DEE2AE20FDE42710009423C /* osxdcs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880130B80A4F800200116 /* osxdcs.cpp */; };
 		4DEE2AE30FDE42710009423C /* osxdnd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BE370CCF789000D74FDB /* osxdnd.cpp */; };
@@ -1112,7 +1112,7 @@
 		4D58801A0B80A4F800200116 /* osxdcmac.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxdcmac.cpp; path = src/osxdcmac.cpp; sourceTree = "<group>"; };
 		4D58801B0B80A4F800200116 /* osxstack.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxstack.cpp; path = src/osxstack.cpp; sourceTree = "<group>"; };
 		4D58801C0B80A4F800200116 /* osxspec.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxspec.cpp; path = src/osxspec.cpp; sourceTree = "<group>"; };
-		4D5880200B80A4F800200116 /* osxdce.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxdce.cpp; path = src/osxdce.cpp; sourceTree = "<group>"; };
+		4D5880200B80A4F800200116 /* osxdce.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = osxdce.mm; path = src/osxdce.mm; sourceTree = "<group>"; };
 		4D5880850B80BDF000200116 /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = /System/Library/Frameworks/QuickTime.framework; sourceTree = "<absolute>"; };
 		4D5881200B80BF1E00200116 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = /System/Library/Frameworks/IOKit.framework; sourceTree = "<absolute>"; };
 		4D5881B90B80C79600200116 /* osxcisupport.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = osxcisupport.mm; path = src/osxcisupport.mm; sourceTree = "<group>"; };
@@ -1799,7 +1799,7 @@
 				4D81A4C811171FD6008AE3F1 /* osxcursor.mm */,
 				4D5880150B80A4F800200116 /* osxdc.cpp */,
 				4D587F600B809A2D00200116 /* osxdc.h */,
-				4D5880200B80A4F800200116 /* osxdce.cpp */,
+				4D5880200B80A4F800200116 /* osxdce.mm */,
 				4D58801A0B80A4F800200116 /* osxdcmac.cpp */,
 				4D5880130B80A4F800200116 /* osxdcs.cpp */,
 				4D61BE370CCF789000D74FDB /* osxdnd.cpp */,
@@ -3362,7 +3362,7 @@
 				4DEE2ADA0FDE42710009423C /* osxcoreimage.cpp in Sources */,
 				4DEE2ADB0FDE42710009423C /* osxclipboard.cpp in Sources */,
 				4DEE2ADE0FDE42710009423C /* osxdc.cpp in Sources */,
-				4DEE2AE00FDE42710009423C /* osxdce.cpp in Sources */,
+				4DEE2AE00FDE42710009423C /* osxdce.mm in Sources */,
 				4DEE2AE10FDE42710009423C /* osxdcmac.cpp in Sources */,
 				4DEE2AE20FDE42710009423C /* osxdcs.cpp in Sources */,
 				4DEE2AE30FDE42710009423C /* osxdnd.cpp in Sources */,

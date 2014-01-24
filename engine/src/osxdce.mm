@@ -42,12 +42,93 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 
+#include <AppKit/AppKit.h>
+
+////////////////////////////////////////////////////////////////////////////////
+
 Boolean tripleclick = False;
 
-MCDisplay *MCScreenDC::s_monitor_displays = NULL;
-uint4 MCScreenDC::s_monitor_count = 0;
+////////////////////////////////////////////////////////////////////////////////
 
-bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& p_displays, uint32_t &r_count)
+extern bool MCOSXGetDisplayPixelScale(NSScreen *p_display, MCGFloat &r_scale);
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline MCRectangle MCRectangleFromNSRect(const NSRect &p_rect)
+{
+	return MCRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+}
+
+MCRectangle MCRectangleFlipYAxis(const MCRectangle &p_rect, uint32_t p_display_height)
+{
+	return MCRectangleMake(p_rect.x, p_display_height - (p_rect.y + p_rect.height), p_rect.width, p_rect.height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-23: [[ HiDPI ]] Retreive the geometry of the screen as well as the backing scale if available
+void MCOSXGetDisplayInfo(NSScreen *p_screen, MCDisplay &r_display)
+{
+	MCGFloat t_scale;
+	if (!MCOSXGetDisplayPixelScale(p_screen, t_scale))
+		t_scale = 1.0;
+	
+	r_display.pixel_scale = t_scale;
+	
+	r_display.viewport = MCRectangleFromNSRect([p_screen frame]);
+	r_display.workarea = MCRectangleFromNSRect([p_screen visibleFrame]);
+}
+
+// IM-2014-01-23: [[ HiDPI ]] Retreive the display info of the main screen
+void MCOSXGetMainDisplayInfo(MCDisplay &r_display)
+{
+	MCOSXGetDisplayInfo([NSScreen mainScreen], r_display);
+}
+
+// IM-2014-01-23: [[ HiDPI ]] Return an array of display information for all available screens
+bool MCOSXGetDisplays(MCDisplay *&r_displays, uint32_t &r_count)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCDisplay *t_displays;
+	t_displays = nil;
+	
+	uint32_t t_count;
+	t_count = 0;
+	
+	// The main screen will always be at index 0 of the returned array
+	NSArray *t_screens;
+	t_screens = [NSScreen screens];
+	
+	t_success = t_screens != nil;
+	
+	if (t_success)
+	{
+		t_count = t_screens.count;
+		t_success = MCMemoryNewArray(t_count, t_displays);
+	}
+	
+	for (uindex_t i = 0; t_success && i < t_count; i++)
+	{
+		MCOSXGetDisplayInfo([t_screens objectAtIndex:i], t_displays[i]);
+		t_displays[i].index = i;
+	}
+	
+	if (t_success)
+	{
+		r_displays = t_displays;
+		r_count = t_count;
+	}
+	else
+		MCMemoryDeleteArray(t_displays);
+	
+	return t_success;
+}
+
+
+// IM-2014-01-23: [[ HiRes ]] Reimplemented to use Cocoa, allowing us to get the pixel scale of each display.
+bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count)
 {
 	bool t_success;
 	t_success = true;
@@ -58,96 +139,56 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& p_displays, u
 	uint32_t t_display_count;
 	t_display_count = 0;
 	
-	MCGFloat t_device_scale;
-	t_device_scale = MCResGetSystemScale();
+	// The main screen will always be at index 0 of the returned array
+	NSArray *t_screens;
+	t_screens = [NSScreen screens];
 	
-	if (s_monitor_count != 0)
+	t_success = t_screens != nil;
+	
+	if (t_success)
 	{
-		t_displays = s_monitor_displays;
-		t_display_count = s_monitor_count;
+		t_display_count = t_screens.count;
+		t_success = MCMemoryNewArray(t_display_count, t_displays);
 	}
-	else
+	
+	for (uindex_t i = 0; t_success && i < t_display_count; i++)
 	{
-		for(GDHandle t_device = GetDeviceList(); t_device != NULL; t_device = GetNextDevice(t_device))
-			if (TestDeviceAttribute(t_device, screenDevice) && TestDeviceAttribute(t_device, screenActive))
-				t_display_count += 1;
-			
-		t_success = t_display_count != 0;
-		
-		if (t_success)
-			t_success = MCMemoryNewArray(t_display_count, t_displays);
-			
-		if (t_success)
-		{
-			uint4 t_current_index = 1;
-			for(GDHandle t_device = GetDeviceList(); t_device != NULL; t_device = GetNextDevice(t_device))
-				if (TestDeviceAttribute(t_device, screenDevice) && TestDeviceAttribute(t_device, screenActive))
-				{
-					uint4 t_index;
-					
-					HLock((Handle)t_device);
-					
-					if (TestDeviceAttribute(t_device, mainScreen))
-						t_index = 0;
-					else
-						t_index = t_current_index++;
-						
-					t_displays[t_index] . index = t_index;
-					
-					MCRectangle t_logical_rect;
-					t_logical_rect = MCMacRectToMCRect((*t_device)->gdRect);
-					
-					// IM-2014-01-17: [[ HiDPI ]] Scale logical screen coords to device pixels
-					t_displays[t_index] . device_viewport = MCRectangleGetScaledBounds(t_logical_rect, t_device_scale);
-				
-					Rect t_workarea;
-					GetAvailableWindowPositioningBounds(t_device, &t_workarea);
-					
-					t_logical_rect = MCMacRectToMCRect(t_workarea);
-					
-					// IM-2014-01-17: [[ HiDPI ]] Scale logical screen coords to device pixels
-					t_displays[t_index] . device_workarea = MCRectangleGetScaledBounds(t_logical_rect, t_device_scale);
-					
-					HUnlock((Handle)t_device);
-				}
-		}
-		
-		if (t_success)
-		{
-			s_monitor_count = t_display_count;
-			s_monitor_displays = t_displays;
-		}
-		else
-			MCMemoryDeleteArray(t_displays);
+		MCOSXGetDisplayInfo([t_screens objectAtIndex:i], t_displays[i]);
+		t_displays[i].index = i;
 	}
 	
 	if (!t_success)
 	{
-		static MCDisplay t_display;
-		Rect t_workarea;
+		t_success = MCMemoryNew(t_displays);
 		
-		MCU_set_rect(t_display . device_viewport, 0, 0, device_getwidth(), device_getheight());
-		GetAvailableWindowPositioningBounds(GetMainDevice(), &t_workarea);
-		
-		MCRectangle t_logical_rect;
-		t_logical_rect = MCMacRectToMCRect(t_workarea);
-		
-		t_display . index = 0;
-		
-		// IM-2014-01-17: [[ HiDPI ]] Scale logical screen coords to device pixels
-		t_display . device_workarea = MCRectangleGetScaledBounds(t_logical_rect, t_device_scale);
-		
-		t_displays = &t_display;
-		t_display_count = 1;
+		if (t_success)
+		{
+			t_display_count = 1;
+			MCOSXGetMainDisplayInfo(*t_displays);
+		}
 	}
 	
-	p_displays = t_displays;
-	r_count = t_display_count;
+	if (t_success)
+	{
+		// flip origin of OSX screenrects
+		MCRectangle t_main_viewport;
+		t_main_viewport = t_displays[0].viewport;
+		
+		for (uint32_t i = 0; i < t_display_count; i++)
+		{
+			t_displays[i].viewport = MCRectangleFlipYAxis(t_displays[i].viewport, t_main_viewport.height);
+			t_displays[i].workarea = MCRectangleFlipYAxis(t_displays[i].workarea, t_main_viewport.height);
+		}
+		
+		r_displays = t_displays;
+		r_count = t_display_count;
+	}
 	
-	return true;
+	return t_success;
 }
 
-void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode mode)
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode mode)
 {	
 	MCRectangle srect;
 
@@ -155,15 +196,14 @@ void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode 
 	{
 		const MCDisplay *t_display;
 		t_display = getnearestdisplay(rect);
-		srect = t_display -> device_workarea;
+		srect = t_display -> workarea;
 	}
 	else
-		srect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(MCwbr));
+		srect = MCwbr;
 
 	uint2 sr, sw, sb, sh;
 	Rect screenRect;
-	
-	SetRect(&screenRect, srect . x, srect . y, srect . x + srect . width, srect . y + srect . height);
+	screenRect = MCRectToMacRect(srect);
 
 	if (title && mode <= WM_SHEET && mode != WM_DRAWER)
 	{
@@ -243,7 +283,8 @@ Boolean MCScreenDC::abortkey()
 	return False;
 }
 
-void MCScreenDC::device_querymouse(int2 &x, int2 &y)
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+void MCScreenDC::platform_querymouse(int2 &x, int2 &y)
 {
 	CGrafPtr oldport;
 	GDHandle olddevice;
@@ -254,12 +295,8 @@ void MCScreenDC::device_querymouse(int2 &x, int2 &y)
 	GetMouse(&mloc);      //get local mouse position
 	SetGWorld(oldport, olddevice);
 	
-	// IM-2014-01-17: [[ HiDPI ]] Scale logical screen coords to device pixels
-	MCGFloat t_scale;
-	t_scale = MCResGetSystemScale();
-	
-	x = mloc.h * t_scale;
-	y = mloc.v * t_scale;
+	x = mloc.h;
+	y = mloc.v;
 }
 
 static Boolean isKeyPressed(unsigned char *km, uint1 keycode)
@@ -298,7 +335,7 @@ uint2 MCScreenDC::querymods()
 	return state;
 }
 
-void MCScreenDC::device_setmouse(int2 x, int2 y)
+void MCScreenDC::platform_setmouse(int2 x, int2 y)
 { //move mouse/cursor to new (x,y) location
 
 	CGPoint point;

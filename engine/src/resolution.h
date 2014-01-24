@@ -30,41 +30,6 @@ MCGFloat MCResGetPixelScale(void);
 // IM-2013-12-04: [[ PixelScale ]] Set the screen scaling factor
 void MCResSetPixelScale(MCGFloat p_scale, bool p_send_update = true);
 
-// IM-2013-12-04: [[ PixelScale ]] Set whether or not to use the system pixel scale
-void MCResSetUseSystemScale(bool p_use_scale);
-bool MCResGetUseSystemScale(void);
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Utility functions to convert rectangle to/from device coordinates
-
-inline MCGRectangle MCGRectangleToUserSpace(const MCGRectangle p_device_rect)
-{
-	return MCGRectangleScale(p_device_rect, 1 / MCResGetPixelScale());
-}
-
-inline MCGRectangle MCGRectangleToDeviceSpace(const MCGRectangle p_user_rect)
-{
-	return MCGRectangleScale(p_user_rect, MCResGetPixelScale());
-}
-
-inline MCGRectangle MCResUserToDeviceRect(MCRectangle p_rect)
-{
-	return MCGRectangleToDeviceSpace(MCRectangleToMCGRectangle(p_rect));
-}
-inline MCGRectangle MCResDeviceToUserRect(MCRectangle p_rect)
-{
-	return MCGRectangleToUserSpace(MCRectangleToMCGRectangle(p_rect));
-}
-
-inline MCGAffineTransform MCResGetDeviceTransform(void)
-{
-	MCGFloat t_scale;
-	t_scale = MCResGetPixelScale();
-	
-	return MCGAffineTransformMakeScale(t_scale, t_scale);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif // __RESOLUTION_INDEPENDENCE_H__

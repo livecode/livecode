@@ -289,9 +289,6 @@ protected:
 	uint2 opened;
 	
 public:
-	static MCDisplay *s_monitor_displays;
-	static uint4 s_monitor_count;
-	
 	static CFAbsoluteTime s_animation_start_time;
 	static CFAbsoluteTime s_animation_current_time;
 
@@ -320,15 +317,19 @@ public:
 	virtual uint2 getvclass(void);
 	virtual uint2 getdepth(void);
 	
-	// IM-2013-08-01: [[ ResIndependence ]] refactored methods that return device coordinates
-	virtual uint16_t device_getwidth(void);
-	virtual uint16_t device_getheight(void);
-	virtual bool device_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count);
-	virtual bool device_getwindowgeometry(Window w, MCRectangle &drect);
-	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
-	virtual void device_querymouse(int2 &x, int2 &y);
-	virtual void device_setmouse(int2 x, int2 y);
-	virtual MCStack *device_getstackatpoint(int32_t x, int32_t y);
+	//////////
+	
+	// IM-2014-01-23: [[ HiDPI ]] Change device methods to platform-specific logical-coordinate based methods
+	virtual uint16_t platform_getwidth(void);
+	virtual uint16_t platform_getheight(void);
+	virtual bool platform_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count);
+	virtual bool platform_getwindowgeometry(Window w, MCRectangle &drect);
+	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void platform_querymouse(int2 &x, int2 &y);
+	virtual void platform_setmouse(int2 x, int2 y);
+	virtual MCStack *platform_getstackatpoint(int32_t x, int32_t y);
+	
+	//////////
 	
 	virtual void openwindow(Window w, Boolean override);
 	virtual void closewindow(Window window);

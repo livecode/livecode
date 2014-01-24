@@ -247,13 +247,11 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 				uint4 t_monitor_count, t_old_monitor_count;
 				bool t_changed;
 				t_old_monitor_count = ((MCScreenDC *)MCscreen) -> getdisplays(t_monitors, false);
-				t_old_monitors = new MCDisplay[t_old_monitor_count];
+				/* UNCHECKED */ MCMemoryAllocateCopy(t_monitors, sizeof(MCDisplay) * t_old_monitor_count, t_old_monitors);
 				if (t_old_monitors != NULL)
 				{
-					memcpy(t_old_monitors, t_monitors, sizeof(MCDisplay) * t_old_monitor_count);
-					((MCScreenDC *)MCscreen) -> s_monitor_count = 0;
-					delete[] ((MCScreenDC *)MCscreen) -> s_monitor_displays;
-					((MCScreenDC *)MCscreen) -> s_monitor_displays = NULL;
+					// IM-2014-01-24: [[ HiDPI ]] Use refactored method to update display info
+					MCscreen->cleardisplayinfocache();
 					t_monitor_count = ((MCScreenDC *)MCscreen) -> getdisplays(t_monitors, false);
 					t_changed = t_monitor_count != t_old_monitor_count || memcmp(t_old_monitors, t_monitors, sizeof(MCDisplay) * t_monitor_count) != 0;
 					delete t_old_monitors;
@@ -262,8 +260,6 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 					t_changed = true;
 				if (t_changed)
 				{
-					// IM-2014-01-17: [[ HiDPI ]] // Reset windows in case of screen DPI change
-					MCdispatcher -> sync_stack_windows();
 					MCscreen -> delaymessage(MCdefaultstackptr -> getcurcard(), MCM_desktop_changed);
 				}
 			}

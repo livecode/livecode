@@ -2442,7 +2442,7 @@ void MCStack::render(MCGContextRef p_context, const MCRectangle &p_rect)
 	delete t_old_context;
 }
 
-void MCStack::device_redrawwindow(MCStackSurface *p_surface, MCRegionRef p_region)
+void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCRegionRef p_region)
 {
 	MCTileCacheRef t_tilecache;
 	t_tilecache = view_gettilecache();
@@ -2450,21 +2450,20 @@ void MCStack::device_redrawwindow(MCStackSurface *p_surface, MCRegionRef p_regio
 	if (t_tilecache == nil || !MCTileCacheIsValid(t_tilecache))
 	{
 		// If there is no tilecache, or the tilecache is invalid then fetch an
-		// MCContext for the surface and render.
+		// MCGContext for the surface and render.
 		MCGContextRef t_context = nil;
 		if (p_surface -> LockGraphics(p_region, t_context))
 		{
-			// p_region is in device coordinates, translate to user-space coords & ensure any fractional pixels are accounted for
-			MCGRectangle t_user_rect;
-			t_user_rect = MCGRectangleToUserSpace(MCRectangleToMCGRectangle(MCRegionGetBoundingBox(p_region)));
+			// IM-2014-01-24: [[ HiDPI ]] Use view backing scale to transform surface -> logical coords
+			MCGFloat t_backing_scale;
+			t_backing_scale = view_getbackingscale();
 			
+			// p_region is in surface coordinates, translate to user-space coords & ensure any fractional pixels are accounted for
 			MCRectangle t_rect;
-			t_rect = MCGRectangleGetIntegerBounds(t_user_rect);
+			t_rect = MCRectangleGetScaledBounds(MCRegionGetBoundingBox(p_region), 1 / t_backing_scale);
 			
-			// scale user -> device space
-			MCGFloat t_scale;
-			t_scale = MCResGetPixelScale();
-			MCGContextScaleCTM(t_context, t_scale, t_scale);
+			// scale user -> surface space
+			MCGContextScaleCTM(t_context, t_backing_scale, t_backing_scale);
 			
 			view_render(t_context, t_rect);
 			
@@ -2528,16 +2527,16 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 		t_effect_area = MCRectangleGetTransformedBounds(t_effect_area, getviewtransform());
 		t_effect_area = MCU_intersect_rect(t_effect_area, MCU_make_rect(0, 0, view_getrect() . width, view_getrect() . height));
 		
-		MCRectangle t_device_rect, t_user_rect;
-		t_device_rect = MCRectangleGetTransformedBounds(t_effect_area, MCResGetDeviceTransform());		
-		t_user_rect = MCRectangleGetTransformedBounds(t_device_rect, MCGAffineTransformInvert(t_transform));
+		MCRectangle t_surface_rect, t_user_rect;
+		t_surface_rect = MCRectangleGetScaledBounds(t_effect_area, view_getbackingscale());
+		t_user_rect = MCRectangleGetTransformedBounds(t_surface_rect, MCGAffineTransformInvert(t_transform));
 		
 		if (t_success)
-			t_success = MCGContextCreate(t_device_rect.width, t_device_rect.height, true, t_context);
+			t_success = MCGContextCreate(t_surface_rect.width, t_surface_rect.height, true, t_context);
 
 		if (t_success)
 		{
-			MCGContextTranslateCTM(t_context, -t_device_rect.x, -t_device_rect.y);
+			MCGContextTranslateCTM(t_context, -t_surface_rect.x, -t_surface_rect.y);
 			
 			// IM-2013-09-30: [[ FullscreenMode ]] Apply stack transform to snapshot context
 			MCGContextConcatCTM(t_context, t_transform);
@@ -2606,7 +2605,10 @@ MCGAffineTransform MCStack::getviewtransform(void) const
 
 MCGAffineTransform MCStack::getdevicetransform(void) const
 {
-	return MCGAffineTransformConcat(MCResGetDeviceTransform(), getviewtransform());
+	MCGFloat t_scale;
+	t_scale = view_getbackingscale();
+	
+	return MCGAffineTransformConcat(MCGAffineTransformMakeScale(t_scale, t_scale), getviewtransform());
 }
 
 MCGAffineTransform MCStack::getroottransform(void) const
