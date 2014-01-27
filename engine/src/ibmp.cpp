@@ -1321,6 +1321,13 @@ void netpbm_scale_to_byte(uint8_t *p_buffer, uint32_t p_max_value, uindex_t p_wi
 	uindex_t t_bytes_per_value;
 	t_bytes_per_value = p_max_value < 256 ? 1 : 2;
 
+	// 1-bit bitmaps - 0 == white, 1 == black.
+	// All others - 0 == black, max-value == white
+	
+	// IM-2014-01-23: [[ Bug 11698 ]] Invert color order for 1-bit bitmaps.
+	bool t_invert_value;
+	t_invert_value = p_max_value == 1;
+	
 	uint8_t *t_src_row = p_buffer;
 	uint8_t *t_dst_row = p_buffer;
 
@@ -1330,6 +1337,9 @@ void netpbm_scale_to_byte(uint8_t *p_buffer, uint32_t p_max_value, uindex_t p_wi
 		if (t_bytes_per_value == 2)
 			t_value = *t_src_row++ << 8;
 		t_value |= *t_src_row++;
+		
+		if (t_invert_value)
+			t_value = p_max_value - t_value;
 
 		*t_dst_row++ = (t_value * 255) / p_max_value;
 	}
