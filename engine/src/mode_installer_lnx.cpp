@@ -199,10 +199,12 @@ bool MCSystemCanDeleteFile(MCStringRef p_file)
     /* UNCHECKED */ t_resolved_file.Lock(*t_resolved_file_str);
 
 	// Now get the folder.
-	if (strrchr(*t_resolved_file, '/') == nil)
+    const char *t_terminator = strrchr(*t_resolved_file, '/');
+	if (t_terminator == nil)
 		return false;
 	
-	strrchr(*t_resolved_file, '/')[0] = '\0';
+    // This is evil but the AutoStringRefAsSysString owns the string it holds
+	*((char*)*t_terminator) = '\0';
 	
 	struct stat64 t_stat;
 	if (stat64(*t_resolved_file, &t_stat) != 0)
