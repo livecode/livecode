@@ -1259,7 +1259,7 @@ bool MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_item, MCStringRef p
 	
 	// If we can't find the chunk in the remainder of the string, we are done.
 	MCRange t_range;
-	if (!MCStringFind(p_string, MCRangeMake(t_first_chunk_range . offset, MCStringGetLength(p_string) - t_first_chunk_range . offset), p_item, t_options, &t_range))
+	if (!MCStringFind(p_string, MCRangeMake(t_index, MCStringGetLength(p_string) - t_index), p_item, t_options, &t_range))
 		return false;
 	
 	// Work out the delimiter.
