@@ -432,15 +432,15 @@ public:
     
     bool Lock(MCStringRef p_string)
     {
-        if (MCStringGetNativeCharPtr(p_string) == nil)
+        if (!MCStringIsNative(p_string))
         {
             m_ref = nil;
             return MCStringConvertToCString(p_string, m_cstring);
         }
-        
+
         m_ref = MCValueRetain(p_string);
-        m_cstring = const_cast<char*>((const char*)MCStringGetNativeCharPtr(p_string));
-        
+        m_cstring = nil;
+
         return true;
     }
     
@@ -456,9 +456,12 @@ public:
         m_cstring = nil;
     }
     
-    char *operator * (void)
+    const char *operator * (void)
     {
-        return m_cstring;
+        if (m_ref != nil)
+            return (const char*)MCStringGetNativeCharPtr(m_ref);
+        else
+            return (const char*)m_cstring;
     }
     
 private:

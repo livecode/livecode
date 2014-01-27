@@ -347,6 +347,7 @@ bool MCStringCreateMutable(uindex_t p_initial_capacity, MCStringRef& r_string)
 
 	if (t_success)
 	{
+        self -> native_chars = nil;
 		self -> flags |= kMCStringFlagIsMutable;
 		r_string = self;
 	}

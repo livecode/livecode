@@ -194,6 +194,7 @@ engine/src/exec-server.cpp
 engine/src/exec-sound.cpp
 engine/src/exec-store.cpp
 engine/src/exec-strings.cpp
+engine/src/exec-strings-chunk.cpp
 engine/src/exec-text.cpp
 engine/src/exec-textmessaging.cpp
 engine/src/exec.cpp
