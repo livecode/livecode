@@ -1598,6 +1598,11 @@ enum Properties {
 	P_PIXEL_SCALE,
 	P_SYSTEM_PIXEL_SCALE,
 	
+	// IM-2014-01-24: [[ HiDPI ]] Tags for the usePixelScaling, screenPixelScale, and screenPixelScales properties
+	P_USE_PIXEL_SCALING,
+	P_SCREEN_PIXEL_SCALE,
+	P_SCREEN_PIXEL_SCALES,
+	
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
     P_CUSTOM_KEYS = P_FIRST_ARRAY_PROP,

@@ -32,4 +32,28 @@ void MCResSetPixelScale(MCGFloat p_scale, bool p_send_update = true);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-01-27: [[ HiDPI ]] Set pixel scaling to default platform-supported values
+void MCResInitPixelScaling(void);
+
+// IM-2014-01-27: [[ HiDPI ]] Return whether or not pixel scaling is supported by the platform
+bool MCResPlatformSupportsPixelScaling(void);
+// IM-2014-01-27: [[ HiDPI ]] Return whether or not pixel scaling can be enabled / disabled at runtime
+bool MCResPlatformCanChangePixelScaling(void);
+
+// IM-2014-01-27: [[ HiDPI ]] update system settings after change to pixel scaling
+void MCResPlatformSetUsePixelScaling(bool p_use_scaling);
+
+// IM-2014-01-27: [[ HiDPI ]] enable or disable pixel scaling
+void MCResSetUsePixelScaling(bool p_use_scaling);
+// IM-2014-01-27: [[ HiDPI ]] return the current pixel scale setting
+bool MCResGetUsePixelScaling(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-27: [[ HiDPI ]] Return the pixel scales of the main screen (or all screens)
+// as a return-delimited list
+void MCResListScreenPixelScales(MCExecPoint &ep, bool p_plural);
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif // __RESOLUTION_INDEPENDENCE_H__

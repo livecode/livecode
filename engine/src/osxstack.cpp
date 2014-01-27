@@ -341,7 +341,10 @@ void MCStack::realize()
 		
 		// IM-2014-01-17: [[ HiDPI ]] Add frameworkscaled flag when creating window to
 		// enable Hi-DPI rendering
-		wattributes |= kWindowCompositingAttribute | kWindowFrameworkScaledAttribute;
+		// IM-2014-01-27: [[ HiDPI ]] Only add frameworkscaled flag when pixel scaling is enabled
+		wattributes |= kWindowCompositingAttribute;
+		if (MCResGetUsePixelScaling())
+			wattributes |= kWindowFrameworkScaledAttribute;
 		
 		long testdecorations = WD_TITLE | WD_MENU | WD_CLOSE | WD_MINIMIZE | WD_MAXIMIZE;
 

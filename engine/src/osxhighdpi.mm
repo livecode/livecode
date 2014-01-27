@@ -14,6 +14,13 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "prefix.h"
+#include "parsedef.h"
+#include "filedefs.h"
+#include "objdefs.h"
+
+#include "dispatch.h"
+
 #include "graphics.h"
 
 #include <AppKit/AppKit.h>
@@ -45,6 +52,25 @@ bool MCOSXGetDisplayPixelScale(NSScreen *p_display, MCGFloat &r_scale)
 	
 	r_scale = s_backingScaleFactor(p_display);
 	return true;
+}
+
+// IM-2014-01-27: [[ HiDPI ]] OSX Supports pixel scaling on retina displays
+bool MCResPlatformSupportsPixelScaling(void)
+{
+	return true;
+}
+
+// IM-2014-01-27: [[ HiDPI ]] HiDPI support can be enabled/disabled on OSX by recreating
+// each stack window with/without the kWindowFrameWorkScaledAttribute flag
+bool MCResPlatformCanChangePixelScaling(void)
+{
+	return true;
+}
+
+void MCResPlatformSetUsePixelScaling(bool p_use_scaling)
+{
+	// Global use-pixel-scaling value has been updated, so now we just need to reopen any open stack windows
+	MCdispatcher->reopen_stack_windows();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -938,9 +938,8 @@ bool X_open(int argc, char *argv[], char *envp[])
 		MCscreen->alloccolor(MClinkatts.visitedcolor);
 	}
 	
-	// IM-2014-01-24: [[ HiRes ]] Remove initialisation of pixelScale to systemPixelScale
-	// as this behaviour will be on mobile only.
-	/* CODE REMOVED */
+	// IM-2014-01-27: [[ HiDPI ]] Initialize pixel scale settings
+	MCResInitPixelScaling();
 	
 	// MW-2012-02-14: [[ FontRefs ]] Open the dispatcher after we have an open
 	//   screen, otherwise we don't have a root fontref!
