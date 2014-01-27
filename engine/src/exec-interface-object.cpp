@@ -2531,9 +2531,7 @@ void MCObject::GetTextFont(MCExecContext& ctxt, MCStringRef& r_font)
     uint2 fontsize, fontstyle;
     MCNameRef fontname;
     getfontattsnew(fontname, fontsize, fontstyle);
-    r_font = MCNameGetString(fontname);
-		
-	
+    r_font = MCValueRetain(MCNameGetString(fontname));
 }
 
 void MCObject::SetTextFont(MCExecContext& ctxt, MCStringRef font)

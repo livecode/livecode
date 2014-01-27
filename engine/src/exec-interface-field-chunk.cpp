@@ -2680,11 +2680,12 @@ void MCBlock::SetFlagged(MCExecContext& ctxt, bool p_value)
 
 void MCBlock::GetTextFont(MCExecContext& ctxt, MCStringRef &r_fontname)
 {
-    MCNewAutoNameRef t_fontname;
-    if (!gettextfont(&t_fontname))
+    // Note: gettextfont does not do a ValueRetain
+    MCNameRef t_fontname;
+    if (!gettextfont(t_fontname))
         r_fontname = nil;
     else
-        r_fontname = MCValueRetain(MCNameGetString(*t_fontname));
+        r_fontname = MCValueRetain(MCNameGetString(t_fontname));
 }
 
 void MCBlock::SetTextFont(MCExecContext& ctxt, MCStringRef p_fontname)
