@@ -110,6 +110,8 @@ typedef struct
 }
 MCMessageList;
 
+// IM-2014-01-23: [[ HiDPI ]] Add screen pixelScale field to display info
+// IM-2014-01-23: [[ HiDPI ]] Remove device-coordinate versions of viewport & workarea rects
 struct MCDisplay
 {
 	uint4 index;
@@ -258,6 +260,7 @@ protected:
 	uint2 bluebits;
 	const char *  m_sound_internal ;
 	
+	// IM-2014-01-24: [[ HiDPI ]] Cache displays array returned from platform-specific methods
 	static MCDisplay *s_displays;
 	static uint4 s_display_count;
 	static bool s_display_info_effective;
@@ -334,16 +337,16 @@ public:
 	
 //////////
 	
-	// platform-specific implementations, all use logical coords for screen / window rects
+	// IM-2014-01-23: [[ HiDPI ]] Change device methods to platform-specific logical-coordinate based methods
 	
-	// return new array of display info structs
+	virtual uint16_t platform_getwidth(void);
+	virtual uint16_t platform_getheight(void);
 	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
 	virtual bool platform_getwindowgeometry(Window w, MCRectangle &drect);
 	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
 	virtual void platform_querymouse(int16_t &r_x, int16_t &r_y);
-	virtual uint16_t platform_getwidth(void);
-	virtual uint16_t platform_getheight(void);
 	virtual void platform_setmouse(int16_t p_x, int16_t p_y);
+
 	virtual MCStack *platform_getstackatpoint(int32_t x, int32_t y);
 	
 ////////////////////////////////////////////////////////////////////////////////
