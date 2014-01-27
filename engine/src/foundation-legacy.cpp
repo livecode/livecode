@@ -671,6 +671,9 @@ bool MCValueConvertToStringForSave(MCValueRef self, MCStringRef& r_string)
 	case kMCValueTypeCodeString:
 		t_success = MCStringCopy((MCStringRef)self, r_string);
 		break;
+    case kMCValueTypeCodeData:
+        t_success = MCStringDecode((MCDataRef)self, kMCStringEncodingNative, false, r_string);
+        break;
 	case kMCValueTypeCodeArray:
 		r_string = MCValueRetain(kMCEmptyString);
 		break;
@@ -684,7 +687,12 @@ bool MCValueConvertToStringForSave(MCValueRef self, MCStringRef& r_string)
 
 bool MCValueIsEmpty(MCValueRef p_value)
 {
-	return p_value == kMCNull || p_value == kMCEmptyName || p_value == kMCEmptyArray || (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString && MCStringGetLength((MCStringRef)p_value) == 0);
+    return p_value == kMCNull ||
+            p_value == kMCEmptyName ||
+            p_value == kMCEmptyArray ||
+            (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString && MCStringIsEmpty((MCStringRef)p_value)) ||
+            (MCValueGetTypeCode(p_value) == kMCValueTypeCodeName && MCNameIsEmpty((MCNameRef)p_value)) ||
+            (MCValueGetTypeCode(p_value) == kMCValueTypeCodeData && MCDataIsEmpty((MCDataRef)p_value));
 }
 
 bool MCValueIsArray(MCValueRef p_value)

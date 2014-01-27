@@ -444,7 +444,7 @@ static bool __MCDataExpandAt(MCDataRef r_data, uindex_t p_at, uindex_t p_count)
 	// be a function of the string's size).
 	t_new_capacity = (t_new_capacity + 63) & ~63;
     
-	// Reallocate.
+    // Reallocate.
 	if (!MCMemoryReallocate(r_data->bytes, t_new_capacity, r_data->bytes))
 		return false;
     
@@ -482,4 +482,16 @@ void __MCDataDestroy(__MCData *self)
 {
     if (self -> bytes != nil)
         MCMemoryDeleteArray(self -> bytes);
+}
+
+bool __MCDataImmutableCopy(__MCData *self, bool p_release, __MCData *&r_immutable_value)
+{
+    if (!p_release)
+        return MCDataCopy(self, r_immutable_value);
+    return MCDataCopyAndRelease(self, r_immutable_value);
+}
+
+bool __MCDataIsEqualTo(__MCData *self, __MCData *p_other_data)
+{
+    return MCDataIsEqualTo(self, p_other_data);
 }

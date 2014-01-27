@@ -69,7 +69,7 @@ bool MCExecContext::ConvertToString(MCValueRef p_value, MCStringRef& r_string)
     case kMCValueTypeCodeString:
         return MCStringCopy((MCStringRef)p_value, r_string);
     case kMCValueTypeCodeData:
-            return MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr((MCDataRef)p_value), MCDataGetLength((MCDataRef)p_value), r_string);
+        return MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr((MCDataRef)p_value), MCDataGetLength((MCDataRef)p_value), r_string);
     case kMCValueTypeCodeNumber:
     {
         if (MCNumberIsInteger((MCNumberRef)p_value))
@@ -123,6 +123,14 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
                 if (!MCU_stor8(MCStringGetOldString((MCStringRef)p_value), t_number, m_convertoctals))
                     break;
             return MCNumberCreateWithReal(t_number, r_number);
+        }
+    case kMCValueTypeCodeData:
+        {
+            MCAutoStringRef t_string;
+            if (MCStringDecode((MCDataRef)p_value, kMCStringEncodingNative, false, &t_string))
+                return ConvertToNumber((MCValueRef)*t_string, r_number);
+            else
+                break;
         }
     default:
         break;
@@ -205,6 +213,14 @@ bool MCExecContext::ConvertToBoolean(MCValueRef p_value, MCBooleanRef &r_boolean
             return true;
         }
         break;
+    case kMCValueTypeCodeData:
+        {
+            MCAutoStringRef t_string;
+            if (MCStringDecode((MCDataRef)p_value, kMCStringEncodingNative, false, &t_string))
+                return ConvertToBoolean(*t_string, r_boolean);
+            else
+                break;
+        }
     }
 
     return false;
