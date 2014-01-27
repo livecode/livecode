@@ -433,9 +433,15 @@ bool MCS_pa(MCSocket *s, MCStringRef& r_string)
 {
 	struct sockaddr_in addr;
 	socklen_t addrsize = sizeof(addr);
-	getpeername(s->fd, (sockaddr *)&addr, &addrsize);
-
-	return MCS_sockaddr_to_string((sockaddr *)&addr, addrsize, false, r_string);
+    
+	if (getpeername(s->fd, (sockaddr *)&addr, &addrsize) == 0)
+        return MCS_sockaddr_to_string((sockaddr *)&addr, addrsize, false, r_string);
+    else
+    {
+        // Backwards compatibility
+        r_string = MCValueRetain(kMCEmptyString);
+        return false;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

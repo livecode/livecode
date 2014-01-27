@@ -312,7 +312,7 @@ public:
 		}
 
 		// Empty result means success
-		MCresult -> clear();
+        ctxt . SetTheResultToEmpty();
 
 		return;
 	}

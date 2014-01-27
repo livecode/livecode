@@ -1114,11 +1114,15 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 		t_success = t_buffer . CreateStringAndRelease(&t_string);
         
         MCAutoDataRef t_data;
+        MCAutoStringRef t_text;
         if (t_success)
             t_success = MCStringEncode(*t_string, kMCStringEncodingNative, false, &t_data);
         
         if (t_success)
-            t_success =  MCStringCreateWithBytes(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), kMCStringEncodingNative, false, r_text);
+            t_success =  MCStringCreateWithBytes(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), kMCStringEncodingNative, false, &t_text);
+        
+        if (t_success)
+            t_success = MCStringConvertLineEndingsToLiveCode(*t_text, r_text);
         
         MCresult -> clear(False);
        

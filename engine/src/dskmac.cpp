@@ -559,7 +559,7 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 		if (MCModeShouldQueueOpeningStacks())
 		{
 			MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
-			MCValueAssign(MCstacknames[MCnstacks++], *t_full_path_name);
+			MCstacknames[MCnstacks++] = MCValueRetain(*t_full_path_name);
 		}
 		else
 		{
@@ -8034,7 +8034,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         for (i = 0; i < osancomponents; i++)
         {
             if (l == strlen(osacomponents[i].compname)
-                && !MCStringIsEqualToCString(p_language, osacomponents[i].compname, kMCCompareCaseless))
+                && MCStringIsEqualToCString(p_language, osacomponents[i].compname, kMCCompareCaseless))
             {
                 posacomp = &osacomponents[i];
                 break;

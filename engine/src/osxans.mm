@@ -53,6 +53,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 extern void MCRemoteFileDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files, MCStringRef &r_value);
 extern void MCRemoteFolderDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef &r_value);
 extern void MCRemoteColorDialog(MCStringRef p_title, uint32_t p_red, uint32_t p_green, uint32_t p_blue, bool& r_chosen, MCColor& r_chosen_color);
+extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
 
 ////////////////////////////////////////////////////////////////////////////////
 // MM-2012-08-30: [[ Bug 10293 ]] Reinstate old file dialog code for tiger
@@ -68,10 +69,10 @@ int MCA_folder_tiger(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_in
 struct MCFileFilter
 {
 	MCFileFilter *next;
-	char *tag;
-	char **extensions;
+	MCStringRef tag;
+	MCStringRef *extensions;
 	uint32_t extension_count;
-	char **filetypes;
+	MCStringRef *filetypes;
 	uint32_t filetypes_count;
 };
 
@@ -79,17 +80,73 @@ struct MCFileFilter
 static void MCFileFilterDestroy(MCFileFilter *self)
 {
 	for(uint32_t i = 0; i < self -> extension_count; i++)
-		MCCStringFree(self -> extensions[i]);
+		MCValueRelease(self -> extensions[i]);
 	MCMemoryDeleteArray(self -> extensions);
 	for(uint32_t i = 0; i < self -> filetypes_count; i++)
-		MCCStringFree(self -> filetypes[i]);
+		MCValueRelease(self -> filetypes[i]);
 	MCMemoryDeleteArray(self -> filetypes);
-	MCCStringFree(self -> tag);
+	MCValueRelease(self -> tag);
 	MCMemoryDelete(self);
 }
 
-static bool MCFileFilterCreate(const char *p_desc, MCFileFilter*& r_filter)
+static bool MCFileFilterCreate(MCStringRef p_desc, MCFileFilter*& r_filter)
 {
+    /* 
+     bool t_success;
+     t_success = true;
+     
+     MCFileFilter *self;
+     self = nil;
+     if (t_success)
+     t_success = MCMemoryNew(self);
+     
+     char **t_items;
+     uint32_t t_item_count;
+     t_items = nil;
+     t_item_count = 0;
+     if (t_success)
+     t_success = MCCStringSplit(p_desc, '|', t_items, t_item_count);
+     
+     // MM-2012-03-09: [[Bug]] Make sure we don't try and copy empty tags (causes a crash on Lion)
+     if (t_success)
+     if (MCCStringLength(t_items[0]) > 0)
+     t_success = MCCStringClone(t_items[0], self -> tag);
+     
+     if (t_success)
+     {
+     if (t_item_count < 2)
+     t_success =
+     MCCStringSplit("*", ',', self -> extensions, self -> extension_count) &&
+     MCCStringSplit("*", ',', self -> filetypes, self -> filetypes_count);
+     else
+     {
+     t_success = MCCStringSplit(t_items[1], ',', self -> extensions, self -> extension_count);
+     if (t_item_count > 2)
+     t_success = MCCStringSplit(t_items[2], ',', self -> filetypes, self -> filetypes_count);
+     }
+     }
+     
+     // MM 2012-10-05: [[ Bug 10409 ]] Make sure filters of the form "All|" and "All||" are treated as wildcards
+     //   (but not filters of the form "Stacks||RSTK").
+     if (t_success)
+     if (self -> extension_count == 1 && self -> extensions[0][0] == '\0' && (t_item_count == 2 || (self -> filetypes_count == 1 && self -> filetypes[0][0] == '\0')))
+     {
+     MCCStringFree(self -> extensions[0]);
+     MCCStringClone("*", self -> extensions[0]);
+     }
+     
+     if (t_success)
+     r_filter = self;
+     else
+     MCFileFilterDestroy(self);
+     
+     for(uint32_t i = 0; i < t_item_count; i++)
+     MCCStringFree(t_items[i]);
+     MCMemoryDeleteArray(t_items);
+     
+     return t_success;
+     */
+    
 	bool t_success;
 	t_success = true;
 	
@@ -98,49 +155,52 @@ static bool MCFileFilterCreate(const char *p_desc, MCFileFilter*& r_filter)
 	if (t_success)
 		t_success = MCMemoryNew(self);
 	
-	char **t_items;
-	uint32_t t_item_count;
-	t_items = nil;
-	t_item_count = 0;
+	MCAutoStringRefArray t_items;
 	if (t_success)
-		t_success = MCCStringSplit(p_desc, '|', t_items, t_item_count);
+		t_success = MCStringsSplit(p_desc, '|', t_items . PtrRef(), t_items . CountRef());
 	
 	// MM-2012-03-09: [[Bug]] Make sure we don't try and copy empty tags (causes a crash on Lion)
 	if (t_success)
-		if (MCCStringLength(t_items[0]) > 0)
-			t_success = MCCStringClone(t_items[0], self -> tag);
-	
+    {
+        MCValueRef t_tag;
+        if (!MCStringIsEmpty(t_items[0]))
+            self -> tag = MCValueRetain(t_items[0]);
+    }
+    
 	if (t_success)
 	{
-		if (t_item_count < 2)
-			t_success =
-			MCCStringSplit("*", ',', self -> extensions, self -> extension_count) &&
-			MCCStringSplit("*", ',', self -> filetypes, self -> filetypes_count);
-		else
-		{
-			t_success = MCCStringSplit(t_items[1], ',', self -> extensions, self -> extension_count);
-			if (t_item_count > 2)
-				t_success = MCCStringSplit(t_items[2], ',', self -> filetypes, self -> filetypes_count);
-		}
+        if (t_items . Count() < 2)
+        {
+            self -> filetypes = new MCStringRef(MCSTR("*"));
+            self -> extensions = new MCStringRef(MCSTR("*"));
+            self -> extension_count = 1;
+            self -> filetypes_count = 1;
+        }
+        else
+        {
+            t_success = MCStringsSplit(t_items[1], ',', self -> extensions, self -> extension_count);
+            if (t_items . Count() > 2)
+            {
+                t_success = MCStringsSplit(t_items[2], ',', self -> filetypes, self -> filetypes_count);
+            }
+        }
 	}
 	
 	// MM 2012-10-05: [[ Bug 10409 ]] Make sure filters of the form "All|" and "All||" are treated as wildcards
 	//   (but not filters of the form "Stacks||RSTK").
 	if (t_success)
-		if (self -> extension_count == 1 && self -> extensions[0][0] == '\0' && (t_item_count == 2 || (self -> filetypes_count == 1 && self -> filetypes[0][0] == '\0')))
+    {
+		if (self -> extension_count == 1 && MCStringIsEmpty(self -> extensions[0]) && (t_items . Count() == 2 || (self -> filetypes_count == 1 && MCStringIsEmpty(self -> filetypes[0]))))
 		{
-			/* UNCHECKED */ MCCStringFree(self -> extensions[0]);
-			/* UNCHECKED */ MCCStringClone("*", self -> extensions[0]);
+			MCValueRelease(self -> extensions[0]);
+            self -> extensions[0] = MCSTR("*");
 		}
-		
+	}
+    
 	if (t_success)
 		r_filter = self;
 	else
 		MCFileFilterDestroy(self);
-	
-	for(uint32_t i = 0; i < t_item_count; i++)
-		MCCStringFree(t_items[i]);
-	MCMemoryDeleteArray(t_items);
 	
 	return t_success;
 }
@@ -312,11 +372,11 @@ static bool filter_to_type_list(MCStringRef p_filter, MCStringRef *&r_types, uin
 - (void)finalize;
 
 - (void)setLabel: (NSString *)newLabel;
-- (void)setTypes: (char * const *)p_types length: (uint32_t)p_count;
+- (void)setTypes: (MCStringRef *)p_types length: (uint32_t)p_count;
 
 - (void)typeChanged: (id)sender;
 
-- (const char *)currentType;
+- (MCStringRef)currentType;
 
 - (BOOL)panel:(id)sender shouldShowFilename:(NSString *)filename;
 
@@ -370,16 +430,16 @@ static bool filter_to_type_list(MCStringRef p_filter, MCStringRef *&r_types, uin
 	[ m_label setStringValue: newLabel ];
 }
 
-- (void)setTypes: (const char **)p_types length: (uint32_t)p_count
+- (void)setTypes: (MCStringRef *)p_types length: (uint32_t)p_count
 {
 	for(uint32_t i = 0; i < p_count; i++)
 	{
 		MCFileFilter *t_filter;
-		if (MCFileFilterCreate([[NSString stringWithCString: p_types[i] encoding: NSMacOSRomanStringEncoding] UTF8String], t_filter))
+		if (MCFileFilterCreate(p_types[i], t_filter))
 		{
 			MCListPushBack(m_filters, t_filter);
 			if (t_filter -> tag != nil)
-				[ m_options addItemWithTitle: [ NSString stringWithUTF8String: t_filter -> tag ]];
+				[ m_options addItemWithTitle: [ NSString stringWithMCStringRef: t_filter -> tag ]];
 		}
 	}
 	m_filter = m_filters;
@@ -397,7 +457,7 @@ static bool filter_to_type_list(MCStringRef p_filter, MCStringRef *&r_types, uin
 	[[self window] validateVisibleColumns];
 }
 
-- (const char *)currentType
+- (MCStringRef)currentType
 {
 	if (m_filter != nil)
 		return m_filter -> tag;
@@ -413,10 +473,10 @@ static bool filter_to_type_list(MCStringRef p_filter, MCStringRef *&r_types, uin
 	
 	// If any of the filters are * (ext or file type) then we allow all files
 	for (uint32_t i = 0; i < m_filter->extension_count; i++)
-		if (MCCStringEqual("*", m_filter->extensions[i]))
+		if (MCStringIsEqualTo(MCSTR("*"), m_filter->extensions[i], kMCCompareExact))
 			return YES;
 	for (uint32_t i = 0; i < m_filter->filetypes_count; i++)
-		if (MCCStringEqual("*", m_filter->filetypes[i]))
+		if (MCStringIsEqualTo(MCSTR("*"), m_filter->filetypes[i], kMCCompareExact))
 			return YES;				
 	
 	// MM-2012-09-25: [[ Bug 10407 ]] Filter on the attirbutes of the target of the alias, rather than the alias.
@@ -450,7 +510,7 @@ static bool filter_to_type_list(MCStringRef p_filter, MCStringRef *&r_types, uin
 			t_ext = strrchr(t_filename, '.');
 			if (t_ext != nil && MCCStringLength(t_ext) > 0)
 				for (uint32_t i = 0; i < m_filter->extension_count && !t_should_show; i++)
-					if (MCCStringLength(m_filter->extensions[i]) > 0 && MCCStringEqualCaseless(t_ext + 1, m_filter->extensions[i]))
+					if (MCStringIsEqualToCString(m_filter->extensions[i], t_ext + 1, kMCCompareCaseless))
 						t_should_show = YES;
 		}
 	}
@@ -477,15 +537,14 @@ static bool filter_to_type_list(MCStringRef p_filter, MCStringRef *&r_types, uin
 			t_bundle_type = @"????";
 		
 		for (uint32_t i = 0; i < m_filter->filetypes_count && !t_should_show; i++)
-			if (MCCStringLength(m_filter->filetypes[i]) > 0 &&
-				(MCCStringEqualCaseless(t_type, m_filter->filetypes[i]) || 
-				MCCStringEqualCaseless(t_creator, m_filter->filetypes[i]) ||
-				MCCStringEqualCaseless([t_bundle_sig cStringUsingEncoding: NSMacOSRomanStringEncoding], m_filter->filetypes[i]) ||
-				 MCCStringEqualCaseless([t_bundle_type cStringUsingEncoding: NSMacOSRomanStringEncoding], m_filter->filetypes[i])))				
+			if (MCStringIsEqualToCString(m_filter->filetypes[i], t_type, kMCCompareCaseless) ||
+                 MCStringIsEqualToCString(m_filter->filetypes[i], t_creator, kMCCompareCaseless) ||
+                 MCStringIsEqualToCString(m_filter->filetypes[i], [t_bundle_sig cStringUsingEncoding: NSMacOSRomanStringEncoding], kMCCompareCaseless) ||
+                 MCStringIsEqualToCString(m_filter->filetypes[i], [t_bundle_type cStringUsingEncoding: NSMacOSRomanStringEncoding], kMCCompareCaseless))
 				t_should_show = YES;
 	}
 	
-	[t_filename_resolved release];	
+	[t_filename_resolved release];
 	return t_should_show;
 }
 
@@ -588,24 +647,15 @@ int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p
         ShowCursor();
         
         //
-        char **t_types = new char*[p_type_count];
-        for (uint4 i = 0; i < p_type_count; ++i)
-        {
-            char *t_type;
-            /* UNCHECKED */ MCStringConvertToCString(p_types[i], t_type);
-            t_types[i] = t_type;
-        }
 		
         FileDialogAccessoryView *t_accessory;
         t_accessory = [[FileDialogAccessoryView alloc] init];
-        [t_accessory setTypes: t_types length: p_type_count];
+        [t_accessory setTypes: p_types length: p_type_count];
         
         
 		
-        char *t_filename;
-        t_filename = nil;
-        char *t_type;
-        t_type = nil;
+        MCAutoStringRef t_filename;
+        MCAutoStringRef t_type;
 		
 		NSSavePanel *t_panel;
 		t_panel = (t_is_save) ? [NSSavePanel savePanel] : [NSOpenPanel openPanel] ;
@@ -637,45 +687,43 @@ int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p
 		
         if (display_modal_dialog(t_panel, *t_initial_folder, *t_initial_file, (p_options & MCA_OPTION_SHEET) != 0) == NSOKButton)
 		{
+            NSString *t_file_name;
+            t_file_name = [t_panel filename];
+            
 			if (t_is_save)
 			{
-				MCCStringToNative([[t_panel filename] UTF8String], t_filename);
-				if ([t_accessory currentType] != nil)
-					/* UNCHECKED */ MCCStringToNative([t_accessory currentType], t_type);
+                const char *t_utf8_string;
+                t_utf8_string = [t_file_name UTF8String];
+                MCStringCreateWithBytes((const byte_t *)t_utf8_string, [t_file_name lengthOfBytesUsingEncoding: NSUTF8StringEncoding], kMCStringEncodingUTF8, false, &t_filename);
 			}
 			else
 			{
+                MCAutoListRef t_list;
+                /* UNCHECKED */ MCListCreateMutable('\n', &t_list);
 				for(uint32_t i = 0; i < [[t_panel filenames] count ]; i++)
 				{
 					// MM-2012-09-25: [[ Bug 10407 ]] Resolve alias (if any) of the returned files.
 					NSString *t_alias;
-					resolve_alias([[t_panel filenames] objectAtIndex: i], t_alias);					
-					char *t_conv_filename;
-					t_conv_filename = nil;
-					if (MCCStringToNative([t_alias UTF8String], t_conv_filename))
-						/* UNCHECKED */ MCCStringAppendFormat(t_filename, "%s%s", i > 0 ? "\n" : "", t_conv_filename);
-					/* UNCHECKED */ MCCStringFree(t_conv_filename);
+					resolve_alias([[t_panel filenames] objectAtIndex: i], t_alias);
+                    MCAutoStringRef t_alias_string;
+                    if (MCStringCreateWithBytes((const byte_t *)[[t_panel filename] UTF8String], [[t_panel filename] lengthOfBytesUsingEncoding: NSUTF8StringEncoding], kMCStringEncodingUTF8, false, &t_alias_string))
+                        MCListAppend(*t_list, *t_alias_string);
 					[t_alias release];
-				}
-				if ([t_accessory currentType] != nil)
-					/* UNCHECKED */ MCCStringToNative([t_accessory currentType], t_type);				
+                    MCListCopyAsString(*t_list, &t_filename);
+				}			
 			}
+            if ([t_accessory currentType] != nil)
+                t_type = MCValueRetain([t_accessory currentType]);
 		}
 		
-        if (MCCStringLength(t_filename) != 0)
+        if (*t_filename != nil)
         {
-            /* UNCHECKED */ MCStringCreateWithCString(t_filename, r_value);
+            r_value = MCValueRetain(*t_filename);
             
             if (p_options & MCA_OPTION_RETURN_FILTER && p_type_count > 0)
-                /* UNCHECKED */ MCStringCreateWithCString(t_type, r_result);
+                r_result = MCValueRetain(*t_type);
         }
 		
-        for(uint4 i = 0; i < p_type_count; ++i)
-            MCCStringFree(t_types[i]);
-        delete[] t_types;
-        
-        /* UNCHECKED */ MCCStringFree(t_filename);
-        /* UNCHECKED */ MCCStringFree(t_type);
         [t_accessory release];
     }
 		
