@@ -105,8 +105,7 @@ uint8_t type_table[256] =
 
 Cvalue constant_table[] =
 {
-    // AL-2014-01-16: [[ Bug 11678 ]] Arrow constant should be equivalent to 1.
-    {"arrow", "1", 1.0},
+    {"arrow", "29", 29.0},
     {"backslash", "\\", BAD_NUMERIC},
     {"busy", "6", 6.0},
     {"clock", "14", 14.0},
