@@ -180,7 +180,7 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 	        || flags & F_DISABLED && (getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if ((state & CS_SIZE || state & CS_MOVE) && points != NULL
-	        && getstyleint(flags) != F_G_RECTANGLE && getstyleint(flags) != F_OVAL)
+	        && getstyleint(flags) != F_G_RECTANGLE)
 	{
 		delete points;
 		points = NULL;
@@ -567,7 +567,20 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 		ep.setint(nsides);
 		break;
 	case P_POINTS:
-		MCU_unparsepoints(realpoints, nrealpoints, ep);
+		// MDW-2014-01-26: [[ rect_points ]] allow effective points as read-only
+		switch (getstyleint(flags))
+		{
+			case F_REGULAR:
+			case F_G_RECTANGLE:
+			case F_ROUNDRECT:
+				if (!effective)
+				{
+					ep.setstaticcstring("");
+					break;
+				}
+			default:
+				MCU_unparsepoints(realpoints, nrealpoints, ep);
+		}
 		break;
 	case P_RELATIVE_POINTS:
 		{
@@ -809,6 +822,7 @@ Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean
 	case P_BACK_COLOR:
 	case P_BACK_PATTERN:
 		if (data.getlength() != 0 && m_fill_gradient != NULL)
+
 		{
 			MCGradientFillFree(m_fill_gradient);
 			m_fill_gradient = NULL;
