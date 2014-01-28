@@ -307,32 +307,105 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	return t_event != nil;
 }
 
+// COCOA-TODO: abort key
 bool MCPlatformGetAbortKeyPressed(void)
 {
 	return false;
 }
 
-bool MCPlatformGetTripleClickOccurred(void)
+bool MCPlatformGetMouseButtonState(uindex_t p_button)
 {
-	return false;
+	NSUInteger t_buttons;
+	t_buttons = [NSEvent pressedMouseButtons];
+	if (p_button == 0)
+		return t_buttons != 0;
+	if (p_button == 1)
+		return (t_buttons & (1 << 0)) != 0;
+	if (p_button == 2)
+		return (t_buttons & (1 << 2)) != 0;
+	if (p_button == 3)
+		return (t_buttons & (1 << 1)) != 0;
+	return (t_buttons & (1 << (p_button - 1))) != 0;
 }
 
-bool MCPlatformGetMouseButtonState(uindex_t button)
+bool MCPlatformGetMouseClick(uindex_t p_button, MCPoint& r_location)
 {
-	return false;
-}
-
-bool MCPlatformGetMouseClick(uindex_t button)
-{
-	return false;
+	// We want to try and remove a whole click from the queue. Which button
+	// is determined by p_button and if zero means any button. So, first
+	// we search for a mouseDown.
+	
+	NSUInteger t_down_mask;
+	t_down_mask = 0;
+	if (p_button == 0 || p_button == 1) 
+		t_down_mask |= NSLeftMouseDownMask;
+	if (p_button == 0 || p_button == 3) 
+		t_down_mask |= NSRightMouseDownMask;
+	if (p_button == 0 || p_button == 2) 
+		t_down_mask |= NSOtherMouseDownMask;
+	
+	NSEvent *t_down_event;
+	t_down_event = [NSApp nextEventMatchingMask: t_down_mask untilDate: nil inMode: NSEventTrackingRunLoopMode dequeue: NO];
+	
+	// If there is no mouse down event then there is no click.
+	if (t_down_event == nil)
+		return false;
+	
+	// Now search for a matching mouse up event.
+	NSUInteger t_up_mask;
+	if ([t_down_event buttonNumber] == 0)
+		t_up_mask = NSLeftMouseUpMask;
+	else if ([t_down_event buttonNumber] == 1)
+		t_up_mask = NSRightMouseUpMask;
+	else
+		t_up_mask = NSOtherMouseUpMask;
+	
+	NSEvent *t_up_event;
+	t_up_event = [NSApp nextEventMatchingMask: t_up_mask untilDate: nil inMode: NSEventTrackingRunLoopMode dequeue: NO];
+	
+	// If there is no mouse up event then there is no click.
+	if (t_up_event == nil)
+		return false;
+	
+	// If the up event preceeds the down event, there is no click.
+	if ([t_down_event timestamp] > [t_up_event timestamp])
+		return false;
+	
+	// Otherwise, clear out all dragged / move etc. messages up to the mouse up event.
+	[NSApp discardEventsMatchingMask: NSLeftMouseDraggedMask |
+										NSRightMouseDraggedMask |
+											NSOtherMouseDraggedMask |
+												NSMouseMovedMask |
+													NSMouseEnteredMask |
+														NSMouseExitedMask
+						 beforeEvent: t_up_event];
+	
+	// And finally deque the up event.
+	[t_up_event release];
+	t_up_event = [NSApp nextEventMatchingMask: t_up_mask untilDate: nil inMode: NSEventTrackingRunLoopMode dequeue: YES];
+	
+	// Fetch its location.
+	NSPoint t_screen_loc;
+	if ([t_up_event window] != nil)
+		t_screen_loc = [[t_up_event window] convertBaseToScreen: [t_up_event locationInWindow]];
+	else
+		t_screen_loc = [t_up_event locationInWindow];
+	
+	MCMacPlatformMapScreenNSPointToMCPoint(t_screen_loc, r_location);
+	
+	return true;
 }
 
 void MCPlatformGetMousePosition(MCPoint& r_location)
 {
+	MCMacPlatformMapScreenNSPointToMCPoint([NSEvent mouseLocation], r_location);
 }
 
 void MCPlatformSetMousePosition(MCPoint p_location)
 {
+	CGPoint t_point;
+	t_point . x = p_location . x;
+	t_point . y = p_location . y;
+	CGWarpMouseCursorPosition(t_point);
 }
 
 void MCPlatformGetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window)
@@ -381,6 +454,9 @@ static MCPlatformWindowRef s_mouse_window = nil;
 // This is the current mask of buttons that are pressed.
 static uint32_t s_mouse_buttons = 0;
 
+// This is the button that is being dragged (if not 0xffffffff).
+static uint32_t s_mouse_drag_button = 0xffffffff;
+
 // This is the number of successive clicks detected on the primary button.
 static uint32_t s_mouse_click_count = 0;
 
@@ -405,6 +481,7 @@ static MCPoint s_mouse_screen_position;
 // COCOA-TODO: Clean up this external dependency.
 extern uint2 MCdoubledelta;
 extern uint2 MCdoubletime;
+extern uint2 MCdragdelta;
 
 void MCPlatformGrabPointer(MCPlatformWindowRef p_window)
 {
@@ -450,9 +527,13 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
 		s_mouse_buttons &= ~(1 << p_button);
 	
 	// If we are grabbed, and mouse buttons are zero, then ungrab.
+	// If mouse buttons are zero, then reset the drag button.
 	if (s_mouse_buttons == 0)
+	{
 		s_mouse_grabbed = false;
-	
+		s_mouse_drag_button = 0xffffffff;
+	}
+		
 	// If mouse buttons are non-zero, then grab.
 	if (s_mouse_buttons != 0)
 		s_mouse_grabbed = true;
@@ -545,6 +626,9 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 			MCPlatformRetainWindow(s_mouse_window);
 	}
 	
+	// Regardless of whether we post a mouse move, update the screen mouse position.
+	s_mouse_screen_position = p_screen_loc;
+	
 	// If we have a new mouse window, then translate screen loc and update.
 	if (s_mouse_window != nil)
 	{
@@ -554,13 +638,22 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 		if (t_window_loc . x != s_mouse_position . x ||
 			t_window_loc . y != s_mouse_position . y)
 		{
-			MCPlatformCallbackSendMouseMove(s_mouse_window, t_window_loc);
 			s_mouse_position = t_window_loc;
+			
+			// Send the mouse move.
+			MCPlatformCallbackSendMouseMove(s_mouse_window, t_window_loc);
+			
+			// If this is sthe start of a drag, then send a mouse drag.
+			if (s_mouse_buttons != 0 && s_mouse_drag_button == 0xffffffff &&
+				(MCU_abs(p_screen_loc . x - s_mouse_last_click_screen_position . x) >= MCdragdelta ||
+				 MCU_abs(p_screen_loc . y - s_mouse_last_click_screen_position . y) >= MCdragdelta))
+			{
+				s_mouse_drag_button = s_mouse_last_click_button;
+				MCPlatformCallbackSendMouseDrag(s_mouse_window, s_mouse_drag_button);
+			}
 		}
 	}
 	
-	// Regardless of whether we posted a mouse move, update the screen mouse position.
-	s_mouse_screen_position = p_screen_loc;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

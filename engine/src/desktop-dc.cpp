@@ -676,10 +676,20 @@ Boolean MCScreenDC::getmouse(uint2 button, Boolean& r_abort)
 	return MCPlatformGetMouseButtonState(button);
 }
 
-Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
+Boolean MCScreenDC::getmouseclick(uint2 p_button, Boolean& r_abort)
 {
 	r_abort = False;
-	return MCPlatformGetMouseClick(button);
+	
+	MCPoint t_location;
+	bool t_clicked;
+	t_clicked = MCPlatformGetMouseClick(p_button, t_location);
+	
+	MCPoint t_clickloc;
+	t_clickloc.x = t_location . x / MCResGetDeviceScale();
+	t_clickloc.y = t_location . y / MCResGetDeviceScale();
+	MCscreen->setclickloc(MCmousestackptr, t_clickloc);
+	
+	return t_clicked;
 	
 #if PRE_PLATFORM
 	// Collect all pending events in the event queue.

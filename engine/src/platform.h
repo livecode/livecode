@@ -255,7 +255,7 @@ bool MCPlatformGetMouseButtonState(uindex_t button);
 
 // Peek into the event queue and pull out a mouse click event (down then up)
 // for the given button. If button is 0, then any button click will do.
-bool MCPlatformGetMouseClick(uindex_t button);
+bool MCPlatformGetMouseClick(uindex_t button, MCPoint& r_location);
 
 // Get the position of the mouse in global coords.
 void MCPlatformGetMousePosition(MCPoint& r_location);
@@ -562,6 +562,10 @@ void MCPlatformReleaseCursor(MCPlatformCursorRef cursor);
 
 void MCPlatformShowCursor(MCPlatformCursorRef cursor);
 void MCPlatformHideCursor(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef class MCPlatformPasteboard *MCPlatformPasteboardRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -198,10 +198,16 @@ void MCPlatformCallbackSendWindowUnfocus(MCPlatformWindowRef window);
 
 void MCPlatformCallbackSendMouseDown(MCPlatformWindowRef window, uint32_t button, uint32_t count);
 void MCPlatformCallbackSendMouseUp(MCPlatformWindowRef window, uint32_t button, uint32_t count);
+void MCPlatformCallbackSendMouseDrag(MCPlatformWindowRef window, uint32_t button);
 void MCPlatformCallbackSendMouseRelease(MCPlatformWindowRef window, uint32_t button);
 void MCPlatformCallbackSendMouseEnter(MCPlatformWindowRef window);
 void MCPlatformCallbackSendMouseLeave(MCPlatformWindowRef window);
 void MCPlatformCallbackSendMouseMove(MCPlatformWindowRef window, MCPoint location);
+
+void MCPlatformCallbackSendDragEnter(MCPlatformWindowRef window, MCPlatformPasteboardRef pasteboard);
+void MCPlatformCallbackSendDragLeave(MCPlatformWindowRef window);
+void MCPlatformCallbackSendDragMove(MCPlatformWindowRef window, MCPoint location);
+void MCPlatformCallbackSendDragDrop(MCPlatformWindowRef window);
 
 void MCPlatformCallbackSendKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 void MCPlatformCallbackSendKeyUp(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);

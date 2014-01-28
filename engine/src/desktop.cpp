@@ -260,6 +260,11 @@ void MCPlatformHandleMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, ui
 	}
 }
 
+void MCPlatformHandleMouseDrag(MCPlatformWindowRef p_window, uint32_t p_button)
+{
+	MCdispatcher -> wmdrag(p_window);
+}
+
 void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_button)
 {
 	MCStack *t_stack;
@@ -294,6 +299,24 @@ void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_butto
 		
 		t_target -> message_with_args(MCM_mouse_release, p_button + 1);
 	}
+}
+
+//////////
+
+void MCPlatformHandleDragEnter(MCPlatformWindowRef window, MCPlatformPasteboardRef pasteboard)
+{
+}
+
+void MCPlatformHandleDragMove(MCPlatformWindowRef window, MCPoint location)
+{
+}
+
+void MCPlatformHandleDragLeave(MCPlatformWindowRef window)
+{
+}
+
+void MCPlatformHandleDragDrop(MCPlatformWindowRef window)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////

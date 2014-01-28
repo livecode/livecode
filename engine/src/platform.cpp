@@ -23,14 +23,14 @@ void MCPlatformHandleMouseEnter(MCPlatformWindowRef window);
 void MCPlatformHandleMouseLeave(MCPlatformWindowRef window);
 void MCPlatformHandleMouseDown(MCPlatformWindowRef window, uint32_t button, uint32_t count);
 void MCPlatformHandleMouseUp(MCPlatformWindowRef window, uint32_t button, uint32_t count);
+void MCPlatformHandleMouseDrag(MCPlatformWindowRef window, uint32_t button);
 void MCPlatformHandleMouseRelease(MCPlatformWindowRef window, uint32_t button);
 void MCPlatformHandleMouseMove(MCPlatformWindowRef window, MCPoint location);
 
-void MCPlatformHandleDragStart(MCPlatformWindowRef window);
-void MCPlatformHandleDragEnter(MCPlatformWindowRef window);
+void MCPlatformHandleDragEnter(MCPlatformWindowRef window, MCPlatformPasteboardRef pasteboard);
 void MCPlatformHandleDragMove(MCPlatformWindowRef window, MCPoint location);
 void MCPlatformHandleDragLeave(MCPlatformWindowRef window);
-void MCPlatformHandleDragEnd(MCPlatformWindowRef window);
+void MCPlatformHandleDragDrop(MCPlatformWindowRef window);
 
 void MCPlatformHandleMenuUpdate(MCPlatformMenuRef menu);
 void MCPlatformHandleMenuSelect(MCPlatformMenuRef menu, uindex_t index);
@@ -125,6 +125,12 @@ void MCPlatformCallbackSendMouseUp(MCPlatformWindowRef p_window, uint32_t p_butt
 	MCPlatformHandleMouseUp(p_window, p_button, p_count);
 }
 
+void MCPlatformCallbackSendMouseDrag(MCPlatformWindowRef p_window, uint32_t p_button)
+{
+	MCLog("Window(%p) -> MouseDrag(%d)", p_window, p_button);
+	MCPlatformHandleMouseDrag(p_window, p_button);
+}
+									 
 void MCPlatformCallbackSendMouseRelease(MCPlatformWindowRef p_window, uint32_t p_button)
 {
 	MCLog("Window(%p) -> MouseRelease(%d)", p_window, p_button);
@@ -135,6 +141,32 @@ void MCPlatformCallbackSendMouseMove(MCPlatformWindowRef p_window, MCPoint p_loc
 {
 	MCLog("Window(%p) -> MouseMove([%d, %d])", p_window, p_location . x, p_location . y);
 	MCPlatformHandleMouseMove(p_window, p_location);
+}
+
+//////////
+
+void MCPlatformCallbackSendDragEnter(MCPlatformWindowRef p_window, MCPlatformPasteboardRef p_pasteboard)
+{
+	MCLog("Window(%p) -> DragEnter(%p)", p_window, p_pasteboard);
+	MCPlatformHandleDragEnter(p_window, p_pasteboard);
+}
+
+void MCPlatformCallbackSendDragLeave(MCPlatformWindowRef p_window)
+{
+	MCLog("Window(%p) -> DragLeave()", p_window);
+	MCPlatformHandleDragLeave(p_window);
+}
+
+void MCPlatformCallbackSendDragMove(MCPlatformWindowRef p_window, MCPoint p_location)
+{
+	MCLog("Window(%p) -> DragMove([%d, %d])", p_window, p_location . x, p_location . y);
+	MCPlatformHandleDragMove(p_window, p_location);
+}
+
+void MCPlatformCallbackSendDragDrop(MCPlatformWindowRef p_window)
+{
+	MCLog("Window(%p) -> DragDrop()", p_window);
+	MCPlatformHandleDragDrop(p_window);
 }
 
 //////////

@@ -638,6 +638,21 @@ void MCMacPlatformWindow::DoRealize(void)
 	[m_window_handle setAlphaValue: m_opacity];
 	[m_window_handle setDocumentEdited: m_has_modified_mark];
 	
+	// If this is a panel (floating window) then hide unrequired tool buttons.
+	// COCOA-TODO: This doesn't work - indeed Apple HIG says windows must always have
+	//   the three buttons, just disabled if not applicable.
+#if 0
+	if (t_window_level == kCGFloatingWindowLevel)
+	{
+		if (!m_has_close_widget)
+			[[m_window_handle standardWindowButton: NSWindowCloseButton] setFrame: NSZeroRect];
+		if (!m_has_collapse_widget)
+			[[m_window_handle standardWindowButton: NSWindowMiniaturizeButton] setFrame: NSZeroRect];
+		if (!m_has_zoom_widget)
+			[[m_window_handle standardWindowButton: NSWindowZoomButton] setFrame: NSZeroRect];
+	}
+#endif
+	
 	// COCOA-TODO: live resizing
 }
 
