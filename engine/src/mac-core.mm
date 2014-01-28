@@ -269,26 +269,63 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static CFRunLoopObserverRef s_observer = nil;
+static bool s_in_blocking_wait = false;
+static bool s_wait_broken = false;
+
 void MCPlatformBreakWait(void)
 {
 	//NSLog(@"Application -> BreakWait()");
 	
+	if (s_wait_broken)
+		return;
+	
+	s_wait_broken = true;
+	
+	NSAutoreleasePool *t_pool;
+	t_pool = [[NSAutoreleasePool alloc] init];
+	
+	NSEvent *t_event;
+	t_event = [NSEvent otherEventWithType:NSApplicationDefined
+								 location:NSMakePoint(0, 0)
+							modifierFlags:0
+								timestamp:0
+							 windowNumber:0
+								  context:NULL
+								  subtype:0
+									data1:0
+									data2:0];
+	
+	NSLog(@"Break wait with %p", t_event);
+	
 	// COCOA-TODO: Make this not leak!
-	[NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined
-										location:NSMakePoint(0, 0)
-								   modifierFlags:0
-									   timestamp:0
-									windowNumber:0
-										 context:NULL
-										 subtype:0
-										   data1:0
-										   data2:0]
-			 atStart:NO];
+	[NSApp postEvent: t_event
+			 atStart: YES];
+	
+	[t_pool release];
+}
+
+static void runloop_observer(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
+{
+	if (s_in_blocking_wait)
+		MCPlatformBreakWait();
 }
 
 bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 {
 	//NSLog(@"Application -> WaitForEvent(%lf, %d)", p_duration, p_blocking);
+	
+	// Make sure we have our observer and install it. This is used when we are
+	// blocking and should break the event loop whenever a new event is added
+	// to the queue.
+	if (s_observer == nil)
+	{
+		s_observer = CFRunLoopObserverCreate(kCFAllocatorDefault, kCFRunLoopAfterWaiting, true, 0, runloop_observer, NULL);
+		CFRunLoopAddObserver([[NSRunLoop currentRunLoop] getCFRunLoop], s_observer, (CFStringRef)NSEventTrackingRunLoopMode);
+	}
+	
+	s_in_blocking_wait = true;
+	s_wait_broken = false;
 	
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
@@ -298,6 +335,8 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 								 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
 									inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
 								   dequeue: YES];
+
+	s_in_blocking_wait = false;
 	
 	if (t_event != nil)
 		[NSApp sendEvent: t_event];
@@ -334,6 +373,9 @@ bool MCPlatformGetMouseClick(uindex_t p_button, MCPoint& r_location)
 	// is determined by p_button and if zero means any button. So, first
 	// we search for a mouseDown.
 	
+	NSAutoreleasePool *t_pool;
+	t_pool = [[NSAutoreleasePool alloc] init];
+	
 	NSUInteger t_down_mask;
 	t_down_mask = 0;
 	if (p_button == 0 || p_button == 1) 
@@ -348,27 +390,45 @@ bool MCPlatformGetMouseClick(uindex_t p_button, MCPoint& r_location)
 	
 	// If there is no mouse down event then there is no click.
 	if (t_down_event == nil)
+	{
+		[t_pool release];
 		return false;
+	}
 	
 	// Now search for a matching mouse up event.
 	NSUInteger t_up_mask;
 	if ([t_down_event buttonNumber] == 0)
+	{
+		t_down_mask = NSLeftMouseDownMask;
 		t_up_mask = NSLeftMouseUpMask;
+	}
 	else if ([t_down_event buttonNumber] == 1)
+	{
+		t_down_mask = NSRightMouseDownMask;
 		t_up_mask = NSRightMouseUpMask;
+	}
 	else
+	{
+		t_down_mask = NSOtherMouseDownMask;
 		t_up_mask = NSOtherMouseUpMask;
+	}
 	
 	NSEvent *t_up_event;
 	t_up_event = [NSApp nextEventMatchingMask: t_up_mask untilDate: nil inMode: NSEventTrackingRunLoopMode dequeue: NO];
 	
 	// If there is no mouse up event then there is no click.
 	if (t_up_event == nil)
+	{
+		[t_pool release];
 		return false;
+	}
 	
 	// If the up event preceeds the down event, there is no click.
 	if ([t_down_event timestamp] > [t_up_event timestamp])
+	{
+		[t_pool release];
 		return false;
+	}
 	
 	// Otherwise, clear out all dragged / move etc. messages up to the mouse up event.
 	[NSApp discardEventsMatchingMask: NSLeftMouseDraggedMask |
@@ -379,8 +439,8 @@ bool MCPlatformGetMouseClick(uindex_t p_button, MCPoint& r_location)
 														NSMouseExitedMask
 						 beforeEvent: t_up_event];
 	
-	// And finally deque the up event.
-	[t_up_event release];
+	// And finally deque the up event and down event.
+	t_down_event = [NSApp nextEventMatchingMask: t_down_mask untilDate: nil inMode: NSEventTrackingRunLoopMode dequeue: YES];
 	t_up_event = [NSApp nextEventMatchingMask: t_up_mask untilDate: nil inMode: NSEventTrackingRunLoopMode dequeue: YES];
 	
 	// Fetch its location.
@@ -391,6 +451,8 @@ bool MCPlatformGetMouseClick(uindex_t p_button, MCPoint& r_location)
 		t_screen_loc = [t_up_event locationInWindow];
 	
 	MCMacPlatformMapScreenNSPointToMCPoint(t_screen_loc, r_location);
+	
+	[t_pool release];
 	
 	return true;
 }
