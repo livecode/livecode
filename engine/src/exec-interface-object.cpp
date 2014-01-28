@@ -3239,7 +3239,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
         
         t_exec_value . valueref_value = MCValueRetain(t_value);
         t_exec_value . type = kMCExecValueTypeValueRef;
-        setprop(ctxt, part, (Properties)s_preprocess_props[j].prop, False, t_exec_value);
+        setprop(ctxt, part, (Properties)s_preprocess_props[j].prop, nil, False, t_exec_value);
         
         ctxt . IgnoreLastError();
     }
@@ -3281,7 +3281,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
             
             t_exec_value . valueref_value = MCValueRetain(t_value);
             t_exec_value . type = kMCExecValueTypeValueRef;
-            setprop(ctxt, part, (Properties)te->which, False, t_exec_value);
+            setprop(ctxt, part, (Properties)te->which, nil, False, t_exec_value);
             
             ctxt . IgnoreLastError();
 		}
