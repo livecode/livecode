@@ -686,8 +686,6 @@ void MCEngineExecSet(MCExecContext& ctxt, MCProperty *p_target, MCValueRef p_val
 		ctxt . LegacyThrow(EE_SET_BADSET);
 		return;
 	}
-		
-	ctxt . SetTheResultToEmpty();
 }
 
 void MCEngineExecGet(MCExecContext& ctxt, MCValueRef p_value)
