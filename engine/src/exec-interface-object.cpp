@@ -2605,8 +2605,7 @@ void MCObject::GetEffectiveTextFont(MCExecContext& ctxt, MCStringRef& r_font)
     uint2 fontsize, fontstyle;
     MCNameRef fontname;
     getfontattsnew(fontname, fontsize, fontstyle);
-    r_font = MCNameGetString(fontname);
-
+    r_font = MCValueRetain(MCNameGetString(fontname));
 }
 
 void MCObject::GetTextSize(MCExecContext& ctxt, uinteger_t*& r_size)
