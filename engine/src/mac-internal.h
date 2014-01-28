@@ -263,6 +263,7 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_location);
 
 bool MCMacMapKeyCode(uint32_t mac_key_code, MCPlatformKeyCode& r_key_code);
 bool MCMacMapNSStringToCodepoint(NSString *string, codepoint_t& r_codepoint);
+bool MCMacMapCodepointToNSString(codepoint_t p_codepoint, NSString*& r_string);
 
 void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint point, NSPoint& r_point);
 void MCMacPlatformMapScreenNSPointToMCPoint(NSPoint point, MCPoint& r_point);

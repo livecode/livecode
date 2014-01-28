@@ -48,6 +48,84 @@ static struct { const char *tag; MCPlatformMenuItemAction action; } s_known_menu
 	// COCOA-TODO: Add other standard actions.
 };
 
+static struct { KeySym keysym; MCPlatformAccelerator accelerator; } s_known_accelerators[] =
+{
+	{ XK_Tab, kMCPlatformAcceleratorTabKey },
+	{ XK_BackSpace, kMCPlatformAcceleratorBackspaceKey },
+	{ XK_Return, kMCPlatformAcceleratorReturnKey },
+	{ XK_KP_Enter, kMCPlatformAcceleratorEnterKey },
+	{ XK_Up, kMCPlatformAcceleratorUpArrowKey },
+	{ XK_Down, kMCPlatformAcceleratorDownArrowKey },
+	{ XK_Left, kMCPlatformAcceleratorLeftArrowKey },
+	{ XK_Right, kMCPlatformAcceleratorRightArrowKey },
+	{ XK_F1, kMCPlatformAcceleratorF1Key },
+	{ XK_F2, kMCPlatformAcceleratorF2Key },
+	{ XK_F3, kMCPlatformAcceleratorF3Key },
+	{ XK_F4, kMCPlatformAcceleratorF4Key },
+	{ XK_F5, kMCPlatformAcceleratorF5Key },
+	{ XK_F6, kMCPlatformAcceleratorF6Key },
+	{ XK_F7, kMCPlatformAcceleratorF7Key },
+	{ XK_F8, kMCPlatformAcceleratorF8Key },
+	{ XK_F9, kMCPlatformAcceleratorF9Key },
+	{ XK_F10, kMCPlatformAcceleratorF10Key },
+	{ XK_F11, kMCPlatformAcceleratorF11Key },
+	{ XK_F12, kMCPlatformAcceleratorF12Key },
+	{ XK_F13, kMCPlatformAcceleratorF13Key },
+	{ XK_F14, kMCPlatformAcceleratorF14Key },
+	{ XK_F15, kMCPlatformAcceleratorF15Key },
+	{ XK_F16, kMCPlatformAcceleratorF16Key },
+	{ XK_F17, kMCPlatformAcceleratorF17Key },
+	{ XK_F18, kMCPlatformAcceleratorF18Key },
+	{ XK_F19, kMCPlatformAcceleratorF19Key },
+	{ XK_F20, kMCPlatformAcceleratorF20Key },
+	{ XK_F21, kMCPlatformAcceleratorF21Key },
+	{ XK_F22, kMCPlatformAcceleratorF22Key },
+	{ XK_F23, kMCPlatformAcceleratorF23Key },
+	{ XK_F24, kMCPlatformAcceleratorF24Key },
+	{ XK_F25, kMCPlatformAcceleratorF25Key },
+	{ XK_F26, kMCPlatformAcceleratorF26Key },
+	{ XK_F27, kMCPlatformAcceleratorF27Key },
+	{ XK_F28, kMCPlatformAcceleratorF28Key },
+	{ XK_F29, kMCPlatformAcceleratorF29Key },
+	{ XK_F30, kMCPlatformAcceleratorF30Key },
+	{ XK_F31, kMCPlatformAcceleratorF31Key },
+	{ XK_F32, kMCPlatformAcceleratorF32Key },
+	{ XK_F33, kMCPlatformAcceleratorF33Key },
+	{ XK_F34, kMCPlatformAcceleratorF34Key },
+	{ XK_F35, kMCPlatformAcceleratorF35Key },
+	{ XK_Insert, kMCPlatformAcceleratorInsertKey },
+	{ XK_Home, kMCPlatformAcceleratorHomeKey },
+	{ XK_Begin, kMCPlatformAcceleratorBeginKey },
+	{ XK_End, kMCPlatformAcceleratorEndKey },
+	{ XK_Prior, kMCPlatformAcceleratorPageUpKey },
+	{ XK_Next, kMCPlatformAcceleratorPageDownKey },
+	{ XK_Scroll_Lock, kMCPlatformAcceleratorScrollLockKey },
+	{ XK_Pause, kMCPlatformAcceleratorPauseKey },
+	{ XK_Sys_Req, kMCPlatformAcceleratorSysReqKey },
+	{ XK_Break, kMCPlatformAcceleratorBreakKey },
+};
+
+static bool map_keysym_to_accelerator(KeySym p_keysym, MCPlatformAccelerator& r_accelerator)
+{
+	for(uindex_t i = 0; i < sizeof(s_known_accelerators) / sizeof(s_known_accelerators[0]); i++)
+		if (s_known_accelerators[i] . keysym == p_keysym)
+		{
+			r_accelerator = s_known_accelerators[i] . accelerator;
+			return true;
+		}
+	
+	// COCOA-TODO: Will require some restructuring in the engine menu code to support unicode
+	//   chars. For now, just map ASCII appropriately. Note that we lowercase the ascii char
+	//   this is because if you want a shift modifier you must specify explicitly.
+	if (p_keysym >= 32 && p_keysym < 127)
+	{
+		r_accelerator = MCS_tolower(p_keysym);
+		return true;
+	}
+	
+	return false;
+}
+
 static char *utf8cstring_from_mcstring(const MCString& p_string, bool p_is_unicode)
 {
 	MCExecPoint ep(nil, nil, nil);
@@ -67,13 +145,16 @@ class MCMenuBuilderCallback: public IParseMenuCallback
 	MCPlatformMenuRef *m_menus;
 	uindex_t m_menu_depth;
 
+	MCButton *m_button;
+	
 public:
-	MCMenuBuilderCallback(const char *p_menu_title, MCPlatformMenuRef p_root_menu)
+	MCMenuBuilderCallback(MCButton *p_button, const char *p_menu_title, MCPlatformMenuRef p_root_menu)
 	{
 		m_menu_title = p_menu_title;
 		m_root_menu = p_root_menu;
 		m_menus = nil;
 		m_menu_depth = 0;
+		m_button = p_button;
 	}
 	
 	~MCMenuBuilderCallback(void)
@@ -184,7 +265,22 @@ public:
 			t_item_tag = utf8cstring_from_mcstring(p_menuitem -> tag, false);
 			
 			MCPlatformAccelerator t_item_accelerator;
-			t_item_accelerator = kMCPlatformAcceleratorNone;
+			if (p_menuitem -> accelerator &&
+				map_keysym_to_accelerator(p_menuitem -> accelerator, t_item_accelerator))
+			{
+				if ((p_menuitem -> modifiers & MS_SHIFT) != 0)
+					t_item_accelerator |= kMCPlatformAcceleratorWithShift;
+				if ((p_menuitem -> modifiers & MS_CONTROL) != 0)
+					t_item_accelerator |= kMCPlatformAcceleratorWithControl;
+				if ((p_menuitem -> modifiers & MS_ALT) != 0)
+					t_item_accelerator |= kMCPlatformAcceleratorWithAlt;
+				if ((p_menuitem -> modifiers & MS_MOD2) != 0)
+					t_item_accelerator |= kMCPlatformAcceleratorWithMeta;
+				
+				MCstacks -> addaccelerator(m_button, m_button -> getstack(), p_menuitem -> accelerator, p_menuitem -> modifiers);
+			}
+			else
+				t_item_accelerator = kMCPlatformAcceleratorNone;
 			
 			bool t_item_enabled;
 			t_item_enabled = !p_menuitem -> is_disabled;
@@ -279,7 +375,7 @@ static void populate_menubar_menu_from_button(MCPlatformMenuRef p_menubar, uinde
 	MCPlatformSetMenuItemProperty(p_menubar, p_menubar_index, kMCPlatformMenuItemPropertyEnabled, kMCPlatformPropertyTypeBool, &t_menu_enabled);
 	
 	// Now build the menu from the spec string.
-	MCMenuBuilderCallback t_callback(*t_menu_title_string, p_menu);
+	MCMenuBuilderCallback t_callback(p_menu_button, *t_menu_title_string, p_menu);
 	MCParseMenuString(t_menu_string, &t_callback, p_menu_button -> hasunicode(), WM_PULLDOWN);
 }
 

@@ -300,11 +300,50 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 			[t_item setRepresentedObject: [NSString stringWithCString: *(const char **)p_value encoding: NSUTF8StringEncoding]];
 			break;
 		case kMCPlatformMenuItemPropertyAction:
-			// COCOA-TODO
-			break;
+		{
+			// COCOA-TODO: I'm not sure this will work - will need to investigate how embedded views
+			//   deal with menu actions when they are implemented...
+#if 0
+			SEL t_selector;
+			if (MCMacPlatformMapMenuItemActionToSelector(*(MCPlatformMenuItemAction *)p_value, t_selector))
+				[t_item setAction: t_selector];
+#endif
+		}
+		break;
 		case kMCPlatformMenuItemPropertyAccelerator:
-			// COCOA-TODO
-			break;
+		{
+			MCPlatformAccelerator t_accelerator;
+			t_accelerator = *(MCPlatformAccelerator *)p_value;
+			if (t_accelerator != 0)
+			{
+				NSUInteger t_modifiers;
+				t_modifiers = 0;
+				if ((t_accelerator & kMCPlatformAcceleratorWithShift) != 0)
+					t_modifiers |= NSShiftKeyMask;
+				if ((t_accelerator & kMCPlatformAcceleratorWithAlt) != 0)
+					t_modifiers |= NSAlternateKeyMask;
+				
+				// COCOA-TODO: Abstract Command/Control switching.
+				if ((t_accelerator & kMCPlatformAcceleratorWithCommand) != 0)
+					t_modifiers |= NSControlKeyMask;
+				if ((t_accelerator & kMCPlatformAcceleratorWithControl) != 0)
+					t_modifiers |= NSCommandKeyMask;
+				
+				NSString *t_char;
+				if (MCMacMapCodepointToNSString(t_accelerator & kMCPlatformAcceleratorKeyMask, t_char))
+				{
+					[t_item setKeyEquivalent: t_char];
+					[t_item setKeyEquivalentModifierMask: t_modifiers];
+					[t_char release];
+				}
+			}
+			else
+			{
+				[t_item setKeyEquivalent: @""];
+				[t_item setKeyEquivalentModifierMask: 0];
+			}
+		}
+		break;
 		case kMCPlatformMenuItemPropertyEnabled:
 			[t_item setEnabled: *(bool *)p_value];
 			break;

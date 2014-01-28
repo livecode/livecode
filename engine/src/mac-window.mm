@@ -245,6 +245,11 @@
 	[self handleMouseMove: event];
 }
 
+// COCOA-TODO: This is probably not the best way to handle modifiers - these
+//   should probably be passed through with the event to ensure synchronization.
+//   Also that would solve the issue with things like alt-a producing a optionKeyDown
+//   message when it should be keyDown. We can use flagsChanged to detect the modifier
+//   key presses though (should we wish to propagate such!).
 - (void)flagsChanged: (NSEvent *)event
 {
 	// The type of modifier key is determined by the cocoa defined flags:
@@ -996,6 +1001,23 @@ bool MCMacMapNSStringToCodepoint(NSString *p_string, codepoint_t& r_codepoint)
 	// We have a valid surrogate pair so return its value!
 	r_codepoint = ((t_high - 0xD800) << 10) | (t_low - 0xDC00);
 	
+	return true;
+}
+
+bool MCMacMapCodepointToNSString(codepoint_t p_codepoint, NSString*& r_string)
+{
+	if (p_codepoint < 65536)
+	{
+		unichar t_char;
+		t_char = p_codepoint & 0xffff;
+		r_string = [[NSString alloc] initWithCharacters: &t_char length: 1];
+		return true;
+	}
+	
+	unichar t_chars[2];
+	t_chars[0] = (p_codepoint >> 10) + 0xD800;
+	t_chars[1] = (p_codepoint & 0x3ff) + 0xDC00;
+	r_string = [[NSString alloc] initWithCharacters: t_chars length: 2];
 	return true;
 }
 
