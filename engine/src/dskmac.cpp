@@ -1558,6 +1558,7 @@ bool MCS_mac_FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)
     
 	CopyPascalStringToC(fSpec->name, (char*)t_name.Chars());
     
+    /* UNCHECKED */ t_name . Shrink(MCCStringLength((const char *)t_name . Chars()));
     /* UNCHECKED */ t_name.CreateStringAndRelease(&t_filename_std);
 	/* UNCHECKED */ MCS_pathfromnative(*t_filename_std, &t_filename);
 
