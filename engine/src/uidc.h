@@ -318,6 +318,9 @@ public:
 	
 	uint4 getdisplays(MCDisplay const *& p_displays, bool effective);
 	
+	// IM-2014-01-28: [[ HiDPI ]] Update the currently held display info, returning whether or not an changes have occured
+	void updatedisplayinfo(bool &r_changed);
+
 	// IM-2014-01-24: [[ HiDPI ]] Clear the currently held display information. Should be called
 	// when the display info needs to be refreshed, for example when a screen is (dis)connected
 	// or screen resolution settings are changed.

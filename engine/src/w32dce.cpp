@@ -52,106 +52,143 @@ extern "C"
 #include <multimon.h>
 };
 
-MCDisplay *MCScreenDC::s_monitor_displays = NULL;
-uint4 MCScreenDC::s_monitor_count = 0;
+////////////////////////////////////////////////////////////////////////////////
+
+extern bool MCWin32GetMonitorPixelScale(HMONITOR p_monitor, MCGFloat &r_pixel_scale);
+
+static inline MCRectangle MCRectangleFromWin32RECT(const RECT &p_rect)
+{
+	return MCRectangleMake(p_rect.left, p_rect.top, p_rect.right - p_rect.left, p_rect.bottom - p_rect.top);
+}
+
+static inline MCPoint MCPointFromWin32POINT(const POINT &p_point)
+{
+	return MCPointMake(p_point.x, p_point.y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct
+{
+	MCDisplay *displays;
+	uint32_t display_count;
+	uint32_t index;
+} MCWin32GetDisplaysContext;
 
 static BOOL CALLBACK CountMonitorsCallback(HMONITOR p_monitor, HDC p_monitor_dc, LPRECT p_rect, LPARAM p_data)
 {
-	*(uint4 *)p_data += 1;
+	*(uint32_t *)p_data += 1;
 	return TRUE;
 }
 
+// IM-2014-01-28: [[ HiDPI ]] Set MCDisplay fields directly in monitor enumeration callback
 static BOOL CALLBACK DescribeMonitorsCallback(HMONITOR p_monitor, HDC p_monitor_dc, LPRECT p_rect, LPARAM p_data)
 {
-	MONITORINFO **t_info = (MONITORINFO **)p_data;
-	(*t_info) -> cbSize = sizeof(MONITORINFO);
-	if (GetMonitorInfo(p_monitor, *t_info))
-		*t_info += 1;
-	return TRUE;
-}
+	MCWin32GetDisplaysContext *t_context;
+	t_context = (MCWin32GetDisplaysContext*)(p_data);
 
-bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
-{
-	if (s_monitor_count == 0)
+	MONITORINFO t_info;
+	t_info.cbSize = sizeof(MONITORINFO);
+
+	if (GetMonitorInfo(p_monitor, &t_info))
 	{
-		bool error = false;
-
-		uint4 t_monitor_count = 0;
-		error = !EnumDisplayMonitors(NULL, NULL, CountMonitorsCallback, (LPARAM)&t_monitor_count);
-		
-		MONITORINFO *t_info = NULL;
-		if (!error)
-		  error = (t_info = new MONITORINFO[t_monitor_count]) == NULL;
-
-		MONITORINFO *t_info_iterator = t_info;
-		if (!error)
-			error = !EnumDisplayMonitors(NULL, NULL, DescribeMonitorsCallback, (LPARAM)&t_info_iterator);
-
-		if (!error)
-			t_monitor_count = t_info_iterator - t_info;
-
-		MCDisplay *t_monitor_displays = NULL;
-		if (!error)
-			error = (t_monitor_displays = new MCDisplay[t_monitor_count]) == NULL;
-
-		if (!error)
-			for(uint4 t_monitor = 0, t_current_index = 1; t_monitor < t_monitor_count; t_monitor += 1)
-			{
-				uint4 t_index;
-
-				if (t_info[t_monitor] . dwFlags & MONITORINFOF_PRIMARY)
-					t_index = 0;
-				else
-					t_index = t_current_index++;
-
-				t_monitor_displays[t_index] . index = t_index;
-
-				t_monitor_displays[t_index] . device_viewport . x = int2(t_info[t_monitor] . rcMonitor . left);
-				t_monitor_displays[t_index] . device_viewport . y = int2(t_info[t_monitor] . rcMonitor . top);
-				t_monitor_displays[t_index] . device_viewport . width = uint2(t_info[t_monitor] . rcMonitor . right - t_info[t_monitor] . rcMonitor . left);
-				t_monitor_displays[t_index] . device_viewport . height = uint2(t_info[t_monitor] . rcMonitor . bottom - t_info[t_monitor] . rcMonitor . top);
-				
-				t_monitor_displays[t_index] . device_workarea . x = int2(t_info[t_monitor] . rcWork . left);
-				t_monitor_displays[t_index] . device_workarea . y = int2(t_info[t_monitor] . rcWork . top);
-				t_monitor_displays[t_index] . device_workarea . width = uint2(t_info[t_monitor] . rcWork . right - t_info[t_monitor] . rcMonitor . left);
-				t_monitor_displays[t_index] . device_workarea . height = uint2(t_info[t_monitor] . rcWork . bottom - t_info[t_monitor] . rcMonitor . top);
-			}
-
-		delete[] t_info;
-
-		if (error)
-			delete[] t_monitor_displays;
+		uint32_t t_index;
+		if (t_info.dwFlags & MONITORINFOF_PRIMARY)
+			t_index = 0;
 		else
+			t_index = t_context->index++;
+
+		if (t_index <= t_context->display_count)
 		{
-			static Meta::static_ptr_t<MCDisplay> s_freeable_monitors;
-			s_monitor_count = t_monitor_count;
-			s_freeable_monitors = s_monitor_displays = t_monitor_displays;
+			t_context->displays[t_index].index = t_index;
+
+			// IM-2014-01-28: [[ HiDPI ]] Get the pixel scale for each display
+			if (!MCWin32GetMonitorPixelScale(p_monitor, t_context->displays[t_index].pixel_scale))
+				t_context->displays[t_index].pixel_scale = 1.0;
+
+			MCRectangle t_viewport, t_workarea;
+			t_viewport = MCRectangleFromWin32RECT(t_info.rcMonitor);
+			t_workarea = MCRectangleFromWin32RECT(t_info.rcWork);
+
+			// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
+			t_context->displays[t_index].viewport = ((MCScreenDC*)MCscreen)->screentologicalrect(t_viewport);
+			t_context->displays[t_index].workarea = ((MCScreenDC*)MCscreen)->screentologicalrect(t_workarea);
 		}
 	}
 
-	if (s_monitor_count == 0)
-	{
-		static MCDisplay t_monitor;
-		RECT r;
-		SystemParametersInfoA(SPI_GETWORKAREA, 0, &r, 0);
-		MCU_set_rect(t_monitor . device_viewport, 0, 0, device_getwidth(), device_getheight());
-		MCU_set_rect(t_monitor . device_workarea, 0, 0, uint2(r . right - r . left), uint2(r . bottom - r . top));
-		r_displays = &t_monitor;
-		r_count = 1;
-		return true;
-	}
-
-	if (taskbarhidden)
-		for(uint4 t_index = 0; t_index < s_monitor_count; t_index++)
-			s_monitor_displays[t_index] . device_workarea = s_monitor_displays[t_index] . device_viewport;
-
-	r_displays = s_monitor_displays;
-	r_count = s_monitor_count;
-
-	return true;
+	return TRUE;
 }
 
-void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+// IM-2014-01-28: [[ HiDPI ]] Refactored to handle display info caching in MCUIDC superclass
+bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
+{
+	bool t_success;
+	t_success = true;
+
+	MCDisplay *t_displays;
+	t_displays = nil;
+
+	uint32_t t_display_count;
+	t_display_count = 0;
+
+	t_success = EnumDisplayMonitors(NULL, NULL, CountMonitorsCallback, (LPARAM)&t_display_count);
+	
+	if (t_success)
+		t_success = MCMemoryNewArray(t_display_count, t_displays);
+
+	if (t_success)
+	{
+		// IM-2014-01-28: [[ HiDPI ]] Removed intermediary MONITORINFO array. Now using context info to fill MCDisplay array directly.
+		MCWin32GetDisplaysContext t_context;
+		t_context.displays = t_displays;
+		t_context.display_count = t_display_count;
+		t_context.index = 1;
+
+		t_success = EnumDisplayMonitors(NULL, NULL, DescribeMonitorsCallback, (LPARAM)&t_context);
+	}
+
+	if (!t_success)
+	{
+		MCMemoryDeleteArray(t_displays);
+		t_displays = nil;
+
+		t_success = MCMemoryNew(t_displays);
+		t_display_count = 1;
+
+		if (t_success)
+		{
+			RECT r;
+			SystemParametersInfoA(SPI_GETWORKAREA, 0, &r, 0);
+			t_displays->index = 0;
+			t_displays->pixel_scale = 1.0;
+			t_displays->viewport = MCRectangleMake(0, 0, platform_getwidth(), platform_getheight());
+
+			MCRectangle t_workarea;
+			t_workarea = MCRectangleFromWin32RECT(r);
+
+			// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
+			t_displays->workarea = screentologicalrect(t_workarea);
+		}
+	}
+
+	if (t_success)
+	{
+		if (taskbarhidden)
+			for(uint32_t i = 0; i < t_display_count; i++)
+				t_displays[i].workarea = t_displays[i].viewport;
+
+		r_displays = t_displays;
+		r_count = t_display_count;
+	}
+	else
+		MCMemoryDeleteArray(t_displays);
+
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
 {
 	MCRectangle srect;
 
@@ -164,7 +201,10 @@ void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode 
 	else
 		srect = MCwbr;
 
-	srect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(srect));
+	// IM-2014-01-28: [[ HiDPI ]] Don't scale to screen coords here
+	/* CODE REMOVED */
+
+	// TODO - This section needs to be revised as using a hardcoded titlebar size will give the wrong results
 
 	if (rect.x < srect.x)
 		rect.x = srect.x;
@@ -240,13 +280,19 @@ Boolean MCScreenDC::abortkey()
 	return False;
 }
 
-void MCScreenDC::device_querymouse(int2 &x, int2 &y)
+void MCScreenDC::platform_querymouse(int2 &x, int2 &y)
 {
 	POINT p;
 	if (GetCursorPos(&p))
 	{
-		x = (int2)p.x;
-		y = (int2)p.y;
+		MCPoint t_loc;
+		t_loc = MCPointFromWin32POINT(p);
+
+		// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
+		t_loc = screentologicalpoint(t_loc);
+
+		x = t_loc.x;
+		y = t_loc.y;
 	}
 }
 
@@ -268,9 +314,15 @@ uint2 MCScreenDC::querymods()
 	return state;
 }
 
-void MCScreenDC::device_setmouse(int2 x, int2 y)
+void MCScreenDC::platform_setmouse(int2 x, int2 y)
 {
-	SetCursorPos(x, y);
+	MCPoint t_loc;
+	t_loc = MCPointMake(x, y);
+
+	// IM-2014-01-28: [[ HiDPI ]] Convert logical to screen coords
+	t_loc = logicaltoscreenpoint(t_loc);
+
+	SetCursorPos(t_loc.x, t_loc.y);
 }
 
 Boolean MCScreenDC::getmouse(uint2 button, Boolean& r_abort)
@@ -398,10 +450,13 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 					break;
 				}
 				MCbuttonstate &= ~(1L << (b - 1));
-				// IM-2013-08-08: [[ ResIndependence ]] scale device to userspace coords
+
 				MCPoint t_clickloc;
-				t_clickloc.x = LOWORD(tptr->lParam) / MCResGetPixelScale();
-				t_clickloc.y = HIWORD(tptr->lParam) / MCResGetPixelScale();
+				t_clickloc = MCPointMake(LOWORD(tptr->lParam), HIWORD(tptr->lParam));
+
+				// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
+				t_clickloc = ((MCScreenDC*)MCscreen)->screentologicalpoint(t_clickloc);
+
 				MCscreen->setclickloc(MCmousestackptr, t_clickloc);
 				releaseptr = tptr;
 				break;

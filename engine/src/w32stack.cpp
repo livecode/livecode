@@ -68,6 +68,15 @@ static MCRectangle s_update_rect;
 extern bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
 extern void surface_merge_with_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
 
+extern MCGFloat MCWin32GetLogicalToScreenScale(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline MCRectangle MCRectangleFromWin32RECT(const RECT &p_rect)
+{
+	return MCRectangleMake(p_rect.left, p_rect.top, p_rect.right - p_rect.left, p_rect.bottom - p_rect.top);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCStack *MCStack::findstackd(Window w)
@@ -392,7 +401,13 @@ void MCStack::realize()
 		// IM-2013-09-23: [[ FullscreenMode ]] Don't change stack rect if fullscreen
 		/* CODE DELETED */
 
-		wrect = getwrect(rect, wstyle, exstyle);
+		MCRectangle t_rect;
+		t_rect = rect;
+
+		// IM-2014-01-28: [[ HiDPI ]] Convert logical to screen coords
+		t_rect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(t_rect);
+
+		wrect = getwrect(t_rect, wstyle, exstyle);
 		LONG x = wrect.left;
 		LONG y = wrect.top;
 		LONG width = wrect.right - wrect.left;
@@ -442,7 +457,11 @@ void MCStack::realize()
 		if ((m_window_shape == NULL || m_window_shape -> is_sharp) && blendlevel != 100)
 			setopacity(blendlevel * 255 / 100);
 	}
-	
+
+	// IM-2014-01-28: [[ HiDPI ]] Initialize window backing scale to the system DPI
+	// TODO - Windows 8 implementation will require getting the appropriate per-window value
+	view_setbackingscale(MCWin32GetLogicalToScreenScale());
+
 	start_externals();
 }
 
@@ -460,38 +479,43 @@ void MCStack::sethints()
 		SetWindowLongA((HWND)window->handle.window, 0, (LONG)sptr->getw()->handle.window);
 }
 
-MCRectangle MCStack::device_getwindowrect() const
+MCRectangle MCStack::view_platform_getwindowrect() const
 {
 	if (window == DNULL)
 		return rect;
 
 	RECT wrect;
 	GetWindowRect((HWND)window->handle.window, &wrect);
+
 	MCRectangle t_rect;
-	t_rect.x = wrect.left;
-	t_rect.y = wrect.top;
-	t_rect.width = wrect.right - wrect.left;
-	t_rect.height = wrect.bottom - wrect.top;
+	t_rect = MCRectangleFromWin32RECT(wrect);
+
+	// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
+	t_rect = ((MCScreenDC*)MCscreen)->screentologicalrect(t_rect);
 
 	return t_rect;
 }
 
-static inline MCRectangle MCWinRectToMCRect(RECT p_rect)
-{
-	return MCRectangleMake(p_rect.left, p_rect.top, p_rect.right - p_rect.left, p_rect.bottom - p_rect.top);
-}
-
 // IM-2013-09-23: [[ FullscreenMode ]] Factor out device-specific window sizing
-MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
+MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 {
+	MCRectangle t_new_rect;
+	t_new_rect = p_rect;
+
+	// IM-2014-01-28: [[ HiDPI ]] Convert logical to screen coords
+	t_new_rect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(t_new_rect);
+
 	uint32_t wstyle, exstyle;
 	getstyle(wstyle, exstyle);
-	RECT newrect = getwrect(p_rect, wstyle, exstyle);
+	RECT newrect = getwrect(t_new_rect, wstyle, exstyle);
 	RECT wrect;
 	GetWindowRect((HWND)window->handle.window, &wrect);
 
 	MCRectangle t_old_rect;
-	t_old_rect = MCWinRectToMCRect(wrect);
+	t_old_rect = MCRectangleFromWin32RECT(wrect);
+
+	// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
+	t_old_rect = ((MCScreenDC*)MCscreen)->screentologicalrect(t_old_rect);
 
 	LONG t_width = newrect.right - newrect.left;
 	LONG t_height = newrect.bottom - newrect.top;
@@ -659,7 +683,8 @@ bool __MCApplyMaskCallback(void *p_context, const MCRectangle &p_rect)
 	return true;
 }
 
-bool MCWin32ApplyMaskToRasterRegion(MCGRaster &p_raster, uint32_t p_x_origin, uint32_t p_y_origin, const MCGRaster &p_mask, MCRegionRef p_region)
+// IM-2014-01-28: [[ HiDPI ]] Parameterize raster scale value instead of using global system value
+bool MCWin32ApplyMaskToRasterRegion(MCGRaster &p_raster, MCGFloat p_raster_scale, uint32_t p_x_origin, uint32_t p_y_origin, const MCGRaster &p_mask, MCRegionRef p_region)
 {
 	// IM-2013-09-11: [[ ResIndependence ]] reduce mask params to single MCGRaster
 	bool t_success;
@@ -683,10 +708,8 @@ bool MCWin32ApplyMaskToRasterRegion(MCGRaster &p_raster, uint32_t p_x_origin, ui
 		// Drawing the mask directly will not work as the effective shape of the drawing operation
 		// will be defined by the opaque parts of the mask - areas outside will be unaffected. Instead we
 		// draw a solid rectangle over the intended areas using the mask as a pattern.
-		MCGFloat t_scale;
-		t_scale = MCResGetPixelScale();
 
-		MCGContextSetFillPattern(t_gcontext, t_mask_image, MCGAffineTransformMakeScale(t_scale, t_scale), kMCGImageFilterNearest);
+		MCGContextSetFillPattern(t_gcontext, t_mask_image, MCGAffineTransformMakeScale(p_raster_scale, p_raster_scale), kMCGImageFilterNearest);
 		MCGContextTranslateCTM(t_gcontext, -(MCGFloat)p_x_origin, -(MCGFloat)p_y_origin);
 		MCGContextSetBlendMode(t_gcontext, kMCGBlendModeDestinationIn);
 
@@ -718,14 +741,16 @@ class MCWindowsStackSurface: public MCStackSurface
 	MCRectangle m_locked_area;
 	HBITMAP m_bitmap;
 	MCGRaster m_raster;
+	MCGFloat m_raster_scale;
 
 public:
-	MCWindowsStackSurface(MCGRaster *p_mask, HRGN p_region, HDC p_dc)
+	MCWindowsStackSurface(MCGRaster *p_mask, MCGFloat p_mask_scale, HRGN p_region, HDC p_dc)
 	{
 		m_region = (MCRegionRef)p_region;
 		m_dc = p_dc;
 
 		m_mask = p_mask;
+		m_raster_scale = p_mask_scale;
 
 		m_locked = false;
 		m_locked_context = nil;
@@ -788,7 +813,7 @@ public:
 		if (p_update)
 		{
 			if (m_mask != nil)
-				MCWin32ApplyMaskToRasterRegion(m_raster, m_area.x, m_area.y, *m_mask, m_redraw_region);
+				MCWin32ApplyMaskToRasterRegion(m_raster, m_raster_scale, m_area.x, m_area.y, *m_mask, m_redraw_region);
 
 			HDC t_src_dc = ((MCScreenDC *)MCscreen) -> getsrchdc();
 
@@ -923,6 +948,7 @@ public:
 class MCWindowsLayeredStackSurface: public MCStackSurface
 {
 	MCGRaster m_raster;
+	MCGFloat m_raster_scale;
 	MCGRaster *m_mask;
 	MCRegionRef m_redraw_region;
 
@@ -934,9 +960,10 @@ class MCWindowsLayeredStackSurface: public MCStackSurface
 	uint32_t m_locked_stride;
 
 public:
-	MCWindowsLayeredStackSurface(MCGRaster p_raster, MCGRaster *p_mask)
+	MCWindowsLayeredStackSurface(MCGRaster p_raster, MCGFloat p_raster_scale, MCGRaster *p_mask)
 	{
 		m_raster = p_raster;
+		m_raster_scale = p_raster_scale;
 		m_mask = p_mask;
 		m_redraw_region = nil;
 
@@ -977,7 +1004,7 @@ public:
 		if (p_update)
 		{
 			void *t_src_ptr, *t_dst_ptr;
-			MCWin32ApplyMaskToRasterRegion(m_raster, 0, 0, *m_mask, m_redraw_region);
+			MCWin32ApplyMaskToRasterRegion(m_raster, m_raster_scale, 0, 0, *m_mask, m_redraw_region);
 		}
 	}
 
@@ -1093,17 +1120,30 @@ bool MCWin32GetWindowShapeAlphaMask(MCWindowShape *p_shape, MCGRaster &r_mask)
 	return true;
 }
 
-void MCStack::device_updatewindow(MCRegionRef p_region)
+extern bool MCRegionTransform(MCRegionRef p_region, const MCGAffineTransform &p_transform, MCRegionRef &r_transformed_region);
+void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 {
+	// IM-2014-01-28: [[ HiDPI ]] Create surface at the view's backing scale
+	MCGFloat t_surface_scale;
+	t_surface_scale = view_getbackingscale();
+
+	MCGAffineTransform t_surface_transform;
+	t_surface_transform = MCGAffineTransformMakeScale(t_surface_scale, t_surface_scale);
+
+	MCRegionRef t_surface_region;
+	/* UNCHECKED */ MCRegionTransform(p_region, t_surface_transform, t_surface_region);
+
 	if (m_window_shape == nil || m_window_shape -> is_sharp)
 	{
-		InvalidateRgn((HWND)window -> handle . window, (HRGN)p_region, FALSE);
+		// TODO - Windows 8.1 per-monitor DPI-awareness may require the update region be in logical coords
+		InvalidateRgn((HWND)window -> handle . window, (HRGN)t_surface_region, FALSE);
 		UpdateWindow((HWND)window -> handle . window);
 	}
 	else
 	{
+
 		MCRectangle t_device_rect;
-		t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(MCRectangleMake(0, 0, m_window_shape->width, m_window_shape->height)));
+		t_device_rect = MCRectangleGetScaledBounds(MCRectangleMake(0, 0, m_window_shape->width, m_window_shape->height), t_surface_scale);
 
 		HBITMAP t_bitmap = nil;
 		void *t_bits = nil;
@@ -1134,14 +1174,14 @@ void MCStack::device_updatewindow(MCRegionRef p_region)
 		MCGRaster t_mask;
 		/* UNCHECKED */ MCWin32GetWindowShapeAlphaMask(m_window_shape, t_mask);
 
-		MCWindowsLayeredStackSurface t_surface(t_raster, &t_mask);
+		MCWindowsLayeredStackSurface t_surface(t_raster, t_surface_scale, &t_mask);
 
 		if (t_surface.Lock())
 		{
 			if (s_update_callback == nil)
-				device_redrawwindow(&t_surface, (MCRegionRef)p_region);
+				view_surface_redrawwindow(&t_surface, (MCRegionRef)t_surface_region);
 			else
-				s_update_callback(&t_surface, (MCRegionRef)p_region, s_update_context);
+				s_update_callback(&t_surface, (MCRegionRef)t_surface_region, s_update_context);
 
 			t_surface.Unlock();
 
@@ -1150,12 +1190,12 @@ void MCStack::device_updatewindow(MCRegionRef p_region)
 	}
 }
 
-void MCStack::device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
+void MCStack::view_platform_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
 {
 	s_update_callback = p_callback;
 	s_update_context = p_context;
 	s_update_rect = MCRegionGetBoundingBox(p_region);
-	device_updatewindow(p_region);
+	view_platform_updatewindow(p_region);
 	s_update_callback = nil;
 	s_update_context = nil;
 }
@@ -1177,12 +1217,12 @@ void MCStack::onpaint(void)
 	else
 		t_mask_ptr = nil;
 
-	MCWindowsStackSurface t_surface(t_mask_ptr, t_update_region, t_paint . hdc);
+	MCWindowsStackSurface t_surface(t_mask_ptr, view_getbackingscale(), t_update_region, t_paint . hdc);
 
 	if (t_surface.Lock())
 	{
 		if (s_update_callback == nil)
-			device_redrawwindow(&t_surface, (MCRegionRef)t_update_region);
+			view_surface_redrawwindow(&t_surface, (MCRegionRef)t_update_region);
 		else
 			s_update_callback(&t_surface, (MCRegionRef)t_update_region, s_update_context);
 
@@ -1212,10 +1252,14 @@ void MCStack::composite(void)
 	t_old_dst = SelectObject(t_dst_dc, t_bitmap);
 
 	MCRectangle t_device_stack_rect;
-	t_device_stack_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
+	// IM-2014-01-28: [[ HiDPI ]] Convert logical to screen coords
+	t_device_stack_rect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(rect);
 
 	MCRectangle t_device_shape_rect;
-	t_device_shape_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(MCRectangleMake(0, 0, m_window_shape->width, m_window_shape->height)));
+	t_device_shape_rect = MCRectangleMake(0, 0, m_window_shape->width, m_window_shape->height);
+
+	// IM-2014-01-28: [[ HiDPI ]] Convert logical to screen coords
+	t_device_shape_rect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(t_device_shape_rect);
 
 	t_offset . x = 0;
 	t_offset . y = 0;

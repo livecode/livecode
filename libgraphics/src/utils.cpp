@@ -649,7 +649,6 @@ void MCGAffineTransformFromSkMatrix(const SkMatrix &p_matrix, MCGAffineTransform
 	r_transform . d = p_matrix[4];
 	r_transform . ty = p_matrix[5];
 }
-}
 
 MCGAffineTransform MCGAffineTransformMakeIdentity(void)
 {

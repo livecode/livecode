@@ -383,6 +383,24 @@ uint4 MCUIDC::getdisplays(const MCDisplay *&r_displays, bool p_effective)
 	return s_display_count;
 }
 
+void MCUIDC::updatedisplayinfo(bool &r_changed)
+{
+	MCDisplay *t_displays;
+	t_displays = nil;
+
+	uint32_t t_display_count;
+	t_display_count = 0;
+
+	/* UNCHECKED */ platform_getdisplays(s_display_info_effective, t_displays, t_display_count);
+
+	r_changed = t_display_count != s_display_count ||
+		(MCMemoryCompare(t_displays, s_displays, sizeof(MCDisplay) * s_display_count) != 0);
+
+	MCMemoryDeleteArray(s_displays);
+	s_displays = t_displays;
+	s_display_count = t_display_count;
+}
+
 void MCUIDC::cleardisplayinfocache(void)
 {
 	MCMemoryDeleteArray(s_displays);
