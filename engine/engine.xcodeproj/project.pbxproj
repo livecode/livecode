@@ -296,6 +296,7 @@
 		4D657F9C17143B7A0086071B /* libpng.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7981171348A6000BCF78 /* libpng.a */; };
 		4D657F9D17143B800086071B /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C797917134897000BCF78 /* libz.a */; };
 		4D6A00F010C578C600FA48D2 /* customprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6A00EE10C578C600FA48D2 /* customprinter.cpp */; };
+		4D6F2AE718981E7F0099947D /* mac-pasteboard.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F2AE618981E7F0099947D /* mac-pasteboard.mm */; };
 		4D7740CB1226AA58001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
 		4D7740CC1226AA65001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
 		4D7740DD1226AB35001C9150 /* osxcisupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D5881B90B80C79600200116 /* osxcisupport.mm */; };
@@ -1148,6 +1149,7 @@
 		4D6A00EE10C578C600FA48D2 /* customprinter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = customprinter.cpp; path = src/customprinter.cpp; sourceTree = "<group>"; };
 		4D6ED4F30E4B3B8800BDFDE4 /* objectstream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectstream.cpp; path = src/objectstream.cpp; sourceTree = "<group>"; };
 		4D6ED4F40E4B3B8800BDFDE4 /* objectstream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = objectstream.h; path = src/objectstream.h; sourceTree = "<group>"; };
+		4D6F2AE618981E7F0099947D /* mac-pasteboard.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-pasteboard.mm"; path = "src/mac-pasteboard.mm"; sourceTree = "<group>"; };
 		4D6F92F112AA5CC000026A72 /* w32color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = w32color.cpp; path = src/w32color.cpp; sourceTree = "<group>"; };
 		4D6F92F212AA5CC000026A72 /* w32cursor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = w32cursor.cpp; path = src/w32cursor.cpp; sourceTree = "<group>"; };
 		4D6F92F312AA5CC000026A72 /* w32icon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = w32icon.cpp; path = src/w32icon.cpp; sourceTree = "<group>"; };
@@ -1865,6 +1867,7 @@
 				4DECD1341886F0FF00463D52 /* mac-surface.mm */,
 				4DC6E30418896CFB00FD43C3 /* mac-menu.mm */,
 				4D444FB4188DCB4400C7B349 /* mac-cursor.mm */,
+				4D6F2AE618981E7F0099947D /* mac-pasteboard.mm */,
 			);
 			name = "Desktop - Mac";
 			sourceTree = "<group>";
@@ -3505,6 +3508,7 @@
 				4DECD26E188807E400463D52 /* platform-surface.cpp in Sources */,
 				4DC6E30518896CFB00FD43C3 /* mac-menu.mm in Sources */,
 				4D444FB5188DCB4400C7B349 /* mac-cursor.mm in Sources */,
+				4D6F2AE718981E7F0099947D /* mac-pasteboard.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

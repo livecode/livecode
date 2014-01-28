@@ -264,6 +264,10 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 		case kMCPlatformSystemPropertyCursorImageSupport:
 			*(MCPlatformCursorImageSupport *)r_value = kMCPlatformCursorImageSupportAlpha; 
 			break;
+			
+		default:
+			assert(false);
+			break;
 	}
 }
 
@@ -295,8 +299,6 @@ void MCPlatformBreakWait(void)
 								  subtype:0
 									data1:0
 									data2:0];
-	
-	NSLog(@"Break wait with %p", t_event);
 	
 	// COCOA-TODO: Make this not leak!
 	[NSApp postEvent: t_event

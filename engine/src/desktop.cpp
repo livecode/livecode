@@ -35,6 +35,8 @@
 #include "debug.h"
 #include "dispatch.h"
 
+#include "desktop-dc.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool X_init(int argc, char *argv[], char *envp[]);
@@ -303,16 +305,76 @@ void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_butto
 
 //////////
 
-void MCPlatformHandleDragEnter(MCPlatformWindowRef window, MCPlatformPasteboardRef pasteboard)
+static MCPlatformDragOperation dragaction_to_dragoperation(MCDragAction p_action)
+{
+	switch(p_action)
+	{
+		case DRAG_ACTION_NONE:
+			return kMCPlatformDragOperationNone;
+		case DRAG_ACTION_MOVE:
+			return kMCPlatformDragOperationMove;
+		case DRAG_ACTION_COPY:
+			return kMCPlatformDragOperationCopy;
+		case DRAG_ACTION_LINK:
+			return kMCPlatformDragOperationLink;
+	}
+	
+	assert(false);
+	
+	return kMCPlatformDragOperationNone;
+}
+
+MCSystemPasteboard::MCSystemPasteboard(MCPlatformPasteboardRef p_pasteboard)
+{
+	m_references = 1;
+}
+
+MCSystemPasteboard::~MCSystemPasteboard(void)
 {
 }
 
-void MCPlatformHandleDragMove(MCPlatformWindowRef window, MCPoint location)
+void MCSystemPasteboard::Retain(void)
 {
+	m_references += 1;
 }
 
-void MCPlatformHandleDragLeave(MCPlatformWindowRef window)
+void MCSystemPasteboard::Release(void)
 {
+	m_references -= 1;
+	if (m_references == 0)
+		delete this;
+}
+
+bool MCSystemPasteboard::Query(MCTransferType*& r_types, unsigned int& r_type_count)
+{
+	return false;
+}
+
+bool MCSystemPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
+{
+	return false;
+}
+
+void MCPlatformHandleDragEnter(MCPlatformWindowRef p_window, MCPlatformPasteboardRef p_pasteboard, MCPlatformDragOperation& r_operation)
+{
+	MCSystemPasteboard *t_pasteboard;
+	t_pasteboard = new MCSystemPasteboard(p_pasteboard);
+	MCdispatcher -> wmdragenter(p_window, t_pasteboard);
+	t_pasteboard -> Release();
+	
+	r_operation = dragaction_to_dragoperation(MCdragaction);
+}
+
+void MCPlatformHandleDragMove(MCPlatformWindowRef p_window, MCPoint p_location, MCPlatformDragOperation& r_operation)
+{
+	MCdispatcher -> wmdragmove(p_window, p_location . x, p_location . y);
+	
+	r_operation = dragaction_to_dragoperation(MCdragaction);
+}
+
+void MCPlatformHandleDragLeave(MCPlatformWindowRef p_window)
+{
+	MCdispatcher -> wmdragleave(p_window);
 }
 
 void MCPlatformHandleDragDrop(MCPlatformWindowRef window)

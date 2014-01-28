@@ -129,6 +129,15 @@ class MCMacPlatformSurface;
 - (void)keyDown: (NSEvent *)event;
 - (void)keyUp: (NSEvent *)event;
 
+- (BOOL)wantsPeriodicDraggingUpdates;
+- (NSDragOperation)draggingEntered: (id<NSDraggingInfo>)sender;
+- (void)draggingExited: (id<NSDraggingInfo>)sender;
+- (NSDragOperation)draggingUpdated: (id<NSDraggingInfo>)sender;
+
+- (BOOL)performDragOperation: (id<NSDraggingInfo>)sender;
+- (BOOL)prepareForDragOperation: (id<NSDraggingInfo>)sender;
+- (void)concludeDragOperation:(id<NSDraggingInfo>)sender;
+
 //////////
 
 - (void)handleMouseMove: (NSEvent *)event;
@@ -273,6 +282,12 @@ void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect rect, MCRectangle& r_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+NSDragOperation MCMacPlatformMapDragOperationToNSDragOperation(MCPlatformDragOperation);
+
+void MCMacPlatformPasteboardCreate(NSPasteboard *pasteboard, MCPlatformPasteboardRef& r_pasteboard);
+
+////////////////////////////////////////////////////////////////////////////////
+
 #if 0
 struct MCPlatformWindowPropertyChanges
 {
@@ -348,6 +363,7 @@ void MCMacPlatformMapScreenMCRectangleToNSRect(MCRectangle rect, NSRect& r_rect)
 void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect rect, MCRectangle& r_rect);
 
 ////////////////////////////////////////////////////////////////////////////////
+
 #endif
 
 #endif

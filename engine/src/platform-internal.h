@@ -112,6 +112,10 @@ public:
 	void HandleKeyDown(MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 	void HandleKeyUp(MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 	
+	void HandleDragEnter(MCPlatformPasteboardRef pasteboard, MCPlatformDragOperation& r_operation);
+	void HandleDragMove(MCPoint location, MCPlatformDragOperation& r_operation);
+	void HandleDragLeave(void);
+	
 	//////////
 	
 	virtual void DoRealize(void) = 0;
@@ -204,9 +208,9 @@ void MCPlatformCallbackSendMouseEnter(MCPlatformWindowRef window);
 void MCPlatformCallbackSendMouseLeave(MCPlatformWindowRef window);
 void MCPlatformCallbackSendMouseMove(MCPlatformWindowRef window, MCPoint location);
 
-void MCPlatformCallbackSendDragEnter(MCPlatformWindowRef window, MCPlatformPasteboardRef pasteboard);
+void MCPlatformCallbackSendDragEnter(MCPlatformWindowRef window, MCPlatformPasteboardRef pasteboard, MCPlatformDragOperation& r_operation);
 void MCPlatformCallbackSendDragLeave(MCPlatformWindowRef window);
-void MCPlatformCallbackSendDragMove(MCPlatformWindowRef window, MCPoint location);
+void MCPlatformCallbackSendDragMove(MCPlatformWindowRef window, MCPoint location, MCPlatformDragOperation& r_operation);
 void MCPlatformCallbackSendDragDrop(MCPlatformWindowRef window);
 
 void MCPlatformCallbackSendKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);

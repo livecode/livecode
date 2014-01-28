@@ -5,6 +5,22 @@
 #include "uidc.h"
 #endif
 
+class MCSystemPasteboard: public MCPasteboard
+{
+public:
+	MCSystemPasteboard(MCPlatformPasteboardRef pasteboard);
+	~MCSystemPasteboard(void);
+	
+	virtual void Retain(void);
+	virtual void Release(void);	
+	
+	virtual bool Query(MCTransferType*& r_types, unsigned int& r_type_count);
+	virtual bool Fetch(MCTransferType p_type, MCSharedString*& r_data);
+	
+private:
+	uint32_t m_references;
+};
+
 class MCScreenDC: public MCUIDC
 {
 private:

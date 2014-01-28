@@ -110,6 +110,12 @@
 	
 	m_tracking_area = nil;
 	
+	// Register for all dragging types (well ones that convert to 'data' anyway).
+	// COCOA-TODO: Restrict this to the types we actually handle. When we support
+	//   'custom' types, these will have to be declared by the app somehow so
+	//   there will always be a finite list.
+	[self registerForDraggedTypes: [NSArray arrayWithObject: (NSString *)kUTTypeData]];
+	
 	return self;
 }
 
@@ -344,6 +350,69 @@
 - (void)keyUp: (NSEvent *)event
 {
 	[self handleKeyPress: event isDown: NO];
+}
+
+//////////
+
+- (BOOL)wantsPeriodicDraggingUpdates
+{
+	// We only want updates when the mouse moves, or similar.
+	return NO;
+}
+
+- (NSDragOperation)draggingEntered: (id<NSDraggingInfo>)sender
+{
+	NSLog(@"draggingEntered");
+	
+	MCPlatformPasteboardRef t_pasteboard;
+	MCMacPlatformPasteboardCreate([sender draggingPasteboard], t_pasteboard);
+	
+	MCMacPlatformWindow *t_window;
+	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	
+	MCPlatformDragOperation t_operation;
+	t_window -> HandleDragEnter(t_pasteboard, t_operation);
+	
+	return MCMacPlatformMapDragOperationToNSDragOperation(t_operation);
+}
+
+- (void)draggingExited: (id<NSDraggingInfo>)sender
+{
+	NSLog(@"draggingExited");
+	
+	MCMacPlatformWindow *t_window;
+	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	t_window -> HandleDragLeave();
+}
+
+- (NSDragOperation)draggingUpdated: (id<NSDraggingInfo>)sender
+{
+	NSLog(@"draggingUpdated");
+	
+	MCPoint t_location;
+	MCMacPlatformMapScreenNSPointToMCPoint([[self window] convertBaseToScreen: [sender draggingLocation]], t_location);
+	
+	MCMacPlatformWindow *t_window;
+	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	
+	MCPlatformDragOperation t_operation;
+	t_window -> HandleDragMove(t_location, t_operation);
+	
+	return MCMacPlatformMapDragOperationToNSDragOperation(t_operation);
+}
+
+- (BOOL)performDragOperation: (id<NSDraggingInfo>)sender
+{
+	return NO;
+}
+
+- (BOOL)prepareForDragOperation: (id<NSDraggingInfo>)sender
+{
+	return NO;
+}
+
+- (void)concludeDragOperation:(id<NSDraggingInfo>)sender
+{
 }
 
 //////////

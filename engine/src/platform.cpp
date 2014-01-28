@@ -27,8 +27,8 @@ void MCPlatformHandleMouseDrag(MCPlatformWindowRef window, uint32_t button);
 void MCPlatformHandleMouseRelease(MCPlatformWindowRef window, uint32_t button);
 void MCPlatformHandleMouseMove(MCPlatformWindowRef window, MCPoint location);
 
-void MCPlatformHandleDragEnter(MCPlatformWindowRef window, MCPlatformPasteboardRef pasteboard);
-void MCPlatformHandleDragMove(MCPlatformWindowRef window, MCPoint location);
+void MCPlatformHandleDragEnter(MCPlatformWindowRef window, MCPlatformPasteboardRef pasteboard, MCPlatformDragOperation& r_operation);
+void MCPlatformHandleDragMove(MCPlatformWindowRef window, MCPoint location, MCPlatformDragOperation& r_operation);
 void MCPlatformHandleDragLeave(MCPlatformWindowRef window);
 void MCPlatformHandleDragDrop(MCPlatformWindowRef window);
 
@@ -145,10 +145,10 @@ void MCPlatformCallbackSendMouseMove(MCPlatformWindowRef p_window, MCPoint p_loc
 
 //////////
 
-void MCPlatformCallbackSendDragEnter(MCPlatformWindowRef p_window, MCPlatformPasteboardRef p_pasteboard)
+void MCPlatformCallbackSendDragEnter(MCPlatformWindowRef p_window, MCPlatformPasteboardRef p_pasteboard, MCPlatformDragOperation& r_operation)
 {
 	MCLog("Window(%p) -> DragEnter(%p)", p_window, p_pasteboard);
-	MCPlatformHandleDragEnter(p_window, p_pasteboard);
+	MCPlatformHandleDragEnter(p_window, p_pasteboard, r_operation);
 }
 
 void MCPlatformCallbackSendDragLeave(MCPlatformWindowRef p_window)
@@ -157,10 +157,10 @@ void MCPlatformCallbackSendDragLeave(MCPlatformWindowRef p_window)
 	MCPlatformHandleDragLeave(p_window);
 }
 
-void MCPlatformCallbackSendDragMove(MCPlatformWindowRef p_window, MCPoint p_location)
+void MCPlatformCallbackSendDragMove(MCPlatformWindowRef p_window, MCPoint p_location, MCPlatformDragOperation& r_operation)
 {
 	MCLog("Window(%p) -> DragMove([%d, %d])", p_window, p_location . x, p_location . y);
-	MCPlatformHandleDragMove(p_window, p_location);
+	MCPlatformHandleDragMove(p_window, p_location, r_operation);
 }
 
 void MCPlatformCallbackSendDragDrop(MCPlatformWindowRef p_window)

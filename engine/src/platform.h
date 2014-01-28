@@ -567,6 +567,22 @@ void MCPlatformHideCursor(void);
 
 typedef class MCPlatformPasteboard *MCPlatformPasteboardRef;
 
+enum MCPlatformDragOperation
+{
+	kMCPlatformDragOperationNone,
+	kMCPlatformDragOperationCopy,
+	kMCPlatformDragOperationLink,
+	kMCPlatformDragOperationMove,
+	
+	// COCOA-TODO: Add other drag operation types.
+};
+
+void MCPlatformPasteboardRetain(MCPlatformPasteboardRef pasteboard);
+void MCPlatformPasteboardRelease(MCPlatformPasteboardRef pasteboard);
+
+bool MCPlatformPasteboardQuery(char **& r_flavors, uindex_t& r_count);
+bool MCPlatformPasteboardFetch(const char *flavor, void*& r_bytes, uindex_t r_byte_count);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef class MCPlatformWindow *MCPlatformWindowRef;
