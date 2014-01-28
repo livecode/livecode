@@ -121,6 +121,7 @@ bool MCNumberParse(MCStringRef p_string, MCNumberRef &r_number)
         return MCNumberParseUnicodeChars(MCStringGetCharPtr(p_string), MCStringGetLength(p_string), r_number);
 
     bool t_success;
+    t_success = false;
 
     const char* t_chars = (const char*)MCStringGetNativeCharPtr(p_string);
 
@@ -137,7 +138,13 @@ bool MCNumberParse(MCStringRef p_string, MCNumberRef &r_number)
         if (*t_end == '\0')
             t_success = MCNumberCreateWithInteger(t_integer, r_number);
         else
-            t_success = MCNumberCreateWithReal(strtod(t_chars, &t_end), r_number);
+        {
+            real64_t t_real;
+            t_real = strtod(t_chars, &t_end);
+            
+            if (*t_end == '\0')
+                t_success = MCNumberCreateWithReal(t_real, r_number);
+        }
     }
 
     return t_success;
