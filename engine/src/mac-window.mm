@@ -587,22 +587,22 @@ void MCMacPlatformWindow::DoRealize(void)
 	{
 		case kMCPlatformWindowStyleNone:
 		case kMCPlatformWindowStyleDocument:
-			t_window_level = kCGNormalWindowLevelKey;
+			t_window_level = kCGNormalWindowLevel;
 			break;
 		case kMCPlatformWindowStylePalette:
-			t_window_level = kCGFloatingWindowLevelKey;
+			t_window_level = kCGFloatingWindowLevel;
 			break;
 		case kMCPlatformWindowStyleDialog:
-			t_window_level = kCGModalPanelWindowLevelKey;
+			t_window_level = kCGModalPanelWindowLevel;
 			break;
 		case kMCPlatformWindowStyleUtility:
-			t_window_level = kCGUtilityWindowLevelKey;
+			t_window_level = kCGUtilityWindowLevel;
 			break;
 		case kMCPlatformWindowStylePopUp:
-			t_window_level = kCGPopUpMenuWindowLevelKey;
+			t_window_level = kCGPopUpMenuWindowLevel;
 			break;
 		case kMCPlatformWindowStyleToolTip:
-			t_window_level = kCGStatusWindowLevelKey;
+			t_window_level = kCGStatusWindowLevel;
 			break;
 		default:
 			assert(false);
@@ -619,7 +619,7 @@ void MCMacPlatformWindow::DoRealize(void)
 	
 	// For floating window levels, we use a panel, otherwise a normal window will do.
 	// (Note that NSPanel is a subclass of NSWindow)
-	if (t_window_level != kCGFloatingWindowLevelKey)
+	if (t_window_level != kCGFloatingWindowLevel)
 		m_window_handle = [[NSWindow alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: YES];
 	else
 		m_panel_handle = [[NSPanel alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: YES];
