@@ -1664,10 +1664,12 @@ void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r
         
         t_object -> parsescript(False);
         if (t_object -> hlist != NULL && t_object -> getstack() -> iskeyed())
+        {
             t_first = t_object -> hlist -> enumerate(ctxt, t_first, t_count, t_handler_array);
         
-        for (uindex_t i = 0; i < t_count; i++)
-            t_handlers . Push(t_handler_array[i]);
+            for (uindex_t i = 0; i < t_count; i++)
+                t_handlers . Push(t_handler_array[i]);
+        }
     }
     
     if (MCbackscripts != NULL)
@@ -1691,10 +1693,12 @@ void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r
                 t_handler_list = NULL;
             
             if (t_handler_list != NULL)
+            {
                 t_first = t_handler_list -> enumerate(ctxt, t_first, t_count, t_handler_array);
             
-            for (uindex_t i = 0; i < t_count; i++)
-                t_handlers . Push(t_handler_array[i]);
+                for (uindex_t i = 0; i < t_count; i++)
+                    t_handlers . Push(t_handler_array[i]);
+            }
             
             t_object_ref = t_object_ref -> next();
         }
