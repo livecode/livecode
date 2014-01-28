@@ -42,6 +42,8 @@ public:
 	};
 };
 
+static MCPlatformCursor *s_hidden_cursor = nil;
+
 // This function expects to be called after a pool has been allocated.
 static NSImage *CreateNSImageFromCGImage(CGImageRef p_image)
 {
@@ -156,5 +158,23 @@ void MCPlatformShowCursor(MCPlatformCursorRef p_cursor)
 
 void MCPlatformHideCursor(void)
 {
-	[NSCursor hide];
+	if (s_hidden_cursor == nil)
+	{
+		uint32_t t_img_data;
+		t_img_data = 0;
+		
+		MCImageBitmap t_image;
+		t_image . width = 1;
+		t_image . height = 1;
+		t_image . stride = 4;
+		t_image . data = &t_img_data;
+		
+		MCPoint t_hot_spot;
+		t_hot_spot . x = 0;
+		t_hot_spot . y = 0;
+		MCPlatformCreateCustomCursor(&t_image, t_hot_spot, s_hidden_cursor);
+	
+	}
+
+	MCPlatformShowCursor(s_hidden_cursor);
 }
