@@ -395,6 +395,8 @@
 	MCMacPlatformWindow *t_window;
 	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
 	
+	MCPlatformMapPointFromScreenToWindow(t_window, t_location, t_location);
+	
 	MCPlatformDragOperation t_operation;
 	t_window -> HandleDragMove(t_location, t_operation);
 	

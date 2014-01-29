@@ -327,6 +327,10 @@ static MCPlatformDragOperation dragaction_to_dragoperation(MCDragAction p_action
 MCSystemPasteboard::MCSystemPasteboard(MCPlatformPasteboardRef p_pasteboard)
 {
 	m_references = 1;
+	
+	m_generation = MCPlatformPasteboardGetGeneration(p_pasteboard);
+	
+	Resolve();
 }
 
 MCSystemPasteboard::~MCSystemPasteboard(void)

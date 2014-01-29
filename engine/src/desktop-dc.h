@@ -19,6 +19,13 @@ public:
 	
 private:
 	uint32_t m_references;
+	
+	uindex_t m_generation;
+	
+	MCTransferType *m_types;
+	uindex_t m_type_count;
+	
+	bool m_valid;
 };
 
 class MCScreenDC: public MCUIDC

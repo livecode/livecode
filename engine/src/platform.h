@@ -577,11 +577,24 @@ enum MCPlatformDragOperation
 	// COCOA-TODO: Add other drag operation types.
 };
 
+enum MCPlatformPasteboardFlavor
+{
+	kMCPlatformPasteboardFlavorUTF8,
+	kMCPlatformPasteboardFlavorRTF,
+	kMCPlatformPasteboardFlavorHTML,
+	kMCPlatformPasteboardFlavorPNG,
+	kMCPlatformPasteboardFlavorJPEG,
+	kMCPlatformPasteboardFlavorGIF,
+	kMCPlatformPasteboardFlavorFiles,
+};
+
 void MCPlatformPasteboardRetain(MCPlatformPasteboardRef pasteboard);
 void MCPlatformPasteboardRelease(MCPlatformPasteboardRef pasteboard);
 
-bool MCPlatformPasteboardQuery(char **& r_flavors, uindex_t& r_count);
-bool MCPlatformPasteboardFetch(const char *flavor, void*& r_bytes, uindex_t r_byte_count);
+void MCPlatformPasteboardGetGeneration(MCPlatformPasteboardRef pasteboard, uindex_t& r_generation);
+
+bool MCPlatformPasteboardQuery(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor& r_flavors, uindex_t& r_count);
+bool MCPlatformPasteboardFetch(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor flavor, void*& r_bytes, uindex_t r_byte_count);
 
 ////////////////////////////////////////////////////////////////////////////////
 
