@@ -30,7 +30,7 @@ void MCPlatformHandleMouseMove(MCPlatformWindowRef window, MCPoint location);
 void MCPlatformHandleDragEnter(MCPlatformWindowRef window, MCPlatformPasteboardRef pasteboard, MCPlatformDragOperation& r_operation);
 void MCPlatformHandleDragMove(MCPlatformWindowRef window, MCPoint location, MCPlatformDragOperation& r_operation);
 void MCPlatformHandleDragLeave(MCPlatformWindowRef window);
-void MCPlatformHandleDragDrop(MCPlatformWindowRef window);
+void MCPlatformHandleDragDrop(MCPlatformWindowRef window, bool& r_accepted);
 
 void MCPlatformHandleMenuUpdate(MCPlatformMenuRef menu);
 void MCPlatformHandleMenuSelect(MCPlatformMenuRef menu, uindex_t index);
@@ -163,10 +163,10 @@ void MCPlatformCallbackSendDragMove(MCPlatformWindowRef p_window, MCPoint p_loca
 	MCPlatformHandleDragMove(p_window, p_location, r_operation);
 }
 
-void MCPlatformCallbackSendDragDrop(MCPlatformWindowRef p_window)
+void MCPlatformCallbackSendDragDrop(MCPlatformWindowRef p_window, bool& r_accepted)
 {
 	MCLog("Window(%p) -> DragDrop()", p_window);
-	MCPlatformHandleDragDrop(p_window);
+	MCPlatformHandleDragDrop(p_window, r_accepted);
 }
 
 //////////

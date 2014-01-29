@@ -1195,7 +1195,6 @@ void MCDispatch::kfocusset(Window w)
 
 void MCDispatch::wmdragenter(Window w, MCPasteboard *p_data)
 {
-	
 	MCStack *target = findstackd(w);
 	
 	m_drag_target = true;

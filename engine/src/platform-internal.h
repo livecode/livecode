@@ -115,6 +115,7 @@ public:
 	void HandleDragEnter(MCPlatformPasteboardRef pasteboard, MCPlatformDragOperation& r_operation);
 	void HandleDragMove(MCPoint location, MCPlatformDragOperation& r_operation);
 	void HandleDragLeave(void);
+	void HandleDragDrop(bool& r_accepted);
 	
 	//////////
 	
@@ -211,7 +212,7 @@ void MCPlatformCallbackSendMouseMove(MCPlatformWindowRef window, MCPoint locatio
 void MCPlatformCallbackSendDragEnter(MCPlatformWindowRef window, MCPlatformPasteboardRef pasteboard, MCPlatformDragOperation& r_operation);
 void MCPlatformCallbackSendDragLeave(MCPlatformWindowRef window);
 void MCPlatformCallbackSendDragMove(MCPlatformWindowRef window, MCPoint location, MCPlatformDragOperation& r_operation);
-void MCPlatformCallbackSendDragDrop(MCPlatformWindowRef window);
+void MCPlatformCallbackSendDragDrop(MCPlatformWindowRef window, bool& r_accepted);
 
 void MCPlatformCallbackSendKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 void MCPlatformCallbackSendKeyUp(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);

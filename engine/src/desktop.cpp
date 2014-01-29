@@ -346,8 +346,13 @@ void MCPlatformHandleDragLeave(MCPlatformWindowRef p_window)
 	MCdispatcher -> wmdragleave(p_window);
 }
 
-void MCPlatformHandleDragDrop(MCPlatformWindowRef window)
+void MCPlatformHandleDragDrop(MCPlatformWindowRef p_window, bool& r_accepted)
 {
+	MCdispatcher -> wmdragdrop(p_window);
+	
+	// PLATFORM-TODO: Should we do more than this? i.e. Should the dragDrop
+	//   message be able to signal refusal?
+	r_accepted = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

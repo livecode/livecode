@@ -429,6 +429,11 @@ void MCPlatformWindow::HandleDragLeave(void)
 	MCPlatformCallbackSendDragLeave(this);
 }
 
+void MCPlatformWindow::HandleDragDrop(bool& r_accepted)
+{
+	MCPlatformCallbackSendDragDrop(this, r_accepted);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Platform Window Procedural Wrappers

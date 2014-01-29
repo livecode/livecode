@@ -405,12 +405,19 @@
 
 - (BOOL)performDragOperation: (id<NSDraggingInfo>)sender
 {
-	return NO;
+	MCMacPlatformWindow *t_window;
+	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	
+	bool t_accepted;
+	t_window -> HandleDragDrop(t_accepted);
+	return t_accepted;
 }
 
 - (BOOL)prepareForDragOperation: (id<NSDraggingInfo>)sender
 {
-	return NO;
+	// We alwasys return YES here since the last script handler must have been
+	// happy with the dragAction for this to get to this point.
+	return YES;
 }
 
 - (void)concludeDragOperation:(id<NSDraggingInfo>)sender
