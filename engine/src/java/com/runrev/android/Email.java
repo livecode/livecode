@@ -89,26 +89,35 @@ class Email
 			return "*/*"; //"multipart/mixed";
 	}
 	
-	private boolean addAttachment(Uri uri, String mime_type, String name)
+	private boolean addAttachment(Uri uri, String mime_type, String name, boolean p_is_in_apk)
 	{
 		if (m_attachment_uris == null)
 			m_attachment_uris = new ArrayList<Uri>();
-		
-		m_attachment_uris.add(uri);
+        
+        // SN-2014-01-29: [[ Bug 11069 ]] mobileComposeMail attachment missing in Android
+        // We need to call a Content Provider to get the right to access them
+        Uri t_uri;
+        if (p_is_in_apk)
+            t_uri = Uri.parse(AttachmentProvider.URI + "/" + uri.getPath());
+        else
+            t_uri = uri;
+        
+		m_attachment_uris.add(t_uri);
+        
 		m_mime_type = combineMimeTypes(m_mime_type, mime_type);
 		return true;
 	}
 	
-	public boolean addAttachment(String path, String mime_type, String name)
+	public boolean addAttachment(String path, String mime_type, String name, boolean p_is_in_apk)
 	{
-		return addAttachment(Uri.fromFile(new File(path)), mime_type, name);
+		return addAttachment(Uri.fromFile(new File(path)), mime_type, name, p_is_in_apk);
 	}
 	
 	public boolean addAttachment(byte[] data, String mime_type, String name)
 	{
 		try
 		{
-			File t_tempfile;
+			File t_tempfile;			
 			t_tempfile = File.createTempFile("eml", name);
 			
 			FileOutputStream t_out = new FileOutputStream(t_tempfile);
@@ -120,7 +129,9 @@ class Email
 			
 			m_temp_files.add(t_tempfile);
 			
-			return addAttachment(Uri.fromFile(t_tempfile), mime_type, name);
+            // SN-2014-01-29: [[ Bug 11069 ]] mobileComposeMail attachment missing in Android
+            // Temporary file is meant to be always readable
+			return addAttachment(Uri.fromFile(t_tempfile), mime_type, name, false);
 		}
 		catch (Exception e)
 		{
@@ -161,6 +172,11 @@ class Email
 			t_mail_intent.setType(m_mime_type);
 		else
 			t_mail_intent.setType("text/plain");
+        
+        // SN-2014-01-28: [[ Bug 11069 ]] mobileComposeMail attachment missing in Android
+        // This permission of reading must be added to the Intent to allow it to read the file
+        t_mail_intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        
 		return t_mail_intent;
 	}
 	

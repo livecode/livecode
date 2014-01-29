@@ -1833,12 +1833,16 @@ public class Engine extends View implements EngineApi
 
 	public void addAttachment(String path, String mime_type, String name)
 	{
-		m_email.addAttachment(path, mime_type, name);
+        // SN-2014-01-29: [[ Bug 11069 ]] mobileComposeMail attachment missing in Android
+        // Specifying whether a file is located in the APK
+        boolean t_apk_path;
+        t_apk_path = path.contains(getActivity().getPackageCodePath());
+        m_email.addAttachment(path, mime_type, name, t_apk_path);
 	}
 
 	public void addAttachment(byte[] data, String mime_type, String name)
 	{
-		m_email.addAttachment(data, mime_type, name);
+        m_email.addAttachment(data, mime_type, name);
 	}
 
 	public void sendEmail()
