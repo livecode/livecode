@@ -1355,7 +1355,7 @@ void MCIdeScriptColourize::exec_ctxt(MCExecContext &ctxt)
     if (eval_target_range(ctxt, f_start, f_end, f_target, t_start, t_end, t_target))
 		t_state = MCIdeState::Find(t_target);
 
-    if (t_target -> getparagraphs() != NULL)
+    if (t_target && t_target -> getparagraphs() != NULL)
         TokenizeField(t_target, t_state, f_type, t_start, t_end, colourize_paragraph);
     else
         ctxt . Throw();

@@ -6303,7 +6303,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 }
                 
                 if (t_success)
-                    t_success = MCListCopyAsStringAndRelease(*t_result_list, &t_result_string);
+                    t_success = MCListCopyAsString(*t_result_list, &t_result_string);
                 
                 if (t_success)
                     t_success = MCListAppend(*t_list, *t_result_string);
