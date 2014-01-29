@@ -836,7 +836,7 @@ void MCStringsAddChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, uindex_t p
     
     /* UNCHECKED */ MCStringCopy(*t_string, x_text . text);
     
-    // adjust indices and map back to codeunits
+    x_text . start += p_to_add;
     x_text . finish += p_to_add;
     
     // the text has changed
