@@ -477,7 +477,7 @@ void MCStack::destroywindowshape()
 }
 
 // IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
-MCRectangle MCStack::view_platform_getwindowrect(void)
+MCRectangle MCStack::view_platform_getwindowrect(void) const
 {
 	return view_device_getwindowrect();
 }
