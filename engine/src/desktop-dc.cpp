@@ -826,11 +826,12 @@ MCPrinter *MCScreenDC::createprinter(void)
 
 void MCScreenDC::flushclipboard(void)
 {
+	MCPlatformFlushClipboard();
 }
 
 bool MCScreenDC::ownsclipboard(void)
 {
-	return false;
+	return MCPlatformOwnsClipboard();
 }
 
 bool MCScreenDC::setclipboard(MCPasteboard *p_pasteboard)
@@ -840,7 +841,15 @@ bool MCScreenDC::setclipboard(MCPasteboard *p_pasteboard)
 
 MCPasteboard *MCScreenDC::getclipboard(void)
 {
-	return nil;
+	MCPlatformPasteboardRef t_pasteboard;
+	MCPlatformGetClipboard(t_pasteboard);
+	
+	MCPasteboard *t_clipboard;
+	t_clipboard = new MCSystemPasteboard(t_pasteboard);
+	
+	MCPlatformPasteboardRelease(t_pasteboard);
+	
+	return t_clipboard;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

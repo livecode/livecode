@@ -5,6 +5,10 @@
 #include "uidc.h"
 #endif
 
+#ifndef __MC_PLATFORM__
+#include "platform.h"
+#endif
+
 class MCSystemPasteboard: public MCPasteboard
 {
 public:
@@ -18,12 +22,25 @@ public:
 	virtual bool Fetch(MCTransferType p_type, MCSharedString*& r_data);
 	
 private:
+	bool IsValid(void);
+	void Resolve(void);
+	void AddEntry(MCTransferType type, MCPlatformPasteboardFlavor flavor);
+	
+	struct Entry
+	{
+		MCTransferType type;
+		MCPlatformPasteboardFlavor flavor;
+		MCSharedString *data;
+	};
+	
 	uint32_t m_references;
 	
+	MCPlatformPasteboardRef m_pasteboard;
 	uindex_t m_generation;
 	
 	MCTransferType *m_types;
-	uindex_t m_type_count;
+	Entry *m_entries;
+	uindex_t m_entry_count;
 	
 	bool m_valid;
 };

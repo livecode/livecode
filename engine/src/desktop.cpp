@@ -324,41 +324,6 @@ static MCPlatformDragOperation dragaction_to_dragoperation(MCDragAction p_action
 	return kMCPlatformDragOperationNone;
 }
 
-MCSystemPasteboard::MCSystemPasteboard(MCPlatformPasteboardRef p_pasteboard)
-{
-	m_references = 1;
-	
-	m_generation = MCPlatformPasteboardGetGeneration(p_pasteboard);
-	
-	Resolve();
-}
-
-MCSystemPasteboard::~MCSystemPasteboard(void)
-{
-}
-
-void MCSystemPasteboard::Retain(void)
-{
-	m_references += 1;
-}
-
-void MCSystemPasteboard::Release(void)
-{
-	m_references -= 1;
-	if (m_references == 0)
-		delete this;
-}
-
-bool MCSystemPasteboard::Query(MCTransferType*& r_types, unsigned int& r_type_count)
-{
-	return false;
-}
-
-bool MCSystemPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
-{
-	return false;
-}
-
 void MCPlatformHandleDragEnter(MCPlatformWindowRef p_window, MCPlatformPasteboardRef p_pasteboard, MCPlatformDragOperation& r_operation)
 {
 	MCSystemPasteboard *t_pasteboard;
