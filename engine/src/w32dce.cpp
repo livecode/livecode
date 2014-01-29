@@ -186,6 +186,12 @@ bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, 
 	return t_success;
 }
 
+// IM-2014-01-29: [[ HiDPI ]] We receive notification of desktop changes on Windows, so can safely cache display info
+bool MCScreen::platform_displayinfocacheable(void)
+{
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m)

@@ -370,7 +370,7 @@ bool MCUIDC::s_display_info_effective = false;
 // IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 uint4 MCUIDC::getdisplays(const MCDisplay *&r_displays, bool p_effective)
 {
-	if (p_effective != s_display_info_effective)
+	if (p_effective != s_display_info_effective || !platform_displayinfocacheable())
 		cleardisplayinfocache();
 	
 	if (s_displays == nil)
@@ -406,6 +406,11 @@ void MCUIDC::cleardisplayinfocache(void)
 	MCMemoryDeleteArray(s_displays);
 	s_displays = nil;
 	s_display_count = 0;
+}
+
+bool MCUIDC::platform_displayinfocacheable(void)
+{
+	return false;
 }
 
 //////////

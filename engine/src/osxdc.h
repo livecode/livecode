@@ -323,6 +323,7 @@ public:
 	virtual uint16_t platform_getwidth(void);
 	virtual uint16_t platform_getheight(void);
 	virtual bool platform_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count);
+	virtual bool platform_displayinfocacheable(void);
 	virtual bool platform_getwindowgeometry(Window w, MCRectangle &drect);
 	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
 	virtual void platform_querymouse(int2 &x, int2 &y);

@@ -815,6 +815,14 @@ public:
 	// MW-201-09-15: [[ Redraw ]] The 'onexpose()' method is called when a sequence
 	//   of Expose events are recevied.
 	void onexpose(MCRegionRef dirty);
+
+	// IM-2014-01-29: [[ HiDPI ]] platform-specific view device methods
+
+	MCRectangle view_device_getwindowrect() const;
+	MCRectangle view_device_setgeom(const MCRectangle &p_rect,
+		uint32_t p_minwidth, uint32_t p_minheight,
+		uint32_t p_maxwidth, uint32_t p_maxheight);
+	void view_device_updatewindow(MCRegionRef p_region);
 #endif
 	
 	bool cursoroverride ;
