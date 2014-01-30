@@ -2686,7 +2686,7 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
     {
         if (parent == nil)
         {
-            setparent(MCdefaultstackptr);
+            setparent(MCdefaultstackptr -> getcard());
             t_parent_added = true;
         }
         
