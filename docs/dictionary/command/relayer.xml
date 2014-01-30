@@ -18,8 +18,8 @@
 	<summary>Aids the manipulation of layers.</summary>
 
 	<examples>
-		<example>relayer button "b1" after button "b2" <code><i>-- bring button b1 to front</i></code></example>
-		<example>relayer button "b1" to back of card "testCard" <code><i>-- send button b1 to the back of card testCard</i></code></example>
+		<example>relayer button "b1" after button "b2" <i>-- bring button b1 to front</i></example>
+		<example>relayer button "b1" to back of card "testCard" <i>-- send button b1 to the back of card testCard</i></example>
 	</examples>
 
 	<history>

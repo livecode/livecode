@@ -1,0 +1,1 @@
+# iOS control scroller doesn't scroll on iOS7

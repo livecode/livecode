@@ -21,6 +21,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static inline uint32_t packed_scale_bounded(uint32_t x, uint8_t a)
+{
+	uint32_t u, v;
+
+	u = (x & 0xff00ff) * a + 0x800080;
+	u = ((u + ((u >> 8) & 0xff00ff)) >> 8) & 0xff00ff;
+
+	v = ((x >> 8) & 0xff00ff) * a + 0x800080;
+	v = (v + ((v >> 8) & 0xff00ff)) & 0xff00ff00;
+
+	return u | v;
+}
+
 static inline uint32_t packed_bilinear_bounded(uint32_t x, uint8_t a, uint32_t y, uint8_t b)
 {
 	uint32_t u, v;
@@ -36,11 +49,142 @@ static inline uint32_t packed_bilinear_bounded(uint32_t x, uint8_t a, uint32_t y
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2014-01-14: [[ Bug 11664 ]] Make sure we render text with appropriate fill
+//   colors for transparent and opaque pixels and blend the two resulting bitmaps
+//   separately.
+
+// Drawing text consistently with other apps is a little more involved than
+// we'd like on Windows due to ClearType and the need to render into potentially
+// partially transparent backgrounds.
+//
+// For each background pixel which is fully opaque, we need to render the text
+// direct on top in the appropriate fill color as ClearType filtering uses both
+// the fill color and the destination pixel to compute the output value.
+//
+// For each background pixel which is not opaque, we need to render the text
+// against black or white (depending on the intensity of the fill color) in
+// white or black (respectively) and take a weighted average of the RGB values
+// (ClearType uses LCD style rendering, spreading the alpha across the three
+// color channels); then use that as a mask to blend in the fill color.
+//
+// Unfortunately, this means we need to potentially render the text twice - once
+// for the opaque pixels, and once for the non-opaque pixels - and then composite
+// appropriately.
+//
+
+static void w32_draw_text_render_transparent_buffer(HDC p_gdi_context, const unichar_t *p_text, uindex_t p_text_length, bool p_nearest_white, int32_t p_height, uint32_t *p_rgb_pxls, int32_t p_rgb_width)
+{
+	// Clear the RGB buffer to black or white.
+	memset(p_rgb_pxls, p_nearest_white ? 0x00 : 0xff, p_rgb_width * p_height * sizeof(uint32_t));
+
+	// The text color is the inverse of what the RGB buffer has been set to.
+	SetTextColor(p_gdi_context, p_nearest_white ? RGB(0xff, 0xff, 0xff) : RGB(0x00, 0x00, 0x00));
+
+	// Render the text.
+	TextOutW(p_gdi_context, 0, 0, (LPCWSTR)p_text, p_text_length);
+
+	// Make sure GDI has finished.
+	GdiFlush();
+}
+
+static bool w32_draw_text_process_transparent_buffer(uint32_t p_fill_color, bool p_nearest_white, int32_t p_height, uint32_t *p_rgb_pxls, int32_t p_rgb_width, uint32_t *p_context_pxls, int32_t p_context_width)
+{
+	// This is set to true if we encounter a fully opaque pixel.
+	bool t_has_opaque;
+	t_has_opaque = false;
+
+	for (uint32_t y = 0; y < p_height; y++)
+	{
+		for (uint32_t x = 0; x < p_rgb_width; x++)
+		{
+			uint32_t *t_context_pxl;
+			t_context_pxl = p_context_pxls + y * p_context_width + x;
+
+			uint32_t *t_rgb_pxl;
+			t_rgb_pxl = p_rgb_pxls + y * p_rgb_width + x;
+			
+			// If the destination pixel is opaque, then set it to transparent black
+			// and flag for opacity. Otherwise; take an average of the three RGB
+			// components and blend with the fill color.
+			if (((*t_context_pxl >> 24) & 0xFF) == 0xFF)
+			{
+				*t_rgb_pxl = 0x00000000;
+				t_has_opaque = true;
+			}
+			else
+			{
+				uint32_t t_lcd32_val;
+				t_lcd32_val = *t_rgb_pxl;
+				
+				uint8_t t_a8_val;
+				t_a8_val = ((t_lcd32_val & 0xFF) + ((t_lcd32_val & 0xFF00) >> 8) + ((t_lcd32_val & 0xFF0000) >> 16)) / 3;
+				
+				if (!p_nearest_white)
+					t_a8_val = 255 - t_a8_val;
+
+				*t_rgb_pxl = packed_scale_bounded(p_fill_color, t_a8_val);
+			}
+		}
+	}
+
+	return t_has_opaque;
+}
+
+static void w32_draw_text_render_opaque_buffer(HDC p_gdi_context, const unichar_t *p_text, uindex_t p_text_length, uint32_t p_fill_color, int32_t p_height, uint32_t *p_rgb_pxls, int32_t p_rgb_width, uint32_t *p_context_pxls, int32_t p_context_width)
+{
+	// Copy the current pixels in the context across to the RGB buffer.
+	for(int32_t y = 0; y < p_height; y++)
+		memcpy(p_rgb_pxls + y * p_rgb_width, p_context_pxls + y * p_context_width, p_rgb_width * sizeof(uint32_t));
+
+	// The text color is the fill color.
+	SetTextColor(p_gdi_context, RGB((p_fill_color >> 16) & 0xFF, (p_fill_color >> 8) & 0xFF, (p_fill_color >> 0) & 0xFF));
+
+	// Render the text.
+	TextOutW(p_gdi_context, 0, 0, (LPCWSTR)p_text, p_text_length);
+
+	// Make sure GDI has finished.
+	GdiFlush();
+}
+
+static bool w32_draw_text_process_opaque_buffer(uint32_t p_fill_color, int32_t p_height, uint32_t *p_rgb_pxls, int32_t p_rgb_width, uint32_t *p_context_pxls, int32_t p_context_width)
+{
+	// This is set to true if we encounter a transparent pixel.
+	bool t_has_transparency;
+	t_has_transparency = false;
+
+	for (uint32_t y = 0; y < p_height; y++)
+	{
+		for (uint32_t x = 0; x < p_rgb_width; x++)
+		{
+			uint32_t *t_context_pxl;
+			t_context_pxl = p_context_pxls + y * p_context_width + x;
+
+			uint32_t *t_rgb_pxl;
+			t_rgb_pxl = p_rgb_pxls + y * p_rgb_width + x;
+			
+			// If the destination pixel is opaque, then just make sure our
+			// RGB pixel has 0xff for its alpha (GDI does not preserve this);
+			// otherwise set the rgb pixel to transparent black and flag that
+			// we have transparency.
+			if (((*t_context_pxl >> 24) & 0xFF) == 0xFF)
+				*t_rgb_pxl = *t_rgb_pxl | 0xFF000000;
+			else
+			{
+				*t_rgb_pxl = 0x00000000;
+				t_has_transparency = true;
+			}
+		}
+	}
+
+	return t_has_transparency;
+}
+
 static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef p_context, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, MCGIntRectangle p_bounds, HDC p_gdicontext)
 {
 	bool t_success;
 	t_success = true;
 
+	// Setup the output RGB buffer used by GDI to render into.
 	void *t_rgb_data;
 	t_rgb_data = NULL;
 	HBITMAP t_rgb_bitmap;
@@ -66,76 +210,32 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 		t_success = t_old_object != NULL;
 	}
 
+	// If the color is 'nearest_white' then we composite white against black for transparent
+	// pixels; otherwise we composite black against white.
 	bool t_nearest_white;
 	if (t_success)
 		t_nearest_white = (0.3 * (p_context -> state -> fill_color & 0xff) + 0.59 * ((p_context -> state -> fill_color >> 8) & 0xff) + 0.11 * ((p_context -> state -> fill_color >> 16) & 0xff)) >= 127.0;
 
+	// Setup various pointers and resources for the rendering that is required.
 	uint32_t *t_rgb_pxls, *t_context_pxls;
 	uint32_t t_context_width;
-	int32_t t_x_offset, t_y_offset;
+	SkPaint t_paint;
+	SkBitmap t_bitmap;
 	if (t_success)
 	{
 		t_rgb_pxls = (uint32_t *) t_rgb_data;
 
-		t_context_pxls = (uint32_t *) p_context -> layer -> canvas -> getTopDevice() -> accessBitmap(false) . getPixels();
-		t_context_width = p_context -> layer -> canvas -> getTopDevice() -> accessBitmap(false) . rowBytes() / 4;	
-
+		int32_t t_x_offset, t_y_offset;
 		t_x_offset = p_location . x + p_bounds . x;
 		t_y_offset = p_location . y + p_bounds . y;
 
-		for (uint32_t y = 0; y < p_bounds . height; y++)
-		{
-			for (uint32_t x = 0; x < p_bounds . width; x++)
-			{
-				uint32_t t_context_pxl;
-				t_context_pxl = *(t_context_pxls + (y + t_y_offset) * t_context_width + x + t_x_offset);
-				if (((t_context_pxl >> 24) & 0xFF) == 0xFF)
-					*(t_rgb_pxls + y * p_bounds . width + x) = t_context_pxl;
-				else
-					*(t_rgb_pxls + y * p_bounds . width + x) = t_nearest_white ? 0x000000 : 0xffffff;
-			}
-		}
+		// Compute the top-left of the pixels in the context (same as 0,0 in the rgb pixels).
+		t_context_pxls = (uint32_t *) p_context -> layer -> canvas -> getTopDevice() -> accessBitmap(false) . getPixels();
+		t_context_width = p_context -> layer -> canvas -> getTopDevice() -> accessBitmap(false) . rowBytes() / 4;
+		t_context_pxls += t_y_offset * t_context_width + t_x_offset;
 
-		SetBkMode(p_gdicontext, TRANSPARENT);
-		SetTextColor(p_gdicontext, RGB((p_context -> state -> fill_color >> 16) & 0xFF, (p_context -> state -> fill_color >> 8) & 0xFF, (p_context -> state -> fill_color >> 0) & 0xFF));
-		t_success = TextOutW(p_gdicontext, 0, 0, (LPCWSTR)p_text, p_length >> 1);
-	}
-
-	if (t_success)
-		t_success = GdiFlush();
-
-	if (t_success)
-	{
-		for (uint32_t y = 0; y < p_bounds . height; y++)
-		{
-			for (uint32_t x = 0; x < p_bounds . width; x++)
-			{
-				uint32_t *t_context_pxl;
-				t_context_pxl = t_context_pxls + (y + t_y_offset) * t_context_width + x + t_x_offset;
-				uint32_t *t_rgb_pxl;
-				t_rgb_pxl = t_rgb_pxls + y * p_bounds . width + x;
-				if (((*t_context_pxl >> 24) & 0xFF) == 0xFF)
-					*t_rgb_pxl = *t_rgb_pxl | 0xFF000000;
-				else
-				{
-					uint32_t t_lcd32_val;
-					t_lcd32_val = *(t_rgb_pxls + y * p_bounds . width + x);
-					
-					uint8_t t_a8_val;
-					t_a8_val = ((t_lcd32_val & 0xFF) + ((t_lcd32_val & 0xFF00) >> 8) + ((t_lcd32_val & 0xFF0000) >> 16)) / 3;
-					
-					if (!t_nearest_white)
-						t_a8_val = 255 - t_a8_val;
-
-					*t_rgb_pxl = packed_bilinear_bounded(*t_context_pxl, 255 - t_a8_val, p_context -> state -> fill_color, t_a8_val);
-				}
-			}
-		}
-
-		SkPaint t_paint;
 		t_paint . setStyle(SkPaint::kFill_Style);	
 		t_paint . setAntiAlias(p_context -> state -> should_antialias);
-		t_paint . setColor(MCGColorToSkColor(p_context -> state -> fill_color));
 		
 		SkXfermode *t_blend_mode;
 		t_blend_mode = MCGBlendModeToSkXfermode(p_context -> state -> blend_mode);
@@ -143,11 +243,80 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 		if (t_blend_mode != NULL)
 			t_blend_mode -> unref();		
 		
-		SkBitmap t_bitmap;
 		t_bitmap . setConfig(SkBitmap::kARGB_8888_Config, p_bounds . width, p_bounds . height);
-		t_bitmap . setIsOpaque(false);
 		t_bitmap . setPixels(t_rgb_data);
-		p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
+
+		SetBkMode(p_gdicontext, TRANSPARENT);
+	}
+
+	// Now process depending on the first pixel - if transparent, then first process
+	// transparency then process opacity; otherwise vice-versa.
+	if (t_success)
+	{
+		if ((*t_context_pxls >> 24) != 0xff)
+		{
+			// Render the text for the transparent pixels (white/black text on black/white background).
+			w32_draw_text_render_transparent_buffer(p_gdicontext, p_text, p_length >> 1, t_nearest_white, p_bounds . height, t_rgb_pxls, p_bounds . width);
+			
+			// Process the buffer - this sets all opaque pixels to fully transparent, and blends
+			// the fill color with the semi-opaque pixels. It returns whether there are any opaque
+			// pixels to process.
+			bool t_has_opaque;
+			t_has_opaque = w32_draw_text_process_transparent_buffer(p_context -> state -> fill_color, t_nearest_white, p_bounds . height, t_rgb_pxls, p_bounds . width, t_context_pxls, t_context_width);
+
+			// Blend the bitmap into the background (we definitely have transparent pixels).
+			t_bitmap . setIsOpaque(false);	
+			p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
+
+			// If there are any opaque pixels, process those.
+			if (t_has_opaque)
+			{
+				// Render the text for the opaque pixels (text with given fill color blended against
+				// destination pixels).
+				w32_draw_text_render_opaque_buffer(p_gdicontext, p_text, p_length >> 1, p_context -> state -> fill_color, p_bounds . height, t_rgb_pxls, p_bounds . width, t_context_pxls, t_context_width);
+
+				// Process the buffer - this ensures the alpha byte of all opaque pixels
+				// is 0xff (GDI doesn't preserve such things) and sets all non-opaque pixels
+				// to full transparent.
+				w32_draw_text_process_opaque_buffer(p_context -> state -> fill_color, p_bounds . height, t_rgb_pxls, p_bounds . width, t_context_pxls, t_context_width);
+
+				// Blend the bitmap into the background (we definitely have transparent pixels since
+				// we've set some so!).
+				t_bitmap . setIsOpaque(false);	
+				p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
+			}
+		}
+		else
+		{
+			// Render the text for the opaque pixels (text with given fill color blended against
+			// destination pixels).
+			w32_draw_text_render_opaque_buffer(p_gdicontext, p_text, p_length >> 1, p_context -> state -> fill_color, p_bounds . height, t_rgb_pxls, p_bounds . width, t_context_pxls, t_context_width);
+
+			// Process the buffer - this ensures the alpha byte of all opaque pixels
+			// is 0xff (GDI doesn't preserve such things) and sets all non-opaque pixels
+			// to full transparent. It returns whether there are any transparent pixels.
+			bool t_has_transparent;
+			t_has_transparent = w32_draw_text_process_opaque_buffer(p_context -> state -> fill_color, p_bounds . height, t_rgb_pxls, p_bounds . width, t_context_pxls, t_context_width);
+
+			// Blend the bitmap into the background (we may have transparent pixels).
+			t_bitmap . setIsOpaque(!t_has_transparent);	
+			p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
+
+			// If there are any transparent pixels, process those.
+			if (t_has_transparent)
+			{
+				// Render the text for the transparent pixels (white/black text on black/white background).
+				w32_draw_text_render_transparent_buffer(p_gdicontext, p_text, p_length >> 1, t_nearest_white, p_bounds . height, t_rgb_pxls, p_bounds . width);
+				
+				// Process the buffer - this sets all opaque pixels to fully transparent, and blends
+				// the fill color with the semi-opaque pixels.
+				w32_draw_text_process_transparent_buffer(p_context -> state -> fill_color, t_nearest_white, p_bounds . height, t_rgb_pxls, p_bounds . width, t_context_pxls, t_context_width);
+
+				// Blend the bitmap into the background (we definitely have transparent pixels).
+				t_bitmap . setIsOpaque(false);	
+				p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
+			}
+		}
 	}
 
 	if (t_rgb_bitmap != NULL)
