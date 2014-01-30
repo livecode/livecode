@@ -234,9 +234,21 @@ static void cache_locale(void)
 	s_datetime_locale -> date_formats[1] = "%a, %b %#d, %#Y";
 	s_datetime_locale -> date_formats[2] = "%A, %B %#d, %#Y" ;
 
-	s_datetime_locale -> time_formats[0] = string_prepend(swap_time_tokens(query_locale(T_FMT_AMPM)), "!");
-	s_datetime_locale -> time_formats[1] = string_prepend(swap_time_tokens(query_locale(T_FMT_AMPM)), "");
-
+    const char *t_time_ampm;
+    t_time_ampm = query_locale(T_FMT_AMPM);
+    
+    // AL-2014-01-16: [[ Bug 11672 ]] If the locale doesn't use AM/PM, then always use 24-hour time.
+    if (t_time_ampm[0] == '\0')
+    {
+        s_datetime_locale -> time_formats[0] = "!%H:%M" ;
+        s_datetime_locale -> time_formats[1] = "!%H:%M:%S" ;
+    }
+    else
+    {
+        s_datetime_locale -> time_formats[0] = string_prepend(swap_time_tokens(strdup(t_time_ampm)), "!");
+        s_datetime_locale -> time_formats[1] = string_prepend(swap_time_tokens(strdup(t_time_ampm)), "");
+    }
+    
 	s_datetime_locale -> time24_formats[0] = "!%H:%M" ;
 	s_datetime_locale -> time24_formats[1] = "!%H:%M:%S" ;
 

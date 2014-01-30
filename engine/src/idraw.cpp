@@ -156,13 +156,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			else
 			{
 				// can't get image data from rep
-				MCU_set_rect(drect, dx, dy, sw, sh);
-				setforeground(dc, DI_BACK, False);
-				dc->setbackground(MCscreen->getwhite());
-				dc->setfillstyle(FillOpaqueStippled, nil, 0, 0);
-				dc->fillrect(drect);
-				dc->setbackground(MCzerocolor);
-				dc->setfillstyle(FillSolid, nil, 0, 0);
+                drawnodata(dc, drect, sw, sh, dx, dy);
 			}
 
 			t_rep->UnlockImageFrame(currentframe, t_frame);
@@ -180,6 +174,22 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			}
 		}
 	}
+    else if (filename != nil)
+    {
+        // AL-2014-01-15: [[ Bug 11570 ]] Draw stippled background when referenced image file not found
+        drawnodata(dc, rect, sw, sh, dx, dy);
+    }
+}
+
+void MCImage::drawnodata(MCDC *dc, MCRectangle drect, uint2 sw, uint2 sh, int2 dx, int2 dy)
+{
+    MCU_set_rect(drect, dx, dy, sw, sh);
+    setforeground(dc, DI_BACK, False);
+    dc->setbackground(MCscreen->getwhite());
+    dc->setfillstyle(FillOpaqueStippled, nil, 0, 0);
+    dc->fillrect(drect);
+    dc->setbackground(MCzerocolor);
+    dc->setfillstyle(FillSolid, nil, 0, 0);
 }
 
 void MCImage::drawcentered(MCDC *dc, int2 x, int2 y, Boolean reversed)

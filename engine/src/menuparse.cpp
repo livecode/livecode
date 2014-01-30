@@ -269,6 +269,12 @@ bool MCParseMenuString(MCString &r_string, IParseMenuCallback *p_callback, bool 
 			ep.setsvalue(t_menuitem.label);
 			ep.utf8toutf16();
 			t_menuitem.label.set(ep.getsvalue().clone(), ep.getsvalue().getlength());
+			
+			// MW-2014-01-06: [[ Bug 11605 ]] If there is no tag, and the label can
+			//   be converted to native non-lossily, then use that as the tag.
+			if (t_menuitem . tag == nil &&
+				ep . trytoconvertutf16tonative())
+				t_menuitem.tag.set(ep.getsvalue().clone(), ep.getsvalue().getlength());
 		}
 		p_callback->ProcessItem(&t_menuitem);
 

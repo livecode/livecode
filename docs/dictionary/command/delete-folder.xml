@@ -16,9 +16,9 @@
 	<summary>Removes a <property tag="defaultFolder">folder</property> from the user's system.</summary>
 
 	<examples>
-<example>delete folder &quot;/bin/badprogram/&quot;</example>
-<example>delete folder &quot;../Last Version&quot;</example>
-<example><p>delete folder (the foundText)</p></example>
+<example>delete folder "/bin/badprogram/"</example>
+<example>delete folder "../Last Version"</example>
+<example><p>answer folder "Choose the folder you wish to delete."</p><p>put it into tChosenFolder</p><p>delete folder tChosenFolder</p></example>
 	</examples>
 
 	<history>
@@ -26,6 +26,8 @@
 		<deprecated version=""></deprecated>
 		<removed version=""></removed>
 		<changed version="4.6.1">Added Support for Android and iOS.</changed>
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
 	</history>
 
 	<objects>
@@ -66,12 +68,12 @@
 	<overview>Use the <b>delete folder</b> <glossary tag="command">command</glossary> to clean up by removing a <property tag="defaultFolder">folder</property> you created.</overview>
 
 		<parameters>
-<parameter>
-<name>pathName</name>
-<description>Specifies the name and location of the folder. If you specify a name but not a location, LiveCode assumes the folder is in the defaultFolder.</description>
-</parameter>		</parameters>
+  <parameter>
+    <name>pathName</name>
+    <description>Specifies the name and location of the folder. If you specify a name but not a location, LiveCode assumes the folder is in the defaultFolder.</description>
+  </parameter>		</parameters>
 
 	<value></value>
-	<comments>If a folder contains any files or folders, it cannot be deleted with the <b>delete folder</b> <glossary tag="command">command</glossary> until the items inside it are deleted or moved. To delete a folder that is not empty, use the <command tag="revDeleteFolder">revDeleteFolder</command> <glossary tag="command">command</glossary>.<p></p><p>This command can also be used to remove folders your stack did not create. Of course, a stack should not remove folders it did not create without obtaining explicit confirmation from the user.</p><p></p><p><code tag=""><caution></code><code tag="">This</code> <glossary tag="command">command</glossary> cannot be undone, so be very certain before you use it. The <b>delete folder</b> <glossary tag="command">command</glossary> removes the folder completely from the user's system. It does not place the folder in the Trash or Recycle Bin.</caution><p></p><p></p><note>iOS imposes strict controls over what you can and cannot access. Each application in iOS is stored in its own 'sandbox' folder (referred to as the home folder). An application is free to read and write files within this folder and its descendants, but it is not allowed to access anything outside of the 'sandbox'.</note><p></p><p></p><note>An Android application is installed on the phone in the form of its zip package. This means that any assets that are included are not available as discrete files in the native filesystem. In order to manage this the engine essentially 'virtualizes' the asset files you include, allowing (read-only) manipulation with all the standard LiveCode file and folder handling syntax.</note></comments>
+	<comments>If a folder contains any files or folders, it cannot be deleted with the <b>delete folder</b> <glossary tag="command">command</glossary> until the items inside it are deleted or moved. To delete a folder that is not empty, use the <command tag="revDeleteFolder">revDeleteFolder</command> <glossary tag="command">command</glossary>.<p></p><p>This command can also be used to remove folders your stack did not create. Of course, a stack should not remove folders it did not create without obtaining explicit confirmation from the user.</p><p></p><p></p><p></p><p></p><p></p><note>iOS imposes strict controls over what you can and cannot access. Each application in iOS is stored in its own 'sandbox' folder (referred to as the home folder). An application is free to read and write files within this folder and its descendants, but it is not allowed to access anything outside of the 'sandbox'.</note><p></p><p></p><p></p><note>An Android application is installed on the phone in the form of its zip package. This means that any assets that are included are not available as discrete files in the native filesystem. In order to manage this the engine essentially 'virtualizes' the asset files you include, allowing (read-only) manipulation with all the standard LiveCode file and folder handling syntax.</note><p>&#9;</p></comments>
 	</description>
 </doc>

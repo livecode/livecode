@@ -37,8 +37,8 @@
   </security>
   <summary>Replaces text in a <glossary tag="container">container</glossary> with other text.</summary>
   <examples>
-    <example>replace "A" with "N" in thisVariable <code><i>-- changes all As to Ns</i></code></example>
-    <example>replace return with empty in field 1 <code><i>-- runs lines together</i></code></example>
+    <example>replace "A" with "N" in thisVariable <i>-- changes all As to Ns</i></example>
+    <example>replace return with empty in field 1 <i>-- runs lines together</i></example>
     <example>replace somethingOld with "\" in it</example>
     <example>replace ".com" with somethingNew in URL "file:stuff.txt"</example>
   </examples>
