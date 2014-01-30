@@ -3264,8 +3264,7 @@ void MCStop::exec_ctxt(MCExecContext &ctxt)
 
                 MCTextExecStopUsingFont(ctxt, *t_font);
             }
-
-			if (target != NULL)
+            else if (target != NULL)
 			{
 				MCObject *optr;
 				uint4 parid;
