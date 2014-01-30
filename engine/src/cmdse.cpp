@@ -1103,8 +1103,6 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
             do
             {
                 if (!(t_success = tptr->eval(ctxt, &t_value)))
-                    t_success = true;
-                else
                     t_can_debug = MCB_error(ctxt, line, pos, EE_STATEMENT_BADPARAM);
                 ctxt.IgnoreLastError();
             }
