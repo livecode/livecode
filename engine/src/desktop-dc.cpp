@@ -217,22 +217,16 @@ MCColor *MCScreenDC::getaccentcolors()
 // IM-2013-08-01: [[ ResIndependence ]] refactored methods that return device coordinates
 uint16_t MCScreenDC::device_getwidth(void)
 {
-	GDHandle mainScreen = GetMainDevice();
-	HLock((Handle)mainScreen);
-	uint2 swidth = ((GDPtr)*mainScreen)->gdRect.right
-	- ((GDPtr)*mainScreen)->gdRect.left;
-	HUnlock((Handle)mainScreen);
-	return swidth;
+	MCRectangle t_viewport;
+	MCPlatformGetScreenViewport(0, t_viewport);
+	return t_viewport . width;
 }
 
 uint16_t MCScreenDC::device_getheight(void)
 {
-	GDHandle mainScreen = GetMainDevice();
-	HLock((Handle)mainScreen);
-	uint2 sheight = ((GDPtr)*mainScreen)->gdRect.bottom
-	- ((GDPtr)*mainScreen)->gdRect.top;
-	HUnlock((Handle)mainScreen);
-	return sheight;
+	MCRectangle t_viewport;
+	MCPlatformGetScreenViewport(0, t_viewport);
+	return t_viewport . height;
 }
 
 bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count)
@@ -253,46 +247,19 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& r_displays, u
 	}
 	else
 	{
-		for(GDHandle t_device = GetDeviceList(); t_device != NULL; t_device = GetNextDevice(t_device))
-			if (TestDeviceAttribute(t_device, screenDevice) && TestDeviceAttribute(t_device, screenActive))
-				t_display_count += 1;
-		
-		t_success = t_display_count != 0;
+		MCPlatformGetScreenCount(t_display_count);
 		
 		if (t_success)
 			t_success = MCMemoryNewArray(t_display_count, t_displays);
 		
 		if (t_success)
 		{
-			uint4 t_current_index = 1;
-			for(GDHandle t_device = GetDeviceList(); t_device != NULL; t_device = GetNextDevice(t_device))
-				if (TestDeviceAttribute(t_device, screenDevice) && TestDeviceAttribute(t_device, screenActive))
-				{
-					uint4 t_index;
-					
-					HLock((Handle)t_device);
-					
-					if (TestDeviceAttribute(t_device, mainScreen))
-						t_index = 0;
-					else
-						t_index = t_current_index++;
-					
-					t_displays[t_index] . index = t_index;
-					
-					t_displays[t_index] . device_viewport . x = (*t_device) -> gdRect . left;
-					t_displays[t_index] . device_viewport . y = (*t_device) -> gdRect . top;
-					t_displays[t_index] . device_viewport . width = (*t_device) -> gdRect . right - (*t_device) -> gdRect . left;
-					t_displays[t_index] . device_viewport . height = (*t_device) -> gdRect . bottom - (*t_device) -> gdRect . top;
-					
-					Rect t_workarea;
-					GetAvailableWindowPositioningBounds(t_device, &t_workarea);
-					t_displays[t_index] . device_workarea . x = t_workarea . left;
-					t_displays[t_index] . device_workarea . y = t_workarea . top;
-					t_displays[t_index] . device_workarea . width = t_workarea . right - t_workarea . left;
-					t_displays[t_index] . device_workarea . height = t_workarea . bottom - t_workarea . top;
-					
-					HUnlock((Handle)t_device);
-				}
+			for(uindex_t i = 0; i < t_display_count; i++)
+			{
+				t_displays[i] . index = i;
+				MCPlatformGetScreenViewport(i, t_displays[i] . device_viewport);
+				MCPlatformGetScreenWorkarea(i, t_displays[i] . device_workarea);
+			}
 		}
 		
 		if (t_success)
@@ -303,24 +270,7 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& r_displays, u
 		else
 			MCMemoryDeleteArray(t_displays);
 	}
-	
-	if (!t_success)
-	{
-		static MCDisplay t_display;
-		Rect t_workarea;
-		
-		MCU_set_rect(t_display . device_viewport, 0, 0, device_getwidth(), device_getheight());
-		GetAvailableWindowPositioningBounds(GetMainDevice(), &t_workarea);
-		t_display . index = 0;
-		t_display . device_workarea . x = t_workarea . left;
-		t_display . device_workarea . y = t_workarea . top;
-		t_display . device_workarea . width = t_workarea . right - t_workarea . left;
-		t_display . device_workarea . height = t_workarea . bottom - t_workarea . top;
-		
-		t_displays = &t_display;
-		t_display_count = 1;
-	}
-	
+
 	r_displays = t_displays;
 	r_count = t_display_count;
 	
@@ -347,16 +297,13 @@ void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode 
 	
 	if (title && mode <= WM_SHEET && mode != WM_DRAWER)
 	{
+		// COCOA-TODO: These values should be queryable (once we figure out what
+		//   'title' is meant to do...)
 		if (mode == WM_PALETTE)
 			screenRect.top += 13;
 		else
 		{
-			long osversion;
-			Gestalt(gestaltSystemVersion, &osversion);
-			if (osversion >= 0x00000800)
-				screenRect.top += 22;
-			else
-				screenRect.top += 19;
+			screenRect.top += 22;
 		}
 		sr = sb = 10;
 		sw = 20;

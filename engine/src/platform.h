@@ -467,6 +467,13 @@ enum
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformGetScreenCount(uindex_t& r_count);
+void MCPlatformGetScreenPixelScale(uindex_t index, float& r_scale);
+void MCPlatformGetScreenViewport(uindex_t index, MCRectangle& r_viewport);
+void MCPlatformGetScreenWorkarea(uindex_t index, MCRectangle& r_workarea);
+
+////////////////////////////////////////////////////////////////////////////////
+
 typedef class MCPlatformWindowMask *MCPlatformWindowMaskRef;
 
 void MCPlatformWindowMaskCreate(int32_t width, int32_t height, int32_t stride, void *bits, MCPlatformWindowMaskRef& r_mask);

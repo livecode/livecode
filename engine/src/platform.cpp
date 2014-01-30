@@ -8,6 +8,8 @@ void MCPlatformHandleApplicationShutdown(int& r_exit_code);
 void MCPlatformHandleApplicationShutdownRequest(bool& r_terminate);
 void MCPlatformHandleApplicationRun(void);
 
+void MCPlatformHandleScreenParametersChanged(void);
+
 void MCPlatformHandleWindowCloseRequest(MCPlatformWindowRef window);
 void MCPlatformHandleWindowIconify(MCPlatformWindowRef window);
 void MCPlatformHandleWindowUniconify(MCPlatformWindowRef window);
@@ -55,6 +57,14 @@ void MCPlatformCallbackSendApplicationShutdownRequest(bool& r_terminate)
 void MCPlatformCallbackSendApplicationRun(void)
 {
 	MCPlatformHandleApplicationRun();
+}
+
+//////////
+
+void MCPlatformCallbackSendScreenParametersChanged(void)
+{
+	MCLog("ScreenParametersChanged()", 0);
+	MCPlatformHandleScreenParametersChanged();
 }
 
 //////////

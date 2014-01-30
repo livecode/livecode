@@ -193,6 +193,8 @@ void MCPlatformCallbackSendApplicationShutdown(int& r_exit_code);
 void MCPlatformCallbackSendApplicationShutdownRequest(bool& r_terminate);
 void MCPlatformCallbackSendApplicationRun(void);
 
+void MCPlatformCallbackSendScreenParametersChanged(void);
+
 void MCPlatformCallbackSendWindowCloseRequest(MCPlatformWindowRef window);
 void MCPlatformCallbackSendWindowReshape(MCPlatformWindowRef window, MCRectangle new_content);
 void MCPlatformCallbackSendWindowRedraw(MCPlatformWindowRef window, MCPlatformSurfaceRef surface, MCRegionRef dirty_rgn);

@@ -26,6 +26,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool s_have_primary_screen_height = false;
+static CGFloat s_primary_screen_height = 0.0f;
+
+////////////////////////////////////////////////////////////////////////////////
+
 @implementation com_runrev_livecode_MCApplicationDelegate
 
 //////////
@@ -184,6 +189,11 @@
 
 - (void)applicationDidChangeScreenParameters:(NSNotification *)notification
 {
+	// Make sure we refetch the primary screen height.
+	s_have_primary_screen_height = false;
+	
+	// Dispatch the notification.
+	MCPlatformCallbackSendScreenParametersChanged();
 }
 
 //////////
@@ -512,6 +522,37 @@ uint32_t MCPlatformGetEventTime(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformGetScreenCount(uindex_t& r_count)
+{
+	r_count = [[NSScreen screens] count];
+}
+
+void MCPlatformGetScreenViewport(uindex_t p_index, MCRectangle& r_viewport)
+{
+	NSRect t_viewport;
+	t_viewport = [[[NSScreen screens] objectAtIndex: p_index] frame];
+	if (p_index == 0)
+	{
+		s_have_primary_screen_height = true;
+		s_primary_screen_height = t_viewport . size . height;
+		
+		r_viewport . x = t_viewport . origin . x;
+		r_viewport . y = t_viewport . origin . y;
+		r_viewport . width = t_viewport . size . width;
+		r_viewport . height = t_viewport . size . height;
+		return;
+	}
+	
+	MCMacPlatformMapScreenNSRectToMCRectangle(t_viewport, r_viewport);
+}
+
+void MCPlatformGetScreenWorkarea(uindex_t p_index, MCRectangle& r_workarea)
+{
+	MCMacPlatformMapScreenNSRectToMCRectangle([[[NSScreen screens] objectAtIndex: p_index] visibleFrame], r_workarea);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Our mouse handling code relies on getting a stream of mouse move messages
 // with screen co-ordinates, and mouse press messages indicating button state
 // changes. As we need to handle things like mouse grabbing, and windows popping
@@ -774,27 +815,58 @@ void MCMacPlatformSyncMouseAfterTracking(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define SCREEN_HEIGHT 1440
-
 void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint p, NSPoint& r_point)
 {
-	r_point = NSMakePoint(p . x, SCREEN_HEIGHT - p . y);
+	if (!s_have_primary_screen_height)
+	{
+		MCRectangle t_viewport;
+		MCPlatformGetScreenViewport(0, t_viewport);
+	}
+	
+	r_point = NSMakePoint(p . x, s_primary_screen_height - p . y);
 }
 
 void MCMacPlatformMapScreenNSPointToMCPoint(NSPoint p, MCPoint& r_point)
 {
+	if (!s_have_primary_screen_height)
+	{
+		MCRectangle t_viewport;
+		MCPlatformGetScreenViewport(0, t_viewport);
+	}
+	
 	r_point . x = p . x;
-	r_point . y = SCREEN_HEIGHT - p . y;
+	r_point . y = s_primary_screen_height - p . y;
 }
 
 void MCMacPlatformMapScreenMCRectangleToNSRect(MCRectangle r, NSRect& r_rect)
 {
-	r_rect = NSMakeRect(r . x, SCREEN_HEIGHT - (r . y + r . height), r . width, r . height);
+	if (!s_have_primary_screen_height)
+	{
+		MCRectangle t_viewport;
+		MCPlatformGetScreenViewport(0, t_viewport);
+	}
+	
+	r_rect = NSMakeRect(r . x, s_primary_screen_height - (r . y + r . height), r . width, r . height);
 }
 
 void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect r, MCRectangle& r_rect)
 {
-	r_rect = MCRectangleMake(r . origin . x, SCREEN_HEIGHT - (r . origin . y + r . size . height), r . size . width, r . size . height);
+	if (!s_have_primary_screen_height)
+	{
+		MCRectangle t_viewport;
+		MCPlatformGetScreenViewport(0, t_viewport);
+	}
+	
+	r_rect = MCRectangleMake(r . origin . x, s_primary_screen_height - (r . origin . y + r . size . height), r . size . width, r . size . height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static void display_reconfiguration_callback(CGDirectDisplayID display, CGDisplayChangeSummaryFlags flags, void *userInfo)
+{
+	// COCOA-TODO: Make this is a little more discerning (only need to reset if
+	//   primary geometry changes).
+	s_have_primary_screen_height = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -809,6 +881,9 @@ int main(int argc, char *argv[], char *envp[])
 	// Create the normal NSApplication object.
 	NSApplication *t_application;
 	t_application = [NSApplication sharedApplication];
+	
+	// Register for reconfigurations.
+	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
 	
 	// Setup our delegate
 	com_runrev_livecode_MCApplicationDelegate *t_delegate;

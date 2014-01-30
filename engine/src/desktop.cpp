@@ -96,6 +96,18 @@ void MCPlatformHandleApplicationRun(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformHandleScreenParametersChanged(void)
+{
+	// Force a refresh of the cached display info.
+	free(MCScreenDC::s_monitor_displays);
+	MCScreenDC::s_monitor_count = 0;
+	
+	// Post a desktop changed message.
+	MCscreen -> delaymessage(MCdefaultstackptr -> getcurcard(), MCM_desktop_changed);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCPlatformHandleWindowCloseRequest(MCPlatformWindowRef p_window)
 {
 	MCdispatcher -> wclose(p_window);
