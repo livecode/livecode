@@ -1216,14 +1216,6 @@
 		4D8BEC3F11B9379500DED42A /* osxicon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = osxicon.cpp; path = src/osxicon.cpp; sourceTree = "<group>"; };
 		4D8BEC4411B9389C00DED42A /* bsdiff_build.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bsdiff_build.cpp; path = src/bsdiff_build.cpp; sourceTree = "<group>"; };
 		4D8BED0111B959F500DED42A /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
-		4D9317A2185720810073ABA8 /* osxdc-cocoa.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "osxdc-cocoa.mm"; path = "src/osxdc-cocoa.mm"; sourceTree = "<group>"; };
-		4D9317A8185720E80073ABA8 /* osxdc-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "osxdc-legacy.cpp"; path = "src/osxdc-legacy.cpp"; sourceTree = "<group>"; };
-		4D9317B6185728F10073ABA8 /* osxdc-carbon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "osxdc-carbon.cpp"; path = "src/osxdc-carbon.cpp"; sourceTree = "<group>"; };
-		4D93185D18573ADD0073ABA8 /* osxdc-menu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "osxdc-menu.mm"; path = "src/osxdc-menu.mm"; sourceTree = "<group>"; };
-		4D93185F18573AEF0073ABA8 /* osxdc-textinput.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "osxdc-textinput.mm"; path = "src/osxdc-textinput.mm"; sourceTree = "<group>"; };
-		4D9318BF185749E70073ABA8 /* osxdc-window.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "osxdc-window.mm"; path = "src/osxdc-window.mm"; sourceTree = "<group>"; };
-		4D931B741857698B0073ABA8 /* osxdc-stack.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "osxdc-stack.mm"; path = "src/osxdc-stack.mm"; sourceTree = "<group>"; };
-		4D931E5A185894D10073ABA8 /* osxdc-stack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "osxdc-stack.h"; path = "src/osxdc-stack.h"; sourceTree = "<group>"; };
 		4D9797D10D1845B700CD2DD0 /* itransform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = itransform.cpp; path = src/itransform.cpp; sourceTree = "<group>"; };
 		4D982A4513C1B9A90066119A /* srvmac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvmac.cpp; path = src/srvmac.cpp; sourceTree = "<group>"; };
 		4D982B1113C1CDC10066119A /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
@@ -1843,16 +1835,8 @@
 				4D61BE370CCF789000D74FDB /* osxdnd.cpp */,
 				4C6F241D1529B33000C5AFB6 /* osxsnapshot.mm */,
 				4D8BEC3F11B9379500DED42A /* osxicon.cpp */,
-				4D9317A2185720810073ABA8 /* osxdc-cocoa.mm */,
-				4D9317A8185720E80073ABA8 /* osxdc-legacy.cpp */,
-				4D9317B6185728F10073ABA8 /* osxdc-carbon.cpp */,
-				4D93185D18573ADD0073ABA8 /* osxdc-menu.mm */,
-				4D93185F18573AEF0073ABA8 /* osxdc-textinput.mm */,
-				4D9318BF185749E70073ABA8 /* osxdc-window.mm */,
-				4D931B741857698B0073ABA8 /* osxdc-stack.mm */,
 				4D58801B0B80A4F800200116 /* osxstack.cpp */,
 				4D05B90E13E06AAC001CD82A /* dskosxmain.mm */,
-				4D931E5A185894D10073ABA8 /* osxdc-stack.h */,
 				4DECC94018856DB400463D52 /* platform.h */,
 				4DECC9AB18857A9100463D52 /* platform.cpp */,
 				4DECC9A918857A3900463D52 /* platform-internal.h */,

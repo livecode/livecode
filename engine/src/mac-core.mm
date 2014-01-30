@@ -277,6 +277,12 @@ static CFRunLoopObserverRef s_observer = nil;
 static bool s_in_blocking_wait = false;
 static bool s_wait_broken = false;
 
+enum
+{
+	kMCMacPlatformBreakEvent = 0,
+	kMCMacPlatformMouseSyncEvent = 1,
+};
+
 void MCPlatformBreakWait(void)
 {
 	//NSLog(@"Application -> BreakWait()");
@@ -296,7 +302,7 @@ void MCPlatformBreakWait(void)
 								timestamp:0
 							 windowNumber:0
 								  context:NULL
-								  subtype:0
+								  subtype:kMCMacPlatformBreakEvent
 									data1:0
 									data2:0];
 	
@@ -339,9 +345,17 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 								   dequeue: YES];
 
 	s_in_blocking_wait = false;
-	
+
 	if (t_event != nil)
-		[NSApp sendEvent: t_event];
+	{
+		if ([t_event type] == NSApplicationDefined)
+		{
+			if ([t_event subtype] == kMCMacPlatformMouseSyncEvent)
+				MCMacPlatformHandleMouseSync();
+		}
+		else
+			[NSApp sendEvent: t_event];
+	}
 	
 	[t_pool release];
 	
@@ -484,7 +498,8 @@ void MCPlatformGetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window)
 	t_window = [NSApp windowWithWindowNumber: t_number];
 	
 	if (t_window != nil &&
-		[[t_window delegate] isKindOfClass: [MCWindowDelegate class]])
+		[[t_window delegate] isKindOfClass: [MCWindowDelegate class]] &&
+		NSPointInRect(t_loc_cocoa, [t_window contentRectForFrameRect: [t_window frame]]))
 		r_window = [(MCWindowDelegate *)[t_window delegate] platformWindow];
 	else
 		r_window = nil;
@@ -707,7 +722,7 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 			// Send the mouse move.
 			MCPlatformCallbackSendMouseMove(s_mouse_window, t_window_loc);
 			
-			// If this is sthe start of a drag, then send a mouse drag.
+			// If this is the start of a drag, then send a mouse drag.
 			if (s_mouse_buttons != 0 && s_mouse_drag_button == 0xffffffff &&
 				(MCU_abs(p_screen_loc . x - s_mouse_last_click_screen_position . x) >= MCdragdelta ||
 				 MCU_abs(p_screen_loc . y - s_mouse_last_click_screen_position . y) >= MCdragdelta))
@@ -716,13 +731,50 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 				MCPlatformCallbackSendMouseDrag(s_mouse_window, s_mouse_drag_button);
 			}
 		}
+	}	
+}
+
+void MCMacPlatformHandleMouseSync(void)
+{
+	if (s_mouse_window != nil)
+	{
+		for(uindex_t i = 0; i < 3; i++)
+			if ((s_mouse_buttons & (1 << i)) != 0)
+			{
+				s_mouse_buttons &= ~(1 << i);
+				MCPlatformCallbackSendMouseRelease(s_mouse_window, i);
+			}
 	}
 	
+	s_mouse_grabbed = false;
+	s_mouse_drag_button = 0xffffffff;
+	s_mouse_click_count = 0;
+	s_mouse_last_click_time = 0;
+
+	MCPoint t_location;
+	MCMacPlatformMapScreenNSPointToMCPoint([NSEvent mouseLocation], t_location);
+	
+	MCMacPlatformHandleMouseMove(t_location);
+}
+
+void MCMacPlatformSyncMouseAfterTracking(void)
+{
+	NSEvent *t_event;
+	t_event = [NSEvent otherEventWithType:NSApplicationDefined
+								 location:NSMakePoint(0, 0)
+							modifierFlags:0
+								timestamp:0
+							 windowNumber:0
+								  context:NULL
+								  subtype:kMCMacPlatformMouseSyncEvent
+									data1:0
+									data2:0];
+	[NSApp postEvent: t_event atStart: YES];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define SCREEN_HEIGHT 1200
+#define SCREEN_HEIGHT 1440
 
 void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint p, NSPoint& r_point)
 {

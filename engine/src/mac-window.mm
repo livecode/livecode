@@ -446,7 +446,16 @@
 	MCMacPlatformWindow *t_window;
 	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
 	
-	t_window -> ProcessMousePress([event buttonNumber], pressed == YES);
+	// Swap button numbers 1 and 2.
+	NSUInteger t_button;
+	if ([event buttonNumber] == 1)
+		t_button = 2;
+	else if ([event buttonNumber] == 2)
+		t_button = 1;
+	else
+		t_button = [event buttonNumber];
+	
+	t_window -> ProcessMousePress(t_button, pressed == YES);
 }
 					 
 - (void)handleKeyPress: (NSEvent *)event isDown: (BOOL)pressed
@@ -576,6 +585,19 @@ MCMacPlatformWindow::~MCMacPlatformWindow(void)
 	[m_view release];
 	[m_handle release];
 	[m_delegate release];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCWindowView *MCMacPlatformWindow::GetView(void)
+{
+	return m_view;
+}
+
+void MCMacPlatformWindow::MapMCPointToNSPoint(MCPoint p_location, NSPoint& r_location)
+{
+	r_location . x = p_location . x;
+	r_location . y = m_content . height - p_location . y;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -804,7 +826,7 @@ void MCMacPlatformWindow::DoHide(void)
 
 void MCMacPlatformWindow::DoFocus(void)
 {
-	// COCOA-TODO: Implement focus.
+	[m_window_handle makeKeyWindow];
 }
 
 void MCMacPlatformWindow::DoRaise(void)

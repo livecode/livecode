@@ -199,6 +199,8 @@ public:
 	MCMacPlatformWindow(void);
 	virtual ~MCMacPlatformWindow(void);
 
+	MCWindowView *GetView(void);
+	
 	void ProcessCloseRequest();
 	void ProcessDidMove(void);
 	void ProcessDidResize(void);
@@ -212,6 +214,9 @@ public:
 	
 	void ProcessKeyDown(MCPlatformKeyCode key_code, codepoint_t unmapped_char, codepoint_t mapped_char);
 	void ProcessKeyUp(MCPlatformKeyCode key_code, codepoint_t unmapped_char, codepoint_t mapped_char);
+	
+	void MapMCPointToNSPoint(MCPoint location, NSPoint& r_ns_location);
+	void MapNSPointToMCPoint(NSPoint location, MCPoint& r_mc_location);
 	
 protected:
 	virtual void DoRealize(void);
@@ -269,6 +274,9 @@ private:
 
 void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_is_down);
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_location);
+void MCMacPlatformHandleMouseSync(void);
+
+void MCMacPlatformSyncMouseAfterTracking(void);
 
 bool MCMacMapKeyCode(uint32_t mac_key_code, MCPlatformKeyCode& r_key_code);
 bool MCMacMapNSStringToCodepoint(NSString *string, codepoint_t& r_codepoint);

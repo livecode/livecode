@@ -203,6 +203,7 @@ typedef class MCPlatformWindow *MCPlatformWindowRef;
 typedef class MCPlatformSurface *MCPlatformSurfaceRef;
 typedef class MCPlatformCursor *MCPlatformCursorRef;
 typedef class MCPlatformPasteboard *MCPlatformPasteboardRef;
+typedef class MCPlatformMenu *MCPlatformMenuRef;
 
 typedef void *MCColorTransformRef;
 

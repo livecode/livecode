@@ -73,7 +73,7 @@ void MCPlatformCallbackSendWindowReshape(MCPlatformWindowRef p_window, MCRectang
 
 void MCPlatformCallbackSendWindowRedraw(MCPlatformWindowRef p_window, MCPlatformSurfaceRef p_surface, MCRegionRef p_dirty_rgn)
 {
-	//MCLog("Window(%p) -> WindowRedraw(%p, %p)", p_window, p_surface);
+	MCLog("Window(%p) -> WindowRedraw(%p, %p)", p_window, p_surface);
 	MCPlatformHandleWindowRedraw(p_window, p_surface, p_dirty_rgn);
 }
 

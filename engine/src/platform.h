@@ -535,6 +535,10 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef menu, uindex_t index, MCPla
 
 //////////
 
+bool MCPlatformPopUpMenu(MCPlatformMenuRef menu, MCPlatformWindowRef window, MCPoint location, uindex_t item);
+
+//////////
+
 void MCPlatformShowMenubar(void);
 void MCPlatformHideMenubar(void);
 

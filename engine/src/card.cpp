@@ -65,8 +65,10 @@ int2 MCCard::startx;
 int2 MCCard::starty;
 MCObjptr *MCCard::removedcontrol;
 
+#ifdef PRE_COCOA
 #ifdef _MAC_DESKTOP
 extern bool MCosxmenupoppedup;
+#endif
 #endif
 
 MCCard::MCCard()
@@ -586,15 +588,19 @@ Boolean MCCard::mdown(uint2 which)
 	{
 		MCControl *oldfocused = mfocused->getref();
 
+#ifdef PRE_COCOA
 		// MW-2007-12-11: [[ Bug 5670 ]] Reset our notification var so we can check it after
 #ifdef _MACOSX
 		MCosxmenupoppedup = false;
 #endif
+#endif
 		if (!mfocused->getref()->mdown(which)
 		        && getstack()->gettool(this) == T_BROWSE)
 		{
+#ifdef PRE_COCOA
 #ifdef _MACOSX
 			if (!MCosxmenupoppedup)
+#endif
 #endif
 				message_with_args(MCM_mouse_down, "1");
 		}

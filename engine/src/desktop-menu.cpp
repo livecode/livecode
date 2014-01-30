@@ -33,6 +33,8 @@
 #include "menuparse.h"
 #include "group.h"
 #include "stacklst.h"
+#include "stack.h"
+#include "graphics_util.h"
 
 #include "platform.h"
 
@@ -226,17 +228,20 @@ public:
 			if (MCU_strcasecmp(p_item_tag, s_known_menu_item_tags[i] . tag) == 0)
 				return s_known_menu_item_tags[i] . action;
 		
-		// If the menu title is "Edit" and the item title begins with "Preferences"
-		// then tag with the preferences action.
-		if (MCU_strcasecmp(m_menu_title, "Edit") == 0 &&
-			MCU_strncasecmp(p_item_title, "Preferences", 11) == 0)
-			return kMCPlatformMenuItemActionPreferences;
-		
-		// If the menu title is "Help" and the item title begins with "About"
-		// then tag with the about aciton.
-		if (MCU_strcasecmp(m_menu_title, "Help") == 0 &&
-			MCU_strncasecmp(p_item_title, "About", 5) == 0)
-			return kMCPlatformMenuItemActionAbout;
+		if (m_menu_title != nil)
+		{
+			// If the menu title is "Edit" and the item title begins with "Preferences"
+			// then tag with the preferences action.
+			if (MCU_strcasecmp(m_menu_title, "Edit") == 0 &&
+				MCU_strncasecmp(p_item_title, "Preferences", 11) == 0)
+				return kMCPlatformMenuItemActionPreferences;
+	
+			// If the menu title is "Help" and the item title begins with "About"
+			// then tag with the about aciton.
+			if (MCU_strcasecmp(m_menu_title, "Help") == 0 &&
+				MCU_strncasecmp(p_item_title, "About", 5) == 0)
+				return kMCPlatformMenuItemActionAbout;
+		}
 		
 		// There is no known action tied to the given tag.
 		return kMCPlatformMenuItemActionNone;
@@ -319,6 +324,9 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static char *s_popup_menupick = nil;
+static uindex_t s_popup_menuitem = 0;
+
 void MCButton::macopenmenu(void)
 {
 	if (m_system_menu == nil)
@@ -356,38 +364,32 @@ void MCButton::macopenmenu(void)
 			tmenuy = trect.y;
 			break;
 	}
-	
-	// MW-2007-12-11: [[ Bug 5670 ]] Make sure we notify things higher up in the call chain
-	//   that the mdown actually did result in a menu being popped up!
-	extern bool MCosxmenupoppedup;
-	MCosxmenupoppedup = true;
-	
+
 	switch (menumode)
 	{
 		case WM_COMBO:
 		case WM_OPTION:
-#if 0
-			//= MAC's pop-up menu, displayed at the control/button location
-			layer_redrawall();
-			if (MCModeMakeLocalWindows())
-				result = PopUpMenuSelect(mh, tmenuy, tmenux, menuhistory);
-			else
-				result = MCModePopUpMenu((MCMacSysMenuHandle)mh, tmenux - trect . x + rect . x, tmenuy - trect . y + rect . y, menuhistory, MCmousestackptr);
-			allowmessages(False);
-			pms->clearmdown(menubutton);
-			allowmessages(True);
-			if (result > 0)
+			if (MCPlatformPopUpMenu(m_system_menu, MCmousestackptr -> getwindow(), MCPointMake(tmenux, tmenuy), menuhistory - 1))
 			{
-				setmenuhistoryprop(LoWord(result));
-				//low word of result from PopUpMenuSelect() is the item selected
-				//high word contains the menu id
-				MCString slabel;
-				getmacmenuitemtext(mh, menuhistory, slabel, False, hasunicode());
+				setmenuhistoryprop(s_popup_menuitem + 1);
+				
+				MCAutoPointer<char> t_label;
+				MCPlatformGetMenuItemProperty(m_system_menu, s_popup_menuitem, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeUTF8CString, &(&t_label));
+				MCExecPoint ep;
+				ep . setsvalue(*t_label);
+				if (hasunicode())
+					ep . utf8toutf16();
+				else
+					ep . utf8tonative();
 				delete label;
-				label = (char *)slabel.getstring();
-				labelsize = slabel.getlength();
+				label = (char *)ep . getsvalue() . clone();
+				labelsize = ep . getsvalue() . getlength();
 				flags |= F_LABEL;
-				Exec_stat es = message_with_args(MCM_menu_pick, slabel);
+				
+				Exec_stat es = message_with_args(MCM_menu_pick, s_popup_menupick);
+				
+				free(s_popup_menupick);
+				
 				if (es == ES_NOT_HANDLED || es == ES_PASS)
 					message_with_args(MCM_mouse_up, menubutton);
 			}
@@ -395,44 +397,18 @@ void MCButton::macopenmenu(void)
 				message_with_args(MCM_mouse_release, menubutton);
 			state &= ~(CS_MFOCUSED | CS_ARMED | CS_HILITED);
 			layer_redrawall();
-#endif
-			result = MCPlatformPopUpMenu(m_system_menu, MCmousestackptr -> getwindow(), , tmenux - trect . x + rect . x, tmenuy - trect . y + rect . y, menuhistory);
-			if (result > 0)
-			{
-			}
 			break;
 		case WM_PULLDOWN:
 		case WM_CASCADE:
-		case WM_POPUP: //= MAC's context menu, Menu displyed at the mouse loc
-			if (MCModeMakeLocalWindows())
-				result = PopUpMenuSelect(mh, tmenuy, tmenux, 0);
-			else
+		case WM_POPUP:
+			if (MCPlatformPopUpMenu(m_system_menu, MCmousestackptr -> getwindow(), MCPointMake(tmenux, tmenuy), 0))
 			{
-				int32_t x, y;
-				if (menumode == WM_POPUP)
-				{
-					x = MCmousex + 1;
-					y = MCmousey + 1;
-				}
-				else
-				{
-					x = tmenux - trect . x + rect . x;
-					y = tmenuy - trect . y + rect . y;
-				}
+				setmenuhistoryprop(s_popup_menuitem + 1);
 				
-				result = MCModePopUpMenu((MCMacSysMenuHandle)mh, x, y, 0, MCmousestackptr);
-			}
-			allowmessages(False);
-			pms->clearmdown(menubutton);
-			allowmessages(True);
-			if (result > 0)
-			{ //user selected something
-				MenuHandle mhandle = GetMenuHandle(HiWord(result));
-				setmenuhistoryprop(LoWord(result));
-				MCString smenustring;
-				getmacmenuitemtext(mhandle, menuhistory, smenustring, mhandle != mh, hasunicode());
-				Exec_stat es = message_with_args(MCM_menu_pick, smenustring);
-				delete (char *)smenustring.getstring();
+				Exec_stat es = message_with_args(MCM_menu_pick, s_popup_menupick);
+				
+				free(s_popup_menupick);
+				
 				if (es == ES_NOT_HANDLED || es == ES_PASS)
 					message_with_args(MCM_mouse_up, menubutton);
 			}
@@ -442,14 +418,11 @@ void MCButton::macopenmenu(void)
 			break;
 	}
 	
-	// MW-2011-02-08: [[ Bug 9384 ]] Free the Mac menu after use since we don't need
-	//   it lingering around.
-	if (bMenuID != 0)
+	if (m_system_menu != nil)
 	{
-		MCScreenDC *pms = (MCScreenDC *)MCscreen;
-		pms->freeMenuAndID(bMenuID, this);
-		bMenuID = 0;
-	}	
+		MCPlatformReleaseMenu(m_system_menu);
+		m_system_menu = nil;
+	}
 }
 
 void MCButton::macfreemenu(void)
@@ -463,10 +436,32 @@ void MCButton::macfreemenu(void)
 
 Bool MCButton::macfindmenu(bool p_just_for_accel)
 {
-	return False;
+	if (m_system_menu != nil || p_just_for_accel)
+		return True;
+	
+	MCString t_menu_title;
+	bool t_is_unicode;
+	getlabeltext(t_menu_title, t_is_unicode);
+	
+	// Get the menu string.
+	MCString t_menu_string;
+	getmenustring(t_menu_string);
+	
+	// Convert the title to a string
+	MCAutoPointer<char> t_menu_title_string;
+	t_menu_title_string = utf8cstring_from_mcstring(t_menu_title, t_is_unicode);
+
+	MCPlatformCreateMenu(m_system_menu);
+	MCPlatformSetMenuTitle(m_system_menu, *t_menu_title_string);
+	
+	// Now build the menu from the spec string.
+	MCMenuBuilderCallback t_callback(this, *t_menu_title_string, m_system_menu);
+	MCParseMenuString(t_menu_string, &t_callback, hasunicode(), menumode);
+	
+	return True;
 }
 
-void MCButton::getmacmenuitemtextfromaccelerator(short menuid, uint2 key, uint1 mods, MCString &s, bool isunicode, bool issubmenu)
+void MCButton::getmacmenuitemtextfromaccelerator(MCPlatformMenuRef menu, uint2 key, uint1 mods, MCString &s, bool isunicode, bool issubmenu)
 {
 }
 
@@ -693,7 +688,7 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 	
 	// Keep track of the current (menu / item) pair we are working on.
 	MCPlatformMenuRef t_current_menu;
-	uindex_t t_current_menu_index;
+	uindex_t t_current_menu_index, t_last_menu_index;
 	t_current_menu = p_menu;
 	t_current_menu_index = p_item_index;
 	while(t_current_menu != nil)
@@ -713,6 +708,9 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 		// Now insert the tag.
 		ep . insert(*t_item_tag, 0, 0);
 		
+		// Store the last menu index.
+		t_last_menu_index = t_current_menu_index;
+		
 		// Fetch the parent menu and loop
 		MCPlatformGetMenuParent(t_current_menu, t_current_menu, t_current_menu_index);
 	}
@@ -729,7 +727,8 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 	}
 	else
 	{
-		// COCOA-TODO: Handle popup menus.
+		s_popup_menuitem = t_last_menu_index;
+		s_popup_menupick = ep . getsvalue() . clone();
 	}
 }
 

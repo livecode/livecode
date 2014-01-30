@@ -258,6 +258,7 @@ void MCPlatformGetMenuParent(MCPlatformMenuRef p_menu, MCPlatformMenuRef& r_pare
 	{
 		r_parent = nil;
 		r_index = 0;
+		return;
 	}
 	
 	r_index = [t_parent indexOfItemWithSubmenu: p_menu -> menu];
@@ -275,6 +276,9 @@ void MCPlatformGetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 	
 	switch(p_property)
 	{
+		case kMCPlatformMenuItemPropertyTitle:
+			*(char **)r_value = strdup([[t_item title] cStringUsingEncoding: NSUTF8StringEncoding]);
+			break;
 		case kMCPlatformMenuItemPropertyTag:
 			*(char **)r_value = strdup([(NSString *)[t_item representedObject] cStringUsingEncoding: NSUTF8StringEncoding]);
 			break;
@@ -373,6 +377,36 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 			// COCOA-TODO
 			break;
 	   }
+}
+
+//////////
+
+bool MCPlatformPopUpMenu(MCPlatformMenuRef p_menu, MCPlatformWindowRef p_window, MCPoint p_location, uindex_t p_item)
+{
+	NSMenu *t_menu;
+	t_menu = p_menu -> menu;
+	
+	NSView *t_view;
+	if (p_window != nil)
+		t_view = ((MCMacPlatformWindow *)p_window) -> GetView();
+	else
+		t_view = nil;
+	
+	NSPoint t_location;
+	if (t_view != nil)
+	{
+		MCPlatformMapPointFromScreenToWindow(p_window, p_location, p_location);
+		((MCMacPlatformWindow *)p_window) -> MapMCPointToNSPoint(p_location, t_location);
+	}
+	else
+		MCMacPlatformMapScreenMCPointToNSPoint(p_location, t_location);
+
+	bool t_result;
+	t_result = [t_menu popUpMenuPositioningItem: [t_menu itemAtIndex: p_item] atLocation: t_location inView: t_view];
+	
+	MCMacPlatformSyncMouseAfterTracking();
+	
+	return t_result;
 }
 
 //////////

@@ -281,6 +281,8 @@ void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_butto
 	{
 		tripleclick = False;
 		
+		MCbuttonstate &= ~(1 << p_button);
+		
 		// If the press was 'released' i.e. cancelled then we stop messages, mup then
 		// dispatch a mouseRelease message ourselves.
 		
