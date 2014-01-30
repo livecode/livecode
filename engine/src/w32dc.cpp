@@ -444,10 +444,21 @@ bool MCResPlatformCanChangePixelScaling(void)
 	return false;
 }
 
-// IM-2014-01-27: [[ HiDPI ]] update system settings after change to pixel scaling
-void MCResPlatformSetUsePixelScaling(bool p_use_scaling)
+// IM-2014-01-30: [[ HiDPI ]] Pixel scale cannot be set on Windows
+bool MCResPlatformCanSetPixelScale(void)
 {
-	// No-op as this cannot be modified at runtime on Windows
+	return false;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Pixel scale is 1.0 on Windows
+MCGFloat MCResPlatformGetDefaultPixelScale(void)
+{
+	return 1.0;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] No-op as this cannot be modified at runtime on Windows
+void MCResPlatformHandleScaleChange(void)
+{
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -188,7 +188,7 @@ bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *& r_displays,
 }
 
 // IM-2014-01-29: [[ HiDPI ]] We receive notification of desktop changes on OSX, so can safely cache display info
-bool MCScreen::platform_displayinfocacheable(void)
+bool MCScreenDC::platform_displayinfocacheable(void)
 {
 	return true;
 }

@@ -479,8 +479,20 @@ bool MCResPlatformCanChangePixelScaling(void)
 	return false;
 }
 
-// IM-2014-01-29: [[ HiDPI ]] Pixel scaling not supported on Linux
-void MCResPlatformSetUsePixelScaling(bool p_use_scaling)
+// IM-2014-01-30: [[ HiDPI ]] Pixel scaling not supported on Linux
+bool MCResPlatformCanSetPixelScale(void)
+{
+	return false;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Pixel scale is 1.0 on Linux
+MCGFloat MCResPlatformGetDefaultPixelScale(void)
+{
+	return 1.0;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Pixel scaling not supported on Linux
+void MCResPlatformHandleScaleChange(void)
 {
 }
 

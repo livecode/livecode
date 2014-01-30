@@ -543,7 +543,10 @@ void MCStack::view_setacceleratedrendering(bool p_value)
 	MCscreen -> getdisplays(t_display, false);
 	
 	MCRectangle t_viewport;
-	t_viewport = t_display -> device_viewport;
+	t_viewport = t_display -> viewport;
+	
+	// IM-2014-01-30: [[ HiDPI ]] Use backing-surface size to determine small, medium, or large
+	t_viewport = MCRectangleGetScaledBounds(t_viewport, view_getbackingscale());
 	
 	bool t_small_screen, t_medium_screen;
 	t_small_screen = MCMin(t_viewport . width, t_viewport . height) <= 480 && MCMax(t_viewport . width, t_viewport . height) <= 640;

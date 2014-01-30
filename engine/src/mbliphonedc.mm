@@ -80,9 +80,10 @@ static SystemSoundID s_system_sound = 0;
 static char *s_system_sound_name = nil;
 
 // These control the mapping of LiveCode pixel values to iOS pixels.
-static bool s_iphone_use_device_resolution = false;
 static MCGFloat s_iphone_device_scale = 1;
-static int32_t s_iphone_control_res_scale = 1;
+// IM-2014-01-30: [[ HiDPI ]] Controls scaling of LiveCode coords to iOS logical coords
+//   when dealing with native controls
+static bool s_iphone_scale_controls = true;
 
 // The main fiber on which all other code is executed.
 static MCFiberRef s_main_fiber = nil;
@@ -102,18 +103,18 @@ static float s_current_keyboard_height = 0.0f;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// IM-2013-07-18: [[ ResIndependence ]] if using the device resolution
-// then 1 pixel == 1 point, otherwise scale
-MCGFloat MCResGetSystemScale()
+// IM-2014-01-30: [[ HiDPI ]] The default value for pixel scaling on iOS is the main display density
+MCGFloat MCResPlatformGetDefaultPixelScale()
 {
-	return s_iphone_use_device_resolution ? 1.0 : s_iphone_device_scale;
+	return s_iphone_device_scale;
 }
 
 // IM-2013-07-18: [[ ResIndependence ]] if using the device resolution
-// then stack size == view size, otherwise scale
+// then stack size == screen size, otherwise scale
 float MCIPhoneGetResolutionScale(void)
 {
-	return s_iphone_use_device_resolution ? s_iphone_device_scale : 1.0;
+	// IM-2014-01-30: [[ HiDPI ]] Use device resolution if pixel scaling is enabled
+	return MCResGetUsePixelScaling() ? s_iphone_device_scale : 1.0;
 }
 
 // IM-2013-07-18: [[ ResIndependence ]] return the device scale
@@ -131,6 +132,11 @@ static void iphone_font_draw_text(void *p_font, CGContextRef p_context, CGFloat 
 
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static inline MCRectangle MCRectangleFromCGRect(const CGRect &p_rect)
+{
+	return MCRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+}
 
 static inline MCGRectangle MCGRectangleFromCGRect(CGRect p_rect)
 {
@@ -150,7 +156,8 @@ MCRectangle MCDeviceRectFromLogicalCGRect(const CGRect p_cg_rect)
 
 CGRect MCUserRectToLogicalCGRect(const MCRectangle p_rect)
 {
-	return MCGRectangleToCGRect(MCGRectangleScale(MCRectangleToMCGRectangle(p_rect), 1.0 / MCIPhoneGetResolutionScale()));
+	// IM-2014-01-30: [[ HiDPI ]] Use logical->screen scale for conversion
+	return MCGRectangleToCGRect(MCGRectangleScale(MCRectangleToMCGRectangle(p_rect), MCScreenDC::logicaltoscreenscale()));
 }
 
 // MW-2012-08-06: [[ Fibers ]] Primitive calls for executing selectors on
@@ -281,31 +288,59 @@ Window MCScreenDC::getroot()
 	return NULL;
 }
 
-bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
+// IM-2014-01-30: [[ HiDPI ]] Refactor to return in logical coordinates, with addition of screen pixel scale
+bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
 {
-	static MCDisplay s_display;
+	bool t_success;
+	t_success = true;
+	
+	MCDisplay *t_displays;
+	t_displays = nil;
+	
+	uint32_t t_display_count;
+	t_display_count = 0;
+	
+	t_success = MCMemoryNewArray(1, t_displays);
+	
+	if (t_success)
+	{
+		t_display_count = 1;
+		
+		t_displays[0].index = 0;
+		t_displays[0].pixel_scale = MCIPhoneGetDeviceScale();
+		
+		t_displays[0].viewport = MCRectangleFromCGRect(MCIPhoneGetScreenBounds());
+		t_displays[0].workarea = MCRectangleFromCGRect(MCIPhoneGetViewBounds());
+		
+		if (p_effective)
+			t_displays[0].workarea.height -= s_current_keyboard_height;
+		
+		t_displays[0].viewport = screentologicalrect(t_displays[0].viewport);
+		t_displays[0].workarea = screentologicalrect(t_displays[0].workarea);
+	}
+	
+	if (t_success)
+	{
+		r_displays = t_displays;
+		r_count = t_display_count;
+	}
+	else
+		MCMemoryDeleteArray(t_displays);
+	
+	return t_success;
+}
 
-	s_display . index = 0;
-	s_display . device_viewport = MCDeviceRectFromLogicalCGRect(MCIPhoneGetScreenBounds());
-	s_display . device_workarea = MCDeviceRectFromLogicalCGRect(MCIPhoneGetViewBounds());
-	if (p_effective)
-		s_display . device_workarea . height -= s_current_keyboard_height;
-	
-	r_displays = &s_display;
-	r_count = 1;
-	
+// IM-2014-01-29: [[ HiDPI ]] We receive notification of screen changes on iOS, so can safely cache display info
+bool MCScreenDC::platform_displayinfocacheable(void)
+{
 	return true;
 }
 
-bool MCScreenDC::device_getwindowgeometry(Window p_window, MCRectangle& r_rect)
+bool MCScreenDC::platform_getwindowgeometry(Window p_window, MCRectangle& r_rect)
 {
-	// IM-2013-09-30: [[ FullscreenMode ]] REVISIT - currently we just return the stack
-	// rect here, though ideally if a new stack is being opened in the window of the
-	// current one, it should use it's own rect rather than the current stack rect
-	MCRectangle t_rect;
-	t_rect = ((MCStack*)p_window)->getrect();
+	// IM-2014-01-30: [[ HiDPI ]] On iOS, the window rect will always be the bounds of the view
+	r_rect = screentologicalrect(MCRectangleFromCGRect(MCIPhoneGetViewBounds()));
 	
-	r_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_rect));
 	return true;
 }
 
@@ -1199,8 +1234,8 @@ void MCIPhoneSyncDisplayClass(void)
 		s_is_opengl_display = true;
 		MCIPhoneRunBlockOnMainFiber(^(void) {
 			MCIPhoneSwitchViewToOpenGL();
-			// IM-2013-08-21: [[ ResIndependence ]] switch to device scale for hi-res rendering
-			MCIPhoneConfigureContentScale(MCIPhoneGetDeviceScale());
+			// IM-2014-01-30: [[ HiDPI ]] GL backing surface should be at the current resolution scale
+			MCIPhoneConfigureContentScale(MCIPhoneGetResolutionScale());
 		});
 	}
 	else if (!s_ensure_opengl && s_is_opengl_display)
@@ -1217,29 +1252,31 @@ void MCIPhoneSyncDisplayClass(void)
 
 float MCIPhoneGetNativeControlScale(void)
 {
-	return s_iphone_control_res_scale;
+	// IM-2014-01-30: [[ HiDPI ]] Scale is from screen -> logical so return inverted if scaling
+	return s_iphone_scale_controls ? 1.0f / MCScreenDC::logicaltoscreenscale() : 1.0f;
 }
 
 // Only called from mobile extra calls so on main thread.
+// IM-2014-01-30: [[ HiDPI ]] Legacy function reimplemented to use MCResSetUsePixelScale
 void MCIPhoneUseDeviceResolution(bool p_use, bool p_controls_too)
 {
+	s_iphone_scale_controls = p_controls_too;
 	
-	if (p_use)
-	{
-		s_iphone_use_device_resolution = true;
-		if (p_controls_too)
-			s_iphone_control_res_scale = s_iphone_device_scale;
-	}
-	else
-	{
-		s_iphone_use_device_resolution = false;
-		s_iphone_control_res_scale = 1;
-	}
+	MCResSetUsePixelScaling(p_use);
 	
+	// IM-2013-12-10: [[ Bug 11571 ]] Update the pixelScale to the new device scale.
+	MCResSetPixelScale(p_use ? 1 : MCIPhoneGetDeviceScale());
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Revise per-platform handling of changes to pixelscale settings
+void MCResPlatformHandleScaleChange(void)
+{
+	// GL backing surface should be at the current resolution scale
 	MCIPhoneConfigureContentScale(MCIPhoneGetResolutionScale());
 	
-	// IM-2013-12-10: [[ Bug 11571 ]] Update the pixelScale to the new device scale. Avoid doing any stack updates in the main thread.
-	MCResSetPixelScale(MCResGetSystemScale(), false);
+	// Refresh display info after any change to the pixelscale
+	bool t_changed;
+	MCscreen->updatedisplayinfo(t_changed);
 	
 	// This doesn't do an immediate resize, so is fine for the main thread. (no
 	// script called).
@@ -1391,7 +1428,11 @@ static void MCIPhoneDoViewBoundsChanged(void *)
 	if (MCscreen == nil)
 		return;
 	
-	static_cast<MCScreenDC *>(MCscreen) -> do_fit_window(true, true);	
+	// IM-2014-01-30: [[ HiDPI ]] Update display info when view bounds change
+	bool t_changed;
+	MCscreen->updatedisplayinfo(t_changed);
+	
+	static_cast<MCScreenDC *>(MCscreen) -> do_fit_window(true, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1523,7 +1564,14 @@ void MCIPhoneHandleTouches(UIView *p_view, NSSet *p_touches, UITouchPhase p_phas
 		
 		CGPoint t_location;
 		t_location = [ t_touch locationInView: p_view ];
-		static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, t_touch, [t_touch timestamp] * 1000, t_location . x * t_scale, t_location . y * t_scale);
+		
+		MCPoint t_loc;
+		t_loc = MCPointMake(t_location.x, t_location.y);
+		
+		// IM-2014-01-30: [[ HiDPI ]] Convert screen to logical coords
+		t_loc = MCScreenDC::screentologicalpoint(t_loc);
+		
+		static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, t_touch, [t_touch timestamp] * 1000, t_loc . x, t_loc . y);
 	}
 }
 
@@ -1727,6 +1775,33 @@ static bool MCIPhoneWait(double p_sleep)
 	s_break_wait_pending = false;
 	
 	return t_broken;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-30: [[ HiDPI ]] Pixel scaling supported on iOS
+bool MCResPlatformSupportsPixelScaling(void)
+{
+	return true;
+}
+
+// IM-2014-01-30: [[ HiDPI  ]] Pixel scaling can be enabled / disable on iOS
+bool MCResPlatformCanChangePixelScaling(void)
+{
+	return true;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Pixel scale can be modified on iOS
+bool MCResPlatformCanSetPixelScale(void)
+{
+	return true;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Calculate logical to iOS screen coordinate scale
+MCGFloat MCScreenDC::logicaltoscreenscale(void)
+{
+	// (logical coordinate to device coordinate scale) * (device coordinate to iOS screen coordinate scale)
+	return MCResGetPixelScale() / MCIPhoneGetResolutionScale();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -823,6 +823,11 @@ public:
 		uint32_t p_minwidth, uint32_t p_minheight,
 		uint32_t p_maxwidth, uint32_t p_maxheight);
 	void view_device_updatewindow(MCRegionRef p_region);
+#elif defined(_MOBILE)
+
+	// IM-2014-01-30: [[ HiDPI ]] platform-specific view device methods
+	
+	void view_device_updatewindow(MCRegionRef p_region);
 #endif
 	
 	bool cursoroverride ;

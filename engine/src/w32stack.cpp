@@ -1120,7 +1120,6 @@ bool MCWin32GetWindowShapeAlphaMask(MCWindowShape *p_shape, MCGRaster &r_mask)
 	return true;
 }
 
-extern bool MCRegionTransform(MCRegionRef p_region, const MCGAffineTransform &p_transform, MCRegionRef &r_transformed_region);
 void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 {
 	// IM-2014-01-28: [[ HiDPI ]] Create surface at the view's backing scale

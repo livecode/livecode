@@ -2436,6 +2436,14 @@ enum Exec_errors
 	// IM-2013-12-04: [[ PixelScale ]]
 	// {EE-0801} pixelScale: not a valid scale value
 	EE_PROPERTY_BADPIXELSCALE,
+	
+	// IM-2014-01-30: [[ HiDPI ]]
+	// {EE-0802} pixelScale: the pixelScale property cannot be set on this platform
+	EE_PROPERTY_PIXELSCALENOTSUPPORTED,
+
+	// IM-2014-01-30: [[ HiDPI ]]
+	// {EE-0803} usePixelScaling: the usePixelScaling property cannot be set on this platform
+	EE_PROPERTY_USEPIXELSCALENOTSUPPORTED,
 };
 
 extern const char *MCexecutionerrors;

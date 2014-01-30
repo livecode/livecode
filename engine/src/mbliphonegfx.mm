@@ -41,6 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbliphoneview.h"
 
 #include "resolution.h"
+#include "graphics_util.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,6 +62,16 @@ static inline MCGRectangle MCGRectangleFromCGRect(CGRect p_rect)
 	return MCGRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
 }
 
+static inline CGRect MCRectangleToCGRect(const MCRectangle &p_rect)
+{
+	return CGRectMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+}
+
+static inline MCRectangle MCRectangleFromCGRect(const CGRect &p_rect)
+{
+	return MCRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static void do_update(void *p_dirty)
@@ -68,7 +79,7 @@ static void do_update(void *p_dirty)
 	[MCIPhoneGetDisplayView() renderInRegion: (MCRegionRef)p_dirty];
 }
 
-void MCStack::device_updatewindow(MCRegionRef p_dirty_rgn)
+void MCStack::view_device_updatewindow(MCRegionRef p_dirty_rgn)
 {
 	// MW-2011-09-13: [[ Redraw ]] Only perform an update if the window should
 	//   draw (i.e. if it is top-most).
@@ -312,10 +323,14 @@ protected:
 	t_stack = (MCStack *)[[self superview] currentStack];
 	if (t_stack == nil)
 		return;
+	
+	// IM-2014-01-30: [[ HiDPI ]] Ensure stack backing scale is set
+	t_stack->view_setbackingscale(MCResGetPixelScale());
     
-	// IM-2013-07-18: [[ ResIndependence ]] We are now always rendering at the device resolution
 	MCGFloat t_scale;
-	t_scale = MCIPhoneGetDeviceScale();
+	
+	// IM-2014-01-30: [[ HiDPI ]] Convert screen to surface coords
+	t_scale = MCIPhoneGetResolutionScale();
 	
     MCRectangle t_hull;
 	t_hull = MCGRectangleGetIntegerBounds(MCGRectangleScale(MCGRectangleFromCGRect(rect), t_scale));
@@ -338,7 +353,7 @@ protected:
 	
 	if (t_surface . Lock())
 	{
-		t_stack -> device_redrawwindow(&t_surface, t_dirty_rgn);
+		t_stack -> view_surface_redrawwindow(&t_surface, t_dirty_rgn);
 		t_surface . Unlock();
 	}
 	
@@ -350,8 +365,8 @@ protected:
 	MCRectangle t_visible;
 	t_visible = MCRegionGetBoundingBox(p_region);
 	
-	[ self setNeedsDisplayInRect: CGRectMake((float)t_visible . x / MCIPhoneGetDeviceScale(), (float)t_visible . y / MCIPhoneGetDeviceScale(),
-											 (float)t_visible . width / MCIPhoneGetDeviceScale(), (float)t_visible . height / MCIPhoneGetDeviceScale()) ];
+	// IM-2014-01-30: [[ HiDPI ]] Redraw region given in iOS screen coords
+	[self setNeedsDisplayInRect: MCRectangleToCGRect(t_visible)];
 	[[self layer] display];
 }
 
@@ -569,7 +584,7 @@ protected:
 	
 	if (t_surface . Lock())
 	{
-		t_stack -> device_redrawwindow(&t_surface, t_dirty_rgn);
+		t_stack -> view_surface_redrawwindow(&t_surface, t_dirty_rgn);
 		t_surface . Unlock();
 	}
 	

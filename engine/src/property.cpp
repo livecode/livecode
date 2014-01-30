@@ -2144,7 +2144,15 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 				return ES_ERROR;
 			}
 			
-			MCResSetPixelScale(t_scale);
+			// IM-2014-01-30: [[ HiDPI ]] It is an error to set the pixelScale on platforms that do not support this
+			if (!MCResPlatformCanSetPixelScale())
+			{
+				MCeerror->add(EE_PROPERTY_PIXELSCALENOTSUPPORTED, line, pos, t_scale);
+				return ES_ERROR;
+			}
+			
+			if (MCResGetUsePixelScaling())
+				MCResSetPixelScale(t_scale);
 		}
 		break;
 
@@ -2155,6 +2163,13 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			stat = ep.getboolean(t_pixel_scaling, line, pos, EE_PROPERTY_NAB);
 			if (stat != ES_NORMAL)
 				return stat;
+			
+			// IM-2014-01-30: [[ HiDPI ]] It is an error to set the usePixelScale on platforms that do not support this
+			if (!MCResPlatformCanChangePixelScaling())
+			{
+				MCeerror->add(EE_PROPERTY_USEPIXELSCALENOTSUPPORTED, line, pos, t_pixel_scaling);
+				return ES_ERROR;
+			}
 			
 			MCResSetUsePixelScaling(t_pixel_scaling);
 		}

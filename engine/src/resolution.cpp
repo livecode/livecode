@@ -30,55 +30,65 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// IM-2014-01-24: [[ HiDPI ]] Removed unused "use system pixel scale" functions
-
+// IM-2014-01-30: [[ HiDPI ]] Enable / disable pixel scaling
+static bool s_res_use_pixel_scaling = true;
 static MCGFloat s_res_pixel_scale = 1.0;
 
-void MCResHandleScaleChanged()
-{
-	// Trigger update of stack windows
-	MCdispatcher->sync_stack_windows();
-}
+////////////////////////////////////////////////////////////////////////////////
 
 MCGFloat MCResGetPixelScale(void)
 {
 	return s_res_pixel_scale;
 }
 
-void MCResSetPixelScale(MCGFloat p_scale, bool p_send_update)
+void MCResSetPixelScale(MCGFloat p_scale)
 {
-	MCGFloat t_old_scale;
-	t_old_scale = MCResGetPixelScale();
+	// IM-2014-01-30: [[ HiDPI ]] Return if pixel scaling is not in use
+	if (!s_res_use_pixel_scaling)
+		return;
 	
+	if (p_scale == s_res_pixel_scale)
+		return;
+
 	s_res_pixel_scale = p_scale;
 	
-	if (p_send_update && p_scale != t_old_scale)
-		MCResHandleScaleChanged();
+	// IM-2014-01-30: [[ HiDPI ]] Use per-platform change handler
+	MCResPlatformHandleScaleChange();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool s_use_pixel_scaling = true;
-
 void MCResInitPixelScaling(void)
 {
 	// If pixel scaling is available then use it by default
-	s_use_pixel_scaling = MCResPlatformSupportsPixelScaling();
+	s_res_use_pixel_scaling = MCResPlatformSupportsPixelScaling();
+	
+	// IM-2014-01-30: [[ HiDPi ]] Initialise pixel scale to the default for this platform
+	if (s_res_use_pixel_scaling)
+		s_res_pixel_scale = MCResPlatformGetDefaultPixelScale();
+	else
+		s_res_pixel_scale = 1.0;
 }
 
 void MCResSetUsePixelScaling(bool p_use_scaling)
 {
-	if (p_use_scaling == s_use_pixel_scaling || !MCResPlatformCanChangePixelScaling())
+	if (p_use_scaling == s_res_use_pixel_scaling || !MCResPlatformCanChangePixelScaling())
 		return;
 	
-	s_use_pixel_scaling = p_use_scaling;
+	s_res_use_pixel_scaling = p_use_scaling;
 	
-	MCResPlatformSetUsePixelScaling(p_use_scaling);
+	// IM-2014-01-30: [[ HiDPI ]] Reset pixel scale value
+	if (s_res_use_pixel_scaling)
+		s_res_pixel_scale = MCResPlatformGetDefaultPixelScale();
+	else
+		s_res_pixel_scale = 1.0;
+	
+	MCResPlatformHandleScaleChange();
 }
 
 bool MCResGetUsePixelScaling(void)
 {
-	return s_use_pixel_scaling;
+	return s_res_use_pixel_scaling;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

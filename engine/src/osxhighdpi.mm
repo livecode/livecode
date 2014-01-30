@@ -67,7 +67,20 @@ bool MCResPlatformCanChangePixelScaling(void)
 	return true;
 }
 
-void MCResPlatformSetUsePixelScaling(bool p_use_scaling)
+// IM-2014-01-30: [[ HiDPI ]] Cannot set pixel scale on OSX
+bool MCResPlatformCanSetPixelScale(void)
+{
+	return false;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Pixel scale is 1.0 on OSX
+MCGFloat MCResPlatformGetDefaultPixelScale(void)
+{
+	return 1.0;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Reopen windows when usePixelScale is changed
+void MCResPlatformHandleScaleChange(void)
 {
 	// Global use-pixel-scaling value has been updated, so now we just need to reopen any open stack windows
 	MCdispatcher->reopen_stack_windows();

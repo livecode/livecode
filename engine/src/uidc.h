@@ -328,7 +328,7 @@ public:
 	
 	// IM-2014-01-28: [[ HiDPI ]] Return true if the platform can detect
 	//   desktop changes and will clear the cache when changes occur.
-	bool platform_displayinfocacheable(void);
+	virtual bool platform_displayinfocacheable(void);
 	
 	// IM-2014-01-24: [[ HiDPI ]] Return the maximum pixel scale of all displays in use
 	bool getmaxdisplayscale(MCGFloat &r_scale);
