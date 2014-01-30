@@ -519,6 +519,11 @@ IO_stat readheader(IO_handle& stream, uint32_t& r_version)
 				return IO_ERROR;
 		}
 	}
+    else
+    {
+        // Could not read header
+        return IO_ERROR;
+    }
 	return IO_NORMAL;
 }
 
