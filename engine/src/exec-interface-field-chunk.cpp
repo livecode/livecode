@@ -93,6 +93,11 @@ template<typename T> struct PodFieldPropType
     {
         r_value = p_value;
     }
+    
+    static bool need_layout()
+    {
+        return true;
+    }
 };
 
 template <>
@@ -150,6 +155,12 @@ struct PodFieldPropType<MCInterfaceNamedColor>
     {
         assign(r_value, p_value);
     }
+    
+    // don't need to relayout paragraph if block colour changes
+    static bool need_layout()
+    {
+        return false;
+    }
 };
 
 template <>
@@ -193,6 +204,11 @@ struct PodFieldPropType<MCInterfaceTextStyle>
     static void output(stack_type p_value, return_type& r_value)
     {
         r_value . style = p_value . style;
+    }
+    
+    static bool need_layout()
+    {
+        return true;
     }
 };
 
@@ -254,7 +270,11 @@ template<typename T> struct VectorFieldPropType
         r_value . count = a . list . count;
         a . list . elements = nil;
     }
-
+    
+    static bool need_layout()
+    {
+        return true;
+    }
 };
 
 template<typename T> struct OptionalFieldPropType
@@ -304,6 +324,11 @@ template<typename T> struct OptionalFieldPropType
             r_value = nil;
         else
             T::assign(*r_value, p_value . value);
+    }
+    
+    static bool need_layout()
+    {
+        return true;
     }
 };
 
@@ -744,7 +769,9 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                     }
 
                     T::setter(ctxt, bptr, p_setter, p_value);
-
+                    // avoid relayout for certain block attributes
+                    t_need_layout = T::need_layout;
+                    
                     // MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
                     //   fontref so it can compute its.
                     if (pgptr -> getopened())
@@ -754,8 +781,13 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                 while (t_block_index + t_block_length < (t_pg_length-1) // Length of paragraph without CR
                        && t_block_index + t_block_length < t_ei);
 
+                // MP-2013-09-02: [[ FasterField ]] If attributes on existing blocks needing layout changed,
+                //   or the blocks themselves changed, we need layout.
                 if (t_blocks_changed)
                     pgptr -> setDirty();
+                
+                if (t_need_layout || t_blocks_changed)
+                    pgptr -> layoutchanged();
             }
             // end of MCParagraph scope
 
