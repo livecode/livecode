@@ -321,10 +321,144 @@ public:
 
 void MCButton::macopenmenu(void)
 {
+	if (m_system_menu == nil)
+		return;
+	
+	MCRectangle trect;
+	long result;
+	
+	int4 tmenux,tmenuy;
+	tmenux = tmenuy = 0;
+	switch (menumode)
+	{
+		case WM_COMBO:
+		case WM_OPTION:
+			trect = MCU_recttoroot(MCmousestackptr, rect);
+			tmenux = trect.x;
+			tmenuy = trect.y;
+			break;
+		case WM_PULLDOWN:
+			trect = MCU_recttoroot(MCmousestackptr, rect);
+			tmenux = trect.x;
+			tmenuy = trect.y+trect.height + 1;
+			break;
+		case WM_CASCADE:
+			trect = MCU_recttoroot(MCmousestackptr, rect);
+			tmenux = trect.x + trect.width + 1;
+			tmenuy = trect.y;
+			break;
+		case WM_POPUP:
+		default:
+			trect.x = MCmousex + 1;
+			trect.y = MCmousey + 1;
+			trect = MCU_recttoroot(MCmousestackptr, trect);
+			tmenux = trect.x;
+			tmenuy = trect.y;
+			break;
+	}
+	
+	// MW-2007-12-11: [[ Bug 5670 ]] Make sure we notify things higher up in the call chain
+	//   that the mdown actually did result in a menu being popped up!
+	extern bool MCosxmenupoppedup;
+	MCosxmenupoppedup = true;
+	
+	switch (menumode)
+	{
+		case WM_COMBO:
+		case WM_OPTION:
+#if 0
+			//= MAC's pop-up menu, displayed at the control/button location
+			layer_redrawall();
+			if (MCModeMakeLocalWindows())
+				result = PopUpMenuSelect(mh, tmenuy, tmenux, menuhistory);
+			else
+				result = MCModePopUpMenu((MCMacSysMenuHandle)mh, tmenux - trect . x + rect . x, tmenuy - trect . y + rect . y, menuhistory, MCmousestackptr);
+			allowmessages(False);
+			pms->clearmdown(menubutton);
+			allowmessages(True);
+			if (result > 0)
+			{
+				setmenuhistoryprop(LoWord(result));
+				//low word of result from PopUpMenuSelect() is the item selected
+				//high word contains the menu id
+				MCString slabel;
+				getmacmenuitemtext(mh, menuhistory, slabel, False, hasunicode());
+				delete label;
+				label = (char *)slabel.getstring();
+				labelsize = slabel.getlength();
+				flags |= F_LABEL;
+				Exec_stat es = message_with_args(MCM_menu_pick, slabel);
+				if (es == ES_NOT_HANDLED || es == ES_PASS)
+					message_with_args(MCM_mouse_up, menubutton);
+			}
+			else
+				message_with_args(MCM_mouse_release, menubutton);
+			state &= ~(CS_MFOCUSED | CS_ARMED | CS_HILITED);
+			layer_redrawall();
+#endif
+			result = MCPlatformPopUpMenu(m_system_menu, MCmousestackptr -> getwindow(), , tmenux - trect . x + rect . x, tmenuy - trect . y + rect . y, menuhistory);
+			if (result > 0)
+			{
+			}
+			break;
+		case WM_PULLDOWN:
+		case WM_CASCADE:
+		case WM_POPUP: //= MAC's context menu, Menu displyed at the mouse loc
+			if (MCModeMakeLocalWindows())
+				result = PopUpMenuSelect(mh, tmenuy, tmenux, 0);
+			else
+			{
+				int32_t x, y;
+				if (menumode == WM_POPUP)
+				{
+					x = MCmousex + 1;
+					y = MCmousey + 1;
+				}
+				else
+				{
+					x = tmenux - trect . x + rect . x;
+					y = tmenuy - trect . y + rect . y;
+				}
+				
+				result = MCModePopUpMenu((MCMacSysMenuHandle)mh, x, y, 0, MCmousestackptr);
+			}
+			allowmessages(False);
+			pms->clearmdown(menubutton);
+			allowmessages(True);
+			if (result > 0)
+			{ //user selected something
+				MenuHandle mhandle = GetMenuHandle(HiWord(result));
+				setmenuhistoryprop(LoWord(result));
+				MCString smenustring;
+				getmacmenuitemtext(mhandle, menuhistory, smenustring, mhandle != mh, hasunicode());
+				Exec_stat es = message_with_args(MCM_menu_pick, smenustring);
+				delete (char *)smenustring.getstring();
+				if (es == ES_NOT_HANDLED || es == ES_PASS)
+					message_with_args(MCM_mouse_up, menubutton);
+			}
+			state &= ~(CS_MFOCUSED | CS_ARMED | CS_HILITED);
+			break;
+		default:
+			break;
+	}
+	
+	// MW-2011-02-08: [[ Bug 9384 ]] Free the Mac menu after use since we don't need
+	//   it lingering around.
+	if (bMenuID != 0)
+	{
+		MCScreenDC *pms = (MCScreenDC *)MCscreen;
+		pms->freeMenuAndID(bMenuID, this);
+		bMenuID = 0;
+	}	
 }
 
 void MCButton::macfreemenu(void)
 {
+	if (m_system_menu != nil)
+	{
+		MCPlatformReleaseMenu(m_system_menu);
+		m_system_menu = nil;
+	}
 }
 
 Bool MCButton::macfindmenu(bool p_just_for_accel)

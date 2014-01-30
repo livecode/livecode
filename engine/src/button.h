@@ -117,7 +117,7 @@ class MCButton : public MCControl
 	uint2 labelwidth;
 	uint2 family;
 #ifdef _MAC_DESKTOP
-	short bMenuID;
+	MCPlatformMenuRef m_system_menu;
 #endif
 
 	uint1 mymenudepth;

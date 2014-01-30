@@ -51,6 +51,8 @@ static struct { NSString *type; MCPlatformPasteboardFlavor flavor; bool (*conver
 	{ (NSString *)kUTTypeGIF, kMCPlatformPasteboardFlavorGIF, MCMacPasteboardConvertIdentity },
 	{ (NSString *)kUTTypePNG, kMCPlatformPasteboardFlavorPNG, MCMacPasteboardConvertIdentity },
 	{ (NSString *)kUTTypeTIFF, kMCPlatformPasteboardFlavorPNG, MCMacPasteboardConvertTIFFToPNG },
+	
+	// COCOA-TODO: Declare these appropriately!
 	{ @"com.runrev.livecode.objects-1", kMCPlatformPasteboardFlavorObjects, MCMacPasteboardConvertIdentity },
 	{ @"com.runrev.livecode.text-styled-1", kMCPlatformPasteboardFlavorStyledText, MCMacPasteboardConvertIdentity },
 };
