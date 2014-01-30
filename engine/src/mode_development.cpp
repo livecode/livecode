@@ -1454,7 +1454,7 @@ LONG WINAPI unhandled_exception_filter(struct _EXCEPTION_POINTERS *p_exception_i
 	HMODULE t_dbg_help_module = NULL;
 	t_dbg_help_module = LoadLibraryA("dbghelp.dll");
 
-	MiniDumpWriteDumpPtr t_write_minidump;
+	MiniDumpWriteDumpPtr t_write_minidump = NULL;
 	if (t_dbg_help_module != NULL)
 		t_write_minidump = (MiniDumpWriteDumpPtr)GetProcAddress(t_dbg_help_module, "MiniDumpWriteDump");
 
