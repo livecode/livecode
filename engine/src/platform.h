@@ -478,6 +478,13 @@ void MCPlatformScreenSnapshot(MCRectangle area, MCImageBitmap*& r_bitmap);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef class MCPlatformLoadedFont *MCPlatformLoadedFontRef;
+
+bool MCPlatformLoadFont(const char *utf8path, bool globally, MCPlatformLoadedFontRef& r_loaded_font);
+bool MCPlatformUnloadFont(const char *utf8path, bool globally, MCPlatformLoadedFontRef loaded_font);
+
+////////////////////////////////////////////////////////////////////////////////
+
 typedef class MCPlatformWindowMask *MCPlatformWindowMaskRef;
 
 void MCPlatformWindowMaskCreate(int32_t width, int32_t height, int32_t stride, void *bits, MCPlatformWindowMaskRef& r_mask);

@@ -809,12 +809,18 @@ MCPasteboard *MCScreenDC::getclipboard(void)
 // TD-2013-07-01: [[ DynamicFonts ]]
 bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
 {
-	return false;
+	MCExecPoint ep;
+	ep . setsvalue(p_path);
+	ep . nativetoutf8();
+	return MCPlatformLoadFont(ep . getcstring(), p_globally, (MCPlatformLoadedFontRef&)r_loaded_font_handle);
 }
 
-bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
+bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *p_loaded_font_handle)
 {
-	return false;
+	MCExecPoint ep;
+	ep . setsvalue(p_path);
+	ep . nativetoutf8();
+	return MCPlatformUnloadFont(ep . getcstring(), p_globally, (MCPlatformLoadedFontRef)p_loaded_font_handle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
