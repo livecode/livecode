@@ -92,6 +92,7 @@ bool MCRegionIncludeRect(MCRegionRef p_region, const MCRectangle& p_rect)
 	return true;
 }
 
+#ifdef OLD_GRAPHICS
 bool MCRegionCalculateMask(MCRegionRef p_region, int32_t p_width, int32_t p_height, MCBitmap*& r_mask)
 {
 	// Our src HDC
@@ -133,6 +134,7 @@ bool MCRegionCalculateMask(MCRegionRef p_region, int32_t p_width, int32_t p_heig
 
 	return true;
 }
+#endif
 
 bool MCRegionForEachRect(MCRegionRef p_region, MCRegionForEachRectCallback p_callback, void *p_context)
 {
@@ -140,28 +142,31 @@ bool MCRegionForEachRect(MCRegionRef p_region, MCRegionForEachRectCallback p_cal
 	t_size = GetRegionData((HRGN)p_region, 0, NULL);
 	
 	RGNDATA *t_buffer;
-	t_buffer = (RGNDATA *)new uint8_t[t_size];
+	if (!MCMemoryAllocate(t_size, t_buffer))
+		return false;
+
 	GetRegionData((HRGN)p_region, t_size, t_buffer);
 
 	RGNDATAHEADER *t_header;
 	t_header = &t_buffer -> rdh;
 	
+	bool t_success = true;
+
 	RECT *t_rects;
 	t_rects = (RECT *)(t_header + 1);
-	for(uint32_t i = 0; i < t_header -> nCount; i++)
+	for(uint32_t i = 0; t_success && i < t_header -> nCount; i++)
 	{
 		MCRectangle t_rect;
 		t_rect . x = (int2)t_rects[i] . left;
 		t_rect . y = (int2)t_rects[i] . top;
 		t_rect . width = (uint2)(t_rects[i] . right - t_rects[i] . left);
 		t_rect . height = (uint2)(t_rects[i] . bottom - t_rects[i] . top);
-		if (!p_callback(p_context, t_rect))
-			return false;
+		t_success = p_callback(p_context, t_rect);
 	}
 
-	delete t_buffer;
+	MCMemoryDeallocate(t_buffer);
 
-	return true;
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

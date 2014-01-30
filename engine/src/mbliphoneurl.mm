@@ -26,6 +26,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+////////////////////////////////////////////////////////////////////////////////
+
+// MW-2013-10-02: [[ MobileSSLVerify ]] When true, SSL verification is turned off.
+static bool s_disable_ssl_verification = false;
+
+////////////////////////////////////////////////////////////////////////////////
+
 typedef bool (*MCHTTPParseHeaderCallback)(const char *p_key, uint32_t p_key_length, const char *p_value, uint32_t p_value_length, void *p_context);
 bool MCHTTPParseHeaders(const char *p_headers, MCHTTPParseHeaderCallback p_callback, void *p_context)
 {
@@ -131,6 +138,10 @@ bool UrlRequestSetHTTPHeader(const char *p_key, uint32_t p_key_length, const cha
 - (void)connection: (NSURLConnection *)connection didReceiveData: (NSData *)data;
 - (void)connection: (NSURLConnection *)connection didFailWithError: (NSError *)error;
 - (void)connectionDidFinishLoading: (NSURLConnection *)connection;
+
+- (BOOL)connection:(NSURLConnection *)connection canAuthenticateAgainstProtectionSpace:(NSURLProtectionSpace *)protectionSpace;
+- (void)connection:(NSURLConnection *)connection didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge;
+
 @end
 
 @implementation MCSystemUrlDelegate
@@ -183,7 +194,10 @@ bool UrlRequestSetHTTPHeader(const char *p_key, uint32_t p_key_length, const cha
 	{
         NSHTTPURLResponse *t_http_response = (NSHTTPURLResponse*)response;
         NSInteger t_status_code = [t_http_response statusCode];
-		if (t_status_code == 200)
+        // MERG-2013-11-06: [[ AllowPartialContentResponse ]] Allow response code 206 to be returned in a url request where a range was requested
+		// MW-2013-11-06: [[ Bug 11399 ]] For parity with libUrl all statuscodes in the 200
+		//   range should try and load (even if there ends up being nothing to load).
+		if (t_status_code >= 200 && t_status_code < 300)
 			m_loading = true;
         else if (t_status_code >= 400)
         {
@@ -237,6 +251,32 @@ bool UrlRequestSetHTTPHeader(const char *p_key, uint32_t p_key_length, const cha
         m_callback(m_context, kMCSystemUrlStatusFinished, nil);
     }
 	[connection release];
+}
+
+// MW-2013-10-02: [[ MobileSSLVerify ]] Handle the case of server trust authentication if
+//   not verifying SSL connections.
+- (BOOL)connection:(NSURLConnection *)connection canAuthenticateAgainstProtectionSpace:(NSURLProtectionSpace *)protectionSpace
+{
+	// If we aren't being asked to authenticate ServerTrust, then we don't do anything.
+	if (![protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
+		return NO;
+	
+	// If we haven't disabled ssl verification, do nothing.
+	if (!s_disable_ssl_verification)
+		return NO;
+	
+	// Otherwise we are being asked to verify the integrity of the server, which we don't want
+	// to do, so return YES to ensure we get to ignore it.
+	return YES;
+}
+
+// MW-2013-10-02: [[ MobileSSLVerify ]] Handle the case of server trust authentication if
+//   not verifying SSL connections.
+- (void)connection:(NSURLConnection *)connection didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
+{
+	// We should only get here if we are being asked to authenticate server trust
+	// so just accept whatever it has sent.
+	[challenge.sender useCredential:[NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust] forAuthenticationChallenge:challenge];
 }
 
 @end
@@ -713,4 +753,12 @@ bool MCSystemPutUrl(const char *p_url, const void *p_data, uint32_t p_length, MC
 	MCIPhoneRunOnMainFiber(do_put_url, &ctxt);
 	
 	return ctxt . success;
+}
+
+//////////
+
+// MW-2013-10-02: [[ MobileSSLVerify ]] Enable or disable SSL verification.
+void MCSystemSetUrlSSLVerification(bool p_enabled)
+{
+	s_disable_ssl_verification = !p_enabled;
 }

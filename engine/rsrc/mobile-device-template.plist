@@ -78,8 +78,12 @@
 	<array>
 		${IPAD_SUPPORTED_ORIENTATIONS}
 	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+		<false/>
 	<key>UIStatusBarHidden</key>
 		${STATUS_BAR_HIDDEN}
+	<key>UIStatusBarHidden~ipad</key>
+		${IPAD_STATUS_BAR_HIDDEN}
 	<key>UIStatusBarStyle</key>
 		${STATUS_BAR_STYLE}
 	<key>UIFileSharingEnabled</key>

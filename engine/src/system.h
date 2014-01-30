@@ -177,6 +177,7 @@ bool MCSystemProcessUrl(const char *p_url, MCSystemUrlOperation p_operations, ch
 bool MCSystemLoadUrl(const char *p_url, MCSystemUrlCallback p_callback, void *p_context);
 bool MCSystemPostUrl(const char *p_url, const void *p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context);
 bool MCSystemPutUrl(const char *p_url, const void *p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context);
+void MCSystemSetUrlSSLVerification(bool enabled);
 
 //////////
 

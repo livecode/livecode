@@ -50,6 +50,7 @@ bool MCSystemPickMedia(MCMediaType *p_media_type, const char *&r_result, bool p_
 
 static MCMediaType MCMediaTypeFromCString(const char *p_string)
 {
+#ifdef /* MCMediaTypeFromCString */ LEGACY_EXEC
     const char *t_ptr = p_string;
     MCMediaType t_media_type = kMCunknownMediaType;
     
@@ -80,6 +81,7 @@ static MCMediaType MCMediaTypeFromCString(const char *p_string)
 
     }
     return t_media_type;
+#endif /* MCMediaTypeFromCString */
 }
 
 static MCMediaScope MCMediaScopeFromCString(const char *p_string)
@@ -119,6 +121,7 @@ void MCDialogExecPickMedia(MCExecContext &p_ctxt, char *p_media_expression, MCMe
 //iphonePickMedia [multiple] [, music, podCast, audioBook, anyAudio, movie, tv, videoPodcast, musicVideo, videoITunesU, anyVideo]
 Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleIPhonePickMedia */ LEGACY_EXEC
 	bool t_success, t_allow_multipe_items;
 	char *t_option_list;
     const char *r_return_media_types;
@@ -159,7 +162,7 @@ Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
 				t_media_types += kMCmovies;
 		}
 #endif
-		t_success = MCParseParameters(p_parameters, "s", &t_option_list);
+	t_success = MCParseParameters(p_parameters, "s", &t_option_list);
 	}
 	if (t_media_types == 0)
 	{
@@ -175,6 +178,7 @@ Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
     MCDialogExecPickMedia(t_ctxt, &t_media_types, t_allow_multipe_items, r_return_media_types);
 	
 	return ES_NORMAL;
+#endif /* MCHandleIPhonePickMedia */
 }
 
 //////////////////////////////////////// Item Pickers ////////////////////////////////////////
@@ -447,8 +451,8 @@ bool SplitOptionListsByChunk(MCChunkType p_chunk_type, const_cstring_array_t *p_
     }
 
 	return t_success;
-}	
-
+}
+#ifdef /* MCDialogExecPickOption */ LEGACY_EXEC
 void MCDialogExecPickOption(MCExecContext &p_ctxt, MCChunkType p_chunk_type, const_cstring_array_t *p_option_lists, const char *p_initial_choice, bool p_use_hilite_type, bool p_use_picker, bool p_use_cancel, bool p_use_done, char *&r_picked_options, MCRectangle p_button_rect)
 {
     bool t_success = true;
@@ -514,9 +518,11 @@ void MCDialogExecPickOption(MCExecContext &p_ctxt, MCChunkType p_chunk_type, con
     FreeIndexArray (t_initial_indices);
     FreeIndexArray (t_option_result);
 }
+#endif /* MCDialogExecPickOption */
 
 void MCDialogExecPickOptionByIndex(MCExecContext &p_ctxt, MCChunkType p_chunk_type, const_cstring_array_t *p_option_lists, const_int32_array_t *p_initial_indices, bool p_use_hilite_type, bool p_use_picker, bool p_use_cancel, bool p_use_done, const_int32_array_t &r_picked_options, MCRectangle p_button_rect)
 {
+#ifdef /* MCDialogExecPickOptionByIndex */ LEGACY_EXEC
     bool t_success, t_cancelled;
     const_cstring_array_t **t_option_lists = nil;
     const_int32_array_t *t_option_result = nil;
@@ -555,10 +561,12 @@ void MCDialogExecPickOptionByIndex(MCExecContext &p_ctxt, MCChunkType p_chunk_ty
     // Free memory
     FreeStringArray (t_option_lists, t_option_lists_count);
     FreeIndexArray(t_option_result);
+#endif /* MCDialogExecPickOptionByIndex */
 }
 
 Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePick */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
 
 	bool t_use_cancel, t_use_done, t_use_picker, t_use_checkmark, t_more_optional, t_success;
@@ -682,12 +690,14 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
     }
 	
 	return t_ctxt.GetStat();
+#endif /* MCHandlePick */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCDialogExecPickDate(MCExecContext &p_ctxt, MCDateTime *p_current, MCDateTime *p_start, MCDateTime *p_end, bool p_cancel_button, bool p_done_button, MCRectangle p_button_rect)
 {
+#ifdef /* MCDialogExecPickDate */ LEGACY_EXEC
     bool t_success = true;
     bool t_canceled = false;
     MCDateTime t_result;
@@ -705,10 +715,12 @@ void MCDialogExecPickDate(MCExecContext &p_ctxt, MCDateTime *p_current, MCDateTi
             MCD_convert_from_datetime(ep, CF_DATE, CF_UNDEFINED, t_result);
         }
     }
+#endif /* MCDialogExecPickDate */
 }
 
 void MCDialogExecPickTime(MCExecContext &p_ctxt, MCDateTime *p_current, MCDateTime *p_start, MCDateTime *p_end, int32_t p_step, bool p_cancel_button, bool p_done_button, MCRectangle p_button_rect)
 {
+#ifdef /* MCDialogExecPickTime */ LEGACY_EXEC
     bool t_success = true;
     bool t_canceled = false;
     MCDateTime t_result;
@@ -726,10 +738,12 @@ void MCDialogExecPickTime(MCExecContext &p_ctxt, MCDateTime *p_current, MCDateTi
             MCD_convert_from_datetime(ep, CF_TIME, CF_UNDEFINED, t_result);
         }
     }
+#endif /* MCDialogExecPickTime */
 }
 
 void MCDialogExecPickDateAndTime(MCExecContext &p_ctxt, MCDateTime *p_current, MCDateTime *p_start, MCDateTime *p_end, int32_t p_step, bool p_cancel_button, bool p_done_button, MCRectangle p_button_rect)
 {
+#ifdef /* MCDialogExecPickDateAndTime */ LEGACY_EXEC
     bool t_success = true;
     bool t_canceled = false;
     MCDateTime t_result;
@@ -747,6 +761,7 @@ void MCDialogExecPickDateAndTime(MCExecContext &p_ctxt, MCDateTime *p_current, M
             MCD_convert_from_datetime(ep, CF_DATE, CF_TIME, t_result);
         }
     }
+#endif /* MCDialogExecPickDateAndTime */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -754,6 +769,7 @@ void MCDialogExecPickDateAndTime(MCExecContext &p_ctxt, MCDateTime *p_current, M
 // MM-2012-11-02: Temporarily refactored mobilePickDate to use the old syntax (rather than three separate pick date, pick time, pick date and time).
 Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePickDate */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     
     char *t_type;    
@@ -866,10 +882,12 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
         MCresult->store(ep, True);
     
 	return t_ctxt.GetStat();
+#endif /* MCHandlePickDate */
 }
 
 Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePickTime */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     
 	bool t_success, t_use_done, t_use_cancel;
@@ -950,11 +968,13 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
         MCresult->store(ep, True);
     
 	return t_ctxt.GetStat();
+#endif /* MCHandlePickTime */
 }
 
 
 Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePickDateAndTime */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     
 	bool t_success, t_use_done, t_use_cancel;
@@ -1030,9 +1050,10 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
     
 	if (t_success)
 		MCDialogExecPickDateAndTime(t_ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_step, t_use_cancel, t_use_done, MCtargetptr->getrect());
-    
+   
     if (MCresult->isempty())
         MCresult->store(ep, True);
     
 	return t_ctxt.GetStat();
+#endif /* MCHandlePickDateAndTime */
 }

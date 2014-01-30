@@ -58,7 +58,7 @@
 		<function tag="revXMLChildNames">revXMLChildNames Function</function>
 		<function tag="revXMLAttributes">revXMLAttributes Function</function>
 		<function tag="revXMLTree">revXMLTree Function</function>
-		<command tag="revAppendXML">revAppendXML Command</command>
+		<command tag="revXMLAppend">revXMLAppend Command</command>
 	</references>
 
 	<description>
@@ -67,7 +67,7 @@
 		<parameters>
 <parameter>
 <name>treeID</name>
-<description>The the number returned by the revCreateXMLTree or revCreateXMLTreeFromFile function when you created the XML tree.</description>
+<description>The the number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.</description>
 </parameter>
 <parameter>
 <name>startNode</name>

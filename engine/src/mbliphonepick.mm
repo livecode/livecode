@@ -38,7 +38,8 @@ UIViewController *MCIPhoneGetViewController(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface MCIPhonePickWheelDelegate : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, UIActionSheetDelegate, UITableViewDelegate> 
+// MM-2013-09-23: [[ iOS7 Support ]] Added missing delegates implemented in order to appease llvm 5.0.
+@interface MCIPhonePickWheelDelegate : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, UIActionSheetDelegate, UITableViewDelegate, UIPopoverControllerDelegate, UITableViewDataSource>
 {
 	bool iSiPad;
 	bool m_running;
@@ -212,7 +213,7 @@ UIViewController *MCIPhoneGetViewController(void);
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-	return 1;
+return 1;
 }
 
 // HC-2011-09-28 [[ Picker Buttons ]] Added arguments to force the display of buttons
@@ -408,7 +409,7 @@ UIViewController *MCIPhoneGetViewController(void);
 		if (m_use_table_view)
 			[actionSheet addSubview: tableView];
 		else
-			[actionSheet addSubview: pickerView];
+		[actionSheet addSubview: pickerView];
 		if (p_use_done || p_use_cancel)
 		{
 			[actionSheet addSubview: t_toolbar];
@@ -432,7 +433,7 @@ UIViewController *MCIPhoneGetViewController(void);
 		}	
 		// create the popover controller
 		popoverController = [[t_popover alloc] initWithContentViewController:self];
-		[popoverController presentPopoverFromRect:MCRectangleToLogicalCGRect(p_button_rect)
+		[popoverController presentPopoverFromRect:MCUserRectToLogicalCGRect(p_button_rect)
 										   inView:MCIPhoneGetView()
 						 permittedArrowDirections:UIPopoverArrowDirectionAny
 										 animated:YES];						
@@ -621,15 +622,16 @@ static MCIPhonePickWheelDelegate *s_pick_wheel_delegate = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MM-2013-09-23: [[ iOS7 Support ]] Made arrays non-const to appease llvm 5.0.
 struct picker_t
 {
-	const NSArray *option_list_array;
+	NSArray *option_list_array;
 	bool use_checkmark;
 	bool use_cancel;
 	bool use_done;
 	bool use_picker;
 	bool use_hilited;
-	const NSArray *initial_index_array;
+	NSArray *initial_index_array;
 	NSString *return_index;
 	MCRectangle button_rect;
 	MCIPhonePickWheelDelegate *picker;
@@ -661,7 +663,7 @@ static void do_pickn_postwait(void *p_context)
 
 // HC-2011-09-28 [[ Picker Buttons ]] Added arguments to force the display of buttons
 // HC-2011-09-30 [[ Bug 9773 ]] Changed using char*& argument to NSString*& for return value
-bool MCSystemPickN(const NSArray *p_option_list_array, bool p_use_checkmark, bool p_use_cancel, bool p_use_done, bool p_use_picker, const NSArray *p_initial_index_array, NSString*& r_return_index, MCRectangle p_button_rect)
+bool MCSystemPickN(NSArray *p_option_list_array, bool p_use_checkmark, bool p_use_cancel, bool p_use_done, bool p_use_picker, NSArray *p_initial_index_array, NSString*& r_return_index, MCRectangle p_button_rect)
 {
 	MCExecPoint ep(nil, nil, nil);
 	

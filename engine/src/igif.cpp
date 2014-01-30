@@ -117,7 +117,7 @@ void MCImage::advanceframe()
 
 static uint32_t gif_color_to_pixel(GifColorType& p_color)
 {
-	return 0xff000000 | (p_color . Red << 16) | (p_color . Green << 8) | (p_color . Blue << 0);
+	return MCGPixelPackNative(p_color.Red, p_color.Green, p_color.Blue, 255);
 }
 
 static void gif_draw_image_into_canvas(MCImageBitmap *p_canvas, GifByteType *p_raster, int32_t p_left, int32_t p_top, int32_t p_width, int32_t p_height, ColorMapObject *p_colors, int32_t p_transparency, bool t_overlay)
@@ -348,6 +348,7 @@ bool MCImageDecodeGIF(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_f
 			MCImageBitmapCheckTransparency(t_frame_bitmap);
 			t_frames[t_frame_count - 1].image = t_frame_bitmap;
 			t_frames[t_frame_count - 1].duration = t_image_delay * 10; // convert 1/100 seconds to milliseconds
+			t_frames[t_frame_count - 1].density = 1.0;
 		}
 
 		t_disposal_region = t_image_region;

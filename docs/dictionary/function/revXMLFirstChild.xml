@@ -69,7 +69,7 @@
 		<parameters>
 <parameter>
 <name>treeID</name>
-<description>The number returned by the revCreateXMLTree or revCreateXMLTreeFromFile function when you created the XML tree.</description>
+<description>The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.</description>
 </parameter>
 <parameter>
 <name>parentNode</name>

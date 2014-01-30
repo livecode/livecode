@@ -111,6 +111,4 @@ private:
 	static void SheetDoneCallback(PMPrintSession printSession, WindowRef documentWindow, Boolean accepted);
 };
 
-CGImageRef PixMapToCGImage(PixMapHandle p_pixmap, bool p_grayscale, bool p_with_alpha = false);
-
 #endif

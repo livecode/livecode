@@ -25,6 +25,30 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 
 #include "lnxdc.h"
+#include "imagebitmap.h"
+
+bool MCImageBitmapCreateWithXImage(XImage *p_image, MCImageBitmap *&r_bitmap)
+{
+	MCImageBitmap *t_bitmap;
+	uindex_t t_width = p_image->width;
+	uindex_t t_height = p_image->height;
+	
+	if (!MCImageBitmapCreate(t_width, t_height, t_bitmap))
+		return false;
+
+	uint8_t *t_src_ptr = (uint8_t*)p_image->data;
+	uint8_t *t_dst_ptr = (uint8_t*)t_bitmap->data;
+	while (t_height--)
+	{
+		MCMemoryCopy(t_dst_ptr, t_src_ptr, t_width * 4);
+		t_src_ptr += p_image->bytes_per_line;
+		t_dst_ptr += t_bitmap->stride;
+	}
+	
+	MCImageBitmapSetAlphaValue(t_bitmap, 0xFF);
+	r_bitmap = t_bitmap;
+	return true;
+}
 
 void surface_extract_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
 MCWindowShape *MCImage::makewindowshape(void)
@@ -42,11 +66,15 @@ MCWindowShape *MCImage::makewindowshape(void)
 
 	MCImageBitmap *t_bitmap = nil;
 	bool t_has_mask = false, t_has_alpha = false;
-	t_success = lockbitmap(t_bitmap);
+	t_success = lockbitmap(t_bitmap, true);
 	if (t_success)
 	{
 		t_has_mask = MCImageBitmapHasTransparency(t_bitmap, t_has_alpha);
+#ifdef LIBGRAPHICS_BROKEN
 		if (t_has_alpha)
+#else
+		if (t_has_mask)
+#endif
 		{
 			// The mask is not sharp.
 			t_mask -> is_sharp = false;
@@ -60,6 +88,7 @@ MCWindowShape *MCImage::makewindowshape(void)
 			if (t_success)
 				surface_extract_alpha(t_bitmap->data, t_bitmap->stride, t_mask->data, t_mask->stride, t_mask->width, t_mask->height);
 		}
+#ifdef LIBGRAPHICS_BROKEN
 		else if (t_has_mask)
 		{
 			// The mask is sharp.
@@ -85,6 +114,7 @@ MCWindowShape *MCImage::makewindowshape(void)
 			if (t_maskimagealpha != nil)
 				MCscreen->destroyimage(t_maskimagealpha);
 		}
+#endif
 		else
 			t_success = false;
 	}

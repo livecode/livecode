@@ -498,6 +498,10 @@ void MCButton::close()
 			tabs = NULL;
 			ntabs = 0;
 		}
+		// AL-2013-01-13 [[ Bug 11363 ]] Close menu on button close. 
+		if (state & CS_SUBMENU)
+			closemenu(True, True);
+
 		freemenu(False);
 		if (entry != NULL)
 		{
@@ -1609,6 +1613,7 @@ Exec_stat MCButton::getprop(uint4 parid, Properties which, MCExecPoint& ep, Bool
 
 	switch (which)
 	{
+#ifdef /* MCButton::getprop */ LEGACY_EXEC
 	case P_STYLE:
 		{
 			const char *t_style_string;
@@ -1871,6 +1876,7 @@ Exec_stat MCButton::getprop(uint4 parid, Properties which, MCExecPoint& ep, Bool
 		// Map the menustring's encoding to the requested encoding.
 		ep.mapunicode(hasunicode(), which == P_UNICODE_TEXT);
 		break;
+#endif /* MCButton::getprop */ 
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}
@@ -1888,6 +1894,7 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 	
 	switch (p)
 	{
+#ifdef /* MCButton::setprop */ LEGACY_EXEC
 	case P_NAME:
 		if (MCObject::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
@@ -2487,6 +2494,7 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 		return MCControl::setprop(parid, p, ep, effective);
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
+#endif /* MCButton::setprop */
 	}
 	if (dirty && opened)
 	{

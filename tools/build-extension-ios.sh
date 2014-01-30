@@ -15,5 +15,9 @@ $PLATFORM_DEVELOPER_BIN_DIR/g++ -dynamiclib $ARCHS -isysroot $SDKROOT -L"$SOLUTI
 
 # MW-2011-09-19: Updated to build universal binary version of lcext - by passing
 #   the process through g++ we get it all for free!
+# MW-2013-06-26: [[ CloneAndRun ]] When in 'Debug' mode, don't strip all global symbols.
+if [ $CONFIGURATION = "Debug" ]; then
+$PLATFORM_DEVELOPER_BIN_DIR/g++ -nodefaultlibs -Wl,-r $ARCHS -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$SRCROOT/$PRODUCT_NAME.ios" -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME $STATIC_DEPS
+else
 $PLATFORM_DEVELOPER_BIN_DIR/g++ -nodefaultlibs -Wl,-r -Wl,-x $ARCHS -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$SRCROOT/$PRODUCT_NAME.ios" -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME $STATIC_DEPS
-#$PLATFORM_DEVELOPER_BIN_DIR/ld -r -x $ARCHS -syslibroot $SDKROOT -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -sectcreate __MISC __deps "$SRCROOT/$PRODUCT_NAME.ios" -exported_symbol ___libinfoptr_$PRODUCT_NAME
+fi

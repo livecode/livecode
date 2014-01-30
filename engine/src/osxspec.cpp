@@ -48,6 +48,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxdc.h"
 #include "mcssl.h"
 
+#include "resolution.h"
+
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
@@ -274,13 +276,11 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 			Rect t_rect;
 			GetWindowPortBounds((WindowPtr)t_window . handle . window, &t_rect);
 			
+			// IM-2013-10-11: [[ FullscreenMode ]] Move stack scroll handling into stack transform
 			t_rect . right -= t_rect . left;
 			t_rect . bottom -= t_rect . top;
 			t_rect . left = 0;
-			
-			// MW-2011-09-12: [[ MacScroll ]] Make sure the top of the HIView takes into
-			//   account the scroll.
-			t_rect . top = -sptr -> getscroll();
+			t_rect . top = 0;
 			
 			ControlRef t_root_control;
 			GetRootControl((WindowPtr)t_window . handle . window, &t_root_control);
@@ -291,7 +291,7 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 			
 			// MW-2007-08-29: [[ Bug 4846 ]] Ensure a moveStack message is sent whenever the window moves
 			if ((attributes & kWindowBoundsChangeSizeChanged) != 0 || ((attributes & kWindowBoundsChangeUserDrag) != 0 && (attributes & kWindowBoundsChangeOriginChanged) != 0))
-				sptr->configure(True);//causes a redraw and recalculation
+				sptr->view_configure(true);//causes a redraw and recalculation
 		}
 		else if (GetEventKind(event) == kEventWindowInit && sptr != NULL)
 		{

@@ -33,7 +33,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "execpt.h"
 #include "stacklst.h"
 #include "sellst.h"
-#include "pxmaplst.h"
 #include "mode.h"
 
 #include "globals.h"
@@ -42,6 +41,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 
 #include "osxdc.h"
+
+#include "graphicscontext.h"
+#include "resolution.h"
 
 uint2 MCScreenDC::ink_table_c[NUM_INKS] =
     {
@@ -348,7 +350,7 @@ void MCScreenDC::ungrabpointer()
 	grabbed = False;
 }
 
-uint2 MCScreenDC::getwidth()
+uint16_t MCScreenDC::device_getwidth(void)
 {
 	GDHandle mainScreen = GetMainDevice();
 	HLock((Handle)mainScreen);
@@ -358,7 +360,7 @@ uint2 MCScreenDC::getwidth()
 	return swidth;
 }
 
-uint2 MCScreenDC::getheight()
+uint16_t MCScreenDC::device_getheight(void)
 {
 	GDHandle mainScreen = GetMainDevice();
 	HLock((Handle)mainScreen);
@@ -769,10 +771,10 @@ void MCScreenDC::unlockpixmap(Pixmap p_pixmap, void *p_bits, uint4 p_stride)
 	UnlockPixels(t_src_pixmap);
 }
 
-Boolean MCScreenDC::getwindowgeometry(Window w, MCRectangle &drect)
+bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 {//get the client window's geometry in screen coord
 	if (w == DNULL || w->handle.window == 0)
-		return False;
+		return false;
 
 
 	RgnHandle r = NewRgn();
@@ -780,11 +782,11 @@ Boolean MCScreenDC::getwindowgeometry(Window w, MCRectangle &drect)
 	Rect windowRect;
 	GetRegionBounds(r, &windowRect);
 	DisposeRgn(r);
-	MacRect2MCRect(windowRect, drect);
+	drect = MCMacRectToMCRect(windowRect);
 	if (drect.height == 0)
 		drect.x = drect.y = -1; // windowshaded, so don't move it
 
-	return True;
+	return true;
 }
 
 Boolean MCScreenDC::getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d)
@@ -857,336 +859,6 @@ void MCScreenDC::copyarea(Drawable s, Drawable d, int2 depth,
 	SetGWorld(oldport, olddevice);
 }
 
-void MCScreenDC::copyplane(Drawable s, Drawable d, int2 sx, int2 sy,
-                           uint2 sw, uint2 sh, int2 dx, int2 dy,
-                           uint4 rop, uint4 pixel)
-{
-	CGrafPtr oldport;
-	GDHandle olddevice;
-	GetGWorld(&oldport, &olddevice);
-	SetGWorld((CGrafPtr)d->handle.pixmap, NULL);
-	
-	RGBColor dstColor;
-	
-	if (s == nil || d == nil)
-		return;
-	
-	dstColor.red = (pixel & 0xFF0000) >> 8;
-	dstColor.green = pixel & 0xFF00;
-	dstColor.blue = (pixel & 0xFF) << 8;
-	dstColor.red |= dstColor.red >> 8;
-	dstColor.green |= dstColor.green >> 8;
-	dstColor.blue |= dstColor.blue >> 8;
-	
-	RGBForeColor(&dstColor);
-	copybits(s, d, sx, sy, sw, sh, dx, dy, ink_table_c[rop]);
-	SetGWorld(oldport, olddevice);
-}
-
-MCBitmap *MCScreenDC::createimage(uint2 depth, uint2 width, uint2 height,
-                                  Boolean set
-	                                  , uint1 value,
-	                                  Boolean shm, Boolean forceZ)
-{
-	if (depth == 0)
-		depth = 32;
-		
-	MCBitmap *image = new MCBitmap;
-	image->width = width;
-	image->height = height;
-	image->format = ZPixmap;
-	image->bitmap_unit = 32;
-	image->byte_order = MSBFirst;
-	image->bitmap_pad = 32;
-	image->bitmap_bit_order = MSBFirst;
-	image->depth = (uint1)depth;
-	image->bits_per_pixel = (uint1)depth;
-	image->red_mask = image->green_mask = image->blue_mask
-	                                      = depth == 1 || depth == getdepth() ? 0x00 : 0xFF;
-	image->data = NULL;
-	if (shm)
-	{
-		Rect r;
-		r.top = r.left = 0;
-		r.bottom = height;
-		r.right = width; // maybe useDistantHdwrMem?
-		QDErr err = NewGWorld((GWorldPtr *)&image->bm, depth, &r, NULL, NULL, MCmajorosversion >= 0x1040 ? kNativeEndianPixMap : 0);
-		if (image->bm != NULL || err == noErr)
-		{
-			PixMapHandle dpm = GetGWorldPixMap((CGrafPtr)image->bm);
-			LockPixels(dpm);
-			image->data = GetPixBaseAddr(dpm);
-			image->bytes_per_line = GetPixRowBytes(dpm);
-		}
-	}
-	if (image->data == NULL)
-	{
-		image->bytes_per_line = ((width * depth + 31) >> 3) & 0xFFFFFFFC;
-		image->data = new char[image->bytes_per_line * height];
-		image->bm = NULL;
-	}
-	if (set)
-		memset(image->data, value, image->bytes_per_line * height);
-	return image;
-}
-
-void MCScreenDC::destroyimage(MCBitmap *image)
-{
-	if (image->bm != NULL)
-	{
-		PixMapHandle dpm = GetGWorldPixMap((CGrafPtr)image->bm);
-		UnlockPixels(dpm);
-		DisposeGWorld((CGrafPtr)image->bm);
-	}
-	else
-		delete image->data;
-	delete image;
-}
-
-MCBitmap *MCScreenDC::copyimage(MCBitmap *source, Boolean invert)
-{
-	MCBitmap *image = new MCBitmap;
-	memcpy(image, source, sizeof(MCBitmap));
-	// IM-2013-02-06: if we're copying a shared memory bitmap then
-	// make sure the pixmap handle is set to null so we don't try
-	// to release it twice
-	image->bm = nil;
-	uint4 bytes = image->bytes_per_line * image->height;
-	image->data = new char[bytes];
-	if (invert)
-	{
-		uint1 *sptr = (uint1 *)source->data;
-		uint1 *dptr = (uint1 *)image->data;
-		while (bytes--)
-			*dptr++ = ~*sptr++;
-	}
-	else
-		memcpy(image->data, source->data, bytes);
-	return image;
-}
-
-
-void MCScreenDC::putimage(Drawable dest, MCBitmap *source, int2 sx, int2 sy,
-                          int2 dx, int2 dy, uint2 w, uint2 h)
-{ /* image from source memory to dest memory */
-	if (w == 0 || h == 0)
-		return;
-	if (dest == nil)
-		return;
-	if (dest->type == DC_BITMAP)
-	{//hiview doesn't like drawing directly to memory..
-		//need to get the context associated with  keventcontroldraw..currently passing the current port.
-		uint2 sd = source->depth == 24 ? 32 : source->depth;
-		char *sptr = source->data + sy * source->bytes_per_line
-		             + (sx * sd >> 3);
-		char *eptr = source->data + sy * source->bytes_per_line
-		             + ((sx + w - 1) * sd >> 3);
-		uint4 cbpl = eptr - sptr + MCU_max(sd >> 3, 1);
-		Rect r;
-		dy -= GetPortBounds((CGrafPtr)dest->handle.pixmap, &r)->top;
-		
-		PixMapHandle destpm;
-		destpm = GetGWorldPixMap((CGrafPtr)dest -> handle . pixmap);
-		LockPixels(destpm);
-		uint4 dbpl = GetPixRowBytes(destpm);
-		char *dptr = GetPixBaseAddr(destpm) + dy * dbpl
-		             + (dx * sd >> 3);
-		if (sd == 1)
-		{
-			uint1 t_startoffset = sx & 0x07;
-			uint1 t_startmask = (1 << t_startoffset) - 1;
-
-			char *t_offsetdata;
-
-			uint1 t_bitoffset = dx & 0x07;
-			uint1 t_mask = (1 << (8 - t_bitoffset)) - 1;
-
-			uint1 t_endbits = w & 0x07;
-			uint1 t_endmask;
-			if (t_endbits)
-			{
-				t_endmask = (1 << 8 - t_endbits) - 1;
-				t_endmask = (t_endmask << (8 - t_bitoffset)) | (t_endmask >> (t_bitoffset));
-			}
-			
-			while (h--)
-			{
-				char *t_dptr = dptr;
-				char *t_sptr = sptr;
-				if (t_startoffset)
-				{
-					// I.M. 2008-09-17
-					// pre-shift data to take startx into account where sx mod 8 != 0
-					t_offsetdata = new char[source->bytes_per_line];
-					memset(t_offsetdata, 0, sizeof(char) * source->bytes_per_line);
-					uint4 i;
-					for (i = 0; i < source->bytes_per_line - 1; i++)
-					{
-						t_offsetdata[i] = (~t_startmask & (t_sptr[i] << t_startoffset)) | (t_startmask & (t_sptr[i + 1] >> (8 - t_startoffset)));
-					}
-					t_offsetdata[i] = (~t_startmask & (t_sptr[i] << t_startoffset));
-					t_sptr = t_offsetdata;
-				}
-				for (uint4 i=0; i<(w>>3); i++)
-				{
-					*t_dptr++ = (~t_mask & *t_dptr) | (t_mask & (*t_sptr >> t_bitoffset));
-					*t_dptr = (t_mask & *t_dptr) | (~t_mask & (*t_sptr++ << (8 - t_bitoffset)));
-				}
-				uint1 t_endbits = w & 0x07;
-				if (t_endbits)
-				{
-					*t_dptr++ = ((~t_mask | t_endmask) & *t_dptr) | ((t_mask & ~t_endmask) & (*t_sptr >> t_bitoffset));					
-					*t_dptr = ((t_mask | t_endmask) & *t_dptr) | ((~t_mask & ~t_endmask) & (*t_sptr++ << (8 - t_bitoffset)));
-				}
-				sptr += source->bytes_per_line;
-				dptr += dbpl;
-				if (t_startoffset)
-					delete t_offsetdata;
-			}
-		}
-		else
-		{
-			while (h--)
-			{
-				memcpy(dptr, sptr, cbpl);
-				sptr += source->bytes_per_line;
-				dptr += dbpl;
-			}
-		}
-		UnlockPixels(destpm);
-		}
-	else
-	{
-		GWorldPtr t_old_gworld;
-		GDHandle t_old_device;
-		GetGWorld(&t_old_gworld, &t_old_device);
-		SetGWorld(GetWindowPort((WindowPtr)dest -> handle . window), NULL);
-	
-		PixMapHandle spm = GetGWorldPixMap((CGrafPtr)source->bm);
-		ForeColor(blackColor);
-		BackColor(whiteColor);
-		Rect srcR;
-		Rect destR;
-		SetRect(&srcR, sx, sy, sx + w, sy + h);
-		SetRect(&destR, dx, dy, dx + w, dy + h);
-		CopyBits((BitMap *)*spm,
-		         GetPortBitMapForCopyBits(GetWindowPort((WindowPtr)dest->handle.window)),
-		         &srcR, &destR, srcCopy, NULL);
-						 
-		SetGWorld(t_old_gworld, t_old_device);
-	}
-}
-
-MCBitmap *MCScreenDC::getimage(Drawable src, int2 x, int2 y,
-                               uint2 w, uint2 h, Boolean shm)
-{
-	uint2 depth;
-	uint4 bpl;                //bytes per line
-	char *sptr;               //point to the begining of src image data
-	PixMapHandle srcpm;
-	Pixmap rootpm = NULL;
-	
-	// MW-2007-08-30: [[ Bug 3736 ]] Ensure we dispose of the root port in the appropriate
-	//   way if we create it - previously DisposeGWorld was being used which causes a memory
-	//   leak.
-	bool t_allocated_rootpm;
-	t_allocated_rootpm = false;
-	if (src == DNULL)
-	{
-		rootpm = new _Drawable;
-		rootpm->type = DC_BITMAP;
-		rootpm->handle.pixmap = (MCSysBitmapHandle)CreateNewPort();
-		src = rootpm;
-		t_allocated_rootpm = true;
-	}
-	
-	Rect r;
-	if (src->type == DC_BITMAP)
-	{
-		srcpm = GetGWorldPixMap((CGrafPtr)src->handle.pixmap);
-		LockPixels(srcpm);
-		
-		bpl = GetPixRowBytes(srcpm);
-		y -= GetPortBounds((CGrafPtr)src->handle.pixmap, &r)->top;
-		sptr = GetPixBaseAddr(srcpm) + y * bpl + x * (devdepth >> 3);
-		depth = (*srcpm)->pixelSize;
-	}
-	else
-	{
-		depth = getdepth();
-		GDevice **dev = GetMainDevice();
-		PixMap pm = **((**dev).gdPMap);
-		bpl = pm.rowBytes & 0x3FFF;
-		Point p;
-		p.h = x;
-		p.v = y - GetPortBounds(GetWindowPort((WindowPtr)src->handle.window), &r)->top;
-		CGrafPtr oldport;
-		GDHandle olddevice;
-		GetGWorld(&oldport, &olddevice);
-		SetGWorld(GetWindowPort((WindowPtr)src->handle.window), GetMainDevice());
-		LocalToGlobal(&p);
-		SetGWorld(oldport, olddevice);
-		sptr = pm.baseAddr + p.v * bpl + p.h * (devdepth >> 3);
-	}
-	MCBitmap *image;
-	
-	{
-		assert(depth == 32 || depth == 1);
-		image = createimage(depth, w, h, True, 0, shm, True);
-		if (shm && src->type == DC_WINDOW)
-		{
-
-			LockPortBits(GetWindowPort((WindowPtr)src->handle.window));
-
-
-			PixMapHandle dstpm = GetGWorldPixMap((CGrafPtr)image->bm);
-			ForeColor(blackColor);
-			BackColor(whiteColor);
-			Rect srcR;
-			Rect destR;
-			SetRect(&srcR, x, y, x + w, y + h);
-			SetRect(&destR, 0, 0, w, h);
-			CopyBits(GetPortBitMapForCopyBits(GetWindowPort((WindowPtr)src->handle.window)),
-			         (BitMap *)*dstpm, &srcR, &destR, srcCopy, NULL);
-
-
-			UnlockPortBits(GetWindowPort((WindowPtr)src->handle.window));
-
-
-		}
-		else
-		{
-			char *dptr = image->data; //point to destination image data buffer
-			uint4 bytes = (w * depth + 7) >> 3;
-			while (h--)
-			{
-				memcpy(dptr, sptr, bytes);
-				sptr += bpl;
-				dptr += image->bytes_per_line;
-			}
-		}
-	}
-	
-	// MW-2009-01-22: [[ Bug 7496 ]] Only unlock pixels if it is a bitmap, otherwise we get a
-	//   crash on Leopard.
-	if (src->type == DC_BITMAP)
-		UnlockPixels(srcpm);
-		
-	if (t_allocated_rootpm)
-	{
-		DisposePort((CGrafPtr)rootpm -> handle . pixmap);
-		delete rootpm;
-	}
-	else if (rootpm)
-		freepixmap(rootpm);
-
-	return image;
-}
-
-void MCScreenDC::flipimage(MCBitmap *image, int2 byte_order, int2 bit_order)
-{ //not needed on Mac platform
-}
-
 uint4 MCScreenDC::dtouint4(Drawable d)
 {
 	if (d == DNULL)
@@ -1196,14 +868,6 @@ uint4 MCScreenDC::dtouint4(Drawable d)
 			return (uint4)(d->handle.window);
 		else
 			return (uint4)(d->handle.pixmap);
-}
-
-Boolean MCScreenDC::uint4topixmap(uint4 id, Pixmap &p)
-{
-	p = new _Drawable;
-	p->type = DC_BITMAP;
-	p->handle.pixmap = (MCSysBitmapHandle)id;
-	return True;
 }
 
 Boolean MCScreenDC::uint4towindow(uint4 id, Window &w)
@@ -1300,7 +964,7 @@ void MCScreenDC::enablebackdrop(bool p_hard)
 	if (!t_error)
 	{
 		MCRectangle t_rect;
-		MCU_set_rect(t_rect, 0, 0, getwidth(), getheight());
+		MCU_set_rect(t_rect, 0, 0, device_getwidth(), device_getheight());
 		updatebackdrop(t_rect);
 		
 		MCstacks -> refresh();
@@ -1340,7 +1004,7 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 	else
 	{
 		MCRectangle t_rect;
-		MCU_set_rect(t_rect, 0, 0, getwidth(), getheight());
+		MCU_set_rect(t_rect, 0, 0, device_getwidth(), device_getheight());
 		updatebackdrop(t_rect);
 	}
 }
@@ -1356,7 +1020,7 @@ bool MCScreenDC::initialisebackdrop(void)
 	t_error = false;
 
 	Rect t_bounds;
-	SetRect(&t_bounds, 0, 0, getwidth(), getheight());
+	SetRect(&t_bounds, 0, 0, device_getwidth(), device_getheight());
 	t_error = CreateNewWindow(kPlainWindowClass, kWindowNoAttributes, &t_bounds, &backdrop_window) != noErr;
 	if (!t_error)
 		t_error = CreateWindowGroup(kWindowGroupAttrLayerTogether | kWindowGroupAttrSelectAsLayer, &backdrop_group);
@@ -1427,7 +1091,7 @@ void MCScreenDC::finalisebackdrop(void)
 	}
 }
 
-void MCScreenDC::configurebackdrop(const MCColor& p_colour, Pixmap p_pattern, MCImage *p_badge)
+void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge)
 {
 	if (backdrop_badge != p_badge || backdrop_pattern != p_pattern || backdrop_colour . red != p_colour . red || backdrop_colour . green != p_colour . green || backdrop_colour . blue != p_colour . blue)
 	{
@@ -1440,7 +1104,7 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, Pixmap p_pattern, MC
 		if (backdrop_active || backdrop_hard)
 		{
 			MCRectangle t_rect;
-			MCU_set_rect(t_rect, 0, 0, getwidth(), getheight());
+			MCU_set_rect(t_rect, 0, 0, device_getwidth(), device_getheight());
 	
 			updatebackdrop(t_rect);
 		}
@@ -1490,17 +1154,42 @@ void MCScreenDC::assignbackdrop(Window_mode p_mode, Window p_window)
 
 void MCScreenDC::updatebackdrop(const MCRectangle& p_dirty)
 {
-	_Drawable d;
-	d.type = DC_WINDOW;
-	d.handle.window = (MCSysWindowHandle)backdrop_window; //get the window ptr
+	MCGContextRef t_context = nil;
+	MCGraphicsContext *t_gfxcontext = nil;
 	
-	MCContext *t_context;
+	CGrafPtr t_gptr = nil;
+	PixMapHandle t_pix = nil;
+	Rect t_bounds;
+	Rect t_pix_bounds;
+	
+	void *t_bits = nil;
+	uint32_t t_stride;
+	
+	/* UNCHECKED */ t_gptr = GetWindowPort(backdrop_window);
+	LockPortBits(t_gptr);
+	/* UNCHECKED */ t_pix = GetPortPixMap(t_gptr);
+	LockPixels(t_pix);
+	HLock((Handle)t_pix);
+	
+	/* UNCHECKED */ t_bits = GetPixBaseAddr(t_pix);
+	t_stride = GetPixRowBytes(t_pix);
+	GetPortBounds(t_gptr, &t_bounds);
+	GetPixBounds(t_pix, &t_pix_bounds);
+	
+	t_bits = (uint8_t*)t_bits + t_stride * -t_pix_bounds.top + sizeof(uint32_t) * -t_pix_bounds.left;
+	
+	/* UNCHECKED */ MCGContextCreateWithPixels(t_bounds.right - t_bounds.left, t_bounds.bottom - t_bounds.top, t_stride, t_bits, true, t_context);
+	/* UNCHECKED */ t_gfxcontext = new MCGraphicsContext(t_context);
+	
+	t_gfxcontext->setclip(p_dirty);
+	redrawbackdrop(t_gfxcontext, p_dirty);
 
-	// MW-2006-03-14: Updated to use (alpha, transient)
-	t_context = createcontext(&d, false, false);
-	t_context -> setclip(p_dirty);
-	redrawbackdrop(t_context, p_dirty);
-	freecontext(t_context);
+	delete t_gfxcontext;
+	MCGContextRelease(t_context);
+	
+	HUnlock((Handle)t_pix);
+	UnlockPixels(t_pix);
+	UnlockPortBits(t_gptr);
 }
 
 void MCScreenDC::redrawbackdrop(MCContext *p_context, const MCRectangle& p_dirty)

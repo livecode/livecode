@@ -86,9 +86,13 @@ bool MCTileCacheSoftwareCompositor_BeginFrame(void *p_context, MCStackSurface *p
 	MCTileCacheSoftwareCompositorContext *self;
 	self = (MCTileCacheSoftwareCompositorContext *)p_context;
 	
-	if (!p_surface -> LockPixels(p_dirty, self -> bits, self -> stride))
+	MCGRaster t_raster;
+	if (!p_surface -> LockPixels(p_dirty, t_raster))
 		return false;
 	
+	self -> bits = t_raster . pixels;
+	self -> stride = t_raster . stride;
+
 	MCMemoryDeallocate(self -> tile_row);
 	self -> tile_row = nil;
 	self -> tile_row_color = 0;
