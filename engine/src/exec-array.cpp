@@ -258,7 +258,7 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
             
             // Next cell
             t_column_index++;
-            t_cell_offset = t_cell_end;
+            t_cell_offset = t_cell_end + 1;
         }
         
         // Next row
@@ -273,8 +273,9 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
             ctxt . Throw();
             return;
         }
+        MCValueRelease(t_temp_array[i]);
     }
-    
+
     MCArrayCopy(*t_array, r_array);
 }
 
