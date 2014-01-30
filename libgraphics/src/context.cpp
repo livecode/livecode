@@ -2639,6 +2639,8 @@ static MCGCacheTableRef s_measure_cache = NULL;
 
 void MCGTextMeasureCacheInitialize(void)
 {
+    // MM-2014-01-09: [[ Bug 11623 ]] Make sure we initialise globals otherwise old values will be present on Android after restart.
+    s_measure_cache = NULL;
 	srand(time(NULL));
 	/* UNCHECKED */ MCGCacheTableCreate(kMCGTextMeasureCacheTableSize, kMCGTextMeasureCacheMaxOccupancy, kMCGTextMeasureCacheByteSize, s_measure_cache);
 }
@@ -2646,6 +2648,7 @@ void MCGTextMeasureCacheInitialize(void)
 void MCGTextMeasureCacheFinalize(void)
 {
 	MCGCacheTableDestroy(s_measure_cache);
+    s_measure_cache = NULL;
 }
 
 void MCGTextMeasureCacheCompact(void)

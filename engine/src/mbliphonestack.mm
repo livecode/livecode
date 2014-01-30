@@ -337,7 +337,9 @@ static void effectrect_phase_2(void *p_context)
 	ctxt -> updated_image_view = [[UIImageView alloc] initWithImage: ctxt -> updated_image];
 	[ctxt -> updated_image release];
 	
-	float t_scale = MCIPhoneGetResolutionScale();
+    // MM-2013-01-10: [[ Bug 11653 ]] As above, our rects are also in device pixels, so use the device scale when working out x and y of bounds.
+	float t_scale;
+    t_scale = MCIPhoneGetDeviceScale();
 	
 	// MW-2011-09-27: [[ iOSApp ]] Adjust for content origin.
 	// IM-2013-07-18: [[ ResIndependence ]] use width / height from the UIImage
