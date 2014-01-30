@@ -84,9 +84,9 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
                 if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
                     do
                     {
-                        ctxt . IgnoreLastError();
                         MCB_error(ctxt, tspr->getline(), tspr->getpos(),
                                   EE_REPEAT_BADSTATEMENT);
+                        ctxt . IgnoreLastError();
                         tspr->exec_ctxt(ctxt);
                     }
                 while (MCtrace && (stat = ctxt . GetExecStat()) != ES_NORMAL);
@@ -700,6 +700,7 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                     do
                     {
                         MCB_error(ctxt, tspr->getline(), tspr->getpos(), EE_TRY_BADSTATEMENT);
+                        ctxt.IgnoreLastError();
                         tspr->exec_ctxt(ctxt);
                     }
 				while(MCtrace && (stat = ctxt . GetExecStat()) != ES_NORMAL);

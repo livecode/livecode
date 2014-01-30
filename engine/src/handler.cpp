@@ -441,6 +441,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
                     do
                     {
                         MCB_error(ctxt, tspr->getline(), tspr->getpos(), EE_HANDLER_BADSTATEMENT);
+                        ctxt . IgnoreLastError();
                         tspr->exec_ctxt(ctxt);
                     }
 				while (MCtrace && (stat = ctxt . GetExecStat()) != ES_NORMAL);
