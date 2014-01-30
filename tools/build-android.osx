@@ -17,7 +17,7 @@ export JAVA_SDK=`/usr/libexec/java_home`
 export JCOUNT=20
 
 # Path variables
-export CLASSPATH="$ANDROID_SDK/platforms/android-8/android.jar"
+export CLASSPATH="$ANDROID_SDK/platforms/android-8/android.jar":"$ANDROID_SDK/platforms/android-8/in-app-purchasing-1.0.3.jar"
 export NDKBUILD=$ANDROID_NDK/ndk-build
 export DSTROOT=$SRCROOT/_build/android/$MODE
 export RAWROOT=$SRCROOT/_build/android/$MODE/assets
@@ -47,8 +47,21 @@ fi
 
 export JAVASRC=$SRCROOT/engine/src/java
 
-# generate the MarketBillingService interface class from the aidl file
-"$AIDL" -I"JAVASRC" -p"$ANDROID_SDK/platforms/android-8/framework.aidl" "$JAVASRC/com/android/vending/billing/IMarketBillingService.aidl"
+# generate the  interface classes from the aidl files
+
+"$AIDL" -I"$JAVASRC" -p"$ANDROID_SDK/platforms/android-8/framework.aidl" "$JAVASRC/com/sec/android/iap/IAPServiceCallback.aidl"
+if [ $? != 0 ]; then
+	exit $?
+fi
+
+"$AIDL" -I"$JAVASRC" -p"$ANDROID_SDK/platforms/android-8/framework.aidl" "$JAVASRC/com/sec/android/iap/IAPConnector.aidl"
+if [ $? != 0 ]; then
+	exit $?
+fi
+
+
+# generate the IInAppBillingService interface class from the aidl file
+"$AIDL" -I"JAVASRC" -p"$ANDROID_SDK/platforms/android-8/framework.aidl" "$JAVASRC/com/android/vending/billing/IInAppBillingService.aidl"
 if [ $? != 0 ]; then
 	exit $?
 fi
@@ -71,6 +84,9 @@ fi
 if [ $? != 0 ]; then
 	exit $?
 fi
+
+# add amazon IAP classes to the classes_livecode_community folder ready for inclusion in jar
+unzip -o "$ANDROID_SDK/platforms/android-8/in-app-purchasing-1.0.3.jar" com/amazon/inapp/purchasing/* -d "$DSTROOT/classes_livecode_community"
 
 # add LiveCode classes to jar
 echo "Create Classes jar"

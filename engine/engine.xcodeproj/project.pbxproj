@@ -780,6 +780,39 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1D86C57018996EB7002A8945 /* MyPurchasingObserver.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = MyPurchasingObserver.java; sourceTree = "<group>"; };
+		1D86C57118997158002A8945 /* AmazonBillingProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = AmazonBillingProvider.java; sourceTree = "<group>"; };
+		1D86C572189A5B82002A8945 /* Base64.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = Base64.java; sourceTree = "<group>"; };
+		1D86C573189A5BF2002A8945 /* Base64DecoderException.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = Base64DecoderException.java; sourceTree = "<group>"; };
+		1D86C574189A5C73002A8945 /* IabException.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = IabException.java; sourceTree = "<group>"; };
+		1D86C575189A5CB8002A8945 /* IabHelper.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = IabHelper.java; sourceTree = "<group>"; };
+		1D86C576189A5CF4002A8945 /* IabResult.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = IabResult.java; sourceTree = "<group>"; };
+		1D86C577189A5D31002A8945 /* Inventory.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = Inventory.java; sourceTree = "<group>"; };
+		1D86C578189A5D97002A8945 /* Purchase.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = Purchase.java; sourceTree = "<group>"; };
+		1D86C579189A5DFB002A8945 /* SkuDetails.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = SkuDetails.java; sourceTree = "<group>"; };
+		1D86C57A189A5E40002A8945 /* Security.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = Security.java; sourceTree = "<group>"; };
+		1D86C57E189A6078002A8945 /* IInAppBillingService.aidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = IInAppBillingService.aidl; sourceTree = "<group>"; };
+		1D86C57F189A6078002A8945 /* IMarketBillingService.aidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = IMarketBillingService.aidl; sourceTree = "<group>"; };
+		1D86C580189A6078002A8945 /* IMarketBillingService.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = IMarketBillingService.java; sourceTree = "<group>"; };
+		1D86C581189A613F002A8945 /* GoogleBillingProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = GoogleBillingProvider.java; sourceTree = "<group>"; };
+		1D86C5D9189A7B30002A8945 /* IAPConnector.aidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = IAPConnector.aidl; sourceTree = "<group>"; };
+		1D86C5DA189A7B30002A8945 /* IAPServiceCallback.aidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = IAPServiceCallback.aidl; sourceTree = "<group>"; };
+		1D86C5DD189A7B30002A8945 /* ItemList.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; lineEnding = 0; path = ItemList.java; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.java; };
+		1D86C5DE189A7B30002A8945 /* ItemsInboxList.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; lineEnding = 0; path = ItemsInboxList.java; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.java; };
+		1D86C5DF189A7B30002A8945 /* Main.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = Main.java; sourceTree = "<group>"; };
+		1D86C5E0189A7B30002A8945 /* PurchaseOneItem.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = PurchaseOneItem.java; sourceTree = "<group>"; };
+		1D86C5E2189A7B30002A8945 /* ItemInboxListAdapter.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = ItemInboxListAdapter.java; sourceTree = "<group>"; };
+		1D86C5E3189A7B30002A8945 /* ItemListAdapter.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = ItemListAdapter.java; sourceTree = "<group>"; };
+		1D86C5E5189A7B30002A8945 /* SamsungIapHelper.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = SamsungIapHelper.java; sourceTree = "<group>"; };
+		1D86C5E7189A7B31002A8945 /* BaseVO.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = BaseVO.java; sourceTree = "<group>"; };
+		1D86C5E8189A7B31002A8945 /* ErrorVO.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = ErrorVO.java; sourceTree = "<group>"; };
+		1D86C5E9189A7B31002A8945 /* InBoxVO.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = InBoxVO.java; sourceTree = "<group>"; };
+		1D86C5EA189A7B31002A8945 /* ItemVO.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = ItemVO.java; sourceTree = "<group>"; };
+		1D86C5EB189A7B31002A8945 /* PurchaseVO.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = PurchaseVO.java; sourceTree = "<group>"; };
+		1D86C5EC189A7B31002A8945 /* VerificationVO.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = VerificationVO.java; sourceTree = "<group>"; };
+		1D86C5ED189A7D70002A8945 /* SamsungBillingProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = SamsungBillingProvider.java; sourceTree = "<group>"; };
+		1D86C5EE189A9AD6002A8945 /* BillingProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = BillingProvider.java; sourceTree = "<group>"; };
+		1D86C5EF189A9CFD002A8945 /* BillingModule.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = BillingModule.java; sourceTree = "<group>"; };
 		3C03ED911134205A009DE406 /* socket_resolve.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = socket_resolve.cpp; path = src/socket_resolve.cpp; sourceTree = "<group>"; };
 		3C0A3CC310BAF6120074D630 /* iquantization.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = iquantization.cpp; path = src/iquantization.cpp; sourceTree = "<group>"; };
 		3C0A3CC510BAF63B0074D630 /* iquantization.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = iquantization.h; path = src/iquantization.h; sourceTree = "<group>"; };
@@ -805,20 +838,10 @@
 		4D05B90F13E06AAC001CD82A /* dskw32main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskw32main.cpp; path = src/dskw32main.cpp; sourceTree = "<group>"; };
 		4D140F6F15A5A82300191B5E /* AdModule.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = AdModule.java; sourceTree = "<group>"; };
 		4D140F7015A5A82300191B5E /* Alert.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = Alert.java; sourceTree = "<group>"; };
-		4D140F7215A5A82300191B5E /* BillingReceiver.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = BillingReceiver.java; sourceTree = "<group>"; };
-		4D140F7315A5A82300191B5E /* BillingService.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = BillingService.java; sourceTree = "<group>"; };
-		4D140F7415A5A82300191B5E /* C.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = C.java; sourceTree = "<group>"; };
 		4D140F7515A5A82300191B5E /* PurchaseObserver.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = PurchaseObserver.java; sourceTree = "<group>"; };
-		4D140F7615A5A82300191B5E /* PurchaseUpdate.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = PurchaseUpdate.java; sourceTree = "<group>"; };
 		4D140F7715A5A82300191B5E /* ResponseHandler.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = ResponseHandler.java; sourceTree = "<group>"; };
-		4D140F7815A5A82300191B5E /* Security.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = Security.java; sourceTree = "<group>"; };
-		4D140F7915A5A82300191B5E /* BillingReceiver.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = BillingReceiver.java; path = billing/BillingReceiver.java; sourceTree = "<group>"; };
-		4D140F7A15A5A82300191B5E /* BillingService.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = BillingService.java; path = billing/BillingService.java; sourceTree = "<group>"; };
-		4D140F7B15A5A82300191B5E /* C.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = C.java; path = billing/C.java; sourceTree = "<group>"; };
 		4D140F7C15A5A82300191B5E /* PurchaseObserver.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = PurchaseObserver.java; path = billing/PurchaseObserver.java; sourceTree = "<group>"; };
-		4D140F7D15A5A82300191B5E /* PurchaseUpdate.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = PurchaseUpdate.java; path = billing/PurchaseUpdate.java; sourceTree = "<group>"; };
 		4D140F7E15A5A82300191B5E /* ResponseHandler.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = ResponseHandler.java; path = billing/ResponseHandler.java; sourceTree = "<group>"; };
-		4D140F7F15A5A82300191B5E /* Security.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = Security.java; path = billing/Security.java; sourceTree = "<group>"; };
 		4D140F8015A5A82300191B5E /* BitmapView.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = BitmapView.java; sourceTree = "<group>"; };
 		4D140F8115A5A82300191B5E /* BusyIndicator.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = BusyIndicator.java; sourceTree = "<group>"; };
 		4D140F8215A5A82300191B5E /* CalendarEvents.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = CalendarEvents.java; sourceTree = "<group>"; };
@@ -1530,6 +1553,144 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1D86C56D18996D02002A8945 /* amazon */ = {
+			isa = PBXGroup;
+			children = (
+				1D86C57018996EB7002A8945 /* MyPurchasingObserver.java */,
+				1D86C57118997158002A8945 /* AmazonBillingProvider.java */,
+			);
+			path = amazon;
+			sourceTree = "<group>";
+		};
+		1D86C56E18996D0E002A8945 /* google */ = {
+			isa = PBXGroup;
+			children = (
+				1D86C572189A5B82002A8945 /* Base64.java */,
+				1D86C573189A5BF2002A8945 /* Base64DecoderException.java */,
+				1D86C574189A5C73002A8945 /* IabException.java */,
+				1D86C575189A5CB8002A8945 /* IabHelper.java */,
+				1D86C576189A5CF4002A8945 /* IabResult.java */,
+				1D86C577189A5D31002A8945 /* Inventory.java */,
+				1D86C578189A5D97002A8945 /* Purchase.java */,
+				1D86C579189A5DFB002A8945 /* SkuDetails.java */,
+				1D86C57A189A5E40002A8945 /* Security.java */,
+				1D86C581189A613F002A8945 /* GoogleBillingProvider.java */,
+			);
+			path = google;
+			sourceTree = "<group>";
+		};
+		1D86C56F18996D17002A8945 /* samsung */ = {
+			isa = PBXGroup;
+			children = (
+				1D86C5ED189A7D70002A8945 /* SamsungBillingProvider.java */,
+			);
+			path = samsung;
+			sourceTree = "<group>";
+		};
+		1D86C57B189A6078002A8945 /* android */ = {
+			isa = PBXGroup;
+			children = (
+				1D86C57C189A6078002A8945 /* vending */,
+			);
+			path = android;
+			sourceTree = "<group>";
+		};
+		1D86C57C189A6078002A8945 /* vending */ = {
+			isa = PBXGroup;
+			children = (
+				1D86C57D189A6078002A8945 /* billing */,
+			);
+			path = vending;
+			sourceTree = "<group>";
+		};
+		1D86C57D189A6078002A8945 /* billing */ = {
+			isa = PBXGroup;
+			children = (
+				1D86C57E189A6078002A8945 /* IInAppBillingService.aidl */,
+				1D86C57F189A6078002A8945 /* IMarketBillingService.aidl */,
+				1D86C580189A6078002A8945 /* IMarketBillingService.java */,
+			);
+			path = billing;
+			sourceTree = "<group>";
+		};
+		1D86C5D6189A7B2F002A8945 /* sec */ = {
+			isa = PBXGroup;
+			children = (
+				1D86C5D7189A7B30002A8945 /* android */,
+			);
+			path = sec;
+			sourceTree = "<group>";
+		};
+		1D86C5D7189A7B30002A8945 /* android */ = {
+			isa = PBXGroup;
+			children = (
+				1D86C5D8189A7B30002A8945 /* iap */,
+			);
+			path = android;
+			sourceTree = "<group>";
+		};
+		1D86C5D8189A7B30002A8945 /* iap */ = {
+			isa = PBXGroup;
+			children = (
+				1D86C5D9189A7B30002A8945 /* IAPConnector.aidl */,
+				1D86C5DA189A7B30002A8945 /* IAPServiceCallback.aidl */,
+				1D86C5DB189A7B30002A8945 /* sample */,
+			);
+			path = iap;
+			sourceTree = "<group>";
+		};
+		1D86C5DB189A7B30002A8945 /* sample */ = {
+			isa = PBXGroup;
+			children = (
+				1D86C5DC189A7B30002A8945 /* activity */,
+				1D86C5E1189A7B30002A8945 /* adapter */,
+				1D86C5E4189A7B30002A8945 /* helper */,
+				1D86C5E6189A7B30002A8945 /* vo */,
+			);
+			path = sample;
+			sourceTree = "<group>";
+		};
+		1D86C5DC189A7B30002A8945 /* activity */ = {
+			isa = PBXGroup;
+			children = (
+				1D86C5DD189A7B30002A8945 /* ItemList.java */,
+				1D86C5DE189A7B30002A8945 /* ItemsInboxList.java */,
+				1D86C5DF189A7B30002A8945 /* Main.java */,
+				1D86C5E0189A7B30002A8945 /* PurchaseOneItem.java */,
+			);
+			path = activity;
+			sourceTree = "<group>";
+		};
+		1D86C5E1189A7B30002A8945 /* adapter */ = {
+			isa = PBXGroup;
+			children = (
+				1D86C5E2189A7B30002A8945 /* ItemInboxListAdapter.java */,
+				1D86C5E3189A7B30002A8945 /* ItemListAdapter.java */,
+			);
+			path = adapter;
+			sourceTree = "<group>";
+		};
+		1D86C5E4189A7B30002A8945 /* helper */ = {
+			isa = PBXGroup;
+			children = (
+				1D86C5E5189A7B30002A8945 /* SamsungIapHelper.java */,
+			);
+			path = helper;
+			sourceTree = "<group>";
+		};
+		1D86C5E6189A7B30002A8945 /* vo */ = {
+			isa = PBXGroup;
+			children = (
+				1D86C5E7189A7B31002A8945 /* BaseVO.java */,
+				1D86C5E8189A7B31002A8945 /* ErrorVO.java */,
+				1D86C5E9189A7B31002A8945 /* InBoxVO.java */,
+				1D86C5EA189A7B31002A8945 /* ItemVO.java */,
+				1D86C5EB189A7B31002A8945 /* PurchaseVO.java */,
+				1D86C5EC189A7B31002A8945 /* VerificationVO.java */,
+			);
+			path = vo;
+			sourceTree = "<group>";
+		};
 		4D055BB11079F6E7007F6E13 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -1541,13 +1702,13 @@
 		4D140F7115A5A82300191B5E /* billing */ = {
 			isa = PBXGroup;
 			children = (
-				4D140F7215A5A82300191B5E /* BillingReceiver.java */,
-				4D140F7315A5A82300191B5E /* BillingService.java */,
-				4D140F7415A5A82300191B5E /* C.java */,
+				1D86C56F18996D17002A8945 /* samsung */,
+				1D86C56E18996D0E002A8945 /* google */,
+				1D86C56D18996D02002A8945 /* amazon */,
 				4D140F7515A5A82300191B5E /* PurchaseObserver.java */,
-				4D140F7615A5A82300191B5E /* PurchaseUpdate.java */,
 				4D140F7715A5A82300191B5E /* ResponseHandler.java */,
-				4D140F7815A5A82300191B5E /* Security.java */,
+				1D86C5EE189A9AD6002A8945 /* BillingProvider.java */,
+				1D86C5EF189A9CFD002A8945 /* BillingModule.java */,
 			);
 			path = billing;
 			sourceTree = "<group>";
@@ -1941,6 +2102,8 @@
 		4DD54D15134F591500981610 /* com */ = {
 			isa = PBXGroup;
 			children = (
+				1D86C5D6189A7B2F002A8945 /* sec */,
+				1D86C57B189A6078002A8945 /* android */,
 				4DD54D16134F591500981610 /* runrev */,
 			);
 			name = com;
@@ -1961,13 +2124,8 @@
 				4D140F7115A5A82300191B5E /* billing */,
 				4D140F6F15A5A82300191B5E /* AdModule.java */,
 				4D140F7015A5A82300191B5E /* Alert.java */,
-				4D140F7915A5A82300191B5E /* BillingReceiver.java */,
-				4D140F7A15A5A82300191B5E /* BillingService.java */,
-				4D140F7B15A5A82300191B5E /* C.java */,
 				4D140F7C15A5A82300191B5E /* PurchaseObserver.java */,
-				4D140F7D15A5A82300191B5E /* PurchaseUpdate.java */,
 				4D140F7E15A5A82300191B5E /* ResponseHandler.java */,
-				4D140F7F15A5A82300191B5E /* Security.java */,
 				4D140F8015A5A82300191B5E /* BitmapView.java */,
 				4D140F8115A5A82300191B5E /* BusyIndicator.java */,
 				4D140F8215A5A82300191B5E /* CalendarEvents.java */,

@@ -331,6 +331,19 @@ Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameter
 	return ES_NORMAL;
 }
 
+Exec_stat MCHandleConsumePurchase(void *context, MCParameter *p_parameters)
+{
+    bool t_success = true;
+    char *t_product_id = nil;
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
+    if (t_success)
+        t_success = MCStoreConsumePurchase(t_product_id);
+    
+    MCCStringFree(t_product_id);
+    return ES_NORMAL;
+}
+
 Exec_stat MCHandleRestorePurchases(void *context, MCParameter *p_parameters)
 {
 	MCStoreRestorePurchases();

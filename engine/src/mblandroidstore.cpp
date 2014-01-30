@@ -113,6 +113,17 @@ bool MCStoreRestorePurchases()
     return t_result;
 }
 
+bool MCStoreConsumePurchase(const char *p_purchase_id)
+{
+    
+    bool t_result;
+    
+    MCAndroidEngineRemoteCall("storeConsumePurchase", "bs", &t_result, p_purchase_id);
+    
+    return t_result;
+    
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCPurchaseFindByProductId(const char *p_product_id, MCPurchase *&r_purchase)

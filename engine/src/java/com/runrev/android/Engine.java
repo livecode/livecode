@@ -17,12 +17,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 package com.runrev.android;
 
 import com.runrev.android.billing.*;
+/*
 import com.runrev.android.billing.C.ResponseCode;
 import com.runrev.android.billing.PurchaseUpdate.Purchase;
 import com.runrev.android.billing.BillingService.RestoreTransactions;
 import com.runrev.android.billing.BillingService.GetPurchaseInformation;
 import com.runrev.android.billing.BillingService.ConfirmNotification;
 import com.runrev.android.billing.BillingService.RequestPurchase;
+ */
 
 import com.runrev.android.nativecontrol.NativeControlModule;
 import com.runrev.android.nativecontrol.VideoControl;
@@ -1753,6 +1755,9 @@ public class Engine extends View implements EngineApi
     private static final int CREATE_CALENDAR_RESULT = 11;
     private static final int UPDATE_CALENDAR_RESULT = 12;
     private static final int SHOW_CALENDAR_RESULT = 13;
+    private static final int GOOGLE_BILLING_RESULT = 10001;
+    private static final int SAMSUNG_BILLING_RESULT = 100;
+    private static final int SAMSUNG_ACCOUNT_CERTIFICATION_RESULT = 101;
 	
 	// MW-2013-08-07: [[ ExternalsApiV5 ]] Activity result code for activities
 	//   launched through 'runActivity' API.
@@ -1803,6 +1808,11 @@ public class Engine extends View implements EngineApi
 			case RUN_ACTIVITY_RESULT:
 				onRunActivityResult(resultCode, data);
 				break;
+            case GOOGLE_BILLING_RESULT:
+            case SAMSUNG_BILLING_RESULT:
+            case SAMSUNG_ACCOUNT_CERTIFICATION_RESULT:
+                mBillingProvider.onActivityResult(requestCode, resultCode, data);
+                break;
 			default:
 				break;
 		}
@@ -1882,88 +1892,66 @@ public class Engine extends View implements EngineApi
 
 	// in-app purchasing
 
-	private static Class mBillingServiceClass = null;
-
-	public static Class getBillingServiceClass()
-	{
-		return mBillingServiceClass;
-	}
-
-	private static void setBillingServiceClass(Class pClass)
-	{
-		mBillingServiceClass = pClass;
-	}
-
-	private BillingService mBilling = null;
-	private EnginePurchaseObserver mPurchaseObserver = null;
+	public static BillingModule mBillingModule = new BillingModule();
+    
+    public static BillingProvider mBillingProvider = mBillingModule.getBillingProvider();
+    
+    public EnginePurchaseObserver mPurchaseObserver;
 
 	private void initBilling()
 	{
-        String t_public_key = doGetCustomPropertyValue("cREVStandaloneSettings", "android,storeKey");
-        if (t_public_key != null && t_public_key.length() > 0)
-            Security.setPublicKey(t_public_key);
-
-		String classFqn = getContext().getPackageName() + ".AppService";
-		try
-		{
-			Class tClass = Class.forName(classFqn);
-			setBillingServiceClass(tClass);
-
-			mBilling = (BillingService)tClass.newInstance();
-		}
-		catch (Exception e)
-		{
-			return;
-		}
-
-		mBilling.setContext(this.getContext());
-
-		mPurchaseObserver = new EnginePurchaseObserver((Activity)getContext());
-		ResponseHandler.register(mPurchaseObserver);
+        mPurchaseObserver = new EnginePurchaseObserver((Activity)getContext());
+        mBillingProvider.setPurchaseObserver(mPurchaseObserver);
+        mBillingProvider.initBilling();
 	}
 
 	public boolean storeCanMakePurchase()
 	{
-		if (mBilling == null)
-			return false;
-
-		return mBilling.checkBillingSupported();
+		return mBillingProvider.canMakePurchase();
 	}
 
 	public void storeSetUpdates(boolean enabled)
 	{
-		if (mBilling == null)
+		if (mPurchaseObserver == null)
 			return;
 
 		if (enabled)
-			ResponseHandler.register(mPurchaseObserver);
+			mBillingProvider.enableUpdates();
 		else
-			ResponseHandler.unregister(mPurchaseObserver);
+			mBillingProvider.disableUpdates();
 	}
 
 	public boolean storeRestorePurchases()
 	{
-		if (mBilling == null)
+		if (mPurchaseObserver == null)
 			return false;
 
-		return mBilling.restoreTransactions();
+		return mBillingProvider.restorePurchases();
 	}
 
 	public boolean purchaseSendRequest(int purchaseId, String productId, String developerPayload)
 	{
-		if (mBilling == null)
+		if (mPurchaseObserver == null)
 			return false;
 
 		Log.i(TAG, "purchaseSendRequest(" + purchaseId + ", " + productId + ")");
-		return mBilling.requestPurchase(purchaseId, productId, developerPayload);
+		return mBillingProvider.sendRequest(purchaseId, productId, null);
 	}
+    
+    public boolean storeConsumePurchase(String productID)
+    {
+        if (mPurchaseObserver == null)
+			return false;
+        
+        return mBillingProvider.consumePurchase(productID);
+    }
 
 	public boolean purchaseConfirmDelivery(int purchaseId, String notificationId)
 	{
-		if (mBilling == null)
+		if (mPurchaseObserver == null)
 			return false;
 
-		return mBilling.confirmNotification(purchaseId, notificationId);
+		return mBillingProvider.confirmDelivery(purchaseId);
 	}
 
 ////////
@@ -1975,18 +1963,52 @@ public class Engine extends View implements EngineApi
 			super(pActivity);
 		}
 
-		public void onBillingSupported(boolean supported)
-		{
-			final boolean tSupported = supported;
-			post(new Runnable() {
-				public void run() {
-					doBillingSupported(tSupported);
-					if (m_wake_on_event)
-						doProcess(false);
-				}
-			});
-		}
-
+        // Sent to the observer to indicate a change in the purchase state
+        // void onPurchaseStateChanged(int purchaseId, PurchaseState state);
+        public void onPurchaseStateChanged(int purchaseId, int state)
+        {
+            
+            //TODO : Fetch the value for each property using mBillingProvider.getPurchaseProperties(purchaseId);
+            final boolean tVerified = true;
+            final int tPurchaseState = state;
+            final String tNotificationId = "";
+            final String tProductId = "";
+            final String tOrderId = "";
+            final long tPurchaseTime = 1;
+            final String tDeveloperPayload = "";
+            final String tSignedData = "";
+            final String tSignature = "";
+            
+            post(new Runnable() {
+                public void run() {
+                    doPurchaseStateChanged(tVerified, tPurchaseState,
+                                           tNotificationId, tProductId, tOrderId,
+                                           tPurchaseTime, tDeveloperPayload, tSignedData, tSignature);
+                    if (m_wake_on_event)
+                        doProcess(false);
+                }
+            });
+        }
+        
+        // Sent to the observer to when an error occurs while sending the purchase request
+        public void onPurchaseRequestError(String errorMessage)
+        {
+            
+        }
+        
+        // Sent to the observer once purchases have been successfully restored
+        public void onPurchasesRestored()
+        {
+            
+        }
+        
+        // Sent to the observer if purchase restoration fails
+        public void onPurchaseRestoreError(String errorMessage)
+        {
+            
+        }
+		
+/*
 		public void onPurchaseStateChanged(Purchase purchase, boolean verified, String signedData, String signature)
 		{
 			final boolean tVerified = verified;
@@ -2047,6 +2069,7 @@ public class Engine extends View implements EngineApi
 				}
 			});
 		}
+ */
 	}
 
 ////////////////////////////////////////////////////////////////////////////////

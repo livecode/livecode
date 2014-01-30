@@ -96,6 +96,7 @@ bool MCStoreCanMakePurchase();
 
 bool MCStoreEnablePurchaseUpdates();
 bool MCStoreDisablePurchaseUpdates();
+bool MCStoreConsumePurchase(const char *p_product_id);
 
 bool MCStoreRestorePurchases();
 
