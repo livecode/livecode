@@ -521,7 +521,12 @@ void MCScreenDC::device_setmouse(int2 x, int2 y)
 
 MCStack *MCScreenDC::device_getstackatpoint(int32_t x, int32_t y)
 {
-	return nil;
+	MCPlatformWindowRef t_window;
+	MCPlatformGetWindowAtPoint(MCPointMake(x, y), t_window);
+	if (t_window == nil)
+		return nil;
+	
+	return MCdispatcher -> findstackd(t_window);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -828,9 +833,15 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard *p_pasteboard, MCDragActionSet 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, const char *displayname)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &p_rect, MCGFloat p_scale_factor, uint4 p_window, const char *p_display_name)
 {
-	return nil;
+	MCImageBitmap *t_bitmap;
+	if (p_window == 0 && (p_rect . width == 0 || p_rect . height == 0))
+		MCPlatformScreenSnapshotOfUserArea(t_bitmap);
+	else if (p_window != 0)
+		MCPlatformScreenSnapshotOfWindow(p_window, t_bitmap);
+	else
+		MCPlatformScreenSnapshot(p_rect, t_bitmap);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

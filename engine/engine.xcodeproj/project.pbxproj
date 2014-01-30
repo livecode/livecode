@@ -263,6 +263,7 @@
 		4D2A5830119871D500135143 /* minizip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D2A582F119871D500135143 /* minizip.cpp */; };
 		4D2A583D1198727F00135143 /* internal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E4B0B8096FD00200116 /* internal.cpp */; };
 		4D30C37118995E840034CDC6 /* desktop-pasteboard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D30C37018995E840034CDC6 /* desktop-pasteboard.cpp */; };
+		4D30CAF6189AC1720034CDC6 /* mac-snapshot.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D30CAF5189AC1720034CDC6 /* mac-snapshot.mm */; };
 		4D377262150785AF000B0EB0 /* fieldhtml.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D377261150785AF000B0EB0 /* fieldhtml.cpp */; };
 		4D37727E150787EA000B0EB0 /* fieldrtf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D37727D150787EA000B0EB0 /* fieldrtf.cpp */; };
 		4D407C0C15F8D15600AA3ABC /* osxscriptold.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D407C0B15F8D15600AA3ABC /* osxscriptold.cpp */; };
@@ -900,6 +901,7 @@
 		4D2A582F119871D500135143 /* minizip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = minizip.cpp; path = src/minizip.cpp; sourceTree = "<group>"; };
 		4D2A585411997BDE00135143 /* internal_development.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = internal_development.cpp; path = src/internal_development.cpp; sourceTree = "<group>"; };
 		4D30C37018995E840034CDC6 /* desktop-pasteboard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "desktop-pasteboard.cpp"; path = "src/desktop-pasteboard.cpp"; sourceTree = "<group>"; };
+		4D30CAF5189AC1720034CDC6 /* mac-snapshot.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-snapshot.mm"; path = "src/mac-snapshot.mm"; sourceTree = "<group>"; };
 		4D377261150785AF000B0EB0 /* fieldhtml.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldhtml.cpp; path = src/fieldhtml.cpp; sourceTree = "<group>"; };
 		4D3772671507869A000B0EB0 /* textbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = textbuffer.h; path = src/textbuffer.h; sourceTree = "<group>"; };
 		4D37727D150787EA000B0EB0 /* fieldrtf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldrtf.cpp; path = src/fieldrtf.cpp; sourceTree = "<group>"; };
@@ -1855,6 +1857,7 @@
 				4DC6E30418896CFB00FD43C3 /* mac-menu.mm */,
 				4D444FB4188DCB4400C7B349 /* mac-cursor.mm */,
 				4D6F2AE618981E7F0099947D /* mac-pasteboard.mm */,
+				4D30CAF5189AC1720034CDC6 /* mac-snapshot.mm */,
 			);
 			name = "Desktop - Mac";
 			sourceTree = "<group>";
@@ -3497,6 +3500,7 @@
 				4D444FB5188DCB4400C7B349 /* mac-cursor.mm in Sources */,
 				4D6F2AE718981E7F0099947D /* mac-pasteboard.mm in Sources */,
 				4D30C37118995E840034CDC6 /* desktop-pasteboard.cpp in Sources */,
+				4D30CAF6189AC1720034CDC6 /* mac-snapshot.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
