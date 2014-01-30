@@ -481,7 +481,7 @@ public:
 	}
 
 	// MCField HTML functions in fieldh.cc
-	Exec_stat sethtml(uint4 parid, MCStringRef data);
+	Exec_stat sethtml(uint4 parid, MCValueRef data);
 	Exec_stat setrtf(uint4 parid, MCStringRef data);
 #ifdef LEGACY_EXEC
 	Exec_stat setstyledtext(uint4 parid, MCExecPoint& ep);
@@ -574,7 +574,7 @@ public:
 	bool exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array);
 
 	// MW-2012-03-07: [[ FieldImport ]] Conver the htmlText string to a list of paragraphs.
-    MCParagraph *importhtmltext(MCStringRef p_data);
+    MCParagraph *importhtmltext(MCValueRef p_data);
 
 	// MW-2012-03-05: [[ FieldImport ]] Add a paragraph with the given styling to the end of the supplied
 	//   paragraphs list.

@@ -1927,11 +1927,11 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 	}
 }
 
-MCParagraph *MCField::importhtmltext(MCStringRef p_data)
+MCParagraph *MCField::importhtmltext(MCValueRef p_data)
 {
     MCAutoPointer<char> t_data;
     uindex_t t_length;
-    /* UNCHECKED */ MCStringConvertToUTF8(p_data, &t_data, t_length);
+    /* UNCHECKED */ MCStringConvertToUTF8((MCStringRef)p_data, &t_data, t_length);
 	const char *t_ptr, *t_limit;
 	t_ptr = *t_data;
 	t_limit = t_ptr + t_length;
