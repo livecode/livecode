@@ -106,7 +106,11 @@ MCStack::MCStack()
 	nneeds = 0;
 	needs = NULL;
 	mode = WM_CLOSED;
-	decorations = WD_CLEAR;
+	
+	// MW-2014-01-30: [[ Bug 5331 ]] Make liveResizing on by default
+	flags |= F_DECORATIONS;
+	decorations = WD_MENU | WD_TITLE | WD_MINIMIZE | WD_MAXIMIZE | WD_CLOSE | WD_LIVERESIZING;
+	
 	nstackfiles = 0;
 	stackfiles = NULL;
 	linkatts = NULL;
