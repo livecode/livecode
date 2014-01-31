@@ -1935,7 +1935,7 @@ public class Engine extends View implements EngineApi
 			return false;
 
 		Log.i(TAG, "purchaseSendRequest(" + purchaseId + ", " + productId + ")");
-		return mBillingProvider.sendRequest(purchaseId, productId, null);
+		return mBillingProvider.sendRequest(purchaseId, productId, mBillingProvider.getPurchaseProperties(purchaseId));
 	}
     
     public boolean storeConsumePurchase(String productID)

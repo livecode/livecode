@@ -16,6 +16,7 @@
 
 package com.runrev.android.billing.amazon;
 
+import com.runrev.android.billing.*;
 import com.amazon.inapp.purchasing.*;
 import java.util.*;
 import android.util.*;
@@ -31,6 +32,7 @@ public class MyPurchasingObserver extends BasePurchasingObserver
     public Map<String, String> requestIds;
     
     private static final String TAG = "IAPPurchasingObserver";
+    private PurchaseObserver mPurchaseObserver;
     
     public MyPurchasingObserver(Activity iapActivity)
     {
@@ -127,6 +129,9 @@ public class MyPurchasingObserver extends BasePurchasingObserver
                             // If the receipt is for an entitlement,the customer is re-entitled.
                             // Add re-entitlement code here
                             
+                            // TODO : How to get the purchase Id
+                            mPurchaseObserver.onPurchaseStateChanged(1,0);
+                            
                             //Move this to EnginePurchaseObserver
                             /*
                             final boolean tVerified = true;
@@ -155,6 +160,10 @@ public class MyPurchasingObserver extends BasePurchasingObserver
                             // Purchase Updates for subscriptions can be done here in one of two ways:
                             // 1. Use the receipts to determineif the user currently has an active subscription
                             // 2. Use the receipts to create a subscription history for your customer.
+                            
+                            // TODO : How to get the purchase Id
+                            mPurchaseObserver.onPurchaseStateChanged(1,0);
+                            
                             
                             //Move this to enginePurchaseObserver
                             /*
@@ -274,6 +283,9 @@ public class MyPurchasingObserver extends BasePurchasingObserver
                 tProductId = requestIds.get(response.getRequestId());
                 break;
         }
+        
+        // TODO : How to get the purchase Id
+        mPurchaseObserver.onPurchaseStateChanged(1,response.getPurchaseRequestStatus().ordinal());
         
         //TODO: MOVE THIS TO EnginePurchaseObserver.
     /*
