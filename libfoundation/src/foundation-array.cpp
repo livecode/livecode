@@ -129,7 +129,7 @@ bool MCArrayCopyAndRelease(MCArrayRef self, MCArrayRef& r_new_array)
 	// If we are indirect, then new array is the contents, we are released.
 	if (__MCArrayIsIndirect(self))
 	{
-		r_new_array = self -> contents;
+		r_new_array = MCValueRetain(self -> contents);
 		MCValueRelease(self);
 		return true;
 	}
