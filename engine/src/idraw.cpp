@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "context.h"
 #include "graphicscontext.h"
+#include "graphics_util.h"
 
 bool MCImage::get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, MCGAffineTransform &r_transform)
 {
@@ -102,8 +103,32 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			MCGAffineTransform t_transform;
 			/* UNCHECKED */ get_rep_and_transform(t_rep, t_has_transform, t_transform);
 			
-			// IM-2013-10-30: [[ FullscreenMode ]] Get appropriate image for current stack scale transform
-			t_success = t_rep->LockImageFrame(currentframe, true, getdevicescale(), t_frame);
+			MCGFloat t_device_scale;
+			t_device_scale = 1.0;
+			
+			// IM-2014-01-31: [[ HiDPI ]] If we're rendering to an MCGraphicsContext, get the device scale from its MCGContextRef
+			if (dc->gettype() != CONTEXT_TYPE_PRINTER)
+			{
+				MCGContextRef t_gcontext;
+				t_gcontext = ((MCGraphicsContext *)dc)->getgcontextref();
+				
+				if (t_gcontext != nil)
+				{
+					MCGAffineTransform t_device_transform;
+					t_device_transform = MCGContextGetDeviceTransform(t_gcontext);
+					
+					// If the image has a transform, combine it with the context device transform
+					if (t_has_transform)
+						t_device_transform = MCGAffineTransformConcat(t_device_transform, t_transform);
+					
+					// get the effective scale from the combined transform
+					t_device_scale = MCGAffineTransformGetEffectiveScale(t_device_transform);
+				}
+			}
+			
+			// IM-2014-01-31: [[ HiDPI ]] Get the appropriate image for the combined
+			//   context device & image transforms
+			t_success = t_rep->LockImageFrame(currentframe, true, t_device_scale, t_frame);
 			if (t_success)
 			{
 				MCImageDescriptor t_image;
