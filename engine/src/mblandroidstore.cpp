@@ -47,8 +47,10 @@ typedef enum
 
 typedef enum
 {
-    PURCHASED,
-    CANCELED,
+    PURCHASED, //SUCCESSFUL for Amazon
+    CANCELED,  //FAILED for Amazon
+    INVALID_SKU,
+    ALREADY_ENTITLED,
     REFUNDED,
 } MCAndroidPurchaseState;
 
@@ -337,6 +339,16 @@ void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified)
                     purchase_confirm(p_purchase);
                     break;
                 }
+                    
+                case ALREADY_ENTITLED:
+                {
+                    p_purchase->state = kMCPurchaseStateAlreadyEntitled;
+                    break;
+                }
+                case INVALID_SKU:
+                    p_purchase->state = kMCPurchaseStateInvalidSKU;
+                    break;
+                    
                 case REFUNDED:
                     //MCLog("verified refunded purchase", nil);
                     p_purchase->state = kMCPurchaseStateRefunded;
@@ -365,6 +377,10 @@ void update_purchase_state(MCPurchase *p_purchase, int32_t p_state, bool p_verif
         p_purchase->state = kMCPurchaseStateUnverified;
     else if (p_state == PURCHASED)
         p_purchase->state = kMCPurchaseStatePaymentReceived;
+    else if (p_state == ALREADY_ENTITLED)
+        p_purchase->state = kMCPurchaseStateAlreadyEntitled;
+    else if (p_state == INVALID_SKU)
+        p_purchase->state = kMCPurchaseStateInvalidSKU;
     else if (p_state == REFUNDED)
         p_purchase->state = kMCPurchaseStateRefunded;
     else

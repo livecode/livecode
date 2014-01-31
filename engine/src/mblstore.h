@@ -56,6 +56,9 @@ enum MCPurchaseState
 	kMCPurchaseStateComplete,
 	kMCPurchaseStateRestored,
 	kMCPurchaseStateCancelled,
+    //Amazon
+    kMCPurchaseStateInvalidSKU,
+    kMCPurchaseStateAlreadyEntitled,
 	kMCPurchaseStateRefunded,
 	kMCPurchaseStateError,
     kMCPurchaseStateUnverified,

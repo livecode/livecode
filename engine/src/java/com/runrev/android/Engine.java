@@ -1892,14 +1892,20 @@ public class Engine extends View implements EngineApi
 
 	// in-app purchasing
 
-	public static BillingModule mBillingModule = new BillingModule();
+	public static BillingModule mBillingModule;
     
-    public static BillingProvider mBillingProvider = mBillingModule.getBillingProvider();
+    public static BillingProvider mBillingProvider;
     
     public EnginePurchaseObserver mPurchaseObserver;
 
 	private void initBilling()
 	{
+        mBillingModule = new BillingModule();
+        if (mBillingModule == null)
+            return;
+        
+        mBillingProvider = mBillingModule.getBillingProvider();
+        mBillingProvider.setActivity(getActivity());
         mPurchaseObserver = new EnginePurchaseObserver((Activity)getContext());
         mBillingProvider.setPurchaseObserver(mPurchaseObserver);
         mBillingProvider.initBilling();
@@ -1935,7 +1941,8 @@ public class Engine extends View implements EngineApi
 			return false;
 
 		Log.i(TAG, "purchaseSendRequest(" + purchaseId + ", " + productId + ")");
-		return mBillingProvider.sendRequest(purchaseId, productId, mBillingProvider.getPurchaseProperties(purchaseId));
+		//return mBillingProvider.sendRequest(purchaseId, productId, mBillingProvider.getPurchaseProperties(purchaseId));
+        return mBillingProvider.sendRequest(purchaseId, productId, developerPayload);
 	}
     
     public boolean storeConsumePurchase(String productID)
@@ -1965,14 +1972,16 @@ public class Engine extends View implements EngineApi
 
         // Sent to the observer to indicate a change in the purchase state
         // void onPurchaseStateChanged(int purchaseId, PurchaseState state);
-        public void onPurchaseStateChanged(int purchaseId, int state)
+        //public void onPurchaseStateChanged(int purchaseId, int state)
+        public void onPurchaseStateChanged(String productId, int state)
         {
             
             //TODO : Fetch the value for each property using mBillingProvider.getPurchaseProperties(purchaseId);
             final boolean tVerified = true;
             final int tPurchaseState = state;
             final String tNotificationId = "";
-            final String tProductId = "";
+            //final String tProductId = "";
+            final String tProductId = productId;
             final String tOrderId = "";
             final long tPurchaseTime = 1;
             final String tDeveloperPayload = "";

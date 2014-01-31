@@ -780,7 +780,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		1D86C57018996EB7002A8945 /* MyPurchasingObserver.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = MyPurchasingObserver.java; sourceTree = "<group>"; };
 		1D86C57118997158002A8945 /* AmazonBillingProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = AmazonBillingProvider.java; sourceTree = "<group>"; };
 		1D86C572189A5B82002A8945 /* Base64.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = Base64.java; sourceTree = "<group>"; };
 		1D86C573189A5BF2002A8945 /* Base64DecoderException.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = Base64DecoderException.java; sourceTree = "<group>"; };
@@ -1556,7 +1555,6 @@
 		1D86C56D18996D02002A8945 /* amazon */ = {
 			isa = PBXGroup;
 			children = (
-				1D86C57018996EB7002A8945 /* MyPurchasingObserver.java */,
 				1D86C57118997158002A8945 /* AmazonBillingProvider.java */,
 			);
 			path = amazon;

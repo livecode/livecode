@@ -18,6 +18,8 @@ package com.runrev.android.billing;
 
 import java.util.*;
 import android.content.*;
+import android.app.*;
+import android.util.*;
 
 public interface BillingProvider
 {
@@ -35,7 +37,8 @@ public interface BillingProvider
     boolean restorePurchases();
     
     // Create and send a new purchase request identified by the given id and using the given properties
-    boolean sendRequest(int purchaseId, String productId, Map<String, String> properties);
+    //boolean sendRequest(int purchaseId, String productId, Map<String, String> properties);
+    boolean sendRequest(int purchaseId, String productId, String developerPayload);
     
     // Consume a purchased item -- only for Google API
     boolean consumePurchase(String productId);
@@ -48,6 +51,8 @@ public interface BillingProvider
     
     // Register an observer for any updates to purchase requests
     void setPurchaseObserver(PurchaseObserver observer);
+    
+    void setActivity(Activity activity);
 
     // Initialize the store
     void initBilling();

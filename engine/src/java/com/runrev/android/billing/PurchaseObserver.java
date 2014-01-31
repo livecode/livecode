@@ -33,7 +33,8 @@ public abstract class PurchaseObserver
     
     // Sent to the observer to indicate a change in the purchase state
     // void onPurchaseStateChanged(int purchaseId, PurchaseState state);
-    public abstract void onPurchaseStateChanged(int purchaseId, int state);
+   // public abstract void onPurchaseStateChanged(int purchaseId, int state);
+    public abstract void onPurchaseStateChanged(String productId, int state);
     
     // Sent to the observer to when an error occurs while sending the purchase request
     public abstract void onPurchaseRequestError(String errorMessage);

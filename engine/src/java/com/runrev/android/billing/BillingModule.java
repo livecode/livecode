@@ -21,18 +21,29 @@ import com.runrev.android.billing.amazon.*;
 import com.runrev.android.billing.google.*;
 import com.runrev.android.billing.samsung.*;
 
+import android.app.*;
+import android.util.*;
+import android.content.*;
+
+import java.util.*;
+
 public class BillingModule
 {
+    public static final String TAG = "BillingModule";
     
     public BillingProvider getBillingProvider()
     {
+        Log.d(TAG, "Fetching the billing provider...");
         String t_billing_provider = Engine.doGetCustomPropertyValue("cREVStandaloneSettings", "android,billingProvider");
+        Log.d(TAG, "Provider is " + t_billing_provider);
         if (t_billing_provider.equals("Google"))
             return new GoogleBillingProvider();
         else if (t_billing_provider.equals("Amazon"))
             return new AmazonBillingProvider();
-        else
+        else if (t_billing_provider.equals("Samsung"))
             return new SamsungBillingProvider();
+        else
+            return null;
         
     }
     

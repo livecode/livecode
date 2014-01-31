@@ -85,7 +85,8 @@ public class SamsungBillingProvider implements BillingProvider
                     int purchaseId = 1;
 
                     // 0 is the statuscode for success in samsung -- TODO: write it differently
-                    mPurchaseObserver.onPurchaseStateChanged(1, 0);
+                   // mPurchaseObserver.onPurchaseStateChanged(1, 0);
+                    mPurchaseObserver.onPurchaseStateChanged(tItemId, 0);
 
                     //TODO : move this to EnginePurchaseObserver
 /*
@@ -246,7 +247,8 @@ public class SamsungBillingProvider implements BillingProvider
 
         // How to get the purchaseId??
         int purchaseId = 1;
-        mPurchaseObserver.onPurchaseStateChanged(1, statusCode);
+        //mPurchaseObserver.onPurchaseStateChanged(1, statusCode);
+        mPurchaseObserver.onPurchaseStateChanged(itemId, statusCode);
 
         // TODO : Move this to EnginePurchaseObserver
 /*
@@ -345,7 +347,8 @@ public class SamsungBillingProvider implements BillingProvider
         return true;
     }
     
-    public boolean sendRequest(int purchaseId, String productId, Map<String, String> properties)
+    //public boolean sendRequest(int purchaseId, String productId, Map<String, String> properties)
+    public boolean sendRequest(int purchaseId, String productId, String developerPayload)
     {
         if (!started)
             return false;

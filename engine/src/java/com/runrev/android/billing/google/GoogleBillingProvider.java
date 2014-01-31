@@ -114,7 +114,8 @@ public class GoogleBillingProvider implements BillingProvider
     }
     
     // TODO : handle subscriptions
-    public boolean sendRequest(int purchaseId, String productId, Map<String, String> properties)
+    //public boolean sendRequest(int purchaseId, String productId, Map<String, String> properties)
+    public boolean sendRequest(int purchaseId, String productId, String developerPayload)
     {
         if (mHelper == null)
             return false;
@@ -246,6 +247,7 @@ public class GoogleBillingProvider implements BillingProvider
     //TODO : move it to EnginePurchaseObserver
     void offerPurchasedItems(Purchase purchase)
     {
+        mPurchaseObserver.onPurchaseStateChanged(purchase.getSku(), purchase.getPurchaseState());
 /*
         final boolean tVerified = true;
         final int tPurchaseState = purchase.getPurchaseState();

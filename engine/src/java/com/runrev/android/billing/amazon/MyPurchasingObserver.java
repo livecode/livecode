@@ -130,7 +130,8 @@ public class MyPurchasingObserver extends BasePurchasingObserver
                             // Add re-entitlement code here
                             
                             // TODO : How to get the purchase Id
-                            mPurchaseObserver.onPurchaseStateChanged(1,0);
+                            //mPurchaseObserver.onPurchaseStateChanged(1,0);
+                            mPurchaseObserver.onPurchaseStateChanged(receipt.getSku(),0);
                             
                             //Move this to EnginePurchaseObserver
                             /*
@@ -162,7 +163,8 @@ public class MyPurchasingObserver extends BasePurchasingObserver
                             // 2. Use the receipts to create a subscription history for your customer.
                             
                             // TODO : How to get the purchase Id
-                            mPurchaseObserver.onPurchaseStateChanged(1,0);
+                           // mPurchaseObserver.onPurchaseStateChanged(1,0);
+                            mPurchaseObserver.onPurchaseStateChanged(receipt.getSku(),0);
                             
                             
                             //Move this to enginePurchaseObserver
@@ -285,7 +287,8 @@ public class MyPurchasingObserver extends BasePurchasingObserver
         }
         
         // TODO : How to get the purchase Id
-        mPurchaseObserver.onPurchaseStateChanged(1,response.getPurchaseRequestStatus().ordinal());
+        //mPurchaseObserver.onPurchaseStateChanged(1,response.getPurchaseRequestStatus().ordinal());
+        mPurchaseObserver.onPurchaseStateChanged(tProductId,response.getPurchaseRequestStatus().ordinal());
         
         //TODO: MOVE THIS TO EnginePurchaseObserver.
     /*
