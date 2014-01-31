@@ -1383,6 +1383,9 @@ LT factor_table[] =
         {"screenmouseloc", TT_PROPERTY, P_SCREEN_MOUSE_LOC},
         {"screenname", TT_FUNCTION, F_SCREEN_NAME},
         {"screennopixmaps", TT_PROPERTY, P_NO_PIXMAPS},
+		// IM-2014-01-24: [[ HiDPI ]] The screenPixelScale and screenPixelScales properties
+		{"screenpixelscale", TT_PROPERTY, P_SCREEN_PIXEL_SCALE},
+		{"screenpixelscales", TT_PROPERTY, P_SCREEN_PIXEL_SCALES},
         {"screenrect", TT_FUNCTION, F_SCREEN_RECT},
 		{"screenrects", TT_FUNCTION, F_SCREEN_RECTS},
         {"screensharedmemory", TT_PROPERTY, P_SHARED_MEMORY},
@@ -1518,7 +1521,7 @@ LT factor_table[] =
         {"system", TT_PROPERTY, P_SYSTEM},
         {"systemcolorselector", TT_PROPERTY, P_SYSTEM_CS},
         {"systemfileselector", TT_PROPERTY, P_SYSTEM_FS},
-		// IM-2013-12-04: [[ PixelScale ]] The "pixelScale" token
+		// IM-2013-12-04: [[ PixelScale ]] The "systemPixelScale" token
 		{"systempixelscale", TT_PROPERTY, P_SYSTEM_PIXEL_SCALE},
 		{"systemprintselector", TT_PROPERTY, P_SYSTEM_PS},
         {"systemversion", TT_FUNCTION, F_SYSTEM_VERSION},
@@ -1629,6 +1632,8 @@ LT factor_table[] =
         {"urlheader", TT_CHUNK, CT_URL_HEADER},
 		{"urlresponse", TT_PROPERTY, P_URL_RESPONSE},
         {"urlstatus", TT_FUNCTION, F_URL_STATUS},
+		// IM-2014-01-24: [[ HiDPI ]] The "usePixelScaling" token
+		{"usepixelscaling", TT_PROPERTY, P_USE_PIXEL_SCALING},
         {"userlevel", TT_PROPERTY, P_USER_LEVEL},
         {"usermodify", TT_PROPERTY, P_USER_MODIFY},
         {"userproperties", TT_PROPERTY, P_CUSTOM_KEYS},

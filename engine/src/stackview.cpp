@@ -145,6 +145,9 @@ void MCStack::view_init(void)
 	m_view_transform = MCGAffineTransformMakeIdentity();
 	
 	m_view_content_scale = 1.0;
+
+	// IM-2014-01: [[ HiDPI ]] Initialize the view backing surface scale
+	m_view_backing_scale = 1.0;
 }
 
 void MCStack::view_copy(const MCStack &p_view)
@@ -167,6 +170,9 @@ void MCStack::view_copy(const MCStack &p_view)
 	m_view_transform = p_view.m_view_transform;
 	
 	m_view_content_scale = p_view.m_view_content_scale;
+
+	// IM-2014-01: [[ HiDPI ]] Initialize the view backing surface scale
+	m_view_backing_scale = p_view.m_view_backing_scale;
 }
 
 void MCStack::view_destroy(void)
@@ -335,18 +341,7 @@ MCGAffineTransform view_get_stack_transform(MCStackFullscreenMode p_mode, MCRect
 void MCStack::view_on_rect_changed(void)
 {
 	// IM-2013-10-03: [[ FullscreenMode ]] if the view rect has changed, update the tilecache geometry
-	if (m_view_tilecache != nil)
-	{
-		// IM-2013-10-10: [[ FullscreenMode ]] Align tilecache viewport to origin
-		MCRectangle t_view_rect;
-		t_view_rect = m_view_rect;
-		t_view_rect.x = t_view_rect.y = 0;
-		
-		MCRectangle t_device_rect;
-		t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_view_rect));
-
-		MCTileCacheSetViewport(m_view_tilecache, t_device_rect);
-	}
+	view_updatetilecacheviewport();
 	
 	if (view_getfullscreen())
 		view_dirty_all();
@@ -367,12 +362,13 @@ void MCStack::view_setrect(const MCRectangle &p_rect)
 	if (getopened() && window != nil)
 	{
 	// IM-2013-10-03: [[ FullscreenMode ]] if the view rect has changed, update the window geometry
-	MCRectangle t_device_rect;
-	t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(m_view_rect));
+
+	// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+	/* CODE REMOVED */
 	
 	// IM-2013-10-08: [[ FullscreenMode ]] Update window size hints when setting the view geometry.
 	setsizehints();
-	device_setgeom(t_device_rect);
+	view_setgeom(m_view_rect);
 	}
 	
 	view_on_rect_changed();
@@ -388,12 +384,13 @@ void MCStack::view_sync_window_geometry(void)
 	else
 	{
 		// otherwise reset the window rect which may have changed as a result of scaling
-		MCRectangle t_device_rect;
-		t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(m_view_rect));
+
+		// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+		/* CODE REMOVED */
 		
 		// IM-2013-10-08: [[ FullscreenMode ]] Update window size hints when setting the view geometry.
 		setsizehints();
-		device_setgeom(t_device_rect);
+		view_setgeom(m_view_rect);
 		
 		view_on_rect_changed();
 	}
@@ -556,32 +553,23 @@ void MCStack::view_updatewindow(void)
 	if (m_view_update_region == nil)
 		return;
 	
-	MCGAffineTransform t_transform;
-	t_transform = MCResGetDeviceTransform();
+	// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+	/* CODE REMOVED */
 	
-	// transform view region to device region
-	MCRegionRef t_device_region;
-	t_device_region = nil;
-	
-	/* UNCHECKED */ MCRegionTransform(m_view_update_region, t_transform, t_device_region);
-	
-	device_updatewindow(t_device_region);
-	
-	MCRegionDestroy(t_device_region);
+	view_platform_updatewindow(m_view_update_region);
 }
 
 void MCStack::view_updatestack(MCRegionRef p_region)
 {
-	MCGAffineTransform t_transform;
-	t_transform = getdevicetransform();
-
-	// transform stack region to device region
+	// transform stack region to view region
 	MCRegionRef t_view_region;
 	t_view_region = nil;
 
-	/* UNCHECKED */ MCRegionTransform(p_region, t_transform, t_view_region);
+	// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - convert to view coordinates rather than device coords
 	
-	device_updatewindow(t_view_region);
+	/* UNCHECKED */ MCRegionTransform(p_region, getviewtransform(), t_view_region);
+	
+	view_platform_updatewindow(t_view_region);
 
 	MCRegionDestroy(t_view_region);
 }
@@ -642,7 +630,10 @@ void MCStack::view_setacceleratedrendering(bool p_value)
 	MCscreen -> getdisplays(t_display, false);
 	
 	MCRectangle t_viewport;
-	t_viewport = t_display -> device_viewport;
+	t_viewport = t_display -> viewport;
+	
+	// IM-2014-01-30: [[ HiDPI ]] Use backing-surface size to determine small, medium, or large
+	t_viewport = MCRectangleGetScaledBounds(t_viewport, view_getbackingscale());
 	
 	bool t_small_screen, t_medium_screen;
 	t_small_screen = MCMin(t_viewport . width, t_viewport . height) <= 480 && MCMax(t_viewport . width, t_viewport . height) <= 640;
@@ -656,17 +647,8 @@ void MCStack::view_setacceleratedrendering(bool p_value)
 		t_tile_size = 64, t_cache_limit = 64 * 1024 * 1024;
 #endif
 	
-	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
-	// IM-2013-09-30: [[ FullscreenMode ]] Use view rect when setting the size of the tilecache
-	// IM-2013-10-10: [[ FullscreenMode ]] Align tilecache viewport to origin
-	MCRectangle t_view_rect;
-	t_view_rect = view_getrect();
-	t_view_rect.x = t_view_rect.y = 0;
-	
-	MCRectangle t_device_rect;
-	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_view_rect));
 	MCTileCacheCreate(t_tile_size, t_cache_limit, m_view_tilecache);
-	MCTileCacheSetViewport(m_view_tilecache, t_device_rect);
+	view_updatetilecacheviewport();
 	MCTileCacheSetCompositor(m_view_tilecache, t_compositor_type);
 	
 	view_dirty_all();
@@ -694,16 +676,8 @@ void MCStack::view_setcompositortype(MCTileCacheCompositorType p_type)
 		if (m_view_tilecache == nil)
 		{
 			MCTileCacheCreate(32, 4096 * 1024, m_view_tilecache);
-			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
-			// IM-2013-10-02: [[ FullscreenMode ]] Use view rect when setting the size of the tilecache
-			// IM-2013-10-10: [[ FullscreenMode ]] Align tilecache viewport to origin
-			MCRectangle t_view_rect;
-			t_view_rect = view_getrect();
-			t_view_rect.x = t_view_rect.y = 0;
 			
-			MCRectangle t_device_rect;
-			t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_view_rect));
-			MCTileCacheSetViewport(m_view_tilecache, t_device_rect);
+			view_updatetilecacheviewport();
 		}
 		
 		MCTileCacheSetCompositor(m_view_tilecache, p_type);
@@ -832,6 +806,23 @@ void MCStack::view_compacttilecache(void)
 	MCTileCacheCompact(m_view_tilecache);
 }
 
+void MCStack::view_updatetilecacheviewport(void)
+{
+	if (m_view_tilecache == nil)
+		return;
+	
+	// IM-2013-10-02: [[ FullscreenMode ]] Use view rect when setting the size of the tilecache
+	// IM-2013-10-10: [[ FullscreenMode ]] Align tilecache viewport to origin
+	// IM-2014-01-24: [[ HiDPI ]] Set tilecache viewport in backing surface coords
+	MCRectangle t_view_rect;
+	t_view_rect = MCRectangleMake(0, 0, m_view_rect.width, m_view_rect.height);
+	
+	MCRectangle t_surface_rect;
+	t_surface_rect = MCRectangleGetScaledBounds(t_view_rect, view_getbackingscale());
+	
+	MCTileCacheSetViewport(m_view_tilecache, t_surface_rect);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCStack::view_snapshottilecache(const MCRectangle &p_stack_rect, MCGImageRef &r_image)
@@ -844,10 +835,9 @@ bool MCStack::view_snapshottilecache(const MCRectangle &p_stack_rect, MCGImageRe
 	t_view_rect = MCRectangleGetTransformedBounds(p_stack_rect, getviewtransform());
 	t_view_rect = MCU_intersect_rect(t_view_rect, MCU_make_rect(0, 0, view_getrect() . width, view_getrect() . height));
 	
-	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
-	// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
+	// IM-2014-01-24: [[ HiDPI ]] use backing surface coords for tilecache operations
 	MCRectangle t_device_rect;
-	t_device_rect = MCRectangleGetTransformedBounds(t_view_rect, MCResGetDeviceTransform());
+	t_device_rect = MCRectangleGetScaledBounds(t_view_rect, view_getbackingscale());
 	return MCTileCacheSnapshot(m_view_tilecache, t_device_rect, r_image);
 }
 
@@ -925,6 +915,35 @@ void MCStack::view_dirty_all(void)
 	view_dirty_rect(MCRectangleMake(0, 0, m_view_rect.width, m_view_rect.height));
 	
 	dirtyall();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCRectangle MCStack::view_getwindowrect(void) const
+{
+	return view_platform_getwindowrect();
+}
+
+MCRectangle MCStack::view_setgeom(const MCRectangle &p_rect)
+{
+	return view_platform_setgeom(p_rect);
+}
+
+MCGFloat MCStack::view_getbackingscale(void) const
+{
+	return m_view_backing_scale;
+}
+
+void MCStack::view_setbackingscale(MCGFloat p_scale)
+{
+	if (p_scale == m_view_backing_scale)
+		return;
+	
+	m_view_backing_scale = p_scale;
+
+	// reset tilecache if the backing scale has changed
+	view_updatetilecacheviewport();
+	view_dirty_all();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

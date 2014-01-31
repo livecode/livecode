@@ -2440,6 +2440,14 @@ enum Exec_errors
 	// IM-2014-01-07: [[ StackScale ]]
 	// {EE-0802} scaleFactor: not a valid scale value
 	EE_STACK_BADSCALEFACTOR,
+
+	// IM-2014-01-30: [[ HiDPI ]]
+	// {EE-0803} pixelScale: the pixelScale property cannot be set on this platform
+	EE_PROPERTY_PIXELSCALENOTSUPPORTED,
+
+	// IM-2014-01-30: [[ HiDPI ]]
+	// {EE-0804} usePixelScaling: the usePixelScaling property cannot be set on this platform
+	EE_PROPERTY_USEPIXELSCALENOTSUPPORTED,
 };
 
 extern const char *MCexecutionerrors;

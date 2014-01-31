@@ -53,9 +53,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 static Boolean pserror;
 Bool debugtest = False;
 
-MCDisplay *MCScreenDC::s_monitor_displays = NULL;
-uint4 MCScreenDC::s_monitor_count = 0;
-
 extern "C" int initialise_weak_link_Xinerama(void);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -168,40 +165,48 @@ GC MCScreenDC::getgc(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCScreenDC::apply_workarea()
+bool MCX11GetWindowWorkarea(Display *p_display, Window p_window, MCRectangle &r_workarea)
 {
 	Atom t_ret;
 	int t_format, t_status;
 	unsigned long t_count, t_after;
-	unsigned long *t_workarea = NULL;
+	unsigned long *t_workarea = nil;
 
-	t_status = XGetWindowProperty(dpy, getroot(), MCworkareaatom, 0, 4, False, XA_CARDINAL,
+	t_status = XGetWindowProperty(p_display, p_window, MCworkareaatom, 0, 4, False, XA_CARDINAL,
 		&t_ret, &t_format, &t_count, &t_after, (unsigned char**)&t_workarea);
 	
 	bool t_success;
 	t_success = t_status == Success && t_ret == XA_CARDINAL && t_format == 32 && t_count == 4;
 	
 	if (t_success)
-	{
-		MCRectangle t_work_rect;
-		t_work_rect.x = t_workarea[0];
-		t_work_rect.y = t_workarea[1];
-		t_work_rect.width = t_workarea[2];
-		t_work_rect.height = t_workarea[3];
+		r_workarea = MCRectangleMake(t_workarea[0], t_workarea[1], t_workarea[2], t_workarea[3]);
 		
-		for (uindex_t i = 0; i < s_monitor_count; i++)
-		{
-			s_monitor_displays[i].device_workarea  = MCU_intersect_rect(t_work_rect, s_monitor_displays[i].device_viewport);
-		}
-	}
-	
-	if (t_workarea != NULL)
+	if (t_workarea != nil)
 		XFree(t_workarea);
 	
 	return t_success;
 }
 
-bool MCScreenDC::apply_partial_struts()
+// IM-2014-01-29: [[ HiDPI ]] Apply screen workarea to given MCDisplay array
+bool MCScreenDC::apply_workarea(MCDisplay *p_displays, uint32_t p_display_count)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCRectangle t_workarea;
+	t_success = MCX11GetWindowWorkarea(dpy, getroot(), t_workarea);
+	
+	if (t_success)
+	{
+		for (uint32_t i = 0; i < p_display_count; i++)
+			p_displays[i].workarea = MCU_intersect_rect(t_workarea, p_displays[i].viewport);
+	}
+	
+	return t_success;
+}
+
+// IM-2014-01-29: [[ HiDPI ]] Apply screen struts to given MCDisplay array
+bool MCScreenDC::apply_partial_struts(MCDisplay *p_displays, uint32_t p_display_count)
 {
 	if (MCstrutpartialatom == None || MCclientlistatom == None)
 		return false;
@@ -285,15 +290,15 @@ bool MCScreenDC::apply_partial_struts()
 					t_strut_test.width = t_struts[11] - t_strut_test.x;
 				}
 				
-				for (uindex_t s = 0; s < s_monitor_count; s++)
+				for (uindex_t s = 0; s < p_display_count; s++)
 				{
-					MCRectangle t_workarea = s_monitor_displays[s].device_workarea;
+					MCRectangle t_workarea = p_displays[s].workarea;
 
 					MCRectangle t_test = MCU_intersect_rect(t_strut_test, t_workarea);
 					if (t_test.width != 0 && t_test.height != 0)
 						t_workarea = MCU_intersect_rect(t_strut_rect, t_workarea);
 						
-					s_monitor_displays[s].device_workarea = t_workarea;
+					p_displays[s].workarea = t_workarea;
 				}
 			}
 			if (t_struts != nil)
@@ -307,9 +312,23 @@ bool MCScreenDC::apply_partial_struts()
 	return t_success;
 }
 
-bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay * &r_displays, uint32_t &r_count)
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_display_count)
 {
-	MCDisplay *t_monitor_displays = NULL;
+	return device_getdisplays(p_effective, r_displays, r_display_count);
+}
+
+// IM-2014-01-29: [[ HiDPI ]] Refactored to handle display info caching in MCUIDC superclass
+bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay * &r_displays, uint32_t &r_display_count)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCDisplay *t_displays;
+	t_displays = nil;
+	
+	uint32_t t_display_count;
+	t_display_count = 0;
 
 	// MW-2010-12-14: [[ Bug 9242 ]] The extension name was spelt wrongly! Making this
 	//   'XINERAMA' causes screenRects and all things that use it work right.
@@ -325,70 +344,72 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay * &r_displays, u
 		getdisplays_init = true ;
 	}
 	
-	if (s_monitor_displays != nil)
-	{
-		delete s_monitor_displays;
-		s_monitor_displays = nil;
-		s_monitor_count = 0;
-	}
-	
 	if (Xinerama_available && XineramaIsActive ( dpy ) )
 	{
-
-		bool error = false;
-
-		int4 t_monitor_count = 0;
-		XineramaScreenInfo *monitors = XineramaQueryScreens (dpy , &t_monitor_count );
+		int32_t t_monitor_count;
 		
-		t_monitor_displays = new MCDisplay[t_monitor_count];
-
-		for (uint4 a = 0 ; a < t_monitor_count; a++)
+		XineramaScreenInfo *t_monitors;
+		t_monitors = XineramaQueryScreens (dpy , &t_monitor_count);
+		
+		t_success = t_monitors != nil;
+		
+		if (t_success)
 		{
-			
-			t_monitor_displays[a] . index = a;
-
-			t_monitor_displays[a] . device_viewport . x = monitors[a] . x_org ;
-			t_monitor_displays[a] . device_viewport . y = monitors[a] . y_org ;
-			t_monitor_displays[a] . device_viewport . width = monitors[a] . width ;
-			t_monitor_displays[a] . device_viewport . height = monitors[a] . height ;
-			
-			t_monitor_displays[a] . device_workarea . x = monitors[a] . x_org ;
-			t_monitor_displays[a] . device_workarea . y = monitors[a] . y_org ;
-			t_monitor_displays[a] . device_workarea . width = monitors[a] . width ;
-			t_monitor_displays[a] . device_workarea . height = monitors[a] . height ;
+			t_display_count = t_monitor_count;
+			t_success = MCMemoryNewArray(t_display_count, t_displays);
 		}
 		
-		XFree(monitors);
-		s_monitor_displays = t_monitor_displays ;
-		s_monitor_count = t_monitor_count;
+		if (t_success)
+		{
+			for (uint32_t i = 0; i < t_display_count; i++)
+			{
+				MCRectangle t_viewport;
+				t_viewport = MCRectangleMake(t_monitors[i].x_org, t_monitors[i].y_org, t_monitors[i].width, t_monitors[i].height);
+				
+				t_displays[i].index = i;
+				t_displays[i].pixel_scale = 1.0;
+				t_displays[i].viewport = t_displays[i].workarea = t_viewport;
+			}
+		}
+		
+		if (t_monitors != nil)
+			XFree(t_monitors);
+	}
+	
+	if (t_displays == nil || !t_success)
+	{
+		MCMemoryDeleteArray(t_displays);
+		t_displays = nil;
+		
+		t_success = MCMemoryNewArray(1, t_displays);
+		if (t_success)
+		{
+			t_display_count = 1;
+			
+			t_displays->index = 0 ;
+			t_displays->pixel_scale = 1.0;
+			t_displays->viewport = t_displays->workarea = MCRectangleMake(0, 0, getwidth(), getheight());
+		}
+	}
+	
+	if (t_success)
+	{
+		if (t_display_count == 1)
+		{
+			apply_workarea(t_displays, t_display_count) || apply_partial_struts(t_displays, t_display_count);
+		}
+		else if (t_display_count > 1)
+		{
+			apply_partial_struts(t_displays, t_display_count);
+		}
+		
+		r_displays = t_displays;
+		r_display_count = t_display_count;
 	}
 	else
-	{
-		t_monitor_displays = new MCDisplay[1];
-		MCU_set_rect(t_monitor_displays[0] . device_viewport, 0, 0, device_getwidth(), device_getheight());
-		MCU_set_rect(t_monitor_displays[0] . device_workarea, 0, 0, device_getwidth(), device_getheight());
-		t_monitor_displays[0] . index = 0 ;
-		s_monitor_count = 1 ;
-		s_monitor_displays = t_monitor_displays ;
+		MCMemoryDeleteArray(t_displays);
 
-	}
-	
-	if (s_monitor_count == 1)
-	{
-		apply_workarea() || apply_partial_struts();
-	}
-	else if (s_monitor_count > 1)
-	{
-		apply_partial_struts();
-	}
-
-	if (s_monitor_count == 0)
-		return false;
-		
-	r_displays = s_monitor_displays;
-	r_count = s_monitor_count;
-	
-	return true;
+	return t_success;
 }
 
 
@@ -417,3 +438,62 @@ MCPrinter *MCScreenDC::createprinter(void)
 	return ( new MCPSPrinter );
 	
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+MCPoint MCScreenDC::logicaltoscreenpoint(const MCPoint &p_point)
+{
+	return p_point;
+}
+
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+MCPoint MCScreenDC::screentologicalpoint(const MCPoint &p_point)
+{
+	return p_point;
+}
+
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+MCRectangle MCScreenDC::logicaltoscreenrect(const MCRectangle &p_rect)
+{
+	return p_rect;
+}
+
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+MCRectangle MCScreenDC::screentologicalrect(const MCRectangle &p_rect)
+{
+	return p_rect;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-29: [[ HiDPI ]] Pixel scaling not supported on Linux
+bool MCResPlatformSupportsPixelScaling(void)
+{
+	return false;
+}
+
+// IM-2014-01-29: [[ HiDPI ]] Pixel scaling not supported on Linux
+bool MCResPlatformCanChangePixelScaling(void)
+{
+	return false;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Pixel scaling not supported on Linux
+bool MCResPlatformCanSetPixelScale(void)
+{
+	return false;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Pixel scale is 1.0 on Linux
+MCGFloat MCResPlatformGetDefaultPixelScale(void)
+{
+	return 1.0;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Pixel scaling not supported on Linux
+void MCResPlatformHandleScaleChange(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////

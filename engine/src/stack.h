@@ -235,6 +235,9 @@ protected:
 	// IM-2014-01-07: [[ StackScale ]] the drawing scale of the stack
 	// IM-2014-01-16: [[ StackScale ]] Move stack scale factor to view abstraction
 	MCGFloat m_view_content_scale;
+
+	// IM-2014-01-23: [[ HiDPI ]] The backing scale of the surface onto which this view is drawn
+	MCGFloat m_view_backing_scale;
 	
 public:
 	Boolean menuwindow;
@@ -289,32 +292,32 @@ public:
 	virtual bool recomputefonts(MCFontRef parent_font);
 	
 	//////////
-	// device interface
+	// view interface
 
-	MCRectangle device_getwindowrect() const;
-	MCRectangle device_setgeom(const MCRectangle &p_rect);
-	
-	// IM-2013-08-29: [[ ResIndependence ]] add device-specific version of updatewindow.
-	//   device_updatewindow takes a region in device coordinates.
-	void device_updatewindow(MCRegionRef p_region);
-	// MW-2011-09-13: [[ Redraw ]] Request an immediate update of the given region of the
-	//   window using the presented pixmap. This is a platform-specific method - note that
-	//   any window-mask is ignored with per-pixel alpha assumed to come from the the image.
-	//   (although a window-mask needs to be present in the stack for it not to be ignored).
-	// IM-2013-06-19: [[ RefactorGraphics ]] Replace pixmap update method with this
-	//   version which uses a callback function to perform the actual drawing using a
-	//    provided MCStackSurface instance. The MCStackSurface class is now responsible
-	//    for handling any window mask present.
-	// IM-2013-08-29: [[ ResIndependence ]] change updatewindowwithcallback to device-specific version.
-	//   device_updatewindowwithcallback takes a region in device coordinates.
-	void device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context);
-	
-	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given
-	//   surface.
-	void device_redrawwindow(MCStackSurface *surface, MCRegionRef region);
+	// IM-2014-01-24: [[ HiDPI ]] Convert device-space methods to logical-space platform-specific methods
 	
 	//////////
-	// view interface
+	// platform-specific view methods
+	
+	MCRectangle view_platform_getwindowrect() const;
+	MCRectangle view_platform_setgeom(const MCRectangle &p_rect);
+
+	// Request an immediate update of the given region of the window.
+	// IM-2014-01-24: [[ HiDPI ]] The request region is specified in logical coordinates.
+	void view_platform_updatewindow(MCRegionRef p_region);
+
+	// IM-2014-01-24: [[ Redraw ]] Request an immediate update of the given region of the
+	//   window using the given callback to perform the drawing.
+	// IM-2014-01-24: [[ HiDPI ]] The request region is specified in logical coordinates.
+	void view_platform_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context);
+	
+	//////////
+	
+	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given surface.
+	// IM-2014-01-24: [[ HiDPI ]] Update region is given in surface coordinates.
+	void view_surface_redrawwindow(MCStackSurface *surface, MCRegionRef region);
+	
+	//////////
 
 	void view_init(void);
 	void view_copy(const MCStack &p_view);
@@ -400,6 +403,9 @@ public:
 	void view_activatetilecache(void);
 	void view_compacttilecache(void);
 	
+	// IM-2014-01-24: [[ HiDPI ]] Update the tilecache viewport to match the view rect at the current backing scale
+	void view_updatetilecacheviewport(void);
+	
 	// IM-2013-10-10: [[ FullscreenMode ]] Reconfigure view after window rect changes
 	void view_configure(bool p_user);
 	
@@ -428,6 +434,18 @@ public:
 	// IM-2014-01-16: [[ StackScale ]] Move stack scale factor to view abstraction
 	MCGFloat view_get_content_scale() const;
 	void view_set_content_scale(MCGFloat p_scale);
+
+	// IM_2014-01-24: [[ HiDPI ]] Return the view window rect in logical coords
+	MCRectangle view_getwindowrect() const;
+
+	// IM-2014-01-24: [[ HiDPI ]] Set the view window rect in logical coords
+	MCRectangle view_setgeom(const MCRectangle &p_rect);
+	
+	// IM-2014-01-24: [[ HiDPI ]] Return the scale factor from logical to pixel coords for the surface onto which the view is drawn
+	MCGFloat view_getbackingscale(void) const;
+
+	// IM-2014-01-24: [[ HiDPI ]] Called to update the view's backing scale to match the target surface before drawing
+	void view_setbackingscale(MCGFloat p_scale);
 	
 	//////////
 	
@@ -836,6 +854,19 @@ public:
 	// MW-201-09-15: [[ Redraw ]] The 'onexpose()' method is called when a sequence
 	//   of Expose events are recevied.
 	void onexpose(MCRegionRef dirty);
+
+	// IM-2014-01-29: [[ HiDPI ]] platform-specific view device methods
+
+	MCRectangle view_device_getwindowrect() const;
+	MCRectangle view_device_setgeom(const MCRectangle &p_rect,
+		uint32_t p_minwidth, uint32_t p_minheight,
+		uint32_t p_maxwidth, uint32_t p_maxheight);
+	void view_device_updatewindow(MCRegionRef p_region);
+#elif defined(_MOBILE)
+
+	// IM-2014-01-30: [[ HiDPI ]] platform-specific view device methods
+	
+	void view_device_updatewindow(MCRegionRef p_region);
 #endif
 	
 	bool cursoroverride ;

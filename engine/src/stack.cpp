@@ -3029,10 +3029,10 @@ MCRectangle MCStack::getwindowrect(void) const
 		return rect;
 		
 	MCRectangle t_rect;
-	t_rect = device_getwindowrect();
+	t_rect = view_getwindowrect();
 	
-	// IM-2013-09-30: [[ FullscreenMode ]] Use inverse stack transform to get stack coords
-	return MCRectangleGetTransformedBounds(t_rect, MCGAffineTransformInvert(getdevicetransform()));
+	// IM-2014-01-23: [[ HiDPI ]] Use inverse view transform to get stack coords
+	return MCRectangleGetTransformedBounds(t_rect, MCGAffineTransformInvert(getviewtransform()));
 }
 
 //////////

@@ -133,9 +133,9 @@ void MCStack::realize()
 		// IM-2013-10-08: [[ FullscreenMode ]] Don't change stack rect if fullscreen
 		/* CODE DELETED */
 
-		// IM-2013-10-08: [[ FullscreenMode ]] scale stack rect to device coords
 		MCRectangle t_rect;
-		t_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(view_getrect()));
+		// IM-2014-01-29: [[ HiDPI ]] Convert logical to screen coords
+		t_rect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(view_getrect());
 
 		if (t_rect.width == 0)
 			t_rect.width = MCminsize << 4;
@@ -218,8 +218,9 @@ void MCStack::setsizehints(void)
 			t_minrect = MCRectangleMake(0, 0, minwidth, minheight);
 			t_maxrect = MCRectangleMake(0, 0, maxwidth, maxheight);
 			
-			t_minrect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_minrect));
-			t_maxrect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_maxrect));
+			// IM-2014-01-29: [[ HiDPI ]] Convert logical to screen coords
+			t_minrect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(t_minrect);
+			t_maxrect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(t_maxrect);
 			
 			hints.min_width = t_minrect.width;
 			hints.min_height = t_minrect.height;
@@ -228,9 +229,9 @@ void MCStack::setsizehints(void)
 		}
 		else
 		{
-			// IM-2013-08-12: [[ ResIndependence ]] Use view rect when setting window size
+			// IM-2014-01-29: [[ HiDPI ]] Convert logical to screen coords
 			MCRectangle t_device_rect;
-			t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(view_getrect()));
+			t_device_rect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(view_getrect());
 			
 			hints.min_width = hints.max_width = t_device_rect.width;
 			hints.min_height = hints.max_height = t_device_rect.height;
@@ -475,7 +476,13 @@ void MCStack::destroywindowshape()
 	m_window_shape = nil;
 }
 
-MCRectangle MCStack::device_getwindowrect(void) const
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+MCRectangle MCStack::view_platform_getwindowrect(void) const
+{
+	return view_device_getwindowrect();
+}
+
+MCRectangle MCStack::view_device_getwindowrect(void) const
 {
 	Window t_root, t_child, t_parent;
 	Window *t_children;
@@ -505,9 +512,18 @@ MCRectangle MCStack::device_getwindowrect(void) const
 	return t_rect;
 }
 
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
+{
+	return view_device_setgeom(p_rect, minwidth, minheight, maxwidth, maxheight);
+}
+
 // IM-2013-08-12: [[ ResIndependence ]] factor out device-specific window-sizing code
 // set window rect to p_rect, returns old window rect
-MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
+// IM-2014-01-29: [[ HiDPI ]] Parameterize min/max width/height
+MCRectangle MCStack::view_device_setgeom(const MCRectangle &p_rect,
+	uint32_t p_minwidth, uint32_t p_minheight,
+	uint32_t p_maxwidth, uint32_t p_maxheight)
 {
 	Window t_root, t_child;
 	int t_win_x, t_win_y;
@@ -527,21 +543,12 @@ MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
 		hints.y = p_rect.y;
 		hints.width = p_rect.width;
 		hints.height = p_rect.height;
-		if (flags & F_RESIZABLE )
+		if (flags & F_RESIZABLE)
 		{
-			// IM-2013-10-18: [[ FullscreenMode ]] Assume min/max sizes in view coords
-			// for resizable stacks - transform to device coords
-			MCRectangle t_minrect, t_maxrect;
-			t_minrect = MCRectangleMake(0, 0, minwidth, minheight);
-			t_maxrect = MCRectangleMake(0, 0, maxwidth, maxheight);
-			
-			t_minrect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_minrect));
-			t_maxrect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_maxrect));
-
-			hints.min_width = t_minrect.width;
-			hints.min_height = t_minrect.height;
-			hints.max_width = t_maxrect.width;
-			hints.max_height = t_maxrect.height;
+			hints.min_width = p_minwidth;
+			hints.min_height = p_minheight;
+			hints.max_width = p_maxwidth;
+			hints.max_height = p_maxheight;
 		}
 		else
 		{
@@ -911,7 +918,13 @@ public:
 	}
 };
 
-void MCStack::device_updatewindow(MCRegionRef p_region)
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+void MCStack::view_platform_updatewindow(MCRegionRef p_region)
+{
+	view_device_updatewindow(p_region);
+}
+
+void MCStack::view_device_updatewindow(MCRegionRef p_region)
 {
 	MCRegionRef t_update_region;
 	t_update_region = nil;
@@ -939,11 +952,11 @@ void MCStack::device_updatewindow(MCRegionRef p_region)
 		MCRegionDestroy(t_update_region);
 }
 
-void MCStack::device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
+void MCStack::view_platform_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
 {
 	s_update_callback = p_callback;
 	s_update_context = p_context;
-	device_updatewindow(p_region);
+	view_platform_updatewindow(p_region);
 	s_update_callback = nil;
 	s_update_context = nil;
 }
@@ -954,7 +967,7 @@ void MCStack::onexpose(MCRegionRef p_region)
 	if (t_surface.Lock())
 	{
 		if (s_update_callback == nil)
-			device_redrawwindow(&t_surface, p_region);
+			view_surface_redrawwindow(&t_surface, p_region);
 		else
 			s_update_callback(&t_surface, p_region, s_update_context);
 			

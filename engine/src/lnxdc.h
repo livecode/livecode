@@ -149,11 +149,6 @@ class MCScreenDC : public MCUIDC
 	MCXTransferStore * m_Selection_store ;
 
 public:
-	
-
-	static MCDisplay *s_monitor_displays;
-	static uint4 s_monitor_count;
-	
 	bool getdisplays_init;
 	bool Xinerama_available; 
 	
@@ -250,6 +245,21 @@ public:
 	virtual void configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge);
 	virtual void assignbackdrop(Window_mode p_mode, Window p_window);
 
+	// IM-2014-01-29: [[ HiDPI ]] Update device_* methods to platform-specific logical coord based methods
+	virtual uint16_t platform_getwidth(void);
+	virtual uint16_t platform_getheight(void);
+	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
+	virtual bool platform_getwindowgeometry(Window w, MCRectangle &drect);
+	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void platform_querymouse(int16_t &r_x, int16_t &r_y);
+	virtual void platform_setmouse(int16_t p_x, int16_t p_y);
+	
+	// IM-2014-01-29: [[ HiDPI ]] Convenience methods to convert logical to screen coords and back
+	MCPoint logicaltoscreenpoint(const MCPoint &p_point);
+	MCPoint screentologicalpoint(const MCPoint &p_point);
+	MCRectangle logicaltoscreenrect(const MCRectangle &p_rect);
+	MCRectangle screentologicalrect(const MCRectangle &p_rect);
+	
 	// IM-2013-08-12: [[ ResIndependence ]] refactored methods that return device coordinates
 	virtual uint16_t device_getwidth(void);
 	virtual uint16_t device_getheight(void);
@@ -304,8 +314,11 @@ public:
 	               Boolean &abort, Boolean &reset);
 	void waitmessage(Window w, int event_type);
 	
-	bool apply_workarea();
-	bool apply_partial_struts();
+	// IM-2014-01-29: [[ HiDPI ]] Apply screen workarea to given MCDisplay array
+	bool apply_workarea(MCDisplay *p_displays, uint32_t p_display_count);
+
+	// IM-2014-01-29: [[ HiDPI ]] Apply screen struts to given MCDisplay array
+	bool apply_partial_struts(MCDisplay *p_displays, uint32_t p_display_count);
 		
 	Display *getDisplay() { return dpy; };
 	

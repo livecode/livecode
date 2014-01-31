@@ -14,15 +14,23 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "prefix.h"
+#include "parsedef.h"
+#include "filedefs.h"
+#include "objdefs.h"
+
+#include "dispatch.h"
+
 #include "graphics.h"
 
-#include <objc/objc-runtime.h>
 #include <AppKit/AppKit.h>
+
+////////////////////////////////////////////////////////////////////////////////
 
 typedef float (*backingScaleFactorIMP)(id);
 
-// IM-2014-01-17: [[ HiDPI ]] returns the maximum backing scale of all attached screens
-bool MCOSXGetScreenBackingScale(MCGFloat &r_scale)
+// IM-2014-01-23; [[ HiDPI ]] Returns the backing scale of the display. Note that this will only be available on OSX versions 10.7 and later.
+bool MCOSXGetDisplayPixelScale(NSScreen *p_display, MCGFloat &r_scale)
 {
 	static backingScaleFactorIMP s_backingScaleFactor = nil;
 	static bool s_initialized = false;
@@ -42,35 +50,40 @@ bool MCOSXGetScreenBackingScale(MCGFloat &r_scale)
 	if (s_backingScaleFactor == nil)
 		return false;
 	
-	
-	MCGFloat t_max_scale;
-	bool t_have_max;
-	t_have_max = false;
-	
-	NSArray *t_screens;
-	t_screens = [NSScreen screens];
-	
-	if (t_screens == nil)
-		return false;
-	
-	for (uindex_t i = 0; i < t_screens.count; i++)
-	{
-		NSScreen *t_screen;
-		t_screen = [t_screens objectAtIndex:i];
-		
-		MCGFloat t_screen_scale;
-//		t_screen_scale = [t_screen backingScaleFactor];
-		t_screen_scale = s_backingScaleFactor(t_screen);
-		
-		if (!t_have_max || t_max_scale < t_screen_scale)
-		{
-			t_max_scale = t_screen_scale;
-			t_have_max = true;
-		}
-	}
-	
-	if (t_have_max)
-		r_scale = t_max_scale;
-	
-	return t_have_max;
+	r_scale = s_backingScaleFactor(p_display);
+	return true;
 }
+
+// IM-2014-01-27: [[ HiDPI ]] OSX Supports pixel scaling on retina displays
+bool MCResPlatformSupportsPixelScaling(void)
+{
+	return true;
+}
+
+// IM-2014-01-27: [[ HiDPI ]] HiDPI support can be enabled/disabled on OSX by recreating
+// each stack window with/without the kWindowFrameWorkScaledAttribute flag
+bool MCResPlatformCanChangePixelScaling(void)
+{
+	return true;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Cannot set pixel scale on OSX
+bool MCResPlatformCanSetPixelScale(void)
+{
+	return false;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Pixel scale is 1.0 on OSX
+MCGFloat MCResPlatformGetDefaultPixelScale(void)
+{
+	return 1.0;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Reopen windows when usePixelScale is changed
+void MCResPlatformHandleScaleChange(void)
+{
+	// Global use-pixel-scaling value has been updated, so now we just need to reopen any open stack windows
+	MCdispatcher->reopen_stack_windows();
+}
+
+////////////////////////////////////////////////////////////////////////////////

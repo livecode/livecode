@@ -386,6 +386,7 @@ void MCScreenDC::getkeysdown(MCExecPoint &ep)
 	}
 }
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 void MCScreenDC::mode_globaltolocal(Point& p)
 {
 	CGrafPtr oldport;
@@ -394,14 +395,6 @@ void MCScreenDC::mode_globaltolocal(Point& p)
 	SetGWorld(GetWindowPort((WindowPtr)mousewindow->handle.window), GetMainDevice());
 	GlobalToLocal(&p);
 	SetGWorld(oldport, olddevice);
-	
-	// IM-2013-08-01: [[ ResIndependence ]] apply device scale
-	// IM-2014-01-17: [[ HiDPI ]] Scale logical screen coords to device pixels
-	MCGFloat t_scale;
-	t_scale = MCResGetSystemScale() / MCResGetPixelScale();
-	
-	p.v = p.v * t_scale;
-	p.h = p.h * t_scale;
 }
 
 void MCScreenDC::mfocus(EventRecord *event, Point p, Boolean dispatch, bool post_or_handle)

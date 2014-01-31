@@ -21,49 +21,41 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// IM-2013-12-04: [[ PixelScale ]] Return the screen pixel scale as reported by the OS
-MCGFloat MCResGetSystemScale(void);
-
-// Return the scaling factor from stack to device coordinates.
-MCGFloat MCResGetPixelScale(void);
-
-// IM-2013-12-04: [[ PixelScale ]] Set the screen scaling factor
-void MCResSetPixelScale(MCGFloat p_scale, bool p_send_update = true);
-
-// IM-2013-12-04: [[ PixelScale ]] Set whether or not to use the system pixel scale
-void MCResSetUseSystemScale(bool p_use_scale);
-bool MCResGetUseSystemScale(void);
+// IM-2014-01-27: [[ HiDPI ]] Set pixel scaling to default platform-supported values
+void MCResInitPixelScaling(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Utility functions to convert rectangle to/from device coordinates
+// IM-2013-12-04: [[ PixelScale ]] Set the screen scaling factor
+void MCResSetPixelScale(MCGFloat p_scale);
+// Return the scaling factor from stack to device coordinates.
+MCGFloat MCResGetPixelScale(void);
 
-inline MCGRectangle MCGRectangleToUserSpace(const MCGRectangle p_device_rect)
-{
-	return MCGRectangleScale(p_device_rect, 1 / MCResGetPixelScale());
-}
+// IM-2014-01-27: [[ HiDPI ]] enable or disable pixel scaling
+void MCResSetUsePixelScaling(bool p_use_scaling);
+// IM-2014-01-27: [[ HiDPI ]] return the current pixel scale setting
+bool MCResGetUsePixelScaling(void);
 
-inline MCGRectangle MCGRectangleToDeviceSpace(const MCGRectangle p_user_rect)
-{
-	return MCGRectangleScale(p_user_rect, MCResGetPixelScale());
-}
+////////////////////////////////////////////////////////////////////////////////
 
-inline MCGRectangle MCResUserToDeviceRect(MCRectangle p_rect)
-{
-	return MCGRectangleToDeviceSpace(MCRectangleToMCGRectangle(p_rect));
-}
-inline MCGRectangle MCResDeviceToUserRect(MCRectangle p_rect)
-{
-	return MCGRectangleToUserSpace(MCRectangleToMCGRectangle(p_rect));
-}
+// IM-2014-01-27: [[ HiDPI ]] Return the pixel scales of the main screen (or all screens)
+// as a return-delimited list
+void MCResListScreenPixelScales(MCExecPoint &ep, bool p_plural);
 
-inline MCGAffineTransform MCResGetDeviceTransform(void)
-{
-	MCGFloat t_scale;
-	t_scale = MCResGetPixelScale();
-	
-	return MCGAffineTransformMakeScale(t_scale, t_scale);
-}
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-30: [[ HiDPI ]] Return the default pixel scale for the platform
+MCGFloat MCResPlatformGetDefaultPixelScale(void);
+
+// IM-2014-01-27: [[ HiDPI ]] Return whether or not pixel scaling is supported by the platform
+bool MCResPlatformSupportsPixelScaling(void);
+// IM-2014-01-27: [[ HiDPI ]] Return whether or not pixel scaling can be enabled / disabled at runtime
+bool MCResPlatformCanChangePixelScaling(void);
+// IM-2014-01-30: [[ HiDPI ]] Return whether or not the picel scale value can be modified
+bool MCResPlatformCanSetPixelScale(void);
+
+// IM-2014-01-29: [[ HiDPI ]] update system settings after change to pixel scaling
+void MCResPlatformHandleScaleChange(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 

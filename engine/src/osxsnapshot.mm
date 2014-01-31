@@ -250,6 +250,8 @@ MCImageBitmap *getimage(CGrafPtr src)
 	return image;
 }
 
+extern bool MCOSXCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context);
+
 /* OVERHAUL - REVISIT: p_scale_factor parameter currently ignored */
 MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, MCGFloat p_scale_factor, uint32_t p_window, const char *p_display_name)
 {
@@ -321,20 +323,45 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, MCGFloat p_scale_factor
 		t_image = s_cg_window_list_create_image(t_area, /*kCGWindowListOptionOnScreenOnly*/ (1 << 0), /*kCGNullWindowID*/ 0, /*kCGWindowImageDefault*/ 0);
 		if (t_image != nil)
 		{
+			// IM-2014-01-24: [[ HiDPI ]] Snapshots will be at the density of the display device,
+			// so we need to scale down if the dimensions of the returned image don't match
+			
+			uint32_t t_width, t_height;
+			uint32_t t_image_width, t_image_height;
+			t_image_width = CGImageGetWidth(t_image);
+			t_image_height = CGImageGetHeight(t_image);
+			
+			MCGFloat t_scale;
+			t_scale = 1.0;
+			
+			if (t_image_width != t_screen_rect.width && t_image_height != t_screen_rect.height)
+			{
+				MCGFloat t_hscale, t_vscale;
+				t_hscale = (MCGFloat)t_image_width / (MCGFloat)t_screen_rect.width;
+				t_vscale = (MCGFloat)t_image_height / (MCGFloat)t_screen_rect.height;
+				
+				// The horizontal & vertical scales should match
+				if (t_hscale == t_vscale)
+					t_scale = t_hscale;
+			}
+			
+			// Calculate the logical image size
+			t_width = ceil(t_image_width / t_scale);
+			t_height = ceil(t_image_height / t_scale);
+			
 			MCImageBitmap *t_bitmap;
-			/* UNCHECKED */ MCImageBitmapCreate(CGImageGetWidth(t_image), CGImageGetHeight(t_image), t_bitmap);
+			/* UNCHECKED */ MCImageBitmapCreate(t_width, t_height, t_bitmap);
+
+			MCImageBitmapClear(t_bitmap);
 			
-			CFDataRef t_data;
-			t_data = s_cg_data_provider_copy_data(CGImageGetDataProvider(t_image));
+			CGContextRef t_context;
+			/* UNCHECKED */ MCOSXCreateCGContextForBitmap(t_bitmap, t_context);
 			
-			uint8_t *t_bytes;
-			t_bytes = (uint8_t *)CFDataGetBytePtr(t_data);
+			// Draw the image scaled down onto the bitmap
+			CGContextScaleCTM(t_context, 1 / t_scale, 1 / t_scale);
+			CGContextDrawImage(t_context, CGRectMake(0, 0, t_image_width, t_image_height), t_image);
 			
-			for(int32_t y = 0; y < CGImageGetHeight(t_image); y++)
-				memcpy((uint8_t*)t_bitmap -> data + y * t_bitmap -> stride, t_bytes + y * CGImageGetBytesPerRow(t_image), CGImageGetWidth(t_image) * 4);
-			
-			CFRelease(t_data);
-			
+			CGContextRelease(t_context);
 			CGImageRelease(t_image);
 			
 			t_snapshot = t_bitmap;

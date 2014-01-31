@@ -174,9 +174,6 @@ public:
 	HMENU f_icon_menu;
 #endif
 
-	static MCDisplay *s_monitor_displays;
-	static uint4 s_monitor_count;
-
 	int4 system_codepage;
 	int4 input_codepage;
 	HKL input_default_keyboard;
@@ -206,15 +203,23 @@ public:
 	virtual uint2 getvclass();
 	virtual uint2 getdepth();
 
-	virtual uint16_t device_getwidth(void);
-	virtual uint16_t device_getheight(void);
-	virtual bool device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
-	virtual bool device_getwindowgeometry(Window w, MCRectangle &drect);
-	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
-	virtual void device_querymouse(int16_t &r_x, int16_t &r_y);
-	virtual void device_setmouse(int16_t p_x, int16_t p_y);
-	virtual MCStack *device_getstackatpoint(int32_t x, int32_t y);
-	
+	// IM-2014-01-28: [[ HiDPI ]] Update device_* methods to platform-specific logical coord based methods
+	virtual uint16_t platform_getwidth(void);
+	virtual uint16_t platform_getheight(void);
+	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
+	virtual bool platform_displayinfocacheable(void);
+	virtual bool platform_getwindowgeometry(Window w, MCRectangle &drect);
+	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void platform_querymouse(int16_t &r_x, int16_t &r_y);
+	virtual void platform_setmouse(int16_t p_x, int16_t p_y);
+	virtual MCStack *platform_getstackatpoint(int32_t x, int32_t y);
+
+	// IM-2014-01-28: [[ HiDPI ]] Convenience methods to convert logical to screen coords and back
+	MCPoint logicaltoscreenpoint(const MCPoint &p_point);
+	MCPoint screentologicalpoint(const MCPoint &p_point);
+	MCRectangle logicaltoscreenrect(const MCRectangle &p_rect);
+	MCRectangle screentologicalrect(const MCRectangle &p_rect);
+
 	virtual void openwindow(Window w, Boolean override);
 	virtual void closewindow(Window window);
 	virtual void destroywindow(Window &window);

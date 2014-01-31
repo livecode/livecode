@@ -650,18 +650,6 @@ void MCGAffineTransformFromSkMatrix(const SkMatrix &p_matrix, MCGAffineTransform
 	r_transform . ty = p_matrix[5];
 }
 
-MCGAffineTransform MCGAffineTransformMake(MCGFloat p_a, MCGFloat p_b, MCGFloat p_c, MCGFloat p_d, MCGFloat p_tx, MCGFloat p_ty)
-{
-	MCGAffineTransform t_transform;
-	t_transform . a = p_a;
-	t_transform . b = p_b;
-	t_transform . c = p_c;
-	t_transform . d = p_d;
-	t_transform . tx = p_tx;
-	t_transform . ty = p_ty;
-	return t_transform;	
-}
-
 MCGAffineTransform MCGAffineTransformMakeIdentity(void)
 {
 	MCGAffineTransform t_transform;

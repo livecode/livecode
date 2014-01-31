@@ -45,6 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "w32text.h"
 
 #include "graphicscontext.h"
+#include "graphics_util.h"
 
 #ifndef CS_DROPSHADOW
 #define CS_DROPSHADOW   0x00020000
@@ -351,20 +352,35 @@ void MCScreenDC::ungrabpointer()
 	}
 }
 
-uint2 MCScreenDC::device_getwidth()
+extern MCGFloat MCWin32GetLogicalToScreenScale();
+uint2 MCScreenDC::platform_getwidth()
 {
 	HDC winhdc = GetDC(NULL);
-	uint2 width = (uint2)GetDeviceCaps(winhdc, HORZRES);
+
+	uint32_t t_width;
+	t_width = GetDeviceCaps(winhdc, HORZRES);
+
 	ReleaseDC(NULL, winhdc);
-	return width;
+
+	// IM-2014-01-28: [[ HiDPI ]] Convert screen width to logical size
+	t_width = t_width / MCWin32GetLogicalToScreenScale();
+
+	return t_width;
 }
 
-uint2 MCScreenDC::device_getheight()
+uint2 MCScreenDC::platform_getheight()
 {
 	HDC winhdc = GetDC(NULL);
-	uint2 height = (uint2)GetDeviceCaps(winhdc, VERTRES);
+
+	uint32_t t_height;
+	t_height = (uint2)GetDeviceCaps(winhdc, VERTRES);
+
 	ReleaseDC(NULL, winhdc);
-	return height;
+
+	// IM-2014-01-28: [[ HiDPI ]] Convert screen height to logical size
+	t_height = t_height / MCWin32GetLogicalToScreenScale();
+
+	return t_height;
 }
 
 uint2 MCScreenDC::getwidthmm()
@@ -611,7 +627,7 @@ void MCScreenDC::setinputfocus(Window w)
 	SetFocus((HWND)w->handle.window);
 }
 
-bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
+bool MCScreenDC::platform_getwindowgeometry(Window w, MCRectangle &drect)
 {//get the client window's geometry in screen coord
 	if (w == DNULL || w->handle.window == 0)
 		return false;
@@ -621,10 +637,13 @@ bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 	p.x = wrect.left;
 	p.y = wrect.top;
 	ClientToScreen((HWND)w->handle.window, &p);
-	drect.x = (int2)p.x;
-	drect.y = (int2)p.y;
-	drect.width = (uint2)(wrect.right - wrect.left);
-	drect.height = (uint2)(wrect.bottom - wrect.top);
+
+	MCRectangle t_rect;
+	t_rect = MCRectangleMake(p.x, p.y, wrect.right - wrect.left, wrect.bottom - wrect.top);
+
+	// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
+	drect = screentologicalrect(t_rect);
+
 	return true;
 }
 
@@ -920,9 +939,16 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uin
 			}
 		}
 	}
+
+	MCRectangle t_screenrect;
+	t_screenrect = MCRectangleMake(0, 0, getwidth(), getheight());
+
+	// IM-2014-01-28: [[ HiDPI ]] Convert logical to screen coords
+	t_screenrect = logicaltoscreenrect(t_screenrect);
+
 	SetWindowPos(hwndsnap, HWND_TOPMOST,
-				 0, 0, device_getwidth(), device_getheight(), SWP_HIDEWINDOW
-				 | SWP_DEFERERASE | SWP_NOREDRAW);
+		t_screenrect.x, t_screenrect.y, t_screenrect.width, t_screenrect.height,
+		SWP_HIDEWINDOW | SWP_DEFERERASE | SWP_NOREDRAW);
 	if (t_is_composited)
 		ReleaseDC(NULL, snaphdc);
 	else
@@ -1025,25 +1051,11 @@ void MCScreenDC::settaskbarstate(bool p_visible)
 
 void MCScreenDC::processdesktopchanged(bool p_notify)
 {
-	const MCDisplay *t_monitors = NULL;
-	MCDisplay *t_old_monitors = NULL;
-	uint4 t_monitor_count, t_old_monitor_count;
+	// IM-2014-01-28: [[ HiDPI ]] Use updatedisplayinfo() method to update & compare display details
 	bool t_changed;
+	t_changed = false;
 
-	t_old_monitor_count = s_monitor_count;
-	t_old_monitors = s_monitor_displays;
-
-	s_monitor_count = 0;
-	s_monitor_displays = NULL;
-
-	if (t_old_monitors != NULL)
-	{
-		t_monitor_count = ((MCScreenDC *)MCscreen) -> getdisplays(t_monitors, false);
-		t_changed = t_monitor_count != t_old_monitor_count || memcmp(t_old_monitors, t_monitors, sizeof(MCDisplay) * t_monitor_count) != 0;
-		delete[] t_old_monitors;
-	}
-	else
-		t_changed = true;
+	updatedisplayinfo(t_changed);
 
 	if (t_changed && (backdrop_active || backdrop_hard))
 	{
@@ -1467,3 +1479,4 @@ LRESULT CALLBACK MCBackdropWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 	return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
+////////////////////////////////////////////////////////////////////////////////

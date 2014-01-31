@@ -195,11 +195,8 @@ void MCScreenDC::handle_mouse_press(uint32_t p_time, uint32_t p_modifiers, int32
 		m_mouse_x = x;
 		m_mouse_y = y;
 
-		// IM-2013-08-02: [[ ResIndependence]] scale mouse coords to user space
-		MCGFloat t_scale;
-		t_scale = MCResGetPixelScale();
-		
-		MCEventQueuePostMousePosition((MCStack *)m_current_window, p_time, p_modifiers, x / t_scale, y / t_scale);
+		// IM-2014-01-30: [[ HiDPI ]] Mouse position should now be given in logical coords
+		MCEventQueuePostMousePosition((MCStack *)m_current_window, p_time, p_modifiers, x, y);
 	}
 	
 	MCEventQueuePostMousePress((MCStack *)m_current_window, p_time, p_modifiers, p_state, p_button);
@@ -216,11 +213,8 @@ void MCScreenDC::handle_mouse_move(uint32_t p_time, uint32_t p_modifiers, int32_
 	m_mouse_x = x;
 	m_mouse_y = y;
 
-	// IM-2013-08-02: [[ ResIndependence]] scale mouse coords to user space
-	MCGFloat t_scale;
-	t_scale = MCResGetPixelScale();
-	
-	MCEventQueuePostMousePosition((MCStack *)m_current_window, p_time, p_modifiers, x / t_scale, y / t_scale);
+	// IM-2014-01-30: [[ HiDPI ]] Mouse position should now be given in logical coords
+	MCEventQueuePostMousePosition((MCStack *)m_current_window, p_time, p_modifiers, x, y);
 }
 
 void MCScreenDC::handle_key_press(uint32_t p_modifiers, uint32_t p_char_code, uint32_t p_key_code)
@@ -293,11 +287,8 @@ void MCScreenDC::process_touch(MCEventTouchPhase p_phase, void *p_touch_handle, 
 	t_touch -> y = p_y;
 	t_touch -> timestamp = p_timestamp;
 	
-	MCGFloat t_scale;
-	t_scale = MCResGetPixelScale();
-	
-	// IM-2013-08-02: [[ ResIndependence]] scale touch coords to user space
-	MCEventQueuePostTouch((MCStack *)m_current_window, p_phase, t_touch -> ident, 1, p_x / t_scale, p_y / t_scale);
+	// IM-2014-01-30: [[ HiDPI ]] Touch position should now be given in logical coords
+	MCEventQueuePostTouch((MCStack *)m_current_window, p_phase, t_touch -> ident, 1, p_x, p_y);
 	
 	if (p_phase == kMCEventTouchPhaseEnded || p_phase == kMCEventTouchPhaseCancelled)
 	{
@@ -926,6 +917,85 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard *p_pasteboard, MCDragActionSet 
 MCScriptEnvironment *MCScreenDC::createscriptenvironment(const char *p_language)
 {
 	return NULL;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+uint16_t MCScreenDC::platform_getwidth()
+{
+	// IM-2014-01-30: [[ HiDPI ]] Convert screen to logical size
+	return device_getwidth() / logicaltoscreenscale();
+}
+
+uint16_t MCScreenDC::platform_getheight()
+{
+	// IM-2014-01-30: [[ HiDPI ]] Convert screen to logical size
+	return device_getheight() / logicaltoscreenscale();
+}
+
+void MCScreenDC::platform_querymouse(int16_t &r_x, int16_t &r_y)
+{
+	MCPoint t_loc;
+	device_querymouse(t_loc.x, t_loc.y);
+	
+	// IM-2014-01-30: [[ HiDPI ]] Convert screen to logical coords
+	t_loc = screentologicalpoint(t_loc);
+	
+	r_x = t_loc.x;
+	r_y = t_loc.y;
+}
+
+void MCScreenDC::platform_setmouse(int16_t p_x, int16_t p_y)
+{
+	MCPoint t_loc;
+	t_loc = MCPointMake(p_x, p_y);
+	
+	// IM-2014-01-30: [[ HiDPI ]] Convert logical to screen coords
+	t_loc = logicaltoscreenpoint(t_loc);
+	
+	device_setmouse(t_loc.x, t_loc.y);
+}
+
+void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+{
+	MCRectangle t_rect;
+	t_rect = rect;
+
+	// IM-2014-01-30: [[ HiDPI ]] Convert logical to screen coords
+	t_rect = logicaltoscreenrect(t_rect);
+	
+	device_boundrect(t_rect, title, m);
+	
+	// IM-2014-01-30: [[ HiDPI ]] Convert screen to logical coords
+	t_rect = screentologicalrect(t_rect);
+	
+	rect = t_rect;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPoint MCScreenDC::logicaltoscreenpoint(const MCPoint &p_point)
+{
+	MCGFloat t_scale;
+	t_scale = logicaltoscreenscale();
+	return MCPointTransform(p_point, MCGAffineTransformMakeScale(t_scale, t_scale));
+}
+
+MCPoint MCScreenDC::screentologicalpoint(const MCPoint &p_point)
+{
+	MCGFloat t_scale;
+	t_scale = 1 / logicaltoscreenscale();
+	return MCPointTransform(p_point, MCGAffineTransformMakeScale(t_scale, t_scale));
+}
+
+MCRectangle MCScreenDC::logicaltoscreenrect(const MCRectangle &p_rect)
+{
+	return MCRectangleGetScaledInterior(p_rect, logicaltoscreenscale());
+}
+
+MCRectangle MCScreenDC::screentologicalrect(const MCRectangle &p_rect)
+{
+	return MCRectangleGetScaledBounds(p_rect, 1 / logicaltoscreenscale());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

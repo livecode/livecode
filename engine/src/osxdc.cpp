@@ -45,20 +45,8 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCOSXGetScreenBackingScale(MCGFloat &r_scale);
-
-// IM-2014-01-17: [[ HiDPI ]] The backing scale can be used here if OS version is >= 10.7
-MCGFloat MCResGetSystemScale(void)
-{
-	if (MCmajorosversion >= 0x1070)
-	{
-		MCGFloat t_scale;
-		if (MCOSXGetScreenBackingScale(t_scale))
-			return t_scale;
-	}
-	
-	return 1.0;
-}
+// IM-2014-01-24: [[ HiDPI ]] Removed MCResGetSystemScale() function as part of HiDPI update
+/* CODE REMOVED */
 
 MCScreenDC::MCScreenDC()
 {
@@ -227,7 +215,7 @@ MCPrinter *MCScreenDC::createprinter(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCStack *MCScreenDC::device_getstackatpoint(int32_t x, int32_t y)
+MCStack *MCScreenDC::platform_getstackatpoint(int32_t x, int32_t y)
 {
 	Point t_location;
 	t_location . h = x;

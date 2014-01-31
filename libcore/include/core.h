@@ -22,6 +22,8 @@
 #include <stdarg.h>
 #endif
 
+#include <math.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef unsigned char uint8_t;
@@ -499,6 +501,8 @@ inline float MCMin(float a, float b) { return a < b ? a : b; }
 inline float MCMax(float a, float b) { return a > b ? a : b; }
 inline uint32_t MCAbs(int32_t a) { return a < 0 ? -a : a; }
 inline uint64_t MCAbs(int64_t a) { return a < 0 ? -a : a; }
+inline float MCAbs(float a) { return fabsf(a); }
+inline double MCAbs(double a) { return fabs(a); }
 inline compare_t MCSgn(int32_t a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }
 inline compare_t MCSgn(int64_t a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }
 inline compare_t MCCompare(int32_t a, int32_t b) { return a < b ? -1 : (a > b ? 1 : 0); }
