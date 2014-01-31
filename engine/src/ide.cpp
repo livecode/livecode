@@ -837,7 +837,7 @@ static void colourize_paragraph(void *p_context, MCColourizeClass p_class, uint4
 
 static unsigned char next_valid_char(const unsigned char *p_text, uindex_t &x_index)
 {
-	if (p_text[x_index] != REPLACEMENT_CHAR_UTF16)
+	if (p_text[x_index] != REPLACEMENT_CHAR_UTF16 && p_text[x_index] != '\0')
 		if (p_text[x_index + 1] == REPLACEMENT_CHAR_ASCII)
 			return p_text[x_index += 2];
 	
