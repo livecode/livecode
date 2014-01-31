@@ -87,6 +87,9 @@ public:
 	
 	void setprintmode(void);
 		
+	// IM-2014-01-31: [[ HiDPI ]] Return the underlying MCGContextRef
+	MCGContextRef getgcontextref(void) const;
+	
 private:
 	void init(MCGContextRef p_context);
 

@@ -125,6 +125,11 @@ MCContextType MCGraphicsContext::gettype() const
 	return CONTEXT_TYPE_SCREEN;
 }
 
+MCGContextRef MCGraphicsContext::getgcontextref(void) const
+{
+	return m_gcontext;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCGraphicsContext::begin(bool p_group)
