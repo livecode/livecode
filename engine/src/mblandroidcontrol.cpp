@@ -354,12 +354,13 @@ void MCAndroidControl::HandleNotifyEvent(MCNameRef p_message)
 
 MCGAffineTransform MCNativeControlUserToDeviceTransform()
 {
-    return MCGAffineTransformConcat(MCdefaultstackptr -> view_getviewtransform(), MCResGetDeviceTransform());
+	// IM-2014-01-31: [[ HiDPI ]] Use stack -> device transform
+	return MCdefaultstackptr -> getdevicetransform();
 }
 
 MCGAffineTransform MCNativeControlUserFromDeviceTransform()
 {
-    return MCGAffineTransformInvert(MCGAffineTransformConcat(MCdefaultstackptr -> view_getviewtransform(), MCResGetDeviceTransform()));
+    return MCGAffineTransformInvert(MCNativeControlUserToDeviceTransform());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
