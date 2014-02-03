@@ -560,6 +560,7 @@ public:
 	Boolean attachmenu(MCStack *sptr);
 	void alloccolors();
 
+    bool handlesmessage(MCNameRef p_message);
 	Bool hashandler(Handler_type p_type, MCNameRef name);
 	MCHandler *findhandler(Handler_type p_type, MCNameRef name);
 

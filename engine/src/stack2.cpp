@@ -288,7 +288,9 @@ Tool MCStack::gettool(MCObject *optr) const
 	// MW-2008-01-30: [[ Bug 5749 ]] Recurse up the object tree to see if any
 	//   parent of the object (up to card level) has CANT_SELECT set, if so
 	//   force browse mode.
-	if (mode == WM_TOP_LEVEL && optr -> isselectable())
+    // AL-2014-01-14: [[ Bug 11419 ]] Allow graphic drawing to begin in non-selectable regions.
+    // AL-2014-01-23: [[ Bug 11702 ]] Change in cantSelect behavior makes it possible to create graphics on IDE stacks.
+	if (mode == WM_TOP_LEVEL && (MCcurtool != T_POINTER || optr -> isselectable()))
 		return MCcurtool;
 
 	return T_BROWSE;

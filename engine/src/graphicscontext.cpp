@@ -20,6 +20,8 @@
 #include "graphics_util.h"
 #include "font.h"
 
+#include "pathprivate.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static inline MCGBlendMode MCBitmapEffectBlendModeToMCGBlendMode(MCBitmapEffectBlendMode p_blend_mode)
@@ -65,6 +67,59 @@ static void MCGraphicsContextAngleAndDistanceToXYOffset(int p_angle, int p_dista
 {
 	r_x_offset = floor(0.5f + p_distance * cos(p_angle * M_PI / 180.0));
 	r_y_offset = floor(0.5f + p_distance * sin(p_angle * M_PI / 180.0));
+}
+
+static inline MCGPoint extract_gpoint_from_legacy_path_ordinates(int32_t *&p_ordinates)
+{
+	MCGFloat x, y;
+	x = (*p_ordinates++ >> 7) / 2.0f;
+	y = (*p_ordinates++ >> 7) / 2.0f;
+	return MCGPointMake(x, y);
+}
+
+static MCGPathRef MCGPathFromMCPath(MCPath *p_path)
+{
+	MCGPathRef t_gpath;
+	t_gpath = NULL;
+		
+	if (!MCGPathCreateMutable(t_gpath))
+		return NULL;
+
+	uindex_t t_command_cnt, t_point_cnt;
+	p_path -> get_lengths(t_command_cnt, t_point_cnt);
+	
+	uint8_t *t_commands;
+	t_commands = p_path -> get_commands();
+		
+	int32_t *t_ordinates;
+	t_ordinates = p_path -> get_ordinates();
+	
+	for (uindex_t t_command_pos = 0; t_command_pos < t_command_cnt; t_command_pos++)
+	{
+		switch (t_commands[t_command_pos])
+		{
+			case PATH_COMMAND_END:
+				break;
+			case PATH_COMMAND_MOVE_TO:
+				MCGPathMoveTo(t_gpath, extract_gpoint_from_legacy_path_ordinates(t_ordinates));
+				break;
+			case PATH_COMMAND_LINE_TO:
+				MCGPathLineTo(t_gpath, extract_gpoint_from_legacy_path_ordinates(t_ordinates));
+				break;
+			case PATH_COMMAND_CUBIC_TO:
+				MCGPathCubicTo(t_gpath, extract_gpoint_from_legacy_path_ordinates(t_ordinates), 
+							   extract_gpoint_from_legacy_path_ordinates(t_ordinates), extract_gpoint_from_legacy_path_ordinates(t_ordinates));
+				break;
+			case PATH_COMMAND_QUADRATIC_TO:
+				MCGPathQuadraticTo(t_gpath, extract_gpoint_from_legacy_path_ordinates(t_ordinates), extract_gpoint_from_legacy_path_ordinates(t_ordinates));
+				break;
+			case PATH_COMMAND_CLOSE:
+				MCGPathCloseSubpath(t_gpath);
+				break;				
+		}
+	}
+	
+	return t_gpath;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -447,20 +502,25 @@ void MCGraphicsContext::setbackground(const MCColor& c)
 
 void MCGraphicsContext::setdashes(uint16_t p_offset, const uint8_t *p_dashes, uint16_t p_length)
 {
-	//MCGFloat *t_lengths;
 	MCMemoryDeleteArray(m_dash_lengths);
 	m_dash_lengths = nil;
 	m_dash_count = 0;
 	m_dash_phase = (MCGFloat)p_offset;
-
+	
 	if (p_length > 0)
 	{
 		m_dash_count = p_length;
 		/* UNCHECKED */ MCMemoryNewArray(m_dash_count, m_dash_lengths);
 		for (uint32_t i = 0; i < m_dash_count; i++)
-			m_dash_lengths[i] = (MCGFloat) p_dashes[i];
+		{
+			// MM-2014-01-21: [[ Bug 11695 ]] Fudge a dash length of 0 to 0.01 - was used previoulsy as start/end cap.
+			if (p_dashes[i] == 0)
+				m_dash_lengths[i] = (MCGFloat) (p_dashes[i] + 0.01f);
+			else
+				m_dash_lengths[i] = (MCGFloat) p_dashes[i];
+		}
 	}
-
+	
 	if (m_line_style != LineSolid)
 		MCGContextSetStrokeDashes(m_gcontext, m_dash_phase, m_dash_lengths, m_dash_count);
 }
@@ -506,6 +566,12 @@ void MCGraphicsContext::getfillstyle(uint2& style, MCPatternRef& p, int2& x, int
 
 void MCGraphicsContext::setlineatts(uint2 linesize, uint2 linestyle, uint2 capstyle, uint2 joinstyle)
 {
+	// MM-2014-01-21: [[ Bug 11671 ]]
+	if (capstyle & NoStartCap)
+		capstyle = capstyle ^ NoStartCap;
+	if (capstyle & NoEndCap)
+		capstyle = capstyle ^ NoEndCap;	
+	
 	// IM-2013-09-03: [[ RefactorGraphics ]] track the current linewidth setting
 	m_line_width = linesize;
 	m_line_style = linestyle;
@@ -1034,15 +1100,34 @@ void MCGraphicsContext::fillroundrect(const MCRectangle& rect, uint2 radius, boo
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// MM-2014-01-20: [[ Bug 11673 ]] Implement draw and fill path - there are still some cases where MCPath is being used.
 
 void MCGraphicsContext::drawpath(MCPath *path)
 {
-
+	MCGPathRef t_path;
+	t_path = MCGPathFromMCPath(path);
+	
+	if (t_path != NULL)
+	{
+		MCGContextAddPath(m_gcontext, t_path);
+		MCGContextStroke(m_gcontext);
+	}
 }
 
 void MCGraphicsContext::fillpath(MCPath *path, bool p_evenodd)
 {
-
+	MCGPathRef t_path;
+	t_path = MCGPathFromMCPath(path);
+	
+	if (t_path != NULL)
+	{
+		MCGContextSave(m_gcontext);
+		if (p_evenodd)
+			MCGContextSetFillRule(m_gcontext, kMCGFillRuleEvenOdd);
+		MCGContextAddPath(m_gcontext, t_path);
+		MCGContextFill(m_gcontext);	
+		MCGContextRestore(m_gcontext);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
