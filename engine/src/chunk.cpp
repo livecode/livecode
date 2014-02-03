@@ -4459,6 +4459,8 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                 MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value);
             else
                 MCStringsEvalByteChunk(ctxt, t_new_mark, r_text . dataref_value);
+            
+            MCValueRelease(t_new_mark . text);
         }
         else
             r_text . valueref_value = MCValueRetain(*t_text);
