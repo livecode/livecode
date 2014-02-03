@@ -80,6 +80,11 @@ public class AmazonBillingProvider implements BillingProvider
         return true;
     }
     
+    public boolean productSetType(String productId, String productType)
+    {
+        return true;
+    }
+    
     public boolean consumePurchase(String productID)
     {
         return true;

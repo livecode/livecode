@@ -943,6 +943,7 @@ extern Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_pa
 extern Exec_stat MCHandleRestorePurchases(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleConsumePurchase(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseCreate(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseState(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseError(void *context, MCParameter *p_parameters);
@@ -1172,6 +1173,7 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{"mobilePurchaseSet", MCHandlePurchaseSet, nil},
 	{"mobilePurchaseSendRequest", MCHandlePurchaseSendRequest, nil},
     {"mobileConsumePurchase", MCHandleConsumePurchase, nil},
+    {"mobileProductSetType", MCHandleProductSetType, nil},
 	{"mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},
     {"mobilePurchaseVerify", MCHandlePurchaseVerify, nil},
     

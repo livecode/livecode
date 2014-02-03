@@ -86,8 +86,8 @@ public class SamsungIapHelper
     // IAP 호출시 onActivityResult 에서 받기 위한 요청 코드
     // define request code for IAPService.
     // ========================================================================
-    public static final int   REQUEST_CODE_IS_IAP_PAYMENT            = 1;
-    public static final int   REQUEST_CODE_IS_ACCOUNT_CERTIFICATION  = 2;
+    public static final int   REQUEST_CODE_IS_IAP_PAYMENT            = 100;
+    public static final int   REQUEST_CODE_IS_ACCOUNT_CERTIFICATION  = 101;
     // ========================================================================
     
     // 3rd party 에 전달되는 코드 정의

@@ -51,6 +51,7 @@ typedef enum
     CANCELED,  //FAILED for Amazon
     INVALID_SKU,
     ALREADY_ENTITLED,
+    IAP_ERROR_ALREADY_PURCHASED = -1003,
     REFUNDED,
 } MCAndroidPurchaseState;
 
@@ -113,6 +114,17 @@ bool MCStoreRestorePurchases()
     MCAndroidEngineRemoteCall("storeRestorePurchases", "b", &t_result);
     
     return t_result;
+}
+
+bool MCStoreProductSetType(const char *p_purchase_id, const char *p_product_type)
+{
+    
+    bool t_result;
+    
+    MCAndroidEngineRemoteCall("storeProductSetType", "bss", &t_result, p_purchase_id, p_product_type);
+    
+    return t_result;
+    
 }
 
 bool MCStoreConsumePurchase(const char *p_purchase_id)
@@ -339,9 +351,16 @@ void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified)
                     purchase_confirm(p_purchase);
                     break;
                 }
-                    
+                
+                case IAP_ERROR_ALREADY_PURCHASED:
+                {
+                    MCLog("found ALREADY_PURCHASED purchase", nil);
+                    p_purchase->state = kMCPurchaseStateAlreadyEntitled;
+                    break;
+                }
                 case ALREADY_ENTITLED:
                 {
+                    MCLog("found ALREADY_ENTITLED purchase", nil);
                     p_purchase->state = kMCPurchaseStateAlreadyEntitled;
                     break;
                 }
@@ -373,11 +392,12 @@ void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified)
 
 void update_purchase_state(MCPurchase *p_purchase, int32_t p_state, bool p_verified)
 {
+    MCLog("State is " + p_state, nil);
     if (!p_verified)
         p_purchase->state = kMCPurchaseStateUnverified;
     else if (p_state == PURCHASED)
         p_purchase->state = kMCPurchaseStatePaymentReceived;
-    else if (p_state == ALREADY_ENTITLED)
+    else if (p_state == ALREADY_ENTITLED || p_state == IAP_ERROR_ALREADY_PURCHASED)
         p_purchase->state = kMCPurchaseStateAlreadyEntitled;
     else if (p_state == INVALID_SKU)
         p_purchase->state = kMCPurchaseStateInvalidSKU;

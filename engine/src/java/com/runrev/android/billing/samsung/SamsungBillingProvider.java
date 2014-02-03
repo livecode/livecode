@@ -250,31 +250,6 @@ public class SamsungBillingProvider implements BillingProvider
         //mPurchaseObserver.onPurchaseStateChanged(1, statusCode);
         mPurchaseObserver.onPurchaseStateChanged(itemId, statusCode);
 
-        // TODO : Move this to EnginePurchaseObserver
-/*
-        final boolean tVerified = true;
-        //TODO : Check status code in accordance with the purchase state in mblandroidstore.cpp
-        final int tPurchaseState = statusCode;
-        final String tNotificationId = "";
-        final String tProductId = itemId;
-        final String tOrderId = "";
-        final long tPurchaseTime = 1;
-        final String tDeveloperPayload = "";
-        final String tSignedData = "";
-        final String tSignature = "";
-
-        post(new Runnable()
-        {
-            public void run()
-            {
-                doPurchaseStateChanged(tVerified, tPurchaseState,
-                tNotificationId, tProductId, tOrderId,
-                tPurchaseTime, tDeveloperPayload, tSignedData, tSignature);
-                if (m_wake_on_event)
-                    doProcess(false);
-            }
-        });
- */
     }
 
     /////////////////
@@ -354,6 +329,11 @@ public class SamsungBillingProvider implements BillingProvider
             return false;
         
         startPurchase(productId);
+        return true;
+    }
+
+    public boolean productSetType(String productId, String productType)
+    {
         return true;
     }
 

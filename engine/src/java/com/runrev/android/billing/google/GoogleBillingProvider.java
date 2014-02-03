@@ -21,6 +21,7 @@ public class GoogleBillingProvider implements BillingProvider
     private Activity mActivity;
     private Boolean started = false;
     private PurchaseObserver mPurchaseObserver;
+    private Map<String,String> types = new HashMap<String,String>();
     
     // (arbitrary) request code for the purchase flow
     static final int RC_REQUEST = 10001;
@@ -120,9 +121,36 @@ public class GoogleBillingProvider implements BillingProvider
         if (mHelper == null)
             return false;
         
-        Log.i(TAG, "purchaseSendRequest(" + purchaseId + ", " + productId + ")");
-        mHelper.launchPurchaseFlow(getActivity(), productId, RC_REQUEST, mPurchaseFinishedListener, "");
+        String type = productGetType(productId);
+        
+        Log.i(TAG, "purchaseSendRequest(" + purchaseId + ", " + productId + ", " + type + ")");
+        
+        if (type.equals("SUBS"))
+        {
+            Log.i(TAG, "mHelper.launchSubscriptionPurchaseFlow is called!!!!");
+            mHelper.launchSubscriptionPurchaseFlow(getActivity(), productId, RC_REQUEST, mPurchaseFinishedListener, "");
+        }
+        else
+        {
+            Log.i(TAG, "Ohh Nooo !!!! mHelper.launchSubscriptionPurchaseFlow is  NOT called!!!!");
+            mHelper.launchPurchaseFlow(getActivity(), productId, RC_REQUEST, mPurchaseFinishedListener, "");
+        }
         return true;
+    }
+    
+    public boolean productSetType(String productId, String productType)
+    {
+        //TODO
+        Log.d(TAG, "Setting type for productId" + productId + ", type is : " + productType);
+        types.put(productId, productType);
+        Log.d(TAG, "Querying HashMap, type is " + types.get(productId));
+        return true;
+    }
+    
+    private String productGetType(String productId)
+    {
+        //TODO
+        return types.get(productId);
     }
     
     public boolean consumePurchase(final String productId)
@@ -248,29 +276,7 @@ public class GoogleBillingProvider implements BillingProvider
     void offerPurchasedItems(Purchase purchase)
     {
         mPurchaseObserver.onPurchaseStateChanged(purchase.getSku(), purchase.getPurchaseState());
-/*
-        final boolean tVerified = true;
-        final int tPurchaseState = purchase.getPurchaseState();
-        final String tNotificationId = purchase.getSku();
-        final String tProductId = purchase.getSku();
-        final String tOrderId = purchase.getOrderId();
-        final long tPurchaseTime = purchase.getPurchaseTime();
-        final String tDeveloperPayload = purchase.getDeveloperPayload();
-        final String tSignedData = "";
-        final String tSignature = purchase.getSignature();
 
-        post(new Runnable()
-        {
-            public void run()
-            {
-                doPurchaseStateChanged(tVerified, tPurchaseState,
-                tNotificationId, tProductId, tOrderId,
-                tPurchaseTime, tDeveloperPayload, tSignedData, tSignature);
-                if (m_wake_on_event)
-                    doProcess(false);
-            }
-        });
- */
     }
 
     // Called when consumption is complete

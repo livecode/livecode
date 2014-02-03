@@ -43,6 +43,9 @@ public interface BillingProvider
     // Consume a purchased item -- only for Google API
     boolean consumePurchase(String productId);
     
+    // type is subscription or non-subscription
+    boolean productSetType(String productId, String productType);
+    
     // Return the set of properties for the given id. These should be updated with any information returned by the store (receipt, etc.)
     Map<String, String> getPurchaseProperties(int purchaseId);
     

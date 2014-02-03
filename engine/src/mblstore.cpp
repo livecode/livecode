@@ -333,6 +333,22 @@ Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameter
 	return ES_NORMAL;
 }
 
+Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameters)
+{
+    bool t_success = true;
+    char *t_product_id = nil;
+    char *t_product_type;
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "ss", &t_product_id, &t_product_type);
+    if (t_success)
+        t_success = MCStoreProductSetType(t_product_id, t_product_type);
+    
+    MCCStringFree(t_product_id);
+    MCCStringFree(t_product_type);
+
+    return ES_NORMAL;
+}
+
 Exec_stat MCHandleConsumePurchase(void *context, MCParameter *p_parameters)
 {
     bool t_success = true;
