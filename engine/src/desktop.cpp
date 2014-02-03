@@ -477,13 +477,31 @@ void MCPlatformHandleKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef bool (*pasteboard_resolve_callback_t)(MCPlatformPasteboardFlavor flavor, void*& r_data, size_t& r_data_size);
+
+void MCPlatformHandlePasteboardResolve(MCPlatformPasteboardRef p_pasteboard, MCPlatformPasteboardFlavor p_flavor, void *p_handle, void *& r_data, size_t& r_data_size)
+{
+	void *t_data;
+	size_t t_data_size;
+	if (((pasteboard_resolve_callback_t)p_handle)(p_flavor, t_data, t_data_size))
+	{
+		r_data = t_data;
+		r_data_size = t_data_size;
+	}
+	else
+		r_data = nil, r_data_size = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 #if 0
 void MCPlatformProcess(MCPlatformCallback& p_callback)
 {
 	switch(p_callback . type)
 	{
 		case kMCPlatformCallbackApplicationStartup:
-			MCPlatformHandleApplicationStartup(p_callback . application . startup . argc,
+			MCPlatformHandleApplicationStartup(p_callb
+			ack . application . startup . argc,
 											   p_callback . application . startup . argv,
 											   p_callback . application . startup . envp,
 											   p_callback . application . startup . error_code,

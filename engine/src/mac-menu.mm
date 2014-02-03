@@ -374,9 +374,28 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 		}
 		break;
 		case kMCPlatformMenuItemPropertyHighlight:
-			// COCOA-TODO
-			break;
-	   }
+		{
+			MCPlatformMenuItemHighlight t_highlight;
+			t_highlight = *(MCPlatformMenuItemHighlight *)p_value;
+			switch(t_highlight)
+			{
+			case kMCPlatformMenuItemHighlightNone:
+				[t_item setState: NSOffState];
+				break;
+			case kMCPlatformMenuItemHighlightTick:
+				[t_item setState: NSOnState];
+				break;
+			case kMCPlatformMenuItemHighlightDiamond:
+				// COCOA-TODO: diamond
+				[t_item setState: NSOnState];
+				break;
+			case kMCPlatformMenuItemHighlightBar:
+				[t_item setState: NSMixedState];
+				break;
+			}
+		}
+		break;
+	}
 }
 
 //////////

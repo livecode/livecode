@@ -222,6 +222,8 @@ void MCPlatformCallbackSendKeyUp(MCPlatformWindowRef window, MCPlatformKeyCode k
 void MCPlatformCallbackSendMenuUpdate(MCPlatformMenuRef menu);
 void MCPlatformCallbackSendMenuSelect(MCPlatformMenuRef menu, uindex_t item);
 
+void MCPlatformCallbackSendPasteboardResolve(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor flavor, void *handle, void*& r_data, size_t& r_data_size);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif

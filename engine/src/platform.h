@@ -628,6 +628,9 @@ uindex_t MCPlatformPasteboardGetGeneration(MCPlatformPasteboardRef pasteboard);
 bool MCPlatformPasteboardQuery(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor*& r_flavors, uindex_t& r_count);
 bool MCPlatformPasteboardFetch(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor flavor, void*& r_bytes, uindex_t& r_byte_count);
 
+void MCPlatformPasteboardClear(MCPlatformPasteboardRef pasteboard);
+bool MCPlatformPasteboardStore(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor *flavor, uindex_t flavor_count, void *handle);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformFlushClipboard(void);

@@ -39,6 +39,8 @@
 #include "notify.h"
 #include "dispatch.h"
 #include "image.h"
+#include "field.h"
+#include "styledtext.h"
 
 #include "desktop-dc.h"
 
@@ -178,40 +180,11 @@ uint2 MCScreenDC::getpad()
 	return 32;
 }
 
+// This method is no longer relevant - it only ever worked on Mac and
+// even then only on mac classic.
 MCColor *MCScreenDC::getaccentcolors()
 {
-	static MCColor accentcolors[8];
-	SInt32 response;
-	if (Gestalt(gestaltAppearanceVersion, &response) == noErr)
-	{ // 1.0.1 or later
-		// theme drawing only supported in version 1.1, OS 8.5 and later
-		RegisterAppearanceClient(); // no harm in calling this multiple times
-		if (response < 0x0110)
-			MClook = LF_MAC;
-		else
-		{
-			ThemeScrollBarThumbStyle tstyle;
-			GetThemeScrollBarThumbStyle(&tstyle);
-			MCproportionalthumbs = tstyle == kThemeScrollBarThumbProportional;
-		}
-		//get the 8 accent colors, for drawing scroll bar
-		CTabHandle themeCT; //handle to the Theme color table
-		if (GetThemeAccentColors(&themeCT) == noErr)
-		{
-			uint2 i = MCU_min(8, (*themeCT)->ctSize + 1);
-			while (i--)
-			{
-				accentcolors[i].red = (*themeCT)->ctTable[i].rgb.red;
-				accentcolors[i].green = (*themeCT)->ctTable[i].rgb.green;
-				accentcolors[i].blue = (*themeCT)->ctTable[i].rgb.blue;
-			}
-			return accentcolors;
-		}
-		return NULL;
-	}
-	
-	MClook = LF_MAC;
-	return NULL;
+	return nil;
 }
 
 // IM-2013-08-01: [[ ResIndependence ]] refactored methods that return device coordinates
@@ -776,6 +749,110 @@ MCPrinter *MCScreenDC::createprinter(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static uindex_t s_clipboard_generation = 0;
+static MCPasteboard *s_local_clipboard = nil;
+
+MCSharedString *MCConvertStyledTextToUTF8(MCSharedString *p_in)
+{
+	MCObject *t_object;
+	t_object = MCObject::unpickle(p_in, MCtemplatefield -> getstack());
+	if (t_object != NULL)
+	{
+		MCParagraph *t_paragraphs;
+		t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
+
+		MCExecPoint ep(NULL, NULL, NULL);
+
+		// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
+		if (t_paragraphs != NULL)
+		{
+			MCtemplatefield -> exportasplaintext(ep, t_paragraphs, 0, INT32_MAX, true);
+			ep . utf16toutf8();
+		}
+
+		delete t_object;
+
+		return MCSharedString::Create(ep . getsvalue());
+	}
+	return NULL;
+}
+
+MCSharedString *MCConvertUnicodeTextToUTF8(MCSharedString* p_in)
+{
+	MCExecPoint ep(NULL, NULL, NULL);
+	ep . setsvalue(p_in -> Get());
+	ep . utf16toutf8();
+	return MCSharedString::Create(ep . getsvalue());
+}
+
+MCSharedString *MCConvertTextToUTF8(MCSharedString *p_in)
+{
+	MCExecPoint ep(NULL, NULL, NULL);
+	ep . setsvalue(p_in -> Get());
+	ep . nativetoutf8();
+	return MCSharedString::Create(ep . getsvalue());
+}
+
+MCSharedString *MCConvertIdentity(MCSharedString *p_in)
+{
+	p_in -> Retain();
+	return p_in;
+}
+
+static struct { MCTransferType type; MCPlatformPasteboardFlavor flavor; MCSharedString* (*convert)(MCSharedString* in); } s_pasteboard_fetchers[] =
+{
+	{ TRANSFER_TYPE_STYLED_TEXT, kMCPlatformPasteboardFlavorRTF, MCConvertStyledTextToRTF },
+	{ TRANSFER_TYPE_STYLED_TEXT, kMCPlatformPasteboardFlavorUTF8, MCConvertStyledTextToUTF8 },
+	{ TRANSFER_TYPE_UNICODE_TEXT, kMCPlatformPasteboardFlavorUTF8, MCConvertUnicodeTextToUTF8 },
+	{ TRANSFER_TYPE_TEXT, kMCPlatformPasteboardFlavorUTF8, MCConvertTextToUTF8 },
+	{ TRANSFER_TYPE_IMAGE, kMCPlatformPasteboardFlavorPNG, MCConvertIdentity },
+	{ TRANSFER_TYPE_IMAGE, kMCPlatformPasteboardFlavorGIF, MCConvertIdentity },
+	{ TRANSFER_TYPE_IMAGE, kMCPlatformPasteboardFlavorJPEG, MCConvertIdentity },
+	{ TRANSFER_TYPE_FILES, kMCPlatformPasteboardFlavorFiles, MCConvertIdentity },
+	{ TRANSFER_TYPE_OBJECTS, kMCPlatformPasteboardFlavorObjects, MCConvertIdentity },
+};
+
+static bool fetch_clipboard(MCPlatformPasteboardFlavor p_flavor, void*& r_data, size_t& r_data_size)
+{
+	if (s_local_clipboard == nil)
+		return false;
+		
+	MCTransferType *t_types;
+	uindex_t t_type_count;
+	if (!s_local_clipboard -> Query(t_types, t_type_count))
+		return false;
+
+	for(uindex_t i = 0; i < sizeof(s_pasteboard_fetchers) / sizeof(s_pasteboard_fetchers[0]); i++)
+		for(uindex_t j = 0; j < t_type_count; j++)
+			if (s_pasteboard_fetchers[i] . type == t_types[j] && s_pasteboard_fetchers[i] . flavor == p_flavor)
+			{
+				MCSharedString *t_data;
+				if (!s_local_clipboard -> Fetch(t_types[j], t_data))
+					return false;
+					
+				bool t_success;
+				t_success = false;
+	
+				MCSharedString *t_new_data;
+				t_new_data = s_pasteboard_fetchers[i] . convert(t_data);
+				if (t_new_data != nil)
+				{
+					if (MCMemoryAllocateCopy(t_new_data -> GetBuffer(), t_new_data -> GetLength(), r_data))
+					{
+						r_data_size = t_new_data -> GetLength();
+						t_success = true;
+					}
+					t_new_data -> Release();
+				}
+				
+				t_data -> Release();
+				
+				return t_success;
+			}
+	
+	return true;
+}
+
 void MCScreenDC::flushclipboard(void)
 {
 	MCPlatformFlushClipboard();
@@ -783,12 +860,86 @@ void MCScreenDC::flushclipboard(void)
 
 bool MCScreenDC::ownsclipboard(void)
 {
-	return MCPlatformOwnsClipboard();
+	MCPlatformPasteboardRef t_pasteboard;
+	MCPlatformGetClipboard(t_pasteboard);
+	if (MCPlatformPasteboardGetGeneration(t_pasteboard) == s_clipboard_generation)
+		return true;
+		
+	if (s_local_clipboard != nil)
+	{
+		s_local_clipboard -> Release();
+		s_local_clipboard = nil;
+	}
+		
+	return false;
 }
 
 bool MCScreenDC::setclipboard(MCPasteboard *p_pasteboard)
 {
-	return false;
+	MCPlatformPasteboardRef t_clipboard;
+	MCPlatformGetClipboard(t_clipboard);
+	
+	MCPlatformPasteboardClear(t_clipboard);
+	if (s_local_clipboard != nil)
+	{
+		s_local_clipboard -> Release();
+		s_local_clipboard = nil;
+	}
+	
+	MCTransferType *t_types;
+	uindex_t t_type_count;
+	if (!p_pasteboard -> Query(t_types, t_type_count))
+		return false;
+		
+	for(uindex_t i = 0; i < t_type_count; i++)
+	{
+		MCPlatformPasteboardFlavor t_flavors[2];
+		uindex_t t_flavor_count;
+		t_flavor_count = 0;
+		
+		switch(t_types[i])
+		{
+		case TRANSFER_TYPE_TEXT:
+		case TRANSFER_TYPE_UNICODE_TEXT:
+			t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorUTF8;
+			break;
+		case TRANSFER_TYPE_STYLED_TEXT:
+			t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorRTF;
+			t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorUTF8;
+		break;
+		case TRANSFER_TYPE_IMAGE:
+		{
+			MCSharedString *t_data;
+			if (p_pasteboard -> Fetch(TRANSFER_TYPE_IMAGE, t_data))
+			{
+				if (MCFormatImageIsPNG(t_data))
+					t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorPNG;
+				if (MCFormatImageIsGIF(t_data))
+					t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorGIF;
+				if (MCFormatImageIsJPEG(t_data))
+					t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorJPEG;
+			}
+		}
+		break;
+		case TRANSFER_TYPE_FILES:
+			t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorFiles;
+			break;
+		case TRANSFER_TYPE_OBJECTS:
+			t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorObjects;
+			break;
+		case TRANSFER_TYPE_PRIVATE:
+			break;
+		}
+		
+		if (t_flavor_count != 0)
+			MCPlatformPasteboardStore(t_clipboard, t_flavors, t_flavor_count, (void *)fetch_clipboard);
+	}
+	
+	s_local_clipboard = p_pasteboard;
+	s_local_clipboard -> Retain();
+	s_clipboard_generation = MCPlatformPasteboardGetGeneration(t_clipboard);
+	
+	return true;
 }
 
 MCPasteboard *MCScreenDC::getclipboard(void)

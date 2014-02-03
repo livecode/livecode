@@ -36,6 +36,8 @@ struct MCPlatformPasteboard
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define kMCMacPasteboardObjectsUTString @"com.runrev.livecode.objects-1"
+
 bool MCMacPasteboardConvertIdentity(const MCString& in_data, MCString& r_out_data);
 bool MCMacPasteboardConvertTIFFToPNG(const MCString& in_data, MCString& r_out_data);
 bool MCMacPasteboardConvertHTMLToRTF(const MCString& in_data, MCString& r_out_data);
@@ -53,7 +55,7 @@ static struct { NSString *type; MCPlatformPasteboardFlavor flavor; bool (*conver
 	{ (NSString *)kUTTypeTIFF, kMCPlatformPasteboardFlavorPNG, MCMacPasteboardConvertTIFFToPNG },
 	
 	// COCOA-TODO: Declare these appropriately!
-	{ @"com.runrev.livecode.objects-1", kMCPlatformPasteboardFlavorObjects, MCMacPasteboardConvertIdentity },
+	{ kMCMacPasteboardObjectsUTString, kMCPlatformPasteboardFlavorObjects, MCMacPasteboardConvertIdentity },
 	{ @"com.runrev.livecode.text-styled-1", kMCPlatformPasteboardFlavorStyledText, MCMacPasteboardConvertIdentity },
 };
 
@@ -148,31 +150,6 @@ bool MCPlatformPasteboardQuery(MCPlatformPasteboardRef p_pasteboard, MCPlatformP
 					if (!t_found)
 						t_flavors[t_flavor_count++] = s_flavor_mappings[j] . flavor;
 				}
-	
-#if 0
-			MCPlatformPasteboardFlavor t_flavor;
-			if ([t_type isEqualTo: (NSString *)kUTTypeUTF8PlainText])
-				t_flavor = kMCPlatformPasteboardFlavorUTF8;
-			else if ([t_type isEqualTo: (NSString *)kUTTypeRTF])
-				t_flavor = kMCPlatformPasteboardFlavorRTF;
-			else if ([t_type isEqualTo: (NSString *)kUTTypeHTML])
-				t_flavor = kMCPlatformPasteboardFlavorHTML;
-			else if ([t_type isEqualTo: (NSString *)kUTTypeFileURL])
-				t_flavor = kMCPlatformPasteboardFlavorFiles;
-			else if ([t_type isEqualTo: (NSString *)kUTTypeJPEG])
-				t_flavor = kMCPlatformPasteboardFlavorJPEG;
-			else if ([t_type isEqualTo: (NSString *)kUTTypeGIF])
-				t_flavor = kMCPlatformPasteboardFlavorGIF;
-			else if ([t_type isEqualTo: (NSString *)kUTTypePNG])
-				t_flavor = kMCPlatformPasteboardFlavorPNG;
-			else
-			{
-				NSLog(@"Unknown pboard type %@", t_type);
-				continue;
-			}
-		
-			t_flavors[t_flavor_count++] = t_flavor;
-#endif
 		}
 	}
 	
@@ -229,6 +206,149 @@ bool MCPlatformPasteboardFetch(MCPlatformPasteboardRef p_pasteboard, MCPlatformP
 				return true;
 			}
 	}
+	
+	return false;
+}
+
+//////////
+
+@interface com_runrev_livecode_MCPasteboardProvider: NSObject<NSPasteboardItemDataProvider>
+{
+	MCPlatformPasteboardRef m_pasteboard;
+	void *m_handle;
+}
+
+- (id)initWithPasteboard:(MCPlatformPasteboardRef)pasteboard handle:(void *)handle;
+- (void)dealloc;
+
+- (void)pasteboard:(NSPasteboard *)pasteboard item:(NSPasteboardItem *)item provideDataForType:(NSString *)type;
+- (void)pasteboardFinishedWithDataProvider:(NSPasteboard *)pasteboard;
+
+@end
+
+@implementation com_runrev_livecode_MCPasteboardProvider
+
+- (id)initWithPasteboard:(MCPlatformPasteboardRef)pasteboard handle:(void *)handle
+{
+	self = [super init];
+	if (self == nil)
+		return nil;
+		
+	m_pasteboard = pasteboard;
+	m_handle = handle;
+	
+	return self;
+}
+
+- (void)dealloc
+{
+	[super dealloc];
+}
+
+- (void)pasteboard:(NSPasteboard *)pasteboard item:(NSPasteboardItem *)item provideDataForType:(NSString *)type
+{
+	MCPlatformPasteboardFlavor t_flavor;
+	if ([type isEqualTo: (NSString *)kUTTypeUTF8PlainText])
+		t_flavor = kMCPlatformPasteboardFlavorUTF8;
+	else if ([type isEqualTo: (NSString *)kUTTypeRTF])
+		t_flavor = kMCPlatformPasteboardFlavorRTF;
+	else if ([type isEqualTo: (NSString *)kUTTypeHTML])
+		t_flavor = kMCPlatformPasteboardFlavorHTML;
+	else if ([type isEqualTo: (NSString *)kUTTypeFileURL])
+		t_flavor = kMCPlatformPasteboardFlavorFiles;
+	else if ([type isEqualTo: (NSString *)kUTTypeJPEG])
+		t_flavor = kMCPlatformPasteboardFlavorJPEG;
+	else if ([type isEqualTo: (NSString *)kUTTypeGIF])
+		t_flavor = kMCPlatformPasteboardFlavorGIF;
+	else if ([type isEqualTo: (NSString *)kUTTypePNG])
+		t_flavor = kMCPlatformPasteboardFlavorPNG;
+	else if ([type isEqualTo: kMCMacPasteboardObjectsUTString])
+		t_flavor = kMCPlatformPasteboardFlavorObjects;
+	else
+	{
+		NSLog(@"Unknown pboard type %@", type);
+		return;
+	}
+
+	void *t_data;
+	size_t t_data_size;
+	MCPlatformCallbackSendPasteboardResolve(m_pasteboard, t_flavor, m_handle, t_data, t_data_size);
+	
+	if (t_data != nil)
+	{
+		NSData *t_ns_data;
+		t_ns_data = [[NSData alloc] initWithBytes: t_data length: t_data_size];
+		[item setData: t_ns_data forType: type];
+		[t_ns_data release];
+		
+		MCMemoryDeallocate(t_data);
+	}
+}
+
+- (void)pasteboardFinishedWithDataProvider:(NSPasteboard *)pasteboard
+{
+}
+
+@end
+
+void MCPlatformPasteboardClear(MCPlatformPasteboardRef p_pasteboard)
+{
+	[p_pasteboard -> ns_pasteboard clearContents];
+}
+
+bool MCPlatformPasteboardStore(MCPlatformPasteboardRef p_pasteboard, MCPlatformPasteboardFlavor *p_flavors, uindex_t p_flavor_count, void *p_handle)
+{
+	NSPasteboardItem *t_item;
+	t_item = [[NSPasteboardItem alloc] init];
+	
+	com_runrev_livecode_MCPasteboardProvider *t_provider;
+	t_provider = [[com_runrev_livecode_MCPasteboardProvider alloc] initWithPasteboard: p_pasteboard handle: p_handle];
+	
+	NSMutableArray *t_flavor_strings;
+	t_flavor_strings = [[NSMutableArray alloc] init];
+	for(uindex_t i = 0; i < p_flavor_count; i++)
+	{
+		NSString *t_flavor_string;
+		switch(p_flavors[i])
+		{
+			case kMCPlatformPasteboardFlavorUTF8:
+				t_flavor_string = (NSString *)kUTTypeUTF8PlainText;
+				break;
+			case kMCPlatformPasteboardFlavorRTF:
+				t_flavor_string = (NSString *)kUTTypeRTF;
+				break;
+			case kMCPlatformPasteboardFlavorHTML:
+				t_flavor_string = (NSString *)kUTTypeHTML;
+				break;
+			case kMCPlatformPasteboardFlavorPNG:
+				t_flavor_string = (NSString *)kUTTypePNG;
+				break;
+			case kMCPlatformPasteboardFlavorJPEG:
+				t_flavor_string = (NSString *)kUTTypeJPEG;
+				break;
+			case kMCPlatformPasteboardFlavorGIF:
+				t_flavor_string = (NSString *)kUTTypeGIF;
+				break;
+			case kMCPlatformPasteboardFlavorFiles:
+				t_flavor_string = (NSString *)kUTTypeFileURL;
+				break;
+			case kMCPlatformPasteboardFlavorObjects:
+				t_flavor_string = kMCMacPasteboardObjectsUTString;
+				break;
+			case kMCPlatformPasteboardFlavorStyledText:
+				t_flavor_string = @"";
+				break;
+			default:
+				assert(false);
+				break;
+		}
+		[t_flavor_strings addObject: t_flavor_string];
+	}
+		
+	[t_item setDataProvider: t_provider forTypes: t_flavor_strings];
+	[t_flavor_strings release];
+	
+	[p_pasteboard -> ns_pasteboard writeObjects: [NSArray arrayWithObject: t_item]];
 	
 	return false;
 }
