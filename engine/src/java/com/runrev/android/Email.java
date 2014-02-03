@@ -89,36 +89,47 @@ class Email
 			return "*/*"; //"multipart/mixed";
 	}
 	
-	private boolean addAttachment(Uri uri, String mime_type, String name, boolean p_is_in_apk)
+	private boolean addAttachment(Uri uri, String mime_type, String name)
 	{
+//        Log.i("revandroid", "addAttachment: " + uri.toString());
 		if (m_attachment_uris == null)
 			m_attachment_uris = new ArrayList<Uri>();
-        
-        // SN-2014-01-29: [[ Bug 11069 ]] mobileComposeMail attachment missing in Android
-        // We need to call a Content Provider to get the right to access them
-        Uri t_uri;
-        if (p_is_in_apk)
-            t_uri = Uri.parse(AttachmentProvider.URI + "/" + uri.getPath());
-        else
-            t_uri = uri;
-        
-		m_attachment_uris.add(t_uri);
+                
+        m_attachment_uris.add(uri);
         
 		m_mime_type = combineMimeTypes(m_mime_type, mime_type);
 		return true;
 	}
+    
+    private ContentValues createAttachmentValues(String p_name, String p_mime_type, long p_size)
+    {        
+        ContentValues t_values = new ContentValues(2);
+        t_values . put(AttachmentProvider.NAME, p_name);
+        t_values . put(AttachmentProvider.MIME_TYPE, p_mime_type);
+        t_values . put(AttachmentProvider.SIZE, p_size);
+        
+        return t_values;        
+    }
 	
-	public boolean addAttachment(String path, String mime_type, String name, boolean p_is_in_apk)
+	public boolean addAttachment(ContentResolver p_resolver, String path, String mime_type, String name)
 	{
-		return addAttachment(Uri.fromFile(new File(path)), mime_type, name, p_is_in_apk);
+        File t_file = new File(path);
+        
+        // SN-2014-02-03: [[ Bug 11069 ]] Generate a URI leading to AttachmentProvider
+        Uri t_uri = Uri.parse(AttachmentProvider.URI + "/" + path);
+        ContentValues t_values = createAttachmentValues(name, mime_type, t_file.length());
+        
+        p_resolver . insert(t_uri, t_values);
+        
+		return addAttachment(t_uri, mime_type, name);
 	}
 	
-	public boolean addAttachment(byte[] data, String mime_type, String name)
+	public boolean addAttachment(ContentResolver p_resolver, byte[] data, String mime_type, String name)
 	{
 		try
 		{
-			File t_tempfile;			
-			t_tempfile = File.createTempFile("eml", name);
+			File t_tempfile;
+            t_tempfile = File.createTempFile("eml", name);
 			
 			FileOutputStream t_out = new FileOutputStream(t_tempfile);
 			t_out.write(data);
@@ -128,13 +139,18 @@ class Email
 				m_temp_files = new ArrayList<File>();
 			
 			m_temp_files.add(t_tempfile);
-			
-            // SN-2014-01-29: [[ Bug 11069 ]] mobileComposeMail attachment missing in Android
-            // Temporary file is meant to be always readable
-			return addAttachment(Uri.fromFile(t_tempfile), mime_type, name, false);
+            
+            // SN-2014-02-03: [[ Bug 11069 ]] Generate a URI leading to AttachmentProvider
+            Uri t_uri = Uri.parse(AttachmentProvider.URI + "/" + t_tempfile.getPath());
+                        
+            ContentValues t_values = createAttachmentValues(name, mime_type, t_tempfile.length());
+            p_resolver . insert(t_uri, t_values);
+            			
+			return addAttachment(t_uri, mime_type, name);
 		}
 		catch (Exception e)
 		{
+//            Log.i("revandroid", "creatTempFile exception: " + e.getMessage());
 			return false;
 		}
 	}
@@ -182,6 +198,7 @@ class Email
 	
 	public void cleanupTempFiles()
 	{
+        Log.i("revandroid", " ****  **** cleanup temporary files");
 		if (m_temp_files == null)
 			return;
 		
