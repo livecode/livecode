@@ -1302,6 +1302,9 @@ static uint32_t measure_array_entry(MCNameRef p_key, MCValueRef p_value)
 	case kMCValueTypeCodeArray:
 		t_size += MCArrayMeasureForStreamLegacy((MCArrayRef)p_value, false);
 		break;
+    case kMCValueTypeCodeData:
+        t_size += 4 + MCDataGetLength((MCDataRef)p_value);
+        break;
 	default:
 		MCAssert(false);
 		break;
@@ -1665,6 +1668,7 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 		return true;
 
 	MCStringRef t_str_value;
+    MCAutoStringRef t_string_buffer;
 	unsigned int t_type;
 	switch(MCValueGetTypeCode(p_value))
 	{
@@ -1684,6 +1688,11 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 		t_type = VF_STRING;
 		t_str_value = (MCStringRef)p_value;
 		break;
+    case kMCValueTypeCodeData:
+        t_type = VF_STRING;
+        MCStringDecode((MCDataRef)p_value, kMCStringEncodingNative, false, &t_string_buffer);
+        t_str_value = *t_string_buffer;
+        break;
 	case kMCValueTypeCodeNumber:
 		t_type = VF_NUMBER;
 		t_str_value = nil;
