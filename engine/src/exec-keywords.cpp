@@ -253,7 +253,11 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 	MCECptr = oldctxt;
 	if (added)
 		MCnexecutioncontexts--;
-	ctxt . SetExecStat(stat);
+    
+    if (stat != ES_NORMAL && stat != ES_PASS && stat != ES_EXIT_HANDLER)
+        ctxt . SetExecStat(stat);
+    else
+        ctxt . SetExecStat(ES_NORMAL);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
