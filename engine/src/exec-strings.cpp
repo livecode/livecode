@@ -1518,6 +1518,8 @@ void MCStringsExecFilterWildcard(MCExecContext& ctxt, MCStringRef p_source, MCSt
     matcher = new MCWildcardMatcher(p_pattern, ctxt . GetCaseSensitive());
     
     MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), matcher, r_result);
+    
+    delete matcher;
 }
 
 void MCStringsExecFilterRegex(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCStringRef &r_result)
@@ -1529,11 +1531,14 @@ void MCStringsExecFilterRegex(MCExecContext& ctxt, MCStringRef p_source, MCStrin
     MCAutoStringRef t_regex_error;
     if (!matcher -> compile(&t_regex_error))
     {
+        delete matcher;
         ctxt . LegacyThrow(EE_MATCH_BADPATTERN);
         return;
     }
     
     MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), matcher, r_result);
+    
+    delete matcher;
 }
 
 void MCStringsExecFilterWildcardIntoIt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines)
