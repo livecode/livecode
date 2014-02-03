@@ -748,11 +748,11 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	if (!t_state -> files != p_entry -> is_folder)
 		return true;
 	
-	MCStringRef t_detailed_string;
 	if (t_state -> details)
-	{		
+	{
+        MCAutoStringRef t_details;
 #ifdef _WIN32
-		/* UNCHECKED */ MCStringFormat(t_detailed_string,
+		/* UNCHECKED */ MCStringFormat(&t_details,
                                        "%@,%I64d,,%ld,%ld,%ld,,,,%03o,",
                                        p_entry -> name,
                                        p_entry -> data_size,
@@ -761,7 +761,7 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
                                        p_entry -> access_time,
                                        p_entry -> permissions);
 #else
-		/* UNCHECKED */ MCStringFormat(t_detailed_string,
+		/* UNCHECKED */ MCStringFormat(&t_details,
                                        "%@,%lld,,,%u,%u,,%d,%d,%03o,",
                                        p_entry -> name,
                                        p_entry -> data_size,
@@ -769,11 +769,8 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
                                        p_entry -> user_id, p_entry -> group_id,
                                        p_entry -> permissions);
 #endif
-	}
-	if (t_state -> details)
-	{
-		/* UNCHECKED */ MCListAppend(t_state->list, t_detailed_string);
-		MCValueRelease(t_detailed_string);
+
+		/* UNCHECKED */ MCListAppend(t_state->list, *t_details);
 	}
 	else
     /* UNCHECKED */ MCListAppendFormat(t_state->list, "%@", p_entry -> name);

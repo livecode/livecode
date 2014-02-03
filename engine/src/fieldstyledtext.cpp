@@ -431,22 +431,25 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
 
 		// Now append the line break char - either as UTF-16 or native, depending
 		// on what mode we are in.
+        
+        MCValueRef t_value;
+        MCNameRef t_key;
+        t_key = ctxt . last_run_unicode ? MCNAME("unicodeText") : MCNAME("text");
+        MCAutoStringRef t_new_string;
+        MCArrayFetchValue(ctxt . last_run, true, t_key, t_value);
+        
 		if (ctxt . last_run_unicode)
 		{
 			uint16_t t_vtab;
 			t_vtab = 11;
             MCAutoStringRef t_string;
-            /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)&t_vtab, 2, &t_string);
-            MCValueRef t_value;
-            MCArrayFetchValue(ctxt . last_run, true, MCNAME("unicodeText"), t_value);
+            /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)&t_vtab, 2, kMCStringEncodingUTF16, false, &t_string);
+            MCStringFormat(&t_new_string, "%@%@", (MCStringRef)t_value, *t_string);
 		}
 		else
-		{
-            MCStringRef t_string;
-            t_string = MCSTR("\x0b");
-            MCValueRef t_value;
-            /* UNCHECKED */ MCArrayStoreValue(ctxt . last_run, true, MCNAME("text"), t_value);
-		}
+            MCStringFormat(&t_new_string, "%@\x0b", (MCStringRef)t_value);
+        
+        /* UNCHECKED */ MCArrayStoreValue(ctxt . last_run, true, t_key, *t_new_string);
 	}
 
 	return true;
@@ -646,6 +649,7 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 		t_block -> setshift(MCNumberFetchAsInteger(*t_number));
 	}
 
+    MCAutoStringRef t_font;
 	// If the block is unicode then we always have to set textFont. In either
 	// case if there is a textFont key, strip any ,unicode tag first.
 	if (MCArrayFetchValue(p_style, false, MCNAME("textFont"), t_valueref) && !MCValueIsEmpty(t_valueref))
@@ -654,20 +658,14 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 		/* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_string);
 		uindex_t t_comma;
 		if (MCStringFirstIndexOfChar(*t_string, ',', 0, kMCCompareExact, t_comma))
-		{
-			MCAutoStringRef t_substring;
-			MCStringCopySubstring(*t_string, MCRangeMake(0, t_comma), &t_substring);
-			t_valueref = MCValueRetain(*t_substring);
-		}
+			MCStringCopySubstring(*t_string, MCRangeMake(0, t_comma), &t_font);
+        else
+            t_font = *t_string;
 	}
 
 	// Now if we have unicode, or a textFont style set it.
-	if (!MCValueIsEmpty(t_valueref))
-	{
-		MCAutoStringRef t_string;
-        /* UNCHECKED */ ctxt . ConvertToString(t_valueref, &t_string);
-        t_block -> SetTextFont(ctxt, *t_string);
-	}
+	if (*t_font != nil)
+        t_block -> SetTextFont(ctxt, *t_font);
 	
 	// Set textsize
 	{

@@ -1506,9 +1506,9 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
         MCStringCopy(kMCEmptyString, r_result);
     }
     else if (MCStringGetLength(*t_output) != 0)
-        MCStringCopy(*t_output, r_result);
+        /* UNCHECKED */ MCStringCopy(*t_output, r_result);
 	else
-        MCStringCopy(kMCEmptyString, r_result);
+        r_result = MCValueRetain(kMCEmptyString);
 }
 
 void MCStringsExecFilterWildcard(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCStringRef &r_result)

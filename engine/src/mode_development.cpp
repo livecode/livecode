@@ -1843,17 +1843,24 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
     MCStringRef t_string;
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("token"), t_value)
             && ctxt . ConvertToString(t_value, t_string))
-        MClicenseparameters . license_token = MCValueRetain(t_string);
+    {
+        MCValueRelease(MClicenseparameters . license_token);
+        MClicenseparameters . license_token = t_string;
+    }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("name"), t_value)
             && ctxt . ConvertToString(t_value, t_string))
-        MClicenseparameters . license_name = MCValueRetain(t_string);
+    {
+        MCValueRelease(MClicenseparameters . license_name);
+        MClicenseparameters . license_name = t_string;
+    }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("organization"), t_value)
             && ctxt . ConvertToString(t_value, t_string))
-        MClicenseparameters . license_organization = MCValueRetain(t_string);
-    
-    MCValueRelease(t_string);
+    {
+        MCValueRelease( MClicenseparameters . license_organization);
+         MClicenseparameters . license_organization = t_string;
+    }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("class"), t_value))
     {
@@ -1953,8 +1960,7 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("addons"), t_value) && MCValueIsArray(t_value))
     {
-        if (MClicenseparameters . addons != nil)
-            MCValueRelease(MClicenseparameters . addons);
+        MCValueRelease(MClicenseparameters . addons);
         MCArrayCopy((MCArrayRef)t_value, MClicenseparameters . addons);
     }
 }
