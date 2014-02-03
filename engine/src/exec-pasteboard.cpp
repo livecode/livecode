@@ -70,6 +70,12 @@ MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardData, 2)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, ClipboardData, 2)
 MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragData, 2)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragData, 2)
+MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardOrDragData, 2)
+MC_EXEC_DEFINE_SET_METHOD(Pasteboard, ClipboardOrDragData, 2)
+MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardTextData, 2)
+MC_EXEC_DEFINE_SET_METHOD(Pasteboard, ClipboardTextData, 2)
+MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragTextData, 2)
+MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragTextData, 2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -572,7 +578,7 @@ void MCPasteboardSetAllowableDragActions(MCExecContext& ctxt, intset_t p_value)
 	MCallowabledragactions = (MCDragActionSet)p_value;
 }
 
-void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, bool p_is_clipboard, MCDataRef& r_data)
+void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, bool p_is_clipboard, MCValueRef& r_data)
 {
 	MCTransferData *t_pasteboard;
 	if (p_is_clipboard)
@@ -587,11 +593,11 @@ void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
 	{
 		MCTransferType t_type;
 		if (p_index == nil)
-			t_type = TRANSFER_TYPE_TEXT;
+            t_type = TRANSFER_TYPE_UNICODE_TEXT;
 		else
 			t_type = MCTransferData::StringToType(MCNameGetString(p_index));
 
-        // Always fetch the unicode text
+        // Make sure we are getting unicode input.
         if (t_type == TRANSFER_TYPE_TEXT)
             t_type = TRANSFER_TYPE_UNICODE_TEXT;
 
@@ -602,11 +608,11 @@ void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
             {
                 if (t_type == TRANSFER_TYPE_UNICODE_TEXT)
                 {
-                    // When the text fetch is in unicode, the data must
-                    // be converted to a stringRef
+                    // When the text fetched is in unicode, the data must
+                    // be converted to a stringRef to allow the unicode understanding
                     MCAutoStringRef t_string;
                     /* UNCHECKED */ MCStringCreateWithChars((const unichar_t*)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data) / 2, &t_string);
-                    r_data = (MCDataRef)MCValueRetain(*t_string);
+                    r_data = (MCValueRef)MCValueRetain(*t_string);
                 }
                 else
                     r_data = MCValueRetain(*t_data);
@@ -632,7 +638,7 @@ void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
 	}
 }
 
-void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, bool p_is_clipboard, MCDataRef p_data)
+void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, bool p_is_clipboard, MCValueRef p_data)
 {
 	MCTransferData *t_pasteboard;
 	if (p_is_clipboard)
@@ -642,13 +648,9 @@ void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
 	
 	MCTransferType t_type;
 	if (p_index == nil)
-		t_type = TRANSFER_TYPE_TEXT;
+        t_type = TRANSFER_TYPE_UNICODE_TEXT;
 	else
 		t_type = MCTransferData::StringToType(MCNameGetString(p_index));
-
-    // Always store unicode text
-    if (t_type == TRANSFER_TYPE_TEXT)
-        t_type = TRANSFER_TYPE_UNICODE_TEXT;
 
 	if (t_type != TRANSFER_TYPE_NULL && p_data != nil)
 	{
@@ -661,42 +663,42 @@ void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
 	ctxt . Throw();
 }
 
-void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef& r_data)
+void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_data)
 {
 	MCPasteboardGetClipboardOrDragData(ctxt, p_index, true, r_data);
 }
 
-void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef p_data)
+void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_data)
 {
 	MCPasteboardSetClipboardOrDragData(ctxt, p_index, true, p_data);
 }
 
-void MCPasteboardGetDragData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef& r_data)
+void MCPasteboardGetDragData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_data)
 {
 	MCPasteboardGetClipboardOrDragData(ctxt, p_index, false, r_data);
 }
 
-void MCPasteboardSetDragData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef p_data)
+void MCPasteboardSetDragData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_data)
 {
 	MCPasteboardSetClipboardOrDragData(ctxt, p_index, false, p_data);
 }
 
-void MCPasteboardGetClipboardTextData(MCExecContext& ctxt, MCDataRef& r_data)
+void MCPasteboardGetClipboardTextData(MCExecContext& ctxt, MCValueRef& r_data)
 {
 	MCPasteboardGetClipboardOrDragData(ctxt, nil, true, r_data);
 }
 
-void MCPasteboardSetClipboardTextData(MCExecContext& ctxt, MCDataRef p_data)
+void MCPasteboardSetClipboardTextData(MCExecContext& ctxt, MCValueRef p_data)
 {
 	MCPasteboardSetClipboardOrDragData(ctxt, nil, true, p_data);
 }
 
-void MCPasteboardGetDragTextData(MCExecContext& ctxt, MCDataRef& r_data)
+void MCPasteboardGetDragTextData(MCExecContext& ctxt, MCValueRef& r_data)
 {
 	MCPasteboardGetClipboardOrDragData(ctxt, nil, false, r_data);
 }
 
-void MCPasteboardSetDragTextData(MCExecContext& ctxt, MCDataRef p_data)
+void MCPasteboardSetDragTextData(MCExecContext& ctxt, MCValueRef p_data)
 {
 	MCPasteboardSetClipboardOrDragData(ctxt, nil, false, p_data);
 }
