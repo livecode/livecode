@@ -1266,15 +1266,13 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		
 		// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
 		//   works.
-        MCAutoStringRefAsNativeChars t_auto_native;
-		char_t *t_text;
-        uindex_t t_length;
+        MCAutoStringRefAsCString t_text;
 		uint4 t_nesting, t_min_nesting;
 
-        t_auto_native . Lock(t_paragraph -> GetInternalStringRef(), t_text, t_length);
+        t_text . Lock(t_paragraph -> GetInternalStringRef());
         
 		t_paragraph -> clearzeros();
-		tokenize(t_text, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
+		tokenize((const char_t *)*t_text, MCCStringLength(*t_text), t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
 
 		t_old_nesting += t_state -> GetCommentDelta(t_line);
 		if (p_mutate)
@@ -1289,15 +1287,13 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 			
 			// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
 			//   works.
-            MCAutoStringRefAsNativeChars t_auto_native;
-			char_t *t_text;
-			uindex_t t_length;
+            MCAutoStringRefAsCString t_text;    
 			uint4 t_nesting, t_min_nesting;
             
-            /* UNCHECKED */ t_auto_native . Lock(t_paragraph -> GetInternalStringRef(), t_text, t_length);
+            /* UNCHECKED */ t_text . Lock(t_paragraph -> GetInternalStringRef());
             
 			t_paragraph -> clearzeros();
-			tokenize(t_text, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
+			tokenize((const char_t *)*t_text, MCCStringLength(*t_text), t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
 
 			t_old_nesting += t_state -> GetCommentDelta(t_line);
 			t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
