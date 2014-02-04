@@ -243,7 +243,7 @@ public:
 
 	// Store the given data-type in the object. If a type of the given
 	// class already exists, it is overridden.
-	bool Store(MCTransferType p_type, MCDataRef p_data);
+    bool Store(MCTransferType p_type, MCValueRef p_data);
 
 private:
 	// Destroy the object.
@@ -258,7 +258,7 @@ private:
 	//
 	// Here r_normal_string has copy semantics, and p_string is unchanged.
 	//
-	bool Normalize(MCTransferType p_type, MCDataRef p_string, MCTransferType& r_normal_type, MCDataRef& r_normal_data);
+    bool Normalize(MCTransferType p_type, MCValueRef p_string, MCTransferType& r_normal_type, MCDataRef &r_normal_data);
 
 	// The number of references to this object.
 	uint4 m_references;
@@ -344,7 +344,7 @@ public:
 	// Return data of the given type, converting as necessary.
 	// The returned string has copy semantics, i.e. the caller must
 	// release it when done with it.
-	bool Fetch(MCTransferType p_type, MCDataRef &r_data);
+    bool Fetch(MCTransferType p_type, MCDataRef &r_data);
 	
 	// Unlock the object.
 	void Unlock(void);
@@ -362,7 +362,7 @@ public:
 
 	// Store the given data in the object. This call does an implicit
 	// Open/Close if one hasn't previously been performed.
-	bool Store(MCTransferType p_type, MCDataRef p_data);
+    bool Store(MCTransferType p_type, MCValueRef p_data);
 
 	// Close the object applying any updates. If applying the
 	// updates failed, false is returned.
