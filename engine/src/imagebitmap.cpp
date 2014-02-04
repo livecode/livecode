@@ -222,11 +222,15 @@ void MCImageBitmapCopyRegionToBitmap(MCImageBitmap *p_src, MCImageBitmap *p_dst,
 	t_dst_x = MCMax(0, dx);
 	t_dst_y = MCMax(0, dy);
 
-	t_width = MCMin((int32_t)p_src->width - t_src_x, (int32_t)sw);
-	t_height = MCMin((int32_t)p_src->height - t_src_y, (int32_t)sh);
+    // SN-2014-01-31: [[ Bug 10910 ]] Make sure width and height
+    // aren't less than 0 in the signed comparison.
+    // The second comparison is done with unsigned integers, since the
+    // floor of t_height/t_width is ensured to be 0.
+	t_width = MCMax(MCMin((int32_t)p_src->width - t_src_x, (int32_t)sw), 0);
+	t_height = MCMax(MCMin((int32_t)p_src->height - t_src_y, (int32_t)sh), 0);
 
-	t_width = MCMin((int32_t)p_dst->width - t_dst_x, (int32_t)t_width);
-	t_height = MCMin((int32_t)p_dst->height - t_dst_y, (int32_t)t_height);
+	t_width = MCMin((uint32_t)p_dst->width - t_dst_x, (uint32_t)t_width);
+	t_height = MCMin((uint32_t)p_dst->height - t_dst_y, (uint32_t)t_height);
 
 	copy_bitmap_data((uint8_t*)p_dst->data + p_dst->stride * t_dst_y + t_dst_x * sizeof(uint32_t), p_dst->stride, (uint8_t*)p_src->data + p_src->stride * t_src_y + t_src_x * sizeof(uint32_t), p_src->stride, t_width, t_height);
 
