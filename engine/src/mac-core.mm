@@ -264,7 +264,9 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 		break;
 			
 		case kMCPlatformSystemPropertyAccentColor:
-			// COCOA-TODO: GetAccentColor
+			((MCColor *)r_value) -> red = 0x0000;
+			((MCColor *)r_value) -> green = 0x0000;
+			((MCColor *)r_value) -> blue = 0x8080;
 			break;
 			
 		case kMCPlatformSystemPropertyMaximumCursorSize:
@@ -318,7 +320,6 @@ void MCPlatformBreakWait(void)
 									data1:0
 									data2:0];
 	
-	// COCOA-TODO: Make this not leak!
 	[NSApp postEvent: t_event
 			 atStart: YES];
 	

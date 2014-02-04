@@ -62,6 +62,10 @@ class MCPlayer : public MCControl
 	uint2 loudness;
 	int4 lasttime;
 
+#ifdef FEATURE_PLATFORM_PLAYER
+	MCPlatformPlayerRef m_platform_player;
+#endif
+	
 #ifdef FEATURE_MPLAYER
 	char *command;
 	Atom atom;
@@ -197,6 +201,11 @@ public:
 
 	Boolean stdeffectdlg(MCExecPoint &ep, const char *p_title, Boolean sheet);
 
+#ifdef FEATURE_PLATFORM_PLAYER
+	MCRectangle resize(MCRectangle rect);
+	void SynchronizeUserCallbacks(void);
+#endif
+	
 #ifdef _LINUX_DESKTOP
 	const char *getcommand()
 	{

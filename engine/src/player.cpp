@@ -73,10 +73,40 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxmplayer.h"
 #endif
 
+//// X11
+
 #undef X11
 #ifdef TARGET_PLATFORM_LINUX
 #define X11 
 #endif
+
+//// PLATFORM PLAYER
+
+#ifdef FEATURE_PLATFORM_PLAYER
+#include "platform.h"
+
+static MCPlatformPlayerMediaType ppmediatypes[] =
+{
+	kMCPlatformPlayerMediaTypeVideo,
+	kMCPlatformPlayerMediaTypeAudio,
+	kMCPlatformPlayerMediaTypeText,
+	kMCPlatformPlayerMediaTypeQTVR,
+	kMCPlatformPlayerMediaTypeSprite,
+	kMCPlatformPlayerMediaTypeFlash,
+};
+
+static const char *ppmediastrings[] =
+{
+	"video",
+	"audio",
+	"text",
+	"qtvr",
+	"sprite",
+	"flash"
+};
+#endif
+
+//// QUICKTIME PLAYER
 
 #ifdef FEATURE_QUICKTIME
 #ifndef _MACOSX
@@ -149,7 +179,6 @@ static inline MCRectangle RectToMCRectangle(Rect r)
 	return mcr;
 }
 
-#endif
 
 #ifdef _MACOSX
 struct MCPlayerOffscreenBuffer
@@ -159,6 +188,8 @@ struct MCPlayerOffscreenBuffer
 };
 
 static Boolean IsQTVRInstalled(void);
+#endif
+
 #endif
 
 #ifdef _WINDOWS
@@ -188,6 +219,10 @@ MCPlayer::MCPlayer()
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
 
+#ifdef FEATURE_PLATFORM_PLAYER
+	m_platform_player = nil;
+#else
+	
 #ifdef FEATURE_MPLAYER
 	command = NULL;
 	m_player = NULL ;
@@ -211,6 +246,8 @@ MCPlayer::MCPlayer()
 	bufferGW = NULL;//gworld for buffering draw - for QT only
 	m_has_port_association = false;
 #endif
+	
+#endif
 }
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
@@ -227,7 +264,11 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	userCallbackStr = strclone(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
-
+	
+#ifdef FEATURE_PLATFORM_PLAYER
+	m_platform_player = nil;
+#else
+	
 #ifdef FEATURE_MPLAYER
 	command = NULL;
 	m_player = NULL ;
@@ -251,6 +292,8 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	m_offscreen = nil;
 	m_has_port_association = false;
 #endif
+	
+#endif
 }
 
 MCPlayer::~MCPlayer()
@@ -261,6 +304,11 @@ MCPlayer::~MCPlayer()
 	
 	playstop();
 
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+		MCPlatformPlayerRelease(m_platform_player);
+#else
+	
 #ifdef FEATURE_QUICKTIME
 	if (this == MCtemplateplayer && qtstate == QT_INITTED && MCplayers == NULL)
 	{
@@ -296,6 +344,7 @@ MCPlayer::~MCPlayer()
 #ifdef FEATURE_MPLAYER
 	if ( m_player != NULL )
 		delete m_player ;
+#endif
 #endif
 
 	delete filename;
@@ -513,6 +562,16 @@ Boolean MCPlayer::doubleup(uint2 which)
 
 void MCPlayer::setrect(const MCRectangle &nrect)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	rect = nrect;
+	
+	if (m_platform_player != nil)
+	{
+		MCRectangle trect = MCU_reduce_rect(rect, getflag(F_SHOW_BORDER) ? borderwidth : 0);
+		trect = MCRectangleGetTransformedBounds(trect, getstack()->getdevicetransform());
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
+	}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		qt_setrect(nrect);
@@ -522,6 +581,7 @@ void MCPlayer::setrect(const MCRectangle &nrect)
 #endif
 #elif defined(X11)
 	x11_setrect(nrect);
+#endif
 #endif
 }
 
@@ -696,9 +756,18 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 		ep.setint(getloudness());
 		break;
 	case P_TRACK_COUNT:
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+		{
+			uindex_t t_count;
+			MCPlatformCountPlayerTracks(m_platform_player, t_count);
+			i = t_count;
+		}
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED && state & CS_PREPARED)
 			i = (uint2)GetMovieTrackCount((Movie)theMovie);
+#endif
 #endif
 		ep.setint(i);
 		break;
@@ -710,6 +779,20 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 		break;
 	case P_MEDIA_TYPES:
 		ep.clear();
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+		{
+			MCPlatformPlayerMediaTypes t_types;
+			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMediaTypes, kMCPlatformPropertyTypePlayerMediaTypes, &t_types);
+			bool first = true;
+			for (i = 0 ; i < sizeof(ppmediatypes) / sizeof(ppmediatypes[0]) ; i++)
+				if ((t_types & (1 << ppmediatypes[i])) != 0)
+				{
+					ep.concatcstring(ppmediastrings[i], EC_COMMA, first);
+					first = false;
+				}
+		}
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED && state & CS_PREPARED)
 		{
@@ -723,20 +806,31 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 				}
 		}
 #endif
+#endif
 		break;
 	case P_CURRENT_NODE:
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+				MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRNode, kMCPlatformPropertyTypeUInt16, &i);
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtvrinstance != NULL)
 			i = (uint2)QTVRGetCurrentNodeID((QTVRInstance)qtvrinstance);
+#endif
 #endif
 		ep.setint(i);
 		break;
 	case P_PAN:
 		{
 			real8 pan = 0.0;
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+				MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRPan, kMCPlatformPropertyTypeDouble, &pan);
+#else
 #ifdef FEATURE_QUICKTIME
 			if (qtvrinstance != NULL)
 				pan = QTVRGetPanAngle((QTVRInstance)qtvrinstance);
+#endif
 #endif
 			ep.setr8(pan, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
 		}
@@ -744,9 +838,14 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 	case P_TILT:
 		{
 			real8 tilt = 0.0;
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+				MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRTilt, kMCPlatformPropertyTypeDouble, &tilt);
+#else
 #ifdef FEATURE_QUICKTIME
 			if (qtvrinstance != NULL)
 				tilt = QTVRGetTiltAngle((QTVRInstance)qtvrinstance);
+#endif
 #endif
 			ep.setr8(tilt, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
 		}
@@ -754,15 +853,30 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 	case P_ZOOM:
 		{
 			real8 zoom = 0.0;
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+				MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRZoom, kMCPlatformPropertyTypeDouble, &zoom);
+#else
 #ifdef FEATURE_QUICKTIME
 			if (qtvrinstance != NULL)
 				zoom = QTVRGetFieldOfView((QTVRInstance)qtvrinstance);
+#endif
 #endif
 			ep.setr8(zoom, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
 		}
 		break;
 	case P_CONSTRAINTS:
-		ep.clear();
+			ep.clear();
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+			{
+				MCPlatformPlayerQTVRConstraints t_constraints;
+				MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRConstraints, kMCPlatformPropertyTypePlayerQTVRConstraints, &t_constraints);
+				ep.appendstringf("%lf,%lf\n", t_constraints . x_min, t_constraints . x_max);
+				ep.appendstringf("%lf,%lf\n", t_constraints . y_min, t_constraints . y_max);
+				ep.appendstringf("%lf,%lf", t_constraints . z_min, t_constraints . z_max);
+			}
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtvrinstance != NULL)
 		{
@@ -777,6 +891,7 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 				ep.concatcstring(buffer, EC_RETURN, i == 0);
 			}
 		}
+#endif
 #endif
 		break;
 	case P_NODES:
@@ -851,6 +966,9 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 			installUserCallbacks(); //install all callbacks for this player
 #endif
 		}
+#ifdef FEATURE_PLATFORM_PLAYER
+			SynchronizeUserCallbacks();
+#endif
 		break;
 	case P_CURRENT_TIME:
 		if (!MCU_stoui4(data, ctime))
@@ -1016,7 +1134,6 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 		dirty = wholecard = True;
 		break;
 	case P_CURRENT_NODE:
-#ifdef FEATURE_QUICKTIME
 		{
 			uint2 nodeid;
 			if (!MCU_stoui2(data,nodeid))
@@ -1024,6 +1141,11 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
 				return ES_ERROR;
 			}
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRNode, kMCPlatformPropertyTypeUInt16, &nodeid);
+#else
+#ifdef FEATURE_QUICKTIME
 			if (qtvrinstance != NULL)
 			{
 				if (QTVRGoToNodeID((QTVRInstance)qtvrinstance,nodeid) != noErr)
@@ -1031,14 +1153,12 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 					MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
 					return ES_ERROR;
 				}
-				if (isbuffering())
-					dirty = True;
 			}
-		}
 #endif
+#endif
+		}
 		break;
 	case P_PAN:
-#ifdef FEATURE_QUICKTIME
 		{
 			real8 pan;
 			if (!MCU_stor8(data, pan))
@@ -1046,15 +1166,20 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
 				return ES_ERROR;
 			}
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRPan, kMCPlatformPropertyTypeDouble, &pan);
+#else
+#ifdef FEATURE_QUICKTIME
 			if (qtvrinstance != NULL)
 				QTVRSetPanAngle((QTVRInstance)qtvrinstance, (float)pan);
+#endif
+#endif
 			if (isbuffering())
 				dirty = True;
 		}
-#endif
 		break;
 	case P_TILT:
-#ifdef FEATURE_QUICKTIME
 		{
 			real8 tilt;
 			if (!MCU_stor8(data, tilt))
@@ -1062,15 +1187,20 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
 				return ES_ERROR;
 			}
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRTilt, kMCPlatformPropertyTypeDouble, &tilt);
+#else
+#ifdef FEATURE_QUICKTIME
 			if (qtvrinstance != NULL)
 				QTVRSetTiltAngle((QTVRInstance)qtvrinstance, (float)tilt);
+#endif
+#endif
 			if (isbuffering())
 				dirty = True;
 		}
-#endif
 		break;
 	case P_ZOOM:
-#ifdef FEATURE_QUICKTIME
 		{
 			real8 zoom;
 			if (!MCU_stor8(data, zoom))
@@ -1078,12 +1208,18 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
 				return ES_ERROR;
 			}
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRZoom, kMCPlatformPropertyTypeDouble, &zoom);
+#else
+#ifdef FEATURE_QUICKTIME
 			if (qtvrinstance != NULL)
 				QTVRSetFieldOfView((QTVRInstance)qtvrinstance, (float)zoom);
+#endif
+#endif
 			if (isbuffering())
 				dirty = True;
 		}
-#endif
 		break;
 	case P_VISIBLE:
 	case P_INVISIBLE:
@@ -1092,9 +1228,18 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 			Exec_stat stat = MCControl::setprop(parid, p, ep, effective);
 			if (flags != oldflags && !(flags & F_VISIBLE))
 				playstop();
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+			{
+				bool t_visible;
+				t_visible = getflag(F_VISIBLE) && getflag(F_SHOW_CONTROLLER);
+				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
+			}
+#else
 #ifdef FEATURE_QUICKTIME
 			if (theMC != NULL)
 				MCSetVisible((MovieController)theMC, getflag(F_VISIBLE) && getflag(F_SHOW_CONTROLLER));
+#endif
 #endif
 			
 			return stat;
@@ -1195,19 +1340,24 @@ IO_stat MCPlayer::load(IO_handle stream, const char *version)
 //   and state.
 void MCPlayer::syncbuffering(MCContext *p_dc)
 {
+	bool t_should_buffer;
+	
+	// MW-2011-09-13: [[ Layers ]] If the layer is dynamic then the player must be buffered.
+	t_should_buffer = getstate(CS_SELECTED) || getflag(F_ALWAYS_BUFFER) || getstack() -> getstate(CS_EFFECT) || (p_dc != nil && p_dc -> gettype() != CONTEXT_TYPE_SCREEN) || !MCModeMakeLocalWindows() || layer_issprite();
+	
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_should_buffer);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate != QT_INITTED)
 		return;
-
-	bool t_should_buffer;
-
-	// MW-2011-09-13: [[ Layers ]] If the layer is dynamic then the player must be buffered.
-	t_should_buffer = getstate(CS_SELECTED) || getflag(F_ALWAYS_BUFFER) || getstack() -> getstate(CS_EFFECT) || (p_dc != nil && p_dc -> gettype() != CONTEXT_TYPE_SCREEN) || !MCModeMakeLocalWindows() || layer_issprite();
 
 	if (t_should_buffer && !isbuffering())
 		bufferDraw(false);
 	else if (!t_should_buffer && isbuffering())
 		unbufferDraw();
+#endif
 #endif
 }
 
@@ -1215,6 +1365,9 @@ void MCPlayer::syncbuffering(MCContext *p_dc)
 //   currently in use.
 void MCPlayer::getversion(MCExecPoint &ep)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	ep . clear();
+#else
 #if defined(X11)
 	ep.setstaticcstring("2.0");
 #elif defined(_WINDOWS)
@@ -1258,6 +1411,7 @@ void MCPlayer::getversion(MCExecPoint &ep)
 #else
 	ep.clear();
 #endif
+#endif
 }
 
 void MCPlayer::freetmp()
@@ -1272,6 +1426,14 @@ void MCPlayer::freetmp()
 
 uint4 MCPlayer::getduration() //get movie duration/length
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	uint4 duration;
+	if (m_platform_player != nil)
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &duration);
+	else
+		duration = 0;
+	return duration;
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		return qt_getduration();
@@ -1284,10 +1446,19 @@ uint4 MCPlayer::getduration() //get movie duration/length
 #else
 	return 0;
 #endif
+#endif
 }
 
 uint4 MCPlayer::gettimescale() //get moive time scale
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	uint4 timescale;
+	if (m_platform_player != nil)
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyTimescale, kMCPlatformPropertyTypeUInt32, &timescale);
+	else
+		timescale = 0;
+	return timescale;
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		return qt_gettimescale();
@@ -1300,10 +1471,19 @@ uint4 MCPlayer::gettimescale() //get moive time scale
 #else
 	return 0;
 #endif
+#endif
 }
 
 uint4 MCPlayer::getmoviecurtime()
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	uint4 curtime;
+	if (m_platform_player != nil)
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &curtime);
+	else
+		curtime = 0;
+	return curtime;
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		return qt_getmoviecurtime();
@@ -1316,11 +1496,16 @@ uint4 MCPlayer::getmoviecurtime()
 #else
 	return 0;
 #endif
+#endif
 }
 
 void MCPlayer::setcurtime(uint4 newtime)
 {
 	lasttime = newtime;
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &newtime);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		qt_setcurtime(newtime);
@@ -1331,10 +1516,26 @@ void MCPlayer::setcurtime(uint4 newtime)
 #elif defined(X11)
 	x11_setcurtime(newtime);
 #endif
+#endif
 }
 
 void MCPlayer::setselection()
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		uint4 st, et;
+		if (starttime == MAXUINT4 || endtime == MAXUINT4)
+			st = et = 0;
+		else
+		{
+			st = starttime;
+			et = endtime;
+		}
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+	}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		qt_setselection();
@@ -1345,10 +1546,19 @@ void MCPlayer::setselection()
 #elif defined(X11)
 	x11_setselection();
 #endif
+#endif
 }
 
 void MCPlayer::setlooping(Boolean loop)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		bool t_loop;
+		t_loop = loop;
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_loop);
+	}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED) // loop or unloop QT movie
 		qt_setlooping(loop);
@@ -1359,10 +1569,19 @@ void MCPlayer::setlooping(Boolean loop)
 #elif defined(X11)
 	x11_setlooping(loop);
 #endif
+#endif
 }
 
 void MCPlayer::setplayrate()
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &rate);
+		if (rate != 0.0f)
+			MCPlatformStartPlayer(m_platform_player);
+	}
+#else
 #ifdef FEATURE_QUICKTIME //MAC or WIN
 	if (qtstate == QT_INITTED)
 		qt_setplayrate();
@@ -1373,6 +1592,7 @@ void MCPlayer::setplayrate()
 #elif defined(X11)
 	x11_setplayrate();
 #endif
+#endif
 
 	if (rate != 0)
 		state = state & ~CS_PAUSED;
@@ -1382,6 +1602,14 @@ void MCPlayer::setplayrate()
 
 void MCPlayer::showbadge(Boolean show)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		bool t_show;
+		t_show = show;
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowBadge, kMCPlatformPropertyTypeBool, &t_show);
+	}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)// set QT movie's play rate, for QT movie only
 		qt_showbadge(show);
@@ -1392,10 +1620,19 @@ void MCPlayer::showbadge(Boolean show)
 #elif defined(X11)
 	x11_showbadge(show);
 #endif
+#endif
 }
 
 void MCPlayer::editmovie(Boolean edit)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		bool t_edit;
+		t_edit = edit;
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_edit);
+	}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)//on & off the ability to set selection
 		qt_editmovie(edit);
@@ -1406,10 +1643,19 @@ void MCPlayer::editmovie(Boolean edit)
 #elif defined(X11)
 	x11_editmovie(edit);
 #endif
+#endif
 }
 
 void MCPlayer::playselection(Boolean play)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		bool t_play;
+		t_play = play;
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play);
+	}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		qt_playselection(play);
@@ -1420,10 +1666,15 @@ void MCPlayer::playselection(Boolean play)
 #elif defined(X11)
 	x11_playselection(play);
 #endif
+#endif
 }
 
 Boolean MCPlayer::ispaused()
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+		return !MCPlatformPlayerIsPlaying(m_platform_player);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		return qt_ispaused();
@@ -1436,10 +1687,19 @@ Boolean MCPlayer::ispaused()
 #else
 	return True;
 #endif
+#endif
 }
 
 void MCPlayer::showcontroller(Boolean show)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		bool t_show;
+		t_show = show;
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show);
+	}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		qt_showcontroller(show);
@@ -1449,6 +1709,7 @@ void MCPlayer::showcontroller(Boolean show)
 #endif
 #elif defined(X11)
 	x11_showcontroller(show);
+#endif
 #endif
 }
 
@@ -1462,6 +1723,61 @@ Boolean MCPlayer::prepare(const char *options)
 	if (!opened)
 		return False;
 
+#ifdef FEATURE_PLATFORM_PLAYER
+
+	if (m_platform_player == nil)
+		MCPlatformCreatePlayer(m_platform_player);
+
+	if (strnequal(filename, "https:", 6) || strnequal(filename, "http:", 5) || strnequal(filename, "ftp:", 4) || strnequal(filename, "file:", 5) || strnequal(filename, "rtsp:", 5))
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyURL, kMCPlatformPropertyTypeNativeCString, &filename);
+	else
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &filename);
+	
+	MCRectangle t_movie_rect;
+	MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_movie_rect);
+	
+	MCRectangle trect = resize(t_movie_rect);
+	
+	// IM-2011-11-12: [[ Bug 11320 ]] Transform player rect to device coords
+	trect = MCRectangleGetTransformedBounds(trect, getstack()->getdevicetransform());
+	
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
+	
+	bool t_show_controller, t_show_badge, t_looping, t_show_selection, t_play_selection;
+	t_show_controller = getflag(F_SHOW_CONTROLLER);
+	t_show_badge = getflag(F_SHOW_BADGE);
+	t_looping = getflag(F_LOOPING);
+	t_show_selection = getflag(F_SHOW_SELECTION);
+	t_play_selection = getflag(F_PLAY_SELECTION);
+	
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &lasttime);
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show_controller);
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowBadge, kMCPlatformPropertyTypeBool, &t_show_badge);
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
+	setselection();
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
+	SynchronizeUserCallbacks();
+	
+	bool t_offscreen;
+	t_offscreen = getflag(F_ALWAYS_BUFFER);
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_offscreen);
+	
+	bool t_visible;
+	t_visible = getflag(F_VISIBLE) && getflag(F_SHOW_CONTROLLER);
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
+	
+	MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+	
+	layer_redrawall();
+	
+	setloudness();
+	
+	MCresult -> clear(False);
+	
+	ok = True;
+	
+#else
 #ifdef X11
 	ok = x11_prepare();
 #elif defined FEATURE_QUICKTIME
@@ -1471,6 +1787,7 @@ Boolean MCPlayer::prepare(const char *options)
 #ifdef TARGET_PLATFORM_WINDOWS
 	else
 		ok = avi_prepare();
+#endif
 #endif
 #endif
 
@@ -1516,7 +1833,20 @@ Boolean MCPlayer::playpause(Boolean on)
 {
 	if (!(state & CS_PREPARED))
 		return False;
-
+	
+	Boolean ok;
+	ok = False;
+	
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		if (!on)
+			MCPlatformStartPlayer(m_platform_player);
+		else
+			MCPlatformStopPlayer(m_platform_player);
+		ok = True;
+	}
+#else
 #ifdef TARGET_PLATFORM_WINDOWS
 	if (qtstate != QT_INITTED)
 		setstate(avi_ispaused(), CS_PAUSED);
@@ -1526,8 +1856,6 @@ Boolean MCPlayer::playpause(Boolean on)
 		return True;
 #endif
 
-	Boolean ok;
-	ok = False;
 
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
@@ -1538,6 +1866,7 @@ Boolean MCPlayer::playpause(Boolean on)
 #endif
 #elif defined(X11)
 	ok = x11_playpause(on);
+#endif
 #endif
 	
 	if (ok)
@@ -1551,6 +1880,10 @@ void MCPlayer::playstepforward()
 	if (!getstate(CS_PREPARED))
 		return;
 
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+		MCPlatformStepPlayer(m_platform_player, 1);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		qt_playstepforward();
@@ -1561,13 +1894,18 @@ void MCPlayer::playstepforward()
 #elif defined(X11)
 	x11_playstepforward();
 #endif
+#endif
 }
 
 void MCPlayer::playstepback()
 {
 	if (!getstate(CS_PREPARED))
 		return;
-
+	
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+		MCPlatformStepPlayer(m_platform_player, -1);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		qt_playstepback();
@@ -1577,6 +1915,7 @@ void MCPlayer::playstepback()
 #endif
 #elif defined(X11)
 	x11_playstepback();
+#endif
 #endif
 }
 
@@ -1590,7 +1929,18 @@ Boolean MCPlayer::playstop()
 	
 	state &= ~(CS_PREPARED | CS_PAUSED);
 	lasttime = 0;
-
+	
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		MCPlatformStopPlayer(m_platform_player);
+		
+		needmessage = getduration() > getmoviecurtime();
+		
+		MCPlatformDetachPlayer(m_platform_player);
+	}
+#else
+	
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		needmessage = qt_playstop();
@@ -1600,6 +1950,7 @@ Boolean MCPlayer::playstop()
 #endif
 #elif defined(X11)
 	needmessage = x11_playstop();
+#endif
 #endif
 
 	freetmp();
@@ -1655,6 +2006,12 @@ MCRectangle MCPlayer::getpreferredrect()
 		return t_bounds;
 	}
 
+#ifdef FEATURE_PLATFORM_PLAYER
+	MCRectangle t_bounds;
+	MCU_set_rect(t_bounds, 0, 0, 0, 0);
+	if (m_platform_player != nil)
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_bounds);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		return qt_getpreferredrect();
@@ -1669,11 +2026,16 @@ MCRectangle MCPlayer::getpreferredrect()
 	MCU_set_rect(t_bounds, 0, 0, 0, 0);
 	return t_bounds;
 #endif
+#endif
 }
 
 uint2 MCPlayer::getloudness()
 {
 	if (getstate(CS_PREPARED))
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVolume, kMCPlatformPropertyTypeUInt16, &loudness);
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			loudness = qt_getloudness();
@@ -1686,12 +2048,17 @@ uint2 MCPlayer::getloudness()
 #else
 		loudness = loudness;
 #endif
+#endif
 	return loudness;
 }
 
 void MCPlayer::setloudness()
 {
 	if (state & CS_PREPARED)
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+			MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVolume, kMCPlatformPropertyTypeUInt16, &loudness);
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			qt_setloudness(loudness);
@@ -1704,6 +2071,7 @@ void MCPlayer::setloudness()
 #else
 	loudness = loudness;
 #endif
+#endif
 }
 
 void MCPlayer::gettracks(MCExecPoint &ep)
@@ -1711,6 +2079,27 @@ void MCPlayer::gettracks(MCExecPoint &ep)
 	ep . clear();
 
 	if (getstate(CS_PREPARED))
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+		{
+			uindex_t t_track_count;
+			MCPlatformCountPlayerTracks(m_platform_player, t_track_count);
+			for(uindex_t i = 0; i < t_track_count; i++)
+			{
+				uint32_t t_id;
+				MCAutoPointer<char> t_name;
+				uint32_t t_offset, t_duration;
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyMediaTypeName, kMCPlatformPropertyTypeNativeCString, &(&t_name));
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyOffset, kMCPlatformPropertyTypeUInt32, &t_offset);
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_offset);
+				ep . concatuint(t_id, EC_RETURN, i == 1);
+				ep . concatcstring(*t_name, EC_COMMA, false);
+				ep . concatuint(t_offset, EC_COMMA, false);
+				ep . concatuint(t_duration, EC_COMMA, false);
+			}
+		}
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			qt_gettracks(ep);
@@ -1723,6 +2112,7 @@ void MCPlayer::gettracks(MCExecPoint &ep)
 #else
 	0 == 0;
 #endif
+#endif
 }
 
 void MCPlayer::getenabledtracks(MCExecPoint &ep)
@@ -1730,6 +2120,22 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 	ep.clear();
 
 	if (getstate(CS_PREPARED))
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+		{
+			uindex_t t_track_count;
+			MCPlatformCountPlayerTracks(m_platform_player, t_track_count);
+			for(uindex_t i = 0; i < t_track_count; i++)
+			{
+				uint32_t t_id;
+				uint32_t t_enabled;
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
+				if (t_enabled)
+					ep . concatuint(t_id, EC_RETURN, i == 1);
+			}
+		}
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			qt_getenabledtracks(ep);
@@ -1742,11 +2148,56 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 #else
 		0 == 0;
 #endif
+#endif
 }
 
 Boolean MCPlayer::setenabledtracks(const MCString &s)
 {
 	if (getstate(CS_PREPARED))
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+		{
+			uindex_t t_track_count;
+			MCPlatformCountPlayerTracks(m_platform_player, t_track_count);
+			for(uindex_t i = 0; i < t_track_count; i++)
+			{
+				bool t_enabled;
+				t_enabled = false;
+				MCPlatformSetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
+			}
+			char *data = s.clone();
+			char *sptr = data;
+			while (*sptr)
+			{
+				char *tptr;
+				if ((tptr = strchr(sptr, '\n')) != NULL)
+					*tptr++ = '\0';
+				else
+					tptr = &sptr[strlen(sptr)];
+				if (strlen(sptr) != 0)
+				{
+					uindex_t t_index;
+					if (!MCPlatformFindPlayerTrackWithId(m_platform_player, strtol(sptr, NULL, 10), t_index))
+					{
+						delete data;
+						return False;
+					}
+					
+					bool t_enabled;
+					t_enabled = true;
+					MCPlatformSetPlayerTrackProperty(m_platform_player, t_index, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
+				}
+				sptr = tptr;
+			}
+			delete data;
+			MCRectangle t_movie_rect;
+			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_movie_rect);
+			MCRectangle trect = resize(t_movie_rect);
+			if (flags & F_SHOW_BORDER)
+				trect = MCU_reduce_rect(trect, -borderwidth);
+			setrect(trect);
+		}
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			return qt_setenabledtracks(s);
@@ -1759,6 +2210,7 @@ Boolean MCPlayer::setenabledtracks(const MCString &s)
 #else
 		0 == 0;
 #endif
+#endif
 
 	return True;
 }
@@ -1766,6 +2218,7 @@ Boolean MCPlayer::setenabledtracks(const MCString &s)
 void MCPlayer::getnodes(MCExecPoint &ep)
 {
 	ep.clear();
+	// COCOA-TODO: MCPlayer::getnodes();
 #ifdef FEATURE_QUICKTIME
 	if (qtvrinstance != NULL)
 	{
@@ -1797,6 +2250,7 @@ void MCPlayer::getnodes(MCExecPoint &ep)
 void MCPlayer::gethotspots(MCExecPoint &ep)
 {
 	ep.clear();
+	// COCOA-TODO: MCPlayer::gethotspots();
 #ifdef FEATURE_QUICKTIME
 	if (qtvrinstance != NULL)
 	{
@@ -1838,6 +2292,21 @@ void MCPlayer::gethotspots(MCExecPoint &ep)
 	}
 #endif
 }
+
+#ifdef FEATURE_PLATFORM_PLAYER
+
+MCRectangle MCPlayer::resize(MCRectangle rect)
+{
+	// COCOA-TODO: Reimplement resize player method.
+	return rect;
+}
+
+void MCPlayer::SynchronizeUserCallbacks(void)
+{
+	// COCOA-TODO: Sort out player user callbacks.
+}
+
+#endif
 
 #ifdef _WINDOWS
 void MCPlayer::changewindow(MCSysWindowHandle p_old_window)
@@ -1907,6 +2376,32 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	if (MClook == LF_MOTIF && state & CS_KFOCUSED && !(extraflags & EF_NO_FOCUS_BORDER))
 		drawfocus(dc, p_dirty);
 
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (!(state & CS_CLOSING))
+		prepare(MCnullstring);
+	
+	if (m_platform_player != nil)
+	{
+		bool t_visible;
+		t_visible = getflag(F_VISIBLE) && getflag(F_SHOW_CONTROLLER);
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
+		
+		MCRectangle trect = MCU_reduce_rect(rect, flags & F_SHOW_BORDER ? borderwidth : 0);
+		
+		// MW-2011-09-23: Sync the buffering state.
+		syncbuffering(dc);
+		
+		if (isbuffering())
+		{
+			MCImageDescriptor t_image;
+			MCMemoryClear(&t_image, sizeof(t_image));
+			t_image.filter = kMCGImageFilterNearest;
+			MCPlatformLockPlayerBitmap(m_platform_player, t_image . bitmap);
+			dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
+			MCPlatformUnlockPlayerBitmap(m_platform_player, t_image . bitmap);
+		}
+	}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (!(state & CS_CLOSING))
 		prepare(MCnullstring);
@@ -1924,6 +2419,7 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	dc->fillrect(rect);
 	dc->setbackground(MCzerocolor);
 	dc->setfillstyle(FillSolid, nil, 0, 0);
+#endif
 #endif
 
 	if (getflag(F_SHOW_BORDER))

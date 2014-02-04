@@ -92,11 +92,13 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeBool,
 	kMCPlatformPropertyTypeUInt16,
 	kMCPlatformPropertyTypeInt32,
+	kMCPlatformPropertyTypeUInt32,
 	kMCPlatformPropertyTypeFloat,
 	kMCPlatformPropertyTypeDouble,
 	kMCPlatformPropertyTypeRectangle,
 	kMCPlatformPropertyTypeColor,
 	
+	kMCPlatformPropertyTypeNativeCString,
 	kMCPlatformPropertyTypeUTF8CString,
 	
 	kMCPlatformPropertyTypeWindowStyle,
@@ -107,6 +109,9 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeMenuItemHighlight,
 	kMCPlatformPropertyTypeMenuItemAction,
 	kMCPlatformPropertyTypeCursorImageSupport,
+	
+	kMCPlatformPropertyTypePlayerMediaTypes,
+	kMCPlatformPropertyTypePlayerQTVRConstraints,
 };
 
 // The lower 21-bits hold a codepoint, the upper bits hold modifiers. Some
@@ -749,6 +754,113 @@ bool MCPlatformSurfaceLockSystemContext(MCPlatformSurfaceRef surface, void*& r_c
 void MCPlatformSurfaceUnlockSystemContext(MCPlatformSurfaceRef surface);
 
 bool MCPlatformSurfaceComposite(MCPlatformSurfaceRef surface, MCGRectangle dst_rect, MCGImageRef src_image, MCGRectangle src_rect, MCGFloat alpha, MCGBlendMode blend);
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef class MCPlatformPlayer *MCPlatformPlayerRef;
+
+enum MCPlatformPlayerProperty
+{
+	kMCPlatformPlayerPropertyURL,
+	kMCPlatformPlayerPropertyFilename,
+	
+	kMCPlatformPlayerPropertyOffscreen,
+	kMCPlatformPlayerPropertyRect,
+	kMCPlatformPlayerPropertyMovieRect,
+	kMCPlatformPlayerPropertyVisible,
+	kMCPlatformPlayerPropertyMediaTypes,
+	
+	kMCPlatformPlayerPropertyDuration,
+	kMCPlatformPlayerPropertyTimescale,
+	kMCPlatformPlayerPropertyCurrentTime,
+	kMCPlatformPlayerPropertyStartTime,
+	kMCPlatformPlayerPropertyFinishTime,
+	kMCPlatformPlayerPropertyPlayRate,
+	kMCPlatformPlayerPropertyVolume,
+	
+	kMCPlatformPlayerPropertyShowBadge,
+	kMCPlatformPlayerPropertyShowController,
+	kMCPlatformPlayerPropertyShowSelection,
+	kMCPlatformPlayerPropertyOnlyPlaySelection,
+	
+	kMCPlatformPlayerPropertyLoop,
+	
+	kMCPlatformPlayerPropertyQTVRNode,
+	kMCPlatformPlayerPropertyQTVRPan,
+	kMCPlatformPlayerPropertyQTVRTilt,
+	kMCPlatformPlayerPropertyQTVRZoom,
+	kMCPlatformPlayerPropertyQTVRConstraints,
+};
+
+typedef uint32_t MCPlatformPlayerMediaTypes;
+enum MCPlatformPlayerMediaType
+{
+	kMCPlatformPlayerMediaTypeVideo,
+	kMCPlatformPlayerMediaTypeAudio,
+	kMCPlatformPlayerMediaTypeText,
+	kMCPlatformPlayerMediaTypeQTVR,
+	kMCPlatformPlayerMediaTypeSprite,
+	kMCPlatformPlayerMediaTypeFlash,
+};
+
+enum MCPlatformPlayerTrackProperty
+{
+	kMCPlatformPlayerTrackPropertyId,
+	kMCPlatformPlayerTrackPropertyMediaTypeName,
+	kMCPlatformPlayerTrackPropertyOffset,
+	kMCPlatformPlayerTrackPropertyDuration,
+	kMCPlatformPlayerTrackPropertyEnabled,
+};
+
+enum MCPlatformPlayerNodeProperty
+{
+};
+
+enum MCPlatformPlayerHotSpotProperty
+{
+};
+
+struct MCPlatformPlayerQTVRConstraints
+{
+	double x_min, x_max;
+	double y_min, y_max;
+	double z_min, z_max;
+};
+
+void MCPlatformCreatePlayer(MCPlatformPlayerRef& r_player);
+
+void MCPlatformPlayerRetain(MCPlatformPlayerRef player);
+void MCPlatformPlayerRelease(MCPlatformPlayerRef player);
+
+void MCPlatformAttachPlayer(MCPlatformPlayerRef player, MCPlatformWindowRef window);
+void MCPlatformDetachPlayer(MCPlatformPlayerRef player);
+
+bool MCPlatformPlayerIsPlaying(MCPlatformPlayerRef player);
+
+void MCPlatformStepPlayer(MCPlatformPlayerRef player, int amount);
+void MCPlatformStartPlayer(MCPlatformPlayerRef player);
+void MCPlatformStopPlayer(MCPlatformPlayerRef player);
+
+void MCPlatformLockPlayerBitmap(MCPlatformPlayerRef player, MCImageBitmap*& r_bitmap);
+void MCPlatformUnlockPlayerBitmap(MCPlatformPlayerRef player, MCImageBitmap *bitmap);
+
+void MCPlatformSetPlayerProperty(MCPlatformPlayerRef player, MCPlatformPlayerProperty property, MCPlatformPropertyType type, void *value);
+void MCPlatformGetPlayerProperty(MCPlatformPlayerRef player, MCPlatformPlayerProperty property, MCPlatformPropertyType type, void *value);
+
+void MCPlatformCountPlayerTracks(MCPlatformPlayerRef player, uindex_t& r_track_count);
+void MCPlatformGetPlayerTrackProperty(MCPlatformPlayerRef player, uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
+void MCPlatformSetPlayerTrackProperty(MCPlatformPlayerRef player, uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
+bool MCPlatformFindPlayerTrackWithId(MCPlatformPlayerRef player, uint32_t id, uindex_t& r_index);
+
+void MCPlatformCountPlayerNodes(MCPlatformPlayerRef player, uindex_t& r_node_count);
+void MCPlatformGetPlayerNodeProperty(MCPlatformPlayerRef player, uindex_t index, MCPlatformPlayerNodeProperty property, MCPlatformPropertyType type, void *value);
+void MCPlatformSetPlayerNodeProperty(MCPlatformPlayerRef player, uindex_t index, MCPlatformPlayerNodeProperty property, MCPlatformPropertyType type, void *value);
+void MCPlatformFindPlayerNodeWithId(MCPlatformPlayerRef player, uint32_t id, uindex_t& r_index);
+
+void MCPlatformCountPlayerHotSpots(MCPlatformPlayerRef player, uindex_t& r_node_count);
+void MCPlatformGetPlayerHotSpotProperty(MCPlatformPlayerRef player, uindex_t index, MCPlatformPlayerHotSpotProperty property, MCPlatformPropertyType type, void *value);
+void MCPlatformSetPlayerHotSpotProperty(MCPlatformPlayerRef player, uindex_t index, MCPlatformPlayerHotSpotProperty property, MCPlatformPropertyType type, void *value);
+void MCPlatformFindPlayerHotSpotWithId(MCPlatformPlayerRef player, uint32_t id, uindex_t& r_index);
 
 ////////////////////////////////////////////////////////////////////////////////
 

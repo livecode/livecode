@@ -125,8 +125,6 @@ Boolean MCScreenDC::open()
 	getdisplays(t_displays, false);
 	MCwbr = t_displays[0] . workarea;
 	
-	// COCOA-TODO: menus / textinput / dragdrop / iconmenu / colormapping
-	
 	return True;
 }
 

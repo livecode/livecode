@@ -469,8 +469,27 @@ bool MCMacPasteboardConvertTIFFToPNG(const MCString& p_in_data, MCString& r_out_
 	if (p_in_data . getlength() >= 4 && memcmp(p_in_data . getstring(), "\211PNG", 4) == 0)
 		return MCMacPasteboardConvertIdentity(p_in_data, r_out_data);
 
-	// Now we know it isn't PNG data, do the conversion!
+	NSAutoreleasePool *t_pool;
+	t_pool = [[NSAutoreleasePool alloc] init];
 	
+	// Now we know it isn't PNG data, do the conversion!
+	NSData *t_data;
+	t_data = [[NSData alloc] initWithBytesNoCopy: (void *)p_in_data . getstring() length: p_in_data . getlength() freeWhenDone: NO];
+	
+	NSBitmapImageRep *t_rep;
+	t_rep =[[NSBitmapImageRep alloc] initWithData: t_data];
+	[t_data release];
+	
+	NSData *t_out_data;
+	t_out_data = [t_rep representationUsingType: NSPNGFileType properties: nil];
+
+	r_out_data . set((const char *)memdup([t_out_data bytes], [t_out_data length]), [t_out_data length]);
+	
+	[t_pool release];
+	
+	return true;
+	
+#ifdef QUICKTIME
 	bool t_success;
 	t_success = true;
 	
@@ -556,6 +575,7 @@ bool MCMacPasteboardConvertTIFFToPNG(const MCString& p_in_data, MCString& r_out_
 		CloseComponent(t_importer);
 	
 	return t_result;
+#endif
 }
 
 bool MCMacPasteboardConvertFileURLToFiles(const MCString& p_in_data, MCString& r_out_data)

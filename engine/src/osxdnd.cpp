@@ -401,7 +401,6 @@ void MCScreenDC::close_dragdrop(void)
 
 pascal OSErr MCScreenDC::DragTrackingHandler(DragTrackingMessage p_message, WindowRef p_window, void *p_context, DragRef p_drag)
 {
-	// COCOA-TODO: Redo dragtracking
 #ifdef OLD_MAC
 	_Drawable _dw;
 	_dw.type = DC_WINDOW;
@@ -485,7 +484,6 @@ pascal OSErr MCScreenDC::DragTrackingHandler(DragTrackingMessage p_message, Wind
 
 pascal OSErr MCScreenDC::DragReceiveHandler(WindowPtr p_window, void *p_context, DragRef p_drag)
 {
-	// COCOA-TODO: Redo DragReceive
 #ifdef OLD_MAC
 	_Drawable _dw;
 	_dw.type = DC_WINDOW;

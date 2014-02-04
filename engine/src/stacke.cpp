@@ -400,6 +400,8 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				// IM-2013-08-29: [[ ResIndependence ]] use scaled effect rect for QT effects
 				if (t_effects -> type == VE_UNDEFINED && MCQTEffectBegin(t_effects -> type, t_effects -> name, t_effects -> direction, t_initial_image, t_final_image, t_device_rect))
 					t_effects -> type = VE_QTEFFECT;
+#else
+				;
 #endif
 		}
 		
