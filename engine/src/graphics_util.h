@@ -100,6 +100,11 @@ inline MCRectangle MCRectangleGetTransformedBounds(const MCRectangle &p_rect, co
 	return MCGRectangleGetIntegerBounds(MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_rect), p_transform));
 }
 
+inline MCRectangle MCRectangleGetTransformedInterior(const MCRectangle &p_rect, const MCGAffineTransform &p_transform)
+{
+	return MCGRectangleGetIntegerInterior(MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_rect), p_transform));
+}
+
 inline MCPoint MCPointTransform(const MCPoint &p_point, const MCGAffineTransform &p_transform)
 {
 	return MCGPointToMCPoint(MCGPointApplyAffineTransform(MCPointToMCGPoint(p_point), p_transform));

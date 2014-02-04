@@ -298,7 +298,7 @@ void MCStack::realize()
 { //create window
 	if (!MCnoui && MCModeMakeLocalWindows())
 	{
-		if ( getextendedstate(ECS_FULLSCREEN) )
+		if (view_getfullscreen())
 		{
 			//TS-2008-08-01 : [[Bug 5703 - fullscreen stack prop interacts badly with HideMenuBar]]
 			if (!((MCScreenDC*)MCscreen)->getmenubarhidden())
@@ -314,8 +314,9 @@ void MCStack::realize()
 		}
 
 		// IM-2013-08-01: [[ ResIndependence ]] scale stack rect to device coords
+		// IM-2014-01-16: [[ StackScale ]] Use scaled view rect as window size
 		MCRectangle t_device_rect;
-		t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
+		t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(view_getrect()));
 		
 		Rect wrect;
 		wrect = MCRectToMacRect(t_device_rect);

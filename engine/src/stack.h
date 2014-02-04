@@ -207,7 +207,10 @@ protected:
 	bool m_view_fullscreen;
 	MCStackFullscreenMode m_view_fullscreenmode;
 
-	MCRectangle m_view_stack_rect;
+	// IM-2014-01-16: [[ StackScale ]] Store the requested stack rect here rather than reset
+	// to the old_rect held by the stack
+	MCRectangle m_view_requested_stack_rect;
+	MCRectangle m_view_adjusted_stack_rect;
 	MCRectangle m_view_rect;
 
 	// IM-2013-10-14: [[ FullscreenMode ]] Indicates whether the view needs to be redrawn
@@ -224,6 +227,10 @@ protected:
 	// MW-2011-08-19: [[ Redraw ]] The region of the view that needs to be
 	//   drawn to the screen on the next update.
 	MCRegionRef m_view_update_region;
+	
+	// IM-2014-01-07: [[ StackScale ]] the drawing scale of the stack
+	// IM-2014-01-16: [[ StackScale ]] Move stack scale factor to view abstraction
+	MCGFloat m_view_content_scale;
 	
 public:
 	Boolean menuwindow;
@@ -317,6 +324,13 @@ public:
 	// Return the visible stack region constrained by the fullscreen settings
 	MCRectangle view_constrainstackviewport(const MCRectangle &p_viewport);
 	
+	// IM-2014-01-16: [[ StackScale ]] Ensure the view rect & transform are in sync with the configured view properties
+	// (stack viewport, fullscreen mode, fullscreen, scale factor)
+	void view_update_transform(void);
+	
+	// IM-2014-01-16: [[ StackScale ]] Calculate the new view rect, transform, and adjusted stack rect for the given stack rect
+	void view_calculate_viewports(const MCRectangle &p_stack_rect, MCRectangle &r_adjusted_stack_rect, MCRectangle &r_view_rect, MCGAffineTransform &r_transform);
+	
 	// Return the rect of the view in logical screen coords.
 	MCRectangle view_getrect(void) const;
 
@@ -403,6 +417,11 @@ public:
 	// IM-2013-12-05: [[ PixelScale ]] Update view window geometry to scaled view rect
 	void view_sync_window_geometry(void);
 	
+	// IM-2014-01-07: [[ StackScale ]] Get / Set the content scale of the stack
+	// IM-2014-01-16: [[ StackScale ]] Move stack scale factor to view abstraction
+	MCGFloat view_get_content_scale() const;
+	void view_set_content_scale(MCGFloat p_scale);
+	
 	//////////
 	
 	// IM-2013-10-14: [[ FullscreenMode ]] Return the stack -> stack viewport coordinate transform (Currently only applies the stack vertical scroll)
@@ -436,7 +455,17 @@ public:
 	MCPoint stacktogloballoc(const MCPoint &p_stackloc) const;
 	MCPoint globaltostackloc(const MCPoint &p_globalloc) const;
 
+	//////////
+	
+	// IM-2014-01-07: [[ StackScale ]] Return the card rect after scale adjustment
+	MCRectangle getcardrect() const;
+	// IM-2014-01-07: [[ StackScale ]] Update the rect of the current card to fit the stack
+	void updatecardsize();
+	
+	//////////
+	
 	void setgeom();
+	
 	//////////
 	
     virtual MCRectangle getrectangle(bool p_effective) const;
