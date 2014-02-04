@@ -138,6 +138,16 @@ bool MCStoreSetPurchaseProperty(const char *p_product_id, const char *p_property
     
 }
 
+char* MCStoreGetPurchaseProperty(const char *p_product_id, const char *p_property_name)
+{
+    char* t_result;
+    
+    MCAndroidEngineRemoteCall("storeGetPurchaseProperty", "sss", &t_result, p_product_id, p_property_name);
+    
+    return t_result;
+    
+}
+
 bool MCStoreConsumePurchase(const char *p_purchase_id)
 {
     

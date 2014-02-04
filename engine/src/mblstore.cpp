@@ -354,6 +354,21 @@ Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameters)
 //////////////////////////////////////////////////////////////////////////////////
 Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_parameters)
 {
+    bool t_success = true;
+	
+	char *t_product_id = nil;
+    char *t_prop_name = nil;
+    const char *t_prop_value = nil;
+    
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "ss", &t_product_id, &t_prop_name);
+	if (t_success)
+        t_prop_value = MCStoreGetPurchaseProperty(t_product_id, t_prop_name);
+        
+    MCCStringFree(t_product_id);
+    MCCStringFree(t_prop_name);
+    
+    MCresult -> sets(t_prop_value);
     return ES_NORMAL;
 }
 

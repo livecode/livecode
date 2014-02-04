@@ -1967,15 +1967,25 @@ public class Engine extends View implements EngineApi
             itemProps.put(productId, new HashMap<String,String>());
         (itemProps.get(productId)).put(propertyName, propertyValue);
     
-        // Move this to storeGetPurchaseProperty
+        // testing
         /*
         Log.d(TAG, "Stored properties for productId :" + productId);
         Map<String,String> map = itemProps.get(productId);
         for (String key : map.keySet())
-            Log.d(TAG, "For property : " + key + "the value is : " + map.get(key));
+            Log.d(TAG, "For property : " + key + "  the value is : " + map.get(key));
          */
         
         return true;
+    }
+    
+    public String storeGetPurchaseProperty(String productId, String propName)
+    {
+        Log.d(TAG, "Stored properties for productId :" + productId);
+        Map<String,String> map = itemProps.get(productId);
+        if (map != null)
+            return map.get(propName);
+        else
+            return "";
     }
 
 	public boolean purchaseConfirmDelivery(int purchaseId, String notificationId)
