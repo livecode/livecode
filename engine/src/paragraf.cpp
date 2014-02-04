@@ -3572,8 +3572,12 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei,
 {
 	// If the paragraph is empty, there is nothing to do.
 	if (gettextlength() == 0)
-		return;
-	
+    {
+        r_ranges . ranges = nil;
+        r_ranges . count = 0;
+        return;
+    }
+
 	if (ei > gettextlength())
 		ei = gettextlength();
     
