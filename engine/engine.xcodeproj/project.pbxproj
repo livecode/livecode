@@ -344,6 +344,8 @@
 		4DB386131714426200D3F102 /* libgif.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7991171348C1000BCF78 /* libgif.a */; };
 		4DB386141714426200D3F102 /* libpcre.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7999171348CD000BCF78 /* libpcre.a */; };
 		4DB98626130C09D6008A03DC /* mcutility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DB98625130C09D6008A03DC /* mcutility.cpp */; };
+		4DBF58881801CAF8009CAB2E /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DBF58631801CA57009CAB2E /* libopenssl.a */; };
+		4DBF58B31801CB6D009CAB2E /* revsecurity.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4DBF58651801CA57009CAB2E /* revsecurity.dylib */; };
 		4DC66D8B1045D41700D1CFA3 /* notify.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DC66D8A1045D41700D1CFA3 /* notify.cpp */; };
 		4DCB65721653B2F700E438E6 /* stackcache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCB65711653B2F700E438E6 /* stackcache.cpp */; };
 		4DCFFD1C10CE8F5800FA2262 /* osxtextlayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCFFD1B10CE8F5800FA2262 /* osxtextlayout.cpp */; };
@@ -768,6 +770,34 @@
 			remoteGlobalIDString = 4DF42A430B048617003F2D95;
 			remoteInfo = external;
 		};
+		4DBF58621801CA57009CAB2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D2AAC046055464E500DB518D;
+			remoteInfo = libopenssl;
+		};
+		4DBF58641801CA57009CAB2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DBF57C11801A14C009CAB2E;
+			remoteInfo = revsecurity;
+		};
+		4DBF58661801CA67009CAB2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = D2AAC045055464E500DB518D;
+			remoteInfo = libopenssl;
+		};
+		4DBF58B01801CB4E009CAB2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DBF57C01801A14C009CAB2E;
+			remoteInfo = revsecurity;
+		};
 		4DEE2B280FDE42DF0009423C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D587D940B80944100200116 /* Project object */;
@@ -819,6 +849,16 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4DBF58BB1801CB77009CAB2E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				4DBF58B31801CB6D009CAB2E /* revsecurity.dylib in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1260,6 +1300,7 @@
 		4DB968A4135DFDA900DCAE93 /* mblandroidorientation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidorientation.cpp; path = src/mblandroidorientation.cpp; sourceTree = "<group>"; };
 		4DB968A5135DFDA900DCAE93 /* mblandroidtextlayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtextlayout.cpp; path = src/mblandroidtextlayout.cpp; sourceTree = "<group>"; };
 		4DB98625130C09D6008A03DC /* mcutility.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mcutility.cpp; path = src/mcutility.cpp; sourceTree = "<group>"; };
+		4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libopenssl.xcodeproj; path = ../thirdparty/libopenssl/libopenssl.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4DC66D8A1045D41700D1CFA3 /* notify.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = notify.cpp; path = src/notify.cpp; sourceTree = "<group>"; };
 		4DC999C00D3BBA29003942CC /* rtf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = rtf.cpp; path = src/rtf.cpp; sourceTree = "<group>"; };
 		4DCA084D11E8DAC7005CF640 /* deploy_dmg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = deploy_dmg.cpp; path = src/deploy_dmg.cpp; sourceTree = "<group>"; };
@@ -1505,6 +1546,7 @@
 				4D657F9B17143B770086071B /* libjpeg.a in Frameworks */,
 				4D657F9A17143B750086071B /* libgif.a in Frameworks */,
 				4D657F9917143B720086071B /* libpcre.a in Frameworks */,
+				4DBF58881801CAF8009CAB2E /* libopenssl.a in Frameworks */,
 				E8252264174E2BF500055329 /* libskia.a in Frameworks */,
 				4DB385731714422E00D3F102 /* Carbon.framework in Frameworks */,
 				4DDC26C9122692B10071CB31 /* Quartz.framework in Frameworks */,
@@ -1681,6 +1723,7 @@
 		4D587FAE0B809C0C00200116 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
+				4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */,
 				E8AF4890174D5563000B2F9E /* libskia.xcodeproj */,
 				4C10D82416BFADB800D25197 /* libgraphics.xcodeproj */,
 				4D055BB01079F6E7007F6E13 /* libcore.xcodeproj */,
@@ -1966,6 +2009,15 @@
 			isa = PBXGroup;
 			children = (
 				4DB9036E0DAB898B0014A170 /* libexternal.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4DBF585E1801CA57009CAB2E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4DBF58631801CA57009CAB2E /* libopenssl.a */,
+				4DBF58651801CA57009CAB2E /* revsecurity.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2624,6 +2676,7 @@
 				4D587D9E0B80945B00200116 /* Resources */,
 				4D587D9F0B80945B00200116 /* Sources */,
 				4D587DA00B80945B00200116 /* Frameworks */,
+				4DBF58BB1801CB77009CAB2E /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -2631,6 +2684,7 @@
 				4D1F9C49171C655E0091C6CB /* PBXTargetDependency */,
 				4DEE2B2B0FDE42E70009423C /* PBXTargetDependency */,
 				4D221ACD171D59F500E7E557 /* PBXTargetDependency */,
+				4DBF58B11801CB4E009CAB2E /* PBXTargetDependency */,
 			);
 			name = "LiveCode-Community";
 			productName = engine;
@@ -2676,6 +2730,7 @@
 				E8A554AD1785A6C700DABC1A /* PBXTargetDependency */,
 				4D8D3565171D4B72009D9D25 /* PBXTargetDependency */,
 				4DEE2BD30FDE4A1E0009423C /* PBXTargetDependency */,
+				4DBF58671801CA67009CAB2E /* PBXTargetDependency */,
 				E8A554B01785A6CC00DABC1A /* PBXTargetDependency */,
 			);
 			name = kernel;
@@ -2742,6 +2797,10 @@
 				{
 					ProductGroup = 4D6C7985171348B4000BCF78 /* Products */;
 					ProjectRef = 4D587FBC0B809C2600200116 /* libjpeg.xcodeproj */;
+				},
+				{
+					ProductGroup = 4DBF585E1801CA57009CAB2E /* Products */;
+					ProjectRef = 4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */;
 				},
 				{
 					ProductGroup = 4D6C7995171348CD000BCF78 /* Products */;
@@ -2831,6 +2890,20 @@
 			fileType = archive.ar;
 			path = libexternal.a;
 			remoteRef = 4DB9036D0DAB898B0014A170 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4DBF58631801CA57009CAB2E /* libopenssl.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libopenssl.a;
+			remoteRef = 4DBF58621801CA57009CAB2E /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4DBF58651801CA57009CAB2E /* revsecurity.dylib */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.dylib";
+			path = revsecurity.dylib;
+			remoteRef = 4DBF58641801CA57009CAB2E /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		E8AF4895174D5563000B2F9E /* libskia.a */ = {
@@ -3614,6 +3687,16 @@
 			isa = PBXTargetDependency;
 			name = core;
 			targetProxy = 4D8D3570171D4B83009D9D25 /* PBXContainerItemProxy */;
+		};
+		4DBF58671801CA67009CAB2E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libopenssl;
+			targetProxy = 4DBF58661801CA67009CAB2E /* PBXContainerItemProxy */;
+		};
+		4DBF58B11801CB4E009CAB2E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = revsecurity;
+			targetProxy = 4DBF58B01801CB4E009CAB2E /* PBXContainerItemProxy */;
 		};
 		4DEE2B290FDE42DF0009423C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

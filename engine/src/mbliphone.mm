@@ -940,3 +940,18 @@ bool MCS_random_bytes(size_t p_count, void* p_buffer)
 }
 
 //////////////////
+
+extern "C" void *IOS_LoadModule(const char *name);
+extern "C" void *IOS_ResolveSymbol(void *module, const char *name);
+
+// MW-2013-10-08: [[ LibOpenSSL101e ]] This functions are used by the stubs to load
+//   modules / resolve symbols.
+void *IOS_LoadModule(const char *name)
+{
+	return MCsystem -> LoadModule(name);
+}
+
+void *IOS_ResolveSymbol(void *module, const char *name)
+{
+	return MCsystem -> ResolveModuleSymbol(module, name);
+}

@@ -295,7 +295,7 @@ IO_stat MCDispatch::startup(void)
 		t_stream = android_get_mainstack_stream();
 #else
 		char *t_path;
-		MCCStringFormat(t_path, "%.*s/iphone_test.livecode", strrchr(MCcmd, '/') - MCcmd, MCcmd);
+		MCCStringFormat(t_path, "%.*s/testenc.livecode", strrchr(MCcmd, '/') - MCcmd, MCcmd);
 		t_stream = MCS_open(t_path, IO_READ_MODE, False, False, 0);
 		MCCStringFree(t_path);
 #endif

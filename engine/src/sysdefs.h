@@ -86,6 +86,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #elif defined(_IOS_MOBILE)
 
+#define MCSSL
 #define __MACROMAN__
 #define __LF__
 #define PLATFORM_STRING "iphone"
