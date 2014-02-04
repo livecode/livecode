@@ -1811,7 +1811,13 @@ enum Sugar_constants {
     // TD-2013-06-14: [[ DynamicFonts ]] start using font theFont [globally]
     SG_FONT,
     SG_GLOBALLY,
-    SG_FILE
+    SG_FILE,
+	
+	// MW-2013-11-14: [[ AssertCmd ]] Tags for sugar used in assert command.
+	SG_TRUE,
+	SG_FALSE,
+	SG_SUCCESS,
+	SG_FAILURE,
 };
 
 enum Statements {
@@ -1820,6 +1826,8 @@ enum Statements {
     S_ADD,
     S_ANSWER,
     S_ASK,
+	// MW-2013-11-14: [[ AssertCmd ]] 'assert' command tag.
+	S_ASSERT,
     S_BEEP,
     S_BREAK,
     S_BREAKPOINT,

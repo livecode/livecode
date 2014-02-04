@@ -43,6 +43,9 @@ MCStatement *MCN_new_statement(int2 which)
 		return new MCAnswer;
 	case S_ASK:
 		return new MCAsk;
+	// MW-2013-11-14: [[ AssertCmd ]] Constructor for assert command.
+	case S_ASSERT:
+		return new MCAssertCmd;
 	case S_BEEP:
 		return new MCBeep;
 	case S_BREAK:
