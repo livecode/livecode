@@ -1833,14 +1833,14 @@ public class Engine extends View implements EngineApi
 
 	public void addAttachment(String path, String mime_type, String name)
 	{
-        // SN-2014-02-03: [[ bug 11069 ]] Pass the ContentResolver to the Email addAttachment
-        m_email.addAttachment(getActivity().getContentResolver(), path, mime_type, name);
+        // SN-2014-02-03: [[ bug 11069 ]] Pass the Activity to the Email addAttachment
+        m_email.addAttachment(getActivity(), path, mime_type, name);
 	}
 
 	public void addAttachment(byte[] data, String mime_type, String name)
 	{
-        // SN-2014-02-03: [[ bug 11069 ]] Pass the ContentResolver to the Email addAttachment
-        m_email.addAttachment(getActivity().getContentResolver(), data, mime_type, name);
+        // SN-2014-02-03: [[ bug 11069 ]] Pass the Activity to the Email addAttachment
+        m_email.addAttachment(getActivity(), data, mime_type, name);
 	}
 
 	public void sendEmail()
@@ -1850,7 +1850,7 @@ public class Engine extends View implements EngineApi
 
 	private void onEmailResult(int resultCode, Intent data)
 	{
-		m_email.cleanupTempFiles();
+		m_email.cleanupAttachments(getActivity().getContentResolver());
 
 		if (resultCode == Activity.RESULT_CANCELED)
 		{

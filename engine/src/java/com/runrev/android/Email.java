@@ -32,7 +32,6 @@ class Email
 	private Spanned m_message;
 	
 	private ArrayList<Uri> m_attachment_uris;
-	private ArrayList<File> m_temp_files;
 	
 	private String m_mime_type;
 	
@@ -101,50 +100,46 @@ class Email
 		return true;
 	}
     
-    private ContentValues createAttachmentValues(String p_name, String p_mime_type, long p_size)
+    private ContentValues createAttachmentValues(String p_name, String p_mime_type, boolean p_temporary)
     {        
         ContentValues t_values = new ContentValues(2);
         t_values . put(AttachmentProvider.NAME, p_name);
         t_values . put(AttachmentProvider.MIME_TYPE, p_mime_type);
-        t_values . put(AttachmentProvider.SIZE, p_size);
+        t_values . put(AttachmentProvider.TEMPORARY, p_temporary);
         
-        return t_values;        
+        return t_values;
     }
 	
-	public boolean addAttachment(ContentResolver p_resolver, String path, String mime_type, String name)
+	public boolean addAttachment(Context p_context, String path, String mime_type, String name)
 	{
         File t_file = new File(path);
         
         // SN-2014-02-03: [[ Bug 11069 ]] Generate a URI leading to AttachmentProvider
         Uri t_uri = Uri.parse(AttachmentProvider.URI + "/" + path);
-        ContentValues t_values = createAttachmentValues(name, mime_type, t_file.length());
+        ContentValues t_values = createAttachmentValues(name, mime_type, false);
         
-        p_resolver . insert(t_uri, t_values);
+        p_context . getContentResolver() . insert(t_uri, t_values);
         
 		return addAttachment(t_uri, mime_type, name);
 	}
 	
-	public boolean addAttachment(ContentResolver p_resolver, byte[] data, String mime_type, String name)
+	public boolean addAttachment(Context p_context, byte[] data, String mime_type, String name)
 	{
 		try
 		{
 			File t_tempfile;
-            t_tempfile = File.createTempFile("eml", name);
+            // SN-2014-02-04: [[ Bug 11069 ]] Temporary files are created in the cache directory
+            t_tempfile = File.createTempFile("eml", name, p_context . getCacheDir());
 			
 			FileOutputStream t_out = new FileOutputStream(t_tempfile);
 			t_out.write(data);
 			t_out.close();
-			
-			if (m_temp_files == null)
-				m_temp_files = new ArrayList<File>();
-			
-			m_temp_files.add(t_tempfile);
-            
+						            
             // SN-2014-02-03: [[ Bug 11069 ]] Generate a URI leading to AttachmentProvider
             Uri t_uri = Uri.parse(AttachmentProvider.URI + "/" + t_tempfile.getPath());
                         
-            ContentValues t_values = createAttachmentValues(name, mime_type, t_tempfile.length());
-            p_resolver . insert(t_uri, t_values);
+            ContentValues t_values = createAttachmentValues(name, mime_type, true);
+            p_context . getContentResolver() . insert(t_uri, t_values);
             			
 			return addAttachment(t_uri, mime_type, name);
 		}
@@ -196,18 +191,14 @@ class Email
 		return t_mail_intent;
 	}
 	
-	public void cleanupTempFiles()
-	{
-        Log.i("revandroid", " ****  **** cleanup temporary files");
-		if (m_temp_files == null)
-			return;
-		
+	public void cleanupAttachments(ContentResolver p_resolver)
+	{		
 		try
 		{
-			for (File t_tempfile : m_temp_files)
-			{
-				t_tempfile.delete();
-			}
+            for (Uri t_uri : m_attachment_uris)
+            {
+                p_resolver . delete(t_uri, AttachmentProvider.FILE, null);
+            }
 		}
 		catch (Exception e)
 		{
