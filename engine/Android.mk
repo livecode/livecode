@@ -104,7 +104,7 @@ LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/../libcore/include \
 	$(LOCAL_PATH)/../libgraphics/include
 
-LOCAL_STATIC_LIBRARIES := librevandroid-kernel libcore libgraphics libjpeg libpcre libpng libgif libskia libfreetype libexpat_static
+LOCAL_STATIC_LIBRARIES := librevandroid-kernel libcore libgraphics libjpeg libpcre libpng libgif libskia libfreetype libexpat_static openssl
 
 LOCAL_LDLIBS += -lz -lm -llog -ljnigraphics -lGLESv1_CM
 

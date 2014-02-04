@@ -15,6 +15,7 @@ export ANDROID_SDK=$TRUNK/sdks/android-sdk
 export SRCROOT=$TRUNK
 export JAVA_SDK=`/usr/libexec/java_home`
 export JCOUNT=20
+export PREBUILT_LIB_DIR=$SRCROOT/prebuilt/lib/android
 
 # Path variables
 export CLASSPATH="$ANDROID_SDK/platforms/android-8/android.jar"
