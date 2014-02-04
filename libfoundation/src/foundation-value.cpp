@@ -122,6 +122,8 @@ hash_t MCValueHash(MCValueRef p_value)
 		return __MCListHash((__MCList *)self);
 	case kMCValueTypeCodeSet:
 		return __MCSetHash((__MCSet *)self);
+    case kMCValueTypeCodeData:
+        return __MCDataHash((__MCData*) self);
 	case kMCValueTypeCodeCustom:
 		return ((__MCCustomValue *)self) -> callbacks -> hash(p_value);
 	default:
@@ -212,6 +214,8 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
 		return __MCListCopyDescription((__MCList *)p_value, r_desc);
 	case kMCValueTypeCodeSet:
 		return __MCSetCopyDescription((__MCSet *)p_value, r_desc);
+    case kMCValueTypeCodeData:
+        return __MCDataCopyDescription((__MCData*)p_value, r_desc);
 	case kMCValueTypeCodeCustom:
 		return ((__MCCustomValue *)self) -> callbacks -> describe(p_value, r_desc);
 	default:

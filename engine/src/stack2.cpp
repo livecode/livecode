@@ -1588,6 +1588,12 @@ MCCard *MCStack::getchildbyordinal(Chunk_term p_ordinal)
 
 MCCard *MCStack::getchildbyid(uinteger_t p_id)
 {
+    if (cards == NULL)
+	{
+		curcard = cards = MCtemplatecard->clone(False, False);
+		cards->setparent(this);
+	}
+    
     // OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
     MCCard *cptr;
     if (editing != nil && savecards != nil)
@@ -1622,6 +1628,12 @@ MCCard *MCStack::getchildbyid(uinteger_t p_id)
 
 MCCard *MCStack::getchildbyname(MCNameRef p_name)
 {
+    if (cards == NULL)
+	{
+		curcard = cards = MCtemplatecard->clone(False, False);
+		cards->setparent(this);
+	}
+    
     MCCard *cptr;
 	if (editing != NULL && savecards != NULL)
 		cptr = savecards;

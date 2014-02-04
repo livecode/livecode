@@ -495,3 +495,13 @@ bool __MCDataIsEqualTo(__MCData *self, __MCData *p_other_data)
 {
     return MCDataIsEqualTo(self, p_other_data);
 }
+
+hash_t __MCDataHash(__MCData *self)
+{
+    return MCHashBytes(self -> bytes, self -> byte_count);
+}
+
+bool __MCDataCopyDescription(__MCData *self, MCStringRef &r_description)
+{
+    return false;
+}
