@@ -3364,7 +3364,7 @@ static codepoint_t GetCodepointAtRelativeIndex(MCBlock *p_block, findex_t p_inde
 	if (p_block == NULL)
 		return 0xFFFFFFFF;
 	
-	return p_block -> GetCodepointAtIndex(p_index);
+	return p_block -> getparent() -> GetCodepointAtIndex(p_index);
 }
 
 findex_t MCParagraph::findwordbreakbefore(MCBlock *p_block, findex_t p_index)

@@ -501,53 +501,6 @@ template<typename T> void SetCharPropOfCharChunkOfParagraph(MCExecContext& ctxt,
     MCField *t_field;
     t_field = p_paragraph -> getparent();
 
-#ifdef NO_LAYOUT
-    // MW-2013-03-20: [[ Bug 10764 ]] We only need to layout if the paragraphs
-    //   are attached to the current card.
-    bool t_need_layout;
-    if (t_field -> getopened())
-        t_need_layout = p_paragraph == t_field -> getparagraphs();
-    else
-        t_need_layout = false;
-
-    MCRectangle drect = t_field -> getrect();
-    findex_t ssi = 0;
-    findex_t sei = 0;
-    int4 savex = t_field -> textx;
-    int4 savey = t_field -> texty;
-
-    // MW-2008-07-09: [[ Bug 6353 ]] Improvements in 2.9 meant that the field was
-    //   more careful about not doing anything if it wasn't the MCactivefield.
-    //   However, the unselection/reselection code here breaks text input if the
-    //   active field sets text properties of another field. Therefore we only
-    //   get and then reset the selection if we are the active field.
-    if (t_need_layout)
-    {
-        if (all)
-        {
-            // Same as this?
-            if (MCactivefield == t_field)
-            {
-                t_field -> selectedmark(False, ssi, sei, False, False);
-                t_field -> unselect(False, True);
-            }
-            t_field -> curparagraph = t_field -> focusedparagraph = p_field -> paragraphs;
-            t_field -> firstparagraph = t_field -> lastparagraph = NULL;
-            t_field -> cury = t_field -> focusedy = t_field -> topmargin;
-            t_field -> textx = t_field -> texty = 0;
-//            p_field -> resetparagraphs();
-        }
-        else
-        {
-            // MW-2012-02-27: [[ Bug ]] Update rect slightly off, shows itself when
-            //   setting the box style of the top line of a field.
-            drect = t_field -> getfrect();
-            drect.y = t_field -> getcontenty() + t_field -> paragraphtoy(pgptr);
-            drect.height = 0;
-        }
-    }
-#endif
-
     // Sanity check for lengths
     uindex_t t_para_len;
     t_para_len = p_paragraph->gettextlength();
@@ -594,27 +547,6 @@ template<typename T> void SetCharPropOfCharChunkOfParagraph(MCExecContext& ctxt,
             t_blocks_changed = true;
         }
 
-        //                  TODO: what to do with the image source property, as there is a need for p_from_html?
-        //                                case P_IMAGE_SOURCE:
-        //                    {
-        //                                bptr->setatts(p, value);
-
-        //                    // MW-2008-04-03: [[ Bug ]] Only add an extra block if this is coming from
-        //                    //   html parsing.
-        //                    if (p_from_html)
-        //                    {
-        //                        MCBlock *tbptr = new MCBlock(*bptr); // need a new empty block
-        //                        tbptr->freerefs();                   // for HTML continuation
-        //                        // MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
-        //                        //   fontref so it can compute its.
-        //                        if (opened)
-        //                            tbptr->open(parent -> getfontref());
-        //                        bptr->append(tbptr);
-        //                        tbptr->SetRange(ei, 0);
-        //                        t_blocks_changed = true;
-        //                    }
-        //                }
-
         T::setter(ctxt, bptr, p_setter, p_value);
 
         // MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
@@ -629,36 +561,8 @@ template<typename T> void SetCharPropOfCharChunkOfParagraph(MCExecContext& ctxt,
     if (t_blocks_changed)
         p_paragraph -> setDirty();
 
-#ifdef NO_LAYOUT
-    if (t_need_layout && !all)
-    {
-        // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
-        p_paragraph -> layout(true);
-        drect.height += p_paragraph -> getheight(t_field -> fixedheight);
-    }
-#else
-    p_paragraph -> layout(true);
-#endif
-#ifdef NO_LAYOUT
-    if (t_need_layout)
-    {
-        if (all)
-        {
-            t_field -> recompute();
-            t_field -> hscroll(savex - t_field -> textx, False);
-            t_field -> vscroll(savey - t_field -> texty, False);
-            t_field -> resetscrollbars(True);
-            if (MCactivefield == t_field)
-                t_field -> seltext(ssi, sei, False);
-        }
-        else
-            t_field -> removecursor();
-        // MW-2011-08-18: [[ Layers ]] Invalidate the dirty rect.
-        t_field -> layer_redrawrect(drect);
-        if (!all)
-            t_field -> replacecursor(False, True);
-    }
-#endif
+    if (T::need_layout || t_blocks_changed)
+        p_paragraph -> layoutchanged();
 }
 
 template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, bool all, uint32_t p_part_id, findex_t si, findex_t ei, void (MCBlock::*p_setter)(MCExecContext&, typename T::arg_type), typename T::arg_type p_value)
