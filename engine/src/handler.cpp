@@ -418,7 +418,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 			if (MCexitall)
 				break;
 		}
-		ctxt.SetLine(tspr->getline());
+		ctxt.SetLineAndPos(tspr->getline(), tspr->getpos());
         
         tspr->exec_ctxt(ctxt);
 		stat = ctxt . GetExecStat();

@@ -5239,7 +5239,7 @@ void MCProperty::eval_count_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 
 void MCProperty::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
-	ctxt . SetLine(line);
+	ctxt . SetLineAndPos(line, pos);
     
 	if (destvar != nil && which != P_CUSTOM_VAR)
 		return eval_variable_ctxt(ctxt, r_value);

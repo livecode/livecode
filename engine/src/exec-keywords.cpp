@@ -57,7 +57,7 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
             if (MCexitall)
                 break;
         }
-        ctxt . SetLine(tspr->getline());
+        ctxt . SetLineAndPos(tspr->getline(), tspr->getpos());
         
        // stat = tspr->exec(ctxt . GetEP());
         tspr->exec_ctxt(ctxt);
@@ -174,7 +174,7 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		ctxt . SetLine(line);
+		ctxt . SetLineAndPos(line, pos);
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
@@ -670,7 +670,7 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
 			if (MCexitall)
 				break;
 		}
-		ctxt . SetLine(tspr->getline());
+		ctxt . SetLineAndPos(tspr->getline(), tspr->getpos());
         
 		//stat = tspr->exec(ctxt . GetEP());
         tspr->exec_ctxt(ctxt);

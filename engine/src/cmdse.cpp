@@ -1122,7 +1122,7 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 		tptr = tptr->getnext();
 	}
 
-    ctxt . SetLine(line);
+    ctxt . SetLineAndPos(line, pos);
     MCEngineExecDispatch(ctxt, is_function ? HT_FUNCTION : HT_MESSAGE, *t_message, t_target_ptr, params);
 }
 
@@ -1421,7 +1421,7 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
 		}
         else
         {
-            ctxt . SetLine(line);
+            ctxt . SetLineAndPos(line, pos);
 
             if (!send)
                 MCEngineExecCall(ctxt, *t_message, t_target_ptr);

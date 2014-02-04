@@ -213,7 +213,7 @@ void MCB_prepmessage(MCExecContext &ctxt, MCNameRef mess, uint2 line, uint2 pos,
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		ctxt.SetLine(line);
+		ctxt.SetLineAndPos(line, pos);
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}

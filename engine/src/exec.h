@@ -1511,6 +1511,22 @@ public:
         m_line = p_line;
     }
     
+    uint2 GetPos() const
+    {
+        return m_pos;
+    }
+    
+    void SetPos(uint2 p_pos)
+    {
+        m_pos = p_pos;
+    }
+    
+    void SetLineAndPos(uint2 p_line, uint2 p_pos)
+    {
+        m_line = p_line;
+        m_pos = p_pos;
+    }
+    
 	void SetParentScript(MCParentScriptUse *p_parentscript)
 	{
         m_parentscript = p_parentscript;
@@ -1607,6 +1623,7 @@ private:
     uint2 m_nfforce;
     uint2 m_cutoff;
     uint2 m_line;
+    uint2 m_pos;
     Boolean m_convertoctals;
     Boolean m_casesensitive;
     Boolean m_wholematches;
