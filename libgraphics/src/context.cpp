@@ -2043,7 +2043,7 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
 		r_paint . setShader(t_shader);
 		r_paint . setMaskFilter(t_stipple);
 		
-        // MM-2014-01-09: [[ Bug 11402 ]] Updated filters to use Skia's new filter levels.
+        // MM-2014-01-09: [[ LibSkiaUpdate ]] Updated filters to use Skia's new filter levels.
 		switch (t_filter)
 		{
 			case kMCGImageFilterNone:
