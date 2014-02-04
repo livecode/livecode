@@ -1397,7 +1397,7 @@ void MCField::GetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
         sptr = sptr -> next();
     }
-    while (sptr -> gettextlengthcr() < ei);
+    while (sptr -> gettextlengthcr() < ei && sptr != pgptr);
 
     t_ranges . Take(r_value . ranges, r_value . count);
 }
