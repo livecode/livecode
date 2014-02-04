@@ -420,7 +420,8 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 			if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
 				do
 				{
-					MCB_error(ep, tspr->getline(), tspr->getpos(), EE_HANDLER_BADSTATEMENT);
+					if (!MCB_error(ep, tspr->getline(), tspr->getpos(), EE_HANDLER_BADSTATEMENT))
+						break;
 				}
 				while (MCtrace && (stat = tspr->exec(ep)) != ES_NORMAL);
 			if (stat != ES_NORMAL)

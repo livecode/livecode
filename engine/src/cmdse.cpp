@@ -749,7 +749,8 @@ Exec_stat MCDispatchCmd::exec(MCExecPoint& ep)
 		{
 			tptr -> clear_argument();
 			while ((stat = tptr->eval(ep)) != ES_NORMAL && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				MCB_error(ep, line, pos, EE_STATEMENT_BADPARAM);
+				if (!MCB_error(ep, line, pos, EE_STATEMENT_BADPARAM))
+					break;
 			if (stat != ES_NORMAL)
 			{
 				MCeerror->add(EE_STATEMENT_BADPARAM, line, pos);
