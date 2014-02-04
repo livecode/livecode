@@ -117,18 +117,21 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 				// IM-2013-10-30: [[ FullscreenMode ]] Get scale factor from the returned frame
 				t_image.scale_factor = t_frame->density;
 
+                // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
 				switch (resizequality)
 				{
-				case INTERPOLATION_NEAREST:
-				case INTERPOLATION_BOX:
-					t_image . filter = kMCGImageFilterNearest;
-					break;
-				case INTERPOLATION_BILINEAR:
-					t_image . filter = kMCGImageFilterBilinear;
-					break;
-				case INTERPOLATION_BICUBIC:
-					t_image . filter = kMCGImageFilterBilinear;
-					break;
+                    case INTERPOLATION_NEAREST:
+                        t_image . filter = kMCGImageFilterNone;
+                        break;
+                    case INTERPOLATION_BOX:
+                        t_image . filter = kMCGImageFilterMedium;
+                        break;
+                    case INTERPOLATION_BILINEAR:
+                        t_image . filter = kMCGImageFilterMedium;
+                        break;
+                    case INTERPOLATION_BICUBIC:
+                        t_image . filter = kMCGImageFilterHigh;
+                        break;
 				}
 
 				t_image . bitmap = t_frame->image;

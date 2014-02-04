@@ -2016,7 +2016,7 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
 	SkMaskFilter *t_stipple;
 	t_stipple = NULL;
 	MCGImageFilter t_filter;
-	t_filter = kMCGImageFilterNearest;
+	t_filter = kMCGImageFilterNone;
 	if (t_success)
 	{
 		if (p_gradient != NULL)
@@ -2046,13 +2046,16 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
         // MM-2014-01-09: [[ Bug 11402 ]] Updated filters to use Skia's new filter levels.
 		switch (t_filter)
 		{
-			case kMCGImageFilterNearest:
+			case kMCGImageFilterNone:
+                r_paint . setFilterLevel(SkPaint::kNone_FilterLevel);
+				break;
+            case kMCGImageFilterLow:
                 r_paint . setFilterLevel(SkPaint::kLow_FilterLevel);
 				break;
-			case kMCGImageFilterBilinear:
+			case kMCGImageFilterMedium:
                 r_paint . setFilterLevel(SkPaint::kMedium_FilterLevel);
 				break;
-			case kMCGImageFilterBicubic:
+			case kMCGImageFilterHigh:
                 r_paint . setFilterLevel(SkPaint::kHigh_FilterLevel);
 				break;
 		}
@@ -2373,21 +2376,25 @@ static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap,
 
 	if (t_success)
 	{
-        // MM-2014-01-09: [[ Bug 11402 ]] Updated filters to use Skia's new filter levels.
+        // MM-2014-01-09: [[ ImageFilterUpdate ]] Updated filters to use Skia's new filter levels.
 		switch (p_filter)
 		{
-            case kMCGImageFilterNearest:
+            case kMCGImageFilterNone:
+                t_paint . setAntiAlias(false);
+                t_paint . setFilterLevel(SkPaint::kNone_FilterLevel);
+				break;
+            case kMCGImageFilterLow:
                 t_paint . setAntiAlias(false);
                 t_paint . setFilterLevel(SkPaint::kLow_FilterLevel);
-                break;
-            case kMCGImageFilterBilinear:
+				break;
+			case kMCGImageFilterMedium:
                 t_paint . setAntiAlias(true);
                 t_paint . setFilterLevel(SkPaint::kMedium_FilterLevel);
-                break;
-            case kMCGImageFilterBicubic:
+				break;
+			case kMCGImageFilterHigh:
                 t_paint . setAntiAlias(true);
                 t_paint . setFilterLevel(SkPaint::kHigh_FilterLevel);
-                break;
+				break;
 		}
 
 		SkRect t_src_rect;
