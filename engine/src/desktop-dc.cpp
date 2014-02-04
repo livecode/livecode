@@ -112,7 +112,7 @@ Boolean MCScreenDC::open()
 	MCPlatformGetSystemProperty(kMCPlatformSystemPropertyAccentColor, kMCPlatformPropertyTypeColor, &MCaccentcolor);
 	alloccolor(MCaccentcolor);
 	
-	MCPlatformGetSystemProperty(kMCPlatformSystemPropertyDoubleClickInterval, kMCPlatformPropertyTypeDouble, &MCdoubletime);
+	MCPlatformGetSystemProperty(kMCPlatformSystemPropertyDoubleClickInterval, kMCPlatformPropertyTypeUInt16, &MCdoubletime);
 	
 	MCtemplatescrollbar->alloccolors();
 	MCtemplatebutton->allocicons();

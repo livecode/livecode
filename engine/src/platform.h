@@ -90,6 +90,7 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeUnknown,
 	
 	kMCPlatformPropertyTypeBool,
+	kMCPlatformPropertyTypeUInt16,
 	kMCPlatformPropertyTypeInt32,
 	kMCPlatformPropertyTypeFloat,
 	kMCPlatformPropertyTypeDouble,

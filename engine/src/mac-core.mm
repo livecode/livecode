@@ -246,11 +246,11 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 	switch(p_property)
 	{
 		case kMCPlatformSystemPropertyDoubleClickInterval:
-			*(double *)r_value = GetDblTime() * 1000.0 / 60.0;
+			*(uint16_t *)r_value = GetDblTime() * 1000.0 / 60.0;
 			break;
 			
 		case kMCPlatformSystemPropertyCaretBlinkInterval:
-			*(double *)r_value = GetCaretTime() * 1000.0 / 60.0;
+			*(uint16_t *)r_value = GetCaretTime() * 1000.0 / 60.0;
 			break;
 			
 		case kMCPlatformSystemPropertyHiliteColor:
