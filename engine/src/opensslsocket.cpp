@@ -68,7 +68,12 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
 #include <sys/socket.h>
 
 #include <netinet/in_systm.h>
+
+// MM-2014-02-04: [[ LibOpenSSL 1.0.1e ]] Header netinet/udp.h is not included in the iOS device SDK.
+#if !defined(TARGET_SUBPLATFORM_IPHONE) || defined(__i386__)
 #include <netinet/udp.h>
+#endif
+
 #include <netinet/in.h>
 
 #include <arpa/inet.h>
