@@ -18,6 +18,8 @@ void MCPlatformHandleWindowFocus(MCPlatformWindowRef window);
 void MCPlatformHandleWindowUnfocus(MCPlatformWindowRef window);
 void MCPlatformHandleWindowRedraw(MCPlatformWindowRef window, MCPlatformSurfaceRef surface, MCRegionRef dirty_rgn);
 
+void MCPlatformHandleModifiersChanged(MCPlatformModifiers modifiers);
+
 void MCPlatformHandleKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 void MCPlatformHandleKeyUp(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 
@@ -112,6 +114,16 @@ void MCPlatformCallbackSendWindowUnfocus(MCPlatformWindowRef p_window)
 	MCLog("Window(%p) -> WindowUnfocus()", p_window);
 	MCPlatformHandleWindowUnfocus(p_window);
 }
+
+//////////
+
+void MCPlatformCallbackSendModifiersChanged(MCPlatformModifiers p_modifiers)
+{
+	MCLog("ModifiersChanged()", 0);
+	MCPlatformHandleModifiersChanged(p_modifiers);
+}
+
+//////////
 
 void MCPlatformCallbackSendMouseEnter(MCPlatformWindowRef p_window)
 {

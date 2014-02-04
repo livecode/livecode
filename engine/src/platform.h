@@ -207,6 +207,18 @@ enum
 	kMCPlatformAcceleratorWithCommand = kMCPlatformAcceleratorWithMeta,
 };
 
+typedef uint32_t MCPlatformModifiers;
+enum
+{
+	kMCPlatformModifierShift = 1 << 0,
+	kMCPlatformModifierControl = 1 << 1,
+	kMCPlatformModifierAlt = 1 << 2,
+	kMCPlatformModifierOption = kMCPlatformModifierAlt,
+	kMCPlatformModifierMeta = 1 << 3,
+	kMCPlatformModifierCommand = kMCPlatformModifierMeta,
+	kMCPlatformModifierCapsLock = 1 << 4,
+};
+
 enum MCPlatformCursorImageSupport
 {
 	kMCPlatformCursorImageSupportMonochrome,

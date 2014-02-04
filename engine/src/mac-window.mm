@@ -292,6 +292,7 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 	
 	// The keyCode of the event contains the key that causes the change,
 	// where as the modifierFlags will indicate whether it is a down or up.
+#if 0
 	NSUInteger t_modifier_flag;
 	MCPlatformKeyCode t_key_code;
 	switch([event keyCode])
@@ -335,7 +336,11 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 			// We don't recognise this modifier, so ignore it.
 			return;
 	}
+#endif
 	
+	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+	
+#if 0
 	// Send a key up or key down event depending on whether the flag is now
 	// set.
 	MCMacPlatformWindow *t_window;
@@ -344,6 +349,7 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 		t_window -> ProcessKeyDown(t_key_code, 0xffffffffU, 0xffffffffU);
 	else
 		t_window -> ProcessKeyUp(t_key_code, 0xffffffffU, 0xffffffffU);
+#endif
 }
 
 - (void)keyDown: (NSEvent *)event
@@ -459,6 +465,9 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
 	
 	MCPlatformMapPointFromScreenToWindow(t_window, t_location, t_location);
+	
+	// Update the modifier key state.
+	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([[NSApp currentEvent] modifierFlags]));
 	
 	MCPlatformDragOperation t_operation;
 	t_window -> HandleDragMove(t_location, t_operation);

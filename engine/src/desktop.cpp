@@ -371,33 +371,23 @@ void MCPlatformHandleDragDrop(MCPlatformWindowRef p_window, bool& r_accepted)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformHandleKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
+void MCPlatformHandleModifiersChanged(MCPlatformModifiers p_modifiers)
 {
-	switch(p_key_code)
-	{
-		case kMCPlatformKeyCodeLeftShift:
-		case kMCPlatformKeyCodeRightShift:
-			MCmodifierstate |= MS_SHIFT;
-			return;
-		case kMCPlatformKeyCodeLeftControl:
-		case kMCPlatformKeyCodeRightControl:
-			// COCOA-TODO: Where should the control/command remapping happen?
-			MCmodifierstate |= MS_MOD2;
-			return;
-		case kMCPlatformKeyCodeLeftAlt:
-		case kMCPlatformKeyCodeRightAlt:
-			MCmodifierstate |= MS_MOD1;
-			return;
-		case kMCPlatformKeyCodeLeftMeta:
-		case kMCPlatformKeyCodeRightMeta:
-			// COCOA-TODO: Where should the control/command remapping happen?
-			MCmodifierstate |= MS_CONTROL;
-			return;
-		case kMCPlatformKeyCodeCapsLock:
-			MCmodifierstate |= MS_CAPS_LOCK;
-			return;
-	}
-	
+	MCmodifierstate = 0;
+	if ((p_modifiers & kMCPlatformModifierShift) != 0)
+		MCmodifierstate |= MS_SHIFT;
+	if ((p_modifiers & kMCPlatformModifierControl) != 0)
+		MCmodifierstate |= MS_CONTROL;
+	if ((p_modifiers & kMCPlatformModifierAlt) != 0)
+		MCmodifierstate |= MS_MOD1;
+	if ((p_modifiers & kMCPlatformModifierMeta) != 0)
+		MCmodifierstate |= MS_MOD2;
+	if ((p_modifiers & kMCPlatformModifierCapsLock) != 0)
+		MCmodifierstate |= MS_CAPS_LOCK;
+}
+
+void MCPlatformHandleKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
+{	
 	if (p_mapped_codepoint == 0xffffffffU)
 	{
 		MCdispatcher -> wkdown(p_window, MCnullstring, p_key_code);
@@ -426,32 +416,7 @@ void MCPlatformHandleKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_k
 }
 
 void MCPlatformHandleKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
-{
-	switch(p_key_code)
-	{
-		case kMCPlatformKeyCodeLeftShift:
-		case kMCPlatformKeyCodeRightShift:
-			MCmodifierstate &= ~MS_SHIFT;
-			return;
-		case kMCPlatformKeyCodeLeftControl:
-		case kMCPlatformKeyCodeRightControl:
-			// COCOA-TODO: Where should the control/command remapping happen?
-			MCmodifierstate &= ~MS_MOD2;
-			return;
-		case kMCPlatformKeyCodeLeftAlt:
-		case kMCPlatformKeyCodeRightAlt:
-			MCmodifierstate &= ~MS_MOD1;
-			return;
-		case kMCPlatformKeyCodeLeftMeta:
-		case kMCPlatformKeyCodeRightMeta:
-			// COCOA-TODO: Where should the control/command remapping happen?
-			MCmodifierstate &= ~MS_CONTROL;
-			return;
-		case kMCPlatformKeyCodeCapsLock:
-			MCmodifierstate &= ~MS_CAPS_LOCK;
-			return;
-	}
-	
+{	
 	if (p_mapped_codepoint == 0xffffffffU)
 	{
 		MCdispatcher -> wkup(p_window, MCnullstring, p_key_code);

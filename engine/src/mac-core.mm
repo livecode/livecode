@@ -861,6 +861,36 @@ void MCMacPlatformSyncMouseAfterTracking(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCMacPlatformHandleModifiersChanged(MCPlatformModifiers p_modifiers)
+{
+	MCPlatformCallbackSendModifiersChanged(p_modifiers);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifiers)
+{
+	MCPlatformModifiers t_modifiers;
+	t_modifiers = 0;
+	
+	if ((p_modifiers & NSShiftKeyMask) != 0)
+		t_modifiers |= kMCPlatformModifierShift;
+	if ((p_modifiers & NSAlternateKeyMask) != 0)
+		t_modifiers |= kMCPlatformModifierOption;
+	
+	// COCOA-TODO: Abstract Command/Control switching.
+	if ((p_modifiers & NSControlKeyMask) != 0)
+		t_modifiers |= kMCPlatformModifierCommand;
+	if ((p_modifiers & NSCommandKeyMask) != 0)
+		t_modifiers |= kMCPlatformModifierControl;
+	
+	// COCOA-TODO: Sort out capslock.
+
+	return t_modifiers;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint p, NSPoint& r_point)
 {
 	if (!s_have_primary_screen_height)

@@ -291,6 +291,8 @@ void MCMacPlatformHandleMouseSync(void);
 void MCMacPlatformSyncMouseBeforeDragging(void);
 void MCMacPlatformSyncMouseAfterTracking(void);
 
+void MCMacPlatformHandleModifiersChanged(MCPlatformModifiers modifiers);
+
 bool MCMacMapKeyCode(uint32_t mac_key_code, MCPlatformKeyCode& r_key_code);
 bool MCMacMapNSStringToCodepoint(NSString *string, codepoint_t& r_codepoint);
 bool MCMacMapCodepointToNSString(codepoint_t p_codepoint, NSString*& r_string);
@@ -300,6 +302,8 @@ void MCMacPlatformMapScreenNSPointToMCPoint(NSPoint point, MCPoint& r_point);
 
 void MCMacPlatformMapScreenMCRectangleToNSRect(MCRectangle rect, NSRect& r_rect);
 void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect rect, MCRectangle& r_rect);
+
+MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifiers);
 
 NSEvent *MCMacPlatformGetLastMouseEvent(void);
 
@@ -311,83 +315,5 @@ MCPlatformDragOperation MCMacPlatformMapNSDragOperationToDragOperation(NSDragOpe
 void MCMacPlatformPasteboardCreate(NSPasteboard *pasteboard, MCPlatformPasteboardRef& r_pasteboard);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-#if 0
-struct MCPlatformWindowPropertyChanges
-{
-	bool style_changed : 1;
-	bool opacity_changed : 1;
-	bool mask_changed : 1;
-	bool content_changed : 1;
-	bool title_changed : 1;
-	bool has_title_widget_changed : 1;
-	bool has_close_widget_changed : 1;
-	bool has_collapse_widget_changed : 1;
-	bool has_zoom_widget_changed : 1;
-	bool has_size_widget_changed : 1;
-	bool has_shadow_changed : 1;
-	bool has_modified_mark_changed : 1;
-	bool use_live_resizing_changed : 1;
-};
-
-struct __MCPlatformWindow
-{
-	// The number of references to the window.
-	uint32_t references;
-	
-	// The set of changes since the last sync.
-	MCPlatformWindowPropertyChanges changes;
-	
-	// The window properties that are pending sync.
-	MCPlatformWindowStyle style;
-	float opacity;
-	CGImageRef mask;
-	MCRectangle content;
-	NSString *title;
-	struct
-	{
-		bool has_title_widget : 1;
-		bool has_close_widget : 1;
-		bool has_collapse_widget : 1;
-		bool has_zoom_widget : 1;
-		bool has_size_widget : 1;
-		bool has_shadow : 1;
-		bool has_modified_mark : 1;
-		bool use_live_resizing : 1;
-	};
-	
-	// This is true if show has been called on the window.
-	bool is_visible : 1;
-	// This is true if the window has been focused.
-	bool is_focused : 1;
-	
-	// If this is true the window shadow needs recomputing on next
-	// display.
-	bool shadow_changed : 1;
-	
-	// The underlying Cocoa handle, this could be a window, panel, drawer etc.
-	// it depends on the current state of the window.
-	union
-	{
-		id handle;
-		NSWindow *handle_as_window;
-		NSPanel *handle_as_panel;
-	};
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MCPlatformSurfaceCreate(MCPlatformWindowRef window, CGContextRef context, MCRegionRef dirty_rgn, MCPlatformSurfaceRef& r_surface);
-void MCPlatformSurfaceDestroy(MCPlatformSurfaceRef surface);
-
-bool MCPlatformSurfaceLock(MCPlatformSurfaceRef surface);
-void MCPlatformSurfaceUnlock(MCPlatformSurfaceRef surface);
-
-void MCMacPlatformMapScreenMCRectangleToNSRect(MCRectangle rect, NSRect& r_rect);
-void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect rect, MCRectangle& r_rect);
-
-////////////////////////////////////////////////////////////////////////////////
-
-#endif
 
 #endif

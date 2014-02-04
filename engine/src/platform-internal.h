@@ -203,6 +203,8 @@ void MCPlatformCallbackSendWindowUniconify(MCPlatformWindowRef window);
 void MCPlatformCallbackSendWindowFocus(MCPlatformWindowRef window);
 void MCPlatformCallbackSendWindowUnfocus(MCPlatformWindowRef window);
 
+void MCPlatformCallbackSendModifiersChanged(MCPlatformModifiers modifiers);
+											
 void MCPlatformCallbackSendMouseDown(MCPlatformWindowRef window, uint32_t button, uint32_t count);
 void MCPlatformCallbackSendMouseUp(MCPlatformWindowRef window, uint32_t button, uint32_t count);
 void MCPlatformCallbackSendMouseDrag(MCPlatformWindowRef window, uint32_t button);
