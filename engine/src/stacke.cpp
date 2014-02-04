@@ -244,6 +244,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 	/* UNCHECKED */ MCRegionCreate(t_device_region);
 	/* UNCHECKED */ MCRegionSetRect(t_device_region, t_device_rect);
 	
+#ifndef FEATURE_PLATFORM_PLAYER
 #if defined(FEATURE_QUICKTIME)
 	// MW-2010-07-07: Make sure QT is only loaded if we actually are doing an effect
 	if (t_effects != nil)
@@ -251,6 +252,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 			if (!MCtemplateplayer -> isQTinitted())
 				MCtemplateplayer -> initqt();
 #endif	
+#endif
 
 	// Lock the screen to prevent any updates occuring until we want them.
 	MCRedrawLockScreen();

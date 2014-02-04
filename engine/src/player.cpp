@@ -390,6 +390,7 @@ Boolean MCPlayer::kdown(const char *string, KeySym key)
 		if (MCObject::kdown(string, key))
 			return True;
 
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED && state & CS_PREPARED)
 	{
@@ -397,17 +398,20 @@ Boolean MCPlayer::kdown(const char *string, KeySym key)
 		qt_key(true, key);
 	}
 #endif
+#endif
 
 	return False;
 }
 
 Boolean MCPlayer::kup(const char *string, KeySym key)
 {
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 	{
 		qt_key(false, key);
 	}
+#endif
 #endif
 
 	return False;
@@ -419,9 +423,11 @@ Boolean MCPlayer::mfocus(int2 x, int2 y)
 	        || flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
 		return False;
 		
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		qt_move(x, y);
+#endif
 #endif
 
 	return MCControl::mfocus(x, y);
@@ -448,9 +454,11 @@ Boolean MCPlayer::mdown(uint2 which)
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 			if (qtstate == QT_INITTED)
 				qt_click(true, 1);
+#endif
 #endif
 			if (message_with_args(MCM_mouse_down, "1") == ES_NORMAL)
 				return True;
@@ -466,18 +474,22 @@ Boolean MCPlayer::mdown(uint2 which)
 			return False;
 		}
 		break;
-	case Button2:
+		case Button2:
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			qt_click(true, 2);
 #endif
+#endif
 		if (message_with_args(MCM_mouse_down, "2") == ES_NORMAL)
 			return True;
 		break;
-	case Button3:
+		case Button3:
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			qt_click(true, 3);
+#endif
 #endif
 		message_with_args(MCM_mouse_down, "3");
 		break;
@@ -503,6 +515,7 @@ Boolean MCPlayer::mup(uint2 which) //mouse up
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 			//if PLAYER's flag is show badge and controller is NOT visible
 			if ((flags & F_SHOW_BADGE) && !(flags & F_SHOW_CONTROLLER))
@@ -516,6 +529,7 @@ Boolean MCPlayer::mup(uint2 which) //mouse up
 #ifdef FEATURE_QUICKTIME
 			if (qtstate == QT_INITTED)
 				qt_click(false, 1);
+#endif
 #endif
 
 			if (MCU_point_in_rect(rect, mx, my))
@@ -537,9 +551,11 @@ Boolean MCPlayer::mup(uint2 which) //mouse up
 		break;
 	case Button2:
 	case Button3:
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			qt_click(false, which == Button2 ? 2 : 3);
+#endif
 #endif
 		if (MCU_point_in_rect(rect, mx, my))
 			message_with_args(MCM_mouse_up, which);
@@ -566,7 +582,7 @@ void MCPlayer::setrect(const MCRectangle &nrect)
 	rect = nrect;
 	
 	if (m_platform_player != nil)
-	{
+	{ 
 		MCRectangle trect = MCU_reduce_rect(rect, getflag(F_SHOW_BORDER) ? borderwidth : 0);
 		trect = MCRectangleGetTransformedBounds(trect, getstack()->getdevicetransform());
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
@@ -587,6 +603,7 @@ void MCPlayer::setrect(const MCRectangle &nrect)
 
 void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 {
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	if (this == s_ephemeral_player && qtstate == QT_INITTED && MCplayers != NULL && MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
 	{
@@ -636,6 +653,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 		return;
 	}
 #endif
+#endif
 
 	if (MCrecording && this == MCtemplateplayer && MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
 	{
@@ -657,6 +675,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 			return; //obj is already deleted, do not pass msg up.
 		}
 	}
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	else if (MCNameIsEqualTo(mptr, MCM_play_paused, kMCCompareCaseless))
 		{
@@ -672,6 +691,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 				checktimes();
 				return;
 			}
+#endif
 #endif
 	MCControl::timer(mptr, params);
 }
@@ -749,7 +769,9 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 #ifndef FEATURE_QUICKTIME
 		ep.setint((int)NULL);
 #else
+#ifndef FEATURE_PLATFORM_PLAYER
 		ep.setint((int4)theMC);
+#endif
 #endif
 		break;
 	case P_PLAY_LOUDNESS:
@@ -953,8 +975,10 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 			dirty = True;
 		break;
 	case P_CALLBACKS:
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 		deleteUserCallbacks(); //delete all callbacks for this player
+#endif
 #endif
 		delete userCallbackStr;
 		if (data.getlength() == 0)
@@ -962,8 +986,10 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 		else
 		{
 			userCallbackStr = data.clone();
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 			installUserCallbacks(); //install all callbacks for this player
+#endif
 #endif
 		}
 #ifdef FEATURE_PLATFORM_PLAYER
@@ -1043,9 +1069,11 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 	case P_TRAVERSAL_ON:
 		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED && getstate(CS_PREPARED))
 			MCDoAction((MovieController)theMC, mcActionSetKeysEnabled, (void*)((flags & F_TRAVERSAL_ON) != 0));
+#endif
 #endif
 		break;
 	case P_SHOW_BADGE: //if in the buffering mode we do not want to show/hide the badge
@@ -1101,6 +1129,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 		dirty = True;
 		break;
 	case P_MOVIE_CONTROLLER_ID:
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 		{
 			uint4 l = data.getlength();
@@ -1113,6 +1142,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 			}
 			theMovie = MCGetMovie((MovieController)theMC);
 		}
+#endif
 #endif
 		break;
 	case P_PLAY_LOUDNESS:
@@ -1795,6 +1825,7 @@ Boolean MCPlayer::prepare(const char *options)
 	{
 		state |= CS_PREPARED | CS_PAUSED;
 
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 		// MW-2007-07-06: [[ Bug 3848 ]] We shouldn't set up this timer if we
 		//   aren't using QT (s_ephemeral_player == NULL).
@@ -1811,6 +1842,7 @@ Boolean MCPlayer::prepare(const char *options)
 		{
 		}
 		else
+#endif
 #endif
 		{
 			nextplayer = MCplayers;
@@ -2218,7 +2250,9 @@ Boolean MCPlayer::setenabledtracks(const MCString &s)
 void MCPlayer::getnodes(MCExecPoint &ep)
 {
 	ep.clear();
+#ifdef FEATURE_PLATFORM_PLAYER
 	// COCOA-TODO: MCPlayer::getnodes();
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtvrinstance != NULL)
 	{
@@ -2245,12 +2279,15 @@ void MCPlayer::getnodes(MCExecPoint &ep)
 		QTDisposeAtomContainer(qtatomcontainer);
 	}
 #endif
+#endif
 }
 
 void MCPlayer::gethotspots(MCExecPoint &ep)
 {
 	ep.clear();
+#ifdef FEATURE_PLATFORM_PLAYER
 	// COCOA-TODO: MCPlayer::gethotspots();
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtvrinstance != NULL)
 	{
@@ -2290,6 +2327,7 @@ void MCPlayer::gethotspots(MCExecPoint &ep)
 		}
 		QTDisposeAtomContainer(qtatomcontainer);
 	}
+#endif
 #endif
 }
 
@@ -2440,6 +2478,8 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 
 //  Redraw Management
 //-----------------------------------------------------------------------------
+
+#ifndef FEATURE_PLATFORM_PLAYER
 
 //-----------------------------------------------------------------------------
 //  QT Event Processing
@@ -4598,20 +4638,26 @@ Boolean MCPlayer::installUserCallbacks(void)
 
 //
 // QuickTime Specific Implementation
-//-----------------------------------------------------------------------------
-
+//----------------------------------------------------------------------------
+	
+#endif
 
 //-----------------------------------------------------------------------------
 // QuickTime Visual Effects Implementation
 //
 
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 QTEffect *MCPlayer::qteffects = NULL;
 uint2 MCPlayer::neffects = 0;
 #endif
+#endif
 
 Boolean MCPlayer::stdeffectdlg(MCExecPoint &ep, const char *p_title, Boolean sheet)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	// COCOA-TODO: stdeffectdlg
+#else
 #ifdef FEATURE_QUICKTIME
 	ep.clear();
 	if (qtstate != QT_INITTED)
@@ -4681,11 +4727,13 @@ Boolean MCPlayer::stdeffectdlg(MCExecPoint &ep, const char *p_title, Boolean she
 	QTDisposeAtomContainer(effectlist);
 	return True;
 #endif
+#endif
 
 	return True;
 }
 
 
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 static int compare_qteffect(const void *a, const void *b)
 {
@@ -4696,11 +4744,15 @@ static int compare_qteffect(const void *a, const void *b)
 	return strcmp(qa -> token, qb -> token);
 }
 #endif
+#endif
 
 void MCPlayer::geteffectlist(MCExecPoint &ep)
 {
 	ep.clear();
 
+#ifdef FEATURE_PLATFORM_PLAYER
+	// COCOA-TODO: MCPlayer::geteffectlist
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate != QT_INITTED)
 		initqt();
@@ -4716,8 +4768,10 @@ void MCPlayer::geteffectlist(MCExecPoint &ep)
 	for (i = 0; i < neffects; i++)
 		ep.concatcstring(qteffects[i].token, EC_RETURN, i == 0);
 #endif
+#endif
 }
 
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 void MCPlayer::queryeffects(void **effectatomptr)
 {
@@ -4785,6 +4839,7 @@ void MCPlayer::queryeffects(void **effectatomptr)
 	if (effectatomptr == NULL)
 		QTDisposeAtomContainer(effectatom);
 }
+#endif
 
 //
 // QuickTime Visual Effects Implementation
@@ -4795,6 +4850,7 @@ void MCPlayer::queryeffects(void **effectatomptr)
 // Sound Recording Implementation
 //
 
+#ifndef FEATURE_PLATFORM_PLAYER
 // Related class variables
 void *MCPlayer::sgSoundComp = NULL;
 long MCPlayer::sgSndDriver = 0;
@@ -4940,17 +4996,23 @@ static void exportToSoundFile(const char *sourcefile, const char *destfile)
 
 	DisposeMovie(tmovie);
 }
+#endif
 
+#ifndef FEATURE_PLATFORM_PLAYER
 void MCPlayer::handlerecord()
 {
 	if (MCrecording)
 		SGIdle((SeqGrabComponent)sgSoundComp);
 }
+#endif
 
 #endif
 
 void MCPlayer::stoprecording()
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	// COCOA-TODO: MCPlayer::stoprecording()
+#else
 #ifdef FEATURE_QUICKTIME
 	if (MCrecording)
 	{
@@ -4976,10 +5038,14 @@ void MCPlayer::stoprecording()
 		delete recordexportfile;
 	}
 #endif
+#endif
 }
 
 void MCPlayer::recordsound(char *fname)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	// COCOA-TODO: MCPlayer::recordsound()
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate != QT_INITTED)
 		initqt();
@@ -5080,10 +5146,14 @@ void MCPlayer::recordsound(char *fname)
 #else
 	MCresult->sets("not supported");
 #endif
+#endif
 }
 
 void MCPlayer::getrecordloudness(MCExecPoint &ep)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	// COCOA-TODO: MCPlayer::getrecordloudness
+#else
 #ifdef FEATURE_QUICKTIME
 	uint2 rloudness = 0;
 	if (MCrecording)
@@ -5097,11 +5167,15 @@ void MCPlayer::getrecordloudness(MCExecPoint &ep)
 
 	MCresult->sets("not supported");
 #endif
+#endif
 }
 
 void MCPlayer::getrecordcompressionlist(MCExecPoint &ep)
 {
 	ep.clear();
+#ifdef FEATURE_PLATFORM_PLAYER
+	// COCOA-TODO:  MCPlayer::getrecordcompressionlist
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate != QT_INITTED)
 		initqt();
@@ -5136,11 +5210,15 @@ void MCPlayer::getrecordcompressionlist(MCExecPoint &ep)
 	}
 	DisposeHandle(name);
 #endif
+#endif
 }
 
 // MW-2005-05-15: For consistency, added title field
 void MCPlayer::stdrecorddlg(MCExecPoint& ep, const char *p_title, Boolean sheet)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	// COCOA-TODO: MCPlayer::stdrecorddlg
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate != QT_INITTED)
 		initqt();
@@ -5197,6 +5275,7 @@ void MCPlayer::stdrecorddlg(MCExecPoint& ep, const char *p_title, Boolean sheet)
 		}
 	CloseComponent(ci);
 #endif
+#endif
 }
 
 //
@@ -5209,7 +5288,7 @@ void MCPlayer::stdrecorddlg(MCExecPoint& ep, const char *p_title, Boolean sheet)
 // The MPlayer object (mplayer.cpp) fully encapulates and manages the mplayer process and provides
 // a nice, easy to use interface for controlling it.
 
-
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef X11
 Boolean MCPlayer::x11_prepare(void)
 {
@@ -5332,6 +5411,7 @@ void MCPlayer::shutdown(void)
 }
 
 #endif
+#endif
 //
 // X11 (using mplayer) Player Implementation
 //-----------------------------------------------------------------------------
@@ -5339,6 +5419,24 @@ void MCPlayer::shutdown(void)
 //-----------------------------------------------------------------------------
 // QTEffect implementation
 
+#ifdef FEATURE_PLATFORM_PLAYER
+	
+// COCOA-TODO: QTEffects
+	
+bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p_direction, MCGImageRef p_start, MCGImageRef p_end, const MCRectangle& p_area)
+{
+	return false;
+}
+
+bool MCQTEffectStep(const MCRectangle &drect, MCStackSurface *p_target, uint4 p_delta, uint4 p_duration)
+{
+}
+
+void MCQTEffectEnd(void)
+{
+}
+	
+#else
 #ifdef FEATURE_QUICKTIME
 
 void MCQTEffectEnd(void);
@@ -5697,6 +5795,7 @@ void MCQTEffectEnd(void)
 }
 
 #endif
-
+#endif
+	
 // 
 //-----------------------------------------------------------------------------

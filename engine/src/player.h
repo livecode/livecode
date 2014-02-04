@@ -71,7 +71,8 @@ class MCPlayer : public MCControl
 	Atom atom;
 	MPlayer *m_player ;
 #endif
-
+	
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	static QTstate qtstate;
 	static long qtversion;
@@ -110,6 +111,7 @@ class MCPlayer : public MCControl
 	bool m_has_port_association;
 #endif
 
+#endif
 #endif
 
 public:
@@ -204,6 +206,11 @@ public:
 #ifdef FEATURE_PLATFORM_PLAYER
 	MCRectangle resize(MCRectangle rect);
 	void SynchronizeUserCallbacks(void);
+	Boolean isbuffering(void)
+	{
+		// COCOA-TODO: Sort out buffering in MCPlayer.
+		return False;
+	}
 #endif
 	
 #ifdef _LINUX_DESKTOP
@@ -214,6 +221,7 @@ public:
 	Boolean syncxanim();
 #endif
 
+#ifndef FEATURE_PLATFORM_PLAYER
 #if !defined(FEATURE_QUICKTIME)
 	Boolean isbuffering()
 	{
@@ -289,6 +297,7 @@ public:
 	}
 #endif
 #endif
+#endif
 
 	Boolean isdisposable()
 	{
@@ -331,6 +340,7 @@ public:
 		lasttime = ltime;
 	}
 
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	Boolean qt_prepare(void);
 	Boolean qt_playpause(Boolean on);
@@ -389,6 +399,7 @@ public:
 	void avi_draw(MCDC *dc, const MCRectangle& dirty);
 
 	bool mode_avi_closewindowonplaystop();
+#endif
 #endif
 #endif
 
