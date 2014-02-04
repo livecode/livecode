@@ -25,6 +25,9 @@
 		3C0A3CC410BAF6120074D630 /* iquantization.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C0A3CC310BAF6120074D630 /* iquantization.cpp */; };
 		4C10D82C16BFADDB00D25197 /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C10D82916BFADB800D25197 /* libgraphics.a */; };
 		4C10D85416BFB1DC00D25197 /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C10D76D16BF9BFA00D25197 /* graphicscontext.cpp */; };
+		4C13880F18A12E6600EFF7B6 /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DBF58631801CA57009CAB2E /* libopenssl.a */; };
+		4C13881218A12E7700EFF7B6 /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DBF58631801CA57009CAB2E /* libopenssl.a */; };
+		4C13881D18A12ED800EFF7B6 /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DBF58631801CA57009CAB2E /* libopenssl.a */; };
 		4C4D3DF417E355B50012FB12 /* osxflst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880160B80A4F800200116 /* osxflst.cpp */; };
 		4C4D3E0117E358230012FB12 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DB3856E1714422200D3F102 /* Carbon.framework */; };
 		4C6F241E1529B33000C5AFB6 /* osxsnapshot.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4C6F241D1529B33000C5AFB6 /* osxsnapshot.mm */; };
@@ -537,6 +540,27 @@
 			proxyType = 2;
 			remoteGlobalIDString = D2AAC046055464E500DB518D;
 			remoteInfo = libgraphics;
+		};
+		4C13880B18A12E3600EFF7B6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DBF57C01801A14C009CAB2E /* revsecurity */;
+			remoteInfo = revsecurity;
+		};
+		4C13881718A12E9900EFF7B6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DBF57C01801A14C009CAB2E /* revsecurity */;
+			remoteInfo = revsecurity;
+		};
+		4C13881B18A12EB400EFF7B6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DBF57C01801A14C009CAB2E /* revsecurity */;
+			remoteInfo = revsecurity;
 		};
 		4D055BB41079F6E7007F6E13 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1515,6 +1539,7 @@
 				4DB384C01714420A00D3F102 /* libjpeg.a in Frameworks */,
 				4DB384C11714420A00D3F102 /* libgif.a in Frameworks */,
 				4DB384C21714420A00D3F102 /* libpcre.a in Frameworks */,
+				4C13881D18A12ED800EFF7B6 /* libopenssl.a in Frameworks */,
 				E8A554B61785A7C600DABC1A /* libskia.a in Frameworks */,
 				4DB386091714423500D3F102 /* Carbon.framework in Frameworks */,
 				4D7740CC1226AA65001C9150 /* Quartz.framework in Frameworks */,
@@ -1574,6 +1599,7 @@
 				4DB382F01714418A00D3F102 /* libjpeg.a in Frameworks */,
 				4DB382F11714418A00D3F102 /* libgif.a in Frameworks */,
 				4DB382F21714418A00D3F102 /* libpcre.a in Frameworks */,
+				4C13880F18A12E6600EFF7B6 /* libopenssl.a in Frameworks */,
 				E8A554B21785A70600DABC1A /* libskia.a in Frameworks */,
 				4DB3856F1714422200D3F102 /* Carbon.framework in Frameworks */,
 				4D7740CB1226AA58001C9150 /* Quartz.framework in Frameworks */,
@@ -1609,6 +1635,7 @@
 				4DB386121714426200D3F102 /* libjpeg.a in Frameworks */,
 				4DB386131714426200D3F102 /* libgif.a in Frameworks */,
 				4DB386141714426200D3F102 /* libpcre.a in Frameworks */,
+				4C13881218A12E7700EFF7B6 /* libopenssl.a in Frameworks */,
 				E8A554B81785A83A00DABC1A /* libskia.a in Frameworks */,
 				4DFD495B13BA2BC0008DB91F /* CoreFoundation.framework in Frameworks */,
 				4D982B1213C1CDC10066119A /* CoreServices.framework in Frameworks */,
@@ -2659,6 +2686,7 @@
 				4D2A579A1198634300135143 /* PBXTargetDependency */,
 				4D1F9C52171C66230091C6CB /* PBXTargetDependency */,
 				4D2A57AC1198634300135143 /* PBXTargetDependency */,
+				4C13881C18A12EB400EFF7B6 /* PBXTargetDependency */,
 			);
 			name = Installer;
 			productName = engine;
@@ -2702,6 +2730,7 @@
 				4DEE2B290FDE42DF0009423C /* PBXTargetDependency */,
 				4D221AFF171D5F3700E7E557 /* PBXTargetDependency */,
 				4D1F9E5C171C69C40091C6CB /* PBXTargetDependency */,
+				4C13880C18A12E3600EFF7B6 /* PBXTargetDependency */,
 			);
 			name = "Standalone-Community";
 			productName = engine;
@@ -2747,6 +2776,7 @@
 			dependencies = (
 				4D1F9DC0171C68680091C6CB /* PBXTargetDependency */,
 				4D1F9C59171C66C30091C6CB /* PBXTargetDependency */,
+				4C13881818A12E9900EFF7B6 /* PBXTargetDependency */,
 			);
 			name = "Server-Community";
 			productName = server;
@@ -3554,6 +3584,21 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4C13880C18A12E3600EFF7B6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = revsecurity;
+			targetProxy = 4C13880B18A12E3600EFF7B6 /* PBXContainerItemProxy */;
+		};
+		4C13881818A12E9900EFF7B6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = revsecurity;
+			targetProxy = 4C13881718A12E9900EFF7B6 /* PBXContainerItemProxy */;
+		};
+		4C13881C18A12EB400EFF7B6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = revsecurity;
+			targetProxy = 4C13881B18A12EB400EFF7B6 /* PBXContainerItemProxy */;
+		};
 		4D1F9C49171C655E0091C6CB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4D1F9C2D171C64320091C6CB /* security-community */;

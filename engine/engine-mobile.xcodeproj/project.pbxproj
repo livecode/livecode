@@ -23,6 +23,7 @@
 /* Begin PBXBuildFile section */
 		3CC6F42812AD0A6100852B3B /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CC6F42712AD0A6100852B3B /* CFNetwork.framework */; };
 		4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4CD038F216C8FE1700EBCCBA /* Default-568h@2x.png */; };
+		4CD7DFE318A140D800CBCB57 /* opensslsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEA61040AD9300CAC7EF /* opensslsocket.cpp */; };
 		4D08A0D0138EA51D0081F990 /* libstandalone-mobile-lib-community.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D2D91891386E2610057811A /* libstandalone-mobile-lib-community.a */; };
 		4D08A0D6138EA58E0081F990 /* libcoremobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DA2CA251136CFDF00B9F27B /* libcoremobile.a */; };
 		4D08A113138EA7C60081F990 /* dummy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D08A112138EA7C60081F990 /* dummy.cpp */; };
@@ -202,7 +203,6 @@
 		4DABCE2B15ECD4B50085E214 /* objectpropsets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC8F213DD90AF006233A4 /* objectpropsets.cpp */; };
 		4DABCE2C15ECD4B50085E214 /* objectstream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE9B1040AD9300CAC7EF /* objectstream.cpp */; };
 		4DABCE2D15ECD4B50085E214 /* objptr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE991040AD9300CAC7EF /* objptr.cpp */; };
-		4DABCE2E15ECD4B50085E214 /* opensslsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEA61040AD9300CAC7EF /* opensslsocket.cpp */; };
 		4DABCE2F15ECD4B50085E214 /* operator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEA51040AD9300CAC7EF /* operator.cpp */; };
 		4DABCE3015ECD4B50085E214 /* paragraf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEB31040ADAF00CAC7EF /* paragraf.cpp */; };
 		4DABCE3115ECD4B50085E214 /* paragrafattr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CAEA83F14E911FE006DFECF /* paragrafattr.cpp */; };
@@ -257,7 +257,6 @@
 		4DB322B1174BD4D100046FFE /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DB322B0174BD4D100046FFE /* Security.framework */; };
 		4DBF5B111802E327009CAB2E /* libopensslmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DBF5B0C1802E2F8009CAB2E /* libopensslmobile.a */; };
 		4DBF5B291802E63F009CAB2E /* socket_resolve.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DBF5B281802E635009CAB2E /* socket_resolve.cpp */; };
-		4DBF5D351802F331009CAB2E /* testenc.livecode in Resources */ = {isa = PBXBuildFile; fileRef = 4DBF5D341802F331009CAB2E /* testenc.livecode */; };
 		4DC684BE1348EAD7002469A4 /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DC684BD1348EAD7002469A4 /* OpenGLES.framework */; };
 		4DD3E17B1040BDAF00CAC7EF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD3E17A1040BDAF00CAC7EF /* libz.dylib */; };
 		4DE5E7EB174BBE89001AB76D /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE5E7E6174BBE64001AB76D /* uuid.cpp */; };
@@ -623,7 +622,6 @@
 		4DB983CF130BB1DF008A03DC /* mblandroidutil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblandroidutil.h; path = src/mblandroidutil.h; sourceTree = "<group>"; };
 		4DBF5B061802E2F8009CAB2E /* libopenssl-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libopenssl-mobile.xcodeproj"; path = "../thirdparty/libopenssl/libopenssl-mobile.xcodeproj"; sourceTree = SOURCE_ROOT; };
 		4DBF5B281802E635009CAB2E /* socket_resolve.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = socket_resolve.cpp; path = src/socket_resolve.cpp; sourceTree = "<group>"; };
-		4DBF5D341802F331009CAB2E /* testenc.livecode */ = {isa = PBXFileReference; lastKnownFileType = file; name = testenc.livecode; path = ../../../../Desktop/testenc.livecode; sourceTree = SOURCE_ROOT; };
 		4DC684741348E50D002469A4 /* mbliphonegfx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonegfx.mm; path = src/mbliphonegfx.mm; sourceTree = "<group>"; };
 		4DC684761348E5AC002469A4 /* mbliphoneview.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mbliphoneview.h; path = src/mbliphoneview.h; sourceTree = "<group>"; };
 		4DC684BD1348EAD7002469A4 /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
@@ -1295,7 +1293,6 @@
 				4D82FCD8171485CA00C48403 /* mobile-template.plist */,
 				4D82FCD9171485D000C48403 /* mobile-remote-notification-template.plist */,
 				4D82FCDA171485D600C48403 /* mobile-url-scheme-template.plist */,
-				4DBF5D341802F331009CAB2E /* testenc.livecode */,
 				4DB322B0174BD4D100046FFE /* Security.framework */,
 			);
 			sourceTree = "<group>";
@@ -1985,7 +1982,6 @@
 			files = (
 				4D7E3A591281835D00E7F80A /* Default.png in Resources */,
 				4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */,
-				4DBF5D351802F331009CAB2E /* testenc.livecode in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2201,6 +2197,7 @@
 				4DABCE1D15ECD4B50085E214 /* mcio.cpp in Sources */,
 				4DABCE1E15ECD4B50085E214 /* mcssl.cpp in Sources */,
 				4DABCE1F15ECD4B50085E214 /* mcstring.cpp in Sources */,
+				4CD7DFE318A140D800CBCB57 /* opensslsocket.cpp in Sources */,
 				4DABCE2015ECD4B50085E214 /* mctheme.cpp in Sources */,
 				4DABCE2115ECD4B50085E214 /* mcutility.cpp in Sources */,
 				4DABCE2215ECD4B50085E214 /* md5.cpp in Sources */,
@@ -2215,7 +2212,6 @@
 				4DABCE2B15ECD4B50085E214 /* objectpropsets.cpp in Sources */,
 				4DABCE2C15ECD4B50085E214 /* objectstream.cpp in Sources */,
 				4DABCE2D15ECD4B50085E214 /* objptr.cpp in Sources */,
-				4DABCE2E15ECD4B50085E214 /* opensslsocket.cpp in Sources */,
 				4DABCE2F15ECD4B50085E214 /* operator.cpp in Sources */,
 				4DABCE3015ECD4B50085E214 /* paragraf.cpp in Sources */,
 				4DABCE3115ECD4B50085E214 /* paragrafattr.cpp in Sources */,
