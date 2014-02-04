@@ -2641,6 +2641,7 @@ void MCInterfaceExecShowObject(MCExecContext& ctxt, MCObjectPtr p_target, MCPoin
 	if (!ctxt.HasError())
 	{
 		p_target.object->setboolprop(ctxt, p_target.part_id, P_VISIBLE, False, kMCTrue);
+        ctxt . IgnoreLastError();
 		return;
 	}
 	
