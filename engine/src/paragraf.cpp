@@ -2281,7 +2281,7 @@ uint1 MCParagraph::fmovefocus(Field_translations type)
 	case FT_RIGHTWORD:
 		if (focusedindex == gettextlength())
 			return FT_RIGHTCHAR;
-		focusedindex += IncrementIndex(focusedindex);
+		focusedindex = IncrementIndex(focusedindex);
 		if (focusedindex >= bindex + blength)
 		{
 			bptr = bptr->next();
@@ -2296,15 +2296,15 @@ uint1 MCParagraph::fmovefocus(Field_translations type)
 				bptr->GetRange(bindex, blength);
 			}
 		}
-		while (focusedindex < gettextlength() && TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
-		{
-			focusedindex = IncrementIndex(focusedindex);
-			if (focusedindex >= bindex + blength)
-			{
-				bptr = bptr->next();
-				bptr->GetRange(bindex, blength);
-			}
-		}
+        while (focusedindex < gettextlength() && !TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
+        {
+            focusedindex = IncrementIndex(focusedindex);
+            if (focusedindex >= bindex + blength)
+            {
+                bptr = bptr->next();
+                bptr->GetRange(bindex, blength);
+            }
+        }
 		break;
 	case FT_BOS:
 		while (focusedindex < gettextlength() && TextIsSentenceBreak(GetCodepointAtIndex(focusedindex)))
