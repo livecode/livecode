@@ -352,10 +352,10 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_BREAK_POINTS, String, Debugging, Breakpoints)
 	DEFINE_RW_PROPERTY(P_WATCHED_VARIABLES, String, Debugging, WatchedVariables)
 
-	DEFINE_RW_ARRAY_PROPERTY(P_CLIPBOARD_DATA, BinaryString, Pasteboard, ClipboardData)
-	DEFINE_RW_ARRAY_PROPERTY(P_DRAG_DATA, BinaryString, Pasteboard, DragData)
-	DEFINE_RW_PROPERTY(P_CLIPBOARD_DATA, BinaryString, Pasteboard, ClipboardTextData)
-	DEFINE_RW_PROPERTY(P_DRAG_DATA, BinaryString, Pasteboard, DragTextData)
+    DEFINE_RW_ARRAY_PROPERTY(P_CLIPBOARD_DATA, Any, Pasteboard, ClipboardData)
+    DEFINE_RW_ARRAY_PROPERTY(P_DRAG_DATA, Any, Pasteboard, DragData)
+    DEFINE_RW_PROPERTY(P_CLIPBOARD_DATA, Any, Pasteboard, ClipboardTextData)
+    DEFINE_RW_PROPERTY(P_DRAG_DATA, Any, Pasteboard, DragTextData)
 
 	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog    
     DEFINE_RW_PROPERTY(P_COLOR_DIALOG_COLORS, LinesOfString, Dialog, ColorDialogColors)

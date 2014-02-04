@@ -3357,14 +3357,14 @@ void MCPasteboardSetDragImageOffset(MCExecContext& ctxt, MCPoint *p_value);
 void MCPasteboardGetAllowableDragActions(MCExecContext& ctxt, intset_t& r_value);
 void MCPasteboardSetAllowableDragActions(MCExecContext& ctxt, intset_t p_value);
 
-void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef& r_data);
-void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef p_data);
-void MCPasteboardGetDragData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef& r_data);
-void MCPasteboardSetDragData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef p_data);
-void MCPasteboardGetClipboardTextData(MCExecContext& ctxt, MCDataRef& r_data);
-void MCPasteboardSetClipboardTextData(MCExecContext& ctxt, MCDataRef p_data);
-void MCPasteboardGetDragTextData(MCExecContext& ctxt, MCDataRef& r_data);
-void MCPasteboardSetDragTextData(MCExecContext& ctxt, MCDataRef p_data);
+void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_data);
+void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_data);
+void MCPasteboardGetDragData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_data);
+void MCPasteboardSetDragData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_data);
+void MCPasteboardGetClipboardTextData(MCExecContext& ctxt, MCValueRef& r_data);
+void MCPasteboardSetClipboardTextData(MCExecContext& ctxt, MCValueRef p_data);
+void MCPasteboardGetDragTextData(MCExecContext& ctxt, MCValueRef& r_data);
+void MCPasteboardSetDragTextData(MCExecContext& ctxt, MCValueRef p_data);
 
 ///////////
 
