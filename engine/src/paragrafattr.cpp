@@ -1716,7 +1716,7 @@ int32_t MCParagraph::gettablewidth(void) const
 
 MCStringRef MCParagraph::getmetadata(void) const
 {
-	if (attrs != nil && (attrs -> flags & PA_HAS_METADATA))
+	if (attrs != nil && (attrs -> flags & PA_HAS_METADATA) && attrs -> metadata != nil)
 		return attrs -> metadata;
     return kMCEmptyString;
 }

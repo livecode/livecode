@@ -2543,14 +2543,7 @@ void MCParagraph::SetInvisible(MCExecContext &ctxt, bool p_invisible)
 
 void MCParagraph::GetMetadata(MCExecContext& ctxt, MCStringRef &r_metadata)
 {
-    if (attrs == nil || (attrs -> flags & PA_HAS_METADATA) == 0)
-        r_metadata = MCValueRetain(kMCEmptyString);
-    else
-    {
-        MCStringRef t_metadata;
-        t_metadata = getmetadata();
-        r_metadata = MCValueRetain(t_metadata == nil ? kMCEmptyString : t_metadata);
-    }
+    r_metadata = MCValueRetain(getmetadata());
 }
 
 void MCParagraph::GetEffectiveMetadata(MCExecContext& ctxt, MCStringRef &r_metadata)
