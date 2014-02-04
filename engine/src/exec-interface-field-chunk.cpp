@@ -2546,7 +2546,11 @@ void MCParagraph::GetMetadata(MCExecContext& ctxt, MCStringRef &r_metadata)
     if (attrs == nil || (attrs -> flags & PA_HAS_METADATA) == 0)
         r_metadata = MCValueRetain(kMCEmptyString);
     else
-        r_metadata = MCValueRetain(getmetadata());
+    {
+        MCStringRef t_metadata;
+        t_metadata = getmetadata();
+        r_metadata = MCValueRetain(t_metadata == nil ? kMCEmptyString : t_metadata);
+    }
 }
 
 void MCParagraph::GetEffectiveMetadata(MCExecContext& ctxt, MCStringRef &r_metadata)
