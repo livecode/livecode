@@ -461,7 +461,6 @@ bool MCMacPasteboardConvertHTMLToRTF(const MCString& p_in_data, MCString& r_out_
 	return false;
 }
 
-// COCOA-TODO: Use Cocoa stuff for TIFF conversion (if there is any!)
 bool MCMacPasteboardConvertTIFFToPNG(const MCString& p_in_data, MCString& r_out_data)
 {
 	// MW-2010-11-17: [[ Bug 9183 ]] Check the data is actually TIFF, it is actually a PNG then
