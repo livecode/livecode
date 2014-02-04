@@ -264,8 +264,9 @@ void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode 
 		srect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(MCwbr));
 	
 	uint2 sr, sw, sb, sh;
-	Rect screenRect;
 	
+	// COCOA-TODO: This is Mac specific
+	Rect screenRect;
 	SetRect(&screenRect, srect . x, srect . y, srect . x + srect . width, srect . y + srect . height);
 	
 	if (title && mode <= WM_SHEET && mode != WM_DRAWER)
@@ -615,16 +616,6 @@ Boolean MCScreenDC::getmouseclick(uint2 p_button, Boolean& r_abort)
 	MCscreen->setclickloc(MCmousestackptr, t_clickloc);
 	
 	return t_clicked;
-	
-#if PRE_PLATFORM
-	// Collect all pending events in the event queue.
-	r_abort = wait(0.0, False, False);
-	if (r_abort)
-		return False;
-	
-	// Now get the eventqueue to filter for a mouse click.
-	return MCEventQueueGetMouseClick(button);
-#endif
 }
 
 Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
@@ -661,19 +652,6 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 				break;
 			}
 		}
-		
-		// If dispatching then dispatch the first event.
-		/*if (dispatch && MCEventQueueDispatch())
-		{
-			if (anyevent)
-				done = True;
-			
-			if (MCquit)
-			{
-				abort = True;
-				break;
-			}
-		}*/
 		
 		// MW-2012-09-19: [[ Bug 10218 ]] Make sure we update the screen in case
 		//   any engine event handling methods need us to.
@@ -986,7 +964,24 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
 {
 	MCPlatformDragOperation t_op;
 	MCPlatformDoDragDrop(w, p_allowed_actions, nil, nil, t_op);
-	return DRAG_ACTION_NONE;
+	
+	MCDragAction t_action;
+	switch(t_op)
+	{
+		case kMCPlatformDragOperationNone:
+			t_action = DRAG_ACTION_NONE;
+			break;
+		case kMCPlatformDragOperationCopy:
+			t_action = DRAG_ACTION_COPY;
+			break;
+		case kMCPlatformDragOperationLink:
+			t_action = DRAG_ACTION_LINK;
+			break;
+		case kMCPlatformDragOperationMove:
+			t_action = DRAG_ACTION_MOVE;
+			break;
+	}
+	return t_action;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1087,6 +1087,10 @@ void MCDispatch::wmdrag(Window w)
 		
 		MCdragsource = MCdragtargetptr;
 
+		// PLATFORM-TODO: This is needed at the moment to make sure that we don't
+		//   get the selection 'going away' when we start dragging. At the moment
+		//   MouseRelease is mapped to mup without messages, which isn't quite
+		//   correct from the point of view of the field.
 		if (MCdragtargetptr->gettype() > CT_CARD)
 		{
 			MCControl *cptr = (MCControl *)MCdragtargetptr;
@@ -1095,7 +1099,7 @@ void MCDispatch::wmdrag(Window w)
 		}
 		MCdragtargetptr->getstack()->resetcursor(True);
 		MCdragtargetptr -> getstack() -> munfocus();
-
+		
 		MCdragaction = MCscreen -> dodragdrop(w, t_pasteboard, MCallowabledragactions, t_image, t_image != NULL ? &MCdragimageoffset : NULL);
 
 		dodrop(true);

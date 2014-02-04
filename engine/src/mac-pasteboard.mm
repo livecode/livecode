@@ -18,6 +18,7 @@
 
 #include "core.h"
 #include "globdefs.h"
+#include "imagebitmap.h"
 
 #include "platform.h"
 #include "platform-internal.h"
@@ -381,6 +382,23 @@ void MCPlatformDoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOpe
 		r_operation = kMCPlatformDragOperationNone;
 		return;
 	}
+	else
+	{
+		uint32_t t_pixel;
+		t_pixel = 0;
+		
+		MCImageBitmap t_bitmap;
+		t_bitmap . width = 1;
+		t_bitmap . height = 1;
+		t_bitmap . stride = 4;
+		t_bitmap . data = &t_pixel;
+		
+		if (!MCImageBitmapToCGImage(&t_bitmap, true, false, t_cg_image))
+		{
+			r_operation = kMCPlatformDragOperationNone;
+			return;
+		}
+	}
 	
 	NSImage *t_image;
 	t_image = [[NSImage alloc] initWithCGImage: t_cg_image size: NSZeroSize];
@@ -403,10 +421,14 @@ void MCPlatformDoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOpe
 	if ((p_allowed_operations & kMCPlatformDragOperationLink) != 0)
 		t_allowed_operations |= NSDragOperationLink;
 	
+	MCMacPlatformSyncMouseBeforeDragging();
+	
 	NSDragOperation t_op;
 	t_op = [((MCMacPlatformWindow *)p_window) -> GetView() dragImage: t_image offset: t_image_loc allowing: t_allowed_operations];
 	
 	[t_image release];
+	
+	//MCMacPlatformSyncMouseAfterTracking();
 	
 	r_operation = MCMacPlatformMapNSDragOperationToDragOperation(t_op);
 }

@@ -814,6 +814,36 @@ void MCMacPlatformHandleMouseSync(void)
 	MCMacPlatformHandleMouseMove(t_location);
 }
 
+void MCMacPlatformSyncMouseBeforeDragging(void)
+{
+	// Release the mouse.
+	uindex_t t_button_to_release;
+	if (s_mouse_buttons != 0)
+	{
+		t_button_to_release = s_mouse_drag_button;
+		if (t_button_to_release == 0xffffffffU)
+			t_button_to_release = s_mouse_last_click_button;
+		
+		s_mouse_buttons = 0;
+		s_mouse_grabbed = false;
+		s_mouse_click_count = 0;
+		s_mouse_last_click_time = 0;
+		s_mouse_drag_button = 0xffffffff;
+	}
+	else
+		t_button_to_release = 0xffffffff;
+	
+	if (s_mouse_window != nil)
+	{
+		if (t_button_to_release != 0xffffffff)
+			MCPlatformCallbackSendMouseRelease(s_mouse_window, t_button_to_release);
+		MCPlatformCallbackSendMouseLeave(s_mouse_window);
+		
+		MCPlatformReleaseWindow(s_mouse_window);
+		s_mouse_window = nil;
+	}
+}
+
 void MCMacPlatformSyncMouseAfterTracking(void)
 {
 	NSEvent *t_event;
