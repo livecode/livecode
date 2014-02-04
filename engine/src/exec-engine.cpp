@@ -1783,7 +1783,7 @@ static bool MCEngineUuidToStringRef(MCUuid p_uuid, MCStringRef& r_string)
 	char t_uuid_buffer[kMCUuidCStringLength];
 	MCUuidToCString(p_uuid, t_uuid_buffer);
     
-    return MCStringCreateWithNativeChars((const char_t *)t_uuid_buffer, kMCUuidCStringLength, r_string);
+    return MCStringCreateWithNativeChars((const char_t *)t_uuid_buffer, kMCUuidCStringLength - 1, r_string);
 }
 
 void MCEngineEvalRandomUuid(MCExecContext& ctxt, MCStringRef& r_uuid)
