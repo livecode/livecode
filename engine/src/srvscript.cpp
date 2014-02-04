@@ -462,7 +462,8 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 					if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
 						do
 						{
-							MCB_error(*m_ep, t_statement->getline(), t_statement->getpos(), EE_HANDLER_BADSTATEMENT);
+							if (!MCB_error(*m_ep, t_statement->getline(), t_statement->getpos(), EE_HANDLER_BADSTATEMENT))
+								break;
 						}
 						while (MCtrace && (t_exec_stat = t_statement->exec(*m_ep)) != ES_NORMAL);
 
