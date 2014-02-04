@@ -1308,7 +1308,7 @@ void MCField::GetMetadataOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, in
     GetParagraphPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetMetadata, t_mixed, &t_metadata);
 
     if (*t_metadata == nil)
-        r_value = nil;
+        r_value = MCValueRetain(kMCEmptyString);
     else
         r_value = MCValueRetain(*t_metadata);
 }
