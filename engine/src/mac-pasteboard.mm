@@ -28,6 +28,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
+
+////////////////////////////////////////////////////////////////////////////////
+
 struct MCPlatformPasteboard
 {
 	uint32_t references;
@@ -56,7 +60,7 @@ static struct { NSString *type; MCPlatformPasteboardFlavor flavor; bool (*conver
 	
 	// COCOA-TODO: Declare these appropriately!
 	{ kMCMacPasteboardObjectsUTString, kMCPlatformPasteboardFlavorObjects, MCMacPasteboardConvertIdentity },
-	{ @"com.runrev.livecode.text-styled-1", kMCPlatformPasteboardFlavorStyledText, MCMacPasteboardConvertIdentity },
+	//{ @"com.runrev.livecode.text-styled-1", kMCPlatformPasteboardFlavorStyledText, MCMacPasteboardConvertIdentity },
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -335,9 +339,9 @@ bool MCPlatformPasteboardStore(MCPlatformPasteboardRef p_pasteboard, MCPlatformP
 			case kMCPlatformPasteboardFlavorObjects:
 				t_flavor_string = kMCMacPasteboardObjectsUTString;
 				break;
-			case kMCPlatformPasteboardFlavorStyledText:
-				t_flavor_string = @"";
-				break;
+//			case kMCPlatformPasteboardFlavorStyledText:
+//				t_flavor_string = @"";
+//				break;
 			default:
 				assert(false);
 				break;
@@ -355,18 +359,56 @@ bool MCPlatformPasteboardStore(MCPlatformPasteboardRef p_pasteboard, MCPlatformP
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCPlatformOwnsClipboard(void)
-{
-	return false;
-}
-
-void MCPlatformFlushClipboard(void)
-{
-}
-
 void MCPlatformGetClipboard(MCPlatformPasteboardRef& r_pasteboard)
 {
 	MCMacPlatformPasteboardCreate([NSPasteboard generalPasteboard], r_pasteboard);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCPlatformGetDragboard(MCPlatformPasteboardRef& r_dragboard)
+{
+	MCMacPlatformPasteboardCreate([NSPasteboard pasteboardWithName: NSDragPboard], r_dragboard);
+}
+
+void MCPlatformDoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOperations p_allowed_operations, MCImageBitmap *p_image, const MCPoint *p_image_loc, MCPlatformDragOperation& r_operation)
+{
+	CGImageRef t_cg_image;
+	t_cg_image = nil;
+	if (p_image != nil &&
+		!MCImageBitmapToCGImage(p_image, true, false, t_cg_image))
+	{
+		r_operation = kMCPlatformDragOperationNone;
+		return;
+	}
+	
+	NSImage *t_image;
+	t_image = [[NSImage alloc] initWithCGImage: t_cg_image size: NSZeroSize];
+	CGImageRelease(t_cg_image);
+	
+	NSSize t_image_loc;
+	t_image_loc . width = t_image_loc . height = 0.0f;
+	if (p_image_loc != nil)
+	{
+		t_image_loc . width = p_image_loc -> x;
+		t_image_loc . height = p_image_loc -> y;
+	}
+		
+	NSDragOperation t_allowed_operations;
+	t_allowed_operations = 0;
+	if ((p_allowed_operations & kMCPlatformDragOperationCopy) != 0)
+		t_allowed_operations |= NSDragOperationCopy;
+	if ((p_allowed_operations & kMCPlatformDragOperationMove) != 0)
+		t_allowed_operations |= NSDragOperationMove;
+	if ((p_allowed_operations & kMCPlatformDragOperationLink) != 0)
+		t_allowed_operations |= NSDragOperationLink;
+	
+	NSDragOperation t_op;
+	t_op = [((MCMacPlatformWindow *)p_window) -> GetView() dragImage: t_image offset: t_image_loc allowing: t_allowed_operations];
+	
+	[t_image release];
+	
+	r_operation = MCMacPlatformMapNSDragOperationToDragOperation(t_op);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -519,6 +561,26 @@ NSDragOperation MCMacPlatformMapDragOperationToNSDragOperation(MCPlatformDragOpe
 	}
 	
 	return NSDragOperationNone;
+}
+
+MCPlatformDragOperation MCMacPlatformMapNSDragOperationToDragOperation(NSDragOperation p_operation)
+{
+	switch(p_operation)
+	{
+		case NSDragOperationNone:
+			return kMCPlatformDragOperationNone;
+		case NSDragOperationCopy:
+			return kMCPlatformDragOperationCopy;
+		case NSDragOperationMove:
+			return kMCPlatformDragOperationMove;
+		case NSDragOperationLink:
+			return kMCPlatformDragOperationLink;
+		default:
+			assert(false);
+			break;
+	}
+	
+	return kMCPlatformDragOperationNone;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

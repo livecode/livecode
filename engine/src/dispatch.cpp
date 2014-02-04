@@ -1096,7 +1096,7 @@ void MCDispatch::wmdrag(Window w)
 		MCdragtargetptr->getstack()->resetcursor(True);
 		MCdragtargetptr -> getstack() -> munfocus();
 
-		MCdragaction = MCscreen -> dodragdrop(t_pasteboard, MCallowabledragactions, t_image, t_image != NULL ? &MCdragimageoffset : NULL);
+		MCdragaction = MCscreen -> dodragdrop(w, t_pasteboard, MCallowabledragactions, t_image, t_image != NULL ? &MCdragimageoffset : NULL);
 
 		dodrop(true);
 		MCdragdata -> ResetSource();

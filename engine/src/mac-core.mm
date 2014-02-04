@@ -283,6 +283,8 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static NSEvent *s_last_mouse_event = nil;
+
 static CFRunLoopObserverRef s_observer = nil;
 static bool s_in_blocking_wait = false;
 static bool s_wait_broken = false;
@@ -358,10 +360,19 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 
 	if (t_event != nil)
 	{
+		[s_last_mouse_event release];
+		s_last_mouse_event = nil;
+		
 		if ([t_event type] == NSApplicationDefined)
 		{
 			if ([t_event subtype] == kMCMacPlatformMouseSyncEvent)
 				MCMacPlatformHandleMouseSync();
+		}
+		else if ([t_event type] == NSLeftMouseDown || [t_event type] == NSLeftMouseDragged)
+		{
+			s_last_mouse_event = t_event;
+			[t_event retain];
+			[NSApp sendEvent: t_event];
 		}
 		else
 			[NSApp sendEvent: t_event];
@@ -518,6 +529,11 @@ void MCPlatformGetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window)
 uint32_t MCPlatformGetEventTime(void)
 {
 	return [[NSApp currentEvent] timestamp] * 1000.0;
+}
+
+NSEvent *MCMacPlatformGetLastMouseEvent(void)
+{
+	return s_last_mouse_event;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

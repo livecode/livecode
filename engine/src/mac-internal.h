@@ -129,6 +129,8 @@ class MCMacPlatformSurface;
 - (void)keyDown: (NSEvent *)event;
 - (void)keyUp: (NSEvent *)event;
 
+//////////
+
 - (BOOL)wantsPeriodicDraggingUpdates;
 - (NSDragOperation)draggingEntered: (id<NSDraggingInfo>)sender;
 - (void)draggingExited: (id<NSDraggingInfo>)sender;
@@ -137,6 +139,16 @@ class MCMacPlatformSurface;
 - (BOOL)performDragOperation: (id<NSDraggingInfo>)sender;
 - (BOOL)prepareForDragOperation: (id<NSDraggingInfo>)sender;
 - (void)concludeDragOperation:(id<NSDraggingInfo>)sender;
+
+//////////
+
+- shouldDelayWindowOrderingForEvent: (NSEvent *)event;
+- (NSDragOperation)draggingSourceOperationMaskForLocal: (BOOL)isLocal;
+- (BOOL)ignoreModifierKeysWhileDragging;
+- (void)draggedImage:(NSImage *)image beganAt:(NSPoint)point;
+- (void)draggedImage:(NSImage *)image movedTo:(NSPoint)point;
+- (void)draggedImage:(NSImage *)image endedAt:(NSPoint)point operation:(NSDragOperation)operation;
+- (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations;
 
 //////////
 
@@ -288,9 +300,12 @@ void MCMacPlatformMapScreenNSPointToMCPoint(NSPoint point, MCPoint& r_point);
 void MCMacPlatformMapScreenMCRectangleToNSRect(MCRectangle rect, NSRect& r_rect);
 void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect rect, MCRectangle& r_rect);
 
+NSEvent *MCMacPlatformGetLastMouseEvent(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NSDragOperation MCMacPlatformMapDragOperationToNSDragOperation(MCPlatformDragOperation);
+MCPlatformDragOperation MCMacPlatformMapNSDragOperationToDragOperation(NSDragOperation);
 
 void MCMacPlatformPasteboardCreate(NSPasteboard *pasteboard, MCPlatformPasteboardRef& r_pasteboard);
 

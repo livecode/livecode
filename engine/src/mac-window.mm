@@ -31,6 +31,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static NSDragOperation s_drag_operation_result = NSDragOperationNone;
+
+////////////////////////////////////////////////////////////////////////////////
+
 @implementation com_runrev_livecode_MCWindowDelegate
 
 - (id)initWithPlatformWindow: (MCMacPlatformWindow *)window
@@ -350,6 +354,65 @@
 - (void)keyUp: (NSEvent *)event
 {
 	[self handleKeyPress: event isDown: NO];
+}
+
+//////////
+
+- shouldDelayWindowOrderingForEvent: (NSEvent *)event
+{
+	return NO;
+}
+
+- (NSDragOperation)draggingSourceOperationMaskForLocal: (BOOL)isLocal
+{
+	return NSDragOperationNone;
+}
+
+- (BOOL)ignoreModifierKeysWhileDragging
+{
+	return YES;
+}
+
+- (void)draggedImage:(NSImage *)image beganAt:(NSPoint)point
+{
+}
+
+- (void)draggedImage:(NSImage *)image movedTo:(NSPoint)point
+{
+}
+
+- (void)draggedImage:(NSImage *)image endedAt:(NSPoint)point operation:(NSDragOperation)operation
+{
+	NSLog(@"draggedImage:endedAt");
+}
+
+- (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations
+{
+	NSEvent *t_mouse_event;
+	t_mouse_event = MCMacPlatformGetLastMouseEvent();
+	if (t_mouse_event == nil)
+		return NSDragOperationNone;
+		
+	if ([t_mouse_event window] != [self window])
+		return NSDragOperationNone;
+	
+	NSPoint t_image_loc;
+	t_image_loc . x = [t_mouse_event locationInWindow] . x + offset . width;
+	t_image_loc . y = [t_mouse_event locationInWindow] . y + offset . height;
+	
+	NSLog(@"Drag image start");
+	
+	[self dragImage: image
+				at: t_image_loc 
+				offset: NSZeroSize 
+				event: t_mouse_event
+				pasteboard: [NSPasteboard pasteboardWithName: NSDragPboard]
+				source: self
+				slideBack: YES];
+				
+	NSLog(@"Drag image end");
+				
+	return NSDragOperationNone;
 }
 
 //////////

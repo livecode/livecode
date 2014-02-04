@@ -855,7 +855,6 @@ static bool fetch_clipboard(MCPlatformPasteboardFlavor p_flavor, void*& r_data, 
 
 void MCScreenDC::flushclipboard(void)
 {
-	MCPlatformFlushClipboard();
 }
 
 bool MCScreenDC::ownsclipboard(void)
@@ -983,8 +982,10 @@ MCScriptEnvironment *MCScreenDC::createscriptenvironment(const char *p_language)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCDragAction MCScreenDC::dodragdrop(MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
+MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
 {
+	MCPlatformDragOperation t_op;
+	MCPlatformDoDragDrop(w, p_allowed_actions, nil, nil, t_op);
 	return DRAG_ACTION_NONE;
 }
 

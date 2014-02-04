@@ -589,6 +589,8 @@ void MCPlatformHideCursor(void);
 
 typedef class MCPlatformPasteboard *MCPlatformPasteboardRef;
 
+typedef uint32_t MCPlatformAllowedDragOperations;
+
 enum MCPlatformDragOperation
 {
 	kMCPlatformDragOperationNone,
@@ -633,9 +635,11 @@ bool MCPlatformPasteboardStore(MCPlatformPasteboardRef pasteboard, MCPlatformPas
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformFlushClipboard(void);
-bool MCPlatformOwnsClipboard(void);
-bool MCPlatformSetClipboard(MCPlatformPasteboardRef pasteboard);
+void MCPlatformGetDragboard(MCPlatformPasteboardRef& r_pasteboard);
+void MCPlatformDoDragDrop(MCPlatformWindowRef window, MCPlatformAllowedDragOperations allowed_operations, MCImageBitmap *image, const MCPoint *image_loc, MCPlatformDragOperation& r_operation);
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCPlatformGetClipboard(MCPlatformPasteboardRef& r_pasteboard);
 
 ////////////////////////////////////////////////////////////////////////////////
