@@ -1459,6 +1459,10 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
         {
             switch(desttype)
             {
+                case DT_THIS_ME:
+                    t_object . object = destobj;
+                    t_object . part_id = 0;
+                    break;
                 case DT_ME:
                     //MCEngineEvalMeAsObject(ctxt, t_object);
                     if (ctxt . GetParentScript() == NULL)
