@@ -1558,6 +1558,7 @@ bool MCS_mac_FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)
     
 	CopyPascalStringToC(fSpec->name, (char*)t_name.Chars());
     
+    /* UNCHECKED */ t_name . Shrink(MCCStringLength((const char *)t_name . Chars()));
     /* UNCHECKED */ t_name.CreateStringAndRelease(&t_filename_std);
 	/* UNCHECKED */ MCS_pathfromnative(*t_filename_std, &t_filename);
 
@@ -6302,7 +6303,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 }
                 
                 if (t_success)
-                    t_success = MCListCopyAsStringAndRelease(*t_result_list, &t_result_string);
+                    t_success = MCListCopyAsString(*t_result_list, &t_result_string);
                 
                 if (t_success)
                     t_success = MCListAppend(*t_list, *t_result_string);
@@ -8034,7 +8035,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         for (i = 0; i < osancomponents; i++)
         {
             if (l == strlen(osacomponents[i].compname)
-                && !MCStringIsEqualToCString(p_language, osacomponents[i].compname, kMCCompareCaseless))
+                && MCStringIsEqualToCString(p_language, osacomponents[i].compname, kMCCompareCaseless))
             {
                 posacomp = &osacomponents[i];
                 break;

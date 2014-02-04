@@ -3107,7 +3107,10 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 					CloseHandle(t_file_mapped_handle);
 				}
 				else
+				{
 					t_handle = new MCMemoryMappedFileHandle(t_file_mapped_handle, t_buffer, t_len);
+					CloseHandle(t_file_handle);
+				}
 			}
 		}
 		else
@@ -4112,40 +4115,40 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		}
 #endif /* MCS_checkprocesses_dsk_w32 */
 
-	// TODO : refactor Windows checkprocesses code 
-	/*
-        uint2 i;
-        for (i = 0 ; i < MCnprocesses ; i++)
-            if (MCprocesses[i].phandle != NULL)
+    uint2 i;
+    for (i = 0 ; i < MCnprocesses ; i++)
+        if (MCprocesses[i].phandle != NULL)
+        {
+            DWORD err = WaitForSingleObject(MCprocesses[i].phandle, 0);
+            if (err == WAIT_OBJECT_0 || err == WAIT_FAILED)
             {
-                DWORD err = WaitForSingleObject(MCprocesses[i].phandle, 0);
-                if (err == WAIT_OBJECT_0 || err == WAIT_FAILED)
+                // MW-2010-05-17: Make sure we keep the process around long enough to
+                //   read in all its data.
+                uint32_t t_available;
+                if (MCprocesses[i].ihandle == NULL || !PeekNamedPipe(MCprocesses[i].ihandle->GetFilePointer(), NULL, 0, NULL, (DWORD *)&t_available, NULL))
+                    t_available = 0;
+                if (t_available != 0)
+                    return;
+                
+				/* TODO: set end of file...
+                // MW-2010-10-25: [[ Bug 9134 ]] Make sure the we mark the stream as 'ATEOF'
+                if (MCprocesses[i] . ihandle != nil)
+                    MCprocesses[i] . ihandle -> flags |= IO_ATEOF;
+                */
+
+                DWORD retcode;
+                GetExitCodeProcess(MCprocesses[i].phandle, &retcode);
+                MCprocesses[i].retcode = retcode;
+                MCprocesses[i].pid = 0;
+                MCprocesses[i].phandle = NULL;
+                Sleep(0);
+                if (MCprocesses[i].thandle != NULL)
                 {
-                    // MW-2010-05-17: Make sure we keep the process around long enough to
-                    //   read in all its data.
-                    uint32_t t_available;
-                    if (MCprocesses[i].ihandle == NULL || !PeekNamedPipe(MCprocesses[i].ihandle->fhandle, NULL, 0, NULL, (DWORD *)&t_available, NULL))
-                        t_available = 0;
-                    if (t_available != 0)
-                        return;
-                    
-                    // MW-2010-10-25: [[ Bug 9134 ]] Make sure the we mark the stream as 'ATEOF'
-                    if (MCprocesses[i] . ihandle != nil)
-                        MCprocesses[i] . ihandle -> flags |= IO_ATEOF;
-                    
-                    DWORD retcode;
-                    GetExitCodeProcess(MCprocesses[i].phandle, &retcode);
-                    MCprocesses[i].retcode = retcode;
-                    MCprocesses[i].pid = 0;
-                    MCprocesses[i].phandle = NULL;
-                    Sleep(0);
-                    if (MCprocesses[i].thandle != NULL)
-                    {
-                        TerminateThread(MCprocesses[i].thandle, 0);
-                        MCprocesses[i].thandle = NULL;
-                    }
+                    TerminateThread(MCprocesses[i].thandle, 0);
+                    MCprocesses[i].thandle = NULL;
                 }
-            }*/
+            }
+        }
     }
     
 	virtual uint32_t GetSystemError(void)

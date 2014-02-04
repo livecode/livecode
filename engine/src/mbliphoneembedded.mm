@@ -477,6 +477,12 @@ public:
                 t_result = [NSString stringWithMCStringRef: (MCStringRef)*t_value];
             else if (MCValueGetTypeCode((*t_value) == kMCValueTypeCodeName))
                 t_result = [NSString stringWithMCNameRef: (MCNameRef)*t_value)];
+            else if (MCValueGeTypeCode((*t_value) == kMCValueTypeCodeData))
+            {
+                MCAutoStringRef t_string;
+                MCStringDecode((MCDataRef)*t_value, kMCStringEncodingNative, false, &t_string);
+                t_result = [NSString stringWithMCStringRef: *t_string];
+            }
 				
 			m_completion(t_result);
 		}

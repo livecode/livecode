@@ -2360,7 +2360,7 @@ public:
 	
     virtual ~MCControlAtLoc();
     Parse_stat parse(MCScriptPoint &sp, Boolean the);
-    virtual void eval_ctxt(MCExecContext &ctxt);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 	
     virtual MCExecMethodInfo *getmethodinfo(void) const { return is_screen ? kMCInterfaceEvalControlAtScreenLocMethodInfo : kMCInterfaceEvalControlAtLocMethodInfo; }
     virtual MCExpression *getmethodarg(void) const { return location; }

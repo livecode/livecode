@@ -1086,7 +1086,7 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 		t_target_ptr = nil;
 	
 	// Evaluate the parameter list
-    bool t_success;
+    bool t_success, t_can_debug;
 	MCParameter *tptr = params;
 	while (tptr != NULL)
 	{
@@ -1099,10 +1099,15 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
         {
             MCAutoValueRef t_value;
             tptr -> clear_argument();
-            while (!(t_success = tptr->eval(ctxt, &t_value))
-                   && (MCtrace || MCnbreakpoints)
-                   && !MCtrylock && !MClockerrors)
-				MCB_error(ctxt, line, pos, EE_STATEMENT_BADPARAM);
+
+            do
+            {
+                if (!(t_success = tptr->eval(ctxt, &t_value)))
+                    t_can_debug = MCB_error(ctxt, line, pos, EE_STATEMENT_BADPARAM);
+                ctxt.IgnoreLastError();
+            }
+            while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
+            
             if (!t_success)
 			{
                 ctxt . LegacyThrow(EE_STATEMENT_BADPARAM);
@@ -1117,7 +1122,7 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 		tptr = tptr->getnext();
 	}
 
-    ctxt . SetLine(line);
+    ctxt . SetLineAndPos(line, pos);
     MCEngineExecDispatch(ctxt, is_function ? HT_FUNCTION : HT_MESSAGE, *t_message, t_target_ptr, params);
 }
 
@@ -1416,7 +1421,7 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
 		}
         else
         {
-            ctxt . SetLine(line);
+            ctxt . SetLineAndPos(line, pos);
 
             if (!send)
                 MCEngineExecCall(ctxt, *t_message, t_target_ptr);
@@ -3264,8 +3269,7 @@ void MCStop::exec_ctxt(MCExecContext &ctxt)
 
                 MCTextExecStopUsingFont(ctxt, *t_font);
             }
-
-			if (target != NULL)
+            else if (target != NULL)
 			{
 				MCObject *optr;
 				uint4 parid;

@@ -6758,7 +6758,7 @@ Parse_stat MCControlAtLoc::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-void MCControlAtLoc::eval_ctxt(MCExecContext &ctxt)
+void MCControlAtLoc::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
 #ifdef /* MCControlAtLoc */ LEGACY_EXEC
 	MCPoint t_location;
@@ -6817,6 +6817,12 @@ void MCControlAtLoc::eval_ctxt(MCExecContext &ctxt)
 		MCInterfaceEvalControlAtLoc(ctxt, t_location, &t_result);
 	else
 		MCInterfaceEvalControlAtScreenLoc(ctxt, t_location, &t_result);
+    
+    if (!ctxt.HasError())
+    {
+        r_value . type = kMCExecValueTypeStringRef;
+        r_value . stringref_value = MCValueRetain(*t_result);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////

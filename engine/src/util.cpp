@@ -2197,7 +2197,7 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 				unichar_t *bptr = fptr - 1;
 				while (True)
 				{ //search backword for '/'
-					if (*bptr == '/')
+					if (*bptr == '/' || bptr == t_unicode_str)
 					{
 						t_length -= strmove(bptr, fptr + 3, true);
 						fptr = bptr;

@@ -57,7 +57,7 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
             if (MCexitall)
                 break;
         }
-        ctxt . SetLine(tspr->getline());
+        ctxt . SetLineAndPos(tspr->getline(), tspr->getpos());
         
        // stat = tspr->exec(ctxt . GetEP());
         tspr->exec_ctxt(ctxt);
@@ -84,9 +84,9 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
                 if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
                     do
                     {
-                        ctxt . IgnoreLastError();
                         MCB_error(ctxt, tspr->getline(), tspr->getpos(),
                                   EE_REPEAT_BADSTATEMENT);
+                        ctxt . IgnoreLastError();
                         tspr->exec_ctxt(ctxt);
                     }
                 while (MCtrace && (stat = ctxt . GetExecStat()) != ES_NORMAL);
@@ -174,7 +174,7 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		ctxt . SetLine(line);
+		ctxt . SetLineAndPos(line, pos);
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
@@ -253,7 +253,11 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 	MCECptr = oldctxt;
 	if (added)
 		MCnexecutioncontexts--;
-	ctxt . SetExecStat(stat);
+    
+    if (stat != ES_NORMAL && stat != ES_PASS && stat != ES_EXIT_HANDLER)
+        ctxt . SetExecStat(stat);
+    else
+        ctxt . SetExecStat(ES_NORMAL);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -360,7 +364,7 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
 	MCNameRef t_key;
 	MCValueRef t_value;
 	uintptr_t t_iterator;
-    const byte_t *t_data_ptr;
+    const byte_t *t_data_ptr, *t_data_end;
     Parse_stat ps;
     MCScriptPoint *sp = nil;
     int4 count = 0;
@@ -400,6 +404,7 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             
             t_length = MCDataGetLength(*t_data);
             t_data_ptr = MCDataGetBytePtr(*t_data);
+            t_data_end = t_data_ptr + t_length;
         }
         else
         {
@@ -463,6 +468,8 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                 case FU_BYTE:
                 {
                     MCDataCreateWithBytes(t_data_ptr++, 1, &t_byte);
+                    if (t_data_ptr == t_data_end)
+                        endnext = true;
                 }
                     break;
                     
@@ -509,7 +516,7 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             // Set the loop variable to whatever the value was in the last iteration.
             if (each == FU_BYTE)
                 loopvar -> set(ctxt, *t_byte);
-            if (each != FU_ELEMENT && each != FU_KEY)
+            else if (each != FU_ELEMENT && each != FU_KEY)
                 loopvar -> set(ctxt, *t_unit);
         }
         else
@@ -518,11 +525,16 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
         if (!done)
             MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);
         
-        if (done)
+        if (endnext)
         {
             // Reset the loop variable to whatever the value was in the last iteration.
-            if (loopvar != nil && each != FU_ELEMENT && each != FU_KEY)
-                loopvar->set(ctxt, *t_unit);
+            if (loopvar != nil)
+            {
+                if (each == FU_BYTE)
+                    loopvar -> set(ctxt, *t_byte);
+                else if (each != FU_ELEMENT && each != FU_KEY)
+                    loopvar -> set(ctxt, *t_unit);
+            }
         }
         
         done = done || endnext;
@@ -658,7 +670,7 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
 			if (MCexitall)
 				break;
 		}
-		ctxt . SetLine(tspr->getline());
+		ctxt . SetLineAndPos(tspr->getline(), tspr->getpos());
         
 		//stat = tspr->exec(ctxt . GetEP());
         tspr->exec_ctxt(ctxt);
@@ -692,6 +704,7 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                     do
                     {
                         MCB_error(ctxt, tspr->getline(), tspr->getpos(), EE_TRY_BADSTATEMENT);
+                        ctxt.IgnoreLastError();
                         tspr->exec_ctxt(ctxt);
                     }
 				while(MCtrace && (stat = ctxt . GetExecStat()) != ES_NORMAL);

@@ -63,7 +63,7 @@ void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		ctxt.SetLine(p_line);
+		ctxt.SetLineAndPos(p_line, p_pos);
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}

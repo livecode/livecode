@@ -67,6 +67,9 @@ public:
 	void setvalueref_argument(MCValueRef name);
 	void setn_argument(real8 n);
 	void clear_argument(void);
+	
+	// MW-2014-01-22: [[ CompatV1 ]] Used by the V1 interface to get the arg value.
+	MCValueRef getvalueref_argument(void);
 
 	// Evaluate the value *stored* in the parameter - i.e. Used by
     // the callee in a function/command invocation.

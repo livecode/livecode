@@ -748,11 +748,11 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	if (!t_state -> files != p_entry -> is_folder)
 		return true;
 	
-	MCStringRef t_detailed_string;
 	if (t_state -> details)
-	{		
+	{
+        MCAutoStringRef t_details;
 #ifdef _WIN32
-		/* UNCHECKED */ MCStringFormat(t_detailed_string,
+		/* UNCHECKED */ MCStringFormat(&t_details,
                                        "%@,%I64d,,%ld,%ld,%ld,,,,%03o,",
                                        p_entry -> name,
                                        p_entry -> data_size,
@@ -761,7 +761,7 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
                                        p_entry -> access_time,
                                        p_entry -> permissions);
 #else
-		/* UNCHECKED */ MCStringFormat(t_detailed_string,
+		/* UNCHECKED */ MCStringFormat(&t_details,
                                        "%@,%lld,,,%u,%u,,%d,%d,%03o,",
                                        p_entry -> name,
                                        p_entry -> data_size,
@@ -769,11 +769,8 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
                                        p_entry -> user_id, p_entry -> group_id,
                                        p_entry -> permissions);
 #endif
-	}
-	if (t_state -> details)
-	{
-		/* UNCHECKED */ MCListAppend(t_state->list, t_detailed_string);
-		MCValueRelease(t_detailed_string);
+
+		/* UNCHECKED */ MCListAppend(t_state->list, *t_details);
 	}
 	else
     /* UNCHECKED */ MCListAppendFormat(t_state->list, "%@", p_entry -> name);
@@ -1114,11 +1111,15 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 		t_success = t_buffer . CreateStringAndRelease(&t_string);
         
         MCAutoDataRef t_data;
+        MCAutoStringRef t_text;
         if (t_success)
             t_success = MCStringEncode(*t_string, kMCStringEncodingNative, false, &t_data);
         
         if (t_success)
-            t_success =  MCStringCreateWithBytes(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), kMCStringEncodingNative, false, r_text);
+            t_success =  MCStringCreateWithBytes(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), kMCStringEncodingNative, false, &t_text);
+        
+        if (t_success)
+            t_success = MCStringConvertLineEndingsToLiveCode(*t_text, r_text);
         
         MCresult -> clear(False);
        

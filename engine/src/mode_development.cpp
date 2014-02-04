@@ -1454,7 +1454,7 @@ LONG WINAPI unhandled_exception_filter(struct _EXCEPTION_POINTERS *p_exception_i
 	HMODULE t_dbg_help_module = NULL;
 	t_dbg_help_module = LoadLibraryA("dbghelp.dll");
 
-	MiniDumpWriteDumpPtr t_write_minidump;
+	MiniDumpWriteDumpPtr t_write_minidump = NULL;
 	if (t_dbg_help_module != NULL)
 		t_write_minidump = (MiniDumpWriteDumpPtr)GetProcAddress(t_dbg_help_module, "MiniDumpWriteDump");
 
@@ -1664,10 +1664,12 @@ void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r
         
         t_object -> parsescript(False);
         if (t_object -> hlist != NULL && t_object -> getstack() -> iskeyed())
+        {
             t_first = t_object -> hlist -> enumerate(ctxt, t_first, t_count, t_handler_array);
         
-        for (uindex_t i = 0; i < t_count; i++)
-            t_handlers . Push(t_handler_array[i]);
+            for (uindex_t i = 0; i < t_count; i++)
+                t_handlers . Push(t_handler_array[i]);
+        }
     }
     
     if (MCbackscripts != NULL)
@@ -1691,10 +1693,12 @@ void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r
                 t_handler_list = NULL;
             
             if (t_handler_list != NULL)
+            {
                 t_first = t_handler_list -> enumerate(ctxt, t_first, t_count, t_handler_array);
             
-            for (uindex_t i = 0; i < t_count; i++)
-                t_handlers . Push(t_handler_array[i]);
+                for (uindex_t i = 0; i < t_count; i++)
+                    t_handlers . Push(t_handler_array[i]);
+            }
             
             t_object_ref = t_object_ref -> next();
         }
@@ -1839,17 +1843,24 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
     MCStringRef t_string;
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("token"), t_value)
             && ctxt . ConvertToString(t_value, t_string))
-        MClicenseparameters . license_token = MCValueRetain(t_string);
+    {
+        MCValueRelease(MClicenseparameters . license_token);
+        MClicenseparameters . license_token = t_string;
+    }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("name"), t_value)
             && ctxt . ConvertToString(t_value, t_string))
-        MClicenseparameters . license_name = MCValueRetain(t_string);
+    {
+        MCValueRelease(MClicenseparameters . license_name);
+        MClicenseparameters . license_name = t_string;
+    }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("organization"), t_value)
             && ctxt . ConvertToString(t_value, t_string))
-        MClicenseparameters . license_organization = MCValueRetain(t_string);
-    
-    MCValueRelease(t_string);
+    {
+        MCValueRelease( MClicenseparameters . license_organization);
+         MClicenseparameters . license_organization = t_string;
+    }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("class"), t_value))
     {
@@ -1949,8 +1960,7 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("addons"), t_value) && MCValueIsArray(t_value))
     {
-        if (MClicenseparameters . addons != nil)
-            MCValueRelease(MClicenseparameters . addons);
+        MCValueRelease(MClicenseparameters . addons);
         MCArrayCopy((MCArrayRef)t_value, MClicenseparameters . addons);
     }
 }

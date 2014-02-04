@@ -3961,7 +3961,10 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 
     uindex_t i;
 	for (i = 0; i < t_item_count; i++)
+    {
         MCListAppend(*t_list, (MCStringRef)t_items[i] . data);
+        MCValueRelease(t_items[i] . svalue);
+    }
 
     if (t_trailing_delim || i < t_item_count - 1)
         MCListAppend(*t_list, kMCEmptyString);

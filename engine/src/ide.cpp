@@ -837,7 +837,7 @@ static void colourize_paragraph(void *p_context, MCColourizeClass p_class, uint4
 
 static unsigned char next_valid_char(const unsigned char *p_text, uindex_t &x_index)
 {
-	if (p_text[x_index] != REPLACEMENT_CHAR_UTF16)
+	if (p_text[x_index] != REPLACEMENT_CHAR_UTF16 && p_text[x_index] != '\0')
 		if (p_text[x_index + 1] == REPLACEMENT_CHAR_ASCII)
 			return p_text[x_index += 2];
 	
@@ -1266,15 +1266,13 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		
 		// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
 		//   works.
-        MCAutoStringRefAsNativeChars t_auto_native;
-		char_t *t_text;
-        uindex_t t_length;
+        MCAutoStringRefAsCString t_text;
 		uint4 t_nesting, t_min_nesting;
 
-        t_auto_native . Lock(t_paragraph -> GetInternalStringRef(), t_text, t_length);
+        t_text . Lock(t_paragraph -> GetInternalStringRef());
         
 		t_paragraph -> clearzeros();
-		tokenize(t_text, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
+		tokenize((const char_t *)*t_text, MCCStringLength(*t_text), t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
 
 		t_old_nesting += t_state -> GetCommentDelta(t_line);
 		if (p_mutate)
@@ -1289,15 +1287,13 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 			
 			// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
 			//   works.
-            MCAutoStringRefAsNativeChars t_auto_native;
-			char_t *t_text;
-			uindex_t t_length;
+            MCAutoStringRefAsCString t_text;    
 			uint4 t_nesting, t_min_nesting;
             
-            /* UNCHECKED */ t_auto_native . Lock(t_paragraph -> GetInternalStringRef(), t_text, t_length);
+            /* UNCHECKED */ t_text . Lock(t_paragraph -> GetInternalStringRef());
             
 			t_paragraph -> clearzeros();
-			tokenize(t_text, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
+			tokenize((const char_t *)*t_text, MCCStringLength(*t_text), t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
 
 			t_old_nesting += t_state -> GetCommentDelta(t_line);
 			t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
@@ -1355,10 +1351,8 @@ void MCIdeScriptColourize::exec_ctxt(MCExecContext &ctxt)
     if (eval_target_range(ctxt, f_start, f_end, f_target, t_start, t_end, t_target))
 		t_state = MCIdeState::Find(t_target);
 
-    if (t_target -> getparagraphs() != NULL)
+    if (t_target && t_target -> getparagraphs() != NULL)
         TokenizeField(t_target, t_state, f_type, t_start, t_end, colourize_paragraph);
-    else
-        ctxt . Throw();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

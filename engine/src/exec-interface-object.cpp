@@ -2531,9 +2531,7 @@ void MCObject::GetTextFont(MCExecContext& ctxt, MCStringRef& r_font)
     uint2 fontsize, fontstyle;
     MCNameRef fontname;
     getfontattsnew(fontname, fontsize, fontstyle);
-    r_font = MCNameGetString(fontname);
-		
-	
+    r_font = MCValueRetain(MCNameGetString(fontname));
 }
 
 void MCObject::SetTextFont(MCExecContext& ctxt, MCStringRef font)
@@ -2607,8 +2605,7 @@ void MCObject::GetEffectiveTextFont(MCExecContext& ctxt, MCStringRef& r_font)
     uint2 fontsize, fontstyle;
     MCNameRef fontname;
     getfontattsnew(fontname, fontsize, fontstyle);
-    r_font = MCNameGetString(fontname);
-
+    r_font = MCValueRetain(MCNameGetString(fontname));
 }
 
 void MCObject::GetTextSize(MCExecContext& ctxt, uinteger_t*& r_size)
@@ -3241,7 +3238,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
         
         t_exec_value . valueref_value = MCValueRetain(t_value);
         t_exec_value . type = kMCExecValueTypeValueRef;
-        setprop(ctxt, part, (Properties)s_preprocess_props[j].prop, False, t_exec_value);
+        setprop(ctxt, part, (Properties)s_preprocess_props[j].prop, nil, False, t_exec_value);
         
         ctxt . IgnoreLastError();
     }
@@ -3283,7 +3280,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
             
             t_exec_value . valueref_value = MCValueRetain(t_value);
             t_exec_value . type = kMCExecValueTypeValueRef;
-            setprop(ctxt, part, (Properties)te->which, False, t_exec_value);
+            setprop(ctxt, part, (Properties)te->which, nil, False, t_exec_value);
             
             ctxt . IgnoreLastError();
 		}

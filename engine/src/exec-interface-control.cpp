@@ -482,7 +482,7 @@ void MCControl::GetDropShadowProperty(MCExecContext& ctxt, MCNameRef index, MCEx
 
 void MCControl::SetDropShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value)
 {
-    bool t_dirty;
+    bool t_dirty = false;
     MCRectangle t_old_effective_rect = geteffectiverect();
     
     if (MCBitmapEffectsSetProperty(ctxt, m_bitmap_effects, index, P_BITMAP_EFFECT_DROP_SHADOW, p_value, t_dirty))
@@ -505,7 +505,7 @@ void MCControl::GetInnerShadowProperty(MCExecContext& ctxt, MCNameRef index, MCE
 
 void MCControl::SetInnerShadowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value)
 {
-    bool t_dirty;
+    bool t_dirty = false;
     MCRectangle t_old_effective_rect = geteffectiverect();
     
     if (MCBitmapEffectsSetProperty(ctxt, m_bitmap_effects, index, P_BITMAP_EFFECT_INNER_SHADOW, p_value, t_dirty))
@@ -528,7 +528,7 @@ void MCControl::GetInnerGlowProperty(MCExecContext& ctxt, MCNameRef index, MCExe
 
 void MCControl::SetInnerGlowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value)
 {
-    bool t_dirty;
+    bool t_dirty = false;
     MCRectangle t_old_effective_rect = geteffectiverect();
     
     if (MCBitmapEffectsSetProperty(ctxt, m_bitmap_effects, index, P_BITMAP_EFFECT_INNER_GLOW, p_value, t_dirty))
@@ -551,7 +551,7 @@ void MCControl::GetOuterGlowProperty(MCExecContext& ctxt, MCNameRef index, MCExe
 
 void MCControl::SetOuterGlowProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value)
 {
-    bool t_dirty;
+    bool t_dirty = false;
     MCRectangle t_old_effective_rect = geteffectiverect();
     
     if (MCBitmapEffectsSetProperty(ctxt, m_bitmap_effects, index, P_BITMAP_EFFECT_OUTER_GLOW, p_value, t_dirty))
@@ -574,7 +574,7 @@ void MCControl::GetColorOverlayProperty(MCExecContext& ctxt, MCNameRef index, MC
 
 void MCControl::SetColorOverlayProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value)
 {
-    bool t_dirty;
+    bool t_dirty = false;
     MCRectangle t_old_effective_rect = geteffectiverect();
     
     if (MCBitmapEffectsSetProperty(ctxt, m_bitmap_effects, index, P_BITMAP_EFFECT_COLOR_OVERLAY, p_value, t_dirty))

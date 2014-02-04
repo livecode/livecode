@@ -248,8 +248,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_DEFAULT_MENU_BAR, Name, Interface, DefaultMenubar)
 	DEFINE_RW_PROPERTY(P_STACK_FILE_VERSION, String, Interface, StackFileVersion)
 	DEFINE_RW_PROPERTY(P_DEFAULT_STACK, String, Interface, DefaultStack)
-	DEFINE_RW_PROPERTY(P_DEFAULT_CURSOR, UInt16, Interface, DefaultCursor)
-	DEFINE_RW_PROPERTY(P_CURSOR, UInt16, Interface, Cursor)
+	DEFINE_RW_PROPERTY(P_DEFAULT_CURSOR, UInt32, Interface, DefaultCursor)
+	DEFINE_RW_PROPERTY(P_CURSOR, UInt32, Interface, Cursor)
 
 	DEFINE_RW_PROPERTY(P_TWELVE_TIME, Bool, DateTime, TwelveTime)
 
@@ -5239,7 +5239,7 @@ void MCProperty::eval_count_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 
 void MCProperty::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
-	ctxt . SetLine(line);
+	ctxt . SetLineAndPos(line, pos);
     
 	if (destvar != nil && which != P_CUSTOM_VAR)
 		return eval_variable_ctxt(ctxt, r_value);

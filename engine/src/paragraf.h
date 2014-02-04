@@ -820,6 +820,8 @@ public:
     // Set the flag Lines not synched
     void setDirty() { state |= PS_LINES_NOT_SYNCHED; }
 
+    void layoutchanged() { needs_layout = true; }
+    
     //////////
 
     void GetEncoding(MCExecContext &ctxt, intenum_t& r_encoding);

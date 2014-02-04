@@ -69,7 +69,7 @@ bool MCExecContext::ConvertToString(MCValueRef p_value, MCStringRef& r_string)
     case kMCValueTypeCodeString:
         return MCStringCopy((MCStringRef)p_value, r_string);
     case kMCValueTypeCodeData:
-            return MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr((MCDataRef)p_value), MCDataGetLength((MCDataRef)p_value), r_string);
+        return MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr((MCDataRef)p_value), MCDataGetLength((MCDataRef)p_value), r_string);
     case kMCValueTypeCodeNumber:
     {
         if (MCNumberIsInteger((MCNumberRef)p_value))
@@ -123,6 +123,14 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
                 if (!MCU_stor8(MCStringGetOldString((MCStringRef)p_value), t_number, m_convertoctals))
                     break;
             return MCNumberCreateWithReal(t_number, r_number);
+        }
+    case kMCValueTypeCodeData:
+        {
+            MCAutoStringRef t_string;
+            if (MCStringDecode((MCDataRef)p_value, kMCStringEncodingNative, false, &t_string))
+                return ConvertToNumber((MCValueRef)*t_string, r_number);
+            else
+                break;
         }
     default:
         break;
@@ -205,6 +213,14 @@ bool MCExecContext::ConvertToBoolean(MCValueRef p_value, MCBooleanRef &r_boolean
             return true;
         }
         break;
+    case kMCValueTypeCodeData:
+        {
+            MCAutoStringRef t_string;
+            if (MCStringDecode((MCDataRef)p_value, kMCStringEncodingNative, false, &t_string))
+                return ConvertToBoolean(*t_string, r_boolean);
+            else
+                break;
+        }
     }
 
     return false;
@@ -655,7 +671,7 @@ bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, ui
 {
     MCAssert(p_expr != nil);
 	
-    bool t_success;
+    bool t_success, t_can_debug;
     t_success = false;
     
     do
@@ -664,10 +680,10 @@ bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, ui
         if (!HasError())
             t_success = true;
         else
-            MCB_error(*this, line, pos, p_error);
+            t_can_debug = MCB_error(*this, line, pos, p_error);
         IgnoreLastError();
     }
-	while (!t_success && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
+	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
         
 	if (t_success)
 		return true;
@@ -680,7 +696,7 @@ bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uin
 {
     MCAssert(p_param != nil);
 	
-    bool t_success;
+    bool t_success, t_can_debug;
     t_success = false;
     
     do
@@ -688,10 +704,10 @@ bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uin
         if (p_param -> eval(*this, r_result))
             t_success = true;
         else
-            MCB_error(*this, line, pos, p_error);
+            t_can_debug = MCB_error(*this, line, pos, p_error);
         IgnoreLastError();
     }
-	while (!t_success && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
+	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
     
 	if (t_success)
 		return true;
@@ -705,7 +721,7 @@ bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr
     MCAssert(p_expr != nil);
     MCExecValue t_value;
     
-    bool t_success;
+    bool t_success, t_can_debug;
     t_success = false;
     
     do
@@ -713,10 +729,10 @@ bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr
         if (EvalExprAsNonStrictBool(p_expr, p_error, r_value))
             t_success = true;
         else
-            MCB_error(*this, line, pos, p_error);
+            t_can_debug = MCB_error(*this, line, pos, p_error);
         IgnoreLastError();
     }
-	while (!t_success && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
+	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
     
     if (t_success)
 		return true;
@@ -727,7 +743,7 @@ bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr
 
 bool MCExecContext::TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef p_value)
 {
-    bool t_success;
+    bool t_success, t_can_debug;
     t_success = false;
     
     do
@@ -736,10 +752,10 @@ bool MCExecContext::TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exe
         if (!HasError())
             t_success = true;
         else
-            MCB_error(*this, line, pos, p_error);
+            t_can_debug = MCB_error(*this, line, pos, p_error);
         IgnoreLastError();
     }
-	while (!t_success && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
+	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
     
 	if (t_success)
 		return true;
@@ -1314,13 +1330,13 @@ Parse_stat MCExecContext::FindVar(MCNameRef p_name, MCVarref **r_var)
 
 void MCExecContext::LegacyThrow(Exec_errors p_error, MCValueRef p_hint)
 {
-	MCeerror -> add(p_error, 0, 0, p_hint);
+	MCeerror -> add(p_error, m_line, m_pos, p_hint);
 	m_stat = ES_ERROR;
 }
 
 void MCExecContext::LegacyThrow(Exec_errors p_error, uint32_t p_hint)
 {
-	MCeerror -> add(p_error, 0, 0, p_hint);
+	MCeerror -> add(p_error, m_line, m_pos, p_hint);
 	m_stat = ES_ERROR;
 }
 

@@ -394,8 +394,8 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					}
 					
 					// Ensure that all the text was covered
-					if (t_last_added != t_length)
-						return IO_ERROR;
+					//if (t_last_added != t_length)
+					//	return IO_ERROR;
 					
 					MCS_seek_cur(stream, -1);
 					MCValueAssign(m_text, *t_text);

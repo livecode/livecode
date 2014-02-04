@@ -181,7 +181,7 @@ bool MCObjectPropertySet::restrict(MCStringRef p_string)
             t_success = MCNameCreate(t_split[i], &t_key_name);
         MCValueRef t_value;
         if (!MCArrayFetchValue(m_props, false, *t_key_name, t_value))
-            t_value = MCValueRetain(kMCEmptyString);
+            t_value = kMCEmptyString;
         if (t_success)
             t_success = MCArrayStoreValue(*t_new_props, false, *t_key_name, t_value);
     }
