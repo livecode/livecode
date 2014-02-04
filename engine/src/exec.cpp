@@ -723,16 +723,14 @@ bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr
     
     bool t_success, t_can_debug;
     t_success = false;
+    t_can_debug = true;
     
-    do
+    t_success = EvalExprAsNonStrictBool(p_expr, p_error, r_value);
+    while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        if (EvalExprAsNonStrictBool(p_expr, p_error, r_value))
-            t_success = true;
-        else
-            t_can_debug = MCB_error(*this, line, pos, p_error);
+        t_can_debug = MCB_error(*this, line, pos, p_error);
         IgnoreLastError();
     }
-	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
     
     if (t_success)
 		return true;
