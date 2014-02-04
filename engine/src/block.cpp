@@ -1873,10 +1873,10 @@ MCStringRef MCBlock::getmetadata(void)
 {
 	// MW-2012-10-01: [[ Bug 10178 ]] Added guard to ensure we don't get a null
 	//   dereference.
-	if (flags & F_HAS_METADATA && atts != nil)
+	if (flags & F_HAS_METADATA && atts != nil && atts -> metadata != nil)
 		return atts -> metadata;
 
-	return nil;
+	return kMCEmptyString;
 }
 
 void MCBlock::sethilite(Boolean on)

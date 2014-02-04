@@ -2627,8 +2627,7 @@ void MCBlock::SetLinktext(MCExecContext& ctxt, MCStringRef p_linktext)
 
 void MCBlock::GetMetadata(MCExecContext& ctxt, MCStringRef& r_metadata)
 {
-    if (getmetadata())
-        r_metadata = MCValueRetain(getmetadata());
+    r_metadata = MCValueRetain(getmetadata());
 }
 
 void MCBlock::SetMetadata(MCExecContext& ctxt, MCStringRef p_metadata)
