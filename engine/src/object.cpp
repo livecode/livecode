@@ -2700,9 +2700,21 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	// IM-2013-03-19: [[ BZ 10753 ]] Any parents of this object must also be opened to
 	// safely & correctly snapshot objects with inherited patterns
 	// MW-2013-03-25: [[ Bug ]] Make sure use appropriate methods to open/close the objects.
+    // SN-2014-01-30: [[ Bug 11721 ]] Make sure the parentless templates are handled properly
+    // as they need a temporary parent
+    bool t_parent_added = false;
 	MCObject *t_opened_control = nil;
 	if (opened == 0)
+    {
+        if (parent == nil)
+        {
+            setparent(MCdefaultstackptr -> getcard());
+            t_parent_added = true;
+        }
+        
 		t_opened_control = this;
+    }
+    
 	if (t_opened_control != nil)
 	{
 		t_opened_control -> open();
@@ -2730,6 +2742,9 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	// MW-2013-03-25: [[ Bug ]] Make sure use appropriate methods to open/close the objects.
 	if (t_opened_control != nil)
 	{
+        // SN-2014-01-30: [[ Bug 11721 ]] Remove the temporary added parent for the parentless object (template)
+        if (t_parent_added)
+            setparent(nil);
 		MCObject *t_closing_control;
 		t_closing_control = this;
 		t_closing_control -> close();
