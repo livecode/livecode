@@ -421,7 +421,8 @@ Exec_stat MCIf::exec(MCExecPoint &ep)
 	Exec_stat stat;
 	while ((stat = cond->eval(ep)) != ES_NORMAL && (MCtrace || MCnbreakpoints)
 	        && !MCtrylock && !MClockerrors)
-		MCB_error(ep, getline(), getpos(), EE_IF_BADCOND);
+		if (!MCB_error(ep, getline(), getpos(), EE_IF_BADCOND))
+			break;
 	if (stat != ES_NORMAL)
 	{
 		MCeerror->add
@@ -462,7 +463,8 @@ Exec_stat MCIf::exec(MCExecPoint &ep)
 			if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
 				do
 				{
-					MCB_error(ep, tspr->getline(), tspr->getpos(), EE_IF_BADSTATEMENT);
+					if (!MCB_error(ep, tspr->getline(), tspr->getpos(), EE_IF_BADSTATEMENT))
+						break;
 				}
 				while (MCtrace && (stat = tspr->exec(ep)) != ES_NORMAL);
 			if (stat == ES_ERROR)
@@ -780,7 +782,8 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 		{
 			while ((stat = endcond->eval(ep2)) != ES_NORMAL
 			        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				MCB_error(ep2, getline(), getpos(), EE_REPEAT_BADFORCOND);
+				if (!MCB_error(ep2, getline(), getpos(), EE_REPEAT_BADFORCOND))
+					break;
 			if (stat != ES_NORMAL)
 			{
 				MCeerror->add(EE_REPEAT_BADFORCOND, line, pos);
@@ -843,7 +846,8 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 			while (((stat = endcond->eval(ep)) != ES_NORMAL
 			        || (stat = ep.ton()) != ES_NORMAL) && (MCtrace || MCnbreakpoints)
 			        && !MCtrylock && !MClockerrors)
-				MCB_error(ep, getline(), getpos(), EE_REPEAT_BADFORCOND);
+				if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADFORCOND))
+					break;
 			if (stat != ES_NORMAL)
 			{
 				MCeerror->add
@@ -859,7 +863,8 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 			while (((stat = step->eval(ep)) != ES_NORMAL
 			        || (stat = ep.ton()) != ES_NORMAL) && (MCtrace || MCnbreakpoints)
 			        && !MCtrylock && !MClockerrors)
-				MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHSTEP);
+				if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHSTEP))
+					break;
 			stepval = ep.getnvalue();
 			if (stat != ES_NORMAL || stepval == 0.0)
 			{
@@ -871,7 +876,8 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 		while (((stat = startcond->eval(ep)) != ES_NORMAL
 		        || (stat = ep.ton()) != ES_NORMAL) && (MCtrace || MCnbreakpoints)
 		        && !MCtrylock && !MClockerrors)
-			MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHSTART);
+			if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHSTART))
+				break;
 		if (stat != ES_NORMAL)
 		{
 			MCeerror->add
@@ -882,7 +888,8 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 		while ((stat = loopvar->set
 		               (ep)) != ES_NORMAL
 		        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-			MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHVAR);
+			if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHVAR))
+				break;
 		if (stat != ES_NORMAL)
 		{
 			MCeerror->add
@@ -892,7 +899,8 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 		while (((stat = endcond->eval(ep)) != ES_NORMAL
 		        || (stat = ep.ton()) != ES_NORMAL)
 		        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-			MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHEND);
+			if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHEND))
+				break;
 		if (stat != ES_NORMAL)
 		{
 			MCeerror->add
@@ -1022,7 +1030,8 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 		case RF_UNTIL:
 			while ((stat = endcond->eval(ep)) != ES_NORMAL
 			        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				MCB_error(ep, getline(), getpos(), EE_REPEAT_BADUNTILCOND);
+				if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADUNTILCOND))
+					break;
 			if (stat != ES_NORMAL)
 			{
 				MCeerror->add
@@ -1034,7 +1043,8 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 		case RF_WHILE:
 			while ((stat = endcond->eval(ep)) != ES_NORMAL
 			        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWHILECOND);
+				if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWHILECOND))
+					break;
 			if (stat != ES_NORMAL)
 			{
 				MCeerror->add
@@ -1047,7 +1057,8 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 			while (((stat = loopvar->eval(ep)) != ES_NORMAL
 			        || (stat = ep.ton()) != ES_NORMAL)
 			        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHVAR);
+				if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHVAR))
+					break;
 			if (stat != ES_NORMAL)
 			{
 				MCeerror->add
@@ -1068,7 +1079,8 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 				while ((stat = loopvar->set
 				               (ep)) != ES_NORMAL
 				        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-					MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHVAR);
+					if (!MCB_error(ep, getline(), getpos(), EE_REPEAT_BADWITHVAR))
+						break;
 				if (stat != ES_NORMAL)
 				{
 					MCeerror->add
@@ -1138,8 +1150,9 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 				if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
 					do
 					{
-						MCB_error(ep, tspr->getline(), tspr->getpos(),
-						          EE_REPEAT_BADSTATEMENT);
+						if (!MCB_error(ep, tspr->getline(), tspr->getpos(),
+						          EE_REPEAT_BADSTATEMENT))
+							break;
 					}
 					while (MCtrace && (stat = tspr->exec(ep)) != ES_NORMAL);
 				if (stat == ES_ERROR)
@@ -1490,7 +1503,8 @@ Exec_stat MCSwitch::exec(MCExecPoint &ep)
 	{
 		while ((stat = cond->eval(ep2)) != ES_NORMAL
 		        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-			MCB_error(ep2, getline(), getpos(), EE_SWITCH_BADCOND);
+			if (!MCB_error(ep2, getline(), getpos(), EE_SWITCH_BADCOND))
+				break;
 		if (stat != ES_NORMAL)
 		{
 			MCeerror->add(EE_SWITCH_BADCOND, line, pos);
@@ -1505,7 +1519,8 @@ Exec_stat MCSwitch::exec(MCExecPoint &ep)
 	{
 		while ((stat = cases[i]->eval(ep)) != ES_NORMAL
 		        && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-			MCB_error(ep2, getline(), getpos(), EE_SWITCH_BADCASE);
+			if (!MCB_error(ep2, getline(), getpos(), EE_SWITCH_BADCASE))
+				break;
 		if (stat != ES_NORMAL)
 		{
 			MCeerror->add
@@ -1558,8 +1573,9 @@ Exec_stat MCSwitch::exec(MCExecPoint &ep)
 				if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
 					do
 					{
-						MCB_error(ep, tspr->getline(), tspr->getpos(),
-						          EE_SWITCH_BADSTATEMENT);
+						if (!MCB_error(ep, tspr->getline(), tspr->getpos(),
+						          EE_SWITCH_BADSTATEMENT))
+							break;
 					}
 					while (MCtrace && (stat = tspr->exec(ep)) != ES_NORMAL);
 				if (stat == ES_ERROR)
@@ -1794,7 +1810,8 @@ Exec_stat MCTry::exec(MCExecPoint &ep)
 			if ((MCtrace || MCnbreakpoints) && state != TS_TRY)
 				do
 				{
-					MCB_error(ep, tspr->getline(), tspr->getpos(), EE_TRY_BADSTATEMENT);
+					if (!MCB_error(ep, tspr->getline(), tspr->getpos(), EE_TRY_BADSTATEMENT))
+						break;
 				}
 				while(MCtrace && (stat = tspr->exec(ep)) != ES_NORMAL);
 

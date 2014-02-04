@@ -67,7 +67,7 @@ extern void MCB_message(MCExecPoint &ep, MCNameRef message, MCParameter *p);
 extern void MCB_prepmessage(MCExecPoint &ep, MCNameRef message, uint2 line, uint2 pos, uint2 id, const char *info = NULL);
 extern void MCB_break(MCExecPoint &ep, uint2 line, uint2 pos);
 extern void MCB_trace(MCExecPoint &ep, uint2 line, uint2 pos);
-extern void MCB_error(MCExecPoint &ep, uint2 line, uint2 pos, uint2 id);
+extern bool MCB_error(MCExecPoint &ep, uint2 line, uint2 pos, uint2 id);
 extern void MCB_done(MCExecPoint &ep);
 extern void MCB_setvar(MCExecPoint &ep, MCNameRef name);
 
