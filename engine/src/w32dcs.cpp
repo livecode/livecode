@@ -1334,8 +1334,9 @@ void MCScreenDC::redrawbackdrop(void)
 
 	if (t_success)
 	{
+        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 		if (backdrop_pattern != nil)
-			MCGContextSetFillPattern(t_context, backdrop_pattern, MCGAffineTransformMakeIdentity(), kMCGImageFilterNearest);
+			MCGContextSetFillPattern(t_context, backdrop_pattern, MCGAffineTransformMakeIdentity(), kMCGImageFilterNone);
 		else
 			MCGContextSetFillRGBAColor(t_context, backdrop_colour.red / 65535.0, backdrop_colour.green / 65535.0, backdrop_colour.blue / 65535.0, 1.0);
 		MCGContextAddRectangle(t_context, MCGRectangleMake(0, 0, t_width, t_height));

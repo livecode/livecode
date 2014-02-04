@@ -30,7 +30,11 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/thirdparty/libcurl/include \
 	$(SOLUTION_DIR)/thirdparty/libskia/include/core \
 	$(SOLUTION_DIR)/thirdparty/libskia/include/config \
-	$(SOLUTION_DIR)/thirdparty/libskia/include/effects
+	$(SOLUTION_DIR)/thirdparty/libskia/include/effects \
+	$(SOLUTION_DIR)/thirdparty/libskia/include/images \
+	$(SOLUTION_DIR)/thirdparty/libskia/include/pathops \
+	$(SOLUTION_DIR)/thirdparty/libskia/include/ports \
+	$(SOLUTION_DIR)/thirdparty/libskia/include/utils
 	
 GLOBAL_LIBS=\
 	$(PREBUILT_LIB_DIR)

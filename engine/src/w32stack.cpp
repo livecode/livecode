@@ -686,7 +686,8 @@ bool MCWin32ApplyMaskToRasterRegion(MCGRaster &p_raster, uint32_t p_x_origin, ui
 		MCGFloat t_scale;
 		t_scale = MCResGetPixelScale();
 
-		MCGContextSetFillPattern(t_gcontext, t_mask_image, MCGAffineTransformMakeScale(t_scale, t_scale), kMCGImageFilterNearest);
+        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+		MCGContextSetFillPattern(t_gcontext, t_mask_image, MCGAffineTransformMakeScale(t_scale, t_scale), kMCGImageFilterNone);
 		MCGContextTranslateCTM(t_gcontext, -(MCGFloat)p_x_origin, -(MCGFloat)p_y_origin);
 		MCGContextSetBlendMode(t_gcontext, kMCGBlendModeDestinationIn);
 
@@ -909,7 +910,8 @@ public:
 			// MW-2013-11-08: [[ Bug ]] Make sure we set the blend/alpha on the context.
 			MCGContextSetBlendMode(t_context, p_blend);
 			MCGContextSetOpacity(t_context, p_alpha);
-			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNearest);
+            // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNone);
 		}
 
 		UnlockGraphics();
@@ -1068,7 +1070,8 @@ public:
 			// MW-2013-11-08: [[ Bug ]] Make sure we set the blend/alpha on the context.
 			MCGContextSetBlendMode(t_context, p_blend);
 			MCGContextSetOpacity(t_context, p_alpha);
-			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNearest);
+            // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNone);
 		}
 
 		UnlockGraphics();

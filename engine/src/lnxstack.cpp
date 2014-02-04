@@ -900,7 +900,8 @@ public:
 			// MW-2013-11-08: [[ Bug ]] Make sure we set the blend/alpha on the context.
 			MCGContextSetBlendMode(t_context, p_blend);
 			MCGContextSetOpacity(t_context, p_alpha);
-			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNearest);
+            // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNone);
 		}
 
 		UnlockGraphics();
