@@ -409,6 +409,9 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 		//   magical swizzling to be done.
 		if ((stat = IO_read_stringref_new(m_text, stream, true)) != IO_NORMAL)
 			return stat;
+        
+        // The paragraph text *must* be mutable
+        /* UNCHECKED */ MCStringMutableCopyAndRelease(m_text, m_text);
 		
 		while (True)
 		{
