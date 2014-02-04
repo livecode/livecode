@@ -23,6 +23,12 @@ public class GoogleBillingProvider implements BillingProvider
     private PurchaseObserver mPurchaseObserver;
     private Map<String,String> types = new HashMap<String,String>();
     
+    /* 
+     Temp var for holding the productId, to pass it in onIabPurchaseFinished(IabResult result, Purchase purchase), in case purchase is null.
+     Thus, purchase.getSku() will not work
+    */
+    private String pendingPurchaseSku = "";
+    
     // (arbitrary) request code for the purchase flow
     static final int RC_REQUEST = 10001;
     
@@ -114,7 +120,6 @@ public class GoogleBillingProvider implements BillingProvider
         return true;
     }
     
-    // TODO : handle subscriptions
     //public boolean sendRequest(int purchaseId, String productId, Map<String, String> properties)
     public boolean sendRequest(int purchaseId, String productId, String developerPayload)
     {
@@ -122,17 +127,22 @@ public class GoogleBillingProvider implements BillingProvider
             return false;
         
         String type = productGetType(productId);
+        if (type == null)
+        {
+            Log.i(TAG, "Item type is null (not specified). Exiting..");
+            return false;
+        }
+        
+        pendingPurchaseSku = productId;
         
         Log.i(TAG, "purchaseSendRequest(" + purchaseId + ", " + productId + ", " + type + ")");
         
         if (type.equals("SUBS"))
         {
-            Log.i(TAG, "mHelper.launchSubscriptionPurchaseFlow is called!!!!");
             mHelper.launchSubscriptionPurchaseFlow(getActivity(), productId, RC_REQUEST, mPurchaseFinishedListener, "");
         }
         else
         {
-            Log.i(TAG, "Ohh Nooo !!!! mHelper.launchSubscriptionPurchaseFlow is  NOT called!!!!");
             mHelper.launchPurchaseFlow(getActivity(), productId, RC_REQUEST, mPurchaseFinishedListener, "");
         }
         return true;
@@ -241,6 +251,7 @@ public class GoogleBillingProvider implements BillingProvider
     
     IabHelper.OnIabPurchaseFinishedListener mPurchaseFinishedListener = new IabHelper.OnIabPurchaseFinishedListener()
     {
+        // parameter "purchase" is null if purchase failed
         public void onIabPurchaseFinished(IabResult result, Purchase purchase)
         {
             Log.d(TAG, "Purchase finished: " + result + ", purchase: " + purchase);
@@ -250,11 +261,14 @@ public class GoogleBillingProvider implements BillingProvider
             {
                 return;
             }
-            
+    
             if (result.isFailure())
             {
                 complain("Error purchasing: " + result);
                 setWaitScreen(false);
+                mPurchaseObserver.onPurchaseStateChanged(pendingPurchaseSku, mapResponseCode(result.getResponse()));
+                // TODO : Call void onPurchaseRequestError(String errorMessage) with input result.getMessage()
+                pendingPurchaseSku = "";
                 return;
             }
             
@@ -266,16 +280,16 @@ public class GoogleBillingProvider implements BillingProvider
             }
             
             Log.d(TAG, "Purchase successful.");
-            
+            pendingPurchaseSku = "";
             offerPurchasedItems(purchase);
-    
+                
         }
     };
 
-    //TODO : move it to EnginePurchaseObserver
     void offerPurchasedItems(Purchase purchase)
     {
-        mPurchaseObserver.onPurchaseStateChanged(purchase.getSku(), purchase.getPurchaseState());
+        if (purchase != null)
+            mPurchaseObserver.onPurchaseStateChanged(purchase.getSku(), mapResponseCode(purchase.getPurchaseState()));
 
     }
 
@@ -373,6 +387,30 @@ public class GoogleBillingProvider implements BillingProvider
         {
             Log.d(TAG, "onActivityResult handled by IABUtil.");
         }
+    }
+
+    // Should match the order of enum MCAndroidPurchaseState (mblandroidstore.cpp)
+    int mapResponseCode(int responseCode)
+    {
+        int result;
+        switch(responseCode)
+        {
+            case IabHelper.BILLING_RESPONSE_RESULT_OK:
+                result = 0;
+                break;
+
+            case IabHelper.BILLING_RESPONSE_RESULT_USER_CANCELED:
+                result = 1;
+                break;
+
+            case IabHelper.BILLING_RESPONSE_RESULT_ITEM_ALREADY_OWNED:
+                result = 3;
+                break;
+            default:
+                result = 1;
+                break;
+        }
+        return result;
     }
 
 }

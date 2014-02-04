@@ -116,12 +116,23 @@ bool MCStoreRestorePurchases()
     return t_result;
 }
 
-bool MCStoreProductSetType(const char *p_purchase_id, const char *p_product_type)
+bool MCStoreProductSetType(const char *p_product_id, const char *p_product_type)
 {
     
     bool t_result;
     
-    MCAndroidEngineRemoteCall("storeProductSetType", "bss", &t_result, p_purchase_id, p_product_type);
+    MCAndroidEngineRemoteCall("storeProductSetType", "bss", &t_result, p_product_id, p_product_type);
+    
+    return t_result;
+    
+}
+
+bool MCStoreSetPurchaseProperty(const char *p_product_id, const char *p_property_name, const char *p_property_value)
+{
+    
+    bool t_result;
+    
+    MCAndroidEngineRemoteCall("storeSetPurchaseProperty", "bsss", &t_result, p_product_id, p_property_name, p_property_value);
     
     return t_result;
     

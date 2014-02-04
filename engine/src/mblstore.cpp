@@ -349,6 +349,33 @@ Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameters)
     return ES_NORMAL;
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+//   TODO   ///////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_parameters)
+{
+    return ES_NORMAL;
+}
+
+Exec_stat MCHandleSetPurchaseProperty(void *context, MCParameter *p_parameters)
+{
+    bool t_success = true;
+    char *t_product_id = nil;
+    char *t_prop_name = nil;
+    char *t_prop_value = nil;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "sss", &t_product_id, &t_prop_name, &t_prop_value);
+    if (t_success)
+        t_success = MCStoreSetPurchaseProperty(t_product_id, t_prop_name, t_prop_value);
+    
+    MCCStringFree(t_product_id);
+    MCCStringFree(t_prop_name);
+    MCCStringFree(t_prop_value);
+    
+    return ES_NORMAL;
+}
+
 Exec_stat MCHandleConsumePurchase(void *context, MCParameter *p_parameters)
 {
     bool t_success = true;
