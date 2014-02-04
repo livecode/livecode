@@ -1330,13 +1330,13 @@ Parse_stat MCExecContext::FindVar(MCNameRef p_name, MCVarref **r_var)
 
 void MCExecContext::LegacyThrow(Exec_errors p_error, MCValueRef p_hint)
 {
-	MCeerror -> add(p_error, 0, 0, p_hint);
+	MCeerror -> add(p_error, m_line, 0, p_hint);
 	m_stat = ES_ERROR;
 }
 
 void MCExecContext::LegacyThrow(Exec_errors p_error, uint32_t p_hint)
 {
-	MCeerror -> add(p_error, 0, 0, p_hint);
+	MCeerror -> add(p_error, m_line, 0, p_hint);
 	m_stat = ES_ERROR;
 }
 
