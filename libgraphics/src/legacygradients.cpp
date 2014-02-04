@@ -875,9 +875,10 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 		s_gradient_affine_combiner.y_inc = (uint4) (STOP_INT_MAX * -(int64_t)(s_gradient_affine_combiner . origin . x * vy + ((int32_t) r_clip . origin .y - s_gradient_affine_combiner . origin . y) * vx) / d);
 	}
 
+    // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
 	switch (p_gradient_ref -> filter)
 	{
-		case kMCGImageFilterNearest:
+		case kMCGImageFilterNone:
 		{
 			s_gradient_affine_combiner.end = gradient_combiner_end;
 			s_gradient_affine_combiner.x_inc += (s_gradient_affine_combiner.x_coef_a + s_gradient_affine_combiner.x_coef_b) >> 1;
@@ -907,8 +908,9 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 					return &s_gradient_affine_combiner;
 			}
 		}
-		case kMCGImageFilterBilinear:
-		case kMCGImageFilterBicubic:
+		case kMCGImageFilterLow:
+		case kMCGImageFilterMedium:
+        case kMCGImageFilterHigh:
 		{
 			s_gradient_affine_combiner.end = gradient_bilinear_affine_combiner_end;
 			s_gradient_affine_combiner.buffer_width = GRADIENT_AA_SCALE * (uint32_t) ceilf(r_clip . size . width);

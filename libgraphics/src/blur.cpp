@@ -14,6 +14,11 @@
 #include <SkMask.h>
 #include <SkColorPriv.h>
 
+#   define SkScalarFloor(x)    SkScalarFloorToInt(x)
+#   define SkScalarCeil(x)     SkScalarCeilToInt(x)
+#   define SkScalarRound(x)    SkScalarRoundToInt(x)
+
+
 #define kBlurRadiusFudgeFactor SkFloatToScalar( .57735f )
 
 extern void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius, int width, int height, int& r_new_width, int& r_new_height);

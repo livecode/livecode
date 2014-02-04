@@ -3200,7 +3200,8 @@ void MCPlayer::qt_draw(MCDC *dc, const MCRectangle& dirty)
 	{
 		MCImageDescriptor t_image;
 		MCMemoryClear(&t_image, sizeof(t_image));
-		t_image.filter = kMCGImageFilterNearest;
+        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+		t_image.filter = kMCGImageFilterNone;
 		t_image.bitmap = &m_offscreen->image_bitmap;
 
 		dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
@@ -3226,7 +3227,8 @@ void MCPlayer::qt_draw(MCDC *dc, const MCRectangle& dirty)
 		
 		MCImageDescriptor t_image;
 		MCMemoryClear(&t_image, sizeof(t_image));
-		t_image.filter = kMCGImageFilterNearest;
+        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+		t_image.filter = kMCGImageFilterNone;
 		t_image.bitmap = &m_offscreen->image_bitmap;
 		
 		dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);

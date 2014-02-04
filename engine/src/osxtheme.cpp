@@ -1174,7 +1174,8 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 		t_raster.format = kMCGRasterFormat_ARGB;
 		
 		// MM-2013-12-16: [[ Bug 11567 ]] Use bilinear filter when drawing theme elements.
-		MCGContextDrawPixels(p_context, t_raster, t_dst, kMCGImageFilterBilinear);
+        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was bilinear).
+		MCGContextDrawPixels(p_context, t_raster, t_dst, kMCGImageFilterMedium);
 	}
 	
 	if (t_bitmap != nil)

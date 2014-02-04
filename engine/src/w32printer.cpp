@@ -949,7 +949,8 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 		/* UNCHECKED */ MCGContextCreateWithPixels(t_width, t_height, t_width * sizeof(uint32_t), t_bits, true, t_context);
 
 		// IM-2013-08-14: [[ ResIndependence ]] Apply pattern scale factor
-		MCGContextSetFillPattern(t_context, p_mark->fill->pattern->image, MCGAffineTransformMakeScale(1.0 / t_scale, 1.0 / t_scale), kMCGImageFilterNearest);
+        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+		MCGContextSetFillPattern(t_context, p_mark->fill->pattern->image, MCGAffineTransformMakeScale(1.0 / t_scale, 1.0 / t_scale), kMCGImageFilterNone);
 		MCGContextAddRectangle(t_context, MCGRectangleMake(0, 0, t_width, t_height));
 		MCGContextFill(t_context);
 

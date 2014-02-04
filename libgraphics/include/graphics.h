@@ -338,11 +338,13 @@ enum MCGRasterFormat
 	kMCGRasterFormat_A, // alpha mask
 };
 
+// MM-2014-01-09: [[ ImageFilterUpdate ]] Updated filters to use Skia's new filter levels.
 enum MCGImageFilter
 {
-	kMCGImageFilterNearest,
-	kMCGImageFilterBilinear,
-	kMCGImageFilterBicubic,
+	kMCGImageFilterNone,
+	kMCGImageFilterLow,
+	kMCGImageFilterMedium,
+    kMCGImageFilterHigh,
 };
 
 enum MCGGradientFunction

@@ -548,7 +548,8 @@ void MCGraphicsContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y
 		t_transform = MCGAffineTransformMakeScale(t_scale, t_scale);
 		t_transform = MCGAffineTransformTranslate(t_transform, x, y);
 
-		MCGContextSetFillPattern(m_gcontext, p->image, t_transform, kMCGImageFilterBilinear);
+        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was bilinear).
+		MCGContextSetFillPattern(m_gcontext, p->image, t_transform, kMCGImageFilterMedium);
 		m_pattern = MCPatternRetain(p);
 		m_pattern_x = x;
 		m_pattern_y = y;
@@ -681,15 +682,16 @@ void MCGraphicsContext::setgradient(MCGradientFill *p_gradient)
 				break;
 		}
 		
+        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
 		MCGImageFilter t_filter;
-		t_filter = kMCGImageFilterNearest;
+		t_filter = kMCGImageFilterNone;
 		switch (p_gradient -> quality)
 		{
 			case kMCGradientQualityNormal:
-				t_filter = kMCGImageFilterNearest;
+				t_filter = kMCGImageFilterNone;
 				break;
 			case kMCGradientQualityGood:
-				t_filter = kMCGImageFilterBilinear;
+				t_filter = kMCGImageFilterMedium;
 				break;
 		}
 		
