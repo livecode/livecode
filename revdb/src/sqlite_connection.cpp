@@ -14,6 +14,12 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+// MM-2014-02-04: [[ Sqlite382 ]] Define string cmp functions for Windows.
+#ifdef _WINDOWS
+#define strncasecmp _strnicmp
+#define strcasecmp _stricmp
+#endif
+
 #include "dbsqlite.h"
 #include <sqlitedataset/sqlitedataset.h>
 

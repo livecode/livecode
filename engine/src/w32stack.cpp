@@ -448,7 +448,7 @@ void MCStack::realize()
 		{
 			MCRegionRef t_region;
 			t_region = (MCRegionRef)m_window_shape -> handle;
-			MCRegionOffset(t_region, t_device_rect . x - wrect . left, t_device_rect . y - wrect . top);
+			MCRegionOffset(t_region, t_rect . x - wrect . left, t_rect . y - wrect . top);
 			MCRegionSetAsWindowShape(t_region, window->handle.window);
 
 			// The window now owns the region.
@@ -709,6 +709,8 @@ bool MCWin32ApplyMaskToRasterRegion(MCGRaster &p_raster, MCGFloat p_raster_scale
 		// Drawing the mask directly will not work as the effective shape of the drawing operation
 		// will be defined by the opaque parts of the mask - areas outside will be unaffected. Instead we
 		// draw a solid rectangle over the intended areas using the mask as a pattern.
+		MCGFloat t_scale;
+		t_scale = MCResGetPixelScale();
 
         // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 		MCGContextSetFillPattern(t_gcontext, t_mask_image, MCGAffineTransformMakeScale(t_scale, t_scale), kMCGImageFilterNone);
