@@ -2220,10 +2220,8 @@ int2 MCParagraph::fdelete(Field_translations type, MCParagraph *&undopgptr)
 
 uint1 MCParagraph::fmovefocus(Field_translations type)
 {
-	findex_t oldfocused = focusedindex;
-	findex_t bindex, blength;
-	MCBlock *bptr = indextoblock(focusedindex, False);
-	bptr->GetRange(bindex, blength);
+    findex_t oldfocused = focusedindex;
+    uindex_t t_length = gettextlength();
 	switch (type)
 	{
 	case FT_LEFTCHAR:
@@ -2236,21 +2234,11 @@ uint1 MCParagraph::fmovefocus(Field_translations type)
 		//   are accessed when dealing with Unicode blocks.
 		if (focusedindex == 0)
 			return FT_LEFTCHAR;
-		focusedindex = DecrementIndex(focusedindex);
-		if (focusedindex < bindex)
-		{
-			bptr = bptr -> prev();
-			bptr -> GetRange(bindex, blength);
-		}
-		while (focusedindex && TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
-		{
-			focusedindex = DecrementIndex(focusedindex);
-			if (focusedindex < bindex)
-			{
-				bptr = bptr->prev();
-				bptr->GetRange(bindex, blength);
-			}
-		}
+        focusedindex = DecrementIndex(focusedindex);
+
+        while (focusedindex && TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
+            focusedindex = DecrementIndex(focusedindex);
+
 		for(;;)
 		{
 			if (focusedindex == 0)
@@ -2260,12 +2248,7 @@ uint1 MCParagraph::fmovefocus(Field_translations type)
 			//   so save current index, then restore if it points to a space.
 			findex_t t_previous_focusedindex;
 			t_previous_focusedindex = focusedindex;
-			focusedindex = DecrementIndex(focusedindex);
-			if (focusedindex < bindex)
-			{
-				bptr = bptr->prev();
-				bptr->GetRange(bindex, blength);
-			}
+            focusedindex = DecrementIndex(focusedindex);
 			if (TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
 			{
 				focusedindex = t_previous_focusedindex;
@@ -2274,74 +2257,66 @@ uint1 MCParagraph::fmovefocus(Field_translations type)
 		}
 		break;
 	case FT_RIGHTCHAR:
-		if (focusedindex == gettextlength())
+        if (focusedindex == t_length)
 			return FT_RIGHTCHAR;
 		focusedindex = IncrementIndex(focusedindex);
 		break;
 	case FT_RIGHTWORD:
-		if (focusedindex == gettextlength())
+        if (focusedindex == t_length)
 			return FT_RIGHTCHAR;
-		focusedindex = IncrementIndex(focusedindex);
-		if (focusedindex >= bindex + blength)
-		{
-			bptr = bptr->next();
-			bptr->GetRange(bindex, blength);
-		}
-		while (focusedindex < gettextlength() && TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
-		{
-			focusedindex = IncrementIndex(focusedindex);
-			if (focusedindex >= bindex + blength)
-			{
-				bptr = bptr->next();
-				bptr->GetRange(bindex, blength);
-			}
-		}
-        while (focusedindex < gettextlength() && !TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
-        {
+        focusedindex = IncrementIndex(focusedindex);
+
+        while (focusedindex < t_length && TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
             focusedindex = IncrementIndex(focusedindex);
-            if (focusedindex >= bindex + blength)
-            {
-                bptr = bptr->next();
-                bptr->GetRange(bindex, blength);
-            }
-        }
+
+        while (focusedindex < t_length && !TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
+            focusedindex = IncrementIndex(focusedindex);
+
 		break;
 	case FT_BOS:
-		while (focusedindex < gettextlength() && TextIsSentenceBreak(GetCodepointAtIndex(focusedindex)))
-		{
-			focusedindex = DecrementIndex(focusedindex);
-			if (focusedindex < bindex)
-			{
-				bptr = bptr->prev();
-				bptr->GetRange(bindex, blength);
-			}
-		}
-		if (focusedindex)
-			focusedindex = IncrementIndex(focusedindex);
-		while (focusedindex < gettextlength() && TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
-		{
-			focusedindex = IncrementIndex(focusedindex);
-			if (focusedindex >= bindex + blength)
-			{
-				bptr = bptr->next();
-				bptr->GetRange(bindex, blength);
-			}
-		}
+        if (focusedindex)
+            focusedindex = DecrementIndex(focusedindex);
+
+        // Skip all the word delimiters that might be before a sentence delimiter
+        while (focusedindex && TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
+            focusedindex = DecrementIndex(focusedindex);
+
+        // Skip all the sequence of sentence delimiters
+        while (focusedindex && TextIsSentenceBreak(GetCodepointAtIndex(focusedindex)))
+            focusedindex = DecrementIndex(focusedindex);
+
+        for(;;)
+        {
+            if (focusedindex == 0)
+                break;
+
+            findex_t t_previous_focusedindex;
+            t_previous_focusedindex = focusedindex;
+            focusedindex = DecrementIndex(focusedindex);
+            if (TextIsSentenceBreak(GetCodepointAtIndex(focusedindex)))
+            {
+                focusedindex = t_previous_focusedindex;
+                break;
+            }
+        }
+
+        // Skip all the word delimiters in the beginning of the sentence
+        while (focusedindex < t_length && TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
+            focusedindex = IncrementIndex(focusedindex);
+
 		if (focusedindex == oldfocused)
 			return FT_BOS;
 		break;
 	case FT_EOS:
-		while (focusedindex < gettextlength() && TextIsSentenceBreak(GetCodepointAtIndex(focusedindex)))
-		{
-			focusedindex = IncrementIndex(focusedindex);
-			if (focusedindex >= bindex + blength)
-			{
-				bptr = bptr->next();
-				bptr->GetRange(bindex, blength);
-			}
-		}
-		if (focusedindex < gettextlength())
-			focusedindex = IncrementIndex(focusedindex);
+        if (focusedindex < t_length)
+            focusedindex = IncrementIndex(focusedindex);
+
+        while (focusedindex < t_length && TextIsSentenceBreak(GetCodepointAtIndex(focusedindex)))
+            focusedindex = IncrementIndex(focusedindex);
+
+        while (focusedindex < t_length && !TextIsSentenceBreak(GetCodepointAtIndex(focusedindex)))
+            focusedindex = IncrementIndex(focusedindex);
+
 		if (focusedindex == oldfocused)
 			return FT_EOS;
 		break;
@@ -2354,12 +2329,12 @@ uint1 MCParagraph::fmovefocus(Field_translations type)
 		focusedindex = 0;
 		break;
 	case FT_EOP:
-		focusedindex = gettextlength();
+        focusedindex = t_length;
 		break;
 	case FT_RIGHTPARA:
-		if (focusedindex == gettextlength())
+        if (focusedindex == t_length)
 			return FT_RIGHTPARA;
-		focusedindex = gettextlength();
+        focusedindex = t_length;
 		break;
 	default:
 		break;
