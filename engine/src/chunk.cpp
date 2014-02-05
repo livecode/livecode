@@ -4761,6 +4761,7 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
             return false;
 
         MCEngineExecPutIntoVariable(ctxt, p_value, p_type, t_var_chunk);
+        MCValueRelease(t_var_chunk . mark . text);
     }
     else if (isurlchunk())
     {
