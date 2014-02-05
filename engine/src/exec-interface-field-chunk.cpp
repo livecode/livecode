@@ -1790,7 +1790,7 @@ void MCField::GetEffectiveForeColorOfCharChunk(MCExecContext& ctxt, uint32_t p_p
     }
 
     // Color unset: must default
-    if (MCStringIsEmpty(r_color . name))
+    if (r_color . name == nil || MCStringIsEmpty(r_color . name))
     {
         MCInterfaceNamedColorFree(ctxt, r_color);
         GetForeColor(ctxt, r_color);
@@ -1818,7 +1818,7 @@ void MCField::GetEffectiveBackColorOfCharChunk(MCExecContext& ctxt, uint32_t p_p
     }
 
     // No value returned: must default
-    if (MCStringIsEmpty(r_color . name))
+    if (r_color . name == nil || MCStringIsEmpty(r_color . name))
     {
         MCInterfaceNamedColorFree(ctxt, r_color);
         GetBackColor(ctxt, r_color);
