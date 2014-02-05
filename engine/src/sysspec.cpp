@@ -1208,9 +1208,17 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 		return false;
 	}
     
+    bool t_success;
+    t_success = true;
+    
+    // convert the line endings before writing
+    MCAutoStringRef t_converted;
+    if (t_success)
+        t_success = MCStringConvertLineEndingsFromLiveCode(p_string, &t_converted);
+    
     // Need to convert the string to a binary string
     MCAutoDataRef t_data;
-    /* UNCHECKED */ MCStringEncode(p_string, kMCStringEncodingNative, false, &t_data);
+    /* UNCHECKED */ MCStringEncode(*t_converted, kMCStringEncodingNative, false, &t_data);
     
 	if (!t_file -> Write(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data)))
 		MCresult -> sets("error writing file");
