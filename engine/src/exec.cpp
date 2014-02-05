@@ -1696,6 +1696,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             if (!ctxt . HasError())
             {
                 r_value . type = kMCExecValueTypeStringRef;
+                if (r_value . stringref_value == nil)
+                    r_value . stringref_value = MCValueRetain(kMCEmptyString);
             }
         }
             break;
