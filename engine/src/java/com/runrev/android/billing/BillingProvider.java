@@ -50,6 +50,8 @@ public interface BillingProvider
     
     String getPurchaseProperty(String productId, String propName);
     
+    String getPurchaseList();
+    
     // Return the set of properties for the given id. These should be updated with any information returned by the store (receipt, etc.)
     Map<String, String> getPurchaseProperties(int purchaseId);
     

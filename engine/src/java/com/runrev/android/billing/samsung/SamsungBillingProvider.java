@@ -434,6 +434,11 @@ public class SamsungBillingProvider implements BillingProvider
             return "";
     }
 
+    public String getPurchaseList()
+    {
+        return itemProps.keySet().toString();
+    }
+
     public boolean confirmDelivery(int purchaseId)
     {
         if (!started)

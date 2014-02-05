@@ -1977,6 +1977,10 @@ public class Engine extends View implements EngineApi
 		return mBillingProvider.confirmDelivery(purchaseId);
 	}
 
+    public String storeGetPurchaseList()
+    {
+        return mBillingProvider.getPurchaseList();
+    }
     
 ////////
 

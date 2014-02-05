@@ -113,6 +113,11 @@ public class AmazonBillingProvider implements BillingProvider
             return "";
     }
     
+    public String getPurchaseList()
+    {
+        return itemProps.keySet().toString();
+    }
+    
     public boolean consumePurchase(String productID)
     {
         return true;

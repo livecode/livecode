@@ -349,9 +349,15 @@ Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameters)
     return ES_NORMAL;
 }
 
-////////////////////////////////////////////////////////////////////////////////////
-//   TODO   ///////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
+Exec_stat MCHandleGetPurchases(void *context, MCParameter *p_parameters)
+{
+    char *t_purchases;
+    t_purchases = MCStoreGetPurchaseList();
+    
+    MCresult -> sets(t_purchases);
+    return ES_NORMAL;
+}
+
 Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_parameters)
 {
     bool t_success = true;

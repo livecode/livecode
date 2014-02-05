@@ -242,11 +242,19 @@ public class GoogleBillingProvider implements BillingProvider
             return "";
     }
     
+    public String getPurchaseList()
+    {
+        return itemProps.keySet().toString();
+    }
+    
     //some helper methods
     
     boolean addPurchaseToLocalInventory(Purchase purchase)
     {
         boolean success = true;
+        if (success)
+            success = setPurchaseProperty(purchase.getSku(), "itemType", purchase.getItemType());
+        
         if (success)
             success = setPurchaseProperty(purchase.getSku(), "orderId", purchase.getOrderId());
         
