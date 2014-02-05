@@ -90,6 +90,8 @@ void MCParagraph::fetchattrs(MCArrayRef src)
     MCBooleanRef t_boolean_value;
     MCInterfaceNamedColor t_color;
     MCExecContext ctxt(nil, nil, nil);
+    
+    t_color . name = nil;
 
     if (ctxt . CopyElementAsInteger(src, MCNAME("textAlign"), false, t_intenum_value))
         SetTextAlign(ctxt, &t_intenum_value);
