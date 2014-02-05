@@ -2446,7 +2446,8 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			MCMemoryClear(&t_image, sizeof(t_image));
 			t_image.filter = kMCGImageFilterNearest;
 			MCPlatformLockPlayerBitmap(m_platform_player, t_image . bitmap);
-			dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
+			if (t_image . bitmap != nil)
+				dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
 			MCPlatformUnlockPlayerBitmap(m_platform_player, t_image . bitmap);
 		}
 	}

@@ -672,6 +672,11 @@ void MCMacPlatformWindow::MapMCPointToNSPoint(MCPoint p_location, NSPoint& r_loc
 	r_location . y = m_content . height - p_location . y;
 }
 
+void MCMacPlatformWindow::MapMCRectangleToNSRect(MCRectangle p_rect, NSRect& r_ns_rect)
+{
+	r_ns_rect = [m_view mapMCRectangleToNSRect: p_rect];
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCMacPlatformWindow::ProcessCloseRequest(void)

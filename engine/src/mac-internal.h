@@ -230,6 +230,9 @@ public:
 	void MapMCPointToNSPoint(MCPoint location, NSPoint& r_ns_location);
 	void MapNSPointToMCPoint(NSPoint location, MCPoint& r_mc_location);
 	
+	void MapMCRectangleToNSRect(MCRectangle rect, NSRect& r_ns_rect);
+	void MapNSRectToMCRectangle(NSRect rect, MCRectangle& r_mc_rect);
+	
 protected:
 	virtual void DoRealize(void);
 	virtual void DoSynchronize(void);

@@ -266,6 +266,7 @@
 		4D30CAF6189AC1720034CDC6 /* mac-snapshot.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D30CAF5189AC1720034CDC6 /* mac-snapshot.mm */; };
 		4D30CB27189AC40C0034CDC6 /* mac-font.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D30CB26189AC40C0034CDC6 /* mac-font.mm */; };
 		4D30D1F018A152700034CDC6 /* mac-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D30D1EF18A152700034CDC6 /* mac-player.mm */; };
+		4D30D43E18A293650034CDC6 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D30D43D18A293650034CDC6 /* QTKit.framework */; };
 		4D377262150785AF000B0EB0 /* fieldhtml.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D377261150785AF000B0EB0 /* fieldhtml.cpp */; };
 		4D37727E150787EA000B0EB0 /* fieldrtf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D37727D150787EA000B0EB0 /* fieldrtf.cpp */; };
 		4D407C0C15F8D15600AA3ABC /* osxscriptold.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D407C0B15F8D15600AA3ABC /* osxscriptold.cpp */; };
@@ -905,6 +906,7 @@
 		4D30CAF5189AC1720034CDC6 /* mac-snapshot.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-snapshot.mm"; path = "src/mac-snapshot.mm"; sourceTree = "<group>"; };
 		4D30CB26189AC40C0034CDC6 /* mac-font.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-font.mm"; path = "src/mac-font.mm"; sourceTree = "<group>"; };
 		4D30D1EF18A152700034CDC6 /* mac-player.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-player.mm"; path = "src/mac-player.mm"; sourceTree = "<group>"; };
+		4D30D43D18A293650034CDC6 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
 		4D377261150785AF000B0EB0 /* fieldhtml.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldhtml.cpp; path = src/fieldhtml.cpp; sourceTree = "<group>"; };
 		4D3772671507869A000B0EB0 /* textbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = textbuffer.h; path = src/textbuffer.h; sourceTree = "<group>"; };
 		4D37727D150787EA000B0EB0 /* fieldrtf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldrtf.cpp; path = src/fieldrtf.cpp; sourceTree = "<group>"; };
@@ -1534,6 +1536,7 @@
 				4D221A74171D577E00E7E557 /* libcups.dylib in Frameworks */,
 				4D221A75171D577E00E7E557 /* libcurl.dylib in Frameworks */,
 				4D221A76171D577E00E7E557 /* libssl.dylib in Frameworks */,
+				4D30D43E18A293650034CDC6 /* QTKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1640,6 +1643,7 @@
 				4D587FAE0B809C0C00200116 /* Projects */,
 				4D58819C0B80C68600200116 /* Resources */,
 				4D587DCC0B8096B000200116 /* Sources */,
+				4D30D43D18A293650034CDC6 /* QTKit.framework */,
 			);
 			sourceTree = "<group>";
 		};
