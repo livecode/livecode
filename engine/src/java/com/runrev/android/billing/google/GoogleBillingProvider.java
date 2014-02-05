@@ -22,6 +22,7 @@ public class GoogleBillingProvider implements BillingProvider
     private Boolean started = false;
     private PurchaseObserver mPurchaseObserver;
     private Map<String,String> types = new HashMap<String,String>();
+    private Map<String,Map<String,String>> itemProps = new HashMap<String, Map<String,String>>();
     
     /* 
      Temp var for holding the productId, to pass it in onIabPurchaseFinished(IabResult result, Purchase purchase), in case purchase is null.
@@ -222,7 +223,54 @@ public class GoogleBillingProvider implements BillingProvider
         mActivity = activity;
     }
     
+    public boolean setPurchaseProperty(String productId, String propertyName, String propertyValue)
+    {
+        if (!itemProps.containsKey(productId))
+            itemProps.put(productId, new HashMap<String,String>());
+        (itemProps.get(productId)).put(propertyName, propertyValue);
+                
+        return true;
+    }
+    
+    public String getPurchaseProperty(String productId, String propName)
+    {
+        Log.d(TAG, "Stored properties for productId :" + productId);
+        Map<String,String> map = itemProps.get(productId);
+        if (map != null)
+            return map.get(propName);
+        else
+            return "";
+    }
+    
     //some helper methods
+    
+    boolean addPurchaseToLocalInventory(Purchase purchase)
+    {
+        boolean success = true;
+        if (success)
+            success = setPurchaseProperty(purchase.getSku(), "orderId", purchase.getOrderId());
+        
+        if (success)
+            success = setPurchaseProperty(purchase.getSku(), "packageName", purchase.getPackageName());
+
+        if (success)
+            success = setPurchaseProperty(purchase.getSku(), "purchaseToken", purchase.getToken());
+
+        if (success)
+            success = setPurchaseProperty(purchase.getSku(), "signature", purchase.getSignature());
+
+        if (success)
+            success = setPurchaseProperty(purchase.getSku(), "purchaseTime", new Long(purchase.getPurchaseTime()).toString());
+
+        return success;
+
+    }
+    
+    void removePurchaseFromLocalInventory(Purchase purchase)
+    {
+        itemProps.remove(purchase.getSku());
+        
+    }
     
     // Enables or disables the "please wait" screen.
     void setWaitScreen(boolean set)
@@ -281,6 +329,7 @@ public class GoogleBillingProvider implements BillingProvider
             
             Log.d(TAG, "Purchase successful.");
             pendingPurchaseSku = "";
+            addPurchaseToLocalInventory(purchase);
             offerPurchasedItems(purchase);
                 
         }
@@ -303,6 +352,7 @@ public class GoogleBillingProvider implements BillingProvider
             if (result.isSuccess())
             {
                 Log.d(TAG, "Consumption successful. Provisioning.");
+                removePurchaseFromLocalInventory(purchase);
             }
             else
             {
@@ -338,7 +388,10 @@ public class GoogleBillingProvider implements BillingProvider
 
             List<Purchase> purchaseList = inventory.getallpurchases();
             for (Purchase p : purchaseList)
+            {
+                addPurchaseToLocalInventory(p);
                 offerPurchasedItems(p);
+            }
         }
     };
 

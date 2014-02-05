@@ -46,6 +46,10 @@ public interface BillingProvider
     // type is subscription or non-subscription
     boolean productSetType(String productId, String productType);
     
+    boolean setPurchaseProperty(String productId, String propertyName, String propertyValue);
+    
+    String getPurchaseProperty(String productId, String propName);
+    
     // Return the set of properties for the given id. These should be updated with any information returned by the store (receipt, etc.)
     Map<String, String> getPurchaseProperties(int purchaseId);
     

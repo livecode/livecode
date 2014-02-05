@@ -21,6 +21,7 @@ public class AmazonBillingProvider implements BillingProvider
     private MyPurchasingObserver mPurchasingObserver;
     private Boolean started = false;
     private PurchaseObserver mPurchaseObserver;
+    private Map<String,Map<String,String>> itemProps = new HashMap<String, Map<String,String>>();
     
     public void initBilling()
     {
@@ -85,6 +86,33 @@ public class AmazonBillingProvider implements BillingProvider
         return true;
     }
     
+    public boolean setPurchaseProperty(String productId, String propertyName, String propertyValue)
+    {
+        if (!itemProps.containsKey(productId))
+            itemProps.put(productId, new HashMap<String,String>());
+        (itemProps.get(productId)).put(propertyName, propertyValue);
+        
+        // testing
+        /*
+         Log.d(TAG, "Stored properties for productId :" + productId);
+         Map<String,String> map = itemProps.get(productId);
+         for (String key : map.keySet())
+         Log.d(TAG, "For property : " + key + "  the value is : " + map.get(key));
+         */
+        
+        return true;
+    }
+    
+    public String getPurchaseProperty(String productId, String propName)
+    {
+        Log.d(TAG, "Stored properties for productId :" + productId);
+        Map<String,String> map = itemProps.get(productId);
+        if (map != null)
+            return map.get(propName);
+        else
+            return "";
+    }
+    
     public boolean consumePurchase(String productID)
     {
         return true;
@@ -121,6 +149,22 @@ public class AmazonBillingProvider implements BillingProvider
     
     public void onActivityResult (int requestCode, int resultCode, Intent data)
     {
+        
+    }
+    
+    boolean addPurchaseReceiptToLocalInventory(Receipt receipt)
+    {
+        boolean success = true;
+        if (success)
+            success = setPurchaseProperty(receipt.getSku(), "itemType", receipt.getItemType().toString());
+        
+        if (success && receipt.getSubscriptionPeriod() != null)
+            success = setPurchaseProperty(receipt.getSku(), "subscriptionPeriod", receipt.getSubscriptionPeriod().toString());
+        
+        if (success)
+            success = setPurchaseProperty(receipt.getSku(), "purchaseToken", receipt.getPurchaseToken());
+        
+        return success;
         
     }
     
@@ -221,6 +265,7 @@ public class AmazonBillingProvider implements BillingProvider
                     // Process receipts
                     for (final Receipt receipt : response.getReceipts())
                     {
+                        Log.v(TAG, "Processing receipt : " + receipt.toString());
                         switch (receipt.getItemType())
                         {
                             case ENTITLED:
@@ -230,30 +275,9 @@ public class AmazonBillingProvider implements BillingProvider
                                 
                                 // TODO : How to get the purchase Id
                                 //mPurchaseObserver.onPurchaseStateChanged(1,0);
+                                Log.v(TAG, "Time to add receipt to local inventory...");
+                                addPurchaseReceiptToLocalInventory(receipt);
                                 mPurchaseObserver.onPurchaseStateChanged(receipt.getSku(),0);
-                                
-                                //Move this to EnginePurchaseObserver
-                                /*
-                                 final boolean tVerified = true;
-                                 final int tPurchaseState = 0; //purchase state for success
-                                 final String tNotificationId = "";
-                                 final String tProductId = receipt.getSku();
-                                 final String tOrderId = "";
-                                 final long tPurchaseTime = 1;
-                                 final String tDeveloperPayload = "";
-                                 final String tSignedData = "";
-                                 final String tSignature = "";
-                                 
-                                 post(new Runnable() {
-                                 public void run() {
-                                 doPurchaseStateChanged(tVerified, tPurchaseState,
-                                 tNotificationId, tProductId, tOrderId,
-                                 tPurchaseTime, tDeveloperPayload, tSignedData, tSignature);
-                                 if (m_wake_on_event)
-                                 doProcess(false);
-                                 }
-                                 });
-                                 */
                                 break;
                             }
                             case SUBSCRIPTION:
@@ -263,33 +287,8 @@ public class AmazonBillingProvider implements BillingProvider
                                 
                                 // TODO : How to get the purchase Id
                                 // mPurchaseObserver.onPurchaseStateChanged(1,0);
+                                addPurchaseReceiptToLocalInventory(receipt);
                                 mPurchaseObserver.onPurchaseStateChanged(receipt.getSku(),0);
-                                
-                                
-                                //Move this to enginePurchaseObserver
-                                /*
-                                 final boolean tVerified = true;
-                                 final int tPurchaseState = 0; //purchase state for success
-                                 final String tNotificationId = "";
-                                 //NOTE : the getSku() method returns the parent SKU of the subscription
-                                 final String tProductId = receipt.getSku();
-                                 final String tOrderId = "";
-                                 final long tPurchaseTime = 1;
-                                 final String tDeveloperPayload = "";
-                                 final String tSignedData = "";
-                                 final String tSignature = "";
-                                 
-                                 post(new Runnable() {
-                                 public void run() {
-                                 doPurchaseStateChanged(tVerified, tPurchaseState,
-                                 tNotificationId, tProductId, tOrderId,
-                                 tPurchaseTime, tDeveloperPayload, tSignedData, tSignature);
-                                 if (m_wake_on_event)
-                                 doProcess(false);
-                                 }
-                                 });
-                                 
-                                 */
                                 break;
                         }
                     }
@@ -379,6 +378,7 @@ public class AmazonBillingProvider implements BillingProvider
                     // Don't use tProductId = requestIds.get(response.getRequestId()), it does not work on subscriptions because it returns the child SKU, but we need the parent SKU
                     tProductId = receipt.getSku();
                     Log.d(TAG, "PRODUCT ID IS : " + tProductId);
+                    addPurchaseReceiptToLocalInventory(receipt);
                     break;
                 default:
                     tProductId = requestIds.get(response.getRequestId());
@@ -388,30 +388,6 @@ public class AmazonBillingProvider implements BillingProvider
             // TODO : How to get the purchase Id
             //mPurchaseObserver.onPurchaseStateChanged(1,response.getPurchaseRequestStatus().ordinal());
             mPurchaseObserver.onPurchaseStateChanged(tProductId,response.getPurchaseRequestStatus().ordinal());
-            
-            //TODO: MOVE THIS TO EnginePurchaseObserver.
-            /*
-             final boolean tVerified = true;
-             final int tPurchaseState = response.getPurchaseRequestStatus().ordinal();
-             final String tNotificationId = "";
-             
-             final String tOrderId = "";//response.getRequestId();
-             final long tPurchaseTime = 1;
-             final String tDeveloperPayload = "";
-             final String tSignedData = "";
-             final String tSignature = "";
-             
-             post(new Runnable() {
-             public void run() {
-             doPurchaseStateChanged(tVerified, tPurchaseState,
-             tNotificationId, tProductId, tOrderId,
-             tPurchaseTime, tDeveloperPayload, tSignedData, tSignature);
-             if (m_wake_on_event)
-             doProcess(false);
-             }
-             });
-             */
-            
             
         }
     }

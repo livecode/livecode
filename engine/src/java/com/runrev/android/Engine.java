@@ -1897,8 +1897,6 @@ public class Engine extends View implements EngineApi
     public static BillingProvider mBillingProvider;
     
     public EnginePurchaseObserver mPurchaseObserver;
-    
-    private Map<String,Map<String,String>> itemProps = new HashMap<String, Map<String,String>>();
 
 	private void initBilling()
 	{
@@ -1963,29 +1961,12 @@ public class Engine extends View implements EngineApi
     
     public boolean storeSetPurchaseProperty(String productId, String propertyName, String propertyValue)
     {
-        if (!itemProps.containsKey(productId))
-            itemProps.put(productId, new HashMap<String,String>());
-        (itemProps.get(productId)).put(propertyName, propertyValue);
-    
-        // testing
-        /*
-        Log.d(TAG, "Stored properties for productId :" + productId);
-        Map<String,String> map = itemProps.get(productId);
-        for (String key : map.keySet())
-            Log.d(TAG, "For property : " + key + "  the value is : " + map.get(key));
-         */
-        
-        return true;
+        return mBillingProvider.setPurchaseProperty(productId, propertyName, propertyValue);
     }
     
     public String storeGetPurchaseProperty(String productId, String propName)
     {
-        Log.d(TAG, "Stored properties for productId :" + productId);
-        Map<String,String> map = itemProps.get(productId);
-        if (map != null)
-            return map.get(propName);
-        else
-            return "";
+        return mBillingProvider.getPurchaseProperty(productId, propName);
     }
 
 	public boolean purchaseConfirmDelivery(int purchaseId, String notificationId)
@@ -1996,6 +1977,7 @@ public class Engine extends View implements EngineApi
 		return mBillingProvider.confirmDelivery(purchaseId);
 	}
 
+    
 ////////
 
 	private class EnginePurchaseObserver extends PurchaseObserver

@@ -11,6 +11,7 @@ import com.sec.android.iap.sample.helper.SamsungIapHelper;
 import com.sec.android.iap.sample.helper.SamsungIapHelper.OnGetInboxListListener;
 import com.sec.android.iap.sample.helper.SamsungIapHelper.OnGetItemListListener;
 import com.sec.android.iap.sample.helper.SamsungIapHelper.OnInitIapListener;
+import com.sec.android.iap.sample.vo.BaseVO;
 import com.sec.android.iap.sample.vo.InBoxVO;
 import com.sec.android.iap.sample.vo.ItemVO;
 import com.sec.android.iap.sample.vo.PurchaseVO;
@@ -39,6 +40,8 @@ public class SamsungBillingProvider implements BillingProvider
     //private OnInitIapListener mOnInitIapListener = null;
     //private OnGetItemListListener mOnGetItemListListener = null;
     //private OnGetInboxListListener mOnGetInboxListListener = null;
+    
+    private Map<String,Map<String,String>> itemProps = new HashMap<String, Map<String,String>>();
     
     
     /* LISTENERS */
@@ -74,6 +77,7 @@ public class SamsungBillingProvider implements BillingProvider
             {
                 final String tItemId = inboxItem.getItemId();
                 ownedItems.add(tItemId);
+                loadInboxToLocalInventory(inboxItem);
 
 
                 // Restore previously purchased items (only non-consumables and subscriptions)
@@ -88,18 +92,6 @@ public class SamsungBillingProvider implements BillingProvider
                    // mPurchaseObserver.onPurchaseStateChanged(1, 0);
                     mPurchaseObserver.onPurchaseStateChanged(tItemId, 0);
 
-                    //TODO : move this to EnginePurchaseObserver
-/*
-                    post(new Runnable()
-                    {
-                        public void run()
-                        {
-                            doPurchaseStateChanged(true, 0, "", tItemId, "", 1, "", "", "");
-                            if (m_wake_on_event)
-                                doProcess(false);
-                        }
-                    });
- */
                 }
 
             }
@@ -117,6 +109,86 @@ public class SamsungBillingProvider implements BillingProvider
 
     /* HELPER METHODS */
 
+    boolean loadBaseToLocalInventory(BaseVO baseVO)
+    {
+        boolean success = true;
+        //Log.d(TAG, "Base Item id is : " + baseVO.getItemId());
+        //Log.d(TAG, "Base Item name is : " + baseVO.getItemName());
+
+        if (success)
+        {
+            success = setPurchaseProperty(baseVO.getItemId(), "itemName", baseVO.getItemName());
+            //Log.d(TAG, "Base itemName loaded successfully");
+        }
+        if (success)
+        {
+            success = setPurchaseProperty(baseVO.getItemId(), "itemPriceString", baseVO.getItemPriceString());
+            //Log.d(TAG, "Base itemPriceString loaded successfully");
+        }
+        if (success)
+        {
+            success = setPurchaseProperty(baseVO.getItemId(), "currencyUnit", baseVO.getCurrencyUnit());
+            //Log.d(TAG, "Base currencyUnit loaded successfully");
+        }
+        if (success)
+        {
+            success = setPurchaseProperty(baseVO.getItemId(), "itemDescription", baseVO.getItemDesc());
+            //Log.d(TAG, "Base itemDescription loaded successfully");
+        }
+        if (success)
+        {
+            success = setPurchaseProperty(baseVO.getItemId(), "itemImageUrl", baseVO.getItemImageUrl());
+            //Log.d(TAG, "Base itemImageUrl loaded successfully");
+        }
+        if (success)
+        {
+            success = setPurchaseProperty(baseVO.getItemId(), "itemDownloadUrl", baseVO.getItemDownloadUrl());
+            //Log.d(TAG, "Base itemDownloadUrl loaded successfully");
+        }
+        return success;
+    }
+
+    boolean addPurchaseToLocalInventory(PurchaseVO purchaseVO)
+    {
+        boolean success = loadBaseToLocalInventory(purchaseVO);
+
+        if (success)
+            success = setPurchaseProperty(purchaseVO.getItemId(), "paymentId", purchaseVO.getPaymentId());
+
+        if (success)
+            success = setPurchaseProperty(purchaseVO.getItemId(), "purchaseId", purchaseVO.getPurchaseId());
+
+        if (success)
+            success = setPurchaseProperty(purchaseVO.getItemId(), "purchaseDate", purchaseVO.getPurchaseDate());
+
+        if (success)
+            success = setPurchaseProperty(purchaseVO.getItemId(), "verifyUrl", purchaseVO.getVerifyUrl());
+        return success;
+
+    }
+
+
+    boolean loadInboxToLocalInventory(InBoxVO inboxVO)
+    {
+        boolean success = loadBaseToLocalInventory(inboxVO);
+        //Log.d(TAG, "Inbox Item id is : " + inboxVO.getItemId());
+        //Log.d(TAG, "Inbox Item name is : " + inboxVO.getItemName());
+
+        if (success)
+            success = setPurchaseProperty(inboxVO.getItemId(), "paymentId", inboxVO.getPaymentId());
+
+        if (success)
+            success = setPurchaseProperty(inboxVO.getItemId(), "subscriptionEndDate", inboxVO.getSubscriptionEndDate());
+
+        if (success)
+            success = setPurchaseProperty(inboxVO.getItemId(), "purchaseDate", inboxVO.getPurchaseDate());
+
+        if (success)
+            success = setPurchaseProperty(inboxVO.getItemId(), "type", inboxVO.getType());
+
+        return success;
+
+    }
 
     /**
      * Start the IAP initialization process
@@ -230,6 +302,7 @@ public class SamsungBillingProvider implements BillingProvider
                 purchaseVO = new PurchaseVO(extras.getString(SamsungIapHelper.KEY_NAME_RESULT_OBJECT));
                 helper.verifyPurchaseResult(getActivity(), purchaseVO);
                 ownedItems.add(itemId);
+                addPurchaseToLocalInventory(purchaseVO);
             }
             else
             {
@@ -342,11 +415,30 @@ public class SamsungBillingProvider implements BillingProvider
         return true;
     }
 
+    public boolean setPurchaseProperty(String productId, String propertyName, String propertyValue)
+    {
+        if (!itemProps.containsKey(productId))
+            itemProps.put(productId, new HashMap<String,String>());
+        (itemProps.get(productId)).put(propertyName, propertyValue);
+
+        return true;
+    }
+
+    public String getPurchaseProperty(String productId, String propName)
+    {
+        Log.d(TAG, "Stored properties for productId :" + productId);
+        Map<String,String> map = itemProps.get(productId);
+        if (map != null)
+            return map.get(propName);
+        else
+            return "";
+    }
+
     public boolean confirmDelivery(int purchaseId)
     {
         if (!started)
             return false;
-        
+
         // TODO
         return true;
     }
