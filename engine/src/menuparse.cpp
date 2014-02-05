@@ -460,8 +460,8 @@ void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCMenuIt
 		MCValueAssign(p_menuitem->tag, t_tag_str);
 		MCValueRelease(t_tag_str);
 		
-		// Don't do any further processing of the string before the '|'
-		x_offset = t_tag;
+		// Don't do any further processing of the string after the '|'
+		t_length = t_tag;
 	}
 	
 	if (p_menuitem->menumode == WM_PULLDOWN || p_menuitem->menumode == WM_TOP_LEVEL)
