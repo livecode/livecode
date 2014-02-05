@@ -316,6 +316,7 @@ bool MCFilesOpenProcessesNamesList(MCListRef& r_list)
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 
+    IO_cleanprocesses();
 	for (uinteger_t i = 0; i < MCnprocesses; i++)
 		if (!MCListAppend(*t_list, MCprocesses[i].name))
 			return false;
@@ -338,6 +339,7 @@ bool MCFilesOpenProcessesIdsList(MCListRef& r_list)
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 
+    IO_cleanprocesses();
 	for (uinteger_t i = 0; i < MCnprocesses; i++)
 		if (!MCListAppendInteger(*t_list, MCprocesses[i].pid))
 			return false;
