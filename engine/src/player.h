@@ -206,11 +206,7 @@ public:
 #ifdef FEATURE_PLATFORM_PLAYER
 	MCRectangle resize(MCRectangle rect);
 	void SynchronizeUserCallbacks(void);
-	Boolean isbuffering(void)
-	{
-		// COCOA-TODO: Sort out buffering in MCPlayer.
-		return False;
-	}
+	Boolean isbuffering(void);
 #endif
 	
 #ifdef _LINUX_DESKTOP

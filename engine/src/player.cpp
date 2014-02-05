@@ -2344,6 +2344,17 @@ void MCPlayer::SynchronizeUserCallbacks(void)
 	// COCOA-TODO: Sort out player user callbacks.
 }
 
+Boolean MCPlayer::isbuffering(void)
+{
+	if (m_platform_player == nil)
+		return false;
+	
+	bool t_buffering;
+	MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_buffering);
+	
+	return t_buffering;
+}
+
 #endif
 
 #ifdef _WINDOWS

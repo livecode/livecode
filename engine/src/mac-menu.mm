@@ -37,11 +37,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// The menuref currently set as the menubar.
-static MCPlatformMenuRef s_menubar = nil;
-
-////////////////////////////////////////////////////////////////////////////////
-
 @interface com_runrev_livecode_MCMenuDelegate: NSObject<NSMenuDelegate>
 {
 	MCPlatformMenuRef m_menu;
@@ -61,9 +56,60 @@ static MCPlatformMenuRef s_menubar = nil;
 - (void)menuNeedsUpdate: (NSMenu *)menu;
 - (void)menuItemSelected: (id)sender;
 
+- (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action;
+
 @end
 
 @compatibility_alias MCMenuDelegate com_runrev_livecode_MCMenuDelegate;
+
+@interface com_runrev_livecode_MCAppMenuDelegate: NSObject<NSMenuDelegate>
+
+- (id)init;
+- (void)dealloc;
+
+- (void)shadowedMenuItemSelected:(NSString*)tag;
+- (NSMenuItem *)findShadowedMenuItem: (NSString *)tag;
+
+- (void)aboutMenuItemSelected: (id)sender;
+- (void)preferencesMenuItemSelected: (id)sender;
+
+- (void)menuNeedsUpdate: (NSMenu *)menu;
+
+- (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action;
+
+@end
+
+@compatibility_alias MCAppMenuDelegate com_runrev_livecode_MCAppMenuDelegate;
+
+////////////////////////////////////////////////////////////////////////////////
+
+// At the moment, we only do menus for Mac so we implement directly without a
+// 'derived' class idea. Indeed, a platform menu is nothing more than a wrapper
+// around NSMenu.
+struct MCPlatformMenu
+{
+	uint32_t references;
+	NSMenu *menu;
+	MCMenuDelegate *menu_delegate;
+	
+	// If the menu is being used as a menubar then this is true. When this
+	// is the case, some items will be hidden and a (API-wise) invisible
+	// menu will be inserted at the front (the application menu).
+	bool is_menubar : 1;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+// The menuref currently set as the menubar.
+static MCPlatformMenuRef s_menubar = nil;
+
+// The delegate for the app menu.
+static com_runrev_livecode_MCAppMenuDelegate *s_app_menu_delegate = nil;
+
+// The services menu that gets populated by Cocoa.
+static NSMenu *s_services_menu = nil;
+
+////////////////////////////////////////////////////////////////////////////////
 
 @implementation com_runrev_livecode_MCMenuDelegate
 
@@ -92,9 +138,56 @@ static MCPlatformMenuRef s_menubar = nil;
 
 //////////
 
+- (void)hideShadowedMenuItem:(NSString *)tag menu:(NSMenu *)menu
+{
+	NSInteger t_index;
+	t_index = [menu indexOfItemWithRepresentedObject: tag];
+	if (t_index == -1)
+		return;
+	
+	NSMenuItem *t_item;
+	t_item = [menu itemAtIndex: t_index];
+	[t_item setHidden: YES];
+	
+	NSUInteger t_item_count;
+	t_item_count = [menu numberOfItems];
+	
+	// If there is only this item in the menu, do no more.
+	if (t_item_count == 1)
+		return;
+	
+	// If we are the first item, then remove the separator after
+	// us - if any.
+	if (t_index == 0 &&
+		[[menu itemAtIndex: 1] isSeparatorItem])
+	{
+		[[menu itemAtIndex: 1] setHidden: YES];
+		return;
+	}
+	
+	// If we are the last item, then remove the separator before
+	// us - if any.
+	if (t_index == t_item_count - 1 &&
+		[[menu itemAtIndex: t_index - 1] isSeparatorItem])
+	{
+		[[menu itemAtIndex: t_index - 1] setHidden: YES];
+		return;
+	}
+	
+	// If we have a separated before and after, then remove the
+	// separator before us.
+	if ([[menu itemAtIndex: t_index - 1] isSeparatorItem] &&
+		[[menu itemAtIndex: t_index + 1] isSeparatorItem])
+		[[menu itemAtIndex: t_index - 1] setHidden: YES];
+}
+
 - (void)menuNeedsUpdate: (NSMenu *)menu
 {
 	MCPlatformCallbackSendMenuUpdate(m_menu);
+	
+	[self hideShadowedMenuItem: @"About" menu: menu];
+	[self hideShadowedMenuItem: @"Preferences" menu: menu];
+	[self hideShadowedMenuItem: @"Quit" menu: menu];
 }
 
 - (void)menuItemSelected: (id)sender
@@ -104,22 +197,102 @@ static MCPlatformMenuRef s_menubar = nil;
 	MCPlatformCallbackSendMenuSelect(m_menu, [[t_item menu] indexOfItem: t_item]);
 }
 
+//////////
+
+- (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action
+{
+	return NO;
+}
+
 @end
 
-// At the moment, we only do menus for Mac so we implement directly without a
-// 'derived' class idea. Indeed, a platform menu is nothing more than a wrapper
-// around NSMenu.
-struct MCPlatformMenu
+@implementation com_runrev_livecode_MCAppMenuDelegate
+
+- (id)init
 {
-	uint32_t references;
-	NSMenu *menu;
-	MCMenuDelegate *menu_delegate;
+	self = [super init];
+	if (self == nil)
+		return nil;
 	
-	// If the menu is being used as a menubar then this is true. When this
-	// is the case, some items will be hidden and a (API-wise) invisible
-	// menu will be inserted at the front (the application menu).
-	bool is_menubar : 1;
-};
+	return self;
+}
+
+- (void)dealloc
+{
+	[super dealloc];
+}
+
+- (void)shadowedMenuItemSelected:(NSString*)tag
+{
+	NSMenuItem *t_shadow;
+	t_shadow = [self findShadowedMenuItem: tag];
+	if (t_shadow != nil)
+		[(MCMenuDelegate *)[[t_shadow menu] delegate] menuItemSelected: t_shadow];
+}
+
+- (NSMenuItem *)findShadowedMenuItem: (NSString *)tag
+{
+	NSMenu *t_menubar;
+	t_menubar = s_menubar -> menu;
+	for(uindex_t i = 1; i < [t_menubar numberOfItems]; i++)
+	{
+		NSMenu *t_menu;
+		t_menu = [[t_menubar itemAtIndex: i] submenu];
+		
+		NSInteger t_index;
+		t_index = [t_menu indexOfItemWithRepresentedObject: tag];
+		if (t_index != -1)
+			return [t_menu itemAtIndex: t_index];
+	}
+	
+	return nil;
+}
+
+- (void)aboutMenuItemSelected: (id)sender
+{
+	[self shadowedMenuItemSelected: @"About"];
+}
+
+- (void)preferencesMenuItemSelected: (id)sender
+{
+	[self shadowedMenuItemSelected: @"Preferences"];
+}
+
+- (void)menuNeedsUpdate: (NSMenu *)menu
+{
+	NSMenuItem *t_prefs, *t_about;
+	t_prefs = [self findShadowedMenuItem: @"Preferences"];
+	t_about = [self findShadowedMenuItem: @"About"];
+	
+	if (t_prefs != nil)
+	{
+		[[[t_prefs menu] delegate] menuNeedsUpdate: [t_prefs menu]];
+		t_prefs = [self findShadowedMenuItem: @"Preferences"];
+		[[menu itemAtIndex: 2] setEnabled: t_prefs != nil ? [t_prefs isEnabled] : NO];
+	}
+	
+	if (t_about != nil)
+	{
+		if (t_prefs == nil ||
+			[t_about menu] != [t_prefs menu])
+			[[[t_about menu] delegate] menuNeedsUpdate: [t_about menu]];
+		t_about = [self findShadowedMenuItem: @"About"];
+		[[menu itemAtIndex: 0] setEnabled: t_about != nil ? [t_about isEnabled] : NO];
+	}
+}
+
+//////////
+
+// Putting this method here means we don't get an excessive amount of
+// menuUpdate messages after each key-press...
+- (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action
+{
+	return NO;
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Helper method that frees anything associated with an NSMenuItem in an NSMenu
 // (at the moment, this is the submenu).
@@ -437,6 +610,9 @@ static void MCPlatformStartUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
 	
 	// COCOA-TODO: Finish app menu support.
 	
+	if (s_app_menu_delegate == nil)
+		s_app_menu_delegate = [[com_runrev_livecode_MCAppMenuDelegate alloc] init];
+	
 	// Initialize the application menu (which is always index 0). The application
 	// menu has structure:
 	//
@@ -452,14 +628,47 @@ static void MCPlatformStartUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
 	//     ----
 	//     Quit <app name> / Apple-Q
 	//
-	
-	// COCOA-TODO: Fetch name from bundle (?)
 	NSString *t_app_name;
-	t_app_name = [[NSProcessInfo processInfo] processName];
+	t_app_name = (NSString *)[[[NSBundle mainBundle] infoDictionary] objectForKey: (NSString *)kCFBundleNameKey];
 	
+	NSMenu *t_services_menu;
+	t_services_menu = [[NSMenu alloc] initWithTitle: NSLocalizedString(@"Services", nil)];
+	[NSApp setServicesMenu: t_services_menu];
+						   
 	NSMenu *t_app_menu;
 	t_app_menu = [[NSMenu alloc] initWithTitle: t_app_name];
-	[t_app_menu addItemWithTitle: [@"Quit " stringByAppendingString: t_app_name] action: @selector(terminate:) keyEquivalent:@"q"];
+	
+	[t_app_menu addItemWithTitle: [NSString stringWithFormat: NSLocalizedString(@"About %@", @"About {Application Name}"), t_app_name]
+						  action: @selector(aboutMenuItemSelected:)
+				   keyEquivalent: @""];
+	[[t_app_menu itemAtIndex: 0] setTarget: s_app_menu_delegate];
+	[t_app_menu addItem: [NSMenuItem separatorItem]];
+	[t_app_menu addItemWithTitle: NSLocalizedString(@"Preferences...", nil)
+						  action: @selector(preferencesMenuItemSelected:)
+				   keyEquivalent: @","];
+	[[t_app_menu itemAtIndex: 2] setTarget: s_app_menu_delegate];
+	[t_app_menu addItem: [NSMenuItem separatorItem]];
+	[t_app_menu addItemWithTitle: NSLocalizedString(@"Services", nil)
+						  action: nil
+				   keyEquivalent: @""];
+	[[t_app_menu itemAtIndex: 4] setSubmenu: t_services_menu];
+	[t_services_menu release];
+	[t_app_menu addItem: [NSMenuItem separatorItem]];
+	[t_app_menu addItemWithTitle: [NSString stringWithFormat: NSLocalizedString(@"Hide %@", @"Hide {Application Name}"), t_app_name]
+						  action: @selector(hide:)
+				   keyEquivalent: @"h"];
+	[t_app_menu addItemWithTitle: NSLocalizedString(@"Hide Others", nil)
+						  action: @selector(hideOtherApplications:)
+				   keyEquivalent: @"h"];
+	[[t_app_menu itemAtIndex: 7] setKeyEquivalentModifierMask: (NSAlternateKeyMask | NSCommandKeyMask)];
+	[t_app_menu addItemWithTitle: NSLocalizedString(@"Show All", nil)
+						  action: @selector(unhideAllApplications:)
+				   keyEquivalent: @""];
+	[t_app_menu addItem: [NSMenuItem separatorItem]];
+	[t_app_menu addItemWithTitle: [NSString stringWithFormat: NSLocalizedString(@"Quit %@", @"Quit {Application Name}"), t_app_name]
+						  action: @selector(terminate:)
+				   keyEquivalent:@"q"];
+	[t_app_menu setDelegate: s_app_menu_delegate];
 	
 	NSMenuItem *t_app_menu_item;
 	t_app_menu_item = [[NSMenuItem alloc] initWithTitle: t_app_name action: nil keyEquivalent: @""];
