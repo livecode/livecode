@@ -645,8 +645,8 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	// Set textshift
 	{
 		MCAutoNumberRef t_number;
-		convert_array_value_to_number_if_non_empty(ctxt, p_style, MCNAME("textShift"), &t_number);
-		t_block -> setshift(MCNumberFetchAsInteger(*t_number));
+		if (convert_array_value_to_number_if_non_empty(ctxt, p_style, MCNAME("textShift"), &t_number))
+            t_block -> setshift(MCNumberFetchAsInteger(*t_number));
 	}
 
     MCAutoStringRef t_font;
@@ -671,9 +671,11 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	{
 		MCAutoNumberRef t_number;
         uinteger_t t_size;
-		convert_array_value_to_number_if_non_empty(ctxt, p_style, MCNAME("textSize"), &t_number);
-        t_size = MCNumberFetchAsUnsignedInteger(*t_number);
-        t_block -> SetTextSize(ctxt, &t_size);
+		if (convert_array_value_to_number_if_non_empty(ctxt, p_style, MCNAME("textSize"), &t_number))
+        {
+            t_size = MCNumberFetchAsUnsignedInteger(*t_number);
+            t_block -> SetTextSize(ctxt, &t_size);
+        }
 	}
 	
 	// Set textstyle
