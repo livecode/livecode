@@ -2041,6 +2041,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 }
                 for (int i = 0; i < t_count; ++i)
                     MCValueRelease(t_value[i]);
+                MCMemoryDeleteArray(t_value);
             }
         }
             break;
