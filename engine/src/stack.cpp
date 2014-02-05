@@ -418,9 +418,10 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	{
 		linkatts = new Linkatts;
 		memcpy(linkatts, sref.linkatts, sizeof(Linkatts));
-		linkatts->colorname = (MCStringRef)MCValueRetain(sref.linkatts->colorname);
-		linkatts->hilitecolorname = (MCStringRef)MCValueRetain(sref.linkatts->hilitecolorname);
-		linkatts->visitedcolorname = (MCStringRef)MCValueRetain(sref.linkatts->visitedcolorname);
+        
+		linkatts->colorname = linkatts->colorname == nil ? nil : (MCStringRef)MCValueRetain(sref.linkatts->colorname);
+		linkatts->hilitecolorname = linkatts->hilitecolorname == nil ? nil : (MCStringRef)MCValueRetain(sref.linkatts->hilitecolorname);
+		linkatts->visitedcolorname = linkatts->hilitecolorname == nil ? nil : (MCStringRef)MCValueRetain(sref.linkatts->visitedcolorname);
 	}
 	else
 		linkatts = NULL;
