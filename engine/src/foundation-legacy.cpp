@@ -1296,6 +1296,7 @@ static uint32_t measure_array_entry(MCNameRef p_key, MCValueRef p_value)
 		break;
 	case kMCValueTypeCodeName:
 		t_size += 4 + MCStringGetLength(MCNameGetString((MCNameRef)p_value));
+        break;
 	case kMCValueTypeCodeNumber:
 		t_size += 8;
 		break;
