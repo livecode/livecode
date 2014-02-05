@@ -2284,6 +2284,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                     MCExecFormatEnum(ctxt, t_enum_info, t_value, r_value);
                 }
             }
+            
+            break;
         }
             
         case kMCPropertyTypeMixedLinesOfUInt:
