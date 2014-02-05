@@ -184,7 +184,9 @@ public:
 	// surrogate pairs when it does so.
 	findex_t DecrementIndex(findex_t p_in)
 	{
-		unichar_t t_char = MCStringGetCharAtIndex(m_text, p_in - 1);
+		if (p_in == 0)
+            return 0;
+        unichar_t t_char = MCStringGetCharAtIndex(m_text, p_in - 1);
 		if (0xDC00 <= t_char && t_char < 0xE000)
 			return p_in - 2;
 		return p_in - 1;
