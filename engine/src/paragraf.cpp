@@ -2698,6 +2698,10 @@ MCRectangle MCParagraph::getdirty(uint2 fixedheight)
 	int32_t t_box_offset, t_box_width;
 	computeboxoffsetandwidth(t_box_offset, t_box_width);
 
+    // If we don't have any lines, do a layout
+    if (lines == nil)
+        layout(false);
+    
 	uint2 height = fixedheight;
 	MCLine *lptr = lines;
 	do
