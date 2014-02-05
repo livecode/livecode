@@ -696,7 +696,7 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
             }
             // end of MCParagraph scope
 
-            if (t_need_layout && !all)
+            if (t_need_layout && !all && pgptr->getopened())
             {
                 // MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
                 pgptr -> layout(false);
