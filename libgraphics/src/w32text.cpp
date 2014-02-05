@@ -266,7 +266,7 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 			t_has_opaque = w32_draw_text_process_transparent_buffer(p_context -> state -> fill_color, t_nearest_white, p_bounds . height, t_rgb_pxls, p_bounds . width, t_context_pxls, t_context_width);
 
 			// Blend the bitmap into the background (we definitely have transparent pixels).
-			t_bitmap . setIsOpaque(false);	
+			t_bitmap . setAlphaType(kPremul_SkAlphaType);	
 			p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
 
 			// If there are any opaque pixels, process those.
@@ -283,7 +283,7 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 
 				// Blend the bitmap into the background (we definitely have transparent pixels since
 				// we've set some so!).
-				t_bitmap . setIsOpaque(false);	
+				t_bitmap . setAlphaType(kPremul_SkAlphaType);	
 				p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
 			}
 		}
@@ -300,7 +300,10 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 			t_has_transparent = w32_draw_text_process_opaque_buffer(p_context -> state -> fill_color, p_bounds . height, t_rgb_pxls, p_bounds . width, t_context_pxls, t_context_width);
 
 			// Blend the bitmap into the background (we may have transparent pixels).
-			t_bitmap . setIsOpaque(!t_has_transparent);	
+			if (t_has_transparent)
+				t_bitmap . setAlphaType(kPremul_SkAlphaType);
+			else
+				t_bitmap . setAlphaType(kOpaque_SkAlphaType);	
 			p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
 
 			// If there are any transparent pixels, process those.
@@ -314,7 +317,7 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 				w32_draw_text_process_transparent_buffer(p_context -> state -> fill_color, t_nearest_white, p_bounds . height, t_rgb_pxls, p_bounds . width, t_context_pxls, t_context_width);
 
 				// Blend the bitmap into the background (we definitely have transparent pixels).
-				t_bitmap . setIsOpaque(false);	
+				t_bitmap . setAlphaType(kPremul_SkAlphaType);
 				p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
 			}
 		}
