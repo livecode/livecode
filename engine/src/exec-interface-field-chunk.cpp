@@ -52,15 +52,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct MCInterfaceTextStyleElement
-{
-    Font_textstyle which;
-    bool has;
-    bool is_unset;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 template<typename T> struct PodFieldPropType
 {
     typedef T value_type;
