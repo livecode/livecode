@@ -435,6 +435,10 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 						return stat;
 					}
 					
+                    // De-(plitter about with) the block indices (the saving code doubles them because
+                    // the 7.0 blocks are always Unicode).
+                    newblock->SetRange(newblock->GetOffset()/2, newblock->GetLength()/2);
+                    
 					newblock->appendto(blocks);
 				}
 				break;
