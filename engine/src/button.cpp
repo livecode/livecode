@@ -274,7 +274,7 @@ MCPropertyInfo MCButton::kProperties[] =
 	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_HEIGHT, Int16, MCButton, FormattedHeight)
 	DEFINE_RW_OBJ_PROPERTY(P_DEFAULT, Bool, MCButton, Default)
 	DEFINE_RW_OBJ_PROPERTY(P_TEXT, String, MCButton, Text)
-	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TEXT, String, MCButton, Text)
+	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TEXT, BinaryString, MCButton, UnicodeText)
 	
 	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_ICON, InterfaceButtonIcon, MCButton, Icon)
 	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_ARMED_ICON, InterfaceButtonIcon, MCButton, ArmedIcon)
