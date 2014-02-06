@@ -1197,7 +1197,7 @@ void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 void MCField::GetLinkTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCStringRef& r_value)
 {
     bool t_mixed;
-    GetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetLinkText, false, (MCStringRef)nil, t_mixed, r_value);
+    GetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, si, &MCBlock::GetLinkText, false, (MCStringRef)nil, t_mixed, r_value);
 }
 
 void MCField::SetLinkTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCStringRef value)
@@ -1225,7 +1225,7 @@ void MCField::SetMetadataOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, in
 void MCField::GetMetadataOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCStringRef& r_value)
 {
     bool t_mixed;
-    GetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetMetadata, false, (MCStringRef)nil, t_mixed, r_value);
+    GetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, si, &MCBlock::GetMetadata, false, (MCStringRef)nil, t_mixed, r_value);
 }
 
 void MCField::SetMetadataOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCStringRef value)
@@ -1236,7 +1236,7 @@ void MCField::SetMetadataOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, in
 void MCField::GetImageSourceOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCStringRef& r_value)
 {
     bool t_mixed;
-    GetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetImageSource, false, (MCStringRef)nil, t_mixed, r_value);
+    GetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, p_part_id, si, si, &MCBlock::GetImageSource, false, (MCStringRef)nil, t_mixed, r_value);
 }
 
 void MCField::SetImageSourceOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCStringRef value)
@@ -1256,7 +1256,7 @@ void MCField::SetImageSourceOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id,
 void MCField::GetVisitedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_value)
 {
     bool t_mixed;
-    GetCharPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetVisited, false, false, t_mixed, r_value);
+    GetCharPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, p_part_id, si, si, &MCBlock::GetVisited, false, false, t_mixed, r_value);
 }
 
 void MCField::GetEncodingOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, intenum_t &r_encoding)
