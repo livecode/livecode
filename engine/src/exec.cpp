@@ -2030,8 +2030,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
         case kMCPropertyTypeLinesOfString:
         {
-            MCStringRef* t_value;
-            uindex_t t_count;
+            MCStringRef* t_value = nil;
+            uindex_t t_count = 0;
             ((void(*)(MCExecContext&, void *, uindex_t&, MCStringRef*&))prop -> getter)(ctxt, mark, t_count, t_value);
             if (!ctxt . HasError())
             {
