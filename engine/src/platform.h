@@ -701,6 +701,8 @@ void MCPlatformRaiseWindow(MCPlatformWindowRef window);
 void MCPlatformIconifyWindow(MCPlatformWindowRef window);
 void MCPlatformUniconifyWindow(MCPlatformWindowRef window);
 
+bool MCPlatformIsWindowVisible(MCPlatformWindowRef window);
+
 void MCPlatformSetWindowContentRect(MCPlatformWindowRef window, MCRectangle content_rect);
 void MCPlatformGetWindowContentRect(MCPlatformWindowRef window, MCRectangle& r_content_rect);
 
@@ -741,6 +743,10 @@ void MCPlatformSetWindowFloatProperty(MCPlatformWindowRef window, MCPlatformWind
 
 void MCPlatformMapPointFromWindowToScreen(MCPlatformWindowRef window, MCPoint window_point, MCPoint& r_screen_point);
 void MCPlatformMapPointFromScreenToWindow(MCPlatformWindowRef window, MCPoint screen_point, MCPoint& r_window_point);
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCPlatformConfigureBackdrop(MCPlatformWindowRef backdrop_window);
 
 ////////////////////////////////////////////////////////////////////////////////
 

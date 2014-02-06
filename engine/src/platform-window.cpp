@@ -100,11 +100,11 @@ void MCPlatformWindow::Show(void)
 	// Make sure the window has been created.
 	DoRealize();
 	
-	// Show the window.
-	DoShow();
-	
 	// Update the state.
 	m_is_visible = true;
+	
+	// Show the window.
+	DoShow();
 }
 
 void MCPlatformWindow::Hide(void)
@@ -113,11 +113,11 @@ void MCPlatformWindow::Hide(void)
 	if (!m_is_visible)
 		return;
 	
-	// Hide the window.
-	DoHide();
-	
 	// Update the state.
 	m_is_visible = false;
+	
+	// Hide the window.
+	DoHide();
 }
 
 void MCPlatformWindow::Focus(void)
@@ -179,6 +179,11 @@ void MCPlatformWindow::Uniconify(void)
 	
 	// Update the state.
 	m_is_iconified = false;
+}
+
+bool MCPlatformWindow::IsVisible(void)
+{
+	return m_is_visible;
 }
 
 void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatformPropertyType p_type, const void *p_value)
@@ -279,8 +284,6 @@ void MCPlatformWindow::GetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 	if (DoGetProperty(p_property, p_type, r_value))
 		return;
 	
-	assert(p_property == kMCPlatformWindowPropertyContentRect);
-	
 	switch(p_property)
 	{
 		case kMCPlatformWindowPropertyTitle:
@@ -289,6 +292,7 @@ void MCPlatformWindow::GetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			break;
 		case kMCPlatformWindowPropertyStyle:
 			assert(p_type == kMCPlatformPropertyTypeWindowStyle);
+			*(MCPlatformWindowStyle *)r_value = m_style;
 			break;
 		case kMCPlatformWindowPropertyOpacity:
 			assert(p_type == kMCPlatformPropertyTypeFloat);
@@ -495,6 +499,11 @@ void MCPlatformIconifyWindow(MCPlatformWindowRef p_window)
 void MCPlatformUniconifyWindow(MCPlatformWindowRef p_window)
 {
 	p_window -> Uniconify();
+}
+
+bool MCPlatformIsWindowVisible(MCPlatformWindowRef p_window)
+{
+	return p_window -> IsVisible();
 }
 
 //////////

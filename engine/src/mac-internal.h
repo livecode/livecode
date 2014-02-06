@@ -216,6 +216,7 @@ public:
 	void ProcessCloseRequest();
 	void ProcessDidMove(void);
 	void ProcessDidResize(void);
+	void ProcessWillMiniaturize(void);
 	void ProcessDidMiniaturize(void);
 	void ProcessDidDeminiaturize(void);
 	void ProcessDidBecomeKey(void);
@@ -232,6 +233,8 @@ public:
 	
 	void MapMCRectangleToNSRect(MCRectangle rect, NSRect& r_ns_rect);
 	void MapNSRectToMCRectangle(NSRect rect, MCRectangle& r_mc_rect);
+	
+	void SetBackdropWindow(MCPlatformWindowRef window);
 	
 protected:
 	virtual void DoRealize(void);
@@ -309,6 +312,10 @@ void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect rect, MCRectangle& r_rect)
 MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifiers);
 
 NSEvent *MCMacPlatformGetLastMouseEvent(void);
+
+void MCMacPlatformWindowFocusing(MCMacPlatformWindow *window);
+void MCMacPlatformWindowShowing(MCMacPlatformWindow *window);
+void MCMacPlatformWindowHiding(MCMacPlatformWindow *window);
 
 ////////////////////////////////////////////////////////////////////////////////
 

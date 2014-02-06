@@ -78,6 +78,11 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 	m_window -> ProcessDidMove();
 }
 
+- (void)windowWillMiniaturize:(NSNotification *)notification
+{
+	m_window -> ProcessWillMiniaturize();
+}
+
 - (void)windowDidMiniaturize:(NSNotification *)notification
 {
 	m_window -> ProcessDidMiniaturize();
@@ -90,6 +95,7 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
+	MCMacPlatformWindowFocusing(m_window);
 	m_window -> ProcessDidBecomeKey();
 }
 
@@ -666,6 +672,37 @@ MCWindowView *MCMacPlatformWindow::GetView(void)
 	return m_view;
 }
 
+void MCMacPlatformWindow::SetBackdropWindow(MCPlatformWindowRef p_window)
+{
+	if (m_window_handle == nil)
+		return;
+	
+	if (p_window == this)
+		return;
+	
+	// Any windows that float above everything don't need to be parented by the
+	// backdrop window.
+	if (m_style == kMCPlatformWindowStyleUtility ||
+		m_style == kMCPlatformWindowStylePopUp ||
+		m_style == kMCPlatformWindowStyleToolTip)
+		return;
+	
+	
+	MCMacPlatformWindow *t_backdrop;
+	t_backdrop = (MCMacPlatformWindow *)p_window;
+	if ([m_window_handle parentWindow] != nil)
+		[[m_window_handle parentWindow] removeChildWindow: m_window_handle];
+	
+	if (t_backdrop != nil &&
+		t_backdrop -> m_window_handle != nil)
+	{
+		NSInteger t_level;
+		t_level = [m_window_handle level];
+		[t_backdrop -> m_window_handle addChildWindow: m_window_handle ordered: NSWindowAbove];
+		[m_window_handle setLevel: t_level];
+	}
+}
+
 void MCMacPlatformWindow::MapMCPointToNSPoint(MCPoint p_location, NSPoint& r_location)
 {
 	r_location . x = p_location . x;
@@ -708,6 +745,15 @@ void MCMacPlatformWindow::ProcessDidResize(void)
 	ProcessDidMove();
 }
 
+void MCMacPlatformWindow::ProcessWillMiniaturize(void)
+{
+	// Unset the parent window to make sure things don't propagate.
+	if ([m_window_handle parentWindow] != nil)
+		[[m_window_handle parentWindow] removeChildWindow: m_window_handle];
+	
+	MCMacPlatformWindowHiding(this);
+}
+
 void MCMacPlatformWindow::ProcessDidMiniaturize(void)
 {
 	HandleIconify();
@@ -715,6 +761,7 @@ void MCMacPlatformWindow::ProcessDidMiniaturize(void)
 
 void MCMacPlatformWindow::ProcessDidDeminiaturize(void)
 {
+	MCMacPlatformWindowShowing(this);
 	HandleUniconify();
 }
 
@@ -901,10 +948,16 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
 void MCMacPlatformWindow::DoShow(void)
 {
 	[m_window_handle makeKeyAndOrderFront: nil];
+	MCMacPlatformWindowShowing(this);
 }
 
 void MCMacPlatformWindow::DoHide(void)
 {
+	// Unset the parent window to make sure things don't propagate.
+	if ([m_window_handle parentWindow] != nil)
+		[[m_window_handle parentWindow] removeChildWindow: m_window_handle];
+	
+	MCMacPlatformWindowHiding(this);
 	[m_window_handle orderOut: nil];
 }
 
@@ -915,6 +968,7 @@ void MCMacPlatformWindow::DoFocus(void)
 
 void MCMacPlatformWindow::DoRaise(void)
 {
+	MCMacPlatformWindowShowing(this);
 	[m_window_handle orderFront: nil];
 }
 

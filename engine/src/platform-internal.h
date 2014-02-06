@@ -63,6 +63,9 @@ public:
 	// Decrease the reference count on the window.
 	void Release(void);
 	
+	// Returns true if the window is being shown.
+	bool IsVisible(void);
+	
 	// Force an immediate update of the window's dirty region. Assuming there
 	// is updates to be made, this will cause an immediate redraw callback.
 	void Update(void);

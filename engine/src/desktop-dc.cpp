@@ -41,6 +41,8 @@
 #include "image.h"
 #include "field.h"
 #include "styledtext.h"
+#include "graphicscontext.h"
+#include "region.h"
 
 #include "desktop-dc.h"
 
@@ -125,6 +127,11 @@ Boolean MCScreenDC::open()
 	getdisplays(t_displays, false);
 	MCwbr = t_displays[0] . workarea;
 	
+	backdrop_enabled = false;
+	backdrop_pattern = nil;
+	MCPlatformCreateWindow(backdrop_window);
+	MCPlatformConfigureBackdrop(backdrop_window);
+
 	return True;
 }
 
@@ -454,21 +461,118 @@ Boolean MCScreenDC::uint4towindow(uint4, Window &w)
 	return False;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCScreenDC::seticon(uint4 p_icon)
+{
+}
+
+void MCScreenDC::seticonmenu(const char *p_menu)
+{
+}
+
+void MCScreenDC::configurestatusicon(uint32_t icon_id, const char *menu, const char *tooltip)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCScreenDC::enactraisewindows(void)
+{
+	// If the backdrop is already enabled, there is nothing to do.
+	if (backdrop_enabled)
+		return;
+	
+	// If raiseWindows mode is active and there is no backdrop then resize the
+	// backdrop window and set it.
+	if (MCraisewindows)
+	{
+		MCRectangle t_rect;
+		t_rect = MCRectangleMake(0, 0, 0, 0);
+		MCPlatformSetWindowProperty(backdrop_window, kMCPlatformWindowPropertyFrameRect, kMCPlatformPropertyTypeRectangle, &t_rect);
+		MCPlatformShowWindow(backdrop_window);
+	}
+	else
+	{
+		MCPlatformHideWindow(backdrop_window);
+	}
+}
 
 void MCScreenDC::enablebackdrop(bool p_hard)
 {
+	if (backdrop_enabled)
+		return;
+	
+	backdrop_enabled = true;
+	
+	MCRectangle t_rect;
+	MCPlatformGetScreenViewport(0, t_rect);
+	MCPlatformSetWindowProperty(backdrop_window, kMCPlatformWindowPropertyFrameRect, kMCPlatformPropertyTypeRectangle, &t_rect);
+	MCPlatformShowWindow(backdrop_window);
 }
 
 void MCScreenDC::disablebackdrop(bool p_hard)
 {
+	if (!backdrop_enabled)
+		return;
+	
+	backdrop_enabled = false;
+	
+	enactraisewindows();
 }
 
 void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge)
 {
+	backdrop_pattern = p_pattern;
+	backdrop_colour = p_colour;
+	
+	alloccolor(backdrop_colour);
+	
+	MCPlatformInvalidateWindow(backdrop_window, nil);
 }
 
 void MCScreenDC::assignbackdrop(Window_mode p_mode, Window p_window)
+{
+}
+
+//////////
+
+bool MCScreenDC::isbackdrop(MCPlatformWindowRef p_window)
+{
+	return backdrop_window == p_window;
+}
+
+void MCScreenDC::redrawbackdrop(MCPlatformSurfaceRef p_surface, MCRegionRef p_region)
+{
+	MCGContextRef t_context;
+	if (MCPlatformSurfaceLockGraphics(p_surface, p_region, t_context))
+	{
+		MCGraphicsContext *t_gfxcontext;
+		/* UNCHECKED */ t_gfxcontext = new MCGraphicsContext(t_context);
+		t_gfxcontext -> setforeground(backdrop_colour);
+		if (backdrop_pattern != NULL)
+			t_gfxcontext -> setfillstyle(FillTiled, backdrop_pattern, 0, 0);
+		else
+			t_gfxcontext -> setfillstyle(FillSolid, NULL, 0, 0);
+		t_gfxcontext -> fillrect(MCRegionGetBoundingBox(p_region), true);
+		delete t_gfxcontext;
+		
+		MCPlatformSurfaceUnlockGraphics(p_surface);
+	}
+}
+
+void MCScreenDC::mousedowninbackdrop(uint32_t p_button, uint32_t p_count)
+{
+	MCdefaultstackptr -> getcard() -> message_with_args(MCM_mouse_down_in_backdrop, p_button + 1);
+}
+
+void MCScreenDC::mouseupinbackdrop(uint32_t p_button, uint32_t p_count)
+{
+	MCdefaultstackptr -> getcard() -> message_with_args(MCM_mouse_up_in_backdrop, p_button + 1);
+}
+
+void MCScreenDC::mousereleaseinbackdrop(uint32_t p_button)
 {
 }
 

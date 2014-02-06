@@ -52,6 +52,11 @@ private:
 	uint2 beepduration;
 	Boolean menubarhidden;
 	
+	bool backdrop_enabled;
+	MCColor backdrop_colour;
+	MCPatternRef backdrop_pattern;
+	MCPlatformWindowRef backdrop_window;
+	
 public:
 	static MCDisplay *s_monitor_displays;
 	static uint4 s_monitor_count;
@@ -131,6 +136,11 @@ public:
 	virtual void activateIME(Boolean activate);
 	virtual void closeIME();
 	
+	virtual void seticon(uint4 p_icon);
+	virtual void seticonmenu(const char *p_menu);
+	virtual void configurestatusicon(uint32_t icon_id, const char *menu, const char *tooltip);
+	virtual void enactraisewindows(void);
+	
 	virtual void listprinters(MCExecPoint& ep);
 	virtual MCPrinter *createprinter(void);
 	
@@ -146,6 +156,14 @@ public:
 	
 	virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
 	virtual MCScriptEnvironment *createscriptenvironment(const char *p_language);
+	
+	//////////
+	
+	bool isbackdrop(MCPlatformWindowRef window);
+	void redrawbackdrop(MCPlatformSurfaceRef p_surface, MCRegionRef p_region);
+	void mousedowninbackdrop(uint32_t button, uint32_t count);
+	void mouseupinbackdrop(uint32_t button, uint32_t count);
+	void mousereleaseinbackdrop(uint32_t button);
 };
 
 #endif

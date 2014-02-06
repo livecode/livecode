@@ -570,6 +570,101 @@ void MCPlatformGetScreenWorkarea(uindex_t p_index, MCRectangle& r_workarea)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCPlatformWindowRef s_backdrop_window = nil;
+static MCMacPlatformWindow **s_visible_windows = nil;
+static uindex_t s_visible_window_count = 0;
+
+static void MCMacPlatformAddVisibleWindow(MCMacPlatformWindow *p_window)
+{
+	/* UNCHECKED */ MCMemoryResizeArray(s_visible_window_count + 1, s_visible_windows, s_visible_window_count);
+	s_visible_windows[s_visible_window_count - 1] = p_window;
+}
+
+static void MCMacPlatformRemoveVisibleWindow(MCMacPlatformWindow *p_window)
+{
+	for(uindex_t i = 0; i < s_visible_window_count; i++)
+		if (s_visible_windows[i] == p_window)
+		{
+			MCMemoryMove(s_visible_windows + i, s_visible_windows + i + 1, sizeof(MCMacPlatformWindow *) * (s_visible_window_count - i - 1));
+			s_visible_window_count -= 1;
+			break;
+		}
+}
+
+static void MCMacPlatformSyncBackdropForStyle(MCPlatformWindowStyle p_style)
+{
+	bool t_need_backdrop;
+	if (s_backdrop_window != nil)
+		t_need_backdrop = MCPlatformIsWindowVisible(s_backdrop_window);
+	else
+		t_need_backdrop = false;
+	
+	for(uindex_t i = 0; i < s_visible_window_count; i++)
+	{
+		MCPlatformWindowStyle t_style;
+		s_visible_windows[i] -> GetProperty(kMCPlatformWindowPropertyStyle, kMCPlatformPropertyTypeWindowStyle, &t_style);
+		if (t_style == p_style)
+			s_visible_windows[i] -> SetBackdropWindow(t_need_backdrop ? s_backdrop_window : nil);
+	}
+}
+
+static void MCMacPlatformSyncBackdrop(void)
+{
+	NSDisableScreenUpdates();
+	MCMacPlatformSyncBackdropForStyle(kMCPlatformWindowStyleDocument);
+	MCMacPlatformSyncBackdropForStyle(kMCPlatformWindowStylePalette);
+	MCMacPlatformSyncBackdropForStyle(kMCPlatformWindowStyleDialog);
+	NSEnableScreenUpdates();
+	/*bool t_need_backdrop;
+	if (s_backdrop_window != nil)
+		t_need_backdrop = MCPlatformIsWindowVisible(s_backdrop_window);
+	else
+		t_need_backdrop = false;
+	
+	for(uindex_t i = 0; i < s_visible_window_count; i++)
+		s_visible_windows[i] -> SetBackdropWindow(nil);
+	if (s_backdrop_window != nil)
+		for(index_t i = 0; i < s_visible_window_count; i++)
+			s_visible_windows[i] -> SetBackdropWindow(s_backdrop_window);*/
+}
+
+void MCPlatformConfigureBackdrop(MCPlatformWindowRef p_backdrop_window)
+{
+	if (s_backdrop_window != nil)
+	{
+		MCPlatformReleaseWindow(s_backdrop_window);
+		s_backdrop_window = nil;
+	}
+	
+	s_backdrop_window = p_backdrop_window;
+	
+	if (s_backdrop_window != nil)
+		MCPlatformRetainWindow(s_backdrop_window);
+	
+	MCMacPlatformSyncBackdrop();
+}
+
+void MCMacPlatformWindowFocusing(MCMacPlatformWindow *p_window)
+{
+	MCMacPlatformRemoveVisibleWindow(p_window);
+	MCMacPlatformAddVisibleWindow(p_window);
+	MCMacPlatformSyncBackdrop();
+}
+
+void MCMacPlatformWindowShowing(MCMacPlatformWindow *p_window)
+{
+	MCMacPlatformAddVisibleWindow(p_window);
+	MCMacPlatformSyncBackdrop();
+}
+
+void MCMacPlatformWindowHiding(MCMacPlatformWindow *p_window)
+{	
+	MCMacPlatformRemoveVisibleWindow(p_window);
+	MCMacPlatformSyncBackdrop();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Our mouse handling code relies on getting a stream of mouse move messages
 // with screen co-ordinates, and mouse press messages indicating button state
 // changes. As we need to handle things like mouse grabbing, and windows popping
@@ -655,6 +750,10 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
 	
 	// If the state is not different from the new state, do nothing.
 	if (p_new_state == t_state)
+		return;
+	
+	// If we are mouse downing with no window, then do nothing.
+	if (p_new_state && s_mouse_window == nil)
 		return;
 	
 	// Update the state.

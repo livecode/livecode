@@ -120,6 +120,12 @@ void MCPlatformHandleWindowReshape(MCPlatformWindowRef p_window)
 
 void MCPlatformHandleWindowRedraw(MCPlatformWindowRef p_window, MCPlatformSurfaceRef p_surface, MCRegionRef p_region)
 {
+	if (((MCScreenDC *)MCscreen) -> isbackdrop(p_window))
+	{
+		((MCScreenDC *)MCscreen) -> redrawbackdrop(p_surface, p_region);
+		return;
+	}
+		
 	MCdispatcher -> wredraw(p_window, p_surface, p_region);
 }
 
@@ -215,6 +221,12 @@ void MCPlatformHandleMouseMove(MCPlatformWindowRef p_window, MCPoint p_location)
 
 void MCPlatformHandleMouseDown(MCPlatformWindowRef p_window, uint32_t p_button, uint32_t p_count)
 {
+	if (((MCScreenDC *)MCscreen) -> isbackdrop(p_window))
+	{
+		((MCScreenDC *)MCscreen) -> mousedowninbackdrop(p_button, p_count);
+		return;
+	}
+	
 	MCStack *t_stack;
 	t_stack = MCdispatcher -> findstackd(p_window);
 	if (t_stack == nil)
@@ -248,6 +260,12 @@ void MCPlatformHandleMouseDown(MCPlatformWindowRef p_window, uint32_t p_button, 
 
 void MCPlatformHandleMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, uint32_t p_count)
 {
+	if (((MCScreenDC *)MCscreen) -> isbackdrop(p_window))
+	{
+		((MCScreenDC *)MCscreen) -> mouseupinbackdrop(p_button, p_count);
+		return;
+	}
+	
 	MCStack *t_stack;
 	t_stack = MCdispatcher -> findstackd(p_window);
 	if (t_stack == nil)
@@ -281,6 +299,12 @@ void MCPlatformHandleMouseDrag(MCPlatformWindowRef p_window, uint32_t p_button)
 
 void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_button)
 {
+	if (((MCScreenDC *)MCscreen) -> isbackdrop(p_window))
+	{
+		((MCScreenDC *)MCscreen) -> mousereleaseinbackdrop(p_button);
+		return;
+	}
+	
 	MCStack *t_stack;
 	t_stack = MCdispatcher -> findstackd(p_window);
 	if (t_stack == nil)
