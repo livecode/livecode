@@ -37,6 +37,7 @@ on process
 
   output "#include <stdlib.h>"
   output "#include <stdio.h>"
+  output "#include <cstring>"
   output
   output "#if defined(_MACOSX)"
   output "#include <mach-o/dyld.h>"
@@ -69,6 +70,35 @@ on process
   output "  module_t t_module;"
   output "#if defined(_MACOSX)"
   output "  t_module  = NSAddImage(p_source, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);"
+  -- MM-2014-02-06: [[ LipOpenSSL 1.0.1e ]] On Mac, if module cannot be found then look relative to current executable.
+  output "  if (t_module == NULL)"
+  output "  {"
+  output "    uint32_t t_buffer_size;"
+  output "    t_buffer_size = 0;"
+  output "    _NSGetExecutablePath(NULL, &t_buffer_size);"
+  output "    char *t_module_path;"
+  output "    t_module_path = (char *) malloc(t_buffer_size + strlen(p_source) + 1);"
+  output "    if (t_module_path != NULL)"
+  output "    {"
+  output "      if (_NSGetExecutablePath(t_module_path, &t_buffer_size) == 0)"
+  output "      {"
+  output "        char *t_last_slash;"
+  output "        t_last_slash = t_module_path + t_buffer_size;"
+  output "        for (uint32_t i = 0; i < t_buffer_size; i++)"
+  output "        {"
+  output "          if (*t_last_slash == '/')"
+  output "          {"
+  output "            *(t_last_slash + 1) = '\0';"
+  output "            break;"
+  output "          }"
+  output "          t_last_slash--;"
+  output "        }"
+  output "        strcat(t_module_path, p_source);"
+  output "        t_module = NSAddImage(t_module_path, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);"
+  output "      }"
+  output "      free(t_module_path);"
+  output "    }"
+  output "  }"
   output "#elif defined(TARGET_SUBPLATFORM_IPHONE)"
   output "  t_module = IOS_LoadModule(p_source);"
   output "#elif defined(_LINUX) || defined(TARGET_SUBPLATFORM_ANDROID)"
@@ -162,6 +192,7 @@ on generateModule pModule
   end repeat
 
   output "#else"
+
   output merge("  if (!module_load(MODULE_[[toUpper(pModule)]]_NAME, &module_[[pModule]]))")
   output "#endif"
 
