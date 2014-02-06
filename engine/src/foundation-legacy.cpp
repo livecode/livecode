@@ -692,7 +692,8 @@ bool MCValueIsEmpty(MCValueRef p_value)
             p_value == kMCEmptyArray ||
             (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString && MCStringIsEmpty((MCStringRef)p_value)) ||
             (MCValueGetTypeCode(p_value) == kMCValueTypeCodeName && MCNameIsEmpty((MCNameRef)p_value)) ||
-            (MCValueGetTypeCode(p_value) == kMCValueTypeCodeData && MCDataIsEmpty((MCDataRef)p_value));
+            (MCValueGetTypeCode(p_value) == kMCValueTypeCodeData && MCDataIsEmpty((MCDataRef)p_value)) ||
+            (MCValueGetTypeCode(p_value) == kMCValueTypeCodeList && MCListIsEmpty((MCListRef)p_value));
 }
 
 bool MCValueIsArray(MCValueRef p_value)
