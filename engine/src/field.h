@@ -237,6 +237,9 @@ public:
 
     template <typename T>
     friend void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, bool all, uint32_t p_part_id, findex_t si, findex_t ei, void (MCBlock::*p_setter)(MCExecContext&, typename T::arg_type), typename T::arg_type p_value);
+    
+    template <typename T>
+    friend void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCField *p_field, bool all, uint32_t p_part_id, findex_t si, findex_t ei, MCNameRef index, void (MCBlock::*p_setter)(MCExecContext&, MCNameRef, typename T::arg_type), typename T::arg_type p_value);
 
 	MCField();
 	MCField(const MCField &fref);
@@ -612,6 +615,7 @@ public:
 
     ////////// PROPERTY SUPPORT METHODS
 
+    void Relayout(bool reset, int4 xoffset, int4 yoffset);
 	void Redraw(bool reset = false, int4 xoffset = 0, int4 yoffset = 0);
     void UpdateScrollbars(void);
     
@@ -856,8 +860,8 @@ public:
     void SetTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t* p_value);
     void GetEffectiveTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t& r_value);
     
-    void GetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value);
+    void GetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool*& r_value);
     void GetEffectiveTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value);
-    void SetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool p_value);
+    void SetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool *p_value);
 };
 #endif

@@ -690,8 +690,10 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkMixedThunkSetOptionalString(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCStringRef)
 #define MCPropertyObjectChunkMixedListThunkSetItemsOfUInt(obj, mth) MCPropertyObjectChunkListThunkImp(obj, mth, uindex_t, uinteger_t*)
 
+#define MCPropertyObjectChunkMixedArrayThunkGetOptionalBool(obj, mth) MCPropertyObjectChunkMixedArrayThunkImp(obj, mth, bool&, bool*&)
 #define MCPropertyObjectChunkMixedArrayThunkGetBool(obj, mth) MCPropertyObjectChunkMixedArrayThunkImp(obj, mth, bool&, bool&)
-#define MCPropertyObjectChunkMixedArrayThunkSetBool(obj, mth) MCPropertyObjectChunkArrayThunkImp(obj, mth, bool)
+#define MCPropertyObjectChunkMixedArrayThunkSetOptionalBool(obj, mth) MCPropertyObjectChunkArrayThunkImp(obj, mth, bool*)
+
 //////////
 
 #define DEFINE_RW_PROPERTY(prop, type, module, tag) \

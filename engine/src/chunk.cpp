@@ -5813,7 +5813,7 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
             t_obj_chunk_index . chunk = t_obj_chunk . chunk;
             t_obj_chunk_index . mark = t_obj_chunk . mark;
             t_obj_chunk_index . index = index;
-            MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, r_value);
+            MCExecFetchProperty(ctxt, t_info, &t_obj_chunk_index, r_value);
         }
         else
             MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, r_value);

@@ -324,7 +324,8 @@ public:
     void GetBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
     void SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor &p_color);
 
-
+    void GetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool*& r_value);
+    void SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool p_value);
 
     //////////
 };

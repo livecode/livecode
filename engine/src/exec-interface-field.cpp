@@ -194,18 +194,23 @@ MCExecCustomTypeInfo *kMCInterfaceFlaggedRangesTypeInfo = &_kMCInterfaceFlaggedR
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCField::Redraw(bool reset, int4 xoffset, int4 yoffset)
+void MCField::Relayout(bool reset, int4 xoffset, int4 yoffset)
 {
-	if (!opened)
-		return;
+    do_recompute(reset);
     
-	do_recompute(reset);
 	if (reset)
 		resetparagraphs();
 	hscroll(xoffset, False);
 	vscroll(yoffset, False);
 	resetscrollbars(True);
+}
 
+void MCField::Redraw(bool reset, int4 xoffset, int4 yoffset)
+{
+	if (!opened)
+		return;
+
+    Relayout(reset, xoffset, yoffset);
 	// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 	layer_redrawall();
 }

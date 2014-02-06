@@ -180,6 +180,7 @@ struct MCInterfaceShadow;
 struct MCInterfaceTextStyle;
 struct MCInterfaceTriState;
 struct MCExecValue;
+struct MCInterfaceTextStyleElement;
 
 struct MCPatternInfo
 {
