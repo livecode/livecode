@@ -1378,9 +1378,7 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		ep.setboolean(getflag(F_WM_PLACE));
 		break;
 	case P_WINDOW_ID:
-		// COCOA-TODO: windowId property
-		//ep.setint(MCscreen->dtouint4(window));
-		ep.setint(0);
+		ep.setint(MCscreen->dtouint4((Drawable)window));
 		break;
 	case P_PIXMAP_ID:
 		ep.setint(0);

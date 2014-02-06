@@ -437,7 +437,16 @@ void MCScreenDC::setinputfocus(Window window)
 
 uint4 MCScreenDC::dtouint4(Drawable d)
 {
-	return 0;
+	if (d == nil)
+		return 0;
+	
+	MCPlatformWindowRef t_window;
+	t_window = (MCPlatformWindowRef)d;
+	
+	uint32_t t_id;
+	MCPlatformGetWindowProperty(t_window, kMCPlatformWindowPropertySystemId, kMCPlatformPropertyTypeUInt32, &t_id);
+	
+	return t_id;
 }
 
 Boolean MCScreenDC::uint4towindow(uint4, Window &w)

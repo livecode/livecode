@@ -729,6 +729,8 @@ enum MCPlatformWindowProperty
 	kMCPlatformWindowPropertyHasModifiedMark,
 
 	kMCPlatformWindowPropertyUseLiveResizing,
+	
+	kMCPlatformWindowPropertySystemId,
 };
 
 void MCPlatformSetWindowProperty(MCPlatformWindowRef window, MCPlatformWindowProperty property, MCPlatformPropertyType type, const void *value);

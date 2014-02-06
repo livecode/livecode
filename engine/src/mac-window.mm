@@ -881,13 +881,20 @@ void MCMacPlatformWindow::DoSynchronize(void)
 	m_synchronizing = false;
 }
 
-bool MCMacPlatformWindow::DoSetProperty(MCPlatformWindowProperty property, MCPlatformPropertyType type, const void *value)
+bool MCMacPlatformWindow::DoSetProperty(MCPlatformWindowProperty p_property, MCPlatformPropertyType p_type, const void *value)
 {
 	return false;
 }
 
-bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty property, MCPlatformPropertyType type, void *r_value)
+bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCPlatformPropertyType p_type, void *r_value)
 {
+	switch(p_property)
+	{
+		case kMCPlatformWindowPropertySystemId:
+			assert(p_type == kMCPlatformPropertyTypeUInt32);
+			*(uint32_t *)r_value = m_window_handle != nil ? [m_window_handle windowNumber] : 0;
+			return true;
+	}
 	return false;
 }
 
