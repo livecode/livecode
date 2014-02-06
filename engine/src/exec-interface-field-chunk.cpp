@@ -467,8 +467,8 @@ template<typename T> void SetParagraphPropOfCharChunk(MCExecContext& ctxt, MCFie
     sptr -> defrag();
 
     MCRectangle drect = p_field -> getrect();
-    findex_t ssi = 0;
-    findex_t sei = 0;
+    findex_t ssi, sei;
+    p_field -> selectedmark(false, ssi, sei, false, false);
     int4 savex = p_field -> textx;
     int4 savey = p_field -> texty;
 
