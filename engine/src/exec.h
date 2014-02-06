@@ -381,6 +381,44 @@ template<typename O, typename A, typename B, typename C, void (O::*Method)(MCExe
 	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> part_id, t_si, t_ei, mixed, count, arg);
 }
 
+template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, MCNameRef, uint32_t, int32_t, int32_t, bool&, A)> inline void MCPropertyObjectChunkMixedArrayThunk(MCExecContext& ctxt, MCObjectChunkIndexPtr *obj, B mixed, A arg)
+{
+    int32_t t_si, t_ei;
+    
+    if (obj -> object -> gettype() == CT_FIELD)
+    {
+        t_si = 0;
+        t_ei = INT32_MAX;
+        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+    }
+    else
+    {
+        t_si = obj -> mark . start;
+        t_ei = obj -> mark . finish;
+    }
+    
+	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> index, obj -> part_id, t_si, t_ei, mixed, arg);
+}
+
+template<typename O, typename A, void (O::*Method)(MCExecContext&, MCNameRef, uint32_t, int32_t, int32_t, A)> inline void MCPropertyObjectChunkArrayThunk(MCExecContext& ctxt, MCObjectChunkIndexPtr *obj, A arg)
+{
+    int32_t t_si, t_ei;
+    
+    if (obj -> object -> gettype() == CT_FIELD)
+    {
+        t_si = 0;
+        t_ei = INT32_MAX;
+        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+    }
+    else
+    {
+        t_si = obj -> mark . start;
+        t_ei = obj -> mark . finish;
+    }
+    
+	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> index, obj -> part_id, t_si, t_ei, arg);
+}
+
 template<typename A, void Method(MCExecContext&, MCNameRef, A)> inline void MCPropertyArrayThunk(MCExecContext& ctxt, MCNameRef index, A arg)
 {
     Method(ctxt, index, arg);
@@ -474,6 +512,9 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkListThunkImp(obj, mth, count, typ) (void(*)(MCExecContext&,MCObjectChunkPtr*,count,typ))MCPropertyObjectChunkListThunk<obj,typ,count,&obj::mth>
 #define MCPropertyObjectChunkMixedThunkImp(obj, mth, mixed, typ) (void(*)(MCExecContext&,MCObjectChunkPtr*,mixed,typ))MCPropertyObjectChunkMixedThunk<obj,typ,mixed,&obj::mth>
 #define MCPropertyObjectChunkMixedListThunkImp(obj, mth, mixed, count, typ) (void(*)(MCExecContext&,MCObjectChunkPtr*,mixed,count,typ))MCPropertyObjectChunkMixedListThunk<obj,typ,count,mixed,&obj::mth>
+
+#define MCPropertyObjectChunkMixedArrayThunkImp(obj, mth, mixed, typ) (void(*)(MCExecContext&,MCObjectChunkIndexPtr*,mixed,typ))MCPropertyObjectChunkMixedArrayThunk<obj,typ,mixed,&obj::mth>
+#define MCPropertyObjectChunkArrayThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectChunkIndexPtr*,typ))MCPropertyObjectChunkArrayThunk<obj,typ,&obj::mth>
 
 #define MCPropertyObjectThunkGetAny(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCValueRef&)
 #define MCPropertyObjectThunkGetBool(obj, mth) MCPropertyObjectThunkImp(obj, mth, bool&)
@@ -649,6 +690,8 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkMixedThunkSetOptionalString(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCStringRef)
 #define MCPropertyObjectChunkMixedListThunkSetItemsOfUInt(obj, mth) MCPropertyObjectChunkListThunkImp(obj, mth, uindex_t, uinteger_t*)
 
+#define MCPropertyObjectChunkMixedArrayThunkGetBool(obj, mth) MCPropertyObjectChunkMixedArrayThunkImp(obj, mth, bool&, bool&)
+#define MCPropertyObjectChunkMixedArrayThunkSetBool(obj, mth) MCPropertyObjectChunkArrayThunkImp(obj, mth, bool)
 //////////
 
 #define DEFINE_RW_PROPERTY(prop, type, module, tag) \
@@ -844,6 +887,14 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 
 #define DEFINE_RO_OBJ_CHAR_CHUNK_EFFECTIVE_MIXED_PROPERTY(prop, type, obj, tag) \
 { prop, true, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGet##type(obj, GetEffective##tag##OfCharChunk), nil, true, false, kMCPropertyInfoChunkTypeChar },
+
+//
+
+#define DEFINE_RW_OBJ_CHAR_CHUNK_NON_EFFECTIVE_MIXED_ARRAY_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedArrayThunkGet##type(obj, Get##tag##OfCharChunk), (void *)MCPropertyObjectChunkMixedArrayThunkSet##type(obj, Set##tag##OfCharChunk), true, true, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_RO_OBJ_CHAR_CHUNK_EFFECTIVE_MIXED_ARRAY_PROPERTY(prop, type, obj, tag) \
+{ prop, true, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedArrayThunkGet##type(obj, GetEffective##tag##OfCharChunk), nil, true, true, kMCPropertyInfoChunkTypeChar },
 
 //
 

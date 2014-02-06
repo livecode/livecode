@@ -1907,6 +1907,30 @@ void MCField::SetTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, i
     SetCharPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<integer_t> > >(ctxt, this, true, p_part_id, si, ei, &MCBlock::SetTextShift, p_value);
 }
 
+void MCField::GetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value)
+{
+    //GetCharPropOfCharChunk< PodFieldPropType<MCInterfaceTextStyle> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetTextStyle, false, r_value, r_mixed, r_value);
+}
+
+void MCField::GetEffectiveTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value)
+{
+ /*   MCInterfaceTextStyle t_value;
+    GetCharPropOfCharChunk< PodFieldPropType<MCInterfaceTextStyle> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetTextStyle, false, t_value, r_mixed, t_value);
+    
+    if (r_mixed)
+        return;
+    
+    if (t_value . style == 0)
+        GetTextStyle(ctxt, t_value);
+    else
+        r_value = t_value; */
+}
+
+void MCField::SetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool p_value)
+{
+    //SetCharPropOfCharChunk< PodFieldPropType<MCInterfaceTextStyle> >(ctxt, this, false, p_part_id, si, ei, &MCBlock::SetTextStyle, p_value);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCParagraph::GetEncoding(MCExecContext &ctxt, intenum_t &r_encoding)

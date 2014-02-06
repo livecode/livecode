@@ -855,5 +855,9 @@ public:
 	void GetTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t*& r_value);
     void SetTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t* p_value);
     void GetEffectiveTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t& r_value);
+    
+    void GetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value);
+    void GetEffectiveTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value);
+    void SetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool p_value);
 };
 #endif

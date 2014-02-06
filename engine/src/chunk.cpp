@@ -5778,19 +5778,26 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         return false;
 
     MCPropertyInfo *t_info;
+    
     if (t_obj_chunk . chunk == CT_UNDEFINED)
 		return t_obj_chunk . object -> getprop(ctxt, t_obj_chunk . part_id, which, index, effective, r_value);
     else
-	{
+	{        
 		if (t_obj_chunk . object->gettype() != CT_FIELD)
 		{
 			MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
 			return false;
 		}
-        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, islinechunk() ? kMCPropertyInfoChunkTypeLine : kMCPropertyInfoChunkTypeChar);
+        
+        // MW-2011-11-23: [[ Array Chunk Props ]] If index is nil or empty, then its just a normal
+        //   prop, else its an array prop.
+        bool t_is_array_prop;
+        t_is_array_prop = (index != nil && !MCNameIsEmpty(index));
+        
+        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, islinechunk() ? kMCPropertyInfoChunkTypeLine : kMCPropertyInfoChunkTypeChar);
         
         if (islinechunk() && t_info == nil)
-            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, kMCPropertyInfoChunkTypeChar);
+            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeChar);
         
         if (t_info == nil || t_info -> getter == nil)
         {
@@ -5798,7 +5805,18 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
             return false;
         }
         
-        MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, r_value);
+        if (t_is_array_prop)
+        {
+            MCObjectChunkIndexPtr t_obj_chunk_index;
+            t_obj_chunk_index . object = t_obj_chunk . object;
+            t_obj_chunk_index . part_id = t_obj_chunk . part_id;
+            t_obj_chunk_index . chunk = t_obj_chunk . chunk;
+            t_obj_chunk_index . mark = t_obj_chunk . mark;
+            t_obj_chunk_index . index = index;
+            MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, r_value);
+        }
+        else
+            MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, r_value);
 	}
     
     return !ctxt . HasError();
@@ -5812,6 +5830,7 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         return false;
     
     MCPropertyInfo *t_info;
+    
     if (t_obj_chunk . chunk == CT_UNDEFINED)
 		return t_obj_chunk . object -> setprop(ctxt, t_obj_chunk . part_id, which, index, effective, p_value);
     else
@@ -5819,24 +5838,42 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         if (t_obj_chunk . object -> gettype() != CT_FIELD)
         {
             MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
-            return ES_ERROR;
+            return false;
         }
     
-        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, islinechunk() ? kMCPropertyInfoChunkTypeLine : kMCPropertyInfoChunkTypeChar);
+        // MW-2011-11-23: [[ Array Chunk Props ]] If index is nil or empty, then its just a normal
+        //   prop, else its an array prop.
+        bool t_is_array_prop;
+        t_is_array_prop = (index != nil && !MCNameIsEmpty(index));
+        
+        t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, islinechunk() ? kMCPropertyInfoChunkTypeLine : kMCPropertyInfoChunkTypeChar);
         if (islinechunk() && t_info == nil)
-            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, false, kMCPropertyInfoChunkTypeChar);
+            t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeChar);
         
         if (t_info == nil || t_info -> getter == nil)
         {
             MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
             return false;
         }
+        
         // MW-2011-11-23: [[ Array TextStyle ]] Pass the 'index' along to method to
         //   handle specific styles.
         // MW-2012-01-25: [[ ParaStyles ]] Pass whether this was an explicit line chunk
         //   or not. This is used to disambiguate the setting of 'backColor'.
         
-        MCExecStoreProperty(ctxt, t_info, &t_obj_chunk, p_value);
+        if (t_is_array_prop)
+        {
+            MCObjectChunkIndexPtr t_obj_chunk_index;
+            t_obj_chunk_index . object = t_obj_chunk . object;
+            t_obj_chunk_index . part_id = t_obj_chunk . part_id;
+            t_obj_chunk_index . chunk = t_obj_chunk . chunk;
+            t_obj_chunk_index . mark = t_obj_chunk . mark;
+            t_obj_chunk_index . index = index;
+            
+            MCExecStoreProperty(ctxt, t_info, &t_obj_chunk_index, p_value);
+        }
+        else
+            MCExecStoreProperty(ctxt, t_info, &t_obj_chunk, p_value);
     }
     
     if (!ctxt . HasError())
@@ -6056,6 +6093,7 @@ bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
 
     if (ctxt . HasError())
     {
+        MCValueRelease(r_chunk . mark . text);
         ctxt . LegacyThrow(EE_CHUNK_CANTMARK);
         return false;
     }

@@ -3943,6 +3943,10 @@ void MCObject::SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool 
 			t_style_set = gettextstyle();
         
         MCF_changetextstyle(t_style_set, t_style, p_setting);
+        
+        MCInterfaceTextStyle t_style;
+        t_style . style = t_style_set;
+        SetTextStyle(ctxt, t_style);
         return;
     }
     
