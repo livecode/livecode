@@ -107,6 +107,34 @@ void MCPlatformWindow::Show(void)
 	DoShow();
 }
 
+void MCPlatformWindow::ShowAsSheet(MCPlatformWindowRef p_parent)
+{
+	// If the window is already visible, do nothing.
+	if (m_is_visible)
+		return;
+	
+	// If the parent isn't visible, or isn't a suitable parent then
+	// dispatch a close event.
+	if (!p_parent -> m_is_visible ||
+		(p_parent -> m_style != kMCPlatformWindowStyleDocument &&
+		 p_parent -> m_style != kMCPlatformWindowStyleDialog &&
+		 p_parent -> m_style != kMCPlatformWindowStylePalette &&
+		 p_parent -> m_style != kMCPlatformWindowStyleUtility))
+	{
+		MCPlatformCallbackSendWindowClose(this);
+		return;
+	}
+		
+	// Make sure the window has been created.
+	DoRealize();
+	
+	// Update the state.
+	m_is_visible = true;
+	
+	// Show the window.
+	DoShowAsSheet(p_parent);
+}
+
 void MCPlatformWindow::Hide(void)
 {
 	// Do nothing if the window is not visible.
@@ -474,6 +502,11 @@ void MCPlatformInvalidateWindow(MCPlatformWindowRef p_window, MCRegionRef p_regi
 void MCPlatformShowWindow(MCPlatformWindowRef p_window)
 {
 	p_window -> Show();
+}
+
+void MCPlatformShowWindowAsSheet(MCPlatformWindowRef p_window, MCPlatformWindowRef p_parent_window)
+{
+	p_window -> ShowAsSheet(p_parent_window);
 }
 
 void MCPlatformHideWindow(MCPlatformWindowRef p_window)

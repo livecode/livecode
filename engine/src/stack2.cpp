@@ -1739,8 +1739,8 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 				parentptr = MCtopstackptr;
 		}
 
-		extern bool MCMacIsWindowVisible(Window window);
-		if (parentptr == NULL || parentptr -> getwindow() == NULL || !MCMacIsWindowVisible(parentptr -> getwindow()))
+		extern bool MCPlatformIsWindowVisible(MCPlatformWindowRef window);
+		if (parentptr == NULL || parentptr -> getwindow() == NULL || !MCPlatformIsWindowVisible(parentptr -> getwindow()))
 			wm = WM_MODAL;
 	}
 #endif

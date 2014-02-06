@@ -246,6 +246,7 @@ protected:
 	virtual bool DoGetProperty(MCPlatformWindowProperty property, MCPlatformPropertyType type, void *r_value);
 	
 	virtual void DoShow(void);
+	virtual void DoShowAsSheet(MCPlatformWindowRef parent);
 	virtual void DoHide(void);
 	virtual void DoFocus(void);
 	virtual void DoRaise(void);
@@ -276,6 +277,9 @@ private:
 		// When set to true, the window's properties are being synced. This
 		// stops events being propagated for state changes caused by script.
 		bool m_synchronizing : 1;
+		
+		// When set to true, the window has a sheet.
+		bool m_has_sheet : 1;
 	};
 	
 	// A window might map to one of several different classes, so we use a
@@ -286,6 +290,9 @@ private:
 		NSWindow *m_window_handle;
 		NSPanel *m_panel_handle;
 	};
+	
+	// The parent pointer for sheets and drawers.
+	MCPlatformWindowRef m_parent;
 	
 	friend class MCMacPlatformSurface;
 };

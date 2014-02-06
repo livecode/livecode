@@ -11,6 +11,7 @@ void MCPlatformHandleApplicationRun(void);
 void MCPlatformHandleScreenParametersChanged(void);
 
 void MCPlatformHandleWindowCloseRequest(MCPlatformWindowRef window);
+void MCPlatformHandleWindowClose(MCPlatformWindowRef window);
 void MCPlatformHandleWindowIconify(MCPlatformWindowRef window);
 void MCPlatformHandleWindowUniconify(MCPlatformWindowRef window);
 void MCPlatformHandleWindowReshape(MCPlatformWindowRef window);
@@ -78,6 +79,12 @@ void MCPlatformCallbackSendWindowCloseRequest(MCPlatformWindowRef p_window)
 {
 	MCLog("Window(%p) -> CloseRequest()", p_window);
 	MCPlatformHandleWindowCloseRequest(p_window);
+}
+
+void MCPlatformCallbackSendWindowClose(MCPlatformWindowRef p_window)
+{
+	MCLog("Window(%p) -> Close()", p_window);
+	MCPlatformHandleWindowClose(p_window);
 }
 
 void MCPlatformCallbackSendWindowReshape(MCPlatformWindowRef p_window, MCRectangle p_new_content)

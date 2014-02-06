@@ -403,7 +403,19 @@ bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 
 void MCScreenDC::openwindow(Window w, Boolean override)
 {
-	MCPlatformShowWindow(w);
+	MCStack *t_stack;
+	t_stack = MCdispatcher -> findstackd(w);
+	if (t_stack == nil)
+		return;
+	
+	MCPlatformWindowRef t_parent;
+	if (t_stack != nil)
+		t_parent = t_stack -> getparentwindow();
+		
+	if (t_stack -> getmode() != WM_SHEET)
+		MCPlatformShowWindow(w);
+	else
+		MCPlatformShowWindowAsSheet(w, t_parent);
 }
 
 void MCScreenDC::closewindow(Window window)

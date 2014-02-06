@@ -75,6 +75,7 @@ public:
 	
 	// Make the window visible as the given class.
 	void Show(void);
+	void ShowAsSheet(MCPlatformWindowRef parent);
 	
 	// Make the window invisible.
 	void Hide(void);
@@ -129,6 +130,7 @@ public:
 	virtual bool DoGetProperty(MCPlatformWindowProperty property, MCPlatformPropertyType type, void *r_value) = 0;
 	
 	virtual void DoShow(void) = 0;
+	virtual void DoShowAsSheet(MCPlatformWindowRef parent) = 0;
 	virtual void DoHide(void) = 0;
 	virtual void DoFocus(void) = 0;
 	virtual void DoRaise(void) = 0;
@@ -185,8 +187,6 @@ protected:
 		bool m_is_focused : 1;
 		bool m_is_iconified : 1;
 	};
-	MCPlatformWindowRef m_parent_window;
-	MCPlatformWindowEdge m_parent_window_edge;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -199,6 +199,7 @@ void MCPlatformCallbackSendApplicationRun(void);
 void MCPlatformCallbackSendScreenParametersChanged(void);
 
 void MCPlatformCallbackSendWindowCloseRequest(MCPlatformWindowRef window);
+void MCPlatformCallbackSendWindowClose(MCPlatformWindowRef window);
 void MCPlatformCallbackSendWindowReshape(MCPlatformWindowRef window, MCRectangle new_content);
 void MCPlatformCallbackSendWindowRedraw(MCPlatformWindowRef window, MCPlatformSurfaceRef surface, MCRegionRef dirty_rgn);
 void MCPlatformCallbackSendWindowIconify(MCPlatformWindowRef window);

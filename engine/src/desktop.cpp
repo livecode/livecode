@@ -114,6 +114,18 @@ void MCPlatformHandleWindowCloseRequest(MCPlatformWindowRef p_window)
 	MCdispatcher -> wclose(p_window);
 }
 
+void MCPlatformHandleWindowClose(MCPlatformWindowRef p_window)
+{
+	MCStack *t_stack;
+	t_stack = MCdispatcher -> findstackd(p_window);
+	if (t_stack == nil)
+		return;
+	
+	t_stack -> kunfocus();
+	t_stack -> close();
+	t_stack -> checkdestroy();
+}
+
 void MCPlatformHandleWindowReshape(MCPlatformWindowRef p_window)
 {
 	MCdispatcher -> wreshape(p_window);

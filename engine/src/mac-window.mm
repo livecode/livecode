@@ -95,13 +95,19 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
-	MCMacPlatformWindowFocusing(m_window);
+	// COCOA-TODO: Sort out window backdrop management
+	//MCMacPlatformWindowFocusing(m_window);
 	m_window -> ProcessDidBecomeKey();
 }
 
 - (void)windowDidResignKey:(NSNotification *)notification
 {
 	m_window -> ProcessDidResignKey();
+}
+
+- (void)didEndSheet: (NSWindow *)sheet returnCode: (NSInteger)returnCode contextInfo: (void *)info
+{
+	NSLog(@"Didendsheet");
 }
 
 @end
@@ -663,6 +669,9 @@ MCMacPlatformWindow::MCMacPlatformWindow(void)
 	
 	m_shadow_changed = false;
 	m_synchronizing = false;
+	m_has_sheet = false;
+	
+	m_parent = nil;
 }
 
 MCMacPlatformWindow::~MCMacPlatformWindow(void)
@@ -977,9 +986,39 @@ void MCMacPlatformWindow::DoShow(void)
 	}
 }
 
+void MCMacPlatformWindow::DoShowAsSheet(MCPlatformWindowRef p_parent)
+{
+	if (p_parent == nil)
+		return;
+	
+	MCMacPlatformWindow *t_parent;
+	t_parent = (MCMacPlatformWindow *)p_parent;
+	
+	if (t_parent -> m_has_sheet)
+	{
+		m_is_visible = false;
+		MCPlatformCallbackSendWindowClose(this);
+		return;
+	}
+
+	m_parent = t_parent;
+	m_parent -> Retain();
+	((MCMacPlatformWindow *)m_parent) -> m_has_sheet = true;
+	
+	[NSApp beginSheet: m_window_handle modalForWindow: t_parent -> m_window_handle modalDelegate: m_delegate didEndSelector: @selector(didEndSheet:returnCode:contextInfo:) contextInfo: nil];
+}
+
 void MCMacPlatformWindow::DoHide(void)
 {
-	if (m_style == kMCPlatformWindowStyleDialog)
+	if (m_parent != nil)
+	{
+		[NSApp endSheet: m_window_handle];
+		[m_window_handle orderOut: nil];
+		((MCMacPlatformWindow *)m_parent) -> m_has_sheet = false;
+		m_parent -> Release();
+		m_parent = nil;
+	}
+	else if (m_style == kMCPlatformWindowStyleDialog)
 	{
 		MCMacPlatformEndModalSession(this);
 	}
