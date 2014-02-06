@@ -380,6 +380,7 @@ template<typename T> struct OptionalFieldPropType
     static void input(typename T::value_type p_value, stack_type& r_value)
     {
         T::assign(r_value . value, p_value);
+        r_value . value_ptr = &r_value . value;
     }
 
     static void init(stack_type& self)
@@ -440,6 +441,7 @@ template<typename T> struct OptionalFieldArrayPropType
     static void input(typename T::value_type p_value, stack_type& r_value)
     {
         T::assign(r_value . value, p_value);
+        r_value . value_ptr = &r_value . value;
     }
     
     static void init(stack_type& self)
@@ -527,10 +529,10 @@ template<typename T> void GetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
     typename T::stack_type t_default_value;
     
     T::init(t_value);
+    T::init(t_default_value);
     
     if (is_effective)
     {
-        T::init(t_default_value);
         T::input(parent_value, t_default_value);
     }
     
@@ -614,7 +616,7 @@ template<typename T> void GetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
     
     r_mixed = false;
     
-    if (t_first_set)
+    if (t_first_set && is_effective)
         T::output(t_value, r_value);
     else
         T::output(t_default_value, r_value);
@@ -635,12 +637,10 @@ template<typename T> void GetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
     typename T::stack_type t_default_value;
     
     T::init(t_value);
+    T::init(t_default_value);
     
     if (is_effective)
-    {
-        T::init(t_default_value);
         T::input(parent_value, t_default_value);
-    }
     
     bool t_mixed;
     t_mixed = false;
@@ -722,7 +722,7 @@ template<typename T> void GetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
     
     r_mixed = false;
     
-    if (t_first_set)
+    if (t_first_set && is_effective)
         T::output(t_value, r_value);
     else
         T::output(t_default_value, r_value);

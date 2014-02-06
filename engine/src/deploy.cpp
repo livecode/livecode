@@ -663,7 +663,7 @@ void MCIdeDiet::exec_ctxt(MCExecContext& ctxt)
 	if (!ctxt . HasError())
 		if (!ctxt.CopyOptElementAsBoolean(*t_array, MCNAME("keep_x86_64"), false, t_params.keep_x86_64))
 			ctxt . Throw();
-	if (!ctxt . HasError());
+	if (!ctxt . HasError())
 		if (!ctxt.CopyOptElementAsBoolean(*t_array, MCNAME("keep_ppc"), false, t_params.keep_ppc))
 			ctxt . Throw();
 	if (!ctxt . HasError())
