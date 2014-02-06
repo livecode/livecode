@@ -667,6 +667,9 @@ MCMacPlatformWindow::MCMacPlatformWindow(void)
 
 MCMacPlatformWindow::~MCMacPlatformWindow(void)
 {
+	if (m_is_visible)
+		MCMacPlatformWindowHiding(this);
+	
 	[m_view release];
 	[m_handle release];
 	[m_delegate release];
@@ -679,6 +682,11 @@ MCWindowView *MCMacPlatformWindow::GetView(void)
 	return m_view;
 }
 
+id MCMacPlatformWindow::GetHandle(void)
+{
+	return m_handle;
+}
+
 void MCMacPlatformWindow::SetBackdropWindow(MCPlatformWindowRef p_window)
 {
 	if (m_window_handle == nil)
@@ -689,7 +697,8 @@ void MCMacPlatformWindow::SetBackdropWindow(MCPlatformWindowRef p_window)
 	
 	// Any windows that float above everything don't need to be parented by the
 	// backdrop window.
-	if (m_style == kMCPlatformWindowStyleUtility ||
+	if (m_style == kMCPlatformWindowStyleDialog ||
+		m_style == kMCPlatformWindowStyleUtility ||
 		m_style == kMCPlatformWindowStylePopUp ||
 		m_style == kMCPlatformWindowStyleToolTip)
 		return;
@@ -959,18 +968,30 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
 
 void MCMacPlatformWindow::DoShow(void)
 {
-	[m_window_handle makeKeyAndOrderFront: nil];
-	MCMacPlatformWindowShowing(this);
+	if (m_style == kMCPlatformWindowStyleDialog)
+		MCMacPlatformBeginModalSession(this);
+	else
+	{
+		[m_window_handle makeKeyAndOrderFront: nil];
+		MCMacPlatformWindowShowing(this);
+	}
 }
 
 void MCMacPlatformWindow::DoHide(void)
 {
-	// Unset the parent window to make sure things don't propagate.
-	if ([m_window_handle parentWindow] != nil)
-		[[m_window_handle parentWindow] removeChildWindow: m_window_handle];
+	if (m_style == kMCPlatformWindowStyleDialog)
+	{
+		MCMacPlatformEndModalSession(this);
+	}
+	else
+	{
+		// Unset the parent window to make sure things don't propagate.
+		if ([m_window_handle parentWindow] != nil)
+			[[m_window_handle parentWindow] removeChildWindow: m_window_handle];
 	
-	MCMacPlatformWindowHiding(this);
-	[m_window_handle orderOut: nil];
+		MCMacPlatformWindowHiding(this);
+		[m_window_handle orderOut: nil];
+	}
 }
 
 void MCMacPlatformWindow::DoFocus(void)

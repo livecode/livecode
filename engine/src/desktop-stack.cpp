@@ -133,6 +133,8 @@ void MCStack::realize(void)
 				t_has_closebox = true;
 				t_has_collapsebox = true;
 			}
+			else if (t_window_style == kMCPlatformWindowStyleDialog)
+				t_has_titlebox = true;
 		}
 		
 		if (getflag(F_DECORATIONS) && ((decorations & (WD_TITLE | WD_MENU | WD_CLOSE | WD_MINIMIZE | WD_MAXIMIZE)) == 0))

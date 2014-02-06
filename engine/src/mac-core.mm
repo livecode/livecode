@@ -291,6 +291,16 @@ static CFRunLoopObserverRef s_observer = nil;
 static bool s_in_blocking_wait = false;
 static bool s_wait_broken = false;
 
+struct MCModalSession
+{
+	NSModalSession session;
+	MCMacPlatformWindow *window;
+	bool is_done;
+};
+
+static MCModalSession *s_modal_sessions = nil;
+static uindex_t s_modal_session_count = 0;
+
 enum
 {
 	kMCMacPlatformBreakEvent = 0,
@@ -348,15 +358,21 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	s_in_blocking_wait = true;
 	s_wait_broken = false;
 	
+	bool t_modal;
+	t_modal = s_modal_session_count > 0;
+	
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
+	
+	if (t_modal)
+		[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
 	
 	NSEvent *t_event;
 	t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
 								 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
-									inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
+									inMode: p_blocking ? NSEventTrackingRunLoopMode : (t_modal ? NSModalPanelRunLoopMode : NSDefaultRunLoopMode)
 								   dequeue: YES];
-
+	
 	s_in_blocking_wait = false;
 
 	if (t_event != nil)
@@ -383,6 +399,43 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	
 	return t_event != nil;
 }
+
+
+void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
+{
+	/* UNCHECKED */ MCMemoryResizeArray(s_modal_session_count + 1, s_modal_sessions, s_modal_session_count);
+	
+	s_modal_sessions[s_modal_session_count - 1] . is_done = false;
+	s_modal_sessions[s_modal_session_count - 1] . window = p_window;
+	p_window -> Retain();
+	s_modal_sessions[s_modal_session_count - 1] . session = [NSApp beginModalSessionForWindow: (NSWindow *)(p_window -> GetHandle())];
+}
+
+void MCMacPlatformEndModalSession(MCMacPlatformWindow *p_window)
+{
+	uindex_t t_index;
+	for(t_index = 0; t_index < s_modal_session_count; t_index++)
+		if (s_modal_sessions[t_index] . window == p_window)
+			break;
+	
+	if (t_index == s_modal_session_count)
+		return;
+	
+	s_modal_sessions[t_index] . is_done = true;
+	
+	for(uindex_t t_final_index = s_modal_session_count; t_final_index > 0; t_final_index--)
+	{
+		if (!s_modal_sessions[t_final_index - 1] . is_done)
+			return;
+		
+		[NSApp endModalSession: s_modal_sessions[t_final_index - 1] . session];
+		[s_modal_sessions[t_final_index - 1] . window -> GetHandle() orderOut: nil];
+		s_modal_sessions[t_final_index - 1] . window -> Release();
+		s_modal_session_count -= 1;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 // COCOA-TODO: abort key
 bool MCPlatformGetAbortKeyPressed(void)

@@ -212,6 +212,7 @@ public:
 	virtual ~MCMacPlatformWindow(void);
 
 	MCWindowView *GetView(void);
+	id GetHandle(void);
 	
 	void ProcessCloseRequest();
 	void ProcessDidMove(void);
@@ -290,6 +291,9 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCMacPlatformBeginModalSession(MCMacPlatformWindow *window);
+void MCMacPlatformEndModalSession(MCMacPlatformWindow *window);
 
 void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_is_down);
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_location);
