@@ -1976,10 +1976,11 @@ void MCParagraph::SetListDepth(MCExecContext& ctxt, uinteger_t* p_depth)
 {
     uinteger_t t_depth;
 
+    // Do not make any changes if they aren't desired
     if (p_depth == nil)
-        t_depth = 1;
-    else
-        t_depth = *p_depth;
+        return;
+    
+    t_depth = *p_depth;
 
     if (t_depth < 1 || t_depth > 16)
     {
