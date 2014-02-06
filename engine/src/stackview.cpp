@@ -495,6 +495,9 @@ void MCStack::view_configure(bool p_user)
 		{
 			// IM-2014-01-16: [[ StackScale ]] set the stack rects to the scaled down view rect
 			m_view_requested_stack_rect = m_view_adjusted_stack_rect = MCRectangleGetTransformedBounds(m_view_rect, MCGAffineTransformInvert(m_view_transform));
+			
+			// IM-2014-02-06: [[ ShowAll ]] Update the visible stack rect
+			m_view_stack_visible_rect = MCRectangleMake(0, 0, m_view_adjusted_stack_rect.width, m_view_adjusted_stack_rect.height);
 		}
 	}
 	configure(p_user);
