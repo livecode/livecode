@@ -105,6 +105,7 @@ cp $DSTROOT/libs/armeabi/librevzip.so $PKGDIR/RevZip
 cp $DSTROOT/libs/armeabi/librevdb.so $PKGDIR/RevDb
 cp $DSTROOT/libs/armeabi/libdbsqlite.so $PKGDIR/DbSqlite
 cp $DSTROOT/libs/armeabi/libdbmysql.so $PKGDIR/DbMysql
+cp $DSTROOT/libs/armeabi/librevsecurity.so $PKGDIR/RevSecurity
 cp $DSTROOT/LiveCode-Community.jar $PKGDIR/Classes-Community
 cp $TRUNK/engine/rsrc/android-manifest.xml $PKGDIR/Manifest.xml
 cp $TRUNK/engine/rsrc/android-notify-icon.png "$PKGDIR/notify_icon.png"
