@@ -34,6 +34,7 @@
 #include "card.h"
 #include "debug.h"
 #include "dispatch.h"
+#include "control.h"
 
 #include "desktop-dc.h"
 
@@ -339,6 +340,37 @@ void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_butto
 		
 		t_target -> message_with_args(MCM_mouse_release, p_button + 1);
 	}
+}
+
+void MCPlatformHandleMouseScroll(MCPlatformWindowRef p_window, int p_dx, int p_dy)
+{
+	MCStack *t_stack;
+	t_stack = MCdispatcher -> findstackd(p_window);
+	if (t_stack == nil)
+		return;
+	
+	if (MCmousestackptr != t_stack)
+		return;
+	
+	MCObject *mfocused;
+	
+	mfocused = MCmousestackptr->getcard()->getmfocused();
+	if (mfocused == NULL)
+		mfocused = MCmousestackptr -> getcard();
+	if (mfocused == NULL)
+		mfocused = MCmousestackptr;
+	
+	if (p_dy != 0)
+		mfocused -> kdown("", p_dy < 0 ? XK_WheelUp : XK_WheelDown);
+	
+	mfocused = MCmousestackptr->getcard()->getmfocused();
+	if (mfocused == NULL)
+		mfocused = MCmousestackptr -> getcard();
+	if (mfocused == NULL)
+		mfocused = MCmousestackptr;
+	
+	if (p_dx != 0)
+		mfocused -> kdown("", p_dx < 0 ? XK_WheelLeft : XK_WheelRight);
 }
 
 //////////

@@ -368,6 +368,13 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 	[self handleKeyPress: event isDown: NO];
 }
 
+- (void)scrollWheel: (NSEvent *)event
+{
+	MCMacPlatformWindow *t_window;
+	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	t_window -> ProcessMouseScroll([event deltaX], [event deltaY]);
+}
+
 //////////
 
 - shouldDelayWindowOrderingForEvent: (NSEvent *)event
@@ -785,6 +792,11 @@ void MCMacPlatformWindow::ProcessMouseMove(NSPoint p_location_cocoa)
 void MCMacPlatformWindow::ProcessMousePress(NSInteger p_button, bool p_is_down)
 {
 	MCMacPlatformHandleMousePress(p_button, p_is_down);
+}
+
+void MCMacPlatformWindow::ProcessMouseScroll(CGFloat dx, CGFloat dy)
+{
+	MCMacPlatformHandleMouseScroll(dx, dy);
 }
 
 void MCMacPlatformWindow::ProcessKeyDown(MCPlatformKeyCode p_key_code, codepoint_t p_unmapped_char, codepoint_t p_mapped_char)

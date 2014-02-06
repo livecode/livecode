@@ -224,6 +224,7 @@ public:
 	
 	void ProcessMouseMove(NSPoint location);
 	void ProcessMousePress(NSInteger button, bool is_down);
+	void ProcessMouseScroll(CGFloat dx, CGFloat dy);
 	
 	void ProcessKeyDown(MCPlatformKeyCode key_code, codepoint_t unmapped_char, codepoint_t mapped_char);
 	void ProcessKeyUp(MCPlatformKeyCode key_code, codepoint_t unmapped_char, codepoint_t mapped_char);
@@ -292,6 +293,7 @@ private:
 
 void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_is_down);
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_location);
+void MCMacPlatformHandleMouseScroll(CGFloat dx, CGFloat dy);
 void MCMacPlatformHandleMouseSync(void);
 
 void MCMacPlatformSyncMouseBeforeDragging(void);

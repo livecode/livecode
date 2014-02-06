@@ -215,6 +215,7 @@ void MCPlatformCallbackSendMouseRelease(MCPlatformWindowRef window, uint32_t but
 void MCPlatformCallbackSendMouseEnter(MCPlatformWindowRef window);
 void MCPlatformCallbackSendMouseLeave(MCPlatformWindowRef window);
 void MCPlatformCallbackSendMouseMove(MCPlatformWindowRef window, MCPoint location);
+void MCPlatformCallbackSendMouseScroll(MCPlatformWindowRef window, int32_t dx, int32_t dy);
 
 void MCPlatformCallbackSendDragEnter(MCPlatformWindowRef window, MCPlatformPasteboardRef pasteboard, MCPlatformDragOperation& r_operation);
 void MCPlatformCallbackSendDragLeave(MCPlatformWindowRef window);

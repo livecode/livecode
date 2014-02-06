@@ -30,6 +30,7 @@ void MCPlatformHandleMouseUp(MCPlatformWindowRef window, uint32_t button, uint32
 void MCPlatformHandleMouseDrag(MCPlatformWindowRef window, uint32_t button);
 void MCPlatformHandleMouseRelease(MCPlatformWindowRef window, uint32_t button);
 void MCPlatformHandleMouseMove(MCPlatformWindowRef window, MCPoint location);
+void MCPlatformHandleMouseScroll(MCPlatformWindowRef window, int dx, int dy);
 
 void MCPlatformHandleDragEnter(MCPlatformWindowRef window, MCPlatformPasteboardRef pasteboard, MCPlatformDragOperation& r_operation);
 void MCPlatformHandleDragMove(MCPlatformWindowRef window, MCPoint location, MCPlatformDragOperation& r_operation);
@@ -165,6 +166,12 @@ void MCPlatformCallbackSendMouseMove(MCPlatformWindowRef p_window, MCPoint p_loc
 {
 	MCLog("Window(%p) -> MouseMove([%d, %d])", p_window, p_location . x, p_location . y);
 	MCPlatformHandleMouseMove(p_window, p_location);
+}
+
+void MCPlatformCallbackSendMouseScroll(MCPlatformWindowRef p_window, int dx, int dy)
+{
+	MCLog("Window(%p) -> MouseScroll(%d, %d)", p_window, dx, dy);
+	MCPlatformHandleMouseScroll(p_window, dx, dy);
 }
 
 //////////

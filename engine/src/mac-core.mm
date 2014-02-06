@@ -891,6 +891,15 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 	}	
 }
 
+void MCMacPlatformHandleMouseScroll(CGFloat dx, CGFloat dy)
+{
+	if (s_mouse_window == nil)
+		return;
+	
+	if (dx != 0.0 || dy != 0.0)
+		MCPlatformCallbackSendMouseScroll(s_mouse_window, dx < 0.0 ? -1 : (dx > 0.0 ? 1 : 0), dy < 0.0 ? -1 : (dy > 0.0 ? 1 : 0));
+}
+
 void MCMacPlatformHandleMouseSync(void)
 {
 	if (s_mouse_window != nil)
