@@ -2962,16 +2962,7 @@ void MCObject::GetEnabled(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 
 void MCObject::SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting)
 {
-	bool t_dirty;
-	t_dirty = !changeflag(setting, F_DISABLED);
-	
-	flags ^= F_DISABLED;
-		
-	if (flags & F_DISABLED && state & CS_KFOCUSED)
-		getcard(part)->kunfocus();
-
-	if (t_dirty)
-		Redraw();
+    SetDisabled(ctxt, part, !setting);
 }
 
 void MCObject::GetDisabled(MCExecContext& ctxt, uint32_t part, bool& r_setting)

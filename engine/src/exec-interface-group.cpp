@@ -596,12 +596,7 @@ void MCGroup::SetSelectGroupedControls(MCExecContext& ctxt, bool setting)
 
 void MCGroup::SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting)
 {
-	if (!changeflag(setting, F_DISABLED))
-	{
-		flags ^= F_DISABLED;
-		SetChildDisabled(ctxt, part, !setting);
-		Redraw();
-	}
+    SetDisabled(ctxt, part, !setting);
 }
 
 void MCGroup::SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting)
