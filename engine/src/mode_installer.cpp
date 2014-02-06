@@ -955,7 +955,7 @@ private:
 	{
 		State *state;
 		state = (State *)p_state;
-        state -> found = MCStringCompareTo(state -> module, p_module, kMCStringOptionCompareCaseless);
+        state -> found = MCStringIsEqualTo(state -> module, p_module, kMCStringOptionCompareCaseless);
 		return !state -> found;
 	}
 
