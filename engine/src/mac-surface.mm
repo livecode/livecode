@@ -34,6 +34,7 @@ extern MCRectangle MCU_intersect_rect(const MCRectangle&, const MCRectangle&);
 extern bool MCU_empty_rect(const MCRectangle&);
 extern bool MCGRasterToCGImage(const MCGRaster &p_raster, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
 extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
+extern MCGFloat MCResGetDeviceScale(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -194,7 +195,37 @@ bool MCMacPlatformSurface::Composite(MCGRectangle p_dst_rect, MCGImageRef p_src_
 
 void MCMacPlatformSurface::Lock(void)
 {
-	// COCOA-TODO: Implement window masks.
+	CGImageRef t_mask;
+	t_mask = nil;
+	if (m_window -> m_mask != nil)
+		t_mask = (CGImageRef)m_window -> m_mask;
+	
+	if (t_mask != nil)
+	{
+		// COCOA-TODO: Getting the height to flip round is dependent on a friend.
+		int t_surface_height;
+		t_surface_height = m_window -> m_content . height;
+		
+		MCRectangle t_rect;
+		t_rect = MCRegionGetBoundingBox(m_update_rgn);
+		CGContextClearRect(m_cg_context, CGRectMake(t_rect . x, t_surface_height - (t_rect . y + t_rect . height), t_rect . width, t_rect . height));
+		
+		// IM-2013-08-29: [[ ResIndependence ]] scale mask to device coords
+		MCGFloat t_scale;
+		t_scale = MCResGetDeviceScale();
+		
+		MCGFloat t_mask_height, t_mask_width;
+		t_mask_width = CGImageGetWidth(t_mask) * t_scale;
+		t_mask_height = CGImageGetHeight(t_mask) * t_scale;
+		
+		CGRect t_dst_rect;
+		t_dst_rect . origin . x = 0;
+		t_dst_rect . origin . y = t_surface_height - t_mask_height;
+		t_dst_rect . size . width = t_mask_width;
+		t_dst_rect . size . height = t_mask_height;
+		CGContextClipToMask(m_cg_context, t_dst_rect, t_mask);
+	}
+	
 	CGContextSaveGState(m_cg_context);
 }
 

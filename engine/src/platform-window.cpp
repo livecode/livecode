@@ -210,9 +210,10 @@ void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			assert(p_type == kMCPlatformPropertyTypeWindowMask);
 			if (m_mask != nil)
 				MCPlatformWindowMaskRelease(m_mask);
-			m_mask = (MCPlatformWindowMaskRef)p_value;
+			m_mask = *(MCPlatformWindowMaskRef *)p_value;
 			if (m_mask != nil)
 				MCPlatformWindowMaskRetain(m_mask);
+			m_changes . mask_changed = true;
 			break;
 		case kMCPlatformWindowPropertyContentRect:
 			assert(p_type == kMCPlatformPropertyTypeRectangle);

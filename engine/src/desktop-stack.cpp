@@ -172,11 +172,7 @@ void MCStack::realize(void)
 		MCPlatformSetWindowContentRect(t_window, t_device_rect);
 		
 		if (m_window_shape != nil)
-		{
-			MCPlatformWindowMaskRef t_mask;
-			MCPlatformWindowMaskCreate(m_window_shape -> width, m_window_shape -> height, m_window_shape -> stride, m_window_shape -> data, t_mask);
-			MCPlatformSetWindowProperty(t_window, kMCPlatformWindowPropertyMask, kMCPlatformPropertyTypeWindowMask, &t_mask);
-		}
+			MCPlatformSetWindowProperty(t_window, kMCPlatformWindowPropertyMask, kMCPlatformPropertyTypeWindowMask, (MCPlatformWindowMaskRef *)&m_window_shape -> handle);
 		MCPlatformSetWindowProperty(t_window, kMCPlatformWindowPropertyStyle, kMCPlatformPropertyTypeWindowStyle, &t_window_style);
 		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHasTitleWidget, t_has_titlebox);
 		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHasCloseWidget, t_has_closebox);
@@ -486,6 +482,20 @@ void MCStack::device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdat
 	// Unset the file-local static.
 	s_update_callback = nil;
 	s_update_context = nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCStack::destroywindowshape(void)
+{
+	if (m_window_shape == nil)
+		return;
+	
+	delete[] m_window_shape -> data;
+	if (m_window_shape -> handle != nil)
+		MCPlatformWindowMaskRelease((MCPlatformWindowMaskRef)m_window_shape -> handle);
+	delete m_window_shape;
+	m_window_shape = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

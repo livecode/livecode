@@ -704,6 +704,7 @@ void MCStack::syncscroll(void)
 }
 #endif
 
+#ifdef OLD_MAC
 // MW-2011-09-13: [[ Masks ]] The windowshape is now stored in a 'WindowMask'
 //   struct. We don't distinguish between 1-bit and 8-bit masks on Mac.
 void MCStack::destroywindowshape()
@@ -717,6 +718,7 @@ void MCStack::destroywindowshape()
 		m_window_shape = nil;
 	}
 }
+#endif
 
 void MCStack::getminmax(Rect *r)
 { //get the min & max size of a stack

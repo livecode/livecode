@@ -808,7 +808,7 @@ void MCMacPlatformWindow::DoRealize(void)
 	[m_window_handle setContentView: m_view];
 	
 	[m_window_handle setLevel: t_window_level];
-	[m_window_handle setOpaque: m_mask != nil];
+	[m_window_handle setOpaque: m_mask == nil];
 	[m_window_handle setHasShadow: m_has_shadow];
 	if (!m_has_zoom_widget)
 		[[m_window_handle standardWindowButton: NSWindowZoomButton] setEnabled: NO];
@@ -853,7 +853,7 @@ void MCMacPlatformWindow::DoSynchronize(void)
 	
 	if (m_changes . mask_changed)
 	{
-		[m_window_handle setOpaque: m_mask != nil];
+		[m_window_handle setOpaque: m_mask == nil];
 		if (m_has_shadow)
 			m_shadow_changed = true;
 	}
@@ -1002,18 +1002,57 @@ void MCMacPlatformWindow::ComputeCocoaStyle(NSUInteger& r_cocoa_style)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// COCOA-TODO: Implement window masks.
+static bool MCAlphaToCGImage(uindex_t p_width, uindex_t p_height, uint8_t* p_data, uindex_t p_stride, CGImageRef &r_image)
+{
+	bool t_success = true;
+	
+	CGImageRef t_image = nil;
+	CGColorSpaceRef t_colorspace = nil;
+	CFDataRef t_data = nil;
+	CGDataProviderRef t_dp = nil;
+	
+	if (t_success)
+		t_success = nil != (t_data = CFDataCreate(kCFAllocatorDefault, (uint8_t*)p_data, p_stride * p_height));
+	
+	if (t_success)
+		t_success = nil != (t_dp = CGDataProviderCreateWithCFData(t_data));
+	
+	if (t_success)
+		t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceGray());
+	
+	if (t_success)
+		t_success = nil != (t_image = CGImageCreate(p_width, p_height, 8, 8, p_stride, t_colorspace, kCGImageAlphaNone, t_dp, nil, false, kCGRenderingIntentDefault));
+	
+	CGColorSpaceRelease(t_colorspace);
+	CGDataProviderRelease(t_dp);
+	CFRelease(t_data);
+	
+	if (t_success)
+		r_image = t_image;
+	
+	return t_success;
+}
+
 void MCPlatformWindowMaskCreate(int32_t p_width, int32_t p_height, int32_t p_stride, void *p_bits, MCPlatformWindowMaskRef& r_mask)
 {
-	r_mask = nil;
+	CGImageRef t_mask;
+	t_mask = nil;
+	MCAlphaToCGImage(p_width, p_height, (uint8_t *)p_bits, p_stride, t_mask);
+	r_mask = (MCPlatformWindowMaskRef)t_mask;
 }
 
 void MCPlatformWindowMaskRetain(MCPlatformWindowMaskRef p_mask)
 {
+	CGImageRef t_mask;
+	t_mask = (CGImageRef)p_mask;
+	CGImageRetain(t_mask);
 }
 
 void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef p_mask)
 {
+	CGImageRef t_mask;
+	t_mask = (CGImageRef)p_mask;
+	CGImageRelease(t_mask);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

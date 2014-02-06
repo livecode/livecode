@@ -86,6 +86,7 @@ CGImageRef MCImage::makeicon(uint4 p_width, uint4 p_height)
 	return t_icon;
 }
 
+#ifdef OLD_MAC
 // MW-2011-09-13: [[ Masks ]] Updated to store data in an MCWindowMask struct.
 MCWindowShape *MCImage::makewindowshape(void)
 {	
@@ -145,6 +146,7 @@ MCWindowShape *MCImage::makewindowshape(void)
 	
 	return t_mask;
 }
+#endif
 
 bool MCImageBitmapToPICT(MCImageBitmap *p_bitmap, MCMacSysPictHandle &r_pict)
 {
@@ -298,6 +300,7 @@ bool MCImageBitmapToPICT(MCImageBitmap *p_bitmap, MCMacSysPictHandle &r_pict)
 #endif
 }
 
+#ifdef OLD_MAC
 CGImageRef MCImage::converttodragimage(void)
 {
 	CGImageRef t_image = NULL;
@@ -310,3 +313,4 @@ CGImageRef MCImage::converttodragimage(void)
 	return t_image;
 
 }
+#endif
