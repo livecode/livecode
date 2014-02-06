@@ -123,6 +123,14 @@ public class AmazonBillingProvider implements BillingProvider
         return true;
     }
     
+    
+    public boolean requestProductDetails(String productId)
+    {
+        //TODO
+        return false;
+    }
+
+    
     public boolean confirmDelivery(int purchaseId)
     {
         if (!started)

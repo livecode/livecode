@@ -1953,6 +1953,11 @@ public class Engine extends View implements EngineApi
         return mBillingProvider.consumePurchase(productID);
     }
     
+    public boolean storeRequestProductDetails(String productId)
+    {
+        return mBillingProvider.requestProductDetails(productId);
+    }
+    
     public boolean storeProductSetType(String productId, String productType)
     {
         Log.d(TAG, "Setting type for productId" + productId + ", type is : " + productType);

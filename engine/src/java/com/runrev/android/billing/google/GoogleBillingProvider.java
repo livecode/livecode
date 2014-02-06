@@ -192,6 +192,38 @@ public class GoogleBillingProvider implements BillingProvider
         return true;
     }
     
+    public boolean requestProductDetails(final String productId)
+    {
+        List<String> productList = new ArrayList<String>();
+        productList.add(productId);
+        mHelper.queryInventoryAsync(true, productList, new IabHelper.QueryInventoryFinishedListener()
+                                    {
+            @Override
+            public void onQueryInventoryFinished(IabResult result, Inventory inventory)
+            {
+                
+                if (result.isFailure())
+                {
+                    return;
+                }
+                else
+                {
+                    SkuDetails skuDetails = inventory.getSkuDetails(productId);
+                    // Do this check to avoid a NullPointerException
+                    if (skuDetails == null)
+                    {
+                        Log.d(TAG, "No product found with the specified ID : " + productId + " !");
+                        return;
+                    }
+                   
+                    Log.d(TAG, "Details for requested product : " + skuDetails.toString());
+                    // TODO : Call productDetailsReceived 
+                }
+            }
+        });
+        return true;
+    }
+    
     public boolean confirmDelivery(int purchaseId)
     {
         if (mHelper == null)

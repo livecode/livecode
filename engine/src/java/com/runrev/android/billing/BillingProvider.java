@@ -23,7 +23,6 @@ import android.util.*;
 
 public interface BillingProvider
 {
-    
     // Determine whether the store is available and purchases can be made
     boolean canMakePurchase();
     
@@ -42,6 +41,8 @@ public interface BillingProvider
     
     // Consume a purchased item -- only for Google API
     boolean consumePurchase(String productId);
+    
+    boolean requestProductDetails(String productId);
     
     // type is subscription or non-subscription
     boolean productSetType(String productId, String productType);

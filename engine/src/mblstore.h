@@ -104,6 +104,7 @@ bool MCStoreSetPurchaseProperty(const char *p_purchase_id, const char *p_propert
 char* MCStoreGetPurchaseProperty(const char *p_purchase_id, const char *p_property_name);
 char* MCStoreGetPurchaseList();
 bool MCStoreConsumePurchase(const char *p_product_id);
+bool MCStoreRequestProductDetails(const char *p_product_id);
 
 bool MCStoreRestorePurchases();
 

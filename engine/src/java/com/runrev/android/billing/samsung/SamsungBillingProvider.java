@@ -415,6 +415,12 @@ public class SamsungBillingProvider implements BillingProvider
         return true;
     }
 
+    public boolean requestProductDetails(String productId)
+    {
+        //TODO
+        return false;
+    }
+
     public boolean setPurchaseProperty(String productId, String propertyName, String propertyValue)
     {
         if (!itemProps.containsKey(productId))
