@@ -21,7 +21,6 @@ import java.util.*;
 
 public class SamsungBillingProvider implements BillingProvider
 {
-    
     public static final String TAG = "SamsungBillingProvider";
     private Activity mActivity;
     private Boolean started = false;
@@ -42,7 +41,6 @@ public class SamsungBillingProvider implements BillingProvider
     //private OnGetInboxListListener mOnGetInboxListListener = null;
     
     private Map<String,Map<String,String>> itemProps = new HashMap<String, Map<String,String>>();
-    
     
     /* LISTENERS */
     
@@ -222,6 +220,8 @@ public class SamsungBillingProvider implements BillingProvider
                 {
                     helper.installIapPackage(getActivity());
                 }
+                // TODO : Investigate why putting this here causes a "waiting" popup screen that runs forever
+                //helper.startAccountActivity(getActivity());
             }
         });
     }
@@ -232,6 +232,7 @@ public class SamsungBillingProvider implements BillingProvider
         {
             isInitialized = true;
             pendingPurchaseItemId = itemId;
+            
             getActivity().runOnUiThread(new Runnable()
             {
                 @Override
@@ -242,6 +243,7 @@ public class SamsungBillingProvider implements BillingProvider
                     helper.startAccountActivity(getActivity());
                 }
             });
+            
             return;
         }
 
@@ -385,6 +387,7 @@ public class SamsungBillingProvider implements BillingProvider
         //TODO
         return true;
     }
+    
 
     public boolean restorePurchases()
     {
@@ -426,8 +429,19 @@ public class SamsungBillingProvider implements BillingProvider
 
     public boolean requestProductDetails(String productId)
     {
-        //TODO
-        return false;
+        for (ItemVO item : knownItems)
+        {
+            if (item.getItemId().equals(productId))
+            {
+                Log.d(TAG, "Requested item details : \n" + item.dump());
+                return true;
+            }
+            
+        }
+
+        Log.d(TAG, " Item not found. (Item : " + productId + ")");
+        return true;
+        // TODO register productDetailsReceived callback
     }
 
     public boolean setPurchaseProperty(String productId, String propertyName, String propertyValue)

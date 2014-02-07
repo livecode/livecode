@@ -793,7 +793,7 @@
 		1D86C57E189A6078002A8945 /* IInAppBillingService.aidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = IInAppBillingService.aidl; sourceTree = "<group>"; };
 		1D86C57F189A6078002A8945 /* IMarketBillingService.aidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = IMarketBillingService.aidl; sourceTree = "<group>"; };
 		1D86C580189A6078002A8945 /* IMarketBillingService.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = IMarketBillingService.java; sourceTree = "<group>"; };
-		1D86C581189A613F002A8945 /* GoogleBillingProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = GoogleBillingProvider.java; sourceTree = "<group>"; };
+		1D86C581189A613F002A8945 /* GoogleBillingProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = GoogleBillingProvider.java; sourceTree = "<group>"; usesTabs = 1; };
 		1D86C5D9189A7B30002A8945 /* IAPConnector.aidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = IAPConnector.aidl; sourceTree = "<group>"; };
 		1D86C5DA189A7B30002A8945 /* IAPServiceCallback.aidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = IAPServiceCallback.aidl; sourceTree = "<group>"; };
 		1D86C5DD189A7B30002A8945 /* ItemList.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; lineEnding = 0; path = ItemList.java; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.java; };
@@ -809,7 +809,7 @@
 		1D86C5EA189A7B31002A8945 /* ItemVO.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = ItemVO.java; sourceTree = "<group>"; };
 		1D86C5EB189A7B31002A8945 /* PurchaseVO.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = PurchaseVO.java; sourceTree = "<group>"; };
 		1D86C5EC189A7B31002A8945 /* VerificationVO.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = VerificationVO.java; sourceTree = "<group>"; };
-		1D86C5ED189A7D70002A8945 /* SamsungBillingProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = SamsungBillingProvider.java; sourceTree = "<group>"; };
+		1D86C5ED189A7D70002A8945 /* SamsungBillingProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.java; lineEnding = 0; path = SamsungBillingProvider.java; sourceTree = "<group>"; tabWidth = 4; usesTabs = 0; wrapsLines = 1; };
 		1D86C5EE189A9AD6002A8945 /* BillingProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = BillingProvider.java; sourceTree = "<group>"; };
 		1D86C5EF189A9CFD002A8945 /* BillingModule.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = BillingModule.java; sourceTree = "<group>"; };
 		3C03ED911134205A009DE406 /* socket_resolve.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = socket_resolve.cpp; path = src/socket_resolve.cpp; sourceTree = "<group>"; };

@@ -139,8 +139,11 @@ public class AmazonBillingProvider implements BillingProvider
     
     public boolean requestProductDetails(String productId)
     {
-        //TODO
-        return false;
+        Set<String> skuSet = new HashSet<String>();
+        skuSet.add(productId);
+        PurchasingManager.initiateItemDataRequest(skuSet);
+        
+        return true;
     }
 
     
@@ -200,6 +203,7 @@ public class AmazonBillingProvider implements BillingProvider
         private boolean rvsProductionMode = false;
         private String currentUserID = null;
         public Map<String, String> requestIds;
+        private Map<String, Item> availableSkus;
         
         private static final String TAG = "IAPPurchasingObserver";
         
@@ -235,7 +239,6 @@ public class AmazonBillingProvider implements BillingProvider
          */
         public void onGetUserIdResponse(final GetUserIdResponse response)
         {
-            
             Log.v(TAG, "onGetUserIdResponse recieved: Response -" + response);
             Log.v(TAG, "RequestId:" + response.getRequestId());
             Log.v(TAG, "IdRequestStatus:" + response.getUserIdRequestStatus());
@@ -249,6 +252,31 @@ public class AmazonBillingProvider implements BillingProvider
             else
             {
                 Log.v(TAG, "onGetUserIdResponse: Unable to get user ID.");
+            }
+        }
+        
+        public void onItemDataResponse(ItemDataResponse response)
+        {
+            Log.v(TAG, "onItemDataResponse recieved: Response -" + response);
+            Log.v(TAG, "RequestId:" + response.getRequestId());
+            Log.v(TAG, "ItemDataRequestStatus:" + response.getItemDataRequestStatus());
+            
+            
+            if (response.getItemDataRequestStatus() ==
+                ItemDataResponse.ItemDataRequestStatus.SUCCESSFUL)
+            {
+                availableSkus = response.getItemData();
+                for (String key : availableSkus.keySet())
+                {
+                    Item item = availableSkus.get(key);
+                    Log.v(TAG, "Item details : " + item.toString());
+                }
+                
+                // TODO : productDetailsReceived callback
+            }
+            else
+            {
+                Log.v(TAG, "onItemDataResponse: Unable to get Item data.");
             }
         }
         

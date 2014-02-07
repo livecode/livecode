@@ -31,7 +31,7 @@ public class Inventory {
     Inventory() { }
     
     /** Returns the listing details for an in-app product. */
-    public SkuDetails getSkuDetails(String sku) {
+    public SkuDetails getSkuDetails(String sku){
         return mSkuMap.get(sku);
     }
     

@@ -16,7 +16,6 @@ import java.util.*;
 
 public class GoogleBillingProvider implements BillingProvider
 {
-    
     public static final String TAG = "GoogleBillingProvider";
     private Activity mActivity;
     private Boolean started = false;
@@ -76,7 +75,6 @@ public class GoogleBillingProvider implements BillingProvider
             }
         });
     }
-    
     
     public boolean canMakePurchase()
     {
@@ -221,7 +219,9 @@ public class GoogleBillingProvider implements BillingProvider
     
     public boolean requestProductDetails(final String productId)
     {
-        List<String> productList = new ArrayList<String>();
+        //arbitrary initial capacity
+        int capacity = 25; 
+        List<String> productList = new ArrayList<String>(capacity);
         productList.add(productId);
         mHelper.queryInventoryAsync(true, productList, new IabHelper.QueryInventoryFinishedListener()
                                     {
