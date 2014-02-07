@@ -402,7 +402,7 @@ void MCArraysExecIntersectRecursive(MCExecContext& ctxt, MCArrayRef p_dst_array,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_encoding)
+void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCDataRef& r_encoding)
 {
 	bool t_success;
 	t_success = true;
@@ -448,7 +448,7 @@ void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRe
 		t_success = false;
 
 	if (t_success)
-		t_success = MCStringCreateWithNativeChars((const char_t *)t_buffer, t_length, r_encoding);
+		t_success = MCDataCreateWithBytes((const byte_t *)t_buffer, t_length, r_encoding);
 
 	free(t_buffer);
 
@@ -458,7 +458,7 @@ void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRe
 	ctxt . Throw();
 }
 
-void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCStringRef p_encoding, MCArrayRef& r_array)
+void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayRef& r_array)
 {
 	bool t_success;
 	t_success = true;
@@ -467,7 +467,7 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCStringRef p_encoding, MCArra
 	t_stream_handle = nil;
     if (t_success)
     {
-		t_stream_handle = MCS_fakeopen(MCStringGetOldString(p_encoding));
+		t_stream_handle = MCS_fakeopen(MCDataGetOldString(p_encoding));
 		if (t_stream_handle == nil)
 			t_success = false;
 	}
@@ -476,7 +476,7 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCStringRef p_encoding, MCArra
 	t_stream = nil;
 	if (t_success)
 	{
-		t_stream = new MCObjectInputStream(t_stream_handle, MCStringGetLength(p_encoding));
+		t_stream = new MCObjectInputStream(t_stream_handle, MCDataGetLength(p_encoding));
 		if (t_stream == nil)
 			t_success = false;
 	}
