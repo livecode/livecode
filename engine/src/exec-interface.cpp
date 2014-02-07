@@ -3163,13 +3163,6 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
     // we have a field chunk
     MCField *t_field;
     t_field = static_cast<MCField *>(p_chunk . object);
-    integer_t t_start, t_finish;
-    if (p_where == PT_INTO)
-        t_start = p_chunk . mark . start, t_finish = p_chunk . mark . finish;
-    else if (p_where == PT_AFTER)
-        t_start = t_finish = p_chunk . mark . finish;
-    else /* PT_BEFORE */
-        t_start = t_finish = p_chunk . mark . start;
     
     // if we forced new delimiters, then reset the text of the field
     if (p_chunk . mark . changed)
@@ -3178,11 +3171,20 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
         if (!MCStringMutableCopy(p_chunk . mark . text, &t_string))
             return;
         
+        // in this case the chunk indices will be correct whatever the preposition
         /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_chunk . mark . start, p_chunk . mark . finish - p_chunk . mark . start), p_string);
         
         p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_string);
         return;
     }
+     
+    integer_t t_start, t_finish;
+    if (p_where == PT_INTO)
+        t_start = p_chunk . mark . start, t_finish = p_chunk . mark . finish;
+    else if (p_where == PT_AFTER)
+        t_start = t_finish = p_chunk . mark . finish;
+    else /* PT_BEFORE */
+        t_start = t_finish = p_chunk . mark . start;
     
     // otherwise just alter the contents of the marked range
     if (t_field -> settextindex(p_chunk . part_id, t_start, t_finish, p_string, False) != ES_NORMAL)
@@ -3219,19 +3221,6 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef p_string, int
 	}
 	else
 	{
-		MCStringRef t_current_value;
-		p_chunk . object -> getstringprop(ctxt, p_chunk . part_id, P_TEXT, False, t_current_value);
-		if (ctxt . HasError())
-			return;
-		
-		MCAutoStringRef t_mutable_current_value;
-		if (!MCStringMutableCopyAndRelease(t_current_value, &t_mutable_current_value))
-		{
-			MCValueRelease(t_current_value);
-			ctxt . Throw();
-			return;
-		}
-		
 		integer_t t_start, t_finish;
 		if (p_where == PT_INTO)
 			t_start = p_chunk . mark . start, t_finish = p_chunk . mark . finish;
@@ -3240,13 +3229,13 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef p_string, int
 		else /* PT_BEFORE */
 			t_start = t_finish = p_chunk . mark . start;
 		
-		if (!MCStringReplace(*t_mutable_current_value, MCRangeMake(t_start, t_finish), p_string))
-		{
-			ctxt . Throw();
-			return;
-		}
-		
-		p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_mutable_current_value);
+        MCAutoStringRef t_string;
+        if (!MCStringMutableCopy(p_chunk . mark . text, &t_string))
+            return;
+        
+        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(t_start, t_finish - t_start), p_string);
+        
+        p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_string);
 	}
 }
 
