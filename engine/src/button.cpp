@@ -3396,7 +3396,7 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 			{
 				uindex_t nlines = 1;
 				//major menustring
-				nlines = MCStringCountChar(menustring, MCRangeMake(0, MCStringGetLength(menustring)), '\n', kMCStringOptionCompareExact);
+				nlines = MCStringCountChar(menustring, MCRangeMake(0, MCStringGetLength(menustring)), '\n', kMCStringOptionCompareExact) + 1;
 
 				MCField *fptr = new MCField;
 				uint2 height;
