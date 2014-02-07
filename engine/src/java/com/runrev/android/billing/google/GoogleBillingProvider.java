@@ -149,6 +149,33 @@ public class GoogleBillingProvider implements BillingProvider
         return true;
     }
     
+    public boolean makePurchase(String productId, String quantity, String payload)
+    {
+        if (mHelper == null)
+            return false;
+        
+        String type = productGetType(productId);
+        if (type == null)
+        {
+            Log.i(TAG, "Item type is null (not specified). Exiting..");
+            return false;
+        }
+        
+        pendingPurchaseSku = productId;
+        
+        Log.i(TAG, "purchaseSendRequest("  + productId + ", " + type + ")");
+        
+        if (type.equals("SUBS"))
+        {
+            mHelper.launchSubscriptionPurchaseFlow(getActivity(), productId, RC_REQUEST, mPurchaseFinishedListener, payload);
+        }
+        else
+        {
+            mHelper.launchPurchaseFlow(getActivity(), productId, RC_REQUEST, mPurchaseFinishedListener, payload);
+        }
+        return true;
+    }
+    
     public boolean productSetType(String productId, String productType)
     {
         //TODO

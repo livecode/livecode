@@ -44,6 +44,8 @@ public interface BillingProvider
     
     boolean requestProductDetails(String productId);
     
+    boolean makePurchase(String productId, String quantity, String payload);
+    
     // type is subscription or non-subscription
     boolean productSetType(String productId, String productType);
     

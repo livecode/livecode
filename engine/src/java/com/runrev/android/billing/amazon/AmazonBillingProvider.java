@@ -81,6 +81,19 @@ public class AmazonBillingProvider implements BillingProvider
         return true;
     }
     
+    public boolean makePurchase(String productId, String quantity, String payload)
+    {
+        if (!started)
+            return false;
+        
+        Log.v(TAG, "Purchase request started");
+        String requestId = PurchasingManager.initiatePurchaseRequest(productId);
+        Log.v(TAG, "Purchase request finished");
+        mPurchasingObserver.requestIds.put(requestId, productId);
+        
+        return true;
+    }
+    
     public boolean productSetType(String productId, String productType)
     {
         return true;

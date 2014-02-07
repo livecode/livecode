@@ -92,6 +92,19 @@ bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase)
 	return false;
 }
 
+bool MCPurchaseFindByProdId(const char *p_prod_id, MCPurchase *&r_purchase)
+{
+	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
+	{
+		if (t_purchase->prod_id == p_prod_id)
+		{
+			r_purchase = t_purchase;
+			return true;
+		}
+	}
+	return false;
+}
+
 bool MCPurchaseLookupProperty(const char *p_property, MCPurchaseProperty &r_property)
 {
 	for (uint32_t i = 0; s_purchase_properties[i].name != nil; i++)
@@ -138,6 +151,7 @@ bool MCPurchaseCreate(const char *p_product_id, void *p_context, MCPurchase *&r_
 	
 	if (t_success)
 	{
+        t_purchase->prod_id = p_product_id;  
 		t_purchase->id = s_last_purchase_id++;
 		t_purchase->ref_count = 1;
 		t_purchase->state = kMCPurchaseStateInitialized;
@@ -270,17 +284,25 @@ void MCPurchaseUpdateEvent::Dispatch()
 	//MCLog("dispatching purchase (%p) event", m_purchase);
 
 	char *t_id = NULL;
+    char *t_prod_id = NULL;
 	const char *t_state = NULL;
 	
 	t_success = MCPurchaseStateToString(m_purchase->state, t_state);
 	
+	//if (t_success)
+		//t_success = MCCStringFormat(t_id, "%d", m_purchase->id);
+    
+    if (t_success)
+		t_success = MCCStringFormat(t_prod_id, "%s", m_purchase->prod_id);
+    
+    //if (m_purchase->prod_id == NULL)
+       // MCLog("m_purchase->prod_id is null",nil);
+    
 	if (t_success)
-		t_success = MCCStringFormat(t_id, "%d", m_purchase->id);
-	
-	if (t_success)
-		MCdefaultstackptr->getcurcard()->message_with_args(MCM_purchase_updated, t_id, t_state);
+		MCdefaultstackptr->getcurcard()->message_with_args(MCM_purchase_updated, t_prod_id, t_state);
 	
 	MCCStringFree(t_id);
+    MCCStringFree(t_prod_id);
 }
 
 bool MCPurchaseUpdateEvent::EventPendingForPurchase(MCPurchase *p_purchase)
@@ -593,6 +615,31 @@ Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters)
 	
 	if (t_success)
 		t_success = MCPurchaseSendRequest(t_purchase);
+	
+	return ES_NORMAL;
+}
+
+
+Exec_stat MCHandleMakePurchase(void *context, MCParameter *p_parameters)
+{
+	bool t_success = true;
+	
+	char  *t_prod_id;
+    char  *t_quantity;
+    char  *t_payload;
+	MCPurchase *t_purchase = nil;
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "sss", &t_prod_id, &t_quantity, &t_payload);
+    
+    
+    if (t_success)
+        t_success = MCPurchaseCreate(t_prod_id, nil, t_purchase);
+
+	//if (t_success)
+		//t_success = MCStoreMakePurchase(t_purchase);
+	if (t_success)
+		t_success = MCStoreMakePurchase(t_purchase->prod_id, t_quantity, t_payload);
 	
 	return ES_NORMAL;
 }

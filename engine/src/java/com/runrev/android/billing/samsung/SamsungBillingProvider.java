@@ -405,6 +405,15 @@ public class SamsungBillingProvider implements BillingProvider
         return true;
     }
 
+    public boolean makePurchase(String productId, String quantity, String payload)
+    {
+        if (!started)
+            return false;
+
+        startPurchase(productId);
+        return true;
+    }
+
     public boolean productSetType(String productId, String productType)
     {
         return true;
