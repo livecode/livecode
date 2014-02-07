@@ -127,7 +127,7 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 // TD-2013-07-01 [[ DynamicFonts ]]
-bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
+bool MCScreenDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle)
 {
 	bool t_success = true;
     DWORD t_private = NULL;
@@ -136,10 +136,14 @@ bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_f
         t_private = FR_PRIVATE;
     
 	if (t_success)
-		t_success = (MCS_exists(p_path, True) == True);
+		t_success = (MCS_exists(p_path, true) == True);
 	
+    MCAutoStringRefAsWString t_wide_path;
+    if (t_success)
+        t_success = t_wide_path . Lock(p_path);
+    
 	if (t_success)
-		t_success = (AddFontResourceExA(p_path, t_private, 0) != 0);
+		t_success = (AddFontResourceExW(*t_wide_path, t_private, 0) != 0);
     
 	if (t_success && p_globally)
 		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
@@ -148,7 +152,7 @@ bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_f
 }
 
 
-bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
+bool MCScreenDC::unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle)
 {
     bool t_success = true;
     DWORD t_private = NULL;
@@ -156,8 +160,12 @@ bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_
     if (p_globally)
         t_private = FR_PRIVATE;
     
+    MCAutoStringRefAsWString t_wide_path;
     if (t_success)
-		t_success = (RemoveFontResourceExA(p_path, t_private, 0) != 0);
+        t_success = t_wide_path . Lock(p_path);
+    
+    if (t_success)
+		t_success = (RemoveFontResourceExW(*t_wide_path, t_private, 0) != 0);
     
 	if (t_success && p_globally)
 		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
