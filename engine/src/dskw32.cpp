@@ -3929,7 +3929,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                     CloseHandle(piProcInfo.hThread);
                 }
                 MCS_close(MCprocesses[index].ihandle);
-                MCprocesses[index.ihandle] = nil;
+                MCprocesses[index].ihandle = nil;
                 IO_cleanprocesses();                
 				MCValueRelease(t_cmd);
                 return false;
