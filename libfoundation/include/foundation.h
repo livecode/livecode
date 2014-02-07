@@ -1538,7 +1538,8 @@ bool MCStringIsEqualTo(MCStringRef string, MCStringRef other, MCStringOptions op
 bool MCStringIsEqualToNativeChars(MCStringRef string, const char_t *chars, uindex_t char_count, MCStringOptions options);
 
 // Returns true if the substring is equal to the other, according to options
-bool MCStringSubstringIsEqualTo(MCStringRef string, MCRange other, MCStringRef p_other, MCStringOptions p_options);
+bool MCStringSubstringIsEqualTo(MCStringRef string, MCRange range, MCStringRef p_other, MCStringOptions p_options);
+bool MCStringSubstringIsEqualToSubstring(MCStringRef string, MCRange range, MCStringRef p_other, MCRange other_range, MCStringOptions p_options);
 
 // Returns -1, 0, or 1, depending on whether left < 0, left == right or left > 0,
 // processing as appropriate according to options. The ordering used is codepoint-

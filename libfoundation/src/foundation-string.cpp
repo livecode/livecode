@@ -1362,6 +1362,16 @@ bool MCStringSubstringIsEqualTo(MCStringRef self, MCRange p_sub, MCStringRef p_o
 	return MCStrCharsEqualExact(self -> chars + p_sub . offset, p_sub . length, p_other -> chars, p_other -> char_count);
 }
 
+bool MCStringSubstringIsEqualToSubstring(MCStringRef self, MCRange p_sub, MCStringRef p_other, MCRange p_other_sub, MCStringOptions p_options)
+{
+	__MCStringClampRange(self, p_sub);
+    __MCStringClampRange(p_other, p_other_sub);
+    
+	if (p_options != kMCStringOptionCompareExact)
+		return MCStrCharsEqualCaseless(self -> chars + p_sub . offset, p_sub . length, p_other -> chars + p_other_sub . offset, p_other_sub . length);
+	return MCStrCharsEqualExact(self -> chars + p_sub . offset, p_sub . length, p_other -> chars + p_other_sub . offset, p_other_sub . length);
+}
+
 bool MCStringIsEqualToNativeChars(MCStringRef self, const char_t *p_chars, uindex_t p_char_count, MCStringOptions p_options)
 {
 	MCAutoStringRef t_string;

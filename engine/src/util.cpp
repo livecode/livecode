@@ -1923,8 +1923,9 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 			return;
 		}
 		uint2 i;
+        MCRange t_range = MCRangeMake(0, 3);
 		for (i = 0 ; i <= T_TEXT ; i++)
-            if (MCStringIsEqualToCString(*t_tool_name, MCtoolnames[i], kMCCompareExact))
+            if (MCStringSubstringIsEqualToSubstring(*t_tool_name, t_range, MCSTR(MCtoolnames[i]), t_range, kMCCompareExact))
             {
 				t_new_tool = (Tool)i;
 				break;
