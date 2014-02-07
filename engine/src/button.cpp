@@ -3299,12 +3299,12 @@ public:
 				if (p_menuitem->accelerator != 0)
 				{
 					uint1 t_mods = p_menuitem->modifiers;
-					uint4 t_key = p_menuitem->accelerator;
+					KeySym t_key = p_menuitem->accelerator;
 					MCStringRef t_keyname = p_menuitem->accelerator_name;
 
 					if ((t_mods & (MS_MAC_CONTROL | MS_CONTROL | MS_ALT)) || t_keyname)
 					{
-						uint2 t_accelkey = (t_key <= 255) ? MCS_tolower(t_key) : t_key;
+						KeySym t_accelkey = MCKeySymToLower(t_key);
 						MCstacks->addaccelerator(parent, parent->getstack(), t_accelkey, t_mods);
 						newbutton->accelkey = t_accelkey;
 						newbutton->accelmods = t_mods;
@@ -3325,7 +3325,20 @@ public:
 						if (t_keyname != NULL && !MCStringIsEmpty(t_keyname))
 							/* UNCHECKED */ MCStringAppend(t_acceltext, t_keyname);
 						else
-							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "%c", t_key);
+                        {
+							codepoint_t t_codepoint;
+                            MCAutoStringRef t_key_text;
+                            
+                            if (t_key < 0x7f)
+                                t_codepoint = t_key;
+                            else if ((t_key & XK_Class_mask) == XK_Class_codepoint)
+                                t_codepoint = t_key & XK_Codepoint_mask;
+                            else
+                                t_codepoint = 0;    // Shouldn't happen!
+                            
+                            /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)&t_codepoint, 4, kMCStringEncodingUTF32, false, &t_key_text);
+                            /* UNCHECKED */ MCStringAppend(t_acceltext, *t_key_text);
+                        }
 
 						MCValueRelease(newbutton->acceltext);
 						/* UNCHECKED */ MCStringCopyAndRelease(t_acceltext, newbutton->acceltext);

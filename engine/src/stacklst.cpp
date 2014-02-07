@@ -291,16 +291,21 @@ bool MCStacklist::stackprops(MCExecContext& ctxt, Properties p_property, MCListR
 	return MCListCopy(*t_list, r_list);
 }
 
-Boolean MCStacklist::doaccelerator(KeySym key)
+Boolean MCStacklist::doaccelerator(KeySym p_key)
 {
 	if (stacks == NULL)
 		return False;
-	
-	codepoint_t t_char = 0;
-	if (key < 0x7f)
-		t_char = key;
-	else if ((key & XK_Class_mask) == XK_Class_codepoint)
-		t_char = key & XK_Codepoint_mask;
+    
+    // Ensure that the character is lowercase
+    KeySym t_lowersym;
+    t_lowersym = MCKeySymToLower(p_key);
+    
+    // Convert from a keysym to a codepoint
+    codepoint_t t_char = 0;
+	if (t_lowersym < 0x7f)
+		t_char = t_lowersym;
+	else if ((t_lowersym & XK_Class_mask) == XK_Class_codepoint)
+		t_char = t_lowersym & XK_Codepoint_mask;
 
 	uint2 t_mod_mask = MS_CONTROL | MS_MAC_CONTROL | MS_MOD1;
 
@@ -329,17 +334,17 @@ Boolean MCStacklist::doaccelerator(KeySym key)
 		//   first.
 		for(uint2 i = 0; i < naccelerators; i++)
 		{
-			if (key == accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
+			if (t_lowersym == accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
 			{
 				t_menubar -> message_with_valueref_args(MCM_mouse_down, kMCEmptyString);
 
 				// We now need to re-search for the accelerator, since it could have gone/been deleted in the mouseDown
 				for(uint2 i = 0; i < naccelerators; i++)
 				{
-					if (key == accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
+					if (t_lowersym == accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
 					{
 						MCmodifierstate &= t_mod_mask;
-						accelerators[i] . button -> activate(True, key);
+						accelerators[i] . button -> activate(True, t_lowersym);
 						return True;
 					}
 				}
@@ -355,7 +360,7 @@ Boolean MCStacklist::doaccelerator(KeySym key)
 	// found a matching accelerator.
 	for (uint2 i = 0 ; i < naccelerators ; i++)
 	{
-		if (key == accelerators[i].key
+		if (t_lowersym == accelerators[i].key
 				&& (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask))
 		{
 			MCStacknode *tptr = stacks;
@@ -368,7 +373,7 @@ Boolean MCStacklist::doaccelerator(KeySym key)
 					)
 				{
 					MCmodifierstate &= t_mod_mask;
-					accelerators[i].button->activate(True, key);
+                        accelerators[i].button->activate(True, t_lowersym);
 					return True;
 				}
 				tptr = tptr->next();

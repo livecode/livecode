@@ -1742,10 +1742,9 @@ void MCStack::findaccel(uint2 key, MCStringRef &r_pick, bool &r_disabled)
 					else
 						/* UNCHECKED */ MCStringAppend(t_label, bptr->getlabeltext());
 					
-					/* UNCHECKED */ MCStringAppendFormat(t_label, "|");
-					/* UNCHECKED */ MCStringAppend(t_label, t_accel);
+					/* UNCHECKED */ MCStringAppendFormat(t_label, "|%@", t_accel);
 
-					MCValueRelease(t_accel);
+					r_pick = t_accel;
 					return;
 				}
 			}
