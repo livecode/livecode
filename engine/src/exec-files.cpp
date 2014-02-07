@@ -1735,7 +1735,7 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 		{
 			MCAutoStringRefAsCString t_output;
 			/* UNCHECKED */ t_output . Lock(p_data);
-			r_stat = MCS_write(*t_output, sizeof(char), strlen(*t_output), p_stream);
+			r_stat = MCS_write(*t_output, sizeof(char), len, p_stream);
 		}
 		break;
 	default:
