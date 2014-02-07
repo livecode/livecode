@@ -3854,11 +3854,11 @@ void MCInterfaceExecSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &n
         t_success = false;
         t_success = ctxt . EvalExprAsValueRef(by, EE_UNDEFINED, &t_output);
         if (!t_success)
-			t_output = MCValueRetain(kMCEmptyString);
+            t_output = kMCEmptyString;
 		MCerrorlock--;
 	}
 	else
-		t_output = MCValueRetain(p_input);
+        t_output = p_input;
 	
 	MCAutoStringRef t_converted;
 	switch (form)
@@ -3964,7 +3964,7 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 	for (i = 0; i < t_item_count; i++)
     {
         MCListAppend(*t_list, (MCStringRef)t_items[i] . data);
-        MCValueRelease(t_items[i] . svalue);
+        MCValueRelease((MCStringRef)t_items[i] . svalue);
     }
 
     if (t_trailing_delim || i < t_item_count - 1)
@@ -3996,7 +3996,7 @@ void MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef& x_target, in
 
 	if (MCInterfaceExecSortContainer(ctxt, x_target, p_chunk_type, p_ascending ? ST_ASCENDING : ST_DESCENDING, p_format, p_by, &t_sorted_string))
 	{
-		x_target = (MCStringRef)MCValueRetain(*t_sorted_string);
+        MCValueAssign(x_target, *t_sorted_string);
 		return;
 	}
 	

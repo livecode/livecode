@@ -2649,7 +2649,7 @@ void MCStack::stringtostackfiles(MCStringRef d_strref, MCStackfile **sf, uint2 &
     // This ensures the coy is freed when the method ends
     MCAutoPointer<char> d;
     /* UNCHECKED */ MCStringConvertToCString(d_strref, &d);
-	char *eptr = strdup(*d);
+    char *eptr = *d;
 	while ((eptr = strtok(eptr, "\n")) != NULL)
 	{
 		char *cptr = strchr(eptr, ',');
