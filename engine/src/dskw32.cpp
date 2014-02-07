@@ -3929,6 +3929,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                     CloseHandle(piProcInfo.hThread);
                 }
                 MCS_close(MCprocesses[index].ihandle);
+                MCprocesses[index.ihandle] = nil;
                 IO_cleanprocesses();                
 				MCValueRelease(t_cmd);
                 return false;
@@ -3955,7 +3956,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		bool t_success;
 
 		t_success = MCS_closetakingbuffer(MCprocesses[index].ohandle, t_buffer, t_buf_size) == IO_NORMAL;
-
+        MCprocesses[index].ohandle = nil;
+        
         IO_cleanprocesses();
         MCValueRelease(t_cmd);
 
