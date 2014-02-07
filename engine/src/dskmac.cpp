@@ -1980,6 +1980,7 @@ public:
     MCStdioFileHandle(FILE *p_fptr)
     {
         m_stream = p_fptr;
+        m_is_eof = false;
     }
 	
 	virtual void Close(void)

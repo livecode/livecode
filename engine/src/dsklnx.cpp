@@ -559,6 +559,7 @@ public:
     MCStdioFileHandle(FILE* p_fptr)
     {
         m_fptr = p_fptr;
+        m_is_eof = false;
     }
 
     virtual void Close(void)
