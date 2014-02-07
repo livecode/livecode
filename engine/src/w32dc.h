@@ -301,8 +301,8 @@ public:
 	virtual MCPasteboard *getclipboard(void);
     
     // TD-2013-07-01: [[ DynamicFonts ]]
-    virtual bool loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle);
-    virtual bool unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle);
+    virtual bool loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle);
+    virtual bool unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle);
 
 	//
 

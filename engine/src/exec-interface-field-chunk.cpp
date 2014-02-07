@@ -552,58 +552,56 @@ template<typename T> void GetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
         
         for(;;)
         {
-            if (t_block -> GetOffset() >= ei)
-                break;
-            
-            if (t_block -> GetLength() != 0)
+            if (t_first)
             {
-                if (t_first)
+                T::getter(ctxt, t_block, p_getter, t_value);
+                if (ctxt . HasError())
+                    return;
+                
+                t_first = false;
+                
+                // If the first value is default, we don't need to compare to future unset values.
+                t_first_set = T::is_set(t_value);
+            }
+            else
+            {
+                typename T::stack_type t_new_value;
+                T::getter(ctxt, t_block, p_getter, t_new_value);
+                if (ctxt . HasError())
+                    return;
+                
+                if (T::is_set(t_new_value) != t_first_set)
                 {
-                    T::getter(ctxt, t_block, p_getter, t_value);
-                    if (ctxt . HasError())
-                        return;
-                    
-                    t_first = false;
-                    
-                    // If the first value is default, we don't need to compare to future unset values.
-                    t_first_set = T::is_set(t_value);
+                    // if one is set and the other is unset, then the result is mixed
+                    // unless we are effective, in which case check for equality
+                    if (!is_effective)
+                        t_mixed = true;
+                    else if (t_first_set)
+                        t_mixed = !T::equal(t_value, t_default_value);
+                    else
+                        t_mixed = !T::equal(t_new_value, t_default_value);
                 }
                 else
                 {
-                    typename T::stack_type t_new_value;
-                    T::getter(ctxt, t_block, p_getter, t_new_value);
-                    if (ctxt . HasError())
-                        return;
-                    
-                    if (T::is_set(t_new_value) != t_first_set)
-                    {
-                        // if one is set and the other is unset, then the result is mixed
-                        // unless we are effective, in which case check for equality
-                        if (!is_effective)
-                            t_mixed = true;
-                        else if (t_first_set)
-                            t_mixed = !T::equal(t_value, t_default_value);
-                        else
-                            t_mixed = !T::equal(t_new_value, t_default_value);
-                    }
-                    else
-                    {
-                        // if they are both set, then test equality between them
-                        t_mixed = !T::equal(t_value, t_new_value);
-                    }
-                    
-                    // otherwise they are both unset, and therefore equal,
-                    // so leave t_mixed alone and return if the result is 'mixed'
-                    if (t_mixed)
-                    {
-                        r_mixed = true;
-                        return;
-                    }
+                    // if they are both set, then test equality between them
+                    t_mixed = !T::equal(t_value, t_new_value);
+                }
+                
+                // otherwise they are both unset, and therefore equal,
+                // so leave t_mixed alone and return if the result is 'mixed'
+                if (t_mixed)
+                {
+                    r_mixed = true;
+                    return;
                 }
             }
-            
+        
             // Stop if the next block is the first one - we are the last one
             if (t_block -> next() == t_firstblock)
+                break;
+            
+            // Stop if the next block index will exceed the end index
+            if (t_block -> next() -> GetOffset() >= ei)
                 break;
             
             t_block = t_block -> next();
@@ -616,7 +614,7 @@ template<typename T> void GetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
     
     r_mixed = false;
     
-    if (t_first_set && is_effective)
+    if (t_first_set)
         T::output(t_value, r_value);
     else
         T::output(t_default_value, r_value);
@@ -658,58 +656,56 @@ template<typename T> void GetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
         
         for(;;)
         {
-            if (t_block -> GetOffset() >= ei)
-                break;
-            
-            if (t_block -> GetLength() != 0)
+            if (t_first)
             {
-                if (t_first)
+                T::getter(ctxt, t_block, p_index, p_getter, t_value);
+                if (ctxt . HasError())
+                    return;
+                
+                t_first = false;
+                
+                // If the first value is default, we don't need to compare to future unset values.
+                t_first_set = T::is_set(t_value);
+            }
+            else
+            {
+                typename T::stack_type t_new_value;
+                T::getter(ctxt, t_block, p_index, p_getter, t_new_value);
+                if (ctxt . HasError())
+                    return;
+                
+                if (T::is_set(t_new_value) != t_first_set)
                 {
-                    T::getter(ctxt, t_block, p_index, p_getter, t_value);
-                    if (ctxt . HasError())
-                        return;
-                    
-                    t_first = false;
-                    
-                    // If the first value is default, we don't need to compare to future unset values.
-                    t_first_set = T::is_set(t_value);
+                    // if one is set and the other is unset, then the result is mixed
+                    // unless we are effective, in which case check for equality
+                    if (!is_effective)
+                        t_mixed = true;
+                    else if (t_first_set)
+                        t_mixed = !T::equal(t_value, t_default_value);
+                    else
+                        t_mixed = !T::equal(t_new_value, t_default_value);
                 }
                 else
                 {
-                    typename T::stack_type t_new_value;
-                    T::getter(ctxt, t_block, p_index, p_getter, t_new_value);
-                    if (ctxt . HasError())
-                        return;
-                    
-                    if (T::is_set(t_new_value) != t_first_set)
-                    {
-                        // if one is set and the other is unset, then the result is mixed
-                        // unless we are effective, in which case check for equality
-                        if (!is_effective)
-                            t_mixed = true;
-                        else if (t_first_set)
-                            t_mixed = !T::equal(t_value, t_default_value);
-                        else
-                            t_mixed = !T::equal(t_new_value, t_default_value);
-                    }
-                    else
-                    {
-                        // if they are both set, then test equality between them
-                        t_mixed = !T::equal(t_value, t_new_value);
-                    }
-                    
-                    // otherwise they are both unset, and therefore equal,
-                    // so leave t_mixed alone and return if the result is 'mixed'
-                    if (t_mixed)
-                    {
-                        r_mixed = true;
-                        return;
-                    }
+                    // if they are both set, then test equality between them
+                    t_mixed = !T::equal(t_value, t_new_value);
+                }
+                
+                // otherwise they are both unset, and therefore equal,
+                // so leave t_mixed alone and return if the result is 'mixed'
+                if (t_mixed)
+                {
+                    r_mixed = true;
+                    return;
                 }
             }
             
             // Stop if the next block is the first one - we are the last one
             if (t_block -> next() == t_firstblock)
+                break;
+            
+            // Stop if the next block index will exceed the end index
+            if (t_block -> next() -> GetOffset() >= ei)
                 break;
             
             t_block = t_block -> next();
@@ -722,7 +718,7 @@ template<typename T> void GetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
     
     r_mixed = false;
     
-    if (t_first_set && is_effective)
+    if (t_first_set)
         T::output(t_value, r_value);
     else
         T::output(t_default_value, r_value);

@@ -458,6 +458,8 @@ void MCClipboardCmd::exec_ctxt(MCExecContext& ctxt)
 			MCPasteboardExecCutTextToClipboard(ctxt, t_obj_chunk);
 		else
 			MCPasteboardExecCopyTextToClipboard(ctxt, t_obj_chunk);
+
+        MCValueRelease(t_obj_chunk . mark . text);
 	}
     else
 	{
@@ -1591,57 +1593,76 @@ void MCDelete::exec_ctxt(MCExecContext& ctxt)
     else if (targets != NULL && targets -> issubstringchunk())
 	{
 		MCAutoArray<MCVariableChunkPtr> t_chunks;
-		for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
+        bool t_return;
+        t_return = false;
+        for(MCChunk *t_chunk = targets; t_chunk != nil && !t_return; t_chunk = t_chunk -> next)
 		{
 			if (!t_chunk -> issubstringchunk())
 			{
                 ctxt . LegacyThrow(EE_CLIPBOARD_BADMIX);
-				return;
+                t_return = true;
+                break;
 			}
             
 			MCVariableChunkPtr t_var_chunk;
 
             if (!t_chunk -> evalvarchunk(ctxt, true, false, t_var_chunk))
-                return;
+            {
+                t_return = true;
+                break;
+            }
                         
 			if (!t_chunks . Push(t_var_chunk))
 			{
                 ctxt . LegacyThrow(EE_NO_MEMORY);
+                MCValueRelease(t_var_chunk . mark . text);
 				break;
 			}
 		}
         
-		MCEngineExecDeleteVariableChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
+        if (!t_return)
+            MCEngineExecDeleteVariableChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
 
         // Release the text stored from evalvarchunk
         for (int i = 0; i < t_chunks . Size(); ++i)
         {
-            MCValueRelease(t_chunks[i].mark.text);
+            MCValueRelease(t_chunks[i] . mark . text);
         }
 	}
     else if (targets != nil && targets -> istextchunk())
 	{
 		MCAutoArray<MCObjectChunkPtr> t_chunks;
-		for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
+        bool t_return;
+        t_return = false;
+        for(MCChunk *t_chunk = targets; t_chunk != nil && !t_return; t_chunk = t_chunk -> next)
 		{
 			if (!t_chunk -> istextchunk())
 			{
                 ctxt . LegacyThrow(EE_CLIPBOARD_BADMIX);
-                return;
+                t_return = true;
+                break;
 			}
             
 			MCObjectChunkPtr t_obj_chunk;
             if (!t_chunk -> evalobjectchunk(ctxt, true, false, t_obj_chunk))
-                return;
+            {
+                t_return = true;
+                break;
+            }
             
 			if (!t_chunks . Push(t_obj_chunk))
 			{
                 ctxt . LegacyThrow(EE_NO_MEMORY);
+                MCValueRelease(t_obj_chunk . mark . text);
 				break;
 			}
 		}
-        
-		MCInterfaceExecDeleteObjectChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
+
+        if (!t_return)
+            MCInterfaceExecDeleteObjectChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
+
+        for (int i = 0; i < t_chunks . Size(); ++i)
+            MCValueRelease(t_chunks[i] . mark . text);
 	}
     else if (targets != nil)
 	{
@@ -1759,6 +1780,7 @@ void MCChangeProp::exec_ctxt(MCExecContext &ctxt)
 			if (t_obj_chunk . object -> gettype() != CT_BUTTON)
 			{
                 ctxt . LegacyThrow(EE_DISABLE_NOOBJ);
+                MCValueRelease(t_obj_chunk . mark . text);
                 return;
 			}
 				
@@ -1778,6 +1800,7 @@ void MCChangeProp::exec_ctxt(MCExecContext &ctxt)
 			default:
 				break;
 			}
+            MCValueRelease(t_obj_chunk . mark . text);
 		}
 		else
 		{
@@ -3286,20 +3309,16 @@ void MCReplace::exec_ctxt(MCExecContext& ctxt)
         return;
     
     
-    MCStringRef t_target;
-    if (!ctxt . EvalExprAsMutableStringRef(container, EE_REPLACE_BADCONTAINER, t_target))
+    MCAutoStringRef t_target;
+    if (!ctxt . EvalExprAsMutableStringRef(container, EE_REPLACE_BADCONTAINER, &t_target))
         return;
 
-    MCStringsExecReplace(ctxt, *t_pattern, *t_replacement, t_target);
+    MCStringsExecReplace(ctxt, *t_pattern, *t_replacement, *t_target);
     
     if (ctxt . HasError())
-    {
-        MCValueRelease(t_target);
         return;
-    }
     
-    container -> set(ctxt, PT_INTO, t_target);
-    MCValueRelease(t_target);
+    container -> set(ctxt, PT_INTO, *t_target);
 }
 
 void MCReplace::compile(MCSyntaxFactoryRef ctxt)
@@ -3707,6 +3726,7 @@ void MCSelect::exec_ctxt(MCExecContext& ctxt)
 			else
 			{
                 ctxt . LegacyThrow(EE_CHUNK_BADCONTAINER);
+                MCValueRelease(t_chunk . mark . text);
 				return;
 			}
 		}
@@ -3715,8 +3735,9 @@ void MCSelect::exec_ctxt(MCExecContext& ctxt)
 			MCObjectPtr t_object;
 			t_object . object = t_chunk . object;
 			t_object . part_id = t_chunk . part_id;
-			MCInterfaceExecSelectObjects(ctxt, &t_object, 1);
+            MCInterfaceExecSelectObjects(ctxt, &t_object, 1);
 		}
+        MCValueRelease(t_chunk . mark . text);
 	}
     else
 	{

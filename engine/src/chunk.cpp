@@ -4780,6 +4780,7 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
         MCNetworkExecPutIntoUrl(ctxt, *t_string, p_type, t_url_chunk);
 
         MCValueRelease(t_url_chunk . url);
+        MCValueRelease(t_url_chunk . mark . text);
     }
     else
     {
@@ -4792,6 +4793,7 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
             if (t_obj_chunk . object -> gettype() != CT_FIELD)
             {
                 ctxt . LegacyThrow(EE_CHUNK_CANTSETUNICODEDEST);
+                MCValueRelease(t_obj_chunk . mark . text);
                 return false;
             }
 
@@ -4799,6 +4801,7 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
             if (!ctxt . ConvertToData(p_value, &t_data))
             {
                 ctxt . LegacyThrow(EE_CHUNK_CANTSETUNICODEDEST);
+                MCValueRelease(t_obj_chunk . mark . text);
                 return false;
             }
             MCInterfaceExecPutUnicodeIntoField(ctxt, *t_data, p_type, t_obj_chunk);
@@ -4809,6 +4812,7 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
             if (!ctxt . ConvertToString(p_value, &t_string))
             {
                 ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
+                MCValueRelease(t_obj_chunk . mark . text);
                 return false;
             }
 
@@ -4817,6 +4821,7 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
             else
                 MCInterfaceExecPutIntoObject(ctxt, *t_string, p_type, t_obj_chunk);
         }
+        MCValueRelease(t_obj_chunk . mark . text);
     }
 
     if (!ctxt . HasError())
@@ -5780,12 +5785,18 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
     MCPropertyInfo *t_info;
     
     if (t_obj_chunk . chunk == CT_UNDEFINED)
-		return t_obj_chunk . object -> getprop(ctxt, t_obj_chunk . part_id, which, index, effective, r_value);
+    {
+        bool t_success;
+        t_success = t_obj_chunk . object -> getprop(ctxt, t_obj_chunk . part_id, which, index, effective, r_value);
+        MCValueRelease(t_obj_chunk . mark . text);
+        return t_success;
+    }
     else
 	{        
 		if (t_obj_chunk . object->gettype() != CT_FIELD)
 		{
 			MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
+            MCValueRelease(t_obj_chunk . mark . text);
 			return false;
 		}
         
@@ -5802,6 +5813,7 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         if (t_info == nil || t_info -> getter == nil)
         {
             MCeerror -> add(EE_OBJECT_GETNOPROP, line, pos);
+            MCValueRelease(t_obj_chunk . mark . text);
             return false;
         }
         
@@ -5819,6 +5831,7 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
             MCExecFetchProperty(ctxt, t_info, &t_obj_chunk, r_value);
 	}
     
+    MCValueRelease(t_obj_chunk . mark . text);
     return !ctxt . HasError();
 }
 
@@ -5832,12 +5845,17 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
     MCPropertyInfo *t_info;
     
     if (t_obj_chunk . chunk == CT_UNDEFINED)
-		return t_obj_chunk . object -> setprop(ctxt, t_obj_chunk . part_id, which, index, effective, p_value);
+    {
+        bool t_success = t_obj_chunk . object -> setprop(ctxt, t_obj_chunk . part_id, which, index, effective, p_value);
+        MCValueRelease(t_obj_chunk . mark . text);
+        return t_success;
+    }
     else
     {
         if (t_obj_chunk . object -> gettype() != CT_FIELD)
         {
             MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
+            MCValueRelease(t_obj_chunk . mark . text);
             return false;
         }
     
@@ -5853,6 +5871,7 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         if (t_info == nil || t_info -> getter == nil)
         {
             MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
+            MCValueRelease(t_obj_chunk . mark . text);
             return false;
         }
         
@@ -5875,7 +5894,9 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         else
             MCExecStoreProperty(ctxt, t_info, &t_obj_chunk, p_value);
     }
-    
+
+    MCValueRelease(t_obj_chunk . mark. text);
+
     if (!ctxt . HasError())
     {
         // MM-2012-09-05: [[ Property Listener ]] Make sure any listeners are updated of the property change.
@@ -6077,6 +6098,7 @@ bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
         t_mark . finish = INDEX_MAX;
         t_mark . start = 0;
         t_mark . changed = false;
+        t_mark . text = nil;
         r_chunk . object = t_object.object;
         r_chunk . part_id = t_object.part_id;
         r_chunk . chunk = CT_UNDEFINED;
