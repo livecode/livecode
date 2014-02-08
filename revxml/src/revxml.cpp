@@ -1286,6 +1286,10 @@ void XML_SetElementContents(char *args[], int nargs, char **retstring, Bool *pas
 				// XML rather than as a raw string. Because of this we need to escape any special characters in the string.
 				xmlChar *t_encoded_string;
 				t_encoded_string = xmlEncodeSpecialChars(tdoc -> GetDocPtr(), (const xmlChar *)args[2]);
+				// MDW-2014-02-07 : [[ bugfix-11766 ]] handle empty string replacement argument.
+				// Should really be fixed in xmlStringGetNodeList in the libxml library, but this avoids the crash.
+				if (0 == strlen(args[2]))
+					t_encoded_string = (xmlChar *)"\n";
 
 				if (t_replace_text_only)
 				{
