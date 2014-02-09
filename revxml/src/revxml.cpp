@@ -1286,10 +1286,6 @@ void XML_SetElementContents(char *args[], int nargs, char **retstring, Bool *pas
 				// XML rather than as a raw string. Because of this we need to escape any special characters in the string.
 				xmlChar *t_encoded_string;
 				t_encoded_string = xmlEncodeSpecialChars(tdoc -> GetDocPtr(), (const xmlChar *)args[2]);
-				// MDW-2014-02-07 : [[ bugfix-11766 ]] handle empty string replacement argument.
-				// Should really be fixed in xmlStringGetNodeList in the libxml library, but this avoids the crash.
-				if (0 == strlen(args[2]))
-					t_encoded_string = (xmlChar *)"\n";
 
 				if (t_replace_text_only)
 				{
@@ -1322,7 +1318,14 @@ void XML_SetElementContents(char *args[], int nargs, char **retstring, Bool *pas
 
 					// Insert a new text node before all the children
 					xmlNodePtr t_new_node_list;
-					t_new_node_list = xmlStringGetNodeList(tdoc -> GetDocPtr(), t_encoded_string);
+					// MDW-2014-02-08 : [[ bugfix-11766 ]] handle empty string replacement argument.
+					// Should really be fixed in xmlStringGetNodeList in the libxml library, but this avoids the crash.
+					if (0 != strlen(args[2]))
+						t_new_node_list = xmlStringGetNodeList(tdoc -> GetDocPtr(), t_encoded_string);
+					else
+					{
+						t_new_node_list = xmlStringGetNodeList(tdoc -> GetDocPtr(), (xmlChar *)"blah");
+					}
 
 					// Create a new text element to hold the content
 					CXMLElement *t_new_element;
@@ -1336,6 +1339,8 @@ void XML_SetElementContents(char *args[], int nargs, char **retstring, Bool *pas
 					// Set the new text element to be the first child
 					telement . GetNodePtr() -> children = t_new_element -> GetNodePtr();
 					telement . GetNodePtr() -> children -> next = t_old_first_element;
+					// MDW-2014-02-08 : [[ bugfix-11766 ]]
+					telement . SetContent((char *)t_encoded_string);
 
 					if (t_old_first_element != NULL)
 						t_old_first_element -> prev = t_new_element -> GetNodePtr();
