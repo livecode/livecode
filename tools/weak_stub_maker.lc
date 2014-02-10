@@ -171,8 +171,11 @@ on generateModule pModule
 
   output "#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)"
   output "#define MODULE_" & toUpper(pModule) & "_NAME" && quote & tDarwinLibrary & quote
-  output "#elif defined(_LINUX) || defined(TARGET_SUBPLATFORM_ANDROID)"
+  output "#elif defined(_LINUX)"
   output "#define MODULE_" & toUpper(pModule) & "_NAME" && quote & tUnixLibrary & quote
+  -- MM-2014-02-10: [[ LipOpenSSL 1.0.1e ]] Prefix android modules with lib.
+  output "#elif defined(TARGET_SUBPLATFORM_ANDROID)"
+  output "#define MODULE_" & toUpper(pModule) & "_NAME" && quote & "lib" & tUnixLibrary & quote
   output "#elif defined(_WINDOWS)"
   output "#define MODULE_" & toUpper(pModule) & "_NAME" && quote & tWindowsLibrary & quote
   output "#endif"
