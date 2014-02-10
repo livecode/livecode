@@ -684,22 +684,22 @@ void MCField::SetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef p_tex
 	SetText(ctxt, part, *t_string);
 }
 
-void MCField::GetHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text)
+void MCField::GetHtmlText(MCExecContext& ctxt, uint32_t part, MCValueRef& r_text)
 {
-	if (exportashtmltext(part, 0, INT32_MAX, false, r_text))
+	if (exportashtmltext(part, 0, INT32_MAX, false, (MCStringRef&)r_text))
 		return;
 
 	ctxt . Throw();
 }
 
-void MCField::SetHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text)
+void MCField::SetHtmlText(MCExecContext& ctxt, uint32_t part, MCValueRef p_text)
 {
 	sethtml(part, p_text);
 }
 
-void MCField::GetEffectiveHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text)
+void MCField::GetEffectiveHtmlText(MCExecContext& ctxt, uint32_t part, MCValueRef& r_text)
 {
-	if (exportashtmltext(part, 0, INT32_MAX, true, r_text))
+	if (exportashtmltext(part, 0, INT32_MAX, true, (MCStringRef&)r_text))
 		return;
 
 	ctxt . Throw();

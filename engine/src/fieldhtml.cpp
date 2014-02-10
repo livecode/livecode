@@ -1927,22 +1927,37 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 	}
 }
 
-MCParagraph *MCField::importhtmltext(MCValueRef p_data)
+MCParagraph *MCField::importhtmltext(MCValueRef p_text)
 {
+    bool t_is_unicode_string;
+    t_is_unicode_string = (MCValueGetTypeCode(p_text) == kMCValueTypeCodeString && !MCStringIsNative((MCStringRef)p_text));
+    
     MCAutoPointer<char> t_data;
+    MCAutoStringRefAsCString t_native_string;
     const char *t_ptr, *t_limit;
     
-    switch (MCValueGetTypeCode(p_data))
+    switch (MCValueGetTypeCode(p_text))
     {
         case kMCValueTypeCodeString:
-            uindex_t t_length;
-            /* UNCHECKED */ MCStringConvertToUTF8((MCStringRef)p_data, &t_data, t_length);
-            t_ptr = *t_data;
-            t_limit = t_ptr + t_length;
+            if (t_is_unicode_string)
+            {
+                uindex_t t_length;
+                /* UNCHECKED */ MCStringConvertToUTF8((MCStringRef)p_text, &t_data, t_length);
+                t_ptr = *t_data;
+                t_limit = t_ptr + t_length;
+
+            }
+            else
+            {
+                t_native_string . Lock((MCStringRef)p_text);
+                t_ptr = *t_native_string;
+                t_limit = t_ptr + MCStringGetLength((MCStringRef)p_text);
+            }
             break;
         case kMCValueTypeCodeData:
-            t_ptr = (const char *)MCDataGetBytePtr((MCDataRef)p_data);
-            t_limit = t_ptr + MCDataGetLength((MCDataRef)p_data);
+            t_ptr = (const char *)MCDataGetBytePtr((MCDataRef)p_text);
+            t_limit = t_ptr + MCDataGetLength((MCDataRef)p_text);
+            break;
         default:
             return nil;
     }
@@ -1957,7 +1972,7 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_data)
 	memset(&t_char_style, 0, sizeof(MCFieldCharacterStyle));
 	import_html_push_tag(ctxt, kImportHtmlTagNone, t_char_style);
 	
-    if (MCValueGetTypeCode(p_data) == kMCValueTypeCodeString)
+    if (t_is_unicode_string)
         ctxt . is_utf8 = true;
     
 	// We implicitly start with a start tag (notionally).
@@ -2037,7 +2052,7 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_data)
                         
                         // MW-2012-11-19: Add support for UTF-8 htmlText.
                     case kImportHtmlTagMeta:
-                        if (!t_tag . is_terminator)
+                        if (!t_tag . is_terminator && !t_is_unicode_string)
                         {
                             bool t_is_utf8;
                             t_is_utf8 = false;

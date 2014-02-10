@@ -1044,23 +1044,23 @@ void MCField::SetRtfTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int
     state &= ~CS_NO_FILE;
 }
 
-void MCField::GetHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value)
+void MCField::GetHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCValueRef& r_value)
 {
-    if (exportashtmltext(p_part_id, p_start, p_finish, false, r_value))
+    if (exportashtmltext(p_part_id, p_start, p_finish, false, (MCStringRef&)r_value))
         return;
 
     ctxt . Throw();
 }
 
-void MCField::GetEffectiveHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value)
+void MCField::GetEffectiveHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCValueRef& r_value)
 {
-    if (exportashtmltext(p_part_id, p_start, p_finish, true, r_value))
+    if (exportashtmltext(p_part_id, p_start, p_finish, true, (MCStringRef&)r_value))
         return;
 
     ctxt . Throw();
 }
 
-void MCField::SetHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef value)
+void MCField::SetHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCValueRef value)
 {
     if (state & CS_NO_FILE)
     {
