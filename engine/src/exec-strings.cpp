@@ -1249,7 +1249,14 @@ bool MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_item, MCStringRef p
 	uindex_t t_index;
 	MCRange t_first_chunk_range;
 	t_index = 0;
-	t_first_chunk_range = MCRangeMake(0, MCStringGetLength(p_string));
+    t_first_chunk_range = MCRangeMake(0, MCStringGetLength(p_string));
+
+    // Ensure that when no item is skipped, the offset starts from the first item - without skipping it
+    if (p_skip == 0)
+        r_offset = 1;
+    else
+        r_offset = 0;
+
 	while(p_skip > 0 && MCStringsIterateChunks(ctxt, t_index, p_string, p_chunk_type, t_first_chunk_range))
 		p_skip -= 1;
 	
@@ -1279,7 +1286,7 @@ bool MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_item, MCStringRef p
 	
 	// Now count the number of delimiters between the start of the first chunk
 	// and the start of the found string.
-	r_offset = 1 + MCStringCountChar(p_string, MCRangeMake(t_first_chunk_range . offset, t_range . offset - t_first_chunk_range . offset), t_delimiter, t_options);
+    r_offset += MCStringCountChar(p_string, MCRangeMake(t_first_chunk_range . offset, t_range . offset - t_first_chunk_range . offset), t_delimiter, t_options);
 
 	return true;
 }

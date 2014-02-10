@@ -3989,7 +3989,10 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
 	return strclone("not found");
 #endif /* MCS_request_ae_dsk_mac */
         if (aePtr == NULL)
+        {
             /* UNCHECKED */ MCStringCreateWithCString("No current Apple event", r_value); //as specified in HyperTalk
+            return;
+        }
         errno = noErr;
         
         switch (p_ae)
@@ -3998,12 +4001,15 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             {
                 char *aeclass;
                 if ((errno = getAEAttributes(aePtr, keyEventClassAttr, aeclass)) == noErr)
+                {
                     /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)aeclass, r_value);
+                    return;
+                }
                 break;
             }
             case AE_DATA:
             {
-                if (MCStringGetLength(p_message) == 0)
+                if (MCStringIsEmpty(p_message))
                 { //no keyword, get event parameter(data)
                     DescType rType;
                     Size rSize;  //actual size returned
@@ -4016,7 +4022,10 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                         char *string = nil;
                         uint4 length = 0;
                         if (fetch_ae_as_fsref_list(string, length))
+                        {
                             /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)string, r_value);
+                            return;
+                        }
                     }
                     
                     if ((errno = AEGetParamPtr(aePtr, keyDirectObject, typeChar,
@@ -4035,8 +4044,10 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                         uint4 length = 0;
                         if (fetch_ae_as_fsref_list(string, length))
                             /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)string, r_value);
-                        /* UNCHECKED */ MCStringCreateWithCString("file list error", r_value);
+                        else
+                            /* UNCHECKED */ MCStringCreateWithCString("file list error", r_value);
                     }
+                    return;
                 }
                 else
                 {
@@ -4052,12 +4063,18 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                         || key == keyTransactionIDAttr)
                     {
                         if ((errno = getAEAttributes(aePtr, key, info)) == noErr)
+                        {
                             /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)info, r_value);
+                            return;
+                        }
                     }
                     else
                     {
                         if ((errno = getAEParams(aePtr, key, info)) == noErr)
+                        {
                             /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)info, r_value);
+                            return;
+                        }
                     }
                 }
             }
@@ -4066,14 +4083,20 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             {
                 char *aeid;
                 if ((errno = getAEAttributes(aePtr, keyEventIDAttr, aeid)) == noErr)
+                {
                     /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)aeid, r_value);
+                    return;
+                }
                 break;
             }
             case AE_RETURN_ID:
             {
                 char *aerid;
                 if ((errno = getAEAttributes(aePtr, keyReturnIDAttr, aerid)) == noErr)
+                {
                     /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)aerid, r_value);
+                    return;
+                }
                 
                 break;
             }
@@ -4088,13 +4111,18 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                     errno = getAddressFromDesc(senderDesc, sender);
                     AEDisposeDesc(&senderDesc);
                     /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)sender, r_value);
+                    return;
                 }
                 delete[] sender;
                 break;
             }
         }  /* end switch */
+        
         if (errno == errAECoercionFail) //data could not display as text
+        {
             /* UNCHECKED */ MCStringCreateWithCString("unknown type", r_value);
+            return;
+        }
         
         /* UNCHECKED */ MCStringCreateWithCString("not found", r_value);
     }
