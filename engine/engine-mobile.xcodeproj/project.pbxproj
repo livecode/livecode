@@ -255,8 +255,8 @@
 		7268ED941848C30200D10598 /* exec-sound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE9459481761E219008408DE /* exec-sound.cpp */; };
 		7268ED951848C30200D10598 /* exec-textmessaging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449997175D02AE00346B49 /* exec-textmessaging.cpp */; };
 		7268ED961848C37D00D10598 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8AB9052180E9DCD0050A249 /* image_rep_densitymapped.cpp */; };
-		72FFE3461858840300BA6A23 /* exec-keywords.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 72FFE3451858840300BA6A23 /* exec-keywords.cpp */; };
-		72FFE3481858845A00BA6A23 /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 72FFE3471858845A00BA6A23 /* image_rep_resampled.cpp */; };
+		72CC34B418A9378800BEC655 /* exec-keywords.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 72FFE3451858840300BA6A23 /* exec-keywords.cpp */; };
+		72CC34B518A9379200BEC655 /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 72FFE3471858845A00BA6A23 /* image_rep_resampled.cpp */; };
 		7607CF321768D26700ADB512 /* mbliphoneorientation.mm in Sources */ = {isa = PBXBuildFile; fileRef = BE940436175F659F003EAB87 /* mbliphoneorientation.mm */; };
 		7607CF701769BB4D00ADB512 /* exec-interface-aclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7607CF601769BB4C00ADB512 /* exec-interface-aclip.cpp */; };
 		7607CF711769BB4D00ADB512 /* exec-interface-button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7607CF611769BB4C00ADB512 /* exec-interface-button.cpp */; };
@@ -2178,6 +2178,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				72CC34B518A9379200BEC655 /* image_rep_resampled.cpp in Sources */,
+				72CC34B418A9378800BEC655 /* exec-keywords.cpp in Sources */,
 				4DE5E7EB174BBE89001AB76D /* uuid.cpp in Sources */,
 				4DABCD9915ECD4700085E214 /* aclip.cpp in Sources */,
 				4DABCD9A15ECD4700085E214 /* answer.cpp in Sources */,
@@ -2445,8 +2447,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D08A113138EA7C60081F990 /* dummy.cpp in Sources */,
-				72FFE3461858840300BA6A23 /* exec-keywords.cpp in Sources */,
-				72FFE3481858845A00BA6A23 /* image_rep_resampled.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
