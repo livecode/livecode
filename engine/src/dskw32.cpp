@@ -1500,11 +1500,34 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 			
 			nread += 1;
 		}
-		else if (!ReadFile(m_handle, (LPVOID)sptr, (DWORD)p_byte_size, &nread, NULL))
+		else
 		{
-			MCS_seterrno(GetLastError());
-			r_read = nread;
-			return false;
+			// The Win32 ReadFile call has an annoying limitation - it cannot read more
+			// than 64MB in each call. Just in case there are additional circumstances
+			// that lower it further, perform the read 4MB at a tile.
+			BOOL t_read_success;
+			DWORD t_offset, t_remaining;
+			t_read_success = TRUE;
+			t_offset = 0;
+			t_remaining = p_byte_size;
+			while (t_read_success && t_remaining > 0)
+			{
+				// Only read up to 4MB at a time.
+				DWORD t_readsize;
+				t_readsize = MCU_min(t_remaining, 0x00400000);
+				
+				t_read_success = ReadFile(m_handle, (LPVOID)((char*)sptr + t_offset), t_readsize, &nread, NULL);
+				t_offset += nread;
+				if (!t_read_success)
+				{
+					MCS_seterrno(GetLastError());
+					r_read = t_offset;
+					return false;
+				}
+				
+				t_remaining -= nread;
+			}
+			nread = t_offset;
 		}
 
 		if (nread < p_byte_size)
