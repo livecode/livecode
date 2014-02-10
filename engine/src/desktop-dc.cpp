@@ -473,7 +473,6 @@ Boolean MCScreenDC::uint4towindow(uint4, Window &w)
 	return False;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCScreenDC::seticon(uint4 p_icon)
@@ -630,16 +629,19 @@ MCStack *MCScreenDC::device_getstackatpoint(int32_t x, int32_t y)
 
 MCColorTransformRef MCScreenDC::createcolortransform(const MCColorSpaceInfo& info)
 {
-	return nil;
+	MCPlatformColorTransformRef t_transform;
+	MCPlatformCreateColorTransform(info, t_transform);
+	return t_transform;
 }
 
 void MCScreenDC::destroycolortransform(MCColorTransformRef transform)
 {
+	MCPlatformReleaseColorTransform((MCPlatformColorTransformRef)transform);
 }
 
 bool MCScreenDC::transformimagecolors(MCColorTransformRef transform, MCImageBitmap *image)
 {
-	return false;
+	return MCPlatformApplyColorTransform((MCPlatformColorTransformRef)transform, image);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

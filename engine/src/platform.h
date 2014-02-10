@@ -29,6 +29,7 @@
 
 // COCOA-TODO: Remove external declaration.
 struct MCImageBitmap;
+struct MCColorSpaceInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -500,6 +501,16 @@ typedef class MCPlatformLoadedFont *MCPlatformLoadedFontRef;
 
 bool MCPlatformLoadFont(const char *utf8path, bool globally, MCPlatformLoadedFontRef& r_loaded_font);
 bool MCPlatformUnloadFont(const char *utf8path, bool globally, MCPlatformLoadedFontRef loaded_font);
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef class MCPlatformColorTransform *MCPlatformColorTransformRef;
+
+void MCPlatformCreateColorTransform(const MCColorSpaceInfo& info, MCPlatformColorTransformRef& r_transform);
+void MCPlatformRetainColorTransform(MCPlatformColorTransformRef transform);
+void MCPlatformReleaseColorTransform(MCPlatformColorTransformRef transform);
+
+bool MCPlatformApplyColorTransform(MCPlatformColorTransformRef transform, MCImageBitmap *image);
 
 ////////////////////////////////////////////////////////////////////////////////
 

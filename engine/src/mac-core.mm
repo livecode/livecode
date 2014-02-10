@@ -1123,6 +1123,9 @@ int main(int argc, char *argv[], char *envp[])
 	// Register for reconfigurations.
 	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
 	
+	// Initialize various things.
+	MCPlatformInitializeColorTransform();
+	
 	// Setup our delegate
 	com_runrev_livecode_MCApplicationDelegate *t_delegate;
 	t_delegate = [[com_runrev_livecode_MCApplicationDelegate alloc] initWithArgc: argc argv: argv envp: envp];
