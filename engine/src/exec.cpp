@@ -290,10 +290,8 @@ bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
     if (!ConvertToString(p_value, &t_string))
         return false;
     
-    if (MCStringIsNative(*t_string))
-        return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string), r_data);
-    else
-        return MCDataCreateWithBytes((const byte_t *)MCStringGetCharPtr(*t_string), MCStringGetLength(*t_string) * 2, r_data);
+    // Strings always convert to data as native characters
+    return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string), r_data);
 }
 
 bool MCExecContext::ConvertToName(MCValueRef p_value, MCNameRef& r_name)
