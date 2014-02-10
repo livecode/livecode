@@ -93,6 +93,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #elif defined(_ANDROID_MOBILE)
 
+#define MCSSL
 #define __ISO_8859_1__
 #define __LF__
 #define PLATFORM_STRING "android"
