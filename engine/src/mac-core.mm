@@ -590,6 +590,32 @@ NSEvent *MCMacPlatformGetLastMouseEvent(void)
 	return s_last_mouse_event;
 }
 
+void MCPlatformFlushEvents(MCPlatformEventMask p_mask)
+{
+	NSUInteger t_ns_mask;
+	t_ns_mask = 0;
+	if ((p_mask & kMCPlatformEventMouseDown) != 0)
+		t_ns_mask |= NSLeftMouseDownMask | NSRightMouseDownMask | NSOtherMouseDownMask;
+	if ((p_mask & kMCPlatformEventMouseUp) != 0)
+		t_ns_mask |= NSLeftMouseUpMask | NSRightMouseUpMask | NSOtherMouseUpMask;
+	if ((p_mask & kMCPlatformEventKeyDown) != 0)
+		t_ns_mask |= NSKeyDownMask;
+	if ((p_mask & kMCPlatformEventKeyUp) != 0)
+		t_ns_mask |= NSKeyUpMask;
+	
+	NSDate *t_distant_past = [NSDate distantPast];
+	for(;;)
+	{
+		NSEvent *t_event;
+		t_event = [NSApp nextEventMatchingMask: t_ns_mask
+									untilDate: t_distant_past
+									inMode: NSDefaultRunLoopMode
+									dequeue: YES];
+		if (t_event == nil)
+			break;
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformGetScreenCount(uindex_t& r_count)

@@ -233,6 +233,15 @@ enum MCPlatformCursorImageSupport
 	kMCPlatformCursorImageSupportAlpha,
 };
 
+typedef uint32_t MCPlatformEventMask;
+enum
+{
+	kMCPlatformEventMouseDown = 1 << 0,
+	kMCPlatformEventMouseUp = 1 << 1,
+	kMCPlatformEventKeyDown = 1 << 2,
+	kMCPlatformEventKeyUp = 1 << 3,
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // System properties are settings that can be queried from the system.
@@ -292,6 +301,9 @@ void MCPlatformGetWindowAtPoint(MCPoint location, MCPlatformWindowRef& r_window)
 
 // Return the 'time' of the last event.
 uint32_t MCPlatformGetEventTime(void);
+
+// Flush events of the specified types in mask.
+void MCPlatformFlushEvents(MCPlatformEventMask mask);
 
 ////////////////////////////////////////////////////////////////////////////////
 

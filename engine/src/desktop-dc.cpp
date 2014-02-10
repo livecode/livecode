@@ -818,6 +818,21 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 
 void MCScreenDC::flushevents(uint2 e)
 {
+	// Only really the mouseDown / mouseUp / keyDown / keyUp events make sense to
+	// flush these days, the remaining event types are quite tied to Mac Classic!
+	MCPlatformEventMask t_mask;
+	t_mask = 0;
+	if (e == FE_MOUSEDOWN)
+		t_mask = kMCPlatformEventMouseDown;
+	else if (e == FE_MOUSEUP)
+		t_mask = kMCPlatformEventMouseUp;
+	else if (e == FE_KEYDOWN)
+		t_mask = kMCPlatformEventKeyDown;
+	else if (e == FE_KEYUP)
+		t_mask = kMCPlatformEventKeyUp;
+	
+	if (t_mask != nil)
+		MCPlatformFlushEvents(t_mask);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
