@@ -60,11 +60,6 @@ extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCMacOSXPrinter::c_sheet_pending = false;
-bool MCMacOSXPrinter::c_sheet_accepted = false;
-
-///////////////////////////////////////////////////////////////////////////////
-
 CGAffineTransform MCGAffineTransformToCGAffineTransform(const MCGAffineTransform &p_transform)
 {
 	CGAffineTransform t_transform;
@@ -986,98 +981,43 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
 	
 	ResetSession();
 
-	PMSheetDoneUPP t_sheet_done_callback;
-	t_sheet_done_callback = NULL;
-
-	Boolean t_accepted;
-	t_accepted = false;
-	OSErr t_err;
-
-	if (!MCModeMakeLocalWindows())
-	{
-		bool t_success = true;
-		// serialize printer + print settings + page format, display remotely then deserialize returned data
-		char *t_data = NULL;
-		uint32_t t_data_size = 0;
-		char *t_reply_data = NULL;
-		uint32_t t_reply_data_size = 0;
-		uint32_t t_result;
-		t_success = serialize_printer_settings(t_data, t_data_size, m_session, m_printer, m_settings, m_page_format);
-		PMPrinter t_printer = NULL;
-		if (t_success)
-		{
-			if (p_is_settings)
-				MCRemotePrintSetupDialog(t_reply_data, t_reply_data_size, t_result, t_data, t_data_size);
-			else
-				MCRemotePageSetupDialog(t_reply_data, t_reply_data_size, t_result, t_data, t_data_size);
-			t_success = deserialize_printer_settings(t_reply_data, t_reply_data_size, m_session, t_printer, m_settings, m_page_format);
-			free(t_reply_data);
-		}
-		if (t_success)
-		{
-			PMSessionSetCurrentPMPrinter(m_session, t_printer);
-			PMRelease(m_printer);
-			m_printer = t_printer;
-		}
-		if (t_success)
-		{
-			t_err = noErr;
-			t_accepted = (Boolean)t_result;
-		}
-		else
-			t_err = errAborted;
-	}
+	bool t_use_sheets;
+	t_use_sheets = false;
+	if (p_window_modal && p_owner != NULL)
+		t_use_sheets = true;
+		
+	PDEBUG(stderr, "DoDialog: Showing dialog\n");
+	
+	MCPlatformPrintDialogResult t_result;
+	if (p_is_settings)
+		MCPlatformBeginPrintSettingsDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format);
 	else
+		MCPlatformBeginPageSetupDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format);
+
+	PDEBUG(stderr, "DoDialog: Dialog shown\n");
+	
+	for(;;)
 	{
-		if (p_window_modal && p_owner != NULL)
-		{
-			t_sheet_done_callback = NewPMSheetDoneUPP(SheetDoneCallback);
-			// COCOA-TODO: PMSessionUseSheets
-#ifdef OLD_MAC
-			PMSessionUseSheets(m_session, (WindowPtr)p_owner -> handle . window, t_sheet_done_callback);
-#endif
-			
-			c_sheet_pending = true;
-			c_sheet_accepted = false;
-		}
-
-		Cursor t_cursor;
-		SetCursor(GetQDGlobalsArrow(&t_cursor)); // bug in OS X doesn't reset this
-		ShowCursor();
+		t_result = MCPlatformEndPrintDialog();
+		if (t_result != kMCPlatformPrintDialogResultContinue)
+			break;
 		
-		PDEBUG(stderr, "DoDialog: Showing dialog\n");
-		
-		if (p_is_settings)
-			t_err = PMSessionPrintDialog(m_session, m_settings, m_page_format, &t_accepted);
-		else
-			t_err = PMSessionPageSetupDialog(m_session, m_page_format, &t_accepted);
-
-		PDEBUG(stderr, "DoDialog: Dialog shown\n");
+		MCscreen -> wait(REFRESH_INTERVAL, True, True);
 	}
 
-	if (t_err == noErr && c_sheet_pending)
+	if (t_use_sheets)
 	{
-		while(c_sheet_pending)
-			MCscreen -> wait(REFRESH_INTERVAL, True, True);
-				
-		t_accepted = c_sheet_accepted;
-	}
-
-	if (t_sheet_done_callback != NULL)
-	{
-		DisposePMSheetDoneUPP(t_sheet_done_callback);
-
 		// MW-2009-01-22: [[ Bug 3509 ]] Make sure we force an update to the menubar, just in case
 		//   the dialog has messed with our menu item enabled state!
 		MCscreen -> updatemenubar(True);
 	}
 
-	if (t_err != noErr)
+	if (t_result == kMCPlatformPrintDialogResultError)
 	{
 		PDEBUG(stderr, "DoDialog: Error occured\n");
 		return PRINTER_DIALOG_RESULT_ERROR;
 	}
-	else if (t_accepted)
+	else if (t_result == kMCPlatformPrintDialogResultSuccess)
 	{
 		PDEBUG(stderr, "DoDialog: SetProperties\n");
 		SetProperties(p_is_settings);
@@ -1089,12 +1029,6 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
 		PDEBUG(stderr, "DoDialog: Returning Cancel\n");
 		return PRINTER_DIALOG_RESULT_CANCEL;
 	}
-}
-
-void MCMacOSXPrinter::SheetDoneCallback(PMPrintSession p_session, WindowRef p_window, Boolean p_accepted)
-{
-	c_sheet_pending = false;
-	c_sheet_accepted = p_accepted;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2200,3 +2134,28 @@ MCPrinterResult MCMacOSXPrinterDevice::HandleError(OSErr p_error, const char *p_
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void MCListSystemPrinters(MCExecPoint& ep)
+{
+	ep . clear();
+
+	CFArrayRef t_printers;
+	if (PMServerCreatePrinterList(kPMServerLocal, &t_printers) != noErr)
+		return;
+
+	for(CFIndex i = 0; i < CFArrayGetCount(t_printers); ++i)
+	{
+		char *t_name;
+		t_name = osx_cfstring_to_cstring(PMPrinterGetName((PMPrinter)CFArrayGetValueAtIndex(t_printers, i)), false);
+		ep . concatcstring(t_name, EC_RETURN, i == 0);
+		free(t_name);
+	}
+
+	CFRelease(t_printers);
+}
+
+MCPrinter *MCCreateSystemPrinter(void)
+{
+	return new MCMacOSXPrinter;
+}
+
+///////////////////////////////////////////////////////////////////////////////

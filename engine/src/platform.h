@@ -788,6 +788,22 @@ bool MCPlatformSurfaceComposite(MCPlatformSurfaceRef surface, MCGRectangle dst_r
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef class MCPlatformPrintSession *MCPlatformPrintSessionRef;
+
+enum MCPlatformPrintDialogResult
+{
+	kMCPlatformPrintDialogResultContinue,
+	kMCPlatformPrintDialogResultError,
+	kMCPlatformPrintDialogResultSuccess,
+	kMCPlatformPrintDialogResultCancel
+};
+
+void MCPlatformBeginPrintSettingsDialog(MCPlatformWindowRef owner, void *session, void *settings, void *page_format);
+void MCPlatformBeginPageSetupDialog(MCPlatformWindowRef owner, void *session, void *settings, void *page_format);
+MCPlatformPrintDialogResult MCPlatformEndPrintDialog(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
 typedef class MCPlatformPlayer *MCPlatformPlayerRef;
 
 enum MCPlatformPlayerProperty

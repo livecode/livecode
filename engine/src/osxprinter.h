@@ -102,13 +102,6 @@ private:
 	PMPrintSettings m_settings;
 	PMPageFormat m_page_format;
 	PMPrintSession m_session;
-
-	//
-
-	static bool c_sheet_pending;
-	static bool c_sheet_accepted;
-
-	static void SheetDoneCallback(PMPrintSession printSession, WindowRef documentWindow, Boolean accepted);
 };
 
 #endif

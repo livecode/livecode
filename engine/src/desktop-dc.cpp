@@ -855,14 +855,18 @@ void MCScreenDC::closeIME()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern void MCListSystemPrinters(MCExecPoint& ep);
+extern MCPrinter *MCCreateSystemPrinter(void);
+
 void MCScreenDC::listprinters(MCExecPoint& ep)
 {
+	MCListSystemPrinters(ep);
 }
 
 // COCOA-TODO: Printer creation.
 MCPrinter *MCScreenDC::createprinter(void)
 {
-	return MCUIDC::createprinter();
+	return MCCreateSystemPrinter();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
