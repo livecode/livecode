@@ -58,6 +58,8 @@ public class SamsungBillingProvider implements BillingProvider
         public void onSucceedGetItemList(ArrayList<ItemVO> itemList)
         {
             knownItems.addAll(itemList);
+            for (ItemVO knownItem : itemList)
+                loadItemToLocalInventory(knownItem);
 
             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
             String today = sdf.format(new Date());
@@ -183,6 +185,26 @@ public class SamsungBillingProvider implements BillingProvider
 
         if (success)
             success = setPurchaseProperty(inboxVO.getItemId(), "type", inboxVO.getType());
+
+        return success;
+
+    }
+
+    boolean loadItemToLocalInventory(ItemVO itemVO)
+    {
+        boolean success = loadBaseToLocalInventory(itemVO);
+        //Log.d(TAG, "Inbox Item id is : " + inboxVO.getItemId());
+        //Log.d(TAG, "Inbox Item name is : " + inboxVO.getItemName());
+
+        if (success)
+            success = setPurchaseProperty(itemVO.getItemId(), "type", itemVO.getType());
+
+        //TODO : check if itemType is not subscription
+        if (success)
+            success = setPurchaseProperty(itemVO.getItemId(), "subscriptionDurationUnit", itemVO.getSubscriptionDurationUnit());
+
+        if (success)
+            success = setPurchaseProperty(itemVO.getItemId(), "subscriptionDurationMultiplier", itemVO.getSubscriptionDurationMultiplier());
 
         return success;
 
@@ -465,7 +487,8 @@ public class SamsungBillingProvider implements BillingProvider
 
     public String getPurchaseList()
     {
-        return itemProps.keySet().toString();
+        return ownedItems.toString();
+        //return itemProps.keySet().toString();
     }
 
     public boolean confirmDelivery(int purchaseId)

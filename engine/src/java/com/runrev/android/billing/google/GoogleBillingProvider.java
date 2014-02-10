@@ -22,6 +22,9 @@ public class GoogleBillingProvider implements BillingProvider
     private PurchaseObserver mPurchaseObserver;
     private Map<String,String> types = new HashMap<String,String>();
     private Map<String,Map<String,String>> itemProps = new HashMap<String, Map<String,String>>();
+	
+	private List<SkuDetails> knownItems = new ArrayList<SkuDetails>();
+    private Set<String> ownedItems = new HashSet<String>();
     
     /* 
      Temp var for holding the productId, to pass it in onIabPurchaseFinished(IabResult result, Purchase purchase), in case purchase is null.
@@ -243,6 +246,8 @@ public class GoogleBillingProvider implements BillingProvider
                         return;
                     }
                    
+					knownItems.add(skuDetails);
+					loadKnownItemToLocalInventory(skuDetails);
                     Log.d(TAG, "Details for requested product : " + skuDetails.toString());
                     // TODO : Call productDetailsReceived 
                 }
@@ -303,7 +308,7 @@ public class GoogleBillingProvider implements BillingProvider
     
     public String getPurchaseList()
     {
-        return itemProps.keySet().toString();
+        return ownedItems.toString();
     }
     
     //some helper methods
@@ -332,10 +337,28 @@ public class GoogleBillingProvider implements BillingProvider
         return success;
 
     }
+	
+	boolean loadKnownItemToLocalInventory(SkuDetails skuDetails)
+	{
+		boolean success = true;
+        if (success)
+            success = setPurchaseProperty(skuDetails.getSku(), "itemType", skuDetails.getType());
+        
+        if (success)
+            success = setPurchaseProperty(skuDetails.getSku(), "price", skuDetails.getPrice());
+        
+        if (success)
+            success = setPurchaseProperty(skuDetails.getSku(), "title", skuDetails.getTitle());
+		
+        if (success)
+            success = setPurchaseProperty(skuDetails.getSku(), "description", skuDetails.getDescription());
+		
+        return success;
+	}
     
     void removePurchaseFromLocalInventory(Purchase purchase)
     {
-        itemProps.remove(purchase.getSku());
+        ownedItems.remove(purchase.getSku());
         
     }
     
@@ -396,6 +419,7 @@ public class GoogleBillingProvider implements BillingProvider
             
             Log.d(TAG, "Purchase successful.");
             pendingPurchaseSku = "";
+			ownedItems.add(purchase.getSku());
             addPurchaseToLocalInventory(purchase);
             offerPurchasedItems(purchase);
                 
@@ -457,6 +481,7 @@ public class GoogleBillingProvider implements BillingProvider
             for (Purchase p : purchaseList)
             {
                 addPurchaseToLocalInventory(p);
+				ownedItems.add(p.getSku());
                 offerPurchasedItems(p);
             }
         }

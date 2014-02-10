@@ -23,6 +23,9 @@ public class AmazonBillingProvider implements BillingProvider
     private PurchaseObserver mPurchaseObserver;
     private Map<String,Map<String,String>> itemProps = new HashMap<String, Map<String,String>>();
     
+    private List<Item> knownItems = new ArrayList<Item>();
+    private Set<String> ownedItems = new HashSet<String>();
+    
     public void initBilling()
     {
         mPurchasingObserver = new MyPurchasingObserver(getActivity());
@@ -128,7 +131,7 @@ public class AmazonBillingProvider implements BillingProvider
     
     public String getPurchaseList()
     {
-        return itemProps.keySet().toString();
+        return ownedItems.toString();
     }
     
     public boolean consumePurchase(String productID)
@@ -195,6 +198,27 @@ public class AmazonBillingProvider implements BillingProvider
         
         return success;
         
+    }
+    
+    boolean loadKnownItemToLocalInventory(Item item)
+    {
+        boolean success = true;
+        if (success)
+            success = setPurchaseProperty(item.getSku(), "itemType", item.getItemType().toString());
+        
+        if (success)
+            success = setPurchaseProperty(item.getSku(), "price", item.getPrice());
+        
+        if (success)
+            success = setPurchaseProperty(item.getSku(), "description", item.getDescription());
+        
+        if (success)
+            success = setPurchaseProperty(item.getSku(), "title", item.getTitle());
+        
+        if (success)
+            success = setPurchaseProperty(item.getSku(), "smallIconUrl", item.getSmallIconUrl());
+        
+        return success;
     }
     
     private class MyPurchasingObserver extends BasePurchasingObserver
@@ -269,6 +293,8 @@ public class AmazonBillingProvider implements BillingProvider
                 for (String key : availableSkus.keySet())
                 {
                     Item item = availableSkus.get(key);
+                    knownItems.add(item);
+                    loadKnownItemToLocalInventory(item);
                     Log.v(TAG, "Item details : " + item.toString());
                 }
                 
@@ -331,6 +357,7 @@ public class AmazonBillingProvider implements BillingProvider
                                 //mPurchaseObserver.onPurchaseStateChanged(1,0);
                                 Log.v(TAG, "Time to add receipt to local inventory...");
                                 addPurchaseReceiptToLocalInventory(receipt);
+                                ownedItems.add(receipt.getSku());
                                 mPurchaseObserver.onPurchaseStateChanged(receipt.getSku(),0);
                                 break;
                             }
@@ -342,6 +369,7 @@ public class AmazonBillingProvider implements BillingProvider
                                 // TODO : How to get the purchase Id
                                 // mPurchaseObserver.onPurchaseStateChanged(1,0);
                                 addPurchaseReceiptToLocalInventory(receipt);
+                                ownedItems.add(receipt.getSku());
                                 mPurchaseObserver.onPurchaseStateChanged(receipt.getSku(),0);
                                 break;
                         }
@@ -432,6 +460,7 @@ public class AmazonBillingProvider implements BillingProvider
                     // Don't use tProductId = requestIds.get(response.getRequestId()), it does not work on subscriptions because it returns the child SKU, but we need the parent SKU
                     tProductId = receipt.getSku();
                     Log.d(TAG, "PRODUCT ID IS : " + tProductId);
+                    ownedItems.add(receipt.getSku());
                     addPurchaseReceiptToLocalInventory(receipt);
                     break;
                 default:
