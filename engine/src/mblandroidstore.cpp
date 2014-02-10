@@ -194,6 +194,18 @@ bool MCStoreMakePurchase(MCPurchase *p_purchase)
     
     return t_success;
 }
+
+
+char* MCStoreAndroidRequestProductDetails(const char *p_purchase_id)
+{
+    
+    char* t_result;
+    
+    MCAndroidEngineRemoteCall("storeRequestProductDetails", "ss", &t_result, p_purchase_id);
+    
+    return t_result;
+    
+}
 */
 
 bool MCStoreRequestProductDetails(const char *p_purchase_id)
@@ -207,6 +219,16 @@ bool MCStoreRequestProductDetails(const char *p_purchase_id)
     
 }
 
+char* MCStoreReceiveProductDetails(const char *p_purchase_id)
+{
+    
+    char* t_result;
+    
+    MCAndroidEngineRemoteCall("storeReceiveProductDetails", "ss", &t_result, p_purchase_id);
+    
+    return t_result;
+    
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

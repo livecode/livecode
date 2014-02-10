@@ -419,6 +419,25 @@ Exec_stat MCHandleSetPurchaseProperty(void *context, MCParameter *p_parameters)
     return ES_NORMAL;
 }
 
+/*
+Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
+{
+    bool t_success = true;
+    char *t_product_id = nil;
+    const char* t_product_details;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
+    if (t_success)
+        t_product_details = MCStoreAndroidRequestProductDetails(t_product_id);
+    
+    MCCStringFree(t_product_id);
+    MCresult -> sets(t_product_details);
+    
+    return ES_NORMAL;
+}
+*/
+
 Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
 {
     bool t_success = true;
@@ -430,6 +449,23 @@ Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters
         t_success = MCStoreRequestProductDetails(t_product_id);
     
     MCCStringFree(t_product_id);
+
+    return ES_NORMAL;
+}
+
+Exec_stat MCHandleReceiveProductDetails(void *context, MCParameter *p_parameters)
+{
+    bool t_success = true;
+    char *t_product_id = nil;
+    const char* t_product_details;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
+    if (t_success)
+        t_product_details = MCStoreReceiveProductDetails(t_product_id);
+    
+    MCCStringFree(t_product_id);
+    MCresult -> sets(t_product_details);
     
     return ES_NORMAL;
 }

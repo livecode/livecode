@@ -462,8 +462,24 @@ public class SamsungBillingProvider implements BillingProvider
         }
 
         Log.d(TAG, " Item not found. (Item : " + productId + ")");
-        return true;
-        // TODO register productDetailsReceived callback
+
+        return false;
+    }
+
+    public String receiveProductDetails(String productId)
+    {
+        for (ItemVO item : knownItems)
+        {
+            if (item.getItemId().equals(productId))
+            {
+                Log.d(TAG, "Requested item details : \n" + item.dump());
+                return item.dump();
+            }
+
+        }
+
+        Log.d(TAG, " Item not found. (Item : " + productId + ")");
+        return "Product ID not found";
     }
 
     public boolean setPurchaseProperty(String productId, String propertyName, String propertyValue)

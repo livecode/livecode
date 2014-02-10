@@ -145,8 +145,20 @@ public class AmazonBillingProvider implements BillingProvider
         Set<String> skuSet = new HashSet<String>();
         skuSet.add(productId);
         PurchasingManager.initiateItemDataRequest(skuSet);
-        
         return true;
+    }
+    
+    public String receiveProductDetails(String productId)
+    {
+        for (Item item : knownItems)
+        {
+            if (productId.equals(item.getSku()))
+            {
+                return item.toString();
+            }
+        }
+        
+        return "Product ID not found";
     }
 
     

@@ -253,8 +253,22 @@ public class GoogleBillingProvider implements BillingProvider
                 }
             }
         });
-        return true;
+		
+		return true;
     }
+	
+	public String receiveProductDetails(String productId)
+    {
+		for (SkuDetails skuDetails : knownItems)
+		{
+			if (productId.equals(skuDetails.getSku()))
+			{
+				return skuDetails.toString();
+			}
+		}
+		
+        return "Product ID not found";
+	}
     
     public boolean confirmDelivery(int purchaseId)
     {

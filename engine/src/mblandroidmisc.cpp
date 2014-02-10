@@ -948,6 +948,7 @@ extern Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_param
 extern Exec_stat MCHandleGetPurchases(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleSetPurchaseProperty(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleReceiveProductDetails(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseCreate(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseState(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseError(void *context, MCParameter *p_parameters);
@@ -1184,6 +1185,8 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {"mobileGetPurchaseProperty", MCHandleGetPurchaseProperty, nil},
     {"mobileSetPurchaseProperty", MCHandleSetPurchaseProperty, nil},
     {"mobileRequestProductDetails", MCHandleRequestProductDetails, nil},
+    {"mobileReceiveProductDetails", MCHandleReceiveProductDetails, nil},
+
     {"mobileMakePurchase", MCHandleMakePurchase, nil},
     
 	{"mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},

@@ -109,6 +109,9 @@ bool MCStoreConsumePurchase(const char *p_product_id);
 bool MCStoreMakePurchase(const char *p_product_id, const char *p_quantity, const char *p_payload);
 //bool MCStoreMakePurchase(MCPurchase *p);
 bool MCStoreRequestProductDetails(const char *p_product_id);
+char* MCStoreReceiveProductDetails(const char *p_product_id);
+//char* MCStoreAndroidRequestProductDetails(const char *p_product_id);
+
 
 bool MCStoreRestorePurchases();
 

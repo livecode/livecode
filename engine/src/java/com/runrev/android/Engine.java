@@ -1958,6 +1958,11 @@ public class Engine extends View implements EngineApi
         return mBillingProvider.requestProductDetails(productId);
     }
     
+    public String storeReceiveProductDetails(String productId)
+    {
+        return mBillingProvider.receiveProductDetails(productId);
+    }
+    
     public boolean storeMakePurchase(String productId, String quantity, String payload)
     {
         return mBillingProvider.makePurchase(productId, quantity, payload);

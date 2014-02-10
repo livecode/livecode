@@ -43,6 +43,8 @@ public interface BillingProvider
     boolean consumePurchase(String productId);
     
     boolean requestProductDetails(String productId);
+    String receiveProductDetails(String productId);
+    
     
     boolean makePurchase(String productId, String quantity, String payload);
     
