@@ -134,6 +134,7 @@ MCPropertyInfo MCObject::kModeProperties[] =
 	DEFINE_RO_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_REV_AVAILABLE_HANDLERS, LinesOfString, MCObject, RevAvailableHandlers)
 	DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_REV_AVAILABLE_HANDLERS, LinesOfString, MCObject, RevAvailableHandlers)
     DEFINE_RO_OBJ_ARRAY_PROPERTY(P_REV_AVAILABLE_VARIABLES, String, MCObject, RevAvailableVariables)
+    DEFINE_RO_OBJ_PROPERTY(P_REV_AVAILABLE_VARIABLES, String, MCObject, RevAvailableVariablesNonArray)
 };
 
 MCObjectPropertyTable MCObject::kModePropertyTable =
@@ -1706,6 +1707,11 @@ void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r
     }
     
     t_handlers . Take(r_handlers, r_count);
+}
+
+void MCObject::GetRevAvailableVariablesNonArray(MCExecContext& ctxt, MCStringRef& r_variables)
+{
+    GetRevAvailableVariables(ctxt, nil, r_variables);
 }
 
 void MCObject::GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MCStringRef& r_variables)
