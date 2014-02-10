@@ -217,6 +217,30 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4DF42ABE0B0488ED003F2D95 /* Debug.xcconfig */;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"\"$(SOLUTION_DIR)/engine/include\"",
+					"\"$(SOLUTION_DIR)/libfoundation/include\"",
+					"\"$(SOLUTION_DIR)/libexternal/include\"",
+					"\"$(SOLUTION_DIR)/libexternalv1/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libz/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpng/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libjpeg/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpcre/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libcairo/src\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libsqlite/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libmysql/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libgif/include\"",
+					"\"$(SOLUTION_DIR)/libgraphics/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/config\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/core\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/effects\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpq/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libiodbc/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
+					"$(SOLUTION_DIR)/libcore/include",
+				);
 			};
 			name = Debug;
 		};
@@ -224,6 +248,30 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4DF42AC20B0488ED003F2D95 /* Release.xcconfig */;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"\"$(SOLUTION_DIR)/engine/include\"",
+					"\"$(SOLUTION_DIR)/libfoundation/include\"",
+					"\"$(SOLUTION_DIR)/libexternal/include\"",
+					"\"$(SOLUTION_DIR)/libexternalv1/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libz/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpng/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libjpeg/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpcre/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libcairo/src\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libsqlite/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libmysql/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libgif/include\"",
+					"\"$(SOLUTION_DIR)/libgraphics/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/config\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/core\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libskia/include/effects\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libpq/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libiodbc/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
+					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
+					"$(SOLUTION_DIR)/libcore/include",
+				);
 			};
 			name = Release;
 		};
