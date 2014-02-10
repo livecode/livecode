@@ -34,8 +34,9 @@ class Email
 	private ArrayList<Uri> m_attachment_uris;
 	
 	private String m_mime_type;
+    private String m_provider_uri;
 	
-	public Email(String address, String cc, String bcc, String subject, String message_body, boolean is_html)
+	public Email(String address, String cc, String bcc, String subject, String message_body, String p_provider_authority, boolean is_html)
 	{
 		if (address != null && address.length() > 0)
 			m_email = address.trim().split(" *, *");
@@ -59,6 +60,8 @@ class Email
 				m_mime_type = "text/plain";
 			}
 		}
+        
+        m_provider_uri = "content://" + p_provider_authority;
 	}
 	
 	private static String getMimeCategory(String mime_type)
@@ -112,12 +115,13 @@ class Email
 	
 	public boolean addAttachment(Context p_context, String path, String mime_type, String name)
 	{
+//        Log.i("revandroid", String.format("addAttachment string attachment %s", m_provider_uri + "/" + path));
         File t_file = new File(path);
         
-        // SN-2014-02-03: [[ Bug 11069 ]] Generate a URI leading to AttachmentProvider
-        Uri t_uri = Uri.parse(AttachmentProvider.URI + "/" + path);
+        // SN-2014-02-03: [[ Bug 11069 ]] Generate a URI leading to the AttachmentProvider
+        Uri t_uri = Uri.parse(m_provider_uri + "/" + path);
         ContentValues t_values = createAttachmentValues(name, mime_type, false);
-        
+                
         p_context . getContentResolver() . insert(t_uri, t_values);
         
 		return addAttachment(t_uri, mime_type, name);
@@ -136,7 +140,7 @@ class Email
 			t_out.close();
 						            
             // SN-2014-02-03: [[ Bug 11069 ]] Generate a URI leading to AttachmentProvider
-            Uri t_uri = Uri.parse(AttachmentProvider.URI + "/" + t_tempfile.getPath());
+            Uri t_uri = Uri.parse(m_provider_uri + "/" + t_tempfile.getPath());
                         
             ContentValues t_values = createAttachmentValues(name, mime_type, true);
             p_context . getContentResolver() . insert(t_uri, t_values);
