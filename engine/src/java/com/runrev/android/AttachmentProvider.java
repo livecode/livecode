@@ -26,17 +26,14 @@ import android.content.ContentValues;
 import android.text.*;
 import android.os.ParcelFileDescriptor;
 import android.net.Uri;
+import android.app.*;
 import android.util.Log;
 import android.content.res.AssetFileDescriptor;
+import android.database.Cursor;
+import android.database.MatrixCursor;
 
-import android.database.*;
-
-
-public class AttachmentProvider extends ContentProvider
-{    
-    public static final String URI = "content://com.runrev.android.attachmentprovider";
-    public static final String AUTHORITY = "com.runrev.android.attachmentprovider";
-    
+public class AttachmentProvider
+{        
     public static final String NAME = "_display_name";
     public static final String MIME_TYPE = "_mime_type";
     public static final String SIZE = "_size";
@@ -44,44 +41,19 @@ public class AttachmentProvider extends ContentProvider
     public static final String FILE = "_file";
     
     private HashMap<String, ArrayList<String> > m_infos = null;
-    private HashMap<String, Integer> m_references = null;
+    private android.content.Context m_context;    
     
-    private void release(String p_filename, String p_reference_key, boolean p_is_apk)
+    public AttachmentProvider(android.content.Context p_context)
     {
-//        Log.i("revandroid", String.format("releasing stored path '%s'", p_filename));
-        int t_refs = m_references . get(p_reference_key);
-        File t_file = new File(p_filename);
+        if (m_infos == null)
+            m_infos = new HashMap<String, ArrayList<String> >();
         
-        if (t_refs == 1)
-        {
-            // Check whether the file is a temporary file
-//            if (!p_is_apk && m_infos . get(p_reference_key).get(3).equals("true"))
-//            {
-//                // The temporary file should be deleted, but it's actually impossible to allow
-//                // this step with the Email application, since it sends the Activity result,
-//                // open the file to check whether it exists, and reopen it before sending the
-//                // the email - so there is no way to keep an open file descriptor up to the sending
-//                // of the email.
-//                t_file . delete();
-//                
-//                Log.i("revandroid", String.format("%s is deleted", p_filename));
-//            }
-//            else
-//                Log.i("revandroid", String.format("%s isn't deleted - not a temporary file", p_filename));
-            
-            // Remove entry from the hashtables
-            m_references.remove(p_reference_key);
-            m_infos.remove(p_reference_key);
-        }
-        else
-        {
-            m_references . put (p_reference_key, t_refs - 1);
-        }
+        m_context = p_context;
     }
-    
+     
     private boolean isAPK(Uri p_uri)
     {
-        return p_uri . toString().contains(getContext().getPackageCodePath());
+        return p_uri . toString().contains(m_context . getPackageCodePath());
     }
     
     private String getFilePath(Uri p_uri)
@@ -93,20 +65,20 @@ public class AttachmentProvider extends ContentProvider
     }
     
     // Open a file
-    private ParcelFileDescriptor doOpenFile(Uri uri, boolean p_cleanup_file)
+    public ParcelFileDescriptor doOpenFile(Uri uri)
         throws FileNotFoundException
     {
         // Check whether we are asked for a file from the APK
         String t_filepath = getFilePath(uri);
         String t_path = uri.getPath();
-        
+                
         ParcelFileDescriptor pfd;                
         try
         {
             boolean t_apk = isAPK(uri);
             if (t_apk)
             {
-                AssetFileDescriptor afd = getContext().getAssets().openFd(t_filepath);
+                AssetFileDescriptor afd = m_context.getAssets().openFd(t_filepath);
                 pfd = afd.getParcelFileDescriptor();
             }
             else
@@ -114,9 +86,6 @@ public class AttachmentProvider extends ContentProvider
                 File t_file = new File(t_filepath);
                 pfd = ParcelFileDescriptor.open(t_file, ParcelFileDescriptor.MODE_READ_ONLY);                
             }
-            
-            if (p_cleanup_file)
-                release(t_filepath, t_path, t_apk);
             
             return pfd;
         }
@@ -126,45 +95,11 @@ public class AttachmentProvider extends ContentProvider
             throw new FileNotFoundException("unable to find file " + t_filepath);
         }
     }
-    
-    @Override
-    public boolean onCreate()
-    {
-        if (m_infos == null)
-            m_infos = new HashMap<String, ArrayList<String> >();
-        
-        if (m_references == null)
-            m_references = new HashMap<String, Integer>();
-        
-        return true;
-    }
-    
-    @Override
-    public ParcelFileDescriptor openFile(Uri uri, String mode)
-        throws FileNotFoundException
-    {
-//        Log.i("revandroid", "openFile " + uri.toString());
-        if (!uri.toString().contains(this.URI))
-            throw new FileNotFoundException("invalid URI given");
-        
-        try
-        {
-            boolean t_release = m_references . containsKey(uri.getPath());
-            
-            return doOpenFile(uri, t_release);
-        }
-        catch (FileNotFoundException e)
-        {
-            throw e;
-        }
-    }
         
     // Fetch the information stored for the asked email
-    @Override
-    public Cursor query (Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder)
+    public Cursor doQuery(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder)
     {
-        if (!uri.toString().contains(this.URI) ||
-                projection . length < 2 ||
+          if (projection . length < 2 ||
                 !projection[0].equals(this.NAME) ||
                 !projection[1].equals(this.SIZE))
             return null;
@@ -187,19 +122,14 @@ public class AttachmentProvider extends ContentProvider
     }
     
     // The insert method update the saved values for the email
-    @Override
-    public Uri insert (Uri uri, ContentValues p_values)
-    {
-        if (!uri.toString().contains(this.URI))
-            return uri;
-        
+    public Uri doInsert (Uri uri, ContentValues p_values)
+    {        
         String t_path = uri.getPath();
-                
+//        Log.i("revandroid", "insert attachment at path: " + t_path);
+        
         if (m_infos.containsKey(t_path))
         {
 //            Log.i("revandroid", String.format("contains %s", t_path));
-//            int t_ref = m_references.get(t_path);
-//            m_references.put(t_path, t_ref + 1);
             return uri;
         }
         
@@ -211,7 +141,7 @@ public class AttachmentProvider extends ContentProvider
             ParcelFileDescriptor t_file;
             try
             {
-                t_file = doOpenFile(uri, false);
+                t_file = doOpenFile(uri);
                 
                 t_infos . add(p_values . getAsString(this.NAME));
                 t_infos . add(Long.toString(t_file . getStatSize()));
@@ -244,34 +174,12 @@ public class AttachmentProvider extends ContentProvider
         return uri;
     }
     
-    @Override
-    public int update (Uri uri, ContentValues values, String selection, String[] selectionArgs)
+    public int doDelete (Uri uri, String selection, String[] selectionArgs)
     {
-//        Log.i("revandroid", "AttachmentProvider::update " + uri.toString());
         return 0;
     }
     
-    @Override
-    public int delete (Uri uri, String selection, String[] selectionArgs)
-    {        
-        if (selection == this.FILE)
-        {
-            String t_key =  uri.getPath();
-            String t_filepath = getFilePath(uri);
-            
-            if (m_references . containsKey(t_key))
-                m_references . put(t_key, m_references.get(t_key) + 1);
-            else
-                m_references . put(t_key, 1);
-            
-            return 1;
-        }
-        else
-            return 0;
-    }
-    
-    @Override
-    public String getType (Uri uri)
+    public String doGetType (Uri uri)
     {
         String t_path = uri.getPath();
         

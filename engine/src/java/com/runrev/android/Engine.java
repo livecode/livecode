@@ -1828,7 +1828,9 @@ public class Engine extends View implements EngineApi
 
 	public void prepareEmail(String address, String cc, String bcc, String subject, String message_body, boolean is_html)
 	{
-		m_email = new Email(address, cc, bcc, subject, message_body, is_html);
+        String t_provider_authority = getContext().getPackageName();
+        t_provider_authority += ".attachmentprovider";
+		m_email = new Email(address, cc, bcc, subject, message_body, t_provider_authority, is_html);
 	}
 
 	public void addAttachment(String path, String mime_type, String name)
