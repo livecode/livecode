@@ -25,6 +25,12 @@ ${USES_PERMISSION}${USES_FEATURE}
       </intent-filter>
       ${CUSTOM_URL_FILTER}
     </activity>
+    <provider 
+	android:name="com.runrev.android.AttachmentProvider"
+        android:authorities="com.runrev.android.attachmentprovider"
+        android:exported="true"
+        android:grantUriPermissions="true" >
+    </provider>
     ${SERVICE}
     ${RECEIVER}
     ${PUSH_RECEIVER}
