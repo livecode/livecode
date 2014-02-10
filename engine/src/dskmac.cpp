@@ -3989,7 +3989,10 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
 	return strclone("not found");
 #endif /* MCS_request_ae_dsk_mac */
         if (aePtr == NULL)
+        {
             /* UNCHECKED */ MCStringCreateWithCString("No current Apple event", r_value); //as specified in HyperTalk
+            return;
+        }
         errno = noErr;
         
         switch (p_ae)
