@@ -25,6 +25,7 @@ ${USES_PERMISSION}${USES_FEATURE}
       </intent-filter>
       ${CUSTOM_URL_FILTER}
     </activity>
+    ${PROVIDER}
     ${SERVICE}
     ${RECEIVER}
     ${PUSH_RECEIVER}

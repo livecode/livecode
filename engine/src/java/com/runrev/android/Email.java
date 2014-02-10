@@ -32,11 +32,11 @@ class Email
 	private Spanned m_message;
 	
 	private ArrayList<Uri> m_attachment_uris;
-	private ArrayList<File> m_temp_files;
 	
 	private String m_mime_type;
+    private String m_provider_uri;
 	
-	public Email(String address, String cc, String bcc, String subject, String message_body, boolean is_html)
+	public Email(String address, String cc, String bcc, String subject, String message_body, String p_provider_authority, boolean is_html)
 	{
 		if (address != null && address.length() > 0)
 			m_email = address.trim().split(" *, *");
@@ -60,6 +60,8 @@ class Email
 				m_mime_type = "text/plain";
 			}
 		}
+        
+        m_provider_uri = "content://" + p_provider_authority;
 	}
 	
 	private static String getMimeCategory(String mime_type)
@@ -91,39 +93,63 @@ class Email
 	
 	private boolean addAttachment(Uri uri, String mime_type, String name)
 	{
+//        Log.i("revandroid", "addAttachment: " + uri.toString());
 		if (m_attachment_uris == null)
 			m_attachment_uris = new ArrayList<Uri>();
-		
-		m_attachment_uris.add(uri);
+                
+        m_attachment_uris.add(uri);
+        
 		m_mime_type = combineMimeTypes(m_mime_type, mime_type);
 		return true;
 	}
+    
+    private ContentValues createAttachmentValues(String p_name, String p_mime_type, boolean p_temporary)
+    {        
+        ContentValues t_values = new ContentValues(2);
+        t_values . put(AttachmentProvider.NAME, p_name);
+        t_values . put(AttachmentProvider.MIME_TYPE, p_mime_type);
+        t_values . put(AttachmentProvider.TEMPORARY, p_temporary);
+        
+        return t_values;
+    }
 	
-	public boolean addAttachment(String path, String mime_type, String name)
+	public boolean addAttachment(Context p_context, String path, String mime_type, String name)
 	{
-		return addAttachment(Uri.fromFile(new File(path)), mime_type, name);
+//        Log.i("revandroid", String.format("addAttachment string attachment %s", m_provider_uri + "/" + path));
+        File t_file = new File(path);
+        
+        // SN-2014-02-03: [[ Bug 11069 ]] Generate a URI leading to the AttachmentProvider
+        Uri t_uri = Uri.parse(m_provider_uri + "/" + path);
+        ContentValues t_values = createAttachmentValues(name, mime_type, false);
+                
+        p_context . getContentResolver() . insert(t_uri, t_values);
+        
+		return addAttachment(t_uri, mime_type, name);
 	}
 	
-	public boolean addAttachment(byte[] data, String mime_type, String name)
+	public boolean addAttachment(Context p_context, byte[] data, String mime_type, String name)
 	{
 		try
 		{
 			File t_tempfile;
-			t_tempfile = File.createTempFile("eml", name);
+            // SN-2014-02-04: [[ Bug 11069 ]] Temporary files are created in the cache directory
+            t_tempfile = File.createTempFile("eml", name, p_context . getCacheDir());
 			
 			FileOutputStream t_out = new FileOutputStream(t_tempfile);
 			t_out.write(data);
 			t_out.close();
-			
-			if (m_temp_files == null)
-				m_temp_files = new ArrayList<File>();
-			
-			m_temp_files.add(t_tempfile);
-			
-			return addAttachment(Uri.fromFile(t_tempfile), mime_type, name);
+						            
+            // SN-2014-02-03: [[ Bug 11069 ]] Generate a URI leading to AttachmentProvider
+            Uri t_uri = Uri.parse(m_provider_uri + "/" + t_tempfile.getPath());
+                        
+            ContentValues t_values = createAttachmentValues(name, mime_type, true);
+            p_context . getContentResolver() . insert(t_uri, t_values);
+            			
+			return addAttachment(t_uri, mime_type, name);
 		}
 		catch (Exception e)
 		{
+//            Log.i("revandroid", "creatTempFile exception: " + e.getMessage());
 			return false;
 		}
 	}
@@ -161,20 +187,22 @@ class Email
 			t_mail_intent.setType(m_mime_type);
 		else
 			t_mail_intent.setType("text/plain");
+        
+        // SN-2014-01-28: [[ Bug 11069 ]] mobileComposeMail attachment missing in Android
+        // This permission of reading must be added to the Intent to allow it to read the file
+        t_mail_intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        
 		return t_mail_intent;
 	}
 	
-	public void cleanupTempFiles()
-	{
-		if (m_temp_files == null)
-			return;
-		
+	public void cleanupAttachments(ContentResolver p_resolver)
+	{		
 		try
 		{
-			for (File t_tempfile : m_temp_files)
-			{
-				t_tempfile.delete();
-			}
+            for (Uri t_uri : m_attachment_uris)
+            {
+                p_resolver . delete(t_uri, AttachmentProvider.FILE, null);
+            }
 		}
 		catch (Exception e)
 		{
