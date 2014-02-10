@@ -320,7 +320,8 @@ extern char *strlwr(char *str);
 
 
 // MDW-2013-06-22: [[ RevXmlXPath ]]
-#define REVXML_VERSIONSTRING "6.5.0"
+// MDW-2014-02-09: [[ bugfix-11766 ]]
+#define REVXML_VERSIONSTRING "6.5.3"
 
 void REVXML_Version(char *args[], int nargs, char **retstring,
 		   Bool *pass, Bool *error)
@@ -1318,19 +1319,27 @@ void XML_SetElementContents(char *args[], int nargs, char **retstring, Bool *pas
 
 					// Insert a new text node before all the children
 					xmlNodePtr t_new_node_list;
-					// MDW-2014-02-08 : [[ bugfix-11766 ]] handle empty string replacement argument.
+					// MDW-2014-02-09 : [[ bugfix-11766 ]] handle empty string replacement argument.
 					// Should really be fixed in xmlStringGetNodeList in the libxml library, but this avoids the crash.
-					if (0 != strlen(args[2]))
-						t_new_node_list = xmlStringGetNodeList(tdoc -> GetDocPtr(), t_encoded_string);
-					else
+					// xmlStringGetNodeList() returns a NULL on trying to bind an empty string.
+					// We need to catch this, fake a string, and patch it later.
+					t_new_node_list = xmlStringGetNodeList(tdoc -> GetDocPtr(), t_encoded_string);
+					if (NULL == t_new_node_list)
 					{
-						t_new_node_list = xmlStringGetNodeList(tdoc -> GetDocPtr(), (xmlChar *)"blah");
+						t_new_node_list = xmlStringGetNodeList(tdoc -> GetDocPtr(), (xmlChar *)"qwerty");
 					}
 
 					// Create a new text element to hold the content
 					CXMLElement *t_new_element;
 					t_new_element = new CXMLElement();
+					
 					t_new_element -> SetNodePtr(t_new_node_list);
+
+					// MDW-2014-02-09 : [[ bugfix-11766 ]]
+					if (0 == strlen(args[2]))
+					{
+						xmlNodeSetContent(t_new_element -> GetNodePtr(), (const xmlChar *)"");
+					}
 
 					// Save the previous first child element
 					xmlNodePtr t_old_first_element;
@@ -1339,11 +1348,10 @@ void XML_SetElementContents(char *args[], int nargs, char **retstring, Bool *pas
 					// Set the new text element to be the first child
 					telement . GetNodePtr() -> children = t_new_element -> GetNodePtr();
 					telement . GetNodePtr() -> children -> next = t_old_first_element;
-					// MDW-2014-02-08 : [[ bugfix-11766 ]]
-					telement . SetContent((char *)t_encoded_string);
 
 					if (t_old_first_element != NULL)
 						t_old_first_element -> prev = t_new_element -> GetNodePtr();
+
 				}
 				else
 					telement . SetContent((char *)t_encoded_string);
