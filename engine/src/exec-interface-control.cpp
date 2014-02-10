@@ -361,7 +361,7 @@ void MCControl::SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_marg
 
 void MCControl::GetMargins(MCExecContext& ctxt, MCInterfaceMargins& r_margins)
 {
-    if (leftmargin == rightmargin == topmargin == bottommargin)
+    if (leftmargin == rightmargin && leftmargin == topmargin && leftmargin == bottommargin)
     {
         r_margins . type = kMCInterfaceMarginsTypeSingle;
         r_margins . margin = leftmargin;

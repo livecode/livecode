@@ -3002,18 +3002,15 @@ void MCExecParseEnum(MCExecContext& ctxt, MCExecEnumTypeInfo *p_info, MCExecValu
     MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_string));
     if (!ctxt . HasError())
     {    
-        bool t_found;
-        t_found = false;
         for(uindex_t i = 0; i < p_info -> count; i++)
             if (!p_info -> elements[i] . read_only &&
                 MCStringIsEqualTo(*t_string, MCSTR(p_info -> elements[i] . tag), kMCStringOptionCompareCaseless))
             {
-                t_found = true;
                 r_value = p_info -> elements[i] . value;
+                return;
             }
         
-        if (!t_found)
-            ctxt . LegacyThrow(EE_PROPERTY_BADENUMVALUE);
+        ctxt . LegacyThrow(EE_PROPERTY_BADENUMVALUE);
     }
 }
 
@@ -3032,22 +3029,17 @@ void MCExecFormatSet(MCExecContext& ctxt, MCExecSetTypeInfo *p_info, intset_t t_
 
 void MCExecFormatEnum(MCExecContext& ctxt, MCExecEnumTypeInfo *p_info, intenum_t p_value, MCExecValue& r_value)
 {
-    bool t_found = false;
     for(uindex_t i = 0; i < p_info -> count; i++)
         if (p_info -> elements[i] . value == p_value)
         {
             MCStringCreateWithCString(p_info -> elements[i] . tag, r_value . stringref_value);
             r_value . type = kMCExecValueTypeStringRef;
-            t_found = true;
-            break;
+            return;
         }
-    if (!t_found)
-    {
-        // THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
-        MCAssert(false);
-        return;
-    }
-    
+
+    // GETTING HERE MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
+    MCAssert(false);
+    return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

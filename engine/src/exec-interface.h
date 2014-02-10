@@ -135,10 +135,6 @@ struct MCInterfaceMargins
     };
 };
 
-void MCInterfaceLayerParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceLayer& r_output);
-void MCInterfaceLayerFormat(MCExecContext& ctxt, const MCInterfaceLayer& p_input, MCStringRef& r_output);
-void MCInterfaceLayerFree(MCExecContext& ctxt, MCInterfaceLayer& p_input);
-
 //////////
 
 struct MCMultimediaTrack
