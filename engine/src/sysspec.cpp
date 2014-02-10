@@ -827,7 +827,12 @@ void MCS_setumask(uint2 p_mask)
 /* WRAPPER */
 Boolean MCS_exists(MCStringRef p_path, bool p_is_file)
 {
-	MCAutoStringRef t_resolved;
+	// Shortcut: this is necessary because MCS_resolvepath turns an empty path
+    // into the path to the current directory, which is really not wanted here.
+    if (MCStringIsEmpty(p_path))
+        return False;
+    
+    MCAutoStringRef t_resolved;
     MCAutoStringRef t_native;
 	if (!(MCS_resolvepath(p_path, &t_resolved) && MCS_pathtonative(*t_resolved, &t_native)))
 		return False;
