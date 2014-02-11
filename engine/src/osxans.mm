@@ -667,7 +667,7 @@ int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p
 		}
 		else
 			[t_panel setTitle: [NSString stringWithMCStringRef: p_prompt]];
-		[t_panel setDelegate: (id<NSOpenSavePanelDelegate>)t_accessory];
+		[t_panel setDelegate: /*(id<NSOpenSavePanelDelegate>)*/t_accessory];
 
 		if (p_type_count > 1)	
 		{
