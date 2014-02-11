@@ -2568,7 +2568,7 @@ uint1 MCU_languagetocharset(MCNameRef p_language)
 {
 	for (uinteger_t i = 0; i < ELEMENTS(langtocharsets); i++)
 		if (MCNameIsEqualTo(p_language, *langtocharsets[i].langname))
-			return i;
+			return langtocharsets[i].charset;
 
 	return 0;
 }
