@@ -938,7 +938,7 @@ public:
     
 		MCSystemListProcesses(ListProcessCallback, &t_state);
         
-		MCresult -> set(ctxt, t_state.list);
+		ctxt . SetTheResultToValue(t_state.list);
 	}
     
 private:
