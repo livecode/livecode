@@ -626,12 +626,12 @@ void MCField::exportashtmltext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_st
 }
 #endif
 
-bool MCField::exportashtmltext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCStringRef& r_string)
+bool MCField::exportashtmltext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCDataRef& r_text)
 {
-	return exportashtmltext(resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_effective, r_string);
+	return exportashtmltext(resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_effective, r_text);
 }
 
-bool MCField::exportashtmltext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCStringRef& r_string)
+bool MCField::exportashtmltext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCDataRef& r_text)
 {
 	export_html_t ctxt;
 	memset(&ctxt, 0, sizeof(export_html_t));
@@ -650,7 +650,7 @@ bool MCField::exportashtmltext(MCParagraph *p_paragraphs, int32_t p_start_index,
 	doexport(t_flags, p_paragraphs, p_start_index, p_finish_index, export_html_emit_paragraphs, &ctxt);
 
 	// Return the buffer.
-	/* UNCHECKED */ MCStringCopyAndRelease(ctxt.m_text, r_string);
+	/* UNCHECKED */ MCStringEncodeAndRelease(ctxt . m_text, kMCStringEncodingNative, false, r_text);
 	return true;
 }
 

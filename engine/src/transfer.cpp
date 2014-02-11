@@ -889,12 +889,8 @@ bool MCConvertStyledTextToHTML(MCDataRef p_input, MCDataRef& r_output)
 	t_success = t_paragraphs != nil;
 
 	// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
-	MCAutoStringRef t_text;
 	if (t_success)
-		t_success = MCtemplatefield -> exportashtmltext(t_paragraphs, 0, INT32_MAX, false, &t_text);
-	
-	if (t_success)
-		t_success = MCStringEncode(*t_text, kMCStringEncodingNative, false, r_output);
+		t_success = MCtemplatefield -> exportashtmltext(t_paragraphs, 0, INT32_MAX, false, r_output);
 	
 	delete t_object;
 	

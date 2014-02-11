@@ -686,7 +686,7 @@ void MCField::SetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef p_tex
 
 void MCField::GetHtmlText(MCExecContext& ctxt, uint32_t part, MCValueRef& r_text)
 {
-	if (exportashtmltext(part, 0, INT32_MAX, false, (MCStringRef&)r_text))
+	if (exportashtmltext(part, 0, INT32_MAX, false, (MCDataRef&)r_text))
 		return;
 
 	ctxt . Throw();
@@ -699,7 +699,7 @@ void MCField::SetHtmlText(MCExecContext& ctxt, uint32_t part, MCValueRef p_text)
 
 void MCField::GetEffectiveHtmlText(MCExecContext& ctxt, uint32_t part, MCValueRef& r_text)
 {
-	if (exportashtmltext(part, 0, INT32_MAX, true, (MCStringRef&)r_text))
+	if (exportashtmltext(part, 0, INT32_MAX, true, (MCDataRef&)r_text))
 		return;
 
 	ctxt . Throw();
