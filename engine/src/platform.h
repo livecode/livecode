@@ -804,6 +804,32 @@ MCPlatformPrintDialogResult MCPlatformEndPrintDialog(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum MCPlatformDialogResult
+{
+	kMCPlatformDialogResultContinue,
+	kMCPlatformDialogResultError,
+	kMCPlatformDialogResultSuccess,
+	kMCPlatformDialogResultCancel,
+};
+
+enum MCPlatformFileDialogKind
+{
+	kMCPlatformFileDialogKindSave,
+	kMCPlatformFileDialogKindOpen,
+	kMCPlatformFileDialogKindOpenMultiple,
+};
+
+void MCPlatformBeginFolderDialog(MCPlatformWindowRef owner, const char *p_title, const char *p_message, const char *p_initial);
+MCPlatformDialogResult MCPlatformEndFolderDialog(char*& r_selected_folder);
+
+void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, const char *p_title, const char *p_prompt,  char * const p_types[], uint4 p_type_count, const char *p_initial);
+MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, char*& r_paths, char*& r_type);
+
+void MCPlatformBeginColorDialog(const char *p_title, const MCColor& p_color);
+MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_new_color);
+
+////////////////////////////////////////////////////////////////////////////////
+
 typedef class MCPlatformPlayer *MCPlatformPlayerRef;
 
 enum MCPlatformPlayerProperty

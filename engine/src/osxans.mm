@@ -658,6 +658,7 @@ int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *p_promp
     return noErr;
 }
 
+#ifdef OLD_MAC
 int MCA_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
 {
 	if (MCmajorosversion > 0x1040)
@@ -693,7 +694,9 @@ int MCA_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prom
 		return MCA_file_with_types_tiger(ep, p_title, p_prompt, p_types, p_type_count, p_initial, p_options);
 #endif
 }
+#endif
 
+#ifdef OLD_MAC
 int MCA_ask_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_filter, const char *p_initial, unsigned int p_options)
 {
 	if (MCmajorosversion > 0x1040)
@@ -726,9 +729,11 @@ int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_
 		return MCA_ask_file_with_types_tiger(ep, p_title, p_prompt, p_types, p_type_count, p_initial, p_options);
 #endif
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef OLD_MAC
 // MM-2012-02-13: Updated to use Cocoa APIs.  Code mostly cribbed from plugin dialog stuff
 int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const char *p_initial, unsigned int p_options)
 {
@@ -790,11 +795,10 @@ int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const
 		
 		return noErr;
 	}
-#ifdef OLD_MAC
 	else
 		return MCA_folder_tiger(ep, p_title, p_prompt, p_initial, p_options);
-#endif
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

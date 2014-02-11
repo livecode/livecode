@@ -1154,7 +1154,10 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 
 int main(int argc, char *argv[], char *envp[])
 {
-	// COCOA-TODO: Elevated slave.
+	extern bool MCS_mac_elevation_bootstrap_main(int argc, char* argv[]);
+	if (argc == 2 && strcmp(argv[1], "-elevated-slave") == 0)
+		if (!MCS_mac_elevation_bootstrap_main(argc, argv))
+			return -1;
 	
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];

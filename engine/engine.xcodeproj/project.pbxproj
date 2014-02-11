@@ -268,6 +268,9 @@
 		4D30D1F018A152700034CDC6 /* mac-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D30D1EF18A152700034CDC6 /* mac-player.mm */; };
 		4D30D43E18A293650034CDC6 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D30D43D18A293650034CDC6 /* QTKit.framework */; };
 		4D30D5D218A394250034CDC6 /* desktop-image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D30D5D118A394250034CDC6 /* desktop-image.cpp */; };
+		4D30E18218AA2FCE0034CDC6 /* mac-abort.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D30E18118AA2FCE0034CDC6 /* mac-abort.mm */; };
+		4D30E40718AA73870034CDC6 /* mac-dialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D30E40618AA73870034CDC6 /* mac-dialog.mm */; };
+		4D30E44618AA7C200034CDC6 /* desktop-ans.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D30E44518AA7C200034CDC6 /* desktop-ans.cpp */; };
 		4D377262150785AF000B0EB0 /* fieldhtml.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D377261150785AF000B0EB0 /* fieldhtml.cpp */; };
 		4D37727E150787EA000B0EB0 /* fieldrtf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D37727D150787EA000B0EB0 /* fieldrtf.cpp */; };
 		4D407C0C15F8D15600AA3ABC /* osxscriptold.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D407C0B15F8D15600AA3ABC /* osxscriptold.cpp */; };
@@ -455,7 +458,6 @@
 		4DEE2AD60FDE42710009423C /* objptr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E7C0B8096FD00200116 /* objptr.cpp */; };
 		4DEE2AD70FDE42710009423C /* opensslsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E3B0B8096FD00200116 /* opensslsocket.cpp */; };
 		4DEE2AD80FDE42710009423C /* operator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E340B8096FD00200116 /* operator.cpp */; };
-		4DEE2AD90FDE42710009423C /* osxans.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880190B80A4F800200116 /* osxans.mm */; };
 		4DEE2ADA0FDE42710009423C /* osxcoreimage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880140B80A4F800200116 /* osxcoreimage.cpp */; };
 		4DEE2AE40FDE42710009423C /* osxfiles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D03C2160BC5803900026EA7 /* osxfiles.cpp */; };
 		4DEE2AE50FDE42710009423C /* osxflst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880160B80A4F800200116 /* osxflst.cpp */; };
@@ -911,6 +913,9 @@
 		4D30D1EF18A152700034CDC6 /* mac-player.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-player.mm"; path = "src/mac-player.mm"; sourceTree = "<group>"; };
 		4D30D43D18A293650034CDC6 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
 		4D30D5D118A394250034CDC6 /* desktop-image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "desktop-image.cpp"; path = "src/desktop-image.cpp"; sourceTree = "<group>"; };
+		4D30E18118AA2FCE0034CDC6 /* mac-abort.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-abort.mm"; path = "src/mac-abort.mm"; sourceTree = "<group>"; };
+		4D30E40618AA73870034CDC6 /* mac-dialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-dialog.mm"; path = "src/mac-dialog.mm"; sourceTree = "<group>"; };
+		4D30E44518AA7C200034CDC6 /* desktop-ans.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "desktop-ans.cpp"; path = "src/desktop-ans.cpp"; sourceTree = "<group>"; };
 		4D377261150785AF000B0EB0 /* fieldhtml.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldhtml.cpp; path = src/fieldhtml.cpp; sourceTree = "<group>"; };
 		4D3772671507869A000B0EB0 /* textbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = textbuffer.h; path = src/textbuffer.h; sourceTree = "<group>"; };
 		4D37727D150787EA000B0EB0 /* fieldrtf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldrtf.cpp; path = src/fieldrtf.cpp; sourceTree = "<group>"; };
@@ -1863,6 +1868,7 @@
 				4DECCA5A188595F500463D52 /* desktop-menu.cpp */,
 				4D30C37018995E840034CDC6 /* desktop-pasteboard.cpp */,
 				4D30D5D118A394250034CDC6 /* desktop-image.cpp */,
+				4D30E44518AA7C200034CDC6 /* desktop-ans.cpp */,
 				4DECC94218856FE000463D52 /* mac-internal.h */,
 				4DECC93B18856C7500463D52 /* mac-core.mm */,
 				4DECD0C71886E4FD00463D52 /* mac-window.mm */,
@@ -1875,6 +1881,8 @@
 				4D30D1EF18A152700034CDC6 /* mac-player.mm */,
 				4D79B4E018A8D9FD00D4974C /* mac-color.mm */,
 				4D79B5D318A9087B00D4974C /* mac-printer.mm */,
+				4D30E18118AA2FCE0034CDC6 /* mac-abort.mm */,
+				4D30E40618AA73870034CDC6 /* mac-dialog.mm */,
 			);
 			name = "Desktop - Mac";
 			sourceTree = "<group>";
@@ -3407,7 +3415,6 @@
 				4DEE2AD60FDE42710009423C /* objptr.cpp in Sources */,
 				4DEE2AD70FDE42710009423C /* opensslsocket.cpp in Sources */,
 				4DEE2AD80FDE42710009423C /* operator.cpp in Sources */,
-				4DEE2AD90FDE42710009423C /* osxans.mm in Sources */,
 				4DEE2ADA0FDE42710009423C /* osxcoreimage.cpp in Sources */,
 				4DEE2AE40FDE42710009423C /* osxfiles.cpp in Sources */,
 				4DEE2AE50FDE42710009423C /* osxflst.cpp in Sources */,
@@ -3523,6 +3530,9 @@
 				4D30D5D218A394250034CDC6 /* desktop-image.cpp in Sources */,
 				4D79B4E118A8D9FD00D4974C /* mac-color.mm in Sources */,
 				4D79B5D418A9087B00D4974C /* mac-printer.mm in Sources */,
+				4D30E18218AA2FCE0034CDC6 /* mac-abort.mm in Sources */,
+				4D30E40718AA73870034CDC6 /* mac-dialog.mm in Sources */,
+				4D30E44618AA7C200034CDC6 /* desktop-ans.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
