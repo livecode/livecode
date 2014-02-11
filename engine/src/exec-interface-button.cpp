@@ -806,7 +806,13 @@ void MCButton::GetAcceleratorKey(MCExecContext& ctxt, MCStringRef& r_key)
 		if (t_keyname == NULL || MCStringCreateWithCString(t_keyname, r_key))
 			return;
 	}
-    else if (!accelkey || MCStringFormat(r_key, "%hu", accelkey))
+    else if (accelkey)
+    {
+        char t_accel_key = (char)accelkey;
+        if (MCStringFormat(r_key, "%c", t_accel_key))
+            return;
+    }
+    else
         return;
 
 	ctxt . Throw();
