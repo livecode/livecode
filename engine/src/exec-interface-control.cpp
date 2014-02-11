@@ -370,8 +370,8 @@ void MCControl::GetMargins(MCExecContext& ctxt, MCInterfaceMargins& r_margins)
     {
         r_margins . type = kMCInterfaceMarginsTypeQuadruple;
         r_margins . margins[0] = leftmargin;
-        r_margins . margins[1] = rightmargin;
-        r_margins . margins[2] = topmargin;
+        r_margins . margins[1] = topmargin;
+        r_margins . margins[2] = rightmargin;
         r_margins . margins[3] = bottommargin;
     }
 }
