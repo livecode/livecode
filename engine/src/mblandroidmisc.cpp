@@ -357,13 +357,12 @@ uint32_t MCAndroidSystem::TextConvert(const void *p_string, uint32_t p_string_le
 	//MCLog("text conversion %d to %d", p_from_charset, p_to_charset);
 
 	MCAutoDataRef t_from_data, t_to_data;
-
 	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)p_string, p_string_length, &t_from_data);
 
 	const char *t_from_charset, *t_to_charset;
 	t_from_charset = MCCharsetToName(p_from_charset);
 	t_to_charset = MCCharsetToName(p_to_charset);
-
+    
 	if (p_buffer == NULL)
 	{
 		int32_t t_bytecount = 0;
@@ -378,7 +377,6 @@ uint32_t MCAndroidSystem::TextConvert(const void *p_string, uint32_t p_string_le
 		if (MCDataGetLength(*t_to_data) > 0)
 			MCMemoryCopy(p_buffer, MCDataGetBytePtr(*t_to_data), MCDataGetLength(*t_to_data));
 
-		//MCLog("converted string: %.*s", t_to_string.getlength(), t_to_string.getstring());
 		return MCDataGetLength(*t_to_data);
 	}
 }

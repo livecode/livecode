@@ -407,12 +407,11 @@ bool MCJavaByteArrayFromDataRef(JNIEnv *env, MCDataRef p_data, jbyteArray &r_byt
     return t_success;
 }
 
-bool MCJavaByteArrayToData(JNIEnv *env, jbyteArray p_byte_array, void *&r_data, uint32_t &r_length)
+bool MCJavaByteArrayToDataRef(JNIEnv *env, jbyteArray p_byte_array, MCDataRef& r_data)
 {
     bool t_success = true;
     
     jbyte *t_bytes = nil;
-    void *t_data = nil;
     uint32_t t_length = 0;
     
     if (p_byte_array != nil)
@@ -421,15 +420,8 @@ bool MCJavaByteArrayToData(JNIEnv *env, jbyteArray p_byte_array, void *&r_data, 
     if (t_bytes != nil)
     {
         t_length = env -> GetArrayLength(p_byte_array);
-        t_success = MCMemoryAllocateCopy(t_bytes, t_length, t_data);
-        
+        t_success = MCDataCreateWithBytes((const byte_t *)t_bytes, t_length, r_data);
         env -> ReleaseByteArrayElements(p_byte_array, t_bytes, 0);
-    }
-    
-    if (t_success)
-    {
-        r_data = t_data;
-        r_length = t_length;
     }
     
     return t_success;
