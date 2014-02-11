@@ -769,7 +769,7 @@ bool MCField::importblock(MCParagraph *p_paragraph, const MCFieldCharacterStyle&
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Exec_stat MCField::sethtml(uint4 parid, MCStringRef data)
+Exec_stat MCField::sethtml(uint4 parid, MCValueRef data)
 {
 	if (state & CS_NO_FILE)
 	{

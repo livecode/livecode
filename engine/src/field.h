@@ -484,7 +484,7 @@ public:
 	}
 
 	// MCField HTML functions in fieldh.cc
-	Exec_stat sethtml(uint4 parid, MCStringRef data);
+	Exec_stat sethtml(uint4 parid, MCValueRef data);
 	Exec_stat setrtf(uint4 parid, MCStringRef data);
 #ifdef LEGACY_EXEC
 	Exec_stat setstyledtext(uint4 parid, MCExecPoint& ep);
@@ -567,8 +567,8 @@ public:
 	void exportashtmltext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool p_effective);
 	void exportashtmltext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index, bool p_effective);
 #endif 
-	bool exportashtmltext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCStringRef& r_string);
-	bool exportashtmltext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCStringRef& r_string);
+	bool exportashtmltext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCDataRef& r_text);
+	bool exportashtmltext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCDataRef& r_text);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to styled text arrays.
 #ifdef LEGACY_EXEC
@@ -577,7 +577,7 @@ public:
 	bool exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array);
 
 	// MW-2012-03-07: [[ FieldImport ]] Conver the htmlText string to a list of paragraphs.
-    MCParagraph *importhtmltext(MCStringRef p_data);
+    MCParagraph *importhtmltext(MCValueRef p_data);
 
 	// MW-2012-03-05: [[ FieldImport ]] Add a paragraph with the given styling to the end of the supplied
 	//   paragraphs list.
@@ -675,9 +675,9 @@ public:
 	void SetText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text);
 	void GetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef& r_text);
 	void SetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef p_text);
-	void GetHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text);
-	void SetHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text);
-	void GetEffectiveHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text);
+	void GetHtmlText(MCExecContext& ctxt, uint32_t part, MCValueRef& r_text);
+	void SetHtmlText(MCExecContext& ctxt, uint32_t part, MCValueRef p_text);
+	void GetEffectiveHtmlText(MCExecContext& ctxt, uint32_t part, MCValueRef& r_text);
 	void GetRtfText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text);
 	void SetRtfText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text);
 	void GetStyledText(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_array);
@@ -745,9 +745,9 @@ public:
     void GetUnicodeFormattedTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCDataRef& r_value);
     void GetRtfTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value);
     void SetRtfTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef value);
-    void GetHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value);
-    void GetEffectiveHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef& r_value);
-    void SetHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCStringRef value);
+    void GetHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCValueRef& r_value);
+    void GetEffectiveHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCValueRef& r_value);
+    void SetHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCValueRef value);
     void GetStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCArrayRef& r_value);
     void GetEffectiveStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCArrayRef& r_value);
     void SetStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCArrayRef value);
