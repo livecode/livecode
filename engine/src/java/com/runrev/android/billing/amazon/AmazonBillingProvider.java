@@ -4,7 +4,7 @@ package com.runrev.android.billing.amazon;
 import com.runrev.android.billing.*;
 //import com.runrev.android.billing.amazon.MyPurchasingObserver;
 import com.amazon.inapp.purchasing.*;
-
+import com.amazon.inapp.purchasing.PurchaseResponse.PurchaseRequestStatus;
 
 import android.app.*;
 import android.util.*;
@@ -365,8 +365,6 @@ public class AmazonBillingProvider implements BillingProvider
                                 // If the receipt is for an entitlement,the customer is re-entitled.
                                 // Add re-entitlement code here
                                 
-                                // TODO : How to get the purchase Id
-                                //mPurchaseObserver.onPurchaseStateChanged(1,0);
                                 Log.v(TAG, "Time to add receipt to local inventory...");
                                 addPurchaseReceiptToLocalInventory(receipt);
                                 ownedItems.add(receipt.getSku());
@@ -378,8 +376,6 @@ public class AmazonBillingProvider implements BillingProvider
                                 // 1. Use the receipts to determineif the user currently has an active subscription
                                 // 2. Use the receipts to create a subscription history for your customer.
                                 
-                                // TODO : How to get the purchase Id
-                                // mPurchaseObserver.onPurchaseStateChanged(1,0);
                                 addPurchaseReceiptToLocalInventory(receipt);
                                 ownedItems.add(receipt.getSku());
                                 mPurchaseObserver.onPurchaseStateChanged(receipt.getSku(),0);
@@ -480,10 +476,37 @@ public class AmazonBillingProvider implements BillingProvider
                     break;
             }
             
-            // TODO : How to get the purchase Id
-            //mPurchaseObserver.onPurchaseStateChanged(1,response.getPurchaseRequestStatus().ordinal());
-            mPurchaseObserver.onPurchaseStateChanged(tProductId,response.getPurchaseRequestStatus().ordinal());
+            mPurchaseObserver.onPurchaseStateChanged(tProductId, mapResponseCode(response.getPurchaseRequestStatus()));
             
         }
+        
+        // Should match the order of enum MCAndroidPurchaseState (mblandroidstore.cpp)
+        int mapResponseCode(PurchaseResponse.PurchaseRequestStatus responseCode)
+        {
+            int result;
+            switch(responseCode)
+            {
+                case SUCCESSFUL:
+                    result = 0;
+                    break;
+                    
+                case FAILED:
+                    result = 1;
+                    break;
+                    
+                case INVALID_SKU:
+                    result = 2;
+                    break;
+                    
+                case ALREADY_ENTITLED:
+                    result = 3;
+                    break;
+                default:
+                    result = 1;
+                    break;
+            }
+            return result;
+        }
+
     }
 }

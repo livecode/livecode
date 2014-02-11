@@ -1,6 +1,7 @@
 package com.runrev.android.billing.samsung;
 
 import com.runrev.android.billing.*;
+import com.runrev.android.Engine;
 
 import android.app.*;
 import android.os.*;
@@ -36,9 +37,6 @@ public class SamsungBillingProvider implements BillingProvider
     private static final int ITEM_AMOUNT = 25;
     private List<ItemVO> knownItems = new ArrayList<ItemVO>();
     private Set<String> ownedItems = new HashSet<String>();
-    //private OnInitIapListener mOnInitIapListener = null;
-    //private OnGetItemListListener mOnGetItemListListener = null;
-    //private OnGetInboxListListener mOnGetInboxListListener = null;
     
     private Map<String,Map<String,String>> itemProps = new HashMap<String, Map<String,String>>();
     
@@ -88,8 +86,6 @@ public class SamsungBillingProvider implements BillingProvider
                     // How to get the purchaseId?
                     int purchaseId = 1;
 
-                    // 0 is the statuscode for success in samsung -- TODO: write it differently
-                   // mPurchaseObserver.onPurchaseStateChanged(1, 0);
                     mPurchaseObserver.onPurchaseStateChanged(tItemId, 0);
 
                 }
@@ -233,17 +229,20 @@ public class SamsungBillingProvider implements BillingProvider
 
                 if (helper.isInstalledIapPackage(getActivity()))
                 {
-                    if (!helper.isValidIapPackage(getActivity()))
+                    if (helper.isValidIapPackage(getActivity()))
                     {
-                        helper.showIapDialog(getActivity(), "title_iap", "msg_invalid_iap_package", true, null);
+                        //TODO : Investigate why putting this here causes a "waiting" popup screen that runs forever
+
+                        //helper.showProgressDialog(getActivity());
+                        //helper.startAccountActivity(getActivity());
                     }
+                    else
+                        helper.showIapDialog(getActivity(), "title_iap", "msg_invalid_iap_package", true, null);
                 }
                 else
                 {
                     helper.installIapPackage(getActivity());
                 }
-                // TODO : Investigate why putting this here causes a "waiting" popup screen that runs forever
-                //helper.startAccountActivity(getActivity());
             }
         });
     }
@@ -254,7 +253,8 @@ public class SamsungBillingProvider implements BillingProvider
         {
             isInitialized = true;
             pendingPurchaseItemId = itemId;
-            
+            //initHelper();
+
             getActivity().runOnUiThread(new Runnable()
             {
                 @Override
@@ -265,6 +265,7 @@ public class SamsungBillingProvider implements BillingProvider
                     helper.startAccountActivity(getActivity());
                 }
             });
+            
             
             return;
         }
@@ -341,11 +342,7 @@ public class SamsungBillingProvider implements BillingProvider
             helper.showIapDialog(getActivity(), "title_iap", "msg_payment_cancelled", false, null);
         }
 
-
-        // How to get the purchaseId??
-        int purchaseId = 1;
-        //mPurchaseObserver.onPurchaseStateChanged(1, statusCode);
-        mPurchaseObserver.onPurchaseStateChanged(itemId, statusCode);
+        mPurchaseObserver.onPurchaseStateChanged(itemId, mapResponseCode(statusCode));
 
     }
 
@@ -381,8 +378,8 @@ public class SamsungBillingProvider implements BillingProvider
 
     public void initBilling()
     {
-        //TODO
-        this.itemGroupId = "100000102710";
+        this.itemGroupId = Engine.doGetCustomPropertyValue("cREVStandaloneSettings", "android,samsungItemGroupId");
+        //this.itemGroupId = "100000102710";
         initHelper();
         started = true;
     }
@@ -553,4 +550,32 @@ public class SamsungBillingProvider implements BillingProvider
         }
             
     }
+    int mapResponseCode(int responseCode)
+    {
+        int result;
+        switch(responseCode)
+        {
+            case SamsungIapHelper.IAP_ERROR_NONE:
+                result = 0;
+                break;
+
+            case SamsungIapHelper.IAP_PAYMENT_IS_CANCELED:
+                result = 1;
+                break;
+
+            case SamsungIapHelper.IAP_ERROR_PRODUCT_DOES_NOT_EXIST:
+                result = 2;
+                break;
+
+            case SamsungIapHelper.IAP_ERROR_ALREADY_PURCHASED:
+                result = 3;
+                break;
+
+            default:
+                result = 1;
+                break;
+        }
+        return result;
+    }
+
 }

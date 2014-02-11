@@ -562,9 +562,14 @@ public class GoogleBillingProvider implements BillingProvider
                 result = 1;
                 break;
 
+			case IabHelper.BILLING_RESPONSE_RESULT_ITEM_UNAVAILABLE:
+				result = 2;
+				break;
+
             case IabHelper.BILLING_RESPONSE_RESULT_ITEM_ALREADY_OWNED:
                 result = 3;
                 break;
+
             default:
                 result = 1;
                 break;

@@ -51,7 +51,6 @@ typedef enum
     CANCELED,  //FAILED for Amazon
     INVALID_SKU,
     ALREADY_ENTITLED,
-    IAP_ERROR_ALREADY_PURCHASED = -1003,
     REFUNDED,
 } MCAndroidPurchaseState;
 
@@ -445,12 +444,6 @@ void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified)
                     break;
                 }
                 
-                case IAP_ERROR_ALREADY_PURCHASED:
-                {
-                    MCLog("found ALREADY_PURCHASED purchase", nil);
-                    p_purchase->state = kMCPurchaseStateAlreadyEntitled;
-                    break;
-                }
                 case ALREADY_ENTITLED:
                 {
                     MCLog("found ALREADY_ENTITLED purchase", nil);
@@ -490,7 +483,7 @@ void update_purchase_state(MCPurchase *p_purchase, int32_t p_state, bool p_verif
         p_purchase->state = kMCPurchaseStateUnverified;
     else if (p_state == PURCHASED)
         p_purchase->state = kMCPurchaseStatePaymentReceived;
-    else if (p_state == ALREADY_ENTITLED || p_state == IAP_ERROR_ALREADY_PURCHASED)
+    else if (p_state == ALREADY_ENTITLED)
         p_purchase->state = kMCPurchaseStateAlreadyEntitled;
     else if (p_state == INVALID_SKU)
         p_purchase->state = kMCPurchaseStateInvalidSKU;
