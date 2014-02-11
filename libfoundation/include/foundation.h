@@ -1696,6 +1696,18 @@ bool MCStringAppendFormatV(MCStringRef string, const char *format, va_list args)
 bool MCStringSplit(MCStringRef string, MCStringRef element_del, MCStringRef key_del, MCStringOptions options, MCArrayRef& r_array);
 bool MCStringSplitColumn(MCStringRef string, MCStringRef col_del, MCStringRef row_del, MCStringOptions options, MCArrayRef& r_array);
 
+//////////
+
+// Converts two surrogate pair code units into a codepoint
+codepoint_t MCStringSurrogatesToCodepoint(unichar_t p_lead, unichar_t p_trail);
+
+// Converts a codepoint to UTF-16 code units and returns the number of units
+unsigned int MCStringCodepointToSurrogates(codepoint_t, unichar_t (&r_units)[2]);
+
+// Returns true if the code unit at the given index and the next code unit form
+// a valid surrogate pair. Lone lead or trail code units are not valid pairs.
+bool MCStringIsValidSurrogatePair(MCStringRef, uindex_t);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //

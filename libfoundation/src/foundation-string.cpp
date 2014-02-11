@@ -64,16 +64,6 @@ static void __MCStringNativize(MCStringRef string);
 // This method marks the string as changed.
 static void __MCStringChanged(MCStringRef string, bool simple = false);
 
-// Converts two surrogate pair code units into a codepoint
-static codepoint_t __MCStringSurrogatesToCodepoint(unichar_t p_lead, unichar_t p_trail);
-
-// Converts a codepoint to UTF-16 code units and returns the number of units
-static unsigned int __MCStringCodepointToSurrogates(codepoint_t, unichar_t (&r_units)[2]);
-
-// Returns true if the code unit at the given index and the next code unit form
-// a valid surrogate pair. Lone lead or trail code units are not valid pairs.
-static bool __MCStringIsValidSurrogatePair(MCStringRef, uindex_t);
-
 // Creates a string
 
 
@@ -792,7 +782,7 @@ codepoint_t MCStringGetCodepointAtIndex(MCStringRef self, uindex_t p_index)
     
     // We have a surrogate pair
     t_trail = self -> chars[t_codeunit_idx.offset + 1];
-    return __MCStringSurrogatesToCodepoint(t_lead, t_trail);
+    return MCStringSurrogatesToCodepoint(t_lead, t_trail);
 }
 
 uindex_t MCStringGetChars(MCStringRef self, MCRange p_range, unichar_t *p_chars)
@@ -869,7 +859,7 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
     {
         // Is this a single code unit or a valid surrogate pair?
         uindex_t t_length;
-        if (__MCStringIsValidSurrogatePair(self, t_units.offset + t_units.length))
+        if (MCStringIsValidSurrogatePair(self, t_units.offset + t_units.length))
             t_length = 2, t_is_simple = false;
         else
             t_length = 1;
@@ -927,7 +917,7 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
     {
         // Is this a single code unit or a valid surrogate pair?
         uindex_t t_length;
-        if (__MCStringIsValidSurrogatePair(self, t_counter))
+        if (MCStringIsValidSurrogatePair(self, t_counter))
             t_length = 2, t_is_simple = false;
         else
             t_length = 1;
@@ -1796,7 +1786,7 @@ bool MCStringAppend(MCStringRef self, MCStringRef p_suffix)
         // Is the string still simple? Appending may have created a valid surrogate pair.
         bool t_simple = (self -> flags & kMCStringFlagIsSimple)
                         && (p_suffix -> flags & kMCStringFlagIsSimple)
-                        && !__MCStringIsValidSurrogatePair(self, self -> char_count - p_suffix -> char_count - 1);
+                        && !MCStringIsValidSurrogatePair(self, self -> char_count - p_suffix -> char_count - 1);
         
 		__MCStringChanged(self, t_simple);
 		
@@ -1832,7 +1822,7 @@ bool MCStringAppendSubstring(MCStringRef self, MCStringRef p_suffix, MCRange p_r
         // Is the string still simple? Appending may have created a valid surrogate pair.
         bool t_simple = (self -> flags & kMCStringFlagIsSimple)
                         && (p_suffix -> flags & kMCStringFlagIsSimple)
-                        && !__MCStringIsValidSurrogatePair(self, self -> char_count - p_range . length - 1);
+                        && !MCStringIsValidSurrogatePair(self, self -> char_count - p_range . length - 1);
         
 		__MCStringChanged(self, t_simple);
         
@@ -1917,7 +1907,7 @@ bool MCStringPrepend(MCStringRef self, MCStringRef p_prefix)
         // Is the string still simple? Prepending may have created a valid surrogate pair.
         bool t_simple = (self -> flags & kMCStringFlagIsSimple)
                         && (p_prefix -> flags & kMCStringFlagIsSimple)
-                        && !__MCStringIsValidSurrogatePair(self, p_prefix -> char_count - 1);
+                        && !MCStringIsValidSurrogatePair(self, p_prefix -> char_count - 1);
         
 		__MCStringChanged(self, t_simple);
 
@@ -1950,7 +1940,7 @@ bool MCStringPrependSubstring(MCStringRef self, MCStringRef p_prefix, MCRange p_
         // Is the string still simple? Prepending may have created a valid surrogate pair.
         bool t_simple = (self -> flags & kMCStringFlagIsSimple)
                         && (p_prefix -> flags & kMCStringFlagIsSimple)
-                        && !__MCStringIsValidSurrogatePair(self, p_range . length - 1);
+                        && !MCStringIsValidSurrogatePair(self, p_range . length - 1);
         
 		__MCStringChanged(self);
 
@@ -2030,8 +2020,8 @@ bool MCStringInsert(MCStringRef self, uindex_t p_at, MCStringRef p_substring)
         // Inserting creates two points where valid surrogate pairs may have been generated
         bool t_simple = (self -> flags & kMCStringFlagIsSimple)
                         && (p_substring -> flags & kMCStringFlagIsSimple)
-                        && !__MCStringIsValidSurrogatePair(self, p_at - 1)
-                        && !__MCStringIsValidSurrogatePair(self, p_at + p_substring -> char_count - 1);
+                        && !MCStringIsValidSurrogatePair(self, p_at - 1)
+                        && !MCStringIsValidSurrogatePair(self, p_at + p_substring -> char_count - 1);
         
 		__MCStringChanged(self, t_simple);
 		
@@ -2064,8 +2054,8 @@ bool MCStringInsertSubstring(MCStringRef self, uindex_t p_at, MCStringRef p_subs
         // Inserting creates two points where valid surrogate pairs may have been generated
         bool t_simple = (self -> flags & kMCStringFlagIsSimple)
                         && (p_substring -> flags & kMCStringFlagIsSimple)
-                        && !__MCStringIsValidSurrogatePair(self, p_at - 1)
-                        && !__MCStringIsValidSurrogatePair(self, p_at + p_range . length - 1);
+                        && !MCStringIsValidSurrogatePair(self, p_at - 1)
+                        && !MCStringIsValidSurrogatePair(self, p_at + p_range . length - 1);
         
 		__MCStringChanged(self, t_simple);
 		
@@ -2427,8 +2417,8 @@ bool MCStringFindAndReplaceChar(MCStringRef self, codepoint_t p_pattern, codepoi
         // Do it via the slow-path full string replacement
         MCAutoStringRef t_pattern, t_replacement;
         unichar_t t_buffer[2];
-        /* UNCHECKED */ MCStringCreateWithChars(t_buffer, __MCStringCodepointToSurrogates(p_pattern, t_buffer), &t_pattern);
-        /* UNCHECKED */ MCStringCreateWithChars(t_buffer, __MCStringCodepointToSurrogates(p_replacement, t_buffer), &t_replacement);
+        /* UNCHECKED */ MCStringCreateWithChars(t_buffer, MCStringCodepointToSurrogates(p_pattern, t_buffer), &t_pattern);
+        /* UNCHECKED */ MCStringCreateWithChars(t_buffer, MCStringCodepointToSurrogates(p_replacement, t_buffer), &t_replacement);
         return MCStringFindAndReplace(self, *t_pattern, *t_replacement, p_options);
     }
     
@@ -2436,8 +2426,8 @@ bool MCStringFindAndReplaceChar(MCStringRef self, codepoint_t p_pattern, codepoi
     unichar_t t_pattern_units[2];
     unichar_t t_replacement_units[2];
     bool t_pair;
-    t_pair = __MCStringCodepointToSurrogates(p_pattern, t_pattern_units) == 2;
-    __MCStringCodepointToSurrogates(p_replacement, t_replacement_units);
+    t_pair = MCStringCodepointToSurrogates(p_pattern, t_pattern_units) == 2;
+    MCStringCodepointToSurrogates(p_replacement, t_replacement_units);
     
     // Which type of comparison are we using?
     if (p_options == kMCStringOptionCompareExact)
@@ -2460,8 +2450,8 @@ bool MCStringFindAndReplaceChar(MCStringRef self, codepoint_t p_pattern, codepoi
         for (uindex_t i = 0; i < self -> char_count; i++)
         {
             codepoint_t t_char;
-            if (__MCStringIsValidSurrogatePair(self, i))
-                t_char = __MCStringSurrogatesToCodepoint(self -> chars[i], self -> chars[i + 1]);
+            if (MCStringIsValidSurrogatePair(self, i))
+                t_char = MCStringSurrogatesToCodepoint(self -> chars[i], self -> chars[i + 1]);
             else
                 t_char = self -> chars[i];
             
@@ -2738,12 +2728,12 @@ static void __MCStringChanged(MCStringRef self, bool simple)
 	self -> native_chars = nil;
 }
 
-static codepoint_t __MCStringSurrogatesToCodepoint(unichar_t p_lead, unichar_t p_trail)
+codepoint_t MCStringSurrogatesToCodepoint(unichar_t p_lead, unichar_t p_trail)
 {
     return 0x10000 + ((p_lead & 0x3FF) << 10) + (p_trail & 0x3FF);
 }
 
-static unsigned int __MCStringCodepointToSurrogates(codepoint_t p_codepoint, unichar_t (&r_units)[2])
+unsigned int MCStringCodepointToSurrogates(codepoint_t p_codepoint, unichar_t (&r_units)[2])
 {
     if (p_codepoint > 0xFFFF)
     {
@@ -2759,7 +2749,7 @@ static unsigned int __MCStringCodepointToSurrogates(codepoint_t p_codepoint, uni
     }
 }
 
-static bool __MCStringIsValidSurrogatePair(MCStringRef self, uindex_t p_index)
+bool MCStringIsValidSurrogatePair(MCStringRef self, uindex_t p_index)
 {
     // Check that the string is long enough
     // (Double-checking here is due to possible unsigned wrapping)
