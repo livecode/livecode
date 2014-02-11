@@ -27,9 +27,44 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@interface com_runrev_livecode_MCPrintDialogDelegate: NSObject
+
+- (void)printDialogDidEnd:(id)printDialog returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo;
+
+@end
+
+@compatibility_alias MCPrintDialogDelegate com_runrev_livecode_MCPrintDialogDelegate;
+
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCPlatformPrintDialogResult s_dialog_result;
+struct MCMacPlatformPrintDialogNest
+{
+	MCMacPlatformPrintDialogNest *next;
+	MCPlatformPrintDialogResult result;
+	MCPlatformWindowRef owner;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+@implementation com_runrev_livecode_MCPrintDialogDelegate
+
+- (void)printDialogDidEnd:(id)printDialog returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo
+{
+	MCMacPlatformPrintDialogNest *t_nest;
+	t_nest = (MCMacPlatformPrintDialogNest *)contextInfo;
+	
+	if (returnCode == NSOKButton)
+		t_nest -> result = kMCPlatformPrintDialogResultSuccess;
+	else
+		t_nest -> result = kMCPlatformPrintDialogResultCancel;
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////
+
+static MCMacPlatformPrintDialogNest *s_print_dialog_nesting = nil;
+static MCPrintDialogDelegate *s_print_dialog_delegate = nil;
 
 static void MCPlatformStartPrintInfo(void *p_session, void *p_settings, void *p_page_format, NSPrintInfo*& r_info)
 {
@@ -90,49 +125,87 @@ static void MCPlatformEndPrintInfo(NSPrintInfo *p_info, void *p_session, void *p
 	[p_info release];
 }
 
-void MCPlatformBeginPageSetupDialog(MCPlatformWindowRef p_owner, void *p_session, void *p_settings, void *p_page_format)
+static void MCPlatformBeginPrintDialog(MCPlatformWindowRef p_owner, void *p_session, void *p_settings, void *p_page_format, id p_dialog)
 {
 	NSPrintInfo *t_info;
 	MCPlatformStartPrintInfo(p_session, p_settings, p_page_format, t_info);
 	
-	//if (p_owner == nil)
+	if (s_print_dialog_delegate == nil)
+		s_print_dialog_delegate = [[MCPrintDialogDelegate alloc] init];
+	
+	MCMacPlatformPrintDialogNest *t_nest;
+	/* UNCHECKED */ MCMemoryNew(t_nest);
+	t_nest -> next = s_print_dialog_nesting;
+	t_nest -> result = kMCPlatformPrintDialogResultContinue;
+	s_print_dialog_nesting = t_nest;
+	
+	if (p_owner == nil)
 	{
-		s_dialog_result = kMCPlatformPrintDialogResultContinue;
-		if ([[NSPageLayout pageLayout] runModalWithPrintInfo: t_info] == NSOKButton)
-			s_dialog_result = kMCPlatformPrintDialogResultSuccess;
+		t_nest -> owner = nil;
+		
+		if ([p_dialog runModalWithPrintInfo: t_info] == NSOKButton)
+			t_nest -> result = kMCPlatformPrintDialogResultSuccess;
 		else
-			s_dialog_result = kMCPlatformPrintDialogResultCancel;
+			t_nest -> result = kMCPlatformPrintDialogResultCancel;
 	}
-	//else
-	//{
-	//}
+	else
+	{
+		// If we've already tried to sheet a dialog against the given window, then
+		// we can't do so again, so we implicitly 'cancel' it.
+		
+		bool t_exists;
+		t_exists = false;
+		for(MCMacPlatformPrintDialogNest *t_other_nest = t_nest; t_other_nest != nil; t_other_nest = t_other_nest -> next)
+			if (t_other_nest -> owner == p_owner)
+				t_exists = true;
+		
+		if (!t_exists)
+		{
+			t_nest -> owner = p_owner;
+			MCPlatformRetainWindow(p_owner);
+		
+			[p_dialog beginSheetWithPrintInfo:t_info
+							   modalForWindow:((MCMacPlatformWindow *)p_owner) -> GetHandle()
+									 delegate:s_print_dialog_delegate
+							   didEndSelector:@selector(printDialogDidEnd:returnCode:contextInfo:)
+								  contextInfo:t_nest];
+		}
+		else
+			t_nest -> result = kMCPlatformPrintDialogResultCancel;
+	}
 	
 	MCPlatformEndPrintInfo(t_info, p_session, p_settings, p_page_format);
+}
+
+void MCPlatformBeginPageSetupDialog(MCPlatformWindowRef p_owner, void *p_session, void *p_settings, void *p_page_format)
+{
+	MCPlatformBeginPrintDialog(p_owner, p_session, p_settings, p_page_format, [NSPageLayout pageLayout]);
 }
 
 void MCPlatformBeginPrintSettingsDialog(MCPlatformWindowRef p_owner, void *p_session, void *p_settings, void *p_page_format)
 {
-	NSPrintInfo *t_info;
-	MCPlatformStartPrintInfo(p_session, p_settings, p_page_format, t_info);
-	
-	//if (p_owner == nil)
-	{
-		s_dialog_result = kMCPlatformPrintDialogResultContinue;
-		if ([[NSPrintPanel printPanel] runModalWithPrintInfo: t_info] == NSOKButton)
-			s_dialog_result = kMCPlatformPrintDialogResultSuccess;
-		else
-			s_dialog_result = kMCPlatformPrintDialogResultCancel;
-	}
-	//else
-	//{
-	//}
-	
-	MCPlatformEndPrintInfo(t_info, p_session, p_settings, p_page_format);
+	MCPlatformBeginPrintDialog(p_owner, p_session, p_settings, p_page_format, [NSPrintPanel printPanel]);
 }
 
 MCPlatformPrintDialogResult MCPlatformEndPrintDialog(void)
 {
-	return s_dialog_result;
+	MCMacPlatformPrintDialogNest *t_nest;
+	t_nest = s_print_dialog_nesting;
+
+	if (t_nest -> result == kMCPlatformPrintDialogResultContinue)
+		return kMCPlatformPrintDialogResultContinue;
+
+	s_print_dialog_nesting = s_print_dialog_nesting -> next;
+	
+	MCPlatformPrintDialogResult t_result;
+	t_result = t_nest -> result;
+	
+	if (t_nest -> owner != nil)
+		MCPlatformReleaseWindow(t_nest -> owner);
+	
+	MCMemoryDelete(t_nest);
+	
+	return t_result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
