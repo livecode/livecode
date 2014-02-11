@@ -99,6 +99,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgraphics", "libgraphics\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libskia", "thirdparty\libskia\libskia.vcproj", "{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcore", "libcore\libcore.vcproj", "{6899CD7E-BE16-44CE-A28B-27304F42E127}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libxslt", "thirdparty\libxslt\libxslt.vcproj", "{8E776621-28FF-4FBF-A2F3-F4598AEAF8B7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -253,6 +257,14 @@ Global
 		{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}.Debug|Win32.Build.0 = Debug|Win32
 		{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}.Release|Win32.ActiveCfg = Release|Win32
 		{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}.Release|Win32.Build.0 = Release|Win32
+		{6899CD7E-BE16-44CE-A28B-27304F42E127}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6899CD7E-BE16-44CE-A28B-27304F42E127}.Debug|Win32.Build.0 = Debug|Win32
+		{6899CD7E-BE16-44CE-A28B-27304F42E127}.Release|Win32.ActiveCfg = Release|Win32
+		{6899CD7E-BE16-44CE-A28B-27304F42E127}.Release|Win32.Build.0 = Release|Win32
+		{8E776621-28FF-4FBF-A2F3-F4598AEAF8B7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8E776621-28FF-4FBF-A2F3-F4598AEAF8B7}.Debug|Win32.Build.0 = Debug|Win32
+		{8E776621-28FF-4FBF-A2F3-F4598AEAF8B7}.Release|Win32.ActiveCfg = Release|Win32
+		{8E776621-28FF-4FBF-A2F3-F4598AEAF8B7}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
