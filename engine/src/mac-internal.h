@@ -15,6 +15,10 @@ class MCMacPlatformSurface;
 	char **m_envp;
 }
 
+// Platform init / finit.
+- (void)initializeModules;
+- (void)finalizeModules;
+
 // Shutdown and reopening handling
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender;
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender;
@@ -338,6 +342,9 @@ MCPlatformDragOperation MCMacPlatformMapNSDragOperationToDragOperation(NSDragOpe
 void MCMacPlatformPasteboardCreate(NSPasteboard *pasteboard, MCPlatformPasteboardRef& r_pasteboard);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCPlatformInitializeAbortKey(void);
+void MCPlatformFinalizeAbortKey(void);
 
 bool MCPlatformInitializeColorTransform(void);
 void MCPlatformFinalizeColorTransform(void);

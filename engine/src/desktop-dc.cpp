@@ -696,7 +696,21 @@ void MCScreenDC::setbeep(uint4 which, int4 beep)
 
 Boolean MCScreenDC::abortkey()
 {
-	return MCPlatformGetAbortKeyPressed();
+	if (MCabortscript)
+		return True;
+	
+	if (MCPlatformGetAbortKeyPressed())
+	{
+		if (MCallowinterrupts && !MCdefaultstackptr -> cantabort())
+			return True;
+		
+		MCinterrupt = True;
+		
+		// OK-2010-04-29: [[Bug]] - cantAbort / allowInterrupts not working on OS X
+		return False;
+	}
+	
+	return False;
 }
 
 uint2 MCScreenDC::querymods()

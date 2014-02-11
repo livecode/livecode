@@ -50,6 +50,20 @@ static CGFloat s_primary_screen_height = 0.0f;
 
 //////////
 
+- (void)initializeModules
+{
+	MCPlatformInitializeColorTransform();
+	MCPlatformInitializeAbortKey();
+}
+
+- (void)finalizeModules
+{
+	MCPlatformFinalizeAbortKey();
+	MCPlatformFinalizeColorTransform();
+}
+
+//////////
+
 - (NSError *)application:(NSApplication *)application willPresentError:(NSError *)error
 {
 }
@@ -69,6 +83,9 @@ static CGFloat s_primary_screen_height = 0.0f;
 
 - (void)applicationDidFinishLaunching: (NSNotification *)notification
 {
+	// Initialize everything.
+	[self initializeModules];
+	
 	// Dispatch the startup callback.
 	int t_error_code;
 	char *t_error_message;
@@ -83,7 +100,10 @@ static CGFloat s_primary_screen_height = 0.0f;
 			fprintf(stderr, "Startup error - %s\n", t_error_message);
 			free(t_error_message);
 		}
-			
+		
+		// Finalize everything
+		[self finalizeModules];
+		
 		// Now exit the application with the appropriate code.
 		exit(t_error_code);
 	}
@@ -128,6 +148,9 @@ static CGFloat s_primary_screen_height = 0.0f;
 	// Dispatch the shutdown callback.
 	int t_exit_code;
 	MCPlatformCallbackSendApplicationShutdown(t_exit_code);
+	
+	// Finalize everything
+	[self finalizeModules];
 	
 	// Now exit the application with the appropriate code.
 	exit(t_exit_code);
@@ -436,12 +459,6 @@ void MCMacPlatformEndModalSession(MCMacPlatformWindow *p_window)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// COCOA-TODO: abort key
-bool MCPlatformGetAbortKeyPressed(void)
-{
-	return false;
-}
 
 bool MCPlatformGetMouseButtonState(uindex_t p_button)
 {
@@ -1148,9 +1165,6 @@ int main(int argc, char *argv[], char *envp[])
 	
 	// Register for reconfigurations.
 	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
-	
-	// Initialize various things.
-	MCPlatformInitializeColorTransform();
 	
 	// Setup our delegate
 	com_runrev_livecode_MCApplicationDelegate *t_delegate;
