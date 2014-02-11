@@ -1,12 +1,15 @@
 ###############################################################################
 # Engine Targets
 
-.PHONY: libopenssl liburlcache libstubs libfoundation
+.PHONY: libopenssl liburlcache libstubs libfoundation libcore
 .PHONY: libexternal libexternalv1 libz libjpeg libpcre libpng libplugin libgraphics libskia
 .PHONY: revsecurity libgif
 .PHONY: kernel development standalone webruntime webplugin webplayer server
 .PHONY: kernel-standalone kernel-development kernel-server
 .PHONY: libireviam onrev-server
+
+libcore:
+	$(MAKE) -C ./libcore libcore
 
 libexternal:
 	$(MAKE) -C ./libexternal libexternal
@@ -78,7 +81,7 @@ server: libz libgif  libjpeg libpcre libpng libopenssl libexternal libfoundation
 libcairopdf:
 	$(MAKE) -C ./thirdparty/libcairo libcairopdf
 
-revpdfprinter: libcairopdf
+revpdfprinter: libcairopdf libcore
 	$(MAKE) -C ./revpdfprinter revpdfprinter
 
 ###############################################################################
