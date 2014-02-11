@@ -13,7 +13,6 @@
 		4DA9C01B10E20D0500055232 /* revpdfprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA9C01A10E20D0500055232 /* revpdfprinter.cpp */; };
 		4DA9C05E10E20E2E00055232 /* revpdfprinter_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA9C05D10E20E2E00055232 /* revpdfprinter_osx.cpp */; };
 		72CC350318A946E900BEC655 /* libcore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 72CC350218A946E900BEC655 /* libcore.a */; };
-		E8ED9FE61733FA730015E32F /* libfoundation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8ED9FE51733FA490015E32F /* libfoundation.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,19 +44,19 @@
 			remoteGlobalIDString = D2AAC045055464E500DB518D;
 			remoteInfo = libz;
 		};
-		E8ED9FE41733FA490015E32F /* PBXContainerItemProxy */ = {
+		72CC354618AA379E00BEC655 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = E8ED9FE01733FA480015E32F /* libfoundation.xcodeproj */;
+			containerPortal = 72CC354218AA379D00BEC655 /* libcore.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 4DF42A430B048617003F2D95;
-			remoteInfo = foundation;
+			remoteInfo = core;
 		};
-		E8ED9FE71733FA7A0015E32F /* PBXContainerItemProxy */ = {
+		72CC354818AA37A300BEC655 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = E8ED9FE01733FA480015E32F /* libfoundation.xcodeproj */;
+			containerPortal = 72CC354218AA379D00BEC655 /* libcore.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 4DF42A420B048617003F2D95;
-			remoteInfo = foundation;
+			remoteInfo = core;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -73,10 +72,10 @@
 		4DA9C05D10E20E2E00055232 /* revpdfprinter_osx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = revpdfprinter_osx.cpp; path = src/revpdfprinter_osx.cpp; sourceTree = "<group>"; };
 		4DA9C2FE10E21F6900055232 /* revpdfprinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = revpdfprinter.h; path = src/revpdfprinter.h; sourceTree = "<group>"; };
 		72CC350218A946E900BEC655 /* libcore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcore.a; path = /Users/frasergordon/Workspace/livecode/libcore/.././_build/mac/Release/libcore.a; sourceTree = "<absolute>"; };
+		72CC354218AA379D00BEC655 /* libcore.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libcore.xcodeproj; path = ../libcore/libcore.xcodeproj; sourceTree = "<group>"; };
 		B55AFA270BCE906200E1F7F0 /* revpdfprinter-Info.plist */ = {isa = PBXFileReference; fileEncoding = 12; lastKnownFileType = text.plist.xml; name = "revpdfprinter-Info.plist"; path = "rsrc/revpdfprinter-Info.plist"; sourceTree = "<group>"; };
 		E88527491704950100CEFCC5 /* revpdfprinter_ios.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = revpdfprinter_ios.mm; path = src/revpdfprinter_ios.mm; sourceTree = "<group>"; };
 		E885274A1704950100CEFCC5 /* revpdfprinter_lnx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = revpdfprinter_lnx.cpp; path = src/revpdfprinter_lnx.cpp; sourceTree = "<group>"; };
-		E8ED9FE01733FA480015E32F /* libfoundation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libfoundation.xcodeproj; path = ../libfoundation/libfoundation.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -86,7 +85,6 @@
 			files = (
 				72CC350318A946E900BEC655 /* libcore.a in Frameworks */,
 				4D9D1D5217142A7800BE4F14 /* libz.a in Frameworks */,
-				E8ED9FE61733FA730015E32F /* libfoundation.a in Frameworks */,
 				4D9D1D5317142A7B00BE4F14 /* libcairo.a in Frameworks */,
 				4C8CFC2517146544000F2C85 /* Carbon.framework in Frameworks */,
 			);
@@ -120,8 +118,8 @@
 		4D6758E40A79F97700FA96D2 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
+				72CC354218AA379D00BEC655 /* libcore.xcodeproj */,
 				4DA9C02F10E20DB300055232 /* libz.xcodeproj */,
-				E8ED9FE01733FA480015E32F /* libfoundation.xcodeproj */,
 				4DA9BFFE10E20CCC00055232 /* libcairo.xcodeproj */,
 			);
 			name = Projects;
@@ -172,10 +170,10 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		E8ED9FE11733FA480015E32F /* Products */ = {
+		72CC354318AA379D00BEC655 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				E8ED9FE51733FA490015E32F /* libfoundation.a */,
+				72CC354718AA379E00BEC655 /* libcore.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -194,8 +192,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				72CC354918AA37A300BEC655 /* PBXTargetDependency */,
 				4D9D1D4F17142A6C00BE4F14 /* PBXTargetDependency */,
-				E8ED9FE81733FA7A0015E32F /* PBXTargetDependency */,
 				4D9D1D5117142A6F00BE4F14 /* PBXTargetDependency */,
 			);
 			name = revpdfprinter;
@@ -227,8 +225,8 @@
 					ProjectRef = 4DA9BFFE10E20CCC00055232 /* libcairo.xcodeproj */;
 				},
 				{
-					ProductGroup = E8ED9FE11733FA480015E32F /* Products */;
-					ProjectRef = E8ED9FE01733FA480015E32F /* libfoundation.xcodeproj */;
+					ProductGroup = 72CC354318AA379D00BEC655 /* Products */;
+					ProjectRef = 72CC354218AA379D00BEC655 /* libcore.xcodeproj */;
 				},
 				{
 					ProductGroup = 4D9D1D3A17142A1000BE4F14 /* Products */;
@@ -257,11 +255,11 @@
 			remoteRef = 4D9D1D4717142A1C00BE4F14 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		E8ED9FE51733FA490015E32F /* libfoundation.a */ = {
+		72CC354718AA379E00BEC655 /* libcore.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
-			path = libfoundation.a;
-			remoteRef = E8ED9FE41733FA490015E32F /* PBXContainerItemProxy */;
+			path = libcore.a;
+			remoteRef = 72CC354618AA379E00BEC655 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -299,10 +297,10 @@
 			name = libz;
 			targetProxy = 4D9D1D5017142A6F00BE4F14 /* PBXContainerItemProxy */;
 		};
-		E8ED9FE81733FA7A0015E32F /* PBXTargetDependency */ = {
+		72CC354918AA37A300BEC655 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = foundation;
-			targetProxy = E8ED9FE71733FA7A0015E32F /* PBXContainerItemProxy */;
+			name = core;
+			targetProxy = 72CC354818AA37A300BEC655 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

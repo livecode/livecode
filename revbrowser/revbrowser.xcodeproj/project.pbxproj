@@ -32,6 +32,20 @@
 			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = external;
 		};
+		72CC354E18AA38F600BEC655 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 72CC354A18AA38F600BEC655 /* libcore.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DF42A430B048617003F2D95;
+			remoteInfo = core;
+		};
+		72CC355018AA38FB00BEC655 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 72CC354A18AA38F600BEC655 /* libcore.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DF42A420B048617003F2D95;
+			remoteInfo = core;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -51,6 +65,7 @@
 		4DF42ABF0B0488ED003F2D95 /* Global.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DF42AC20B0488ED003F2D95 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DF42AE40B0489A5003F2D95 /* libexternal.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libexternal.xcodeproj; path = ../libexternal/libexternal.xcodeproj; sourceTree = SOURCE_ROOT; };
+		72CC354A18AA38F600BEC655 /* libcore.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libcore.xcodeproj; path = ../libcore/libcore.xcodeproj; sourceTree = "<group>"; };
 		769568ED1823D0E700779255 /* libcore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcore.a; path = ../_build/mac/Debug/libcore.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -121,6 +136,7 @@
 		4DF42AD90B04899A003F2D95 /* References */ = {
 			isa = PBXGroup;
 			children = (
+				72CC354A18AA38F600BEC655 /* libcore.xcodeproj */,
 				4DF42AE40B0489A5003F2D95 /* libexternal.xcodeproj */,
 			);
 			name = References;
@@ -130,6 +146,14 @@
 			isa = PBXGroup;
 			children = (
 				4DF42AEC0B0489A5003F2D95 /* libexternal.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		72CC354B18AA38F600BEC655 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				72CC354F18AA38F600BEC655 /* libcore.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -147,6 +171,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				72CC355118AA38FB00BEC655 /* PBXTargetDependency */,
 				4DF42AEF0B0489B4003F2D95 /* PBXTargetDependency */,
 			);
 			name = revbrowser;
@@ -171,6 +196,10 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
+					ProductGroup = 72CC354B18AA38F600BEC655 /* Products */;
+					ProjectRef = 72CC354A18AA38F600BEC655 /* libcore.xcodeproj */;
+				},
+				{
 					ProductGroup = 4DF42AE50B0489A5003F2D95 /* Products */;
 					ProjectRef = 4DF42AE40B0489A5003F2D95 /* libexternal.xcodeproj */;
 				},
@@ -188,6 +217,13 @@
 			fileType = archive.ar;
 			path = libexternal.a;
 			remoteRef = 4DF42AEB0B0489A5003F2D95 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		72CC354F18AA38F600BEC655 /* libcore.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcore.a;
+			remoteRef = 72CC354E18AA38F600BEC655 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -209,6 +245,11 @@
 			isa = PBXTargetDependency;
 			name = external;
 			targetProxy = 4DF42AEE0B0489B4003F2D95 /* PBXContainerItemProxy */;
+		};
+		72CC355118AA38FB00BEC655 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = core;
+			targetProxy = 72CC355018AA38FB00BEC655 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
