@@ -141,6 +141,25 @@ Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 	return ES_NOT_HANDLED;
 }
 
+char* MCStoreGetPurchaseProperty(const char *p_product_id, const char*  p_prop_name)
+{
+    bool t_success = true;
+    MCPurchase *t_purchase = nil;
+	MCPurchaseProperty t_property;
+	
+	if (t_success)
+		t_success =
+		MCPurchaseFindByProdId(p_product_id, t_purchase) &&
+		MCPurchaseLookupProperty(p_prop_name, t_property);
+	
+	MCExecPoint ep(nil, nil, nil);
+	if (t_success)
+		t_success = MCPurchaseGet(t_purchase, t_property, ep) == ES_NORMAL;
+	
+    return strdup(ep.getcstring());
+	
+}
+
 
 Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
 {
@@ -238,6 +257,26 @@ bool MCPurchaseSendRequest(MCPurchase *p_purchase)
 		return false;
 	
 	s_purchase_request = p_purchase;
+	[[SKPaymentQueue defaultQueue] addPayment: t_ios_data->payment];
+	s_purchase_request = nil;
+	
+	return true;
+}
+
+bool MCStoreMakePurchase(const char *p_product_id, const char *p_quantity, const char *p_payload)
+{
+    MCPurchase *t_purchase = nil;
+    MCPurchaseFindByProdId(p_product_id, t_purchase);
+    MCExecPoint ep(nil,nil,nil);
+    ep.setcstring(p_quantity);
+    MCPurchaseSet(t_purchase, kMCPurchasePropertyQuantity, ep);
+
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)t_purchase->platform_data;
+	
+	if (t_ios_data->payment == nil)
+		return false;
+	
+	s_purchase_request = t_purchase;
 	[[SKPaymentQueue defaultQueue] addPayment: t_ios_data->payment];
 	s_purchase_request = nil;
 	

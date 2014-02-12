@@ -262,6 +262,10 @@ void MCPurchaseUpdateEvent::Destroy()
 	delete this;
 }
 
+/*
+     PM : CONSIDER - backward compatibility. purchaseStateUpdate callback was returned with purchaseId and purchaseState.
+     Now is returned with purchaseId, productId and purchaseState     
+*/
 void MCPurchaseUpdateEvent::Dispatch()
 {
 	bool t_success = true;
@@ -289,8 +293,8 @@ void MCPurchaseUpdateEvent::Dispatch()
 	
 	t_success = MCPurchaseStateToString(m_purchase->state, t_state);
 	
-	//if (t_success)
-		//t_success = MCCStringFormat(t_id, "%d", m_purchase->id);
+	if (t_success)
+		t_success = MCCStringFormat(t_id, "%d", m_purchase->id);
     
     if (t_success)
 		t_success = MCCStringFormat(t_prod_id, "%s", m_purchase->prod_id);
@@ -299,7 +303,7 @@ void MCPurchaseUpdateEvent::Dispatch()
        // MCLog("m_purchase->prod_id is null",nil);
     
 	if (t_success)
-		MCdefaultstackptr->getcurcard()->message_with_args(MCM_purchase_updated, t_prod_id, t_state);
+		MCdefaultstackptr->getcurcard()->message_with_args(MCM_purchase_updated, t_id, t_prod_id, t_state);
 	
 	MCCStringFree(t_id);
     MCCStringFree(t_prod_id);
@@ -438,7 +442,7 @@ Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters
 }
 */
 
-Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
+Exec_stat MCHandleRequestForProductDetails(void *context, MCParameter *p_parameters)
 {
     bool t_success = true;
     char *t_product_id = nil;
@@ -676,6 +680,29 @@ Exec_stat MCHandleMakePurchase(void *context, MCParameter *p_parameters)
 		//t_success = MCStoreMakePurchase(t_purchase);
 	if (t_success)
 		t_success = MCStoreMakePurchase(t_purchase->prod_id, t_quantity, t_payload);
+    
+    MCCStringFree(t_prod_id);
+    MCCStringFree(t_quantity);
+    MCCStringFree(t_payload);
+	
+	return ES_NORMAL;
+}
+
+Exec_stat MCHandleConfirmPurchase(void *context, MCParameter *p_parameters)
+{
+	bool t_success = true;
+	
+	char *t_prod_id;
+	MCPurchase *t_purchase = nil;
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "s", &t_prod_id);
+	
+	if (t_success)
+		t_success = MCPurchaseFindByProdId(t_prod_id, t_purchase);
+	
+	if (t_success)
+		t_success = MCPurchaseConfirmDelivery(t_purchase);
 	
 	return ES_NORMAL;
 }
