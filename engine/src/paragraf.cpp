@@ -274,7 +274,11 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 {
 	IO_stat stat;
 	uint1 type;
-	
+
+    // The constructor-created string of the paragraph must be reset
+    MCValueRelease(m_text);
+    m_text = nil;
+
 	// MW-2013-11-20: [[ UnicodeFileFormat ]] Prior to 7.0, paragraphs were mixed runs
 	//   of UTF-16 and native text. 7.0 plus they are just a stringref.
 	if (version < 7000)
