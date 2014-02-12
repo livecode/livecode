@@ -411,6 +411,11 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 	[self handleAction: @selector(delete:) with: sender];
 }
 
+- (BOOL)validateMenuItem:(NSMenuItem *)menuItem
+{
+	return [menuItem isEnabled];
+}
+
 - (void)handleAction:(SEL)selector with:(id)sender
 {
 	if (![sender isKindOfClass: [NSMenuItem class]])
@@ -430,60 +435,6 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 	
 	[(MCMenuDelegate *)[[t_item menu] delegate] menuItemSelected: sender];
 }
-
-#if 0
-- (BOOL)performKeyEquivalent: (NSEvent *)event
-{
-	BOOL t_key_equiv;
-	MCMacPlatformLockMenuSelect();
-	t_key_equiv = [super performKeyEquivalent: event];
-	MCMacPlatformUnlockMenuSelect();
-	
-	if (MCMacPlatformWasMenuSelect())
-	{
-	}
-	
-	return t_key_equiv;
-}
-
-- (BOOL)respondsToSelector:(SEL)aSelector
-{
-	if (aSelector == @selector(cut:))
-		return YES;
-	return [super respondsToSelector:aSelector];
-}
-
-- (id)performSelector:(SEL)action withObject:(id)sender
-{
-	if (action == @selector(cut:))
-	{
-		
-	}
-	
-	return [super performSelector: action withObject: sender];
-}
-
-- (void)doCommandBySelector:(SEL)aSelector
-{
-	[self tryToPerform: aSelector with: nil];
-}
-
-- (BOOL)tryToPerform:(SEL)action with:(id)object
-{
-	if (![object isKindOfClass: [NSMenuItem class]])
-		return [super tryToPerform: action with: object];
-	
-	NSMenuItem *t_item;
-	t_item = (NSMenuItem *)object;
-	
-	if (![[[t_item menu] delegate] isKindOfClass: [MCMenuDelegate class]])
-		return [super tryToPerform: action with: object];
-	
-	[(MCMenuDelegate *)[[t_item menu] delegate] menuItemSelected: object];
-	
-	return YES;
-}
-#endif
 
 //////////
 

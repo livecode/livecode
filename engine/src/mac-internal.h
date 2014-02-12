@@ -203,6 +203,8 @@ class MCMacPlatformSurface;
 - (void)menuNeedsUpdate: (NSMenu *)menu;
 - (void)menuItemSelected: (id)sender;
 
+- (BOOL)validateMenuItem: (NSMenuItem *)item;
+
 - (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action;
 
 @end
@@ -221,6 +223,8 @@ class MCMacPlatformSurface;
 - (void)preferencesMenuItemSelected: (id)sender;
 
 - (void)menuNeedsUpdate: (NSMenu *)menu;
+
+- (BOOL)validateMenuItem: (NSMenuItem *)item;
 
 - (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action;
 

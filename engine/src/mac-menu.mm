@@ -164,6 +164,11 @@ static uint32_t s_key_equivalent_depth = 0;
 		s_menu_select_occured = true;
 }
 
+- (BOOL)validateMenuItem: (NSMenuItem *)item
+{
+	return [item isEnabled];
+}
+
 //////////
 
 - (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action
@@ -246,6 +251,11 @@ static uint32_t s_key_equivalent_depth = 0;
 		t_about = [self findShadowedMenuItem: @"About"];
 		[[menu itemAtIndex: 0] setEnabled: t_about != nil ? [t_about isEnabled] : NO];
 	}
+}
+
+- (BOOL)validateMenuItem: (NSMenuItem *)item
+{
+	return [item isEnabled];
 }
 
 //////////
@@ -369,8 +379,9 @@ void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu)
 	[t_menu -> menu setDelegate: t_menu -> menu_delegate];
 	t_menu -> is_menubar = false;
 	
-	// We don't use autoenablement.
-	[t_menu -> menu setAutoenablesItems: NO];
+	// Turn on auto-enablement - this allows dialogs to control the enablement
+	// of items with appropriate tag.
+	[t_menu -> menu setAutoenablesItems: YES];
 	
 	r_menu = t_menu;
 }
