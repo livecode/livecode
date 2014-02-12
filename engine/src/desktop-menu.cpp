@@ -34,6 +34,7 @@
 #include "group.h"
 #include "stacklst.h"
 #include "stack.h"
+#include "card.h"
 #include "graphics_util.h"
 
 #include "platform.h"
@@ -644,8 +645,210 @@ void MCScreenDC::showmenu()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct MenuItemDescriptor
+{
+	MenuItemDescriptor *next;
+	uint4 depth;
+	uint4 id;
+	bool disabled;
+	bool checked;
+	const char *name;
+	uint4 name_length;
+	const char *tag;
+	uint4 tag_length;
+	MenuItemDescriptor *submenu;
+};
+
+static void flatten_menu(MenuItemDescriptor *p_menu)
+{
+	MenuItemDescriptor *t_item;
+	t_item = p_menu;
+	while(t_item != NULL)
+	{
+		if (t_item -> next != NULL && t_item -> next -> depth > t_item -> depth)
+		{
+			MenuItemDescriptor *t_first_subitem, *t_last_subitem;
+			
+			t_first_subitem = t_item -> next;
+			for(t_last_subitem = t_first_subitem; t_last_subitem -> next != NULL && t_last_subitem -> next -> depth >= t_first_subitem -> depth; t_last_subitem = t_last_subitem -> next)
+				;
+			
+			t_item -> submenu = t_first_subitem;
+			t_item -> next = t_last_subitem -> next;
+			
+			t_last_subitem -> next = NULL;
+			
+			flatten_menu(t_item -> submenu);
+		}
+		
+		t_item = t_item -> next;
+	}
+}
+
+static MCPlatformMenuRef create_menu(MCPlatformMenuRef p_menu, MenuItemDescriptor *p_items)
+{
+	MCPlatformMenuRef t_menu;
+	if (p_menu == nil)
+		MCPlatformCreateMenu(t_menu);
+	else
+		t_menu = p_menu;
+		
+	uindex_t t_index;
+	t_index = 0;
+	for(MenuItemDescriptor *t_item = p_items; t_item != nil; t_item = t_item -> next)
+	{
+		if (t_item -> name_length == 1 && t_item -> name[0] == '-')
+			MCPlatformAddMenuSeparatorItem(t_menu, t_index);
+		else
+		{
+			MCPlatformAddMenuItem(t_menu, t_index);
+			
+			char *t_title, *t_tag;
+			MCExecPoint ep;
+			ep . setsvalue(MCString(t_item -> name, t_item -> name_length));
+			ep . nativetoutf8();
+			t_title = ep . getsvalue() . clone();
+			
+			if (t_item -> tag_length != 0)
+			{
+				ep . setsvalue(MCString(t_item -> tag, t_item -> tag_length));
+				ep . nativetoutf8();
+				t_tag = ep . getsvalue() . clone();
+			}
+			else
+				t_tag = ep . getsvalue() . clone();
+			
+			bool t_enabled;
+			t_enabled = !t_item -> disabled;
+			
+			MCPlatformSetMenuItemProperty(t_menu, t_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeUTF8CString, &t_title);
+			MCPlatformSetMenuItemProperty(t_menu, t_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeUTF8CString, &t_tag);
+			MCPlatformSetMenuItemProperty(t_menu, t_index, kMCPlatformMenuItemPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
+			
+			if (t_item -> submenu != nil)
+			{
+				MCPlatformMenuRef t_submenu;
+				t_submenu = create_menu(nil, t_item -> submenu);
+				MCPlatformSetMenuItemProperty(t_menu, t_index, kMCPlatformMenuItemPropertySubmenu, kMCPlatformPropertyTypeMenuRef, &t_submenu);
+				MCPlatformReleaseMenu(t_submenu);
+			}
+			
+			free(t_title);
+			free(t_tag);
+		}
+		
+		t_index++;
+	}
+}
+
+static void free_menu(MenuItemDescriptor *p_items)
+{
+	while(p_items != nil)
+	{
+		if (p_items -> submenu != nil)
+			free_menu(p_items -> submenu);
+		
+		MenuItemDescriptor *t_next;
+		t_next = p_items -> next;
+		free(p_items);
+		
+		p_items = t_next;
+	}
+}
+
+void MCScreenDC::seticonmenu(const char *p_menu)
+{
+	MenuItemDescriptor *t_items, *t_current_item;
+	uint4 t_id;
+	
+	t_items = NULL;
+	t_current_item = NULL;
+	t_id = 65536;
+	
+	if (p_menu != NULL)
+		while(*p_menu != '\0')
+		{
+			const char *t_item_start, *t_item_end, *t_item_middle;
+			t_item_start = p_menu;
+			t_item_end = strchr(t_item_start, '\n');
+			if (t_item_end == NULL)
+				t_item_end = strchr(t_item_start, '\0');
+			
+			t_item_middle = strchr(t_item_start, '|');
+			if (t_item_middle > t_item_end)
+				t_item_middle = NULL;
+			
+			for(; *t_item_start == '\t'; ++t_item_start)
+				;
+			
+			MenuItemDescriptor *t_item;
+			t_item = new MenuItemDescriptor;
+			if (t_item == NULL)
+				break;
+			
+			if (t_current_item == NULL)
+				t_items = t_item, t_current_item = t_items;
+			else
+				t_current_item -> next = t_item, t_current_item = t_item;
+			
+			t_item -> next = NULL;
+			
+			if (*t_item_start == '(')
+				t_item_start++, p_menu++, t_item -> disabled = true;
+			else
+				t_item -> disabled = false;
+			
+			t_item -> name = t_item_start;
+			if (t_item_middle == NULL)
+			{
+				t_item -> name_length = t_item_end - t_item_start;
+				t_item -> tag = NULL;
+				t_item -> tag_length = 0;
+			}
+			else
+			{
+				t_item -> name_length = t_item_middle - t_item_start;
+				t_item -> tag = t_item_middle + 1;
+				t_item -> tag_length = t_item_end - t_item_middle - 1;
+			}
+			
+			t_item -> depth = t_item_start - p_menu;
+			t_item -> submenu = NULL;
+			t_item -> id = t_id++;
+			
+			if (*t_item_end == '\0')
+				p_menu = t_item_end;
+			else
+				p_menu = t_item_end + 1;
+		}
+	
+	if (t_items != NULL)
+		flatten_menu(t_items);
+	
+	MCPlatformRemoveAllMenuItems(icon_menu);
+		
+	create_menu(icon_menu, t_items);
+	
+	free_menu(t_items);
+}
+
+bool MCScreenDC::isiconmenu(MCPlatformMenuRef menu)
+{
+	return menu == icon_menu;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
 {
+	// If the menu is the icon menu, send an 'iconMenuOpening' message.
+	if (((MCScreenDC *)MCscreen) -> isiconmenu(p_menu))
+	{
+		if (MCdefaultstackptr != NULL)
+			MCdefaultstackptr -> getcard() -> message(MCM_icon_menu_opening);
+		return;
+	}
+	
 	// We get MenuUpdate callbacks for all menus before they open, however at
 	// the moment we are only interested in ones directly in the menubar. So
 	// fetch the menu's parent and see what it is.
@@ -687,7 +890,7 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 	ep . clear();
 	
 	// Keep track of the current (menu / item) pair we are working on.
-	MCPlatformMenuRef t_current_menu;
+	MCPlatformMenuRef t_current_menu, t_last_menu;
 	uindex_t t_current_menu_index, t_last_menu_index;
 	t_current_menu = p_menu;
 	t_current_menu_index = p_item_index;
@@ -709,6 +912,7 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 		ep . insert(*t_item_tag, 0, 0);
 		
 		// Store the last menu index.
+		t_last_menu = t_current_menu;
 		t_last_menu_index = t_current_menu_index;
 		
 		// Fetch the parent menu and loop
@@ -719,7 +923,7 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 	ep . utf8tonative();
 	
 	// If the current menu is non-nil, we are dispatching to a main-menu; otherwise it
-	// will be the current popup menu.
+	// will be the current popup menu or icon menu.
 	if (t_current_menu != nil)
 	{
 		if (s_menubar_targets[t_current_menu_index] -> Exists())
@@ -727,8 +931,16 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 	}
 	else
 	{
-		s_popup_menuitem = t_last_menu_index;
-		s_popup_menupick = ep . getsvalue() . clone();
+		if (((MCScreenDC *)MCscreen) -> isiconmenu(t_last_menu))
+		{
+			if (MCdefaultstackptr != NULL)
+				MCdefaultstackptr -> getcard() -> message_with_args(MCM_icon_menu_pick, ep . getsvalue());
+		}
+		else
+		{
+			s_popup_menuitem = t_last_menu_index;
+			s_popup_menupick = ep . getsvalue() . clone();
+		}
 	}
 }
 

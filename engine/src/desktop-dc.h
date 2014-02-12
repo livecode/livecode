@@ -57,6 +57,8 @@ private:
 	MCPatternRef backdrop_pattern;
 	MCPlatformWindowRef backdrop_window;
 	
+	MCPlatformMenuRef icon_menu;
+	
 public:
 	static MCDisplay *s_monitor_displays;
 	static uint4 s_monitor_count;
@@ -164,6 +166,10 @@ public:
 	void mousedowninbackdrop(uint32_t button, uint32_t count);
 	void mouseupinbackdrop(uint32_t button, uint32_t count);
 	void mousereleaseinbackdrop(uint32_t button);
+	
+	/////////
+	
+	bool isiconmenu(MCPlatformMenuRef menu);
 };
 
 #endif

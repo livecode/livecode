@@ -732,4 +732,28 @@ void MCPlatformGetMenubar(MCPlatformMenuRef& r_menu)
 	r_menu = s_menubar;
 }
 
+//////////
+
+static MCPlatformMenuRef s_icon_menu = nil;
+
+NSMenu *MCMacPlatformGetIconMenu(void)
+{
+	if (s_icon_menu != nil)
+		MCPlatformCallbackSendMenuUpdate(s_icon_menu);
+	
+	if (s_icon_menu != nil)
+		return s_icon_menu -> menu;
+	
+	return nil;
+}
+
+void MCPlatformSetIconMenu(MCPlatformMenuRef p_menu)
+{
+	if (s_icon_menu != nil)
+		MCPlatformReleaseMenu(s_icon_menu);
+	s_icon_menu = p_menu;
+	if (s_icon_menu != nil)
+		MCPlatformRetainMenu(s_icon_menu);
+}
+
 ////////////////////////////////////////////////////////////////////////////////

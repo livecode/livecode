@@ -334,6 +334,8 @@ void MCMacPlatformWindowFocusing(MCMacPlatformWindow *window);
 void MCMacPlatformWindowShowing(MCMacPlatformWindow *window);
 void MCMacPlatformWindowHiding(MCMacPlatformWindow *window);
 
+NSMenu *MCMacPlatformGetIconMenu(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NSDragOperation MCMacPlatformMapDragOperationToNSDragOperation(MCPlatformDragOperation);

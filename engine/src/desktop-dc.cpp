@@ -131,12 +131,17 @@ Boolean MCScreenDC::open()
 	backdrop_pattern = nil;
 	MCPlatformCreateWindow(backdrop_window);
 	MCPlatformConfigureBackdrop(backdrop_window);
+	
+	MCPlatformCreateMenu(icon_menu);
+	MCPlatformSetIconMenu(icon_menu);
 
 	return True;
 }
 
 Boolean MCScreenDC::close(Boolean force)
 {
+	MCPlatformReleaseMenu(icon_menu);
+	
 	// COCOA-TODO: Is this still needed?
 	uint2 i;
 	if (ncolors != 0)
@@ -476,10 +481,6 @@ Boolean MCScreenDC::uint4towindow(uint4, Window &w)
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCScreenDC::seticon(uint4 p_icon)
-{
-}
-
-void MCScreenDC::seticonmenu(const char *p_menu)
 {
 }
 

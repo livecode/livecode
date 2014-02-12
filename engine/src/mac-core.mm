@@ -159,7 +159,7 @@ static CGFloat s_primary_screen_height = 0.0f;
 // Dock menu handling.
 - (NSMenu *)applicationDockMenu:(NSApplication *)sender
 {
-	return nil;
+	return MCMacPlatformGetIconMenu();
 }
 
 //////////
@@ -726,6 +726,7 @@ static void MCMacPlatformSyncBackdrop(void)
 
 void MCPlatformConfigureBackdrop(MCPlatformWindowRef p_backdrop_window)
 {
+#if TO_FIX
 	if (s_backdrop_window != nil)
 	{
 		MCPlatformReleaseWindow(s_backdrop_window);
@@ -738,25 +739,32 @@ void MCPlatformConfigureBackdrop(MCPlatformWindowRef p_backdrop_window)
 		MCPlatformRetainWindow(s_backdrop_window);
 	
 	MCMacPlatformSyncBackdrop();
+#endif
 }
 
 void MCMacPlatformWindowFocusing(MCMacPlatformWindow *p_window)
 {
+#if TO_FIX
 	MCMacPlatformRemoveVisibleWindow(p_window);
 	MCMacPlatformAddVisibleWindow(p_window);
 	MCMacPlatformSyncBackdrop();
+#endif
 }
 
 void MCMacPlatformWindowShowing(MCMacPlatformWindow *p_window)
 {
+#if TO_FIX
 	MCMacPlatformAddVisibleWindow(p_window);
 	MCMacPlatformSyncBackdrop();
+#endif
 }
 
 void MCMacPlatformWindowHiding(MCMacPlatformWindow *p_window)
 {	
+#if TO_FIX
 	MCMacPlatformRemoveVisibleWindow(p_window);
 	MCMacPlatformSyncBackdrop();
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

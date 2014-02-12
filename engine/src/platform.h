@@ -598,6 +598,10 @@ bool MCPlatformPopUpMenu(MCPlatformMenuRef menu, MCPlatformWindowRef window, MCP
 
 //////////
 
+void MCPlatformSetIconMenu(MCPlatformMenuRef menu);
+
+//////////
+
 void MCPlatformShowMenubar(void);
 void MCPlatformHideMenubar(void);
 
