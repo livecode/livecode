@@ -163,6 +163,7 @@ public class GoogleBillingProvider implements BillingProvider
         }
         
         pendingPurchaseSku = productId;
+		setPurchaseProperty(productId, "payload", payload);
         
         Log.i(TAG, "purchaseSendRequest("  + productId + ", " + type + ")");
         
