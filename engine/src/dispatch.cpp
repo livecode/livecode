@@ -1027,19 +1027,13 @@ void MCDispatch::wmfocus_stack(MCStack *target, int2 x, int2 y)
 {
 	// IM-2013-09-23: [[ FullscreenMode ]] transform view -> stack coordinates
 	MCPoint t_stackloc;
+	// IM-2014-02-12: [[ StackScale ]] mfocus will translate target stack to menu stack coords
+	//   so in both cases we pass target stack coords.
+	t_stackloc = target->windowtostackloc(MCPointMake(x, y));
 	if (menu != NULL)
-	{
-		t_stackloc = menu->getstack()->windowtostackloc(MCPointMake(x, y));
 		menu->mfocus(t_stackloc.x, t_stackloc.y);
-	}
-	else
-	{
-		if (target != NULL)
-		{
-			t_stackloc = target->windowtostackloc(MCPointMake(x, y));
-			target->mfocus(t_stackloc.x, t_stackloc.y);
-		}
-	}
+	else if (target != NULL)
+		target->mfocus(t_stackloc.x, t_stackloc.y);
 }
 
 void MCDispatch::wmfocus(Window w, int2 x, int2 y)
