@@ -133,6 +133,14 @@ class MCMacPlatformSurface;
 - (void)keyDown: (NSEvent *)event;
 - (void)keyUp: (NSEvent *)event;
 
+- (void)undo:(id)sender;
+- (void)redo:(id)sender;
+- (void)cut:(id)sender;
+- (void)copy:(id)sender;
+- (void)paste:(id)sender;
+- (void)selectAll:(id)sender;
+- (void)delete:(id)sender;
+
 //////////
 
 - (BOOL)wantsPeriodicDraggingUpdates;
@@ -159,6 +167,7 @@ class MCMacPlatformSurface;
 - (void)handleMouseMove: (NSEvent *)event;
 - (void)handleMousePress: (NSEvent *)event isDown: (BOOL)pressed;
 - (void)handleKeyPress: (NSEvent *)event isDown: (BOOL)pressed;
+- (void)handleAction:(SEL)selector with:(id)sender;
 
 //////////
 
@@ -172,6 +181,52 @@ class MCMacPlatformSurface;
 @end
 
 @compatibility_alias MCWindowView com_runrev_livecode_MCWindowView;
+
+////////////////////////////////////////////////////////////////////////////////
+
+@interface com_runrev_livecode_MCMenuDelegate: NSObject<NSMenuDelegate>
+{
+	MCPlatformMenuRef m_menu;
+}
+
+//////////
+
+- (id)initWithPlatformMenuRef: (MCPlatformMenuRef)p_menu_ref;
+- (void)dealloc;
+
+//////////
+
+- (MCPlatformMenuRef)platformMenuRef;
+
+//////////
+
+- (void)menuNeedsUpdate: (NSMenu *)menu;
+- (void)menuItemSelected: (id)sender;
+
+- (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action;
+
+@end
+
+@compatibility_alias MCMenuDelegate com_runrev_livecode_MCMenuDelegate;
+
+@interface com_runrev_livecode_MCAppMenuDelegate: NSObject<NSMenuDelegate>
+
+- (id)init;
+- (void)dealloc;
+
+- (void)shadowedMenuItemSelected:(NSString*)tag;
+- (NSMenuItem *)findShadowedMenuItem: (NSString *)tag;
+
+- (void)aboutMenuItemSelected: (id)sender;
+- (void)preferencesMenuItemSelected: (id)sender;
+
+- (void)menuNeedsUpdate: (NSMenu *)menu;
+
+- (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action;
+
+@end
+
+@compatibility_alias MCAppMenuDelegate com_runrev_livecode_MCAppMenuDelegate;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -335,6 +390,12 @@ void MCMacPlatformWindowShowing(MCMacPlatformWindow *window);
 void MCMacPlatformWindowHiding(MCMacPlatformWindow *window);
 
 NSMenu *MCMacPlatformGetIconMenu(void);
+
+void MCMacPlatformLockMenuSelect(void);
+void MCMacPlatformUnlockMenuSelect(void);
+bool MCMacPlatformWasMenuSelect(void);
+
+bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, SEL& r_selector);
 
 ////////////////////////////////////////////////////////////////////////////////
 

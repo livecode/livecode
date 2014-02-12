@@ -35,51 +35,8 @@
 // platform that uses native menus - we will probably want to abstract in a
 // similar way to the MCPlatformWindow at a later date though.
 
-////////////////////////////////////////////////////////////////////////////////
-
-@interface com_runrev_livecode_MCMenuDelegate: NSObject<NSMenuDelegate>
-{
-	MCPlatformMenuRef m_menu;
-}
-
-//////////
-
-- (id)initWithPlatformMenuRef: (MCPlatformMenuRef)p_menu_ref;
-- (void)dealloc;
-
-//////////
-
-- (MCPlatformMenuRef)platformMenuRef;
-
-//////////
-
-- (void)menuNeedsUpdate: (NSMenu *)menu;
-- (void)menuItemSelected: (id)sender;
-
-- (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action;
-
-@end
-
-@compatibility_alias MCMenuDelegate com_runrev_livecode_MCMenuDelegate;
-
-@interface com_runrev_livecode_MCAppMenuDelegate: NSObject<NSMenuDelegate>
-
-- (id)init;
-- (void)dealloc;
-
-- (void)shadowedMenuItemSelected:(NSString*)tag;
-- (NSMenuItem *)findShadowedMenuItem: (NSString *)tag;
-
-- (void)aboutMenuItemSelected: (id)sender;
-- (void)preferencesMenuItemSelected: (id)sender;
-
-- (void)menuNeedsUpdate: (NSMenu *)menu;
-
-- (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action;
-
-@end
-
-@compatibility_alias MCAppMenuDelegate com_runrev_livecode_MCAppMenuDelegate;
+static uint32_t s_menu_select_lock = 0;
+static bool s_menu_select_occured = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -108,6 +65,11 @@ static com_runrev_livecode_MCAppMenuDelegate *s_app_menu_delegate = nil;
 
 // The services menu that gets populated by Cocoa.
 static NSMenu *s_services_menu = nil;
+
+// The depth of 'keyEquivalent' calls we are in. If non-zero it means the item
+// selection has occured as a result of a key-press and so must be dispatched as
+// such.
+static uint32_t s_key_equivalent_depth = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -192,9 +154,14 @@ static NSMenu *s_services_menu = nil;
 
 - (void)menuItemSelected: (id)sender
 {
-	NSMenuItem *t_item;
-	t_item = (NSMenuItem *)sender;
-	MCPlatformCallbackSendMenuSelect(m_menu, [[t_item menu] indexOfItem: t_item]);
+	if (s_menu_select_lock == 0)
+	{
+		NSMenuItem *t_item;
+		t_item = (NSMenuItem *)sender;
+		MCPlatformCallbackSendMenuSelect(m_menu, [[t_item menu] indexOfItem: t_item]);
+	}
+	else
+		s_menu_select_occured = true;
 }
 
 //////////
@@ -294,6 +261,61 @@ static NSMenu *s_services_menu = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// We subclass NSMenu so that for any LiveCode menus, keyEquivalents don't
+// result in 'menuSelect' messages, but instead propagate a keyDown/keyUp
+// message which the engine handles.
+
+@interface com_runrev_livecode_MCMenuHandlingKeys: NSMenu
+
+- (BOOL)performKeyEquivalent: (NSEvent *)event;
+
+@end
+
+@compatibility_alias MCMenuHandlingKeys com_runrev_livecode_MCMenuHandlingKeys;
+
+bool MCMacPlatformWasMenuSelect(void)
+{
+	bool t_occured;
+	t_occured = s_menu_select_occured;
+	s_menu_select_occured = false;
+	return t_occured;
+}
+
+void MCMacPlatformLockMenuSelect(void)
+{
+	s_menu_select_lock += 1;
+}
+
+void MCMacPlatformUnlockMenuSelect(void)
+{
+	s_menu_select_lock -= 1;
+}
+
+@implementation com_runrev_livecode_MCMenuHandlingKeys
+
+- (BOOL)performKeyEquivalent: (NSEvent *)event
+{
+	// If the event is not targetted at one of our windows, we just let things
+	// flow as normal.
+	if (![[[event window] delegate] isKindOfClass: [MCWindowDelegate class]])
+		return [super performKeyEquivalent: event];
+	
+	// Otherwise, we lock menuSelect firing, and propagate a keydown/keyup.
+	BOOL t_key_equiv;
+	MCMacPlatformLockMenuSelect();
+	t_key_equiv = [super performKeyEquivalent: event];
+	MCMacPlatformUnlockMenuSelect();
+	
+	[[[event window] contentView] keyDown: event];
+	[[[event window] contentView] keyUp: event];
+	
+	return YES;
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Helper method that frees anything associated with an NSMenuItem in an NSMenu
 // (at the moment, this is the submenu).
 static void MCPlatformDestroyMenuItem(MCPlatformMenuRef p_menu, uindex_t p_index)
@@ -342,7 +364,7 @@ void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu)
 	
 	t_menu -> references = 1;
 	
-	t_menu -> menu = [[NSMenu alloc] initWithTitle: @""];
+	t_menu -> menu = [[MCMenuHandlingKeys alloc] initWithTitle: @""];
 	t_menu -> menu_delegate = [[MCMenuDelegate alloc] initWithPlatformMenuRef: t_menu];
 	[t_menu -> menu setDelegate: t_menu -> menu_delegate];
 	t_menu -> is_menubar = false;
@@ -478,13 +500,23 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 			break;
 		case kMCPlatformMenuItemPropertyAction:
 		{
-			// COCOA-TODO: I'm not sure this will work - will need to investigate how embedded views
-			//   deal with menu actions when they are implemented...
-#if 0
-			SEL t_selector;
-			if (MCMacPlatformMapMenuItemActionToSelector(*(MCPlatformMenuItemAction *)p_value, t_selector))
-				[t_item setAction: t_selector];
-#endif
+			MCPlatformMenuItemAction t_action;
+			t_action = *(MCPlatformMenuItemAction *)p_value;
+			
+			if (t_action == kMCPlatformMenuItemActionNone)
+			{
+				[t_item setAction: @selector(menuItemSelected:)];
+				[t_item setTarget: p_menu -> menu_delegate];
+			}
+			else
+			{
+				SEL t_selector;
+				if (MCMacPlatformMapMenuItemActionToSelector(t_action, t_selector))
+				{
+					[t_item setAction: t_selector];
+					[t_item setTarget: nil];
+				}
+			}
 		}
 		break;
 		case kMCPlatformMenuItemPropertyAccelerator:
@@ -754,6 +786,32 @@ void MCPlatformSetIconMenu(MCPlatformMenuRef p_menu)
 	s_icon_menu = p_menu;
 	if (s_icon_menu != nil)
 		MCPlatformRetainMenu(s_icon_menu);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static struct { MCPlatformMenuItemAction action; SEL selector; } s_menu_item_action_map[] =
+{
+	{ kMCPlatformMenuItemActionNone, nil },
+	{ kMCPlatformMenuItemActionUndo, @selector(undo:) },
+	{ kMCPlatformMenuItemActionRedo, @selector(redo:) },
+	{ kMCPlatformMenuItemActionCut, @selector(cut:) },
+	{ kMCPlatformMenuItemActionCopy, @selector(copy:) },
+	{ kMCPlatformMenuItemActionPaste, @selector(paste:) },
+	{ kMCPlatformMenuItemActionClear, @selector(delete:) },
+	{ kMCPlatformMenuItemActionSelectAll, @selector(selectAll:) },
+};
+
+bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, SEL& r_selector)
+{
+	for(uindex_t i = 0; i < sizeof(s_menu_item_action_map) / sizeof(s_menu_item_action_map[0]); i++)
+		if (action == s_menu_item_action_map[i] . action)
+		{
+			r_selector = s_menu_item_action_map[i] . selector;
+			return true;
+		}
+	
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

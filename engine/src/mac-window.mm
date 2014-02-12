@@ -374,6 +374,119 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 	[self handleKeyPress: event isDown: NO];
 }
 
+//////////
+
+- (void)undo:(id)sender
+{
+	[self handleAction: @selector(undo:) with: sender];
+}
+
+- (void)redo:(id)sender
+{
+	[self handleAction: @selector(redo:) with: sender];
+}
+
+- (void)cut:(id)sender
+{
+	[self handleAction: @selector(cut:) with: sender];
+}
+
+- (void)copy:(id)sender
+{
+	[self handleAction: @selector(copy:) with: sender];
+}
+
+- (void)paste:(id)sender
+{
+	[self handleAction: @selector(paste:) with: sender];
+}
+
+- (void)selectAll:(id)sender
+{
+	[self handleAction: @selector(selectAll:) with: sender];
+}
+
+- (void)delete:(id)sender
+{
+	[self handleAction: @selector(delete:) with: sender];
+}
+
+- (void)handleAction:(SEL)selector with:(id)sender
+{
+	if (![sender isKindOfClass: [NSMenuItem class]])
+	{
+		[super tryToPerform: selector with: sender];
+		return;
+	}
+	
+	NSMenuItem *t_item;
+	t_item = (NSMenuItem *)sender;
+	
+	if (![[[t_item menu] delegate] isKindOfClass: [MCMenuDelegate class]])
+	{
+		[super tryToPerform: selector with: sender];
+		return;
+	}
+	
+	[(MCMenuDelegate *)[[t_item menu] delegate] menuItemSelected: sender];
+}
+
+#if 0
+- (BOOL)performKeyEquivalent: (NSEvent *)event
+{
+	BOOL t_key_equiv;
+	MCMacPlatformLockMenuSelect();
+	t_key_equiv = [super performKeyEquivalent: event];
+	MCMacPlatformUnlockMenuSelect();
+	
+	if (MCMacPlatformWasMenuSelect())
+	{
+	}
+	
+	return t_key_equiv;
+}
+
+- (BOOL)respondsToSelector:(SEL)aSelector
+{
+	if (aSelector == @selector(cut:))
+		return YES;
+	return [super respondsToSelector:aSelector];
+}
+
+- (id)performSelector:(SEL)action withObject:(id)sender
+{
+	if (action == @selector(cut:))
+	{
+		
+	}
+	
+	return [super performSelector: action withObject: sender];
+}
+
+- (void)doCommandBySelector:(SEL)aSelector
+{
+	[self tryToPerform: aSelector with: nil];
+}
+
+- (BOOL)tryToPerform:(SEL)action with:(id)object
+{
+	if (![object isKindOfClass: [NSMenuItem class]])
+		return [super tryToPerform: action with: object];
+	
+	NSMenuItem *t_item;
+	t_item = (NSMenuItem *)object;
+	
+	if (![[[t_item menu] delegate] isKindOfClass: [MCMenuDelegate class]])
+		return [super tryToPerform: action with: object];
+	
+	[(MCMenuDelegate *)[[t_item menu] delegate] menuItemSelected: object];
+	
+	return YES;
+}
+#endif
+
+//////////
+
 - (void)scrollWheel: (NSEvent *)event
 {
 	MCMacPlatformWindow *t_window;

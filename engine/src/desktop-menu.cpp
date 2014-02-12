@@ -48,7 +48,13 @@ static struct { const char *tag; MCPlatformMenuItemAction action; } s_known_menu
 	{ "About", kMCPlatformMenuItemActionAbout },
 	{ "Preferences", kMCPlatformMenuItemActionPreferences },
 	
-	// COCOA-TODO: Add other standard actions.
+	{ "Undo", kMCPlatformMenuItemActionUndo },
+	{ "Redo", kMCPlatformMenuItemActionRedo },
+	{ "Cut", kMCPlatformMenuItemActionCut },
+	{ "Copy", kMCPlatformMenuItemActionCopy },
+	{ "Paste", kMCPlatformMenuItemActionPaste },
+	{ "Select All", kMCPlatformMenuItemActionSelectAll },
+	{ "Clear", kMCPlatformMenuItemActionClear },
 };
 
 static struct { KeySym keysym; MCPlatformAccelerator accelerator; } s_known_accelerators[] =
@@ -283,7 +289,12 @@ public:
 				if ((p_menuitem -> modifiers & MS_MOD2) != 0)
 					t_item_accelerator |= kMCPlatformAcceleratorWithMeta;
 				
-				MCstacks -> addaccelerator(m_button, m_button -> getstack(), p_menuitem -> accelerator, p_menuitem -> modifiers);
+				uint2 t_key;
+				if (isascii(p_menuitem -> accelerator))
+					t_key = MCS_tolower(p_menuitem -> accelerator);
+				else
+					t_key = p_menuitem -> accelerator;
+				MCstacks -> addaccelerator(m_button, m_button -> getstack(), t_key, p_menuitem -> modifiers);
 			}
 			else
 				t_item_accelerator = kMCPlatformAcceleratorNone;
@@ -874,8 +885,12 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
 	// menu button still exists!
 	if (s_menubar_targets[t_parent_menu_index] -> Exists())
 	{
+		MCButton *t_button;
+		t_button = (MCButton *)s_menubar_targets[t_parent_menu_index] -> Get();
+		
 		MCPlatformRemoveAllMenuItems(p_menu);
-		populate_menubar_menu_from_button(s_menubar, t_parent_menu_index, p_menu, (MCButton *)s_menubar_targets[t_parent_menu_index] -> Get());
+		MCstacks -> deleteaccelerator(t_button, t_button -> getstack());
+		populate_menubar_menu_from_button(s_menubar, t_parent_menu_index, p_menu, t_button);
 	}
 }
 
