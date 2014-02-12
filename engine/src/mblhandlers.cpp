@@ -293,7 +293,7 @@ Exec_stat MCHandlePurchaseCreate(void* p_context, MCParameter* p_parameters)
         t_success = MCParseParameters(p_parameters, "x", &(&t_product_id));
     
     if (t_success)
-        MCStoreExecCreatePurchase(ctxt, &t_product_id, t_id);
+        MCStoreExecCreatePurchase(ctxt, *t_product_id, t_id);
     
     if (!ctxt.HasError())
     {
@@ -444,7 +444,7 @@ Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters)
     MCExecContext ctxt(nil, nil, nil);
 	
 	if (t_success)
-        MCStoreExecGet(ctxt, t_id, &t_prop_name, &t_value);
+        MCStoreExecGet(ctxt, t_id, *t_prop_name, &t_value);
 	
 	if (!ctxt . HasError())
     {
