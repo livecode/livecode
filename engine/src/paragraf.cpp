@@ -291,11 +291,8 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 		// This string can contain a mixture of Unicode and native...
 		if ((stat = IO_read_string_legacy_full(&t_text_data, t_length, stream, 2, true, false)) != IO_NORMAL)
 			return stat;
-		
-		// The paragraph's text is accumulated into here as it can change between
-		// native and UTF-16 encodings on a block-by-block basis.
-		MCAutoStringRef t_text;
-		if (!MCStringCreateMutable(0, &t_text))
+
+        if (!MCStringCreateMutable(0, m_text))
 			return IO_ERROR;
 		
 		// If the whole text isn't covered by the saved blocks, the index of the
@@ -332,6 +329,10 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					findex_t index, len;
 					newblock->GetRange(index, len);
 					t_last_added = index+len;
+
+                    uindex_t t_index;
+                    t_index = MCStringGetLength(m_text);
+
 					if (newblock->IsSavedAsUnicode())
 					{
 						len >>= 1;
@@ -341,18 +342,18 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 							
 							// Byte swap, if required
 							uindex_t t_len = len;
-							while (len--)
+                            while (len--)
 								swap_uint2(dptr++);
+
+                            // Append to the paragraph text
+                            if (!MCStringAppendChars(m_text, (const unichar_t*)dptr - t_len, t_len))
+                                return IO_ERROR;
 							
 							// The indices used by the block are incorrect and need
 							// to be updated (offsets into the stored string and
 							// the string held by the paragraph will differ if any
 							// portion of the stored string was non-UTF-16)
-							newblock->SetRange(MCStringGetLength(*t_text), t_len);
-							
-							// Append to the paragraph text
-							if (!MCStringAppendChars(*t_text, (const unichar_t*)dptr - t_len, t_len))
-								return IO_ERROR;
+                            newblock->SetRange(t_index, t_len);
 						}
 					}
 					else
@@ -363,13 +364,13 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 #else
 						IO_mac_to_iso(*t_text_data + index, len);
 #endif
-						
-						// Fix the indices used by the block
-						newblock->SetRange(MCStringGetLength(*t_text), len);
-						
+
 						// String is in native format. Append to paragraph text
-						if (!MCStringAppendNativeChars(*t_text, (const char_t*)(*t_text_data + index), len))
-							return IO_ERROR;
+                        if (!MCStringAppendNativeChars(m_text, (const char_t*)(*t_text_data + index), len))
+                            return IO_ERROR;
+
+                        // Fix the indices used by the block
+                        newblock->SetRange(t_index, len);
 					}
 					newblock->appendto(blocks);
 				}
@@ -388,7 +389,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					// there were no blocks to say it was unicode, it must be native.
 					if (t_last_added == 0)
 					{
-						if (!MCStringAppendNativeChars(*t_text, (const char_t*)*t_text_data, t_length))
+                        if (!MCStringAppendNativeChars(m_text, (const char_t*)*t_text_data, t_length))
 							return IO_ERROR;
 						t_last_added = t_length;
 					}
@@ -397,8 +398,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					//if (t_last_added != t_length)
 					//	return IO_ERROR;
 					
-					MCS_seek_cur(stream, -1);
-					MCValueAssign(m_text, *t_text);
+                    MCS_seek_cur(stream, -1);
 					return IO_NORMAL;
 			}
 		}		
