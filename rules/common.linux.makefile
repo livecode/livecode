@@ -30,7 +30,11 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/thirdparty/libcurl/include \
 	$(SOLUTION_DIR)/thirdparty/libskia/include/core \
 	$(SOLUTION_DIR)/thirdparty/libskia/include/config \
-	$(SOLUTION_DIR)/thirdparty/libskia/include/effects
+	$(SOLUTION_DIR)/thirdparty/libskia/include/effects \
+	$(SOLUTION_DIR)/thirdparty/libskia/include/images \
+	$(SOLUTION_DIR)/thirdparty/libskia/include/pathops \
+	$(SOLUTION_DIR)/thirdparty/libskia/include/ports \
+	$(SOLUTION_DIR)/thirdparty/libskia/include/utils
 	
 GLOBAL_LIBS=\
 	$(PREBUILT_LIB_DIR)
@@ -66,15 +70,15 @@ VPATH=./src $(SOURCE_DIRS) $(CACHE_DIR) $(BUILD_DIR)
 
 $(CACHE_DIR)/%.o: %.cpp
 	mkdir -p $(CACHE_DIR)/$(dir $*)
-	gcc $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o ./src/$*.cpp
+	$(CC) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o ./src/$*.cpp
 
 $(CACHE_DIR)/%.o: %.c
 	mkdir -p $(CACHE_DIR)/$(dir $*)
-	gcc $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o ./src/$*.c
+	$(CC) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o ./src/$*.c
 	
 $(CACHE_DIR)/%.o: %.s
 	mkdir -p $(CACHE_DIR)/$(dir $*)
-	gcc $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -c -o$(CACHE_DIR)/$*.o ./src/$*.s
+	$(CC) $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -c -o$(CACHE_DIR)/$*.o ./src/$*.s
 
 clean:
 	rm $(OBJECTS)

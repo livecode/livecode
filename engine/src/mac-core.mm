@@ -24,6 +24,8 @@
 
 #include "mac-internal.h"
 
+#include <objc/objc-runtime.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool s_have_primary_screen_height = false;
@@ -662,6 +664,16 @@ void MCPlatformGetScreenViewport(uindex_t p_index, MCRectangle& r_viewport)
 void MCPlatformGetScreenWorkarea(uindex_t p_index, MCRectangle& r_workarea)
 {
 	MCMacPlatformMapScreenNSRectToMCRectangle([[[NSScreen screens] objectAtIndex: p_index] visibleFrame], r_workarea);
+}
+
+void MCPlatformGetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale)
+{
+	NSScreen *t_screen;
+	t_screen = [[NSScreen screens] objectAtIndex: p_index];
+	if ([t_screen respondsToSelector: @selector(backingScaleFactor)])
+		r_scale = objc_msgSend_fpret(t_screen, @selector(backingScaleFactor));
+	else
+		r_scale = 1.0f;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

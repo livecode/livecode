@@ -60,6 +60,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "regex.h"
 
+#include "resolution.h"
+
 MCProperty::MCProperty()
 {
 	tocount = CT_UNDEFINED;
@@ -527,6 +529,16 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 
 	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
 	case P_COLOR_DIALOG_COLORS:
+
+	// IM-2013-12-04: [[ PixelScale ]] Add support for global pixelScale and systemPixelScale properties
+	case P_PIXEL_SCALE:
+	case P_SYSTEM_PIXEL_SCALE:
+
+	// IM-2014-01-24: [[ HiDPI ]] Add support for global usePixelScaling, screenPixelScale, screenPixelScales properties
+	case P_USE_PIXEL_SCALING:
+	case P_SCREEN_PIXEL_SCALE:
+	case P_SCREEN_PIXEL_SCALES:
+			
 		break;
 
 	case P_REV_CRASH_REPORT_SETTINGS: // DEVELOPMENT only
@@ -2115,6 +2127,54 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		break;
 	case P_SCREEN_GAMMA:
 		return ep.getreal8(MCgamma, line, pos, EE_PROPERTY_NAN);
+
+	// IM-2013-12-04: [[ PixelScale ]] Enable setting of pixelScale to override default system value
+	// IM-2013-12-06: [[ PixelScale ]] Remove handling of empty pixelScale - should always have a numeric value
+	case P_PIXEL_SCALE:
+		{
+			real64_t t_scale;
+			stat = ep.getreal8(t_scale, line, pos, EE_PROPERTY_NAN);
+			
+			if (stat != ES_NORMAL)
+				return stat;
+			
+			if (t_scale <= 0)
+			{
+				MCeerror->add(EE_PROPERTY_BADPIXELSCALE, line, pos, t_scale);
+				return ES_ERROR;
+			}
+			
+			// IM-2014-01-30: [[ HiDPI ]] It is an error to set the pixelScale on platforms that do not support this
+			if (!MCResPlatformCanSetPixelScale())
+			{
+				MCeerror->add(EE_PROPERTY_PIXELSCALENOTSUPPORTED, line, pos, t_scale);
+				return ES_ERROR;
+			}
+			
+			if (MCResGetUsePixelScaling())
+				MCResSetPixelScale(t_scale);
+		}
+		break;
+
+	// IM-2014-01-24: [[ HiDPI ]] Enable or disable pixel scaling on Hi-DPI displays
+	case P_USE_PIXEL_SCALING:
+		{
+			Boolean t_pixel_scaling;
+			stat = ep.getboolean(t_pixel_scaling, line, pos, EE_PROPERTY_NAB);
+			if (stat != ES_NORMAL)
+				return stat;
+			
+			// IM-2014-01-30: [[ HiDPI ]] It is an error to set the usePixelScale on platforms that do not support this
+			if (!MCResPlatformCanChangePixelScaling())
+			{
+				MCeerror->add(EE_PROPERTY_USEPIXELSCALENOTSUPPORTED, line, pos, t_pixel_scaling);
+				return ES_ERROR;
+			}
+			
+			MCResSetUsePixelScaling(t_pixel_scaling);
+		}
+		break;
+
 	case P_SHELL_COMMAND:
 		delete MCshellcmd;
 		MCshellcmd = ep.getsvalue().clone();
@@ -3616,6 +3676,35 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 	case P_SCREEN_GAMMA:
 		ep.setr8(MCgamma, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
 		break;
+
+	// IM-2013-12-04: [[ PixelScale ]] Global property pixelScale returns the current pixel scale
+	case P_PIXEL_SCALE:
+		ep.setnvalue(MCResGetPixelScale());
+		break;
+	// IM-2013-12-04: [[ PixelScale ]] Global property systemPixelScale returns the pixel scale as determined by the OS
+	case P_SYSTEM_PIXEL_SCALE:
+		// IM-2014-01-24: [[ HiDPI ]] systemPixelScale now returns the maximum scale on all displays
+		MCGFloat t_scale;
+		t_scale = 1.0;
+		/* UNCHECKED */ MCscreen->getmaxdisplayscale(t_scale);
+		ep.setnvalue(t_scale);
+		break;
+
+	// IM-2014-01-24: [[ HiDPI ]] Global property usePixelScaling returns its configured value (default: true)
+	case P_USE_PIXEL_SCALING:
+		ep.setboolean(MCResGetUsePixelScaling());
+		break;
+
+	// IM-2014-01-27: [[ HiDPI ]] Global property screenPixelScale returns the pixel scale of the main screen
+	case P_SCREEN_PIXEL_SCALE:
+	// IM-2014-01-27: [[ HiDPI ]] Global property screenPixelScales returns a return-delimited
+	// list of the pixel scales of all connected screens
+	case P_SCREEN_PIXEL_SCALES:
+	{
+		MCResListScreenPixelScales(ep, which == P_SCREEN_PIXEL_SCALES);
+		break;
+	}
+
 	case P_SHELL_COMMAND:
 		ep.setsvalue(MCshellcmd);
 		break;

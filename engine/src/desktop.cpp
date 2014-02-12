@@ -99,9 +99,10 @@ void MCPlatformHandleApplicationRun(void)
 
 void MCPlatformHandleScreenParametersChanged(void)
 {
-	// Force a refresh of the cached display info.
-	free(MCScreenDC::s_monitor_displays);
-	MCScreenDC::s_monitor_count = 0;
+	// IM-2014-01-28: [[ HiDPI ]] Use updatedisplayinfo() method to update & compare display details
+	bool t_changed;
+	t_changed = false;
+	MCscreen->updatedisplayinfo(t_changed);
 	
 	// Post a desktop changed message.
 	MCscreen -> delaymessage(MCdefaultstackptr -> getcurcard(), MCM_desktop_changed);

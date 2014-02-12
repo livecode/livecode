@@ -14,10 +14,9 @@
 
 	<examples>
 <example>get the colors</example>
-<example>get 2 * myRadius * pi <i>-- gets area of circle</i></example>
+<example>get 2 * 25 * pi <i>-- gets area of circle with radius 25</i></example>
 <example><p>get message <i>-- evaluates expression in message box</i></p></example>
-<example>get URL &quot;http://www.example.org/index.html&quot;</example>
-<example>get URL &quot;https://www.runrev.com/index.html&quot;</example>
+<example>get URL "https://www.runrev.com"</example>
 	</examples>
 
 	<history>
@@ -25,6 +24,8 @@
 		<deprecated version=""></deprecated>
 		<removed version=""></removed>
 		<changed version="4.6.1">Added Support for Android and iOS</changed>
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
 	</history>
 
 	<objects>
@@ -75,6 +76,6 @@
   </parameter>		</parameters>
 
 	<value></value>
-	<comments>The <b>get</b> <glossary tag="command">command</glossary> is a shorthand way of writing the following statement:<p></p><p>  put<i> expression</i> into it</p><p></p><p></p><note>When specifying URLs for Android and iOS, you must use the appropriate form that confirms to the RFC standards. Ensure that you <function tag="urlEncode">urlEncode</function> any username and password fields appropriately for FTP urls.  The Android and iOS engines do not support 'libUrl', which would allow characters such as @ in the username.</note></comments>
+	<comments>The <b>get</b> <glossary tag="command">command</glossary> is a shorthand way of writing the following statement:<p></p><p>  put<i> expression</i> into it</p><p></p><p></p><p></p><note>When specifying URLs for Android and iOS, you must use the appropriate form that confirms to the RFC standards. Ensure that you <function tag="urlEncode">urlEncode</function> any username and password fields appropriately for FTP urls.  The Android and iOS engines do not support 'libUrl', which would allow characters such as @ in the username.</note></comments>
 	</description>
 </doc>

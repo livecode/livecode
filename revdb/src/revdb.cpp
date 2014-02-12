@@ -747,7 +747,10 @@ void REVDB_Connect(char *args[], int nargs, char **retstring, Bool *pass, Bool *
 	char *result = NULL;
 	*error = True;
 	*pass = False;
-	if (nargs >= 5) 
+	
+	// MW-2014-01-30: [[ Sqlite382 ]] Make this a little more flexible - only require at least
+	//   one argument.
+	if (nargs >= 1) 
 	{
 		*error = False;
 		char *dbtype = args[0];

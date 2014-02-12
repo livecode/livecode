@@ -81,7 +81,7 @@ void MCStack::realize(void)
 		
 		// IM-2013-08-01: [[ ResIndependence ]] scale stack rect to device coords
 		MCRectangle t_device_rect;
-		t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
+		t_device_rect = rect;
 	
 		// Sort out name ?
 		
@@ -323,7 +323,7 @@ void MCStack::realize(void)
 	start_externals();
 }
 
-MCRectangle MCStack::device_getwindowrect() const
+MCRectangle MCStack::view_platform_getwindowrect() const
 {
 	MCRectangle t_rect;
 	MCPlatformGetWindowFrameRect(window, t_rect);
@@ -337,9 +337,10 @@ MCRectangle MCStack::device_getwindowrect() const
 }
 
 // IM-2013-09-23: [[ FullscreenMode ]] Factor out device-specific window sizing
-void MCStack::device_setgeom(const MCRectangle &p_rect)
+MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 {
 	MCPlatformSetWindowContentRect(window, p_rect);
+	return p_rect;
 	
 #ifdef PRE_PLATFORM
 	NSRect t_content;
@@ -438,7 +439,7 @@ void MCStack::updatemodifiedmark(void)
 
 // MW-2011-09-11: [[ Redraw ]] Force an immediate update of the window within the given
 //   region. The actual rendering is done by deferring to the 'redrawwindow' method.
-void MCStack::device_updatewindow(MCRegionRef p_region)
+void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 {
 	if (window == nil)
 		return;
@@ -474,13 +475,13 @@ void MCStack::device_updatewindow(MCRegionRef p_region)
 #endif
 }
 
-void MCStack::device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
+void MCStack::view_platform_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
 {
 	// Set the file-local static to the callback to use (stacksurface picks this up!)
 	s_update_callback = p_callback;
 	s_update_context = p_context;
 	// IM-2013-08-29: [[ RefactorGraphics ]] simplify by calling device_updatewindow, which performs the same actions
-	device_updatewindow(p_region);
+	view_platform_updatewindow(p_region);
 	// Unset the file-local static.
 	s_update_callback = nil;
 	s_update_context = nil;
@@ -570,11 +571,14 @@ void MCDispatch::wredraw(Window p_window, MCPlatformSurfaceRef p_surface, MCRegi
 	if (t_stack == nil)
 		return;
 	
+	// IM-2014-01-24: [[ HiRes ]] Update the view backing scale to match the surface
+	t_stack -> view_setbackingscale(MCPlatformSurfaceGetBackingScaleFactor(p_surface));
+	
 	MCDesktopStackSurface t_stack_surface(p_surface);
 	
 	// If we don't have an update pixmap, then use redrawwindow.
 	if (s_update_callback == nil)
-		t_stack -> device_redrawwindow(&t_stack_surface, (MCRegionRef)p_update_rgn);
+		t_stack -> view_surface_redrawwindow(&t_stack_surface, (MCRegionRef)p_update_rgn);
 	else
 		s_update_callback(&t_stack_surface, (MCRegionRef)p_update_rgn, s_update_context);
 }

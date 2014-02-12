@@ -1954,7 +1954,7 @@ static MCExternalError MCExternalWaitBreak(void *unused, unsigned int p_options)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern MCGFloat MCResGetDeviceScale(void);
+extern MCGFloat MCResGetPixelScale(void);
 
 extern void *MCIPhoneGetView(void);
 extern void *MCIPhoneGetViewController(void);
@@ -1993,7 +1993,7 @@ static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, 
     // MERG-2013-11-07: [[ DeviceScale ]] Return 1/the device scale on platforms where the view is measured in pixels
     if (op == kMCExternalInterfaceQueryViewScale)
     {
-        *(double *)r_value = 1/MCResGetDeviceScale();
+        *(double *)r_value = 1/MCResGetPixelScale();
     	return kMCExternalErrorNone;
     }
 #if defined(TARGET_SUBPLATFORM_ANDROID)

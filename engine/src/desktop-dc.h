@@ -60,9 +60,6 @@ private:
 	MCPlatformMenuRef icon_menu;
 	
 public:
-	static MCDisplay *s_monitor_displays;
-	static uint4 s_monitor_count;
-	
 	MCScreenDC(void);
 	virtual ~MCScreenDC(void);
 	
@@ -80,17 +77,17 @@ public:
 	
 	virtual MCColor *getaccentcolors();
 	
-	virtual uint16_t device_getwidth(void);
-	virtual uint16_t device_getheight(void);
-	virtual bool device_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count);
-	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode mode);
+	virtual uint16_t platform_getwidth(void);
+	virtual uint16_t platform_getheight(void);
+	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
+	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
 	
 	virtual void resetcursors();
 	virtual void setcursor(Window w, MCCursorRef c);
 	virtual MCCursorRef createcursor(MCImageBitmap *image, int2 xhot, int2 yhot);
 	virtual void freecursor(MCCursorRef c);
 	
-	virtual bool device_getwindowgeometry(Window w, MCRectangle &drect);
+	virtual bool platform_getwindowgeometry(Window w, MCRectangle &drect);
 	virtual void openwindow(Window w, Boolean override);
 	virtual void closewindow(Window window);
 	virtual void destroywindow(Window &window);
@@ -119,9 +116,9 @@ public:
 	virtual void getbeep(uint4 which, MCExecPoint &ep);
 	virtual void setbeep(uint4 which, int4 beep);
 	
-	virtual MCStack *device_getstackatpoint(int32_t x, int32_t y);
-	virtual void device_querymouse(int2 &x, int2 &y);
-	virtual void device_setmouse(int2 x, int2 y);
+	virtual MCStack *platform_getstackatpoint(int32_t x, int32_t y);
+	virtual void platform_querymouse(int16_t &r_x, int16_t &r_y);
+	virtual void platform_setmouse(int16_t p_x, int16_t p_y);
 	virtual void grabpointer(Window w);
 	virtual void ungrabpointer();
 	virtual Boolean istripleclick();
@@ -158,6 +155,10 @@ public:
 	
 	virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
 	virtual MCScriptEnvironment *createscriptenvironment(const char *p_language);
+	
+	// IM-2014-01-28: [[ HiDPI ]] Return true if the platform can detect
+	//   desktop changes and will clear the cache when changes occur.
+	virtual bool platform_displayinfocacheable(void);
 	
 	//////////
 	

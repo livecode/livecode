@@ -52,7 +52,7 @@ Boolean load_crypto_symbols()
 #ifdef MCSSL
 
 // MW-2009-07-21: Weakly link only on non-MacOSX platforms.
-#if !defined(_MACOSX) && !defined(_SERVER)
+#if !defined(_SERVER)
 	if (!initialise_weak_link_crypto())
 		return False;
 	if (!initialise_weak_link_ssl())

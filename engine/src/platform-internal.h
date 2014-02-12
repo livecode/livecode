@@ -47,6 +47,8 @@ public:
 	virtual void UnlockSystemContext(void) = 0;
 	
 	virtual bool Composite(MCGRectangle dst_rect, MCGImageRef src_image, MCGRectangle src_rect, MCGFloat opacity, MCGBlendMode blend) = 0;
+
+	virtual MCGFloat GetBackingScaleFactor(void) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

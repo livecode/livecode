@@ -39,23 +39,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
+#include "graphics_util.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void surface_combine_blendSrcOver_masked(void *p_dst, int32_t p_dst_stride, const void *p_src, uint32_t p_src_stride, uint32_t p_width, uint32_t p_height, uint8_t p_opacity);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-/* OVERHAUL - REVISIT: should move this to shared util code as will probably be
- * useful elsewhere */
-static inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
-{
-	MCGRectangle t_rect;
-	t_rect . origin . x = (MCGFloat) p_rect . x;
-	t_rect . origin . y = (MCGFloat) p_rect . y;
-	t_rect . size . width = (MCGFloat) p_rect . width;
-	t_rect . size . height = (MCGFloat) p_rect . height;
-	return t_rect;
-}
 
 bool MCImageAllocMask(uint32_t p_width, uint32_t p_height, MCGRaster &r_mask)
 {
@@ -864,7 +854,8 @@ void MCMutableImageRep::put_brush(int2 x, int2 y, MCBrush *bmptr)
 	MCGContextRef t_context = nil;
 	/* UNCHECKED */ MCGContextCreateWithRaster(m_draw_mask, t_context);
 	MCGRectangle t_dst = MCGRectangleMake(x, y, bwidth, bheight);
-	MCGContextDrawImage(t_context, bmptr->image, t_dst, kMCGImageFilterNearest);
+    // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+	MCGContextDrawImage(t_context, bmptr->image, t_dst, kMCGImageFilterNone);
 	MCGContextRelease(t_context);
 }
 
@@ -1202,7 +1193,8 @@ void MCMutableImageRep::apply_fill_paint(MCGContextRef p_context, MCPatternRef p
 	else if (p_pattern == nil)
 		MCGContextSetFillRGBAColor(p_context, p_color.red / 65535.0, p_color.green / 65535.0, p_color.blue / 65535.0, 1.0);
 	else
-		MCGContextSetFillPattern(p_context, p_pattern->image, MCGAffineTransformMakeScale(1.0 / p_pattern->scale, 1.0 / p_pattern->scale), kMCGImageFilterNearest);
+        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+		MCGContextSetFillPattern(p_context, p_pattern->image, MCGAffineTransformMakeScale(1.0 / p_pattern->scale, 1.0 / p_pattern->scale), kMCGImageFilterNone);
 }
 
 void MCMutableImageRep::apply_stroke_paint(MCGContextRef p_context, MCPatternRef p_pattern, const MCColor &p_color)
@@ -1212,7 +1204,8 @@ void MCMutableImageRep::apply_stroke_paint(MCGContextRef p_context, MCPatternRef
 	else if (p_pattern == nil)
 		MCGContextSetStrokeRGBAColor(p_context, p_color.red / 65535.0, p_color.green / 65535.0, p_color.blue / 65535.0, 1.0);
 	else
-		MCGContextSetStrokePattern(p_context, p_pattern->image, MCGAffineTransformMakeScale(1.0 / p_pattern->scale, 1.0 / p_pattern->scale), kMCGImageFilterNearest);
+        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+		MCGContextSetStrokePattern(p_context, p_pattern->image, MCGAffineTransformMakeScale(1.0 / p_pattern->scale, 1.0 / p_pattern->scale), kMCGImageFilterNone);
 }
 
 void MCMutableImageRep::fill_path(MCGPathRef p_path)
@@ -1439,7 +1432,8 @@ void MCMutableImageRep::fillimage(const MCRectangle &drect)
 	/* UNCHECKED */ MCGContextCreateWithPixels(m_bitmap->width, m_bitmap->height, m_bitmap->stride, m_bitmap->data, true, t_context);
 
 	apply_fill_paint(t_context, MCbrushpattern, MCbrushcolor);
-	MCGContextDrawPixels(t_context, m_draw_mask, MCGRectangleMake(0, 0, m_bitmap->width, m_bitmap->height), kMCGImageFilterNearest);
+    // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+	MCGContextDrawPixels(t_context, m_draw_mask, MCGRectangleMake(0, 0, m_bitmap->width, m_bitmap->height), kMCGImageFilterNone);
 
 	MCGContextRelease(t_context);
 
@@ -1453,7 +1447,8 @@ void MCMutableImageRep::eraseimage(const MCRectangle &drect)
 
 	MCGContextSetBlendMode(t_context, kMCGBlendModeClear);
 	MCGContextSetFillRGBAColor(t_context, 1, 1, 1, 1);
-	MCGContextDrawPixels(t_context, m_draw_mask, MCGRectangleMake(0, 0, m_bitmap->width, m_bitmap->height), kMCGImageFilterNearest);
+    // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+	MCGContextDrawPixels(t_context, m_draw_mask, MCGRectangleMake(0, 0, m_bitmap->width, m_bitmap->height), kMCGImageFilterNone);
 
 	MCGContextRelease(t_context);
 
@@ -1900,6 +1895,13 @@ void MCMutableImageRep::image_freeundo(Ustruct *us)
 	MCLog("MCMutableImage::image_free_undo(%p) - freeing image %p", us, m_undo_image);
 	MCImageFreeBitmap(m_undo_image);
 	m_undo_image = nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCMutableImageRep::owner_rect_changed(const MCRectangle &p_new_rect)
+{
+	rect = p_new_rect;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

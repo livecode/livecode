@@ -314,9 +314,8 @@ static void effectrect_phase_1(void *p_context)
 {
 	effectrect_t *ctxt;
 	ctxt = (effectrect_t *)p_context;
-	// IM-2013-07-18: [[ ResIndependence ]] our snapshots are now always at the device resolution, so
-	// pass that as the image scale factor
-	/* UNCHECKED */ MCGImageToUIImage(ctxt->snapshot, true, MCIPhoneGetDeviceScale(), ctxt->current_image);
+	// IM-2014-01-30: [[ HiDPI ]] Use resolution scale for snapshots - this gives us the correct size in screen coords 
+	/* UNCHECKED */ MCGImageToUIImage(ctxt->snapshot, true, MCIPhoneGetResolutionScale(), ctxt->current_image);
 	[ctxt -> current_image retain];
 }
 
@@ -324,9 +323,8 @@ static void effectrect_phase_2(void *p_context)
 {
 	effectrect_t *ctxt;
 	ctxt = (effectrect_t *)p_context;
-	// IM-2013-07-18: [[ ResIndependence ]] our snapshots are now always at the device resolution, so
-	// pass that as the image scale factor
-	/* UNCHECKED */ MCGImageToUIImage(ctxt->snapshot, false, MCIPhoneGetDeviceScale(), ctxt->updated_image);
+	// IM-2014-01-30: [[ HiDPI ]] Use resolution scale for snapshots - this gives us the correct size in screen coords 
+	/* UNCHECKED */ MCGImageToUIImage(ctxt->snapshot, false, MCIPhoneGetResolutionScale(), ctxt->updated_image);
 	[ctxt -> updated_image retain];
 	
 	CGSize t_img_size;
@@ -337,15 +335,16 @@ static void effectrect_phase_2(void *p_context)
 	ctxt -> updated_image_view = [[UIImageView alloc] initWithImage: ctxt -> updated_image];
 	[ctxt -> updated_image release];
 	
-	float t_scale = MCIPhoneGetResolutionScale();
+	// IM-2014-01-30: [[ HiDPI ]] Convert logical to screen coords
+	float t_scale = MCScreenDC::logicaltoscreenscale();
 	
 	// MW-2011-09-27: [[ iOSApp ]] Adjust for content origin.
-	// IM-2013-07-18: [[ ResIndependence ]] use width / height from the UIImage
+	// IM-2014-01-30: [[ HiDPI ]] Scale effect area from logical to screen coords
 	CGRect t_bounds;
-	t_bounds = CGRectMake(ctxt -> effect_area.x / t_scale + [ctxt -> main_view frame] . origin . x,
-						  ctxt -> effect_area.y / t_scale + [ctxt -> main_view frame] . origin . y,
-						  t_img_size . width,
-						  t_img_size . height);
+	t_bounds = CGRectMake(ctxt -> effect_area.x * t_scale + [ctxt -> main_view frame] . origin . x,
+						  ctxt -> effect_area.y * t_scale + [ctxt -> main_view frame] . origin . y,
+						  ctxt -> effect_area.width * t_scale,
+						  ctxt -> effect_area.height * t_scale);
 	ctxt -> effect_view = [[UIView alloc] initWithFrame: t_bounds];
 	
 	[ctxt -> effect_view setClipsToBounds: YES];

@@ -266,7 +266,7 @@ public:
 	void SetBorderColor(uint32_t p_color);
 	uint32_t GetBorderColor(void) const;
 	
-	bool HasListChanged(void) const;
+	bool HasParagraphChanged(void) const;
 
 private:
 	struct Entry

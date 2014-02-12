@@ -24,6 +24,7 @@
 /* Begin PBXFileReference section */
 		4C053DCF17C4C9B30036E151 /* mbliphonetext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonetext.mm; path = src/mbliphonetext.mm; sourceTree = "<group>"; };
 		4C053DD817C506930036E151 /* blur.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = blur.cpp; path = src/blur.cpp; sourceTree = "<group>"; };
+		4C077911187DA31E001E297E /* mblandroidtext.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtext.cpp; path = src/mblandroidtext.cpp; sourceTree = "<group>"; };
 		4C313BD9180C545D004232E1 /* legacygradients.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = legacygradients.cpp; path = src/legacygradients.cpp; sourceTree = "<group>"; };
 		4C92703217D63F3000F97382 /* legacyblendmodes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = legacyblendmodes.cpp; path = src/legacyblendmodes.cpp; sourceTree = "<group>"; };
 		4CD56BFA17D5E3CD00B718F2 /* cachetable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cachetable.cpp; path = src/cachetable.cpp; sourceTree = "<group>"; };
@@ -78,6 +79,7 @@
 				E8C22BC8177AEC9A003785D3 /* image.cpp */,
 				E8C22BC9177AEC9A003785D3 /* path.cpp */,
 				E8C22BCA177AEC9A003785D3 /* utils.cpp */,
+				4C077911187DA31E001E297E /* mblandroidtext.cpp */,
 				4C053DCF17C4C9B30036E151 /* mbliphonetext.mm */,
 				4CD56BFA17D5E3CD00B718F2 /* cachetable.cpp */,
 				4C92703217D63F3000F97382 /* legacyblendmodes.cpp */,

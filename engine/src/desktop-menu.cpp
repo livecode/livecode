@@ -634,24 +634,18 @@ void MCScreenDC::hidemenu()
 {
 	MCPlatformHideMenubar();
 	menubarhidden = true ;
-	if (s_monitor_count != 0)
-	{
-		delete[] s_monitor_displays;
-		s_monitor_displays = NULL;
-		s_monitor_count = 0;
-	}
+	
+	// IM-2014-01-24: [[ HiDPI ]] Use refactored method to update display info
+	cleardisplayinfocache();
 }
 
 void MCScreenDC::showmenu()
 {
 	MCPlatformShowMenubar();
 	menubarhidden = false ;
-	if (s_monitor_count != 0)
-	{
-		delete[] s_monitor_displays;
-		s_monitor_displays = NULL;
-		s_monitor_count = 0;
-	}
+	
+	// IM-2014-01-24: [[ HiDPI ]] Use refactored method to update display info
+	cleardisplayinfocache();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

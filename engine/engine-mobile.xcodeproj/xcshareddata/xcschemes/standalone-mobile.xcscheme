@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4DD3DD981040AA9A00CAC7EF"
-               BuildableName = "standalone-mobile.app"
-               BlueprintName = "standalone-mobile"
+               BuildableName = "standalone-mobile-community.app"
+               BlueprintName = "standalone-mobile-community"
                ReferencedContainer = "container:engine-mobile.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -33,8 +33,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4DD3DD981040AA9A00CAC7EF"
-            BuildableName = "standalone-mobile.app"
-            BlueprintName = "standalone-mobile"
+            BuildableName = "standalone-mobile-community.app"
+            BlueprintName = "standalone-mobile-community"
             ReferencedContainer = "container:engine-mobile.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -51,8 +51,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4DD3DD981040AA9A00CAC7EF"
-            BuildableName = "standalone-mobile.app"
-            BlueprintName = "standalone-mobile"
+            BuildableName = "standalone-mobile-community.app"
+            BlueprintName = "standalone-mobile-community"
             ReferencedContainer = "container:engine-mobile.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -69,8 +69,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4DD3DD981040AA9A00CAC7EF"
-            BuildableName = "standalone-mobile.app"
-            BlueprintName = "standalone-mobile"
+            BuildableName = "standalone-mobile-community.app"
+            BlueprintName = "standalone-mobile-community"
             ReferencedContainer = "container:engine-mobile.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

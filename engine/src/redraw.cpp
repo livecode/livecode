@@ -1043,10 +1043,9 @@ bool MCCard::tilecache_render_background(void *p_context, MCContext *p_target, c
 	t_card = (MCCard *)p_context;
 	
 	// MW-2013-10-23: [[ FullscreenMode ]] Make sure we set the clip to the visible rect.
+	// IM-2013-12-20: [[ ShowAll ]] Use MCStack::getvisiblerect() to get the visible area
 	MCRectangle t_visible_rect;
-	t_visible_rect = t_card -> getstack()->getrect();
-	t_visible_rect.x = 0;
-	t_visible_rect.y = t_card -> getstack()->getscroll();
+	t_visible_rect = t_card->getstack()->getvisiblerect();
 	
 	p_target -> setclip(MCU_intersect_rect(t_visible_rect, p_dirty));
 	p_target -> setfunction(GXcopy);
@@ -1076,10 +1075,9 @@ void MCCard::render(void)
 	t_transform = getstack()->getdevicetransform();
 	
 	// IM-2013-10-14: [[ FullscreenMode ]] Get the visible area of the stack
+	// IM-2013-12-20: [[ ShowAll ]] Use MCStack::getvisiblerect() to get the visible area
 	MCRectangle t_visible_rect;
-	t_visible_rect = getstack()->getrect();
-	t_visible_rect.x = 0;
-	t_visible_rect.y = getstack()->getscroll();
+	t_visible_rect = getstack()->getvisiblerect();
 	
 	if (getstate(CS_SIZE))
 	{

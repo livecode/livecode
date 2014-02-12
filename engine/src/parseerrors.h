@@ -1618,7 +1618,7 @@ enum Parse_errors
 
 	// {PE-0530} variance: bad parameters
 	PE_VARIANCE_BADPARAM,
-    
+	
     // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
     // {PE-0531} measureText: no object
     PE_MEASURE_TEXT_NOOBJECT,
@@ -1639,6 +1639,13 @@ enum Parse_errors
 	// MERG-2013-10-04: [[ EditScriptAt ]] edit script of object at.
     // {EE-0536} edit script: no at expression
 	PE_EDIT_NOAT,
+	
+	// MW-2013-11-14: [[ AssertCmd ]] Parsing errors for assert command.
+	// {PE-0537} assert: bad type
+	PE_ASSERT_BADTYPE,
+	
+	// {PE-0538} assert: bad expression
+	PE_ASSERT_BADEXPR,
 };
 
 extern const char *MCparsingerrors;

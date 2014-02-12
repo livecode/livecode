@@ -147,6 +147,21 @@ static inline uint8_t MCGPixelGetAlpha(MCGPixelFormat p_format, uint32_t p_pixel
 #endif
 }
 
+static inline uint32_t MCGPixelSetAlpha(MCGPixelFormat p_format, uint32_t p_pixel, uint8_t p_new_alpha)
+{
+#ifdef __LITTLE_ENDIAN__
+	if (p_format & kMCGPixelAlphaPositionFirst)
+		return (p_pixel & 0xFFFFFF00) | p_new_alpha;
+	else
+		return (p_pixel & 0x00FFFFFF) | (p_new_alpha << 24);
+#else
+	if ((p_format & kMCGPixelAlphaPositionFirst) == 0)
+		return (p_pixel & 0xFFFFFF00) | p_new_alpha;
+	else
+		return (p_pixel & 0x00FFFFFF) | (p_new_alpha << 24);
+#endif
+}
+
 // IM-2013-11-01: [[ RefactorGraphics ]] Reverse component shift values on big-endian architectures
 static inline uint8_t MCGPixelGetNativeAlpha(uint32_t p_pixel)
 {
@@ -323,11 +338,13 @@ enum MCGRasterFormat
 	kMCGRasterFormat_A, // alpha mask
 };
 
+// MM-2014-01-09: [[ ImageFilterUpdate ]] Updated filters to use Skia's new filter levels.
 enum MCGImageFilter
 {
-	kMCGImageFilterNearest,
-	kMCGImageFilterBilinear,
-	kMCGImageFilterBicubic,
+	kMCGImageFilterNone,
+	kMCGImageFilterLow,
+	kMCGImageFilterMedium,
+    kMCGImageFilterHigh,
 };
 
 enum MCGGradientFunction
@@ -426,6 +443,7 @@ struct MCGFont
 {
 	void		*fid;
 	uint16_t	size;
+	uint16_t	fixed_advance;
 	int32_t		ascent;
 	int32_t		descent;
 	uint8_t		style;
@@ -705,6 +723,25 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef context, const unichar_t *t
 ////////////////////////////////////////////////////////////////////////////////
 
 // Transforms
+
+static inline void MCGAffineTransformSet(MCGAffineTransform &x_transform, MCGFloat a, MCGFloat b, MCGFloat c, MCGFloat d, MCGFloat tx, MCGFloat ty)
+{
+	x_transform.a = a;
+	x_transform.b = b;
+	x_transform.c = c;
+	x_transform.d = d;
+	x_transform.tx = tx;
+	x_transform.ty = ty;
+}
+
+static inline MCGAffineTransform MCGAffineTransformMake(MCGFloat a, MCGFloat b, MCGFloat c, MCGFloat d, MCGFloat tx, MCGFloat ty)
+{
+	MCGAffineTransform t_transform;
+	MCGAffineTransformSet(t_transform, a, b, c, d, tx, ty);
+	
+	return t_transform;
+}
+
 MCGAffineTransform MCGAffineTransformMakeIdentity(void);
 MCGAffineTransform MCGAffineTransformMakeRotation(MCGFloat p_angle);
 MCGAffineTransform MCGAffineTransformMakeTranslation(MCGFloat p_xoffset, MCGFloat p_yoffset);

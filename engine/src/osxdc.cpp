@@ -45,6 +45,7 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true
 
 ///////////////////////////////////////////////////////////////////////////////
 
+<<<<<<< HEAD
 #ifdef MAC_MOVED
 // IM-2013-08-01: [[ ResIndependence ]] OSX implementation currently returns 1.0
 MCGFloat MCResGetDeviceScale(void)
@@ -52,6 +53,10 @@ MCGFloat MCResGetDeviceScale(void)
 	return 1.0;
 }
 #endif
+=======
+// IM-2014-01-24: [[ HiDPI ]] Removed MCResGetSystemScale() function as part of HiDPI update
+/* CODE REMOVED */
+>>>>>>> develop
 
 #ifdef MAC_MOVED
 MCScreenDC::MCScreenDC()
@@ -232,8 +237,12 @@ MCPrinter *MCScreenDC::createprinter(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+<<<<<<< HEAD
 #ifdef MAC_MOVED
 MCStack *MCScreenDC::device_getstackatpoint(int32_t x, int32_t y)
+=======
+MCStack *MCScreenDC::platform_getstackatpoint(int32_t x, int32_t y)
+>>>>>>> develop
 {
 	Point t_location;
 	t_location . h = x;

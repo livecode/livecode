@@ -251,6 +251,8 @@ public:
 	
 	virtual bool Composite(MCGRectangle dst_rect, MCGImageRef src_image, MCGRectangle src_rect, MCGFloat opacity, MCGBlendMode blend);
 	
+	virtual MCGFloat GetBackingScaleFactor(void);
+	
 private:
 	void Lock(void);
 	void Unlock(void);

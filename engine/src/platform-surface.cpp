@@ -70,4 +70,9 @@ bool MCPlatformSurfaceComposite(MCPlatformSurfaceRef p_surface, MCGRectangle p_d
 	return p_surface -> Composite(p_dst_rect, p_src_image, p_src_rect, p_opacity, p_blend_mode);
 }
 
+MCGFloat MCPlatformSurfaceGetBackingScaleFactor(MCPlatformSurfaceRef p_surface)
+{
+	return p_surface -> GetBackingScaleFactor();
+}
+
 ////////////////////////////////////////////////////////////////////////////////

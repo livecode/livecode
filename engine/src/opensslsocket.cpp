@@ -68,7 +68,12 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
 #include <sys/socket.h>
 
 #include <netinet/in_systm.h>
+
+// MM-2014-02-04: [[ LibOpenSSL 1.0.1e ]] Header netinet/udp.h is not included in the iOS device SDK.
+#if !defined(TARGET_SUBPLATFORM_IPHONE) || defined(__i386__)
 #include <netinet/udp.h>
+#endif
+
 #include <netinet/in.h>
 
 #include <arpa/inet.h>
@@ -90,7 +95,7 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
 #include <openssl/ssl.h>
 #include <openssl/x509v3.h>
 
-#if !defined(X11) && (!defined(_MACOSX))
+#if !defined(X11) && (!defined(_MACOSX)) && (!defined(TARGET_SUBPLATFORM_IPHONE))
 #define socklen_t int
 #endif
 
@@ -1809,13 +1814,6 @@ Boolean MCSocket::initsslcontext()
 	return t_success;
 }
 
-#if defined(TARGET_PLATFORM_MACOS_X)
-bool load_ssl_ctx_certs_from_folder(SSL_CTX *p_ssl_ctx, const char *p_path)
-{
-	// on OSX, we're still using the provided version of openSSL so this should still work
-	return SSL_CTX_load_verify_locations(p_ssl_ctx, NULL, p_path);
-}
-#else
 struct cert_folder_load_context_t
 {
 	const char *path;
@@ -1850,7 +1848,6 @@ bool load_ssl_ctx_certs_from_folder(SSL_CTX *p_ssl_ctx, const char *p_path)
 	
 	return t_success;
 }
-#endif
 
 bool load_ssl_ctx_certs_from_file(SSL_CTX *p_ssl_ctx, const char *p_path)
 {
@@ -1987,11 +1984,7 @@ bool export_system_root_cert_stack(STACK_OF(X509) *&r_x509_stack)
 		for (UInt32 i = 0; t_success && i < t_anchor_count; i++)
 		{
 			X509 *t_x509 = NULL;
-#if (__MAC_OS_X_VERSION_MAX_ALLOWED > 1050)
 			const unsigned char* t_data_ptr = NULL;
-#else
-			unsigned char *t_data_ptr = NULL;
-#endif
 			UInt32 t_data_len = 0;
 			
 			CSSM_DATA t_cert_data;

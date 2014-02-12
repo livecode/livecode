@@ -838,13 +838,19 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 				t_ramp[i - 1] . difference = (uint4) (STOP_DIFF_MULT / STOP_INT_MAX);
 		}
 		
-#if kMCGPixelFormatNative != kMCGPixelFormatBGRA
+// MM-2013-12-04: [[ Bug 11528 ]] Tweak byte order for Android.
+#if defined(ANDROID)
 		uint8_t t_red, t_green, t_blue, t_alpha;
+        MCGPixelUnpack(kMCGPixelFormatARGB, t_ramp[i] . color, t_red, t_green, t_blue, t_alpha);
+        t_ramp[i] . hw_color = MCGPixelPack(kMCGPixelFormatABGR, t_red, t_green, t_blue, t_alpha);
+#elif defined(TARGET_SUBPLATFORM_IPHONE)
+        uint8_t t_red, t_green, t_blue, t_alpha;
 		MCGPixelUnpack(kMCGPixelFormatBGRA, t_ramp[i] . color, t_red, t_green, t_blue, t_alpha);
-		t_ramp[i] . hw_color = MCGPixelPackNative(t_red, t_green, t_blue, t_alpha);
+        t_ramp[i] . hw_color = MCGPixelPackNative(t_red, t_green, t_blue, t_alpha);
 #else
 		t_ramp[i] . hw_color = t_ramp[i] . color;
 #endif
+        
 	}
 	
 	// MW-2013-10-26: [[ Bug 11315 ]] Index shuold be i - 1 (otherwise memory overrun occurs!).
@@ -869,9 +875,10 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 		s_gradient_affine_combiner.y_inc = (uint4) (STOP_INT_MAX * -(int64_t)(s_gradient_affine_combiner . origin . x * vy + ((int32_t) r_clip . origin .y - s_gradient_affine_combiner . origin . y) * vx) / d);
 	}
 
+    // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
 	switch (p_gradient_ref -> filter)
 	{
-		case kMCGImageFilterNearest:
+		case kMCGImageFilterNone:
 		{
 			s_gradient_affine_combiner.end = gradient_combiner_end;
 			s_gradient_affine_combiner.x_inc += (s_gradient_affine_combiner.x_coef_a + s_gradient_affine_combiner.x_coef_b) >> 1;
@@ -901,8 +908,9 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, 
 					return &s_gradient_affine_combiner;
 			}
 		}
-		case kMCGImageFilterBilinear:
-		case kMCGImageFilterBicubic:
+		case kMCGImageFilterLow:
+		case kMCGImageFilterMedium:
+        case kMCGImageFilterHigh:
 		{
 			s_gradient_affine_combiner.end = gradient_bilinear_affine_combiner_end;
 			s_gradient_affine_combiner.buffer_width = GRADIENT_AA_SCALE * (uint32_t) ceilf(r_clip . size . width);

@@ -553,7 +553,15 @@ Boolean MCBlock::sameatts(MCBlock *bptr, bool p_persistent_only)
 
 static bool MCUnicodeCanBreakBetween(uint2 x, uint2 y)
 {
-	if (x < 256 && isspace(x))
+	// MW-2013-12-19: [[ Bug 11606 ]] We only check for breaks between chars and spaces
+	//   where the space follows the char. This is because a break will consume all space
+	//   chars after it thus we want to measure up to but not including the spaces.
+	bool t_x_isspace, t_y_isspace;
+	t_x_isspace = x < 256 && isspace(x);
+	t_y_isspace = y < 256 && isspace(y);
+	if (t_x_isspace && t_y_isspace)
+		return false;
+	if (t_y_isspace)
 		return true;
 
 	bool t_xid;
@@ -623,7 +631,13 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 	
 	// We don't completely fit within maxwidth, so compute the last break point in
 	// the block by measuring
-	int4 twidth;
+	// MW-2013-12-19: [[ Bug 11606 ]] Track the width of the text within the block as a float
+	//   but use the integer width to break. This ensures measure(a & b) == measure(a) + measure(b)
+	//   (otherwise you get drift as the accumulated width the block calculates is different
+	//    from the width of the text that is drawn).
+	MCGFloat twidth_float;
+	twidth_float = 0;
+	int32_t twidth;
 	twidth = 0;
 
 	// MW-2009-04-23: [[ Bug ]] For printing, we measure complete runs of text otherwise we get
@@ -704,13 +718,17 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 		//   generally now).
 		if (t_this_char == '\t')
 		{
-			twidth += gettabwidth(x + twidth, text, initial_i);
-
+			twidth = twidth + gettabwidth(x + twidth, text, initial_i);
+			twidth_float = (MCGFloat)twidth;
+			
 			t_last_break_width = twidth;
 			t_last_break_i = i;
 		}
 		else
-			twidth += MCFontMeasureText(m_font, &text[initial_i], i - initial_i, hasunicode());
+		{
+			twidth_float += MCFontMeasureTextFloat(m_font, &text[initial_i], i - initial_i, hasunicode());
+			twidth = (int32_t)floorf(twidth_float);
+		}
 
 		if (t_can_fit && twidth > maxwidth)
 			break;
@@ -1073,10 +1091,12 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		ull = a->underline;
 	}
 
-	if (flags & F_HAS_COLOR && atts->color->pixel != MAXUINT4)
+	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+	if (flags & F_HAS_COLOR)
 		t_foreground_color = atts -> color;
 
-	if (flags & F_HAS_BACK_COLOR && atts->backcolor->pixel != MAXUINT4)
+	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+	if (flags & F_HAS_BACK_COLOR)
 		dc->setbackground(*atts->backcolor);
 
 	if (t_foreground_color != NULL)
@@ -1145,7 +1165,8 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		dc -> setclip(t_sel_clip);
 		
 		// Change the hilite color (if necessary).
-		if (!(flags & F_HAS_COLOR) || atts->color->pixel == MAXUINT4)
+		// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+		if (!(flags & F_HAS_COLOR))
 		{
 			if (IsMacLF() && !f->isautoarm())
 			{
@@ -1164,10 +1185,11 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		// Draw the selected text.
 		drawstring(dc, x, cx, y, index, size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
 		
+		// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
 		// Revert to the previous clip and foreground color.
 		if (t_foreground_color != NULL)
 			dc->setforeground(*t_foreground_color);
-		else if (!(flags & F_HAS_COLOR) || atts->color->pixel == MAXUINT4)
+		else if (!(flags & F_HAS_COLOR))
 			f->setforeground(dc, DI_FORE, False, True);
 		dc-> setclip(t_old_clip);
 	}
@@ -1221,10 +1243,12 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		dc -> setclip(t_old_clip);
 	}
 	
-	if (flags & F_HAS_BACK_COLOR && atts->backcolor->pixel != MAXUINT4)
+	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+	if (flags & F_HAS_BACK_COLOR)
 		dc->setbackground(MCzerocolor);
 
-	if (flags & F_HAS_COLOR && atts->color->pixel != MAXUINT4 || fontstyle & FA_LINK)
+	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+	if (flags & F_HAS_COLOR || fontstyle & FA_LINK)
 		f->setforeground(dc, DI_FORE, False, True);
 
 	// MW-2010-01-06: If there is link text, then draw a link

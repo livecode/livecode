@@ -491,17 +491,17 @@ class MCGLegacyBlendMode : public SkXfermode
 public:
 	MCGLegacyBlendMode(MCGBlendMode blend_mode);
 	
-    virtual void xfer32(SkPMColor dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
+    /*virtual void xfer32(SkPMColor dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
     virtual void xfer16(uint16_t dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
     virtual void xfer4444(uint16_t dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
-    virtual void xferA8(SkAlpha dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
+    virtual void xferA8(SkAlpha dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;*/
 	
-	//virtual SkPMColor xferColor(SkPMColor src, SkPMColor dst) const;
+	virtual SkPMColor xferColor(SkPMColor src, SkPMColor dst) const;
 	
 	virtual bool asCoeff(Coeff* src, Coeff* dst) const;
 	virtual bool asMode(Mode* mode) const;
 	
-    virtual Factory getFactory() { return CreateProc; }
+    virtual Factory getFactory() const { return CreateProc; }
     virtual void flatten(SkFlattenableWriteBuffer&);
 	
 protected:
@@ -530,8 +530,6 @@ public:
     virtual uint32_t getFlags();
     virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count);
     virtual void shadeSpan16(int x, int y, uint16_t dstC[], int count);
-    /*virtual void beginSession();
-    virtual void endSession();*/
     virtual bool asABitmap(SkBitmap*, SkMatrix*, TileMode*);
 	
     static SkFlattenable* CreateProc(SkFlattenableReadBuffer& buffer)
@@ -542,7 +540,7 @@ public:
 protected:
     MCGLegacyGradientShader(SkFlattenableReadBuffer& );
     virtual void flatten(SkFlattenableWriteBuffer& );
-    virtual Factory getFactory() { return CreateProc; }
+    virtual Factory getFactory() const { return CreateProc; }
 	
 	MCGGradientRef			m_gradient_ref;
 	int32_t					m_y;

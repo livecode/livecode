@@ -27,6 +27,8 @@
 
 #include "mac-internal.h"
 
+#include <objc/objc-runtime.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // COCOA-TODO: Clean up external linkage for surface.
@@ -38,7 +40,7 @@ extern MCGFloat MCResGetDeviceScale(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void MCMacRenderBitsToCG(CGContextRef p_target, CGRect p_area, const void *p_bits, uint32_t p_stride, bool p_has_alpha);
+static void MCMacRenderBitsToCG(CGContextRef p_target, CGRect p_area, int32_t p_width, int32_t p_height, const void *p_bits, uint32_t p_stride, bool p_has_alpha);
 static void MCMacRenderImageToCG(CGContextRef p_target, CGRect p_dst_rect, MCGImageRef &p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,6 +79,12 @@ bool MCMacPlatformSurface::LockGraphics(MCRegionRef p_region, MCGContextRef& r_c
 	{
 		if (MCGContextCreateWithRaster(t_raster, m_locked_context))
 		{
+			MCGFloat t_scale;
+			t_scale = GetBackingScaleFactor();
+			
+			// Scale by backing scale
+			MCGContextScaleCTM(m_locked_context, t_scale, t_scale);
+			
 			// Set origin
 			MCGContextTranslateCTM(m_locked_context, -m_locked_area . x, -m_locked_area . y);
 			
@@ -109,14 +117,21 @@ bool MCMacPlatformSurface::LockPixels(MCRegionRef p_region, MCGRaster& r_raster)
 	if (MCU_empty_rect(t_actual_area))
 		return false;
 	
-	m_locked_stride = t_actual_area . width * sizeof(uint32_t);
-	m_locked_bits = malloc(t_actual_area . height * m_locked_stride);
+	MCGFloat t_scale;
+	t_scale = GetBackingScaleFactor();
+	
+	int32_t t_scaled_width, t_scaled_height;
+	t_scaled_width = t_actual_area . width * t_scale;
+	t_scaled_height = t_actual_area . height * t_scale;
+	
+	m_locked_stride = t_scaled_width * sizeof(uint32_t);
+	m_locked_bits = malloc(t_scaled_height * m_locked_stride);
 	if (m_locked_bits != nil)
 	{
 		m_locked_area = t_actual_area;
 		
-		r_raster . width = t_actual_area . width;
-		r_raster . height = t_actual_area . height;
+		r_raster . width = t_scaled_width;
+		r_raster . height = t_scaled_height;
 		r_raster . stride = m_locked_stride;
 		r_raster . pixels = m_locked_bits;
 		r_raster . format = kMCGRasterFormat_ARGB;
@@ -135,10 +150,13 @@ void MCMacPlatformSurface::UnlockPixels(void)
 	int t_surface_height;
 	t_surface_height = m_window -> m_content . height;
 	
+	MCGFloat t_scale;
+	t_scale = GetBackingScaleFactor();
+	
 	CGRect t_dst_rect;
 	t_dst_rect = CGRectMake(m_locked_area . x, t_surface_height - (m_locked_area . y + m_locked_area . height), m_locked_area . width, m_locked_area . height);
 	
-	MCMacRenderBitsToCG(m_cg_context, t_dst_rect, m_locked_bits, m_locked_stride, false);
+	MCMacRenderBitsToCG(m_cg_context, t_dst_rect, m_locked_area . width * t_scale, m_locked_area . height * t_scale, m_locked_bits, m_locked_stride, false);
 	
 	free(m_locked_bits);
 	m_locked_bits = nil;
@@ -210,13 +228,9 @@ void MCMacPlatformSurface::Lock(void)
 		t_rect = MCRegionGetBoundingBox(m_update_rgn);
 		CGContextClearRect(m_cg_context, CGRectMake(t_rect . x, t_surface_height - (t_rect . y + t_rect . height), t_rect . width, t_rect . height));
 		
-		// IM-2013-08-29: [[ ResIndependence ]] scale mask to device coords
-		MCGFloat t_scale;
-		t_scale = MCResGetDeviceScale();
-		
 		MCGFloat t_mask_height, t_mask_width;
-		t_mask_width = CGImageGetWidth(t_mask) * t_scale;
-		t_mask_height = CGImageGetHeight(t_mask) * t_scale;
+		t_mask_width = CGImageGetWidth(t_mask);
+		t_mask_height = CGImageGetHeight(t_mask);
 		
 		CGRect t_dst_rect;
 		t_dst_rect . origin . x = 0;
@@ -232,6 +246,13 @@ void MCMacPlatformSurface::Lock(void)
 void MCMacPlatformSurface::Unlock(void)
 {
 	CGContextRestoreGState(m_cg_context);
+}
+
+MCGFloat MCMacPlatformSurface::GetBackingScaleFactor(void)
+{
+	if ([m_window -> GetHandle() respondsToSelector: @selector(backingScaleFactor)])
+		return objc_msgSend_fpret(m_window -> GetHandle(), @selector(backingScaleFactor));
+	return 1.0f;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -323,15 +344,15 @@ static void MCMacRenderImageToCG(CGContextRef p_target, CGRect p_dst_rect, MCGIm
 	}
 }
 
-static void MCMacRenderBitsToCG(CGContextRef p_target, CGRect p_area, const void *p_bits, uint32_t p_stride, bool p_has_alpha)
+static void MCMacRenderBitsToCG(CGContextRef p_target, CGRect p_area, int32_t p_width, int32_t p_height, const void *p_bits, uint32_t p_stride, bool p_has_alpha)
 {
 	CGColorSpaceRef t_colorspace;
 	t_colorspace = CGColorSpaceCreateDeviceRGB();
 	if (t_colorspace != nil)
 	{
 		MCGRaster t_raster;
-		t_raster.width = p_area.size.width;
-		t_raster.height = p_area.size.height;
+		t_raster.width = p_width;
+		t_raster.height = p_height;
 		t_raster.pixels = const_cast<void*>(p_bits);
 		t_raster.stride = p_stride;
 		t_raster.format = p_has_alpha ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;

@@ -1224,6 +1224,8 @@ enum Properties {
 	P_FULLSCREEN, 
 	// IM-2013-09-23: [[ FullscreenMode ]] Property tag for the fullscreenMode
 	P_FULLSCREENMODE,
+	// IM-2014-01-07: [[ StackScale ]] Property tag for the scalefactor
+	P_SCALE_FACTOR,
     P_FILE_NAME,
     P_SAVE_COMPRESSED,
     P_USER_LEVEL,
@@ -1594,6 +1596,15 @@ enum Properties {
 	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
 	P_COLOR_DIALOG_COLORS,
 	
+	// IM-2013-12-04: [[ PixelScale ]] Tags for the pixelScale and systemPixelScale properties
+	P_PIXEL_SCALE,
+	P_SYSTEM_PIXEL_SCALE,
+	
+	// IM-2014-01-24: [[ HiDPI ]] Tags for the usePixelScaling, screenPixelScale, and screenPixelScales properties
+	P_USE_PIXEL_SCALING,
+	P_SCREEN_PIXEL_SCALE,
+	P_SCREEN_PIXEL_SCALES,
+	
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
     P_CUSTOM_KEYS = P_FIRST_ARRAY_PROP,
@@ -1800,7 +1811,13 @@ enum Sugar_constants {
     // TD-2013-06-14: [[ DynamicFonts ]] start using font theFont [globally]
     SG_FONT,
     SG_GLOBALLY,
-    SG_FILE
+    SG_FILE,
+	
+	// MW-2013-11-14: [[ AssertCmd ]] Tags for sugar used in assert command.
+	SG_TRUE,
+	SG_FALSE,
+	SG_SUCCESS,
+	SG_FAILURE,
 };
 
 enum Statements {
@@ -1809,6 +1826,8 @@ enum Statements {
     S_ADD,
     S_ANSWER,
     S_ASK,
+	// MW-2013-11-14: [[ AssertCmd ]] 'assert' command tag.
+	S_ASSERT,
     S_BEEP,
     S_BREAK,
     S_BREAKPOINT,

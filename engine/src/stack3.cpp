@@ -1064,7 +1064,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 			updatemenubar();
 		}
 		
-		curcard->resize(rect.width, rect.height + getscroll());
+		updatecardsize();
 
 		// MW-2008-10-31: [[ ParentScripts ]] Send preOpenControl appropriately
 		if (curcard -> openbackgrounds(true, oldcard) == ES_ERROR
@@ -1524,7 +1524,7 @@ void MCStack::createmenu(MCControl *nc, uint2 width, uint2 height)
 	}
 
 
-	curcard->resize(rect.width, rect.height + getscroll());
+	updatecardsize();
 	cards->setparent(this);
 	MCControl *cptr = nc;
 	do

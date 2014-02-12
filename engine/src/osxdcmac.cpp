@@ -390,7 +390,11 @@ void MCScreenDC::getkeysdown(MCExecPoint &ep)
 }
 #endif
 
+<<<<<<< HEAD
 #ifdef OLD_MAC
+=======
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+>>>>>>> develop
 void MCScreenDC::mode_globaltolocal(Point& p)
 {
 	CGrafPtr oldport;
@@ -399,10 +403,6 @@ void MCScreenDC::mode_globaltolocal(Point& p)
 	SetGWorld(GetWindowPort((WindowPtr)mousewindow->handle.window), GetMainDevice());
 	GlobalToLocal(&p);
 	SetGWorld(oldport, olddevice);
-	
-	// IM-2013-08-01: [[ ResIndependence ]] apply device scale
-	p.v = p.v / MCResGetDeviceScale();
-	p.h = p.h / MCResGetDeviceScale();
 }
 #endif
 

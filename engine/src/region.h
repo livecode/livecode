@@ -17,6 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_REGION__
 #define __MC_REGION__
 
+#ifndef __MC_GRAPHICS__
+#include "graphics.h"
+#endif
+
 typedef struct __MCRegion *MCRegionRef;
 
 bool MCRegionCreate(MCRegionRef& r_region);
@@ -39,6 +43,8 @@ bool MCRegionExcludeRect(MCRegionRef region, const MCRectangle& rect);
 bool MCRegionUnion(MCRegionRef dst, MCRegionRef x, MCRegionRef y);
 
 bool MCRegionOffset(MCRegionRef region, int32_t dx, int32_t dy);
+
+bool MCRegionTransform(MCRegionRef p_region, const MCGAffineTransform &p_transform, MCRegionRef &r_transformed_region);
 
 #ifdef OLD_GRAPHICS
 bool MCRegionCalculateMask(MCRegionRef region, int32_t width, int32_t height, MCBitmap*& r_mask);

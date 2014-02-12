@@ -100,9 +100,29 @@ inline MCRectangle MCRectangleGetTransformedBounds(const MCRectangle &p_rect, co
 	return MCGRectangleGetIntegerBounds(MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_rect), p_transform));
 }
 
+inline MCRectangle MCRectangleGetTransformedInterior(const MCRectangle &p_rect, const MCGAffineTransform &p_transform)
+{
+	return MCGRectangleGetIntegerInterior(MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_rect), p_transform));
+}
+
+static inline MCRectangle MCRectangleGetScaledBounds(const MCRectangle &p_rect, MCGFloat p_scale)
+{
+	return MCRectangleGetTransformedBounds(p_rect, MCGAffineTransformMakeScale(p_scale, p_scale));
+}
+
+static inline MCRectangle MCRectangleGetScaledInterior(const MCRectangle &p_rect, MCGFloat p_scale)
+{
+	return MCRectangleGetTransformedInterior(p_rect, MCGAffineTransformMakeScale(p_scale, p_scale));
+}
+
 inline MCPoint MCPointTransform(const MCPoint &p_point, const MCGAffineTransform &p_transform)
 {
 	return MCGPointToMCPoint(MCGPointApplyAffineTransform(MCPointToMCGPoint(p_point), p_transform));
+}
+
+inline MCGFloat MCGAffineTransformGetEffectiveScale(const MCGAffineTransform &p_transform)
+{
+	return MCMax(MCAbs(p_transform.a), MCAbs(p_transform.d));
 }
 
 #if defined(TARGET_SUBPLATFORM_ANDROID)
@@ -145,6 +165,12 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 {
 	MCGFont t_font;
+	if (p_font == nil)
+	{
+		MCMemoryClear(&t_font, sizeof(t_font));
+		return t_font;
+	}
+	
 	t_font . size = p_font -> size;
 	t_font . ascent = p_font -> ascent;
 	t_font . descent = p_font -> descent;

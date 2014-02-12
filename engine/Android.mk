@@ -30,8 +30,11 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	keywords.cpp line.cpp literal.cpp magnify.cpp mcerror.cpp \
 	mcio.cpp mcstring.cpp mctheme.cpp newobj.cpp mcutility.cpp \
 	object.cpp objectpropsets.cpp objptr.cpp operator.cpp paragraf.cpp paragrafattr.cpp param.cpp \
-	property.cpp pickle.cpp regex.cpp \
-	scriptpt.cpp scrolbar.cpp scrollbardraw.cpp sellst.cpp \
+	property.cpp pickle.cpp \
+	regex.cpp \
+	resolution.cpp \
+	scriptpt.cpp \
+	scrolbar.cpp scrollbardraw.cpp sellst.cpp \
 	stack.cpp \
 	stack2.cpp \
 	stack3.cpp \
@@ -80,7 +83,8 @@ LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/../thirdparty/libskia/include/effects \
 	$(LOCAL_PATH)/../thirdparty/libskia/include/config \
 	$(LOCAL_PATH)/../thirdparty/libskia/include/ports \
-	$(LOCAL_PATH)/../thirdparty/libfreetype/include
+	$(LOCAL_PATH)/../thirdparty/libfreetype/include \
+	$(LOCAL_PATH)/../thirdparty/libopenssl/include
 
 include $(BUILD_STATIC_LIBRARY)
 
@@ -101,7 +105,7 @@ LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/../libcore/include \
 	$(LOCAL_PATH)/../libgraphics/include
 
-LOCAL_STATIC_LIBRARIES := librevandroid-kernel libcore libgraphics libjpeg libpcre libpng libgif libskia libfreetype libexpat_static
+LOCAL_STATIC_LIBRARIES := librevandroid-kernel libcore libgraphics libjpeg libpcre libpng libgif libskia libfreetype libexpat_static openssl
 
 LOCAL_LDLIBS += -lz -lm -llog -ljnigraphics -lGLESv1_CM
 

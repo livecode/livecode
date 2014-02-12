@@ -54,9 +54,6 @@
 
 Boolean tripleclick = False;
 
-MCDisplay *MCScreenDC::s_monitor_displays = nil;
-uint4 MCScreenDC::s_monitor_count = 0;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCScreenDC::MCScreenDC(void)
@@ -197,22 +194,27 @@ MCColor *MCScreenDC::getaccentcolors()
 	return nil;
 }
 
+bool MCScreenDC::platform_displayinfocacheable(void)
+{
+	return true;
+}
+
 // IM-2013-08-01: [[ ResIndependence ]] refactored methods that return device coordinates
-uint16_t MCScreenDC::device_getwidth(void)
+uint16_t MCScreenDC::platform_getwidth(void)
 {
 	MCRectangle t_viewport;
 	MCPlatformGetScreenViewport(0, t_viewport);
 	return t_viewport . width;
 }
 
-uint16_t MCScreenDC::device_getheight(void)
+uint16_t MCScreenDC::platform_getheight(void)
 {
 	MCRectangle t_viewport;
 	MCPlatformGetScreenViewport(0, t_viewport);
 	return t_viewport . height;
 }
 
-bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count)
+bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count)
 {
 	bool t_success;
 	t_success = true;
@@ -223,36 +225,24 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& r_displays, u
 	uint32_t t_display_count;
 	t_display_count = 0;
 	
-	if (s_monitor_count != 0)
+	MCPlatformGetScreenCount(t_display_count);
+	
+	if (t_success)
+		t_success = MCMemoryNewArray(t_display_count, t_displays);
+	
+	if (t_success)
 	{
-		t_displays = s_monitor_displays;
-		t_display_count = s_monitor_count;
-	}
-	else
-	{
-		MCPlatformGetScreenCount(t_display_count);
-		
-		if (t_success)
-			t_success = MCMemoryNewArray(t_display_count, t_displays);
-		
-		if (t_success)
+		for(uindex_t i = 0; i < t_display_count; i++)
 		{
-			for(uindex_t i = 0; i < t_display_count; i++)
-			{
-				t_displays[i] . index = i;
-				MCPlatformGetScreenViewport(i, t_displays[i] . device_viewport);
-				MCPlatformGetScreenWorkarea(i, t_displays[i] . device_workarea);
-			}
+			t_displays[i] . index = i;
+			MCPlatformGetScreenViewport(i, t_displays[i] . viewport);
+			MCPlatformGetScreenWorkarea(i, t_displays[i] . workarea);
+			MCPlatformGetScreenPixelScale(i, t_displays[i] . pixel_scale);
 		}
-		
-		if (t_success)
-		{
-			s_monitor_count = t_display_count;
-			s_monitor_displays = t_displays;
-		}
-		else
-			MCMemoryDeleteArray(t_displays);
 	}
+	
+	if (!t_success)
+		MCMemoryDeleteArray(t_displays);
 
 	r_displays = t_displays;
 	r_count = t_display_count;
@@ -260,7 +250,7 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& r_displays, u
 	return true;
 }
 
-void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode mode)
+void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode mode)
 {
 	MCRectangle srect;
 	
@@ -268,10 +258,10 @@ void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode 
 	{
 		const MCDisplay *t_display;
 		t_display = getnearestdisplay(rect);
-		srect = t_display -> device_workarea;
+		srect = t_display -> workarea;
 	}
 	else
-		srect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(MCwbr));
+		srect = MCwbr;
 	
 	uint2 sr, sw, sb, sh;
 	
@@ -398,7 +388,7 @@ void MCScreenDC::freecursor(MCCursorRef c)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
+bool MCScreenDC::platform_getwindowgeometry(Window w, MCRectangle &drect)
 {
 	if (w == nil)
 		return false;
@@ -600,7 +590,7 @@ void MCScreenDC::ungrabpointer()
 	MCPlatformUngrabPointer();
 }
 
-void MCScreenDC::device_querymouse(int2 &x, int2 &y)
+void MCScreenDC::platform_querymouse(int2 &x, int2 &y)
 {
 	MCPoint t_location;
 	MCPlatformGetMousePosition(t_location);
@@ -608,7 +598,7 @@ void MCScreenDC::device_querymouse(int2 &x, int2 &y)
 	y = t_location . y;
 }
 
-void MCScreenDC::device_setmouse(int2 x, int2 y)
+void MCScreenDC::platform_setmouse(int2 x, int2 y)
 {
 	MCPoint t_location;
 	t_location . x = x;
@@ -616,7 +606,7 @@ void MCScreenDC::device_setmouse(int2 x, int2 y)
 	MCPlatformSetMousePosition(t_location);
 }
 
-MCStack *MCScreenDC::device_getstackatpoint(int32_t x, int32_t y)
+MCStack *MCScreenDC::platform_getstackatpoint(int32_t x, int32_t y)
 {
 	MCPlatformWindowRef t_window;
 	MCPlatformGetWindowAtPoint(MCPointMake(x, y), t_window);
@@ -751,8 +741,8 @@ Boolean MCScreenDC::getmouseclick(uint2 p_button, Boolean& r_abort)
 	t_clicked = MCPlatformGetMouseClick(p_button, t_location);
 	
 	MCPoint t_clickloc;
-	t_clickloc.x = t_location . x / MCResGetDeviceScale();
-	t_clickloc.y = t_location . y / MCResGetDeviceScale();
+	t_clickloc.x = t_location . x;
+	t_clickloc.y = t_location . y;
 	MCscreen->setclickloc(MCmousestackptr, t_clickloc);
 	
 	return t_clicked;
@@ -1180,11 +1170,31 @@ void MCMacBreakWait(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// IM-2013-08-01: [[ ResIndependence ]] OSX implementation currently returns 1.0
-MCGFloat MCResGetDeviceScale(void)
+bool MCResPlatformSupportsPixelScaling(void)
 {
-	// COCOA-TODO: Integrate with platform
-	return 1.0;
+	return true;
+}
+
+bool MCResPlatformCanChangePixelScaling(void)
+{
+	return true;
+}
+
+bool MCResPlatformCanSetPixelScale(void)
+{
+	return false;
+}
+
+MCGFloat MCResPlatformGetDefaultPixelScale(void)
+{
+	return 1.0f;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Reopen windows when usePixelScale is changed
+void MCResPlatformHandleScaleChange(void)
+{
+	// Global use-pixel-scaling value has been updated, so now we just need to reopen any open stack windows
+	MCdispatcher->reopen_stack_windows();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -37,12 +37,18 @@ on process
 
   output "#include <stdlib.h>"
   output "#include <stdio.h>"
+  output "#include <cstring>"
   output
   output "#if defined(_MACOSX)"
   output "#include <mach-o/dyld.h>"
   output "typedef const struct mach_header *module_t;"
   output "#define SYMBOL_PREFIX " & quote & "_" & quote
-  output "#elif defined(_LINUX)"
+  output "#elif defined(TARGET_SUBPLATFORM_IPHONE)"
+  output "typedef void *module_t;"
+  output "extern" && quote & "C" & quote && "void *IOS_LoadModule(const char *);"
+  output "extern" && quote & "C" & quote && "void *IOS_ResolveSymbol(void *, const char *);"
+  output "#define SYMBOL_PREFIX"
+  output "#elif defined(_LINUX) || defined(TARGET_SUBPLATFORM_ANDROID)"
   output "#include <dlfcn.h>"
   output "typedef void *module_t;"
   output "#define SYMBOL_PREFIX"
@@ -64,7 +70,38 @@ on process
   output "  module_t t_module;"
   output "#if defined(_MACOSX)"
   output "  t_module  = NSAddImage(p_source, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);"
-  output "#elif defined(_LINUX)"
+  -- MM-2014-02-06: [[ LipOpenSSL 1.0.1e ]] On Mac, if module cannot be found then look relative to current executable.
+  output "  if (t_module == NULL)"
+  output "  {"
+  output "    uint32_t t_buffer_size;"
+  output "    t_buffer_size = 0;"
+  output "    _NSGetExecutablePath(NULL, &t_buffer_size);"
+  output "    char *t_module_path;"
+  output "    t_module_path = (char *) malloc(t_buffer_size + strlen(p_source) + 1);"
+  output "    if (t_module_path != NULL)"
+  output "    {"
+  output "      if (_NSGetExecutablePath(t_module_path, &t_buffer_size) == 0)"
+  output "      {"
+  output "        char *t_last_slash;"
+  output "        t_last_slash = t_module_path + t_buffer_size;"
+  output "        for (uint32_t i = 0; i < t_buffer_size; i++)"
+  output "        {"
+  output "          if (*t_last_slash == '/')"
+  output "          {"
+  output "            *(t_last_slash + 1) = '\0';"
+  output "            break;"
+  output "          }"
+  output "          t_last_slash--;"
+  output "        }"
+  output "        strcat(t_module_path, p_source);"
+  output "        t_module = NSAddImage(t_module_path, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);"
+  output "      }"
+  output "      free(t_module_path);"
+  output "    }"
+  output "  }"
+  output "#elif defined(TARGET_SUBPLATFORM_IPHONE)"
+  output "  t_module = IOS_LoadModule(p_source);"
+  output "#elif defined(_LINUX) || defined(TARGET_SUBPLATFORM_ANDROID)"
   output "  t_module = dlopen(p_source, RTLD_LAZY);"
   output "#elif defined(_WINDOWS)"
   output "  t_module = LoadLibraryA(p_source);"
@@ -88,7 +125,9 @@ on process
   output "  t_symbol = NSLookupSymbolInImage(p_module, p_name, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);"
   output "  if (t_symbol != NULL)"
   output "    t_handler = (handler_t)NSAddressOfSymbol(t_symbol);"
-  output "#elif defined(_LINUX)"
+  output "#elif defined(TARGET_SUBPLATFORM_IPHONE)"
+  output "  t_handler = (handler_t)IOS_ResolveSymbol(p_module, p_name);"
+  output "#elif defined(_LINUX) || defined(TARGET_SUBPLATFORM_ANDROID)"
   output "  t_handler = (handler_t)dlsym(p_module, p_name);"
   output "#elif defined(_WINDOWS)"
   output "  t_handler = (handler_t)GetProcAddress(p_module, p_name);"
@@ -130,10 +169,13 @@ on generateModule pModule
 
   output
 
-  output "#if defined(_MACOSX)"
+  output "#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)"
   output "#define MODULE_" & toUpper(pModule) & "_NAME" && quote & tDarwinLibrary & quote
   output "#elif defined(_LINUX)"
   output "#define MODULE_" & toUpper(pModule) & "_NAME" && quote & tUnixLibrary & quote
+  -- MM-2014-02-10: [[ LipOpenSSL 1.0.1e ]] Prefix android modules with lib.
+  output "#elif defined(TARGET_SUBPLATFORM_ANDROID)"
+  output "#define MODULE_" & toUpper(pModule) & "_NAME" && quote & "lib" & tUnixLibrary & quote
   output "#elif defined(_WINDOWS)"
   output "#define MODULE_" & toUpper(pModule) & "_NAME" && quote & tWindowsLibrary & quote
   output "#endif"
@@ -153,6 +195,7 @@ on generateModule pModule
   end repeat
 
   output "#else"
+
   output merge("  if (!module_load(MODULE_[[toUpper(pModule)]]_NAME, &module_[[pModule]]))")
   output "#endif"
 

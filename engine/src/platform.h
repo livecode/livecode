@@ -788,6 +788,8 @@ void MCPlatformSurfaceUnlockPixels(MCPlatformSurfaceRef surface);
 bool MCPlatformSurfaceLockSystemContext(MCPlatformSurfaceRef surface, void*& r_context);
 void MCPlatformSurfaceUnlockSystemContext(MCPlatformSurfaceRef surface);
 
+MCGFloat MCPlatformSurfaceGetBackingScaleFactor(MCPlatformSurfaceRef surface);
+
 bool MCPlatformSurfaceComposite(MCPlatformSurfaceRef surface, MCGRectangle dst_rect, MCGImageRef src_image, MCGRectangle src_rect, MCGFloat alpha, MCGBlendMode blend);
 
 ////////////////////////////////////////////////////////////////////////////////

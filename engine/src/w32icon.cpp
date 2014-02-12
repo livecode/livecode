@@ -87,7 +87,8 @@ bool MCImageCreateIcon(MCImageBitmap *p_bitmap, uint32_t p_width, uint32_t p_hei
 		t_raster.format = kMCGRasterFormat_ARGB;
 
 		MCGRectangle t_dst = MCGRectangleMake(0, 0, p_width, p_height);
-		MCGContextDrawPixels(t_context, t_raster, t_dst, kMCGImageFilterNearest);
+        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+		MCGContextDrawPixels(t_context, t_raster, t_dst, kMCGImageFilterNone);
 	}
 
 	MCGContextRelease(t_context);
