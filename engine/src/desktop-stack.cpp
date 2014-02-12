@@ -181,7 +181,7 @@ void MCStack::realize(void)
 		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHasCollapseWidget, t_has_collapsebox);
 		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHasZoomWidget, t_has_zoombox);
 		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHasSizeWidget, t_has_sizebox);
-		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHasShadow, (decorations & WD_NOSHADOW) != 0);
+		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHasShadow, (decorations & WD_NOSHADOW) == 0);
 		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyUseLiveResizing, (decorations & WD_LIVERESIZING) != 0);
 									
 #ifdef PRE_PLATFORM
