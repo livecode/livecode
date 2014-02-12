@@ -134,7 +134,7 @@ MCUrlProgressEvent *MCUrlProgressEvent::CreateUrlProgressEvent(MCObjectHandle *p
     t_event -> m_url = MCValueRetain(p_url);
 		
 	if (p_status == kMCSystemUrlStatusError)
-        t_event -> m_error = MCValueRetain(p_error);
+        /* UNCHECKED */ MCStringCopy(p_error, t_event -> m_error);
 	
     t_event->m_status = p_status;
     t_event->m_object = p_object;
@@ -523,16 +523,8 @@ static bool MCS_posturl_callback(void *p_context, MCSystemUrlStatus p_status, co
 	if (p_status == kMCSystemUrlStatusError)
 		/* UNCHECKED */ MCStringCreateWithCString((const char *)p_data, context -> data);
 	else if (p_status == kMCSystemUrlStatusLoading)
-    {
-        MCAutoStringRef t_data;
-        if (context -> data != nil)
-            /* UNCHECKED */ MCStringMutableCopy(context -> data, &t_data);
-        else
-            MCStringCreateMutable(0, &t_data);
+		/* UNCHECKED */ MCStringAppendFormat(context -> data, "%s", (const char *)p_data);
 
-		/* UNCHECKED */ MCStringAppendFormat(*t_data, "%s", (const char *)p_data);
-        MCStringCopy(*t_data, context -> data);
-    }
 	if (p_status == kMCSystemUrlStatusUploading || p_status == kMCSystemUrlStatusUploaded)
 	{
 		context -> post_sent = *(uint32_t*)p_data;
@@ -563,6 +555,7 @@ void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 		t_state . object = t_obj;
 		t_state . post_sent = 0;
 		t_state . post_length = MCDataGetLength(p_data);
+        MCStringCreateMutable(0, t_state . data);
         
 		t_success = MCSystemPostUrl(*t_processed, p_data, MCDataGetLength(p_data), MCS_posturl_callback, &t_state);
 	}
