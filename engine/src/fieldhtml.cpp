@@ -1929,18 +1929,17 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 
 MCParagraph *MCField::importhtmltext(MCValueRef p_text)
 {
-    bool t_is_unicode_string;
-    t_is_unicode_string = (MCValueGetTypeCode(p_text) == kMCValueTypeCodeString && !MCStringIsNative((MCStringRef)p_text));
-    
     MCAutoPointer<char> t_data;
     MCAutoStringRefAsCString t_native_string;
     const char *t_ptr, *t_limit;
+    bool t_is_unicode_string;
+    t_is_unicode_string = false;
     
-    switch (MCValueGetTypeCode(p_text))
+    if (MCValueGetTypeCode(p_text) == kMCValueTypeCodeString)
     {
-        case kMCValueTypeCodeString:
-            if (t_is_unicode_string)
+            if (!MCStringIsNative((MCStringRef)p_text))
             {
+                t_is_unicode_string = true;
                 uindex_t t_length;
                 /* UNCHECKED */ MCStringConvertToUTF8((MCStringRef)p_text, &t_data, t_length);
                 t_ptr = *t_data;
@@ -1953,13 +1952,11 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                 t_ptr = *t_native_string;
                 t_limit = t_ptr + MCStringGetLength((MCStringRef)p_text);
             }
-            break;
-        case kMCValueTypeCodeData:
+    }
+    else
+    {
             t_ptr = (const char *)MCDataGetBytePtr((MCDataRef)p_text);
             t_limit = t_ptr + MCDataGetLength((MCDataRef)p_text);
-            break;
-        default:
-            return nil;
     }
     
 	import_html_t ctxt;
