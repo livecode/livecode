@@ -132,7 +132,7 @@ MCUrlProgressEvent *MCUrlProgressEvent::CreateUrlProgressEvent(MCObjectHandle *p
     t_event -> m_url = MCValueRetain(p_url);
 		
 	if (p_status == kMCSystemUrlStatusError)
-        /* UNCHECKED */ MCStringCopy(p_error, t_event -> m_error);
+        t_event -> m_error = MCValueRetain(p_error);
 
     t_event->m_status = p_status;
     t_event->m_object = p_object;
