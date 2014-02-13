@@ -97,8 +97,7 @@ class MCMacPlatformSurface;
 
 //////////
 
-- (void)viewNowFirstResponder;
-- (void)nativeViewNowFirstResponder: (uint32_t)id;
+- (void)viewFocusSwitched: (uint32_t)id;
 
 @end
 
@@ -117,6 +116,8 @@ class MCMacPlatformSurface;
 - (void)updateTrackingAreas;
 
 - (BOOL)isFlipped;
+
+- (BOOL)canBecomeKeyView;
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)theEvent;
 - (BOOL)acceptsFirstResponder;

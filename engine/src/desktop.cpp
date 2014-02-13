@@ -163,6 +163,7 @@ void MCPlatformHandleWindowUnfocus(MCPlatformWindowRef p_window)
 	MCdispatcher -> wkunfocus(p_window);
 }
 
+#if 0
 void MCPlatformHandleViewFocus(MCPlatformWindowRef p_window)
 {
 	MCStack *t_stack;
@@ -207,6 +208,29 @@ void MCPlatformHandleNativeViewFocus(MCPlatformWindowRef p_window, uint32_t p_vi
 void MCPlatformHandleNativeViewUnfocus(MCPlatformWindowRef p_window, uint32_t p_view_id)
 {
 	MCPlatformHandleViewUnfocus(p_window);
+}
+#endif
+
+void MCPlatformHandleViewFocusSwitched(MCPlatformWindowRef p_window, uint32_t p_view_id)
+{
+	MCStack *t_stack;
+	t_stack = MCdispatcher -> findstackd(p_window);
+	if (t_stack == nil)
+		return;
+	
+	if (p_view_id == 0)
+		t_stack -> getcard() -> kfocus();
+	else
+	{
+		MCControl *t_control;
+		char t_id[U4L];
+		sprintf(t_id, "%d", p_view_id);
+		t_control = t_stack -> getcard() -> getchild(CT_ID, t_id, CT_LAYER, CT_UNDEFINED);
+		if (t_control != nil)
+			t_stack -> kfocusset(t_control);
+		else
+			t_stack -> getcard() -> kunfocus();
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

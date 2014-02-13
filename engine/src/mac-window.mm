@@ -35,6 +35,8 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool s_lock_responder_change = false;
+
 @implementation com_runrev_livecode_MCWindow
 
 - (BOOL)makeFirstResponder: (NSResponder *)p_responder
@@ -45,9 +47,10 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 	if (![super makeFirstResponder: p_responder])
 		return NO;
 	
-	if ([p_responder isKindOfClass: [MCWindowView class]])
-		[[self delegate] viewNowFirstResponder];
-	else if ([p_responder isKindOfClass: [NSView class]])
+	if (s_lock_responder_change)
+		return YES;
+	
+	if ([p_responder isKindOfClass: [NSView class]])
 	{
 		NSView *t_view;
 		t_view = (NSView *)p_responder;
@@ -55,13 +58,15 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 		{
 			if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
 			{
-				[[self delegate] nativeViewNowFirstResponder: (uint32_t)[t_view com_runrev_livecode_nativeViewId]];
-				break;
+				[(MCWindowDelegate *)[self delegate] viewFocusSwitched: (uint32_t)[t_view com_runrev_livecode_nativeViewId]];
+				return YES;
 			}
 			
 			t_view = [t_view superview];
 		}
 	}
+	
+	[(MCWindowDelegate *)[self delegate] viewFocusSwitched: 0];
 	
 	return YES;
 }
@@ -147,14 +152,9 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 
 //////////
 
-- (void)viewNowFirstResponder
+- (void)viewFocusSwitched:(uint32_t)p_id
 {
-	MCPlatformCallbackSendViewFocus(m_window);
-}
-
-- (void)nativeViewNowFirstResponder: (uint32_t)p_id
-{
-	MCPlatformCallbackSendNativeViewFocus(m_window, p_id);
+	MCPlatformCallbackSendViewFocusSwitched(m_window, p_id);
 }
 
 @end
@@ -220,6 +220,11 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 - (BOOL)isFlipped
 {
 	return NO;
+}
+
+- (BOOL)canBecomeKeyView
+{
+	return YES;
 }
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)theEvent
@@ -1320,40 +1325,53 @@ void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef p_mask)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static NSView *MCMacPlatformFindNativeView(MCPlatformWindowRef p_window, uint32_t p_id)
+static NSView *MCMacPlatformFindView(MCPlatformWindowRef p_window, uint32_t p_id)
 {
 	MCMacPlatformWindow *t_window;
 	t_window = (MCMacPlatformWindow *)p_window;
-	
+
 	NSView *t_parent_view;
 	t_parent_view = t_window -> GetView();
-	
-	NSArray *t_subviews;
-	t_subviews = [t_parent_view subviews];
-	for(uindex_t i = 0; i < [t_subviews count]; i++)
+
+	if (p_id != 0)
 	{
-		NSView *t_view;
-		t_view = (NSView *)[t_subviews objectAtIndex: i];
-		if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
-			if ((uint32_t)[t_view com_runrev_livecode_nativeViewId] == p_id)
-				return t_view;
+		NSArray *t_subviews;
+		t_subviews = [t_parent_view subviews];
+		for(uindex_t i = 0; i < [t_subviews count]; i++)
+		{
+			NSView *t_view;
+			t_view = (NSView *)[t_subviews objectAtIndex: i];
+			if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
+				if ((uint32_t)[t_view com_runrev_livecode_nativeViewId] == p_id)
+					return t_view;
+		}
 	}
+	
+	return t_parent_view;
 }
 
-void MCPlatformFocusNativeView(MCPlatformWindowRef p_window, uint32_t p_id)
+void MCPlatformSwitchFocusToView(MCPlatformWindowRef p_window, uint32_t p_id)
 {
 	NSView *t_view;
-	t_view = MCMacPlatformFindNativeView(p_window, p_id);
+	t_view = MCMacPlatformFindView(p_window, p_id);
 	
-	[t_view becomeFirstResponder];
-}
-
-void MCPlatformUnfocusNativeView(MCPlatformWindowRef p_window, uint32_t p_id)
-{
-	NSView *t_view;
-	t_view = MCMacPlatformFindNativeView(p_window, p_id);
+	MCMacPlatformWindow *t_window;
+	t_window = (MCMacPlatformWindow *)p_window;
 	
-	[t_view resignFirstResponder];
+	s_lock_responder_change = true;
+	if ([t_view nextValidKeyView] != nil &&
+		[[t_view nextValidKeyView] previousValidKeyView] != t_view)
+		t_view = [t_view nextValidKeyView];
+	
+	/*if (![t_view canBecomeKeyView])
+	{
+		NSView *t_next_view;
+		t_next_view = [t_view nextValidKeyView];
+		if (t_next_view != nil)
+			t_view = t_next_view;
+	}*/
+	[(com_runrev_livecode_MCWindow *)(t_window -> GetHandle()) makeFirstResponder: t_view];
+	s_lock_responder_change = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
