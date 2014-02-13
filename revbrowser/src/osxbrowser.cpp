@@ -42,6 +42,13 @@ inline int max(int a, int b)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static NSRect RectToNSRect(NSWindow *p_window, Rect p_rect)
+{
+	CGFloat t_height;
+	t_height = [[p_window contentView] frame] . size . height;
+	return NSMakeRect(p_rect . left, t_height - p_rect . bottom, p_rect . right - p_rect . left, p_rect . bottom - p_rect . top);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 @interface printDelegate : NSObject 
@@ -74,12 +81,11 @@ OpenDialogEventProc( const NavEventCallbackMessage callbackSelector,
 
 @interface WebBrowserAdapter : NSObject
 {
-	HIObjectRef	_object;
 	TAltBrowser *m_browser;
 	DOMHTMLElement *m_previous_element;
 }
 
-- initWithHIObject: (HIObjectRef)inObject;
+- init;
 - dealloc;
 
 - (void)setBrowser: (TAltBrowser *)inBrowser;
@@ -89,12 +95,11 @@ OpenDialogEventProc( const NavEventCallbackMessage callbackSelector,
 
 @implementation WebBrowserAdapter
 
-- initWithHIObject: (HIObjectRef)inObject
+- init
 {
     self = [super init];
 	if ( self )
 	{
-		_object = inObject;	// non retained
 		m_previous_element = NULL;
 	}
     return self;
@@ -110,11 +115,6 @@ OpenDialogEventProc( const NavEventCallbackMessage callbackSelector,
 - (void)setBrowser: (TAltBrowser *)inBrowser
 {
 	m_browser = inBrowser;
-}
-
-- (HIObjectRef)hiobject
-{
-	return _object;
 }
 
 - (void)webView: (WebView *)sender decidePolicyForNavigationAction:
@@ -420,6 +420,7 @@ TAltBrowser::TAltBrowser()
 	contextmenus = true;
 	messages = false;
 	
+#if PRE_COCOA
 	m_container = NULL;
 	m_group = NULL;
 	m_parent = NULL;
@@ -427,6 +428,7 @@ TAltBrowser::TAltBrowser()
 	m_parent_handler = NULL;
 	m_container_handler = NULL;
 	m_webview_handler = NULL;
+#endif
 	
 	m_web_browser = NULL;
 	m_web_adapter = NULL;
@@ -438,15 +440,17 @@ TAltBrowser::TAltBrowser()
 
 TAltBrowser::~TAltBrowser()
 {
+#if PRE_COCOA
 	DetachFromParent();
 	
 	RemoveEventHandler(m_webview_handler);
 	DisposeEventHandlerUPP(m_webview_handler_upp);
 	
 	HideWindow(m_container);
+#endif
 	
 	WebView *t_view;
-	t_view = HIWebViewGetWebView(m_web_browser);
+	t_view = m_web_browser; //HIWebViewGetWebView(m_web_browser);
 	
 	[t_view setPolicyDelegate: nil];
 	[t_view setFrameLoadDelegate: nil];
@@ -454,9 +458,11 @@ TAltBrowser::~TAltBrowser()
 	[m_web_adapter release];
 	
 	[[t_view mainFrame] stopLoading];
-	HIViewRemoveFromSuperview(m_web_browser);
+	[t_view removeFromSuperview];
 	
+#ifdef PRE_COCOA
 	DisposeWindow(m_container);
+#endif
 	
 	[t_view release];
 }
@@ -465,6 +471,7 @@ CWebBrowserBase::~CWebBrowserBase(void)
 {
 }
 
+#ifdef PRE_COCOA
 OSStatus TAltBrowser::ParentEventHandler(EventHandlerCallRef p_call_chain, EventRef p_event, void *p_context)
 {
 	if (GetEventClass(p_event) == 'revo' && GetEventKind(p_event) == 'sync')
@@ -631,11 +638,77 @@ void TAltBrowser::Synchronize(void)
 	else
 		HideWindow(m_container);
 }
+#endif
+
+@interface NativeWebView: WebView
+{
+	unsigned int native_id;
+}
+
+#if 0
+- (BOOL)becomeFirstResponder;
+- (BOOL)resignFirstResponder;
+#endif
+
+- (void)resizeWithOldSuperviewSize: (NSSize)oldsize;
+
+- (unsigned int)com_runrev_livecode_nativeViewId;
+- (void)com_runrev_livecode_setNativeViewId:(int)new_id;
+@end
+
+@implementation NativeWebView
+
+#if 0
+- (BOOL)becomeFirstResponder
+{
+	if (![super becomeFirstResponder])
+		return NO;
+	
+	[[self superview] com_runrev_livecode_subviewBecomeFirstResponder: native_id];
+	
+	return YES;
+}
+
+- (BOOL)resignFirstResponder
+{
+	if (![super resignFirstResponder])
+		return NO;
+	
+	[[self superview] com_runrev_livecode_subviewResignFirstResponder: native_id];
+	
+	return YES;
+}
+#endif
+
+- (void)resizeWithOldSuperviewSize: (NSSize)oldsize
+{
+	NSRect t_frame;
+	t_frame = [self frame];
+	
+	NSRect t_new_frame;
+	t_new_frame = t_frame;
+	t_new_frame . origin . y -= oldsize . height - [[self superview] frame] . size . height;
+	
+	[self setFrame: t_new_frame];
+}
+
+- (unsigned int)com_runrev_livecode_nativeViewId
+{
+	return 1067;
+}
+
+- (void)com_runrev_livecode_setNativeViewId:(int)new_id
+{
+	native_id = new_id;
+}
+
+@end
 
 void TAltBrowser::init(unsigned int p_window)
 {
 	WebInitForCarbon();
 
+#ifdef PRE_COCOA
 	m_parent = (WindowRef)p_window;
 
 	HIWebViewCreate(&m_web_browser);
@@ -657,14 +730,32 @@ void TAltBrowser::init(unsigned int p_window)
 
 	WebView *t_webview;
 	t_webview = HIWebViewGetWebView(m_web_browser);
+#endif
 	
-	m_web_adapter = [[WebBrowserAdapter alloc] initWithHIObject: (HIObjectRef)m_container];
+	m_parent = p_window;
+	
+	NSWindow *t_window;
+	t_window = [NSApp windowWithWindowNumber: p_window];
+	if (t_window == nil)
+		m_parent = 0;
+	
+	m_web_browser = [[NativeWebView alloc] initWithFrame: RectToNSRect(t_window, m_bounds) frameName: nil groupName: nil];
+	
+	[m_web_browser setAutoresizingMask: NSViewWidthSizable];
+	
+	m_web_adapter = [[WebBrowserAdapter alloc] init];
 	
 	[m_web_adapter setBrowser: this];
-	[t_webview setPolicyDelegate: m_web_adapter];
-	[t_webview setFrameLoadDelegate: m_web_adapter];
-	[t_webview setUIDelegate: m_web_adapter];
+	[m_web_browser setPolicyDelegate: m_web_adapter];
+	[m_web_browser setFrameLoadDelegate: m_web_adapter];
+	[m_web_browser setUIDelegate: m_web_adapter];
 	
+	[m_web_browser setHidden: false];
+	
+	if (t_window != nil)
+		[[t_window contentView] addSubview: m_web_browser];
+	
+#ifdef PRE_COCOA
 	HIViewSetVisible(m_web_browser, true);
 	
 	static EventTypeSpec s_webview_events[] =
@@ -679,8 +770,10 @@ void TAltBrowser::init(unsigned int p_window)
 	InstallEventHandler(GetControlEventTarget(m_web_browser), m_webview_handler_upp, sizeof(s_webview_events) / sizeof(EventTypeSpec), s_webview_events, this, &m_webview_handler);
 
 	AttachToParent(m_parent);
+#endif
 }
 
+#ifdef PRE_COCOA
 void TAltBrowser::AttachToParent(WindowRef p_parent)
 {
 	// Make sure the parent is in a window group with us.
@@ -752,8 +845,7 @@ void TAltBrowser::DetachFromParent(void)
 	SetWindowGroup(m_container, GetWindowGroupOfClass(kDocumentWindowClass));
 	m_parent = NULL;
 }
-
-
+#endif
 
 void TAltBrowser::GoURL(const char * myurl, const char *p_target_frame)
 {
@@ -763,7 +855,7 @@ void TAltBrowser::GoURL(const char * myurl, const char *p_target_frame)
 	NSString	*		  lurlstr = [[NSString alloc] initWithCString:myurl];
 	NSURL *			  lurl = [[NSURL alloc] initWithString:lurlstr];
 	
-	nativeView = HIWebViewGetWebView( m_web_browser ); // get the Cocoa view
+	nativeView = m_web_browser; // get the Cocoa view
 												   // Use Objective-C calls to load the actual content
 	
     request = [NSURLRequest requestWithURL:lurl];
@@ -797,7 +889,7 @@ void TAltBrowser::SetSource( const char * myhtml )
 	NSData *t_data;
 	t_data = [[NSData alloc] initWithBytes: myhtml length: strlen(myhtml)];
 	
-	nativeView = HIWebViewGetWebView( m_web_browser );
+	nativeView = m_web_browser;
 	mainFrame = [nativeView mainFrame];
 	
 	[mainFrame loadData: t_data MIMEType: nil textEncodingName: nil baseURL: nil];
@@ -808,7 +900,7 @@ void TAltBrowser::SetSource( const char * myhtml )
 void TAltBrowser::SetVScroll(int p_vscroll_pixels)
 {
 	WebView *t_native_view;
-	t_native_view = HIWebViewGetWebView(m_web_browser);
+	t_native_view = m_web_browser;
 	
 	NSView *t_document_view;
 	t_document_view = [[[t_native_view mainFrame] frameView] documentView];
@@ -823,7 +915,7 @@ void TAltBrowser::SetVScroll(int p_vscroll_pixels)
 void TAltBrowser::SetHScroll(int p_hscroll_pixels)
 {
 	WebView *t_native_view;
-	t_native_view = HIWebViewGetWebView(m_web_browser);
+	t_native_view = m_web_browser;
 	
 	NSView *t_document_view;
 	t_document_view = [[[t_native_view mainFrame] frameView] documentView];
@@ -838,7 +930,7 @@ void TAltBrowser::SetHScroll(int p_hscroll_pixels)
 int TAltBrowser::GetVScroll(void)
 {
 	WebView *t_native_view;
-	t_native_view = HIWebViewGetWebView(m_web_browser);
+	t_native_view = m_web_browser;
 	
 	NSView *t_document_view;
 	t_document_view = [[[t_native_view mainFrame] frameView] documentView];
@@ -849,7 +941,7 @@ int TAltBrowser::GetVScroll(void)
 int TAltBrowser::GetHScroll(void)
 {
 	WebView *t_native_view;
-	t_native_view = HIWebViewGetWebView(m_web_browser);
+	t_native_view = m_web_browser;
 	
 	NSView *t_document_view;
 	t_document_view = [[[t_native_view mainFrame] frameView] documentView];
@@ -860,14 +952,14 @@ int TAltBrowser::GetHScroll(void)
 int TAltBrowser::GetFormattedHeight(void)
 {
 	WebView *t_native_view;
-	t_native_view = HIWebViewGetWebView(m_web_browser);
+	t_native_view = m_web_browser;
 	return (int) [[t_native_view window] userSpaceScaleFactor] * NSMaxY([[[[t_native_view mainFrame] frameView] documentView] bounds]);
 }
 
 int TAltBrowser::GetFormattedWidth(void)
 {
 	WebView *t_native_view;
-	t_native_view = HIWebViewGetWebView(m_web_browser);
+	t_native_view = m_web_browser;
 	return (int) [[t_native_view window] userSpaceScaleFactor] * NSMaxX([[[[t_native_view mainFrame] frameView] documentView] bounds]);
 }
 
@@ -882,7 +974,7 @@ void TAltBrowser::GetFormattedRect(int& r_left, int& r_top, int& r_right, int& r
 char *TAltBrowser::ExecuteScript(const char *p_javascript_string)
 {
 		WebView *t_native_view;
-		t_native_view = HIWebViewGetWebView(m_web_browser);
+		t_native_view = m_web_browser;
 		
 		// To be consistent with the Windows implementation, we return the value of the "result" global variable.
 		// In order to do this, we simply put "result;" at the end of the string to execute, and it will be evaluated
@@ -915,7 +1007,7 @@ char *TAltBrowser::ExecuteScript(const char *p_javascript_string)
 char *TAltBrowser::CallScript(const char *p_function_name, char **p_arguments, unsigned int p_argument_count)
 {
 	WebView *t_native_view;
-	t_native_view = HIWebViewGetWebView(m_web_browser);
+	t_native_view = m_web_browser;
 	
 	id t_script_object;
 	t_script_object = [t_native_view windowScriptObject];
@@ -986,7 +1078,7 @@ void TAltBrowser::SetBorder(bool p_enabled)
 	WebFrameView *		   theframe;
 	NSScrollView *	   sview;
 	
-	nativeView = HIWebViewGetWebView( m_web_browser );
+	nativeView = m_web_browser;
 	theframe = [[nativeView mainFrame] frameView];
 	sview = (NSScrollView *)[[theframe documentView] enclosingScrollView];
 	
@@ -1006,7 +1098,7 @@ char * TAltBrowser::GetURL()
 	WebDataSource *     datasource;
 	NSURL *				  urlkey;
 	
-	nativeView = HIWebViewGetWebView( m_web_browser ); // get the Cocoa view
+	nativeView = m_web_browser; // get the Cocoa view
 	
 	mainFrame = [nativeView mainFrame];
 	datasource = [mainFrame dataSource];
@@ -1034,7 +1126,7 @@ void TAltBrowser::GoBack(void)
 	WebView*            nativeView;
 	WebFrame*           mainFrame;
 	
-	nativeView = HIWebViewGetWebView( m_web_browser ); // get the Cocoa view
+	nativeView = m_web_browser; // get the Cocoa view
 	
 	[nativeView goBack];
 }
@@ -1044,7 +1136,7 @@ void TAltBrowser::GoForward(void)
 	WebView*            nativeView;
 	WebFrame*           mainFrame;
 	
-	nativeView = HIWebViewGetWebView( m_web_browser ); // get the Cocoa view
+	nativeView = m_web_browser; // get the Cocoa view
 	
 	[nativeView goForward];
 }
@@ -1054,7 +1146,7 @@ void TAltBrowser::Refresh(void)
 	WebView*            nativeView;
 	WebFrame*           mainFrame;
 	
-	nativeView = HIWebViewGetWebView( m_web_browser ); // get the Cocoa view
+	nativeView = m_web_browser; // get the Cocoa view
 	
     mainFrame = [nativeView mainFrame];
     [mainFrame reload];
@@ -1065,7 +1157,7 @@ void TAltBrowser::Stop(void)
 	WebView*            nativeView;
 	WebFrame*           mainFrame;
 	
-	nativeView = HIWebViewGetWebView( m_web_browser ); // get the Cocoa view
+	nativeView = m_web_browser; // get the Cocoa view
 	
     mainFrame = [nativeView mainFrame];
     [mainFrame stopLoading];
@@ -1077,7 +1169,7 @@ void TAltBrowser::SetScrollbars(bool p_enabled)
 	WebFrameView *		   theframe;
 	NSScrollView *	   sview;
 	
-	nativeView = HIWebViewGetWebView( m_web_browser );
+	nativeView = m_web_browser;
 	
 	theframe = [[nativeView mainFrame] frameView];
 	
@@ -1100,11 +1192,15 @@ void TAltBrowser::SetVisible(bool p_state)
 {
 	WebView*            nativeView;
 	
-	nativeView = HIWebViewGetWebView( m_web_browser ); // get the Cocoa view
+	nativeView = m_web_browser; // get the Cocoa view
 	
 	isvisible = p_state;
 
+	[nativeView setHidden: !isvisible];
+	
+#ifdef PRE_COCOA
 	Synchronize();
+#endif
 }
 
 bool TAltBrowser::GetVisible()
@@ -1122,7 +1218,7 @@ bool TAltBrowser::GetBusy()
 	WebView*            nativeView;
 	WebDataSource *     datasource;
 	
-	nativeView = HIWebViewGetWebView( m_web_browser );
+	nativeView = m_web_browser;
 	datasource = [[nativeView mainFrame] dataSource];
 	return [datasource isLoading];
 	
@@ -1172,7 +1268,7 @@ char *TAltBrowser::GetSource()
 	NSString *		   websource;
 	const char * curl=NULL;
 	
-	nativeview = HIWebViewGetWebView( m_web_browser );
+	nativeview = m_web_browser;
 
     datasource = [[nativeview mainFrame] dataSource];
 	
@@ -1213,7 +1309,7 @@ void TAltBrowser::GetRect(int& r_left, int& r_top, int& r_right, int& r_bottom)
 void TAltBrowser::SetRect(int p_left, int p_top, int p_right, int p_bottom)
 {
 	::SetRect(&m_bounds, p_left, p_top, p_right, p_bottom);
-	Synchronize();
+	[m_web_browser setFrame: RectToNSRect([m_web_browser window], m_bounds)];
 }
 
 char * TAltBrowser::GetSelectedText()
@@ -1228,7 +1324,7 @@ char * TAltBrowser::GetSelectedText()
 	
 	if( (SystemMinorVersion > 3) || ((SystemMinorVersion==3) && (SystemBugFixVersion>8)) )
 	{
-		nativeView = HIWebViewGetWebView( m_web_browser );
+		nativeView = m_web_browser;
 		DOMRange * mrange = [nativeView selectedDOMRange];
 		NSString * txtStr;
 		
@@ -1252,7 +1348,7 @@ int TAltBrowser::GetInst()
 char * TAltBrowser::GetTitle()
 {
 	WebView * nativeView;
-	nativeView = HIWebViewGetWebView( m_web_browser );
+	nativeView = m_web_browser;
 	char * ltitle = (char *)[[[[nativeView mainFrame] dataSource] pageTitle] cString];
 	return strdup(ltitle != NULL ? ltitle : "");
 }
@@ -1266,7 +1362,7 @@ void TAltBrowser::SetSelectedText(const char * selText )
 {
 	WebView*            nativeView;
 	
-	nativeView = HIWebViewGetWebView( m_web_browser );
+	nativeView = m_web_browser;
 	// call searchFor with an NSString and go to town
 	NSString * mystring = [[NSString alloc] initWithCString:selText];
 	
@@ -1283,7 +1379,7 @@ bool TAltBrowser::FindString(const char *p_string, bool p_search_up)
 	else
 		t_search_forward = YES;
 	
-	t_native_view = HIWebViewGetWebView( m_web_browser );
+	t_native_view = m_web_browser;
 	
 	NSString * t_search_string;
 	t_search_string = [[NSString alloc] initWithCString:p_string];
@@ -1297,7 +1393,7 @@ bool TAltBrowser::FindString(const char *p_string, bool p_search_up)
 void TAltBrowser::Redraw()
 {
 	WebView *t_native_view;
-	t_native_view = HIWebViewGetWebView(m_web_browser);
+	t_native_view = m_web_browser;
 	[t_native_view setNeedsDisplay: TRUE];
 }
 
@@ -1305,7 +1401,7 @@ void TAltBrowser::MakeTextBigger(void)
 {
     WebView*            nativeView;
 		
-	nativeView = HIWebViewGetWebView( m_web_browser );
+	nativeView = m_web_browser;
 	if( [nativeView canMakeTextLarger] )
 		[nativeView makeTextLarger: NULL];
 }
@@ -1314,7 +1410,7 @@ void TAltBrowser::MakeTextSmaller(void)
 {
 	WebView*            nativeView;
 	
-	nativeView = HIWebViewGetWebView( m_web_browser );
+	nativeView = m_web_browser;
 	if( [nativeView canMakeTextSmaller] )
 		[nativeView makeTextSmaller: NULL];
 }
@@ -1328,12 +1424,14 @@ void TAltBrowser::Print()
 	WebPreferences *   thePrefs;
 	long				 SystemMinorVersion;
 	
+#ifdef PRE_COCOA
 	//disconnect the group briefly
 	ChangeWindowGroupAttributes(m_group,0,
 								kWindowGroupAttrMoveTogether | kWindowGroupAttrLayerTogether | kWindowGroupAttrHideOnCollapse | kWindowGroupAttrSharedActivation);
+#endif
 	
 	
-	nativeView = ::HIWebViewGetWebView( m_web_browser );
+	nativeView = m_web_browser;
 	
 	NSPrintInfo * info = [NSPrintInfo sharedPrintInfo];
     [info setHorizontalPagination: NSAutoPagination];
@@ -1361,9 +1459,10 @@ void TAltBrowser::Print()
 	
 	[op runOperation];
 
+#ifdef PRE_COCOA
 	//reconnect the group
 	ChangeWindowGroupAttributes(m_group, kWindowGroupAttrMoveTogether | kWindowGroupAttrLayerTogether | kWindowGroupAttrHideOnCollapse | kWindowGroupAttrSharedActivation, 0);
-	
+#endif
 }
 
 // MW-2012-11-14: [[ Bug 10509 ]] Reimplemented to fix image corruption.
@@ -1372,6 +1471,7 @@ bool TAltBrowser::GetImage(void*& r_data, int& r_length)
 	bool t_success;
 	t_success = true;
 	
+#ifdef PRE_COCOA
 	CGImageRef t_image;
 	t_image = nil;
 	if (t_success)
@@ -1432,6 +1532,9 @@ bool TAltBrowser::GetImage(void*& r_data, int& r_length)
 	
 	if (t_image != nil)
 		CGImageRelease(t_image);
+#else
+	t_success = false;
+#endif
 	
 	return t_success;
 }
@@ -1443,6 +1546,7 @@ int TAltBrowser::GetWindowId(void)
 
 void TAltBrowser::SetWindowId(int p_new_id)
 {
+#ifdef PRE_COCOA
 	WindowRef t_new_window;
 	t_new_window = (WindowRef)p_new_id;
 	if (p_new_id == 0 || !IsValidWindowPtr((WindowRef)t_new_window))
@@ -1452,12 +1556,27 @@ void TAltBrowser::SetWindowId(int p_new_id)
 		AttachToParent(t_new_window);
 		Synchronize();
 	}
+#endif
+	
+	NSWindow *t_window;
+	t_window = [NSApp windowWithWindowNumber: p_new_id];
+	if (p_new_id == 0 || t_window == nil)
+	{
+		[m_web_browser removeFromSuperview];
+		m_parent = 0;
+	}
+	else
+	{
+		[m_web_browser removeFromSuperview];
+		[[t_window contentView] addSubview: m_web_browser];
+		[m_web_browser setFrame: RectToNSRect(t_window, m_bounds)];
+	}
 }
 
 char *TAltBrowser::GetUserAgent(void)
 {
 	WebView *t_web_view;
-	t_web_view = HIWebViewGetWebView(m_web_browser);
+	t_web_view = m_web_browser;
 	
 	NSString *t_ns_user_agent;
 	t_ns_user_agent = [t_web_view customUserAgent];
@@ -1474,7 +1593,7 @@ void TAltBrowser::SetUserAgent(const char *p_user_agent)
 		t_ns_user_agent = [NSString stringWithCString: p_user_agent encoding: NSMacOSRomanStringEncoding];
 	
 	WebView *t_web_view;
-	t_web_view = HIWebViewGetWebView(m_web_browser);
+	t_web_view = m_web_browser;
 	[t_web_view setCustomUserAgent: t_ns_user_agent];
 }
 

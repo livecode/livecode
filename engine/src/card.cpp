@@ -65,12 +65,6 @@ int2 MCCard::startx;
 int2 MCCard::starty;
 MCObjptr *MCCard::removedcontrol;
 
-#ifdef PRE_COCOA
-#ifdef _MAC_DESKTOP
-extern bool MCosxmenupoppedup;
-#endif
-#endif
-
 MCCard::MCCard()
 {
 	objptrs = NULL;
@@ -239,6 +233,7 @@ void MCCard::kfocus()
 	{
 		kfocused = oldkfocused;
 		kfocused->getref()->kfocus();
+		MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
 	}
 	if (kfocused == NULL)
 		kfocusnext(True);
@@ -275,6 +270,7 @@ Boolean MCCard::kfocusnext(Boolean top)
 					        && !MCactivefield->getflag(F_LIST_BEHAVIOR))
 						MCactivefield->unselect(False, True);
 					oldkfocused->getref()->kunfocus();
+					MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
 					if (oldkfocused == NULL)
 						return False;
 				}
@@ -282,6 +278,7 @@ Boolean MCCard::kfocusnext(Boolean top)
 					kfocused = tptr;
 			}
 			kfocused->getref()->kfocus();
+			MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
 			done = True;
 			break;
 		}
@@ -328,6 +325,7 @@ Boolean MCCard::kfocusprev(Boolean bottom)
 					        && !MCactivefield->getflag(F_LIST_BEHAVIOR))
 						MCactivefield->unselect(False, True);
 					oldkfocused->getref()->kunfocus();
+					MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
 					if (oldkfocused == NULL)
 						return False;
 				}
@@ -335,6 +333,7 @@ Boolean MCCard::kfocusprev(Boolean bottom)
 					kfocused = tptr;
 			}
 			kfocused->getref()->kfocus();
+			MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
 			done = True;
 			break;
 		}
@@ -355,6 +354,7 @@ void MCCard::kunfocus()
 		oldkfocused = kfocused;
 		kfocused = NULL;
 		oldkfocused->getref()->kunfocus();
+		MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
 	}
 	else
 	{
@@ -592,20 +592,9 @@ Boolean MCCard::mdown(uint2 which)
         if (oldfocused -> handlesmessage(MCM_mouse_still_down))
             MCscreen->addtimer(oldfocused, MCM_idle, MCidleRate);
 
-#ifdef PRE_COCOA
-		// MW-2007-12-11: [[ Bug 5670 ]] Reset our notification var so we can check it after
-#ifdef _MACOSX
-		MCosxmenupoppedup = false;
-#endif
-#endif
 		if (!mfocused->getref()->mdown(which)
 		        && getstack()->gettool(this) == T_BROWSE)
 		{
-#ifdef PRE_COCOA
-#ifdef _MACOSX
-			if (!MCosxmenupoppedup)
-#endif
-#endif
 				message_with_args(MCM_mouse_down, "1");
 		}
 		if (!(MCbuttonstate & (0x1L << (which - 1))))
@@ -1390,6 +1379,7 @@ void MCCard::kfocusset(MCControl *target)
 		{
 			kfocused = NULL;
 			tkfocused->getref()->kunfocus();
+			MCscreen -> controllostfocus(getstack(), tkfocused -> getid());
 		}
 		if (kfocused != NULL)
 			return;
@@ -1400,6 +1390,7 @@ void MCCard::kfocusset(MCControl *target)
 			if (kfocused->getref()->kfocusset(target))
 			{
 				kfocused->getref()->kfocus();
+				MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
 
 				// OK-2009-04-29: [[Bug 8013]] - Its possible that kfocus() can set kfocused to NULL if the 
 				// user handles the message and does something to unfocus the object (e.g. select empty)

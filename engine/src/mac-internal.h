@@ -62,6 +62,14 @@ class MCMacPlatformSurface;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@interface com_runrev_livecode_MCWindow: NSWindow
+
+- (BOOL)makeFirstResponder: (NSResponder *)responder;
+
+@end
+	
+////////////////////////////////////////////////////////////////////////////////
+
 @interface com_runrev_livecode_MCWindowDelegate: NSObject<NSWindowDelegate>
 {
 	MCMacPlatformWindow *m_window;
@@ -86,6 +94,11 @@ class MCMacPlatformSurface;
 
 - (void)windowDidBecomeKey:(NSNotification *)notification;
 - (void)windowDidResignKey:(NSNotification *)notification;
+
+//////////
+
+- (void)viewNowFirstResponder;
+- (void)nativeViewNowFirstResponder: (uint32_t)id;
 
 @end
 

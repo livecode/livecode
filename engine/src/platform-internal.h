@@ -233,6 +233,11 @@ void MCPlatformCallbackSendMenuSelect(MCPlatformMenuRef menu, uindex_t item);
 
 void MCPlatformCallbackSendPasteboardResolve(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor flavor, void *handle, void*& r_data, size_t& r_data_size);
 
+void MCPlatformCallbackSendViewFocus(MCPlatformWindowRef window);
+void MCPlatformCallbackSendViewUnfocus(MCPlatformWindowRef window);
+void MCPlatformCallbackSendNativeViewFocus(MCPlatformWindowRef window, uint32_t view_id);
+void MCPlatformCallbackSendNativeViewUnfocus(MCPlatformWindowRef window, uint32_t view_id);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif

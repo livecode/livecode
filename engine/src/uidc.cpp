@@ -1665,3 +1665,13 @@ char *MCUIDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p
 {
 	return nil;
 }
+
+//
+
+void MCUIDC::controlgainedfocus(MCStack *s, uint32_t id)
+{
+}
+
+void MCUIDC::controllostfocus(MCStack *s, uint32_t id)
+{
+}

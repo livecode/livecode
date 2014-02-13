@@ -943,4 +943,9 @@ void MCPlatformFindPlayerHotSpotWithId(MCPlatformPlayerRef player, uint32_t id, 
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformFocusNativeView(MCPlatformWindowRef window, uint32_t id);
+void MCPlatformUnfocusNativeView(MCPlatformWindowRef window, uint32_t id);
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif

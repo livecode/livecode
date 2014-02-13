@@ -1783,7 +1783,7 @@ const char *MCS_getsystemversion()
 		Gestalt(gestaltSystemVersionMajor, &t_major);
 		Gestalt(gestaltSystemVersionMinor, &t_minor);
 		Gestalt(gestaltSystemVersionBugFix, &t_bugfix);
-		sprintf(versioninfo, "%d.%d.%d", t_major, t_minor, t_bugfix);
+		sprintf(versioninfo, "%ld.%ld.%ld", t_major, t_minor, t_bugfix);
 		return versioninfo;
 	}
 	else if ((errno = Gestalt(gestaltSystemVersion, &response)) == noErr)
@@ -3481,7 +3481,7 @@ void MCS_startprocess_unix(char *name, char *doc, Open_mode mode, Boolean elevat
 		{
 			char *t_arguments[] =
 			{
-				"-elevated-slave",
+				(char *)"-elevated-slave",
 				nil
 			};
 			t_status = AuthorizationExecuteWithPrivileges(t_auth, MCcmd, kAuthorizationFlagDefaults, t_arguments, &t_stream);

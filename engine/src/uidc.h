@@ -562,6 +562,11 @@ public:
     virtual bool unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle);
     
     //
+	
+	virtual void controlgainedfocus(MCStack *s, uint32_t id);
+	virtual void controllostfocus(MCStack *s, uint32_t id);
+	
+	//
 
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
 	void cancelmessageindex(uint2 i, Boolean dodelete);

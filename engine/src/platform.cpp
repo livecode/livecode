@@ -43,6 +43,11 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef menu, uindex_t index);
 
 void MCPlatformHandlePasteboardResolve(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor flavor, void *handle, void*& r_data, size_t& r_data_size);
 
+void MCPlatformHandleViewFocus(MCPlatformWindowRef window);
+void MCPlatformHandleViewUnfocus(MCPlatformWindowRef window);
+void MCPlatformHandleNativeViewFocus(MCPlatformWindowRef window, uint32_t id);
+void MCPlatformHandleNativeViewUnfocus(MCPlatformWindowRef window, uint32_t id);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformCallbackSendApplicationStartup(int p_argc, char **p_argv, char **p_envp, int& r_error_code, char*& r_error_message)
@@ -241,6 +246,32 @@ void MCPlatformCallbackSendPasteboardResolve(MCPlatformPasteboardRef p_pasteboar
 {
 	MCLog("Pasteboard(%p) -> Resolve(%d, %p)", p_pasteboard, p_flavor, p_handle);
 	MCPlatformHandlePasteboardResolve(p_pasteboard, p_flavor, p_handle, r_data, r_data_size);
+}
+
+//////////
+
+void MCPlatformCallbackSendViewFocus(MCPlatformWindowRef p_window)
+{
+	MCLog("Window(%p) -> ViewFocus()", p_window);
+	MCPlatformHandleViewFocus(p_window);
+}
+
+void MCPlatformCallbackSendViewUnfocus(MCPlatformWindowRef p_window)
+{
+	MCLog("Window(%p) -> ViewUnfocus()", p_window);
+	MCPlatformHandleViewUnfocus(p_window);
+}
+
+void MCPlatformCallbackSendNativeViewFocus(MCPlatformWindowRef p_window, uint32_t p_view_id)
+{
+	MCLog("Window(%p) -> NativeViewFocus(%d)", p_window, p_view_id);
+	MCPlatformHandleNativeViewFocus(p_window, p_view_id);
+}
+
+void MCPlatformCallbackSendNativeViewUnfocus(MCPlatformWindowRef p_window, uint32_t p_view_id)
+{
+	MCLog("Window(%p) -> NativeViewUnfocus(%d)", p_window, p_view_id);
+	MCPlatformHandleNativeViewUnfocus(p_window, p_view_id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

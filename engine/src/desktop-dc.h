@@ -160,6 +160,9 @@ public:
 	//   desktop changes and will clear the cache when changes occur.
 	virtual bool platform_displayinfocacheable(void);
 	
+	virtual void controlgainedfocus(MCStack *s, uint32_t id);
+	virtual void controllostfocus(MCStack *s, uint32_t id);
+	
 	//////////
 	
 	bool isbackdrop(MCPlatformWindowRef window);

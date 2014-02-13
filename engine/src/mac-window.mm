@@ -35,6 +35,41 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@implementation com_runrev_livecode_MCWindow
+
+- (BOOL)makeFirstResponder: (NSResponder *)p_responder
+{
+	NSResponder *t_previous;
+	t_previous = [self firstResponder];
+	
+	if (![super makeFirstResponder: p_responder])
+		return NO;
+	
+	if ([p_responder isKindOfClass: [MCWindowView class]])
+		[[self delegate] viewNowFirstResponder];
+	else if ([p_responder isKindOfClass: [NSView class]])
+	{
+		NSView *t_view;
+		t_view = (NSView *)p_responder;
+		while(t_view != nil)
+		{
+			if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
+			{
+				[[self delegate] nativeViewNowFirstResponder: (uint32_t)[t_view com_runrev_livecode_nativeViewId]];
+				break;
+			}
+			
+			t_view = [t_view superview];
+		}
+	}
+	
+	return YES;
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////
+
 @implementation com_runrev_livecode_MCWindowDelegate
 
 - (id)initWithPlatformWindow: (MCMacPlatformWindow *)window
@@ -108,6 +143,18 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 - (void)didEndSheet: (NSWindow *)sheet returnCode: (NSInteger)returnCode contextInfo: (void *)info
 {
 	NSLog(@"Didendsheet");
+}
+
+//////////
+
+- (void)viewNowFirstResponder
+{
+	MCPlatformCallbackSendViewFocus(m_window);
+}
+
+- (void)nativeViewNowFirstResponder: (uint32_t)p_id
+{
+	MCPlatformCallbackSendNativeViewFocus(m_window, p_id);
 }
 
 @end
@@ -187,11 +234,25 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 
 - (BOOL)becomeFirstResponder
 {
+	//MCPlatformCallbackSendViewFocus([(MCWindowDelegate *)[[self window] delegate] platformWindow]);
 	return YES;
 }
 
 - (BOOL)resignFirstResponder
 {
+	//MCPlatformCallbackSendViewUnfocus([(MCWindowDelegate *)[[self window] delegate] platformWindow]);
+	return YES;
+}
+
+- (BOOL)com_runrev_livecode_subviewBecomeFirstResponder: (uint32_t)p_id
+{
+	//MCPlatformCallbackSendNativeViewFocus([(MCWindowDelegate *)[[self window] delegate] platformWindow], p_id);
+	return YES;
+}
+
+- (BOOL)com_runrev_livecode_subviewResignFirstResponder: (uint32_t)p_id
+{
+	//MCPlatformCallbackSendNativeViewUnfocus([(MCWindowDelegate *)[[self window] delegate] platformWindow], p_id);
 	return YES;
 }
 
@@ -671,6 +732,11 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 	
 	t_window -> ProcessDidResize();
 }
+
+- (BOOL)autoresizesSubviews
+{
+	return YES;
+}
 	
 //////////
 
@@ -938,7 +1004,7 @@ void MCMacPlatformWindow::DoRealize(void)
 	// For floating window levels, we use a panel, otherwise a normal window will do.
 	// (Note that NSPanel is a subclass of NSWindow)
 	if (t_window_level != kCGFloatingWindowLevel)
-		m_window_handle = [[NSWindow alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: YES];
+		m_window_handle = [[com_runrev_livecode_MCWindow alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: YES];
 	else
 		m_panel_handle = [[NSPanel alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: YES];
 	
@@ -1250,6 +1316,44 @@ void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef p_mask)
 	CGImageRef t_mask;
 	t_mask = (CGImageRef)p_mask;
 	CGImageRelease(t_mask);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static NSView *MCMacPlatformFindNativeView(MCPlatformWindowRef p_window, uint32_t p_id)
+{
+	MCMacPlatformWindow *t_window;
+	t_window = (MCMacPlatformWindow *)p_window;
+	
+	NSView *t_parent_view;
+	t_parent_view = t_window -> GetView();
+	
+	NSArray *t_subviews;
+	t_subviews = [t_parent_view subviews];
+	for(uindex_t i = 0; i < [t_subviews count]; i++)
+	{
+		NSView *t_view;
+		t_view = (NSView *)[t_subviews objectAtIndex: i];
+		if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
+			if ((uint32_t)[t_view com_runrev_livecode_nativeViewId] == p_id)
+				return t_view;
+	}
+}
+
+void MCPlatformFocusNativeView(MCPlatformWindowRef p_window, uint32_t p_id)
+{
+	NSView *t_view;
+	t_view = MCMacPlatformFindNativeView(p_window, p_id);
+	
+	[t_view becomeFirstResponder];
+}
+
+void MCPlatformUnfocusNativeView(MCPlatformWindowRef p_window, uint32_t p_id)
+{
+	NSView *t_view;
+	t_view = MCMacPlatformFindNativeView(p_window, p_id);
+	
+	[t_view resignFirstResponder];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

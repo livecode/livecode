@@ -63,15 +63,6 @@ MCImage *MCButton::macrbhilite = NULL;
 MCImage *MCButton::macrbhilitetrack = NULL;
 uint2 MCButton::focusedtab = MAXUINT2;
 
-// MW-2007-12-11: [[ Bug 5670 ]] This global is set to false before a card issues an
-//   mdown to its focused control. If the mdown resulted in a popup being shown on OS X, then it will be
-//   set to true. This is to work around the problem with the mouse down message being 'cancelled' on a
-//   popup-menu action resulting in the group mdown not returning true, and thus causing the card to
-//   send an errant mdown message to the script.
-
-#ifdef PRE_COCOA
-bool MCosxmenupoppedup = false;
-#endif
 bool MCmenupoppedup = false;
 
 Keynames MCButton::button_keys[] =

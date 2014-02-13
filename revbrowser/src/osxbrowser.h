@@ -108,6 +108,7 @@ public:
 	
 	int instance_id;
 	
+#if 0
 	EventHandlerUPP m_parent_handler_upp;
 	EventHandlerRef m_parent_handler;
 	
@@ -120,15 +121,21 @@ public:
 	WindowRef m_parent;
 	WindowGroupRef m_group;
 	WindowRef m_container;
+#endif
+	
+	uint32_t m_parent;
+	
 	Rect m_bounds;
 	
-	HIViewRef m_web_browser;
+	WebView *m_web_browser;
 	
 	WebBrowserAdapter *m_web_adapter;
 	
+#if 0
 	void Synchronize(void);
 	void AttachToParent(WindowRef p_new_parent);
 	void DetachFromParent(void);
+#endif
 	
     static OSStatus ParentEventHandler(EventHandlerCallRef p_call_chain, EventRef p_event, void *p_context);
     static OSStatus ContainerEventHandler(EventHandlerCallRef p_call_chain, EventRef p_event, void *p_context);
