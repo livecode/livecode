@@ -2974,12 +2974,34 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 			(PE_OPEN_NOMODE, sp);
 			return PS_ERROR;
 		}
+
+        // SN-2014-02-13: text encoding option added to the 'open' function
+        if (sp.lookup(SP_ENCODING, te) == PS_NORMAL)
+        {
+            encoding = (Encoding_type)te->which;
+            if (sp.next(type) != PS_NORMAL)
+            {
+                MCperror -> add(PE_OPEN_BADMODE, sp);
+                return PS_ERROR;
+            }
+        }
+
 		if (sp.lookup(SP_MODE, te) != PS_NORMAL)
 		{
 			MCperror->add
 			(PE_OPEN_BADMODE, sp);
 			return PS_ERROR;
 		}
+
+        // An encoding can only be given with a text reading
+        // An error may help a user to notify a wrong read mode
+        if (encoding != EN_BOM_BASED &&
+                te->which != OM_TEXT)
+        {
+            MCperror->add(PE_OPEN_BADMODE, sp);
+            return PS_ERROR;
+        }
+
 		if (te->which == OM_BINARY || te->which == OM_TEXT)
 		{
 			textmode = te->which == OM_TEXT;
@@ -2988,14 +3010,16 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 				MCperror->add
 				(PE_OPEN_NOMODE, sp);
 				return PS_ERROR;
-			}
+            }
+
 			if (sp.lookup(SP_MODE, te) != PS_NORMAL)
 			{
 				MCperror->add
 				(PE_OPEN_BADMODE, sp);
 				return PS_ERROR;
 			}
-		}
+        }
+
 		mode = (Open_mode)te->which;
 	}
 	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
@@ -3250,11 +3274,11 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
 
 		switch (arg)
 		{
-		case OA_DRIVER:
-			MCFilesExecOpenDriver(ctxt, *t_name, mode, textmode == True);
+        case OA_DRIVER:
+            MCFilesExecOpenDriver(ctxt, *t_name, mode, textmode == True);
 			break;
-		case OA_FILE:
-			MCFilesExecOpenFile(ctxt, *t_name, mode, textmode == True);
+        case OA_FILE:
+            MCFilesExecOpenFile(ctxt, *t_name, mode, textmode == True);
 			break;
 		case OA_PROCESS:
 			if (elevated)

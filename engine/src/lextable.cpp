@@ -378,6 +378,16 @@ static LT convert_table[] =
         {"time", TT_CHUNK, CF_TIME}
     };
 
+static LT encoding_table[] =
+    {
+        {"native", TT_UNDEFINED, EN_NATIVE},
+        {"utf16", TT_UNDEFINED, EN_UTF16},
+        {"utf16be", TT_UNDEFINED, EN_UTF16BE},
+        {"utf16le", TT_CHUNK, EN_UTF16LE},
+        {"utf8", TT_UNDEFINED, EN_UTF8}
+    };
+
+
 static LT encryption_table[] =
     {
         {"bit", TT_UNDEFINED, ENCRT_BIT},
@@ -2165,6 +2175,7 @@ LT *table_pointers[] =
     ask_table,
     command_table,
     convert_table,
+    encoding_table,
     encryption_table,
     exit_table,
     export_table,
@@ -2203,6 +2214,7 @@ uint2 table_sizes[] =
     ELEMENTS(ask_table),
     ELEMENTS(command_table),
     ELEMENTS(convert_table),
+    ELEMENTS(encoding_table),
     ELEMENTS(encryption_table),
     ELEMENTS(exit_table),
     ELEMENTS(export_table),
