@@ -125,17 +125,15 @@ MCUrlProgressEvent *MCUrlProgressEvent::CreateUrlProgressEvent(MCObjectHandle *p
 	t_event = new MCUrlProgressEvent();
 	if (t_event == nil)
 		return nil;
-	
-	t_event->m_url = nil;
+    
 	t_event->m_object = nil;
 	t_event->m_status = kMCSystemUrlStatusNone;
 	t_event->m_error = nil;
-	
     t_event -> m_url = MCValueRetain(p_url);
 		
 	if (p_status == kMCSystemUrlStatusError)
         /* UNCHECKED */ MCStringCopy(p_error, t_event -> m_error);
-	
+
     t_event->m_status = p_status;
     t_event->m_object = p_object;
     t_event->m_object->Retain();
@@ -144,7 +142,6 @@ MCUrlProgressEvent *MCUrlProgressEvent::CreateUrlProgressEvent(MCObjectHandle *p
         t_event->m_transferred.amount = p_amount;
         t_event->m_transferred.total = p_total;
     }
-	
 	return t_event;
 }
 
@@ -208,13 +205,12 @@ void MCUrlProgressEvent::Dispatch(void)
 static void send_url_progress(MCObjectHandle *p_object, MCSystemUrlStatus p_status, MCStringRef p_url, int32_t p_amount, int32_t& x_total, MCStringRef p_data)
 {
 	if (p_status == kMCSystemUrlStatusNegotiated)
-        /* UNCHECKED */ MCStringToInteger(p_data, x_total);
-	
+        x_total = *(int32_t *)MCStringGetCString(p_data);
+    
 	MCUrlProgressEvent *t_event;
     t_event = nil;
     
-    if (p_data != nil)
-        t_event = MCUrlProgressEvent::CreateUrlProgressEvent(p_object, p_url, p_status, p_amount, x_total, p_data);
+    t_event = MCUrlProgressEvent::CreateUrlProgressEvent(p_object, p_url, p_status, p_amount, x_total, p_data);
 	if (t_event)
 		MCEventQueuePostCustom(t_event);
 }
@@ -275,7 +271,7 @@ void MCS_geturl(MCObject *p_target, MCStringRef p_url)
 		return;
 	
 	MCSGetUrlState t_state;
-	t_state . url = p_url;
+	t_state . url = *t_processed_url;
 	t_state . status = kMCSystemUrlStatusNone;
 	t_state . object = p_target -> gethandle();
     t_state . error = MCValueRetain(kMCEmptyString);
@@ -316,7 +312,7 @@ void MCS_geturl(MCObject *p_target, MCStringRef p_url)
 class MCUrlLoadEvent : public MCCustomEvent
 {
 public:
-	static MCUrlLoadEvent *CreateUrlLoadEvent(MCObjectHandle *object, MCNameRef p_message, MCStringRef url, MCSystemUrlStatus status, void *data, uint32_t size, MCStringRef error);
+	static MCUrlLoadEvent *CreateUrlLoadEvent(MCObjectHandle *object, MCNameRef p_message, MCStringRef url, MCSystemUrlStatus status, MCDataRef data, MCStringRef error);
 	
 	void Destroy(void);
 	void Dispatch(void);
@@ -328,26 +324,20 @@ private:
 	MCNameRef m_message;
 	union
 	{
-		struct
-		{
-			void *bytes;
-			uint32_t size;
-		} m_data;
+		MCDataRef m_data;
 		MCStringRef m_error;
 	};
 };
 
-MCUrlLoadEvent *MCUrlLoadEvent::CreateUrlLoadEvent(MCObjectHandle *p_object, MCNameRef p_message, MCStringRef p_url, MCSystemUrlStatus p_status, void *p_data, uint32_t p_size, MCStringRef p_error)
+MCUrlLoadEvent *MCUrlLoadEvent::CreateUrlLoadEvent(MCObjectHandle *p_object, MCNameRef p_message, MCStringRef p_url, MCSystemUrlStatus p_status, MCDataRef p_data, MCStringRef p_error)
 {
 	MCUrlLoadEvent *t_event;
 	t_event = new MCUrlLoadEvent();
 	if (t_event == nil)
 		return nil;
 	
-	t_event->m_url = nil;
 	t_event->m_object = nil;
 	t_event->m_status = kMCSystemUrlStatusNone;
-	t_event->m_error = nil;
 	t_event->m_message = nil;
 	
 	bool t_success;
@@ -365,10 +355,7 @@ MCUrlLoadEvent *MCUrlLoadEvent::CreateUrlLoadEvent(MCObjectHandle *p_object, MCN
 		t_event->m_object = p_object;
 		t_event->m_object->Retain();
 		if (t_event->m_status == kMCSystemUrlStatusFinished)
-		{
-			t_event->m_data.bytes = p_data;
-			t_event->m_data.size = p_size;
-		}
+			t_event->m_data = MCValueRetain(p_data);
 	}
 	else
 	{
@@ -388,7 +375,7 @@ void MCUrlLoadEvent::Destroy(void)
 	MCValueRelease(m_url);
 	MCNameDelete(m_message);
 	if (m_status == kMCSystemUrlStatusFinished)
-		MCMemoryDelete(m_data.bytes);
+		MCValueRelease(m_data);
 	else if (m_status == kMCSystemUrlStatusError)
 		MCValueRelease(m_error);
 	if (m_object != nil)
@@ -406,11 +393,9 @@ void MCUrlLoadEvent::Dispatch(void)
 		{
 			case kMCSystemUrlStatusFinished:
             {
-                MCAutoDataRef t_data;
                 MCAutoNumberRef t_num;
-                /* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)m_data.bytes, m_data.size, &t_data);
-                /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(m_data.size, &t_num);
-                t_object -> message_with_valueref_args(m_message, m_url, MCSTR("downloaded"), *t_data, *t_num);
+                /* UNCHECKED */ MCNumberCreateWithUnsignedInteger(MCDataGetLength(m_data), &t_num);
+                t_object -> message_with_valueref_args(m_message, m_url, MCSTR("downloaded"), m_data, *t_num);
 				break;
             }
 			case kMCSystemUrlStatusError:
@@ -425,11 +410,7 @@ struct MCSLoadUrlState
 {
 	MCStringRef url;
 	MCSystemUrlStatus status;
-	struct
-	{
-		void *bytes;
-		uint32_t size;
-	} data;
+    MCDataRef data;
 	MCObjectHandle *object;
 	int32_t total;
 	MCNameRef message;
@@ -441,30 +422,21 @@ static bool MCS_loadurl_callback(void *p_context, MCSystemUrlStatus p_status, co
 	context = static_cast<MCSLoadUrlState *>(p_context);
 	
 	context -> status = p_status;
+
     MCAutoStringRef t_data;
     /* UNCHECKED */ MCStringCreateWithCString((const char *)p_data, &t_data);
-	
-	if (p_status == kMCSystemUrlStatusError)
-		MCMemoryDelete(context->data.bytes);
-	else if (p_status == kMCSystemUrlStatusLoading)
-	{
-		MCMemoryReallocate(context->data.bytes, context->data.size + MCStringGetLength(*t_data), context->data.bytes);
-		MCMemoryCopy(static_cast<uint8_t*>(context->data.bytes) + context->data.size, p_data, MCStringGetLength(*t_data));
-		context->data.size += MCStringGetLength(*t_data);
-	}
-
-    send_url_progress(context -> object, p_status, context -> url, context -> data . size, context -> total, *t_data);
+    
+	if (p_status == kMCSystemUrlStatusLoading)
+        /* UNCHECKED */ MCDataAppendBytes(context -> data, (const byte_t *)p_data, MCStringGetLength(*t_data));
+    
+    send_url_progress(context -> object, p_status, context -> url, MCDataGetLength(context -> data), context -> total, *t_data);
 	
 	if (p_status == kMCSystemUrlStatusError || p_status == kMCSystemUrlStatusFinished)
 	{
 		MCUrlLoadEvent *t_event;
-		t_event = MCUrlLoadEvent::CreateUrlLoadEvent(context->object, context->message, context -> url, p_status, context->data.bytes, context->data.size, *t_data);
+		t_event = MCUrlLoadEvent::CreateUrlLoadEvent(context->object, context->message, context -> url, p_status, context->data, *t_data);
 		if (t_event)
 			MCEventQueuePostCustom(t_event);
-		context->object->Release();
-		MCValueRelease(context->url);
-		MCNameDelete(context->message);
-		MCMemoryDelete(context);
 	}
 	return true;
 }
@@ -472,31 +444,31 @@ static bool MCS_loadurl_callback(void *p_context, MCSystemUrlStatus p_status, co
 void MCS_loadurl(MCObject *p_object, MCStringRef p_url, MCNameRef p_message)
 {
 	bool t_success = true;
-	MCSLoadUrlState *t_state = nil;
-	MCAutoStringRef t_processed;
-	t_success = MCMemoryNew(t_state) &&
-			MCSystemProcessUrl(p_url, kMCSystemUrlOperationStrip, &t_processed);
+	MCSLoadUrlState *t_state;
+	MCStringRef t_processed;
+	t_success = MCMemoryNew(t_state) && MCSystemProcessUrl(p_url, kMCSystemUrlOperationStrip, t_processed);
 	
 	if (t_success)
 	{
-        t_state->url = *t_processed;
-		t_state->message = p_message;
-		t_state->status = kMCSystemUrlStatusNone;
-		t_state->object = p_object -> gethandle();
-		t_state->data . bytes = nil;
-		t_state->data . size = 0;
+        t_state -> url = t_processed;
+		t_state -> message = p_message;
+		t_state -> status = kMCSystemUrlStatusNone;
+		t_state -> object = p_object -> gethandle();
+		MCDataCreateMutable(0, t_state -> data);
 		
-		t_success = MCSystemLoadUrl(*t_processed, MCS_loadurl_callback, t_state);
+		t_success = MCSystemLoadUrl(t_processed, MCS_loadurl_callback, t_state);
 	}
 	
 	if (t_success)
 		MCresult->clear();
 	else
 	{
-		MCNameDelete(p_message);
-        MCMemoryDelete(t_state);
+        MCValueRelease(t_state -> data);
+        MCValueRelease(t_state -> url);
+        MCNameDelete(t_state -> message);
 		MCurlresult -> clear();
 		MCresult->sets("error: load URL failed");
+        MCMemoryDelete(t_state);
 	}
 }
 
@@ -550,7 +522,7 @@ void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 	
 	if (t_success)
 	{
-		t_state . url = p_url;
+		t_state . url = *t_processed;
 		t_state . status = kMCSystemUrlStatusNone;
 		t_state . object = t_obj;
 		t_state . post_sent = 0;
