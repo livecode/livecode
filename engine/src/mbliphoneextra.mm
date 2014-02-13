@@ -1317,6 +1317,7 @@ extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_p
 extern Exec_stat MCHandleMakePurchase(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleConfirmPurchase(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameters);
 
 
 extern Exec_stat MCHandleComposeTextMessage(void *, MCParameter *);
@@ -1665,6 +1666,8 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobileMakePurchase", MCHandleMakePurchase, nil},
     {false, "mobileConfirmPurchase", MCHandleConfirmPurchase, nil},
     {false, "mobileGetPurchaseProperty", MCHandleGetPurchaseProperty, nil},
+    {false, "mobileProductSetType", MCHandleProductSetType, nil},
+    
     
     {false, "iphoneRequestProductDetails", MCHandleRequestProductDetails, nil},
     

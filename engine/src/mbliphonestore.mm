@@ -812,3 +812,31 @@ Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters
     
     return ES_NORMAL;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+bool MCStoreProductSetType(const char *p_product_id, const char *p_product_type)
+{
+    return true;
+}
+
+bool MCStoreConsumePurchase(char const*)
+{
+    return true;
+}
+
+char *MCStoreGetPurchaseList()
+{
+    return nil;
+}
+
+bool MCStoreSetPurchaseProperty(char const*, char const*, char const*)
+{
+    return true;
+}
+
+char *MCStoreReceiveProductDetails(char const*)
+{
+    return nil;
+}

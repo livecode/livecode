@@ -278,7 +278,7 @@ public class GoogleBillingProvider implements BillingProvider
         
         else
             //TODO
-            return false;
+            return true;
     }
     
     public void setPurchaseObserver(PurchaseObserver observer)

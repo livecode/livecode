@@ -151,7 +151,12 @@ bool MCPurchaseCreate(const char *p_product_id, void *p_context, MCPurchase *&r_
 	
 	if (t_success)
 	{
-        t_purchase->prod_id = p_product_id;  
+        // use MCCStringFormat instead of "=" to fix encoding problems on iphone
+        char *temp;
+        MCCStringFormat(temp, "%s", p_product_id);
+        MCLog("temp is : %s", temp);
+        t_purchase->prod_id = temp;
+        MCLog("purchase->prod_id is : %s", t_purchase->prod_id);
 		t_purchase->id = s_last_purchase_id++;
 		t_purchase->ref_count = 1;
 		t_purchase->state = kMCPurchaseStateInitialized;
@@ -300,6 +305,7 @@ void MCPurchaseUpdateEvent::Dispatch()
 		t_success = MCCStringFormat(t_prod_id, "%s", m_purchase->prod_id);
     
     //if (m_purchase->prod_id == NULL)
+        //t_prod_id = "Null prod_id";
        // MCLog("m_purchase->prod_id is null",nil);
     
 	if (t_success)

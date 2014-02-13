@@ -2792,6 +2792,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = NO;
+				LastUpgradeCheck = 0420;
 			};
 			buildConfigurationList = 4D587D950B80944100200116 /* Build configuration list for PBXProject "engine" */;
 			compatibilityVersion = "Xcode 3.2";
