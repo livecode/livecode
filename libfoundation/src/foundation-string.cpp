@@ -944,6 +944,13 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
     MCAssert(self != nil);
     MCAssert(p_locale != nil);
     
+    // Quick-n-dirty workaround
+    if (MCStringIsNative(self))
+    {
+        r_out_range = p_in_range;
+        return true;
+    }
+    
     // Create a grapheme break iterator
     MCBreakIteratorRef t_iter;
     if (!MCLocaleBreakIteratorCreate(p_locale, kMCBreakIteratorTypeCharacter, t_iter))
@@ -984,6 +991,13 @@ bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
 {
     MCAssert(self != nil);
     MCAssert(p_locale != nil);
+    
+    // Quick-n-dirty workaround
+    if (MCStringIsNative(self))
+    {
+        r_out_range = p_in_range;
+        return true;
+    }
     
     // Check that the input range is valid
     if (p_in_range.offset + p_in_range.length > self -> char_count)
