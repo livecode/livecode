@@ -1144,6 +1144,7 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &p_rect, MCGFloat p_scale_factor
 		MCPlatformScreenSnapshotOfWindow(p_window, t_bitmap);
 	else
 		MCPlatformScreenSnapshot(p_rect, t_bitmap);
+	return t_bitmap;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

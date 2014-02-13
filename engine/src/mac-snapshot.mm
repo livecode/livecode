@@ -28,6 +28,30 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void MCMacPlatformCGImageToMCImageBitmap(CGImageRef p_image, MCImageBitmap*& r_bitmap)
+{
+	if (p_image != nil)
+	{
+		MCImageBitmap *t_bitmap;
+		/* UNCHECKED */ MCImageBitmapCreate(CGImageGetWidth(p_image), CGImageGetHeight(p_image), t_bitmap);
+		
+		CFDataRef t_data;
+		t_data = CGDataProviderCopyData(CGImageGetDataProvider(p_image));
+		
+		uint8_t *t_bytes;
+		t_bytes = (uint8_t *)CFDataGetBytePtr(t_data);
+		
+		for(int32_t y = 0; y < CGImageGetHeight(p_image); y++)
+			memcpy((uint8_t*)t_bitmap -> data + y * t_bitmap -> stride, t_bytes + y * CGImageGetBytesPerRow(p_image), CGImageGetWidth(p_image) * 4);
+		
+		CFRelease(t_data);
+		
+		r_bitmap = t_bitmap;
+	}
+	else
+		r_bitmap = nil;
+}
+
 void MCPlatformScreenSnapshotOfUserArea(MCImageBitmap*& r_bitmap)
 {
 	// COCOA-TODO: Screen snapshot of area.
@@ -36,8 +60,10 @@ void MCPlatformScreenSnapshotOfUserArea(MCImageBitmap*& r_bitmap)
 
 void MCPlatformScreenSnapshotOfWindow(uint32_t p_window_id, MCImageBitmap*& r_bitmap)
 {
-	// COCOA-TODO: Screen snapshot of window.
-	r_bitmap = nil;
+	CGImageRef t_image;
+	t_image = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, p_window_id, kCGWindowImageBoundsIgnoreFraming);
+	MCMacPlatformCGImageToMCImageBitmap(t_image, r_bitmap);
+	CGImageRelease(t_image);
 }
 
 void MCPlatformScreenSnapshot(MCRectangle p_screen_rect, MCImageBitmap*& r_bitmap)
@@ -47,28 +73,8 @@ void MCPlatformScreenSnapshot(MCRectangle p_screen_rect, MCImageBitmap*& r_bitma
 	
 	CGImageRef t_image;
 	t_image = CGWindowListCreateImage(t_area, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault);
-	if (t_image != nil)
-	{
-		MCImageBitmap *t_bitmap;
-		/* UNCHECKED */ MCImageBitmapCreate(CGImageGetWidth(t_image), CGImageGetHeight(t_image), t_bitmap);
-		
-		CFDataRef t_data;
-		t_data = CGDataProviderCopyData(CGImageGetDataProvider(t_image));
-		
-		uint8_t *t_bytes;
-		t_bytes = (uint8_t *)CFDataGetBytePtr(t_data);
-		
-		for(int32_t y = 0; y < CGImageGetHeight(t_image); y++)
-			memcpy((uint8_t*)t_bitmap -> data + y * t_bitmap -> stride, t_bytes + y * CGImageGetBytesPerRow(t_image), CGImageGetWidth(t_image) * 4);
-		
-		CFRelease(t_data);
-		
-		CGImageRelease(t_image);
-		
-		r_bitmap = t_bitmap;
-	}
-	else
-		r_bitmap = nil;
+	MCMacPlatformCGImageToMCImageBitmap(t_image, r_bitmap);
+	CGImageRelease(t_image);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
