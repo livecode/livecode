@@ -332,7 +332,8 @@ public:
 	MCRectangle view_getstackvisiblerect(void);
 
 	// Return the visible stack region constrained by the fullscreen settings
-	MCRectangle view_constrainstackviewport(const MCRectangle &p_viewport);
+	// IM-2014-02-13: [[ StackScale ]] Update to work with MCGRectangles
+	MCGRectangle view_constrainstackviewport(const MCGRectangle &p_viewport);
 	
 	// IM-2014-01-16: [[ StackScale ]] Ensure the view rect & transform are in sync with the configured view properties
 	// (stack viewport, fullscreen mode, fullscreen, scale factor)
@@ -470,7 +471,8 @@ public:
 	// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within min/max width & height
 	MCRectangle constrainstackrect(const MCRectangle &p_rect);
 	// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within screen bounds
-	MCRectangle constrainstackrecttoscreen(const MCRectangle &p_rect);
+	// IM-2014-02-13: [[ StackScale ]] Update to work with MCGRectangles. Rename to reflect use of view coordinates.
+	MCGRectangle view_constrainrecttoscreen(const MCGRectangle &p_rect);
 	
     // IM-2012-05-15: [[ Effective Rect ]] get the rect of the window (including decorations)
     MCRectangle getwindowrect() const;

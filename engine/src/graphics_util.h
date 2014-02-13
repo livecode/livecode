@@ -73,6 +73,17 @@ inline MCRectangle MCGRectangleGetIntegerInterior(MCGRectangle p_rect)
 	return t_rect;
 }
 
+inline MCRectangle MCGRectangleGetIntegerRect(const MCGRectangle &p_rect)
+{
+	int32_t t_left, t_right, t_top, t_bottom;
+	t_left = roundf(p_rect.origin.x);
+	t_top = roundf(p_rect.origin.y);
+	t_right = roundf(p_rect.origin.x + p_rect.size.width);
+	t_bottom = roundf(p_rect.origin.y + p_rect.size.height);
+	
+	return MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
+}
+
 static inline MCPoint MCPointMake(int16_t x, int16_t y)
 {
 	MCPoint t_point;
@@ -123,6 +134,21 @@ inline MCPoint MCPointTransform(const MCPoint &p_point, const MCGAffineTransform
 inline MCGFloat MCGAffineTransformGetEffectiveScale(const MCGAffineTransform &p_transform)
 {
 	return MCMax(MCAbs(p_transform.a), MCAbs(p_transform.d));
+}
+
+inline MCGPoint MCGRectangleGetCenter(const MCGRectangle &p_rect)
+{
+	return MCGPointMake(p_rect.origin.x + p_rect.size.width / 2.0, p_rect.origin.y + p_rect.size.height / 2.0);
+}
+
+inline MCGRectangle MCGRectangleCenterOnPoint(const MCGRectangle &p_rect, const MCGPoint &p_point)
+{
+	return MCGRectangleMake(p_point.x - p_rect.size.width / 2.0, p_point.y - p_rect.size.height / 2.0, p_rect.size.width, p_rect.size.height);
+}
+
+inline MCGRectangle MCGRectangleCenterOnRect(const MCGRectangle &p_rect_a, const MCGRectangle &p_rect_b)
+{
+	return MCGRectangleCenterOnPoint(p_rect_a, MCGRectangleGetCenter(p_rect_b));
 }
 
 #if defined(TARGET_SUBPLATFORM_ANDROID)

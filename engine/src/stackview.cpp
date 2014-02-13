@@ -252,47 +252,48 @@ MCGFloat MCStack::view_get_content_scale(void) const
 
 //////////
 
-MCRectangle MCStack::view_constrainstackviewport(const MCRectangle &p_rect)
+// IM-2014-02-13: [[ StackScale ]] Update to work with MCGRectangles
+MCGRectangle MCStack::view_constrainstackviewport(const MCGRectangle &p_rect)
 {
 	// IM-2014-01-16: [[ StackScale ]] stack rect now constrained to min/max size elsewhere
-	MCRectangle t_stackrect;
+	MCGRectangle t_stackrect;
 	t_stackrect = p_rect;
 	
 	// MW-2012-10-04: [[ Bug 10436 ]] Make sure we constrain stack size to screen size
 	//   if in fullscreen mode.
-	MCRectangle t_new_rect;
+	MCGRectangle t_new_rect;
 	if (view_getfullscreen())
 	{
 		const MCDisplay *t_display;
-		t_display = MCscreen -> getnearestdisplay(t_stackrect);
-
+		t_display = MCscreen -> getnearestdisplay(MCGRectangleGetIntegerInterior(t_stackrect));
+		
 		switch (m_view_fullscreenmode)
 		{
-		case kMCStackFullscreenResize:
-			// resize stack to fullscreen rect
-			t_new_rect = MCscreen->fullscreenrect(t_display);
-			break;
-
-		case kMCStackFullscreenNoScale:
-			// center rect on screen
-			t_new_rect = MCU_center_rect(MCscreen->fullscreenrect(t_display), t_stackrect);
-			break;
-
-		case kMCStackFullscreenExactFit:
-		case kMCStackFullscreenLetterbox:
-		case kMCStackFullscreenNoBorder:
-		case kMCStackFullscreenShowAll:
-			// scaling modes should return the requested stack rect
-			t_new_rect = t_stackrect;
-			break;
-
-		default:
-			MCAssert(false);
+			case kMCStackFullscreenResize:
+				// resize stack to fullscreen rect
+				t_new_rect = MCRectangleToMCGRectangle(MCscreen->fullscreenrect(t_display));
+				break;
+				
+			case kMCStackFullscreenNoScale:
+				// center rect on screen
+				t_new_rect = MCGRectangleCenterOnRect(t_stackrect, MCRectangleToMCGRectangle(MCscreen->fullscreenrect(t_display)));
+				break;
+				
+			case kMCStackFullscreenExactFit:
+			case kMCStackFullscreenLetterbox:
+			case kMCStackFullscreenNoBorder:
+			case kMCStackFullscreenShowAll:
+				// scaling modes should return the requested stack rect
+				t_new_rect = t_stackrect;
+				break;
+				
+			default:
+				MCAssert(false);
 		}
 	}
 	else
-		t_new_rect = constrainstackrecttoscreen(t_stackrect);
-
+		t_new_rect = view_constrainrecttoscreen(t_stackrect);
+	
 	return t_new_rect;
 }
 
@@ -410,7 +411,11 @@ void MCStack::view_calculate_viewports(const MCRectangle &p_stack_rect, MCRectan
 	t_stack_rect = constrainstackrect(p_stack_rect);
 	
 	// IM-2014-01-16: [[ StackScale ]] transform stack rect using scale factor
-	t_stack_rect = MCRectangleGetTransformedInterior(t_stack_rect, t_transform);
+	// IM-2014-02-13: [[ StackScale ]] Use MCGRectangle to avoid resizing due to rounding errors
+	MCGRectangle t_scaled_rect;
+	t_scaled_rect = MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(t_stack_rect), t_transform);
+
+	t_scaled_rect = view_constrainstackviewport(t_scaled_rect);
 	
 	MCStackFullscreenMode t_mode;
 	
@@ -419,7 +424,7 @@ void MCStack::view_calculate_viewports(const MCRectangle &p_stack_rect, MCRectan
 		t_mode = m_view_fullscreenmode;
 		
 		const MCDisplay *t_display;
-		t_display = MCscreen -> getnearestdisplay(t_stack_rect);
+		t_display = MCscreen -> getnearestdisplay(MCGRectangleGetIntegerInterior(t_scaled_rect));
 
 		t_view_rect = MCscreen->fullscreenrect(t_display);
 		// IM-2013-12-19: [[ Bug 11590 ]] Removed adjustment of screen rect to 0,0 origin
@@ -427,15 +432,19 @@ void MCStack::view_calculate_viewports(const MCRectangle &p_stack_rect, MCRectan
 	else
 	{
 		t_mode = kMCStackFullscreenModeNone;
-		t_view_rect = t_stack_rect;
+		t_view_rect = MCGRectangleGetIntegerInterior(t_scaled_rect);
 	}
 	
 	// IM-2014-01-16: [[ StackScale ]] store adjusted rect in stack coords
-	r_adjusted_stack_rect = MCRectangleGetTransformedBounds(view_constrainstackviewport(t_stack_rect), MCGAffineTransformInvert(t_transform));
+	MCGRectangle t_adjusted;
+	t_adjusted = MCGRectangleApplyAffineTransform(t_scaled_rect, MCGAffineTransformInvert(t_transform));
+	
+	r_adjusted_stack_rect = MCGRectangleGetIntegerRect(t_adjusted);
+	
 	r_view_rect = t_view_rect;
 	
 	// IM-2014-01-16: [[ StackScale ]] append scale transform to fullscreenmode transform
-	r_transform = MCGAffineTransformConcat(view_get_stack_transform(t_mode, t_stack_rect, t_view_rect), t_transform);
+	r_transform = MCGAffineTransformConcat(view_get_stack_transform(t_mode, MCGRectangleGetIntegerBounds(t_scaled_rect), t_view_rect), t_transform);
 }
 	
 void MCStack::view_update_transform(void)
@@ -483,6 +492,10 @@ void MCStack::view_configure(bool p_user)
 	
 	if (!MCU_equal_rect(t_view_rect, m_view_rect))
 	{
+		// IM-2014-02-13: [[ StackScale ]] Test if the view size has changed
+		bool t_resize;
+		t_resize = t_view_rect.width != m_view_rect.width || t_view_rect.height != m_view_rect.height;
+		
 		m_view_rect = t_view_rect;
 		view_on_rect_changed();
 		
@@ -493,8 +506,21 @@ void MCStack::view_configure(bool p_user)
 		}
 		else
 		{
+			uint32_t t_current_width, t_current_height;
+			t_current_width = m_view_adjusted_stack_rect.width;
+			t_current_height = m_view_adjusted_stack_rect.height;
+			
 			// IM-2014-01-16: [[ StackScale ]] set the stack rects to the scaled down view rect
 			m_view_requested_stack_rect = m_view_adjusted_stack_rect = MCRectangleGetTransformedBounds(m_view_rect, MCGAffineTransformInvert(m_view_transform));
+			
+			// IM-2014-02-13: [[ StackScale ]] If the view size has not changed then make sure
+			//   the stack size also remains the same
+			if (!t_resize)
+			{
+				//restore current logical width & height
+				m_view_requested_stack_rect.width = m_view_adjusted_stack_rect.width = t_current_width;
+				m_view_requested_stack_rect.height = m_view_adjusted_stack_rect.height = t_current_height;
+			}
 			
 			// IM-2014-02-06: [[ ShowAll ]] Update the visible stack rect
 			m_view_stack_visible_rect = MCRectangleMake(0, 0, m_view_adjusted_stack_rect.width, m_view_adjusted_stack_rect.height);
