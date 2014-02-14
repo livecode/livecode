@@ -190,6 +190,13 @@ static bool s_lock_responder_change = false;
 
 /////////
 
+- (MCMacPlatformWindow *)platformWindow
+{
+	return [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+}
+
+/////////
+
 - (void)updateTrackingAreas
 {
 	[super updateTrackingAreas];
@@ -265,11 +272,19 @@ static bool s_lock_responder_change = false;
 
 - (void)mouseDown: (NSEvent *)event
 {
+	if ([self useTextInput])
+		if ([[self inputContext] handleEvent: event])
+			return;
+	
 	[self handleMousePress: event isDown: YES];
 }
 
 - (void)mouseUp: (NSEvent *)event
 {
+	if ([self useTextInput])
+		if ([[self inputContext] handleEvent: event])
+			return;
+	
 	[self handleMousePress: event isDown: NO];
 }
 
@@ -280,6 +295,10 @@ static bool s_lock_responder_change = false;
 
 - (void)mouseDragged: (NSEvent *)event
 {
+	if ([self useTextInput])
+		if ([[self inputContext] handleEvent: event])
+			return;
+	
 	[self handleMouseMove: event];
 }
 
@@ -432,12 +451,334 @@ static bool s_lock_responder_change = false;
 
 - (void)keyDown: (NSEvent *)event
 {
+	if ([self useTextInput])
+		if ([[self inputContext] handleEvent: event])
+			return;
 	[self handleKeyPress: event isDown: YES];
 }
 
 - (void)keyUp: (NSEvent *)event
 {
+	if ([self useTextInput])
+	{
+		//if ([[self inputContext] handleEvent: event])
+		return;
+	}
 	[self handleKeyPress: event isDown: NO];
+}
+
+//////////
+
+- (BOOL)useTextInput
+{
+	return [(MCWindowDelegate *)[[self window] delegate] platformWindow] -> IsTextInputActive();
+}
+
+- (void)insertText:(id)aString replacementRange:(NSRange)replacementRange
+{
+	NSLog(@"insertText('%@', (%d, %d))", aString, replacementRange . location, replacementRange . length);
+	
+	// It seems that if replacementRange is NSNotFound then we should
+	// take the marked range if any, otherwise take the selected range.
+	if (replacementRange . location == NSNotFound)
+	{
+		MCRange t_marked_range, t_selected_range;
+		MCPlatformCallbackSendTextInputQueryTextRanges([self platformWindow], t_marked_range, t_selected_range);
+		if (t_marked_range . offset != UINDEX_MAX)
+			replacementRange = NSMakeRange(t_marked_range . offset, t_marked_range . length);
+		else
+			replacementRange = NSMakeRange(t_selected_range . offset, t_selected_range . length);
+	}
+	
+	NSString *t_string;
+	if ([aString isKindOfClass: [NSAttributedString class]])
+		t_string = [aString string];
+	else
+		t_string = aString;
+	
+	NSUInteger t_length;
+	t_length = [t_string length];
+	
+	unichar_t *t_chars;
+	t_chars = new unichar_t[t_length];
+	
+	[t_string getCharacters: t_chars range: NSMakeRange(0, t_length)];
+	
+	// Insert the text replacing the given range and setting the selection after
+	// it... (It isn't clear what should - if anything - be selected after insert!).
+	MCPlatformCallbackSendTextInputInsertText([self platformWindow],
+											  t_chars, t_length,
+											  MCRangeMake(replacementRange . location, replacementRange . length),
+											  MCRangeMake(replacementRange . location + t_length, 0),
+											  false);
+	
+	delete t_chars;
+	
+	// It appears that 'insert' is a commit operation - we've already told the input field to
+	// not mark text, so now we just need to tell the input context.
+	[[self inputContext] discardMarkedText];
+	[[self inputContext] invalidateCharacterCoordinates];
+	
+	/*if (replacementRange . location == NSNotFound)
+	{
+		NSRange t_marked_range;
+		t_marked_range = [self markedRange];
+		if (t_marked_range . location != NSNotFound)
+			replacementRange = t_marked_range;
+		else
+			replacementRange = [self selectedRange];
+	}
+	
+	int32_t si, ei;
+	si = 0;
+	ei = INT32_MAX;
+	MCactivefield -> resolvechars(0, si, ei, replacementRange . location, replacementRange . length);
+	
+	NSString *t_string;
+	if ([aString isKindOfClass: [NSAttributedString class]])
+		t_string = [aString string];
+	else
+		t_string = aString;
+	
+	NSUInteger t_length;
+	t_length = [t_string length];
+	
+	unichar *t_chars;
+	t_chars = new unichar[t_length];
+	
+	[t_string getCharacters: t_chars range: NSMakeRange(0, t_length)];
+	
+	MCactivefield -> settextindex(0,
+								  si,
+								  ei,
+								  MCString((char *)t_chars, t_length * 2),
+								  True,
+								  true);
+    
+	delete t_chars;
+	
+	[self unmarkText];
+	[[self inputContext] invalidateCharacterCoordinates];*/
+}
+
+- (void)doCommandBySelector:(SEL)aSelector
+{
+	MCLog("doCommandBySelector:", 0);
+	MCPlatformTextInputAction t_action;
+	if (MCMacMapSelectorToTextInputAction(aSelector, t_action))
+	{
+		MCPlatformCallbackSendTextInputAction([self platformWindow], t_action);
+		return;
+	}
+	
+	[super doCommandBySelector: aSelector];	
+}
+
+- (void)setMarkedText:(id)aString selectedRange:(NSRange)newSelection replacementRange:(NSRange)replacementRange
+{
+	NSLog(@"setMarkedText('%@', (%d, %d), (%d, %d)", aString, newSelection . location, newSelection . length, replacementRange . location, replacementRange . length);
+	
+	// It seems that if replacementRange is NSNotFound then we should
+	// take the marked range if any, otherwise take the selected range.
+	if (replacementRange . location == NSNotFound)
+	{
+		MCRange t_marked_range, t_selected_range;
+		MCPlatformCallbackSendTextInputQueryTextRanges([self platformWindow], t_marked_range, t_selected_range);
+		if (t_marked_range . offset != UINDEX_MAX)
+			replacementRange = NSMakeRange(t_marked_range . offset, t_marked_range . length);
+		else
+			replacementRange = NSMakeRange(t_selected_range . offset, t_selected_range . length);
+	}
+	
+	NSString *t_string;
+	if ([aString isKindOfClass: [NSAttributedString class]])
+		t_string = [aString string];
+	else
+		t_string = aString;
+	
+	NSUInteger t_length;
+	t_length = [t_string length];
+	
+	unichar_t *t_chars;
+	t_chars = new unichar_t[t_length];
+	
+	[t_string getCharacters: t_chars range: NSMakeRange(0, t_length)];
+
+	MCPlatformCallbackSendTextInputInsertText([self platformWindow],
+											  t_chars, t_length,
+											  MCRangeMake(replacementRange . location, replacementRange . length),
+											  MCRangeMake(replacementRange . location + newSelection . location, newSelection . length),
+											  true);
+
+	delete t_chars;
+	
+	// If the operation had a zero length string, it means remove markedText
+	// (it seems!).
+	if (t_length == 0)
+		[[self inputContext] discardMarkedText];
+	
+	// We've inserted something, so tell the context to invalidate its caches.
+	[[self inputContext] invalidateCharacterCoordinates];
+	
+	/*if (replacementRange . location == NSNotFound)
+	 {
+	 NSRange t_marked_range;
+	 t_marked_range = [self markedRange];
+	 if (t_marked_range . location != NSNotFound)
+	 replacementRange = t_marked_range;
+	 else
+	 replacementRange = [self selectedRange];
+	 }
+	 
+	 int32_t si, ei;
+	 si = ei = 0;
+	 MCactivefield -> resolvechars(0, si, ei, replacementRange . location, replacementRange . length);
+	 
+	 NSString *t_string;
+	 if ([aString isKindOfClass: [NSAttributedString class]])
+	 t_string = [aString string];
+	 else
+	 t_string = aString;
+	 
+	 NSUInteger t_length;
+	 t_length = [t_string length];
+	 
+	 unichar *t_chars;
+	 t_chars = new unichar[t_length];
+	 
+	 [t_string getCharacters: t_chars range: NSMakeRange(0, t_length)];
+	 
+	 MCactivefield -> stopcomposition(True, False);
+	 
+	 if ([t_string length] == 0)
+	 [self unmarkText];
+	 else
+	 {
+	 MCactivefield -> startcomposition();
+	 MCactivefield -> finsertnew(FT_IMEINSERT, MCString((char *)t_chars, t_length * 2), 0, true);
+	 }
+	 
+	 MCactivefield -> seltext(replacementRange . location + newSelection . location,
+	 replacementRange . location + newSelection . location + newSelection . length,
+	 False);
+	 
+	 [[self inputContext] invalidateCharacterCoordinates];*/
+}
+
+- (void)unmarkText
+{
+	MCLog("unmarkText", 0);
+	
+	// This is the 'commit' operation, any marked text currently in the buffer should be accepted.
+	// We do this by inserting an empty string, leaving the current selection untouched.
+	
+	MCRange t_marked_range, t_selected_range;
+	MCPlatformCallbackSendTextInputQueryTextRanges([self platformWindow], t_marked_range, t_selected_range);
+	
+	MCPlatformCallbackSendTextInputInsertText([self platformWindow], nil, 0, MCRangeMake(0, 0), t_selected_range, false);
+	
+	[[self inputContext] discardMarkedText];
+	
+/*	MCactivefield -> stopcomposition(False, False);
+	[[self inputContext] discardMarkedText];*/
+}
+
+- (NSRange)selectedRange
+{
+	MCRange t_marked_range, t_selected_range;
+	MCPlatformCallbackSendTextInputQueryTextRanges([self platformWindow], t_marked_range, t_selected_range);
+	MCLog("selectedRange() = (%d, %d)", t_selected_range . offset, t_selected_range . length);
+	return NSMakeRange(t_selected_range . offset, t_selected_range . length);
+	
+/*	if (MCactivefield == nil)
+		return NSMakeRange(NSNotFound, 0);
+	
+	int4 si, ei;
+	MCactivefield -> selectedmark(False, si, ei, False, False);
+	MCLog("selectedRange() = (%d, %d)", si, ei - si);
+ //	return NSMakeRange(si, ei - si);*/
+}
+
+- (NSRange)markedRange
+{
+	MCRange t_marked_range, t_selected_range;
+	MCPlatformCallbackSendTextInputQueryTextRanges([self platformWindow], t_marked_range, t_selected_range);
+	MCLog("markedRange() = (%d, %d)", t_marked_range . offset, t_marked_range . length);
+	return NSMakeRange(t_marked_range . offset, t_marked_range . length);
+}
+
+- (BOOL)hasMarkedText
+{
+	MCRange t_marked_range, t_selected_range;
+	MCPlatformCallbackSendTextInputQueryTextRanges([self platformWindow], t_marked_range, t_selected_range);
+	MCLog("hasMarkedText() = %d", t_marked_range . offset != UINDEX_MAX);
+	return t_marked_range . offset != UINDEX_MAX;
+}
+
+- (NSAttributedString *)attributedSubstringForProposedRange:(NSRange)aRange actualRange:(NSRangePointer)actualRange
+{
+	unichar_t *t_chars;
+	uindex_t t_char_count;
+	MCRange t_actual_range;
+	MCPlatformCallbackSendTextInputQueryText([self platformWindow],
+											 MCRangeMake(aRange . location, aRange . length),
+											 t_chars, t_char_count,
+											 t_actual_range);
+	
+	NSString *t_string;
+	NSAttributedString *t_attr_string;
+	t_string = [[NSString alloc] initWithCharacters: t_chars length: t_char_count];
+	t_attr_string = [[[NSAttributedString alloc] initWithString: t_string] autorelease];
+	[t_string release];
+	
+	if (actualRange != nil)
+		*actualRange = NSMakeRange(t_actual_range . offset, t_actual_range . length);
+	
+	NSLog(@"attributedSubstringForProposedRange(%d, %d -> %d, %d) = '%@'", aRange . location, aRange . length, t_actual_range . offset, t_actual_range . length, t_attr_string);
+	return t_attr_string;
+}
+
+- (NSArray*)validAttributesForMarkedText
+{
+	MCLog("validAttributesForMarkedText() = []", nil);
+	return [NSArray array];
+}
+
+- (NSRect)firstRectForCharacterRange:(NSRange)aRange actualRange:(NSRangePointer)actualRange
+{
+	MCRange t_actual_range;
+	MCRectangle t_rect;
+	MCPlatformCallbackSendTextInputQueryTextRect([self platformWindow],
+												 MCRangeMake(aRange . location, aRange . length),
+												 t_rect,
+												 t_actual_range);
+	
+	NSRect t_ns_rect;
+	t_ns_rect = [self mapMCRectangleToNSRect: t_rect];
+	
+	if (actualRange != nil)
+		*actualRange = NSMakeRange(t_actual_range . offset, t_actual_range . length);
+	
+	MCLog("firstRectForCharacterRange(%d, %d -> %d, %d) = [%d, %d, %d, %d]", aRange . location, aRange . length, t_actual_range . offset, t_actual_range . length, t_rect . x, t_rect . y, t_rect . width, t_rect . height);
+	
+	t_ns_rect . origin = [[self window] convertBaseToScreen: t_ns_rect . origin];
+	
+	return t_ns_rect;
+}
+
+- (NSUInteger)characterIndexForPoint:(NSPoint)aPoint
+{
+	aPoint = [[self window] convertScreenToBase: aPoint];
+	
+	MCPoint t_location;
+	t_location = [self mapNSPointToMCPoint: aPoint];
+	
+	uindex_t t_index;
+	MCPlatformCallbackSendTextInputQueryTextIndex([self platformWindow], t_location, t_index);
+	
+	MCLog("characterIndexForPoint(%d, %d) = %d", t_location . x, t_location . y, t_index);
+	
+	return t_index;
 }
 
 //////////
@@ -476,6 +817,22 @@ static bool s_lock_responder_change = false;
 {
 	[self handleAction: @selector(delete:) with: sender];
 }
+
+//////////
+
+#if 0
+- (void)capitalizeWord:(id)sender;
+- (void)changeCaseOfLetter:(id)sender;
+- (void)deleteBackward:(id)sender;
+- (void)deleteBackwardByDecomposingPreviousCharacter:(id)sender;
+- (void)deleteForward:(id)sender;
+- (void)deleteToBeginningOfLine:(id)sender;
+- (void)deleteToBeginningOfParagraph:(id)sender;
+- (void)deleteToEndOfLine:(id)sender;
+- (void)delete
+#endif
+
+//////////
 
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem
 {
@@ -781,7 +1138,7 @@ static bool s_lock_responder_change = false;
 }
 
 //////////
-
+				  
 - (MCRectangle)mapNSRectToMCRectangle: (NSRect)r
 {
 	return MCRectangleMake(r . origin . x, [self bounds] . size . height - (r . origin . y + r . size . height), r . size . width, r . size . height);
@@ -790,6 +1147,16 @@ static bool s_lock_responder_change = false;
 - (NSRect)mapMCRectangleToNSRect: (MCRectangle)r
 {
 	return NSMakeRect(r . x, [self bounds] . size . height - (r . y + r . height), r . width, r . height);
+}
+
+- (MCPoint)mapNSPointToMCPoint: (NSPoint)p
+{
+	return MCPointMake(p . x, [self bounds] . size . height - p . y);
+}
+
+- (NSPoint)mapMCPointToNSPoint: (MCPoint)p
+{
+	return NSMakePoint(p . x, [self bounds] . size . height - p . y);
 }
 
 @end
@@ -1209,6 +1576,15 @@ void MCMacPlatformWindow::DoUniconify(void)
 	[m_window_handle deminiaturize: nil];
 }
 
+void MCMacPlatformWindow::DoConfigureTextInput(void)
+{
+}
+
+void MCMacPlatformWindow::DoResetTextInput(void)
+{
+	[[GetView() inputContext] discardMarkedText];
+}
+
 void MCMacPlatformWindow::DoMapContentRectToFrameRect(MCRectangle p_content, MCRectangle& r_frame)
 {
 	// This method must work for the potentially unapplied property changes
@@ -1569,6 +1945,104 @@ bool MCMacMapCodepointToNSString(codepoint_t p_codepoint, NSString*& r_string)
 	t_chars[1] = (p_codepoint & 0x3ff) + 0xDC00;
 	r_string = [[NSString alloc] initWithCharacters: t_chars length: 2];
 	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static struct { SEL selector; MCPlatformTextInputAction action; } s_mac_input_action_map[] =
+{
+	{ @selector(capitalizeWord:), kMCPlatformTextInputActionCapitalizeWord },
+	{ @selector(changeCaseOfLetter:), kMCPlatformTextInputActionChangeCaseOfLetter },
+	{ @selector(deleteBackward:), kMCPlatformTextInputActionDeleteBackward },
+	{ @selector(deleteBackwardByDecomposingPreviousCharacter:), kMCPlatformTextInputActionDeleteBackwardByDecomposingPreviousCharacter },
+	{ @selector(deleteForward:), kMCPlatformTextInputActionDeleteForward },
+	{ @selector(deleteToBeginningOfLine:), kMCPlatformTextInputActionDeleteToBeginningOfLine },
+	{ @selector(deleteToBeginningOfParagraph:), kMCPlatformTextInputActionDeleteToBeginningOfParagraph },
+	{ @selector(deleteToEndOfLine:), kMCPlatformTextInputActionDeleteToEndOfLine },
+	{ @selector(deleteToEndOfParagraph:), kMCPlatformTextInputActionDeleteToEndOfParagraph },
+	{ @selector(deleteWordBackward:), kMCPlatformTextInputActionDeleteWordBackward },
+	{ @selector(deleteWordForward:), kMCPlatformTextInputActionDeleteWordForward },
+	{ @selector(insertBacktab:), kMCPlatformTextInputActionInsertBacktab },
+	{ @selector(insertContainerBreak:), kMCPlatformTextInputActionInsertContainerBreak },
+	{ @selector(insertLineBreak:), kMCPlatformTextInputActionInsertLineBreak },
+	{ @selector(insertNewline:), kMCPlatformTextInputActionInsertNewline },
+	{ @selector(insertParagraphSeparator:), kMCPlatformTextInputActionInsertParagraphSeparator },
+	{ @selector(insertTab:), kMCPlatformTextInputActionInsertTab },
+	{ @selector(lowercaseWord:), kMCPlatformTextInputActionLowercaseWord },
+	{ @selector(moveBackward:), kMCPlatformTextInputActionMoveBackward },
+	{ @selector(moveBackwardAndModifySelection:), kMCPlatformTextInputActionMoveBackwardAndModifySelection },
+	{ @selector(moveParagraphForwardAndModifySelection:), kMCPlatformTextInputActionMoveParagraphForwardAndModifySelection },
+	{ @selector(moveParagraphBackwardAndModifySelection:), kMCPlatformTextInputActionMoveParagraphBackwardAndModifySelection },
+	{ @selector(moveToBeginningOfDocumentAndModfySelection:), kMCPlatformTextInputActionMoveToBeginningOfDocumentAndModfySelection },
+	{ @selector(moveToEndOfDocumentAndModfySelection:), kMCPlatformTextInputActionMoveToEndOfDocumentAndModfySelection },
+	{ @selector(moveToBeginningOfLineAndModfySelection:), kMCPlatformTextInputActionMoveToBeginningOfLineAndModfySelection },
+	{ @selector(moveToEndOfLineAndModfySelection:), kMCPlatformTextInputActionMoveToEndOfLineAndModfySelection },
+	{ @selector(moveToBeginningOfParagraphAndModfySelection:), kMCPlatformTextInputActionMoveToBeginningOfParagraphAndModfySelection },
+	{ @selector(moveToEndOfParagraphAndModfySelection:), kMCPlatformTextInputActionMoveToEndOfParagraphAndModfySelection },
+	{ @selector(moveToLeftEndOfLine:), kMCPlatformTextInputActionMoveToLeftEndOfLine },
+	{ @selector(moveToLeftEndOfLineAndModfySelection:), kMCPlatformTextInputActionMoveToLeftEndOfLineAndModfySelection },
+	{ @selector(moveToRightEndOfLine:), kMCPlatformTextInputActionMoveToRightEndOfLine },
+	{ @selector(moveToRightEndOfLineAndModfySelection:), kMCPlatformTextInputActionMoveToRightEndOfLineAndModfySelection },
+	{ @selector(moveDown:), kMCPlatformTextInputActionMoveDown },
+	{ @selector(moveDownAndModifySelection:), kMCPlatformTextInputActionMoveDownAndModifySelection },
+	{ @selector(moveForward:), kMCPlatformTextInputActionMoveForward },
+	{ @selector(moveForwardAndModifySelection:), kMCPlatformTextInputActionMoveForwardAndModifySelection },
+	{ @selector(moveLeft:), kMCPlatformTextInputActionMoveLeft },
+	{ @selector(moveLeftAndModifySelection:), kMCPlatformTextInputActionMoveLeftAndModifySelection },
+	{ @selector(moveRight:), kMCPlatformTextInputActionMoveRight },
+	{ @selector(moveRightAndModifySelection:), kMCPlatformTextInputActionMoveRightAndModifySelection },
+	{ @selector(moveToBeginningOfDocument:), kMCPlatformTextInputActionMoveToBeginningOfDocument },
+	{ @selector(moveToBeginningOfLine:), kMCPlatformTextInputActionMoveToBeginningOfLine },
+	{ @selector(moveToBeginningOfParagraph:), kMCPlatformTextInputActionMoveToBeginningOfParagraph },
+	{ @selector(moveToEndOfDocument:), kMCPlatformTextInputActionMoveToEndOfDocument },
+	{ @selector(moveToEndOfLine:), kMCPlatformTextInputActionMoveToEndOfLine },
+	{ @selector(moveToEndOfParagraph:), kMCPlatformTextInputActionMoveToEndOfParagraph },
+	{ @selector(moveUp:), kMCPlatformTextInputActionMoveUp },
+	{ @selector(moveUpAndModifySelection:), kMCPlatformTextInputActionMoveUpAndModifySelection },
+	{ @selector(moveWordBackward:), kMCPlatformTextInputActionMoveWordBackward },
+	{ @selector(moveWordBackwardAndModifySelection:), kMCPlatformTextInputActionMoveWordBackwardAndModifySelection },
+	{ @selector(moveWordForward:), kMCPlatformTextInputActionMoveWordForward },
+	{ @selector(moveWordForwardAndModifySelection:), kMCPlatformTextInputActionMoveWordForwardAndModifySelection },
+	{ @selector(moveWordLeft:), kMCPlatformTextInputActionMoveWordLeft },
+	{ @selector(moveWordLeftAndModifySelection:), kMCPlatformTextInputActionMoveWordLeftAndModifySelection },
+	{ @selector(moveWordRight:), kMCPlatformTextInputActionMoveWordRight },
+	{ @selector(moveWordRightAndModifySelection:), kMCPlatformTextInputActionMoveWordRightAndModifySelection },
+	{ @selector(pageUp:), kMCPlatformTextInputActionPageUp },
+	{ @selector(pageUpAndModifySelection:), kMCPlatformTextInputActionPageUpAndModifySelection },
+	{ @selector(pageDown:), kMCPlatformTextInputActionPageDown },
+	{ @selector(pageDownAndModifySelection:), kMCPlatformTextInputActionPageDownAndModifySelection },
+	{ @selector(scrollToBeginningOfDocument:), kMCPlatformTextInputActionScrollToBeginningOfDocument },
+	{ @selector(scrollToEndOfDocument:), kMCPlatformTextInputActionScrollToEndOfDocument },
+	{ @selector(scrollLineUp:), kMCPlatformTextInputActionScrollLineUp },
+	{ @selector(scrollLineDown:), kMCPlatformTextInputActionScrollLineDown },
+	{ @selector(scrollPageUp:), kMCPlatformTextInputActionScrollPageUp },
+	{ @selector(scrollPageDown:), kMCPlatformTextInputActionScrollPageDown },
+	{ @selector(selectAll:), kMCPlatformTextInputActionSelectAll },
+	{ @selector(selectLine:), kMCPlatformTextInputActionSelectLine },
+	{ @selector(selectParagraph:), kMCPlatformTextInputActionSelectParagraph },
+	{ @selector(selectWord:), kMCPlatformTextInputActionSelectWord },
+	{ @selector(transpose:), kMCPlatformTextInputActionTranspose },
+	{ @selector(transposeWords:), kMCPlatformTextInputActionTransposeWords },
+	{ @selector(uppercaseWord:), kMCPlatformTextInputActionUppercaseWord },
+	{ @selector(yank:), kMCPlatformTextInputActionYank },
+	{ @selector(cut:), kMCPlatformTextInputActionCut },
+	{ @selector(copy:), kMCPlatformTextInputActionCopy },
+	{ @selector(paste:), kMCPlatformTextInputActionPaste },
+	{ @selector(undo:), kMCPlatformTextInputActionUndo },
+	{ @selector(redo:), kMCPlatformTextInputActionRedo },
+	{ @selector(delete:), kMCPlatformTextInputActionDelete },
+};
+
+bool MCMacMapSelectorToTextInputAction(SEL p_selector, MCPlatformTextInputAction& r_action)
+{
+	for(uindex_t i = 0; i < sizeof(s_mac_input_action_map) / sizeof(s_mac_input_action_map[0]); i++)
+		if (p_selector == s_mac_input_action_map[i] . selector)
+		{
+			r_action = s_mac_input_action_map[i] . action;
+			return true;
+		}
+	
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

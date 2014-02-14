@@ -583,6 +583,20 @@ struct MCFontStruct
 #define BAD_NUMERIC DBL_MAX
 #define MC_EPSILON  (DBL_EPSILON * 10.0)
 
+struct MCRange
+{
+	uindex_t offset;
+	uindex_t length;
+};
+
+inline MCRange MCRangeMake(uindex_t offset, uindex_t length)
+{
+	MCRange r;
+	r . offset = offset;
+	r . length = length;
+	return r;
+}
+
 //////////////////////////////////////////////////////////////////////
 
 #define DoRed                0x1

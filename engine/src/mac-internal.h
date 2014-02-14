@@ -105,9 +105,11 @@ class MCMacPlatformSurface;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface com_runrev_livecode_MCWindowView: NSView
+@interface com_runrev_livecode_MCWindowView: NSView<NSTextInputClient>
 {
 	NSTrackingArea *m_tracking_area;
+	
+	bool m_use_input_method : 1;
 }
 
 - (id)initWithFrame:(NSRect)frameRect;
@@ -146,6 +148,24 @@ class MCMacPlatformSurface;
 
 - (void)keyDown: (NSEvent *)event;
 - (void)keyUp: (NSEvent *)event;
+
+//////////
+
+- (BOOL)useTextInput;
+
+- (void)insertText:(id)aString replacementRange:(NSRange)replacementRange;
+- (void)doCommandBySelector:(SEL)aSelector;
+- (void)setMarkedText:(id)aString selectedRange:(NSRange)newSelection replacementRange:(NSRange)replacementRange;
+- (void)unmarkText;
+- (NSRange)selectedRange;
+- (NSRange)markedRange;
+- (BOOL)hasMarkedText;
+- (NSAttributedString *)attributedSubstringForProposedRange:(NSRange)aRange actualRange:(NSRangePointer)actualRange;
+- (NSArray*)validAttributesForMarkedText;
+- (NSRect)firstRectForCharacterRange:(NSRange)aRange actualRange:(NSRangePointer)actualRange;
+- (NSUInteger)characterIndexForPoint:(NSPoint)aPoint;
+
+//////////
 
 - (void)undo:(id)sender;
 - (void)redo:(id)sender;
@@ -191,6 +211,9 @@ class MCMacPlatformSurface;
 
 - (MCRectangle)mapNSRectToMCRectangle: (NSRect)r;
 - (NSRect)mapMCRectangleToNSRect: (MCRectangle)r;
+
+- (MCPoint)mapNSPointToMCPoint: (NSPoint)r;
+- (NSPoint)mapMCPointToNSPoint: (MCPoint)r;
 
 @end
 
@@ -333,6 +356,9 @@ protected:
 	virtual void DoIconify(void);
 	virtual void DoUniconify(void);
 	
+	virtual void DoConfigureTextInput(void);
+	virtual void DoResetTextInput(void);
+	
 	virtual void DoMapContentRectToFrameRect(MCRectangle content, MCRectangle& r_frame);
 	virtual void DoMapFrameRectToContentRect(MCRectangle frame, MCRectangle& r_content);
 	
@@ -394,6 +420,7 @@ void MCMacPlatformHandleModifiersChanged(MCPlatformModifiers modifiers);
 bool MCMacMapKeyCode(uint32_t mac_key_code, MCPlatformKeyCode& r_key_code);
 bool MCMacMapNSStringToCodepoint(NSString *string, codepoint_t& r_codepoint);
 bool MCMacMapCodepointToNSString(codepoint_t p_codepoint, NSString*& r_string);
+bool MCMacMapSelectorToTextInputAction(SEL p_selector, MCPlatformTextInputAction& r_action);
 
 void MCMacPlatformMapScreenMCPointToNSPoint(MCPoint point, NSPoint& r_point);
 void MCMacPlatformMapScreenNSPointToMCPoint(NSPoint point, MCPoint& r_point);

@@ -209,6 +209,29 @@ void MCPlatformWindow::Uniconify(void)
 	m_is_iconified = false;
 }
 
+bool MCPlatformWindow::IsTextInputActive(void)
+{
+	return m_use_text_input;
+}
+
+void MCPlatformWindow::ConfigureTextInput(bool p_activate)
+{
+	if (p_activate == m_use_text_input)
+		return;
+	
+	m_use_text_input = p_activate;
+	
+	DoConfigureTextInput();
+}
+
+void MCPlatformWindow::ResetTextInput(void)
+{
+	if (!m_use_text_input)
+		return;
+	
+	DoResetTextInput();
+}
+
 bool MCPlatformWindow::IsVisible(void)
 {
 	return m_is_visible;
@@ -532,6 +555,16 @@ void MCPlatformIconifyWindow(MCPlatformWindowRef p_window)
 void MCPlatformUniconifyWindow(MCPlatformWindowRef p_window)
 {
 	p_window -> Uniconify();
+}
+
+void MCPlatformConfigureTextInputInWindow(MCPlatformWindowRef p_window, bool p_activate)
+{
+	p_window -> ConfigureTextInput(p_activate);
+}
+
+void MCPlatformResetTextInputInWindow(MCPlatformWindowRef p_window)
+{
+	p_window -> ResetTextInput();
 }
 
 bool MCPlatformIsWindowVisible(MCPlatformWindowRef p_window)

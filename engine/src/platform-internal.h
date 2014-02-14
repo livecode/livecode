@@ -29,6 +29,14 @@ inline MCRectangle MCRectangleMake(int x, int y, int w, int h)
 	return r;
 }
 
+inline MCPoint MCPointMake(int x, int y)
+{
+	MCPoint p;
+	p . x = x;
+	p . y = y;
+	return p;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCPlatformSurface
@@ -94,6 +102,11 @@ public:
 	// Deminimize / deminiturize the window.
 	void Uniconify(void);
 	
+	// Manage text input sessions
+	void ConfigureTextInput(bool enabled);
+	void ResetTextInput(void);
+	bool IsTextInputActive(void);
+	
 	// Set the given window property.
 	void SetProperty(MCPlatformWindowProperty property, MCPlatformPropertyType type, const void *value);
 	
@@ -139,6 +152,8 @@ public:
 	virtual void DoUpdate(void) = 0;
 	virtual void DoIconify(void) = 0;
 	virtual void DoUniconify(void) = 0;
+	virtual void DoConfigureTextInput(void) = 0;
+	virtual void DoResetTextInput(void) = 0;
 	
 	virtual void DoMapContentRectToFrameRect(MCRectangle content, MCRectangle& r_frame) = 0;
 	virtual void DoMapFrameRectToContentRect(MCRectangle frame, MCRectangle& r_content) = 0;
@@ -188,6 +203,7 @@ protected:
 		bool m_is_visible : 1;
 		bool m_is_focused : 1;
 		bool m_is_iconified : 1;
+		bool m_use_text_input : 1;
 	};
 };
 
@@ -228,17 +244,17 @@ void MCPlatformCallbackSendDragDrop(MCPlatformWindowRef window, bool& r_accepted
 void MCPlatformCallbackSendKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 void MCPlatformCallbackSendKeyUp(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 
+void MCPlatformCallbackSendTextInputQueryTextRanges(MCPlatformWindowRef window, MCRange& r_marked_range, MCRange& r_selected_range);
+void MCPlatformCallbackSendTextInputQueryTextIndex(MCPlatformWindowRef window, MCPoint location, uindex_t& r_index);
+void MCPlatformCallbackSendTextInputQueryTextRect(MCPlatformWindowRef window, MCRange range, MCRectangle& first_line_rect, MCRange& r_actual_range);
+void MCPlatformCallbackSendTextInputQueryText(MCPlatformWindowRef window, MCRange range, unichar_t*& r_chars, uindex_t& r_char_count, MCRange& r_actual_range);
+void MCPlatformCallbackSendTextInputInsertText(MCPlatformWindowRef window, unichar_t *chars, uindex_t char_count, MCRange replace_range, MCRange selection_range, bool mark);
+void MCPlatformCallbackSendTextInputAction(MCPlatformWindowRef window, MCPlatformTextInputAction action);
+
 void MCPlatformCallbackSendMenuUpdate(MCPlatformMenuRef menu);
 void MCPlatformCallbackSendMenuSelect(MCPlatformMenuRef menu, uindex_t item);
 
 void MCPlatformCallbackSendPasteboardResolve(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor flavor, void *handle, void*& r_data, size_t& r_data_size);
-
-#if 0
-void MCPlatformCallbackSendViewFocus(MCPlatformWindowRef window);
-void MCPlatformCallbackSendViewUnfocus(MCPlatformWindowRef window);
-void MCPlatformCallbackSendNativeViewFocus(MCPlatformWindowRef window, uint32_t view_id);
-void MCPlatformCallbackSendNativeViewUnfocus(MCPlatformWindowRef window, uint32_t view_id);
-#endif
 
 void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef window, uint32_t view_id);
 

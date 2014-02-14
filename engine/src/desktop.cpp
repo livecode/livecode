@@ -35,6 +35,9 @@
 #include "debug.h"
 #include "dispatch.h"
 #include "control.h"
+#include "field.h"
+#include "graphics_util.h"
+#include "redraw.h"
 
 #include "desktop-dc.h"
 
@@ -162,54 +165,6 @@ void MCPlatformHandleWindowUnfocus(MCPlatformWindowRef p_window)
 {
 	MCdispatcher -> wkunfocus(p_window);
 }
-
-#if 0
-void MCPlatformHandleViewFocus(MCPlatformWindowRef p_window)
-{
-	MCStack *t_stack;
-	t_stack = MCdispatcher -> findstackd(p_window);
-	if (t_stack == nil)
-		return;
-
-	t_stack -> getcard() -> kfocus();
-}
-
-void MCPlatformHandleViewUnfocus(MCPlatformWindowRef p_window)
-{
-	MCStack *t_stack;
-	t_stack = MCdispatcher -> findstackd(p_window);
-	if (t_stack == nil)
-		return;
-	
-	t_stack -> getcard() -> kunfocus();
-}
-
-void MCPlatformHandleNativeViewFocus(MCPlatformWindowRef p_window, uint32_t p_view_id)
-{
-	MCStack *t_stack;
-	t_stack = MCdispatcher -> findstackd(p_window);
-	if (t_stack == nil)
-		return;
-	
-	MCCard *t_card;
-	t_card = t_stack -> getcard();
-	
-	MCControl *t_control;
-	char t_id[U4L];
-	sprintf(t_id, "%d", p_view_id);
-	t_control = t_stack -> getcard() -> getchild(CT_ID, t_id, CT_LAYER, CT_UNDEFINED);
-	if (t_control != nil)
-		t_stack -> kfocusset(t_control);
-	else
-		t_stack -> getcard() -> kunfocus();
-	
-}
-
-void MCPlatformHandleNativeViewUnfocus(MCPlatformWindowRef p_window, uint32_t p_view_id)
-{
-	MCPlatformHandleViewUnfocus(p_window);
-}
-#endif
 
 void MCPlatformHandleViewFocusSwitched(MCPlatformWindowRef p_window, uint32_t p_view_id)
 {
@@ -577,6 +532,433 @@ void MCPlatformHandleKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key
 	}
 	
 	MCdispatcher -> wkup(p_window, MCnullstring, p_key_code);
+}
+
+void MCPlatformHandleTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRange& r_marked_range, MCRange& r_selected_range)
+{
+	if (MCactivefield == nil)
+	{
+		r_marked_range = MCRangeMake(UINDEX_MAX, 0);
+		r_selected_range = MCRangeMake(UINDEX_MAX, 0);
+		return;
+	}
+	
+	int4 si, ei;
+	MCactivefield -> selectedmark(False, si, ei, False, False);
+	MCactivefield -> unresolvechars(0, si, ei);
+	r_selected_range = MCRangeMake(si, ei - si);
+	if (MCactivefield -> getcompositionrange(si, ei))
+	{
+		MCactivefield -> unresolvechars(0, si, ei);
+		r_marked_range = MCRangeMake(si, ei - si);
+	}
+	else
+		r_marked_range = MCRangeMake(UINDEX_MAX, 0);
+}
+
+void MCPlatformHandleTextInputQueryTextIndex(MCPlatformWindowRef p_window, MCPoint p_location, uindex_t& r_index)
+{
+	if (MCactivefield == nil)
+	{
+		r_index = 0;
+		return;
+	}
+	
+	MCPoint t_location;
+	t_location = MCactivefield -> getstack() -> windowtostackloc(p_location);
+	
+	int32_t si, ei;
+	if (MCactivefield -> locmarkpoint(p_location, False, False, False, False, si, ei))
+		MCactivefield -> unresolvechars(0, si, ei);
+	else
+		si = 0;
+	
+	r_index = si;
+}
+
+void MCPlatformHandleTextInputQueryTextRect(MCPlatformWindowRef p_window, MCRange p_range, MCRectangle& r_first_line_rect, MCRange& r_actual_range)
+{
+	if (MCactivefield == nil)
+	{
+		r_first_line_rect = MCRectangleMake(0, 0, 0, 0);
+		r_actual_range = MCRangeMake(UINDEX_MAX, 0);
+		return;
+	}
+	
+	int32_t t_si, t_ei;
+	t_si = 0;
+	t_ei = INT32_MAX;
+	MCactivefield -> resolvechars(0, t_si, t_ei, p_range . offset, p_range . length);
+	
+	MCRectangle t_rect;
+	t_rect = MCactivefield -> firstRectForCharacterRange(t_si, t_ei);
+	
+	MCactivefield -> unresolvechars(0, t_si, t_ei);
+	
+	MCPoint t_top_left, t_bottom_right;
+	t_top_left = MCactivefield -> getstack() -> stacktowindowloc(MCPointMake(t_rect . x, t_rect . y));
+	t_bottom_right = MCactivefield -> getstack() -> stacktowindowloc(MCPointMake(t_rect . x + t_rect . width, t_rect . y + t_rect . height));
+	
+	r_first_line_rect = MCRectangleMake(t_top_left . x, t_top_left . y, t_bottom_right . x - t_top_left . x, t_bottom_right . y - t_top_left . y);
+	r_actual_range = MCRangeMake(t_si, t_ei - t_si);
+}
+
+void MCPlatformHandleTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_range, unichar_t*& r_chars, uindex_t& r_char_count, MCRange& r_actual_range)
+{
+	r_chars = nil;
+	r_char_count = 0;
+	r_actual_range = p_range;
+}
+
+void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t *p_chars, uindex_t p_char_count, MCRange p_replace_range, MCRange p_selection_range, bool p_mark)
+{
+	if (MCactivefield == nil)
+		return;
+	
+	MCRedrawLockScreen();
+	
+	int32_t t_r_si, t_r_ei;
+	t_r_si = 0;
+	t_r_ei = INT32_MAX;
+	MCactivefield -> resolvechars(0, t_r_si, t_r_ei, p_replace_range . offset, p_replace_range . length);
+	
+	if (!p_mark)
+	{
+		int4 si, ei;
+		if (MCactivefield -> getcompositionrange(si, ei))
+		{
+			if (si < t_r_si)
+				t_r_si -= MCMin(t_r_si - si, ei - si);
+			if (si < t_r_ei)
+				t_r_ei -= MCMin(t_r_ei - si, ei - si);
+			
+			MCactivefield -> stopcomposition(True, False);
+		}
+		
+		// If the char count is 1 and the replacement range matches the current selection,
+		// the char is native and the requested selection is after the char, then synthesis a
+		// keydown/up pair.
+		uint8_t t_char[2];
+		if (p_char_count == 1 &&
+			MCUnicodeMapToNative(p_chars, 1, t_char[0]) &&
+			p_selection_range . offset == p_replace_range . offset + 1 &&
+			p_selection_range . length == 0)
+		{
+			int32_t t_s_si, t_s_ei;
+			MCactivefield -> selectedmark(False, t_s_si, t_s_ei, False, False);
+			if (t_s_si == t_r_si &&
+				t_s_ei == t_r_ei)
+			{
+				t_char[1] = '\0';
+				MCdispatcher -> wkdown(p_window, (const char *)t_char, t_char[0]);
+				MCdispatcher -> wkup(p_window, (const char *)t_char, t_char[0]);
+				return;
+			}
+		}
+	}
+	else
+	{
+		if (p_char_count == 0)
+			MCactivefield -> stopcomposition(True, False);
+		else
+		{
+			int4 si, ei;
+			if (MCactivefield -> getcompositionrange(si, ei))
+			{
+				if (si < t_r_si)
+					t_r_si -= MCMin(t_r_si - si, ei - si);
+				if (si < t_r_ei)
+					t_r_ei -= MCMin(t_r_ei - si, ei - si);
+				
+				MCactivefield -> stopcomposition(True, False);
+			}
+		}
+	}
+	
+	// Set the text.
+	MCactivefield -> seltext(t_r_si, t_r_ei, False);
+	
+	if (p_mark)
+		MCactivefield -> startcomposition();
+	
+	MCactivefield -> finsertnew(FT_IMEINSERT, MCString((char *)p_chars, p_char_count * 2), True, true);
+	
+	// And update the selection range.
+	int32_t t_s_si, t_s_ei;
+	t_s_si = 0;
+	t_s_ei = INT32_MAX;
+	MCactivefield -> resolvechars(0, t_s_si, t_s_ei, p_selection_range . offset, p_selection_range . length);
+	MCactivefield -> setcompositioncursoroffset(t_s_si - t_r_si);
+	MCactivefield -> seltext(t_s_si, t_s_ei, True);
+	
+	MCRedrawUnlockScreen();
+}
+
+static void synthesize_key_press(MCPlatformWindowRef p_window, char p_char)
+{
+	char t_string[2];
+	t_string[0] = p_char;
+	t_string[1] = '\0';
+	MCdispatcher -> wkdown(p_window, t_string, p_char);
+	MCdispatcher -> wkup(p_window, t_string, p_char);
+}
+
+static void synthesize_move_with_shift(MCField *p_field, Field_translations p_action)
+{
+	uint2 t_modifier_state;
+	t_modifier_state = MCmodifierstate;
+	MCmodifierstate = MS_SHIFT;
+	p_field -> fmove(p_action, nil, 0);
+	MCmodifierstate = t_modifier_state;
+}
+
+void MCPlatformHandleTextInputAction(MCPlatformWindowRef p_window, MCPlatformTextInputAction p_action)
+{
+	if (MCactivefield == nil)
+		return;
+	
+	switch(p_action)
+	{
+		case kMCPlatformTextInputActionCapitalizeWord:
+			break;
+		case kMCPlatformTextInputActionChangeCaseOfLetter:
+			break;
+		case kMCPlatformTextInputActionDeleteBackward:
+			if (!MCactivefield -> getflag(F_LOCK_TEXT))
+				MCactivefield -> fdel(FT_DELBCHAR, nil, 0);
+			break;
+		case kMCPlatformTextInputActionDeleteBackwardByDecomposingPreviousCharacter:
+			if (!MCactivefield -> getflag(F_LOCK_TEXT))
+				MCactivefield -> fdel(FT_DELBSUBCHAR, nil, 0);
+			break;
+		case kMCPlatformTextInputActionDeleteForward:
+			if (!MCactivefield -> getflag(F_LOCK_TEXT))
+				MCactivefield -> fdel(FT_DELFCHAR, nil, 0);
+			break;
+		case kMCPlatformTextInputActionDeleteToBeginningOfLine:
+			if (!MCactivefield -> getflag(F_LOCK_TEXT))
+				MCactivefield -> fdel(FT_DELBOL, nil, 0);
+			break;
+		case kMCPlatformTextInputActionDeleteToBeginningOfParagraph:
+			if (!MCactivefield -> getflag(F_LOCK_TEXT))
+				MCactivefield -> fdel(FT_DELBOP, nil, 0);
+			break;
+		case kMCPlatformTextInputActionDeleteToEndOfLine:
+			if (!MCactivefield -> getflag(F_LOCK_TEXT))
+				MCactivefield -> fdel(FT_DELEOL, nil, 0);
+			break;
+		case kMCPlatformTextInputActionDeleteToEndOfParagraph:
+			if (!MCactivefield -> getflag(F_LOCK_TEXT))
+				MCactivefield -> fdel(FT_DELEOP, nil, 0);
+			break;
+		case kMCPlatformTextInputActionDeleteWordBackward:
+			if (!MCactivefield -> getflag(F_LOCK_TEXT))
+				MCactivefield -> fdel(FT_DELBWORD, nil, 0);
+			break;
+		case kMCPlatformTextInputActionDeleteWordForward:
+			if (!MCactivefield -> getflag(F_LOCK_TEXT))
+				MCactivefield -> fdel(FT_DELFWORD, nil, 0);
+			break;
+		case kMCPlatformTextInputActionInsertBacktab:
+			break;
+		case kMCPlatformTextInputActionInsertContainerBreak:
+			break;
+		case kMCPlatformTextInputActionInsertLineBreak:
+			synthesize_key_press(p_window, 11);
+			break;
+		case kMCPlatformTextInputActionInsertNewline:
+			synthesize_key_press(p_window, '\n');
+			break;
+		case kMCPlatformTextInputActionInsertParagraphSeparator:
+			synthesize_key_press(p_window, '\n');
+			break;
+		case kMCPlatformTextInputActionInsertTab:
+			synthesize_key_press(p_window, '\t');
+			break;
+		case kMCPlatformTextInputActionLowercaseWord:
+			break;
+		case kMCPlatformTextInputActionMoveBackward:
+			MCactivefield -> fmove(FT_BACKCHAR, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveBackwardAndModifySelection:
+			synthesize_move_with_shift(MCactivefield, FT_BACKCHAR);
+			break;
+		case kMCPlatformTextInputActionMoveParagraphForwardAndModifySelection:
+			synthesize_move_with_shift(MCactivefield, FT_FORWARDPARA);
+			break;
+		case kMCPlatformTextInputActionMoveParagraphBackwardAndModifySelection:
+			synthesize_move_with_shift(MCactivefield, FT_BACKPARA);
+			break;
+		case kMCPlatformTextInputActionMoveToBeginningOfDocumentAndModfySelection:
+			synthesize_move_with_shift(MCactivefield, FT_BOF);
+			break;
+		case kMCPlatformTextInputActionMoveToEndOfDocumentAndModfySelection:
+			synthesize_move_with_shift(MCactivefield, FT_EOF);
+			break;
+		case kMCPlatformTextInputActionMoveToBeginningOfLineAndModfySelection:
+			synthesize_move_with_shift(MCactivefield, FT_BOL);
+			break;
+		case kMCPlatformTextInputActionMoveToEndOfLineAndModfySelection:
+			synthesize_move_with_shift(MCactivefield, FT_EOL);
+			break;
+		case kMCPlatformTextInputActionMoveToBeginningOfParagraphAndModfySelection:
+			synthesize_move_with_shift(MCactivefield, FT_BOP);
+			break;
+		case kMCPlatformTextInputActionMoveToEndOfParagraphAndModfySelection:
+			synthesize_move_with_shift(MCactivefield, FT_EOP);
+			break;
+		case kMCPlatformTextInputActionMoveToLeftEndOfLine:
+			MCactivefield -> fmove(FT_BOL, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveToLeftEndOfLineAndModfySelection:
+			synthesize_move_with_shift(MCactivefield, FT_BOL);
+			break;
+		case kMCPlatformTextInputActionMoveToRightEndOfLine:
+			MCactivefield -> fmove(FT_EOL, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveToRightEndOfLineAndModfySelection:
+			synthesize_move_with_shift(MCactivefield, FT_EOL);
+			break;
+		case kMCPlatformTextInputActionMoveDown:
+			MCactivefield -> fmove(FT_DOWN, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveDownAndModifySelection:
+			synthesize_move_with_shift(MCactivefield, FT_DOWN);
+			break;
+		case kMCPlatformTextInputActionMoveForward:
+			MCactivefield -> fmove(FT_FORWARDCHAR, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveForwardAndModifySelection:
+			synthesize_move_with_shift(MCactivefield, FT_FORWARDCHAR);
+			break;
+		case kMCPlatformTextInputActionMoveLeft:
+			MCactivefield -> fmove(FT_LEFTCHAR, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveLeftAndModifySelection:
+			synthesize_move_with_shift(MCactivefield, FT_LEFTCHAR);
+			break;
+		case kMCPlatformTextInputActionMoveRight:
+			MCactivefield -> fmove(FT_RIGHTCHAR, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveRightAndModifySelection:
+			synthesize_move_with_shift(MCactivefield, FT_RIGHTCHAR);
+			break;
+		case kMCPlatformTextInputActionMoveToBeginningOfDocument:
+			MCactivefield -> fmove(FT_BOF, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveToBeginningOfLine:
+			MCactivefield -> fmove(FT_BOL, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveToBeginningOfParagraph:
+			MCactivefield -> fmove(FT_BOP, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveToEndOfDocument:
+			MCactivefield -> fmove(FT_EOF, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveToEndOfLine:
+			MCactivefield -> fmove(FT_EOL, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveToEndOfParagraph:
+			MCactivefield -> fmove(FT_EOF, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveUp:
+			MCactivefield -> fmove(FT_UP, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveUpAndModifySelection:
+			synthesize_move_with_shift(MCactivefield, FT_UP);
+			break;
+		case kMCPlatformTextInputActionMoveWordBackward:
+			MCactivefield -> fmove(FT_BACKWORD, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveWordBackwardAndModifySelection:
+			synthesize_move_with_shift(MCactivefield, FT_BACKWORD);
+			break;
+		case kMCPlatformTextInputActionMoveWordForward:
+			MCactivefield -> fmove(FT_FORWARDWORD, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveWordForwardAndModifySelection:
+			synthesize_move_with_shift(MCactivefield, FT_FORWARDWORD);
+			break;
+		case kMCPlatformTextInputActionMoveWordLeft:
+			MCactivefield -> fmove(FT_LEFTWORD, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveWordLeftAndModifySelection:
+			synthesize_move_with_shift(MCactivefield, FT_LEFTWORD);
+			break;
+		case kMCPlatformTextInputActionMoveWordRight:
+			MCactivefield -> fmove(FT_RIGHTWORD, nil, 0);
+			break;
+		case kMCPlatformTextInputActionMoveWordRightAndModifySelection:
+			synthesize_move_with_shift(MCactivefield, FT_RIGHTWORD);
+			break;
+		case kMCPlatformTextInputActionPageUp:
+			MCactivefield -> fmove(FT_PAGEUP, nil, 0);
+			break;
+		case kMCPlatformTextInputActionPageUpAndModifySelection:
+			synthesize_move_with_shift(MCactivefield, FT_PAGEUP);
+			break;
+		case kMCPlatformTextInputActionPageDown:
+			MCactivefield -> fmove(FT_PAGEDOWN, nil, 0);
+			break;
+		case kMCPlatformTextInputActionPageDownAndModifySelection:
+			synthesize_move_with_shift(MCactivefield, FT_PAGEDOWN);
+			break;
+		case kMCPlatformTextInputActionScrollToBeginningOfDocument:
+			MCactivefield -> fscroll(FT_SCROLLTOP, nil, 0);
+			break;
+		case kMCPlatformTextInputActionScrollToEndOfDocument:
+			MCactivefield -> fscroll(FT_SCROLLBOTTOM, nil, 0);
+			break;
+		case kMCPlatformTextInputActionScrollLineUp:
+			MCactivefield -> fscroll(FT_SCROLLUP, nil, 0);
+			break;
+		case kMCPlatformTextInputActionScrollLineDown:
+			MCactivefield -> fscroll(FT_SCROLLDOWN, nil, 0);
+			break;
+		case kMCPlatformTextInputActionScrollPageUp:
+			MCactivefield -> fscroll(FT_SCROLLPAGEUP, nil, 0);
+			break;
+		case kMCPlatformTextInputActionScrollPageDown:
+			MCactivefield -> fscroll(FT_SCROLLPAGEDOWN, nil, 0);
+			break;
+		case kMCPlatformTextInputActionSelectAll:
+			break;
+		case kMCPlatformTextInputActionSelectLine:
+			break;
+		case kMCPlatformTextInputActionSelectParagraph:
+			break;
+		case kMCPlatformTextInputActionSelectWord:
+			break;
+		case kMCPlatformTextInputActionTranspose:
+			break;
+		case kMCPlatformTextInputActionTransposeWords:
+			break;
+		case kMCPlatformTextInputActionUppercaseWord:
+			break;
+		case kMCPlatformTextInputActionYank:
+			break;
+		case kMCPlatformTextInputActionCut:
+			if (!MCactivefield -> getflag(F_LOCK_TEXT))
+				MCactivefield -> fcut(FT_CUT, nil, 0);
+			break;
+		case kMCPlatformTextInputActionCopy:
+			if (!MCactivefield -> getflag(F_LOCK_TEXT))
+				MCactivefield -> fcopy(FT_COPY, nil, 0);
+			break;
+		case kMCPlatformTextInputActionPaste:
+			if (!MCactivefield -> getflag(F_LOCK_TEXT))
+				MCactivefield -> fpaste(FT_PASTE, nil, 0);
+			break;
+		case kMCPlatformTextInputActionUndo:
+			if (!MCactivefield -> getflag(F_LOCK_TEXT))
+				MCactivefield -> fundo(FT_UNDO, nil, 0);
+			break;
+		case kMCPlatformTextInputActionRedo:
+			break;
+		case kMCPlatformTextInputActionDelete:
+			MCactivefield -> deleteselection(False);
+			break;
+	};
 }
 
 ////////////////////////////////////////////////////////////////////////////////

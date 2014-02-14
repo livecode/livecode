@@ -694,7 +694,7 @@ void TAltBrowser::Synchronize(void)
 
 - (unsigned int)com_runrev_livecode_nativeViewId
 {
-	return 1067;
+	return 0xffffffff;
 }
 
 - (void)com_runrev_livecode_setNativeViewId:(int)new_id

@@ -844,6 +844,10 @@ void MCScreenDC::flushevents(uint2 e)
 
 void MCScreenDC::clearIME(Window w)
 {
+	if (MCactivefield == nil)
+		return;
+	
+	MCPlatformResetTextInputInWindow(MCactivefield -> getstack() -> getwindow());
 }
 
 void MCScreenDC::openIME()
@@ -852,6 +856,10 @@ void MCScreenDC::openIME()
 
 void MCScreenDC::activateIME(Boolean activate)
 {
+	if (MCactivefield == nil)
+		return;
+	
+	MCPlatformConfigureTextInputInWindow(MCactivefield -> getstack() -> getwindow(), activate);
 }
 
 void MCScreenDC::closeIME()

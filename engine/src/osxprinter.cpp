@@ -624,7 +624,7 @@ void MCMacOSXPrinter::SetProperties(bool p_include_output)
 	PDEBUG(stderr, "SetProperties: SetJobRanges\n");
 	if (t_pm_last_page < 65536)
 	{
-		MCRange t_range;
+		MCInterval t_range;
 		t_range . from = t_pm_first_page;
 		t_range . to = t_pm_last_page;
 		SetJobRanges(1, &t_range);
