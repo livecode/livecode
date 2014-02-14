@@ -1667,6 +1667,7 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobileConfirmPurchase", MCHandleConfirmPurchase, nil},
     {false, "mobileGetPurchaseProperty", MCHandleGetPurchaseProperty, nil},
     {false, "mobileProductSetType", MCHandleProductSetType, nil},
+    {false, "mobileRequestProductDetails", MCHandleRequestProductDetails, nil},
     
     
     {false, "iphoneRequestProductDetails", MCHandleRequestProductDetails, nil},

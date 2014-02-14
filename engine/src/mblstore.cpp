@@ -96,9 +96,9 @@ bool MCPurchaseFindByProdId(const char *p_prod_id, MCPurchase *&r_purchase)
 {
 	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
 	{
-		if (t_purchase->prod_id == p_prod_id)
+        if (MCCStringEqual(t_purchase->prod_id, p_prod_id))
 		{
-			r_purchase = t_purchase;
+            r_purchase = t_purchase;
 			return true;
 		}
 	}
@@ -154,9 +154,9 @@ bool MCPurchaseCreate(const char *p_product_id, void *p_context, MCPurchase *&r_
         // use MCCStringFormat instead of "=" to fix encoding problems on iphone
         char *temp;
         MCCStringFormat(temp, "%s", p_product_id);
-        MCLog("temp is : %s", temp);
+        MCLog("MCPurchaseCreate :temp is : %s", temp);
         t_purchase->prod_id = temp;
-        MCLog("purchase->prod_id is : %s", t_purchase->prod_id);
+        MCLog("MCPurchaseCreate :purchase->prod_id is : %s", t_purchase->prod_id);
 		t_purchase->id = s_last_purchase_id++;
 		t_purchase->ref_count = 1;
 		t_purchase->state = kMCPurchaseStateInitialized;
@@ -262,7 +262,7 @@ MCPurchaseUpdateEvent::MCPurchaseUpdateEvent(MCPurchase *p_purchase)
 
 void MCPurchaseUpdateEvent::Destroy()
 {
-	//MCLog("releasing purchase (%p) after event deletion", m_purchase);
+	MCLog("releasing purchase (%p) after event deletion", m_purchase);
 	MCPurchaseRelease(m_purchase);
 	delete this;
 }
@@ -429,24 +429,6 @@ Exec_stat MCHandleSetPurchaseProperty(void *context, MCParameter *p_parameters)
     return ES_NORMAL;
 }
 
-/*
-Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
-{
-    bool t_success = true;
-    char *t_product_id = nil;
-    const char* t_product_details;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
-    if (t_success)
-        t_product_details = MCStoreAndroidRequestProductDetails(t_product_id);
-    
-    MCCStringFree(t_product_id);
-    MCresult -> sets(t_product_details);
-    
-    return ES_NORMAL;
-}
-*/
 
 Exec_stat MCHandleRequestForProductDetails(void *context, MCParameter *p_parameters)
 {

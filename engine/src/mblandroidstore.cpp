@@ -593,7 +593,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPurchaseStateChanged(JNI
             
             MCLog("found purchase for %s", t_product_id);
             
-            // REMOVE THIS
+            // THIS WAS ADDED 
             t_purchase->prod_id = t_product_id;
             
             MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)t_purchase->platform_data;

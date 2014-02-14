@@ -146,17 +146,34 @@ char* MCStoreGetPurchaseProperty(const char *p_product_id, const char*  p_prop_n
     bool t_success = true;
     MCPurchase *t_purchase = nil;
 	MCPurchaseProperty t_property;
-	
+
 	if (t_success)
 		t_success =
 		MCPurchaseFindByProdId(p_product_id, t_purchase) &&
 		MCPurchaseLookupProperty(p_prop_name, t_property);
+        
+        /*
+    if (t_success)
+		t_success = MCPurchaseLookupProperty(p_prop_name, t_property);
+    
+    if (t_success)
+        MCLog("Success in lookUpProperty!...",nil);
+    
+    if (t_success)
+		t_success = MCPurchaseFindByProdId(p_product_id, t_purchase);
+    
+    if (t_success)
+        MCLog("Success in finding Purchase!...",nil);
+        */
+
 	
 	MCExecPoint ep(nil, nil, nil);
 	if (t_success)
 		t_success = MCPurchaseGet(t_purchase, t_property, ep) == ES_NORMAL;
 	
-    return strdup(ep.getcstring());
+    char *temp;
+    MCCStringFormat(temp, "%s", ep.getcstring());
+    return temp;
 	
 }
 
@@ -209,6 +226,7 @@ Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 				break;
 			
 			ep.setnvalue([[t_transaction transactionDate] timeIntervalSince1970]);
+            ep.ntos();
 			return ES_NORMAL;
 
 		case kMCPurchasePropertyTransactionIdentifier:
