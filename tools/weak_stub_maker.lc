@@ -112,8 +112,14 @@ on process
   output "  return 1;"
   output "}"
   output
-  output "static int module_unload(module_t t_module)"
+
+  -- MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Implemented module_unload for Android.
+  output "static int module_unload(module_t p_module)"
   output "{"
+  output "#if defined(TARGET_SUBPLATFORM_ANDROID)"
+  output "  if (p_module != NULL)"
+  output "    dlclose(p_module);"
+  output "#endif"
   output "  return 1;"
   output "}"
   output
@@ -182,8 +188,17 @@ on generateModule pModule
   output
   output "static module_t module_" & pModule & " = NULL;"
   output
+
+  -- MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Added finalise function and made sure staid variables are initialised to NULL.
+  output "int finalise_weak_link_" & pModule & "(void)"
+  output "{"
+  output "  module_unload(module_" & pModule & ");"
+  output "  module_" & pModule & " = NULL;"
+  output "}"
+  output
   output "int initialise_weak_link_" & pModule & "(void)"
   output "{"
+  output "  module_" & pModule & " = NULL;"
 
 
    output "#if defined(_LINUX)"
