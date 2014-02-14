@@ -446,6 +446,16 @@ static ThemeButtonKind getthemebuttonpartandstate(const MCWidgetInfo &widgetinfo
 			macR.right -= 2;
 		}
 		macR.bottom -= 2;
+		
+		// IM-2014-02-12: [[ Bug 11785 ]] Constrain option button height to 20 px.
+		//   Drawing above this height is not supported on OSX with a retina display. 
+		if (themebuttonkind == kThemePopupButton && macR.bottom - macR.top > 20)
+		{
+			// center within button rect
+			uint32_t t_adjust = ((macR.bottom - macR.top) - 20) / 2;
+			macR.top += t_adjust;
+			macR.bottom = macR.top + 20;
+		}
 	}
 
 	return themebuttonkind;
