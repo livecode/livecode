@@ -55,7 +55,7 @@ struct MCPickleContext
 	IO_handle stream;
 	bool error;
     
-    // MW-2012-03-04: [[ UnicodeFileFormat ]] If 'include_legacy' is true then
+    // AL-2014-02-14: [[ UnicodeFileFormat ]] If 'include_legacy' is true then
 	// 2.7, 5.5 and 7.0 versions will be pickled.
 	bool include_legacy;
 };
@@ -274,7 +274,7 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
 void MCObject::pickle(MCObject *p_object, uint4 p_part, MCDataRef& r_data)
 {
 	MCPickleContext *t_context;
-	// MW-2012-03-04: [[ UnicodeFileFormat ]] The pickle method is only used for
+	// AL-2014-02-14: [[ UnicodeFileFormat ]] The pickle method is only used for
 	//   internal purposes, and we don't want to include 2.7 or 5.5 versions in this
 	//   case - so pass 'false' for include_legacy.
 	t_context = startpickling(false);
@@ -489,7 +489,7 @@ MCObject *MCObject::unpickle(MCDataRef p_data, MCStack *p_stack)
 
 		if (t_success)
 		{
-			// MW-2012-03-04: [[ UnicodeFileFormat ]] If the header is 7.7, then there
+            // AL-2014-02-14: [[ UnicodeFileFormat ]] If the header is 7.0, then there
 			//   won't be a 2.7 version before it.
 			if (memcmp(t_buffer, "REVO7000", 8) == 0)
 				t_7000_only = true;
@@ -524,7 +524,7 @@ MCObject *MCObject::unpickle(MCDataRef p_data, MCStack *p_stack)
 				t_success = false;
 		}
 
-		// MW-2012-03-04: [[ UnicodeFileFormat ]] Unpickle the first version in the chunk.
+        // AL-2014-02-14: [[ UnicodeFileFormat ]] Unpickle the first version in the chunk.
 		//   If there is no 2.7, then the version will be 7.0; otherwise it is the
 		//   2.7 version preceeding the 5.5 and 7.0 ones.
 		MCObject *t_object;
@@ -537,7 +537,7 @@ MCObject *MCObject::unpickle(MCDataRef p_data, MCStack *p_stack)
                 t_success = unpickle_object_from_stream(t_stream, t_5500_only ? 5500 : 2700, p_stack, t_object);
         }
 			
-		// MW-2012-03-04: [[ UnicodeFileFormat ]] If the header was 2.7, then there could
+        // AL-2014-02-14: [[ UnicodeFileFormat ]] If the header was 2.7, then there could
 		//   be 5.5 and 7.0 versions following it. So attempt to unpickle second and third
 		//   versions, and use them if present.
 		if (t_success && !t_7000_only && !t_5500_only)

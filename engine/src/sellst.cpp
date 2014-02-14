@@ -346,8 +346,8 @@ bool MCSellist::clipboard(bool p_is_cut)
 		// First we construct the pickle of the list of selected objects
 		MCPickleContext *t_context;
 		
-		// MW-2012-03-04: [[ StackFile5500 ]] When pickling for the clipboard, make sure it
-		//   includes both 2.7 and 5.5 stackfile formats.
+        // AL-2014-02-14: [[ UnicodeFileFormat ]] When pickling for the clipboard, make sure it
+        //   includes 2.7, 5.5 and 7.0 stackfile formats.
 		t_context = MCObject::startpickling(true);
 
 		MCSelnode *t_node;
