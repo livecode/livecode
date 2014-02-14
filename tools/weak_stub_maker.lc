@@ -190,7 +190,7 @@ on generateModule pModule
   output
 
   -- MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Added finalise function and made sure staid variables are initialised to NULL.
-  output "int finalise_weak_link_" & pModule & "(void)"
+  output "void finalise_weak_link_" & pModule & "(void)"
   output "{"
   output "  module_unload(module_" & pModule & ");"
   output "  module_" & pModule & " = NULL;"
