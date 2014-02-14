@@ -989,6 +989,9 @@ bool X_open(int argc, char *argv[], char *envp[])
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsInitialize();
 	
+	// MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Initialise the openlSSL module.
+	InitialiseSSL();
+	
 	// MW-2009-07-02: Clear the result as a startup failure will be indicated
 	//   there.
 	MCresult -> clear();
