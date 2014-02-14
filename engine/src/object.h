@@ -686,9 +686,9 @@ public:
 	//   font record. (Called by the font table visitor - so public).
 	bool needtosavefontrecord(void) const;
 
-	// MW-2012-03-04: [[ StackFile5500 ]] If 'include_2700' is set then both 2.7 and 5.5 versions
+	// AL-2014-02-14: [[ UnicodeFileFormat ]] If 'include_legacy' is set then 2.7, 5.5 and 7.0 versions
 	//   of the objects will be included.
-	static MCPickleContext *startpickling(bool include_2700);
+	static MCPickleContext *startpickling(bool include_legacy);
 	static void continuepickling(MCPickleContext *p_context, MCObject *p_object, uint4 p_part);
 	static void pickle(MCObject *p_object, uint4 p_part, MCDataRef& r_string);
 	static void stoppickling(MCPickleContext *p_context, MCDataRef& r_string);

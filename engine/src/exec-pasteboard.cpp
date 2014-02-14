@@ -400,8 +400,8 @@ void MCPasteboardProcessToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets,
 	// memory.
 	MCPickleContext *t_context;
 
-	// MW-2012-03-04: [[ StackFile5500 ]] When pickling for the clipboard, make sure it
-	//   includes both 2.7 and 5.5 stackfile formats.
+	// AL-2014-02-14: [[ UnicodeFileFormat ]] When pickling for the clipboard, make sure it
+	//   includes 2.7, 5.5 and 7.0 stackfile formats.
 	t_context = MCObject::startpickling(true);
 	if (t_context == NULL)
 	{
