@@ -17,6 +17,13 @@
 #ifndef __GRAPHICS_UTIL_H_
 #define __GRAPHICS_UTIL_H_
 
+#if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
+inline double roundf(float x)
+{
+	return floorf(x + 0.5f);
+}
+#endif
+
 inline MCRectangle MCRectangleMake(int16_t x, int16_t y, uint16_t width, uint16_t height)
 {
 	MCRectangle t_rect;
