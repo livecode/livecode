@@ -645,8 +645,9 @@ bool MCStack::snapshottilecache(MCRectangle p_area, MCGImageRef& r_image)
 		return false;
 	
 	__block bool t_result;
+    __block MCGImageRef *t_image = &r_image;
 	MCIPhoneRunBlockOnMainFiber(^(void) {
-		t_result = view_snapshottilecache(p_area, r_image);
+		t_result = view_snapshottilecache(p_area, *t_image);
 	});
 	
 	return t_result;
