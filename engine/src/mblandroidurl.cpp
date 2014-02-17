@@ -256,9 +256,9 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doUrlDidReceiveData(JNIEnv
 		// get bytes from byte[] object
 		jbyte *t_bytes = env->GetByteArrayElements(bytes, nil);
 
-		MCString t_data;
-		t_data . set((const char *)t_bytes, length);
-		t_info->callback(t_info->context, kMCSystemUrlStatusLoading, &t_data);
+		MCAutoDataRef t_data;
+		MCDataCreateWithBytes((const byte_t *)t_bytes, length, &t_data);
+		t_info->callback(t_info->context, kMCSystemUrlStatusLoading, MCDataGetBytePtr(*t_data));
 
 		env->ReleaseByteArrayElements(bytes, t_bytes, 0);
 	}

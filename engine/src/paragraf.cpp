@@ -227,7 +227,7 @@ bool MCParagraph::TextIsParagraphBreak(codepoint_t p_codepoint)
 
 bool MCParagraph::TextIsPunctuation(codepoint_t p_codepoint)
 {
-	return ispunct(p_codepoint);
+	return MCUnicodeIsPunctuation(p_codepoint);
 }
 
 bool MCParagraph::TextFindNextParagraph(MCStringRef p_string, findex_t p_after, findex_t &r_next)
@@ -274,14 +274,11 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 {
 	IO_stat stat;
 	uint1 type;
-	
-	
-	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended paragraph then
-	//   load in the attribute extension record.
-	if (is_ext)
-		if ((stat = loadattrs(stream, version)) != IO_NORMAL)
-			return IO_ERROR;
-	
+
+    // The constructor-created string of the paragraph must be reset
+    MCValueRelease(m_text);
+    m_text = nil;
+
 	// MW-2013-11-20: [[ UnicodeFileFormat ]] Prior to 7.0, paragraphs were mixed runs
 	//   of UTF-16 and native text. 7.0 plus they are just a stringref.
 	if (version < 7000)
@@ -294,6 +291,12 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 
         if (!MCStringCreateMutable(0, m_text))
 			return IO_ERROR;
+
+        // MW-2012-03-04: [[ StackFile5500 ]] If this is an extended paragraph then
+        //   load in the attribute extension record.
+        if (is_ext)
+            if ((stat = loadattrs(stream, version)) != IO_NORMAL)
+                return IO_ERROR;
 		
 		// If the whole text isn't covered by the saved blocks, the index of the
 		// portion not covered needs to be retained so that it can be added to
@@ -412,6 +415,12 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
         
         // The paragraph text *must* be mutable
         /* UNCHECKED */ MCStringMutableCopyAndRelease(m_text, m_text);
+
+        // MW-2012-03-04: [[ StackFile5500 ]] If this is an extended paragraph then
+        //   load in the attribute extension record.
+        if (is_ext)
+            if ((stat = loadattrs(stream, version)) != IO_NORMAL)
+                return IO_ERROR;
 		
 		while (True)
 		{

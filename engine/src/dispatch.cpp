@@ -1576,7 +1576,7 @@ MCObject *MCDispatch::getobjname(Chunk_term type, MCNameRef p_name)
 			do
 			{
 check:
-				if (!MCNameIsEmpty(*t_image_name) && iptr -> hasname(*t_image_name))
+				if (*t_image_name != nil && iptr -> hasname(*t_image_name))
 					return iptr;
 				if (!iptr->getopened())
 				{

@@ -55,7 +55,7 @@ void MCMailDoComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc
 	MCNameCreateWithCString("type", &t_type_name);
 	MCNameCreateWithCString("name", &t_name_name);
 
-	if (p_attachments != nil)
+	if (p_attachments != nil && !MCArrayIsEmpty(p_attachments))
 	{
 		MCValueRef t_data;
 		MCValueRef t_file;
@@ -71,19 +71,21 @@ void MCMailDoComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc
 				MCArrayFetchValueAtIndex(p_attachments, i + 1, t_value);
 				if (!MCValueIsArray(t_value))
 					continue;
-				
-				MCArrayFetchValue((MCArrayRef)t_value, false, *t_data_name, t_data);
-				MCArrayFetchValue((MCArrayRef)t_value, false, *t_file_name, t_file);
-				MCArrayFetchValue((MCArrayRef)t_value, false, *t_type_name, t_type);
-				MCArrayFetchValue((MCArrayRef)t_value, false, *t_name_name, t_name);
 
-                if (!ctxt . ConvertToData(t_data, t_attachment . data))
+                if (!MCArrayFetchValue((MCArrayRef)t_value, false, *t_data_name, t_data) ||
+                    !ctxt . ConvertToData(t_data, t_attachment . data))
                     t_attachment . data = nil;
-                if (ctxt . ConvertToString(t_data, t_attachment . file))
+                
+                if (!MCArrayFetchValue((MCArrayRef)t_value, false, *t_file_name, t_file) ||
+                    !ctxt . ConvertToString(t_file, t_attachment . file))
                     t_attachment . file = nil;
-                if (ctxt . ConvertToString(t_data, t_attachment . type))
+                
+                if (!MCArrayFetchValue((MCArrayRef)t_value, false, *t_type_name, t_type) ||
+                    !ctxt . ConvertToString(t_type, t_attachment . type))
                     t_attachment . type = nil;
-                if (ctxt . ConvertToString(t_data, t_attachment . name))
+                
+                if (!MCArrayFetchValue((MCArrayRef)t_value, false, *t_name_name, t_name) ||
+                    !ctxt . ConvertToString(t_name, t_attachment . name))
                     t_attachment . name = nil;
 
 				t_attachments . Push(t_attachment);
@@ -91,18 +93,20 @@ void MCMailDoComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc
 		}
 		else
 		{
-			MCArrayFetchValue(p_attachments, false, *t_data_name, t_data);
-			MCArrayFetchValue(p_attachments, false, *t_file_name, t_file);
-			MCArrayFetchValue(p_attachments, false, *t_type_name, t_type);
-			MCArrayFetchValue(p_attachments, false, *t_name_name, t_name);
-
-			if (!ctxt . ConvertToData(t_data, t_attachment . data))
+			if (!MCArrayFetchValue(p_attachments, false, *t_data_name, t_data) ||
+                !ctxt . ConvertToData(t_data, t_attachment . data))
                 t_attachment . data = nil;
-			if (ctxt . ConvertToString(t_data, t_attachment . file))
+            
+            if (!MCArrayFetchValue(p_attachments, false, *t_file_name, t_file) ||
+                !ctxt . ConvertToString(t_file, t_attachment . file))
                 t_attachment . file = nil;
-			if (ctxt . ConvertToString(t_data, t_attachment . type))
+            
+            if (!MCArrayFetchValue(p_attachments, false, *t_type_name, t_type) ||
+                !ctxt . ConvertToString(t_type, t_attachment . type))
                 t_attachment . type = nil;
-			if (ctxt . ConvertToString(t_data, t_attachment . name))
+            
+            if (!MCArrayFetchValue(p_attachments, false, *t_name_name, t_name) ||
+                !ctxt . ConvertToString(t_name, t_attachment . name))
                 t_attachment . name = nil;
 		
 			t_attachments . Push(t_attachment);

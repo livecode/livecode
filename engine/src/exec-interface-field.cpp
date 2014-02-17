@@ -292,7 +292,7 @@ void MCField::DoSetInputControl(MCExecContext& ctxt, Properties which, bool sett
     uint4 tflags = flags;
 	bool t_dirty = false;
 	
-	if (setting != ((tflags & (which == P_LOCK_TEXT ? F_LOCK_TEXT : F_TRAVERSAL_ON)) == True))
+	if (setting != ((tflags & (which == P_LOCK_TEXT ? F_LOCK_TEXT : F_TRAVERSAL_ON)) != False))
 	{
 		if (setting)
 			tflags |= (which == P_LOCK_TEXT ? F_LOCK_TEXT : F_TRAVERSAL_ON);

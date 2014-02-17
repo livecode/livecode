@@ -1619,10 +1619,12 @@ void MCFilesExecReadComplete(MCExecContext& ctxt, MCStringRef p_output, IO_stat 
 	{
 		MCAutoStringRef t_output;
 		/* UNCHECKED*/ MCStringConvertLineEndingsToLiveCode(p_output, &t_output);
-		MCValueAssign(p_output, *t_output);
+		ctxt . SetItToValue(*t_output);
 	}
-	
-	ctxt . SetItToValue(p_output);
+	else
+    {
+        ctxt . SetItToValue(p_output);
+    }
 }
 
 void MCFilesExecReadUntil(MCExecContext& ctxt, IO_handle p_stream, index_t p_index, MCStringRef p_sentinel, double p_max_wait, int p_time_units, intenum_t p_encoding, MCStringRef &r_output, IO_stat &r_stat)

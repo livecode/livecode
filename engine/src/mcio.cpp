@@ -900,6 +900,7 @@ IO_stat IO_write_valueref_new(MCValueRef p_value, IO_handle p_stream)
 		}	
 		break;
 		default:
+            MCAssert(false);
 			return IO_ERROR;
 	}
 	return t_stat;

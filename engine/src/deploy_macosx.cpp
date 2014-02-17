@@ -1827,7 +1827,7 @@ Exec_stat MCDeployToIOS(const MCDeployParameters& p_params, bool p_embedded)
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
 	// Make sure we can open the output file.
-	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeWrite, t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeCreate, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 	
 	// Generate the binary.

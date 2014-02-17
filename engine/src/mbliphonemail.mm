@@ -274,22 +274,6 @@ Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 //     name - preferred filename
 //
 
-static NSString *mcstring_to_nsstring(const MCString& p_string, bool p_unicode)
-{
-	if (p_unicode)
-		return [NSString stringWithCharacters: (unichar*)p_string . getstring() length: p_string . getlength() / 2];
-	return [[[NSString alloc] initWithBytes: p_string . getstring() length: p_string . getlength() encoding: NSMacOSRomanStringEncoding] autorelease];
-}
-
-static NSString *mcstringref_to_nsstring(MCStringRef p_string, bool p_unicode)
-{
-	if (p_unicode)
-		return [NSString stringWithCharacters: MCStringGetCharPtr(p_string) length: MCStringGetLength(p_string)];
-    MCAutoPointer<char> t_string;
-    /* UNCHECKED */ MCStringConvertToCString(p_string, &t_string);
-	return [[[NSString alloc] initWithBytes: *t_string length: MCStringGetLength(p_string) encoding: NSMacOSRomanStringEncoding] autorelease];
-}
-
 static NSArray *mcstringref_to_nsarray(MCStringRef p_string, NSCharacterSet* p_separator_set)
 {
 	return [[NSString stringWithMCStringRef: p_string] componentsSeparatedByCharactersInSet: p_separator_set];
@@ -511,10 +495,10 @@ static void compose_mail_prewait(void *p_context)
 	t_separator_set = [NSCharacterSet characterSetWithCharactersInString: @","];
 	
 	NSString *t_ns_subject;
-	t_ns_subject = mcstringref_to_nsstring(ctxt -> subject, ctxt -> type == kMCMailTypeUnicode);
+	t_ns_subject = [NSString stringWithMCStringRef: ctxt -> subject];
 	
 	NSString *t_ns_body;
-	t_ns_body = mcstringref_to_nsstring(ctxt -> body, ctxt -> type == kMCMailTypeUnicode);
+	t_ns_body = [NSString stringWithMCStringRef: ctxt -> body];
 	
 	NSArray *t_ns_to;
 	t_ns_to = nil;

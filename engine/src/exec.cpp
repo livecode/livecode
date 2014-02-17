@@ -70,6 +70,8 @@ bool MCExecContext::ConvertToString(MCValueRef p_value, MCStringRef& r_string)
         return MCStringCopy((MCStringRef)p_value, r_string);
     case kMCValueTypeCodeData:
         return MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr((MCDataRef)p_value), MCDataGetLength((MCDataRef)p_value), r_string);
+    case kMCValueTypeCodeList:
+        return MCListCopyAsString((MCListRef)p_value, r_string);
     case kMCValueTypeCodeNumber:
     {
         if (MCNumberIsInteger((MCNumberRef)p_value))
@@ -103,6 +105,7 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
         return MCNumberCreateWithInteger(0, r_number);
     case kMCValueTypeCodeBoolean:
     case kMCValueTypeCodeArray:
+    case kMCValueTypeCodeList:
         break;
     case kMCValueTypeCodeNumber:
         return MCValueCopy(p_value, (MCValueRef&)r_number);
@@ -186,6 +189,7 @@ bool MCExecContext::ConvertToBoolean(MCValueRef p_value, MCBooleanRef &r_boolean
     case kMCValueTypeCodeNull:
     case kMCValueTypeCodeArray:
     case kMCValueTypeCodeNumber:
+    case kMCValueTypeCodeList:
         break;
     case kMCValueTypeCodeName:
         if (MCStringIsEqualTo(MCNameGetString((MCNameRef)p_value), kMCTrueString, kMCStringOptionCompareCaseless))
