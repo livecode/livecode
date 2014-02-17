@@ -1911,7 +1911,7 @@ void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uindex_t &nstr
             
 			while(remaining_chars > 0)
 			{
-				while(remaining_chars > 0 && !isspace(MCStringGetNativeCharAtIndex(source, l)))
+				while(remaining_chars > 0 && !MCUnicodeIsWhitespace(MCStringGetCharAtIndex(source, l)))
                 {
 					l++;
                     remaining_chars--;

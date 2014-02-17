@@ -229,7 +229,7 @@ bool MCParagraph::TextIsParagraphBreak(codepoint_t p_codepoint)
 
 bool MCParagraph::TextIsPunctuation(codepoint_t p_codepoint)
 {
-	return ispunct(p_codepoint);
+	return MCUnicodeIsPunctuation(p_codepoint);
 }
 
 bool MCParagraph::TextFindNextParagraph(MCStringRef p_string, findex_t p_after, findex_t &r_next)

@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "scriptpt.h"
 #include "util.h"
+#include "foundation-unicode.h"
 
 #include "exec.h"
 
@@ -57,7 +58,7 @@ void MCStringsSkipWord(MCExecContext& ctxt, MCStringRef p_string, bool p_skip_sp
     uindex_t t_end_quote_offset = t_length;
     uindex_t t_end_line_offset = t_length;
     
-    if (MCStringGetNativeCharAtIndex(p_string, x_offset) == '"')
+    if (MCStringGetCharAtIndex(p_string, x_offset) == '"')
     {
         // then bump the offset up to the next quotation mark + 1, or the beginning of the next line
         // if neither of these are present then set offset to string length.
@@ -71,13 +72,13 @@ void MCStringsSkipWord(MCExecContext& ctxt, MCStringRef p_string, bool p_skip_sp
     }
     else
     {
-        while (!isspace(MCStringGetNativeCharAtIndex(p_string, x_offset)) && x_offset < t_length)
+        while (!MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, x_offset)) && x_offset < t_length)
             x_offset++;
     }
     
     if (p_skip_spaces)
     {
-        while (isspace(MCStringGetNativeCharAtIndex(p_string, x_offset)) && x_offset < t_length)
+        while (!MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, x_offset)) && x_offset < t_length)
             x_offset++;
     }
 }
@@ -118,7 +119,7 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
         {
             uindex_t t_space_offset, t_word_offset;
             // if there are consecutive spaces at the beginning, skip them
-            while (isspace(MCStringGetCharAtIndex(p_string, t_offset)))
+            while (MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, t_offset)))
                 t_offset++;
             
             // then keep skipping to the next word until the end of the string.
@@ -348,7 +349,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             uindex_t t_space_offset;
             
             // if there are consecutive spaces at the beginning, skip them
-            while (isspace(MCStringGetCharAtIndex(p_string, t_offset)))
+            while (MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, t_offset)))
                 t_offset++;
             
             // calculate the start of the (p_first)th word
@@ -368,15 +369,15 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             
             if (p_whole_chunk && !p_further_chunks)
             {
-                while (r_end < t_length && isspace(MCStringGetNativeCharAtIndex(p_string, r_end)))
+                while (r_end < t_length && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_end)))
                     r_end++;
-                while (r_start > 0 && isspace(MCStringGetNativeCharAtIndex(p_string, r_start - 1)))
+                while (r_start > 0 && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_start - 1)))
                     r_start--;
                 return;
             }
             
             // ignore whitespace at the end
-            while (r_end > r_start && isspace(MCStringGetNativeCharAtIndex(p_string, r_end - 1)))
+            while (r_end > r_start && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_end - 1)))
                 r_end--;
         }
             break;

@@ -21,6 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <string.h>
 #endif
 
+#include "foundation-unicode.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void *memdup(const void *p_src, unsigned int p_src_length);
@@ -44,7 +46,7 @@ inline char *MCU_empty()
 
 inline void MCU_skip_spaces(MCStringRef p_input, uindex_t& x_offset)
 {
-    while (isspace(MCStringGetNativeCharAtIndex(p_input, x_offset)))
+    while (MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_input, x_offset)))
         x_offset++;
 }
 
