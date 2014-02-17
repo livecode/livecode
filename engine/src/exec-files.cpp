@@ -855,7 +855,7 @@ void MCFilesExecDeleteFile(MCExecContext& ctxt, MCStringRef p_target)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, bool p_text_mode, bool p_is_driver)
+void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, intenum_t p_encoding, bool p_is_driver)
 {
 	if (!ctxt . EnsureDiskAccessIsAllowed())
 		return;
@@ -866,22 +866,22 @@ void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, b
 
 	IO_handle istream = NULL;
 	IO_handle ostream = NULL;
-	
+
 	switch (p_mode)
 	{
 	case OM_APPEND:
-		ostream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeAppend, False, p_is_driver, 0);
+        ostream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeAppend, False, p_is_driver, 0);
 		break;
 	case OM_NEITHER:
 		break;
 	case OM_READ:
-		istream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeRead, True, p_is_driver, 0);
+        istream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeRead, True, p_is_driver, 0);
 		break;
 	case OM_WRITE:
-		ostream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeWrite, False, p_is_driver, 0);
+        ostream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeWrite, False, p_is_driver, 0);
 		break;
 	case OM_UPDATE:
-		istream = ostream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeUpdate, False, p_is_driver, 0);
+        istream = ostream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeUpdate, False, p_is_driver, 0);
 		break;
 	default:
 		break;
@@ -890,26 +890,36 @@ void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, b
 	{
 		ctxt . SetTheResultToStaticCString("can't open that file");
 		return;
-	}
+    }
+
 	MCU_realloc((char **)&MCfiles, MCnfiles, MCnfiles + 1, sizeof(Streamnode));
 	MCfiles[MCnfiles].name = (MCNameRef)MCValueRetain(p_name);
-	MCfiles[MCnfiles].mode = (Open_mode)p_mode;
-	MCfiles[MCnfiles].textmode = p_text_mode ? True : False;
+    MCfiles[MCnfiles].mode = (Open_mode)p_mode;
+
+    if (p_encoding == kMCFileEncodingText)
+    {
+        IO_handle t_BOM_stream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeRead, True, p_is_driver, 0);
+        MCfiles[MCnfiles].encoding = (Encoding_type)MCS_resolve_BOM(t_BOM_stream);
+        MCS_close(t_BOM_stream);
+    }
+    else
+        MCfiles[MCnfiles].encoding = (Encoding_type)p_encoding;
+
 	MCfiles[MCnfiles].ihandle = istream;
-	MCfiles[MCnfiles++].ohandle = ostream;
+    MCfiles[MCnfiles++].ohandle = ostream;
 }
 
-void MCFilesExecOpenFile(MCExecContext& ctxt, MCNameRef p_filename, int p_mode, bool p_text_mode)
+void MCFilesExecOpenFile(MCExecContext& ctxt, MCNameRef p_filename, int p_mode, intenum_t p_encoding)
 {
-	MCFilesExecPerformOpen(ctxt, p_filename, p_mode, p_text_mode, false);
+    MCFilesExecPerformOpen(ctxt, p_filename, p_mode, p_encoding, false);
 }
 
-void MCFilesExecOpenDriver(MCExecContext& ctxt, MCNameRef p_device, int p_mode, bool p_text_mode)
+void MCFilesExecOpenDriver(MCExecContext& ctxt, MCNameRef p_device, int p_mode, intenum_t p_encoding)
 {
-	MCFilesExecPerformOpen(ctxt, p_device, p_mode, p_text_mode, true);
+    MCFilesExecPerformOpen(ctxt, p_device, p_mode, p_encoding, true);
 }
 
-void MCFilesExecPerformOpenProcess(MCExecContext& ctxt, MCNameRef p_process, int p_mode, bool p_text_mode, bool p_elevated)
+void MCFilesExecPerformOpenProcess(MCExecContext& ctxt, MCNameRef p_process, int p_mode, intenum_t p_encoding, bool p_elevated)
 {
 	if (!ctxt . EnsureProcessIsAllowed())
 		return;
@@ -920,19 +930,25 @@ void MCFilesExecPerformOpenProcess(MCExecContext& ctxt, MCNameRef p_process, int
 		ctxt . SetTheResultToStaticCString("process is already open");
 		return;
 	}
-	MCS_startprocess(p_process, NULL, (Open_mode)p_mode, p_elevated);
+    MCS_startprocess(p_process, NULL, (Open_mode)p_mode, p_elevated);
 	if (IO_findprocess(p_process, index))
-		MCprocesses[index].textmode = p_text_mode ? True : False;
+    {
+        // ENCODING what default encoding for the process?
+        if (p_encoding == kMCFileEncodingText)
+            MCprocesses[MCnprocesses].encoding = (Encoding_type)kMCFileEncodingNative;
+        else
+            MCfiles[MCnfiles].encoding = (Encoding_type)p_encoding;
+    }
 }
 
-void MCFilesExecOpenProcess(MCExecContext& ctxt, MCNameRef p_process, int p_mode, bool p_text_mode)
+void MCFilesExecOpenProcess(MCExecContext& ctxt, MCNameRef p_process, int p_mode, intenum_t p_encoding)
 {
-	MCFilesExecPerformOpenProcess(ctxt, p_process, p_mode, p_text_mode, false);
+    MCFilesExecPerformOpenProcess(ctxt, p_process, p_mode, p_encoding, false);
 }
 
-void MCFilesExecOpenElevatedProcess(MCExecContext& ctxt, MCNameRef p_process, int p_mode, bool p_text_mode)
+void MCFilesExecOpenElevatedProcess(MCExecContext& ctxt, MCNameRef p_process, int p_mode, intenum_t p_encoding)
 {
-	MCFilesExecPerformOpenProcess(ctxt, p_process, p_mode, p_text_mode, true);
+    MCFilesExecPerformOpenProcess(ctxt, p_process, p_mode, p_encoding, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -966,7 +982,7 @@ void MCFilesExecCloseProcess(MCExecContext& ctxt, MCNameRef p_process)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCFilesExecPerformReadFor(MCExecContext& ctxt, IO_handle p_stream, int4 p_index, int p_unit_type, uint4 p_count, double p_max_wait, int p_time_units, MCStringRef &r_output, IO_stat &r_stat)
+void MCFilesExecPerformReadForBinary(MCExecContext& ctxt, IO_handle p_stream, int4 p_index, int p_unit_type, uint4 p_count, double p_max_wait, int p_time_units, MCStringRef &r_output, IO_stat &r_stat)
 {
 	real8 t_duration = p_max_wait;
 	switch (p_time_units)
@@ -1005,12 +1021,12 @@ void MCFilesExecPerformReadFor(MCExecContext& ctxt, IO_handle p_stream, int4 p_i
 	case FU_REAL8:
 		size = p_count * 8;
 		break;
-	default:
-		size = p_count;
-		break;
+    default:
+        r_stat = IO_ERROR;
+        return;
 	}
 
-	MCAutoNativeCharArray t_current;
+    MCAutoNativeCharArray t_current;
 	/* UNCHECKED */ t_current.New(size);
 
 	uint4 tsize = 0;
@@ -1019,8 +1035,9 @@ void MCFilesExecPerformReadFor(MCExecContext& ctxt, IO_handle p_stream, int4 p_i
 	{
 		uint4 rsize = size - tsize;
 		uint4 fullsize = rsize;
-		r_stat = MCS_readall(t_current.Chars() + tsize, rsize, p_stream, rsize);
+        r_stat = MCS_readall(t_current.Chars() + tsize, rsize, p_stream, rsize);
 		tsize += rsize;
+
 		if (rsize < fullsize)
 		{
 			// MW-2010-10-25: [[ Bug 4022 ]] If we are reading from a process and we didn't
@@ -1200,7 +1217,120 @@ void MCFilesExecPerformReadFor(MCExecContext& ctxt, IO_handle p_stream, int4 p_i
 	/* UNCHECKED */ MCStringCopyAndRelease(t_buffer, r_output);
 }
 
-void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p_index, uint4 p_count, const MCStringRef p_sentinel, Boolean words, double p_max_wait, int p_time_units, MCStringRef &r_output, IO_stat &r_stat)
+void MCFilesExecPerformReadFor(MCExecContext& ctxt, IO_handle p_stream, int4 p_index, int p_unit_type, uint4 p_count, double p_max_wait, int p_time_units, intenum_t p_encoding, MCStringRef &r_output, IO_stat &r_stat)
+{
+    real8 t_duration = p_max_wait;
+    switch (p_time_units)
+    {
+    case F_MILLISECS:
+        t_duration /= 1000.0;
+        break;
+    case F_TICKS:
+        t_duration /= 60.0;
+        break;
+    default:
+        break;
+    }
+
+    uint4 size;
+
+    switch (p_unit_type)
+    {
+    case FU_CHARACTER:
+    case FU_CODEPOINT:
+    case FU_CODEUNIT:
+        size = p_count;
+        break;
+    default:
+        r_stat = IO_ERROR;
+        return;
+    }
+
+    uint4 tsize = 0;
+
+    MCStringEncoding t_encoding;
+    switch (p_encoding)
+    {
+    case kMCFileEncodingNative:
+        t_encoding = kMCStringEncodingNative;
+        break;
+    case kMCFileEncodingUTF8:
+        size = MCU_min(size * 2, MCS_fsize(p_stream) - MCS_tell(p_stream));
+        t_encoding = kMCStringEncodingUTF8;
+        break;
+    case kMCFileEncodingUTF16:
+        size *= 2;
+        t_encoding = kMCStringEncodingUTF16;
+        break;
+    case kMCFileEncodingUTF16LE:
+        size *= 2;
+        t_encoding = kMCStringEncodingUTF16LE;
+        break;
+    case kMCFileEncodingUTF16BE:
+        size *= 2;
+        t_encoding = kMCStringEncodingUTF16BE;
+        break;
+    }
+
+    MCAutoByteArray t_current;
+    /* UNCHECKED */ t_current.New(size);
+
+    do
+    {
+        uint4 rsize = size - tsize;
+        uint4 fullsize = rsize;
+        r_stat = MCS_readall(t_current.Bytes() + tsize, rsize, p_stream, rsize);
+        tsize += rsize;
+
+        if (rsize < fullsize)
+        {
+            // MW-2010-10-25: [[ Bug 4022 ]] If we are reading from a process and we didn't
+            //   get as much data as we wanted then do a sweep.
+            if (p_index != -1)
+                MCS_checkprocesses();
+
+            if (((r_stat == IO_ERROR || r_stat == IO_EOF)
+                    && (p_index == -1 || MCprocesses[p_index].pid == 0)))
+            {
+                r_stat = IO_EOF;
+                break;
+            }
+            t_duration -= READ_INTERVAL;
+            if (t_duration < 0.0)
+            {
+                r_stat = IO_TIMEOUT;
+                break;
+            }
+            else
+            {
+                MCU_play();
+                // MH-2007-05-18 [[Bug 4021]]: read from process times out too soon.
+                // Originally the arguments to wait were READ_INTERVAL, False, True
+                if (MCscreen->wait(READ_INTERVAL, False, False))
+                {
+                    ctxt . LegacyThrow(EE_READ_ABORT);
+                    r_stat = IO_ERROR;
+                    return;
+                }
+            }
+        }
+    }
+    while (tsize < size);
+
+    if (r_stat == IO_NORMAL)
+    {
+        MCStringRef t_output;
+        MCStringCreateWithBytes(t_current . Bytes(), t_current . ByteCount(), t_encoding, false, t_output);
+
+        // Get rid of the possible extra characters added on UTF8 reading.
+        if (p_encoding == kMCFileEncodingUTF8)
+            /* UNCHECKED */ MCStringCopySubstringAndRelease(t_output, MCRangeMake(0, p_count), r_output);
+        else
+            r_output = t_output;
+    }
+}
+
+void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p_index, uint4 p_count, const MCStringRef p_sentinel, Boolean words, double p_max_wait, int p_time_units, intenum_t p_encoding, MCStringRef &r_output, IO_stat &r_stat)
 {
 	real8 t_duration = p_max_wait;
 	switch (p_time_units)
@@ -1216,9 +1346,18 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 	}
 
 	uint4 tsize;
-	tsize = BUFSIZ;
-	MCAutoNativeCharArray t_buffer;
-	/* UNCHECKED */ t_buffer.New(BUFSIZ);
+    tsize = BUFSIZ;
+
+    MCAutoStringRef t_output;
+    /* UNCHECKED */ MCStringCreateMutable(0, &t_output);
+
+    // We don't accept binary or badly processed files
+    if (p_encoding == kMCFileEncodingText
+            || p_encoding == kMCFileEncodingBinary)
+    {
+        r_stat = IO_ERROR;
+        return;
+    }
 
 	uint4 fullsize;
 	if (MCStringGetNativeCharAtIndex(p_sentinel, 0) == '\004')
@@ -1232,13 +1371,11 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 	while (True)
 	{
 		uint4 rsize = fullsize;
-		if (size + rsize > tsize)
-		{
-			/* UNCHECKED */ t_buffer.Extend(tsize + BUFSIZ);
-			tsize += BUFSIZ;
-		}
-		r_stat = MCS_readall(t_buffer.Chars() + size, rsize, p_stream, rsize);
-		size += rsize;
+        MCAutoByteArray t_buffer;
+        t_buffer . New(fullsize);
+
+        r_stat = MCS_readall(t_buffer.Bytes(), rsize, p_stream, rsize);
+        size += rsize;
 		if (rsize < fullsize)
 		{
 			// MW-2010-10-25: [[ Bug 4022 ]] If we are reading from a process and we didn't
@@ -1267,15 +1404,41 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 		}
 		else
 		{
+            // We need to convert the input text following the file encoding
+            MCAutoStringRef t_text_read;
+            MCStringEncoding t_bytes_encoding;
+
+            switch(p_encoding)
+            {
+            case kMCFileEncodingNative:
+                t_bytes_encoding = kMCStringEncodingNative;
+                break;
+            case kMCFileEncodingUTF8:
+                t_bytes_encoding = kMCStringEncodingUTF8;
+                break;
+            case kMCFileEncodingUTF16:
+                t_bytes_encoding = kMCStringEncodingUTF16;
+                break;
+            case kMCFileEncodingUTF16LE:
+                t_bytes_encoding = kMCStringEncodingUTF16LE;
+                break;
+            case kMCFileEncodingUTF16BE:
+                t_bytes_encoding = kMCStringEncodingUTF16BE;
+                break;
+            }
+
+            /* UNCHECKED */ MCStringCreateWithBytes(t_buffer . Bytes(), t_buffer . ByteCount(), t_bytes_encoding, false, &t_text_read);
+            /* UNCHECKED */ MCStringAppend(*t_output, &t_text_read);
+
 			if (words)
 			{
 				if (doingspace)
 				{
-					if (!isspace(t_buffer.Chars()[size - 1]))
+                    if (!MCUnicodeIsWhitespace(MCStringGetCharAtIndex(*t_output, size - 1)))
 						doingspace = False;
 				}
 				else
-					if (isspace(t_buffer.Chars()[size - 1]))
+                    if (MCUnicodeIsWhitespace(MCStringGetCharAtIndex(*t_output, size - 1)))
                     {
 						if (--p_count == 0)
 							break;
@@ -1289,19 +1452,19 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 				{
 					uint4 i = endp_count;
 					uint4 j = size - 1;
-					while (i && j && t_buffer.Chars()[j] == MCStringGetNativeCharAtIndex(p_sentinel, i))
+                    while (i && j && MCStringGetCharAtIndex(*t_output, j) == MCStringGetCharAtIndex(p_sentinel, i))
 					{
 						i--;
 						j--;
 					}
-					if (i == 0 && (t_buffer.Chars()[j] == MCStringGetNativeCharAtIndex(p_sentinel, 0)
-					               || (MCStringGetNativeCharAtIndex(p_sentinel, 0) == '\n' && t_buffer.Chars()[j] == '\r')))
+                    if (i == 0 && (MCStringGetCharAtIndex(*t_output, j) == MCStringGetCharAtIndex(p_sentinel, 0)
+                                   || (MCStringGetCharAtIndex(p_sentinel, 0) == '\n' && MCStringGetNativeCharAtIndex(*t_output, j) == '\r')))
 					{
 						// MW-2008-08-15: [[ Bug 6580 ]] This clause looks ahead for CR LF sequences
 						//   if we have just enp_countered CR. However, it was previousy using MCS_seek_cur
 						//   to retreat, which *doesn't* work for process p_streams.
-						if (MCStringGetNativeCharAtIndex(p_sentinel, 0) == '\n' && endp_count == 0
-						        && t_buffer.Chars()[j] == '\r')
+                        if (MCStringGetCharAtIndex(p_sentinel, 0) == '\n' && endp_count == 0
+                                && MCStringGetCharAtIndex(*t_output, j) == '\r')
 						{
 							uint1 term;
 							uint4 nread = 1;
@@ -1310,7 +1473,7 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 								if (term != '\n')
 									MCS_putback(term, p_stream);
 								else
-									t_buffer.Chars()[j] = '\n';
+                                    /* UNCHECKED */ MCStringReplace(*t_output, MCRangeMake(j, 1), MCStringRef("\n"));
                             }
 						}
 						if (--p_count == 0)
@@ -1319,9 +1482,9 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 				}
 			}
 		}
-	}
-	t_buffer.Shrink(size);
-	/* UNCHECKED */ t_buffer.CreateStringAndRelease(r_output);
+    }
+
+    /* UNCHECKED */ MCStringCopy(*t_output, r_output);
 }
 
 void MCFilesExecPerformReadUntilBinary(MCExecContext& ctxt, IO_handle stream, int4 p_index, uint4 p_count, const MCStringRef p_sentinel, Boolean words, double p_max_wait, int p_time_units, MCStringRef &r_output, IO_stat &r_stat)
@@ -1452,7 +1615,7 @@ void MCFilesExecReadComplete(MCExecContext& ctxt, MCStringRef p_output, IO_stat 
 		ctxt . SetTheResultToEmpty();
 		break;
 	}
-	if (t_textmode)
+    if (t_textmode)
 	{
 		MCAutoStringRef t_output;
 		/* UNCHECKED*/ MCStringConvertLineEndingsToLiveCode(p_output, &t_output);
@@ -1462,7 +1625,7 @@ void MCFilesExecReadComplete(MCExecContext& ctxt, MCStringRef p_output, IO_stat 
 	ctxt . SetItToValue(p_output);
 }
 
-void MCFilesExecReadUntil(MCExecContext& ctxt, IO_handle p_stream, index_t p_index, MCStringRef p_sentinel, double p_max_wait, int p_time_units, bool p_is_text, MCStringRef &r_output, IO_stat &r_stat)
+void MCFilesExecReadUntil(MCExecContext& ctxt, IO_handle p_stream, index_t p_index, MCStringRef p_sentinel, double p_max_wait, int p_time_units, intenum_t p_encoding, MCStringRef &r_output, IO_stat &r_stat)
 {
 	MCAutoStringRef t_sentinel;
 	if (p_sentinel != nil)
@@ -1472,13 +1635,13 @@ void MCFilesExecReadUntil(MCExecContext& ctxt, IO_handle p_stream, index_t p_ind
 
 	// MW-2009-11-03: [[ Bug 8402 ]] Use a different stream array, depending on what
 	//   type of stream we are reading from.
-	if (!p_is_text)
-		MCFilesExecPerformReadUntilBinary(ctxt, p_stream, p_index, 1, *t_sentinel, False, p_max_wait, p_time_units, r_output, r_stat);
+    if (p_encoding == kMCFileEncodingBinary)
+        MCFilesExecPerformReadUntilBinary(ctxt, p_stream, p_index, 1, *t_sentinel, False, p_max_wait, p_time_units, r_output, r_stat);
 	else
-		MCFilesExecPerformReadUntil(ctxt, p_stream, p_index, 1, *t_sentinel, False, p_max_wait, p_time_units, r_output, r_stat);
+        MCFilesExecPerformReadUntil(ctxt, p_stream, p_index, 1, *t_sentinel, False, p_max_wait, p_time_units, p_encoding, r_output, r_stat);
 }
 
-void MCFilesExecReadFor(MCExecContext& ctxt, IO_handle p_stream, index_t p_index, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units, MCStringRef &r_output, IO_stat &r_stat) 
+void MCFilesExecReadFor(MCExecContext& ctxt, IO_handle p_stream, index_t p_index, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units, intenum_t p_encoding, MCStringRef &r_output, IO_stat &r_stat)
 {
 	MCAutoStringRef t_sentinel;
 
@@ -1486,18 +1649,32 @@ void MCFilesExecReadFor(MCExecContext& ctxt, IO_handle p_stream, index_t p_index
 	{
 	case FU_LINE:
 		MCStringCreateWithCString("\n", &t_sentinel);
-		MCFilesExecPerformReadUntil(ctxt, p_stream, p_index, p_count, *t_sentinel, False, p_max_wait, p_time_units, r_output, r_stat);
+        MCFilesExecPerformReadUntil(ctxt, p_stream, p_index, p_count, *t_sentinel, False, p_max_wait, p_time_units, p_encoding, r_output, r_stat);
 		break;
 	case FU_ITEM:
 		MCStringCreateWithCString(",", &t_sentinel);
-		MCFilesExecPerformReadUntil(ctxt, p_stream, p_index, p_count, *t_sentinel, False, p_max_wait, p_time_units, r_output, r_stat);
+        MCFilesExecPerformReadUntil(ctxt, p_stream, p_index, p_count, *t_sentinel, False, p_max_wait, p_time_units, p_encoding, r_output, r_stat);
 		break;
 	case FU_WORD:
 		MCStringCreateWithCString(" ", &t_sentinel);
-		MCFilesExecPerformReadUntil(ctxt, p_stream, p_index, p_count, *t_sentinel, True, p_max_wait, p_time_units, r_output, r_stat);
-		break;
+        MCFilesExecPerformReadUntil(ctxt, p_stream, p_index, p_count, *t_sentinel, True, p_max_wait, p_time_units, p_encoding, r_output, r_stat);
+        break;
+    case FU_BYTE:
+    case FU_REAL4:
+    case FU_REAL8:
+    case FU_INT1:
+    case FU_INT2:
+    case FU_INT4:
+    case FU_INT8:
+    case FU_UINT1:
+    case FU_UINT2:
+    case FU_UINT4:
+    case FU_UINT8:
+        // Binary reading
+        MCFilesExecPerformReadForBinary(ctxt, p_stream, p_index, p_unit_type, p_count, p_max_wait, p_time_units, r_output, r_stat);
+        break;
 	default:
-		MCFilesExecPerformReadFor(ctxt, p_stream, p_index, p_unit_type, p_count, p_max_wait, p_time_units, r_output, r_stat);
+        MCFilesExecPerformReadFor(ctxt, p_stream, p_index, p_unit_type, p_count, p_max_wait, p_time_units, p_encoding, r_output, r_stat);
 		break;
 	}
 }
@@ -1520,15 +1697,15 @@ void MCFilesExecReadFromStdin(MCExecContext& ctxt, MCStringRef p_sentinel, uint4
 	switch (p_repeat_form)
 	{
 	case RF_FOR:
-		MCFilesExecReadFor(ctxt, IO_stdin, -1, p_count, p_unit_type, p_max_wait, p_time_units, &t_output, t_stat);
+        MCFilesExecReadFor(ctxt, IO_stdin, -1, p_count, p_unit_type, p_max_wait, p_time_units, kMCFileEncodingNative, &t_output, t_stat);
 		break;
 	case RF_UNTIL:
-		MCFilesExecReadUntil(ctxt, IO_stdin, -1, p_sentinel, p_max_wait, p_time_units, true, &t_output, t_stat);
+        MCFilesExecReadUntil(ctxt, IO_stdin, -1, p_sentinel, p_max_wait, p_time_units, kMCFileEncodingNative, &t_output, t_stat);
 		break;
 	default:
 		break;
 	}
-	MCFilesExecReadComplete(ctxt, *t_output, t_stat, True);
+    MCFilesExecReadComplete(ctxt, *t_output, t_stat, kMCFileEncodingNative);
 }
 
 void MCFilesExecReadFromStdinFor(MCExecContext& ctxt, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units)
@@ -1541,7 +1718,7 @@ void MCFilesExecReadFromStdinUntil(MCExecContext& ctxt, MCStringRef p_sentinel, 
 	MCFilesExecReadFromStdin(ctxt, p_sentinel, 0, 0, p_max_wait, p_time_units, RF_UNTIL);
 }
 
-void MCFilesExecReadGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_end, int64_t p_at, bool p_has_at, IO_handle &r_stream, Boolean &r_textmode, IO_stat &r_stat)
+void MCFilesExecReadGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_end, int64_t p_at, bool p_has_at, IO_handle &r_stream, intenum_t &r_encoding, IO_stat &r_stat)
 {
 	uindex_t t_index;
 	if (!IO_findfile(p_name, t_index) || MCfiles[t_index].mode == OM_APPEND
@@ -1551,7 +1728,7 @@ void MCFilesExecReadGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_e
 		return;
 	}
 	r_stream = MCfiles[t_index].ihandle;
-	r_textmode = MCfiles[t_index].textmode;
+    r_encoding = MCfiles[t_index].encoding;
 
 	if (p_has_at)
     {
@@ -1567,10 +1744,10 @@ void MCFilesExecReadGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_e
 void MCFilesExecReadFromFileOrDriverFor(MCExecContext& ctxt, bool p_driver, bool p_is_end, MCNameRef p_file, int64_t p_at, bool p_has_at, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units)
 {
 	IO_handle t_stream = NULL;
-	Boolean t_textmode = False;
+    MCSFileEncodingType t_encoding;
 	IO_stat t_stat = IO_NORMAL;
 	
-	MCFilesExecReadGetStream(ctxt, p_file, p_is_end, p_at, p_has_at, t_stream, t_textmode, t_stat);
+    MCFilesExecReadGetStream(ctxt, p_file, p_is_end, p_at, p_has_at, t_stream, (intenum_t&)t_encoding, t_stat);
 	
 	if (t_stream == NULL)
 		return;
@@ -1583,8 +1760,8 @@ void MCFilesExecReadFromFileOrDriverFor(MCExecContext& ctxt, bool p_driver, bool
 
 	MCAutoStringRef t_output;
 
-	MCFilesExecReadFor(ctxt, t_stream, -1, p_count, p_unit_type, p_max_wait, p_time_units, &t_output, t_stat);
- 	MCFilesExecReadComplete(ctxt, *t_output, t_stat, t_textmode);
+    MCFilesExecReadFor(ctxt, t_stream, -1, p_count, p_unit_type, p_max_wait, p_time_units, t_encoding, &t_output, t_stat);
+    MCFilesExecReadComplete(ctxt, *t_output, t_stat, t_encoding);
 
 #if !defined _WIN32 && !defined _MACOSX
 	MCS_sync(t_stream);
@@ -1594,10 +1771,10 @@ void MCFilesExecReadFromFileOrDriverFor(MCExecContext& ctxt, bool p_driver, bool
 void MCFilesExecReadFromFileOrDriverUntil(MCExecContext& ctxt, bool p_driver, bool p_is_end, MCNameRef p_file, MCStringRef p_sentinel, int64_t p_at, bool p_has_at, double p_max_wait, int p_time_units)
 {
 	IO_handle t_stream = NULL;
-	Boolean t_textmode = False;
+    MCSFileEncodingType t_encoding;
 	IO_stat t_stat = IO_NORMAL;
 	
-	MCFilesExecReadGetStream(ctxt, p_file, p_is_end, p_at, p_has_at, t_stream, t_textmode, t_stat);
+    MCFilesExecReadGetStream(ctxt, p_file, p_is_end, p_at, p_has_at, t_stream, (intenum_t&)t_encoding, t_stat);
 	
 	if (t_stream == NULL)
 		return;
@@ -1608,12 +1785,7 @@ void MCFilesExecReadFromFileOrDriverUntil(MCExecContext& ctxt, bool p_driver, bo
 		return;
 	}
 	
-	MCAutoStringRef t_output;
-	bool t_is_text = true;
-
-	if (!p_driver)
-		t_is_text = t_textmode != 0;
-    
+    MCAutoStringRef t_output;
 	if (MCStringGetLength(p_sentinel) == 1 && MCStringGetNativeCharAtIndex(p_sentinel, 0) == '\004')
 	{
 		MCAutoDataRef t_data;
@@ -1627,10 +1799,10 @@ void MCFilesExecReadFromFileOrDriverUntil(MCExecContext& ctxt, bool p_driver, bo
 	}
     else
     {
-        MCFilesExecReadUntil(ctxt, t_stream, -1, p_sentinel, p_max_wait, p_time_units, t_is_text, &t_output, t_stat);
+        MCFilesExecReadUntil(ctxt, t_stream, -1, p_sentinel, p_max_wait, p_time_units, t_encoding, &t_output, t_stat);
     }
     
-	MCFilesExecReadComplete(ctxt, *t_output, t_stat, t_textmode);
+    MCFilesExecReadComplete(ctxt, *t_output, t_stat, t_encoding != kMCFileEncodingBinary);
 
 #if !defined _WIN32 && !defined _MACOSX
 	MCS_sync(t_stream);
@@ -1690,30 +1862,29 @@ void MCFilesExecReadFromProcess(MCExecContext& ctxt, MCNameRef p_process, MCStri
 	}
 
 	IO_handle t_stream = NULL;
-	Boolean t_textmode = False;
+    intenum_t t_encoding;
 	IO_stat t_stat = IO_NORMAL;
 	t_stream = MCprocesses[t_index].ihandle;
 #ifdef OLD_IO_HANDLE
 	MCshellfd = t_stream->gefd();
 #endif // OLD_IO_HANDLE
-	t_textmode = MCprocesses[t_index].textmode;
+    t_encoding = MCprocesses[t_index].encoding;
 	MCAutoStringRef t_output;
 
 	switch (p_repeat_form)
 	{
 	case RF_FOR:
-		MCFilesExecReadFor(ctxt, t_stream, t_index, p_count, p_unit_type, p_max_wait, p_time_units, &t_output, t_stat);
+        MCFilesExecReadFor(ctxt, t_stream, t_index, p_count, p_unit_type, p_max_wait, p_time_units, t_encoding, &t_output, t_stat);
 		break;
 	case RF_UNTIL:
-	{
-		bool t_is_text = MCprocesses[t_index] . textmode != 0;
-		MCFilesExecReadUntil(ctxt, t_stream, t_index, p_sentinel, p_max_wait, p_time_units, t_is_text, &t_output, t_stat);
+    {
+        MCFilesExecReadUntil(ctxt, t_stream, t_index, p_sentinel, p_max_wait, p_time_units, t_encoding, &t_output, t_stat);
 		break;
 	}
 	default:  
 		break;
 	}
-	MCFilesExecReadComplete(ctxt, *t_output, t_stat, t_textmode);
+    MCFilesExecReadComplete(ctxt, *t_output, t_stat, t_encoding);
 }
 
 void MCFilesExecReadFromProcessFor(MCExecContext& ctxt, MCNameRef p_process, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units)
@@ -1728,7 +1899,7 @@ void MCFilesExecReadFromProcessUntil(MCExecContext& ctxt, MCNameRef p_process, M
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringRef p_data, int p_unit_type, IO_stat &r_stat)
+void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringRef p_data, int p_unit_type, intenum_t p_encoding, IO_stat &r_stat)
 {
 	uint4 len = MCStringGetLength(p_data);
 	uindex_t t_data_pos;
@@ -1740,11 +1911,47 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 	case FU_ITEM:
 	case FU_LINE:
 	case FU_WORD:
-		{
-			MCAutoStringRefAsCString t_output;
-			/* UNCHECKED */ t_output . Lock(p_data);
-			r_stat = MCS_write(*t_output, sizeof(char), len, p_stream);
-		}
+        {
+            switch(p_encoding)
+            {
+            case kMCFileEncodingNative:
+                {
+                    MCAutoStringRefAsCString t_output;
+                    /* UNCHECKED */ t_output . Lock(p_data);
+                    r_stat = MCS_write(*t_output, sizeof(char), strlen(*t_output), p_stream);
+                    break;
+                }
+            case kMCFileEncodingUTF8:
+                {
+                    MCAutoStringRefAsUTF8String t_output;
+                    /* UNCHECKED */ t_output . Lock(p_data);
+                    r_stat = MCS_write(*t_output, sizeof(char), strlen(*t_output), p_stream);
+                    break;
+                }
+            case kMCFileEncodingUTF16:
+                {
+                    r_stat = MCS_write(MCStringGetCharPtr(p_data), sizeof(unichar_t), len, p_stream);
+                    break;
+                }
+            case kMCFileEncodingUTF16LE:
+                {
+                    MCAutoDataRef t_output;
+                    /* UNCHECKED */ MCStringEncode(p_data, kMCStringEncodingUTF16LE, false, &t_output);
+                    r_stat = MCS_write(MCDataGetBytePtr(*t_output), 1, MCDataGetLength(*t_output), p_stream);
+                    break;
+                }
+            case kMCFileEncodingUTF16BE:
+                {
+                    MCAutoDataRef t_output;
+                    /* UNCHECKED */ MCStringEncode(p_data, kMCStringEncodingUTF16BE, false, &t_output);
+                    r_stat = MCS_write(MCDataGetBytePtr(*t_output), 1, MCDataGetLength(*t_output), p_stream);
+                    break;
+                }
+            default:
+                r_stat = IO_ERROR;
+                break;
+            }
+        }
 		break;
 	default:
 		{
@@ -1818,7 +2025,7 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 	}
 }
 
-void MCFilesExecWriteGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_end, int64_t p_at, bool p_has_at, IO_handle &r_stream, Boolean &r_textmode, IO_stat &r_stat)
+void MCFilesExecWriteGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_end, int64_t p_at, bool p_has_at, IO_handle &r_stream, intenum_t &r_encoding, IO_stat &r_stat)
 {
 	uindex_t t_index;
 	if (!IO_findfile(p_name, t_index) || MCfiles[t_index].mode == OM_NEITHER || 
@@ -1827,8 +2034,8 @@ void MCFilesExecWriteGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_
 		ctxt . SetTheResultToStaticCString("file is not open for write");
 		return;
 	}
-	r_stream = MCfiles[t_index].ohandle;
-	r_textmode = MCfiles[t_index].textmode;
+    r_stream = MCfiles[t_index].ohandle;
+    r_encoding = MCfiles[t_index].encoding;
 
 	if (p_has_at)
 		if (p_at < 0)
@@ -1842,7 +2049,8 @@ void MCFilesExecWriteGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_
 void MCFilesExecWriteToStdout(MCExecContext& ctxt, MCStringRef p_data, int p_unit_type)
 {
 	IO_stat t_stat;
-	MCFilesExecWriteToStream(ctxt, IO_stdout, p_data, p_unit_type, t_stat);
+    // ENCODING what encoding for STD?
+    MCFilesExecWriteToStream(ctxt, IO_stdout, p_data, p_unit_type, kMCFileEncodingNative, t_stat);
 
 	if (t_stat != IO_NORMAL)
 		ctxt . SetTheResultToStaticCString("error writing file");
@@ -1852,7 +2060,7 @@ void MCFilesExecWriteToStdout(MCExecContext& ctxt, MCStringRef p_data, int p_uni
 void MCFilesExecWriteToStderr(MCExecContext& ctxt, MCStringRef p_data, int p_unit_type)
 {
 	IO_stat t_stat;
-	MCFilesExecWriteToStream(ctxt, IO_stderr, p_data, p_unit_type, t_stat);
+    MCFilesExecWriteToStream(ctxt, IO_stderr, p_data, p_unit_type, kMCFileEncodingNative, t_stat);
 
 	if (t_stat != IO_NORMAL)
 		ctxt . SetTheResultToStaticCString("error writing file");
@@ -1865,10 +2073,10 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 {
 	
 	IO_handle t_stream = NULL;
-	Boolean t_textmode = False;
+    MCSFileEncodingType t_encoding;
 	IO_stat t_stat = IO_NORMAL;
 	
-	MCFilesExecWriteGetStream(ctxt, p_file, p_is_end, p_at, p_has_at, t_stream, t_textmode, t_stat);
+    MCFilesExecWriteGetStream(ctxt, p_file, p_is_end, p_at, p_has_at, t_stream, (intenum_t&)t_encoding, t_stat);
 	
 	if (t_stream == NULL)
 		return;
@@ -1879,14 +2087,14 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 		return;
 	}
 
-	if (t_textmode)
+    if (t_encoding != kMCFileEncodingBinary)
 	{
 		MCAutoStringRef t_text_data;
 		/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(p_data, &t_text_data);
-		MCFilesExecWriteToStream(ctxt, t_stream, *t_text_data, p_unit_type, t_stat);
+        MCFilesExecWriteToStream(ctxt, t_stream, *t_text_data, p_unit_type, t_encoding, t_stat);
 	}
 	else
-		MCFilesExecWriteToStream(ctxt, t_stream, p_data, p_unit_type, t_stat);
+        MCFilesExecWriteToStream(ctxt, t_stream, p_data, p_unit_type, t_encoding, t_stat);
 
 	if (t_stat != IO_NORMAL)
 	{
@@ -1934,14 +2142,13 @@ void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStrin
 		return;
 	}
 
-	IO_handle t_stream = MCprocesses[t_index].ohandle;
-	Boolean t_textmode = MCprocesses[t_index].textmode;
+    IO_handle t_stream = MCprocesses[t_index].ohandle;
 	uint4 t_offset;
 	Boolean haseof = False;
 	IO_stat t_stat;
     t_stat = IO_NORMAL;
 
-	if (t_textmode)
+    if (MCprocesses[t_index].encoding !=  kMCFileEncodingBinary)
 	{
 		MCStringRef t_text_data;
 		/* UNCHECKED */ MCStringConvertLineEndingsFromLiveCode(p_data, t_text_data);
@@ -1953,13 +2160,13 @@ void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStrin
 			MCValueAssign(t_text_data, *t_substring);
 			haseof = True;
 		}
-		MCFilesExecWriteToStream(ctxt, t_stream, t_text_data, p_unit_type, t_stat);
+        MCFilesExecWriteToStream(ctxt, t_stream, t_text_data, p_unit_type, MCprocesses[t_index].encoding, t_stat);
 		MCValueRelease(t_text_data);
 	}
 	else
-		MCFilesExecWriteToStream(ctxt, t_stream, p_data, p_unit_type, t_stat);
+        MCFilesExecWriteToStream(ctxt, t_stream, p_data, p_unit_type, MCprocesses[t_index].encoding, t_stat);
 
-	if (haseof) 
+    if (haseof)
 	{
 		MCS_close(MCprocesses[t_index].ohandle);
 		MCprocesses[t_index].ohandle = NULL;

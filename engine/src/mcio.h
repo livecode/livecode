@@ -56,6 +56,17 @@ enum MCSOpenFileMode
     kMCSOpenFileModeCreate
 };
 
+enum MCSFileEncodingType
+{
+    kMCFileEncodingText,
+    kMCFileEncodingNative,
+    kMCFileEncodingUTF8,
+    kMCFileEncodingUTF16,
+    kMCFileEncodingUTF16LE,
+    kMCFileEncodingUTF16BE,
+    kMCFileEncodingBinary
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void IO_set_stream(IO_handle stream, char *newptr);
@@ -172,6 +183,7 @@ extern IO_handle MCS_deploy_open(MCStringRef path, intenum_t p_mode);
 /* LEGACY */ extern IO_handle MCS_open(const char *path, const char *mode, Boolean map, Boolean driver, uint4 offset);
 extern IO_handle MCS_open(MCStringRef path, intenum_t mode, Boolean map, Boolean driver, uint4 offset);
 extern void MCS_close(IO_handle &stream);
+extern MCSFileEncodingType MCS_resolve_BOM(IO_handle x_stream);
 
 ///* LEGACY */ extern IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream);
 extern IO_stat MCS_readfixed(void *p_ptr, uint32_t p_byte_size, IO_handle p_stream);
@@ -194,6 +206,8 @@ extern IO_stat MCS_seek_set(IO_handle stream, int64_t offset);
 extern IO_stat MCS_seek_end(IO_handle stream, int64_t offset);
 extern int64_t MCS_tell(IO_handle stream);
 extern int64_t MCS_fsize(IO_handle stream);
+extern MCSFileEncodingType MCS_get_encoding(IO_handle stream);
+extern void MCS_set_encoding(IO_handle stream, MCSFileEncodingType p_encoding);
 
 ///////////////////////////////////////////////////////////////////////////////
 

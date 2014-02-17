@@ -146,16 +146,6 @@ enum Dest_type {
 	DT_THIS_ME,
 };
 
-enum Encoding_type
-{
-    EN_BOM_BASED,
-    EN_NATIVE,
-    EN_UTF8,
-    EN_UTF16,
-    EN_UTF16LE,
-    EN_UTF16BE
-};
-
 enum Encryption_constants
 {
     ENCRT_BIT,

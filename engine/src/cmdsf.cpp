@@ -3003,8 +3003,11 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
         }
 
 		if (te->which == OM_BINARY || te->which == OM_TEXT)
-		{
-			textmode = te->which == OM_TEXT;
+        {
+            // Encoding now replaces textmode
+            if (te->which == OM_BINARY)
+                encoding = EN_BINARY;
+
 			if (sp.next(type) != PS_NORMAL)
 			{
 				MCperror->add
@@ -3167,7 +3170,7 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
 		MCU_realloc((char **)&MCfiles, MCnfiles, MCnfiles + 1, sizeof(Streamnode));
 		MCfiles[MCnfiles].name = name;
 		MCfiles[MCnfiles].mode = mode;
-		MCfiles[MCnfiles].textmode = textmode;
+        MCfiles[MCnfiles].textmode = textmode;
 		MCfiles[MCnfiles].ihandle = istream;
 		MCfiles[MCnfiles++].ohandle = ostream;
 		break;
@@ -3275,16 +3278,16 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
 		switch (arg)
 		{
         case OA_DRIVER:
-            MCFilesExecOpenDriver(ctxt, *t_name, mode, textmode == True);
+            MCFilesExecOpenDriver(ctxt, *t_name, mode, encoding);
 			break;
         case OA_FILE:
-            MCFilesExecOpenFile(ctxt, *t_name, mode, textmode == True);
+            MCFilesExecOpenFile(ctxt, *t_name, mode, encoding);
 			break;
 		case OA_PROCESS:
 			if (elevated)
-				MCFilesExecOpenElevatedProcess(ctxt, *t_name, mode, textmode == True);
+                MCFilesExecOpenElevatedProcess(ctxt, *t_name, mode, encoding);
 			else
-				MCFilesExecOpenProcess(ctxt, *t_name, mode, textmode == True);
+                MCFilesExecOpenProcess(ctxt, *t_name, mode, encoding);
 			break;
 		case OA_SOCKET:
             if (!ctxt . EvalOptionalExprAsNullableNameRef(message, EE_OPEN_BADMESSAGE, &t_message_name))
@@ -3344,21 +3347,21 @@ void MCOpen::compile(MCSyntaxFactoryRef ctxt)
 		{
 		case OA_DRIVER:
 			MCSyntaxFactoryEvalConstantInt(ctxt, mode);
-			MCSyntaxFactoryEvalConstantBool(ctxt, textmode == True);
+            MCSyntaxFactoryEvalConstantBool(ctxt, encoding != EN_BINARY);
 
 			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecOpenDriverMethodInfo);
 			break;
 
 		case OA_FILE:
 			MCSyntaxFactoryEvalConstantInt(ctxt, mode);
-			MCSyntaxFactoryEvalConstantBool(ctxt, textmode == True);
+            MCSyntaxFactoryEvalConstantBool(ctxt, encoding != EN_BINARY);
 
 			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecOpenFileMethodInfo);
 			break;
 
 		case OA_PROCESS:
 			MCSyntaxFactoryEvalConstantInt(ctxt, mode);
-			MCSyntaxFactoryEvalConstantBool(ctxt, textmode == True);
+            MCSyntaxFactoryEvalConstantBool(ctxt, encoding != EN_BINARY);
 
 			if (elevated)
 				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecOpenElevatedProcessMethodInfo);
