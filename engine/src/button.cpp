@@ -4319,7 +4319,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	}
 	else
 	{
-		if ((stat = IO_write_stringref_new(menustring, stream, true)) != IO_NORMAL)
+		if ((stat = IO_write_stringref_new(acceltext, stream, true)) != IO_NORMAL)
 			return stat;
 	}
 
