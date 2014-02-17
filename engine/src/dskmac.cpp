@@ -559,7 +559,7 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 		if (MCModeShouldQueueOpeningStacks())
 		{
 			MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
-			MCValueAssign(MCstacknames[MCnstacks++], *t_full_path_name);
+			MCstacknames[MCnstacks++] = MCValueRetain(*t_full_path_name);
 		}
 		else
 		{
@@ -847,7 +847,7 @@ static bool MCS_mac_specialfolder_to_mac_folder(MCStringRef p_type, uint32_t& r_
 	{
 		if (MCStringIsEqualTo(p_type, MCNameGetString(*(sysfolderlist[i].token)), kMCStringOptionCompareCaseless))
 		{
-			r_folder = sysfolderlist[i].macfolder;
+			r_folder = sysfolderlist[i].mactag;
 			r_domain = sysfolderlist[i].domain;
             return true;
 		}
@@ -1558,6 +1558,7 @@ bool MCS_mac_FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)
     
 	CopyPascalStringToC(fSpec->name, (char*)t_name.Chars());
     
+    /* UNCHECKED */ t_name . Shrink(MCCStringLength((const char *)t_name . Chars()));
     /* UNCHECKED */ t_name.CreateStringAndRelease(&t_filename_std);
 	/* UNCHECKED */ MCS_pathfromnative(*t_filename_std, &t_filename);
 
@@ -1979,6 +1980,7 @@ public:
     MCStdioFileHandle(FILE *p_fptr)
     {
         m_stream = p_fptr;
+        m_is_eof = false;
     }
 	
 	virtual void Close(void)
@@ -2106,6 +2108,11 @@ public:
         {
             offset += nread;
             r_read = offset;
+            if (feof(m_stream))
+            {
+                m_is_eof = true;
+                return true;
+            }
             if (ferror(m_stream))
             {
                 clearerr(m_stream);
@@ -2122,11 +2129,6 @@ public:
                 
                 // A "real" error occurred
                 return false;
-            }
-            if (feof(m_stream))
-            {
-                m_is_eof = true;
-                return true;
             }
             
             m_is_eof = false;
@@ -3987,7 +3989,10 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
 	return strclone("not found");
 #endif /* MCS_request_ae_dsk_mac */
         if (aePtr == NULL)
+        {
             /* UNCHECKED */ MCStringCreateWithCString("No current Apple event", r_value); //as specified in HyperTalk
+            return;
+        }
         errno = noErr;
         
         switch (p_ae)
@@ -3996,12 +4001,15 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             {
                 char *aeclass;
                 if ((errno = getAEAttributes(aePtr, keyEventClassAttr, aeclass)) == noErr)
+                {
                     /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)aeclass, r_value);
+                    return;
+                }
                 break;
             }
             case AE_DATA:
             {
-                if (MCStringGetLength(p_message) == 0)
+                if (MCStringIsEmpty(p_message))
                 { //no keyword, get event parameter(data)
                     DescType rType;
                     Size rSize;  //actual size returned
@@ -4014,7 +4022,10 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                         char *string = nil;
                         uint4 length = 0;
                         if (fetch_ae_as_fsref_list(string, length))
+                        {
                             /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)string, r_value);
+                            return;
+                        }
                     }
                     
                     if ((errno = AEGetParamPtr(aePtr, keyDirectObject, typeChar,
@@ -4033,8 +4044,10 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                         uint4 length = 0;
                         if (fetch_ae_as_fsref_list(string, length))
                             /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)string, r_value);
-                        /* UNCHECKED */ MCStringCreateWithCString("file list error", r_value);
+                        else
+                            /* UNCHECKED */ MCStringCreateWithCString("file list error", r_value);
                     }
+                    return;
                 }
                 else
                 {
@@ -4050,12 +4063,18 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                         || key == keyTransactionIDAttr)
                     {
                         if ((errno = getAEAttributes(aePtr, key, info)) == noErr)
+                        {
                             /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)info, r_value);
+                            return;
+                        }
                     }
                     else
                     {
                         if ((errno = getAEParams(aePtr, key, info)) == noErr)
+                        {
                             /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)info, r_value);
+                            return;
+                        }
                     }
                 }
             }
@@ -4064,14 +4083,20 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             {
                 char *aeid;
                 if ((errno = getAEAttributes(aePtr, keyEventIDAttr, aeid)) == noErr)
+                {
                     /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)aeid, r_value);
+                    return;
+                }
                 break;
             }
             case AE_RETURN_ID:
             {
                 char *aerid;
                 if ((errno = getAEAttributes(aePtr, keyReturnIDAttr, aerid)) == noErr)
+                {
                     /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)aerid, r_value);
+                    return;
+                }
                 
                 break;
             }
@@ -4086,13 +4111,18 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                     errno = getAddressFromDesc(senderDesc, sender);
                     AEDisposeDesc(&senderDesc);
                     /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)sender, r_value);
+                    return;
                 }
                 delete[] sender;
                 break;
             }
         }  /* end switch */
+        
         if (errno == errAECoercionFail) //data could not display as text
+        {
             /* UNCHECKED */ MCStringCreateWithCString("unknown type", r_value);
+            return;
+        }
         
         /* UNCHECKED */ MCStringCreateWithCString("not found", r_value);
     }
@@ -6302,7 +6332,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 }
                 
                 if (t_success)
-                    t_success = MCListCopyAsStringAndRelease(*t_result_list, &t_result_string);
+                    t_success = MCListCopyAsString(*t_result_list, &t_result_string);
                 
                 if (t_success)
                     t_success = MCListAppend(*t_list, *t_result_string);
@@ -6565,6 +6595,27 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             return MCStringCopy(*t_newname, r_resolved_path);
     }
 	
+    virtual IO_handle DeployOpen(MCStringRef p_path, intenum_t p_mode)
+    {
+        if (p_mode != kMCSOpenFileModeCreate)
+            return OpenFile(p_path, p_mode, False);
+        
+        FILE *fptr;
+        IO_handle t_handle;
+        t_handle = NULL;
+        
+        MCAutoStringRefAsUTF8String t_path_utf;
+        if (!t_path_utf.Lock(p_path))
+            return NULL;
+        
+        fptr = fopen(*t_path_utf, IO_CREATE_MODE);
+
+        if (fptr != nil)
+            t_handle = new MCStdioFileHandle(fptr);
+        
+        return t_handle;
+    }
+    
 	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map)
     {
 #ifdef /* MCS_open_dsk_mac */ LEGACY_SYSTEM
@@ -6649,7 +6700,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (fptr != NULL)
         {
             created = False;
-            if (p_mode != kMCSystemFileModeRead)
+            if (p_mode != kMCSOpenFileModeRead)
             {
                 fclose(fptr);
                 fptr = NULL;
@@ -8013,7 +8064,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         for (i = 0; i < osancomponents; i++)
         {
             if (l == strlen(osacomponents[i].compname)
-                && !MCStringIsEqualToCString(p_language, osacomponents[i].compname, kMCCompareCaseless))
+                && MCStringIsEqualToCString(p_language, osacomponents[i].compname, kMCCompareCaseless))
             {
                 posacomp = &osacomponents[i];
                 break;

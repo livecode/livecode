@@ -607,7 +607,7 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCParagraph *p_start, MCParagrap
 		do
 		{
 			findex_t t_block_length;
-			MCNewAutoNameRef t_font_name;
+			MCNameRef t_font_name;
 			uint2 t_font_style;
 			uint2 t_font_size;
 			uint4 t_color;
@@ -631,8 +631,9 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCParagraph *p_start, MCParagrap
 					t_block_length += 1;
 				
 				// MW-2012-02-17: [[ SplitTextAttrs ]] Get any font attrs the block has.
-				if (!t_block -> gettextfont(&t_font_name))
-					t_font_name = MCValueRetain(origname);
+                // Note: gettextfont does not do a ValueRetain
+				if (!t_block -> gettextfont(t_font_name))
+					t_font_name = origname;
 				if (!t_block -> gettextsize(t_font_size))
 					t_font_size = origsize;
 				if (!t_block -> gettextstyle(t_font_style))
@@ -656,7 +657,7 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCParagraph *p_start, MCParagrap
 				t_color = 0xffffffff;
 			}
 			
-			t_buffer . Append(MCNameGetString(*t_font_name), t_font_size, t_font_style, t_color, t_block_length);
+			t_buffer . Append(MCNameGetString(t_font_name), t_font_size, t_font_style, t_color, t_block_length);
 			
 		}
 		while(t_block != t_blocks);

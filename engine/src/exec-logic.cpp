@@ -101,32 +101,40 @@ static bool MCLogicIsEqualTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef 
 		return true;
 	}
     
-	// If both can be numbers, then compare them as that.
-	bool t_left_converted, t_right_converted;
-	real64_t t_left_num, t_right_num;
-	if (!ctxt . TryToConvertToReal(p_left, t_left_converted, t_left_num) ||
-		!ctxt . TryToConvertToReal(p_right, t_right_converted, t_right_num))
-		return false;
-		
-	if (t_left_converted && t_right_converted)
+	// MW-2014-01-28: Only compare as numbers if both values are non-empty.
+	bool t_left_is_empty, t_right_is_empty;
+	t_left_is_empty = MCValueIsEmpty(p_left);
+	t_right_is_empty = MCValueIsEmpty(p_right);
+	if (!t_left_is_empty && !t_right_is_empty)
 	{
-		real64_t t_dleft, t_dright;
-		t_dleft = fabs(t_left_num);
-		t_dright = fabs(t_right_num);
+		// If both can be numbers, then compare them as that.
+		bool t_left_converted, t_right_converted;
+		real64_t t_left_num, t_right_num;
+		
+		if (!ctxt . TryToConvertToReal(p_left, t_left_converted, t_left_num) ||
+			!ctxt . TryToConvertToReal(p_right, t_right_converted, t_right_num))
+			return false;
+			
+		if (t_left_converted && t_right_converted)
+		{
+			real64_t t_dleft, t_dright;
+			t_dleft = fabs(t_left_num);
+			t_dright = fabs(t_right_num);
 
-		real64_t t_min;
-		t_min = MCMin(t_dleft, t_dright);
+			real64_t t_min;
+			t_min = MCMin(t_dleft, t_dright);
 
-		if (t_min < MC_EPSILON)
-			r_result = fabs(t_dleft - t_dright) < MC_EPSILON;
-		else
-			r_result = fabs(t_dleft - t_dright) / t_min < MC_EPSILON;
+			if (t_min < MC_EPSILON)
+				r_result = fabs(t_dleft - t_dright) < MC_EPSILON;
+			else
+				r_result = fabs(t_dleft - t_dright) / t_min < MC_EPSILON;
 
-		return true;
+			return true;
+		}
 	}
 
     // If only one value is empty by this point, then they are not equal
-    if (MCValueIsEmpty(p_left) != MCValueIsEmpty(p_right))
+    if (t_left_is_empty != t_right_is_empty)
     {
         r_result = false;
         return true;

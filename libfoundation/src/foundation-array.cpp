@@ -129,7 +129,7 @@ bool MCArrayCopyAndRelease(MCArrayRef self, MCArrayRef& r_new_array)
 	// If we are indirect, then new array is the contents, we are released.
 	if (__MCArrayIsIndirect(self))
 	{
-		r_new_array = self -> contents;
+		r_new_array = MCValueRetain(self -> contents);
 		MCValueRelease(self);
 		return true;
 	}
@@ -745,7 +745,7 @@ static bool __MCArrayFindKeyValueSlot(__MCArray *self, bool p_case_sensitive, MC
 	// Get the table size.
 	uindex_t t_size;
 	t_size = __MCArrayGetTableSize(self);
-	if (t_size == 0)
+	if (t_size == 0 || self -> key_values == nil)
 	{
 		r_slot = UINDEX_MAX;
 		return false;

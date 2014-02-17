@@ -1303,6 +1303,15 @@ struct MCObjectIndexPtr
     MCNameRef index;
 };
 
+struct MCObjectChunkIndexPtr
+{
+	MCObject *object;
+	uint32_t part_id;
+	Chunk_term chunk;
+	MCMarkedText mark;
+    MCNameRef index;
+};
+
 //////////////////////////////////////////////////////////////////////
 
 #endif

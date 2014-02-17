@@ -281,6 +281,7 @@ void MCStack::sethints()
 
 	chints.res_class = (char *)MCapplicationstring;
 	XSetClassHint(MCdpy, window, &chints);
+    MCMemoryDelete(chints.res_name);
 
 	Atom protocols[3];
 	protocols[0] = MCdeletewindowatom;
@@ -799,7 +800,8 @@ public:
 			
 			((MCScreenDC*)MCscreen)->putimage(m_stack->getwindow(), m_bitmap, 0, 0, m_area.x, m_area.y, m_area.width, m_area.height);
 		}
-		
+
+        MCRegionDestroy(m_redraw_region);
 		((MCScreenDC*)MCscreen)->destroyimage(m_bitmap);
 		m_bitmap = nil;
 	}

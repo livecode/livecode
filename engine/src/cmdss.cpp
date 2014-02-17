@@ -1144,7 +1144,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
             return;
 	}
 
-    ctxt . SetLine(line);
+    ctxt . SetLineAndPos(line, pos);
 	if (t_is_home)
 		MCInterfaceExecGoHome(ctxt, cptr);
 	else if (t_is_recent)

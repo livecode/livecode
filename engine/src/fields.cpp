@@ -578,21 +578,32 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
 		unselect(False, True);
 		focusedparagraph->setselectionindex(PARAGRAPH_MAX_LEN, PARAGRAPH_MAX_LEN, False, False);
 	}
-    
-	MCParagraph *toppgptr = fptr->getparagraphs();
+
+    MCParagraph *toppgptr = fptr->getparagraphs();
+
+    findex_t oldsi;
+    // 'put after' puts at PARAGRAPH_MAX_LEN...
+    if (si == PARAGRAPH_MAX_LEN)
+    {
+        MCParagraph* t_paragraph;
+        t_paragraph = fptr -> getparagraphs();
+        oldsi = 0;
+        // Loop up to the penultimate paragraph
+        while (t_paragraph -> next() != toppgptr)
+        {
+            oldsi += t_paragraph -> gettextlengthcr();
+            t_paragraph = t_paragraph -> next();
+        }
+        // Add the length of the last paragraph
+        oldsi += t_paragraph -> gettextlength();
+    }
+    else
+        oldsi = si;
 
 	MCParagraph *pgptr;
 	pgptr = verifyindices(toppgptr, si, ei);
 
-    findex_t oldsi = si;
-    MCParagraph *t_paragraph = toppgptr;
-    do
-    {
-        oldsi += t_paragraph -> gettextlengthcr();
-        t_paragraph = t_paragraph -> next();
-    }
-    while (t_paragraph != pgptr);
-    
+
 	// MW-2013-10-24: [[ FasterField ]] If affect_many is true then multiple
 	//   paragraphs have been affected, so we need to redraw everything below
 	//   the initial one. We also store the initial height of the paragraph
@@ -691,10 +702,10 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
     }
 
 	if (opened && fptr == fdata)
-	{
-		oldsi += MCStringGetLength(p_text);
-		ei = oldsi;
-		focusedparagraph = indextoparagraph(paragraphs, oldsi, ei);
+    {
+        oldsi += MCStringGetLength(p_text);
+        ei = oldsi;
+        focusedparagraph = indextoparagraph(paragraphs, oldsi, ei);
 		if (state & CS_KFOCUSED)
 			focusedparagraph->setselectionindex(ei, ei, False, False);
 		
@@ -2318,7 +2329,8 @@ bool MCField::returnchunk(findex_t p_si, findex_t p_ei, MCStringRef& r_chunk)
 
 	// MW-2012-02-23: [[ CharChunk ]] Map the internal field indices (si, ei) to
 	//   char indices.
-	unresolvechars(0, p_si, p_ei);
+    // SN-2014-02-11: [[ Unicodify ]] The functions calling returnchunk already have field indices.
+//	unresolvechars(0, p_si, p_ei);
 	
 	const char *sptr = parent->gettype() == CT_CARD && getstack()->hcaddress()
 										 ? "char %d to %d of card field %d" : "char %d to %d of field %d";

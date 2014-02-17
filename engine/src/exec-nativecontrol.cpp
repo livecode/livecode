@@ -719,7 +719,7 @@ void MCNativeControlExecGet(MCExecContext& ctxt, MCStringRef p_control_name, MCS
 
 		MCExecValue t_value;
         MCExecFetchProperty(ctxt, t_info, &t_control, t_value);
-		MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, t_value . type, &t_value, r_result);
+		MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeValueRef, &r_result);
     }
 }
 

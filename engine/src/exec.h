@@ -381,6 +381,44 @@ template<typename O, typename A, typename B, typename C, void (O::*Method)(MCExe
 	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> part_id, t_si, t_ei, mixed, count, arg);
 }
 
+template<typename O, typename A, typename B, void (O::*Method)(MCExecContext&, MCNameRef, uint32_t, int32_t, int32_t, bool&, A)> inline void MCPropertyObjectChunkMixedArrayThunk(MCExecContext& ctxt, MCObjectChunkIndexPtr *obj, B mixed, A arg)
+{
+    int32_t t_si, t_ei;
+    
+    if (obj -> object -> gettype() == CT_FIELD)
+    {
+        t_si = 0;
+        t_ei = INT32_MAX;
+        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+    }
+    else
+    {
+        t_si = obj -> mark . start;
+        t_ei = obj -> mark . finish;
+    }
+    
+	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> index, obj -> part_id, t_si, t_ei, mixed, arg);
+}
+
+template<typename O, typename A, void (O::*Method)(MCExecContext&, MCNameRef, uint32_t, int32_t, int32_t, A)> inline void MCPropertyObjectChunkArrayThunk(MCExecContext& ctxt, MCObjectChunkIndexPtr *obj, A arg)
+{
+    int32_t t_si, t_ei;
+    
+    if (obj -> object -> gettype() == CT_FIELD)
+    {
+        t_si = 0;
+        t_ei = INT32_MAX;
+        MCExecResolveCharsOfField((MCField *)obj -> object, obj -> part_id, t_si, t_ei, obj -> mark . start, obj -> mark . finish - obj -> mark . start);
+    }
+    else
+    {
+        t_si = obj -> mark . start;
+        t_ei = obj -> mark . finish;
+    }
+    
+	(static_cast<O *>(obj -> object) ->* Method)(ctxt, obj -> index, obj -> part_id, t_si, t_ei, arg);
+}
+
 template<typename A, void Method(MCExecContext&, MCNameRef, A)> inline void MCPropertyArrayThunk(MCExecContext& ctxt, MCNameRef index, A arg)
 {
     Method(ctxt, index, arg);
@@ -403,6 +441,8 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkArrayGetBinaryString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCDataRef&)
 #define MCPropertyThunkArraySetBinaryString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCDataRef)
 #define MCPropertyThunkArrayGetString(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCStringRef&)
+#define MCPropertyThunkArrayGetAny(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCValueRef&)
+#define MCPropertyThunkArraySetAny(mth) MCPropertyArrayThunkImp(mth, MCNameRef, MCValueRef)
 
 #define MCPropertyThunkGetAny(mth) MCPropertyThunkImp(mth, MCValueRef&)
 #define MCPropertyThunkGetBool(mth) MCPropertyThunkImp(mth, bool&)
@@ -472,6 +512,9 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkListThunkImp(obj, mth, count, typ) (void(*)(MCExecContext&,MCObjectChunkPtr*,count,typ))MCPropertyObjectChunkListThunk<obj,typ,count,&obj::mth>
 #define MCPropertyObjectChunkMixedThunkImp(obj, mth, mixed, typ) (void(*)(MCExecContext&,MCObjectChunkPtr*,mixed,typ))MCPropertyObjectChunkMixedThunk<obj,typ,mixed,&obj::mth>
 #define MCPropertyObjectChunkMixedListThunkImp(obj, mth, mixed, count, typ) (void(*)(MCExecContext&,MCObjectChunkPtr*,mixed,count,typ))MCPropertyObjectChunkMixedListThunk<obj,typ,count,mixed,&obj::mth>
+
+#define MCPropertyObjectChunkMixedArrayThunkImp(obj, mth, mixed, typ) (void(*)(MCExecContext&,MCObjectChunkIndexPtr*,mixed,typ))MCPropertyObjectChunkMixedArrayThunk<obj,typ,mixed,&obj::mth>
+#define MCPropertyObjectChunkArrayThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectChunkIndexPtr*,typ))MCPropertyObjectChunkArrayThunk<obj,typ,&obj::mth>
 
 #define MCPropertyObjectThunkGetAny(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCValueRef&)
 #define MCPropertyObjectThunkGetBool(obj, mth) MCPropertyObjectThunkImp(obj, mth, bool&)
@@ -597,6 +640,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectArrayThunkSetOptionalColor(obj, mth) MCPropertyObjectArrayThunkImp(obj, mth, MCColor*)
 #define MCPropertyObjectArrayThunkSetOptionalUInt16(obj, mth) MCPropertyObjectArrayThunkImp(obj, mth, uinteger_t*)
 
+#define MCPropertyObjectChunkThunkGetAny(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCValueRef&)
 #define MCPropertyObjectChunkThunkGetBool(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, bool&)
 #define MCPropertyObjectChunkThunkGetString(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCStringRef&)
 #define MCPropertyObjectChunkThunkGetBinaryString(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCDataRef&)
@@ -608,6 +652,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkThunkGetCustomType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, typ&)
 #define MCPropertyObjectChunkThunkGetOptionalEnumType(obj, mth, typ) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t*&)
 
+#define MCPropertyObjectChunkThunkSetAny(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCValueRef)
 #define MCPropertyObjectChunkThunkSetBool(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, bool)
 #define MCPropertyObjectChunkThunkSetString(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCStringRef)
 #define MCPropertyObjectChunkThunkSetBinaryString(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCDataRef)
@@ -646,6 +691,10 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectChunkMixedThunkSetOptionalEnumType(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, intenum_t*)
 #define MCPropertyObjectChunkMixedThunkSetOptionalString(obj, mth) MCPropertyObjectChunkThunkImp(obj, mth, MCStringRef)
 #define MCPropertyObjectChunkMixedListThunkSetItemsOfUInt(obj, mth) MCPropertyObjectChunkListThunkImp(obj, mth, uindex_t, uinteger_t*)
+
+#define MCPropertyObjectChunkMixedArrayThunkGetOptionalBool(obj, mth) MCPropertyObjectChunkMixedArrayThunkImp(obj, mth, bool&, bool*&)
+#define MCPropertyObjectChunkMixedArrayThunkGetBool(obj, mth) MCPropertyObjectChunkMixedArrayThunkImp(obj, mth, bool&, bool&)
+#define MCPropertyObjectChunkMixedArrayThunkSetOptionalBool(obj, mth) MCPropertyObjectChunkArrayThunkImp(obj, mth, bool*)
 
 //////////
 
@@ -842,6 +891,14 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 
 #define DEFINE_RO_OBJ_CHAR_CHUNK_EFFECTIVE_MIXED_PROPERTY(prop, type, obj, tag) \
 { prop, true, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedThunkGet##type(obj, GetEffective##tag##OfCharChunk), nil, true, false, kMCPropertyInfoChunkTypeChar },
+
+//
+
+#define DEFINE_RW_OBJ_CHAR_CHUNK_NON_EFFECTIVE_MIXED_ARRAY_PROPERTY(prop, type, obj, tag) \
+{ prop, false, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedArrayThunkGet##type(obj, Get##tag##OfCharChunk), (void *)MCPropertyObjectChunkMixedArrayThunkSet##type(obj, Set##tag##OfCharChunk), true, true, kMCPropertyInfoChunkTypeChar },
+
+#define DEFINE_RO_OBJ_CHAR_CHUNK_EFFECTIVE_MIXED_ARRAY_PROPERTY(prop, type, obj, tag) \
+{ prop, true, kMCPropertyTypeMixed##type, nil, (void *)MCPropertyObjectChunkMixedArrayThunkGet##type(obj, GetEffective##tag##OfCharChunk), nil, true, true, kMCPropertyInfoChunkTypeChar },
 
 //
 
@@ -1509,6 +1566,22 @@ public:
         m_line = p_line;
     }
     
+    uint2 GetPos() const
+    {
+        return m_pos;
+    }
+    
+    void SetPos(uint2 p_pos)
+    {
+        m_pos = p_pos;
+    }
+    
+    void SetLineAndPos(uint2 p_line, uint2 p_pos)
+    {
+        m_line = p_line;
+        m_pos = p_pos;
+    }
+    
 	void SetParentScript(MCParentScriptUse *p_parentscript)
 	{
         m_parentscript = p_parentscript;
@@ -1605,6 +1678,7 @@ private:
     uint2 m_nfforce;
     uint2 m_cutoff;
     uint2 m_line;
+    uint2 m_pos;
     Boolean m_convertoctals;
     Boolean m_casesensitive;
     Boolean m_wholematches;
@@ -1668,11 +1742,9 @@ void MCLogicEvalIsNotABoolean(MCExecContext& ctxt, MCValueRef p_value, bool& r_r
 extern MCExecMethodInfo *kMCArraysEvalKeysMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalExtentsMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecCombineMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecCombineByRowMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecCombineByColumnMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecCombineAsSetMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecSplitMethodInfo;
-extern MCExecMethodInfo *kMCArraysExecSplitByRowMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecSplitByColumnMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecSplitAsSetMethodInfo;
 extern MCExecMethodInfo *kMCArraysExecUnionMethodInfo;
@@ -1689,19 +1761,17 @@ extern MCExecMethodInfo *kMCArraysEvalIsNotAmongTheKeysOfMethodInfo;
 void MCArraysEvalKeys(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string);
 void MCArraysEvalExtents(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string);
 void MCArraysExecCombine(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_element_delimiter, MCStringRef p_key_delimiter, MCStringRef& r_string);
-void MCArraysExecCombineByRow(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string);
 void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string);
 void MCArraysExecCombineAsSet(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_element_delimiter, MCStringRef& r_string);
 void MCArraysExecSplit(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_element_delimiter, MCStringRef p_key_delimiter, MCArrayRef& r_array);
-void MCArraysExecSplitByRow(MCExecContext& ctxt, MCStringRef p_string, MCArrayRef& r_array);
 void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArrayRef& r_array);
 void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_element_delimiter, MCArrayRef& r_array);
 void MCArraysExecUnion(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
 void MCArraysExecIntersect(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
 void MCArraysExecUnionRecursive(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
 void MCArraysExecIntersectRecursive(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
-void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_encoding);
-void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCStringRef p_encoding, MCArrayRef& r_array);
+void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCDataRef& r_encoding);
+void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayRef& r_array);
 void MCArraysEvalMatrixMultiply(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, MCArrayRef& r_result);
 void MCArraysEvalTransposeMatrix(MCExecContext& ctxt, MCArrayRef p_matrix, MCArrayRef& r_result);
 
@@ -3342,14 +3412,14 @@ void MCPasteboardSetDragImageOffset(MCExecContext& ctxt, MCPoint *p_value);
 void MCPasteboardGetAllowableDragActions(MCExecContext& ctxt, intset_t& r_value);
 void MCPasteboardSetAllowableDragActions(MCExecContext& ctxt, intset_t p_value);
 
-void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef& r_data);
-void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef p_data);
-void MCPasteboardGetDragData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef& r_data);
-void MCPasteboardSetDragData(MCExecContext& ctxt, MCNameRef p_index, MCDataRef p_data);
-void MCPasteboardGetClipboardTextData(MCExecContext& ctxt, MCDataRef& r_data);
-void MCPasteboardSetClipboardTextData(MCExecContext& ctxt, MCDataRef p_data);
-void MCPasteboardGetDragTextData(MCExecContext& ctxt, MCDataRef& r_data);
-void MCPasteboardSetDragTextData(MCExecContext& ctxt, MCDataRef p_data);
+void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_data);
+void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_data);
+void MCPasteboardGetDragData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_data);
+void MCPasteboardSetDragData(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_data);
+void MCPasteboardGetClipboardTextData(MCExecContext& ctxt, MCValueRef& r_data);
+void MCPasteboardSetClipboardTextData(MCExecContext& ctxt, MCValueRef p_data);
+void MCPasteboardGetDragTextData(MCExecContext& ctxt, MCValueRef& r_data);
+void MCPasteboardSetDragTextData(MCExecContext& ctxt, MCValueRef p_data);
 
 ///////////
 

@@ -90,6 +90,8 @@ void MCParagraph::fetchattrs(MCArrayRef src)
     MCBooleanRef t_boolean_value;
     MCInterfaceNamedColor t_color;
     MCExecContext ctxt(nil, nil, nil);
+    
+    t_color . name = nil;
 
     if (ctxt . CopyElementAsInteger(src, MCNAME("textAlign"), false, t_intenum_value))
         SetTextAlign(ctxt, &t_intenum_value);
@@ -1716,7 +1718,7 @@ int32_t MCParagraph::gettablewidth(void) const
 
 MCStringRef MCParagraph::getmetadata(void) const
 {
-	if (attrs != nil && (attrs -> flags & PA_HAS_METADATA))
+	if (attrs != nil && (attrs -> flags & PA_HAS_METADATA) && attrs -> metadata != nil)
 		return attrs -> metadata;
     return kMCEmptyString;
 }

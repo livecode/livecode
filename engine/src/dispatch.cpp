@@ -519,6 +519,11 @@ IO_stat readheader(IO_handle& stream, uint32_t& r_version)
 				return IO_ERROR;
 		}
 	}
+    else
+    {
+        // Could not read header
+        return IO_ERROR;
+    }
 	return IO_NORMAL;
 }
 
@@ -843,7 +848,7 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 	{
 
 		MCAutoStringRef t_homename;
-		if (MCS_getenv(MCSTR("HOME"), &t_homename))
+		if (MCS_getenv(MCSTR("HOME"), &t_homename) && !MCStringIsEmpty(*t_homename))
 		{
 			MCAutoStringRef t_trimmed_homename;
 			if (MCStringGetCharAtIndex(*t_homename, MCStringGetLength(*t_homename) - 1) == '/')
@@ -1571,7 +1576,7 @@ MCObject *MCDispatch::getobjname(Chunk_term type, MCNameRef p_name)
 			do
 			{
 check:
-				if (!MCNameIsEmpty(*t_image_name) && iptr -> hasname(*t_image_name))
+				if (*t_image_name != nil && iptr -> hasname(*t_image_name))
 					return iptr;
 				if (!iptr->getopened())
 				{

@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////
 
-struct NSString;
+//struct NSString;
 
 extern "C" void rreCaptureBeginSession(void);
 extern "C" void rreCaptureEndSession(void);

@@ -26,8 +26,6 @@ protected:
 	MCStringRef pattern;
 	bool casesensitive;
 public:
-	// MW-2013-07-01: [[ EnhancedFilter ]] Tweaked to take 'const char *' since class
-	//   copies the string.
 	MCPatternMatcher(MCStringRef p, bool cs)
 	{
 		pattern = MCValueRetain(p);

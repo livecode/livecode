@@ -312,7 +312,7 @@ public:
 		}
 
 		// Empty result means success
-		MCresult -> clear();
+        ctxt . SetTheResultToEmpty();
 
 		return;
 	}
@@ -938,7 +938,7 @@ public:
     
 		MCSystemListProcesses(ListProcessCallback, &t_state);
         
-		MCresult -> set(ctxt, t_state.list);
+		ctxt . SetTheResultToValue(t_state.list);
 	}
     
 private:
@@ -955,7 +955,7 @@ private:
 	{
 		State *state;
 		state = (State *)p_state;
-        state -> found = MCStringCompareTo(state -> module, p_module, kMCStringOptionCompareCaseless);
+        state -> found = MCStringIsEqualTo(state -> module, p_module, kMCStringOptionCompareCaseless);
 		return !state -> found;
 	}
 

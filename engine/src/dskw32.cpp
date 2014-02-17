@@ -1500,11 +1500,34 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 			
 			nread += 1;
 		}
-		else if (!ReadFile(m_handle, (LPVOID)sptr, (DWORD)p_byte_size, &nread, NULL))
+		else
 		{
-			MCS_seterrno(GetLastError());
-			r_read = nread;
-			return false;
+			// The Win32 ReadFile call has an annoying limitation - it cannot read more
+			// than 64MB in each call. Just in case there are additional circumstances
+			// that lower it further, perform the read 4MB at a tile.
+			BOOL t_read_success;
+			DWORD t_offset, t_remaining;
+			t_read_success = TRUE;
+			t_offset = 0;
+			t_remaining = p_byte_size;
+			while (t_read_success && t_remaining > 0)
+			{
+				// Only read up to 4MB at a time.
+				DWORD t_readsize;
+				t_readsize = MCU_min(t_remaining, 0x00400000);
+				
+				t_read_success = ReadFile(m_handle, (LPVOID)((char*)sptr + t_offset), t_readsize, &nread, NULL);
+				t_offset += nread;
+				if (!t_read_success)
+				{
+					MCS_seterrno(GetLastError());
+					r_read = t_offset;
+					return false;
+				}
+				
+				t_remaining -= nread;
+			}
+			nread = t_offset;
 		}
 
 		if (nread < p_byte_size)
@@ -2871,7 +2894,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 #endif /* MCS_umask_dsk_w32 */
         return _umask(p_mask);
     }
-	
+    
 	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map)
     {
 #ifdef /* MCS_open_dsk_w32 */ LEGACY_SYSTEM
@@ -3107,7 +3130,10 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 					CloseHandle(t_file_mapped_handle);
 				}
 				else
+				{
 					t_handle = new MCMemoryMappedFileHandle(t_file_mapped_handle, t_buffer, t_len);
+					CloseHandle(t_file_handle);
+				}
 			}
 		}
 		else
@@ -3926,6 +3952,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                     CloseHandle(piProcInfo.hThread);
                 }
                 MCS_close(MCprocesses[index].ihandle);
+                MCprocesses[index].ihandle = nil;
                 IO_cleanprocesses();                
 				MCValueRelease(t_cmd);
                 return false;
@@ -3952,7 +3979,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		bool t_success;
 
 		t_success = MCS_closetakingbuffer(MCprocesses[index].ohandle, t_buffer, t_buf_size) == IO_NORMAL;
-
+        MCprocesses[index].ohandle = nil;
+        
         IO_cleanprocesses();
         MCValueRelease(t_cmd);
 
@@ -4112,40 +4140,40 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		}
 #endif /* MCS_checkprocesses_dsk_w32 */
 
-	// TODO : refactor Windows checkprocesses code 
-	/*
-        uint2 i;
-        for (i = 0 ; i < MCnprocesses ; i++)
-            if (MCprocesses[i].phandle != NULL)
+    uint2 i;
+    for (i = 0 ; i < MCnprocesses ; i++)
+        if (MCprocesses[i].phandle != NULL)
+        {
+            DWORD err = WaitForSingleObject(MCprocesses[i].phandle, 0);
+            if (err == WAIT_OBJECT_0 || err == WAIT_FAILED)
             {
-                DWORD err = WaitForSingleObject(MCprocesses[i].phandle, 0);
-                if (err == WAIT_OBJECT_0 || err == WAIT_FAILED)
+                // MW-2010-05-17: Make sure we keep the process around long enough to
+                //   read in all its data.
+                uint32_t t_available;
+                if (MCprocesses[i].ihandle == NULL || !PeekNamedPipe(MCprocesses[i].ihandle->GetFilePointer(), NULL, 0, NULL, (DWORD *)&t_available, NULL))
+                    t_available = 0;
+                if (t_available != 0)
+                    return;
+                
+				/* TODO: set end of file...
+                // MW-2010-10-25: [[ Bug 9134 ]] Make sure the we mark the stream as 'ATEOF'
+                if (MCprocesses[i] . ihandle != nil)
+                    MCprocesses[i] . ihandle -> flags |= IO_ATEOF;
+                */
+
+                DWORD retcode;
+                GetExitCodeProcess(MCprocesses[i].phandle, &retcode);
+                MCprocesses[i].retcode = retcode;
+                MCprocesses[i].pid = 0;
+                MCprocesses[i].phandle = NULL;
+                Sleep(0);
+                if (MCprocesses[i].thandle != NULL)
                 {
-                    // MW-2010-05-17: Make sure we keep the process around long enough to
-                    //   read in all its data.
-                    uint32_t t_available;
-                    if (MCprocesses[i].ihandle == NULL || !PeekNamedPipe(MCprocesses[i].ihandle->fhandle, NULL, 0, NULL, (DWORD *)&t_available, NULL))
-                        t_available = 0;
-                    if (t_available != 0)
-                        return;
-                    
-                    // MW-2010-10-25: [[ Bug 9134 ]] Make sure the we mark the stream as 'ATEOF'
-                    if (MCprocesses[i] . ihandle != nil)
-                        MCprocesses[i] . ihandle -> flags |= IO_ATEOF;
-                    
-                    DWORD retcode;
-                    GetExitCodeProcess(MCprocesses[i].phandle, &retcode);
-                    MCprocesses[i].retcode = retcode;
-                    MCprocesses[i].pid = 0;
-                    MCprocesses[i].phandle = NULL;
-                    Sleep(0);
-                    if (MCprocesses[i].thandle != NULL)
-                    {
-                        TerminateThread(MCprocesses[i].thandle, 0);
-                        MCprocesses[i].thandle = NULL;
-                    }
+                    TerminateThread(MCprocesses[i].thandle, 0);
+                    MCprocesses[i].thandle = NULL;
                 }
-            }*/
+            }
+        }
     }
     
 	virtual uint32_t GetSystemError(void)

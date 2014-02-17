@@ -529,7 +529,10 @@ class MCXorBits : public MCBinaryOperatorCtxt<uinteger_t, uinteger_t, MCMathEval
 class MCBeginsEndsWith : public MCBinaryOperator
 {
 public:
-    MCBeginsEndsWith(void){}
+    MCBeginsEndsWith(void)
+    {
+        rank = FR_COMPARISON;
+    }
     virtual Parse_stat parse(MCScriptPoint&, Boolean the);
 };
 

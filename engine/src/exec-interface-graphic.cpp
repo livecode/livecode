@@ -642,8 +642,8 @@ void MCGraphic::DoGetGradientFill(MCExecContext& ctxt, MCGradientFill*& p_fill, 
 
 void MCGraphic::DoSetGradientFill(MCExecContext& ctxt, MCGradientFill*& p_fill, Draw_index p_di, MCNameRef p_prop, MCExecValue p_value)
 {
-    bool t_dirty;
-    bool t_success;
+    bool t_dirty = false;
+    bool t_success = true;
     
     if (p_prop == nil || MCNameIsEmpty(p_prop))
         t_success = MCGradientFillSetProperties(ctxt, p_fill, rect, p_value, t_dirty);

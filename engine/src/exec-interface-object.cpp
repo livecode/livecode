@@ -2531,9 +2531,7 @@ void MCObject::GetTextFont(MCExecContext& ctxt, MCStringRef& r_font)
     uint2 fontsize, fontstyle;
     MCNameRef fontname;
     getfontattsnew(fontname, fontsize, fontstyle);
-    r_font = MCNameGetString(fontname);
-		
-	
+    r_font = MCValueRetain(MCNameGetString(fontname));
 }
 
 void MCObject::SetTextFont(MCExecContext& ctxt, MCStringRef font)
@@ -2607,8 +2605,7 @@ void MCObject::GetEffectiveTextFont(MCExecContext& ctxt, MCStringRef& r_font)
     uint2 fontsize, fontstyle;
     MCNameRef fontname;
     getfontattsnew(fontname, fontsize, fontstyle);
-    r_font = MCNameGetString(fontname);
-
+    r_font = MCValueRetain(MCNameGetString(fontname));
 }
 
 void MCObject::GetTextSize(MCExecContext& ctxt, uinteger_t*& r_size)
@@ -2965,16 +2962,7 @@ void MCObject::GetEnabled(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 
 void MCObject::SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting)
 {
-	bool t_dirty;
-	t_dirty = !changeflag(setting, F_DISABLED);
-	
-	flags ^= F_DISABLED;
-		
-	if (flags & F_DISABLED && state & CS_KFOCUSED)
-		getcard(part)->kunfocus();
-
-	if (t_dirty)
-		Redraw();
+    SetDisabled(ctxt, part, !setting);
 }
 
 void MCObject::GetDisabled(MCExecContext& ctxt, uint32_t part, bool& r_setting)
@@ -3241,7 +3229,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
         
         t_exec_value . valueref_value = MCValueRetain(t_value);
         t_exec_value . type = kMCExecValueTypeValueRef;
-        setprop(ctxt, part, (Properties)s_preprocess_props[j].prop, False, t_exec_value);
+        setprop(ctxt, part, (Properties)s_preprocess_props[j].prop, nil, False, t_exec_value);
         
         ctxt . IgnoreLastError();
     }
@@ -3283,7 +3271,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
             
             t_exec_value . valueref_value = MCValueRetain(t_value);
             t_exec_value . type = kMCExecValueTypeValueRef;
-            setprop(ctxt, part, (Properties)te->which, False, t_exec_value);
+            setprop(ctxt, part, (Properties)te->which, nil, False, t_exec_value);
             
             ctxt . IgnoreLastError();
 		}
@@ -3946,6 +3934,10 @@ void MCObject::SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool 
 			t_style_set = gettextstyle();
         
         MCF_changetextstyle(t_style_set, t_style, p_setting);
+        
+        MCInterfaceTextStyle t_style;
+        t_style . style = t_style_set;
+        SetTextStyle(ctxt, t_style);
         return;
     }
     

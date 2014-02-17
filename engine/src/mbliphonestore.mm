@@ -252,8 +252,9 @@ void MCPurchaseGetProductIdentifier(MCExecContext& ctxt, MCPurchase *p_purchase,
     
 	SKPayment *t_payment = nil;
 	SKPaymentTransaction *t_transaction = nil;
+    t_transaction = t_ios_data->transaction;
 	
-	if (t_ios_data->transaction != nil)
+    if (t_transaction != nil)
 		t_payment = [t_transaction payment];
 	else
 		t_payment = t_ios_data->payment;
@@ -270,8 +271,9 @@ void MCPurchaseGetQuantity(MCExecContext& ctxt, MCPurchase *p_purchase, uinteger
     
 	SKPayment *t_payment = nil;
 	SKPaymentTransaction *t_transaction = nil;
+    t_transaction = t_ios_data->transaction;
 	
-	if (t_ios_data->transaction != nil)
+    if (t_transaction != nil)
 		t_payment = [t_transaction payment];
 	else
 		t_payment = t_ios_data->payment;
@@ -291,8 +293,9 @@ void MCPurchaseGetPurchaseDate(MCExecContext& ctxt, MCPurchase *p_purchase, inte
     
 	SKPayment *t_payment = nil;
 	SKPaymentTransaction *t_transaction = nil;
+    t_transaction = t_ios_data->transaction;
 	
-	if (t_ios_data->transaction != nil)
+    if (t_transaction != nil)
 	{
 		t_transaction = t_ios_data->transaction;
 		t_payment = [t_transaction payment];
@@ -315,12 +318,10 @@ void MCPurchaseGetTransactionIdentifier(MCExecContext& ctxt, MCPurchase *p_purch
     
 	SKPayment *t_payment = nil;
 	SKPaymentTransaction *t_transaction = nil;
+    t_transaction = t_ios_data->transaction;
 	
-	if (t_ios_data->transaction != nil)
-	{
-		t_transaction = t_ios_data->transaction;
+    if (t_transaction != nil)
 		t_payment = [t_transaction payment];
-	}
 	else
 		t_payment = t_ios_data->payment;
     
@@ -336,12 +337,10 @@ void MCPurchaseGetReceipt(MCExecContext& ctxt, MCPurchase *p_purchase, MCDataRef
     
 	SKPayment *t_payment = nil;
 	SKPaymentTransaction *t_transaction = nil;
+    t_transaction = t_ios_data->transaction;
 	
-	if (t_ios_data->transaction != nil)
-	{
-		t_transaction = t_ios_data->transaction;
+    if (t_transaction != nil)
 		t_payment = [t_transaction payment];
-	}
 	else
 		t_payment = t_ios_data->payment;
     
@@ -361,12 +360,10 @@ void MCPurchaseGetOriginalTransactionIdentifier(MCExecContext& ctxt, MCPurchase 
     
 	SKPaymentTransaction *t_transaction = nil;
 	SKPaymentTransaction *t_original_transaction = nil;
+    t_transaction = t_ios_data->transaction;
 	
-	if (t_ios_data->transaction != nil)
-	{
-		t_transaction = t_ios_data->transaction;
+    if (t_transaction != nil)
 		t_original_transaction = [t_transaction originalTransaction];
-	}
     
     if (t_original_transaction != nil && MCStringCreateWithCString([[t_original_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_identifier))
         return;
@@ -380,12 +377,10 @@ void MCPurchaseGetOriginalPurchaseDate(MCExecContext& ctxt, MCPurchase *p_purcha
     \
 	SKPaymentTransaction *t_transaction = nil;
 	SKPaymentTransaction *t_original_transaction = nil;
+    t_transaction = t_ios_data->transaction;
 	
-	if (t_ios_data->transaction != nil)
-	{
-		t_transaction = t_ios_data->transaction;
+    if (t_transaction != nil)
 		t_original_transaction = [t_transaction originalTransaction];
-	}
     
     if (t_original_transaction != nil)
     {
@@ -402,12 +397,10 @@ void MCPurchaseGetOriginalReceipt(MCExecContext& ctxt, MCPurchase *p_purchase, M
     
 	SKPaymentTransaction *t_transaction = nil;
 	SKPaymentTransaction *t_original_transaction = nil;
+    t_transaction = t_ios_data->transaction;
 	
-	if (t_ios_data->transaction != nil)
-	{
-		t_transaction = t_ios_data->transaction;
+    if (t_transaction != nil)
 		t_original_transaction = [t_transaction originalTransaction];
-	}
     
     if (t_original_transaction != nil)
     {

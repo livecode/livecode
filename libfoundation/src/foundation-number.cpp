@@ -121,6 +121,7 @@ bool MCNumberParse(MCStringRef p_string, MCNumberRef &r_number)
         return MCNumberParseUnicodeChars(MCStringGetCharPtr(p_string), MCStringGetLength(p_string), r_number);
 
     bool t_success;
+    t_success = false;
 
     const char* t_chars = (const char*)MCStringGetNativeCharPtr(p_string);
 
@@ -137,7 +138,13 @@ bool MCNumberParse(MCStringRef p_string, MCNumberRef &r_number)
         if (*t_end == '\0')
             t_success = MCNumberCreateWithInteger(t_integer, r_number);
         else
-            t_success = MCNumberCreateWithReal(strtod(t_chars, &t_end), r_number);
+        {
+            real64_t t_real;
+            t_real = strtod(t_chars, &t_end);
+            
+            if (*t_end == '\0')
+                t_success = MCNumberCreateWithReal(t_real, r_number);
+        }
     }
 
     return t_success;
@@ -153,6 +160,7 @@ bool MCNumberParseUnicodeChars(const unichar_t *p_chars, uindex_t p_char_count, 
 	MCUnicodeCharsMapToNative(p_chars, p_char_count, (char_t *)t_native_chars, t_native_char_count, '?');
 
 	bool t_success;
+	t_success = false;
 	if (p_char_count >= 2 && t_native_chars[0] == '0' && (t_native_chars[1] == 'x' || t_native_chars[1] == 'X'))
 		t_success = MCNumberCreateWithInteger(strtoul(t_native_chars + 2, nil, 16), r_number);
 	else
@@ -164,7 +172,13 @@ bool MCNumberParseUnicodeChars(const unichar_t *p_chars, uindex_t p_char_count, 
 		if (*t_end == '\0')
 			t_success = MCNumberCreateWithInteger(t_integer, r_number);
 		else
-			t_success = MCNumberCreateWithReal(strtod(t_native_chars, &t_end), r_number);
+		{
+			real64_t t_real;
+			t_real = strtod(t_native_chars, &t_end);
+
+			if (*t_end == '\0')
+				t_success = MCNumberCreateWithReal(t_real, r_number);
+		}
 	}
 
 	MCMemoryDeleteArray(t_native_chars);

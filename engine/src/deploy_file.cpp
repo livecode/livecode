@@ -125,8 +125,12 @@ bool MCDeployFileOpen(MCStringRef p_path, intenum_t p_mode, MCDeployFileRef& r_f
 	
 	if (MCStringIsEmpty(p_path))
 		return false;
-	
-	IO_handle t_handle = MCS_open(p_path, p_mode, false, false, 0);
+    
+    IO_handle t_handle ;
+    if (p_mode == kMCSOpenFileModeCreate)
+        t_handle = MCS_deploy_open(p_path, p_mode);
+    else
+        t_handle = MCS_open(p_path, p_mode, false, false, 0);
 	
 	t_success = (t_handle != nil);
 	
@@ -175,7 +179,10 @@ bool MCDeployFileCopy(MCDeployFileRef p_dst, uint32_t p_at, MCDeployFileRef p_sr
 {
 	if (MCS_seek_set(p_src, p_from) != IO_NORMAL)
 		return MCDeployThrow(kMCDeployErrorBadRead);
-
+    
+    if (MCS_seek_set(p_dst, p_at) != IO_NORMAL)
+		return MCDeployThrow(kMCDeployErrorBadWrite);
+    
 	while(p_amount > 0)
 	{
 		char t_buffer[4096];
@@ -183,7 +190,7 @@ bool MCDeployFileCopy(MCDeployFileRef p_dst, uint32_t p_at, MCDeployFileRef p_sr
 		t_size = MCU_min(4096U, p_amount);
 		if (MCS_readfixed(t_buffer, t_size, p_src) != IO_NORMAL)
 			return MCDeployThrow(kMCDeployErrorBadRead);
-		if (MCS_writeat(t_buffer, t_size, p_at, p_dst) != IO_NORMAL)
+		if (MCS_write(t_buffer, t_size, 1, p_dst) != IO_NORMAL)
 			return MCDeployThrow(kMCDeployErrorBadWrite);
 		p_amount -= t_size;
 	}
@@ -193,9 +200,12 @@ bool MCDeployFileCopy(MCDeployFileRef p_dst, uint32_t p_at, MCDeployFileRef p_sr
 
 bool MCDeployFileWriteAt(MCDeployFileRef p_dst, const void *p_buffer, uint32_t p_size, uint32_t p_at)
 {
-	if (MCS_writeat(p_buffer, p_size, p_at, p_dst) != IO_NORMAL)
+	if (MCS_seek_set(p_dst, p_at) != IO_NORMAL)
 		return MCDeployThrow(kMCDeployErrorBadWrite);
-
+	
+	if (MCS_write(p_buffer, p_size, 1, p_dst) != IO_NORMAL)
+		return MCDeployThrow(kMCDeployErrorBadWrite);
+    
 	return true;
 }
 

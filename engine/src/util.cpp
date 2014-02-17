@@ -1923,8 +1923,9 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 			return;
 		}
 		uint2 i;
+        MCRange t_range = MCRangeMake(0, 3);
 		for (i = 0 ; i <= T_TEXT ; i++)
-            if (MCStringIsEqualToCString(*t_tool_name, MCtoolnames[i], kMCCompareExact))
+            if (MCStringSubstringIsEqualToSubstring(*t_tool_name, t_range, MCSTR(MCtoolnames[i]), t_range, kMCCompareExact))
             {
 				t_new_tool = (Tool)i;
 				break;
@@ -2197,7 +2198,7 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 				unichar_t *bptr = fptr - 1;
 				while (True)
 				{ //search backword for '/'
-					if (*bptr == '/')
+					if (*bptr == '/' || bptr == t_unicode_str)
 					{
 						t_length -= strmove(bptr, fptr + 3, true);
 						fptr = bptr;
@@ -2567,7 +2568,7 @@ uint1 MCU_languagetocharset(MCNameRef p_language)
 {
 	for (uinteger_t i = 0; i < ELEMENTS(langtocharsets); i++)
 		if (MCNameIsEqualTo(p_language, *langtocharsets[i].langname))
-			return i;
+			return langtocharsets[i].charset;
 
 	return 0;
 }

@@ -612,6 +612,7 @@ Exec_stat MCExpression::eval(MCExecPoint &ep)
 void MCExpression::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
     fprintf(stderr, "ERROR: eval method for expression not implemented properly\n");
+    abort();
 }
 
 void MCExpression::eval_typed(MCExecContext& ctxt, MCExecValueType p_type, void *r_value)

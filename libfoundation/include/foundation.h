@@ -1538,7 +1538,8 @@ bool MCStringIsEqualTo(MCStringRef string, MCStringRef other, MCStringOptions op
 bool MCStringIsEqualToNativeChars(MCStringRef string, const char_t *chars, uindex_t char_count, MCStringOptions options);
 
 // Returns true if the substring is equal to the other, according to options
-bool MCStringSubstringIsEqualTo(MCStringRef string, MCRange other, MCStringRef p_other, MCStringOptions p_options);
+bool MCStringSubstringIsEqualTo(MCStringRef string, MCRange range, MCStringRef p_other, MCStringOptions p_options);
+bool MCStringSubstringIsEqualToSubstring(MCStringRef string, MCRange range, MCStringRef p_other, MCRange other_range, MCStringOptions p_options);
 
 // Returns -1, 0, or 1, depending on whether left < 0, left == right or left > 0,
 // processing as appropriate according to options. The ordering used is codepoint-
@@ -1694,6 +1695,18 @@ bool MCStringAppendFormatV(MCStringRef string, const char *format, va_list args)
 
 bool MCStringSplit(MCStringRef string, MCStringRef element_del, MCStringRef key_del, MCStringOptions options, MCArrayRef& r_array);
 bool MCStringSplitColumn(MCStringRef string, MCStringRef col_del, MCStringRef row_del, MCStringOptions options, MCArrayRef& r_array);
+
+//////////
+
+// Converts two surrogate pair code units into a codepoint
+codepoint_t MCStringSurrogatesToCodepoint(unichar_t p_lead, unichar_t p_trail);
+
+// Converts a codepoint to UTF-16 code units and returns the number of units
+unsigned int MCStringCodepointToSurrogates(codepoint_t, unichar_t (&r_units)[2]);
+
+// Returns true if the code unit at the given index and the next code unit form
+// a valid surrogate pair. Lone lead or trail code units are not valid pairs.
+bool MCStringIsValidSurrogatePair(MCStringRef, uindex_t);
 
 
 ////////////////////////////////////////////////////////////////////////////////

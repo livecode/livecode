@@ -63,6 +63,11 @@ void MCParameter::setvalueref_argument(MCValueRef p_value)
 	value = t_value;
 }
 
+MCValueRef MCParameter::getvalueref_argument(void)
+{
+	return value;
+}
+
 void MCParameter::setn_argument(real8 p_number)
 {
 	MCNumberRef t_number_ref;

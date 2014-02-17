@@ -769,7 +769,7 @@ bool MCField::importblock(MCParagraph *p_paragraph, const MCFieldCharacterStyle&
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Exec_stat MCField::sethtml(uint4 parid, MCStringRef data)
+Exec_stat MCField::sethtml(uint4 parid, MCValueRef data)
 {
 	if (state & CS_NO_FILE)
 	{
@@ -951,6 +951,8 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 				t_style . border_color = p_paragraph -> border_color, t_style . has_border_color = true, t_count += 1;
             if (p_paragraph -> metadata != nil && !MCStringIsEmpty(p_paragraph -> metadata))
 				t_style . metadata = p_paragraph -> metadata, t_style . has_metadata = true, t_count += 1;
+            else
+                t_style . metadata = kMCEmptyString;
 
 			// MW-2012-03-14: [[ RtfParaStyles ]] Apply the listStyle attrs, if applicable.
 			if (p_paragraph -> list_style != kMCTextListStyleNone)

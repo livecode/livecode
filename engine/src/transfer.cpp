@@ -86,22 +86,28 @@ bool MCLocalPasteboard::Find(MCTransferType p_type, uint4& r_index)
 }
 
 
-bool MCLocalPasteboard::Normalize(MCTransferType p_type, MCDataRef p_data, MCTransferType& r_normal_type, MCDataRef& r_normal_data)
+bool MCLocalPasteboard::Normalize(MCTransferType p_type, MCValueRef p_data, MCTransferType& r_normal_type, MCDataRef &r_normal_data)
 {
 	if (p_type == TRANSFER_TYPE_RTF_TEXT)
 	{
 		r_normal_type = TRANSFER_TYPE_STYLED_TEXT;
-		return MCConvertRTFToStyledText(p_data, r_normal_data);
+        return MCConvertRTFToStyledText((MCDataRef)p_data, r_normal_data);
 	}
 	else if (p_type == TRANSFER_TYPE_HTML_TEXT)
 	{
 		r_normal_type = TRANSFER_TYPE_STYLED_TEXT;
-		return MCConvertHTMLToStyledText(p_data, r_normal_data);
+        return MCConvertHTMLToStyledText((MCDataRef)p_data, r_normal_data);
 	}
-	else
+    // If unicode text is asked, we are provided a StringRef and not a DataRef
+    else if (p_type == TRANSFER_TYPE_UNICODE_TEXT)
+    {
+        r_normal_type = TRANSFER_TYPE_UNICODE_TEXT;
+        return MCStringEncode((MCStringRef)p_data, kMCStringEncodingUTF16, false, r_normal_data);
+    }
+    else
 	{
 		r_normal_type = p_type;
-		r_normal_data = MCValueRetain(p_data);
+        r_normal_data = MCValueRetain((MCDataRef)p_data);
 		return true;
 	}
 }
@@ -124,10 +130,10 @@ bool MCLocalPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	return true;
 }
 
-bool MCLocalPasteboard::Store(MCTransferType p_type, MCDataRef p_data)
+bool MCLocalPasteboard::Store(MCTransferType p_type, MCValueRef p_data)
 {
 	MCTransferType t_normal_type;
-	MCAutoDataRef t_normal_data;
+    MCAutoDataRef t_normal_data;
 
 	if (!Normalize(p_type, p_data, t_normal_type, &t_normal_data))
 		return false;
@@ -496,7 +502,7 @@ void MCTransferData::Open(void)
 		m_open_pasteboard = new MCLocalPasteboard;
 }
 
-bool MCTransferData::Store(MCTransferType p_type, MCDataRef p_data)
+bool MCTransferData::Store(MCTransferType p_type, MCValueRef p_data)
 {
 	Open();
 
@@ -795,9 +801,7 @@ bool MCConvertHTMLToStyledText(MCDataRef p_input, MCDataRef& r_output)
 {
 	MCParagraph *t_paragraphs;
 	// MW-2012-03-08: [[ FieldImport ]] Use the new htmlText importer.
-    MCAutoStringRef t_input;
-    /* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingNative, false, &t_input);
-	t_paragraphs = MCtemplatefield -> importhtmltext(*t_input);
+	t_paragraphs = MCtemplatefield -> importhtmltext(p_input);
 
 	MCStyledText t_styled_text;
 	t_styled_text . setparent(MCtemplatefield -> getparent());
@@ -891,12 +895,8 @@ bool MCConvertStyledTextToHTML(MCDataRef p_input, MCDataRef& r_output)
 	t_success = t_paragraphs != nil;
 
 	// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
-	MCAutoStringRef t_text;
 	if (t_success)
-		t_success = MCtemplatefield -> exportashtmltext(t_paragraphs, 0, INT32_MAX, false, &t_text);
-	
-	if (t_success)
-		t_success = MCStringEncode(*t_text, kMCStringEncodingNative, false, r_output);
+		t_success = MCtemplatefield -> exportashtmltext(t_paragraphs, 0, INT32_MAX, false, r_output);
 	
 	delete t_object;
 	

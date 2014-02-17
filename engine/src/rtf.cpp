@@ -1565,7 +1565,7 @@ RTFStatus RTFReader::Flush(bool p_force)
         if (m_state . GetMetadata() != kMCEmptyString)
             /* UNCHECKED */ MCStringCopy(m_state . GetMetadata(), t_block . text_metadata);
 		else
-			t_block . text_metadata = nil;
+			t_block . text_metadata = MCValueRetain(kMCEmptyString);
 
 		t_block . string_native = false;
 		t_block . string_buffer = NULL;
@@ -1600,7 +1600,7 @@ RTFStatus RTFReader::Flush(bool p_force)
 
 		m_attributes . string_native = false;
 		m_attributes . string_buffer = t_string_buffer;
-		m_attributes . string_length = t_string_length;
+		m_attributes . string_length = t_string_length / 2;
 		m_converter(m_converter_context, NULL, &m_attributes);
 		m_text . Clear();
 	}

@@ -686,8 +686,6 @@ void MCEngineExecSet(MCExecContext& ctxt, MCProperty *p_target, MCValueRef p_val
 		ctxt . LegacyThrow(EE_SET_BADSET);
 		return;
 	}
-		
-	ctxt . SetTheResultToEmpty();
 }
 
 void MCEngineExecGet(MCExecContext& ctxt, MCValueRef p_value)
@@ -772,7 +770,7 @@ void MCEngineExecDo(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
-		ctxt.SetLine(p_line);
+		ctxt.SetLineAndPos(p_line, p_pos);
 		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
 		added = True;
 	}
@@ -1785,7 +1783,7 @@ static bool MCEngineUuidToStringRef(MCUuid p_uuid, MCStringRef& r_string)
 	char t_uuid_buffer[kMCUuidCStringLength];
 	MCUuidToCString(p_uuid, t_uuid_buffer);
     
-    return MCStringCreateWithNativeChars((const char_t *)t_uuid_buffer, kMCUuidCStringLength, r_string);
+    return MCStringCreateWithNativeChars((const char_t *)t_uuid_buffer, kMCUuidCStringLength - 1, r_string);
 }
 
 void MCEngineEvalRandomUuid(MCExecContext& ctxt, MCStringRef& r_uuid)

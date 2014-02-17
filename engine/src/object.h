@@ -350,8 +350,8 @@ public:
     Exec_stat setarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective);
 #endif
 	
-    bool getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCExecValue& r_value);
-	bool setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCExecValue p_value);
+    bool getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue& r_value);
+	bool setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue p_value);
     
 	// MW-2012-05-28: [[ Value Prop Accessors ]] These methods allow access to object props
 	//   via direct types. Appropriate type coercion will be performed, with errors thrown as
@@ -686,9 +686,9 @@ public:
 	//   font record. (Called by the font table visitor - so public).
 	bool needtosavefontrecord(void) const;
 
-	// MW-2012-03-04: [[ StackFile5500 ]] If 'include_2700' is set then both 2.7 and 5.5 versions
+	// AL-2014-02-14: [[ UnicodeFileFormat ]] If 'include_legacy' is set then 2.7, 5.5 and 7.0 versions
 	//   of the objects will be included.
-	static MCPickleContext *startpickling(bool include_2700);
+	static MCPickleContext *startpickling(bool include_legacy);
 	static void continuepickling(MCPickleContext *p_context, MCObject *p_object, uint4 p_part);
 	static void pickle(MCObject *p_object, uint4 p_part, MCDataRef& r_string);
 	static void stoppickling(MCPickleContext *p_context, MCDataRef& r_string);
@@ -1083,6 +1083,7 @@ public:
     void GetRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers);
     void GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers);
     void GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MCStringRef& r_variables);
+    void GetRevAvailableVariablesNonArray(MCExecContext& ctxt, MCStringRef& r_variables);
 #endif
     
 //////////

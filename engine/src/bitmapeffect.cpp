@@ -945,8 +945,11 @@ bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
     if (t_is_array && p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
     {
         if (self == nil || (self -> mask & (1 << t_type)) == 0)
-			return true;
-        
+        {
+            r_dirty = false;
+            return true;
+        }
+
 		// We are set, so just unset our bit in the mask
 		self -> mask &= ~(1 << t_type);
         

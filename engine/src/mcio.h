@@ -52,7 +52,8 @@ enum MCSOpenFileMode
 	kMCSOpenFileModeRead,
 	kMCSOpenFileModeWrite,
 	kMCSOpenFileModeUpdate,
-	kMCSOpenFileModeAppend
+	kMCSOpenFileModeAppend,
+    kMCSOpenFileModeCreate
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -167,6 +168,7 @@ extern IO_handle MCS_fakeopenwrite(void);
 ///* LEGACY */ extern IO_stat MCS_fakeclosewrite(IO_handle &stream, char*& r_buffer, uint4& r_length);
 extern IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_length);
 
+extern IO_handle MCS_deploy_open(MCStringRef path, intenum_t p_mode);
 /* LEGACY */ extern IO_handle MCS_open(const char *path, const char *mode, Boolean map, Boolean driver, uint4 offset);
 extern IO_handle MCS_open(MCStringRef path, intenum_t mode, Boolean map, Boolean driver, uint4 offset);
 extern void MCS_close(IO_handle &stream);

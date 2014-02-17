@@ -206,11 +206,11 @@ bool MCVariable::setvalueref(MCNameRef *p_path, uindex_t p_length, bool p_case_s
 	if (!converttomutablearray())
 		return false;
 
-	MCValueRef t_copied_value;
-	if (!MCValueCopy(p_value, t_copied_value))
-		return false;
+    MCAutoValueRef t_copied_value;
+    if (!MCValueCopy(p_value, &t_copied_value))
+        return false;
 
-	if (MCArrayStoreValueOnPath((MCArrayRef)value, p_case_sensitive, p_path, p_length, t_copied_value))
+    if (MCArrayStoreValueOnPath((MCArrayRef)value, p_case_sensitive, p_path, p_length, *t_copied_value))
 		return true;
 
 	return false;
@@ -303,10 +303,7 @@ bool MCVariable::set(MCExecContext& ctxt, MCValueRef p_value)
 
 bool MCVariable::set(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length)
 {
-    MCAutoValueRef t_value;
-    MCValueCopy(p_value, &t_value);
-    
-    if (setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), *t_value))
+    if (setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), p_value))
     {
         synchronize(ctxt, true);
         return true;

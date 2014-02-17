@@ -289,6 +289,26 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 		
 		if ((stat = IO_read_uint1(&linkatts->underline, stream)) != IO_NORMAL)
 			return stat;
+        
+        // for interface colors, empty name means unset whereas nil name means
+        // defer to rgb values. Therefore set values to nil if they are empty.
+        if (MCStringIsEmpty(linkatts -> colorname))
+        {
+            MCValueRelease(linkatts -> colorname);
+            linkatts -> colorname = nil;
+        }
+        
+        if (MCStringIsEmpty(linkatts -> hilitecolorname))
+        {
+            MCValueRelease(linkatts -> hilitecolorname);
+            linkatts -> hilitecolorname = nil;
+        }
+        
+        if (MCStringIsEmpty(linkatts -> visitedcolorname))
+        {
+            MCValueRelease(linkatts -> visitedcolorname);
+            linkatts -> visitedcolorname = nil;
+        }
 	}
 
 	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
@@ -652,19 +672,21 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 	
 	if (flags & F_LINK_ATTS)
 	{
+        // linkatts color names may be nil.
+        
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
         if ((stat = IO_write_mccolor(linkatts->color, stream)) != IO_NORMAL
-                || (stat = IO_write_stringref_new(linkatts->colorname, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+            || (stat = IO_write_stringref_new(linkatts->colorname != nil ? linkatts->colorname : kMCEmptyString, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
 			return stat;
 		
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
         if ((stat = IO_write_mccolor(linkatts->hilitecolor, stream)) != IO_NORMAL
-                || (stat=IO_write_stringref_new(linkatts->hilitecolorname, stream, MCstackfileversion >= 7000))!=IO_NORMAL)
+                || (stat=IO_write_stringref_new(linkatts->hilitecolorname != nil ? linkatts->hilitecolorname : kMCEmptyString, stream, MCstackfileversion >= 7000))!=IO_NORMAL)
 			return stat;
 		
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
         if ((stat = IO_write_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
-                || (stat=IO_write_stringref_new(linkatts->visitedcolorname, stream, MCstackfileversion >= 7000))!=IO_NORMAL)
+                || (stat=IO_write_stringref_new(linkatts->visitedcolorname != nil ? linkatts->visitedcolorname : kMCEmptyString, stream, MCstackfileversion >= 7000))!=IO_NORMAL)
 			return stat;
 		
 		if ((stat = IO_write_uint1(linkatts->underline, stream)) != IO_NORMAL)
@@ -1720,10 +1742,9 @@ void MCStack::findaccel(uint2 key, MCStringRef &r_pick, bool &r_disabled)
 					else
 						/* UNCHECKED */ MCStringAppend(t_label, bptr->getlabeltext());
 					
-					/* UNCHECKED */ MCStringAppendFormat(t_label, "|");
-					/* UNCHECKED */ MCStringAppend(t_label, t_accel);
+					/* UNCHECKED */ MCStringAppendFormat(t_label, "|%@", t_accel);
 
-					MCValueRelease(t_accel);
+					r_pick = t_accel;
 					return;
 				}
 			}
@@ -1834,7 +1855,7 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 				else
 				{
 					MCStringRef t_mutable;
-                    /* UNCHECKED */ MCStringMutableCopyAndRelease(*t_string, t_mutable);
+                    /* UNCHECKED */ MCStringMutableCopy(*t_string, t_mutable);
 					/* UNCHECKED */ MCStringLowercase(t_mutable, kMCSystemLocale);
 					/* UNCHECKED */ MCStringCopyAndRelease(t_mutable, items[nitems].svalue);
 				}

@@ -1465,13 +1465,11 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 					t_success = false;
 				}
 
-                void *t_data = nil;
-                uint32_t t_length = 0;
-
+                MCDataRef t_data;
 				if (t_success)
-                    t_success = MCJavaByteArrayToData(t_env, t_byte_array, t_data, t_length);
+                    t_success = MCJavaByteArrayToDataRef(t_env, t_byte_array, t_data);
                 if (t_success)
-                    ((MCString*)context -> return_value) -> set((char*)t_data, t_length);
+					*((MCDataRef *)context -> return_value) = t_data;
 
 				t_env -> DeleteLocalRef(t_byte_array);
 			}

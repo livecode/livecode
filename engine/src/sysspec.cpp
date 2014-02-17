@@ -748,11 +748,11 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	if (!t_state -> files != p_entry -> is_folder)
 		return true;
 	
-	MCStringRef t_detailed_string;
 	if (t_state -> details)
-	{		
+	{
+        MCAutoStringRef t_details;
 #ifdef _WIN32
-		/* UNCHECKED */ MCStringFormat(t_detailed_string,
+		/* UNCHECKED */ MCStringFormat(&t_details,
                                        "%@,%I64d,,%ld,%ld,%ld,,,,%03o,",
                                        p_entry -> name,
                                        p_entry -> data_size,
@@ -761,7 +761,7 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
                                        p_entry -> access_time,
                                        p_entry -> permissions);
 #else
-		/* UNCHECKED */ MCStringFormat(t_detailed_string,
+		/* UNCHECKED */ MCStringFormat(&t_details,
                                        "%@,%lld,,,%u,%u,,%d,%d,%03o,",
                                        p_entry -> name,
                                        p_entry -> data_size,
@@ -769,11 +769,8 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
                                        p_entry -> user_id, p_entry -> group_id,
                                        p_entry -> permissions);
 #endif
-	}
-	if (t_state -> details)
-	{
-		/* UNCHECKED */ MCListAppend(t_state->list, t_detailed_string);
-		MCValueRelease(t_detailed_string);
+
+		/* UNCHECKED */ MCListAppend(t_state->list, *t_details);
 	}
 	else
     /* UNCHECKED */ MCListAppendFormat(t_state->list, "%@", p_entry -> name);
@@ -830,7 +827,12 @@ void MCS_setumask(uint2 p_mask)
 /* WRAPPER */
 Boolean MCS_exists(MCStringRef p_path, bool p_is_file)
 {
-	MCAutoStringRef t_resolved;
+	// Shortcut: this is necessary because MCS_resolvepath turns an empty path
+    // into the path to the current directory, which is really not wanted here.
+    if (MCStringIsEmpty(p_path))
+        return False;
+    
+    MCAutoStringRef t_resolved;
     MCAutoStringRef t_native;
 	if (!(MCS_resolvepath(p_path, &t_resolved) && MCS_pathtonative(*t_resolved, &t_native)))
 		return False;
@@ -999,6 +1001,10 @@ IO_handle MCS_open(const char *p_path, const char *p_mode, Boolean p_map, Boolea
 }
 #endif 
 
+IO_handle MCS_deploy_open(MCStringRef path, intenum_t p_mode)
+{
+    return MCsystem -> DeployOpen(path, p_mode);
+}
 
 IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_driver, uint32_t p_offset)
 {
@@ -1110,11 +1116,15 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 		t_success = t_buffer . CreateStringAndRelease(&t_string);
         
         MCAutoDataRef t_data;
+        MCAutoStringRef t_text;
         if (t_success)
             t_success = MCStringEncode(*t_string, kMCStringEncodingNative, false, &t_data);
         
         if (t_success)
-            t_success =  MCStringCreateWithBytes(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), kMCStringEncodingNative, false, r_text);
+            t_success =  MCStringCreateWithBytes(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), kMCStringEncodingNative, false, &t_text);
+        
+        if (t_success)
+            t_success = MCStringConvertLineEndingsToLiveCode(*t_text, r_text);
         
         MCresult -> clear(False);
        
@@ -1203,9 +1213,17 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 		return false;
 	}
     
+    bool t_success;
+    t_success = true;
+    
+    // convert the line endings before writing
+    MCAutoStringRef t_converted;
+    if (t_success)
+        t_success = MCStringConvertLineEndingsFromLiveCode(p_string, &t_converted);
+    
     // Need to convert the string to a binary string
     MCAutoDataRef t_data;
-    /* UNCHECKED */ MCStringEncode(p_string, kMCStringEncodingNative, false, &t_data);
+    /* UNCHECKED */ MCStringEncode(*t_converted, kMCStringEncodingNative, false, &t_data);
     
 	if (!t_file -> Write(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data)))
 		MCresult -> sets("error writing file");

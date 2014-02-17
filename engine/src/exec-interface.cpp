@@ -2641,6 +2641,7 @@ void MCInterfaceExecShowObject(MCExecContext& ctxt, MCObjectPtr p_target, MCPoin
 	if (!ctxt.HasError())
 	{
 		p_target.object->setboolprop(ctxt, p_target.part_id, P_VISIBLE, False, kMCTrue);
+        ctxt . IgnoreLastError();
 		return;
 	}
 	
@@ -3162,13 +3163,6 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
     // we have a field chunk
     MCField *t_field;
     t_field = static_cast<MCField *>(p_chunk . object);
-    integer_t t_start, t_finish;
-    if (p_where == PT_INTO)
-        t_start = p_chunk . mark . start, t_finish = p_chunk . mark . finish;
-    else if (p_where == PT_AFTER)
-        t_start = t_finish = p_chunk . mark . finish;
-    else /* PT_BEFORE */
-        t_start = t_finish = p_chunk . mark . start;
     
     // if we forced new delimiters, then reset the text of the field
     if (p_chunk . mark . changed)
@@ -3177,11 +3171,20 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
         if (!MCStringMutableCopy(p_chunk . mark . text, &t_string))
             return;
         
+        // in this case the chunk indices will be correct whatever the preposition
         /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_chunk . mark . start, p_chunk . mark . finish - p_chunk . mark . start), p_string);
         
         p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_string);
         return;
     }
+     
+    integer_t t_start, t_finish;
+    if (p_where == PT_INTO)
+        t_start = p_chunk . mark . start, t_finish = p_chunk . mark . finish;
+    else if (p_where == PT_AFTER)
+        t_start = t_finish = p_chunk . mark . finish;
+    else /* PT_BEFORE */
+        t_start = t_finish = p_chunk . mark . start;
     
     // otherwise just alter the contents of the marked range
     if (t_field -> settextindex(p_chunk . part_id, t_start, t_finish, p_string, False) != ES_NORMAL)
@@ -3218,19 +3221,6 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef p_string, int
 	}
 	else
 	{
-		MCStringRef t_current_value;
-		p_chunk . object -> getstringprop(ctxt, p_chunk . part_id, P_TEXT, False, t_current_value);
-		if (ctxt . HasError())
-			return;
-		
-		MCAutoStringRef t_mutable_current_value;
-		if (!MCStringMutableCopyAndRelease(t_current_value, &t_mutable_current_value))
-		{
-			MCValueRelease(t_current_value);
-			ctxt . Throw();
-			return;
-		}
-		
 		integer_t t_start, t_finish;
 		if (p_where == PT_INTO)
 			t_start = p_chunk . mark . start, t_finish = p_chunk . mark . finish;
@@ -3239,13 +3229,13 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef p_string, int
 		else /* PT_BEFORE */
 			t_start = t_finish = p_chunk . mark . start;
 		
-		if (!MCStringReplace(*t_mutable_current_value, MCRangeMake(t_start, t_finish), p_string))
-		{
-			ctxt . Throw();
-			return;
-		}
-		
-		p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_mutable_current_value);
+        MCAutoStringRef t_string;
+        if (!MCStringMutableCopy(p_chunk . mark . text, &t_string))
+            return;
+        
+        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(t_start, t_finish - t_start), p_string);
+        
+        p_chunk . object -> setstringprop(ctxt, p_chunk . part_id, P_TEXT, False, *t_string);
 	}
 }
 
@@ -3853,11 +3843,11 @@ void MCInterfaceExecSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &n
         t_success = false;
         t_success = ctxt . EvalExprAsValueRef(by, EE_UNDEFINED, &t_output);
         if (!t_success)
-			t_output = MCValueRetain(kMCEmptyString);
+            t_output = kMCEmptyString;
 		MCerrorlock--;
 	}
 	else
-		t_output = MCValueRetain(p_input);
+        t_output = p_input;
 	
 	MCAutoStringRef t_converted;
 	switch (form)
@@ -3896,7 +3886,7 @@ void MCInterfaceExecSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &n
 
 bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p_type, Sort_type p_direction, int p_form, MCExpression *p_by, MCStringRef &r_output)
 {
-	if (MCStringGetLength(p_data) == 0)
+	if (MCStringIsEmpty(p_data))
 	{
 		MCStringCopy(kMCEmptyString, r_output);
 		return true;
@@ -3915,34 +3905,21 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 	if (t_delimiter == '\0')
 		return false;
 
-	uindex_t t_item_count;
-	t_item_count = 0;
+    MCAutoStringRefArray t_chunks;
+    
+    extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
+    
+    if (!MCStringsSplit(p_data, t_delimiter, t_chunks . PtrRef(), t_chunks . CountRef()))
+        return false;
+    
+    uindex_t t_item_count;
+    t_item_count = t_chunks . Count();
 
-	// Calculate the number of items we need to sort, store this in t_item_count.
-	uint4 t_item_size;
-	t_item_size = MCStringGetLength(p_data);
-
-	MCAutoPointer<char> t_item_text;
-    MCAutoPointer<char> t_data;
-    /* UNCHECKED */ MCStringConvertToCString(p_data, &t_data);
-	t_item_text = strclone(*t_data);
-
-	char *t_string_pointer;
-	t_string_pointer = *t_item_text;
-
-	char *t_end_pointer;
 	bool t_trailing_delim = false;
-	while ((t_end_pointer = strchr(t_string_pointer, t_delimiter)) != NULL)
-	{
-		// knock out last delim for lines with a trailing return char
-		if (p_type != CT_ITEM && t_end_pointer[1] == '\0')
-		{
-			t_end_pointer[0] = '\0';
-			t_trailing_delim = true;
-		}
-		else
-			t_item_count++;
-		t_string_pointer = t_end_pointer + 1;
+	if (MCStringIsEmpty(t_chunks[t_item_count - 1]))
+    {
+        t_trailing_delim = true;
+        t_item_count--;
 	}
 
 	// OK-2008-12-11: [[Bug 7503]] - If there are 0 items in the string, don't carry out the search,
@@ -3957,53 +3934,32 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 	MCAutoArray<MCSortnode> t_items;
 	t_items.Extend(t_item_count + 1);
 	t_item_count = 0;
-	t_string_pointer = *t_item_text;
 
 	// Next, populate the MCSortnodes with all the items to be sorted
-	do
-	{
-		MCAutoStringRef t_string;
-		if ((t_end_pointer = strchr(t_string_pointer, t_delimiter)) != NULL)
-		{
-			*t_end_pointer++ = '\0';
-			 MCStringCreateWithNativeChars((const char_t *)t_string_pointer, t_end_pointer - t_string_pointer - 1, &t_string);
-		}
-		else
-			MCStringCreateWithNativeChars((const char_t *)t_string_pointer, strlen(t_string_pointer), &t_string);
-
-		MCInterfaceExecSortAddItem(ctxt, t_items.Ptr(), t_item_count, p_form, *t_string, p_by);
-
-		t_items[t_item_count - 1] . data = (void *)t_string_pointer;
-		t_string_pointer = t_end_pointer;
-	}
-	while(t_end_pointer != NULL);
+    for (uindex_t i = 0; i < t_chunks . Count(); i++)
+    {
+        MCInterfaceExecSortAddItem(ctxt, t_items . Ptr(), t_item_count, p_form, t_chunks[i], p_by);
+        t_items[t_item_count - 1] . data = (void *)t_chunks[i];
+    }
 
 	// Sort the array
 	MCU_sort(t_items.Ptr(), t_item_count, p_direction, (Sort_type)p_form);
 
 	// Build the output string
-	MCAutoPointer<char> t_output;
-	t_output = new char[t_item_size + 1];
-	(*t_output)[0] = '\0';
-	
-	uint4 t_length;
-	t_length = 0;
+	MCAutoListRef t_list;
+    MCListCreateMutable(t_delimiter, &t_list);
 
-	for (unsigned int i = 0; i < t_item_count; i++)
-	{
-		uint4 t_item_length;
-		t_item_length = strlen((const char *)t_items[i] . data);
-		strncpy(&(*t_output)[t_length], (const char *)t_items[i] . data, t_item_length);
-		t_length = t_length + t_item_length;
+    uindex_t i;
+	for (i = 0; i < t_item_count; i++)
+    {
+        MCListAppend(*t_list, (MCStringRef)t_items[i] . data);
+        MCValueRelease((MCStringRef)t_items[i] . svalue);
+    }
 
-		if (t_trailing_delim || i < t_item_count - 1)
-			(*t_output)[t_length++] = t_delimiter;
-	}
-	(*t_output)[t_length] = '\0';
-
-	MCStringCreateWithNativeChars((const char_t *)*t_output, t_length, r_output);
-
-	return true; 
+    if (t_trailing_delim || i < t_item_count - 1)
+        MCListAppend(*t_list, kMCEmptyString);
+    
+    return MCListCopyAsString(*t_list, r_output);
 }
 
 
@@ -4029,7 +3985,7 @@ void MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef& x_target, in
 
 	if (MCInterfaceExecSortContainer(ctxt, x_target, p_chunk_type, p_ascending ? ST_ASCENDING : ST_DESCENDING, p_format, p_by, &t_sorted_string))
 	{
-		x_target = (MCStringRef)MCValueRetain(*t_sorted_string);
+        MCValueAssign(x_target, *t_sorted_string);
 		return;
 	}
 	

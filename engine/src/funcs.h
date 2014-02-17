@@ -200,14 +200,14 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCArrayDecode: public MCUnaryFunctionCtxt<MCStringRef, MCArrayRef, MCArraysEvalArrayDecode, EE_ARRAYDECODE_BADSOURCE, PE_ARRAYDECODE_BADPARAM, kMCArraysEvalArrayDecodeMethodInfo>
+class MCArrayDecode: public MCUnaryFunctionCtxt<MCDataRef, MCArrayRef, MCArraysEvalArrayDecode, EE_ARRAYDECODE_BADSOURCE, PE_ARRAYDECODE_BADPARAM, kMCArraysEvalArrayDecodeMethodInfo>
 {
 public:
     MCArrayDecode(){}
     virtual ~MCArrayDecode(){}
 };
 
-class MCArrayEncode: public MCUnaryFunctionCtxt<MCArrayRef, MCStringRef, MCArraysEvalArrayEncode, EE_ARRAYENCODE_BADSOURCE, PE_ARRAYENCODE_BADPARAM, kMCArraysEvalArrayEncodeMethodInfo>
+class MCArrayEncode: public MCUnaryFunctionCtxt<MCArrayRef, MCDataRef, MCArraysEvalArrayEncode, EE_ARRAYENCODE_BADSOURCE, PE_ARRAYENCODE_BADPARAM, kMCArraysEvalArrayEncodeMethodInfo>
 {
 public:
     MCArrayEncode(){}
@@ -2360,7 +2360,7 @@ public:
 	
     virtual ~MCControlAtLoc();
     Parse_stat parse(MCScriptPoint &sp, Boolean the);
-    virtual void eval_ctxt(MCExecContext &ctxt);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 	
     virtual MCExecMethodInfo *getmethodinfo(void) const { return is_screen ? kMCInterfaceEvalControlAtScreenLocMethodInfo : kMCInterfaceEvalControlAtLocMethodInfo; }
     virtual MCExpression *getmethodarg(void) const { return location; }

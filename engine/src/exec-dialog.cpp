@@ -717,7 +717,7 @@ void MCDialogSetColorDialogColors(MCExecContext& ctxt, uindex_t p_count, MCStrin
     for (uindex_t i = 0; t_success && i < 16; i++)
     {
         MCColor t_color;
-        if (MCStringIsEmpty(p_color_list[i]))
+        if (i >= p_count || MCStringIsEmpty(p_color_list[i]))
         {
             t_color . flags = 0;
             t_success = t_list . Push(t_color);

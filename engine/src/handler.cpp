@@ -418,7 +418,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 			if (MCexitall)
 				break;
 		}
-		ctxt.SetLine(tspr->getline());
+		ctxt.SetLineAndPos(tspr->getline(), tspr->getpos());
         
         tspr->exec_ctxt(ctxt);
 		stat = ctxt . GetExecStat();
@@ -441,6 +441,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
                     do
                     {
                         MCB_error(ctxt, tspr->getline(), tspr->getpos(), EE_HANDLER_BADSTATEMENT);
+                        ctxt . IgnoreLastError();
                         tspr->exec_ctxt(ctxt);
                     }
 				while (MCtrace && (stat = ctxt . GetExecStat()) != ES_NORMAL);
@@ -943,7 +944,7 @@ Exec_stat MCHandler::getvarnames(MCExecPoint& ep, Boolean all)
 
 void MCHandler::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value)
 {
-	MCScriptPoint sp(p_expression);
+    MCScriptPoint sp(ctxt, p_expression);
 	sp.sethandler(this);
     MCExpression *exp = NULL;
     Symbol_type type;

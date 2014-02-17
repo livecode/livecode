@@ -248,8 +248,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_DEFAULT_MENU_BAR, Name, Interface, DefaultMenubar)
 	DEFINE_RW_PROPERTY(P_STACK_FILE_VERSION, String, Interface, StackFileVersion)
 	DEFINE_RW_PROPERTY(P_DEFAULT_STACK, String, Interface, DefaultStack)
-	DEFINE_RW_PROPERTY(P_DEFAULT_CURSOR, UInt16, Interface, DefaultCursor)
-	DEFINE_RW_PROPERTY(P_CURSOR, UInt16, Interface, Cursor)
+	DEFINE_RW_PROPERTY(P_DEFAULT_CURSOR, UInt32, Interface, DefaultCursor)
+	DEFINE_RW_PROPERTY(P_CURSOR, UInt32, Interface, Cursor)
 
 	DEFINE_RW_PROPERTY(P_TWELVE_TIME, Bool, DateTime, TwelveTime)
 
@@ -352,10 +352,10 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_BREAK_POINTS, String, Debugging, Breakpoints)
 	DEFINE_RW_PROPERTY(P_WATCHED_VARIABLES, String, Debugging, WatchedVariables)
 
-	DEFINE_RW_ARRAY_PROPERTY(P_CLIPBOARD_DATA, BinaryString, Pasteboard, ClipboardData)
-	DEFINE_RW_ARRAY_PROPERTY(P_DRAG_DATA, BinaryString, Pasteboard, DragData)
-	DEFINE_RW_PROPERTY(P_CLIPBOARD_DATA, BinaryString, Pasteboard, ClipboardTextData)
-	DEFINE_RW_PROPERTY(P_DRAG_DATA, BinaryString, Pasteboard, DragTextData)
+    DEFINE_RW_ARRAY_PROPERTY(P_CLIPBOARD_DATA, Any, Pasteboard, ClipboardData)
+    DEFINE_RW_ARRAY_PROPERTY(P_DRAG_DATA, Any, Pasteboard, DragData)
+    DEFINE_RW_PROPERTY(P_CLIPBOARD_DATA, Any, Pasteboard, ClipboardTextData)
+    DEFINE_RW_PROPERTY(P_DRAG_DATA, Any, Pasteboard, DragTextData)
 
 	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog    
     DEFINE_RW_PROPERTY(P_COLOR_DIALOG_COLORS, LinesOfString, Dialog, ColorDialogColors)
@@ -5239,7 +5239,7 @@ void MCProperty::eval_count_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 
 void MCProperty::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
-	ctxt . SetLine(line);
+	ctxt . SetLineAndPos(line, pos);
     
 	if (destvar != nil && which != P_CUSTOM_VAR)
 		return eval_variable_ctxt(ctxt, r_value);

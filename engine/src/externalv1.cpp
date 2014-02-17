@@ -37,14 +37,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "card.h"
 #include "eventqueue.h"
+#include "debug.h"
 
 #include "external.h"
 
-#ifdef OLD_EXEC
-
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef MCVariableValue *MCExternalVariableRef;
+typedef class MCExternalVariable *MCExternalVariableRef;
 typedef MCObjectHandle *MCExternalObjectRef;
 
 typedef void *MCExternalVariableIteratorRef;
@@ -347,6 +346,99 @@ extern MCExecPoint *MCEPptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2014-01-22: [[ CompatV1 ]] Shim classes that emulate the old MCVariableValue
+//   semantics using the new MCValueRef imp.
+class MCExternalVariable
+{
+public:
+	MCExternalVariable(void);
+	virtual ~MCExternalVariable(void);
+	
+	uint32_t GetReferenceCount(void);
+	void Retain(void);
+	void Release(void);
+	
+	Value_format GetFormat(void);
+	
+	MCExternalError Set(MCExternalVariable *other);
+	MCExternalError SetBoolean(bool value);
+	MCExternalError SetInteger(int32_t value);
+	MCExternalError SetCardinal(uint32_t value);
+	MCExternalError SetReal(real64_t value);
+	MCExternalError SetString(const MCString& string);
+	MCExternalError SetCString(const char *cstring);
+	
+	MCExternalError Append(MCExternalValueOptions options, MCExternalVariable *other);
+	MCExternalError AppendBoolean(MCExternalValueOptions options, bool value);
+	MCExternalError AppendInteger(MCExternalValueOptions options, int32_t value);
+	MCExternalError AppendCardinal(MCExternalValueOptions options, uint32_t value);
+	MCExternalError AppendReal(MCExternalValueOptions options, real64_t value);
+	MCExternalError AppendString(MCExternalValueOptions options, const MCString& string);
+	MCExternalError AppendCString(MCExternalValueOptions options, const char *cstring);
+	
+	MCExternalError GetBoolean(MCExternalValueOptions options, bool& r_value);
+	MCExternalError GetInteger(MCExternalValueOptions options, int32_t& r_value);
+	MCExternalError GetCardinal(MCExternalValueOptions options, uint32_t& r_value);
+	MCExternalError GetReal(MCExternalValueOptions options, real64_t& r_value);
+	MCExternalError GetString(MCExternalValueOptions options, MCString& r_string);
+	MCExternalError GetCString(MCExternalValueOptions options, const char*& r_cstring);
+	
+	virtual bool IsTemporary(void) = 0;
+	virtual bool IsTransient(void) = 0;
+	
+	virtual MCValueRef GetValueRef(void) = 0;
+	virtual void SetValueRef(MCValueRef value) = 0;
+	
+private:
+	uint32_t m_references;
+	MCString m_string_conversion;
+};
+
+class MCTransientExternalVariable: public MCExternalVariable
+{
+public:
+	MCTransientExternalVariable(MCValueRef value);
+	~MCTransientExternalVariable(void);
+	
+	virtual bool IsTemporary(void);
+	virtual bool IsTransient(void);
+	virtual MCValueRef GetValueRef(void);
+	virtual void SetValueRef(MCValueRef value);
+	
+private:
+	MCValueRef m_value;
+};
+
+class MCTemporaryExternalVariable: public MCTransientExternalVariable
+{
+public:
+	MCTemporaryExternalVariable(MCValueRef value);
+	
+	virtual bool IsTemporary(void);
+};
+
+class MCReferenceExternalVariable: public MCExternalVariable
+{
+public:
+	MCReferenceExternalVariable(MCVariable *value);
+	~MCReferenceExternalVariable(void);
+	
+	virtual bool IsTemporary(void);
+	virtual bool IsTransient(void);
+	virtual MCValueRef GetValueRef(void);
+	virtual void SetValueRef(MCValueRef value);
+	
+private:
+	MCVariable *m_variable;
+};
+
+// MW-2014-01-22: [[ CompatV1 ]] This global holds the current handlers it-shim.
+static MCReferenceExternalVariable *s_external_v1_current_it = nil;
+// MW-2014-01-22: [[ CompatV1 ]] This global holds the result-shim.
+static MCReferenceExternalVariable *s_external_v1_result = nil;
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCExternalV1: public MCExternal
 {
 public:
@@ -365,6 +457,739 @@ private:
 
 	MCExternalInfo *m_info;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+static void number_to_string(double p_number, MCExternalValueOptions p_options, char p_buffer[R8L])
+{
+	switch(p_options & kMCExternalValueOptionNumberFormatMask)
+	{
+		case kMCExternalValueOptionDefaultNumberFormat:
+		{
+			char *v;
+			v = p_buffer;
+			uint4 l;
+			l = R8L;
+			MCU_r8tos(v, l, p_number, MCECptr -> GetNumberFormatWidth(), MCECptr -> GetNumberFormatTrailing(), MCECptr -> GetNumberFormatForce());
+		}
+			break;
+		case kMCExternalValueOptionDecimalNumberFormat:
+			sprintf(p_buffer, "%f", p_number);
+			break;
+		case kMCExternalValueOptionScientificNumberFormat:
+			sprintf(p_buffer, "%e", p_number);
+			break;
+		case kMCExternalValueOptionCompactNumberFormat:
+			sprintf(p_buffer, "%0.16g", p_number);
+			break;
+	}
+}
+
+static bool options_get_convert_octals(MCExternalValueOptions p_options)
+{
+	switch(p_options & kMCExternalValueOptionConvertOctalsMask)
+	{
+		case kMCExternalValueOptionDefaultConvertOctals:
+			return MCECptr -> GetConvertOctals();
+		case kMCExternalValueOptionConvertOctals:
+			return true;
+		case kMCExternalValueOptionDoNotConvertOctals:
+			return false;
+		default:
+			break;
+	}
+	return false;
+}
+
+static MCExternalError string_to_boolean(const MCString& p_string, MCExternalValueOptions p_options, void *r_value)
+{
+	if (p_string == MCtruemcstring)
+		*(bool *)r_value = true;
+	else if (p_string == MCfalsemcstring)
+		*(bool *)r_value = false;
+	else
+		return kMCExternalErrorNotABoolean;
+	
+	return kMCExternalErrorNone;
+}
+
+static MCExternalError string_to_integer(const MCString& p_string, MCExternalValueOptions p_options, void *r_value)
+{
+	const char *s;
+	uint32_t l;
+	s = p_string . getstring();
+	l = p_string . getlength();
+	
+	// Skip any whitespace before the number.
+	MCU_skip_spaces(s, l);
+	if (l == 0)
+		return kMCExternalErrorNotANumber;
+	
+	// Check to see if we have a sign.
+	bool t_negative;
+	t_negative = false;
+	if (*s == '-' || *s == '+')
+	{
+		t_negative = (*s == '-');
+		s++;
+		l--;
+	}
+	if (l == 0)
+		return kMCExternalErrorNotANumber;
+	
+	// Check to see what base we are using.
+	uint32_t t_base;
+	t_base = 10;
+	if (*s == '0')
+	{
+		if (l >= 2 && (s[1] == 'X' || s[1] == 'x'))
+		{
+			t_base = 16;
+			s += 2;
+			l -= 2;
+		}
+		else if (options_get_convert_octals(p_options))
+		{
+			t_base = 8;
+			s += 1;
+			l -= 1;
+		}
+	}
+	
+	uint32_t t_value;
+	t_value = 0;
+	
+	bool t_is_integer;
+	t_is_integer = true;
+	
+	if (t_base == 10)
+	{
+		uint32_t sl;
+		sl = l;
+		while(l != 0 && isdigit(*s))
+		{
+			uint32_t t_new_value;
+			t_new_value = t_value * 10 + (*s - '0');
+			if (t_new_value < t_value)
+				return kMCExternalErrorNumericOverflow;
+			
+			t_value = t_new_value;
+			
+			s += 1;
+			l -= 1;
+		}
+		
+		if (l != 0 && *s == '.')
+		{
+			if (sl <= 1)
+				return kMCExternalErrorNotANumber;
+			
+			do
+			{
+				s += 1;
+				l -= 1;
+				if (l != 0 && *s != '0')
+					t_is_integer = false;
+			}
+			while(l != 0 && isdigit(*s));
+		}
+	}
+	else if (t_base == 16)
+	{
+		while(l != 0 && isxdigit(*s))
+		{
+			uint32_t t_new_value;
+			if (isdigit(*s))
+				t_new_value = t_value * 16 + (*s - '0');
+			else
+				t_new_value = t_value * 16 + (((*s) & ~32) - 'A');
+			
+			if (t_new_value < t_value)
+				return kMCExternalErrorNumericOverflow;
+			
+			t_value = t_new_value;
+			
+			s += 1;
+			l -= 1;
+		}
+	}
+	else
+	{
+		while(l != 0 && isdigit(*s) && *s < '8')
+		{
+			uint32_t t_new_value;
+			t_new_value = t_value * 8 + (*s - '0');
+			if (t_new_value < t_value)
+				return kMCExternalErrorNumericOverflow;
+			
+			t_value = t_new_value;
+		}
+	}
+	
+	MCU_skip_spaces(s, l);
+	if (l != 0)
+		return kMCExternalErrorNotANumber;
+	
+	if (!t_is_integer)
+		return kMCExternalErrorNotAnInteger;
+	
+	if ((p_options & 0xf) == kMCExternalValueOptionAsInteger)
+	{
+		int32_t t_as_value;
+		if (t_negative)
+		{
+			if (t_value > 0x80000000U)
+				return kMCExternalErrorNumericOverflow;
+			t_as_value = -(int32_t)t_value;
+		}
+		else
+		{
+			if (t_value > MAXINT4)
+				return kMCExternalErrorNumericOverflow;
+			t_as_value = t_value;
+		}
+		*(int32_t *)r_value = t_as_value;
+	}
+	else
+	{
+		if (t_negative)
+			return kMCExternalErrorNumericOverflow;
+		*(uint32_t *)r_value = t_value;
+	}
+	
+	return kMCExternalErrorNone;
+}
+
+static MCExternalError string_to_real(const MCString& p_string, MCExternalValueOptions p_options, void *r_value)
+{
+	const char *s;
+	uint32_t l;
+	s = p_string . getstring();
+	l = p_string . getlength();
+	
+	// Skip space before the number.
+	MCU_skip_spaces(s, l);
+	if (l == 0)
+		return kMCExternalErrorNotANumber;
+	
+	// See if the number is negative.
+	bool t_negative;
+	t_negative = false;
+	if (*s == '-' || *s == '+')
+	{
+		t_negative = (*s == '-');
+		s++;
+		l--;
+	}
+	if (l == 0)
+		return kMCExternalErrorNotANumber;
+	
+	// Now see if it has to be interpreted as an integer (0x or 0 prefix).
+	if (*s == '0' &&
+		(l >= 2 && (s[1] == 'X' || s[1] == 'x')) ||
+		options_get_convert_octals(p_options))
+	{
+		MCExternalError t_error;
+		uint32_t t_value;
+		t_error = string_to_integer(MCString(s, l), (p_options & ~0xf) | kMCExternalValueOptionAsCardinal, &t_value);
+		if (t_error != kMCExternalErrorNone)
+			return t_error;
+		
+		*(double *)r_value = !t_negative ? (double)t_value : -(double)t_value;
+		return kMCExternalErrorNone;
+	}
+	
+	// Otherwise we convert as a double - note that we need a NUL terminated
+	// string here so temporarily copy into a buffer...
+	char t_tmp_s[R8L];
+	uint32_t t_tmp_l;
+	t_tmp_l = MCU_min(R8L - 1U, l);
+	memcpy(t_tmp_s, s, t_tmp_l);
+	t_tmp_s[t_tmp_l] = '\0';
+	
+	double t_value;
+	char *t_tmp_end;
+	t_value = strtod(t_tmp_s, &t_tmp_end);
+	
+	s += t_tmp_end - t_tmp_s;
+	l -= t_tmp_end - t_tmp_s;
+	MCU_skip_spaces(s, l);
+	
+	if (l != 0)
+		return kMCExternalErrorNotANumber;
+	
+	*(double *)r_value = !t_negative ? t_value : -t_value;
+	
+	return kMCExternalErrorNone;
+}
+
+static MCExternalError number_to_integer(double p_number, MCExternalValueOptions p_options, void *r_value)
+{
+	bool t_negative;
+	if (p_number >= 0.0)
+		t_negative = false;
+	else
+	{
+		t_negative = true;
+		p_number = -p_number;
+	}
+	
+	double t_integer, t_fraction;
+	t_fraction = modf(p_number, &t_integer);
+	
+	uint32_t t_value;
+	if (t_fraction < MC_EPSILON)
+		t_value = (uint32_t)t_integer;
+	else if ((1.0 - t_fraction) < MC_EPSILON)
+		t_value = (uint32_t)t_integer + 1;
+	else
+		return kMCExternalErrorNotAnInteger;
+	
+	if ((p_options & 0xf) == kMCExternalValueOptionAsInteger)
+	{
+		int32_t t_as_value;
+		if (t_negative)
+		{
+			if (t_value > 0x80000000U)
+				return kMCExternalErrorNumericOverflow;
+			t_as_value = -(int32_t)t_value;
+		}
+		else
+		{
+			if (t_value > MAXINT4)
+				return kMCExternalErrorNumericOverflow;
+			t_as_value = t_value;
+		}
+		*(int32_t *)r_value = t_as_value;
+	}
+	else
+	{
+		if (t_negative)
+			return kMCExternalErrorNumericOverflow;
+		*(uint32_t *)r_value = t_value;
+	}
+	
+	return kMCExternalErrorNone;
+}
+
+static MCExternalError number_to_real(double p_number, MCExternalValueOptions p_options, void *r_value)
+{
+	*(double *)r_value = p_number;
+	return kMCExternalErrorNone;
+}
+
+static MCExternalError convert_stringref_to_mcstring(MCStringRef p_string, MCString& r_mcstring)
+{
+	char_t *t_chars;
+	uindex_t t_char_count;
+	if (!MCStringConvertToNative(p_string, t_chars, t_char_count))
+		return kMCExternalErrorOutOfMemory;
+	
+	r_mcstring . set((char *)t_chars, t_char_count);
+	
+	return kMCExternalErrorNone;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCExternalVariable::MCExternalVariable(void)
+{
+	m_references = 1;
+	m_string_conversion . set(nil, 0);
+}
+
+MCExternalVariable::~MCExternalVariable(void)
+{
+	if (m_string_conversion . getstring() != nil)
+		free((void *)m_string_conversion . getstring());
+}
+
+uint32_t MCExternalVariable::GetReferenceCount(void)
+{
+	return m_references;
+}
+
+void MCExternalVariable::Retain(void)
+{
+	m_references += 1;
+}
+
+void MCExternalVariable::Release(void)
+{
+	m_references -= 1;
+	if (m_references > 0)
+		return;
+	
+	delete this;
+}
+
+Value_format MCExternalVariable::GetFormat(void)
+{
+	switch(MCValueGetTypeCode(GetValueRef()))
+	{
+		case kMCValueTypeCodeNull:
+			return VF_STRING;
+		case kMCValueTypeCodeBoolean:
+			return VF_STRING;
+		case kMCValueTypeCodeNumber:
+			return VF_NUMBER;
+		case kMCValueTypeCodeName:
+			return VF_STRING;
+		case kMCValueTypeCodeString:
+			return VF_STRING;
+		case kMCValueTypeCodeData:
+			return VF_STRING;
+		case kMCValueTypeCodeArray:
+			return VF_ARRAY;
+		default:
+			assert(false);
+	}
+	
+	return VF_UNDEFINED;
+}
+
+MCExternalError MCExternalVariable::Set(MCExternalVariable *p_other)
+{
+	SetValueRef(p_other -> GetValueRef());
+	return kMCExternalErrorNone;
+}
+
+MCExternalError MCExternalVariable::SetBoolean(bool p_value)
+{
+	SetValueRef(p_value ? kMCTrue : kMCFalse);
+	return kMCExternalErrorNone;
+}
+
+MCExternalError MCExternalVariable::SetInteger(int32_t p_value)
+{
+	MCAutoNumberRef t_number;
+	if (!MCNumberCreateWithInteger(p_value, &t_number))
+		return kMCExternalErrorOutOfMemory;
+	SetValueRef(*t_number);
+	return kMCExternalErrorNone;
+}
+
+MCExternalError MCExternalVariable::SetCardinal(uint32_t p_value)
+{
+	MCAutoNumberRef t_number;
+	if (!MCNumberCreateWithUnsignedInteger(p_value, &t_number))
+		return kMCExternalErrorOutOfMemory;
+	SetValueRef(*t_number);
+	return kMCExternalErrorNone;
+}
+
+MCExternalError MCExternalVariable::SetReal(double p_value)
+{
+	MCAutoNumberRef t_number;
+	if (!MCNumberCreateWithReal(p_value, &t_number))
+		return kMCExternalErrorOutOfMemory;
+	SetValueRef(*t_number);
+	return kMCExternalErrorNone;
+}
+
+MCExternalError MCExternalVariable::SetString(const MCString& p_value)
+{
+	MCAutoStringRef t_string;
+	if (!MCStringCreateWithOldString(p_value, &t_string))
+		return kMCExternalErrorOutOfMemory;
+	SetValueRef(*t_string);
+	return kMCExternalErrorNone;
+}
+
+MCExternalError MCExternalVariable::SetCString(const char *p_value)
+{
+	MCAutoStringRef t_string;
+	if (!MCStringCreateWithCString(p_value, &t_string))
+		return kMCExternalErrorOutOfMemory;
+	SetValueRef(*t_string);
+	return kMCExternalErrorNone;
+}
+
+MCExternalError MCExternalVariable::Append(MCExternalValueOptions p_options, MCExternalVariable *p_value)
+{
+	MCExternalError t_error;
+	MCString t_string;
+	t_error = p_value -> GetString(p_options, t_string);
+	return AppendString(p_options, t_string);
+}
+
+MCExternalError MCExternalVariable::AppendBoolean(MCExternalValueOptions p_options, bool p_value)
+{
+	return AppendString(p_options, p_value ? MCtruemcstring : MCfalsemcstring);
+}
+
+MCExternalError MCExternalVariable::AppendInteger(MCExternalValueOptions p_options, int32_t p_value)
+{
+	char t_buffer[I4L];
+	sprintf(t_buffer, "%d", *(int32_t *)p_value);
+	return AppendCString(p_options, t_buffer);
+}
+
+MCExternalError MCExternalVariable::AppendCardinal(MCExternalValueOptions p_options, uint32_t p_value)
+{
+	char t_buffer[U4L];
+	sprintf(t_buffer, "%u", *(uint32_t *)p_value);
+	return AppendCString(p_options, t_buffer);
+}
+
+MCExternalError MCExternalVariable::AppendReal(MCExternalValueOptions p_options, real64_t p_value)
+{
+	char t_buffer[R8L];
+	number_to_string(p_value, p_options, t_buffer);
+	return AppendCString(p_options, t_buffer);
+}
+
+MCExternalError MCExternalVariable::AppendString(MCExternalValueOptions p_options, const MCString& p_value)
+{
+	MCExternalError t_error;
+	MCString t_current_value;
+	t_error = GetString(p_options, t_current_value);
+	if (t_error != kMCExternalErrorNone)
+		return t_error;
+	
+	MCAutoStringRef t_new_value;
+	if (!MCStringFormat(&t_new_value, "%.*s%.*s", t_current_value . getlength(), t_current_value . getstring(), p_value . getlength(), p_value . getstring()))
+		return kMCExternalErrorOutOfMemory;
+	
+	SetValueRef(*t_new_value);
+	
+	return t_error;
+}
+
+MCExternalError MCExternalVariable::AppendCString(MCExternalValueOptions p_options, const char *p_value)
+{
+	return AppendString(p_options, p_value);
+}
+
+MCExternalError MCExternalVariable::GetBoolean(MCExternalValueOptions p_options, bool& r_value)
+{
+	MCValueRef t_value;
+	t_value = GetValueRef();
+	if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeBoolean)
+		r_value = t_value == kMCTrue;
+	else
+	{
+		MCExternalError t_error;
+		MCString t_value;
+		t_error = GetString(p_options, t_value);
+		if (t_error != kMCExternalErrorNone)
+			return t_error;
+		
+		return string_to_boolean(t_value, p_options, &r_value);
+	}
+	
+	return kMCExternalErrorNone;
+}
+
+MCExternalError MCExternalVariable::GetInteger(MCExternalValueOptions p_options, int32_t& r_value)
+{
+	MCValueRef t_value;
+	t_value = GetValueRef();
+	if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNumber)
+		return number_to_integer(p_options, MCNumberFetchAsReal((MCNumberRef)t_value), &r_value);
+	
+	MCExternalError t_error;
+	MCString t_string_value;
+	t_error = GetString(p_options, t_string_value);
+	if (t_error != kMCExternalErrorNone)
+		return t_error;
+	
+	return string_to_integer(t_string_value, p_options, &r_value);
+}
+
+MCExternalError MCExternalVariable::GetCardinal(MCExternalValueOptions p_options, uint32_t& r_value)
+{
+	return GetInteger(p_options, (int32_t&)r_value);
+}
+
+MCExternalError MCExternalVariable::GetReal(MCExternalValueOptions p_options, real64_t& r_value)
+{
+	MCValueRef t_value;
+	t_value = GetValueRef();
+	if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNumber)
+		return number_to_real(p_options, MCNumberFetchAsReal((MCNumberRef)t_value), &r_value);
+	
+	MCExternalError t_error;
+	MCString t_string_value;
+	t_error = GetString(p_options, t_string_value);
+	if (t_error != kMCExternalErrorNone)
+		return t_error;
+	
+	return string_to_real(t_string_value, p_options, &r_value);
+}
+
+MCExternalError MCExternalVariable::GetString(MCExternalValueOptions p_options, MCString& r_value)
+{	MCString t_string;
+	
+	// Get the valueref.
+	MCValueRef t_value;
+	t_value = GetValueRef();
+	
+	MCString t_string_value;
+	switch(MCValueGetTypeCode(t_value))
+	{
+		case kMCValueTypeCodeNull:
+			t_string_value = MCnullmcstring;
+			break;
+		case kMCValueTypeCodeBoolean:
+			t_string_value = (t_value == kMCTrue ? MCtruemcstring : MCfalsemcstring);
+			break;
+		case kMCValueTypeCodeNumber:
+		{
+			// Use the externalv1 method to convert.
+			double t_number;
+			t_number = MCNumberFetchAsReal((MCNumberRef)t_value);
+			
+			char t_buffer[R8L];
+			number_to_string(t_number, p_options, t_buffer);
+			
+			char *t_dup_buffer;
+			t_dup_buffer = strdup(t_buffer);
+			if (t_dup_buffer == nil)
+				return kMCExternalErrorOutOfMemory;
+			
+			// Duplicate the string and store in the externalvar.
+			t_string_value . set(t_dup_buffer, strlen(t_buffer));
+			m_string_conversion = t_string_value;
+		}
+			break;
+		case kMCValueTypeCodeName:
+		{
+			// For a name we convert its stringref to a (native) mcstring.
+			MCExternalError t_error;
+			t_error = convert_stringref_to_mcstring(MCNameGetString((MCNameRef)t_value), t_string_value);
+			if (t_error != kMCExternalErrorNone)
+				return t_error;
+			
+			// Store the string as the converted value in the externalvar (so
+			// it doesn't get lost).
+			m_string_conversion = t_string_value;
+		}
+			break;
+		case kMCValueTypeCodeString:
+		{
+			// For a string we convert the stringref to a (native) mcstring.
+			MCExternalError t_error;
+			t_error = convert_stringref_to_mcstring((MCStringRef)t_value, t_string_value);
+			if (t_error != kMCExternalErrorNone)
+				return t_error;
+			
+			// Store the string as the converted value in the externalvar (so
+			// it doesn't get lost).
+			m_string_conversion = t_string_value;
+		}
+			break;
+		case kMCValueTypeCodeData:
+		{
+			// For data we can use the bytes as (when a string) we view them as native.
+			t_string_value . set((const char *)MCDataGetBytePtr((MCDataRef)t_value), MCDataGetLength((MCDataRef)t_value));
+		}
+			break;
+		case kMCValueTypeCodeArray:
+			// An array is never a string (from the point of view of the externals API).
+			return kMCExternalErrorNotAString;
+			break;
+		default:
+			assert(false);
+	}
+	
+	r_value = t_string_value;
+	
+	return kMCExternalErrorNone;
+}
+
+MCExternalError MCExternalVariable::GetCString(MCExternalValueOptions p_options, const char*& r_value)
+{
+	MCString t_string_value;
+	MCExternalError t_error;
+	t_error = GetString(p_options, t_string_value);
+	if (t_error != kMCExternalErrorNone)
+		return t_error;
+	
+	if (memchr(t_string_value . getstring(), '\0', t_string_value . getlength()) != nil)
+		return kMCExternalErrorNotACString;
+	
+	r_value = t_string_value . getstring();
+	
+	return kMCExternalErrorNone;
+}
+
+//////////
+
+MCTransientExternalVariable::MCTransientExternalVariable(MCValueRef p_value)
+{
+	m_value = MCValueRetain(p_value);
+}
+
+MCTransientExternalVariable::~MCTransientExternalVariable(void)
+{
+	MCValueRelease(m_value);
+}
+
+bool MCTransientExternalVariable::IsTemporary(void)
+{
+	return false;
+}
+
+bool MCTransientExternalVariable::IsTransient(void)
+{
+	return true;
+}
+
+MCValueRef MCTransientExternalVariable::GetValueRef(void)
+{
+	return m_value;
+}
+
+void MCTransientExternalVariable::SetValueRef(MCValueRef p_value)
+{
+	MCValueRetain(p_value);
+	MCValueRelease(m_value);
+	m_value = p_value;
+}
+
+//////////
+
+MCTemporaryExternalVariable::MCTemporaryExternalVariable(MCValueRef p_value)
+	: MCTransientExternalVariable(p_value)
+{
+}
+
+bool MCTemporaryExternalVariable::IsTemporary(void)
+{
+	return true;
+}
+
+//////////
+
+MCReferenceExternalVariable::MCReferenceExternalVariable(MCVariable *p_variable)
+{
+	m_variable = p_variable;
+}
+
+MCReferenceExternalVariable::~MCReferenceExternalVariable(void)
+{
+}
+
+bool MCReferenceExternalVariable::IsTemporary(void)
+{
+	return false;
+}
+
+bool MCReferenceExternalVariable::IsTransient(void)
+{
+	return false;
+}
+
+MCValueRef MCReferenceExternalVariable::GetValueRef(void)
+{
+	return m_variable -> getvalueref();
+}
+
+void MCReferenceExternalVariable::SetValueRef(MCValueRef p_value)
+{
+	m_variable -> setvalueref(p_value);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -462,11 +1287,11 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 			t_parameter_count += 1;
 			
 		// Allocate an array of values.
-		MCVariableValue **t_parameter_vars;
+		MCExternalVariableRef *t_parameter_vars;
 		t_parameter_vars = NULL;
 		if (t_parameter_count != 0)
 		{
-			t_parameter_vars = new MCVariableValue *[t_parameter_count];
+			t_parameter_vars = new MCExternalVariableRef[t_parameter_count];
 			if (t_parameter_vars == nil)
 				return ES_ERROR;
 		}
@@ -480,21 +1305,14 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 			{
 				// We are a variable parameter so use the value directly (i.e. pass by
 				// reference).
-				t_parameter_vars[i] = &t_var -> getvalue();
+				
+				// MW-2014-01-22: [[ CompatV1 ]] Create a reference to the MCVariable.
+				t_parameter_vars[i] = new MCReferenceExternalVariable(t_var);
 			}
 			else
 			{
-				// We need a temporary so do an exchange. Note that unlike other handlers,
-				// external handlers can't 'pass' so we don't need the value in the parameter
-				// anymore after this 'Handle' call.
-				t_parameter_vars[i] = new MCVariableValue;
-				if (t_parameter_vars[i] != nil)
-				{
-					t_parameter_vars[i] -> set_temporary();
-					t_parameter_vars[i] -> exchange(p_parameters -> getvalue());
-				}
-				else
-					t_stat = ES_ERROR;
+				// MW-2014-01-22: [[ CompatV1 ]] Create a temporary value var.
+				t_parameter_vars[i] = new MCTransientExternalVariable(p_parameters -> getvalueref_argument());
 			}
 		}
 
@@ -502,25 +1320,34 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 		// result.
 		if (t_stat == ES_NORMAL)
 		{
-			MCVariableValue t_result;
-			t_result . set_temporary();
-			t_result . assign_empty();
-
+			// MW-2014-01-22: [[ CompatV1 ]] Initialize a temporary var to empty.
+			MCTransientExternalVariable t_result(kMCEmptyString);
+			
+			// MW-2014-01-22: [[ CompatV1 ]] Make a reference var to hold it (should it be needed).
+			//   We then store the previous global value of the it extvar, and set this one.
+			//   As external calls are recursive, this should be fine :)
+			MCReferenceExternalVariable t_it(MCECptr -> GetHandler() -> getit() -> evalvar(*MCECptr));
+			MCReferenceExternalVariable *t_old_it;
+			t_old_it = s_external_v1_current_it;
+			s_external_v1_current_it = &t_it;
+			
 			// Invoke the external handler. If 'false' is returned, treat the result as a
 			// string value containing an error hint.
 			if ((t_handler -> handler)(t_parameter_vars, t_parameter_count, &t_result))
-				MCresult -> getvalue() . exchange(t_result);
+				MCresult -> setvalueref(t_result . GetValueRef());
 			else
 			{
-				MCeerror -> add(EE_EXTERNAL_EXCEPTION, 0, 0, t_result . is_string() ? t_result . get_string() : "");
+				MCeerror -> add(EE_EXTERNAL_EXCEPTION, 0, 0, t_result . GetValueRef());
 				t_stat = ES_ERROR;
 			}
+			
+			// Restore the old it.
+			s_external_v1_current_it = t_old_it;
 		}
 
 		// Finally, loop through and free the parameters as necessary.
 		for(uint32_t i = 0; i < t_parameter_count; i++)
-			if (t_parameter_vars[i] -> get_temporary())
-				delete t_parameter_vars[i];
+			delete t_parameter_vars[i];
 
 		delete t_parameter_vars;
 
@@ -536,326 +1363,97 @@ MCExternal *MCExternalCreateV1(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool options_get_convert_octals(MCExternalValueOptions p_options)
-{
-	switch(p_options & kMCExternalValueOptionConvertOctalsMask)
-	{
-		case kMCExternalValueOptionDefaultConvertOctals:
-			return MCEPptr -> getconvertoctals() == True;
-		case kMCExternalValueOptionConvertOctals:
-			return true;
-		case kMCExternalValueOptionDoNotConvertOctals:
-			return false;
-		default:
-			break;
-	}
-	return false;
-}
-
-static MCExternalError string_to_boolean(const MCString& p_string, MCExternalValueOptions p_options, void *r_value)
-{
-	if (p_string == MCtruemcstring)
-		*(bool *)r_value = true;
-	else if (p_string == MCfalsemcstring)
-		*(bool *)r_value = false;
-	else
-		return kMCExternalErrorNotABoolean;
-
-	return kMCExternalErrorNone;
-}
-
-static MCExternalError string_to_integer(const MCString& p_string, MCExternalValueOptions p_options, void *r_value)
-{
-	const char *s;
-	uint32_t l;
-	s = p_string . getstring();
-	l = p_string . getlength();
-
-	// Skip any whitespace before the number.
-	MCU_skip_spaces(s, l);
-	if (l == 0)
-		return kMCExternalErrorNotANumber;
-
-	// Check to see if we have a sign.
-	bool t_negative;
-	t_negative = false;
-	if (*s == '-' || *s == '+')
-	{
-		t_negative = (*s == '-');
-		s++;
-		l--;
-	}
-	if (l == 0)
-		return kMCExternalErrorNotANumber;
-
-	// Check to see what base we are using.
-	uint32_t t_base;
-	t_base = 10;
-	if (*s == '0')
-	{
-		if (l >= 2 && (s[1] == 'X' || s[1] == 'x'))
-		{
-			t_base = 16;
-			s += 2;
-			l -= 2;
-		}
-		else if (options_get_convert_octals(p_options))
-		{
-			t_base = 8;
-			s += 1;
-			l -= 1;
-		}
-	}
-
-	uint32_t t_value;
-	t_value = 0;
-
-	bool t_is_integer;
-	t_is_integer = true;
-
-	if (t_base == 10)
-	{
-		uint32_t sl;
-		sl = l;
-		while(l != 0 && isdigit(*s))
-		{
-			uint32_t t_new_value;
-			t_new_value = t_value * 10 + (*s - '0');
-			if (t_new_value < t_value)
-				return kMCExternalErrorNumericOverflow;
-
-			t_value = t_new_value;
-
-			s += 1;
-			l -= 1;
-		}
-
-		if (l != 0 && *s == '.')
-		{
-			if (sl <= 1)
-				return kMCExternalErrorNotANumber;
-
-			do
-			{
-				s += 1;
-				l -= 1;
-				if (l != 0 && *s != '0')
-					t_is_integer = false;
-			}
-			while(l != 0 && isdigit(*s));
-		}
-	}
-	else if (t_base == 16)
-	{
-		while(l != 0 && isxdigit(*s))
-		{
-			uint32_t t_new_value;
-			if (isdigit(*s))
-				t_new_value = t_value * 16 + (*s - '0');
-			else
-				t_new_value = t_value * 16 + (((*s) & ~32) - 'A');
-
-			if (t_new_value < t_value)
-				return kMCExternalErrorNumericOverflow;
-
-			t_value = t_new_value;
-
-			s += 1;
-			l -= 1;
-		}
-	}
-	else
-	{
-		while(l != 0 && isdigit(*s) && *s < '8')
-		{
-			uint32_t t_new_value;
-			t_new_value = t_value * 8 + (*s - '0');
-			if (t_new_value < t_value)
-				return kMCExternalErrorNumericOverflow;
-
-			t_value = t_new_value;
-		}
-	}
-
-	MCU_skip_spaces(s, l);
-	if (l != 0)
-		return kMCExternalErrorNotANumber;
-
-	if (!t_is_integer)
-		return kMCExternalErrorNotAnInteger;
-
-	if ((p_options & 0xf) == kMCExternalValueOptionAsInteger)
-	{
-		int32_t t_as_value;
-		if (t_negative)
-		{
-			if (t_value > 0x80000000U)
-				return kMCExternalErrorNumericOverflow;
-			t_as_value = -(int32_t)t_value;
-		}
-		else
-		{
-			if (t_value > MAXINT4)
-				return kMCExternalErrorNumericOverflow;
-			t_as_value = t_value;
-		}
-		*(int32_t *)r_value = t_as_value;
-	}
-	else
-	{
-		if (t_negative)
-			return kMCExternalErrorNumericOverflow;
-		*(uint32_t *)r_value = t_value;
-	}
-
-	return kMCExternalErrorNone;
-}
-
-static MCExternalError string_to_real(const MCString& p_string, MCExternalValueOptions p_options, void *r_value)
-{
-	const char *s;
-	uint32_t l;
-	s = p_string . getstring();
-	l = p_string . getlength();
-
-	// Skip space before the number.
-	MCU_skip_spaces(s, l);
-	if (l == 0)
-		return kMCExternalErrorNotANumber;
-
-	// See if the number is negative.
-	bool t_negative;
-	t_negative = false;
-	if (*s == '-' || *s == '+')
-	{
-		t_negative = (*s == '-');
-		s++;
-		l--;
-	}
-	if (l == 0)
-		return kMCExternalErrorNotANumber;
-
-	// Now see if it has to be interpreted as an integer (0x or 0 prefix).
-	if (*s == '0' &&
-		(l >= 2 && (s[1] == 'X' || s[1] == 'x')) ||
-		options_get_convert_octals(p_options))
-	{
-		MCExternalError t_error;
-		uint32_t t_value;
-		t_error = string_to_integer(MCString(s, l), (p_options & ~0xf) | kMCExternalValueOptionAsCardinal, &t_value);
-		if (t_error != kMCExternalErrorNone)
-			return t_error;
-
-		*(double *)r_value = !t_negative ? (double)t_value : -(double)t_value;
-		return kMCExternalErrorNone;
-	}
-
-	// Otherwise we convert as a double - note that we need a NUL terminated
-	// string here so temporarily copy into a buffer...
-	char t_tmp_s[R8L];
-	uint32_t t_tmp_l;
-	t_tmp_l = MCU_min(R8L - 1U, l);
-	memcpy(t_tmp_s, s, t_tmp_l);
-	t_tmp_s[t_tmp_l] = '\0';
-
-	double t_value;
-	char *t_tmp_end;
-	t_value = strtod(t_tmp_s, &t_tmp_end);
-	
-	s += t_tmp_end - t_tmp_s;
-	l -= t_tmp_end - t_tmp_s;
-	MCU_skip_spaces(s, l);
-
-	if (l != 0)
-		return kMCExternalErrorNotANumber;
-
-	*(double *)r_value = !t_negative ? t_value : -t_value;
-
-	return kMCExternalErrorNone;
-}
-
-static MCExternalError number_to_integer(double p_number, MCExternalValueOptions p_options, void *r_value)
-{
-	bool t_negative;
-	if (p_number >= 0.0)
-		t_negative = false;
-	else
-	{
-		t_negative = true;
-		p_number = -p_number;
-	}
-
-	double t_integer, t_fraction;
-	t_fraction = modf(p_number, &t_integer);
-	
-	uint32_t t_value;
-	if (t_fraction < MC_EPSILON)
-		t_value = (uint32_t)t_integer;
-	else if ((1.0 - t_fraction) < MC_EPSILON)
-		t_value = (uint32_t)t_integer + 1;
-	else
-		return kMCExternalErrorNotAnInteger;
-
-	if ((p_options & 0xf) == kMCExternalValueOptionAsInteger)
-	{
-		int32_t t_as_value;
-		if (t_negative)
-		{
-			if (t_value > 0x80000000U)
-				return kMCExternalErrorNumericOverflow;
-			t_as_value = -(int32_t)t_value;
-		}
-		else
-		{
-			if (t_value > MAXINT4)
-				return kMCExternalErrorNumericOverflow;
-			t_as_value = t_value;
-		}
-		*(int32_t *)r_value = t_as_value;
-	}
-	else
-	{
-		if (t_negative)
-			return kMCExternalErrorNumericOverflow;
-		*(uint32_t *)r_value = t_value;
-	}
-
-	return kMCExternalErrorNone;
-}
-
-static MCExternalError number_to_real(double p_number, MCExternalValueOptions p_options, void *r_value)
-{
-	*(double *)r_value = p_number;
-	return kMCExternalErrorNone;
-}
-
-static void number_to_string(double p_number, MCExternalValueOptions p_options, char p_buffer[R8L])
-{
-	switch(p_options & kMCExternalValueOptionNumberFormatMask)
-	{
-	case kMCExternalValueOptionDefaultNumberFormat:
-		{
-			char *v;
-			v = p_buffer;
-			uint4 l;
-			l = R8L;
-			MCU_r8tos(v, l, p_number, MCEPptr -> getnffw(), MCEPptr -> getnftrailing(), MCEPptr -> getnfforce());
-		}
-		break;
-	case kMCExternalValueOptionDecimalNumberFormat:
-		sprintf(p_buffer, "%f", p_number);
-		break;
-	case kMCExternalValueOptionScientificNumberFormat:
-		sprintf(p_buffer, "%e", p_number);
-		break;
-	case kMCExternalValueOptionCompactNumberFormat:
-		sprintf(p_buffer, "%0.16g", p_number);
-		break;
-	}
-}
-
+#ifdef OLD_EXEC
 static MCExternalError fetch_as_string(MCExternalVariableRef p_var, MCExternalValueOptions p_options, void *r_value)
 {
+	MCString t_string;
+	
+	// Get the valueref.
+	MCValueRef t_value;
+	t_value = p_var -> GetValueRef();
+	
+	MCString t_string_value;
+	switch(MCValueGetTypeCode(t_value))
+	{
+		case kMCValueTypeCodeNull:
+			t_string_value = MCnullmcstring;
+		break;
+		case kMCValueTypeCodeBoolean:
+			t_string_value = (t_value == kMCTrue ? MCtruemcstring : MCfalsemcstring);
+		break;
+		case kMCValueTypeCodeNumber:
+		{
+			// Use the externalv1 method to convert.
+			double t_number;
+			t_number = MCNumberFetchAsReal((MCNumberRef)t_value);
+			
+			char t_buffer[R8L];
+			number_to_string(t_number, p_options, t_buffer);
+			
+			char *t_dup_buffer;
+			t_dup_buffer = strdup(t_buffer);
+			if (t_dup_buffer == nil)
+				return kMCExternalErrorOutOfMemory;
+			
+			// Duplicate the string and store in the externalvar.
+			t_string_value . set(t_dup_buffer, strlen(t_buffer));
+			p_var -> SetStringConversion(t_string_value);
+		}
+		break;
+		case kMCValueTypeCodeName:
+		{
+			// For a name we convert its stringref to a (native) mcstring.
+			MCExternalError t_error;
+			t_error = convert_stringref_to_mcstring(MCNameGetString((MCNameRef)t_value), t_string_value);
+			if (t_error != kMCExternalErrorNone)
+				return t_error;
+			
+			// Store the string as the converted value in the externalvar (so
+			// it doesn't get lost).
+			p_var -> SetStringConversion(t_string_value);
+		}
+		break;
+		case kMCValueTypeCodeString:
+		{
+			// For a string we convert the stringref to a (native) mcstring.
+			MCExternalError t_error;
+			t_error = convert_stringref_to_mcstring((MCStringRef)t_value, t_string_value);
+			if (t_error != kMCExternalErrorNone)
+				return t_error;
+			
+			// Store the string as the converted value in the externalvar (so
+			// it doesn't get lost).
+			p_var -> SetStringConversion(t_string_value);
+		}
+		break;
+		case kMCValueTypeCodeData:
+		{
+			// For data we can use the bytes as (when a string) we view them as native.
+			t_string_value . set((const char *)MCDataGetBytePtr((MCDataRef)t_value), MCDataGetLength((MCDataRef)t_value));
+		}
+		break;
+		case kMCValueTypeCodeArray:
+			// An array is never a string (from the point of view of the externals API).
+			return kMCExternalErrorNotAString;
+		break;
+		default:
+			assert(false);
+	}
+	
+	// Finally process whether it should be a c-string or not.
+	if ((p_options & 0xf) == kMCExternalValueOptionAsString)
+		*(MCString *)r_value = t_string_value;
+	else
+	{
+		if (memchr(t_string_value . getstring(), '\0', t_string_value . getlength()) != nil)
+			return kMCExternalErrorNotACString;
+		
+		*(const char **)r_value = t_string_value . getstring();
+	}
+	
+	return kMCExternalErrorNone;
+	
+#ifdef OLD_EXEC
 	if (p_var -> is_number())
 	{
 		double t_number;
@@ -891,7 +1489,9 @@ static MCExternalError fetch_as_string(MCExternalVariableRef p_var, MCExternalVa
 		return kMCExternalErrorNotAString;
 
 	return kMCExternalErrorNone;
+#endif
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -936,7 +1536,7 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, void
 	case kMCExternalContextQueryMe:
 		{
 			MCObjectHandle *t_handle;
-			t_handle = MCEPptr -> getobj() -> gethandle();
+			t_handle = MCECptr -> GetObject() -> gethandle();
 			if (t_handle == nil)
 				return kMCExternalErrorOutOfMemory;
 			*(MCObjectHandle **)result = t_handle;
@@ -952,37 +1552,39 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, void
 		}
 		break;
 	case kMCExternalContextQueryResult:
-		*(MCExternalVariableRef *)result = &MCresult -> getvalue();
+		// MW-2014-01-22: [[ CompatV1 ]] If the result shim hasn't been made, make it.
+		if (s_external_v1_result == nil)
+			s_external_v1_result = new MCReferenceExternalVariable(MCresult);
+		*(MCExternalVariableRef *)result = s_external_v1_result;
 		break;
 	case kMCExternalContextQueryIt:
 		{
-			// MW-2013-11-08: [[ RefactorIt ]] MCHandler::getit() now returns a varref.
-			MCVariable *t_var;
-			t_var = MCEPptr -> gethandler() -> getit() -> evalvar(*MCEPptr);
-			*(MCExternalVariableRef *)result = (t_var != NULL) ? &t_var -> getvalue() : NULL;
+			// MW-2014-01-22: [[ CompatV1 ]] Use the current it shim (initialized before
+			//   a new handler is invoked).
+			*(MCExternalVariableRef *)result = s_external_v1_current_it;
 		}
 		break;
 	case kMCExternalContextQueryCaseSensitive:
-		*(bool *)result = MCEPptr -> getcasesensitive() == True;
+		*(bool *)result = MCECptr -> GetCaseSensitive();
 		break;
 	case kMCExternalContextQueryConvertOctals:
-		*(bool *)result = MCEPptr -> getconvertoctals() == True;
+		*(bool *)result = MCECptr -> GetConvertOctals();
 		break;
 	// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of 'the wholeMatches' query.
 	case kMCExternalContextQueryWholeMatches:
-		*(bool *)result = MCEPptr -> getwholematches() == True;
+		*(bool *)result = MCECptr -> GetWholeMatches();
 		break;
 	case kMCExternalContextQueryItemDelimiter:
-		*(uint32_t *)result = MCEPptr -> getitemdel();
+		*(uint32_t *)result = MCECptr -> GetItemDelimiter();
 		break;
 	case kMCExternalContextQueryLineDelimiter:
-		*(uint32_t *)result = MCEPptr -> getlinedel();
+		*(uint32_t *)result = MCECptr -> GetLineDelimiter();
 		break;
 	case kMCExternalContextQueryColumnDelimiter:
-		*(uint32_t *)result = MCEPptr -> getcolumndel();
+		*(uint32_t *)result = MCECptr -> GetColumnDelimiter();
 		break;
 	case kMCExternalContextQueryRowDelimiter:
-		*(uint32_t *)result = MCEPptr -> getrowdel();
+		*(uint32_t *)result = MCECptr -> GetRowDelimiter();
 		break;
 	case kMCExternalContextQueryDefaultStack:
 		{
@@ -1017,18 +1619,22 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, void
 // MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of context_evaluate method.
 MCExternalError MCExternalContextEvaluate(const char *p_expression, unsigned int p_options, MCExternalVariableRef *p_binds, unsigned int p_bind_count, MCExternalVariableRef p_result)
 {
-	MCEPptr -> setsvalue(p_expression);
+	MCAutoStringRef t_expr;
+	if (!MCStringCreateWithCString(p_expression, &t_expr))
+		return kMCExternalErrorOutOfMemory;
 	
-	Exec_stat t_stat;
-	t_stat = MCEPptr -> gethandler() -> eval(*MCEPptr);
+	MCAutoValueRef t_value;
+	MCECptr -> GetHandler() -> eval(*MCECptr, *t_expr, &t_value);
+	if (MCECptr -> HasError())
+	{	
+		if (MCECptr -> GetExecStat() == ES_ERROR)
+			return kMCExternalErrorFailed;
 	
-	if (t_stat == ES_ERROR)
-		return kMCExternalErrorFailed;
+		if (MCECptr -> GetExecStat() == ES_EXIT_ALL)
+			return kMCExternalErrorExited;
+	}
 	
-	if (t_stat == ES_EXIT_ALL)
-		return kMCExternalErrorExited;
-	
-	p_result -> store(*MCEPptr);
+	p_result -> SetValueRef(*t_value);
 	
 	return kMCExternalErrorNone;
 }
@@ -1036,35 +1642,31 @@ MCExternalError MCExternalContextEvaluate(const char *p_expression, unsigned int
 // MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of context_execute method.
 MCExternalError MCExternalContextExecute(const char *p_commands, unsigned int p_options, MCExternalVariableRef *p_binds, unsigned int p_bind_count)
 {
-	MCEPptr -> setsvalue(p_commands);
+	MCAutoStringRef t_expr;
+	if (!MCStringCreateWithCString(p_commands, &t_expr))
+		return kMCExternalErrorOutOfMemory;
 	
 	Exec_stat t_stat;
-	t_stat = MCEPptr -> gethandler() -> doscript(*MCEPptr, 0, 0);
-	
-	if (t_stat == ES_ERROR)
-		return kMCExternalErrorFailed;
-	
-	if (t_stat == ES_EXIT_ALL)
-		return kMCExternalErrorExited;
+	MCECptr -> GetHandler() -> doscript(*MCECptr, *t_expr, 0, 0);
+	if (MCECptr -> HasError())
+	{	
+		if (MCECptr -> GetExecStat() == ES_ERROR)
+			return kMCExternalErrorFailed;
+		
+		if (MCECptr -> GetExecStat() == ES_EXIT_ALL)
+			return kMCExternalErrorExited;
+	}
 	
 	return kMCExternalErrorNone;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct MCTemporaryVariable: public MCVariableValue
-{
-	uint32_t references;
-};
-
 static MCExternalError MCExternalVariableCreate(MCExternalVariableRef* r_var)
 {
-	*r_var = new MCTemporaryVariable;
+	*r_var = new MCTemporaryExternalVariable(kMCEmptyString);
 	if (r_var == nil)
 		return kMCExternalErrorOutOfMemory;
-
-	(*r_var) -> set_external();
-	static_cast<MCTemporaryVariable *>(*r_var) -> references = 1;
 
 	return kMCExternalErrorNone;
 }
@@ -1074,13 +1676,7 @@ static MCExternalError MCExternalVariableRetain(MCExternalVariableRef var)
 	if (var == nil)
 		return kMCExternalErrorNoVariable;
 
-	if (!var -> get_external())
-		return kMCExternalErrorNone;
-
-	// Otherwise increment the reference count.
-	MCTemporaryVariable *t_temp_var;
-	t_temp_var = static_cast<MCTemporaryVariable *>(var);
-	t_temp_var -> references += 1;
+	var -> Retain();
 
 	return kMCExternalErrorNone;
 }
@@ -1090,16 +1686,7 @@ static MCExternalError MCExternalVariableRelease(MCExternalVariableRef var)
 	if (var == nil)
 		return kMCExternalErrorNoVariable;
 
-	// If we aren't a temporary var, then we do nothing.
-	if (!var -> get_external())
-		return kMCExternalErrorNone;
-
-	// Otherwise decrement the reference count.
-	MCTemporaryVariable *t_temp_var;
-	t_temp_var = static_cast<MCTemporaryVariable *>(var);
-	t_temp_var -> references -= 1;
-	if (t_temp_var -> references == 0)
-		delete t_temp_var;
+	var -> Release();
 	
 	return kMCExternalErrorNone;
 }
@@ -1112,32 +1699,32 @@ static MCExternalError MCExternalVariableQuery(MCExternalVariableRef var, MCExte
 	switch(p_query)
 	{
 	case kMCExternalVariableQueryIsTemporary:
-		*(bool *)r_result = var -> get_external();
+		*(bool *)r_result = var -> IsTemporary();
 		break;
 	case kMCExternalVariableQueryIsTransient:
-		*(bool *)r_result = var -> get_temporary();
+		*(bool *)r_result = var -> IsTransient();
 		break;
 	case kMCExternalVariableQueryFormat:
-		*(Value_format *)r_result = var -> get_format();
+		*(Value_format *)r_result = var -> GetFormat();
 		break;
 	case kMCExternalVariableQueryRetention:
-		if (!var -> get_external())
+		if (!var -> IsTemporary())
 			*(uint32_t *)r_result = 0;
 		else
-			*(uint32_t *)r_result = static_cast<MCTemporaryVariable *>(var) -> references;
+			*(uint32_t *)r_result = var -> GetReferenceCount();
 		break;
 	case kMCExternalVariableQueryIsAnArray:
-		*(bool *)r_result = var -> is_empty() || var -> is_array();
+		*(bool *)r_result = MCValueIsArray(var -> GetValueRef()) || MCValueIsEmpty(var -> GetValueRef());
 		break;
 			
 	// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of IsEmpty variable query.
 	case kMCExternalVariableQueryIsEmpty:
-		*(bool *)r_result = var -> is_empty();
+		*(bool *)r_result = MCValueIsEmpty(var -> GetValueRef());
 		break;
 			
 	// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of IsASequence variable query.
 	case kMCExternalVariableQueryIsASequence:
-		*(bool *)r_result = var -> is_array() && var -> get_array() -> issequence();
+			*(bool *)r_result = MCValueIsEmpty(var -> GetValueRef()) || (MCValueIsArray(var -> GetValueRef()) && MCArrayIsSequence((MCArrayRef)var -> GetValueRef()));
 		break;
 	
 	default:
@@ -1152,7 +1739,7 @@ static MCExternalError MCExternalVariableClear(MCExternalVariableRef var)
 	if (var == nil)
 		return kMCExternalErrorNoVariable;
 
-	var -> clear();
+	var -> SetValueRef(kMCEmptyString);
 
 	return kMCExternalErrorNone;
 }
@@ -1162,7 +1749,11 @@ static MCExternalError MCExternalVariableExchange(MCExternalVariableRef var_a, M
 	if (var_a == nil || var_b == nil)
 		return kMCExternalErrorNoVariable;
 
-	var_a -> exchange(*var_b);
+	MCValueRef t_a_value;
+	t_a_value = MCValueRetain(var_a -> GetValueRef());
+	var_a -> SetValueRef(var_a -> GetValueRef());
+	var_b -> SetValueRef(t_a_value);
+	MCValueRelease(t_a_value);
 
 	return kMCExternalErrorNone;
 }
@@ -1178,29 +1769,19 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
 	switch(p_options & 0xf)
 	{
 	case kMCExternalValueOptionAsVariable:
-		if (!var -> assign(*(MCVariableValue *)p_value))
-			return kMCExternalErrorOutOfMemory;
-		break;
+		return var -> Set((MCExternalVariableRef)p_value);
 	case kMCExternalValueOptionAsBoolean:
-		var -> assign_constant_string(*(bool *)p_value ? MCtruemcstring : MCfalsemcstring);
-		break;
+		return var -> SetBoolean(*(bool *)p_value);
 	case kMCExternalValueOptionAsInteger:
-		var -> assign_real(*(int32_t *)p_value);
-		break;
+		return var -> SetInteger(*(int32_t *)p_value);
 	case kMCExternalValueOptionAsCardinal:
-		var -> assign_real(*(uint32_t *)p_value);
-		break;
+		return var -> SetCardinal(*(uint32_t *)p_value);
 	case kMCExternalValueOptionAsReal:
-		var -> assign_real(*(real64_t *)p_value);
-		break;
+		return var -> SetReal(*(real64_t *)p_value);
 	case kMCExternalValueOptionAsString:
-		if (!var -> assign_string(*(MCString *)p_value))
-			return kMCExternalErrorOutOfMemory;
-		break;
+		return var -> SetString(*(MCString *)p_value);
 	case kMCExternalValueOptionAsCString:
-		if (!var -> assign_string(*(const char **)p_value))
-			return kMCExternalErrorOutOfMemory;
-		break;
+		return var -> SetCString(*(const char **)p_value);
 	default:
 		return kMCExternalErrorInvalidValueType;
 	}
@@ -1219,35 +1800,20 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
 	switch(p_options & 0xf)
 	{
 	case kMCExternalValueOptionAsVariable:
-		if (!static_cast<MCVariableValue *>(p_value) -> assign(*var))
-			return kMCExternalErrorOutOfMemory;
-		break;
+		return ((MCExternalVariableRef)p_value) -> Set(var);
 
 	case kMCExternalValueOptionAsBoolean:
-		if (var -> is_string())
-			return string_to_boolean(var -> get_string(), p_options, p_value);
-		return kMCExternalErrorNotABoolean;
-
+		return var -> GetBoolean(p_options, *(bool *)p_value);
 	case kMCExternalValueOptionAsInteger:
+		return var -> GetInteger(p_options, *(int32_t *)p_value);
 	case kMCExternalValueOptionAsCardinal:
-		if (var -> is_number())
-			return number_to_integer(var -> get_real(), p_options, p_value);
-		else if (var -> is_string())
-			return string_to_integer(var -> get_string(), p_options, p_value);
-		return kMCExternalErrorNotANumber;
-
+		return var -> GetCardinal(p_options, *(uint32_t *)p_value);
 	case kMCExternalValueOptionAsReal:
-		if (var -> is_number())
-			return number_to_real(var -> get_real(), p_options, p_value);
-		else if (var -> is_string())
-			return string_to_real(var -> get_string(), p_options, p_value);
-		return kMCExternalErrorNotANumber;
-
+		return var -> GetReal(p_options, *(real64_t *)p_value);
 	case kMCExternalValueOptionAsString:
+		return var -> GetString(p_options, *(MCString *)p_value);
 	case kMCExternalValueOptionAsCString:
-		return fetch_as_string(var, p_options, p_value);
-		break;
-
+		return var -> GetCString(p_options, *(const char **)p_value);
 	default:
 		return kMCExternalErrorInvalidValueType;
 	}
@@ -1255,6 +1821,7 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
 	return kMCExternalErrorNone;
 }
 
+#ifdef OLD_EXEC
 static MCExternalError coerce_to_string(MCExternalVariableRef var, MCExternalValueOptions p_options)
 {
 	if (var -> get_format() == VF_ARRAY)
@@ -1275,6 +1842,7 @@ static MCExternalError coerce_to_string(MCExternalVariableRef var, MCExternalVal
 
 	return kMCExternalErrorNone;
 }
+#endif
 
 static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExternalValueOptions p_options, void *p_value)
 {
@@ -1284,62 +1852,22 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
 	if (p_value == nil)
 		return kMCExternalErrorNoValue;
 
-	MCExternalError t_error;
-	t_error = coerce_to_string(var, p_options);
-	if (t_error != kMCExternalErrorNone)
-		return t_error;
-
 	switch(p_options & 0xf)
 	{
 	case kMCExternalValueOptionAsVariable:
-		{
-			MCExternalVariableRef t_value_var;
-			t_value_var = (MCExternalVariableRef)p_value;
-
-			if (t_value_var -> is_number())
-			{
-				double t_number;
-				t_number = t_value_var -> get_real();
-
-				char t_buffer[R8L];
-				number_to_string(t_number, p_options, t_buffer);
-
-				if (!var -> append_string(t_buffer))
-					return kMCExternalErrorOutOfMemory;
-			}
-			else if (t_value_var -> is_string())
-				if (!var -> append_string(t_value_var -> get_string()))
-					return kMCExternalErrorOutOfMemory;
-		}
-		break;
+		return var -> Append(p_options, (MCExternalVariableRef)p_value);
 	case kMCExternalValueOptionAsBoolean:
-		if (!var -> append_string(*(bool *)p_value ? MCtruemcstring : MCfalsemcstring))
-			return kMCExternalErrorOutOfMemory;
-		break;
+		return var -> AppendBoolean(p_options, *(bool *)p_value);
 	case kMCExternalValueOptionAsInteger:
-		{
-			char t_buffer[I4L];
-			sprintf(t_buffer, "%d", *(int32_t *)p_value);
-			if (!var -> append_string(t_buffer))
-				return kMCExternalErrorOutOfMemory;
-		}
-		break;
+		return var -> AppendInteger(p_options, *(int32_t *)p_value);
 	case kMCExternalValueOptionAsCardinal:
-		{
-			char t_buffer[U4L];
-			sprintf(t_buffer, "%u", *(uint32_t *)p_value);
-			if (!var -> append_string(t_buffer))
-				return kMCExternalErrorOutOfMemory;
-		}
-		break;
+		return var -> AppendCardinal(p_options, *(uint32_t *)p_value);
+	case kMCExternalValueOptionAsReal:
+		return var -> AppendReal(p_options, *(real64_t *)p_value);
 	case kMCExternalValueOptionAsString:
-		if (!var -> append_string(*(MCString *)p_value))
-			return kMCExternalErrorOutOfMemory;
-		break;
+		return var -> AppendString(p_options, *(MCString *)p_value);
 	case kMCExternalValueOptionAsCString:
-		if (!var -> append_string(*(const char **)p_value))
-			return kMCExternalErrorOutOfMemory;
-		break;
+		return var -> AppendCString(p_options, *(const char **)p_value);
 	default:
 		return kMCExternalErrorInvalidValueType;
 	}
@@ -1354,8 +1882,12 @@ static MCExternalError MCExternalVariablePrepend(MCExternalVariableRef var, MCEx
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// This method was never exposed.
 static MCExternalError MCExternalVariableEdit(MCExternalVariableRef var, MCExternalValueOptions p_options, uint32_t p_required_length, void **r_buffer, uint32_t *r_length)
 {
+	return kMCExternalErrorNotImplemented;
+
+#if OLD_EXEC
 	if (var == nil)
 		return kMCExternalErrorNoVariable;
 
@@ -1386,33 +1918,47 @@ static MCExternalError MCExternalVariableEdit(MCExternalVariableRef var, MCExter
 		return kMCExternalErrorOutOfMemory;
 
 	return kMCExternalErrorNone;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCExternalError MCExternalVariableCountKeys(MCExternalVariableRef var, uint32_t* r_count)
 {
+	return kMCExternalErrorNotImplemented;
+	
+#ifdef OLD_EXEC
 	if (var == nil)
 		return kMCExternalErrorNoVariable;
 	
-	if (var -> is_array())
-		*r_count = var -> get_array() -> getnfilled();
-	else if (var -> is_empty())
+	MCValueRef t_value;
+	t_value = var -> GetValueRef();
+	
+	if (MCValueIsArray(t_value))
+		*r_count = MCArrayGetCount((MCArrayRef)t_value);
+	else if (MCValueIsEmpty(t_value))
 		*r_count = 0;
 	else
 		return kMCExternalErrorNotAnArray;
 	
 	return kMCExternalErrorNone;
+#endif
 }
 
 static MCExternalError MCExternalVariableIterateKeys(MCExternalVariableRef var, MCExternalVariableIteratorRef *p_iterator, MCExternalValueOptions p_options, void *p_key, MCExternalVariableRef *r_value)
 {
+	return kMCExternalErrorNotImplemented;
+	
+#ifdef OLD_EXEC
 	if (var == nil)
 		return kMCExternalErrorNoVariable;
 
 	if (p_iterator == nil)
 		return kMCExternalErrorNoIterator;
-
+	
+	MCValueRef t_value;
+	t_value = var -> GetValueRef();
+	
 	// If the var is not an array, we set the iterator to nil to indicate
 	// there are no elements.
 	if (!var -> is_array())
@@ -1465,8 +2011,10 @@ static MCExternalError MCExternalVariableIterateKeys(MCExternalVariableRef var, 
 	}
 
 	return kMCExternalErrorNone;
+#endif
 }
 
+#ifdef OLD_EXEC
 static MCExternalError fetch_hash_entry(MCExternalVariableRef var, MCExternalValueOptions p_options, void *p_key, bool p_ensure, MCHashentry*& r_entry)
 {
 	if (var == nil)
@@ -1571,9 +2119,13 @@ static MCExternalError fetch_hash_entry(MCExternalVariableRef var, MCExternalVal
 	return kMCExternalErrorNone;
 				
 }
+#endif
 
 static MCExternalError MCExternalVariableRemoveKey(MCExternalVariableRef var, MCExternalValueOptions p_options, void *p_key)
 {	
+	return kMCExternalErrorNotImplemented;
+	
+#ifdef OLD_EXEC
 	MCExternalError t_error;
 
 	MCHashentry *t_entry;
@@ -1582,10 +2134,14 @@ static MCExternalError MCExternalVariableRemoveKey(MCExternalVariableRef var, MC
 		var -> remove_hash(t_entry);
 	
 	return t_error;
+#endif
 }
 
 static MCExternalError MCExternalVariableLookupKey(MCExternalVariableRef var, MCExternalValueOptions p_options, void *p_key, bool p_ensure, MCExternalVariableRef *r_var)
 {
+	return kMCExternalErrorNotImplemented;
+	
+#ifdef OLD_EXEC
 	MCExternalError t_error;
 	
 	MCHashentry *t_entry;
@@ -1594,6 +2150,7 @@ static MCExternalError MCExternalVariableLookupKey(MCExternalVariableRef var, MC
 		*r_var = t_entry != nil ? &t_entry -> value : nil;
 		
 	return t_error;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1611,9 +2168,14 @@ static MCExternalError MCExternalObjectResolve(const char *p_long_id, MCExternal
 	MCExternalError t_error;
 	t_error = kMCExternalErrorNone;
 
+	// MW-2014-01-22: [[ CompatV1 ]] Convert the long id to a stringref.
+	MCAutoStringRef t_long_id_ref;
+	if (!MCStringCreateWithCString(p_long_id, &t_long_id_ref))
+		return kMCExternalErrorOutOfMemory;
+	
 	// Create a script point with the value are setting the property to
 	// as source text.
-	MCScriptPoint sp(p_long_id);
+	MCScriptPoint sp(*t_long_id_ref);
 
 	// Create a new chunk object to parse the reference into
 	MCChunk *t_chunk;
@@ -1632,7 +2194,7 @@ static MCExternalError MCExternalObjectResolve(const char *p_long_id, MCExternal
 
 	// Now attempt to evaluate the object reference - this will only succeed
 	// if the object exists.
-	MCExecPoint ep2(*MCEPptr);
+	MCExecContext ep2(*MCECptr);
 	MCObject *t_object;
 	uint32_t t_part_id;
 	if (t_error == kMCExternalErrorNone)
@@ -1711,12 +2273,7 @@ static MCExternalError MCExternalObjectDispatch(MCExternalObjectRef p_object, MC
 	{
 		MCParameter *t_param;
 		t_param = new MCParameter;
-		if (t_param == nil ||
-			!t_param -> getvalue() . assign(*p_argv[i]))
-		{
-			t_error = kMCExternalErrorOutOfMemory;
-			break;
-		}
+		t_param -> setvalueref_argument(p_argv[i] -> GetValueRef());
 
 		if (t_last_param == nil)
 			t_params = t_param;
@@ -1769,7 +2326,9 @@ static MCExternalError MCExternalObjectDispatch(MCExternalObjectRef p_object, MC
 
 static Properties parse_property_name(const char *p_name)
 {
-	MCScriptPoint t_sp(p_name);
+	MCAutoStringRef t_name_ref;
+	/* UNCHECKED */ MCStringCreateWithCString(p_name, &t_name_ref);
+	MCScriptPoint t_sp(*t_name_ref);
 	Symbol_type t_type;
 	const LT *t_literal;
 	if (t_sp . next(t_type) &&
@@ -1801,8 +2360,11 @@ static MCExternalError MCExternalObjectSet(MCExternalObjectRef p_object, unsigne
 	MCObject *t_object;
 	t_object = p_object -> Get();
 	
-	MCExecPoint t_ep(t_object, nil, nil);
-	p_value -> fetch(t_ep, false);
+	MCExecContext t_ctxt;
+	
+	MCExecValue t_value;
+	t_value . type = kMCExecValueTypeValueRef;
+	t_value . valueref_value = p_value -> GetValueRef();
 	
 	Exec_stat t_stat;
 	if (t_prop == P_CUSTOM)
@@ -1818,19 +2380,21 @@ static MCExternalError MCExternalObjectSet(MCExternalObjectRef p_object, unsigne
 			/* UNCHECKED */ t_propset_name . CreateWithCString(p_name);
 			/* UNCHECKED */ t_propset_key . CreateWithCString(p_key);
 		}
-		t_stat = t_object -> setcustomprop(t_ep, t_propset_name, t_propset_key);
-	}
-	else if (t_prop >= P_FIRST_ARRAY_PROP)
-	{
-		MCAutoNameRef t_key_name;
-		/* UNCHECKED */ t_key_name . CreateWithCString(p_key);
-
-		// MW-2011-11-23: [[ Array Chunk Props ]] Array props can now have 'effective', but that
-		//   only applies if its a chunk prop so just pass 'False'.
-		t_stat = t_object -> setarrayprop(0, t_prop, t_ep, t_key_name, False);
+		if (!t_object -> setcustomprop(t_ctxt, t_propset_name, t_propset_key, t_value))
+			t_stat = t_ctxt . GetExecStat();
 	}
 	else
-		t_stat = t_object -> setprop(0, t_prop, t_ep, False);
+	{
+		MCNewAutoNameRef t_index;
+		if (p_key != nil)
+		{
+			if (!MCNameCreateWithCString(p_key, &t_index))
+				return kMCExternalErrorOutOfMemory;
+		}
+		
+		if (!t_object -> setprop(t_ctxt, 0, t_prop, *t_index, False, t_value))
+			t_stat = t_ctxt . GetExecStat();
+	}
 	
 	if (t_stat == ES_ERROR)
 		return kMCExternalErrorFailed;
@@ -1860,7 +2424,8 @@ static MCExternalError MCExternalObjectGet(MCExternalObjectRef p_object, unsigne
 	MCObject *t_object;
 	t_object = p_object -> Get();
 	
-	MCExecPoint t_ep(t_object, nil, nil);
+	MCExecContext t_ctxt;
+	MCExecValue t_value;
 	
 	Exec_stat t_stat;
 	if (t_prop == P_CUSTOM)
@@ -1876,26 +2441,33 @@ static MCExternalError MCExternalObjectGet(MCExternalObjectRef p_object, unsigne
 			/* UNCHECKED */ t_propset_name . CreateWithCString(p_name);
 			/* UNCHECKED */ t_propset_key . CreateWithCString(p_key);
 		}
-		t_stat = t_object -> getcustomprop(t_ep, t_propset_name, t_propset_key);
-	}
-	else if (t_prop >= P_FIRST_ARRAY_PROP)
-	{
-		MCAutoNameRef t_key_name;
-		/* UNCHECKED */ t_key_name . CreateWithCString(p_key);
-
-		// MW-2011-11-23: [[ Array Chunk Props ]] Array props can now have 'effective', but that
-		//   only applies if its a chunk prop so just pass 'False'.
-		t_stat = t_object -> getarrayprop(0, t_prop, t_ep, t_key_name, False);
+		if (!t_object -> getcustomprop(t_ctxt, t_propset_name, t_propset_key, t_value))
+			t_stat = t_ctxt . GetExecStat();
 	}
 	else
-		t_stat = t_object -> getprop(0, t_prop, t_ep, False);
+	{
+		MCNewAutoNameRef t_index;
+		if (p_key != nil)
+		{
+			if (!MCNameCreateWithCString(p_key, &t_index))
+				return kMCExternalErrorOutOfMemory;
+		}
+		
+		if (!t_object -> getprop(t_ctxt, 0, t_prop, *t_index, False, t_value))
+			t_stat = t_ctxt . GetExecStat();
+	}
 	
 	if (t_stat == ES_ERROR)
 		return kMCExternalErrorFailed;
 	else if (t_stat == ES_EXIT_ALL)
 		return kMCExternalErrorExited;
 	
-	p_value -> store(t_ep);
+	MCAutoValueRef t_value_ref;
+	MCExecTypeConvertAndReleaseAlways(t_ctxt, t_value . type, &t_value, kMCExecValueTypeValueRef, &t_value_ref);
+	if (t_ctxt . HasError())
+		return kMCExternalErrorOutOfMemory;
+	
+	p_value -> SetValueRef(*t_value_ref);
 	
 	return kMCExternalErrorNone;
 }
@@ -2083,9 +2655,3 @@ MCExternalInterface g_external_interface =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#endif
-
-MCExternal *MCExternalCreateV1(void)
-{
-	return nil;
-}

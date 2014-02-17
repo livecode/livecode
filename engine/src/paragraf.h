@@ -163,10 +163,10 @@ public:
 		// pairs are matched correctly.
 		unichar_t t_lead, t_tail;
 		t_lead = MCStringGetCharAtIndex(m_text, p_index);
-		if (0xD800 <= t_lead && t_lead < 0xDC00)
+		if (MCStringIsValidSurrogatePair(m_text, p_index))
 		{
-			t_tail = MCStringGetCharAtIndex(m_text, p_index + 1);
-			return ((t_lead - 0xD800) << 10) | (t_tail - 0xDC00);
+            t_tail = MCStringGetCharAtIndex(m_text, p_index + 1);
+			return MCStringSurrogatesToCodepoint(t_lead, t_tail);
 		}
 		return t_lead;
 	}
@@ -185,7 +185,9 @@ public:
 	// surrogate pairs when it does so.
 	findex_t DecrementIndex(findex_t p_in)
 	{
-		unichar_t t_char = MCStringGetCharAtIndex(m_text, p_in - 1);
+		if (p_in == 0)
+            return 0;
+        unichar_t t_char = MCStringGetCharAtIndex(m_text, p_in - 1);
 		if (0xDC00 <= t_char && t_char < 0xE000)
 			return p_in - 2;
 		return p_in - 1;
@@ -834,6 +836,8 @@ public:
     // Set the flag Lines not synched
     void setDirty() { state |= PS_LINES_NOT_SYNCHED; }
 
+    void layoutchanged() { needs_layout = true; }
+    
     //////////
 
     void GetEncoding(MCExecContext &ctxt, intenum_t& r_encoding);

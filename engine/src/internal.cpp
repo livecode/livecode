@@ -75,12 +75,12 @@ Parse_stat MCInternal::parse(MCScriptPoint& sp)
 	}
 
 	// Get the first token
-    MCStringRef t_first_token;
+    MCAutoStringRef t_first_token;
     t_first_token = sp . gettoken_stringref();
 
 	// Look for a match on the first token.
 	for(uint32_t i = 0; MCinternalverbs[i] . first_token != nil; i++)
-        if (MCStringIsEqualToCString(t_first_token, MCinternalverbs[i] . first_token, kMCCompareExact))
+        if (MCStringIsEqualToCString(*t_first_token, MCinternalverbs[i] . first_token, kMCCompareExact))
 		{
 			// If the second token is non-nil then check for a match
 			if (MCinternalverbs[i] . second_token != nil)

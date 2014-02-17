@@ -742,7 +742,11 @@ Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
 			{
 				if (token.getlength() == 4 && MCU_strncasecmp(token.getstring(), "null", 4) == 0)
 				{
-					*dest = new MCConstant(kMCEmptyString, BAD_NUMERIC);
+					// Create a stringref that contains an explicit nul character
+                    MCAutoStringRef t_nul_string;
+                    /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)"", 1, kMCStringEncodingASCII, false, &t_nul_string);
+                    
+                    *dest = new MCConstant(*t_nul_string, BAD_NUMERIC);
 				}
 				else
 					*dest = new MCConstant(MCSTR(constant_table[mid].svalue),

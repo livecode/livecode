@@ -659,7 +659,7 @@ static char *set_variable(const char *arg1, const char *arg2,
 static char *get_variable_ex(const char *arg1, const char *arg2,
                              const char *arg3, int *retval)
 {
-	char *value = (char *)arg3;
+	MCString *value = (MCString *)arg3;
 	Boolean array = False;
 	MCVariable *var = NULL;
 	if (MCECptr == NULL)
@@ -688,7 +688,7 @@ static char *get_variable_ex(const char *arg1, const char *arg2,
     /* UNCHECKED */ MCECptr -> ConvertToString(*t_value, &t_string);
     char *t_result;
     /* UNCHECKED */ MCStringConvertToCString(*t_string, t_result);
-	value = t_result;
+	*value = t_result;
 	return NULL;
 }
 
@@ -705,7 +705,7 @@ static char *set_variable_ex(const char *arg1, const char *arg2,
 	if (var == NULL)
 		return NULL;
     MCAutoStringRef t_string;
-    /* UNCHECKED */ MCStringCreateWithCString(arg3, &t_string);
+    /* UNCHECKED */ MCStringCreateWithOldString(*(MCString*)arg3, &t_string);
 	if (arg2 != NULL && strlen(arg2) > 0)
 	{
 		MCNameRef t_key;

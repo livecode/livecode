@@ -85,6 +85,8 @@ enum
 	kMCStringFlagIsNative = 1 << 2,
     // If set, the string contains no non-BMP characters
     kMCStringFlagIsSimple = 1 << 3,
+    // If set, the string has been checked for simplicity
+    kMCStringFlagIsChecked = 1 << 4,
 };
 
 
@@ -317,6 +319,10 @@ bool __MCSetImmutableCopy(__MCSet *set, bool release, __MCSet*& r_immutable_valu
 bool __MCDataInitialize(void);
 void __MCDataFinalize(void);
 void __MCDataDestroy(__MCData *data);
+hash_t __MCDataHash(__MCData *self);
+bool __MCDataIsEqualTo(__MCData *self, __MCData *p_other_data);
+bool __MCDataCopyDescription(__MCData *self, MCStringRef &r_description);
+bool __MCDataImmutableCopy(__MCData *self, bool p_release, __MCData *&r_immutable_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 

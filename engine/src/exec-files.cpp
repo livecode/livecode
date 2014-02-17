@@ -316,6 +316,7 @@ bool MCFilesOpenProcessesNamesList(MCListRef& r_list)
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 
+    IO_cleanprocesses();
 	for (uinteger_t i = 0; i < MCnprocesses; i++)
 		if (!MCListAppend(*t_list, MCprocesses[i].name))
 			return false;
@@ -338,6 +339,7 @@ bool MCFilesOpenProcessesIdsList(MCListRef& r_list)
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 
+    IO_cleanprocesses();
 	for (uinteger_t i = 0; i < MCnprocesses; i++)
 		if (!MCListAppendInteger(*t_list, MCprocesses[i].pid))
 			return false;
@@ -1609,17 +1611,25 @@ void MCFilesExecReadFromFileOrDriverUntil(MCExecContext& ctxt, bool p_driver, bo
 	MCAutoStringRef t_output;
 	bool t_is_text = true;
 
+	if (!p_driver)
+		t_is_text = t_textmode != 0;
+    
 	if (MCStringGetLength(p_sentinel) == 1 && MCStringGetNativeCharAtIndex(p_sentinel, 0) == '\004')
 	{
 		MCAutoDataRef t_data;
-		IO_read_to_eof(t_stream, &t_data);
-		ctxt . SetTheResultToStaticCString("eof");
+		t_stat = IO_read_to_eof(t_stream, &t_data);
+        
+        if (t_stat == IO_EOF)
+            t_stat = IO_NORMAL;
+        
+        if (t_stat == IO_NORMAL && !ctxt . ConvertToString(*t_data, &t_output))
+            t_stat = IO_ERROR;
 	}
-		
-	if (!p_driver)
-		t_is_text = t_textmode != 0;
-		
-	MCFilesExecReadUntil(ctxt, t_stream, -1, p_sentinel, p_max_wait, p_time_units, t_is_text, &t_output, t_stat);
+    else
+    {
+        MCFilesExecReadUntil(ctxt, t_stream, -1, p_sentinel, p_max_wait, p_time_units, t_is_text, &t_output, t_stat);
+    }
+    
 	MCFilesExecReadComplete(ctxt, *t_output, t_stat, t_textmode);
 
 #if !defined _WIN32 && !defined _MACOSX
@@ -1733,7 +1743,7 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
 		{
 			MCAutoStringRefAsCString t_output;
 			/* UNCHECKED */ t_output . Lock(p_data);
-			r_stat = MCS_write(*t_output, sizeof(char), strlen(*t_output), p_stream);
+			r_stat = MCS_write(*t_output, sizeof(char), len, p_stream);
 		}
 		break;
 	default:

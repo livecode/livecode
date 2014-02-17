@@ -1690,7 +1690,7 @@ Exec_stat MCDeployToMacOSX(const MCDeployParameters& p_params)
 		 (!MCStringIsEmpty(p_params . engine_x86) && !MCDeployFileOpen(p_params . engine_x86, kMCSOpenFileModeRead, t_engine_x86))))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
-	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeWrite, t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeCreate, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
 	// MW-2013-06-13:  If we have a single engine, process that in the appropriate
@@ -1827,7 +1827,7 @@ Exec_stat MCDeployToIOS(const MCDeployParameters& p_params, bool p_embedded)
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
 	// Make sure we can open the output file.
-	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeWrite, t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeCreate, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 	
 	// Generate the binary.

@@ -1249,7 +1249,14 @@ bool MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_item, MCStringRef p
 	uindex_t t_index;
 	MCRange t_first_chunk_range;
 	t_index = 0;
-	t_first_chunk_range = MCRangeMake(0, MCStringGetLength(p_string));
+    t_first_chunk_range = MCRangeMake(0, MCStringGetLength(p_string));
+
+    // Ensure that when no item is skipped, the offset starts from the first item - without skipping it
+    if (p_skip == 0)
+        r_offset = 1;
+    else
+        r_offset = 0;
+
 	while(p_skip > 0 && MCStringsIterateChunks(ctxt, t_index, p_string, p_chunk_type, t_first_chunk_range))
 		p_skip -= 1;
 	
@@ -1259,7 +1266,7 @@ bool MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_item, MCStringRef p
 	
 	// If we can't find the chunk in the remainder of the string, we are done.
 	MCRange t_range;
-	if (!MCStringFind(p_string, MCRangeMake(t_first_chunk_range . offset, MCStringGetLength(p_string) - t_first_chunk_range . offset), p_item, t_options, &t_range))
+	if (!MCStringFind(p_string, MCRangeMake(t_index, MCStringGetLength(p_string) - t_index), p_item, t_options, &t_range))
 		return false;
 	
 	// Work out the delimiter.
@@ -1279,7 +1286,7 @@ bool MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_item, MCStringRef p
 	
 	// Now count the number of delimiters between the start of the first chunk
 	// and the start of the found string.
-	r_offset = 1 + MCStringCountChar(p_string, MCRangeMake(t_first_chunk_range . offset, t_range . offset - t_first_chunk_range . offset), t_delimiter, t_options);
+    r_offset += MCStringCountChar(p_string, MCRangeMake(t_first_chunk_range . offset, t_range . offset - t_first_chunk_range . offset), t_delimiter, t_options);
 
 	return true;
 }
@@ -1506,9 +1513,9 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
         MCStringCopy(kMCEmptyString, r_result);
     }
     else if (MCStringGetLength(*t_output) != 0)
-        MCStringCopy(*t_output, r_result);
+        /* UNCHECKED */ MCStringCopy(*t_output, r_result);
 	else
-        MCStringCopy(kMCEmptyString, r_result);
+        r_result = MCValueRetain(kMCEmptyString);
 }
 
 void MCStringsExecFilterWildcard(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCStringRef &r_result)
@@ -1518,6 +1525,8 @@ void MCStringsExecFilterWildcard(MCExecContext& ctxt, MCStringRef p_source, MCSt
     matcher = new MCWildcardMatcher(p_pattern, ctxt . GetCaseSensitive());
     
     MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), matcher, r_result);
+    
+    delete matcher;
 }
 
 void MCStringsExecFilterRegex(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCStringRef &r_result)
@@ -1529,11 +1538,14 @@ void MCStringsExecFilterRegex(MCExecContext& ctxt, MCStringRef p_source, MCStrin
     MCAutoStringRef t_regex_error;
     if (!matcher -> compile(&t_regex_error))
     {
+        delete matcher;
         ctxt . LegacyThrow(EE_MATCH_BADPATTERN);
         return;
     }
     
     MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), matcher, r_result);
+    
+    delete matcher;
 }
 
 void MCStringsExecFilterWildcardIntoIt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines)

@@ -462,7 +462,7 @@ IO_stat MCDispatch::startup(void)
 #endif
 
     MCAutoStringRef t_env;
-    if (MCS_getenv(MCSTR("TEST_STACK"), &t_env))
+    if (MCS_getenv(MCSTR("TEST_STACK"), &t_env) && !MCStringIsEmpty(*t_env))
     {
         MCStack *t_stack;
         IO_handle t_stream;
@@ -501,13 +501,18 @@ IO_stat MCDispatch::startup(void)
 
 	if (((MCcapsule . size) & (1U << 31)) == 0)
 	{
-		// Capsule is not spilled - just use the project section.
-		// MW-2010-05-08: Capsule size includes 'size' field, so need to adjust
-		if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&MCcapsule . data, MCcapsule . size - sizeof(uint32_t), true))
-		{
-			MCCapsuleClose(t_capsule);
-			return IO_ERROR;
-		}
+		if (MCcapsule . size != 0)
+        {
+            // Capsule is not spilled - just use the project section.
+            // MW-2010-05-08: Capsule size includes 'size' field, so need to adjust
+            if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&MCcapsule . data, MCcapsule . size - sizeof(uint32_t), true))
+            {
+                MCCapsuleClose(t_capsule);
+                return IO_ERROR;
+            }
+        }
+        else
+            return IO_ERROR;
 	}
 	else
 	{

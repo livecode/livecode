@@ -671,6 +671,9 @@ bool MCValueConvertToStringForSave(MCValueRef self, MCStringRef& r_string)
 	case kMCValueTypeCodeString:
 		t_success = MCStringCopy((MCStringRef)self, r_string);
 		break;
+    case kMCValueTypeCodeData:
+        t_success = MCStringDecode((MCDataRef)self, kMCStringEncodingNative, false, r_string);
+        break;
 	case kMCValueTypeCodeArray:
 		r_string = MCValueRetain(kMCEmptyString);
 		break;
@@ -684,7 +687,13 @@ bool MCValueConvertToStringForSave(MCValueRef self, MCStringRef& r_string)
 
 bool MCValueIsEmpty(MCValueRef p_value)
 {
-	return p_value == kMCNull || p_value == kMCEmptyName || p_value == kMCEmptyArray || (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString && MCStringGetLength((MCStringRef)p_value) == 0);
+    return p_value == kMCNull ||
+            p_value == kMCEmptyName ||
+            p_value == kMCEmptyArray ||
+            (MCValueGetTypeCode(p_value) == kMCValueTypeCodeString && MCStringIsEmpty((MCStringRef)p_value)) ||
+            (MCValueGetTypeCode(p_value) == kMCValueTypeCodeName && MCNameIsEmpty((MCNameRef)p_value)) ||
+            (MCValueGetTypeCode(p_value) == kMCValueTypeCodeData && MCDataIsEmpty((MCDataRef)p_value)) ||
+            (MCValueGetTypeCode(p_value) == kMCValueTypeCodeList && MCListIsEmpty((MCListRef)p_value));
 }
 
 bool MCValueIsArray(MCValueRef p_value)
@@ -1288,12 +1297,16 @@ static uint32_t measure_array_entry(MCNameRef p_key, MCValueRef p_value)
 		break;
 	case kMCValueTypeCodeName:
 		t_size += 4 + MCStringGetLength(MCNameGetString((MCNameRef)p_value));
+        break;
 	case kMCValueTypeCodeNumber:
 		t_size += 8;
 		break;
 	case kMCValueTypeCodeArray:
 		t_size += MCArrayMeasureForStreamLegacy((MCArrayRef)p_value, false);
 		break;
+    case kMCValueTypeCodeData:
+        t_size += 4 + MCDataGetLength((MCDataRef)p_value);
+        break;
 	default:
 		MCAssert(false);
 		break;
@@ -1657,6 +1670,7 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 		return true;
 
 	MCStringRef t_str_value;
+    MCAutoStringRef t_string_buffer;
 	unsigned int t_type;
 	switch(MCValueGetTypeCode(p_value))
 	{
@@ -1676,6 +1690,11 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 		t_type = VF_STRING;
 		t_str_value = (MCStringRef)p_value;
 		break;
+    case kMCValueTypeCodeData:
+        t_type = VF_STRING;
+        MCStringDecode((MCDataRef)p_value, kMCStringEncodingNative, false, &t_string_buffer);
+        t_str_value = *t_string_buffer;
+        break;
 	case kMCValueTypeCodeNumber:
 		t_type = VF_NUMBER;
 		t_str_value = nil;

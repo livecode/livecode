@@ -122,6 +122,8 @@ hash_t MCValueHash(MCValueRef p_value)
 		return __MCListHash((__MCList *)self);
 	case kMCValueTypeCodeSet:
 		return __MCSetHash((__MCSet *)self);
+    case kMCValueTypeCodeData:
+        return __MCDataHash((__MCData*) self);
 	case kMCValueTypeCodeCustom:
 		return ((__MCCustomValue *)self) -> callbacks -> hash(p_value);
 	default:
@@ -171,6 +173,8 @@ bool MCValueIsEqualTo(MCValueRef p_value, MCValueRef p_other_value)
 		return __MCListIsEqualTo((__MCList *)self, (__MCList *)other_self);
 	case kMCValueTypeCodeSet:
 		return __MCSetIsEqualTo((__MCSet *)self, (__MCSet *)other_self);
+    case kMCValueTypeCodeData:
+        return __MCDataIsEqualTo((__MCData*)self, (__MCData*)other_self);
 	// Defer to the custom comparison method, but only if the callbacks are
 	// the same.
 	case kMCValueTypeCodeCustom:
@@ -210,6 +214,8 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
 		return __MCListCopyDescription((__MCList *)p_value, r_desc);
 	case kMCValueTypeCodeSet:
 		return __MCSetCopyDescription((__MCSet *)p_value, r_desc);
+    case kMCValueTypeCodeData:
+        return __MCDataCopyDescription((__MCData*)p_value, r_desc);
 	case kMCValueTypeCodeCustom:
 		return ((__MCCustomValue *)self) -> callbacks -> describe(p_value, r_desc);
 	default:
@@ -703,6 +709,14 @@ bool __MCValueImmutableCopy(__MCValue *self, bool p_release, __MCValue*& r_new_v
 			return r_new_value = t_new_value, true;
 	}
 	return false;
+
+    case kMCValueTypeCodeData:
+    {
+        __MCData *t_new_value;
+        if (__MCDataImmutableCopy((__MCData*)self, p_release, t_new_value))
+            return r_new_value = t_new_value, true;
+    }
+    return false;
 
 	case kMCValueTypeCodeCustom:
 	{

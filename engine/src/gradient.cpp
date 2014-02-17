@@ -850,7 +850,10 @@ static bool MCGradientFillStoreProperty(MCExecContext& ctxt, MCGradientFill*& p_
 	bool t_success = true;
     
 	if (p_gradient == nil)
+    {
 		MCGradientFillInit(t_gradient, rect);
+        dirty = true;
+    }
 	else
 		t_gradient = p_gradient;
        

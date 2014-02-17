@@ -38,6 +38,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)libcore\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;REVBROWSER_EXPORTS;ATLASSUME="
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -110,6 +111,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)libcore\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;REVBROWSER_EXPORTS"
 				UsePrecompiledHeader="0"
 				DebugInformationFormat="3"

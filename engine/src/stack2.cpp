@@ -1588,6 +1588,12 @@ MCCard *MCStack::getchildbyordinal(Chunk_term p_ordinal)
 
 MCCard *MCStack::getchildbyid(uinteger_t p_id)
 {
+    if (cards == NULL)
+	{
+		curcard = cards = MCtemplatecard->clone(False, False);
+		cards->setparent(this);
+	}
+    
     // OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
     MCCard *cptr;
     if (editing != nil && savecards != nil)
@@ -1622,6 +1628,12 @@ MCCard *MCStack::getchildbyid(uinteger_t p_id)
 
 MCCard *MCStack::getchildbyname(MCNameRef p_name)
 {
+    if (cards == NULL)
+	{
+		curcard = cards = MCtemplatecard->clone(False, False);
+		cards->setparent(this);
+	}
+    
     MCCard *cptr;
 	if (editing != NULL && savecards != NULL)
 		cptr = savecards;
@@ -2637,7 +2649,7 @@ void MCStack::stringtostackfiles(MCStringRef d_strref, MCStackfile **sf, uint2 &
     // This ensures the coy is freed when the method ends
     MCAutoPointer<char> d;
     /* UNCHECKED */ MCStringConvertToCString(d_strref, &d);
-	char *eptr = strdup(*d);
+    char *eptr = *d;
 	while ((eptr = strtok(eptr, "\n")) != NULL)
 	{
 		char *cptr = strchr(eptr, ',');
