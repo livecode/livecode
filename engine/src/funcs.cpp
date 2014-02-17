@@ -4986,6 +4986,107 @@ void MCOwner::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCTempName */
 
+MCTextDecode::~MCTextDecode()
+{
+    delete m_data;
+    delete m_encoding;
+}
+
+Parse_stat MCTextDecode::parse(MCScriptPoint& sp, Boolean the)
+{
+    if (get1or2params(sp, &m_data, &m_encoding, the) != PS_NORMAL)
+    {
+        MCperror->add(PE_TEXTDECODE_BADPARAM, sp);
+        return PS_ERROR;
+    }
+    
+    return PS_NORMAL;
+}
+
+void MCTextDecode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    MCAutoDataRef t_data;
+    m_data->eval_dataref(ctxt, &t_data);
+    if (ctxt.HasError())
+    {
+        ctxt.LegacyThrow(EE_TEXTDECODE_BADDATA);
+        return;
+    }
+    
+    MCAutoStringRef t_encoding;
+    if (m_encoding != NULL)
+    {
+        m_encoding->eval_stringref(ctxt, &t_encoding);
+        if (ctxt.HasError())
+        {
+            ctxt.LegacyThrow(EE_TEXTDECODE_BADENCODING);
+            return;
+        }
+    }
+    else
+    {
+        t_encoding = MCSTR("native");
+    }
+    
+    MCStringsEvalTextDecode(ctxt, *t_encoding, *t_data, r_value.stringref_value);
+    r_value.type = kMCExecValueTypeStringRef;
+}
+
+void MCTextDecode::compile(MCSyntaxFactoryRef ctxt)
+{
+    compile_with_args(ctxt, kMCStringsEvalTextDecodeMethodInfo, m_data, m_encoding);
+}
+
+MCTextEncode::~MCTextEncode()
+{
+    delete m_string;
+    delete m_encoding;
+}
+
+Parse_stat MCTextEncode::parse(MCScriptPoint& sp, Boolean the)
+{
+    if (get1or2params(sp, &m_string, &m_encoding, the) != PS_NORMAL)
+    {
+        MCperror->add(PE_TEXTENCODE_BADPARAM, sp);
+        return PS_ERROR;
+    }
+    
+    return PS_NORMAL;
+}
+
+void MCTextEncode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    MCAutoStringRef t_string;
+    m_string->eval_stringref(ctxt, &t_string);
+    if (ctxt.HasError())
+    {
+        ctxt.LegacyThrow(EE_TEXTENCODE_BADTEXT);
+        return;
+    }
+    
+    MCAutoStringRef t_encoding;
+    if (m_encoding != NULL)
+    {
+        m_encoding->eval_stringref(ctxt, &t_encoding);
+        if (ctxt.HasError())
+        {
+            ctxt.LegacyThrow(EE_TEXTENCODE_BADENCODING);
+            return;
+        }
+    }
+    else
+    {
+        t_encoding = MCSTR("native");
+    }
+    
+    MCStringsEvalTextEncode(ctxt, *t_encoding, *t_string, r_value.dataref_value);
+    r_value.type = kMCExecValueTypeDataRef;
+}
+
+void MCTextEncode::compile(MCSyntaxFactoryRef ctxt)
+{
+    compile_with_args(ctxt, kMCStringsEvalTextEncodeMethodInfo, m_string, m_encoding);
+}
 
 MCTextHeightSum::~MCTextHeightSum()
 {
