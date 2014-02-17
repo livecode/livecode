@@ -504,7 +504,6 @@ static void domenu(short menu, short item)
 		if (mb != NULL)
 		{ //to response to the menu pick msg
 			MCButton *bptr = NULL;
-			bool isunicode = false;
 			bool issubmenu = (menu >= SUB_MENU_START_ID);
 			if (issubmenu)
 				// Get main menu id of submenu, stored as a property of the menu
@@ -523,87 +522,50 @@ static void domenu(short menu, short item)
 				uint2 gmenu = menu - 2;
 				bptr = (MCButton *)mb->findnum(CT_MENU, gmenu);
 			}
-			if (bptr)
+
+            
+            if (bptr != NULL)
 			{
-				isunicode = bptr->hasunicode();
-			}
-			bool t_menuhastags;
-			GetMenuItemProperty(GetMenuHandle(menu), 0, 'RRev', 'Tags', sizeof(t_menuhastags), NULL, &t_menuhastags);
-			
-			isunicode &= !t_menuhastags;
-			char *menuitemname;
-			uint2 menuitemlen;
-			MCAutoStringRef t_tag_ref;
-			extern bool MCMacGetMenuItemTag(MenuHandle menu, uint2 mitem, MCStringRef &r_string);
-			if (t_menuhastags && MCMacGetMenuItemTag(mhandle, item, &t_tag_ref))
-			{
-                MCAutoPointer<char> temp_tag_ref;
-                /* UNCHECKED */ MCStringConvertToCString(*t_tag_ref, &temp_tag_ref);
-				menuitemname = strclone(*temp_tag_ref);
-				menuitemlen = strlen(menuitemname);
-			}
-			else
-			{
-				CFStringRef cfmenuitem;
-				CopyMenuItemTextAsCFString(mhandle, item, &cfmenuitem);
-				uint2 t_menuitemlen = CFStringGetLength(cfmenuitem);
-				menuitemlen = t_menuitemlen * MCU_charsize(isunicode);
-				if (isunicode)
-				{
-					menuitemname = new char[menuitemlen];
-					CFStringGetCharacters(cfmenuitem, CFRangeMake(0, t_menuitemlen), (UniChar*)menuitemname);
-				}
-				else
-				{
-					menuitemname = new char[menuitemlen + 1];
-					CFStringGetCString(cfmenuitem, menuitemname, menuitemlen + 1,kCFStringEncodingMacRoman);
-				}
-				CFRelease(cfmenuitem);
-			}
-
-			char *menupick = menuitemname;
-			uint2 menupicklen = menuitemlen;
-			char *newmenu = NULL;
-
-			if (issubmenu)
-			{ //item from submenu is selected
-				/* get the menu hierachy to pass
-				back to the user. menu hierachy is store in the menu
-				handle's data field. It's format is :
-				mainmenu|submenu1|submenu2|....    get the
-				length of the menu hierachy. PASCAL string byte 0 is the length */
-
-				CFStringRef cftitlestr;
-				CopyMenuTitleAsCFString(mhandle,&cftitlestr);
-				uint2 titlelen = CFStringGetLength(cftitlestr);
-				uint2 t_titlestrlen = titlelen * MCU_charsize(isunicode);
-				if (isunicode)
-				{
-					newmenu = new char[t_titlestrlen + menuitemlen];//bug menuitemlen too small for unicode
-					CFStringGetCharacters(cftitlestr,CFRangeMake(0,titlelen),(UniChar *)newmenu);
-				}
-				else
-				{
-					newmenu = new char[t_titlestrlen + menuitemlen + 1];
-					CFStringGetCString(cftitlestr, newmenu, titlelen + 1, kCFStringEncodingMacRoman);
-				}
-
-				memcpy(&newmenu[t_titlestrlen], menuitemname, menuitemlen);
-				delete menuitemname;
-				
-				menupick = newmenu;
-				menupicklen = t_titlestrlen + menuitemlen;
-
-				CFRelease(cftitlestr);
-			}
-			if (bptr != NULL)
-			{
-				MCAutoStringRef t_menupick;
-				/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)menupick, menupicklen, &t_menupick);
+                bool t_menuhastags;
+                GetMenuItemProperty(GetMenuHandle(menu), 0, 'RRev', 'Tags', sizeof(t_menuhastags), NULL, &t_menuhastags);
+                
+                MCAutoStringRef t_tag_ref;
+                MCAutoStringRef t_menupick;
+                
+                extern bool MCMacGetMenuItemTag(MenuHandle menu, uint2 mitem, MCStringRef &r_string);
+                if (t_menuhastags && MCMacGetMenuItemTag(mhandle, item, &t_tag_ref))
+                    MCStringMutableCopy(*t_tag_ref, &t_menupick);
+                else
+                {
+                    CFStringRef cfmenuitem;
+                    CopyMenuItemTextAsCFString(mhandle, item, &cfmenuitem);
+                    MCAutoStringRef menuitemname;
+                    MCStringCreateWithCFString(cfmenuitem, &menuitemname);
+                    MCStringMutableCopy(*menuitemname, &t_menupick);
+                    
+                    CFRelease(cfmenuitem);
+                }
+                
+                if (issubmenu)
+                { //item from submenu is selected
+                    /* get the menu hierachy to pass
+                     back to the user. menu hierachy is store in the menu
+                     handle's data field. It's format is :
+                     mainmenu|submenu1|submenu2|....    get the
+                     length of the menu hierachy. PASCAL string byte 0 is the length */
+                    
+                    CFStringRef cftitlestr;
+                    CopyMenuTitleAsCFString(mhandle,&cftitlestr);
+                    MCAutoStringRef titlestring;
+                    MCStringCreateWithCFString(cftitlestr, &titlestring);
+                    MCStringPrepend(*t_menupick, *titlestring);
+                    
+                    CFRelease(cftitlestr);
+                }
+                
 				bptr->setmenuhistoryprop(item);
 				bptr->message_with_valueref_args(MCM_menu_pick, *t_menupick);
 			}
-			delete menupick;
 		}
 	}
 }
