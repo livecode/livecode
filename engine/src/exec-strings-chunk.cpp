@@ -118,8 +118,7 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
         {
             uindex_t t_space_offset, t_word_offset;
             // if there are consecutive spaces at the beginning, skip them
-            while (MCStringFirstIndexOfChar(p_string, ' ', t_offset, kMCCompareExact, t_space_offset) &&
-                   t_space_offset == t_offset)
+            while (isspace(MCStringGetCharAtIndex(p_string, t_offset)))
                 t_offset++;
             
             // then keep skipping to the next word until the end of the string.
@@ -349,8 +348,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             uindex_t t_space_offset;
             
             // if there are consecutive spaces at the beginning, skip them
-            while (MCStringFirstIndexOfChar(p_string, ' ', t_offset, kMCCompareExact, t_space_offset) &&
-                   t_space_offset == t_offset)
+            while (isspace(MCStringGetCharAtIndex(p_string, t_offset)))
                 t_offset++;
             
             // calculate the start of the (p_first)th word
