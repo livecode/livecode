@@ -2108,6 +2108,11 @@ public:
         {
             offset += nread;
             r_read = offset;
+            if (feof(m_stream))
+            {
+                m_is_eof = true;
+                return true;
+            }
             if (ferror(m_stream))
             {
                 clearerr(m_stream);
@@ -2124,11 +2129,6 @@ public:
                 
                 // A "real" error occurred
                 return false;
-            }
-            if (feof(m_stream))
-            {
-                m_is_eof = true;
-                return true;
             }
             
             m_is_eof = false;
