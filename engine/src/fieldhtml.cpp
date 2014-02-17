@@ -1935,6 +1935,12 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
     bool t_is_unicode_string;
     t_is_unicode_string = false;
     
+    if (MCValueGetTypeCode(p_text) != kMCValueTypeCodeString
+        && MCValueGetTypeCode(p_text) != kMCValueTypeCodeData)
+    {
+        p_text = kMCEmptyString;
+    }
+    
     if (MCValueGetTypeCode(p_text) == kMCValueTypeCodeString)
     {
             if (!MCStringIsNative((MCStringRef)p_text))
