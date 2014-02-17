@@ -78,7 +78,7 @@ void MCStringsSkipWord(MCExecContext& ctxt, MCStringRef p_string, bool p_skip_sp
     
     if (p_skip_spaces)
     {
-        while (!MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, x_offset)) && x_offset < t_length)
+        while (MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, x_offset)) && x_offset < t_length)
             x_offset++;
     }
 }
