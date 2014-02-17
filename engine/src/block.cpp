@@ -35,6 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mctheme.h"
 #include "font.h"
 #include "path.h"
+#include "foundation-unicode.h"
 
 #include "exec-interface.h"
 
@@ -613,7 +614,7 @@ Boolean MCBlock::sameatts(MCBlock *bptr, bool p_persistent_only)
 
 static bool MCUnicodeCanBreakBetween(uint2 x, uint2 y)
 {
-	if (x < 256 && isspace(x))
+	if (MCUnicodeIsWhitespace(x))
 		return true;
 
 	bool t_xid;

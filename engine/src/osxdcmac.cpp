@@ -1556,7 +1556,7 @@ public:
 				t_macmods |= kMenuNoCommandModifier;
 			SetMenuItemModifiers(p_menu, p_item, t_macmods);
 			
-			uint2 t_accel = p_menuitem->accelerator;
+			codepoint_t t_accel = p_menuitem->accelerator;
 			if (t_accel < 256)
 				t_accel = MCS_tolower(t_accel);
 			MCstacks->addaccelerator(menubutton, menubutton->getstack(), t_accel, t_mods);
