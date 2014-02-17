@@ -345,7 +345,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	
     // The "has unicode" flag depends on whether the paragraph is native
 	bool t_is_unicode;
-    if (MCStringIsNative(parent->GetInternalStringRef()))
+    if (MCstackfileversion < 7000 && MCStringIsNative(parent->GetInternalStringRef()))
 	{
 		t_is_unicode = false;
         flags &= ~F_HAS_UNICODE;
