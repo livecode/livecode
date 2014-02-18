@@ -290,6 +290,12 @@ bool MCExecContext::ConvertToNumberOrArray(MCExecValue& x_value)
 
 bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
 {
+    if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeData)
+    {
+        r_data = MCValueRetain((MCDataRef)p_value);
+        return true;
+    }
+    
     MCAutoStringRef t_string;
     if (!ConvertToString(p_value, &t_string))
         return false;
@@ -300,6 +306,12 @@ bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
 
 bool MCExecContext::ConvertToName(MCValueRef p_value, MCNameRef& r_name)
 {
+    if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeName)
+    {
+        r_name = MCValueRetain((MCNameRef)p_value);
+        return true;
+    }
+    
     MCAutoStringRef t_string;
     if (!ConvertToString(p_value, &t_string))
         return false;
