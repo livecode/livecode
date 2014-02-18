@@ -1645,7 +1645,7 @@ void MCFilesExecPerformReadUntilBinary(MCExecContext& ctxt, IO_handle stream, in
 				{
 					uint4 i = endcount;
 					uint4 j = size - 1;
-					while (i && j && t_buffer.Chars()[j] == MCStringGetNativeCharAtIndex(p_sentinel, 0))
+                    while (i && j && t_buffer.Chars()[j] == MCStringGetNativeCharAtIndex(p_sentinel, i))
 					{
 						i--;
 						j--;
