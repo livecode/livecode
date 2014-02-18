@@ -159,6 +159,7 @@ bool MCPurchaseCreate(const char *p_product_id, void *p_context, MCPurchase *&r_
         MCLog("MCPurchaseCreate :purchase->prod_id is : %s", t_purchase->prod_id);
 		t_purchase->id = s_last_purchase_id++;
 		t_purchase->ref_count = 1;
+        MCLog("MCPurchaseCreate : reference count : %d", t_purchase->ref_count);
 		t_purchase->state = kMCPurchaseStateInitialized;
 		
 		t_success = MCPurchaseInit(t_purchase, p_product_id, p_context);
@@ -209,6 +210,7 @@ void MCPurchaseRetain(MCPurchase *p_purchase)
 {
 	if (p_purchase != NULL)
 		p_purchase -> ref_count ++;
+    MCLog("MCPurchaseRetain : reference count: %d", p_purchase->ref_count);
 }
 
 void MCPurchaseRelease(MCPurchase *p_purchase)
@@ -216,12 +218,14 @@ void MCPurchaseRelease(MCPurchase *p_purchase)
 	MCLog("MCPurchaseRelease(%p)...", p_purchase);
 	if (p_purchase != NULL)
 	{
-		MCLog("reference count: %d", p_purchase->ref_count);
+        MCLog("MCPurchaseRelease : p_purchase is NOT null", nil);
+        MCLog("MCPurchaseRelease : referencecount : %d", p_purchase->ref_count);
 		if (p_purchase -> ref_count > 1)
 			p_purchase -> ref_count -= 1;
 		else
 			MCPurchaseDelete(p_purchase);
 	}
+    MCLog("reference count: %d", p_purchase->ref_count);
 	//MCLog("...done", nil);
 }
 
@@ -253,7 +257,7 @@ MCPurchaseUpdateEvent *MCPurchaseUpdateEvent::s_pending_events = NULL;
 MCPurchaseUpdateEvent::MCPurchaseUpdateEvent(MCPurchase *p_purchase)
 {
 	m_purchase = p_purchase;
-	//MCLog("retaining purchase (%p) until event dispatch", p_purchase);
+	MCLog("retaining purchase (%p) until event dispatch", p_purchase);
 	MCPurchaseRetain(m_purchase);
 	
 	m_next = s_pending_events;
@@ -275,7 +279,7 @@ void MCPurchaseUpdateEvent::Dispatch()
 {
 	bool t_success = true;
 	
-	//MCLog("removing purchase (%p) event from pending list", m_purchase);
+	MCLog("removing purchase (%p) event from pending list", m_purchase);
 	if (s_pending_events == this)
 		s_pending_events = m_next;
 	else
@@ -290,7 +294,7 @@ void MCPurchaseUpdateEvent::Dispatch()
 		}
 	}
 
-	//MCLog("dispatching purchase (%p) event", m_purchase);
+	MCLog("dispatching purchase (%p) event", m_purchase);
 
 	char *t_id = NULL;
     char *t_prod_id = NULL;
@@ -311,6 +315,7 @@ void MCPurchaseUpdateEvent::Dispatch()
 	if (t_success)
 		MCdefaultstackptr->getcurcard()->message_with_args(MCM_purchase_updated, t_id, t_prod_id, t_state);
 	
+    MCLog("MCPurchaseUpdateEvent::Dispatch() : m_purchase->prod_id is :  %s",t_prod_id);
 	MCCStringFree(t_id);
     MCCStringFree(t_prod_id);
 }

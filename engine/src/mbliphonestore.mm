@@ -309,7 +309,6 @@ bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase)
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
 	
 	[[SKPaymentQueue defaultQueue] finishTransaction: t_ios_data->transaction];
-	
 	p_purchase->state = kMCPurchaseStateComplete;
 	MCPurchaseNotifyUpdate(p_purchase);
 	MCPurchaseRelease(p_purchase);
@@ -420,7 +419,7 @@ void update_purchase_state(MCPurchase *p_purchase)
 				t_success = nil != (t_ios_data->product_id = [[t_transaction payment] productIdentifier]);
 
 			if (t_success)
-				t_success = MCPurchaseCreate(nil, t_ios_data, t_purchase);
+				t_success = MCPurchaseCreate([t_ios_data->product_id cStringUsingEncoding:NSMacOSRomanStringEncoding], t_ios_data, t_purchase);
 
 			if (!t_success)
 				MCMemoryDelete(t_ios_data);
@@ -441,11 +440,15 @@ void update_purchase_state(MCPurchase *p_purchase)
 			
 			update_purchase_state(t_purchase);
 			MCPurchaseNotifyUpdate(t_purchase);
-			
-			if ([t_transaction transactionState] == SKPaymentTransactionStateFailed)
+			           
+			//if ([t_transaction transactionState] == SKPaymentTransactionStateFailed)
+            if ([t_transaction transactionState] != SKPaymentTransactionStatePurchasing)
 			{
 				[[SKPaymentQueue defaultQueue] finishTransaction: t_transaction];
-				MCPurchaseRelease(t_purchase);
+                if ([t_transaction transactionState] == SKPaymentTransactionStateFailed)
+                {
+                    MCPurchaseRelease(t_purchase);
+                }
 			}
 		}
 	}
