@@ -552,7 +552,6 @@ MCObject *MCObject::unpickle(MCDataRef p_data, MCStack *p_stack)
 			if (unpickle_object_from_stream(t_stream, 7000, p_stack, t_7000_object))
 			{
 				delete t_object;
-                delete t_5500_object;
 				t_object = t_7000_object;
 			}
 		}
