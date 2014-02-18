@@ -1154,64 +1154,75 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
 	MCParameter *params = NULL;
 	MCParameter *tparam = NULL;
 	
-	MCAutoPointer<char> t_script;
-    /* UNCHECKED */ MCStringConvertToCString(p_script, &t_script);
-    char *mptr = strclone(*t_script);
-	char *sptr = mptr;
-	while (*sptr && !isspace((uint1)*sptr))
-		sptr++;
+    uindex_t t_offset;
+    t_offset = 0;
+    
+    uindex_t t_length;
+    t_length = MCStringGetLength(p_script);
+    
+	while (t_offset < t_length && !isspace(MCStringGetCharAtIndex(p_script, t_offset)))
+		t_offset++;
 		
+    MCRange t_msg_range;
+    t_msg_range = MCRangeMake(0, t_offset);
+    t_offset++;
+    
 	MCerrorlock++;
-	if (*sptr)
+    unichar_t t_char;
+    uindex_t t_start_offset;
+    t_start_offset = t_offset;
+    
+    MCRange t_exp_range;
+    
+	while (t_offset <= t_length)
 	{
-		*sptr++ = '\0';
-		char *startptr = sptr;
-		while (*startptr)
-		{
-			while (*sptr && *sptr != ',')
-				if (*sptr == '"')
-				{
-					sptr++;
-					while (*sptr && *sptr++ != '"')
-						;
-				}
-				else
-					sptr++;
-			if (*sptr)
-				*sptr++ = '\0';
-			MCAutoStringRef t_expression;
-			/* UNCHECKED */ MCStringCreateWithCString(startptr, &t_expression);
-			
-			MCParameter *newparam = new MCParameter;
+        if (t_offset < t_length)
+            t_char = MCStringGetCharAtIndex(p_script, t_offset);
+        
+        if (t_offset == t_length || t_char == ',')
+        {
+            t_exp_range = MCRangeMake(t_start_offset, t_offset - t_start_offset);
 
-			// MW-2011-08-11: [[ Bug 9668 ]] Make sure we copy 'pdata' if we use it, since
-			//   mptr (into which it points) only lasts as long as this method call.
-			MCAutoValueRef t_value;
-			ctxt . GetHandler() -> eval(ctxt, *t_expression, &t_value);
+            MCAutoStringRef t_expression;
+            /* UNCHECKED */ MCStringCopySubstring(p_script, t_exp_range, &t_expression);
+            
+            MCParameter *newparam = new MCParameter;
+            
+            // MW-2011-08-11: [[ Bug 9668 ]] Make sure we copy 'pdata' if we use it, since
+            //   mptr (into which it points) only lasts as long as this method call.
+            MCAutoValueRef t_value;
+            ctxt . GetHandler() -> eval(ctxt, *t_expression, &t_value);
             if (!ctxt.HasError())
-				newparam->setvalueref_argument(*t_value);
-			else
-				newparam->setvalueref_argument(*t_expression);
-			
-			// Not being able to evaluate the parameter doesn't cause an error at this stage
-			ctxt.IgnoreLastError();
-
-			if (tparam == NULL)
-				params = tparam = newparam;
-			else
-			{
-				tparam->setnext(newparam);
-				tparam = newparam;
-			}
-			startptr = sptr;
-		}
+                newparam->setvalueref_argument(*t_value);
+            else
+                newparam->setvalueref_argument(*t_expression);
+            
+            // Not being able to evaluate the parameter doesn't cause an error at this stage
+            ctxt.IgnoreLastError();
+            
+            if (tparam == NULL)
+                params = tparam = newparam;
+            else
+            {
+                tparam->setnext(newparam);
+                tparam = newparam;
+            }
+            t_start_offset = ++t_offset;
+        }
+        else if (t_char == '"')
+        {
+            while (t_offset < t_length && MCStringGetCharAtIndex(p_script, ++t_offset) != '"')
+                ;
+        }
+        else
+            t_offset++;
 	}
 	MCerrorlock--;
 	
-	/* UNCHECKED */ MCNameCreateWithCString(mptr, r_message);
+    MCAutoStringRef t_msg;
+    /* UNCHECKED */ MCStringCopySubstring(p_script, t_msg_range, &t_msg);
+	/* UNCHECKED */ MCNameCreate(*t_msg, r_message);
 	r_params = params;
-	
-	delete mptr;
 }
 
 static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target, bool p_is_send)
