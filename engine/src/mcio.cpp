@@ -360,6 +360,27 @@ void IO_mac_to_iso(char *string, uint4 len)
 	}
 }
 
+MCStringEncoding MCS_file_to_string_encoding(MCSFileEncodingType p_encoding)
+{
+    switch(p_encoding)
+    {
+    case kMCFileEncodingUTF8:
+        return kMCStringEncodingUTF8;
+
+    case kMCFileEncodingUTF16:
+        return kMCStringEncodingUTF16;
+
+    case kMCFileEncodingUTF16LE:
+        return kMCStringEncodingUTF16LE;
+
+    case kMCFileEncodingUTF16BE:
+        return kMCStringEncodingUTF16BE;
+
+    default:
+        return kMCStringEncodingNative;
+    }
+}
+
 IO_stat IO_read_string_no_translate(char*& string, IO_handle stream, uint1 size)
 {
 	uint32_t t_length;

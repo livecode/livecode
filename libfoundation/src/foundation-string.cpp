@@ -127,6 +127,7 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
         case kMCStringEncodingNative:
             return MCStringCreateWithNativeChars(p_bytes, p_byte_count, r_string);
         case kMCStringEncodingUTF16:
+        case kMCStringEncodingUTF16LE:
             return MCStringCreateWithChars((unichar_t *)p_bytes, p_byte_count / 2, r_string);
         case kMCStringEncodingUTF16BE:
         {

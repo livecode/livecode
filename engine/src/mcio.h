@@ -107,6 +107,7 @@ extern IO_stat IO_write_uint2or4(uint4 dest, IO_handle stream);
 
 extern void IO_iso_to_mac(char *sptr, uint4 len);
 extern void IO_mac_to_iso(char *sptr, uint4 len);
+extern MCStringEncoding MCS_file_to_string_encoding(MCSFileEncodingType p_encoding);
 
 extern IO_stat IO_read_mccolor(MCColor& r_color, IO_handle stream);
 extern IO_stat IO_write_mccolor(const MCColor& color, IO_handle stream);
@@ -206,8 +207,6 @@ extern IO_stat MCS_seek_set(IO_handle stream, int64_t offset);
 extern IO_stat MCS_seek_end(IO_handle stream, int64_t offset);
 extern int64_t MCS_tell(IO_handle stream);
 extern int64_t MCS_fsize(IO_handle stream);
-extern MCSFileEncodingType MCS_get_encoding(IO_handle stream);
-extern void MCS_set_encoding(IO_handle stream, MCSFileEncodingType p_encoding);
 
 ///////////////////////////////////////////////////////////////////////////////
 
