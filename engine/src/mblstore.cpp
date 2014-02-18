@@ -434,8 +434,27 @@ Exec_stat MCHandleSetPurchaseProperty(void *context, MCParameter *p_parameters)
     return ES_NORMAL;
 }
 
-
+//REMOVE THIS
+/*
 Exec_stat MCHandleRequestForProductDetails(void *context, MCParameter *p_parameters)
+{
+    bool t_success = true;
+    char *t_product_id = nil;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
+    if (t_success)
+        t_success = MCStoreRequestForProductDetails(t_product_id);
+    
+    MCCStringFree(t_product_id);
+
+    return ES_NORMAL;
+}
+*/
+
+// MOVE THIS to mblandroidstore.cpp
+/*
+Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
 {
     bool t_success = true;
     char *t_product_id = nil;
@@ -446,9 +465,10 @@ Exec_stat MCHandleRequestForProductDetails(void *context, MCParameter *p_paramet
         t_success = MCStoreRequestProductDetails(t_product_id);
     
     MCCStringFree(t_product_id);
-
+    
     return ES_NORMAL;
 }
+*/
 
 Exec_stat MCHandleReceiveProductDetails(void *context, MCParameter *p_parameters)
 {

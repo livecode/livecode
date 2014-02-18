@@ -45,7 +45,9 @@ public abstract class PurchaseObserver
     // Sent to the observer if purchase restoration fails
     public abstract void onPurchaseRestoreError(String errorMessage);
 
-	
+	// Sent to the observer once product details have been successfully received
+    public abstract void onProductDetailsReceived(String productId);
+    
 //	public abstract void onGetPurchaseInformationResponse(GetPurchaseInformation request, ResponseCode responseCode);
 
 	void startBuyPageActivity(PendingIntent pendingIntent, Intent intent)

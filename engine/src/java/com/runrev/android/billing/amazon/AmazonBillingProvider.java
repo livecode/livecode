@@ -308,9 +308,10 @@ public class AmazonBillingProvider implements BillingProvider
                     knownItems.add(item);
                     loadKnownItemToLocalInventory(item);
                     Log.v(TAG, "Item details : " + item.toString());
+                    mPurchaseObserver.onProductDetailsReceived(item.getSku());
                 }
                 
-                // TODO : productDetailsReceived callback
+               // 
             }
             else
             {

@@ -250,7 +250,9 @@ public class GoogleBillingProvider implements BillingProvider
 					knownItems.add(skuDetails);
 					loadKnownItemToLocalInventory(skuDetails);
                     Log.d(TAG, "Details for requested product : " + skuDetails.toString());
-                    // TODO : Call productDetailsReceived 
+                    // TODO : Call productDetailsReceived
+					mPurchaseObserver.onProductDetailsReceived(productId);
+					
                 }
             }
         });

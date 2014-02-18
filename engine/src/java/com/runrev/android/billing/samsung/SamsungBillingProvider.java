@@ -453,6 +453,7 @@ public class SamsungBillingProvider implements BillingProvider
             if (item.getItemId().equals(productId))
             {
                 Log.d(TAG, "Requested item details : \n" + item.dump());
+                mPurchaseObserver.onProductDetailsReceived(productId);
                 return true;
             }
             

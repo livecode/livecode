@@ -32,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "core.h"
 #include "mblstore.h"
 
+#include "param.h"
 #include <jni.h>
 
 typedef enum
@@ -207,7 +208,9 @@ char* MCStoreAndroidRequestProductDetails(const char *p_purchase_id)
 }
 */
 
-bool MCStoreRequestProductDetails(const char *p_purchase_id)
+
+// REMOVE THIS METHOD
+bool MCStoreRequestForProductDetails(const char *p_purchase_id)
 {
     
     bool t_result;
@@ -710,6 +713,19 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRequestPurchaseResponse(
     }
 }
 
+bool MCStorePostProductRequestResponse(const char *p_product_id);
+
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProductDetailsResponse(JNIEnv *env, jobject object, jstring productId) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProductDetailsResponse(JNIEnv *env, jobject object, jstring productId)
+{
+    bool t_success = true;
+
+    char *t_product_id = nil;
+    t_success = MCCStringFromJava(env, productId, t_product_id);
+    if (t_success)
+        t_success = MCStorePostProductRequestResponse(t_product_id);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
@@ -733,3 +749,135 @@ Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters)
     
     return ES_NORMAL;
 }
+
+///////////////////////////////////////////////////////////////
+
+class MCStoreProductRequestResponseEvent : public MCCustomEvent
+{
+public:
+    MCStoreProductRequestResponseEvent(const char *p_product_id);
+    
+    void Dispatch();
+    void Destroy();
+    
+private:
+    const char *m_product_id;
+};
+
+MCStoreProductRequestResponseEvent::MCStoreProductRequestResponseEvent(const char *p_product_id)
+{
+    m_product_id = p_product_id;
+}
+
+void MCStoreProductRequestResponseEvent::Destroy()
+{
+    m_product_id = nil;
+}
+
+
+
+void MCStoreProductRequestResponseEvent::Dispatch()
+{
+    bool t_success = true;
+    
+    const char *t_product_id = nil;
+    const char *t_description = nil;
+    const char *t_title = nil;
+    const char *t_itemType = nil;
+    const char *t_price = nil;
+    
+    
+    
+    t_product_id = m_product_id;
+    t_description = MCStoreGetPurchaseProperty(m_product_id, "description");
+    t_title = MCStoreGetPurchaseProperty(m_product_id, "title");
+    t_itemType = MCStoreGetPurchaseProperty(m_product_id, "itemType");
+    t_price = MCStoreGetPurchaseProperty(m_product_id, "price");
+    
+    if (t_success)
+    {
+        MCExecPoint ep(nil, nil, nil);
+        
+        MCVariableValue *t_response = nil;
+        t_response = new MCVariableValue();
+        
+        MCVariableValue *t_element = nil;
+      
+        if (t_price != nil)
+        {
+            t_response->lookup_element(ep, "price", t_element);
+            t_element->assign_string(MCString(t_price));
+        }
+        
+        if (t_description != nil)
+        {
+            t_response->lookup_element(ep, "description", t_element);
+            t_element->assign_string(MCString(t_description));
+        }
+        
+        if (t_title != nil)
+        {
+            t_response->lookup_element(ep, "title", t_element);
+            t_element->assign_string(MCString(t_title));
+        }
+        
+        if (t_itemType != nil)
+        {
+            t_response->lookup_element(ep, "itemType", t_element);
+            t_element->assign_string(MCString(t_itemType));
+        }
+        
+        ep.setarray(t_response, True);
+        
+        MCParameter p1, p2;
+        p1.sets_argument(MCString(t_product_id));
+        p1.setnext(&p2);
+        p2.set_argument(ep);
+        
+        MCdefaultstackptr->getcurcard()->message(MCM_product_details_received, &p1);
+    }
+    
+}
+
+bool MCStorePostProductRequestResponse(const char *p_product_id)
+{
+    bool t_success;
+    MCCustomEvent *t_event = nil;
+    t_event = new MCStoreProductRequestResponseEvent(p_product_id);
+    t_success = t_event != nil;
+    
+    if (t_success)
+        MCEventQueuePostCustom(t_event);
+    
+    return t_success;
+}
+
+Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
+{
+    bool t_success = true;
+    char *t_product_id = nil;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
+    if (t_success)
+        t_success = MCStoreRequestProductDetails(t_product_id);
+    
+    MCCStringFree(t_product_id);
+    
+    return ES_NORMAL;
+}
+
+bool MCStoreRequestProductDetails(const char *p_product_id)
+{
+    
+    bool t_result;
+    
+    MCAndroidEngineRemoteCall("storeRequestProductDetails", "bs", &t_result, p_product_id);
+    
+    //if (t_result)
+        //MCStorePostProductRequestResponse(p_product_id);
+    
+    return t_result;
+    
+}
+
