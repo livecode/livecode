@@ -511,6 +511,8 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 		// Special keys as their number converted to a string, the rest by value
 		if (key > 0x7F && (key & XK_Class_mask) == XK_Class_compat)
 			/* UNCHECKED */ MCStringFormat(&t_string, "%ld", key);
+        else if (MCmodifierstate & MS_CONTROL)
+            /* UNCHECKED */ MCStringFormat(&t_string, "%c", (char)key);
 		else
 			t_string = p_string;
 			
