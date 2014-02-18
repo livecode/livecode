@@ -180,7 +180,7 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 	        || flags & F_DISABLED && (getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if ((state & CS_SIZE || state & CS_MOVE) && points != NULL
-	        && getstyleint(flags) != F_G_RECTANGLE && getstyleint(flags) != F_OVAL)
+	        && getstyleint(flags) != F_G_RECTANGLE)
 	{
 		delete points;
 		points = NULL;
@@ -367,7 +367,28 @@ Boolean MCGraphic::doubleup(uint2 which)
 
 void MCGraphic::setrect(const MCRectangle &nrect)
 {
-	if (realpoints != NULL)
+	// MDW-2014-01-19: [[ feature_rect_points ]] set the points of rectangles and rounded rectangles
+	if (getstyleint(flags) == F_G_RECTANGLE || getstyleint(flags) == F_ROUNDRECT)
+	{
+		nrealpoints = 4;
+		realpoints = new MCPoint[nrealpoints];
+		realpoints[0].x = nrect.x;
+		realpoints[0].y = nrect.y;
+		realpoints[1].x = nrect.x + nrect.width;
+		realpoints[1].y = nrect.y;
+		realpoints[2].x = nrect.x + nrect.width;
+		realpoints[2].y = nrect.y + nrect.height;
+		realpoints[3].x = nrect.x;
+		realpoints[3].y = nrect.y + nrect.height;
+		if (oldpoints == NULL)
+		{
+			oldpoints = new MCPoint[nrealpoints];
+			uint2 i = nrealpoints;
+			while (i--)
+				oldpoints[i] = realpoints[i];
+		}
+	}
+	else if (realpoints != NULL)
 	{
 		if (nrect.width != rect.width || nrect.height != rect.height)
 		{
@@ -547,7 +568,20 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 		ep.setint(nsides);
 		break;
 	case P_POINTS:
-		MCU_unparsepoints(realpoints, nrealpoints, ep);
+		// MDW-2014-01-26: [[ rect_points ]] allow effective points as read-only
+		switch (getstyleint(flags))
+		{
+			case F_REGULAR:
+			case F_G_RECTANGLE:
+			case F_ROUNDRECT:
+				if (!effective)
+				{
+					ep.setstaticcstring("");
+					break;
+				}
+			default:
+				MCU_unparsepoints(realpoints, nrealpoints, ep);
+		}
 		break;
 	case P_RELATIVE_POINTS:
 		{
@@ -793,6 +827,7 @@ Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean
 	case P_BACK_COLOR:
 	case P_BACK_PATTERN:
 		if (data.getlength() != 0 && m_fill_gradient != NULL)
+
 		{
 			MCGradientFillFree(m_fill_gradient);
 			m_fill_gradient = NULL;
@@ -1794,13 +1829,19 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		int2 cy = trect.y + (trect.height >> 1);
 		real8 factor = 2.0 * M_PI / (real8)nsides;
 		uint2 i;
+		// MDW-2013-01-19: [[ feature_polygon points ]] allow regular polygons to have points
+		if (NULL == realpoints)
+			realpoints = new MCPoint[nsides];
 		for (i = 0 ; i < nsides ; i++)
 		{
 			real8 iangle = rangle + (real8)i * factor;
 			points[i].x = cx + (int2)(cos(iangle) * dx);
 			points[i].y = cy + (int2)(sin(iangle) * dy);
+			realpoints[i] = points[i];
 		}
 		points[nsides] = points[0];
+		realpoints[nsides] = points[0];
+		nrealpoints = nsides;
 	}
 	if (flags & F_OPAQUE)
 	{
