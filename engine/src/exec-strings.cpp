@@ -1163,31 +1163,32 @@ void MCStringsEvalIsNotAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_token
 
 bool MCStringsIterateWords(MCExecContext& ctxt, uindex_t& x_index, MCStringRef p_string, MCRange& r_word_range)
 {
-	const char_t *t_str_ptr = MCStringGetNativeCharPtr(p_string);
 	uindex_t t_length = MCStringGetLength(p_string);
+    
+    unichar_t t_char;
+    
+    while (x_index < t_length && isspace(t_char = MCStringGetCharAtIndex(p_string, x_index)))
+        x_index++;
+    
 	if (x_index < t_length)
 	{
 		uindex_t t_word_start;
-
-		while (x_index < t_length && isspace(t_str_ptr[x_index]))
-			x_index++;
-
-		if (x_index == t_length)
-			return false;
-
 		t_word_start = x_index;
 
-		if (t_str_ptr[x_index] == '"')
+		if (t_char == '"')
 		{
 			x_index++;
-			while (x_index < t_length && t_str_ptr[x_index] != '"' && t_str_ptr[x_index] != '\n')
+			while (x_index < t_length && (t_char = MCStringGetCharAtIndex(p_string, x_index) != '"') && t_char != '\n')
 				x_index++;
 			if (x_index < t_length)
 				x_index++;
 		}
 		else
-			while (x_index < t_length && !isspace(t_str_ptr[x_index]))
-				x_index++;
+			while (x_index < t_length && !isspace(t_char))
+            {
+                x_index++;
+                t_char = MCStringGetCharAtIndex(p_string, x_index);
+            }
 
 		r_word_range = MCRangeMake(t_word_start, x_index - t_word_start);
 		return true;
