@@ -228,7 +228,7 @@ public class AmazonBillingProvider implements BillingProvider
             success = setPurchaseProperty(item.getSku(), "title", item.getTitle());
         
         if (success)
-            success = setPurchaseProperty(item.getSku(), "smallIconUrl", item.getSmallIconUrl());
+            success = setPurchaseProperty(item.getSku(), "itemImageUrl", item.getSmallIconUrl());
         
         return success;
     }

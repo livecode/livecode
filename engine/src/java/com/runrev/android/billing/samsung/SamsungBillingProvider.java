@@ -113,12 +113,12 @@ public class SamsungBillingProvider implements BillingProvider
 
         if (success)
         {
-            success = setPurchaseProperty(baseVO.getItemId(), "itemName", baseVO.getItemName());
+            success = setPurchaseProperty(baseVO.getItemId(), "title", baseVO.getItemName());
             //Log.d(TAG, "Base itemName loaded successfully");
         }
         if (success)
         {
-            success = setPurchaseProperty(baseVO.getItemId(), "itemPriceString", baseVO.getItemPriceString());
+            success = setPurchaseProperty(baseVO.getItemId(), "price", baseVO.getItemPriceString());
             //Log.d(TAG, "Base itemPriceString loaded successfully");
         }
         if (success)
@@ -128,7 +128,7 @@ public class SamsungBillingProvider implements BillingProvider
         }
         if (success)
         {
-            success = setPurchaseProperty(baseVO.getItemId(), "itemDescription", baseVO.getItemDesc());
+            success = setPurchaseProperty(baseVO.getItemId(), "description", baseVO.getItemDesc());
             //Log.d(TAG, "Base itemDescription loaded successfully");
         }
         if (success)
@@ -180,7 +180,7 @@ public class SamsungBillingProvider implements BillingProvider
             success = setPurchaseProperty(inboxVO.getItemId(), "purchaseDate", inboxVO.getPurchaseDate());
 
         if (success)
-            success = setPurchaseProperty(inboxVO.getItemId(), "type", inboxVO.getType());
+            success = setPurchaseProperty(inboxVO.getItemId(), "itemType", inboxVO.getType());
 
         return success;
 
@@ -193,7 +193,7 @@ public class SamsungBillingProvider implements BillingProvider
         //Log.d(TAG, "Inbox Item name is : " + inboxVO.getItemName());
 
         if (success)
-            success = setPurchaseProperty(itemVO.getItemId(), "type", itemVO.getType());
+            success = setPurchaseProperty(itemVO.getItemId(), "itemType", itemVO.getType());
 
         //TODO : check if itemType is not subscription
         if (success)

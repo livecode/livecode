@@ -785,14 +785,20 @@ void MCStoreProductRequestResponseEvent::Dispatch()
     const char *t_title = nil;
     const char *t_itemType = nil;
     const char *t_price = nil;
-    
-    
+    const char *t_itemImageUrl = nil;
+    const char *t_itemDownloadUrl = nil;
+    const char *t_subscriptionDurationUnit = nil;
+    const char *t_subscriptionDurationMultiplier= nil;
     
     t_product_id = m_product_id;
     t_description = MCStoreGetPurchaseProperty(m_product_id, "description");
     t_title = MCStoreGetPurchaseProperty(m_product_id, "title");
     t_itemType = MCStoreGetPurchaseProperty(m_product_id, "itemType");
     t_price = MCStoreGetPurchaseProperty(m_product_id, "price");
+    t_itemImageUrl = MCStoreGetPurchaseProperty(m_product_id, "itemImageUrl");
+    t_itemDownloadUrl = MCStoreGetPurchaseProperty(m_product_id, "itemDownloadUrl");
+    t_subscriptionDurationUnit = MCStoreGetPurchaseProperty(m_product_id, "subscriptionDurationUnit");
+    t_subscriptionDurationMultiplier = MCStoreGetPurchaseProperty(m_product_id, "subscriptionDurationMultiplier");
     
     if (t_success)
     {
@@ -825,6 +831,30 @@ void MCStoreProductRequestResponseEvent::Dispatch()
         {
             t_response->lookup_element(ep, "itemType", t_element);
             t_element->assign_string(MCString(t_itemType));
+        }
+        
+        if (t_itemImageUrl != nil)
+        {
+            t_response->lookup_element(ep, "itemImageUrl", t_element);
+            t_element->assign_string(MCString(t_itemImageUrl));
+        }
+        
+        if (t_itemDownloadUrl != nil)
+        {
+            t_response->lookup_element(ep, "itemDownloadUrl", t_element);
+            t_element->assign_string(MCString(t_itemDownloadUrl));
+        }
+        
+        if (t_subscriptionDurationUnit != nil)
+        {
+            t_response->lookup_element(ep, "subscriptionDurationUnit", t_element);
+            t_element->assign_string(MCString(t_subscriptionDurationUnit));
+        }
+        
+        if (t_subscriptionDurationMultiplier != nil)
+        {
+            t_response->lookup_element(ep, "subscriptionDurationMultiplier", t_element);
+            t_element->assign_string(MCString(t_subscriptionDurationMultiplier));
         }
         
         ep.setarray(t_response, True);
