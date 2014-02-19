@@ -971,12 +971,12 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bo
 	else
 	{
 		r_chosen = true;
-		p_initial_color.red = GetRValue(chooseclr.rgbResult);
-		p_initial_color.red |= p_initial_color.red << 8;
-		p_initial_color.green = GetGValue(chooseclr.rgbResult);
-		p_initial_color.green |= p_initial_color.green << 8;
-		p_initial_color.blue = GetBValue(chooseclr.rgbResult);
-		p_initial_color.blue |= p_initial_color.blue << 8;
+		r_chosen_color.red = GetRValue(chooseclr.rgbResult);
+		r_chosen_color.red |= r_chosen_color.red << 8;
+		r_chosen_color.green = GetGValue(chooseclr.rgbResult);
+		r_chosen_color.green |= r_chosen_color.green << 8;
+		r_chosen_color.blue = GetBValue(chooseclr.rgbResult);
+		r_chosen_color.blue |= r_chosen_color.blue << 8;
 	}
 
 	//  SMR 1880 clear shift and button state
