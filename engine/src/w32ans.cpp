@@ -74,7 +74,7 @@ static void getfilter(MCStringRef p_filter, MCStringRef &r_filter)
 		MCStringCopy(*t_filterstring, r_filter);
 	}
 	else
-		r_filter = MCSTR("All Files (*.*)\0*.*\0");
+		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)"All Files (*.*)\0*.*\0", 20, r_filter);
 }
 
 static void waitonbutton()
