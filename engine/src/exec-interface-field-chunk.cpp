@@ -1295,16 +1295,17 @@ void MCField::GetTextSizeOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, in
 
 void MCField::GetEffectiveTextSizeOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t& r_value)
 {
-    uinteger_t *t_size;
-    GetCharPropOfCharChunk<OptionalFieldPropType<PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCBlock::GetTextSize, false, 0, r_mixed, t_size);
+    uinteger_t t_size;
+    uinteger_t *t_size_ptr = &t_size;
+    GetCharPropOfCharChunk<OptionalFieldPropType<PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCBlock::GetTextSize, false, 0, r_mixed, t_size_ptr);
 
     if (r_mixed)
         return;
 
-    if (t_size == nil)
+    if (t_size_ptr == nil)
         GetEffectiveTextSize(ctxt, r_value);
     else
-        r_value = *t_size;
+        r_value = t_size;
 }
 
 void MCField::SetTextSizeOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t* p_value)
@@ -1446,10 +1447,16 @@ void MCField::SetStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, 
 {
     state |= CS_NO_FILE; // prevent interactions while downloading images
     MCParagraph *stpgptr = styledtexttoparagraphs(value);
-    if (stpgptr == nil)
-        resolveparagraphs(p_part_id) -> deletestring(p_start , p_finish);
-    else
-        resolveparagraphs(p_part_id) -> replacetextwithparagraphs(p_start, p_finish, stpgptr);
+    
+    deletetext(p_start , p_finish);
+    
+    if (stpgptr != nil)
+    {
+        MCParagraph *t_insert_paragraph;
+        t_insert_paragraph = indextoparagraph(paragraphs, p_start, p_finish);
+        t_insert_paragraph -> replacetextwithparagraphs(p_start, p_start, stpgptr);
+    }
+    
     state &= ~CS_NO_FILE;
 }
 
