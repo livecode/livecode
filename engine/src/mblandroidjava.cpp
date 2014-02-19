@@ -613,7 +613,6 @@ bool MCJavaIterateMap(JNIEnv *env, jobject p_map, MCJavaMapCallback p_callback, 
 	{
 		jobject t_entry = nil;
 		jobject t_key = nil, t_value = nil;
-		char *t_key_string = nil;
 		
 		t_success = nil != (t_entry = env->CallObjectMethod(t_iterator, s_iterator_next));
 		
@@ -623,16 +622,21 @@ bool MCJavaIterateMap(JNIEnv *env, jobject p_map, MCJavaMapCallback p_callback, 
 		if (t_success)
 			t_success = nil != (t_value = env->CallObjectMethod(t_entry, s_map_entry_get_value));
 		
-		// convert key string to native char*
+		// convert key string to stringref
+        MCAutoStringRef t_key_string;
 		if (t_success)
-			t_success = MCJavaStringToNative(env, (jstring)t_key, t_key_string);
+			t_success = MCJavaStringToStringRef(env, (jstring)t_key, &t_key_string);
 		
+        // and then to nameref
+        MCNewAutoNameRef t_key_name;
+        if (t_success)
+            t_success = MCNameCreate(*t_key_string, &t_key_name);
+        
 		// call callback
 		if (t_success)
-			t_success = p_callback(env, t_key_string, t_value, p_context);
+			t_success = p_callback(env, *t_key_name, t_value, p_context);
 		
-		if (t_key_string != nil)
-			MCCStringFree(t_key_string);
+
 		if (t_key != nil)
 			env->DeleteLocalRef(t_key);
 		if (t_value != nil)
@@ -810,28 +814,20 @@ typedef struct
     MCArrayRef array;
 } map_to_array_context_t;
 
-static bool s_map_to_array_callback(JNIEnv *p_env, const char *p_key, jobject p_value, void *p_context)
+static bool s_map_to_array_callback(JNIEnv *p_env, MCNameRef p_key, jobject p_value, void *p_context)
 {
 	bool t_success = true;
 	
 	map_to_array_context_t *t_context = (map_to_array_context_t*)p_context;
-	
-    MCNewAutoNameRef t_key;
-    MCNameCreateWithCString(p_key, &t_key);
 	
 	if (t_success)
 	{
 		if (p_env->IsInstanceOf(p_value, s_string_class))
 		{
             MCAutoStringRef t_string;
-			char *t_string_value = nil;
-			t_success = MCJavaStringToNative(p_env, (jstring)p_value, t_string_value);
-			if (t_success && t_string_value != nil)
-				t_success = MCStringCreateWithCString(t_string_value, &t_string);
+			t_success = MCJavaStringToStringRef(p_env, (jstring)p_value, &t_string);
             if (t_success)
-                t_success = MCArrayStoreValue(t_context -> array, false, *t_key, *t_string);
-			if (t_string_value != nil)
-				MCCStringFree(t_string_value);
+                t_success = MCArrayStoreValue(t_context -> array, false, p_key, *t_string);
 		}
 		else if (p_env->IsInstanceOf(p_value, s_hash_map_class))
 		{

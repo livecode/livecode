@@ -74,7 +74,7 @@ static void getfilter(MCStringRef p_filter, MCStringRef &r_filter)
 		MCStringCopy(*t_filterstring, r_filter);
 	}
 	else
-		r_filter = MCSTR("All Files (*.*)\0*.*\0");
+		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)"All Files (*.*)\0*.*\0", 20, r_filter);
 }
 
 static void waitonbutton()
@@ -666,15 +666,19 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 		{
 			// The filter string has the following format:
 			// "<description0>\0<extensions0>\0<description1>\0...\0<extensionsN>\0"
-			// so the n'th filter comes after the (2n - 1)'th null character
-			uindex_t t_index = t_filter_index * 2 - 1;
+			// so the n'th filter comes after the 2(n - 1)'th null character
+			uindex_t t_index = 2 * (t_filter_index - 1);
 			uindex_t t_offset = 0;
-			for (uindex_t t_index = t_filter_index * 2 - 1; t_index > 0; t_index--)
+			while (t_index--)
+			{
 				/* UNCHECKED */ MCStringFirstIndexOfChar(p_filter, '\0', t_offset, kMCStringOptionCompareExact, t_offset);
+				t_offset++;
+			}
 			
 			uindex_t t_end;
+			t_end = UINDEX_MAX;
 			/* UNCHECKED */ MCStringFirstIndexOfChar(p_filter, '\0', t_offset, kMCStringOptionCompareExact, t_end);
-
+            
 			/* UNCHECKED */ MCStringCopySubstring(p_filter, MCRangeMake(t_offset, t_end-t_offset), r_result);
 		}
 
@@ -967,12 +971,12 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bo
 	else
 	{
 		r_chosen = true;
-		p_initial_color.red = GetRValue(chooseclr.rgbResult);
-		p_initial_color.red |= p_initial_color.red << 8;
-		p_initial_color.green = GetGValue(chooseclr.rgbResult);
-		p_initial_color.green |= p_initial_color.green << 8;
-		p_initial_color.blue = GetBValue(chooseclr.rgbResult);
-		p_initial_color.blue |= p_initial_color.blue << 8;
+		r_chosen_color.red = GetRValue(chooseclr.rgbResult);
+		r_chosen_color.red |= r_chosen_color.red << 8;
+		r_chosen_color.green = GetGValue(chooseclr.rgbResult);
+		r_chosen_color.green |= r_chosen_color.green << 8;
+		r_chosen_color.blue = GetBValue(chooseclr.rgbResult);
+		r_chosen_color.blue |= r_chosen_color.blue << 8;
 	}
 
 	//  SMR 1880 clear shift and button state

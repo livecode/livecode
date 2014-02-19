@@ -1935,34 +1935,39 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
     bool t_is_unicode_string;
     t_is_unicode_string = false;
     
-    if (MCValueGetTypeCode(p_text) != kMCValueTypeCodeString
-        && MCValueGetTypeCode(p_text) != kMCValueTypeCodeData)
-    {
-        p_text = kMCEmptyString;
-    }
     
-    if (MCValueGetTypeCode(p_text) == kMCValueTypeCodeString)
+    MCValueTypeCode t_code = MCValueGetTypeCode(p_text);
+    
+    if (t_code == kMCValueTypeCodeString || t_code == kMCValueTypeCodeName)
     {
-            if (!MCStringIsNative((MCStringRef)p_text))
-            {
-                t_is_unicode_string = true;
-                uindex_t t_length;
-                /* UNCHECKED */ MCStringConvertToUTF8((MCStringRef)p_text, &t_data, t_length);
-                t_ptr = *t_data;
-                t_limit = t_ptr + t_length;
-
-            }
-            else
-            {
-                t_native_string . Lock((MCStringRef)p_text);
-                t_ptr = *t_native_string;
-                t_limit = t_ptr + MCStringGetLength((MCStringRef)p_text);
-            }
+        if (t_code == kMCValueTypeCodeName)
+            p_text = MCNameGetString((MCNameRef)p_text);
+        
+        if (!MCStringIsNative((MCStringRef)p_text))
+        {
+            t_is_unicode_string = true;
+            uindex_t t_length;
+            /* UNCHECKED */ MCStringConvertToUTF8((MCStringRef)p_text, &t_data, t_length);
+            t_ptr = *t_data;
+            t_limit = t_ptr + t_length;
+            
+        }
+        else
+        {
+            t_native_string . Lock((MCStringRef)p_text);
+            t_ptr = *t_native_string;
+            t_limit = t_ptr + MCStringGetLength((MCStringRef)p_text);
+        }
+    }
+    else if (t_code == kMCValueTypeCodeData)
+    {
+        t_ptr = (const char *)MCDataGetBytePtr((MCDataRef)p_text);
+        t_limit = t_ptr + MCDataGetLength((MCDataRef)p_text);
     }
     else
     {
-            t_ptr = (const char *)MCDataGetBytePtr((MCDataRef)p_text);
-            t_limit = t_ptr + MCDataGetLength((MCDataRef)p_text);
+        t_ptr = "";
+        t_limit = t_ptr;
     }
     
 	import_html_t ctxt;

@@ -1399,7 +1399,7 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 	uint4 endp_count = MCStringGetLength(p_sentinel) - 1;
 
     uint4 t_string_size = 0;
-	Boolean doingspace = True;
+    Boolean doingspace = True;
 
     while (p_count)
     {

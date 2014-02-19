@@ -1450,11 +1450,14 @@ IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output)
     // TODO Change to MCDataRef or change Shell to MCStringRef
     MCAutoDataRef t_data;
     
-    int t_retcode;
+    int t_retcode = 0;
     if (!MCsystem -> Shell(p_command, &t_data, t_retcode))
         return IO_ERROR;
 
-    MCresult -> setnvalue(t_retcode);
+    if (t_retcode)
+        MCresult -> setnvalue(t_retcode);
+    else
+        MCresult -> clear();
     
     MCAutoStringRef t_data_string;
     // MW-2013-08-07: [[ Bug 11089 ]] The MCSystem::Shell() call returns binary data,
