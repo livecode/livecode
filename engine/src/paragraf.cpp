@@ -1782,13 +1782,19 @@ void MCParagraph::replacetextwithparagraphs(findex_t p_start, findex_t p_finish,
         // t_last_paragraph is meant to point to the last
         // paragraph of p_pglist
         MCParagraph *t_last_paragraph = p_pglist;
-        for (; t_last_paragraph -> next() != p_pglist; t_last_paragraph = t_last_paragraph -> next())
+        for (; t_last_paragraph -> next() != p_pglist; t_last_paragraph = t_last_paragraph -> prev())
             ;
         t_last_paragraph -> append(next());
     }
 
-    // Append p_pglist to this
-    append(p_pglist);
+    // Append p_pglist to this if this is not the only, empty paragraph
+    if (MCStringIsEmpty(m_text) && next() == this)
+    {
+        MCParagraph *t_old = this;
+        delete t_old;
+    }
+    else
+        append(p_pglist);
 }
 
 void MCParagraph::split() //split paragraphs on return

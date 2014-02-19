@@ -1447,6 +1447,13 @@ void MCField::SetStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, 
 {
     state |= CS_NO_FILE; // prevent interactions while downloading images
     MCParagraph *stpgptr = styledtexttoparagraphs(value);
+
+    uint4 oc = 0;
+    while (opened)
+    {
+        close();
+        oc++;
+    }
     
     deletetext(p_start , p_finish);
     
@@ -1457,6 +1464,10 @@ void MCField::SetStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, 
         t_insert_paragraph -> replacetextwithparagraphs(p_start, p_start, stpgptr);
     }
     
+    while (oc--)
+    {
+        open();
+    }
     state &= ~CS_NO_FILE;
 }
 
@@ -2329,13 +2340,14 @@ void MCField::GetTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, i
 
 void MCField::GetEffectiveTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t& r_value)
 {
-    integer_t *t_value_ptr;
+    integer_t t_value = 0;
+    integer_t *t_value_ptr = &t_value;
     GetCharPropOfCharChunk< OptionalFieldPropType<PodFieldPropType<integer_t> > >(ctxt, this, p_part_id, si, ei, &MCBlock::GetTextShift, true, 0, r_mixed, t_value_ptr);
 
     if (r_mixed)
         return;
-    
-    r_value = *t_value_ptr;
+
+    r_value = t_value;
 }
 
 void MCField::SetTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t* p_value)
