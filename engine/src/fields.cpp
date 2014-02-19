@@ -415,6 +415,11 @@ findex_t MCField::getpgsize(MCParagraph *pgptr)
 
 void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid)
 {
+    setparagraphs(newpgptr, parid, INTEGER_MIN, INTEGER_MIN);
+}
+
+void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start, findex_t p_end)
+{
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
 	else
@@ -422,28 +427,85 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid)
 			parid = getcard()->getid();
 	MCCdata *fptr = getcarddata(fdata, parid, True);
 	MCParagraph *pgptr = fptr->getparagraphs();
+    MCParagraph *t_old_pgptr;
+
 	if (opened && fptr == fdata)
 		closeparagraphs(pgptr);
 	if (pgptr == paragraphs)
 		paragraphs = NULL;
 	if (pgptr == oldparagraphs)
-		oldparagraphs = NULL;
-	while (pgptr != NULL)
-	{
-		MCParagraph *tpgptr = pgptr->remove
-		                      (pgptr);
-		delete tpgptr;
-	}
-	
+        oldparagraphs = NULL;
+
+    // Save the current paragraphs and switch to the one to be processed
+    t_old_pgptr = paragraphs;
+    paragraphs = pgptr;
+
+    // Must simply delete the whole lot of paragraphs (old execution)
+    if (p_start == p_end && p_end == INTEGER_MIN)
+    {
+        while (paragraphs != NULL)
+        {
+            MCParagraph *tpgptr = paragraphs->remove(paragraphs);
+            delete tpgptr;
+        }
+        paragraphs = newpgptr;
+
+        fptr->setparagraphs(paragraphs);
+    }
+    else
+    {
+        // New execution, only deleting a part of the paragraphs
+
+        uint4 oc = 0;
+        while (opened)
+        {
+            close();
+            oc++;
+        }
+
+        // delete the text to be replaced
+        deletetext(p_start, p_end);
+
+        MCParagraph *t_insert_paragraph;
+        // Fetch the paragraph in which to insert the new paragraphs (and update the position)
+        t_insert_paragraph = indextoparagraph(paragraphs, p_start, p_end);
+
+        // Split if needed
+        if (p_start > t_insert_paragraph -> gettextlength())
+            t_insert_paragraph -> split(p_start);
+
+        // Insert the paragraph beyond the split after the new paragraphs
+        if (t_insert_paragraph -> next() != t_insert_paragraph)
+            newpgptr -> append(t_insert_paragraph -> next());
+
+        // Cleanup the empty paragraph left if everything has been deleted
+        if (t_insert_paragraph == paragraphs &&
+                paragraphs -> next() == paragraphs &&
+                paragraphs -> gettextlength() == 0)
+        {
+            delete paragraphs;
+            paragraphs = newpgptr;
+        }
+        else
+            // Otherwise append the new paragraphs at the index
+            t_insert_paragraph -> append(newpgptr);
+
+        fptr->setparagraphs(paragraphs);
+
+        while (oc--)
+        {
+            open();
+        }
+    }
+
+
 	// MW-2008-03-13: [[ Bug 5383 ]] Crash when saving after initiating a URL download
 	//   Here it is important to 'setparagraphs' on the MCCdata object *before* opening. This
 	//   is because it is possible for URL downloads to be initiated in openparagraphs, which 
 	//   allow messages to be processed which allows a save to occur and its important that
 	//   the field be in a consistent state.
 	if (opened && fptr == fdata)
-	{
-		paragraphs = newpgptr;
-		fptr->setparagraphs(newpgptr);
+    {
 		openparagraphs();
 		do_recompute(true);
 
@@ -451,7 +513,9 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid)
 		layer_redrawall();
 	}
 	else
-		fptr->setparagraphs(newpgptr);
+    {
+        paragraphs = t_old_pgptr;
+    }
 }
 
 Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean formatted)

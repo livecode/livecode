@@ -1392,7 +1392,7 @@ void MCField::SetRtfTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int
 {
     state |= CS_NO_FILE; // prevent interactions while downloading images
 
-    resolveparagraphs(p_part_id) -> replacetextwithparagraphs(p_start, p_finish, rtftoparagraphs(value));
+    setparagraphs(rtftoparagraphs(value), p_part_id, p_start, p_finish);
 
     state &= ~CS_NO_FILE;
 }
@@ -1422,7 +1422,7 @@ void MCField::SetHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, in
     }
     state |= CS_NO_FILE; // prevent interactions while downloading images
     // MW-2012-03-08: [[ FieldImport ]] Use the new htmlText importer.
-    resolveparagraphs(p_part_id) -> replacetextwithparagraphs(p_start, p_finish, importhtmltext(value));
+    setparagraphs(importhtmltext(value), p_part_id, p_start, p_finish);
 
     state &= ~CS_NO_FILE;
 }
@@ -1448,26 +1448,8 @@ void MCField::SetStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, 
     state |= CS_NO_FILE; // prevent interactions while downloading images
     MCParagraph *stpgptr = styledtexttoparagraphs(value);
 
-    uint4 oc = 0;
-    while (opened)
-    {
-        close();
-        oc++;
-    }
+    setparagraphs(stpgptr, p_part_id, p_start, p_finish);
     
-    deletetext(p_start , p_finish);
-    
-    if (stpgptr != nil)
-    {
-        MCParagraph *t_insert_paragraph;
-        t_insert_paragraph = indextoparagraph(paragraphs, p_start, p_finish);
-        t_insert_paragraph -> replacetextwithparagraphs(p_start, p_start, stpgptr);
-    }
-    
-    while (oc--)
-    {
-        open();
-    }
     state &= ~CS_NO_FILE;
 }
 
