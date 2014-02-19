@@ -511,7 +511,7 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 		// Special keys as their number converted to a string, the rest by value
 		if (key > 0x7F && (key & XK_Class_mask) == XK_Class_compat)
 			/* UNCHECKED */ MCStringFormat(&t_string, "%ld", key);
-        else if (MCmodifierstate & MS_CONTROL)
+            else if (MCmodifierstate & MS_CONTROL)
             /* UNCHECKED */ MCStringFormat(&t_string, "%c", (char)key);
 		else
 			t_string = p_string;
@@ -3485,8 +3485,17 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		//     uint32 id
 		//     cstring stack
 		//     cstring mainstack
-		t_size += 1 + 1 + 4 + MCStringGetLength(MCNameGetString(parent_script -> GetParent() -> GetObjectStack())) + 1;
-		t_size += 1; // was mainstack reference
+        
+        // in 5.5 format, the length of the string + 1 (for nul char) is written out,
+        // whereas in 7.0 we write out the 32-bit length and then the string.
+        
+        t_size += 1 + 1 + 4 + MCStringGetLength(MCNameGetString(parent_script -> GetParent() -> GetObjectStack()));
+
+        // for < 7.0, add 2 (for the 2 nul terminators). For >= 7.0, add 8 for the 2 uint32s
+        if (MCstackfileversion < 7000)
+            t_size += 2;
+        else
+            t_size += 8;
 	}
 
 	// MW-2009-09-24: Slight oversight on my part means that there is no record
