@@ -666,15 +666,19 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 		{
 			// The filter string has the following format:
 			// "<description0>\0<extensions0>\0<description1>\0...\0<extensionsN>\0"
-			// so the n'th filter comes after the (2n - 1)'th null character
-			uindex_t t_index = t_filter_index * 2 - 1;
+			// so the n'th filter comes after the 2(n - 1)'th null character
+			uindex_t t_index = 2 * (t_filter_index - 1);
 			uindex_t t_offset = 0;
-			for (uindex_t t_index = t_filter_index * 2 - 1; t_index > 0; t_index--)
+			while (t_index--)
+			{
 				/* UNCHECKED */ MCStringFirstIndexOfChar(p_filter, '\0', t_offset, kMCStringOptionCompareExact, t_offset);
+				t_offset++;
+			}
 			
 			uindex_t t_end;
+			t_end = UINDEX_MAX;
 			/* UNCHECKED */ MCStringFirstIndexOfChar(p_filter, '\0', t_offset, kMCStringOptionCompareExact, t_end);
-
+            
 			/* UNCHECKED */ MCStringCopySubstring(p_filter, MCRangeMake(t_offset, t_end-t_offset), r_result);
 		}
 
