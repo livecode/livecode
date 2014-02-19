@@ -90,7 +90,7 @@ bool MCJavaMapToArray(JNIEnv *p_env, MCExecPoint &p_ep, jobject p_map, MCVariabl
 bool MCJavaMapFromArray(JNIEnv *p_env, MCArrayRef p_array, jobject &r_object);
 bool MCJavaMapToArray(JNIEnv *p_env, jobject p_map, MCArrayRef &r_array);
 
-typedef bool (*MCJavaMapCallback)(JNIEnv *env, const char *p_key, jobject p_value, void *p_context);
+typedef bool (*MCJavaMapCallback)(JNIEnv *env, MCNameRef p_key, jobject p_value, void *p_context);
 bool MCJavaIterateMap(JNIEnv *env, jobject p_map, MCJavaMapCallback p_callback, void *p_context);
 
 bool MCJavaObjectGetField(JNIEnv *env, jobject p_object, const char *p_fieldname, MCJavaType p_fieldtype, void *r_value);
