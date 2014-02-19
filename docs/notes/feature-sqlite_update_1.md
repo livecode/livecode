@@ -1,7 +1,7 @@
 # SQLite support updated and improved
-The version of SQLite has been updated to 3.8.2.
+The version of SQLite has been updated to 3.8.3.
 
-The SQLite RTREE module is now available.
+The SQLite library has been compiled with options - FTS3, FTS4, FTS3_PARANTHESIS and RTREE.
 
 SQLite loadable extensions are now supported. To utilize loadable extensions, the 'extensions' option must be passed to the revOpenDatabase() call when creating the database connection (see below).
 
@@ -21,5 +21,3 @@ For example:
    put revOpenDatabase("sqlite", "mydb.sqlite", "binary") -- open the connection in the 'new' binary mode
    put revOpenDatabase("sqlite", "mydb.sqlite", "extensions") -- enable loadable extensions for this connection
    put revOpenDatabase("sqlite", "mydb.sqlite", "binary,extensions") -- enable both 'new' binary mode and loadable extensions
-
-Note: We are hoping to update SQLite to 3.8.3 before release - assuming that SQLite has declared that version stable before then.
