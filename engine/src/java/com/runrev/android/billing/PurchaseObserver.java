@@ -48,6 +48,9 @@ public abstract class PurchaseObserver
 	// Sent to the observer once product details have been successfully received
     public abstract void onProductDetailsReceived(String productId);
     
+    // Sent to the observer once product details have NOT been successfully received
+    public abstract void onProductDetailsError(String productId, String error);
+    
 //	public abstract void onGetPurchaseInformationResponse(GetPurchaseInformation request, ResponseCode responseCode);
 
 	void startBuyPageActivity(PendingIntent pendingIntent, Intent intent)

@@ -244,6 +244,7 @@ public class GoogleBillingProvider implements BillingProvider
                     if (skuDetails == null)
                     {
                         Log.d(TAG, "No product found with the specified ID : " + productId + " !");
+						mPurchaseObserver.onProductDetailsError(productId, "No product found with the specified ID");
                         return;
                     }
                    

@@ -2064,6 +2064,19 @@ public class Engine extends View implements EngineApi
                 }
             });
         }
+        
+        public void onProductDetailsError(String productId, String error)
+        {
+            final String tProductId = productId;
+            final String tError = error;
+            post(new Runnable() {
+                public void run() {
+                    doProductDetailsError(tProductId, tError);
+                    if (m_wake_on_event)
+                        doProcess(false);
+                }
+            });
+        }
 		
 /*
 		public void onPurchaseStateChanged(Purchase purchase, boolean verified, String signedData, String signature)
@@ -2846,6 +2859,8 @@ public class Engine extends View implements EngineApi
 	public static native void doRestoreTransactionsResponse(int responseCode);
 	public static native void doRequestPurchaseResponse(int purchaseId, int responseCode);
     public static native void doProductDetailsResponse(String productId);
+    public static native void doProductDetailsError(String productId, String error);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

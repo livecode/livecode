@@ -459,6 +459,7 @@ public class SamsungBillingProvider implements BillingProvider
             
         }
 
+        mPurchaseObserver.onProductDetailsError(productId, "No product found with the specified ID");
         Log.d(TAG, " Item not found. (Item : " + productId + ")");
 
         return false;

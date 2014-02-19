@@ -714,6 +714,8 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRequestPurchaseResponse(
 }
 
 bool MCStorePostProductRequestResponse(const char *p_product_id);
+bool MCStorePostProductRequestError(const char *p_product, const char *p_error);
+
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProductDetailsResponse(JNIEnv *env, jobject object, jstring productId) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProductDetailsResponse(JNIEnv *env, jobject object, jstring productId)
@@ -724,6 +726,18 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProductDetailsResponse(J
     t_success = MCCStringFromJava(env, productId, t_product_id);
     if (t_success)
         t_success = MCStorePostProductRequestResponse(t_product_id);
+}
+
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProductDetailsError(JNIEnv *env, jobject object, jstring productId, jstring error) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProductDetailsError(JNIEnv *env, jobject object, jstring productId, jstring error)
+{
+    bool t_success = true;
+    
+    char *t_product_id = nil;
+    char *t_error = nil;
+    t_success = MCCStringFromJava(env, productId, t_product_id) && MCCStringFromJava(env, error, t_error);
+    if (t_success)
+        t_success = MCStorePostProductRequestError(t_product_id, t_error);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -761,17 +775,20 @@ public:
     void Destroy();
     
 private:
-    const char *m_product_id;
+    char *m_product_id;
 };
 
 MCStoreProductRequestResponseEvent::MCStoreProductRequestResponseEvent(const char *p_product_id)
 {
-    m_product_id = p_product_id;
+    m_product_id = nil;
+    MCCStringClone(p_product_id, m_product_id);
 }
 
 void MCStoreProductRequestResponseEvent::Destroy()
 {
-    m_product_id = nil;
+    MCCStringFree(m_product_id);
+    
+    delete this;
 }
 
 
@@ -882,6 +899,58 @@ bool MCStorePostProductRequestResponse(const char *p_product_id)
     return t_success;
 }
 
+////////
+
+class MCStoreProductRequestErrorEvent : public MCCustomEvent
+{
+public:
+    MCStoreProductRequestErrorEvent(const char *p_product, const char *p_error);
+    
+    void Destroy();
+    void Dispatch();
+    
+private:
+    char *m_product;
+    char *m_error;
+};
+
+MCStoreProductRequestErrorEvent::MCStoreProductRequestErrorEvent(const char *p_product, const char *p_error)
+{
+    m_product = m_error = nil;
+    
+    MCCStringClone(p_product, m_product);
+    MCCStringClone(p_error, m_error);
+}
+
+void MCStoreProductRequestErrorEvent::Destroy()
+{
+    MCCStringFree(m_product);
+    MCCStringFree(m_error);
+    
+    delete this;
+}
+
+void MCStoreProductRequestErrorEvent::Dispatch()
+{
+    MCdefaultstackptr->getcurcard()->message_with_args(MCM_product_request_error, m_product, m_error);
+}
+
+bool MCStorePostProductRequestError(const char *p_product, const char *p_error)
+{
+    bool t_success;
+    MCCustomEvent *t_event = nil;
+    t_event = new MCStoreProductRequestErrorEvent(p_product, p_error);
+    t_success = t_event != nil;
+    
+    if (t_success)
+        MCEventQueuePostCustom(t_event);
+    
+    return t_success;
+}
+
+////////
+
+
 Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
 {
     bool t_success = true;
@@ -903,9 +972,6 @@ bool MCStoreRequestProductDetails(const char *p_product_id)
     bool t_result;
     
     MCAndroidEngineRemoteCall("storeRequestProductDetails", "bs", &t_result, p_product_id);
-    
-    //if (t_result)
-        //MCStorePostProductRequestResponse(p_product_id);
     
     return t_result;
     

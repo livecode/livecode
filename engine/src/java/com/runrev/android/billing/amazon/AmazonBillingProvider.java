@@ -240,6 +240,7 @@ public class AmazonBillingProvider implements BillingProvider
         private String currentUserID = null;
         public Map<String, String> requestIds;
         private Map<String, Item> availableSkus;
+        private Set<String> unavailableSkus;
         
         private static final String TAG = "IAPPurchasingObserver";
         
@@ -315,6 +316,9 @@ public class AmazonBillingProvider implements BillingProvider
             }
             else
             {
+                unavailableSkus = response.getUnavailableSkus();
+                for (String unavailableSku : unavailableSkus)
+                    mPurchaseObserver.onProductDetailsError(unavailableSku, "No product found with the specified ID");
                 Log.v(TAG, "onItemDataResponse: Unable to get Item data.");
             }
         }

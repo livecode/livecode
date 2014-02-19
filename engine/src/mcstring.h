@@ -419,6 +419,7 @@ extern MCNameRef MCM_input_end_editing;
 extern MCNameRef MCM_input_return_key;
 extern MCNameRef MCM_input_text_changed;
 extern MCNameRef MCM_product_details_received;
+extern MCNameRef MCM_product_request_error;
 #endif
 
 #ifdef _IOS_MOBILE
@@ -435,7 +436,7 @@ extern MCNameRef MCM_player_movie_changed;
 extern MCNameRef MCM_player_stopped;
 extern MCNameRef MCM_reachability_changed;
 //extern MCNameRef MCM_product_details_received;
-extern MCNameRef MCM_product_request_error;
+//extern MCNameRef MCM_product_request_error;
 extern MCNameRef MCM_protected_data_available;
 extern MCNameRef MCM_protected_data_unavailable;
 
