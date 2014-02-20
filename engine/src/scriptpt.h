@@ -41,9 +41,9 @@ class MCScriptPoint
 	MCObject *curobj;
 	MCHandlerlist *curhlist;
 	MCHandler *curhandler;
-	const uint1 *curptr;
-	const uint1 *tokenptr;
-	const uint1 *backupptr;
+	const unichar_t *curptr;
+	const unichar_t *tokenptr;
+	const unichar_t *backupptr;
 	MCString token;
 	MCNameRef token_nameref;
 	uint2 line;
@@ -51,6 +51,11 @@ class MCScriptPoint
 	Boolean escapes;
 	Symbol_type m_type;
 	
+    uint32_t length;
+    MCDataRef utf16_script;
+    const unichar_t *utf16_curptr;
+    uindex_t index;
+    
 	// MW-2011-06-23: If this is true, then we parse the script in 'tag' mode.
 	Boolean tagged;
 	// MW-2011-06-23: This is true if we are currently consuming tokens inside
@@ -127,7 +132,7 @@ public:
 		return curhlist;
 	}
 
-	const uint1 *getcurptr(void)
+	const unichar_t *getcurptr(void)
 	{
 		return curptr;
 	}
@@ -164,6 +169,9 @@ public:
 	// doesn't exist. A uql-var starts off with the same content as its
 	// name, but as soon as its used as a container becomes empty.
 	Parse_stat finduqlvar(MCNameRef name, MCVarref** r_var);
+    
+    Symbol_type gettype(codepoint_t p_codepoint, bool p_is_plus_one = false);
+    bool is_identifier(codepoint_t p_codepoint, bool p_initial);
 };
 #endif
 
