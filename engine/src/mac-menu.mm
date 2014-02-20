@@ -316,8 +316,8 @@ void MCMacPlatformUnlockMenuSelect(void)
 	t_key_equiv = [super performKeyEquivalent: event];
 	MCMacPlatformUnlockMenuSelect();
 	
-	[[[event window] contentView] keyDown: event];
-	[[[event window] contentView] keyUp: event];
+	[[[event window] contentView] handleKeyPress: event isDown: YES];
+	[[[event window] contentView] handleKeyPress: event isDown: NO];
 	
 	return YES;
 }
