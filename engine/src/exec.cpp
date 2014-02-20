@@ -2121,9 +2121,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             bool t_mixed;
             uinteger_t t_value;
-            uinteger_t *t_value_ptr;
-            t_value_ptr = &t_value;
-            ((void(*)(MCExecContext&, void *, bool&, uinteger_t*&))prop -> getter)(ctxt, mark, t_mixed, t_value_ptr);
+            ((void(*)(MCExecContext&, void *, bool&, uinteger_t&))prop -> getter)(ctxt, mark, t_mixed, t_value);
             if (!ctxt . HasError())
             {
                 if (t_mixed)
