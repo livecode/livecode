@@ -480,26 +480,30 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start
         // delete the text to be replaced
         deletetext(p_start, p_end);
 
+        MCParagraph *t_lastpgptr;
         MCParagraph *t_insert_paragraph;
         // Fetch the paragraph in which to insert the new paragraphs (and update the position)
         t_insert_paragraph = indextoparagraph(paragraphs, p_start, p_end);
+
+        if (paragraphs -> prev() == paragraphs)
+            t_lastpgptr = NULL;
+        else
+            t_lastpgptr = paragraphs -> prev();
 
         // Split if needed
         if (p_start > t_insert_paragraph -> gettextlength())
             t_insert_paragraph -> split(p_start);
 
         // Insert the paragraph beyond the split after the new paragraphs
-        if (t_insert_paragraph -> next() != t_insert_paragraph)
+        if (t_insert_paragraph -> next() != paragraphs)
             newpgptr -> append(t_insert_paragraph -> next());
 
         t_insert_paragraph -> append(newpgptr);
-        t_insert_paragraph -> join();
 
-        MCParagraph *t_lastpgptr;
-        if (paragraphs -> prev() == paragraphs)
-            t_lastpgptr = paragraphs;
-        else
+        if (t_lastpgptr == NULL)
             t_lastpgptr = t_insert_paragraph;
+        else
+            t_insert_paragraph -> defrag();
 
         t_lastpgptr->join();
         t_lastpgptr->defrag();
