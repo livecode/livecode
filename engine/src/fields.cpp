@@ -455,8 +455,22 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start
     else
     {
         // New execution, only deleting a part of the paragraphs
-
         uint4 oc = 0;
+
+        uint4 oldstate = state;
+        bool t_refocus;
+        if (focused == this)
+            t_refocus = true;
+        else
+            t_refocus = false;
+        if (state & CS_KFOCUSED)
+            kunfocus();
+
+        // MW-2012-09-07: [[ 10374 ]] Make sure we preseve the drag* vars since
+        //   closing and opening the field will clear them.
+        bool t_was_dragdest, t_was_dragsource;
+        t_was_dragdest = MCdragdest == this;
+        t_was_dragsource = MCdragsource == this;
         while (opened)
         {
             close();
@@ -478,17 +492,17 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start
         if (t_insert_paragraph -> next() != t_insert_paragraph)
             newpgptr -> append(t_insert_paragraph -> next());
 
-        // Cleanup the empty paragraph left if everything has been deleted
-        if (t_insert_paragraph == paragraphs &&
-                paragraphs -> next() == paragraphs &&
-                paragraphs -> gettextlength() == 0)
-        {
-            delete paragraphs;
-            paragraphs = newpgptr;
-        }
+        t_insert_paragraph -> append(newpgptr);
+        t_insert_paragraph -> join();
+
+        MCParagraph *t_lastpgptr;
+        if (paragraphs -> prev() == paragraphs)
+            t_lastpgptr = paragraphs;
         else
-            // Otherwise append the new paragraphs at the index
-            t_insert_paragraph -> append(newpgptr);
+            t_lastpgptr = t_insert_paragraph;
+
+        t_lastpgptr->join();
+        t_lastpgptr->defrag();
 
         fptr->setparagraphs(paragraphs);
 
@@ -496,6 +510,21 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start
         {
             open();
         }
+
+        // MW-2012-09-07: [[ 10374 ]] Make sure we preseve the drag* vars since
+        //   closing and opening the field will clear them.
+        if (t_was_dragsource)
+            MCdragsource = this;
+        if (t_was_dragdest)
+            MCdragdest = this;
+
+        if (oldstate & CS_KFOCUSED)
+            kfocus();
+        // MW-2008-03-25: Make sure we reset focused to this field - otherwise mouseMoves aren't
+        //   sent to the field after doing a partial htmlText update.
+        if (t_refocus)
+            focused = this;
+        state = oldstate;
     }
 
 
