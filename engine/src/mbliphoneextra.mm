@@ -1318,6 +1318,8 @@ extern Exec_stat MCHandleMakePurchase(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleConfirmPurchase(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleConsumePurchase(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleGetPurchases(void *context, MCParameter *p_parameters);
 
 
 extern Exec_stat MCHandleComposeTextMessage(void *, MCParameter *);
@@ -1668,8 +1670,10 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobileGetPurchaseProperty", MCHandleGetPurchaseProperty, nil},
     {false, "mobileProductSetType", MCHandleProductSetType, nil},
     {false, "mobileRequestProductDetails", MCHandleRequestProductDetails, nil},
-    
-    
+    {false, "mobileConsumePurchase", MCHandleConsumePurchase, nil},
+    {false, "mobileGetPurchases", MCHandleGetPurchases, nil},
+    //{false, "mobileGetPurchases", MCHandlePurchaseList, nil},
+
     {false, "iphoneRequestProductDetails", MCHandleRequestProductDetails, nil},
     
     {true, "mobilePickContact", MCHandlePickContact, nil},       // ABPeoplePickerNavigationController

@@ -849,7 +849,27 @@ bool MCStoreConsumePurchase(char const*)
 
 char *MCStoreGetPurchaseList()
 {
-    return nil;
+    bool found;
+    
+    MCExecPoint ep(nil,nil,nil);
+    for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != nil; t_purchase = t_purchase->next)
+    {
+        found = false;
+        for (MCPurchase *t_next_purchase = t_purchase->next ; t_next_purchase != nil; t_next_purchase = t_next_purchase->next)
+        {
+            if (strcmp(t_next_purchase->prod_id, t_purchase->prod_id) == 0)
+            {
+                found = true;
+                break;
+            }
+        }
+        
+        if (!found)
+        {
+            ep.concatcstring(t_purchase->prod_id, EC_RETURN, ep.isempty());
+        }
+    }
+    return strdup(ep.getcstring());
 }
 
 bool MCStoreSetPurchaseProperty(char const*, char const*, char const*)
