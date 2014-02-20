@@ -677,17 +677,17 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 						MCperror -> add(PE_IMPORT_BADFILENAME, sp);
 						return PS_ERROR;
 					}
-					
-					if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
-					{
-						if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
-							sp . parseexp(False, True, &size) != PS_NORMAL)
-						{
-							MCperror -> add(PE_IMPORT_BADFILENAME, sp);
-							return PS_ERROR;
-						}
-					}
 				}
+			}
+		}
+		
+		if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
+		{
+			if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
+				sp . parseexp(False, True, &size) != PS_NORMAL)
+			{
+				MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+				return PS_ERROR;
 			}
 		}
 	}
@@ -943,7 +943,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			t_bitmap = MCscreen->snapshot(r, w, sdisp, nil);
+			t_bitmap = MCscreen->snapshot(r, w, sdisp, size == NULL ? nil : &t_wanted_size);
 			if (t_bitmap == nil)
 			{
 				delete sdisp;
@@ -1669,18 +1669,19 @@ Parse_stat MCImport::parse(MCScriptPoint &sp)
 					}
 				}
 			}
-			
-			// MW-2014-02-20: [[ Bug 11811 ]] Add the 'at size' clause to screen snapshot.
-			if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
+		}
+		
+		// MW-2014-02-20: [[ Bug 11811 ]] Add the 'at size' clause to screen snapshot.
+		if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
+		{
+			if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
+				sp . parseexp(False, True, &size) != PS_NORMAL)
 			{
-				if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
-					sp . parseexp(False, True, &size) != PS_NORMAL)
-				{
-					MCperror -> add(PE_IMPORT_BADFILENAME, sp);
-					return PS_ERROR;
-				}
+				MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+				return PS_ERROR;
 			}
 		}
+		
 		return PS_NORMAL;
 	}
 	if (sp.skip_token(SP_FACTOR, TT_FROM) != PS_NORMAL)
