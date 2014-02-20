@@ -840,6 +840,8 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *di
 	for(uint4 t_index = 1; t_index < t_display_count; ++t_index)
 		t_virtual_viewport = MCU_union_rect(t_virtual_viewport, t_displays[t_index] . viewport);
 
+	t_virtual_viewport . width = 500;
+
 	HWND hwndsnap = CreateWindowExA(WS_EX_TRANSPARENT | WS_EX_TOPMOST,
 	                               MC_SNAPSHOT_WIN_CLASS_NAME,"", WS_POPUP, t_virtual_viewport . x, t_virtual_viewport . y,
 	                               t_virtual_viewport . width, t_virtual_viewport . height, invisiblehwnd,
@@ -878,7 +880,7 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *di
 			TranslateMessage(&msg);
 			DispatchMessageA(&msg);
 		}
-		r = snaprect;
+		r = screentologicalrect(snaprect);
 	}
 	
 	int t_width, t_height;
@@ -925,8 +927,8 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *di
 		
 		if (size != nil)
 		{
-			t_width = size -> width;
-			t_height = size -> height;
+			t_width = size -> x;
+			t_height = size -> y;
 		}
 		else
 		{
@@ -934,6 +936,8 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *di
 			t_height = r . height;
 		}
 		
+		r = logicaltoscreenrect(r);
+
 		if (r.width != 0 && r.height != 0)
 		{
 			if (create_temporary_dib(snapdesthdc, t_width, t_height, newimage, t_bits))
@@ -978,7 +982,7 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *di
 		MCMemoryClear(&t_out_fmt, sizeof(BITMAPINFOHEADER));
 		t_out_fmt.biSize = sizeof(BITMAPINFOHEADER);
 		t_out_fmt.biWidth = t_width;
-		t_out_fmt.biHeight = -(int32_t)t_hegiht;
+		t_out_fmt.biHeight = -(int32_t)t_height;
 		t_out_fmt.biPlanes = 1;
 		t_out_fmt.biBitCount = 32;
 		t_out_fmt.biCompression = BI_RGB;

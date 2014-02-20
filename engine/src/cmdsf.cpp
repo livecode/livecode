@@ -1865,7 +1865,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 		else
 		{
 			// MW-2014-02-20: [[ Bug 11811 ]] Pass the wanted size to the snapshot method.
-			t_bitmap = MCscreen->snapshot(r, w, disp, &t_wanted_size);
+			t_bitmap = MCscreen->snapshot(r, w, disp, size != nil ? &t_wanted_size : nil);
 
 			delete disp;
 		}
