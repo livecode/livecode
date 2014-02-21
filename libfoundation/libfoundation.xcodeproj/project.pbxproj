@@ -267,7 +267,7 @@
 					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
 					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
 					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
-					"$(SOLUTION_DIR)/prebuilt/include",
+					"\"$(SOLUTION_DIR)/prebuilt/include\"",
 				);
 				PRODUCT_NAME = foundation;
 			};
@@ -299,7 +299,7 @@
 					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
 					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
 					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
-					"$(SOLUTION_DIR)/prebuilt/include",
+					"\"$(SOLUTION_DIR)/prebuilt/include\"",
 				);
 				PRODUCT_NAME = foundation;
 			};
