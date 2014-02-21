@@ -3662,12 +3662,10 @@ void MCButton::docascade(MCStringRef p_pick)
 				t_label = pptr->getlabeltext();
 			
 			if (*t_pick == nil)
-                /* UNCHECKED */ MCStringMutableCopy(t_label, &t_pick);
-            else
-            {
-                /* UNCHECKED */ MCStringPrependChar(*t_pick, '|');
-                /* UNCHECKED */ MCStringPrepend(*t_pick, t_label);
-            }
+                /* UNCHECKED */ MCStringMutableCopy(p_pick, &t_pick);
+            
+            /* UNCHECKED */ MCStringPrependChar(*t_pick, '|');
+            /* UNCHECKED */ MCStringPrepend(*t_pick, t_label);
 
 			pptr = (MCButton *)pptr->parent->getparent()->getparent();
 			pptr->state |= CS_IGNORE_MENU;
