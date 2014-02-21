@@ -850,25 +850,32 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
     if (self -> flags & kMCStringFlagIsChecked)
         t_scan_end = p_in_range.offset + p_in_range.length;
     else
+    {
         t_scan_end = self -> char_count;
+        // The whole string is going to be checked for simplicity
+        self -> flags |= kMCStringFlagIsChecked;
+    }
     
     // Scan through the string, counting the number of codepoints
     bool t_is_simple = true;
-    uindex_t t_counter = 0;
+    uindex_t t_cp_counter = 0;
+    uindex_t t_codeunit_pos = 0;
     MCRange t_units = MCRangeMake(0, 0);
-    while (t_counter < t_scan_end)
+    // If we are scanning the whole string, the end comes when all the codeunits have been processed
+    // Otherwise, we have an amount of codepoints to read, not codeunits
+    while (t_codeunit_pos < t_scan_end)
     {
         // Is this a single code unit or a valid surrogate pair?
         uindex_t t_length;
-        if (MCStringIsValidSurrogatePair(self, t_units.offset + t_units.length))
+        if (MCStringIsValidSurrogatePair(self, t_codeunit_pos))
             t_length = 2, t_is_simple = false;
         else
             t_length = 1;
         
         // Update the appropriate field of the output
-        if (t_counter < p_in_range.offset)
+        if (t_codeunit_pos < p_in_range.offset)
             t_units.offset += t_length;
-        else if (t_counter < p_in_range.offset + p_in_range.length)
+        else if (t_cp_counter < p_in_range.offset + p_in_range.length)
             t_units.length += t_length;
         
         // Make sure we haven't exceeded the length of the string
@@ -883,7 +890,8 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
             break;
         }
         
-        t_counter++;
+        ++t_cp_counter;
+        t_codeunit_pos += t_length;
     }
     
     // If no surrogates were found, mark the string as simple
@@ -2739,6 +2747,7 @@ static void __MCStringChanged(MCStringRef self, bool simple)
     else
         self -> flags &= ~kMCStringFlagIsSimple;
     
+    self -> flags &= ~kMCStringFlagIsChecked;
     MCMemoryDeleteArray(self -> native_chars);
 	self -> native_chars = nil;
 }
