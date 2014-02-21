@@ -110,7 +110,11 @@ public class SamsungBillingProvider implements BillingProvider
         boolean success = true;
         //Log.d(TAG, "Base Item id is : " + baseVO.getItemId());
         //Log.d(TAG, "Base Item name is : " + baseVO.getItemName());
-
+        if (success)
+        {
+            success = setPurchaseProperty(baseVO.getItemId(), "productId", baseVO.getItemId());
+            //Log.d(TAG, "Base productId loaded successfully");
+        }
         if (success)
         {
             success = setPurchaseProperty(baseVO.getItemId(), "title", baseVO.getItemName());

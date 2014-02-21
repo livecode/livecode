@@ -200,6 +200,8 @@ public class AmazonBillingProvider implements BillingProvider
     {
         boolean success = true;
         if (success)
+            success = setPurchaseProperty(receipt.getSku(), "productId", receipt.getSku());
+        if (success)
             success = setPurchaseProperty(receipt.getSku(), "itemType", receipt.getItemType().toString());
         
         if (success && receipt.getSubscriptionPeriod() != null)

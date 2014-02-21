@@ -807,7 +807,8 @@ void MCStoreProductRequestResponseEvent::Dispatch()
     const char *t_subscriptionDurationUnit = nil;
     const char *t_subscriptionDurationMultiplier= nil;
     
-    t_product_id = m_product_id;
+    //t_product_id = m_product_id;
+    t_product_id = MCStoreGetPurchaseProperty(m_product_id, "productId");
     t_description = MCStoreGetPurchaseProperty(m_product_id, "description");
     t_title = MCStoreGetPurchaseProperty(m_product_id, "title");
     t_itemType = MCStoreGetPurchaseProperty(m_product_id, "itemType");
@@ -825,6 +826,12 @@ void MCStoreProductRequestResponseEvent::Dispatch()
         t_response = new MCVariableValue();
         
         MCVariableValue *t_element = nil;
+        
+        if (t_product_id != nil)
+        {
+            t_response->lookup_element(ep, "productId", t_element);
+            t_element->assign_string(MCString(t_product_id));
+        }
       
         if (t_price != nil)
         {

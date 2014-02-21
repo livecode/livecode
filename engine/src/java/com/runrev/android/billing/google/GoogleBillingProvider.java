@@ -334,6 +334,8 @@ public class GoogleBillingProvider implements BillingProvider
     boolean addPurchaseToLocalInventory(Purchase purchase)
     {
         boolean success = true;
+		if (success)
+            success = setPurchaseProperty(purchase.getSku(), "productId", purchase.getSku());
         if (success)
             success = setPurchaseProperty(purchase.getSku(), "itemType", purchase.getItemType());
         
@@ -359,6 +361,8 @@ public class GoogleBillingProvider implements BillingProvider
 	boolean loadKnownItemToLocalInventory(SkuDetails skuDetails)
 	{
 		boolean success = true;
+		if (success)
+            success = setPurchaseProperty(skuDetails.getSku(), "productId", skuDetails.getSku());
         if (success)
             success = setPurchaseProperty(skuDetails.getSku(), "itemType", skuDetails.getType());
         
