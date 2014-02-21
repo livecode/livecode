@@ -37,13 +37,13 @@ struct Cvalue
 
 class MCScriptPoint
 {
-	MCDataRef script;
 	MCObject *curobj;
 	MCHandlerlist *curhlist;
 	MCHandler *curhandler;
 	const unichar_t *curptr;
 	const unichar_t *tokenptr;
 	const unichar_t *backupptr;
+    const unichar_t *endptr;
 	MCString token;
 	MCNameRef token_nameref;
 	uint2 line;
@@ -53,8 +53,8 @@ class MCScriptPoint
 	
     uint32_t length;
     MCDataRef utf16_script;
-    const unichar_t *utf16_curptr;
     uindex_t index;
+    uint1 curlength;
     
 	// MW-2011-06-23: If this is true, then we parse the script in 'tag' mode.
 	Boolean tagged;
@@ -111,10 +111,6 @@ public:
 	MCNameRef gettoken_nameref(void);
 	MCStringRef gettoken_stringref(void);
 
-	const char *getscript()
-	{
-		return (const char *)MCDataGetBytePtr(script);
-	}
 	MCObject *getobj()
 	{
 		return curobj;
@@ -170,8 +166,24 @@ public:
 	// name, but as soon as its used as a container becomes empty.
 	Parse_stat finduqlvar(MCNameRef name, MCVarref** r_var);
     
-    Symbol_type gettype(codepoint_t p_codepoint, bool p_is_plus_one = false);
+    Symbol_type gettype(codepoint_t p_codepoint);
+    
+    // A codepoint can be an initial character of an identifier if it
+    // - has type ST_ID
+    // - is a Unicode letter
+    // It can be part of an identifier if it can be an initial character, or it
+    // - has type ST_NUM
+    // - is a Unicode digit
+    // - is a Unicode combining mark
+    // - is a Unicode connector punctuation mark
     bool is_identifier(codepoint_t p_codepoint, bool p_initial);
+    
+    // Increment the index
+    void advance(uindex_t number = 0);
+    
+    codepoint_t getcurrent();
+    codepoint_t getnext();
+    codepoint_t getcodepointatindex(uindex_t index);
 };
 #endif
 
