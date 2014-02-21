@@ -373,10 +373,12 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 			}
 		}
 	}
-	MCAutoStringRef t_resolved_folder, t_initial_folder_native;
-	/* UNCHECKED */ MCS_resolvepath(*t_initial_folder != nil ? *t_initial_folder : kMCEmptyString, &t_resolved_folder);
-    /* UNCHECKED */ MCS_pathtonative(*t_resolved_folder, &t_initial_folder_native);
-
+    
+    MCAutoStringRef t_resolved_folder, t_initial_folder_native;
+    /* UNCHECKED */ MCS_resolvepath(*t_initial_folder != nil ? *t_initial_folder : kMCEmptyString, &t_resolved_folder);
+	if (*t_initial_folder != nil)
+        /* UNCHECKED */ MCS_pathtonative(*t_resolved_folder, &t_initial_folder_native);
+    
 	if (!MCModeMakeLocalWindows())
 	{
 		MCAutoStringRefArray t_filters;
@@ -597,7 +599,7 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 		MCAutoStringRefAsWString t_prompt_wstr;
 		MCAutoStringRefAsWString t_filter_wstr;
 		/* UNCHECKED */ t_filter_wstr.Lock(p_filter);
-		/* UNCHECKED */ t_initial_folder_wstr.Lock(*t_resolved_folder);
+		/* UNCHECKED */ t_initial_folder_wstr.Lock(*t_initial_folder_native);
 		/* UNCHECKED */ t_prompt_wstr.Lock(p_prompt);
 		/* UNCHECKED */ t_filter_wstr.Lock(p_filter);
 
