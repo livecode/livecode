@@ -117,13 +117,17 @@ MCScriptPoint::MCScriptPoint(MCObject *o, MCHandlerlist *hl, MCStringRef s)
     unichar_t *t_unicode_string;
 	/* UNCHECKED */ MCStringConvertToUnicode(s, t_unicode_string, length);
 	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_unicode_string, (length + 1) * 2, utf16_script);
-    index = 0;
     
 	curobj = o;
 	curhlist = hl;
 	curhandler = NULL;
 	curptr = tokenptr = backupptr = (const unichar_t *)MCDataGetBytePtr(utf16_script);
     endptr = curptr + length;
+    
+    uindex_t t_index = 0;
+    codepoint = MCUnicodeCodepointAdvance(curptr, length, t_index);
+    curlength = t_index;
+    
 	line = pos = 1;
 	escapes = False;
 	tagged = False;
@@ -135,8 +139,9 @@ MCScriptPoint::MCScriptPoint(MCObject *o, MCHandlerlist *hl, MCStringRef s)
 MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)
 {
     utf16_script = MCValueRetain(sp . utf16_script);
-    endptr = sp . endptr;
-    index = sp . index;
+    endptr = sp.endptr;
+    codepoint = sp.codepoint;
+    curlength = sp.curlength;
 	curobj = sp.curobj;
 	curhlist = sp.curhlist;
 	curhandler = sp.curhandler;
@@ -196,7 +201,8 @@ MCScriptPoint::MCScriptPoint(const MCString &s)
 MCScriptPoint::MCScriptPoint(MCExecContext &ctxt)
 {
     utf16_script = MCValueRetain(kMCEmptyData);
-    index = 0;
+    codepoint = '\0';
+    curlength = 1;
     curobj = ctxt . GetObject();
     curhlist = ctxt . GetHandlerList();
     curhandler = ctxt . GetHandler();
@@ -215,13 +221,17 @@ MCScriptPoint::MCScriptPoint(MCExecContext &ctxt, MCStringRef p_string)
     unichar_t *t_unicode_string;
 	/* UNCHECKED */ MCStringConvertToUnicode(p_string, t_unicode_string, length);
 	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_unicode_string, (length + 1) * 2, utf16_script);
-    index = 0;
     
     curobj = ctxt . GetObject();
     curhlist = ctxt . GetHandlerList();
     curhandler = ctxt . GetHandler();
     curptr = tokenptr = backupptr = (const unichar_t *)MCDataGetBytePtr(utf16_script);
     endptr = curptr + length;
+    
+    uindex_t t_index = 0;
+    codepoint = MCUnicodeCodepointAdvance(curptr, length, t_index);
+    curlength = t_index;
+    
     line = pos = 0;
     escapes = False;
     tagged = False;
@@ -235,13 +245,17 @@ MCScriptPoint::MCScriptPoint(MCStringRef p_string)
     unichar_t *t_unicode_string;
 	/* UNCHECKED */ MCStringConvertToUnicode(p_string, t_unicode_string, length);
 	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_unicode_string, (length + 1) * 2, utf16_script);
-    index = 0;
     
 	curobj = NULL;
 	curhlist = NULL;
 	curhandler = NULL;
 	curptr = tokenptr = backupptr = (const unichar_t *)MCDataGetBytePtr(utf16_script);
     endptr = curptr + length;
+    
+    uindex_t t_index = 0;
+    codepoint = MCUnicodeCodepointAdvance(curptr, length, t_index);
+    curlength = t_index;
+    
 	line = pos = 0;
 	escapes = False;
 	tagged = False;
@@ -253,7 +267,8 @@ MCScriptPoint::MCScriptPoint(MCStringRef p_string)
 MCScriptPoint& MCScriptPoint::operator =(const MCScriptPoint& sp)
 {
     MCValueAssign(utf16_script, sp . utf16_script);
-    index = sp.index;
+    codepoint = sp.codepoint;
+    curlength = sp.curlength;;
     
 	curobj = sp.curobj;
 	curhlist = sp.curhlist;
@@ -364,19 +379,21 @@ bool MCScriptPoint::is_identifier(codepoint_t p_codepoint, bool p_initial)
 
 void MCScriptPoint::advance(uindex_t number)
 {
-    uindex_t t_index = 0;
-    while (number--)
-        MCUnicodeCodepointAdvance(curptr, endptr - curptr, t_index);
+    curptr += curlength;
     
-    MCUnicodeCodepointAdvance(curptr, endptr - curptr, t_index);
+    uindex_t t_index = 0;
+    while (--number)
+        MCUnicodeCodepointAdvance(curptr, endptr - curptr, t_index);
+
     curptr += t_index;
+    
+    t_index = 0;
+    codepoint = MCUnicodeCodepointAdvance(curptr, endptr - curptr, t_index);
+    curlength = t_index;
 }
 
 codepoint_t MCScriptPoint::getcurrent()
 {
-    uindex_t t_index = 0;
-    codepoint_t codepoint = MCUnicodeCodepointAdvance(curptr, endptr - curptr, t_index);
-    curlength = t_index;
     return codepoint;
 }
 
@@ -393,6 +410,14 @@ codepoint_t MCScriptPoint::getcodepointatindex(uindex_t p_index)
         MCUnicodeCodepointAdvance(curptr + t_index, endptr - curptr - t_index, t_index);
     
     return MCUnicodeCodepointAdvance(curptr + t_index, endptr - curptr - t_index, t_index);
+}
+
+void MCScriptPoint::setcurptr(const unichar_t *ptr)
+{
+    curptr = ptr;
+    uindex_t t_index = 0;
+    codepoint = MCUnicodeCodepointAdvance(curptr, endptr - curptr, t_index);
+    curlength = t_index;
 }
 
 #ifdef OLD_SCRIPT_POINT
@@ -889,7 +914,7 @@ Parse_stat MCScriptPoint::skip_space()
                         advance();
                         if (getcurrent() == '*' && getnext() == '/')
                         {
-                            curptr += 2;
+                            advance(2);
                             return skip_space();
                         }
                         if (gettype(getcurrent()) == ST_EOL)
@@ -897,7 +922,7 @@ Parse_stat MCScriptPoint::skip_space()
                             // MW-2011-06-23: [[ SERVER ]] If the line ends with CR LF
                             //   then eat the LF.
                             if (curptr[0] == 13 && curptr[1] == 10)
-                                curptr++;
+                                advance();
                             
                             line++;
                             pos = 1;
@@ -907,7 +932,7 @@ Parse_stat MCScriptPoint::skip_space()
                     }
                     while (*curptr);
 
-                    curptr = startptr;
+                    setcurptr(startptr);
                     line = startline;
                     pos = startpos;
                     return PS_ERROR;
@@ -922,7 +947,7 @@ Parse_stat MCScriptPoint::skip_space()
             // MW-2011-06-23: [[ SERVER ]] If the line ends with CR LF
             //   then eat the LF.
             if (getcurrent() == 13 && getnext() == 10)
-                curptr++;
+                advance();
             advance();
             line++;
             pos = 1;
@@ -970,13 +995,13 @@ Parse_stat MCScriptPoint::skip_eol()
 					advance();
 				
 				pos = 1;
-				curptr += 3;
+				advance(3);
 				line += 1;
 			}
 			else
 			{
 				pos += 2;
-				curptr += 2;
+				advance(2);
 			}
 
 			tokenptr = curptr;
@@ -990,7 +1015,7 @@ Parse_stat MCScriptPoint::skip_eol()
 		// MW-2011-06-23: [[ SERVER ]] If the line ends with CR LF
 		//   then eat the LF.
 		if (curptr[-1] == 13 && curptr[0] == 10)
-			curptr++;
+			advance();
 		line++;
 		pos = 1;
 		tokenptr = curptr;
@@ -1003,17 +1028,19 @@ Parse_stat MCScriptPoint::backup()
 	if (curptr == tokenptr)
 	{
 		pos -= curptr - backupptr;
-		curptr = backupptr;
+		setcurptr(backupptr);
+        
 	}
 	else
 	{
 		pos -= curptr - tokenptr;
-		curptr = tokenptr;
+		setcurptr(tokenptr);
 		
 		// MW-2011-06-23: [[ SERVER ]] Restore the backup 'in tag' state.
 		if (tagged)
 			in_tag = was_in_tag;
 	}
+    
 	cleartoken();
 	return PS_NORMAL;
 }
@@ -1039,15 +1066,15 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 			{
 				// Take account of CR LF line ending
 				if (getcodepointatindex(3) == 13)
-					curptr += 1;
+					advance();
 				pos = 1;
-				curptr += 3;
+				advance(3);
 				line += 1;
 			}
 			else
 			{
 				pos += 2;
-				curptr += 2;
+				advance(2);
 			}
 			startptr = curptr;
 		}
@@ -1069,14 +1096,14 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 			if (!t_in_comment && (MCMemoryCompare(curptr, open_comment, sizeof(open_comment)) == 0))
 			{
 				pos += 4;
-				curptr += 4;
+				advance(4);
 				t_in_comment = true;
 				continue;
 			}
 			else if (t_in_comment && (MCMemoryCompare(curptr, close_comment, sizeof(close_comment)) == 0))
 			{
 				pos += 3;
-				curptr += 3;
+				advance(3);
 				t_in_comment = false;
 				continue;
 			}
@@ -1103,7 +1130,7 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 			if (getcurrent() == 13)
 			{
 				if (getnext() == 10)
-					curptr += 1;
+					advance();
 
 				pos = 1, line += 1;
 			}
@@ -1111,7 +1138,7 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 				pos = 1, line += 1;
 			
 			pos += 1;
-			curptr += 1;
+			advance();
 		}
 		
 		if (curptr != startptr)
@@ -1131,7 +1158,7 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 			
 			// If we aren't looking at the end of the data, then advance by 5 to skip '<?rev'.
 			if (*curptr != '\0')
-				curptr += t_tag_length;
+				advance(t_tag_length);
 			
 			// Return our token.
 			return PS_NORMAL;
@@ -1140,7 +1167,7 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 		{
 			// There is no literal data, so just advance curptr and carry on.
 			if (*curptr != '\0')
-				curptr += t_tag_length;
+				advance(t_tag_length);
 		}
 	}
 	else if (tagged)
@@ -1179,7 +1206,7 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 		tokenptr = curptr;
 	}
 	if (type == ST_LIT)
-		curptr++;
+		advance();
 	token.setstring((const char *)curptr);
 
 	switch (type)
@@ -1187,7 +1214,7 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 	case ST_ID:
 		if (getcurrent() == '$' && getnext() == '#')
 		{
-			curptr += 2;
+			advance(2);
 		}
 		else
 		{
@@ -1208,7 +1235,7 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 		{
 			Symbol_type newtype = gettype(getcurrent());
 			if (escapes && newtype == ST_ESC && getnext())
-				curptr += 2;
+                advance(2);
 			else
 			{
 				if (newtype == ST_EOL || newtype == ST_EOF)
@@ -1245,7 +1272,7 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 				if (c == 'e')
 				{
 					if (getnext() == '+' || getnext() == '-')
-						curptr++;
+						advance();
 				}
 				else
 					if (c != 'x' && (c < 'a' || c > 'f'))
@@ -1261,7 +1288,7 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 	if (type == ST_LIT && gettype(getcurrent()) == ST_LIT)
 	{
 		token.setlength(curptr - tokenptr - 1);
-		curptr++;
+		advance();
 	}
 	else
 		token.setlength(curptr - tokenptr);

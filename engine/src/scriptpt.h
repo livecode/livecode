@@ -53,7 +53,7 @@ class MCScriptPoint
 	
     uint32_t length;
     MCDataRef utf16_script;
-    uindex_t index;
+    codepoint_t codepoint;
     uint1 curlength;
     
 	// MW-2011-06-23: If this is true, then we parse the script in 'tag' mode.
@@ -179,11 +179,13 @@ public:
     bool is_identifier(codepoint_t p_codepoint, bool p_initial);
     
     // Increment the index
-    void advance(uindex_t number = 0);
+    void advance(uindex_t number = 1);
     
     codepoint_t getcurrent();
     codepoint_t getnext();
     codepoint_t getcodepointatindex(uindex_t index);
+    
+    void setcurptr(const unichar_t *ptr);
 };
 #endif
 
