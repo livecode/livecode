@@ -1292,6 +1292,18 @@ public:
     {
         return m_formsensitive == True;
     }
+    
+    MCStringOptions GetStringComparisonType() const
+    {
+        if (GetCaseSensitive() && GetFormSensitive())
+            return kMCStringOptionCompareExact;
+        else if (GetCaseSensitive())
+            return kMCStringOptionCompareNonliteral;
+        else if (GetFormSensitive())
+            return kMCStringOptionCompareFolded;
+        else
+            return kMCStringOptionCompareCaseless;
+    }
 
 	bool GetConvertOctals(void) const
 	{
