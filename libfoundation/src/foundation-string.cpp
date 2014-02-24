@@ -2410,22 +2410,11 @@ bool MCStringFindAndReplaceChar(MCStringRef self, codepoint_t p_pattern, codepoi
     // normalisation is required and one or both codepoints are composed. Another
     if
     (
-        /*// One is BMP and one is non-BMP
-        ((!(p_pattern & 0x1F0000)) ^ (!(p_replacement & 0x1F0000)))
+        // Either character is outside the BMP
+        (p_pattern > 0xFFFF || p_replacement > 0xFFFF)
      
-        // Normalisation has been requested and either the pattern or replacement
-        // will potentially change under normalisation
-        || ((p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareNonliteral)
-            && (MCUnicodeIsComposed(p_pattern) || MCUnicodeIsComposed(p_replacement)))
-     
-        // Case folding changes the length of either the pattern or replacement
-        || ((p_options == kMCStringOptionCompareCaseless)
-            && (MCUnicodeGetBinaryProperty(p_pattern, kMCUni)
-                || !MCUnicodeGetBinaryProperty(p_replacement, kMCUnicodePropertyChangesWhenCaseFolded)))
-        */
-     
-        // Don't bother doing it the slow way yet; do it fast + wrong instead...
-        false
+        // Normalisation or case-folding has been requested
+        || (p_options != kMCStringOptionCompareExact)
     )
     {
         // Do it via the slow-path full string replacement
@@ -2436,68 +2425,18 @@ bool MCStringFindAndReplaceChar(MCStringRef self, codepoint_t p_pattern, codepoi
         return MCStringFindAndReplace(self, *t_pattern, *t_replacement, p_options);
     }
     
-    // Are we dealing with a surrogate pair?
-    unichar_t t_pattern_units[2];
-    unichar_t t_replacement_units[2];
-    bool t_pair;
-    t_pair = MCStringCodepointToSurrogates(p_pattern, t_pattern_units) == 2;
-    MCStringCodepointToSurrogates(p_replacement, t_replacement_units);
-    
-    // Which type of comparison are we using?
-    if (p_options == kMCStringOptionCompareExact)
+    // The options must be kMCStringOptionCompareExact
+    for (uindex_t i = 0; i < self -> char_count; i++)
     {
-        for (uindex_t i = 0; i < self -> char_count; i++)
-        {
-            if (self -> chars[i] == t_pattern_units[0]
-                && (!t_pair ||
-                    (i + 1 < self -> char_count && self -> chars[i + 1] == t_pattern_units[1])))
-            {
-                // Found a match
-                self -> chars[i] = t_replacement_units[0];
-                if (t_pair)
-                    self -> chars[++i] = t_replacement_units[1];
-            }
-        }
-    }
-    else if (p_options == kMCStringOptionCompareCaseless)
-    {
-        for (uindex_t i = 0; i < self -> char_count; i++)
-        {
-            codepoint_t t_char;
-            if (MCStringIsValidSurrogatePair(self, i))
-                t_char = MCStringSurrogatesToCodepoint(self -> chars[i], self -> chars[i + 1]);
-            else
-                t_char = self -> chars[i];
-            
-            if (MCUnicodeGetCharacterProperty(t_char, kMCUnicodePropertySimpleCaseFolding)
-                == MCUnicodeGetCharacterProperty(p_pattern, kMCUnicodePropertySimpleCaseFolding))
-            {
-                // Found a match
-                self -> chars[i] = t_replacement_units[0];
-                if (t_pair)
-                    self -> chars[++i] = t_replacement_units[1];
-            }
-        }
-    }
-    else if (p_options == kMCStringOptionCompareNonliteral)
-    {
-        MCAssert(false);
-        return false;
-    }
-    else
-    {
-        MCAssert(false);
-        return false;
+        if (self -> chars[i] == p_pattern)
+            self -> chars[i] = p_replacement;
     }
     
-    return true;
+      return true;
 }
 
 bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef p_replacement, MCStringOptions p_options)
 {
-	if (p_pattern -> char_count == 1 && p_replacement -> char_count == 1)
-		return MCStringFindAndReplaceChar(self, p_pattern -> chars[0], p_replacement -> chars[0], p_options);
-	
 	if (self -> char_count != 0)
 	{
 		strchar_t *t_output;

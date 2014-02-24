@@ -750,14 +750,30 @@ int32_t MCUnicodeCompare(const unichar_t *p_first, uindex_t p_first_length,
                          const unichar_t *p_second, uindex_t p_second_length,
                          MCUnicodeCompareOption p_option)
 {
+    // This is a bit more complicated than a plain comparison and requires the
+    // construction of UnicodeString objects.
     UErrorCode t_error = U_ZERO_ERROR;
-    if (p_option == kMCUnicodeCompareOptionExact)
-        return u_strCompare(p_first, p_first_length, p_second, p_second_length, TRUE);
-    else if (p_option == kMCUnicodeCompareOptionNormalised)
-        MCAssert(false);    // TODO
-    else
-        return u_strCaseCompare(p_first, p_first_length, p_second, p_second_length,
-                                U_COMPARE_CODE_POINT_ORDER, &t_error);
+    icu::UnicodeString t_first(p_first, p_first_length);
+    icu::UnicodeString t_second(p_second, p_second_length);
+    
+    // Normalise, if required
+    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionNormalised)
+    {
+        // Construct the normaliser
+        const icu::Normalizer2 *t_nfc = icu::Normalizer2::getNFCInstance(t_error);
+        t_first = t_nfc->normalize(t_first, t_error);
+        t_second = t_nfc->normalize(t_second, t_error);
+    }
+    
+    // Case-fold, if required
+    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionFolded)
+    {
+        t_first.foldCase();
+        t_second.foldCase();
+    }
+    
+    // Perform the comparison
+    return t_first.compareCodePointOrder(t_second);
 }
 
 bool MCUnicodeBeginsWith(const unichar_t *p_first, uindex_t p_first_length,
