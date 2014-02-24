@@ -616,6 +616,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	switch (which)
 	{
 	case P_CASE_SENSITIVE:
+    case P_FORM_SENSITIVE:
 	case P_CENTURY_CUTOFF:
 	case P_CONVERT_OCTALS:
 	case P_ITEM_DELIMITER:
