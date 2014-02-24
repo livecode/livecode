@@ -386,7 +386,7 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 			/* UNCHECKED */ MCStringsSplit(p_filter, '\0', t_filters.PtrRef(), t_filters.CountRef());
 		}
 
-		MCRemoteFileDialog(p_title, p_prompt, *t_filters, t_filters.Count(), *t_initial_folder_native, *t_initial_file, (p_options & MCA_OPTION_SAVE_DIALOG) != 0, (p_options & MCA_OPTION_PLURAL) != 0, r_value);
+		MCRemoteFileDialog(p_title, p_prompt, *t_filters, t_filters.Count(), *t_resolved_folder, *t_initial_file, (p_options & MCA_OPTION_SAVE_DIALOG) != 0, (p_options & MCA_OPTION_PLURAL) != 0, r_value);
 
 		return 0;
 	}
@@ -449,13 +449,13 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 			t_succeeded = SUCCEEDED(t_hresult);
 		}
 
-		if (t_succeeded && *t_initial_folder_native != NULL)
+		if (t_succeeded && *t_resolved_folder != NULL)
 		{
 			IShellItem *t_initial_folder_shellitem;
 			t_initial_folder_shellitem = NULL;
 
 			MCAutoStringRefAsWString t_initial_folder_wstr;
-			/* UNCHECKED */ t_initial_folder_wstr.Lock(*t_initial_folder_native);
+			/* UNCHECKED */ t_initial_folder_wstr.Lock(*t_resolved_folder);
 
 			t_hresult = s_shcreateitemfromparsingname(*t_initial_folder_wstr, NULL, __uuidof(IShellItem), (LPVOID *)&t_initial_folder_shellitem);
 			if (SUCCEEDED(t_hresult))
@@ -597,7 +597,7 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 		MCAutoStringRefAsWString t_prompt_wstr;
 		MCAutoStringRefAsWString t_filter_wstr;
 		/* UNCHECKED */ t_filter_wstr.Lock(p_filter);
-		/* UNCHECKED */ t_initial_folder_wstr.Lock(*t_initial_folder_native);
+		/* UNCHECKED */ t_initial_folder_wstr.Lock(*t_resolved_folder);
 		/* UNCHECKED */ t_prompt_wstr.Lock(p_prompt);
 		/* UNCHECKED */ t_filter_wstr.Lock(p_filter);
 
