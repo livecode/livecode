@@ -1114,6 +1114,24 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
             }
             return false;
         }
+    case kMCStringEncodingUTF16LE:
+        {
+            uindex_t t_char_count;
+            unichar_t *t_bytes;
+            if (MCStringConvertToUnicode(self, t_bytes, t_char_count))
+            {
+                unichar_t *t_buffer;
+                MCMemoryAllocate((t_char_count + 1) * sizeof(unichar_t), t_buffer);
+                
+                for (uindex_t i = 0; i < t_char_count; i++)
+                    t_buffer[i] = (unichar_t)MCSwapInt16HostToLittle((t_bytes)[i]);
+                
+                r_bytes = (byte_t*&)t_buffer;
+                r_byte_count = t_char_count * sizeof(unichar_t);
+                return true;
+            }
+            return false;
+        }
     case kMCStringEncodingUTF8:
         return MCStringConvertToUTF8(self, (char*&)r_bytes, r_byte_count);
     case kMCStringEncodingUTF32:
