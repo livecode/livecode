@@ -371,6 +371,7 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 			}
 		}
         
+        MCAutoStringRef t_resolved_folder;
         /* UNCHECKED */ MCS_resolvepath(*t_initial_folder != nil ? *t_initial_folder : kMCEmptyString, &t_resolved_folder);
         /* UNCHECKED */ MCS_pathtonative(*t_resolved_folder, &t_initial_native_folder);
 	}
