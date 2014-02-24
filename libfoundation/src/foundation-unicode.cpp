@@ -530,7 +530,7 @@ bool MCUnicodeNormaliseNFD(const unichar_t *p_in, uindex_t p_in_length,
     return true;
 }
 
-bool MCUnicodeNormaliseNFDK(const unichar_t *p_in, uindex_t p_in_length,
+bool MCUnicodeNormaliseNFKD(const unichar_t *p_in, uindex_t p_in_length,
                             unichar_t *&r_out, uindex_t &r_out_length)
 {
     // Get the instance of the NFC normaliser

@@ -3009,3 +3009,51 @@ bool MCStringConvertToSysString(MCStringRef p_string, const char * &r_system_str
 }
 
 #endif
+
+bool MCStringNormalizedCopyNFC(MCStringRef self, MCStringRef &r_string)
+{
+    // Normalise
+    unichar_t *t_norm = nil;
+    uindex_t t_norm_length;
+    if (MCUnicodeNormaliseNFC(self -> chars, self -> char_count, t_norm, t_norm_length)
+        && MCStringCreateWithCharsAndRelease(t_norm, t_norm_length, r_string))
+        return true;
+    MCMemoryDelete(t_norm);
+    return false;
+}
+
+bool MCStringNormalizedCopyNFD(MCStringRef self, MCStringRef &r_string)
+{
+    // Normalise
+    unichar_t *t_norm = nil;
+    uindex_t t_norm_length;
+    if (MCUnicodeNormaliseNFD(self -> chars, self -> char_count, t_norm, t_norm_length)
+        && MCStringCreateWithCharsAndRelease(t_norm, t_norm_length, r_string))
+        return true;
+    MCMemoryDelete(t_norm);
+    return false;
+}
+
+bool MCStringNormalizedCopyNFKC(MCStringRef self, MCStringRef &r_string)
+{
+    // Normalise
+    unichar_t *t_norm = nil;
+    uindex_t t_norm_length;
+    if (MCUnicodeNormaliseNFKC(self -> chars, self -> char_count, t_norm, t_norm_length)
+        && MCStringCreateWithCharsAndRelease(t_norm, t_norm_length, r_string))
+        return true;
+    MCMemoryDelete(t_norm);
+    return false;
+}
+
+bool MCStringNormalizedCopyNFKD(MCStringRef self, MCStringRef &r_string)
+{
+    // Normalise
+    unichar_t *t_norm = nil;
+    uindex_t t_norm_length;
+    if (MCUnicodeNormaliseNFKD(self -> chars, self -> char_count, t_norm, t_norm_length)
+        && MCStringCreateWithCharsAndRelease(t_norm, t_norm_length, r_string))
+        return true;
+    MCMemoryDelete(t_norm);
+    return false;
+}
