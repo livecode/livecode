@@ -1693,16 +1693,16 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	
 	// If we are setting both app and doc icons, clear out the existing
 	// icon resources
-	if (t_success && p_params . app_icon != NULL && p_params . doc_icon != NULL)
+	if (t_success && !MCStringIsEmpty(p_params . app_icon) && !MCStringIsEmpty(p_params . doc_icon))
 		MCWindowsResourcesClearIcons(t_resources);
 
-	if (t_success && p_params . app_icon != NULL)
+	if (t_success && !MCStringIsEmpty(p_params . app_icon))
 	{
 		t_success = MCWindowsResourcesAddIcon(t_resources, p_params . app_icon, 111, 0x0409);
 		if (!t_success)
 			t_success = MCDeployThrow(kMCDeployErrorWindowsBadAppIcon);
 	}
-	if (t_success && p_params . doc_icon != NULL)
+	if (t_success && !MCStringIsEmpty(p_params . doc_icon))
 	{
 		t_success = MCWindowsResourcesAddIcon(t_resources, p_params . doc_icon, 112, 0x0409);
 		if (!t_success)
@@ -1711,11 +1711,11 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 
 	// If there is a version info array, then build a VERSIONINFO resource and
 	// add it.
-	if (t_success && p_params . version_info != NULL)
+	if (t_success && !MCArrayIsEmpty(p_params . version_info))
 		t_success = MCWindowsResourcesAddVersionInfo(t_resources, p_params . version_info);
 
 	// Add the manifest to the resources
-	if (t_success && p_params . manifest != NULL)
+	if (t_success && !MCStringIsEmpty(p_params . manifest))
 		t_success = MCWindowsResourcesAddManifest(t_resources, p_params . manifest);
 
 	// Now we have the various references we need and have prepared the
