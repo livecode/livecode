@@ -3051,7 +3051,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			omode = GENERIC_READ;
 			createmode = OPEN_EXISTING;
 		}
-		if (p_mode== kMCSOpenFileModeWrite)
+		if (p_mode== kMCSOpenFileModeWrite || p_mode == kMCSOpenFileModeCreate)
 		{
 			omode = GENERIC_WRITE;
 			createmode = CREATE_ALWAYS;
