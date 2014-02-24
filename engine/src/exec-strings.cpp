@@ -1109,26 +1109,24 @@ void MCStringsEvalConcatenateWithComma(MCExecContext& ctxt, MCStringRef p_left, 
 
 void MCStringsEvalContains(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
 {
-	MCStringOptions t_compare_option = ctxt.GetCaseSensitive() ? kMCStringOptionCompareExact : kMCStringOptionCompareCaseless;
+	MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
 	r_result = MCStringContains(p_whole, p_part, t_compare_option);
 }
 
 void MCStringsEvalDoesNotContain(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
 {
-	MCStringOptions t_compare_option = ctxt.GetCaseSensitive() ? kMCStringOptionCompareExact : kMCStringOptionCompareCaseless;
+	MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
 	r_result = !MCStringContains(p_whole, p_part, t_compare_option);
 }
 
 void MCStringsEvalBeginsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
 {
-	MCStringOptions t_compare_option = ctxt.GetCaseSensitive() ? kMCStringOptionCompareExact : kMCStringOptionCompareCaseless;
+	MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
 	r_result = MCStringBeginsWith(p_whole, p_part, t_compare_option);
 }
 
 void MCStringsEvalEndsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
-{
-	MCStringOptions t_compare_option = ctxt.GetCaseSensitive() ? kMCStringOptionCompareExact : kMCStringOptionCompareCaseless;
-	r_result = MCStringEndsWith(p_whole, p_part, t_compare_option);
+{MCStringOptions t_compare_option = ctxt.GetStringComparisonType();	r_result = MCStringEndsWith(p_whole, p_part, t_compare_option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1138,7 +1136,7 @@ void MCStringsEvalIsAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_token, M
 	// IM-2012-08-24 Note - this relies on the old parser stuff, not sure if this
 	// will be replaced or dropped
 
-	MCCompareOptions t_options = ctxt.GetCaseSensitive() ? kMCCompareExact : kMCCompareCaseless;
+	MCCompareOptions t_options = ctxt.GetStringComparisonType();
 
 	MCScriptPoint sp(p_string);
 	Parse_stat ps = sp.nexttoken();
@@ -1230,7 +1228,7 @@ bool MCStringsIsAmongTheSplitChunksOf(MCExecContext& ctxt, MCStringRef p_item, M
 {
 	uindex_t t_index = 0;
 	MCRange t_range;
-	MCStringOptions t_options = ctxt.GetCaseSensitive() ? kMCStringOptionCompareExact: kMCStringOptionCompareCaseless;
+	MCStringOptions t_options = ctxt.GetStringComparisonType();
 	while (MCStringsIterateChunks(ctxt, t_index, p_string, p_chunk_type, t_range))
 	{
 		if (MCStringSubstringIsEqualTo(p_string, t_range, p_item, t_options))
@@ -1282,8 +1280,7 @@ static bool MCStringsIsAmongTheChunksOf(MCExecContext& ctxt, MCStringRef p_chunk
 {
 	// First search for the pattern.
 	MCStringOptions t_options;
-	t_options = ctxt.GetCaseSensitive() ? kMCStringOptionCompareExact: kMCStringOptionCompareCaseless;
-	
+	t_options = ctxt.GetStringComparisonType();
     return MCStringsIsAmongTheChunksOfRange(ctxt, p_chunk, p_string, p_chunk_type, t_options, MCRangeMake(0, UINDEX_MAX));
 }
 
@@ -1326,7 +1323,7 @@ bool MCStringsSplitChunkOffset(MCExecContext& ctxt, MCStringRef p_item, MCString
 	uindex_t t_index = 0;
 	r_offset = 1;
 	MCRange t_range;
-	MCStringOptions t_options = ctxt.GetCaseSensitive() ? kMCStringOptionCompareExact: kMCStringOptionCompareCaseless;
+	MCStringOptions t_options = ctxt.GetStringComparisonType();
 	while (MCStringsIterateChunks(ctxt, t_index, p_string, p_chunk_type, t_range))
 	{
 		if (p_skip > 0)
@@ -1357,7 +1354,7 @@ void MCStringsEvalWordOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringR
 
 void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-	MCStringOptions t_options = ctxt.GetCaseSensitive() ? kMCStringOptionCompareExact: kMCStringOptionCompareCaseless;
+	MCStringOptions t_options = ctxt.GetStringComparisonType();
 	if (!MCStringFirstIndexOf(p_string, p_chunk, p_start_offset, t_options, r_result))
 		r_result = 0;
 	else
@@ -1374,7 +1371,7 @@ void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p
 bool MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_item, MCStringRef p_string, Chunk_term p_chunk_type, uindex_t p_skip, uindex_t& r_offset)
 {
 	MCStringOptions t_options;
-	t_options = ctxt.GetCaseSensitive() ? kMCStringOptionCompareExact : kMCStringOptionCompareCaseless;
+	t_options = ctxt.GetStringComparisonType();
 	
 	// Skip ahead to the first chunk of interest.
 	uindex_t t_index;
@@ -1438,7 +1435,7 @@ void MCStringsEvalLineOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringR
 
 void MCStringsExecReplace(MCExecContext& ctxt, MCStringRef p_pattern, MCStringRef p_replacement, MCStringRef p_target)
 {
-	MCStringOptions t_options = ctxt.GetCaseSensitive() ? kMCStringOptionCompareExact: kMCStringOptionCompareCaseless;
+	MCStringOptions t_options = ctxt.GetStringComparisonType();
 	if (MCStringFindAndReplace(p_target, p_pattern, p_replacement, t_options))
 		return;
 	

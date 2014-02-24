@@ -208,7 +208,7 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 				MCRange t_range, t_where;
 				t_range = MCRangeMake(oldoffset, t_length - oldoffset);
 				while (MCStringFind(tpgptr->GetInternalStringRef(), t_range, tofind, 
-									ctxt.GetCaseSensitive() ? kMCStringOptionCompareCaseless : kMCStringOptionCompareExact,
+									ctxt.GetStringComparisonType(),
 									&t_where))
 				{
 					switch (mode)
