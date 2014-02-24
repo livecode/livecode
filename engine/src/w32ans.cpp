@@ -329,6 +329,7 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 
 	MCAutoStringRef t_initial_file;
 	MCAutoStringRef t_initial_folder;
+    MCAutoStringRef t_resolved_folder;
 
 	if (p_initial != nil && !MCStringIsEmpty(p_initial))
 	{
@@ -372,12 +373,9 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 					t_initial_folder = *t_folder_split;
 			}
 		}
+        
+        /* UNCHECKED */ MCS_resolvepath(*t_initial_folder != nil ? *t_initial_folder : kMCEmptyString, &t_resolved_folder);
 	}
-    
-    MCAutoStringRef t_resolved_folder, t_initial_folder_native;
-    /* UNCHECKED */ MCS_resolvepath(*t_initial_folder != nil ? *t_initial_folder : kMCEmptyString, &t_resolved_folder);
-	if (*t_initial_folder != nil)
-        /* UNCHECKED */ MCS_pathtonative(*t_resolved_folder, &t_initial_folder_native);
     
 	if (!MCModeMakeLocalWindows())
 	{
