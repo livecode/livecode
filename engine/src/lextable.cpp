@@ -860,6 +860,7 @@ LT factor_table[] =
         {"formattedtext", TT_PROPERTY, P_FORMATTED_TEXT},
         {"formattedtop", TT_PROPERTY, P_FORMATTED_TOP},
         {"formattedwidth", TT_PROPERTY, P_FORMATTED_WIDTH},
+        {"formsensitive", TT_PROPERTY, P_FORM_SENSITIVE},
         {"foundchunk", TT_FUNCTION, F_FOUND_CHUNK},
         {"foundfield", TT_FUNCTION, F_FOUND_FIELD},
         {"foundline", TT_FUNCTION, F_FOUND_LINE},

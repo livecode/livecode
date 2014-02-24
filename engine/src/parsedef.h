@@ -840,6 +840,7 @@ enum Properties {
 	P_WORKING,
     // local properties
     P_CASE_SENSITIVE,
+    P_FORM_SENSITIVE,
     P_CENTURY_CUTOFF,
     P_CONVERT_OCTALS,
     P_ITEM_DELIMITER,
