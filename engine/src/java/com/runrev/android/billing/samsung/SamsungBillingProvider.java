@@ -83,9 +83,6 @@ public class SamsungBillingProvider implements BillingProvider
                 {
                     Log.d(TAG, "Item restored :" + tItemId);
 
-                    // How to get the purchaseId?
-                    int purchaseId = 1;
-
                     mPurchaseObserver.onPurchaseStateChanged(tItemId, 0);
 
                 }
@@ -96,6 +93,12 @@ public class SamsungBillingProvider implements BillingProvider
             {
                 startPurchase(pendingPurchaseItemId);
                 pendingPurchaseItemId = null;
+            }
+            else
+            {   
+                SamsungIapHelper helper = SamsungIapHelper.getInstance(getActivity(), iapMode);
+                helper.showProgressDialog(getActivity());
+                helper.dismissProgressDialog();
             }
         }
     };
@@ -253,6 +256,7 @@ public class SamsungBillingProvider implements BillingProvider
 
     private void startPurchase(String itemId)
     {
+/*
         if (!isInitialized)
         {
             isInitialized = true;
@@ -273,6 +277,7 @@ public class SamsungBillingProvider implements BillingProvider
             
             return;
         }
+        */
 
         SamsungIapHelper helper = SamsungIapHelper.getInstance(getActivity(), iapMode);
         helper.showProgressDialog(getActivity());
@@ -417,10 +422,29 @@ public class SamsungBillingProvider implements BillingProvider
         if (!started)
             return false;
 
-        //TODO;
-        return true;
+        if (!isInitialized)
+        {
+            isInitialized = true;
+            //pendingPurchaseItemId = itemId;
+            //initHelper();
+
+            getActivity().runOnUiThread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    SamsungIapHelper helper = SamsungIapHelper.getInstance(getActivity(), iapMode);
+                    helper.showProgressDialog(getActivity());
+                    helper.startAccountActivity(getActivity());
+                }
+            });
+
+
+            return true;
+        }
+        return false;
     }
-    
+
     //public boolean sendRequest(int purchaseId, String productId, Map<String, String> properties)
     public boolean sendRequest(int purchaseId, String productId, String developerPayload)
     {

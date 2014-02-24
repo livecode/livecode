@@ -3819,8 +3819,10 @@
 		4D587DA70B80945B00200116 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				INFOPLIST_FILE = "rsrc/Revolution-Info.plist";
 				PRODUCT_NAME = "LiveCode-Community";
+				VALID_ARCHS = i386;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -3828,8 +3830,10 @@
 		4D587DA80B80945B00200116 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				INFOPLIST_FILE = "rsrc/Revolution-Info.plist";
 				PRODUCT_NAME = "LiveCode-Community";
+				VALID_ARCHS = i386;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

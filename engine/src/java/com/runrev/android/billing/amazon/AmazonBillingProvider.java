@@ -33,7 +33,7 @@ public class AmazonBillingProvider implements BillingProvider
         Log.v(TAG, "IAP initialised");
         started = true;
         PurchasingManager.initiateGetUserIdRequest();
-        restorePurchases();
+        //restorePurchases();
     }
     
     /*Always equals true. The Amazon Appstore allows a customer to disable In-App Purchasing, the IAP workflow

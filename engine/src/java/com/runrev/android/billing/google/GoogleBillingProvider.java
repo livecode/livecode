@@ -139,15 +139,22 @@ public class GoogleBillingProvider implements BillingProvider
         
         Log.i(TAG, "purchaseSendRequest(" + purchaseId + ", " + productId + ", " + type + ")");
         
-        if (type.equals("SUBS"))
+        if (type.equals("subs"))
         {
-            mHelper.launchSubscriptionPurchaseFlow(getActivity(), productId, RC_REQUEST, mPurchaseFinishedListener, "");
+            mHelper.launchSubscriptionPurchaseFlow(getActivity(), productId, RC_REQUEST, mPurchaseFinishedListener, developerPayload);
+			return true;
         }
-        else
+        else if (type.equals("inapp"))
         {
-            mHelper.launchPurchaseFlow(getActivity(), productId, RC_REQUEST, mPurchaseFinishedListener, "");
+            mHelper.launchPurchaseFlow(getActivity(), productId, RC_REQUEST, mPurchaseFinishedListener, developerPayload);
+			return true;
         }
-        return true;
+		else
+		{
+			Log.i(TAG, "Item type is not recognized. Exiting..");
+            return false;
+		}
+        
     }
     
     public boolean makePurchase(String productId, String quantity, String payload)
@@ -163,19 +170,26 @@ public class GoogleBillingProvider implements BillingProvider
         }
         
         pendingPurchaseSku = productId;
-		setPurchaseProperty(productId, "payload", payload);
+		setPurchaseProperty(productId, "developerPayload", payload);
         
         Log.i(TAG, "purchaseSendRequest("  + productId + ", " + type + ")");
         
-        if (type.equals("SUBS"))
+        if (type.equals("subs"))
         {
             mHelper.launchSubscriptionPurchaseFlow(getActivity(), productId, RC_REQUEST, mPurchaseFinishedListener, payload);
+			return true;
         }
-        else
-        {
+        else if (type.equals("inapp"))
+		{
             mHelper.launchPurchaseFlow(getActivity(), productId, RC_REQUEST, mPurchaseFinishedListener, payload);
+			return true;
         }
-        return true;
+		else
+		{
+			Log.i(TAG, "Item type is not recognized. Exiting..");
+            return false;
+		}
+        
     }
     
     public boolean productSetType(String productId, String productType)
@@ -351,9 +365,12 @@ public class GoogleBillingProvider implements BillingProvider
         if (success)
             success = setPurchaseProperty(purchase.getSku(), "signature", purchase.getSignature());
 
+		if (success)
+            success = setPurchaseProperty(purchase.getSku(), "developerPayload", purchase.getDeveloperPayload());
+
         if (success)
             success = setPurchaseProperty(purchase.getSku(), "purchaseTime", new Long(purchase.getPurchaseTime()).toString());
-
+			
         return success;
 
     }
