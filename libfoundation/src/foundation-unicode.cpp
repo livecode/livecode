@@ -717,6 +717,20 @@ bool MCUnicodeTitlecase(MCLocaleRef p_locale,
     return true;
 }
 
+static void __MCUnicodeSimpleCaseFold(icu::UnicodeString& p_string)
+{
+    icu::UnicodeString t_temp;
+    int32_t i = 0;
+    
+    while(i < p_string.length())
+    {
+        t_temp.append(u_toupper(p_string.char32At(i)/*, U_FOLD_CASE_DEFAULT*/));
+        i = p_string.moveIndex32(i, 1);
+    }
+    
+    p_string.setTo(t_temp);
+}
+
 bool MCUnicodeCaseFold(const unichar_t *p_in, uindex_t p_in_length,
                        unichar_t *&r_out, uindex_t &r_out_length)
 {
@@ -727,7 +741,7 @@ bool MCUnicodeCaseFold(const unichar_t *p_in, uindex_t p_in_length,
     // Unlike the other case transformations, case folding does not depend on
     // locale. Its only option is whether to use the special Turkish rules for
     // casefolding dotless i and dotted l but we don't support this.
-    t_input.foldCase();
+    __MCUnicodeSimpleCaseFold(t_input);
     
     // Allocate the output buffer
     MCAutoArray<unichar_t> t_buffer;
@@ -768,8 +782,8 @@ int32_t MCUnicodeCompare(const unichar_t *p_first, uindex_t p_first_length,
     // Case-fold, if required
     if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionFolded)
     {
-        t_first.foldCase();
-        t_second.foldCase();
+        __MCUnicodeSimpleCaseFold(t_first);
+        __MCUnicodeSimpleCaseFold(t_second);
     }
     
     // Perform the comparison
@@ -798,8 +812,8 @@ bool MCUnicodeBeginsWith(const unichar_t *p_first, uindex_t p_first_length,
     // Case-fold, if required
     if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionFolded)
     {
-        t_first.foldCase();
-        t_second.foldCase();
+        __MCUnicodeSimpleCaseFold(t_first);
+        __MCUnicodeSimpleCaseFold(t_second);
     }
     
     // Perform the comparison
@@ -828,8 +842,8 @@ bool MCUnicodeEndsWith(const unichar_t *p_first, uindex_t p_first_length,
     // Case-fold, if required
     if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionFolded)
     {
-        t_first.foldCase();
-        t_second.foldCase();
+        __MCUnicodeSimpleCaseFold(t_first);
+        __MCUnicodeSimpleCaseFold(t_second);
     }
     
     // Perform the comparison
@@ -858,8 +872,8 @@ bool MCUnicodeContains(const unichar_t *p_string, uindex_t p_string_length,
     // Case-fold, if required
     if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionFolded)
     {
-        t_string.foldCase();
-        t_needle.foldCase();
+        __MCUnicodeSimpleCaseFold(t_string);
+        __MCUnicodeSimpleCaseFold(t_needle);
     }
     
     // Perform the comparison
@@ -888,8 +902,8 @@ bool MCUnicodeFirstIndexOf(const unichar_t *p_string, uindex_t p_string_length,
     // Case-fold, if required
     if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionFolded)
     {
-        t_string.foldCase();
-        t_needle.foldCase();
+        __MCUnicodeSimpleCaseFold(t_string);
+        __MCUnicodeSimpleCaseFold(t_needle);
     }
     
     // Perform the comparison
@@ -922,8 +936,8 @@ bool MCUnicodeLastIndexOf(const unichar_t *p_string, uindex_t p_string_length,
     // Case-fold, if required
     if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionFolded)
     {
-        t_string.foldCase();
-        t_needle.foldCase();
+        __MCUnicodeSimpleCaseFold(t_string);
+        __MCUnicodeSimpleCaseFold(t_needle);
     }
     
     // Perform the comparison
