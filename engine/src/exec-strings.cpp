@@ -645,7 +645,7 @@ void MCStringsEvalCodepointProperty(MCExecContext& ctxt, MCStringRef p_codepoint
 {
     // Verify that we have a single codepoint
     if (MCStringGetLength(p_codepoint) != 1
-        && (MCStringGetLength(p_codepoint) != 2 || MCStringIsValidSurrogatePair(p_codepoint, 0)))
+        && (MCStringGetLength(p_codepoint) != 2 || !MCStringIsValidSurrogatePair(p_codepoint, 0)))
     {
         ctxt.LegacyThrow(EE_CODEPOINTPROPERTY_BADCODEPOINT);
         return;
