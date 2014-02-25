@@ -620,11 +620,16 @@ const MCUnicodePropertyMapping MCUnicodePropertyMap[] =
 
 static bool MCStringsMapCodepointPropertyNameToID(MCStringRef p_name, MCUnicodeProperty& r_propid)
 {
+    // Treat spaces and underscores as identical (for compatibility with Unicode's official names)
+    MCAutoStringRef t_name;
+    /* UNCHECKED */ MCStringMutableCopy(p_name, &t_name);
+    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_name, '_', ' ', kMCStringOptionCompareExact);
+    
     const MCUnicodePropertyMapping *t_mapping;
     t_mapping = MCUnicodePropertyMap;
     while (t_mapping->m_name != NULL)
     {
-        if (MCStringIsEqualToCString(p_name, t_mapping->m_name, kMCStringOptionCompareCaseless))
+        if (MCStringIsEqualToCString(*t_name, t_mapping->m_name, kMCStringOptionCompareCaseless))
         {
             r_propid = t_mapping->m_propid;
             return true;
