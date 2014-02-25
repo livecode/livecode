@@ -1692,6 +1692,7 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
 	else
 	{
 		findex_t sptr = i;
+        findex_t t_length = l;
 		
 		// MW-2012-02-12: [[ Bug 10662 ]] If the last char is a VTAB then ignore it.
         if (parent->TextIsLineBreak(parent->GetCodepointAtIndex(sptr + l - 1)))
@@ -1708,7 +1709,7 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
 			while (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', sptr, kMCStringOptionCompareExact, eptr))
 			{
 				// Break if we've gone past the end of this block
-                if (eptr >= m_size)
+                if (eptr >= i + t_length)
 					break;
 				
 				MCRange t_range;
