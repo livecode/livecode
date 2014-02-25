@@ -1321,12 +1321,15 @@ Parse_stat MCScriptPoint::lookup(Script_point t, const LT *&dlt)
 		uint2 high = table_sizes[t];
 		uint2 low = 0;
 		int4 cond;
-
+        const char *token_cstring = MCStringGetCString(gettoken_stringref());
+        
 		while (low < high)
 		{
 			// Both the table and the token are encoded in UTF-8
 			uint2 mid = low + ((high - low) >> 1);
-			cond = MCStringCompareTo(gettoken_stringref(), MCSTR(table[mid].token), kMCCompareCaseless);
+			cond = MCU_strncasecmp(token_cstring, table[mid].token, token.getlength());
+			if (cond == 0)
+				cond -= table[mid].token[token.getlength()];
 			if (cond < 0)
 				high = mid;
 			else
@@ -1353,11 +1356,15 @@ Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
 	uint2 high = constant_table_size;
 	uint2 low = 0;
 	int4 cond;
+    const char *token_cstring = MCStringGetCString(gettoken_stringref());
+    
 	while (low < high)
 	{
 		// Both the table and the token are encoded in UTF-8
 		uint2 mid = low + ((high - low) >> 1);
-			cond = MCStringCompareTo(gettoken_stringref(), MCSTR(constant_table[mid].token), kMCCompareCaseless);
+		cond = MCU_strncasecmp(token_cstring, constant_table[mid].token, token.getlength());
+		if (cond == 0)
+			cond -= constant_table[mid].token[token.getlength()];
 		if (cond < 0)
 			high = mid;
 		else
@@ -1365,7 +1372,7 @@ Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
 				low = mid + 1;
 			else
 			{
-				if (MCStringIsEqualToCString(gettoken_stringref(), "null", kMCCompareCaseless))
+				if (token.getlength() == 4 && MCU_strncasecmp(token_cstring, "null", 4) == 0)
 				{
 					// Create a stringref that contains an explicit nul character
                     MCAutoStringRef t_nul_string;
