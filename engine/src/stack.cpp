@@ -507,6 +507,10 @@ void MCStack::close()
 {
 	if (!opened)
 		return;
+	
+	// MW-2014-02-25: [[ Platform ]] Make sure we lock the screen when closing
+	//   so nothing is seen.
+	MCRedrawLockScreen();
 				
 	if (menuheight && (rect.height != menuheight || menuy != 0))
 	{
@@ -595,6 +599,8 @@ void MCStack::close()
 	m_snapshot = nil;
 	
 	state &= ~(CS_IGNORE_CLOSE | CS_KFOCUSED | CS_ISOPENING);
+	
+	MCRedrawUnlockScreen();
 }
 
 void MCStack::kfocus()
