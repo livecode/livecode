@@ -730,9 +730,17 @@ uint2 MCScreenDC::querymods()
 
 void MCScreenDC::getkeysdown(MCExecPoint &ep)
 {
-	// COCOA-TODO: We should be able to use CGEventSourceKeyState here - although
-	//   it might be somewhat inefficient.
-	ep.clear();
+	ep . clear();
+	
+	MCPlatformKeyCode *t_codes;
+	uindex_t t_code_count;
+	if (!MCPlatformGetKeyState(t_codes, t_code_count))
+		return;
+	
+	for(uindex_t i = 0; i < t_code_count; i++)
+		ep . concatuint(t_codes[i], EC_COMMA, i == 0);
+	
+	free(t_codes);
 }
 
 Boolean MCScreenDC::istripleclick()

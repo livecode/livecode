@@ -244,72 +244,6 @@ enum
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// System properties are settings that can be queried from the system.
-//
-// TODO-REVIEW: Perhaps these would be better classed as metrics?
-//   Or perhaps MCPlatformQuery(...)
-
-enum MCPlatformSystemProperty
-{
-	kMCPlatformSystemPropertyUnknown,
-	
-	kMCPlatformSystemPropertyDoubleClickInterval,
-	kMCPlatformSystemPropertyCaretBlinkInterval,
-	
-	kMCPlatformSystemPropertyHiliteColor,
-	kMCPlatformSystemPropertyAccentColor,
-	
-	kMCPlatformSystemPropertyMaximumCursorSize,
-	kMCPlatformSystemPropertyCursorImageSupport,
-};
-
-void MCPlatformGetSystemProperty(MCPlatformSystemProperty property, MCPlatformPropertyType type, void *value);
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Break the current WaitForEvent which is progress.
-void MCPlatformBreakWait(void);
-
-// Wait for any event for at most duration seconds. If blocking is true then
-// no events which cause a dispatch should be processed. If an event is processed
-// during duration, true is returned; otherwise false is.
-bool MCPlatformWaitForEvent(double duration, bool blocking);
-
-// Return true if the abort key has been pressed since the last check.
-bool MCPlatformGetAbortKeyPressed(void);
-
-// Get the current (right now!) state of the mouse button.
-bool MCPlatformGetMouseButtonState(uindex_t button);
-
-// Get the current (right now!) state of the modifier keys.
-MCPlatformModifiers MCPlatformGetModifiersState(void);
-
-// Peek into the event queue and pull out a mouse click event (down then up)
-// for the given button. If button is 0, then any button click will do.
-bool MCPlatformGetMouseClick(uindex_t button, MCPoint& r_location);
-
-// Get the position of the mouse in global coords.
-void MCPlatformGetMousePosition(MCPoint& r_location);
-// Set the position of the mouse in global coords.
-void MCPlatformSetMousePosition(MCPoint location);
-
-// Make the given window grab the pointer (if possible).
-void MCPlatformGrabPointer(MCPlatformWindowRef window);
-
-// Release the pointer from a grab.
-void MCPlatformUngrabPointer(void);
-
-// Get the window (that we know about) at the given co-ords.
-void MCPlatformGetWindowAtPoint(MCPoint location, MCPlatformWindowRef& r_window);
-
-// Return the 'time' of the last event.
-uint32_t MCPlatformGetEventTime(void);
-
-// Flush events of the specified types in mask.
-void MCPlatformFlushEvents(MCPlatformEventMask mask);
-
-////////////////////////////////////////////////////////////////////////////////
-
 typedef uint32_t MCPlatformKeyCode;
 enum
 {
@@ -498,6 +432,75 @@ enum
 	
 	kMCPlatformKeyCodeDelete		= 0xffff,
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+// System properties are settings that can be queried from the system.
+//
+// TODO-REVIEW: Perhaps these would be better classed as metrics?
+//   Or perhaps MCPlatformQuery(...)
+
+enum MCPlatformSystemProperty
+{
+	kMCPlatformSystemPropertyUnknown,
+	
+	kMCPlatformSystemPropertyDoubleClickInterval,
+	kMCPlatformSystemPropertyCaretBlinkInterval,
+	
+	kMCPlatformSystemPropertyHiliteColor,
+	kMCPlatformSystemPropertyAccentColor,
+	
+	kMCPlatformSystemPropertyMaximumCursorSize,
+	kMCPlatformSystemPropertyCursorImageSupport,
+};
+
+void MCPlatformGetSystemProperty(MCPlatformSystemProperty property, MCPlatformPropertyType type, void *value);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Break the current WaitForEvent which is progress.
+void MCPlatformBreakWait(void);
+
+// Wait for any event for at most duration seconds. If blocking is true then
+// no events which cause a dispatch should be processed. If an event is processed
+// during duration, true is returned; otherwise false is.
+bool MCPlatformWaitForEvent(double duration, bool blocking);
+
+// Return true if the abort key has been pressed since the last check.
+bool MCPlatformGetAbortKeyPressed(void);
+
+// Get the current (right now!) state of the mouse button.
+bool MCPlatformGetMouseButtonState(uindex_t button);
+
+// Returns an array of all the currently pressed keys.
+bool MCPlatformGetKeyState(MCPlatformKeyCode*& r_codes, uindex_t& r_code_count);
+
+// Get the current (right now!) state of the modifier keys.
+MCPlatformModifiers MCPlatformGetModifiersState(void);
+
+// Peek into the event queue and pull out a mouse click event (down then up)
+// for the given button. If button is 0, then any button click will do.
+bool MCPlatformGetMouseClick(uindex_t button, MCPoint& r_location);
+
+// Get the position of the mouse in global coords.
+void MCPlatformGetMousePosition(MCPoint& r_location);
+// Set the position of the mouse in global coords.
+void MCPlatformSetMousePosition(MCPoint location);
+
+// Make the given window grab the pointer (if possible).
+void MCPlatformGrabPointer(MCPlatformWindowRef window);
+
+// Release the pointer from a grab.
+void MCPlatformUngrabPointer(void);
+
+// Get the window (that we know about) at the given co-ords.
+void MCPlatformGetWindowAtPoint(MCPoint location, MCPlatformWindowRef& r_window);
+
+// Return the 'time' of the last event.
+uint32_t MCPlatformGetEventTime(void);
+
+// Flush events of the specified types in mask.
+void MCPlatformFlushEvents(MCPlatformEventMask mask);
 
 ////////////////////////////////////////////////////////////////////////////////
 
