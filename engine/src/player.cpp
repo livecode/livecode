@@ -205,6 +205,7 @@ MCPropertyInfo MCPlayer::kProperties[] =
 	DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_CONSTRAINTS, MultimediaQTVRConstraints, MCPlayer, Constraints)
     DEFINE_RO_OBJ_LIST_PROPERTY(P_ENABLED_TRACKS, LinesOfUInt, MCPlayer, EnabledTracks)
     DEFINE_RW_OBJ_PROPERTY(P_PLAY_LOUDNESS, UInt16, MCPlayer, PlayLoudness)
+    DEFINE_RO_OBJ_PROPERTY(P_TIME_SCALE, UInt32, MCPlayer, TimeScale)
 };
 
 MCObjectPropertyTable MCPlayer::kPropertyTable =
