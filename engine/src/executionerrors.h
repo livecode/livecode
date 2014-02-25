@@ -2549,6 +2549,12 @@ enum Exec_errors
     
     // {EE-0826} textEncode: could not encode text
     EE_TEXTENCODE_FAILED,
+    
+    // {EE-0827} normalizeText: bad normal form
+    EE_NORMALIZETEXT_BADFORM,
+    
+    // {EE-0828} normalizeText: bad text expression
+    EE_NORMALIZETEXT_BADTEXT,
 };
 
 extern const char *MCexecutionerrors;

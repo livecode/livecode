@@ -1653,6 +1653,27 @@ public:
     virtual void compile(MCSyntaxFactoryRef);
 };
 
+class MCNormalizeText : public MCFunction
+{
+    MCExpression *m_text;
+    MCExpression *m_form;
+public:
+    MCNormalizeText()
+    {
+        m_text = m_form = NULL;
+    }
+    virtual ~MCNormalizeText();
+    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
+    virtual void eval_ctxt(MCExecContext&, MCExecValue&);
+    virtual void compile(MCSyntaxFactoryRef);
+};
+
+
+class MCCodepointProperty : public MCFunction
+{
+    
+};
+
 class MCTicks : public MCConstantFunctionCtxt<double, MCDateTimeEvalTicks>
 {
 public:

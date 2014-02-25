@@ -1155,6 +1155,7 @@ LT factor_table[] =
         {"no", TT_UNOP, O_NOT},
         {"nodes", TT_PROPERTY, P_NODES},
         {"noncontiguoushilites", TT_PROPERTY, P_NONCONTIGUOUS_HILITES},
+        {"normalizetext", TT_FUNCTION, F_NORMALIZE_TEXT},
         {"not", TT_UNOP, O_NOT},
         {"num", TT_PROPERTY, P_NUMBER},
         {"number", TT_PROPERTY, P_NUMBER},

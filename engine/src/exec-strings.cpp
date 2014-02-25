@@ -43,6 +43,7 @@ MC_EXEC_DEFINE_EVAL_METHOD(Strings, NumToByte, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, ByteToNum, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, TextDecode, 2);
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, TextEncode, 2);
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, NormalizeText, 2);
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, Length, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, MatchText, 4)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, MatchChunk, 4)
@@ -442,6 +443,35 @@ void MCStringsEvalTextEncode(MCExecContext& ctxt, MCStringRef p_encoding, MCStri
         ctxt.LegacyThrow(EE_TEXTENCODE_FAILED);
         return;
     }
+}
+
+void MCStringsEvalNormalizeText(MCExecContext& ctxt, MCStringRef p_text, MCStringRef p_form, MCStringRef &r_string)
+{
+    bool t_success;
+    if (MCStringIsEqualToCString(p_form, "NFC", kMCStringOptionCompareCaseless))
+    {
+        t_success = MCStringNormalizedCopyNFC(p_text, r_string);
+    }
+    else if (MCStringIsEqualToCString(p_form, "NFD", kMCStringOptionCompareCaseless))
+    {
+        t_success = MCStringNormalizedCopyNFD(p_text, r_string);
+    }
+    else if (MCStringIsEqualToCString(p_form, "NFKC", kMCStringOptionCompareCaseless))
+    {
+        t_success = MCStringNormalizedCopyNFKC(p_text, r_string);
+    }
+    else if (MCStringIsEqualToCString(p_form, "NFKD", kMCStringOptionCompareCaseless))
+    {
+        t_success = MCStringNormalizedCopyNFKD(p_text, r_string);
+    }
+    else
+    {
+        ctxt.LegacyThrow(EE_NORMALIZETEXT_BADFORM);
+        return;
+    }
+    
+    if (!t_success)
+        ctxt.Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

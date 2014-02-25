@@ -562,6 +562,10 @@ enum Functions {
     // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
     F_MEASURE_TEXT,
     F_MEASURE_UNICODE_TEXT,
+    
+    F_NORMALIZE_TEXT,
+    
+    F_CODEPOINT_PROPERTY,
 };
 
 enum Handler_type {

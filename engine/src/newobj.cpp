@@ -805,6 +805,10 @@ MCExpression *MCN_new_function(int2 which)
         return new MCMeasureText(false);
     case F_MEASURE_UNICODE_TEXT:
         return new MCMeasureText(true);
+    case F_NORMALIZE_TEXT:
+        return new MCNormalizeText;
+    case F_CODEPOINT_PROPERTY:
+        return new MCCodepointProperty;
     default:
 		break;
 	}

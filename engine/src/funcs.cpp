@@ -5088,6 +5088,50 @@ void MCTextEncode::compile(MCSyntaxFactoryRef ctxt)
     compile_with_args(ctxt, kMCStringsEvalTextEncodeMethodInfo, m_string, m_encoding);
 }
 
+MCNormalizeText::~MCNormalizeText()
+{
+    delete m_text;
+    delete m_form;
+}
+
+Parse_stat MCNormalizeText::parse(MCScriptPoint& sp, Boolean the)
+{
+    if (get2params(sp, &m_text, &m_form) != PS_NORMAL)
+    {
+        MCperror->add(PE_NORMALIZETEXT_BADPARAM, sp);
+        return PS_ERROR;
+    }
+    
+    return PS_NORMAL;
+}
+
+void MCNormalizeText::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    MCAutoStringRef t_text;
+    m_text->eval_stringref(ctxt, &t_text);
+    if (ctxt.HasError())
+    {
+        ctxt.LegacyThrow(EE_NORMALIZETEXT_BADTEXT);
+        return;
+    }
+    
+    MCAutoStringRef t_form;
+    m_form->eval_stringref(ctxt, &t_form);
+    if (ctxt.HasError())
+    {
+        ctxt.LegacyThrow(EE_NORMALIZETEXT_BADFORM);
+        return;
+    }
+    
+    MCStringsEvalNormalizeText(ctxt, *t_text, *t_form, r_value.stringref_value);
+    r_value.type = kMCExecValueTypeStringRef;
+}
+
+void MCNormalizeText::compile(MCSyntaxFactoryRef ctxt)
+{
+    compile_with_args(ctxt, kMCStringsEvalNormalizeTextMethodInfo, m_text, m_form);
+}
+
 MCTextHeightSum::~MCTextHeightSum()
 {
 	delete object;

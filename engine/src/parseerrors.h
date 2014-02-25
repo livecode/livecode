@@ -1646,6 +1646,9 @@ enum Parse_errors
     // {PE-0538} textEncode: bad parameters
     PE_TEXTENCODE_BADPARAM,
     
+    // {PE-0539} normalizeText: bad parameters
+    PE_NORMALIZETEXT_BADPARAM,
+    
 };
 
 extern const char *MCparsingerrors;
