@@ -369,23 +369,6 @@ void MCBaseConvert::compile(MCSyntaxFactoryRef ctxt)
 
 
 
-#define BINARY_NOCOUNT -2
-#define BINARY_ALL -1
-static void MCU_gettemplate(const char *&format, char &cmd, int4 &count)
-{
-	cmd = *format++;
-	if (isdigit(*format))
-		count = strtoul(format, (char **)&format, 10);
-	else
-		if (*format == '*')
-		{
-			count = BINARY_ALL;
-			format++;
-		}
-		else
-			count = 1;
-}
-
 MCBinaryDecode::~MCBinaryDecode()
 {
 	while (params != NULL)

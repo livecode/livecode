@@ -344,7 +344,7 @@ static MCStringEncodingName MCStringEncodingNames[] =
     {NULL, 0},
 };
 
-static bool MCStringsEvalTextEncoding(MCStringRef p_encoding, MCStringEncoding &r_encoding)
+bool MCStringsEvalTextEncoding(MCStringRef p_encoding, MCStringEncoding &r_encoding)
 {
     // First, map the incoming charset name according to the rules in Unicode TR22:
     //  Delete all characters except a-zA-Z0-9
