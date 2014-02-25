@@ -871,7 +871,7 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
 	if (s_menubar_targets[t_parent_menu_index] -> Exists())
 	{
 		s_menubar_lock_count += 1;
-		s_menubar_targets[t_parent_menu_index] -> Get() -> message_with_args(MCM_mouse_down, "");
+		s_menubar_targets[t_parent_menu_index] -> Get() -> message_with_args(MCM_mouse_down, "1");
 		s_menubar_lock_count -= 1;
 	}
 	
