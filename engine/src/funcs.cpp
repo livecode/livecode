@@ -5126,7 +5126,7 @@ Parse_stat MCCodepointProperty::parse(MCScriptPoint &sp, Boolean the)
     if (get2params(sp, &m_codepoint, &m_property) != PS_NORMAL)
     {
         MCperror->add(PE_CODEPOINTPROPERTY_BADPARAM, sp);
-        return;
+        return PS_ERROR;
     }
     
     return PS_NORMAL;

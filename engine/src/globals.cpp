@@ -1010,13 +1010,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 		}
 		else
 			delete newtheme;
-	}
-    // Create the basic locale and the system locale
-    if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
-        return false;
-    kMCSystemLocale = MCS_getsystemlocale();
-    if (kMCSystemLocale == nil)
-        return false;
+    }
 
 	MCsystemprinter = MCprinter = MCscreen -> createprinter();
 	MCprinter -> Initialize();
