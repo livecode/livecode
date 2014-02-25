@@ -1475,7 +1475,11 @@ static bool MCPropertyFormatPointList(MCPoint *p_list, uindex_t p_count, char_t 
         if (t_success && i != 0)
 			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
         
-		t_success = MCStringAppendFormat(*t_list, "%d,%d", p_list[i].x, p_list[i].y);
+        // Special case when two points in the vertex aren't linked
+        if (p_list[i].x == MININT2 && p_list[i].y == MININT2)
+            t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
+        else
+            t_success = MCStringAppendFormat(*t_list, "%d,%d", p_list[i].x, p_list[i].y);
 	}
 	
 	if (t_success)
@@ -1612,14 +1616,25 @@ static bool MCPropertyParsePointList(MCStringRef p_input, char_t p_delimiter, ui
 		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
 			t_new_offset = t_length;
 		
-        if (t_new_offset <= t_old_offset)
+        if (t_new_offset < t_old_offset)
             break;
         
-		if (t_success)
-            t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_point_string);
-        
-        if (t_success)
-            MCU_stoi2x2(*t_point_string, t_point . x, t_point . y);
+        if (t_new_offset == t_old_offset)
+        {
+            // Special case: we have 2 times in a row the delimiter,
+            // the next point is not link to the previous one - we add a
+            // {MIN,MIN} point to ensure this information is passed to the property setter
+            t_point.x = MININT2;
+            t_point.y = MININT2;
+        }
+        else
+        {
+            if (t_success)
+                t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_point_string);
+            
+            if (t_success)
+                MCU_stoi2x2(*t_point_string, t_point . x, t_point . y);
+        }
         
 		if (t_success)
 			t_success = t_list . Push(t_point);
