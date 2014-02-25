@@ -248,13 +248,14 @@ const unichar_t* MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicodePr
             char *t_temp = new char[256];
             uindex_t t_length;
             
-            t_length = u_charName(p_codepoint, U_UNICODE_CHAR_NAME, t_temp, 256, &t_error);
+            t_length = u_charName(p_codepoint, U_UNICODE_CHAR_NAME, t_temp, 255, &t_error);
             
             // The name is in ASCII but we want UTF-16
             for (uindex_t i = 0; i < t_length; i++)
             {
                 s_pointer[i] = t_temp[i];
             }
+            s_pointer[t_length] = 0;
             
             delete[] t_temp;
             break;
@@ -275,13 +276,14 @@ const unichar_t* MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicodePr
             char *t_temp = new char[256];
             uindex_t t_length;
             
-            t_length = u_charName(p_codepoint, U_UNICODE_10_CHAR_NAME, t_temp, 256, &t_error);
+            t_length = u_charName(p_codepoint, U_UNICODE_10_CHAR_NAME, t_temp, 255, &t_error);
             
             // The name is in ASCII but we want UTF-16
             for (uindex_t i = 0; i < t_length; i++)
             {
                 s_pointer[i] = t_temp[i];
             }
+            s_pointer[t_length] = 0;
             
             delete[] t_temp;
             break;
