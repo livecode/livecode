@@ -1069,3 +1069,21 @@ bool MCLocaleBreakIteratorIsBoundary(MCBreakIteratorRef p_iter, uindex_t p_index
     
     return t_result;
 }
+
+uindex_t MCLocaleBreakIteratorBefore(MCBreakIteratorRef p_iter, uindex_t p_index)
+{
+    MCAssert(p_iter != nil);
+    
+    int32_t t_result;
+    t_result = p_iter->m_icu_iter.preceding(p_index);
+    return (t_result == icu::BreakIterator::DONE) ? kMCLocaleBreakIteratorDone : t_result;
+}
+
+uindex_t MCLocaleBreakIteratorAfter(MCBreakIteratorRef p_iter, uindex_t p_index)
+{
+    MCAssert(p_iter != nil);
+    
+    int32_t t_result;
+    t_result = p_iter->m_icu_iter.following(p_index);
+    return (t_result == icu::BreakIterator::DONE) ? kMCLocaleBreakIteratorDone : t_result;
+}

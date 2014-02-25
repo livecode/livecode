@@ -205,6 +205,46 @@ MCBlock* MCParagraph::AppendText(MCStringRef p_string)
 	return t_block;
 }
 
+findex_t MCParagraph::NextChar(findex_t p_in)
+{
+    MCBreakIteratorRef t_iter;
+    /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, kMCBreakIteratorTypeCharacter, t_iter);
+    /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_iter, m_text);
+    uindex_t t_index;
+    t_index = MCLocaleBreakIteratorAfter(t_iter, p_in);
+    return (t_index == kMCLocaleBreakIteratorDone) ? MCStringGetLength(m_text) : t_index;
+}
+
+findex_t MCParagraph::PrevChar(findex_t p_in)
+{
+    MCBreakIteratorRef t_iter;
+    /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, kMCBreakIteratorTypeCharacter, t_iter);
+    /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_iter, m_text);
+    uindex_t t_index;
+    t_index = MCLocaleBreakIteratorBefore(t_iter, p_in);
+    return (t_index == kMCLocaleBreakIteratorDone) ? 0 : t_index;
+}
+
+findex_t MCParagraph::NextWord(findex_t p_in)
+{
+    MCBreakIteratorRef t_iter;
+    /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, kMCBreakIteratorTypeWord, t_iter);
+    /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_iter, m_text);
+    uindex_t t_index;
+    t_index = MCLocaleBreakIteratorAfter(t_iter, p_in);
+    return (t_index == kMCLocaleBreakIteratorDone) ? MCStringGetLength(m_text) : t_index;
+}
+
+findex_t MCParagraph::PrevWord(findex_t p_in)
+{
+    MCBreakIteratorRef t_iter;
+    /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, kMCBreakIteratorTypeWord, t_iter);
+    /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_iter, m_text);
+    uindex_t t_index;
+    t_index = MCLocaleBreakIteratorBefore(t_iter, p_in);
+    return (t_index == kMCLocaleBreakIteratorDone) ? 0 : t_index;
+}
+
 bool MCParagraph::TextIsWordBreak(codepoint_t p_codepoint)
 {
 	return p_codepoint == ' ';
@@ -2149,61 +2189,77 @@ int2 MCParagraph::fdelete(Field_translations type, MCParagraph *&undopgptr)
 	bptr->GetRange(bindex, blength);
 	switch (type)
 	{
-	case FT_DELBCHAR:
+    case FT_DELBSUBCHAR:
+    {
 		if (focusedindex == 0)
 			return -1;
+            
+        // Because we are deleting a subchar, we need to decompose the current char
+        findex_t t_charstart, t_charend;
+        t_charstart = PrevChar(focusedindex);
+        t_charend = focusedindex;
+        
+        // Get the bit of text we need to decompose and do so
+        MCAutoStringRef t_composed, t_decomposed;
+        MCRange t_range;
+        t_range = MCRangeMake(t_charstart, t_charend - t_charstart);
+        /* UNCHECKED */ MCStringCopySubstring(m_text, t_range, &t_composed);
+        /* UNCHECKED */ MCStringNormalizedCopyNFD(*t_composed, &t_decomposed);
+        
+        // Replace the character with its decomposed form. This requires adjusting
+        // all the blocks to alter their indices.
+        /* UNCHECKED */ MCStringReplace(m_text, t_range, *t_decomposed);
+        
+        findex_t t_delta = MCStringGetLength(*t_decomposed) - MCStringGetLength(*t_composed);
+        MCBlock *t_bptr = indextoblock(t_charstart, False);
+        t_bptr->MoveRange(0, t_delta);
+        while ((t_bptr = t_bptr->next()) != blocks)
+        {
+            t_bptr->MoveRange(t_delta, 0);
+        }
+        
+        focusedindex += t_delta;
+        startindex += t_delta;
+        endindex += t_delta;
+        originalindex += t_delta;
+        si += t_delta;
+        ei += t_delta;
+        
+        // After all that has been done, we want to delete a single codepoint
 		si = DecrementIndex(focusedindex);
 		break;
+    }
+    case FT_DELBCHAR:
+        if (focusedindex == 0)
+            return -1;
+        si = PrevChar(focusedindex);
+        break;
 	case FT_DELBWORD:
 		if (focusedindex == 0)
 			return -1;
 		si = DecrementIndex(focusedindex);
-		while (si && TextIsWordBreak(GetCodepointAtIndex(si)))
-		{
+		
+        // TODO: find out if ICU break iterator makes this redundant
+        while (si && TextIsWordBreak(GetCodepointAtIndex(si)))
 			si = DecrementIndex(si);
-			if (si < bindex)
-			{
-				bptr = bptr->prev();
-				bptr->GetRange(bindex, blength);
-			}
-		}
-		while (si && !TextIsWordBreak(GetCodepointAtIndex(DecrementIndex(si))))
-		{
-			si = DecrementIndex(si);
-			if (si < bindex)
-			{
-				bptr = bptr->prev();
-				bptr->GetRange(bindex, blength);
-			}
-		}
+
+        si = PrevWord(si);
 		break;
 	case FT_DELFCHAR:
 		if (focusedindex == gettextlength())
 			return 1;
-		ei = IncrementIndex(focusedindex);
+		ei = NextChar(focusedindex);
 		break;
 	case FT_DELFWORD:
 		if (focusedindex == gettextlength())
 			return 1;
 		ei = IncrementIndex(focusedindex);
+            
+        // TODO: find out if ICU break iterator makes this redundant
 		while (ei < gettextlength() && TextIsWordBreak(GetCodepointAtIndex(ei)))
-		{
 			ei = IncrementIndex(ei);
-			if (ei >= bindex + blength)
-			{
-				bptr = bptr->next();
-				bptr->GetRange(bindex, blength);
-			}
-		}
-		while (ei < gettextlength() && !TextIsWordBreak(GetCodepointAtIndex(ei)))
-		{
-			ei = IncrementIndex(ei);
-			if (ei >= bindex + blength)
-			{
-				bptr = bptr->next();
-				bptr->GetRange(bindex, blength);
-			}
-		}
+
+        ei = NextWord(ei);
 		break;
 	case FT_DELBOL:
 		{
