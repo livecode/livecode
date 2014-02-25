@@ -24,7 +24,7 @@
 
 #include "mac-internal.h"
 
-#if DOES_NOT_WORK
+#if 1
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,6 +36,7 @@
 // This approach should mean that detecting for the abort-key has zero overhead.
 
 static volatile bool s_abort_key_pressed = false;
+static volatile bool s_abort_key_checked = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -75,6 +76,11 @@ static CGEventRef abort_key_callback(CGEventTapProxy p_proxy, CGEventType p_type
 	return p_event;
 }
 
+static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
+{
+	s_abort_key_checked = false;
+}
+
 @implementation com_runrev_livecode_MCAbortKeyThread
 
 - (void)main
@@ -97,14 +103,19 @@ static CGEventRef abort_key_callback(CGEventTapProxy p_proxy, CGEventType p_type
 	
 	CFRunLoopSourceRef t_event_tap_source;
 	t_event_tap_source = CFMachPortCreateRunLoopSource(NULL, t_event_tap_port, 0);
-	
 	CFRunLoopAddSource([t_loop getCFRunLoop], t_event_tap_source, kCFRunLoopDefaultMode);
+
+	CFRunLoopTimerRef t_runloop_timer;
+	t_runloop_timer = CFRunLoopTimerCreate(NULL, CFAbsoluteTimeGetCurrent(), 0.25, 0, 0, abort_key_timer_callback, nil);
+	CFRunLoopAddTimer([t_loop getCFRunLoop], t_runloop_timer, kCFRunLoopDefaultMode);
 	
 	m_is_running = true;
 	while(m_is_running &&
 		  [t_loop runMode: NSDefaultRunLoopMode beforeDate: [NSDate distantFuture]])
 		;
 
+	CFRunLoopRemoveTimer([t_loop getCFRunLoop], t_runloop_timer, kCFRunLoopDefaultMode);
+	CFRelease(t_runloop_timer);
 	CFRunLoopRemoveSource([t_loop getCFRunLoop], t_event_tap_source, kCFRunLoopDefaultMode);
 	CFRelease(t_event_tap_source);
 	CFRelease(t_event_tap_port);
@@ -134,6 +145,15 @@ static CGEventRef abort_key_callback(CGEventTapProxy p_proxy, CGEventType p_type
 
 bool MCPlatformGetAbortKeyPressed(void)
 {
+	if (!s_abort_key_checked)
+	{
+		[NSApp nextEventMatchingMask: 0
+						   untilDate: nil
+							  inMode: NSEventTrackingRunLoopMode
+							 dequeue: NO];
+		s_abort_key_checked = true;
+	}
+	
 	if (!s_abort_key_pressed)
 		return false;
 	

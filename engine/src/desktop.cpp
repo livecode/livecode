@@ -605,6 +605,7 @@ void MCPlatformHandleTextInputQueryTextRect(MCPlatformWindowRef p_window, MCRang
 
 void MCPlatformHandleTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_range, unichar_t*& r_chars, uindex_t& r_char_count, MCRange& r_actual_range)
 {
+	// COCOA-TODO: Implement QueryText
 	r_chars = nil;
 	r_char_count = 0;
 	r_actual_range = p_range;
