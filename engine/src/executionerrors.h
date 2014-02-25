@@ -2555,6 +2555,12 @@ enum Exec_errors
     
     // {EE-0828} normalizeText: bad text expression
     EE_NORMALIZETEXT_BADTEXT,
+    
+    // {EE-0829} codepointProperty: bad codepoint
+    EE_CODEPOINTPROPERTY_BADCODEPOINT,
+
+    // {EE-0830} codepointProperty: bad property name
+    EE_CODEPOINTPROPERTY_BADPROPERTY,
 };
 
 extern const char *MCexecutionerrors;

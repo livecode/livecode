@@ -5115,6 +5115,50 @@ void MCNormalizeText::compile(MCSyntaxFactoryRef ctxt)
     compile_with_args(ctxt, kMCStringsEvalNormalizeTextMethodInfo, m_text, m_form);
 }
 
+MCCodepointProperty::~MCCodepointProperty()
+{
+    delete m_codepoint;
+    delete m_property;
+}
+
+Parse_stat MCCodepointProperty::parse(MCScriptPoint &sp, Boolean the)
+{
+    if (get2params(sp, &m_codepoint, &m_property) != PS_NORMAL)
+    {
+        MCperror->add(PE_CODEPOINTPROPERTY_BADPARAM, sp);
+        return;
+    }
+    
+    return PS_NORMAL;
+}
+
+void MCCodepointProperty::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    MCAutoStringRef t_codepoint;
+    m_codepoint->eval_stringref(ctxt, &t_codepoint);
+    if (ctxt.HasError())
+    {
+        ctxt.LegacyThrow(EE_CODEPOINTPROPERTY_BADCODEPOINT);
+        return;
+    }
+    
+    MCAutoStringRef t_property;
+    m_property->eval_stringref(ctxt, &t_property);
+    if (ctxt.HasError())
+    {
+        ctxt.LegacyThrow(EE_CODEPOINTPROPERTY_BADPROPERTY);
+        return;
+    }
+    
+    MCStringsEvalCodepointProperty(ctxt, *t_codepoint, *t_property, r_value.valueref_value);
+    r_value.type = kMCExecValueTypeValueRef;
+}
+
+void MCCodepointProperty::compile(MCSyntaxFactoryRef ctxt)
+{
+    compile_with_args(ctxt, kMCStringsEvalCodepointPropertyMethodInfo, m_codepoint, m_property);
+}
+
 MCTextHeightSum::~MCTextHeightSum()
 {
 	delete object;

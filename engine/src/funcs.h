@@ -1671,7 +1671,17 @@ public:
 
 class MCCodepointProperty : public MCFunction
 {
-    
+    MCExpression *m_codepoint;
+    MCExpression *m_property;
+public:
+    MCCodepointProperty()
+    {
+        m_codepoint = m_property = NULL;
+    }
+    virtual ~MCCodepointProperty();
+    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
+    virtual void eval_ctxt(MCExecContext&, MCExecValue&);
+    virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCTicks : public MCConstantFunctionCtxt<double, MCDateTimeEvalTicks>

@@ -197,9 +197,112 @@ codepoint_t MCUnicodeGetCharacterProperty(codepoint_t p_codepoint, MCUnicodeProp
 
 const unichar_t* MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicodeProperty p_property)
 {
-    // Not currently supported
-    MCAssert(false);
-	return nil;
+    // This function is really hacky and unpleasant and could do with fixing
+    
+    // Delete any pre-existing string we have
+    // NOTE: this is not thread-safe nor re-entrant
+    static unichar_t *s_pointer = nil;
+    if (s_pointer != nil)
+        delete[] s_pointer;
+    
+    // Which property do we want?
+    UErrorCode t_error = U_ZERO_ERROR;
+    switch (p_property)
+    {
+        case kMCUnicodePropertyAge:
+            // NOT YET SUPPORTED
+            s_pointer = nil;
+            break;
+            
+        case kMCUnicodePropertyCaseFolding:
+        {
+            // Case-fold the codepoint
+            s_pointer = new unichar_t[16];
+            icu::UnicodeString t_string;
+            t_string.append(UChar32(p_codepoint));
+            t_string.foldCase();
+            t_string.extract(s_pointer, 16, t_error);
+            break;
+        }
+            
+        case kMCUnicodePropertyISOComment:
+            // The comment string is always empty
+            s_pointer = nil;
+            break;
+            
+        case kMCUnicodePropertyLowercaseMapping:
+        {
+            // Lowercase the codepoint
+            s_pointer = new unichar_t[16];
+            icu::UnicodeString t_string;
+            t_string.append(UChar32(p_codepoint));
+            t_string.toLower();
+            t_string.extract(s_pointer, 16, t_error);
+            break;
+        }
+            
+        case kMCUnicodePropertyName:
+        {
+            // We assume that this is sufficient for a character name
+            s_pointer = new unichar_t[256];
+            char *t_temp = new char[256];
+            uindex_t t_length;
+            
+            t_length = u_charName(p_codepoint, U_UNICODE_CHAR_NAME, t_temp, 256, &t_error);
+            
+            // The name is in ASCII but we want UTF-16
+            for (uindex_t i = 0; i < t_length; i++)
+            {
+                s_pointer[i] = t_temp[i];
+            }
+            
+            delete[] t_temp;
+            break;
+        }
+            
+            
+        case kMCUnicodePropertyTitlecaseMapping:
+        {
+            // NOT YET SUPPORTED
+            s_pointer = nil;
+            break;
+        }
+            
+        case kMCUnicodePropertyUnicode1Name:
+        {
+            // We assume that this is sufficient for a character name
+            s_pointer = new unichar_t[256];
+            char *t_temp = new char[256];
+            uindex_t t_length;
+            
+            t_length = u_charName(p_codepoint, U_UNICODE_10_CHAR_NAME, t_temp, 256, &t_error);
+            
+            // The name is in ASCII but we want UTF-16
+            for (uindex_t i = 0; i < t_length; i++)
+            {
+                s_pointer[i] = t_temp[i];
+            }
+            
+            delete[] t_temp;
+            break;
+        }
+            
+        case kMCUnicodePropertyUppercaseMapping:
+        {
+            // Uppercase the codepoint
+            s_pointer = new unichar_t[16];
+            icu::UnicodeString t_string;
+            t_string.append(UChar32(p_codepoint));
+            t_string.toUpper();
+            t_string.extract(s_pointer, 16, t_error);
+            break;
+        }
+            
+        default:
+            s_pointer = nil;
+    }
+    
+    return s_pointer;
 }
 
 bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUnicodeProperty p_property,

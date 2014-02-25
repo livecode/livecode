@@ -86,6 +86,7 @@ enum MCUnicodeProperty
     kMCUnicodePropertyChangesWhenCaseFolded,
     kMCUnicodePropertyChangesWhenCaseMapped,
     kMCUnicodePropertyChangesWhenNFKCCaseFolded,
+    kMCUnicodePropertyLastBinary = kMCUnicodePropertyChangesWhenNFKCCaseFolded,
     
     // Integer properties
     kMCUnicodePropertyBidiClass,
@@ -110,12 +111,15 @@ enum MCUnicodeProperty
     kMCUnicodePropertySentenceBreak,
     kMCUnicodePropertyWordBreak,
     kMCUnicodePropertyBidiPairedBracketType,
+    kMCUnicodePropertyLastInteger = kMCUnicodePropertyBidiPairedBracketType,
     
     // Bitmask properties
     kMCUnicodePropertyGeneralCategoryMask,
+    kMCUnicodePropertyLastBitmask = kMCUnicodePropertyGeneralCategoryMask,
     
     // Floating-point properties
     kMCUnicodePropertyNumericValue,
+    kMCUnicodePropertyLastFloatingPoint = kMCUnicodePropertyNumericValue,
     
     // Character properties
     kMCUnicodePropertyBidiMirroringGlyph,
@@ -124,6 +128,7 @@ enum MCUnicodeProperty
     kMCUnicodePropertySimpleTitlecaseMapping,
     kMCUnicodePropertySimpleUppercaseMapping,
     kMCUnicodePropertyBidiPairedBracket,
+    kMCUnicodePropertyLastCharacter = kMCUnicodePropertyBidiPairedBracket,
     
     // String properties
     kMCUnicodePropertyAge,
@@ -134,6 +139,7 @@ enum MCUnicodeProperty
     kMCUnicodePropertyTitlecaseMapping,
     kMCUnicodePropertyUnicode1Name,
     kMCUnicodePropertyUppercaseMapping,
+    kMCUnicodePropertyLastString = kMCUnicodePropertyUppercaseMapping,
    
 };
 

@@ -44,6 +44,7 @@ MC_EXEC_DEFINE_EVAL_METHOD(Strings, ByteToNum, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, TextDecode, 2);
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, TextEncode, 2);
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, NormalizeText, 2);
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, CodepointProperty, 2);
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, Length, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, MatchText, 4)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, MatchChunk, 4)
@@ -472,6 +473,231 @@ void MCStringsEvalNormalizeText(MCExecContext& ctxt, MCStringRef p_text, MCStrin
     
     if (!t_success)
         ctxt.Throw();
+}
+
+struct MCUnicodePropertyMapping
+{
+    MCUnicodeProperty m_propid;
+    const char *m_name;
+};
+
+const MCUnicodePropertyMapping MCUnicodePropertyMap[] =
+{
+    // Missing properties that are present in TR44:
+    //  Name Alias
+    //  Script Extensions
+    //  Decomposition Mapping
+    //  Composition Exclusion
+    //  FC NFKC Closure (deprecated)
+    //  Expands On NFC (deprecated)
+    //  Expands On NFD (deprecated)
+    //  Expands On NFKC (deprecated)
+    //  Expands On NFKD (deprecated)
+    //  NFKC Casefold
+    //  Ideographic
+    //  Unicode Radical Stroke
+    //  Indic Matra Category
+    //  Indic Syllabic Category
+    
+    // Properties we include but TR44 lacks: (capitalised in the table)
+    //  Case Sensitive
+    //  NFC Inert
+    //  NFD Inert
+    //  NFKC Inert
+    //  NFKD Inert
+    //  Segment Starter
+    //  POSIX Alnum
+    //  POSIX Blank
+    //  POSIX Graph
+    //  POSIX Print
+    //  POSIX Hex Digit
+    //  Lead Canonical Combining Class
+    //  Trail Canonical Combining Class
+    //  General Category Mask
+    
+    {kMCUnicodePropertyAlphabetic, "Alphabetic"},
+    {kMCUnicodePropertyASCIIHex, "ASCII Hex Digit"},
+    {kMCUnicodePropertyBidiControl, "Bidi Control"},
+    {kMCUnicodePropertyBidiMirrored, "Bidi Mirrored"},
+    {kMCUnicodePropertyDash, "Dash"},
+    {kMCUnicodePropertyDefaultIgnorable, "Default Ignorable Codepoint"},
+    {kMCUnicodePropertyDeprecated, "Deprecated"},
+    {kMCUnicodePropertyDiacritic, "Diacritic"},
+    {kMCUnicodePropertyExtender, "Extender"},
+    {kMCUnicodePropertyFullCompositionExclusion, "Full Composition Exclusion"},
+    {kMCUnicodePropertyGraphemeBase, "Grapheme Base"},
+    {kMCUnicodePropertyGraphemeExtended, "Grapheme Extend"},
+    {kMCUnicodePropertyGraphemeLink, "Grapheme Link"},
+    {kMCUnicodePropertyHexDigit, "Hex Digit"},
+    {kMCUnicodePropertyHyphen, "Hyphen"},
+    {kMCUnicodePropertyIDContinue, "ID Continue"},
+    {kMCUnicodePropertyIDStart, "ID Start"},
+    {kMCUnicodePropertyIDSBinaryOperator, "IDS Binary Operator"},
+    {kMCUnicodePropertyIDSTrinaryOperator, "IDS Trinary Operator"},
+    {kMCUnicodePropertyJoinControl, "Join Control"},
+    {kMCUnicodePropertyLocalOrderException, "Logical Order Exception"},
+    {kMCUnicodePropertyLowercase, "Lowercase"},
+    {kMCUnicodePropertyMath, "Math"},
+    {kMCUnicodePropertyNoncharacterCodePoint, "Noncharacter Codepoint"},
+    {kMCUnicodePropertyQuotationMark, "Quotation Mark"},
+    {kMCUnicodePropertyRadical, "Radical"},
+    {kMCUnicodePropertySoftDotted, "Soft Dotted"},
+    {kMCUnicodePropertyTerminalPunctuation, "Terminal Punctuation"},
+    {kMCUnicodePropertyUnifiedIdeograph, "Unified Ideograph"},
+    {kMCUnicodePropertyUppercase, "Uppercase"},
+    {kMCUnicodePropertyWhiteSpace, "White Space"},
+    {kMCUnicodePropertyXIDContinue, "XID Continue"},
+    {kMCUnicodePropertyXIDStart, "XID Start"},
+    {kMCUnicodePropertyCaseSensitive, "CASE SENSITIVE"},
+    {kMCUnicodePropertySTerminal, "STerm"},
+    {kMCUnicodePropertyVariationSelector, "Variation Selector"},
+    {kMCUnicodePropertyNFDInert, "NFD INERT"},
+    {kMCUnicodePropertyNFKDInert, "NFKD INERT"},
+    {kMCUnicodePropertyNFCInert, "NFC INERT"},
+    {kMCUnicodePropertyNFKCInert, "NFKC INERT"},
+    {kMCUnicodePropertySegmentStarter, "SEGMENT STARTER"},
+    {kMCUnicodePropertyPatternSyntax, "Pattern Syntax"},
+    {kMCUnicodePropertyPatternWhiteSpace, "Pattern White Space"},
+    {kMCUnicodePropertyPosixAlnum, "POSIX ALNUM"},
+    {kMCUnicodePropertyPosixBlank, "POSIX BLANK"},
+    {kMCUnicodePropertyPosixGraph, "POSIX GRAPH"},
+    {kMCUnicodePropertyPosixPrint, "POSIX PRINT"},
+    {kMCUnicodePropertyPosixHexDigit, "POSIX HEX DIGIT"},
+    {kMCUnicodePropertyCased, "Cased"},
+    {kMCUnicodePropertyCaseIgnorable, "Case Ignorable"},
+    {kMCUnicodePropertyChangesWhenLowercased, "Changes When Lowercased"},
+    {kMCUnicodePropertyChangesWhenUppercased, "Changes When Uppercased"},
+    {kMCUnicodePropertyChangesWhenTitlecased, "Changes When Titlecased"},
+    {kMCUnicodePropertyChangesWhenCaseFolded, "Changes When Casefolded"},
+    {kMCUnicodePropertyChangesWhenCaseMapped, "Changes When Casemapped"},
+    {kMCUnicodePropertyChangesWhenNFKCCaseFolded, "Changes When NFKC Casefolded"},
+    
+    {kMCUnicodePropertyBidiClass, "Bidi Class"},
+    {kMCUnicodePropertyBlock, "Block"},
+    {kMCUnicodePropertyCanonicalCombiningClass, "Canonical Combining Class"},
+    {kMCUnicodePropertyDecompositionType, "Decomposition Type"},
+    {kMCUnicodePropertyEastAsianWidth, "East Asian Width"},
+    {kMCUnicodePropertyGeneralCategory, "General Category"},
+    {kMCUnicodePropertyJoiningGroup, "Joining Group"},
+    {kMCUnicodePropertyJoiningType, "Joining Type"},
+    {kMCUnicodePropertyLineBreak, "Line Break"},
+    {kMCUnicodePropertyNumericType, "Numeric Type"},
+    {kMCUnicodePropertyScript, "Script"},
+    {kMCUnicodePropertyHangulSyllableType, "Hangul Syllable Type"},
+    {kMCUnicodePropertyNFDQuickCheck, "NFD Quick Check"},
+    {kMCUnicodePropertyNFKDQuickCheck, "NFKD Quick Check"},
+    {kMCUnicodePropertyNFCQuickCheck, "NFC Quick Check"},
+    {kMCUnicodePropertyNFKCQuickCheck, "NFKC Quick Check"},
+    {kMCUnicodePropertyLeadCanonicalCombiningClass, "LEAD CANONICAL COMBINING CLASS"},
+    {kMCUnicodePropertyTrailCanonicalCombiningClass, "TRAIL CANONICAL COMBINING CLASS"},
+    {kMCUnicodePropertyGraphemeClusterBreak, "Grapheme Cluster Break"},
+    {kMCUnicodePropertySentenceBreak, "Sentence Break"},
+    {kMCUnicodePropertyWordBreak, "Word Break"},
+    {kMCUnicodePropertyBidiPairedBracketType, "Bidi Paired Bracket Type"},
+    
+    {kMCUnicodePropertyGeneralCategoryMask, "GENERAL CATEGORY MASK"},
+    
+    {kMCUnicodePropertyNumericValue, "Numeric Value"},
+    
+    {kMCUnicodePropertyBidiMirroringGlyph, "Bidi Mirroring Glyph"},
+    {kMCUnicodePropertySimpleCaseFolding, "Simple Case Folding"},
+    {kMCUnicodePropertySimpleLowercaseMapping, "Simple Lowercase Mapping"},
+    {kMCUnicodePropertySimpleTitlecaseMapping, "Simple Titlecase Mapping"},
+    {kMCUnicodePropertySimpleUppercaseMapping, "Simple Uppercase Mapping"},
+    {kMCUnicodePropertyBidiPairedBracket, "Bidi Paired Bracket"},
+    
+    {kMCUnicodePropertyAge, "Age"},
+    {kMCUnicodePropertyCaseFolding, "Case Folding"},
+    {kMCUnicodePropertyISOComment, "ISO Comment"},
+    {kMCUnicodePropertyLowercaseMapping, "Lowercase Mapping"},
+    {kMCUnicodePropertyName, "Name"},
+    {kMCUnicodePropertyTitlecaseMapping, "Titlecase Mapping"},
+    {kMCUnicodePropertyUnicode1Name, "Unicode 1 Name"},
+    {kMCUnicodePropertyUppercaseMapping, "Uppercase Mapping"},
+    
+    {MCUnicodeProperty(0), NULL},
+};
+
+static bool MCStringsMapCodepointPropertyNameToID(MCStringRef p_name, MCUnicodeProperty& r_propid)
+{
+    const MCUnicodePropertyMapping *t_mapping;
+    t_mapping = MCUnicodePropertyMap;
+    while (t_mapping->m_name != NULL)
+    {
+        if (MCStringIsEqualToCString(p_name, t_mapping->m_name, kMCStringOptionCompareCaseless))
+        {
+            r_propid = t_mapping->m_propid;
+            return true;
+        }
+        
+        t_mapping++;
+    }
+    
+    return false;
+}
+
+void MCStringsEvalCodepointProperty(MCExecContext& ctxt, MCStringRef p_codepoint, MCStringRef p_property, MCValueRef &r_value)
+{
+    // Verify that we have a single codepoint
+    if (MCStringGetLength(p_codepoint) != 1
+        && (MCStringGetLength(p_codepoint) != 2 || MCStringIsValidSurrogatePair(p_codepoint, 0)))
+    {
+        ctxt.LegacyThrow(EE_CODEPOINTPROPERTY_BADCODEPOINT);
+        return;
+    }
+    
+    codepoint_t t_codepoint;
+    t_codepoint = MCStringGetCodepointAtIndex(p_codepoint, 0);
+    
+    // Look up the property ID
+    MCUnicodeProperty t_propid;
+    if (!MCStringsMapCodepointPropertyNameToID(p_property, t_propid))
+    {
+        ctxt.LegacyThrow(EE_CODEPOINTPROPERTY_BADPROPERTY);
+        return;
+    }
+    
+    if (t_propid <= kMCUnicodePropertyLastBinary)
+    {
+        if (MCUnicodeGetBinaryProperty(t_codepoint, t_propid))
+            r_value = MCValueRetain(kMCTrue);
+        else
+            r_value = MCValueRetain(kMCFalse);
+    }
+    else if (t_propid <= kMCUnicodePropertyLastBitmask) // Includes integers
+    {
+        int32_t t_value;
+        t_value = MCUnicodeGetIntegerProperty(t_codepoint, t_propid);
+        /* UNCHECKED */ MCNumberCreateWithInteger(t_value, (MCNumberRef&)r_value);
+    }
+    else if (t_propid <= kMCUnicodePropertyLastFloatingPoint)
+    {
+        double t_value;
+        t_value = MCUnicodeGetFloatProperty(t_codepoint, t_propid);
+        /* UNCHECKED */ MCNumberCreateWithReal(t_value, (MCNumberRef&)r_value);
+    }
+    else if (t_propid <= kMCUnicodePropertyLastCharacter)
+    {
+        codepoint_t t_value;
+        t_value = MCUnicodeGetCharacterProperty(t_codepoint, t_propid);
+        /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)&t_value, 4, kMCStringEncodingUTF32, false, (MCStringRef&)r_value);
+    }
+    else if (t_propid <= kMCUnicodePropertyLastString)
+    {
+        const unichar_t *t_value;
+        t_value = MCUnicodeGetStringProperty(t_codepoint, t_propid);
+        uindex_t t_length = 0;
+        while (t_value && t_value[t_length] != 0)
+            t_length++;
+        /* UNCHECKED */ MCStringCreateWithChars(t_value, t_length, (MCStringRef&)r_value);
+    }
+    else
+    {
+        // Shouldn't get here
+        MCAssert(false);
+        ctxt.LegacyThrow(EE_CODEPOINTPROPERTY_BADPROPERTY);
+        return;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

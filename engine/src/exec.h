@@ -2008,6 +2008,7 @@ extern MCExecMethodInfo *kMCStringsEvalByteToNumMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalTextDecodeMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalTextEncodeMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalNormalizeTextMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalCodepointPropertyMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalLengthMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalMatchTextMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalMatchChunkMethodInfo;
@@ -2071,6 +2072,8 @@ void MCStringsEvalTextDecode(MCExecContext& ctxt, MCStringRef p_encoding, MCData
 void MCStringsEvalTextEncode(MCExecContext& ctxt, MCStringRef p_encoding, MCStringRef p_decoded_text, MCDataRef& r_encoded_text);
 
 void MCStringsEvalNormalizeText(MCExecContext& ctxt, MCStringRef p_text, MCStringRef p_form, MCStringRef& r_string);
+
+void MCStringsEvalCodepointProperty(MCExecContext& ctxt, MCStringRef p_text, MCStringRef p_form, MCValueRef& r_value);
 
 void MCStringsEvalLength(MCExecContext& ctxt, MCStringRef p_string, integer_t& r_length);
 

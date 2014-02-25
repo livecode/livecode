@@ -645,6 +645,7 @@ LT factor_table[] =
         {"closebox", TT_PROPERTY, P_CLOSE_BOX},
         {"cmdkey", TT_FUNCTION, F_COMMAND_KEY},
         {"codepoint", TT_CHUNK, CT_CODEPOINT},
+        {"codepointproperty", TT_FUNCTION, F_CODEPOINT_PROPERTY},
         {"codepointtonum", TT_FUNCTION, F_UNICODE_CHAR_TO_NUM},
 		{"codepoints", TT_CLASS, CT_CODEPOINT},
         {"codeunit", TT_CHUNK, CT_CODEUNIT},
