@@ -709,8 +709,22 @@ uint2 MCScreenDC::querymods()
 	if (lockmods)
 		return MCmodifierstate;
 
+	MCPlatformModifiers t_state;
+	t_state = MCPlatformGetModifiersState();
+	
 	uint2 state;
-	state = 0;
+	if ((t_state & kMCPlatformModifierShift) != 0)
+		state |= MS_SHIFT;
+	if ((t_state & kMCPlatformModifierControl) != 0)
+		state |= MS_CONTROL;
+	if ((t_state & kMCPlatformModifierAlt) != 0)
+		state |= MS_MOD1;
+	if ((t_state & kMCPlatformModifierCommand) != 0)
+		state |= MS_MOD2;
+	if ((t_state & kMCPlatformModifierCapsLock) != 0)
+		state |= MS_CAPS_LOCK;
+	
+	return state;
 }
 
 void MCScreenDC::getkeysdown(MCExecPoint &ep)

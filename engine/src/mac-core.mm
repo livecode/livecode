@@ -500,6 +500,11 @@ bool MCPlatformGetMouseButtonState(uindex_t p_button)
 	return (t_buttons & (1 << (p_button - 1))) != 0;
 }
 
+MCPlatformModifiers MCPlatformGetModifiersState(void)
+{
+	return MCMacPlatformMapNSModifiersToModifiers([NSEvent modifierFlags]);
+}
+
 bool MCPlatformGetMouseClick(uindex_t p_button, MCPoint& r_location)
 {
 	// We want to try and remove a whole click from the queue. Which button

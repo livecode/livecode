@@ -281,6 +281,9 @@ bool MCPlatformGetAbortKeyPressed(void);
 // Get the current (right now!) state of the mouse button.
 bool MCPlatformGetMouseButtonState(uindex_t button);
 
+// Get the current (right now!) state of the modifier keys.
+MCPlatformModifiers MCPlatformGetModifiersState(void);
+
 // Peek into the event queue and pull out a mouse click event (down then up)
 // for the given button. If button is 0, then any button click will do.
 bool MCPlatformGetMouseClick(uindex_t button, MCPoint& r_location);
