@@ -446,6 +446,11 @@ bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUni
     return true;
 }
 
+const char* MCUnicodeGetPropertyValueName(MCUnicodeProperty p_prop, int32_t p_value)
+{
+    return u_getPropertyValueName(MCUnicodePropToICUProp[p_prop], p_value, U_LONG_PROPERTY_NAME);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Where possible, the u_hasBinaryProperty and u_charType functions are

@@ -668,7 +668,15 @@ void MCStringsEvalCodepointProperty(MCExecContext& ctxt, MCStringRef p_codepoint
     {
         int32_t t_value;
         t_value = MCUnicodeGetIntegerProperty(t_codepoint, t_propid);
-        /* UNCHECKED */ MCNumberCreateWithInteger(t_value, (MCNumberRef&)r_value);
+        
+        // Attempt to map the property value to a string. If it isn't possible,
+        // return the property's integer value instead.
+        const char *t_prop_string;
+        t_prop_string = MCUnicodeGetPropertyValueName(t_propid, t_value);
+        if (t_prop_string != nil)
+            /* UNCHECKED */ MCStringCreateWithCString(t_prop_string, (MCStringRef&)r_value);
+        else
+            /* UNCHECKED */ MCNumberCreateWithInteger(t_value, (MCNumberRef&)r_value);
     }
     else if (t_propid <= kMCUnicodePropertyLastFloatingPoint)
     {

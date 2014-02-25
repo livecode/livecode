@@ -252,6 +252,10 @@ bool    MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count,
                              MCUnicodeProperty, MCUnicodePropertyType,
                              void *x_result_array);
 
+// Returns the name of a Unicode property. The returned pointer is internal and
+// should not be modified. (Unicode property value names are always ASCII).
+const char*    MCUnicodeGetPropertyValueName(MCUnicodeProperty, int32_t p_prop_value);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Shortcuts to (approximate) equivalents of the standard is_* ctype functions
