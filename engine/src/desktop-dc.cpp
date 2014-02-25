@@ -713,6 +713,7 @@ uint2 MCScreenDC::querymods()
 	t_state = MCPlatformGetModifiersState();
 	
 	uint2 state;
+	state = 0;
 	if ((t_state & kMCPlatformModifierShift) != 0)
 		state |= MS_SHIFT;
 	if ((t_state & kMCPlatformModifierControl) != 0)
