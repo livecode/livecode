@@ -1024,7 +1024,12 @@ bool MCScreenDC::setclipboard(MCPasteboard *p_pasteboard)
 	uindex_t t_type_count;
 	if (!p_pasteboard -> Query(t_types, t_type_count))
 		return false;
-		
+	
+	// We must set the pasteboard here as we might get our data callback invoked
+	// whilst setting data.
+	s_local_clipboard = p_pasteboard;
+	s_local_clipboard -> Retain();
+	
 	for(uindex_t i = 0; i < t_type_count; i++)
 	{
 		MCPlatformPasteboardFlavor t_flavors[2];
@@ -1069,8 +1074,6 @@ bool MCScreenDC::setclipboard(MCPasteboard *p_pasteboard)
 			MCPlatformPasteboardStore(t_clipboard, t_flavors, t_flavor_count, (void *)fetch_clipboard);
 	}
 	
-	s_local_clipboard = p_pasteboard;
-	s_local_clipboard -> Retain();
 	s_clipboard_generation = MCPlatformPasteboardGetGeneration(t_clipboard);
 	
 	return true;

@@ -694,13 +694,13 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 	MCRedrawUnlockScreen();
 }
 
-static void synthesize_key_press(MCPlatformWindowRef p_window, char p_char)
+static void synthesize_key_press(MCPlatformWindowRef p_window, char p_char, KeySym p_sym)
 {
 	char t_string[2];
 	t_string[0] = p_char;
 	t_string[1] = '\0';
-	MCdispatcher -> wkdown(p_window, t_string, p_char);
-	MCdispatcher -> wkup(p_window, t_string, p_char);
+	MCdispatcher -> wkdown(p_window, t_string, p_sym);
+	MCdispatcher -> wkup(p_window, t_string, p_sym);
 }
 
 static void synthesize_move_with_shift(MCField *p_field, Field_translations p_action)
@@ -764,16 +764,16 @@ void MCPlatformHandleTextInputAction(MCPlatformWindowRef p_window, MCPlatformTex
 		case kMCPlatformTextInputActionInsertContainerBreak:
 			break;
 		case kMCPlatformTextInputActionInsertLineBreak:
-			synthesize_key_press(p_window, 11);
+			synthesize_key_press(p_window, 11, 0);
 			break;
 		case kMCPlatformTextInputActionInsertNewline:
-			synthesize_key_press(p_window, '\n');
+			synthesize_key_press(p_window, '\n', XK_Return);
 			break;
 		case kMCPlatformTextInputActionInsertParagraphSeparator:
-			synthesize_key_press(p_window, '\n');
+			synthesize_key_press(p_window, '\n', XK_Return);
 			break;
 		case kMCPlatformTextInputActionInsertTab:
-			synthesize_key_press(p_window, '\t');
+			synthesize_key_press(p_window, '\t', XK_Tab);
 			break;
 		case kMCPlatformTextInputActionLowercaseWord:
 			break;

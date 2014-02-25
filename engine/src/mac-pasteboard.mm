@@ -105,7 +105,6 @@ bool MCPlatformPasteboardQuery(MCPlatformPasteboardRef p_pasteboard, MCPlatformP
 	t_items = [p_pasteboard -> ns_pasteboard pasteboardItems];
 	
 	// For now we are only interested in the first one.
-	// COCOA-TODO: Support multiple files.
 	NSPasteboardItem *t_item;
 	if ([t_items count] > 0)
 		t_item = (NSPasteboardItem *)[t_items objectAtIndex: 0];
@@ -118,7 +117,7 @@ bool MCPlatformPasteboardQuery(MCPlatformPasteboardRef p_pasteboard, MCPlatformP
 		t_types = [t_item types];
 	else
 		t_types = nil;
-		
+	
 	// Now process the types on the pasteboard.
 	MCPlatformPasteboardFlavor *t_flavors;
 	uindex_t t_flavor_count;
@@ -170,46 +169,68 @@ bool MCPlatformPasteboardFetch(MCPlatformPasteboardRef p_pasteboard, MCPlatformP
 	NSArray *t_items;
 	t_items = [p_pasteboard -> ns_pasteboard pasteboardItems];
 	
-	// For now we are only interested in the first one.
-	// COCOA-TODO: Support multiple files.
-	NSPasteboardItem *t_item;
-	if ([t_items count] > 0)
-		t_item = (NSPasteboardItem *)[t_items objectAtIndex: 0];
-	else
-		t_item = nil;
-	
-	// Get the list of types.
-	NSArray *t_types;
-	if (t_item != nil)
-		t_types = [t_item types];
-	else
-		t_types = nil;
-	
-	// Now loop through our mapping list, trying to find a format that is appropriate.
-	for(uindex_t i = 0; i < [t_types count]; i++)
+	// If we are requesting files, then handle it specially.
+	if (p_flavor == kMCPlatformPasteboardFlavorFiles)
 	{
-		NSString *t_type;
-		t_type = (NSString *)[t_types objectAtIndex: i];
+		NSArray *t_urls;
+		t_urls = [p_pasteboard -> ns_pasteboard readObjectsForClasses: [NSArray arrayWithObject: [NSURL class]]
+															  options: [NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] 
+																								   forKey: NSPasteboardURLReadingFileURLsOnlyKey]];
+		
+		NSMutableString *t_files;
+		t_files = [[NSMutableString alloc] init];
+		for(uindex_t i = 0; i < [t_urls count]; i++)
+			[t_files appendFormat: @"%s%@", i != 0 ? "\n" : "", [(NSURL *)[t_urls objectAtIndex: i] path]];
 
-		for(uindex_t j = 0; j < sizeof(s_flavor_mappings) / sizeof(s_flavor_mappings[0]); j++)
-			if ([t_type isEqualTo: s_flavor_mappings[j] . type] &&
-				p_flavor == s_flavor_mappings[j] . flavor)
-			{
-				NSData *t_data;
-				t_data = [t_item dataForType: t_type];
-				
-				MCString t_in_data;
-				t_in_data . set((const char *)[t_data bytes], [t_data length]);
-				
-				MCString t_out_data;
-				if (!s_flavor_mappings[j] . converter(t_in_data, t_out_data))
-					return false;
-				
-				r_bytes = (void *)t_out_data . getstring();
-				r_byte_count = t_out_data . getlength();
-				
-				return true;
-			}
+		r_bytes = strdup([t_files UTF8String]);
+		r_byte_count = strlen((char *)r_bytes);
+
+		[t_files release];
+	
+		return true;
+	}
+	else
+	{
+		// For now we are only interested in the first one.
+		NSPasteboardItem *t_item;
+		if ([t_items count] > 0)
+			t_item = (NSPasteboardItem *)[t_items objectAtIndex: 0];
+		else
+			t_item = nil;
+		
+		// Get the list of types.
+		NSArray *t_types;
+		if (t_item != nil)
+			t_types = [t_item types];
+		else
+			t_types = nil;
+		
+		// Now loop through our mapping list, trying to find a format that is appropriate.
+		for(uindex_t i = 0; i < [t_types count]; i++)
+		{
+			NSString *t_type;
+			t_type = (NSString *)[t_types objectAtIndex: i];
+
+			for(uindex_t j = 0; j < sizeof(s_flavor_mappings) / sizeof(s_flavor_mappings[0]); j++)
+				if ([t_type isEqualTo: s_flavor_mappings[j] . type] &&
+					p_flavor == s_flavor_mappings[j] . flavor)
+				{
+					NSData *t_data;
+					t_data = [t_item dataForType: t_type];
+					
+					MCString t_in_data;
+					t_in_data . set((const char *)[t_data bytes], [t_data length]);
+					
+					MCString t_out_data;
+					if (!s_flavor_mappings[j] . converter(t_in_data, t_out_data))
+						return false;
+					
+					r_bytes = (void *)t_out_data . getstring();
+					r_byte_count = t_out_data . getlength();
+					
+					return true;
+				}
+		}
 	}
 	
 	return false;
@@ -303,59 +324,88 @@ void MCPlatformPasteboardClear(MCPlatformPasteboardRef p_pasteboard)
 
 bool MCPlatformPasteboardStore(MCPlatformPasteboardRef p_pasteboard, MCPlatformPasteboardFlavor *p_flavors, uindex_t p_flavor_count, void *p_handle)
 {
-	NSPasteboardItem *t_item;
-	t_item = [[NSPasteboardItem alloc] init];
-	
-	com_runrev_livecode_MCPasteboardProvider *t_provider;
-	t_provider = [[com_runrev_livecode_MCPasteboardProvider alloc] initWithPasteboard: p_pasteboard handle: p_handle];
-	
-	NSMutableArray *t_flavor_strings;
-	t_flavor_strings = [[NSMutableArray alloc] init];
-	for(uindex_t i = 0; i < p_flavor_count; i++)
+	// We handle files specially.
+	if (p_flavor_count > 0 && p_flavors[0] == kMCPlatformPasteboardFlavorFiles)
 	{
-		NSString *t_flavor_string;
-		switch(p_flavors[i])
-		{
-			case kMCPlatformPasteboardFlavorUTF8:
-				t_flavor_string = (NSString *)kUTTypeUTF8PlainText;
-				break;
-			case kMCPlatformPasteboardFlavorRTF:
-				t_flavor_string = (NSString *)kUTTypeRTF;
-				break;
-			case kMCPlatformPasteboardFlavorHTML:
-				t_flavor_string = (NSString *)kUTTypeHTML;
-				break;
-			case kMCPlatformPasteboardFlavorPNG:
-				t_flavor_string = (NSString *)kUTTypePNG;
-				break;
-			case kMCPlatformPasteboardFlavorJPEG:
-				t_flavor_string = (NSString *)kUTTypeJPEG;
-				break;
-			case kMCPlatformPasteboardFlavorGIF:
-				t_flavor_string = (NSString *)kUTTypeGIF;
-				break;
-			case kMCPlatformPasteboardFlavorFiles:
-				t_flavor_string = (NSString *)kUTTypeFileURL;
-				break;
-			case kMCPlatformPasteboardFlavorObjects:
-				t_flavor_string = kMCMacPasteboardObjectsUTString;
-				break;
-//			case kMCPlatformPasteboardFlavorStyledText:
-//				t_flavor_string = @"";
-//				break;
-			default:
-				assert(false);
-				break;
-		}
-		[t_flavor_strings addObject: t_flavor_string];
-	}
+		void *t_data;
+		size_t t_data_size;
+		MCPlatformCallbackSendPasteboardResolve(p_pasteboard, kMCPlatformPasteboardFlavorFiles, p_handle, t_data, t_data_size);
 		
-	[t_item setDataProvider: t_provider forTypes: t_flavor_strings];
-	[t_flavor_strings release];
+		NSString *t_string;
+		t_string = [[NSString alloc] initWithBytes: t_data length: t_data_size encoding: NSUTF8StringEncoding];
+		
+		NSArray *t_files;
+		t_files = [t_string componentsSeparatedByString: @"\n"];
+		
+		NSMutableArray *t_urls;
+		t_urls = [[NSMutableArray alloc] init];
+		for(uindex_t i = 0; i < [t_files count]; i++)
+		{
+			NSURL *t_url;
+			t_url = [[NSURL alloc] initFileURLWithPath: (NSString *)[t_files objectAtIndex: i]];
+			if (t_url != nil)
+				[t_urls addObject: t_url];
+			[t_url release];
+		}
+		
+		[p_pasteboard -> ns_pasteboard writeObjects: t_urls];
+		[t_urls release];
+		
+		[t_string release];
+	}
+	else
+	{
+		NSPasteboardItem *t_item;
+		t_item = [[NSPasteboardItem alloc] init];
+		
+		com_runrev_livecode_MCPasteboardProvider *t_provider;
+		t_provider = [[com_runrev_livecode_MCPasteboardProvider alloc] initWithPasteboard: p_pasteboard handle: p_handle];
+		
+		NSMutableArray *t_flavor_strings;
+		t_flavor_strings = [[NSMutableArray alloc] init];
+		for(uindex_t i = 0; i < p_flavor_count; i++)
+		{
+			NSString *t_flavor_string;
+			switch(p_flavors[i])
+			{
+				case kMCPlatformPasteboardFlavorUTF8:
+					t_flavor_string = (NSString *)kUTTypeUTF8PlainText;
+					break;
+				case kMCPlatformPasteboardFlavorRTF:
+					t_flavor_string = (NSString *)kUTTypeRTF;
+					break;
+				case kMCPlatformPasteboardFlavorHTML:
+					t_flavor_string = (NSString *)kUTTypeHTML;
+					break;
+				case kMCPlatformPasteboardFlavorPNG:
+					t_flavor_string = (NSString *)kUTTypePNG;
+					break;
+				case kMCPlatformPasteboardFlavorJPEG:
+					t_flavor_string = (NSString *)kUTTypeJPEG;
+					break;
+				case kMCPlatformPasteboardFlavorGIF:
+					t_flavor_string = (NSString *)kUTTypeGIF;
+					break;
+				case kMCPlatformPasteboardFlavorObjects:
+					t_flavor_string = kMCMacPasteboardObjectsUTString;
+					break;
+	//			case kMCPlatformPasteboardFlavorStyledText:
+	//				t_flavor_string = @"";
+	//				break;
+				default:
+					assert(false);
+					break;
+			}
+			[t_flavor_strings addObject: t_flavor_string];
+		}
+			
+		[t_item setDataProvider: t_provider forTypes: t_flavor_strings];
+		[t_flavor_strings release];
+		
+		[p_pasteboard -> ns_pasteboard writeObjects: [NSArray arrayWithObject: t_item]];
+	}
 	
-	[p_pasteboard -> ns_pasteboard writeObjects: [NSArray arrayWithObject: t_item]];
-	
-	return false;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
