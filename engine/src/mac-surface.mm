@@ -31,9 +31,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+inline bool MCU_empty_rect(const MCRectangle& a)
+{
+	return a . width == 0 || a . height == 0;
+}
+
 // COCOA-TODO: Clean up external linkage for surface.
 extern MCRectangle MCU_intersect_rect(const MCRectangle&, const MCRectangle&);
-extern bool MCU_empty_rect(const MCRectangle&);
 extern bool MCGRasterToCGImage(const MCGRaster &p_raster, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
 extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
 extern MCGFloat MCResGetDeviceScale(void);
