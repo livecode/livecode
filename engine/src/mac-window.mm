@@ -172,6 +172,8 @@ static bool s_lock_responder_change = false;
 		return nil;
 	
 	m_tracking_area = nil;
+	m_use_input_method = false;
+	m_input_method_event = nil;
 	
 	// Register for all dragging types (well ones that convert to 'data' anyway).
 	// COCOA-TODO: Restrict this to the types we actually handle. When we support
@@ -452,8 +454,17 @@ static bool s_lock_responder_change = false;
 - (void)keyDown: (NSEvent *)event
 {
 	if ([self useTextInput])
+	{
+		// Store the event being processed, if it results in a doCommandBySelector,
+		// then dispatch as a key event.
+		m_input_method_event = event;
 		if ([[self inputContext] handleEvent: event])
+		{
+			m_input_method_event = nil;
 			return;
+		}
+		m_input_method_event = nil;
+	}
 	[self handleKeyPress: event isDown: YES];
 }
 
@@ -564,14 +575,25 @@ static bool s_lock_responder_change = false;
 - (void)doCommandBySelector:(SEL)aSelector
 {
 	MCLog("doCommandBySelector:", 0);
-	MCPlatformTextInputAction t_action;
-	if (MCMacMapSelectorToTextInputAction(aSelector, t_action))
-	{
-		MCPlatformCallbackSendTextInputAction([self platformWindow], t_action);
-		return;
-	}
 	
-	[super doCommandBySelector: aSelector];	
+	// If the event came about as a result of a keyDown input method event
+	// then process the key directly.
+	if (m_input_method_event != nil)
+	{
+		[self handleKeyPress: m_input_method_event isDown: YES];
+		[self handleKeyPress: m_input_method_event isDown: NO];
+	}
+	else
+	{
+		MCPlatformTextInputAction t_action;
+		if (MCMacMapSelectorToTextInputAction(aSelector, t_action))
+		{
+			MCPlatformCallbackSendTextInputAction([self platformWindow], t_action);
+			return;
+		}
+		
+		[super doCommandBySelector: aSelector];
+	}
 }
 
 - (void)setMarkedText:(id)aString selectedRange:(NSRange)newSelection replacementRange:(NSRange)replacementRange

@@ -712,6 +712,8 @@ static void synthesize_move_with_shift(MCField *p_field, Field_translations p_ac
 	MCmodifierstate = t_modifier_state;
 }
 
+// This is probably never called now as we catch keyDown's for IME input
+// and dispatch them rather than go through actions.
 void MCPlatformHandleTextInputAction(MCPlatformWindowRef p_window, MCPlatformTextInputAction p_action)
 {
 	if (MCactivefield == nil)

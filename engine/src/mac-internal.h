@@ -108,7 +108,7 @@ class MCMacPlatformSurface;
 @interface com_runrev_livecode_MCWindowView: NSView<NSTextInputClient>
 {
 	NSTrackingArea *m_tracking_area;
-	
+	NSEvent *m_input_method_event;
 	bool m_use_input_method : 1;
 }
 
