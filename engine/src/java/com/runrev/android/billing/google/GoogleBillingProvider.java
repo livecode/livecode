@@ -74,10 +74,17 @@ public class GoogleBillingProvider implements BillingProvider
                 // IAB is fully set up.
                 Log.d(TAG, "Setup successful.");
                 
-                mHelper.queryInventoryAsync(mGotInventoryListener);
+                //mHelper.queryInventoryAsync(mGotInventoryListener);
             }
         });
     }
+	
+	public void onDestroy()
+	{
+		if (mHelper != null)
+            mHelper.dispose();
+        mHelper = null;
+	}
     
     public boolean canMakePurchase()
     {
@@ -109,16 +116,15 @@ public class GoogleBillingProvider implements BillingProvider
     public boolean restorePurchases()
     {
         // Not sure if this is needed, since inventory is queried when the app is launched (initBilling())
-        /*
-         if (mHelper == null)
-         {
+        
+		if (mHelper == null)
+		{
+			return false;
+		}
          
-         return false;
-         }
+		Log.d(TAG, "Querying inventory.");
+		mHelper.queryInventoryAsync(mGotInventoryListener);
          
-         Log.d(TAG, "Querying inventory.");
-         mHelper.queryInventoryAsync(mGotInventoryListener);
-         */
         return true;
     }
     

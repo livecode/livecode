@@ -36,6 +36,11 @@ public class AmazonBillingProvider implements BillingProvider
         //restorePurchases();
     }
     
+    public void onDestroy()
+	{
+    
+	}
+    
     /*Always equals true. The Amazon Appstore allows a customer to disable In-App Purchasing, the IAP workflow
      will reflect this when the user is prompted to buy an item. There is no way for your app to know if a
      user has disabled Amazon In-App Purchasing */

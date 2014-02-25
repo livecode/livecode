@@ -2011,18 +2011,27 @@ public class Engine extends View implements EngineApi
         //public void onPurchaseStateChanged(int purchaseId, int state)
         public void onPurchaseStateChanged(String productId, int state)
         {
-            
-            //TODO : Fetch the value for each property using mBillingProvider.getPurchaseProperties(purchaseId);
             final boolean tVerified = true;
             final int tPurchaseState = state;
             final String tNotificationId = "";
-            //final String tProductId = "";
             final String tProductId = productId;
-            final String tOrderId = "";
-            final long tPurchaseTime = 1;
-            final String tDeveloperPayload = "";
+            final String tOrderId = storeGetPurchaseProperty(productId, "orderId");
+            
+            String tTimeString = storeGetPurchaseProperty(productId, "purchaseTime");
+            long tTime = 0l;
+            try
+            {
+                tTime = Long.parseLong(tTimeString, 10);
+            }
+            catch (NumberFormatException nfe)
+            {
+                
+            }
+            
+            final long tPurchaseTime = tTime;
+            final String tDeveloperPayload = storeGetPurchaseProperty(productId, "developerPayload");
             final String tSignedData = "";
-            final String tSignature = "";
+            final String tSignature = storeGetPurchaseProperty(productId, "signature");
             
             post(new Runnable() {
                 public void run() {
@@ -2639,6 +2648,7 @@ public class Engine extends View implements EngineApi
 	public void onDestroy()
 	{
 		doDestroy();
+        mBillingProvider.onDestroy();
         s_engine_instance = null;
 	}
 

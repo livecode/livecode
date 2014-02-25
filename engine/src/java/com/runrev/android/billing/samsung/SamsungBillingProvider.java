@@ -29,6 +29,7 @@ public class SamsungBillingProvider implements BillingProvider
     
     //private static final int iapMode = SamsungIapHelper.IAP_MODE_COMMERCIAL;
     private static final int iapMode = SamsungIapHelper.IAP_MODE_TEST_SUCCESS;
+    //private static final int iapMode = SamsungIapHelper.IAP_MODE_TEST_FAIL;
     
     private String itemGroupId = null;
     private String pendingPurchaseItemId = null;
@@ -252,11 +253,12 @@ public class SamsungBillingProvider implements BillingProvider
                 }
             }
         });
+
     }
 
     private void startPurchase(String itemId)
     {
-/*
+
         if (!isInitialized)
         {
             isInitialized = true;
@@ -277,7 +279,7 @@ public class SamsungBillingProvider implements BillingProvider
             
             return;
         }
-        */
+        
 
         SamsungIapHelper helper = SamsungIapHelper.getInstance(getActivity(), iapMode);
         helper.showProgressDialog(getActivity());
@@ -340,7 +342,7 @@ public class SamsungBillingProvider implements BillingProvider
             }
             else
             {
-
+                Log.d(TAG, "StatusCode is : " + statusCode);
                 helper.dismissProgressDialog();
                 helper.showIapDialog(getActivity(), "title_iap", errorString, false, null);
             }
@@ -391,6 +393,11 @@ public class SamsungBillingProvider implements BillingProvider
         //this.itemGroupId = "100000102710";
         initHelper();
         started = true;
+    }
+
+    public void onDestroy()
+    {
+
     }
 
     public boolean canMakePurchase()

@@ -71,6 +71,9 @@ public interface BillingProvider
     // Initialize the store
     void initBilling();
     
+    //Dispose any helper objects
+    void onDestroy();
+    
     // helper
     void onActivityResult (int requestCode, int resultCode, Intent data);
     
