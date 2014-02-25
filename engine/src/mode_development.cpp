@@ -689,6 +689,72 @@ static bool enumerate_handlers_for_list(MCObjectList *p_list, MCObject *p_ignore
 //  Implementation of MCObject::getmodeprop for DEVELOPMENT mode.
 //
 
+// IM-2014-02-25: [[ Bug 11841 ]] MCObjectList helper functions
+bool MCObjectListAppend(MCObjectList *&x_list, MCObject *p_object, bool p_unique)
+{
+	if (p_unique && x_list != nil)
+	{
+		MCObjectList *t_object;
+		t_object = x_list;
+		
+		do
+		{
+			if (t_object->getobject() == p_object)
+				return true;
+			t_object = t_object->next();
+		}
+		while (t_object != x_list);
+	}
+
+	MCObjectList *t_newobject;
+	t_newobject = nil;
+	
+	t_newobject = new MCObjectList(p_object);
+	
+	if (t_newobject == nil)
+		return false;
+	
+	if (x_list == nil)
+		x_list = t_newobject;
+	else
+		x_list->append(t_newobject);
+	
+	return true;
+}
+
+bool MCObjectListAppend(MCObjectList *&x_list, MCObjectList *p_list, bool p_unique)
+{
+	bool t_success;
+	t_success = true;
+	
+	if (p_list != nil)
+	{
+		MCObjectList *t_object;
+		t_object = p_list;
+		
+		do
+		{
+			if (!t_object->getremoved())
+				t_success = MCObjectListAppend(x_list, t_object->getobject(), p_unique);
+			t_object = t_object->next();
+		}
+		while (t_success && t_object != p_list);
+	}
+	
+	return t_success;
+}
+
+void MCObjectListFree(MCObjectList *p_list)
+{
+	if (p_list == nil)
+		return;
+	
+	while (p_list->next() != p_list)
+		delete p_list->next();
+	
+	delete p_list;
+}
+
 Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, const MCString &carray, Boolean effective)
 {
 	switch(which)
@@ -710,23 +776,38 @@ Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep,
 		}
 		else
 		{
+			bool t_success;
+			t_success = true;
+			
+			// IM-2014-02-25: [[ Bug 11841 ]] Collect non-repeating objects in the message path
+			MCObjectList *t_object_list;
+			t_object_list = nil;
+			
 			// MM-2013-09-10: [[ Bug 10634 ]] Make we search both parent scripts and library stacks for handlers.
-			t_first = enumerate_handlers_for_list(MCfrontscripts, this, ep, t_first);
+			t_success = MCObjectListAppend(t_object_list, MCfrontscripts, true);
+			
 
-			for (MCObject *t_object = this; t_object != NULL; t_object = t_object -> parent)
+			for (MCObject *t_object = this; t_success && t_object != NULL; t_object = t_object -> parent)
 			{
 				t_object -> parsescript(False);
-				t_first = enumerate_handlers_for_object(t_object, ep, t_first);
+				t_success = MCObjectListAppend(t_object_list, t_object, true);
 			}
 
-			t_first = enumerate_handlers_for_list(MCbackscripts, this, ep, t_first);
+			if (t_success)
+				t_success = MCObjectListAppend(t_object_list, MCbackscripts, true);
 
-			for (uint32_t i = 0; i < MCnusing; i++)
+			for (uint32_t i = 0; t_success && i < MCnusing; i++)
 			{
 				if (MCusing[i] == this)
 					continue;
-				t_first = enumerate_handlers_for_object(MCusing[i], ep, t_first);
-			}			
+				t_success = MCObjectListAppend(t_object_list, MCusing[i], true);
+			}
+			
+			// IM-2014-02-25: [[ Bug 11841 ]] Enumerate the handlers for each object
+			if (t_success)
+				t_first = enumerate_handlers_for_list(t_object_list, nil, ep, t_first);
+			
+			MCObjectListFree(t_object_list);
 		}
 	}
 	break;
