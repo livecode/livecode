@@ -824,7 +824,7 @@ int2 MCBlock::gettabwidth(int2 x, findex_t i)
 		j = 0;
 		while(j < i)
 		{
-			if (t_block -> getflag(F_HAS_TAB))
+            if (t_block -> getflag(F_HAS_TAB))
 			{
 				findex_t k;
 				k = t_block -> GetOffset() + t_block -> GetLength();
@@ -1694,7 +1694,7 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
 		findex_t sptr = i;
 		
 		// MW-2012-02-12: [[ Bug 10662 ]] If the last char is a VTAB then ignore it.
-		if (parent->TextIsLineBreak(parent->GetCodepointAtIndex(sptr + l - 1)))
+        if (parent->TextIsLineBreak(parent->GetCodepointAtIndex(sptr + l - 1)))
 			l--;
 
 		// MW-2012-08-29: [[ Bug 10325 ]] Use 32-bit int to compute the width, then clamp
@@ -1708,7 +1708,7 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
 			while (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', sptr, kMCStringOptionCompareExact, eptr))
 			{
 				// Break if we've gone past the end of this block
-				if (eptr >= (m_index + l))
+                if (eptr >= m_size)
 					break;
 				
 				MCRange t_range;
