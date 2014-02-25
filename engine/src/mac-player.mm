@@ -59,6 +59,8 @@ protected:
 	virtual void Realize(void) = 0;
 	virtual void Unrealize(void) = 0;
 	
+	static void DoWindowStateChanged(void *object, bool realized);
+	
 protected:
 	uint32_t m_references;
 
@@ -98,6 +100,8 @@ private:
 	void Synchronize(void);
 	void Switch(bool new_offscreen);
 	
+	static void DoSwitch(void *context);
+	
 	QTMovie *m_movie;
 	QTMovieView *m_view;
 	
@@ -106,18 +110,24 @@ private:
 	bool m_offscreen : 1;
 	bool m_show_controller : 1;
 	bool m_show_selection : 1;
+	
+	bool m_pending_offscreen : 1;
+	
+	bool m_switch_scheduled : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPlatformPlayer::MCPlatformPlayer(void)
 {
+	NSLog(@"Create player %p", this);
 	m_references = 1;
 	m_window = nil;
 }
 
 MCPlatformPlayer::~MCPlatformPlayer(void)
 {
+	NSLog(@"Destroy player %p", this);
 	if (m_window != nil)
 		Detach();
 }
@@ -142,10 +152,12 @@ void MCPlatformPlayer::Attach(MCPlatformWindowRef p_window)
 	if (m_window != nil)
 		Detach();
 	
+	NSLog(@"Do attach %p", this);
+	
 	m_window = p_window;
 	MCPlatformRetainWindow(m_window);
 	
-	Realize();
+	m_window -> AttachObject(this, DoWindowStateChanged);
 }
 
 void MCPlatformPlayer::Detach(void)
@@ -153,10 +165,25 @@ void MCPlatformPlayer::Detach(void)
 	if (m_window == nil)
 		return;
 	
-	Unrealize();
+	NSLog(@"Do detch %p", this);
+	
+	m_window -> DetachObject(this);
 	
 	MCPlatformReleaseWindow(m_window);
 	m_window = nil;
+}
+
+void MCPlatformPlayer::DoWindowStateChanged(void *p_ctxt, bool p_realized)
+{
+	NSLog(@"%p state change %d", p_ctxt, p_realized);
+	
+	MCPlatformPlayer *t_player;
+	t_player = (MCPlatformPlayer *)p_ctxt;
+	
+	if (p_realized)
+		t_player -> Realize();
+	else
+		t_player -> Unrealize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,8 +197,11 @@ MCQTKitPlayer::MCQTKitPlayer(void)
 	m_rect = MCRectangleMake(0, 0, 0, 0);
 	m_visible = true;
 	m_offscreen = false;
+	m_pending_offscreen = false;
 	m_show_controller = false;
 	m_show_selection = false;
+	
+	m_switch_scheduled = false;
 }
 
 MCQTKitPlayer::~MCQTKitPlayer(void)
@@ -182,26 +212,57 @@ MCQTKitPlayer::~MCQTKitPlayer(void)
 
 void MCQTKitPlayer::Switch(bool p_new_offscreen)
 {
-	if (p_new_offscreen == m_offscreen)
+	// If the new setting is the same as the pending setting, do nothing.
+	if (p_new_offscreen == m_pending_offscreen)
 		return;
 	
-	if (p_new_offscreen)
-	{
-		if (m_view != nil)
-			Unrealize();
-		m_offscreen = p_new_offscreen;
+	// Update the pending offscreen setting and schedule a switch.
+	m_pending_offscreen = p_new_offscreen;
+
+	if (m_switch_scheduled)
 		return;
+	
+	Retain();
+	MCMacPlatformScheduleCallback(DoSwitch, this);
+	
+	m_switch_scheduled = true;
+}
+
+void MCQTKitPlayer::DoSwitch(void *ctxt)
+{
+	MCQTKitPlayer *t_player;
+	t_player = (MCQTKitPlayer *)ctxt;
+	
+	NSLog(@"Do switch %p", ctxt);
+	
+	t_player -> m_switch_scheduled = false;
+	
+	if (t_player -> m_pending_offscreen == t_player -> m_offscreen)
+	{
+		// Do nothing if there is no state change.
+	}
+	else if (t_player -> m_pending_offscreen)
+	{
+		if (t_player -> m_view != nil)
+			t_player -> Unrealize();
+		t_player -> m_offscreen = t_player -> m_pending_offscreen;
+	}
+	else
+	{
+		// Switching to non-offscreen
+		t_player -> m_offscreen = t_player -> m_pending_offscreen;
+		t_player -> Realize();
 	}
 	
-	// Switching to non-offscreen
-	m_offscreen = p_new_offscreen;
-	Realize();
+	t_player -> Release();
 }
 
 void MCQTKitPlayer::Realize(void)
 {
 	if (m_offscreen || m_window == nil)
 		return;
+	
+	NSLog(@"Realize movie view");
 	
 	MCMacPlatformWindow *t_window;
 	t_window = (MCMacPlatformWindow *)m_window;
@@ -221,11 +282,15 @@ void MCQTKitPlayer::Unrealize(void)
 	if (m_offscreen || m_window == nil)
 		return;
 	
+	NSLog(@"Unrealize movie view");
+	
 	MCMacPlatformWindow *t_window;
 	t_window = (MCMacPlatformWindow *)m_window;
 	
 	MCWindowView *t_parent_view;
 	t_parent_view = t_window -> GetView();
+	
+	[m_view setMovie: nil];
 	
 	[m_view removeFromSuperview];
 	
@@ -242,6 +307,8 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 	t_attrs = [NSDictionary dictionaryWithObjectsAndKeys:
 			   [NSString stringWithCString: p_filename encoding: NSMacOSRomanStringEncoding], p_is_url ? QTMovieURLAttribute : QTMovieFileNameAttribute,
 			   [NSNumber numberWithBool: YES], QTMovieOpenForPlaybackAttribute,
+			   [NSNumber numberWithBool: NO], QTMovieOpenAsyncOKAttribute,
+			   [NSNumber numberWithBool: NO], QTMovieOpenAsyncRequiredAttribute,
 			   nil];
 	
 	QTMovie *t_new_movie;
@@ -267,6 +334,8 @@ void MCQTKitPlayer::Synchronize(void)
 	if (m_view == nil)
 		return;
 	
+	NSLog(@"Synchronize movie");
+	
 	MCMacPlatformWindow *t_window;
 	t_window = (MCMacPlatformWindow *)m_window;
 	
@@ -277,6 +346,8 @@ void MCQTKitPlayer::Synchronize(void)
 	[m_view setFrame: t_frame];
 	
 	[m_view setHidden: !m_visible];
+	
+	[m_view setControllerVisible: m_show_controller];
 }
 
 bool MCQTKitPlayer::IsPlaying(void)
@@ -368,6 +439,8 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 		case kMCPlatformPlayerPropertyShowBadge:
 			break;
 		case kMCPlatformPlayerPropertyShowController:
+			m_show_controller = *(bool *)p_value;
+			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyShowSelection:
 			break;
@@ -393,6 +466,7 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			NSValue *t_value;
 			t_value = [m_movie attributeForKey: QTMovieNaturalSizeAttribute];
 			*(MCRectangle *)r_value = MCRectangleMake(0, 0, [t_value sizeValue] . width, [t_value sizeValue] . height);
+			NSLog(@"NaturalSize = %d, %d", (*(MCRectangle *)r_value) . width, (*(MCRectangle *)r_value) . height);
 		}
 		break;
 		case kMCPlatformPlayerPropertyVisible:

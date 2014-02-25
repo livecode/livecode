@@ -326,6 +326,15 @@ struct MCModalSession
 static MCModalSession *s_modal_sessions = nil;
 static uindex_t s_modal_session_count = 0;
 
+struct MCCallback
+{
+	void (*method)(void *);
+	void *context;
+};
+
+static MCCallback *s_callbacks = nil;
+static uindex_t s_callback_count;
+
 enum
 {
 	kMCMacPlatformBreakEvent = 0,
@@ -370,6 +379,13 @@ static void runloop_observer(CFRunLoopObserverRef observer, CFRunLoopActivity ac
 bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 {
 	//NSLog(@"Application -> WaitForEvent(%lf, %d)", p_duration, p_blocking);
+	
+	// Handle all the pending callbacks.
+	for(uindex_t i = 0; i < s_callback_count; i++)
+		s_callbacks[i] . method(s_callbacks[i] . context);
+	MCMemoryDeleteArray(s_callbacks);
+	s_callbacks = nil;
+	s_callback_count = 0;
 	
 	// Make sure we have our observer and install it. This is used when we are
 	// blocking and should break the event loop whenever a new event is added
@@ -458,6 +474,13 @@ void MCMacPlatformEndModalSession(MCMacPlatformWindow *p_window)
 		s_modal_sessions[t_final_index - 1] . window -> Release();
 		s_modal_session_count -= 1;
 	}
+}
+
+void MCMacPlatformScheduleCallback(void (*p_callback)(void *), void *p_context)
+{
+	/* UNCHECKED */ MCMemoryResizeArray(s_callback_count + 1, s_callbacks, s_callback_count);
+	s_callbacks[s_callback_count - 1] . method = p_callback;
+	s_callbacks[s_callback_count - 1] . context = p_context;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

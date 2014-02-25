@@ -26,7 +26,13 @@
 
 MCPlatformWindow::MCPlatformWindow(void)
 {
+	MCLog("Create window %p", this);
+	
 	m_references = 1;
+	
+	m_attachments = nil;
+	m_attachment_count = 0;
+	
 	MCMemoryClear(&m_changes, sizeof(m_changes));
 	m_style = kMCPlatformWindowStyleDocument;
 	m_title = nil;
@@ -50,10 +56,14 @@ MCPlatformWindow::MCPlatformWindow(void)
 
 MCPlatformWindow::~MCPlatformWindow(void)
 {
+	MCLog("Destroy window %p", this);
+	
 	MCRegionDestroy(m_dirty_region);
 	
 	MCPlatformWindowMaskRelease(m_mask);
 	free(m_title);
+	
+	free(m_attachments);
 }
 
 void MCPlatformWindow::Retain(void)
@@ -98,7 +108,7 @@ void MCPlatformWindow::Show(void)
 		return;
 	
 	// Make sure the window has been created.
-	DoRealize();
+	RealizeAndNotify();
 	
 	// Update the state.
 	m_is_visible = true;
@@ -126,7 +136,7 @@ void MCPlatformWindow::ShowAsSheet(MCPlatformWindowRef p_parent)
 	}
 		
 	// Make sure the window has been created.
-	DoRealize();
+	RealizeAndNotify();
 	
 	// Update the state.
 	m_is_visible = true;
@@ -400,6 +410,39 @@ void MCPlatformWindow::MapPointFromWindowToScreen(MCPoint p_window_point, MCPoin
 {
 	r_screen_point . x = p_window_point . x + m_content . x;
 	r_screen_point . y = p_window_point . y + m_content . y;
+}
+
+//////////
+
+void MCPlatformWindow::AttachObject(void *p_object, MCPlatformWindowAttachmentCallback p_callback)
+{
+	/* UNCHECKED */ MCMemoryResizeArray(m_attachment_count + 1, m_attachments, m_attachment_count);
+	m_attachments[m_attachment_count - 1] . object = p_object;
+	m_attachments[m_attachment_count - 1] . callback = p_callback;
+	
+	if (m_is_visible)
+		p_callback(p_object, true);
+}
+
+void MCPlatformWindow::DetachObject(void *p_object)
+{
+	for(uindex_t i = 0; i < m_attachment_count; i++)
+		if (m_attachments[i] . object == p_object)
+		{
+			if (m_is_visible)
+				m_attachments[i] . callback(m_attachments[i] . object, false);
+			MCMemoryMove(m_attachments + i, m_attachments + i + 1, (m_attachment_count - i - 1) * sizeof(m_attachments[0]));
+			m_attachment_count -= 1;
+			return;
+		}
+}
+
+void MCPlatformWindow::RealizeAndNotify(void)
+{
+	DoRealize();
+	
+	for(uindex_t i = 0; i < m_attachment_count; i++)
+		m_attachments[i] . callback(m_attachments[i] . object, true);
 }
 
 //////////

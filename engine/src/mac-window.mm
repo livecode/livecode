@@ -1203,8 +1203,8 @@ MCMacPlatformWindow::~MCMacPlatformWindow(void)
 	if (m_is_visible)
 		MCMacPlatformWindowHiding(this);
 	
-	[m_view release];
 	[m_handle release];
+	[m_view release];
 	[m_delegate release];
 }
 

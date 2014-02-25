@@ -147,10 +147,12 @@ bool MCPlatformGetAbortKeyPressed(void)
 {
 	if (!s_abort_key_checked)
 	{
+		NSDisableScreenUpdates();
 		[NSApp nextEventMatchingMask: 0
 						   untilDate: nil
 							  inMode: NSEventTrackingRunLoopMode
 							 dequeue: NO];
+		NSEnableScreenUpdates();
 		s_abort_key_checked = true;
 	}
 	

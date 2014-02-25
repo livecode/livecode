@@ -404,6 +404,8 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCMacPlatformScheduleCallback(void (*)(void*), void *);
+
 void MCMacPlatformBeginModalSession(MCMacPlatformWindow *window);
 void MCMacPlatformEndModalSession(MCMacPlatformWindow *window);
 

@@ -61,6 +61,14 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef void (*MCPlatformWindowAttachmentCallback)(void *object, bool realized);
+
+struct MCPlatformWindowAttachment
+{
+	void *object;
+	MCPlatformWindowAttachmentCallback callback;
+};
+
 class MCPlatformWindow
 {
 public:
@@ -117,6 +125,10 @@ public:
 	void MapPointFromScreenToWindow(MCPoint screen_point, MCPoint& r_window_point);
 	void MapPointFromWindowToScreen(MCPoint window_point, MCPoint& r_screen_point);
 	
+	// Attach an object that needs to be notified when the window is realized / unrealized.
+	void AttachObject(void *object, MCPlatformWindowAttachmentCallback callback);
+	void DetachObject(void *object);
+	
 public:
 	
 	void HandleCloseRequest(void);
@@ -159,8 +171,15 @@ public:
 	virtual void DoMapFrameRectToContentRect(MCRectangle frame, MCRectangle& r_content) = 0;
 	
 protected:
+	// Called to tell attachments there is a handle.
+	void RealizeAndNotify(void);
+	
 	// The window's reference count.
 	uint32_t m_references;
+	
+	// Any attachments the window has.
+	MCPlatformWindowAttachment *m_attachments;
+	uindex_t m_attachment_count;
 	
 	// Universal property values.
 	struct 

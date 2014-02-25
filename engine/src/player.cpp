@@ -369,8 +369,12 @@ MCRectangle MCPlayer::getactiverect(void)
 void MCPlayer::open()
 {
 	MCControl::open();
+#ifdef FEATURE_PLATFORM_PLAYER
+	prepare(MCnullstring);
+#else
 	if (flags & F_ALWAYS_BUFFER && !isbuffering())
 		prepare(MCnullstring);
+#endif
 }
 
 void MCPlayer::close()
@@ -1262,7 +1266,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 			if (m_platform_player != nil)
 			{
 				bool t_visible;
-				t_visible = getflag(F_VISIBLE) && getflag(F_SHOW_CONTROLLER);
+				t_visible = getflag(F_VISIBLE);
 				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
 			}
 #else
@@ -1794,7 +1798,7 @@ Boolean MCPlayer::prepare(const char *options)
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_offscreen);
 	
 	bool t_visible;
-	t_visible = getflag(F_VISIBLE) && getflag(F_SHOW_CONTROLLER);
+	t_visible = getflag(F_VISIBLE);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
 	
 	MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
@@ -2333,10 +2337,51 @@ void MCPlayer::gethotspots(MCExecPoint &ep)
 
 #ifdef FEATURE_PLATFORM_PLAYER
 
-MCRectangle MCPlayer::resize(MCRectangle rect)
+MCRectangle MCPlayer::resize(MCRectangle movieRect)
 {
-	// COCOA-TODO: Reimplement resize player method.
-	return rect;
+	int2 x, y;
+	MCRectangle trect = rect;
+	
+	// MW-2011-10-24: [[ Bug 9800 ]] Store the current rect for layer notification.
+	MCRectangle t_old_rect;
+	t_old_rect = rect;
+	
+	// MW-2011-10-01: [[ Bug 9762 ]] These got inverted sometime.
+	formattedheight = movieRect.height;
+	formattedwidth = movieRect.width;
+	
+	if (!(flags & F_LOCK_LOCATION))
+	{
+		if (formattedheight == 0)
+		{ // audio clip
+			trect.height = 16;
+			rect = trect;
+		}
+		else
+		{
+			x = trect.x + (trect.width >> 1);
+			y = trect.y + (trect.height >> 1);
+			trect.width = (uint2)(formattedwidth * scale);
+			trect.height = (uint2)(formattedheight * scale);
+			if (flags & F_SHOW_CONTROLLER)
+				trect.height += 16;
+			trect.x = x - (trect.width >> 1);
+			trect.y = y - (trect.height >> 1);
+			if (flags & F_SHOW_BORDER)
+				rect = MCU_reduce_rect(trect, -borderwidth);
+			else
+				rect = trect;
+		}
+	}
+	else
+		if (flags & F_SHOW_BORDER)
+			trect = MCU_reduce_rect(trect, borderwidth);
+	
+	// MW-2011-10-24: [[ Bug 9800 ]] If the rect has changed, notify the layer.
+	if (!MCU_equal_rect(rect, t_old_rect))
+		layer_rectchanged(t_old_rect, true);
+	
+	return trect;
 }
 
 void MCPlayer::SynchronizeUserCallbacks(void)
@@ -2426,13 +2471,13 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		drawfocus(dc, p_dirty);
 
 #ifdef FEATURE_PLATFORM_PLAYER
-	if (!(state & CS_CLOSING))
+	/*if (!(state & CS_CLOSING))
 		prepare(MCnullstring);
 	
 	if (m_platform_player != nil)
 	{
 		bool t_visible;
-		t_visible = getflag(F_VISIBLE) && getflag(F_SHOW_CONTROLLER);
+		t_visible = getflag(F_VISIBLE);
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
 		
 		MCRectangle trect = MCU_reduce_rect(rect, flags & F_SHOW_BORDER ? borderwidth : 0);
@@ -2442,6 +2487,27 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		
 		if (isbuffering())
 		{
+			MCImageDescriptor t_image;
+			MCMemoryClear(&t_image, sizeof(t_image));
+			t_image.filter = kMCGImageFilterNone;
+			MCPlatformLockPlayerBitmap(m_platform_player, t_image . bitmap);
+			if (t_image . bitmap != nil)
+				dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
+			MCPlatformUnlockPlayerBitmap(m_platform_player, t_image . bitmap);
+		}
+	}*/
+	
+	if (m_platform_player != nil)
+	{
+		syncbuffering(dc);
+		
+		bool t_offscreen;
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_offscreen);
+		
+		if (t_offscreen)
+		{
+			MCRectangle trect = MCU_reduce_rect(rect, flags & F_SHOW_BORDER ? borderwidth : 0);
+			
 			MCImageDescriptor t_image;
 			MCMemoryClear(&t_image, sizeof(t_image));
 			t_image.filter = kMCGImageFilterNone;
