@@ -165,8 +165,9 @@ void MCStack::realize(void)
 			t_window_style != kMCPlatformWindowStyleDialog)
 			t_has_sizebox = false;
 		
-		// If the window is a tooltip, we want no decorations.
-		if (t_window_style == kMCPlatformWindowStyleToolTip)
+		// If the window is a tooltip or popup, we want no decorations.
+		if (t_window_style == kMCPlatformWindowStyleToolTip ||
+			t_window_style == kMCPlatformWindowStylePopUp)
 		{
 			t_has_titlebox = false;
 			t_has_closebox = false;
