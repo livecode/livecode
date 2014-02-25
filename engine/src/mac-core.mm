@@ -854,6 +854,11 @@ static MCPoint s_mouse_position = { INT16_MIN, INT16_MAX };
 // This is the last screen location we received a mouse move message for.
 static MCPoint s_mouse_screen_position;
 
+// This is the current modifier state, and whether the control key was down
+// for a button 0 press.
+static MCPlatformModifiers s_mouse_modifiers = 0;
+static bool s_mouse_was_control_click = false;
+
 // COCOA-TODO: Clean up this external dependency.
 extern uint2 MCdoubledelta;
 extern uint2 MCdoubletime;
@@ -918,6 +923,20 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
 	if (s_mouse_buttons != 0)
 		s_mouse_grabbed = true;
 	
+	// If the control key is down (which we will see as the command key) and if
+	// the button is 0, then we actually want to dispatch a button 2.
+	if (p_button == 0 &&
+		(s_mouse_modifiers & kMCPlatformModifierCommand) != 0 &&
+		p_new_state)
+	{
+		p_button = 2;
+		s_mouse_was_control_click = true;
+	}
+	
+	if (!p_new_state &&
+		s_mouse_was_control_click && p_button == 0)
+		p_button = 2;
+		
 	// Determine the press state - this can be down, up or release. If
 	// the new state is 'up', then we must dispatch a release message
 	// if the mouse location is not within the window.
@@ -951,6 +970,8 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
 		
 		Window t_new_mouse_window;
 		MCPlatformGetWindowAtPoint(t_global_pos, t_new_mouse_window);
+		
+		s_mouse_was_control_click = false;
 		
 		if (t_new_mouse_window == s_mouse_window)
 		{
@@ -1052,7 +1073,12 @@ void MCMacPlatformHandleMouseSync(void)
 			if ((s_mouse_buttons & (1 << i)) != 0)
 			{
 				s_mouse_buttons &= ~(1 << i);
-				MCPlatformCallbackSendMouseRelease(s_mouse_window, i);
+				
+				if (s_mouse_was_control_click &&
+					i == 0)
+					MCPlatformCallbackSendMouseRelease(s_mouse_window, 2);
+				else
+					MCPlatformCallbackSendMouseRelease(s_mouse_window, i);
 			}
 	}
 	
@@ -1060,6 +1086,7 @@ void MCMacPlatformHandleMouseSync(void)
 	s_mouse_drag_button = 0xffffffff;
 	s_mouse_click_count = 0;
 	s_mouse_last_click_time = 0;
+	s_mouse_was_control_click = false;
 
 	MCPoint t_location;
 	MCMacPlatformMapScreenNSPointToMCPoint([NSEvent mouseLocation], t_location);
@@ -1082,6 +1109,7 @@ void MCMacPlatformSyncMouseBeforeDragging(void)
 		s_mouse_click_count = 0;
 		s_mouse_last_click_time = 0;
 		s_mouse_drag_button = 0xffffffff;
+		s_mouse_was_control_click = false;
 	}
 	else
 		t_button_to_release = 0xffffffff;
@@ -1116,6 +1144,7 @@ void MCMacPlatformSyncMouseAfterTracking(void)
 
 void MCMacPlatformHandleModifiersChanged(MCPlatformModifiers p_modifiers)
 {
+	s_mouse_modifiers = p_modifiers;
 	MCPlatformCallbackSendModifiersChanged(p_modifiers);
 }
 
