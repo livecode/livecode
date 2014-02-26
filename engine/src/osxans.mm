@@ -502,16 +502,18 @@ static bool filter_to_type_list(MCStringRef p_filter, MCStringRef *&r_types, uin
 	// Check to see if the extension of the file matches any of those in the extension list
 	if (!t_should_show && m_filter->extension_count > 0)
 	{
-		const char *t_filename;
-		t_filename = [filename cStringUsingEncoding: NSMacOSRomanStringEncoding];
-		if (t_filename != nil)
+        MCAutoStringRef t_filename;
+        MCStringCreateWithBytes((const byte_t *)[filename UTF8String], [filename lengthOfBytesUsingEncoding: NSUTF8StringEncoding], kMCStringEncodingUTF8, false, &t_filename);
+		if (*t_filename != nil)
 		{
-			char *t_ext;
-			t_ext = strrchr(t_filename, '.');
-			if (t_ext != nil && MCCStringLength(t_ext) > 0)
-				for (uint32_t i = 0; i < m_filter->extension_count && !t_should_show; i++)
-					if (MCStringIsEqualToCString(m_filter->extensions[i], t_ext + 1, kMCCompareCaseless))
-						t_should_show = YES;
+			uindex_t t_dot;
+            if (MCStringFirstIndexOfChar(*t_filename, '.', 0, kMCCompareExact, t_dot))
+            {
+                MCRange t_range = MCRangeMake(t_dot + 1, UINDEX_MAX);
+                for (uint32_t i = 0; i < m_filter->extension_count && !t_should_show; i++)
+                    if (MCStringSubstringIsEqualTo(*t_filename, t_range, m_filter->extensions[i], kMCCompareCaseless))
+                            t_should_show = YES;
+            }
 		}
 	}
 	
