@@ -74,15 +74,15 @@ bool MCJavaByteArrayToDataRef(JNIEnv *env, jbyteArray p_byte_array, MCDataRef& r
 bool MCJavaInitList(JNIEnv *env, jobject&);
 bool MCJavaFreeList(JNIEnv *env, jobject);
 bool MCJavaListAppendObject(JNIEnv *env, jobject, jobject);
-bool MCJavaListAppendString(JNIEnv *env, jobject p_list, const MCString *p_string);
+//bool MCJavaListAppendString(JNIEnv *env, jobject p_list, const MCString *p_string);
 bool MCJavaListAppendStringRef(JNIEnv *env, jobject p_list, MCStringRef p_string);
 bool MCJavaListAppendInt(JNIEnv *env, jobject p_list, jint p_int);
 
 bool MCJavaInitMap(JNIEnv *env, jobject &r_map);
 bool MCJavaFreeMap(JNIEnv *env, jobject p_map);
 bool MCJavaMapPutObjectToObject(JNIEnv *env, jobject p_map, jobject p_key, jobject p_value);
-bool MCJavaMapPutStringToObject(JNIEnv *env, jobject p_map, const char *p_key, jobject p_value);
-bool MCJavaMapPutStringToString(JNIEnv *env, jobject p_map, const char *p_key, MCStringRef p_value);
+bool MCJavaMapPutStringToObject(JNIEnv *env, jobject p_map, MCStringRef p_key, jobject p_value);
+bool MCJavaMapPutStringToString(JNIEnv *env, jobject p_map, MCStringRef p_key, MCStringRef p_value);
 /*
 bool MCJavaMapFromArray(JNIEnv *p_env, MCExecPoint &p_ep, MCVariableValue *p_array, jobject &r_object);
 bool MCJavaMapToArray(JNIEnv *p_env, MCExecPoint &p_ep, jobject p_map, MCVariableValue *&r_array);
@@ -90,7 +90,7 @@ bool MCJavaMapToArray(JNIEnv *p_env, MCExecPoint &p_ep, jobject p_map, MCVariabl
 bool MCJavaMapFromArray(JNIEnv *p_env, MCArrayRef p_array, jobject &r_object);
 bool MCJavaMapToArray(JNIEnv *p_env, jobject p_map, MCArrayRef &r_array);
 
-typedef bool (*MCJavaMapCallback)(JNIEnv *env, const char *p_key, jobject p_value, void *p_context);
+typedef bool (*MCJavaMapCallback)(JNIEnv *env, MCNameRef p_key, jobject p_value, void *p_context);
 bool MCJavaIterateMap(JNIEnv *env, jobject p_map, MCJavaMapCallback p_callback, void *p_context);
 
 bool MCJavaObjectGetField(JNIEnv *env, jobject p_object, const char *p_fieldname, MCJavaType p_fieldtype, void *r_value);

@@ -351,7 +351,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	
     // The "has unicode" flag depends on whether the paragraph is native
 	bool t_is_unicode;
-    if (MCStringIsNative(parent->GetInternalStringRef()))
+    if (MCstackfileversion < 7000 && MCStringIsNative(parent->GetInternalStringRef()))
 	{
 		t_is_unicode = false;
         flags &= ~F_HAS_UNICODE;
@@ -834,7 +834,7 @@ int2 MCBlock::gettabwidth(int2 x, findex_t i)
 		j = 0;
 		while(j < i)
 		{
-			if (t_block -> getflag(F_HAS_TAB))
+            if (t_block -> getflag(F_HAS_TAB))
 			{
 				findex_t k;
 				k = t_block -> GetOffset() + t_block -> GetLength();
@@ -1739,9 +1739,10 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
 	else
 	{
 		findex_t sptr = i;
+        findex_t t_length = l;
 		
 		// MW-2012-02-12: [[ Bug 10662 ]] If the last char is a VTAB then ignore it.
-		if (parent->TextIsLineBreak(parent->GetCodepointAtIndex(sptr + l - 1)))
+        if (parent->TextIsLineBreak(parent->GetCodepointAtIndex(sptr + l - 1)))
 			l--;
 
 		// MW-2012-08-29: [[ Bug 10325 ]] Use 32-bit int to compute the width, then clamp
@@ -1755,7 +1756,7 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
 			while (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', sptr, kMCStringOptionCompareExact, eptr))
 			{
 				// Break if we've gone past the end of this block
-				if (eptr >= (m_index + l))
+                if (eptr >= i + t_length)
 					break;
 				
 				MCRange t_range;

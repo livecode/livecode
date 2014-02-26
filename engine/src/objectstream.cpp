@@ -248,7 +248,7 @@ IO_stat MCObjectInputStream::ReadStringRefNew(MCStringRef &r_value, bool p_suppo
 	if (!MCMemoryNewArray(t_length, &t_bytes))
 		return IO_ERROR;
 	
-	if (!Read(*t_bytes, t_length))
+	if (Read(*t_bytes, t_length) != IO_NORMAL)
 		return IO_ERROR;
 	
 	if (!MCStringCreateWithBytes((const uint8_t *)*t_bytes, t_length, kMCStringEncodingUTF8, false, r_value))

@@ -807,9 +807,6 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
             MCAutoStringRef t_initial_folder;
             if (p_initial != nil)
                 /* UNCHECKED */ folder_path_from_initial_path(p_initial, &t_initial_folder);
-            
-            char *t_folder;
-            t_folder = nil;
 			
 			NSOpenPanel *t_choose;
 			t_choose = [NSOpenPanel openPanel];
@@ -828,21 +825,19 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
 			// MM-2012-03-01: [[ BUG 10046]] Make sure the "new folder" button is enabled for folder dialogs
 			[t_choose setCanCreateDirectories: YES];
 			
+            MCAutoStringRef t_folder;
 			if (display_modal_dialog(t_choose, *t_initial_folder, nil, (p_options & MCA_OPTION_SHEET) != 0) == NSOKButton)
-				{
-					// MM-2012-09-25: [[ Bug 10407 ]] Resolve alias (if any) of the returned folder
-					NSString *t_alias;
-					resolve_alias([t_choose filename], t_alias);									
-					/* UNCHECKED */ MCCStringToNative([t_alias UTF8String], t_folder);
-					[t_alias release];
-				}
+            {
+                // MM-2012-09-25: [[ Bug 10407 ]] Resolve alias (if any) of the returned folder
+                NSString *t_alias;
+                resolve_alias([t_choose filename], t_alias);
+                MCStringCreateWithBytes((const byte_t *)[t_alias UTF8String], [t_alias lengthOfBytesUsingEncoding: NSUTF8StringEncoding], kMCStringEncodingUTF8, false, &t_folder);
+                [t_alias release];
+            }
 			
-			// Send results back                
-			if (MCCStringLength(t_folder) != 0)
-            /* UNCHECKED */ MCStringCreateWithCString(t_folder, r_value);
-    
-			// Free the folder
-			/* UNCHECKED */ MCCStringFree(t_folder);	
+			// Send results back
+			if (*t_folder != nil)
+                r_value = MCValueRetain(*t_folder);
 		}
 		
 		return noErr;

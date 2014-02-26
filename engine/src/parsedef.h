@@ -520,6 +520,8 @@ enum Functions {
     F_TEMPLATE_VIDEO_CLIP,
     F_TEMPLATE_PLAYER,
     F_TEMPLATE_STACK,
+    F_TEXT_DECODE,
+    F_TEXT_ENCODE,
     F_TEXT_HEIGHT_SUM,
     F_TICKS,
     F_TIME,
@@ -560,6 +562,10 @@ enum Functions {
     // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
     F_MEASURE_TEXT,
     F_MEASURE_UNICODE_TEXT,
+    
+    F_NORMALIZE_TEXT,
+    
+    F_CODEPOINT_PROPERTY,
 };
 
 enum Handler_type {

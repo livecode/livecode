@@ -426,6 +426,7 @@ public:
 	MCParagraph *resolveparagraphs(uint4 parid);
 
     void setparagraphs(MCParagraph *newpgptr, uint4 parid);
+    void setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start, findex_t p_end);
     // SN-2014-01-17: [[ Unicodification ]] Suppressed old string version of settext and settextindex
     Exec_stat settext(uint4 parid, MCStringRef p_text, Boolean p_formatted);
 	Exec_stat settextindex(uint4 parid, findex_t si, findex_t ei, MCStringRef s, Boolean undoing);

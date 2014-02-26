@@ -447,7 +447,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		{
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\fonttbl");
 			for(uint32_t i = 0; i < ctxt . fonts . count(); i++)
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\f%d\\fnil \\fcharset" EXPORT_RTF_PLATFORM_CHARSET " %s;}", i, ctxt.fonts[i]);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\f%d\\fnil \\fcharset" EXPORT_RTF_PLATFORM_CHARSET " %@;}", i, MCNameGetString(ctxt.fonts[i]));
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}\n");
 		}
 		
@@ -456,7 +456,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		{
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\colortbl;");
 			for(uint32_t i = 0; i < ctxt . colors . count(); i++)
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\ref%d\\green%d\\blue%d;", (ctxt . colors[i] >> 16) & 0xff, (ctxt . colors[i] >> 8) & 0xff, (ctxt . colors[i] >> 0) & 0xff);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\red%d\\green%d\\blue%d;", (ctxt . colors[i] >> 16) & 0xff, (ctxt . colors[i] >> 8) & 0xff, (ctxt . colors[i] >> 0) & 0xff);
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}\n");
 		}
 		

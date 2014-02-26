@@ -334,8 +334,10 @@ void run_dialog(GtkWidget *dialog, MCStringRef &r_value)
 			t_filename_list = gtk_file_chooser_get_filenames ( GTK_FILE_CHOOSER ( dialog )) ;
 			while ( t_filename_list != NULL )
             {
-                /* UNCHECKED */ MCListAppendNativeChars(*t_filenames, (char_t*)t_filename_list -> data, strlen((char*)t_filename_list -> data));
-			
+                MCAutoStringRef t_item;
+                /* UNCHECKED */ MCStringCreateWithSysString((char*)t_filename_list -> data, &t_item);
+                /* UNCHECKED */ MCListAppend(*t_filenames, *t_item);
+
 				t_filename_list = t_filename_list -> next ;
 			}
 

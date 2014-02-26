@@ -230,9 +230,17 @@ bool MCStringConvertToICUString(MCStringRef p_string, icu::UnicodeString &r_stri
 
 bool MCLocaleCreateWithName(MCStringRef p_name, MCLocaleRef &r_locale)
 {
+    // This is a really nasty hack used to work around the fact that nativising
+    // a string requires a locale in the first place...
+    const char *t_name;
+    if (MCStringIsEqualToCString(p_name, "en_US", kMCStringOptionCompareExact))
+        t_name = "en_US";
+    else
+        t_name = (const char *)MCStringGetNativeCharPtr(p_name);
+    
     // Create a new ICU locale
     icu::Locale *t_icu_locale;
-    t_icu_locale = new icu::Locale((const char*)MCStringGetNativeCharPtr(p_name), NULL, NULL, NULL);
+    t_icu_locale = new icu::Locale(t_name, NULL, NULL, NULL);
     
     // Convert it into an engine locale
     __MCLocale *t_locale;

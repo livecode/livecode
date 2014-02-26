@@ -89,6 +89,7 @@ enum MCUnicodeProperty
     kMCUnicodePropertyChangesWhenCaseFolded,
     kMCUnicodePropertyChangesWhenCaseMapped,
     kMCUnicodePropertyChangesWhenNFKCCaseFolded,
+    kMCUnicodePropertyLastBinary = kMCUnicodePropertyChangesWhenNFKCCaseFolded,
     
     // Integer properties
     kMCUnicodePropertyBidiClass,
@@ -113,12 +114,15 @@ enum MCUnicodeProperty
     kMCUnicodePropertySentenceBreak,
     kMCUnicodePropertyWordBreak,
     kMCUnicodePropertyBidiPairedBracketType,
+    kMCUnicodePropertyLastInteger = kMCUnicodePropertyBidiPairedBracketType,
     
     // Bitmask properties
     kMCUnicodePropertyGeneralCategoryMask,
+    kMCUnicodePropertyLastBitmask = kMCUnicodePropertyGeneralCategoryMask,
     
     // Floating-point properties
     kMCUnicodePropertyNumericValue,
+    kMCUnicodePropertyLastFloatingPoint = kMCUnicodePropertyNumericValue,
     
     // Character properties
     kMCUnicodePropertyBidiMirroringGlyph,
@@ -127,6 +131,7 @@ enum MCUnicodeProperty
     kMCUnicodePropertySimpleTitlecaseMapping,
     kMCUnicodePropertySimpleUppercaseMapping,
     kMCUnicodePropertyBidiPairedBracket,
+    kMCUnicodePropertyLastCharacter = kMCUnicodePropertyBidiPairedBracket,
     
     // String properties
     kMCUnicodePropertyAge,
@@ -137,6 +142,7 @@ enum MCUnicodeProperty
     kMCUnicodePropertyTitlecaseMapping,
     kMCUnicodePropertyUnicode1Name,
     kMCUnicodePropertyUppercaseMapping,
+    kMCUnicodePropertyLastString = kMCUnicodePropertyUppercaseMapping,
    
 };
 
@@ -248,6 +254,10 @@ const unichar_t*    MCUnicodeGetStringProperty(codepoint_t p_codepoint, MCUnicod
 bool    MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count,
                              MCUnicodeProperty, MCUnicodePropertyType,
                              void *x_result_array);
+
+// Returns the name of a Unicode property. The returned pointer is internal and
+// should not be modified. (Unicode property value names are always ASCII).
+const char*    MCUnicodeGetPropertyValueName(MCUnicodeProperty, int32_t p_prop_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 

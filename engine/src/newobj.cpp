@@ -745,6 +745,10 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCTarget;
 	case F_TEMP_NAME:
 		return new MCTempName;
+    case F_TEXT_DECODE:
+        return new MCTextDecode;
+    case F_TEXT_ENCODE:
+        return new MCTextEncode;
 	case F_TEXT_HEIGHT_SUM:
 		return new MCTextHeightSum;
 	case F_TICKS:
@@ -801,6 +805,10 @@ MCExpression *MCN_new_function(int2 which)
         return new MCMeasureText(false);
     case F_MEASURE_UNICODE_TEXT:
         return new MCMeasureText(true);
+    case F_NORMALIZE_TEXT:
+        return new MCNormalizeText;
+    case F_CODEPOINT_PROPERTY:
+        return new MCCodepointProperty;
     default:
 		break;
 	}

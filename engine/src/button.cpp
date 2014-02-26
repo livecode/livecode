@@ -3661,7 +3661,11 @@ void MCButton::docascade(MCStringRef p_pick)
 			else
 				t_label = pptr->getlabeltext();
 			
-			/* UNCHECKED */ MCStringFormat(&t_pick, "%@|%@", t_label, p_pick);
+			if (*t_pick == nil)
+                /* UNCHECKED */ MCStringMutableCopy(p_pick, &t_pick);
+            
+            /* UNCHECKED */ MCStringPrependChar(*t_pick, '|');
+            /* UNCHECKED */ MCStringPrepend(*t_pick, t_label);
 
 			pptr = (MCButton *)pptr->parent->getparent()->getparent();
 			pptr->state |= CS_IGNORE_MENU;
@@ -4319,7 +4323,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	}
 	else
 	{
-		if ((stat = IO_write_stringref_new(menustring, stream, true)) != IO_NORMAL)
+		if ((stat = IO_write_stringref_new(acceltext, stream, true)) != IO_NORMAL)
 			return stat;
 	}
 

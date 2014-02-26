@@ -1623,6 +1623,67 @@ public:
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalTempNameMethodInfo; }
 };
 
+class MCTextDecode : public MCFunction
+{
+    MCExpression *m_data;
+    MCExpression *m_encoding;
+public:
+    MCTextDecode()
+    {
+        m_data = m_encoding = NULL;
+    }
+    virtual ~MCTextDecode();
+    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
+    virtual void eval_ctxt(MCExecContext&, MCExecValue&);
+    virtual void compile(MCSyntaxFactoryRef);
+};
+
+class MCTextEncode : public MCFunction
+{
+    MCExpression *m_string;
+    MCExpression *m_encoding;
+public:
+    MCTextEncode()
+    {
+        m_string = m_encoding = NULL;
+    }
+    virtual ~MCTextEncode();
+    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
+    virtual void eval_ctxt(MCExecContext&, MCExecValue&);
+    virtual void compile(MCSyntaxFactoryRef);
+};
+
+class MCNormalizeText : public MCFunction
+{
+    MCExpression *m_text;
+    MCExpression *m_form;
+public:
+    MCNormalizeText()
+    {
+        m_text = m_form = NULL;
+    }
+    virtual ~MCNormalizeText();
+    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
+    virtual void eval_ctxt(MCExecContext&, MCExecValue&);
+    virtual void compile(MCSyntaxFactoryRef);
+};
+
+
+class MCCodepointProperty : public MCFunction
+{
+    MCExpression *m_codepoint;
+    MCExpression *m_property;
+public:
+    MCCodepointProperty()
+    {
+        m_codepoint = m_property = NULL;
+    }
+    virtual ~MCCodepointProperty();
+    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
+    virtual void eval_ctxt(MCExecContext&, MCExecValue&);
+    virtual void compile(MCSyntaxFactoryRef);
+};
+
 class MCTicks : public MCConstantFunctionCtxt<double, MCDateTimeEvalTicks>
 {
 public:

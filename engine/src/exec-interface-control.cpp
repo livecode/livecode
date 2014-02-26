@@ -352,8 +352,8 @@ void MCControl::SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_marg
     else
     {
         leftmargin = p_margins . margins[0];
-        rightmargin = p_margins . margins[1];
-        topmargin = p_margins . margins[2];
+        topmargin = p_margins . margins[1];
+        rightmargin = p_margins . margins[2];
         bottommargin = p_margins . margins[3];
     }
     Redraw();

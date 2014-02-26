@@ -41,6 +41,10 @@ MC_EXEC_DEFINE_EVAL_METHOD(Strings, NumToChar, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, CharToNum, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, NumToByte, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, ByteToNum, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, TextDecode, 2);
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, TextEncode, 2);
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, NormalizeText, 2);
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, CodepointProperty, 2);
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, Length, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, MatchText, 4)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, MatchChunk, 4)
@@ -312,6 +316,401 @@ void MCStringsEvalByteToNum(MCExecContext& ctxt, MCStringRef p_byte, integer_t& 
 	}
 
 	ctxt . LegacyThrow(EE_BYTETONUM_BADSOURCE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct MCStringEncodingName
+{
+    const char *m_name;
+    MCStringEncoding m_encoding;
+};
+
+// These names must match the formatting of character encoding names as output
+// by the algorithm described in section 1.4 of the Unicode Consortium TR22.
+static MCStringEncodingName MCStringEncodingNames[] =
+{
+    {"ascii", kMCStringEncodingASCII},
+    {"iso88591", kMCStringEncodingISO8859_1},
+    {"macroman", kMCStringEncodingMacRoman},
+    {"native", kMCStringEncodingNative},
+    {"utf16", kMCStringEncodingUTF16},
+    {"utf16be", kMCStringEncodingUTF16BE},
+    {"utf16le", kMCStringEncodingUTF16LE},
+    {"utf32", kMCStringEncodingUTF32},
+    {"utf32be", kMCStringEncodingUTF32BE},
+    {"utf32le", kMCStringEncodingUTF32LE},
+    {"utf8", kMCStringEncodingUTF8},
+    {"cp1252", kMCStringEncodingWindows1252},
+    
+    {NULL, 0},
+};
+
+bool MCStringsEvalTextEncoding(MCStringRef p_encoding, MCStringEncoding &r_encoding)
+{
+    // First, map the incoming charset name according to the rules in Unicode TR22:
+    //  Delete all characters except a-zA-Z0-9
+    //  Map A-Z to a-z
+    //  From left-to-right, delete each 0 not preceded by a digit
+    MCAutoArray<char_t> t_cleaned;
+    t_cleaned.New(MCStringGetLength(p_encoding) + 1);   // Cannot exceed incoming length
+    
+    uindex_t t_cleaned_len;
+    t_cleaned_len = 0;
+    
+    bool t_in_number;
+    t_in_number = false;
+    for (uindex_t i = 0; i < MCStringGetLength(p_encoding); i++)
+    {
+        unichar_t t_char;
+        t_char = MCStringGetCharAtIndex(p_encoding, i);
+        
+        // All important characters are in the ASCII range (filtering here
+        // avoids problems with the subsequent tolower call and non-ASCII chars)
+        if (t_char > 128)
+        {
+            t_in_number = false;
+            continue;
+        }
+
+        t_char = tolower(t_char);
+        
+        if (t_char >= 'a' && t_char <= 'z')
+        {
+            t_in_number = false;
+            t_cleaned[t_cleaned_len++] = t_char;
+        }
+        else if (t_char == '0' && t_in_number)
+        {
+            t_cleaned[t_cleaned_len++] = t_char;
+        }
+        else if (t_char >= '1' && t_char <= '9')
+        {
+            t_in_number = true;
+            t_cleaned[t_cleaned_len++] = t_char;
+        }
+    }
+    
+    // Terminate the cleaned name
+    t_cleaned[t_cleaned_len++] = '\0';
+    
+    // Search the encoding table
+    uindex_t t_index;
+    t_index = 0;
+    while (MCStringEncodingNames[t_index].m_name != NULL)
+    {
+        if (strncmp(MCStringEncodingNames[t_index].m_name, (const char*)&t_cleaned[0], t_cleaned_len) == 0)
+        {
+            r_encoding = MCStringEncodingNames[t_index].m_encoding;
+            return true;
+        }
+        
+        t_index++;
+    }
+    
+    // Encoding could not be recognised
+    return false;
+}
+
+void MCStringsEvalTextDecode(MCExecContext& ctxt, MCStringRef p_encoding, MCDataRef p_data, MCStringRef &r_string)
+{
+    MCStringEncoding t_encoding;
+    if (!MCStringsEvalTextEncoding(p_encoding, t_encoding))
+    {
+        ctxt.LegacyThrow(EE_TEXTDECODE_BADENCODING);
+        return;
+    }
+    
+    MCAutoStringRef t_string;
+    if (!MCStringDecode(p_data, t_encoding, false, r_string))
+    {
+        ctxt.LegacyThrow(EE_TEXTDECODE_FAILED);
+        return;
+    }
+}
+
+void MCStringsEvalTextEncode(MCExecContext& ctxt, MCStringRef p_encoding, MCStringRef p_string, MCDataRef &r_data)
+{
+    MCStringEncoding t_encoding;
+    if (!MCStringsEvalTextEncoding(p_encoding, t_encoding))
+    {
+        ctxt.LegacyThrow(EE_TEXTENCODE_BADENCODING);
+        return;
+    }
+    
+    MCAutoDataRef t_data;
+    if (!MCStringEncode(p_string, t_encoding, false, r_data))
+    {
+        ctxt.LegacyThrow(EE_TEXTENCODE_FAILED);
+        return;
+    }
+}
+
+void MCStringsEvalNormalizeText(MCExecContext& ctxt, MCStringRef p_text, MCStringRef p_form, MCStringRef &r_string)
+{
+    bool t_success;
+    if (MCStringIsEqualToCString(p_form, "NFC", kMCStringOptionCompareCaseless))
+    {
+        t_success = MCStringNormalizedCopyNFC(p_text, r_string);
+    }
+    else if (MCStringIsEqualToCString(p_form, "NFD", kMCStringOptionCompareCaseless))
+    {
+        t_success = MCStringNormalizedCopyNFD(p_text, r_string);
+    }
+    else if (MCStringIsEqualToCString(p_form, "NFKC", kMCStringOptionCompareCaseless))
+    {
+        t_success = MCStringNormalizedCopyNFKC(p_text, r_string);
+    }
+    else if (MCStringIsEqualToCString(p_form, "NFKD", kMCStringOptionCompareCaseless))
+    {
+        t_success = MCStringNormalizedCopyNFKD(p_text, r_string);
+    }
+    else
+    {
+        ctxt.LegacyThrow(EE_NORMALIZETEXT_BADFORM);
+        return;
+    }
+    
+    if (!t_success)
+        ctxt.Throw();
+}
+
+struct MCUnicodePropertyMapping
+{
+    MCUnicodeProperty m_propid;
+    const char *m_name;
+};
+
+const MCUnicodePropertyMapping MCUnicodePropertyMap[] =
+{
+    // Missing properties that are present in TR44:
+    //  Name Alias
+    //  Script Extensions
+    //  Decomposition Mapping
+    //  Composition Exclusion
+    //  FC NFKC Closure (deprecated)
+    //  Expands On NFC (deprecated)
+    //  Expands On NFD (deprecated)
+    //  Expands On NFKC (deprecated)
+    //  Expands On NFKD (deprecated)
+    //  NFKC Casefold
+    //  Ideographic
+    //  Unicode Radical Stroke
+    //  Indic Matra Category
+    //  Indic Syllabic Category
+    
+    // Properties we include but TR44 lacks: (capitalised in the table)
+    //  Case Sensitive
+    //  NFC Inert
+    //  NFD Inert
+    //  NFKC Inert
+    //  NFKD Inert
+    //  Segment Starter
+    //  POSIX Alnum
+    //  POSIX Blank
+    //  POSIX Graph
+    //  POSIX Print
+    //  POSIX Hex Digit
+    //  Lead Canonical Combining Class
+    //  Trail Canonical Combining Class
+    //  General Category Mask
+    
+    {kMCUnicodePropertyAlphabetic, "Alphabetic"},
+    {kMCUnicodePropertyASCIIHex, "ASCII Hex Digit"},
+    {kMCUnicodePropertyBidiControl, "Bidi Control"},
+    {kMCUnicodePropertyBidiMirrored, "Bidi Mirrored"},
+    {kMCUnicodePropertyDash, "Dash"},
+    {kMCUnicodePropertyDefaultIgnorable, "Default Ignorable Codepoint"},
+    {kMCUnicodePropertyDeprecated, "Deprecated"},
+    {kMCUnicodePropertyDiacritic, "Diacritic"},
+    {kMCUnicodePropertyExtender, "Extender"},
+    {kMCUnicodePropertyFullCompositionExclusion, "Full Composition Exclusion"},
+    {kMCUnicodePropertyGraphemeBase, "Grapheme Base"},
+    {kMCUnicodePropertyGraphemeExtended, "Grapheme Extend"},
+    {kMCUnicodePropertyGraphemeLink, "Grapheme Link"},
+    {kMCUnicodePropertyHexDigit, "Hex Digit"},
+    {kMCUnicodePropertyHyphen, "Hyphen"},
+    {kMCUnicodePropertyIDContinue, "ID Continue"},
+    {kMCUnicodePropertyIDStart, "ID Start"},
+    {kMCUnicodePropertyIDSBinaryOperator, "IDS Binary Operator"},
+    {kMCUnicodePropertyIDSTrinaryOperator, "IDS Trinary Operator"},
+    {kMCUnicodePropertyJoinControl, "Join Control"},
+    {kMCUnicodePropertyLocalOrderException, "Logical Order Exception"},
+    {kMCUnicodePropertyLowercase, "Lowercase"},
+    {kMCUnicodePropertyMath, "Math"},
+    {kMCUnicodePropertyNoncharacterCodePoint, "Noncharacter Codepoint"},
+    {kMCUnicodePropertyQuotationMark, "Quotation Mark"},
+    {kMCUnicodePropertyRadical, "Radical"},
+    {kMCUnicodePropertySoftDotted, "Soft Dotted"},
+    {kMCUnicodePropertyTerminalPunctuation, "Terminal Punctuation"},
+    {kMCUnicodePropertyUnifiedIdeograph, "Unified Ideograph"},
+    {kMCUnicodePropertyUppercase, "Uppercase"},
+    {kMCUnicodePropertyWhiteSpace, "White Space"},
+    {kMCUnicodePropertyXIDContinue, "XID Continue"},
+    {kMCUnicodePropertyXIDStart, "XID Start"},
+    {kMCUnicodePropertyCaseSensitive, "CASE SENSITIVE"},
+    {kMCUnicodePropertySTerminal, "STerm"},
+    {kMCUnicodePropertyVariationSelector, "Variation Selector"},
+    {kMCUnicodePropertyNFDInert, "NFD INERT"},
+    {kMCUnicodePropertyNFKDInert, "NFKD INERT"},
+    {kMCUnicodePropertyNFCInert, "NFC INERT"},
+    {kMCUnicodePropertyNFKCInert, "NFKC INERT"},
+    {kMCUnicodePropertySegmentStarter, "SEGMENT STARTER"},
+    {kMCUnicodePropertyPatternSyntax, "Pattern Syntax"},
+    {kMCUnicodePropertyPatternWhiteSpace, "Pattern White Space"},
+    {kMCUnicodePropertyPosixAlnum, "POSIX ALNUM"},
+    {kMCUnicodePropertyPosixBlank, "POSIX BLANK"},
+    {kMCUnicodePropertyPosixGraph, "POSIX GRAPH"},
+    {kMCUnicodePropertyPosixPrint, "POSIX PRINT"},
+    {kMCUnicodePropertyPosixHexDigit, "POSIX HEX DIGIT"},
+    {kMCUnicodePropertyCased, "Cased"},
+    {kMCUnicodePropertyCaseIgnorable, "Case Ignorable"},
+    {kMCUnicodePropertyChangesWhenLowercased, "Changes When Lowercased"},
+    {kMCUnicodePropertyChangesWhenUppercased, "Changes When Uppercased"},
+    {kMCUnicodePropertyChangesWhenTitlecased, "Changes When Titlecased"},
+    {kMCUnicodePropertyChangesWhenCaseFolded, "Changes When Casefolded"},
+    {kMCUnicodePropertyChangesWhenCaseMapped, "Changes When Casemapped"},
+    {kMCUnicodePropertyChangesWhenNFKCCaseFolded, "Changes When NFKC Casefolded"},
+    
+    {kMCUnicodePropertyBidiClass, "Bidi Class"},
+    {kMCUnicodePropertyBlock, "Block"},
+    {kMCUnicodePropertyCanonicalCombiningClass, "Canonical Combining Class"},
+    {kMCUnicodePropertyDecompositionType, "Decomposition Type"},
+    {kMCUnicodePropertyEastAsianWidth, "East Asian Width"},
+    {kMCUnicodePropertyGeneralCategory, "General Category"},
+    {kMCUnicodePropertyJoiningGroup, "Joining Group"},
+    {kMCUnicodePropertyJoiningType, "Joining Type"},
+    {kMCUnicodePropertyLineBreak, "Line Break"},
+    {kMCUnicodePropertyNumericType, "Numeric Type"},
+    {kMCUnicodePropertyScript, "Script"},
+    {kMCUnicodePropertyHangulSyllableType, "Hangul Syllable Type"},
+    {kMCUnicodePropertyNFDQuickCheck, "NFD Quick Check"},
+    {kMCUnicodePropertyNFKDQuickCheck, "NFKD Quick Check"},
+    {kMCUnicodePropertyNFCQuickCheck, "NFC Quick Check"},
+    {kMCUnicodePropertyNFKCQuickCheck, "NFKC Quick Check"},
+    {kMCUnicodePropertyLeadCanonicalCombiningClass, "LEAD CANONICAL COMBINING CLASS"},
+    {kMCUnicodePropertyTrailCanonicalCombiningClass, "TRAIL CANONICAL COMBINING CLASS"},
+    {kMCUnicodePropertyGraphemeClusterBreak, "Grapheme Cluster Break"},
+    {kMCUnicodePropertySentenceBreak, "Sentence Break"},
+    {kMCUnicodePropertyWordBreak, "Word Break"},
+    {kMCUnicodePropertyBidiPairedBracketType, "Bidi Paired Bracket Type"},
+    
+    {kMCUnicodePropertyGeneralCategoryMask, "GENERAL CATEGORY MASK"},
+    
+    {kMCUnicodePropertyNumericValue, "Numeric Value"},
+    
+    {kMCUnicodePropertyBidiMirroringGlyph, "Bidi Mirroring Glyph"},
+    {kMCUnicodePropertySimpleCaseFolding, "Simple Case Folding"},
+    {kMCUnicodePropertySimpleLowercaseMapping, "Simple Lowercase Mapping"},
+    {kMCUnicodePropertySimpleTitlecaseMapping, "Simple Titlecase Mapping"},
+    {kMCUnicodePropertySimpleUppercaseMapping, "Simple Uppercase Mapping"},
+    {kMCUnicodePropertyBidiPairedBracket, "Bidi Paired Bracket"},
+    
+    {kMCUnicodePropertyAge, "Age"},
+    {kMCUnicodePropertyCaseFolding, "Case Folding"},
+    {kMCUnicodePropertyISOComment, "ISO Comment"},
+    {kMCUnicodePropertyLowercaseMapping, "Lowercase Mapping"},
+    {kMCUnicodePropertyName, "Name"},
+    {kMCUnicodePropertyTitlecaseMapping, "Titlecase Mapping"},
+    {kMCUnicodePropertyUnicode1Name, "Unicode 1 Name"},
+    {kMCUnicodePropertyUppercaseMapping, "Uppercase Mapping"},
+    
+    {MCUnicodeProperty(0), NULL},
+};
+
+static bool MCStringsMapCodepointPropertyNameToID(MCStringRef p_name, MCUnicodeProperty& r_propid)
+{
+    // Treat spaces and underscores as identical (for compatibility with Unicode's official names)
+    MCAutoStringRef t_name;
+    /* UNCHECKED */ MCStringMutableCopy(p_name, &t_name);
+    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_name, '_', ' ', kMCStringOptionCompareExact);
+    
+    const MCUnicodePropertyMapping *t_mapping;
+    t_mapping = MCUnicodePropertyMap;
+    while (t_mapping->m_name != NULL)
+    {
+        if (MCStringIsEqualToCString(*t_name, t_mapping->m_name, kMCStringOptionCompareCaseless))
+        {
+            r_propid = t_mapping->m_propid;
+            return true;
+        }
+        
+        t_mapping++;
+    }
+    
+    return false;
+}
+
+void MCStringsEvalCodepointProperty(MCExecContext& ctxt, MCStringRef p_codepoint, MCStringRef p_property, MCValueRef &r_value)
+{
+    // Verify that we have a single codepoint
+    if (MCStringGetLength(p_codepoint) != 1
+        && (MCStringGetLength(p_codepoint) != 2 || !MCStringIsValidSurrogatePair(p_codepoint, 0)))
+    {
+        ctxt.LegacyThrow(EE_CODEPOINTPROPERTY_BADCODEPOINT);
+        return;
+    }
+    
+    codepoint_t t_codepoint;
+    t_codepoint = MCStringGetCodepointAtIndex(p_codepoint, 0);
+    
+    // Look up the property ID
+    MCUnicodeProperty t_propid;
+    if (!MCStringsMapCodepointPropertyNameToID(p_property, t_propid))
+    {
+        ctxt.LegacyThrow(EE_CODEPOINTPROPERTY_BADPROPERTY);
+        return;
+    }
+    
+    if (t_propid <= kMCUnicodePropertyLastBinary)
+    {
+        if (MCUnicodeGetBinaryProperty(t_codepoint, t_propid))
+            r_value = MCValueRetain(kMCTrue);
+        else
+            r_value = MCValueRetain(kMCFalse);
+    }
+    else if (t_propid <= kMCUnicodePropertyLastBitmask) // Includes integers
+    {
+        int32_t t_value;
+        t_value = MCUnicodeGetIntegerProperty(t_codepoint, t_propid);
+        
+        // Attempt to map the property value to a string. If it isn't possible,
+        // return the property's integer value instead.
+        const char *t_prop_string;
+        t_prop_string = MCUnicodeGetPropertyValueName(t_propid, t_value);
+        if (t_prop_string != nil)
+            /* UNCHECKED */ MCStringCreateWithCString(t_prop_string, (MCStringRef&)r_value);
+        else
+            /* UNCHECKED */ MCNumberCreateWithInteger(t_value, (MCNumberRef&)r_value);
+    }
+    else if (t_propid <= kMCUnicodePropertyLastFloatingPoint)
+    {
+        double t_value;
+        t_value = MCUnicodeGetFloatProperty(t_codepoint, t_propid);
+        /* UNCHECKED */ MCNumberCreateWithReal(t_value, (MCNumberRef&)r_value);
+    }
+    else if (t_propid <= kMCUnicodePropertyLastCharacter)
+    {
+        codepoint_t t_value;
+        t_value = MCUnicodeGetCharacterProperty(t_codepoint, t_propid);
+        /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)&t_value, 4, kMCStringEncodingUTF32, false, (MCStringRef&)r_value);
+    }
+    else if (t_propid <= kMCUnicodePropertyLastString)
+    {
+        const unichar_t *t_value;
+        t_value = MCUnicodeGetStringProperty(t_codepoint, t_propid);
+        uindex_t t_length = 0;
+        while (t_value && t_value[t_length] != 0)
+            t_length++;
+        /* UNCHECKED */ MCStringCreateWithChars(t_value, t_length, (MCStringRef&)r_value);
+    }
+    else
+    {
+        // Shouldn't get here
+        MCAssert(false);
+        ctxt.LegacyThrow(EE_CODEPOINTPROPERTY_BADPROPERTY);
+        return;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1033,31 +1432,32 @@ void MCStringsEvalIsNotAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_token
 
 bool MCStringsIterateWords(MCExecContext& ctxt, uindex_t& x_index, MCStringRef p_string, MCRange& r_word_range)
 {
-	const char_t *t_str_ptr = MCStringGetNativeCharPtr(p_string);
 	uindex_t t_length = MCStringGetLength(p_string);
+    
+    unichar_t t_char;
+    
+    while (x_index < t_length && isspace(t_char = MCStringGetCharAtIndex(p_string, x_index)))
+        x_index++;
+    
 	if (x_index < t_length)
 	{
 		uindex_t t_word_start;
-
-		while (x_index < t_length && isspace(t_str_ptr[x_index]))
-			x_index++;
-
-		if (x_index == t_length)
-			return false;
-
 		t_word_start = x_index;
 
-		if (t_str_ptr[x_index] == '"')
+		if (t_char == '"')
 		{
 			x_index++;
-			while (x_index < t_length && t_str_ptr[x_index] != '"' && t_str_ptr[x_index] != '\n')
+			while (x_index < t_length && (t_char = MCStringGetCharAtIndex(p_string, x_index) != '"') && t_char != '\n')
 				x_index++;
 			if (x_index < t_length)
 				x_index++;
 		}
 		else
-			while (x_index < t_length && !isspace(t_str_ptr[x_index]))
-				x_index++;
+			while (x_index < t_length && !isspace(t_char))
+            {
+                x_index++;
+                t_char = MCStringGetCharAtIndex(p_string, x_index);
+            }
 
 		r_word_range = MCRangeMake(t_word_start, x_index - t_word_start);
 		return true;

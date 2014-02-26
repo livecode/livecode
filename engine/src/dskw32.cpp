@@ -3051,7 +3051,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			omode = GENERIC_READ;
 			createmode = OPEN_EXISTING;
 		}
-		if (p_mode== kMCSOpenFileModeWrite)
+		if (p_mode== kMCSOpenFileModeWrite || p_mode == kMCSOpenFileModeCreate)
 		{
 			omode = GENERIC_WRITE;
 			createmode = CREATE_ALWAYS;
@@ -3968,11 +3968,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             CloseHandle(piProcInfo.hThread);
         }
 
-		MCExecContext ctxt(nil, nil, nil);
-        if (MCprocesses[index].retcode)
-			ctxt.SetTheResultToNumber((real64_t)MCprocesses[index].retcode);
-        else
-			ctxt.SetTheResultToEmpty();
+        r_retcode = MCprocesses[index].retcode;
 
 		void *t_buffer;
 		uint32_t t_buf_size;

@@ -74,7 +74,7 @@ static void getfilter(MCStringRef p_filter, MCStringRef &r_filter)
 		MCStringCopy(*t_filterstring, r_filter);
 	}
 	else
-		r_filter = MCSTR("All Files (*.*)\0*.*\0");
+		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)"All Files (*.*)\0*.*\0", 20, r_filter);
 }
 
 static void waitonbutton()
@@ -329,14 +329,12 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 
 	MCAutoStringRef t_initial_file;
 	MCAutoStringRef t_initial_folder;
+    MCAutoStringRef t_initial_native_folder;
 
 	if (p_initial != nil && !MCStringIsEmpty(p_initial))
 	{
-		MCAutoStringRef t_std_path;
 		MCAutoStringRef t_fixed_path;
-
-		/* UNCHECKED */ MCS_pathfromnative(p_initial, &t_std_path);
-		/* UNCHECKED */ MCU_fix_path(*t_std_path, &t_fixed_path);
+		/* UNCHECKED */ MCU_fix_path(p_initial, &t_fixed_path);
 
 		if (MCS_exists(*t_fixed_path, False))
 			t_initial_folder = *t_fixed_path;
@@ -372,11 +370,12 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 					t_initial_folder = *t_folder_split;
 			}
 		}
+        
+        MCAutoStringRef t_resolved_folder;
+        /* UNCHECKED */ MCS_resolvepath(*t_initial_folder != nil ? *t_initial_folder : kMCEmptyString, &t_resolved_folder);
+        /* UNCHECKED */ MCS_pathtonative(*t_resolved_folder, &t_initial_native_folder);
 	}
-	MCAutoStringRef t_resolved_folder, t_initial_folder_native;
-	/* UNCHECKED */ MCS_resolvepath(*t_initial_folder != nil ? *t_initial_folder : kMCEmptyString, &t_resolved_folder);
-    /* UNCHECKED */ MCS_pathtonative(*t_resolved_folder, &t_initial_folder_native);
-
+    
 	if (!MCModeMakeLocalWindows())
 	{
 		MCAutoStringRefArray t_filters;
@@ -386,7 +385,7 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 			/* UNCHECKED */ MCStringsSplit(p_filter, '\0', t_filters.PtrRef(), t_filters.CountRef());
 		}
 
-		MCRemoteFileDialog(p_title, p_prompt, *t_filters, t_filters.Count(), *t_initial_folder_native, *t_initial_file, (p_options & MCA_OPTION_SAVE_DIALOG) != 0, (p_options & MCA_OPTION_PLURAL) != 0, r_value);
+		MCRemoteFileDialog(p_title, p_prompt, *t_filters, t_filters.Count(), *t_initial_native_folder, *t_initial_file, (p_options & MCA_OPTION_SAVE_DIALOG) != 0, (p_options & MCA_OPTION_PLURAL) != 0, r_value);
 
 		return 0;
 	}
@@ -449,13 +448,13 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 			t_succeeded = SUCCEEDED(t_hresult);
 		}
 
-		if (t_succeeded && *t_initial_folder_native != NULL)
+		if (t_succeeded && *t_initial_native_folder != NULL)
 		{
 			IShellItem *t_initial_folder_shellitem;
 			t_initial_folder_shellitem = NULL;
 
 			MCAutoStringRefAsWString t_initial_folder_wstr;
-			/* UNCHECKED */ t_initial_folder_wstr.Lock(*t_initial_folder_native);
+			/* UNCHECKED */ t_initial_folder_wstr.Lock(*t_initial_native_folder);
 
 			t_hresult = s_shcreateitemfromparsingname(*t_initial_folder_wstr, NULL, __uuidof(IShellItem), (LPVOID *)&t_initial_folder_shellitem);
 			if (SUCCEEDED(t_hresult))
@@ -597,7 +596,7 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 		MCAutoStringRefAsWString t_prompt_wstr;
 		MCAutoStringRefAsWString t_filter_wstr;
 		/* UNCHECKED */ t_filter_wstr.Lock(p_filter);
-		/* UNCHECKED */ t_initial_folder_wstr.Lock(*t_resolved_folder);
+		/* UNCHECKED */ t_initial_folder_wstr.Lock(*t_initial_native_folder);
 		/* UNCHECKED */ t_prompt_wstr.Lock(p_prompt);
 		/* UNCHECKED */ t_filter_wstr.Lock(p_filter);
 
@@ -666,15 +665,19 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 		{
 			// The filter string has the following format:
 			// "<description0>\0<extensions0>\0<description1>\0...\0<extensionsN>\0"
-			// so the n'th filter comes after the (2n - 1)'th null character
-			uindex_t t_index = t_filter_index * 2 - 1;
+			// so the n'th filter comes after the 2(n - 1)'th null character
+			uindex_t t_index = 2 * (t_filter_index - 1);
 			uindex_t t_offset = 0;
-			for (uindex_t t_index = t_filter_index * 2 - 1; t_index > 0; t_index--)
+			while (t_index--)
+			{
 				/* UNCHECKED */ MCStringFirstIndexOfChar(p_filter, '\0', t_offset, kMCStringOptionCompareExact, t_offset);
+				t_offset++;
+			}
 			
 			uindex_t t_end;
+			t_end = UINDEX_MAX;
 			/* UNCHECKED */ MCStringFirstIndexOfChar(p_filter, '\0', t_offset, kMCStringOptionCompareExact, t_end);
-
+            
 			/* UNCHECKED */ MCStringCopySubstring(p_filter, MCRangeMake(t_offset, t_end-t_offset), r_result);
 		}
 
@@ -967,12 +970,12 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bo
 	else
 	{
 		r_chosen = true;
-		p_initial_color.red = GetRValue(chooseclr.rgbResult);
-		p_initial_color.red |= p_initial_color.red << 8;
-		p_initial_color.green = GetGValue(chooseclr.rgbResult);
-		p_initial_color.green |= p_initial_color.green << 8;
-		p_initial_color.blue = GetBValue(chooseclr.rgbResult);
-		p_initial_color.blue |= p_initial_color.blue << 8;
+		r_chosen_color.red = GetRValue(chooseclr.rgbResult);
+		r_chosen_color.red |= r_chosen_color.red << 8;
+		r_chosen_color.green = GetGValue(chooseclr.rgbResult);
+		r_chosen_color.green |= r_chosen_color.green << 8;
+		r_chosen_color.blue = GetBValue(chooseclr.rgbResult);
+		r_chosen_color.blue |= r_chosen_color.blue << 8;
 	}
 
 	//  SMR 1880 clear shift and button state

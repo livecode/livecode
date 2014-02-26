@@ -415,6 +415,11 @@ findex_t MCField::getpgsize(MCParagraph *pgptr)
 
 void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid)
 {
+    setparagraphs(newpgptr, parid, INTEGER_MIN, INTEGER_MIN);
+}
+
+void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start, findex_t p_end)
+{
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
 	else
@@ -422,28 +427,118 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid)
 			parid = getcard()->getid();
 	MCCdata *fptr = getcarddata(fdata, parid, True);
 	MCParagraph *pgptr = fptr->getparagraphs();
+    MCParagraph *t_old_pgptr;
+
 	if (opened && fptr == fdata)
 		closeparagraphs(pgptr);
 	if (pgptr == paragraphs)
 		paragraphs = NULL;
 	if (pgptr == oldparagraphs)
-		oldparagraphs = NULL;
-	while (pgptr != NULL)
-	{
-		MCParagraph *tpgptr = pgptr->remove
-		                      (pgptr);
-		delete tpgptr;
-	}
-	
+        oldparagraphs = NULL;
+
+    // Save the current paragraphs and switch to the one to be processed
+    t_old_pgptr = paragraphs;
+    paragraphs = pgptr;
+
+    // Must simply delete the whole lot of paragraphs (old execution)
+    if (p_start == p_end && p_end == INTEGER_MIN)
+    {
+        while (paragraphs != NULL)
+        {
+            MCParagraph *tpgptr = paragraphs->remove(paragraphs);
+            delete tpgptr;
+        }
+        paragraphs = newpgptr;
+
+        fptr->setparagraphs(paragraphs);
+    }
+    else
+    {
+        // New execution, only deleting a part of the paragraphs
+        uint4 oc = 0;
+
+        uint4 oldstate = state;
+        bool t_refocus;
+        if (focused == this)
+            t_refocus = true;
+        else
+            t_refocus = false;
+        if (state & CS_KFOCUSED)
+            kunfocus();
+
+        // MW-2012-09-07: [[ 10374 ]] Make sure we preseve the drag* vars since
+        //   closing and opening the field will clear them.
+        bool t_was_dragdest, t_was_dragsource;
+        t_was_dragdest = MCdragdest == this;
+        t_was_dragsource = MCdragsource == this;
+        while (opened)
+        {
+            close();
+            oc++;
+        }
+
+        // delete the text to be replaced
+        deletetext(p_start, p_end);
+
+        MCParagraph *t_lastpgptr;
+        MCParagraph *t_insert_paragraph;
+        // Fetch the paragraph in which to insert the new paragraphs (and update the position)
+        t_insert_paragraph = indextoparagraph(paragraphs, p_start, p_end);
+
+        if (paragraphs -> prev() == paragraphs)
+            t_lastpgptr = NULL;
+        else
+            t_lastpgptr = paragraphs -> prev();
+
+        // Split if needed
+        if (p_start > t_insert_paragraph -> gettextlength())
+            t_insert_paragraph -> split(p_start);
+
+        // Insert the paragraph beyond the split after the new paragraphs
+        if (t_insert_paragraph -> next() != paragraphs)
+            newpgptr -> append(t_insert_paragraph -> next());
+
+        t_insert_paragraph -> append(newpgptr);
+
+        if (t_lastpgptr == NULL)
+            t_lastpgptr = t_insert_paragraph;
+        else
+            t_insert_paragraph -> defrag();
+
+        t_lastpgptr->join();
+        t_lastpgptr->defrag();
+
+        fptr->setparagraphs(paragraphs);
+
+        while (oc--)
+        {
+            open();
+        }
+
+        // MW-2012-09-07: [[ 10374 ]] Make sure we preseve the drag* vars since
+        //   closing and opening the field will clear them.
+        if (t_was_dragsource)
+            MCdragsource = this;
+        if (t_was_dragdest)
+            MCdragdest = this;
+
+        if (oldstate & CS_KFOCUSED)
+            kfocus();
+        // MW-2008-03-25: Make sure we reset focused to this field - otherwise mouseMoves aren't
+        //   sent to the field after doing a partial htmlText update.
+        if (t_refocus)
+            focused = this;
+        state = oldstate;
+    }
+
+
 	// MW-2008-03-13: [[ Bug 5383 ]] Crash when saving after initiating a URL download
 	//   Here it is important to 'setparagraphs' on the MCCdata object *before* opening. This
 	//   is because it is possible for URL downloads to be initiated in openparagraphs, which 
 	//   allow messages to be processed which allows a save to occur and its important that
 	//   the field be in a consistent state.
 	if (opened && fptr == fdata)
-	{
-		paragraphs = newpgptr;
-		fptr->setparagraphs(newpgptr);
+    {
 		openparagraphs();
 		do_recompute(true);
 
@@ -451,7 +546,9 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid)
 		layer_redrawall();
 	}
 	else
-		fptr->setparagraphs(newpgptr);
+    {
+        paragraphs = t_old_pgptr;
+    }
 }
 
 Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean formatted)

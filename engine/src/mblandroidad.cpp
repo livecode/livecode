@@ -233,7 +233,7 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
             if (MCArrayFetchValue(p_meta_data, false, *t_age_key, t_value))
             {
                 /* UNCHECKED */ ctxt . ConvertToString(t_value, &t_value_string);
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "age", *t_value_string);
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, MCSTR("age"), *t_value_string);
             }
         }
         if (t_success)
@@ -244,7 +244,7 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
             if (MCArrayFetchValue(p_meta_data, false, *t_distrib_key, t_value))
             {
                 /* UNCHECKED */ ctxt . ConvertToString(t_value, &t_value_string);
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "distribution id", *t_value_string);
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, MCSTR("distribution id"), *t_value_string);
             }
         }
 		
@@ -256,7 +256,7 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
             if (MCArrayFetchValue(p_meta_data, false, *t_gender_key, t_value))
             {
                 /* UNCHECKED */ ctxt . ConvertToString(t_value, &t_value_string);
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "gender", *t_value_string);
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, MCSTR("gender"), *t_value_string);
             }
         }
         if (t_success)
@@ -267,7 +267,7 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
             if (MCArrayFetchValue(p_meta_data, false, *t_keywords_key, t_value))
             {
                 /* UNCHECKED */ ctxt . ConvertToString(t_value, &t_value_string);
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "keywords", *t_value_string);
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, MCSTR("keywords"), *t_value_string);
             }
         }
         if (t_success)
@@ -278,7 +278,7 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
             if (MCArrayFetchValue(p_meta_data, false, *t_phone_key, t_value))
             {
                 /* UNCHECKED */ ctxt . ConvertToString(t_value, &t_value_string);
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "phone number", *t_value_string);
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, MCSTR("phone number"), *t_value_string);
             }
         }
     }

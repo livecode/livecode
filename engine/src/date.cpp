@@ -1039,7 +1039,7 @@ bool MCD_convert_to_datetime(MCExecContext &ctxt, MCValueRef p_input, Convert_fo
 			if (!ctxt.ConvertToString(p_input, &t_string))
 				return false;
 			
-			if (!datetime_parse(g_basic_locale, ctxt.GetCutOff(), false, MCSTR(s_items_date_format), *t_string, t_offset, t_datetime, t_valid_dateitems) || !MCStringIsEmpty(*t_string))
+			if (!datetime_parse(g_basic_locale, ctxt.GetCutOff(), false, MCSTR(s_items_date_format), *t_string, t_offset, t_datetime, t_valid_dateitems) || MCStringIsEmpty(*t_string))
 				return false;
             
 			datetime_normalize(t_datetime);
@@ -1055,7 +1055,7 @@ bool MCD_convert_to_datetime(MCExecContext &ctxt, MCValueRef p_input, Convert_fo
 			if (!ctxt.ConvertToString(p_input, &t_string))
 				return false;
 			
-			if (!datetime_parse(g_basic_locale, ctxt.GetCutOff(), false, MCSTR(s_internet_date_format), *t_string, t_offset, t_datetime, t_valid_dateitems) || !MCStringIsEmpty(*t_string))
+			if (!datetime_parse(g_basic_locale, ctxt.GetCutOff(), false, MCSTR(s_internet_date_format), *t_string, t_offset, t_datetime, t_valid_dateitems) || MCStringIsEmpty(*t_string))
 				return false;
             
 			if (!datetime_validate(t_datetime))

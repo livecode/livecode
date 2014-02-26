@@ -376,8 +376,8 @@ Boolean MCrecording;
 
 Boolean MCantialiasedtextworkaround = False;
 
-// MW-2012-03-08: [[ StackFile5500 ]] Make stackfile version 5.5 the default.
-uint4 MCstackfileversion = 5500;
+// AL-2014-18-02: [[ UnicodeFileFormat ]] Make stackfile version 7.0 the default.
+uint4 MCstackfileversion = 7000;
 uint2 MClook;
 MCStringRef MCttbgcolor;
 MCStringRef MCttfont;
@@ -736,8 +736,8 @@ void X_clear_globals(void)
 	MCretcode = 0;
 	MCrecording = False;
 	MCantialiasedtextworkaround = False;
-	// MW-2012-03-08: [[ StackFile5500 ]] Make 5.5 stackfile version the default.
-	MCstackfileversion = 5500;
+	// AL-2014-18-02: [[ UnicodeFileFormat ]] Make 7.0 stackfile version the default.
+	MCstackfileversion = 7000;
 #if defined(_WINDOWS)
     MClook = LF_WIN95;
     MCttbgcolor = MCSTR("255,255,231");
@@ -1010,13 +1010,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 		}
 		else
 			delete newtheme;
-	}
-    // Create the basic locale and the system locale
-    if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
-        return false;
-    kMCSystemLocale = MCS_getsystemlocale();
-    if (kMCSystemLocale == nil)
-        return false;
+    }
 
 	MCsystemprinter = MCprinter = MCscreen -> createprinter();
 	MCprinter -> Initialize();

@@ -1958,23 +1958,31 @@ void MCParagraph::replacetextwithparagraphs(findex_t p_start, findex_t p_finish,
     // Remove characters to replace
     deletestring(p_start, p_finish);
 
-    // Split the paragraph
-    split(p_start);
-
-    // p_pglist must be inserted between this and next()
-    // t_last_paragraph is meant to point to the last
-    // paragraph of p_pglist
-    MCParagraph *t_last_paragraph = p_pglist;
-    for (; t_last_paragraph -> next() != t_last_paragraph; t_last_paragraph = t_last_paragraph -> next())
-        ;
+    // Split the paragraph if needed
+    if (p_start < MCStringGetLength(m_text))
+        split(p_start);
 
     // Append the right part of the split to the end
     // of p_pglist if it exists
     if (next() != this)
+    {
+        // p_pglist must be inserted between this and next()
+        // t_last_paragraph is meant to point to the last
+        // paragraph of p_pglist
+        MCParagraph *t_last_paragraph = p_pglist;
+        for (; t_last_paragraph -> next() != p_pglist; t_last_paragraph = t_last_paragraph -> prev())
+            ;
         t_last_paragraph -> append(next());
+    }
 
-    // Append p_pglist to this
-    append(p_pglist);
+    // Append p_pglist to this if this is not the only, empty paragraph
+    if (MCStringIsEmpty(m_text) && next() == this)
+    {
+        MCParagraph *t_old = this;
+        delete t_old;
+    }
+    else
+        append(p_pglist);
 }
 
 void MCParagraph::split() //split paragraphs on return

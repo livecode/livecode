@@ -199,8 +199,11 @@ static MCStringRef windows_convert_date_format(MCStringRef p_format)
 				// Count the number of consecutive identical characters
 				unichar_t t_want = t_char;
 				int t_count = 1;
-				while ((t_char == MCStringGetCharAtIndex(p_format, t_offset++)) == t_want)
+				while (MCStringGetCharAtIndex(p_format, t_offset) == t_want)
+                {
 					t_count++;
+                    t_offset++;
+                }
 				
 				// Append the correct formatting instruction
 				switch (t_char)
@@ -227,7 +230,7 @@ static MCStringRef windows_convert_date_format(MCStringRef p_format)
 						MCStringAppendFormat(t_output, "%%B");
 					break;
 						
-				case 'Y':
+				case 'y':
 					if (t_count == 1)
 						MCStringAppendFormat(t_output, "%%#y");
 					else if (t_count == 2)

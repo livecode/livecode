@@ -1229,7 +1229,7 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 
 	uint4 size = 0;
 	Boolean doingspace = True;
-	while (True)
+    while (p_count)
 	{
 		uint4 rsize = fullsize;
 		if (size + rsize > tsize)
@@ -1416,7 +1416,7 @@ void MCFilesExecPerformReadUntilBinary(MCExecContext& ctxt, IO_handle stream, in
 				{
 					uint4 i = endcount;
 					uint4 j = size - 1;
-					while (i && j && t_buffer.Chars()[j] == MCStringGetNativeCharAtIndex(p_sentinel, 0))
+                    while (i && j && t_buffer.Chars()[j] == MCStringGetNativeCharAtIndex(p_sentinel, i))
 					{
 						i--;
 						j--;
@@ -1456,10 +1456,12 @@ void MCFilesExecReadComplete(MCExecContext& ctxt, MCStringRef p_output, IO_stat 
 	{
 		MCAutoStringRef t_output;
 		/* UNCHECKED*/ MCStringConvertLineEndingsToLiveCode(p_output, &t_output);
-		MCValueAssign(p_output, *t_output);
+		ctxt . SetItToValue(*t_output);
 	}
-	
-	ctxt . SetItToValue(p_output);
+	else
+    {
+        ctxt . SetItToValue(p_output);
+    }
 }
 
 void MCFilesExecReadUntil(MCExecContext& ctxt, IO_handle p_stream, index_t p_index, MCStringRef p_sentinel, double p_max_wait, int p_time_units, bool p_is_text, MCStringRef &r_output, IO_stat &r_stat)
