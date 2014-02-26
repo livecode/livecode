@@ -2191,6 +2191,8 @@ void MCBlock::MoveRange(findex_t p_index, findex_t p_length)
 {
 	m_index += p_index;
 	m_size += p_length;
+    if (p_length)
+        width = 0;
 }
 
 codepoint_t MCBlock::GetCodepointAtIndex(findex_t p_index) const
