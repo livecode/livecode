@@ -1953,7 +1953,7 @@ void MCFlip::exec_ctxt(MCExecContext& ctxt)
 
 	return ES_NORMAL;
 #endif /* MCFlip */
-    
+
     if (image != NULL)
 	{
 		MCObject *optr;
@@ -1971,10 +1971,11 @@ void MCFlip::exec_ctxt(MCExecContext& ctxt)
 			return;
 		}
 		MCImage *iptr = (MCImage *)optr;
-		MCGraphicsExecFlipImage(ctxt, iptr, direction == FL_HORIZONTAL);
-	}
-    else
-		MCGraphicsExecFlipSelection(ctxt, direction == FL_HORIZONTAL);
+        MCGraphicsExecFlipImage(ctxt, iptr, direction == FL_HORIZONTAL);
+    }
+
+    if (MCactiveimage != nil)
+        MCGraphicsExecFlipSelection(ctxt, direction == FL_HORIZONTAL);
 }
 
 void MCFlip::compile(MCSyntaxFactoryRef ctxt)
