@@ -2301,54 +2301,39 @@ uint1 MCParagraph::fmovefocus(Field_translations type)
     uindex_t t_length = gettextlength();
 	switch (type)
 	{
-	case FT_LEFTCHAR:
+	case FT_BACKCHAR:
 		if (focusedindex == 0)
-			return FT_LEFTCHAR;
-		focusedindex = DecrementIndex(focusedindex);
+			return FT_BACKCHAR;
+		focusedindex = PrevChar(focusedindex);
 		break;
-	case FT_LEFTWORD:
+	case FT_BACKWORD:
 		// MW-2012-11-14: [[ Bug 10504 ]] Corrected loop to ensure the right chars
 		//   are accessed when dealing with Unicode blocks.
 		if (focusedindex == 0)
-			return FT_LEFTCHAR;
+			return FT_BACKCHAR;
         focusedindex = DecrementIndex(focusedindex);
 
+        // TODO: is this necessary with the ICU break iterator?
         while (focusedindex && TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
-            focusedindex = DecrementIndex(focusedindex);
+            focusedindex = PrevChar(focusedindex);
 
-		for(;;)
-		{
-			if (focusedindex == 0)
-				break;
-	
-			// MW-2012-12-04: [[ Bug 10578 ]] Make sure we navigate to the beginning of the word
-			//   so save current index, then restore if it points to a space.
-			findex_t t_previous_focusedindex;
-			t_previous_focusedindex = focusedindex;
-            focusedindex = DecrementIndex(focusedindex);
-			if (TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
-			{
-				focusedindex = t_previous_focusedindex;
-				break;
-			}
-		}
+        focusedindex = PrevWord(focusedindex);
 		break;
-	case FT_RIGHTCHAR:
+	case FT_FORWARDCHAR:
         if (focusedindex == t_length)
-			return FT_RIGHTCHAR;
-		focusedindex = IncrementIndex(focusedindex);
+			return FT_FORWARDCHAR;
+		focusedindex = NextChar(focusedindex);
 		break;
-	case FT_RIGHTWORD:
+	case FT_FORWARDWORD:
         if (focusedindex == t_length)
-			return FT_RIGHTCHAR;
+			return FT_FORWARDCHAR;
         focusedindex = IncrementIndex(focusedindex);
 
+        // TODO: is this necessary with the ICU break iterator?
         while (focusedindex < t_length && TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
             focusedindex = IncrementIndex(focusedindex);
-
-        while (focusedindex < t_length && !TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
-            focusedindex = IncrementIndex(focusedindex);
-
+            
+        focusedindex = NextWord(focusedindex);
 		break;
 	case FT_BOS:
         if (focusedindex)
