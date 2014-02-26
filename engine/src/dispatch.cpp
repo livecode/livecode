@@ -909,7 +909,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		t_linkname = sptr -> getfilename();
 	else
 	{
-		MCresult -> sets("stack does not have filename");
+		MCresult -> sets("stack does not have a filename");
 		return IO_ERROR;
 	}
 	
