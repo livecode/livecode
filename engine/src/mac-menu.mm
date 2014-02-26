@@ -316,8 +316,11 @@ void MCMacPlatformUnlockMenuSelect(void)
 	t_key_equiv = [super performKeyEquivalent: event];
 	MCMacPlatformUnlockMenuSelect();
 	
+	MCPlatformWindowRef t_window = [(MCWindowDelegate *)[[event window] delegate] platformWindow];
+	MCPlatformRetainWindow(t_window);
 	[[[event window] contentView] handleKeyPress: event isDown: YES];
 	[[[event window] contentView] handleKeyPress: event isDown: NO];
+	MCPlatformReleaseWindow(t_window);
 	
 	return YES;
 }
