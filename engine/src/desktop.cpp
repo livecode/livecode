@@ -93,6 +93,18 @@ void MCPlatformHandleApplicationShutdownRequest(bool& r_terminate)
 	}
 }
 
+void MCPlatformHandleApplicationSuspend(void)
+{
+	MCdefaultstackptr -> getcard() -> message(MCM_suspend);
+	MCappisactive = False;
+}
+
+void MCPlatformHandleApplicationResume(void)
+{
+	MCappisactive = True;
+	MCdefaultstackptr -> getcard() -> message(MCM_resume);
+}
+
 void MCPlatformHandleApplicationRun(void)
 {
 	X_main_loop();

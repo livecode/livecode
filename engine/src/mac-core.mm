@@ -190,10 +190,12 @@ static CGFloat s_primary_screen_height = 0.0f;
 
 - (void)applicationDidBecomeActive:(NSNotification *)notification
 {
+	MCPlatformCallbackSendApplicationResume();
 }
 
 - (void)applicationWillResignActive:(NSNotification *)notification
 {
+	MCPlatformCallbackSendApplicationSuspend();
 }
 
 - (void)applicationDidResignActive:(NSNotification *)notification

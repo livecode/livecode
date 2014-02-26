@@ -6,6 +6,8 @@
 void MCPlatformHandleApplicationStartup(int p_argc, char **p_argv, char **p_envp, int& r_error_code, char*& r_error_message);
 void MCPlatformHandleApplicationShutdown(int& r_exit_code);
 void MCPlatformHandleApplicationShutdownRequest(bool& r_terminate);
+void MCPlatformHandleApplicationSuspend(void);
+void MCPlatformHandleApplicationResume(void);
 void MCPlatformHandleApplicationRun(void);
 
 void MCPlatformHandleScreenParametersChanged(void);
@@ -73,6 +75,16 @@ void MCPlatformCallbackSendApplicationShutdownRequest(bool& r_terminate)
 void MCPlatformCallbackSendApplicationRun(void)
 {
 	MCPlatformHandleApplicationRun();
+}
+
+void MCPlatformCallbackSendApplicationSuspend(void)
+{
+	MCPlatformHandleApplicationSuspend();
+}
+
+void MCPlatformCallbackSendApplicationResume(void)
+{
+	MCPlatformHandleApplicationResume();
 }
 
 //////////

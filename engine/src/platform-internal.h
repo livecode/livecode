@@ -232,6 +232,8 @@ void MCPlatformCallbackSendApplicationStartup(int argc, char **argv, char **envp
 void MCPlatformCallbackSendApplicationShutdown(int& r_exit_code);
 void MCPlatformCallbackSendApplicationShutdownRequest(bool& r_terminate);
 void MCPlatformCallbackSendApplicationRun(void);
+void MCPlatformCallbackSendApplicationSuspend(void);
+void MCPlatformCallbackSendApplicationResume(void);
 
 void MCPlatformCallbackSendScreenParametersChanged(void);
 
