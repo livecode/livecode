@@ -67,6 +67,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #endif
 
+#define LEGACY_SYSTEM
+
 #include "sysdefs.h"
 
 ////////////////////////////////////////////////////////////////////////////////

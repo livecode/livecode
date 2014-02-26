@@ -92,6 +92,7 @@ void MCS_setfiletype(const char *newpath);
 IO_handle MCS_open(const char *path, const char *mode,
 									 Boolean map, Boolean driver, uint4 offset)
 {
+#ifdef /* MCS_open_dsk_mac */ LEGACY_SYSTEM    
 	IO_handle handle = NULL;
 		//opening regular files
 		//set the file type and it's creator. These are 2 global variables
@@ -155,6 +156,7 @@ IO_handle MCS_open(const char *path, const char *mode,
 		}
 
 	return handle;
+#endif /* MCS_open_dsk_mac */    
 }
 
 IO_handle MCS_fakeopen(const MCString &data)
@@ -206,6 +208,7 @@ void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 
 	memcpy(stream -> buffer + p_pos, p_buffer, p_size);
 }
 
+#ifdef /* MCS_loadfile_dsk_mac */ LEGACY_SYSTEM
 void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 {
 	if (!MCSecureModeCanAccessDisk())
@@ -262,7 +265,9 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 		}
 	}
 }
+#endif /* MCS_loadfile_dsk_mac */
 
+#ifdef /* MCS_savefile_dsk_mac */ LEGACY_SYSTEM
 void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
 {
 	if (!MCSecureModeCanAccessDisk())
@@ -306,9 +311,11 @@ void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
 	delete tpath;
 	delete newpath;
 }
+#endif /* MCS_savefile_dsk_mac */
 
 IO_stat MCS_close(IO_handle &stream)
 {
+#ifdef /* MCS_close_dsk_mac */ LEGACY_SYSTEM    
 	IO_stat stat = IO_NORMAL;
 	if (stream->serialIn != 0 || stream->serialOut != 0)
 	{//close the serial port
@@ -325,12 +332,14 @@ IO_stat MCS_close(IO_handle &stream)
 	delete stream;
 	stream = NULL;
 	return stat;
+#endif /* MCS_close_dsk_mac */
 }
 
 // File reading and writing
 
 IO_stat MCS_putback(char c, IO_handle stream)
 {
+#ifdef /* MCS_putback_dsk_mac */ LEGACY_SYSTEM    
 	if (stream -> serialIn != 0 || stream -> fptr == NULL)
 		return MCS_seek_cur(stream, -1);
 	
@@ -338,10 +347,12 @@ IO_stat MCS_putback(char c, IO_handle stream)
 		return IO_ERROR;
 		
 	return IO_NORMAL;
+#endif /* MCS_putback_dsk_mac */
 }
 
 IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
 {
+#ifdef /* MCS_read_dsk_mac */ LEGACY_SYSTEM
 	if (MCabortscript || stream == NULL)
 		return IO_ERROR;
 
@@ -425,10 +436,12 @@ IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
 			}
 		}
 	return stat;
+#endif /* MCS_read_dsk_mac */
 }
 
 IO_stat MCS_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
 {
+#ifdef /* MCS_write_dsk_mac */ LEGACY_SYSTEM
 	if (stream == NULL)
 		return IO_ERROR;
 	if (stream->serialOut != 0)
@@ -446,14 +459,18 @@ IO_stat MCS_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
 	if (fwrite(ptr, size, n, stream->fptr) != n)
 		return IO_ERROR;
 	return IO_NORMAL;
+#endif /* MCS_write_dsk_mac */
 }
 
 IO_stat MCS_flush(IO_handle stream)
-{ //flush file buffer
+{
+#ifdef /* MCS_flush_dsk_mac */ LEGACY_SYSTEM    
+    //flush file buffer
 	if (stream->fptr != NULL)
 		if (fflush(stream->fptr))
 			return IO_ERROR;
 	return IO_NORMAL;
+#endif /* MCS_flush_dsk_mac */
 }
 
 // File positioning
@@ -468,6 +485,7 @@ Boolean MCS_eof(IO_handle stream)
 
 IO_stat MCS_seek_cur(IO_handle stream, int64_t offset)
 {
+#ifdef /* MCS_seek_cur_dsk_mac */ LEGACY_SYSTEM
 	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
 	// MW-2009-06-30: Refactored to common implementation in mcio.cpp.
 	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
@@ -480,10 +498,12 @@ IO_stat MCS_seek_cur(IO_handle stream, int64_t offset)
 		if (fseeko(stream->fptr, offset, SEEK_CUR) != 0)
 			return IO_ERROR;
 	return IO_NORMAL;
+#endif /* MCS_seek_cur_dsk_mac */    
 }
 
 IO_stat MCS_seek_set(IO_handle stream, int64_t offset)
 {
+#ifdef /* MCS_seek_set_dsk_mac */ LEGACY_SYSTEM
 	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
 	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
 		return MCS_fake_seek_set(stream, offset);
@@ -494,20 +514,25 @@ IO_stat MCS_seek_set(IO_handle stream, int64_t offset)
 		if (fseeko(stream->fptr, offset, SEEK_SET) != 0)
 			return IO_ERROR;
 	return IO_NORMAL;
+#endif /* MCS_seek_set_dsk_mac */    
 }
 
 IO_stat MCS_seek_end(IO_handle stream, int64_t offset)
-{ /* seek to offset from the end of the file */
+{
+#ifdef /* MCS_seek_end_dsk_mac */ LEGACY_SYSTEM    
+    /* seek to offset from the end of the file */
 	if (stream->fptr == NULL)
 		IO_set_stream(stream, stream->buffer + stream->len + offset);
 	else
 		if (fseeko(stream->fptr, offset, SEEK_END) != 0)
 			return IO_ERROR;
 	return IO_NORMAL;
+#endif /* MCS_seek_end_dsk_mac */    
 }
 
 int64_t MCS_tell(IO_handle stream)
 {
+#ifdef /* MCS_tell_dsk_mac */ LEGACY_SYSTEM    
 	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
 	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
 		return MCS_fake_tell(stream);
@@ -516,11 +541,13 @@ int64_t MCS_tell(IO_handle stream)
 		return ftello(stream->fptr);
 	else
 		return stream->ioptr - stream->buffer;
+#endif /* MCS_tell_dsk_mac */    
 }
 
 
 IO_stat MCS_sync(IO_handle stream)
 {
+#ifdef /* MCS_sync_dsk_mac */ LEGACY_SYSTEM    
 	if (stream->fptr != NULL)
 	{
 		int4 pos = ftello(stream->fptr);
@@ -528,12 +555,14 @@ IO_stat MCS_sync(IO_handle stream)
 			return IO_ERROR;
 	}
 	return IO_NORMAL;
+#endif /* MCS_sync_dsk_mac */
 }
 
 // File properties
 
 int64_t MCS_fsize(IO_handle stream)
 {
+#ifdef /* MCS_fsize_dsk_mac */ LEGACY_SYSTEM    
 	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
 		return MCS_fake_fsize(stream);
 
@@ -548,6 +577,7 @@ int64_t MCS_fsize(IO_handle stream)
 	if (fstat(fd, (struct stat *)&buf))
 		return 0;
 	return buf.st_size;
+#endif /* MCS_fsize_dsk_mac */
 }
 
 // TESTCASE: Callers of MCS_setfiletype
@@ -574,7 +604,9 @@ void MCS_setfiletype(const char *p_new_path)
 
 uint2 MCS_umask(uint2 mask)
 {
+#ifdef /* MCS_umask_dsk_mac */ LEGACY_SYSTEM    
 	return 0;
+#endif /* MCS_umask_dsk_mac */
 }
 
 int4 MCS_getumask()
@@ -589,18 +621,23 @@ void MCS_setumask(int4 newmask)
 
 IO_stat MCS_chmod(const char *path, uint2 mask)
 {
+#ifdef /* MCS_chmod_dsk_mac */ LEGACY_SYSTEM    
 	return IO_NORMAL;
+#endif /* MCS_chmod_dsk_mac */
 }
 
 Boolean MCS_noperm(const char *path)
 {
+#ifdef /* MCS_noperm_dsk_mac */ LEGACY_SYSTEM    
 	return False;
+#endif /* MCS_noperm_dsk_mac */
 }
 
 
 // File queries
 Boolean MCS_exists(const char *path, Boolean file)
 {
+#ifdef /* MCS_exists_dsk_mac */ LEGACY_SYSTEM    
 	if (path == NULL || !*path)
 		return False;
 	Boolean found = False;
@@ -628,6 +665,7 @@ Boolean MCS_exists(const char *path, Boolean file)
 				found = False;
 	delete newpath;
 	return found;
+#endif /* MCS_exists_dsk_mac */
 }
 
 // File actions
@@ -639,6 +677,7 @@ Boolean MCS_exists(const char *path, Boolean file)
 //   to FSExchangeObjects and if that fails, do a rename.
 Boolean MCS_backup(const char *p_src_path, const char *p_dst_path)
 {
+#ifdef /* MCS_backup_dsk_mac */ LEGACY_SYSTEM    
 	bool t_error;
 	t_error = false;
 	
@@ -716,10 +755,12 @@ Boolean MCS_backup(const char *p_src_path, const char *p_dst_path)
 		t_error = !MCS_rename(p_src_path, p_dst_path);
 		
 	return !t_error;
+#endif /* MCS_backup_dsk_mac */    
 }
 
 Boolean MCS_unbackup(const char *p_src_path, const char *p_dst_path)
 {
+#ifdef /* MCS_unbackup_dsk_mac */ LEGACY_SYSTEM    
 	bool t_error;
 	t_error = false;
 	
@@ -763,20 +804,23 @@ Boolean MCS_unbackup(const char *p_src_path, const char *p_dst_path)
 		t_error = !MCS_rename(p_src_path, p_dst_path);
 		
 	return !t_error;
+#endif /* MCS_unbackup_dsk_mac */
 }
 
 IO_stat MCS_trunc(IO_handle stream)
 {
-
+#ifdef /* MCS_trunc_dsk_mac */ LEGACY_SYSTEM
 	if (ftruncate(fileno(stream->fptr), ftell(stream->fptr)))
 		return IO_ERROR;
 	return IO_NORMAL;
+#endif /* MCS_trunc_dsk_mac */
 }
 
 // Anything else
 
 const char *MCS_tmpnam()
 {
+#ifdef /* MCS_tmpnam_dsk_mac */ LEGACY_SYSTEM    
 	static char *s_last_path;
 	
 	free(s_last_path);
@@ -803,7 +847,8 @@ const char *MCS_tmpnam()
 		return "";
 	
 	return s_last_path;
-	}
+#endif /* MCS_tmpnam_dsk_mac */
+}
 	
 	
 /********************************************************************/
@@ -942,6 +987,7 @@ static void configureSerialPort(int sRefNum)
 // MW-2007-12-18: [[ Bug 1059 ]] 'create alias' doesn't work when passed a folder
 Boolean MCS_createalias(char *p_source_path, char *p_dest_path)
 {
+#ifdef /* MCS_createalias_dsk_mac */ LEGACY_SYSTEM    
 	bool t_error;
 	t_error = false;
 	
@@ -1069,10 +1115,12 @@ Boolean MCS_createalias(char *p_source_path, char *p_dest_path)
 	}
 		
 	return !t_error;
+#endif /* MCS_createalias_dsk_mac */    
 }
 
 void MCS_resolvealias(MCExecPoint &p_context)
 {
+#ifdef /* MCS_resolvealias_dsk_mac */ LEGACY_SYSTEM    
 	const char *t_error;
 	t_error = NULL;
 	
@@ -1114,6 +1162,7 @@ void MCS_resolvealias(MCExecPoint &p_context)
 	
 	delete t_path;
 	delete t_resolved_path;
+#endif /* MCS_resolvealias_dsk_mac */
 }
 
 
@@ -1129,6 +1178,7 @@ void MCS_resolvealias(MCExecPoint &p_context)
 void MCS_copyresource(const char *src, const char *dest, const char *rtype,
                       const char *which, const char *newid)
 {
+#ifdef /* MCS_copyresource_dsk_mac */ LEGACY_SYSTEM    
 	short prev_res_file = CurResFile(); //save the current resource fork
 	short srcFileRefNum, destFileRefNum;
 	
@@ -1254,6 +1304,7 @@ void MCS_copyresource(const char *src, const char *dest, const char *rtype,
 	MCS_closeresourcefile(destFileRefNum);
 	
 	UseResFile(prev_res_file); //restore to the original state
+#endif /* MCS_copyresource_dsk_mac */
 }
 
 
@@ -1268,6 +1319,7 @@ void MCS_copyresource(const char *src, const char *dest, const char *rtype,
  *********************************************************************/
 void MCS_copyresourcefork(const char *p_source, const char *p_destination)
 {
+#ifdef /* MCS_copyresourcefork_dsk_mac */ LEGACY_SYSTEM    
 	const char *t_error;
 	t_error = NULL;
 	
@@ -1308,6 +1360,7 @@ void MCS_copyresourcefork(const char *p_source, const char *p_destination)
 		FSCloseFork(t_source_ref);
 	if (t_dest_fork_opened)
 		FSCloseFork(t_dest_ref);
+#endif /* MCS_copyresourcefork_dsk_mac */
 }
 
 // MH-2007-04-02 rewriting this function to support FSRefs, long filenames in particular.
@@ -1475,6 +1528,7 @@ const char *MCS_openresourcefork_with_path(const MCString& p_path, SInt8 p_permi
 
 void MCS_loadresfile(MCExecPoint &ep)
 {
+#ifdef /* MCS_loadresfile_dsk_mac */ LEGACY_SYSTEM
 	if (!MCSecureModeCanAccessDisk())
 	{
 		ep.clear();
@@ -1524,11 +1578,13 @@ void MCS_loadresfile(MCExecPoint &ep)
 	FSCloseFork(fRefNum);
 
 	delete t_path;
+#endif /* MCS_loadresfile_dsk_mac */
 }
 
 // MH-2007-04-02: [[ Bug 705 ]] resfile: URLs do not work with long filenames...
 void MCS_saveresfile(const MCString& p_path, const MCString p_data)
 {
+#ifdef /* MCS_saveresfile_dsk_mac */ LEGACY_SYSTEM    
 	const char *t_error;
 	t_error = NULL;
 
@@ -1564,11 +1620,13 @@ void MCS_saveresfile(const MCString& p_path, const MCString p_data)
 		MCresult -> sets(t_error);
 	else
 		MCresult -> clear(False);
+#endif /* MCS_saveresfile_dsk_mac */   
 }
 
 void MCS_deleteresource(const char *resourcefile, const char *rtype,
                         const char *which)
 {
+#ifdef /* MCS_deleteresource_dsk_mac */ LEGACY_SYSTEM    
 	ResType restype;
 	short rfRefNum;
 	memcpy((char *)&restype, rtype, 4); /* let's get the resource type first */
@@ -1605,11 +1663,13 @@ void MCS_deleteresource(const char *resourcefile, const char *rtype,
 	}
 	
 	MCS_closeresourcefile(rfRefNum);
+#endif /* MCS_deleteresource_dsk_mac */
 }
 
 void MCS_getresource(const char *resourcefile, const char *restype,
                      const char *name, MCExecPoint &ep)
 {
+#ifdef /* MCS_getresource_dsk_mac */ LEGACY_SYSTEM    
 	short resFileRefNum;
 	const char *t_open_res_error;
 	t_open_res_error = MCS_openresourcefile_with_path(resourcefile, fsRdPerm, true, &resFileRefNum); // RESFILE
@@ -1659,10 +1719,13 @@ void MCS_getresource(const char *resourcefile, const char *restype,
 	ep.copysvalue((const char *)*rh, resLength);
 	MCresult->clear();
 	MCS_closeresourcefile(resFileRefNum);
+#endif /* MCS_getresource_dsk_mac */    
 }
 
 char *MCS_getresources(const char *resourcefile, const char *restype)
-{ /* get resources from the resource fork of file 'path',
+{
+#ifdef /* MCS_getresources_dsk_mac */ LEGACY_SYSTEM    
+    /* get resources from the resource fork of file 'path',
 	   * if resource type is not empty, only resources of the specified type
 	   * are listed. otherwise lists all resources from the
 	   * resource fork.					    */
@@ -1719,6 +1782,7 @@ char *MCS_getresources(const char *resourcefile, const char *restype)
 	MCS_closeresourcefile(resFileRefNum);
 	SetResLoad(True);
 	return resourceInfoList;
+#endif /* MCS_getresources_dsk_mac */
 }
 
 void MCS_setresource(const char *resourcefile, const char *type,
@@ -1727,6 +1791,7 @@ void MCS_setresource(const char *resourcefile, const char *type,
 /* set a resource in the file specified.  either name or id can be empty,
  * attrib is the attributes of the resource. It's a ";" seperated list */
 {
+#ifdef /* MCS_setresource_dsk_mac */ LEGACY_SYSTEM    
 	short newflags = 0; // parse up the attributes
 	if (strlen(attrib) != 0)
 	{
@@ -1837,6 +1902,7 @@ void MCS_setresource(const char *resourcefile, const char *type,
 			SetResAttrs(rh, newflags);
 	}
 	MCS_closeresourcefile(resFileRefNum);
+#endif /* MCS_setresource_dsk_mac */
 }
 
 // Resource utility functions
@@ -1903,28 +1969,32 @@ static void getResourceInfo(char *&list, uint4 &len, ResType searchType)
 
 Boolean MCS_mkdir(const char *path)
 {
-
+#ifdef /* MCS_mkdir_dsk_mac */ LEGACY_SYSTEM
 	char *newpath = path2utf(MCS_resolvepath(path));
 	Boolean done = mkdir(newpath, 0777) == 0;
 	delete newpath;
 	return done;
+#endif /* MCS_mkdir_dsk_mac */
 }
 
 Boolean MCS_rmdir(const char *path)
 {
-
+#ifdef /* MCS_rmdir_dsk_mac */ LEGACY_SYSTEM
 	char *newpath = path2utf(MCS_resolvepath(path));
 	Boolean done = rmdir(newpath) == 0;
 	delete newpath;
 	return done;
+#endif /* MCS_rmdir_dsk_mac */
 }
 
 Boolean MCS_unlink(const char *path)
 {
+#ifdef /* MCS_unlink_dsk_mac */ LEGACY_SYSTEM    
 	char *newpath = path2utf(MCS_resolvepath(path));
 	Boolean done = remove(newpath) == 0;
 	delete newpath;
 	return done;
+#endif /* MCS_unlink_dsk_mac */
 }
 
 // Setting and Getting the current directory
@@ -1932,6 +2002,7 @@ Boolean MCS_unlink(const char *path)
 // MW-2006-04-07: Bug 3201 - MCS_resolvepath returns NULL if unable to find a ~<username> folder.
 Boolean MCS_setcurdir(const char *path)
 {
+#ifdef /* MCS_setcurdir_dsk_mac */ LEGACY_SYSTEM    
 	char *t_resolved_path;
 	t_resolved_path = MCS_resolvepath(path);
 	if (t_resolved_path == NULL)
@@ -1946,10 +2017,12 @@ Boolean MCS_setcurdir(const char *path)
 		return False;
 	
 	return True;
+#endif /* MCS_setcurdir_dsk_mac */
 }
 
 char *MCS_getcurdir()
 {
+#ifdef /* MCS_getcurdir_dsk_mac */ LEGACY_SYSTEM    
 	char namebuf[PATH_MAX + 2];
 	char *dptr = new char[PATH_MAX + 2];
 	getcwd(namebuf, PATH_MAX);
@@ -1958,6 +2031,7 @@ char *MCS_getcurdir()
 	MCS_utf8tonative(namebuf, strlen(namebuf), dptr, outlen);
 	dptr[outlen] = 0;
 	return dptr;
+#endif /* MCS_getcurdir_dsk_mac */
 }
 
 // Canonical path resolution
@@ -2012,6 +2086,7 @@ static sysfolders sysfolderlist[] = {
 //   because the folder wasn't necessarily being created.
 void MCS_getspecialfolder(MCExecPoint &p_context)
 {
+#ifdef /* MCS_getspecialfolder_dsk_mac */ LEGACY_SYSTEM    
 	const char *t_error;
 	t_error = NULL;
 	
@@ -2078,6 +2153,7 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 	}
 	
 	delete t_folder_path;
+#endif /* MCS_getspecialfolder_dsk_mac */
 }
 
 
@@ -2088,6 +2164,7 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 #define CATALOG_MAX_ENTRIES 16
 void MCS_getentries(MCExecPoint& p_context, bool p_files, bool p_detailed)
 {
+#ifdef /* MCS_getentries_dsk_mac */ LEGACY_SYSTEM    
 	OSStatus t_os_status;
 
 	p_context . clear();
@@ -2235,17 +2312,26 @@ void MCS_getentries(MCExecPoint& p_context, bool p_files, bool p_detailed)
 	} while(t_oserror != errFSNoMoreItems);
 	
 	FSCloseIterator(t_catalog_iterator);
+#endif /* MCS_getentries_dsk_mac */    
 }
 
 void MCS_longfilepath(MCExecPoint &ep)
-{}
+{
+#ifdef /* MCS_longfilepath_dsk_mac */ LEGACY_SYSTEM
+
+#endif /* MCS_longfilepath_dsk_mac */    
+}
 
 void MCS_shortfilepath(MCExecPoint &ep)
-{}
+{
+#ifdef /* MCS_shortfilepath_dsk_mac */ LEGACY_SYSTEM
+
+#endif /* MCS_shortfilepath_dsk_mac */
+}
 
 char *MCS_resolvepath(const char *path)
 {
-
+#ifdef /* MCS_resolvepath_dsk_mac */ LEGACY_SYSTEM
 	if (path == NULL)
 		return MCS_getcurdir();
 	char *tildepath;
@@ -2318,10 +2404,13 @@ char *MCS_resolvepath(const char *path)
 		delete fullpath;
 	}
 	return newname;
+#endif /* MCS_resolvepath_dsk_mac */
 }
 
 Boolean MCS_rename(const char *oname, const char *nname)
-{ //rename a file or directory
+{
+#ifdef /* MCS_rename_dsk_mac */ LEGACY_SYSTEM    
+    //rename a file or directory
 
 	char *oldpath = path2utf(MCS_resolvepath(oname));
 	char *newpath = path2utf(MCS_resolvepath(nname));
@@ -2330,10 +2419,12 @@ Boolean MCS_rename(const char *oname, const char *nname)
 	delete oldpath;
 	delete newpath;
 	return done;
+#endif /* MCS_rename_dsk_mac */
 }
 
 Boolean MCS_getdrives(MCExecPoint &ep)
 {
+#ifdef /* MCS_getdrives_dsk_mac */ LEGACY_SYSTEM    
 	OSErr t_err;
 	ItemCount t_index;
 	bool t_first;
@@ -2369,4 +2460,5 @@ Boolean MCS_getdrives(MCExecPoint &ep)
 	}
 	
 	return True;
+#endif /* MCS_getdrives_dsk_mac */
 }
