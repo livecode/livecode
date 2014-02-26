@@ -216,7 +216,7 @@ enum MCUnicodeDirection
     kMCUnicodeDirectionRightToLeftEmbedding,
     kMCUnicodeDirectionRightToLeftOverride,
     kMCUnicodeDirectionPopDirectionalFormat,
-    kMCUnicodeDirectionDirNonSpacingMark,
+    kMCUnicodeDirectionNonSpacingMark,
     kMCUnicodeDirectionBoundaryNeutral,
     kMCUnicodeDirectionFirstStrongIsolate,
     kMCUnicodeDirectionLeftToRightIsolate,
