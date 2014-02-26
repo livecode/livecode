@@ -432,7 +432,8 @@ void MCPlatformDoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOpe
 		r_operation = kMCPlatformDragOperationNone;
 		return;
 	}
-	else
+	
+	if (t_cg_image == nil)
 	{
 		uint32_t t_pixel;
 		t_pixel = 0;
@@ -508,7 +509,7 @@ bool MCMacPasteboardConvertHTMLToRTF(const MCString& p_in_data, MCString& r_out_
 	
 	r_out_data . set((const char *)memdup([t_rtf_data bytes], [t_rtf_data length]), [t_rtf_data length]);
 	
-	return false;
+	return true;
 }
 
 bool MCMacPasteboardConvertTIFFToPNG(const MCString& p_in_data, MCString& r_out_data)

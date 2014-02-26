@@ -1145,8 +1145,29 @@ MCScriptEnvironment *MCScreenDC::createscriptenvironment(const char *p_language)
 
 MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
 {
+	MCPlatformAllowedDragOperations t_operations;
+	t_operations = kMCPlatformDragOperationNone;
+	if ((p_allowed_actions & DRAG_ACTION_COPY) != 0)
+		t_operations |= kMCPlatformDragOperationCopy;
+	if ((p_allowed_actions & DRAG_ACTION_MOVE) != 0)
+		t_operations |= kMCPlatformDragOperationMove;
+	if ((p_allowed_actions & DRAG_ACTION_LINK) != 0)
+		t_operations |= kMCPlatformDragOperationLink;
+	
+	MCImageBitmap *t_image_bitmap;
+	t_image_bitmap = nil;
+	if (p_image != nil)
+	{
+		MCImageBitmap *t_bitmap = nil;
+		/* UNCHECKED */ p_image -> lockbitmap(t_bitmap, true);
+		/* UNCHECKED */ MCImageCopyBitmap(t_bitmap, t_image_bitmap);
+		p_image -> unlockbitmap(t_bitmap);
+	}
+	
 	MCPlatformDragOperation t_op;
-	MCPlatformDoDragDrop(w, p_allowed_actions, nil, nil, t_op);
+	MCPlatformDoDragDrop(w, t_operations, t_image_bitmap, p_image_offset, t_op);
+	
+	MCImageFreeBitmap(t_image_bitmap);
 	
 	MCDragAction t_action;
 	switch(t_op)

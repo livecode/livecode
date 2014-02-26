@@ -644,10 +644,10 @@ typedef uint32_t MCPlatformAllowedDragOperations;
 
 enum MCPlatformDragOperation
 {
-	kMCPlatformDragOperationNone,
-	kMCPlatformDragOperationCopy,
-	kMCPlatformDragOperationLink,
-	kMCPlatformDragOperationMove,
+	kMCPlatformDragOperationNone = 0,
+	kMCPlatformDragOperationCopy = 1 << 0,
+	kMCPlatformDragOperationLink = 1 << 1,
+	kMCPlatformDragOperationMove = 1 << 2,
 	
 	// COCOA-TODO: Add other drag operation types.
 };

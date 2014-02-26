@@ -935,7 +935,7 @@ static bool s_lock_responder_change = false;
 	
 	NSPoint t_image_loc;
 	t_image_loc . x = [t_mouse_event locationInWindow] . x + offset . width;
-	t_image_loc . y = [t_mouse_event locationInWindow] . y + offset . height;
+	t_image_loc . y = [t_mouse_event locationInWindow] . y - ([image size] . height - offset . height);
 	
 	NSLog(@"Drag image start");
 	

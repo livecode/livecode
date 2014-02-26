@@ -291,7 +291,19 @@ void MCPlatformHandleMouseDown(MCPlatformWindowRef p_window, uint32_t p_button, 
 		MCLog("MouseDown(%p, %d, %d)", t_target, p_button, p_count);
 		
 		if (p_count != 1)
+		{
+			if (p_count == 0 && !MCdispatcher -> isdragsource())
+			{
+				MCallowabledragactions = DRAG_ACTION_COPY;
+				MCdragaction = DRAG_ACTION_NONE;
+				MCdragimageid = 0;
+				MCdragimageoffset . x = 0;
+				MCdragimageoffset . y = 0;
+				MCdragdata -> ResetSource();
+			}
+			
 			t_target -> mdown(p_button + 1);
+		}
 		else
 			t_target -> doubledown(p_button + 1);
 	}
