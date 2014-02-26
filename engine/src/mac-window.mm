@@ -460,6 +460,8 @@ static bool s_lock_responder_change = false;
 
 - (void)keyDown: (NSEvent *)event
 {
+	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+	
 	if ([self useTextInput])
 	{
 		// Store the event being processed, if it results in a doCommandBySelector,
@@ -477,6 +479,8 @@ static bool s_lock_responder_change = false;
 
 - (void)keyUp: (NSEvent *)event
 {
+	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+	
 	if ([self useTextInput])
 	{
 		//if ([[self inputContext] handleEvent: event])
@@ -895,6 +899,8 @@ static bool s_lock_responder_change = false;
 
 - (void)scrollWheel: (NSEvent *)event
 {
+	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+	
 	MCMacPlatformWindow *t_window;
 	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
 	t_window -> ProcessMouseScroll([event deltaX], [event deltaY]);
@@ -1038,6 +1044,8 @@ static bool s_lock_responder_change = false;
 
 - (void)handleMouseMove: (NSEvent *)event
 {
+	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+	
 	MCMacPlatformWindow *t_window;
 	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
 	

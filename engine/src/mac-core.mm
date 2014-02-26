@@ -1220,10 +1220,13 @@ void MCMacPlatformSyncMouseAfterTracking(void)
 
 void MCMacPlatformHandleModifiersChanged(MCPlatformModifiers p_modifiers)
 {
-	s_mouse_modifiers = p_modifiers;
-	MCPlatformCallbackSendModifiersChanged(p_modifiers);
+	if (s_mouse_modifiers != p_modifiers)
+	{
+		s_mouse_modifiers = p_modifiers;
+		MCPlatformCallbackSendModifiersChanged(p_modifiers);
+	}
 }
-
+	
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifiers)
