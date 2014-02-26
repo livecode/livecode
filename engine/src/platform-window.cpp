@@ -89,6 +89,9 @@ void MCPlatformWindow::Update(void)
 		return;
 	
 	DoUpdate();
+
+	// Now that we have updated, make sure we empty the dirty region!
+	MCRegionSetEmpty(m_dirty_region);
 }
 
 void MCPlatformWindow::Invalidate(MCRegionRef p_region)
@@ -96,7 +99,7 @@ void MCPlatformWindow::Invalidate(MCRegionRef p_region)
 	// If the window is not visible, there is nothing to do.
 	if (!m_is_visible)
 		return;
-	
+
 	// Union the dirty region.
 	MCRegionUnion(m_dirty_region, m_dirty_region, p_region);
 }
