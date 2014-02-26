@@ -3284,6 +3284,7 @@ extern MCExecSetTypeInfo *kMCInterfaceButtonAcceleratorModifiersTypeInfo;
 
 extern MCExecEnumTypeInfo *kMCInterfaceFieldStyleTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceFlaggedRangesTypeInfo;
+extern MCExecEnumTypeInfo *kMCInterfaceFieldCursorMovementTypeInfo;
 
 ///////////
 

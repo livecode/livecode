@@ -542,6 +542,7 @@ void MCLine::ResolveDisplayOrder()
         bptr = t_visual_order[i];
         setscents(bptr);
         bptr -> setorigin(width);
+        bptr -> SetVisualIndex(i);
         width += bptr -> getwidth(NULL);
     }
     

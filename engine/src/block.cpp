@@ -2221,3 +2221,28 @@ codepoint_t MCBlock::GetCodepointAtIndex(findex_t p_index) const
 	return parent->GetCodepointAtIndex(m_index + p_index);
 }
 
+MCBlock *MCBlock::GetNextBlockVisualOrder()
+{
+    MCBlock *bptr = this;
+    do
+    {
+        if (bptr->visual_index == visual_index + 1)
+            return bptr;
+        bptr = bptr->next();
+    } while (bptr != this);
+    
+    return nil;
+}
+
+MCBlock *MCBlock::GetPrevBlockVisualOrder()
+{
+    MCBlock *bptr = this;
+    do
+    {
+        if (bptr->visual_index == visual_index - 1)
+            return bptr;
+        bptr = bptr->next();
+    } while (bptr != this);
+    
+    return nil;
+}

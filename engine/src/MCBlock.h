@@ -65,6 +65,7 @@ protected:
     uint2 origin;
 	uint2 opened;
     uint2 tabpos;           // Pixel offset to use when calculating tabstops
+    uint2 visual_index;     // Visual ordering index from left to right
     uint8_t direction_level;
 
 	// MW-2012-02-14: [[ FontRefs ]] The concrete font to use for the block.
@@ -269,6 +270,16 @@ public:
         origin = o;
     }
     
+    uint2 GetVisualIndex() const
+    {
+        return visual_index;
+    }
+    
+    void SetVisualIndex(uint2 i)
+    {
+        visual_index = i;
+    }
+    
     uint2 GetDirectionLevel() const
     {
         return direction_level;
@@ -297,6 +308,10 @@ public:
     {
         tabpos = offset;
     }
+    
+    // Returns the next/previous block in visual order (or nil if none)
+    MCBlock *GetNextBlockVisualOrder();
+    MCBlock *GetPrevBlockVisualOrder();
 	
 	////////////////////
 	

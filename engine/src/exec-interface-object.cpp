@@ -254,6 +254,7 @@ static PropList fieldprops[] =
         {"borderWidth", P_BORDER_WIDTH},
         {"cantSelect", P_CANT_SELECT},
         {"colors", P_COLORS},
+        {"cursorMovement", P_CURSORMOVEMENT},
         {"disabled", P_DISABLED},
         {"dontSearch", P_DONT_SEARCH},
         {"dontWrap", P_DONT_WRAP},

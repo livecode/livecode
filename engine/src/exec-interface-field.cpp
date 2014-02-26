@@ -66,11 +66,25 @@ static MCExecEnumTypeElementInfo _kMCInterfaceFieldStyleElementInfo[] =
 	{ MCopaquestring, kMCFieldStyleShowBorder, false },
 };
 
+static MCExecEnumTypeElementInfo _kMCInterfaceFieldCursorMovementElementInfo[] =
+{
+    { "default", kMCFieldCursorMovementDefault, false },
+    { "visual", kMCFieldCursorMovementVisual, false },
+    { "logical", kMCFieldCursorMovementLogical, false },
+};
+
 static MCExecEnumTypeInfo _kMCInterfaceFieldStyleTypeInfo =
 {
 	"Interface.FieldStyle",
 	sizeof(_kMCInterfaceFieldStyleElementInfo) / sizeof(MCExecEnumTypeElementInfo),
 	_kMCInterfaceFieldStyleElementInfo
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceFieldCursorMovementTypeInfo =
+{
+    "Interface.CursorMovement",
+    sizeof(_kMCInterfaceFieldCursorMovementElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceFieldCursorMovementElementInfo
 };
 
 //////////
@@ -191,6 +205,7 @@ static MCExecEnumTypeInfo _kMCInterfaceLayerModeTypeInfo =
 
 MCExecEnumTypeInfo *kMCInterfaceFieldStyleTypeInfo = &_kMCInterfaceFieldStyleTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceFlaggedRangesTypeInfo = &_kMCInterfaceFlaggedRangesTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceFieldCursorMovementTypeInfo = &_kMCInterfaceFieldCursorMovementTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -879,6 +894,16 @@ void MCField::GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encod
         pgptr = pgptr -> next();
     }
     r_encoding = t_encoding;
+}
+
+void MCField::SetCursorMovement(MCExecContext& ctxt, intenum_t p_movement)
+{
+    cursor_movement = (MCInterfaceFieldCursorMovement)p_movement;
+}
+
+void MCField::GetCursorMovement(MCExecContext& ctxt, intenum_t &r_movement)
+{
+    r_movement = intenum_t(cursor_movement);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

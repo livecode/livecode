@@ -130,6 +130,13 @@ enum
 	kMCFieldExportFlattenStyles = 1 << 6,
 };
 
+enum MCInterfaceFieldCursorMovement
+{
+    kMCFieldCursorMovementDefault,
+    kMCFieldCursorMovementVisual,
+    kMCFieldCursorMovementLogical,
+};
+
 // MW-2012-02-20: [[ FieldExport ]] The event that occured to cause the callback.
 enum MCFieldExportEventType
 {
@@ -223,6 +230,7 @@ class MCField : public MCControl
 	MCScrollbar *hscrollbar;
 	MCStringRef label;
     MCFieldTextDirection text_direction;
+    MCInterfaceFieldCursorMovement cursor_movement;
 	
 	static int2 clickx;
 	static int2 clicky;
@@ -640,6 +648,7 @@ public:
     ////////// BIDIRECTIONAL SUPPORT
     
     MCFieldTextDirection getbasetextdirection() { return text_direction; }
+    bool IsCursorMovementVisual();
 
     ////////// PROPERTY SUPPORT METHODS
 
@@ -726,6 +735,8 @@ public:
 	void GetThreeDHilite(MCExecContext& ctxt, bool& r_setting);
 	void SetThreeDHilite(MCExecContext& ctxt, bool setting);
 	void GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encoding);
+    void SetCursorMovement(MCExecContext&, intenum_t);
+    void GetCursorMovement(MCExecContext&, intenum_t&);
     
     void GetHilitedLines(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_lines);
     void SetHilitedLines(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_lines);

@@ -379,7 +379,8 @@ public:
 	// Move the focused index to the place specified by type.
 	// Called by:
 	//   MCField::fmove
-	uint1 fmovefocus(Field_translations type);
+	uint1 fmovefocus(Field_translations type, bool force_logical = false);
+    uint1 fmovefocus_visual(Field_translations type);
 
 	// Initialize the text buffer
 	// Called by:

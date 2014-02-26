@@ -100,6 +100,7 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_LIST_BEHAVIOR, Bool, MCField, ListBehavior)
 	DEFINE_RW_OBJ_PROPERTY(P_MULTIPLE_HILITES, Bool, MCField, MultipleHilites)
 	DEFINE_RW_OBJ_PROPERTY(P_NONCONTIGUOUS_HILITES, Bool, MCField, NoncontiguousHilites)
+    DEFINE_RW_OBJ_ENUM_PROPERTY(P_CURSORMOVEMENT, InterfaceFieldCursorMovement, MCField, CursorMovement)
 	DEFINE_RW_OBJ_PART_PROPERTY(P_TEXT, String, MCField, Text)
 	DEFINE_RW_OBJ_PART_PROPERTY(P_UNICODE_TEXT, BinaryString, MCField, UnicodeText)
 	DEFINE_RW_OBJ_PART_NON_EFFECTIVE_PROPERTY(P_HTML_TEXT, Any, MCField, HtmlText)
@@ -3340,4 +3341,22 @@ bool MCField::imagechanged(MCImage *p_image, bool p_deleting)
 	}
 
 	return t_used;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool MCField::IsCursorMovementVisual()
+{
+    if (cursor_movement == kMCFieldCursorMovementLogical)
+        return false;
+    else if (cursor_movement == kMCFieldCursorMovementVisual)
+        return true;
+    else
+    {
+#ifdef __WIN32
+        return false;
+#else
+        return true;
+#endif
+    }
 }

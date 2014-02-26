@@ -1621,6 +1621,9 @@ enum Properties {
     P_LOCALIZED_TITLE,
     P_LOCALIZED_DESCRIPTION,
     P_LOCALIZED_PRICE,
+    
+    // RTL/Bidirectional properties
+    P_CURSORMOVEMENT,
 };
 
 enum Look_and_feel {

@@ -2483,8 +2483,123 @@ int2 MCParagraph::fdelete(Field_translations type, MCParagraph *&undopgptr)
 	return 0;
 }
 
-uint1 MCParagraph::fmovefocus(Field_translations type)
+uint1 MCParagraph::fmovefocus_visual(Field_translations type)
 {
+    // Get the current block and its text direction
+    MCBlock *sbptr = indextoblock(focusedindex, false);
+    bool t_is_rtl = sbptr->is_rtl();
+    
+    // Attempt to move non-visually and then back-out if we crossed a text
+    // direction boundary (as this is where visual order matters)
+    findex_t t_original_index = focusedindex;
+    Field_translations t_logical_type;
+    bool t_direction_matters = true;
+    switch (type)
+    {
+        case FT_LEFTCHAR:
+            t_logical_type = t_is_rtl ? FT_FORWARDCHAR : FT_BACKCHAR;
+            break;
+            
+        case FT_LEFTWORD:
+            t_logical_type = t_is_rtl ? FT_FORWARDWORD : FT_BACKWORD;
+            break;
+            
+        case FT_RIGHTCHAR:
+            t_logical_type = t_is_rtl ? FT_BACKCHAR : FT_FORWARDCHAR;
+            break;
+            
+        case FT_RIGHTWORD:
+            t_logical_type = t_is_rtl ? FT_BACKWORD : FT_FORWARDWORD;
+            break;
+            
+        default:
+            t_logical_type = type;
+            t_direction_matters = false;
+            break;
+    }
+    
+    uint1 t_result = fmovefocus(t_logical_type, true);
+    if (!t_direction_matters || t_result != FT_UNDEFINED)
+        return t_result;
+    
+    // Blocks may have been crossed. Did we cross any directional boundaries?
+    bool t_direction_changed = false;
+    MCBlock *bptr = sbptr;
+    MCBlock *ebptr = indextoblock(focusedindex, false);
+    while (bptr != ebptr)
+    {
+        if (bptr->is_rtl() != t_is_rtl)
+        {
+            t_direction_changed = true;
+            break;
+        }
+        bptr = bptr->next();
+    }
+    
+    // If no directional boundaries were crossed, nothing needs to be done
+    if (!t_direction_changed)
+        return t_result;
+    
+    // Block boundary was crossed. We will decree that changing text direction
+    // always ends a word or character (not doing so would seem a bit odd).
+    MCBlock *tbptr;
+    if (type == FT_LEFTCHAR || type == FT_LEFTWORD)
+    {
+        tbptr = sbptr->GetPrevBlockVisualOrder();
+        
+        // Position cursor at the beginning/end of this block, as appropriate
+        if (tbptr == nil)
+            return FT_LEFTCHAR;
+        else if (tbptr->is_rtl())
+            focusedindex = tbptr->GetOffset() + tbptr->GetLength();
+        else
+            focusedindex = tbptr->GetOffset();
+    }
+    else // type == FT_RIGHTCHAR || type == FT_RIGHTWORD
+    {
+        tbptr = sbptr->GetNextBlockVisualOrder();
+        
+        // Position cursor at the beginning/end of this block, as appropriate
+        if (tbptr == nil)
+            return FT_RIGHTCHAR;
+        if (tbptr->is_rtl())
+            focusedindex = tbptr->GetOffset();
+        else
+            focusedindex = tbptr->GetOffset() + tbptr->GetLength();
+    }
+    
+    // All done
+    return FT_UNDEFINED;
+}
+
+uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
+{
+    // Get the cursor movement style of the parent field
+    bool t_visual_movement;
+    t_visual_movement = parent->IsCursorMovementVisual();
+    if (!p_force_logical && t_visual_movement)
+        return fmovefocus_visual(type);
+
+    // Using logical ordering so translate the type
+    switch (type)
+    {
+        case FT_LEFTCHAR:
+            type = FT_BACKCHAR;
+            break;
+            
+        case FT_LEFTWORD:
+            type = FT_BACKWORD;
+            break;
+            
+        case FT_RIGHTCHAR:
+            type = FT_FORWARDCHAR;
+            break;
+            
+        case FT_RIGHTWORD:
+            type = FT_FORWARDWORD;
+            break;
+    }
+
     findex_t oldfocused = focusedindex;
     uindex_t t_length = gettextlength();
 	switch (type)
