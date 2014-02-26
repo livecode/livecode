@@ -1470,7 +1470,9 @@ void MCMacPlatformWindow::DoSynchronize(void)
 		NSRect t_cocoa_frame;
 		t_cocoa_frame = [m_window_handle frameRectForContentRect: t_cocoa_content];
 		
-		[m_window_handle setFrame: t_cocoa_frame display: NO];
+		// COCOA-TODO: At the moment force a re-display here to stop redraw artifacts.
+		//   The engine will disable screen updates appropriately to ensure atomicity.
+		[m_window_handle setFrame: t_cocoa_frame display: YES];
 	}
 	
 	if (m_changes . title_changed)

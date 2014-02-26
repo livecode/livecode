@@ -621,6 +621,14 @@ void MCStack::setgeom()
 	MCRectangle t_old_rect;
 	t_old_rect = view_getstackviewport();
 	
+	// MW-2014-02-26: [[ Cocoa ]] It seems that to stop unwanted redraw artifacts we need to
+	//   set the frame of the NSWindow and update the content at the same time. To achieve this
+	//   neatly we will need to restructure how we go about resizes. However, for now, hopefully
+	//   just disabling screen updates and enabling them between setting the frame and resizing
+	//   should be enough...
+	
+	DisableScreenUpdates();
+	
 	rect = view_setstackviewport(rect);
 	
 	state &= ~CS_NEED_RESIZE;
@@ -629,6 +637,8 @@ void MCStack::setgeom()
 	// in stack coords so don't need to transform
 	if (t_old_rect.x != rect.x || t_old_rect.y != rect.y || t_old_rect.width != rect.width || t_old_rect.height != rect.height)
 		resize(t_old_rect.width, t_old_rect.height);
+	
+	EnableScreenUpdates();
 }
 
 // MW-2011-09-12: [[ MacScroll ]] This is called to apply the Mac menu scroll. It
