@@ -1510,6 +1510,7 @@ void MCMacPlatformWindow::DoShow(void)
 		MCMacPlatformBeginModalSession(this);
 	else
 	{
+		[m_view setNeedsDisplay: YES];
 		[m_window_handle makeKeyAndOrderFront: nil];
 		MCMacPlatformWindowShowing(this);
 	}
