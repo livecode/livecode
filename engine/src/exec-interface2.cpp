@@ -62,6 +62,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objptr.h"
 
 #include "exec-interface.h"
+#include "resolution.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -336,6 +337,10 @@ MC_EXEC_DEFINE_EXEC_METHOD(Interface, Relayer, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, RelayerRelativeToControl, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, ResolveImageByName, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, ResolveImageById, 2)
+
+MC_EXEC_DEFINE_GET_METHOD(Interface, PixelScale, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, PixelScale, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, SystemPixelScale, 1)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3709,4 +3714,29 @@ void MCInterfaceExecResolveImageByName(MCExecContext& ctxt, MCObject *p_object, 
     }
     else
         ctxt . SetItToEmpty();
+}
+
+void MCInterfaceGetPixelScale(MCExecContext& ctxt, double &r_scale)
+{
+    // IM-2013-12-04: [[ PixelScale ]] Global property pixelScale returns the current pixel scale
+    r_scale = MCResGetPixelScale();
+}
+
+void MCInterfaceSetPixelScale(MCExecContext& ctxt, double p_scale)
+{
+	// IM-2013-12-04: [[ PixelScale ]] Enable setting of pixelScale to override default system value
+	// IM-2013-12-06: [[ PixelScale ]] Remove handling of empty pixelScale - should always have a numeric value
+    if (p_scale <= 0)
+    {
+        ctxt . LegacyThrow(EE_PROPERTY_BADPIXELSCALE);
+        return;
+    }
+    
+    MCResSetPixelScale(p_scale);
+}
+
+void MCInterfaceGetSystemPixelScale(MCExecContext& ctxt, double &r_scale)
+{
+    // IM-2013-12-04: [[ PixelScale ]] Global property systemPixelScale returns the pixel scale as determined by the OS
+    r_scale = MCResGetSystemScale();
 }

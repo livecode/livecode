@@ -167,6 +167,38 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 		t_break_index = t_break_block -> GetOffset() + t_break_block -> GetLength();
 	}
 	
+	// MW-2014-01-06: [[ Bug 11628 ]] We have a break block and index, so now extend the
+	//   break index through any space chars.
+	for(;;)
+	{
+		// Consume all spaces after the break index.
+		while(t_break_index < (t_break_block -> GetOffset() + t_break_block -> GetLength()) &&
+			  parent -> TextIsWordBreak(t_break_block -> GetCodepointAtIndex(t_break_index)))
+			t_break_index++;
+		
+		if (t_break_index < (t_break_block -> GetOffset() + t_break_block -> GetLength()))
+			break;
+
+        // Get the next non empty block.
+        MCBlock *t_next_block;
+        t_next_block = t_break_block -> next();
+        while(t_next_block -> GetLength() == 0 && t_next_block != p_sentinal)
+            t_next_block = t_next_block -> next();
+
+		// If we are at the end of the list of blocks there is nothing more to do.
+		if (t_next_block == p_sentinal)
+			break;
+		
+		// If the first char of the next block is not a space, then there is nothing more
+		// to do.
+		if (!parent -> TextIsWordBreak(t_next_block -> GetCodepointAtIndex(t_break_index)))
+			break;
+		
+		// The next block starts with a space, so advance the break block.
+		t_break_block = t_next_block;
+		t_break_index = t_break_block -> GetOffset();
+	}
+	
 	// MW-2012-02-21: [[ LineBreak ]] Check to see if there is a vtab char before the
 	//   break index.
 	bool t_is_explicit_line_break;

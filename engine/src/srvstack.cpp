@@ -43,7 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphics_util.h"
 
 // MM-2013-03-06: [[ RefactorGraphics ]] Added to allow server engines to compile.
-MCGFloat MCResGetDeviceScale(void)
+MCGFloat MCResGetSystemScale(void)
 {
 	return 1.0;
 }

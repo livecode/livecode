@@ -259,7 +259,7 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 	r_abort = False;
 	
 	MCGFloat t_device_scale;
-	t_device_scale = MCResGetDeviceScale();
+	t_device_scale = MCResGetPixelScale();
 	
 	MCEventnode *tptr = pendingevents;
 	MCEventnode *pressptr = NULL;

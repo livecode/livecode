@@ -490,11 +490,11 @@ bool MCImageGetFileRepForStackContext(MCStringRef p_filename, MCStack *p_stack, 
 				t_success = MCS_resolvepath(p_filename, &t_resolved);
 				if (t_success)
 					t_success = MCImageRepGetDensityMapped(*t_resolved, t_rep);
-				
-				if (t_success)
-					t_success = t_rep != nil;
 			}
 		}
+        // AL-2014-01-17: [[ Bug 11684 ]] If image file isn't found, return false
+        if (t_success)
+            t_success = t_rep != nil;
 	}
 	
 	if (t_success)

@@ -1775,7 +1775,8 @@ void MCInterfaceExecClickCmd(MCExecContext& ctxt, uint2 p_button, MCPoint p_loca
     
     // IM-2013-09-23: [[ FullscreenMode ]] get / set mouseloc & clickloc in view coords
 	MCPoint t_view_clickloc;
-	t_view_clickloc = MCdefaultstackptr->view_stacktoviewloc(p_location);
+    // IM-2014-01-06: [[ Bug 11624 ]] Use MCStack::stacktowindowloc to account for stack scroll
+	t_view_clickloc = MCdefaultstackptr->stacktowindowloc(p_location);
     
 	uint2 oldmstate = MCmodifierstate;
 	uint2 oldbstate = MCbuttonstate;

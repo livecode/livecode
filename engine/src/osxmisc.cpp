@@ -451,7 +451,7 @@ void MCButton::macopenmenu(void)
 	
 	// IM-2013-08-16: [[ ResIndependence ]] scale menu location to device coords
 	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
+	t_scale = MCResGetPixelScale();
 	
 	tmenux = tmenux * t_scale;
 	tmenuy = tmenuy * t_scale;
@@ -479,11 +479,13 @@ void MCButton::macopenmenu(void)
 				setmenuhistoryprop(LoWord(result));
 				//low word of result from PopUpMenuSelect() is the item selected
 				//high word contains the menu id
-				
+
 				MCAutoStringRef t_label;
 				getmacmenuitemtext(mh, menuhistory, &t_label, False);
-				MCValueAssign(label, *t_label);
+                // MW-2014-02-04: [[ Bug 11751 ]] Make sure the label is in-sync with the menuhistory.
+				resetlabel();
 				Exec_stat es = message_with_valueref_args(MCM_menu_pick, label);
+
 				if (es == ES_NOT_HANDLED || es == ES_PASS)
 					message_with_args(MCM_mouse_up, menubutton);
 			}

@@ -581,6 +581,10 @@ void MCImage::setrect(const MCRectangle &nrect)
 	MCRectangle orect = rect;
 	rect = nrect;
 
+	// IM-2013-12-17: [[ Bug 11604 ]] Notify mutable image rep of change in image rect
+	if (m_rep != nil && m_rep->GetType() == kMCImageRepMutable)
+		static_cast<MCMutableImageRep*>(m_rep)->owner_rect_changed(rect);
+	
 	if (!(state & CS_SIZE) || !(state & CS_EDITED))
 	{
 		// IM-2013-04-15: [[ BZ 10827 ]] if the image has rotation then apply_transform()
@@ -775,6 +779,18 @@ Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 					MCMemoryClear(t_data_ptr, t_data_size);
 				else
 				{
+                    // SN-2014-01-31: [[ Bug 11462 ]] Opening an image to get its data should not
+                    // reset its size: F_LOCK_LOCATION ensures the size - and the location, which
+                    // doesn't matter here - are read as they are stored.
+                    bool t_tmp_locked;
+                    t_tmp_locked = false;
+                    
+                    if (!getflag(F_LOCK_LOCATION))
+                    {
+                        setflag(true, F_LOCK_LOCATION);
+                        t_tmp_locked = true;
+                    }
+                    
 					openimage();
 					
 					MCImageBitmap *t_bitmap = nil;
@@ -795,6 +811,9 @@ Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 					}
 					MCImageFreeBitmap(t_bitmap);
 					
+                    if (t_tmp_locked)
+                        setflag(false, F_LOCK_LOCATION);
+                    
 					closeimage();
 				}
 			}
@@ -1732,11 +1751,15 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	}
 	
 	uint32_t t_pixwidth, t_pixheight;
-	getgeometry(t_pixwidth, t_pixheight);
-
-	if (getcompression() == 0
-	        && (rect.width != t_pixwidth || rect.height != t_pixheight))
-		flags |= F_SAVE_SIZE;
+	t_pixwidth = t_pixheight = 0;
+	
+	// IM-2013-12-05: [[ Bug 11551 ]] We only need to get the geometry of an image rep if it's an rle-compressed image
+	if (m_rep != nil && m_rep->GetType() == kMCImageRepCompressed)
+	{
+		m_rep->GetGeometry(t_pixwidth, t_pixheight);
+		if (rect.width != t_pixwidth || rect.height != t_pixheight)
+			flags |= F_SAVE_SIZE;
+	}
 
 	uint1 t_old_ink = ink;
 

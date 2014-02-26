@@ -372,7 +372,12 @@ void MCiOSScrollerControl::SetCanCancelTouches(MCExecContext& ctxt, bool p_value
 	t_view = (UIScrollView*)GetView();
     
     if (t_view)
+    {
         [t_view setCanCancelContentTouches: p_value];
+        // SN-2014-01-14: [[ bugfix-11482 ]] DelayContentTouches must be set
+        // to the opposite of CanCancelContentTouches to allow scrolling on iOS7
+        [t_view setDelaysContentTouches: !p_value];
+    }
 }
 void MCiOSScrollerControl::GetCanCancelTouches(MCExecContext& ctxt, bool& r_value)
 {
@@ -399,7 +404,12 @@ void MCiOSScrollerControl::SetDelayTouches(MCExecContext& ctxt, bool p_value)
     }
 
     if (t_view)
+    {
         [t_view setDelaysContentTouches: p_value];
+        // SN-2014-01-14: [[ bugfix-11482 ]] DelayContentTouches must be set
+        // to the opposite of CanCancelContentTouches to allow scrolling on iOS7
+        [t_view setCanCancelContentTouches: !p_value];
+    }
 }
 
 void MCiOSScrollerControl::GetDelayTouches(MCExecContext& ctxt, bool& r_value)
@@ -763,7 +773,12 @@ Exec_stat scroller_set_property(UIScrollView *p_view, MCRectangle32 &x_content_r
 			if (MCU_stob(ep.getsvalue(), t_bool))
 			{
 				if (p_view)
+                {
 					[p_view setCanCancelContentTouches: t_bool];
+                    // SN-2014-01-14: [[ bugfix-11482 ]] DelayContentTouches must be set
+                    // to the opposite of CanCancelContentTouches to allow scrolling on iOS7
+                    [p_view setDelaysContentTouches: !t_bool];
+                }
 			}
 			else
 			{
@@ -776,7 +791,12 @@ Exec_stat scroller_set_property(UIScrollView *p_view, MCRectangle32 &x_content_r
 			if (MCU_stob(ep.getsvalue(), t_bool))
 			{
 				if (p_view)
+                {
 					[p_view setDelaysContentTouches: t_bool];
+                    // SN-2014-01-14: [[ bugfix-11482 ]] DelayContentTouches must be set
+                    // to the opposite of CanCancelContentTouches to allow scrolling on iOS7
+                    [p_view setCanCancelContentTouches: !t_bool];
+                }
 			}
 			else
 			{
@@ -1184,7 +1204,12 @@ UIView *MCiOSScrollerControl::CreateView(void)
 	[t_view addSubview: m_forwarder];
 	
 	if (MCmajorosversion >= DELAYS_TOUCHES_WORKAROUND_MIN)
+    {
 		[t_view setDelaysContentTouches: NO];
+        // SN-2014-01-14: [[ bugfix-11482 ]] DelayContentTouches must be set
+        // to the opposite of CanCancelContentTouches to allow scrolling on iOS7
+        [t_view setCanCancelContentTouches: YES];
+    }
 	
 	return t_view;
 }

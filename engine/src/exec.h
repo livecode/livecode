@@ -3242,6 +3242,9 @@ void MCInterfaceExecRelayerRelativeToOwner(MCExecContext& ctxt, int p_relation, 
 void MCInterfaceExecResolveImageById(MCExecContext& ctxt, MCObject *p_object, uinteger_t p_id);
 void MCInterfaceExecResolveImageByName(MCExecContext& ctxt, MCObject *p_object, MCStringRef p_name);
 
+void MCInterfaceGetPixelScale(MCExecContext& ctxt, double &r_scale);
+void MCInterfaceSetPixelScale(MCExecContext& ctxt, double p_scale);
+void MCInterfaceGetSystemPixelScale(MCExecContext& ctxt, double &r_scale);
 ///////////
 
 struct MCInterfaceLayer;

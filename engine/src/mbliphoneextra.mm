@@ -1412,8 +1412,9 @@ static Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_p
 	if (!s_resolved)
 	{
 		s_resolved = true;
+        // SN-2014-01-31: [[ Bug 11703 ]] dlsym returns a pointer to NSString and not a NSString
 		for(int i = 0; i < sizeof(s_props) / sizeof(s_props[0]); i++)
-			s_props[i] . property = (NSString *)dlsym(RTLD_SELF, s_props[i] . property_symbol);
+			s_props[i] . property = *(NSString **)dlsym(RTLD_SELF, s_props[i] . property_symbol);
 		s_info_center = NSClassFromString(@"MPNowPlayingInfoCenter");
 	}
 	
@@ -1453,6 +1454,8 @@ static Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_p
 				case kRCDPropTypeImage:
                 {
                     UIImage *t_image;
+                    // SN-2014-01-31: [[ Bug 11703 ]] t_image wasn't initialised to nil
+                    t_image = nil;
                     if (MCImageDataIsJPEG(ep . getsvalue()) ||
                         MCImageDataIsGIF(ep . getsvalue()) ||
                         MCImageDataIsPNG(ep . getsvalue()))
@@ -1524,8 +1527,9 @@ static Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_p
 	if (!s_resolved)
 	{
 		s_resolved = true;
+        // SN-2014-01-31: [[ Bug 11703 ]] dlsym returns a pointer to NSString and not a NSString
 		for(int i = 0; i < sizeof(s_props) / sizeof(s_props[0]); i++)
-			s_props[i] . property = (NSString *)dlsym(RTLD_SELF, s_props[i] . property_symbol);
+			s_props[i] . property = *(NSString **)dlsym(RTLD_SELF, s_props[i] . property_symbol);
 		s_info_center = NSClassFromString(@"MPNowPlayingInfoCenter");
 	}
 	
@@ -1573,6 +1577,8 @@ static Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_p
                     MCAutoDataRef t_data;
                     ctxt . ConvertToData(t_prop_value, &t_data);
                     UIImage *t_image;
+                    // SN-2014-01-31: [[ Bug 11703 ]] t_image wasn't initialised to nil
+                    t_image = nil;
                     if (MCImageDataIsJPEG(*t_data) ||
                         MCImageDataIsGIF(*t_data) ||
                         MCImageDataIsPNG(*t_data))

@@ -63,6 +63,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "regex.h"
 
 #include "exec.h"
+#include "resolution.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -359,6 +360,10 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 
 	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog    
     DEFINE_RW_PROPERTY(P_COLOR_DIALOG_COLORS, LinesOfString, Dialog, ColorDialogColors)
+    
+    // IM-2013-12-04: [[ PixelScale ]] Add support for global pixelScale and systemPixelScale properties
+    DEFINE_RW_PROPERTY(P_PIXEL_SCALE, Double, Interface, PixelScale)
+    DEFINE_RO_PROPERTY(P_SYSTEM_PIXEL_SCALE, Double, Interface, SystemPixelScale)
 };
 
 static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info, bool p_is_array_prop)
@@ -861,6 +866,11 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 
 	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
 	case P_COLOR_DIALOG_COLORS:
+
+	// IM-2013-12-04: [[ PixelScale ]] Add support for global pixelScale and systemPixelScale properties
+	case P_PIXEL_SCALE:
+	case P_SYSTEM_PIXEL_SCALE:
+
 		break;
 
 	case P_REV_CRASH_REPORT_SETTINGS: // DEVELOPMENT only
@@ -2511,6 +2521,27 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 		break;
 	case P_SCREEN_GAMMA:
 		return ep.getreal8(MCgamma, line, pos, EE_PROPERTY_NAN);
+
+	// IM-2013-12-04: [[ PixelScale ]] Enable setting of pixelScale to override default system value
+	// IM-2013-12-06: [[ PixelScale ]] Remove handling of empty pixelScale - should always have a numeric value
+	case P_PIXEL_SCALE:
+		{
+			real64_t t_scale;
+			stat = ep.getreal8(t_scale, line, pos, EE_PROPERTY_NAN);
+			
+			if (stat != ES_NORMAL)
+				return stat;
+			
+			if (t_scale <= 0)
+			{
+				MCeerror->add(EE_PROPERTY_BADPIXELSCALE, line, pos, t_scale);
+				return ES_ERROR;
+			}
+			
+			MCResSetPixelScale(t_scale);
+		}
+		break;
+
 	case P_SHELL_COMMAND:
 		delete MCshellcmd;
 		MCshellcmd = ep.getsvalue().clone();
@@ -4116,6 +4147,14 @@ Exec_stat MCProperty::set_object_property(MCExecPoint& ep)
             break;
         case P_SCREEN_GAMMA:
             ep.setr8(MCgamma, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
+            break;
+        // IM-2013-12-04: [[ PixelScale ]] Global property pixelScale returns the current pixel scale
+        case P_PIXEL_SCALE:
+            ep.setnvalue(MCResGetPixelScale());
+            break;
+        // IM-2013-12-04: [[ PixelScale ]] Global property systemPixelScale returns the pixel scale as determined by the OS
+        case P_SYSTEM_PIXEL_SCALE:
+            ep.setnvalue(MCResGetSystemScale());
             break;
         case P_SHELL_COMMAND:
             ep.setsvalue(MCshellcmd);
