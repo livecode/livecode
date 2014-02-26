@@ -1877,8 +1877,8 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
         MCStringCopy(kMCEmptyString, r_result);
 
 	uint4 offset = 0;
-    MCAutoStringRef t_output;
-    MCStringCreateMutable(0, &t_output);
+    MCAutoListRef t_output;
+    MCListCreateMutable(p_delimiter, &t_output);
 
 	// OK-2010-01-11: Bug 7649 - Filter command was incorrectly removing empty lines.
 	// Now ignores delimiter for matching but includes it in the append.
@@ -1894,15 +1894,17 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
 		if (!t_found) //last line or item
             t_success = MCStringCopySubstring(p_source, MCRangeMake(t_last_offset, t_length - t_last_offset), &t_line);
 		else
-            t_success = MCStringCopySubstring(p_source, MCRangeMake(t_last_offset, t_return_offset - t_last_offset), &t_line);
+        {
+            if (t_return_offset == t_last_offset)
+                // Two delimiters in a row
+                t_line = kMCEmptyString;
+            else
+                t_success = MCStringCopySubstring(p_source, MCRangeMake(t_last_offset, t_return_offset - t_last_offset), &t_line);
+        }
         
         if (t_success && p_matcher -> match(*t_line) != p_without)
-		{
-			if (!t_found)
-                t_success = MCStringAppend(*t_output, *t_line);
-			else
-                t_success = MCStringAppendSubstring(*t_output, p_source, MCRangeMake(t_last_offset, 1 + t_return_offset - t_last_offset));
-		}
+            t_success = MCListAppend(*t_output, *t_line);
+
 		t_last_offset = t_return_offset + 1;
 	}
 	
@@ -1912,8 +1914,8 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
         ctxt . LegacyThrow(EE_NO_MEMORY);
         MCStringCopy(kMCEmptyString, r_result);
     }
-    else if (MCStringGetLength(*t_output) != 0)
-        /* UNCHECKED */ MCStringCopy(*t_output, r_result);
+    else if (!MCListIsEmpty(*t_output))
+        /* UNCHECKED */ MCListCopyAsString(*t_output, r_result);
 	else
         r_result = MCValueRetain(kMCEmptyString);
 }
