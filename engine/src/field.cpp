@@ -725,6 +725,7 @@ Boolean MCField::kdown(MCStringRef p_string, KeySym key)
 		}
 		break;
 	case FT_DELBCHAR:
+    case FT_DELBSUBCHAR:
 	case FT_DELBWORD:
 	case FT_DELFCHAR:
 	case FT_DELFWORD:

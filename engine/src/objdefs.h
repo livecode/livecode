@@ -661,7 +661,7 @@ enum Etch {
 enum Field_translations {
     FT_UNDEFINED,
     FT_DELBCHAR,
-	FT_DELBSUBCHAR = FT_DELBCHAR,
+	FT_DELBSUBCHAR,
     FT_DELBWORD,
     FT_DELFCHAR,
     FT_DELFWORD,
