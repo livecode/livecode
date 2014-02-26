@@ -507,12 +507,12 @@ public:
 	virtual bool create(void) { return true; }
 	virtual void destroy(void) {}
 	
-	virtual MCFontStruct *getfont(const MCString &fname, uint2 &size, uint2 style, Boolean printer) { return nil; }
-	virtual void getfontnames(MCExecPoint &ep, char *type) { ep . clear(); }
-	virtual void getfontsizes(const char *fname, MCExecPoint &ep) { ep . clear(); }
-	virtual void getfontstyles(const char *fname, uint2 fsize, MCExecPoint &ep) { ep . clear(); }
-	virtual bool getfontstructinfo(const char *&r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font) { return false; }
-	virtual void getfontreqs(MCFontStruct *f, const char*& r_name, uint2& r_size, uint2& r_style) { r_name = ""; r_size = 0; r_style = 0; }
+    virtual MCFontStruct *getfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer) { return nil; }
+    virtual bool getfontnames(MCStringRef p_type, MCListRef& r_names) { return false; }
+    virtual bool getfontsizes(MCStringRef p_fname, MCListRef& r_sizes) { return false; }
+    virtual bool getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_styles) { return false; }
+    virtual bool getfontstructinfo(MCNameRef &r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font) { return false; }
+    virtual void getfontreqs(MCFontStruct *f, MCNameRef & r_name, uint2& r_size, uint2& r_style) { r_name = MCValueRetain(kMCEmptyName); r_size = 0; r_style = 0; }
 	
 	virtual int4 ctxt_textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override) { return 0; }
 	virtual bool ctxt_layouttext(const unichar_t *chars, uint32_t char_count, MCFontStruct *font, MCTextLayoutCallback callback, void *context) { return false; }

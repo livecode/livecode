@@ -229,8 +229,8 @@ static void cache_locale(void)
     }
     else
     {
-        s_datetime_locale -> time_formats[0] = string_prepend(swap_time_tokens(t_time_ampm), "!");
-        s_datetime_locale -> time_formats[1] = string_prepend(swap_time_tokens(t_time_ampm), "");
+        s_datetime_locale -> time_formats[0] = string_prepend(swap_time_tokens(t_time_ampm), '!');
+        s_datetime_locale -> time_formats[1] = swap_time_tokens(t_time_ampm);
     }
     
 	s_datetime_locale -> time24_formats[0] = MCSTR("!%H:%M");
