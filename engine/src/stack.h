@@ -825,6 +825,8 @@ public:
 	
 	MCWindowShape *getwindowshape(void) { return m_window_shape; }
 
+	void constrain(MCPoint p_size, MCPoint& r_out_size);
+	
 #if defined(_WINDOWS_DESKTOP)
 	MCSysWindowHandle getrealwindow();
 	MCSysWindowHandle getqtwindow(void);

@@ -18,6 +18,7 @@ void MCPlatformHandleWindowReshape(MCPlatformWindowRef window);
 void MCPlatformHandleWindowFocus(MCPlatformWindowRef window);
 void MCPlatformHandleWindowUnfocus(MCPlatformWindowRef window);
 void MCPlatformHandleWindowRedraw(MCPlatformWindowRef window, MCPlatformSurfaceRef surface, MCRegionRef dirty_rgn);
+void MCPlatformHandleWindowConstrain(MCPlatformWindowRef window, MCPoint proposed_size, MCPoint& r_wanted_size);
 
 void MCPlatformHandleModifiersChanged(MCPlatformModifiers modifiers);
 
@@ -100,6 +101,11 @@ void MCPlatformCallbackSendWindowReshape(MCPlatformWindowRef p_window, MCRectang
 {
 	MCLog("Window(%p) -> WindowReshape([%d, %d, %d, %d])", p_window, p_new_content . x, p_new_content . y, p_new_content . width, p_new_content . height);
 	MCPlatformHandleWindowReshape(p_window);
+}
+
+void MCPlatformCallbackSendWindowConstrain(MCPlatformWindowRef p_window, MCPoint p_proposed_size, MCPoint& r_wanted_size)
+{
+	MCPlatformHandleWindowConstrain(p_window, p_proposed_size, r_wanted_size);
 }
 
 void MCPlatformCallbackSendWindowRedraw(MCPlatformWindowRef p_window, MCPlatformSurfaceRef p_surface, MCRegionRef p_dirty_rgn)

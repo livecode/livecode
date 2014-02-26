@@ -108,7 +108,14 @@ static bool s_lock_responder_change = false;
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize
 {
-	return frameSize;
+	MCPoint t_size;
+	t_size . x = frameSize . width;
+	t_size . y = frameSize . height;
+	
+	MCPoint t_new_size;
+	MCPlatformCallbackSendWindowConstrain(m_window, t_size, t_new_size);
+	
+	return NSMakeSize(t_new_size . x, t_new_size . y);
 }
 
 - (void)windowDidMove:(NSNotification *)notification

@@ -135,6 +135,19 @@ void MCPlatformHandleWindowReshape(MCPlatformWindowRef p_window)
 	MCdispatcher -> wreshape(p_window);
 }
 
+void MCPlatformHandleWindowConstrain(MCPlatformWindowRef p_window, MCPoint p_proposed_size, MCPoint& r_wanted_size)
+{
+	MCStack *t_stack;
+	t_stack = MCdispatcher -> findstackd(p_window);
+	if (t_stack == nil)
+	{
+		r_wanted_size = p_proposed_size;
+		return;
+	}
+	
+	t_stack -> constrain(p_proposed_size, r_wanted_size);
+}
+
 void MCPlatformHandleWindowRedraw(MCPlatformWindowRef p_window, MCPlatformSurfaceRef p_surface, MCRegionRef p_region)
 {
 	if (((MCScreenDC *)MCscreen) -> isbackdrop(p_window))

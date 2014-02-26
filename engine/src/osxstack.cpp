@@ -735,6 +735,7 @@ void MCStack::destroywindowshape()
 }
 #endif
 
+#ifdef OLD_MAC
 void MCStack::getminmax(Rect *r)
 { //get the min & max size of a stack
 	r->left = minwidth;
@@ -742,6 +743,7 @@ void MCStack::getminmax(Rect *r)
 	r->right = maxwidth > MAXINT2 ? MAXINT2 : maxwidth;
 	r->bottom = maxheight > MAXINT2 ? MAXINT2 : maxheight;
 }
+#endif
 
 #ifdef OLD_MAC
 void  MCStack::getWinstyle(uint32_t &wstyle, uint32_t &wclass)
