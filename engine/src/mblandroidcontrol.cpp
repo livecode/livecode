@@ -184,14 +184,6 @@ void MCAndroidControl::GetRect(MCExecContext& ctxt, MCRectangle& r_rect)
         int16_t i1, i2, i3, i4;
         GetViewRect(m_view, i1, i2, i3, i4);
         
-        // MM-2013-09-30: [[ Bug 11227 ]] Make sure we take into account device scale when positioning native controls.
-        MCGFloat t_device_scale;
-        t_device_scale = MCResGetDeviceScale();
-        i1 = (int16_t) i1 / t_device_scale;
-        i1 = (int16_t) i2 / t_device_scale;
-        i1 = (int16_t) i3 / t_device_scale;
-        i1 = (int16_t) i4 / t_device_scale;
-        
         r_rect . x = i1;
         r_rect . y = i2;
         r_rect . width = i3 - i1;
