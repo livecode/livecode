@@ -94,6 +94,7 @@ MC_EXEC_DEFINE_EVAL_METHOD(Math, IsANumber, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Math, IsNotANumber, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Math, PopulationStdDev, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Math, PopulationVariance, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Math, SampleVariance, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Math, AverageDeviation, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Math, GeometricMean, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Math, HarmonicMean, 3)
@@ -557,6 +558,12 @@ void MCMathEvalPopulationVariance(MCExecContext& ctxt, real64_t *p_values, uinde
 {
     MCMathEvaluateStatsFunction(ctxt, F_POP_VARIANCE, p_values, p_count, r_result);
 }
+
+void MCMathEvalSampleVariance(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+{
+    MCMathEvaluateStatsFunction(ctxt, F_SMP_VARIANCE, p_values, p_count, r_result);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1022,19 +1029,15 @@ void MCMathEvaluateStatsFunction(MCExecContext& ctxt, Functions p_func, real64_t
 		return;
 	}
     
-	real64_t t_mean;
+    real64_t t_mean;
 	MCMathEvalArithmeticMean(ctxt, p_values, p_count, t_mean);
 	if (ctxt.HasError())
 		return;
     
     // TODO - move action of MCU_dofunc here
     real64_t t_result = 0.0;
-	for (uindex_t i = 0; i < p_count; i++)
-	{
-        // dummy variable t_count until dofunc is moved (no need to param counting again)
-        uindex_t t_count = 0;
-        MCU_dofunc(p_func, t_count, t_result, p_values[i], p_func == F_GEO_MEAN ? p_count : t_mean, nil);
-    }
+    for (uindex_t i = 0; i < p_count; i++)
+        MCU_dofunc(p_func, i, t_result, p_values[i], p_func == F_GEO_MEAN ? p_count : t_mean, nil);
     
     switch (p_func)
 	{
@@ -1052,7 +1055,7 @@ void MCMathEvaluateStatsFunction(MCExecContext& ctxt, Functions p_func, real64_t
 			break;
             // JS-2013-06-19: [[ StatsFunctions ]] Support for populationVariance
 		case F_POP_VARIANCE:
-			t_result /= p_count;
+            t_result /= p_count;
 			break;
             // JS-2013-06-19: [[ StatsFunctions ]] Support for sampleStandardDeviation (was stdDev)
 		case F_SMP_STD_DEV:

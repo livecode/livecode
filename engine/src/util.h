@@ -200,7 +200,7 @@ extern Exec_stat MCU_change_color(MCColor &c, MCStringRef&n, MCExecPoint &ep, ui
 extern void MCU_get_color(MCExecPoint &ep, MCStringRef name, MCColor &c);
 #endif
 extern void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCValueRef &r_output);
-extern void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
+extern void MCU_dofunc(Functions func, uint4 nparams, real8 &n,
 	                       real8 tn, real8 oldn, MCSortnode *titems);
 // MW-2013-07-01: [[ Bug 10975 ]] This method returns true if the given string could be a url
 //   (as used by MCU_geturl, to determine whether to try and fetch via libUrl).

@@ -1816,6 +1816,7 @@ extern MCExecMethodInfo *kMCMathEvalSumMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalRandomMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalPopulationStdDevMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalPopulationVarianceMethodInfo;
+extern MCExecMethodInfo *kMCMathEvalSampleVarianceMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalAverageDeviationMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalGeometricMeanMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalHarmonicMeanMethodInfo;
@@ -1909,6 +1910,7 @@ void MCMathEvalGeometricMean(MCExecContext& ctxt, real64_t *p_values, uindex_t p
 void MCMathEvalHarmonicMean(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
 void MCMathEvalPopulationStdDev(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
 void MCMathEvalPopulationVariance(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
+void MCMathEvalSampleVariance(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
 
 void MCMathEvalRandom(MCExecContext& ctxt, real64_t p_in, real64_t& r_result);
 
