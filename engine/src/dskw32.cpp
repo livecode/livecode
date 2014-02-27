@@ -877,18 +877,27 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 				// Convert the value from the registry to the appropriate value type
 				switch (t_type)
 				{
-				case REG_EXPAND_SZ:
 				case REG_LINK:
+					if (!MCStringCreateWithChars((const unichar_t*)t_buffer.Ptr(), t_buffer_len/2, (MCStringRef&)r_value))
+						return false;
+					break;
+
+				case REG_EXPAND_SZ:
 				case REG_MULTI_SZ:
 				case REG_SZ:
-					{
-						// Note that the StringRef type permits embedded null characters
-						MCAutoStringRef t_string;
-						if (!MCStringCreateWithChars((const unichar_t*)t_buffer.Ptr(), t_buffer_len/2, &t_string))
-							return false;
+					{						
+						DWORD t_unicode_len;
+						t_unicode_len = t_buffer_len / 2;
 
-						r_value = MCValueRetain(*t_string);
-						break;
+						unichar_t *t_chars = (unichar_t*)t_buffer.Ptr();
+						// Get rid of any trailing NULL character
+						while(t_unicode_len > 0 && t_chars[t_unicode_len - 1] == '\0')
+							t_unicode_len -= 1;
+					
+						if (t_type == REG_MULTI_SZ && t_unicode_len < t_buffer_len / 2)
+							t_unicode_len += 1;
+         
+						return MCStringCreateWithChars((unichar_t*)t_buffer.Ptr(), t_unicode_len, (MCStringRef&)r_value);
 					}
 
 				case REG_NONE:
@@ -906,7 +915,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 						// Binary or unsupported type. Return as a binary blob
 						// (For compatibility with existing scripts, DWORD and QWORD are binary)
 						MCAutoDataRef t_data;
-						if (!MCDataCreateWithBytes((const byte_t*)t_buffer.Ptr(), t_buffer_len, &t_data))
+						if (!MCDataCreateWithBytes((const byte_t*)t_buffer.Ptr(), t_buffer_len, (MCDataRef&)t_data))
 							return false;
 
 						r_value = MCValueRetain(*t_data);

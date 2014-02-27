@@ -1047,6 +1047,48 @@ void MCS_close(IO_handle &x_stream)
 	x_stream -> Close();
 }
 
+// Inspects the BOM of a text file to retrieve its encoding
+MCSFileEncodingType MCS_resolve_BOM(IO_handle x_stream)
+{
+    uint1 t_BOM[3];
+    int64_t t_size;
+    uint32_t t_size_read;
+    uint32_t t_position;
+    MCSFileEncodingType t_encoding;
+    t_encoding = kMCFileEncodingNative;
+
+    t_size = x_stream -> GetFileSize();
+
+    t_position = x_stream -> Tell();
+    x_stream -> Seek(0, 1);
+
+    if (t_size > 1)
+    {
+        if (x_stream -> Read(t_BOM, 2, t_size_read))
+        {
+            if (t_BOM[0] == 0xFE && t_BOM[1] == 0xFF)
+                t_encoding = kMCFileEncodingUTF16BE;
+            else if (t_BOM[0] == 0xFF && t_BOM[1] == 0xFE)
+                t_encoding = kMCFileEncodingUTF16LE;
+            else
+                x_stream -> Seek(0, 1);
+        }
+    }
+
+    if (t_encoding == kMCFileEncodingNative && t_size > 2)
+    {
+        if (x_stream -> Read(t_BOM, 3, t_size_read)
+                && t_size_read == 3
+                && t_BOM[0] == 0xEF
+                && t_BOM[1] == 0xBB
+                && t_BOM[2] == 0xBF)
+            t_encoding = kMCFileEncodingUTF8;
+    }
+
+    x_stream -> Seek(t_position, 1);
+    return t_encoding;
+}
+
 IO_stat MCS_putback(char p_char, IO_handle p_stream)
 {
 	if (!p_stream -> PutBack(p_char))
@@ -1110,18 +1152,15 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 
     if (t_success)
     {
-        MCAutoStringRef t_string;
-        
-		t_buffer . Shrink(t_size);
-		t_success = t_buffer . CreateStringAndRelease(&t_string);
-        
-        MCAutoDataRef t_data;
+        MCSFileEncodingType t_file_encoding;
         MCAutoStringRef t_text;
+
+        t_buffer . Shrink(t_size);
+
+        t_file_encoding = MCS_resolve_BOM(t_file);
+
         if (t_success)
-            t_success = MCStringEncode(*t_string, kMCStringEncodingNative, false, &t_data);
-        
-        if (t_success)
-            t_success =  MCStringCreateWithBytes(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), kMCStringEncodingNative, false, &t_text);
+            t_success =  MCStringCreateWithBytes((byte_t*)t_buffer.Chars(), t_buffer.CharCount(), MCS_file_to_string_encoding(t_file_encoding), false, &t_text);
         
         if (t_success)
             t_success = MCStringConvertLineEndingsToLiveCode(*t_text, r_text);

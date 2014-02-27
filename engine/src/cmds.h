@@ -1463,7 +1463,7 @@ class MCOpen : public MCStatement
 	char *destination;
 	Open_argument arg : 4;
 	Open_mode mode : 4;
-	Boolean textmode : 1;
+    Encoding_type encoding : 4;
 	Boolean dialog : 1;
 	Boolean datagram : 1;
 	Boolean sheet : 1;
@@ -1478,7 +1478,7 @@ public:
 	{
 		fname = message = NULL;
 		mode = OM_UPDATE;
-		textmode = True;
+        encoding = EN_BOM_BASED;
 		datagram = dialog = sheet = False;
 		go = NULL;
 		certificate = NULL;
