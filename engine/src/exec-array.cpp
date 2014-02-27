@@ -268,7 +268,7 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
     // Convert the temporary array into a "proper" array
     for (uindex_t i = 0; i < t_temp_array.Size(); i++)
     {
-        if (!MCArrayStoreValueAtIndex(*t_array, i, t_temp_array[i]))
+        if (!MCArrayStoreValueAtIndex(*t_array, i + 1, t_temp_array[i]))
         {
             ctxt . Throw();
             return;

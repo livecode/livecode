@@ -2259,32 +2259,6 @@ static bool MCPropertyFormatStringList(MCStringRef *p_list, uindex_t p_count, ch
 	return false;
 }
 
-static bool MCPropertyFormatPointList(MCPoint *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
-{
-    if (p_count == 0)
-    {
-        r_string = MCValueRetain(kMCEmptyString);
-        return true;
-    }
-    
-	MCAutoStringRef t_list;
-	bool t_success;
-	t_success = MCStringCreateMutable(0, &t_list);
-	
-	for (uindex_t i = 0; i < p_count && t_success; i++)
-	{
-        if (t_success && i != 0)
-			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
-        
-		t_success = MCStringAppendFormat(*t_list, "%d,%d", p_list[i].x, p_list[i].y);
-	}
-	
-	if (t_success)
-		return MCStringCopy(*t_list, r_string);
-	
-	return false;
-}
-
 static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, uinteger_t*& r_list)
 {
     uindex_t t_length;
@@ -2371,56 +2345,6 @@ static bool MCPropertyParseStringList(MCStringRef p_input, char_t p_delimiter, u
 		
 		if (t_success)
 			t_success = t_list . Push(t_string);
-		
-		t_old_offset = t_new_offset + 1;
-	}
-	
-	if (t_success)
-		t_list . Take(r_list, r_count);
-	
-	return t_success;
-}
-
-static bool MCPropertyParsePointList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, MCPoint*& r_list)
-{
-    uindex_t t_length;
-	t_length = MCStringGetLength(p_input);
-    
-    if (t_length == 0)
-    {
-        r_count = 0;
-        return true;
-    }
-    
-	MCAutoArray<MCPoint> t_list;
-    
-    bool t_success;
-    t_success = true;
-    
-	uindex_t t_old_offset;
-	t_old_offset = 0;
-	uindex_t t_new_offset;
-	t_new_offset = 0;
-	
-	while (t_success && t_old_offset <= t_length)
-	{
-		MCAutoStringRef t_point_string;
-        MCPoint t_point;
-		
-		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
-			t_new_offset = t_length;
-		
-        if (t_new_offset <= t_old_offset)
-            break;
-        
-		if (t_success)
-            t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_point_string);
-
-        if (t_success)
-            MCU_stoi2x2(*t_point_string, t_point . x, t_point . y);
-        
-		if (t_success)
-			t_success = t_list . Push(t_point);
 		
 		t_old_offset = t_new_offset + 1;
 	}

@@ -1816,6 +1816,7 @@ extern MCExecMethodInfo *kMCMathEvalSumMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalRandomMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalPopulationStdDevMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalPopulationVarianceMethodInfo;
+extern MCExecMethodInfo *kMCMathEvalSampleVarianceMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalAverageDeviationMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalGeometricMeanMethodInfo;
 extern MCExecMethodInfo *kMCMathEvalHarmonicMeanMethodInfo;
@@ -1909,6 +1910,7 @@ void MCMathEvalGeometricMean(MCExecContext& ctxt, real64_t *p_values, uindex_t p
 void MCMathEvalHarmonicMean(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
 void MCMathEvalPopulationStdDev(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
 void MCMathEvalPopulationVariance(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
+void MCMathEvalSampleVariance(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result);
 
 void MCMathEvalRandom(MCExecContext& ctxt, real64_t p_in, real64_t& r_result);
 
@@ -2007,6 +2009,8 @@ extern MCExecMethodInfo *kMCStringsEvalNumToByteMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalByteToNumMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalTextDecodeMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalTextEncodeMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalNormalizeTextMethodInfo;
+extern MCExecMethodInfo *kMCStringsEvalCodepointPropertyMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalLengthMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalMatchTextMethodInfo;
 extern MCExecMethodInfo *kMCStringsEvalMatchChunkMethodInfo;
@@ -2068,6 +2072,10 @@ void MCStringsEvalByteToNum(MCExecContext& ctxt, MCStringRef byte, integer_t& r_
 
 void MCStringsEvalTextDecode(MCExecContext& ctxt, MCStringRef p_encoding, MCDataRef p_encoded_text, MCStringRef& r_decoded_text);
 void MCStringsEvalTextEncode(MCExecContext& ctxt, MCStringRef p_encoding, MCStringRef p_decoded_text, MCDataRef& r_encoded_text);
+
+void MCStringsEvalNormalizeText(MCExecContext& ctxt, MCStringRef p_text, MCStringRef p_form, MCStringRef& r_string);
+
+void MCStringsEvalCodepointProperty(MCExecContext& ctxt, MCStringRef p_text, MCStringRef p_form, MCValueRef& r_value);
 
 void MCStringsEvalLength(MCExecContext& ctxt, MCStringRef p_string, integer_t& r_length);
 
@@ -3236,6 +3244,9 @@ void MCInterfaceExecRelayerRelativeToOwner(MCExecContext& ctxt, int p_relation, 
 void MCInterfaceExecResolveImageById(MCExecContext& ctxt, MCObject *p_object, uinteger_t p_id);
 void MCInterfaceExecResolveImageByName(MCExecContext& ctxt, MCObject *p_object, MCStringRef p_name);
 
+void MCInterfaceGetPixelScale(MCExecContext& ctxt, double &r_scale);
+void MCInterfaceSetPixelScale(MCExecContext& ctxt, double p_scale);
+void MCInterfaceGetSystemPixelScale(MCExecContext& ctxt, double &r_scale);
 ///////////
 
 struct MCInterfaceLayer;

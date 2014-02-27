@@ -567,53 +567,60 @@ void MCFiltersEvalUrlDecode(MCExecContext& ctxt, MCStringRef p_source, MCStringR
 
 #define BINARY_NOCOUNT -2
 #define BINARY_ALL -1
-static void MCU_gettemplate(const char_t *&format, char_t &cmd, uindex_t &count)
-{
-	cmd = *format++;
-	if (isdigit(*format))
-		count = strtoul((char*)format, (char **)&format, 10);
-	else
-    {
-		if (*format == '*')
-		{
-			count = BINARY_ALL;
-			format++;
-		}
-		else
-			count = 1;
-    }
-}
 
-static void MCU_gettemplate(MCStringRef format, uindex_t &p_offset, unichar_t &cmd, uindex_t &count)
+// From exec-strings.cpp
+extern bool MCStringsEvalTextEncoding(MCStringRef p_encoding, MCStringEncoding &r_encoding);
+
+static bool MCU_gettemplate(MCStringRef format, uindex_t &x_offset, unichar_t &cmd, uindex_t &count, MCStringEncoding &r_encoding)
 {
-	cmd = MCStringGetCharAtIndex(format, p_offset++);
-	if (isdigit(MCStringGetCharAtIndex(format, p_offset)))
+	cmd = MCStringGetCharAtIndex(format, x_offset++);    
+    
+    // Check the encoding specified by the user
+    if (MCStringGetCharAtIndex(format, x_offset) == '{')
+    {
+        uindex_t t_brace_end;
+        MCAutoStringRef t_encoding_string;
+        if (!MCStringFirstIndexOfChar(format, '}', x_offset, kMCStringOptionCompareExact, t_brace_end))
+            // No ending curly brace: error
+            return false;
+        
+        /* UNCHECKED */ MCStringCopySubstring(format, MCRangeMake(x_offset, t_brace_end - x_offset), &t_encoding_string);
+        
+        x_offset = t_brace_end + 1;
+        
+        if (!MCStringsEvalTextEncoding(*t_encoding_string, r_encoding))
+            // Encoding not recognised
+            return false;    
+    }
+	if (isdigit(MCStringGetCharAtIndex(format, x_offset)))
     {
         MCAutoNumberRef t_number;
         uindex_t t_number_size;
         t_number_size = 1;
 
-        while (isdigit(MCStringGetCharAtIndex(format, p_offset + t_number_size)))
+        while (isdigit(MCStringGetCharAtIndex(format, x_offset + t_number_size)))
             t_number_size++;
 
-        if (MCNumberParseUnicodeChars(MCStringGetCharPtr(format) + p_offset, t_number_size, &t_number))
+        if (MCNumberParseUnicodeChars(MCStringGetCharPtr(format) + x_offset, t_number_size, &t_number))
         {        
             count = MCNumberFetchAsUnsignedInteger(*t_number);
-            p_offset += t_number_size;
+            x_offset += t_number_size;
         }
         else
             count = 0;
     }
 	else
     {
-		if (MCStringGetCharAtIndex(format, p_offset) == '*')
+		if (MCStringGetCharAtIndex(format, x_offset) == '*')
 		{
 			count = BINARY_ALL;
-			p_offset++;
+			x_offset++;
 		}
 		else
 			count = 1;
     }
+    
+    return true;
 }
 
 void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCDataRef p_data, MCValueRef *r_results, uindex_t p_result_count, integer_t& r_done)
@@ -642,8 +649,15 @@ void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCData
 	{
 		unichar_t cmd;
 		uindex_t count;
+        MCStringEncoding t_encoding = kMCStringEncodingNative;
 
-		MCU_gettemplate(p_format, t_format_index, cmd, count);
+		if (!MCU_gettemplate(p_format, t_format_index, cmd, count, t_encoding))
+        {
+            // Invalid format specified
+            ctxt . Throw();
+            return;
+        }
+            
 		if (count == 0 && cmd != '@')
 			continue;
 
@@ -930,6 +944,67 @@ void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCData
 				}
 			}
 			break;
+        case 'u':
+        case 'U':
+            {
+                MCStringRef t_output;
+                
+                if (count == BINARY_ALL)
+                    count = length - offset;
+                
+                uindex_t t_size = count;
+                
+                if (cmd == 'U')
+                {
+                    // We need to skip all the spaces
+                    MCAutoDataRef t_encoded_space;
+                    MCStringEncode(MCSTR(" "), t_encoding, false, &t_encoded_space);
+                    
+                    const byte_t* t_space_ptr = MCDataGetBytePtr(*t_encoded_space);
+                    uindex_t t_space_length = MCDataGetLength(*t_encoded_space);
+                    
+                    bool t_space_skipped = false;
+                    uindex_t t_temp_size = t_size;
+                    
+                    while (!t_space_skipped)
+                    {
+                        if (offset > offset + t_temp_size - t_space_length)
+                        {
+                            // No char remaining
+                            t_space_skipped = true;
+                        }
+                        else
+                        {
+                            bool t_is_space = true;
+                            uindex_t t_consucutive_fails = 0;
+                            
+                            // Compare the encoded spaces
+                            for (uindex_t i = 0; i < t_space_length && t_is_space; ++i)
+                                t_is_space = t_data_ptr[offset + t_temp_size - 1 - (t_space_length - 1) + i] == t_space_ptr[i];
+                            
+                            if (t_is_space)
+                            {
+                                t_size = t_temp_size - t_space_length;
+                                t_temp_size = t_size;
+                            }
+                            else
+                            {
+                                // The byte might be offset, we need to try to offset at most the size of the encoded space
+                                if (t_size - t_temp_size == t_space_length)
+                                    t_space_skipped = true;
+                                else
+                                    --t_temp_size;
+                            }
+                            
+                        }
+                    }
+                }
+                
+                MCStringCreateWithBytes(t_data_ptr + offset, t_size, t_encoding, false, (MCStringRef&)r_results[t_index]);
+                                
+                done++;
+                offset += count;
+            }
 		case 'x':
 			if (count == BINARY_NOCOUNT)
 				count = 1;
@@ -992,8 +1067,14 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 	{
 		unichar_t cmd;
 		uindex_t count;
+        MCStringEncoding t_encoding;
         
-		MCU_gettemplate(p_format, t_format_index, cmd, count);
+		if (!MCU_gettemplate(p_format, t_format_index, cmd, count, t_encoding))
+        {
+            ctxt . Throw();
+            return;
+        }
+        
 		if (count == 0 && cmd != '@')
 		{
 			t_index++;
@@ -1271,6 +1352,87 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 				}
 				break;
 			}
+        case 'u':
+        case 'U':
+            {
+                MCAutoStringRef t_param;
+                
+                ctxt . ForceToString(t_value, &t_param);
+                
+                if (count == BINARY_ALL)
+                {
+                    // Get all the bytes of the encoded string
+                    MCAutoDataRef t_encoded_string;
+                    MCStringEncode(*t_param, t_encoding, false, &t_encoded_string);
+                    
+                    append_to_array(t_buffer, MCDataGetBytePtr(*t_encoded_string), MCDataGetLength(*t_encoded_string));
+                }
+                else
+                {
+                    uindex_t t_byte_pos = 0;
+                    uindex_t t_cu_pos = 0;
+                    uindex_t t_char_pos = 0;
+                    
+                    byte_t* t_byte_string;
+                    
+                    bool t_char_offsets = false;
+                    
+                    // Loop until we have reached either the output byte-amount specified by the user
+                    // or the length of the string given
+                    while (t_byte_pos < count && t_cu_pos < MCStringGetLength(*t_param)
+                            && !t_char_offsets)
+                    {
+                        MCStringRef t_char_substring;
+                        MCAutoDataRef t_encoded_char;
+                        MCRange t_cu_range;
+                        MCStringMapIndices(*t_param, kMCCharChunkTypeGrapheme, MCRangeMake(t_char_pos, 1), t_cu_range);
+                        
+                        MCStringCreateWithChars(MCStringGetCharPtr(*t_param) + t_cu_range . offset, t_cu_range . length, t_char_substring);
+                        
+                        MCStringEncodeAndRelease(t_char_substring, t_encoding, false, &t_encoded_char);
+                        
+                        // Tests whether the encoded char fits in the amount given
+                        if (t_byte_pos + MCDataGetLength(*t_encoded_char) <= count)
+                        {
+                            append_to_array(t_buffer, MCDataGetBytePtr(*t_encoded_char), MCDataGetLength(*t_encoded_char));
+                            t_byte_pos += MCDataGetLength(*t_encoded_char);
+                            t_cu_pos +=  t_cu_range . length;
+                            ++t_char_pos;
+                        }
+                        else
+                            t_char_offsets = true;
+                            
+                    }
+                    
+                    // Check whether padding is needed
+                    if (t_byte_pos != count)
+                    {
+                        if (cmd == 'U')
+                        {
+                            // We pad with as many spaces as possible
+                            MCAutoDataRef t_encoded_space;
+                            MCStringEncode(MCSTR(" "), t_encoding, false, &t_encoded_space);
+                            
+                            const byte_t *t_space_bytes = MCDataGetBytePtr(*t_encoded_space);
+                            uindex_t t_space_length = MCDataGetLength(*t_encoded_space);
+                            
+                            while (t_byte_pos + t_space_length <= count)
+                            {
+                                append_to_array(t_buffer, t_space_bytes, t_space_length);
+                                t_byte_pos += t_space_length;
+                            }
+                            
+                            // In case the last space would have overfitted the byte amount
+                            if (t_byte_pos != count)
+                                t_buffer . Extend(t_buffer . ByteCount() + count);
+                        }
+                        else
+                            // Pad the remaining bytes needed with NULL
+                            t_buffer.Extend(t_buffer . ByteCount() + count);
+                    }
+                }
+                break;
+            }
 		default:
 			ctxt.LegacyThrow(EE_BINARYE_BADFORMAT);
 			return;

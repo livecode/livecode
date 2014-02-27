@@ -369,23 +369,6 @@ void MCBaseConvert::compile(MCSyntaxFactoryRef ctxt)
 
 
 
-#define BINARY_NOCOUNT -2
-#define BINARY_ALL -1
-static void MCU_gettemplate(const char *&format, char &cmd, int4 &count)
-{
-	cmd = *format++;
-	if (isdigit(*format))
-		count = strtoul(format, (char **)&format, 10);
-	else
-		if (*format == '*')
-		{
-			count = BINARY_ALL;
-			format++;
-		}
-		else
-			count = 1;
-}
-
 MCBinaryDecode::~MCBinaryDecode()
 {
 	while (params != NULL)
@@ -5086,6 +5069,94 @@ void MCTextEncode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 void MCTextEncode::compile(MCSyntaxFactoryRef ctxt)
 {
     compile_with_args(ctxt, kMCStringsEvalTextEncodeMethodInfo, m_string, m_encoding);
+}
+
+MCNormalizeText::~MCNormalizeText()
+{
+    delete m_text;
+    delete m_form;
+}
+
+Parse_stat MCNormalizeText::parse(MCScriptPoint& sp, Boolean the)
+{
+    if (get2params(sp, &m_text, &m_form) != PS_NORMAL)
+    {
+        MCperror->add(PE_NORMALIZETEXT_BADPARAM, sp);
+        return PS_ERROR;
+    }
+    
+    return PS_NORMAL;
+}
+
+void MCNormalizeText::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    MCAutoStringRef t_text;
+    m_text->eval_stringref(ctxt, &t_text);
+    if (ctxt.HasError())
+    {
+        ctxt.LegacyThrow(EE_NORMALIZETEXT_BADTEXT);
+        return;
+    }
+    
+    MCAutoStringRef t_form;
+    m_form->eval_stringref(ctxt, &t_form);
+    if (ctxt.HasError())
+    {
+        ctxt.LegacyThrow(EE_NORMALIZETEXT_BADFORM);
+        return;
+    }
+    
+    MCStringsEvalNormalizeText(ctxt, *t_text, *t_form, r_value.stringref_value);
+    r_value.type = kMCExecValueTypeStringRef;
+}
+
+void MCNormalizeText::compile(MCSyntaxFactoryRef ctxt)
+{
+    compile_with_args(ctxt, kMCStringsEvalNormalizeTextMethodInfo, m_text, m_form);
+}
+
+MCCodepointProperty::~MCCodepointProperty()
+{
+    delete m_codepoint;
+    delete m_property;
+}
+
+Parse_stat MCCodepointProperty::parse(MCScriptPoint &sp, Boolean the)
+{
+    if (get2params(sp, &m_codepoint, &m_property) != PS_NORMAL)
+    {
+        MCperror->add(PE_CODEPOINTPROPERTY_BADPARAM, sp);
+        return PS_ERROR;
+    }
+    
+    return PS_NORMAL;
+}
+
+void MCCodepointProperty::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    MCAutoStringRef t_codepoint;
+    m_codepoint->eval_stringref(ctxt, &t_codepoint);
+    if (ctxt.HasError())
+    {
+        ctxt.LegacyThrow(EE_CODEPOINTPROPERTY_BADCODEPOINT);
+        return;
+    }
+    
+    MCAutoStringRef t_property;
+    m_property->eval_stringref(ctxt, &t_property);
+    if (ctxt.HasError())
+    {
+        ctxt.LegacyThrow(EE_CODEPOINTPROPERTY_BADPROPERTY);
+        return;
+    }
+    
+    MCStringsEvalCodepointProperty(ctxt, *t_codepoint, *t_property, r_value.valueref_value);
+    r_value.type = kMCExecValueTypeValueRef;
+}
+
+void MCCodepointProperty::compile(MCSyntaxFactoryRef ctxt)
+{
+    compile_with_args(ctxt, kMCStringsEvalCodepointPropertyMethodInfo, m_codepoint, m_property);
 }
 
 MCTextHeightSum::~MCTextHeightSum()

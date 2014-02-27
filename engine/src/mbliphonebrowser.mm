@@ -120,7 +120,6 @@ public:
 	bool HandleLoadRequest(NSURLRequest *request, UIWebViewNavigationType type, bool notify);
 	void HandleLoadFailed(NSError *error);
 	
-	const char *GetUrl(void);
 	bool GetDelayRequests(void);
 	
 	UIScrollView *GetScrollView(void);
@@ -282,10 +281,15 @@ void MCiOSBrowserControl::SetScrollingEnabled(MCExecContext& ctxt, bool p_value)
 
 void MCiOSBrowserControl::GetUrl(MCExecContext& ctxt, MCStringRef& r_url)
 {
-    if (MCStringCreateWithCString(GetUrl(), r_url))
+	UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+	if (t_view != nil)
+    {
+        /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[[[t_view request] URL] absoluteString], r_url);
         return;
-    
-    ctxt . Throw();
+    }
+	
+    r_url = MCValueRetain(kMCEmptyString);
 }
                
 void MCiOSBrowserControl::GetCanAdvance(MCExecContext& ctxt, bool& r_value)
@@ -659,8 +663,9 @@ void MCiOSBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_script)
         ctxt.SetTheResultToCString("error");
         return;
     }
-    
-    ctxt.SetTheResultToCString([t_result cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+    MCAutoStringRef t_result_string;
+    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_result, &t_result_string);
+    ctxt.SetTheResultToValue(*t_result_string);
 }
 
 void MCiOSBrowserControl::ExecLoad(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_html)
@@ -761,16 +766,6 @@ bool datadetectortypes_to_string(UIDataDetectorTypes p_types, char *&r_list)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const char *MCiOSBrowserControl::GetUrl(void)
-{
-	UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-	if (t_view == nil)
-		return "";
-	
-	return [[[[t_view request] URL] absoluteString] cStringUsingEncoding: NSMacOSRomanStringEncoding];
-}
-
 bool MCiOSBrowserControl::GetDelayRequests(void)
 {
 	return m_delay_requests;
@@ -802,7 +797,8 @@ void MCiOSBrowserControl::HandleStartEvent(void)
 	if (t_target != nil)
 	{
 		MCAutoStringRef t_string;
-        /* UNCHECKED */ MCStringCreateWithCString(GetUrl(), &t_string);
+        MCExecContext ctxt(nil, nil, nil);
+        GetUrl(ctxt, &t_string);
         MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
 		t_target -> message_with_valueref_args(MCM_browser_started_loading, *t_string);
@@ -816,8 +812,9 @@ void MCiOSBrowserControl::HandleFinishEvent(void)
 	t_target = GetOwner();
 	if (t_target != nil)
 	{
-        MCAutoStringRef t_string;
-        /* UNCHECKED */ MCStringCreateWithCString(GetUrl(), &t_string);
+		MCAutoStringRef t_string;
+        MCExecContext ctxt(nil, nil, nil);
+        GetUrl(ctxt, &t_string);
         MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
 		t_target -> message_with_valueref_args(MCM_browser_finished_loading, *t_string);
@@ -884,7 +881,8 @@ void MCiOSBrowserControl::HandleLoadFailed(NSError *p_error)
 	if (t_target != nil)
 	{
         MCAutoStringRef t_url, t_description;
-        /* UNCHECKED */ MCStringCreateWithCString(GetUrl(), &t_url);
+        MCExecContext ctxt(nil, nil, nil);
+        GetUrl(ctxt, &t_url);
         /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[p_error localizedDescription], &t_description);
         MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);

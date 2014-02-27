@@ -1653,6 +1653,37 @@ public:
     virtual void compile(MCSyntaxFactoryRef);
 };
 
+class MCNormalizeText : public MCFunction
+{
+    MCExpression *m_text;
+    MCExpression *m_form;
+public:
+    MCNormalizeText()
+    {
+        m_text = m_form = NULL;
+    }
+    virtual ~MCNormalizeText();
+    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
+    virtual void eval_ctxt(MCExecContext&, MCExecValue&);
+    virtual void compile(MCSyntaxFactoryRef);
+};
+
+
+class MCCodepointProperty : public MCFunction
+{
+    MCExpression *m_codepoint;
+    MCExpression *m_property;
+public:
+    MCCodepointProperty()
+    {
+        m_codepoint = m_property = NULL;
+    }
+    virtual ~MCCodepointProperty();
+    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
+    virtual void eval_ctxt(MCExecContext&, MCExecValue&);
+    virtual void compile(MCSyntaxFactoryRef);
+};
+
 class MCTicks : public MCConstantFunctionCtxt<double, MCDateTimeEvalTicks>
 {
 public:
@@ -2263,7 +2294,7 @@ public:
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of sampleVariance
-class MCSampleVariance : public MCParamFunctionCtxt<MCMathEvalPopulationVariance, EE_VARIANCE_BADSOURCE, PE_VARIANCE_BADPARAM, kMCMathEvalPopulationVarianceMethodInfo>
+class MCSampleVariance : public MCParamFunctionCtxt<MCMathEvalSampleVariance, EE_VARIANCE_BADSOURCE, PE_VARIANCE_BADPARAM, kMCMathEvalPopulationVarianceMethodInfo>
 {
 public:
     MCSampleVariance(){}

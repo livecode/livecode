@@ -1708,6 +1708,14 @@ unsigned int MCStringCodepointToSurrogates(codepoint_t, unichar_t (&r_units)[2])
 // a valid surrogate pair. Lone lead or trail code units are not valid pairs.
 bool MCStringIsValidSurrogatePair(MCStringRef, uindex_t);
 
+//////////
+
+// Normalises a string into the requested form
+bool MCStringNormalizedCopyNFC(MCStringRef, MCStringRef&);
+bool MCStringNormalizedCopyNFD(MCStringRef, MCStringRef&);
+bool MCStringNormalizedCopyNFKC(MCStringRef, MCStringRef&);
+bool MCStringNormalizedCopyNFKD(MCStringRef, MCStringRef&);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //

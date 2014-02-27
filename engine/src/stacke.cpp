@@ -230,7 +230,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 	t_user_rect = MCRectangleGetTransformedBounds(t_device_rect, MCGAffineTransformInvert(t_transform));
 	
 	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
+	t_scale = MCResGetPixelScale();
 	
 	// IM-2013-08-29: [[ RefactorGraphics ]] get device height for CoreImage effects
 	// IM-2013-09-30: [[ FullscreenMode ]] Use view rect to get device height

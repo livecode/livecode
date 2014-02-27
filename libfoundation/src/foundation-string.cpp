@@ -1002,7 +1002,7 @@ bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
     MCAssert(p_locale != nil);
     
     // Quick-n-dirty workaround
-    if (MCStringIsNative(self))
+    if (self -> flags & kMCStringFlagIsNative)
     {
         r_out_range = p_in_range;
         return true;
@@ -1118,6 +1118,24 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
             uindex_t t_char_count;
             if (MCStringConvertToUnicode(self, (unichar_t*&)r_bytes, t_char_count))
             {
+                r_byte_count = t_char_count * sizeof(unichar_t);
+                return true;
+            }
+            return false;
+        }
+    case kMCStringEncodingUTF16LE:
+        {
+            uindex_t t_char_count;
+            unichar_t *t_bytes;
+            if (MCStringConvertToUnicode(self, t_bytes, t_char_count))
+            {
+                unichar_t *t_buffer;
+                MCMemoryAllocate((t_char_count + 1) * sizeof(unichar_t), t_buffer);
+                
+                for (uindex_t i = 0; i < t_char_count; i++)
+                    t_buffer[i] = (unichar_t)MCSwapInt16HostToLittle((t_bytes)[i]);
+                
+                r_bytes = (byte_t*&)t_buffer;
                 r_byte_count = t_char_count * sizeof(unichar_t);
                 return true;
             }
@@ -2720,19 +2738,64 @@ static void __MCStringNativize(MCStringRef self)
 	if (self -> native_chars != nil)
 		return;
 	
-	/* UNCHECKED */ MCMemoryNewArray(self -> char_count + 1, self -> native_chars);
-	
-	bool t_is_native;
-	t_is_native = true;
-	for(uindex_t i = 0; i < self -> char_count; i++)
-	{
-		if (MCUnicodeCharMapToNative(self -> chars[i], self -> native_chars[i]))
-			continue;
-		
-		self -> native_chars[i] = '?';
-		t_is_native = false;
-	}
-	
+    // The string needs to be normalised before conversion to native characters.
+    // All the native character sets we support use pre-composed characters.
+    MCAutoStringRef t_norm;
+    /* UNCHECKED */ MCStringNormalizedCopyNFC(self, &t_norm);
+    
+    // Nativisation is done on a char (grapheme) basis so we need to know the
+    // number of graphemes in the string
+    MCRange t_cu_range, t_char_range;
+    t_cu_range = MCRangeMake(0, (*t_norm) -> char_count);
+    /* UNCHECKED */ MCStringUnmapIndices(*t_norm, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
+    
+    // Allocate an array for the native characters
+    /* UNCHECKED */ MCMemoryNewArray(t_char_range . length + 1, self -> native_chars);
+    
+    // Create a character break iterator and go through the string
+    MCBreakIteratorRef t_breaker;
+    /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeCharacter, t_breaker);
+    /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_breaker, *t_norm);
+    
+    uindex_t t_current = 0, t_next;
+    bool t_is_native = true;
+    for (uindex_t i = 0; i < t_char_range . length; i++)
+    {
+        // If we've reached the end, set the next boundary manually
+        t_next = MCLocaleBreakIteratorAdvance(t_breaker);
+        if (t_next == 0)
+            t_next = self -> char_count;
+        
+        // All nativisable characters are 1 codeunit in length. We do, however,
+        // need a special case for CRLF sequences (Unicode defines them as being
+        // a single grapheme but we want them to produce 2 bytes).
+        //
+        // This should go away when we teach ICU about our own breaking rules.
+        if (t_next != t_current + 1
+            || !MCUnicodeCharMapToNative((*t_norm) -> chars[t_current], self -> native_chars[i]))
+        {
+            if (t_next == t_current + 2
+                && (*t_norm) -> chars[t_current] == '\r'
+                && (*t_norm) -> chars[t_current + 1] == '\n')
+            {
+                // Need to resize the output array :-(
+                /* UNCHECKED */ MCMemoryReallocate(self -> native_chars, ++t_char_range . length, self -> native_chars);
+                self -> native_chars[i] = '\r';
+                self -> native_chars[++i] = '\n';
+            }
+            else
+            {
+                t_is_native = false;
+                self -> native_chars[i] = '?';
+            }
+        }
+        
+        // Advance
+        t_current = t_next;
+    }
+
+    MCLocaleBreakIteratorRelease(t_breaker);
+    
 	if (t_is_native)
 		self -> flags |= kMCStringFlagIsNative;
 	else
@@ -3019,3 +3082,51 @@ bool MCStringConvertToSysString(MCStringRef p_string, const char * &r_system_str
 }
 
 #endif
+
+bool MCStringNormalizedCopyNFC(MCStringRef self, MCStringRef &r_string)
+{
+    // Normalise
+    unichar_t *t_norm = nil;
+    uindex_t t_norm_length;
+    if (MCUnicodeNormaliseNFC(self -> chars, self -> char_count, t_norm, t_norm_length)
+        && MCStringCreateWithCharsAndRelease(t_norm, t_norm_length, r_string))
+        return true;
+    MCMemoryDelete(t_norm);
+    return false;
+}
+
+bool MCStringNormalizedCopyNFD(MCStringRef self, MCStringRef &r_string)
+{
+    // Normalise
+    unichar_t *t_norm = nil;
+    uindex_t t_norm_length;
+    if (MCUnicodeNormaliseNFD(self -> chars, self -> char_count, t_norm, t_norm_length)
+        && MCStringCreateWithCharsAndRelease(t_norm, t_norm_length, r_string))
+        return true;
+    MCMemoryDelete(t_norm);
+    return false;
+}
+
+bool MCStringNormalizedCopyNFKC(MCStringRef self, MCStringRef &r_string)
+{
+    // Normalise
+    unichar_t *t_norm = nil;
+    uindex_t t_norm_length;
+    if (MCUnicodeNormaliseNFKC(self -> chars, self -> char_count, t_norm, t_norm_length)
+        && MCStringCreateWithCharsAndRelease(t_norm, t_norm_length, r_string))
+        return true;
+    MCMemoryDelete(t_norm);
+    return false;
+}
+
+bool MCStringNormalizedCopyNFKD(MCStringRef self, MCStringRef &r_string)
+{
+    // Normalise
+    unichar_t *t_norm = nil;
+    uindex_t t_norm_length;
+    if (MCUnicodeNormaliseNFKD(self -> chars, self -> char_count, t_norm, t_norm_length)
+        && MCStringCreateWithCharsAndRelease(t_norm, t_norm_length, r_string))
+        return true;
+    MCMemoryDelete(t_norm);
+    return false;
+}

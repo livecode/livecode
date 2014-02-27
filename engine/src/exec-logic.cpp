@@ -173,11 +173,11 @@ static bool MCLogicCompareTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef 
 		r_result = 1;
 		if (t_min < MC_EPSILON)
 		{
-			if (fabs(t_dleft - t_dright) < MC_EPSILON)
+			if (fabs(t_left_num - t_right_num) < MC_EPSILON)
 				r_result = 0;
 		}
 		else
-			if (fabs(t_dleft - t_dright) / t_min < MC_EPSILON)
+			if (fabs(t_left_num - t_right_num) / t_min < MC_EPSILON)
 				r_result = 0;
 
 		if (r_result)

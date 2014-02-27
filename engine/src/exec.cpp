@@ -255,7 +255,15 @@ bool MCExecContext::ConvertToNumberOrArray(MCExecValue& x_value)
     {
         double t_real;
         if (!ConvertToReal(x_value . valueref_value, t_real))
-            return false;
+        {
+            MCAutoArrayRef t_array;
+            if (!ConvertToArray(x_value . valueref_value, &t_array))
+                return false;
+            
+            MCValueRelease(x_value . valueref_value);
+            MCExecValueTraits<MCArrayRef>::set(x_value, *t_array);
+            return true;
+        }
 
         MCValueRelease(x_value . valueref_value);
         MCExecValueTraits<double>::set(x_value, t_real);
@@ -1475,7 +1483,11 @@ static bool MCPropertyFormatPointList(MCPoint *p_list, uindex_t p_count, char_t 
         if (t_success && i != 0)
 			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
         
-		t_success = MCStringAppendFormat(*t_list, "%d,%d", p_list[i].x, p_list[i].y);
+        // Special case when two points in the vertex aren't linked
+        if (p_list[i].x == MININT2 && p_list[i].y == MININT2)
+            t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
+        else
+            t_success = MCStringAppendFormat(*t_list, "%d,%d", p_list[i].x, p_list[i].y);
 	}
 	
 	if (t_success)
@@ -1612,14 +1624,25 @@ static bool MCPropertyParsePointList(MCStringRef p_input, char_t p_delimiter, ui
 		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
 			t_new_offset = t_length;
 		
-        if (t_new_offset <= t_old_offset)
+        if (t_new_offset < t_old_offset)
             break;
         
-		if (t_success)
-            t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_point_string);
-        
-        if (t_success)
-            MCU_stoi2x2(*t_point_string, t_point . x, t_point . y);
+        if (t_new_offset == t_old_offset)
+        {
+            // Special case: we have 2 times in a row the delimiter,
+            // the next point is not link to the previous one - we add a
+            // {MIN,MIN} point to ensure this information is passed to the property setter
+            t_point.x = MININT2;
+            t_point.y = MININT2;
+        }
+        else
+        {
+            if (t_success)
+                t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_point_string);
+            
+            if (t_success)
+                MCU_stoi2x2(*t_point_string, t_point . x, t_point . y);
+        }
         
 		if (t_success)
 			t_success = t_list . Push(t_point);
@@ -2121,9 +2144,7 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         {
             bool t_mixed;
             uinteger_t t_value;
-            uinteger_t *t_value_ptr;
-            t_value_ptr = &t_value;
-            ((void(*)(MCExecContext&, void *, bool&, uinteger_t*&))prop -> getter)(ctxt, mark, t_mixed, t_value_ptr);
+            ((void(*)(MCExecContext&, void *, bool&, uinteger_t&))prop -> getter)(ctxt, mark, t_mixed, t_value);
             if (!ctxt . HasError())
             {
                 if (t_mixed)
@@ -2301,6 +2322,30 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
             break;
         }
+            
+        case kMCPropertyTypeMixedOptionalEnum:
+        {
+            int t_value;
+            int *t_value_ptr;
+            bool t_mixed;
+            t_value_ptr = &t_value;
+            ((void(*)(MCExecContext&, void *, bool&, int*&))prop -> getter)(ctxt, mark, t_mixed, t_value_ptr);
+            if (!ctxt . HasError())
+            {
+                r_value . type = kMCExecValueTypeStringRef;
+                if (t_mixed)
+                    r_value . stringref_value = MCSTR(MCmixedstring);
+                else if (t_value_ptr == nil)
+                    r_value . stringref_value = MCValueRetain(kMCEmptyString);
+                else
+                {
+                    MCExecEnumTypeInfo *t_enum_info;
+                    t_enum_info = (MCExecEnumTypeInfo *)(prop -> type_info);
+                    MCExecFormatEnum(ctxt, t_enum_info, t_value, r_value);
+                }
+            }
+        }
+            break;
             
         case kMCPropertyTypeMixedLinesOfUInt:
         case kMCPropertyTypeMixedItemsOfUInt:

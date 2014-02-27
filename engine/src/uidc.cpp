@@ -351,7 +351,7 @@ MCRectangle MCUIDC::fullscreenrect(const MCDisplay *p_display)
 uint2 MCUIDC::getwidth()
 {
 	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
+	t_scale = MCResGetPixelScale();
 	
 	return ceil(device_getwidth() / t_scale) ;
 }
@@ -359,7 +359,7 @@ uint2 MCUIDC::getwidth()
 uint2 MCUIDC::getheight()
 {
 	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
+	t_scale = MCResGetPixelScale();
 	
 	return ceil(device_getheight() / t_scale);
 }
@@ -512,7 +512,7 @@ void MCUIDC::querymouse(int2 &x, int2 &y)
 	device_querymouse(t_x, t_y);
 	
 	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
+	t_scale = MCResGetPixelScale();
 	x = t_x / t_scale;
 	y = t_y / t_scale;
 }
@@ -527,7 +527,7 @@ void MCUIDC::device_querymouse(int2 &x, int2 &y)
 void MCUIDC::setmouse(int2 x, int2 y)
 {
 	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
+	t_scale = MCResGetPixelScale();
 	
 	device_setmouse(x * t_scale, y * t_scale);
 }
@@ -542,7 +542,7 @@ void MCUIDC::device_setmouse(int2 x, int2 y)
 MCStack *MCUIDC::getstackatpoint(int32_t x, int32_t y)
 {
 	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
+	t_scale = MCResGetPixelScale();
 
 	return device_getstackatpoint(x * t_scale, y * t_scale);
 }

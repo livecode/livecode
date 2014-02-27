@@ -1181,7 +1181,8 @@ char *TAltBrowser::GetSource()
 	if (datasource != nil)
 		t_repn = [datasource representation];
 
-	NSString *t_source;
+    // AL-2013-12-03 [[ Bug 11507 ]] Initialise t_source to nil to prevent crash.
+	NSString *t_source = nil;
 	if (t_repn != nil)
 		t_source = [t_repn documentSource];
 

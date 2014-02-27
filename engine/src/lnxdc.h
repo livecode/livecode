@@ -237,7 +237,7 @@ public:
 	virtual uint2 getpad();
 	virtual Window getroot();
 
-	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, MCStringRef displayname);
+	virtual MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, MCStringRef displayname);
 	
     virtual void createbackdrop(const char *color);
 	virtual void destroybackdrop();

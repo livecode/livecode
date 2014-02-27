@@ -67,6 +67,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mctheme.h"
 #include "mcssl.h"
 #include "stacksecurity.h"
+#include "resolution.h"
 
 #include "date.h"
 
@@ -969,6 +970,9 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
     MCExecContext ctxt(nil, nil, nil);
 	MCInterfaceInitialize(ctxt);
 	
+	// IM-2013-12-06: [[ PixelScale ]] Initialise pixelScale property to the systemPixelScale
+	MCResSetPixelScale(MCResGetSystemScale());
+
 	// MW-2013-08-07: [[ Bug 10995 ]] Configure fonts based on platform.
 #if defined(TARGET_PLATFORM_WINDOWS)
 	if (MCmajorosversion >= 0x0600)
@@ -1010,13 +1014,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 		}
 		else
 			delete newtheme;
-	}
-    // Create the basic locale and the system locale
-    if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
-        return false;
-    kMCSystemLocale = MCS_getsystemlocale();
-    if (kMCSystemLocale == nil)
-        return false;
+    }
 
 	MCsystemprinter = MCprinter = MCscreen -> createprinter();
 	MCprinter -> Initialize();

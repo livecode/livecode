@@ -158,7 +158,7 @@ static bool revandroid_getAssetOffsetAndLength(JNIEnv *env, jobject object, cons
 
 // IM-2013-07-26: [[ ResIndependence ]] return the device scale - this is initialised
 // on screen open
-MCGFloat MCResGetDeviceScale(void)
+MCGFloat MCResGetSystemScale(void)
 {
 	return s_android_device_scale;
 }
@@ -1866,7 +1866,9 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doTouch(JNIEnv *env, jobje
 			return;
 	}
 
-	static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, (void *)id, timestamp, x, y);
+	// MW-2014-01-06: [[ Bug 11641 ]] Make sure we use 'id + 1' for the id as it needs to be non-zero
+	//   (non-nil) for 'getmouse()'. (Android touch ids are 0 based).
+	static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, (void *)(id + 1), timestamp, x, y);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyPress(JNIEnv *env, jobject object, int modifiers, int char_code, int key_code)

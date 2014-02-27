@@ -521,22 +521,6 @@ static DWORD readThread(Streamnode *process)
 
 //////////////////////////////////////////////////////////////////////////////////
 
-// OK-2009-01-28: [[Bug 7452]] - SpecialFolderPath not working with redirected My Documents folder on Windows.
-bool MCS_getlongfilepath(MCStringRef p_short_path, MCStringRef& r_long_path)
-{
-	// If the path conversion was not succesful, then
-	// we revert back to using the original path.
-	MCAutoStringRef t_long_path;
-	if (MCS_longfilepath(p_short_path, &t_long_path) && MCStringGetLength(*t_long_path) > 0)
-	{
-		r_long_path = MCValueRetain(*t_long_path);
-		return true;
-	}
-
-	r_long_path = MCValueRetain(p_short_path);
-	return true;
-}
-
 bool MCS_getcurdir_native(MCStringRef& r_path)
 {
 	// NOTE:
@@ -893,18 +877,27 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 				// Convert the value from the registry to the appropriate value type
 				switch (t_type)
 				{
-				case REG_EXPAND_SZ:
 				case REG_LINK:
+					if (!MCStringCreateWithChars((const unichar_t*)t_buffer.Ptr(), t_buffer_len/2, (MCStringRef&)r_value))
+						return false;
+					break;
+
+				case REG_EXPAND_SZ:
 				case REG_MULTI_SZ:
 				case REG_SZ:
-					{
-						// Note that the StringRef type permits embedded null characters
-						MCAutoStringRef t_string;
-						if (!MCStringCreateWithChars((const unichar_t*)t_buffer.Ptr(), t_buffer_len/2, &t_string))
-							return false;
+					{						
+						DWORD t_unicode_len;
+						t_unicode_len = t_buffer_len / 2;
 
-						r_value = MCValueRetain(*t_string);
-						break;
+						unichar_t *t_chars = (unichar_t*)t_buffer.Ptr();
+						// Get rid of any trailing NULL character
+						while(t_unicode_len > 0 && t_chars[t_unicode_len - 1] == '\0')
+							t_unicode_len -= 1;
+					
+						if (t_type == REG_MULTI_SZ && t_unicode_len < t_buffer_len / 2)
+							t_unicode_len += 1;
+         
+						return MCStringCreateWithChars((unichar_t*)t_buffer.Ptr(), t_unicode_len, (MCStringRef&)r_value);
 					}
 
 				case REG_NONE:
@@ -922,7 +915,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 						// Binary or unsupported type. Return as a binary blob
 						// (For compatibility with existing scripts, DWORD and QWORD are binary)
 						MCAutoDataRef t_data;
-						if (!MCDataCreateWithBytes((const byte_t*)t_buffer.Ptr(), t_buffer_len, &t_data))
+						if (!MCDataCreateWithBytes((const byte_t*)t_buffer.Ptr(), t_buffer_len, (MCDataRef&)t_data))
 							return false;
 
 						r_value = MCValueRetain(*t_data);
@@ -2658,6 +2651,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             MCAutoArray<unichar_t> t_buffer;
             uindex_t t_length;
             t_length = GetTempPathW(0, NULL);
+
             if (t_length != 0)
             {
                 if (!t_buffer.New(t_length))
@@ -2712,17 +2706,14 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             }
         }
         if (t_wasfound)
-        {
-            MCAutoStringRef t_standard_path;
-            // TS-2008-06-16: [[ Bug 6403 ]] - specialFolderPath() returns 8.3 paths
-            // First we need to swap to standard path seperator
-			if (!MCS_pathfromnative(*t_native_path, &t_standard_path))
-                return false;
-            
+        {            
             // OK-2009-01-28: [[Bug 7452]]
             // And call the function to expand the path - if cannot convert to a longfile path,
             // we should return what we already had!
-            return MCS_getlongfilepath(*t_standard_path, r_folder);
+			if (!LongFilePath(*t_native_path, r_folder))
+				return MCStringCopy(*t_native_path, r_folder);
+
+			return true;
         }
         else
         {
@@ -3051,7 +3042,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			omode = GENERIC_READ;
 			createmode = OPEN_EXISTING;
 		}
-		if (p_mode== kMCSOpenFileModeWrite)
+		if (p_mode== kMCSOpenFileModeWrite || p_mode == kMCSOpenFileModeCreate)
 		{
 			omode = GENERIC_WRITE;
 			createmode = CREATE_ALWAYS;
@@ -3230,8 +3221,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		}
         
         MCAutoStringRef t_tmp_name;
-        if (!MCStringMutableCopy(*t_long_path, &t_tmp_name) &&
-			MCStringAppendFormat(*t_tmp_name, "/%s", t_ptr + 1))
+        if (!MCStringMutableCopy(*t_long_path, &t_tmp_name) ||
+			!MCStringAppendFormat(*t_tmp_name, "/%s", t_ptr + 1))
 			return false;
 	
 		MCStringCopy(*t_tmp_name, r_tmp_name);
@@ -3634,8 +3625,14 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         ep.setstrlen();
         delete shortpath;
 #endif /* MCS_longfilepath_dsk_w32 */
+		// The path given to longfilepath can't be already resolved - as it remains the same
+		// for UNIX-based OS, resolving it's not done in the MCS_* function like usual
+		MCAutoStringRef t_resolved_path;
+		if (!ResolveNativePath(p_path, &t_resolved_path))
+			return false;
+
 		MCAutoStringRefAsWString t_short_wstr;
-		if (!t_short_wstr.Lock(p_path))
+		if (!t_short_wstr.Lock(*t_resolved_path))
 			return false;
 
 		// Retrieve the length of the long file name
@@ -3662,11 +3659,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			return false;
 		}
 
-		MCAutoStringRef t_long_path;
-		if (!MCStringCreateWithChars(t_buffer.Ptr(), t_result, &t_long_path))
-			return false;
+		// The new way the longpath is built leaves the terminating backslash
+		char t_bdag = (char)t_buffer[t_result - 1];
+		if (t_buffer[t_result - 1] == '\\')
+			--t_result;
 
-		return MCS_pathfromnative(*t_long_path, r_long_path);
+		return MCStringCreateWithChars(t_buffer.Ptr(), t_result, r_long_path);
     }
     
 	virtual bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path)
@@ -3688,8 +3686,14 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         }
         delete newpath;
 #endif /* MCS_shortfilepath_dsk_w32 */
+		// The path given to shortfilepath can't be already resolved - as it remains the same
+		// for UNIX-based OS, resolving it's not done in the MCS_* function like usual
+		MCAutoStringRef t_resolved_path;
+		if (!ResolveNativePath(p_path, &t_resolved_path))
+			return false;
+
 		MCAutoStringRefAsWString t_long_wstr;
-		if (!t_long_wstr.Lock(p_path))
+		if (!t_long_wstr.Lock(*t_resolved_path))
 			return false;
 
 		// How long is the short path?

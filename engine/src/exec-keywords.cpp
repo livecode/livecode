@@ -551,7 +551,7 @@ void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCEx
         if (!ctxt . TryToEvaluateExpression(step, line, pos, EE_REPEAT_BADWITHSTEP, &t_step))
             return;
         
-        if (!ctxt . ConvertToReal(*t_condition, stepval) || stepval == 0.0)
+        if (!ctxt . ConvertToReal(*t_step, stepval) || stepval == 0.0)
         {
             ctxt . LegacyThrow(EE_REPEAT_BADWITHSTEP);
             return;

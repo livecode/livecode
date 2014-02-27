@@ -614,7 +614,16 @@ Boolean MCBlock::sameatts(MCBlock *bptr, bool p_persistent_only)
 
 static bool MCUnicodeCanBreakBetween(uint2 x, uint2 y)
 {
-	if (MCUnicodeIsWhitespace(x))
+	// MW-2013-12-19: [[ Bug 11606 ]] We only check for breaks between chars and spaces
+	//   where the space follows the char. This is because a break will consume all space
+	//   chars after it thus we want to measure up to but not including the spaces.
+	bool t_x_isspace, t_y_isspace;
+    t_x_isspace = MCUnicodeIsWhitespace(x);
+    t_y_isspace = MCUnicodeIsWhitespace(y);
+
+	if (t_x_isspace && t_y_isspace)
+		return false;
+	if (t_y_isspace)
 		return true;
 
 	bool t_xid;
@@ -679,7 +688,13 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, findex_t& r_break_index, bool& r_break
 	
 	// We don't completely fit within maxwidth, so compute the last break point in
 	// the block by measuring
-	int4 twidth;
+	// MW-2013-12-19: [[ Bug 11606 ]] Track the width of the text within the block as a float
+	//   but use the integer width to break. This ensures measure(a & b) == measure(a) + measure(b)
+	//   (otherwise you get drift as the accumulated width the block calculates is different
+	//    from the width of the text that is drawn).
+	MCGFloat twidth_float;
+	twidth_float = 0;
+	int32_t twidth;
 	twidth = 0;
 
 	// MW-2009-04-23: [[ Bug ]] For printing, we measure complete runs of text otherwise we get
@@ -745,6 +760,8 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, findex_t& r_break_index, bool& r_break
 		if (t_this_char == '\t')
 		{
 			twidth += gettabwidth(x + twidth, initial_i);
+			twidth_float = (MCGFloat)twidth;
+
 			t_last_break_width = twidth;
 			t_last_break_i = i;
 		}
@@ -752,8 +769,9 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, findex_t& r_break_index, bool& r_break
         {
             MCRange t_range;
             t_range = MCRangeMake(initial_i, i - initial_i);
-            twidth += MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
-        }
+			twidth_float += MCFontMeasureTextSubstringFloat(m_font,  parent->GetInternalStringRef(), t_range);
+			twidth = (int32_t)floorf(twidth_float);
+		}
 
 		if (t_can_fit && twidth > maxwidth)
 			break;
@@ -824,7 +842,7 @@ int2 MCBlock::gettabwidth(int2 x, findex_t i)
 		j = 0;
 		while(j < i)
 		{
-			if (t_block -> getflag(F_HAS_TAB))
+            if (t_block -> getflag(F_HAS_TAB))
 			{
 				findex_t k;
 				k = t_block -> GetOffset() + t_block -> GetLength();
@@ -1132,10 +1150,12 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, findex_t si, findex_t ei, 
 		ull = a->underline;
 	}
 
-	if (flags & F_HAS_COLOR && atts->color->pixel != MAXUINT4)
+	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+	if (flags & F_HAS_COLOR)
 		t_foreground_color = atts -> color;
 
-	if (flags & F_HAS_BACK_COLOR && atts->backcolor->pixel != MAXUINT4)
+	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+	if (flags & F_HAS_BACK_COLOR)
 		dc->setbackground(*atts->backcolor);
 
 	if (t_foreground_color != NULL)
@@ -1204,7 +1224,8 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, findex_t si, findex_t ei, 
 		dc -> setclip(t_sel_clip);
 		
 		// Change the hilite color (if necessary).
-		if (!(flags & F_HAS_COLOR) || atts->color->pixel == MAXUINT4)
+		// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+		if (!(flags & F_HAS_COLOR))
 		{
 			if (IsMacLF() && !f->isautoarm())
 			{
@@ -1223,10 +1244,11 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, findex_t si, findex_t ei, 
 		// Draw the selected text.
 		drawstring(dc, x, cx, y, m_index, m_size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
 		
+		// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
 		// Revert to the previous clip and foreground color.
 		if (t_foreground_color != NULL)
 			dc->setforeground(*t_foreground_color);
-		else if (!(flags & F_HAS_COLOR) || atts->color->pixel == MAXUINT4)
+		else if (!(flags & F_HAS_COLOR))
 			f->setforeground(dc, DI_FORE, False, True);
 		dc-> setclip(t_old_clip);
 	}
@@ -1280,10 +1302,12 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, findex_t si, findex_t ei, 
 		dc -> setclip(t_old_clip);
 	}
 	
-	if (flags & F_HAS_BACK_COLOR && atts->backcolor->pixel != MAXUINT4)
+	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+	if (flags & F_HAS_BACK_COLOR)
 		dc->setbackground(MCzerocolor);
 
-	if ((flags & F_HAS_COLOR && atts->color->pixel != MAXUINT4) || fontstyle & FA_LINK)
+	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+	if (flags & F_HAS_COLOR || fontstyle & FA_LINK)
 		f->setforeground(dc, DI_FORE, False, True);
 
 	// MW-2010-01-06: If there is link text, then draw a link
@@ -1692,9 +1716,10 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
 	else
 	{
 		findex_t sptr = i;
+        findex_t t_length = l;
 		
 		// MW-2012-02-12: [[ Bug 10662 ]] If the last char is a VTAB then ignore it.
-		if (parent->TextIsLineBreak(parent->GetCodepointAtIndex(sptr + l - 1)))
+        if (parent->TextIsLineBreak(parent->GetCodepointAtIndex(sptr + l - 1)))
 			l--;
 
 		// MW-2012-08-29: [[ Bug 10325 ]] Use 32-bit int to compute the width, then clamp
@@ -1708,7 +1733,7 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
 			while (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', sptr, kMCStringOptionCompareExact, eptr))
 			{
 				// Break if we've gone past the end of this block
-				if (eptr >= (m_index + l))
+                if (eptr >= i + t_length)
 					break;
 				
 				MCRange t_range;
@@ -2166,6 +2191,8 @@ void MCBlock::MoveRange(findex_t p_index, findex_t p_length)
 {
 	m_index += p_index;
 	m_size += p_length;
+    if (p_length)
+        width = 0;
 }
 
 codepoint_t MCBlock::GetCodepointAtIndex(findex_t p_index) const

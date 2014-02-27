@@ -1775,7 +1775,8 @@ void MCInterfaceExecClickCmd(MCExecContext& ctxt, uint2 p_button, MCPoint p_loca
     
     // IM-2013-09-23: [[ FullscreenMode ]] get / set mouseloc & clickloc in view coords
 	MCPoint t_view_clickloc;
-	t_view_clickloc = MCdefaultstackptr->view_stacktoviewloc(p_location);
+    // IM-2014-01-06: [[ Bug 11624 ]] Use MCStack::stacktowindowloc to account for stack scroll
+	t_view_clickloc = MCdefaultstackptr->stacktowindowloc(p_location);
     
 	uint2 oldmstate = MCmodifierstate;
 	uint2 oldbstate = MCbuttonstate;
@@ -3916,7 +3917,7 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
     t_item_count = t_chunks . Count();
 
 	bool t_trailing_delim = false;
-	if (MCStringIsEmpty(t_chunks[t_item_count - 1]))
+	if (p_type != CT_ITEM && MCStringIsEmpty(t_chunks[t_item_count - 1]))
     {
         t_trailing_delim = true;
         t_item_count--;
@@ -3933,33 +3934,39 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 	// Now we know the item count, we can allocate an array of MCSortnodes to store them.
 	MCAutoArray<MCSortnode> t_items;
 	t_items.Extend(t_item_count + 1);
-	t_item_count = 0;
+    uindex_t t_added = 0;
 
 	// Next, populate the MCSortnodes with all the items to be sorted
-    for (uindex_t i = 0; i < t_chunks . Count(); i++)
+    for (uindex_t i = 0; i < t_item_count; i++)
     {
-        MCInterfaceExecSortAddItem(ctxt, t_items . Ptr(), t_item_count, p_form, t_chunks[i], p_by);
-        t_items[t_item_count - 1] . data = (void *)t_chunks[i];
+        MCInterfaceExecSortAddItem(ctxt, t_items . Ptr(), t_added, p_form, t_chunks[i], p_by);
+        t_items[t_added - 1] . data = (void *)t_chunks[i];
     }
 
 	// Sort the array
-	MCU_sort(t_items.Ptr(), t_item_count, p_direction, (Sort_type)p_form);
+	MCU_sort(t_items.Ptr(), t_added, p_direction, (Sort_type)p_form);
 
 	// Build the output string
 	MCAutoListRef t_list;
     MCListCreateMutable(t_delimiter, &t_list);
 
     uindex_t i;
-	for (i = 0; i < t_item_count; i++)
+	for (i = 0; i < t_added; i++)
     {
         MCListAppend(*t_list, (MCStringRef)t_items[i] . data);
         MCValueRelease((MCStringRef)t_items[i] . svalue);
     }
 
-    if (t_trailing_delim || i < t_item_count - 1)
-        MCListAppend(*t_list, kMCEmptyString);
+    MCAutoStringRef t_list_string;
+    /* UNCHECKED */ MCListCopyAsString(*t_list, &t_list_string);
     
-    return MCListCopyAsString(*t_list, r_output);
+    if (p_type == CT_LINE && (t_trailing_delim || i < t_added - 1))
+    {
+        return MCStringFormat(r_output, "%@%c", *t_list_string, t_delimiter);
+    }
+    
+    r_output = MCValueRetain(*t_list_string);
+    return true;
 }
 
 

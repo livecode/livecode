@@ -227,7 +227,11 @@ Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)
 				}
 			}
 		}
-
+		
+		// MW-2014-02-12: [[ Bug 11789 ]] Make sure we reset the state to 'waiting'
+		//   so we don't fall through the wait loop.
+		s_mail_status = kMCAndroidMailWaiting;
+		
 		MCAndroidEngineCall("sendEmail", "v", nil);
 	}
 	
@@ -341,6 +345,10 @@ void MCSystemSendMailWithAttachments(MCStringRef p_to, MCStringRef p_cc, MCStrin
 			MCAndroidEngineCall("addAttachment", "vdxx", nil, p_attachments[i] . data, p_attachments[i] . type, p_attachments[i] . name);
 	}
 
+    // MW-2014-02-12: [[ Bug 11789 ]] Make sure we reset the state to 'waiting'
+    //   so we don't fall through the wait loop.
+    s_mail_status = kMCAndroidMailWaiting;
+    
 	MCAndroidEngineCall("sendEmail", "v", nil);
 	
 	MCAndroidMailResult(r_result);

@@ -655,6 +655,7 @@ LT factor_table[] =
         {"closebox", TT_PROPERTY, P_CLOSE_BOX},
         {"cmdkey", TT_FUNCTION, F_COMMAND_KEY},
         {"codepoint", TT_CHUNK, CT_CODEPOINT},
+        {"codepointproperty", TT_FUNCTION, F_CODEPOINT_PROPERTY},
         {"codepointtonum", TT_FUNCTION, F_UNICODE_CHAR_TO_NUM},
 		{"codepoints", TT_CLASS, CT_CODEPOINT},
         {"codeunit", TT_CHUNK, CT_CODEUNIT},
@@ -1165,6 +1166,7 @@ LT factor_table[] =
         {"no", TT_UNOP, O_NOT},
         {"nodes", TT_PROPERTY, P_NODES},
         {"noncontiguoushilites", TT_PROPERTY, P_NONCONTIGUOUS_HILITES},
+        {"normalizetext", TT_FUNCTION, F_NORMALIZE_TEXT},
         {"not", TT_UNOP, O_NOT},
         {"num", TT_PROPERTY, P_NUMBER},
         {"number", TT_PROPERTY, P_NUMBER},
@@ -1224,6 +1226,8 @@ LT factor_table[] =
         {"penpat", TT_PROPERTY, P_PEN_PATTERN},
         {"penpattern", TT_PROPERTY, P_PEN_PATTERN},
         {"penwidth", TT_PROPERTY, P_PEN_WIDTH},
+		// IM-2013-12-04: [[ PixelScale ]] The "pixelScale" token
+		{"pixelscale", TT_PROPERTY, P_PIXEL_SCALE},
         {"pixmapid", TT_PROPERTY, P_PIXMAP_ID},
 		{"plaintext", TT_PROPERTY, P_PLAIN_TEXT},
         {"platform", TT_FUNCTION, F_PLATFORM},
@@ -1532,6 +1536,8 @@ LT factor_table[] =
         {"system", TT_PROPERTY, P_SYSTEM},
         {"systemcolorselector", TT_PROPERTY, P_SYSTEM_CS},
         {"systemfileselector", TT_PROPERTY, P_SYSTEM_FS},
+		// IM-2013-12-04: [[ PixelScale ]] The "pixelScale" token
+		{"systempixelscale", TT_PROPERTY, P_SYSTEM_PIXEL_SCALE},
 		{"systemprintselector", TT_PROPERTY, P_SYSTEM_PS},
         {"systemversion", TT_FUNCTION, F_SYSTEM_VERSION},
         {"systemwindow", TT_PROPERTY, P_SYSTEM_WINDOW},

@@ -561,6 +561,10 @@ enum Functions {
     // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
     F_MEASURE_TEXT,
     F_MEASURE_UNICODE_TEXT,
+    
+    F_NORMALIZE_TEXT,
+    
+    F_CODEPOINT_PROPERTY,
 };
 
 enum Handler_type {
@@ -1529,6 +1533,10 @@ enum Properties {
 
 	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
 	P_COLOR_DIALOG_COLORS,
+	
+	// IM-2013-12-04: [[ PixelScale ]] Tags for the pixelScale and systemPixelScale properties
+	P_PIXEL_SCALE,
+	P_SYSTEM_PIXEL_SCALE,
 	
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,

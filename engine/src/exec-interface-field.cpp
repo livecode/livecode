@@ -567,9 +567,7 @@ void MCField::GetHScrollbar(MCExecContext& ctxt, bool& r_setting)
 
 void MCField::SetHScrollbar(MCExecContext& ctxt, bool setting)
 {
-	setflag(setting, F_HSCROLLBAR);
-    
-    if (setting)
+    if (changeflag(setting, F_HSCROLLBAR))
 	{
         
 		DoSetHScrollbar(ctxt, hscrollbar, scrollbarwidth);
@@ -584,9 +582,7 @@ void MCField::GetVScrollbar(MCExecContext& ctxt, bool& r_setting)
 
 void MCField::SetVScrollbar(MCExecContext& ctxt, bool setting)
 {
-	setflag(setting, F_VSCROLLBAR);
-    
-    if (setting)
+    if (changeflag(setting, F_VSCROLLBAR))
 	{	
 		DoSetVScrollbar(ctxt, vscrollbar, scrollbarwidth);
 		Redraw(true, textx, texty);

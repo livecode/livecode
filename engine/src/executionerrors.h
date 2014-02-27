@@ -2549,6 +2549,22 @@ enum Exec_errors
     
     // {EE-0826} textEncode: could not encode text
     EE_TEXTENCODE_FAILED,
+    
+    // {EE-0827} normalizeText: bad normal form
+    EE_NORMALIZETEXT_BADFORM,
+    
+    // {EE-0828} normalizeText: bad text expression
+    EE_NORMALIZETEXT_BADTEXT,
+    
+    // {EE-0829} codepointProperty: bad codepoint
+    EE_CODEPOINTPROPERTY_BADCODEPOINT,
+
+    // {EE-0830} codepointProperty: bad property name
+    EE_CODEPOINTPROPERTY_BADPROPERTY,
+	
+	// IM-2013-12-04: [[ PixelScale ]]
+	// {EE-0831} pixelScale: not a valid scale value
+	EE_PROPERTY_BADPIXELSCALE,
 };
 
 extern const char *MCexecutionerrors;

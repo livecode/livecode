@@ -340,6 +340,11 @@ void MCStack::SetFullscreen(MCExecContext& ctxt, bool setting)
 {
 	if (getextendedstate(ECS_FULLSCREEN) != setting)
 	{
+        // IM-2014-02-12: [[ Bug 11783 ]] We may also need to reset the fonts on Windows when
+        //   fullscreen is changed
+        bool t_ideal_layout;
+        t_ideal_layout = getuseideallayout();
+        
 		setextendedstate(setting, ECS_FULLSCREEN);
         view_setfullscreen(setting);
         
@@ -352,6 +357,9 @@ void MCStack::SetFullscreen(MCExecContext& ctxt, bool setting)
 		
 		if (opened > 0) 
 			reopenwindow();
+        
+        if ((t_ideal_layout != getuseideallayout()) && opened)
+            purgefonts();
 	}
 }
 

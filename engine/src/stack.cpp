@@ -1705,6 +1705,11 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 			bool v_changed = (getextendedstate(ECS_FULLSCREEN) != t_bval);
 			if ( v_changed)
 			{
+				// IM-2014-02-12: [[ Bug 11783 ]] We may also need to reset the fonts on Windows when
+				//   fullscreen is changed
+				bool t_ideal_layout;
+				t_ideal_layout = getuseideallayout();
+
 				setextendedstate(t_bval, ECS_FULLSCREEN);
 				view_setfullscreen(t_bval);
 				
@@ -1717,6 +1722,9 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 				
 				if ( opened > 0 ) 
 					reopenwindow();
+
+				if ((t_ideal_layout != getuseideallayout()) && opened)
+					purgefonts();
 			}
 		}
 	break;
@@ -3193,7 +3201,8 @@ bool MCStack::getuseideallayout(void)
 	if (getflag(F_FORMAT_FOR_PRINTING))
 		return true;
 
-	if (m_view_fullscreenmode != kMCStackFullscreenResize)
+	// IM-2014-02-12: [[ Bug 11783 ]] Only use ideal layout if stack is fullscreen and has a scaling fullscreenmode
+	if (view_getfullscreen() && m_view_fullscreenmode != kMCStackFullscreenResize && m_view_fullscreenmode != kMCStackFullscreenNoScale)
 		return true;
 
 	return false;

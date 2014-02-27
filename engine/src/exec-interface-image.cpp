@@ -417,6 +417,18 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
 			MCMemoryClear(t_data_ptr, t_data_size);
 		else
 		{
+            // SN-2014-01-31: [[ Bug 11462 ]] Opening an image to get its data should not
+            // reset its size: F_LOCK_LOCATION ensures the size - and the location, which
+            // doesn't matter here - are read as they are stored.
+            bool t_tmp_locked;
+            t_tmp_locked = false;
+            
+            if (!getflag(F_LOCK_LOCATION))
+            {
+                setflag(true, F_LOCK_LOCATION);
+                t_tmp_locked = true;
+            }
+            
 			openimage();
 			
 			MCImageBitmap *t_bitmap = nil;

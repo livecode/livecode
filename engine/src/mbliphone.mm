@@ -365,16 +365,12 @@ uint32_t MCIPhoneSystem::GetProcessId(void)
 
 bool MCIPhoneSystem::GetVersion(MCStringRef& r_string)
 {
-	const char *t_version;
-	t_version = [[[UIDevice currentDevice] systemVersion] cStringUsingEncoding:NSMacOSRomanStringEncoding];
-	return MCStringCreateWithCString(t_version, r_string);
+	return MCStringCreateWithCFString((CFStringRef)[[UIDevice currentDevice] systemVersion], r_string);
 }
 
 bool MCIPhoneSystem::GetMachine(MCStringRef& r_string)
 {
-	const char *t_machine;
-	t_machine = [[[UIDevice currentDevice] model] cStringUsingEncoding:NSMacOSRomanStringEncoding];
-	return MCStringCreateWithCString(t_machine, r_string);
+	return MCStringCreateWithCFString((CFStringRef)[[UIDevice currentDevice] model], r_string);
 }
 
 MCNameRef MCIPhoneSystem::GetProcessor(void)

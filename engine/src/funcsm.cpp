@@ -62,7 +62,7 @@ bool MCParamFunction::params_to_doubles(MCExecContext& ctxt, real64_t *&r_double
 
             while (MCArrayIterate(t_array, t_index, t_key, t_value))
 			{
-                if (ctxt . ConvertToReal(t_value, t_number))
+                if (!ctxt . ConvertToReal(t_value, t_number))
 				{
                     ctxt . LegacyThrow(EE_FUNCTION_BADSOURCE);
                     return false;

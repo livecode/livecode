@@ -139,6 +139,13 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 #endif
 	
 	MCcmd = MCValueRetain(argv[0]);
+
+    // Create the basic locale and the system locale
+    if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
+        return false;
+    kMCSystemLocale = MCS_getsystemlocale();
+    if (kMCSystemLocale == nil)
+        return false;
 		
 #if defined(_LINUX_DESKTOP) || defined(_MAC_DESKTOP)   //get fullpath
 	{
@@ -278,10 +285,6 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 		create_var(argv[i]);
 	}
 	create_var(nvars);
-
-	// If we have 'no ui' make sure we also have noxft
-	if (MCnoui)
-		MCuseXft = False;
 
 	if (!X_open(argc, argv, envp))
 		return false;

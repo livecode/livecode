@@ -208,7 +208,7 @@ void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius
     // All the destination pixels are set to the infinite distance initially
     memset(buffer, 255, t_mem_size);
     
-    // Only this part of the buffer can have non-zero x distances
+    // Only this part of the buffer can have non-infinite x distances
     uint8_t *xd = buffer + new_width * yradius;
     
 	// Compute the x distance of each pixel from the nearest set pixel
@@ -245,6 +245,10 @@ void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius
             if (dnext >= new_width)
                 halfway = distance;
             
+            // Ensure that we do nothing for empty lines
+            if (next >= width && x == 0)
+                halfway = distance = 0;
+            
             int i;
             for (i = 0; i < halfway; i++)
                 xdptr[x + i] = SkMin32(i, 255);
@@ -280,7 +284,7 @@ void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius
         t_xlut[i] = bb*i*i, t_ylut[i] = aa*i*i;
     
     // Ensure that the "infinite" distance never compares < anything else
-    t_xlut[255] = 0xFFFFFFFF;
+    t_xlut[255] = t_ylut[255] = 0xFFFFFFFF;
 	
 	memset(dst, 0, new_width * new_height);
     
@@ -307,8 +311,9 @@ void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius
                 xval = xdist[noffset];
                 yval = ny - y;
                 
-                // Note the ordering of the comparison to avoid overflow
-                if (t_xlut[xval] < aabb - t_ylut[yval])
+                // Note that care is needed to avoid overflow errors
+                uint64_t t_dist64 = uint64_t(t_xlut[xval]) + uint64_t(t_ylut[yval]);
+                if (t_dist64 == uint32_t(t_dist64) && uint32_t(t_dist64) < aabb)
                 {
                     dst[offset] = 255;
                     break;
@@ -334,8 +339,9 @@ void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius
                 xval = xdist[noffset];
                 yval = y - ny;
                 
-                // Note the ordering of the comparison to avoid overflow
-                if (t_xlut[xval] < aabb - t_ylut[yval])
+                // Note that care is needed to avoid overflow errors
+                uint64_t t_dist64 = uint64_t(t_xlut[xval]) + uint64_t(t_ylut[yval]);
+                if (t_dist64 == uint32_t(t_dist64) && uint32_t(t_dist64) < aabb)
                 {
                     dst[offset] = 255;
                     break;

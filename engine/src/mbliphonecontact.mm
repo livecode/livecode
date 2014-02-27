@@ -272,7 +272,7 @@ bool MCCFDictionaryToArray(CFDictionaryRef p_dict, MCArrayRef &r_array)
 			if (key_to_name(t_dict_keys[i], &t_key_name))
 			{
 				MCAutoStringRef t_string;
-				MCStringCreateWithCString([(NSString*)t_dict_values[i] cStringUsingEncoding: NSMacOSRomanStringEncoding], &t_string);
+				MCStringCreateWithCFString((CFStringRef)t_dict_values[i], &t_string);
 				t_success = MCArrayStoreValue(*t_prop_array, false, *t_key_name, *t_string);
 			}
 		}
@@ -503,7 +503,7 @@ bool MCCreatePersonData(ABRecordRef p_person, MCArrayRef& r_contact)
 			if (!s_property_map[i].has_labels)
 			{
 				MCAutoStringRef t_value;
-				MCStringCreateWithCString([(NSString*)t_prop_value cStringUsingEncoding: NSMacOSRomanStringEncoding], &t_value);
+				MCStringCreateWithCFString((CFStringRef)t_prop_value, &t_value);
 				t_success = MCContactAddProperty(*t_contact, *s_property_map[i].name, *t_value);
 			}
 			else
@@ -529,7 +529,7 @@ bool MCCreatePersonData(ABRecordRef p_person, MCArrayRef& r_contact)
 						if (t_proptype == kABStringPropertyType)
 						{
 							MCAutoStringRef t_value;
-							MCStringCreateWithCString([(NSString*)t_multi_value cStringUsingEncoding: NSMacOSRomanStringEncoding], &t_value);
+							MCStringCreateWithCFString((CFStringRef)t_multi_value, &t_value);
 							t_success = MCContactAddPropertyWithLabel(*t_contact, *s_property_map[i].name, *t_label_name, *t_value);
 						}
 						else if (t_proptype == kABDictionaryPropertyType)
@@ -726,7 +726,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 	}
 
 	if (t_success)
-		t_success = MCStringCreateWithCString([t_chosen cStringUsingEncoding:NSMacOSRomanStringEncoding], r_chosen);
+		t_success = MCStringCreateWithCFString((CFStringRef)t_chosen, r_chosen);
 	
     if (t_people != nil)
 		[t_people release];

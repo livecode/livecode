@@ -502,16 +502,17 @@ static bool filter_to_type_list(MCStringRef p_filter, MCStringRef *&r_types, uin
 	// Check to see if the extension of the file matches any of those in the extension list
 	if (!t_should_show && m_filter->extension_count > 0)
 	{
-		const char *t_filename;
-		t_filename = [filename cStringUsingEncoding: NSMacOSRomanStringEncoding];
-		if (t_filename != nil)
+        MCAutoStringRef t_filename;
+		if (MCStringCreateWithCFString((CFStringRef)t_filename_resolved, &t_filename) && *t_filename != nil)
 		{
-			char *t_ext;
-			t_ext = strrchr(t_filename, '.');
-			if (t_ext != nil && MCCStringLength(t_ext) > 0)
-				for (uint32_t i = 0; i < m_filter->extension_count && !t_should_show; i++)
-					if (MCStringIsEqualToCString(m_filter->extensions[i], t_ext + 1, kMCCompareCaseless))
-						t_should_show = YES;
+			uindex_t t_dot;
+            if (MCStringFirstIndexOfChar(*t_filename, '.', 0, kMCCompareExact, t_dot))
+            {
+                MCRange t_range = MCRangeMake(t_dot + 1, UINDEX_MAX);
+                for (uint32_t i = 0; i < m_filter->extension_count && !t_should_show; i++)
+                    if (MCStringSubstringIsEqualTo(*t_filename, t_range, m_filter->extensions[i], kMCCompareCaseless))
+                            t_should_show = YES;
+            }
 		}
 	}
 	
@@ -691,11 +692,7 @@ int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p
             t_file_name = [t_panel filename];
             
 			if (t_is_save)
-			{
-                const char *t_utf8_string;
-                t_utf8_string = [t_file_name UTF8String];
-                MCStringCreateWithBytes((const byte_t *)t_utf8_string, [t_file_name lengthOfBytesUsingEncoding: NSUTF8StringEncoding], kMCStringEncodingUTF8, false, &t_filename);
-			}
+                MCStringCreateWithCFString((CFStringRef)t_file_name, &t_filename);
 			else
 			{
                 MCAutoListRef t_list;
@@ -704,13 +701,16 @@ int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p
 				{
 					// MM-2012-09-25: [[ Bug 10407 ]] Resolve alias (if any) of the returned files.
 					NSString *t_alias;
+                    t_alias = nil;
 					resolve_alias([[t_panel filenames] objectAtIndex: i], t_alias);
                     MCAutoStringRef t_alias_string;
-                    if (MCStringCreateWithBytes((const byte_t *)[[t_panel filename] UTF8String], [[t_panel filename] lengthOfBytesUsingEncoding: NSUTF8StringEncoding], kMCStringEncodingUTF8, false, &t_alias_string))
+                    if (t_alias != nil && MCStringCreateWithCFString((CFStringRef)t_alias, &t_alias_string))
+                    {
                         MCListAppend(*t_list, *t_alias_string);
-					[t_alias release];
-                    MCListCopyAsString(*t_list, &t_filename);
-				}			
+                        [t_alias release];
+                    }
+				}
+                MCListCopyAsString(*t_list, &t_filename);
 			}
             if ([t_accessory currentType] != nil)
                 t_type = MCValueRetain([t_accessory currentType]);
@@ -807,9 +807,6 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
             MCAutoStringRef t_initial_folder;
             if (p_initial != nil)
                 /* UNCHECKED */ folder_path_from_initial_path(p_initial, &t_initial_folder);
-            
-            char *t_folder;
-            t_folder = nil;
 			
 			NSOpenPanel *t_choose;
 			t_choose = [NSOpenPanel openPanel];
@@ -828,21 +825,23 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
 			// MM-2012-03-01: [[ BUG 10046]] Make sure the "new folder" button is enabled for folder dialogs
 			[t_choose setCanCreateDirectories: YES];
 			
+            MCAutoStringRef t_folder;
 			if (display_modal_dialog(t_choose, *t_initial_folder, nil, (p_options & MCA_OPTION_SHEET) != 0) == NSOKButton)
-				{
-					// MM-2012-09-25: [[ Bug 10407 ]] Resolve alias (if any) of the returned folder
-					NSString *t_alias;
-					resolve_alias([t_choose filename], t_alias);									
-					/* UNCHECKED */ MCCStringToNative([t_alias UTF8String], t_folder);
-					[t_alias release];
-				}
+            {
+                // MM-2012-09-25: [[ Bug 10407 ]] Resolve alias (if any) of the returned folder
+                NSString *t_alias;
+                t_alias = nil;
+                resolve_alias([t_choose filename], t_alias);
+                if (t_alias != nil)
+                {
+                    MCStringCreateWithCFString((CFStringRef)t_alias, &t_folder);
+                    [t_alias release];
+                }
+            }
 			
-			// Send results back                
-			if (MCCStringLength(t_folder) != 0)
-            /* UNCHECKED */ MCStringCreateWithCString(t_folder, r_value);
-    
-			// Free the folder
-			/* UNCHECKED */ MCCStringFree(t_folder);	
+			// Send results back
+			if (*t_folder != nil)
+                r_value = MCValueRetain(*t_folder);
 		}
 		
 		return noErr;

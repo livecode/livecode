@@ -1295,16 +1295,17 @@ void MCField::GetTextSizeOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, in
 
 void MCField::GetEffectiveTextSizeOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t& r_value)
 {
-    uinteger_t *t_size;
-    GetCharPropOfCharChunk<OptionalFieldPropType<PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCBlock::GetTextSize, false, 0, r_mixed, t_size);
+    uinteger_t t_size;
+    uinteger_t *t_size_ptr = &t_size;
+    GetCharPropOfCharChunk<OptionalFieldPropType<PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCBlock::GetTextSize, false, 0, r_mixed, t_size_ptr);
 
     if (r_mixed)
         return;
 
-    if (t_size == nil)
+    if (t_size_ptr == nil)
         GetEffectiveTextSize(ctxt, r_value);
     else
-        r_value = *t_size;
+        r_value = t_size;
 }
 
 void MCField::SetTextSizeOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t* p_value)
@@ -1391,7 +1392,7 @@ void MCField::SetRtfTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int
 {
     state |= CS_NO_FILE; // prevent interactions while downloading images
 
-    resolveparagraphs(p_part_id) -> replacetextwithparagraphs(p_start, p_finish, rtftoparagraphs(value));
+    setparagraphs(rtftoparagraphs(value), p_part_id, p_start, p_finish);
 
     state &= ~CS_NO_FILE;
 }
@@ -1421,7 +1422,7 @@ void MCField::SetHtmlTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, in
     }
     state |= CS_NO_FILE; // prevent interactions while downloading images
     // MW-2012-03-08: [[ FieldImport ]] Use the new htmlText importer.
-    resolveparagraphs(p_part_id) -> replacetextwithparagraphs(p_start, p_finish, importhtmltext(value));
+    setparagraphs(importhtmltext(value), p_part_id, p_start, p_finish);
 
     state &= ~CS_NO_FILE;
 }
@@ -1446,10 +1447,9 @@ void MCField::SetStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, 
 {
     state |= CS_NO_FILE; // prevent interactions while downloading images
     MCParagraph *stpgptr = styledtexttoparagraphs(value);
-    if (stpgptr == nil)
-        resolveparagraphs(p_part_id) -> deletestring(p_start , p_finish);
-    else
-        resolveparagraphs(p_part_id) -> replacetextwithparagraphs(p_start, p_finish, stpgptr);
+
+    setparagraphs(stpgptr, p_part_id, p_start, p_finish);
+    
     state &= ~CS_NO_FILE;
 }
 
@@ -2322,13 +2322,14 @@ void MCField::GetTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, i
 
 void MCField::GetEffectiveTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t& r_value)
 {
-    integer_t *t_value_ptr;
+    integer_t t_value = 0;
+    integer_t *t_value_ptr = &t_value;
     GetCharPropOfCharChunk< OptionalFieldPropType<PodFieldPropType<integer_t> > >(ctxt, this, p_part_id, si, ei, &MCBlock::GetTextShift, true, 0, r_mixed, t_value_ptr);
 
     if (r_mixed)
         return;
-    
-    r_value = *t_value_ptr;
+
+    r_value = t_value;
 }
 
 void MCField::SetTextShiftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t* p_value)

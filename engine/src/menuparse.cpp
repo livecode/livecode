@@ -378,7 +378,7 @@ void ParseMenuItemLabel(MCStringRef p_string, uindex_t &x_offset, MCStringRef p_
 		if (IsEscapeChar(p_string, x_offset, p_menuitem->menumode))
 		{
 			// Don't treat the next character as special; copy it to the output
-			/* UNCHECKED */ MCStringAppendSubstring(p_mutable, p_string, MCRangeMake(x_offset, 1));
+			/* UNCHECKED */ MCStringAppendSubstring(p_mutable, p_string, MCRangeMake(x_offset + 1, 1));
             // And move the offset past the escape char and the copied char.
 			x_offset += 2;
 		}

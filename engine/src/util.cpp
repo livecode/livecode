@@ -2320,7 +2320,7 @@ void MCU_get_color(MCExecPoint& ep, MCStringRef name, MCColor& c)
 }
 #endif
 
-void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
+void MCU_dofunc(Functions func, uint4 nparams, real8 &n,
                 real8 tn, real8 oldn, MCSortnode *titems)
 {
 	real8 tp;
@@ -2329,13 +2329,11 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
             // JS-2013-06-19: [[ StatsFunctions ]] Support for 'arithmeticMean' (was average)
         case F_ARI_MEAN:
             n += tn;
-            nparams++;
 			break;
             // JS-2013-06-19: [[ StatsFunctions ]] Support for 'averageDeviation'
         case F_AVG_DEV:
             tn = tn - oldn;
             n += abs(tn);
-            nparams++;
             break;
             // JS-2013-06-19: [[ StatsFunctions ]] Support for 'geometricMean'
         case F_GEO_MEAN:
@@ -2343,19 +2341,17 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
                 n = 1;
             tp = 1 / oldn;
             n *= pow(tn, tp);
-            nparams++;
             break;
             // JS-2013-06-19: [[ StatsFunctions ]] Support for 'harmonicMean'
         case F_HAR_MEAN:
             n += 1/tn;
-            nparams++;
             break;
         case F_MAX:
-            if (nparams++ == 0 || tn > n)
+            if (nparams == 0 || tn > n)
                 n = tn;
             break;
         case F_MIN:
-            if (nparams++ == 0 || tn < n)
+            if (nparams == 0 || tn < n)
                 n = tn;
             break;
         case F_SUM:
@@ -2363,7 +2359,6 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
             break;
         case F_MEDIAN:
             /* UNCHECKED */ MCNumberCreateWithReal(tn, titems[nparams].nvalue);
-            nparams++;
             break;
             // JS-2013-06-19: [[ StatsFunctions ]] Support for 'populationStdDev', 'populationVariance', 'sampleStdDev' (was stdDev), 'sampleVariance'
         case F_POP_STD_DEV:
@@ -2372,11 +2367,8 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
         case F_SMP_VARIANCE:
             tn = tn - oldn;
             n += tn * tn;
-            nparams++;
             break;
         case  F_UNDEFINED:
-            nparams++;
-            break;
         default:
             break;
 	}

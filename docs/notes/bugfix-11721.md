@@ -1,0 +1,1 @@
+# Crash when taking a snapshot of the template graphic
