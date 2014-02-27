@@ -503,8 +503,7 @@ static bool filter_to_type_list(MCStringRef p_filter, MCStringRef *&r_types, uin
 	if (!t_should_show && m_filter->extension_count > 0)
 	{
         MCAutoStringRef t_filename;
-        MCStringCreateWithBytes((const byte_t *)[filename UTF8String], [filename lengthOfBytesUsingEncoding: NSUTF8StringEncoding], kMCStringEncodingUTF8, false, &t_filename);
-		if (*t_filename != nil)
+		if (MCStringCreateWithCFString((CFStringRef)t_filename_resolved, &t_filename) && *t_filename != nil)
 		{
 			uindex_t t_dot;
             if (MCStringFirstIndexOfChar(*t_filename, '.', 0, kMCCompareExact, t_dot))
@@ -693,11 +692,7 @@ int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p
             t_file_name = [t_panel filename];
             
 			if (t_is_save)
-			{
-                const char *t_utf8_string;
-                t_utf8_string = [t_file_name UTF8String];
-                MCStringCreateWithBytes((const byte_t *)t_utf8_string, [t_file_name lengthOfBytesUsingEncoding: NSUTF8StringEncoding], kMCStringEncodingUTF8, false, &t_filename);
-			}
+                MCStringCreateWithCFString((CFStringRef)t_file_name, &t_filename);
 			else
 			{
                 MCAutoListRef t_list;
@@ -706,13 +701,16 @@ int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p
 				{
 					// MM-2012-09-25: [[ Bug 10407 ]] Resolve alias (if any) of the returned files.
 					NSString *t_alias;
+                    t_alias = nil;
 					resolve_alias([[t_panel filenames] objectAtIndex: i], t_alias);
                     MCAutoStringRef t_alias_string;
-                    if (MCStringCreateWithBytes((const byte_t *)[[t_panel filename] UTF8String], [[t_panel filename] lengthOfBytesUsingEncoding: NSUTF8StringEncoding], kMCStringEncodingUTF8, false, &t_alias_string))
+                    if (t_alias != nil && MCStringCreateWithCFString((CFStringRef)t_alias, &t_alias_string))
+                    {
                         MCListAppend(*t_list, *t_alias_string);
-					[t_alias release];
-                    MCListCopyAsString(*t_list, &t_filename);
-				}			
+                        [t_alias release];
+                    }
+				}
+                MCListCopyAsString(*t_list, &t_filename);
 			}
             if ([t_accessory currentType] != nil)
                 t_type = MCValueRetain([t_accessory currentType]);
@@ -832,9 +830,13 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
             {
                 // MM-2012-09-25: [[ Bug 10407 ]] Resolve alias (if any) of the returned folder
                 NSString *t_alias;
+                t_alias = nil;
                 resolve_alias([t_choose filename], t_alias);
-                MCStringCreateWithBytes((const byte_t *)[t_alias UTF8String], [t_alias lengthOfBytesUsingEncoding: NSUTF8StringEncoding], kMCStringEncodingUTF8, false, &t_folder);
-                [t_alias release];
+                if (t_alias != nil)
+                {
+                    MCStringCreateWithCFString((CFStringRef)t_alias, &t_folder);
+                    [t_alias release];
+                }
             }
 			
 			// Send results back

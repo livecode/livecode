@@ -397,9 +397,12 @@ bool MCSystemListFontFamilies(MCListRef& r_names)
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 	for(NSString *t_family in [UIFont familyNames])
-		if (!MCListAppendCString(*t_list, [t_family cStringUsingEncoding: NSMacOSRomanStringEncoding]))
+    {
+        MCAutoStringRef t_family_string;
+        if (!MCStringCreateWithCFString((CFStringRef)t_family, &t_family_string) ||
+            !MCListAppend(*t_list, *t_family_string))
 			return false;
-
+    }
 	return MCListCopy(*t_list, r_names);
 }
 
@@ -409,8 +412,12 @@ bool MCSystemListFontsForFamily(MCStringRef p_family, MCListRef& r_styles)
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 	for(NSString *t_font in [UIFont fontNamesForFamilyName: [NSString stringWithMCStringRef: p_family]])
-		if (!MCListAppendCString(*t_list, [t_font cStringUsingEncoding: NSMacOSRomanStringEncoding]))
+    {
+        MCAutoStringRef t_font_string;
+        if (!MCStringCreateWithCFString((CFStringRef)t_font, &t_font_string) ||
+            !MCListAppend(*t_list, *t_font_string))
 			return false;
+    }
 
 	return MCListCopy(*t_list, r_styles);
 }
@@ -1020,31 +1027,24 @@ bool MCSystemGetPreferredLanguages(MCStringRef& r_preferred_languages)
 	t_preferred_langs = [NSLocale preferredLanguages];
 	t_success = t_preferred_langs != nil && [t_preferred_langs count] != 0;
 
-    MCAutoStringRef t_preferred_languages;
-    t_success |= MCStringCreateMutable(0, &t_preferred_languages);
+    MCAutoListRef t_languages;
+    t_success |= MCListCreateMutable('\n', &t_languages);
     
 	if (t_success)
 	{
         bool t_first = true;
 		for (NSString *t_lang in t_preferred_langs)
 		{
-            if (t_first)
-            {
-                t_success |= MCStringAppendFormat(*t_preferred_languages, "%s", [t_lang cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-                t_first = false;
-            }
-            else
-                t_success |= MCStringAppendFormat(*t_preferred_languages, "\n%s", [t_lang cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+            MCAutoStringRef t_language;
+            if (t_success && MCStringCreateWithCFString((CFStringRef)t_lang, &t_language))
+                t_success = MCListAppend(*t_languages, *t_language);
         }
 	}
     
     if (t_success)
-    {
-        r_preferred_languages = MCValueRetain(*t_preferred_languages);
-        return ES_NORMAL;
-    }
+        return MCListCopyAsString(*t_languages, r_preferred_languages);
     
-    return ES_ERROR;
+    return false;
 }
 
 bool MCSystemGetCurrentLocale(MCStringRef& r_current_locale)
@@ -1052,7 +1052,7 @@ bool MCSystemGetCurrentLocale(MCStringRef& r_current_locale)
 	NSString *t_current_locale_id = nil;
 	t_current_locale_id = [[NSLocale currentLocale] objectForKey: NSLocaleIdentifier];
 
-	MCStringCreateWithCString([t_current_locale_id cStringUsingEncoding: NSMacOSRomanStringEncoding], r_current_locale);
+	/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_current_locale_id, r_current_locale);
 
 	return true;
 }
@@ -1167,7 +1167,7 @@ bool MCSystemGetApplicationIdentifier(MCStringRef& r_identifier)
 	NSString *t_identifier;
 	t_identifier = [t_plist objectForKey: @"CFBundleIdentifier"];
 	
-	return MCStringCreateWithCString([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding], r_identifier);
+	return MCStringCreateWithCFString((CFStringRef)t_identifier, r_identifier);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

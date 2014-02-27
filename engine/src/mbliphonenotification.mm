@@ -119,9 +119,9 @@ bool MCSystemGetNotificationDetails(int32_t p_id, MCNotification &r_notification
         UILocalNotification* t_local_notification = [t_scheduled_local_notifications objectAtIndex:i];
         if (atoi ([[t_local_notification.userInfo objectForKey:@"notificationId"] cStringUsingEncoding:NSMacOSRomanStringEncoding]) == p_id) 
         {
-            MCStringCreateWithCString ([[t_local_notification alertBody] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_notification.body); // or ""
-            MCStringCreateWithCString ([[t_local_notification alertAction] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_notification.action); // or ""
-            MCStringCreateWithCString ([[t_local_notification.userInfo objectForKey:@"payload"] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_notification.user_info);
+            MCStringCreateWithCFString ((CFStringRef)[t_local_notification alertBody], r_notification.body); // or ""
+            MCStringCreateWithCFString ((CFStringRef)[t_local_notification alertAction], r_notification.action); // or ""
+            MCStringCreateWithCFString ((CFStringRef)[t_local_notification.userInfo objectForKey:@"payload"], r_notification.user_info);
             r_notification.time = [[t_local_notification fireDate] timeIntervalSince1970];
             r_notification.badge_value = t_local_notification.applicationIconBadgeNumber;
             r_notification.play_sound = t_local_notification.soundName != nil ? true : false;
