@@ -407,10 +407,10 @@ static bool bidiPrevISRCharClass(uint8_t *classes, level_run*& x_run, uindex_t& 
         return false;
     
     // Ignore BNs
-    if (classes[x_index-1] == kMCUnicodeDirectionBoundaryNeutral)
-        return bidiPrevISRCharClass(classes, x_run, --x_index, r_class);
+    if (classes[--x_index] == kMCUnicodeDirectionBoundaryNeutral)
+        return bidiPrevISRCharClass(classes, x_run, x_index, r_class);
     
-    return classes[x_index-1];
+    return classes[x_index];
 }
 
 static uint8_t bidiPeekPrevISRCharClass(uint8_t *classes, uint8_t alternative, level_run* p_run, uindex_t p_index)
@@ -445,8 +445,6 @@ static void bidiApplyRuleW1(isolating_run_sequence& irs, uint8_t *classes)
                 classes[t_index] = t_before;
             }
         }
-        
-        t_index++;
     }
 }
 
@@ -468,7 +466,6 @@ static void bidiApplyRuleW2(isolating_run_sequence& irs, uint8_t *classes)
             do
             {
                 t_valid = bidiPrevISRCharClass(classes, t_run_b, t_index_b, t_strong);
-                t_index_b--;
             }
             while (t_valid
                      && t_strong != kMCUnicodeDirectionRightToLeft
@@ -481,8 +478,6 @@ static void bidiApplyRuleW2(isolating_run_sequence& irs, uint8_t *classes)
             if (t_strong == kMCUnicodeDirectionRightToLeftArabic)
                 classes[t_index] = kMCUnicodeDirectionArabicNumber;
         }
-        
-        t_index++;
     }
 }
 
@@ -497,7 +492,6 @@ static void bidiApplyRuleW3(isolating_run_sequence& irs, uint8_t *classes)
     {
         if (t_class == kMCUnicodeDirectionRightToLeftArabic)
             classes[t_index] = kMCUnicodeDirectionRightToLeft;
-        t_index++;
     }
 }
 
@@ -541,7 +535,6 @@ static void bidiApplyRuleW4(isolating_run_sequence& irs, uint8_t *classes)
         }
         
         t_prev_class = t_class;
-        t_index++;
     }
 }
 
@@ -565,7 +558,6 @@ static void bidiApplyRuleW5(isolating_run_sequence& irs, uint8_t *classes)
             else
                 t_in_en = false;
             
-            t_index++;
         }
         else if (t_class == kMCUnicodeDirectionEuropeanNumberTerminator)
         {
@@ -588,10 +580,6 @@ static void bidiApplyRuleW5(isolating_run_sequence& irs, uint8_t *classes)
                 }
             }
         }
-        else
-        {
-            t_index++;
-        }
     }
 }
 
@@ -612,8 +600,6 @@ static void bidiApplyRuleW6(isolating_run_sequence& irs, uint8_t *classes)
                 classes[t_index] = kMCUnicodeDirectionOtherNeutral;
                 break;
         }
-        
-        t_index++;
     }
 }
 
@@ -648,8 +634,6 @@ static void bidiApplyRuleW7(isolating_run_sequence& irs, uint8_t *classes)
             if (t_strong == kMCUnicodeDirectionLeftToRight)
                 classes[t_index] = kMCUnicodeDirectionLeftToRight;
         }
-        
-        t_index++;
     }
 }
 
@@ -710,7 +694,6 @@ static void bidiApplyRuleN1(isolating_run_sequence& irs, uint8_t *classes, uint8
             do
             {
                 t_valid = bidiPrevISRCharClass(classes, t_run_temp, t_index_temp, t_strong_before);
-                t_index_temp--;
             }
             while (t_valid && bidiIsNI(t_strong_before));
             
@@ -731,7 +714,6 @@ static void bidiApplyRuleN1(isolating_run_sequence& irs, uint8_t *classes, uint8
             do
             {
                 t_valid = bidiPrevISRCharClass(classes, t_run_temp, t_index_temp, t_strong_after);
-                t_index_temp--;
             }
             while (t_valid && bidiIsNI(t_strong_after));
             
@@ -760,10 +742,6 @@ static void bidiApplyRuleN1(isolating_run_sequence& irs, uint8_t *classes, uint8
             
             t_index = t_after_index + 1;
         }
-        else
-        {
-            t_index++;
-        }
     }
 }
 
@@ -783,8 +761,6 @@ static void bidiApplyRuleN2(isolating_run_sequence& irs, uint8_t *classes, uint8
             else
                 classes[t_index] = kMCUnicodeDirectionLeftToRight;
         }
-        
-        t_index++;
     }
 }
 
@@ -805,8 +781,6 @@ static void bidiApplyRuleI1(isolating_run_sequence& irs, uint8_t *classes, uint8
                      || t_class == kMCUnicodeDirectionEuropeanNumber)
                 levels[t_index] += 2;
         }
-        
-        t_index++;
     }
 }
 
@@ -826,8 +800,6 @@ static void bidiApplyRuleI2(isolating_run_sequence& irs, uint8_t *classes, uint8
                || t_class == kMCUnicodeDirectionArabicNumber)
                levels[t_index] += 1;
         }
-        
-        t_index++;
     }
 }
 
