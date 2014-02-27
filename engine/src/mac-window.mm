@@ -592,10 +592,8 @@ static bool s_lock_responder_change = false;
 	if (m_input_method_event != nil)
 	{
 		MCPlatformWindowRef t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
-		MCPlatformRetainWindow(t_window);
 		[self handleKeyPress: m_input_method_event isDown: YES];
 		[self handleKeyPress: m_input_method_event isDown: NO];
-		MCPlatformReleaseWindow(t_window);
 	}
 	else
 	{

@@ -228,6 +228,10 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformWindowDeathGrip(MCPlatformWindowRef window);
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCPlatformCallbackSendApplicationStartup(int argc, char **argv, char **envp, int& r_error_code, char*& r_error_message);
 void MCPlatformCallbackSendApplicationShutdown(int& r_exit_code);
 void MCPlatformCallbackSendApplicationShutdownRequest(bool& r_terminate);

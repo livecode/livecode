@@ -487,6 +487,58 @@ void MCMacPlatformScheduleCallback(void (*p_callback)(void *), void *p_context)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef void (*MCPlatformDeathGripFreeCallback)(void *);
+
+@interface com_runrev_livecode_MCPlatformDeathGrip: NSObject
+{
+	void *m_pointer;
+	MCPlatformDeathGripFreeCallback m_free;
+}
+
+- (id)initWithPointer: (void *)pointer freeWith: (MCPlatformDeathGripFreeCallback)free;
+- (void)dealloc;
+
+@end
+
+@implementation com_runrev_livecode_MCPlatformDeathGrip
+
+- (id)initWithPointer: (void *)pointer freeWith: (MCPlatformDeathGripFreeCallback)free
+{
+	self = [super init];
+	if (self == nil)
+		return nil;
+	
+	m_pointer = pointer;
+	m_free = free;
+
+	return self;
+}
+
+- (void)dealloc
+{
+	m_free(m_pointer);
+	[super dealloc];
+}
+
+@end
+
+// When an event is dispatched to high-level it is possible for the main object
+// to which it refers to be deleted. This can cause problems in the cocoa event
+// handling chain. A deathgrip lasts for the scope of the current autorelease
+// pool - so means such objects won't get completely destroyed until after event
+// handling has completed.
+void MCPlatformWindowDeathGrip(MCPlatformWindowRef p_window)
+{
+	// Retain the window.
+	MCPlatformRetainWindow(p_window);
+	
+	// Now push an autorelease object onto the stack that will release the object
+	// after event dispatch.
+	[[[com_runrev_livecode_MCPlatformDeathGrip alloc] initWithPointer: p_window freeWith: (MCPlatformDeathGripFreeCallback)MCPlatformReleaseWindow] autorelease];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // These tables are taken from the Carbon implementation - as keysDown takes into
 // account shift states. I'm not sure this is entirely correct, but we must keep
 // backwards compat.
