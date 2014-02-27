@@ -2227,26 +2227,31 @@ void MCFilesSetCurrentFolder(MCExecContext& ctxt, MCStringRef p_value)
 void MCFilesGetEngineFolder(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	/* UNCHECKED */ MCS_getspecialfolder(MCN_engine, r_value);
+	ctxt . SetTheResultToEmpty();
 }
 
 void MCFilesGetHomeFolder(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	/* UNCHECKED */ MCS_getspecialfolder(MCN_home, r_value);
+	ctxt . SetTheResultToEmpty();
 }
 
 void MCFilesGetDocumentsFolder(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	/* UNCHECKED */ MCS_getspecialfolder(MCN_documents, r_value);
+	ctxt . SetTheResultToEmpty();
 }
 
 void MCFilesGetDesktopFolder(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	/* UNCHECKED */ MCS_getspecialfolder(MCN_desktop, r_value);
+	ctxt . SetTheResultToEmpty();
 }
 
 void MCFilesGetTemporaryFolder(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	/* UNCHECKED */ MCS_getspecialfolder(MCN_temporary, r_value);
+	ctxt . SetTheResultToEmpty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

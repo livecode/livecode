@@ -521,22 +521,6 @@ static DWORD readThread(Streamnode *process)
 
 //////////////////////////////////////////////////////////////////////////////////
 
-// OK-2009-01-28: [[Bug 7452]] - SpecialFolderPath not working with redirected My Documents folder on Windows.
-bool MCS_getlongfilepath(MCStringRef p_short_path, MCStringRef& r_long_path)
-{
-	// If the path conversion was not succesful, then
-	// we revert back to using the original path.
-	MCAutoStringRef t_long_path;
-	if (MCS_longfilepath(p_short_path, &t_long_path) && MCStringGetLength(*t_long_path) > 0)
-	{
-		r_long_path = MCValueRetain(*t_long_path);
-		return true;
-	}
-
-	r_long_path = MCValueRetain(p_short_path);
-	return true;
-}
-
 bool MCS_getcurdir_native(MCStringRef& r_path)
 {
 	// NOTE:
@@ -2658,6 +2642,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             MCAutoArray<unichar_t> t_buffer;
             uindex_t t_length;
             t_length = GetTempPathW(0, NULL);
+
             if (t_length != 0)
             {
                 if (!t_buffer.New(t_length))
@@ -2712,17 +2697,14 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             }
         }
         if (t_wasfound)
-        {
-            MCAutoStringRef t_standard_path;
-            // TS-2008-06-16: [[ Bug 6403 ]] - specialFolderPath() returns 8.3 paths
-            // First we need to swap to standard path seperator
-			if (!MCS_pathfromnative(*t_native_path, &t_standard_path))
-                return false;
-            
+        {            
             // OK-2009-01-28: [[Bug 7452]]
             // And call the function to expand the path - if cannot convert to a longfile path,
             // we should return what we already had!
-            return MCS_getlongfilepath(*t_standard_path, r_folder);
+			if (!LongFilePath(*t_native_path, r_folder))
+				return MCStringCopy(*t_native_path, r_folder);
+
+			return true;
         }
         else
         {
@@ -3667,6 +3649,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			MCS_seterrno(GetLastError());
 			return false;
 		}
+
+		// The new way the longpath is built leaves the terminating backslash
+		char t_bdag = (char)t_buffer[t_result - 1];
+		if (t_buffer[t_result - 1] == '\\')
+			--t_result;
 
 		return MCStringCreateWithChars(t_buffer.Ptr(), t_result, r_long_path);
     }
