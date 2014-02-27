@@ -752,42 +752,43 @@ void MCFilesExecRename(MCExecContext& ctxt, MCStringRef p_from, MCStringRef p_to
 
 void MCFilesExecLaunchUrl(MCExecContext& ctxt, MCStringRef p_url)
 {
-	// MW-2008-04-02: [[ Bug 6306 ]] Make sure we escape invalid URL characters to save
-	//   the user having to do so.
-	MCAutoStringRef t_mutable_string;
-	/* UNCHECKED */ MCStringCreateMutable(0, &t_mutable_string);
-    uindex_t t_index = 0;
-    while (t_index != MCStringGetLength((p_url)))
-	{
-		// MW-2008-08-14: [[ Bug 6898 ]] Interpreting this as a signed char causes sprintf
-		//   to produce bad results.
+    MCAutoStringRef t_new_url;
+    // Ensure we aren't asked for a file
+    if (!MCStringBeginsWithCString(p_url, (const char_t*)"file:", kMCStringOptionCompareCaseless))
+    {
+        // MW-2008-04-02: [[ Bug 6306 ]] Make sure we escape invalid URL characters to save
+        //   the user having to do so.
+        MCAutoStringRef t_mutable_string;
+        /* UNCHECKED */ MCStringCreateMutable(0, &t_mutable_string);
+        uindex_t t_index = 0;
+        while (t_index != MCStringGetLength((p_url)))
+        {
+            // MW-2008-08-14: [[ Bug 6898 ]] Interpreting this as a signed char causes sprintf
+            //   to produce bad results.
 
-		unsigned char t_char;
-		t_char = MCStringGetNativeCharAtIndex(p_url, t_index);
+            unsigned char t_char;
+            t_char = MCStringGetNativeCharAtIndex(p_url, t_index);
 
-		// MW-2008-06-12: [[ Bug 6446 ]] We must not escape '#' because this breaks URL
-		//   anchors.
-		if (t_char < 128 && (isalnum(t_char) || strchr("$-_.+!*'%(),;/?:@&=#", t_char) != NULL))
-			/* UNCHECKED */ MCStringAppendNativeChar(*t_mutable_string, t_char); 
-		else
-			MCStringAppendFormat(*t_mutable_string, "%%%02X", t_char); 
-			//t_new_ep . appendstringf("%%%02X", t_char);
+            // MW-2008-06-12: [[ Bug 6446 ]] We must not escape '#' because this breaks URL
+            //   anchors.
+            if (t_char < 128 && (isalnum(t_char) || strchr("$-_.+!*'%(),;/?:@&=#", t_char) != NULL))
+                /* UNCHECKED */ MCStringAppendNativeChar(*t_mutable_string, t_char);
+            else
+                MCStringAppendFormat(*t_mutable_string, "%%%02X", t_char);
+            //t_new_ep . appendstringf("%%%02X", t_char);
 
-		t_index += 1;
-	}
+            t_index += 1;
+        }
 
-	MCStringRef t_new_url;
-	t_new_url = MCValueRetain(*t_mutable_string);
+        t_new_url = *t_mutable_string;
+    }
+    else
+        t_new_url = p_url;
 
-	if (ctxt . EnsureProcessIsAllowed())
-	{
-		MCS_launch_url(t_new_url);
-		MCValueRelease(t_new_url);
-		return;
-	}
-
-	MCValueRelease(t_new_url);
-	ctxt . LegacyThrow(EE_PROCESS_NOPERM);
+    if (ctxt . EnsureProcessIsAllowed())
+        MCS_launch_url(*t_new_url);
+    else
+        ctxt . LegacyThrow(EE_PROCESS_NOPERM);
 }
 
 void MCFilesExecLaunchDocument(MCExecContext& ctxt, MCStringRef p_document)
