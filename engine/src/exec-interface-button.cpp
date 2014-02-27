@@ -144,7 +144,7 @@ static MCExecSetTypeElementInfo _kMCInterfaceButtonAcceleratorModifiersElementIn
 {
 	{ MCshiftstring, kMCButtonAcceleratorShiftBit },
 #ifdef _MAC_DESKTOP
-	{ MCcommandstring, kMCButtonAcceleratorMacControlBit },
+	{ MCcommandstring, kMCButtonAcceleratorControlBit },
 	{ MCcontrolstring, kMCButtonAcceleratorMacControlBit },
 #else
 	{ MCcontrolstring, kMCButtonAcceleratorControlBit },
