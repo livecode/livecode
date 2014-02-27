@@ -3230,8 +3230,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		}
         
         MCAutoStringRef t_tmp_name;
-        if (!MCStringMutableCopy(*t_long_path, &t_tmp_name) &&
-			MCStringAppendFormat(*t_tmp_name, "/%s", t_ptr + 1))
+        if (!MCStringMutableCopy(*t_long_path, &t_tmp_name) ||
+			!MCStringAppendFormat(*t_tmp_name, "/%s", t_ptr + 1))
 			return false;
 	
 		MCStringCopy(*t_tmp_name, r_tmp_name);
