@@ -1141,7 +1141,7 @@ static bool s_lock_responder_change = false;
 //////////
 
 - (void)drawRect: (NSRect)dirtyRect
-{
+{	
 	MCMacPlatformWindow *t_window;
 	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
 	
@@ -1156,7 +1156,7 @@ static bool s_lock_responder_change = false;
 	/* UNCHECKED */ MCRegionCreate(t_update_rgn);
 	for(NSInteger i = 0; i < t_update_rect_count; i++)
 		/* UNCHECKED */ MCRegionIncludeRect(t_update_rgn, [self mapNSRectToMCRectangle: t_update_rects[i]]);
-	
+
 	//////////
 	
 	// Save the context state

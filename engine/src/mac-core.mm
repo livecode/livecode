@@ -952,6 +952,9 @@ void MCMacPlatformWindowHiding(MCMacPlatformWindow *p_window)
 // switching active window until ungrabbed.
 static bool s_mouse_grabbed = false;
 
+// If this is true there was an explicit request for grabbing.
+static bool s_mouse_grabbed_explicit = false;
+
 // This is the currently active window (the one receiving mouse events).
 static MCPlatformWindowRef s_mouse_window = nil;
 
@@ -996,12 +999,16 @@ void MCPlatformGrabPointer(MCPlatformWindowRef p_window)
 {
 	// If we are grabbing for the given window already, do nothing.
 	if (s_mouse_grabbed && p_window == s_mouse_window)
+	{
+		s_mouse_grabbed_explicit = true;
 		return;
+	}
 	
 	// If the mouse window is already w, then just grab.
 	if (p_window == s_mouse_window)
 	{
 		s_mouse_grabbed = true;
+		s_mouse_grabbed_explicit = true;
 		return;
 	}
 	
@@ -1018,6 +1025,7 @@ void MCPlatformUngrabPointer(void)
 	
 	// Otherwise just turn off the grabbed flag.
 	s_mouse_grabbed = false;
+	s_mouse_grabbed_explicit = false;
 }
 
 void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
@@ -1039,11 +1047,16 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
 	else
 		s_mouse_buttons &= ~(1 << p_button);
 	
+	// Record whether it was an explicit grab.
+	bool t_grabbed_explicit;
+	t_grabbed_explicit = s_mouse_grabbed_explicit;
+	
 	// If we are grabbed, and mouse buttons are zero, then ungrab.
 	// If mouse buttons are zero, then reset the drag button.
 	if (s_mouse_buttons == 0)
 	{
 		s_mouse_grabbed = false;
+		s_mouse_grabbed_explicit = false;
 		s_mouse_drag_button = 0xffffffff;
 	}
 		
@@ -1101,7 +1114,8 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
 		
 		s_mouse_was_control_click = false;
 		
-		if (t_new_mouse_window == s_mouse_window)
+		// If the mouse was grabbed explicitly, we send mouseUp not mouseRelease.
+		if (t_new_mouse_window == s_mouse_window || t_grabbed_explicit)
 		{
 			// If this is the same button as the last mouseDown, then
 			// update the click time.
