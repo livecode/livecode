@@ -3053,5 +3053,5 @@ MCRectangle MCStack::getwindowrect(void) const
 void MCStack::constrain(MCPoint p_size, MCPoint& r_new_size)
 {
 	r_new_size . x = MCMax(minwidth, MCMin(maxwidth, p_size . x));
-	r_new_size . y = MCMax(minwidth, MCMin(maxheight, p_size . y));
+	r_new_size . y = MCMax(minheight, MCMin(maxheight, p_size . y));
 }
