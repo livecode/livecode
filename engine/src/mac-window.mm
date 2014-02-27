@@ -1020,7 +1020,7 @@ static bool s_lock_responder_change = false;
 
 - (NSDragOperation)draggingSourceOperationMaskForLocal: (BOOL)isLocal
 {
-	return NSDragOperationNone;
+	return m_allowed_drag_operations;
 }
 
 - (BOOL)ignoreModifierKeysWhileDragging
@@ -1056,6 +1056,8 @@ static bool s_lock_responder_change = false;
 	t_image_loc . y = [t_mouse_event locationInWindow] . y - ([image size] . height - offset . height);
 	
 	NSLog(@"Drag image start");
+	
+	m_allowed_drag_operations = operations;
 	
 	[self dragImage: image
 				at: t_image_loc 

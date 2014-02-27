@@ -118,6 +118,7 @@ class MCMacPlatformSurface;
 	NSTrackingArea *m_tracking_area;
 	NSEvent *m_input_method_event;
 	bool m_use_input_method : 1;
+	NSDragOperation m_allowed_drag_operations;
 }
 
 - (id)initWithFrame:(NSRect)frameRect;

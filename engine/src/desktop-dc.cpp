@@ -970,27 +970,24 @@ static struct { MCTransferType type; MCPlatformPasteboardFlavor flavor; MCShared
 	{ TRANSFER_TYPE_OBJECTS, kMCPlatformPasteboardFlavorObjects, MCConvertIdentity },
 };
 
-static bool fetch_clipboard(MCPlatformPasteboardFlavor p_flavor, void*& r_data, size_t& r_data_size)
+static bool fetch_pasteboard(MCPasteboard *p_pasteboard, MCPlatformPasteboardFlavor p_flavor, void*& r_data, size_t& r_data_size)
 {
-	if (s_local_clipboard == nil)
-		return false;
-		
 	MCTransferType *t_types;
 	uindex_t t_type_count;
-	if (!s_local_clipboard -> Query(t_types, t_type_count))
+	if (!p_pasteboard -> Query(t_types, t_type_count))
 		return false;
-
+	
 	for(uindex_t i = 0; i < sizeof(s_pasteboard_fetchers) / sizeof(s_pasteboard_fetchers[0]); i++)
 		for(uindex_t j = 0; j < t_type_count; j++)
 			if (s_pasteboard_fetchers[i] . type == t_types[j] && s_pasteboard_fetchers[i] . flavor == p_flavor)
 			{
 				MCSharedString *t_data;
-				if (!s_local_clipboard -> Fetch(t_types[j], t_data))
+				if (!p_pasteboard -> Fetch(t_types[j], t_data))
 					return false;
-					
+				
 				bool t_success;
 				t_success = false;
-	
+				
 				MCSharedString *t_new_data;
 				t_new_data = s_pasteboard_fetchers[i] . convert(t_data);
 				if (t_new_data != nil)
@@ -1009,6 +1006,14 @@ static bool fetch_clipboard(MCPlatformPasteboardFlavor p_flavor, void*& r_data, 
 			}
 	
 	return true;
+}
+
+static bool fetch_clipboard(MCPlatformPasteboardFlavor p_flavor, void*& r_data, size_t& r_data_size)
+{
+	if (s_local_clipboard == nil)
+		return false;
+	
+	return fetch_pasteboard(s_local_clipboard, p_flavor, r_data, r_data_size);
 }
 
 void MCScreenDC::flushclipboard(void)
@@ -1143,8 +1148,83 @@ MCScriptEnvironment *MCScreenDC::createscriptenvironment(const char *p_language)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCPasteboard *s_local_dragboard = nil;
+
+static bool fetch_dragboard(MCPlatformPasteboardFlavor p_flavor, void*& r_data, size_t& r_data_size)
+{
+	if (s_local_dragboard == nil)
+		return false;
+	
+	return fetch_pasteboard(s_local_dragboard, p_flavor, r_data, r_data_size);
+}
+
 MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
 {
+	/////////
+	
+	MCPlatformPasteboardRef t_dragboard;
+	MCPlatformGetDragboard(t_dragboard);
+	
+	MCPlatformPasteboardClear(t_dragboard);
+	
+	// COCOA-TODO: Duplicate code - needs refactored along with code in setclipboard().
+	
+	MCTransferType *t_types;
+	uindex_t t_type_count;
+	if (!p_pasteboard -> Query(t_types, t_type_count))
+	{
+		t_type_count = 0;
+		t_types = nil;
+	}
+	
+	s_local_dragboard = p_pasteboard;
+	
+	for(uindex_t i = 0; i < t_type_count; i++)
+	{
+		MCPlatformPasteboardFlavor t_flavors[2];
+		uindex_t t_flavor_count;
+		t_flavor_count = 0;
+		
+		switch(t_types[i])
+		{
+			case TRANSFER_TYPE_TEXT:
+			case TRANSFER_TYPE_UNICODE_TEXT:
+				t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorUTF8;
+				break;
+			case TRANSFER_TYPE_STYLED_TEXT:
+				t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorRTF;
+				t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorUTF8;
+				break;
+			case TRANSFER_TYPE_IMAGE:
+			{
+				MCSharedString *t_data;
+				if (p_pasteboard -> Fetch(TRANSFER_TYPE_IMAGE, t_data))
+				{
+					if (MCFormatImageIsPNG(t_data))
+						t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorPNG;
+					if (MCFormatImageIsGIF(t_data))
+						t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorGIF;
+					if (MCFormatImageIsJPEG(t_data))
+						t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorJPEG;
+				}
+			}
+				break;
+			case TRANSFER_TYPE_FILES:
+				t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorFiles;
+				break;
+			case TRANSFER_TYPE_OBJECTS:
+				t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorObjects;
+				break;
+			case TRANSFER_TYPE_PRIVATE:
+				break;
+		}
+		
+		if (t_flavor_count != 0)
+			MCPlatformPasteboardStore(t_dragboard, t_flavors, t_flavor_count, (void *)fetch_dragboard);
+	}
+	
+	/////////
+	
 	MCPlatformAllowedDragOperations t_operations;
 	t_operations = kMCPlatformDragOperationNone;
 	if ((p_allowed_actions & DRAG_ACTION_COPY) != 0)
@@ -1169,6 +1249,10 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
 	
 	MCImageFreeBitmap(t_image_bitmap);
 	
+	MCPlatformPasteboardRelease(t_dragboard);
+	
+	s_local_dragboard = nil;
+	
 	MCDragAction t_action;
 	switch(t_op)
 	{
@@ -1185,6 +1269,7 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
 			t_action = DRAG_ACTION_MOVE;
 			break;
 	}
+	
 	return t_action;
 }
 
