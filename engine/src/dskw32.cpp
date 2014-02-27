@@ -3634,8 +3634,14 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         ep.setstrlen();
         delete shortpath;
 #endif /* MCS_longfilepath_dsk_w32 */
+		// The path given to longfilepath can't be already resolved - as it remains the same
+		// for UNIX-based OS, resolving it's not done in the MCS_* function like usual
+		MCAutoStringRef t_resolved_path;
+		if (!ResolveNativePath(p_path, &t_resolved_path))
+			return false;
+
 		MCAutoStringRefAsWString t_short_wstr;
-		if (!t_short_wstr.Lock(p_path))
+		if (!t_short_wstr.Lock(*t_resolved_path))
 			return false;
 
 		// Retrieve the length of the long file name
@@ -3662,11 +3668,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			return false;
 		}
 
-		MCAutoStringRef t_long_path;
-		if (!MCStringCreateWithChars(t_buffer.Ptr(), t_result, &t_long_path))
-			return false;
-
-		return MCS_pathfromnative(*t_long_path, r_long_path);
+		return MCStringCreateWithChars(t_buffer.Ptr(), t_result, r_long_path);
     }
     
 	virtual bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path)
@@ -3688,8 +3690,14 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         }
         delete newpath;
 #endif /* MCS_shortfilepath_dsk_w32 */
+		// The path given to shortfilepath can't be already resolved - as it remains the same
+		// for UNIX-based OS, resolving it's not done in the MCS_* function like usual
+		MCAutoStringRef t_resolved_path;
+		if (!ResolveNativePath(p_path, &t_resolved_path))
+			return false;
+
 		MCAutoStringRefAsWString t_long_wstr;
-		if (!t_long_wstr.Lock(p_path))
+		if (!t_long_wstr.Lock(*t_resolved_path))
 			return false;
 
 		// How long is the short path?
