@@ -410,7 +410,8 @@ static bool bidiPrevISRCharClass(uint8_t *classes, level_run*& x_run, uindex_t& 
     if (classes[--x_index] == kMCUnicodeDirectionBoundaryNeutral)
         return bidiPrevISRCharClass(classes, x_run, x_index, r_class);
     
-    return classes[x_index];
+    r_class = classes[x_index];
+    return true;
 }
 
 static uint8_t bidiPeekPrevISRCharClass(uint8_t *classes, uint8_t alternative, level_run* p_run, uindex_t p_index)
@@ -647,7 +648,7 @@ static bool bidiIsNI(uint8_t p_class)
         case kMCUnicodeDirectionOtherNeutral:
         case kMCUnicodeDirectionFirstStrongIsolate:
         case kMCUnicodeDirectionLeftToRightIsolate:
-        case kMCUnicodeDirectionRightToLeft:
+        case kMCUnicodeDirectionRightToLeftIsolate:
         case kMCUnicodeDirectionPopDirectionalIsolate:
             return true;
     }
@@ -713,7 +714,7 @@ static void bidiApplyRuleN1(isolating_run_sequence& irs, uint8_t *classes, uint8
             t_run_temp = t_run;
             do
             {
-                t_valid = bidiPrevISRCharClass(classes, t_run_temp, t_index_temp, t_strong_after);
+                t_valid = bidiNextISRCharClass(classes, t_run_temp, t_index_temp, t_strong_after);
             }
             while (t_valid && bidiIsNI(t_strong_after));
             
