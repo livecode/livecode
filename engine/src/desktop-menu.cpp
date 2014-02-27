@@ -936,7 +936,10 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 	if (t_current_menu != nil)
 	{
 		if (s_menubar_targets[t_current_menu_index] -> Exists())
+		{
+			((MCButton *)s_menubar_targets[t_current_menu_index] -> Get()) -> setmenuhistoryprop(t_last_menu_index + 1);
 			s_menubar_targets[t_current_menu_index] -> Get() -> message_with_args(MCM_menu_pick, ep . getsvalue());
+		}
 	}
 	else
 	{
