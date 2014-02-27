@@ -255,7 +255,15 @@ bool MCExecContext::ConvertToNumberOrArray(MCExecValue& x_value)
     {
         double t_real;
         if (!ConvertToReal(x_value . valueref_value, t_real))
-            return false;
+        {
+            MCAutoArrayRef t_array;
+            if (!ConvertToArray(x_value . valueref_value, &t_array))
+                return false;
+            
+            MCValueRelease(x_value . valueref_value);
+            MCExecValueTraits<MCArrayRef>::set(x_value, *t_array);
+            return true;
+        }
 
         MCValueRelease(x_value . valueref_value);
         MCExecValueTraits<double>::set(x_value, t_real);
