@@ -1935,13 +1935,14 @@ void MCFilesExecReadFromFileOrDriverUntil(MCExecContext& ctxt, bool p_driver, bo
 	if (MCStringGetLength(p_sentinel) == 1 && MCStringGetNativeCharAtIndex(p_sentinel, 0) == '\004')
 	{
 		MCAutoDataRef t_data;
-		t_stat = IO_read_to_eof(t_stream, &t_data);
-        
-        if (t_stat == IO_EOF)
-            t_stat = IO_NORMAL;
+        t_stat = IO_read_to_eof(t_stream, &t_data);
 
-        if (t_stat == IO_NORMAL && !MCStringCreateWithBytes(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), MCS_file_to_string_encoding(t_encoding), false, &t_output))
-            t_stat = IO_ERROR;
+        if (t_stat == IO_NORMAL)
+        {
+            t_stat = IO_EOF;
+            if (!MCStringCreateWithBytes(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), MCS_file_to_string_encoding(t_encoding), false, &t_output))
+                t_stat = IO_ERROR;
+        }
 	}
     else
     {
