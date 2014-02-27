@@ -84,14 +84,19 @@ static CGFloat s_primary_screen_height = 0.0f;
 }
 
 - (void)applicationDidFinishLaunching: (NSNotification *)notification
-{
+{	
 	// Initialize everything.
 	[self initializeModules];
+	
+	NSAutoreleasePool *t_pool;
+	t_pool = [[NSAutoreleasePool alloc] init];
 	
 	// Dispatch the startup callback.
 	int t_error_code;
 	char *t_error_message;
 	MCPlatformCallbackSendApplicationStartup(m_argc, m_argv, m_envp, t_error_code, t_error_message);
+	
+	[t_pool release];
 	
 	// If the error code is non-zero, startup failed so quit.
 	if (t_error_code != 0)

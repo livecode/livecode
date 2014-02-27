@@ -433,6 +433,8 @@ void MCPlatformAddMenuItem(MCPlatformMenuRef p_menu, uindex_t p_where)
 	
 	// Insert the item in the menu.
 	[p_menu -> menu insertItem: t_item atIndex: p_where];
+	
+	[t_item release];
 }
 
 void MCPlatformAddMenuSeparatorItem(MCPlatformMenuRef p_menu, uindex_t p_where)

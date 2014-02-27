@@ -152,7 +152,7 @@ void MCPlatformPlayer::Attach(MCPlatformWindowRef p_window)
 	if (m_window != nil)
 		Detach();
 	
-	NSLog(@"Do attach %p", this);
+	NSLog(@"Do attach %p to %p", this, p_window);
 	
 	m_window = p_window;
 	MCPlatformRetainWindow(m_window);
@@ -165,7 +165,7 @@ void MCPlatformPlayer::Detach(void)
 	if (m_window == nil)
 		return;
 	
-	NSLog(@"Do detch %p", this);
+	NSLog(@"Do detach %p from %p", this, m_window);
 	
 	m_window -> DetachObject(this);
 	
@@ -262,8 +262,6 @@ void MCQTKitPlayer::Realize(void)
 	if (m_offscreen || m_window == nil)
 		return;
 	
-	NSLog(@"Realize movie view");
-	
 	MCMacPlatformWindow *t_window;
 	t_window = (MCMacPlatformWindow *)m_window;
 	
@@ -271,6 +269,8 @@ void MCQTKitPlayer::Realize(void)
 	t_parent_view = t_window -> GetView();
 	
 	m_view = [[QTMovieView alloc] initWithFrame: NSZeroRect];
+	
+	NSLog(@"Realize movie view %p", m_view);
 	
 	[t_parent_view addSubview: m_view];
 	
@@ -282,7 +282,7 @@ void MCQTKitPlayer::Unrealize(void)
 	if (m_offscreen || m_window == nil)
 		return;
 	
-	NSLog(@"Unrealize movie view");
+	NSLog(@"Unrealize movie view %p", m_view);
 	
 	MCMacPlatformWindow *t_window;
 	t_window = (MCMacPlatformWindow *)m_window;

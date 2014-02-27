@@ -249,7 +249,9 @@ static bool s_lock_responder_change = false;
 
 - (MCMacPlatformWindow *)platformWindow
 {
-	return [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	MCWindowDelegate *t_delegate;
+	t_delegate = (MCWindowDelegate *)[[self window] delegate];
+	return [t_delegate platformWindow];
 }
 
 /////////
@@ -541,12 +543,22 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)useTextInput
 {
-	return [(MCWindowDelegate *)[[self window] delegate] platformWindow] -> IsTextInputActive();
+	MCMacPlatformWindow *t_window;
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return NO;
+	
+	return t_window -> IsTextInputActive();
 }
 
 - (void)insertText:(id)aString replacementRange:(NSRange)replacementRange
 {
 	NSLog(@"insertText('%@', (%d, %d))", aString, replacementRange . location, replacementRange . length);
+	
+	MCMacPlatformWindow *t_window;
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return;
 	
 	// It seems that if replacementRange is NSNotFound then we should
 	// take the marked range if any, otherwise take the selected range.
@@ -576,7 +588,7 @@ static bool s_lock_responder_change = false;
 	
 	// Insert the text replacing the given range and setting the selection after
 	// it... (It isn't clear what should - if anything - be selected after insert!).
-	MCPlatformCallbackSendTextInputInsertText([self platformWindow],
+	MCPlatformCallbackSendTextInputInsertText(t_window,
 											  t_chars, t_length,
 											  MCRangeMake(replacementRange . location, replacementRange . length),
 											  MCRangeMake(replacementRange . location + t_length, 0),
@@ -635,11 +647,15 @@ static bool s_lock_responder_change = false;
 {
 	MCLog("doCommandBySelector:", 0);
 	
+	MCMacPlatformWindow *t_window;
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return;
+	
 	// If the event came about as a result of a keyDown input method event
 	// then process the key directly.
 	if (m_input_method_event != nil)
 	{
-		MCPlatformWindowRef t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
 		[self handleKeyPress: m_input_method_event isDown: YES];
 		[self handleKeyPress: m_input_method_event isDown: NO];
 	}
@@ -660,12 +676,17 @@ static bool s_lock_responder_change = false;
 {
 	NSLog(@"setMarkedText('%@', (%d, %d), (%d, %d)", aString, newSelection . location, newSelection . length, replacementRange . location, replacementRange . length);
 	
+	MCMacPlatformWindow *t_window;
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return;
+	
 	// It seems that if replacementRange is NSNotFound then we should
 	// take the marked range if any, otherwise take the selected range.
 	if (replacementRange . location == NSNotFound)
 	{
 		MCRange t_marked_range, t_selected_range;
-		MCPlatformCallbackSendTextInputQueryTextRanges([self platformWindow], t_marked_range, t_selected_range);
+		MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
 		if (t_marked_range . offset != UINDEX_MAX)
 			replacementRange = NSMakeRange(t_marked_range . offset, t_marked_range . length);
 		else
@@ -686,7 +707,7 @@ static bool s_lock_responder_change = false;
 	
 	[t_string getCharacters: t_chars range: NSMakeRange(0, t_length)];
 
-	MCPlatformCallbackSendTextInputInsertText([self platformWindow],
+	MCPlatformCallbackSendTextInputInsertText(t_window,
 											  t_chars, t_length,
 											  MCRangeMake(replacementRange . location, replacementRange . length),
 											  MCRangeMake(replacementRange . location + newSelection . location, newSelection . length),
@@ -751,13 +772,18 @@ static bool s_lock_responder_change = false;
 {
 	MCLog("unmarkText", 0);
 	
+	MCMacPlatformWindow *t_window;
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return;
+	
 	// This is the 'commit' operation, any marked text currently in the buffer should be accepted.
 	// We do this by inserting an empty string, leaving the current selection untouched.
 	
 	MCRange t_marked_range, t_selected_range;
-	MCPlatformCallbackSendTextInputQueryTextRanges([self platformWindow], t_marked_range, t_selected_range);
+	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
 	
-	MCPlatformCallbackSendTextInputInsertText([self platformWindow], nil, 0, MCRangeMake(0, 0), t_selected_range, false);
+	MCPlatformCallbackSendTextInputInsertText(t_window, nil, 0, MCRangeMake(0, 0), t_selected_range, false);
 	
 	[[self inputContext] discardMarkedText];
 	
@@ -767,8 +793,13 @@ static bool s_lock_responder_change = false;
 
 - (NSRange)selectedRange
 {
+	MCMacPlatformWindow *t_window;
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return NSMakeRange(NSNotFound, 0);
+	
 	MCRange t_marked_range, t_selected_range;
-	MCPlatformCallbackSendTextInputQueryTextRanges([self platformWindow], t_marked_range, t_selected_range);
+	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
 	MCLog("selectedRange() = (%d, %d)", t_selected_range . offset, t_selected_range . length);
 	return NSMakeRange(t_selected_range . offset, t_selected_range . length);
 	
@@ -783,26 +814,41 @@ static bool s_lock_responder_change = false;
 
 - (NSRange)markedRange
 {
+	MCMacPlatformWindow *t_window;
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return NSMakeRange(NSNotFound, 0);
+	
 	MCRange t_marked_range, t_selected_range;
-	MCPlatformCallbackSendTextInputQueryTextRanges([self platformWindow], t_marked_range, t_selected_range);
+	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
 	MCLog("markedRange() = (%d, %d)", t_marked_range . offset, t_marked_range . length);
 	return NSMakeRange(t_marked_range . offset, t_marked_range . length);
 }
 
 - (BOOL)hasMarkedText
 {
+	MCMacPlatformWindow *t_window;
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return NO;
+	
 	MCRange t_marked_range, t_selected_range;
-	MCPlatformCallbackSendTextInputQueryTextRanges([self platformWindow], t_marked_range, t_selected_range);
+	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
 	MCLog("hasMarkedText() = %d", t_marked_range . offset != UINDEX_MAX);
 	return t_marked_range . offset != UINDEX_MAX;
 }
 
 - (NSAttributedString *)attributedSubstringForProposedRange:(NSRange)aRange actualRange:(NSRangePointer)actualRange
 {
+	MCMacPlatformWindow *t_window;
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return nil;
+	
 	unichar_t *t_chars;
 	uindex_t t_char_count;
 	MCRange t_actual_range;
-	MCPlatformCallbackSendTextInputQueryText([self platformWindow],
+	MCPlatformCallbackSendTextInputQueryText(t_window,
 											 MCRangeMake(aRange . location, aRange . length),
 											 t_chars, t_char_count,
 											 t_actual_range);
@@ -828,9 +874,14 @@ static bool s_lock_responder_change = false;
 
 - (NSRect)firstRectForCharacterRange:(NSRange)aRange actualRange:(NSRangePointer)actualRange
 {
+	MCMacPlatformWindow *t_window;
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return NSZeroRect;
+	
 	MCRange t_actual_range;
 	MCRectangle t_rect;
-	MCPlatformCallbackSendTextInputQueryTextRect([self platformWindow],
+	MCPlatformCallbackSendTextInputQueryTextRect(t_window,
 												 MCRangeMake(aRange . location, aRange . length),
 												 t_rect,
 												 t_actual_range);
@@ -855,8 +906,13 @@ static bool s_lock_responder_change = false;
 	MCPoint t_location;
 	t_location = [self mapNSPointToMCPoint: aPoint];
 	
+	MCMacPlatformWindow *t_window;
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return 0;
+	
 	uindex_t t_index;
-	MCPlatformCallbackSendTextInputQueryTextIndex([self platformWindow], t_location, t_index);
+	MCPlatformCallbackSendTextInputQueryTextIndex(t_window, t_location, t_index);
 	
 	MCLog("characterIndexForPoint(%d, %d) = %d", t_location . x, t_location . y, t_index);
 	
@@ -948,7 +1004,10 @@ static bool s_lock_responder_change = false;
 	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 	
 	MCMacPlatformWindow *t_window;
-	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return;
+	
 	t_window -> ProcessMouseScroll([event deltaX], [event deltaY]);
 }
 
@@ -1027,7 +1086,9 @@ static bool s_lock_responder_change = false;
 	MCMacPlatformPasteboardCreate([sender draggingPasteboard], t_pasteboard);
 	
 	MCMacPlatformWindow *t_window;
-	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return NSDragOperationNone;
 	
 	MCPlatformDragOperation t_operation;
 	t_window -> HandleDragEnter(t_pasteboard, t_operation);
@@ -1052,7 +1113,9 @@ static bool s_lock_responder_change = false;
 	MCMacPlatformMapScreenNSPointToMCPoint([[self window] convertBaseToScreen: [sender draggingLocation]], t_location);
 	
 	MCMacPlatformWindow *t_window;
-	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return NSDragOperationNone;
 	
 	MCPlatformMapPointFromScreenToWindow(t_window, t_location, t_location);
 	
@@ -1068,7 +1131,9 @@ static bool s_lock_responder_change = false;
 - (BOOL)performDragOperation: (id<NSDraggingInfo>)sender
 {
 	MCMacPlatformWindow *t_window;
-	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return NO;
 	
 	bool t_accepted;
 	t_window -> HandleDragDrop(t_accepted);
@@ -1093,7 +1158,9 @@ static bool s_lock_responder_change = false;
 	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 	
 	MCMacPlatformWindow *t_window;
-	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return;
 	
 	NSPoint t_location;
 	t_location = [event locationInWindow];
@@ -1108,7 +1175,9 @@ static bool s_lock_responder_change = false;
 	[self handleMouseMove: event];
 	
 	MCMacPlatformWindow *t_window;
-	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return;
 	
 	// Swap button numbers 1 and 2.
 	NSUInteger t_button;
@@ -1151,7 +1220,10 @@ static bool s_lock_responder_change = false;
 	
 	// Finally we process.
 	MCMacPlatformWindow *t_window;
-	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return;
+	
 	if (pressed)
 		t_window -> ProcessKeyDown(t_key_code, t_mapped_codepoint, t_unmapped_codepoint);
 	else
@@ -1176,7 +1248,9 @@ static bool s_lock_responder_change = false;
 		return;
 	
 	MCMacPlatformWindow *t_window;
-	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return;
 	
 	t_window -> ProcessDidResize();
 }
@@ -1191,8 +1265,10 @@ static bool s_lock_responder_change = false;
 - (void)drawRect: (NSRect)dirtyRect
 {	
 	MCMacPlatformWindow *t_window;
-	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
-	
+	t_window = [self platformWindow];
+	if (t_window == nil)
+		return;
+
 	CGContextRef t_graphics;
 	t_graphics = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
 	
@@ -1266,7 +1342,10 @@ MCMacPlatformWindow::~MCMacPlatformWindow(void)
 {
 	if (m_is_visible)
 		MCMacPlatformWindowHiding(this);
-	
+
+	[m_handle setDelegate: nil];
+	[m_handle setContentView: nil];
+	[m_handle close];
 	[m_handle release];
 	[m_view release];
 	[m_delegate release];
@@ -1466,6 +1545,8 @@ void MCMacPlatformWindow::DoRealize(void)
 	else
 		m_panel_handle = [[com_runrev_livecode_MCPanel alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: YES];
 	
+	NSLog(@"Create NSWindow %p", m_handle);
+	
 	m_delegate = [[com_runrev_livecode_MCWindowDelegate alloc] initWithPlatformWindow: this];
 	[m_window_handle setDelegate: m_delegate];
 	
@@ -1479,6 +1560,7 @@ void MCMacPlatformWindow::DoRealize(void)
 		[[m_window_handle standardWindowButton: NSWindowZoomButton] setEnabled: NO];
 	[m_window_handle setAlphaValue: m_opacity];
 	[m_window_handle setDocumentEdited: m_has_modified_mark];
+	[m_window_handle setReleasedWhenClosed: NO];
 	
 	// If this is a panel (floating window) then hide unrequired tool buttons.
 	// COCOA-TODO: This doesn't work - indeed Apple HIG says windows must always have
