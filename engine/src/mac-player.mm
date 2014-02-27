@@ -19,6 +19,7 @@
 
 #include "core.h"
 #include "globdefs.h"
+#include "imagebitmap.h"
 
 #include "platform.h"
 #include "platform-internal.h"
@@ -104,6 +105,8 @@ private:
 	
 	QTMovie *m_movie;
 	QTMovieView *m_view;
+	
+	CVPixelBufferRef m_pixel_buffer;
 	
 	MCRectangle m_rect;
 	bool m_visible : 1;
@@ -306,7 +309,7 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 	NSDictionary *t_attrs;
 	t_attrs = [NSDictionary dictionaryWithObjectsAndKeys:
 			   [NSString stringWithCString: p_filename encoding: NSMacOSRomanStringEncoding], p_is_url ? QTMovieURLAttribute : QTMovieFileNameAttribute,
-			   [NSNumber numberWithBool: YES], QTMovieOpenForPlaybackAttribute,
+			   /* [NSNumber numberWithBool: YES], QTMovieOpenForPlaybackAttribute, */
 			   [NSNumber numberWithBool: NO], QTMovieOpenAsyncOKAttribute,
 			   [NSNumber numberWithBool: NO], QTMovieOpenAsyncRequiredAttribute,
 			   nil];
@@ -324,6 +327,10 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 	
 	[m_movie release];
 	m_movie = t_new_movie;
+	
+	// This method seems to be there - but isn't 'public'. Given QTKit is now deprecated as long
+	// as it works on the platforms we support, it should be fine.
+	[m_movie setDraggable: NO];
 	
 	if (m_view != nil)
 		[m_view setMovie: m_movie];
@@ -347,6 +354,7 @@ void MCQTKitPlayer::Synchronize(void)
 	
 	[m_view setHidden: !m_visible];
 	
+	[m_view setEditable: m_show_selection];
 	[m_view setControllerVisible: m_show_controller];
 }
 
@@ -398,11 +406,28 @@ void MCQTKitPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 	OSType t_type;
 	t_type = CVPixelBufferGetPixelFormatType(t_buffer);
 	
-	NSLog(@"Image format %x", t_type);
+	if (t_type != kCVPixelFormatType_32ARGB)
+	{
+		NSLog(@"Unsupported pixel format - %08x", t_type);
+		return;
+	}
+	
+	m_pixel_buffer = t_buffer;
+	CVPixelBufferLockBaseAddress(t_buffer, kCVPixelBufferLock_ReadOnly);
+	
+	r_bitmap = new MCImageBitmap;
+	r_bitmap -> width = CVPixelBufferGetWidth(t_buffer);
+	r_bitmap -> height = CVPixelBufferGetHeight(t_buffer);
+	r_bitmap -> stride = CVPixelBufferGetBytesPerRow(t_buffer);
+	r_bitmap -> data = (uint32_t *)CVPixelBufferGetBaseAddress(t_buffer);
+	r_bitmap -> has_alpha = r_bitmap -> has_transparency = true;
 }
 
 void MCQTKitPlayer::UnlockBitmap(MCImageBitmap *bitmap)
 {
+	delete bitmap;
+	CVPixelBufferUnlockBaseAddress(m_pixel_buffer, kCVPixelBufferLock_ReadOnly);
+	m_pixel_buffer = nil;
 }
 
 void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformPropertyType p_type, void *p_value)
@@ -427,9 +452,15 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyCurrentTime:
+			[m_movie setCurrentTime: QTMakeTime(*(uint32_t *)p_value, [m_movie duration] . timeScale)];
 			break;
 		case kMCPlatformPlayerPropertyStartTime:
-			break;
+		{
+			//QTTimeRange t_selection;
+			//t_selection = [m_movie selection];
+			
+		}
+		break;
 		case kMCPlatformPlayerPropertyFinishTime:
 			break;
 		case kMCPlatformPlayerPropertyPlayRate:
@@ -443,10 +474,13 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyShowSelection:
+			m_show_selection = *(bool *)p_value;
 			break;
 		case kMCPlatformPlayerPropertyOnlyPlaySelection:
+			[m_movie setAttribute: [NSNumber numberWithBool: *(bool *)p_value] forKey: QTMoviePlaysSelectionOnlyAttribute];
 			break;
 		case kMCPlatformPlayerPropertyLoop:
+			[m_movie setAttribute: [NSNumber numberWithBool: *(bool *)p_value] forKey: QTMovieLoopsAttribute];
 			break;
 	}
 }
