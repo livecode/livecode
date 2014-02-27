@@ -39,6 +39,54 @@ static bool s_lock_responder_change = false;
 
 @implementation com_runrev_livecode_MCWindow
 
+// The default implementation doesn't allow borderless windows to become key.
+- (BOOL)canBecomeKeyWindow
+{
+	return YES;
+}
+
+- (BOOL)makeFirstResponder: (NSResponder *)p_responder
+{
+	NSResponder *t_previous;
+	t_previous = [self firstResponder];
+	
+	if (![super makeFirstResponder: p_responder])
+		return NO;
+	
+	if (s_lock_responder_change)
+		return YES;
+	
+	if ([p_responder isKindOfClass: [NSView class]])
+	{
+		NSView *t_view;
+		t_view = (NSView *)p_responder;
+		while(t_view != nil)
+		{
+			if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
+			{
+				[(MCWindowDelegate *)[self delegate] viewFocusSwitched: (uint32_t)[t_view com_runrev_livecode_nativeViewId]];
+				return YES;
+			}
+			
+			t_view = [t_view superview];
+		}
+	}
+	
+	[(MCWindowDelegate *)[self delegate] viewFocusSwitched: 0];
+	
+	return YES;
+}
+
+@end
+
+@implementation com_runrev_livecode_MCPanel
+
+// The default implementation doesn't allow borderless windows to become key.
+- (BOOL)canBecomeKeyWindow
+{
+	return YES;
+}
+
 - (BOOL)makeFirstResponder: (NSResponder *)p_responder
 {
 	NSResponder *t_previous;
@@ -1416,7 +1464,7 @@ void MCMacPlatformWindow::DoRealize(void)
 	if (t_window_level != kCGFloatingWindowLevel)
 		m_window_handle = [[com_runrev_livecode_MCWindow alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: YES];
 	else
-		m_panel_handle = [[NSPanel alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: YES];
+		m_panel_handle = [[com_runrev_livecode_MCPanel alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: YES];
 	
 	m_delegate = [[com_runrev_livecode_MCWindowDelegate alloc] initWithPlatformWindow: this];
 	[m_window_handle setDelegate: m_delegate];

@@ -64,10 +64,18 @@ class MCMacPlatformSurface;
 
 @interface com_runrev_livecode_MCWindow: NSWindow
 
+- (BOOL)canBecomeKeyWindow;
 - (BOOL)makeFirstResponder: (NSResponder *)responder;
 
 @end
-	
+
+@interface com_runrev_livecode_MCPanel: NSPanel
+
+- (BOOL)canBecomeKeyWindow;
+- (BOOL)makeFirstResponder: (NSResponder *)responder;
+
+@end
+
 ////////////////////////////////////////////////////////////////////////////////
 
 @interface com_runrev_livecode_MCWindowDelegate: NSObject<NSWindowDelegate>
