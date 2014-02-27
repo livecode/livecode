@@ -2294,7 +2294,7 @@ public:
 };
 
 // JS-2013-06-19: [[ StatsFunctions ]] Definition of sampleVariance
-class MCSampleVariance : public MCParamFunctionCtxt<MCMathEvalPopulationVariance, EE_VARIANCE_BADSOURCE, PE_VARIANCE_BADPARAM, kMCMathEvalPopulationVarianceMethodInfo>
+class MCSampleVariance : public MCParamFunctionCtxt<MCMathEvalSampleVariance, EE_VARIANCE_BADSOURCE, PE_VARIANCE_BADPARAM, kMCMathEvalPopulationVarianceMethodInfo>
 {
 public:
     MCSampleVariance(){}

@@ -1104,9 +1104,6 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 }
 
 uint2 MCS_umask(uint2 mask)
-
-
-
 {
 	return umask(mask);
 }

@@ -468,7 +468,7 @@ IO_stat MCDispatch::startup(void)
         IO_handle t_stream;
         t_stream = MCS_open(*t_env, kMCSystemFileModeRead, False, False, 0);
 
-		if (MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
+		if (t_stream == nil || MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone stack");
 			return IO_ERROR;

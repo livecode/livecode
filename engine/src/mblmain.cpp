@@ -107,6 +107,13 @@ bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[])
 	
 	/* UNCHECKED */ MCsystem -> PathFromNative(argv[0], MCcmd);
 	
+    // Create the basic locale and the system locale
+    if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
+        return false;
+    kMCSystemLocale = MCS_getsystemlocale();
+    if (kMCSystemLocale == nil)
+        return false;
+    
 	// Create the $<n> variables.
 	for(uint32_t i = 2; i < argc; ++i)
 		if (argv[i] != nil)

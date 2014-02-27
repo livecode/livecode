@@ -340,9 +340,9 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 	m_index = p_index;
 }
 
-- (const char *)getText
+- (CFStringRef)getText
 {
-	return [m_textResult.text cStringUsingEncoding:NSMacOSRomanStringEncoding];
+	return (CFStringRef)m_textResult.text;
 }
 
 - (UITextField *)textField
@@ -359,7 +359,7 @@ struct popupaskdialog_t
 	MCStringRef message;
 	MCStringRef initial;
 	bool hint;
-	char *result;
+	MCStringRef result;
 	
 	TextAlertView *alert;
 	ModalDelegate *delegate;
@@ -442,39 +442,37 @@ static void dopopupaskdialog_postwait(void *p_context)
 	popupaskdialog_t *ctxt;
 	ctxt = (popupaskdialog_t *)p_context;
 	
+    MCAutoStringRef t_message_text;
+    CFStringRef t_result;
+    t_result = nil;
 	if (MCmajorosversion < 500)
 	{
-        const char *t_messageText;
+        t_result = [ctxt -> alert getText];
         
-        t_messageText = [ctxt -> alert getText];
+        if (t_result != nil)
+            MCStringCreateWithCFString(t_result, &t_message_text);
         
 		// MW-2012-10-24: [[ Bug 10491 ]] The delegate now holds the button index, not the alert view.
-        if ([ctxt -> delegate index] == 0 || t_messageText == nil || *t_messageText == '\0')
+        if ([ctxt -> delegate index] == 0 || *t_message_text == nil)
             ctxt -> result = nil;
         else
-        {
-            ctxt -> result = (char *) malloc (strlen (t_messageText) + 1);
-            strcpy (ctxt -> result, t_messageText);
-        }
+            ctxt -> result = MCValueRetain(*t_message_text);
         
         [ctxt -> alert release];
 	}
 	else
 	{
 #ifdef __IPHONE_5_0
-        const char* t_message_text;
         if (ctxt -> text_field != nil)
-            t_message_text = [[ctxt -> text_field text] cStringUsingEncoding:NSMacOSRomanStringEncoding];
-        else
-            t_message_text = nil;
+            t_result = (CFStringRef)[ctxt -> text_field text];
+
+        if (t_result != nil)
+            MCStringCreateWithCFString(t_result, &t_message_text);
         
-        if ([ctxt -> delegate index] == 0 || t_message_text == nil || *t_message_text == '\0')
+        if ([ctxt -> delegate index] == 0 || *t_message_text == nil)
             ctxt -> result = nil;
         else
-        {
-            MCMemoryAllocate(MCCStringLength(t_message_text) + 1, ctxt -> result);
-            MCCStringClone(t_message_text, ctxt -> result);
-        }
+            ctxt -> result = MCValueRetain(*t_message_text);
         
         [ctxt -> delegate release];
         [ctxt -> alert_view release];
@@ -506,7 +504,11 @@ bool MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRe
     MCValueRelease(ctxt . title);
     MCValueRelease(ctxt . message);
     MCValueRelease(ctxt . initial);
-	return MCStringCreateWithCString(ctxt . result, r_result);
+    if (ctxt . result == nil)
+        return false;
+    
+	r_result = ctxt . result;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

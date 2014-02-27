@@ -5,7 +5,7 @@
 
 	<syntax>
 		<example>focus [on] <i>object</i></example>
-       <example>focus on nothing</example>
+		<example>focus on nothing</example>
 	</syntax>
 
 	<synonyms>
@@ -14,9 +14,9 @@
 	<summary>Places the <glossary tag="insertion point">insertion point</glossary> in a <keyword tag="field">field</keyword>, makes a <keyword tag="control">control</keyword> active, or removes focus from all controls.</summary>
 
 	<examples>
-<example>focus on field &quot;Label&quot;</example>
+<example>focus on field 1</example>
 <example>focus on the mouseControl</example>
-<example><p>focus on graphic &quot;Move Me&quot;</p></example>
+<example><p>focus on graphic "Move Me"</p></example>
 <example>focus on nothing</example>
 	</examples>
 
@@ -25,6 +25,8 @@
 		<deprecated version=""></deprecated>
 		<removed version=""></removed>
 		
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
 	</history>
 
 	<objects>
@@ -34,16 +36,16 @@
 		<mac/>
 		<windows/>
 		<linux/>
-	  <ios/>
-    <android/>
-  </platforms>
+		<ios/>
+		<android/>
+	</platforms>
 
 	<classes>
 		<desktop/>
 		<server/>
 		<web/>
-	  <mobile/>
-  </classes>
+		<mobile/>
+	</classes>
 
 	<security>
 	</security>
@@ -75,5 +77,5 @@
 		<message tag="focusOut">focusOut Message</message>
 	</references>
 
-	<description>Use the <b>focus</b> <glossary tag="command">command</glossary> to make a <keyword tag="control">control</keyword> active--that is, to make it receive any keystrokes the user types.<p></p><p><b>Parameters:</b></p><p>The <i>object</i> is any <glossary tag="object">object</glossary> on the <glossary tag="current card">current card</glossary>.</p><p></p><p><b>Comments:</b></p><p>If the object's <b>traversalOn</b> <glossary tag="property">property</glossary> is false, it cannot receive the <command tag="focus">focus</command>, and the <b>focus</b> <glossary tag="command">command</glossary> causes an <glossary tag="error">error</glossary>.</p><p></p><p>If the <b>lookAndFeel</b> is set to &quot;Motif&quot;, the <glossary tag="active control">focused control</glossary> is outlined, and the <keyword tag="control">control</keyword> receives any keystrokes (and the <glossary tag="message">messages</glossary> associated with them).</p><p></p><p>If the <b>lookAndFeel</b> is set to &quot;Appearance Manager&quot; or &quot;Macintosh&quot;, an outline is drawn around <glossary tag="field">fields</glossary>, <glossary tag="image">images</glossary>, and <glossary tag="EPS">EPS objects</glossary> whose <property tag="showFocusBorder">showFocusBorder</property> <glossary tag="property">property</glossary> is set to true. Otherwise, the <glossary tag="appearance">appearance</glossary> of the <glossary tag="active control">focused control</glossary> does not change, but it receives keystroke <glossary tag="message">messages</glossary>.</p><p></p><p>If the <b>lookAndFeel</b> is set to &quot;Windows 95&quot;, a dotted outline is drawn within <glossary tag="button">buttons</glossary> when they receive the <command tag="focus">focus</command>.</p><p></p><p>If the <i>object</i> is an <glossary tag="unlock">unlocked</glossary> <keyword tag="field">field</keyword>, the <glossary tag="insertion point">insertion point</glossary> is placed after the text in the <keyword tag="field">field</keyword>.</p><p></p><p>Use the <b>focus on nothing</b> command to remove focus from all objects on a card.</p></description>
+	<description>Use the <b>focus</b> <glossary tag="command">command</glossary> to make a <keyword tag="control">control</keyword> active--that is, to make it receive any keystrokes the user types.<p></p><p><b>Parameters:</b></p><p>The <i>object</i> is any <glossary tag="object">object</glossary> on the <glossary tag="current card">current card</glossary>.</p><p></p><p><b>Comments:</b></p><p>If the object's <b>traversalOn</b> <glossary tag="property">property</glossary> is false, it cannot receive the <command tag="focus">focus</command>, and the <b>focus</b> <glossary tag="command">command</glossary> causes an <glossary tag="error">error</glossary>.</p><p></p><p>If the <b>lookAndFeel</b> is set to "Motif", the <glossary tag="active control">focused control</glossary> is outlined, and the <keyword tag="control">control</keyword> receives any keystrokes (and the <glossary tag="message">messages</glossary> associated with them).</p><p></p><p>If the <b>lookAndFeel</b> is set to "Appearance Manager" or "Macintosh", an outline is drawn around <glossary tag="field">fields</glossary>, <glossary tag="image">images</glossary>, and <glossary tag="EPS">EPS objects</glossary> whose <property tag="showFocusBorder">showFocusBorder</property> <glossary tag="property">property</glossary> is set to true. Otherwise, the <glossary tag="appearance">appearance</glossary> of the <glossary tag="active control">focused control</glossary> does not change, but it receives keystroke <glossary tag="message">messages</glossary>.</p><p></p><p>If the <b>lookAndFeel</b> is set to "Windows 95", a dotted outline is drawn within <glossary tag="button">buttons</glossary> when they receive the <command tag="focus">focus</command>.</p><p></p><p>If the <i>object</i> is an <glossary tag="unlock">unlocked</glossary> <keyword tag="field">field</keyword>, the <glossary tag="insertion point">insertion point</glossary> is placed after the text in the <keyword tag="field">field</keyword>.</p><p></p><p>Use the <b>focus on nothing</b> command to remove focus from all objects on a card.</p></description>
 </doc>

@@ -100,25 +100,28 @@ MCSErrorMode MCS_get_errormode(void)
 
 bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data)
 {
-    /* UNSURE */// This might no be required
-	ctxt . SetTheResultToValue(p_data);
-	
+    bool t_success;
     switch (p_kind)
 	{
     case kMCSPutOutput:
     case kMCSPutUnicodeOutput:
     case kMCSPutBeforeMessage:
 	case kMCSPutIntoMessage:
-		return MCmb -> set(ctxt, p_data);
+		t_success = MCmb -> set(ctxt, p_data);
+        break;
     case kMCSPutAfterMessage:
-        return MCmb -> append(ctxt, p_data);
+        t_success = MCmb -> append(ctxt, p_data);
+        break;
 	default:
+        t_success = false;
 		break;
 	}
 	
+    ctxt . SetTheResultToBool(t_success);
+    
 	// MW-2012-02-23: [[ PutUnicode ]] If we don't understand the kind
 	//   then return false (caller can then throw an error).
-	return false;
+	return t_success;
 }
 
 // Missing implementation. What to write here? Panos.

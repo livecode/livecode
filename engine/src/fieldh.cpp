@@ -485,7 +485,7 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 
 		// Update the first / last indices we want.
 		t_first_offset = 0;
-		t_last_offset -= t_paragraph -> gettextlength();
+        t_last_offset -= t_paragraph -> gettextlengthcr();
 
 		// Advance to the next paragraph.
 		t_paragraph = t_paragraph -> next();

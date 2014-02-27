@@ -2561,6 +2561,10 @@ enum Exec_errors
 
     // {EE-0830} codepointProperty: bad property name
     EE_CODEPOINTPROPERTY_BADPROPERTY,
+	
+	// IM-2013-12-04: [[ PixelScale ]]
+	// {EE-0831} pixelScale: not a valid scale value
+	EE_PROPERTY_BADPIXELSCALE,
 };
 
 extern const char *MCexecutionerrors;

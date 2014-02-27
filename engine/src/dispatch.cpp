@@ -909,7 +909,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		t_linkname = sptr -> getfilename();
 	else
 	{
-		MCresult -> sets("stack does not have filename");
+		MCresult -> sets("stack does not have a filename");
 		return IO_ERROR;
 	}
 	
@@ -1352,6 +1352,27 @@ MCDragAction MCDispatch::wmdragdrop(Window w)
 
 void MCDispatch::property(Window w, Atom atom)
 {
+}
+
+void MCDispatch::sync_stack_windows(void)
+{
+	if (stacks == nil)
+		return;
+	
+	MCStack *t_stack;
+	t_stack = stacks;
+	
+	do
+	{
+		if (t_stack->getopened() && t_stack->isvisible())
+		{
+			t_stack->view_sync_window_geometry();
+			t_stack->view_dirty_all();
+		}
+		
+		t_stack = (MCStack*)t_stack->next();
+	}
+	while (t_stack != stacks);
 }
 
 void MCDispatch::configure(Window w)

@@ -1896,7 +1896,12 @@ void MCiOSMultiLineControl::SetCanCancelTouches(MCExecContext& ctxt, bool p_valu
 	t_view = (UIScrollView*)GetView();
     
     if (t_view)
+    {
         [t_view setCanCancelContentTouches: p_value];
+        // SN-2014-01-14: [[ bugfix-11482 ]] DelayContentTouches must be set
+        // to the opposite of CanCancelContentTouches to allow scrolling on iOS7
+        [t_view setDelaysContentTouches: !p_value];
+    }
 }
 void MCiOSMultiLineControl::GetCanCancelTouches(MCExecContext& ctxt, bool& r_value)
 {
@@ -1914,7 +1919,12 @@ void MCiOSMultiLineControl::SetDelayTouches(MCExecContext& ctxt, bool p_value)
 	t_view = (UIScrollView*)GetView();
     
     if (t_view)
+    {
         [t_view setDelaysContentTouches: p_value];
+        // SN-2014-01-14: [[ bugfix-11482 ]] DelayContentTouches must be set
+        // to the opposite of CanCancelContentTouches to allow scrolling on iOS7
+        [t_view setCanCancelContentTouches: !p_value];
+    }
 }
 
 void MCiOSMultiLineControl::GetDelayTouches(MCExecContext& ctxt, bool& r_value)

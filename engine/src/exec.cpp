@@ -2315,6 +2315,30 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             break;
         }
             
+        case kMCPropertyTypeMixedOptionalEnum:
+        {
+            int t_value;
+            int *t_value_ptr;
+            bool t_mixed;
+            t_value_ptr = &t_value;
+            ((void(*)(MCExecContext&, void *, bool&, int*&))prop -> getter)(ctxt, mark, t_mixed, t_value_ptr);
+            if (!ctxt . HasError())
+            {
+                r_value . type = kMCExecValueTypeStringRef;
+                if (t_mixed)
+                    r_value . stringref_value = MCSTR(MCmixedstring);
+                else if (t_value_ptr == nil)
+                    r_value . stringref_value = MCValueRetain(kMCEmptyString);
+                else
+                {
+                    MCExecEnumTypeInfo *t_enum_info;
+                    t_enum_info = (MCExecEnumTypeInfo *)(prop -> type_info);
+                    MCExecFormatEnum(ctxt, t_enum_info, t_value, r_value);
+                }
+            }
+        }
+            break;
+            
         case kMCPropertyTypeMixedLinesOfUInt:
         case kMCPropertyTypeMixedItemsOfUInt:
         {

@@ -1935,8 +1935,13 @@ void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uindex_t &nstr
 	case FM_STRING:
 	case FM_WHOLE:
 	default:
+        nstrings = 0;
 		break;
-	}
+    }
+
+    if (nstrings == 0)
+        t_strings . Push(MCValueRetain(source));
+
     t_strings . Take(dest, nstrings);
 }
 

@@ -22,6 +22,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2013-12-19: [[ Bug 11559 ]] If 'false' after initializing we have no
+//   text support as the needed libs are not available.
+static bool s_has_text_support = false;
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern "C" int initialise_weak_link_pango();
 extern "C" int initialise_weak_link_pangoft2();
 extern "C" int initialise_weak_link_glib();
@@ -38,10 +44,14 @@ static bool lnx_pango_initialize(void)
 {
 	bool t_success;
 	t_success = true;
-
+	
+	// MW-2013-12-19: [[ Bug 11559 ]] Use '=' not '=='!
 	if (t_success)
-		t_success == initialise_weak_link_pango() != 0 && initialise_weak_link_pangoft2() != 0 &&
-			initialise_weak_link_gobject() != 0 && initialise_weak_link_glib() != 0;
+		t_success =
+			initialise_weak_link_pango() != 0 &&
+			initialise_weak_link_pangoft2() != 0 &&
+			initialise_weak_link_gobject() != 0 &&
+			initialise_weak_link_glib() != 0;
 	
 	if (t_success)
 		if (s_font_map == NULL)
@@ -81,7 +91,7 @@ static void lnx_pango_finalize(void)
 
 void MCGPlatformInitialize(void)
 {
-	/* UNCHECKED */ lnx_pango_initialize();
+	s_has_text_support = lnx_pango_initialize();
 }
 
 void MCGPlatformFinalize(void)
@@ -94,7 +104,11 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 {
 	// TODO: RTL
     
-    if (!MCGContextIsValid(self))
+    // MW-2013-12-19: [[ Bug 11559 ]] Do nothing if no text support.
+	if (!s_has_text_support)
+		return;
+	
+	if (!MCGContextIsValid(self))
 		return;	
 	
 	bool t_success;
@@ -212,8 +226,9 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 
 MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
 {	
-	//if (!MCGContextIsValid(self))
-	//	return 0.0;
+	// MW-2013-12-19: [[ Bug 11559 ]] Do nothing if no text support.
+	if (!s_has_text_support)
+		return 0.0;
 	
 	bool t_success;
 	t_success = true;		
@@ -239,7 +254,6 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 	}
 	
 	MCCStringFree(t_text);
-	//self -> is_valid = t_success;
 
 	return t_width;
 }

@@ -308,16 +308,17 @@ void MCiOSControl::GetRect(MCExecContext& ctxt, MCRectangle& r_rect)
 {
     if (m_view != nil)
     {
-        CGRect t_rect;
-        t_rect = [m_view frame];
+        // MM-2013-11-26: [[ Bug 11485 ]] The user expects the rect of the control to be returned in user space, so convert the views rect from device space.
+        CGRect t_dev_rect;
+        t_dev_rect = [m_view frame];
         
-        float t_scale;
-        t_scale = MCIPhoneGetNativeControlScale();
+        MCGRectangle t_user_rect;
+        t_user_rect = MCNativeControlUserRectFromDeviceRect(MCGRectangleMake(t_dev_rect . origin . x, t_dev_rect . origin . y, t_dev_rect . size. width, t_dev_rect . size . height));
         
-        r_rect . x = t_rect.origin.x * t_scale;
-        r_rect . y = t_rect.origin.y * t_scale;
-        r_rect . width = t_rect.size.width * t_scale;
-        r_rect . height = t_rect.size.height * t_scale;
+        r_rect . x = (int32_t) roundf(t_user_rect.origin.x);
+        r_rect . y = (int32_t) roundf(t_user_rect.origin.y);
+        r_rect . width = (int32_t) (roundf(t_user_rect.origin.x) + roundf(t_user_rect.size.width));
+        r_rect . height = (int32_t) (roundf(t_user_rect.origin.y) + roundf(t_user_rect.size.height));
     }
 }
 
@@ -472,7 +473,9 @@ Exec_stat MCiOSControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
                 MCGRectangle t_user_rect;
                 t_user_rect = MCNativeControlUserRectFromDeviceRect(MCGRectangleMake(t_dev_rect . origin . x, t_dev_rect . origin . y, t_dev_rect . size. width, t_dev_rect . size . height));
                 
-				ep . setrectangle(t_user_rect.origin.x, t_user_rect.origin.y, t_user_rect.origin.x + t_user_rect.size.width, t_user_rect.origin.y + t_user_rect.size.height);
+				ep . setrectangle((int32_t) roundf(t_user_rect.origin.x), (int32_t) roundf(t_user_rect.origin.y),
+                                  (int32_t) (roundf(t_user_rect.origin.x) + roundf(t_user_rect.size.width)),
+                                  (int32_t) (roundf(t_user_rect.origin.y) + roundf(t_user_rect.size.height)));
 			}
 			return ES_NORMAL;
 			
@@ -513,14 +516,14 @@ MCGAffineTransform MCNativeControlUserToDeviceTransform()
 {
     float t_scale;
     t_scale = 1 / MCIPhoneGetNativeControlScale();
-    return MCGAffineTransformScale(MCdefaultstackptr -> view_getviewtransform(), t_scale, t_scale);
+    return MCGAffineTransformScale(MCdefaultstackptr -> getviewtransform(), t_scale, t_scale);
 }
 
 MCGAffineTransform MCNativeControlUserFromDeviceTransform()
 {
     float t_scale;
     t_scale = MCIPhoneGetNativeControlScale();
-    return MCGAffineTransformScale(MCGAffineTransformInvert(MCdefaultstackptr -> view_getviewtransform()), t_scale, t_scale);
+    return MCGAffineTransformScale(MCGAffineTransformInvert(MCdefaultstackptr -> getviewtransform()), t_scale, t_scale);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

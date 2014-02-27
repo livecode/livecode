@@ -275,17 +275,15 @@ void MCFilesEvalLongFilePath(MCExecContext& ctxt, MCStringRef p_path, MCStringRe
 		return;
 	}
 
-	if (MCS_longfilepath(p_path, r_long_path))
+	// No failure for this function, only a specific "can't get" result - and
+	// an empty string as a return value
+	if (!MCS_longfilepath(p_path, r_long_path))
 	{
-		if (MCStringGetLength(r_long_path) == 0)
-			ctxt.SetTheResultToCString("can't get");
-		else
-			ctxt.SetTheResultToEmpty();
-
-		return;
+		r_long_path = MCValueRetain(kMCEmptyString);
+		ctxt.SetTheResultToCString("can't get");
 	}
-
-	ctxt.Throw();
+	else
+		ctxt.SetTheResultToEmpty();
 }
 
 void MCFilesEvalShortFilePath(MCExecContext& ctxt, MCStringRef p_path, MCStringRef& r_short_path)
@@ -298,13 +296,13 @@ void MCFilesEvalShortFilePath(MCExecContext& ctxt, MCStringRef p_path, MCStringR
 
     // Failure of this function isn't really an error
     r_short_path = nil;
-	/* UNCHECKED */ MCS_shortfilepath(p_path, r_short_path);
-	
-    if (r_short_path == nil || MCStringIsEmpty(r_short_path))
+	if (!MCS_shortfilepath(p_path, r_short_path))
+	{
+		r_short_path = MCValueRetain(kMCEmptyString);
 		ctxt.SetTheResultToCString("can't get");
+	}
 	else
 		ctxt.SetTheResultToEmpty();
-	return;
 }
 
 
@@ -2229,26 +2227,31 @@ void MCFilesSetCurrentFolder(MCExecContext& ctxt, MCStringRef p_value)
 void MCFilesGetEngineFolder(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	/* UNCHECKED */ MCS_getspecialfolder(MCN_engine, r_value);
+	ctxt . SetTheResultToEmpty();
 }
 
 void MCFilesGetHomeFolder(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	/* UNCHECKED */ MCS_getspecialfolder(MCN_home, r_value);
+	ctxt . SetTheResultToEmpty();
 }
 
 void MCFilesGetDocumentsFolder(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	/* UNCHECKED */ MCS_getspecialfolder(MCN_documents, r_value);
+	ctxt . SetTheResultToEmpty();
 }
 
 void MCFilesGetDesktopFolder(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	/* UNCHECKED */ MCS_getspecialfolder(MCN_desktop, r_value);
+	ctxt . SetTheResultToEmpty();
 }
 
 void MCFilesGetTemporaryFolder(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	/* UNCHECKED */ MCS_getspecialfolder(MCN_temporary, r_value);
+	ctxt . SetTheResultToEmpty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

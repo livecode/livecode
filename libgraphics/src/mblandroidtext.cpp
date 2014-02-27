@@ -70,6 +70,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_typeface = (SkTypeface *) p_font . fid;
 		t_paint . setTypeface(t_typeface);
 		
+		// MM-2013-12-05: [[ Bug 11527 ]] Make sure we calculate the UTF-8 string length correctly.
 		self -> layer -> canvas -> drawText(*t_utf8_string, t_utf8_string . Size(), MCGCoordToSkCoord(p_location . x), MCGCoordToSkCoord(p_location . y), t_paint);
 	}
 	
@@ -103,6 +104,7 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 		t_typeface = (SkTypeface *) p_font . fid;
 		t_paint . setTypeface(t_typeface);
 		
+		// MM-2013-12-05: [[ Bug 11527 ]] Make sure we calculate the UTF-8 string length correctly.
 		t_width =  (MCGFloat) t_paint . measureText(*t_utf8_string, t_utf8_string . Size());
 	}
 	

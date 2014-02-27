@@ -51,7 +51,11 @@ struct MCFont
 	MCNameRef name;
 	MCFontStyle style;
 	int32_t size;
-
+	
+	// MW-2013-12-05: [[ Bug 11535 ]] If non-zero, then each glyph will have the
+	//   given fixed advance width (used for monospaced fonts).
+	int32_t fixed_advance;
+	
 	MCFontStruct *fontstruct;
 };
 
@@ -106,6 +110,33 @@ bool MCFontCreate(MCNameRef p_name, MCFontStyle p_style, int32_t p_size, MCFontR
 	t_temp_size = self -> size;
 	self -> fontstruct = MCdispatcher -> loadfont(self -> name, t_temp_size, MCFontStyleToTextStyle(self -> style), (self -> style & kMCFontStylePrinterMetrics) != 0);
 
+	// MW-2013-12-04: [[ Bug 11535 ]] Test to see if the font is fixed-width, at least for
+	//   Roman script.
+    MCGFont t_gfont;
+	t_gfont = MCFontStructToMCGFont(self -> fontstruct);
+	t_gfont . fixed_advance = 0;
+
+	// We check the width of ' ', i, l, m and w. If they are all the same width
+	// we assume the font is monospaced and subsequently set the fixed_advance
+	// field to a suitable value.
+	MCGFloat t_last_width;
+	for(uindex_t i = 0; i < 5; i++)
+	{
+		unichar_t t_char;
+		t_char = (unichar_t)((" ilmw")[i]);
+		
+		MCGFloat t_this_width;
+		t_this_width = MCGContextMeasurePlatformText(nil, &t_char, 2, t_gfont);
+		if (t_this_width == 0.0 ||
+			(i != 0 && t_this_width != t_last_width))
+		{
+			t_last_width = 0;
+			break;
+		}
+		t_last_width = t_this_width;
+	}
+	self -> fixed_advance = floorf(t_last_width + 0.5);
+	
 	self -> next = s_fonts;
 	s_fonts = self;
 
@@ -145,21 +176,47 @@ void MCFontRelease(MCFontRef self)
 
 bool MCFontHasPrinterMetrics(MCFontRef self)
 {
+	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
+	if (self -> fontstruct == nil)
+		return false;
+	
 	return (self -> style & kMCFontStylePrinterMetrics) != 0;
 }
 
 int32_t MCFontGetAscent(MCFontRef self)
 {
+	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
+	if (self -> fontstruct == nil)
+		return 0;
+	
 	return self -> fontstruct -> ascent;
 }
 
 int32_t MCFontGetDescent(MCFontRef self)
 {
+	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
+	if (self -> fontstruct == nil)
+		return 0;
+	
 	return self -> fontstruct -> descent;
 }
 
 void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFontBreakTextCallback p_callback, void *p_callback_data, bool p_rtl)
 {
+	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
+	if (p_font -> fontstruct == nil)
+		return;
+	
+    // If the text is small enough, don't bother trying to break it
+    /*if (p_length <= (kMCFontBreakTextCharLimit * (p_is_unicode ? 2 : 1)))
+    {
+        p_callback(p_font, p_text, p_length, p_is_unicode, p_callback_data);
+        return;
+    }*/
+    
+    //p_callback(p_font, p_text, p_length, p_is_unicode, p_callback_data);
+    //return;
+    
     // Scan forward in the string for possible break locations. Breaks are
     // assigned a quality value as some locations are better for breaking than
     // others. The qualities are:
@@ -282,7 +339,8 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
 
 struct font_measure_text_context
 {
-    uint32_t m_width;
+	// MW-2013-12-19: [[ Bug 11606 ]] Make sure we use a float to accumulate the width.
+    MCGFloat m_width;
 };
 
 static void MCFontMeasureTextCallback(MCFontRef p_font, MCStringRef p_string, MCRange p_range, font_measure_text_context *ctxt)
@@ -293,7 +351,15 @@ static void MCFontMeasureTextCallback(MCFontRef p_font, MCStringRef p_string, MC
     MCGFont t_font;
 	t_font = MCFontStructToMCGFont(p_font->fontstruct);
 	
+	// MW-2013-12-04: [[ Bug 11535 ]] Pass through the fixed advance.
+	t_font . fixed_advance = p_font -> fixed_advance;
+	
     ctxt -> m_width += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_string) + p_range.offset, p_range.length*2, t_font);
+}
+
+int32_t MCFontMeasureTextSubstring(MCFontRef p_font, MCStringRef p_text, MCRange p_range)
+{
+	return (int32_t)floorf(MCFontMeasureTextSubstringFloat(p_font, p_text, p_range));
 }
 
 int32_t MCFontMeasureText(MCFontRef p_font, MCStringRef p_text)
@@ -302,7 +368,7 @@ int32_t MCFontMeasureText(MCFontRef p_font, MCStringRef p_text)
 	return MCFontMeasureTextSubstring(p_font, p_text, t_range);
 }
 
-int32_t MCFontMeasureTextSubstring(MCFontRef p_font, MCStringRef p_string, MCRange p_range)
+MCGFloat MCFontMeasureTextSubstringFloat(MCFontRef p_font, MCStringRef p_string, MCRange p_range)
 {
     font_measure_text_context ctxt;
     ctxt.m_width = 0;
@@ -315,7 +381,8 @@ int32_t MCFontMeasureTextSubstring(MCFontRef p_font, MCStringRef p_string, MCRan
 struct font_draw_text_context
 {
     MCGContextRef m_gcontext;
-    int32_t x;
+	// MW-2013-12-19: [[ Bug 11606 ]] Make sure we use a float to accumulate the x-offset.
+    MCGFloat x;
     int32_t y;
     bool rtl;
 };
@@ -325,8 +392,10 @@ static void MCFontDrawTextCallback(MCFontRef p_font, MCStringRef p_text, MCRange
     MCGFont t_font;
 	t_font = MCFontStructToMCGFont(p_font->fontstruct);
 
+    // MW-2013-12-04: [[ Bug 11535 ]] Pass through the fixed advance.
+	t_font . fixed_advance = p_font -> fixed_advance;
+    
 	// The drawing is done on the UTF-16 form of the text
-	
 	MCGContextDrawPlatformText(ctxt->m_gcontext, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, MCGPointMake(ctxt->x, ctxt->y), t_font, ctxt->rtl);
     
     // The draw position needs to be advanced
