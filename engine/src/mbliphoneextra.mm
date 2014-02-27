@@ -1112,7 +1112,7 @@ bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier)
     NSString *t_identifier;
     t_identifier = objc_msgSend([UIDevice currentDevice], sel_getUid("uniqueIdentifier"));
 	
-    return MCStringCreateWithCString([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding], r_identifier);
+    return MCStringCreateWithCFString((CFStringRef)t_identifier, r_identifier);
 }
 
 bool MCSystemGetIdentifierForVendor(MCStringRef& r_identifier)
@@ -1138,7 +1138,7 @@ static Exec_stat MCHandleIdentifierForVendor(void *context, MCParameter *p_param
     {
         NSString *t_identifier;
         t_identifier = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
-        return MCStringCreateWithCString([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding], r_identifier);
+        return MCStringCreateWithCFString((CFStringRef)t_identifier, r_identifier);
     }
 
     r_identifier = MCValueRetain(kMCEmptyString);

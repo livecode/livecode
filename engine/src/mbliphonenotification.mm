@@ -107,7 +107,7 @@ bool MCSystemGetRegisteredNotifications (MCStringRef& r_registered_alerts)
     if (t_result == nil)
         r_registered_alerts = MCValueRetain(kMCEmptyString);
     else
-        return MCStringCreateWithCString([t_result cStringUsingEncoding:NSMacOSRomanStringEncoding], r_registered_alerts);
+        return MCStringCreateWithCFString((CFStringRef)t_result, r_registered_alerts);
     return true;
 }
 
