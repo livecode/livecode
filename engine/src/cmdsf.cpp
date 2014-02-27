@@ -2974,28 +2974,55 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 			(PE_OPEN_NOMODE, sp);
 			return PS_ERROR;
 		}
+
+        // SN-2014-02-13: text encoding option added to the 'open' function
+        if (sp.lookup(SP_ENCODING, te) == PS_NORMAL)
+        {
+            encoding = (Encoding_type)te->which;
+            if (sp.next(type) != PS_NORMAL)
+            {
+                MCperror -> add(PE_OPEN_BADMODE, sp);
+                return PS_ERROR;
+            }
+        }
+
 		if (sp.lookup(SP_MODE, te) != PS_NORMAL)
 		{
 			MCperror->add
 			(PE_OPEN_BADMODE, sp);
 			return PS_ERROR;
 		}
+
+        // An encoding can only be given with a text reading
+        // An error may help a user to notify a wrong read mode
+        if (encoding != EN_BOM_BASED &&
+                te->which != OM_TEXT)
+        {
+            MCperror->add(PE_OPEN_BADMODE, sp);
+            return PS_ERROR;
+        }
+
 		if (te->which == OM_BINARY || te->which == OM_TEXT)
-		{
-			textmode = te->which == OM_TEXT;
+        {
+            // Encoding now replaces textmode
+            if (te->which == OM_BINARY)
+                encoding = EN_BINARY;
+
 			if (sp.next(type) != PS_NORMAL)
 			{
 				MCperror->add
 				(PE_OPEN_NOMODE, sp);
 				return PS_ERROR;
-			}
+            }
+
 			if (sp.lookup(SP_MODE, te) != PS_NORMAL)
 			{
 				MCperror->add
 				(PE_OPEN_BADMODE, sp);
 				return PS_ERROR;
 			}
-		}
+        }
+
 		mode = (Open_mode)te->which;
 	}
 	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
@@ -3143,7 +3170,7 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
 		MCU_realloc((char **)&MCfiles, MCnfiles, MCnfiles + 1, sizeof(Streamnode));
 		MCfiles[MCnfiles].name = name;
 		MCfiles[MCnfiles].mode = mode;
-		MCfiles[MCnfiles].textmode = textmode;
+        MCfiles[MCnfiles].textmode = textmode;
 		MCfiles[MCnfiles].ihandle = istream;
 		MCfiles[MCnfiles++].ohandle = ostream;
 		break;
@@ -3250,17 +3277,17 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
 
 		switch (arg)
 		{
-		case OA_DRIVER:
-			MCFilesExecOpenDriver(ctxt, *t_name, mode, textmode == True);
+        case OA_DRIVER:
+            MCFilesExecOpenDriver(ctxt, *t_name, mode, encoding);
 			break;
-		case OA_FILE:
-			MCFilesExecOpenFile(ctxt, *t_name, mode, textmode == True);
+        case OA_FILE:
+            MCFilesExecOpenFile(ctxt, *t_name, mode, encoding);
 			break;
 		case OA_PROCESS:
 			if (elevated)
-				MCFilesExecOpenElevatedProcess(ctxt, *t_name, mode, textmode == True);
+                MCFilesExecOpenElevatedProcess(ctxt, *t_name, mode, encoding);
 			else
-				MCFilesExecOpenProcess(ctxt, *t_name, mode, textmode == True);
+                MCFilesExecOpenProcess(ctxt, *t_name, mode, encoding);
 			break;
 		case OA_SOCKET:
             if (!ctxt . EvalOptionalExprAsNullableNameRef(message, EE_OPEN_BADMESSAGE, &t_message_name))
@@ -3320,21 +3347,21 @@ void MCOpen::compile(MCSyntaxFactoryRef ctxt)
 		{
 		case OA_DRIVER:
 			MCSyntaxFactoryEvalConstantInt(ctxt, mode);
-			MCSyntaxFactoryEvalConstantBool(ctxt, textmode == True);
+            MCSyntaxFactoryEvalConstantBool(ctxt, encoding != EN_BINARY);
 
 			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecOpenDriverMethodInfo);
 			break;
 
 		case OA_FILE:
 			MCSyntaxFactoryEvalConstantInt(ctxt, mode);
-			MCSyntaxFactoryEvalConstantBool(ctxt, textmode == True);
+            MCSyntaxFactoryEvalConstantBool(ctxt, encoding != EN_BINARY);
 
 			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecOpenFileMethodInfo);
 			break;
 
 		case OA_PROCESS:
 			MCSyntaxFactoryEvalConstantInt(ctxt, mode);
-			MCSyntaxFactoryEvalConstantBool(ctxt, textmode == True);
+            MCSyntaxFactoryEvalConstantBool(ctxt, encoding != EN_BINARY);
 
 			if (elevated)
 				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecOpenElevatedProcessMethodInfo);

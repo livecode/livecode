@@ -38,6 +38,17 @@ enum Open_mode {
     OM_BINARY
 };
 
+enum Encoding_type
+{
+    EN_BOM_BASED,
+    EN_NATIVE,
+    EN_UTF8,
+    EN_UTF16,
+    EN_UTF16LE,
+    EN_UTF16BE,
+    EN_BINARY
+};
+
 enum Object_type {
     OT_END,
     OT_HOME,
@@ -190,6 +201,7 @@ typedef struct _Streamnode
 {
 	MCNameRef name;
 	Open_mode mode;
+    Encoding_type encoding;
 	IO_handle ihandle;
 	IO_handle ohandle;
 	int4 pid;
@@ -199,8 +211,7 @@ typedef struct _Streamnode
 #elif defined(_MAC_DESKTOP)
 	MCMacProcessSerialNumber sn;
 #endif
-	int4 retcode;
-	Boolean textmode;
+    int4 retcode;
 }
 Streamnode;
 

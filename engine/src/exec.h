@@ -3839,8 +3839,12 @@ void MCFilesExecLaunchUrl(MCExecContext& ctxt, MCStringRef p_url);
 void MCFilesExecLaunchDocument(MCExecContext& ctxt, MCStringRef p_document);
 void MCFilesExecLaunchApp(MCExecContext& ctxt, MCNameRef p_app, MCStringRef p_document);
 
-void MCFilesExecOpenFile(MCExecContext& ctxt, MCNameRef p_filename, int p_mode, bool p_text_mode);
-void MCFilesExecOpenDriver(MCExecContext& ctxt, MCNameRef p_device, int p_mode, bool p_text_mode);
+void MCFilesExecOpenFile(MCExecContext& ctxt, MCNameRef p_filename, int p_mode, intenum_t p_encoding);
+void MCFilesExecOpenDriver(MCExecContext& ctxt, MCNameRef p_device, int p_mode, intenum_t p_encoding);
+void MCFilesExecOpenProcess(MCExecContext& ctxt, MCNameRef p_process, int p_mode, intenum_t p_encoding);
+void MCFilesExecOpenElevatedProcess(MCExecContext& ctxt, MCNameRef p_process, int p_mode, intenum_t p_encoding);
+//void MCFilesExecOpenFile(MCExecContext& ctxt, MCNameRef p_filename, int p_mode, bool p_text_mode);
+//void MCFilesExecOpenDriver(MCExecContext& ctxt, MCNameRef p_device, int p_mode, bool p_text_mode);
 void MCFilesExecOpenProcess(MCExecContext& ctxt, MCNameRef p_process, int p_mode, bool p_text_mode);
 void MCFilesExecOpenElevatedProcess(MCExecContext& ctxt, MCNameRef p_process, int p_mode, bool p_text_mode);
 

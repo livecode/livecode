@@ -146,7 +146,6 @@ enum Dest_type {
 	DT_THIS_ME,
 };
 
-
 enum Encryption_constants
 {
     ENCRT_BIT,
@@ -1700,6 +1699,7 @@ enum Script_point {
     SP_ASK,
     SP_COMMAND,
     SP_CONVERT,
+    SP_ENCODING,
     SP_ENCRYPTION,
     SP_EXIT,
     SP_EXPORT,
