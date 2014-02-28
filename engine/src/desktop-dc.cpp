@@ -788,6 +788,13 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	
 	do
 	{
+		// Check for abort.
+		if (abortkey())
+		{
+			abort = True;
+			break;
+		}
+		
 		// Dispatch any notify events.
 		if (MCNotifyDispatch(dispatch == True) && anyevent)
 			break;

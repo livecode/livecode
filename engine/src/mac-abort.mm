@@ -24,19 +24,42 @@
 
 #include "mac-internal.h"
 
-#if 1
-
 ////////////////////////////////////////////////////////////////////////////////
 
+// USE_EVENTTAP:
+//
 // We run a separate thread which has an eventtap monitoring for key events.
 // When a Cmd-. occurs, this global (volatile - to make sure its not optimized
 // away!) is set to true. This can then be picked up in the GetAbortKeyPressed()
 // method.
 //
 // This approach should mean that detecting for the abort-key has zero overhead.
+//
+// Unfortunately this method is not ideal - it requires Accessibility to be turned
+// on, and needs a poke at the event queue during normal script execution which
+// can cause things like redraws to occur at inappropriate points (it seems at
+// least!).
+//
+// NO USE_EVENTTAP:
+//
+// Again, a separate thread is used but instead it polls at a fixed interval to
+// see if the '.' key and Cmd key are down. This should be no worse than the
+// eventtap model in terms of responsiveness, it just means you have to hold down
+// the Cmd-'.' key for a short while (just like on Windows).
+//
+// Of course, the only issue is we need to know what key maps to '.' (how annoying
+// that people like different keyboard layouts ;)) but this can be done using
+// UCKeyTranslate magic.
+//
+// Now if only Mac allowed you to attach a monitor to low-level event input
+// stream on a secondary thread (i.e. where events are posted to the internal
+// event queue)...
 
 static volatile bool s_abort_key_pressed = false;
+
+#ifdef USE_EVENTTAP
 static volatile bool s_abort_key_checked = false;
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -57,6 +80,45 @@ static volatile bool s_abort_key_checked = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifndef USE_EVENTTAP
+static TISInputSourceRef s_current_input_source = nil;
+static CGKeyCode s_current_period_keycode = 0xffff;
+static bool s_current_period_needs_shift = false;
+
+static unichar map_keycode_to_char(TISInputSourceRef p_input_source, CGKeyCode p_key_code, bool p_with_shift)
+{
+	CFDataRef t_layout_data;
+	t_layout_data = (CFDataRef)TISGetInputSourceProperty(p_input_source, kTISPropertyUnicodeKeyLayoutData);
+	
+	const UCKeyboardLayout *t_layout;
+	t_layout = (const UCKeyboardLayout *)CFDataGetBytePtr(t_layout_data);
+	
+	UInt32 t_keys_down;
+	UniChar t_chars[4];
+	UniCharCount t_real_length;
+	t_keys_down = 0;
+	
+	UCKeyTranslate(t_layout,
+				   p_key_code,
+				   kUCKeyActionDisplay,
+				   p_with_shift ? (1 << 9) >> 8 /* shiftKey >> 8 */ : 0,
+				   LMGetKbdType(),
+				   kUCKeyTranslateNoDeadKeysBit,
+				   &t_keys_down,
+				   sizeof(t_chars) / sizeof(t_chars[0]),
+				   &t_real_length,
+				   t_chars);
+	
+	if (t_real_length == 0 || t_real_length > 1)
+		return 0xffff;
+	
+	NSLog(@"%d = %c", p_key_code, t_chars[0] & 0xff);
+	
+	return t_chars[0];
+}
+#endif
+
+#ifdef USE_EVENTTAP
 static CGEventRef abort_key_callback(CGEventTapProxy p_proxy, CGEventType p_type, CGEventRef p_event, void *p_refcon)
 {
 	if ((CGEventGetFlags(p_event) & kCGEventFlagMaskCommand) == 0)
@@ -75,10 +137,89 @@ static CGEventRef abort_key_callback(CGEventTapProxy p_proxy, CGEventType p_type
 	
 	return p_event;
 }
+#endif
 
 static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 {
+#ifdef USE_EVENTTAP
 	s_abort_key_checked = false;
+#else
+	// Update our period key mapping if the input source has changed / hasn't
+	// been initialized.
+	TISInputSourceRef t_input_source;
+	t_input_source = TISCopyCurrentKeyboardInputSource();
+	if (t_input_source != s_current_input_source || s_current_input_source == nil)
+	{
+		if (s_current_input_source != nil)
+			CFRelease(s_current_input_source);
+		
+		s_current_input_source = t_input_source;
+		s_current_period_keycode = 0xffff;
+		s_current_period_needs_shift = false;
+		
+		// If we have a valid keyboard input source then resolve '.'.
+		if (s_current_input_source != nil)
+		{
+			// Loop through all possible keycodes and map with no-shift and shift
+			// to see if we can find our '.' key.
+			for(uindex_t i = 0; i < 127; i++)
+			{
+				unichar t_char;
+				t_char = map_keycode_to_char(t_input_source, i, false);
+				if (t_char == '.')
+				{
+					s_current_period_keycode = i;
+					s_current_period_needs_shift = false;
+					break;
+				}
+				
+				t_char = map_keycode_to_char(t_input_source, i, true);
+				if (t_char == '.')
+				{
+					s_current_period_keycode = i;
+					s_current_period_needs_shift = true;
+					break;
+				}
+			}
+		}
+	}
+	
+	// If we successfully found period - we must now check the state of the keys.
+	if (s_current_period_keycode != 0xffff)
+	{
+		if (!CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, s_current_period_keycode))
+			return;
+		
+		//NSLog(@"Found period.");
+		
+		if (!CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, 0x37 /* LeftCommand */) &&
+			!CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, 0x36 /* RightCommand */))
+			return;
+		
+		//NSLog(@"Found command.");
+		
+		bool t_has_shift;
+		t_has_shift =
+				CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, 0x38 /* LeftShift */) ||
+				CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, 0x3C /* RightShift */);
+		if (s_current_period_needs_shift &&
+			!t_has_shift)
+			return;
+		if (!s_current_period_needs_shift &&
+			t_has_shift)
+			return;
+		
+		//NSLog(@"Found appropriate shift.");
+		
+		// If we get here then:
+		//   the period keycode is down
+		//   left command or right command is down
+		//   if the period keycode needs shift, then left shift or right shift is down
+		// i.e. We have detected Cmd-'.'
+		//
+		s_abort_key_pressed = true;
+	}
+#endif
 }
 
 @implementation com_runrev_livecode_MCAbortKeyThread
@@ -95,6 +236,7 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 	[m_termination_port setDelegate: self];
 	[t_loop addPort: m_termination_port forMode: NSDefaultRunLoopMode];
 	
+#ifdef USE_EVENTTAP
 	ProcessSerialNumber t_psn;
 	GetCurrentProcess(&t_psn);
 	
@@ -104,7 +246,8 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 	CFRunLoopSourceRef t_event_tap_source;
 	t_event_tap_source = CFMachPortCreateRunLoopSource(NULL, t_event_tap_port, 0);
 	CFRunLoopAddSource([t_loop getCFRunLoop], t_event_tap_source, kCFRunLoopDefaultMode);
-
+#endif
+	
 	CFRunLoopTimerRef t_runloop_timer;
 	t_runloop_timer = CFRunLoopTimerCreate(NULL, CFAbsoluteTimeGetCurrent(), 0.25, 0, 0, abort_key_timer_callback, nil);
 	CFRunLoopAddTimer([t_loop getCFRunLoop], t_runloop_timer, kCFRunLoopDefaultMode);
@@ -116,9 +259,12 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 
 	CFRunLoopRemoveTimer([t_loop getCFRunLoop], t_runloop_timer, kCFRunLoopDefaultMode);
 	CFRelease(t_runloop_timer);
+	
+#ifdef USE_EVENTTAP
 	CFRunLoopRemoveSource([t_loop getCFRunLoop], t_event_tap_source, kCFRunLoopDefaultMode);
 	CFRelease(t_event_tap_source);
 	CFRelease(t_event_tap_port);
+#endif
 	
 	[m_termination_port release];
 	m_termination_port = nil;
@@ -145,6 +291,7 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 
 bool MCPlatformGetAbortKeyPressed(void)
 {
+#ifdef USE_EVENTTAP
 	if (!s_abort_key_checked)
 	{
 		NSDisableScreenUpdates();
@@ -155,6 +302,7 @@ bool MCPlatformGetAbortKeyPressed(void)
 		NSEnableScreenUpdates();
 		s_abort_key_checked = true;
 	}
+#endif
 	
 	if (!s_abort_key_pressed)
 		return false;
@@ -189,77 +337,4 @@ void MCPlatformFinalizeAbortKey(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-#elif DOES_NOT_WORK
-
-static CFAbsoluteTime s_last_time_abort_checked = 0.0;
-
-bool MCPlatformGetAbortKeyPressed(void)
-{
-	CFAbsoluteTime t_current_time;
-	t_current_time = CFAbsoluteTimeGetCurrent();
-	if (t_current_time - s_last_time_abort_checked < 0.5)
-		return false;
-	
-	s_last_time_abort_checked = t_current_time;
-	
-#ifdef 1
-	
-#else
-	NSAutoreleasePool *t_pool;
-	t_pool = [[NSAutoreleasePool alloc] init];
-	
-	NSEvent *t_event;
-	t_event = [NSApp nextEventMatchingMask: NSKeyDownMask
-								 untilDate: [NSDate distantPast]
-									inMode: NSDefaultRunLoopMode
-								   dequeue: NO];
-	
-	bool t_abort;
-	t_abort = false;
-	if (t_event != nil)
-		if (([t_event modifierFlags] & NSCommandKeyMask) != 0)
-			if ([[t_event characters] length] == 1)
-				if ([[t_event characters] characterAtIndex: 0] == '.')
-				{
-					NSEvent *t_event;
-					t_event = [NSApp nextEventMatchingMask: NSKeyDownMask
-												 untilDate: [NSDate distantPast]
-													inMode: NSDefaultRunLoopMode
-												   dequeue: YES];
-					t_abort = true;
-				}
-	
-	[t_pool release];
-#endif
-	
-	return t_abort;
-}
-
-bool MCPlatformInitializeAbortKey(void)
-{
-	s_last_time_abort_checked = CFAbsoluteTimeGetCurrent();
-}
-
-void MCPlatformFinalizeAbortKey(void)
-{
-}
-
-#else
-
-bool MCPlatformGetAbortKeyPressed(void)
-{
-	return false;
-}
-
-bool MCPlatformInitializeAbortKey(void)
-{
-	return true;
-}
-
-void MCPlatformFinalizeAbortKey(void)
-{
-}
-
-#endif
 
