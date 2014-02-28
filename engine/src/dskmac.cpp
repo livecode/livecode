@@ -5550,10 +5550,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         t_os_error = MCS_mac_pathtoref(p_target, t_fsref);
         if (t_os_error != noErr)
         {
-            if (!MCStringCreateWithCString("file not found", r_resolved_path))
-                return False;
-            else
-                return True;
+            MCresult -> sets("file not found");
+            return False;
         }
         
         Boolean t_is_folder;
@@ -5562,18 +5560,14 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         t_os_error = FSResolveAliasFile(&t_fsref, TRUE, &t_is_folder, &t_is_alias);
         if (t_os_error != noErr || !t_is_alias) // this always seems to be false
         {
-            if (!MCStringCreateWithCString("can't get alias", r_resolved_path))
-                return False;
-            else
-                return True;
+            MCresult -> sets("can't get alias");
+            return False;
         }
         
         if (!MCS_mac_fsref_to_path(t_fsref, r_resolved_path))
         {
-            if (!MCStringCreateWithCString("can't get alias path", r_resolved_path))
-                return False;
-            
-            return True;
+            MCresult -> sets("can't get alias path");
+            return False;
         }
         
         return True;

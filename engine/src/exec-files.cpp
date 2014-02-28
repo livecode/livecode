@@ -657,8 +657,8 @@ void MCFilesEvalAliasReference(MCExecContext& ctxt, MCStringRef p_path, MCString
         ctxt.SetTheResultToEmpty();
 		return;
 	}
-	
-	ctxt.Throw();
+    
+    r_reference = MCValueRetain(kMCEmptyString);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

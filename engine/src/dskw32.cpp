@@ -2523,7 +2523,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             MCS_seterrno(GetLastError());
             //return MCStringCreateWithCString("can't get", r_error);
 			MCresult -> sets("can't get");
-			return true;
+			return false;
         }
     }
 	
