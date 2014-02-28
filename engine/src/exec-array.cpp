@@ -34,8 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, Keys, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, Extents, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Combine, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, CombineByRow, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, CombineByColumn, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Arrays, CombineByRowOrColumn, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Arrays, CombineAsSet, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Split, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Arrays, SplitByRow, 2)
@@ -72,7 +71,7 @@ struct array_element_t
 
 struct combine_array_t
 {
-	uindex_t index;
+    uindex_t index;
 	array_element_t *elements;
 };
 
@@ -94,6 +93,56 @@ static int compare_array_element(const void *a, const void *b)
 	return MCStringCompareTo(MCNameGetString(t_left -> key), MCNameGetString(t_right -> key), kMCStringOptionCompareExact);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+// combine by row or column expects an integer-indexed array
+struct array_int_indexed_element_t
+{
+    index_t key;
+    MCValueRef value;
+};
+
+struct combine_int_indexed_array_t
+{
+    uindex_t index;
+    array_int_indexed_element_t *elements;
+    MCExecContext* converter;
+};
+
+static bool list_int_indexed_array_elements(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
+{
+    combine_int_indexed_array_t *ctxt;
+    ctxt = (combine_int_indexed_array_t *)p_context;
+
+    MCAutoNumberRef t_key;
+    if (ctxt -> converter -> ConvertToNumber(MCNameGetString(p_key), &t_key))
+    {
+        index_t t_key_num = MCNumberFetchAsInteger(*t_key);
+
+        if (t_key_num < 1) // Invalid index
+            return false;
+
+        ctxt -> elements[ctxt -> index] . key = t_key_num;
+        ctxt -> elements[ctxt -> index] . value = p_value;
+        ++(ctxt -> index);
+
+        return true;
+    }
+    else
+        return false;
+}
+
+static int compare_int_indexed_elements(const void *a, const void* b)
+{
+    const array_int_indexed_element_t *t_left, *t_right;
+    t_left = (const array_int_indexed_element_t *)a;
+    t_right = (const array_int_indexed_element_t *)b;
+
+    return (t_left -> key - t_right -> key < 0) ? -1 : (t_left -> key != t_right -> key ? 1 : 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCArraysExecCombine(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_element_delimiter, MCStringRef p_key_delimiter, MCStringRef& r_string)
 {
 	bool t_success;
@@ -107,14 +156,14 @@ void MCArraysExecCombine(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_
 		t_success = MCStringCreateMutable(0, &t_string);
 
 	combine_array_t t_lisctxt;
-	t_lisctxt . elements = nil;
+    t_lisctxt . elements = nil;
 	if (t_success)
 		t_success = MCMemoryNewArray(t_count, t_lisctxt . elements);
 
 	if (t_success)
 	{
-		t_lisctxt . index = 0;
-		MCArrayApply(p_array, list_array_elements, &t_lisctxt);
+        t_lisctxt . index = 0;
+        MCArrayApply(p_array, list_array_elements, &t_lisctxt);
 		qsort(t_lisctxt . elements, t_count, sizeof(array_element_t), compare_array_element);
 		for(uindex_t i = 0; i < t_count; i++)
 		{
@@ -151,9 +200,115 @@ void MCArraysExecCombine(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_
 	ctxt . Throw();
 }
 
-void MCArraysExecCombineByColumn(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string)
+// Should be removed when 'combine by row' and 'combine by column' only differs by the delimiter used,
+// not by the way the array is handled - any index is fine for combine by row
+void MCArraysExecCombineByRow(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef &r_string)
 {
-	ctxt . Unimplemented();
+    MCAutoListRef t_list;
+    MCListCreateMutable(ctxt . GetRowDelimiter(), &t_list);
+
+    uindex_t t_count = MCArrayGetCount(p_array);
+    combine_array_t t_lisctxt;
+    bool t_success;
+
+    t_lisctxt . elements = nil;
+    t_lisctxt . index = 0;
+    t_success = MCMemoryNewArray(t_count, t_lisctxt . elements);
+
+    if (t_success)
+    {
+        MCArrayApply(p_array, list_array_elements, &t_lisctxt);
+        qsort(t_lisctxt . elements, t_count, sizeof(array_element_t), compare_array_element);
+
+        for (int i = 0; i < t_count && t_success; ++i)
+        {
+            MCAutoStringRef t_string;
+            if (ctxt . ConvertToString(t_lisctxt . elements[i] . value, &t_string))
+                t_success = MCListAppend(*t_list, *t_string);
+            else
+                t_success = false;
+        }
+
+        MCMemoryDeleteArray(t_lisctxt . elements);
+    }
+
+    if (t_success && MCListCopyAsString(*t_list, r_string))
+        return;
+
+    ctxt . Throw();
+}
+
+void MCArraysExecCombineByRowOrColumn(MCExecContext& ctxt, MCArrayRef p_array, bool p_is_row, MCStringRef &r_string)
+{
+    if (p_is_row)
+    {
+        // Temporarily buggy output for 'combine by row'
+        MCArraysExecCombineByRow(ctxt, p_array, r_string);
+        return;
+    }
+
+    char_t t_delimiter;
+    if (p_is_row)
+        t_delimiter = ctxt . GetRowDelimiter();
+    else
+        t_delimiter = ctxt . GetColumnDelimiter();
+
+    MCAutoListRef t_list;
+    MCListCreateMutable(t_delimiter, &t_list);
+
+    uindex_t t_count = MCArrayGetCount(p_array);
+    combine_int_indexed_array_t t_lisctxt;
+    bool t_success;
+
+    t_lisctxt . elements = nil;
+    t_lisctxt . index = 0;
+    t_lisctxt . converter = &ctxt;
+    t_success = MCMemoryNewArray(t_count, t_lisctxt . elements);
+
+    if (t_success)
+    {
+        if (MCArrayApply(p_array, list_int_indexed_array_elements, &t_lisctxt))
+        {
+            bool t_valid_keys;
+
+            qsort(t_lisctxt . elements, t_count, sizeof(array_element_t), compare_int_indexed_elements);
+
+            // Combine by row/column is only valid if all the indices are consecutive numbers
+            // Otherwise, an empty string is returned - no error
+            index_t t_last_index;
+            t_valid_keys = true;
+            t_last_index = 0;
+            for (int i = 0; i < t_count && t_valid_keys; ++i)
+            {
+                if (!t_last_index)
+                    t_last_index = t_lisctxt . elements[i] . key;
+                else
+                    t_valid_keys = ++t_last_index == t_lisctxt . elements[i] . key;
+            }
+
+            if (t_valid_keys)
+            {
+                for (int i = 0; i < t_count && t_success; ++i)
+                {
+                    MCAutoStringRef t_string;
+
+                    if (t_lisctxt . elements[i] . key == 0) // The index 0 is ignored
+                        continue;
+
+                    if (ctxt . ConvertToString(t_lisctxt . elements[i] . value, &t_string))
+                        t_success = MCListAppend(*t_list, *t_string);
+                    else
+                        t_success = false;
+                }
+            }
+        }
+        MCMemoryDeleteArray(t_lisctxt . elements);
+    }
+
+    if (t_success && MCListCopyAsString(*t_list, r_string))
+        return;
+
+    ctxt . Throw();
 }
 
 void MCArraysExecCombineAsSet(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_element_delimiter, MCStringRef& r_string)
