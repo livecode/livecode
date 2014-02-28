@@ -5891,15 +5891,16 @@ void MCMCISendString::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 	return ES_NORMAL;
 #endif /* MCMCISendString */
     
-    MCAutoStringRef t_string, t_result;
+    MCAutoStringRef t_string;
+    MCStringRef t_result;
 
     if (!MCExecValueTraits<MCStringRef>::eval(ctxt, string, EE_MCISENDSTRING_BADSOURCE, &t_string))
         return;
     
-    MCMultimediaEvalMCISendString(ctxt, *t_string, &t_result);
+    MCMultimediaEvalMCISendString(ctxt, *t_string, t_result);
     
     if (!ctxt . HasError())
-        MCExecValueTraits<MCStringRef>::set(r_value, *t_result);
+        MCExecValueTraits<MCStringRef>::set(r_value, t_result);
 }
 
 void MCMCISendString::compile(MCSyntaxFactoryRef ctxt)

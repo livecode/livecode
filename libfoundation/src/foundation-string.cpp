@@ -1374,9 +1374,14 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
         return false;
     }
     
-    if (p_options != kMCStringOptionCompareExact)
-		return MCStrCharsEqualCaseless(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
-	return MCStrCharsEqualExact(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
+    if (p_options == kMCStringOptionCompareExact)
+        return MCStrCharsEqualExact(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
+    else if (p_options == kMCStringOptionCompareNonliteral)
+        return MCStrCharsEqualNonliteral(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
+    else if (p_options == kMCStringOptionCompareFolded)
+        return MCStrCharsEqualFolded(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
+    else
+        return MCStrCharsEqualCaseless(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
 }
 
 bool MCStringIsEmpty(MCStringRef string)
@@ -1388,9 +1393,14 @@ bool MCStringSubstringIsEqualTo(MCStringRef self, MCRange p_sub, MCStringRef p_o
 {
 	__MCStringClampRange(self, p_sub);
 
-	if (p_options != kMCStringOptionCompareExact)
-		return MCStrCharsEqualCaseless(self -> chars + p_sub . offset, p_sub . length, p_other -> chars, p_other -> char_count);
-	return MCStrCharsEqualExact(self -> chars + p_sub . offset, p_sub . length, p_other -> chars, p_other -> char_count);
+    if (p_options == kMCStringOptionCompareExact)
+        return MCStrCharsEqualExact(self -> chars + p_sub . offset, p_sub . length, p_other -> chars, p_other -> char_count);
+    else if (p_options == kMCStringOptionCompareNonliteral)
+        return MCStrCharsEqualNonliteral(self -> chars + p_sub . offset, p_sub . length, p_other -> chars, p_other -> char_count);
+    else if (p_options == kMCStringOptionCompareFolded)
+        return MCStrCharsEqualFolded(self -> chars + p_sub . offset, p_sub . length, p_other -> chars, p_other -> char_count);
+    else
+        return MCStrCharsEqualCaseless(self -> chars + p_sub . offset, p_sub . length, p_other -> chars, p_other -> char_count);
 }
 
 bool MCStringSubstringIsEqualToSubstring(MCStringRef self, MCRange p_sub, MCStringRef p_other, MCRange p_other_sub, MCStringOptions p_options)
@@ -1398,9 +1408,14 @@ bool MCStringSubstringIsEqualToSubstring(MCStringRef self, MCRange p_sub, MCStri
 	__MCStringClampRange(self, p_sub);
     __MCStringClampRange(p_other, p_other_sub);
     
-	if (p_options != kMCStringOptionCompareExact)
-		return MCStrCharsEqualCaseless(self -> chars + p_sub . offset, p_sub . length, p_other -> chars + p_other_sub . offset, p_other_sub . length);
-	return MCStrCharsEqualExact(self -> chars + p_sub . offset, p_sub . length, p_other -> chars + p_other_sub . offset, p_other_sub . length);
+    if (p_options == kMCStringOptionCompareExact)
+        return MCStrCharsEqualExact(self -> chars + p_sub . offset, p_sub . length, p_other -> chars + p_other_sub . offset, p_other_sub . length);
+    else if (p_options == kMCStringOptionCompareNonliteral)
+        return MCStrCharsEqualNonliteral(self -> chars + p_sub . offset, p_sub . length, p_other -> chars + p_other_sub . offset, p_other_sub . length);
+    else if (p_options == kMCStringOptionCompareFolded)
+        return MCStrCharsEqualFolded(self -> chars + p_sub . offset, p_sub . length, p_other -> chars + p_other_sub . offset, p_other_sub . length);
+    else
+        return MCStrCharsEqualCaseless(self -> chars + p_sub . offset, p_sub . length, p_other -> chars + p_other_sub . offset, p_other_sub . length);
 }
 
 bool MCStringIsEqualToNativeChars(MCStringRef self, const char_t *p_chars, uindex_t p_char_count, MCStringOptions p_options)
@@ -1412,9 +1427,14 @@ bool MCStringIsEqualToNativeChars(MCStringRef self, const char_t *p_chars, uinde
 
 compare_t MCStringCompareTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_options)
 {
-	if (p_options != kMCStringOptionCompareExact)
-		return MCStrCharsCompareCaseless(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
-	return MCStrCharsCompareExact(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
+    if (p_options == kMCStringOptionCompareExact)
+        return MCStrCharsCompareExact(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
+    else if (p_options == kMCStringOptionCompareNonliteral)
+        return MCStrCharsCompareNonliteral(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
+    else if (p_options == kMCStringOptionCompareFolded)
+        return MCStrCharsCompareFolded(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
+    else
+        return MCStrCharsCompareCaseless(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
 }
 
 bool MCStringBeginsWith(MCStringRef self, MCStringRef p_prefix, MCStringOptions p_options)
@@ -1423,6 +1443,8 @@ bool MCStringBeginsWith(MCStringRef self, MCStringRef p_prefix, MCStringOptions 
         return MCStrCharsBeginsWithExact(self -> chars, self -> char_count, p_prefix -> chars, p_prefix -> char_count);
     else if (p_options == kMCStringOptionCompareNonliteral)
         return MCStrCharsBeginsWithNonliteral(self -> chars, self -> char_count, p_prefix -> chars, p_prefix -> char_count);
+    else if (p_options == kMCStringOptionCompareFolded)
+        return MCStrCharsBeginsWithFolded(self -> chars, self -> char_count, p_prefix -> chars, p_prefix -> char_count);
     else
         return MCStrCharsBeginsWithCaseless(self -> chars, self -> char_count, p_prefix -> chars, p_prefix -> char_count);
 }
@@ -1440,6 +1462,8 @@ bool MCStringEndsWith(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_
         return MCStrCharsEndsWithExact(self -> chars, self -> char_count, p_suffix -> chars, p_suffix -> char_count);
     else if (p_options == kMCStringOptionCompareNonliteral)
         return MCStrCharsEndsWithNonliteral(self -> chars, self -> char_count, p_suffix -> chars, p_suffix -> char_count);
+    else if (p_options == kMCStringOptionCompareFolded)
+        return MCStrCharsEndsWithFolded(self -> chars, self -> char_count, p_suffix -> chars, p_suffix -> char_count);
     else
         return MCStrCharsEndsWithCaseless(self -> chars, self -> char_count, p_suffix -> chars, p_suffix -> char_count);
 }
@@ -1457,6 +1481,8 @@ bool MCStringContains(MCStringRef self, MCStringRef p_needle, MCStringOptions p_
         return MCStrCharsContainsExact(self -> chars, self -> char_count, p_needle -> chars, p_needle -> char_count);
     else if (p_options == kMCStringOptionCompareNonliteral)
         return MCStrCharsContainsNonliteral(self -> chars, self -> char_count, p_needle -> chars, p_needle -> char_count);
+    else if (p_options == kMCStringOptionCompareFolded)
+        return MCStrCharsContainsFolded(self -> chars, self -> char_count, p_needle -> chars, p_needle -> char_count);
     else
         return MCStrCharsContainsCaseless(self -> chars, self -> char_count, p_needle -> chars, p_needle -> char_count);
 }
@@ -1469,6 +1495,8 @@ bool MCStringSubstringContains(MCStringRef self, MCRange p_range, MCStringRef p_
         return MCStrCharsContainsExact(self -> chars + p_range . offset, p_range . length, p_needle -> chars, p_needle -> char_count);
     else if (p_options == kMCStringOptionCompareNonliteral)
         return MCStrCharsContainsNonliteral(self -> chars + p_range . offset, p_range . length, p_needle -> chars, p_needle -> char_count);
+    else if (p_options == kMCStringOptionCompareFolded)
+        return MCStrCharsContainsFolded(self -> chars + p_range . offset, p_range . length, p_needle -> chars, p_needle -> char_count);
     else
         return MCStrCharsContainsCaseless(self -> chars + p_range . offset, p_range . length, p_needle -> chars, p_needle -> char_count);
 }
@@ -1485,6 +1513,8 @@ bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_aft
         t_result = MCStrCharsFirstIndexOfExact(self -> chars + p_after, self -> char_count - p_after, p_needle -> chars, p_needle -> char_count, r_offset);
     else if (p_options == kMCStringOptionCompareNonliteral)
         t_result = MCStrCharsFirstIndexOfNonliteral(self -> chars + p_after, self -> char_count - p_after, p_needle -> chars, p_needle -> char_count, r_offset);
+    else if (p_options == kMCStringOptionCompareFolded)
+        t_result = MCStrCharsFirstIndexOfFolded(self -> chars + p_after, self -> char_count - p_after, p_needle -> chars, p_needle -> char_count, r_offset);
     else
         t_result =  MCStrCharsFirstIndexOfCaseless(self -> chars + p_after, self -> char_count - p_after, p_needle -> chars, p_needle -> char_count, r_offset);
    
@@ -1505,6 +1535,8 @@ bool MCStringFirstIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p
         t_result = MCStrCharsFirstIndexOfCharExact(self -> chars + p_after, self -> char_count - p_after, p_needle, r_offset);
     else if (p_options == kMCStringOptionCompareNonliteral)
         t_result = MCStrCharsFirstIndexOfCharNonliteral(self -> chars + p_after, self -> char_count - p_after, p_needle, r_offset);
+    else if (p_options == kMCStringOptionCompareFolded)
+        t_result = MCStrCharsFirstIndexOfCharFolded(self -> chars + p_after, self -> char_count - p_after, p_needle, r_offset);
     else
         t_result = MCStrCharsFirstIndexOfCharCaseless(self -> chars + p_after, self -> char_count - p_after, p_needle, r_offset);
     
@@ -1525,6 +1557,8 @@ bool MCStringLastIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_befo
         t_result = MCStrCharsLastIndexOfExact(self -> chars, p_before, p_needle -> chars, p_needle -> char_count, r_offset);
     else if (p_options == kMCStringOptionCompareNonliteral)
         t_result = MCStrCharsLastIndexOfNonliteral(self -> chars, p_before, p_needle -> chars, p_needle -> char_count, r_offset);
+    else if (p_options == kMCStringOptionCompareFolded)
+        t_result = MCStrCharsLastIndexOfFolded(self -> chars, p_before, p_needle -> chars, p_needle -> char_count, r_offset);
     else
         t_result = MCStrCharsLastIndexOfCaseless(self -> chars, p_before, p_needle -> chars, p_needle -> char_count, r_offset);
     
@@ -1541,6 +1575,8 @@ bool MCStringLastIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_
         t_result = MCStrCharsLastIndexOfCharExact(self -> chars, p_before, p_needle, r_offset);
     else if (p_options == kMCStringOptionCompareNonliteral)
         t_result = MCStrCharsLastIndexOfCharNonliteral(self -> chars, p_before, p_needle, r_offset);
+    else if (p_options == kMCStringOptionCompareFolded)
+        t_result = MCStrCharsLastIndexOfCharFolded(self -> chars, p_before, p_needle, r_offset);
     else
         t_result = MCStrCharsLastIndexOfCharCaseless(self -> chars, p_before, p_needle, r_offset);
 
@@ -1748,7 +1784,7 @@ bool MCStringFold(MCStringRef self, MCStringOptions p_options)
 	MCAssert(MCStringIsMutable(self));
 
 	// If we are looking for exact comparison then folding has no effect.
-	if (p_options == kMCStringOptionCompareExact)
+	if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral)
 		return true;
 
     // Case-fold the string
@@ -2437,22 +2473,11 @@ bool MCStringFindAndReplaceChar(MCStringRef self, codepoint_t p_pattern, codepoi
     // normalisation is required and one or both codepoints are composed. Another
     if
     (
-        /*// One is BMP and one is non-BMP
-        ((!(p_pattern & 0x1F0000)) ^ (!(p_replacement & 0x1F0000)))
+        // Either character is outside the BMP
+        (p_pattern > 0xFFFF || p_replacement > 0xFFFF)
      
-        // Normalisation has been requested and either the pattern or replacement
-        // will potentially change under normalisation
-        || ((p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareNonliteral)
-            && (MCUnicodeIsComposed(p_pattern) || MCUnicodeIsComposed(p_replacement)))
-     
-        // Case folding changes the length of either the pattern or replacement
-        || ((p_options == kMCStringOptionCompareCaseless)
-            && (MCUnicodeGetBinaryProperty(p_pattern, kMCUni)
-                || !MCUnicodeGetBinaryProperty(p_replacement, kMCUnicodePropertyChangesWhenCaseFolded)))
-        */
-     
-        // Don't bother doing it the slow way yet; do it fast + wrong instead...
-        false
+        // Normalisation or case-folding has been requested
+        || (p_options != kMCStringOptionCompareExact)
     )
     {
         // Do it via the slow-path full string replacement
@@ -2463,68 +2488,18 @@ bool MCStringFindAndReplaceChar(MCStringRef self, codepoint_t p_pattern, codepoi
         return MCStringFindAndReplace(self, *t_pattern, *t_replacement, p_options);
     }
     
-    // Are we dealing with a surrogate pair?
-    unichar_t t_pattern_units[2];
-    unichar_t t_replacement_units[2];
-    bool t_pair;
-    t_pair = MCStringCodepointToSurrogates(p_pattern, t_pattern_units) == 2;
-    MCStringCodepointToSurrogates(p_replacement, t_replacement_units);
-    
-    // Which type of comparison are we using?
-    if (p_options == kMCStringOptionCompareExact)
+    // The options must be kMCStringOptionCompareExact
+    for (uindex_t i = 0; i < self -> char_count; i++)
     {
-        for (uindex_t i = 0; i < self -> char_count; i++)
-        {
-            if (self -> chars[i] == t_pattern_units[0]
-                && (!t_pair ||
-                    (i + 1 < self -> char_count && self -> chars[i + 1] == t_pattern_units[1])))
-            {
-                // Found a match
-                self -> chars[i] = t_replacement_units[0];
-                if (t_pair)
-                    self -> chars[++i] = t_replacement_units[1];
-            }
-        }
-    }
-    else if (p_options == kMCStringOptionCompareCaseless)
-    {
-        for (uindex_t i = 0; i < self -> char_count; i++)
-        {
-            codepoint_t t_char;
-            if (MCStringIsValidSurrogatePair(self, i))
-                t_char = MCStringSurrogatesToCodepoint(self -> chars[i], self -> chars[i + 1]);
-            else
-                t_char = self -> chars[i];
-            
-            if (MCUnicodeGetCharacterProperty(t_char, kMCUnicodePropertySimpleCaseFolding)
-                == MCUnicodeGetCharacterProperty(p_pattern, kMCUnicodePropertySimpleCaseFolding))
-            {
-                // Found a match
-                self -> chars[i] = t_replacement_units[0];
-                if (t_pair)
-                    self -> chars[++i] = t_replacement_units[1];
-            }
-        }
-    }
-    else if (p_options == kMCStringOptionCompareNonliteral)
-    {
-        MCAssert(false);
-        return false;
-    }
-    else
-    {
-        MCAssert(false);
-        return false;
+        if (self -> chars[i] == p_pattern)
+            self -> chars[i] = p_replacement;
     }
     
-    return true;
+      return true;
 }
 
 bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef p_replacement, MCStringOptions p_options)
 {
-	if (p_pattern -> char_count == 1 && p_replacement -> char_count == 1)
-		return MCStringFindAndReplaceChar(self, p_pattern -> chars[0], p_replacement -> chars[0], p_options);
-	
 	if (self -> char_count != 0)
 	{
 		strchar_t *t_output;

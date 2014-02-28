@@ -843,6 +843,7 @@ enum Properties {
 	P_WORKING,
     // local properties
     P_CASE_SENSITIVE,
+    P_FORM_SENSITIVE,
     P_CENTURY_CUTOFF,
     P_CONVERT_OCTALS,
     P_ITEM_DELIMITER,
@@ -1753,7 +1754,7 @@ enum Show_object {
 };
 
 enum Sort_type {
-    ST_UNDEFINED,
+    ST_UNDEF,
     ST_OF,
     ST_BY,
     ST_LINES,
@@ -1977,6 +1978,7 @@ enum Statements {
 //   a uint32_t since as a independent var, it makes more sense for it to be that).
 typedef uint32_t Symbol_type;
 enum {
+    ST_UNDEFINED,
     ST_ERR,
     ST_EOF,
     ST_EOL,

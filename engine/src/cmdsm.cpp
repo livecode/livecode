@@ -1205,9 +1205,9 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 		MCAutoStringRef t_string;
 		if (form == FORM_NONE)
 		{
-			if (chunk == TYPE_COLUMN)
-				MCArraysExecCombineByColumn(ctxt, *t_array, &t_string);
-			else
+            if (chunk == TYPE_COLUMN || chunk == TYPE_ROW)
+                MCArraysExecCombineByRowOrColumn(ctxt, *t_array, chunk == TYPE_ROW, &t_string);
+            else
 				MCArraysExecCombine(ctxt, *t_array, *t_element_del, *t_key_del, &t_string);
 		}
 		else if (form == FORM_SET)
@@ -1258,8 +1258,8 @@ void MCArrayOp::compile(MCSyntaxFactoryRef ctxt)
 	{
 		if (form == FORM_NONE)
 		{
-			if (mode == TYPE_COLUMN)
-				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineByColumnMethodInfo, 0, 0);
+            if (mode == TYPE_COLUMN || mode == TYPE_ROW)
+                MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineByRowOrColumnMethodInfo, 0, 1, 0);
 			else
 				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineMethodInfo, 0, 1, 2, 0);
 		}

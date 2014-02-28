@@ -1353,6 +1353,16 @@ void MCEngineSetCaseSensitive(MCExecContext& ctxt, bool p_value)
 	ctxt . SetCaseSensitive(p_value);
 }
 
+void MCEngineGetFormSensitive(MCExecContext& ctxt, bool& r_value)
+{
+    r_value = ctxt . GetFormSensitive();
+}
+
+void MCEngineSetFormSensitive(MCExecContext& ctxt, bool p_value)
+{
+    ctxt . SetFormSensitive(p_value);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void MCEngineSetCenturyCutOff(MCExecContext& ctxt, integer_t p_value)

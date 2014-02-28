@@ -519,7 +519,7 @@ void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCMenuIt
 		
 		// Ignore shift state for non-letter keys
 		// Will this work for non-English locales? Maybe "if (!MCS_isletter(t_key))"
-		if (!MCUnicodeIsAlphabetic(t_key));
+		if (!MCUnicodeIsAlphabetic(t_key))
 				t_mods &= ~MS_SHIFT;
 		p_menuitem->modifiers = t_mods;
 		p_menuitem->accelerator = t_key;

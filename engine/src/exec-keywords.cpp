@@ -296,7 +296,7 @@ void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpres
             return;
         }
         
-		if (MCStringIsEqualTo(*t_cond, *t_case_string, ctxt . GetCaseSensitive() ? kMCStringOptionCompareExact : kMCStringOptionCompareCaseless))
+		if (MCStringIsEqualTo(*t_cond, *t_case_string, ctxt . GetStringComparisonType()))
         {
             match = case_offsets[i];
             break;

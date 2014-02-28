@@ -145,7 +145,7 @@ static bool MCLogicIsEqualTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef 
 	if (ctxt . ForceToString(p_left, &t_left_str) &&
 		ctxt . ForceToString(p_right, &t_right_str))
 	{
-		r_result = MCStringIsEqualTo(*t_left_str, *t_right_str, ctxt . GetCaseSensitive() ? kMCStringOptionCompareExact : kMCStringOptionCompareCaseless);
+		r_result = MCStringIsEqualTo(*t_left_str, *t_right_str, ctxt . GetStringComparisonType());
 		return true;
 	}
 
@@ -192,7 +192,7 @@ static bool MCLogicCompareTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef 
 	if (ctxt . ForceToString(p_left, &t_left_str) &&
 		ctxt . ForceToString(p_right, &t_right_str))
 	{
-		r_result = MCStringCompareTo(*t_left_str, *t_right_str, ctxt . GetCaseSensitive() ? kMCStringOptionCompareExact : kMCStringOptionCompareCaseless);
+		r_result = MCStringCompareTo(*t_left_str, *t_right_str, ctxt . GetStringComparisonType());
 		return true;
 	}
 

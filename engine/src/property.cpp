@@ -70,6 +70,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 static MCPropertyInfo kMCPropertyInfoTable[] =
 {
 	DEFINE_RW_PROPERTY(P_CASE_SENSITIVE, Bool, Engine, CaseSensitive)
+    DEFINE_RW_PROPERTY(P_FORM_SENSITIVE, Bool, Engine, FormSensitive)
 	DEFINE_RW_PROPERTY(P_CENTURY_CUTOFF, Int16, Engine, CenturyCutOff)
 	DEFINE_RW_PROPERTY(P_CONVERT_OCTALS, Bool, Engine, ConvertOctals)
 	DEFINE_RW_PROPERTY(P_ITEM_DELIMITER, Char, Engine, ItemDelimiter)
@@ -620,6 +621,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	switch (which)
 	{
 	case P_CASE_SENSITIVE:
+    case P_FORM_SENSITIVE:
 	case P_CENTURY_CUTOFF:
 	case P_CONVERT_OCTALS:
 	case P_ITEM_DELIMITER:
