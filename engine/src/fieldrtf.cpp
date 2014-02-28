@@ -326,7 +326,7 @@ static bool export_rtf_build_tables(void *p_context, MCFieldExportEventType p_ev
 
 // Emit a run of native text, taking care to encode appropriate chars
 // (in particular, line break - 0x0b).
-static void export_rtf_emit_native_text(MCStringRef p_buffer, const uint8_t *p_chars, uint32_t p_char_count)
+static void export_rtf_emit_native_text(MCStringRef& x_buffer, const uint8_t *p_chars, uint32_t p_char_count)
 {
 	for(;;)
 	{
@@ -342,7 +342,7 @@ static void export_rtf_emit_native_text(MCStringRef p_buffer, const uint8_t *p_c
 
 		if (t_end > 0)
 		{
-			/* UNCHECKED */ MCStringAppendFormat(p_buffer, "%*.s", t_end, p_chars);
+			/* UNCHECKED */ MCStringAppendFormat(x_buffer, "%.*s", t_end, p_chars);
 			p_char_count -= t_end;
 			p_chars += t_end;
 		}
@@ -351,9 +351,9 @@ static void export_rtf_emit_native_text(MCStringRef p_buffer, const uint8_t *p_c
 			break;
 
 		if (*p_chars != 0x0b)
-			/* UNCHECKED */ MCStringAppendFormat(p_buffer, "\\'%02X", *p_chars);
+			/* UNCHECKED */ MCStringAppendFormat(x_buffer, "\\'%02X", *p_chars);
 		else
-			/* UNCHECKED */ MCStringAppendFormat(p_buffer, "\\line ");
+			/* UNCHECKED */ MCStringAppendFormat(x_buffer, "\\line ");
 		p_chars += 1;
 		p_char_count -= 1;
 	}
