@@ -20,6 +20,7 @@
 #include "core.h"
 #include "globdefs.h"
 #include "imagebitmap.h"
+#include "region.h"
 
 #include "platform.h"
 #include "platform-internal.h"
@@ -102,11 +103,11 @@ private:
 	void Switch(bool new_offscreen);
 	
 	static void DoSwitch(void *context);
+	static OSErr MovieDrawingComplete(Movie movie, long ref);
 	
 	QTMovie *m_movie;
 	QTMovieView *m_view;
-	
-	CVPixelBufferRef m_pixel_buffer;
+	CVImageBufferRef m_current_frame;
 	
 	MCRectangle m_rect;
 	bool m_visible : 1;
@@ -193,9 +194,10 @@ void MCPlatformPlayer::DoWindowStateChanged(void *p_ctxt, bool p_realized)
 
 MCQTKitPlayer::MCQTKitPlayer(void)
 {
-	m_view = nil;
-	
 	m_movie = [[QTMovie movie] retain];
+	m_view = [[QTMovieView alloc] initWithFrame: NSZeroRect];
+	
+	m_current_frame = nil;
 	
 	m_rect = MCRectangleMake(0, 0, 0, 0);
 	m_visible = true;
@@ -209,8 +211,37 @@ MCQTKitPlayer::MCQTKitPlayer(void)
 
 MCQTKitPlayer::~MCQTKitPlayer(void)
 {
+	if (m_current_frame != nil)
+		CFRelease(m_current_frame);
+	
 	[m_view release];
 	[m_movie release];
+}
+
+OSErr MCQTKitPlayer::MovieDrawingComplete(Movie p_movie, long p_ref)
+{
+	MCQTKitPlayer *t_self;
+	t_self = (MCQTKitPlayer *)p_ref;
+
+	QTVisualContextRef t_context;
+	t_context = nil;
+	GetMovieVisualContext([t_self -> m_movie quickTimeMovie], &t_context);
+	
+	CVImageBufferRef t_image;
+	t_image = nil;
+	if (t_context != nil)
+		QTVisualContextCopyImageForTime(t_context, kCFAllocatorDefault, NULL, &t_image);
+	
+	if (t_image != nil)
+	{
+		if (t_self -> m_current_frame != nil)
+			CFRelease(t_self -> m_current_frame);
+		t_self -> m_current_frame = t_image;
+	}
+	
+	MCPlatformCallbackSendPlayerFrameChanged(t_self);
+	
+	return noErr;
 }
 
 void MCQTKitPlayer::Switch(bool p_new_offscreen)
@@ -248,10 +279,20 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
 	{
 		if (t_player -> m_view != nil)
 			t_player -> Unrealize();
+		
+		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
+		
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
 	}
 	else
 	{
+		if (t_player -> m_current_frame != nil)
+		{
+			CFRelease(t_player -> m_current_frame);
+			t_player -> m_current_frame = nil;
+		}
+		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
+		
 		// Switching to non-offscreen
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
 		t_player -> Realize();
@@ -262,20 +303,20 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
 
 void MCQTKitPlayer::Realize(void)
 {
-	if (m_offscreen || m_window == nil)
+	if (m_window == nil)
 		return;
+	
+	NSLog(@"Realize movie view %p", m_view);
 	
 	MCMacPlatformWindow *t_window;
 	t_window = (MCMacPlatformWindow *)m_window;
 	
-	MCWindowView *t_parent_view;
-	t_parent_view = t_window -> GetView();
-	
-	m_view = [[QTMovieView alloc] initWithFrame: NSZeroRect];
-	
-	NSLog(@"Realize movie view %p", m_view);
-	
-	[t_parent_view addSubview: m_view];
+	if (!m_offscreen)
+	{
+		MCWindowView *t_parent_view;
+		t_parent_view = t_window -> GetView();
+		[t_parent_view addSubview: m_view];
+	}
 	
 	Synchronize();
 }
@@ -287,18 +328,16 @@ void MCQTKitPlayer::Unrealize(void)
 	
 	NSLog(@"Unrealize movie view %p", m_view);
 	
-	MCMacPlatformWindow *t_window;
-	t_window = (MCMacPlatformWindow *)m_window;
+	if (!m_offscreen)
+	{
+		MCMacPlatformWindow *t_window;
+		t_window = (MCMacPlatformWindow *)m_window;
 	
-	MCWindowView *t_parent_view;
-	t_parent_view = t_window -> GetView();
+		MCWindowView *t_parent_view;
+		t_parent_view = t_window -> GetView();
 	
-	[m_view setMovie: nil];
-	
-	[m_view removeFromSuperview];
-	
-	[m_view release];
-	m_view = nil;
+		[m_view removeFromSuperview];
+	}
 }
 
 void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
@@ -332,13 +371,12 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 	// as it works on the platforms we support, it should be fine.
 	[m_movie setDraggable: NO];
 	
-	if (m_view != nil)
-		[m_view setMovie: m_movie];
+	[m_view setMovie: m_movie];
 }
 
 void MCQTKitPlayer::Synchronize(void)
 {
-	if (m_view == nil)
+	if (m_window == nil)
 		return;
 	
 	NSLog(@"Synchronize movie");
@@ -346,16 +384,17 @@ void MCQTKitPlayer::Synchronize(void)
 	MCMacPlatformWindow *t_window;
 	t_window = (MCMacPlatformWindow *)m_window;
 	
-	[m_view setMovie: m_movie];
-	
 	NSRect t_frame;
 	t_window -> MapMCRectangleToNSRect(m_rect, t_frame);
+
 	[m_view setFrame: t_frame];
 	
 	[m_view setHidden: !m_visible];
 	
 	[m_view setEditable: m_show_selection];
 	[m_view setControllerVisible: m_show_controller];
+	
+	MCMovieChanged([m_movie quickTimeMovieController], [m_movie quickTimeMovie]);
 }
 
 bool MCQTKitPlayer::IsPlaying(void)
@@ -383,51 +422,62 @@ void MCQTKitPlayer::Step(int amount)
 
 void MCQTKitPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 {	
-	NSError *t_error;
-	t_error = nil;
-
-	NSDictionary *t_attrs;
-	t_attrs = [NSDictionary dictionaryWithObjectsAndKeys:
-			   QTMovieFrameImageTypeCVPixelBufferRef, QTMovieFrameImageType,
-			   [NSValue valueWithSize: NSMakeSize(m_rect . width, m_rect . height)], QTMovieFrameImageSize,
-			   nil];
+	// First get the image from the view - this will have black where the movie
+	// should be.
 	
-	CVPixelBufferRef t_buffer;
-	t_buffer = (CVPixelBufferRef)[m_movie frameImageAtTime: [m_movie currentTime]
-											withAttributes: t_attrs
-													 error: &t_error];
+	NSRect t_rect;
+	if (m_offscreen)
+		t_rect = NSMakeRect(0, 0, m_rect . width, m_rect . height);
+	else
+		t_rect = [m_view frame];
 	
-	if (t_error != nil)
+	NSRect t_movie_rect;
+	t_movie_rect = [m_view movieBounds];
+	
+	NSBitmapImageRep *t_rep;
+	t_rep = [m_view bitmapImageRepForCachingDisplayInRect: t_rect];
+	[m_view cacheDisplayInRect: t_rect toBitmapImageRep: t_rep];
+	
+	MCImageBitmap *t_bitmap;
+	t_bitmap = new MCImageBitmap;
+	t_bitmap -> width = [t_rep pixelsWide];
+	t_bitmap -> height = [t_rep pixelsHigh];
+	t_bitmap -> stride = [t_rep bytesPerRow];
+	t_bitmap -> data = (uint32_t *)[t_rep bitmapData];
+	t_bitmap -> has_alpha = t_bitmap -> has_transparency = true;
+	
+	// Now if we have a current frame, then composite at the appropriate size into
+	// the movie portion of the buffer.
+	if (m_current_frame != nil)
 	{
-		NSLog(@"Image error: %@", t_error);
-		return;
+		extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
+		
+		CGColorSpaceRef t_colorspace;
+		t_colorspace = CGColorSpaceCreateDeviceRGB();
+		
+		CGContextRef t_cg_context;
+		t_cg_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap -> width, t_bitmap -> height, 8, t_bitmap -> stride, t_colorspace, MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true));
+		
+		CIContext *t_ci_context;
+		t_ci_context = [CIContext contextWithCGContext: t_cg_context options: nil];
+		
+		CIImage *t_ci_image;
+		t_ci_image = [[CIImage alloc] initWithCVImageBuffer: m_current_frame];
+		
+		[t_ci_context drawImage: t_ci_image inRect: CGRectMake(0, t_rect . size . height - t_movie_rect . size . height, t_movie_rect . size . width, t_movie_rect . size . height) fromRect: [t_ci_image extent]];
+		
+		[t_ci_image release];
+		
+		CGContextRelease(t_cg_context);
+		CGColorSpaceRelease(t_colorspace);
 	}
 	
-	OSType t_type;
-	t_type = CVPixelBufferGetPixelFormatType(t_buffer);
-	
-	if (t_type != kCVPixelFormatType_32ARGB)
-	{
-		NSLog(@"Unsupported pixel format - %08x", t_type);
-		return;
-	}
-	
-	m_pixel_buffer = t_buffer;
-	CVPixelBufferLockBaseAddress(t_buffer, kCVPixelBufferLock_ReadOnly);
-	
-	r_bitmap = new MCImageBitmap;
-	r_bitmap -> width = CVPixelBufferGetWidth(t_buffer);
-	r_bitmap -> height = CVPixelBufferGetHeight(t_buffer);
-	r_bitmap -> stride = CVPixelBufferGetBytesPerRow(t_buffer);
-	r_bitmap -> data = (uint32_t *)CVPixelBufferGetBaseAddress(t_buffer);
-	r_bitmap -> has_alpha = r_bitmap -> has_transparency = true;
+	r_bitmap = t_bitmap;
 }
 
 void MCQTKitPlayer::UnlockBitmap(MCImageBitmap *bitmap)
 {
 	delete bitmap;
-	CVPixelBufferUnlockBaseAddress(m_pixel_buffer, kCVPixelBufferLock_ReadOnly);
-	m_pixel_buffer = nil;
 }
 
 void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformPropertyType p_type, void *p_value)
@@ -436,9 +486,11 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 	{
 		case kMCPlatformPlayerPropertyURL:
 			Load(*(const char **)p_value, true);
+			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyFilename:
 			Load(*(const char **)p_value, false);
+			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyOffscreen:
 			Switch(*(bool *)p_value);
@@ -475,6 +527,7 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			break;
 		case kMCPlatformPlayerPropertyShowSelection:
 			m_show_selection = *(bool *)p_value;
+			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyOnlyPlaySelection:
 			[m_movie setAttribute: [NSNumber numberWithBool: *(bool *)p_value] forKey: QTMoviePlaysSelectionOnlyAttribute];

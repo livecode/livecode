@@ -284,6 +284,8 @@ void MCPlatformCallbackSendPasteboardResolve(MCPlatformPasteboardRef pasteboard,
 
 void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef window, uint32_t view_id);
 
+void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef player);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif

@@ -55,6 +55,8 @@ void MCPlatformHandlePasteboardResolve(MCPlatformPasteboardRef pasteboard, MCPla
 
 void MCPlatformHandleViewFocusSwitched(MCPlatformWindowRef window, uint32_t id);
 
+void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef player);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformCallbackSendApplicationStartup(int p_argc, char **p_argv, char **p_envp, int& r_error_code, char*& r_error_message)
@@ -341,6 +343,13 @@ void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef p_window, uint3
 {
 	MCLog("Window(%p) -> ViewFocusSwitched(%d)", p_window, p_view_id);
 	MCPlatformHandleViewFocusSwitched(p_window, p_view_id);
+}
+
+//////////
+
+void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef p_player)
+{
+	MCPlatformHandlePlayerFrameChanged(p_player);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

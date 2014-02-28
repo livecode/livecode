@@ -336,6 +336,13 @@ public:
 		lasttime = ltime;
 	}
 
+#ifdef FEATURE_PLATFORM_PLAYER
+	MCPlatformPlayerRef getplatformplayer(void)
+	{
+		return m_platform_player;
+	}
+#endif
+	
 #ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	Boolean qt_prepare(void);
@@ -397,7 +404,6 @@ public:
 	bool mode_avi_closewindowonplaystop();
 #endif
 #endif
-#endif
 
 #if defined(_LINUX_DESKTOP)
 	Boolean x11_prepare(void) ;
@@ -430,6 +436,7 @@ public:
 	
 	pid_t getpid(void);
 	void  shutdown(void);
+#endif
 #endif
 };
 

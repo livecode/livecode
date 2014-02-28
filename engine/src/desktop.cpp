@@ -38,6 +38,7 @@
 #include "field.h"
 #include "graphics_util.h"
 #include "redraw.h"
+#include "player.h"
 
 #include "desktop-dc.h"
 
@@ -1016,6 +1017,21 @@ void MCPlatformHandlePasteboardResolve(MCPlatformPasteboardRef p_pasteboard, MCP
 	}
 	else
 		r_data = nil, r_data_size = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef p_player)
+{
+	for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
+	{
+		if (t_player -> getplatformplayer() == p_player)
+		{
+			t_player -> layer_redrawall();
+			MCPlatformBreakWait();
+			break;
+		}
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
