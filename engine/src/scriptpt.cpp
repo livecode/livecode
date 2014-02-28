@@ -1360,7 +1360,6 @@ Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
     
 	while (low < high)
 	{
-		// Both the table and the token are encoded in UTF-8
 		uint2 mid = low + ((high - low) >> 1);
 		cond = MCU_strncasecmp(token_cstring, constant_table[mid].token, token.getlength());
 		if (cond == 0)
