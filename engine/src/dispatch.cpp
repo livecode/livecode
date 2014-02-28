@@ -1797,7 +1797,8 @@ void MCDispatch::dodrop(bool p_source)
 		//   causing the default engine behaviour to be overriden. In this case, some things have to happen to the field
 		//   when the drag is over. Note that we have to check that the source was a field in this case since we don't
 		//   need to do anything if it is not!
-		if (MCdragsource -> gettype() == CT_FIELD)
+		// IM-2014-02-28: [[ Bug 11715 ]] dragsource may have changed or unset after sending message so check for valid ptr
+		if (MCdragsource != nil && MCdragsource -> gettype() == CT_FIELD)
 		{
 			MCField *t_field;
 			t_field = static_cast<MCField *>(MCdragsource);
