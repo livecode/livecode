@@ -1294,6 +1294,8 @@ enum
 	// Compare the strings codepoint for codepoint after normalization and
 	// folding.
 	kMCStringOptionCompareCaseless = 2,
+    // Compare strings without normalization but with case folding
+    kMCStringOptionCompareFolded = 3,
 };
 
 /////////

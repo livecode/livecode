@@ -1287,6 +1287,23 @@ public:
 	{
         return m_casesensitive == True;
 	}
+    
+    bool GetFormSensitive(void) const
+    {
+        return m_formsensitive == True;
+    }
+    
+    MCStringOptions GetStringComparisonType() const
+    {
+        if (GetCaseSensitive() && GetFormSensitive())
+            return kMCStringOptionCompareExact;
+        else if (GetCaseSensitive())
+            return kMCStringOptionCompareNonliteral;
+        else if (GetFormSensitive())
+            return kMCStringOptionCompareFolded;
+        else
+            return kMCStringOptionCompareCaseless;
+    }
 
 	bool GetConvertOctals(void) const
 	{
@@ -1361,6 +1378,11 @@ public:
 	{
         m_casesensitive = p_value;
 	}
+    
+    void SetFormSensitive(bool p_value)
+    {
+        m_formsensitive = p_value;
+    }
 
 	void SetConvertOctals(bool p_value)
 	{
@@ -1681,6 +1703,7 @@ private:
     uint2 m_pos;
     Boolean m_convertoctals;
     Boolean m_casesensitive;
+    Boolean m_formsensitive;
     Boolean m_wholematches;
     Boolean m_usesystemdate;
     Boolean m_useunicode;
@@ -3644,6 +3667,8 @@ void MCEngineExecReturnValue(MCExecContext& ctxt, MCValueRef value);
 
 void MCEngineSetCaseSensitive(MCExecContext& ctxt, bool p_value);
 void MCEngineGetCaseSensitive(MCExecContext& ctxt, bool& r_value);
+void MCEngineSetFormSensitive(MCExecContext& ctxt, bool p_value);
+void MCEngineGetFormSensitive(MCExecContext& ctxt, bool& r_value);
 void MCEngineSetCenturyCutOff(MCExecContext& ctxt, integer_t p_value);
 void MCEngineGetCenturyCutOff(MCExecContext& ctxt, integer_t& r_value);
 void MCEngineSetConvertOctals(MCExecContext& ctxt, bool p_value);

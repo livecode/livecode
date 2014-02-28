@@ -343,7 +343,7 @@ void MCArraysExecCombineAsSet(MCExecContext& ctxt, MCArrayRef p_array, MCStringR
 
 void MCArraysExecSplit(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_element_delimiter, MCStringRef p_key_delimiter, MCArrayRef& r_array)
 {
-	if (MCStringSplit(p_string, p_element_delimiter, p_key_delimiter, ctxt . GetCaseSensitive() ? kMCStringOptionCompareExact : kMCStringOptionCompareCaseless, r_array))
+	if (MCStringSplit(p_string, p_element_delimiter, p_key_delimiter, ctxt . GetStringComparisonType(), r_array))
 		return;
 
 	ctxt . Throw();
@@ -438,7 +438,7 @@ void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringR
 {
 	// Split the incoming string into its components
     MCAutoArrayRef t_keys;
-    if (!MCStringSplit(p_string, p_element_delimiter, nil, ctxt . GetCaseSensitive() ? kMCStringOptionCompareExact : kMCStringOptionCompareCaseless, &t_keys))
+    if (!MCStringSplit(p_string, p_element_delimiter, nil, ctxt . GetStringComparisonType(), &t_keys))
     {
         ctxt . Throw();
         return;
