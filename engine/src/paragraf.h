@@ -191,6 +191,18 @@ public:
 			return p_in - 2;
 		return p_in - 1;
 	}
+    
+    // Scans from the given index to the next word break
+    findex_t NextWord(findex_t);
+    
+    // Scans from the given index to the previous word break
+    findex_t PrevWord(findex_t);
+    
+    // Scans from the given index to the next character break
+    findex_t NextChar(findex_t);
+    
+    // Scans from the given index to the previous charcter break
+    findex_t PrevChar(findex_t);
 	
 	// Returns true if the given character is a word break (e.g. space)
 	static bool TextIsWordBreak(codepoint_t);

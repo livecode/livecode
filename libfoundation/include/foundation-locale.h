@@ -385,6 +385,12 @@ uindex_t MCLocaleBreakIteratorNext(MCBreakIteratorRef, uindex_t p_count);
 // Returns whether the given index into the iterator's text is a boundary
 bool    MCLocaleBreakIteratorIsBoundary(MCBreakIteratorRef, uindex_t);
 
+// Finds the first boundary before the given code unit index
+uindex_t MCLocaleBreakIteratorBefore(MCBreakIteratorRef, uindex_t);
+
+// Finds the first boundary after the given code unit index
+uindex_t MCLocaleBreakIteratorAfter(MCBreakIteratorRef, uindex_t);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
