@@ -111,9 +111,7 @@ static unichar map_keycode_to_char(TISInputSourceRef p_input_source, CGKeyCode p
 	
 	if (t_real_length == 0 || t_real_length > 1)
 		return 0xffff;
-	
-	NSLog(@"%d = %c", p_key_code, t_chars[0] & 0xff);
-	
+
 	return t_chars[0];
 }
 #endif

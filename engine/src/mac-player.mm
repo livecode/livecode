@@ -508,16 +508,51 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			break;
 		case kMCPlatformPlayerPropertyStartTime:
 		{
-			//QTTimeRange t_selection;
-			//t_selection = [m_movie selection];
+			QTTime t_selection_start, t_selection_end;
+			t_selection_start = [m_movie selectionStart];
+			t_selection_end = [m_movie selectionEnd];
 			
+			uint32_t t_start_time, t_end_time;
+			t_start_time = *(uint32_t *)p_value;
+			t_end_time = t_selection_end . timeValue;
+			
+			if (t_start_time > t_end_time)
+				t_end_time = t_start_time;
+			
+			QTTimeRange t_selection;
+			t_selection . time . timeValue = t_start_time;
+			t_selection . time . timeScale = t_selection_start . timeScale;
+			t_selection . duration . timeValue = t_end_time - t_start_time;
+			t_selection . duration . timeScale = t_selection_start . timeScale;			
+			[m_movie setSelection: t_selection];
 		}
 		break;
 		case kMCPlatformPlayerPropertyFinishTime:
-			break;
+		{
+			QTTime t_selection_start, t_selection_end;
+			t_selection_start = [m_movie selectionStart];
+			t_selection_end = [m_movie selectionEnd];
+			
+			uint32_t t_start_time, t_end_time;
+			t_start_time = t_selection_start . timeValue;
+			t_end_time = *(uint32_t *)p_value;
+			
+			if (t_start_time > t_end_time)
+				t_start_time = t_end_time;
+			
+			QTTimeRange t_selection;
+			t_selection . time . timeValue = t_start_time;
+			t_selection . time . timeScale = t_selection_start . timeScale;
+			t_selection . duration . timeValue = t_end_time - t_start_time;
+			t_selection . duration . timeScale = t_selection_start . timeScale;
+			[m_movie setSelection: t_selection];
+		}
+		break;
 		case kMCPlatformPlayerPropertyPlayRate:
+			[m_movie setRate: *(double *)p_value];
 			break;
 		case kMCPlatformPlayerPropertyVolume:
+			[m_movie setVolume: *(uint16_t *)p_value / 100.0f];
 			break;
 		case kMCPlatformPlayerPropertyShowBadge:
 			break;
@@ -553,7 +588,6 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			NSValue *t_value;
 			t_value = [m_movie attributeForKey: QTMovieNaturalSizeAttribute];
 			*(MCRectangle *)r_value = MCRectangleMake(0, 0, [t_value sizeValue] . width, [t_value sizeValue] . height);
-			NSLog(@"NaturalSize = %d, %d", (*(MCRectangle *)r_value) . width, (*(MCRectangle *)r_value) . height);
 		}
 		break;
 		case kMCPlatformPlayerPropertyVisible:
@@ -585,12 +619,16 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 		case kMCPlatformPlayerPropertyShowBadge:
 			break;
 		case kMCPlatformPlayerPropertyShowController:
+			*(bool *)r_value = m_show_controller;
 			break;
 		case kMCPlatformPlayerPropertyShowSelection:
+			*(bool *)r_value = m_show_selection;
 			break;
 		case kMCPlatformPlayerPropertyOnlyPlaySelection:
+			*(bool *)r_value = [(NSNumber *)[m_movie attributeForKey: QTMoviePlaysSelectionOnlyAttribute] boolValue] == YES;
 			break;
 		case kMCPlatformPlayerPropertyLoop:
+			*(bool *)r_value = [(NSNumber *)[m_movie attributeForKey: QTMovieLoopsAttribute] boolValue] == YES;
 			break;
 	}
 }
