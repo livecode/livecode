@@ -63,6 +63,11 @@ class MCMacPlatformSurface;
 ////////////////////////////////////////////////////////////////////////////////
 
 @interface com_runrev_livecode_MCWindow: NSWindow
+{
+	bool m_can_become_key : 1;
+}
+
+- (void)setCanBecomeKeyWindow: (BOOL)value;
 
 - (BOOL)canBecomeKeyWindow;
 - (BOOL)makeFirstResponder: (NSResponder *)responder;
@@ -70,6 +75,11 @@ class MCMacPlatformSurface;
 @end
 
 @interface com_runrev_livecode_MCPanel: NSPanel
+{
+	bool m_can_become_key : 1;
+}
+
+- (void)setCanBecomeKeyWindow: (BOOL)value;
 
 - (BOOL)canBecomeKeyWindow;
 - (BOOL)makeFirstResponder: (NSResponder *)responder;

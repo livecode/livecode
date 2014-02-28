@@ -39,10 +39,15 @@ static bool s_lock_responder_change = false;
 
 @implementation com_runrev_livecode_MCWindow
 
+- (void)setCanBecomeKeyWindow: (BOOL)p_value
+{
+	m_can_become_key = p_value;
+}
+
 // The default implementation doesn't allow borderless windows to become key.
 - (BOOL)canBecomeKeyWindow
 {
-	return YES;
+	return m_can_become_key;
 }
 
 - (BOOL)makeFirstResponder: (NSResponder *)p_responder
@@ -81,10 +86,15 @@ static bool s_lock_responder_change = false;
 
 @implementation com_runrev_livecode_MCPanel
 
+- (void)setCanBecomeKeyWindow: (BOOL)p_value
+{
+	m_can_become_key = p_value;
+}
+
 // The default implementation doesn't allow borderless windows to become key.
 - (BOOL)canBecomeKeyWindow
 {
-	return YES;
+	return m_can_become_key;
 }
 
 - (BOOL)makeFirstResponder: (NSResponder *)p_responder
@@ -1563,6 +1573,8 @@ void MCMacPlatformWindow::DoRealize(void)
 	[m_window_handle setAlphaValue: m_opacity];
 	[m_window_handle setDocumentEdited: m_has_modified_mark];
 	[m_window_handle setReleasedWhenClosed: NO];
+	
+	[m_window_handle setCanBecomeKeyWindow: m_style != kMCPlatformWindowStylePopUp && m_style != kMCPlatformWindowStyleToolTip];
 	
 	// If this is a panel (floating window) then hide unrequired tool buttons.
 	// COCOA-TODO: This doesn't work - indeed Apple HIG says windows must always have
