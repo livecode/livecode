@@ -760,10 +760,10 @@ void MCStack::view_setcompositortilesize(uint32_t p_size)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool view_device_render_background(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
+bool view_device_render_background(void *p_context, MCGContextRef p_target, const MCRectangle32& p_rectangle)
 {
 	/* OVERHAUL - REVISIT: currently just draws black behind the stack area */
-	MCGContextAddRectangle(p_target, MCRectangleToMCGRectangle(p_rectangle));
+	MCGContextAddRectangle(p_target, MCRectangle32ToMCGRectangle(p_rectangle));
 	MCGContextSetFillRGBAColor(p_target, 0.0, 0.0, 0.0, 1.0);
 	MCGContextFill(p_target);
 	
@@ -790,8 +790,8 @@ void MCStack::view_updatetilecache(void)
 	// is an easier alternative.
 	MCTileCacheLayer t_bg_layer;
 	t_bg_layer . id = m_view_bg_layer_id;
-	t_bg_layer . region = MCU_make_rect(0, 0, 8192, 8192);
-	t_bg_layer . clip = MCU_make_rect(0, 0, 8192, 8192);
+	t_bg_layer . region = MCRectangle32Make(0, 0, 8192, 8192);
+	t_bg_layer . clip = MCRectangle32Make(0, 0, 8192, 8192);
 	t_bg_layer . is_opaque = true;
 	t_bg_layer . opacity = 255;
 	t_bg_layer . ink = GXblendSrcOver;
