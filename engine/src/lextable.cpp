@@ -103,6 +103,74 @@ uint8_t type_table[256] =
     ST_ID,   ST_ID,   ST_ID,   ST_ID    //      0xFC    0xFD    0xFE    0xFF
 };
 
+uint8_t unicode_type_table[256] =
+{
+    ST_EOF,         ST_ID,          ST_ID,          ST_ID,          //     ^@      ^A      ^B      ^C
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //     ^D      ^E      ^F      ^G
+    ST_ID,          ST_SPC,         ST_EOL,         ST_ID,          //     ^H      ^I      ^J      ^K
+    ST_ID,          ST_EOL,         ST_ID,          ST_ID,          //     ^L      ^M      ^N      ^O
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //     ^P      ^Q      ^R      ^S
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //     ^T      ^U      ^V      ^W
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //     ^X      ^Y      ^Z      ^[
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //     ^\      ^]      ^^      ^_
+    ST_SPC,         ST_OP,          ST_LIT,         ST_COM,         //              !       "       #
+    ST_ID,          ST_OP,          ST_OP,          ST_ID,          //      $       %       &       '
+    ST_LP,          ST_RP,          ST_OP,          ST_OP,          //      (       )       *       +
+    ST_SEP,         ST_MIN,         ST_NUM,         ST_OP,          //      ,       -       .       /
+    ST_NUM,         ST_NUM,         ST_NUM,         ST_NUM,         //      0       1       2       3
+    ST_NUM,         ST_NUM,         ST_NUM,         ST_NUM,         //      4       5       6       7
+    ST_NUM,         ST_NUM,         ST_OP,          ST_SEMI,        //      8       9       :       ;
+    ST_OP,          ST_OP,          ST_OP,          ST_TAG,         //      <       =       >       ?
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      @       A       B       C
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      D       E       F       G
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      H       I       J       K
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      L       M       N       O
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      P       Q       R       S
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      T       U       V       W
+    ST_ID,          ST_ID,          ST_ID,          ST_LB,          //      X       Y       Z       [
+    ST_ESC,         ST_RB,          ST_OP,          ST_ID,          //      \       ]       ^       _
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      `       a       b       c
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      d       e       f       g
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      h       i       j       k
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      l       m       n       o
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      p       q       r       s
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      t       u       v       w
+    ST_ID,          ST_ID,          ST_ID,          ST_LB,          //      x       y       z       {
+    ST_OP,          ST_RB,          ST_OP,          ST_ID,          //      |       }       ~       DEL
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x80    0x81    0x82    0x83
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x84    0x85    0x86    0x87
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x88    0x89    0x8A    0x8B
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x8C    0x8D    0x8E    0x8F
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x90    0x91    0x92    0x93
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x94    0x95    0x96    0x97
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x98    0x99    0x9A    0x9B
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x9C    0x9D    0x9E    0x9F
+    ST_SPC,         ST_ID,          ST_ID,          ST_ID,          //      0xA0    0xA1    0xA2    0xA3
+    ST_UNDEFINED,   ST_ID,          ST_UNDEFINED,   ST_ID,          //      0xA4    0xA5    0xA6    0xA7
+    ST_ESC,         ST_ID,          ST_ID,          ST_ID,          //      0xA8    0xA9    0xAA    0xAB
+    ST_ESC,         ST_UNDEFINED,   ST_ID,          ST_ID,          //      0xAC    0xAD    0xAE    0xAF
+    ST_ID,          ST_ID,          ST_UNDEFINED,   ST_UNDEFINED,	//      0xB0    0xB1    0xB2    0xB3
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xB4    0xB5    0xB6    0xB7
+    ST_ID,          ST_UNDEFINED,   ST_ID,          ST_ID,          //      0xB8    0xB9    0xBA    0xBB
+    ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_ID,          //      0xBC    0xBD    0xBE    0xBF
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xC0    0xC1    0xC2    0xC3
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xC4    0xC5    0xC6    0xC7
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xC8    0xC9    0xCA    0xCB
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xCC    0xCD    0xCE    0xCF
+    ST_UNDEFINED,   ST_ID,          ST_ID,          ST_ID,          //      0xD0    0xD1    0xD2    0xD3
+    ST_ID,          ST_ID,          ST_ID,          ST_UNDEFINED,	//      0xD4    0xD5    0xD6    0xD7
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xD8    0xD9    0xDA    0xDB
+    ST_ID,          ST_UNDEFINED,   ST_UNDEFINED,   ST_ID,          //      0xDC    0xDD    0xDE    0xDF
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xE0    0xE1    0xE2    0xE3
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xE4    0xE5    0xE6    0xE7
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xE8    0xE9    0xEA    0xEB
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xEC    0xED    0xEE    0xEF
+    ST_UNDEFINED,   ST_ID,          ST_ID,          ST_ID,          //      0xF0    0xF1    0xF2    0xF3
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xF4    0xF5    0xF6    0xF7
+    ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      0xF8    0xF9    0xFA    0xFB
+    ST_ID,          ST_UNDEFINED,   ST_UNDEFINED,   ST_ID,          //      0xFC    0xFD    0xFE    0xFF
+};
+
 Cvalue constant_table[] =
 {
     {"arrow", "29", 29.0},
