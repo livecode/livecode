@@ -401,8 +401,6 @@ enum
 	kMCPlatformKeyCodeF34			= 0xFFDF,
 	kMCPlatformKeyCodeF35			= 0xFFE0,
 	
-	// COCOA-TODO: Complete platformkeycode list.
-	
 	kMCPlatformKeyCodeLeftShift		= 0xffe1,
 	kMCPlatformKeyCodeRightShift	= 0xffe2,
 	kMCPlatformKeyCodeLeftControl	= 0xffe3,
@@ -418,7 +416,7 @@ enum
 	kMCPlatformKeyCodeRightAlt		= 0xffea, // Option key on mac
 	kMCPlatformKeyCodeRightOption	= kMCPlatformKeyCodeRightAlt,
 	
-	// COCOA-TODO: Map these appropriately.
+	// COCOA-TODO: Do these key codes need to be mapped?
 	kMCPlatformKeyCodeVolumeUp		= 0xfffe,
 	kMCPlatformKeyCodeVolumeDown	= 0xfffe,
 	kMCPlatformKeyCodeMute			= 0xfffe,

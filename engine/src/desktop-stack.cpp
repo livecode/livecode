@@ -102,7 +102,7 @@ void MCStack::realize(void)
 		else if (mode == WM_TOOLTIP)
 			t_window_style = kMCPlatformWindowStyleToolTip;
 		else if (mode == WM_DRAWER)
-			; // COCOA-TODO
+			; // COCOA-TODO: Implement drawers
 		else
 			t_window_style = kMCPlatformWindowStyleDocument;
 		
@@ -220,7 +220,7 @@ MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 
 void MCStack::syncscroll(void)
 {
-	// COCOA-TODO: Do something with scroll
+	// COCOA-TODO: Make sure contained views also scroll (?)
 }
 
 void MCStack::start_externals()

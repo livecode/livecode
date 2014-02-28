@@ -316,11 +316,10 @@ static MCAbortKeyThread *s_abort_key_thread = nil;
 
 bool MCPlatformInitializeAbortKey(void)
 {
-	// COCOA-TODO: If AX isn't enabled, then we can't use event taps. It does
-	//   seem one can make a process trusted (after a restart at least), we could
-	//   easily integrate this into the IDE.
+#ifdef USE_EVENTTAP
 	if (!AXAPIEnabled())
 		return true;
+#endif
 	
 	s_abort_key_thread = [[MCAbortKeyThread alloc] init];
 	[s_abort_key_thread start];

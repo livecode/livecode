@@ -264,14 +264,6 @@ void MCMacEnableScreenUpdates(void)
 	EnableScreenUpdates();
 }
 
-// COCOA-TODO: Remove this function and use (shouldn't be something this part of
-//   the engine has to worry about).
-bool MCMacIsWindowVisible(Window window)
-{
-	//return IsWindowVisible((WindowPtr)window -> handle . window);
-	return false;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  REFACTORED FROM BUTTON.CPP

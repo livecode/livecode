@@ -1316,7 +1316,8 @@ MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifier
 	if ((p_modifiers & NSCommandKeyMask) != 0)
 		t_modifiers |= kMCPlatformModifierControl;
 	
-	// COCOA-TODO: Sort out capslock.
+	if ((p_modifiers & NSAlphaShiftKeyMask) != 0)
+		t_modifiers |= kMCPlatformModifierCapsLock;
 
 	return t_modifiers;
 }

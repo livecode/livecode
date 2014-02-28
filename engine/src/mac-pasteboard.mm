@@ -59,7 +59,7 @@ static struct { NSString *type; MCPlatformPasteboardFlavor flavor; bool (*conver
 	{ (NSString *)kUTTypePNG, kMCPlatformPasteboardFlavorPNG, MCMacPasteboardConvertIdentity },
 	{ (NSString *)kUTTypeTIFF, kMCPlatformPasteboardFlavorPNG, MCMacPasteboardConvertTIFFToPNG },
 	
-	// COCOA-TODO: Declare these appropriately!
+	// COCOA-TODO: Declare objects UT type so copy/paste objects works between LiveCode instances.
 	{ kMCMacPasteboardObjectsUTString, kMCPlatformPasteboardFlavorObjects, MCMacPasteboardConvertIdentity },
 	//{ @"com.runrev.livecode.text-styled-1", kMCPlatformPasteboardFlavorStyledText, MCMacPasteboardConvertIdentity },
 };

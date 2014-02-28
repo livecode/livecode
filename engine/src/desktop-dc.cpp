@@ -914,7 +914,6 @@ void MCScreenDC::listprinters(MCExecPoint& ep)
 	MCListSystemPrinters(ep);
 }
 
-// COCOA-TODO: Printer creation.
 MCPrinter *MCScreenDC::createprinter(void)
 {
 	return MCCreateSystemPrinter();

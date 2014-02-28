@@ -654,8 +654,6 @@ static void MCPlatformStartUsingMenuAsMenubar(MCPlatformMenuRef p_menu)
 	if (p_menu -> is_menubar)
 		return;
 	
-	// COCOA-TODO: Finish app menu support.
-	
 	if (s_app_menu_delegate == nil)
 		s_app_menu_delegate = [[com_runrev_livecode_MCAppMenuDelegate alloc] init];
 	

@@ -600,21 +600,6 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 }
 #endif
 
-#ifdef _MACOSX
-MCSysWindowHandle MCStack::getrealwindow(void)
-{
-	// COCOA-TODO: getrealwindow
-	return nil;
-}
-
-MCSysWindowHandle MCStack::getqtwindow(void)
-{
-	// COCOA-TODO: getqtwindow
-	//return window;
-	return nil;
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool enumerate_handlers_for_object(MCObject *p_object, MCExecPoint &ep, bool p_first)

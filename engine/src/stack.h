@@ -842,12 +842,6 @@ public:
 	void getstyle(uint32_t &wstyle, uint32_t &exstyle);
 	void constrain(intptr_t lp);
 #elif defined(_MAC_DESKTOP)
-	MCSysWindowHandle getrealwindow();
-	MCSysWindowHandle getqtwindow(void);
-	void showmenubar();
-	void getWinstyle(uint32_t &wstyle, uint32_t &wclass);
-
-	void getminmax(MCMacSysRect *winrect);
 #elif defined(_LINUX_DESKTOP)
 	void setmodalhints(void);
 

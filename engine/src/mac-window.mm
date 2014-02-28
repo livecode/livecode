@@ -200,8 +200,6 @@ static bool s_lock_responder_change = false;
 
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
-	// COCOA-TODO: Sort out window backdrop management
-	//MCMacPlatformWindowFocusing(m_window);
 	m_window -> ProcessDidBecomeKey();
 }
 
@@ -241,9 +239,6 @@ static bool s_lock_responder_change = false;
 	m_input_method_event = nil;
 	
 	// Register for all dragging types (well ones that convert to 'data' anyway).
-	// COCOA-TODO: Restrict this to the types we actually handle. When we support
-	//   'custom' types, these will have to be declared by the app somehow so
-	//   there will always be a finite list.
 	[self registerForDraggedTypes: [NSArray arrayWithObject: (NSString *)kUTTypeData]];
 	
 	return self;
@@ -421,101 +416,9 @@ static bool s_lock_responder_change = false;
 	[self handleMouseMove: event];
 }
 
-// COCOA-TODO: This is probably not the best way to handle modifiers - these
-//   should probably be passed through with the event to ensure synchronization.
-//   Also that would solve the issue with things like alt-a producing a optionKeyDown
-//   message when it should be keyDown. We can use flagsChanged to detect the modifier
-//   key presses though (should we wish to propagate such!).
 - (void)flagsChanged: (NSEvent *)event
 {
-	// The type of modifier key is determined by the cocoa defined flags:
-	//   NSAlphaShiftKeyMask (CapsLock)
-	//   NSShiftKeyMask
-	//   NSControlKeyMask
-	//   NSAlternateKeyMask
-	//   NSCommandKeyMask
-	//   NSNumericPadKeyMask
-	//   NSHelpKeyMask
-	//   NSFunctionKeyMask
-	
-	// Whether it is the left or right variant is determined by other bits (which
-	// don't seem to have defines anywhere...):
-	//   left-control = 1 << 0
-	//   left-alt = 1 << 5
-	//   left-command = 1 << 2
-	//   right-command = 1 << 4
-	//   right-alt = 1 << 6
-	//   right-control = 1 << 13
-	
-	/*NSUInteger t_flags;
-	t_flags = [event modifierFlags];
-	
-	MCPlatformKeyCode t_key_code;
-	if ((t_flags & NSAlphaShiftKeyMask) != 0)
-		t_key_code = kMCPlatformKeyCodeCapsLock;
-	else if ((*/
-	//NSLog(@"Flags = %08x, KeyCode = %04x", [event modifierFlags], [event keyCode]);
-	
-	// The keyCode of the event contains the key that causes the change,
-	// where as the modifierFlags will indicate whether it is a down or up.
-#if 0
-	NSUInteger t_modifier_flag;
-	MCPlatformKeyCode t_key_code;
-	switch([event keyCode])
-	{
-		case kVK_Shift:
-			t_key_code = kMCPlatformKeyCodeLeftShift;
-			t_modifier_flag = NSShiftKeyMask;
-			break;
-		case kVK_RightShift:
-			t_key_code = kMCPlatformKeyCodeRightShift;
-			t_modifier_flag = NSShiftKeyMask;
-			break;
-		case kVK_Option:
-			t_key_code = kMCPlatformKeyCodeLeftAlt;
-			t_modifier_flag = NSAlternateKeyMask;
-			break;
-		case kVK_RightOption:
-			t_key_code = kMCPlatformKeyCodeRightAlt;
-			t_modifier_flag = NSAlternateKeyMask;
-			break;
-		case kVK_Control:
-			t_key_code = kMCPlatformKeyCodeLeftControl;
-			t_modifier_flag = NSControlKeyMask;
-			break;
-		case kVK_RightControl:
-			t_key_code = kMCPlatformKeyCodeRightControl;
-			t_modifier_flag = NSControlKeyMask;
-			break;
-		case kVK_Command:
-			t_key_code = kMCPlatformKeyCodeLeftMeta;
-			t_modifier_flag = NSCommandKeyMask;
-			break;
-		case 0x0036: /* kVK_RightCommand */
-			t_key_code = kMCPlatformKeyCodeRightMeta;
-			t_modifier_flag = NSCommandKeyMask;
-			break;
-		case kVK_Function: // COCOA-TODO
-		case kVK_Help: // COCOA-TODO
-		// ?? NSNumericPadMask ?? // COCOA-TODO
-		default:
-			// We don't recognise this modifier, so ignore it.
-			return;
-	}
-#endif
-	
 	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
-	
-#if 0
-	// Send a key up or key down event depending on whether the flag is now
-	// set.
-	MCMacPlatformWindow *t_window;
-	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
-	if (([event modifierFlags] & t_modifier_flag) != 0)
-		t_window -> ProcessKeyDown(t_key_code, 0xffffffffU, 0xffffffffU);
-	else
-		t_window -> ProcessKeyUp(t_key_code, 0xffffffffU, 0xffffffffU);
-#endif
 }
 
 - (void)keyDown: (NSEvent *)event
@@ -1575,23 +1478,6 @@ void MCMacPlatformWindow::DoRealize(void)
 	[m_window_handle setReleasedWhenClosed: NO];
 	
 	[m_window_handle setCanBecomeKeyWindow: m_style != kMCPlatformWindowStylePopUp && m_style != kMCPlatformWindowStyleToolTip];
-	
-	// If this is a panel (floating window) then hide unrequired tool buttons.
-	// COCOA-TODO: This doesn't work - indeed Apple HIG says windows must always have
-	//   the three buttons, just disabled if not applicable.
-#if 0
-	if (t_window_level == kCGFloatingWindowLevel)
-	{
-		if (!m_has_close_widget)
-			[[m_window_handle standardWindowButton: NSWindowCloseButton] setFrame: NSZeroRect];
-		if (!m_has_collapse_widget)
-			[[m_window_handle standardWindowButton: NSWindowMiniaturizeButton] setFrame: NSZeroRect];
-		if (!m_has_zoom_widget)
-			[[m_window_handle standardWindowButton: NSWindowZoomButton] setFrame: NSZeroRect];
-	}
-#endif
-	
-	// COCOA-TODO: live resizing
 }
 
 void MCMacPlatformWindow::DoSynchronize(void)
