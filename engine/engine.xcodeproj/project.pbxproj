@@ -332,6 +332,7 @@
 		4DADCD5B12392EAF003CD17C /* sha1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DADCD5912392EAF003CD17C /* sha1.cpp */; };
 		4DADCDFD12393F55003CD17C /* Installer.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4DADCDFC12393F26003CD17C /* Installer.icns */; };
 		4DAF5A4018C0B7A900B9713C /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DAF5A3F18C0B7A900B9713C /* QuickTime.framework */; };
+		4DAF5C8718C0E76500B9713C /* mac-scripting.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DAF5C8618C0E76500B9713C /* mac-scripting.mm */; };
 		4DB32401174BEE1400046FFE /* sysunxrandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DB3222E174BD06200046FFE /* sysunxrandom.cpp */; };
 		4DB32402174BEE1900046FFE /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D8589AA173A856600B20951 /* uuid.cpp */; };
 		4DB32404174BEE3300046FFE /* sysosxrandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DB32230174BD08E00046FFE /* sysosxrandom.cpp */; };
@@ -1332,6 +1333,7 @@
 		4DADCD5A12392EAF003CD17C /* sha1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sha1.h; path = src/sha1.h; sourceTree = "<group>"; };
 		4DADCDFC12393F26003CD17C /* Installer.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = Installer.icns; path = rsrc/Installer.icns; sourceTree = "<group>"; };
 		4DAF5A3F18C0B7A900B9713C /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = System/Library/Frameworks/QuickTime.framework; sourceTree = SDKROOT; };
+		4DAF5C8618C0E76500B9713C /* mac-scripting.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-scripting.mm"; path = "src/mac-scripting.mm"; sourceTree = "<group>"; };
 		4DB3222E174BD06200046FFE /* sysunxrandom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxrandom.cpp; path = src/sysunxrandom.cpp; sourceTree = "<group>"; };
 		4DB32230174BD08E00046FFE /* sysosxrandom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysosxrandom.cpp; path = src/sysosxrandom.cpp; sourceTree = "<group>"; };
 		4DB3856E1714422200D3F102 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
@@ -1963,6 +1965,7 @@
 				4D79B5D318A9087B00D4974C /* mac-printer.mm */,
 				4D30E18118AA2FCE0034CDC6 /* mac-abort.mm */,
 				4D30E40618AA73870034CDC6 /* mac-dialog.mm */,
+				4DAF5C8618C0E76500B9713C /* mac-scripting.mm */,
 			);
 			name = "Desktop - Mac";
 			sourceTree = "<group>";
@@ -3650,6 +3653,7 @@
 				4D30E40718AA73870034CDC6 /* mac-dialog.mm in Sources */,
 				4D30E44618AA7C200034CDC6 /* desktop-ans.cpp in Sources */,
 				E82206E1184F810A00117D10 /* resolution.cpp in Sources */,
+				4DAF5C8718C0E76500B9713C /* mac-scripting.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

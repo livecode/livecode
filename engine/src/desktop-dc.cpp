@@ -43,6 +43,7 @@
 #include "styledtext.h"
 #include "graphicscontext.h"
 #include "region.h"
+#include "scriptenvironment.h"
 
 #include "desktop-dc.h"
 
@@ -1148,9 +1149,61 @@ bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *p_loaded_
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCSystemScriptEnvironment: public MCScriptEnvironment
+{
+public:
+	MCSystemScriptEnvironment(const char *p_language)
+	{
+		m_references = 1;
+		MCPlatformScriptEnvironmentCreate(p_language, m_env);
+	}
+	
+	~MCSystemScriptEnvironment(void)
+	{
+		MCPlatformScriptEnvironmentRelease(m_env);
+	}
+	
+	void Retain(void)
+	{
+		m_references += 1;
+	}
+	
+	void Release(void)
+	{
+		m_references -= 1;
+		if (m_references == 0)
+			delete this;
+	}
+	
+	bool Define(const char *p_name, MCScriptEnvironmentCallback p_callback)
+	{
+		return MCPlatformScriptEnvironmentDefine(m_env, p_name, (MCPlatformScriptEnvironmentCallback)p_callback);
+	}
+	
+	char *Run(const char *p_script)
+	{
+		char *t_result;
+		t_result = nil;
+		MCPlatformScriptEnvironmentRun(m_env, p_script, t_result);
+		return t_result;
+	}
+	
+	char *Call(const char *p_method, const char **p_arguments, uindex_t p_argument_count)
+	{
+		char *t_result;
+		t_result = nil;
+		MCPlatformScriptEnvironmentCall(m_env, p_method, p_arguments, p_argument_count, t_result);
+		return t_result;
+	}
+
+private:
+	uint32_t m_references;
+	MCPlatformScriptEnvironmentRef m_env;
+};
+
 MCScriptEnvironment *MCScreenDC::createscriptenvironment(const char *p_language)
 {
-	return nil;
+	return new MCSystemScriptEnvironment(p_language);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

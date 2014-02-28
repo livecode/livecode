@@ -1038,6 +1038,19 @@ void MCPlatformFindPlayerHotSpotWithId(MCPlatformPlayerRef player, uint32_t id, 
 
 ////////////////////////////////////////////////////////////////////////////////
 
+typedef struct MCPlatformScriptEnvironment *MCPlatformScriptEnvironmentRef;
+
+typedef char *(*MCPlatformScriptEnvironmentCallback)(const char * const *arguments, uindex_t argument_count);
+
+void MCPlatformScriptEnvironmentCreate(const char *language, MCPlatformScriptEnvironmentRef& r_env);
+void MCPlatformScriptEnvironmentRetain(MCPlatformScriptEnvironmentRef env);
+void MCPlatformScriptEnvironmentRelease(MCPlatformScriptEnvironmentRef env);
+bool MCPlatformScriptEnvironmentDefine(MCPlatformScriptEnvironmentRef env, const char *function, MCPlatformScriptEnvironmentCallback callback);
+void MCPlatformScriptEnvironmentRun(MCPlatformScriptEnvironmentRef env, const char *script, char*& r_result);
+void MCPlatformScriptEnvironmentCall(MCPlatformScriptEnvironmentRef env, const char *method, const char **arguments, uindex_t argument_count, char*& r_result);
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCPlatformSwitchFocusToView(MCPlatformWindowRef window, uint32_t id);
 
 ////////////////////////////////////////////////////////////////////////////////
