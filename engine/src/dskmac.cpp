@@ -1827,10 +1827,10 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
     uindex_t t_last_slash;
     MCAutoStringRef t_resolved_path_new, t_fspecname;
     char *fspecname;
-    if (MCStringLastIndexOfChar(*t_resolved_path, '/', 0, kMCCompareExact, t_last_slash) && t_last_slash != 0)
+    if (MCStringLastIndexOfChar(*t_resolved_path, '/', UINDEX_MAX, kMCCompareExact, t_last_slash) && t_last_slash != 0)
     {
         /* UNCHECKED */ MCStringDivideAtIndex(*t_resolved_path, t_last_slash, &t_resolved_path_new, &t_fspecname);
-        /* UNCHECKED */ MCStringConvertToCString(*t_fspecname, fspecname);        
+        /* UNCHECKED */ MCStringConvertToUTF8String(*t_fspecname, fspecname);
     }
     else
     {
@@ -1839,7 +1839,10 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
     }
     
     if (!t_utf_path.Lock(*t_resolved_path_new))
+    {
+        delete fspecname;
         return memFullErr;
+    }
     
 	FSRef ref;
 	if ((errno = FSPathMakeRef((unsigned char*)*t_utf_path, &ref, NULL)) == noErr)
