@@ -337,6 +337,8 @@ MCPlayer::~MCPlayer()
 		s_ephemeral_player = NULL;
 		qtstate = QT_NOT_INITTED;
 	}
+    
+    MCValueRelease(recordtempfile);
 #endif
 
 #ifdef FEATURE_MPLAYER
@@ -346,7 +348,6 @@ MCPlayer::~MCPlayer()
 
 	MCValueRelease(filename);
 	MCValueRelease(userCallbackStr);
-    MCValueRelease(recordtempfile);
 }
 
 Chunk_term MCPlayer::gettype() const
