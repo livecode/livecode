@@ -236,7 +236,8 @@ class MCField : public MCControl
 	static int2 clicky;
 	static int2 goalx;
 
-	static MCRectangle cursorrect;
+	static MCRectangle cursorrectp;
+    static MCRectangle cursorrects;
 	static Boolean cursoron;
 	static MCField *cursorfield;
 
@@ -367,7 +368,7 @@ public:
 
 	void removecursor();
 	void drawcursor(MCContext *context, const MCRectangle &drect);
-	void positioncursor(Boolean force, Boolean goal, MCRectangle &drect, int4 y);
+	void positioncursor(Boolean force, Boolean goal, MCRectangle &drect, int4 y, bool primary);
 	void replacecursor(Boolean force, Boolean goal);
 	void dragtext();
 	void computedrag();

@@ -3982,6 +3982,84 @@ MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_in
 	return drect;
 }
 
+// MW-2012-01-25: [[ ParaStyles ]] The 'include_space' parameter, if true, means that
+//   the returned rect will take into account space before and after.
+MCRectangle MCParagraph::getsplitcursorrect(findex_t fi, uint2 fixedheight, bool p_include_space, bool primary)
+{
+	if (fi < 0)
+		fi = focusedindex;
+    
+	// MW-2005-08-31: If we get here even though we have no lines,
+	//   noflow to make up for it.
+	if (lines == NULL)
+		noflow();
+    
+	// MW-2012-01-08: [[ ParaStyles ]] Compute spacing before and after.
+	int32_t t_space_above, t_space_below;
+	t_space_above = computetopmargin();
+	t_space_below = computebottommargin();
+    
+	// MW-2012-01-08: [[ ParaStyles ]] Top of text starts after spacing above.
+	MCRectangle drect;
+	drect.y = 1 + t_space_above;
+    
+	MCLine *lptr;
+	findex_t i, l;
+	bool t_first_line;
+	lptr = lines;
+	lptr->GetRange(i, l);
+	t_first_line = true;
+	while (fi >= i + l && lptr->next() != lines)
+	{
+		if (fixedheight == 0)
+			drect.y += lptr->getheight();
+		else
+			drect.y += fixedheight;
+		lptr = lptr->next();
+		lptr->GetRange(i, l);
+		t_first_line = false;
+	};
+	if (fixedheight == 0)
+		drect.height = lptr->getheight() - 2;
+	else
+		drect.height = fixedheight - 2;
+    if (primary)
+        drect.x = lptr->GetCursorXPrimary(fi, moving_forward);
+    else
+        drect.x = lptr->GetCursorXSecondary(fi, moving_forward);
+	
+	// MW-2012-01-08: [[ ParaStyles ]] If we want the 'full height' of the
+	//   cursor (inc space), adjust appropriately depending on which line we are
+	//   on.
+	if (p_include_space)
+	{
+		if (t_first_line)
+		{
+			drect.y -= t_space_above;
+			drect.height += t_space_above;
+		}
+		if (lptr -> next() == lines)
+			drect.height += t_space_below;
+	}
+    
+	drect.x += computelineoffset(lptr);
+    
+	drect.width = cursorwidth;
+    
+    // Adjust the height
+    if (primary)
+    {
+        drect.height /= 2;
+    }
+    else
+    {
+        drect.y += drect.height/2;
+        drect.height /= 2;
+    }
+    
+	return drect;
+}
+
 bool MCParagraph::copytextasstringref(MCStringRef& r_string)
 {
 	return MCStringCopy(m_text, r_string);

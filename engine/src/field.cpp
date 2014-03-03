@@ -50,7 +50,8 @@ int2 MCField::clickx;
 int2 MCField::clicky;
 int2 MCField::goalx;
 
-MCRectangle MCField::cursorrect;
+MCRectangle MCField::cursorrectp;
+MCRectangle MCField::cursorrects;
 Boolean MCField::cursoron = False;
 MCField *MCField::cursorfield = NULL;
 

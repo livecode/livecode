@@ -739,6 +739,7 @@ public:
 	//   MCField::fmove
 	//   MCField::getcompositionrect
 	MCRectangle getcursorrect(findex_t fi, uint2 fixedheight, bool include_space);
+    MCRectangle getsplitcursorrect(findex_t fi, uint2 fixedheight, bool include_space, bool primary);
 
 	// Compute the (x, y) location of the given index in the paragraph
 	// Called by:
