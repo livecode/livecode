@@ -1445,7 +1445,12 @@ bool MCFilesExecPerformReadChunk(MCExecContext &ctxt, int4 p_index, intenum_t p_
 
                 // In case we came across EOF before the char is finished, we want to had the codepoints that have been read
                 if (r_new_boundary != p_last_boundary)
+                {
+                    // EOF is actually not encountered.
+                    if (r_stat == IO_EOF)
+                        r_stat = IO_NORMAL;
                     break;
+                }
                 else
                     return false;
             }

@@ -1017,7 +1017,9 @@ bool ConvertFile_rev_to_MIME ( MCDataRef p_input, MCTransferType p_type, MCDataR
 bool ConvertFile_MIME_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output )  
 {
 	MCAutoStringRef t_input_files;
-	/* UNCHECKED */ MCStringDecode(p_input, kMCStringEncodingMacRoman, false, &t_input_files);
+    if (!MCStringDecode(p_input, kMCStringEncodingNative, false, &t_input_files))
+        return false;
+
 	MCAutoStringRef t_input_files_livecode;
 	/* UNCHECKED */ MCStringConvertLineEndingsToLiveCode(*t_input_files, &t_input_files_livecode);
 	MCAutoStringRef t_input_files_livecode_decoded;
