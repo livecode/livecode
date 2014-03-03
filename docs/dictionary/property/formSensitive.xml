@@ -1,19 +1,19 @@
 <doc>
-	<legacy_id>1372</legacy_id>
-	<name>caseSensitive</name>
+	<legacy_id></legacy_id>
+	<name>formSensitive</name>
 	<type>property</type>
 
 	<syntax>
-		<example>set the caseSensitive to {true | false}</example>
+		<example>set the formSensitive to {true | false}</example>
 	</syntax>
 
 	<synonyms>
 	</synonyms>
 
-	<summary>Specifies whether comparisons treat uppercase and lowercase letters as different. </summary>
+	<summary>Controls how text with minor differences is treated in comparison operations.</summary>
 
 	<examples>
-<example>set the caseSensitive to true</example>
+<example>set the formSensitive to true</example>
 <example>
 set the formSensitive to true
 put "e" & numToCodepoint("0x301") into tExample		-- Acute accent
@@ -23,7 +23,7 @@ put normalizeText(tExample, "NFC") is "é"			-- Returns true
 	</examples>
 
 	<history>
-		<introduced version="1.0">Added. </introduced>
+		<introduced version="7.0">Added. </introduced>
 		<deprecated version=""></deprecated>
 		<removed version=""></removed>
 		
@@ -60,23 +60,17 @@ put normalizeText(tExample, "NFC") is "é"			-- Returns true
 	</classification>
 
 	<references>
-		<function tag="wordOffset">wordOffset Function</function>
-		<function tag="replaceText">replaceText Function</function>
-		<command tag="find">find Command</command>
-		<command tag="filter">filter Command</command>
-		<command tag="replace">replace Command</command>
-		<property tag="wholeMatches">wholeMatches Property</property>
-		<operator tag="&gt;">&gt; Operator</operator>
-		<operator tag="&lt;=">&lt;= Operator</operator>
+		<function tag="normalizeText">normalizeText Function</function>
+		<property tag="caseSensitive">caseSensitive Property</property>
 	</references>
 
 	<description>
-	<overview>Use the <b>caseSensitive</b> <glossary tag="property">property</glossary> to control the behavior of text comparisons.</overview>
+	<overview>Use the <b>formSensitive </b>property<b> </b>to control how text with minor differences is treated in comparison operations.</overview>
 
 		<parameters>
 		</parameters>
 
-	<value>The <b>caseSensitive</b> is true or false. <p></p><p>By default, the <b>caseSensitive</b> <glossary tag="property">property</glossary> is set to false. </p></value>
-	<comments>The <b>caseSensitive</b> <glossary tag="property">property</glossary> <glossary tag="control">controls</glossary> the <glossary tag="behavior">behavior</glossary> of the all <keyword tag="string">string</keyword> comparisons, including the comparison <glossary tag="operator">operators</glossary> <operator tag="">=</operator>, &gt;, &lt; , &gt;=, &lt;=, <operator tag="is in">is in</operator>, <operator tag="is among">is among</operator>, <operator tag="is not among">is not among</operator>, and <operator tag="contains">contains</operator>; the <glossary tag="command">commands</glossary> <command tag="filter">filter</command>, <command tag="find">find</command>, and <command tag="replace">replace</command>; and the <glossary tag="function">functions</glossary> <function tag="offset">offset</function>, <function tag="itemOffset">itemOffset</function>, <function tag="wordOffset">wordOffset</function>, <function tag="lineOffset">lineOffset</function>, and <function tag="replaceText">replaceText</function>. <p></p><p>If the <b>caseSensitive</b> <glossary tag="property">property</glossary> is set to true, all the <glossary tag="LiveCode">LiveCode</glossary> terms listed above, as well as all other <keyword tag="string">string</keyword> comparisons, treat uppercase and lowercase letters as different. For example, a search for "Apple" does not find the <keyword tag="string">string</keyword> "apple" or "APPLE", and the <glossary tag="expression">expression</glossary> "APPLE" = "apple" <glossary tag="evaluate">evaluates</glossary> to false. </p><p></p><p>If the <b>caseSensitive</b> is false, uppercase letters are treated as equal to their lowercase equivalents: a search for "Apple" finds strings such as "apple" or "APPLE" without paying attention to the case of each letter, and the expression  "APPLE" = "apple" <glossary tag="evaluate">evaluates</glossary> to true. </p><p></p><p>The <b>caseSensitive</b> also affects <property tag="customProperties">custom property</property> names and <glossary tag="array">array</glossary> <glossary tag="key">key</glossary> names. If the <property tag="caseSensitive">caseSensitive</property> is true, <property tag="customProperties">custom property</property> names that differ only in the case of their letters are treated as different <property tag="customProperties">custom properties</property>. If the <property tag="caseSensitive">caseSensitive</property> is false, <property tag="customProperties">custom property</property> names that differ only in letter case cannot be distinguished from each other. The same is true for the <function tag="keys">keys</function> of <glossary tag="array">array</glossary> <glossary tag="element">elements</glossary>. </p><p></p><p>Since the <b>caseSensitive</b> is a local property, its <function tag="value">value</function> is <command tag="reset">reset</command> to false when the current <glossary tag="handler">handler</glossary> finishes <glossary tag="execute">executing</glossary>. It retains its <function tag="value">value</function> only for the current <glossary tag="handler">handler</glossary>, and setting it in one <glossary tag="handler">handler</glossary> does not affect its <function tag="value">value</function> in other <glossary tag="handler">handlers</glossary> it <glossary tag="call">calls</glossary>. </p><p></p><p></p><p></p><important> <glossary tag="message">Messages</glossary>, <glossary tag="object">object</glossary> names, and <glossary tag="LiveCode">LiveCode</glossary> terms are never treated as case-sensitive, even if the <b>caseSensitive</b> is set to true. </important></comments>
+	<value>The <b>formSensitive</b> is true or false. <p></p><p>By default, the <b>formSensitive</b> <glossary tag="property">property</glossary> is set to false. </p></value>
+	<comments>Normalization is a process defined by the Unicode standard for removing minor encoding differences for a small set of characters and is more fully described in the <function tag="normalizeText">normalizeText</function> function. </comments>
 	</description>
 </doc>
