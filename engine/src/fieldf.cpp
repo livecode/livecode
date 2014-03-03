@@ -2157,8 +2157,8 @@ void MCField::fmove(Field_translations function, MCStringRef p_string, KeySym ke
 			MCRectangle trect;
 			switch (moved)
 			{
-				case FT_LEFTCHAR:
-				case FT_LEFTWORD:
+				case FT_BACKCHAR:
+				case FT_BACKWORD:
 				case FT_BOS:
 				case FT_LEFTPARA:
 					if (focusedparagraph != paragraphs)
@@ -2173,8 +2173,8 @@ void MCField::fmove(Field_translations function, MCStringRef p_string, KeySym ke
 						drect.x = trect.x;
 					}
 					break;
-				case FT_RIGHTCHAR:
-				case FT_RIGHTWORD:
+				case FT_FORWARDCHAR:
+				case FT_FORWARDWORD:
 				case FT_EOS:
 				case FT_RIGHTPARA:
 					if (focusedparagraph != paragraphs->prev())
