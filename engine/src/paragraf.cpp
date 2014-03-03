@@ -399,7 +399,7 @@ static bool bidiPrevISRCharClass(uint8_t *classes, level_run*& x_run, uindex_t& 
 {
     MCAssert(x_index <= x_run->start + x_run->length);
     
-    if (x_run == nil)
+    if (x_run == nil || x_index == 0)
         return false;
     
     if (x_index <= x_run -> start)
@@ -810,15 +810,15 @@ static void bidiApplyRuleI2(isolating_run_sequence& irs, uint8_t *classes, uint8
 }
 
 void MCParagraph::resolvetextdirections()
-{
-    // TODO:
-    //  The bulk of the Unicode BiDirectional algorithm (as described in TR9)
-    //  should be implemented here in order to provide proper BiDi support.
-    //  Instead, the algorithm here is fairly trivial but works in simple cases.
-    
-    // TODO: do we have a forced base direction?
+{ 
+    // Use the field text direction, if specified
     uint8_t t_base_level;
-    t_base_level = firststrongisolate(0);
+    if (parent->gettextdirection() == kMCFieldTextDirectionLTR)
+        t_base_level = 0;
+    else if (parent->gettextdirection() == kMCFieldTextDirectionRTL)
+        t_base_level = 1;
+    else // == kMCFieldTextDirectionAuto
+        t_base_level = firststrongisolate(0);
     
     uindex_t t_length;
     t_length = MCStringGetLength(m_text);

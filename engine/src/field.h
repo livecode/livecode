@@ -363,6 +363,8 @@ public:
 	int32_t gettexty(void) const;
 	int32_t getfirstindent(void) const;
 	int32_t getfixedheight(void) const { return fixedheight; }
+    
+    MCFieldTextDirection gettextdirection() const { return text_direction; }
 
 	bool getshowlines(void) const;
 
@@ -738,6 +740,8 @@ public:
 	void GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encoding);
     void SetCursorMovement(MCExecContext&, intenum_t);
     void GetCursorMovement(MCExecContext&, intenum_t&);
+    void SetTextDirection(MCExecContext&, intenum_t);
+    void GetTextDirection(MCExecContext&, intenum_t&);
     
     void GetHilitedLines(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_lines);
     void SetHilitedLines(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_lines);

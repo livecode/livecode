@@ -1641,6 +1641,7 @@ LT factor_table[] =
         {"textcolor", TT_PROPERTY, P_FORE_COLOR},
         {"textdata", TT_PROPERTY, P_TEXT},
         {"textdecode", TT_FUNCTION, F_TEXT_DECODE},
+        {"textdirection", TT_PROPERTY, P_TEXTDIRECTION},
         {"textencode", TT_FUNCTION, F_TEXT_ENCODE},
         {"textfont", TT_PROPERTY, P_TEXT_FONT},
         {"textheight", TT_PROPERTY, P_TEXT_HEIGHT},

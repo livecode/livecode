@@ -289,6 +289,7 @@ static PropList fieldprops[] =
         {"style", P_STYLE},
         {"tabStops", P_TAB_STOPS},
         {"textAlign", P_TEXT_ALIGN},
+        {"textDirection", P_TEXTDIRECTION},
         {"textFont", P_TEXT_FONT},
         {"textHeight", P_TEXT_HEIGHT},
         {"textSize", P_TEXT_SIZE},

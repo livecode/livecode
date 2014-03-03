@@ -73,6 +73,13 @@ static MCExecEnumTypeElementInfo _kMCInterfaceFieldCursorMovementElementInfo[] =
     { "logical", kMCFieldCursorMovementLogical, false },
 };
 
+static MCExecEnumTypeElementInfo _kMCInterfaceFieldTextDirectionElementInfo[] =
+{
+    { "auto", kMCFieldTextDirectionAuto, false },
+    { "rtl", kMCFieldTextDirectionRTL, false },
+    { "ltr", kMCFieldTextDirectionLTR, false },
+};
+
 static MCExecEnumTypeInfo _kMCInterfaceFieldStyleTypeInfo =
 {
 	"Interface.FieldStyle",
@@ -85,6 +92,13 @@ static MCExecEnumTypeInfo _kMCInterfaceFieldCursorMovementTypeInfo =
     "Interface.CursorMovement",
     sizeof(_kMCInterfaceFieldCursorMovementElementInfo) / sizeof(MCExecEnumTypeElementInfo),
     _kMCInterfaceFieldCursorMovementElementInfo
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceFieldTextDirectionTypeInfo =
+{
+    "Interface.TextDirection",
+    sizeof(_kMCInterfaceFieldTextDirectionElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceFieldTextDirectionElementInfo
 };
 
 //////////
@@ -206,6 +220,7 @@ static MCExecEnumTypeInfo _kMCInterfaceLayerModeTypeInfo =
 MCExecEnumTypeInfo *kMCInterfaceFieldStyleTypeInfo = &_kMCInterfaceFieldStyleTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceFlaggedRangesTypeInfo = &_kMCInterfaceFlaggedRangesTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceFieldCursorMovementTypeInfo = &_kMCInterfaceFieldCursorMovementTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceFieldTextDirectionTypeInfo = &_kMCInterfaceFieldTextDirectionTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -904,6 +919,16 @@ void MCField::SetCursorMovement(MCExecContext& ctxt, intenum_t p_movement)
 void MCField::GetCursorMovement(MCExecContext& ctxt, intenum_t &r_movement)
 {
     r_movement = intenum_t(cursor_movement);
+}
+
+void MCField::SetTextDirection(MCExecContext& ctxt, intenum_t p_direction)
+{
+    text_direction = (MCFieldTextDirection)p_direction;
+}
+
+void MCField::GetTextDirection(MCExecContext& ctxt, intenum_t &r_direction)
+{
+    r_direction = intenum_t(text_direction);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

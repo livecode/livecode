@@ -1628,6 +1628,7 @@ enum Properties {
     
     // RTL/Bidirectional properties
     P_CURSORMOVEMENT,
+    P_TEXTDIRECTION,
 };
 
 enum Look_and_feel {
