@@ -776,6 +776,7 @@ LT factor_table[] =
         {"currenttime", TT_PROPERTY, P_CURRENT_TIME},
         {"currentwindow", TT_FUNCTION, F_TOP_STACK},
         {"cursor", TT_PROPERTY, P_CURSOR},
+        {"cursorMovement", TT_PROPERTY, P_CURSORMOVEMENT},
         {"customkeys", TT_PROPERTY, P_CUSTOM_KEYS},
         {"customproperties", TT_PROPERTY, P_CUSTOM_PROPERTIES},
         {"custompropertyset", TT_PROPERTY, P_CUSTOM_PROPERTY_SET},
