@@ -3324,25 +3324,26 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
     //    return fmovefocus_visual(type);
 
     // Using logical ordering so translate the type
+    MCBlock *bptr = indextoblock(focusedindex, false);
     switch (type)
     {
         case FT_LEFTCHAR:
-            moving_left = true;
+            moving_left = !bptr -> is_rtl();
             type = FT_BACKCHAR;
             break;
             
         case FT_LEFTWORD:
-            moving_left = true;
+            moving_left = !bptr -> is_rtl();
             type = FT_BACKWORD;
             break;
             
         case FT_RIGHTCHAR:
-            moving_left = false;
+            moving_left = bptr -> is_rtl();;
             type = FT_FORWARDCHAR;
             break;
             
         case FT_RIGHTWORD:
-            moving_left = false;
+            moving_left = bptr -> is_rtl();
             type = FT_FORWARDWORD;
             break;
     }

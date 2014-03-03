@@ -406,8 +406,11 @@ uint2 MCLine::GetCursorXHelper(findex_t fi, bool prefer_left)
 	bptr->GetRange(i, l);
     
     while (bptr != lastblock
-           && ((bptr -> is_rtl() == prefer_left && fi >  i + l)
-           ||  (bptr -> is_rtl() != prefer_left && fi >= i + l)))
+           && ((bptr -> is_rtl() == bptr -> next() -> is_rtl() && fi > i + l)
+           ||  ( bptr -> is_rtl() &&  prefer_left && fi >= i + l)
+           ||  ( bptr -> is_rtl() && !prefer_left && fi >  i + l)
+           ||  (!bptr -> is_rtl() &&  prefer_left && fi >  i + l)
+           ||  (!bptr -> is_rtl() && !prefer_left && fi >= i + l)))
     {
         bptr = bptr -> next();
         bptr -> GetRange(i, l);
