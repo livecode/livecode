@@ -2398,10 +2398,14 @@ void MCParagraph::SetTextAlign(MCExecContext& ctxt, intenum_t* p_value)
     }
     else
     {
+        // The incoming values need to be translated
+        intenum_t t_value;
+        t_value = *p_value >> F_ALIGNMENT_SHIFT;
+        
         if (attrs == nil)
             attrs = new MCParagraphAttrs;
         attrs -> flags |= PA_HAS_TEXT_ALIGN;
-        attrs -> text_align = *p_value;
+        attrs -> text_align = t_value;
     }
 }
 
