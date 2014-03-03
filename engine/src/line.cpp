@@ -399,20 +399,51 @@ void MCLine::GetRange(findex_t &i, findex_t &l)
 	l = j + l - i;
 }
 
-uint2 MCLine::GetCursorX(findex_t fi)
+uint2 MCLine::GetCursorXHelper(findex_t fi, bool prefer_left)
 {
-	MCBlock *bptr = (MCBlock *)firstblock;
+    MCBlock *bptr = (MCBlock *)firstblock;
 	findex_t i, l;
 	bptr->GetRange(i, l);
-	while (fi > i + l && bptr != lastblock)
-	{
-		bptr = (MCBlock *)bptr->next();
-		bptr->GetRange(i, l);
-	}
-	return bptr->GetCursorX(fi);
+    
+    while (bptr != lastblock
+           && ((bptr -> is_rtl() == prefer_left && fi >  i + l)
+           ||  (bptr -> is_rtl() != prefer_left && fi >= i + l)))
+    {
+        bptr = bptr -> next();
+        bptr -> GetRange(i, l);
+    }
+    /*
+    if (!prefer_left)
+    {
+        while (fi >= i + l && bptr != lastblock)
+        {
+            bptr = (MCBlock *)bptr->next();
+            bptr->GetRange(i, l);
+        }
+    }
+    else
+    {
+        while (fi > i + l && bptr != lastblock)
+        {
+            bptr = (MCBlock *)bptr->next();
+            bptr->GetRange(i, l);
+        }
+    }
+    */
+    return bptr->GetCursorX(fi);
 }
 
-findex_t MCLine::GetCursorIndex(int2 cx, Boolean chunk)
+uint2 MCLine::GetCursorXPrimary(findex_t fi, bool moving_left)
+{
+	return GetCursorXHelper(fi, moving_left);
+}
+
+uint2 MCLine::GetCursorXSecondary(findex_t fi, bool moving_left)
+{
+    return GetCursorXHelper(fi, !moving_left);
+}
+
+findex_t MCLine::GetCursorIndex(int2 cx, Boolean chunk, bool moving_left)
 {
 	/*uint2 x = 0;
 	MCBlock *bptr = firstblock;
@@ -435,15 +466,20 @@ findex_t MCLine::GetCursorIndex(int2 cx, Boolean chunk)
     MCBlock *bptr = firstblock;
     while (bptr != lastblock)
     {
-        if (cx >= bptr->getorigin() && cx < bptr->getorigin() + bptr->getwidth())
+        if (moving_left)
         {
-            // This is the block we want
-            break;
+            if (cx >= bptr->getorigin() && cx < bptr->getorigin() + bptr->getwidth())
+                break;
+        }
+        else
+        {
+            if (cx > bptr->getorigin() && cx <= bptr->getorigin() + bptr->getwidth())
+                break;
         }
         
         bptr = bptr->next();
     }
-    
+        
     return bptr->GetCursorIndex(cx, chunk, bptr == lastblock);
 }
 

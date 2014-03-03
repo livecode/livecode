@@ -137,6 +137,7 @@ class MCParagraph : public MCDLlist
 	MCLine *lines;
 	findex_t focusedindex;
 	findex_t startindex, endindex, originalindex;
+    bool moving_left;        // Need to know direction for BiDi support
 	uint2 opened;
 	uint1 state;
 	// MP-2013-09-02: [[ FasterField ]] If true, it means the paragraph needs layout.

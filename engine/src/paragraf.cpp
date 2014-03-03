@@ -115,6 +115,7 @@ MCParagraph::MCParagraph()
 	opened = 0;
 	startindex = endindex = originalindex = PARAGRAPH_MAX_LEN;
 	state = 0;
+    moving_left = false;
 	
 	// MP-2013-09-02: [[ FasterField ]] Paragraphs start off needing layout.
 	needs_layout = true;
@@ -152,6 +153,7 @@ MCParagraph::MCParagraph(const MCParagraph &pref) : MCDLlist(pref)
 	startindex = endindex = originalindex = PARAGRAPH_MAX_LEN;
 	opened = 0;
 	state = 0;
+    moving_left = false;
 	
 	// MP-2013-09-02: [[ FasterField ]] Paragraphs start off needing layout.
 	needs_layout = true;
@@ -249,22 +251,22 @@ findex_t MCParagraph::PrevWord(findex_t p_in)
 
 bool MCParagraph::TextIsWordBreak(codepoint_t p_codepoint)
 {
-	return p_codepoint == ' ';
+	return MCUnicodeGetBinaryProperty(p_codepoint, kMCUnicodePropertyWordBreak);
 }
 
 bool MCParagraph::TextIsLineBreak(codepoint_t p_codepoint)
 {
-	return p_codepoint == '\v';
+	return p_codepoint == '\v' || p_codepoint == 0x2028;    // Line Separator (LSEP)
 }
 
 bool MCParagraph::TextIsSentenceBreak(codepoint_t p_codepoint)
 {
-	return p_codepoint == '.';
+	return MCUnicodeGetBinaryProperty(p_codepoint, kMCUnicodePropertySentenceBreak);
 }
 
 bool MCParagraph::TextIsParagraphBreak(codepoint_t p_codepoint)
 {
-	return p_codepoint == '\n';
+	return p_codepoint == '\n' || p_codepoint == 0x2029;    // Paragraps Separator (PSEP)
 }
 
 bool MCParagraph::TextIsPunctuation(codepoint_t p_codepoint)
@@ -365,7 +367,7 @@ static bool bidiNextISRCharClass(uint8_t *classes, level_run*& x_run, uindex_t &
 {
     if (x_run == nil)
         return false;
-    
+
     if (x_index < x_run->start + x_run->length)
     {
         // Ignore BNs
@@ -393,6 +395,8 @@ static uint8_t bidiPeekNextISRCharClass(uint8_t *classes, uint8_t alternative, l
 
 static bool bidiPrevISRCharClass(uint8_t *classes, level_run*& x_run, uindex_t& x_index, uint8_t& r_class)
 {
+    MCAssert(x_index <= x_run->start + x_run->length);
+    
     if (x_run == nil)
         return false;
     
@@ -623,7 +627,6 @@ static void bidiApplyRuleW7(isolating_run_sequence& irs, uint8_t *classes)
             do
             {
                 t_valid = bidiPrevISRCharClass(classes, t_run_b, t_index_b, t_strong);
-                t_index_b--;
             }
             while (t_valid
                    && t_strong != kMCUnicodeDirectionRightToLeft
@@ -1829,7 +1832,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
 		{
 			srect.x = x;
 			if (startindex > i)
-				srect.x += lptr->GetCursorX(MCU_min(gettextlength(), startindex));
+				srect.x += lptr->GetCursorXPrimary(MCU_min(gettextlength(), startindex), moving_left);
 		}
 		
 		bool t_show_back;
@@ -1838,7 +1841,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
 			srect.width = swidth - (srect.x - sx);
 		else
 		{
-			int2 sx = x + lptr->GetCursorX(MCU_min(gettextlength(), endindex));
+			int2 sx = x + lptr->GetCursorXPrimary(MCU_min(gettextlength(), endindex), moving_left);
 			if (sx > srect.x)
 				srect.width = sx - srect.x;
 			else
@@ -1925,11 +1928,11 @@ void MCParagraph::drawcomposition(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 
 		srect.y = y;
 		srect.height = height;
 		if (compstart > i)
-			srect.x += lptr->GetCursorX(compstart);
+			srect.x += lptr->GetCursorXPrimary(compstart, moving_left);
 		if (compend > i + l)
 			srect.width = lptr->getwidth() - (srect.x - x);
 		else
-			srect.width = x + lptr->GetCursorX(compend) - srect.x;
+			srect.width = x + lptr->GetCursorXPrimary(compend, moving_left) - srect.x;
 		dc->setforeground(dc->getgray());
 		dc->drawline(srect.x, srect.y + srect.height - 1, srect.x + srect.width,
 		             srect.y + srect.height - 1);
@@ -1943,11 +1946,11 @@ void MCParagraph::drawcomposition(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 
 			srect.y = y;
 			srect.height = height;
 			if (compconvstart > i)
-				srect.x += lptr->GetCursorX(compconvstart);
+				srect.x += lptr->GetCursorXPrimary(compconvstart, moving_left);
 			if (compconvend > i + l)
 				srect.width = lptr->getwidth() - (srect.x - x);
 			else
-				srect.width = x + lptr->GetCursorX(compconvend) - srect.x;
+				srect.width = x + lptr->GetCursorXPrimary(compconvend, moving_left) - srect.x;
 
 			dc->drawline(srect.x, srect.y + srect.height - 1, srect.x + srect.width,
 			             srect.y + srect.height - 1);
@@ -1976,14 +1979,14 @@ void MCParagraph::drawfound(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height
 		bool t_has_start;
 		t_has_start = fstart >= i;
 		if (fstart > i)
-			srect.x += lptr->GetCursorX(fstart);
+			srect.x += lptr->GetCursorXPrimary(fstart, moving_left);
 
 		bool t_has_end;
 		t_has_end = fend <= i + l;
 		if (fend > i + l)
 			srect.width = lptr->getwidth() - (srect.x - x);
 		else
-			srect.width = x + lptr->GetCursorX(fend) - srect.x;
+			srect.width = x + lptr->GetCursorXPrimary(fend, moving_left) - srect.x;
 
 		parent->setforeground(dc, DI_FORE, False, True);
 		if (t_has_start && t_has_end)
@@ -3317,25 +3320,29 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
     // Get the cursor movement style of the parent field
     bool t_visual_movement;
     t_visual_movement = parent->IsCursorMovementVisual();
-    if (!p_force_logical && t_visual_movement)
-        return fmovefocus_visual(type);
+    //if (!p_force_logical && t_visual_movement)
+    //    return fmovefocus_visual(type);
 
     // Using logical ordering so translate the type
     switch (type)
     {
         case FT_LEFTCHAR:
+            moving_left = true;
             type = FT_BACKCHAR;
             break;
             
         case FT_LEFTWORD:
+            moving_left = true;
             type = FT_BACKWORD;
             break;
             
         case FT_RIGHTCHAR:
+            moving_left = false;
             type = FT_FORWARDCHAR;
             break;
             
         case FT_RIGHTWORD:
+            moving_left = false;
             type = FT_FORWARDWORD;
             break;
     }
@@ -3429,6 +3436,7 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
 		focusedindex = 0;
 		break;
 	case FT_LEFTPARA:
+        moving_left = true;
 		if (focusedindex == 0)
 			return FT_LEFTPARA;
 		focusedindex = 0;
@@ -3437,6 +3445,7 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
         focusedindex = t_length;
 		break;
 	case FT_RIGHTPARA:
+        moving_left = false;
         if (focusedindex == t_length)
 			return FT_RIGHTPARA;
         focusedindex = t_length;
@@ -3608,7 +3617,7 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 	//   indents, list indents and alignment. (Field to Paragraph so -ve)
 	x -= computelineoffset(lptr);
 
-	focusedindex = lptr->GetCursorIndex(x, False);
+	focusedindex = lptr->GetCursorIndex(x, False, moving_left);
 	if (extend)
 	{
 		if (originalindex == PARAGRAPH_MAX_LEN)
@@ -3953,7 +3962,7 @@ MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_in
 		drect.height = lptr->getheight() - 2;
 	else
 		drect.height = fixedheight - 2;
-	drect.x = lptr->GetCursorX(fi);
+	drect.x = lptr->GetCursorXPrimary(fi, moving_left);
 	
 	// MW-2012-01-08: [[ ParaStyles ]] If we want the 'full height' of the
 	//   cursor (inc space), adjust appropriately depending on which line we are
@@ -4213,7 +4222,7 @@ uint2 MCParagraph::getyextent(findex_t tindex, uint2 fixedheight)
 
 int2 MCParagraph::getx(findex_t tindex, MCLine *lptr)
 {
-	int2 x = lptr->GetCursorX(tindex);
+	int2 x = lptr->GetCursorXPrimary(tindex, moving_left);
 
 	// MW-2012-01-08: [[ ParaStyles ]] Adjust the x start taking into account
 	//   indents, list indents and alignment. (Paragraph to Field so +ve)
@@ -4376,7 +4385,7 @@ void MCParagraph::getclickindex(int2 x, int2 y,
 	//   indents, list indents and alignment. (Field to Paragraph so -ve)
 	x -= computelineoffset(lptr);
 
-	si = lptr->GetCursorIndex(x, chunk);
+	si = lptr->GetCursorIndex(x, chunk, true);
 	int4 lwidth = lptr->getwidth();
 	if (x < 0 || x >= lwidth)
 	{
