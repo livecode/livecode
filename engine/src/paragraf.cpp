@@ -1828,18 +1828,19 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
 		t_show_front = (state & PS_FRONT) != 0 && (parent -> getflag(F_LIST_BEHAVIOR) || this != parent -> getparagraphs() || lptr != lines);
 	
 		MCRectangle srect;
-		if (t_show_front || startindex < i)
+		/*if (t_show_front || startindex < i)
 			srect.x = sx;
 		else
 		{
 			srect.x = x;
 			if (startindex > i)
 				srect.x += lptr->GetCursorXPrimary(MCU_min(gettextlength(), startindex), moving_forward);
-		}
+		}*/
 		
 		bool t_show_back;
 		t_show_back = (state & PS_BACK) != 0 && (parent -> getflag(F_LIST_BEHAVIOR) || this != parent -> getparagraphs() -> prev() || lptr != lines -> prev());
-		if (t_show_back || endindex > i + l)
+		
+        /*if (t_show_back || endindex > i + l)
 			srect.width = swidth - (srect.x - sx);
 		else
 		{
@@ -1848,7 +1849,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
 				srect.width = sx - srect.x;
 			else
 				return;
-		}
+		}*/
 		
 		// MW-2012-03-19: [[ Bug 10069 ]] The padding to use vertically depends on
 		//   the vgrid property and such.
@@ -1889,15 +1890,61 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
 			MCU_set_rect(t_rect, sx, y - t_space_height, swidth, t_space_height);
 			dc -> fillrect(t_rect);
 		}
-		
-		// MW-2012-03-15: [[ Bug ]] If we have an implicit grid line, then don't fill over it!
+        
+        // MW-2012-03-15: [[ Bug ]] If we have an implicit grid line, then don't fill over it!
 		if (computetopborder() == 0 && gethgrid())
 		{
 			srect . y += 1;
 			srect . height -= 1;
 		}
+        
+        // Iterate over the blocks in the line
+        MCBlock *firstblock, *lastblock;
+        lptr->getblocks(firstblock, lastblock);
+        MCBlock *bptr = firstblock;
+        do
+        {
+            // Is part of this block selected?
+            findex_t bi, bl;
+            bptr->GetRange(bi, bl);
+            if (startindex <= bi + bl && endindex >= bi)
+            {
+                findex_t si, ei;
+                if (startindex > bi)
+                    si = startindex;
+                else
+                    si = bi;
+                if (endindex < bi + bl)
+                    ei = endindex;
+                else
+                    ei = bi + bl;
+                
+                // Get the X coordinates for the selection
+                int2 bix, bex;
+                bix = bptr->GetCursorX(si);
+                bex = bptr->GetCursorX(ei);
+                
+                // Re-ordering will be required if the block is RTL
+                if (bix > bex)
+                {
+                    srect.x = x + bex;
+                    srect.width = bix - bex;
+                }
+                else
+                {
+                    srect.x = x + bix;
+                    srect.width = bex - bix;
+                }
+                
+                // Draw this block
+                dc->fillrect(srect);
+            }
+            
+            bptr = bptr->next();
+        }
+        while (bptr != firstblock);
 
-		dc->fillrect(srect);
+		//dc->fillrect(srect);
 
 		// MW-2012-01-08: [[ Paragraph Spacing ]] If we are the last line and
 		//   the 'back' selection is being shown, then render the hilite over
