@@ -116,6 +116,7 @@ MCParagraph::MCParagraph()
 	startindex = endindex = originalindex = PARAGRAPH_MAX_LEN;
 	state = 0;
     moving_left = false;
+    moving_forward = true;
 	
 	// MP-2013-09-02: [[ FasterField ]] Paragraphs start off needing layout.
 	needs_layout = true;
@@ -154,6 +155,7 @@ MCParagraph::MCParagraph(const MCParagraph &pref) : MCDLlist(pref)
 	opened = 0;
 	state = 0;
     moving_left = false;
+    moving_forward = true;
 	
 	// MP-2013-09-02: [[ FasterField ]] Paragraphs start off needing layout.
 	needs_layout = true;
@@ -1832,7 +1834,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
 		{
 			srect.x = x;
 			if (startindex > i)
-				srect.x += lptr->GetCursorXPrimary(MCU_min(gettextlength(), startindex), moving_left);
+				srect.x += lptr->GetCursorXPrimary(MCU_min(gettextlength(), startindex), moving_forward);
 		}
 		
 		bool t_show_back;
@@ -1841,7 +1843,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
 			srect.width = swidth - (srect.x - sx);
 		else
 		{
-			int2 sx = x + lptr->GetCursorXPrimary(MCU_min(gettextlength(), endindex), moving_left);
+			int2 sx = x + lptr->GetCursorXPrimary(MCU_min(gettextlength(), endindex), moving_forward);
 			if (sx > srect.x)
 				srect.width = sx - srect.x;
 			else
@@ -1928,11 +1930,11 @@ void MCParagraph::drawcomposition(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 
 		srect.y = y;
 		srect.height = height;
 		if (compstart > i)
-			srect.x += lptr->GetCursorXPrimary(compstart, moving_left);
+			srect.x += lptr->GetCursorXPrimary(compstart, moving_forward);
 		if (compend > i + l)
 			srect.width = lptr->getwidth() - (srect.x - x);
 		else
-			srect.width = x + lptr->GetCursorXPrimary(compend, moving_left) - srect.x;
+			srect.width = x + lptr->GetCursorXPrimary(compend, moving_forward) - srect.x;
 		dc->setforeground(dc->getgray());
 		dc->drawline(srect.x, srect.y + srect.height - 1, srect.x + srect.width,
 		             srect.y + srect.height - 1);
@@ -1946,11 +1948,11 @@ void MCParagraph::drawcomposition(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 
 			srect.y = y;
 			srect.height = height;
 			if (compconvstart > i)
-				srect.x += lptr->GetCursorXPrimary(compconvstart, moving_left);
+				srect.x += lptr->GetCursorXPrimary(compconvstart, moving_forward);
 			if (compconvend > i + l)
 				srect.width = lptr->getwidth() - (srect.x - x);
 			else
-				srect.width = x + lptr->GetCursorXPrimary(compconvend, moving_left) - srect.x;
+				srect.width = x + lptr->GetCursorXPrimary(compconvend, moving_forward) - srect.x;
 
 			dc->drawline(srect.x, srect.y + srect.height - 1, srect.x + srect.width,
 			             srect.y + srect.height - 1);
@@ -1979,14 +1981,14 @@ void MCParagraph::drawfound(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 height
 		bool t_has_start;
 		t_has_start = fstart >= i;
 		if (fstart > i)
-			srect.x += lptr->GetCursorXPrimary(fstart, moving_left);
+			srect.x += lptr->GetCursorXPrimary(fstart, moving_forward);
 
 		bool t_has_end;
 		t_has_end = fend <= i + l;
 		if (fend > i + l)
 			srect.width = lptr->getwidth() - (srect.x - x);
 		else
-			srect.width = x + lptr->GetCursorXPrimary(fend, moving_left) - srect.x;
+			srect.width = x + lptr->GetCursorXPrimary(fend, moving_forward) - srect.x;
 
 		parent->setforeground(dc, DI_FORE, False, True);
 		if (t_has_start && t_has_end)
@@ -2665,7 +2667,7 @@ MCBlock *MCParagraph::indextoblock(findex_t tindex, Boolean forinsert)
 		bptr->GetRange(i, l);
 		if (tindex >= i && tindex <= i + l)
 		{
-			if (tindex == i + l && bptr->next() != blocks)
+			if (tindex == i + l && !moving_forward && bptr->next() != blocks)
 				bptr = bptr->next();
 			return bptr;
 		}
@@ -3230,89 +3232,81 @@ uint1 MCParagraph::fmovefocus_visual(Field_translations type)
 {
     // Get the current block and its text direction
     MCBlock *sbptr = indextoblock(focusedindex, false);
+    MCBlock *ebptr = nil;
     bool t_is_rtl = sbptr->is_rtl();
-    
-    // Attempt to move non-visually and then back-out if we crossed a text
-    // direction boundary (as this is where visual order matters)
-    findex_t t_original_index = focusedindex;
-    Field_translations t_logical_type;
-    bool t_direction_matters = true;
+    bool t_done = false;
+  
+    findex_t i, l;
+    sbptr->GetRange(i, l);
     switch (type)
     {
         case FT_LEFTCHAR:
-            t_logical_type = t_is_rtl ? FT_FORWARDCHAR : FT_BACKCHAR;
-            break;
-            
         case FT_LEFTWORD:
-            t_logical_type = t_is_rtl ? FT_FORWARDWORD : FT_BACKWORD;
+            moving_left = true;
+            if ((t_is_rtl && focusedindex == i + l) || (!t_is_rtl && focusedindex == i))
+            {
+                ebptr = sbptr->GetPrevBlockVisualOrder();
+                if (ebptr != nil)
+                {
+                    t_done = true;
+                    moving_forward = !ebptr->is_rtl();
+                    if (ebptr->is_rtl())
+                        focusedindex = ebptr->GetOffset() + 1;
+                    else
+                        focusedindex = ebptr->GetOffset() + ebptr->GetLength() - 1;
+                }
+            }
+            if (!t_done)
+            {
+                if (type == FT_LEFTCHAR)
+                {
+                    type = t_is_rtl ? FT_FORWARDCHAR : FT_BACKCHAR;
+                }
+                else
+                {
+                    type = t_is_rtl ? FT_FORWARDWORD : FT_BACKWORD;
+                }
+            }
             break;
             
         case FT_RIGHTCHAR:
-            t_logical_type = t_is_rtl ? FT_BACKCHAR : FT_FORWARDCHAR;
-            break;
-            
         case FT_RIGHTWORD:
-            t_logical_type = t_is_rtl ? FT_BACKWORD : FT_FORWARDWORD;
+            moving_left = false;
+            if ((t_is_rtl && focusedindex == i) || (!t_is_rtl && focusedindex == i + l))
+            {
+                ebptr = sbptr->GetNextBlockVisualOrder();
+                t_done = true;
+                if (ebptr != nil)
+                {
+                    t_done = true;
+                    moving_forward = ebptr->is_rtl();
+                    if (ebptr->is_rtl())
+                        focusedindex = ebptr->GetOffset() + ebptr->GetLength() - 1;
+                    else
+                        focusedindex = ebptr->GetOffset() + 1;
+                }
+            }
+            if (!t_done)
+            {
+                if (type == FT_RIGHTCHAR)
+                {
+                    type = t_is_rtl ? FT_BACKCHAR : FT_FORWARDCHAR;
+                }
+                else
+                {
+                    type = t_is_rtl ? FT_BACKWORD : FT_FORWARDWORD;
+                }
+            }
             break;
             
         default:
-            t_logical_type = type;
-            t_direction_matters = false;
             break;
     }
     
-    uint1 t_result = fmovefocus(t_logical_type, true);
-    if (!t_direction_matters || t_result != FT_UNDEFINED)
-        return t_result;
-    
-    // Blocks may have been crossed. Did we cross any directional boundaries?
-    bool t_direction_changed = false;
-    MCBlock *bptr = sbptr;
-    MCBlock *ebptr = indextoblock(focusedindex, false);
-    while (bptr != ebptr)
-    {
-        if (bptr->is_rtl() != t_is_rtl)
-        {
-            t_direction_changed = true;
-            break;
-        }
-        bptr = bptr->next();
-    }
-    
-    // If no directional boundaries were crossed, nothing needs to be done
-    if (!t_direction_changed)
-        return t_result;
-    
-    // Block boundary was crossed. We will decree that changing text direction
-    // always ends a word or character (not doing so would seem a bit odd).
-    MCBlock *tbptr;
-    if (type == FT_LEFTCHAR || type == FT_LEFTWORD)
-    {
-        tbptr = sbptr->GetPrevBlockVisualOrder();
-        
-        // Position cursor at the beginning/end of this block, as appropriate
-        if (tbptr == nil)
-            return FT_LEFTCHAR;
-        else if (tbptr->is_rtl())
-            focusedindex = tbptr->GetOffset() + tbptr->GetLength();
-        else
-            focusedindex = tbptr->GetOffset();
-    }
-    else // type == FT_RIGHTCHAR || type == FT_RIGHTWORD
-    {
-        tbptr = sbptr->GetNextBlockVisualOrder();
-        
-        // Position cursor at the beginning/end of this block, as appropriate
-        if (tbptr == nil)
-            return FT_RIGHTCHAR;
-        if (tbptr->is_rtl())
-            focusedindex = tbptr->GetOffset();
-        else
-            focusedindex = tbptr->GetOffset() + tbptr->GetLength();
-    }
-    
-    // All done
-    return FT_UNDEFINED;
+    if (t_done)
+        return FT_UNDEFINED;
+    else
+        return fmovefocus(type, true);
 }
 
 uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
@@ -3320,8 +3314,8 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
     // Get the cursor movement style of the parent field
     bool t_visual_movement;
     t_visual_movement = parent->IsCursorMovementVisual();
-    //if (!p_force_logical && t_visual_movement)
-    //    return fmovefocus_visual(type);
+    if (!p_force_logical && t_visual_movement)
+       return fmovefocus_visual(type);
 
     // Using logical ordering so translate the type
     MCBlock *bptr = indextoblock(focusedindex, false);
@@ -3353,6 +3347,7 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
 	switch (type)
 	{
 	case FT_BACKCHAR:
+        moving_forward = false;
 		if (focusedindex == 0)
 			return FT_BACKCHAR;
 		focusedindex = PrevChar(focusedindex);
@@ -3360,6 +3355,7 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
 	case FT_BACKWORD:
 		// MW-2012-11-14: [[ Bug 10504 ]] Corrected loop to ensure the right chars
 		//   are accessed when dealing with Unicode blocks.
+        moving_forward = false;
 		if (focusedindex == 0)
 			return FT_BACKCHAR;
         focusedindex = DecrementIndex(focusedindex);
@@ -3371,11 +3367,13 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
         focusedindex = PrevWord(focusedindex);
 		break;
 	case FT_FORWARDCHAR:
+        moving_forward = true;
         if (focusedindex == t_length)
 			return FT_FORWARDCHAR;
 		focusedindex = NextChar(focusedindex);
 		break;
 	case FT_FORWARDWORD:
+        moving_forward = true;
         if (focusedindex == t_length)
 			return FT_FORWARDCHAR;
         focusedindex = IncrementIndex(focusedindex);
@@ -3437,7 +3435,6 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
 		focusedindex = 0;
 		break;
 	case FT_LEFTPARA:
-        moving_left = true;
 		if (focusedindex == 0)
 			return FT_LEFTPARA;
 		focusedindex = 0;
@@ -3446,7 +3443,6 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
         focusedindex = t_length;
 		break;
 	case FT_RIGHTPARA:
-        moving_left = false;
         if (focusedindex == t_length)
 			return FT_RIGHTPARA;
         focusedindex = t_length;
@@ -3963,7 +3959,7 @@ MCRectangle MCParagraph::getcursorrect(findex_t fi, uint2 fixedheight, bool p_in
 		drect.height = lptr->getheight() - 2;
 	else
 		drect.height = fixedheight - 2;
-	drect.x = lptr->GetCursorXPrimary(fi, moving_left);
+	drect.x = lptr->GetCursorXPrimary(fi, moving_forward);
 	
 	// MW-2012-01-08: [[ ParaStyles ]] If we want the 'full height' of the
 	//   cursor (inc space), adjust appropriately depending on which line we are
@@ -4223,7 +4219,7 @@ uint2 MCParagraph::getyextent(findex_t tindex, uint2 fixedheight)
 
 int2 MCParagraph::getx(findex_t tindex, MCLine *lptr)
 {
-	int2 x = lptr->GetCursorXPrimary(tindex, moving_left);
+	int2 x = lptr->GetCursorXPrimary(tindex, moving_forward);
 
 	// MW-2012-01-08: [[ ParaStyles ]] Adjust the x start taking into account
 	//   indents, list indents and alignment. (Paragraph to Field so +ve)

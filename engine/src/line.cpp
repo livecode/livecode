@@ -399,51 +399,31 @@ void MCLine::GetRange(findex_t &i, findex_t &l)
 	l = j + l - i;
 }
 
-uint2 MCLine::GetCursorXHelper(findex_t fi, bool prefer_left)
+uint2 MCLine::GetCursorXHelper(findex_t fi, bool prefer_forward)
 {
     MCBlock *bptr = (MCBlock *)firstblock;
 	findex_t i, l;
 	bptr->GetRange(i, l);
     
     while (bptr != lastblock
-           && ((bptr -> is_rtl() == bptr -> next() -> is_rtl() && fi > i + l)
-           ||  ( bptr -> is_rtl() &&  prefer_left && fi >= i + l)
-           ||  ( bptr -> is_rtl() && !prefer_left && fi >  i + l)
-           ||  (!bptr -> is_rtl() &&  prefer_left && fi >  i + l)
-           ||  (!bptr -> is_rtl() && !prefer_left && fi >= i + l)))
+           && ((prefer_forward && fi >= i + l)
+           || (!prefer_forward && fi >  i + l)))
     {
         bptr = bptr -> next();
         bptr -> GetRange(i, l);
     }
-    /*
-    if (!prefer_left)
-    {
-        while (fi >= i + l && bptr != lastblock)
-        {
-            bptr = (MCBlock *)bptr->next();
-            bptr->GetRange(i, l);
-        }
-    }
-    else
-    {
-        while (fi > i + l && bptr != lastblock)
-        {
-            bptr = (MCBlock *)bptr->next();
-            bptr->GetRange(i, l);
-        }
-    }
-    */
+   
     return bptr->GetCursorX(fi);
 }
 
-uint2 MCLine::GetCursorXPrimary(findex_t fi, bool moving_left)
+uint2 MCLine::GetCursorXPrimary(findex_t fi, bool moving_forward)
 {
-	return GetCursorXHelper(fi, moving_left);
+	return GetCursorXHelper(fi, !moving_forward);
 }
 
-uint2 MCLine::GetCursorXSecondary(findex_t fi, bool moving_left)
+uint2 MCLine::GetCursorXSecondary(findex_t fi, bool moving_forward)
 {
-    return GetCursorXHelper(fi, !moving_left);
+    return GetCursorXHelper(fi, moving_forward);
 }
 
 findex_t MCLine::GetCursorIndex(int2 cx, Boolean chunk, bool moving_left)

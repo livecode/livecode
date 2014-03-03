@@ -68,7 +68,7 @@ public:
 	findex_t GetCursorIndex(int2 x, Boolean chunk, bool forward);
 	uint2 GetCursorXPrimary(findex_t i, bool forward);
     uint2 GetCursorXSecondary(findex_t i, bool forward);
-    uint2 GetCursorXHelper(findex_t i, bool next_block);
+    uint2 GetCursorXHelper(findex_t i, bool moving_forward);
 	
 	//////////
 	

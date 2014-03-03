@@ -234,6 +234,7 @@ MCField::MCField()
 	scrollbarwidth = MCscrollbarwidth;
 	tabs = NULL;
 	ntabs = 0;
+    cursor_movement = kMCFieldCursorMovementDefault;
 	label = MCValueRetain(kMCEmptyString);
 }
 
@@ -249,6 +250,7 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
 	cury = focusedy = firsty = topmargin;
 	firstparagraph = lastparagraph = NULL;
 	foundlength = 0;
+    cursor_movement = fref.cursor_movement;
 	if (fref.vscrollbar != NULL)
 	{
 		vscrollbar = new MCScrollbar(*fref.vscrollbar);
