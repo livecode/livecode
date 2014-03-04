@@ -948,8 +948,7 @@ Window MCScreenDC::getroot()
 	return RootWindow(dpy, getscreen());
 }
 
-/* OVERHAUL - REVISIT: p_scale_factor parameter currently ignored */
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, const char *displayname)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size)
 {
 	Display *olddpy = dpy;
 	Colormap oldcmap = cmap;
@@ -1129,6 +1128,15 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uin
 	MCImageBitmap *t_bitmap = nil;
 	/* UNCHECKED */ MCImageBitmapCreateWithXImage(t_image, t_bitmap);
 	XDestroyImage(t_image);
+	
+	if (size != nil && 
+		(size -> x != t_bitmap -> width || size -> y != t_bitmap -> height))
+	{
+		MCImageBitmap *t_new_bitmap;
+		MCImageScaleBitmap(t_bitmap, size -> x, size -> y, INTERPOLATION_BILINEAR, t_new_bitmap);
+		MCImageFreeBitmap(t_bitmap);
+		t_bitmap = t_new_bitmap;
+	}
 
 	return t_bitmap;
 }

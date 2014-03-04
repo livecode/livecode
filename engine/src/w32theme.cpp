@@ -36,6 +36,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "graphics_util.h"
 
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
 #include <uxtheme.h>
 
 ////////////////////////////////////////////////////////////////////////////////
