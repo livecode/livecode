@@ -24,6 +24,8 @@ inline double roundf(float x)
 }
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
+
 inline MCRectangle MCRectangleMake(int16_t x, int16_t y, uint16_t width, uint16_t height)
 {
 	MCRectangle t_rect;
@@ -35,12 +37,71 @@ inline MCRectangle MCRectangleMake(int16_t x, int16_t y, uint16_t width, uint16_
 	return t_rect;
 }
 
-inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
+////////////////////////////////////////////////////////////////////////////////
+// MCRectangle32 Utility Functions
+
+inline void MCRectangle32Set(MCRectangle32 &x_rect, int32_t x, int32_t y, int32_t width, int32_t height)
+{
+	x_rect.x = x;
+	x_rect.y = y;
+	x_rect.width = width;
+	x_rect.height = height;
+}
+
+inline MCRectangle32 MCRectangle32Make(int32_t x, int32_t y, int32_t width, int32_t height)
+{
+	MCRectangle32 t_rect;
+	MCRectangle32Set(t_rect, x, y, width, height);
+	
+	return t_rect;
+}
+
+inline MCRectangle32 MCRectangle32Offset(const MCRectangle32 &p_rect, int32_t x_off, int32_t y_off)
+{
+	return MCRectangle32Make(p_rect.x + x_off, p_rect.y + y_off, p_rect.width, p_rect.height);
+}
+
+inline MCRectangle32 MCRectangle32Intersect(const MCRectangle32 &a, const MCRectangle32 &b)
+{
+	int32_t t_left, t_top, t_right, t_bottom;
+	t_left = MCMax(a.x, b.x);
+	t_top = MCMax(a.y, b.y);
+	t_right = MCMin(a.x + a.width, b.x + b.width);
+	t_bottom = MCMin(a.y + a.height, b.y + b.height);
+	
+	uint32_t t_width, t_height;
+	t_width = MCMax(0, t_right - t_left);
+	t_height = MCMax(0, t_bottom - t_top);
+	
+	return MCRectangle32Make(t_left, t_top, t_width, t_height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Rectangle conversion functions
+
+inline MCRectangle32 MCRectangle32FromMCRectangle(const MCRectangle &p_rect)
+{
+	return MCRectangle32Make(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+}
+
+inline MCRectangle MCRectangle32ToMCRectangle(const MCRectangle32 &p_rect)
+{
+	return MCRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+}
+
+inline MCGRectangle MCRectangleToMCGRectangle(const MCRectangle &p_rect)
 {
 	return MCGRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
 }
 
-inline MCRectangle MCGRectangleGetIntegerBounds(MCGRectangle p_rect)
+inline MCGRectangle MCRectangle32ToMCGRectangle(const MCRectangle32 &p_rect)
+{
+	return MCGRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+inline MCRectangle32 MCGRectangleGetInt32Bounds(MCGRectangle p_rect)
 {	
 	int32_t t_left, t_right, t_top, t_bottom;
 	t_left = floor(p_rect.origin.x);
@@ -60,10 +121,15 @@ inline MCRectangle MCGRectangleGetIntegerBounds(MCGRectangle p_rect)
 		t_height = 0;
 	}
 	
-	MCRectangle t_rect;
-	t_rect = MCRectangleMake(t_left, t_top, t_width, t_height);
+	MCRectangle32 t_rect;
+	t_rect = MCRectangle32Make(t_left, t_top, t_width, t_height);
 	
 	return t_rect;
+}
+
+inline MCRectangle MCGRectangleGetIntegerBounds(MCGRectangle p_rect)
+{
+	return MCRectangle32ToMCRectangle(MCGRectangleGetInt32Bounds(p_rect));
 }
 
 inline MCRectangle MCGRectangleGetIntegerInterior(MCGRectangle p_rect)
@@ -91,6 +157,8 @@ inline MCRectangle MCGRectangleGetIntegerRect(const MCGRectangle &p_rect)
 	return MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 static inline MCPoint MCPointMake(int16_t x, int16_t y)
 {
 	MCPoint t_point;
@@ -113,14 +181,36 @@ inline MCGPoint MCPointToMCGPoint(MCPoint p_point, MCGFloat p_adjustment = 0.0f)
 	return t_point;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+inline MCRectangle32 MCRectangle32GetTransformedBounds(const MCRectangle32 &p_rect, const MCGAffineTransform &p_transform)
+{
+	return MCGRectangleGetInt32Bounds(MCGRectangleApplyAffineTransform(MCRectangle32ToMCGRectangle(p_rect), p_transform));
+}
+
+inline MCRectangle32 MCRectangle32GetTransformedBounds(const MCRectangle &p_rect, const MCGAffineTransform &p_transform)
+{
+	return MCRectangle32GetTransformedBounds(MCRectangle32FromMCRectangle(p_rect), p_transform);
+}
+
 inline MCRectangle MCRectangleGetTransformedBounds(const MCRectangle &p_rect, const MCGAffineTransform &p_transform)
 {
 	return MCGRectangleGetIntegerBounds(MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_rect), p_transform));
 }
 
+inline MCRectangle MCRectangleGetTransformedBounds(const MCRectangle32 &p_rect, const MCGAffineTransform &p_transform)
+{
+	return MCGRectangleGetIntegerBounds(MCGRectangleApplyAffineTransform(MCRectangle32ToMCGRectangle(p_rect), p_transform));
+}
+
 inline MCRectangle MCRectangleGetTransformedInterior(const MCRectangle &p_rect, const MCGAffineTransform &p_transform)
 {
 	return MCGRectangleGetIntegerInterior(MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_rect), p_transform));
+}
+
+inline MCRectangle MCRectangleGetTransformedRect(const MCRectangle &p_rect, const MCGAffineTransform &p_transform)
+{
+	return MCGRectangleGetIntegerRect(MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_rect), p_transform));
 }
 
 static inline MCRectangle MCRectangleGetScaledBounds(const MCRectangle &p_rect, MCGFloat p_scale)
@@ -138,10 +228,14 @@ inline MCPoint MCPointTransform(const MCPoint &p_point, const MCGAffineTransform
 	return MCGPointToMCPoint(MCGPointApplyAffineTransform(MCPointToMCGPoint(p_point), p_transform));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 inline MCGFloat MCGAffineTransformGetEffectiveScale(const MCGAffineTransform &p_transform)
 {
 	return MCMax(MCAbs(p_transform.a), MCAbs(p_transform.d));
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 inline MCGPoint MCGRectangleGetCenter(const MCGRectangle &p_rect)
 {
@@ -157,6 +251,8 @@ inline MCGRectangle MCGRectangleCenterOnRect(const MCGRectangle &p_rect_a, const
 {
 	return MCGRectangleCenterOnPoint(p_rect_a, MCGRectangleGetCenter(p_rect_b));
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 #if defined(TARGET_SUBPLATFORM_ANDROID)
 
