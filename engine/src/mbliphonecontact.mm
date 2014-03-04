@@ -1143,9 +1143,9 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 		
 		if (m_success)
 		{
-            t_title = [stringWithMCStringRef p_title == nil ? kMCEmptyString : p_title];
-            t_message = [stringWithMCStringRef p_message == nil ? kMCEmptyString : p_message];
-			t_alternate_name = [stringWithMCStringRef p_alternate_name == nil ? kMCEmptyString : p_alternate_name];
+            t_title = [NSString stringWithMCStringRef: p_title == nil ? kMCEmptyString : p_title];
+            t_message = [NSString stringWithMCStringRef: p_message == nil ? kMCEmptyString : p_message];
+			t_alternate_name = [NSString stringWithMCStringRef: p_alternate_name == nil ? kMCEmptyString : p_alternate_name];
 			m_success = (t_title != nil) && (t_message != nil) && (t_alternate_name != nil);
 		}
 		
