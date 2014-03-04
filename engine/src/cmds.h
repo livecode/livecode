@@ -388,7 +388,7 @@ public:
 	virtual ~MCSort();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &);
-	static void additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort_type form, MCValueRef p_value, MCExpression *by);
+	//static void additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort_type form, MCValueRef p_value, MCExpression *by);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
