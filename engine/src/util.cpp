@@ -2262,7 +2262,8 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'averageDeviation'
 	case F_AVG_DEV:
 		tn = tn - oldn;
-		n += abs(tn);
+		// IM-2014-02-28: [[ Bug 11778 ]] Make sure we're using the floating-point version of 'abs'
+		n += fabs(tn);
 		nparams++;
 		break;
 	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'geometricMean'
