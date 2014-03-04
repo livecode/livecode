@@ -574,14 +574,6 @@ MCMobileBitmap *MCMobileBitmapCreate(uint32_t width, uint32_t height, bool mono)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCScreenDC::device_querymouse(int2 &x, int2 &y)
-{
-	// These co-ords should be in screen co-ords, so adjust the view-based current co-ords
-	// by the view top-left.
-	x = m_mouse_x + m_window_left;
-	y = m_mouse_y + m_window_top;
-}
-
 Boolean MCScreenDC::getmouse(uint2 button, Boolean& r_abort)
 {
 	// Wait for 0 seconds to give a chance to collect system events (notice we
@@ -935,14 +927,9 @@ uint16_t MCScreenDC::platform_getheight()
 
 void MCScreenDC::platform_querymouse(int16_t &r_x, int16_t &r_y)
 {
-	MCPoint t_loc;
-	device_querymouse(t_loc.x, t_loc.y);
-	
-	// IM-2014-01-30: [[ HiDPI ]] Convert screen to logical coords
-	t_loc = screentologicalpoint(t_loc);
-	
-	r_x = t_loc.x;
-	r_y = t_loc.y;
+	// IM-2014-03-03: [[ Bug 11836 ]] Mouse loc and window position now stored in logical coords
+	r_x = m_mouse_x + m_window_left;
+	r_y = m_mouse_y + m_window_top;
 }
 
 void MCScreenDC::platform_setmouse(int16_t p_x, int16_t p_y)

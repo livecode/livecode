@@ -756,8 +756,14 @@ void MCScreenDC::do_fit_window(bool p_immediate_resize, bool p_post_message)
 	MCRectangle t_view_bounds;
 	t_view_bounds = MCDeviceRectFromLogicalCGRect(MCIPhoneGetViewBounds());
 	
-	m_window_left = t_view_bounds . x;
-	m_window_top = t_view_bounds . y;
+	// IM-2014-03-03: [[ Bug 11836 ]] Store window topleft in logical coords
+	MCPoint t_topleft;
+	t_topleft = MCPointMake(t_view_bounds.x, t_view_bounds.y);
+
+	t_topleft = screentologicalpoint(t_topleft);
+
+	m_window_left = t_topleft . x;
+	m_window_top = t_topleft . y;
 	
 	if (p_post_message)
 	{
