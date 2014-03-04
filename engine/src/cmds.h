@@ -1460,7 +1460,7 @@ class MCOpen : public MCStatement
 		MCExpression *options; // if open printing to
 	};
 	MCGo *go;
-	char *destination;
+	MCStringRef destination;
 	Open_argument arg : 4;
 	Open_mode mode : 4;
     Encoding_type encoding : 4;
@@ -1484,7 +1484,7 @@ public:
 		certificate = NULL;
 		secure = False;
 		secureverify = True;
-		destination = NULL;
+		destination = nil;
 		elevated = False;
 	}
 	virtual ~MCOpen();
