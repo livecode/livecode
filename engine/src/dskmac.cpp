@@ -750,7 +750,7 @@ static void MCS_launch_set_result_from_lsstatus(void)
 	switch(t_error)
 	{
         case 0:
-            MCresult -> clear();
+            MCresult -> empty();
             break;
             
         case 1:
@@ -3590,7 +3590,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         if (*t_error != nil)
 		/* UNCHECKED */ MCresult -> setvalueref(*t_error);
         else
-            MCresult -> clear(False);
+            MCresult -> empty();
     }
     
     // MW-2006-08-05: Vetted for Endian issues

@@ -366,7 +366,7 @@ static void url_execute(MCStringRef p_url, MCUrlExecuteCallback p_callback, void
 		curl_easy_setopt(t_url_handle, CURLOPT_ERRORBUFFER, t_error_buffer);
 
 		MCurlresult -> clear();
-		MCresult -> clear();
+		MCresult -> empty();
 		if (curl_easy_perform(t_url_handle) == CURLE_OK)
 		{
 			if (t_is_http)

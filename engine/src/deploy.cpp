@@ -434,7 +434,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
     t_has_error = false;
     
     // Clear the result as we return an error there
-	MCresult -> clear();
+	ctxt . SetTheResultToEmpty();
     
     MCAutoArrayRef t_array;
     if (!ctxt . EvalExprAsArrayRef(m_params, EE_UNDEFINED, &t_array))
@@ -542,7 +542,7 @@ Parse_stat MCIdeSign::parse(MCScriptPoint& sp)
 void MCIdeSign::exec_ctxt(MCExecContext &ctxt)
 {
 	// Clear the result as we return an error there
-	MCresult -> clear();
+	ctxt . SetTheResultToEmpty();
 
     MCAutoArrayRef t_array;
     if (!ctxt . EvalExprAsArrayRef(m_params, EE_UNDEFINED, &t_array))
@@ -643,7 +643,7 @@ Parse_stat MCIdeDiet::parse(MCScriptPoint& sp)
 void MCIdeDiet::exec_ctxt(MCExecContext& ctxt)
 {
 	// Clear the result as we return an error there
-	MCresult -> clear();
+	ctxt . SetTheResultToEmpty();
     
     MCAutoArrayRef t_array;
     if (!ctxt . EvalExprAsArrayRef(m_params, EE_UNDEFINED, &t_array))
@@ -719,7 +719,7 @@ Parse_stat MCIdeDmgDump::parse(MCScriptPoint& sp)
 void MCIdeDmgDump::exec_ctxt(MCExecContext &ctxt)
 {
 	// Clear the result as we return an error there
-	MCresult -> clear();
+	ctxt . SetTheResultToEmpty();
 
     MCAutoStringRef t_string;
     if (!ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
@@ -768,7 +768,7 @@ Parse_stat MCIdeDmgBuild::parse(MCScriptPoint& sp)
 void MCIdeDmgBuild::exec_ctxt(MCExecContext& ctxt)
 {
     // Clear the result as we return an error there
-	MCresult -> clear();
+	ctxt . SetTheResultToEmpty();
 
 	/////////
 
