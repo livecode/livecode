@@ -1617,15 +1617,25 @@ void MCFilesExecPerformReadTextUntil(MCExecContext& ctxt, IO_handle p_stream, in
                 //   to retreat, which *doesn't* work for process p_streams.
                 if (t_norm_sent_size == 1)
                 {
-                    uint1 term;
-                    uint4 nread = 1;
-                    if (MCS_readall(&term, nread, p_stream, nread) == IO_NORMAL)
+                    if (t_new_char_boundary != MCStringGetLength(*t_output))
                     {
-                        if (term != '\n')
-                            MCS_putback(term, p_stream);
-                        else
-                            // Reaching that point, we want to change the last char of the buffer (being a lone, byte-wide <CR>) to an LF
-                            /* UNCHECKED */ MCStringReplace(*t_output, MCRangeMake(t_last_char_boundary, 1), MCSTR("\n"));
+                        // We already have the next char loaded
+                        if (MCStringGetCharAtIndex(*t_output, t_new_char_boundary) == '\n')
+                            /* UNCHECKED */ MCStringReplace(*t_output, MCRangeMake(t_new_char_boundary, 1), MCSTR("\n"));
+                    }
+                    else
+                    {
+                        // We need to read the next char
+                        uint1 term;
+                        uint4 nread = 1;
+                        if (MCS_readall(&term, nread, p_stream, nread) == IO_NORMAL)
+                        {
+                            if (term != '\n')
+                                MCS_putback(term, p_stream);
+                            else
+                                // Reaching that point, we want to change the last char of the buffer (being a lone, byte-wide <CR>) to an LF
+                                /* UNCHECKED */ MCStringReplace(*t_output, MCRangeMake(t_last_char_boundary, 1), MCSTR("\n"));
+                        }
                     }
                 }
                 --p_count;
