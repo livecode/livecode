@@ -1580,7 +1580,7 @@ bool MCStringFirstIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t a
 bool MCStringLastIndexOf(MCStringRef string, MCStringRef needle, uindex_t before, MCStringOptions options, uindex_t& r_offset);
 // Find the last offset of needle in string - where needle is a Unicode character
 // (note it is a codepoint, not unichar - i.e. a 20-bit value).
-bool MCStringLastIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t after, MCStringOptions options, uindex_t& r_offset);
+bool MCStringLastIndexOfChar(MCStringRef string, codepoint_t needle, uindex_t before, MCStringOptions options, uindex_t& r_offset);
 
 // Search 'range' of 'string' for 'needle' processing as appropriate to optiosn
 // and returning any located string in 'result'. If the result is false, no range is
