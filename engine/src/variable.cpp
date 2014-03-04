@@ -127,7 +127,7 @@ void MCVariable::clearuql(void)
 
 Boolean MCVariable::isclear(void) const
 {
-	return value == kMCNull;
+    return value == kMCEmptyString;
 }
 
 Boolean MCVariable::isfree(void) const
@@ -150,7 +150,7 @@ Boolean MCVariable::isempty(void) const
 void MCVariable::clear(Boolean p_delete_buffer)
 {
 	MCValueRelease(value);
-	value = MCValueRetain(kMCNull);
+    value = MCValueRetain(kMCEmptyString);
 }
 
 Exec_stat MCVariable::sets(const MCString& p_string)
