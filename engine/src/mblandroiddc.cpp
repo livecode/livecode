@@ -547,8 +547,15 @@ void MCScreenDC::do_fit_window(bool p_immediate_resize, bool p_post_message)
 	// Make sure view is configured to be the right size...
 	MCRectangle drect;
 	drect = android_view_get_bounds();
-	m_window_left = drect . x;
-	m_window_top = drect . y;
+
+	// IM-2014-03-03: [[ Bug 11836 ]] Store window topleft in logical coords
+	MCPoint t_topleft;
+	t_topleft = MCPointMake(drect.x, drect.y);
+
+	t_topleft = screentologicalpoint(t_topleft);
+
+	m_window_left = t_topleft . x;
+	m_window_top = t_topleft . y;
 
 	// IM-2014-01-31: [[ HiDPI ]] Ensure stack view is updated with the current pixel scale
 	((MCStack*)m_current_window)->view_setbackingscale(MCResGetPixelScale());
