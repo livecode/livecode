@@ -470,9 +470,6 @@ public:
 	
 	// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within min/max width & height
 	MCRectangle constrainstackrect(const MCRectangle &p_rect);
-	// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within screen bounds
-	// IM-2014-02-13: [[ StackScale ]] Update to work with MCGRectangles. Rename to reflect use of view coordinates.
-	MCGRectangle view_constrainrecttoscreen(const MCGRectangle &p_rect);
 	
     // IM-2012-05-15: [[ Effective Rect ]] get the rect of the window (including decorations)
     MCRectangle getwindowrect() const;
