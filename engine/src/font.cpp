@@ -206,7 +206,7 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
 	if (p_font -> fontstruct == nil)
 		return;
-	
+
     // If the text is small enough, don't bother trying to break it
     /*if (p_length <= (kMCFontBreakTextCharLimit * (p_is_unicode ? 2 : 1)))
     {
@@ -326,7 +326,23 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
             t_range = MCRangeMake(t_end - t_offset - t_break_point, t_break_point);
         else
             t_range = MCRangeMake(t_offset, t_break_point);
-        p_callback(p_font, p_text, t_range, p_callback_data);
+        
+        // This is a really ugly hack to get LTR/RTL overrides working correctly -
+        // ATSUI and Pango think they know better than us and won't let us suppress
+        // the BiDi algorithm they uses for text layout. So instead, we need to add
+        // an LRO or RLO character in front of every single bit of text :-(
+        MCAutoStringRef t_temp;
+        unichar_t t_override;
+        if (p_rtl)
+            t_override = 0x202E;
+        else
+            t_override = 0x202D;
+        /* UNCHECKED */ MCStringCreateMutable(0, &t_temp);
+        /* UNCHECKED */ MCStringAppendChar(*t_temp, t_override);
+        /* UNCHECKED */ MCStringAppendSubstring(*t_temp, p_text, t_range);
+        /* UNCHECKED */ MCStringAppendChar(*t_temp, 0x202C);
+        
+        p_callback(p_font, *t_temp, MCRangeMake(0, MCStringGetLength(*t_temp)), p_callback_data);
         
         // Explicitly show breaking points
         //p_callback(p_font, MCSTR("|"), MCRangeMake(0, 1), p_callback_data);

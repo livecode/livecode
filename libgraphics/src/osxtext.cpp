@@ -177,18 +177,18 @@ static bool osx_draw_text_substring_to_cgcontext_at_location(uindex_t p_length, 
 	
 	ATSUAttributeTag t_layout_tags[] =
 	{
-		kATSUCGContextTag,
         kATSULineDirectionTag,
+        kATSUCGContextTag,
 	};
 	ByteCount t_layout_sizes[] =
 	{
-		sizeof(CGContextRef),
-        sizeof(Boolean),
+		sizeof(Boolean),
+        sizeof(CGContextRef),
 	};
 	ATSUAttributeValuePtr t_layout_attrs[] =
 	{
-		&p_cgcontext,
-        &t_is_rtl,
+		&t_is_rtl,
+        &p_cgcontext,
 	};
 
 	if (t_err == noErr)
@@ -333,7 +333,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	
 	bool t_success;
 	t_success = true;
-	
+    
     if (t_success)
         t_success = osx_prepare_text(p_text, p_length, p_font);
     

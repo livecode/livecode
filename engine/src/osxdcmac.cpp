@@ -2228,8 +2228,9 @@ pascal OSErr TSMUnicodeNotFromInputHandler(const AppleEvent *theAppleEvent,
 	AEGetDescData(&text, (void *) imetext, imetextsize);
 	imetext[imetextsize] = '\0';
 
-	// Do ASCII codepoints the old-fashioned way
-	if (imetextsize == 2 && *(const unichar_t*)imetext <= 0x7F)
+	// Do native codepoints the old-fashioned way
+    uint8_t t_native;
+    if (MCUnicodeMapToNative_MacRoman((const unichar_t*)imetext, imetextsize/2, t_native))
 	{
 		delete[] imetext;
 		return paramErr;
