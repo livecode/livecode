@@ -129,7 +129,7 @@ public:
 	void getbeep(uint4 property, MCExecPoint &ep);
 	void setbeep(uint4 property, int4 beep);
 
-	MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, const char *displayname);
+	MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size);
 
 	void enablebackdrop(bool p_hard = false);
 	void disablebackdrop(bool p_hard = false);
