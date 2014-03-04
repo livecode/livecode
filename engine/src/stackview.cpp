@@ -292,7 +292,10 @@ MCGRectangle MCStack::view_constrainstackviewport(const MCGRectangle &p_rect)
 		}
 	}
 	else
-		t_new_rect = view_constrainrecttoscreen(t_stackrect);
+	{
+		// IM-2014-02-28: [[ Bug 11844 ]] Don't constrain stack rect here unless fullscreen
+		t_new_rect = t_stackrect;
+	}
 	
 	return t_new_rect;
 }
