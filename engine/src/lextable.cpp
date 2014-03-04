@@ -328,7 +328,9 @@ LT command_table[] =
 #endif
         {"rotate", TT_STATEMENT, S_ROTATE},
 		{"save", TT_STATEMENT, S_SAVE},
-        {"seek", TT_STATEMENT, S_SEEK},
+		// MM-2014-02-12: [[ SecureSocket ]] 'secure' statement used by secure socket
+		{"secure", TT_STATEMENT, S_SECURE},
+		{"seek", TT_STATEMENT, S_SEEK},
         {"select", TT_STATEMENT, S_SELECT},
         {"send", TT_STATEMENT, S_SEND},
         {"set", TT_STATEMENT, S_SET},

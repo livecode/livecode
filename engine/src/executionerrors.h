@@ -2436,6 +2436,10 @@ enum Exec_errors
 	// IM-2013-12-04: [[ PixelScale ]]
 	// {EE-0801} pixelScale: not a valid scale value
 	EE_PROPERTY_BADPIXELSCALE,
+	
+	// MM-2014-02-12: [[ SecureSocket ]]
+	// {EE-0802} secure: error in socket expression
+	EE_SECURE_BADNAME,
 };
 
 extern const char *MCexecutionerrors;

@@ -1247,6 +1247,11 @@ MCSocket *MCS_accept(uint2 p_port, MCObject* p_object, MCNameRef p_message, Bool
 	return NULL;
 }
 
+// MM-2014-02-12: [[ SecureSocket ]] New secure socket command
+void MCS_secure_socket(MCSocket *s, Boolean sslverify)
+{
+}
+
 void MCS_ha(MCExecPoint& ep, MCSocket *p_socket)
 {
 }

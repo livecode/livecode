@@ -75,7 +75,11 @@ public:
 	uint4 size;
 	uint4 done;
 	Boolean writedone;
-	MCSocketwrite(const MCString &d, MCObject *o, MCNameRef m);
+	
+	// MM-2014-02-12: [[ SecureSocket ]] We now store against each individual write if it should be encrypted (rather than checking against socket).
+	Boolean secure;
+	
+	MCSocketwrite(const MCString &d, MCObject *o, MCNameRef m, Boolean secure);
 	~MCSocketwrite();
 	MCSocketwrite *next()
 	{
@@ -139,8 +143,10 @@ public:
 	void close();
 	Boolean init(MCSocketHandle newfd);
 
-	int4 write(const char *buffer, uint4 towrite);
-	int4 read(char *buffer, uint4 toread);
+	// MM-2014-02-12: [[ SecureSocket ]] Pass if the read/write should be encrypted rather than checking against socket.
+	int4 write(const char *buffer, uint4 towrite, Boolean securewrite);
+	int4 read(char *buffer, uint4 toread, Boolean secureread);
+	
 	uint2 sslstate;
 	Boolean sslverify;
 	void doclose();
@@ -191,6 +197,8 @@ extern MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNa
 extern void MCS_close_socket(MCSocket *s);
 extern void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, char *until, MCNameRef m);
 extern void MCS_write_socket(const MCString &d, MCSocket *s, MCObject *optr, MCNameRef m);
+// MM-2014-02-12: [[ SecureSocket ]] New secure socket command.
+void MCS_secure_socket(MCSocket *s, Boolean sslverify);
 extern MCSocket *MCS_accept(uint2 p, MCObject *o, MCNameRef m, Boolean datagram,Boolean secure,Boolean sslverify,char *sslcertfile);
 extern void MCS_ha(MCExecPoint &ep, MCSocket *s);
 extern void MCS_hn(MCExecPoint &ep);

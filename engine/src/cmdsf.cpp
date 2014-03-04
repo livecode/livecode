@@ -3672,3 +3672,109 @@ Exec_stat MCWrite::exec(MCExecPoint &ep)
 	return ES_NORMAL;
 #endif /* MCWrite */
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// MM-2014-02-12: [[ SecureSocket ]] 
+//  New secure socket command, used to ensure all future communications over the given socket are encrypted.
+//
+//  After securing:
+//    All pending and future reads from the socket will assumed to be encrypted.
+//    All pending writes will continue unencrypted. All future writes will be encrypted.
+//
+//  Unless specified, the connection will be verified.
+//
+//  Syntax:
+//    secure socket <socket>
+//    secure socket <socket> with verification
+//    secure socket <socket> without verification
+//
+MCSecure::~MCSecure()
+{
+	delete m_sock_name;
+}
+
+Parse_stat MCSecure::parse(MCScriptPoint &sp)
+{	
+	initpoint(sp);
+	
+	Symbol_type type;
+	if (sp . next(type) != PS_NORMAL)
+	{
+		MCperror -> add(PE_SECURE_NOSOCKET, sp);
+		return PS_ERROR;
+	}
+	
+	const LT *te;
+	if (sp . lookup(SP_OPEN, te) != PS_NORMAL)
+	{
+		MCperror -> add(PE_SECURE_NOSOCKET, sp);
+		return PS_ERROR;
+	}
+	
+	Open_argument t_open_arg;
+	t_open_arg = (Open_argument) te -> which;
+	if (t_open_arg != OA_SOCKET)
+	{
+		MCperror -> add(PE_SECURE_NOSOCKET, sp);
+		return PS_ERROR;
+	}
+	
+	if (sp . parseexp(False, True, &m_sock_name) != PS_NORMAL)
+	{
+		MCperror -> add(PE_SECURE_BADNAME, sp);
+		return PS_ERROR;
+	}
+	
+	if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+	{
+		if (sp . skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) == PS_NORMAL)
+			secureverify = True;
+		else
+		{
+			MCperror -> add(PE_SECURE_BADMESSAGE, sp);
+			return PS_ERROR;
+		}
+	}
+	
+	if (sp . skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
+	{
+		if (sp . skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) == PS_NORMAL)
+			secureverify = False;
+		else
+		{
+			MCperror -> add(PE_SECURE_BADMESSAGE, sp);
+			return PS_ERROR;
+		}
+	}
+	
+	return PS_NORMAL;
+}
+
+Exec_stat MCSecure::exec(MCExecPoint &ep)
+{
+#ifdef /* MCSecure */ LEGACY_EXEC
+	
+	if (m_sock_name -> eval(ep) != ES_NORMAL)
+	{
+		MCeerror -> add(EE_SECURE_BADNAME, line, pos);
+		return ES_ERROR;
+	}
+	
+	char *t_sock_name;
+	t_sock_name = ep . getsvalue() . clone();
+	
+	uint2 t_index;
+	if (IO_findsocket(t_sock_name, t_index))
+	{
+		MCS_secure_socket(MCsockets[t_index], secureverify);
+		MCresult->clear(False);
+	}
+	else
+		MCresult->sets("socket is not open");
+	
+	MCCStringFree(t_sock_name);
+	
+	return ES_NORMAL;
+#endif /* MCSecure */
+}
