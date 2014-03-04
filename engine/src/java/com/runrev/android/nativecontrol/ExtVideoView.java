@@ -276,6 +276,10 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
             mMediaPlayer.setDisplay(mSurfaceHolder);
             mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mMediaPlayer.setScreenOnWhilePlaying(true);
+			// IM-2014-02-26: [[ Bug 11753 ]] Only set looping if requested as this can cause
+			// an exception to be thrown when opening some streams
+			if (mLooping)
+				mMediaPlayer.setLooping(true);
             mMediaPlayer.prepareAsync();
             // we don't set the target state here either, but preserve the
             // target state that was there before.
@@ -288,6 +292,13 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
             mErrorListener.onError(mMediaPlayer, MediaPlayer.MEDIA_ERROR_UNKNOWN, 0);
             return;
         } catch (IllegalArgumentException ex) {
+            Log.w(TAG, "Unable to open content: " + mUri, ex);
+            mCurrentState = STATE_ERROR;
+            mTargetState = STATE_ERROR;
+            mErrorListener.onError(mMediaPlayer, MediaPlayer.MEDIA_ERROR_UNKNOWN, 0);
+            return;
+        } catch (IllegalStateException ex) {
+        	// IM-2014-02-26: [[ Bug 11753 ]] Catch & handle IllegalState exceptions
             Log.w(TAG, "Unable to open content: " + mUri, ex);
             mCurrentState = STATE_ERROR;
             mTargetState = STATE_ERROR;
@@ -364,7 +375,10 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
             if (seekToPosition != 0) {
                 seekTo(seekToPosition);
             }
-            mp.setLooping(mLooping);
+            // IM-2014-02-25: [[ Bug 11753 ]] don't set looping here as this seems to put
+            // the player into an error state
+            /* CODE REMOVED */
+
             if (mVideoWidth != 0 && mVideoHeight != 0) {
                 //Log.i("@@@@", "video size: " + mVideoWidth +"/"+ mVideoHeight);
                 getHolder().setFixedSize(mVideoWidth, mVideoHeight);
