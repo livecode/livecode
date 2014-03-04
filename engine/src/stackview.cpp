@@ -363,16 +363,17 @@ void MCStack::view_setrect(const MCRectangle &p_rect)
 	m_view_rect = p_rect;
 	
 	// IM-2014-01-16: [[ StackScale ]] Update window geometry if we have a window
-	if (getopened() && window != nil)
+	// IM-2014-02-27: [[ Bug 11858 ]] Allow window geometry update when stack is closed
+	if (window != nil)
 	{
-	// IM-2013-10-03: [[ FullscreenMode ]] if the view rect has changed, update the window geometry
+		// IM-2013-10-03: [[ FullscreenMode ]] if the view rect has changed, update the window geometry
 
-	// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
-	/* CODE REMOVED */
-	
-	// IM-2013-10-08: [[ FullscreenMode ]] Update window size hints when setting the view geometry.
-	setsizehints();
-	view_setgeom(m_view_rect);
+		// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+		/* CODE REMOVED */
+
+		// IM-2013-10-08: [[ FullscreenMode ]] Update window size hints when setting the view geometry.
+		setsizehints();
+		view_setgeom(m_view_rect);
 	}
 	
 	view_on_rect_changed();
