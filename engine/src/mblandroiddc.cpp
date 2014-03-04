@@ -550,15 +550,19 @@ void MCScreenDC::do_fit_window(bool p_immediate_resize, bool p_post_message)
 	m_window_left = drect . x;
 	m_window_top = drect . y;
 
-	// IM-2014-01-31: [[ HiDPI ]] Ensure stack view is updated with the current pixel scale
-	((MCStack*)m_current_window)->view_setbackingscale(MCResGetPixelScale());
-	
 	if (p_post_message)
 	{
 		if (p_immediate_resize)
+		{
+			// IM-2014-01-31: [[ HiDPI ]] Ensure stack view is updated with the current pixel scale
+			((MCStack*)m_current_window)->view_setbackingscale(MCResGetPixelScale());
 			((MCStack *)m_current_window) -> view_configure(true);
+		}
 		else
-			MCEventQueuePostWindowReshape((MCStack *)m_current_window);
+		{
+			// IM-2014-02-14: [[ HiDPI ]] Post backing scale changes with window reshape message
+			MCEventQueuePostWindowReshape((MCStack *)m_current_window, MCResGetPixelScale());
+		}
 
 		// When we get a resize from android, we need to redraw the whole thing
 		// as the buffer will have changed!

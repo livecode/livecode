@@ -762,9 +762,16 @@ void MCScreenDC::do_fit_window(bool p_immediate_resize, bool p_post_message)
 	if (p_post_message)
 	{
 		if (p_immediate_resize)
+		{
+			// IM-2014-01-30: [[ HiDPI ]] Ensure stack backing scale is set
+			((MCStack *)m_current_window) -> view_setbackingscale(MCResGetPixelScale());
 			((MCStack *)m_current_window) -> view_configure(true);
+		}
 		else
-			MCEventQueuePostWindowReshape((MCStack *)m_current_window);
+		{
+			// IM-2014-02-14: [[ HiDPI ]] Post backing scale changes with window reshape message
+			MCEventQueuePostWindowReshape((MCStack *)m_current_window, MCResGetPixelScale());
+		}
 	}
 }
 
