@@ -23,38 +23,38 @@ Instead of
 
     now all it needs is just
 
-    - set the product type (**mobileProductSetType** productID, itemType)
+    - set the product type (**mobileStoreSetProductType** productID, itemType)
 
-    - make a purchase (**mobileMakePurchase** productID, quantity, developerPayload)
+    - make a purchase (**mobileStoreMakePurchase** productID, quantity, developerPayload)
 
 
-4. The **purchaseStateUpdate** message that the store sends in response to **mobileMakePurchase**, contains not only the purchaseID and the state of the purchase, but also the productID of the requested item:
+4. The **purchaseStateUpdate** message that the store sends in response to **mobileStoreMakePurchase**, contains not only the purchaseID and the state of the purchase, but also the productID of the requested item:
 
      **purchaseStateUpdate** purchaseID, productID, state
 
-5. So you can query for a purchase property using the productID, instead of the purchaseID:
+5. So you can query for a purchased product property using the productID, instead of the purchaseID:
 
-    **mobilePurchaseGetProperty** productID, propertyName
+    **mobileStoreProductProperty** productID, propertyName
 
      Note that the old command **mobileGetPurchase** purchaseID, propertyName will still work.
 
-6. You can get information on a specific item (such as product id, product type, price etc), using **mobileRequestProductDetails** productID. The store responds:
+6. You can get information on a specific item (such as product id, product type, price etc), using **mobileStoreRequestProductDetails** productID. The store responds:
 
      In case the request is successful, a **productDetailsReceived** productId, details message is sent by the store.
 
      In case of failure, a **productRequestError** productId, error message is sent by the store.
 
-7. You can get a list of all known completed purchases using **mobileGetPurchases**. This returns a list of product identifiers of restored or newly bought purchases.
+7. You can get a list of all known completed purchases using **mobileStorePurchasedProducts**. This returns a list of product identifiers of restored or newly bought purchases.
 
 **What needs to change in existing scripts?**
 
-It is recommended that scripts which were written using previous versions of Livecode (and thus use the old Livecode API for in-app purchasing), should be used to run on these versions. However, it is still possible to run an existing script (that makes use of in-app purchasing feature) on Livecode 6.6, only by changing a few things:
+It is recommended that scripts which were written using previous versions of Livecode (and thus use the old Livecode API for in-app purchasing), should be used to run on these versions. However, it is still possible to run an existing script (that makes use of in-app purchasing feature) on Livecode 6.7, only by changing a few things:
 
 - **purchaseStateUpdate** message is now returned with (purchaseID, productID, state),instead of(purchaseID, state). This applies to apps built for both Google Play Store and Apple AppStore.
 
-- before sending a **mobilePurchaseSendRequest**, you have to specify the type (subs or inapp) of the item using **mobileProductSetType** productID, type command (Google Play Store only).
+- before sending a **mobilePurchaseSendRequest**, you have to specify the type (subs or inapp) of the item using **mobileStoreSetProductType** productID, type command (Google Play Store only).
 
-- if you want to buy more than one consumable item, you have to consume it first. This can be done by calling  **mobileConsumePurchase productID**  through a “consume itemX” button (Google Play Store only).
+- if you want to buy more than one consumable item, you have to consume it first. This can be done by calling  **mobileStoreConsumePurchase productID**  through a “consume item X” button (Google Play Store only).
 
 If you want to build apps for Amazon and/or Samsung Store, you have to use the newest API Livecode commands. 
 
@@ -124,18 +124,18 @@ Implementing in-app purchasing requires two way communication between your LiveC
 
 To determine if in app purchasing is available use:
 
-**mobileCanMakePurchase()**
+**mobileStoreCanMakePurchase()**
 
 Returns _true_ if in-app purchases can be made, _false_ if not.
 
 Throughout the purchase process, the AppStore sends **purchaseStateUpdate** messages to your app which report any changes in the status of active purchases. The receipt of these messages can be switched on and off using:
 
-**mobileEnablePurchaseUpdates**  
-**mobileDisablePurchaseUpdates**
+**mobileStoreEnablePurchaseUpdates**  
+**mobileStoreDisablePurchaseUpdates**
 
 If you want to get information on a specific item (such as product id, product type, price etc), you can use:
 
-**mobileRequestProductDetails** _productId_
+**mobileStoreRequestProductDetails** _productId_
 
 The _productId_ is the identifier of the item you are interested. Then, the store sends a _productDetailsReceived_ message, in case the request is successful, otherwise it sends a _productRequestError_ message:
 
@@ -168,7 +168,7 @@ For iTunes Connect store (Apple), the keys of _details_ array are the following:
 - _unicode title_ — unicode title of requested item
 - _unicode currency symbol_ — unicode currency symbol of requested item
 
-If **mobileRequestProductDetails** is not successful, then a _productRequestError_ message is sent :
+If **mobileStoreRequestProductDetails** is not successful, then a _productRequestError_ message is sent :
 
 **productRequestError** _productId_, _error_
 
@@ -176,47 +176,26 @@ The _productId_ is the identifier of the item, and _error_ is a string that desc
 
 Before sending a purchase request for a particular item, you have to specify the type of this item. To do this, use :
 
-**mobileProductSetType** _itemType_
+**mobileStoreSetProductType** _itemType_
 
 The _itemType_ can be either _subs_ or _inapp_.
 
 To create and send a request for a new purchase use:
 
-**mobileMakePurchase** _productID_, _quantity_, _developerPayload_
+**mobileStoreMakePurchase** _productID_, _quantity_, _developerPayload_
 
 The _productID_ is the identifier of the in-app purchase you created in iTunesConnect and wish to purchase. The _quantity_ specifies the quantity of the in-app purchase to buy (default 1) (iOS only) . The _developerPayload_ is a string of less than 256 characters that will be returned with the purchase details once complete. Can be used to later identify a purchase response to a specific request. Defaults to empty (Android only).
 
-To query the status of an active purchase use:
-
-**mobilePurchaseState** (_purchaseID_)
-
-The _purchaseID_ is the identifier of the purchase request, and is returned in **purchaseStateUpdate** message (more information on this below). One of the following is returned
-
-- _initialized_ – the purchase request has been created but not sent. In this state additional properties such as the item quantity can be set. (Available only in v1 in-app purchase API)
-- _sendingRequest_ – the purchase request is being sent to the store / marketplace.
-- _paymentReceived_ – the requested item has been paid for. The item should now be delivered to the user and confirmed via the **mobileConfirmPurchase** command.
-- _alreadyEntitled_ – the requested item is already owned, and cannot be purchased again
-- _invalidSKU_ – the requested item does not exist in the store listing
-- _complete_ – the purchase has now been paid for and delivered
-- _restored_ – the purchase has been restored after a call to mobileRestorePurchases. The purchase should now be delivered to the user and confirmed via the mobilePurchaseConfirmDelivery command.
-- _cancelled_ – the purchase was cancelled by the user before payment was received
-- _error_ – An error occurred during the payment request. More detailed information is available from the mobilePurchaseError function
-
-To get a list of all known active purchases use:
-
-**mobilePurchases()**
-
-It returns a return-separated list of purchase identifiers, of restored or newly bought purchases which have yet to be confirmed as complete.
 
 To get a list of all known completed purchases use:
 
-**mobileGetPurchases()**
+**mobileStorePurchasedProducts()**
 
 It returns a return-separated list of product identifiers, of restored or newly bought purchases which are confirmed as complete. Note that in iOS, consumable products as well as non-renewable subscriptions will not be contained in this list.
 
-Once a purchase is complete, you can retrieve its properties, using:
+Once a purchase is complete, you can retrieve the properties of the purchased product, using:
 
-**mobileGetPurchaseProperty** _(productID, property)_
+**mobileStoreProductProperty** _(productID, property)_
 
 The parameters are as follows:
 
@@ -268,35 +247,35 @@ For iTunes Store (iOS), you can query for the properties:
 - _originalTransactionIdentifier_ – for restored purchases – the transaction identifier of the original purchase 
 - _originalReceipt_ – for restored purchases – the receipt for the original purchase 
 
-Once you have sent your purchase request and it has been confirmed you can then unlock or download new content to fulfill the requirements of the in-app purchase. You must inform the AppStore once you have completely fulfilled the purchase using:
+Once you have sent your purchase request and it has been confirmed you can then unlock or download new content to fulfill the requirements of the in-app purchase. You must inform the store once you have completely fulfilled the purchase using:
 
-**mobileConfirmPurchase** _productID_
+**mobileStoreConfirmPurchase** _productID_
 
 Here, _productID_ is the identifier of the product requested for purchase.
 
-**mobileConfirmPurchase** should only be called on a purchase request in the ‘paymentReceived’ or ‘restored’ state. If you don’t send this confirmation before the app is closed, **purchaseStateUpdate** messages for the purchase will be sent to your app the next time updates are enabled by calling the mobileEnableUpdates command.
+**mobileStoreConfirmPurchase** should only be called on a purchase request in the ‘paymentReceived’ or ‘restored’ state (more on the states of the purchase later). If you don’t send this confirmation before the app is closed, **purchaseStateUpdate** messages for the purchase will be sent to your app the next time updates are enabled by calling the **mobileStoreEnablePurchaseUpdates** command.
 
 To consume a purchased item use:
 
-**mobileConsumePurchase** _productID_
+**mobileStoreConsumePurchase** _productID_
 
 Here, _productID_ is the identifier of the product requested for purchase. Note that this command is practically used only when interacting with Google Play Store API. This is because Google Play Store API has the restriction that you cannot buy more than one consumable product, unless you “consume” it first. What “consume’ means, is that the purchase is removed from the user’s “inventory” of purchased items, so that the user can buy it again. 
 
-IMPORTANT : Note that **mobileConsumePurchase** should be called *only* on consumable items. In case you call **mobileConsumePurchase** on a non consumable item’s _productId_, you will no longer own this item. 
+IMPORTANT : Note that **mobileStoreConsumePurchase** should be called *only* on consumable items. In case you call **mobileStoreConsumePurchase** on a non consumable item’s _productId_, you will no longer own this item. 
 
-To instruct the AppStore to re-send notifications of previously completed purchases use:
+To instruct the store to re-send notifications of previously completed purchases use:
 
-**mobileRestorePurchases**
+**mobileStoreRestorePurchases**
 
 This would typically be called the first time an app is run after installation on a new device to restore any items bought through the app.
 
 To get more detailed information about errors in the purchase request use:
 
-**mobilePurchaseError** _(purchaseID)_
+**mobileStorePurchaseError** _(purchaseID)_
 
 **Messages**
 
-The AppStore sends **purchaseStateUpdate** messages to notifies your app of any changes in state to the purchase request. These messages continue until you notify the AppStore that the purchase is complete or it is cancelled.
+The store sends **purchaseStateUpdate** messages to notifies your app of any changes in state to the purchase request. These messages continue until you notify the AppStore that the purchase is complete or it is cancelled.
 
 **purchaseStateUpdate** _purchaseID, productID, state_
 

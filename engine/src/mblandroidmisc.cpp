@@ -1180,21 +1180,26 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{"mobilePurchaseGet", MCHandlePurchaseGet, nil},
 	{"mobilePurchaseSet", MCHandlePurchaseSet, nil},
 	{"mobilePurchaseSendRequest", MCHandlePurchaseSendRequest, nil},
-    
-    {"mobileConsumePurchase", MCHandleConsumePurchase, nil},
-    {"mobileProductSetType", MCHandleProductSetType, nil},
-    {"mobileGetPurchases", MCHandleGetPurchases, nil},
-    {"mobileGetPurchaseProperty", MCHandleGetPurchaseProperty, nil},
-    {"mobileSetPurchaseProperty", MCHandleSetPurchaseProperty, nil},
-    //{"mobileRequestForProductDetails", MCHandleRequestForProductDetails, nil},
-    {"mobileReceiveProductDetails", MCHandleReceiveProductDetails, nil},
-    {"mobileRequestProductDetails", MCHandleRequestProductDetails, nil},
-
-    {"mobileMakePurchase", MCHandleMakePurchase, nil},
-    {"mobileConfirmPurchase", MCHandleConfirmPurchase, nil},
-    
-	{"mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},
+    {"mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},
     {"mobilePurchaseVerify", MCHandlePurchaseVerify, nil},
+    
+    {"mobileStoreCanMakePurchase", MCHandleCanMakePurchase, nil},
+	{"mobileStoreEnablePurchaseUpdates", MCHandleEnablePurchaseUpdates, nil},
+	{"mobileStoreDisablePurchaseUpdates", MCHandleDisablePurchaseUpdates, nil},
+	{"mobileStoreRestorePurchases", MCHandleRestorePurchases, nil},
+    {"mobileStoreConsumePurchase", MCHandleConsumePurchase, nil},
+    {"mobileStoreSetProductType", MCHandleProductSetType, nil},
+    {"mobileStorePurchasedProducts", MCHandleGetPurchases, nil},
+    {"mobileStoreProductProperty", MCHandleGetPurchaseProperty, nil},
+    //{"mobileSetPurchaseProperty", MCHandleSetPurchaseProperty, nil},
+    //{"mobileRequestForProductDetails", MCHandleRequestForProductDetails, nil},
+    //{"mobileReceiveProductDetails", MCHandleReceiveProductDetails, nil},
+    {"mobileStoreRequestProductDetails", MCHandleRequestProductDetails, nil},
+    {"mobileStoreMakePurchase", MCHandleMakePurchase, nil},
+    {"mobileStoreConfirmPurchase", MCHandleConfirmPurchase, nil},
+    {"mobileStorePurchaseError", MCHandlePurchaseError, nil},
+    
+	
     
 	{"mobileControlCreate", MCHandleControlCreate, nil},
 	{"mobileControlDelete", MCHandleControlDelete, nil},
