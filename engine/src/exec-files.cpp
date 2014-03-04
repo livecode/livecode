@@ -1402,6 +1402,8 @@ bool MCFilesExecPerformReadChunk(MCExecContext &ctxt, int4 p_index, intenum_t p_
     case FU_CODEUNIT:
         if (!MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, x_duration, x_stream, x_buffer, r_stat))
             return false;
+
+        r_new_boundary = MCStringGetLength(x_buffer);
         break;
 
     case FU_CODEPOINT:
@@ -1620,8 +1622,9 @@ void MCFilesExecPerformReadTextUntil(MCExecContext& ctxt, IO_handle p_stream, in
                     if (t_new_char_boundary != MCStringGetLength(*t_output))
                     {
                         // We already have the next char loaded
+                        // If it's a '\n', we remove it
                         if (MCStringGetCharAtIndex(*t_output, t_new_char_boundary) == '\n')
-                            /* UNCHECKED */ MCStringReplace(*t_output, MCRangeMake(t_new_char_boundary, 1), MCSTR("\n"));
+                            /* UNCHECKED */ MCStringRemove(*t_output, MCRangeMake(t_new_char_boundary, 1));
                     }
                     else
                     {
@@ -1679,7 +1682,7 @@ void MCFilesExecPerformReadBinaryUntil(MCExecContext& ctxt, IO_handle stream, in
 	uint4 endcount = MCStringGetLength(p_sentinel) - 1;
 	
 	uint4 size = 0;
-	Boolean doingspace = True;
+    Boolean doingspace = True;
 	while (True)
 	{
 		uint4 rsize = fullsize;
@@ -1815,20 +1818,21 @@ void MCFilesExecReadUntil(MCExecContext& ctxt, IO_handle p_stream, index_t p_ind
 void MCFilesExecReadFor(MCExecContext& ctxt, IO_handle p_stream, index_t p_index, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units, intenum_t p_encoding, MCStringRef &r_output, IO_stat &r_stat)
 {
 	MCAutoStringRef t_sentinel;
+    Boolean t_words;
 
 	switch (p_unit_type)
 	{
 	case FU_LINE:
 		MCStringCreateWithCString("\n", &t_sentinel);
-        MCFilesExecPerformReadTextUntil(ctxt, p_stream, p_index, p_count, *t_sentinel, False, p_max_wait, p_time_units, p_encoding, r_output, r_stat);
+        t_words = False;
 		break;
 	case FU_ITEM:
 		MCStringCreateWithCString(",", &t_sentinel);
-        MCFilesExecPerformReadTextUntil(ctxt, p_stream, p_index, p_count, *t_sentinel, False, p_max_wait, p_time_units, p_encoding, r_output, r_stat);
+        t_words = False;
 		break;
 	case FU_WORD:
 		MCStringCreateWithCString(" ", &t_sentinel);
-        MCFilesExecPerformReadTextUntil(ctxt, p_stream, p_index, p_count, *t_sentinel, True, p_max_wait, p_time_units, p_encoding, r_output, r_stat);
+        t_words = True;
         break;
     default:
         if (p_encoding == kMCFileEncodingNative
@@ -1836,8 +1840,14 @@ void MCFilesExecReadFor(MCExecContext& ctxt, IO_handle p_stream, index_t p_index
             MCFilesExecPerformReadFixedFor(ctxt, p_stream, p_index, p_unit_type, p_count, p_max_wait, p_time_units, p_encoding, r_output, r_stat);
         else
             MCFilesExecPerformReadUnicodeFor(ctxt, p_stream, p_index, p_unit_type, p_count, p_max_wait, p_time_units, p_encoding, r_output, r_stat);
-		break;
+
+        return;
 	}
+
+    if (p_encoding == kMCFileEncodingBinary)
+        MCFilesExecPerformReadBinaryUntil(ctxt, p_stream, p_index, p_count, *t_sentinel, t_words, p_max_wait, p_time_units, r_output, r_stat);
+    else
+        MCFilesExecPerformReadTextUntil(ctxt, p_stream, p_index, p_count, *t_sentinel, t_words, p_max_wait, p_time_units, p_encoding, r_output, r_stat);
 }
 
 void MCFilesExecReadFromStdin(MCExecContext& ctxt, MCStringRef p_sentinel, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units, uint2 p_repeat_form)
