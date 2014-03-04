@@ -1476,58 +1476,8 @@ void MCStack::SetStackFiles(MCExecContext& ctxt, MCStringRef p_files)
 	}
 	delete stackfiles;
 
-	MCStackfile *newsf = NULL;
-	uint2 nnewsf = 0;
-
-	bool t_success;
-	t_success = true;
-
-	uindex_t t_old_offset;
-	t_old_offset = 0;
-	uindex_t t_new_offset;
-	t_new_offset = 0;
-
-	uindex_t t_length;
-	t_length = MCStringGetLength(p_files);
-
-	while (t_success && t_old_offset <= t_length)
-	{
-		MCAutoStringRef t_line;
-		
-		if (!MCStringFirstIndexOfChar(p_files, '\n', t_old_offset, kMCCompareCaseless, t_new_offset))
-			t_new_offset = t_length;
-
-		t_success = MCStringCopySubstring(p_files, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_line);
-		if (t_success && t_new_offset > t_old_offset)
-		{
-			MCAutoStringRef t_stack_name;
-			MCAutoStringRef t_file_name;
-
-			t_success = MCStringDivideAtChar(*t_line, ',', kMCCompareExact, &t_stack_name, &t_file_name);
-
-			if (t_success && MCStringGetLength(*t_file_name) != 0)
-			{
-				MCU_realloc((char **)&newsf, nnewsf, nnewsf + 1, sizeof(MCStackfile));
-				newsf[nnewsf].stackname = MCValueRetain(*t_stack_name);
-				newsf[nnewsf].filename = MCValueRetain(*t_file_name);
-				nnewsf++;
-			}
-		}
-		t_old_offset = t_new_offset + 1;
-	}
-
-	if (t_success)
-	{
-		stackfiles = newsf;
-		nstackfiles = nnewsf;
-
-		if (nstackfiles != 0)
-			flags |= F_STACK_FILES;
-		else
-			flags &= ~F_STACK_FILES;
-
-		return;
-	}
+    if (stringtostackfiles(p_files, &stackfiles, nstackfiles))
+        return;
 
 	ctxt . Throw();
 }

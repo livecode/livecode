@@ -2644,29 +2644,63 @@ bool MCStack::getstackfiles(MCStringRef& r_stackfiles)
 	return t_success;
 }
 
-void MCStack::stringtostackfiles(MCStringRef d_strref, MCStackfile **sf, uint2 &nf)
+bool MCStack::stringtostackfiles(MCStringRef d_strref, MCStackfile **sf, uint2 &nf)
 {
 	MCStackfile *newsf = NULL;
 	uint2 nnewsf = 0;
-    // This ensures the coy is freed when the method ends
-    MCAutoPointer<char> d;
-    /* UNCHECKED */ MCStringConvertToCString(d_strref, &d);
-    char *eptr = *d;
-	while ((eptr = strtok(eptr, "\n")) != NULL)
+
+    bool t_success;
+	t_success = true;
+    
+	uindex_t t_old_offset;
+	t_old_offset = 0;
+	uindex_t t_new_offset;
+	t_new_offset = 0;
+    
+	uindex_t t_length;
+	t_length = MCStringGetLength(d_strref);
+    
+	while (t_success && t_old_offset <= t_length)
 	{
-		char *cptr = strchr(eptr, ',');
-		if (cptr != NULL)
+		MCAutoStringRef t_line;
+		
+		if (!MCStringFirstIndexOfChar(d_strref, '\n', t_old_offset, kMCCompareCaseless, t_new_offset))
+			t_new_offset = t_length;
+        
+		t_success = MCStringCopySubstring(d_strref, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_line);
+		if (t_success && t_new_offset > t_old_offset)
 		{
-			*cptr++ = '\0';
-			MCU_realloc((char **)&newsf, nnewsf, nnewsf + 1, sizeof(MCStackfile));
-			/* UNCHECKED */ MCStringCreateWithCString(eptr, newsf[nnewsf].stackname);
-			/* UNCHECKED */ MCStringCreateWithCString(cptr, newsf[nnewsf].filename);
-			nnewsf++;
+			MCAutoStringRef t_stack_name;
+			MCAutoStringRef t_file_name;
+            
+			t_success = MCStringDivideAtChar(*t_line, ',', kMCCompareExact, &t_stack_name, &t_file_name);
+            
+			if (t_success && MCStringGetLength(*t_file_name) != 0)
+			{
+				MCU_realloc((char **)&newsf, nnewsf, nnewsf + 1, sizeof(MCStackfile));
+				newsf[nnewsf].stackname = MCValueRetain(*t_stack_name);
+				newsf[nnewsf].filename = MCValueRetain(*t_file_name);
+				nnewsf++;
+			}
 		}
-		eptr = NULL;
+		t_old_offset = t_new_offset + 1;
 	}
+    
+	if (t_success)
+	{
+		stackfiles = newsf;
+		nstackfiles = nnewsf;
+        
+		if (nstackfiles != 0)
+			flags |= F_STACK_FILES;
+		else
+			flags &= ~F_STACK_FILES;
+	}
+    
 	*sf = newsf;
 	nf = nnewsf;
+    
+    return t_success;
 }
 
 void MCStack::setstackfiles(MCStringRef s)
