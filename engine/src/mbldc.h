@@ -92,7 +92,6 @@ public:
 	bool device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
 	bool device_getwindowgeometry(Window w, MCRectangle &drect);
 	void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
-	void device_querymouse(int16_t &r_x, int16_t &r_y);
 	void device_setmouse(int16_t p_x, int16_t p_y);
 
 	bool fullscreenwindows(void);
