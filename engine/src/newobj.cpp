@@ -239,6 +239,9 @@ MCStatement *MCN_new_statement(int2 which)
 		return new MCSave;
 	case S_SCRIPT_ERROR:
 		return new MCScriptError;
+	// MM-2014-02-12: [[ SecureSocket ]] Create secure statement object
+	case S_SECURE:
+		return new MCSecure;
 	case S_SEEK:
 		return new MCSeek;
 	case S_SELECT:

@@ -738,7 +738,9 @@ void MCS_write_socket(const MCString &d, MCSocket *s, MCObject *optr, MCNameRef 
 	}
 	else
 	{
-		MCSocketwrite *eptr = new MCSocketwrite(d, optr, mptr);
+		// MM-2014-02-12: [[ SecureSocket ]] Store against the write if it should be encrypted.
+		//  This way, upon securing a socket, all pending writes will remain unencrypted whilst all new writes will be encrypted.
+		MCSocketwrite *eptr = new MCSocketwrite(d, optr, mptr, s->secure);
 		eptr->appendto(s->wevents);
 		s->setselect();
 		if (mptr == NULL)
@@ -843,6 +845,17 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 	char *portname = new char[U2L];
 	sprintf(portname, "%d", port);
 	return new MCSocket(portname, object, message, datagram, sock, True, False, secure);
+}
+
+// MM-2014-02-12: [[ SecureSocket ]] New secure socket command. If socket is not already secure, flag as secure to ensure future communications are encrypted.
+void MCS_secure_socket(MCSocket *s, Boolean sslverify)
+{
+	if (!s -> secure)
+	{
+		s -> secure = True;
+		s -> sslverify = sslverify;
+		s -> sslstate |= SSTATE_RETRYCONNECT;
+	}
 }
 
 // Return the IP address of the host interface that is used to connect to the
@@ -995,7 +1008,7 @@ MCSocketread::~MCSocketread()
 	delete until;
 }
 
-MCSocketwrite::MCSocketwrite(const MCString &d, MCObject *o, MCNameRef m)
+MCSocketwrite::MCSocketwrite(const MCString &d, MCObject *o, MCNameRef m, Boolean securewrite)
 {
 	if (m != NULL)
 		buffer = d.clone();
@@ -1003,6 +1016,7 @@ MCSocketwrite::MCSocketwrite(const MCString &d, MCObject *o, MCNameRef m)
 		buffer = (char *)d.getstring();
 	size = d.getlength();
 	timeout = curtime + MCsockettimeout;
+	secure = securewrite;
 	optr = o;
 	done = 0;
 	if (m != nil)
@@ -1297,13 +1311,15 @@ void MCSocket::readsome()
 				errno = 0;
 #ifdef _WINDOWS
 
-				if ((l = read(rbuffer + nread, l)) <= 0 || l == SOCKET_ERROR )
+				// MM-2014-02-12: [[ SecureSocket ]] If a scoket is secured, all data read should be assumed to be encrypted.
+				if ((l = read(rbuffer + nread, l, secure)) <= 0 || l == SOCKET_ERROR )
 				{
 					int wsaerr = WSAGetLastError();
 					if (!doread && errno != EAGAIN && wsaerr != WSAEWOULDBLOCK && wsaerr != WSAENOTCONN && errno != EINTR)
 					{
 #else
-				if ((l = read(rbuffer + nread, l)) <= 0)
+				// MM-2014-02-12: [[ SecureSocket ]] If a scoket is secured, all data read should be assumed to be encrypted.
+				if ((l = read(rbuffer + nread, l, secure)) <= 0)
 				{
 					if (!doread && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
 					{
@@ -1395,7 +1411,10 @@ void MCSocket::writesome()
 	while (wevents != NULL)
 	{
 		uint4 towrite = wevents->size - wevents->done;
-		int4 nwritten = write( wevents->buffer + wevents->done, towrite);
+
+		// MM-2014-02-12: [[ SecureSocket ]] The write should only be encrypted if the write object has been flagged as secured.
+		//  (Was previously using the secure flag stored against the socket).
+		int4 nwritten = write( wevents->buffer + wevents->done, towrite, wevents->secure);
 #ifdef _WINDOWS
 
 		if (nwritten == SOCKET_ERROR)
@@ -1567,10 +1586,11 @@ void MCSocket::close()
 	}
 }
 
-int4 MCSocket::write(const char *buffer, uint4 towrite)
+// MM-2014-02-12: [[ SecureSocket ]] Updated to pass in if this write should be encrypted, rather than checking against socket.
+int4 MCSocket::write(const char *buffer, uint4 towrite, Boolean securewrite)
 {
 	int4 rc = 0;
-	if (secure)
+	if (securewrite)
 	{
 		sslstate &= ~SSTATE_RETRYWRITE;
 #ifdef _WINDOWS
@@ -1632,10 +1652,11 @@ int4 MCSocket::write(const char *buffer, uint4 towrite)
 #endif
 }
 
-int4 MCSocket::read(char *buffer, uint4 toread)
+// MM-2014-02-12: [[ SecureSocket ]] Updated to pass in if this read is encrypted, rather than checking against socket.
+int4 MCSocket::read(char *buffer, uint4 toread, Boolean secureread)
 {
 	int4 rc = 0;
-	if (secure)
+	if (secureread)
 	{
 		sslstate &= ~SSTATE_RETRYREAD;
 #ifdef _WINDOWS

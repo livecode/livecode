@@ -2448,6 +2448,10 @@ enum Exec_errors
 	// IM-2014-01-30: [[ HiDPI ]]
 	// {EE-0804} usePixelScaling: the usePixelScaling property cannot be set on this platform
 	EE_PROPERTY_USEPIXELSCALENOTSUPPORTED,
+    
+	// MM-2014-02-12: [[ SecureSocket ]]
+	// {EE-0805} secure: error in socket expression
+	EE_SECURE_BADNAME,
 };
 
 extern const char *MCexecutionerrors;
