@@ -516,7 +516,7 @@ public:
 	void prepareimage();
 	void reopen(bool p_newfile, bool p_lock_size = false);
 	// in iimport.cc
-	IO_stat import(const char *newname, IO_handle stream, IO_handle mstream);
+	IO_stat import(MCStringRef newname, IO_handle stream, IO_handle mstream);
 
 	// Return a shared string containing the image data in the format required for
 	// publishing to the clipboard. For PNG, GIF, JPEG images this is the text 
