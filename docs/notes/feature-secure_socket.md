@@ -17,8 +17,3 @@ Once secured:
 * All pending writes will complete unencrypted. All future writes will be encrypted.
 
 If the socket fails secure, a **socketError** message is sent to the object that opened the socket (not the object that attempted to secure it).
-
-open socket to "127.0.0.0:8080"
-write "unencrypted message" to socket "127.0.0.0:8080"
-secure socket "127.0.0.0:8080"
-write "encrypted message" to socket "127.0.0.0:8080"
