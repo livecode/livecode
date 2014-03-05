@@ -72,31 +72,16 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 
 	if (type == CT_ITEM)
 	{
-		if (ctxt . GetItemDelimiter() == '\0')
-			return ES_NORMAL; //can't sort field by null bytes
-		// MW-2012-02-21: [[ FieldExport ]] Use the new text export method.
-        MCAutoStringRef t_text_string;
-		exportastext(parid, 0, INT32_MAX, &t_text_string);
-		itemsize = MCStringGetLength(*t_text_string);
-        nitems = MCStringCountChar(*t_text_string, MCRangeMake(0, MCStringGetLength(*t_text_string)), ctxt . GetItemDelimiter(), kMCCompareExact);
-		items.Extend(nitems + 1);
-		nitems = 0;
-        MCAutoArrayRef t_array;
-        char t_delim = ctxt . GetItemDelimiter();
-        /* UNCHECKED */ MCStringSplit(*t_text_string, MCSTR(& t_delim), nil, kMCCompareExact, &t_array);
-        uindex_t t_count;
-        t_count = MCArrayGetCount(*t_array);
         
-        for (int i = 0; i < t_count; i++)
-        {
-            MCValueRef t_value;
-            MCArrayFetchValueAtIndex(*t_array, i+1, t_value);
-            MCStringRef t_string;
-            t_string = (MCStringRef)t_value;
-            MCSort::additem(ctxt, items.Ptr(), nitems, form, t_string, by);
-            /* UNCHECKED */ MCStringConvertToCString(t_string, temp);
-			items[nitems - 1].data = (void *)temp;
-        }
+        extern bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p_type, Sort_type p_direction, int p_form, MCExpression *p_by, MCStringRef &r_output);
+		// MW-2012-02-21: [[ FieldExport ]] Use the new text export method.
+        MCAutoStringRef t_text_string, t_sorted;
+		exportastext(parid, 0, INT32_MAX, &t_text_string);
+        if (!MCInterfaceExecSortContainer(ctxt, *t_text_string, type, dir, form, by, &t_sorted))
+            return ES_ERROR;
+        
+        settext(parid, *t_sorted, False);
+        return ES_NORMAL;
 	}
 	else
 	{
@@ -119,13 +104,16 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 			while (tpgptr != pgptr);
 			items.Extend(nitems);
 			nitems = 0;
+            
+            extern void MCInterfaceExecSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, int form, MCValueRef p_input, MCExpression *by);
+
 			do
 			{
 				if (tpgptr->next() != pgptr || !tpgptr->IsEmpty())
 				{
 					MCAutoStringRef t_string;
 					/* UNCHECKED */ MCStringCopy(tpgptr->GetInternalStringRef(), &t_string);
-					MCSort::additem(ctxt, items.Ptr(), nitems, form, *t_string, by);
+					MCInterfaceExecSortAddItem(ctxt, items.Ptr(), nitems, form, *t_string, by);
 					items[nitems - 1].data = (void *)tpgptr;
 				}
 				tpgptr = tpgptr->next();
@@ -134,20 +122,8 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 		}
 	}
 	MCU_sort(items.Ptr(), nitems, dir, form);
-	if (type == CT_ITEM)
-	{
-        MCAutoListRef t_item_list;
-        MCListCreateMutable(ctxt . GetItemDelimiter(), &t_item_list);
-
-        for (int i = 0; i < nitems; ++i)
-            /* UNCHECKED */ MCListAppendNativeChars(*t_item_list, (const char_t *)items[i].data, strlen((const char *)items[i].data));
-
-        MCAutoStringRef t_string_list;
-        /* UNCHECKED */ MCListCopyAsString(*t_item_list, &t_string_list);
-
-        settext(parid, *t_string_list, False);
-	}
-	else if (nitems > 0)
+    
+    if (nitems > 0)
 	{
 		MCParagraph *newparagraphs = NULL;
 		uint4 i;

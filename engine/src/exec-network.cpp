@@ -436,7 +436,7 @@ void MCNetworkExecPerformOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNam
 	}
 
 	// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
-	MCresult -> clear(True);
+	MCresult -> empty();
 
 	MCSocket *s = MCS_open_socket(p_name, p_datagram, ctxt . GetObject(), p_message, p_secure, p_ssl, kMCEmptyString);
 	if (s != NULL)
@@ -480,7 +480,7 @@ void MCNetworkExecCloseSocket(MCExecContext& ctxt, MCNameRef p_socket)
 void MCNetworkExecPerformAcceptConnections(MCExecContext& ctxt, uint2 p_port, MCNameRef p_message, bool p_datagram, bool p_secure, bool p_with_verification)
 {
 	// MW-2005-01-28: Fix bug 2412 - accept doesn't clear the result.
-	MCresult -> clear(False);
+	MCresult -> empty();
 
 	if (!ctxt . EnsureNetworkAccessIsAllowed())
 		return;

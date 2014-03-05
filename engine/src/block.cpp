@@ -2188,6 +2188,7 @@ bool MCBlock::GetFirstLineBreak(findex_t& r_index)
         return false;
 
 	r_index = t_offset;
+    parent -> IncrementIndex(r_index);
     return true;
 }
 

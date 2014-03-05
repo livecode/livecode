@@ -698,10 +698,10 @@ void MCEncryptionOp::exec_ctxt(MCExecContext &ctxt)
 
 		MCAutoStringRef t_iv;
 		MCAutoStringRef t_salt;
-        if (!ctxt . EvalOptionalExprAsStringRef(salt, kMCEmptyString, EE_OPEN_BADNAME, &t_salt))
+        if (salt != nil && !ctxt . EvalExprAsStringRef(salt, EE_OPEN_BADNAME, &t_salt))
             return;
 
-        if (!ctxt . EvalOptionalExprAsStringRef(iv, kMCEmptyString, EE_OPEN_BADNAME, &t_iv))
+        if (iv != nil && !ctxt . EvalExprAsStringRef(iv, EE_OPEN_BADNAME, &t_iv))
             return;
 
         MCAutoStringRef t_data;
@@ -2879,7 +2879,7 @@ MCOpen::~MCOpen()
 	delete fname;
 	delete message;
 	delete go;
-	delete destination;
+	MCValueRelease(destination);
 	delete certificate;
 }
 
@@ -2928,7 +2928,7 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 				return PS_ERROR;
 			}
 
-            /* UNCHECKED */ MCStringConvertToCString(sp . gettoken_stringref(), destination);
+            destination = MCValueRetain(sp . gettoken_stringref());
 
 			if (sp . parseexp(False, True, &fname) != PS_NORMAL)
 			{
@@ -3252,10 +3252,7 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
             if (!ctxt . EvalOptionalExprAsNullableArrayRef(options, EE_OPEN_BADOPTIONS, &t_options))
                 return;
 
-			MCAutoStringRef t_dest;
-			/* UNCHECKED */ MCStringCreateWithCString(destination, &t_dest);
-
-			MCPrintingExecOpenPrintingToDestination(ctxt, *t_dest, *t_filename, *t_options);
+			MCPrintingExecOpenPrintingToDestination(ctxt, destination, *t_filename, *t_options);
 		}
 		else if (dialog)
 		{
@@ -3320,7 +3317,7 @@ void MCOpen::compile(MCSyntaxFactoryRef ctxt)
 	{
 		if (destination != NULL)
 		{
-			MCSyntaxFactoryEvalConstantOldString(ctxt, destination);
+			MCSyntaxFactoryEvalConstant(ctxt, destination);
 			fname -> compile(ctxt);
 
 			if (options != nil)

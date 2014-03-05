@@ -52,8 +52,6 @@
 
 	<references>
 		<function tag="number">number Function</function>
-		<command tag=""></command>
-		<operator tag=""></operator>
 		<keyword tag="byte">byte Keyword</keyword>
 		<keyword tag="bytes">bytes Keyword</keyword>
 		<keyword tag="character">character Keyword</keyword>

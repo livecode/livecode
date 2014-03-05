@@ -1025,12 +1025,13 @@ MCExternalError MCExternalVariable::GetString(MCExternalValueOptions p_options, 
 	MCValueRef t_value;
 	t_value = GetValueRef();
 	
+    // Avoid null pointer dereferences in externals
+    if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeNull)
+        t_value = kMCEmptyString;
+
 	MCString t_string_value;
 	switch(MCValueGetTypeCode(t_value))
 	{
-		case kMCValueTypeCodeNull:
-			t_string_value = MCnullmcstring;
-			break;
 		case kMCValueTypeCodeBoolean:
 			t_string_value = (t_value == kMCTrue ? MCtruemcstring : MCfalsemcstring);
 			break;

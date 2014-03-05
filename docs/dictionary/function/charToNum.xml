@@ -1,6 +1,6 @@
 <doc>
 	<legacy_id>1151</legacy_id>
-	<name>charToNum (deprecrated 7.0)</name>
+	<name>charToNum</name>
 	<type>function</type>
 
 	<syntax>

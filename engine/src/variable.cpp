@@ -127,7 +127,7 @@ void MCVariable::clearuql(void)
 
 Boolean MCVariable::isclear(void) const
 {
-	return value == kMCNull;
+    return value == kMCNull;
 }
 
 Boolean MCVariable::isfree(void) const
@@ -150,7 +150,13 @@ Boolean MCVariable::isempty(void) const
 void MCVariable::clear(Boolean p_delete_buffer)
 {
 	MCValueRelease(value);
-	value = MCValueRetain(kMCNull);
+    value = MCValueRetain(kMCNull);
+}
+
+void MCVariable::empty()
+{
+	MCValueRelease(value);
+    value = MCValueRetain(kMCEmptyString);
 }
 
 Exec_stat MCVariable::sets(const MCString& p_string)
@@ -233,7 +239,7 @@ MCValueRef MCVariable::getvalueref(MCNameRef *p_path, uindex_t p_length, bool p_
 		MCArrayFetchValueOnPath((MCArrayRef)value, p_case_sensitive, p_path, p_length, t_value))
 		return t_value;
 
-	return kMCEmptyString;
+	return kMCNull;
 }
 
 bool MCVariable::copyasvalueref(MCValueRef& r_value)

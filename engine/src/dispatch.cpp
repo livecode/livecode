@@ -671,7 +671,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 			delete cstring;
 		}
 
-		MCresult -> clear();
+		MCresult -> empty();
 
 		if (IO_read_uint1(&type, stream) != IO_NORMAL
 		    || type != OT_STACK && type != OT_ENCRYPT_STACK
@@ -980,7 +980,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	MCgroupedobjectoffset . x = 0;
 	MCgroupedobjectoffset . y = 0;
 	
-	MCresult -> clear();
+	MCresult -> empty();
 	if (sptr->save(stream, 0, false) != IO_NORMAL
 	        || IO_write_uint1(OT_END, stream) != IO_NORMAL)
 	{

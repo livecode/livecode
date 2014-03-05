@@ -39,8 +39,8 @@ void MCConstant::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
 	if (nvalue == BAD_NUMERIC)
 	{
-		r_value . type = kMCExecValueTypeStringRef;
-		r_value . stringref_value = MCValueRetain(svalue);
+		r_value . type = kMCExecValueTypeValueRef;
+		r_value . valueref_value = MCValueRetain(svalue);
 	}
 	else
 	{

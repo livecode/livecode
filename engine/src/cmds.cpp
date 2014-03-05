@@ -2261,60 +2261,6 @@ Exec_stat MCSort::sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, S
 }
 #endif
 
-void MCSort::additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort_type form, MCValueRef p_value, MCExpression *by)
-{
-	MCAutoValueRef t_value;
-	if (by != NULL)
-	{
-        MCerrorlock++;
-        MCeach -> setvalueref(p_value);
-        bool t_success;
-        t_success = false;
-        t_success = ctxt . EvalExprAsValueRef(by, EE_UNDEFINED, &t_value);
-        
-		if (!t_success);
-			t_value = MCValueRetain(kMCEmptyString);
-		MCerrorlock--;
-	}
-	else
-		t_value = MCValueRetain(p_value);
-		
-	switch (form)
-	{
-	case ST_DATETIME:
-		{
-			MCAutoStringRef t_out;
-			if (MCD_convert(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
-			{
-				if (ctxt.ConvertToNumber(*t_out, items[nitems].nvalue))
-					break;
-			}
-
-			/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
-			break;
-		}
-	case ST_NUMERIC:
-		{
-			if (!ctxt.ConvertToNumber(*t_value, items[nitems].nvalue))
-				/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
-		}
-		break;
-	default:
-		if (ctxt.GetCaseSensitive())
-			/* UNCHECKED */ ctxt.ConvertToString(*t_value, items[nitems].svalue);
-		else
-		{
-			MCStringRef t_fixed, t_mutable;
-			/* UNCHECKED */ ctxt.ConvertToString(*t_value, t_fixed);
-			/* UNCHECKED */ MCStringMutableCopyAndRelease(t_fixed, t_mutable);
-			/* UNCHECKED */ MCStringLowercase(t_mutable, kMCSystemLocale);
-			/* UNCHECKED */ MCStringCopyAndRelease(t_fixed, items[nitems].svalue);
-		}
-		break;
-	}
-	nitems++;
-}
-
 void MCSort::exec_ctxt(MCExecContext& ctxt)
 {
 #ifdef /* MCSort */ LEGACY_EXEC

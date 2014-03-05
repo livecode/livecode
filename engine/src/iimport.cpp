@@ -288,7 +288,7 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
 	return t_success;
 }
 
-IO_stat MCImage::import(const char *newname, IO_handle stream, IO_handle mstream)
+IO_stat MCImage::import(MCStringRef newname, IO_handle stream, IO_handle mstream)
 {
 	bool t_success = true;
 
@@ -343,14 +343,18 @@ IO_stat MCImage::import(const char *newname, IO_handle stream, IO_handle mstream
         }
 		if (isunnamed() && newname != nil)
 		{
-			const char *tname = strrchr(newname, PATH_SEPARATOR);
-			if (tname != NULL)
-				tname += 1;
-			else
-				tname = newname;
-			setname_cstring(tname);
-		}
+            MCNewAutoNameRef t_name_nameref;
+            uindex_t t_offset;
+            if (MCStringLastIndexOfChar(newname, PATH_SEPARATOR, UINDEX_MAX, kMCCompareExact, t_offset))
+            {
+                /* UNCHECKED */ MCStringCopySubstring(newname, MCRangeMake(t_offset + 1, MCStringGetLength(newname) - t_offset - 1), t_name);
+                /* UNCHECKED */ MCNameCreate(t_name, &t_name_nameref);
+            }
+            else
+                /* UNCHECKED */ MCNameCreate(newname, &t_name_nameref);
 
+			setname(*t_name_nameref);
+		}
 	}
 
 	MCValueRelease(t_name);
