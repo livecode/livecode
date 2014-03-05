@@ -698,10 +698,10 @@ void MCEncryptionOp::exec_ctxt(MCExecContext &ctxt)
 
 		MCAutoStringRef t_iv;
 		MCAutoStringRef t_salt;
-        if (!ctxt . EvalOptionalExprAsStringRef(salt, kMCEmptyString, EE_OPEN_BADNAME, &t_salt))
+        if (salt != nil && !ctxt . EvalExprAsStringRef(salt, EE_OPEN_BADNAME, &t_salt))
             return;
 
-        if (!ctxt . EvalOptionalExprAsStringRef(iv, kMCEmptyString, EE_OPEN_BADNAME, &t_iv))
+        if (iv != nil && !ctxt . EvalExprAsStringRef(iv, EE_OPEN_BADNAME, &t_iv))
             return;
 
         MCAutoStringRef t_data;
