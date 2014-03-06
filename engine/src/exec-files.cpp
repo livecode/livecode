@@ -867,6 +867,24 @@ void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, i
 	IO_handle istream = NULL;
 	IO_handle ostream = NULL;
 
+	// Attempt to open the file to find out its current encoding
+	Encoding_type t_encoding;
+    if (p_encoding == kMCFileEncodingText)
+    {
+        IO_handle t_BOM_stream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeRead, True, p_is_driver, 0);
+		if (t_BOM_stream != NULL)
+		{
+			t_encoding = (Encoding_type)MCS_resolve_BOM(t_BOM_stream);
+			MCS_close(t_BOM_stream);
+		}
+		else
+		{
+			t_encoding = (Encoding_type)kMCFileEncodingNative;
+		}
+    }
+    else
+        t_encoding = (Encoding_type)p_encoding;
+
 	switch (p_mode)
 	{
 	case OM_APPEND:
@@ -895,15 +913,7 @@ void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, i
 	MCU_realloc((char **)&MCfiles, MCnfiles, MCnfiles + 1, sizeof(Streamnode));
 	MCfiles[MCnfiles].name = (MCNameRef)MCValueRetain(p_name);
     MCfiles[MCnfiles].mode = (Open_mode)p_mode;
-
-    if (p_encoding == kMCFileEncodingText)
-    {
-        IO_handle t_BOM_stream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeRead, True, p_is_driver, 0);
-        MCfiles[MCnfiles].encoding = (Encoding_type)MCS_resolve_BOM(t_BOM_stream);
-        MCS_close(t_BOM_stream);
-    }
-    else
-        MCfiles[MCnfiles].encoding = (Encoding_type)p_encoding;
+	MCfiles[MCnfiles].encoding = t_encoding;
 
 	MCfiles[MCnfiles].ihandle = istream;
     MCfiles[MCnfiles++].ohandle = ostream;
