@@ -1014,7 +1014,10 @@ int X_close(void)
 
 	MCU_play_stop();
 	if (MCrecording)
-		MCtemplateplayer->stoprecording();
+	{
+		extern void MCQTStopRecording(void);
+		MCQTStopRecording();
+	}
 	MClockmessages = True;
 	MCS_killall();
 

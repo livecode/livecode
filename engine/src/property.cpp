@@ -2216,7 +2216,10 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			if (ep.getboolean(trecording, line, pos, EE_PROPERTY_NAB) != ES_NORMAL)
 				return ES_ERROR;
 			if (!trecording)
-				MCtemplateplayer->stoprecording();
+			{
+				extern void MCQTStopRecording(void);
+				MCQTStopRecording();
+			}
 		}
 		break;
 	case P_LZW_KEY:

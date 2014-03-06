@@ -834,6 +834,16 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		else if (!done && eventtime > curtime)
 			t_sleep = MCMin(eventtime - curtime, exittime - curtime);
 		
+#ifdef FEATURE_QUICKTIME_EFFECTS
+		// If we are recording, then poke QT (if enabled) and reduce sleep.
+		if (MCrecording)
+		{
+			extern void MCQTHandleRecord(void);
+			MCQTHandleRecord();
+			t_sleep = MCMin(0.1, t_sleep);
+		}
+#endif
+		
 		// Wait for t_sleep seconds and collect at most one event. If an event
 		// is collected and anyevent is True, then we are done.
 		if (MCPlatformWaitForEvent(t_sleep, dispatch == False) && anyevent)

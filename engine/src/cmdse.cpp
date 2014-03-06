@@ -2256,7 +2256,8 @@ Exec_stat MCStop::exec(MCExecPoint &ep)
 				MCU_play_stop();
 		break;
 	case SC_RECORDING:
-		MCtemplateplayer->stoprecording();
+		extern void MCQTStopRecording(void);	
+		MCQTStopRecording();
 		break;
 	case SC_USING:
 		{

@@ -425,7 +425,8 @@ Exec_errors MCAnswer::exec_effect(MCExecPoint& ep, const char *p_title)
 Exec_errors MCAnswer::exec_record(MCExecPoint& ep, const char *p_title)
 {
 	MCresult -> clear(False);
-	MCtemplateplayer -> stdrecorddlg(ep, p_title, sheet);
+	extern void MCQTRecordDialog(MCExecPoint& ep, const char *p_title, Boolean sheet);
+	MCQTRecordDialog(ep, p_title, sheet);
 	return EE_UNDEFINED;
 }
 #endif /* MCAnswer::exec_record */

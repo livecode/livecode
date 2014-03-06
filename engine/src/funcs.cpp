@@ -1909,7 +1909,8 @@ Exec_stat MCQTEffects::eval(MCExecPoint &ep)
 Exec_stat MCRecordCompressionTypes::eval(MCExecPoint &ep)
 {
 #ifdef /* MCRecordCompressionTypes */ LEGACY_EXEC
-	MCtemplateplayer->getrecordcompressionlist(ep);
+	extern void MCQTGetRecordCompressionList(MCExecPoint& ep);
+	MCQTGetRecordCompressionList(ep);
 	return ES_NORMAL;
 #endif /* MCRecordCompressionTypes */
 }
@@ -1917,7 +1918,8 @@ Exec_stat MCRecordCompressionTypes::eval(MCExecPoint &ep)
 Exec_stat MCRecordLoudness::eval(MCExecPoint &ep)
 {
 #ifdef /* MCRecordLoudness */ LEGACY_EXEC
-	MCtemplateplayer->getrecordloudness(ep);
+	extern void MCQTGetRecordLoudness(MCExecPoint& ep);
+	MCQTGetRecordLoudness(ep);
 	return ES_NORMAL;
 #endif /* MCRecordLoudness */
 }

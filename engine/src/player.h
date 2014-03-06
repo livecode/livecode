@@ -179,13 +179,6 @@ public:
 	Boolean setenabledtracks(const MCString &s);
 	void getnodes(MCExecPoint &ep);
 	void gethotspots(MCExecPoint &ep);
-	void recordsound(char *fname);
-	void getrecordloudness(MCExecPoint &ep);
-	void getrecordcompressionlist(MCExecPoint &ep);
-
-	// MW-2005-05-15: Augment call with extra title field for consistency
-	void stdrecorddlg(MCExecPoint& ep, const char *p_title, Boolean sheet);
-	void stoprecording();
 
 	// MW-2011-09-23: Ensures the buffering state is consistent with current flags
 	//   and such.
