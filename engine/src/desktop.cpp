@@ -273,8 +273,9 @@ void MCPlatformHandleMouseMove(MCPlatformWindowRef p_window, MCPoint p_location)
 		// IM-2014-02-12: [[ StackScale ]] mfocus will translate target stack to menu stack coords
 		//   so in both cases we pass target stack coords.
 		// IM-2014-02-14: [[ StackScale ]] Don't try to convert if target is null
+		MCPoint t_mouseloc;
 		if (t_stack != nil)
-			t_stackloc = t_stack->windowtostackloc(t_stackloc);
+			t_mouseloc = t_stack->windowtostackloc(p_location);
 		
 		MCmousex = t_mouseloc.x;
 		MCmousey = t_mouseloc.y;
