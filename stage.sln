@@ -92,6 +92,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libxslt", "thirdparty\libxs
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kernel-standalone", "engine\kernel-standalone.vcproj", "{0491E47C-B096-4DBF-8D26-C28364DF6176}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcef_dll_wrapper", "thirdparty\libcef\libcef_dll_wrapper.vcproj", "{A9D6DC71-C0DC-4549-AEA0-3B15B44E86A9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "revbrowser-cefprocess", "revbrowser\revbrowser-cefprocess.vcproj", "{C704BBEE-0A2A-42C3-91D1-A382541593E0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -250,6 +254,14 @@ Global
 		{0491E47C-B096-4DBF-8D26-C28364DF6176}.Debug|Win32.Build.0 = Debug|Win32
 		{0491E47C-B096-4DBF-8D26-C28364DF6176}.Release|Win32.ActiveCfg = Release|Win32
 		{0491E47C-B096-4DBF-8D26-C28364DF6176}.Release|Win32.Build.0 = Release|Win32
+		{A9D6DC71-C0DC-4549-AEA0-3B15B44E86A9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A9D6DC71-C0DC-4549-AEA0-3B15B44E86A9}.Debug|Win32.Build.0 = Debug|Win32
+		{A9D6DC71-C0DC-4549-AEA0-3B15B44E86A9}.Release|Win32.ActiveCfg = Release|Win32
+		{A9D6DC71-C0DC-4549-AEA0-3B15B44E86A9}.Release|Win32.Build.0 = Release|Win32
+		{C704BBEE-0A2A-42C3-91D1-A382541593E0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C704BBEE-0A2A-42C3-91D1-A382541593E0}.Debug|Win32.Build.0 = Debug|Win32
+		{C704BBEE-0A2A-42C3-91D1-A382541593E0}.Release|Win32.ActiveCfg = Release|Win32
+		{C704BBEE-0A2A-42C3-91D1-A382541593E0}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
