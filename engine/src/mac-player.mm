@@ -830,10 +830,12 @@ void MCPlatformCountPlayerTracks(MCPlatformPlayerRef player, uindex_t& r_track_c
 
 void MCPlatformGetPlayerTrackProperty(MCPlatformPlayerRef player, uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value)
 {
+	player -> GetTrackProperty(index, property, type, value);
 }
 
 void MCPlatformSetPlayerTrackProperty(MCPlatformPlayerRef player, uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value)
 {
+	player -> SetTrackProperty(index, property, type, value);
 }
 
 bool MCPlatformFindPlayerTrackWithId(MCPlatformPlayerRef player, uint32_t id, uindex_t& r_index)
