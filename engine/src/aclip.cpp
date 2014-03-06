@@ -620,7 +620,7 @@ Boolean MCAudioClip::open_audio()
 		WORD v = MCtemplateaudio->loudness * loudness * 0xFFFF / 10000;
 		waveOutSetVolume(hwaveout, v | (v << 16));
 
-		wh.lpData = samples;          // address of the waveform buffer
+		wh.lpData = (char *) samples;          // address of the waveform buffer
 		wh.dwBufferLength = size;    // length, in bytes, of the buffer
 		wh.dwBytesRecorded = 0;          // see below
 		wh.dwUser = 0;
