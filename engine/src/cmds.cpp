@@ -341,7 +341,7 @@ void MCConvert::exec_ctxt(MCExecContext& ctxt)
         container -> set(ctxt, PT_INTO, *t_output);
 
         if (ctxt . HasError())
-            ctxt . LegacyThrow(EE_CONVERT_CANTSET);
+            ctxt . LegacyThrow(EE_CONVERT_CANTSET, *t_output);
 	}
 }
 
