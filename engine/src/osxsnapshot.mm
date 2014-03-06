@@ -252,8 +252,8 @@ MCImageBitmap *getimage(CGrafPtr src)
 
 extern bool MCOSXCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context);
 
-/* OVERHAUL - REVISIT: p_scale_factor parameter currently ignored */
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, MCGFloat p_scale_factor, uint32_t p_window, const char *p_display_name)
+// MW-2014-02-20: [[ Bug 11811 ]] Updated to take into account size parameter.
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, uint32_t p_window, const char *p_display_name, MCPoint *size)
 {
 	// Compute the rectangle to grab in screen co-ords.
 	MCRectangle t_screen_rect;
@@ -300,72 +300,35 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, MCGFloat p_scale_factor
 		t_screen_rect = MCU_offset_rect(p_rect, t_window_bounds . left, t_window_bounds . top);
 	}
 
-	// Now we have a screen rect, we can grab the contents. On 10.5 and above we
-	// use the CGWindow APIs; otherwise we fall back to QD for now.
 	MCImageBitmap *t_snapshot;
 	t_snapshot = nil;
-	if (MCmajorosversion >= 0x1050)
-	{
-		typedef CGImageRef (*CGWindowListCreateImageProc)(CGRect, uint32_t listOption, uint32_t windowID, uint32_t imageOption);
-		typedef CFDataRef (*CGDataProviderCopyDataProc)(CGDataProviderRef);
-		static CGWindowListCreateImageProc s_cg_window_list_create_image = nil;
-		static CGDataProviderCopyDataProc s_cg_data_provider_copy_data = nil;
-		if (s_cg_window_list_create_image == nil)
-		{
-			s_cg_window_list_create_image = (CGWindowListCreateImageProc)CFBundleGetFunctionPointerForName(CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices")), CFSTR("CGWindowListCreateImage"));
-			s_cg_data_provider_copy_data = (CGDataProviderCopyDataProc)CFBundleGetFunctionPointerForName(CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices")), CFSTR("CGDataProviderCopyData"));
-		}
-		
-		CGRect t_area;
-		t_area = CGRectMake(t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
-		
-		CGImageRef t_image;
-		t_image = s_cg_window_list_create_image(t_area, /*kCGWindowListOptionOnScreenOnly*/ (1 << 0), /*kCGNullWindowID*/ 0, /*kCGWindowImageDefault*/ 0);
-		if (t_image != nil)
-		{
-			// IM-2014-01-24: [[ HiDPI ]] Snapshots will be at the density of the display device,
-			// so we need to scale down if the dimensions of the returned image don't match
-			
-			uint32_t t_width, t_height;
-			uint32_t t_image_width, t_image_height;
-			t_image_width = CGImageGetWidth(t_image);
-			t_image_height = CGImageGetHeight(t_image);
-			
-			MCGFloat t_scale;
-			t_scale = 1.0;
-			
-			if (t_image_width != t_screen_rect.width && t_image_height != t_screen_rect.height)
-			{
-				MCGFloat t_hscale, t_vscale;
-				t_hscale = (MCGFloat)t_image_width / (MCGFloat)t_screen_rect.width;
-				t_vscale = (MCGFloat)t_image_height / (MCGFloat)t_screen_rect.height;
-				
-				// The horizontal & vertical scales should match
-				if (t_hscale == t_vscale)
-					t_scale = t_hscale;
-			}
-			
-			// Calculate the logical image size
-			t_width = ceil(t_image_width / t_scale);
-			t_height = ceil(t_image_height / t_scale);
-			
-			MCImageBitmap *t_bitmap;
-			/* UNCHECKED */ MCImageBitmapCreate(t_width, t_height, t_bitmap);
 
-			MCImageBitmapClear(t_bitmap);
-			
-			CGContextRef t_context;
-			/* UNCHECKED */ MCOSXCreateCGContextForBitmap(t_bitmap, t_context);
-			
-			// Draw the image scaled down onto the bitmap
-			CGContextScaleCTM(t_context, 1 / t_scale, 1 / t_scale);
-			CGContextDrawImage(t_context, CGRectMake(0, 0, t_image_width, t_image_height), t_image);
-			
-			CGContextRelease(t_context);
-			CGImageRelease(t_image);
-			
-			t_snapshot = t_bitmap;
+	CGRect t_area;
+	t_area = CGRectMake(t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
+	
+	CGImageRef t_image;
+	t_image = CGWindowListCreateImage(t_area, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault);
+	if (t_image != nil)
+	{
+		// IM-2014-01-24: [[ HiDPI ]] Snapshots will be at the density of the display device,
+		// so we need to scale down if the dimensions of the returned image don't match
+		
+		uint32_t t_width, t_height;
+		uint32_t t_image_width, t_image_height;
+		t_image_width = CGImageGetWidth(t_image);
+		t_image_height = CGImageGetHeight(t_image);
+
+		if (size == nil)
+		{
+			t_width = t_screen_rect . width;
+			t_height = t_screen_rect . height;
 		}
+		else
+		{
+			t_width = size -> x;
+			t_height = size -> y;
+		}
+<<<<<<< HEAD
 	}
 #ifdef OLD_MAC
 	else
@@ -379,32 +342,36 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, MCGFloat p_scale_factor
 
 		CGrafPtr port;
 		port = CreateNewPort();
+=======
+>>>>>>> develop
 		
-		PixMapHandle spm, dpm;
-		spm = GetGWorldPixMap(port);
-		dpm = GetGWorldPixMap((CGrafPtr)t_snap_pixmap -> handle . pixmap);
-		LockPixels(spm);
-		LockPixels(dpm);
+		MCGFloat t_hscale, t_vscale;
+		t_hscale = (MCGFloat)t_width / (MCGFloat)t_image_width;
+		t_vscale = (MCGFloat)t_height / (MCGFloat)t_image_height;
 		
-		const BitMap *sbm, *dbm;
-		sbm = (BitMap *)*spm;
-		dbm = (BitMap *)*dpm;
+		MCImageBitmap *t_bitmap;
+		/* UNCHECKED */ MCImageBitmapCreate(t_width, t_height, t_bitmap);
+
+		MCImageBitmapClear(t_bitmap);
 		
-		CopyBits(sbm, dbm, &t_src_rect, &t_dst_rect, srcCopy, NULL);
+		CGContextRef t_context;
+		/* UNCHECKED */ MCOSXCreateCGContextForBitmap(t_bitmap, t_context);
 		
-		UnlockPixels(dpm);
-		UnlockPixels(spm);
+		// Draw the image scaled down onto the bitmap
+		CGContextScaleCTM(t_context, t_hscale, t_vscale);
+		CGContextDrawImage(t_context, CGRectMake(0, 0, t_image_width, t_image_height), t_image);
 		
-		DisposePort(port);
+		CGContextRelease(t_context);
+		CGImageRelease(t_image);
 		
-		MCImageBitmap *snapimage;
-		snapimage = getimage((CGrafPtr)t_snap_pixmap -> handle . pixmap);
-		freepixmap(t_snap_pixmap);
-		
-		t_snapshot = snapimage;
+		t_snapshot = t_bitmap;
 	}
+<<<<<<< HEAD
 #endif
 
+=======
+	
+>>>>>>> develop
 	return t_snapshot;
 }
 

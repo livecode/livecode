@@ -32,6 +32,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "debug.h"
 #include "group.h"
 
+#include "resolution.h"
+
 #include "graphics_util.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,6 +94,7 @@ struct MCEvent
 		struct
 		{
 			MCStack *stack;
+			MCGFloat scale;
 		} window;
 		
 		struct
@@ -305,6 +308,8 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 	break;
 			
 	case kMCEventTypeWindowReshape:
+		// IM-2014-02-14: [[ HiDPI ]] update view backing scale
+		t_event -> window . stack -> view_setbackingscale(t_event->window.scale);
 		t_event -> window . stack -> view_configure(true);
 		break;
 			
@@ -875,7 +880,8 @@ bool MCEventQueuePostNotify(MCEventQueueNotifyCallback p_callback, void *p_state
 
 //////////
 
-bool MCEventQueuePostWindowReshape(MCStack *p_stack)
+// IM-2014-02-14: [[ HiDPI ]] Post backing scale changes with window reshape message
+bool MCEventQueuePostWindowReshape(MCStack *p_stack, MCGFloat p_backing_scale)
 {
 	// We look through the current event queue, looking for the last window
 	// reshape event for this stack and coalesce the event.
@@ -898,6 +904,7 @@ bool MCEventQueuePostWindowReshape(MCStack *p_stack)
 		return false;
 	
 	t_event -> window . stack = p_stack;
+	t_event -> window . scale = p_backing_scale;
 	
 	return true;
 }

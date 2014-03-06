@@ -292,7 +292,10 @@ MCGRectangle MCStack::view_constrainstackviewport(const MCGRectangle &p_rect)
 		}
 	}
 	else
-		t_new_rect = view_constrainrecttoscreen(t_stackrect);
+	{
+		// IM-2014-02-28: [[ Bug 11844 ]] Don't constrain stack rect here unless fullscreen
+		t_new_rect = t_stackrect;
+	}
 	
 	return t_new_rect;
 }
@@ -360,16 +363,17 @@ void MCStack::view_setrect(const MCRectangle &p_rect)
 	m_view_rect = p_rect;
 	
 	// IM-2014-01-16: [[ StackScale ]] Update window geometry if we have a window
-	if (getopened() && window != nil)
+	// IM-2014-02-27: [[ Bug 11858 ]] Allow window geometry update when stack is closed
+	if (window != nil)
 	{
-	// IM-2013-10-03: [[ FullscreenMode ]] if the view rect has changed, update the window geometry
+		// IM-2013-10-03: [[ FullscreenMode ]] if the view rect has changed, update the window geometry
 
-	// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
-	/* CODE REMOVED */
-	
-	// IM-2013-10-08: [[ FullscreenMode ]] Update window size hints when setting the view geometry.
-	setsizehints();
-	view_setgeom(m_view_rect);
+		// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+		/* CODE REMOVED */
+
+		// IM-2013-10-08: [[ FullscreenMode ]] Update window size hints when setting the view geometry.
+		setsizehints();
+		view_setgeom(m_view_rect);
 	}
 	
 	view_on_rect_changed();
@@ -761,10 +765,10 @@ void MCStack::view_setcompositortilesize(uint32_t p_size)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool view_device_render_background(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
+bool view_device_render_background(void *p_context, MCGContextRef p_target, const MCRectangle32& p_rectangle)
 {
 	/* OVERHAUL - REVISIT: currently just draws black behind the stack area */
-	MCGContextAddRectangle(p_target, MCRectangleToMCGRectangle(p_rectangle));
+	MCGContextAddRectangle(p_target, MCRectangle32ToMCGRectangle(p_rectangle));
 	MCGContextSetFillRGBAColor(p_target, 0.0, 0.0, 0.0, 1.0);
 	MCGContextFill(p_target);
 	
@@ -791,8 +795,8 @@ void MCStack::view_updatetilecache(void)
 	// is an easier alternative.
 	MCTileCacheLayer t_bg_layer;
 	t_bg_layer . id = m_view_bg_layer_id;
-	t_bg_layer . region = MCU_make_rect(0, 0, 8192, 8192);
-	t_bg_layer . clip = MCU_make_rect(0, 0, 8192, 8192);
+	t_bg_layer . region = MCRectangle32Make(0, 0, 8192, 8192);
+	t_bg_layer . clip = MCRectangle32Make(0, 0, 8192, 8192);
 	t_bg_layer . is_opaque = true;
 	t_bg_layer . opacity = 255;
 	t_bg_layer . ink = GXblendSrcOver;

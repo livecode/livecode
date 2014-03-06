@@ -255,7 +255,7 @@ public:
 	virtual uint2 getpad();
 	virtual Window getroot();
 	//virtual bool selectrect(MCRectangle &r_rect);
-	virtual MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, const char *displayname);
+	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size);
 
 	virtual HRGN BitmapToRegion(MCImageBitmap *p_bitmap);
 

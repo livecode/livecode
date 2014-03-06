@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "region.h"
 
 #include "graphicscontext.h"
+#include "graphics_util.h"
 
 #ifdef _HAS_QSORT_R
 #define stdc_qsort(a, b, c, d, e) qsort_r(a, b, c, e, d)
@@ -79,7 +80,7 @@ struct MCTileCacheSprite
 	// The render callback for the sprite.
 	MCTileCacheRenderer renderer;
 	// The offset from the top-left of the sprite contents to (0, 0) in tile co-ords.
-	int16_t xorg, yorg;
+	int32_t xorg, yorg;
 	// The maximum extent of the tiles array, in tile co-ords.
 	uint8_t left, top, right, bottom;
 	// The 2d array of tiles currently cached for this sprite. An index of 0
@@ -991,7 +992,7 @@ static void MCTileCacheEmptyTile(MCTileCacheRef self, uint32_t p_index)
 ////////////////////////////////////////////////////////////////////////////////
 
 // Computes the bounding box (in tiles) of all tiles touched by the given rect.
-static MCTileCacheRectangle MCTileCacheComputeTouchedTiles(MCTileCacheRef self, const MCRectangle& p_rect)
+static MCTileCacheRectangle MCTileCacheComputeTouchedTiles(MCTileCacheRef self, const MCRectangle32& p_rect)
 {
 	MCTileCacheRectangle t_tile_rect;
 	t_tile_rect . left = MCMax(MCTileCacheTileFloor(self, p_rect . x - self -> viewport . x), 0);
@@ -1002,7 +1003,7 @@ static MCTileCacheRectangle MCTileCacheComputeTouchedTiles(MCTileCacheRef self, 
 }
 
 // Computes the bounding box (in tiles) of all tiles occluded by the given rect.
-static MCTileCacheRectangle MCTileCacheComputeOccludedTiles(MCTileCacheRef self, const MCRectangle& p_rect)
+static MCTileCacheRectangle MCTileCacheComputeOccludedTiles(MCTileCacheRef self, const MCRectangle32& p_rect)
 {
 	MCTileCacheRectangle t_tile_rect;
 	t_tile_rect . left = MCMax(MCTileCacheTileCeiling(self, p_rect . x - self -> viewport . x), 0);
@@ -1012,7 +1013,7 @@ static MCTileCacheRectangle MCTileCacheComputeOccludedTiles(MCTileCacheRef self,
 	return t_tile_rect;
 }
 
-static void MCTileCacheFlushCellsContainingLayers(MCTileCacheRef self, uint32_t p_first_layer, uint32_t p_last_layer, const MCRectangle& p_region)
+static void MCTileCacheFlushCellsContainingLayers(MCTileCacheRef self, uint32_t p_first_layer, uint32_t p_last_layer, const MCRectangle32& p_region)
 {
 	// Do nothing if the tilecache is invalid.
 	if (!self -> valid)
@@ -1068,7 +1069,7 @@ static void MCTileCacheFlushCellsContainingLayers(MCTileCacheRef self, uint32_t 
 		}
 }
 
-void MCTileCacheInsertScenery(MCTileCacheRef self, uint32_t p_before_layer, const MCRectangle& p_region)
+void MCTileCacheInsertScenery(MCTileCacheRef self, uint32_t p_before_layer, const MCRectangle32& p_region)
 {
 	// If we are inserting at the start, there is nothing to do.
 	if (p_before_layer == 1)
@@ -1078,13 +1079,13 @@ void MCTileCacheInsertScenery(MCTileCacheRef self, uint32_t p_before_layer, cons
 	MCTileCacheFlushCellsContainingLayers(self, p_before_layer - 1, p_before_layer, p_region);
 }
 
-void MCTileCacheRemoveScenery(MCTileCacheRef self, uint32_t p_layer, const MCRectangle& p_region)
+void MCTileCacheRemoveScenery(MCTileCacheRef self, uint32_t p_layer, const MCRectangle32& p_region)
 {
 	// When removing a scenery layer, we need only flush any tiles containing it.
 	MCTileCacheFlushCellsContainingLayers(self, p_layer, p_layer, p_region);
 }
 
-void MCTileCacheReshapeScenery(MCTileCacheRef self, uint32_t p_layer, const MCRectangle& p_old_region, const MCRectangle& p_new_region)
+void MCTileCacheReshapeScenery(MCTileCacheRef self, uint32_t p_layer, const MCRectangle32& p_old_region, const MCRectangle32& p_new_region)
 {
 	// Remove the layer for the old region.
 	MCTileCacheRemoveScenery(self, p_layer, p_old_region);
@@ -1092,7 +1093,7 @@ void MCTileCacheReshapeScenery(MCTileCacheRef self, uint32_t p_layer, const MCRe
 	MCTileCacheInsertScenery(self, p_layer + 1, p_new_region);
 }
 
-void MCTileCacheUpdateScenery(MCTileCacheRef self, uint32_t p_layer, const MCRectangle& p_region)
+void MCTileCacheUpdateScenery(MCTileCacheRef self, uint32_t p_layer, const MCRectangle32& p_region)
 {
 	// When updating a scenery layer, we need only flush any tiles touching it and the update region.
 	MCTileCacheFlushCellsContainingLayers(self, p_layer, p_layer, p_region);
@@ -1359,7 +1360,7 @@ void MCTileCacheScrollSprite(MCTileCacheRef self, uint32_t p_id, int32_t p_dx, i
 	t_sprite -> yorg -= p_dy;
 }
 
-void MCTileCacheUpdateSprite(MCTileCacheRef self, uint32_t p_id, const MCRectangle& p_region)
+void MCTileCacheUpdateSprite(MCTileCacheRef self, uint32_t p_id, const MCRectangle32& p_region)
 {
 	// Do nothing if the tilecache is invalid.
 	if (!self -> valid)
@@ -1379,8 +1380,8 @@ void MCTileCacheUpdateSprite(MCTileCacheRef self, uint32_t p_id, const MCRectang
 	
 	// The region passed in is in sprite layer co-ords, so first compute it
 	// in tile-coords.
-	MCRectangle t_tile_rect;
-	t_tile_rect = MCU_offset_rect(p_region, t_sprite -> xorg, t_sprite -> yorg);
+	MCRectangle32 t_tile_rect;
+	t_tile_rect = MCRectangle32Offset(p_region, t_sprite -> xorg, t_sprite -> yorg);
 
 	// Compute the bounds of the touched cells.
 	int32_t t_left, t_top, t_right, t_bottom;
@@ -1490,7 +1491,7 @@ void MCTileCacheEndFrame(MCTileCacheRef self)
 #endif
 }
 
-static void MCTileCacheDrawSprite(MCTileCacheRef self, uint32_t p_sprite_id, MCGContextRef p_context, const MCRectangle& p_rect)
+static void MCTileCacheDrawSprite(MCTileCacheRef self, uint32_t p_sprite_id, MCGContextRef p_context, const MCRectangle32& p_rect)
 {
 	MCTileCacheSprite *t_sprite;
 	t_sprite = MCTileCacheGetSprite(self, p_sprite_id);
@@ -1554,8 +1555,8 @@ static void MCTileCacheRenderSpriteTiles(MCTileCacheRef self)
 		t_sprite = MCTileCacheGetSprite(self, t_sprite_id);
 
 		// Compute the rect of the tiles
-		MCRectangle t_required_rect;
-		MCU_set_rect(t_required_rect,
+		MCRectangle32 t_required_rect;
+		MCRectangle32Set(t_required_rect,
 						-t_sprite -> xorg + t_required_tiles . left * self -> tile_size,
 						-t_sprite -> yorg + t_required_tiles . top * self -> tile_size,
 						(t_required_tiles . right - t_required_tiles . left) * self -> tile_size,
@@ -1650,7 +1651,7 @@ static int MCTileCacheSortRenderListByIncreasingYThenX(void *p_context, const vo
 	return d;
 }
 
-static void MCTileCacheDrawScenery(MCTileCacheRef self, uint32_t p_layer_id, MCGContextRef p_context, const MCRectangle& p_rect)
+static void MCTileCacheDrawScenery(MCTileCacheRef self, uint32_t p_layer_id, MCGContextRef p_context, const MCRectangle32& p_rect)
 {
 	if (!self -> scenery_renderers[p_layer_id] . callback(self -> scenery_renderers[p_layer_id] . context, p_context, p_rect))
 		MCTileCacheInvalidate(self);
@@ -1718,8 +1719,8 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 	t_required_height = t_required_tiles . bottom - t_required_tiles . top;
 
 	// Compute the rect of the tiles
-	MCRectangle t_required_rect;
-	MCU_set_rect(t_required_rect,
+	MCRectangle32 t_required_rect;
+	MCRectangle32Set(t_required_rect,
 					t_required_tiles . left * self -> tile_size,
 					t_required_tiles . top * self -> tile_size,
 					t_required_width * self -> tile_size,
@@ -1952,7 +1953,7 @@ static bool MCTileCacheEnsureDisplayList(MCTileCacheRef self, uint32_t p_amount)
 {
 	if (self -> display_list_frontier + p_amount > self -> display_list_capacity)
 	{
-		if (!MCMemoryReallocate(self -> display_list, (self -> display_list_capacity != 0 ? self -> display_list_capacity * 2 : 16) * sizeof(uint16_t), self -> display_list))
+		if (!MCMemoryReallocate(self -> display_list, (self -> display_list_capacity != 0 ? self -> display_list_capacity * 2 : 16) * sizeof(self -> display_list[0]), self -> display_list))
 		{
 			MCTileCacheInvalidate(self);
 			return false;
@@ -1972,21 +1973,54 @@ static void MCTileCachePushCompositeOntoDisplayList(MCTileCacheRef self, uint32_
 	self -> display_list[self -> display_list_frontier++] = p_tile;
 }
 
-static void MCTileCachePushBeginLayerOntoDisplayList(MCTileCacheRef self, int32_t p_ox, int32_t p_oy, const MCRectangle& p_clip, uint32_t p_opacity, uint32_t p_ink)
+static inline void _push_uint32(uint16_t *p_display_list, uint32_t &x_index, uint32_t p_value)
 {
-	if (!MCTileCacheEnsureDisplayList(self, 8))
+	p_display_list[x_index++] = p_value >> 16;
+	p_display_list[x_index++] = p_value & 0xFFFF;
+}
+
+static void MCTileCachePushBeginLayerOntoDisplayList(MCTileCacheRef self, int32_t p_ox, int32_t p_oy, const MCRectangle32& p_clip, uint32_t p_opacity, uint32_t p_ink)
+{
+	if (!MCTileCacheEnsureDisplayList(self, 14))
 		return;
 
 	// Note that the order is reversed from what you expect. This is because the
 	// display list is played backwards.
 	self -> display_list[self -> display_list_frontier++] = (p_opacity << 8) | p_ink;
-	self -> display_list[self -> display_list_frontier++] = p_clip . height;
-	self -> display_list[self -> display_list_frontier++] = p_clip . width;
-	self -> display_list[self -> display_list_frontier++] = p_clip . y;
-	self -> display_list[self -> display_list_frontier++] = p_clip . x;
-	self -> display_list[self -> display_list_frontier++] = p_oy;
-	self -> display_list[self -> display_list_frontier++] = p_ox;
+
+	// IM-2014-02-28: [[ Bug 11617 ]] Push 32bit values onto list as 2 16bit values
+	_push_uint32(self->display_list, self->display_list_frontier, p_clip.height);
+	_push_uint32(self->display_list, self->display_list_frontier, p_clip.width);
+	_push_uint32(self->display_list, self->display_list_frontier, p_clip.y);
+	_push_uint32(self->display_list, self->display_list_frontier, p_clip.x);
+
+	_push_uint32(self->display_list, self->display_list_frontier, p_oy);
+	_push_uint32(self->display_list, self->display_list_frontier, p_ox);
+
 	self -> display_list[self -> display_list_frontier++] = 0;
+}
+
+static inline uint32_t _pop_uint32(uint16_t *p_display_list, uint32_t &x_index)
+{
+	uint32_t t_tmp;
+	t_tmp = p_display_list[--x_index];
+	t_tmp |= p_display_list[--x_index] << 16;
+	return t_tmp;
+}
+
+// IM-2014-02-28: [[ Bug 11617 ]] Retrieve layer values from display list
+static void MCTileCachePopLayerFromDisplayList(uint16_t *p_display_list, uint32_t &x_index, int32_t &r_ox, int32_t &r_oy, MCRectangle32 &r_clip, uint32_t &r_opacity, uint32_t &r_ink)
+{
+	r_ox = _pop_uint32(p_display_list, x_index);
+	r_oy = _pop_uint32(p_display_list, x_index);
+	
+	r_clip.x = _pop_uint32(p_display_list, x_index);
+	r_clip.y = _pop_uint32(p_display_list, x_index);
+	r_clip.width = _pop_uint32(p_display_list, x_index);
+	r_clip.height = _pop_uint32(p_display_list, x_index);
+
+	r_ink = p_display_list[--x_index] & 0xff;
+	r_opacity = p_display_list[x_index] >> 8;
 }
 
 static void MCTileCachePushEndLayerOntoDisplayList(MCTileCacheRef self)
@@ -2241,8 +2275,8 @@ void MCTileCacheRenderSprite(MCTileCacheRef self, MCTileCacheLayer& x_layer)
 		return;
 	
 	// Compute the visible region of the sprite in global co-ords.
-	MCRectangle t_visible;
-	t_visible = MCU_intersect_rect(self -> viewport, MCU_intersect_rect(x_layer . region, x_layer . clip));
+	MCRectangle32 t_visible;
+	t_visible = MCRectangle32Intersect(MCRectangle32FromMCRectangle(self -> viewport), MCRectangle32Intersect(x_layer . region, x_layer . clip));
 
 	// Compute the region of the canvas touched by the sprite (in tiles).
 	MCTileCacheRectangle t_affected_cells;
@@ -2278,8 +2312,8 @@ void MCTileCacheRenderSprite(MCTileCacheRef self, MCTileCacheLayer& x_layer)
 	t_sprite = MCTileCacheGetSprite(self, x_layer . id);
 
 	// Compute the visible rect in tile co-ords.
-	MCRectangle t_visible_tile_rect;
-	t_visible_tile_rect = MCU_offset_rect(MCU_offset_rect(t_visible, -x_layer . region . x, -x_layer . region . y), t_sprite -> xorg, t_sprite -> yorg); 
+	MCRectangle32 t_visible_tile_rect;
+	t_visible_tile_rect = MCRectangle32Offset(t_visible, t_sprite->xorg - x_layer.region.x, t_sprite->yorg - x_layer.region.y);
 
 	// Compute the visible tiles of the sprite.
 	MCTileCacheRectangle t_visible_tiles;
@@ -2424,25 +2458,16 @@ static bool MCTileCacheDoComposite(MCTileCacheRef self)
 		}
 		else if (!t_in_layer)
 		{
-			// A zero means start a layer if not in one. First compute the new origin.
-			t_ox = (int16_t)self -> display_list[--t_index];
-			t_oy = (int16_t)self -> display_list[--t_index];
-			
-			// Next compute the clip.
-			MCRectangle t_clip;
-			t_clip . x = (int16_t)self -> display_list[--t_index];
-			t_clip . y = (int16_t)self -> display_list[--t_index];
-			t_clip . width = (uint16_t)self -> display_list[--t_index];
-			t_clip . height = (uint16_t)self -> display_list[--t_index];
-			
-			// Then the ink and opacity.
+			// A zero means start a layer if not in one.
+			MCRectangle32 t_clip;
 			uint32_t t_ink, t_opacity;
-			t_ink = self -> display_list[--t_index] & 0xff;
-			t_opacity = self -> display_list[t_index] >> 8;
+			
+			// IM-2014-02-28: [[ Bug 11617 ]] Call function to get layer values from display list
+			MCTileCachePopLayerFromDisplayList(self->display_list, t_index, t_ox, t_oy, t_clip, t_opacity, t_ink);
 			
 			// Now we notify the compositor about starting a new layer.
 			if (self -> compositor . begin_layer != nil)
-				t_success = self -> compositor . begin_layer(self -> compositor . context, t_clip, t_opacity, t_ink);
+				t_success = self -> compositor . begin_layer(self -> compositor . context, MCRectangle32ToMCRectangle(t_clip), t_opacity, t_ink);
 			
 			// Mark ourselves as being within a layer.
 			t_in_layer = true;

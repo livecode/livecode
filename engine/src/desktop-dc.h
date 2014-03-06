@@ -151,7 +151,7 @@ public:
     virtual bool loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle);
     virtual bool unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle);
 	
-	virtual MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, const char *displayname);
+	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size);
 	
 	virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
 	virtual MCScriptEnvironment *createscriptenvironment(const char *p_language);

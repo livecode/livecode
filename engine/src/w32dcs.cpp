@@ -821,17 +821,17 @@ static bool WindowsIsCompositionEnabled(void)
 	return t_enabled != FALSE;
 }
 
+// MW-2014-02-20: [[ Bug 11811 ]] Updated to scale snapshot to requested size.
 bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
-/* OVERHAUL - REVISIT: p_scale_factor parameter currently ignored */
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, const char *displayname)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size)
 {
 	bool t_is_composited;
 	t_is_composited = WindowsIsCompositionEnabled();
 
 	expose();
 	//make the parent window to be the invisible window, so that the snapshot window icon
-	//does not show up in the desktop taskbar
-
+	//does not show up in the desktop taskbar.
+	
 	MCDisplay const *t_displays;
 	uint4 t_display_count;
 	MCRectangle t_virtual_viewport;
@@ -839,6 +839,8 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uin
 	t_virtual_viewport = t_displays[0] . viewport;
 	for(uint4 t_index = 1; t_index < t_display_count; ++t_index)
 		t_virtual_viewport = MCU_union_rect(t_virtual_viewport, t_displays[t_index] . viewport);
+
+	t_virtual_viewport . width = 500;
 
 	HWND hwndsnap = CreateWindowExA(WS_EX_TRANSPARENT | WS_EX_TOPMOST,
 	                               MC_SNAPSHOT_WIN_CLASS_NAME,"", WS_POPUP, t_virtual_viewport . x, t_virtual_viewport . y,
@@ -878,8 +880,10 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uin
 			TranslateMessage(&msg);
 			DispatchMessageA(&msg);
 		}
-		r = snaprect;
+		r = screentologicalrect(snaprect);
 	}
+	
+	int t_width, t_height;
 	HBITMAP newimage = NULL;
 	void *t_bits = nil;
 	if (!snapcancelled)
@@ -920,20 +924,35 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uin
 			}
 		}
 		r = MCU_clip_rect(r, t_virtual_viewport . x, t_virtual_viewport . y, t_virtual_viewport . width, t_virtual_viewport . height);
+		
+		if (size != nil)
+		{
+			t_width = size -> x;
+			t_height = size -> y;
+		}
+		else
+		{
+			t_width = r . width;
+			t_height = r . height;
+		}
+		
+		r = logicaltoscreenrect(r);
+
 		if (r.width != 0 && r.height != 0)
 		{
-			if (create_temporary_dib(snapdesthdc, r.width, r.height, newimage, t_bits))
+			if (create_temporary_dib(snapdesthdc, t_width, t_height, newimage, t_bits))
 			{
 				HBITMAP obm = (HBITMAP)SelectObject(snapdesthdc, newimage);
 				
 				// MW-2012-09-19: [[ Bug 4173 ]] Add the 'CAPTUREBLT' flag to make sure
 				//   layered windows are included.
 				if (t_is_composited)
-					BitBlt(snapdesthdc, 0, 0, r . width, r . height, snaphdc, r . x, r . y, CAPTUREBLT | SRCCOPY);
+					StretchBlt(snapdesthdc, 0, 0, t_width, t_height,
+								snaphdc, r . x, r . y, r . width, r . height, CAPTUREBLT | SRCCOPY);
 				else
 				{
-					BitBlt(snapdesthdc, 0, 0, r.width, r.height,
-						   snaphdc, r.x - t_virtual_viewport . x, r.y - t_virtual_viewport . y, CAPTUREBLT | SRCCOPY);
+					StretchBlt(snapdesthdc, 0, 0, t_width, t_height,
+								snaphdc, r.x - t_virtual_viewport . x, r.y - t_virtual_viewport . y, r . width, r . height, CAPTUREBLT | SRCCOPY);
 				}
 				SelectObject(snapdesthdc, obm);
 			}
@@ -958,16 +977,16 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uin
 	MCImageBitmap *t_bitmap = nil;
 	if (newimage != NULL)
 	{
-		/* UNCHECKED */ MCImageBitmapCreate(r.width, r.height, t_bitmap);
+		/* UNCHECKED */ MCImageBitmapCreate(t_width, t_height, t_bitmap);
 		BITMAPINFOHEADER t_out_fmt;
 		MCMemoryClear(&t_out_fmt, sizeof(BITMAPINFOHEADER));
 		t_out_fmt.biSize = sizeof(BITMAPINFOHEADER);
-		t_out_fmt.biWidth = r.width;
-		t_out_fmt.biHeight = -(int32_t)r.height;
+		t_out_fmt.biWidth = t_width;
+		t_out_fmt.biHeight = -(int32_t)t_height;
 		t_out_fmt.biPlanes = 1;
 		t_out_fmt.biBitCount = 32;
 		t_out_fmt.biCompression = BI_RGB;
-		GetDIBits(snapdesthdc, newimage, 0, r.height, t_bitmap->data, (BITMAPINFO*)&t_out_fmt, DIB_RGB_COLORS);
+		GetDIBits(snapdesthdc, newimage, 0, t_height, t_bitmap->data, (BITMAPINFO*)&t_out_fmt, DIB_RGB_COLORS);
 		DeleteObject(newimage);
 		MCImageBitmapSetAlphaValue(t_bitmap, 0xFF);
 	}

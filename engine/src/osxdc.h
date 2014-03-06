@@ -395,12 +395,16 @@ public:
 #ifdef OLD_MAC
 	virtual Window getroot();
 <<<<<<< HEAD
+<<<<<<< HEAD
 #endif
 	
 	virtual MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window,
 	                           const char *displayname);
 =======
 	virtual MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, const char *displayname);
+>>>>>>> develop
+=======
+	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size);
 >>>>>>> develop
 
 	virtual void enablebackdrop(bool p_hard);

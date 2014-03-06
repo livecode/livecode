@@ -2125,5 +2125,24 @@ private:
     bool m_is_id : 1;
 };
 
+// MM-2014-02-12: [[ SecureSocket ]] secure socket <socket> [with|without verification]
+//  New secure socket command, used to ensure all future communications over the given socket are encrypted.
+class MCSecure : public MCStatement
+{
+public:
+	MCSecure(void)
+	{
+		m_sock_name = NULL;
+		secureverify = True;
+	}
+	
+	virtual ~MCSecure();
+	virtual Parse_stat parse(MCScriptPoint &);
+	virtual Exec_stat exec(MCExecPoint &);
+	
+private:
+	MCExpression *m_sock_name;
+	Boolean secureverify : 1;
+};
 
 #endif

@@ -92,7 +92,6 @@ public:
 	bool device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
 	bool device_getwindowgeometry(Window w, MCRectangle &drect);
 	void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
-	void device_querymouse(int16_t &r_x, int16_t &r_y);
 	void device_setmouse(int16_t p_x, int16_t p_y);
 
 	bool fullscreenwindows(void);
@@ -130,7 +129,7 @@ public:
 	void getbeep(uint4 property, MCExecPoint &ep);
 	void setbeep(uint4 property, int4 beep);
 
-	MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, const char *displayname);
+	MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size);
 
 	void enablebackdrop(bool p_hard = false);
 	void disablebackdrop(bool p_hard = false);

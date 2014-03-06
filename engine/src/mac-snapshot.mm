@@ -28,6 +28,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern bool MCOSXCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context);
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern MCRectangle MCU_make_rect(int2 x, int2 y, uint2 w, uint2 h);
 
 static CGPoint s_snapshot_start_point, s_snapshot_end_point;
@@ -203,31 +207,42 @@ static Rect rect_from_points(CGPoint x, CGPoint y)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void MCMacPlatformCGImageToMCImageBitmap(CGImageRef p_image, MCImageBitmap*& r_bitmap)
+static void MCMacPlatformCGImageToMCImageBitmap(CGImageRef p_image, MCPoint p_size, MCImageBitmap*& r_bitmap)
 {
 	if (p_image != nil)
 	{
+		uint32_t t_width, t_height;
+		uint32_t t_image_width, t_image_height;
+		t_image_width = CGImageGetWidth(p_image);
+		t_image_height = CGImageGetHeight(p_image);
+		t_width = p_size . x;
+		t_height = p_size . y;
+		
+		MCGFloat t_hscale, t_vscale;
+		t_hscale = (MCGFloat)t_width / (MCGFloat)t_image_width;
+		t_vscale = (MCGFloat)t_height / (MCGFloat)t_image_height;
+		
 		MCImageBitmap *t_bitmap;
-		/* UNCHECKED */ MCImageBitmapCreate(CGImageGetWidth(p_image), CGImageGetHeight(p_image), t_bitmap);
+		/* UNCHECKED */ MCImageBitmapCreate(t_width, t_height, t_bitmap);
 		
-		CFDataRef t_data;
-		t_data = CGDataProviderCopyData(CGImageGetDataProvider(p_image));
+		MCImageBitmapClear(t_bitmap);
 		
-		uint8_t *t_bytes;
-		t_bytes = (uint8_t *)CFDataGetBytePtr(t_data);
+		CGContextRef t_context;
+		/* UNCHECKED */ MCOSXCreateCGContextForBitmap(t_bitmap, t_context);
 		
-		for(int32_t y = 0; y < CGImageGetHeight(p_image); y++)
-			memcpy((uint8_t*)t_bitmap -> data + y * t_bitmap -> stride, t_bytes + y * CGImageGetBytesPerRow(p_image), CGImageGetWidth(p_image) * 4);
+		// Draw the image scaled down onto the bitmap
+		CGContextScaleCTM(t_context, t_hscale, t_vscale);
+		CGContextDrawImage(t_context, CGRectMake(0, 0, t_image_width, t_image_height), p_image);
 		
-		CFRelease(t_data);
-		
+		CGContextRelease(t_context);
+
 		r_bitmap = t_bitmap;
 	}
 	else
 		r_bitmap = nil;
 }
 
-void MCPlatformScreenSnapshotOfUserArea(MCImageBitmap*& r_bitmap)
+void MCPlatformScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitmap)
 {
 	// Compute the rectangle to grab in screen co-ords.
 	MCRectangle t_screen_rect;
@@ -255,25 +270,48 @@ void MCPlatformScreenSnapshotOfUserArea(MCImageBitmap*& r_bitmap)
 	// Compute the selected rectangle.
 	t_screen_rect = mcrect_from_points(s_snapshot_start_point, s_snapshot_end_point);
 
-	MCPlatformScreenSnapshot(t_screen_rect, r_bitmap);
+	MCPlatformScreenSnapshot(t_screen_rect, p_size, r_bitmap);
 }
 
-void MCPlatformScreenSnapshotOfWindow(uint32_t p_window_id, MCImageBitmap*& r_bitmap)
+void MCPlatformScreenSnapshotOfWindow(uint32_t p_window_id, MCPoint *p_size, MCImageBitmap*& r_bitmap)
 {
 	CGImageRef t_image;
 	t_image = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, p_window_id, kCGWindowImageBoundsIgnoreFraming);
-	MCMacPlatformCGImageToMCImageBitmap(t_image, r_bitmap);
+	
+	NSArray *t_info_array;
+	t_info_array = (NSArray *)CGWindowListCreateDescriptionFromArray((CFArrayRef)[NSArray arrayWithObject: [NSNumber numberWithUnsignedInt: p_window_id]]);
+	
+	NSDictionary *t_rect_dict;
+	t_rect_dict = [[t_info_array objectAtIndex: 0] objectForKey: (NSString *)kCGWindowBounds];
+	
+	CGRect t_rect;
+	CGRectMakeWithDictionaryRepresentation((CFDictionaryRef)t_rect_dict, &t_rect);
+	
+	MCPoint t_size;
+	if (p_size == 0)
+		t_size = MCPointMake(t_rect . size . width, t_rect . size . height);
+	else
+		t_size = *p_size;
+	
+	MCMacPlatformCGImageToMCImageBitmap(t_image, t_size, r_bitmap);
 	CGImageRelease(t_image);
 }
 
-void MCPlatformScreenSnapshot(MCRectangle p_screen_rect, MCImageBitmap*& r_bitmap)
+void MCPlatformScreenSnapshot(MCRectangle p_screen_rect, MCPoint *p_size, MCImageBitmap*& r_bitmap)
 {
 	CGRect t_area;
 	t_area = CGRectMake(p_screen_rect . x, p_screen_rect . y, p_screen_rect . width, p_screen_rect . height);
 	
 	CGImageRef t_image;
 	t_image = CGWindowListCreateImage(t_area, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault);
-	MCMacPlatformCGImageToMCImageBitmap(t_image, r_bitmap);
+	
+	MCPoint t_size;
+	if (p_size == nil)
+		t_size = MCPointMake(p_screen_rect . width, p_screen_rect . height);
+	else
+		t_size = *p_size;
+	
+	MCMacPlatformCGImageToMCImageBitmap(t_image, t_size, r_bitmap);
 	CGImageRelease(t_image);
 }
 

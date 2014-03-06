@@ -1929,6 +1929,8 @@ enum Statements {
     S_ROTATE,
     S_SAVE,
     S_SCRIPT_ERROR,
+	// MM-2014-02-12: [[ SecureSocket ]] secure socket <socket> [with|without verification]
+	S_SECURE,
     S_SEEK,
     S_SELECT,
     S_SEND,

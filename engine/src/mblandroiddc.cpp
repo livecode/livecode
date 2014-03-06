@@ -415,7 +415,7 @@ void MCScreenDC::setbeep(uint4 property, int4 beep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale, uint4 window, const char *displayname)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size)
 {
 	return NULL;
 }
@@ -547,18 +547,29 @@ void MCScreenDC::do_fit_window(bool p_immediate_resize, bool p_post_message)
 	// Make sure view is configured to be the right size...
 	MCRectangle drect;
 	drect = android_view_get_bounds();
-	m_window_left = drect . x;
-	m_window_top = drect . y;
 
-	// IM-2014-01-31: [[ HiDPI ]] Ensure stack view is updated with the current pixel scale
-	((MCStack*)m_current_window)->view_setbackingscale(MCResGetPixelScale());
-	
+	// IM-2014-03-03: [[ Bug 11836 ]] Store window topleft in logical coords
+	MCPoint t_topleft;
+	t_topleft = MCPointMake(drect.x, drect.y);
+
+	t_topleft = screentologicalpoint(t_topleft);
+
+	m_window_left = t_topleft . x;
+	m_window_top = t_topleft . y;
+
 	if (p_post_message)
 	{
 		if (p_immediate_resize)
+		{
+			// IM-2014-01-31: [[ HiDPI ]] Ensure stack view is updated with the current pixel scale
+			((MCStack*)m_current_window)->view_setbackingscale(MCResGetPixelScale());
 			((MCStack *)m_current_window) -> view_configure(true);
+		}
 		else
-			MCEventQueuePostWindowReshape((MCStack *)m_current_window);
+		{
+			// IM-2014-02-14: [[ HiDPI ]] Post backing scale changes with window reshape message
+			MCEventQueuePostWindowReshape((MCStack *)m_current_window, MCResGetPixelScale());
+		}
 
 		// When we get a resize from android, we need to redraw the whole thing
 		// as the buffer will have changed!

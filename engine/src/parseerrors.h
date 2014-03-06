@@ -1646,6 +1646,18 @@ enum Parse_errors
 	
 	// {PE-0538} assert: bad expression
 	PE_ASSERT_BADEXPR,
+    
+	// MM-2014-02-12: [[ SecureSocket ]]
+	// {PE-0539} secure: missing 'socket'
+	PE_SECURE_NOSOCKET,
+	
+	// MM-2014-02-12: [[ SecureSocket ]]	
+	// {PE-0540} secure: bad socket name
+	PE_SECURE_BADNAME,
+	
+	// MM-2014-02-12: [[ SecureSocket ]]	
+	// {PE-0541} secure: expected 'verification'
+	PE_SECURE_BADMESSAGE,
 };
 
 extern const char *MCparsingerrors;

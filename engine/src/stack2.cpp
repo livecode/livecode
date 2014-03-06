@@ -2658,26 +2658,6 @@ MCRectangle MCStack::constrainstackrect(const MCRectangle &p_rect)
 	return MCRectangleMake(p_rect.x, p_rect.y, t_width, t_height);
 }
 
-// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within screen bounds
-// IM-2014-02-13: [[ StackScale ]] Update to work with MCGRectangles
-MCGRectangle MCStack::view_constrainrecttoscreen(const MCGRectangle &p_rect)
-{
-	if (!getflag(F_RESIZABLE))
-		return p_rect;
-	
-	MCGFloat t_width, t_height;
-	const MCDisplay *t_display;
-	t_display = MCscreen->getnearestdisplay(MCGRectangleGetIntegerInterior(p_rect));
-	
-	MCRectangle t_screenrect;
-	t_screenrect = MCscreen->fullscreenrect(t_display);
-	
-	t_width = MCMin(p_rect.size.width, (MCGFloat)t_screenrect.width);
-	t_height = MCMin(p_rect.size.height, (MCGFloat)t_screenrect.height);
-	
-	return MCGRectangleMake(p_rect.origin.x, p_rect.origin.y, t_width, t_height);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPoint MCStack::windowtostackloc(const MCPoint &p_windowloc) const

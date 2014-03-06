@@ -1341,15 +1341,15 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &p_rect, MCGFloat p_scale_factor, uint4 p_window, const char *p_display_name)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &p_rect, uint4 p_window, const char *p_display_name, MCPoint *p_size)
 {
 	MCImageBitmap *t_bitmap;
 	if (p_window == 0 && (p_rect . width == 0 || p_rect . height == 0))
-		MCPlatformScreenSnapshotOfUserArea(t_bitmap);
+		MCPlatformScreenSnapshotOfUserArea(p_size, t_bitmap);
 	else if (p_window != 0)
-		MCPlatformScreenSnapshotOfWindow(p_window, t_bitmap);
+		MCPlatformScreenSnapshotOfWindow(p_window, p_size, t_bitmap);
 	else
-		MCPlatformScreenSnapshot(p_rect, t_bitmap);
+		MCPlatformScreenSnapshot(p_rect, p_size, t_bitmap);
 	return t_bitmap;
 }
 

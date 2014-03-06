@@ -434,13 +434,14 @@ void MCScreenDC::setbeep(uint4 property, int4 beep)
 struct MCScreenDCDoSnapshotEnv
 {
 	MCRectangle r;
-	MCGFloat scale_factor;
+	MCPoint size;
 	uint4 window;
 	const char *displayname;
 	MCImageBitmap *result;
 };
 
 // MW-2012-08-06: [[ Fibers ]] Main fiber callback for system calls.
+// MW-2014-02-20: [[ Bug 11811 ]] Updated to scale snapshot to requested size.
 static void MCScreenDCDoSnapshot(void *p_env)
 {
 	MCScreenDCDoSnapshotEnv *env;
@@ -467,8 +468,8 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	r = MCU_clip_rect(env -> r, t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
 	
 	uint32_t t_bitmap_width, t_bitmap_height;
-	t_bitmap_width = ceil(r . width * env -> scale_factor);
-	t_bitmap_height = ceil(r . height * env -> scale_factor);
+	t_bitmap_width = env -> size . x;
+	t_bitmap_height = env -> size . y;
 	
 	if (r.width != 0 && r.height != 0)
 	{
@@ -500,7 +501,7 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextScaleCTM(t_img_context, 1.0, -1.0);
 			CGContextTranslateCTM(t_img_context, 0, -(CGFloat)t_bitmap_height);
 			
-			CGContextScaleCTM(t_img_context, env -> scale_factor, env -> scale_factor);
+			CGContextScaleCTM(t_img_context, (MCGFloat)t_bitmap_width / r . width , (MCGFloat)t_bitmap_width / r . height);
 			
 			CGContextTranslateCTM(t_img_context, -(CGFloat)r.x, -(CGFloat)r.y);
 			
@@ -538,9 +539,9 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextTranslateCTM(t_img_context, -t_offset . width, -t_offset . height);
 			
             // MM-2013-01-10: [[ Bug 11653 ]] As above, our rects are also in device pixels, so use the device scale when working out x and y of bounds.
-            float t_scale;
-            t_scale = MCIPhoneGetDeviceScale();
-			CGContextScaleCTM(t_img_context, t_scale, t_scale);
+            //float t_scale;
+            //t_scale = MCIPhoneGetDeviceScale();
+			//CGContextScaleCTM(t_img_context, t_scale, t_scale);
 			
 #ifndef USE_UNDOCUMENTED_METHODS
 			NSArray *t_windows;
@@ -612,13 +613,15 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	env -> result = t_bitmap;
 }
 
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, const char *displayname)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size)
 {
 	MCScreenDCDoSnapshotEnv env;
 	env . r = r;
 	env . window = window;
 	env . displayname = displayname;
-	env . scale_factor = p_scale_factor;
+    
+    // MW-2014-02-20: [[ Bug 11811 ]] Pass through the specified size, or the size of the rect.
+	env . size = size != nil ? *size : MCPointMake(r . width, r . height);
 
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	/* REMOTE */ MCFiberCall(s_main_fiber, MCScreenDCDoSnapshot, &env);
@@ -756,15 +759,28 @@ void MCScreenDC::do_fit_window(bool p_immediate_resize, bool p_post_message)
 	MCRectangle t_view_bounds;
 	t_view_bounds = MCDeviceRectFromLogicalCGRect(MCIPhoneGetViewBounds());
 	
-	m_window_left = t_view_bounds . x;
-	m_window_top = t_view_bounds . y;
+	// IM-2014-03-03: [[ Bug 11836 ]] Store window topleft in logical coords
+	MCPoint t_topleft;
+	t_topleft = MCPointMake(t_view_bounds.x, t_view_bounds.y);
+
+	t_topleft = screentologicalpoint(t_topleft);
+
+	m_window_left = t_topleft . x;
+	m_window_top = t_topleft . y;
 	
 	if (p_post_message)
 	{
 		if (p_immediate_resize)
+		{
+			// IM-2014-01-30: [[ HiDPI ]] Ensure stack backing scale is set
+			((MCStack *)m_current_window) -> view_setbackingscale(MCResGetPixelScale());
 			((MCStack *)m_current_window) -> view_configure(true);
+		}
 		else
-			MCEventQueuePostWindowReshape((MCStack *)m_current_window);
+		{
+			// IM-2014-02-14: [[ HiDPI ]] Post backing scale changes with window reshape message
+			MCEventQueuePostWindowReshape((MCStack *)m_current_window, MCResGetPixelScale());
+		}
 	}
 }
 

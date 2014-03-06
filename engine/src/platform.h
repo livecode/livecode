@@ -507,9 +507,9 @@ void MCPlatformGetScreenPixelScale(uindex_t index, float& r_scale);
 void MCPlatformGetScreenViewport(uindex_t index, MCRectangle& r_viewport);
 void MCPlatformGetScreenWorkarea(uindex_t index, MCRectangle& r_workarea);
 
-void MCPlatformScreenSnapshotOfUserArea(MCImageBitmap*& r_bitmap);
-void MCPlatformScreenSnapshotOfWindow(uint32_t window_id, MCImageBitmap*& r_bitmap);
-void MCPlatformScreenSnapshot(MCRectangle area, MCImageBitmap*& r_bitmap);
+void MCPlatformScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitmap);
+void MCPlatformScreenSnapshotOfWindow(uint32_t window_id, MCPoint *p_size, MCImageBitmap*& r_bitmap);
+void MCPlatformScreenSnapshot(MCRectangle area, MCPoint *p_size, MCImageBitmap*& r_bitmap);
 
 ////////////////////////////////////////////////////////////////////////////////
 

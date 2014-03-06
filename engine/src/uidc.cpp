@@ -674,8 +674,8 @@ Window MCUIDC::getroot()
 	return (Window)1;
 }
 
-MCImageBitmap *MCUIDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window,
-                           const char *displayname)
+MCImageBitmap *MCUIDC::snapshot(MCRectangle &r, uint4 window,
+                           const char *displayname, MCPoint *size)
 {
 	return NULL;
 }
@@ -1391,7 +1391,7 @@ void MCUIDC::dropper(Window w, int2 mx, int2 my, MCColor *cptr)
 		}
 	}
 	
-	MCImageBitmap *image = snapshot(t_rect, 1.0, 0, nil);
+	MCImageBitmap *image = snapshot(t_rect, 0, nil, nil);
 
 	// If fetching the mouse pixel fails, then just return black.
 	if (image == NULL)
