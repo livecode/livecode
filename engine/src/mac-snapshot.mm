@@ -32,8 +32,6 @@ extern bool MCOSXCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern MCRectangle MCU_make_rect(int2 x, int2 y, uint2 w, uint2 h);
-
 static CGPoint s_snapshot_start_point, s_snapshot_end_point;
 static bool s_snapshot_done = false;
 
@@ -87,7 +85,7 @@ static MCRectangle mcrect_from_points(CGPoint x, CGPoint y)
 	r = MCMax(x . x, y . x);
 	t = MCMin(x . y, y . y);
 	b = MCMax(x . y, y . y);
-	return MCU_make_rect(l, t, r - l, b - t);
+	return MCRectangleMake(l, t, r - l, b - t);
 }
 
 static Rect rect_from_points(CGPoint x, CGPoint y)
