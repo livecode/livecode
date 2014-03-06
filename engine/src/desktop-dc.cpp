@@ -758,7 +758,6 @@ Boolean MCScreenDC::istripleclick()
 
 Boolean MCScreenDC::getmouse(uint2 button, Boolean& r_abort)
 {
-	// COCOA-TODO: See what the impact of no delay is...
 	r_abort = False;
 	return MCPlatformGetMouseButtonState(button);
 }

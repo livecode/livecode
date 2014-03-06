@@ -180,6 +180,9 @@ static bool s_lock_responder_change = false;
 {
 	// COCOA-TODO: This only gives a final notification - perhaps use RunLoop
 	//   observer to monitor what's going on and check for updates.
+	// UPDATE: RunLoop observer does not work - seems the window server only
+	//   updates the loc of the window (from the app point of view) when *it*
+	//   decides too. Hmph.
 	m_window -> ProcessDidMove();
 }
 
