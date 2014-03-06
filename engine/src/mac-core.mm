@@ -425,9 +425,6 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 
 	if (t_event != nil)
 	{
-		[s_last_mouse_event release];
-		s_last_mouse_event = nil;
-		
 		if ([t_event type] == NSApplicationDefined)
 		{
 			if ([t_event subtype] == kMCMacPlatformMouseSyncEvent)
@@ -440,7 +437,15 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 			[NSApp sendEvent: t_event];
 		}
 		else
+		{
+			if ([t_event type] == NSLeftMouseUp)
+			{
+				[s_last_mouse_event release];
+				s_last_mouse_event = nil;
+			}
+			
 			[NSApp sendEvent: t_event];
+		}
 	}
 	
 	[t_pool release];
