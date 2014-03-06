@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class CWebBrowserBase
 {
 public:
-	virtual ~CWebBrowserBase(void) = 0;
+	virtual ~CWebBrowserBase(void) {};
 
 	virtual void SetVisible(bool p_visible) = 0;
 	virtual void SetBrowser(const char *p_type) = 0;
@@ -79,9 +79,17 @@ public:
 	virtual void Redraw(void) = 0;
 	virtual void MakeTextBigger(void) = 0;
 	virtual void MakeTextSmaller(void) = 0;
+
+	// IM-2014-03-06: [[ revBrowserCEF ]] Make LiveCode handler available to JavaScript
+	virtual void AddJavaScriptHandler(const char *p_handler) = 0;
+	// IM-2014-03-06: [[ revBrowserCEF ]] Unregister LiveCode handler from JavaScript
+	virtual void RemoveJavaScriptHandler(const char *p_handler) = 0;
 };
 
 CWebBrowserBase *InstantiateBrowser(int p_window_id);
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Send the handler message with the given args
+void CB_Custom(int p_instance_id, const char *p_message, char **p_args, uint32_t p_arg_count, bool *r_cancel);
 
 void CB_ElementEnter(int p_instance_id, const char *p_element);
 void CB_ElementLeave(int p_instance_id, const char *p_element);
