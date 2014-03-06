@@ -2671,6 +2671,26 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+        case kMCPropertyTypeMixedOptionalUInt8:
+        case kMCPropertyTypeOptionalUInt8:
+        {
+            uinteger_t t_value;
+            uinteger_t *t_value_ptr;
+            if (p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
+                t_value_ptr = nil;
+            else
+            {
+                t_value_ptr = &t_value;
+                MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeUInt, &t_value);
+                if (t_value < 0 || t_value > 255)
+                    ctxt . LegacyThrow(EE_PROPERTY_NAN);
+            }
+            
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, uinteger_t*))prop -> setter)(ctxt, mark, t_value_ptr);
+        }
+            break;
+            
         case kMCPropertyTypeMixedOptionalInt16:
         case kMCPropertyTypeOptionalInt16:
         {
