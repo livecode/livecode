@@ -1381,6 +1381,8 @@ void MCVariableArray::split_as_set(const MCString& s, char e)
 //   to ensure other properties don't set them differently.
 static struct { Properties prop; const char *tag; } s_preprocess_props[] =
 {
+    // MERG-2014-03-06: [[ RevisedPropsProp ]] Ensure showController of players is set before rectangle
+    { P_SHOW_CONTROLLER, "showController" },
     // MERG-2013-08-30: [[ RevisedPropsProp ]] Ensure lockLocation of groups is set before rectangle
     { P_LOCK_LOCATION, "lockLocation" },
     { P_LOCK_LOCATION, "lockLoc" },
