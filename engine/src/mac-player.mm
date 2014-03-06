@@ -53,7 +53,7 @@ public:
 	virtual void GetProperty(MCPlatformPlayerProperty property, MCPlatformPropertyType type, void *value) = 0;
 	
 	virtual void CountTracks(uindex_t& r_count) = 0;
-	virtual void FindTrackWithId(uint32_t id, uindex_t& r_index) = 0;
+	virtual bool FindTrackWithId(uint32_t id, uindex_t& r_index) = 0;
 	virtual void SetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value) = 0;
 	virtual void GetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value) = 0;
 
@@ -89,7 +89,7 @@ public:
 	virtual void GetProperty(MCPlatformPlayerProperty property, MCPlatformPropertyType type, void *value);
 	
 	virtual void CountTracks(uindex_t& r_count);
-	virtual void FindTrackWithId(uint32_t id, uindex_t& r_index);
+	virtual bool FindTrackWithId(uint32_t id, uindex_t& r_index);
 	virtual void SetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
 	virtual void GetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value);
 	
@@ -573,6 +573,42 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 	}
 }
 
+static Boolean IsQTVRMovie(Movie theMovie)
+{
+	Boolean IsQTVR = False;
+	OSType evaltype,targettype =  kQTVRUnknownType;
+	UserData myUserData;
+	if (theMovie == NULL)
+		return False;
+	myUserData = GetMovieUserData(theMovie);
+	if (myUserData != NULL)
+	{
+		GetUserDataItem(myUserData, &targettype, sizeof(targettype),
+		                kUserDataMovieControllerType, 0);
+		evaltype = EndianU32_BtoN(targettype);
+		if (evaltype == kQTVRQTVRType || evaltype == kQTVROldPanoType
+			|| evaltype == kQTVROldObjectType)
+			IsQTVR = true;
+	}
+	return(IsQTVR);
+}
+
+static Boolean QTMovieHasType(Movie tmovie, OSType movtype)
+{
+	switch (movtype)
+	{
+		case VisualMediaCharacteristic:
+		case AudioMediaCharacteristic:
+			return (GetMovieIndTrackType(tmovie, 1, movtype,
+										 movieTrackCharacteristic) != NULL);
+		case kQTVRQTVRType:
+			return IsQTVRMovie(tmovie);
+		default:
+			return (GetMovieIndTrackType(tmovie, 1, movtype,
+										 movieTrackMediaType) != NULL);
+	}
+}
+
 void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformPropertyType p_type, void *r_value)
 {
 	switch(p_property)
@@ -594,7 +630,24 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			*(bool *)r_value = m_visible;
 			break;
 		case kMCPlatformPlayerPropertyMediaTypes:
-			break;
+		{
+			MCPlatformPlayerMediaTypes t_types;
+			t_types = 0;
+			if (QTMovieHasType([m_movie quickTimeMovie], VisualMediaCharacteristic))
+				t_types |= kMCPlatformPlayerMediaTypeVideo;
+			if (QTMovieHasType([m_movie quickTimeMovie], AudioMediaCharacteristic))
+				t_types |= kMCPlatformPlayerMediaTypeAudio;
+			if (QTMovieHasType([m_movie quickTimeMovie], TextMediaType))
+				t_types |= kMCPlatformPlayerMediaTypeText;
+			if (QTMovieHasType([m_movie quickTimeMovie], kQTVRQTVRType))
+				t_types |= kMCPlatformPlayerMediaTypeQTVR;
+			if (QTMovieHasType([m_movie quickTimeMovie], SpriteMediaType))
+				t_types |= kMCPlatformPlayerMediaTypeSprite;
+			if (QTMovieHasType([m_movie quickTimeMovie], FlashMediaType))
+				t_types |= kMCPlatformPlayerMediaTypeFlash;
+			*(MCPlatformPlayerMediaTypes *)r_value = t_types;
+		}
+		break;
 		case kMCPlatformPlayerPropertyDuration:
 			*(uint32_t *)r_value = [m_movie duration] . timeValue;
 			break;
@@ -635,19 +688,72 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 
 void MCQTKitPlayer::CountTracks(uindex_t& r_count)
 {
-	r_count = 0;
+	r_count = GetMovieTrackCount([m_movie quickTimeMovie]);
 }
 
-void MCQTKitPlayer::FindTrackWithId(uint32_t id, uindex_t& r_index)
+bool MCQTKitPlayer::FindTrackWithId(uint32_t p_id, uindex_t& r_index)
 {
+	Movie t_movie;
+	t_movie = [m_movie quickTimeMovie];
+	for(uindex_t i = 1; i <= GetMovieTrackCount(t_movie); i++)
+		if (GetTrackID(GetMovieIndTrack(t_movie, i)) == p_id)
+		{
+			r_index = i - 1;
+			return true;
+		}
+	return false;
 }
 
-void MCQTKitPlayer::SetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value)
+void MCQTKitPlayer::SetTrackProperty(uindex_t p_index, MCPlatformPlayerTrackProperty p_property, MCPlatformPropertyType p_type, void *p_value)
 {
+	if (p_property != kMCPlatformPlayerTrackPropertyEnabled)
+		return;
+	
+	Movie t_movie;
+	t_movie = [m_movie quickTimeMovie];
+	
+	Track t_track;
+	t_track = GetMovieIndTrack(t_movie, p_index + 1);
+	
+	SetTrackEnabled(t_track, *(bool *)p_value);
 }
 
-void MCQTKitPlayer::GetTrackProperty(uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value)
+void MCQTKitPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTrackProperty p_property, MCPlatformPropertyType p_type, void *r_value)
 {
+	Movie t_movie;
+	t_movie = [m_movie quickTimeMovie];
+	
+	Track t_track;
+	t_track = GetMovieIndTrack(t_movie, p_index + 1);
+	
+	switch(p_property)
+	{
+		case kMCPlatformPlayerTrackPropertyId:
+			*(uint32_t *)r_value = GetTrackID(t_track);
+			break;
+		case kMCPlatformPlayerTrackPropertyMediaTypeName:
+		{
+			Media t_media;
+			t_media = GetTrackMedia(t_track);
+			MediaHandler t_handler;
+			t_handler = GetMediaHandler(t_media);
+			
+			unsigned char t_name[256];
+			MediaGetName(t_handler, t_name, 0, nil);
+			p2cstr(t_name);
+			*(char **)r_value = strdup((const char *)t_name);
+		}
+		break;
+		case kMCPlatformPlayerTrackPropertyOffset:
+			*(uint32_t *)r_value = GetTrackOffset(t_track);
+			break;
+		case kMCPlatformPlayerTrackPropertyDuration:
+			*(uint32_t *)r_value = GetTrackDuration(t_track);
+			break;
+		case kMCPlatformPlayerTrackPropertyEnabled:
+			*(bool *)r_value = GetTrackEnabled(t_track);
+			break;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -719,6 +825,7 @@ void MCPlatformGetPlayerProperty(MCPlatformPlayerRef player, MCPlatformPlayerPro
 
 void MCPlatformCountPlayerTracks(MCPlatformPlayerRef player, uindex_t& r_track_count)
 {
+	player -> CountTracks(r_track_count);
 }
 
 void MCPlatformGetPlayerTrackProperty(MCPlatformPlayerRef player, uindex_t index, MCPlatformPlayerTrackProperty property, MCPlatformPropertyType type, void *value)
@@ -731,6 +838,7 @@ void MCPlatformSetPlayerTrackProperty(MCPlatformPlayerRef player, uindex_t index
 
 bool MCPlatformFindPlayerTrackWithId(MCPlatformPlayerRef player, uint32_t id, uindex_t& r_index)
 {
+	return player -> FindTrackWithId(id, r_index);
 }
 
 void MCPlatformCountPlayerNodes(MCPlatformPlayerRef player, uindex_t& r_node_count)
