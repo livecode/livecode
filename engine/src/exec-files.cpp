@@ -999,8 +999,7 @@ void MCFilesExecPerformReadFixedFor(MCExecContext& ctxt, IO_handle p_stream, int
 
 	uint4 size; 
 
-    if (p_encoding != kMCFileEncodingNative
-            || p_encoding != kMCFileEncodingBinary)
+    if (p_encoding != kMCFileEncodingNative && p_encoding != kMCFileEncodingBinary)
     {
         r_stat = IO_ERROR;
         return;
