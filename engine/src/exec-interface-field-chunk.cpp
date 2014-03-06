@@ -1448,6 +1448,9 @@ void MCField::SetStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, 
     state |= CS_NO_FILE; // prevent interactions while downloading images
     MCParagraph *stpgptr = styledtexttoparagraphs(value);
 
+    if (stpgptr == nil)
+        stpgptr = texttoparagraphs(MCnullmcstring, false);
+        
     setparagraphs(stpgptr, p_part_id, p_start, p_finish);
     
     state &= ~CS_NO_FILE;
