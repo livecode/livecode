@@ -465,6 +465,8 @@ bool MCMacPlatformWasMenuSelect(void);
 
 bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, SEL& r_selector);
 
+void MCMacPlatformResetCursor(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NSDragOperation MCMacPlatformMapDragOperationToNSDragOperation(MCPlatformDragOperation);

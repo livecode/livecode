@@ -1165,6 +1165,10 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 		if (t_new_mouse_window != nil)
 			MCPlatformCallbackSendMouseEnter(t_new_mouse_window);
 		
+		// If there is no mouse window, reset the cursor to default.
+		if (t_new_mouse_window == nil)
+			MCMacPlatformResetCursor();
+			
 		if (s_mouse_window != nil)
 			MCPlatformReleaseWindow(s_mouse_window);
 		
@@ -1200,7 +1204,12 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 				MCPlatformCallbackSendMouseDrag(s_mouse_window, s_mouse_drag_button);
 			}
 		}
-	}	
+		
+		// Show the cursor attached to the window.
+		MCPlatformCursorRef t_cursor;
+		MCPlatformGetWindowProperty(t_new_mouse_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
+		MCPlatformShowCursor(t_cursor);
+	}
 }
 
 void MCMacPlatformHandleMouseScroll(CGFloat dx, CGFloat dy)

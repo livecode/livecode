@@ -43,6 +43,7 @@ public:
 };
 
 static MCPlatformCursor *s_hidden_cursor = nil;
+static MCPlatformCursor *s_current_cursor = nil;
 
 // This function expects to be called after a pool has been allocated.
 static NSImage *CreateNSImageFromCGImage(CGImageRef p_image)
@@ -129,7 +130,7 @@ void MCPlatformReleaseCursor(MCPlatformCursorRef p_cursor)
 }
 
 void MCPlatformShowCursor(MCPlatformCursorRef p_cursor)
-{
+{	
 	[NSCursor unhide];
 	if (p_cursor -> is_standard)
 	{
@@ -177,4 +178,10 @@ void MCPlatformHideCursor(void)
 	}
 
 	MCPlatformShowCursor(s_hidden_cursor);
+}
+
+void MCMacPlatformResetCursor(void)
+{
+	[NSCursor unhide];
+	SetThemeCursor(kThemeArrowCursor);
 }

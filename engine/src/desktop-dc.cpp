@@ -371,10 +371,12 @@ void MCScreenDC::setcursor(Window w, MCCursorRef c)
 	if (MCdispatcher -> isdragtarget())
 		return;
 		
-	if (c == nil)
+	/*if (c == nil)
 		MCPlatformHideCursor();
 	else
-		MCPlatformShowCursor(c);
+		MCPlatformShowCursor(c);*/
+	
+	MCPlatformSetWindowProperty(w, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &c);
 }
 
 MCCursorRef MCScreenDC::createcursor(MCImageBitmap *image, int2 xhot, int2 yhot)

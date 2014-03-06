@@ -39,6 +39,7 @@ MCPlatformWindow::MCPlatformWindow(void)
 	m_opacity = 1.0f;
 	m_content = MCRectangleMake(0, 0, 0, 0);
 	m_mask = nil;
+	m_cursor = nil;
 	m_has_title_widget = false;
 	m_has_close_widget = false;
 	m_has_collapse_widget = false;
@@ -334,6 +335,13 @@ void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			m_use_live_resizing = *(bool *)p_value;
 			m_changes . use_live_resizing_changed = true;
 			break;
+		case kMCPlatformWindowPropertyCursor:
+			if (m_cursor != nil)
+				MCPlatformReleaseCursor(m_cursor);
+			m_cursor = *(MCPlatformCursorRef *)p_value;
+			if (m_cursor != nil)
+				MCPlatformRetainCursor(m_cursor);
+			break;
 		default:
 			assert(false);
 			break;
@@ -394,6 +402,9 @@ void MCPlatformWindow::GetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			break;
 		case kMCPlatformWindowPropertyUseLiveResizing:
 			assert(p_type == kMCPlatformPropertyTypeBool);
+			break;
+		case kMCPlatformWindowPropertyCursor:
+			*(MCPlatformCursorRef *)r_value = m_cursor;
 			break;
 		default:
 			assert(false);

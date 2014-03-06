@@ -113,6 +113,8 @@ enum MCPlatformPropertyType
 	
 	kMCPlatformPropertyTypePlayerMediaTypes,
 	kMCPlatformPropertyTypePlayerQTVRConstraints,
+	
+	kMCPlatformPropertyTypeCursorRef,
 };
 
 // The lower 21-bits hold a codepoint, the upper bits hold modifiers. Some
@@ -764,6 +766,8 @@ enum MCPlatformWindowProperty
 	kMCPlatformWindowPropertyUseLiveResizing,
 	
 	kMCPlatformWindowPropertySystemId,
+	
+	kMCPlatformWindowPropertyCursor,
 };
 
 void MCPlatformSetWindowProperty(MCPlatformWindowRef window, MCPlatformWindowProperty property, MCPlatformPropertyType type, const void *value);

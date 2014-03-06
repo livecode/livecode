@@ -203,6 +203,7 @@ protected:
 	MCPlatformWindowMaskRef m_mask;
 	float m_opacity;
 	MCRectangle m_content;
+	MCCursorRef m_cursor;
 	struct
 	{
 		bool m_has_title_widget : 1;
