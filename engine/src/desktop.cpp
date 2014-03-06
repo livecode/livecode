@@ -270,10 +270,11 @@ void MCPlatformHandleMouseMove(MCPlatformWindowRef p_window, MCPoint p_location)
 		MCObject *t_target;
 		t_target = t_menu != nil ? t_menu : MCmousestackptr;
 		
-		// IM-2013-09-30: [[ FullscreenMode ]] Translate mouse location to stack coords		
-		// IM-2013-10-03: [[ FullscreenMode ]] Transform mouseloc based on the mousestack
-		MCPoint t_mouseloc;
-		t_mouseloc = MCmousestackptr->windowtostackloc(p_location);
+		// IM-2014-02-12: [[ StackScale ]] mfocus will translate target stack to menu stack coords
+		//   so in both cases we pass target stack coords.
+		// IM-2014-02-14: [[ StackScale ]] Don't try to convert if target is null
+		if (t_stack != nil)
+			t_stackloc = t_stack->windowtostackloc(t_stackloc);
 		
 		MCmousex = t_mouseloc.x;
 		MCmousey = t_mouseloc.y;
