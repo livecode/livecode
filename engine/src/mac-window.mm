@@ -1000,15 +1000,27 @@ static bool s_lock_responder_change = false;
 	MCPlatformPasteboardRef t_pasteboard;
 	MCMacPlatformPasteboardCreate([sender draggingPasteboard], t_pasteboard);
 	
+	NSDragOperation t_ns_operation;
+	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
-	if (t_window == nil)
-		return NSDragOperationNone;
+	if (t_window != nil)
+	{
+		MCPlatformDragOperation t_operation;
+		t_window -> HandleDragEnter(t_pasteboard, t_operation);
+		t_ns_operation = MCMacPlatformMapDragOperationToNSDragOperation(t_operation);
+	}
+	else
+		t_ns_operation = NSDragOperationNone;
 	
-	MCPlatformDragOperation t_operation;
-	t_window -> HandleDragEnter(t_pasteboard, t_operation);
+	bool t_is_not_allowed_cursor;
+	t_is_not_allowed_cursor = ([NSCursor currentCursor] == [NSCursor operationNotAllowedCursor]);
+	if (t_ns_operation == NSDragOperationNone && !t_is_not_allowed_cursor)
+		[[NSCursor operationNotAllowedCursor] push];
+	else if (t_ns_operation != NSDragOperationNone && t_is_not_allowed_cursor)
+		[[NSCursor operationNotAllowedCursor] pop];
 	
-	return MCMacPlatformMapDragOperationToNSDragOperation(t_operation);
+	return t_ns_operation;
 }
 
 - (void)draggingExited: (id<NSDraggingInfo>)sender
