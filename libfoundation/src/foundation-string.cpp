@@ -299,6 +299,10 @@ bool MCStringCreateWithNativeChars(const char_t *p_chars, uindex_t p_char_count,
 		self -> char_count = p_char_count;
 
 		r_string = self;
+        
+        // Also take a copy of the native chars to avoid doing so again later
+        MCMemoryAllocate(p_char_count, self -> native_chars);
+        MCMemoryCopy(self -> native_chars, p_chars, p_char_count);
 	}
 	else
 	{
