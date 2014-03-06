@@ -415,7 +415,8 @@ Exec_errors MCAnswer::exec_printer(MCExecPoint& ep, const char *p_title)
 Exec_errors MCAnswer::exec_effect(MCExecPoint& ep, const char *p_title)
 {
 	MCresult -> clear(False);
-	MCtemplateplayer -> stdeffectdlg(ep, p_title, sheet);
+	extern Boolean MCQTEffectsDialog(MCExecPoint &ep, const char *p_title, Boolean sheet);
+	MCQTEffectsDialog(ep, p_title, sheet);
 	return EE_UNDEFINED;
 }
 #endif /* MCAnswer::exec_effect */

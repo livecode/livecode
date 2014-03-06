@@ -164,7 +164,7 @@ bool MCStackRenderEffect(MCStackSurface *p_target, MCRegionRef p_region, void *p
 			break;
 #endif
 			
-#ifdef FEATURE_QUICKTIME
+#ifdef FEATURE_QUICKTIME_EFFECTS
 		case VE_QTEFFECT:
 			t_drawn = MCQTEffectStep(context->effect_area, p_target, context->delta, context->duration);
 			break;
@@ -399,7 +399,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				t_effects -> type = VE_CIEFFECT;
 			else
 #endif
-#ifdef FEATURE_QUICKTIME
+#ifdef FEATURE_QUICKTIME_EFFECTS
 				// IM-2013-08-29: [[ ResIndependence ]] use scaled effect rect for QT effects
 				if (t_effects -> type == VE_UNDEFINED && MCQTEffectBegin(t_effects -> type, t_effects -> name, t_effects -> direction, t_initial_image, t_final_image, t_device_rect))
 					t_effects -> type = VE_QTEFFECT;
@@ -483,7 +483,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 			MCCoreImageEffectEnd();
 		else
 #endif
-#ifdef FEATURE_QUICKTIME
+#ifdef FEATURE_QUICKTIME_EFFECTS
 			if (t_effects -> type == VE_QTEFFECT)
 				MCQTEffectEnd();
 #endif

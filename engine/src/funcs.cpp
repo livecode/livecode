@@ -1900,7 +1900,8 @@ Exec_stat MCDropChunk::eval(MCExecPoint &ep)
 Exec_stat MCQTEffects::eval(MCExecPoint &ep)
 {
 #ifdef /* MCQTEffects */ LEGACY_EXEC
-	MCtemplateplayer->geteffectlist(ep);
+	extern void MCQTEffectsList(MCExecPoint& ep);
+	MCQTEffectsList(ep);
 	return ES_NORMAL;
 #endif /* MCQTEffects */
 }

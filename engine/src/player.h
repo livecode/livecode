@@ -34,13 +34,6 @@ enum QTVRstate {
     QTVR_INITTED,
     QTVR_FAILED
 };
-
-typedef struct
-{
-	char *token;
-	long type;
-}
-QTEffect;
 #endif
 
 struct MCPlayerOffscreenBuffer;
@@ -76,8 +69,6 @@ class MCPlayer : public MCControl
 #ifdef FEATURE_QUICKTIME
 	static QTstate qtstate;
 	static long qtversion;
-	static QTEffect *qteffects;
-	static uint2 neffects;
 	static void *sgSoundComp;
 	static const char  *recordtempfile;
 	static char  *recordexportfile;
@@ -188,7 +179,6 @@ public:
 	Boolean setenabledtracks(const MCString &s);
 	void getnodes(MCExecPoint &ep);
 	void gethotspots(MCExecPoint &ep);
-	void geteffectlist(MCExecPoint &ep);
 	void recordsound(char *fname);
 	void getrecordloudness(MCExecPoint &ep);
 	void getrecordcompressionlist(MCExecPoint &ep);
@@ -200,8 +190,6 @@ public:
 	// MW-2011-09-23: Ensures the buffering state is consistent with current flags
 	//   and such.
 	void syncbuffering(MCContext *dc);
-
-	Boolean stdeffectdlg(MCExecPoint &ep, const char *p_title, Boolean sheet);
 
 #ifdef FEATURE_PLATFORM_PLAYER
 	MCRectangle resize(MCRectangle rect);
@@ -231,7 +219,6 @@ public:
 	void checktimes();
 
 	// MW-2005-05-15: Augment call with extra title field for consistency
-	void queryeffects(void **effectatomptr);
 	void handlerecord();
 	void reloadcallbacks(Boolean reloadstopmovie, long p_from_time);
 
@@ -254,15 +241,6 @@ public:
 	Boolean isInteractive()
 	{
 		return isinteractive;
-	}
-	QTEffect *geteffects()
-	{
-		queryeffects(NULL);
-		return qteffects;
-	}
-	uint2 getneffects()
-	{
-		return neffects;
 	}
 	void deleteUserCallbacks();
 	Boolean installUserCallbacks();
