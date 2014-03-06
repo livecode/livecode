@@ -827,10 +827,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
 
             if (t_error)
             {
-                if (*t_value != nil)
-                    ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP, *t_value);
-                else
-                    ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
+                ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP, *t_value);
                 return;
             }
         }

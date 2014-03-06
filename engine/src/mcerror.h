@@ -24,8 +24,7 @@ class MCScriptPoint;
 
 class MCError
 {
-	MCString svalue;
-	char *buffer;
+	MCStringRef buffer;
 	uint2 errorline;
 	uint2 errorpos;
 	uint2 depth;
@@ -33,19 +32,19 @@ class MCError
 public:
 	MCError()
 	{
-		buffer = MCU_empty();
+		MCStringCreateMutable(0, buffer);
 		errorline = errorpos = 0;
 		depth = 0;
 		thrown = False;
 	}
 	~MCError()
 	{
-		delete buffer;
+		MCValueRelease(buffer);
 	}
 	void add(uint2 id, MCScriptPoint &);
 	void add(uint2 id, uint2 line, uint2 pos);
 	void add(uint2 id, uint2 line, uint2 pos, uint32_t);
-	void add(uint2 id, uint2 line, uint2 pos, const MCString &);
+	// void add(uint2 id, uint2 line, uint2 pos, const MCString &);
 	void add(uint2 id, uint2 line, uint2 pos, const char *);
 	void add(uint2 id, uint2 line, uint2 pos, MCValueRef);
 	void append(MCError& string);
@@ -57,12 +56,12 @@ public:
 	void clear();
 	Boolean isempty()
 	{
-		return strlen(buffer) == 0;
+		return MCStringIsEmpty(buffer);
 	}
 	void geterrorloc(uint2 &line, uint2 &pos);
 
 private:
-	void doadd(uint2 id, uint2 line, uint2 pos, const MCString& token);
+	void doadd(uint2 id, uint2 line, uint2 pos, MCStringRef token);
 };
 #endif
 
