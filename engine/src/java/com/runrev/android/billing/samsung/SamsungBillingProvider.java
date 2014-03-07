@@ -83,8 +83,8 @@ public class SamsungBillingProvider implements BillingProvider
                 if(!inboxItem.getType().equals("00"))
                 {
                     Log.d(TAG, "Item restored :" + tItemId);
-
-                    mPurchaseObserver.onPurchaseStateChanged(tItemId, 0);
+                    // onPurchaseStateChanged to be called with state = 5 (restored)
+                    mPurchaseObserver.onPurchaseStateChanged(tItemId, 5);
 
                 }
 
@@ -478,6 +478,8 @@ public class SamsungBillingProvider implements BillingProvider
 
     public boolean consumePurchase(String productID)
     {
+        if (ownedItems.contains(productID))
+            ownedItems.remove(productID);
         return true;
     }
 

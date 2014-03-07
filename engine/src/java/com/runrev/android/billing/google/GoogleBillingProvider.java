@@ -450,7 +450,6 @@ public class GoogleBillingProvider implements BillingProvider
                 complain("Error purchasing: " + result);
                 setWaitScreen(false);
                 mPurchaseObserver.onPurchaseStateChanged(pendingPurchaseSku, mapResponseCode(result.getResponse()));
-                // TODO : Call void onPurchaseRequestError(String errorMessage) with input result.getMessage()
                 pendingPurchaseSku = "";
                 return;
             }
@@ -527,7 +526,8 @@ public class GoogleBillingProvider implements BillingProvider
             {
                 addPurchaseToLocalInventory(p);
 				ownedItems.add(p.getSku());
-                offerPurchasedItems(p);
+				// onPurchaseStateChanged to be called with state = 5 (restored)
+				mPurchaseObserver.onPurchaseStateChanged(p.getSku(), 5);
             }
         }
     };

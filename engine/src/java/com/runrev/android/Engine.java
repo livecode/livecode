@@ -2007,8 +2007,6 @@ public class Engine extends View implements EngineApi
 		}
 
         // Sent to the observer to indicate a change in the purchase state
-        // void onPurchaseStateChanged(int purchaseId, PurchaseState state);
-        //public void onPurchaseStateChanged(int purchaseId, int state)
         public void onPurchaseStateChanged(String productId, int state)
         {
             final boolean tVerified = true;

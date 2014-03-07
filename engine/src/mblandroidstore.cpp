@@ -53,6 +53,7 @@ typedef enum
     INVALID_SKU,
     ALREADY_ENTITLED,
     REFUNDED,
+    RESTORED,
 } MCAndroidPurchaseState;
 
 typedef struct
@@ -462,6 +463,10 @@ void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified)
                     p_purchase->state = kMCPurchaseStateRefunded;
                     break;
                     
+                case RESTORED:
+                    p_purchase->state = kMCPurchaseStateRestored;
+                    break;
+                    
                 default:
                     break;
             }
@@ -492,6 +497,8 @@ void update_purchase_state(MCPurchase *p_purchase, int32_t p_state, bool p_verif
         p_purchase->state = kMCPurchaseStateInvalidSKU;
     else if (p_state == REFUNDED)
         p_purchase->state = kMCPurchaseStateRefunded;
+    else if (p_state == RESTORED)
+        p_purchase->state = kMCPurchaseStateRestored;
     else
         p_purchase->state = kMCPurchaseStateCancelled;
 }

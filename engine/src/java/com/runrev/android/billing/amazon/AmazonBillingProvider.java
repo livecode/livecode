@@ -113,14 +113,6 @@ public class AmazonBillingProvider implements BillingProvider
             itemProps.put(productId, new HashMap<String,String>());
         (itemProps.get(productId)).put(propertyName, propertyValue);
         
-        // testing
-        /*
-         Log.d(TAG, "Stored properties for productId :" + productId);
-         Map<String,String> map = itemProps.get(productId);
-         for (String key : map.keySet())
-         Log.d(TAG, "For property : " + key + "  the value is : " + map.get(key));
-         */
-        
         return true;
     }
     
@@ -141,6 +133,8 @@ public class AmazonBillingProvider implements BillingProvider
     
     public boolean consumePurchase(String productID)
     {
+        if (ownedItems.contains(productID))
+            ownedItems.remove(productID);
         return true;
     }
     
@@ -380,7 +374,8 @@ public class AmazonBillingProvider implements BillingProvider
                                 Log.v(TAG, "Time to add receipt to local inventory...");
                                 addPurchaseReceiptToLocalInventory(receipt);
                                 ownedItems.add(receipt.getSku());
-                                mPurchaseObserver.onPurchaseStateChanged(receipt.getSku(),0);
+                                // onPurchaseStateChanged to be called with state = 5 (restored)
+                                mPurchaseObserver.onPurchaseStateChanged(receipt.getSku(),5);
                                 break;
                             }
                             case SUBSCRIPTION:
@@ -390,7 +385,8 @@ public class AmazonBillingProvider implements BillingProvider
                                 
                                 addPurchaseReceiptToLocalInventory(receipt);
                                 ownedItems.add(receipt.getSku());
-                                mPurchaseObserver.onPurchaseStateChanged(receipt.getSku(),0);
+                                // onPurchaseStateChanged to be called with state = 5 (restored)
+                                mPurchaseObserver.onPurchaseStateChanged(receipt.getSku(),5);
                                 break;
                         }
                     }
