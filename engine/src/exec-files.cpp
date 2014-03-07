@@ -868,7 +868,7 @@ void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, i
 	IO_handle ostream = NULL;
 
 	// Attempt to open the file to find out its current encoding
-	Encoding_type t_encoding;
+	Encoding_type t_encoding = (Encoding_type)p_encoding;
     if (p_encoding == kMCFileEncodingText)
     {
         IO_handle t_BOM_stream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeRead, True, p_is_driver, 0);
