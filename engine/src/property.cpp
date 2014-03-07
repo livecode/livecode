@@ -365,6 +365,9 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
     // IM-2013-12-04: [[ PixelScale ]] Add support for global pixelScale and systemPixelScale properties
     DEFINE_RW_PROPERTY(P_PIXEL_SCALE, Double, Interface, PixelScale)
     DEFINE_RO_PROPERTY(P_SYSTEM_PIXEL_SCALE, Double, Interface, SystemPixelScale)
+    
+    DEFINE_RW_PROPERTY(P_MOVE_SPEED, UInt16, Interface, MoveSpeed)
+    DEFINE_RW_PROPERTY(P_DRAG_SPEED, UInt16, Interface, DragSpeed)
 };
 
 static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info, bool p_is_array_prop)
