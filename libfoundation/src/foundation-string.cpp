@@ -301,8 +301,9 @@ bool MCStringCreateWithNativeChars(const char_t *p_chars, uindex_t p_char_count,
 		r_string = self;
         
         // Also take a copy of the native chars to avoid doing so again later
-        MCMemoryAllocate(p_char_count, self -> native_chars);
+        MCMemoryAllocate(p_char_count + 1, self -> native_chars);
         MCMemoryCopy(self -> native_chars, p_chars, p_char_count);
+        self -> native_chars[p_char_count] = '\0';
 	}
 	else
 	{
@@ -2758,7 +2759,7 @@ static void __MCStringNativize(MCStringRef self)
                 && (*t_norm) -> chars[t_current + 1] == '\n')
             {
                 // Need to resize the output array :-(
-                /* UNCHECKED */ MCMemoryReallocate(self -> native_chars, ++t_char_range . length, self -> native_chars);
+                /* UNCHECKED */ MCMemoryReallocate(self -> native_chars, ++t_char_range . length + 1, self -> native_chars);
                 self -> native_chars[i] = '\r';
                 self -> native_chars[++i] = '\n';
             }
@@ -2774,6 +2775,7 @@ static void __MCStringNativize(MCStringRef self)
     }
 
     MCLocaleBreakIteratorRelease(t_breaker);
+	self -> native_chars[t_char_range.length] = '\0';
     
 	if (t_is_native)
 		self -> flags |= kMCStringFlagIsNative;
