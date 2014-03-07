@@ -123,16 +123,13 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 	MCValueAssign(auxillary_stackfiles, t_temp_array);
 	MCValueRelease(t_temp_array);
 	
+    // The externals listed by the IDE are LF separated
 	if (!ctxt.CopyOptElementAsString(p_array, MCNAME("externals"), false, t_temp_string))
-		return false;    
-    if (!MCStringIsEmpty(t_temp_string))
-    {
-        MCStringSplit(t_temp_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, t_temp_array);
-        MCValueAssign(externals, t_temp_array);
-        MCValueRelease(t_temp_array);
-    }
-    else
-        MCValueAssign(externals, kMCEmptyArray);
+		return false;
+    MCStringSplit(t_temp_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, t_temp_array);
+    MCValueAssign(externals, t_temp_array);
+    MCValueRelease(t_temp_string);
+    MCValueRelease(t_temp_array);
 	
 	if (!ctxt.CopyOptElementAsString(p_array, MCNAME("startup_script"), false, t_temp_string))
 		return false;
