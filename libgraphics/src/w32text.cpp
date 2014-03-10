@@ -359,7 +359,7 @@ static bool w32_draw_text_to_context_at_device_location(MCGContextRef p_context,
 		SetTextColor(p_gdicontext, 0x00000000);
 		SetBkColor(p_gdicontext, 0x00FFFFFF);
 		SetBkMode(p_gdicontext, OPAQUE);		
-		t_success = TextOutW(p_gdicontext, 0, 0, (LPCWSTR)p_text, p_length >> 1);
+		t_success = ExtTextOutW(p_gdicontext, 0, 0, false ? ETO_RTLREADING : 0, NULL, (LPCWSTR)p_text, p_length >> 1, NULL);
 	}
 	
 	if (t_success)
@@ -459,7 +459,7 @@ static bool w32_draw_opaque_text_to_context_at_device_location(MCGContextRef p_c
 
 		SetBkMode(p_gdicontext, TRANSPARENT);
 		SetTextColor(p_gdicontext, RGB((p_context -> state -> fill_color >> 16) & 0xFF, (p_context -> state -> fill_color >> 8) & 0xFF, (p_context -> state -> fill_color >> 0) & 0xFF));
-		t_success = TextOutW(p_gdicontext, 0, 0, (LPCWSTR)p_text, p_length >> 1);
+		t_success = ExtTextOutW(p_gdicontext, 0, 0, false ? ETO_RTLREADING : 0, NULL, (LPCWSTR)p_text, p_length >> 1, NULL);
 	}	
 
 	if (t_success)

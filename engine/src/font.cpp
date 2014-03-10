@@ -326,7 +326,8 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
             t_range = MCRangeMake(t_end - t_offset - t_break_point, t_break_point);
         else
             t_range = MCRangeMake(t_offset, t_break_point);
-        
+
+#if !defined(_WIN32)
         // This is a really ugly hack to get LTR/RTL overrides working correctly -
         // ATSUI and Pango think they know better than us and won't let us suppress
         // the BiDi algorithm they uses for text layout. So instead, we need to add
@@ -343,6 +344,9 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
         /* UNCHECKED */ MCStringAppendChar(*t_temp, 0x202C);
         
         p_callback(p_font, *t_temp, MCRangeMake(0, MCStringGetLength(*t_temp)), p_callback_data);
+#else
+        p_callback(p_font, p_text, t_range, p_callback_data);
+#endif
         
         // Explicitly show breaking points
         //p_callback(p_font, MCSTR("|"), MCRangeMake(0, 1), p_callback_data);
