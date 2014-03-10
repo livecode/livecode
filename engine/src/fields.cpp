@@ -454,8 +454,8 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start
         }
 
         // delete the text to be replaced
-        deletetext(p_start, p_end);
-
+        settextindex(parid, p_start, p_end, kMCEmptyString, False);
+        
         MCParagraph *t_lastpgptr;
         MCParagraph *t_insert_paragraph;
         // Fetch the paragraph in which to insert the new paragraphs (and update the position)
