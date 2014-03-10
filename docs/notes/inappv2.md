@@ -224,7 +224,7 @@ For Google Play Store (Android), you can query for the properties:
 - _packageName_ – The application package from which the purchase originated
 - _orderId_ – A unique order identifier for the transaction. This corresponds to the Google Wallet Order ID
 - _purchaseTime_ – The time the product was purchased, in milliseconds since the epoch (Jan 1, 1970)
-- _developerPayload_– A developer-specified string that contains supplemental information about an order. You can specify a value for this in **mobileMakePurchase.**
+- _developerPayload_– A developer-specified string that contains supplemental information about an order. You can specify a value for this in **mobileStoreMakePurchase.**
 - _purchaseToken_– A token that uniquely identifies a purchase for a given item and user pair.
 - _itemType_ — The type of the purchased item (“inapp” or “subs”)
 - _signature_ — String containing the signature of the purchase data that was signed with the private key of the developer. The data signature uses the RSASSA-PKCS1-v1_5 scheme.
@@ -238,7 +238,7 @@ For Amazon Store (Android), you can query for the properties:
 
 For iTunes Store (iOS), you can query for the properties:
 
-- _quantity_ – amount of item purchased. You can specify a value for this in **mobileMakePurchase**
+- _quantity_ – amount of item purchased. You can specify a value for this in **mobileStoreMakePurchase**
 - _productId_ – identifier of the purchased product
 - _receipt_ – block of data that can be used to confirm the purchase from a remote server with the itunes store 
 - _purchaseDate_ – date the purchase / restore request was sent
@@ -267,7 +267,9 @@ To instruct the store to re-send notifications of previously completed purchases
 
 **mobileStoreRestorePurchases**
 
-This would typically be called the first time an app is run after installation on a new device to restore any items bought through the app.
+This would typically be called the first time an app is run after installation on a new 
+
+device to restore any items bought through the app.
 
 To get more detailed information about errors in the purchase request use:
 
@@ -283,10 +285,10 @@ The state can be any one of the following:
 
 - _initialized_ – the purchase request has been created but not sent. In this state additional properties such as the item quantity can be set.
 - _sendingRequest_ – the purchase request is being sent to the store / marketplace
-- _paymentReceived_ – the requested item has been paid for. The item should now be delivered to the user and confirmed via the mobilePurchaseConfirmDelivery command
+- _paymentReceived_ – the requested item has been paid for. The item should now be delivered to the user and confirmed via the mobileStoreConfirmPurchase command
 - _alreadyEntitled_ – the requested item is already owned, and cannot be purchased again
 - _invalidSKU_ – the requested item does not exist in the store listing
 - _complete_ – the purchase has now been paid for and delivered
-- _restored_ – the purchase has been restored after a call to mobileRestorePurchases. The purchase should now be delivered to the user and confirmed via the mobilePurchaseConfirmDelivery command
+- _restored_ – the purchase has been restored after a call to mobileStoreRestorePurchases. The purchase should now be delivered to the user and confirmed via the mobileStoreConfirmPurchase command
 - _cancelled_ – the purchase was cancelled by the user before payment was received
-- _error_ – An error occurred during the payment request. More detailed information is available from the mobilePurchaseError function
+- _error_ – An error occurred during the payment request. More detailed information is available from the mobileStorePurchaseError function

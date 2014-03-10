@@ -1,65 +1,1 @@
-<doc>
-	<legacy_id></legacy_id>
-	<name>productRequestError</name>
-	<type>message</type>
-
-	<syntax>
-		<example>productRequestError <i>product, error</i></example>
-	</syntax>
-
-	<synonyms>
-	</synonyms>
-
-	<summary>Sent when a request for product details fails.</summary>
-
-	<examples>
-<example><p>on productRequestError pProduct, pError</p><p>   answer &quot;Error:&quot; &amp;&amp; pError &amp;&amp; &quot;when requesting details for&quot; &amp;&amp; pProduct</p><p>end productRequestError</p></example>
-	</examples>
-
-	<history>
-		<introduced version="5.5">Added</introduced>
-		<deprecated version=""></deprecated>
-		<removed version=""></removed>
-		
-	</history>
-
-	<objects>
-	</objects>
-
-	<platforms>
-		<ios/>
-	</platforms>
-
-	<classes>
-		<mobile/>
-	</classes>
-
-	<security>
-	</security>
-
-
-	<classification>
-	</classification>
-
-	<references>
-		<command tag="iphoneRequestProductDetails">iphoneRequestProductDetails Commad</command>
-		<message tag="productDetailsReceived">productDetailsReceived Message</message>
-	</references>
-
-	<description>
-	<overview>Handle the <b>productRequestError</b> message if you want to perform an action when a request for product details fails.</overview>
-
-		<parameters>
-  <parameter>
-    <name>product</name>
-    <description>The identifier of the product for which you wish to retrieve the details.</description>
-  </parameter>
-  <parameter>
-    <name>error</name>
-    <description>The description of the error that occurred.  </description>
-  </parameter>		</parameters>
-
-	<value></value>
-	<comments>The <b>productRequestError</b> message is sent to an application when a request for product details, made using the <b>iphoneRequestProductDetails</b> command, fails.</comments>
-	</description>
-</doc>
+<doc>	<legacy_id></legacy_id>	<name>productRequestError</name>	<type>message</type>	<syntax>		<example>productRequestError<i> productID, error</i></example>	</syntax>	<synonyms>	</synonyms>	<summary>sent by the store in case a request for specific product details (sent via mobileStoreRequestProductsDetails command) is unsuccessful</summary>	<examples><example><p>on productRequestError pProduct, pError</p><p> "Error:" &amp;&amp; pError &amp;&amp; "when requesting details for" &amp;&amp; pProduct</p><p>end productRequestError</p></example>	</examples>	<history>		<introduced version="6.7">Added.</introduced>		<deprecated version=""></deprecated>		<removed version=""></removed>				<experimental version=""></experimental>		<nonexperimental version=""></nonexperimental>	</history>	<objects>	</objects>	<platforms>		<ios/>		<android/>	</platforms>	<classes>		<mobile/>	</classes>	<security>	</security>	<classification>	</classification>	<references>		<function tag="mobileStoreCanMakePurchase">mobileStoreCanMakePurchase function</function>		<function tag="mobileStorePurchasedProducts">mobileStorePurchasedProducts function</function>		<function tag="mobileStorePurchaseError">mobileStorePurchaseError function</function>		<function tag="mobileStoreProductProperty">mobileStoreProductProperty function</function>		<command tag="mobileStoreEnablePurchaseUpdates">mobileStoreEnablePurchaseUpdates command</command>		<command tag="mobileStoreDisablePurchaseUpdates">mobileStoreDisablePurchaseUpdates command</command>		<command tag="mobileStoreConsumePurchase">mobileStoreConsumePurchase command</command>		<command tag="mobileStoreConfirmPurchase">mobileStoreConfirmPurchase command</command>		<command tag="mobileStoreRestorePurchases">mobileStoreRestorePurchases command</command>		<command tag="mobileStoreSetProductType">mobileStoreSetProductType command</command>		<command tag="mobileStoreRequestProductDetails">mobileStoreRequestProductDetails command</command>		<command tag="mobileStoreMakePurchase">mobileStoreMakePurchase command</command>		<command tag="mobileStoreVerifyPurchase">mobileStoreVerifyPurchase command</command>		<message tag="purchaseStateUpdate">purchaseStateUpdate message</message>		<message tag="productDetailsReceived">productDetailsReceived message</message>	</references>	<description>	<overview>Use the productRequestError message to handle unsuccessful request for details for a specific product </overview>		<parameters>  <parameter>    <name>productID</name>    <description>Is the identidier of the product the request for details was made</description>  </parameter>  <parameter>    <name>error</name>    <description>Is a string that describes the error</description>  </parameter>		</parameters>	<value></value>	<comments>The message productRequestError is sent in response to <command tag="mobileStoreRequestProductDetails">mobileStoreRequestProductDetails</command> command, when the request is not successful. </comments>	</description></doc>

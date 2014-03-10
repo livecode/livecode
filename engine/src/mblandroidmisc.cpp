@@ -1198,6 +1198,7 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {"mobileStoreMakePurchase", MCHandleMakePurchase, nil},
     {"mobileStoreConfirmPurchase", MCHandleConfirmPurchase, nil},
     {"mobileStorePurchaseError", MCHandlePurchaseError, nil},
+    {"mobileStoreVerifyPurchase", MCHandlePurchaseVerify, nil},
     
 	
     
