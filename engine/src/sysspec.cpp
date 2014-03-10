@@ -147,9 +147,13 @@ void MCS_shutdown(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// This is needed by opensslsocket.
+real8 curtime;
+
 real8 MCS_time(void)
 {
-	return MCsystem -> GetCurrentTime();
+	curtime = MCsystem -> GetCurrentTime();
+	return curtime;
 }
 
 void MCS_setenv(MCStringRef p_name_string, MCStringRef p_value_string)

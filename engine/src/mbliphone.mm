@@ -1162,10 +1162,10 @@ extern "C" void *IOS_ResolveSymbol(void *module, const char *name);
 //   modules / resolve symbols.
 void *IOS_LoadModule(const char *name)
 {
-	return MCsystem -> LoadModule(name);
+	return MCsystem -> LoadModule(MCSTR(name));
 }
 
 void *IOS_ResolveSymbol(void *module, const char *name)
 {
-	return MCsystem -> ResolveModuleSymbol(module, name);
+	return MCsystem -> ResolveModuleSymbol((MCSysModuleHandle)module, MCSTR(name));
 }

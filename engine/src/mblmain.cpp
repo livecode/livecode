@@ -107,10 +107,9 @@ bool X_init(int argc, MCStringRef argv[], int envc, MCStringRef envp[])
 
     // MM-2014-02-10: [[ LipOpenSSL 1.0.1e ]] Attempt load revsecurity library on Java side.
 #if defined(TARGET_SUBPLATFORM_ANDROID)
-	extern bool revandroid_loadExternalLibrary(const char *p_external, char*& r_filename);
-    char *t_filename;
-    revandroid_loadExternalLibrary("revsecurity", t_filename);
-    delete t_filename;
+	extern bool revandroid_loadExternalLibrary(MCStringRef p_external, MCStringRef& r_filename);
+    MCAutoStringRef t_filename;
+    revandroid_loadExternalLibrary(MCSTR("revsecurity"), &t_filename);
 #endif
     
 	////

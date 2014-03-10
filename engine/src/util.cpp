@@ -41,6 +41,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "system.h"
 
+#ifdef MCSSL
+#include <openssl/rand.h>
+#endif
+
 #define QA_NPOINTS 10
 
 static MCPoint qa_points[QA_NPOINTS];
@@ -3033,7 +3037,7 @@ bool MCU_random_bytes(size_t p_bytecount, MCDataRef& r_bytes)
         if (InitSSLCrypt())
         {
             return (t_buffer.New(p_bytecount) &&
-                    (SSL_random_bytes(t_buffer.Bytes(), p_bytecount)) &&
+                    (RAND_bytes((unsigned char *)t_buffer.Bytes(), p_bytecount) == 1) &&
                     t_buffer.CreateData(r_bytes));
         }
 		s_donotuse_ssl = true;

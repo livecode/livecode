@@ -423,5 +423,5 @@ void MCDebuggingExecAssert(MCExecContext& ctxt, int type, bool p_eval_success, b
 	ctxt . GetObject() -> getvariantprop(ctxt, 0, P_LONG_ID, False, &t_long_id);
 	t_object.setvalueref_argument(*t_long_id);
 	
-	return ctxt . GetObject() -> message(MCM_assert_error, &t_handler);
+	ctxt . GetObject() -> message(MCM_assert_error, &t_handler);
 }
