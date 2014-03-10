@@ -750,7 +750,7 @@ static void MCS_launch_set_result_from_lsstatus(void)
 	switch(t_error)
 	{
         case 0:
-            MCresult -> clear();
+            MCresult -> empty();
             break;
             
         case 1:
@@ -1827,10 +1827,10 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
     uindex_t t_last_slash;
     MCAutoStringRef t_resolved_path_new, t_fspecname;
     char *fspecname;
-    if (MCStringLastIndexOfChar(*t_resolved_path, '/', 0, kMCCompareExact, t_last_slash) && t_last_slash != 0)
+    if (MCStringLastIndexOfChar(*t_resolved_path, '/', UINDEX_MAX, kMCCompareExact, t_last_slash) && t_last_slash != 0)
     {
         /* UNCHECKED */ MCStringDivideAtIndex(*t_resolved_path, t_last_slash, &t_resolved_path_new, &t_fspecname);
-        /* UNCHECKED */ MCStringConvertToCString(*t_fspecname, fspecname);        
+        /* UNCHECKED */ MCStringConvertToUTF8String(*t_fspecname, fspecname);
     }
     else
     {
@@ -1839,7 +1839,10 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
     }
     
     if (!t_utf_path.Lock(*t_resolved_path_new))
+    {
+        delete fspecname;
         return memFullErr;
+    }
     
 	FSRef ref;
 	if ((errno = FSPathMakeRef((unsigned char*)*t_utf_path, &ref, NULL)) == noErr)
@@ -2741,7 +2744,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         CloseResFile(resFileRefNum);
         
-        if (!MCresult -> isclear())
+        if (!MCresult -> isempty())
         {
             return MCStringCopy((MCStringRef)MCresult -> getvalueref(), r_error);
         }
@@ -2842,7 +2845,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         
         bool t_success = true;
-        if (MCresult -> isclear())
+        if (MCresult -> isempty())
         {
             //getting the the resource's size throuth the resource handle
             int4 resLength = GetHandleSize(rh);
@@ -2856,7 +2859,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             CloseResFile(resFileRefNum);
         }
         
-        if (!MCresult -> isclear())
+        if (!MCresult -> isempty())
         {
             return MCStringCopy((MCStringRef)MCresult->getvalueref(), r_error);
         }
@@ -3317,7 +3320,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         
         CloseResFile(rfRefNum);
-        if (MCresult->isclear())
+        if (MCresult->isempty())
             return true;
         
         MCAssert(MCValueGetTypeCode(MCresult->getvalueref()) == kMCValueTypeCodeString);
@@ -3587,7 +3590,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         if (*t_error != nil)
 		/* UNCHECKED */ MCresult -> setvalueref(*t_error);
         else
-            MCresult -> clear(False);
+            MCresult -> empty();
     }
     
     // MW-2006-08-05: Vetted for Endian issues

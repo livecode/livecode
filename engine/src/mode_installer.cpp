@@ -616,7 +616,7 @@ public:
 			if (MCStringIsEmpty(*t_file) || t_context . stream != nil)
 			{
 				if (MCMiniZipExtractItem(s_payload_minizip, t_context . name, extract_item, &t_context))
-					MCresult -> clear();
+					ctxt . SetTheResultToEmpty();
 				else
 					ctxt . SetTheResultToCString("extract failed");
 			}

@@ -827,10 +827,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
 
             if (t_error)
             {
-                if (*t_value != nil)
-                    ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP, *t_value);
-                else
-                    ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
+                ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP, *t_value);
                 return;
             }
         }
@@ -3550,19 +3547,12 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
     }
     else if (isurlchunk())
     {
-        MCAutoStringRef t_string;
-        if (!ctxt . ConvertToString(p_value, &t_string))
-        {
-            ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
-            return false;
-        }
-
         MCUrlChunkPtr t_url_chunk;
         t_url_chunk . url = nil;
         if (!evalurlchunk(ctxt, false, true, t_url_chunk))
             return false;
 
-        MCNetworkExecPutIntoUrl(ctxt, *t_string, p_type, t_url_chunk);
+        MCNetworkExecPutIntoUrl(ctxt, p_value, p_type, t_url_chunk);
 
         MCValueRelease(t_url_chunk . url);
         MCValueRelease(t_url_chunk . mark . text);

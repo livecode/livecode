@@ -376,7 +376,7 @@ void MCEngineEvalGlobalNames(MCExecContext& ctxt, MCStringRef& r_string)
 	t_success = MCListCreateMutable(',', &t_list);
 
 	for (MCVariable *v = MCglobals; t_success && v != nil; v = v->getnext())
-		if (!v->isfree() || v->isarray())
+        if (!v->isclear() || v->isarray())
 			t_success = MCListAppend(*t_list, v->getname());
 
 	if (t_success && MCListCopyAsString(*t_list, r_string))

@@ -679,6 +679,7 @@ public:
 	//      near future.
 	//
 	void clear(Boolean p_delete_buffer = False);
+    void empty();
 
 	// Clear the variable's value but only if it is an unquoted literal (i.e. its
 	// name is the same pointer as its string value).

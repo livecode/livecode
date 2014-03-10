@@ -123,10 +123,13 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 	MCValueAssign(auxillary_stackfiles, t_temp_array);
 	MCValueRelease(t_temp_array);
 	
-	if (!ctxt.CopyOptElementAsArray(p_array, MCNAME("externals"), false, t_temp_array))
+    // The externals listed by the IDE are LF separated
+	if (!ctxt.CopyOptElementAsString(p_array, MCNAME("externals"), false, t_temp_string))
 		return false;
-	MCValueAssign(externals, t_temp_array);
-	MCValueRelease(t_temp_array);
+    MCStringSplit(t_temp_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, t_temp_array);
+    MCValueAssign(externals, t_temp_array);
+    MCValueRelease(t_temp_string);
+    MCValueRelease(t_temp_array);
 	
 	if (!ctxt.CopyOptElementAsString(p_array, MCNAME("startup_script"), false, t_temp_string))
 		return false;
@@ -434,7 +437,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
     t_has_error = false;
     
     // Clear the result as we return an error there
-	MCresult -> clear();
+	ctxt . SetTheResultToEmpty();
     
     MCAutoArrayRef t_array;
     if (!ctxt . EvalExprAsArrayRef(m_params, EE_UNDEFINED, &t_array))
@@ -542,7 +545,7 @@ Parse_stat MCIdeSign::parse(MCScriptPoint& sp)
 void MCIdeSign::exec_ctxt(MCExecContext &ctxt)
 {
 	// Clear the result as we return an error there
-	MCresult -> clear();
+	ctxt . SetTheResultToEmpty();
 
     MCAutoArrayRef t_array;
     if (!ctxt . EvalExprAsArrayRef(m_params, EE_UNDEFINED, &t_array))
@@ -643,7 +646,7 @@ Parse_stat MCIdeDiet::parse(MCScriptPoint& sp)
 void MCIdeDiet::exec_ctxt(MCExecContext& ctxt)
 {
 	// Clear the result as we return an error there
-	MCresult -> clear();
+	ctxt . SetTheResultToEmpty();
     
     MCAutoArrayRef t_array;
     if (!ctxt . EvalExprAsArrayRef(m_params, EE_UNDEFINED, &t_array))
@@ -719,7 +722,7 @@ Parse_stat MCIdeDmgDump::parse(MCScriptPoint& sp)
 void MCIdeDmgDump::exec_ctxt(MCExecContext &ctxt)
 {
 	// Clear the result as we return an error there
-	MCresult -> clear();
+	ctxt . SetTheResultToEmpty();
 
     MCAutoStringRef t_string;
     if (!ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
@@ -768,7 +771,7 @@ Parse_stat MCIdeDmgBuild::parse(MCScriptPoint& sp)
 void MCIdeDmgBuild::exec_ctxt(MCExecContext& ctxt)
 {
     // Clear the result as we return an error there
-	MCresult -> clear();
+	ctxt . SetTheResultToEmpty();
 
 	/////////
 

@@ -1,6 +1,6 @@
 <doc>
 	<legacy_id>1137</legacy_id>
-	<name>numToChar (deprecrated 7.0)</name>
+	<name>numToChar</name>
 	<type>function</type>
 
 	<syntax>

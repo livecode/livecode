@@ -671,13 +671,13 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 			delete cstring;
 		}
 
-		MCresult -> clear();
+		MCresult -> empty();
 
 		if (IO_read_uint1(&type, stream) != IO_NORMAL
 		    || type != OT_STACK && type != OT_ENCRYPT_STACK
 		    || sptr->load(stream, version, type) != IO_NORMAL)
 		{
-			if (MCresult -> isclear())
+			if (MCresult -> isempty())
 				MCresult->sets("stack is corrupted, check for ~ backup file");
 			destroystack(sptr, False);
 			sptr = NULL;
@@ -692,7 +692,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		        || IO_read_uint1(&type, stream) != IO_NORMAL
 		        || type != OT_END)
 		{
-			if (MCresult -> isclear())
+			if (MCresult -> isempty())
 				MCresult->sets("stack is corrupted, check for ~ backup file");
 			destroystack(sptr, False);
 			sptr = NULL;
@@ -980,11 +980,11 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	MCgroupedobjectoffset . x = 0;
 	MCgroupedobjectoffset . y = 0;
 	
-	MCresult -> clear();
+	MCresult -> empty();
 	if (sptr->save(stream, 0, false) != IO_NORMAL
 	        || IO_write_uint1(OT_END, stream) != IO_NORMAL)
 	{
-		if (MCresult -> isclear())
+		if (MCresult -> isempty())
 			MCresult->sets(errstring);
 		cleanup(stream, *t_linkname, *t_backup);
 		return IO_ERROR;
@@ -1616,9 +1616,9 @@ check:
         uindex_t t_second_colon;
         if (MCStringFirstIndexOfChar(MCNameGetString(p_name), ':', t_colon, kMCCompareExact, t_second_colon))
 		{
-            MCresult->clear(False);
             MCExecContext default_ctxt(MCdefaultstackptr, nil, nil);
             MCExecContext *ctxt = MCECptr == NULL ? &default_ctxt : MCECptr;
+            default_ctxt . SetTheResultToEmpty();
 
             MCAutoValueRef t_output;
             MCU_geturl(*ctxt, MCNameGetString(p_name), &t_output);

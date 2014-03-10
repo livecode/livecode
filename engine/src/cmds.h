@@ -388,7 +388,7 @@ public:
 	virtual ~MCSort();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &);
-	static void additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort_type form, MCValueRef p_value, MCExpression *by);
+	//static void additem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, Sort_type form, MCValueRef p_value, MCExpression *by);
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
@@ -1460,7 +1460,7 @@ class MCOpen : public MCStatement
 		MCExpression *options; // if open printing to
 	};
 	MCGo *go;
-	char *destination;
+	MCStringRef destination;
 	Open_argument arg : 4;
 	Open_mode mode : 4;
     Encoding_type encoding : 4;
@@ -1484,7 +1484,7 @@ public:
 		certificate = NULL;
 		secure = False;
 		secureverify = True;
-		destination = NULL;
+		destination = nil;
 		elevated = False;
 	}
 	virtual ~MCOpen();

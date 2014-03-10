@@ -525,7 +525,7 @@ MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term et
 		if (MCdispatcher->readfile(NULL, NULL, stream, sptr) != IO_NORMAL)
 		{
 			MCS_close(stream);
-			if (MCresult->isclear())
+			if (MCresult->isempty())
                 ctxt . SetTheResultToCString("can't build stack from string");
             return nil;
 		}
@@ -571,7 +571,7 @@ MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term et
 		}
 	}
     else
-		if (MCresult->isclear())
+		if (MCresult->isempty())
             ctxt . SetTheResultToCString("no such card");
 	return sptr;
 }
@@ -2793,7 +2793,7 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 	MCObject *optr;
 	MCNewAutoNameRef optr_name;
 	uint4 parid;
-	MCresult->clear(False);
+	ctxt . SetTheResultToEmpty();
     MCerrorlock++;
 
     // Need to have a second MCExecContext as getobj may throw a non-fatal error

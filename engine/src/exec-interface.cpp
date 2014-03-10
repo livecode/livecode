@@ -2804,7 +2804,7 @@ void MCInterfaceExecDrawerOrSheetStackByName(MCExecContext& ctxt, MCNameRef p_na
 
 	if (sptr == nil)
 	{
-		if (MCresult->isclear())
+		if (MCresult -> isempty())
 			ctxt. SetTheResultToStaticCString("can't find stack");
 		return;
 	}
@@ -2857,7 +2857,7 @@ void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_name, int p
 
 	if (sptr == nil)
 	{
-		if (MCresult->isclear())
+		if (MCresult->isempty())
 			ctxt. SetTheResultToStaticCString("can't find stack");
 		return;
 	}
@@ -2898,7 +2898,7 @@ void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCNameRef p_name, MCPo
 
 	if (sptr == nil)
 	{
-		if (MCresult->isclear())
+		if (MCresult->isempty())
 			ctxt. SetTheResultToStaticCString("can't find stack");
 		return;
 	}
@@ -3508,9 +3508,8 @@ void MCInterfaceExecImportImage(MCExecContext& ctxt, MCStringRef p_filename, MCS
 			MCImage *t_image = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
 			MCtemplateimage->setparent(NULL);
 			t_image->setflag(True, F_I_ALWAYS_BUFFER);
-            MCAutoPointer<char> t_filename;
-            /* UNCHECKED */ MCStringConvertToCString(p_filename, &t_filename);
-			if (t_image->import(*t_filename, t_stream, t_mask_stream) == IO_NORMAL)
+
+			if (t_image->import(p_filename, t_stream, t_mask_stream) == IO_NORMAL)
 				t_image->attach(OP_CENTER, false);
 			else
 			{
@@ -4026,7 +4025,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 {
 	if (p_card == nil)
     {
-        if (MCresult -> isclear())
+        if (MCresult -> isempty())
             ctxt . SetTheResultToStaticCString("No such card");
 		return;
     }

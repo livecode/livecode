@@ -1165,7 +1165,7 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
         if (t_success)
             t_success = MCStringConvertLineEndingsToLiveCode(*t_text, r_text);
         
-        MCresult -> clear(False);
+        MCresult -> empty();
        
     }
 
@@ -1221,7 +1221,7 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
     
     if (t_success)
     {
-        MCresult -> clear(False);
+        MCresult -> empty();
     }
     
 	t_file -> Close();
@@ -1269,7 +1269,7 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 	
 	t_file -> Close();
     
-    if (!MCresult -> isclear())
+    if (!MCresult -> isempty())
         return false;
     
     return true;
@@ -1297,7 +1297,7 @@ bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 	
 	t_file -> Close();
 	
-    if (!MCresult -> isclear())
+    if (!MCresult -> isempty())
 		return false;
     
     return true;
@@ -1454,7 +1454,7 @@ IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output)
     if (t_retcode)
         MCresult -> setnvalue(t_retcode);
     else
-        MCresult -> clear();
+        MCresult -> empty();
     
     MCAutoStringRef t_data_string;
     // MW-2013-08-07: [[ Bug 11089 ]] The MCSystem::Shell() call returns binary data,

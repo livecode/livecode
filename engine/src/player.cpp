@@ -337,6 +337,8 @@ MCPlayer::~MCPlayer()
 		s_ephemeral_player = NULL;
 		qtstate = QT_NOT_INITTED;
 	}
+    
+    MCValueRelease(recordtempfile);
 #endif
 
 #ifdef FEATURE_MPLAYER
@@ -346,7 +348,6 @@ MCPlayer::~MCPlayer()
 
 	MCValueRelease(filename);
 	MCValueRelease(userCallbackStr);
-
 }
 
 Chunk_term MCPlayer::gettype() const
@@ -4641,8 +4642,8 @@ void MCPlayer::stoprecording()
 			exportToSoundFile(*t_recordtempfile, *t_recordexportfile);
 			MCS_unlink(recordtempfile);
 		}
-		recordexportfile = NULL;
-		//delete recordexportfile;
+		MCValueRelease(recordexportfile);
+        recordexportfile = NULL;
 	}
 #endif
 }
@@ -4662,9 +4663,9 @@ void MCPlayer::recordsound(MCStringRef fname)
     
     MCAutoStringRef t_name;
     if (MCS_tmpnam(&t_name)) 
-        recordtempfile = MCValueRetain(*t_name);
+        MCValueAssign(recordtempfile, *t_name);
     
-	recordexportfile = (MCStringRef)MCValueRetain(fname);
+	recordexportfile = MCValueRetain(fname);
 	MCS_path2FSSpec(recordtempfile, &fspec);
 	OSType compressionType, inputSource;
 	memcpy(&compressionType, MCrecordcompression, 4);
@@ -4743,9 +4744,9 @@ void MCPlayer::recordsound(MCStringRef fname)
 	}
 	else
 	{
-		char buffer[21 + U4L];
-		sprintf(buffer, "error %d starting recording", errno);
-		MCresult->copysvalue(buffer);
+        MCAutoStringRef t_error;
+        MCStringFormat(&t_error, "error %d starting recording", errno);
+        MCresult -> setvalueref(*t_error);
 		if (sgSoundComp != NULL)
 		{
 			CloseComponent((SeqGrabComponent)sgSoundComp);

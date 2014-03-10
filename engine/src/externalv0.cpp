@@ -280,7 +280,7 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
 			m_free(retval);
 		}
 		else if (retval == NULL)
-            MCresult->clear(False);
+            ctxt . SetTheResultToEmpty();
 		else
 		{
             ctxt . SetTheResultToCString(retval);

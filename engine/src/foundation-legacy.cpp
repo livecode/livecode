@@ -352,6 +352,7 @@ bool MCStringConvertLineEndingsToLiveCode(MCStringRef p_input, MCStringRef& r_ou
 	/* UNCHECKED */ MCStringMutableCopy(p_input, t_mutable_input);
 	/* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\r\n"), MCSTR("\n\r"), kMCStringOptionCompareExact);
 	/* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\n\r"), MCSTR("\n"), kMCStringOptionCompareExact);
+    /* UNCHECKED */ MCStringFindAndReplace(t_mutable_input, MCSTR("\r"), MCSTR("\n"), kMCStringOptionCompareExact);
 	/* UNCHECKED */ MCStringCopyAndRelease(t_mutable_input, r_output);
 	return true;
 }

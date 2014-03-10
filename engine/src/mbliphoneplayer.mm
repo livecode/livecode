@@ -379,7 +379,7 @@ void MCiOSPlayerControl::GetContent(MCExecContext& ctxt, MCStringRef& r_content)
     }
     if (t_string != nil)
     {
-        if (NSStringToMCStringRef(t_string, r_content))
+        if (MCStringCreateWithCFString((CFStringRef)t_string, r_content))
             return;
     }
     else

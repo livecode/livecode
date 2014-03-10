@@ -119,6 +119,13 @@ struct __MCLocale
     // Date formatter object (gets updated to use the specified date/time
     // formats whenever a format call is made)
     icu::DateFormat     *m_df;
+    
+    // Cached break iterators
+    icu::BreakIterator  *m_character;
+    icu::BreakIterator  *m_word;
+    icu::BreakIterator  *m_line;
+    icu::BreakIterator  *m_sentence;
+    icu::BreakIterator  *m_title;
 
     
 public:
@@ -129,7 +136,8 @@ public:
         m_nf_scientific(nil), m_nf_spellout(nil), m_nf_ordinal(nil),
         m_nf_duration(nil), m_nf_numbering_system(nil), m_nf_currency_iso(nil),
         m_nf_currency_plural(nil), m_tz(nil), m_cal(nil), m_nf_pattern(nil),
-        m_df_pattern(nil), m_df(nil)
+        m_df_pattern(nil), m_df(nil), m_character(nil), m_word(nil), m_line(nil),
+        m_sentence(nil), m_title(nil)
     {
         m_name = MCValueRetain(kMCEmptyString);
         m_language = MCValueRetain(kMCEmptyString);
@@ -161,6 +169,11 @@ public:
         delete m_nf_pattern;
         delete m_df_pattern;
         delete m_df;
+        delete m_character;
+        delete m_word;
+        delete m_sentence;
+        delete m_line;
+        delete m_title;
     }
 };
 
@@ -984,23 +997,33 @@ bool MCLocaleBreakIteratorCreate(MCLocaleRef p_locale, MCBreakIteratorType p_typ
     switch (p_type)
     {
         case kMCBreakIteratorTypeCharacter:
-            t_iter = icu::BreakIterator::createCharacterInstance(p_locale->m_icu_locale, t_error);
+            if (p_locale->m_character == nil)
+                p_locale->m_character = icu::BreakIterator::createCharacterInstance(p_locale->m_icu_locale, t_error);
+            t_iter = p_locale->m_character;
             break;
             
         case kMCBreakIteratorTypeWord:
-            t_iter = icu::BreakIterator::createWordInstance(p_locale->m_icu_locale, t_error);
+            if (p_locale->m_word == nil)
+                p_locale->m_word = icu::BreakIterator::createWordInstance(p_locale->m_icu_locale, t_error);
+            t_iter = p_locale->m_word;
             break;
             
         case kMCBreakIteratorTypeLine:
-            t_iter = icu::BreakIterator::createLineInstance(p_locale->m_icu_locale, t_error);
+            if (p_locale->m_line == nil)
+                p_locale->m_line = icu::BreakIterator::createLineInstance(p_locale->m_icu_locale, t_error);
+            t_iter = p_locale->m_line;
             break;
             
         case kMCBreakIteratorTypeSentence:
-            t_iter = icu::BreakIterator::createSentenceInstance(p_locale->m_icu_locale, t_error);
+            if (p_locale->m_sentence == nil)
+                p_locale->m_sentence = icu::BreakIterator::createSentenceInstance(p_locale->m_icu_locale, t_error);
+            t_iter = p_locale->m_sentence;
             break;
             
         case kMCBreakIteratorTypeTitle:
-            t_iter = icu::BreakIterator::createTitleInstance(p_locale->m_icu_locale, t_error);
+            if (p_locale->m_title == nil)
+                p_locale->m_title = icu::BreakIterator::createTitleInstance(p_locale->m_icu_locale, t_error);
+            t_iter = p_locale->m_title;
             break;
             
         default:
@@ -1020,7 +1043,8 @@ void MCLocaleBreakIteratorRelease(MCBreakIteratorRef p_iter)
 {
     MCAssert(p_iter != nil);
     
-    delete p_iter;
+    // No longer does anything - the break iterators are cached by the locale
+    //delete p_iter;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

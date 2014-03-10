@@ -1,6 +1,6 @@
 <doc>
 	<legacy_id>1863</legacy_id>
-	<name>unicodeText (deprecated 7.0)</name>
+	<name>unicodeText</name>
 	<type>property</type>
 
 	<syntax>
@@ -61,7 +61,6 @@
 		<function tag="charToNum">charToNum Function</function>
 		<function tag="uniEncode">uniEncode Function</function>
 		<function tag="uniDecode">uniDecode Function</function>
-		<function tag=""></function>
 		<property tag="HTMLText">HTMLText Property</property>
 		<property tag="dragData">dragData Property</property>
 		<property tag="text">text Property</property>
