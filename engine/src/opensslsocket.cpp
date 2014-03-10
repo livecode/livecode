@@ -663,7 +663,7 @@ void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char 
 			s->doread = True;
 #endif
 			s->processreadqueue();
-			MCresult->clear(True);
+			ctxt . SetTheResultToEmpty();
 			
 		}
 		

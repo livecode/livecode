@@ -2804,7 +2804,7 @@ void MCInterfaceExecDrawerOrSheetStackByName(MCExecContext& ctxt, MCNameRef p_na
 
 	if (sptr == nil)
 	{
-		if (MCresult->isclear())
+		if (MCresult -> isempty())
 			ctxt. SetTheResultToStaticCString("can't find stack");
 		return;
 	}
@@ -2857,7 +2857,7 @@ void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_name, int p
 
 	if (sptr == nil)
 	{
-		if (MCresult->isclear())
+		if (MCresult->isempty())
 			ctxt. SetTheResultToStaticCString("can't find stack");
 		return;
 	}
@@ -2898,7 +2898,7 @@ void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCNameRef p_name, MCPo
 
 	if (sptr == nil)
 	{
-		if (MCresult->isclear())
+		if (MCresult->isempty())
 			ctxt. SetTheResultToStaticCString("can't find stack");
 		return;
 	}
@@ -4025,7 +4025,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 {
 	if (p_card == nil)
     {
-        if (MCresult -> isclear())
+        if (MCresult -> isempty())
             ctxt . SetTheResultToStaticCString("No such card");
 		return;
     }
