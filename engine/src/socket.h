@@ -76,7 +76,11 @@ public:
 	uint4 size;
 	uint4 done;
 	Boolean writedone;
-	MCSocketwrite(MCStringRef d, MCObject *o, MCNameRef m);
+
+    // MM-2014-02-12: [[ SecureSocket ]] We now store against each individual write if it should be encrypted (rather than checking against socket).
+	Boolean secure;
+    
+	MCSocketwrite(MCStringRef d, MCObject *o, MCNameRef m, Boolean secure);
 	~MCSocketwrite();
 	MCSocketwrite *next()
 	{
@@ -140,8 +144,10 @@ public:
 	void close();
 	Boolean init(MCSocketHandle newfd);
 
-	int4 write(const char *buffer, uint4 towrite);
-	int4 read(char *buffer, uint4 toread);
+	// MM-2014-02-12: [[ SecureSocket ]] Pass if the read/write should be encrypted rather than checking against socket.
+	int4 write(const char *buffer, uint4 towrite, Boolean securewrite);
+	int4 read(char *buffer, uint4 toread, Boolean secureread);
+	
 	uint2 sslstate;
 	Boolean sslverify;
 	void doclose();
@@ -183,7 +189,6 @@ protected:
 	SSL_CTX *_ssl_context;
 #endif
 };
-
 
 typedef bool (*MCHostNameResolveCallback)(void *p_context, bool p_resolved, bool p_final, struct sockaddr *p_addr, int p_addrlen);
 typedef void (*MCSockAddrToStringCallback)(void *p_context, bool p_resolved, const char *p_hostname);

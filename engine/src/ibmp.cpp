@@ -2331,8 +2331,8 @@ bool MCImageDecodeXWD(IO_handle stream, MCStringRef &r_name, MCImageBitmap *&r_b
 			IO_read_uint2(&colors[i].red, stream) == IO_NORMAL &&
 			IO_read_uint2(&colors[i].green, stream) == IO_NORMAL &&
 			IO_read_uint2(&colors[i].blue, stream) == IO_NORMAL &&
-			IO_read_int1((char *)&colors[i].flags, stream) == IO_NORMAL &&
-			IO_read_int1((char *)&colors[i].pad, stream) == IO_NORMAL;
+			IO_read_uint1((uint1 *)&colors[i].flags, stream) == IO_NORMAL &&
+			IO_read_uint1((uint1 *)&colors[i].pad, stream) == IO_NORMAL;
 	}
 
 	char *t_newimage_data = nil;

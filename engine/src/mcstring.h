@@ -277,6 +277,7 @@ extern MCNameRef MCN_hcstat;
 
 extern MCNameRef MCM_apple_event;
 extern MCNameRef MCM_arrow_key;
+extern MCNameRef MCM_assert_error;
 extern MCNameRef MCM_backspace_key;
 extern MCNameRef MCM_close_background;
 extern MCNameRef MCM_close_card;

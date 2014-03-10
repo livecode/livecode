@@ -387,6 +387,7 @@ bool MCScreenDC::getkeysdown(MCListRef& r_list)
 	return MCListCopy(*t_list, r_list);
 }
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 void MCScreenDC::mode_globaltolocal(Point& p)
 {
 	CGrafPtr oldport;
@@ -395,10 +396,6 @@ void MCScreenDC::mode_globaltolocal(Point& p)
 	SetGWorld(GetWindowPort((WindowPtr)mousewindow->handle.window), GetMainDevice());
 	GlobalToLocal(&p);
 	SetGWorld(oldport, olddevice);
-	
-	// IM-2013-08-01: [[ ResIndependence ]] apply device scale
-	p.v = p.v / MCResGetPixelScale();
-	p.h = p.h / MCResGetPixelScale();
 }
 
 void MCScreenDC::mfocus(EventRecord *event, Point p, Boolean dispatch, bool post_or_handle)

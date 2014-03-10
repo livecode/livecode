@@ -106,9 +106,6 @@ static bool s_schedule_wakeup_was_broken = false;
 static co_yield_callback_t s_yield_callback = nil;
 static void *s_yield_callback_context = nil;
 
-// IM-2013-07-26: [[ ResIndependence ]] the user -> device resolution scale
-static MCGFloat s_android_device_scale = 1.0;
-
 // The bitmap containing the current visible state of the view
 static jobject s_android_bitmap = nil;
 static int s_android_bitmap_width = 0;
@@ -135,6 +132,15 @@ static bool s_engine_running = false;
 
 int32_t g_android_keyboard_type = 1;
 
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-31: [[ HiDPI ]] Refactor view_platform_updatewindowwithcallback to use
+//   view_platform_updatewindow method
+static MCStackUpdateCallback s_updatewindow_callback = nil;
+static void *s_updatewindow_context = nil;
+
+////////////////////////////////////////////////////////////////////////////////
+
 static void android_process(void);
 
 static MCRectangle android_view_get_bounds(void);
@@ -156,11 +162,55 @@ static bool revandroid_getAssetOffsetAndLength(JNIEnv *env, jobject object, cons
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// IM-2013-07-26: [[ ResIndependence ]] return the device scale - this is initialised
-// on screen open
-MCGFloat MCResGetSystemScale(void)
+// IM-2014-01-31: [[ HiDPI ]] Return the screen pixel density
+MCGFloat MCAndroidGetSystemScale(void)
 {
-	return s_android_device_scale;
+	MCGFloat t_scale;
+	MCAndroidEngineCall("getPixelDensity", "f", &t_scale);
+	
+	return t_scale;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-31: [[ HiDPI ]] Pixel scaling supported on android
+bool MCResPlatformSupportsPixelScaling(void)
+{
+	return true;
+}
+
+// IM-2014-01-31: [[ HiDPI ]] Pixel scaling cannot be disabled on Android
+bool MCResPlatformCanChangePixelScaling(void)
+{
+	return false;
+}
+
+// IM-2014-01-31: [[ HiDPI ]] The pixelScale can be set on Android
+bool MCResPlatformCanSetPixelScale(void)
+{
+	return true;
+}
+
+//////////
+
+// IM-2014-01-31: [[ HiDPI ]] The default pixel scale on android is the display density
+MCGFloat MCResPlatformGetDefaultPixelScale(void)
+{
+	return MCAndroidGetSystemScale();
+}
+
+// IM-2014-01-31: [[ HiDPI ]] On Android use the configured pixelScale
+MCGFloat MCScreenDC::logicaltoscreenscale(void)
+{
+	return MCResGetPixelScale();
+}
+
+//////////
+
+void MCResPlatformHandleScaleChange(void)
+{
+	// IM-2014-01-31: [[ HiDPI ]] Update the main stack geometry
+	static_cast<MCScreenDC *>(MCscreen) -> do_fit_window(false, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,9 +222,9 @@ Boolean MCScreenDC::open(void)
 	// We don't need to do anything to initialize the view, as that is done
 	// by the Java wrapper.
 
-	// IM-2013-07-26: [[ ResIndependence ]] Use the display metrics pixel density to
-	// scale drawing
-	MCAndroidEngineCall("getPixelDensity", "f", &s_android_device_scale);
+	// IM-2014-01-31: [[ HiDPI ]] Initialise updatewindow callback to nil
+	s_updatewindow_callback = nil;
+	s_updatewindow_context = nil;
 	
 	return True;
 }
@@ -251,10 +301,26 @@ Window MCScreenDC::getroot()
 	return NULL;
 }
 
-bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count)
+// IM-2014-01-31: [[ HiDPI ]] Refactor to return display rects in logical coords and include pixel scale
+bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
 {
-	static MCDisplay s_display;
-	memset(&s_display, 0, sizeof(MCDisplay));
+	bool t_success;
+	t_success = true;
+	
+	MCDisplay *t_displays;
+	t_displays = nil;
+	
+	uint32_t t_count;
+	t_count = 0;
+	
+	t_success = MCMemoryNewArray(1, t_displays);
+	
+	if (!t_success)
+		return false;
+	
+	t_count = 1;
+	
+	MCRectangle t_viewport, t_workarea;
 
 	MCAutoStringRef t_rect_string;
 	int2 t_left, t_top, t_right, t_bottom;
@@ -269,30 +335,52 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& r_displays, u
         MCAndroidEngineCall("getWorkareaAsString", "x", &(&t_rect_string));
 	MCU_stoi2x4(*t_rect_string, t_left, t_top, t_right, t_bottom);
 
-	s_display.device_workarea.x = t_left;
-	s_display.device_workarea.y = t_top;
-	s_display.device_workarea.width = t_right - t_left;
-	s_display.device_workarea.height = t_bottom - t_top;
+	t_workarea = MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
 
     MCAutoStringRef t_viewport_string;
 	MCAndroidEngineCall("getViewportAsString", "x", &(&t_viewport_string));
 	MCU_stoi2x4(*t_viewport_string, t_left, t_top, t_right, t_bottom);
 
-	s_display.device_viewport.x = t_left;
-	s_display.device_viewport.y = t_top;
-	s_display.device_viewport.width = t_right - t_left;
-	s_display.device_viewport.height = t_bottom - t_top;
+	t_viewport = MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
+
+	// IM-2014-01-31: [[ HiDPI ]] Convert screen to logical coords
+	t_viewport = MCScreenDC::screentologicalrect(t_viewport);
+	t_workarea = MCScreenDC::screentologicalrect(t_workarea);
 
 	MCLog("getdisplays(effective=%s): workarea(%d,%d,%d,%d) viewport(%d,%d,%d,%d)", p_effective?"true":"false",
-		s_display.device_workarea.x, s_display.device_workarea.y, s_display.device_workarea.width, s_display.device_workarea.height,
-		s_display.device_viewport.x, s_display.device_viewport.y, s_display.device_viewport.width, s_display.device_viewport.height);
+		  t_workarea.x, t_workarea.y, t_workarea.width, t_workarea.height,
+		  t_viewport.x, t_viewport.y, t_viewport.width, t_viewport.height);
 
-	r_displays = &s_display;
-	r_count = 1;
+	t_displays[0].index = 0;
+	t_displays[0].pixel_scale = MCAndroidGetSystemScale();
+	t_displays[0].viewport = t_viewport;
+	t_displays[0].workarea = t_workarea;
+	
+	r_displays = t_displays;
+	r_count = t_count;
+	
 	return true;
 }
 
+// IM-2014-01-31: [[ HiDPI ]] Display info updating not yet implemented on Android
+bool MCScreenDC::platform_displayinfocacheable(void)
+{
+	return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCScreenDC::platform_getwindowgeometry(Window w, MCRectangle &r_rect)
+{
+	MCRectangle t_rect;
+	if (!device_getwindowgeometry(w, t_rect))
+		return false;
+	
+	// IM-2014-01-31: [[ HiDPI ]] Convert screen to logical coords
+	r_rect = screentologicalrect(t_rect);
+	
+	return true;
+}
 
 bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 {
@@ -328,7 +416,7 @@ void MCScreenDC::setbeep(uint4 property, int4 beep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale, uint4 window, MCStringRef displayname)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size)
 {
 	return NULL;
 }
@@ -460,15 +548,29 @@ void MCScreenDC::do_fit_window(bool p_immediate_resize, bool p_post_message)
 	// Make sure view is configured to be the right size...
 	MCRectangle drect;
 	drect = android_view_get_bounds();
-	m_window_left = drect . x;
-	m_window_top = drect . y;
+
+	// IM-2014-03-03: [[ Bug 11836 ]] Store window topleft in logical coords
+	MCPoint t_topleft;
+	t_topleft = MCPointMake(drect.x, drect.y);
+
+	t_topleft = screentologicalpoint(t_topleft);
+
+	m_window_left = t_topleft . x;
+	m_window_top = t_topleft . y;
 
 	if (p_post_message)
 	{
 		if (p_immediate_resize)
+		{
+			// IM-2014-01-31: [[ HiDPI ]] Ensure stack view is updated with the current pixel scale
+			((MCStack*)m_current_window)->view_setbackingscale(MCResGetPixelScale());
 			((MCStack *)m_current_window) -> view_configure(true);
+		}
 		else
-			MCEventQueuePostWindowReshape((MCStack *)m_current_window);
+		{
+			// IM-2014-02-14: [[ HiDPI ]] Post backing scale changes with window reshape message
+			MCEventQueuePostWindowReshape((MCStack *)m_current_window, MCResGetPixelScale());
+		}
 
 		// When we get a resize from android, we need to redraw the whole thing
 		// as the buffer will have changed!
@@ -631,10 +733,11 @@ public:
 			t_success = LockGraphics(t_region, t_context);
 
 		if (t_success)
-	{
+        {
 			MCGContextSetBlendMode(t_context, p_blend);
 			MCGContextSetOpacity(t_context, p_alpha);
-			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNearest);
+            // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNone);
 		}
 
 		UnlockGraphics();
@@ -776,7 +879,8 @@ public:
 		{
 			MCGContextSetBlendMode(t_context, p_blend);
 			MCGContextSetOpacity(t_context, p_alpha);
-			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNearest);
+            // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNone);
 		}
 		
 		UnlockGraphics();
@@ -851,9 +955,10 @@ protected:
 	}
 };
 
-void MCStack::device_updatewindow(MCRegionRef p_region)
+void MCStack::view_device_updatewindow(MCRegionRef p_region)
 {
-	if (!s_android_opengl_enabled)
+	// IM-2014-01-31: [[ HiDPI ]] If using a callback, render to the Android bitmap view
+	if (s_updatewindow_callback != nil || !s_android_opengl_enabled)
 	{
 		// MW-2011-10-01: [[ Bug 9772 ]] At the moment, dirtyrect() calls that
 		//   occur prior to 'configure()' being called for the first time will
@@ -870,7 +975,12 @@ void MCStack::device_updatewindow(MCRegionRef p_region)
 		MCAndroidStackSurface t_surface(t_actual_region);
 		if (t_surface.Lock())
 		{
-			device_redrawwindow(&t_surface, t_actual_region);
+			// IM-2014-01-31: [[ HiDPI ]] If a callback is given then use it to render to the surface
+			if (s_updatewindow_callback != nil)
+				s_updatewindow_callback(&t_surface, t_actual_region, s_updatewindow_context);
+			else
+				view_surface_redrawwindow(&t_surface, t_actual_region);
+			
 			t_surface.Unlock();
 		}
 
@@ -904,7 +1014,7 @@ void MCStack::device_updatewindow(MCRegionRef p_region)
 		
 		if (t_surface.Lock())
 		{
-			device_redrawwindow(&t_surface, t_dirty_rgn);
+			view_surface_redrawwindow(&t_surface, t_dirty_rgn);
 			t_surface.Unlock();
 		}
 		
@@ -919,7 +1029,7 @@ void MCStack::device_updatewindow(MCRegionRef p_region)
 
 			// MW-2011-12-12: [[ Bug 9908 ]] Make sure both front and back buffers hold the same image
 			//   to prevent a flicker back to an old frame when making the opengl layer visible.
-			device_updatewindow(p_region);
+			view_device_updatewindow(p_region);
 
 			MCAndroidEngineRemoteCall("hideBitmapView", "v", nil);
 		}
@@ -927,25 +1037,17 @@ void MCStack::device_updatewindow(MCRegionRef p_region)
 
 }
 
-void MCStack::device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
+// IM-2014-01-31: [[ HiDPI ]] Refactor view_platform_updatewindowwithcallback to use
+//   view_platform_updatewindow method
+void MCStack::view_platform_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
 {
-	MCRectangle t_rect;
-	t_rect = MCRegionGetBoundingBox(p_region);
+	s_updatewindow_callback = p_callback;
+	s_updatewindow_context = p_context;
 
-	MCRegionRef t_actual_region;
-	MCRegionCreate(t_actual_region);
-	MCRegionSetRect(t_actual_region, MCU_intersect_rect(t_rect, MCU_make_rect(0, 0, s_android_bitmap_width, s_android_bitmap_height)));
+	view_platform_updatewindow(p_region);
 
-	MCAndroidStackSurface t_surface(t_actual_region);
-
-	if (t_surface . Lock())
-	{
-		// update the bitmap view using the callback
-		p_callback(&t_surface, t_actual_region, p_context);
-		t_surface . Unlock();
-	}
-
-	MCRegionDestroy(t_actual_region);
+	s_updatewindow_callback = nil;
+	s_updatewindow_context = nil;
 
 	// If we are in OpenGL mode, then show the bitmap view.
 	if (s_android_opengl_enabled)
@@ -984,7 +1086,7 @@ void MCStack::preservescreenforvisualeffect(const MCRectangle& p_rect)
 	{
 		// We need the contents of the last presented framebuffer. To ensure
 		// we get that, force an (OpenGL) update before reading the pixels.
-			device_updatewindow(t_actual_region);
+			view_device_updatewindow(t_actual_region);
 
 		// Fetch the contents of the framebuffer.
 			glReadPixels(0, 0, s_android_bitmap_width, s_android_bitmap_height, GL_RGBA, GL_UNSIGNED_BYTE, t_raster . pixels);
@@ -1866,9 +1968,15 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doTouch(JNIEnv *env, jobje
 			return;
 	}
 
+	MCPoint t_loc;
+	t_loc = MCPointMake(x, y);
+	
+	// IM-2014-01-31: [[ HiDPI ]] Convert screen to logical coords
+	t_loc = MCScreenDC::screentologicalpoint(t_loc);
+	
 	// MW-2014-01-06: [[ Bug 11641 ]] Make sure we use 'id + 1' for the id as it needs to be non-zero
 	//   (non-nil) for 'getmouse()'. (Android touch ids are 0 based).
-	static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, (void *)(id + 1), timestamp, x, y);
+	static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, (void *)(id + 1), timestamp, t_loc.x, t_loc.y);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyPress(JNIEnv *env, jobject object, int modifiers, int char_code, int key_code)

@@ -1618,7 +1618,7 @@ enum Parse_errors
 
 	// {PE-0530} variance: bad parameters
 	PE_VARIANCE_BADPARAM,
-    
+	
     // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
     // {PE-0531} measureText: no object
     PE_MEASURE_TEXT_NOOBJECT,
@@ -1639,19 +1639,37 @@ enum Parse_errors
 	// MERG-2013-10-04: [[ EditScriptAt ]] edit script of object at.
     // {EE-0536} edit script: no at expression
 	PE_EDIT_NOAT,
+	
+	// MW-2013-11-14: [[ AssertCmd ]] Parsing errors for assert command.
+	// {PE-0537} assert: bad type
+	PE_ASSERT_BADTYPE,
+	
+	// {PE-0538} assert: bad expression
+	PE_ASSERT_BADEXPR,
     
-    // {PE-0537} textDecode: bad parameters
+	// MM-2014-02-12: [[ SecureSocket ]]
+	// {PE-0539} secure: missing 'socket'
+	PE_SECURE_NOSOCKET,
+	
+	// MM-2014-02-12: [[ SecureSocket ]]	
+	// {PE-0540} secure: bad socket name
+	PE_SECURE_BADNAME,
+	
+	// MM-2014-02-12: [[ SecureSocket ]]	
+	// {PE-0541} secure: expected 'verification'
+	PE_SECURE_BADMESSAGE,
+
+    // {PE-0542} textDecode: bad parameters
     PE_TEXTDECODE_BADPARAM,
     
-    // {PE-0538} textEncode: bad parameters
+    // {PE-0543} textEncode: bad parameters
     PE_TEXTENCODE_BADPARAM,
     
-    // {PE-0539} normalizeText: bad parameters
+    // {PE-0544} normalizeText: bad parameters
     PE_NORMALIZETEXT_BADPARAM,
     
-    // {PE-0540} codepointProperty: bad parameters
+    // {PE-0545} codepointProperty: bad parameters
     PE_CODEPOINTPROPERTY_BADPARAM,
-    
 };
 
 extern const char *MCparsingerrors;

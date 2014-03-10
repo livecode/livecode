@@ -73,6 +73,14 @@ enum Ask_type {
 	AT_HINT,
 };
 
+enum Assert_type {
+    TYPE_NONE,
+    TYPE_TRUE,
+    TYPE_FALSE,
+    TYPE_SUCCESS,
+    TYPE_FAILURE,
+};
+
 inline Chunk_term ct_class(Chunk_term src)
 {
 	if (src == CT_UNDEFINED)
@@ -1165,6 +1173,8 @@ enum Properties {
 	P_FULLSCREEN, 
 	// IM-2013-09-23: [[ FullscreenMode ]] Property tag for the fullscreenMode
 	P_FULLSCREENMODE,
+	// IM-2014-01-07: [[ StackScale ]] Property tag for the scalefactor
+	P_SCALE_FACTOR,
     P_FILE_NAME,
     P_SAVE_COMPRESSED,
     P_USER_LEVEL,
@@ -1539,6 +1549,11 @@ enum Properties {
 	P_PIXEL_SCALE,
 	P_SYSTEM_PIXEL_SCALE,
 	
+	// IM-2014-01-24: [[ HiDPI ]] Tags for the usePixelScaling, screenPixelScale, and screenPixelScales properties
+	P_USE_PIXEL_SCALING,
+	P_SCREEN_PIXEL_SCALE,
+	P_SCREEN_PIXEL_SCALES,
+	
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
     P_CUSTOM_KEYS = P_FIRST_ARRAY_PROP,
@@ -1828,7 +1843,13 @@ enum Sugar_constants {
     // TD-2013-06-14: [[ DynamicFonts ]] start using font theFont [globally]
     SG_FONT,
     SG_GLOBALLY,
-    SG_FILE
+    SG_FILE,
+	
+	// MW-2013-11-14: [[ AssertCmd ]] Tags for sugar used in assert command.
+	SG_TRUE,
+	SG_FALSE,
+	SG_SUCCESS,
+	SG_FAILURE,
 };
 
 enum Statements {
@@ -1837,6 +1858,8 @@ enum Statements {
     S_ADD,
     S_ANSWER,
     S_ASK,
+	// MW-2013-11-14: [[ AssertCmd ]] 'assert' command tag.
+	S_ASSERT,
     S_BEEP,
     S_BREAK,
     S_BREAKPOINT,
@@ -1938,6 +1961,8 @@ enum Statements {
     S_ROTATE,
     S_SAVE,
     S_SCRIPT_ERROR,
+	// MM-2014-02-12: [[ SecureSocket ]] secure socket <socket> [with|without verification]
+	S_SECURE,
     S_SEEK,
     S_SELECT,
     S_SEND,

@@ -19,6 +19,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 Boolean InitSSLCrypt();
 void ShutdownSSL();
+
+// MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Added initialise.
+void InitialiseSSL(void);
+
 bool SSL_ciphernames(MCListRef& r_list, MCStringRef& r_error);
 unsigned long SSLError(MCStringRef errbuf);
 char *SSL_encode(Boolean isdecrypt, const char *ciphername,

@@ -297,7 +297,7 @@ void MCStack::realize()
 { //create window
 	if (!MCnoui && MCModeMakeLocalWindows())
 	{
-		if ( getextendedstate(ECS_FULLSCREEN) )
+		if (view_getfullscreen())
 		{
 			//TS-2008-08-01 : [[Bug 5703 - fullscreen stack prop interacts badly with HideMenuBar]]
 			if (!((MCScreenDC*)MCscreen)->getmenubarhidden())
@@ -312,12 +312,12 @@ void MCStack::realize()
 				SetSystemUIMode(kUIModeNormal, NULL);
 		}
 
-		// IM-2013-08-01: [[ ResIndependence ]] scale stack rect to device coords
-		MCRectangle t_device_rect;
-		t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
+		// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+		/* CODE REMOVED */
 		
 		Rect wrect;
-		wrect = MCRectToMacRect(t_device_rect);
+		// IM-2014-01-16: [[ StackScale ]] Use view rect as window size
+		wrect = MCRectToMacRect(view_getrect());
 		window = new _Drawable;
 		window->type = DC_WINDOW;
 		window->handle.window = 0;
@@ -339,8 +339,13 @@ void MCStack::realize()
 		uint32_t wattributes;
 		getWinstyle(wattributes,wclass);
 		
+		// IM-2014-01-17: [[ HiDPI ]] Add frameworkscaled flag when creating window to
+		// enable Hi-DPI rendering
+		// IM-2014-01-27: [[ HiDPI ]] Only add frameworkscaled flag when pixel scaling is enabled
 		wattributes |= kWindowCompositingAttribute;
-
+		if (MCResGetUsePixelScaling())
+			wattributes |= kWindowFrameworkScaledAttribute;
+		
 		long testdecorations = WD_TITLE | WD_MENU | WD_CLOSE | WD_MINIMIZE | WD_MAXIMIZE;
 
 		if (m_window_shape != NULL)
@@ -432,7 +437,7 @@ void MCStack::realize()
 				if (walignment)
 				{
 					MCRectangle parentwindowrect;
-					MCscreen->device_getwindowgeometry(pwindow, parentwindowrect);
+					MCscreen->getwindowgeometry(pwindow, parentwindowrect);
 					int2 wspace = 0;
 					RgnHandle r = NewRgn();
 					GetWindowRegion((WindowPtr)window->handle.window, kWindowStructureRgn, r);
@@ -514,7 +519,8 @@ void MCStack::sethints(void)
 {
 }
 
-MCRectangle MCStack::device_getwindowrect() const
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+MCRectangle MCStack::view_platform_getwindowrect() const
 {
     MCRectangle t_rect;
     Rect t_winrect;
@@ -524,11 +530,10 @@ MCRectangle MCStack::device_getwindowrect() const
     GetRegionBounds(t_rgn, &t_winrect);
     DisposeRgn(t_rgn);
     
-	t_rect = MCMacRectToMCRect(t_winrect);
-    
-    return t_rect;
+	return MCMacRectToMCRect(t_winrect);
 }
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 void MCStackGetWindowRect(WindowPtr p_window, MCRectangle &r_rect)
 {
 	Rect t_winrect;
@@ -547,8 +552,8 @@ void MCStackGetWindowRect(WindowPtr p_window, MCRectangle &r_rect)
 	r_rect.height = t_winrect.bottom - t_winrect.top;
 }
 
-// IM-2013-09-23: [[ FullscreenMode ]] Factor out device-specific window sizing
-MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 {
 	MCRectangle t_win_rect;
 	MCStackGetWindowRect((WindowPtr)window->handle.window, t_win_rect);
@@ -886,9 +891,11 @@ void MCStack::enablewindow(bool p_enable)
 {
 }
 
+
 // MW-2011-09-11: [[ Redraw ]] Force an immediate update of the window within the given
 //   region. The actual rendering is done by deferring to the 'redrawwindow' method.
-void MCStack::device_updatewindow(MCRegionRef p_region)
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 {
 	HIViewRef t_root;
 	GetRootControl((WindowPtr)window -> handle . window, &t_root);
@@ -927,13 +934,13 @@ void MCStack::device_updatewindow(MCRegionRef p_region)
 	}
 }
 
-void MCStack::device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
+void MCStack::view_platform_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
 {
 	// Set the file-local static to the callback to use (stacksurface picks this up!)
 	s_update_callback = p_callback;
 	s_update_context = p_context;
 	// IM-2013-08-29: [[ RefactorGraphics ]] simplify by calling device_updatewindow, which performs the same actions
-	device_updatewindow(p_region);
+	view_platform_updatewindow(p_region);
 	// Unset the file-local static.
 	s_update_callback = nil;
 	s_update_context = nil;
@@ -1105,9 +1112,9 @@ public:
 			t_rect = MCRegionGetBoundingBox(m_region);
 			CGContextClearRect(m_context, CGRectMake(t_rect . x, m_surface_height - (t_rect . y + t_rect . height), t_rect . width, t_rect . height));
 			
-			// IM-2013-08-29: [[ ResIndependence ]] scale mask to device coords
+			// IM-2014-01-24: [[ HiDPI ]] scale mask to surface pixel coords
 			MCGFloat t_scale;
-			t_scale = MCResGetPixelScale();
+			t_scale = m_stack->view_getbackingscale();
 			
 			MCGFloat t_mask_height, t_mask_width;
 			t_mask_width = CGImageGetWidth(t_mask) * t_scale;
@@ -1316,6 +1323,16 @@ void HIRevolutionStackViewRegister(void)
 	}
 }
 
+inline MCGAffineTransform MCGAffineTransformFromCGAffineTransform(const CGAffineTransform &p_transform)
+{
+	return MCGAffineTransformMake(p_transform.a, p_transform.b, p_transform.c, p_transform.d, p_transform.tx, p_transform.ty);
+}
+
+inline MCGFloat MCOSXCGAffineTransformGetEffectiveScale(const CGAffineTransform &p_transform)
+{
+	return MCGAffineTransformGetEffectiveScale(MCGAffineTransformFromCGAffineTransform(p_transform));
+}
+
 OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p_event, void *p_data)
 {
 	OSStatus t_status;
@@ -1362,7 +1379,6 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 			// MW-2011-09-12: [[ MacScroll ]] Make sure the top of the HIView takes into
 			//   account the scroll.
 			
-			// IM-2013-08-13: [[ ResIndependence ]] scale new stack window size to device space
 			MCRectangle t_stack_rect;
 			t_stack_rect = t_context->stack->getrect();
 			
@@ -1370,11 +1386,11 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 			MCRectangle t_rect;
 			t_rect = MCRectangleMake(0, 0, t_stack_rect.width, t_stack_rect.height);
 			
-			MCRectangle t_device_rect;
-			t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_rect));
+			// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+			/* CODE REMOVED */
 			
 			Rect t_bounds;
-			t_bounds = MCRectToMacRect(t_device_rect);
+			t_bounds = MCRectToMacRect(t_rect);
 
 			SetControlBounds((ControlRef)t_context -> view, &t_bounds);
 			
@@ -1420,8 +1436,8 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 						MCRectangle t_rect;
 						Rect t_mac_rect;
 						
-						// IM-2013-11-12: [[ Bug 11320 ]] Transform player rect to device coords
-						t_rect = MCRectangleGetTransformedBounds(t_player->getactiverect(), t_context->stack->getdevicetransform());
+						// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+						t_rect = t_player->getactiverect();
 						
 						if (t_clip_rgn == NULL)
 						{
@@ -1462,9 +1478,24 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 				// draw something.
 				if (t_graphics != nil)
 				{
-					// IM-2013-08-23: [[ ResIndependence ]] provide surface height in device scale
+					// IM-2014-01-24: [[ HiRes ]] Create the stack surface with the same backing scale
+					// as the given CGContext, which we infer from its device space transform
+					
+					CGAffineTransform t_transform;
+					t_transform = CGContextGetUserSpaceToDeviceSpaceTransform(t_graphics);
+					
 					MCGFloat t_scale;
-					t_scale = MCResGetPixelScale();
+					t_scale = MCOSXCGAffineTransformGetEffectiveScale(t_transform);
+					
+					// IM-2014-01-24: [[ HiRes ]] Update the view backing scale to match the surface
+					t_context -> stack ->view_setbackingscale(t_scale);
+					
+					// IM-2014-01-17: [[ HiDPI ]] Transform CGContext to draw in device pixel coords
+					CGContextScaleCTM(t_graphics, 1 / t_scale, 1 / t_scale);
+					
+					// IM-2014-01-17: [[ HiDPI ]] Scale logical screen coords to device pixels
+					MCRegionRef t_surface_rgn;
+					/* UNCHECKED */ MCRegionTransform((MCRegionRef)t_dirty_rgn, MCGAffineTransformMakeScale(t_scale, t_scale), t_surface_rgn);
 					
 					// IM-2013-10-10: [[ FullscreenMode ]] Use height of view instead of card
 					int32_t t_surface_height;
@@ -1481,20 +1512,22 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 					// Save the context state
 					CGContextSaveGState(t_graphics);
 					
-					MCMacStackSurface t_surface(t_context -> stack, t_surface_height, (MCRegionRef)t_dirty_rgn, t_graphics);
+					MCMacStackSurface t_surface(t_context -> stack, t_surface_height, t_surface_rgn, t_graphics);
 					
 					if (t_surface.Lock())
 					{
 						// If we don't have an update pixmap, then use redrawwindow.
 						if (s_update_callback == nil)
-							t_context -> stack -> device_redrawwindow(&t_surface, (MCRegionRef)t_dirty_rgn);
+							t_context -> stack -> view_surface_redrawwindow(&t_surface, t_surface_rgn);
 						else
-							s_update_callback(&t_surface, (MCRegionRef)t_dirty_rgn, s_update_context);
+							s_update_callback(&t_surface, t_surface_rgn, s_update_context);
 						t_surface.Unlock();
 					}
 
 					// Restore the context state
 					CGContextRestoreGState(t_graphics);
+					
+					MCRegionDestroy(t_surface_rgn);
 				}
 				
 				// MW-2011-11-23: [[ Bug ]] Force a redraw of the players on the stack

@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 
 #include "stacksecurity.h"
+#include "osspec.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -43,6 +44,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Security, BlockDecryptWithPassword, 6)
 MC_EXEC_DEFINE_EXEC_METHOD(Security, BlockDecryptWithKey, 5)
 MC_EXEC_DEFINE_GET_METHOD(Security, SslCertificates, 1)
 MC_EXEC_DEFINE_SET_METHOD(Security, SslCertificates, 1)
+MC_EXEC_DEFINE_EXEC_METHOD(Security, SecureSocket, 2)
 
 #ifndef _MOBILE
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,6 +192,19 @@ void MCSecuritySetSslCertificates(MCExecContext& ctxt, MCStringRef p_value)
 	MCsslcertificates = t_value;
 }
 
+void MCSecurityExecSecureSocket(MCExecContext& ctxt, MCNameRef p_socket, bool p_secure_verify)
+{
+    uindex_t t_index;
+	if (IO_findsocket(p_socket, t_index))
+	{
+		MCS_secure_socket(MCsockets[t_index], p_secure_verify);
+		ctxt . SetTheResultToEmpty();
+        return;
+	}
+    
+    ctxt . SetTheResultToStaticCString("socket is not open");
+}
+
 #else
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -265,6 +280,11 @@ void MCSecurityGetSslCertificates(MCExecContext& ctxt, MCStringRef& r_value)
 void MCSecuritySetSslCertificates(MCExecContext& ctxt, MCStringRef p_value)
 {
 	ctxt . Unimplemented();
+}
+
+void MCSecurityExecSecureSocket(MCExecContext& ctxt, MCNameRef p_socket, bool p_secure_verify)
+{
+    ctxt . Unimplemented();
 }
 
 #endif

@@ -20,6 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <SkShader.h>
 #include <SkGradientShader.h>
 #include <SkMallocPixelRef.h>
+#include <SkData.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -479,7 +480,10 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
 	{		
 		SkBitmap::Config t_config = MCGRasterFormatToSkBitmapConfig(p_raster . format);
 		r_bitmap . setConfig(t_config, p_raster . width, p_raster . height, p_raster . stride);
-		r_bitmap . setIsOpaque(p_raster . format == kMCGRasterFormat_xRGB);
+        if (p_raster . format == kMCGRasterFormat_xRGB)
+            r_bitmap . setAlphaType(kOpaque_SkAlphaType);
+        else
+            r_bitmap . setAlphaType(kPremul_SkAlphaType);
 		
 		// for non-premultiplied bitmaps, allocate the space then set pixels one by one
 		// for premultiplied bitmaps, just set the pixels in the target directly
@@ -494,14 +498,32 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
 				break;
 				
 			case kMCGPixelOwnershipTypeTake:
+            {
+                SkImageInfo t_image_info;
+                if (t_success)
+                    t_success = r_bitmap  . asImageInfo(&t_image_info);
+                
+                SkData *t_data;
+                if (t_success)
+                {
+                    t_data = SkData::NewFromMalloc(p_raster . pixels, p_raster . stride * p_raster . height);
+                    t_success = t_data != NULL;
+                }
+                
 				SkMallocPixelRef *t_pixelref;
-				t_success = nil != (t_pixelref = new SkMallocPixelRef(p_raster . pixels, p_raster . stride * p_raster . height, nil));
-				if (t_success)
+                if (t_success)
+                {
+                    t_pixelref = SkMallocPixelRef::NewWithData(t_image_info, p_raster . stride, NULL, t_data, 0);
+                    t_success = t_pixelref != NULL;
+                }
+                if (t_success)
 				{
 					r_bitmap . setPixelRef(t_pixelref);
 					t_pixelref -> unref();
 				}
-				break;
+                
+                break;
+            }
 				
 			case kMCGPixelOwnershipTypeCopy:
 				t_success = r_bitmap . allocPixels();
@@ -648,18 +670,6 @@ void MCGAffineTransformFromSkMatrix(const SkMatrix &p_matrix, MCGAffineTransform
 	r_transform . b = p_matrix[3];
 	r_transform . d = p_matrix[4];
 	r_transform . ty = p_matrix[5];
-}
-
-MCGAffineTransform MCGAffineTransformMake(MCGFloat p_a, MCGFloat p_b, MCGFloat p_c, MCGFloat p_d, MCGFloat p_tx, MCGFloat p_ty)
-{
-	MCGAffineTransform t_transform;
-	t_transform . a = p_a;
-	t_transform . b = p_b;
-	t_transform . c = p_c;
-	t_transform . d = p_d;
-	t_transform . tx = p_tx;
-	t_transform . ty = p_ty;
-	return t_transform;	
 }
 
 MCGAffineTransform MCGAffineTransformMakeIdentity(void)

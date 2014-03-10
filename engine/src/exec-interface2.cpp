@@ -341,6 +341,10 @@ MC_EXEC_DEFINE_EXEC_METHOD(Interface, ResolveImageById, 2)
 MC_EXEC_DEFINE_GET_METHOD(Interface, PixelScale, 1)
 MC_EXEC_DEFINE_SET_METHOD(Interface, PixelScale, 1)
 MC_EXEC_DEFINE_GET_METHOD(Interface, SystemPixelScale, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, UsePixelScaling, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, UsePixelScaling, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenPixelScale, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenPixelScales, 1)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3732,11 +3736,52 @@ void MCInterfaceSetPixelScale(MCExecContext& ctxt, double p_scale)
         return;
     }
     
-    MCResSetPixelScale(p_scale);
+    // IM-2014-01-30: [[ HiDPI ]] It is an error to set the pixelScale on platforms that do not support this
+    if (!MCResPlatformCanSetPixelScale())
+    {
+        ctxt . LegacyThrow(EE_PROPERTY_PIXELSCALENOTSUPPORTED);
+        return;
+    }
+    
+    if (MCResGetUsePixelScaling())
+        MCResSetPixelScale(p_scale);
 }
 
 void MCInterfaceGetSystemPixelScale(MCExecContext& ctxt, double &r_scale)
 {
-    // IM-2013-12-04: [[ PixelScale ]] Global property systemPixelScale returns the pixel scale as determined by the OS
-    r_scale = MCResGetSystemScale();
+    // IM-2014-01-24: [[ HiDPI ]] systemPixelScale now returns the maximum scale on all displays
+    MCGFloat t_scale;
+    t_scale = 1.0;
+    /* UNCHECKED */ MCscreen->getmaxdisplayscale(t_scale);
+    r_scale = t_scale;
+}
+
+void MCInterfaceSetUsePixelScaling(MCExecContext& ctxt, bool p_setting)
+{
+    // IM-2014-01-30: [[ HiDPI ]] It is an error to set the usePixelScale on platforms that do not support this
+    if (!MCResPlatformCanChangePixelScaling())
+    {
+        ctxt . LegacyThrow(EE_PROPERTY_USEPIXELSCALENOTSUPPORTED);
+        return;
+    }
+    
+    MCResSetUsePixelScaling(p_setting);
+}
+
+void MCInterfaceGetUsePixelScaling(MCExecContext& ctxt, bool& r_setting)
+{
+    r_setting = MCResGetUsePixelScaling();
+}
+
+void MCInterfaceGetScreenPixelScale(MCExecContext& ctxt, double& r_scale)
+{
+    double *t_scale;
+    uindex_t t_count;
+    MCResListScreenPixelScales(false, t_count, t_scale);
+    r_scale = *t_scale;
+}
+
+void MCInterfaceGetScreenPixelScales(MCExecContext& ctxt, uindex_t& r_count, double*& r_scale)
+{
+    MCResListScreenPixelScales(true, r_count, r_scale);
 }

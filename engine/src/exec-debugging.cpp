@@ -31,6 +31,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "util.h"
 #include "parentscript.h"
+#include "mcerror.h"
+#include "param.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,6 +57,8 @@ MC_EXEC_DEFINE_SET_METHOD(Debugging, DebugContext, 1)
 MC_EXEC_DEFINE_GET_METHOD(Debugging, ExecutionContexts, 1)
 MC_EXEC_DEFINE_GET_METHOD(Debugging, WatchedVariables, 1)
 MC_EXEC_DEFINE_SET_METHOD(Debugging, WatchedVariables, 1)
+
+MC_EXEC_DEFINE_EXEC_METHOD(Engine, Assert, 3)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -357,3 +361,67 @@ void MCDebuggingSetWatchedVariables(MCExecContext& ctxt, MCStringRef p_value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCDebuggingExecAssert(MCExecContext& ctxt, int type, bool p_eval_success, bool p_result)
+{
+    switch(type)
+	{
+		case TYPE_NONE:
+		case TYPE_TRUE:
+			// If the expression threw an error, then just throw.
+			if (!p_eval_success)
+            {
+                ctxt . Throw();
+                return;
+            }
+			
+			// If the expression is true, we are done.
+			if (p_result)
+				return;
+            break;
+            
+		case TYPE_FALSE:
+			// If the expression threw an error, then just throw.
+			if (!p_eval_success)
+            {
+                ctxt . Throw();
+                return;
+            }
+			
+			// If the expression is not true, we are done. (this uses the same logic as if).
+			if (!p_result)
+				return;
+            break;
+            
+		case TYPE_SUCCESS:
+			if (p_eval_success)
+				return;
+			break;
+            
+		case TYPE_FAILURE:
+			if (!p_eval_success)
+				return;
+			break;
+			
+		default:
+			assert(false);
+			break;
+	}
+	
+	// Clear the execution error.
+	MCeerror -> clear();
+	
+	// Dispatch 'assertError <handler>, <line>, <pos>, <object>'
+	MCParameter t_handler, t_line, t_pos, t_object;
+	t_handler.setvalueref_argument(ctxt .GetHandler() -> getname());
+	t_handler.setnext(&t_line);
+	t_line.setn_argument((real8)ctxt . GetLine());
+	t_line.setnext(&t_pos);
+	t_pos.setn_argument((real8)ctxt . GetPos());
+	t_pos.setnext(&t_object);
+    MCAutoValueRef t_long_id;
+	ctxt . GetObject() -> getvariantprop(ctxt, 0, P_LONG_ID, False, &t_long_id);
+	t_object.setvalueref_argument(*t_long_id);
+	
+	return ctxt . GetObject() -> message(MCM_assert_error, &t_handler);
+}
