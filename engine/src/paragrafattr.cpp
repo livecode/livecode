@@ -158,11 +158,9 @@ void MCParagraph::fetchattrs(MCArrayRef src)
 
     if (ctxt . CopyElementAsString(src, MCNAME("backgroundColor"), false, t_stringref_value))
     {
-        if (MCscreen -> parsecolor(t_stringref_value, t_color . color, nil))
-        {
-            MCscreen -> alloccolor(t_color . color);
-            SetBackColor(ctxt, t_color);
-        }
+        MCInterfaceNamedColorParse(ctxt, t_stringref_value, t_color);
+        SetBackColor(ctxt, t_color);
+        
         MCValueRelease(t_stringref_value);
     }
 
@@ -174,12 +172,9 @@ void MCParagraph::fetchattrs(MCArrayRef src)
 
     if (ctxt . CopyElementAsString(src, MCNAME("borderColor"), false, t_stringref_value))
     {
-        MCInterfaceNamedColor t_color;
-        if (MCscreen -> parsecolor(t_stringref_value, t_color . color, nil))
-        {
-            MCscreen -> alloccolor(t_color . color);
-            SetBorderColor(ctxt, t_color);
-        }
+        MCInterfaceNamedColorParse(ctxt, t_stringref_value, t_color);
+        SetBorderColor(ctxt, t_color);
+        
         MCValueRelease(t_stringref_value);
     }
 
