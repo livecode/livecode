@@ -533,6 +533,7 @@ void MCGraphicsContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y
 	// MM-2013-09-30: [[ Bug 11221 ]] Retain the fill style (and return in getfillstyle). Breaks backpatterns in fields otherwise.
 	m_fill_style = style;
 
+	// MW-2014-03-11: [[ Bug 11704 ]] Make sure we set both fill and stroke paints.
 	if (style == FillTiled && p != NULL)
 	{
 		// IM-2013-08-14: [[ ResIndependence ]] apply pattern image scale to transform
@@ -544,16 +545,21 @@ void MCGraphicsContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y
 		t_transform = MCGAffineTransformTranslate(t_transform, x, y);
 
 		MCGContextSetFillPattern(m_gcontext, p->image, t_transform, kMCGImageFilterBilinear);
+		MCGContextSetStrokePattern(m_gcontext, p->image, t_transform, kMCGImageFilterBilinear);
 		m_pattern = MCPatternRetain(p);
 		m_pattern_x = x;
 		m_pattern_y = y;
 	}
-	else if (style == FillStippled)
+	else if (style == FillStippled || style == FillOpaqueStippled)
+	{
 		MCGContextSetFillPaintStyle(m_gcontext, kMCGPaintStyleStippled);
-	else if (style == FillOpaqueStippled)
-		MCGContextSetFillPaintStyle(m_gcontext, kMCGPaintStyleStippled);
+		MCGContextSetStrokePaintStyle(m_gcontext, kMCGPaintStyleStippled);
+	}
 	else
+	{
 		MCGContextSetFillPaintStyle(m_gcontext, kMCGPaintStyleOpaque);
+		MCGContextSetStrokePaintStyle(m_gcontext, kMCGPaintStyleOpaque);
+	}
 }
 
 void MCGraphicsContext::getfillstyle(uint2& style, MCPatternRef& p, int2& x, int2& y)
