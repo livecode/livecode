@@ -1269,7 +1269,7 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 	
 	t_file -> Close();
     
-    if (!MCresult -> isclear())
+    if (!MCresult -> isempty())
         return false;
     
     return true;
@@ -1297,7 +1297,7 @@ bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 	
 	t_file -> Close();
 	
-    if (!MCresult -> isclear())
+    if (!MCresult -> isempty())
 		return false;
     
     return true;

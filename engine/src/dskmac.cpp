@@ -2731,7 +2731,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         CloseResFile(resFileRefNum);
         
-        if (!MCresult -> isclear())
+        if (!MCresult -> isempty())
         {
             return MCStringCopy((MCStringRef)MCresult -> getvalueref(), r_error);
         }
@@ -2832,7 +2832,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         
         bool t_success = true;
-        if (MCresult -> isclear())
+        if (MCresult -> isempty())
         {
             //getting the the resource's size throuth the resource handle
             int4 resLength = GetHandleSize(rh);
@@ -2846,7 +2846,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             CloseResFile(resFileRefNum);
         }
         
-        if (!MCresult -> isclear())
+        if (!MCresult -> isempty())
         {
             return MCStringCopy((MCStringRef)MCresult->getvalueref(), r_error);
         }
@@ -3307,7 +3307,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         
         CloseResFile(rfRefNum);
-        if (MCresult->isclear())
+        if (MCresult->isempty())
             return true;
         
         MCAssert(MCValueGetTypeCode(MCresult->getvalueref()) == kMCValueTypeCodeString);

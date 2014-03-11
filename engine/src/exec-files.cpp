@@ -1231,7 +1231,7 @@ void MCFilesExecPerformReadFixedFor(MCExecContext& ctxt, IO_handle p_stream, int
 		}
         break;
     default:
-        if (!MCStringCreateWithBytes((byte_t*)t_current . Chars(), t_current . CharCount(), kMCStringEncodingNative, false, r_output))
+        if (!MCStringCreateWithBytes((byte_t*)t_current . Chars(), tsize, kMCStringEncodingNative, false, r_output))
             r_stat = IO_ERROR;
         return;
 	}

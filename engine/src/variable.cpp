@@ -144,7 +144,7 @@ Boolean MCVariable::isempty(void) const
 {
 	if (value == kMCEmptyName)
 		return True;
-	return MCValueGetTypeCode(value) == kMCValueTypeCodeString && MCStringGetLength((MCStringRef)value) == 0;
+	return MCValueGetTypeCode(value) == kMCValueTypeCodeString && MCValueIsEmpty(value);
 }
 
 void MCVariable::clear(Boolean p_delete_buffer)

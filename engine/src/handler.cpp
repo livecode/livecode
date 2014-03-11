@@ -398,7 +398,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 	}
     
 	executing++;
-	MCresult->clear(False);
+	ctxt . SetTheResultToEmpty();
 	Exec_stat stat = ES_NORMAL;
 	MCStatement *tspr = statements;
     
