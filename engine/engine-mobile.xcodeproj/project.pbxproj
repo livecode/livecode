@@ -249,6 +249,8 @@
 		4DD3E17B1040BDAF00CAC7EF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD3E17A1040BDAF00CAC7EF /* libz.dylib */; };
 		4DE5E7EB174BBE89001AB76D /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE5E7E6174BBE64001AB76D /* uuid.cpp */; };
 		4DE9499E142762490072D9C6 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE9499D142762490072D9C6 /* CoreText.framework */; };
+		7231B08718CF3FFF00295AE6 /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7231B08518CF3FFF00295AE6 /* graphicscontext.cpp */; };
+		7231B08A18CF40B600295AE6 /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7231B08818CF40B600295AE6 /* imagelist.cpp */; };
 		7268ED8E1848C1F400D10598 /* exec-misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94594A17621812008408DE /* exec-misc.cpp */; };
 		7268ED8F1848C30200D10598 /* exec-ad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE940439175F74D2003EAB87 /* exec-ad.cpp */; };
 		7268ED901848C30200D10598 /* exec-busyindicator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A9091760D32200791270 /* exec-busyindicator.cpp */; };
@@ -285,11 +287,9 @@
 		76B298B2180448AF0053EC38 /* exec-interface-field-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76B298B1180448AF0053EC38 /* exec-interface-field-chunk.cpp */; };
 		76EF32BA182263E000FAC195 /* foundation-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32B7182263DB00FAC195 /* foundation-legacy.cpp */; };
 		76EF32D918226C7300FAC195 /* sysunxrandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF323E182145CA00FAC195 /* sysunxrandom.cpp */; };
-		76EF32DD18226EEB00FAC195 /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32DB18226EE800FAC195 /* graphicscontext.cpp */; };
 		76EF32DF182270E500FAC195 /* mbltheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32DE182270D400FAC195 /* mbltheme.cpp */; };
 		76EF32E41822749600FAC195 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 76EF32E31822749500FAC195 /* Security.framework */; };
 		76EF32E61822757A00FAC195 /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32E51822756F00FAC195 /* stackview.cpp */; };
-		76EF32E9182275D500FAC195 /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF32E7182275D000FAC195 /* imagelist.cpp */; };
 		BE02B4FB17FEC652001BAFF0 /* exec-strings-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE02B4FA17FEC639001BAFF0 /* exec-strings-chunk.cpp */; };
 		BE096E8B175CD7CF00F92F90 /* libfoundationmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BE096E85175CD79D00F92F90 /* libfoundationmobile.a */; };
 		BE0A3CD417E1FD2500C2361B /* mblnetwork.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE0A3CD317E1FC9E00C2361B /* mblnetwork.cpp */; };
@@ -927,6 +927,10 @@
 		4DFFC8EE13DD909F006233A4 /* name.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = name.cpp; path = src/name.cpp; sourceTree = "<group>"; };
 		4DFFC8F213DD90AF006233A4 /* objectpropsets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectpropsets.cpp; path = src/objectpropsets.cpp; sourceTree = "<group>"; };
 		4DFFC8F613DD90CE006233A4 /* syscfdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syscfdate.cpp; path = src/syscfdate.cpp; sourceTree = "<group>"; };
+		7231B08518CF3FFF00295AE6 /* graphicscontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = graphicscontext.cpp; path = src/graphicscontext.cpp; sourceTree = "<group>"; };
+		7231B08618CF3FFF00295AE6 /* graphicscontext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graphicscontext.h; path = src/graphicscontext.h; sourceTree = "<group>"; };
+		7231B08818CF40B600295AE6 /* imagelist.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imagelist.cpp; path = src/imagelist.cpp; sourceTree = "<group>"; };
+		7231B08918CF40B600295AE6 /* imagelist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imagelist.h; path = src/imagelist.h; sourceTree = "<group>"; };
 		72FFE3451858840300BA6A23 /* exec-keywords.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-keywords.cpp"; path = "src/exec-keywords.cpp"; sourceTree = "<group>"; };
 		72FFE3471858845A00BA6A23 /* image_rep_resampled.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_resampled.cpp; path = src/image_rep_resampled.cpp; sourceTree = "<group>"; };
 		7607CF601769BB4C00ADB512 /* exec-interface-aclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-aclip.cpp"; path = "src/exec-interface-aclip.cpp"; sourceTree = "<group>"; };
@@ -956,11 +960,9 @@
 		76EF328D18217FA200FAC195 /* mblandroidtypeface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtypeface.cpp; path = src/mblandroidtypeface.cpp; sourceTree = "<group>"; };
 		76EF328E18217FC600FAC195 /* libgraphics-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libgraphics-mobile.xcodeproj"; path = "../libgraphics/libgraphics-mobile.xcodeproj"; sourceTree = "<group>"; };
 		76EF32B7182263DB00FAC195 /* foundation-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-legacy.cpp"; path = "src/foundation-legacy.cpp"; sourceTree = "<group>"; };
-		76EF32DB18226EE800FAC195 /* graphicscontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = graphicscontext.cpp; path = src/graphicscontext.cpp; sourceTree = "<group>"; };
 		76EF32DE182270D400FAC195 /* mbltheme.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mbltheme.cpp; path = src/mbltheme.cpp; sourceTree = "<group>"; };
 		76EF32E31822749500FAC195 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		76EF32E51822756F00FAC195 /* stackview.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackview.cpp; path = src/stackview.cpp; sourceTree = "<group>"; };
-		76EF32E7182275D000FAC195 /* imagelist.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imagelist.cpp; path = src/imagelist.cpp; sourceTree = "<group>"; };
 		BE02B4FA17FEC639001BAFF0 /* exec-strings-chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-strings-chunk.cpp"; path = "src/exec-strings-chunk.cpp"; sourceTree = "<group>"; };
 		BE096E7D175CD79D00F92F90 /* libfoundation-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libfoundation-mobile.xcodeproj"; path = "../libfoundation/libfoundation-mobile.xcodeproj"; sourceTree = SOURCE_ROOT; };
 		BE0A3CD317E1FC9E00C2361B /* mblnetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblnetwork.cpp; path = src/mblnetwork.cpp; sourceTree = "<group>"; };
@@ -1574,6 +1576,10 @@
 		E81AC137170C8E1000315861 /* Core - Graphics */ = {
 			isa = PBXGroup;
 			children = (
+				7231B08818CF40B600295AE6 /* imagelist.cpp */,
+				7231B08918CF40B600295AE6 /* imagelist.h */,
+				7231B08518CF3FFF00295AE6 /* graphicscontext.cpp */,
+				7231B08618CF3FFF00295AE6 /* graphicscontext.h */,
 				72FFE3471858845A00BA6A23 /* image_rep_resampled.cpp */,
 				4DD3DDAD1040AC1A00CAC7EF /* bitmapeffect.cpp */,
 				4DD3DDB71040AC1A00CAC7EF /* bitmapeffect.h */,
@@ -2051,8 +2057,6 @@
 /* Begin PBXProject section */
 		4DD3DD7D1040AA4700CAC7EF /* Project object */ = {
 			isa = PBXProject;
-			attributes = {
-			};
 			buildConfigurationList = 4DD3DD801040AA4700CAC7EF /* Build configuration list for PBXProject "engine-mobile" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -2482,10 +2486,8 @@
 				76B298B2180448AF0053EC38 /* exec-interface-field-chunk.cpp in Sources */,
 				76EF32BA182263E000FAC195 /* foundation-legacy.cpp in Sources */,
 				76EF32D918226C7300FAC195 /* sysunxrandom.cpp in Sources */,
-				76EF32DD18226EEB00FAC195 /* graphicscontext.cpp in Sources */,
 				76EF32DF182270E500FAC195 /* mbltheme.cpp in Sources */,
 				76EF32E61822757A00FAC195 /* stackview.cpp in Sources */,
-				76EF32E9182275D500FAC195 /* imagelist.cpp in Sources */,
 				76956893182277B200779255 /* cgimageutil.cpp in Sources */,
 				7268ED8F1848C30200D10598 /* exec-ad.cpp in Sources */,
 				BE94042E175F6308003EAB87 /* exec-addressbook.cpp in Sources */,
@@ -2527,6 +2529,8 @@
 				BE449501175CDE7400346B49 /* exec.cpp in Sources */,
 				4DBF5B291802E63F009CAB2E /* socket_resolve.cpp in Sources */,
 				E877A6181850D85F008FDE2C /* resolution.cpp in Sources */,
+				7231B08718CF3FFF00295AE6 /* graphicscontext.cpp in Sources */,
+				7231B08A18CF40B600295AE6 /* imagelist.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
