@@ -969,9 +969,9 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 
     MCExecContext ctxt(nil, nil, nil);
 	MCInterfaceInitialize(ctxt);
-	
-	// IM-2013-12-06: [[ PixelScale ]] Initialise pixelScale property to the systemPixelScale
-	MCResSetPixelScale(MCResGetSystemScale());
+
+	// IM-2014-01-27: [[ HiDPI ]] Initialize pixel scale settings
+	MCResInitPixelScaling();
 
 	// MW-2013-08-07: [[ Bug 10995 ]] Configure fonts based on platform.
 #if defined(TARGET_PLATFORM_WINDOWS)
@@ -1022,6 +1022,9 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsInitialize();
 
+	
+	// MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Initialise the openlSSL module.
+	InitialiseSSL();
 	
 	// MW-2009-07-02: Clear the result as a startup failure will be indicated
 	//   there.

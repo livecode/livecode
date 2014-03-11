@@ -70,7 +70,7 @@ installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundati
 
 	$(MAKE) -C ./engine -f Makefile.installer installer
 
-server: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation kernel-server revsecurity libgraphics
+server: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation libgraphics kernel-server revsecurity
 	$(MAKE) -C ./engine -f Makefile.server server-community
 
 ###############################################################################

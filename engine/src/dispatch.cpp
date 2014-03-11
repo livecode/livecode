@@ -1112,19 +1112,18 @@ void MCDispatch::wmfocus_stack(MCStack *target, int2 x, int2 y)
 {
 	// IM-2013-09-23: [[ FullscreenMode ]] transform view -> stack coordinates
 	MCPoint t_stackloc;
+	t_stackloc = MCPointMake(x, y);
+
+	// IM-2014-02-12: [[ StackScale ]] mfocus will translate target stack to menu stack coords
+	//   so in both cases we pass target stack coords.
+	// IM-2014-02-14: [[ StackScale ]] Don't try to convert if target is null
+	if (target != nil)
+		t_stackloc = target->windowtostackloc(t_stackloc);
+
 	if (menu != NULL)
-	{
-		t_stackloc = menu->getstack()->windowtostackloc(MCPointMake(x, y));
 		menu->mfocus(t_stackloc.x, t_stackloc.y);
-	}
-	else
-	{
-		if (target != NULL)
-		{
-			t_stackloc = target->windowtostackloc(MCPointMake(x, y));
-			target->mfocus(t_stackloc.x, t_stackloc.y);
-		}
-	}
+	else if (target != NULL)
+		target->mfocus(t_stackloc.x, t_stackloc.y);
 }
 
 void MCDispatch::wmfocus(Window w, int2 x, int2 y)
@@ -1369,6 +1368,24 @@ void MCDispatch::sync_stack_windows(void)
 			t_stack->view_sync_window_geometry();
 			t_stack->view_dirty_all();
 		}
+		
+		t_stack = (MCStack*)t_stack->next();
+	}
+	while (t_stack != stacks);
+}
+
+void MCDispatch::reopen_stack_windows(void)
+{
+	if (stacks == nil)
+		return;
+	
+	MCStack *t_stack;
+	t_stack = stacks;
+	
+	do
+	{
+		if (t_stack->getopened() && t_stack->getwindow() != nil)
+			t_stack->reopenwindow();
 		
 		t_stack = (MCStack*)t_stack->next();
 	}
@@ -1917,7 +1934,8 @@ void MCDispatch::dodrop(bool p_source)
 		//   causing the default engine behaviour to be overriden. In this case, some things have to happen to the field
 		//   when the drag is over. Note that we have to check that the source was a field in this case since we don't
 		//   need to do anything if it is not!
-		if (MCdragsource -> gettype() == CT_FIELD)
+		// IM-2014-02-28: [[ Bug 11715 ]] dragsource may have changed or unset after sending message so check for valid ptr
+		if (MCdragsource != nil && MCdragsource -> gettype() == CT_FIELD)
 		{
 			MCField *t_field;
 			t_field = static_cast<MCField *>(MCdragsource);

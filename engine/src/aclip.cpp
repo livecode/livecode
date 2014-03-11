@@ -503,7 +503,7 @@ Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
 	samples = new int1[size];
 	if (IO_read(samples, size, stream) != IO_NORMAL)
 		return False;
-	if (strnequal(samples, ".snd", 4))
+	if (strnequal((char*)samples, ".snd", 4))
 	{
 		uint4 *header = (uint4 *)samples;
 		uint4 start = swap_uint4(&header[1]);
@@ -532,8 +532,8 @@ Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
 	}
 	else
 	{
-		if (strnequal(samples, "FORM", 4)
-		        || strnequal(&samples[8], "AIFF", 4))
+		if (strnequal((char*)samples, "FORM", 4)
+		        || strnequal((char*)&samples[8], "AIFF", 4))
 		{
 			int1 *sptr = &samples[12];
 			while (True)
@@ -541,7 +541,7 @@ Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
 				uint4 length;
 				memcpy((char *)&length, sptr + 4, 4);
 				swap_uint4(&length);
-				if (strnequal(sptr, "COMM", 4))
+				if (strnequal((char*)sptr, "COMM", 4))
 				{
 					memcpy((char *)&nchannels, sptr + 8, 2);
 					memcpy((char *)&swidth, sptr + 14, 2);
@@ -551,7 +551,7 @@ Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
 					rate = (int4)MCU_stoIEEE((char *)(sptr + 16));
 				}
 				else
-					if (strnequal(sptr, "SSND", 4))
+					if (strnequal((char*)sptr, "SSND", 4))
 					{
 						size = length - 8;
 						memmove(samples, sptr + 12, size);
@@ -561,13 +561,13 @@ Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
 			}
 		}
 		else
-			if (strnequal(samples, "RIFF", 4)
-			        && strnequal(&samples[8], "WAVE", 4))
+			if (strnequal((char*)samples, "RIFF", 4)
+			        && strnequal((char*)&samples[8], "WAVE", 4))
 			{
 				uint4 fsize = size;
 				uint4 skip = 0;
 				MCswapbytes = !MCswapbytes;
-				while (!strnequal(&samples[12 + skip], "fmt ", 4))
+				while (!strnequal((char*)&samples[12 + skip], "fmt ", 4))
 				{
 					memcpy((char *)&size, &samples[16 + skip], 4);
 					swap_uint4(&size);
@@ -588,7 +588,7 @@ Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
 				memcpy((char *)&size, &samples[16 + skip], 4);
 				swap_uint4(&size);
 				skip += size + 8;
-				while (!strnequal(&samples[12 + skip], "data", 4))
+				while (!strnequal((char*)&samples[12 + skip], "data", 4))
 				{
 					memcpy((char *)&size, &samples[16 + skip], 4);
 					swap_uint4(&size);
@@ -649,7 +649,7 @@ Boolean MCAudioClip::open_audio()
 		WORD v = MCtemplateaudio->loudness * loudness * 0xFFFF / 10000;
 		waveOutSetVolume(hwaveout, v | (v << 16));
 
-		wh.lpData = samples;          // address of the waveform buffer
+		wh.lpData = (char *) samples;          // address of the waveform buffer
 		wh.dwBufferLength = size;    // length, in bytes, of the buffer
 		wh.dwBytesRecorded = 0;          // see below
 		wh.dwUser = 0;

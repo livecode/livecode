@@ -54,6 +54,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 uint1 *MCuppercasingtable;
 uint1 *MClowercasingtable;
+real8 curtime;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -355,7 +356,8 @@ real64_t MCIPhoneSystem::GetCurrentTime(void)
 {
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
-	return tv . tv_sec + tv . tv_usec / 1000000.0;
+	curtime = tv . tv_sec + tv . tv_usec / 1000000.0;
+    return curtime;
 }
 
 uint32_t MCIPhoneSystem::GetProcessId(void)
@@ -1154,3 +1156,18 @@ bool MCS_random_bytes(size_t p_count, MCDataRef& r_buffer)
 }
 
 //////////////////
+
+extern "C" void *IOS_LoadModule(const char *name);
+extern "C" void *IOS_ResolveSymbol(void *module, const char *name);
+
+// MW-2013-10-08: [[ LibOpenSSL101e ]] This functions are used by the stubs to load
+//   modules / resolve symbols.
+void *IOS_LoadModule(const char *name)
+{
+	return MCsystem -> LoadModule(MCSTR(name));
+}
+
+void *IOS_ResolveSymbol(void *module, const char *name)
+{
+	return MCsystem -> ResolveModuleSymbol((MCSysModuleHandle)module, MCSTR(name));
+}

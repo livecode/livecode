@@ -40,13 +40,16 @@ last - move to last row of resultset
 
 #include "dbsqlite.h"
 
+#include <sqlitedecode.h>
+
 #define ENTER 
 
-DBCursor_SQLITE::DBCursor_SQLITE(SqliteDatabase &db) 
+DBCursor_SQLITE::DBCursor_SQLITE(SqliteDatabase &db, bool enable_binary) 
 	: mDB(db)
 {
 	ENTER;
 	mDataset = mDB.CreateDataset();
+	m_enable_binary = enable_binary;
 }
 
 DBCursor_SQLITE::~DBCursor_SQLITE()
@@ -283,6 +286,12 @@ Bool DBCursor_SQLITE::getFieldsInformation()
 					MDEBUG0("Type: double\n");
 					tfield->fieldType = FT_DOUBLE;
 					break;
+				case ft_Object :
+					if (m_enable_binary)
+						tfield -> fieldType = FT_BLOB;
+					else
+						tfield -> fieldType = FT_STRING;
+					break;
 				case ft_String :
 				default:
 					MDEBUG0("Type: string\n");
@@ -337,18 +346,48 @@ Bool DBCursor_SQLITE::getRowData()
 			fields[i]->isNull = fv.get_isNull();
 			
 			if(!fields[i]->isNull) {
+				
 				std::string tmp = fv.get_asString();
-				int bufsize = tmp.size();
-				fields[i]->data = new char[tmp.size() + 1];
+				
+				// MW-2014-01-29: [[ Sqlite382 ]] If the field type is BLOB and we aren't in binary mode,
+				//   we must decode the data; otherwise we just use the contents directly.
+				if (fv.get_fType() == ft_Object && !m_enable_binary)
+				{
+					// This code has moved from libsqlite/sqlitedataset.cpp:callback().
+					int bufsize;
+					bufsize = tmp.size();
+					
+					char *mybuff;
+					mybuff = (char *)malloc(bufsize);
+					memset(mybuff,0,bufsize);
+					bufsize = sqlite_decode_binary((const unsigned char *)tmp.c_str(), bufsize, ( unsigned char *)mybuff, bufsize);
+					if (bufsize == -1)
+					{
+						fields[i] -> data = NULL;
+						fields[i] -> dataSize = 0;
+						fields[i] -> isNull = True;
+						free(mybuff);
+					}
+					else
+					{
+						fields[i] -> data = mybuff;
+						fields[i] -> dataSize = bufsize;
+					}
+				}
+				else
+				{
+					int bufsize = tmp.size();
+					fields[i]->data = new char[tmp.size() + 1];
 
+					memset(fields[i]->data,0,bufsize+1);
+					memcpy(fields[i]->data, tmp.data(), tmp.size());
+					fields[i]->dataSize = tmp.size();
+				}
+				
 				// OK-2009-05-26: [[Bug 8065]] - Because we copied the data in the line above,
 				// We have to set FreeBuffer otherwise it will not be freed when the cursor is closed,
 				// leading to memory leaks.
 				fields[i] -> freeBuffer = True;
-
-				memset(fields[i]->data,0,bufsize+1);
-				memcpy(fields[i]->data, tmp.data(), tmp.size());
-				fields[i]->dataSize = tmp.size();
 			}
 
 			MDEBUG("getRowData() -- fv=[%s]\n", fields[i]->data);

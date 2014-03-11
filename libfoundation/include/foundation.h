@@ -553,6 +553,7 @@ typedef struct __MCLocale* MCLocaleRef;
 //
 
 #include <foundation-stdlib.h>
+#include <math.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -585,6 +586,8 @@ inline float MCMax(float a, float b) { return a > b ? a : b; }
 
 inline uint32_t MCAbs(int32_t a) { return a < 0 ? -a : a; }
 inline uint64_t MCAbs(int64_t a) { return a < 0 ? -a : a; }
+inline float MCAbs(float a) { return fabsf(a); }
+inline double MCAbs(double a) { return fabs(a); }
 
 ////////////////////////////////////////////////////////////////////////////////
 //

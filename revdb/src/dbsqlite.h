@@ -44,7 +44,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class DBCursor_SQLITE : public CDBCursor
 {
 	public:
-		DBCursor_SQLITE(SqliteDatabase &db);
+		DBCursor_SQLITE(SqliteDatabase &db, bool enable_binary);
 		virtual ~DBCursor_SQLITE();
 		
 		Bool open(DBConnection *newconnection);
@@ -62,6 +62,9 @@ class DBCursor_SQLITE : public CDBCursor
 		Bool getFieldsInformation();
 		SqliteDatabase &mDB;
 		Dataset *mDataset;
+	
+	// MW-2014-01-29: [[ Sqlite382 ]] If true the binary data will not be decoded.
+	bool m_enable_binary : 1;
 };
 
 class DBConnection_SQLITE : public CDBConnection
@@ -71,7 +74,8 @@ class DBConnection_SQLITE : public CDBConnection
 		~DBConnection_SQLITE();
 
 		Bool IsError();
-
+		bool IsBinaryEnabled(void);
+	
 		Bool connect(char **args, int numargs);
 
 		void disconnect();
@@ -101,5 +105,8 @@ class DBConnection_SQLITE : public CDBConnection
 		SqliteDatabase mDB;
 		char *mErrorStr;
 		bool mIsError;
+	
+	bool m_enable_extensions : 1;
+	bool m_enable_binary : 1;
 };
 #endif

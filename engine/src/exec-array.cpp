@@ -514,9 +514,9 @@ void MCArraysDoIntersect(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef
     
     bool t_is_array;
     
-	while(MCArrayIterate(p_src_array, t_iterator, t_key, t_src_value))
+	while(MCArrayIterate(p_dst_array, t_iterator, t_key, t_dst_value))
 	{
-		if (MCArrayFetchValue(p_dst_array, ctxt . GetCaseSensitive(), t_key, t_dst_value))
+		if (MCArrayFetchValue(p_src_array, ctxt . GetCaseSensitive(), t_key, t_src_value))
         {
             if (p_recursive && MCValueIsArray(t_dst_value) && MCValueIsArray(t_src_value))
             {

@@ -449,13 +449,9 @@ void MCButton::macopenmenu(void)
 			break;
 	}
 	
-	// IM-2013-08-16: [[ ResIndependence ]] scale menu location to device coords
-	MCGFloat t_scale;
-	t_scale = MCResGetPixelScale();
-	
-	tmenux = tmenux * t_scale;
-	tmenuy = tmenuy * t_scale;
-	
+	// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+	/* CODE REMOVED */
+
 	// MW-2007-12-11: [[ Bug 5670 ]] Make sure we notify things higher up in the call chain
 	//   that the mdown actually did result in a menu being popped up!
 	extern bool MCosxmenupoppedup;
