@@ -123,6 +123,7 @@ MCParagraph::MCParagraph()
 
 	// MW-2012-01-25: [[ ParaStyles ]] All attributes are unset to begin with.
 	attrs = nil;
+    base_direction = kMCFieldTextDirectionAuto;
 }
 
 MCParagraph::MCParagraph(const MCParagraph &pref) : MCDLlist(pref)
@@ -159,6 +160,7 @@ MCParagraph::MCParagraph(const MCParagraph &pref) : MCDLlist(pref)
 	
 	// MP-2013-09-02: [[ FasterField ]] Paragraphs start off needing layout.
 	needs_layout = true;
+    base_direction = pref.base_direction;
 }
 
 MCParagraph::~MCParagraph()
