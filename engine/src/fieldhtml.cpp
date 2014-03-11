@@ -1186,10 +1186,12 @@ static bool import_html_parse_attr(const char*& x_ptr, const char *p_limit, impo
 	char *t_value;
 	if (*x_ptr == '=')
 	{
-		if (x_ptr + 1 >= p_limit)
-			return false;
-			
+		// MW-2014-03-11: [[ Bug 11888 ]] Ensure we consume as much as possible, else
+		//   the caller can get into an infinite loop with things like "<a href=".
 		x_ptr += 1;
+		
+		if (x_ptr >= p_limit)
+			return false;
 
 		const char *t_value_start_ptr, *t_value_end_ptr;
 		if (*x_ptr == '"' || *x_ptr == '\'')
