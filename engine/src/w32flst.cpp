@@ -314,19 +314,25 @@ void MCFontlist::freeprinterfonts()
 	while (tmp != fonts);
 }
 
-int CALLBACK fontnames_FontFamProc(const ENUMLOGFONTW * lpelf,
-								   const NEWTEXTMETRICW * lpntm,
+int CALLBACK fontnames_FontFamProc(const LOGFONTW * lpelf,
+								   const TEXTMETRICW * lpntm,
 								   DWORD FontType, LPARAM lParam)
 {
 	MCListRef t_list = (MCListRef)lParam;
 	MCAutoStringRef t_name;
 
 	size_t t_length;
-	if (StringCchLength(lpelf->elfFullName, LF_FULLFACESIZE, &t_length) != S_OK)
+	if (StringCchLength(lpelf->lfFaceName, LF_FACESIZE, &t_length) != S_OK)
 		return False;
 
-	if (!MCStringCreateWithChars(lpelf->elfFullName, t_length, &t_name))
+	if (!MCStringCreateWithChars(lpelf->lfFaceName, t_length, &t_name))
 		return False;
+
+	// Skip names that we have already added to the list
+	MCAutoStringRef t_list_string;
+	/* UNCHECKED */ MCListCopyAsString(t_list, &t_list_string);
+	if (MCStringContains(*t_list_string, *t_name, kMCStringOptionCompareCaseless))
+		return True;
 
 	return MCListAppend(t_list, *t_name) ? True : False;
 }
@@ -353,7 +359,11 @@ bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 	else
 #endif
 		hdc = pms->getsrchdc();
-	if (EnumFontFamiliesW(hdc, NULL, (FONTENUMPROCW)fontnames_FontFamProc, (LPARAM)*t_list) != True)
+	LOGFONTW lf;
+	lf.lfCharSet = DEFAULT_CHARSET;
+	lf.lfFaceName[0] = '\0';
+	lf.lfPitchAndFamily = 0;
+	if (EnumFontFamiliesExW(hdc, &lf, (FONTENUMPROCW)fontnames_FontFamProc, (LPARAM)*t_list, 0) != True)
 		return false;
 
 	return MCListCopy(*t_list, r_names);
