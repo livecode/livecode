@@ -100,7 +100,17 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			MCImageRep *t_rep;
 			bool t_has_transform;
 			MCGAffineTransform t_transform;
-			/* UNCHECKED */ get_rep_and_transform(t_rep, t_has_transform, t_transform);
+			
+			// MW-2014-03-11: [[ Bug 11608 ]] Make sure we always use the source rep if printing
+			//   (rather than resampled).
+			if (t_printer)
+			{
+				t_rep = m_rep;
+				t_has_transform = m_has_transform;
+				t_transform = m_transform;
+			}
+			else
+				/* UNCHECKED */ get_rep_and_transform(t_rep, t_has_transform, t_transform);
 			
 			// IM-2013-10-30: [[ FullscreenMode ]] Get appropriate image for current stack scale transform
 			t_success = t_rep->LockImageFrame(currentframe, true, getdevicescale(), t_frame);
