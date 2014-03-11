@@ -2804,7 +2804,7 @@ void MCInterfaceExecDrawerOrSheetStackByName(MCExecContext& ctxt, MCNameRef p_na
 
 	if (sptr == nil)
 	{
-		if (MCresult->isclear())
+		if (MCresult -> isempty())
 			ctxt. SetTheResultToStaticCString("can't find stack");
 		return;
 	}
@@ -2857,7 +2857,7 @@ void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_name, int p
 
 	if (sptr == nil)
 	{
-		if (MCresult->isclear())
+		if (MCresult->isempty())
 			ctxt. SetTheResultToStaticCString("can't find stack");
 		return;
 	}
@@ -2898,7 +2898,7 @@ void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCNameRef p_name, MCPo
 
 	if (sptr == nil)
 	{
-		if (MCresult->isclear())
+		if (MCresult->isempty())
 			ctxt. SetTheResultToStaticCString("can't find stack");
 		return;
 	}
@@ -3328,7 +3328,7 @@ void MCInterfaceExecUnlockScreenWithEffect(MCExecContext& ctxt, MCVisualEffect *
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCInterfaceExecImportSnapshot(MCExecContext& ctxt, MCStringRef p_display, MCRectangle *p_region, uint4 p_window)
+void MCInterfaceExecImportSnapshot(MCExecContext& ctxt, MCStringRef p_display, MCRectangle *p_region, uint4 p_window, MCPoint *p_size)
 {
 	if (!ctxt . EnsurePrivacyIsAllowed())
 		return;
@@ -3347,13 +3347,9 @@ void MCInterfaceExecImportSnapshot(MCExecContext& ctxt, MCStringRef p_display, M
 	}
 	else	
 		t_rect = *p_region;
-
-    // IM-2013-08-01: [[ ResIndependence ]] Resolution scale for snapshots - unless specified should produce point-scale image
-    MCGFloat t_image_scale;
-    t_image_scale = 1.0;
     
 	MCImageBitmap *t_bitmap = nil;
-	t_bitmap = MCscreen->snapshot(t_rect, t_image_scale, p_window, p_display);
+	t_bitmap = MCscreen->snapshot(t_rect, p_window, p_display, p_size);
 	
 	if (t_bitmap != nil)
 	{
@@ -3363,25 +3359,25 @@ void MCInterfaceExecImportSnapshot(MCExecContext& ctxt, MCStringRef p_display, M
         if (iptr != nil)
         {
             // IM-2013-08-01: [[ ResIndependence ]] pass image scale when setting bitmap
-            iptr->setbitmap(t_bitmap, t_image_scale, true);
+            iptr->setbitmap(t_bitmap, 1.0f, true);
             iptr->attach(OP_CENTER, false);
         }
         
         MCImageFreeBitmap(t_bitmap);
     }
 }
-void MCInterfaceExecImportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region)
+void MCInterfaceExecImportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region, MCPoint *p_size)
 {
-	MCInterfaceExecImportSnapshot(ctxt, nil, p_region, 0);
+	MCInterfaceExecImportSnapshot(ctxt, nil, p_region, 0, p_size);
 }
 
-void MCInterfaceExecImportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region)
+void MCInterfaceExecImportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, MCPoint *p_size)
 {
 	uint4 t_window;
 	if (!MCU_stoui4(p_stack, t_window))
 		ctxt . LegacyThrow(EE_IMPORT_BADNAME);
 	else
-		MCInterfaceExecImportSnapshot(ctxt, p_display, p_region, t_window);
+		MCInterfaceExecImportSnapshot(ctxt, p_display, p_region, t_window, p_size);
 }
 void MCInterfaceExecImportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size)
 {
@@ -3390,13 +3386,9 @@ void MCInterfaceExecImportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_targ
 		ctxt . LegacyThrow(EE_IMPORT_LOCKED);
 		return;
 	}
-
-    // IM-2013-08-01: [[ ResIndependence ]] Resolution scale for snapshots - unless specified should produce point-scale image
-    MCGFloat t_image_scale;
-    t_image_scale = 1.0;
     
 	MCImageBitmap *t_bitmap = nil;
-	t_bitmap = p_target -> snapshot(p_region, p_at_size, t_image_scale, p_with_effects);
+	t_bitmap = p_target -> snapshot(p_region, p_at_size, 1.0f, p_with_effects);
 	
 	// OK-2007-04-24: If the import rect doesn't intersect with the object, MCobject::snapshot
 	// may return null. In this case, return an error.
@@ -3417,7 +3409,7 @@ void MCInterfaceExecImportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_targ
     if (iptr != nil)
     {
         // IM-2013-08-01: [[ ResIndependence ]] pass image scale when setting bitmap
-        iptr->setbitmap(t_bitmap, t_image_scale, true);
+        iptr->setbitmap(t_bitmap, 1.0f, true);
         iptr->attach(OP_CENTER, false);
     }
     
@@ -3633,7 +3625,7 @@ void MCInterfaceExportBitmapToFile(MCExecContext& ctxt, MCImageBitmap *p_bitmap,
 		MCS_unlink(p_filename);
 }
 
-MCImageBitmap* MCInterfaceGetSnapshotBitmap(MCExecContext &ctxt, MCStringRef p_display, MCRectangle *p_region, uint4 p_window)
+MCImageBitmap* MCInterfaceGetSnapshotBitmap(MCExecContext &ctxt, MCStringRef p_display, MCRectangle *p_region, uint4 p_window, MCPoint *p_size)
 {
 	MCRectangle t_rect;
 	if (p_region == nil)
@@ -3646,7 +3638,7 @@ MCImageBitmap* MCInterfaceGetSnapshotBitmap(MCExecContext &ctxt, MCStringRef p_d
 	
 	MCImageBitmap *t_bitmap = nil;
 
-	t_bitmap = MCscreen->snapshot(t_rect, 1.0, p_window, p_display);
+	t_bitmap = MCscreen->snapshot(t_rect, p_window, p_display, p_size);
 	if (t_bitmap == nil)
 	{
 		ctxt . LegacyThrow(EE_EXPORT_NOSELECTED);
@@ -3665,21 +3657,21 @@ bool MCInterfaceGetDitherImage(MCImage *p_image)
 	return !p_image->getflag(F_DONT_DITHER);
 }
 
-void MCInterfaceExecExportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data)
+void MCInterfaceExecExportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region, MCPoint *p_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data)
 {
 	MCImageBitmap *t_bitmap;
-	t_bitmap = MCInterfaceGetSnapshotBitmap(ctxt, nil, p_region, 0);
+	t_bitmap = MCInterfaceGetSnapshotBitmap(ctxt, nil, p_region, 0, p_size);
 	MCInterfaceExportBitmap(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), r_data);
 }
 
-void MCInterfaceExecExportSnapshotOfScreenToFile(MCExecContext& ctxt, MCRectangle *p_region, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename)
+void MCInterfaceExecExportSnapshotOfScreenToFile(MCExecContext& ctxt, MCRectangle *p_region, MCPoint *p_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename)
 {
 	MCImageBitmap *t_bitmap;
-	t_bitmap = MCInterfaceGetSnapshotBitmap(ctxt, nil, p_region, 0);
+	t_bitmap = MCInterfaceGetSnapshotBitmap(ctxt, nil, p_region, 0, p_size);
 	MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_filename, p_mask_filename);
 }
 
-void MCInterfaceExecExportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data)
+void MCInterfaceExecExportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, MCPoint *p_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data)
 {
 	uint4 t_window;
 	if (!MCU_stoui4(p_stack, t_window))
@@ -3687,12 +3679,12 @@ void MCInterfaceExecExportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_sta
 	else
 	{
 		MCImageBitmap *t_bitmap;
-		t_bitmap = MCInterfaceGetSnapshotBitmap(ctxt, p_display, p_region, t_window);
+		t_bitmap = MCInterfaceGetSnapshotBitmap(ctxt, p_display, p_region, t_window, p_size);
 		MCInterfaceExportBitmap(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), r_data);
 	}
 }
 
-void MCInterfaceExecExportSnapshotOfStackToFile(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename)
+void MCInterfaceExecExportSnapshotOfStackToFile(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, MCPoint *p_size, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename)
 {
 	uint4 t_window;
 	if (!MCU_stoui4(p_stack, t_window))
@@ -3700,7 +3692,7 @@ void MCInterfaceExecExportSnapshotOfStackToFile(MCExecContext& ctxt, MCStringRef
 	else
 	{
 		MCImageBitmap *t_bitmap;
-		t_bitmap = MCInterfaceGetSnapshotBitmap(ctxt, p_display, p_region, t_window);
+		t_bitmap = MCInterfaceGetSnapshotBitmap(ctxt, p_display, p_region, t_window, p_size);
 		MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_filename, p_mask_filename);
 	}
 }
@@ -4025,7 +4017,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 {
 	if (p_card == nil)
     {
-        if (MCresult -> isclear())
+        if (MCresult -> isempty())
             ctxt . SetTheResultToStaticCString("No such card");
 		return;
     }

@@ -84,8 +84,9 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
                 if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
                     do
                     {
-                        MCB_error(ctxt, tspr->getline(), tspr->getpos(),
-                                  EE_REPEAT_BADSTATEMENT);
+                        if (!MCB_error(ctxt, tspr->getline(), tspr->getpos(),
+                                  p_error))
+                            break;
                         ctxt . IgnoreLastError();
                         tspr->exec_ctxt(ctxt);
                     }
@@ -703,7 +704,8 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                 if ((MCtrace || MCnbreakpoints) && state != TS_TRY)
                     do
                     {
-                        MCB_error(ctxt, tspr->getline(), tspr->getpos(), EE_TRY_BADSTATEMENT);
+                        if (MCB_error(ctxt, tspr->getline(), tspr->getpos(), EE_TRY_BADSTATEMENT))
+                            break;
                         ctxt.IgnoreLastError();
                         tspr->exec_ctxt(ctxt);
                     }

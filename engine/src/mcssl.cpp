@@ -45,13 +45,15 @@ static Boolean cryptinited = False;
 
 extern "C" int initialise_weak_link_crypto(void);
 extern "C" int initialise_weak_link_ssl(void);
+extern "C" void finalise_weak_link_crypto(void);
+extern "C" void finalise_weak_link_ssl(void);
 
 Boolean load_crypto_symbols()
 {
 #ifdef MCSSL
 
 // MW-2009-07-21: Weakly link only on non-MacOSX platforms.
-#if !defined(_MACOSX) && !defined(_SERVER)
+#if !defined(_SERVER)
 	if (!initialise_weak_link_crypto())
 		return False;
 	if (!initialise_weak_link_ssl())
@@ -113,21 +115,6 @@ void SeedSSL(UINT iMsg, WPARAM wParam, LPARAM lParam)
 	}
 }
 #endif
-
-void ShutdownSSL()
-{
-#ifdef MCSSL
-	if (cryptinited)
-	{
-
-		EVP_cleanup();
-		ERR_free_strings();
-	}
-#endif
-}
-
-void shutdown()
-{}
 
 //error buf should have a buffer of at least 256 bytes.
 unsigned long SSLError(MCStringRef errbuf)
@@ -592,8 +579,6 @@ bool SSL_ciphernames(MCListRef& r_list, MCStringRef& r_error)
 	t_context.success = true;
 
 	// MW-2004-12-29: Integrate Tuviah's fixes
-	//static char sslcipherlist[] = "bf,128\nbf-cbc,128\nbf-cfb,128\nbf-ecb,128\nbf-ofb,128\nblowfish,128\ncast,128\ncast-cbc,128\ncast5-cbc,128\ncast5-cfb,128\ncast5-ecb,128\ncast5-ofb,128\ndes,64\ndes-cbc,64\ndes-cfb,64\ndes-ecb,64\ndes-ede,128\ndes-ede-cbc,128\ndes-ede-cfb,128\ndes-ede-ofb,128\ndes-ede3,192\ndes-ede3-cbc,192\ndes-ede3-cfb,192\ndes-ede3-ofb,192\ndes-ofb,64\ndes3,192\ndesx,192\ndesx-cbc,192\nrc2,128\nrc2-40-cbc,40\nrc2-64-cbc,64\nrc2-cbc,128\nrc2-cfb,128\nrc2-ecb,128\nrc2-ofb,128\nrc4,128\nrc4-40,40\nrc5,128\nrc5-cbc,128\nrc5-cfb,128\nrc5-ecb,128\nrc5-ofb,128";
-
 	if (!InitSSLCrypt())
 	{
 		MCAutoStringRef sslerrbuf;
@@ -621,3 +606,31 @@ bool SSL_random_bytes(const void *p_buffer, uindex_t p_count)
 #endif
 	return false;
 }
+
+// MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Initialise the openlSSL module.
+void InitialiseSSL(void)
+{
+#ifdef MCSSL
+	cryptinited = False;
+#endif
+}
+
+void ShutdownSSL()
+{
+#ifdef MCSSL
+	if (cryptinited)
+	{
+		
+		EVP_cleanup();
+		ERR_free_strings();
+#if !defined(_SERVER)
+		finalise_weak_link_crypto();
+		finalise_weak_link_ssl();
+#endif
+		cryptinited = False;
+	}
+#endif
+}
+
+void shutdown()
+{}

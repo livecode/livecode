@@ -1440,6 +1440,32 @@ static bool MCPropertyFormatUIntList(uinteger_t *p_list, uindex_t p_count, char_
 	return false;
 }
 
+static bool MCPropertyFormatDoubleList(double *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
+{
+    if (p_count == 0)
+    {
+        r_string = MCValueRetain(kMCEmptyString);
+        return true;
+    }
+    
+	MCAutoStringRef t_list;
+	bool t_success;
+	t_success = MCStringCreateMutable(0, &t_list);
+	
+	for (uindex_t i = 0; i < p_count && t_success; i++)
+	{
+		if (t_success && i != 0)
+			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
+        
+		t_success = MCStringAppendFormat(*t_list, "%f", p_list[i]);
+	}
+	
+	if (t_success)
+		return MCStringCopy(*t_list, r_string);
+	
+	return false;
+}
+
 static bool MCPropertyFormatStringList(MCStringRef *p_list, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
 {
     if (p_count == 0)
@@ -1534,6 +1560,57 @@ static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uin
 		
 		if (t_success)
 			t_success = MCU_stoui4(*t_uint_string, t_d);
+		
+		if (t_success)
+			t_success = t_list . Push(t_d);
+		
+		t_old_offset = t_new_offset + 1;
+	}
+	
+	if (t_success)
+		t_list . Take(r_list, r_count);
+	
+	return t_success;
+}
+
+static bool MCPropertyParseDoubleList(MCStringRef p_input, char_t p_delimiter, uindex_t& r_count, double*& r_list)
+{
+    uindex_t t_length;
+	t_length = MCStringGetLength(p_input);
+    
+    if (t_length == 0)
+    {
+        r_count = 0;
+        r_list = nil;
+        return true;
+    }
+    
+	MCAutoArray<double> t_list;
+	
+    bool t_success;
+    t_success = true;
+    
+	uindex_t t_old_offset;
+	t_old_offset = 0;
+	uindex_t t_new_offset;
+	t_new_offset = 0;
+	
+	while (t_success && t_old_offset <= t_length)
+	{
+		MCAutoStringRef t_double_string;
+		double t_d;
+		
+		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
+			t_new_offset = t_length;
+		
+        if (t_new_offset <= t_old_offset)
+            break;
+        
+		if (t_success)
+            t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_double_string);
+		
+		if (t_success)
+			t_success = MCU_stor8(*t_double_string, t_d);
 		
 		if (t_success)
 			t_success = t_list . Push(t_d);
@@ -2095,6 +2172,23 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                 char_t t_delimiter;
                 t_delimiter = prop -> type == kMCPropertyTypeLinesOfUInt ? '\n' : ',';
                 if (MCPropertyFormatUIntList(t_value, t_count, t_delimiter, r_value . stringref_value))
+                {
+                    r_value . type = kMCExecValueTypeStringRef;
+                }
+            }
+        }
+            break;
+            
+        case kMCPropertyTypeLinesOfDouble:
+        {
+            double* t_value;
+            uindex_t t_count;
+            ((void(*)(MCExecContext&, void *, uindex_t&, double*&))prop -> getter)(ctxt, mark, t_count, t_value);
+            if (!ctxt . HasError())
+            {
+                char_t t_delimiter;
+                t_delimiter = prop -> type == kMCPropertyTypeLinesOfDouble ? '\n' : ',';
+                if (MCPropertyFormatDoubleList(t_value, t_count, t_delimiter, r_value . stringref_value))
                 {
                     r_value . type = kMCExecValueTypeStringRef;
                 }
@@ -2845,6 +2939,26 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             
             if (!ctxt . HasError())
                 ((void(*)(MCExecContext&, void *, uindex_t, uinteger_t*))prop -> setter)(ctxt, mark, t_count, t_value);
+            
+            MCMemoryDeleteArray(t_value);
+        }
+            break;
+            
+        case kMCPropertyTypeLinesOfDouble:
+        {
+            MCAutoStringRef t_input;
+            double* t_value;
+            uindex_t t_count;
+            
+            char_t t_delimiter;
+            t_delimiter = prop -> type == kMCPropertyTypeLinesOfDouble ? '\n' : ',';
+            
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_input));
+            if (!MCPropertyParseDoubleList(*t_input, t_delimiter, t_count, t_value))
+                ctxt . LegacyThrow(EE_PROPERTY_NAN);
+            
+            if (!ctxt . HasError())
+                ((void(*)(MCExecContext&, void *, uindex_t, double*))prop -> setter)(ctxt, mark, t_count, t_value);
             
             MCMemoryDeleteArray(t_value);
         }

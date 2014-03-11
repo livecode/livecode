@@ -241,6 +241,7 @@ enum MCPropertyType
     kMCPropertyTypeLinesOfString,
     kMCPropertyTypeLinesOfUInt,
     kMCPropertyTypeLinesOfUIntX2,
+    kMCPropertyTypeLinesOfDouble,
     kMCPropertyTypeLinesOfPoint,
     kMCPropertyTypeItemsOfUInt,
     kMCPropertyTypeMixedBool,
@@ -473,6 +474,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkGetName(mth) MCPropertyThunkImp(mth, MCNameRef&)
 #define MCPropertyThunkGetItemsOfUInt(mth) MCPropertyListThunkImp(mth,uindex_t&,uinteger_t*&)
 #define MCPropertyThunkGetLinesOfString(mth) MCPropertyListThunkImp(mth,uindex_t&,MCStringRef*&)
+#define MCPropertyThunkGetLinesOfDouble(mth) MCPropertyListThunkImp(mth,uindex_t&,double*&)
 
 #define MCPropertyThunkSetAny(mth) MCPropertyThunkImp(mth, MCValueRef)
 #define MCPropertyThunkSetBool(mth) MCPropertyThunkImp(mth, bool)
@@ -503,6 +505,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkSetName(mth) MCPropertyThunkImp(mth, MCNameRef)
 #define MCPropertyThunkSetItemsOfUInt(mth) MCPropertyListThunkImp(mth,uindex_t,uinteger_t*)
 #define MCPropertyThunkSetLinesOfString(mth) MCPropertyListThunkImp(mth,uindex_t,MCStringRef*)
+#define MCPropertyThunkSetLinesOfDouble(mth) MCPropertyListThunkImp(mth,uindex_t,double*)
 
 #define MCPropertyObjectThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectPtr*,typ))MCPropertyObjectThunk<obj,typ,&obj::mth>
 #define MCPropertyObjectPartThunkImp(obj, mth, typ) (void(*)(MCExecContext&,MCObjectPtr*,typ))MCPropertyObjectPartThunk<obj,typ,&obj::mth>
@@ -730,10 +733,6 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 
 #define DEFINE_RO_ARRAY_PROPERTY(prop, type, module, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyThunkArrayGet##type(MC##module##Get##tag), nil, false, true, kMCPropertyInfoChunkTypeNone },
-
-#define DEFINE_RO_LIST_PROPERTY(prop, type, module, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyListThunkGet##type(MC##module##Get##tag), nil },
-
 
 #define DEFINE_RW_OBJ_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(obj, Get##tag), (void *)MCPropertyObjectThunkSet##type(obj, Set##tag), false, false, kMCPropertyInfoChunkTypeNone },
@@ -2713,6 +2712,15 @@ extern MCExecMethodInfo *kMCInterfaceExecRelayerRelativeToControlMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecResolveImageByNameMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecResolveImageByIdMethodInfo;
 
+extern MCExecMethodInfo *kMCInterfaceGetPixelScaleMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceSetPixelScaleMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceGetSystemPixelScaleMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceSetUsePixelScalingMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceGetUsePixelScalingMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceGetScreenPixelScaleMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceGetScreenPixelScalesMethodInfo;
+
+
 void MCInterfaceInitialize(MCExecContext& ctxt);
 void MCInterfaceFinalize(MCExecContext& ctxt);
 
@@ -2938,17 +2946,17 @@ void MCInterfaceExecUnlockRecent(MCExecContext& ctxt);
 void MCInterfaceExecUnlockScreen(MCExecContext& ctxt);
 void MCInterfaceExecUnlockScreenWithEffect(MCExecContext& ctxt, MCVisualEffect *region);
 
-void MCInterfaceExecImportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region);
-void MCInterfaceExecImportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region);
+void MCInterfaceExecImportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region, MCPoint *p_at_size);
+void MCInterfaceExecImportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, MCPoint *p_at_size);
 void MCInterfaceExecImportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size);
 void MCInterfaceExecImportAudioClip(MCExecContext& ctxt, MCStringRef p_filename);
 void MCInterfaceExecImportVideoClip(MCExecContext& ctxt, MCStringRef p_filename);
 void MCInterfaceExecImportImage(MCExecContext& ctxt, MCStringRef p_filename, MCStringRef p_mask_filename, MCObject *p_container);
 
-void MCInterfaceExecExportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region, int format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data);
-void MCInterfaceExecExportSnapshotOfScreenToFile(MCExecContext& ctxt, MCRectangle *p_region, int format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename);
-void MCInterfaceExecExportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, int format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data);
-void MCInterfaceExecExportSnapshotOfStackToFile(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, int format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename);
+void MCInterfaceExecExportSnapshotOfScreen(MCExecContext& ctxt, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data);
+void MCInterfaceExecExportSnapshotOfScreenToFile(MCExecContext& ctxt, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename);
+void MCInterfaceExecExportSnapshotOfStack(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data);
+void MCInterfaceExecExportSnapshotOfStackToFile(MCExecContext& ctxt, MCStringRef p_stack, MCStringRef p_display, MCRectangle *p_region, MCPoint *p_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename);
 void MCInterfaceExecExportSnapshotOfObject(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data);
 void MCInterfaceExecExportSnapshotOfObjectToFile(MCExecContext& ctxt, MCObject *p_target, MCRectangle *p_region, bool p_with_effects, MCPoint *p_at_size, int format, MCInterfaceImagePaletteSettings *p_palette, MCStringRef p_filename, MCStringRef p_mask_filename);
 void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCDataRef &r_data);
@@ -3270,6 +3278,11 @@ void MCInterfaceExecResolveImageByName(MCExecContext& ctxt, MCObject *p_object, 
 void MCInterfaceGetPixelScale(MCExecContext& ctxt, double &r_scale);
 void MCInterfaceSetPixelScale(MCExecContext& ctxt, double p_scale);
 void MCInterfaceGetSystemPixelScale(MCExecContext& ctxt, double &r_scale);
+void MCInterfaceSetUsePixelScaling(MCExecContext& ctxt, bool p_setting);
+void MCInterfaceGetUsePixelScaling(MCExecContext& ctxt, bool &r_setting);
+void MCInterfaceGetScreenPixelScale(MCExecContext& ctxt, double& r_scale);
+void MCInterfaceGetScreenPixelScales(MCExecContext& ctxt, uindex_t& r_count, double*& r_scale);
+
 ///////////
 
 struct MCInterfaceLayer;
@@ -4256,6 +4269,7 @@ extern MCExecMethodInfo *kMCSecurityExecBlockDecryptWithPasswordMethodInfo;
 extern MCExecMethodInfo *kMCSecurityExecBlockDecryptWithKeyMethodInfo;
 extern MCExecMethodInfo *kMCSecurityGetSslCertificatesMethodInfo;
 extern MCExecMethodInfo *kMCSecuritySetSslCertificatesMethodInfo;
+extern MCExecMethodInfo *kMCSecurityExecSecureSocketMethodInfo;
 
 void MCSecurityEvalEncrypt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_dest);
 void MCSecurityEvalCipherNames(MCExecContext& ctxt, MCStringRef& r_names);
@@ -4270,6 +4284,8 @@ void MCSecurityExecBlockDecryptWithKey(MCExecContext& ctxt, MCStringRef p_data, 
 
 void MCSecurityGetSslCertificates(MCExecContext& ctxt, MCStringRef& r_value);
 void MCSecuritySetSslCertificates(MCExecContext& ctxt, MCStringRef p_value);
+
+void MCSecurityExecSecureSocket(MCExecContext& ctxt, MCNameRef p_socket, bool p_secure_verify);
 
 ///////////
 
@@ -4778,6 +4794,7 @@ void MCServerSetSessionId(MCExecContext& ctxt, MCStringRef p_value);
 
 extern MCExecMethodInfo *kMCDebuggingExecBreakpointMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingExecDebugDoMethodInfo;
+extern MCExecMethodInfo *kMCDebuggingExecAssertMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingGetTraceAbortMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingSetTraceAbortMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingGetTraceDelayMethodInfo;
@@ -4800,6 +4817,7 @@ extern MCExecMethodInfo *kMCDebuggingSetWatchedVariablesMethodInfo;
 
 void MCDebuggingExecBreakpoint(MCExecContext& ctxt, uinteger_t p_line, uinteger_t p_pos);
 void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos);
+void MCDebuggingExecAssert(MCExecContext& ctxt, int type, bool p_eval_success, bool p_result);
 
 void MCDebuggingGetTraceAbort(MCExecContext& ctxtm, bool& r_value);
 void MCDebuggingSetTraceAbort(MCExecContext& ctxtm, bool p_value);

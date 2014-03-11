@@ -329,6 +329,7 @@ MCNameRef MCN_messagename;
 MCNameRef MCN_hcstat;
 MCNameRef MCM_apple_event;
 MCNameRef MCM_arrow_key;
+MCNameRef MCM_assert_error;
 MCNameRef MCM_backspace_key;
 MCNameRef MCM_close_background;
 MCNameRef MCM_close_card;
@@ -760,6 +761,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("HyperCard Import Status", MCN_hcstat);
 	/* UNCHECKED */ MCNameCreateWithCString("appleEvent", MCM_apple_event);
 	/* UNCHECKED */ MCNameCreateWithCString("arrowKey", MCM_arrow_key);
+	/* UNCHECKED */ MCNameCreateWithCString("assertError", MCM_assert_error);
 	/* UNCHECKED */ MCNameCreateWithCString("backspaceKey", MCM_backspace_key);
 	/* UNCHECKED */ MCNameCreateWithCString("closeBackground", MCM_close_background);
 	/* UNCHECKED */ MCNameCreateWithCString("closeCard", MCM_close_card);
@@ -1193,6 +1195,7 @@ void MCU_finalize_names(void)
     
 	MCNameDelete(MCM_apple_event);
 	MCNameDelete(MCM_arrow_key);
+	MCNameDelete(MCM_assert_error);
 	MCNameDelete(MCM_backspace_key);
 	MCNameDelete(MCM_close_background);
 	MCNameDelete(MCM_close_card);

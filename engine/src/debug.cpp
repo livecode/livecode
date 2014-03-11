@@ -99,6 +99,8 @@ void MCB_error(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id)
 	// Increasing the error lock means that more MCB_error invocations won't occur as
 	// we step back up the (script) call stack.
 	MCerrorlock++;
+
+	return true;
 }
 
 void MCB_done(MCExecPoint &ep)

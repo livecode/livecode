@@ -340,6 +340,10 @@ void MCStack::SetFullscreen(MCExecContext& ctxt, bool setting)
 {
 	if (getextendedstate(ECS_FULLSCREEN) != setting)
 	{
+        // IM-2014-01-16: [[ StackScale ]] Save the old rect here as view_setfullscreen() will update the stack rect
+        if (setting)
+            old_rect = rect;
+        
         // IM-2014-02-12: [[ Bug 11783 ]] We may also need to reset the fonts on Windows when
         //   fullscreen is changed
         bool t_ideal_layout;
@@ -347,16 +351,6 @@ void MCStack::SetFullscreen(MCExecContext& ctxt, bool setting)
         
 		setextendedstate(setting, ECS_FULLSCREEN);
         view_setfullscreen(setting);
-        
-		// MW-2012-10-04: [[ Bug 10436 ]] Use 'setrect' to change the rect
-		//   field.
-		if (setting)
-			old_rect = rect ;
-		else if ((old_rect . width > 0) && (old_rect . height > 0))
-			setrect(old_rect);
-		
-		if (opened > 0) 
-			reopenwindow();
         
         if ((t_ideal_layout != getuseideallayout()) && opened)
             purgefonts();
@@ -377,16 +371,26 @@ void MCStack::SetFullscreenMode(MCExecContext& ctxt, intenum_t p_mode)
     t_ideal_layout = getuseideallayout();
     
     if (p_mode != view_getfullscreenmode())
-    {
         view_setfullscreenmode((MCStackFullscreenMode)p_mode);
-        if (view_getfullscreen() && opened > 0)
-            // IM-2013-10-04: [[ FullscreenMode ]] Change the rect back to old_rect,
-            // rather than reopening the window.
-            setrect(old_rect);
-    }
     
     if ((t_ideal_layout != getuseideallayout()) && opened)
         purgefonts();
+}
+
+void MCStack::GetScaleFactor(MCExecContext& ctxt, double& r_scale)
+{
+    r_scale = view_get_content_scale();
+}
+
+void MCStack::SetScaleFactor(MCExecContext& ctxt, double p_scale)
+{
+    if (p_scale <= 0)
+    {
+        ctxt . LegacyThrow(EE_STACK_BADSCALEFACTOR);
+        return;
+    }
+    
+    view_set_content_scale(p_scale);
 }
 
 void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
