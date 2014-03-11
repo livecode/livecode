@@ -88,13 +88,11 @@ static bool MCLogicIsEqualTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef 
 				{
 					if (t_result)
 						continue;
-
-					r_result = false;
-					return true;
 				}
-				else
-					return false;
 			}
+            
+            r_result = false;
+            return true;
 		}
 
 		r_result = true;
