@@ -511,6 +511,8 @@
 		7278F63E1843A2B100E35A65 /* libiculx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC518351E7400858545 /* libiculx.a */; };
 		7278F63F1843A2B100E35A65 /* libicutu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC618351E7400858545 /* libicutu.a */; };
 		7278F6401843A2B100E35A65 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC718351E7400858545 /* libicuuc.a */; };
+		72876DE618CF32C400C20405 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 76F0CC9018CA28E500C01A67 /* libskia.a */; };
+		72876DE718CF32D700C20405 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 76F0CC9018CA28E500C01A67 /* libskia.a */; };
 		72D6032418476FC90022379C /* libicudata.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC218351E7400858545 /* libicudata.a */; };
 		72D6032518476FC90022379C /* libicui18n.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC018351E1800858545 /* libicui18n.a */; };
 		72D6032618476FC90022379C /* libicuio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC318351E7400858545 /* libicuio.a */; };
@@ -532,9 +534,6 @@
 		76D47DE918030E50006F9102 /* exec-interface-field-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76D47DE81802FD03006F9102 /* exec-interface-field-chunk.cpp */; };
 		76EF3163181E6BD900FAC195 /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 766E32A1180EE5BC00CF7FCF /* libgraphics.a */; };
 		76EF3165181E6BF700FAC195 /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 766E32A1180EE5BC00CF7FCF /* libgraphics.a */; };
-		76EF3192181E74E600FAC195 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
-		76EF3194181E74F600FAC195 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
-		76EF3195181E74FB00FAC195 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		76EF3197181E762C00FAC195 /* LiveCode-Community.rsrc in Resources */ = {isa = PBXBuildFile; fileRef = 76EF3196181E762C00FAC195 /* LiveCode-Community.rsrc */; };
 		76EF31A0181E7A1400FAC195 /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF319F181E79FF00FAC195 /* stackview.cpp */; };
 		76EF31A1181E7A1400FAC195 /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF319F181E79FF00FAC195 /* stackview.cpp */; };
@@ -1681,6 +1680,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				72876DE718CF32D700C20405 /* libskia.a in Frameworks */,
 				72D6038618477E640022379C /* QuartzCore.framework in Frameworks */,
 				72D6032418476FC90022379C /* libicudata.a in Frameworks */,
 				72D6032518476FC90022379C /* libicui18n.a in Frameworks */,
@@ -1689,7 +1689,6 @@
 				72D6032818476FC90022379C /* libiculx.a in Frameworks */,
 				72D6032918476FC90022379C /* libicutu.a in Frameworks */,
 				72D6032A18476FC90022379C /* libicuuc.a in Frameworks */,
-				76EF3192181E74E600FAC195 /* (null) in Frameworks */,
 				76EF3165181E6BF700FAC195 /* libgraphics.a in Frameworks */,
 				4D56632017D9CD1E00C4A0B1 /* libfoundation.a in Frameworks */,
 				4D2A57C41198634300135143 /* libkernel.a in Frameworks */,
@@ -1726,7 +1725,6 @@
 				721CAACC18351E7400858545 /* libicutu.a in Frameworks */,
 				721CAACD18351E7400858545 /* libicuuc.a in Frameworks */,
 				721CAAC118351E1800858545 /* libicui18n.a in Frameworks */,
-				76EF3195181E74FB00FAC195 /* (null) in Frameworks */,
 				4D7FA7BF1594E10500EEF440 /* libfoundation.a in Frameworks */,
 				4DEE2C7A0FDE52770009423C /* libkernel.a in Frameworks */,
 				4D221ACB171D59ED00E7E557 /* libkernel-development.a in Frameworks */,
@@ -1757,6 +1755,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				72876DE618CF32C400C20405 /* libskia.a in Frameworks */,
 				72D6038518477E5D0022379C /* QuartzCore.framework in Frameworks */,
 				7278F63A1843A2B100E35A65 /* libicudata.a in Frameworks */,
 				7278F63B1843A2B100E35A65 /* libicui18n.a in Frameworks */,
@@ -1765,7 +1764,6 @@
 				7278F63E1843A2B100E35A65 /* libiculx.a in Frameworks */,
 				7278F63F1843A2B100E35A65 /* libicutu.a in Frameworks */,
 				7278F6401843A2B100E35A65 /* libicuuc.a in Frameworks */,
-				76EF3194181E74F600FAC195 /* (null) in Frameworks */,
 				76EF3163181E6BD900FAC195 /* libgraphics.a in Frameworks */,
 				4D6C28B61647DC4F007C96B7 /* libfoundation.a in Frameworks */,
 				4DEE2CA20FDE53620009423C /* libkernel.a in Frameworks */,
@@ -4228,7 +4226,6 @@
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "LiveCode-Community";
-				SDKROOT = macosx10.6;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -4243,7 +4240,6 @@
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "LiveCode-Community";
-				SDKROOT = macosx10.6;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
