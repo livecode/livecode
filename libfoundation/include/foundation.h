@@ -1475,6 +1475,24 @@ bool MCStringMapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_grapheme_ran
 // Maps from a code unit (StringRef) range to a grapheme (visual character) range
 bool MCStringUnmapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange& r_grapheme_range);
 
+// Maps from a word range to a codeunit (StringRef) range
+bool MCStringMapNaturalWordIndices(MCStringRef, MCLocaleRef, MCRange p_word_range, MCRange& r_string_range);
+
+// Maps from a codeunit (StringRef) range to a word range
+bool MCStringUnmapNaturalWordIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange &r_word_range);
+
+// Maps from a sentence range to a codeunit (StringRef) range
+bool MCStringMapSentenceIndices(MCStringRef, MCLocaleRef, MCRange p_sentence_range, MCRange& r_string_range);
+
+// Maps from a codeunit (StringRef) range to a sentence range
+bool MCStringUnmapSentenceIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange &r_sentence_range);
+
+// Maps from a paragraph range to a codeunit (StringRef) range
+bool MCStringMapParagraphIndices(MCStringRef, MCLocaleRef, MCRange p_paragraph_range, MCRange& r_string_range);
+
+// Maps from a codeunit (StringRef) range to a word range
+bool MCStringUnmapParagraphIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange &r_paragraph_range);
+
 // Flexible grapheme/codepoint/codeunit mapping used for "char" chunk expressions
 enum MCCharChunkType
 {

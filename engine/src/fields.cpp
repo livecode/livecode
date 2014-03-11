@@ -70,7 +70,7 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
 
-	if (type == CT_ITEM)
+	if (type != CT_PARAGRAPH)
 	{
         
         extern bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p_type, Sort_type p_direction, int p_form, MCExpression *p_by, MCStringRef &r_output);

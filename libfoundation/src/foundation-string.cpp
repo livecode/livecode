@@ -953,21 +953,14 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
     return true;
 }
 
-bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
+bool MCStringMapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
 {
     MCAssert(self != nil);
     MCAssert(p_locale != nil);
     
-    // Quick-n-dirty workaround
-    if (MCStringIsNative(self))
-    {
-        r_out_range = p_in_range;
-        return true;
-    }
-    
-    // Create a grapheme break iterator
+    // Create the appropriate break iterator
     MCBreakIteratorRef t_iter;
-    if (!MCLocaleBreakIteratorCreate(p_locale, kMCBreakIteratorTypeCharacter, t_iter))
+    if (!MCLocaleBreakIteratorCreate(p_locale, p_type, t_iter))
         return false;
     
     // Set the iterator's text
@@ -980,6 +973,7 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
     // Advance to the beginning of the specified range
     uindex_t t_start;
     t_start = MCLocaleBreakIteratorNext(t_iter, p_in_range.offset);
+    
     if (t_start == kMCLocaleBreakIteratorDone)
     {
         r_out_range = MCRangeMake(self -> char_count, 0);
@@ -1001,25 +995,26 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
     return true;
 }
 
-bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
+bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
 {
-    MCAssert(self != nil);
-    MCAssert(p_locale != nil);
-    
     // Quick-n-dirty workaround
-    if (self -> flags & kMCStringFlagIsNative)
+    if (MCStringIsNative(self))
     {
         r_out_range = p_in_range;
         return true;
     }
     
-    // Check that the input range is valid
-    if (p_in_range.offset + p_in_range.length > self -> char_count)
-        return false;
+    return MCStringMapIndices(self, kMCBreakIteratorTypeCharacter, p_locale, p_in_range, r_out_range);
+}
+
+bool MCStringMapNaturalWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
+{
+    MCAssert(self != nil);
+    MCAssert(p_locale != nil);
     
-    // Create a grapheme break iterator
+    // Create the appropriate break iterator
     MCBreakIteratorRef t_iter;
-    if (!MCLocaleBreakIteratorCreate(p_locale, kMCBreakIteratorTypeCharacter, t_iter))
+    if (!MCLocaleBreakIteratorCreate(p_locale, kMCBreakIteratorTypeWord, t_iter))
         return false;
     
     // Set the iterator's text
@@ -1029,7 +1024,76 @@ bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
         return false;
     }
     
-    // Count how many graphemes it takes to reach or exceed the offset
+    // Skip any initial spaces
+    uindex_t t_start;
+    t_start = 0;
+    
+    // Advance to the beginning of the specified range
+    while (t_start != kMCLocaleBreakIteratorDone && p_in_range . offset--)
+    {
+        t_start = MCLocaleBreakIteratorAdvance(t_iter);
+        if (MCLocaleBreakIteratorIsBoundary(t_iter, t_start + 1))
+            p_in_range . offset++;
+    }
+    
+    if (t_start == kMCLocaleBreakIteratorDone)
+    {
+        r_out_range = MCRangeMake(self -> char_count, 0);
+        return true;
+    }
+
+    // Advance to the end of the current word
+    uindex_t t_end;
+    t_end = MCLocaleBreakIteratorNext(t_iter, 1);
+    
+    // While more words are requested, find the end of the next word.
+    while (t_end != kMCLocaleBreakIteratorDone && --p_in_range.length)
+    {
+        MCLocaleBreakIteratorAdvance(t_iter);
+        t_end = MCLocaleBreakIteratorNext(t_iter, 1);
+        if (MCLocaleBreakIteratorIsBoundary(t_iter, t_end + 1))
+            p_in_range . length++;
+    }
+    
+    if (t_end == kMCLocaleBreakIteratorDone)
+        t_end = self -> char_count;
+    
+    MCRange t_units;
+    t_units = MCRangeMake(t_start, t_end - t_start);
+    
+    // All done
+    MCLocaleBreakIteratorRelease(t_iter);
+    r_out_range = t_units;
+    return true;
+}
+
+bool MCStringMapSentenceIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
+{
+    return MCStringMapIndices(self, kMCBreakIteratorTypeSentence, p_locale, p_in_range, r_out_range);
+}
+
+bool MCStringUnmapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
+{
+    MCAssert(self != nil);
+    MCAssert(p_locale != nil);
+    
+    // Check that the input range is valid
+    if (p_in_range.offset + p_in_range.length > self -> char_count)
+        return false;
+    
+    // Create a break iterator of the appropriate type
+    MCBreakIteratorRef t_iter;
+    if (!MCLocaleBreakIteratorCreate(p_locale, p_type, t_iter))
+        return false;
+    
+    // Set the iterator's text
+    if (!MCLocaleBreakIteratorSetText(t_iter, self))
+    {
+        MCLocaleBreakIteratorRelease(t_iter);
+        return false;
+    }
+    
+    // Count how many of the given unit it takes to reach or exceed the offset
     uindex_t t_start, t_offset;
     t_start = 0;
     t_offset = 0;
@@ -1059,13 +1123,35 @@ bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
             break;
     }
     
-    MCRange t_graphemes;
-    t_graphemes = MCRangeMake(t_start, t_end);
-
+    MCRange t_units;
+    t_units = MCRangeMake(t_start, t_end);
+    
     // All done
     MCLocaleBreakIteratorRelease(t_iter);
-    r_out_range = t_graphemes;
+    r_out_range = t_units;
     return true;
+}
+
+bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
+{
+    // Quick-n-dirty workaround
+    if (self -> flags & kMCStringFlagIsNative)
+    {
+        r_out_range = p_in_range;
+        return true;
+    }
+    
+    return MCStringUnmapIndices(self, kMCBreakIteratorTypeCharacter, p_locale, p_in_range, r_out_range);
+}
+
+bool MCStringUnmapNaturalWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
+{
+    return MCStringUnmapIndices(self, kMCBreakIteratorTypeWord, p_locale, p_in_range, r_out_range);
+}
+
+bool MCStringUnmapSentenceIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
+{
+    return MCStringUnmapIndices(self, kMCBreakIteratorTypeSentence, p_locale, p_in_range, r_out_range);
 }
 
 extern MCLocaleRef kMCBasicLocale;
