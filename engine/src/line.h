@@ -60,13 +60,15 @@ public:
 		r_last = lastblock;
 	}
 	
-	//////////
+    //////////
 	
 	void GetRange(findex_t &r_index, findex_t &r_length);
 	findex_t GetOffset();
 	findex_t GetLength();
-	findex_t GetCursorIndex(int2 x, Boolean chunk);
-	uint2 GetCursorX(findex_t i);
+	findex_t GetCursorIndex(int2 x, Boolean chunk, bool forward);
+	uint2 GetCursorXPrimary(findex_t i, bool forward);
+    uint2 GetCursorXSecondary(findex_t i, bool forward);
+    uint2 GetCursorXHelper(findex_t i, bool moving_forward);
 	
 	//////////
 	
@@ -102,6 +104,12 @@ public:
 	{
 		return (MCLine *)MCDLlist::remove((MCDLlist *&)list);
 	}
+    
+private:
+    
+    ////////// BIDIRECTIONAL SUPPORT
+    
+    void ResolveDisplayOrder();
 };
 
 #endif

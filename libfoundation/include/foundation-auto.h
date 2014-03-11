@@ -219,7 +219,10 @@ public:
     
     bool Lock(MCStringRef p_string)
     {
-        if (MCStringGetCharPtr(p_string) == nil)
+        if (p_string == nil)
+			return false;
+		
+		if (MCStringGetCharPtr(p_string) == nil)
         {
             m_ref = nil;
             return MCStringConvertToWString(p_string, m_wstring);

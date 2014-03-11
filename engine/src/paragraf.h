@@ -137,12 +137,14 @@ class MCParagraph : public MCDLlist
 	MCLine *lines;
 	findex_t focusedindex;
 	findex_t startindex, endindex, originalindex;
+    bool moving_left, moving_forward;        // Need to know direction for BiDi support
 	uint2 opened;
 	uint1 state;
 	// MP-2013-09-02: [[ FasterField ]] If true, it means the paragraph needs layout.
 	bool needs_layout : 1;
 	// MW-2012-01-25: [[ ParaStyles ]] This paragraphs collection of attrs.
 	MCParagraphAttrs *attrs;
+    MCFieldTextDirection base_direction;
 
     static uint2 cursorwidth;
 
@@ -240,7 +242,20 @@ public:
 		return m_text;
 	}
 	
-	//////////
+	////////// BIDIRECTIONAL SUPPORT
+    
+    MCFieldTextDirection getbasetextdirection() const
+    {
+        return base_direction;
+    }
+    
+    void SetBlockDirectionLevel(findex_t si, findex_t ei, uint8_t level);
+    
+    void resolvetextdirections();
+    
+    uint8_t firststrongisolate(uindex_t p_offset) const;
+    
+    //////////
 	
 	bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor);
 
@@ -365,7 +380,8 @@ public:
 	// Move the focused index to the place specified by type.
 	// Called by:
 	//   MCField::fmove
-	uint1 fmovefocus(Field_translations type);
+	uint1 fmovefocus(Field_translations type, bool force_logical = false);
+    uint1 fmovefocus_visual(Field_translations type);
 
 	// Initialize the text buffer
 	// Called by:
@@ -723,6 +739,7 @@ public:
 	//   MCField::fmove
 	//   MCField::getcompositionrect
 	MCRectangle getcursorrect(findex_t fi, uint2 fixedheight, bool include_space);
+    MCRectangle getsplitcursorrect(findex_t fi, uint2 fixedheight, bool include_space, bool primary);
 
 	// Compute the (x, y) location of the given index in the paragraph
 	// Called by:

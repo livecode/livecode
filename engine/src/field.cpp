@@ -50,7 +50,8 @@ int2 MCField::clickx;
 int2 MCField::clicky;
 int2 MCField::goalx;
 
-MCRectangle MCField::cursorrect;
+MCRectangle MCField::cursorrectp;
+MCRectangle MCField::cursorrects;
 Boolean MCField::cursoron = False;
 MCField *MCField::cursorfield = NULL;
 
@@ -100,6 +101,8 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_LIST_BEHAVIOR, Bool, MCField, ListBehavior)
 	DEFINE_RW_OBJ_PROPERTY(P_MULTIPLE_HILITES, Bool, MCField, MultipleHilites)
 	DEFINE_RW_OBJ_PROPERTY(P_NONCONTIGUOUS_HILITES, Bool, MCField, NoncontiguousHilites)
+    DEFINE_RW_OBJ_ENUM_PROPERTY(P_CURSORMOVEMENT, InterfaceFieldCursorMovement, MCField, CursorMovement)
+    DEFINE_RW_OBJ_ENUM_PROPERTY(P_TEXTDIRECTION, InterfaceFieldTextDirection, MCField, TextDirection)
 	DEFINE_RW_OBJ_PART_PROPERTY(P_TEXT, String, MCField, Text)
 	DEFINE_RW_OBJ_PART_PROPERTY(P_UNICODE_TEXT, BinaryString, MCField, UnicodeText)
 	DEFINE_RW_OBJ_PART_NON_EFFECTIVE_PROPERTY(P_HTML_TEXT, Any, MCField, HtmlText)
@@ -233,6 +236,8 @@ MCField::MCField()
 	scrollbarwidth = MCscrollbarwidth;
 	tabs = NULL;
 	ntabs = 0;
+    cursor_movement = kMCFieldCursorMovementDefault;
+    text_direction = kMCFieldTextDirectionAuto;
 	label = MCValueRetain(kMCEmptyString);
 }
 
@@ -248,6 +253,7 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
 	cury = focusedy = firsty = topmargin;
 	firstparagraph = lastparagraph = NULL;
 	foundlength = 0;
+    cursor_movement = fref.cursor_movement;
 	if (fref.vscrollbar != NULL)
 	{
 		vscrollbar = new MCScrollbar(*fref.vscrollbar);
@@ -3344,4 +3350,22 @@ bool MCField::imagechanged(MCImage *p_image, bool p_deleting)
 	}
 
 	return t_used;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool MCField::IsCursorMovementVisual()
+{
+    if (cursor_movement == kMCFieldCursorMovementLogical)
+        return false;
+    else if (cursor_movement == kMCFieldCursorMovementVisual)
+        return true;
+    else
+    {
+#ifdef __WIN32
+        return false;
+#else
+        return true;
+#endif
+    }
 }

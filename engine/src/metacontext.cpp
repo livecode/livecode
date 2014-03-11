@@ -403,7 +403,7 @@ void MCMetaContext::drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_f
     drawtext_substring(x, y, p_string, t_range, p_font, image);
 }
 
-void MCMetaContext::drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image)
+void MCMetaContext::drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image, bool p_rtl)
 {
 	// MW-2009-12-22: Make sure we don't generate 0 length text mark records
 	if (MCStringIsEmpty(p_string) || p_range.length == 0)

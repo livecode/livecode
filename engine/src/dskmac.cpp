@@ -162,11 +162,14 @@ static triplets ourkeys[] =
 #define MINIMUM_FAKE_PID (1 << 29)
 
 static int4 curpid = MINIMUM_FAKE_PID;
-static char *replymessage;       //used in DoSpecial() & other routines
-static uint4 replylength;
+//static char *replymessage;       //used in DoSpecial() & other routines
+//static uint4 replylength;
 static AEKeyword replykeyword;   // Use in DoSpecial & other routines
-static char *AEanswerData;// used by DoAEAnswer() & MCS_send()
-static char *AEanswerErr; //the reply error from an AE send by MC.
+//static char *AEanswerData;// used by DoAEAnswer() & MCS_send()
+//static char *AEanswerErr; //the reply error from an AE send by MC.
+static MCStringRef AEReplyMessage;
+static MCStringRef AEAnswerData;
+static MCStringRef AEAnswerErr;
 static const AppleEvent *aePtr; //current apple event for mcs_request_ae()
 
 /***************************************************************************
@@ -175,8 +178,8 @@ static const AppleEvent *aePtr; //current apple event for mcs_request_ae()
 
 static OSErr getDescFromAddress(MCStringRef address, AEDesc *retDesc);
 static OSErr getDesc(short locKind, StringPtr zone, StringPtr machine, StringPtr app, AEDesc *retDesc);
-static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, char *&result);
-static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, char *&result);
+static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result);
+static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result);
 static OSErr getAddressFromDesc(AEAddressDesc targetDesc, char *address);
 
 static void getosacomponents();
@@ -436,13 +439,15 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 		}
 		else
 		{ //ES_NORMAL
-			if (replymessage == NULL) //no reply, will return no error code
+			if (AEReplyMessage == NULL) //no reply, will return no error code
 				err = noErr;
 			else
 			{
 				if (reply->descriptorType != typeNull && reply->dataHandle != NULL)
 				{
-					err = AEPutParamPtr(reply, replykeyword, typeChar, replymessage, replylength);
+					MCAutoStringRefAsUTF8String t_reply;
+                    /* UNCHECKED */ t_reply.Lock(AEReplyMessage);
+                    err = AEPutParamPtr(reply, replykeyword, typeUTF8Text, *t_reply, t_reply.Size());
 					if (err != noErr)
 					{
 						short e = err;
@@ -450,9 +455,10 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 					}
 				}
 			}
+            
+            MCValueRelease(AEReplyMessage);
+            AEReplyMessage = NULL;
 		}
-		delete replymessage;
-		replymessage = NULL;
 	}
 	else
 		if (aeclass == kAEMiscStandards
@@ -460,38 +466,36 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 		{
 			DescType rType;
 			Size rSize;  //actual size returned
-			if ((err = AEGetParamPtr(aePtr, keyDirectObject, typeChar, &rType, NULL, 0, &rSize)) == noErr)
+			if ((err = AEGetParamPtr(aePtr, keyDirectObject, typeUTF8Text, &rType, NULL, 0, &rSize)) == noErr)
 			{
-				char *sptr = new char[rSize + 1];
-				sptr[rSize] = '\0';
-				AEGetParamPtr(aePtr, keyDirectObject, typeChar, &rType, sptr, rSize, &rSize);
+				byte_t *sptr = new byte_t[rSize + 1];
+				AEGetParamPtr(aePtr, keyDirectObject, typeUTF8Text, &rType, sptr, rSize, &rSize);
                 MCExecContext ctxt(MCdefaultstackptr -> getcard(), nil, nil);
                 MCAutoStringRef t_sptr;
-                /* UNCHECKED */ MCStringCreateWithCString(sptr, &t_sptr);
+                /* UNCHECKED */ MCStringCreateWithBytesAndRelease(sptr, rSize, kMCStringEncodingUTF8, false, &t_sptr);
 				if (aeid == kAEDoScript)
 				{
                     MCdefaultstackptr->getcard()->domess(*t_sptr);
                     MCAutoValueRef t_value;
-                    MCAutoDataRef t_data;
+                    MCAutoStringRef t_string;
+                    MCAutoStringRefAsUTF8String t_utf8_string;
                     /* UNCHECKED */ MCresult->eval(ctxt, &t_value);
-                    /* UNCHECKED */ ctxt . ConvertToData(*t_value, &t_data);
-                    AEPutParamPtr(reply, '----', typeChar, MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data));
+                    /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
+                    /* UNCHECKED */ t_utf8_string.Lock(*t_string);
+                    AEPutParamPtr(reply, '----', typeUTF8Text, *t_utf8_string, t_utf8_string.Size());
 				}
 				else
                 {
 					MCAutoValueRef t_val;
 					MCAutoStringRef t_string;
-                    MCAutoStringRefAsNativeChars t_auto_native;
-                    char_t* t_native;
-                    uindex_t t_native_length;
+                    MCAutoStringRefAsUTF8String t_utf8;
 
 					MCdefaultstackptr->getcard()->eval(ctxt, *t_sptr, &t_val);
 					/* UNCHECKED */ ctxt.ConvertToString(*t_val, &t_string);
-                    /* UNCHECKED */ t_auto_native . Lock(*t_string, t_native, t_native_length);
+                    /* UNCHECKED */ t_utf8.Lock(*t_string);
 
-                    AEPutParamPtr(reply, '----', typeChar, (char*)t_native, t_native_length);
+                    AEPutParamPtr(reply, '----', typeUTF8Text, *t_utf8, t_utf8.Size());
 				}
-				delete sptr;
 			}
 		}
 		else
@@ -664,11 +668,11 @@ static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long ref
 	/*If the handler returns a result code other than noErr, and if the
      client is waiting for a reply, it is returned in the keyErrorNumber
      parameter of the reply Apple event. */
-	if (AEGetParamPtr(ae, keyErrorString, typeChar, &rType, NULL, 0, &rSize) == noErr)
+	if (AEGetParamPtr(ae, keyErrorString, typeUTF8Text, &rType, NULL, 0, &rSize) == noErr)
 	{
-		AEanswerErr = new char[rSize + 1];
-		AEGetParamPtr(ae, keyErrorString, typeChar, &rType, AEanswerErr, rSize, &rSize);
-		AEanswerErr[rSize] = '\0';
+		byte_t* t_utf8 = new byte_t[rSize + 1];
+		AEGetParamPtr(ae, keyErrorString, typeUTF8Text, &rType, t_utf8, rSize, &rSize);
+		/* UNCHECKED */ MCStringCreateWithBytesAndRelease(t_utf8, rSize, kMCStringEncodingUTF8, false, AEAnswerErr);
 	}
 	else
 	{
@@ -676,26 +680,28 @@ static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long ref
 		if (AEGetParamPtr(ae, keyErrorNumber, typeSMInt, &rType, (Ptr)&e, sizeof(short), &rSize) == noErr
             && e != noErr)
 		{
-			AEanswerErr = new char[35 + I2L];
-			sprintf(AEanswerErr, "Got error %d when sending Apple event", e);
+			/* UNCHECKED */ MCStringFormat(AEAnswerErr, "Got error %d when sending Apple event", e);
 		}
 		else
 		{
-			delete AEanswerData;
-			if ((errno = AEGetParamPtr(ae, keyDirectObject, typeChar, &rType, NULL, 0, &rSize)) != noErr)
+			if (AEAnswerData != NULL)
+            {
+                MCValueRelease(AEAnswerData);
+                AEAnswerData = NULL;
+            }
+			if ((errno = AEGetParamPtr(ae, keyDirectObject, typeUTF8Text, &rType, NULL, 0, &rSize)) != noErr)
 			{
 				if (errno == errAEDescNotFound)
 				{
-					AEanswerData = MCU_empty();
+					AEAnswerData = MCValueRetain(kMCEmptyString);
 					return noErr;
 				}
-				AEanswerErr = new char[37 + I2L];
-				sprintf(AEanswerErr, "Got error %d when receiving Apple event", errno);
-				return errno;
+                /* UNCHECKED */ MCStringFormat(AEAnswerErr, "Got error %d when receiving Apple event", errno);
+                return errno;
 			}
-			AEanswerData = new char[rSize + 1];
-			AEGetParamPtr(ae, keyDirectObject, typeChar, &rType, AEanswerData, rSize, &rSize);
-			AEanswerData[rSize] = '\0';
+			byte_t *t_utf8 = new byte_t[rSize + 1];
+			AEGetParamPtr(ae, keyDirectObject, typeUTF8Text, &rType, t_utf8, rSize, &rSize);
+			/* UNCHECKED */ MCStringCreateWithBytesAndRelease(t_utf8, rSize, kMCStringEncodingUTF8, false, AEAnswerData);
 		}
 	}
 	return noErr;
@@ -3757,10 +3763,9 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         //non document related massge, assume it's typeChar message
         if (!docmessage && MCStringGetLength(p_message))
         {
-            char *t_message;
-            /* UNCHECKED */ MCStringConvertToCString(p_message, t_message);
-            AEPutParamPtr(&ae, keyDirectObject, typeChar, t_message, MCStringGetLength(p_message));
-            delete t_message;
+            MCAutoStringRefAsUTF8String t_utf8;
+            /* UNCHECKED */ t_utf8.Lock(p_message);
+            AEPutParamPtr(&ae, keyDirectObject, typeUTF8Text, *t_utf8, t_utf8.Size());
         }
         
         //Send the Apple event
@@ -3804,20 +3809,20 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                     MCresult->sets("timeout");
                     return;
                 }
-                if (AEanswerErr != NULL || AEanswerData != NULL)
+                if (AEAnswerErr != NULL || AEAnswerData != NULL)
                     break;
             }
-            if (AEanswerErr != NULL)
+            if (AEAnswerErr != NULL)
             {
-                MCresult->copysvalue(AEanswerErr);
-                delete AEanswerErr;
-                AEanswerErr = NULL;
+                MCresult->setvalueref(AEAnswerErr);
+                MCValueRelease(AEAnswerErr);
+                AEAnswerErr = NULL;
             }
             else
             {
-                MCresult->copysvalue(AEanswerData);
-                delete AEanswerData;
-                AEanswerData = NULL;
+                MCresult->setvalueref(AEAnswerData);
+                MCValueRelease(AEAnswerData);
+                AEAnswerData = NULL;
             }
             AEDisposeDesc(&answer);
         }
@@ -3847,9 +3852,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
 			replykeyword = '----';
 	}
 #endif /* MCS_reply_dsk_mac */
-        delete[] replymessage;
-        replylength = MCStringGetLength(p_message);
-        /* UNCHECKED */ MCStringConvertToCString(p_message, replymessage);
+        MCValueAssign(AEReplyMessage, p_message);
         
         //at any one time only either keyword or error is set
         if (p_keyword != NULL)
@@ -3989,12 +3992,8 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         {
             case AE_CLASS:
             {
-                char *aeclass;
-                if ((errno = getAEAttributes(aePtr, keyEventClassAttr, aeclass)) == noErr)
-                {
-                    /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)aeclass, r_value);
+                if ((errno = getAEAttributes(aePtr, keyEventClassAttr, r_value)) == noErr)
                     return;
-                }
                 break;
             }
             case AE_DATA:
@@ -4018,15 +4017,11 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                         }
                     }
                     
-                    if ((errno = AEGetParamPtr(aePtr, keyDirectObject, typeChar,
-                                               &rType, NULL, 0, &rSize)) == noErr)
+                    if ((errno = AEGetParamPtr(aePtr, keyDirectObject, typeUTF8Text, &rType, NULL, 0, &rSize)) == noErr)
                     {
-                        char *info = new char[rSize + 1]; //allocate enough buffer for data
-                        AEGetParamPtr(aePtr, keyDirectObject, typeChar,
-                                      &rType, info, rSize, &rSize); //retrive data now
-                        info[rSize] = '\0';
-                        
-                        /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)info, r_value);
+                        byte_t *t_utf8 = new byte_t[rSize + 1];
+                        AEGetParamPtr(aePtr, keyDirectObject, typeUTF8Text, &rType, t_utf8, rSize, &rSize);
+                        /* UNCHECKED */ MCStringCreateWithBytesAndRelease(t_utf8, rSize, kMCStringEncodingUTF8, false, r_value);
                     }
                     else
                     {
@@ -4043,7 +4038,6 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                 {
                     AEKeyword key;
                     /* UNCHECKED */ FourCharCodeFromString(p_message, MCStringGetLength(p_message) - sizeof(AEKeyword), (uint32_t&)key);
-                    char *info;
                     
                     if (key == keyAddressAttr || key == keyEventClassAttr
                         || key == keyEventIDAttr || key == keyEventSourceAttr
@@ -4052,42 +4046,27 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                         || key == keyReturnIDAttr || key == keyTimeoutAttr
                         || key == keyTransactionIDAttr)
                     {
-                        if ((errno = getAEAttributes(aePtr, key, info)) == noErr)
-                        {
-                            /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)info, r_value);
+                        if ((errno = getAEAttributes(aePtr, key, r_value)) == noErr)
                             return;
-                        }
                     }
                     else
                     {
-                        if ((errno = getAEParams(aePtr, key, info)) == noErr)
-                        {
-                            /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)info, r_value);
+                        if ((errno = getAEParams(aePtr, key, r_value)) == noErr)
                             return;
-                        }
                     }
                 }
             }
                 break;
             case AE_ID:
             {
-                char *aeid;
-                if ((errno = getAEAttributes(aePtr, keyEventIDAttr, aeid)) == noErr)
-                {
-                    /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)aeid, r_value);
+                if ((errno = getAEAttributes(aePtr, keyEventIDAttr, r_value)) == noErr)
                     return;
-                }
                 break;
             }
             case AE_RETURN_ID:
             {
-                char *aerid;
-                if ((errno = getAEAttributes(aePtr, keyReturnIDAttr, aerid)) == noErr)
-                {
-                    /* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t*)aerid, r_value);
+                if ((errno = getAEAttributes(aePtr, keyReturnIDAttr, r_value)) == noErr)
                     return;
-                }
-                
                 break;
             }
             case AE_SENDER:
@@ -4195,11 +4174,9 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                                    kAutoGenerateReturnID, kAnyTransactionID, &ae);
         AEDisposeDesc(&receiver); //dispose of the receiver description record
         //add parameters to the Apple event
-        char *t_message;
-        /* UNCHECKED */ MCStringConvertToCString(p_message, t_message);
-        AEPutParamPtr(&ae, keyDirectObject, typeChar,
-                      t_message, MCStringGetLength(p_message));
-        delete t_message;
+        MCAutoStringRefAsUTF8String t_message;
+        /* UNCHECKED */ t_message.Lock(p_message);
+        AEPutParamPtr(&ae, keyDirectObject, typeUTF8Text, *t_message, t_message.Size());
         //Send the Apple event
         AppleEvent answer;
         errno = AESend(&ae, &answer, kAEQueueReply, kAENormalPriority,
@@ -4231,24 +4208,22 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                 r_value = MCValueRetain(kMCEmptyString);
                 return false;
             }
-            if (AEanswerErr != NULL || AEanswerData != NULL)
+            if (AEAnswerErr != NULL || AEAnswerData != NULL)
                 break;
         }
-        if (AEanswerErr != NULL)
+        if (AEAnswerErr != NULL)
         {
-            MCresult->copysvalue(AEanswerErr);
-            delete AEanswerErr;
-            AEanswerErr = NULL;
+            MCresult->setvalueref(AEAnswerErr);
+            MCValueRelease(AEAnswerErr);
+            AEAnswerErr = NULL;
             r_value = MCValueRetain(kMCEmptyString);
             return true;
         }
         else
         {
             MCresult->clear(False);
-            if (!MCStringCreateWithCString(AEanswerData, r_value)) // Set empty string if the allocation fails
-                r_value = MCValueRetain(kMCEmptyString);
-            
-            AEanswerData = NULL;
+            r_value = AEAnswerData;     // Pass on the reference
+            AEAnswerData = NULL;
             return false;
         }
     }
@@ -8281,7 +8256,7 @@ static OSErr getDesc(short locKind, StringPtr zone, StringPtr machine,
 }
 
 // MW-2006-08-05: Vetted for Endian issues
-static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, char *&result)
+static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result)
 {
 	DescType rType;
 	Size rSize;
@@ -8295,87 +8270,84 @@ static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, char *&result)
 			{
 				Boolean b;
 				AEGetAttributePtr(ae, key, dt, &rType, &b, s, &rSize);
-				result = strclone(b ? MCtruestring : MCfalsestring);
+				r_result = MCValueRetain(b ? kMCTrueString : kMCFalseString);
+                break;
 			}
-                break;
-            case typeChar:
-                result = new char[s + 1];
+            case typeUTF8Text:
+            {
+                byte_t *result = new byte_t[s + 1];
                 AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
-                result[s] = '\0';
+                /* UNCHECKED */ MCStringCreateWithBytesAndRelease(result, s, kMCStringEncodingUTF8, false, r_result);
                 break;
+            }
+            case typeChar:
+            {
+                char_t *result = new char_t[s + 1];
+                AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
+                /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease(result, s, r_result);
+                break;
+            }
             case typeType:
             {
                 FourCharCode t_type;
                 AEGetAttributePtr(ae, key, dt, &rType, &t_type, s, &rSize);
-				result = FourCharCodeToString(t_type);
+                /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t*)FourCharCodeToString(t_type), 4, r_result);
 			}
                 break;
             case typeShortInteger:
 			{
 				int2 i;
 				AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
-				result = new char[I2L];
-				sprintf(result, "%d", i);
+                /* UNCHECKED */ MCStringFormat(r_result, "%d", i);
 				break;
 			}
             case typeLongInteger:
 			{
 				int4 i;
 				AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
-				result = new char[I4L];
-				sprintf(result, "%d", i);
+                /* UNCHECKED */ MCStringFormat(r_result, "%d", i);
 				break;
 			}
             case typeShortFloat:
 			{
 				real4 f;
 				AEGetAttributePtr(ae, key, dt, &rType, &f, s, &rSize);
-				result = new char[R4L];
-				sprintf(result, "%12.12g", f);
+                /* UNCHECKED */ MCStringFormat(r_result, "%12.12g", f);
 				break;
 			}
             case typeLongFloat:
 			{
 				real8 f;
 				AEGetAttributePtr(ae, key, dt, &rType, &f, s, &rSize);
-				result = new char[R8L];
-				sprintf(result, "%12.12g", f);
+                /* UNCHECKED */ MCStringFormat(r_result, "%12.12g", f);
 				break;
 			}
             case typeMagnitude:
 			{
 				uint4 i;
 				AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
-				result = new char[U4L];
-				sprintf(result, "%u", i);
+                /* UNCHECKED */ MCStringFormat(r_result, "%u", i);
 				break;
 			}
             case typeNull:
-                result = MCU_empty();
+                r_result = MCValueRetain(kMCEmptyString);
                 break;
             case typeFSS:
 			{
 				FSSpec fs;
 				errno = AEGetAttributePtr(ae, key, dt, &rType, &fs, s, &rSize);
-                MCAutoStringRef t_result;
-                
-				/* UNCHECKED */ MCS_mac_FSSpec2path(&fs, &t_result);
-                /* UNCHECKED */ MCStringConvertToCString(*t_result, result);
+				/* UNCHECKED */ MCS_mac_FSSpec2path(&fs, r_result);
 			}
                 break;
             case typeFSRef:
 			{
 				FSRef t_fs_ref;
 				errno = AEGetAttributePtr(ae, key, dt, &rType, &t_fs_ref, s, &rSize);
-                MCAutoStringRef t_result;
-                /* UNCHECKED */ MCS_mac_fsref_to_path(t_fs_ref, &t_result);
-                
-                /* UNCHECKED */ MCStringConvertToCString(*t_result, result);
+                /* UNCHECKED */ MCS_mac_fsref_to_path(t_fs_ref, r_result);
 			}
                 break;
             default:
-                result = new char[18];
-                sprintf(result, "unknown type %4.4s", (char *)&dt);
+                /* UNCHECKED */ MCStringFormat(r_result, "unknown type %4.4s", (char*)&dt);
                 break;
 		}
 	}
@@ -8383,7 +8355,7 @@ static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, char *&result)
 }
 
 // MW-2006-08-05: Vetted for Endian issues
-static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, char *&result)
+static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, MCStringRef &r_result)
 {
 	DescType rType;
 	Size rSize;
@@ -8397,86 +8369,84 @@ static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, char *&result)
 			{
 				Boolean b;
 				AEGetParamPtr(ae, key, dt, &rType, &b, s, &rSize);
-				result = strclone(b ? MCtruestring : MCfalsestring);
+				r_result = MCValueRetain(b ? kMCTrueString : kMCFalseString);
+                break;
 			}
-                break;
-            case typeChar:
-                result = new char[s + 1];
+            case typeUTF8Text:
+            {
+                byte_t *result = new byte_t[s + 1];
                 AEGetParamPtr(ae, key, dt, &rType, result, s, &rSize);
-                result[s] = '\0';
+                /* UNCHECKED */ MCStringCreateWithBytesAndRelease(result, s, kMCStringEncodingUTF8, false, r_result);
                 break;
+            }
+            case typeChar:
+            {
+                char_t *result = new char_t[s + 1];
+                AEGetParamPtr(ae, key, dt, &rType, result, s, &rSize);
+                /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease(result, s, r_result);
+                break;
+            }
             case typeType:
             {
                 FourCharCode t_type;
                 AEGetParamPtr(ae, key, dt, &rType, &t_type, s, &rSize);
-				result = FourCharCodeToString(t_type);
+                /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t*)FourCharCodeToString(t_type), 4, r_result);
 			}
                 break;
             case typeShortInteger:
 			{
 				int2 i;
 				AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
-				result = new char[I2L];
-				sprintf(result, "%d", i);
+                /* UNCHECKED */ MCStringFormat(r_result, "%d", i);
 				break;
 			}
             case typeLongInteger:
 			{
 				int4 i;
 				AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
-				result = new char[I4L];
-				sprintf(result, "%d", i);
+                /* UNCHECKED */ MCStringFormat(r_result, "%d", i);
 				break;
 			}
             case typeShortFloat:
 			{
 				real4 f;
 				AEGetParamPtr(ae, key, dt, &rType, &f, s, &rSize);
-				result = new char[R4L];
-				sprintf(result, "%12.12g", f);
+                /* UNCHECKED */ MCStringFormat(r_result, "%12.12g", f);
 				break;
 			}
             case typeLongFloat:
 			{
 				real8 f;
 				AEGetParamPtr(ae, key, dt, &rType, &f, s, &rSize);
-				result = new char[R8L];
-				sprintf(result, "%12.12g", f);
+                /* UNCHECKED */ MCStringFormat(r_result, "%12.12g", f);
 				break;
 			}
             case typeMagnitude:
 			{
 				uint4 i;
 				AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
-				result = new char[U4L];
-				sprintf(result, "%u", i);
+                /* UNCHECKED */ MCStringFormat(r_result, "%u", i);
 				break;
 			}
             case typeNull:
-                result = MCU_empty();
+                r_result = MCValueRetain(kMCEmptyString);
                 break;
             case typeFSS:
 			{
 				FSSpec fs;
 				errno = AEGetParamPtr(ae, key, dt, &rType, &fs, s, &rSize);
-                MCAutoStringRef t_result;
-                
-				/* UNCHECKED */ MCS_mac_FSSpec2path(&fs, &t_result);
-                /* UNCHECKED */ MCStringConvertToCString(*t_result, result);			}
+				/* UNCHECKED */ MCS_mac_FSSpec2path(&fs, r_result);
+			}
                 break;
             case typeFSRef:
 			{
 				FSRef t_fs_ref;
 				errno = AEGetParamPtr(ae, key, dt, &rType, &t_fs_ref, s, &rSize);
-                MCAutoStringRef t_result;
-                /* UNCHECKED */ MCS_mac_fsref_to_path(t_fs_ref, &t_result);
-                
-                /* UNCHECKED */ MCStringConvertToCString(*t_result, result);
+                /* UNCHECKED */ MCS_mac_fsref_to_path(t_fs_ref, r_result);
 			}
                 break;
             default:
-                result = new char[18];
-                sprintf(result, "unknown type %4.4s", (char *)&dt);
+                /* UNCHECKED */ MCStringFormat(r_result, "unknown type %4.4s", (char*)&dt);
                 break;
 		}
 	}
@@ -8501,9 +8471,9 @@ static OSErr osacompile(MCStringRef s, ComponentInstance compinstance,
     /* UNCHECKED */ MCStringMutableCopy(s, &t_mutable_copy);
 	/* UNCHECKED */ MCStringFindAndReplaceChar(*t_mutable_copy, '\n', '\r', kMCCompareExact);
 	scriptid = kOSANullScript;
-    MCAutoPointer<char> temp_s;
-    /* UNCHECKED */ MCStringConvertToCString(*t_mutable_copy, &temp_s);
-	AECreateDesc(typeChar, *temp_s, MCStringGetLength(*t_mutable_copy), &aedscript);
+    MCAutoStringRefAsUTF8String t_temp;
+    /* UNCHECKED */ t_temp.Lock(*t_mutable_copy);
+    AECreateDesc(typeUTF8Text, *t_temp, t_temp.Size(), &aedscript);
 	OSErr err = OSACompile(compinstance, &aedscript, kOSAModeNull, &scriptid);
 	AEDisposeDesc(&aedscript);
 	return err;
@@ -8519,11 +8489,11 @@ static OSErr osaexecute(MCStringRef& r_string, ComponentInstance compinstance,
 	if (err != noErr)
 		return err;
 	AEDesc aedresult;
-	OSADisplay(compinstance, scriptresult, typeChar, kOSAModeNull, &aedresult);
+	OSADisplay(compinstance, scriptresult, typeUTF8Text, kOSAModeNull, &aedresult);
 	uint4 tsize = AEGetDescDataSize(&aedresult);
-	char *buffer = new char[tsize];
+	byte_t *buffer = new byte_t[tsize];
 	err = AEGetDescData(&aedresult,buffer,tsize);
-    /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t*)buffer, tsize, r_string);
+    /* UNCHECKED */ MCStringCreateWithBytesAndRelease(buffer, tsize, kMCStringEncodingUTF8, false, r_string);
 	AEDisposeDesc(&aedresult);
 	OSADispose(compinstance, scriptresult);
 	return err;

@@ -171,9 +171,11 @@ void MCGPlatformFinalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
+void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font, bool p_rtl)
 {
-	if (!MCGContextIsValid(self))
+	// TODO: RTL
+    
+    if (!MCGContextIsValid(self))
 		return;	
 
 	bool t_success;
