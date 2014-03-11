@@ -168,7 +168,7 @@ static MCStringRef windows_query_locale(uint4 t_index)
 	if (GetLocaleInfoW(LOCALE_USER_DEFAULT, t_index, t_buffer, t_buf_size) == 0)
 		return MCValueRetain(kMCEmptyString);
 	MCStringRef t_string;
-	MCStringCreateWithChars(t_buffer, t_buf_size, t_string);
+	MCStringCreateWithChars(t_buffer, MCU_max(0, t_buf_size - 1), t_string);
 	delete[] t_buffer;
 	
 	return t_string;
