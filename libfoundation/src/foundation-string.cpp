@@ -1391,7 +1391,7 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
 
 bool MCStringIsEmpty(MCStringRef string)
 {
-	return MCStringGetLength(string) == 0;
+	return string == nil || MCStringGetLength(string) == 0;
 }
 
 bool MCStringSubstringIsEqualTo(MCStringRef self, MCRange p_sub, MCStringRef p_other, MCStringOptions p_options)

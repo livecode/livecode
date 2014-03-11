@@ -365,17 +365,16 @@ struct isolating_run_sequence
     level_run *first_run, *last_run;
 };
 
-static bool bidiNextISRCharClass(uint8_t *classes, level_run*& x_run, uindex_t &x_index, uint8_t& r_class)
+static bool bidiIncrementISRIndex(uint8_t *classes, level_run*& x_run, uindex_t &x_index)
 {
     if (x_run == nil)
         return false;
 
-    if (x_index < x_run->start + x_run->length)
+    if (++x_index < x_run->start + x_run->length)
     {
         // Ignore BNs
-        if (classes[x_index++] == kMCUnicodeDirectionBoundaryNeutral)
-            return bidiNextISRCharClass(classes, x_run, x_index, r_class);
-        r_class = classes[x_index];
+        if (classes[x_index] == kMCUnicodeDirectionBoundaryNeutral)
+            return bidiIncrementISRIndex(classes, x_run, x_index);
         return true;
     }
     
@@ -383,26 +382,23 @@ static bool bidiNextISRCharClass(uint8_t *classes, level_run*& x_run, uindex_t &
     if (x_run == nil)
         return false;
     
-    x_index = x_run -> start;
-    return bidiNextISRCharClass(classes, x_run, x_index, r_class);
+    x_index = x_run -> start - 1;
+    return bidiIncrementISRIndex(classes, x_run, x_index);
 }
 
 static uint8_t bidiPeekNextISRCharClass(uint8_t *classes, uint8_t alternative, level_run* p_run, uindex_t p_index)
 {
-    uint8_t t_class;
-    if (!bidiNextISRCharClass(classes, p_run, p_index, t_class))
+    if (!bidiIncrementISRIndex(classes, p_run, p_index))
         return alternative;
-    return t_class;
+    return classes[p_index];
 }
 
-static bool bidiPrevISRCharClass(uint8_t *classes, level_run*& x_run, uindex_t& x_index, uint8_t& r_class)
+static bool bidiDecrementISRIndex(uint8_t *classes, level_run*& x_run, uindex_t& x_index)
 {
-    MCAssert(x_index <= x_run->start + x_run->length);
-    
     if (x_run == nil || x_index == 0)
         return false;
     
-    if (x_index <= x_run -> start)
+    if (--x_index <= x_run -> start)
     {
         x_run = x_run -> prev_run;
         if (x_run != nil)
@@ -413,19 +409,17 @@ static bool bidiPrevISRCharClass(uint8_t *classes, level_run*& x_run, uindex_t& 
         return false;
     
     // Ignore BNs
-    if (classes[--x_index] == kMCUnicodeDirectionBoundaryNeutral)
-        return bidiPrevISRCharClass(classes, x_run, x_index, r_class);
+    if (classes[x_index] == kMCUnicodeDirectionBoundaryNeutral)
+        return bidiDecrementISRIndex(classes, x_run, x_index);
     
-    r_class = classes[x_index];
     return true;
 }
 
 static uint8_t bidiPeekPrevISRCharClass(uint8_t *classes, uint8_t alternative, level_run* p_run, uindex_t p_index)
 {
-    uint8_t t_class;
-    if (!bidiPrevISRCharClass(classes, p_run, p_index, t_class))
+    if (!bidiDecrementISRIndex(classes, p_run, p_index))
         return alternative;
-    return t_class;
+    return classes[p_index];
 }
 
 static void bidiApplyRuleW1(isolating_run_sequence& irs, uint8_t *classes)
@@ -435,8 +429,9 @@ static void bidiApplyRuleW1(isolating_run_sequence& irs, uint8_t *classes)
     level_run *t_run = irs.first_run;
     uindex_t t_index = t_run->start;
     uint8_t t_class;
-    while (bidiNextISRCharClass(classes, t_run, t_index, t_class))
+    do
     {
+        t_class = classes[t_index];
         if (t_class == kMCUnicodeDirectionNonSpacingMark)
         {
             uint8_t t_before = bidiPeekPrevISRCharClass(classes, irs.sos, t_run, t_index);
@@ -453,6 +448,7 @@ static void bidiApplyRuleW1(isolating_run_sequence& irs, uint8_t *classes)
             }
         }
     }
+    while (bidiIncrementISRIndex(classes, t_run, t_index));
 }
 
 static void bidiApplyRuleW2(isolating_run_sequence& irs, uint8_t *classes)
@@ -462,8 +458,9 @@ static void bidiApplyRuleW2(isolating_run_sequence& irs, uint8_t *classes)
     level_run *t_run = irs.first_run;
     uindex_t t_index = t_run->start;
     uint8_t t_class;
-    while (bidiNextISRCharClass(classes, t_run, t_index, t_class))
+    do
     {
+        t_class = classes[t_index];
         if (t_class == kMCUnicodeDirectionEuropeanNumber)
         {
             uint8_t t_strong;
@@ -472,7 +469,9 @@ static void bidiApplyRuleW2(isolating_run_sequence& irs, uint8_t *classes)
             bool t_valid;
             do
             {
-                t_valid = bidiPrevISRCharClass(classes, t_run_b, t_index_b, t_strong);
+                t_valid = bidiDecrementISRIndex(classes, t_run_b, t_index_b);
+                if (t_valid)
+                    t_strong = classes[t_index_b];
             }
             while (t_valid
                      && t_strong != kMCUnicodeDirectionRightToLeft
@@ -486,6 +485,7 @@ static void bidiApplyRuleW2(isolating_run_sequence& irs, uint8_t *classes)
                 classes[t_index] = kMCUnicodeDirectionArabicNumber;
         }
     }
+    while (bidiIncrementISRIndex(classes, t_run, t_index));
 }
 
 static void bidiApplyRuleW3(isolating_run_sequence& irs, uint8_t *classes)
@@ -495,11 +495,13 @@ static void bidiApplyRuleW3(isolating_run_sequence& irs, uint8_t *classes)
     level_run *t_run = irs.first_run;
     uindex_t t_index = t_run->start;
     uint8_t t_class;
-    while (bidiNextISRCharClass(classes, t_run, t_index, t_class))
+    do
     {
+        t_class = classes[t_index];
         if (t_class == kMCUnicodeDirectionRightToLeftArabic)
             classes[t_index] = kMCUnicodeDirectionRightToLeft;
     }
+    while (bidiIncrementISRIndex(classes, t_run, t_index));
 }
 
 static void bidiApplyRuleW4(isolating_run_sequence& irs, uint8_t *classes)
@@ -512,9 +514,10 @@ static void bidiApplyRuleW4(isolating_run_sequence& irs, uint8_t *classes)
     uindex_t t_index = t_run->start;
     uint8_t t_class;
     uint8_t t_prev_class = irs.sos;
-    while (bidiNextISRCharClass(classes, t_run, t_index, t_class))
+    do
     {
         uint8_t t_peek;
+        t_class = classes[t_index];
         t_peek = bidiPeekNextISRCharClass(classes, irs.eos, t_run, t_index);
         
         if (t_class == kMCUnicodeDirectionEuropeanNumberSeparator)
@@ -543,6 +546,7 @@ static void bidiApplyRuleW4(isolating_run_sequence& irs, uint8_t *classes)
         
         t_prev_class = t_class;
     }
+    while (bidiIncrementISRIndex(classes, t_run, t_index));
 }
 
 static void bidiApplyRuleW5(isolating_run_sequence& irs, uint8_t *classes)
@@ -553,8 +557,10 @@ static void bidiApplyRuleW5(isolating_run_sequence& irs, uint8_t *classes)
     uindex_t t_index = t_run->start;
     uint8_t t_class;
     bool t_in_en = false;
-    while (bidiNextISRCharClass(classes, t_run, t_index, t_class))
+    do
     {
+        t_class = classes[t_index];
+        
         // Are we already expanding an EN?
         if (t_in_en)
         {
@@ -573,21 +579,22 @@ static void bidiApplyRuleW5(isolating_run_sequence& irs, uint8_t *classes)
             level_run *t_start_run = t_run;
             bool t_valid = true;
             while (t_class == kMCUnicodeDirectionEuropeanNumberTerminator
-                   && (t_valid = bidiNextISRCharClass(classes, t_run, ++t_index, t_class)))
-                ;
+                   && (t_valid = bidiIncrementISRIndex(classes, t_run, t_index)))
+                
             
             // Did we find a European number?
-            if (t_valid && t_class == kMCUnicodeDirectionEuropeanNumber)
+            if (t_valid && classes[t_index] == kMCUnicodeDirectionEuropeanNumber)
             {
                 // Set all of the terminators to EN
                 while (t_start != t_index)
                 {
                     classes[t_start] = kMCUnicodeDirectionEuropeanNumber;
-                    bidiNextISRCharClass(classes, t_start_run, t_start, t_class);
+                    bidiIncrementISRIndex(classes, t_start_run, t_start);
                 }
             }
         }
     }
+    while (bidiIncrementISRIndex(classes, t_run, t_index));
 }
 
 static void bidiApplyRuleW6(isolating_run_sequence& irs, uint8_t *classes)
@@ -597,8 +604,9 @@ static void bidiApplyRuleW6(isolating_run_sequence& irs, uint8_t *classes)
     level_run *t_run = irs.first_run;
     uindex_t t_index = t_run->start;
     uint8_t t_class;
-    while (bidiNextISRCharClass(classes, t_run, t_index, t_class))
+    do
     {
+        t_class = classes[t_index];
         switch (t_class)
         {
             case kMCUnicodeDirectionEuropeanNumberTerminator:
@@ -608,6 +616,7 @@ static void bidiApplyRuleW6(isolating_run_sequence& irs, uint8_t *classes)
                 break;
         }
     }
+    while (bidiIncrementISRIndex(classes, t_run, t_index));
 }
 
 static void bidiApplyRuleW7(isolating_run_sequence& irs, uint8_t *classes)
@@ -617,8 +626,9 @@ static void bidiApplyRuleW7(isolating_run_sequence& irs, uint8_t *classes)
     level_run *t_run = irs.first_run;
     uindex_t t_index = t_run->start;
     uint8_t t_class;
-    while (bidiNextISRCharClass(classes, t_run, t_index, t_class))
+    do
     {
+        t_class = classes[t_index];
         if (t_class == kMCUnicodeDirectionEuropeanNumber)
         {
             // Search backwards for the first strong type
@@ -628,7 +638,9 @@ static void bidiApplyRuleW7(isolating_run_sequence& irs, uint8_t *classes)
             bool t_valid;
             do
             {
-                t_valid = bidiPrevISRCharClass(classes, t_run_b, t_index_b, t_strong);
+                t_valid = bidiDecrementISRIndex(classes, t_run_b, t_index_b);
+                if (t_valid)
+                    t_strong = classes[t_index_b];
             }
             while (t_valid
                    && t_strong != kMCUnicodeDirectionRightToLeft
@@ -641,6 +653,7 @@ static void bidiApplyRuleW7(isolating_run_sequence& irs, uint8_t *classes)
                 classes[t_index] = kMCUnicodeDirectionLeftToRight;
         }
     }
+    while (bidiIncrementISRIndex(classes, t_run, t_index));
 }
 
 static bool bidiIsNI(uint8_t p_class)
@@ -685,8 +698,9 @@ static void bidiApplyRuleN1(isolating_run_sequence& irs, uint8_t *classes, uint8
     level_run *t_run = irs.first_run;
     uindex_t t_index = t_run->start;
     uint8_t t_class;
-    while (bidiNextISRCharClass(classes, t_run, t_index, t_class))
+    do
     {
+        t_class = classes[t_index];
         if (bidiIsNI(t_class))
         {
             uindex_t t_before_index, t_after_index;
@@ -699,7 +713,9 @@ static void bidiApplyRuleN1(isolating_run_sequence& irs, uint8_t *classes, uint8
             bool t_valid;
             do
             {
-                t_valid = bidiPrevISRCharClass(classes, t_run_temp, t_index_temp, t_strong_before);
+                t_valid = bidiDecrementISRIndex(classes, t_run_temp, t_index_temp);
+                if (t_valid)
+                    t_strong_before = classes[t_index_temp];
             }
             while (t_valid && bidiIsNI(t_strong_before));
             
@@ -709,7 +725,6 @@ static void bidiApplyRuleN1(isolating_run_sequence& irs, uint8_t *classes, uint8
             if (!t_valid)
             {
                 t_strong_before = irs.sos;
-                t_index_temp++;
                 t_before_run = irs.first_run;
             }
             
@@ -719,14 +734,16 @@ static void bidiApplyRuleN1(isolating_run_sequence& irs, uint8_t *classes, uint8
             t_run_temp = t_run;
             do
             {
-                t_valid = bidiNextISRCharClass(classes, t_run_temp, t_index_temp, t_strong_after);
+                t_valid = bidiIncrementISRIndex(classes, t_run_temp, t_index_temp);
+                if (t_valid)
+                    t_strong_after = classes[t_index_temp];
             }
             while (t_valid && bidiIsNI(t_strong_after));
             
             t_after_index = t_index_temp;
             
             if (!t_valid)
-                t_strong_before = irs.eos;
+                t_strong_after = irs.eos;
             
             // Do both have the same direction?
             if (bidiIsRForNIRun(t_strong_before) == bidiIsRForNIRun(t_strong_after))
@@ -739,16 +756,15 @@ static void bidiApplyRuleN1(isolating_run_sequence& irs, uint8_t *classes, uint8
                 // This run needs to take on the direction
                 while (t_before_index < t_after_index)
                 {
-                    uint8_t ignore;
                     classes[t_before_index] = t_new_class;
-                    bidiNextISRCharClass(classes, t_before_run, t_before_index, ignore);
-                    t_before_index++;
+                    bidiIncrementISRIndex(classes, t_before_run, t_before_index);
                 }
             }
             
             t_index = t_after_index + 1;
         }
     }
+    while (bidiIncrementISRIndex(classes, t_run, t_index));
 }
 
 static void bidiApplyRuleN2(isolating_run_sequence& irs, uint8_t *classes, uint8_t *levels)
@@ -758,8 +774,9 @@ static void bidiApplyRuleN2(isolating_run_sequence& irs, uint8_t *classes, uint8
     level_run *t_run = irs.first_run;
     uindex_t t_index = t_run->start;
     uint8_t t_class;
-    while (bidiNextISRCharClass(classes, t_run, t_index, t_class))
+    do
     {
+        t_class = classes[t_index];
         if (bidiIsNI(t_class))
         {
             if (levels[t_index] & 1)
@@ -768,6 +785,7 @@ static void bidiApplyRuleN2(isolating_run_sequence& irs, uint8_t *classes, uint8
                 classes[t_index] = kMCUnicodeDirectionLeftToRight;
         }
     }
+    while (bidiIncrementISRIndex(classes, t_run, t_index));
 }
 
 static void bidiApplyRuleI1(isolating_run_sequence& irs, uint8_t *classes, uint8_t *levels)
@@ -777,8 +795,9 @@ static void bidiApplyRuleI1(isolating_run_sequence& irs, uint8_t *classes, uint8
     level_run *t_run = irs.first_run;
     uindex_t t_index = t_run->start;
     uint8_t t_class;
-    while (bidiNextISRCharClass(classes, t_run, t_index, t_class))
+    do
     {
+        t_class = classes[t_index];
         if ((levels[t_index] & 1) == 0)
         {
             if (t_class == kMCUnicodeDirectionRightToLeft)
@@ -788,6 +807,7 @@ static void bidiApplyRuleI1(isolating_run_sequence& irs, uint8_t *classes, uint8
                 levels[t_index] += 2;
         }
     }
+    while (bidiIncrementISRIndex(classes, t_run, t_index));
 }
 
 static void bidiApplyRuleI2(isolating_run_sequence& irs, uint8_t *classes, uint8_t *levels)
@@ -797,8 +817,9 @@ static void bidiApplyRuleI2(isolating_run_sequence& irs, uint8_t *classes, uint8
     level_run *t_run = irs.first_run;
     uindex_t t_index = t_run->start;
     uint8_t t_class;
-    while (bidiNextISRCharClass(classes, t_run, t_index, t_class))
+    do
     {
+        t_class = classes[t_index];
         if ((levels[t_index] & 1))
         {
            if (t_class == kMCUnicodeDirectionLeftToRight
@@ -807,6 +828,7 @@ static void bidiApplyRuleI2(isolating_run_sequence& irs, uint8_t *classes, uint8
                levels[t_index] += 1;
         }
     }
+    while (bidiIncrementISRIndex(classes, t_run, t_index));
 }
 
 void MCParagraph::resolvetextdirections()
@@ -839,7 +861,7 @@ void MCParagraph::resolvetextdirections()
     t_stack[t_depth].clear();
     
     // Counters
-    const uindex_t MAX_DEPTH = 253;     // CHECK THIS!
+    const uindex_t MAX_DEPTH = 125;
     uindex_t t_current_level = t_base_level;
     uindex_t t_overflow_isolates = 0;
     uindex_t t_overflow_embedding = 0;
@@ -861,7 +883,7 @@ void MCParagraph::resolvetextdirections()
         
         // ----- RULE X2 -----
         // Handle RLEs
-        if (t_class == kMCUnicodeDirectionRightToLeftEmbedding)
+        if (t_class == kMCUnicodeDirectionRightToLeftEmbedding && t_overflow_isolates == 0 && t_overflow_embedding == 0)
         {
             t_formatting = true;
             t_to_remove = true;
@@ -883,7 +905,7 @@ void MCParagraph::resolvetextdirections()
         {
             t_formatting = true;
             t_to_remove = true;
-            if (t_depth < MAX_DEPTH)
+            if (t_depth < MAX_DEPTH && t_overflow_isolates == 0 && t_overflow_embedding == 0)
             {
                 // Level is the next even level > current level
                 t_stack[++t_depth].clear();
@@ -901,7 +923,7 @@ void MCParagraph::resolvetextdirections()
         {
             t_formatting = true;
             t_to_remove = true;
-            if (t_depth < MAX_DEPTH)
+            if (t_depth < MAX_DEPTH && t_overflow_isolates == 0 && t_overflow_embedding == 0)
             {
                 // Level is the next odd level > current level
                 t_stack[++t_depth].clear();
@@ -920,7 +942,7 @@ void MCParagraph::resolvetextdirections()
         {
             t_formatting = true;
             t_to_remove = true;
-            if (t_depth < MAX_DEPTH)
+            if (t_depth < MAX_DEPTH && t_overflow_isolates == 0 && t_overflow_embedding == 0)
             {
                 // Level is the next even level > current level
                 t_stack[++t_depth].clear();

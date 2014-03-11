@@ -110,14 +110,16 @@ static UINT_PTR CALLBACK open_dialog_hook(HWND p_dialog, UINT p_message, WPARAM 
 			t_length = SendMessageW(GetParent(p_dialog), CDM_GETSPEC, (WPARAM)0, (LPARAM)NULL);
 			if (t_length >= 0)
 			{
-				/* UNCHECKED */ s_chosen_files.New(t_length);
+				s_chosen_files.Delete();
+                /* UNCHECKED */ s_chosen_files.New(t_length);
 				SendMessageW(GetParent(p_dialog), CDM_GETSPEC, (WPARAM)t_length, (LPARAM)s_chosen_files.Ptr());
 			}
 			t_length = SendMessageW(GetParent(p_dialog), CDM_GETFOLDERPATH, (WPARAM)0, (LPARAM)NULL);
 			if (t_length >= 0)
 			{
-				/* UNCHECKED */ s_chosen_folder.New(t_length);
-				SendMessageW(GetParent(p_dialog), CDM_GETFOLDERPATH, (WPARAM)t_length, (LPARAM)s_chosen_files.Ptr());
+				s_chosen_folder.Delete();
+                /* UNCHECKED */ s_chosen_folder.New(t_length);
+				SendMessageW(GetParent(p_dialog), CDM_GETFOLDERPATH, (WPARAM)t_length, (LPARAM)s_chosen_folder.Ptr());
 			}
 		}
 		break;
@@ -164,7 +166,7 @@ static void build_path(MCStringRef p_folder, MCStringRef p_file, MCStringRef x_p
 	MCStringAppend(*t_path, *t_engine_path);
 
 	if (*t_path != nil)
-		MCStringAppend(*t_path, x_path);
+		MCStringAppend(x_path, *t_path);
 }
 
 static void build_paths(MCStringRef &r_path)
@@ -173,7 +175,7 @@ static void build_paths(MCStringRef &r_path)
 	/* UNCHECKED */ MCStringCreateMutable(0, &t_path);
 	MCAutoStringRef t_std_path;
 	MCAutoStringRef t_native_path;
-	/* UNCHECKED */ MCStringCreateWithChars(s_chosen_folder.Ptr(), s_chosen_folder.Size(), &t_native_path);
+	/* UNCHECKED */ MCStringCreateWithChars(s_chosen_folder.Ptr(), s_chosen_folder.Size()-1, &t_native_path);
 	/* UNCHECKED */ MCS_pathfromnative(*t_native_path, &t_std_path);
 
 	if (MCStringGetCharAtIndex(*t_std_path, 0) == '"')
@@ -188,13 +190,13 @@ static void build_paths(MCStringRef &r_path)
 			build_path(*t_std_path, t_items[t_index], *t_path);
 		}*/
 		MCAutoStringRef t_item;
-		/* UNCHECKED */ MCStringCreateWithChars(s_chosen_files.Ptr(), s_chosen_files.Size(), &t_item);
+		/* UNCHECKED */ MCStringCreateWithChars(s_chosen_files.Ptr(), s_chosen_files.Size()-1, &t_item);
 		build_path(*t_std_path, *t_item, *t_path);
 	}
 	else
 	{
 		MCAutoStringRef t_files;
-		/* UNCHECKED */ MCStringCreateWithChars(s_chosen_files.Ptr(), s_chosen_files.Size(), &t_files);
+		/* UNCHECKED */ MCStringCreateWithChars(s_chosen_files.Ptr(), s_chosen_files.Size()-1, &t_files);
 		build_path(*t_std_path, *t_files, *t_path);
 	}
 
@@ -591,19 +593,20 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 		memset(&t_open_dialog, 0, sizeof(OPENFILENAMEW));
 		t_open_dialog . lStructSize = sizeof(OPENFILENAMEW);
 
-		MCAutoStringRefAsWString t_initial_file_wstr;
 		MCAutoStringRefAsWString t_initial_folder_wstr;
 		MCAutoStringRefAsWString t_prompt_wstr;
 		MCAutoStringRefAsWString t_filter_wstr;
 		/* UNCHECKED */ t_filter_wstr.Lock(p_filter);
 		/* UNCHECKED */ t_initial_folder_wstr.Lock(*t_initial_native_folder);
 		/* UNCHECKED */ t_prompt_wstr.Lock(p_prompt);
-		/* UNCHECKED */ t_filter_wstr.Lock(p_filter);
 
 		MCAutoArray<unichar_t> t_buffer;
 		/* UNCHECKED */ t_buffer.New(MAX_PATH);
 
-		/* UNCHECKED */ MCStringGetChars(*t_initial_file, MCRangeMake(0, t_buffer.Size()), t_buffer.Ptr());
+		if (!MCStringIsEmpty(*t_initial_file))
+			/* UNCHECKED */ MCStringGetChars(*t_initial_file, MCRangeMake(0, t_buffer.Size()), t_buffer.Ptr());
+		else
+			t_buffer[0] = '\0';
 
 		t_open_dialog . lpstrFilter = *t_filter_wstr;
 		t_open_dialog . nFilterIndex = 1;
