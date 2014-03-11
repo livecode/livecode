@@ -193,10 +193,15 @@ bool MCObjectPropertySet::restrict(MCStringRef p_string)
 
 IO_stat MCObjectPropertySet::loadprops_new(IO_handle p_stream)
 {
-	if (IO_read_valueref_new((MCValueRef&)m_props, p_stream) != IO_NORMAL)
+    MCArrayRef t_new_props;
+
+    if (IO_read_valueref_new((MCValueRef&)t_new_props, p_stream) != IO_NORMAL)
 		return IO_ERROR;
-	if (!MCArrayMutableCopyAndRelease(m_props, m_props))
+    if (!MCArrayMutableCopyAndRelease(t_new_props, t_new_props))
 		return IO_ERROR;
+
+    MCValueAssign(m_props, t_new_props);
+    MCValueRelease(t_new_props);
 	return IO_NORMAL;
 }
 
