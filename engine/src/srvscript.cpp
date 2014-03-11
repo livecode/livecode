@@ -412,11 +412,14 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 	// Note that script point does not copy 'script' and requires it to be NUL-
 	// terminated. Indeed, this string *has* to persist until termination as
 	// constants, handler names and variable names use substrings of it directly.
-    
+
     MCAutoStringRef t_file_script;
     /* UNCHECKED */ MCStringCreateWithCString(t_file -> script, &t_file_script);
 	MCScriptPoint sp(this, hlist, *t_file_script);
-	sp . allowtags(True);
+
+    // MERG 2013-12-24: [[ Shebang ]] Don't use tagged mode in script files
+    if (!(t_file -> script[0] == '#' && t_file -> script[1] == '!'))
+        sp . allowtags(True);
 	
 	// The statement chain that will executed.
 	MCStatement *t_statements, *t_last_statement;
@@ -482,7 +485,8 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 					if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
 						do
 						{
-							MCB_error(m_ctxt->GetEP(), t_statement->getline(), t_statement->getpos(), EE_HANDLER_BADSTATEMENT);
+							if (!MCB_error(m_ctxt, t_statement->getline(), t_statement->getpos(), EE_HANDLER_BADSTATEMENT))
+								break;
 						}
 						while (MCtrace && (t_exec_stat = t_statement->exec(m_ctxt->GetEP())) != ES_NORMAL);
 

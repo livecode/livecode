@@ -56,7 +56,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // Old-style integer definitions and limits
 
 typedef unsigned char   uint1;
-typedef          char   int1;
+typedef signed   char   int1;
 typedef unsigned short  uint2;
 typedef          short  int2;
 typedef unsigned int    uint4;

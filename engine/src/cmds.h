@@ -25,6 +25,25 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 // general commands in cmds.cc
 
+// MW-2013-11-14: [[ AssertCmd ]] 'assert' command definition.
+class MCAssertCmd: public MCStatement
+{
+	Assert_type m_type;
+	MCExpression *m_expr;
+	
+public:
+	MCAssertCmd(void)
+	{
+		m_type = TYPE_NONE;
+		m_expr = nil;
+	}
+	
+	virtual ~MCAssertCmd(void);
+	virtual Parse_stat parse(MCScriptPoint& sp);
+	virtual void exec_ctxt(MCExecContext& ctxt);
+    virtual void compile(MCSyntaxFactoryRef);
+};
+
 class MCChoose : public MCStatement
 {
 	Tool littool;
@@ -2113,5 +2132,25 @@ private:
     bool m_is_id : 1;
 };
 
+// MM-2014-02-12: [[ SecureSocket ]] secure socket <socket> [with|without verification]
+//  New secure socket command, used to ensure all future communications over the given socket are encrypted.
+class MCSecure : public MCStatement
+{
+public:
+	MCSecure(void)
+	{
+		m_sock_name = NULL;
+		secureverify = True;
+	}
+	
+	virtual ~MCSecure();
+	virtual Parse_stat parse(MCScriptPoint &);
+	virtual void exec_ctxt(MCExecContext&);
+    virtual void compile(MCSyntaxFactoryRef);
+	
+private:
+	MCExpression *m_sock_name;
+	Boolean secureverify : 1;
+};
 
 #endif

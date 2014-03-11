@@ -92,7 +92,8 @@ LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/../thirdparty/libskia/include/effects \
 	$(LOCAL_PATH)/../thirdparty/libskia/include/config \
 	$(LOCAL_PATH)/../thirdparty/libskia/include/ports \
-	$(LOCAL_PATH)/../thirdparty/libfreetype/include
+	$(LOCAL_PATH)/../thirdparty/libfreetype/include \
+	$(LOCAL_PATH)/../thirdparty/libopenssl/include
 
 include $(BUILD_STATIC_LIBRARY)
 
@@ -117,7 +118,7 @@ LOCAL_C_INCLUDES := \
 
 LOCAL_CFLAGS := -DGL_GLEXT_PROTOTYPES=1
 
-LOCAL_STATIC_LIBRARIES := librevandroid-kernel libfoundation libgraphics libjpeg libpcre libpng libgif libskia libfreetype libexpat_static 
+LOCAL_STATIC_LIBRARIES := librevandroid-kernel libfoundation libgraphics libjpeg libpcre libpng libgif libskia libfreetype libexpat_static openssl
 
 LOCAL_LDLIBS += -lz -lm -llog -ljnigraphics -lGLESv1_CM
 

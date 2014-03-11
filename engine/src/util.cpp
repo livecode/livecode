@@ -41,6 +41,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "system.h"
 
+#ifdef MCSSL
+#include <openssl/rand.h>
+#endif
+
 #define QA_NPOINTS 10
 
 static MCPoint qa_points[QA_NPOINTS];
@@ -2326,51 +2330,52 @@ void MCU_dofunc(Functions func, uint4 nparams, real8 &n,
 	real8 tp;
 	switch (func)
 	{
-            // JS-2013-06-19: [[ StatsFunctions ]] Support for 'arithmeticMean' (was average)
-        case F_ARI_MEAN:
-            n += tn;
-			break;
-            // JS-2013-06-19: [[ StatsFunctions ]] Support for 'averageDeviation'
-        case F_AVG_DEV:
-            tn = tn - oldn;
-            n += abs(tn);
-            break;
-            // JS-2013-06-19: [[ StatsFunctions ]] Support for 'geometricMean'
-        case F_GEO_MEAN:
-            if (nparams == 0)
-                n = 1;
-            tp = 1 / oldn;
-            n *= pow(tn, tp);
-            break;
-            // JS-2013-06-19: [[ StatsFunctions ]] Support for 'harmonicMean'
-        case F_HAR_MEAN:
-            n += 1/tn;
-            break;
-        case F_MAX:
-            if (nparams == 0 || tn > n)
-                n = tn;
-            break;
-        case F_MIN:
-            if (nparams == 0 || tn < n)
-                n = tn;
-            break;
-        case F_SUM:
-            n += tn;
-            break;
-        case F_MEDIAN:
-            /* UNCHECKED */ MCNumberCreateWithReal(tn, titems[nparams].nvalue);
-            break;
-            // JS-2013-06-19: [[ StatsFunctions ]] Support for 'populationStdDev', 'populationVariance', 'sampleStdDev' (was stdDev), 'sampleVariance'
-        case F_POP_STD_DEV:
-        case F_POP_VARIANCE:
-        case F_SMP_STD_DEV:
-        case F_SMP_VARIANCE:
-            tn = tn - oldn;
-            n += tn * tn;
-            break;
-        case  F_UNDEFINED:
-        default:
-            break;
+    // JS-2013-06-19: [[ StatsFunctions ]] Support for 'arithmeticMean' (was average)
+    case F_ARI_MEAN:
+        n += tn;
+        break;
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'averageDeviation'
+	case F_AVG_DEV:
+		tn = tn - oldn;
+		// IM-2014-02-28: [[ Bug 11778 ]] Make sure we're using the floating-point version of 'abs'
+		n += fabs(tn);
+		break;
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'geometricMean'
+	case F_GEO_MEAN:
+		if (nparams == 0)
+			n = 1;
+		tp = 1 / oldn;
+		n *= pow(tn, tp);
+		break;
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'harmonicMean'
+	case F_HAR_MEAN:
+		n += 1/tn;
+		break;
+	case F_MAX:
+		if (nparams++ == 0 || tn > n)
+			n = tn;
+		break;
+	case F_MIN:
+		if (nparams++ == 0 || tn < n)
+			n = tn;
+		break;
+	case F_SUM:
+		n += tn;
+		break;
+	case F_MEDIAN:
+        /* UNCHECKED */ MCNumberCreateWithReal(tn, titems[nparams].nvalue);
+		break;
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'populationStdDev', 'populationVariance', 'sampleStdDev' (was stdDev), 'sampleVariance'
+	case F_POP_STD_DEV:
+	case F_POP_VARIANCE:
+	case F_SMP_STD_DEV:
+	case F_SMP_VARIANCE:
+		tn = tn - oldn;
+		n += tn * tn;
+		break;
+	case  F_UNDEFINED:
+	default:
+		break;
 	}
 }
 
@@ -3032,7 +3037,7 @@ bool MCU_random_bytes(size_t p_bytecount, MCDataRef& r_bytes)
         if (InitSSLCrypt())
         {
             return (t_buffer.New(p_bytecount) &&
-                    (SSL_random_bytes(t_buffer.Bytes(), p_bytecount)) &&
+                    (RAND_bytes((unsigned char *)t_buffer.Bytes(), p_bytecount) == 1) &&
                     t_buffer.CreateData(r_bytes));
         }
 		s_donotuse_ssl = true;

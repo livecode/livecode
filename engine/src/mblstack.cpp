@@ -40,6 +40,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "visual.h"
 #include "tilecache.h"
 
+#include "mbldc.h"
+#include "region.h"
+
 #include "globals.h"
 
 #include "resolution.h"
@@ -111,11 +114,6 @@ void MCStack::destroywindowshape(void)
 {
 }
 
-MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
-{
-	return p_rect;
-}
-
 // IM-2013-09-30: [[ FullscreenMode ]] Mobile version of setgeom now calls view methods
 void MCStack::setgeom(void)
 {
@@ -177,7 +175,42 @@ void MCStack::clearscroll(void)
 {
 }
 
-MCRectangle MCStack::device_getwindowrect() const
+////////////////////////////////////////////////////////////////////////////////
+
+MCRectangle MCStack::view_platform_getwindowrect() const
 {
-    return MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
+	return view_getrect();
 }
+
+MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
+{
+	return p_rect;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Platform wrapper converts logical to screen coords
+void MCStack::view_platform_updatewindow(MCRegionRef p_dirty_region)
+{
+	MCRegionRef t_scaled_region;
+	t_scaled_region = nil;
+	
+	MCRegionRef t_screen_region;
+	t_screen_region = nil;
+	
+	MCGFloat t_scale;
+	t_scale = MCScreenDC::logicaltoscreenscale();
+	
+	if (t_scale != 1.0)
+	{
+		/* UNCHECKED */ MCRegionTransform(p_dirty_region, MCGAffineTransformMakeScale(t_scale, t_scale), t_scaled_region);
+		t_screen_region = t_scaled_region;
+	}
+	else
+		t_screen_region = p_dirty_region;
+	
+	view_device_updatewindow(t_screen_region);
+	
+	if (t_scaled_region != nil)
+		MCRegionDestroy(t_scaled_region);
+}
+
+////////////////////////////////////////////////////////////////////////////////

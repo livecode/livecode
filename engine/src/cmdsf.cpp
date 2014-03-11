@@ -892,18 +892,18 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 						MCperror -> add(PE_IMPORT_BADFILENAME, sp);
 						return PS_ERROR;
 					}
-					
-					if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
-					{
-						if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
-							sp . parseexp(False, True, &size) != PS_NORMAL)
-						{
-							MCperror -> add(PE_IMPORT_BADFILENAME, sp);
-							return PS_ERROR;
 				}
 			}
 		}
-	}
+		
+		if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
+		{
+			if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
+				sp . parseexp(False, True, &size) != PS_NORMAL)
+			{
+				MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+				return PS_ERROR;
+			}
 		}
 	}
 
@@ -1158,7 +1158,7 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 		}
 		else
 		{
-			t_bitmap = MCscreen->snapshot(r, 1.0, w, sdisp);
+			t_bitmap = MCscreen->snapshot(r, w, sdisp, size == NULL ? nil : &t_wanted_size);
 			if (t_bitmap == nil)
 			{
 				delete sdisp;
@@ -1422,6 +1422,8 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
         break;
     }
 
+    bool t_success;
+    t_success = true;
     if (sformat == EX_SNAPSHOT)
     {
         MCRectangle *t_rect_ptr;
@@ -1429,45 +1431,51 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 
         t_rect_ptr = &t_rect;
 
-        if (ctxt . EvalOptionalExprAsRectangle(exsrect, nil, EE_IMPORT_BADNAME, t_rect_ptr)
-                && exsstack != NULL)
+        t_success = ctxt . EvalOptionalExprAsRectangle(exsrect, nil, EE_IMPORT_BADNAME, t_rect_ptr);
+            
+        MCPoint t_size;
+        MCPoint *t_size_ptr = nil;
+            
+        t_size_ptr = &t_size;
+        
+        if (t_success)
+            t_success = ctxt . EvalOptionalExprAsPoint(size, nil, EE_EXPORT_NOSELECTED, t_size_ptr);
+       
+        if (t_success)
         {
-            MCAutoStringRef t_stack_name;
-
-            if (ctxt . EvalExprAsStringRef(exsstack, EE_EXPORT_NOSELECTED, &t_stack_name))
+            if (exsstack != NULL)
             {
-				MCAutoStringRef t_display;
-                if (ctxt . EvalOptionalExprAsNullableStringRef(exsdisplay, EE_EXPORT_NOSELECTED, &t_display))
+                MCAutoStringRef t_stack_name, t_display;
+                
+                t_success = ctxt . EvalExprAsStringRef(exsstack, EE_EXPORT_NOSELECTED, &t_stack_name);
+                
+                if (t_success)
+                    t_success = ctxt . EvalOptionalExprAsNullableStringRef(exsdisplay, EE_EXPORT_NOSELECTED, &t_display);
+                
+                if (t_success)
                 {
 					if (*t_filename == nil)
-						MCInterfaceExecExportSnapshotOfStack(ctxt, *t_stack_name, *t_display, t_rect_ptr, format, t_settings_ptr, &t_return_data);
+						MCInterfaceExecExportSnapshotOfStack(ctxt, *t_stack_name, *t_display, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_return_data);
 					else
-						MCInterfaceExecExportSnapshotOfStackToFile(ctxt, *t_stack_name, *t_display, t_rect_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);
+						MCInterfaceExecExportSnapshotOfStackToFile(ctxt, *t_stack_name, *t_display, t_rect_ptr, t_size_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);
 				}
 			}
-		}
-		else if (optr != NULL)
-		{            
-            MCPoint t_size;
-            MCPoint *t_size_ptr = nil;
-
-            t_size_ptr = &t_size;
-
-            if (ctxt . EvalOptionalExprAsPoint(size, nil, EE_EXPORT_NOSELECTED, t_size_ptr))
+            else if (optr != NULL)
             {
+                
                 if (*t_filename == nil)
                     MCInterfaceExecExportSnapshotOfObject(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, &t_return_data);
                 else
                     MCInterfaceExecExportSnapshotOfObjectToFile(ctxt, optr, t_rect_ptr, with_effects, t_size_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);
             }
-		}
-		else
-		{
-			if (*t_filename == nil)
-				MCInterfaceExecExportSnapshotOfScreen(ctxt, t_rect_ptr, format, t_settings_ptr, &t_return_data);
-			else
-				MCInterfaceExecExportSnapshotOfScreenToFile(ctxt, t_rect_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);
-		}
+            else
+            {
+                if (*t_filename == nil)
+                    MCInterfaceExecExportSnapshotOfScreen(ctxt, t_rect_ptr, t_size_ptr, format, t_settings_ptr, &t_return_data);
+                else
+                    MCInterfaceExecExportSnapshotOfScreenToFile(ctxt, t_rect_ptr, t_size_ptr, format, t_settings_ptr, *t_filename, *t_mask_filename);
+            }
+        }
 	}
 	else
 	{
@@ -1516,14 +1524,12 @@ void MCExport::compile(MCSyntaxFactoryRef ctxt)
 			MCSyntaxFactoryEvalConstantNil(ctxt);
         
 		if (image != nil)
-		{
 			MCSyntaxFactoryEvalConstantBool(ctxt, with_effects);
             
-			if (size != nil)
-				size -> compile(ctxt);
-			else
-				MCSyntaxFactoryEvalConstantNil(ctxt);
-		}
+        if (size != nil)
+            size -> compile(ctxt);
+        else
+            MCSyntaxFactoryEvalConstantNil(ctxt);
 	}
 	else
 		image -> compile_object_ptr(ctxt);
@@ -2170,7 +2176,7 @@ Parse_stat MCImport::parse(MCScriptPoint &sp)
 					bool t_need_effects;
 					if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 						t_need_effects = true, with_effects = true;
-				else if (sp . skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
+					else if (sp . skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
 						t_need_effects = true, with_effects = false;
 					else
 						t_need_effects = false;
@@ -2181,17 +2187,18 @@ Parse_stat MCImport::parse(MCScriptPoint &sp)
 						MCperror -> add(PE_IMPORT_BADFILENAME, sp);
 						return PS_ERROR;
 					}
-					
-					if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
-					{
-						if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
-							sp . parseexp(False, True, &size) != PS_NORMAL)
-						{
-							MCperror -> add(PE_IMPORT_BADFILENAME, sp);
-							return PS_ERROR;
 				}
 			}
 		}
+		
+		// MW-2014-02-20: [[ Bug 11811 ]] Add the 'at size' clause to screen snapshot.
+		if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
+		{
+			if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
+				sp . parseexp(False, True, &size) != PS_NORMAL)
+			{
+				MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+				return PS_ERROR;
 			}
 		}
 		return PS_NORMAL;
@@ -2291,10 +2298,6 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 	t_needs_unpremultiply = false;
 	if (format == EX_SNAPSHOT)
 	{
-		// IM-2013-08-01: [[ ResIndependence ]] Resolution scale for snapshots - unless specified should produce point-scale image
-		MCGFloat t_image_scale;
-		t_image_scale = 1.0;
-		
 		char *disp = NULL;
 		if (dname != NULL)
 		{
@@ -2366,7 +2369,7 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 				return ES_ERROR;
 			}
 		
-			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, t_image_scale, with_effects);
+			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, 1.0f, with_effects);
 			// OK-2007-04-24: If the import rect doesn't intersect with the object, MCobject::snapshot
 			// may return null. In this case, return an error.
 			if (t_bitmap == NULL)
@@ -2381,7 +2384,8 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 		}
 		else
 		{
-			t_bitmap = MCscreen->snapshot(r, t_image_scale, w, disp);
+			// MW-2014-02-20: [[ Bug 11811 ]] Pass the wanted size to the snapshot method.
+			t_bitmap = MCscreen->snapshot(r, w, disp, size != nil ? &t_wanted_size : nil);
 
 			delete disp;
 		}
@@ -2397,7 +2401,7 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 			/* UNCHECKED */ iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
 			// IM-2013-08-01: [[ ResIndependence ]] pass image scale when setting bitmap
 			if (t_bitmap != nil)
-				iptr->setbitmap(t_bitmap, t_image_scale, true);
+				iptr->setbitmap(t_bitmap, 1.0f, true);
 			MCImageFreeBitmap(t_bitmap);
 		}
 	
@@ -2540,14 +2544,14 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
         if (!ctxt . EvalOptionalExprAsRectangle(fname, nil, EE_IMPORT_BADNAME, t_rect_ptr))
             return;
 
+        MCPoint t_size;
+        MCPoint *t_size_ptr = &t_size;
+        
+        if (!ctxt . EvalOptionalExprAsPoint(size, nil, EE_IMPORT_NOSELECTED, t_size_ptr))
+            return;
+        
 		if (container != NULL)
 		{
-            MCPoint t_size;
-            MCPoint *t_size_ptr = &t_size;
-
-            if (!ctxt . EvalOptionalExprAsPoint(size, nil, EE_IMPORT_NOSELECTED, t_size_ptr))
-                return;
-
 			MCObject *t_parent = nil;
 			uint4 parid;
 
@@ -2568,11 +2572,12 @@ void MCImport::exec_ctxt(MCExecContext &ctxt)
 			MCAutoStringRef t_display;
             if (!ctxt . EvalOptionalExprAsNullableStringRef(dname, EE_IMPORT_BADNAME, &t_display))
                 return;
-
-			MCInterfaceExecImportSnapshotOfStack(ctxt, *t_stack, *t_display, t_rect_ptr);
+			// MW-2014-02-20: [[ Bug 11811 ]] Pass the wanted size to the snapshot method.
+			MCInterfaceExecImportSnapshotOfStack(ctxt, *t_stack, *t_display, t_rect_ptr, t_size_ptr);
 		}
 		else
-			MCInterfaceExecImportSnapshotOfScreen(ctxt, t_rect_ptr);
+            // MW-2014-02-20: [[ Bug 11811 ]] Pass the wanted size to the snapshot method.
+			MCInterfaceExecImportSnapshotOfScreen(ctxt, t_rect_ptr, t_size_ptr);
 	}
 	else
 	{
@@ -2657,12 +2662,22 @@ void MCImport::compile(MCSyntaxFactoryRef ctxt)
 			else
 				MCSyntaxFactoryEvalConstantNil(ctxt);
             
+            if (size != nil)
+				size -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+            
 			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecImportSnapshotOfStackMethodInfo);
 		}
 		else
 		{
 			if (fname != nil)
 				fname -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+            
+            if (size != nil)
+				size -> compile(ctxt);
 			else
 				MCSyntaxFactoryEvalConstantNil(ctxt);
             
@@ -5078,4 +5093,129 @@ void MCWrite::compile(MCSyntaxFactoryRef ctxt)
 	}
 
 	MCSyntaxFactoryEndStatement(ctxt);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// MM-2014-02-12: [[ SecureSocket ]] 
+//  New secure socket command, used to ensure all future communications over the given socket are encrypted.
+//
+//  After securing:
+//    All pending and future reads from the socket will assumed to be encrypted.
+//    All pending writes will continue unencrypted. All future writes will be encrypted.
+//
+//  Unless specified, the connection will be verified.
+//
+//  Syntax:
+//    secure socket <socket>
+//    secure socket <socket> with verification
+//    secure socket <socket> without verification
+//
+MCSecure::~MCSecure()
+{
+	delete m_sock_name;
+}
+
+Parse_stat MCSecure::parse(MCScriptPoint &sp)
+{	
+	initpoint(sp);
+	
+	Symbol_type type;
+	if (sp . next(type) != PS_NORMAL)
+	{
+		MCperror -> add(PE_SECURE_NOSOCKET, sp);
+		return PS_ERROR;
+	}
+	
+	const LT *te;
+	if (sp . lookup(SP_OPEN, te) != PS_NORMAL)
+	{
+		MCperror -> add(PE_SECURE_NOSOCKET, sp);
+		return PS_ERROR;
+	}
+	
+	Open_argument t_open_arg;
+	t_open_arg = (Open_argument) te -> which;
+	if (t_open_arg != OA_SOCKET)
+	{
+		MCperror -> add(PE_SECURE_NOSOCKET, sp);
+		return PS_ERROR;
+	}
+	
+	if (sp . parseexp(False, True, &m_sock_name) != PS_NORMAL)
+	{
+		MCperror -> add(PE_SECURE_BADNAME, sp);
+		return PS_ERROR;
+	}
+	
+	if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+	{
+		if (sp . skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) == PS_NORMAL)
+			secureverify = True;
+		else
+		{
+			MCperror -> add(PE_SECURE_BADMESSAGE, sp);
+			return PS_ERROR;
+		}
+	}
+	
+	if (sp . skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
+	{
+		if (sp . skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) == PS_NORMAL)
+			secureverify = False;
+		else
+		{
+			MCperror -> add(PE_SECURE_BADMESSAGE, sp);
+			return PS_ERROR;
+		}
+	}
+	
+	return PS_NORMAL;
+}
+
+void MCSecure::exec_ctxt(MCExecContext& ctxt)
+{
+#ifdef /* MCSecure */ LEGACY_EXEC
+	
+	if (m_sock_name -> eval(ep) != ES_NORMAL)
+	{
+		MCeerror -> add(EE_SECURE_BADNAME, line, pos);
+		return ES_ERROR;
+	}
+	
+	char *t_sock_name;
+	t_sock_name = ep . getsvalue() . clone();
+	
+	uint2 t_index;
+	if (IO_findsocket(t_sock_name, t_index))
+	{
+		MCS_secure_socket(MCsockets[t_index], secureverify);
+		MCresult->clear(False);
+	}
+	else
+		MCresult->sets("socket is not open");
+	
+	MCCStringFree(t_sock_name);
+	
+	return ES_NORMAL;
+#endif /* MCSecure */
+    
+    MCNewAutoNameRef t_name;
+    if (!ctxt . EvalExprAsNameRef(m_sock_name, EE_SECURE_BADNAME, &t_name))
+        return;
+
+    MCSecurityExecSecureSocket(ctxt, *t_name, secureverify == True);
+}
+
+void MCSecure::compile(MCSyntaxFactoryRef ctxt)
+{
+    MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+    
+    m_sock_name -> compile(ctxt);
+    
+    MCSyntaxFactoryEvalConstantBool(ctxt, secureverify == True);
+    
+    MCSyntaxFactoryExecMethod(ctxt, kMCSecurityExecSecureSocketMethodInfo);
+    
+    MCSyntaxFactoryEndStatement(ctxt);
 }

@@ -283,6 +283,7 @@ LT command_table[] =
         {"add", TT_STATEMENT, S_ADD},
         {"answer", TT_STATEMENT, S_ANSWER},
         {"ask", TT_STATEMENT, S_ASK},
+		{"assert", TT_STATEMENT, S_ASSERT},
         {"beep", TT_STATEMENT, S_BEEP},
         {"break", TT_STATEMENT, S_BREAK},
         {"breakpoint", TT_STATEMENT, S_BREAKPOINT},
@@ -396,7 +397,9 @@ LT command_table[] =
 #endif
         {"rotate", TT_STATEMENT, S_ROTATE},
 		{"save", TT_STATEMENT, S_SAVE},
-        {"seek", TT_STATEMENT, S_SEEK},
+		// MM-2014-02-12: [[ SecureSocket ]] 'secure' statement used by secure socket
+		{"secure", TT_STATEMENT, S_SECURE},
+		{"seek", TT_STATEMENT, S_SEEK},
         {"select", TT_STATEMENT, S_SELECT},
         {"send", TT_STATEMENT, S_SEND},
         {"set", TT_STATEMENT, S_SET},
@@ -1461,6 +1464,8 @@ LT factor_table[] =
         {"sb", TT_CHUNK, CT_SCROLLBAR},
         {"sbs", TT_CLASS, CT_SCROLLBAR},
         {"scale", TT_PROPERTY, P_SCALE},
+		// IM-2014-01-07: [[ StackScale ]] New property for 'scalefactor'
+		{"scalefactor", TT_PROPERTY, P_SCALE_FACTOR},
         {"scaleindependently", TT_PROPERTY, P_SCALE_INDEPENDENTLY},
 		{"screen", TT_PROPERTY, P_SCREEN},
         {"screencolors", TT_FUNCTION, F_SCREEN_COLORS},
@@ -1470,6 +1475,9 @@ LT factor_table[] =
         {"screenmouseloc", TT_PROPERTY, P_SCREEN_MOUSE_LOC},
         {"screenname", TT_FUNCTION, F_SCREEN_NAME},
         {"screennopixmaps", TT_PROPERTY, P_NO_PIXMAPS},
+		// IM-2014-01-24: [[ HiDPI ]] The screenPixelScale and screenPixelScales properties
+		{"screenpixelscale", TT_PROPERTY, P_SCREEN_PIXEL_SCALE},
+		{"screenpixelscales", TT_PROPERTY, P_SCREEN_PIXEL_SCALES},
         {"screenrect", TT_FUNCTION, F_SCREEN_RECT},
 		{"screenrects", TT_FUNCTION, F_SCREEN_RECTS},
         {"screensharedmemory", TT_PROPERTY, P_SHARED_MEMORY},
@@ -1605,7 +1613,7 @@ LT factor_table[] =
         {"system", TT_PROPERTY, P_SYSTEM},
         {"systemcolorselector", TT_PROPERTY, P_SYSTEM_CS},
         {"systemfileselector", TT_PROPERTY, P_SYSTEM_FS},
-		// IM-2013-12-04: [[ PixelScale ]] The "pixelScale" token
+		// IM-2013-12-04: [[ PixelScale ]] The "systemPixelScale" token
 		{"systempixelscale", TT_PROPERTY, P_SYSTEM_PIXEL_SCALE},
 		{"systemprintselector", TT_PROPERTY, P_SYSTEM_PS},
         {"systemversion", TT_FUNCTION, F_SYSTEM_VERSION},
@@ -1718,6 +1726,8 @@ LT factor_table[] =
         {"urlheader", TT_CHUNK, CT_URL_HEADER},
 		{"urlresponse", TT_PROPERTY, P_URL_RESPONSE},
         {"urlstatus", TT_FUNCTION, F_URL_STATUS},
+		// IM-2014-01-24: [[ HiDPI ]] The "usePixelScaling" token
+		{"usepixelscaling", TT_PROPERTY, P_USE_PIXEL_SCALING},
         {"userlevel", TT_PROPERTY, P_USER_LEVEL},
         {"usermodify", TT_PROPERTY, P_USER_MODIFY},
         {"userproperties", TT_PROPERTY, P_CUSTOM_KEYS},
@@ -2036,12 +2046,14 @@ static LT sugar_table[] =
 		{"effects", TT_UNDEFINED, SG_EFFECTS},
 		{"elevated", TT_UNDEFINED, SG_ELEVATED},
         {"empty", TT_CHUNK, CT_UNDEFINED},
-        
+		// MW-2013-11-14: [[ AssertCmd ]] Token for 'failure'
+		{"failure", TT_UNDEFINED, SG_FAILURE},
+		// MW-2013-11-14: [[ AssertCmd ]] Token for 'false'
+		{"false", TT_UNDEFINED, SG_FALSE},
         // TD-2013-06-14: [[ DynamicFonts ]] start using font theFont [globally]
         {"file", TT_UNDEFINED, SG_FILE},
         {"font", TT_UNDEFINED, SG_FONT},
         {"globally", TT_UNDEFINED, SG_GLOBALLY},
-        
 		{"initially", TT_UNDEFINED, SG_INITIALLY},
         {"keyword", TT_CHUNK, CT_UNDEFINED},
 		{"level", TT_UNDEFINED, SG_LEVEL},
@@ -2068,6 +2080,10 @@ static LT sugar_table[] =
 		{"standard", TT_UNDEFINED, SG_STANDARD},
 		// MERG-2013-06-24: [[ IsAnAsciiString ]] Token for 'string'.
         {"string", TT_UNDEFINED, SG_STRING},
+		// MW-2013-11-14: [[ AssertCmd ]] Token for 'success'
+		{"success", TT_UNDEFINED, SG_SUCCESS},
+		// MW-2013-11-14: [[ AssertCmd ]] Token for 'true'
+		{"true", TT_UNDEFINED, SG_TRUE},
 		{"unicode", TT_UNDEFINED, SG_UNICODE},
 		{"url", TT_UNDEFINED, SG_URL},
 		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'wildcard'.

@@ -1010,21 +1010,17 @@ Exec_stat MCLessThanEqual::eval(MCExecPoint &ep)
 #ifdef /* MCNotEqual */ LEGACY_EXEC
 Exec_stat MCNotEqual::eval(MCExecPoint &ep)
 {
-    MCAutoValueRef t_left, t_right;
-    if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
-        return ES_ERROR;
-
-    MCExecContext ctxt(ep);
-
-    bool t_result;
-    MCLogicEvalIsNotEqualTo(ctxt, *t_left, *t_right, t_result);
-    if (!ctxt . HasError())
-    {
-        ep . setboolean(t_result);
-        return ES_NORMAL;
-    }
-
-    return ctxt . Catch(line, pos);
+	// MW-2014-01-30: [[ Bug 11732 ]] Enable array comparison mode - this stops
+	//   auto-conversion of arrays to empty.
+	int2 i;
+	if (compare(ep, i, true) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_NOTEQUAL_OPS, line, pos);
+		return ES_ERROR;
+	}
+	ep.setboolean(i != 0);
+	return ES_NORMAL;
 }
 #endif /* MCNotEqual */
 
