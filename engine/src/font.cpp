@@ -327,7 +327,7 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
         else
             t_range = MCRangeMake(t_offset, t_break_point);
 
-#if !defined(_WIN32)
+#if !defined(_WIN32) && !defined(_ANDROID_MOBILE)
         // This is a really ugly hack to get LTR/RTL overrides working correctly -
         // ATSUI and Pango think they know better than us and won't let us suppress
         // the BiDi algorithm they uses for text layout. So instead, we need to add
