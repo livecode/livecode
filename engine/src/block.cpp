@@ -1229,7 +1229,12 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 			f->setforeground(dc, DI_BORDER, False, True);
 			f->adjustpixmapoffset(dc, DI_BORDER);
 			MCRectangle trect = { x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent };
-			dc->drawrect(trect);
+			
+			// MW-2014-03-11: [[ Bug 11882 ]] Ensure we use miter join for drawing the border.
+			dc->setlineatts(1, LineSolid, CapButt, JoinMiter);
+			dc->drawrect(trect, true);
+			dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
+			
 			f->setforeground(dc, DI_FORE, False, True);
 		}
 		else if (fontstyle & FA_3D_BOX)
