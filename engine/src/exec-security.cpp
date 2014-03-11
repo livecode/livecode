@@ -66,15 +66,9 @@ void MCSecurityEvalCipherNames(MCExecContext& ctxt, MCStringRef& r_names)
 	if (SSL_ciphernames(&t_list, &t_error))
 	{
 		if (*t_error != nil)
-		{
 			ctxt.SetTheResultToValue(*t_error);
+		if (MCListCopyAsString(*t_list, r_names))
 			return;
-		}
-		else
-		{
-			if (MCListCopyAsString(*t_list, r_names))
-				return;
-		}
 	}
 
 	ctxt.Throw();

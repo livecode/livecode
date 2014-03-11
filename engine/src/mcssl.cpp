@@ -117,7 +117,7 @@ void SeedSSL(UINT iMsg, WPARAM wParam, LPARAM lParam)
 #endif
 
 //error buf should have a buffer of at least 256 bytes.
-unsigned long SSLError(MCStringRef errbuf)
+unsigned long SSLError(MCStringRef& errbuf)
 {
 	if (!InitSSLCrypt())
 	{
@@ -585,8 +585,10 @@ bool SSL_ciphernames(MCListRef& r_list, MCStringRef& r_error)
 		SSLError(&sslerrbuf);
         r_error = MCValueRetain(*sslerrbuf);
 	}
-
-	OBJ_NAME_do_all_sorted(OBJ_NAME_TYPE_CIPHER_METH, list_ciphers_cb, &t_context);
+	else
+	{
+		OBJ_NAME_do_all_sorted(OBJ_NAME_TYPE_CIPHER_METH, list_ciphers_cb, &t_context);
+	}
 
 	return t_context.success && MCListCopy(t_context.list, r_list);
 }
