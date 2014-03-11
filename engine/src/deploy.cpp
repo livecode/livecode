@@ -140,7 +140,7 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 	if (!ctxt.CopyOptElementAsString(p_array, MCNAME("redirects"), false, t_temp_string))
 		return false;
     MCStringSplit(t_temp_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, t_temp_array);
-    MCValueAssign(externals, t_temp_array);
+    MCValueAssign(redirects, t_temp_array);
     MCValueRelease(t_temp_string);
     MCValueRelease(t_temp_array);
 	
