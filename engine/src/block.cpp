@@ -2241,6 +2241,14 @@ void MCBlock::MoveRange(findex_t p_index, findex_t p_length)
 	m_size += p_length;
     if (p_length)
         width = 0;
+    
+	// Update the 'has tabs' flag
+	uindex_t t_where;
+	if (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', m_index, kMCStringOptionCompareExact, t_where)
+		&& t_where < m_index + m_size)
+		flags |= F_HAS_TAB;
+	else
+		flags &= ~F_HAS_TAB;
 }
 
 codepoint_t MCBlock::GetCodepointAtIndex(findex_t p_index) const
