@@ -563,7 +563,8 @@ void MCField::removecursor()
 		cursoron = False;
 		cursorfield = NULL;
 		// MW-2011-08-18: [[ Layers ]] Invalidate the cursor rect.
-		layer_redrawrect(cursorrect);
+		layer_redrawrect(cursorrectp);
+        layer_redrawrect(cursorrects);
 	}
 }
 
@@ -584,12 +585,16 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 				p_context->setlineatts(0, LineDoubleDash, CapButt, JoinBevel);
 				p_context->setdashes(0, dotlist, 2);
 				p_context->setfunction(GXxor);
-				p_context->drawrect(cursorrect);
+				p_context->drawrect(cursorrectp);
+                p_context->drawrect(cursorrects);
 				p_context->setfunction(GXcopy);
 				p_context->setlineatts(0, LineSolid, CapButt, JoinBevel);
 			}
 			else
-				p_context->drawrect(cursorrect);
+            {
+				p_context->drawrect(cursorrectp);
+                p_context->drawrect(cursorrects);
+            }
 		}
 	}
 	else
@@ -614,7 +619,8 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 			p_context->begin(false);
 		}
 		
-		p_context->drawline(cursorrect.x, cursorrect.y, cursorrect.x, cursorrect.y + cursorrect.height - 1);
+		p_context->drawline(cursorrectp.x, cursorrectp.y, cursorrectp.x, cursorrectp.y + cursorrectp.height - 1);
+        p_context->drawline(cursorrects.x, cursorrects.y, cursorrects.x, cursorrects.y + cursorrects.height - 1);
 		
 		if (t_is_opaque)
 		{
@@ -630,7 +636,7 @@ void MCField::replacecursor(Boolean force, Boolean goal)
 	if (!opened)
 		return;
 
-	MCRectangle drect;
+	MCRectangle drectp, drects;
 	if (composing && composelength)
 	{
 		findex_t compsi, compei;
@@ -639,18 +645,21 @@ void MCField::replacecursor(Boolean force, Boolean goal)
 		indextoparagraph(paragraphs,compsi,compei);
 		// MW-2012-01-25: [[ ParaStyles ]] Request the cursor-rect of the line
 		//   not including any space above/below.
-		drect = focusedparagraph->getcursorrect(compsi, fixedheight, false);
+		drectp = focusedparagraph->getsplitcursorrect(compsi, fixedheight, false, true);
+        drects = focusedparagraph->getsplitcursorrect(compsi, fixedheight, false, false);
 	}
 	else
 	{
 		// MW-2012-01-25: [[ ParaStyles ]] Request the cursor-rect of the line
 		//   not including any space above/below.
-		drect = focusedparagraph->getcursorrect(-1, fixedheight, false);
+		drectp = focusedparagraph->getsplitcursorrect(-1, fixedheight, false, true);
+        drects = focusedparagraph->getsplitcursorrect(-1, fixedheight, false, false);
 	}
-	positioncursor(force, goal, drect, focusedy);
+	positioncursor(force, goal, drects, focusedy, false);
+    positioncursor(force, goal, drectp, focusedy, true);
 }
 
-void MCField::positioncursor(Boolean force, Boolean goal, MCRectangle &drect, int4 yoffset)
+void MCField::positioncursor(Boolean force, Boolean goal, MCRectangle &drect, int4 yoffset, bool primary)
 {
 	if (flags & F_LIST_BEHAVIOR && MClook != LF_WIN95)
 	{
@@ -765,7 +774,10 @@ void MCField::positioncursor(Boolean force, Boolean goal, MCRectangle &drect, in
 				drect.width += 2;
 			}
 		}
-		cursorrect = drect;
+        if (primary)
+            cursorrectp = drect;
+        else
+            cursorrects = drect;
 		cursorfield = this;
 		cursoron = True;
 		// MW-2011-08-18: [[ Layers ]] Invalidate the dirty rect.
@@ -800,7 +812,7 @@ void MCField::dragtext()
 
 	// MW-2012-01-25: [[ ParaStyles ]] Request the cursor rect without spacing.
 	MCRectangle drect = pgptr->getcursorrect(ssi, fixedheight, false);
-	positioncursor(True, False, drect, paragraphtoy(pgptr));
+	positioncursor(True, False, drect, paragraphtoy(pgptr), true);
 
 	// Compute the appropriate drag action depending the state of the keyboard
 	// MW-2007-12-11: [[ Bug 5542 ]] Wrong keyboard modifier for copying/moving text on OS X
@@ -1934,7 +1946,7 @@ void MCField::ffocus(Field_translations function, MCStringRef p_string, KeySym k
 
 void MCField::freturn(Field_translations function, MCStringRef p_string, KeySym key)
 {
-	if (flags & F_AUTO_TAB && cursorrect.y + (cursorrect.height << 1) > rect.y + getfheight())
+	if (flags & F_AUTO_TAB && cursorrectp.y + (cursorrectp.height << 1) > rect.y + getfheight())
 		getcard()->kfocusnext(False);
 	else
 	{
@@ -2157,8 +2169,8 @@ void MCField::fmove(Field_translations function, MCStringRef p_string, KeySym ke
 			MCRectangle trect;
 			switch (moved)
 			{
-				case FT_LEFTCHAR:
-				case FT_LEFTWORD:
+				case FT_BACKCHAR:
+				case FT_BACKWORD:
 				case FT_BOS:
 				case FT_LEFTPARA:
 					if (focusedparagraph != paragraphs)
@@ -2173,8 +2185,8 @@ void MCField::fmove(Field_translations function, MCStringRef p_string, KeySym ke
 						drect.x = trect.x;
 					}
 					break;
-				case FT_RIGHTCHAR:
-				case FT_RIGHTWORD:
+				case FT_FORWARDCHAR:
+				case FT_FORWARDWORD:
 				case FT_EOS:
 				case FT_RIGHTPARA:
 					if (focusedparagraph != paragraphs->prev())

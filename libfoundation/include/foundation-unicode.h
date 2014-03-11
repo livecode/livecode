@@ -24,6 +24,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+codepoint_t MCUnicodeSurrogatesToCodepoint(uint16_t first, uint16_t second);
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Unicode character properties
 enum MCUnicodeProperty
@@ -213,7 +216,7 @@ enum MCUnicodeDirection
     kMCUnicodeDirectionRightToLeftEmbedding,
     kMCUnicodeDirectionRightToLeftOverride,
     kMCUnicodeDirectionPopDirectionalFormat,
-    kMCUnicodeDirectionDirNonSpacingMark,
+    kMCUnicodeDirectionNonSpacingMark,
     kMCUnicodeDirectionBoundaryNeutral,
     kMCUnicodeDirectionFirstStrongIsolate,
     kMCUnicodeDirectionLeftToRightIsolate,

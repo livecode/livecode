@@ -165,25 +165,30 @@ static bool osx_measure_text_substring_bounds(uindex_t p_length, MCGIntRectangle
     return t_err == noErr;
 }
 
-static bool osx_draw_text_substring_to_cgcontext_at_location(uindex_t p_length, CGContextRef p_cgcontext, MCGPoint p_location)
+static bool osx_draw_text_substring_to_cgcontext_at_location(uindex_t p_length, CGContextRef p_cgcontext, MCGPoint p_location, bool p_rtl)
 {
 	if (s_layout == NULL || s_style == NULL)
 		return false;
 	
     OSStatus t_err;
 	t_err = noErr;
+    
+    Boolean t_is_rtl = p_rtl;
 	
 	ATSUAttributeTag t_layout_tags[] =
 	{
-		kATSUCGContextTag,
+        kATSULineDirectionTag,
+        kATSUCGContextTag,
 	};
 	ByteCount t_layout_sizes[] =
 	{
-		sizeof(CGContextRef),
+		sizeof(Boolean),
+        sizeof(CGContextRef),
 	};
 	ATSUAttributeValuePtr t_layout_attrs[] =
 	{
-		&p_cgcontext,
+		&t_is_rtl,
+        &p_cgcontext,
 	};
 
 	if (t_err == noErr)
@@ -321,14 +326,14 @@ void MCGPlatformFinalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
+void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font, bool p_rtl)
 {
-	if (!MCGContextIsValid(self))
+    if (!MCGContextIsValid(self))
 		return;	
 	
 	bool t_success;
 	t_success = true;
-	
+    
     if (t_success)
         t_success = osx_prepare_text(p_text, p_length, p_font);
     
@@ -380,7 +385,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		CGContextTranslateCTM(t_cgcontext, -t_clipped_bounds . x, t_clipped_bounds . height + t_clipped_bounds . y);
 		CGContextConcatCTM(t_cgcontext, CGAffineTransformMake(t_transform . a, t_transform . b, t_transform . c, t_transform . d, t_transform . tx, t_transform . ty));
 		CGContextSetFillColorWithColor(t_cgcontext, s_colour);
-		t_success = osx_draw_text_substring_to_cgcontext_at_location(p_length, t_cgcontext, MCGPointMake(0.0, 0.0));
+		t_success = osx_draw_text_substring_to_cgcontext_at_location(p_length, t_cgcontext, MCGPointMake(0.0, 0.0), p_rtl);
 	}
 	
 	if (t_success)

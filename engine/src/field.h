@@ -130,6 +130,13 @@ enum
 	kMCFieldExportFlattenStyles = 1 << 6,
 };
 
+enum MCInterfaceFieldCursorMovement
+{
+    kMCFieldCursorMovementDefault,
+    kMCFieldCursorMovementVisual,
+    kMCFieldCursorMovementLogical,
+};
+
 // MW-2012-02-20: [[ FieldExport ]] The event that occured to cause the callback.
 enum MCFieldExportEventType
 {
@@ -166,6 +173,29 @@ typedef bool (*MCFieldExportCallback)(void *context, MCFieldExportEventType even
 struct MCInterfaceFlaggedRanges;
 struct MCInterfaceFlaggedRange;
 
+// The values assigned to these constants are significant: they represent the
+// starting values in the Unicode BiDi algorithm and should not be changed. 
+enum MCFieldTextDirection
+{
+    kMCFieldTextDirectionAuto = -1,     // Detect based on contents
+    kMCFieldTextDirectionLTR = 0,       // Force left-to-right direction
+    kMCFieldTextDirectionRTL = 1,       // Force right-to-left direction
+};
+
+// Significant characters for BiDi processing
+#define kMCBidiLRE      0x202A      // Left-to-right embedding
+#define kMCBidiRLE      0x202B      // Right-to-left embedding
+#define kMCBidiLRO      0x202D      // Left-to-right override
+#define kMCBidiRLO      0x202E      // Right-to-left override
+#define kMCBidiPDF      0x202C      // Pop directional formatting
+#define kMCBidiLRI      0x2066      // Left-to-right isolate
+#define kMCBidiRLI      0x2067      // Right-to-left isolate
+#define kMCBidiFSI      0x2068      // First strong isolate
+#define kMCBidiPDI      0x2069      // Pop directional isolate
+#define kMCBidiLRM      0x200E      // Left-to-right mark
+#define kMCBidiRLM      0x200F      // Right-to-left mark
+#define kMCBidiALM      0x061C      // Arabic letter mark
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCField : public MCControl
@@ -199,12 +229,15 @@ class MCField : public MCControl
 	MCScrollbar *vscrollbar;
 	MCScrollbar *hscrollbar;
 	MCStringRef label;
+    MCFieldTextDirection text_direction;
+    MCInterfaceFieldCursorMovement cursor_movement;
 	
 	static int2 clickx;
 	static int2 clicky;
 	static int2 goalx;
 
-	static MCRectangle cursorrect;
+	static MCRectangle cursorrectp;
+    static MCRectangle cursorrects;
 	static Boolean cursoron;
 	static MCField *cursorfield;
 
@@ -330,12 +363,14 @@ public:
 	int32_t gettexty(void) const;
 	int32_t getfirstindent(void) const;
 	int32_t getfixedheight(void) const { return fixedheight; }
+    
+    MCFieldTextDirection gettextdirection() const { return text_direction; }
 
 	bool getshowlines(void) const;
 
 	void removecursor();
 	void drawcursor(MCContext *context, const MCRectangle &drect);
-	void positioncursor(Boolean force, Boolean goal, MCRectangle &drect, int4 y);
+	void positioncursor(Boolean force, Boolean goal, MCRectangle &drect, int4 y, bool primary);
 	void replacecursor(Boolean force, Boolean goal);
 	void dragtext();
 	void computedrag();
@@ -613,6 +648,10 @@ public:
 
 	bool imagechanged(MCImage *p_image, bool p_deleting);
 
+    ////////// BIDIRECTIONAL SUPPORT
+    
+    MCFieldTextDirection getbasetextdirection() { return text_direction; }
+    bool IsCursorMovementVisual();
 
     ////////// PROPERTY SUPPORT METHODS
 
@@ -699,6 +738,10 @@ public:
 	void GetThreeDHilite(MCExecContext& ctxt, bool& r_setting);
 	void SetThreeDHilite(MCExecContext& ctxt, bool setting);
 	void GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encoding);
+    void SetCursorMovement(MCExecContext&, intenum_t);
+    void GetCursorMovement(MCExecContext&, intenum_t&);
+    void SetTextDirection(MCExecContext&, intenum_t);
+    void GetTextDirection(MCExecContext&, intenum_t&);
     
     void GetHilitedLines(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_lines);
     void SetHilitedLines(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_lines);

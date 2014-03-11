@@ -72,7 +72,7 @@ static inline uint32_t packed_bilinear_bounded(uint32_t x, uint8_t a, uint32_t y
 // appropriately.
 //
 
-static void w32_draw_text_render_transparent_buffer(HDC p_gdi_context, const unichar_t *p_text, uindex_t p_text_length, bool p_nearest_white, int32_t p_height, uint32_t *p_rgb_pxls, int32_t p_rgb_width)
+static void w32_draw_text_render_transparent_buffer(HDC p_gdi_context, const unichar_t *p_text, uindex_t p_text_length, bool p_nearest_white, int32_t p_height, uint32_t *p_rgb_pxls, int32_t p_rgb_width, bool p_rtl)
 {
 	// Clear the RGB buffer to black or white.
 	memset(p_rgb_pxls, p_nearest_white ? 0x00 : 0xff, p_rgb_width * p_height * sizeof(uint32_t));
@@ -81,7 +81,7 @@ static void w32_draw_text_render_transparent_buffer(HDC p_gdi_context, const uni
 	SetTextColor(p_gdi_context, p_nearest_white ? RGB(0xff, 0xff, 0xff) : RGB(0x00, 0x00, 0x00));
 
 	// Render the text.
-	TextOutW(p_gdi_context, 0, 0, (LPCWSTR)p_text, p_text_length);
+    ExtTextOutW(p_gdi_context, 0, 0, p_rtl ? ETO_RTLREADING : 0, NULL, (LPCWSTR)p_text, p_text_length, NULL);
 
 	// Make sure GDI has finished.
 	GdiFlush();
@@ -130,7 +130,7 @@ static bool w32_draw_text_process_transparent_buffer(uint32_t p_fill_color, bool
 	return t_has_opaque;
 }
 
-static void w32_draw_text_render_opaque_buffer(HDC p_gdi_context, const unichar_t *p_text, uindex_t p_text_length, uint32_t p_fill_color, int32_t p_height, uint32_t *p_rgb_pxls, int32_t p_rgb_width, uint32_t *p_context_pxls, int32_t p_context_width)
+static void w32_draw_text_render_opaque_buffer(HDC p_gdi_context, const unichar_t *p_text, uindex_t p_text_length, uint32_t p_fill_color, int32_t p_height, uint32_t *p_rgb_pxls, int32_t p_rgb_width, uint32_t *p_context_pxls, int32_t p_context_width, bool p_rtl)
 {
 	// Copy the current pixels in the context across to the RGB buffer.
 	for(int32_t y = 0; y < p_height; y++)
@@ -140,7 +140,7 @@ static void w32_draw_text_render_opaque_buffer(HDC p_gdi_context, const unichar_
 	SetTextColor(p_gdi_context, RGB((p_fill_color >> 16) & 0xFF, (p_fill_color >> 8) & 0xFF, (p_fill_color >> 0) & 0xFF));
 
 	// Render the text.
-	TextOutW(p_gdi_context, 0, 0, (LPCWSTR)p_text, p_text_length);
+	ExtTextOutW(p_gdi_context, 0, 0, p_rtl ? ETO_RTLREADING : 0, NULL, (LPCWSTR)p_text, p_text_length, NULL);
 
 	// Make sure GDI has finished.
 	GdiFlush();
@@ -179,7 +179,7 @@ static bool w32_draw_text_process_opaque_buffer(uint32_t p_fill_color, int32_t p
 	return t_has_transparency;
 }
 
-static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef p_context, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, MCGIntRectangle p_bounds, HDC p_gdicontext)
+static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef p_context, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, MCGIntRectangle p_bounds, HDC p_gdicontext, bool p_rtl)
 {
 	bool t_success;
 	t_success = true;
@@ -257,7 +257,7 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 		if ((*t_context_pxls >> 24) != 0xff)
 		{
 			// Render the text for the transparent pixels (white/black text on black/white background).
-			w32_draw_text_render_transparent_buffer(p_gdicontext, p_text, p_length >> 1, t_nearest_white, p_bounds . height, t_rgb_pxls, p_bounds . width);
+			w32_draw_text_render_transparent_buffer(p_gdicontext, p_text, p_length >> 1, t_nearest_white, p_bounds . height, t_rgb_pxls, p_bounds . width, p_rtl);
 			
 			// Process the buffer - this sets all opaque pixels to fully transparent, and blends
 			// the fill color with the semi-opaque pixels. It returns whether there are any opaque
@@ -274,7 +274,7 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 			{
 				// Render the text for the opaque pixels (text with given fill color blended against
 				// destination pixels).
-				w32_draw_text_render_opaque_buffer(p_gdicontext, p_text, p_length >> 1, p_context -> state -> fill_color, p_bounds . height, t_rgb_pxls, p_bounds . width, t_context_pxls, t_context_width);
+				w32_draw_text_render_opaque_buffer(p_gdicontext, p_text, p_length >> 1, p_context -> state -> fill_color, p_bounds . height, t_rgb_pxls, p_bounds . width, t_context_pxls, t_context_width, p_rtl);
 
 				// Process the buffer - this ensures the alpha byte of all opaque pixels
 				// is 0xff (GDI doesn't preserve such things) and sets all non-opaque pixels
@@ -291,7 +291,7 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 		{
 			// Render the text for the opaque pixels (text with given fill color blended against
 			// destination pixels).
-			w32_draw_text_render_opaque_buffer(p_gdicontext, p_text, p_length >> 1, p_context -> state -> fill_color, p_bounds . height, t_rgb_pxls, p_bounds . width, t_context_pxls, t_context_width);
+			w32_draw_text_render_opaque_buffer(p_gdicontext, p_text, p_length >> 1, p_context -> state -> fill_color, p_bounds . height, t_rgb_pxls, p_bounds . width, t_context_pxls, t_context_width, p_rtl);
 
 			// Process the buffer - this ensures the alpha byte of all opaque pixels
 			// is 0xff (GDI doesn't preserve such things) and sets all non-opaque pixels
@@ -310,7 +310,7 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 			if (t_has_transparent)
 			{
 				// Render the text for the transparent pixels (white/black text on black/white background).
-				w32_draw_text_render_transparent_buffer(p_gdicontext, p_text, p_length >> 1, t_nearest_white, p_bounds . height, t_rgb_pxls, p_bounds . width);
+				w32_draw_text_render_transparent_buffer(p_gdicontext, p_text, p_length >> 1, t_nearest_white, p_bounds . height, t_rgb_pxls, p_bounds . width, p_rtl);
 				
 				// Process the buffer - this sets all opaque pixels to fully transparent, and blends
 				// the fill color with the semi-opaque pixels.
@@ -363,7 +363,7 @@ static bool w32_draw_text_to_context_at_device_location(MCGContextRef p_context,
 		SetTextColor(p_gdicontext, 0x00000000);
 		SetBkColor(p_gdicontext, 0x00FFFFFF);
 		SetBkMode(p_gdicontext, OPAQUE);		
-		t_success = TextOutW(p_gdicontext, 0, 0, (LPCWSTR)p_text, p_length >> 1);
+		t_success = ExtTextOutW(p_gdicontext, 0, 0, false ? ETO_RTLREADING : 0, NULL, (LPCWSTR)p_text, p_length >> 1, NULL);
 	}
 	
 	if (t_success)
@@ -463,7 +463,7 @@ static bool w32_draw_opaque_text_to_context_at_device_location(MCGContextRef p_c
 
 		SetBkMode(p_gdicontext, TRANSPARENT);
 		SetTextColor(p_gdicontext, RGB((p_context -> state -> fill_color >> 16) & 0xFF, (p_context -> state -> fill_color >> 8) & 0xFF, (p_context -> state -> fill_color >> 0) & 0xFF));
-		t_success = TextOutW(p_gdicontext, 0, 0, (LPCWSTR)p_text, p_length >> 1);
+		t_success = ExtTextOutW(p_gdicontext, 0, 0, false ? ETO_RTLREADING : 0, NULL, (LPCWSTR)p_text, p_length >> 1, NULL);
 	}	
 
 	if (t_success)
@@ -491,9 +491,9 @@ void MCGPlatformFinalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
+static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font, bool p_rtl)
 {
-	if (!MCGContextIsValid(self))
+    if (!MCGContextIsValid(self))
 		return;	
 	
 	bool t_success;
@@ -520,7 +520,7 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 	TEXTMETRICA t_metrics;
 	if (t_success)
 		t_success = GetTextMetricsA(t_gdicontext, &t_metrics);
-
+    
 	// MM-2013-12-16: [[ Bug 11564 ]] Take into account any overhang of italic text to prevent clipping.
 	MCGFloat t_overhang;
 	if (t_success)
@@ -597,15 +597,17 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 	}
 
 	if (t_success)
-		t_success = w32_draw_text_using_mask_to_context_at_device_location(self, p_text, p_length, t_device_location, t_clipped_bounds, t_gdicontext);
+		t_success = w32_draw_text_using_mask_to_context_at_device_location(self, p_text, p_length, t_device_location, t_clipped_bounds, t_gdicontext, p_rtl);
 
 	DeleteDC(t_gdicontext);
 	self -> is_valid = t_success;
 }
 
-static bool __MCGContextTracePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont& p_font, MCGPathRef& r_path)
+static bool __MCGContextTracePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont& p_font, MCGPathRef& r_path, bool p_rtl)
 {
-	bool t_success;
+	// TODO: RTL
+    
+    bool t_success;
 	t_success = true;
 	
 	HDC t_gdicontext;
@@ -706,13 +708,13 @@ static bool __MCGContextTracePlatformText(MCGContextRef self, const unichar_t *p
 //   then filling as a path. At some point it would be worth upgrading this code path
 //   to use GDI+/DirectWrite (depending on Windows version) as these should give better
 //   quality and performance (particularly for smaller < 15pt text sizes).
-static void __MCGContextDrawPlatformTextIdeal(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
+static void __MCGContextDrawPlatformTextIdeal(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font, bool p_rtl)
 {
-	if (!MCGContextIsValid(self))
+    if (!MCGContextIsValid(self))
 		return;	
 
 	MCGPathRef t_path;
-	__MCGContextTracePlatformText(self, p_text, p_length, p_font, t_path);
+	__MCGContextTracePlatformText(self, p_text, p_length, p_font, t_path, p_rtl);
 
 	MCGContextSave(self);
 	MCGContextTranslateCTM(self, p_location . x, p_location . y);
@@ -727,15 +729,15 @@ static void __MCGContextDrawPlatformTextIdeal(MCGContextRef self, const unichar_
 
 // MW-2013-11-07: [[ Bug 11393 ]] What codepath we use depends on whether we are
 //   using ideal metrics or not.
-void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont& p_font)
+void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont& p_font, bool p_rtl)
 {
-	if (p_font . ideal)
+    if (p_font . ideal)
 	{
-		__MCGContextDrawPlatformTextIdeal(self, p_text, p_length, p_location, p_font);
+		__MCGContextDrawPlatformTextIdeal(self, p_text, p_length, p_location, p_font, p_rtl);
 		return;
 	}
 
-	__MCGContextDrawPlatformTextScreen(self, p_text, p_length, p_location, p_font);
+	__MCGContextDrawPlatformTextScreen(self, p_text, p_length, p_location, p_font, p_rtl);
 }
 
 //////////

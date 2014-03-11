@@ -47,7 +47,7 @@ public:
 	void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false);
 	void drawsegments(MCSegment *segments, uint2 nsegs);
 	void drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image);
-    void drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image);
+    void drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image, bool p_rtl = false);
 	void drawrect(const MCRectangle& rect, bool inside);
 	void fillrect(const MCRectangle& rect, bool inside);
 	void fillrects(MCRectangle *rects, uint2 nrects);

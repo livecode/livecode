@@ -100,9 +100,11 @@ void MCGPlatformFinalize(void)
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
+void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font, bool p_rtl)
 {
-	// MW-2013-12-19: [[ Bug 11559 ]] Do nothing if no text support.
+	// TODO: RTL
+    
+    // MW-2013-12-19: [[ Bug 11559 ]] Do nothing if no text support.
 	if (!s_has_text_support)
 		return;
 	
