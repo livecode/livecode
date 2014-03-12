@@ -153,11 +153,16 @@ bool MCExecContext::ConvertToReal(MCValueRef p_value, real64_t& r_double)
 
 bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array)
 {
-	if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray)
-		r_array = MCValueRetain((MCArrayRef)p_value);
-	else
-		r_array = MCValueRetain(kMCEmptyArray);
-	
+    if (MCValueIsEmpty(p_value))
+    {
+        r_array = MCValueRetain(kMCEmptyArray);
+        return true;
+    }
+    
+	if (MCValueGetTypeCode(p_value) != kMCValueTypeCodeArray)
+        return false;
+    
+    r_array = MCValueRetain((MCArrayRef)p_value);
 	return true;
 }
 
