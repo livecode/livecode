@@ -2157,6 +2157,43 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 
 			clearmnemonic();
 			setupmnemonic();
+			
+			// MW-2014-03-12: [[ Bug 11917 ]] Try and sync the menuhistory with
+			//   the new label - we take the first entry which matches the label
+			//   or leave it unchanged if there is no match.
+			if (menumode == WM_OPTION || menumode == WM_COMBO)
+			{
+				// Break up the list of items.
+				MCString *t_ptrs;
+				uint2 t_nptrs;
+				MCU_break_string(MCString(menustring, menusize), t_ptrs, t_nptrs, hasunicode());
+				
+				// Loop through looking for the new label (taking into account
+				// the caseSensitive property).
+				int t_index;
+				t_index = -1;
+				for(int i = 0; i < t_nptrs; i++)
+					if (ep . getcasesensitive())
+					{
+						if (t_ptrs[i] . equalexactly(data))
+						{
+							t_index = i;
+							break;
+						}
+					}
+					else
+					{
+						if (t_ptrs[i] == data)
+						{
+							t_index = i;
+							break;
+						}
+					}
+				
+				// If we found a matching item, then set the menuhistory.
+				if (t_index != -1)
+					setmenuhistoryprop(t_index + 1);
+			}
 		}
 		else
 		{
