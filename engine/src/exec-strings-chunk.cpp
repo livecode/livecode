@@ -1180,6 +1180,11 @@ void MCStringsMarkBytesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal
     x_mark . finish = x_mark . start + t_chunk_count;
 }
 
+static bool need_increment(Chunk_term p_chunk_type)
+{
+    return (p_chunk_type == CT_LINE || p_chunk_type == CT_ITEM || p_chunk_type == CT_WORD || p_chunk_type == CT_PARAGRAPH);
+}
+
 bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_chunk_type, uindex_t t_length, MCRange& x_range, bool p_not_first, bool& r_last)
 {
     // incoming indices are code unit indices
@@ -1187,7 +1192,7 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
     uindex_t t_end_index = t_length - 1;
     uindex_t t_offset = x_range . offset + x_range . length;
     
-    if (p_not_first && p_chunk_type != CT_CHARACTER && p_chunk_type != CT_CODEPOINT && p_chunk_type != CT_CODEUNIT)
+    if (p_not_first && need_increment(p_chunk_type))
         t_offset++;
 
     if (t_offset >= t_length)
@@ -1283,7 +1288,7 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
         case CT_TOKEN:
         {
             MCAutoStringRef t_string;
-            MCStringCopySubstring(p_string, MCRangeMake(x_range . offset + x_range . length, UINDEX_MAX), &t_string);
+            MCStringCopySubstring(p_string, MCRangeMake(x_range . offset, UINDEX_MAX), &t_string);
             MCScriptPoint sp(*t_string);
             MCerrorlock++;
             
@@ -1292,19 +1297,17 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             if (ps == PS_ERROR || ps == PS_EOF)
                 return false;
             t_pos = sp . getindex();
-        
-            x_range . offset = t_pos;
 
+            x_range . offset += t_pos;
+            x_range . length = MCStringGetLength(sp.gettoken_stringref());
+            
             ps = sp.nexttoken();
-            t_pos += sp . getindex();
 
             if (ps == PS_ERROR || ps == PS_EOF)
             {
                 x_range . length = t_length - t_offset;
                 r_last = true;
             }
-            else
-                x_range . length = MCStringGetLength(sp.gettoken_stringref());
             
             MCerrorlock--;
         }
