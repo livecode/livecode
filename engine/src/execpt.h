@@ -119,7 +119,12 @@ public:
 	// Return a pointer to the array value contained in the exec-point
 	MCVariableValue *getarray(void)
 	{
-		return array;
+		// MW-2014-03-12: [[ Bug 11867 ]] If the format is array return the array
+		//   pointer. Otherwise return nil (since array is not necessarily set to
+		//   nil if it changes format).
+		if (format == VF_ARRAY) 
+			return array;
+		return nil;
 	}
 
 	Boolean getdeletearray()
