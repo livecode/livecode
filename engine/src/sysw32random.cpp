@@ -49,7 +49,10 @@ bool MCS_random_bytes(size_t p_count, MCDataRef& r_bytes)
 	CryptReleaseContext(t_provider, 0);
 
 	// Return whether we successfully generated random bytes or not.
-	return t_success;
+	if (t_success)
+		return MCDataCreateWithBytes(t_bytes . Bytes(), t_bytes . ByteCount(), r_bytes);
+	else
+		return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
