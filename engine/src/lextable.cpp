@@ -2170,10 +2170,14 @@ static LT unit_table[] =
 		{"key", TT_UNDEFINED, FU_KEY},
         {"line", TT_UNDEFINED, FU_LINE},
         {"lines", TT_UNDEFINED, FU_LINE},
+        {"paragraph", TT_UNDEFINED, FU_PARAGRAPH},
+        {"paragraphs", TT_UNDEFINED, FU_PARAGRAPH},
         {"real4", TT_UNDEFINED, FU_REAL4},
         {"real4s", TT_UNDEFINED, FU_REAL4},
         {"real8", TT_UNDEFINED, FU_REAL8},
         {"real8s", TT_UNDEFINED, FU_REAL8},
+        {"sentence", TT_UNDEFINED, FU_SENTENCE},
+        {"sentences", TT_UNDEFINED, FU_SENTENCE},
         {"token", TT_UNDEFINED, FU_TOKEN},
         {"tokens", TT_UNDEFINED, FU_TOKEN},
         {"uint1", TT_UNDEFINED, FU_UINT1},
@@ -2185,7 +2189,9 @@ static LT unit_table[] =
         {"uint8", TT_UNDEFINED, FU_UINT8},
         {"uint8s", TT_UNDEFINED, FU_UINT8},
         {"word", TT_UNDEFINED, FU_WORD},
-        {"words", TT_UNDEFINED, FU_WORD}
+        {"words", TT_UNDEFINED, FU_WORD},
+        {"wordunit", TT_UNDEFINED, FU_WORDUNIT},
+        {"wordunits", TT_UNDEFINED, FU_WORDUNIT}
     };
 
 static LT validation_table[] =

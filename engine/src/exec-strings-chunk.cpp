@@ -118,10 +118,19 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
         case CT_PARAGRAPH:
         {
             nchunks++;
+            
+            uindex_t t_pg_offset;
+            bool t_pg_found, t_newline_found;
+            
             while (t_offset <= t_end_index)
             {
-                if (!MCStringFirstIndexOfChar(p_string, '\n', t_offset, kMCCompareExact, t_offset)
-                    && !MCStringFirstIndexOfChar(p_string, 0x2029, t_offset, kMCCompareExact, t_offset))
+                t_pg_offset = t_offset;
+                t_newline_found = MCStringFirstIndexOfChar(p_string, '\n', t_offset, kMCCompareExact, t_offset);
+                t_pg_found = MCStringFirstIndexOfChar(p_string, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);
+                
+                t_offset = MCU_min(t_newline_found ? t_offset : UINDEX_MAX, t_pg_found ? t_pg_offset : UINDEX_MAX);
+                
+                if (t_newline_found || t_pg_found)
                     break;
                 if (t_offset < t_end_index)
                     nchunks++;
@@ -139,7 +148,7 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
             if (p_chunk_type == CT_SENTENCE)
                 /* UNCHECKED */ MCStringUnmapSentenceIndices(p_string, kMCBasicLocale, t_cu_range, t_range);
             else
-            /* UNCHECKED */ MCStringUnmapWordunitIndices(p_string, kMCBasicLocale, t_cu_range, t_range);
+                /* UNCHECKED */ MCStringUnmapWordunitIndices(p_string, kMCBasicLocale, t_cu_range, t_range);
             
             nchunks = t_range.length;
         }
@@ -1206,6 +1215,50 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
                 x_range . length = t_offset - x_range . offset;
         }
             return true;
+         
+        case CT_PARAGRAPH:
+        {
+            uindex_t t_pg_offset;
+            bool t_newline_found, t_pg_found;
+            
+            t_pg_offset = t_offset;
+            t_newline_found = MCStringFirstIndexOfChar(p_string, '\n', t_offset, kMCCompareExact, t_offset);
+            t_pg_found = MCStringFirstIndexOfChar(p_string, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);
+            
+            t_offset = MCU_min(t_newline_found ? t_offset : UINDEX_MAX, t_pg_found ? t_pg_offset : UINDEX_MAX);
+            
+            // calculate the length of the paragraph
+            if (t_newline_found || t_pg_found)
+                x_range . length = t_offset - x_range . offset;
+            else
+            {
+                x_range . length = t_length - t_offset;
+                r_last = true;
+            }
+        }
+            return true;
+            
+        case CT_SENTENCE:
+        case CT_WORDUNIT:
+        {
+            x_range . length = 1;
+            // offset is already in code units so avoid remapping up to there.
+            uindex_t t_cu_offset = x_range . offset;
+            MCAutoStringRef t_string;
+            MCStringCopySubstring(p_string, MCRangeMake(x_range . offset, UINDEX_MAX), &t_string);
+            x_range . offset = 0;
+            if (p_chunk_type == CT_SENTENCE)
+                /* UNCHECKED */ MCStringMapSentenceIndices(*t_string, kMCBasicLocale, x_range, x_range);
+            else
+                /* UNCHECKED */ MCStringMapWordunitIndices(*t_string, kMCBasicLocale, x_range, x_range);
+            
+            // restore original offset.
+            x_range . offset += t_cu_offset;
+            
+            if (t_offset == t_end_index)
+                r_last = true;
+        }
+            return true;
             
         case CT_WORD:
         {
@@ -1226,7 +1279,7 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             x_range . length = t_offset - x_range . offset;
         }
             return true;
-            
+        
         case CT_TOKEN:
         {
             MCAutoStringRef t_string;
