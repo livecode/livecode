@@ -4,3 +4,4 @@ For example, you can now do:
    set the clipboardData["styledText"] to the styledText of line 5 of field 3
    set the styledText of line 6 of field 3 to the clipboardData["styledText"]
 
+Note that the dragData can now also be used with this new format in exactly the same way.
