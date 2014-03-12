@@ -256,12 +256,12 @@ bool MCExecContext::ConvertToNumberOrArray(MCExecValue& x_value)
         double t_real;
         if (!ConvertToReal(x_value . valueref_value, t_real))
         {
-            MCAutoArrayRef t_array;
-            if (!ConvertToArray(x_value . valueref_value, &t_array))
+            MCArrayRef t_array;
+            if (!ConvertToArray(x_value . valueref_value, t_array))
                 return false;
             
             MCValueRelease(x_value . valueref_value);
-            MCExecValueTraits<MCArrayRef>::set(x_value, *t_array);
+            MCExecValueTraits<MCArrayRef>::set(x_value, t_array);
             return true;
         }
 
