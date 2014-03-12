@@ -212,9 +212,24 @@ bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 	{
 		if (FMGetFontFamilyName(fontFamily, fname) == noErr)
 		{
-			p2cstr(fname);
-			if (fname[0] != '%' && fname[0] != '.')          //exclude printer fonts
-				t_success = MCListAppendCString(*t_list, (char*)fname);
+            TextEncoding t_encoding;
+            TextToUnicodeInfo t_info;
+            
+            FMGetFontFamilyTextEncoding(fontFamily, &t_encoding);
+            CreateTextToUnicodeInfoByEncoding(t_encoding, &t_info);
+            
+            ByteCount t_length;
+            unichar_t ufname[255];
+            ConvertFromPStringToUnicode(t_info, fname, 255, &t_length, ufname);
+            
+            DisposeTextToUnicodeInfo(&t_info);
+
+			if (ufname[0] != '%' && ufname[0] != '.')          //exclude printer fonts
+            {
+                MCAutoStringRef t_name;
+                /* UNCHECKED */ MCStringCreateWithChars(ufname, t_length/2, &t_name);
+                t_success = MCListAppend(*t_list, *t_name);
+            }
 		}
 	}
 	
