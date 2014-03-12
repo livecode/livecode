@@ -225,6 +225,9 @@ protected:
 	//   drawn to the screen on the next update.
 	MCRegionRef m_view_update_region;
 	
+	// MW-2014-03-12: [[ Bug 11914 ]] If this is true then the stack is an engine menu.
+	bool m_is_menu : 1;
+	
 public:
 	Boolean menuwindow;
 
