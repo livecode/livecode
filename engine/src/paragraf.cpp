@@ -3346,7 +3346,6 @@ uint1 MCParagraph::fmovefocus_visual(Field_translations type)
             if ((t_is_rtl && focusedindex == i) || (!t_is_rtl && focusedindex == i + l))
             {
                 ebptr = sbptr->GetNextBlockVisualOrder();
-                t_done = true;
                 if (ebptr != nil)
                 {
                     t_done = true;
