@@ -1154,19 +1154,27 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
     {
         MCSFileEncodingType t_file_encoding;
         MCAutoStringRef t_text;
+        uindex_t t_bom_size;
 
+        t_bom_size = 0;
         t_buffer . Shrink(t_size);
 
         t_file_encoding = MCS_resolve_BOM(t_file);
+        
+        if (t_file_encoding == kMCFileEncodingUTF16
+                || t_file_encoding == kMCFileEncodingUTF16BE
+                || t_file_encoding == kMCFileEncodingUTF16LE)
+            t_bom_size = 2;
+        else if (t_file_encoding == kMCFileEncodingUTF8)
+            t_bom_size = 3;
 
         if (t_success)
-            t_success =  MCStringCreateWithBytes((byte_t*)t_buffer.Chars(), t_buffer.CharCount(), MCS_file_to_string_encoding(t_file_encoding), false, &t_text);
+            t_success =  MCStringCreateWithBytes((byte_t*)t_buffer.Chars() + t_bom_size, t_buffer.CharCount() - t_bom_size, MCS_file_to_string_encoding(t_file_encoding), false, &t_text);
         
         if (t_success)
             t_success = MCStringConvertLineEndingsToLiveCode(*t_text, r_text);
         
-        MCresult -> empty();
-       
+        MCresult -> empty();       
     }
 
 	t_file -> Close();
