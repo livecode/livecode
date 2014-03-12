@@ -1476,10 +1476,10 @@ bool MCStringMapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_grapheme_ran
 bool MCStringUnmapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange& r_grapheme_range);
 
 // Maps from a word range to a codeunit (StringRef) range
-bool MCStringMapNaturalWordIndices(MCStringRef, MCLocaleRef, MCRange p_word_range, MCRange& r_string_range);
+bool MCStringMapWordunitIndices(MCStringRef, MCLocaleRef, MCRange p_word_range, MCRange& r_string_range);
 
 // Maps from a codeunit (StringRef) range to a word range
-bool MCStringUnmapNaturalWordIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange &r_word_range);
+bool MCStringUnmapWordunitIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange &r_word_range);
 
 // Maps from a sentence range to a codeunit (StringRef) range
 bool MCStringMapSentenceIndices(MCStringRef, MCLocaleRef, MCRange p_sentence_range, MCRange& r_string_range);

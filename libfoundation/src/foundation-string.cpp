@@ -1007,7 +1007,12 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
     return MCStringMapIndices(self, kMCBreakIteratorTypeCharacter, p_locale, p_in_range, r_out_range);
 }
 
-bool MCStringMapNaturalWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
+static bool MCStringCodepointIsWordPart(codepoint_t p_codepoint)
+{
+    return MCUnicodeIsAlphabetic(p_codepoint) || MCUnicodeIsDigit(p_codepoint);
+}
+
+bool MCStringMapWordunitIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
 {
     MCAssert(self != nil);
     MCAssert(p_locale != nil);
@@ -1023,17 +1028,30 @@ bool MCStringMapNaturalWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRan
         MCLocaleBreakIteratorRelease(t_iter);
         return false;
     }
-    
-    // Skip any initial spaces
-    uindex_t t_start;
-    t_start = 0;
+
+    uindex_t t_start, t_left_break, t_right_break;
+    t_right_break = 0;
+    t_start = t_right_break;
+    p_in_range . offset++;
     
     // Advance to the beginning of the specified range
-    while (t_start != kMCLocaleBreakIteratorDone && p_in_range . offset--)
+    while (t_right_break != kMCLocaleBreakIteratorDone && p_in_range . offset)
     {
-        t_start = MCLocaleBreakIteratorAdvance(t_iter);
-        if (MCLocaleBreakIteratorIsBoundary(t_iter, t_start + 1))
-            p_in_range . offset++;
+        t_left_break = t_right_break;
+        t_start = t_left_break;
+        
+        t_right_break = MCLocaleBreakIteratorAdvance(t_iter);
+        
+        // if the intervening chars contain a letter or number then it was a valid 'word'
+        while (t_left_break < t_right_break)
+        {
+            if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(self, t_left_break)))
+                break;
+            t_left_break++;
+        }
+        
+        if (t_left_break < t_right_break)
+            p_in_range . offset--;
     }
     
     if (t_start == kMCLocaleBreakIteratorDone)
@@ -1043,16 +1061,26 @@ bool MCStringMapNaturalWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRan
     }
 
     // Advance to the end of the current word
-    uindex_t t_end;
-    t_end = MCLocaleBreakIteratorNext(t_iter, 1);
+    uindex_t t_end = t_right_break;
+    p_in_range . length--;
     
     // While more words are requested, find the end of the next word.
-    while (t_end != kMCLocaleBreakIteratorDone && --p_in_range.length)
+    while (t_end != kMCLocaleBreakIteratorDone && p_in_range . length)
     {
-        MCLocaleBreakIteratorAdvance(t_iter);
-        t_end = MCLocaleBreakIteratorNext(t_iter, 1);
-        if (MCLocaleBreakIteratorIsBoundary(t_iter, t_end + 1))
-            p_in_range . length++;
+        t_left_break = t_right_break;
+        t_end = t_right_break;
+        t_right_break = MCLocaleBreakIteratorAdvance(t_iter);
+        
+        // if the intervening chars contain a letter or number then it was a valid 'word'
+        while (t_left_break < t_right_break)
+        {
+            if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(self, t_left_break)))
+                break;
+            t_left_break++;
+        }
+        
+        if (t_left_break < t_right_break)
+            p_in_range . length--;
     }
     
     if (t_end == kMCLocaleBreakIteratorDone)
@@ -1144,9 +1172,89 @@ bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
     return MCStringUnmapIndices(self, kMCBreakIteratorTypeCharacter, p_locale, p_in_range, r_out_range);
 }
 
-bool MCStringUnmapNaturalWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
+bool MCStringUnmapWordunitIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
 {
-    return MCStringUnmapIndices(self, kMCBreakIteratorTypeWord, p_locale, p_in_range, r_out_range);
+    MCAssert(self != nil);
+    MCAssert(p_locale != nil);
+    
+    // Check that the input range is valid
+    if (p_in_range.offset + p_in_range.length > self -> char_count)
+        return false;
+    
+    // Create a break iterator of the appropriate type
+    MCBreakIteratorRef t_iter;
+    if (!MCLocaleBreakIteratorCreate(p_locale, kMCBreakIteratorTypeWord, t_iter))
+        return false;
+    
+    // Set the iterator's text
+    if (!MCLocaleBreakIteratorSetText(t_iter, self))
+    {
+        MCLocaleBreakIteratorRelease(t_iter);
+        return false;
+    }
+    
+    // Count how many words it takes to reach or exceed the offset
+    uindex_t t_start, t_left_break, t_right_break;
+    t_start = 0;
+    t_right_break = 0;
+    t_left_break = 0;
+    while (t_right_break < p_in_range.offset)
+    {
+        t_right_break++;
+        if (MCLocaleBreakIteratorIsBoundary(t_iter, t_right_break))
+        {
+            // if the intervening chars contain a letter or number then it was a valid 'word'
+            while (t_left_break < t_right_break)
+            {
+                if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(self, t_left_break)))
+                    break;
+                t_left_break++;
+            }
+            
+            if (t_left_break < t_right_break)
+                t_start++;
+            t_left_break = t_right_break;
+        }
+
+        if (t_right_break >= self -> char_count)
+        {
+            r_out_range = MCRangeMake(t_right_break, 0);
+            return true;
+        }
+    }
+    
+    // Count how many more it takes to accomodate all the code units
+    uindex_t t_end;
+    t_end = 0;
+    while (t_right_break < p_in_range.offset + p_in_range.length)
+    {
+        t_right_break++;
+        if (MCLocaleBreakIteratorIsBoundary(t_iter, t_right_break))
+        {
+            // if the intervening chars contain a letter or number then it was a valid 'word'
+            while (t_left_break < t_right_break)
+            {
+                if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(self, t_left_break)))
+                    break;
+                t_left_break++;
+            }
+            
+            if (t_left_break < t_right_break)
+                t_end++;
+            t_left_break = t_right_break;
+        }
+        
+        if (t_right_break >= self -> char_count)
+            break;
+    }
+    
+    MCRange t_units;
+    t_units = MCRangeMake(t_start, t_end);
+    
+    // All done
+    MCLocaleBreakIteratorRelease(t_iter);
+    r_out_range = t_units;
+    return true;
 }
 
 bool MCStringUnmapSentenceIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)

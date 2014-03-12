@@ -128,7 +128,7 @@ MCChunk::MCChunk(Boolean isforset)
 {
 	url = stack = background = card = group = object = NULL;
 	cline = item = word = token = character = NULL;
-    paragraph = sentence = natword = NULL;
+    paragraph = sentence = wordunit = NULL;
     codepoint = codeunit = byte = NULL;
 	source = NULL;
 	destvar = NULL;
@@ -175,7 +175,7 @@ MCChunk::~MCChunk()
     delete byte;
     delete paragraph;
     delete sentence;
-    delete natword;
+    delete wordunit;
 	delete source;
 	delete destvar;
 }
@@ -258,7 +258,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 				//   is of a previously parsed object then we must pass as a dest so the
 				//   object resolves correctly.
 				if (desttype != DT_ISDEST && (cline != NULL || paragraph != NULL || sentence != NULL
-				                              || item != NULL || natword != NULL || word != NULL
+				                              || item != NULL || word != NULL || wordunit != NULL
 				                              || token != NULL || character != NULL || codepoint != NULL
                                               || codeunit != NULL || byte != NULL) &&
 											 (stack == nil && background == nil &&
@@ -458,12 +458,12 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 					case CT_ITEM:
 						item = curref;
 						break;
-                    case CT_NAT_WORD:
-                        natword = curref;
-                        break;
 					case CT_WORD:
 						word = curref;
 						break;
+                    case CT_WORDUNIT:
+                        wordunit = curref;
+                        break;
 					case CT_TOKEN:
 						token = curref;
 						break;
@@ -525,7 +525,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						{}
 					}
 					else if (cline != NULL || paragraph != NULL || sentence != NULL || item != NULL
-                             || natword != NULL || word != NULL || token != NULL || character != NULL
+                             || wordunit != NULL || word != NULL || token != NULL || character != NULL
                              || codepoint != NULL || codeunit != NULL || byte != NULL)
 					{
 						sp.backup();
@@ -741,11 +741,11 @@ void MCChunk::take_components(MCChunk *tchunk)
 		word = tchunk->word;
 		tchunk->word = NULL;
 	}
-    if (tchunk->natword != NULL)
+    if (tchunk->wordunit != NULL)
 	{
-		delete natword;
-		natword = tchunk->natword;
-		tchunk->natword = NULL;
+		delete wordunit;
+		wordunit = tchunk->wordunit;
+		tchunk->wordunit = NULL;
     }
 	if (tchunk->item != NULL)
 	{
@@ -2411,7 +2411,7 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
     
     if (cline != nil)
     {
-        t_further_chunks = (paragraph != nil || sentence != nil || item != nil || natword != nil || word != nil
+        t_further_chunks = (paragraph != nil || sentence != nil || item != nil || word != nil || wordunit != nil
                             || character != nil || codepoint != nil || codeunit != nil || byte != nil);
         if (cline -> etype == CT_RANGE || cline -> etype == CT_EXPRESSION)
         {
@@ -2434,7 +2434,7 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
     
     if (paragraph != nil)
     {
-        t_further_chunks = (sentence != nil || item != nil || natword != nil || word != nil
+        t_further_chunks = (sentence != nil || item != nil || word != nil || wordunit != nil
                             || character != nil || codepoint != nil || codeunit != nil || byte != nil);
         if (paragraph -> etype == CT_RANGE || paragraph -> etype == CT_EXPRESSION)
         {
@@ -2457,7 +2457,7 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
     
     if (sentence != nil)
     {
-        t_further_chunks = (item != nil || natword != nil || word != nil || character != nil 
+        t_further_chunks = (item != nil || word != nil || wordunit != nil || character != nil 
                             || codepoint != nil || codeunit != nil || byte != nil);
         if (sentence -> etype == CT_RANGE || sentence -> etype == CT_EXPRESSION)
         {
@@ -2480,7 +2480,7 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
     
     if (item != nil)
     {
-        t_further_chunks = (natword != nil || word != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil);
+        t_further_chunks = (word != nil || wordunit != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil);
         if (item -> etype == CT_RANGE || item -> etype == CT_EXPRESSION)
         {
             if (!ctxt . EvalExprAsInt(item -> startpos, EE_CHUNK_BADRANGESTART, t_first))
@@ -2500,31 +2500,9 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
             MCStringsMarkItemsOfTextByOrdinal(ctxt, item -> etype, force, wholechunk, t_further_chunks, x_mark);
     }
     
-    if (natword != nil)
-    {
-        t_further_chunks = (word != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil);
-        if (natword -> etype == CT_RANGE || natword -> etype == CT_EXPRESSION)
-        {
-            if (!ctxt . EvalExprAsInt(natword -> startpos, EE_CHUNK_BADRANGESTART, t_first))
-                return;
-            
-            if (natword -> etype == CT_RANGE)
-            {
-                if (!ctxt . EvalExprAsInt(natword -> endpos, EE_CHUNK_BADRANGEEND, t_last))
-                    return;
-            }
-            else
-                t_last = t_first;
-            
-            MCStringsMarkNaturalWordsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
-        }
-        else
-            MCStringsMarkNaturalWordsOfTextByOrdinal(ctxt, natword -> etype, force, wholechunk, t_further_chunks, x_mark);
-    }
-    
     if (word != nil)
     {
-        t_further_chunks = (character != nil || codepoint != nil || codeunit != nil || byte != nil);
+        t_further_chunks = (wordunit != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil);
         if (word -> etype == CT_RANGE || word -> etype == CT_EXPRESSION)
         {
             if (!ctxt . EvalExprAsInt(word -> startpos, EE_CHUNK_BADRANGESTART, t_first))
@@ -2542,6 +2520,28 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
         }
         else
             MCStringsMarkWordsOfTextByOrdinal(ctxt, word -> etype, force, wholechunk, t_further_chunks, x_mark);
+    }
+    
+    if (wordunit != nil)
+    {
+        t_further_chunks = (character != nil || codepoint != nil || codeunit != nil || byte != nil);
+        if (wordunit -> etype == CT_RANGE || wordunit -> etype == CT_EXPRESSION)
+        {
+            if (!ctxt . EvalExprAsInt(wordunit -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+                return;
+            
+            if (wordunit -> etype == CT_RANGE)
+            {
+                if (!ctxt . EvalExprAsInt(wordunit -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                    return;
+            }
+            else
+                t_last = t_first;
+            
+            MCStringsMarkWordunitsOfTextByRange(ctxt, t_first, t_last, force, wholechunk, t_further_chunks, x_mark);
+        }
+        else
+            MCStringsMarkWordunitsOfTextByOrdinal(ctxt, wordunit -> etype, force, wholechunk, t_further_chunks, x_mark);
     }
     
     if (token != nil)
@@ -3324,7 +3324,7 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
 
     if (*t_text != nil)
     {
-        if (cline != nil || paragraph != nil || sentence != nil || item != nil || natword != nil || word != nil
+        if (cline != nil || paragraph != nil || sentence != nil || item != nil || wordunit != nil || word != nil
             || token != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil)
         {
             // Must be a string ref
@@ -4242,7 +4242,7 @@ bool MCChunk::getobjforprop(MCExecContext& ctxt, MCObject*& r_object, uint4& r_p
         && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
 		tfunction = True;
 	if (!tfunction && cline == nil && paragraph == nil && sentence == nil
-        && item == nil && natword == nil && word == nil && token == nil
+        && item == nil && wordunit == nil && word == nil && token == nil
         && character == nil && codepoint == nil && codeunit == nil && byte == nil)
 	{
 		r_object = objptr;
@@ -4795,10 +4795,10 @@ Chunk_term MCChunk::getlastchunktype(void)
 		return CT_CHARACTER;
 	if (item != nil)
 		return CT_ITEM;
+    if (wordunit != nil)
+        return CT_WORDUNIT;
 	if (word != nil)
 		return CT_WORD;
-    if (natword != nil)
-        return CT_NAT_WORD;
 	if (token != nil)
 		return CT_TOKEN;
     if (sentence != nil)
@@ -5252,7 +5252,7 @@ bool MCChunk::istextchunk(void) const
         t_function = true;
     
     if (!t_function && cline == nil && paragraph == nil && sentence == nil
-        && item == nil && natword == nil && word == nil && token == nil
+        && item == nil && wordunit == nil && word == nil && token == nil
         && character == nil && codepoint == nil && codeunit == nil && byte == nil)
         return false;
     
@@ -5264,7 +5264,7 @@ bool MCChunk::istextchunk(void) const
 bool MCChunk::islinechunk(void) const
 {
 	// If we have any of item, token, word, character, codepoint, codeunit or byte entries then we are not a line.
-	if (paragraph != nil || sentence != nil || item != nil || token != nil || natword != nil
+	if (paragraph != nil || sentence != nil || item != nil || token != nil || wordunit != nil
         || word != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil)
 		return false;
 
@@ -5287,7 +5287,7 @@ bool MCChunk::isvarchunk(void) const
 	if (source != nil)
 		return false;
 	
-	if (cline != nil || paragraph != nil || sentence != nil || item != nil || token != nil || natword != nil
+	if (cline != nil || paragraph != nil || sentence != nil || item != nil || token != nil || wordunit != nil
         || word != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil)
 		return false;
 	
@@ -5307,7 +5307,7 @@ bool MCChunk::issubstringchunk(void) const
 	if (destvar == nil)
 		return false;
 
-	if (cline != nil || paragraph != nil || sentence != nil || item != nil || token != nil || natword != nil
+	if (cline != nil || paragraph != nil || sentence != nil || item != nil || token != nil || wordunit != nil
         || word != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil)
 		return true;
 
