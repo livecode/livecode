@@ -73,7 +73,9 @@ public:
     
     ~__MCBreakIterator()
     {
-        delete &m_icu_iter;
+        // No longer deletes the ICU:BreakIterator, but needs to cleanup the
+        // ICU:UnicodeString stored
+//        delete &m_icu_iter;
         delete m_icu_string;
     }
 };
@@ -1043,8 +1045,8 @@ void MCLocaleBreakIteratorRelease(MCBreakIteratorRef p_iter)
 {
     MCAssert(p_iter != nil);
     
-    // No longer does anything - the break iterators are cached by the locale
-    //delete p_iter;
+    // No longer does anything to the break iterators, which are cached by the locale
+    delete p_iter;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
