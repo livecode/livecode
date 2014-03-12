@@ -1848,32 +1848,22 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
 	        || (state & PS_BACK && lptr == lines->prev())
 	        || (endindex >= i && startindex < i + l))
 	{
-		bool t_show_front;
+        MCRectangle srect;
+        
+        bool t_show_front;
 		t_show_front = (state & PS_FRONT) != 0 && (parent -> getflag(F_LIST_BEHAVIOR) || this != parent -> getparagraphs() || lptr != lines);
-	
-		MCRectangle srect;
-		/*if (t_show_front || startindex < i)
-			srect.x = sx;
-		else
-		{
-			srect.x = x;
-			if (startindex > i)
-				srect.x += lptr->GetCursorXPrimary(MCU_min(gettextlength(), startindex), moving_forward);
-		}*/
-		
+
 		bool t_show_back;
 		t_show_back = (state & PS_BACK) != 0 && (parent -> getflag(F_LIST_BEHAVIOR) || this != parent -> getparagraphs() -> prev() || lptr != lines -> prev());
-		
-        /*if (t_show_back || endindex > i + l)
-			srect.width = swidth - (srect.x - sx);
-		else
-		{
-			int2 sx = x + lptr->GetCursorXPrimary(MCU_min(gettextlength(), endindex), moving_forward);
-			if (sx > srect.x)
-				srect.width = sx - srect.x;
-			else
-				return;
-		}*/
+
+        bool t_show_all;
+        t_show_all = t_show_front && t_show_back;
+        
+        // Do some adjustment of the start/end indices for block drawing purposes
+        // (This is needed so that we have valid indices when highlighting comboboxes)
+        findex_t startindex_draw, endindex_draw;
+        startindex_draw = t_show_front ? i : startindex;
+        endindex_draw = t_show_back ? i + l : endindex;
 		
 		// MW-2012-03-19: [[ Bug 10069 ]] The padding to use vertically depends on
 		//   the vgrid property and such.
@@ -1931,15 +1921,15 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
             // Is part of this block selected?
             findex_t bi, bl;
             bptr->GetRange(bi, bl);
-            if (startindex <= bi + bl && endindex >= bi)
+            if (t_show_all || (startindex <= bi + bl && endindex >= bi))
             {
                 findex_t si, ei;
-                if (startindex > bi)
-                    si = startindex;
+                if (startindex_draw > bi)
+                    si = startindex_draw;
                 else
                     si = bi;
-                if (endindex < bi + bl)
-                    ei = endindex;
+                if (endindex_draw < bi + bl)
+                    ei = endindex_draw;
                 else
                     ei = bi + bl;
                 
@@ -1959,7 +1949,7 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                     srect.x = x + bix;
                     srect.width = bex - bix;
                 }
-                
+
                 // Draw this block
                 dc->fillrect(srect);
             }
@@ -1967,6 +1957,37 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
             bptr = bptr->next();
         }
         while (bptr != firstblock);
+        
+        // Draw the left-hand side, if required
+        if (t_show_front || startindex < i)
+        {
+            MCBlock *t_first_visual;
+            t_first_visual = firstblock;
+            
+            // TODO: avoid this loop
+            while (t_first_visual->GetPrevBlockVisualOrder() != nil)
+                t_first_visual = t_first_visual->GetPrevBlockVisualOrder();
+            
+            srect.x = sx;
+            srect.width = x + t_first_visual->getorigin() - sx;
+            dc->fillrect(srect);
+        }
+        
+        // Draw the right-hand side, if required
+        if (t_show_back || endindex > i + l)
+        {
+            MCBlock *t_last_visual;
+            t_last_visual = lastblock;
+            
+            // TODO: avoid this loop
+            while (t_last_visual->GetNextBlockVisualOrder() != nil)
+                t_last_visual = t_last_visual->GetNextBlockVisualOrder();
+            
+            srect.x = x + t_last_visual->getorigin() + t_last_visual->getwidth();
+            srect.width = swidth - (srect.x - sx);
+            dc->fillrect(srect);
+        }
+        
 
 		//dc->fillrect(srect);
 
