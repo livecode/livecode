@@ -515,7 +515,7 @@ void MCField::SetStyle(MCExecContext& ctxt, intenum_t p_style)
 
 void MCField::GetAutoHilite(MCExecContext& ctxt, bool& r_setting)
 {
-	r_setting = getflag(F_AUTO_HILITE);
+	r_setting = (flags & F_NO_AUTO_HILITE) == 0;
 }
 
 void MCField::SetAutoHilite(MCExecContext& ctxt, bool setting)
