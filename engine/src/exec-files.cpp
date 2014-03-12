@@ -1277,121 +1277,133 @@ void MCFilesExecPerformWait(MCExecContext &ctxt, int4 p_index, real8 &x_duration
 // For a UTF-8 character, it might read more than one codepoint, the number of codeunit read is returned
 uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_t p_encoding, real8 &x_duration, IO_handle p_stream, MCStringRef x_buffer, IO_stat &r_stat)
 {
-    MCAutoByteArray t_bytes;
-    uint4 t_bytes_read = 0;
     uint4 t_codeunit_added = 0;
 
-    switch(p_encoding)
-    {
-    case kMCFileEncodingNative:
-        t_bytes . New(1);
-        r_stat = MCS_readall(t_bytes.Bytes(), 1, p_stream, t_bytes_read);
+	do
+	{
+		MCAutoByteArray t_bytes;
+		uint4 t_bytes_read = 0;
+		switch(p_encoding)
+		{
+			case kMCFileEncodingNative:
+			t_bytes . New(1);
+			r_stat = MCS_readall(t_bytes.Bytes(), 1, p_stream, t_bytes_read);
 
-        if (t_bytes_read == 1)
-        {
-            MCStringAppendNativeChar(x_buffer, (char)t_bytes.Bytes()[0]);
-            t_codeunit_added = 1;
-        }
-        else
-            MCFilesExecPerformWait(ctxt, p_index, x_duration, r_stat);
-        break;
+			if (t_bytes_read == 1)
+			{
+				MCStringAppendNativeChar(x_buffer, (char)t_bytes.Bytes()[0]);
+				t_codeunit_added = 1;
+			}
+			else
+				MCFilesExecPerformWait(ctxt, p_index, x_duration, r_stat);
+			break;
 
-    case kMCFileEncodingUTF16:
-    case kMCFileEncodingUTF16LE:
-    case kMCFileEncodingUTF16BE:
-        t_bytes . New(2);
-        r_stat = MCS_readall(t_bytes.Bytes(), 2, p_stream, t_bytes_read);
+		case kMCFileEncodingUTF16:
+		case kMCFileEncodingUTF16LE:
+		case kMCFileEncodingUTF16BE:
+			t_bytes . New(2);
+			r_stat = MCS_readall(t_bytes.Bytes(), 2, p_stream, t_bytes_read);
 
-        if (t_bytes_read == 2 ||
-                (t_bytes_read == 1 && r_stat == EOF))
-        {
-            unichar_t t_codeunit;
+			if (t_bytes_read == 2 ||
+					(t_bytes_read == 1 && r_stat == EOF))
+			{
+				unichar_t t_codeunit;
 
-            // Reverse the bytes in case it's needed
-            if (p_encoding == kMCFileEncodingUTF16BE)
-                t_codeunit = MCSwapInt16HostToBig(((unichar_t*)t_bytes . Bytes())[0]);
-            else
-                t_codeunit = *(unichar_t*)t_bytes . Bytes();
+				// Reverse the bytes in case it's needed
+				if (p_encoding == kMCFileEncodingUTF16BE)
+					t_codeunit = MCSwapInt16HostToBig(((unichar_t*)t_bytes . Bytes())[0]);
+				else
+					t_codeunit = *(unichar_t*)t_bytes . Bytes();
 
-            MCStringAppendChar(x_buffer, t_codeunit);
-            t_codeunit_added = 1;
-        }
-        else
-            MCFilesExecPerformWait(ctxt, p_index, x_duration, r_stat);
-        break;
-    case kMCFileEncodingUTF8:
-        t_bytes . New(1);
-        r_stat = MCS_readall(t_bytes . Bytes(), 1, p_stream, t_bytes_read);
+				MCStringAppendChar(x_buffer, t_codeunit);
+				t_codeunit_added = 1;
+			}
+			else
+				MCFilesExecPerformWait(ctxt, p_index, x_duration, r_stat);
+			break;
+		case kMCFileEncodingUTF8:
+			t_bytes . New(1);
+			r_stat = MCS_readall(t_bytes . Bytes(), 1, p_stream, t_bytes_read);
 
-        if (t_bytes_read == 1)
-        {
-            byte_t t_byte = t_bytes . Bytes()[0];
-            uint4 t_to_read;
-            bool t_sequence_correct;
+			if (t_bytes_read == 1)
+			{
+				byte_t t_byte = t_bytes . Bytes()[0];
+				uint4 t_to_read;
+				bool t_sequence_correct;
 
-            t_sequence_correct = true;
+				t_sequence_correct = true;
 
-            if (t_byte < 0x80)
-                t_to_read = 0;
-            else if (t_byte < 0xC0) // invalid 10xxxxxx pattern
-                break;
-            else if (t_byte < 0xE0) // 2-byte long
-                t_to_read = 1;
-            else if (t_byte < 0xF0) // 3-byte long
-                t_to_read = 2;
-            else if (t_byte < 0xF8) // 4-byte long
-                t_to_read = 3;
-            else if (t_byte < 0xFC) // 5-byte long
-                t_to_read = 4;
-            else if (t_byte < 0xFE) // 6-byte long
-                t_to_read = 5;
+				if (t_byte < 0x80)
+					t_to_read = 0;
+				else if (t_byte < 0xC0) // invalid 10xxxxxx pattern
+					break;
+				else if (t_byte < 0xE0) // 2-byte long
+					t_to_read = 1;
+				else if (t_byte < 0xF0) // 3-byte long
+					t_to_read = 2;
+				else if (t_byte < 0xF8) // 4-byte long
+					t_to_read = 3;
+				else if (t_byte < 0xFC) // 5-byte long
+					t_to_read = 4;
+				else if (t_byte < 0xFE) // 6-byte long
+					t_to_read = 5;
 
-            // We need to read more bytes
-            if (t_to_read)
-            {
-                uint4 t_rsize;
-                IO_stat t_stat;
+				// We need to read more bytes
+				if (t_to_read)
+				{
+					uint4 t_rsize;
 
-                // Read all the expected bytes from the lead one
-                for (uint4 i = 1; i < t_to_read + 1 && t_sequence_correct; ++i)
-                {
-                    t_bytes . Extend(1);
-                    t_stat = MCS_readall(t_bytes . Bytes() + i, 1, p_stream, t_rsize);
-                    if (t_rsize != 1)
-                        // If we can't read the byte, the sequence is incorrect
-                        t_sequence_correct = false;
-                    else
-                        // The sequence is correct if the byte starts with 110xxxxx
-                        t_sequence_correct = *((byte_t*)t_bytes . Bytes() + i) < 0xC0;
+					// Read all the expected bytes from the lead one
+					for (uint4 i = 1; i < t_to_read + 1 && t_sequence_correct; )
+					{
+						t_bytes . Extend(1);
+						r_stat = MCS_readall(t_bytes . Bytes() + i, 1, p_stream, t_rsize);
+						if (t_rsize != 1)
+						{
+							// If we couldn't read the byte, let's wait first
+							MCFilesExecPerformWait(ctxt, p_index, x_duration, r_stat);
 
-                    t_bytes_read += t_rsize;
-                }
+							// If there is a stream error, the sequence is incorrect
+							t_sequence_correct = r_stat == IO_NORMAL;
+						}
+						else
+						{
+							// The sequence is correct if the byte starts with 110xxxxx
+							t_sequence_correct = *((byte_t*)t_bytes . Bytes() + i) < 0xC0;
+							++i;
 
-                r_stat = t_stat;
-            }
+							t_bytes_read += t_rsize;
+						}
+					}
+				}
 
-            if (t_sequence_correct)
-            {
-                MCAutoStringRef t_codepoints;
-                MCStringCreateWithBytes(t_bytes . Bytes(), t_bytes_read, kMCStringEncodingUTF8, false, &t_codepoints);
-                t_codeunit_added = MCStringGetLength(*t_codepoints);
-                MCStringAppend(x_buffer, *t_codepoints);
-            }
-            else
-            {
-                // Append the <?> character ('?' in a diamond) instead of the sequence
-                MCStringAppendChar(x_buffer, 0xFFFD);
-                t_codeunit_added = 1;
-                MCS_putback(t_bytes . Bytes()[t_bytes_read - 1], p_stream);
-            }
-        }
-        else
-            MCFilesExecPerformWait(ctxt, p_index, x_duration, r_stat);
+				if (t_sequence_correct)
+				{
+					MCAutoStringRef t_codepoints;
+					MCStringCreateWithBytes(t_bytes . Bytes(), t_bytes_read, kMCStringEncodingUTF8, false, &t_codepoints);
+					t_codeunit_added = MCStringGetLength(*t_codepoints);
+					MCStringAppend(x_buffer, *t_codepoints);
+				}
+				else
+				{
+					// Append the <?> character ('?' in a diamond) instead of the sequence
+					MCStringAppendChar(x_buffer, 0xFFFD);
+					t_codeunit_added = 1;
 
-        break;
-    default:
-        r_stat = IO_ERROR;
-    }
+					// Put back the last char if there is no stream error
+					if (r_stat == IO_NORMAL)
+						MCS_putback(t_bytes . Bytes()[t_bytes_read - 1], p_stream);
+				}
+			}
+			else
+				MCFilesExecPerformWait(ctxt, p_index, x_duration, r_stat);
+
+			break;
+		default:
+			r_stat = IO_ERROR;
+		}
+	}
+	while (!t_codeunit_added && r_stat == IO_NORMAL);
 
     return t_codeunit_added;
 }
@@ -1579,8 +1591,8 @@ void MCFilesExecPerformReadTextUntil(MCExecContext& ctxt, IO_handle p_stream, in
     while (p_count)
     {
         uint4 t_new_char_boundary;
-        if (!MCFilesExecPerformReadChunk(ctxt, p_index, p_encoding, FU_CHARACTER, t_last_char_boundary, t_duration, p_stream, *t_output, t_new_char_boundary, t_stat))
-            // error occurred while reading a char
+        if (!MCFilesExecPerformReadChunk(ctxt, p_index, p_encoding, FU_CODEPOINT, t_last_char_boundary, t_duration, p_stream, *t_output, t_new_char_boundary, t_stat))
+            // error occurred while reading a codepoint
             break;
 
         if (words)
