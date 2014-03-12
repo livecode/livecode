@@ -563,6 +563,9 @@ MCTransferType MCTransferData::StringToType(const MCString& p_string)
 	if (p_string == "unicode")
 		return TRANSFER_TYPE_UNICODE_TEXT;
 
+	if (p_string == "styledText")
+		return TRANSFER_TYPE_STYLED_TEXT_ARRAY;
+	
 	if (p_string == "styles")
 		return TRANSFER_TYPE_STYLED_TEXT;
 
@@ -937,6 +940,47 @@ MCSharedString *MCConvertStyledTextToRTF(MCSharedString *p_in)
 		return MCSharedString::Create(ep . getsvalue());
 	}
 	return NULL;
+}
+
+// MW-2014-03-12: [[ ClipboardStyledText ]] Convert data stored as a 'styles' pickle to a styledText array.
+MCVariableValue *MCConvertStyledTextToStyledTextArray(MCSharedString *p_string)
+{
+	MCObject *t_object;
+	t_object = MCObject::unpickle(p_string, MCtemplatefield -> getstack());
+	if (t_object != NULL)
+	{
+		MCParagraph *t_paragraphs;
+		t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
+		
+		MCExecPoint ep(NULL, NULL, NULL);
+		if (t_paragraphs != NULL)
+			MCtemplatefield -> exportasstyledtext(ep, t_paragraphs, 0, INT32_MAX, false, false);
+		
+		delete t_object;
+		
+		ep . grabarray();
+		
+		MCVariableValue *t_array;
+		Boolean t_delete_array;
+		ep . takearray(t_array, t_delete_array);
+		
+		return t_array;
+	}
+	return NULL;
+}
+
+// MW-2014-03-12: [[ ClipboardStyledText ]] Convert a styledText array to a 'styles' pickle.
+MCSharedString *MCConvertStyledTextArrayToStyledText(MCVariableValue *p_array)
+{
+	MCExecPoint ep(NULL, NULL, NULL);
+	ep . setarray(p_array, False);
+	
+	MCParagraph *t_paragraphs;
+	t_paragraphs = MCtemplatefield -> styledtexttoparagraphs(ep);
+	MCStyledText t_styled_text;
+	t_styled_text . setparent(MCdefaultstackptr);
+	t_styled_text . setparagraphs(t_paragraphs);
+	return MCObject::pickle(&t_styled_text, 0);
 }
 
 MCSharedString *MCConvertTextToUnicode(MCSharedString *p_string)
