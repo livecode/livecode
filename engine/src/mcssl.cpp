@@ -197,7 +197,7 @@ bool load_pem_key(const char *p_data, uint32_t p_length, RSA_KEYTYPE p_type, con
 {
 	char *t_message_out;
 	uint32_t t_message_out_length;
-	char *t_result;
+    char *t_result = nil;
 	MCAutoPointer<char>t_message_in, t_key, t_passphrase;
     /* UNCHECKED */ MCStringConvertToCString(p_message_in, &t_message_in);
     /* UNCHECKED */ MCStringConvertToCString(p_key, &t_key);
@@ -370,7 +370,7 @@ bool MCCrypt_rsa_op(bool p_encrypt, bool p_is_public, MCStringRef p_message_in, 
 		else
 		{
 			uint32_t t_err;
-			char *t_result;
+            char *t_result = nil;
 			t_err = ERR_get_error();
 			if (t_err)
 			{
