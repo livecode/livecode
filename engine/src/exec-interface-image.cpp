@@ -536,7 +536,7 @@ void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef
 			
 			MCImageBitmap *t_bitmap = nil;
 			
-			t_success = copybitmap(1.0, false, t_bitmap);
+			t_success = copybitmap(1.0, true, t_bitmap);
 			if (t_success)
 			{
 				uint8_t *t_src_ptr = (uint8_t*)t_bitmap->data;
