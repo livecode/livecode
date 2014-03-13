@@ -1966,7 +1966,7 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, uindex_t p_string_offset, 
                 
                 while (s_index != s_length)
                 {
-                    if ((MCStringsWildcardCompareChar(p_string, s_index, p_pattern, p_index, t_comparison, t_string_move, t_pattern_move) != 0
+                    if ((MCStringsWildcardCompareChar(p_string, s_index, p_pattern, p_index, t_comparison, t_string_move, t_pattern_move) == 0
                             || MCStringGetCharAtIndex(p_pattern, p_index) == '?'
                             || MCStringGetCharAtIndex(p_pattern, p_index) == OPEN_BRACKET)
                             && MCStringsExecWildcardMatch(p_string, s_index, p_pattern, p_index, casesensitive))

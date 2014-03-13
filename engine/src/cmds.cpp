@@ -2043,6 +2043,7 @@ void MCSet::exec_ctxt(MCExecContext& ctxt)
     if (!ctxt . EvalExprAsValueRef(value, EE_SET_BADEXP, &t_value))
         return;
     
+    ctxt . SetTheResultToEmpty();
     MCEngineExecSet(ctxt, target, *t_value);
 }
 
