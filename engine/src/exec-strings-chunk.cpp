@@ -140,7 +140,7 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
             break;
         
         case CT_SENTENCE:
-        case CT_WORDUNIT:
+        case CT_TRUEWORD:
         {
             // Convert from code unit indices to appropriate indices
             MCRange t_cu_range, t_range;
@@ -148,7 +148,7 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
             if (p_chunk_type == CT_SENTENCE)
                 /* UNCHECKED */ MCStringUnmapSentenceIndices(p_string, kMCBasicLocale, t_cu_range, t_range);
             else
-                /* UNCHECKED */ MCStringUnmapWordunitIndices(p_string, kMCBasicLocale, t_cu_range, t_range);
+                /* UNCHECKED */ MCStringUnmapTrueWordIndices(p_string, kMCBasicLocale, t_cu_range, t_range);
             
             nchunks = t_range.length;
         }
@@ -442,7 +442,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             break;
 
         case CT_SENTENCE:
-        case CT_WORDUNIT:
+        case CT_TRUEWORD:
         {
             // Resolve the indices
             MCRange t_range, t_cu_range;
@@ -450,7 +450,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             if (p_chunk_type == CT_SENTENCE)
                 /* UNCHECKED */ MCStringMapSentenceIndices(p_string, kMCBasicLocale, t_range, t_cu_range);
             else
-                /* UNCHECKED */ MCStringMapWordunitIndices(p_string, kMCBasicLocale, t_range, t_cu_range);
+                /* UNCHECKED */ MCStringMapTrueWordIndices(p_string, kMCBasicLocale, t_range, t_cu_range);
                 
             r_start = t_cu_range.offset;
             r_end = t_cu_range.offset + t_cu_range.length;
@@ -1085,14 +1085,14 @@ void MCStringsMarkItemsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal
     MCStringsMarkTextChunkByOrdinal(ctxt, CT_ITEM, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
-void MCStringsMarkWordunitsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
+void MCStringsMarkTrueWordsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
-    MCStringsMarkTextChunkByRange(ctxt, CT_WORDUNIT, p_first, p_last, p_force, p_whole_chunk, p_further_chunks, x_mark);
+    MCStringsMarkTextChunkByRange(ctxt, CT_TRUEWORD, p_first, p_last, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
-void MCStringsMarkWordunitsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
+void MCStringsMarkTrueWordsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
-    MCStringsMarkTextChunkByOrdinal(ctxt, CT_WORDUNIT, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
+    MCStringsMarkTextChunkByOrdinal(ctxt, CT_TRUEWORD, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
 void MCStringsMarkWordsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
@@ -1244,7 +1244,7 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             return true;
             
         case CT_SENTENCE:
-        case CT_WORDUNIT:
+        case CT_TRUEWORD:
         {
             x_range . length = 1;
             // offset is already in code units so avoid remapping up to there.
@@ -1255,7 +1255,7 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             if (p_chunk_type == CT_SENTENCE)
                 /* UNCHECKED */ MCStringMapSentenceIndices(*t_string, kMCBasicLocale, x_range, x_range);
             else
-                /* UNCHECKED */ MCStringMapWordunitIndices(*t_string, kMCBasicLocale, x_range, x_range);
+                /* UNCHECKED */ MCStringMapTrueWordIndices(*t_string, kMCBasicLocale, x_range, x_range);
             
             // restore original offset.
             x_range . offset += t_cu_offset;

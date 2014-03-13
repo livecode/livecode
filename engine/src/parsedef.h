@@ -271,7 +271,7 @@ enum File_unit {
     FU_TOKEN,
     FU_SENTENCE,
     FU_WORD,
-    FU_WORDUNIT,
+    FU_TRUEWORD,
     FU_UINT1,
     FU_UINT2,
     FU_UINT4,

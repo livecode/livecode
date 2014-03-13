@@ -1012,7 +1012,7 @@ static bool MCStringCodepointIsWordPart(codepoint_t p_codepoint)
     return MCUnicodeIsAlphabetic(p_codepoint) || MCUnicodeIsDigit(p_codepoint);
 }
 
-bool MCStringMapWordunitIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
+bool MCStringMapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
 {
     MCAssert(self != nil);
     MCAssert(p_locale != nil);
@@ -1047,7 +1047,8 @@ bool MCStringMapWordunitIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
         {
             if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(self, t_left_break)))
                 break;
-            t_left_break++;
+            if (MCStringIsValidSurrogatePair(self, t_left_break++))
+                t_left_break++;
         }
         
         if (t_left_break < t_right_break)
@@ -1076,7 +1077,8 @@ bool MCStringMapWordunitIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
         {
             if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(self, t_left_break)))
                 break;
-            t_left_break++;
+            if (MCStringIsValidSurrogatePair(self, t_left_break++))
+                t_left_break++;
         }
         
         if (t_left_break < t_right_break)
@@ -1172,7 +1174,7 @@ bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
     return MCStringUnmapIndices(self, kMCBreakIteratorTypeCharacter, p_locale, p_in_range, r_out_range);
 }
 
-bool MCStringUnmapWordunitIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
+bool MCStringUnmapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
 {
     MCAssert(self != nil);
     MCAssert(p_locale != nil);
@@ -1208,7 +1210,8 @@ bool MCStringUnmapWordunitIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
             {
                 if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(self, t_left_break)))
                     break;
-                t_left_break++;
+                if (MCStringIsValidSurrogatePair(self, t_left_break++))
+                    t_left_break++;
             }
             
             if (t_left_break < t_right_break)
@@ -1236,7 +1239,8 @@ bool MCStringUnmapWordunitIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
             {
                 if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(self, t_left_break)))
                     break;
-                t_left_break++;
+                if (MCStringIsValidSurrogatePair(self, t_left_break++))
+                    t_left_break++;
             }
             
             if (t_left_break < t_right_break)

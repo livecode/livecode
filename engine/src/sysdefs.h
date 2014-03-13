@@ -1257,7 +1257,7 @@ enum Chunk_term {
     CT_PARAGRAPH,
     CT_SENTENCE,
     CT_ITEM,
-    CT_WORDUNIT,
+    CT_TRUEWORD,
     CT_WORD,
     CT_TOKEN,
     CT_CHARACTER,

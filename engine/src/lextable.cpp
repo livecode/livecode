@@ -1506,6 +1506,8 @@ LT factor_table[] =
         {"securemode", TT_PROPERTY, P_SECURE_MODE},
 		{"securitycategories", TT_PROPERTY, P_SECURITY_CATEGORIES},
 		{"securitypermissions", TT_PROPERTY, P_SECURITY_PERMISSIONS},
+        {"segment", TT_CHUNK, CT_WORD},
+        {"segments", TT_CLASS, CT_WORD},
         {"selected", TT_PROPERTY, P_SELECTED},
         {"selectedbutton", TT_FUNCTION, F_SELECTED_BUTTON},
         {"selectedchunk", TT_FUNCTION, F_SELECTED_CHUNK},
@@ -1709,6 +1711,8 @@ LT factor_table[] =
         {"tracks", TT_PROPERTY, P_TRACKS},
         {"transpose", TT_FUNCTION, F_TRANSPOSE},
         {"traversalon", TT_PROPERTY, P_TRAVERSAL_ON},
+        {"trueword", TT_CHUNK, CT_TRUEWORD},
+        {"truewords", TT_CLASS, CT_TRUEWORD},
         {"trunc", TT_FUNCTION, F_TRUNC},
         {"twelvehourtime", TT_PROPERTY, P_TWELVE_TIME},
         {"typingrate", TT_PROPERTY, P_TYPE_RATE},
@@ -1778,8 +1782,6 @@ LT factor_table[] =
         {"word", TT_CHUNK, CT_WORD},
         {"wordoffset", TT_FUNCTION, F_WORD_OFFSET},
         {"words", TT_CLASS, CT_WORD},
-        {"wordunit", TT_CHUNK, CT_WORDUNIT},
-        {"wordunits", TT_CLASS, CT_WORDUNIT},
 		{"working", TT_PROPERTY, P_WORKING},
 		{"wrap", TT_BINOP, O_WRAP},
         {"xextent", TT_PROPERTY, P_X_EXTENT},
@@ -2176,10 +2178,14 @@ static LT unit_table[] =
         {"real4s", TT_UNDEFINED, FU_REAL4},
         {"real8", TT_UNDEFINED, FU_REAL8},
         {"real8s", TT_UNDEFINED, FU_REAL8},
+        {"segment", TT_UNDEFINED, FU_WORD},
+        {"segments", TT_UNDEFINED, FU_WORD},
         {"sentence", TT_UNDEFINED, FU_SENTENCE},
         {"sentences", TT_UNDEFINED, FU_SENTENCE},
         {"token", TT_UNDEFINED, FU_TOKEN},
         {"tokens", TT_UNDEFINED, FU_TOKEN},
+        {"trueword", TT_UNDEFINED, FU_TRUEWORD},
+        {"truewords", TT_UNDEFINED, FU_TRUEWORD},
         {"uint1", TT_UNDEFINED, FU_UINT1},
         {"uint1s", TT_UNDEFINED, FU_UINT1},
         {"uint2", TT_UNDEFINED, FU_UINT2},
@@ -2189,9 +2195,7 @@ static LT unit_table[] =
         {"uint8", TT_UNDEFINED, FU_UINT8},
         {"uint8s", TT_UNDEFINED, FU_UINT8},
         {"word", TT_UNDEFINED, FU_WORD},
-        {"words", TT_UNDEFINED, FU_WORD},
-        {"wordunit", TT_UNDEFINED, FU_WORDUNIT},
-        {"wordunits", TT_UNDEFINED, FU_WORDUNIT}
+        {"words", TT_UNDEFINED, FU_WORD}
     };
 
 static LT validation_table[] =

@@ -493,8 +493,8 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                         case FU_WORD:
                             t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_WORD, t_length, t_chunk_range, t_found, endnext);
                             break;
-                        case FU_WORDUNIT:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_WORDUNIT, t_length, t_chunk_range, t_found, endnext);
+                        case FU_TRUEWORD:
+                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_TRUEWORD, t_length, t_chunk_range, t_found, endnext);
                             break;
                         case FU_TOKEN:
                             t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_TOKEN, t_length, t_chunk_range, t_found, endnext);
