@@ -120,9 +120,9 @@ void MCTextEvalMeasureText(MCExecContext& ctxt, MCObject *p_obj, MCStringRef p_t
     if (p_mode == nil)
         t_success = MCStringFormat(r_result, "%d", t_bounds . width);
     else if (MCStringIsEqualTo(p_mode, MCSTR("size"), kMCStringOptionCompareCaseless))
-        t_success = MCStringFormat(r_result, "%d, %d", t_bounds . width, t_bounds . height);
+        t_success = MCStringFormat(r_result, "%d,%d", t_bounds . width, t_bounds . height);
     else if (MCStringIsEqualTo(p_mode, MCSTR("bounds"), kMCStringOptionCompareCaseless))
-        t_success = MCStringFormat(r_result, "%d, %d, %d, %d", t_bounds . x, t_bounds . y, t_bounds . x + t_bounds . width, t_bounds . y + t_bounds . height);
+        t_success = MCStringFormat(r_result, "%d,%d,%d,%d", t_bounds . x, t_bounds . y, t_bounds . x + t_bounds . width, t_bounds . y + t_bounds . height);
 
     if (t_success)
         return;
