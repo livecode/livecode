@@ -534,6 +534,11 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_PIXEL_SCALE:
 	case P_SYSTEM_PIXEL_SCALE:
 
+	// IM-2014-01-24: [[ HiDPI ]] Add support for global usePixelScaling, screenPixelScale, screenPixelScales properties
+	case P_USE_PIXEL_SCALING:
+	case P_SCREEN_PIXEL_SCALE:
+	case P_SCREEN_PIXEL_SCALES:
+			
 		break;
 
 	case P_REV_CRASH_REPORT_SETTINGS: // DEVELOPMENT only
@@ -2139,7 +2144,34 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 				return ES_ERROR;
 			}
 			
-			MCResSetPixelScale(t_scale);
+			// IM-2014-01-30: [[ HiDPI ]] It is an error to set the pixelScale on platforms that do not support this
+			if (!MCResPlatformCanSetPixelScale())
+			{
+				MCeerror->add(EE_PROPERTY_PIXELSCALENOTSUPPORTED, line, pos, t_scale);
+				return ES_ERROR;
+			}
+			
+			if (MCResGetUsePixelScaling())
+				MCResSetPixelScale(t_scale);
+		}
+		break;
+
+	// IM-2014-01-24: [[ HiDPI ]] Enable or disable pixel scaling on Hi-DPI displays
+	case P_USE_PIXEL_SCALING:
+		{
+			Boolean t_pixel_scaling;
+			stat = ep.getboolean(t_pixel_scaling, line, pos, EE_PROPERTY_NAB);
+			if (stat != ES_NORMAL)
+				return stat;
+			
+			// IM-2014-01-30: [[ HiDPI ]] It is an error to set the usePixelScale on platforms that do not support this
+			if (!MCResPlatformCanChangePixelScaling())
+			{
+				MCeerror->add(EE_PROPERTY_USEPIXELSCALENOTSUPPORTED, line, pos, t_pixel_scaling);
+				return ES_ERROR;
+			}
+			
+			MCResSetUsePixelScaling(t_pixel_scaling);
 		}
 		break;
 
@@ -3651,8 +3683,27 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 		break;
 	// IM-2013-12-04: [[ PixelScale ]] Global property systemPixelScale returns the pixel scale as determined by the OS
 	case P_SYSTEM_PIXEL_SCALE:
-		ep.setnvalue(MCResGetSystemScale());
+		// IM-2014-01-24: [[ HiDPI ]] systemPixelScale now returns the maximum scale on all displays
+		MCGFloat t_scale;
+		t_scale = 1.0;
+		/* UNCHECKED */ MCscreen->getmaxdisplayscale(t_scale);
+		ep.setnvalue(t_scale);
 		break;
+
+	// IM-2014-01-24: [[ HiDPI ]] Global property usePixelScaling returns its configured value (default: true)
+	case P_USE_PIXEL_SCALING:
+		ep.setboolean(MCResGetUsePixelScaling());
+		break;
+
+	// IM-2014-01-27: [[ HiDPI ]] Global property screenPixelScale returns the pixel scale of the main screen
+	case P_SCREEN_PIXEL_SCALE:
+	// IM-2014-01-27: [[ HiDPI ]] Global property screenPixelScales returns a return-delimited
+	// list of the pixel scales of all connected screens
+	case P_SCREEN_PIXEL_SCALES:
+	{
+		MCResListScreenPixelScales(ep, which == P_SCREEN_PIXEL_SCALES);
+		break;
+	}
 
 	case P_SHELL_COMMAND:
 		ep.setsvalue(MCshellcmd);

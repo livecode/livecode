@@ -993,7 +993,13 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	UIView *t_display_view;
 	t_display_view = [[m_main_controller rootView] displayView];
 	if ([t_display_view isMemberOfClass: [MCIPhoneOpenGLDisplayView class]])
+	{
 		[t_display_view setContentScaleFactor: p_new_scale];
+		
+		MCIPhoneOpenGLDisplayView *t_gl_view = static_cast<MCIPhoneOpenGLDisplayView*>(t_display_view);
+		// IM-2014-02-18: [[ Bug 11814 ]] Update the GL layer size after changing scale
+		[t_gl_view resizeFromLayer:(CAEAGLLayer *)[t_gl_view layer]];
+	}
 }
 
 @end

@@ -400,7 +400,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		
 		SkBitmap t_bitmap;
 		t_bitmap . setConfig(SkBitmap::kA8_Config, t_clipped_bounds . width, t_clipped_bounds .  height);
-		t_bitmap . setIsOpaque(false);
+        t_bitmap . setAlphaType(kPremul_SkAlphaType);
 		t_bitmap . setPixels(t_data);
 		self -> layer -> canvas -> drawSprite(t_bitmap, t_clipped_bounds . x + t_device_location . x, 
 											  t_clipped_bounds . y + t_device_location . y, &t_paint);		

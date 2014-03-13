@@ -45,6 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "w32text.h"
 
 #include "graphicscontext.h"
+#include "graphics_util.h"
 
 #ifndef CS_DROPSHADOW
 #define CS_DROPSHADOW   0x00020000
@@ -351,20 +352,35 @@ void MCScreenDC::ungrabpointer()
 	}
 }
 
-uint2 MCScreenDC::device_getwidth()
+extern MCGFloat MCWin32GetLogicalToScreenScale();
+uint2 MCScreenDC::platform_getwidth()
 {
 	HDC winhdc = GetDC(NULL);
-	uint2 width = (uint2)GetDeviceCaps(winhdc, HORZRES);
+
+	uint32_t t_width;
+	t_width = GetDeviceCaps(winhdc, HORZRES);
+
 	ReleaseDC(NULL, winhdc);
-	return width;
+
+	// IM-2014-01-28: [[ HiDPI ]] Convert screen width to logical size
+	t_width = t_width / MCWin32GetLogicalToScreenScale();
+
+	return t_width;
 }
 
-uint2 MCScreenDC::device_getheight()
+uint2 MCScreenDC::platform_getheight()
 {
 	HDC winhdc = GetDC(NULL);
-	uint2 height = (uint2)GetDeviceCaps(winhdc, VERTRES);
+
+	uint32_t t_height;
+	t_height = (uint2)GetDeviceCaps(winhdc, VERTRES);
+
 	ReleaseDC(NULL, winhdc);
-	return height;
+
+	// IM-2014-01-28: [[ HiDPI ]] Convert screen height to logical size
+	t_height = t_height / MCWin32GetLogicalToScreenScale();
+
+	return t_height;
 }
 
 uint2 MCScreenDC::getwidthmm()
@@ -611,7 +627,7 @@ void MCScreenDC::setinputfocus(Window w)
 	SetFocus((HWND)w->handle.window);
 }
 
-bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
+bool MCScreenDC::platform_getwindowgeometry(Window w, MCRectangle &drect)
 {//get the client window's geometry in screen coord
 	if (w == DNULL || w->handle.window == 0)
 		return false;
@@ -621,10 +637,13 @@ bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 	p.x = wrect.left;
 	p.y = wrect.top;
 	ClientToScreen((HWND)w->handle.window, &p);
-	drect.x = (int2)p.x;
-	drect.y = (int2)p.y;
-	drect.width = (uint2)(wrect.right - wrect.left);
-	drect.height = (uint2)(wrect.bottom - wrect.top);
+
+	MCRectangle t_rect;
+	t_rect = MCRectangleMake(p.x, p.y, wrect.right - wrect.left, wrect.bottom - wrect.top);
+
+	// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
+	drect = screentologicalrect(t_rect);
+
 	return true;
 }
 
@@ -802,17 +821,17 @@ static bool WindowsIsCompositionEnabled(void)
 	return t_enabled != FALSE;
 }
 
+// MW-2014-02-20: [[ Bug 11811 ]] Updated to scale snapshot to requested size.
 bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
-/* OVERHAUL - REVISIT: p_scale_factor parameter currently ignored */
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, const char *displayname)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size)
 {
 	bool t_is_composited;
 	t_is_composited = WindowsIsCompositionEnabled();
 
 	expose();
 	//make the parent window to be the invisible window, so that the snapshot window icon
-	//does not show up in the desktop taskbar
-
+	//does not show up in the desktop taskbar.
+	
 	MCDisplay const *t_displays;
 	uint4 t_display_count;
 	MCRectangle t_virtual_viewport;
@@ -820,6 +839,8 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uin
 	t_virtual_viewport = t_displays[0] . viewport;
 	for(uint4 t_index = 1; t_index < t_display_count; ++t_index)
 		t_virtual_viewport = MCU_union_rect(t_virtual_viewport, t_displays[t_index] . viewport);
+
+	t_virtual_viewport . width = 500;
 
 	HWND hwndsnap = CreateWindowExA(WS_EX_TRANSPARENT | WS_EX_TOPMOST,
 	                               MC_SNAPSHOT_WIN_CLASS_NAME,"", WS_POPUP, t_virtual_viewport . x, t_virtual_viewport . y,
@@ -859,8 +880,10 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uin
 			TranslateMessage(&msg);
 			DispatchMessageA(&msg);
 		}
-		r = snaprect;
+		r = screentologicalrect(snaprect);
 	}
+	
+	int t_width, t_height;
 	HBITMAP newimage = NULL;
 	void *t_bits = nil;
 	if (!snapcancelled)
@@ -901,28 +924,50 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uin
 			}
 		}
 		r = MCU_clip_rect(r, t_virtual_viewport . x, t_virtual_viewport . y, t_virtual_viewport . width, t_virtual_viewport . height);
+		
+		if (size != nil)
+		{
+			t_width = size -> x;
+			t_height = size -> y;
+		}
+		else
+		{
+			t_width = r . width;
+			t_height = r . height;
+		}
+		
+		r = logicaltoscreenrect(r);
+
 		if (r.width != 0 && r.height != 0)
 		{
-			if (create_temporary_dib(snapdesthdc, r.width, r.height, newimage, t_bits))
+			if (create_temporary_dib(snapdesthdc, t_width, t_height, newimage, t_bits))
 			{
 				HBITMAP obm = (HBITMAP)SelectObject(snapdesthdc, newimage);
 				
 				// MW-2012-09-19: [[ Bug 4173 ]] Add the 'CAPTUREBLT' flag to make sure
 				//   layered windows are included.
 				if (t_is_composited)
-					BitBlt(snapdesthdc, 0, 0, r . width, r . height, snaphdc, r . x, r . y, CAPTUREBLT | SRCCOPY);
+					StretchBlt(snapdesthdc, 0, 0, t_width, t_height,
+								snaphdc, r . x, r . y, r . width, r . height, CAPTUREBLT | SRCCOPY);
 				else
 				{
-					BitBlt(snapdesthdc, 0, 0, r.width, r.height,
-						   snaphdc, r.x - t_virtual_viewport . x, r.y - t_virtual_viewport . y, CAPTUREBLT | SRCCOPY);
+					StretchBlt(snapdesthdc, 0, 0, t_width, t_height,
+								snaphdc, r.x - t_virtual_viewport . x, r.y - t_virtual_viewport . y, r . width, r . height, CAPTUREBLT | SRCCOPY);
 				}
 				SelectObject(snapdesthdc, obm);
 			}
 		}
 	}
+
+	MCRectangle t_screenrect;
+	t_screenrect = MCRectangleMake(0, 0, getwidth(), getheight());
+
+	// IM-2014-01-28: [[ HiDPI ]] Convert logical to screen coords
+	t_screenrect = logicaltoscreenrect(t_screenrect);
+
 	SetWindowPos(hwndsnap, HWND_TOPMOST,
-				 0, 0, device_getwidth(), device_getheight(), SWP_HIDEWINDOW
-				 | SWP_DEFERERASE | SWP_NOREDRAW);
+		t_screenrect.x, t_screenrect.y, t_screenrect.width, t_screenrect.height,
+		SWP_HIDEWINDOW | SWP_DEFERERASE | SWP_NOREDRAW);
 	if (t_is_composited)
 		ReleaseDC(NULL, snaphdc);
 	else
@@ -932,16 +977,16 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uin
 	MCImageBitmap *t_bitmap = nil;
 	if (newimage != NULL)
 	{
-		/* UNCHECKED */ MCImageBitmapCreate(r.width, r.height, t_bitmap);
+		/* UNCHECKED */ MCImageBitmapCreate(t_width, t_height, t_bitmap);
 		BITMAPINFOHEADER t_out_fmt;
 		MCMemoryClear(&t_out_fmt, sizeof(BITMAPINFOHEADER));
 		t_out_fmt.biSize = sizeof(BITMAPINFOHEADER);
-		t_out_fmt.biWidth = r.width;
-		t_out_fmt.biHeight = -(int32_t)r.height;
+		t_out_fmt.biWidth = t_width;
+		t_out_fmt.biHeight = -(int32_t)t_height;
 		t_out_fmt.biPlanes = 1;
 		t_out_fmt.biBitCount = 32;
 		t_out_fmt.biCompression = BI_RGB;
-		GetDIBits(snapdesthdc, newimage, 0, r.height, t_bitmap->data, (BITMAPINFO*)&t_out_fmt, DIB_RGB_COLORS);
+		GetDIBits(snapdesthdc, newimage, 0, t_height, t_bitmap->data, (BITMAPINFO*)&t_out_fmt, DIB_RGB_COLORS);
 		DeleteObject(newimage);
 		MCImageBitmapSetAlphaValue(t_bitmap, 0xFF);
 	}
@@ -1025,25 +1070,11 @@ void MCScreenDC::settaskbarstate(bool p_visible)
 
 void MCScreenDC::processdesktopchanged(bool p_notify)
 {
-	const MCDisplay *t_monitors = NULL;
-	MCDisplay *t_old_monitors = NULL;
-	uint4 t_monitor_count, t_old_monitor_count;
+	// IM-2014-01-28: [[ HiDPI ]] Use updatedisplayinfo() method to update & compare display details
 	bool t_changed;
+	t_changed = false;
 
-	t_old_monitor_count = s_monitor_count;
-	t_old_monitors = s_monitor_displays;
-
-	s_monitor_count = 0;
-	s_monitor_displays = NULL;
-
-	if (t_old_monitors != NULL)
-	{
-		t_monitor_count = ((MCScreenDC *)MCscreen) -> getdisplays(t_monitors, false);
-		t_changed = t_monitor_count != t_old_monitor_count || memcmp(t_old_monitors, t_monitors, sizeof(MCDisplay) * t_monitor_count) != 0;
-		delete[] t_old_monitors;
-	}
-	else
-		t_changed = true;
+	updatedisplayinfo(t_changed);
 
 	if (t_changed && (backdrop_active || backdrop_hard))
 	{
@@ -1334,8 +1365,9 @@ void MCScreenDC::redrawbackdrop(void)
 
 	if (t_success)
 	{
+        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 		if (backdrop_pattern != nil)
-			MCGContextSetFillPattern(t_context, backdrop_pattern, MCGAffineTransformMakeIdentity(), kMCGImageFilterNearest);
+			MCGContextSetFillPattern(t_context, backdrop_pattern, MCGAffineTransformMakeIdentity(), kMCGImageFilterNone);
 		else
 			MCGContextSetFillRGBAColor(t_context, backdrop_colour.red / 65535.0, backdrop_colour.green / 65535.0, backdrop_colour.blue / 65535.0, 1.0);
 		MCGContextAddRectangle(t_context, MCGRectangleMake(0, 0, t_width, t_height));
@@ -1467,3 +1499,4 @@ LRESULT CALLBACK MCBackdropWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 	return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
+////////////////////////////////////////////////////////////////////////////////

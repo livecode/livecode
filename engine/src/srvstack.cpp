@@ -42,11 +42,38 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "graphics_util.h"
 
-// MM-2013-03-06: [[ RefactorGraphics ]] Added to allow server engines to compile.
-MCGFloat MCResGetSystemScale(void)
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-31: [[ HiDPI ]] Pixel scaling not supported on server
+bool MCResPlatformSupportsPixelScaling(void)
+{
+	return false;
+}
+
+// IM-2014-01-31: [[ HiDPI ]] Pixel scaling not supported on server
+bool MCResPlatformCanChangePixelScaling(void)
+{
+	return false;
+}
+
+// IM-2014-01-31: [[ HiDPI ]] Pixel scaling not supported on server
+bool MCResPlatformCanSetPixelScale(void)
+{
+	return false;
+}
+
+// IM-2014-01-31: [[ HiDPI ]] Pixel scaling not supported on server
+MCGFloat MCResPlatformGetDefaultPixelScale(void)
 {
 	return 1.0;
 }
+
+// IM-2014-01-31: [[ HiDPI ]] Pixel scaling not supported on server
+void MCResPlatformHandleScaleChange(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCStack *MCStack::findstackd(Window w)
 {
@@ -109,7 +136,7 @@ void MCStack::destroywindowshape(void)
 {
 }
 
-MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
+MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 {
 	return MCRectangleMake(0,0,0,0);
 }
@@ -142,7 +169,7 @@ void MCStack::updatemodifiedmark(void)
 {
 }
 
-void MCStack::device_updatewindow(MCRegionRef region)
+void MCStack::view_platform_updatewindow(MCRegionRef region)
 {
 }
 
@@ -170,7 +197,7 @@ void MCStack::effectrect(const MCRectangle& p_rect, Boolean& r_abort)
 }
 
 // MM-2013-03-06: [[ RefactorGraphics ]] Added to allow server engines to compile.
-MCRectangle MCStack::device_getwindowrect() const
+MCRectangle MCStack::view_platform_getwindowrect() const
 {
 	return rect;	
 }

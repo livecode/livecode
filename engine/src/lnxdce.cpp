@@ -48,6 +48,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define WM_TITLE_HEIGHT 16
 
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+{
+	device_boundrect(rect, title, m);
+}
+
 void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
 {
 	MCRectangle srect;
@@ -55,8 +61,8 @@ void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode 
 		MCU_set_rect(srect, 0, 0, device_getwidth(), device_getheight());
 	else
 	{
-		// IM-2013-08-08: [[ ResIndependence ]] Scale source rect to device space
-		srect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(MCwbr));
+		// IM-2014-01-29: [[ HiDPI ]] Convert logical to screen coords
+		srect = logicaltoscreenrect(MCwbr);
 	}
 	
 	
@@ -179,6 +185,12 @@ void MCScreenDC::waitfocus()
 		MCdispatcher->wkunfocus(foevent->window);
 }
 
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+void MCScreenDC::platform_querymouse(int16_t &x, int16_t &y)
+{
+	device_querymouse(x, y);
+}
+
 void MCScreenDC::device_querymouse(int2 &x, int2 &y)
 {
 	Window root, child;
@@ -214,6 +226,12 @@ uint2 MCScreenDC::querymods()
 		t_rstate |= MS_MOD2;
 
 	return t_rstate;
+}
+
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+void MCScreenDC::platform_setmouse(int16_t x, int16_t y)
+{
+	device_setmouse(x, y);
 }
 
 void MCScreenDC::device_setmouse(int2 x, int2 y)
@@ -258,9 +276,6 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 	
 	r_abort = False;
 	
-	MCGFloat t_device_scale;
-	t_device_scale = MCResGetPixelScale();
-	
 	MCEventnode *tptr = pendingevents;
 	MCEventnode *pressptr = NULL;
 	MCEventnode *releaseptr = NULL;
@@ -274,9 +289,12 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 				        || bpevent->state >> 8 & 0x1F & ~(0x1L << button - 1))
 				{
 					setmods(bpevent->state, 0, bpevent->button, False);
-					// IM-2013-08-12: [[ ResIndependence ]] Scale mouse coordinates to user space
+					
 					MCPoint t_clickloc;
-					t_clickloc = MCPointMake(bpevent->x / t_device_scale, bpevent->y / t_device_scale);
+					t_clickloc = MCPointMake(bpevent->x, bpevent->y);
+					
+					// IM-2014-01-29: [[ HiDPI ]] Convert screen to logical coords
+					t_clickloc = screentologicalpoint(t_clickloc);
 					
 					// IM-2013-10-09: [[ FullscreenMode ]] Update clickloc with MCscreen getters & setters
 					MCscreen->setclickloc(MCmousestackptr, t_clickloc);

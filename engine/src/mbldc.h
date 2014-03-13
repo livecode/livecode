@@ -68,12 +68,30 @@ public:
 	uint2 getpad();
 	Window getroot();
 	
+	// IM-2014-01-23: [[ HiDPI ]] Change device methods to platform-specific logical-coordinate based methods
+	
+	virtual uint16_t platform_getwidth(void);
+	virtual uint16_t platform_getheight(void);
+	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
+	virtual bool platform_displayinfocacheable(void);
+	virtual bool platform_getwindowgeometry(Window w, MCRectangle &drect);
+	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void platform_querymouse(int16_t &r_x, int16_t &r_y);
+	virtual void platform_setmouse(int16_t p_x, int16_t p_y);
+	
+	// IM-2014-01-28: [[ HiDPI ]] Convenience methods to convert logical to screen coords and back
+	
+	static MCGFloat logicaltoscreenscale(void);
+	static MCPoint logicaltoscreenpoint(const MCPoint &p_point);
+	static MCPoint screentologicalpoint(const MCPoint &p_point);
+	static MCRectangle logicaltoscreenrect(const MCRectangle &p_rect);
+	static MCRectangle screentologicalrect(const MCRectangle &p_rect);
+	
 	uint16_t device_getwidth();
 	uint16_t device_getheight();
 	bool device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
 	bool device_getwindowgeometry(Window w, MCRectangle &drect);
 	void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
-	void device_querymouse(int16_t &r_x, int16_t &r_y);
 	void device_setmouse(int16_t p_x, int16_t p_y);
 
 	bool fullscreenwindows(void);
@@ -111,7 +129,7 @@ public:
 	void getbeep(uint4 property, MCExecPoint &ep);
 	void setbeep(uint4 property, int4 beep);
 
-	MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, const char *displayname);
+	MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size);
 
 	void enablebackdrop(bool p_hard = false);
 	void disablebackdrop(bool p_hard = false);
