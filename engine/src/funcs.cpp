@@ -3032,8 +3032,7 @@ void MCKeys::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	if (source != NULL)
 	{
         MCAutoArrayRef t_array;
-        if (!ctxt . EvalExprAsArrayRef(source, EE_KEYS_BADSOURCE, &t_array))
-            return;
+        ctxt . TryToEvalExprAsArrayRef(source, EE_KEYS_BADSOURCE, &t_array);
 		MCArraysEvalKeys(ctxt, *t_array, r_value . stringref_value);
         r_value . type = kMCExecValueTypeStringRef;
 	}

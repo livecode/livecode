@@ -1677,7 +1677,8 @@ public:
 	bool EvalExprAsRectangle(MCExpression *expr, Exec_errors error, MCRectangle& r_rectangle);
     bool EvalOptionalExprAsRectangle(MCExpression *expr, MCRectangle *default_value, Exec_errors error, MCRectangle *&r_rectangle);
     
-	
+	void TryToEvalExprAsArrayRef(MCExpression *p_expr, Exec_errors p_error, MCArrayRef& r_value);
+    
 private:
 #ifdef LEGACY_EXEC
     MCExecPoint& m_ep;

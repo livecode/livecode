@@ -937,6 +937,19 @@ bool MCExecContext::EvalExprAsArrayRef(MCExpression *p_expr, Exec_errors p_error
 	return false;
 }
 
+void MCExecContext::TryToEvalExprAsArrayRef(MCExpression *p_expr, Exec_errors p_error, MCArrayRef& r_value)
+{
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_arrayref(*this, r_value);
+	
+	if (!HasError())
+		return;
+	
+	IgnoreLastError();
+	r_value = MCValueRetain(kMCEmptyArray);
+}
+
 bool MCExecContext::EvalOptionalExprAsArrayRef(MCExpression *p_expr, MCArrayRef p_default, Exec_errors p_error, MCArrayRef& r_value)
 {
 	if (p_expr == nil)

@@ -1820,8 +1820,7 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
             if (!ctxt . EvalExprAsNameRef(left, EE_IS_BADLEFT, &t_name))
                 return;
 
-            if (!ctxt . EvalExprAsArrayRef(right, EE_IS_BADRIGHT, &t_array))
-                return;
+            ctxt . TryToEvalExprAsArrayRef(right, EE_IS_BADRIGHT, &t_array);
 
             if (form == IT_AMONG)
                 MCArraysEvalIsAmongTheKeysOf(ctxt, *t_name, *t_array, t_result);
