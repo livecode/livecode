@@ -795,6 +795,9 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	
 	do
 	{
+		// IM-2014-03-13: [[ revBrowserCEF ]] call additional runloop callbacks
+		DoRunloopActions();
+		
 		// Check for abort.
 		if (abortkey())
 		{
