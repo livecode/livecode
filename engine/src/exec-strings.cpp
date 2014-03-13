@@ -1741,53 +1741,190 @@ bool MCWildcardMatcher::compile(MCStringRef& r_error)
 #define OPEN_BRACKET '['
 #define CLOSE_BRACKET ']'
 
-bool MCStringsWildcardMatch(const char *s, uindex_t s_length, const char *p, uindex_t p_length, bool casesensitive)
-{
-	uindex_t s_index = 0;
-	uindex_t p_index = 0;
-	uint1 scc, c;
+//bool MCStringsWildcardMatch(const char *s, uindex_t s_length, const char *p, uindex_t p_length, bool casesensitive)
+//{
+//	uindex_t s_index = 0;
+//	uindex_t p_index = 0;
+//	uint1 scc, c;
+//
+//	while (s_index < s_length)
+//	{
+//		scc = *s++;
+//		s_index++;
+//		c = *p++;
+//		p_index++;
+//		switch (c)
+//		{
+//		case OPEN_BRACKET:
+//			{
+//				bool ok = false;
+//				int lc = -1;
+//				int notflag = 0;
+//
+//				if (*p == '!' )
+//				{
+//					notflag = 1;
+//					p++;
+//					p_index++;
+//				}
+//				while (p_index < p_length)
+//				{
+//					c = *p++;
+//					p_index++;
+//					if (c == CLOSE_BRACKET && lc >= 0)
+//						return ok ? MCStringsWildcardMatch(s, s_length - s_index, p, p_length - p_index, casesensitive) : false;
+//					else
+//						if (c == '-' && lc >= 0 && *p != CLOSE_BRACKET)
+//						{
+//							c = *p++;
+//							p_index++;
+//							if (notflag)
+//							{
+//								if (lc > scc || scc > c)
+//									ok = true;
+//								else
+//									return false;
+//							}
+//							else
+//							{
+//								if (lc < scc && scc <= c)
+//									ok = true;
+//							}
+//						}
+//						else
+//						{
+//							if (notflag)
+//							{
+//								if (scc != c)
+//									ok = true;
+//								else
+//									return false;
+//							}
+//							else
+//								if (scc == c)
+//									ok = true;
+//							lc = c;
+//						}
+//				}
+//			}
+//			return false;
+//		case '?':
+//			break;
+//		case '*':
+//			while (*p == '*')
+//			{
+//				p++;
+//				p_index++;
+//			}
+//			if (*p == 0)
+//				return true;
+//			--s;
+//			--s_index;
+//			c = *p;
+//			while (*s)
+//				if ((casesensitive ? c != *s : MCS_tolower(c) != MCS_tolower(*s))
+//				        && *p != '?' && *p != OPEN_BRACKET)
+//				{
+//					s++;
+//					s_index++;
+//				}
+//				else
+//					if (MCStringsWildcardMatch(s++, s_length - s_index++, p, p_length - p_index, casesensitive))
+//						return true;
+//			return false;
+//		case 0:
+//			return scc == 0;
+//		default:
+//			if (casesensitive)
+//			{
+//				if (c != scc)
+//					return false;
+//			}
+//			else
+//				if (MCS_tolower(c) != MCS_tolower(scc))
+//					return false;
+//			break;
+//		}
+//	}
+//	while (p_index < p_length && *p == '*')
+//	{
+//		p++;
+//		p_index++;
+//	}
+//	return p_index == p_length;
+//}
 
+index_t MCStringsWildcardCompareChar(MCStringRef p_input, uindex_t p_string_cu_offset, MCStringRef p_pattern, uindex_t p_pattern_cu_offset, MCUnicodeCompareOption p_option, uindex_t &r_string_char_cu, uindex_t &r_pattern_char_cu)
+{
+    // Comparison of the characters
+    MCRange t_string_cu_range;
+    MCStringUnmapIndices(p_input, kMCCharChunkTypeGrapheme, MCRangeMake(p_string_cu_offset, 1), t_string_cu_range);
+    
+    MCRange t_pattern_cu_range;
+    MCStringUnmapIndices(p_pattern, kMCCharChunkTypeGrapheme, MCRangeMake(p_pattern_cu_offset, 1), t_pattern_cu_range);
+    
+    r_string_char_cu = t_string_cu_range . length;
+    r_pattern_char_cu = t_pattern_cu_range . length;
+    
+    return MCUnicodeCompare(MCStringGetCharPtr(p_input) + t_string_cu_range . offset,
+                            t_string_cu_range . length,
+                            MCStringGetCharPtr(p_pattern) + t_pattern_cu_range . offset,
+                            t_pattern_cu_range . length,
+                            p_option);
+}
+
+bool MCStringsExecWildcardMatch(MCStringRef p_string, uindex_t p_string_offset, MCStringRef p_pattern, uindex_t p_pattern_offset, bool casesensitive)
+{
+	uindex_t s_index = p_string_offset;
+	uindex_t p_index = p_pattern_offset;
+    
+    uindex_t s_length = MCStringGetLength(p_string);
+    uindex_t p_length = MCStringGetLength(p_pattern);
+    
+    uindex_t t_string_move;
+    uindex_t t_pattern_move;
+    
+    MCUnicodeCompareOption t_comparison = casesensitive ? kMCUnicodeCompareOptionNormalised : kMCUnicodeCompareOptionCaseless;
+    
 	while (s_index < s_length)
-	{
-		scc = *s++;
-		s_index++;
-		c = *p++;
-		p_index++;
-		switch (c)
+	{        
+		switch (MCStringGetCharAtIndex(p_pattern, p_index))
 		{
-		case OPEN_BRACKET:
+            case OPEN_BRACKET:
 			{
 				bool ok = false;
-				int lc = -1;
+                
+                uindex_t t_last_char_offset = 0;
+                unichar_t t_pattern_char;
+                
 				int notflag = 0;
-
-				if (*p == '!' )
+                ++p_index;
+                
+				if (MCStringGetCharAtIndex(p_pattern, p_index) == '!' )
 				{
 					notflag = 1;
-					p++;
 					p_index++;
 				}
 				while (p_index < p_length)
-				{
-					c = *p++;
-					p_index++;
-					if (c == CLOSE_BRACKET && lc >= 0)
-						return ok ? MCStringsWildcardMatch(s, s_length - s_index, p, p_length - p_index, casesensitive) : false;
+				{                    
+					if (MCStringGetCharAtIndex(p_pattern, p_index) == CLOSE_BRACKET && t_last_char_offset != 0)
+						return ok ? MCStringsExecWildcardMatch(p_string, ++s_index, p_pattern, ++p_index, casesensitive) : false;
 					else
-						if (c == '-' && lc >= 0 && *p != CLOSE_BRACKET)
-						{
-							c = *p++;
-							p_index++;
+                    {
+						if (MCStringGetCharAtIndex(p_pattern, p_index) == '-' && t_last_char_offset != 0 && MCStringGetCharAtIndex(p_pattern, ++p_index) != CLOSE_BRACKET)
+                        {
 							if (notflag)
 							{
-								if (lc > scc || scc > c)
+								if (MCStringsWildcardCompareChar(p_string, s_index, p_pattern, t_last_char_offset, t_comparison, t_string_move, t_pattern_move) < 0
+                                        || MCStringsWildcardCompareChar(p_string, s_index, p_pattern, p_index, t_comparison, t_string_move, t_pattern_move) > 0)
 									ok = true;
 								else
 									return false;
 							}
 							else
 							{
-								if (lc < scc && scc <= c)
+								if (MCStringsWildcardCompareChar(p_string, s_index, p_pattern, t_last_char_offset, t_comparison, t_string_move, t_pattern_move) > 0
+                                        && MCStringsWildcardCompareChar(p_string, s_index, p_pattern, p_index, t_comparison, t_string_move, t_pattern_move) <= 0)
 									ok = true;
 							}
 						}
@@ -1795,76 +1932,73 @@ bool MCStringsWildcardMatch(const char *s, uindex_t s_length, const char *p, uin
 						{
 							if (notflag)
 							{
-								if (scc != c)
-									ok = true;
+								if (MCStringsWildcardCompareChar(p_string, s_index, p_pattern, p_index, t_comparison, t_string_move, t_pattern_move) != 0)
+                                    ok = true;
 								else
 									return false;
 							}
 							else
-								if (scc == c)
+                                if (MCStringsWildcardCompareChar(p_string, s_index, p_pattern, p_index, t_comparison, t_string_move, t_pattern_move) == 0)
 									ok = true;
-							lc = c;
+                            
+                            t_last_char_offset = p_index;
+                            p_index += t_pattern_move;
 						}
+                    }
 				}
 			}
-			return false;
-		case '?':
-			break;
-		case '*':
-			while (*p == '*')
-			{
-				p++;
-				p_index++;
-			}
-			if (*p == 0)
-				return true;
-			--s;
-			--s_index;
-			c = *p;
-			while (*s)
-				if ((casesensitive ? c != *s : MCS_tolower(c) != MCS_tolower(*s))
-				        && *p != '?' && *p != OPEN_BRACKET)
-				{
-					s++;
-					s_index++;
-				}
-				else
-					if (MCStringsWildcardMatch(s++, s_length - s_index++, p, p_length - p_index, casesensitive))
-						return true;
-			return false;
-		case 0:
-			return scc == 0;
-		default:
-			if (casesensitive)
-			{
-				if (c != scc)
-					return false;
-			}
-			else
-				if (MCS_tolower(c) != MCS_tolower(scc))
-					return false;
-			break;
+                return false;
+            case '?':
+            {
+                // get the offsets to jump over the next pattern and string chars
+                MCStringsWildcardCompareChar(p_string, s_index, p_pattern, p_index, t_comparison, t_string_move, t_pattern_move);
+                s_index += t_string_move;
+                p_index += t_pattern_move;
+                break;
+            }
+            case '*':
+            {
+                while (p_index != p_length && MCStringGetCharAtIndex(p_pattern, p_index) == '*')
+                    p_index++;
+                
+                if (p_index == p_length)
+                    return true;
+                
+                while (s_index != s_length)
+                {
+                    if ((MCStringsWildcardCompareChar(p_string, s_index, p_pattern, p_index, t_comparison, t_string_move, t_pattern_move) != 0
+                            || MCStringGetCharAtIndex(p_pattern, p_index) == '?'
+                            || MCStringGetCharAtIndex(p_pattern, p_index) == OPEN_BRACKET)
+                            && MCStringsExecWildcardMatch(p_string, s_index, p_pattern, p_index, casesensitive))
+                        return true;
+                    
+                    s_index += t_string_move;
+                }
+            }
+                return false;
+            case 0:
+                return MCStringGetCharAtIndex(p_string, s_index) == 0;
+            default:
+                if (MCStringsWildcardCompareChar(p_string, s_index, p_pattern, p_index, t_comparison, t_string_move, t_pattern_move) == 0)
+                {
+                    s_index += t_string_move;
+                    p_index += t_pattern_move;
+                }
+                else
+                    return false;
+                
+                break;
 		}
 	}
-	while (p_index < p_length && *p == '*')
-	{
-		p++;
+	while (p_index < p_length && MCStringGetCharAtIndex(p_pattern, p_index) == '*')
 		p_index++;
-	}
+    
 	return p_index == p_length;
-}
-
-bool MCStringsExecWildcardMatch(MCStringRef p_source, MCStringRef p_pattern, bool casesensitive)
-{
-    MCAutoPointer<char> t_source, t_pattern;
-    /* UNCHECKED */ MCStringConvertToCString(p_source, &t_source);
-    /* UNCHECKED */ MCStringConvertToCString(p_pattern, &t_pattern);
-	return MCStringsWildcardMatch(*t_source, MCStringGetLength(p_source), *t_pattern, MCStringGetLength(p_pattern), casesensitive);
 }
 
 bool MCWildcardMatcher::match(MCStringRef s)
 {
-	return MCStringsExecWildcardMatch(s, pattern, casesensitive);
+	return MCStringsExecWildcardMatch(s, 0, pattern, 0, casesensitive);
 }
 
 void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, bool p_without, char_t p_delimiter, MCPatternMatcher *p_matcher, MCStringRef &r_result)
