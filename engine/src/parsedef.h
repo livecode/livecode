@@ -1554,6 +1554,10 @@ enum Properties {
 	P_SCREEN_PIXEL_SCALE,
 	P_SCREEN_PIXEL_SCALES,
 	
+    // RTL/Bidirectional properties
+    P_CURSORMOVEMENT,
+    P_TEXTDIRECTION,
+    
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
     P_CUSTOM_KEYS = P_FIRST_ARRAY_PROP,
@@ -1640,10 +1644,6 @@ enum Properties {
     P_LOCALIZED_TITLE,
     P_LOCALIZED_DESCRIPTION,
     P_LOCALIZED_PRICE,
-    
-    // RTL/Bidirectional properties
-    P_CURSORMOVEMENT,
-    P_TEXTDIRECTION,
 };
 
 enum Look_and_feel {

@@ -3119,33 +3119,17 @@ void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effect
             MCAutoValueRef t_value;
             const char* t_token = table[tablesize].token;
 
-            if ((Properties)table[tablesize].value > P_FIRST_ARRAY_PROP)
+            // MERG-2013-06-24: [[ RevisedPropsProp ]] Treat the short name specially to ensure
+            //   round-tripping. If the name is empty, then return empty for 'name'.
+            if ((Properties)table[tablesize].value == P_SHORT_NAME)
             {
-                MCAutoArrayRef t_array;
-                getarrayprop(ctxt, part, (Properties)table[tablesize].value, p_effective, &t_array);
-                t_value = (MCValueRef)*t_array;
+                if (isunnamed())
+                    t_value = MCValueRetain(kMCEmptyString);
+                else
+                    getstringprop(ctxt, part, P_SHORT_NAME, p_effective, (MCStringRef&)&t_value);
             }
             else
-            {
-                MCAutoStringRef t_string_prop;
-                // MERG-2013-06-24: [[ RevisedPropsProp ]] Treat the short name specially to ensure
-                //   round-tripping. If the name is empty, then return empty for 'name'.
-                switch ((Properties)table[tablesize].value) {
-                    case P_SHORT_NAME:
-                        if (isunnamed())
-                            t_string_prop = kMCEmptyString;
-                        else
-                            getstringprop(ctxt, part, P_SHORT_NAME, p_effective, &t_string_prop);
-
-                        t_value = (MCValueRef)*t_string_prop;
-                        break;
-                    default:
-                    {
-                        getvariantprop(ctxt, part, (Properties)table[tablesize].value, p_effective, &t_value);
-                    }
-                        break;
-                }
-            }
+                getvariantprop(ctxt, part, (Properties)table[tablesize].value, p_effective, &t_value);
 
             if (!ctxt . HasError())
                 MCArrayStoreValue(*t_array, false, MCNAME(t_token), *t_value);
