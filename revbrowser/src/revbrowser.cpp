@@ -374,8 +374,9 @@ bool revBrowserCreateCallbackScript(int p_id, int p_window_id, const char *p_mes
 
 	if (t_success)
 	{
-		char *t_locals_str = t_locals ? t_locals : "";
-		char *t_assigns_str = t_assigns ? t_assigns : "";
+		// IM-2014-03-13: [[ revBrowserCEF ]] fix const ptr compile error
+		const char *t_locals_str = t_locals ? t_locals : "";
+		const char *t_assigns_str = t_assigns ? t_assigns : "";
 		t_success = MCCStringFormat(t_script, MCSCRIPT_CALLBACK, p_id, p_window_id, t_locals_str, t_assigns_str, p_message, t_locals_str);
 	}
 	if (t_locals)

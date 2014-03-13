@@ -461,10 +461,6 @@ TAltBrowser::~TAltBrowser()
 	[t_view release];
 }
 
-CWebBrowserBase::~CWebBrowserBase(void)
-{
-}
-
 OSStatus TAltBrowser::ParentEventHandler(EventHandlerCallRef p_call_chain, EventRef p_event, void *p_context)
 {
 	if (GetEventClass(p_event) == 'revo' && GetEventKind(p_event) == 'sync')
@@ -1476,6 +1472,14 @@ void TAltBrowser::SetUserAgent(const char *p_user_agent)
 	WebView *t_web_view;
 	t_web_view = HIWebViewGetWebView(m_web_browser);
 	[t_web_view setCustomUserAgent: t_ns_user_agent];
+}
+
+void TAltBrowser::AddJavaScriptHandler(const char *p_handler)
+{
+}
+
+void TAltBrowser::RemoveJavaScriptHandler(const char *p_handler)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////

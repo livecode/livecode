@@ -16,8 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "core.h"
 
-#include <Windows.h>
-
 #include <include/cef_app.h>
 
 #include <map>
@@ -379,98 +377,144 @@ public:
 	IMPLEMENT_REFCOUNTING(MCCefLCFuncHandler)
 };
 
-class MCCefLCObjectAccessor : public CefV8Accessor
-{
-private:
-	std::map<CefString, CefRefPtr<CefV8Value>> m_handlers;
-
-public:
-	bool AddHandler(const CefString &p_name)
-	{
-		bool t_success;
-		t_success = true;
-
-		CefRefPtr<CefV8Handler> t_handler;
-		t_handler = new MCCefLCFuncHandler(p_name);
-		t_success = t_handler != nil;
-
-		CefRefPtr<CefV8Value> t_func;
-		if (t_success)
-		{
-			t_func = CefV8Value::CreateFunction(p_name, t_handler);
-			t_success = t_func != nil;
-		}
-
-		if (t_success)
-			m_handlers[p_name] = t_func;
-
-		return t_success;
-	}
-
-	bool RemoveHandler(const CefString &p_name)
-	{
-		m_handlers.erase(p_name);
-		return true;
-	}
-
-	virtual bool Get(const CefString &p_name, const CefRefPtr<CefV8Value> p_object, CefRefPtr<CefV8Value> &r_retval, CefString &r_exception) OVERRIDE
-	{
-		std::map<CefString, CefRefPtr<CefV8Value>>::iterator t_iter;
-		t_iter = m_handlers.find(p_name);
-		
-		if (t_iter != m_handlers.end())
-		{
-			r_retval = t_iter->second;
-
-			return true;
-		}
-
-		return false;
-	}
-
-	virtual bool Set(const CefString &p_name, const CefRefPtr<CefV8Value> p_object, const CefRefPtr<CefV8Value> p_value, CefString &r_exception) OVERRIDE
-	{
-		return false;
-	}
-
-	IMPLEMENT_REFCOUNTING(MCCefLCObjectAccessor)
-};
-
 class MCCefRenderApp : public CefApp, CefRenderProcessHandler
 {
 private:
-	//CefRefPtr<MCCefLCObjectAccessor> m_lc_accessor;
-	CefRefPtr<CefV8Value> m_lc_obj;
-
-	bool AddObjectFunc(const CefString &p_name)
+	bool GetV8Context(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefV8Context> &r_context)
+	{
+		CefRefPtr<CefFrame> t_frame;
+		t_frame = p_browser->GetMainFrame();
+		
+		if (t_frame == nil)
+			return false;
+		
+		CefRefPtr<CefV8Context> t_context;
+		t_context = t_frame->GetV8Context();
+		
+		if (t_context == nil)
+			return false;
+		
+		r_context = t_context;
+		
+		return true;
+	}
+	
+	bool GetLiveCodeGlobalObj(CefRefPtr<CefV8Context> p_context, CefRefPtr<CefV8Value> &r_global_obj)
+	{
+		CefString t_obj_name("liveCode");
+		
+		if (!p_context->Enter())
+			return false;
+		
+		bool t_success;
+		t_success = true;
+		
+		CefRefPtr<CefV8Value> t_global;
+		t_global = p_context->GetGlobal();
+		
+		t_success = t_global != nil;
+		
+		CefRefPtr<CefV8Value> t_obj;
+		
+		if (t_success)
+		{
+			if (t_global->HasValue(t_obj_name))
+			{
+				t_obj = t_global->GetValue(t_obj_name);
+				t_success = t_obj != nil;
+			}
+			else
+			{
+				t_obj = CefV8Value::CreateObject(nil);
+				t_success = t_obj != nil;
+				
+				if (t_success)
+					t_success = t_global->SetValue(t_obj_name, t_obj, V8_PROPERTY_ATTRIBUTE_READONLY);
+			}
+		}
+		
+		if (t_success)
+			r_global_obj = t_obj;
+		
+		p_context->Exit();
+		
+		return t_success;
+	}
+	
+	// IM-2014-03-13: [[ revBrowserCEF ]] Add the named handler to the liveCode object browser's JavaScript context
+	bool AddLiveCodeHandler(CefRefPtr<CefBrowser> p_browser, const CefString &p_name)
 	{
 		bool t_success;
 		t_success = true;
-
-		CefRefPtr<CefV8Handler> t_handler;
-		t_handler = new MCCefLCFuncHandler(p_name);
-		t_success = t_handler != nil;
-
-		CefRefPtr<CefV8Value> t_func;
+		
+		bool t_entered;
+		t_entered = false;
+		
+		CefRefPtr<CefV8Context> t_context;
+		t_success = GetV8Context(p_browser, t_context);
+		
+		if (t_success)
+			t_success = t_entered = t_context->Enter();
+		
+		CefRefPtr<CefV8Value> t_livecode_obj;
+		if (t_success)
+			t_success = GetLiveCodeGlobalObj(t_context, t_livecode_obj);
+		
 		if (t_success)
 		{
-			t_func = CefV8Value::CreateFunction(p_name, t_handler);
-			t_success = t_func != nil;
+			if (!t_livecode_obj->HasValue(p_name))
+			{
+				CefRefPtr<CefV8Handler> t_handler;
+				t_success = nil != (t_handler = new MCCefLCFuncHandler(p_name));
+				
+				CefRefPtr<CefV8Value> t_func;
+				if (t_success)
+					t_success = nil != (t_func = CefV8Value::CreateFunction(p_name, t_handler));
+				
+				if (t_success)
+					t_success = t_livecode_obj->SetValue(p_name, t_func, V8_PROPERTY_ATTRIBUTE_NONE);
+			}
 		}
-
+		
+		if (t_entered)
+			t_context->Exit();
+		
+		return t_success;
+	}
+	
+	// IM-2014-03-13: [[ revBrowserCEF ]] Remove the named handler from the liveCode object browser's JavaScript context
+	bool RemoveBrowserFunc(CefRefPtr<CefBrowser> p_browser, const CefString &p_name)
+	{
+		bool t_success;
+		t_success = true;
+		
+		bool t_entered;
+		t_entered = false;
+		
+		CefRefPtr<CefV8Context> t_context;
+		t_success = GetV8Context(p_browser, t_context);
+		
 		if (t_success)
-			t_success = m_lc_obj->SetValue(p_name, t_func, V8_PROPERTY_ATTRIBUTE_NONE);
-
+			t_success = t_entered = t_context->Enter();
+		
+		CefRefPtr<CefV8Value> t_livecode_obj;
+		if (t_success)
+			t_success = GetLiveCodeGlobalObj(t_context, t_livecode_obj);
+		
+		if (t_success)
+		{
+			if (t_livecode_obj->HasValue(p_name))
+				t_success = t_livecode_obj->DeleteValue(p_name);
+		}
+		
+		if (t_entered)
+			t_context->Exit();
+		
 		return t_success;
 	}
 
-	bool RemoveObjectFunc(const CefString &p_name)
-	{
-		return m_lc_obj->DeleteValue(p_name);
-	}
-
 public:
-	virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() { return this; }
+	virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() OVERRIDE { return this; }
 
 	// RenderProcessHandler interface
 	virtual bool OnProcessMessageReceived(CefRefPtr<CefBrowser> p_browser, CefProcessId p_source_process, CefRefPtr<CefProcessMessage> p_message) OVERRIDE
@@ -546,15 +590,10 @@ public:
 			bool t_enable;
 			t_enable = p_message->GetArgumentList()->GetBool(1);
 
-			CefRefPtr<CefV8Context> t_context;
-			t_context = p_browser->GetMainFrame()->GetV8Context();
-
-			t_context->Enter();
 			if (t_enable)
-				t_success = AddObjectFunc(t_handler);
+				t_success = AddBrowserFunc(p_browser, t_handler);
 			else
-				t_success = RemoveObjectFunc(t_handler);
-			t_context->Exit();
+				t_success = RemoveBrowserFunc(p_browser, t_handler);
 
 			///* UNCHECKED */ MCCefSendIntResult(p_browser, t_success, 0);
 
@@ -564,36 +603,24 @@ public:
 			return CefRenderProcessHandler::OnProcessMessageReceived(p_browser, p_source_process, p_message);
 	}
 
-	virtual void OnContextCreated(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefRefPtr<CefV8Context> p_context) OVERRIDE
-	{
-		CefRefPtr<CefV8Value> t_global;
-		t_global = p_context->GetGlobal();
-
-		//m_lc_accessor = new MCCefLCObjectAccessor();
-
-		//CefRefPtr<CefV8Value> t_lc_obj;
-		//t_lc_obj = CefV8Value::CreateObject(m_lc_accessor.get());
-		m_lc_obj = CefV8Value::CreateObject(nil);
-
-		t_global->SetValue("liveCode", m_lc_obj, V8_PROPERTY_ATTRIBUTE_READONLY);
-
-		//AddObjectFunc("testHandler");
-	}
-
 	IMPLEMENT_REFCOUNTING(MCCefRenderApp)
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+// IM-2014-03-13: [[ revBrowserCEF ]] create the app handler
+bool MCCefCreateApp(CefRefPtr<CefApp> &r_app)
 {
-	CefMainArgs t_args(hInstance);
-
-	CefRefPtr<CefApp> t_app;
+	MCCefRenderApp *t_app;
 	t_app = new MCCefRenderApp();
-
-	return CefExecuteProcess(t_args, t_app);
+	
+	if (t_app == nil)
+	{
+		MCLog("failed to create app", nil);
+		return false;
+	}
+	
+	r_app = t_app;
+	
+	return true;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-

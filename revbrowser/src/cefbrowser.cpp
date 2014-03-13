@@ -78,14 +78,18 @@ static bool MCCefStringFromCString(const char *p_c_string, CefString &r_cef_stri
 // Cef initialization / shutdown handling
 
 static bool s_cef_initialised = false;
+static bool s_cefbrowser_initialised = false;
+
 static uint32_t s_instance_count = 0;
 static MCRunloopActionRef s_runloop_action = nil;
 
-void MCCefBrowserInit(void)
+void MCCefBrowserExternalInit(void)
 {
 	// set up static vars
 	s_cef_initialised = false;
+	s_cefbrowser_initialised = false;
 	s_instance_count = 0;
+	s_runloop_action = nil;
 }
 
 void MCCefBrowserRunloopAction(void *p_context)
@@ -93,6 +97,7 @@ void MCCefBrowserRunloopAction(void *p_context)
 	CefDoMessageLoopWork();
 }
 
+// IM-2014-03-13: [[ revBrowserCEF ]] Initialisation of the CEF library
 bool MCCefInitialise(void)
 {
 	if (s_cef_initialised)
@@ -114,17 +119,34 @@ bool MCCefInitialise(void)
 	if (t_success)
 		t_success = CefInitialize(t_args, t_settings, t_app);
 
+	s_cef_initialised = t_success;
+	
+	return s_cef_initialised;
+}
+
+// IM-2014-03-13: [[ revBrowserCEF ]] Initialise CEF & install the runloop action
+bool MCCefBrowserInitialise(void)
+{
+	if (s_cefbrowser_initialised)
+		return true;
+	
+	bool t_success;
+	t_success = true;
+	
+	t_success = MCCefInitialise();
+	
 	if (t_success)
 	{
 		int t_result;
 		AddRunloopAction(MCCefBrowserRunloopAction, nil, &s_runloop_action, &t_result);
 	}
 
-	s_cef_initialised = t_success;
+	s_cefbrowser_initialised = t_success;
 
-	return s_cef_initialised;
+	return s_cefbrowser_initialised;
 }
 
+// IM-2014-03-13: [[ revBrowserCEF ]] Shutdown the CEF library
 void MCCefFinalise(void)
 {
 	if (!s_cef_initialised)
@@ -132,16 +154,29 @@ void MCCefFinalise(void)
 
 	CefShutdown();
 
+	s_cef_initialised = false;
+}
+
+// IM-2014-03-13: [[ revBrowserCEF ]] Shut down the browser
+void MCCefBrowserFinalise(void)
+{
+	if (!s_cefbrowser_initialised)
+		return;
+	
+	// IM-2014-03-13: [[ revBrowserCEF ]] CEF library can't be cleanly shutdown and restarted - don't call finalise
+	// MCCefFinalise();
+	
 	int t_result;
 	/* UNCHECKED */ RemoveRunloopAction(s_runloop_action, &t_result);
-
-	s_cef_initialised = false;
+	s_runloop_action = nil;
+	
+	s_cefbrowser_initialised = false;
 }
 
 void MCCefIncrementInstanceCount(void)
 {
 	if (s_instance_count == 0)
-		/* UNCHECKED */ MCCefInitialise();
+		/* UNCHECKED */ MCCefBrowserInitialise();
 
 	s_instance_count++;
 }
@@ -154,7 +189,7 @@ void MCCefDecrementInstanceCount(void)
 	s_instance_count--;
 
 	if (s_instance_count == 0)
-		MCCefFinalise();
+		MCCefBrowserFinalise();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
