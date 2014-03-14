@@ -741,8 +741,6 @@ void MCS_seturlsslverification(bool p_enabled)
 
 bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data)
 {
-	/* UNCHECKED */ ctxt . SetTheResultToValue(p_data);
-
 	switch(p_kind)
 	{
 	case kMCSPutOutput:
@@ -755,6 +753,8 @@ bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data)
 	default:
 		break;
 	}
+    
+    ctxt . SetTheResultToBool(True);
 	return true;
 }
 
