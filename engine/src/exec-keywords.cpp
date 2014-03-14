@@ -184,7 +184,12 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
     {
 #ifdef _MOBILE
         extern Exec_stat MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters);
+        
+        // AL-2014-03-14: Currently no mobile handler's execution is halted when ES_ERROR
+        //  is returned. Error info is returned via the result. 
         stat = MCHandlePlatformMessage(name, params);
+        if (stat != ES_NOT_HANDLED)
+            stat = ES_NORMAL;
 #endif
     }
 	else if (handler != nil)
