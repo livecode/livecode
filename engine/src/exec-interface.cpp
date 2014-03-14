@@ -3951,7 +3951,7 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
     MCAutoStringRef t_list_string;
     /* UNCHECKED */ MCListCopyAsString(*t_list, &t_list_string);
     
-    if (p_type == CT_LINE && (t_trailing_delim || i < t_added - 1))
+    if (t_trailing_delim || i < t_added - 1)
     {
         return MCStringFormat(r_output, "%@%c", *t_list_string, t_delimiter);
     }
