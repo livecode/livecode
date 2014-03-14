@@ -8910,7 +8910,7 @@ static void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mo
 			{
 				MCU_realloc((char **)&MCprocesses, MCnprocesses, MCnprocesses + 1,
 				            sizeof(Streamnode));
-				MCprocesses[MCnprocesses].name = name;
+				MCprocesses[MCnprocesses].name = MCValueRetain(name);
 				MCprocesses[MCnprocesses].mode = OM_NEITHER;
 				MCprocesses[MCnprocesses].ihandle = NULL;
 				MCprocesses[MCnprocesses].ohandle = NULL;
