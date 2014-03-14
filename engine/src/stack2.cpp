@@ -560,6 +560,10 @@ Boolean MCStack::takewindow(MCStack *sptr)
 	// MW-2011-01-10: [[ Effects ]] Take the snapshot.
 	takewindowsnapshot(sptr);
 	
+    // MW-2014-03-14: [[ Bug 11915 ]] Make sure we copy the view (fullscreenmode related)
+    //   props to this stack.
+    view_copy(*sptr);
+    
 	mode_takewindow(sptr);
 	
 	if (MCmousestackptr == sptr)
