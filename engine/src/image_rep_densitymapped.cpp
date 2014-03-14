@@ -290,9 +290,8 @@ bool MCImageSplitScaledFilename(MCStringRef p_filename, MCStringRef &r_base, MCS
 	else
 		t_name_start = 0;
 	
-    if (MCStringLastIndexOfChar(p_filename, '.', UINDEX_MAX, kMCStringOptionCompareExact, t_index)
-        && t_index >= t_name_start)
-		t_ext_start = t_name_start + t_index;
+    if (MCStringFirstIndexOfChar(p_filename, '.', t_name_start, kMCStringOptionCompareExact, t_index))
+		t_ext_start = t_index;
 	else
 		t_ext_start = t_length;
 	
@@ -300,10 +299,10 @@ bool MCImageSplitScaledFilename(MCStringRef p_filename, MCStringRef &r_base, MCS
 	t_label_start = t_label_search_start = t_name_start;
     while (MCStringFirstIndexOfChar(p_filename, '@', t_label_search_start, kMCStringOptionCompareExact, t_index))
 	{
-		if (t_label_start + t_index > t_ext_start)
+		if (t_index > t_ext_start)
 			break;
 		
-		t_label_start += t_index;
+		t_label_start = t_index;
 		t_label_search_start = t_label_start + 1;
 	}
 	
