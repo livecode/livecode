@@ -874,6 +874,9 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 			if ((err = RegQueryValueExW(*t_regkey, *t_value_wstr, 0, &t_type, t_buffer.Ptr(), &t_buffer_len))
 				== ERROR_SUCCESS && t_buffer_len > 0)
             {
+				// Sets the type
+				MCS_registry_type_to_string(t_type, r_type);
+
 				// Convert the value from the registry to the appropriate value type
 				switch (t_type)
 				{
@@ -922,8 +925,6 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 						break;
 					}
 				}
-				
-				MCS_registry_type_to_string(t_type, r_type);
             }
         }
         else if (err == ERROR_FILE_NOT_FOUND)
