@@ -433,7 +433,14 @@ void MCScreenDC::openwindow(Window w, Boolean override)
 {
 	if (IsWindowVisible((WindowPtr)w->handle.window))
 		return;
-		
+	
+	// MW-2014-03-11: [[ Bug 11819 ]] Make sure we invalidate the view for all window's
+	//   on open (otherwise non-decorated windows don't redraw for some reason...)
+	HIViewRef t_root, t_view;
+	GetRootControl((WindowPtr)w -> handle . window, &t_root);
+	GetIndexedSubControl(t_root, 1, &t_view);
+	HIViewSetNeedsDisplay(t_view, TRUE);
+	
 	if (override)
 	{
         // MM-2012-04-02: Use new MC*Window wrapper function - fixes bugs where a cocoa NSWindow has been
