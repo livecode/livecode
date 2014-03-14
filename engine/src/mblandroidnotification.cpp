@@ -137,12 +137,12 @@ bool MCSystemGetDeviceToken (MCStringRef& r_device_token)
     bool t_success = true;
     MCAutoStringRef t_registration_id;
     
-    MCAndroidEngineRemoteCall("getRemoteNotificationId", "x", &t_registration_id);
+    MCAndroidEngineRemoteCall("getRemoteNotificationId", "x", &(&t_registration_id));
     
     t_success = *t_registration_id != nil;
     
     if (t_success)
-        t_success = MCStringCopy(*t_registration_id, r_device_token);
+        r_device_token = MCValueRetain(*t_registration_id);
     
     return t_success;
 }
