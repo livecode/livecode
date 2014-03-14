@@ -383,10 +383,23 @@ public class AmazonBillingProvider implements BillingProvider
                                 // 1. Use the receipts to determineif the user currently has an active subscription
                                 // 2. Use the receipts to create a subscription history for your customer.
                                 
-                                addPurchaseReceiptToLocalInventory(receipt);
-                                ownedItems.add(receipt.getSku());
-                                // onPurchaseStateChanged to be called with state = 5 (restored)
-                                mPurchaseObserver.onPurchaseStateChanged(receipt.getSku(),5);
+                                SubscriptionPeriod subscriptionPeriod = receipt.getSubscriptionPeriod();
+                                
+                                Date subscriptionStart = subscriptionPeriod.getStartDate();
+                                Date subscriptionEnd = subscriptionPeriod.getEndDate();
+                                
+                                Date today = new Date();
+                                
+                                boolean subscriptionHasStarted = subscriptionStart.before(today) || subscriptionStart.equals(today);
+                                boolean subscriptionHasEnded = subscriptionEnd != null && today.after(subscriptionEnd);
+                                
+                                if (subscriptionHasStarted && !subscriptionHasEnded)
+                                {
+                                    addPurchaseReceiptToLocalInventory(receipt);
+                                    ownedItems.add(receipt.getSku());
+                                    // onPurchaseStateChanged to be called with state = 5 (restored)
+                                    mPurchaseObserver.onPurchaseStateChanged(receipt.getSku(),5);
+                                }
                                 break;
                         }
                     }

@@ -27,8 +27,15 @@ public class SamsungBillingProvider implements BillingProvider
     private Boolean started = false;
     private PurchaseObserver mPurchaseObserver;
     
+    // mode can be :
+    // "1" for test_success_mode
+    // "-1" for test_failure_mode
+    // "0" for production mode
+    private static String mode = Engine.doGetCustomPropertyValue("cREVStandaloneSettings", "android,samsungIapMode");
+    private static final int iapMode = Integer.parseInt(mode);
+   
     //private static final int iapMode = SamsungIapHelper.IAP_MODE_COMMERCIAL;
-    private static final int iapMode = SamsungIapHelper.IAP_MODE_TEST_SUCCESS;
+    //private static final int iapMode = SamsungIapHelper.IAP_MODE_TEST_SUCCESS;
     //private static final int iapMode = SamsungIapHelper.IAP_MODE_TEST_FAIL;
     
     private String itemGroupId = null;
@@ -203,11 +210,11 @@ public class SamsungBillingProvider implements BillingProvider
         if (success)
             success = setPurchaseProperty(itemVO.getItemId(), "itemType", itemVO.getType());
 
-        //TODO : check if itemType is not subscription
-        if (success)
+        //check if itemType is subscription
+        if (success && (itemVO.getType()).equals("02"))
             success = setPurchaseProperty(itemVO.getItemId(), "subscriptionDurationUnit", itemVO.getSubscriptionDurationUnit());
 
-        if (success)
+        if (success && (itemVO.getType()).equals("02"))
             success = setPurchaseProperty(itemVO.getItemId(), "subscriptionDurationMultiplier", itemVO.getSubscriptionDurationMultiplier());
 
         return success;
@@ -419,7 +426,7 @@ public class SamsungBillingProvider implements BillingProvider
     {
         if (!started)
             return false;
-        //TODO
+        
         return true;
     }
     
