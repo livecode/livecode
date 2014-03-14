@@ -837,7 +837,7 @@ Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parameters)
 
 bool MCSystemGetCurrentLocale(MCStringRef& r_current_locale)
 {
-    MCAndroidEngineCall("getCurrentLocale", "x", &r_current_locale);
+    MCAndroidEngineCall("getPreferredLocale", "x", &r_current_locale);
     return true;
 }
 
