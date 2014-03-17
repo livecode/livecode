@@ -413,112 +413,112 @@ bool MCSystemGetRotationRateReading(MCSensorRotationRateReading &r_reading, bool
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Exec_stat MCHandleCanTrackLocation(void *context, MCParameter *p_parameters)
-{
-    MCSystemGetSensorAvailable(kMCSensorTypeLocation);
-	return ES_NORMAL;
-}
-
-Exec_stat MCHandleLocationTrackingState(void *context, MCParameter *p_parameters)
-{
-    bool t_start;
-    t_start = (bool) context;
-    if (t_start)
-        MCSystemStartTrackingSensor(kMCSensorTypeLocation, true);
-    else
-        MCSystemStopTrackingSensor(kMCSensorTypeLocation);
-	return ES_NORMAL;
-}
-
-Exec_stat MCHandleCurrentLocation(void *context, MCParameter *p_parameters)
-{
-    MCSensorLocationReading r_reading;
-    MCSystemGetLocationReading(r_reading, true);
-	return ES_NORMAL;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Exec_stat MCHandleCanTrackHeading(void *context, MCParameter *p_parameters)
-{
-    MCSystemGetSensorAvailable(kMCSensorTypeHeading);
-	return ES_NORMAL;
-}
-
-Exec_stat MCHandleHeadingTrackingState(void *context, MCParameter *p_parameters)
-{
-    bool t_start;
-    t_start = (bool) context;
-    if (t_start)
-        MCSystemStartTrackingSensor(kMCSensorTypeHeading, true);
-    else
-        MCSystemStopTrackingSensor(kMCSensorTypeHeading);
-	return ES_NORMAL;
-}
-
-Exec_stat MCHandleCurrentHeading(void *context, MCParameter *p_parameters)
-{
-    MCSensorHeadingReading r_reading;
-    MCSystemGetHeadingReading(r_reading, true);
-	return ES_NORMAL;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Exec_stat MCHandleCanTrackRotation(void *context, MCParameter *p_parameters)
-{
-    MCSystemGetSensorAvailable(kMCSensorTypeRotationRate);
-	return ES_NORMAL;
-}
-
-Exec_stat MCHandleRotationTrackingState(void *context, MCParameter *p_parameters)
-{
-    bool t_start;
-    t_start = (bool) context;
-    if (t_start)
-        MCSystemStartTrackingSensor(kMCSensorTypeRotationRate, true);
-    else
-        MCSystemStopTrackingSensor(kMCSensorTypeRotationRate);
-	return ES_NORMAL;
-}
-
-Exec_stat MCHandleCurrentRotation(void *context, MCParameter *p_parameters)
-{
-    MCSensorRotationRateReading r_reading;
-    MCSystemGetRotationRateReading(r_reading, true);
-	return ES_NORMAL;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Exec_stat MCHandleAccelerometerEnablement(void *context, MCParameter *p_parameters)
-{
-    bool t_start;
-    t_start = (bool) context;
-    if (t_start)
-        MCSystemStartTrackingSensor(kMCSensorTypeAcceleration, true);
-    else
-        MCSystemStopTrackingSensor(kMCSensorTypeAcceleration);
-	return ES_NORMAL;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Exec_stat MCHandleSetHeadingCalibrationTimeout(void *context, MCParameter *p_parameters)
-{
-	MCExecPoint ep(nil, nil, nil);
-	
-	if (p_parameters != nil)
-		MCParseParameters(p_parameters, "i", &s_calibration_timeout);
-	
-	return ES_NORMAL;
-}
-
-Exec_stat MCHandleHeadingCalibrationTimeout(void *context, MCParameter *p_parameters)
-{
-	MCresult->setnvalue(s_calibration_timeout);
-
-	return ES_NORMAL;
-}
+//Exec_stat MCHandleCanTrackLocation(void *context, MCParameter *p_parameters)
+//{
+//    MCSystemGetSensorAvailable(kMCSensorTypeLocation);
+//	return ES_NORMAL;
+//}
+//
+//Exec_stat MCHandleLocationTrackingState(void *context, MCParameter *p_parameters)
+//{
+//    bool t_start;
+//    t_start = (bool) context;
+//    if (t_start)
+//        MCSystemStartTrackingSensor(kMCSensorTypeLocation, true);
+//    else
+//        MCSystemStopTrackingSensor(kMCSensorTypeLocation);
+//	return ES_NORMAL;
+//}
+//
+//Exec_stat MCHandleCurrentLocation(void *context, MCParameter *p_parameters)
+//{
+//    MCSensorLocationReading r_reading;
+//    MCSystemGetLocationReading(r_reading, true);
+//	return ES_NORMAL;
+//}
+//
+//////////////////////////////////////////////////////////////////////////////////
+//
+//Exec_stat MCHandleCanTrackHeading(void *context, MCParameter *p_parameters)
+//{
+//    MCSystemGetSensorAvailable(kMCSensorTypeHeading);
+//	return ES_NORMAL;
+//}
+//
+//Exec_stat MCHandleHeadingTrackingState(void *context, MCParameter *p_parameters)
+//{
+//    bool t_start;
+//    t_start = (bool) context;
+//    if (t_start)
+//        MCSystemStartTrackingSensor(kMCSensorTypeHeading, true);
+//    else
+//        MCSystemStopTrackingSensor(kMCSensorTypeHeading);
+//	return ES_NORMAL;
+//}
+//
+//Exec_stat MCHandleCurrentHeading(void *context, MCParameter *p_parameters)
+//{
+//    MCSensorHeadingReading r_reading;
+//    MCSystemGetHeadingReading(r_reading, true);
+//	return ES_NORMAL;
+//}
+//
+//////////////////////////////////////////////////////////////////////////////////
+//
+//Exec_stat MCHandleCanTrackRotation(void *context, MCParameter *p_parameters)
+//{
+//    MCSystemGetSensorAvailable(kMCSensorTypeRotationRate);
+//	return ES_NORMAL;
+//}
+//
+//Exec_stat MCHandleRotationTrackingState(void *context, MCParameter *p_parameters)
+//{
+//    bool t_start;
+//    t_start = (bool) context;
+//    if (t_start)
+//        MCSystemStartTrackingSensor(kMCSensorTypeRotationRate, true);
+//    else
+//        MCSystemStopTrackingSensor(kMCSensorTypeRotationRate);
+//	return ES_NORMAL;
+//}
+//
+//Exec_stat MCHandleCurrentRotation(void *context, MCParameter *p_parameters)
+//{
+//    MCSensorRotationRateReading r_reading;
+//    MCSystemGetRotationRateReading(r_reading, true);
+//	return ES_NORMAL;
+//}
+//
+//////////////////////////////////////////////////////////////////////////////////
+//
+//Exec_stat MCHandleAccelerometerEnablement(void *context, MCParameter *p_parameters)
+//{
+//    bool t_start;
+//    t_start = (bool) context;
+//    if (t_start)
+//        MCSystemStartTrackingSensor(kMCSensorTypeAcceleration, true);
+//    else
+//        MCSystemStopTrackingSensor(kMCSensorTypeAcceleration);
+//	return ES_NORMAL;
+//}
+//
+//////////////////////////////////////////////////////////////////////////////////
+//
+//Exec_stat MCHandleSetHeadingCalibrationTimeout(void *context, MCParameter *p_parameters)
+//{
+//	MCExecPoint ep(nil, nil, nil);
+//	
+//	if (p_parameters != nil)
+//		MCParseParameters(p_parameters, "i", &s_calibration_timeout);
+//	
+//	return ES_NORMAL;
+//}
+//
+//Exec_stat MCHandleHeadingCalibrationTimeout(void *context, MCParameter *p_parameters)
+//{
+//	MCresult->setnvalue(s_calibration_timeout);
+//
+//	return ES_NORMAL;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////

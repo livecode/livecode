@@ -1954,9 +1954,11 @@ static MCExternalError MCExternalWaitBreak(void *unused, unsigned int p_options)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern MCGFloat MCResGetPixelScale(void);
+extern MCGFloat MCResGetUIScale(void);
+
 extern void *MCIPhoneGetView(void);
 extern void *MCIPhoneGetViewController(void);
-extern float MCIPhoneGetResolutionScale(void);
 extern void *MCAndroidGetActivity(void);
 extern void *MCAndroidGetContainer(void);
 
@@ -1969,25 +1971,24 @@ extern void *MCAndroidGetEngine(void);
 
 static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, void *r_value)
 {
-#if defined(TARGET_SUBPLATFORM_IPHONE)
+    
 	switch(op)
 	{
+		case kMCExternalInterfaceQueryViewScale:
+			// IM-2014-03-14: [[ HiDPI ]] Return the inverse of the logical -> ui coords scale
+			*(double *)r_value = 1.0 / MCResGetUIScale();
+			break;
+			
+#if defined(TARGET_SUBPLATFORM_IPHONE)
 		case kMCExternalInterfaceQueryView:
 			*(void **)r_value = MCIPhoneGetView();
 			break;
 		case kMCExternalInterfaceQueryViewController:
 			*(void **)r_value = MCIPhoneGetViewController();
 			break;
-		case kMCExternalInterfaceQueryViewScale:
-			*(double *)r_value = MCIPhoneGetResolutionScale();
-			break;
-		default:
-			return kMCExternalErrorInvalidInterfaceQuery;
-	}
-	return kMCExternalErrorNone;
-#elif defined(TARGET_SUBPLATFORM_ANDROID)
-	switch(op)
-	{
+#endif
+			
+#if defined(TARGET_SUBPLATFORM_ANDROID)
 		case kMCExternalInterfaceQueryActivity:
 			*(void **)r_value = MCAndroidGetActivity();
 			break;
@@ -2009,14 +2010,13 @@ static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, 
 		case kMCExternalInterfaceQueryEngine:
 			*(void **)r_value = MCAndroidGetEngine();
 			break;
-
+#endif
+			
 		default:
 			return kMCExternalErrorInvalidInterfaceQuery;
 	}
+	
 	return kMCExternalErrorNone;
-#endif
-
-	return kMCExternalErrorInvalidInterfaceQuery;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

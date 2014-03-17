@@ -21,6 +21,10 @@ ifeq ($(ARCH),)
     endif
 endif
 
+ifeq ($(CC),)
+	CC:=gcc
+endif
+
 BUILD_DIR=$(SOLUTION_DIR)/_build/linux/$(ARCH)/$(MODE)
 CACHE_DIR=$(SOLUTION_DIR)/_cache/linux/$(ARCH)/$(MODE)/$(NAME)
 PRODUCT_DIR=$(BUILD_DIR)

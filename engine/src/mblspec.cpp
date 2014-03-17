@@ -758,6 +758,13 @@ void MCS_unloadurl(MCObject *p_object, const char *p_url)
 	MCresult -> sets("not implemented");
 }
 
+//////////
+
+void MCS_seturlsslverification(bool p_enabled)
+{
+	MCSystemSetUrlSSLVerification(p_enabled);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, const MCString& p_data)
@@ -884,5 +891,17 @@ int MCA_color(MCExecPoint& ep, const char *p_title, const char *p_initial, Boole
 {
 	return 0;
 }
+
+// MERG-2013-08-18: Stubs for colorDialogColors.
+void MCA_setcolordialogcolors(MCExecPoint& p_ep)
+{
+    
+}
+
+void MCA_getcolordialogcolors(MCExecPoint& p_ep)
+{
+	p_ep.clear();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////

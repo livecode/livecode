@@ -174,6 +174,9 @@ static bool MCTextLayoutFontFromHFONT(void *p_font, MCTextLayoutFont*& r_font)
 		if (!GetObjectA(p_font, sizeof(LOGFONTA), &t_logfont))
 			t_success = false;
 
+	if (t_success)
+		t_logfont . lfHeight = -256;
+
 	// Now use this to search for an existing layout font
 	MCTextLayoutFont *self;
 	self = nil;
@@ -1059,9 +1062,10 @@ bool MCTextLayout(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct 
 				// total of the advance width.
 				for(uint32_t i = 0; i < t_run -> glyph_count; i++)
 				{
+					// MW-2013-11-07: [[ Bug 10508 ]] We lay out in 256px units, so scale.
 					t_glyphs[i] . index = t_run -> glyphs[i];
-					t_glyphs[i] . x = t_x + t_run -> goffsets[i] . du;
-					t_glyphs[i] . y = t_run -> goffsets[i] . dv;
+					t_glyphs[i] . x = (t_x + t_run -> goffsets[i] . du) * p_font -> size / 256.0;
+					t_glyphs[i] . y = (t_run -> goffsets[i] . dv) * p_font -> size / 256.0;
 					t_x += t_run -> advances[i];
 				}
 

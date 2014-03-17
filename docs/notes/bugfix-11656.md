@@ -1,0 +1,1 @@
+# Slider renders white box under Linux 

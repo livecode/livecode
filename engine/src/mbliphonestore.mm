@@ -820,6 +820,7 @@ extern bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, 
 
 Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleRequestProductDetails */ LEGACY_EXEC
     bool t_success = true;
     
     char * t_product;
@@ -832,6 +833,7 @@ Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters
         MCStoreRequestProductDetails(t_product);
     
     return ES_NORMAL;
+#endif /* MCHandleRequestProductDetails */
 }
 
 ////////////////////////////////////////////////////////////////////////////////

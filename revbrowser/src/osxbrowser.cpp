@@ -644,7 +644,7 @@ void TAltBrowser::init(unsigned int p_window)
 	GetWindowBounds(m_parent, kWindowContentRgn, &t_content_rect);
 	t_content_rect . right = t_content_rect . left + 32;
 	t_content_rect . bottom = t_content_rect . top + 32;
-	CreateNewWindow(kSheetWindowClass, kWindowStandardHandlerAttribute | kWindowCompositingAttribute | kWindowNoShadowAttribute, &t_content_rect, &m_container);
+	CreateNewWindow(kSheetWindowClass, kWindowStandardHandlerAttribute | kWindowCompositingAttribute | kWindowNoShadowAttribute | kWindowFrameworkScaledAttribute, &t_content_rect, &m_container);
 	
 	HIViewRef t_content_view;
 	HIViewFindByID(HIViewGetRoot(m_container), kHIViewWindowContentID, &t_content_view);
@@ -1181,7 +1181,8 @@ char *TAltBrowser::GetSource()
 	if (datasource != nil)
 		t_repn = [datasource representation];
 
-	NSString *t_source;
+    // AL-2013-12-03 [[ Bug 11507 ]] Initialise t_source to nil to prevent crash.
+	NSString *t_source = nil;
 	if (t_repn != nil)
 		t_source = [t_repn documentSource];
 

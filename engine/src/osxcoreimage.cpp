@@ -45,12 +45,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 static bool s_coreimage_initialized = false;
 
-extern "C" rei_boolean_t coreimage_visualeffect_initialise(void);
-extern "C" void coreimage_visualeffect_finalise(void);
-extern "C" rei_boolean_t coreimage_visualeffect_lookup(const char *p_name, rei_visualeffect_info_ref_t *r_info);
-extern "C" rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, CGrafPtr p_target, CGrafPtr p_source_a, CGrafPtr p_source_b, rei_rectangle_ref_t p_area, rei_visualeffect_parameters_ref_t p_parameters);
-extern "C" rei_boolean_t coreimage_visualeffect_step(float p_time);
-extern "C" rei_boolean_t coreimage_visualeffect_end(void);
+extern rei_boolean_t coreimage_visualeffect_initialise(void);
+extern void coreimage_visualeffect_finalise(void);
+extern rei_boolean_t coreimage_visualeffect_lookup(const char *p_name, rei_visualeffect_info_ref_t *r_info);
+extern rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_image_a, MCGImageRef p_image_b, rei_rectangle_ref_t p_area, float p_surface_height, rei_visualeffect_parameter_list_ref_t p_parameters);
+extern rei_boolean_t coreimage_visualeffect_step(MCStackSurface *p_target, float p_time);
+extern rei_boolean_t coreimage_visualeffect_end(void);
 
 void MCCoreImageRegister(void)
 {
@@ -66,7 +66,8 @@ void MCCoreImageUnregister(void)
 	}
 }
 
-bool MCCoreImageEffectBegin(const char *p_name, Drawable p_target, Drawable p_source_a, Drawable p_source_b, const MCRectangle& p_rect, MCEffectArgument *p_arguments)
+// IM-2013-08-29: [[ RefactorGraphics ]] add surface height param to pass through to coreimage_visualeffect_begin
+bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImageRef p_source_b, const MCRectangle& p_rect, MCGFloat p_surface_height, MCEffectArgument *p_arguments)
 {	
 	if (!s_coreimage_initialized)
 		return false;
@@ -85,8 +86,8 @@ bool MCCoreImageEffectBegin(const char *p_name, Drawable p_target, Drawable p_so
 	for(MCEffectArgument *t_argument = p_arguments; t_argument != NULL; t_argument = t_argument -> next)
 		t_argument_count += 1;
 	
-	rei_visualeffect_parameters_ref_t t_parameters;
-	t_parameters = (rei_visualeffect_parameters_ref_t)alloca(4 + 16 * t_argument_count);
+	rei_visualeffect_parameter_list_ref_t t_parameters;
+	t_parameters = (rei_visualeffect_parameter_list_ref_t)alloca(sizeof(rei_visualeffect_parameter_list_t) + sizeof(rei_visualeffect_parameter_t) * t_argument_count);
 	if (t_parameters == NULL)
 		return false;
 	
@@ -193,7 +194,7 @@ bool MCCoreImageEffectBegin(const char *p_name, Drawable p_target, Drawable p_so
 					if (t_data != NULL)
 					{
 						MCImageBitmap *t_bitmap = nil;
-						if (t_image->lockbitmap(t_bitmap))
+						if (t_image->lockbitmap(t_bitmap, true))
 							MCImageBitmapPremultiplyRegion(t_bitmap, 0, 0, t_bitmap->width, t_bitmap->height, t_rect.width * sizeof(uint32_t), t_data);
 						else
 							MCMemoryClear(t_data, t_rect.width * sizeof(uint32_t) * t_rect.height);
@@ -229,20 +230,16 @@ bool MCCoreImageEffectBegin(const char *p_name, Drawable p_target, Drawable p_so
 	}
 	else
 	{
-		CGrafPtr t_target, t_source_a, t_source_b;
-		t_target = p_target -> type == DC_WINDOW ? GetWindowPort((WindowPtr)p_target -> handle . window) : (CGrafPtr)p_target -> handle . pixmap;
-		t_source_a = p_source_a -> type == DC_WINDOW ? GetWindowPort((WindowPtr)p_source_a -> handle . window) : (CGrafPtr)p_source_a -> handle . pixmap;
-		t_source_b = p_source_b -> type == DC_WINDOW ? GetWindowPort((WindowPtr)p_source_b -> handle . window) : (CGrafPtr)p_source_b -> handle . pixmap;
-	  if (!coreimage_visualeffect_begin(t_info -> handle, t_target, t_source_a, t_source_b, &t_rect, t_parameters))
+	  if (!coreimage_visualeffect_begin(t_info -> handle, p_source_a, p_source_b, &t_rect, p_surface_height, t_parameters))
 			return false;
 	}
 	
 	return true;
 }
 
-bool MCCoreImageEffectStep(float p_time)
+bool MCCoreImageEffectStep(MCStackSurface *p_target, float p_time)
 {
-	return coreimage_visualeffect_step(p_time);
+	return coreimage_visualeffect_step(p_target, p_time);
 }
 
 void MCCoreImageEffectEnd(void)

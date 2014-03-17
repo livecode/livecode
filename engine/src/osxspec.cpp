@@ -48,6 +48,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxdc.h"
 #include "mcssl.h"
 
+#include "resolution.h"
+
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
@@ -239,25 +241,12 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 		{
 			if (sptr == MCdispatcher -> gethome())
 			{
-				const MCDisplay *t_monitors = NULL;
-				MCDisplay *t_old_monitors = NULL;
-				
-				uint4 t_monitor_count, t_old_monitor_count;
+				// IM-2014-01-28: [[ HiDPI ]] Use updatedisplayinfo() method to update & compare display details
 				bool t_changed;
-				t_old_monitor_count = ((MCScreenDC *)MCscreen) -> getdisplays(t_monitors, false);
-				t_old_monitors = new MCDisplay[t_old_monitor_count];
-				if (t_old_monitors != NULL)
-				{
-					memcpy(t_old_monitors, t_monitors, sizeof(MCDisplay) * t_old_monitor_count);
-					((MCScreenDC *)MCscreen) -> s_monitor_count = 0;
-					delete[] ((MCScreenDC *)MCscreen) -> s_monitor_displays;
-					((MCScreenDC *)MCscreen) -> s_monitor_displays = NULL;
-					t_monitor_count = ((MCScreenDC *)MCscreen) -> getdisplays(t_monitors, false);
-					t_changed = t_monitor_count != t_old_monitor_count || memcmp(t_old_monitors, t_monitors, sizeof(MCDisplay) * t_monitor_count) != 0;
-					delete t_old_monitors;
-				}
-				else
-					t_changed = true;
+				t_changed = false;
+
+				MCscreen->updatedisplayinfo(t_changed);
+
 				if (t_changed)
 					MCscreen -> delaymessage(MCdefaultstackptr -> getcurcard(), MCM_desktop_changed);
 			}
@@ -274,13 +263,11 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 			Rect t_rect;
 			GetWindowPortBounds((WindowPtr)t_window . handle . window, &t_rect);
 			
+			// IM-2013-10-11: [[ FullscreenMode ]] Move stack scroll handling into stack transform
 			t_rect . right -= t_rect . left;
 			t_rect . bottom -= t_rect . top;
 			t_rect . left = 0;
-			
-			// MW-2011-09-12: [[ MacScroll ]] Make sure the top of the HIView takes into
-			//   account the scroll.
-			t_rect . top = -sptr -> getscroll();
+			t_rect . top = 0;
 			
 			ControlRef t_root_control;
 			GetRootControl((WindowPtr)t_window . handle . window, &t_root_control);
@@ -291,7 +278,7 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 			
 			// MW-2007-08-29: [[ Bug 4846 ]] Ensure a moveStack message is sent whenever the window moves
 			if ((attributes & kWindowBoundsChangeSizeChanged) != 0 || ((attributes & kWindowBoundsChangeUserDrag) != 0 && (attributes & kWindowBoundsChangeOriginChanged) != 0))
-				sptr->configure(True);//causes a redraw and recalculation
+				sptr->view_configure(true);//causes a redraw and recalculation
 		}
 		else if (GetEventKind(event) == kEventWindowInit && sptr != NULL)
 		{

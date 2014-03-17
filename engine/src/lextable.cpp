@@ -215,6 +215,7 @@ LT command_table[] =
         {"add", TT_STATEMENT, S_ADD},
         {"answer", TT_STATEMENT, S_ANSWER},
         {"ask", TT_STATEMENT, S_ASK},
+		{"assert", TT_STATEMENT, S_ASSERT},
         {"beep", TT_STATEMENT, S_BEEP},
         {"break", TT_STATEMENT, S_BREAK},
         {"breakpoint", TT_STATEMENT, S_BREAKPOINT},
@@ -320,6 +321,7 @@ LT command_table[] =
         {"request", TT_STATEMENT, S_REQUEST},
 		{"require", TT_STATEMENT, S_REQUIRE},
         {"reset", TT_STATEMENT, S_RESET},
+        {"resolve", TT_STATEMENT, S_RESOLVE},
         {"return", TT_STATEMENT, S_RETURN},
         {"revert", TT_STATEMENT, S_REVERT},
 #ifdef MODE_DEVELOPMENT
@@ -327,7 +329,9 @@ LT command_table[] =
 #endif
         {"rotate", TT_STATEMENT, S_ROTATE},
 		{"save", TT_STATEMENT, S_SAVE},
-        {"seek", TT_STATEMENT, S_SEEK},
+		// MM-2014-02-12: [[ SecureSocket ]] 'secure' statement used by secure socket
+		{"secure", TT_STATEMENT, S_SECURE},
+		{"seek", TT_STATEMENT, S_SEEK},
         {"select", TT_STATEMENT, S_SELECT},
         {"send", TT_STATEMENT, S_SEND},
         {"set", TT_STATEMENT, S_SET},
@@ -644,6 +648,8 @@ LT factor_table[] =
         {"closebox", TT_PROPERTY, P_CLOSE_BOX},
         {"cmdkey", TT_FUNCTION, F_COMMAND_KEY},
         {"collapsebox", TT_PROPERTY, P_COLLAPSE_BOX},
+		// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+		{"colordialogcolors", TT_PROPERTY, P_COLOR_DIALOG_COLORS},
         {"colormap", TT_PROPERTY, P_COLORMAP},
         {"colornames", TT_FUNCTION, F_COLOR_NAMES},
 		{"coloroverlay", TT_PROPERTY, P_BITMAP_EFFECT_COLOR_OVERLAY},
@@ -830,6 +836,8 @@ LT factor_table[] =
         {"focuspixel", TT_PROPERTY, P_FOCUS_PIXEL},
         {"folder", TT_PROPERTY, P_DIRECTORY},
         {"folders", TT_FUNCTION, F_DIRECTORIES},
+        // TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
+        {"fontfilesinuse", TT_PROPERTY, P_FONTFILES_IN_USE},
         {"fontlanguage", TT_FUNCTION, F_FONT_LANGUAGE},
         {"fontnames", TT_FUNCTION, F_FONT_NAMES},
         {"fontsizes", TT_FUNCTION, F_FONT_SIZES},
@@ -865,6 +873,8 @@ LT factor_table[] =
         {"frontscripts", TT_FUNCTION, F_FRONT_SCRIPTS},
         {"ftpproxy", TT_PROPERTY, P_FTP_PROXY},
 		{"fullscreen", TT_PROPERTY, P_FULLSCREEN},
+		// IM-2013-09-23: [[ FullscreenMode ]] New property for 'fullscreenmode'
+		{"fullscreenmode", TT_PROPERTY, P_FULLSCREENMODE},
         {"functionnames", TT_FUNCTION, F_FUNCTION_NAMES},
 		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'geometricMean'
         {"geometricmean", TT_FUNCTION, F_GEO_MEAN},
@@ -1073,6 +1083,9 @@ LT factor_table[] =
         {"me", TT_FUNCTION, F_ME},
 		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'arithmeticMean' (aka mean / average / avg)
         {"mean", TT_FUNCTION, F_ARI_MEAN},
+        // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+        {"measuretext", TT_FUNCTION, F_MEASURE_TEXT},
+        {"measureunicodetext", TT_FUNCTION, F_MEASURE_UNICODE_TEXT},
         {"median", TT_FUNCTION, F_MEDIAN},
         {"mediatypes", TT_PROPERTY, P_MEDIA_TYPES},
         {"menu", TT_CHUNK, CT_MENU},
@@ -1196,6 +1209,8 @@ LT factor_table[] =
         {"penpat", TT_PROPERTY, P_PEN_PATTERN},
         {"penpattern", TT_PROPERTY, P_PEN_PATTERN},
         {"penwidth", TT_PROPERTY, P_PEN_WIDTH},
+		// IM-2013-12-04: [[ PixelScale ]] The "pixelScale" token
+		{"pixelscale", TT_PROPERTY, P_PIXEL_SCALE},
         {"pixmapid", TT_PROPERTY, P_PIXMAP_ID},
 		{"plaintext", TT_PROPERTY, P_PLAIN_TEXT},
         {"platform", TT_FUNCTION, F_PLATFORM},
@@ -1360,6 +1375,8 @@ LT factor_table[] =
         {"sb", TT_CHUNK, CT_SCROLLBAR},
         {"sbs", TT_CLASS, CT_SCROLLBAR},
         {"scale", TT_PROPERTY, P_SCALE},
+		// IM-2014-01-07: [[ StackScale ]] New property for 'scalefactor'
+		{"scalefactor", TT_PROPERTY, P_SCALE_FACTOR},
         {"scaleindependently", TT_PROPERTY, P_SCALE_INDEPENDENTLY},
 		{"screen", TT_PROPERTY, P_SCREEN},
         {"screencolors", TT_FUNCTION, F_SCREEN_COLORS},
@@ -1369,6 +1386,9 @@ LT factor_table[] =
         {"screenmouseloc", TT_PROPERTY, P_SCREEN_MOUSE_LOC},
         {"screenname", TT_FUNCTION, F_SCREEN_NAME},
         {"screennopixmaps", TT_PROPERTY, P_NO_PIXMAPS},
+		// IM-2014-01-24: [[ HiDPI ]] The screenPixelScale and screenPixelScales properties
+		{"screenpixelscale", TT_PROPERTY, P_SCREEN_PIXEL_SCALE},
+		{"screenpixelscales", TT_PROPERTY, P_SCREEN_PIXEL_SCALES},
         {"screenrect", TT_FUNCTION, F_SCREEN_RECT},
 		{"screenrects", TT_FUNCTION, F_SCREEN_RECTS},
         {"screensharedmemory", TT_PROPERTY, P_SHARED_MEMORY},
@@ -1504,6 +1524,8 @@ LT factor_table[] =
         {"system", TT_PROPERTY, P_SYSTEM},
         {"systemcolorselector", TT_PROPERTY, P_SYSTEM_CS},
         {"systemfileselector", TT_PROPERTY, P_SYSTEM_FS},
+		// IM-2013-12-04: [[ PixelScale ]] The "systemPixelScale" token
+		{"systempixelscale", TT_PROPERTY, P_SYSTEM_PIXEL_SCALE},
 		{"systemprintselector", TT_PROPERTY, P_SYSTEM_PS},
         {"systemversion", TT_FUNCTION, F_SYSTEM_VERSION},
         {"systemwindow", TT_PROPERTY, P_SYSTEM_WINDOW},
@@ -1613,6 +1635,8 @@ LT factor_table[] =
         {"urlheader", TT_CHUNK, CT_URL_HEADER},
 		{"urlresponse", TT_PROPERTY, P_URL_RESPONSE},
         {"urlstatus", TT_FUNCTION, F_URL_STATUS},
+		// IM-2014-01-24: [[ HiDPI ]] The "usePixelScaling" token
+		{"usepixelscaling", TT_PROPERTY, P_USE_PIXEL_SCALING},
         {"userlevel", TT_PROPERTY, P_USER_LEVEL},
         {"usermodify", TT_PROPERTY, P_USER_MODIFY},
         {"userproperties", TT_PROPERTY, P_CUSTOM_KEYS},
@@ -1931,6 +1955,14 @@ static LT sugar_table[] =
 		{"effects", TT_UNDEFINED, SG_EFFECTS},
 		{"elevated", TT_UNDEFINED, SG_ELEVATED},
         {"empty", TT_CHUNK, CT_UNDEFINED},
+		// MW-2013-11-14: [[ AssertCmd ]] Token for 'failure'
+		{"failure", TT_UNDEFINED, SG_FAILURE},
+		// MW-2013-11-14: [[ AssertCmd ]] Token for 'false'
+		{"false", TT_UNDEFINED, SG_FALSE},
+        // TD-2013-06-14: [[ DynamicFonts ]] start using font theFont [globally]
+        {"file", TT_UNDEFINED, SG_FILE},
+        {"font", TT_UNDEFINED, SG_FONT},
+        {"globally", TT_UNDEFINED, SG_GLOBALLY},
 		{"initially", TT_UNDEFINED, SG_INITIALLY},
         {"keyword", TT_CHUNK, CT_UNDEFINED},
 		{"level", TT_UNDEFINED, SG_LEVEL},
@@ -1939,17 +1971,32 @@ static LT sugar_table[] =
 		// MM-2012-09-05: [[ Property Listener ]] Syntax: cancel listener for [object]
 		{"listener", TT_UNDEFINED, SG_LISTENER},
 #endif
+		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'matching'.
+        {"matching", TT_UNDEFINED, SG_MATCHING},
         {"message", TT_CHUNK, CT_UNDEFINED},
         {"new", TT_CHUNK, CT_UNDEFINED},
 		{"nothing", TT_UNDEFINED, SG_NOTHING},
 		{"open", TT_UNDEFINED, SG_OPEN},
 		{"optimized", TT_UNDEFINED, SG_OPTIMIZED},
 		{"options", TT_UNDEFINED, SG_OPTIONS},
+		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'pattern'.
+		{"pattern", TT_UNDEFINED, SG_PATTERN},
+		// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+		// AL-2013-10-30: [[ Bug 11351 ]] Ensure table is in alphabetical order.
+        {"recursively", TT_UNDEFINED, SG_RECURSIVELY},
+		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'regex'.
+		{"regex", TT_UNDEFINED, SG_REGEX},
 		{"standard", TT_UNDEFINED, SG_STANDARD},
 		// MERG-2013-06-24: [[ IsAnAsciiString ]] Token for 'string'.
         {"string", TT_UNDEFINED, SG_STRING},
+		// MW-2013-11-14: [[ AssertCmd ]] Token for 'success'
+		{"success", TT_UNDEFINED, SG_SUCCESS},
+		// MW-2013-11-14: [[ AssertCmd ]] Token for 'true'
+		{"true", TT_UNDEFINED, SG_TRUE},
 		{"unicode", TT_UNDEFINED, SG_UNICODE},
 		{"url", TT_UNDEFINED, SG_URL},
+		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'wildcard'.
+		{"wildcard", TT_UNDEFINED, SG_WILDCARD},
 		{"without", TT_PREP, PT_WITHOUT},
     };
 

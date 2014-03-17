@@ -1,0 +1,1 @@
+# revDatabaseConnectResult always returns empty

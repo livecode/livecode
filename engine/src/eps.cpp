@@ -192,6 +192,7 @@ Exec_stat MCEPS::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean
 {
 	switch (which)
 	{
+#ifdef /* MCEPS::getprop */ LEGACY_EXEC
 	case P_SIZE:
 		ep.setint(size);
 		break;
@@ -241,6 +242,7 @@ Exec_stat MCEPS::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean
 	case P_PAGE_COUNT:
 		ep.setint(MCU_max(pagecount, 1));
 		break;
+#endif /* MCEPS::getprop */ 
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}
@@ -257,6 +259,7 @@ Exec_stat MCEPS::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean eff
 
 	switch (p)
 	{
+#ifdef /* MCEPS::setprop */ LEGACY_EXEC
 	case P_TRAVERSAL_ON:
 	case P_SHOW_BORDER:
 		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
@@ -410,6 +413,7 @@ Exec_stat MCEPS::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean eff
 		else
 			curpage = i;
 		break;
+#endif /* MCEPS::setprop */
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
 	}
@@ -499,7 +503,7 @@ void MCEPS::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_spr
 		dc->setlineatts(0, LineDoubleDash, CapButt, JoinBevel);
 		dc->setforeground(dc->getblack());
 		dc->setbackground(dc->getwhite());
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 		dc->setdashes(0, dashlist, 2);
 		MCSegment segs[2];
 		segs[0].x1 = segs[1].x1 = trect.x;

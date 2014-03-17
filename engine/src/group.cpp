@@ -797,6 +797,7 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 {
 	switch (which)
 	{
+#ifdef /* MCGroup::getprop */ LEGACY_EXEC
 	case P_CANT_DELETE:
 		ep.setboolean(getflag(F_G_CANT_DELETE));
 		break;
@@ -971,6 +972,7 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_LOCK_UPDATES:
 		ep.setboolean(m_updates_locked);
 		break;
+#endif /* MCGroup::getprop */
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}
@@ -985,6 +987,7 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 
 	switch (p)
 	{
+#ifdef /* MCGroup::setprop */ LEGACY_EXEC
 	case P_SHOW_BORDER:
 	case P_BORDER_WIDTH:
 	case P_TEXT_SIZE:
@@ -1332,6 +1335,7 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 		return t_stat;
 	}
 	break;
+#endif /* MCGroup::setprop */
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
 	}
@@ -1827,14 +1831,14 @@ void MCGroup::setsbrects()
 	{
 		// MW-2012-03-16: [[ Bug ]] Make sure we have a font to use to
 		//   calculate the label height.
-		if (!opened && m_font == nil)
-			mapfont();
+		// MW-2013-08-22: [[ MeasureText ]] Update to use new object method.
+		MCRectangle t_font_metrics;
+		t_font_metrics = measuretext(MCnullmcstring, false);
+		
 		int32_t fheight;
-		fheight = MCFontGetAscent(m_font) + MCFontGetDescent(m_font);
+		fheight = t_font_metrics . height;
 		grect.y += fheight >> 1;
 		grect.height -= fheight >> 1;
-		if (!opened && m_font == nil)
-			unmapfont();
 	}
 	if (flags & F_HSCROLLBAR)
 	{
@@ -2257,12 +2261,13 @@ MCRectangle MCGroup::getgrect()
 		//   the font mapped (i.e. not open) so map/unmap the font as required.
 		// MW-2012-03-16: [[ Bug ]] Make sure we only map/unmap a font if the group is
 		//   closed *and* has no font since hscroll/vscroll set opened to 0 temporarily.
-		if (!opened && m_font == nil)
-			mapfont();
+		// MW-2013-08-23: [[ MeasureText ]] Update to use measuretext() method for
+		//   better encapsulation.
+		MCRectangle t_font_metrics;
+		t_font_metrics = measuretext(MCnullmcstring, false);
+		
 		int32_t fascent;
-		fascent = MCFontGetAscent(m_font);
-		if (!opened && m_font == nil)
-			unmapfont();
+		fascent = -t_font_metrics . y;
 		
 		grect.y += fascent;
 		grect.height -= fascent;
@@ -2337,14 +2342,14 @@ Boolean MCGroup::computeminrect(Boolean scrolling)
 		{
 			// MW-2012-03-16: [[ Bug ]] Make sure we have a font to use to
 			//   calculate the label height.
-			if (!opened && m_font == nil)
-				mapfont();
+			// MW-2013-08-22: [[ MeasureText ]] Update to use new object method.
+			MCRectangle t_font_metrics;
+			t_font_metrics = measuretext(MCnullmcstring, false);
+			
 			int32_t fheight;
-			fheight = MCFontGetAscent(m_font) + MCFontGetDescent(m_font);
+			fheight = t_font_metrics . height;
 			rect.y -= fheight - borderwidth;
 			rect.height += fheight - borderwidth;
-			if (!opened && m_font == nil)
-				unmapfont();
 		}
 		if (flags & F_HSCROLLBAR)
 			rect.height += scrollbarwidth;
@@ -2634,7 +2639,7 @@ void MCGroup::drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawfra
 		if (showtextlabel && drawframe)
 		{
 			setforeground(dc, DI_FORE, False);
-			MCFontDrawText(m_font, slabel.getstring(), slabel.getlength(), isunicode,dc, textrect.x + 2, textrect.y + fascent, False);
+            dc -> drawtext(textrect.x + 2, textrect.y + fascent, slabel.getstring(), slabel.getlength(), m_font, false, isunicode);
 		}
 	}
 }
@@ -2754,7 +2759,7 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 				}
 			}
 			setforeground(dc, DI_FORE, False);
-			MCFontDrawText(m_font, slabel.getstring(), slabel.getlength(), isunicode, dc, textrect.x + 2, textrect.y + fascent, False);
+            dc -> drawtext(textrect.x + 2, textrect.y + fascent, slabel.getstring(), slabel.getlength(), m_font, false, isunicode);
 		}
 		else
 		{

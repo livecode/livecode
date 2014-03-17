@@ -301,9 +301,13 @@ RTFStatus RTFReader::Parse(void)
 			bool t_was_field;
 			t_was_field = m_state . GetDestination() == kRTFDestinationFldInst;
 
-			// MW-2012-08-29: [[ Bug 10324 ]] If list properties change when popping the
-			//   group, make sure we emit.
-			if (m_state . HasListChanged() || m_state . GetParagraphMetadata() != kMCEmptyName)
+			// MW-2014-01-08: [[ Bug 11627 ]] If the paragraph attributes have changed then
+			//   force a flush so that a new paragraph with said attributes is created. [ This
+			//   isn't 100% correct from my reading of the RTF Spec - really paragraph attrs
+			//   should be set on the current paragraph as the paragraph is parsed, rather than
+			//   before the first text is emitted - however due to the way LiveCode and Word Processors
+			//   generate RTF, this at least makes things roundtrip ].
+			if (m_state . HasParagraphChanged())
 				Flush(true);
 
 			t_status = m_state . Restore();
@@ -751,6 +755,9 @@ RTFStatus RTFReader::ParseDocument(RTFToken p_token, int4 p_value)
 		m_state . SetSpaceBelow(0);
 		m_state . SetParagraphBackgroundColor(0xffffffff);
 		m_state . SetBorderColor(0xffffffff);
+			
+		// MW-2014-01-08: [[ Bug 11627 ]] Make sure the text alignment attribute is reset.
+		m_state . SetTextAlign(kMCTextTextAlignLeft);
 		break;
 
 	case kRTFTokenRow:
@@ -920,12 +927,31 @@ RTFStatus RTFReader::ParseDocument(RTFToken p_token, int4 p_value)
 				m_table_cell = false;
 				t_status = m_text . Output(9, kMCTextEncodingUTF16);
 			}
-			if (m_attributes_changed)
-				t_status = Flush();
-			if (t_status == kRTFStatusSuccess)
-				t_status = m_text . Output(p_value & 0xFFFF, kMCTextEncodingUTF16);
-			if (t_status == kRTFStatusSuccess)
-				m_input_skip_count = m_state . GetUnicodeSkip();
+			
+			// MW-2014-03-14: [[ Bug 11771 ]] On Mac, HTML on the clipboard is translated
+			//   to RTF with LINE SEPARATOR instead of BR. So map both LINE SEPARATOR and
+			//   PARAGRAPH SEPARATOR to a new paragraph marker. (This is consistent with the
+			//   handling of newline and other related markers in the RTF and means
+			//   scripts won't get tripped up).
+			if ((p_value & 0xFFFF) == 0x2028 || (p_value & 0xFFFF) == 0x2029)
+			{	
+				t_status = Flush(true);
+				if (t_status == kRTFStatusSuccess)
+				{
+					if (m_needs_paragraph)
+						Paragraph();
+					m_needs_paragraph = true;
+				}
+			}
+			else
+			{
+				if (m_attributes_changed)
+					t_status = Flush();
+				if (t_status == kRTFStatusSuccess)
+					t_status = m_text . Output(p_value & 0xFFFF, kMCTextEncodingUTF16);
+				if (t_status == kRTFStatusSuccess)
+					m_input_skip_count = m_state . GetUnicodeSkip();
+			}
 		}
 	}
 	break;

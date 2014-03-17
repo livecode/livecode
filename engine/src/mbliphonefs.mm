@@ -36,6 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 bool MCiOSFileSetDoNotBackup(const char *p_path, bool p_no_backup)
 {
+#ifdef /* MCiOSFileSetDoNotBackup */ LEGACY_EXEC
     bool t_success = true;
     if (p_no_backup)
     {
@@ -47,14 +48,17 @@ bool MCiOSFileSetDoNotBackup(const char *p_path, bool p_no_backup)
         t_success = 0 == removexattr(p_path, FILEATTR_DONOTBACKUP, 0);
     }
     return t_success;
+#endif /* MCiOSFileSetDoNotBackup */
 }
 
 bool MCiOSFileGetDoNotBackup(const char *p_path)
 {
+#ifdef /* MCiOSFileGetDoNotBackup */ LEGACY_EXEC
     uint8_t t_val = 0;
     if (-1 == getxattr(p_path, FILEATTR_DONOTBACKUP, &t_val, sizeof(t_val), 0, 0))
         return false;
     return t_val != 0;
+#endif /* MCiOSFileGetDoNotBackup */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -226,6 +230,7 @@ bool MCFileGetDataProtection(const char *p_filename, NSString *&r_protection)
 ////////////////////////////////////////////////////////////////////////////////
 Exec_stat MCHandleFileSetDoNotBackup(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleFileSetDoNotBackup */ LEGACY_EXEC
 	MCExecPoint ep(nil, nil, nil);
 	
     const char *t_path = nil;
@@ -250,10 +255,12 @@ Exec_stat MCHandleFileSetDoNotBackup(void *context, MCParameter *p_parameters)
         MCiOSFileSetDoNotBackup(t_path, t_no_backup);
 	
 	return ES_NORMAL;
+#endif /* MCHandleFileSetDoNotBackup */
 }
 
 Exec_stat MCHandleFileGetDoNotBackup(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleFileGetDoNotBackup */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     
     const char *t_path = nil;
@@ -265,12 +272,14 @@ Exec_stat MCHandleFileGetDoNotBackup(void *context, MCParameter *p_parameters)
     MCresult->sets(MCU_btos(MCiOSFileGetDoNotBackup(t_path)));
     
     return ES_NORMAL;
+#endif /* MCHandleFileGetDoNotBackup */
 }
 
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
 Exec_stat MCHandleFileSetDataProtection(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleFileSetDataProtection */ LEGACY_EXEC
     bool t_success = true;
     
     char *t_filename = nil;
@@ -302,10 +311,12 @@ Exec_stat MCHandleFileSetDataProtection(void *context, MCParameter *p_parameters
         MCresult->clear();
     
     return ES_NORMAL;
+#endif /* MCHandleFileSetDataProtection */
 }
 
 Exec_stat MCHandleFileGetDataProtection(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleFileGetDataProtection */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     
     bool t_success = true;
@@ -334,4 +345,5 @@ Exec_stat MCHandleFileGetDataProtection(void *context, MCParameter *p_parameters
         MCresult->clear();
     
     return ES_NORMAL;
+#endif /* MCHandleFileGetDataProtection */
 }

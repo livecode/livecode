@@ -75,6 +75,7 @@ Exec_stat MCVideoClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, B
 {
 	switch (which)
 	{
+#ifdef /* MCVideoClip::getprop */ LEGACY_EXEC
 	case P_DONT_REFRESH:
 		ep.setboolean(getflag(F_DONT_REFRESH));
 		break;
@@ -96,6 +97,7 @@ Exec_stat MCVideoClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, B
 			ep.setsvalue(s);
 		}
 		break;
+#endif /* MCVideoClip::getprop */
 	default:
 		return MCObject::getprop(parid, which, ep, effective);
 	}
@@ -109,6 +111,7 @@ Exec_stat MCVideoClip::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boole
 	Boolean dirty = False;
 	switch (p)
 	{
+#ifdef /* MCVideoClip::setprop */ LEGACY_EXEC
 	case P_DONT_REFRESH:
 		if (!MCU_matchflags(data, flags, F_DONT_REFRESH, dirty))
 		{
@@ -146,6 +149,7 @@ Exec_stat MCVideoClip::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boole
 		frames = new uint1[size];
 		memcpy(frames, data.getstring(), size);
 		return ES_NORMAL;
+#endif /* MCVideoClip::setprop */
 	default:
 		break;
 	}

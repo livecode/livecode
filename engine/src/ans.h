@@ -97,6 +97,10 @@ extern int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt
 //   if p_initial is empty, take the value of MCpencolor.
 //   otherwise parse p_initial using MCscreen -> parsecolor
 //
-extern int MCA_color(MCExecPoint& ep, const char *p_title, const char *p_initial, Boolean sheet);
+extern int MCA_color(MCExecPoint &ep, const char *p_title, const char *p_initial, Boolean sheet);
+
+extern void MCA_getcolordialogcolors(MCExecPoint &ep);
+
+extern void MCA_setcolordialogcolors(MCExecPoint &ep);
 
 #endif

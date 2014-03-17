@@ -34,15 +34,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "w32theme.h"
 #include "w32context.h"
 
-typedef enum THEMESIZE
-{
-    TS_MIN,             // minimum size
-    TS_TRUE,            // size without stretching
-    TS_DRAW,            // size that theme mgr will use to draw part
-};
+#include "graphics_util.h"
 
-#define THEME_COLOR 204
- #define THEME_FONT  210
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+#include <uxtheme.h>
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Generic state constants
 #define TS_NORMAL    1
@@ -107,14 +105,6 @@ typedef enum THEMESIZE
 #define CBP_READONLY		 5
 #define CBP_DROPDOWNBUTTONRIGHT 6
 
-#define DTBG_CLIPRECT        0x00000001   // rcClip has been specified
-#define DTBG_DRAWSOLID       0x00000002   // draw transparent/alpha images as solid
-#define DTBG_OMITBORDER      0x00000004   // don't draw border of part
-#define DTBG_OMITCONTENT     0x00000008   // don't draw content area of part
-
-#define DTBG_COMPUTINGREGION 0x00000010   // TRUE if calling to compute region
-
-#define DTBG_MIRRORDC        0x00000020   // assume the hdc is mirrorred and
 
 enum {
 	MENU_MENUITEM_TMSCHEMA = 1,
@@ -179,14 +169,6 @@ enum {
 };
 
 
-typedef struct _DTBGOPTS
-{
-	DWORD dwSize;
-	DWORD dwFlags;
-	RECT rcClip;
-}
-DTBGOPTS, *PDTBGOPTS;
-
 
 typedef HANDLE (WINAPI*OpenThemeDataPtr)(HWND hwnd, LPCWSTR pszClassList);
 typedef HRESULT (WINAPI*CloseThemeDataPtr)(HANDLE hTheme);
@@ -210,10 +192,15 @@ typedef HRESULT (WINAPI *GetThemeBackgroundRegionPtr)(HANDLE hTheme, OPTIONAL HD
 				int iStateId, const RECT *pRect, HRGN *pRegion);
 typedef HRESULT (WINAPI *DrawThemeBackgroundExPtr)(HANDLE hTheme, HDC hdc, 
     int iPartId, int iStateId, const RECT *pRect, OPTIONAL const DTBGOPTS *pOptions);
+typedef HPAINTBUFFER (WINAPI *BeginBufferedPaintPtr)(HDC hdcTarget, const RECT *prcTarget, BP_BUFFERFORMAT dwFormat,
+												BP_PAINTPARAMS *pPaintParams, HDC *phdc);
+typedef HRESULT (WINAPI *EndBufferedPaintPtr)(HPAINTBUFFER hBufferedPaint, BOOL fUpdateTarget);
+typedef HRESULT (WINAPI *BufferedPaintClearPtr)(HPAINTBUFFER hBufferedPaint, const RECT *prc);
+typedef HRESULT (WINAPI *GetBufferedPaintBitsPtr)(HPAINTBUFFER hBufferedPaint, RGBQUAD **ppbBuffer, int *pcxRow);
 
 static OpenThemeDataPtr openTheme = NULL;
 static CloseThemeDataPtr closeTheme = NULL;
-DrawThemeBackgroundPtr drawThemeBG = NULL;
+static DrawThemeBackgroundPtr drawThemeBG = NULL;
 static DrawThemeBackgroundExPtr drawThemeBGEx = NULL;
 static GetThemeContentRectPtr getThemeContentRect = NULL;
 static GetThemePartSizePtr getThemePartSize = NULL;
@@ -221,7 +208,12 @@ static GetThemeFontPtr getThemeFont = NULL;
 static GetThemeSysFontPtr getThemeSysFont = NULL;
 static GetThemeColorPtr getThemeColor = NULL;
 static GetThemeTextMetricsPtr getThemeTextMetrics = NULL;
-GetThemeBackgroundRegionPtr getThemeBackgroundRegion = NULL;
+static GetThemeBackgroundRegionPtr getThemeBackgroundRegion = NULL;
+static BeginBufferedPaintPtr beginBufferedPaint = NULL;
+static EndBufferedPaintPtr endBufferedPaint = NULL;
+static BufferedPaintClearPtr bufferedPaintClear = NULL;
+static GetBufferedPaintBitsPtr getBufferedPaintBits = NULL;
+
 #define NMENUCOLORS 4
 static char *menucolors[NMENUCOLORS];
 
@@ -268,6 +260,10 @@ Boolean MCNativeTheme::load()
 	getThemeSysFont = (GetThemeSysFontPtr)GetProcAddress((HMODULE)mThemeDLL, "GetThemeSysFont");
 	getThemeColor = (GetThemeColorPtr)GetProcAddress((HMODULE)mThemeDLL, "GetThemeColor");
 	getThemeBackgroundRegion = (GetThemeBackgroundRegionPtr)GetProcAddress((HMODULE)mThemeDLL, "GetThemeBackgroundRegion");
+	beginBufferedPaint = (BeginBufferedPaintPtr)GetProcAddress((HMODULE)mThemeDLL, "BeginBufferedPaint");
+	endBufferedPaint = (EndBufferedPaintPtr)GetProcAddress((HMODULE)mThemeDLL, "EndBufferedPaint");
+	bufferedPaintClear = (BufferedPaintClearPtr)GetProcAddress((HMODULE)mThemeDLL, "BufferedPaintClear");
+	getBufferedPaintBits = (GetBufferedPaintBitsPtr)GetProcAddress((HMODULE)mThemeDLL, "GetBufferedPaintBits");
 
 	drawThemeBGEx = (DrawThemeBackgroundExPtr)GetProcAddress((HMODULE)mThemeDLL, "DrawThemeBackgroundEx");
 
@@ -1759,6 +1755,234 @@ bool MCNativeTheme::drawmenuitembackground(MCContext *p_context, const MCRectang
 MCTheme *MCThemeCreateNative(void)
 {
 	return new MCNativeTheme;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef void (*MCGDIDrawFunc)(HDC p_hdc, void *p_context);
+bool MCGDIDrawAlpha(uint32_t p_width, uint32_t p_height, MCGDIDrawFunc p_draw, void *p_context, MCImageBitmap *&r_bitmap);
+void MCGDIDrawTheme(HDC p_dc, void *p_context);
+
+typedef struct
+{
+	MCThemeDrawType type;
+	MCThemeDrawInfo *info;
+	MCPoint origin;
+} MCGDIThemeDrawContext;
+
+bool MCWin32ThemeDrawBuffered(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInfo *p_info_ptr)
+{
+	bool t_success = true;
+
+	int32_t t_x, t_y;
+	uint32_t t_width, t_height;
+
+	MCGDIThemeDrawContext t_context;
+	t_context.type = p_type;
+	t_context.info = p_info_ptr;
+
+	t_x = p_info_ptr->bounds.x;
+	t_y = p_info_ptr->bounds.y;
+	t_width = p_info_ptr->bounds.width;
+	t_height = p_info_ptr->bounds.height;
+
+	HDC t_dc = ((MCScreenDC*)MCscreen)->getdsthdc();
+	t_success = t_dc != nil;
+
+	HDC t_paintdc = nil;
+	HPAINTBUFFER t_buffer = nil;
+	RECT t_target_rect;
+
+	if (t_success)
+	{
+		SetRect(&t_target_rect, 0, 0, p_info_ptr->bounds.width, p_info_ptr->bounds.height);
+		t_buffer = beginBufferedPaint(t_dc, &t_target_rect, BPBF_TOPDOWNDIB, NULL, &t_paintdc);
+		t_success = t_buffer != nil;
+	}
+
+	RGBQUAD *t_bits = nil;
+	int t_row_width = 0;
+	if (t_success)
+		t_success = S_OK == bufferedPaintClear(t_buffer, NULL);
+
+	if (t_success)
+	{
+		MCGDIDrawTheme(t_paintdc, &t_context);
+		t_success = S_OK == getBufferedPaintBits(t_buffer, &t_bits, &t_row_width);
+	}
+
+	if (t_success)
+	{
+		MCGRaster t_raster;
+		t_raster.width = t_width;
+		t_raster.height = t_height;
+		t_raster.stride = t_row_width * sizeof(uint32_t);
+		t_raster.pixels = t_bits;
+		t_raster.format = kMCGRasterFormat_ARGB;
+
+		MCGRectangle t_dst = MCGRectangleMake(t_x, t_y, t_width, t_height);
+		
+		// MM-2013-12-16: [[ Bug 11567 ]] Use bilinear filter when drawing theme elements.
+        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was bilinear).
+		MCGContextDrawPixels(p_context, t_raster, t_dst, kMCGImageFilterMedium);
+	}
+
+	if (t_buffer != nil)
+		endBufferedPaint(t_buffer, FALSE);
+
+	return t_success;
+}
+
+bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInfo *p_info_ptr)
+{
+	bool t_success = true;
+
+	/* OVERHAUL - REVISIT: This does not seem to fix the issue of alpha-transparency with windows GDI calls, disabling for now */
+	//if (beginBufferedPaint != nil)
+	//	return MCWin32ThemeDrawBuffered(p_context, p_type, p_info_ptr);
+
+	MCImageBitmap *t_bitmap = nil;
+	int32_t t_x, t_y;
+	uint32_t t_width, t_height;
+
+	MCGRectangle t_dst;
+
+	MCRectangle t_old_bounds, t_old_interior, t_old_clip;
+	t_old_bounds = p_info_ptr->bounds;
+	t_old_clip = p_info_ptr->clip;
+	t_old_interior = p_info_ptr->interior;
+
+	MCGAffineTransform t_transform;
+	t_transform = MCGContextGetDeviceTransform(p_context);
+
+	// IM-2013-12-13: [[ HiDPI ]] Improve scaled UI appearance by rendering at transformed size.
+	if (MCGAffineTransformIsRectangular(t_transform))
+	{
+		// render theme elements at scaled size
+
+		MCGRectangle t_scaled_bounds;
+		t_scaled_bounds = MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_info_ptr->bounds), t_transform);
+
+		MCGRectangle t_scaled_interior;
+		t_scaled_interior = MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_info_ptr->interior), t_transform);
+
+		MCGRectangle t_scaled_clip;
+		t_scaled_clip = MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_info_ptr->clip), t_transform);
+
+		MCRectangle t_int_bounds;
+		t_int_bounds = MCGRectangleGetIntegerInterior(t_scaled_bounds);
+
+		MCRectangle t_int_interior;
+		t_int_interior = MCGRectangleGetIntegerBounds(t_scaled_interior);
+
+		MCRectangle t_int_clip;
+		t_int_clip = MCGRectangleGetIntegerBounds(t_scaled_clip);
+		t_int_clip = MCU_intersect_rect(t_int_clip, t_int_bounds);
+
+
+		t_width = t_int_clip.width;
+		t_height = t_int_clip.height;
+
+		p_info_ptr->bounds = t_int_bounds;
+		p_info_ptr->interior = t_int_interior;
+		p_info_ptr->clip = t_int_clip;
+
+		t_x = t_int_clip.x;
+		t_y = t_int_clip.y;
+
+		t_dst = MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(t_int_clip), MCGAffineTransformInvert(t_transform));
+	}
+	else
+	{
+		// render at normalsize & draw into target rect
+	t_x = p_info_ptr->bounds.x;
+	t_y = p_info_ptr->bounds.y;
+
+	t_width = p_info_ptr->bounds.width;
+	t_height = p_info_ptr->bounds.height;
+
+		t_dst = MCGRectangleMake(t_x, t_y, t_width, t_height);
+	}
+
+	MCGDIThemeDrawContext t_context;
+	t_context.type = p_type;
+	t_context.info = p_info_ptr;
+	t_context.origin = MCPointMake(t_x, t_y);
+
+
+	// render theme to bitmap
+	t_success = MCGDIDrawAlpha(t_width, t_height, MCGDIDrawTheme, &t_context, t_bitmap);
+	if (t_success)
+	{
+		MCGRaster t_raster;
+		t_raster.width = t_bitmap->width;
+		t_raster.height = t_bitmap->height;
+		t_raster.stride = t_bitmap->stride;
+		t_raster.pixels = t_bitmap->data;
+		t_raster.format = kMCGRasterFormat_ARGB;
+
+		
+		// MM-2013-12-16: [[ Bug 11567 ]] Use bilinear filter when drawing theme elements.
+        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was bilinear).
+		MCGContextDrawPixels(p_context, t_raster, t_dst, kMCGImageFilterMedium);
+	}
+
+	p_info_ptr->bounds = t_old_bounds;
+	p_info_ptr->interior = t_old_interior;
+	p_info_ptr->clip = t_old_clip;
+
+	MCImageFreeBitmap(t_bitmap);
+
+	return t_success;
+}
+
+void MCGDIDrawTheme(HDC p_dc, void *p_context)
+{
+	MCGDIThemeDrawContext *t_context = (MCGDIThemeDrawContext*)p_context;
+
+	MCThemeDrawInfo& p_info = *t_context->info;
+
+	HRGN t_clip_region = NULL;
+
+	// IM-2013-12-13: [[ HiDPI ]] Use context origin to offset drawing rects
+	int32_t t_xoff, t_yoff;
+	t_xoff = t_context->origin.x;
+	t_yoff = t_context->origin.y;
+
+	MCRectangle t_bounds, t_interior, t_clip;
+	t_bounds = MCU_offset_rect(p_info.bounds, -t_xoff, -t_yoff);
+	t_interior = MCU_offset_rect(p_info.interior, -t_xoff, -t_yoff);
+	t_clip = MCU_offset_rect(p_info.clip, -t_xoff, -t_yoff);
+
+	if (p_info . clip_interior)
+	{
+		HRGN t_outside_region;
+		t_outside_region = CreateRectRgn(t_bounds.x, t_bounds.y, t_bounds.x + t_bounds.width, t_bounds.y + t_bounds.height);
+
+		HRGN t_inside_region;
+		t_inside_region = CreateRectRgn(t_interior.x, t_interior.y, t_interior.x + t_interior.width, t_interior.y + t_interior.height);
+
+		CombineRgn(t_inside_region, t_outside_region, t_inside_region, RGN_DIFF);
+		DeleteObject(t_outside_region);
+
+		t_clip_region = t_inside_region;
+	}
+
+	SaveDC(p_dc);
+
+	if (t_clip_region != NULL)
+		SelectClipRgn(p_dc, t_clip_region);
+
+	RECT t_widget_rect;
+	RECT t_clip_rect;
+	SetRect(&t_widget_rect, t_bounds.x, t_bounds.y, t_bounds.x + t_bounds.width, t_bounds.y + t_bounds.height);
+	SetRect(&t_clip_rect, t_clip.x, t_clip.y, t_clip.x + t_clip.width, t_clip.y + t_clip.height);
+	drawThemeBG(p_info . theme, p_dc, p_info . part, p_info . state, &t_widget_rect, &t_clip_rect);
+
+	RestoreDC(p_dc, -1);
+
+	if (t_clip_region != NULL)
+		DeleteObject(t_clip_region);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

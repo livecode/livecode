@@ -266,8 +266,10 @@ public:
 	MCRectangle rect;
 	MCRectangle mrect;
 	Boolean visible;
+#ifdef LIBGRAPHICS_BROKEN
 	MCBitmap *mask;
 	MCBitmap *data;
+#endif
 	char *name;
 	uint2 xhot;
 	uint2 yhot;

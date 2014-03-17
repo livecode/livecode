@@ -221,7 +221,7 @@ void MCGradientEditTool::drawhandles(MCDC *dc)
 
 	gradient_rects(rects);
 
-	dc->setfillstyle(FillSolid, DNULL, 0, 0);
+	dc->setfillstyle(FillSolid, nil, 0, 0);
 	dc->setlineatts(1, LineSolid, CapButt, JoinBevel);
 	dc -> setquality(graphic->getflag(F_G_ANTI_ALIASED) ? QUALITY_SMOOTH : QUALITY_DEFAULT);
 	dc->setforeground(dc->getblack());
@@ -425,7 +425,7 @@ void MCPolygonEditTool::drawhandles(MCDC *dc)
 
 		point_rects(rects);
 
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 		dc->setlineatts(1, LineSolid, CapButt, JoinBevel);
 		dc -> setquality(graphic->getflag(F_G_ANTI_ALIASED) ? QUALITY_SMOOTH : QUALITY_DEFAULT);
 		

@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 typedef struct MCTileCache *MCTileCacheRef;
 
 // The callback type required to render layers.
-typedef bool (*MCTileCacheRenderCallback)(void *context, MCContext *target, const MCRectangle& region);
+typedef bool (*MCTileCacheRenderCallback)(void *context, MCGContextRef target, const MCRectangle32& region);
 
 // The compositor cleanup callback
 typedef void (*MCTileCacheCleanupCallback)(void *context);
@@ -48,9 +48,9 @@ typedef bool (*MCTileCacheCompositeTileCallback)(void *context, int32_t x, int32
 // Composite a tile-sized rectangle at the given location.
 typedef bool (*MCTileCacheCompositeRectCallback)(void *context, int32_t x, int32_t y, uint32_t color);
 // Snapshot of the current frame has begun.
-typedef bool (*MCTileCacheBeginSnapshotCallback)(void *context, MCRectangle area, Pixmap target);
+typedef bool (*MCTileCacheBeginSnapshotCallback)(void *context, MCRectangle area, MCGRaster &target);
 // Snapshot of the current frame has ended.
-typedef bool (*MCTileCacheEndSnapshotCallback)(void *context, MCRectangle area, Pixmap target);
+typedef bool (*MCTileCacheEndSnapshotCallback)(void *context, MCRectangle area, MCGRaster &target);
 
 // The compositor description structure.
 struct MCTileCacheCompositor
@@ -83,16 +83,17 @@ enum MCTileCacheCompositorType
 };
 
 // The layer description structure.
+// IM-2014-02-28: [[ Bug 11617 ]] Update tilecache layer to use 32-bit rectangles
 struct MCTileCacheLayer
 {
 	// The previous id of the layer (or zero if new).
 	uint32_t id;
 	// The region the layer touches.
-	MCRectangle region;
+	MCRectangle32 region;
 	// This should be true if the layer is completely opaque in region.
 	bool is_opaque;
 	// The clipping rectangle to apply to the layer.
-	MCRectangle clip;
+	MCRectangle32 clip;
 	// The opacity of the layer (0 transparent, 255 solid).
 	uint32_t opacity;
 	// The ink to use when compositing the layer.
@@ -151,18 +152,18 @@ void MCTileCacheFlush(MCTileCacheRef self);
 void MCTileCacheCompact(MCTileCacheRef self);
 
 // A scenery layer has been inserted before the given layer touching the given region.
-void MCTileCacheInsertScenery(MCTileCacheRef self, uint32_t before_layer, const MCRectangle& region);
+void MCTileCacheInsertScenery(MCTileCacheRef self, uint32_t before_layer, const MCRectangle32& region);
 // The given scenery layer touching the given region has been removed.
-void MCTileCacheRemoveScenery(MCTileCacheRef self, uint32_t layer, const MCRectangle& region);
+void MCTileCacheRemoveScenery(MCTileCacheRef self, uint32_t layer, const MCRectangle32& region);
 // The given scenery layer has been reshaped from the old region to the new region.
-void MCTileCacheReshapeScenery(MCTileCacheRef self, uint32_t layer, const MCRectangle& old_region, const MCRectangle& new_region);
+void MCTileCacheReshapeScenery(MCTileCacheRef self, uint32_t layer, const MCRectangle32& old_region, const MCRectangle32& new_region);
 // The given scenery layer has changed within the given region.
-void MCTileCacheUpdateScenery(MCTileCacheRef self, uint32_t layer, const MCRectangle& region);
+void MCTileCacheUpdateScenery(MCTileCacheRef self, uint32_t layer, const MCRectangle32& region);
 
 // The given sprite has been removed.
 void MCTileCacheRemoveSprite(MCTileCacheRef self, uint32_t id);
 // The given sprite has changed within the given region.
-void MCTileCacheUpdateSprite(MCTileCacheRef self, uint32_t id, const MCRectangle& region);
+void MCTileCacheUpdateSprite(MCTileCacheRef self, uint32_t id, const MCRectangle32& region);
 // The given sprite's cached tiles are scrolled by the given amount.
 void MCTileCacheScrollSprite(MCTileCacheRef self, uint32_t id, int32_t dx, int32_t dy);
 
@@ -182,7 +183,7 @@ void MCTileCacheRenderDirectSprite(MCTileCacheRef self, MCTileCacheLayer& layer,
 bool MCTileCacheComposite(MCTileCacheRef self, MCStackSurface *surface, MCRegionRef region);
 
 // Render the current frame into an offscreen buffer.
-bool MCTileCacheSnapshot(MCTileCacheRef self, MCRectangle area, Pixmap& r_pixmap);
+bool MCTileCacheSnapshot(MCTileCacheRef self, MCRectangle area, MCGImageRef& r_pixmap);
 
 // Configure the tilecache to use the software compositor.
 bool MCTileCacheSoftwareCompositorConfigure(MCTileCacheRef p_tilecache, MCTileCacheCompositor& compositor);

@@ -244,7 +244,7 @@ void MCTooltip::render(MCContext *dc, const MCRectangle &dirty)
 		MCExecPoint ep;
 		ep . setsvalue(MCString(t_tooltip, t_next_line - t_tooltip));
 		ep . utf8toutf16();
-		MCFontDrawText(m_font, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), true, dc, 4, t_y + t_fheight, False);
+        dc -> drawtext(4, t_y + t_fheight, ep.getsvalue().getstring(), ep.getsvalue().getlength(), m_font, false, true);
 
 		t_y += t_fheight + 3;
 

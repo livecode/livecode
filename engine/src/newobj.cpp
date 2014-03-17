@@ -43,6 +43,9 @@ MCStatement *MCN_new_statement(int2 which)
 		return new MCAnswer;
 	case S_ASK:
 		return new MCAsk;
+	// MW-2013-11-14: [[ AssertCmd ]] Constructor for assert command.
+	case S_ASSERT:
+		return new MCAssertCmd;
 	case S_BEEP:
 		return new MCBeep;
 	case S_BREAK:
@@ -224,7 +227,9 @@ MCStatement *MCN_new_statement(int2 which)
 		return new MCInclude(true);
 	case S_RESET:
 		return new MCReset;
-	case S_RETURN:
+    case S_RESOLVE:
+        return new MCResolveImage;
+    case S_RETURN:
 		return new MCReturn;
 	case S_REVERT:
 		return new MCRevert;
@@ -234,6 +239,9 @@ MCStatement *MCN_new_statement(int2 which)
 		return new MCSave;
 	case S_SCRIPT_ERROR:
 		return new MCScriptError;
+	// MM-2014-02-12: [[ SecureSocket ]] Create secure statement object
+	case S_SECURE:
+		return new MCSecure;
 	case S_SEEK:
 		return new MCSeek;
 	case S_SELECT:
@@ -786,8 +794,12 @@ MCExpression *MCN_new_function(int2 which)
 	// MW-2013-05-08: [[ Uuid ]] Constructor for uuid function.
 	case F_UUID:
 		return new MCUuidFunc;
-
-	default:
+    // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+    case F_MEASURE_TEXT:
+        return new MCMeasureText(false);
+    case F_MEASURE_UNICODE_TEXT:
+        return new MCMeasureText(true);
+    default:
 		break;
 	}
 

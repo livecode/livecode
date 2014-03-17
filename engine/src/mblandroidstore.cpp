@@ -753,6 +753,7 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
 Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePurchaseVerify */ LEGACY_EXEC
     bool t_success = true;
     
     bool t_verified = true;
@@ -769,6 +770,7 @@ Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters)
         MCPurchaseVerify(t_purchase, t_verified);
     
     return ES_NORMAL;
+#endif /* MCHandlePurchaseVerify */
 }
 
 ///////////////////////////////////////////////////////////////

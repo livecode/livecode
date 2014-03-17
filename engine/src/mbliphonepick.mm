@@ -213,7 +213,7 @@ UIViewController *MCIPhoneGetViewController(void);
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-	return 1;
+return 1;
 }
 
 // HC-2011-09-28 [[ Picker Buttons ]] Added arguments to force the display of buttons
@@ -409,7 +409,7 @@ UIViewController *MCIPhoneGetViewController(void);
 		if (m_use_table_view)
 			[actionSheet addSubview: tableView];
 		else
-			[actionSheet addSubview: pickerView];
+		[actionSheet addSubview: pickerView];
 		if (p_use_done || p_use_cancel)
 		{
 			[actionSheet addSubview: t_toolbar];
@@ -433,7 +433,7 @@ UIViewController *MCIPhoneGetViewController(void);
 		}	
 		// create the popover controller
 		popoverController = [[t_popover alloc] initWithContentViewController:self];
-		[popoverController presentPopoverFromRect:MCRectangleToLogicalCGRect(p_button_rect)
+		[popoverController presentPopoverFromRect:MCUserRectToLogicalCGRect(p_button_rect)
 										   inView:MCIPhoneGetView()
 						 permittedArrowDirections:UIPopoverArrowDirectionAny
 										 animated:YES];						

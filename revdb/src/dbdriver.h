@@ -170,7 +170,7 @@ public:
 	virtual void transBegin() = 0;
 	virtual void transCommit() = 0;
 	virtual void transRollback() = 0;
-	virtual char *getErrorMessage() = 0;
+	virtual char *getErrorMessage(Bool last = False) = 0;
 
 	virtual DBList *getCursorList() = 0; 
 	virtual void deleteCursor(int fid) = 0;

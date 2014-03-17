@@ -85,6 +85,8 @@ void MCPrinter::Initialize(void)
 	m_loop_page = 0;
 	
 	m_device = NULL;
+	
+	m_resync = true;
 
 	DoInitialize();
 }

@@ -56,6 +56,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 #include "stacksecurity.h"
 
+#include "graphics_util.h"
+
 #define UNLICENSED_TIME 6.0
 #ifdef _DEBUG_MALLOC_INC
 #define LICENSED_TIME 1.0
@@ -129,6 +131,7 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 {
 	switch (which)
 	{
+#ifdef /* MCDispatch::getprop */ LEGACY_EXEC
 	case P_BACK_PIXEL:
 		ep.setint(MCscreen->background_pixel.pixel & 0xFFFFFF);
 		return ES_NORMAL;
@@ -180,6 +183,7 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 	case P_TEXT_STYLE:
 		ep.setstaticcstring(MCplainstring);
 		return ES_NORMAL;
+#endif /* MCDispatch::getprop */ 
 	default:
 		MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
 		return ES_ERROR;
@@ -188,7 +192,9 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 
 Exec_stat MCDispatch::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
+#ifdef /* MCDispatch::setprop */ LEGACY_EXEC
 	return ES_NORMAL;
+#endif /* MCDispatch::setprop */
 }
 
 // bogus "cut" call actually checks license
@@ -1019,13 +1025,20 @@ void MCDispatch::wkup(Window w, const char *string, KeySym key)
 
 void MCDispatch::wmfocus_stack(MCStack *target, int2 x, int2 y)
 {
+	// IM-2013-09-23: [[ FullscreenMode ]] transform view -> stack coordinates
+	MCPoint t_stackloc;
+	t_stackloc = MCPointMake(x, y);
+
+	// IM-2014-02-12: [[ StackScale ]] mfocus will translate target stack to menu stack coords
+	//   so in both cases we pass target stack coords.
+	// IM-2014-02-14: [[ StackScale ]] Don't try to convert if target is null
+	if (target != nil)
+		t_stackloc = target->windowtostackloc(t_stackloc);
+
 	if (menu != NULL)
-		menu->mfocus(x, y);
-	else
-	{
-		if (target != NULL)
-			target->mfocus(x, y);
-	}
+		menu->mfocus(t_stackloc.x, t_stackloc.y);
+	else if (target != NULL)
+		target->mfocus(t_stackloc.x, t_stackloc.y);
 }
 
 void MCDispatch::wmfocus(Window w, int2 x, int2 y)
@@ -1204,12 +1217,17 @@ MCDragAction MCDispatch::wmdragmove(Window w, int2 x, int2 y)
 	static uint4 s_old_modifiers = 0;
 
 	MCStack *target = findstackd(w);
-	if (MCmousex != x || MCmousey != y || MCmodifierstate != s_old_modifiers)
+	
+	// IM-2013-10-08: [[ FullscreenMode ]] Translate mouse location to stack coords
+	MCPoint t_mouseloc;
+	t_mouseloc = target->windowtostackloc(MCPointMake(x, y));
+	
+	if (MCmousex != t_mouseloc.x || MCmousey != t_mouseloc.y || MCmodifierstate != s_old_modifiers)
 	{
-		MCmousex = x;
-		MCmousey = y;
+		MCmousex = t_mouseloc.x;
+		MCmousey = t_mouseloc.y;
 		s_old_modifiers = MCmodifierstate;
-		target -> mfocus(x, y);
+		target -> mfocus(t_mouseloc.x, t_mouseloc.y);
 	}
 	return MCdragaction;
 }
@@ -1250,11 +1268,50 @@ void MCDispatch::property(Window w, Atom atom)
 {
 }
 
+void MCDispatch::sync_stack_windows(void)
+{
+	if (stacks == nil)
+		return;
+	
+	MCStack *t_stack;
+	t_stack = stacks;
+	
+	do
+	{
+		if (t_stack->getopened() && t_stack->isvisible())
+		{
+			t_stack->view_sync_window_geometry();
+			t_stack->view_dirty_all();
+		}
+		
+		t_stack = (MCStack*)t_stack->next();
+	}
+	while (t_stack != stacks);
+}
+
+void MCDispatch::reopen_stack_windows(void)
+{
+	if (stacks == nil)
+		return;
+	
+	MCStack *t_stack;
+	t_stack = stacks;
+	
+	do
+	{
+		if (t_stack->getopened() && t_stack->getwindow() != nil)
+			t_stack->reopenwindow();
+		
+		t_stack = (MCStack*)t_stack->next();
+	}
+	while (t_stack != stacks);
+}
+
 void MCDispatch::configure(Window w)
 {
 	MCStack *target = findstackd(w);
 	if (target != NULL)
-		target->configure(True);
+		target->view_configure(true);
 }
 
 void MCDispatch::enter(Window w)
@@ -1276,11 +1333,15 @@ void MCDispatch::redraw(Window w, MCRegionRef p_dirty_region)
 MCFontStruct *MCDispatch::loadfont(const MCString &fname, uint2 &size,
                                    uint2 style, Boolean printer)
 {
-#ifdef _LINUX
+#if defined(_LINUX_DESKTOP)
 	if (fonts == NULL)
 		fonts = MCFontlistCreateNew();
 	if (fonts == NULL)
 		fonts = MCFontlistCreateOld();
+#elif defined(_LINUX_SERVER)
+	// MM-2013-09-13: [[ RefactorGraphics ]] Server font support.
+	if (fonts == NULL)
+		fonts = MCFontlistCreateNew();
 #else
 	if (fonts == nil)
 		fonts = new MCFontlist;
@@ -1753,7 +1814,8 @@ void MCDispatch::dodrop(bool p_source)
 		//   causing the default engine behaviour to be overriden. In this case, some things have to happen to the field
 		//   when the drag is over. Note that we have to check that the source was a field in this case since we don't
 		//   need to do anything if it is not!
-		if (MCdragsource -> gettype() == CT_FIELD)
+		// IM-2014-02-28: [[ Bug 11715 ]] dragsource may have changed or unset after sending message so check for valid ptr
+		if (MCdragsource != nil && MCdragsource -> gettype() == CT_FIELD)
 		{
 			MCField *t_field;
 			t_field = static_cast<MCField *>(MCdragsource);
@@ -1969,6 +2031,12 @@ void MCDispatch::freeprinterfonts()
 	fonts->freeprinterfonts();
 }
 #endif
+
+void MCDispatch::flushfonts(void)
+{
+	delete fonts;
+	fonts = nil;
+}
 
 MCFontlist *MCFontlistGetCurrent(void)
 {

@@ -1,0 +1,1 @@
+# Option menu with height > 22 draws incorrectly on OSX with Retina display.

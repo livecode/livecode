@@ -406,7 +406,11 @@ bool MCImageGenerateOptimalPaletteWithWeightedPixels(MCImageBitmap *p_bitmap, ui
 			r_colours[i].red = t_colourmap[i].channel[0] << 8 | t_colourmap[i].channel[0];
 			r_colours[i].green = t_colourmap[i].channel[1] << 8 | t_colourmap[i].channel[1];
 			r_colours[i].blue = t_colourmap[i].channel[2] << 8 | t_colourmap[i].channel[2];
-			r_colours[i].pixel = 0xFF000000 | ((r_colours[i].red & 0xFF00) << 8) | ((r_colours[i].green & 0xFF00)) | ((r_colours[i].blue & 0xFF00) >> 8);
+			r_colours[i].pixel = MCGPixelPackNative(
+											  r_colours[i].red >> 8,
+											  r_colours[i].green >> 8,
+											  r_colours[i].blue,
+											  255);
 		}
 	}
 	if (t_colourmap != NULL)

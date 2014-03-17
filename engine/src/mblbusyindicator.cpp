@@ -43,16 +43,21 @@ void MCSystemBusyIndicatorStop ();
 // MM-2013-02-04: [[ Bug 10642 ]] Added new optional opacity parameter to busy indicator.
 void MCBusyIndicatorExecStart (MCExecContext& ctxt, MCBusyIndicatorType p_indicator, const char *p_label, int32_t p_opacity)
 {
+#ifdef /* MCBusyIndicatorExecStart */ LEGACY_EXEC
     MCSystemBusyIndicatorStart(p_indicator, p_label, p_opacity);
+#endif /* MCBusyIndicatorExecStart */
 }
 
 void MCBusyIndicatorExecStop (MCExecContext& ctxt)
 {
+#ifdef /* MCBusyIndicatorExecStop */ LEGACY_EXEC
     MCSystemBusyIndicatorStop();
+#endif /* MCBusyIndicatorExecStop */
 }
 
 static MCBusyIndicatorType MCBusyIndicatorTypeFromCString(const char *p_string)
 {
+#ifdef /* MCBusyIndicatorTypeFromCString */ LEGACY_EXEC
     if (MCCStringEqualCaseless(p_string, "in line"))
         return kMCBusyIndicatorInLine;
     else if (MCCStringEqualCaseless(p_string, "square"))
@@ -61,10 +66,12 @@ static MCBusyIndicatorType MCBusyIndicatorTypeFromCString(const char *p_string)
         return kMCBusyIndicatorKeyboard;
     
     return kMCBusyIndicatorSquare;
+#endif /* MCBusyIndicatorTypeFromCString */    
 }
 
 static bool MCBusyIndicatorTypeToCString(MCSensorType p_indicator, char *&r_string)
 {
+#ifdef /* MCBusyIndicatorTypeToCString */ LEGACY_EXEC
     switch (p_indicator)
     {
         case kMCBusyIndicatorInLine:
@@ -77,11 +84,13 @@ static bool MCBusyIndicatorTypeToCString(MCSensorType p_indicator, char *&r_stri
             return MCCStringClone("unknown", r_string);
     }
     return false;
+#endif /* MCBusyIndicatorTypeToCString */
 }
 
 // MM-2013-02-04: [[ Bug 10642 ]] Added new optional opacity parameter to busy indicator.
 Exec_stat MCHandleStartBusyIndicator(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleStartBusyIndicator */ LEGACY_EXEC
     MCBusyIndicatorType t_indicator_type;
     MCExecPoint ep(nil, nil, nil);
     
@@ -115,10 +124,12 @@ Exec_stat MCHandleStartBusyIndicator(void *p_context, MCParameter *p_parameters)
 	t_ctxt . SetTheResultToEmpty();
     MCBusyIndicatorExecStart(t_ctxt, kMCBusyIndicatorSquare, t_label, t_opacity);
     return t_ctxt.GetStat();
+#endif /* MCHandleStartBusyIndicator */
 }
 
 Exec_stat MCHandleStopBusyIndicator(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleStopBusyIndicator */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     
     MCExecContext t_ctxt(ep);
@@ -127,4 +138,5 @@ Exec_stat MCHandleStopBusyIndicator(void *p_context, MCParameter *p_parameters)
     MCBusyIndicatorExecStop(t_ctxt);
     
     return t_ctxt.GetStat();
+#endif /* MCHandleStopBusyIndicator */
 }

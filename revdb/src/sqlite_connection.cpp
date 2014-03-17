@@ -14,6 +14,12 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+// MM-2014-02-04: [[ Sqlite382 ]] Define string cmp functions for Windows.
+#ifdef _WINDOWS
+#define strncasecmp _strnicmp
+#define strcasecmp _stricmp
+#endif
+
 #include "dbsqlite.h"
 #include <sqlitedataset/sqlitedataset.h>
 
@@ -31,12 +37,21 @@ DBConnection_SQLITE::DBConnection_SQLITE() :
 	mIsError(false)
 {
 	connectionType = CT_SQLITE;
+	
+	// MW-2014-01-29: [[ Sqlite382 ]] Make sure options are set to defaults (false).
+	m_enable_binary = false;
+	m_enable_extensions = false;
 }
 
 DBConnection_SQLITE::~DBConnection_SQLITE()
 {
 	setErrorStr(0);
 	disconnect();
+}
+
+bool DBConnection_SQLITE::IsBinaryEnabled(void)
+{
+	return m_enable_binary;
 }
 
 // Only 1 arguments are expected.
@@ -50,7 +65,8 @@ Bool DBConnection_SQLITE::connect(char **args, int numargs)
 	Bool ret = False;
 
 
-	if(!isConnected && numargs > 1) {
+	// MW-2014-01-29: [[ Sqlite382 ]] We only need a minimum of one argument.
+	if(!isConnected && numargs >= 1) {
 		char *fname;
 		string bhash;
 		string mash;
@@ -61,6 +77,36 @@ Bool DBConnection_SQLITE::connect(char **args, int numargs)
 		//   path encoded as UTF-8.
 		fname = os_path_to_native_utf8(args[0]);
 		
+		// MW-2014-01-29: [[ Sqlite382 ]] If there's a second argument, then interpret
+		//   it as an options string.
+		if (numargs >= 2)
+		{
+			const char *t_start;
+			t_start = args[1];
+			for(;;)
+			{
+				// Find the end of the item (delimited by ',').
+				const char *t_end;
+				t_end = strchr(t_start, ',');
+				if (t_end == NULL)
+					t_end = t_start + strlen(t_start);
+				
+				// Check to see if we recognise the option (ignoring ones we don't know
+				// anything about).
+				if ((t_end - t_start) == 6 && strncasecmp(t_start, "binary", 6) == 0)
+					m_enable_binary = true;
+				if ((t_end - t_start) == 10 && strncasecmp(t_start, "extensions", 10) == 0)
+					m_enable_extensions = true;
+				
+				// If the end points to NUL we are done.
+				if (*t_end == '\0')
+					break;
+				
+				// Start is the char after the separating ','.
+				t_start = t_end + 1;
+			}
+		}
+
 		try
 		{
 			mDB.setDatabase(fname);
@@ -72,6 +118,10 @@ Bool DBConnection_SQLITE::connect(char **args, int numargs)
 			{
 				ret = True;
 				isConnected = True;
+				
+				// MW-2014-01-29: [[ Sqlite382 ]] Now we have a handle, configure extension
+				//   loading.
+				sqlite3_enable_load_extension(mDB . getHandle(), m_enable_extensions ? 1 : 0);
 			}
 		}
 		catch(DbErrors &e)
@@ -79,6 +129,7 @@ Bool DBConnection_SQLITE::connect(char **args, int numargs)
 			mIsError = true;
 			setErrorStr(e.getMsg());
 		}
+
 		free(fname);
 	}
 	return ret;
@@ -193,7 +244,7 @@ DBCursor *DBConnection_SQLITE::sqlQuery(char *query, DBString *args, int numargs
 	}
 
 	try {
-		ret = new DBCursor_SQLITE(mDB);
+		ret = new DBCursor_SQLITE(mDB, m_enable_binary);
 		Dataset *ds = ret->getDataset();
 
 		ds->query(newquery);
@@ -227,13 +278,19 @@ Bool DBConnection_SQLITE::IsError()
 }
 
 /*getErrorMessage- return error string*/
-char *DBConnection_SQLITE::getErrorMessage()
+char *DBConnection_SQLITE::getErrorMessage(Bool p_last)
 {
-	if(mIsError && mErrorStr != 0) {
-		mIsError = false;
-		return mErrorStr;
-	} else
-		return (char*)DBNullValue;
+    // AL-2013-11-08 [[ Bug 11149 ]] Make sure most recent error string is available to revDatabaseConnectResult
+	if(p_last || mIsError)
+    {
+        if (mErrorStr != 0)
+        {
+            mIsError = false;
+            return mErrorStr;
+        }
+    }
+    
+    return (char*)DBNullValue;
 }
 
 char *replaceString(char *p_string, char *p_find, char *p_replace)
@@ -319,6 +376,13 @@ char *replaceString(char *p_string, char *p_find, char *p_replace)
 	return t_output_buffer_copy;
 }
 
+static char num2nibble(int p_nibble)
+{
+	if (p_nibble < 10)
+		return '0' + p_nibble;
+	return 'A' + (p_nibble - 10);
+}
+
 bool queryCallback(void *p_context, int p_placeholder, DBBuffer& p_output)
 {
 	QueryMetadata *t_query_metadata;
@@ -333,11 +397,45 @@ bool queryCallback(void *p_context, int p_placeholder, DBBuffer& p_output)
 	size_t t_escaped_string_length;
 	t_escaped_string_length = 0;
 	
+	// MW-2014-01-29: [[ Sqlite382 ]] If true the value needs quoting, otherwise it is
+	//   already quoted appropriately.
+	bool t_needs_quotes;
+	t_needs_quotes = true;
 	if (t_parameter_value . isbinary)
 	{
-		// According to documentation in sqlitedecode.cpp, this is the required size of output buffer
-		t_escaped_string = malloc(2 + (257 * t_parameter_value . length) / 254);
-		t_escaped_string_length = sqlite_encode_binary((const unsigned char *)t_parameter_value . sptr, t_parameter_value . length, (unsigned char *)t_escaped_string);
+		DBConnection_SQLITE *t_conn;
+		t_conn = (DBConnection_SQLITE *)t_query_metadata -> connection;
+		
+		if (t_conn -> IsBinaryEnabled())
+		{
+			// MW-2014-01-29: [[ Sqlite382 ]] Encode the binary as BLOB literal - X'<hex>'. Thus
+			//   the length of the escaped string is 3 + 2 * size.;
+			t_escaped_string_length = 3 + 2 * t_parameter_value . length;
+			t_escaped_string = malloc(t_escaped_string_length);
+			t_needs_quotes = false;
+			
+			// Quote the binary!
+			char *t_buffer;
+			t_buffer = (char *)t_escaped_string;
+			
+			*t_buffer++ = 'X';
+			*t_buffer++ = '\'';
+			for(size_t i = 0; i < t_parameter_value . length; i++)
+			{
+				char t_high_nibble, t_low_nibble;
+				t_high_nibble = num2nibble(((unsigned)t_parameter_value . sptr[i] & 0xff) >> 4);
+				t_low_nibble = num2nibble(((unsigned)t_parameter_value . sptr[i]) & 0xf);
+				*t_buffer++ = t_high_nibble;
+				*t_buffer++ = t_low_nibble;
+			}
+			*t_buffer++ = '\'';
+		}
+		else
+		{
+			// According to documentation in sqlitedecode.cpp, this is the required size of output buffer
+			t_escaped_string = malloc(2 + (257 * t_parameter_value . length) / 254);
+			t_escaped_string_length = sqlite_encode_binary((const unsigned char *)t_parameter_value . sptr, t_parameter_value . length, (unsigned char *)t_escaped_string);
+		}
 	}
 	else
 	{
@@ -357,9 +455,14 @@ bool queryCallback(void *p_context, int p_placeholder, DBBuffer& p_output)
 		}
 	}
 
-	p_output . ensure(t_escaped_string_length + 2);
-	memcpy(p_output . getFrontier(), "'", 1);
-	p_output . advance(1);
+	if (t_needs_quotes)
+	{
+		p_output . ensure(t_escaped_string_length + 2);
+		memcpy(p_output . getFrontier(), "'", 1);
+		p_output . advance(1);
+	}
+	else
+		p_output . ensure(t_escaped_string_length);
 
 	if (t_escaped_string != NULL)
 	{
@@ -367,8 +470,11 @@ bool queryCallback(void *p_context, int p_placeholder, DBBuffer& p_output)
 		p_output . advance(t_escaped_string_length);
 	}
 
-	memcpy(p_output . getFrontier(), "'", 1);
-	p_output . advance(1);
+	if (t_needs_quotes)
+	{
+		memcpy(p_output . getFrontier(), "'", 1);
+		p_output . advance(1);
+	}
 	
 	free(t_escaped_string);
 	return true;
@@ -392,6 +498,7 @@ char *DBConnection_SQLITE::BindVariables(char *p_query, int p_query_length, DBSt
 		QueryMetadata t_query_metadata;
 		t_query_metadata . argument_count = p_argument_count;
 		t_query_metadata . arguments = p_arguments;
+		t_query_metadata . connection = this;
 
 		DBBuffer t_query_buffer(t_parsed_query_length + 1);
 

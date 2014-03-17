@@ -301,7 +301,7 @@ void MCAndroidPlayerControl::HandlePropertyAvailableEvent(const char *p_property
 	t_target = GetOwner();
 	if (t_target != nil)
 	{
-		MCNativeControl *t_old_target;
+	MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
 		t_target -> message_with_args(MCM_player_property_available, p_property);
 		ChangeTarget(t_old_target);

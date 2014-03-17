@@ -132,21 +132,28 @@ static bool MCSensorTypeToCString(MCSensorType p_sensor, char *&r_string)
 
 void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, MCSensorType p_sensor, bool p_loosely)
 {
+#ifdef /* MCSensorExecStartTrackingSensor */ LEGACY_EXEC
     MCSystemStartTrackingSensor(p_sensor, p_loosely);
+#endif /* MCSensorExecStartTrackingSensor */
 }
 
 void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, MCSensorType p_sensor)
 {
+#ifdef /* MCSensorExecStopTrackingSensor */ LEGACY_EXEC
     MCSystemStopTrackingSensor(p_sensor);
+#endif /* MCSensorExecStopTrackingSensor */
 }
 
 void MCSensorGetSensorAvailable(MCExecContext& ctxt, MCSensorType p_sensor, bool& r_available)
 {
+#ifdef /* MCSensorGetSensorAvailable */ LEGACY_EXEC
     MCSystemGetSensorAvailable(p_sensor, r_available);
+#endif /* MCSensorGetSensorAvailable */
 }
 
 void MCSensorGetDetailedLocationOfDevice(MCExecContext& ctxt, MCVariableValue *&r_detailed_location)
 {
+#ifdef /* MCSensorGetDetailedLocationOfDevice */ LEGACY_EXEC
     MCSensorLocationReading t_reading;
     if (MCSystemGetLocationReading(t_reading, true))
     {
@@ -187,20 +194,24 @@ void MCSensorGetDetailedLocationOfDevice(MCExecContext& ctxt, MCVariableValue *&
         
         r_detailed_location = t_location;
     }
+#endif /* MCSensorGetDetailedLocationOfDevice */
 }
 
 void MCSensorGetLocationOfDevice(MCExecContext& ctxt, char *&r_location)
 {
+#ifdef /* MCSensorGetLocationOfDevice */ LEGACY_EXEC
     MCSensorLocationReading t_reading;
     if (MCSystemGetLocationReading(t_reading, false))
     {
         r_location = nil;
         MCCStringFormat(r_location, "%Lf,%Lf,%Lf", t_reading.latitude, t_reading.longitude, t_reading.altitude);
     }
+#endif /* MCSensorGetLocationOfDevice */
 }
 
 void MCSensorGetDetailedHeadingOfDevice(MCExecContext& ctxt, MCVariableValue *&r_detailed_heading)
 {
+#ifdef /* MCSensorGetDetailedHeadingOfDevice */ LEGACY_EXEC
     MCSensorHeadingReading t_reading;
     if (MCSystemGetHeadingReading(t_reading, true))
     {
@@ -235,20 +246,24 @@ void MCSensorGetDetailedHeadingOfDevice(MCExecContext& ctxt, MCVariableValue *&r
 
         r_detailed_heading = t_heading;
     }    
+#endif /* MCSensorGetDetailedHeadingOfDevice */
 }
 
 void MCSensorGetHeadingOfDevice(MCExecContext& ctxt, char *&r_heading)
 {
+#ifdef /* MCSensorGetHeadingOfDevice */ LEGACY_EXEC
     MCSensorHeadingReading t_reading;
     if (MCSystemGetHeadingReading(t_reading, true))
     {
         r_heading = nil;
         MCCStringFormat(r_heading, "%Lf", t_reading.heading);
     }
+#endif /* MCSensorGetHeadingOfDevice */
 }
 
 void MCSensorGetDetailedAccelerationOfDevice(MCExecContext& ctxt, MCVariableValue *&r_detailed_acceleration)
 {
+#ifdef /* MCSensorGetDetailedAccelerationOfDevice */ LEGACY_EXEC
     MCSensorAccelerationReading t_reading;
     if (MCSystemGetAccelerationReading(t_reading, true))
     {
@@ -271,20 +286,24 @@ void MCSensorGetDetailedAccelerationOfDevice(MCExecContext& ctxt, MCVariableValu
         
         r_detailed_acceleration = t_acceleration;
     }    
+#endif /* MCSensorGetDetailedAccelerationOfDevice */
 }
 
 void MCSensorGetAccelerationOfDevice(MCExecContext& ctxt, char *&r_acceleration)
 {
+#ifdef /* MCSensorGetAccelerationOfDevice */ LEGACY_EXEC
     MCSensorAccelerationReading t_reading;
     if (MCSystemGetAccelerationReading(t_reading, true))
     {
         r_acceleration = nil;
         MCCStringFormat(r_acceleration, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
     }
+#endif /* MCSensorGetAccelerationOfDevice */
 }
 
 void MCSensorGetDetailedRotationRateOfDevice(MCExecContext& ctxt, MCVariableValue *&r_detailed_rotation_rate)
 {
+#ifdef /* MCSensorGetDetailedRotationRateOfDevice */ LEGACY_EXEC
     MCSensorRotationRateReading t_reading;
     if (MCSystemGetRotationRateReading(t_reading, true))
     {
@@ -307,27 +326,34 @@ void MCSensorGetDetailedRotationRateOfDevice(MCExecContext& ctxt, MCVariableValu
         
         r_detailed_rotation_rate = t_rotation_rate;
     }    
+#endif /* MCSensorGetDetailedRotationRateOfDevice */
 }
 
 void MCSensorGetRotationRateOfDevice(MCExecContext& ctxt, char *&r_rotation_rate)
 {
+#ifdef /* MCSensorGetRotationRateOfDevice */ LEGACY_EXEC
     MCSensorRotationRateReading t_reading;
     if (MCSystemGetRotationRateReading(t_reading, true))
     {
         r_rotation_rate = nil;
         MCCStringFormat(r_rotation_rate, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
     }
+#endif /* MCSensorGetRotationRateOfDevice */
 }
 
 // MM-2012-02-11: Added support for iPhoneGet/SetCalibrationTimeout
 void MCSensorSetLocationCalibration(MCExecContext& ctxt, int32_t p_timeout)
 {
+#ifdef /* MCSensorSetLocationCalibration */ LEGACY_EXEC
     MCSystemSetLocationCalibrationTimeout(p_timeout);
+#endif /* MCSensorSetLocationCalibration */
 }
 
 void MCSensorGetLocationCalibration(MCExecContext& ctxt, int32_t& r_timeout)
 {
+#ifdef /* MCSensorGetLocationCalibration */ LEGACY_EXEC
     MCSystemGetLocationCalibrationTimeout(r_timeout);
+#endif /* MCSensorGetLocationCalibration */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -465,7 +491,7 @@ public:
 				}
                 break;
             }                
-            case kMCSensorTypeAcceleration:
+           case kMCSensorTypeAcceleration:
             {
                 MCSensorAccelerationReading t_reading;
                 if (MCSystemGetAccelerationReading(t_reading, false))
@@ -556,6 +582,7 @@ void MCSensorPostErrorMessage(MCSensorType p_sensor, const char *p_error)
 
 Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleStartTrackingSensor */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     
     MCSensorType t_sensor = kMCSensorTypeUnknown;
@@ -583,10 +610,12 @@ Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters
     }
     
     return t_ctxt.GetStat();
+#endif /* MCHandleStartTrackingSensor */
 }
 
 Exec_stat MCHandleStopTrackingSensor(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleStopTrackingSensor */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     
     MCSensorType t_sensor = kMCSensorTypeUnknown;
@@ -607,11 +636,13 @@ Exec_stat MCHandleStopTrackingSensor(void *p_context, MCParameter *p_parameters)
     }
     
     return t_ctxt.GetStat();
+#endif /* MCHandleStopTrackingSensor */
 }
 
 // MM-2012-02-11: Added support old style senseor syntax (iPhoneEnableAcceleromter etc)
 Exec_stat MCHandleAccelerometerEnablement(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAccelerometerEnablement */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     MCExecContext t_ctxt(ep);
 	t_ctxt . SetTheResultToEmpty();
@@ -622,10 +653,12 @@ Exec_stat MCHandleAccelerometerEnablement(void *p_context, MCParameter *p_parame
         MCSensorExecStopTrackingSensor(t_ctxt, kMCSensorTypeAcceleration);
     
     return t_ctxt.GetStat();
+#endif /* MCHandleAccelerometerEnablement */
 }
 
 Exec_stat MCHandleLocationTrackingState(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleLocationTrackingState */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     MCExecContext t_ctxt(ep);
 	t_ctxt . SetTheResultToEmpty();
@@ -636,10 +669,12 @@ Exec_stat MCHandleLocationTrackingState(void *p_context, MCParameter *p_paramete
         MCSensorExecStopTrackingSensor(t_ctxt, kMCSensorTypeLocation);
     
     return t_ctxt.GetStat();
+#endif /* MCHandleLocationTrackingState */
 }
 
 Exec_stat MCHandleHeadingTrackingState(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleHeadingTrackingState */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     MCExecContext t_ctxt(ep);
 	t_ctxt . SetTheResultToEmpty();
@@ -650,10 +685,12 @@ Exec_stat MCHandleHeadingTrackingState(void *p_context, MCParameter *p_parameter
         MCSensorExecStopTrackingSensor(t_ctxt, kMCSensorTypeHeading);
     
     return t_ctxt.GetStat();
+#endif /* MCHandleHeadingTrackingState */
 }
 
 Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSensorReading */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     
     MCSensorType t_sensor = kMCSensorTypeUnknown;
@@ -727,11 +764,13 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
     
     MCresult->store(ep, False);
     return t_ctxt.GetStat();
+#endif /* MCHandleSensorReading */
 }
 
 // MM-2012-02-11: Added support old style senseor syntax (iPhoneGetCurrentLocation etc)
 Exec_stat MCHandleCurrentLocation(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleCurrentLocation */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     MCExecContext t_ctxt(ep);
 	t_ctxt . SetTheResultToEmpty();
@@ -743,10 +782,12 @@ Exec_stat MCHandleCurrentLocation(void *p_context, MCParameter *p_parameters)
     
     MCresult->store(ep, False);
     return t_ctxt.GetStat();
+#endif /* MCHandleCurrentLocation */
 }
 
 Exec_stat MCHandleCurrentHeading(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleCurrentHeading */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     MCExecContext t_ctxt(ep);
 	t_ctxt . SetTheResultToEmpty();
@@ -758,10 +799,12 @@ Exec_stat MCHandleCurrentHeading(void *p_context, MCParameter *p_parameters)
     
     MCresult->store(ep, False);
     return t_ctxt.GetStat();
+#endif /* MCHandleCurrentHeading */
 }
 
 Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSetHeadingCalibrationTimeout */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     MCExecContext t_ctxt(ep);
 	t_ctxt . SetTheResultToEmpty();
@@ -775,10 +818,12 @@ Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_p
     MCSensorSetLocationCalibration(t_ctxt, t_timeout);
     
     return t_ctxt.GetStat();
+#endif /* MCHandleSetHeadingCalibrationTimeout */
 }
 
 Exec_stat MCHandleHeadingCalibrationTimeout(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleHeadingCalibrationTimeout */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     MCExecContext t_ctxt(ep);
 	t_ctxt . SetTheResultToEmpty();
@@ -789,10 +834,12 @@ Exec_stat MCHandleHeadingCalibrationTimeout(void *p_context, MCParameter *p_para
     
     t_ctxt . SetTheResultToEmpty();
     return t_ctxt.GetStat();
+#endif /* MCHandleHeadingCalibrationTimeout */
 }
 
 Exec_stat MCHandleSensorAvailable(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSensorAvailable */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);    
     MCExecContext t_ctxt(ep);
 	t_ctxt . SetTheResultToEmpty();
@@ -812,10 +859,12 @@ Exec_stat MCHandleSensorAvailable(void *p_context, MCParameter *p_parameters)
     
     MCresult->sets(MCU_btos(t_available));
     return t_ctxt.GetStat();
+#endif /* MCHandleSensorAvailable */
 }
 
 Exec_stat MCHandleCanTrackLocation(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleCanTrackLocation */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);    
     MCExecContext t_ctxt(ep);
 	t_ctxt . SetTheResultToEmpty();
@@ -826,10 +875,12 @@ Exec_stat MCHandleCanTrackLocation(void *p_context, MCParameter *p_parameters)
     
     MCresult->sets(MCU_btos(t_available));
     return t_ctxt.GetStat();
+#endif /* MCHandleCanTrackLocation */
 }
 
 Exec_stat MCHandleCanTrackHeading(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleCanTrackHeading */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);    
     MCExecContext t_ctxt(ep);
 	t_ctxt . SetTheResultToEmpty();
@@ -840,6 +891,7 @@ Exec_stat MCHandleCanTrackHeading(void *p_context, MCParameter *p_parameters)
     
     MCresult->sets(MCU_btos(t_available));
     return t_ctxt.GetStat();
+#endif /* MCHandleCanTrackHeading */
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1061,7 +1061,8 @@ Exec_stat MCVariableValue::factorarray(MCExecPoint& ep, Operators op)
 	return array . factorarray(ep, op);
 }
 
-Exec_stat MCVariableValue::unionarray(MCVariableValue& v)
+// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+Exec_stat MCVariableValue::unionarray(MCVariableValue& v, bool p_recursive)
 {
 	if (!is_array())
 		assign_empty();
@@ -1078,7 +1079,7 @@ Exec_stat MCVariableValue::unionarray(MCVariableValue& v)
 	uint4 t_nfilled;
 	t_nfilled = array . getnfilled();
 	
-	if (array . unionarray(v . array) != ES_NORMAL)
+	if (array . unionarray(v . array, p_recursive) != ES_NORMAL)
 		return ES_ERROR;
 	
 	set_dbg_mutated(t_nfilled != array . getnfilled());
@@ -1086,7 +1087,8 @@ Exec_stat MCVariableValue::unionarray(MCVariableValue& v)
 	return ES_NORMAL;
 }
 
-Exec_stat MCVariableValue::intersectarray(MCVariableValue& v)
+// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+Exec_stat MCVariableValue::intersectarray(MCVariableValue& v, bool p_recursive)
 {
 	if (!is_array() || !v . is_array())
 	{
@@ -1097,7 +1099,7 @@ Exec_stat MCVariableValue::intersectarray(MCVariableValue& v)
 	uint4 t_nfilled;
 	t_nfilled = array . getnfilled();
 	
-	if (array . intersectarray(v . array) != ES_NORMAL)
+	if (array . intersectarray(v . array, p_recursive) != ES_NORMAL)
 		return ES_ERROR;
 	
 	set_dbg_mutated(t_nfilled != array . getnfilled());

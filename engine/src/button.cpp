@@ -498,6 +498,10 @@ void MCButton::close()
 			tabs = NULL;
 			ntabs = 0;
 		}
+		// AL-2013-01-13 [[ Bug 11363 ]] Close menu on button close. 
+		if (state & CS_SUBMENU)
+			closemenu(True, True);
+
 		freemenu(False);
 		if (entry != NULL)
 		{
@@ -899,7 +903,8 @@ Boolean MCButton::mfocus(int2 x, int2 y)
 				if ((MClook != LF_WIN95) || menuname != NULL)
 					break;
 			case WM_COMBO:
-				if (state & CS_MFOCUSED)
+				// MW-2014-03-11: [[ Bug 11893 ]] Make sure we don't do anything to a stack panel.
+				if (state & CS_MFOCUSED && menuname == NULL)
 				{
 					uint2 fheight;
 					fheight = gettextheight();
@@ -1609,6 +1614,7 @@ Exec_stat MCButton::getprop(uint4 parid, Properties which, MCExecPoint& ep, Bool
 
 	switch (which)
 	{
+#ifdef /* MCButton::getprop */ LEGACY_EXEC
 	case P_STYLE:
 		{
 			const char *t_style_string;
@@ -1871,6 +1877,7 @@ Exec_stat MCButton::getprop(uint4 parid, Properties which, MCExecPoint& ep, Bool
 		// Map the menustring's encoding to the requested encoding.
 		ep.mapunicode(hasunicode(), which == P_UNICODE_TEXT);
 		break;
+#endif /* MCButton::getprop */ 
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}
@@ -1888,6 +1895,7 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 	
 	switch (p)
 	{
+#ifdef /* MCButton::setprop */ LEGACY_EXEC
 	case P_NAME:
 		if (MCObject::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
@@ -2487,6 +2495,7 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 		return MCControl::setprop(parid, p, ep, effective);
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
+#endif /* MCButton::setprop */
 	}
 	if (dirty && opened)
 	{
@@ -3603,7 +3612,8 @@ void MCButton::openmenu(Boolean grab)
 		menu->openrect(rel, (Window_mode)menumode, NULL, WP_DEFAULT, OP_NONE);
 		menu -> mode_openasmenu(t_did_grab ? sptr : NULL);
 		
-		if (menumode == WM_OPTION)
+		// MW-2014-03-11: [[ Bug 11893 ]] Make sure we don't do anything to a stack panel.
+		if (menumode == WM_OPTION && menuname == nil)
 		{
 			MCField *t_field = NULL;
 			MCObjptr *t_obj = menu->getcurcard()->getrefs();

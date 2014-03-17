@@ -22,6 +22,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <revolution/external.h>
 #include <revolution/support.h>
+#include <libxml/xpath.h>
+#include <libxslt/transform.h>
+#include <libxslt/xsltutils.h>
 
 #include "cxml.h"
 
@@ -112,6 +115,9 @@ enum XMLErrs
 	XMLERR_BADMOVE,
 	XMLERR_BADCOPY,
 	XMLERR_NOFILEPERMS,
+	XPATHERR_BADDOCCONTEXT,
+	XPATHERR_CANTRESOLVE,
+	XPATHERR_BADDOCPOINTER,
 };
 
 const char *xmlerrors[] = {
@@ -125,6 +131,9 @@ const char *xmlerrors[] = {
 	"xmlerr, can't move node into itself",
 	"xmlerr, can't copy node into itself",
 	"xmlerr, file access not permitted",
+	"xmlerr, couldn't assign document context",
+	"xmlerr, can't resolve xpath",
+	"xmlerr, bad document pointer",
 };
 
 //HS-2010-10-11: [[ Bug 7586 ]] Reinstate libxml2 to create name spaces. Implement new liveCode commands to suppress name space creation.
@@ -145,6 +154,12 @@ class XMLDocumentList
 		VXMLDocList::iterator theIterator;
 		for (theIterator = doclist.begin(); theIterator != doclist.end(); theIterator++){
 			CXMLDocument *curobject = (CXMLDocument *)(*theIterator);
+			// MDW-2013-07-09: [[ RevXmlXPath ]]
+			if (NULL != curobject->GetXPathContext())
+				xmlXPathFreeContext(curobject->GetXPathContext());
+			// MDW-2013-09-04: [[ RevXmlXslt ]]
+			if (NULL != curobject->GetXsltContext())
+				xsltFreeStylesheet(curobject->GetXsltContext());
 			delete curobject;
 		}
 		doclist.clear();
@@ -207,7 +222,8 @@ void DispatchMetaCardMessage(char *messagename,char *tmessage)
 int retvalue = 0;
 SetGlobal("xmlvariable",tmessage,&retvalue);
 char mcmessage[256];
-sprintf(mcmessage,"global xmlvariable;try;send \"%s xmlvariable\" to current card of stack the topstack;catch errno;end try;put 0 into extvariable",messagename);
+// MDW-2013-07-09: [[ RevXmlXPath ]]
+sprintf(mcmessage,"global xmlvariable;try;send \"%s xmlvariable\" to current card of stack the topstack;catch errno;end try;put 0 into xmlvariable",messagename);
 SendCardMessage(mcmessage, &retvalue);
 }
 
@@ -303,7 +319,8 @@ extern char *strlwr(char *str);
 #endif
 
 
-#define REVXML_VERSIONSTRING "2.9.0"
+// MDW-2013-06-22: [[ RevXmlXPath ]]
+#define REVXML_VERSIONSTRING "6.5.0"
 
 void REVXML_Version(char *args[], int nargs, char **retstring,
 		   Bool *pass, Bool *error)
@@ -2153,6 +2170,836 @@ void XML_FindElementByAttributeValue(char *args[], int nargs, char **retstring, 
 	*retstring = (result != NULL ? result : (char *)calloc(1,1));
 }
 
+// MDW-2013-06-22: [[ RevXmlXPath ]]
+
+static int xpathNodeBufGetContent(xmlBufferPtr pBuffer, xmlNodePtr cur, char *pCharDelimiter);
+
+static xmlNodeSetPtr XML_Object_to_NodeSet(xmlXPathObjectPtr pObject)
+{
+	return pObject->nodesetval;
+}
+
+/**
+ * xpathBufferCat:
+ * @buf:  the buffer to add to
+ * @str:  the #xmlChar string
+ *
+ * Append a zero terminated string to an XML buffer.
+ *
+ * Returns 0 successful, a positive error code number otherwise
+ *         and -1 in case of internal or API error.
+ */
+static int
+xpathBufferCat(xmlBufferPtr pBuf, const xmlChar *pStr, char *pCharDelimiter) {
+	if (pBuf == NULL)
+		return(-1);
+	if (pBuf->alloc == XML_BUFFER_ALLOC_IMMUTABLE)
+		return -1;
+	if (pStr == NULL)
+		return -1;
+	xmlBufferAdd(pBuf, pStr, -1);
+	return xmlBufferAdd(pBuf, (xmlChar*)pCharDelimiter, -1);
+}
+
+/**
+ * xmlNodeGetContent:
+ * @cur:  the node being read
+ *
+ * Read the value of a node, this can be either the text carried
+ * directly by this node if it's a TEXT node or the aggregate string
+ * of the values carried by this node child's (TEXT and ENTITY_REF).
+ * Entity references are substituted.
+ * Returns a new #xmlChar * or NULL if no content is available.
+ *     It's up to the caller to free the memory with xmlFree().
+ */
+static xmlChar *
+xpathNodeGetContent(xmlNodePtr cur, char *pCharDelimiter)
+{
+    if (cur == NULL)
+        return (NULL);
+    switch (cur->type) {
+        case XML_DOCUMENT_FRAG_NODE:
+        case XML_ELEMENT_NODE:{
+                xmlBufferPtr buffer;
+                xmlChar *ret;
+
+                buffer = xmlBufferCreateSize(64);
+                if (buffer == NULL)
+                    return (NULL);
+		xpathNodeBufGetContent(buffer, cur, pCharDelimiter);
+                ret = buffer->content;
+                buffer->content = NULL;
+                xmlBufferFree(buffer);
+                return (ret);
+            }
+        case XML_ATTRIBUTE_NODE:{
+                xmlAttrPtr attr = (xmlAttrPtr) cur;
+
+                if (attr->parent != NULL)
+                    return (xmlNodeListGetString
+                            (attr->parent->doc, attr->children, 1));
+                else
+                    return (xmlNodeListGetString(NULL, attr->children, 1));
+                break;
+            }
+        case XML_COMMENT_NODE:
+        case XML_PI_NODE:
+            if (cur->content != NULL)
+                return (xmlStrdup(cur->content));
+            return (NULL);
+        case XML_ENTITY_REF_NODE:{
+                xmlEntityPtr ent;
+                xmlBufferPtr buffer;
+                xmlChar *ret;
+
+                /* lookup entity declaration */
+                ent = xmlGetDocEntity(cur->doc, cur->name);
+                if (ent == NULL)
+                    return (NULL);
+
+                buffer = xmlBufferCreate();
+                if (buffer == NULL)
+                    return (NULL);
+
+                xpathNodeBufGetContent(buffer, cur, pCharDelimiter);
+
+                ret = buffer->content;
+                buffer->content = NULL;
+                xmlBufferFree(buffer);
+                return (ret);
+            }
+        case XML_ENTITY_NODE:
+        case XML_DOCUMENT_TYPE_NODE:
+        case XML_NOTATION_NODE:
+        case XML_DTD_NODE:
+        case XML_XINCLUDE_START:
+        case XML_XINCLUDE_END:
+            return (NULL);
+        case XML_DOCUMENT_NODE:
+#ifdef LIBXML_DOCB_ENABLED
+        case XML_DOCB_DOCUMENT_NODE:
+#endif
+        case XML_HTML_DOCUMENT_NODE: {
+	    xmlBufferPtr buffer;
+	    xmlChar *ret;
+
+	    buffer = xmlBufferCreate();
+	    if (buffer == NULL)
+		return (NULL);
+
+	    xpathNodeBufGetContent(buffer, (xmlNodePtr) cur, pCharDelimiter);
+
+	    ret = buffer->content;
+	    buffer->content = NULL;
+	    xmlBufferFree(buffer);
+	    return (ret);
+	}
+        case XML_NAMESPACE_DECL: {
+	    xmlChar *tmp;
+
+	    tmp = xmlStrdup(((xmlNsPtr) cur)->href);
+            return (tmp);
+	}
+        case XML_ELEMENT_DECL:
+            /* TODO !!! */
+            return (NULL);
+        case XML_ATTRIBUTE_DECL:
+            /* TODO !!! */
+            return (NULL);
+        case XML_ENTITY_DECL:
+            /* TODO !!! */
+            return (NULL);
+        case XML_CDATA_SECTION_NODE:
+        case XML_TEXT_NODE:
+            if (cur->content != NULL)
+                return (xmlStrdup(cur->content));
+            return (NULL);
+    }
+    return (NULL);
+}
+
+/**
+ * xmlNodeBufGetContent:
+ * @buffer:  a buffer
+ * @cur:  the node being read
+ *
+ * Read the value of a node @cur, this can be either the text carried
+ * directly by this node if it's a TEXT node or the aggregate string
+ * of the values carried by this node child's (TEXT and ENTITY_REF).
+ * Entity references are substituted.
+ * Fills up the buffer @buffer with this value
+ * 
+ * Returns 0 in case of success and -1 in case of error.
+ */
+static int
+xpathNodeBufGetContent(xmlBufferPtr buffer, xmlNodePtr cur, char *cDelimiter)
+{
+    if ((cur == NULL) || (buffer == NULL)) return(-1);
+    switch (cur->type) {
+        case XML_CDATA_SECTION_NODE:
+        case XML_TEXT_NODE:
+	    xpathBufferCat(buffer, cur->content, cDelimiter);
+            break;
+        case XML_DOCUMENT_FRAG_NODE:
+        case XML_ELEMENT_NODE:{
+                xmlNodePtr tmp = cur;
+
+                while (tmp != NULL) {
+                    switch (tmp->type) {
+                        case XML_CDATA_SECTION_NODE:
+                        case XML_TEXT_NODE:
+                            if (tmp->content != NULL)
+                                xpathBufferCat(buffer, tmp->content, cDelimiter);
+                            break;
+                        case XML_ENTITY_REF_NODE:
+                            xpathNodeBufGetContent(buffer, tmp, cDelimiter);
+                            break;
+                        default:
+                            break;
+                    }
+                    /*
+                     * Skip to next node
+                     */
+                    if (tmp->children != NULL) {
+                        if (tmp->children->type != XML_ENTITY_DECL) {
+                            tmp = tmp->children;
+                            continue;
+                        }
+                    }
+                    if (tmp == cur)
+                        break;
+
+                    if (tmp->next != NULL) {
+                        tmp = tmp->next;
+                        continue;
+                    }
+
+                    do {
+                        tmp = tmp->parent;
+                        if (tmp == NULL)
+                            break;
+                        if (tmp == cur) {
+                            tmp = NULL;
+                            break;
+                        }
+                        if (tmp->next != NULL) {
+                            tmp = tmp->next;
+                            break;
+                        }
+                    } while (tmp != NULL);
+                }
+		break;
+            }
+        case XML_ATTRIBUTE_NODE:{
+                xmlAttrPtr attr = (xmlAttrPtr) cur;
+		xmlNodePtr tmp = attr->children;
+
+		while (tmp != NULL) {
+		    if (tmp->type == XML_TEXT_NODE)
+		        xpathBufferCat(buffer, tmp->content, cDelimiter);
+		    else
+		        xpathNodeBufGetContent(buffer, tmp, cDelimiter);
+		    tmp = tmp->next;
+		}
+                break;
+            }
+        case XML_COMMENT_NODE:
+        case XML_PI_NODE:
+	    xpathBufferCat(buffer, cur->content, cDelimiter);
+            break;
+        case XML_ENTITY_REF_NODE:{
+                xmlEntityPtr ent;
+                xmlNodePtr tmp;
+
+                /* lookup entity declaration */
+                ent = xmlGetDocEntity(cur->doc, cur->name);
+                if (ent == NULL)
+                    return(-1);
+
+                /* an entity content can be any "well balanced chunk",
+                 * i.e. the result of the content [43] production:
+                 * http://www.w3.org/TR/REC-xml#NT-content
+                 * -> we iterate through child nodes and recursive call
+                 * xmlNodeGetContent() which handles all possible node types */
+                tmp = ent->children;
+                while (tmp) {
+		    xpathNodeBufGetContent(buffer, tmp, cDelimiter);
+                    tmp = tmp->next;
+                }
+		break;
+            }
+        case XML_ENTITY_NODE:
+        case XML_DOCUMENT_TYPE_NODE:
+        case XML_NOTATION_NODE:
+        case XML_DTD_NODE:
+        case XML_XINCLUDE_START:
+        case XML_XINCLUDE_END:
+            break;
+        case XML_DOCUMENT_NODE:
+#ifdef LIBXML_DOCB_ENABLED
+        case XML_DOCB_DOCUMENT_NODE:
+#endif
+        case XML_HTML_DOCUMENT_NODE:
+	    cur = cur->children;
+	    while (cur!= NULL) {
+		if ((cur->type == XML_ELEMENT_NODE) ||
+		    (cur->type == XML_TEXT_NODE) ||
+		    (cur->type == XML_CDATA_SECTION_NODE)) {
+		    xpathNodeBufGetContent(buffer, cur, cDelimiter);
+		}
+		cur = cur->next;
+	    }
+	    break;
+        case XML_NAMESPACE_DECL:
+	    xpathBufferCat(buffer, ((xmlNsPtr) cur)->href, cDelimiter);
+	    break;
+        case XML_ELEMENT_DECL:
+        case XML_ATTRIBUTE_DECL:
+        case XML_ENTITY_DECL:
+            break;
+    }
+    return(0);
+}
+
+/**
+ * XML_ObjectPtr_to_Xpaths
+ *
+ * @pObject
+ * @pLineDelimiter : delimiter between returned lines
+ */
+static char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject, char *pLineDelimiter)
+{
+	int iBufferSize = 8192;
+	if (NULL != pObject)
+	{
+		xmlNodeSetPtr nodes = XML_Object_to_NodeSet(pObject);
+		if (NULL != nodes)
+		{
+    			int i;
+			xmlNodePtr cur;
+		    	int size = (nodes) ? nodes->nodeNr : 0;
+			char *buffer = (char*)malloc(iBufferSize);
+			*buffer = (char)0; // null-terminate to start things off
+
+			for(i = 0; i < size; ++i)
+			{
+				cur = nodes->nodeTab[i];
+				if (NULL != cur)
+				{
+					xmlChar *cPtr = xmlGetNodePath(cur);
+					if (NULL != cPtr)
+					{
+						// make more room if needed
+						if (strlen(buffer) + strlen((char*)cPtr) > iBufferSize)
+						{
+							iBufferSize += strlen((char*)cPtr) + iBufferSize;
+							buffer = (char*)realloc(buffer, iBufferSize);
+						}
+						strncat(buffer, (char*)cPtr, strlen((char*)cPtr));
+						strcat(buffer, pLineDelimiter);
+						free((char*)cPtr);
+					}
+				}
+			}
+			return (buffer);
+		}
+		else
+			return(NULL);
+	}
+	else
+		return(NULL);
+}
+
+/**
+ * XML_ObjectPtr_to_Xpaths
+ *
+ * @pObject
+ * @pElementDelimiter : delimiter between returned elements
+ * @pLineDelimiter : delimiter between returned lines
+ */
+static char *XML_ObjectPtr_to_Data(xmlXPathObjectPtr pObject, char *pElementDelimiter, char *pLineDelimiter)
+{
+	int iBufferSize = 8192;
+	if (NULL != pObject)
+	{
+		xmlNodeSetPtr nodes = XML_Object_to_NodeSet(pObject);
+		if (NULL != nodes)
+		{
+    			int i;
+			xmlNodePtr cur;
+		    	int size = (nodes) ? nodes->nodeNr : 0;
+			char *buffer = (char*)malloc(iBufferSize);
+			*buffer = (char)0; // null-terminate to start things off
+
+			for(i = 0; i < size; ++i)
+			{
+				cur = nodes->nodeTab[i];
+				if (NULL != cur)
+				{
+					xmlChar *cPtr = xpathNodeGetContent(cur, pElementDelimiter);
+					if (NULL != cPtr)
+					{
+						// make more room if needed
+						if (strlen(buffer) + strlen((char*)cPtr) > iBufferSize)
+						{
+							buffer = (char*)realloc(buffer, iBufferSize * 2);
+							iBufferSize = iBufferSize * 2;
+						}
+						strncat(buffer, (char*)cPtr, strlen((char*)cPtr));
+						strcat(buffer, pLineDelimiter);
+						free((char*)cPtr);
+					}
+				}
+			}
+			return (buffer);
+		}
+		else
+			return(NULL);
+	}
+	else
+		return(NULL);
+}
+
+/**
+ * XML_EvalXPath
+ * @pDocID : xml tree id
+ * @pExpression : xpath to evaluate
+ * @pDelimiter : [optional] delimiter between paths (default="\n")
+ *
+ * Returns a cr-separated list of paths which is the result of
+ * evaluating the expression against the xml tree
+ *
+ * Example:
+ * put revXMLEvaluateXPath(tDocID, "/bookstore/books/[price<50]", tab)
+ */
+void XML_EvalXPath(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+
+	int docID = atoi(args[0]);
+	CXMLDocument *xmlDocument = doclist.find(docID);
+	if (NULL != xmlDocument)
+	{
+		xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
+		if (NULL != xmlDoc)
+		{
+			xmlXPathContextPtr ctx = xmlXPathNewContext(xmlDoc);
+			if (NULL != ctx)
+			{
+				xmlChar *str = (xmlChar *)args[1];
+
+				xmlXPathObjectPtr result = xmlXPathEvalExpression(str, ctx);
+				if (NULL != result)
+				{
+					char *cDelimiter;
+					if (nargs > 2)
+						cDelimiter = args[2];
+					else
+						cDelimiter = (char *)"\n";
+					char *xpaths = XML_ObjectPtr_to_Xpaths(result, cDelimiter);
+					if (NULL != xpaths)
+					{
+						*retstring = istrdup(xpaths);
+						free(xpaths);
+					}
+					else
+					{
+						*retstring = istrdup(xmlerrors[XPATHERR_CANTRESOLVE]);
+					}
+					xmlXPathFreeObject(result);
+				}
+				xmlXPathFreeContext(ctx);
+			}
+			else
+				*retstring = istrdup(xmlerrors[XPATHERR_BADDOCCONTEXT]);
+		}
+		else
+			*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+	}
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+}
+
+/**
+ * XML_XPathDataFromQuery
+ * @pDocID : xml tree id
+ * @pExpression : xpath to evaluate
+ * @pElementDelimiter : ]optional] delimiter between data elements (default="\n")
+ * @pLineDelimiter : [optional] delimiter between data lines (default="\n")
+ *
+ * Returns a cr-separated list of data which is the result of
+ * evaluating the expression against the xml tree
+ *
+ * put revXMLDataFromXPathQuery(tDocID, "/bookstore/books/[price<30]title", tab, cr)
+ */
+void XML_XPathDataFromQuery(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+
+	int docID = atoi(args[0]);
+	CXMLDocument *xmlDocument = doclist.find(docID);
+	if (NULL != xmlDocument)
+	{
+		xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
+		if (NULL != xmlDoc)
+		{
+			xmlXPathContextPtr ctx = xmlXPathNewContext(xmlDoc);
+			if (NULL != ctx)
+			{
+				xmlChar *str = (xmlChar *)args[1];
+
+				xmlXPathObjectPtr result = xmlXPathEvalExpression(str, ctx);
+				if (NULL != result)
+				{
+					char *charDelimiter;
+					char *lineDelimiter;
+					if (nargs > 2)
+						charDelimiter = args[2];
+					else
+						charDelimiter = (char *)"\n";
+					if (nargs > 3)
+						lineDelimiter = args[3];
+					else
+						lineDelimiter = (char *)"\n";
+					char *xpaths = XML_ObjectPtr_to_Data(result, charDelimiter, lineDelimiter);
+					if (NULL != xpaths)
+					{
+						*retstring = istrdup(xpaths);
+						free(xpaths);
+					}
+					else
+					{
+						*retstring = istrdup(xmlerrors[XPATHERR_CANTRESOLVE]);
+					}
+					xmlXPathFreeObject(result);
+				}
+				xmlXPathFreeContext(ctx);
+			}
+			else
+				*retstring = istrdup(xmlerrors[XPATHERR_BADDOCCONTEXT]);
+		}
+		else
+			*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+	}
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+}
+
+// MDW-2013-08-09: [[ RevXmlXslt ]]
+// XML stylesheet transformation functions
+
+/**
+ * XML_xsltLoadStylesheet
+ * @pStylesheetDocID : xml document id
+ *
+ * returns an xsltStylesheetPtr which can be used in xsltApplyStyleSheet.
+ * it's up to the user to free the stylesheet pointer after processing.
+ *
+ * put xsltLoadStylesheet(tStylesheetDocID)
+ */
+void XML_xsltLoadStylesheet(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+	xsltStylesheetPtr cur = NULL;
+	char *result;
+
+	if (1 == nargs)
+	{
+		int docID = atoi(args[0]);
+		CXMLDocument *xsltDocument = doclist.find(docID);
+		if (NULL != xsltDocument)
+		{
+			xmlDocPtr xmlDoc = xsltDocument->GetDocPtr();
+			if (NULL != xmlDoc)
+			{
+				cur = xsltParseStylesheetDoc(xmlDoc);
+				if (NULL != cur)
+				{
+					CXMLDocument *newdoc = new CXMLDocument(cur);
+					doclist.add(newdoc);
+					unsigned int docid = newdoc->GetID();
+
+					result = (char *)malloc(INTSTRSIZE);
+					sprintf(result,"%d",docid);
+				
+					*retstring = istrdup(result);
+					free(result);
+				}
+				else
+				{
+					// couldn't parse the stylesheet
+					*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+				}
+			}
+			// couldn't dereference the xml document
+			else
+				*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+		}
+		// couldn't dereference the xml id
+		else
+			*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+	}
+	// only one argument permitted
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
+}
+
+/**
+ * XML_xsltLoadStylesheetFromFile
+ * @pStylesheetPath : path to stylesheet file
+ *
+ * returns an xsltStylesheetPtr which can be used in xsltApplyStyleSheet
+ * it's up to the user to free the stylesheet pointer after processing.
+ *
+ * put xsltLoadStylesheetFromFile(tPathToStylesheet)
+ */
+void XML_xsltLoadStylesheetFromFile(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+	xsltStylesheetPtr cur = NULL;
+	char *result;
+
+	if (1 == nargs)
+	{
+		// MW-2013-09-11: [[ RevXmlXslt ]] Resolve the input path using the
+		//   standard LiveCode convention.
+		char *t_resolved_path;
+		t_resolved_path = os_path_resolve(args[0]);
+		char *t_native_path;
+		t_native_path = os_path_to_native(t_resolved_path);
+		
+		cur = xsltParseStylesheetFile((const xmlChar *)t_native_path);
+		if (NULL != cur)
+		{
+			CXMLDocument *newdoc = new CXMLDocument(cur);
+			doclist.add(newdoc);
+			unsigned int docid = newdoc->GetID();
+			result = (char *)malloc(INTSTRSIZE);
+			sprintf(result,"%d",docid);
+			*retstring = istrdup(result);
+			free(result);
+		}
+		else
+		{
+			// couldn't parse the stylesheet
+			*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+		}
+		
+		free(t_native_path);
+		free(t_resolved_path);
+	}
+	// only one argument permitted
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
+}
+
+/**
+ * XML_xsltFreeStylesheet
+ * @pStylesheet : id of a stylesheet cursor
+ *
+ * frees a xsltStylesheetPtr created by xsltLoadStylesheet
+ *
+ * xsltFreeStylesheet tStylesheetID
+ *
+ * NOTE: this is no longer necessary, so I commented out the reference to it
+ * but I'm keeping this here so I don't have to reinvent it if it becomes
+ * necessary to pull it in again. MDW-2013-09-04
+ */
+void XML_xsltFreeStylesheet(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+	xsltStylesheetPtr cur = NULL;
+
+	if (1 == nargs)
+	{
+		int docID = atoi(args[0]);
+		CXMLDocument *xsltDocument = doclist.find(docID);
+		if (NULL != xsltDocument)
+		{
+			cur = xsltDocument->GetXsltContext();
+			if (NULL != cur)
+			{
+				xsltFreeStylesheet(cur);
+				*retstring = (char *)calloc(1,1);
+			}
+			else
+			{
+				*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+			}
+		}
+		else
+		{
+			// couldn't dereference the xml id
+			*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+		}
+	}
+	// only one argument permitted
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
+}
+
+/**
+ * XML_xsltApplyStylesheet
+ * @pDocID : xml tree id (already parsed)
+ * @pStylesheet : xsltStylesheetPtr from xsltLoadStylesheet
+ * @pParamList : [optional] delimiter between data elements (default="\n")
+ *
+ * Returns the transformed xml data after applying the stylesheet.
+ * Note that the user must free the stylesheet document after processing.
+ *
+ * put xsltApplyStylesheet(tDocID, tStylesheet, tParamList)
+ * xsltFreeStylesheet tStylesheet
+ */
+void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+	xmlDocPtr xmlDoc, res;
+	xsltStylesheetPtr cur = NULL;
+	int nbparams = 0;
+	const char *params[16 + 1];
+	char *result;
+
+	xmlChar *doc_txt_ptr;
+	int doc_txt_len;
+
+	if (2 <= nargs)
+	{
+		int docID = atoi(args[0]);
+		CXMLDocument *xmlDocument = doclist.find(docID);
+		if (NULL != xmlDocument)
+		{
+			xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
+			if (NULL != xmlDoc)
+			{
+				int docID = atoi(args[1]);
+				CXMLDocument *xsltDocument = doclist.find(docID);
+				
+				// MW-2013-09-11: [[ RevXmlXslt ]] Only try to fetch the xsltContext if
+				//   we found the document.
+				if (xsltDocument != NULL)
+					cur = xsltDocument -> GetXsltContext();
+				
+				if (NULL != cur)
+				{
+					if (nargs > 2)
+					{
+						// no parameter support yet
+						params[nbparams] = NULL;
+					}
+					else
+					{
+						params[nbparams] = NULL;
+					}
+					res = xsltApplyStylesheet(cur, xmlDoc, params);
+
+					xsltSaveResultToString(&doc_txt_ptr, &doc_txt_len, res, cur);
+
+					*retstring = istrdup((char *)doc_txt_ptr);
+
+					// free the xml document - we're done with it
+					xmlFreeDoc(res);
+				}
+				else
+					*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+			}
+			else
+				*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+		}
+		else
+			*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+	}
+	// requires at least docID and stylesheetPtr arguments
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
+}
+
+/**
+ * XML_xsltApplyStylesheetFile
+ * @pDocID : xml tree id (already parsed)
+ * @pStylesheetPath : path to stylesheet file
+ * @pParamList : [optional] delimiter between data elements (default="\n")
+ *
+ * Returns the transformed xml data after applying the stylesheet.
+  *
+ * put xsltApplyStylesheet(tDocID, tStylesheetPath, tParamList)
+ */
+void XML_xsltApplyStylesheetFile(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+	xmlDocPtr xmlDoc, res;
+	xsltStylesheetPtr cur = NULL;
+	int nbparams = 0;
+	const char *params[16 + 1];
+
+	xmlChar *doc_txt_ptr;
+	int doc_txt_len;
+
+	if (2 <= nargs)
+	{
+		int docID = atoi(args[0]);
+		CXMLDocument *xmlDocument = doclist.find(docID);
+		if (NULL != xmlDocument)
+		{
+			xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
+			if (NULL != xmlDoc)
+			{
+				// MW-2013-09-11: [[ RevXmlXslt ]] Resolve the input path using the
+				//   standard LiveCode convention.
+				char *t_resolved_path;
+				t_resolved_path = os_path_resolve(args[1]);
+				char *t_native_path;
+				t_native_path = os_path_to_native(t_resolved_path);
+				
+				cur = xsltParseStylesheetFile((const xmlChar *)t_native_path);
+				if (NULL != cur)
+				{
+					if (nargs > 2)
+					{
+						// no parameter support yet
+						params[nbparams] = NULL;
+					}
+					else
+					{
+						params[nbparams] = NULL;
+					}
+					res = xsltApplyStylesheet(cur, xmlDoc, params);
+
+					xsltSaveResultToString(&doc_txt_ptr, &doc_txt_len, res, cur);
+
+					*retstring = istrdup((char *)doc_txt_ptr);
+
+					// free the xsltStylesheetPtr we just created
+					xsltFreeStylesheet(cur);
+					// free the xml document - we're done with it
+					xmlFreeDoc(res);
+				}
+				// couldn't dereference the stylesheet document
+				else
+					*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+				
+				free(t_native_path);
+				free(t_resolved_path);
+			}
+			// couldn't dereference the xml document
+			else
+				*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+		}
+		// couldn't dereference the xml id
+		else
+			*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+	}
+	// requires at least docID and stylesheetPath arguments
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
+}
+
 EXTERNAL_BEGIN_DECLARATIONS("revXML")
 	EXTERNAL_DECLARE_FUNCTION("revXMLinit", XML_Init)
 	EXTERNAL_DECLARE_FUNCTION("revXML_version", REVXML_Version)
@@ -2196,6 +3043,36 @@ EXTERNAL_BEGIN_DECLARATIONS("revXML")
 	EXTERNAL_DECLARE_FUNCTION("revXMLAttributes", XML_ListOfAttributes)
 	EXTERNAL_DECLARE_FUNCTION("revXMLMatchingNode", XML_FindElementByAttributeValue)
 	EXTERNAL_DECLARE_FUNCTION("revXMLAttributeValues", XML_ListByAttributeValue)
+// MDW-2013-06-22: [[ RevXmlXPath ]]
+	// declared preferred synonyms for consistency and sanity
+	// propose deprecating the old keywords
+	EXTERNAL_DECLARE_FUNCTION("revXMLCreateTree", XML_NewDocumentNS)
+    	EXTERNAL_DECLARE_FUNCTION("revXMLCreateTreeWithNamespaces", XML_NewDocumentNNS)
+    	EXTERNAL_DECLARE_FUNCTION("revXMLCreateTreeFromFile", XML_NewDocumentFromFileNS)
+    	EXTERNAL_DECLARE_FUNCTION("revXMLCreateTreeFromFileWithNamespaces", XML_NewDocumentFromFileNNS)
+	EXTERNAL_DECLARE_COMMAND("revXMLDeleteTree", XML_FreeDocument)
+	EXTERNAL_DECLARE_COMMAND("revXMLAppend", XML_AddXML)
+	EXTERNAL_DECLARE_COMMAND("revXMLDeleteAllTrees", XML_FreeAll)
+	EXTERNAL_DECLARE_COMMAND("revXMLAddNode", XML_AddElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLDeleteNode", XML_RemoveElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLInsertNode", XML_InsertElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLMoveNode", XML_MoveElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLCopyNode", XML_CopyElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLCopyRemoteNode", XML_CopyRemoteElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLMoveRemoteNode", XML_MoveRemoteElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLPutIntoNode", XML_SetElementContents)
+	EXTERNAL_DECLARE_COMMAND("revXMLSetAttribute", XML_SetAttributeValue)
+
+// MDW-2013-06-22: [[ RevXmlXPath ]]
+	EXTERNAL_DECLARE_FUNCTION("revXMLEvaluateXPath", XML_EvalXPath)
+	EXTERNAL_DECLARE_FUNCTION("revXMLDataFromXPathQuery", XML_XPathDataFromQuery)
+
+// MDW-2013-08-09: [[ RevXmlXslt ]]
+	EXTERNAL_DECLARE_FUNCTION("xsltApplyStylesheet", XML_xsltApplyStylesheet)
+	EXTERNAL_DECLARE_FUNCTION("xsltApplyStylesheetFile", XML_xsltApplyStylesheetFile)
+	EXTERNAL_DECLARE_FUNCTION("xsltLoadStylesheet", XML_xsltLoadStylesheet)
+	EXTERNAL_DECLARE_FUNCTION("xsltLoadStylesheetFromFile", XML_xsltLoadStylesheetFromFile)
+//	EXTERNAL_DECLARE_COMMAND("xsltFreeStylesheet", XML_xsltFreeStylesheet)
 EXTERNAL_END_DECLARATIONS
 
 
@@ -2205,7 +3082,7 @@ EXTERNAL_END_DECLARATIONS
 extern void REVXML_INIT();
 extern void REVXML_QUIT();
 
-extern "C" BOOL WINAPI xmlDllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
+extern "C" BOOL XMLCALL xmlDllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
 
 BOOL WINAPI DllMain(HINSTANCE tInstance, DWORD dwReason, LPVOID lpReserved)
 {
