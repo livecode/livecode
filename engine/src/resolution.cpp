@@ -41,6 +41,11 @@ MCGFloat MCResGetPixelScale(void)
 	return s_res_pixel_scale;
 }
 
+MCGFloat MCResGetUIScale(void)
+{
+	return MCResGetPixelScale() / MCResPlatformGetUIDeviceScale();
+}
+
 void MCResSetPixelScale(MCGFloat p_scale)
 {
 	// IM-2014-01-30: [[ HiDPI ]] Return if pixel scaling is not in use

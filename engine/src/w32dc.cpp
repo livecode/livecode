@@ -456,6 +456,12 @@ MCGFloat MCResPlatformGetDefaultPixelScale(void)
 	return 1.0;
 }
 
+// IM-2014-03-14: [[ HiDPI ]] UI scale is 1.0 on Windows
+MCGFloat MCResPlatformGetUIDeviceScale(void)
+{
+	return 1.0;
+}
+
 // IM-2014-01-30: [[ HiDPI ]] No-op as this cannot be modified at runtime on Windows
 void MCResPlatformHandleScaleChange(void)
 {
