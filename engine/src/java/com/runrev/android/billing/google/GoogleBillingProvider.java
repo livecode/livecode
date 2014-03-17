@@ -100,7 +100,6 @@ public class GoogleBillingProvider implements BillingProvider
         if (mHelper == null)
             return false;
         
-        //TODO
         return true;
     }
     
@@ -109,15 +108,12 @@ public class GoogleBillingProvider implements BillingProvider
         if (mHelper == null)
             return false;
         
-        //TODO
-        return true;
+		return true;
     }
     
     public boolean restorePurchases()
     {
-        // Not sure if this is needed, since inventory is queried when the app is launched (initBilling())
-        
-		if (mHelper == null)
+        if (mHelper == null)
 		{
 			return false;
 		}
@@ -128,7 +124,6 @@ public class GoogleBillingProvider implements BillingProvider
         return true;
     }
     
-    //public boolean sendRequest(int purchaseId, String productId, Map<String, String> properties)
     public boolean sendRequest(int purchaseId, String productId, String developerPayload)
     {
         if (mHelper == null)
@@ -200,7 +195,6 @@ public class GoogleBillingProvider implements BillingProvider
     
     public boolean productSetType(String productId, String productType)
     {
-        //TODO
         Log.d(TAG, "Setting type for productId" + productId + ", type is : " + productType);
         types.put(productId, productType);
         Log.d(TAG, "Querying HashMap, type is " + types.get(productId));
@@ -209,7 +203,6 @@ public class GoogleBillingProvider implements BillingProvider
     
     private String productGetType(String productId)
     {
-        //TODO
         return types.get(productId);
     }
     
@@ -271,7 +264,7 @@ public class GoogleBillingProvider implements BillingProvider
 					knownItems.add(skuDetails);
 					loadKnownItemToLocalInventory(skuDetails);
                     Log.d(TAG, "Details for requested product : " + skuDetails.toString());
-                    // TODO : Call productDetailsReceived
+                    
 					mPurchaseObserver.onProductDetailsReceived(productId);
 					
                 }
@@ -300,7 +293,6 @@ public class GoogleBillingProvider implements BillingProvider
             return false;
         
         else
-            //TODO
             return true;
     }
     
@@ -309,12 +301,7 @@ public class GoogleBillingProvider implements BillingProvider
         mPurchaseObserver = observer;
     }
     
-    public Map<String, String> getPurchaseProperties(int purchaseId)
-    {
-        //TODO
-        return new HashMap<String,String>();
-    }
-    
+	
     Activity getActivity()
     {
         return mActivity;
@@ -407,14 +394,6 @@ public class GoogleBillingProvider implements BillingProvider
         
     }
     
-    // Enables or disables the "please wait" screen.
-    void setWaitScreen(boolean set)
-    {
-        // Uncomment these lines after fixing the "R package not found " error
-        // getActivity().findViewById(R.id.screen_main).setVisibility(set ? View.GONE : View.VISIBLE);
-        //  getActivity().findViewById(R.id.screen_wait).setVisibility(set ? View.VISIBLE : View.GONE);
-    }
-    
     void complain(String message)
     {
         Log.e(TAG, "**** Error: " + message);
@@ -448,7 +427,6 @@ public class GoogleBillingProvider implements BillingProvider
             if (result.isFailure())
             {
                 complain("Error purchasing: " + result);
-                setWaitScreen(false);
                 mPurchaseObserver.onPurchaseStateChanged(pendingPurchaseSku, mapResponseCode(result.getResponse()));
                 pendingPurchaseSku = "";
                 return;
@@ -457,7 +435,6 @@ public class GoogleBillingProvider implements BillingProvider
             if (!verifyDeveloperPayload(purchase))
             {
                 complain("Error purchasing. Authenticity verification failed.");
-                setWaitScreen(false);
                 return;
             }
             
@@ -494,7 +471,6 @@ public class GoogleBillingProvider implements BillingProvider
                 complain("Error while consuming: " + result);
             }
 
-            setWaitScreen(false);
             Log.d(TAG, "End consumption flow.");
         }
     };
@@ -518,7 +494,6 @@ public class GoogleBillingProvider implements BillingProvider
 
             Log.d(TAG, "Query inventory was successful.");
 
-            setWaitScreen(false);
             Log.d(TAG, "Initial inventory query finished; enabling main UI.");
 
             List<Purchase> purchaseList = inventory.getallpurchases();

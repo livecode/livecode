@@ -2,7 +2,6 @@
 package com.runrev.android.billing.amazon;
 
 import com.runrev.android.billing.*;
-//import com.runrev.android.billing.amazon.MyPurchasingObserver;
 import com.amazon.inapp.purchasing.*;
 import com.amazon.inapp.purchasing.PurchaseResponse.PurchaseRequestStatus;
 
@@ -33,7 +32,6 @@ public class AmazonBillingProvider implements BillingProvider
         Log.v(TAG, "IAP initialised");
         started = true;
         PurchasingManager.initiateGetUserIdRequest();
-        //restorePurchases();
     }
     
     public void onDestroy()
@@ -62,7 +60,9 @@ public class AmazonBillingProvider implements BillingProvider
 
     public boolean disableUpdates()
     {
-        //TODO
+        if (!started)
+            return false;
+        
         return true;
     }
     
@@ -75,7 +75,6 @@ public class AmazonBillingProvider implements BillingProvider
         return true;
     }
 
-    //public boolean sendRequest(int purchaseId, String productId, Map<String, String> properties)
     public boolean sendRequest(int purchaseId, String productId, String developerPayload)
     {
         if (!started)
@@ -166,18 +165,13 @@ public class AmazonBillingProvider implements BillingProvider
         if (!started)
             return false;
         
-        // Amazon client is responsible for validating purchase receipts. Does that mean that this method does nothing?
+        // Amazon client is responsible for validating purchase receipts. 
         return true;
     }
 
     public void setPurchaseObserver(PurchaseObserver observer)
     {
         mPurchaseObserver = observer;
-    }
-    
-    public Map<String, String> getPurchaseProperties(int purchaseId)
-    {
-        return new HashMap<String,String>();
     }
     
     Activity getActivity()
@@ -436,10 +430,7 @@ public class AmazonBillingProvider implements BillingProvider
                     /*
                      * You can verify the receipt and fulfill the purchase on successful responses.
                      */
-                    //Receipt receipt = response.getReceipt();
-                    //String itemType = receipt.getItemType().toString();
-                    //String sku = receipt.getSku();
-                    //String purchaseToken = receipt.getPurchaseToken();
+                    
                     Log.v(TAG, "Successsful purchase for request" + requestIds.get(response.getRequestId()));
                     Log.v(TAG, "Ordinal for SUCCESSFUL = " + response.getPurchaseRequestStatus().ordinal());
                     break;

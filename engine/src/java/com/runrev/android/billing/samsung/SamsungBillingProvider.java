@@ -119,42 +119,34 @@ public class SamsungBillingProvider implements BillingProvider
     boolean loadBaseToLocalInventory(BaseVO baseVO)
     {
         boolean success = true;
-        //Log.d(TAG, "Base Item id is : " + baseVO.getItemId());
-        //Log.d(TAG, "Base Item name is : " + baseVO.getItemName());
+        
         if (success)
         {
             success = setPurchaseProperty(baseVO.getItemId(), "productId", baseVO.getItemId());
-            //Log.d(TAG, "Base productId loaded successfully");
         }
         if (success)
         {
             success = setPurchaseProperty(baseVO.getItemId(), "title", baseVO.getItemName());
-            //Log.d(TAG, "Base itemName loaded successfully");
         }
         if (success)
         {
             success = setPurchaseProperty(baseVO.getItemId(), "price", baseVO.getItemPriceString());
-            //Log.d(TAG, "Base itemPriceString loaded successfully");
         }
         if (success)
         {
             success = setPurchaseProperty(baseVO.getItemId(), "currencyUnit", baseVO.getCurrencyUnit());
-            //Log.d(TAG, "Base currencyUnit loaded successfully");
         }
         if (success)
         {
             success = setPurchaseProperty(baseVO.getItemId(), "description", baseVO.getItemDesc());
-            //Log.d(TAG, "Base itemDescription loaded successfully");
         }
         if (success)
         {
             success = setPurchaseProperty(baseVO.getItemId(), "itemImageUrl", baseVO.getItemImageUrl());
-            //Log.d(TAG, "Base itemImageUrl loaded successfully");
         }
         if (success)
         {
             success = setPurchaseProperty(baseVO.getItemId(), "itemDownloadUrl", baseVO.getItemDownloadUrl());
-            //Log.d(TAG, "Base itemDownloadUrl loaded successfully");
         }
         return success;
     }
@@ -182,8 +174,6 @@ public class SamsungBillingProvider implements BillingProvider
     boolean loadInboxToLocalInventory(InBoxVO inboxVO)
     {
         boolean success = loadBaseToLocalInventory(inboxVO);
-        //Log.d(TAG, "Inbox Item id is : " + inboxVO.getItemId());
-        //Log.d(TAG, "Inbox Item name is : " + inboxVO.getItemName());
 
         if (success)
             success = setPurchaseProperty(inboxVO.getItemId(), "paymentId", inboxVO.getPaymentId());
@@ -204,8 +194,6 @@ public class SamsungBillingProvider implements BillingProvider
     boolean loadItemToLocalInventory(ItemVO itemVO)
     {
         boolean success = loadBaseToLocalInventory(itemVO);
-        //Log.d(TAG, "Inbox Item id is : " + inboxVO.getItemId());
-        //Log.d(TAG, "Inbox Item name is : " + inboxVO.getItemName());
 
         if (success)
             success = setPurchaseProperty(itemVO.getItemId(), "itemType", itemVO.getType());
@@ -244,15 +232,10 @@ public class SamsungBillingProvider implements BillingProvider
 
                 if (helper.isInstalledIapPackage(getActivity()))
                 {
-                    if (helper.isValidIapPackage(getActivity()))
+                    if (!helper.isValidIapPackage(getActivity()))
                     {
-                        //TODO : Investigate why putting this here causes a "waiting" popup screen that runs forever
-
-                        //helper.showProgressDialog(getActivity());
-                        //helper.startAccountActivity(getActivity());
-                    }
-                    else
                         helper.showIapDialog(getActivity(), "title_iap", "msg_invalid_iap_package", true, null);
+                    }
                 }
                 else
                 {
@@ -270,7 +253,6 @@ public class SamsungBillingProvider implements BillingProvider
         {
             isInitialized = true;
             pendingPurchaseItemId = itemId;
-            //initHelper();
 
             getActivity().runOnUiThread(new Runnable()
             {
@@ -439,8 +421,6 @@ public class SamsungBillingProvider implements BillingProvider
         if (!isInitialized)
         {
             isInitialized = true;
-            //pendingPurchaseItemId = itemId;
-            //initHelper();
 
             getActivity().runOnUiThread(new Runnable()
             {
@@ -459,7 +439,6 @@ public class SamsungBillingProvider implements BillingProvider
         return false;
     }
 
-    //public boolean sendRequest(int purchaseId, String productId, Map<String, String> properties)
     public boolean sendRequest(int purchaseId, String productId, String developerPayload)
     {
         if (!started)
@@ -547,7 +526,6 @@ public class SamsungBillingProvider implements BillingProvider
     public String getPurchaseList()
     {
         return ownedItems.toString();
-        //return itemProps.keySet().toString();
     }
 
     public boolean confirmDelivery(int purchaseId)
@@ -555,18 +533,12 @@ public class SamsungBillingProvider implements BillingProvider
         if (!started)
             return false;
 
-        // TODO
         return true;
     }
     
     public void setPurchaseObserver(PurchaseObserver observer)
     {
         mPurchaseObserver = observer;
-    }
-    
-    public Map<String, String> getPurchaseProperties(int purchaseId)
-    {
-        return new HashMap<String,String>();
     }
     
     public Activity getActivity()
