@@ -483,7 +483,7 @@ private:
 	}
 	
 	// IM-2014-03-13: [[ revBrowserCEF ]] Remove the named handler from the liveCode object browser's JavaScript context
-	bool RemoveBrowserFunc(CefRefPtr<CefBrowser> p_browser, const CefString &p_name)
+	bool RemoveLiveCodeHandler(CefRefPtr<CefBrowser> p_browser, const CefString &p_name)
 	{
 		bool t_success;
 		t_success = true;
@@ -591,9 +591,9 @@ public:
 			t_enable = p_message->GetArgumentList()->GetBool(1);
 
 			if (t_enable)
-				t_success = AddBrowserFunc(p_browser, t_handler);
+				t_success = AddLiveCodeHandler(p_browser, t_handler);
 			else
-				t_success = RemoveBrowserFunc(p_browser, t_handler);
+				t_success = RemoveLiveCodeHandler(p_browser, t_handler);
 
 			///* UNCHECKED */ MCCefSendIntResult(p_browser, t_success, 0);
 
@@ -616,7 +616,7 @@ bool MCCefCreateApp(CefRefPtr<CefApp> &r_app)
 	
 	if (t_app == nil)
 	{
-		MCLog("failed to create app", nil);
+		//MCLog("failed to create app", nil);
 		return false;
 	}
 	

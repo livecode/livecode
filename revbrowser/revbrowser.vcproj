@@ -190,6 +190,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\cefbrowser_w32.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\osxbrowser.cpp"
 				>
 				<FileConfiguration
@@ -232,10 +236,6 @@
 						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\src\w32cefbrowser.cpp"
-				>
 			</File>
 		</Filter>
 		<Filter

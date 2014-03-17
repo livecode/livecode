@@ -172,6 +172,10 @@
 				RelativePath=".\src\cefprocess.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\cefprocess_w32.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
