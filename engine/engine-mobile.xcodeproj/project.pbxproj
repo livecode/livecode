@@ -2224,7 +2224,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "$PLATFORM_DEVELOPER_BIN_DIR/g++ -nodefaultlibs -Wl,-r -Wl,-x -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SOLUTION_DIR/engine//standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol -L\"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME\" -licudata -licui18n -licuio -licule -liculx -licuuc\n";
+			shellScript = "$PLATFORM_DEVELOPER_BIN_DIR/g++ -ObjC -nodefaultlibs -nostartfiles -Wl,-r -Wl,-x -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SOLUTION_DIR/engine//standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol -L\"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME\" -licudata -licui18n -licuio -licule -liculx -licuuc\n";
 			showEnvVarsInLog = 0;
 		};
 		4DBF5B5B1802E7C1009CAB2E /* Copy revsecurity */ = {
