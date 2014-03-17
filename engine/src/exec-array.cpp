@@ -943,8 +943,18 @@ bool MCMatrixMultiply(matrix_t *p_a, matrix_t *p_b, matrix_t*& r_c)
 
 void MCArraysEvalMatrixMultiply(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, MCArrayRef& r_result)
 {
+	// MW-2014-03-14: [[ Bug 11924 ]] If both are empty arrays, then the result
+	//   is empty.
+    if (MCArrayIsEmpty(p_left) && MCArrayIsEmpty(p_right))
+    {
+        r_result = MCValueRetain(kMCEmptyArray);
+        return;
+    }
+    
+    // MW-2014-03-14: [[ Bug 11924 ]] If either array is empty, then its a mismatch.
 	MCAutoPointer<matrix_t> t_left, t_right, t_product;
-	if (!MCArraysCopyMatrix(ctxt, p_left, &t_left) || !MCArraysCopyMatrix(ctxt, p_right, &t_right) ||
+	if (MCArrayIsEmpty(p_left) || MCArrayIsEmpty(p_right) ||
+        !MCArraysCopyMatrix(ctxt, p_left, &t_left) || !MCArraysCopyMatrix(ctxt, p_right, &t_right) ||
 		!MCMatrixMultiply(*t_left, *t_right, &t_product))
 	{
 		ctxt.LegacyThrow(EE_MATRIXMULT_MISMATCH);

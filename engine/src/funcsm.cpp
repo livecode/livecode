@@ -597,10 +597,19 @@ void MCMatrixMultiply::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 		return ES_ERROR;
 	}
     
+	// MW-2014-03-14: [[ Bug 11924 ]] Make sure the dst is an array.
 	MCVariableValue *t_dst_array;
 	Boolean t_delete_dst_array;
-	ep . takearray(t_dst_array, t_delete_dst_array);
-    
+	if (ep . isempty())
+		t_dst_array = nil;
+	else if (ep . getformat() == VF_ARRAY)
+		ep . takearray(t_dst_array, t_delete_dst_array);
+	else
+	{
+		MCeerror->add(EE_MATRIXMULT_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+
 	if (source -> eval(ep) != ES_NORMAL)
 	{
 		if (t_delete_dst_array)
@@ -609,13 +618,32 @@ void MCMatrixMultiply::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 		MCeerror->add(EE_MATRIXMULT_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
-    
+	
+	// MW-2014-03-14: [[ Bug 11924 ]] Make sure the src is an array.
 	MCVariableValue *t_src_array;
 	Boolean t_delete_src_array;
-	ep . takearray(t_src_array, t_delete_src_array);
-    
+	if (ep . isempty())
+		t_src_array = nil;
+	else if (ep . getformat() == VF_ARRAY)
+		ep . takearray(t_src_array, t_delete_src_array);
+	else
+	{
+		MCeerror->add(EE_MATRIXMULT_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	
+	// MW-2014-03-14: [[ Bug 11924 ]] If both are empty arrays, then the result
+	//   is empty.
+	if (t_src_array == nil && t_dst_array == nil)
+	{
+		ep . clear();
+		return ES_NORMAL;
+	}
+	
+	// MW-2014-03-14: [[ Bug 11924 ]] If either array is empty, then its a mismatch.
 	MCVariableValue *v = new MCVariableValue();
-	if (v->matrixmultiply(ep, *t_dst_array, *t_src_array) != ES_NORMAL)
+	if ((t_src_array == nil || t_dst_array == nil) ||
+		v->matrixmultiply(ep, *t_dst_array, *t_src_array) != ES_NORMAL)
 	{
 		MCeerror->add(EE_MATRIXMULT_MISMATCH, line, pos);
 		

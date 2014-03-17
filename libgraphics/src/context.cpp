@@ -2027,7 +2027,12 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
 		}
 		else if (p_pattern != NULL)
 		{
-			//t_filter = p_pattern -> filter;
+			// MM-2014-03-12: [[ Bug 11892 ]] If we are not transforming the pattern, there's no need to apply any filtering.
+			//  Was causing issues in Skia with non null blend modes.
+			SkMatrix::TypeMask t_transform_type;
+			t_transform_type = self -> layer -> canvas -> getTotalMatrix() . getType();
+			if (t_transform_type != SkMatrix::kIdentity_Mask && t_transform_type != SkMatrix::kTranslate_Mask)
+				t_filter = p_pattern -> filter;
 			t_success = MCGPatternToSkShader(p_pattern, t_shader);
 		}
 		else if (p_paint_style == kMCGPaintStyleStippled)
@@ -2376,27 +2381,40 @@ static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap,
 
 	if (t_success)
 	{
-        // MM-2014-01-09: [[ ImageFilterUpdate ]] Updated filters to use Skia's new filter levels.
-		switch (p_filter)
+		// MM-2014-03-12: [[ Bug 11892 ]] If we are not transforming the image, there's no need to apply any filtering.
+		//  Was causing issues in Skia with non null blend modes.
+		SkMatrix::TypeMask t_transform_type;
+		t_transform_type = self -> layer -> canvas -> getTotalMatrix() . getType();
+		if ((t_transform_type == SkMatrix::kIdentity_Mask || t_transform_type == SkMatrix::kTranslate_Mask) &&
+			p_bitmap . width() == p_dst . size . width && p_bitmap . height() == p_dst . size . height)
 		{
-            case kMCGImageFilterNone:
-                t_paint . setAntiAlias(false);
-                t_paint . setFilterLevel(SkPaint::kNone_FilterLevel);
-				break;
-            case kMCGImageFilterLow:
-                t_paint . setAntiAlias(false);
-                t_paint . setFilterLevel(SkPaint::kLow_FilterLevel);
-				break;
-			case kMCGImageFilterMedium:
-                t_paint . setAntiAlias(true);
-                t_paint . setFilterLevel(SkPaint::kMedium_FilterLevel);
-				break;
-			case kMCGImageFilterHigh:
-                t_paint . setAntiAlias(true);
-                t_paint . setFilterLevel(SkPaint::kHigh_FilterLevel);
-				break;
+			t_paint . setAntiAlias(false);
+			t_paint . setFilterLevel(SkPaint::kNone_FilterLevel);
 		}
-
+		else
+		{
+			// MM-2014-01-09: [[ ImageFilterUpdate ]] Updated filters to use Skia's new filter levels.
+			switch (p_filter)
+			{
+				case kMCGImageFilterNone:
+					t_paint . setAntiAlias(false);
+					t_paint . setFilterLevel(SkPaint::kNone_FilterLevel);
+					break;
+				case kMCGImageFilterLow:
+					t_paint . setAntiAlias(false);
+					t_paint . setFilterLevel(SkPaint::kLow_FilterLevel);
+					break;
+				case kMCGImageFilterMedium:
+					t_paint . setAntiAlias(true);
+					t_paint . setFilterLevel(SkPaint::kMedium_FilterLevel);
+					break;
+				case kMCGImageFilterHigh:
+					t_paint . setAntiAlias(true);
+					t_paint . setFilterLevel(SkPaint::kHigh_FilterLevel);
+					break;
+			}
+		}
+		
 		SkRect t_src_rect;
 		SkRect *t_src_rect_ptr = nil;
 		if (p_src != nil)

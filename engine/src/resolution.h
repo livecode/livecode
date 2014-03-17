@@ -30,6 +30,8 @@ void MCResInitPixelScaling(void);
 void MCResSetPixelScale(MCGFloat p_scale);
 // Return the scaling factor from stack to device coordinates.
 MCGFloat MCResGetPixelScale(void);
+// IM-2014-03-14: [[ HiDPI ]] Return the scaling factor from stack to platform UI coordinates
+MCGFloat MCResGetUIScale(void);
 
 // IM-2014-01-27: [[ HiDPI ]] enable or disable pixel scaling
 void MCResSetUsePixelScaling(bool p_use_scaling);
@@ -46,6 +48,8 @@ void MCResListScreenPixelScales(bool p_plural, uindex_t& r_count, double *&r_lis
 
 // IM-2014-01-30: [[ HiDPI ]] Return the default pixel scale for the platform
 MCGFloat MCResPlatformGetDefaultPixelScale(void);
+// IM-2014-03-14: [[ HiDPI ]] Return the scale factor from platform UI coords to device pixels
+MCGFloat MCResPlatformGetUIDeviceScale(void);
 
 // IM-2014-01-27: [[ HiDPI ]] Return whether or not pixel scaling is supported by the platform
 bool MCResPlatformSupportsPixelScaling(void);
