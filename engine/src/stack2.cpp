@@ -568,6 +568,14 @@ Boolean MCStack::takewindow(MCStack *sptr)
 	if (MCmousestackptr == sptr)
 		MCmousestackptr = this;
 	start_externals();
+    
+#ifdef _MOBILE
+    // MW-2014-03-14: [[ Bug 11813 ]] Make sure we tell MCScreenDC that the top window
+    //   has changed, and mark our stack as its own window.
+    MCscreen -> openwindow((Window)this, False);
+    window = (Window)this;
+#endif
+    
 	return True;
 }
 
