@@ -918,7 +918,7 @@ void MCPrinter::SetResult(void)
 	switch (m_loop_status)
 	{
 	case STATUS_READY:
-		MCresult -> empty();
+		MCresult -> clear();
 	break;
 	
 	case STATUS_CANCELLED:

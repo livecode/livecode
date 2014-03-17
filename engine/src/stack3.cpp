@@ -143,7 +143,7 @@ IO_stat MCStack::load(IO_handle stream, uint32_t version, uint1 type)
 	// Community edition cannot read encrypted stacks
 	if (type != OT_STACK)
 	{
-		if (MCresult->isempty() && type == OT_ENCRYPT_STACK)
+		if (MCresult->isclear() && type == OT_ENCRYPT_STACK)
 			MCresult->sets("Encrypted stacks cannot be opened in Community Edition");
 		return IO_ERROR;
 	}

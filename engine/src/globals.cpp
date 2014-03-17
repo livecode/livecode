@@ -1028,7 +1028,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	
 	// MW-2009-07-02: Clear the result as a startup failure will be indicated
 	//   there.
-	MCresult -> empty();
+	MCresult -> clear();
 	if (MCdispatcher->startup() != IO_NORMAL)
 		return false;
 

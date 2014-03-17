@@ -153,12 +153,6 @@ void MCVariable::clear(Boolean p_delete_buffer)
     value = MCValueRetain(kMCNull);
 }
 
-void MCVariable::empty()
-{
-	MCValueRelease(value);
-    value = MCValueRetain(kMCEmptyString);
-}
-
 Exec_stat MCVariable::sets(const MCString& p_string)
 {
 	copysvalue(p_string);

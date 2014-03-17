@@ -525,7 +525,7 @@ MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term et
 		if (MCdispatcher->readfile(NULL, NULL, stream, sptr) != IO_NORMAL)
 		{
 			MCS_close(stream);
-			if (MCresult->isempty())
+			if (MCresult->isclear())
                 ctxt . SetTheResultToCString("can't build stack from string");
             return nil;
 		}
@@ -571,7 +571,7 @@ MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term et
 		}
 	}
     else
-		if (MCresult->isempty())
+		if (MCresult->isclear())
             ctxt . SetTheResultToCString("no such card");
 	return sptr;
 }

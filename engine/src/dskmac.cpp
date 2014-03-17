@@ -743,7 +743,7 @@ static void MCS_launch_set_result_from_lsstatus(void)
 	switch(t_error)
 	{
         case 0:
-            MCresult -> empty();
+            MCresult -> clear();
             break;
             
         case 1:
@@ -2737,7 +2737,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         CloseResFile(resFileRefNum);
         
-        if (!MCresult -> isempty())
+        if (!MCresult -> isclear())
         {
             return MCStringCopy((MCStringRef)MCresult -> getvalueref(), r_error);
         }
@@ -2838,7 +2838,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         
         bool t_success = true;
-        if (MCresult -> isempty())
+        if (MCresult -> isclear())
         {
             //getting the the resource's size throuth the resource handle
             int4 resLength = GetHandleSize(rh);
@@ -2852,7 +2852,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             CloseResFile(resFileRefNum);
         }
         
-        if (!MCresult -> isempty())
+        if (!MCresult -> isclear())
         {
             return MCStringCopy((MCStringRef)MCresult->getvalueref(), r_error);
         }
@@ -3313,7 +3313,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         }
         
         CloseResFile(rfRefNum);
-        if (MCresult->isempty())
+        if (MCresult->isclear())
             return true;
         
         MCAssert(MCValueGetTypeCode(MCresult->getvalueref()) == kMCValueTypeCodeString);
@@ -3583,7 +3583,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         if (*t_error != nil)
 		/* UNCHECKED */ MCresult -> setvalueref(*t_error);
         else
-            MCresult -> empty();
+            MCresult -> clear();
     }
     
     // MW-2006-08-05: Vetted for Endian issues
