@@ -161,7 +161,7 @@ void MCHandlerlist::reset(void)
 	}
 
 	for(uint32_t i = 0; i < nvars; i++)
-		MCNameDelete(vinits[i]);
+		MCValueRelease(vinits[i]);
 	delete vinits;
 	vinits = NULL;
 	nvars = 0;
@@ -173,7 +173,7 @@ void MCHandlerlist::reset(void)
 	for(uint32_t i = 0; i < nconstants; i++)
 	{
 		MCNameDelete(cinfo[i] . name);
-		MCNameDelete(cinfo[i] . value);
+		MCValueRelease(cinfo[i] . value);
 	}
 	delete cinfo;
 	cinfo = NULL;
@@ -252,7 +252,7 @@ Parse_stat MCHandlerlist::findvar(MCNameRef p_name, bool p_ignore_uql, MCVarref 
 	return PS_NO_MATCH;
 }
 
-Parse_stat MCHandlerlist::newvar(MCNameRef p_name, MCNameRef p_init, MCVarref **newptr, Boolean initialised)
+Parse_stat MCHandlerlist::newvar(MCNameRef p_name, MCValueRef p_init, MCVarref **newptr, Boolean initialised)
 {
 	MCVariable *t_new_variable;
 
@@ -312,9 +312,9 @@ Parse_stat MCHandlerlist::newvar(MCNameRef p_name, MCNameRef p_init, MCVarref **
 	// MW-2008-10-28: [[ ParentScripts ]] Extend the vinits array
 	// MW-2011-08-22: [[ Bug ]] Don't clone the init when we are creating a UQL in
 	//   global script scope (never used as parentscript so irrelevant).
-	MCU_realloc((char **)&vinits, nvars, nvars + 1, sizeof(MCNameRef));
+	MCU_realloc((char **)&vinits, nvars, nvars + 1, sizeof(MCValueRef));
 	if (p_init != nil)
-		/* UNCHECKED */ MCNameClone(p_init, vinits[nvars]);
+		/* UNCHECKED */ vinits[nvars] = MCValueRetain(p_init);
 	else
 		vinits[nvars] = p_init;
 
@@ -336,11 +336,11 @@ Parse_stat MCHandlerlist::findconstant(MCNameRef p_name, MCExpression **dptr)
 	return PS_NO_MATCH;
 }
 
-Parse_stat MCHandlerlist::newconstant(MCNameRef p_name, MCNameRef p_value)
+Parse_stat MCHandlerlist::newconstant(MCNameRef p_name, MCValueRef p_value)
 {
 	MCU_realloc((char **)&cinfo, nconstants, nconstants + 1, sizeof(MCHandlerConstantInfo));
 	/* UNCHECKED */ MCNameClone(p_name, cinfo[nconstants].name);
-	/* UNCHECKED */ MCNameClone(p_value, cinfo[nconstants++].value);
+	/* UNCHECKED */ cinfo[nconstants++].value = MCValueRetain(p_value);
 	return PS_NORMAL;
 }
 

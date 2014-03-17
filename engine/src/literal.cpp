@@ -41,8 +41,8 @@ Exec_stat MCLiteral::eval(MCExecPoint &ep)
 
 void MCLiteral::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
-	r_value . type = kMCExecValueTypeNameRef;
-	r_value . nameref_value = MCValueRetain(value);
+	r_value . type = kMCExecValueTypeValueRef;
+	r_value . valueref_value = MCValueRetain(value);
 }
 
 void MCLiteral::compile(MCSyntaxFactoryRef ctxt)
@@ -72,7 +72,7 @@ void MCLiteralNumber::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         ep.setboth(MCNameGetOldString(value), nvalue);
 	return ES_NORMAL;
 #else
-	r_value . type = kMCExecValueTypeNameRef;
-	r_value . nameref_value = MCValueRetain(value);
+	r_value . type = kMCExecValueTypeValueRef;
+	r_value . valueref_value = MCValueRetain(value);
 #endif
 }

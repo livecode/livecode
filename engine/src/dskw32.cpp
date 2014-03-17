@@ -834,7 +834,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
         {
             /* RESULT */ //MCresult->sets("no key");
 			r_error = MCSTR("no key");
-			r_value = MCValueRetain(kMCNull);
+			r_value = MCValueRetain(kMCEmptyString);
 			return true;
         }
         

@@ -24,15 +24,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCLiteral : public MCExpression
 {
-	MCNameRef value;
+	MCValueRef value;
 public:
-	MCLiteral(MCNameRef v)
+	MCLiteral(MCValueRef v)
 	{
-		/* UNCHECKED */ MCNameClone(v, value);
+		/* UNCHECKED */ value = MCValueRetain(v);
 	}
 	~MCLiteral(void)
 	{
-		MCNameDelete(value);
+		MCValueRelease(value);
 	}
 
     virtual Parse_stat parse(MCScriptPoint &, Boolean the);
@@ -42,17 +42,17 @@ public:
 
 class MCLiteralNumber : public MCExpression
 {
-	MCNameRef value;
+	MCValueRef value;
 	double nvalue;
 public:
-	MCLiteralNumber(MCNameRef v, double n)
+	MCLiteralNumber(MCValueRef v, double n)
 	{
-		/* UNCHECKED */ MCNameClone(v, value);
+		/* UNCHECKED */ value = MCValueRetain(v);
 		nvalue = n;
 	}
 	~MCLiteralNumber(void)
 	{
-		MCNameDelete(value);
+		MCValueRelease(value);
 	}
 
     virtual Parse_stat parse(MCScriptPoint &, Boolean the);

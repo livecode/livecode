@@ -104,23 +104,25 @@ static bool MCLogicIsEqualTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef 
 	t_left_is_empty = MCValueIsEmpty(p_left);
 	t_right_is_empty = MCValueIsEmpty(p_right);
     
-    // SN-2014-04-03: A non-valid valueref kMCNull - only returned by asking a non-existing index in an array -
-    // is only equal to an empty value. That's the only way to mimic the nil value returned in such circumstances in the 6.x engine
-    // Otherwise a number comparison is required, if not a string one.
-    if ((p_left == kMCNull && !t_right_is_empty)
-            || (p_right == kMCNull && !t_left_is_empty))
+    bool t_left_converted;
+    real64_t t_left_num;
+    if (p_left == kMCNull || !t_left_is_empty)
     {
-        r_result = false;
-        return true;
+        if (!ctxt . TryToConvertToReal(p_left, t_left_converted, t_left_num))
+            return false;
     }
-
-    // If both can be numbers, then compare them as that.
-    bool t_left_converted, t_right_converted;
-    real64_t t_left_num, t_right_num;
+    else
+        t_left_converted = false;
     
-    if (!ctxt . TryToConvertToReal(p_left, t_left_converted, t_left_num) ||
-        !ctxt . TryToConvertToReal(p_right, t_right_converted, t_right_num))
-        return false;
+    bool t_right_converted;
+    real64_t t_right_num;
+    if (p_right == kMCNull || !t_right_is_empty)
+    {
+        if (!ctxt . TryToConvertToReal(p_right, t_right_converted, t_right_num))
+            return false;
+    }
+    else
+        t_right_converted = false;
     
     if (t_left_converted && t_right_converted)
     {

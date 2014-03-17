@@ -1880,7 +1880,7 @@ void MCFilesExecReadFromStdin(MCExecContext& ctxt, MCStringRef p_sentinel, uint4
 	if (!MCnoui && MCS_isinteractiveconsole(0))
 	{
 		ctxt . SetTheResultToStaticCString("eof");
-		ctxt . SetItToValue(kMCNull);
+		ctxt . SetItToValue(kMCEmptyString);
 		return;
 	}
 	else

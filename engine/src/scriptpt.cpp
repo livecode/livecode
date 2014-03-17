@@ -1382,7 +1382,7 @@ Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
                 else if (token.getlength() == 5 && MCU_strncasecmp(token_cstring, "empty", 5) == 0)
                 {
                     // Uses the kMCNull as a StringRef - that's what is expected from 'empty'
-                    *dest = new MCConstant(kMCNull, BAD_NUMERIC);
+                    *dest = new MCConstant(kMCEmptyString, BAD_NUMERIC);
                 }
 				else
 					*dest = new MCConstant(MCSTR(constant_table[mid].svalue),

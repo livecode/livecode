@@ -84,7 +84,7 @@ MCHandler::~MCHandler()
 	for(uint32_t i = 0; i < nvnames; i++)
 	{
 		MCNameDelete(vinfo[i] . name);
-		MCNameDelete(vinfo[i] . init);
+		MCValueRelease(vinfo[i] . init);
 	}
 	delete vinfo;
 
@@ -97,7 +97,7 @@ MCHandler::~MCHandler()
 	for(uint32_t i = 0; i < nconstants; i++)
 	{
 		MCNameDelete(cinfo[i] . name);
-		MCNameDelete(cinfo[i] . value);
+		MCValueRelease(cinfo[i] . value);
 	}
 	delete cinfo;
 	
@@ -497,7 +497,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 			if (nvnames >= oldnvnames)
 			{
 				MCNameDelete(vinfo[nvnames] . name);
-				MCNameDelete(vinfo[nvnames] . init);
+				MCValueRelease(vinfo[nvnames] . init);
 			}
 			delete vars[nvnames];
 		}
@@ -786,12 +786,12 @@ Parse_stat MCHandler::findvar(MCNameRef p_name, MCVarref **dptr)
 	return hlist->findvar(p_name, true, dptr);
 }
 
-Parse_stat MCHandler::newvar(MCNameRef p_name, MCNameRef p_init, MCVarref **r_ref)
+Parse_stat MCHandler::newvar(MCNameRef p_name, MCValueRef p_init, MCVarref **r_ref)
 {
 	MCU_realloc((char **)&vinfo, nvnames, nvnames + 1, sizeof(MCHandlerVarInfo));
 	/* UNCHECKED */ MCNameClone(p_name, vinfo[nvnames] . name);
 	if (p_init != nil)
-		/* UNCHECKED */ MCNameClone(p_init, vinfo[nvnames] . init);
+		/* UNCHECKED */ vinfo[nvnames] . init = MCValueRetain(p_init);
 	else
 		vinfo[nvnames] . init = nil;
 
@@ -826,11 +826,11 @@ Parse_stat MCHandler::findconstant(MCNameRef p_name, MCExpression **dptr)
 	return hlist->findconstant(p_name, dptr);
 }
 
-Parse_stat MCHandler::newconstant(MCNameRef p_name, MCNameRef p_value)
+Parse_stat MCHandler::newconstant(MCNameRef p_name, MCValueRef p_value)
 {
 	MCU_realloc((char **)&cinfo, nconstants, nconstants + 1, sizeof(MCHandlerConstantInfo));
 	/* UNCHECKED */ MCNameClone(p_name, cinfo[nconstants].name);
-	/* UNCHECKED */ MCNameClone(p_value, cinfo[nconstants++].value);
+	/* UNCHECKED */ cinfo[nconstants++].value = MCValueRetain(p_value);
 	return PS_NORMAL;
 }
 

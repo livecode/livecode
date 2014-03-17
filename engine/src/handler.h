@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 struct MCHandlerVarInfo
 {
 	MCNameRef name;
-	MCNameRef init;
+	MCValueRef init;
 };
 
 struct MCHandlerParamInfo
@@ -34,7 +34,7 @@ struct MCHandlerParamInfo
 struct MCHandlerConstantInfo
 {
 	MCNameRef name;
-	MCNameRef value;
+	MCValueRef value;
 };
 
 class MCHandler
@@ -106,9 +106,9 @@ public:
 	integer_t getnparams(void);
     MCValueRef getparam(uindex_t p_index);
 	Parse_stat findvar(MCNameRef name, MCVarref **);
-	Parse_stat newvar(MCNameRef name, MCNameRef init, MCVarref **);
+	Parse_stat newvar(MCNameRef name, MCValueRef init, MCVarref **);
 	Parse_stat findconstant(MCNameRef name, MCExpression **);
-	Parse_stat newconstant(MCNameRef name, MCNameRef value);
+	Parse_stat newconstant(MCNameRef name, MCValueRef value);
 	void newglobal(MCNameRef name);
 	bool getparamnames(MCListRef& r_list);
 	bool getvariablenames(MCListRef& r_list);

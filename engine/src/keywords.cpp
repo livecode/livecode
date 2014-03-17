@@ -178,17 +178,17 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 				return PS_ERROR;
 			}
 
-		MCNewAutoNameRef t_init_name;
+		MCAutoValueRef t_init_value;
 		if (initialised)
-			/* UNCHECKED */ MCNameCreate(*init, &t_init_name);
+			/* UNCHECKED */ t_init_value = *init;
 		else
-			t_init_name = kMCEmptyName;
+			t_init_value = kMCNull;
 
 		if (sp.gethandler() == NULL)
 		{
 			if (constant)
-				sp.gethlist()->newconstant(t_token_name, *t_init_name);
-			else if (sp.gethlist()->newvar(t_token_name, *t_init_name, &tvar, initialised) != PS_NORMAL)
+				sp.gethlist()->newconstant(t_token_name, *t_init_value);
+			else if (sp.gethlist()->newvar(t_token_name, *t_init_value, &tvar, initialised) != PS_NORMAL)
 				{
 					MCperror->add(PE_LOCAL_BADNAME, sp);
 					return PS_ERROR;
@@ -196,8 +196,8 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 
 		}
 		else if (constant)
-			sp.gethandler()->newconstant(t_token_name, *t_init_name);
-		else if (sp.gethandler()->newvar(t_token_name, *t_init_name, &tvar) != PS_NORMAL)
+			sp.gethandler()->newconstant(t_token_name, *t_init_value);
+		else if (sp.gethandler()->newvar(t_token_name, *t_init_value, &tvar) != PS_NORMAL)
 				{
 					MCperror->add(PE_LOCAL_BADNAME, sp);
 					return PS_ERROR;

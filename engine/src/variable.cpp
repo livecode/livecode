@@ -239,7 +239,7 @@ MCValueRef MCVariable::getvalueref(MCNameRef *p_path, uindex_t p_length, bool p_
 		MCArrayFetchValueOnPath((MCArrayRef)value, p_case_sensitive, p_path, p_length, t_value))
 		return t_value;
 
-	return kMCNull;
+	return kMCEmptyString;
 }
 
 bool MCVariable::copyasvalueref(MCValueRef& r_value)
