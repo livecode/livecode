@@ -45,11 +45,16 @@ class MCChunk : public MCExpression
 	MCCRef *item;
 	MCCRef *word;
 	MCCRef *character;
-    // AL-2013-01-08 [[ CharChunks ]] Add 'codepoint, codeunit and byte' to chunk types
+    // AL-2014-01-08 [[ CharChunks ]] Add 'codepoint, codeunit and byte' to chunk types
     MCCRef *codepoint;
     MCCRef *codeunit;
     MCCRef *byte;
 	
+    // AL-2014-03-11 [[ LanguageChunks ]] Add 'paragraph, sentence and trueword' to chunk types
+    MCCRef *paragraph;
+    MCCRef *sentence;
+    MCCRef *trueword;
+    
 	// MW-2008-03-05: [[ Owner Reference ]] If desttype == DT_OWNER, then this pointer will
 	//   be an MCChunk, otherwise it will be an MCExpression.
 	MCExpression *source;
@@ -215,8 +220,9 @@ public:
 	}
 	Boolean nochunks()
 	{
-		return cline == NULL && item == NULL && word == NULL
-		       && token == NULL && character == NULL;
+		return cline == NULL && & paragraph == NULL && sentence == NULL && item == NULL
+                && trueword == NULL && word == NULL && token == NULL && character == NULL
+                && codepoint == NULL && codeunit == NULL && byte == NULL;
 	}
 };
 #endif

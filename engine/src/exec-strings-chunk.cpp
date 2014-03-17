@@ -114,6 +114,45 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
             }
         }
             break;
+        
+        case CT_PARAGRAPH:
+        {
+            nchunks++;
+            
+            uindex_t t_pg_offset;
+            bool t_pg_found, t_newline_found;
+            
+            while (t_offset <= t_end_index)
+            {
+                t_pg_offset = t_offset;
+                t_newline_found = MCStringFirstIndexOfChar(p_string, '\n', t_offset, kMCCompareExact, t_offset);
+                t_pg_found = MCStringFirstIndexOfChar(p_string, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);
+                
+                t_offset = MCU_min(t_newline_found ? t_offset : UINDEX_MAX, t_pg_found ? t_pg_offset : UINDEX_MAX);
+                
+                if (t_newline_found || t_pg_found)
+                    break;
+                if (t_offset < t_end_index)
+                    nchunks++;
+                t_offset++;
+            }
+        }
+            break;
+        
+        case CT_SENTENCE:
+        case CT_TRUEWORD:
+        {
+            // Convert from code unit indices to appropriate indices
+            MCRange t_cu_range, t_range;
+            t_cu_range = MCRangeMake(0, MCStringGetLength(p_string));
+            if (p_chunk_type == CT_SENTENCE)
+                /* UNCHECKED */ MCStringUnmapSentenceIndices(p_string, kMCBasicLocale, t_cu_range, t_range);
+            else
+                /* UNCHECKED */ MCStringUnmapTrueWordIndices(p_string, kMCBasicLocale, t_cu_range, t_range);
+            
+            nchunks = t_range.length;
+        }
+            break;
             
         case CT_WORD:
         {
@@ -343,6 +382,82 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             }
         }
             break;
+        
+        case CT_PARAGRAPH:
+        {
+            uindex_t t_pg_offset;
+            bool t_pg_found, t_newline_found;
+            
+            // calculate the start of the (p_first)th paragraph
+            while (p_first)
+            {
+                t_pg_offset = t_offset;
+                t_newline_found = MCStringFirstIndexOfChar(p_string, '\n', t_offset, kMCCompareExact, t_offset);
+                t_pg_found = MCStringFirstIndexOfChar(p_string, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);
+                
+                if (!t_newline_found && !t_pg_found)
+                    break;
+                t_offset = MCU_min(t_newline_found ? t_offset : UINDEX_MAX, t_pg_found ? t_pg_offset : UINDEX_MAX);
+                p_first--;
+                t_offset++;
+            }
+            
+            // if we couldn't find enough delimiters, set r_add to the number of
+            // additional delimiters required and set the offset to the end
+            if (p_first > 0)
+            {
+                t_offset = t_length;
+                r_add = p_first;
+            }
+                
+            r_start = t_offset;
+            
+            // calculate the length of the next p_count paragraphs
+            while (p_count--)
+            {
+                t_pg_offset = t_offset;
+                if (t_offset > t_end_index || (!(t_newline_found = MCStringFirstIndexOfChar(p_string, '\n', t_offset, kMCCompareExact, t_offset)) &&
+                                                !(t_pg_found = MCStringFirstIndexOfChar(p_string, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset))))
+                {
+                    r_end = t_length;
+                    break;
+                }
+                
+                t_offset = MCU_min(t_newline_found ? t_offset : UINDEX_MAX, t_pg_found ? t_pg_offset : UINDEX_MAX);
+                
+                if (p_count == 0)
+                    r_end = t_offset;
+                else
+                    t_offset++;
+            }
+            
+            if (p_whole_chunk && !p_further_chunks)
+            {
+                if (r_end < t_length)
+                    r_end++;
+                else if (r_start > 0 && !r_add)
+                    r_start--;
+            }
+        }
+            break;
+
+        case CT_SENTENCE:
+        case CT_TRUEWORD:
+        {
+            // Resolve the indices
+            MCRange t_range, t_cu_range;
+            t_range = MCRangeMake(p_first, p_count);
+            if (p_chunk_type == CT_SENTENCE)
+                /* UNCHECKED */ MCStringMapSentenceIndices(p_string, kMCBasicLocale, t_range, t_cu_range);
+            else
+                /* UNCHECKED */ MCStringMapTrueWordIndices(p_string, kMCBasicLocale, t_range, t_cu_range);
+                
+            r_start = t_cu_range.offset;
+            r_end = t_cu_range.offset + t_cu_range.length;
+            //r_start = p_first;
+            //r_end = p_first + p_count;
+        }
+            return;
             
         case CT_WORD:
         {
@@ -433,7 +548,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             MCAssert(false);
     }
     
-    // for line, item, word and token, start and end are codepoint indices, so map them back to codeunits.
+    // for line, paragraph, item, word and token, start and end are codepoint indices, so map them back to codeunits.
     MCRange t_cp_range, t_cu_range;
     t_cp_range = MCRangeMake(r_start, r_end - r_start);
     MCStringMapIndices(p_string, kMCCharChunkTypeCodepoint, t_cp_range, t_cu_range);
@@ -940,6 +1055,26 @@ void MCStringsMarkLinesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal
     MCStringsMarkTextChunkByOrdinal(ctxt, CT_LINE, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
+void MCStringsMarkParagraphsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByRange(ctxt, CT_PARAGRAPH, p_first, p_last, p_force, p_whole_chunk, p_further_chunks, x_mark);
+}
+
+void MCStringsMarkParagraphsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByOrdinal(ctxt, CT_PARAGRAPH, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
+}
+
+void MCStringsMarkSentencesOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByRange(ctxt, CT_SENTENCE, p_first, p_last, p_force, p_whole_chunk, p_further_chunks, x_mark);
+}
+
+void MCStringsMarkSentencesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByOrdinal(ctxt, CT_SENTENCE, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
+}
+
 void MCStringsMarkItemsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
     MCStringsMarkTextChunkByRange(ctxt, CT_ITEM, p_first, p_last, p_force, p_whole_chunk, p_further_chunks, x_mark);
@@ -948,6 +1083,16 @@ void MCStringsMarkItemsOfTextByRange(MCExecContext& ctxt, integer_t p_first, int
 void MCStringsMarkItemsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
 {
     MCStringsMarkTextChunkByOrdinal(ctxt, CT_ITEM, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
+}
+
+void MCStringsMarkTrueWordsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByRange(ctxt, CT_TRUEWORD, p_first, p_last, p_force, p_whole_chunk, p_further_chunks, x_mark);
+}
+
+void MCStringsMarkTrueWordsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
+{
+    MCStringsMarkTextChunkByOrdinal(ctxt, CT_TRUEWORD, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
 void MCStringsMarkWordsOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark)
@@ -1035,6 +1180,11 @@ void MCStringsMarkBytesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal
     x_mark . finish = x_mark . start + t_chunk_count;
 }
 
+static bool need_increment(Chunk_term p_chunk_type)
+{
+    return (p_chunk_type == CT_LINE || p_chunk_type == CT_ITEM || p_chunk_type == CT_WORD || p_chunk_type == CT_PARAGRAPH);
+}
+
 bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_chunk_type, uindex_t t_length, MCRange& x_range, bool p_not_first, bool& r_last)
 {
     // incoming indices are code unit indices
@@ -1042,7 +1192,7 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
     uindex_t t_end_index = t_length - 1;
     uindex_t t_offset = x_range . offset + x_range . length;
     
-    if (p_not_first && p_chunk_type != CT_CHARACTER && p_chunk_type != CT_CODEPOINT && p_chunk_type != CT_CODEUNIT)
+    if (p_not_first && need_increment(p_chunk_type))
         t_offset++;
 
     if (t_offset >= t_length)
@@ -1070,6 +1220,50 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
                 x_range . length = t_offset - x_range . offset;
         }
             return true;
+         
+        case CT_PARAGRAPH:
+        {
+            uindex_t t_pg_offset;
+            bool t_newline_found, t_pg_found;
+            
+            t_pg_offset = t_offset;
+            t_newline_found = MCStringFirstIndexOfChar(p_string, '\n', t_offset, kMCCompareExact, t_offset);
+            t_pg_found = MCStringFirstIndexOfChar(p_string, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);
+            
+            t_offset = MCU_min(t_newline_found ? t_offset : UINDEX_MAX, t_pg_found ? t_pg_offset : UINDEX_MAX);
+            
+            // calculate the length of the paragraph
+            if (t_newline_found || t_pg_found)
+                x_range . length = t_offset - x_range . offset;
+            else
+            {
+                x_range . length = t_length - t_offset;
+                r_last = true;
+            }
+        }
+            return true;
+            
+        case CT_SENTENCE:
+        case CT_TRUEWORD:
+        {
+            x_range . length = 1;
+            // offset is already in code units so avoid remapping up to there.
+            uindex_t t_cu_offset = x_range . offset;
+            MCAutoStringRef t_string;
+            MCStringCopySubstring(p_string, MCRangeMake(x_range . offset, UINDEX_MAX), &t_string);
+            x_range . offset = 0;
+            if (p_chunk_type == CT_SENTENCE)
+                /* UNCHECKED */ MCStringMapSentenceIndices(*t_string, kMCBasicLocale, x_range, x_range);
+            else
+                /* UNCHECKED */ MCStringMapTrueWordIndices(*t_string, kMCBasicLocale, x_range, x_range);
+            
+            // restore original offset.
+            x_range . offset += t_cu_offset;
+            
+            if (t_offset == t_end_index)
+                r_last = true;
+        }
+            return true;
             
         case CT_WORD:
         {
@@ -1090,11 +1284,11 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             x_range . length = t_offset - x_range . offset;
         }
             return true;
-            
+        
         case CT_TOKEN:
         {
             MCAutoStringRef t_string;
-            MCStringCopySubstring(p_string, MCRangeMake(x_range . offset + x_range . length, UINDEX_MAX), &t_string);
+            MCStringCopySubstring(p_string, MCRangeMake(x_range . offset, UINDEX_MAX), &t_string);
             MCScriptPoint sp(*t_string);
             MCerrorlock++;
             
@@ -1103,19 +1297,17 @@ bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             if (ps == PS_ERROR || ps == PS_EOF)
                 return false;
             t_pos = sp . getindex();
-        
-            x_range . offset = t_pos;
 
+            x_range . offset += t_pos;
+            x_range . length = MCStringGetLength(sp.gettoken_stringref());
+            
             ps = sp.nexttoken();
-            t_pos += sp . getindex();
 
             if (ps == PS_ERROR || ps == PS_EOF)
             {
                 x_range . length = t_length - t_offset;
                 r_last = true;
             }
-            else
-                x_range . length = MCStringGetLength(sp.gettoken_stringref());
             
             MCerrorlock--;
         }
