@@ -1550,6 +1550,8 @@ MCObject *MCStack::getobjname(Chunk_term type, MCNameRef p_name)
 
 void MCStack::createmenu(MCControl *nc, uint2 width, uint2 height)
 {
+	// MW-2014-03-12: [[ Bug 11914 ]] Mark the stack as an engine menu.
+	m_is_menu = true;
 
 	allowmessages(False);
 	flags &= ~F_RESIZABLE;
@@ -1643,45 +1645,49 @@ void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 	// function succeeded but there is no text while the null string indicates
 	// that no menu handled the key event.
 	r_string = nil;
-	
-	MCControl *focused = curcard->getmfocused();
-	if (focused == NULL)
-		focused = curcard->getkfocused();
-	MCButton *bptr = (MCButton *)focused;
-	if (focused != NULL && (focused->gettype() == CT_FIELD
-	                        || focused->gettype() == CT_BUTTON
-	                        && bptr->getmenumode() != WM_CASCADE))
+	// MW-2014-03-12: [[ Bug 11914 ]] Only do internal menu actions if this is an
+	//   engine menu.
+	if (m_is_menu)
 	{
-		bool t_has_tags = bptr->getmenuhastags();
-
-        MCExecContext ctxt(this, nil, nil);
-		MCAutoStringRef t_label;
-		MCStringRef t_name = nil;
-		if (focused -> gettype() == CT_FIELD)
+        MCControl *focused = curcard->getmfocused();
+        if (focused == NULL)
+            focused = curcard->getkfocused();
+        MCButton *bptr = (MCButton *)focused;
+        if (focused != NULL && (focused->gettype() == CT_FIELD
+                                || focused->gettype() == CT_BUTTON
+                                && bptr->getmenumode() != WM_CASCADE))
+        {
+            bool t_has_tags = bptr->getmenuhastags();
+            
+            MCExecContext ctxt(this, nil, nil);
+            MCAutoStringRef t_label;
+            MCStringRef t_name = nil;
+            if (focused -> gettype() == CT_FIELD)
 			/* UNCHECKED */ static_cast<MCField *>(focused) -> selectedtext(&t_label);
-		else
-			focused->getstringprop(ctxt, 0, P_LABEL, true, &t_label);
-		t_name = MCNameGetString(focused->getname());
-		if (!MCStringIsEmpty(t_name) && t_has_tags)
-			r_string = MCValueRetain(t_name);
-		else
-			r_string = MCValueRetain(*t_label);
-
-/*		{
-			// If the name exists, use it in preference to the label
-			if (t_has_tags && !MCStringIsEqualTo(*t_label, t_name, kMCStringOptionCompareExact))
-				r_string = MCValueRetain(t_name);
-			else 
-				r_string = MCValueRetain(*t_label);
-		}*/
-
-		if (focused->gettype() == CT_FIELD)
-		{
-			MCField *f = (MCField *)focused;
-			selline = f->hilitedline();
+            else
+                focused->getstringprop(ctxt, 0, P_LABEL, true, &t_label);
+            t_name = MCNameGetString(focused->getname());
+            if (!MCStringIsEmpty(t_name) && t_has_tags)
+                r_string = MCValueRetain(t_name);
+            else
+                r_string = MCValueRetain(*t_label);
+            
+            /*		{
+             // If the name exists, use it in preference to the label
+             if (t_has_tags && !MCStringIsEqualTo(*t_label, t_name, kMCStringOptionCompareExact))
+             r_string = MCValueRetain(t_name);
+             else
+             r_string = MCValueRetain(*t_label);
+             }*/
+            
+            if (focused->gettype() == CT_FIELD)
+            {
+                MCField *f = (MCField *)focused;
+                selline = f->hilitedline();
+			}
+			else
+				curcard->count(CT_LAYER, CT_UNDEFINED, focused, selline, True);
 		}
-		else
-			curcard->count(CT_LAYER, CT_UNDEFINED, focused, selline, True);
 	}
 	curcard->mup(which);
 }
@@ -1689,27 +1695,36 @@ void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 
 void MCStack::menukdown(MCStringRef p_string, KeySym key, MCStringRef &r_string, uint2 &selline)
 {
-	MCControl *kfocused = curcard->getkfocused();
 	r_string = nil;
-	if (kfocused != NULL)
+	// MW-2014-03-12: [[ Bug 11914 ]] Only do internal menu actions if this is an
+	//   engine menu.
+	if (m_is_menu)
 	{
-		// OK-2010-03-08: [[Bug 8650]] - Check its actually a button before casting, 
-		// with combo boxes on OS X this will be a field.
-		if (kfocused ->gettype() == CT_BUTTON && ((MCButton*)kfocused)->getmenuhastags())
-		{
-			r_string = MCValueRetain(MCNameGetString(kfocused->getname()));
-		}
-		else
-		{
-            MCAutoStringRef t_string;
-            MCExecContext ctxt(this, nil, nil);
-			kfocused->getstringprop(ctxt, 0, P_LABEL, True, &t_string);
-			r_string = MCValueRetain(*t_string);
-		}
-		curcard->count(CT_LAYER, CT_UNDEFINED, kfocused, selline, True);
-	}
-	curcard->kdown(p_string, key);
-	curcard->kunfocus();
+        MCControl *kfocused = curcard->getkfocused();
+        if (kfocused != NULL)
+        {
+            // OK-2010-03-08: [[Bug 8650]] - Check its actually a button before casting,
+            // with combo boxes on OS X this will be a field.
+            if (kfocused ->gettype() == CT_BUTTON && ((MCButton*)kfocused)->getmenuhastags())
+            {
+                r_string = MCValueRetain(MCNameGetString(kfocused->getname()));
+            }
+            else
+            {
+                MCAutoStringRef t_string;
+                MCExecContext ctxt(this, nil, nil);
+                kfocused->getstringprop(ctxt, 0, P_LABEL, True, &t_string);
+                r_string = MCValueRetain(*t_string);
+                
+			}
+			curcard->count(CT_LAYER, CT_UNDEFINED, kfocused, selline, True);
+        }
+        
+        curcard->kdown(p_string, key);
+        curcard->kunfocus();
+    }
+	else
+		curcard -> kdown(p_string, key);
 }
 
 void MCStack::findaccel(uint2 key, MCStringRef &r_pick, bool &r_disabled)

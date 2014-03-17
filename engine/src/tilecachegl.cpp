@@ -585,8 +585,10 @@ bool MCTileCacheOpenGLCompositor_CompositeTile(void *p_context, int32_t p_x, int
 		glEnable(GL_TEXTURE_2D);
     }
     
+    // MW-2014-03-14: [[ Bug 11880 ]] The color field we store is premultiplied by the current
+    //   opacity.
 	uint32_t t_new_color;
-	t_new_color = ((self -> current_opacity << 24) | 0x00ffffff);
+	t_new_color = packed_scale_bounded(0xffffffff, self -> current_opacity);
     if (self -> current_color != t_new_color)
     {
         self -> current_color = t_new_color;
@@ -626,16 +628,14 @@ bool MCTileCacheOpenGLCompositor_CompositeRect(void *p_context, int32_t p_x, int
         self -> is_filling = true;
 		glDisable(GL_TEXTURE_2D);
     }
-		
-	uint32_t t_new_color;
-	t_new_color = (p_color & 0xffffff) | ((self -> current_opacity * ((p_color >> 24) & 0xff) / 255) << 24);
+    
+    // MW-2014-03-14: [[ Bug 11880 ]] The color field we store is premultiplied by the current
+    //   opacity.
+    uint32_t t_new_color;
+    t_new_color = packed_scale_bounded(p_color, self -> current_opacity);
 	if (self -> current_color != t_new_color)
 	{
 		self -> current_color = t_new_color;
-		
-		// MW-2012-08-30: [[ Bug 10341 ]] Premultiply the color value as that's how
-		//   our blending function is set up.
-		t_new_color = packed_scale_bounded((t_new_color & 0xffffff) | 0xff000000, t_new_color >> 24);
 		
 		// IM-2013-08-23: [[ RefactorGraphics ]] Use MCGPixelUnpackNative to fix color swap issues
 		uint8_t a, r, g, b;
