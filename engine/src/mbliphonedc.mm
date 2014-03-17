@@ -123,6 +123,12 @@ float MCIPhoneGetDeviceScale()
 	return s_iphone_device_scale;
 }
 
+// IM-2014-03-14: [[ HiDPI ]] UI scale is resolution scale on iOS
+MCGFloat MCResPlatformGetUIDeviceScale(void)
+{
+	return MCIPhoneGetResolutionScale();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool MCIPhoneWait(double sleep);

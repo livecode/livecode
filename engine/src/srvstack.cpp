@@ -68,6 +68,12 @@ MCGFloat MCResPlatformGetDefaultPixelScale(void)
 	return 1.0;
 }
 
+// IM-2014-03-14: [[ HiDPI ]] Pixel scaling not supported on server
+MCGFloat MCResPlatformGetUIDeviceScale(void)
+{
+	return 1.0;
+}
+
 // IM-2014-01-31: [[ HiDPI ]] Pixel scaling not supported on server
 void MCResPlatformHandleScaleChange(void)
 {
