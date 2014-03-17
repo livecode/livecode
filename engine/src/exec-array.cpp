@@ -168,18 +168,16 @@ void MCArraysExecCombine(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_
 		for(uindex_t i = 0; i < t_count; i++)
 		{
 			MCAutoStringRef t_value_as_string;
-			if (p_key_delimiter != nil)
-			{
-				t_success = ctxt . ConvertToString(t_lisctxt . elements[i] . value, &t_value_as_string);
-				if (!t_success)
-					break;
-			}
+            
+            t_success = ctxt . ConvertToString(t_lisctxt . elements[i] . value, &t_value_as_string);
+            if (!t_success)
+                break;
 
 			t_success =
-				MCStringAppend(*t_string, MCNameGetString(t_lisctxt . elements[i] . key)) &&
 				(p_key_delimiter == nil ||
-					MCStringAppend(*t_string, p_key_delimiter) &&
-					MCStringAppend(*t_string, *t_value_as_string)) &&
+                    (MCStringAppend(*t_string, MCNameGetString(t_lisctxt . elements[i] . key)) &&
+					MCStringAppend(*t_string, p_key_delimiter)))&&
+				MCStringAppend(*t_string, *t_value_as_string) &&
 				(i == t_count - 1 ||
 					MCStringAppend(*t_string, p_element_delimiter));
 
