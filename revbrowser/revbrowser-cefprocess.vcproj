@@ -57,7 +57,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="libcef.lib"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)prebuilt\lib\libcef&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)prebuilt\lib\libcef\win32&quot;"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 			/>
@@ -124,7 +124,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="libcef.lib"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)prebuilt\lib\libcef&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)prebuilt\lib\libcef\win32&quot;"
 			/>
 			<Tool
 				Name="VCALinkTool"
