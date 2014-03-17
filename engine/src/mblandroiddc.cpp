@@ -199,6 +199,12 @@ MCGFloat MCResPlatformGetDefaultPixelScale(void)
 	return MCAndroidGetSystemScale();
 }
 
+// IM-2014-03-14: [[ HiDPI ]] UI scale is 1.0 on Android
+MCGFloat MCResPlatformGetUIDeviceScale(void)
+{
+	return 1.0;
+}
+
 // IM-2014-01-31: [[ HiDPI ]] On Android use the configured pixelScale
 MCGFloat MCScreenDC::logicaltoscreenscale(void)
 {

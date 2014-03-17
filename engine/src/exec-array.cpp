@@ -168,18 +168,16 @@ void MCArraysExecCombine(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_
 		for(uindex_t i = 0; i < t_count; i++)
 		{
 			MCAutoStringRef t_value_as_string;
-			if (p_key_delimiter != nil)
-			{
-				t_success = ctxt . ConvertToString(t_lisctxt . elements[i] . value, &t_value_as_string);
-				if (!t_success)
-					break;
-			}
+            
+            t_success = ctxt . ConvertToString(t_lisctxt . elements[i] . value, &t_value_as_string);
+            if (!t_success)
+                break;
 
 			t_success =
-				MCStringAppend(*t_string, MCNameGetString(t_lisctxt . elements[i] . key)) &&
 				(p_key_delimiter == nil ||
-					MCStringAppend(*t_string, p_key_delimiter) &&
-					MCStringAppend(*t_string, *t_value_as_string)) &&
+                    (MCStringAppend(*t_string, MCNameGetString(t_lisctxt . elements[i] . key)) &&
+					MCStringAppend(*t_string, p_key_delimiter)))&&
+				MCStringAppend(*t_string, *t_value_as_string) &&
 				(i == t_count - 1 ||
 					MCStringAppend(*t_string, p_element_delimiter));
 
@@ -943,8 +941,18 @@ bool MCMatrixMultiply(matrix_t *p_a, matrix_t *p_b, matrix_t*& r_c)
 
 void MCArraysEvalMatrixMultiply(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, MCArrayRef& r_result)
 {
+	// MW-2014-03-14: [[ Bug 11924 ]] If both are empty arrays, then the result
+	//   is empty.
+    if (MCArrayIsEmpty(p_left) && MCArrayIsEmpty(p_right))
+    {
+        r_result = MCValueRetain(kMCEmptyArray);
+        return;
+    }
+    
+    // MW-2014-03-14: [[ Bug 11924 ]] If either array is empty, then its a mismatch.
 	MCAutoPointer<matrix_t> t_left, t_right, t_product;
-	if (!MCArraysCopyMatrix(ctxt, p_left, &t_left) || !MCArraysCopyMatrix(ctxt, p_right, &t_right) ||
+	if (MCArrayIsEmpty(p_left) || MCArrayIsEmpty(p_right) ||
+        !MCArraysCopyMatrix(ctxt, p_left, &t_left) || !MCArraysCopyMatrix(ctxt, p_right, &t_right) ||
 		!MCMatrixMultiply(*t_left, *t_right, &t_product))
 	{
 		ctxt.LegacyThrow(EE_MATRIXMULT_MISMATCH);

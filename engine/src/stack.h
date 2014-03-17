@@ -245,7 +245,10 @@ protected:
 	MCGFloat m_view_content_scale;
 
 	// IM-2014-01-23: [[ HiDPI ]] The backing scale of the surface onto which this view is drawn
+    
 	MCGFloat m_view_backing_scale;
+	// MW-2014-03-12: [[ Bug 11914 ]] If this is true then the stack is an engine menu.
+	bool m_is_menu : 1;
 	
 public:
 	Boolean menuwindow;

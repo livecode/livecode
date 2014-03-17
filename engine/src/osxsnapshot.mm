@@ -34,7 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 static CGPoint s_snapshot_start_point, s_snapshot_end_point;
-static bool s_snapshot_done = false;
+static volatile bool s_snapshot_done = false;
 
 static float menu_screen_height(void)
 {
@@ -180,7 +180,11 @@ static Rect rect_from_points(CGPoint x, CGPoint y)
 	// partial grayness over the selected area.
 	[m_region setHidden: YES];
 	[[self contentView] setNeedsDisplayInRect: [m_region frame]];
-	[self displayIfNeeded];
+	[self display];
+	[self flushWindow];
+
+	// MW-2014-03-11: [[ Bug 11654 ]] Make sure we force the wait to finish.
+	PostEvent(mouseUp, 0);
 }
 
 - (void)mouseDragged: (NSEvent *)event

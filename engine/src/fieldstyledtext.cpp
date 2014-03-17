@@ -855,8 +855,8 @@ void MCField::parsestyledtextarray(MCArrayRef p_styled_text, bool p_paragraph_br
 			MCArrayRef t_runs_array;
 			if (MCValueIsArray(t_runs_entry))
 			{
-				t_runs_array = (MCArrayRef)t_runs_entry;
-				if (!MCArrayIsSequence(t_runs_array))
+				t_runs_array = (MCArrayRef)t_runs_entry;	
+				if (!MCArrayIsEmpty(t_runs_array) && !MCArrayIsSequence(t_runs_array))
 					continue;
 			}
 			else if (!MCValueIsEmpty(t_runs_entry))
