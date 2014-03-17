@@ -116,8 +116,6 @@ bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data)
         t_success = false;
 		break;
 	}
-	
-    ctxt . SetTheResultToBool(t_success);
     
 	// MW-2012-02-23: [[ PutUnicode ]] If we don't understand the kind
 	//   then return false (caller can then throw an error).

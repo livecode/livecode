@@ -608,7 +608,7 @@ MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameR
 				delete s;
 				s = nil;
 
-				if (MCresult->isempty())
+				if (MCresult->isclear())
 					MCresult->sets("can't resolve hostname");
 			}
 		}
