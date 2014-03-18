@@ -309,7 +309,10 @@ static char *PACmyIpAddress(const char* const* p_arguments, unsigned int p_argum
 void MCNetworkEvalHTTPProxyForURL(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_host, MCStringRef& r_proxy)
 {
 	if (s_pac_engine == nil)
-		return;
+    {
+        r_proxy = MCValueRetain(kMCEmptyString);
+        return;
+    }
 
 	const char *t_arguments[2];
 	char *t_url, *t_host;
