@@ -99,7 +99,9 @@ bool MCLocalPasteboard::Normalize(MCTransferType p_type, MCValueRef p_data, MCTr
         return MCConvertHTMLToStyledText((MCDataRef)p_data, r_normal_data);
 	}
     // If unicode text is asked, we are provided a StringRef and not a DataRef
-    else if (p_type == TRANSFER_TYPE_UNICODE_TEXT)
+    // In case we are anyway provided a StringRef, we should store it as a unicode string - breaks some pasting otherwise
+    else if (p_type == TRANSFER_TYPE_UNICODE_TEXT ||
+             MCValueGetTypeCode(p_data) == kMCValueTypeCodeString)
     {
         r_normal_type = TRANSFER_TYPE_UNICODE_TEXT;
         return MCStringEncode((MCStringRef)p_data, kMCStringEncodingUTF16, false, r_normal_data);
