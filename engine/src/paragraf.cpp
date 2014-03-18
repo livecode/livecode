@@ -1327,6 +1327,11 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 					newblock->GetRange(index, len);
 					t_last_added = index+len;
 
+                    // Some stacks seem to be saved with invalid blocks that
+                    // exceed the length of the paragraph character data
+                    if (len > t_length)
+                        len = t_length;
+                    
                     uindex_t t_index;
                     t_index = MCStringGetLength(m_text);
 
