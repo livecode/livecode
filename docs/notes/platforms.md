@@ -16,7 +16,7 @@ The linux engine requires the following:
 *X11R5 capable Xserver running locally on a 24-bit display
 *glibc 2.3.2 or later
 *gtk/gdk/glib (optional – required for native theme support)
-*pango/xft (optional – required for pdf printing, anti-aliased text and unicode font support)
+*pango/xft
 *lcms (optional – required for color profile support in JPEGs and PNGs)
 *gksu (optional – required for elevate process support)
 * **Note:** The optional requirements (except for gksu and lcms) are also required by Firefox and Chrome, so if your linux distribution runs one of those, it will run the engine.*
