@@ -845,6 +845,7 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
     // Shortcut for strings containing only BMP characters
     if (MCStringIsSimple(self))
     {
+        __MCStringClampRange(self, p_in_range);
         r_out_range = p_in_range;
         return true;
     }
@@ -915,6 +916,7 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
     // Shortcut for strings containing only BMP characters
     if (MCStringIsSimple(self))
     {
+        __MCStringClampRange(self, p_in_range);
         r_out_range = p_in_range;
         return true;
     }
@@ -1000,6 +1002,7 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
     // Quick-n-dirty workaround
     if (MCStringIsNative(self))
     {
+        __MCStringClampRange(self, p_in_range);
         r_out_range = p_in_range;
         return true;
     }
@@ -1167,6 +1170,7 @@ bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
     // Quick-n-dirty workaround
     if (self -> flags & kMCStringFlagIsNative)
     {
+        __MCStringClampRange(self, p_in_range);
         r_out_range = p_in_range;
         return true;
     }
