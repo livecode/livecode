@@ -87,6 +87,8 @@ public:
 };
 
 CWebBrowserBase *InstantiateBrowser(int p_window_id);
+// IM-2014-03-18: [[ revBrowserCEF ]] Create new cef-based browser instance
+CWebBrowserBase *MCCefBrowserInstantiate(int p_window_id);
 
 // IM-2014-03-06: [[ revBrowserCEF ]] Send the handler message with the given args
 void CB_Custom(int p_instance_id, const char *p_message, char **p_args, uint32_t p_arg_count, bool *r_cancel);

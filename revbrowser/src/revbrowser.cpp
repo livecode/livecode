@@ -806,7 +806,7 @@ void CB_NewWindow(int p_instance_id, const char *p_url)
 // Result:
 //   The instance ID of the new browser.
 //
-void commonBrowserOpen(bool p_is_xbrowser, char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+void commonBrowserOpen(bool p_is_xbrowser, bool p_is_cef_browser, char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
 	char *result = NULL;
 	char inID[255];
@@ -814,7 +814,11 @@ void commonBrowserOpen(bool p_is_xbrowser, char *args[], int nargs, char **retst
 	if( nargs > 0  )
 	{
 		CWebBrowserBase *t_browser;
-		t_browser = InstantiateBrowser(atoi(args[0]));
+		if (p_is_cef_browser)
+			t_browser = MCCefBrowserInstantiate(atoi(args[0]));
+		else
+			t_browser = InstantiateBrowser(atoi(args[0]));
+
 
 		if (t_browser != NULL)
 		{
@@ -846,12 +850,18 @@ void commonBrowserOpen(bool p_is_xbrowser, char *args[], int nargs, char **retst
 
 void revBrowserOpen(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
-	commonBrowserOpen(false, args, nargs, retstring, pass, error);
+	commonBrowserOpen(false, false, args, nargs, retstring, pass, error);
+}
+
+// IM-2014-03-18: [[ revBrowserCEF ]] create new browser instance using CEF
+void revBrowserOpenCef(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	commonBrowserOpen(false, true, args, nargs, retstring, pass, error);
 }
 
 void XBrowserOpen(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
-	commonBrowserOpen(true, args, nargs, retstring, pass, error);
+	commonBrowserOpen(true, false, args, nargs, retstring, pass, error);
 }
 
 // Command:
@@ -1877,6 +1887,7 @@ template<BrowserHandler u_handler> void revBrowserWrapper(char *p_arguments[], i
 
 EXTERNAL_BEGIN_DECLARATIONS("revBrowser")
 	EXTERNAL_DECLARE_FUNCTION_OBJC("revBrowserOpen", revBrowserOpen)
+	EXTERNAL_DECLARE_FUNCTION_OBJC("revBrowserOpenCef", revBrowserOpenCef)
 	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserClose", revBrowserWrapper<revBrowserClose>)
 	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserStop", revBrowserWrapper<revBrowserStop>)
 	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserRefresh", revBrowserWrapper<revBrowserRefresh>)

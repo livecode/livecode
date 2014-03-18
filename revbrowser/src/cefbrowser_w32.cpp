@@ -176,22 +176,3 @@ bool MCCefWin32Browser::PlatformGetWindowID(int32_t &r_id)
 	return true;
 }
 
-
-static HINSTANCE s_instance = nil;
-
-// DLL Entry Point
-extern "C" BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
-{
-	switch (dwReason)
-	{
-	case DLL_PROCESS_ATTACH:
-		s_instance = hInstance;
-		break;
-
-	case DLL_PROCESS_DETACH:
-		break;
-
-	}
-
-	return TRUE;
-}
