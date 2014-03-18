@@ -1690,6 +1690,7 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 	for (i = 0 ; i < MCStringGetLength(p_typing); i++)
 	{
 		KeySym keysym = MCStringGetCodepointAtIndex(p_typing, i);
+        MCAutoStringRef t_char;
 		if (keysym < 0x20 || keysym == 0xFF)
 		{
 			if (keysym == 0x0A)
@@ -1700,7 +1701,10 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 		else if (keysym > 0x7F)
 			keysym |= XK_Class_codepoint;
 		else
-			t_string = p_typing;
+        {
+            MCStringCopySubstring(p_typing, MCRangeMake(i, 1), &t_char);
+			t_string = *t_char;
+        }
 		MCdefaultstackptr->kdown(t_string, keysym);
 		MCdefaultstackptr->kup(t_string, keysym);
 		nexttime += (real8)MCtyperate / 1000.0;
