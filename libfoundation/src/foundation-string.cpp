@@ -1072,7 +1072,6 @@ bool MCStringMapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
     while (t_end != kMCLocaleBreakIteratorDone && p_in_range . length)
     {
         t_left_break = t_right_break;
-        t_end = t_right_break;
         t_right_break = MCLocaleBreakIteratorAdvance(t_iter);
         
         // if the intervening chars contain a letter or number then it was a valid 'word'
@@ -1086,6 +1085,8 @@ bool MCStringMapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
         
         if (t_left_break < t_right_break)
             p_in_range . length--;
+        
+        t_end = t_right_break;
     }
     
     if (t_end == kMCLocaleBreakIteratorDone)
