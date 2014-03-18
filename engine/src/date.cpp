@@ -112,8 +112,8 @@ bool MCDateTimeInitialize()
 	g_basic_locale->abbrev_month_names[11]= MCSTR("Dec");
 	
 	g_basic_locale->date_formats[0] = MCSTR("^%#m/%#d/%#y");
-	g_basic_locale->date_formats[1] = MCSTR("%a, %b %#d %#Y");
-	g_basic_locale->date_formats[2] = MCSTR("%A, %B %#d %#Y");
+	g_basic_locale->date_formats[1] = MCSTR("%a, %b %#d, %#Y");
+	g_basic_locale->date_formats[2] = MCSTR("%A, %B %#d, %#Y");
 	
 	g_basic_locale->time_formats[0] = MCSTR("!%#I:%M %p");
 	g_basic_locale->time_formats[1] = MCSTR("!%#I:%M:%S %p");
@@ -586,7 +586,7 @@ static void datetime_format(const MCDateTimeLocale *p_locale, MCStringRef p_form
 			case 'M': /* UNCHECKED */ MCStringAppendFormat(t_buffer, t_pad ? "%02d" : "%d", t_minute); break; // minutes
 			case 'S': /* UNCHECKED */ MCStringAppendFormat(t_buffer, t_pad ? "%02d" : "%d", t_second); break; // seconds
 			case 'p': /* UNCHECKED */ MCStringAppend(t_buffer, t_hour < 12 ? p_locale -> time_morning_suffix : p_locale -> time_evening_suffix); break; // 12-hour identifier
-			case 'z': /* UNCHECKED */ MCStringAppendFormat(t_buffer, "%+04d", (t_bias / 60) * 100 + t_bias % 60); break; // timezone
+			case 'z': /* UNCHECKED */ MCStringAppendFormat(t_buffer, "%+05d", (t_bias / 60) * 100 + t_bias % 60); break; // timezone
 			case '%': /* UNCHECKED */ MCStringAppendChar(t_buffer, '%'); break;
 			}
 		}
