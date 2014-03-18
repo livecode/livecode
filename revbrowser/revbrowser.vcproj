@@ -57,7 +57,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="user32.lib libcef.lib"
+				AdditionalDependencies="user32.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)prebuilt\lib\libcef\win32&quot;"
 				GenerateDebugInformation="true"
@@ -87,6 +87,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy /Y &quot;$(SolutionDir)prebuilt\lib\libcef\win32\*.dll&quot; &quot;$(OutDir)&quot;&#x0D;&#x0A;xcopy /E /Y &quot;$(SolutionDir)thirdparty\libcef\res\win32\*&quot; &quot;$(OutDir)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -130,7 +131,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="user32.lib libcef.lib"
+				AdditionalDependencies="user32.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)prebuilt\lib\libcef\win32&quot;"
 				GenerateDebugInformation="true"
@@ -162,6 +163,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy /Y &quot;$(SolutionDir)prebuilt\lib\libcef\win32\*.dll&quot; &quot;$(OutDir)&quot;&#x0D;&#x0A;xcopy /E /Y &quot;$(SolutionDir)thirdparty\libcef\res\win32\*.* &quot;$(OutDir)&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -177,6 +179,10 @@
 		<ProjectReference
 			ReferencedProjectIdentifier="{A9D6DC71-C0DC-4549-AEA0-3B15B44E86A9}"
 			RelativePathToProject=".\thirdparty\libcef\libcef_dll_wrapper.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{58314BC9-A2EE-49F0-8B40-7BA12517A60C}"
+			RelativePathToProject=".\thirdparty\libcef\libcef.vcproj"
 		/>
 	</References>
 	<Files>

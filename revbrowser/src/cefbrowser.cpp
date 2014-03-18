@@ -97,6 +97,8 @@ void MCCefBrowserRunloopAction(void *p_context)
 	CefDoMessageLoopWork();
 }
 
+extern "C" int initialise_weak_link_cef(void);
+
 // IM-2014-03-13: [[ revBrowserCEF ]] Initialisation of the CEF library
 bool MCCefInitialise(void)
 {
@@ -133,7 +135,12 @@ bool MCCefBrowserInitialise(void)
 	bool t_success;
 	t_success = true;
 	
-	t_success = MCCefInitialise();
+	// IM-2014-03-18: [[ revBrowserCEF ]] Initialise dynamically loaded cef library
+	if (t_success)
+		t_success = initialise_weak_link_cef();
+
+	if (t_success)
+		t_success = MCCefInitialise();
 	
 	if (t_success)
 	{
@@ -658,8 +665,12 @@ MCCefBrowserBase::~MCCefBrowserBase(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-CWebBrowserBase *InstantiateBrowser(int p_window_id)
+CWebBrowserBase *MCCefBrowserInstantiate(int p_window_id)
 {
+	// IM-2014-03-18: [[ revBrowserCEF ]] Make sure cef library is loaded before trying to create browser
+	if (!MCCefBrowserInitialise())
+		return nil;
+
 	MCCefBrowserBase *t_browser;
 	if (!MCCefPlatformCreateBrowser(p_window_id, t_browser))
 		return nil;
