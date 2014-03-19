@@ -7,3 +7,4 @@ Every effort has been made to ensure that externally, the engine behaviour is id
 *LiveCode does not run correctly when installed to Unicode paths on OSX
 *On Windows, executing LiveCode from the installer fails as it cannot find the IDE
 *Android app label is not yet Unicode compatible
+*Auto-updater process doesn't terminate when dismissed
