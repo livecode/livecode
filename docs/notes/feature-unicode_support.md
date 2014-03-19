@@ -50,9 +50,9 @@ The key change is that **byte** and **char** are no longer synonyms - a byte is 
 
 The **char** chunk type no longer means an 8-bit unit but instead refers to what would naturally be thought of as a single graphical character (even if it is composed of multiple sub-units, as in some accented text or Korean ideographs). Because of this change, it is inappropriate to use this type of chunk expression on binary data.
 
-Codepoints refer to the integer identifiers associated with Unicode characters. A single **char** is composed of one or more codepoints. For more details, see **numToCodepoint** / **codepointToNum**. This chunk type is not of general utility.
+The **codepoint** chunk type allows access to the sequence of Unicode codepoints which make up the string. This allows direct access to the components that make up a character. For example, &aacute; can be encoded as (a,combining-acute-accent) so it is one character, but two codepoints (the two codepoints being a and combining-acute-accent).
 
-Codeunits are the encoded units in which codepoints are stored (e.g. 16 bit words in UTF-16 or 8-bit bytes in UTF-8). Although the engine currently uses UTF-16 for storage of Unicode text, this should not be relied upon. The byte order of the codeunits depends on the platform and it is not guaranteed that the engine will always use UTF-16 for text storage. This chunk type is not of general utility.
+The **codeunit** chunk type allows direct access to the UTF-16 code-units which notionally make up the internal storage of strings. The codeunit and codepoint chunk are the same if a string only contains unicode codepoints from the Basic Multilingual Plane. If, however, the string contains unicode codepoints from the Supplementary Planes, then such codepoints are represented as two codeunits (via the surrogate pair mechanism). The most important feature of the 'codeunit' chunk is that it guarantees constant time indexed access into a string (just as char did in previous engines) however it is not of general utility and should be reserved for use in scripts which need greater speed but do not need to process Supplmentary Plane characters, or are able to do such processing themselves.
 
 The hierarchy of these new and altered chunk types is as follows: **byte** *w* of **codeunit** *x* of **codepoint** *y* of **char** *z* of **word**...
 
@@ -153,7 +153,7 @@ The normal forms supported by this function are:
 
 The "compatibility" normal forms are designed by the Unicode Consortium for dealing with certain legacy encodings and are not generally useful otherwise.
 
-It should be noted that normalization does not avoid all problems with visually-identical characters; Unicode contains a number of characters that will (in the majority of fonts) be indistinguishable but are nonetheless completely different characters (a prime example of this is "M" and U+2164 "M" ROMAN NUMERAL ONE THOUSAND).
+It should be noted that normalization does not avoid all problems with visually-identical characters; Unicode contains a number of characters that will (in the majority of fonts) be indistinguishable but are nonetheless completely different characters (a prime example of this is "M" and U+2164 "&#8559;" ROMAN NUMERAL ONE THOUSAND).
 
 Unless the **formSensitive** handler property is set to true, LiveCode ignores text normalization when performing comparisons (is, <>, etc).
 
@@ -169,7 +169,7 @@ Returns: the text normalized into the given form.
 
 **codepointProperty**("A", "Script")	-- "Latin"
 **codepointProperty**("&beta;", "Uppercase")	-- false
-**codepointProperty**("&sigma;", "Name")		-- GREEK SMALL LETTER SIGMA`
+**codepointProperty**("&sigma;", "Name")		-- GREEK SMALL LETTER SIGMA
 
 Retrieves a UCD character property of a Unicode codepoint.
 
@@ -211,18 +211,29 @@ U{<encoding>}: converts amount bytes of the input to the specified encoding, ski
 
 The encoding, surrounded by curly braces, is optional - no one specified would default to the behaviour of 'a' - and must match one of those applicable to textEncode
 
-# Planned additions for DP 2
-
 # Deprecated Features
 
 ## Functions: numToChar, charToNum
 
-These are deprecated and should not be used in new code as they cannot correctly handle Unicode text.
+These functions should not be used in new code as they cannot correctly handle Unicode text.
+
+## Property: useUnicode
+
+This property should not be used in new code, as it only affects the behaviour of numToChar and charToNum, which are themselves deprecated.
 
 ## Functions: uniEncode, uniDecode
 
-These are deprecated and should not be used in new code as their existing behaviour is incompatible with the new, transparent Unicode handling (the resulting value will be treated as binary data rather than text). These functions are only useful in combination with the also-deprecated **the unicodeText** field property.
+These functions should not be used in new code as their existing behaviour is incompatible with the new, transparent Unicode handling (the resulting value will be treated as binary data rather than text). These functions are only useful in combination with the also-deprecated unicode properties described below.
 
-## Property: the unicodeText
+## Property: unicodeText, unicodeLabel, unicodeTitle, unicodeTooltip, unicodePlainText, unicodeFormattedText
 
-This property is deprecated and should not be used in new code; simply set the text as normal. Assigning values other than those returned from **uniEncode** to **the unicodeText** property of a control will not produce the desired results.
+These properties should not be used in new code; simply set the text, label, title etc. as normal. Assigning values other than those returned from **uniEncode** to these properties will not produce the desired results.
+**set the unicodeText of** *field 1* **to** *tText* is now equivalent to
+**set the text of** *field 1* **to textDecode**(*tText*, "UTF16") and similarly for the other unicode-prefixed properties.
+
+## Function: measureUnicodeText
+
+This function should not be used in new code. **measureUnicodeText**(*tText*) is equivalent to **measureText**(**textDecode**(*tText*, "UTF16")).
+
+
+
