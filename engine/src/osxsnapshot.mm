@@ -181,8 +181,7 @@ static Rect rect_from_points(CGPoint x, CGPoint y)
 	// partial grayness over the selected area.
 	[m_region setHidden: YES];
 	[[self contentView] setNeedsDisplayInRect: [m_region frame]];
-	[self display];
-	[self flushWindow];
+	[self displayIfNeeded];
 
 	// MW-2014-03-11: [[ Bug 11654 ]] Make sure we force the wait to finish.
 	PostEvent(mouseUp, 0);
@@ -282,6 +281,11 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, uint32_t p_window, cons
 		// Remove the window from display.
 		[t_window orderOut: nil];
 		[t_window release];
+        
+        // MW-2014-03-19: [[ Bug 11654 ]] Wait enough time for the screen to update to a new
+        //   frame. Ideally there'd be an API to wait until the screen has been updated, but
+        //   this doesn't seem to be the case.
+        MCscreen -> wait(1.0/50.0, False, False);
 
 		// Return the cursor to arrow.
 		setcursor(nil, MCcursors[PI_ARROW]);
