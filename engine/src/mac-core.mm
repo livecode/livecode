@@ -350,8 +350,6 @@ enum
 
 void MCPlatformBreakWait(void)
 {
-	//NSLog(@"Application -> BreakWait()");
-	
 	if (s_wait_broken)
 		return;
 	
@@ -385,8 +383,6 @@ static void runloop_observer(CFRunLoopObserverRef observer, CFRunLoopActivity ac
 
 bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 {
-	//NSLog(@"Application -> WaitForEvent(%lf, %d)", p_duration, p_blocking);
-	
 	// Handle all the pending callbacks.
 	for(uindex_t i = 0; i < s_callback_count; i++)
 		s_callbacks[i] . method(s_callbacks[i] . context);

@@ -124,14 +124,12 @@ private:
 
 MCPlatformPlayer::MCPlatformPlayer(void)
 {
-	NSLog(@"Create player %p", this);
 	m_references = 1;
 	m_window = nil;
 }
 
 MCPlatformPlayer::~MCPlatformPlayer(void)
 {
-	NSLog(@"Destroy player %p", this);
 	if (m_window != nil)
 		Detach();
 }
@@ -156,8 +154,6 @@ void MCPlatformPlayer::Attach(MCPlatformWindowRef p_window)
 	if (m_window != nil)
 		Detach();
 	
-	NSLog(@"Do attach %p to %p", this, p_window);
-	
 	m_window = p_window;
 	MCPlatformRetainWindow(m_window);
 	
@@ -169,8 +165,6 @@ void MCPlatformPlayer::Detach(void)
 	if (m_window == nil)
 		return;
 	
-	NSLog(@"Do detach %p from %p", this, m_window);
-	
 	m_window -> DetachObject(this);
 	
 	MCPlatformReleaseWindow(m_window);
@@ -179,8 +173,6 @@ void MCPlatformPlayer::Detach(void)
 
 void MCPlatformPlayer::DoWindowStateChanged(void *p_ctxt, bool p_realized)
 {
-	NSLog(@"%p state change %d", p_ctxt, p_realized);
-	
 	MCPlatformPlayer *t_player;
 	t_player = (MCPlatformPlayer *)p_ctxt;
 	
@@ -266,9 +258,7 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
 {
 	MCQTKitPlayer *t_player;
 	t_player = (MCQTKitPlayer *)ctxt;
-	
-	NSLog(@"Do switch %p", ctxt);
-	
+
 	t_player -> m_switch_scheduled = false;
 	
 	if (t_player -> m_pending_offscreen == t_player -> m_offscreen)
@@ -306,8 +296,6 @@ void MCQTKitPlayer::Realize(void)
 	if (m_window == nil)
 		return;
 	
-	NSLog(@"Realize movie view %p", m_view);
-	
 	MCMacPlatformWindow *t_window;
 	t_window = (MCMacPlatformWindow *)m_window;
 	
@@ -325,9 +313,7 @@ void MCQTKitPlayer::Unrealize(void)
 {
 	if (m_offscreen || m_window == nil)
 		return;
-	
-	NSLog(@"Unrealize movie view %p", m_view);
-	
+
 	if (!m_offscreen)
 	{
 		MCMacPlatformWindow *t_window;
@@ -359,7 +345,6 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 	
 	if (t_error != nil)
 	{
-		NSLog(@"Error: @%", t_error);
 		[t_new_movie release];
 		return;
 	}
@@ -378,8 +363,6 @@ void MCQTKitPlayer::Synchronize(void)
 {
 	if (m_window == nil)
 		return;
-	
-	NSLog(@"Synchronize movie");
 	
 	MCMacPlatformWindow *t_window;
 	t_window = (MCMacPlatformWindow *)m_window;

@@ -213,7 +213,6 @@ static bool s_lock_responder_change = false;
 
 - (void)didEndSheet: (NSWindow *)sheet returnCode: (NSInteger)returnCode contextInfo: (void *)info
 {
-	NSLog(@"Didendsheet");
 }
 
 //////////
@@ -469,7 +468,7 @@ static bool s_lock_responder_change = false;
 
 - (void)insertText:(id)aString replacementRange:(NSRange)replacementRange
 {
-	NSLog(@"insertText('%@', (%d, %d))", aString, replacementRange . location, replacementRange . length);
+	// NSLog(@"insertText('%@', (%d, %d))", aString, replacementRange . location, replacementRange . length);
 	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
@@ -590,7 +589,7 @@ static bool s_lock_responder_change = false;
 
 - (void)setMarkedText:(id)aString selectedRange:(NSRange)newSelection replacementRange:(NSRange)replacementRange
 {
-	NSLog(@"setMarkedText('%@', (%d, %d), (%d, %d)", aString, newSelection . location, newSelection . length, replacementRange . location, replacementRange . length);
+	// NSLog(@"setMarkedText('%@', (%d, %d), (%d, %d)", aString, newSelection . location, newSelection . length, replacementRange . location, replacementRange . length);
 	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
@@ -778,13 +777,13 @@ static bool s_lock_responder_change = false;
 	if (actualRange != nil)
 		*actualRange = NSMakeRange(t_actual_range . offset, t_actual_range . length);
 	
-	NSLog(@"attributedSubstringForProposedRange(%d, %d -> %d, %d) = '%@'", aRange . location, aRange . length, t_actual_range . offset, t_actual_range . length, t_attr_string);
+	// NSLog(@"attributedSubstringForProposedRange(%d, %d -> %d, %d) = '%@'", aRange . location, aRange . length, t_actual_range . offset, t_actual_range . length, t_attr_string);
 	return t_attr_string;
 }
 
 - (NSArray*)validAttributesForMarkedText
 {
-	MCLog("validAttributesForMarkedText() = []", nil);
+	// MCLog("validAttributesForMarkedText() = []", nil);
 	return [NSArray array];
 }
 
@@ -954,7 +953,6 @@ static bool s_lock_responder_change = false;
 
 - (void)draggedImage:(NSImage *)image endedAt:(NSPoint)point operation:(NSDragOperation)operation
 {
-	NSLog(@"draggedImage:endedAt");
 }
 
 - (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations
@@ -971,8 +969,6 @@ static bool s_lock_responder_change = false;
 	t_image_loc . x = [t_mouse_event locationInWindow] . x + offset . width;
 	t_image_loc . y = [t_mouse_event locationInWindow] . y - ([image size] . height - offset . height);
 	
-	NSLog(@"Drag image start");
-	
 	m_allowed_drag_operations = operations;
 	
 	[self dragImage: image
@@ -982,8 +978,6 @@ static bool s_lock_responder_change = false;
 				pasteboard: [NSPasteboard pasteboardWithName: NSDragPboard]
 				source: self
 				slideBack: YES];
-				
-	NSLog(@"Drag image end");
 				
 	return NSDragOperationNone;
 }
@@ -1008,8 +1002,6 @@ static bool s_lock_responder_change = false;
 
 - (NSDragOperation)draggingEntered: (id<NSDraggingInfo>)sender
 {
-	NSLog(@"draggingEntered");
-	
 	MCPlatformPasteboardRef t_pasteboard;
 	MCMacPlatformPasteboardCreate([sender draggingPasteboard], t_pasteboard);
 	
@@ -1033,8 +1025,6 @@ static bool s_lock_responder_change = false;
 
 - (void)draggingExited: (id<NSDraggingInfo>)sender
 {
-	NSLog(@"draggingExited");
-	
 	MCMacPlatformWindow *t_window;
 	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
 	t_window -> HandleDragLeave();
@@ -1042,8 +1032,6 @@ static bool s_lock_responder_change = false;
 
 - (NSDragOperation)draggingUpdated: (id<NSDraggingInfo>)sender
 {
-	NSLog(@"draggingUpdated");
-	
 	MCPoint t_location;
 	MCMacPlatformMapScreenNSPointToMCPoint([[self window] convertBaseToScreen: [sender draggingLocation]], t_location);
 	
@@ -1168,14 +1156,6 @@ static bool s_lock_responder_change = false;
 		t_window -> ProcessKeyDown(t_key_code, t_mapped_codepoint, t_unmapped_codepoint);
 	else
 		t_window -> ProcessKeyUp(t_key_code, t_mapped_codepoint, t_unmapped_codepoint);
-	
-#if 0
-	NSLog(@"Keycode = %04x", [event keyCode]);
-	if ([[event characters] length] > 0)
-		NSLog(@"Chars[0] = %04x (length = %d)", [[event characters] characterAtIndex: 0], [[event characters] length]);
-	if ([[event charactersIgnoringModifiers] length] > 0)
-		NSLog(@"CharsIgnoringMods[0] = %04x (length = %d)", [[event charactersIgnoringModifiers] characterAtIndex: 0], [[event charactersIgnoringModifiers] length]);
-#endif
 }
 
 //////////
@@ -1484,8 +1464,6 @@ void MCMacPlatformWindow::DoRealize(void)
 		m_window_handle = [[com_runrev_livecode_MCWindow alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: YES];
 	else
 		m_panel_handle = [[com_runrev_livecode_MCPanel alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: YES];
-	
-	NSLog(@"Create NSWindow %p", m_handle);
 	
 	m_delegate = [[com_runrev_livecode_MCWindowDelegate alloc] initWithPlatformWindow: this];
 	[m_window_handle setDelegate: m_delegate];

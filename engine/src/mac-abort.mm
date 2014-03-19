@@ -188,14 +188,10 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 		if (!CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, s_current_period_keycode))
 			return;
 		
-		//NSLog(@"Found period.");
-		
 		if (!CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, 0x37 /* LeftCommand */) &&
 			!CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, 0x36 /* RightCommand */))
 			return;
-		
-		//NSLog(@"Found command.");
-		
+
 		bool t_has_shift;
 		t_has_shift =
 				CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState, 0x38 /* LeftShift */) ||
@@ -206,8 +202,6 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 		if (!s_current_period_needs_shift &&
 			t_has_shift)
 			return;
-		
-		//NSLog(@"Found appropriate shift.");
 		
 		// If we get here then:
 		//   the period keycode is down
