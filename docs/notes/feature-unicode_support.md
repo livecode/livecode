@@ -1,4 +1,6 @@
-# Unicode and Livecode
+# Unicode Support
+
+# Unicode and LiveCode
 
 Traditionally, computer systems have stored text as 8-bit bytes, with each byte representing a single character (for example, the letter 'A' might be stored as 65). This has the advantage of being very simple and space efficient whilst providing enough (256) different values to represent all the symbols that might be provided on a typewriter.
 
@@ -39,10 +41,10 @@ Unfortunately, the correct text encoding depends on the other programs that will
 
 ## Chunk expressions: byte, char, codepoint, codeunit
 
-**byte** *x* to *y* of *text*		-- Returns bytes from a binary string
-**char** *x* to *y* of *text*			-- As a series of graphical units
-**codepoint** *x* to *y* of *text*	-- As a series of Unicode codepoints
-**codeunit** *x* to *y* of *text*		-- As a series of encoded units
+**byte** *x* **to** *y* **of** *text*		-- Returns bytes from a binary string
+**char** *x* **to** *y* **of** *text*			-- As a series of graphical units
+**codepoint** *x* **to** *y* **of** *text*	-- As a series of Unicode codepoints
+**codeunit** *x* **to** *y* **of** *text*		-- As a series of encoded units
 
 A variety of new chunk types have been added to the LiveCode syntax to support the various methods of referring to the components of text. This set is only important to those implementing low-level functions and can be safely ignored by the majority of users.
 
@@ -64,7 +66,7 @@ The **paragraph** chunk is identical to the existing **line** chunk, except that
 
 The hierarchy of these new chunk types is as follows: **trueword** *v* of **word** *w* of **item** *x* of **sentence** *y* of **paragraph** *z* of **line**...
 
-### Synonym: segment
+## Synonym: segment
 
 The **segment** chunk type has been added as a synonym to the existing **word** chunk. This in order to allow you to update your scripts to use the newer syntax in anticipation of a future change to make the behaviour of the **word** chunk match the new **trueWord** behaviour.
 
@@ -219,21 +221,25 @@ These functions should not be used in new code as they cannot correctly handle U
 
 ## Property: useUnicode
 
-This property should not be used in new code, as it only affects the behaviour of numToChar and charToNum, which are themselves deprecated.
+This property should not be used in new code, as it only affects the behaviour of **numToChar** and **charToNum**, which are themselves deprecated.
 
 ## Functions: uniEncode, uniDecode
 
 These functions should not be used in new code as their existing behaviour is incompatible with the new, transparent Unicode handling (the resulting value will be treated as binary data rather than text). These functions are only useful in combination with the also-deprecated unicode properties described below.
 
-## Property: unicodeText, unicodeLabel, unicodeTitle, unicodeTooltip, unicodePlainText, unicodeFormattedText
-
-These properties should not be used in new code; simply set the text, label, title etc. as normal. Assigning values other than those returned from **uniEncode** to these properties will not produce the desired results.
-**set the unicodeText of** *field 1* **to** *tText* is now equivalent to
-**set the text of** *field 1* **to textDecode**(*tText*, "UTF16") and similarly for the other unicode-prefixed properties.
-
 ## Function: measureUnicodeText
 
 This function should not be used in new code. **measureUnicodeText**(*tText*) is equivalent to **measureText**(**textDecode**(*tText*, "UTF16")).
+
+## Properties: unicodeText, unicodeLabel, unicodeTitle, unicodeTooltip, unicodePlainText, unicodeFormattedText
+
+These properties should not be used in new code; simply set the text, label, title etc. as normal. Assigning values other than those returned from **uniEncode** to these properties will not produce the desired results.
+
+The following are now equivalent:
+
+`	set the unicodeText of field 1 to tText
+	set the text of field 1 to textDecode(tText, "UTF16")` 
+and similarly for the other unicode-prefixed properties.
 
 
 
