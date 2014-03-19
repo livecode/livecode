@@ -207,6 +207,17 @@ struct MCImageBuffer;
 
 //
 
+// IM-2014-03-06: [[ revBrowserCEF ]] Actions to call during the runloop
+typedef void (*MCRunloopActionCallback)(void *context);
+
+typedef struct _MCRunloopAction
+{
+	MCRunloopActionCallback callback;
+	void *context;
+
+	_MCRunloopAction *next;
+} MCRunloopAction, *MCRunloopActionRef;
+
 enum
 {
 	kMCAnswerDialogButtonOk,
@@ -264,6 +275,9 @@ protected:
 	static MCDisplay *s_displays;
 	static uint4 s_display_count;
 	static bool s_display_info_effective;
+
+	// IM-2014-03-06: [[ revBrowserCEF ]] List of actions to run during the runloop
+	MCRunloopAction *m_runloop_actions;
 	
 public:
 	MCColor white_pixel;
@@ -440,6 +454,13 @@ public:
 	// and such to be processed. If the wait was called with 'anyevent' True
 	// then it will cause termination of the wait.
 	virtual void pingwait(void);
+
+	// IM-2014-03-06: [[ revBrowserCEF ]] Add action to runloop
+	bool AddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action);
+	// IM-2014-03-06: [[ revBrowserCEF ]] Remove action from runloop
+	void RemoveRunloopAction(MCRunloopActionRef p_action);
+	// IM-2014-03-06: [[ revBrowserCEF ]] Perform runloop actions
+	void DoRunloopActions(void);
 
 	virtual void flushevents(uint2 e);
 	virtual void updatemenubar(Boolean force);

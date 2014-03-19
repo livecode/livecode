@@ -445,6 +445,9 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 
 	do
 	{
+		// IM-2014-03-06: [[ revBrowserCEF ]] Call additional runloop callbacks
+		DoRunloopActions();
+
 		real8 eventtime = exittime;
 		if (handlepending(curtime, eventtime, dispatch))
 		{

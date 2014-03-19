@@ -95,6 +95,9 @@ public:
 	virtual void MakeTextBigger(void);
 	virtual void MakeTextSmaller(void);
  
+	virtual void AddJavaScriptHandler(const char *p_handler);
+	virtual void RemoveJavaScriptHandler(const char *p_handler);
+	
 	bool m_lock_update;
  
  protected:
