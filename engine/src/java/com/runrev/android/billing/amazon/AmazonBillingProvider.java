@@ -54,7 +54,7 @@ public class AmazonBillingProvider implements BillingProvider
         if (!started)
             return false;
         
-        PurchasingManager.registerObserver(mPurchasingObserver);
+        //PurchasingManager.registerObserver(mPurchasingObserver);
         return true;
     }
 

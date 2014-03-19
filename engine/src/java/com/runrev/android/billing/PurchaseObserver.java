@@ -32,26 +32,13 @@ public abstract class PurchaseObserver
 	
     
     // Sent to the observer to indicate a change in the purchase state
-    // void onPurchaseStateChanged(int purchaseId, PurchaseState state);
-   // public abstract void onPurchaseStateChanged(int purchaseId, int state);
     public abstract void onPurchaseStateChanged(String productId, int state);
     
-    // Sent to the observer to when an error occurs while sending the purchase request
-    public abstract void onPurchaseRequestError(String errorMessage);
-    
-    // Sent to the observer once purchases have been successfully restored
-    public abstract void onPurchasesRestored();
-    
-    // Sent to the observer if purchase restoration fails
-    public abstract void onPurchaseRestoreError(String errorMessage);
-
 	// Sent to the observer once product details have been successfully received
     public abstract void onProductDetailsReceived(String productId);
     
     // Sent to the observer once product details have NOT been successfully received
     public abstract void onProductDetailsError(String productId, String error);
-    
-//	public abstract void onGetPurchaseInformationResponse(GetPurchaseInformation request, ResponseCode responseCode);
 
 	void startBuyPageActivity(PendingIntent pendingIntent, Intent intent)
 	{

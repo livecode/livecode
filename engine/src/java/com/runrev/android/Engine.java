@@ -2174,24 +2174,6 @@ public class Engine extends View implements EngineApi
             });
         }
         
-        // Sent to the observer to when an error occurs while sending the purchase request
-        public void onPurchaseRequestError(String errorMessage)
-        {
-            
-        }
-        
-        // Sent to the observer once purchases have been successfully restored
-        public void onPurchasesRestored()
-        {
-            
-        }
-        
-        // Sent to the observer if purchase restoration fails
-        public void onPurchaseRestoreError(String errorMessage)
-        {
-            
-        }
-        
         public void onProductDetailsReceived(String productId)
         {
             final String tProductId = productId;
@@ -2216,69 +2198,6 @@ public class Engine extends View implements EngineApi
                 }
             });
         }
-		
-/*
-		public void onPurchaseStateChanged(Purchase purchase, boolean verified, String signedData, String signature)
-		{
-			final boolean tVerified = verified;
-			final int tPurchaseState = purchase.purchaseState.ordinal();
-			final String tNotificationId = purchase.notificationId;
-			final String tProductId = purchase.productId;
-			final String tOrderId = purchase.orderId;
-			final long tPurchaseTime = purchase.purchaseTime;
-			final String tDeveloperPayload = purchase.developerPayload;
-			final String tSignedData = signedData;
-			final String tSignature = signature;
-
-			post(new Runnable() {
-				public void run() {
-					doPurchaseStateChanged(tVerified, tPurchaseState,
-						tNotificationId, tProductId, tOrderId,
-						tPurchaseTime, tDeveloperPayload, tSignedData, tSignature);
-					if (m_wake_on_event)
-						doProcess(false);
-				}
-			});
-		}
-
-		public void onRestoreTransactionsResponse(RestoreTransactions request, ResponseCode responseCode)
-		{
-			final int tResponseCode = responseCode.ordinal();
-			post(new Runnable() {
-				public void run() {
-					doRestoreTransactionsResponse(tResponseCode);
-					if (m_wake_on_event)
-						doProcess(false);
-				}
-			});
-		}
-
-		public void onConfirmNotificationResponse(ConfirmNotification request, ResponseCode responseCode)
-		{
-			final int tPurchaseId = request.mPurchaseId;
-			final int tResponseCode = responseCode.ordinal();
-			post(new Runnable() {
-				public void run() {
-					doConfirmNotificationResponse(tPurchaseId, tResponseCode);
-					if (m_wake_on_event)
-						doProcess(false);
-				}
-			});
-		}
-
-		public void onRequestPurchaseResponse(RequestPurchase request, ResponseCode responseCode)
-		{
-			final int tPurchaseId = request.mPurchaseId;
-			final int tResponseCode = responseCode.ordinal();
-			post(new Runnable() {
-				public void run() {
-					doRequestPurchaseResponse(tPurchaseId, tResponseCode);
-					if (m_wake_on_event)
-						doProcess(false);
-				}
-			});
-		}
- */
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
