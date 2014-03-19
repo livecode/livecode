@@ -648,6 +648,9 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	
 	do
 	{
+		// IM-2014-03-06: [[ revBrowserCEF ]] Call additional runloop callbacks
+		DoRunloopActions();
+		
 		// MW-2013-08-18: [[ XPlatNotify ]] Handle any pending notifications
 		if (MCNotifyDispatch(dispatch == True) && anyevent)
 			break;

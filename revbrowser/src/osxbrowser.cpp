@@ -467,10 +467,6 @@ TAltBrowser::~TAltBrowser()
 	[t_view release];
 }
 
-CWebBrowserBase::~CWebBrowserBase(void)
-{
-}
-
 #ifdef PRE_COCOA
 OSStatus TAltBrowser::ParentEventHandler(EventHandlerCallRef p_call_chain, EventRef p_event, void *p_context)
 {
@@ -1595,6 +1591,14 @@ void TAltBrowser::SetUserAgent(const char *p_user_agent)
 	WebView *t_web_view;
 	t_web_view = m_web_browser;
 	[t_web_view setCustomUserAgent: t_ns_user_agent];
+}
+
+void TAltBrowser::AddJavaScriptHandler(const char *p_handler)
+{
+}
+
+void TAltBrowser::RemoveJavaScriptHandler(const char *p_handler)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////

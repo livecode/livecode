@@ -334,6 +334,9 @@ function typelistToProto pList, pWithArgs
       case "integer"
         put "int " after tProto
       break
+	  case "integer64"
+        put "long long int " after tProto
+      break
       case "double"
         put "double " after tProto
       break
