@@ -420,16 +420,6 @@ TAltBrowser::TAltBrowser()
 	contextmenus = true;
 	messages = false;
 	
-#if PRE_COCOA
-	m_container = NULL;
-	m_group = NULL;
-	m_parent = NULL;
-	
-	m_parent_handler = NULL;
-	m_container_handler = NULL;
-	m_webview_handler = NULL;
-#endif
-	
 	m_web_browser = NULL;
 	m_web_adapter = NULL;
 	
@@ -440,15 +430,6 @@ TAltBrowser::TAltBrowser()
 
 TAltBrowser::~TAltBrowser()
 {
-#if PRE_COCOA
-	DetachFromParent();
-	
-	RemoveEventHandler(m_webview_handler);
-	DisposeEventHandlerUPP(m_webview_handler_upp);
-	
-	HideWindow(m_container);
-#endif
-	
 	WebView *t_view;
 	t_view = m_web_browser; //HIWebViewGetWebView(m_web_browser);
 	
@@ -460,191 +441,13 @@ TAltBrowser::~TAltBrowser()
 	[[t_view mainFrame] stopLoading];
 	[t_view removeFromSuperview];
 	
-#ifdef PRE_COCOA
-	DisposeWindow(m_container);
-#endif
-	
 	[t_view release];
 }
-
-#ifdef PRE_COCOA
-OSStatus TAltBrowser::ParentEventHandler(EventHandlerCallRef p_call_chain, EventRef p_event, void *p_context)
-{
-	if (GetEventClass(p_event) == 'revo' && GetEventKind(p_event) == 'sync')
-	{
-		((TAltBrowser *)p_context) -> Synchronize();
-		return noErr;
-	}
-	
-	switch(GetEventKind(p_event))
-	{
-		case kEventWindowBoundsChanged:
-		case kEventWindowShown:
-		case kEventWindowHidden:
-		case kEventWindowCollapsing:
-		case kEventWindowExpanded:
-			((TAltBrowser *)p_context) -> Synchronize();
-		break;
-
-		case kEventWindowClosed:
-		break;
-	}
-	
-	return eventNotHandledErr;
-}
-
-static UInt32 key_to_command_id(UInt16 p_key)
-{
-	UInt32 t_id;
-	switch(p_key)
-	{	
-		case 'c':
-		case 'C':
-			t_id = kHICommandCopy;
-		break;
-		
-		case 'v':
-		case 'V':
-			t_id = kHICommandPaste;
-		break;
-		
-		case 'x':
-		case 'X':
-			t_id = kHICommandCut;
-		break;
-		
-		case 'a':
-		case 'A':
-			t_id = kHICommandSelectAll;
-		break;
-		
-		case 'Z':
-			t_id = kHICommandUndo;
-		break;
-		
-		case 'z':
-			t_id = kHICommandRedo;
-		break;
-			
-		default:
-			t_id = 0;
-		break;
-	}
-	return t_id;
-}
-
-OSStatus TAltBrowser::WebViewEventHandler(EventHandlerCallRef p_call_chain, EventRef p_event, void *p_context)
-{
-	switch(GetEventKind(p_event))
-	{
-		case kEventCommandUpdateStatus:
-		{
-			HICommand t_command;
-			GetEventParameter(p_event, kEventParamDirectObject, typeHICommand, NULL, sizeof(HICommand), NULL, &t_command);
-			
-			UInt16 t_key;
-			GetMenuItemCommandKey(t_command . menu . menuRef, t_command . menu . menuItemIndex, FALSE, &t_key);
-			if (key_to_command_id(t_key) != 0)
-				EnableMenuItem(t_command . menu . menuRef, t_command . menu . menuItemIndex);
-		}
-		break;
-		
-		//MH-2007-05-21 [[Bug 4968 ]]: mousewheel activates scrollbars, even if disabled
-		case kEventMouseWheelMoved:
-		{
-			if (! ((TAltBrowser *)p_context) -> scrollbarsenabled)
-				return noErr;
-		}
-		break;
-	
-		case kEventCommandProcess:
-		{
-			OSStatus t_err;
-			
-			HICommand t_command;
-			t_err = GetEventParameter(p_event, kEventParamDirectObject, typeHICommand, NULL, sizeof(HICommand), NULL, &t_command);
-			
-			UInt16 t_key;
-			GetMenuItemCommandKey(t_command . menu . menuRef, t_command . menu . menuItemIndex, FALSE, &t_key);
-			t_command . commandID = key_to_command_id(t_key);
-			
-			// MW-2011-01-31: [[ Bug 9359 ]] Make sure we return 'eventNotHandled' if we don't
-			//   recognize the key sequence... Otherwise we end up not passing on things like Cmd-Q!
-			if (t_command . commandID != 0)
-				SetEventParameter(p_event, kEventParamDirectObject, typeHICommand, sizeof(HICommand), &t_command);
-			else
-				return eventNotHandledErr;
-		}
-		break;
-	
-		case kEventControlDraw:
-			((TAltBrowser *)p_context) -> Redraw();
-		break;
-	}
-
-	return eventNotHandledErr;
-}
-
-void TAltBrowser::Synchronize(void)
-{
-	// Do nothing if there is currently no parent.
-	if (m_parent == NULL)
-		return;
-
-	Rect t_parent_bounds;
-	GetWindowBounds(m_parent, kWindowContentRgn, &t_parent_bounds);
-
-	// MW-2012-10-08: [[ Bug 10442 ] Get the window scroll so the browser is placed properly
-	//   when parent stack is scrolled.
-	int t_scroll;
-	if (GetWindowProperty(m_parent, 'revo', 'scrl', 4, NULL, &t_scroll) != noErr)
-		t_scroll = 0;
-	
-	HIRect t_view_bounds;
-	t_view_bounds . origin . x = 0;
-	t_view_bounds . origin . y = 0;
-	t_view_bounds . size . width = m_bounds . right - m_bounds . left;
-	t_view_bounds . size . height = m_bounds . bottom - m_bounds . top;
-	
-	Rect t_container_bounds;
-	t_container_bounds . left = max(t_parent_bounds . left, t_parent_bounds . left + m_bounds . left);
-	t_container_bounds . top = max(t_parent_bounds . top, t_parent_bounds . top + m_bounds . top) - t_scroll;
-	t_container_bounds . right = min(t_parent_bounds . right, t_parent_bounds . left + m_bounds . right);
-	t_container_bounds . bottom = min(t_parent_bounds . bottom, t_parent_bounds . top + m_bounds . bottom) - t_scroll;
-	
-	bool t_is_null;
-	if (t_container_bounds . left >= t_container_bounds . right || t_container_bounds . top >= t_container_bounds . bottom)
-		t_is_null = true;
-	else
-		t_is_null = false;
-	
-	if (!t_is_null)
-	{
-		ChangeWindowGroupAttributes(m_group,0, kWindowGroupAttrMoveTogether | kWindowGroupAttrLayerTogether | kWindowGroupAttrHideOnCollapse | kWindowGroupAttrSharedActivation);
-		SetWindowBounds(m_container, kWindowContentRgn, &t_container_bounds);
-		HIViewSetFrame(m_web_browser, &t_view_bounds);
-		ChangeWindowGroupAttributes(m_group, kWindowGroupAttrMoveTogether | kWindowGroupAttrLayerTogether | kWindowGroupAttrHideOnCollapse | kWindowGroupAttrSharedActivation, 0);
-	}
-
-	bool t_parent_visible;
-	t_parent_visible = IsWindowVisible(m_parent) && !IsWindowCollapsed(m_parent);
-
-	if (t_parent_visible && isvisible && !t_is_null)
-		ShowWindow(m_container);
-	else
-		HideWindow(m_container);
-}
-#endif
 
 @interface NativeWebView: WebView
 {
 	unsigned int native_id;
 }
-
-#if 0
-- (BOOL)becomeFirstResponder;
-- (BOOL)resignFirstResponder;
-#endif
 
 - (void)resizeWithOldSuperviewSize: (NSSize)oldsize;
 
@@ -653,28 +456,6 @@ void TAltBrowser::Synchronize(void)
 @end
 
 @implementation NativeWebView
-
-#if 0
-- (BOOL)becomeFirstResponder
-{
-	if (![super becomeFirstResponder])
-		return NO;
-	
-	[[self superview] com_runrev_livecode_subviewBecomeFirstResponder: native_id];
-	
-	return YES;
-}
-
-- (BOOL)resignFirstResponder
-{
-	if (![super resignFirstResponder])
-		return NO;
-	
-	[[self superview] com_runrev_livecode_subviewResignFirstResponder: native_id];
-	
-	return YES;
-}
-#endif
 
 - (void)resizeWithOldSuperviewSize: (NSSize)oldsize
 {
@@ -703,30 +484,6 @@ void TAltBrowser::Synchronize(void)
 void TAltBrowser::init(unsigned int p_window)
 {
 	WebInitForCarbon();
-
-#ifdef PRE_COCOA
-	m_parent = (WindowRef)p_window;
-
-	HIWebViewCreate(&m_web_browser);
-
-	Rect t_content_rect;
-	GetWindowBounds(m_parent, kWindowContentRgn, &t_content_rect);
-	t_content_rect . right = t_content_rect . left + 32;
-	t_content_rect . bottom = t_content_rect . top + 32;
-	CreateNewWindow(kSheetWindowClass, kWindowStandardHandlerAttribute | kWindowCompositingAttribute | kWindowNoShadowAttribute | kWindowFrameworkScaledAttribute, &t_content_rect, &m_container);
-	
-	HIViewRef t_content_view;
-	HIViewFindByID(HIViewGetRoot(m_container), kHIViewWindowContentID, &t_content_view);
-	
-	HIRect t_bounds_rect;
-	HIViewGetBounds(t_content_view, &t_bounds_rect);
-	HIViewSetFrame(m_web_browser, &t_bounds_rect);
-	
-	HIViewAddSubview(t_content_view, m_web_browser);
-
-	WebView *t_webview;
-	t_webview = HIWebViewGetWebView(m_web_browser);
-#endif
 	
 	m_parent = p_window;
 	
@@ -750,98 +507,7 @@ void TAltBrowser::init(unsigned int p_window)
 	
 	if (t_window != nil)
 		[[t_window contentView] addSubview: m_web_browser];
-	
-#ifdef PRE_COCOA
-	HIViewSetVisible(m_web_browser, true);
-	
-	static EventTypeSpec s_webview_events[] =
-	{
-		{ kEventClassControl, kEventControlDraw },
-		{ kEventClassCommand, kEventCommandProcess },
-		{ kEventClassCommand, kEventCommandUpdateStatus },
-		{ kEventClassMouse, kEventMouseWheelMoved }
-	};
-	
-	m_webview_handler_upp = NewEventHandlerUPP(WebViewEventHandler);
-	InstallEventHandler(GetControlEventTarget(m_web_browser), m_webview_handler_upp, sizeof(s_webview_events) / sizeof(EventTypeSpec), s_webview_events, this, &m_webview_handler);
-
-	AttachToParent(m_parent);
-#endif
 }
-
-#ifdef PRE_COCOA
-void TAltBrowser::AttachToParent(WindowRef p_parent)
-{
-	// Make sure the parent is in a window group with us.
-	m_parent = p_parent;
-
-	WindowGroupRef t_current_group;
-	t_current_group = GetWindowGroup(m_parent);
-	
-	m_group = NULL;
-	if (t_current_group != NULL)
-	{
-		CFStringRef t_group_name;
-		t_group_name = NULL;
-		CopyWindowGroupName(t_current_group, &t_group_name);
-		if (t_group_name != NULL)
-		{
-			if (CFStringCompare(t_group_name, CFSTR("MCCONTROLGROUP"), 0) == 0)
-				m_group = t_current_group;
-			CFRelease(t_group_name);
-		}
-	}
-	
-	if (m_group != NULL)
-	{
-		if (GetWindowGroup(m_parent) != m_group)
-		{
-			ChangeWindowGroupAttributes(m_group, 0, kWindowGroupAttrMoveTogether | kWindowGroupAttrLayerTogether | kWindowGroupAttrHideOnCollapse | kWindowGroupAttrSharedActivation);
-			SetWindowGroupParent(m_group, GetWindowGroup(m_parent));
-		}
-		SetWindowGroup(m_container, m_group);
-	}
-	else
-	{
-		CreateWindowGroup(0, &m_group);
-		SetWindowGroupName(m_group, CFSTR("MCCONTROLGROUP"));
-		SetWindowGroupOwner(m_group, m_parent);
-		SetWindowGroupParent(m_group, GetWindowGroup(m_parent));
-		SetWindowGroup(m_parent, m_group);
-		SetWindowGroup(m_container, m_group);
-	}
-	
-	WindowGroupAttributes fwinAttributes = kWindowGroupAttrSelectAsLayer | kWindowGroupAttrMoveTogether | kWindowGroupAttrLayerTogether | kWindowGroupAttrHideOnCollapse | kWindowGroupAttrSharedActivation;
-	ChangeWindowGroupAttributes(m_group, fwinAttributes, 0); 
-	SetWindowGroupLevel(m_group, 4);
-
-	static EventTypeSpec s_parent_events[] =
-	{
-		{ kEventClassWindow, kEventWindowBoundsChanged },
-		{ kEventClassWindow, kEventWindowShown },
-		{ kEventClassWindow, kEventWindowHidden },
-		{ kEventClassWindow, kEventWindowClosed },
-		{ kEventClassWindow, kEventWindowExpanded },
-		{ kEventClassWindow, kEventWindowCollapsing },
-		{ 'revo', 'sync' },
-	};
-
-	m_parent_handler_upp = NewEventHandlerUPP(ParentEventHandler);
-	InstallEventHandler(GetWindowEventTarget(m_parent), m_parent_handler_upp, sizeof(s_parent_events) / sizeof(EventTypeSpec), s_parent_events, this, &m_parent_handler);	
-}
-
-void TAltBrowser::DetachFromParent(void)
-{
-	RemoveEventHandler(m_parent_handler);
-	DisposeEventHandlerUPP(m_parent_handler_upp);
-	m_parent_handler = NULL;
-	m_parent_handler_upp = NULL;
-
-	HideWindow(m_container);
-	SetWindowGroup(m_container, GetWindowGroupOfClass(kDocumentWindowClass));
-	m_parent = NULL;
-}
-#endif
 
 void TAltBrowser::GoURL(const char * myurl, const char *p_target_frame)
 {
@@ -1193,10 +859,6 @@ void TAltBrowser::SetVisible(bool p_state)
 	isvisible = p_state;
 
 	[nativeView setHidden: !isvisible];
-	
-#ifdef PRE_COCOA
-	Synchronize();
-#endif
 }
 
 bool TAltBrowser::GetVisible()
@@ -1420,12 +1082,6 @@ void TAltBrowser::Print()
 	WebPreferences *   thePrefs;
 	long				 SystemMinorVersion;
 	
-#ifdef PRE_COCOA
-	//disconnect the group briefly
-	ChangeWindowGroupAttributes(m_group,0,
-								kWindowGroupAttrMoveTogether | kWindowGroupAttrLayerTogether | kWindowGroupAttrHideOnCollapse | kWindowGroupAttrSharedActivation);
-#endif
-	
 	
 	nativeView = m_web_browser;
 	
@@ -1454,11 +1110,6 @@ void TAltBrowser::Print()
 	    [op setShowPanels:NO];
 	
 	[op runOperation];
-
-#ifdef PRE_COCOA
-	//reconnect the group
-	ChangeWindowGroupAttributes(m_group, kWindowGroupAttrMoveTogether | kWindowGroupAttrLayerTogether | kWindowGroupAttrHideOnCollapse | kWindowGroupAttrSharedActivation, 0);
-#endif
 }
 
 // MW-2012-11-14: [[ Bug 10509 ]] Reimplemented to fix image corruption.
@@ -1542,18 +1193,6 @@ int TAltBrowser::GetWindowId(void)
 
 void TAltBrowser::SetWindowId(int p_new_id)
 {
-#ifdef PRE_COCOA
-	WindowRef t_new_window;
-	t_new_window = (WindowRef)p_new_id;
-	if (p_new_id == 0 || !IsValidWindowPtr((WindowRef)t_new_window))
-		DetachFromParent();
-	else
-	{
-		AttachToParent(t_new_window);
-		Synchronize();
-	}
-#endif
-	
 	NSWindow *t_window;
 	t_window = [NSApp windowWithWindowNumber: p_new_id];
 	if (p_new_id == 0 || t_window == nil)
