@@ -14,16 +14,17 @@
 		4DF42ABA0B0488E2003F2D95 /* revbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DF42AB90B0488E2003F2D95 /* revbrowser.cpp */; };
 		4DF42AED0B0489AF003F2D95 /* libexternal.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DF42AEC0B0489A5003F2D95 /* libexternal.a */; };
 		769568EE1823D0E700779255 /* libcore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 769568ED1823D0E700779255 /* libcore.a */; };
+		E832B1A618D9C27700083DF8 /* libcef_stubs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E832B19B18D9C20D00083DF8 /* libcef_stubs.a */; };
+		E832B1A918D9C27B00083DF8 /* libcef_stubs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E832B19B18D9C20D00083DF8 /* libcef_stubs.a */; };
+		E832B1B618D9C3C100083DF8 /* osxbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D03BBDB0BC2423D00026EA7 /* osxbrowser.cpp */; };
 		E8589ADA18C9F77800958234 /* cefbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8589AD818C9F77800958234 /* cefbrowser.cpp */; };
 		E8589AF018C9F82200958234 /* cefbrowser_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = E8589AEF18C9F82200958234 /* cefbrowser_osx.mm */; };
 		E8589D9B18CA20CF00958234 /* libcef_dll_wrapper.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AA04C018C9E72A00AE8663 /* libcef_dll_wrapper.a */; };
-		E858A19E18CA29F800958234 /* libcef.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E858A19D18CA29F800958234 /* libcef.dylib */; };
 		E858A20E18CDD1FB00958234 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E858A20D18CDD1FB00958234 /* AppKit.framework */; };
 		E897315018D07D2A005FFFBE /* Resources in CopyFiles */ = {isa = PBXBuildFile; fileRef = E897308018D07D1D005FFFBE /* Resources */; };
 		E8D3736118CDDA5A005C1182 /* cefprocess.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8D3736018CDDA5A005C1182 /* cefprocess.cpp */; };
 		E8D3736A18CDDBEE005C1182 /* cefprocess_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8D3736918CDDBEE005C1182 /* cefprocess_osx.cpp */; };
 		E8D373BF18CDE872005C1182 /* libcef_dll_wrapper.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AA04C018C9E72A00AE8663 /* libcef_dll_wrapper.a */; };
-		E8D373C418CDE886005C1182 /* libcef.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E858A19D18CA29F800958234 /* libcef.dylib */; };
 		E8D3770118CF2903005C1182 /* libcore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8D371D118CDD2D7005C1182 /* libcore.a */; };
 		E8D3779F18CF2992005C1182 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D03BCA40BC2780100026EA7 /* Foundation.framework */; };
 /* End PBXBuildFile section */
@@ -42,6 +43,27 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = external;
+		};
+		E832B19A18D9C20D00083DF8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E832B19618D9C20D00083DF8 /* libcef.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E832B11018D8AD4800083DF8 /* libcef_stubs.a */;
+			remoteInfo = cef_stubs;
+		};
+		E832B19E18D9C22300083DF8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E832B19618D9C20D00083DF8 /* libcef.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = E832B10F18D8AD4800083DF8 /* cef_stubs */;
+			remoteInfo = cef_stubs;
+		};
+		E832B1A218D9C25400083DF8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E832B19618D9C20D00083DF8 /* libcef.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = E832B10F18D8AD4800083DF8 /* cef_stubs */;
+			remoteInfo = cef_stubs;
 		};
 		E8589AFE18C9FA9F00958234 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -125,11 +147,12 @@
 		4DF42AC20B0488ED003F2D95 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DF42AE40B0489A5003F2D95 /* libexternal.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libexternal.xcodeproj; path = ../libexternal/libexternal.xcodeproj; sourceTree = SOURCE_ROOT; };
 		769568ED1823D0E700779255 /* libcore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcore.a; path = ../_build/mac/Debug/libcore.a; sourceTree = "<group>"; };
+		E832B19618D9C20D00083DF8 /* libcef.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libcef.xcodeproj; path = ../thirdparty/libcef/libcef.xcodeproj; sourceTree = SOURCE_ROOT; };
 		E8589AD718C9F77800958234 /* cefbrowser_msg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cefbrowser_msg.h; path = src/cefbrowser_msg.h; sourceTree = "<group>"; };
 		E8589AD818C9F77800958234 /* cefbrowser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cefbrowser.cpp; path = src/cefbrowser.cpp; sourceTree = "<group>"; };
 		E8589AD918C9F77800958234 /* cefbrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cefbrowser.h; path = src/cefbrowser.h; sourceTree = "<group>"; };
 		E8589AEF18C9F82200958234 /* cefbrowser_osx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = cefbrowser_osx.mm; path = src/cefbrowser_osx.mm; sourceTree = "<group>"; };
-		E8589AF118C9F84000958234 /* w32cefbrowser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = w32cefbrowser.cpp; path = src/w32cefbrowser.cpp; sourceTree = "<group>"; };
+		E8589AF118C9F84000958234 /* cefprocess_w32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cefprocess_w32.cpp; path = src/cefprocess_w32.cpp; sourceTree = "<group>"; };
 		E858A19D18CA29F800958234 /* libcef.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcef.dylib; path = ../prebuilt/lib/libcef/mac/libcef.dylib; sourceTree = SOURCE_ROOT; };
 		E858A20D18CDD1FB00958234 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		E897308018D07D1D005FFFBE /* Resources */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Resources; path = ../thirdparty/libcef/res/osx/Resources; sourceTree = SOURCE_ROOT; };
@@ -138,7 +161,7 @@
 		E8D3735718CDDA3F005C1182 /* revbrowser-cefprocess.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "revbrowser-cefprocess.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E8D3735918CDDA40005C1182 /* revbrowser-cefprocess-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "revbrowser-cefprocess-Info.plist"; sourceTree = "<group>"; };
 		E8D3736018CDDA5A005C1182 /* cefprocess.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cefprocess.cpp; path = src/cefprocess.cpp; sourceTree = "<group>"; };
-		E8D3736418CDDA9B005C1182 /* cefprocess_w32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cefprocess_w32.cpp; sourceTree = "<group>"; };
+		E8D3736418CDDA9B005C1182 /* cefbrowser_w32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cefbrowser_w32.cpp; path = src/cefbrowser_w32.cpp; sourceTree = "<group>"; };
 		E8D3736918CDDBEE005C1182 /* cefprocess_osx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cefprocess_osx.cpp; path = src/cefprocess_osx.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -147,6 +170,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E832B1A618D9C27700083DF8 /* libcef_stubs.a in Frameworks */,
 				E8589D9B18CA20CF00958234 /* libcef_dll_wrapper.a in Frameworks */,
 				769568EE1823D0E700779255 /* libcore.a in Frameworks */,
 				4DF42AED0B0489AF003F2D95 /* libexternal.a in Frameworks */,
@@ -154,7 +178,6 @@
 				4D03BCAD0BC2781B00026EA7 /* Carbon.framework in Frameworks */,
 				4D03BCB50BC2783300026EA7 /* Cocoa.framework in Frameworks */,
 				4D03BCBC0BC2785100026EA7 /* WebKit.framework in Frameworks */,
-				E858A19E18CA29F800958234 /* libcef.dylib in Frameworks */,
 				E858A20E18CDD1FB00958234 /* AppKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -163,8 +186,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E832B1A918D9C27B00083DF8 /* libcef_stubs.a in Frameworks */,
 				E8D373BF18CDE872005C1182 /* libcef_dll_wrapper.a in Frameworks */,
-				E8D373C418CDE886005C1182 /* libcef.dylib in Frameworks */,
 				E8D3770118CF2903005C1182 /* libcore.a in Frameworks */,
 				E8D3779F18CF2992005C1182 /* Foundation.framework in Frameworks */,
 			);
@@ -229,6 +252,7 @@
 		4DF42AD90B04899A003F2D95 /* References */ = {
 			isa = PBXGroup;
 			children = (
+				E832B19618D9C20D00083DF8 /* libcef.xcodeproj */,
 				E8D371CC18CDD2D7005C1182 /* libcore.xcodeproj */,
 				E8AA049B18C9E6DD00AE8663 /* libcef_dll_wrapper.xcodeproj */,
 				4DF42AE40B0489A5003F2D95 /* libexternal.xcodeproj */,
@@ -240,6 +264,14 @@
 			isa = PBXGroup;
 			children = (
 				4DF42AEC0B0489A5003F2D95 /* libexternal.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E832B19718D9C20D00083DF8 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E832B19B18D9C20D00083DF8 /* libcef_stubs.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -273,12 +305,12 @@
 			children = (
 				E8D3736018CDDA5A005C1182 /* cefprocess.cpp */,
 				E8D3736918CDDBEE005C1182 /* cefprocess_osx.cpp */,
-				E8D3736418CDDA9B005C1182 /* cefprocess_w32.cpp */,
+				E8589AF118C9F84000958234 /* cefprocess_w32.cpp */,
 				E8589AD918C9F77800958234 /* cefbrowser.h */,
 				E8589AD718C9F77800958234 /* cefbrowser_msg.h */,
 				E8589AD818C9F77800958234 /* cefbrowser.cpp */,
 				E8589AEF18C9F82200958234 /* cefbrowser_osx.mm */,
-				E8589AF118C9F84000958234 /* w32cefbrowser.cpp */,
+				E8D3736418CDDA9B005C1182 /* cefbrowser_w32.cpp */,
 			);
 			name = CEF;
 			sourceTree = "<group>";
@@ -300,6 +332,7 @@
 				E8589AFF18C9FA9F00958234 /* PBXTargetDependency */,
 				E8D371D718CDD2F3005C1182 /* PBXTargetDependency */,
 				E8D3786118CF4450005C1182 /* PBXTargetDependency */,
+				E832B19F18D9C22300083DF8 /* PBXTargetDependency */,
 			);
 			name = revbrowser;
 			productName = revbrowser;
@@ -320,6 +353,7 @@
 			dependencies = (
 				E8D373BA18CDE841005C1182 /* PBXTargetDependency */,
 				E8D3783118CF3BF9005C1182 /* PBXTargetDependency */,
+				E832B1A318D9C25400083DF8 /* PBXTargetDependency */,
 			);
 			name = "revbrowser-cefprocess";
 			productName = cefprocess;
@@ -342,6 +376,10 @@
 			productRefGroup = 4DF42AA90B0488CE003F2D95 /* Products */;
 			projectDirPath = "";
 			projectReferences = (
+				{
+					ProductGroup = E832B19718D9C20D00083DF8 /* Products */;
+					ProjectRef = E832B19618D9C20D00083DF8 /* libcef.xcodeproj */;
+				},
 				{
 					ProductGroup = E8AA04B718C9E72A00AE8663 /* Products */;
 					ProjectRef = E8AA049B18C9E6DD00AE8663 /* libcef_dll_wrapper.xcodeproj */;
@@ -369,6 +407,13 @@
 			fileType = archive.ar;
 			path = libexternal.a;
 			remoteRef = 4DF42AEB0B0489A5003F2D95 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		E832B19B18D9C20D00083DF8 /* libcef_stubs.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcef_stubs.a;
+			remoteRef = E832B19A18D9C20D00083DF8 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		E8AA04C018C9E72A00AE8663 /* libcef_dll_wrapper.a */ = {
@@ -405,6 +450,7 @@
 				4DF42ABA0B0488E2003F2D95 /* revbrowser.cpp in Sources */,
 				E8589ADA18C9F77800958234 /* cefbrowser.cpp in Sources */,
 				E8589AF018C9F82200958234 /* cefbrowser_osx.mm in Sources */,
+				E832B1B618D9C3C100083DF8 /* osxbrowser.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -424,6 +470,16 @@
 			isa = PBXTargetDependency;
 			name = external;
 			targetProxy = 4DF42AEE0B0489B4003F2D95 /* PBXContainerItemProxy */;
+		};
+		E832B19F18D9C22300083DF8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = cef_stubs;
+			targetProxy = E832B19E18D9C22300083DF8 /* PBXContainerItemProxy */;
+		};
+		E832B1A318D9C25400083DF8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = cef_stubs;
+			targetProxy = E832B1A218D9C25400083DF8 /* PBXContainerItemProxy */;
 		};
 		E8589AFF18C9FA9F00958234 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

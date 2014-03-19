@@ -68,7 +68,7 @@ public:
 	virtual char *ExecuteScript(const char *p_javascript_string) = 0;
 	virtual char *CallScript(const char *p_function_name, char **p_arguments, unsigned int p_argument_count) = 0;
 	virtual bool FindString(const char *p_string, bool p_search_up) = 0;
-	virtual void GoURL(const char *p_url, const char *target_frame = NULL) = 0;
+	virtual void GoURL(const char *p_url, const char *target_frame = nil) = 0;
 	virtual void GoBack(void) = 0;
 	virtual void GoForward(void) = 0;
 	virtual void Focus(void) = 0;
