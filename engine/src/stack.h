@@ -412,6 +412,7 @@ public:
 	
 	// IM-2013-10-10: [[ FullscreenMode ]] Reconfigure view after window rect changes
 	void view_configure(bool p_user);
+	void view_configure_with_rect(bool p_user, MCRectangle rect);
 	
 	// IM-2013-10-10: [[ FullscreenMode ]] Update the on-screen bounds of the view
 	void view_setrect(const MCRectangle &p_new_rect);
@@ -826,6 +827,8 @@ public:
 	
 	MCWindowShape *getwindowshape(void) { return m_window_shape; }
 
+	void constrain(MCPoint p_size, MCPoint& r_out_size);
+	
 #if defined(_WINDOWS_DESKTOP)
 	MCSysWindowHandle getrealwindow();
 	MCSysWindowHandle getqtwindow(void);
@@ -841,15 +844,6 @@ public:
 	void getstyle(uint32_t &wstyle, uint32_t &exstyle);
 	void constrain(intptr_t lp);
 #elif defined(_MAC_DESKTOP)
-	MCSysWindowHandle getrealwindow()
-	{
-		return window->handle.window;
-	}
-	MCSysWindowHandle getqtwindow(void);
-	void showmenubar();
-	void getWinstyle(uint32_t &wstyle, uint32_t &wclass);
-
-	void getminmax(MCMacSysRect *winrect);
 #elif defined(_LINUX_DESKTOP)
 	void setmodalhints(void);
 

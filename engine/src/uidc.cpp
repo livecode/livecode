@@ -1638,7 +1638,7 @@ bool MCUIDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font
 
 //
 
-MCDragAction MCUIDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
+MCDragAction MCUIDC::dodragdrop(Window w, MCPasteboard* p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
 {
 	return DRAG_ACTION_NONE;
 }
@@ -1664,4 +1664,14 @@ int32_t MCUIDC::popupanswerdialog(const char **p_buttons, uint32_t p_button_coun
 char *MCUIDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint)
 {
 	return nil;
+}
+
+//
+
+void MCUIDC::controlgainedfocus(MCStack *s, uint32_t id)
+{
+}
+
+void MCUIDC::controllostfocus(MCStack *s, uint32_t id)
+{
 }

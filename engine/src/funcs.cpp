@@ -1900,7 +1900,8 @@ Exec_stat MCDropChunk::eval(MCExecPoint &ep)
 Exec_stat MCQTEffects::eval(MCExecPoint &ep)
 {
 #ifdef /* MCQTEffects */ LEGACY_EXEC
-	MCtemplateplayer->geteffectlist(ep);
+	extern void MCQTEffectsList(MCExecPoint& ep);
+	MCQTEffectsList(ep);
 	return ES_NORMAL;
 #endif /* MCQTEffects */
 }
@@ -1908,7 +1909,8 @@ Exec_stat MCQTEffects::eval(MCExecPoint &ep)
 Exec_stat MCRecordCompressionTypes::eval(MCExecPoint &ep)
 {
 #ifdef /* MCRecordCompressionTypes */ LEGACY_EXEC
-	MCtemplateplayer->getrecordcompressionlist(ep);
+	extern void MCQTGetRecordCompressionList(MCExecPoint& ep);
+	MCQTGetRecordCompressionList(ep);
 	return ES_NORMAL;
 #endif /* MCRecordCompressionTypes */
 }
@@ -1916,7 +1918,8 @@ Exec_stat MCRecordCompressionTypes::eval(MCExecPoint &ep)
 Exec_stat MCRecordLoudness::eval(MCExecPoint &ep)
 {
 #ifdef /* MCRecordLoudness */ LEGACY_EXEC
-	MCtemplateplayer->getrecordloudness(ep);
+	extern void MCQTGetRecordLoudness(MCExecPoint& ep);
+	MCQTGetRecordLoudness(ep);
 	return ES_NORMAL;
 #endif /* MCRecordLoudness */
 }
@@ -3784,7 +3787,7 @@ Exec_stat MCMouseColor::eval(MCExecPoint &ep)
 	int2 mx, my;
 	MCscreen->querymouse(mx, my);
 	MCColor c;
-	MCscreen->dropper(DNULL, mx, my, &c);
+	MCscreen->dropper(NULL, mx, my, &c);
 	ep.setcolor(c);
 	return ES_NORMAL;
 #endif /* MCMouseColor */

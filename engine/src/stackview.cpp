@@ -501,6 +501,7 @@ void MCStack::view_configure(bool p_user)
 		t_resize = t_view_rect.width != m_view_rect.width || t_view_rect.height != m_view_rect.height;
 		
 		m_view_rect = t_view_rect;
+		
 		view_on_rect_changed();
 		
 		if (view_getfullscreen())

@@ -1,41 +1,39 @@
 /* Copyright (C) 2003-2013 Runtime Revolution Ltd.
-
-This file is part of LiveCode.
-
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
-
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
-
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
-
-#include "osxprefix.h"
-
-#include "core.h"
-#include "globdefs.h"
-#include "filedefs.h"
-#include "objdefs.h"
-#include "parsedef.h"
-
-#include "util.h"
-#include "uidc.h"
-#include "globals.h"
-#include "image.h"
-#include "osxdc.h"
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <Cocoa/Cocoa.h>
 
-#ifndef _IOS_MOBILE
-#define CGFloat float
-#endif
+#include "core.h"
+#include "globdefs.h"
+
+#include "imagebitmap.h"
+
+#include "platform.h"
+#include "platform-internal.h"
+
+#include "mac-internal.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern bool MCOSXCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context);
+
+////////////////////////////////////////////////////////////////////////////////
 
 static CGPoint s_snapshot_start_point, s_snapshot_end_point;
-static volatile bool s_snapshot_done = false;
+static bool s_snapshot_done = false;
 
 static float menu_screen_height(void)
 {
@@ -87,7 +85,7 @@ static MCRectangle mcrect_from_points(CGPoint x, CGPoint y)
 	r = MCMax(x . x, y . x);
 	t = MCMin(x . y, y . y);
 	b = MCMax(x . y, y . y);
-	return MCU_make_rect(l, t, r - l, b - t);
+	return MCRectangleMake(l, t, r - l, b - t);
 }
 
 static Rect rect_from_points(CGPoint x, CGPoint y)
@@ -148,7 +146,7 @@ static Rect rect_from_points(CGPoint x, CGPoint y)
 	m_region = [[NSBox alloc] initWithFrame: NSZeroRect];
 	[m_region setTitlePosition: NSNoTitle];
 	[m_region setBorderType: NSLineBorder];
-	[m_region setBoxType: MCmajorosversion >= 0x1050 ? (NSBoxType) 4 : NSBoxPrimary];
+	[m_region setBoxType: NSBoxCustom];
 	[m_region setBorderWidth: 1];
 	[m_region setBorderColor: [NSColor whiteColor]];
 	[m_region setFillColor: [NSColor grayColor]];
@@ -182,9 +180,15 @@ static Rect rect_from_points(CGPoint x, CGPoint y)
 	[m_region setHidden: YES];
 	[[self contentView] setNeedsDisplayInRect: [m_region frame]];
 	[self displayIfNeeded];
-
+    
+	// Remove the region from display and force an update to ensure in QD mode, we don't get
+	// partial grayness over the selected area.
+	[m_region setHidden: YES];
+	[[self contentView] setNeedsDisplayInRect: [m_region frame]];
+	[self displayIfNeeded];
+    
 	// MW-2014-03-11: [[ Bug 11654 ]] Make sure we force the wait to finish.
-	PostEvent(mouseUp, 0);
+	MCPlatformBreakWait();
 }
 
 - (void)mouseDragged: (NSEvent *)event
@@ -208,134 +212,18 @@ static Rect rect_from_points(CGPoint x, CGPoint y)
 
 @end
 
-MCImageBitmap *getimage(CGrafPtr src)
+////////////////////////////////////////////////////////////////////////////////
+
+static void MCMacPlatformCGImageToMCImageBitmap(CGImageRef p_image, MCPoint p_size, MCImageBitmap*& r_bitmap)
 {
-	uint2 depth;
-	uint4 bpl;                //bytes per line
-	char *sptr;               //point to the begining of src image data
-	PixMapHandle srcpm;
-	
-	Rect r;
-	int32_t x = 0, y = 0;
-	uint32_t w, h;
-	
-	srcpm = GetGWorldPixMap(src);
-	LockPixels(srcpm);
-	
-	bpl = GetPixRowBytes(srcpm);
-	y -= GetPortBounds(src, &r)->top;
-	depth = (*srcpm)->pixelSize;
-	sptr = GetPixBaseAddr(srcpm) + y * bpl + x * (depth >> 3);
-	
-	w = r.right - r.left;
-	h = r.bottom - r.top;
-	
-	MCImageBitmap *image = nil;
-	
+	if (p_image != nil)
 	{
-		assert(depth == 32);
-		/* UNCHECKED */ MCImageBitmapCreate(w, h, image);
-
-		{
-			uint8_t *dptr = (uint8_t*)image->data; //point to destination image data buffer
-			uint4 bytes = (w * depth + 7) >> 3;
-			while (h--)
-			{
-				memcpy(dptr, sptr, bytes);
-				sptr += bpl;
-				dptr += image->stride;
-			}
-		}
-	}
-	
-	UnlockPixels(srcpm);
-	
-	return image;
-}
-
-extern bool MCOSXCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context);
-
-// MW-2014-02-20: [[ Bug 11811 ]] Updated to take into account size parameter.
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, uint32_t p_window, const char *p_display_name, MCPoint *size)
-{
-	// Compute the rectangle to grab in screen co-ords.
-	MCRectangle t_screen_rect;
-	if (p_window == 0 && (p_rect . width == 0 || p_rect . height == 0))
-	{
-		// If the rect is of zero size and no window has been specified then allow
-		// a rect to be dragged out.
-		
-		// Create a window that covers the whole screen.
-		MCSnapshotWindow *t_window;
-		t_window = [[MCSnapshotWindow alloc] init];
-		[t_window orderFront: nil];
-		
-		// Set the cursor to cross.
-		setcursor(nil, MCcursors[PI_CROSS]);
-		
-		// Wait until the mouse has been released.
-		s_snapshot_done = false;
-		while(!s_snapshot_done)
-			MCscreen -> wait(60.0, False, True);
-	
-		// Remove the window from display.
-		[t_window orderOut: nil];
-		[t_window release];
-        
-        // MW-2014-03-19: [[ Bug 11654 ]] Wait enough time for the screen to update to a new
-        //   frame. Ideally there'd be an API to wait until the screen has been updated, but
-        //   this doesn't seem to be the case.
-        MCscreen -> wait(1.0/50.0, False, False);
-
-		// Return the cursor to arrow.
-		setcursor(nil, MCcursors[PI_ARROW]);
-		
-		// Compute the selected rectangle.
-		t_screen_rect = mcrect_from_points(s_snapshot_start_point, s_snapshot_end_point);
-	}
-	else if (p_window == 0)
-	{
-		// We have no window, but do have a rect so just copy it.
-		t_screen_rect = p_rect;
-	}
-	else
-	{
-		// Get the window bounds.
-		Rect t_window_bounds;
-		GetWindowBounds((WindowPtr)p_window, kWindowGlobalPortRgn, &t_window_bounds);
-		
-		// We have a rect relative to a window so map the co-ords.
-		t_screen_rect = MCU_offset_rect(p_rect, t_window_bounds . left, t_window_bounds . top);
-	}
-
-	MCImageBitmap *t_snapshot;
-	t_snapshot = nil;
-
-	CGRect t_area;
-	t_area = CGRectMake(t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
-	
-	CGImageRef t_image;
-	t_image = CGWindowListCreateImage(t_area, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault);
-	if (t_image != nil)
-	{
-		// IM-2014-01-24: [[ HiDPI ]] Snapshots will be at the density of the display device,
-		// so we need to scale down if the dimensions of the returned image don't match
-		
 		uint32_t t_width, t_height;
 		uint32_t t_image_width, t_image_height;
-		t_image_width = CGImageGetWidth(t_image);
-		t_image_height = CGImageGetHeight(t_image);
-
-		if (size == nil)
-		{
-			t_width = t_screen_rect . width;
-			t_height = t_screen_rect . height;
-		}
-		else
-		{
-			t_width = size -> x;
-			t_height = size -> y;
-		}
+		t_image_width = CGImageGetWidth(p_image);
+		t_image_height = CGImageGetHeight(p_image);
+		t_width = p_size . x;
+		t_height = p_size . y;
 		
 		MCGFloat t_hscale, t_vscale;
 		t_hscale = (MCGFloat)t_width / (MCGFloat)t_image_width;
@@ -343,7 +231,7 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, uint32_t p_window, cons
 		
 		MCImageBitmap *t_bitmap;
 		/* UNCHECKED */ MCImageBitmapCreate(t_width, t_height, t_bitmap);
-
+		
 		MCImageBitmapClear(t_bitmap);
 		
 		CGContextRef t_context;
@@ -351,14 +239,92 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, uint32_t p_window, cons
 		
 		// Draw the image scaled down onto the bitmap
 		CGContextScaleCTM(t_context, t_hscale, t_vscale);
-		CGContextDrawImage(t_context, CGRectMake(0, 0, t_image_width, t_image_height), t_image);
+		CGContextDrawImage(t_context, CGRectMake(0, 0, t_image_width, t_image_height), p_image);
 		
 		CGContextRelease(t_context);
-		CGImageRelease(t_image);
-		
-		t_snapshot = t_bitmap;
+
+		r_bitmap = t_bitmap;
 	}
-	
-	return t_snapshot;
+	else
+		r_bitmap = nil;
 }
 
+void MCPlatformScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitmap)
+{
+	// Compute the rectangle to grab in screen co-ords.
+	MCRectangle t_screen_rect;
+
+	// Create a window that covers the whole screen.
+	MCSnapshotWindow *t_window;
+	t_window = [[MCSnapshotWindow alloc] init];
+	[t_window orderFront: nil];
+	
+	// Set the cursor to cross.
+	[[NSCursor crosshairCursor] push];
+	
+	// Wait until the mouse has been released.
+	s_snapshot_done = false;
+	while(!s_snapshot_done)
+		MCPlatformWaitForEvent(60.0, false);
+
+	// Remove the window from display.
+	[t_window orderOut: nil];
+	[t_window release];
+	
+	// Return the cursor to arrow.
+	[NSCursor pop];
+	
+    // MW-2014-03-19: [[ Bug 11654 ]] Wait enough time for the screen to update to a new
+    //   frame. Ideally there'd be an API to wait until the screen has been updated, but
+    //   this doesn't seem to be the case.
+    MCPlatformWaitForEvent(1.0/50.0, False);
+    
+	// Compute the selected rectangle.
+	t_screen_rect = mcrect_from_points(s_snapshot_start_point, s_snapshot_end_point);
+
+	MCPlatformScreenSnapshot(t_screen_rect, p_size, r_bitmap);
+}
+
+void MCPlatformScreenSnapshotOfWindow(uint32_t p_window_id, MCPoint *p_size, MCImageBitmap*& r_bitmap)
+{
+	CGImageRef t_image;
+	t_image = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, p_window_id, kCGWindowImageBoundsIgnoreFraming);
+	
+	NSArray *t_info_array;
+	t_info_array = (NSArray *)CGWindowListCreateDescriptionFromArray((CFArrayRef)[NSArray arrayWithObject: [NSNumber numberWithUnsignedInt: p_window_id]]);
+	
+	NSDictionary *t_rect_dict;
+	t_rect_dict = [[t_info_array objectAtIndex: 0] objectForKey: (NSString *)kCGWindowBounds];
+	
+	CGRect t_rect;
+	CGRectMakeWithDictionaryRepresentation((CFDictionaryRef)t_rect_dict, &t_rect);
+	
+	MCPoint t_size;
+	if (p_size == 0)
+		t_size = MCPointMake(t_rect . size . width, t_rect . size . height);
+	else
+		t_size = *p_size;
+	
+	MCMacPlatformCGImageToMCImageBitmap(t_image, t_size, r_bitmap);
+	CGImageRelease(t_image);
+}
+
+void MCPlatformScreenSnapshot(MCRectangle p_screen_rect, MCPoint *p_size, MCImageBitmap*& r_bitmap)
+{
+	CGRect t_area;
+	t_area = CGRectMake(p_screen_rect . x, p_screen_rect . y, p_screen_rect . width, p_screen_rect . height);
+	
+	CGImageRef t_image;
+	t_image = CGWindowListCreateImage(t_area, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault);
+	
+	MCPoint t_size;
+	if (p_size == nil)
+		t_size = MCPointMake(p_screen_rect . width, p_screen_rect . height);
+	else
+		t_size = *p_size;
+	
+	MCMacPlatformCGImageToMCImageBitmap(t_image, t_size, r_bitmap);
+	CGImageRelease(t_image);
+}
+
+////////////////////////////////////////////////////////////////////////////////

@@ -1,38 +1,29 @@
 /* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-This file is part of LiveCode.
-
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
-
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
-
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
-
-#include "osxprefix.h"
+#include <Cocoa/Cocoa.h>
 
 #include "core.h"
 #include "globdefs.h"
-#include "parsedef.h"
-#include "filedefs.h"
-#include "objdefs.h"
+#include "uidc.h"
 
-#include "execpt.h"
-#include "mcerror.h"
-#include "ans.h"
-#include "stack.h"
-#include "stacklst.h"
-#include "dispatch.h"
-#include "globals.h"
-#include "util.h"
-#include "scriptenvironment.h"
+#include "platform.h"
+#include "platform-internal.h"
 
-#include "osxdc.h"
+#include "mac-internal.h"
 
 #include <mach-o/dyld.h>
 
@@ -176,16 +167,16 @@ static JSObjectCallAsFunctionPtr JSObjectCallAsFunction;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-class MCMacOSXNewJavaScriptEnvironment: public MCScriptEnvironment
+class MCPlatformScriptEnvironment
 {
 public:
-	MCMacOSXNewJavaScriptEnvironment(void);
-	~MCMacOSXNewJavaScriptEnvironment(void);
+	MCPlatformScriptEnvironment(void);
+	~MCPlatformScriptEnvironment(void);
 	
 	void Retain(void);
 	void Release(void);
 	
-	bool Define(const char *p_function, MCScriptEnvironmentCallback p_callback);
+	bool Define(const char *p_function, MCPlatformScriptEnvironmentCallback p_callback);
 	
 	char *Run(const char *p_script);
 	
@@ -195,7 +186,7 @@ private:
 	struct Function
 	{
 		char *name;
-		MCScriptEnvironmentCallback callback;
+		MCPlatformScriptEnvironmentCallback callback;
 	};
 	
 	unsigned int m_references;
@@ -208,45 +199,8 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern MCScriptEnvironment *MCMacOSXCreateOldJavaScriptEnvironment(void);
-
 #define GET_JSC_SYMBOL(sym) \
-	sym = (sym##Ptr)NSAddressOfSymbol(NSLookupSymbolInImage((const mach_header *)JavaScriptCoreLibrary, "_"#sym, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND));
-
-MCScriptEnvironment *MCScreenDC::createscriptenvironment(const char *p_language)
-{
-	MCScriptEnvironment *t_environment;
-	if (MCmajorosversion >= 0x1050)
-	{
-		if (JavaScriptCoreLibrary == NULL)
-		{
-			JavaScriptCoreLibrary = (void *)NSAddImage(kJavaScriptCoreLibraryPath, NSADDIMAGE_OPTION_WITH_SEARCHING | NSADDIMAGE_OPTION_MATCH_FILENAME_BY_INSTALLNAME);
-			GET_JSC_SYMBOL(JSGlobalContextCreate);
-			GET_JSC_SYMBOL(JSGlobalContextRelease);
-			GET_JSC_SYMBOL(JSContextGetGlobalObject);
-			GET_JSC_SYMBOL(JSEvaluateScript);
-			GET_JSC_SYMBOL(JSCheckScriptSyntax);
-			GET_JSC_SYMBOL(JSStringCreateWithCFString);
-			GET_JSC_SYMBOL(JSStringCopyCFString);
-			GET_JSC_SYMBOL(JSValueMakeString);
-			GET_JSC_SYMBOL(JSValueToStringCopy);
-			GET_JSC_SYMBOL(JSValueToObject);
-			GET_JSC_SYMBOL(JSValueProtect);
-			GET_JSC_SYMBOL(JSValueUnprotect);
-			GET_JSC_SYMBOL(JSStringRelease);
-			GET_JSC_SYMBOL(JSClassCreate);
-			GET_JSC_SYMBOL(JSClassRelease);
-			GET_JSC_SYMBOL(JSObjectMake);
-			GET_JSC_SYMBOL(JSObjectGetPrivate);
-			GET_JSC_SYMBOL(JSObjectGetProperty);
-			GET_JSC_SYMBOL(JSObjectSetProperty);
-			GET_JSC_SYMBOL(JSObjectCallAsFunction);
-		}
-		return new MCMacOSXNewJavaScriptEnvironment();
-	}
-	
-	return MCMacOSXCreateOldJavaScriptEnvironment();
-}
+sym = (sym##Ptr)NSAddressOfSymbol(NSLookupSymbolInImage((const mach_header *)JavaScriptCoreLibrary, "_"#sym, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND));
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -324,8 +278,8 @@ static bool ConvertJSValueToCString(JSContextRef p_context, JSValueRef p_value, 
 
 static JSValueRef InvokeHostFunction(JSContextRef p_context, JSObjectRef p_function, JSObjectRef p_this, size_t p_argument_count, const JSValueRef p_arguments[], JSValueRef *p_exception)
 {
-	MCScriptEnvironmentCallback t_callback;
-	t_callback = (MCScriptEnvironmentCallback)JSObjectGetPrivate(p_function);
+	MCPlatformScriptEnvironmentCallback t_callback;
+	t_callback = (MCPlatformScriptEnvironmentCallback)JSObjectGetPrivate(p_function);
 	
 	bool t_success;
 	t_success = true;
@@ -351,7 +305,7 @@ static JSValueRef InvokeHostFunction(JSContextRef p_context, JSObjectRef p_funct
 				ConvertJSStringToCString(t_string_arg, t_arguments[i]);
 				JSStringRelease(t_string_arg);
 			}
-
+			
 			if (t_arguments[i] == NULL)
 				t_success = false;
 		}
@@ -386,7 +340,7 @@ static JSValueRef InvokeHostFunction(JSContextRef p_context, JSObjectRef p_funct
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCMacOSXNewJavaScriptEnvironment::MCMacOSXNewJavaScriptEnvironment(void)
+MCPlatformScriptEnvironment::MCPlatformScriptEnvironment(void)
 {
 	m_references = 1;
 	m_runtime = NULL;
@@ -394,7 +348,7 @@ MCMacOSXNewJavaScriptEnvironment::MCMacOSXNewJavaScriptEnvironment(void)
 	m_function_count = 0;
 }
 
-MCMacOSXNewJavaScriptEnvironment::~MCMacOSXNewJavaScriptEnvironment(void)
+MCPlatformScriptEnvironment::~MCPlatformScriptEnvironment(void)
 {
 	for(uint4 i = 0; i < m_function_count; ++i)
 		delete m_functions[i] . name;
@@ -405,19 +359,19 @@ MCMacOSXNewJavaScriptEnvironment::~MCMacOSXNewJavaScriptEnvironment(void)
 		JSGlobalContextRelease(m_runtime);
 }
 
-void MCMacOSXNewJavaScriptEnvironment::Retain(void)
+void MCPlatformScriptEnvironment::Retain(void)
 {
 	m_references += 1;
 }
 
-void MCMacOSXNewJavaScriptEnvironment::Release(void)
+void MCPlatformScriptEnvironment::Release(void)
 {
 	m_references -= 1;
 	if (m_references == 0)
 		delete this;
 }
 
-bool MCMacOSXNewJavaScriptEnvironment::Define(const char *p_name, MCScriptEnvironmentCallback p_callback)
+bool MCPlatformScriptEnvironment::Define(const char *p_name, MCPlatformScriptEnvironmentCallback p_callback)
 {
 	Function *t_new_functions;
 	t_new_functions = (Function *)realloc(m_functions, sizeof(Function) * (m_function_count + 1));
@@ -433,7 +387,7 @@ bool MCMacOSXNewJavaScriptEnvironment::Define(const char *p_name, MCScriptEnviro
 	return true;
 }
 
-char *MCMacOSXNewJavaScriptEnvironment::Run(const char *p_script)
+char *MCPlatformScriptEnvironment::Run(const char *p_script)
 {
 	bool t_success;
 	t_success = true;
@@ -531,7 +485,7 @@ char *MCMacOSXNewJavaScriptEnvironment::Run(const char *p_script)
 	return t_result;
 }
 
-char *MCMacOSXNewJavaScriptEnvironment::Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count)
+char *MCPlatformScriptEnvironment::Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count)
 {
 	if (m_runtime == NULL)
 		return NULL;
@@ -543,7 +497,7 @@ char *MCMacOSXNewJavaScriptEnvironment::Call(const char *p_method, const char **
 	t_js_method_name = NULL;
 	if (t_success)
 		t_success = ConvertCStringToJSString(p_method, t_js_method_name);
-		
+	
 	
 	JSObjectRef t_js_global;
 	t_js_global = NULL;
@@ -588,7 +542,7 @@ char *MCMacOSXNewJavaScriptEnvironment::Call(const char *p_method, const char **
 	t_result = NULL;
 	if (t_success)
 		t_success = ConvertJSValueToCString(m_runtime, t_js_result, t_result);
-		
+	
 	if (t_arguments != nil)
 	{
 		for(uindex_t i = 0; i < p_argument_count; i++)
@@ -600,3 +554,60 @@ char *MCMacOSXNewJavaScriptEnvironment::Call(const char *p_method, const char **
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+void MCPlatformScriptEnvironmentCreate(const char *language, MCPlatformScriptEnvironmentRef& r_env)
+{
+	if (JavaScriptCoreLibrary == NULL)
+	{
+		JavaScriptCoreLibrary = (void *)NSAddImage(kJavaScriptCoreLibraryPath, NSADDIMAGE_OPTION_WITH_SEARCHING | NSADDIMAGE_OPTION_MATCH_FILENAME_BY_INSTALLNAME);
+		GET_JSC_SYMBOL(JSGlobalContextCreate);
+		GET_JSC_SYMBOL(JSGlobalContextRelease);
+		GET_JSC_SYMBOL(JSContextGetGlobalObject);
+		GET_JSC_SYMBOL(JSEvaluateScript);
+		GET_JSC_SYMBOL(JSCheckScriptSyntax);
+		GET_JSC_SYMBOL(JSStringCreateWithCFString);
+		GET_JSC_SYMBOL(JSStringCopyCFString);
+		GET_JSC_SYMBOL(JSValueMakeString);
+		GET_JSC_SYMBOL(JSValueToStringCopy);
+		GET_JSC_SYMBOL(JSValueToObject);
+		GET_JSC_SYMBOL(JSValueProtect);
+		GET_JSC_SYMBOL(JSValueUnprotect);
+		GET_JSC_SYMBOL(JSStringRelease);
+		GET_JSC_SYMBOL(JSClassCreate);
+		GET_JSC_SYMBOL(JSClassRelease);
+		GET_JSC_SYMBOL(JSObjectMake);
+		GET_JSC_SYMBOL(JSObjectGetPrivate);
+		GET_JSC_SYMBOL(JSObjectGetProperty);
+		GET_JSC_SYMBOL(JSObjectSetProperty);
+		GET_JSC_SYMBOL(JSObjectCallAsFunction);
+	}
+	
+	r_env = new MCPlatformScriptEnvironment();
+}
+
+void MCPlatformScriptEnvironmentRetain(MCPlatformScriptEnvironmentRef env)
+{
+	env -> Retain();
+}
+
+void MCPlatformScriptEnvironmentRelease(MCPlatformScriptEnvironmentRef env)
+{
+	env -> Release();
+}
+
+bool MCPlatformScriptEnvironmentDefine(MCPlatformScriptEnvironmentRef env, const char *function, MCPlatformScriptEnvironmentCallback callback)
+{
+	return env -> Define(function, callback);
+}
+
+void MCPlatformScriptEnvironmentRun(MCPlatformScriptEnvironmentRef env, const char *script, char*& r_result)
+{
+	r_result = env -> Run(script);
+}
+
+void MCPlatformScriptEnvironmentCall(MCPlatformScriptEnvironmentRef env, const char *method, const char **arguments, uindex_t argument_count, char*& r_result)
+{
+	r_result = env -> Call(method, arguments, argument_count);
+}
+
+////////////////////////////////////////////////////////////////////////////////

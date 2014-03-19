@@ -1045,7 +1045,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		bool t_error;
 		t_error = false;
 
-		MCRange *t_ranges;
+		MCInterval *t_ranges;
 		int t_range_count;
 		t_ranges = NULL;
 
@@ -2216,7 +2216,10 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			if (ep.getboolean(trecording, line, pos, EE_PROPERTY_NAB) != ES_NORMAL)
 				return ES_ERROR;
 			if (!trecording)
-				MCtemplateplayer->stoprecording();
+			{
+				extern void MCQTStopRecording(void);
+				MCQTStopRecording();
+			}
 		}
 		break;
 	case P_LZW_KEY:
@@ -3062,7 +3065,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			ep . setstaticcstring("all");
 		else
 		{
-			const MCRange *t_ranges;
+			const MCInterval *t_ranges;
 			t_ranges = MCprinter -> GetJobRanges();
 
 			ep . clear();

@@ -17,6 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_REGION__
 #define __MC_REGION__
 
+#ifndef __MC_GRAPHICS__
+#include "graphics.h"
+#endif
+
 typedef struct __MCRegion *MCRegionRef;
 
 bool MCRegionCreate(MCRegionRef& r_region);

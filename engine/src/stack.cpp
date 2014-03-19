@@ -72,8 +72,8 @@ MCStack::MCStack()
 {
 	obj_id = START_ID;
 	flags = F_VISIBLE | F_RESIZABLE | F_OPAQUE;
-	window = DNULL;
-	parentwindow = DNULL;
+	window = NULL;
+	parentwindow = NULL;
 	cursor = None;
 	substacks = NULL;
 	cards = curcard = savecards = NULL;
@@ -173,8 +173,8 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 			s_last_stack_index = 2;
 		}
 	}
-	window = DNULL;
-	parentwindow = DNULL;
+	window = NULL;
+	parentwindow = NULL;
 	cursor = None;
 	substacks = NULL;
 	cards = curcard = savecards = NULL;
@@ -361,13 +361,13 @@ MCStack::~MCStack()
 		opened++;
 		MCObject::close();
 	}
-	if (parentwindow != DNULL)
-		setparentwindow(DNULL);
+	if (parentwindow != NULL)
+		setparentwindow(NULL);
 	delete mnemonics;
 	delete title;
 	delete titlestring;
 
-	if (window != DNULL && !(state & CS_FOREIGN_WINDOW))
+	if (window != NULL && !(state & CS_FOREIGN_WINDOW))
 	{
 		stop_externals();
 		MCscreen->destroywindow(window);
@@ -441,8 +441,11 @@ MCStack::~MCStack()
 
 	unloadexternals();
 
+	// COCOA-TODO: Remove dependence on ifdef
+#if !defined(_MAC_DESKTOP)
 	MCEventQueueFlush(this);
-
+#endif
+	
 	// MW-2011-09-13: [[ Redraw ]] If there is snapshot, get rid of it.
 	MCGImageRelease(m_snapshot);
 	m_snapshot = nil;
@@ -510,6 +513,10 @@ void MCStack::close()
 {
 	if (!opened)
 		return;
+	
+	// MW-2014-02-25: [[ Platform ]] Make sure we lock the screen when closing
+	//   so nothing is seen.
+	MCRedrawLockScreen();
 				
 	// MW-2014-03-12: [[ Bug 11914 ]] Only fiddle with scrolling and such
 	//   if this is an engine menu.
@@ -566,7 +573,7 @@ void MCStack::close()
 		MCfocusedstackptr = NULL;
 	if (!(state & CS_ICONIC))
 		MCstacks->remove(this);
-	if (window != DNULL && !(state & CS_FOREIGN_WINDOW))
+	if (window != NULL && !(state & CS_FOREIGN_WINDOW))
 	{
 		MCscreen->closewindow(window);
 		if (mode == WM_MODAL || mode == WM_SHEET)
@@ -584,7 +591,7 @@ void MCStack::close()
 		{
 			stop_externals();
 			MCscreen->destroywindow(window);
-			window = DNULL;
+			window = NULL;
 			cursor = None;
 			delete titlestring;
 			titlestring = NULL;
@@ -601,6 +608,8 @@ void MCStack::close()
 	m_snapshot = nil;
 	
 	state &= ~(CS_IGNORE_CLOSE | CS_KFOCUSED | CS_ISOPENING);
+	
+	MCRedrawUnlockScreen();
 }
 
 void MCStack::kfocus()
@@ -1417,7 +1426,7 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		ep.setboolean(getflag(F_WM_PLACE));
 		break;
 	case P_WINDOW_ID:
-		ep.setint(MCscreen->dtouint4(window));
+		ep.setint(MCscreen->dtouint4((Drawable)window));
 		break;
 	case P_PIXMAP_ID:
 		ep.setint(0);
@@ -2157,7 +2166,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 					reopenwindow();
 				else
 				{
-					if (window != DNULL)
+					if (window != NULL)
 					{
 						stop_externals();
 						MCscreen->destroywindow(window);
@@ -2741,7 +2750,7 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 {
 	if (!opened)
 	{
-		if (window == DNULL && !MCNameIsEqualTo(message, MCM_start_up, kMCCompareCaseless)
+		if (window == NULL && !MCNameIsEqualTo(message, MCM_start_up, kMCCompareCaseless)
 #ifdef _MACOSX
 		        && !(state & CS_DELETE_STACK))
 #else
@@ -3074,3 +3083,9 @@ MCRectangle MCStack::getwindowrect(void) const
 }
 
 //////////
+
+void MCStack::constrain(MCPoint p_size, MCPoint& r_new_size)
+{
+	r_new_size . x = MCMax(minwidth, MCMin(maxwidth, p_size . x));
+	r_new_size . y = MCMax(minheight, MCMin(maxheight, p_size . y));
+}

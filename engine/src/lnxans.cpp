@@ -862,14 +862,14 @@ MCPrinterDialogResult MCA_gtk_printer_setup ( PSPrinterSettings &p_settings )
 		
 		
 		GtkPageRange* t_ranges ;
-		MCRange * t_rev_ranges ;
+		MCInterval * t_rev_ranges ;
 		
 		int4 t_range_count ; 
 		
 		t_ranges = gtk_print_settings_get_page_ranges  ( t_printer_settings , &t_range_count ) ;
 		if ( t_range_count > 0 ) 
 		{
-			p_settings . page_ranges = (MCRange*)t_ranges ; // This is OK as the structures are the same - just different member names.
+			p_settings . page_ranges = (MCInterval*)t_ranges ; // This is OK as the structures are the same - just different member names.
 			p_settings . page_range_count = t_range_count ;
 			
 			// We need to adjust these as GTK starts pages at 0 and we start pages at 1

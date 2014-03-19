@@ -39,7 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define MCSSL
 #define FEATURE_TASKBAR_ICON
 #define FEATURE_RELAUNCH_SUPPORT
-#define FEATURE_QUICKTIME
+#define FEATURE_QUICKTIME_EFFECTS
 
 #elif defined(_MAC_DESKTOP)
 
@@ -49,7 +49,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MCSSL
 #define FEATURE_TASKBAR_ICON
-#define FEATURE_QUICKTIME
+#define FEATURE_QUICKTIME_EFFECTS
+#define FEATURE_PLATFORM_PLAYER
 
 #elif defined(_LINUX_DESKTOP)
 
@@ -201,8 +202,20 @@ typedef struct __MCSysWindowHandle *MCSysWindowHandle;
 typedef struct __MCSysFontHandle *MCSysFontHandle;
 typedef struct __MCSysContextHandle *MCSysContextHandle;
 
+typedef class MCPlatformWindow *MCPlatformWindowRef;
+typedef class MCPlatformSurface *MCPlatformSurfaceRef;
+typedef class MCPlatformCursor *MCPlatformCursorRef;
+typedef class MCPlatformPasteboard *MCPlatformPasteboardRef;
+typedef class MCPlatformMenu *MCPlatformMenuRef;
+typedef class MCPlatformPlayer *MCPlatformPlayerRef;
+
 typedef void *MCColorTransformRef;
+
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
+typedef MCPlatformCursorRef MCCursorRef;
+#else
 typedef struct MCCursor *MCCursorRef;
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -570,6 +583,20 @@ struct MCFontStruct
 #define BAD_NUMERIC DBL_MAX
 #define MC_EPSILON  (DBL_EPSILON * 10.0)
 
+struct MCRange
+{
+	uindex_t offset;
+	uindex_t length;
+};
+
+inline MCRange MCRangeMake(uindex_t offset, uindex_t length)
+{
+	MCRange r;
+	r . offset = offset;
+	r . length = length;
+	return r;
+}
+
 //////////////////////////////////////////////////////////////////////
 
 #define DoRed                0x1
@@ -690,7 +717,7 @@ struct MCBitmap
 
 ////////////////////////////////////////
 
-#if !defined(_LINUX_DESKTOP) && !defined(_LINUX_SERVER)
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 enum
 {
     DC_WINDOW,
@@ -717,8 +744,12 @@ struct _ExtendedDrawable: public _Drawable
 typedef  _Drawable *        Window;
 typedef  _Drawable *        Pixmap;
 typedef  _Drawable *        Drawable;
-#else
+#elif defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
 
+typedef MCPlatformWindowRef Window;
+typedef MCSysWindowHandle Drawable;
+
+#else
 // MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
 #ifndef __LP64__
 	#if !defined(Window)
@@ -1120,7 +1151,7 @@ public:
 
 	T*& operator & (void)
 	{
-		MCAssert(m_ptr == nil);
+		assert(m_ptr == nil);
 		return m_ptr;
 	}
 
@@ -1141,6 +1172,11 @@ public:
 		m_ptr = nil;
 	}
 
+	T*& PtrRef(void)
+	{
+		return m_ptr;
+	}
+	
 private:
 	T *m_ptr;
 };
@@ -1185,6 +1221,7 @@ class MCPlayer;
 class MCImage;
 class MCField;
 class MCObject;
+class MCObjectHandle;
 class MCObjectList;
 class MCMagnify;
 class MCPrinter;

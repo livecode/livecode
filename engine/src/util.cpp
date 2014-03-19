@@ -2549,10 +2549,10 @@ void MCU_unicodetomultibyte(const char *p_ucstring, uint4 p_uclength,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCU_disjointrangeinclude(MCRange*& x_ranges, int& x_count, int p_from, int p_to)
+bool MCU_disjointrangeinclude(MCInterval*& x_ranges, int& x_count, int p_from, int p_to)
 {
-	MCRange *t_new_ranges;
-	t_new_ranges = (MCRange *)malloc(sizeof(MCRange) * (x_count + 1));
+	MCInterval *t_new_ranges;
+	t_new_ranges = (MCInterval *)malloc(sizeof(MCInterval) * (x_count + 1));
 	if (t_new_ranges == NULL)
 		return false;
 	
@@ -2593,7 +2593,7 @@ bool MCU_disjointrangeinclude(MCRange*& x_ranges, int& x_count, int p_from, int 
 	return true;
 }
 
-bool MCU_disjointrangecontains(MCRange* p_ranges, int p_count, int p_element)
+bool MCU_disjointrangecontains(MCInterval* p_ranges, int p_count, int p_element)
 {
 	if (p_count == 0)
 		return false;

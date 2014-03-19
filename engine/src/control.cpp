@@ -1435,7 +1435,7 @@ void MCControl::start(Boolean canclone)
 	MCexitall = False;
 	getstack()->kfocusset(NULL);
 	kunfocus();
-
+	
 	state |= sizehandles();
 	if (!(state & CS_SELECTED))
 	{

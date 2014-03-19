@@ -306,7 +306,7 @@ void MCStack::hidecursor()
 
 void MCStack::setcursor(MCCursorRef newcursor, Boolean force)
 {
-	if (window == DNULL && MCModeMakeLocalWindows())
+	if (window == NULL && MCModeMakeLocalWindows())
 		return;
 	
 	if (MCwatchcursor)
@@ -456,35 +456,35 @@ Window MCStack::getwindow()
 	if (!opened || state & CS_ICONIC)
 #endif
 
-		return DNULL;
+		return NULL;
 	else
 		return window;
 }
 
 Window MCStack::getparentwindow()
 {
-#if defined(_MACOSX) || defined(_WINDOWS)
-	if (parentwindow != DNULL)
+#if defined(_WINDOWS)
+	if (parentwindow != NULL)
 	{
 		if (MCdispatcher->findstackd(parentwindow) == NULL)
 		{
 			delete parentwindow;
-			parentwindow = DNULL;
+			parentwindow = NULL;
 		}
 		return parentwindow;
 	}
 	return DNULL;
 #else
-	if (parentwindow != DNULL &&
+	if (parentwindow != NULL &&
 		MCdispatcher -> findstackd(parentwindow) == NULL)
-		parentwindow = DNULL;
+		parentwindow = NULL;
 	return parentwindow;
 #endif
 }
 
 void MCStack::setparentwindow(Window w)
 {
-#if defined(_MACOSX) || defined(_WINDOWS)
+#if defined(_WINDOWS)
 	if (w != DNULL && w->handle.window != 0)
 	{
 		if (parentwindow == DNULL)
@@ -511,7 +511,7 @@ Boolean MCStack::takewindow(MCStack *sptr)
 {
 	// If there is no window ptr and we 'have' a window (i.e. plugin)
 	// we can't take another one's window.
-	if (window == DNULL && mode_haswindow())
+	if (window == NULL && mode_haswindow())
 		return False;
 
 	// MW-2008-10-31: [[ ParentScripts ]] Send closeControl messages appropriately
@@ -521,7 +521,7 @@ Boolean MCStack::takewindow(MCStack *sptr)
 		sptr -> curcard -> closebackgrounds(NULL) == ES_ERROR ||
 		sptr->curcard->message(MCM_close_stack) == ES_ERROR)
 		return False;
-	if (window != DNULL)
+	if (window != NULL)
 	{
 		stop_externals();
 		MCscreen->destroywindow(window);
@@ -534,7 +534,7 @@ Boolean MCStack::takewindow(MCStack *sptr)
 	window = sptr->window;
 	iconid = sptr->iconid;
 	sptr->stop_externals();
-	sptr->window = DNULL;
+	sptr->window = NULL;
 	
 	state = sptr->state;
 	state &= ~(CS_IGNORE_CLOSE | CS_NO_FOCUS | CS_DELETE_STACK);
@@ -1561,7 +1561,7 @@ void MCStack::removeaccels(MCStack *stack)
 
 void MCStack::setwindowname()
 {
-	if (!opened || isunnamed() || window == DNULL)
+	if (!opened || isunnamed() || window == NULL)
 		return;
 
 	char *t_utf8_name;
@@ -1750,16 +1750,16 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			else if (MCtopstackptr -> getwindow() != NULL)
 				parentptr = MCtopstackptr;
 		}
-		
-		extern bool MCMacIsWindowVisible(Window window);
-		if (parentptr == NULL || parentptr -> getwindow() == NULL || !MCMacIsWindowVisible(parentptr -> getwindow()))
+
+		extern bool MCPlatformIsWindowVisible(MCPlatformWindowRef window);
+		if (parentptr == NULL || parentptr -> getwindow() == NULL || !MCPlatformIsWindowVisible(parentptr -> getwindow()))
 			wm = WM_MODAL;
 	}
 #endif
 
 	if (state & CS_FOREIGN_WINDOW)
 		mode = wm;
-	if ((wm != mode || parentptr != NULL) && window != DNULL)
+	if ((wm != mode || parentptr != NULL) && window != NULL)
 	{
 		stop_externals();
 		MCscreen->destroywindow(window);
@@ -1771,7 +1771,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	walignment = walign;
 	if (parentptr == NULL)
 	{
-		if (parentwindow != DNULL)
+		if (parentwindow != NULL)
 			parentptr = MCdispatcher->findstackd(parentwindow);
 	}
 	else
@@ -1780,7 +1780,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	// IM-2014-01-16: [[ StackScale ]] Ensure view has the current stack rect
 	view_setstackviewport(rect);
 	
-	if (window == DNULL)
+	if (window == NULL)
 		realize();
 
 	if (substacks != NULL)
@@ -2134,7 +2134,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 
 			// MW-2009-09-09: If this is a plugin window, then we need to send a resizeStack
 			//   as we have no control over the size of the window...
-			view_configure(window != DNULL ? False : True);
+			view_configure(window != NULL ? False : True);
 		}
 
 		// MW-2008-10-31: [[ ParentScripts ]] Send openControl appropriately
@@ -2483,6 +2483,7 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCRegionRef p
 		MCGContextRef t_context = nil;
 		if (p_surface -> LockGraphics(p_region, t_context))
 		{
+#ifndef _MAC_DESKTOP
 			// IM-2014-01-24: [[ HiDPI ]] Use view backing scale to transform surface -> logical coords
 			MCGFloat t_backing_scale;
 			t_backing_scale = view_getbackingscale();
@@ -2495,6 +2496,9 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCRegionRef p
 			MCGContextScaleCTM(t_context, t_backing_scale, t_backing_scale);
 			
 			view_render(t_context, t_rect);
+#else
+			view_render(t_context, MCRegionGetBoundingBox(p_region));
+#endif		
 			
 			p_surface -> UnlockGraphics();
 		}
