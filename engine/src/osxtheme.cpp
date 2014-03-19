@@ -28,7 +28,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 
 #include "context.h"
-#include "osxdc.h"
 #include "osxtheme.h"
 
 #include "graphics_util.h"

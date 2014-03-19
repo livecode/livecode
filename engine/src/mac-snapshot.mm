@@ -180,6 +180,15 @@ static Rect rect_from_points(CGPoint x, CGPoint y)
 	[m_region setHidden: YES];
 	[[self contentView] setNeedsDisplayInRect: [m_region frame]];
 	[self displayIfNeeded];
+    
+	// Remove the region from display and force an update to ensure in QD mode, we don't get
+	// partial grayness over the selected area.
+	[m_region setHidden: YES];
+	[[self contentView] setNeedsDisplayInRect: [m_region frame]];
+	[self displayIfNeeded];
+    
+	// MW-2014-03-11: [[ Bug 11654 ]] Make sure we force the wait to finish.
+	MCPlatformBreakWait();
 }
 
 - (void)mouseDragged: (NSEvent *)event
@@ -265,6 +274,11 @@ void MCPlatformScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitma
 	// Return the cursor to arrow.
 	[NSCursor pop];
 	
+    // MW-2014-03-19: [[ Bug 11654 ]] Wait enough time for the screen to update to a new
+    //   frame. Ideally there'd be an API to wait until the screen has been updated, but
+    //   this doesn't seem to be the case.
+    MCPlatformWaitForEvent(1.0/50.0, False);
+    
 	// Compute the selected rectangle.
 	t_screen_rect = mcrect_from_points(s_snapshot_start_point, s_snapshot_end_point);
 

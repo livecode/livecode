@@ -1419,6 +1419,12 @@ MCGFloat MCResPlatformGetDefaultPixelScale(void)
 	return 1.0f;
 }
 
+// IM-2014-03-14: [[ HiDPI ]] UI scale is 1.0 on OSX
+MCGFloat MCResPlatformGetUIDeviceScale(void)
+{
+	return 1.0;
+}
+
 // IM-2014-01-30: [[ HiDPI ]] Reopen windows when usePixelScale is changed
 void MCResPlatformHandleScaleChange(void)
 {

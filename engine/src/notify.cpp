@@ -199,16 +199,6 @@ static bool MCNotifyIsMainThread(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef OLD_MAC
-#if defined(_MACOSX)
-extern bool g_osx_dispatch_event;
-static OSStatus MCNotifyEventHandler(EventHandlerCallRef p_ref, EventRef p_event, void *p_data)
-{
-	MCNotifyDispatch(g_osx_dispatch_event);
-}
-#endif
-#endif
-
 bool MCNotifyInitialize(void)
 {
 	if (s_initialized)

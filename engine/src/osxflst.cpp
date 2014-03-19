@@ -30,7 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "osspec.h"
 
-#include "osxdc.h"
 #include "osxflst.h"
 
 #define MAX_XFONT2MACFONT    11

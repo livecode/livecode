@@ -25,8 +25,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "image.h"
 
-#include "osxdc.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void surface_extract_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
@@ -85,68 +83,6 @@ CGImageRef MCImage::makeicon(uint4 p_width, uint4 p_height)
 	
 	return t_icon;
 }
-
-#ifdef OLD_MAC
-// MW-2011-09-13: [[ Masks ]] Updated to store data in an MCWindowMask struct.
-MCWindowShape *MCImage::makewindowshape(void)
-{	
-	bool t_success = true;
-	
-	MCWindowShape *t_mask = nil;
-	CGImageRef t_mask_image = nil;
-	MCImageBitmap *t_bitmap = nil;
-	uint8_t *t_alpha = nil;
-	uindex_t t_alpha_stride = 0;
-	uindex_t t_width, t_height;
-	
-	t_success = lockbitmap(t_bitmap, true);
-	
-	if (t_success)
-		t_success = MCImageBitmapHasTransparency(t_bitmap);
-	
-	if (t_success)
-	{
-		t_width = t_bitmap->width;
-		t_height = t_bitmap->height;
-		
-		t_alpha_stride = (t_width + 3) & ~3;
-		t_success = MCMemoryAllocate(t_alpha_stride * t_height, t_alpha);
-	}
-	
-	if (t_success)
-	{
-		surface_extract_alpha(t_bitmap->data, t_bitmap->stride, t_alpha, t_alpha_stride, t_width, t_height);
-		
-		t_success = MCAlphaToCGImage(t_width, t_height, t_alpha, t_alpha_stride, t_mask_image);
-	}
-	
-	if (t_success)
-		t_success = MCMemoryNew(t_mask);
-	
-	unlockbitmap(t_bitmap);
-	
-	
-	if (!t_success)
-	{
-		CGImageRelease(t_mask_image);
-		MCMemoryDeallocate(t_mask);
-		MCMemoryDeallocate(t_alpha);
-		
-		return nil;
-	}
-	
-	t_mask->width = t_width;
-	t_mask->height = t_height;
-	t_mask->is_sharp = false;
-	
-	t_mask->data = (char*)t_alpha;
-	t_mask->stride = t_alpha_stride;
-	
-	t_mask->handle = t_mask_image;
-	
-	return t_mask;
-}
-#endif
 
 bool MCImageBitmapToPICT(MCImageBitmap *p_bitmap, MCMacSysPictHandle &r_pict)
 {
@@ -300,17 +236,3 @@ bool MCImageBitmapToPICT(MCImageBitmap *p_bitmap, MCMacSysPictHandle &r_pict)
 #endif
 }
 
-#ifdef OLD_MAC
-CGImageRef MCImage::converttodragimage(void)
-{
-	CGImageRef t_image = NULL;
-	MCImageBitmap *t_bitmap = nil;
-	
-	if (lockbitmap(t_bitmap, false))
-		/* UNCHECKED */ MCImageBitmapToCGImage(t_bitmap, true, false, t_image);
-	unlockbitmap(t_bitmap);
-	
-	return t_image;
-
-}
-#endif

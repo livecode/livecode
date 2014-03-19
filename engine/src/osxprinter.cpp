@@ -33,12 +33,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "region.h"
 
-#include "osxdc.h"
 #include "osxprinter.h"
 #include "sserialize_osx.h"
 
 #include "graphicscontext.h"
 #include "debug.h"
+
+#include "platform.h"
 
 #include <cups/ppd.h>
 #include <pwd.h>
