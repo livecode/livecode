@@ -323,7 +323,7 @@ public:
 	//   MCField::finsert - to check the charset of the target block
 	//   MCField::verifyindex - to check the integrity of an index
 	//   MCField::getlinkdata - to check if the given block is a link
-	MCBlock *indextoblock(findex_t tindex, Boolean forinsert);
+	MCBlock *indextoblock(findex_t tindex, Boolean forinsert, bool for_navigation = false);
 
 	// Join this paragraph with the next paragraph or split the current
 	// paragraph at the focused index.

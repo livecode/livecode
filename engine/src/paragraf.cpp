@@ -2659,7 +2659,7 @@ void MCParagraph::setatts(findex_t si, findex_t ei, Properties p, void *value, b
 
 // MW-2008-03-27: [[ Bug 5093 ]] Rewritten to more correctly insert blocks around
 //   imagesource characters.
-MCBlock *MCParagraph::indextoblock(findex_t tindex, Boolean forinsert)
+MCBlock *MCParagraph::indextoblock(findex_t tindex, Boolean forinsert, bool for_navigation)
 {
 	if (blocks == NULL)
 		inittext();
@@ -2764,7 +2764,7 @@ MCBlock *MCParagraph::indextoblock(findex_t tindex, Boolean forinsert)
 		bptr->GetRange(i, l);
 		if (tindex >= i && tindex <= i + l)
 		{
-			if (tindex == i + l && !moving_forward && bptr->next() != blocks)
+			if (tindex == i + l && (!for_navigation || !moving_forward) && bptr->next() != blocks)
 				bptr = bptr->next();
 			return bptr;
 		}
@@ -3328,7 +3328,7 @@ int2 MCParagraph::fdelete(Field_translations type, MCParagraph *&undopgptr)
 uint1 MCParagraph::fmovefocus_visual(Field_translations type)
 {
     // Get the current block and its text direction
-    MCBlock *sbptr = indextoblock(focusedindex, false);
+    MCBlock *sbptr = indextoblock(focusedindex, false, true);
     MCBlock *ebptr = nil;
     bool t_is_rtl = sbptr->is_rtl();
     bool t_done = false;
@@ -3414,7 +3414,7 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
        return fmovefocus_visual(type);
 
     // Using logical ordering so translate the type
-    MCBlock *bptr = indextoblock(focusedindex, false);
+    MCBlock *bptr = indextoblock(focusedindex, false, true);
     switch (type)
     {
         case FT_LEFTCHAR:
