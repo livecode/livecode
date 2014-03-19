@@ -3362,7 +3362,7 @@ bool MCField::IsCursorMovementVisual()
         return true;
     else
     {
-#ifdef __WIN32
+#ifdef _WIN32
         return false;
 #else
         return true;
