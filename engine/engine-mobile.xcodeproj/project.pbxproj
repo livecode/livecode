@@ -21,6 +21,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1D836A3518AD0978004E8999 /* inapppurchase_lesson.livecode in Resources */ = {isa = PBXBuildFile; fileRef = 1D836A3418AD0978004E8999 /* inapppurchase_lesson.livecode */; };
 		3CC6F42812AD0A6100852B3B /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CC6F42712AD0A6100852B3B /* CFNetwork.framework */; };
 		4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4CD038F216C8FE1700EBCCBA /* Default-568h@2x.png */; };
 		4CD7DFE318A140D800CBCB57 /* opensslsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEA61040AD9300CAC7EF /* opensslsocket.cpp */; };
@@ -497,6 +498,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1D836A3418AD0978004E8999 /* inapppurchase_lesson.livecode */ = {isa = PBXFileReference; lastKnownFileType = file; name = inapppurchase_lesson.livecode; path = ../../Desktop/inapppurchase_lesson.livecode; sourceTree = "<group>"; };
 		3C07062E12942ADC0021FFAA /* mbliphonescroller.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonescroller.mm; path = src/mbliphonescroller.mm; sourceTree = "<group>"; };
 		3CC6F42712AD0A6100852B3B /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
 		4C3454FC14F3FE56008D7E50 /* mblad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblad.cpp; path = src/mblad.cpp; sourceTree = "<group>"; };
@@ -1295,6 +1297,7 @@
 				4D82FCD8171485CA00C48403 /* mobile-template.plist */,
 				4D82FCD9171485D000C48403 /* mobile-remote-notification-template.plist */,
 				4D82FCDA171485D600C48403 /* mobile-url-scheme-template.plist */,
+				1D836A3418AD0978004E8999 /* inapppurchase_lesson.livecode */,
 				4DB322B0174BD4D100046FFE /* Security.framework */,
 			);
 			sourceTree = "<group>";
@@ -1984,6 +1987,7 @@
 			files = (
 				4D7E3A591281835D00E7F80A /* Default.png in Resources */,
 				4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */,
+				1D836A3518AD0978004E8999 /* inapppurchase_lesson.livecode in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2434,6 +2438,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEAD_CODE_STRIPPING = NO;
+				GCC_VERSION = "";
 				INFOPLIST_FILE = "rsrc/standalone-mobile-Info.plist";
 				OTHER_LDFLAGS = (
 					"-Wl,-x",
@@ -2470,6 +2475,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GCC_VERSION = "";
 				INFOPLIST_FILE = "rsrc/standalone-mobile-Info.plist";
 				PRODUCT_NAME = "standalone-mobile-community";
 				PROVISIONING_PROFILE = "";

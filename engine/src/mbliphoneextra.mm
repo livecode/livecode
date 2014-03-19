@@ -1394,6 +1394,14 @@ extern Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters);
 
+extern Exec_stat MCHandleMakePurchase(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleConfirmPurchase(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleConsumePurchase(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleGetPurchases(void *context, MCParameter *p_parameters);
+
+
 extern Exec_stat MCHandleComposeTextMessage(void *, MCParameter *);
 extern Exec_stat MCHandleCanComposeTextMessage(void *, MCParameter *);
 
@@ -1740,6 +1748,20 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "mobilePurchaseSendRequest", MCHandlePurchaseSendRequest, nil},
 	{false, "mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},
     
+    {false, "mobileStoreCanMakePurchase", MCHandleCanMakePurchase, nil},
+    {false, "mobileStoreEnablePurchaseUpdates", MCHandleEnablePurchaseUpdates, nil},
+	{false, "mobileStoreDisablePurchaseUpdates", MCHandleDisablePurchaseUpdates, nil},
+    {false, "mobileStoreRestorePurchases", MCHandleRestorePurchases, nil},
+    {false, "mobileStoreMakePurchase", MCHandleMakePurchase, nil},
+    {false, "mobileStoreConfirmPurchase", MCHandleConfirmPurchase, nil},
+    {false, "mobileStoreProductProperty", MCHandleGetPurchaseProperty, nil},
+    {false, "mobileStoreSetProductType", MCHandleProductSetType, nil},
+    {false, "mobileStoreRequestProductDetails", MCHandleRequestProductDetails, nil},
+    {false, "mobileStoreConsumePurchase", MCHandleConsumePurchase, nil},
+    {false, "mobileStorePurchasedProducts", MCHandleGetPurchases, nil},
+    {false, "mobileStorePurchaseError", MCHandlePurchaseError, nil},
+    //{false, "mobileGetPurchases", MCHandlePurchaseList, nil},
+
     {false, "iphoneRequestProductDetails", MCHandleRequestProductDetails, nil},
     
     {true, "mobilePickContact", MCHandlePickContact, nil},       // ABPeoplePickerNavigationController
