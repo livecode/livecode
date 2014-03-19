@@ -255,7 +255,7 @@ findex_t MCParagraph::PrevWord(findex_t p_in)
 
 bool MCParagraph::TextIsWordBreak(codepoint_t p_codepoint)
 {
-	return MCUnicodeGetBinaryProperty(p_codepoint, kMCUnicodePropertyWordBreak);
+	return MCUnicodeGetBinaryProperty(p_codepoint, kMCUnicodePropertyWhiteSpace);
 }
 
 bool MCParagraph::TextIsLineBreak(codepoint_t p_codepoint)
