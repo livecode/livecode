@@ -449,16 +449,8 @@ findex_t MCLine::GetCursorIndex(int2 cx, Boolean chunk, bool moving_left)
     MCBlock *bptr = firstblock;
     while (bptr != lastblock)
     {
-        if (moving_left)
-        {
-            if (cx >= bptr->getorigin() && cx < bptr->getorigin() + bptr->getwidth())
-                break;
-        }
-        else
-        {
-            if (cx > bptr->getorigin() && cx <= bptr->getorigin() + bptr->getwidth())
-                break;
-        }
+        if (cx >= (int4)bptr->getorigin() && cx < (int4)(bptr->getorigin() + bptr->getwidth()))
+            break;
         
         bptr = bptr->next();
     }
