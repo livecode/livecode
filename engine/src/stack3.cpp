@@ -1908,6 +1908,7 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uindex_t &nstrings, Find_mode fmode)
 {
     MCAutoArray<MCStringRef> t_strings;
+    nstrings = 0;
 	switch (fmode)
 	{
 	case FM_NORMAL:
@@ -1935,6 +1936,7 @@ void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uindex_t &nstr
                 MCStringRef t_word;
                 uindex_t t_word_length;
                 t_word_length = l - t_word_start;
+                nstrings++;
                 /* UNCHECKED */ MCStringCopySubstring(source, MCRangeMake(t_word_start, t_word_length), t_word);
 				t_strings . Push(t_word);
         
