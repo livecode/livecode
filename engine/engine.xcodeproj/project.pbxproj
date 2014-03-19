@@ -276,7 +276,6 @@
 		4D30E44618AA7C200034CDC6 /* desktop-ans.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D30E44518AA7C200034CDC6 /* desktop-ans.cpp */; };
 		4D377262150785AF000B0EB0 /* fieldhtml.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D377261150785AF000B0EB0 /* fieldhtml.cpp */; };
 		4D37727E150787EA000B0EB0 /* fieldrtf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D37727D150787EA000B0EB0 /* fieldrtf.cpp */; };
-		4D407C0C15F8D15600AA3ABC /* osxscriptold.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D407C0B15F8D15600AA3ABC /* osxscriptold.cpp */; };
 		4D432F1F141A2DFE001164F9 /* tilecachesw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D432F1E141A2DFE001164F9 /* tilecachesw.cpp */; };
 		4D433504141BC5FC001164F9 /* tilecachecg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D433503141BC5FC001164F9 /* tilecachecg.cpp */; };
 		4D444FB5188DCB4400C7B349 /* mac-cursor.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D444FB4188DCB4400C7B349 /* mac-cursor.mm */; };
@@ -472,7 +471,6 @@
 		4DEE2AE60FDE42710009423C /* osxprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D2192420C63871D0027A96D /* osxprinter.cpp */; };
 		4DEE2AE80FDE42710009423C /* osxspec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D58801C0B80A4F800200116 /* osxspec.cpp */; };
 		4DEE2AEA0FDE42710009423C /* osxtheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880180B80A4F800200116 /* osxtheme.cpp */; };
-		4DEE2AEB0FDE42710009423C /* osxtransfer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BD9A0CCF74C800D74FDB /* osxtransfer.mm */; };
 		4DEE2AEC0FDE42710009423C /* paragraf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E690B8096FD00200116 /* paragraf.cpp */; };
 		4DEE2AED0FDE42710009423C /* param.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E5B0B8096FD00200116 /* param.cpp */; };
 		4DEE2AEE0FDE42710009423C /* parentscript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCA5E6D0EB879AD005197A1 /* parentscript.cpp */; };
@@ -940,8 +938,6 @@
 		4C10D76D16BF9BFA00D25197 /* graphicscontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = graphicscontext.cpp; path = src/graphicscontext.cpp; sourceTree = "<group>"; };
 		4C10D76E16BF9BFA00D25197 /* graphicscontext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graphicscontext.h; path = src/graphicscontext.h; sourceTree = "<group>"; };
 		4C10D82416BFADB800D25197 /* libgraphics.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libgraphics.xcodeproj; path = ../libgraphics/libgraphics.xcodeproj; sourceTree = SOURCE_ROOT; };
-		4C6F241D1529B33000C5AFB6 /* osxsnapshot.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = osxsnapshot.mm; path = src/osxsnapshot.mm; sourceTree = "<group>"; };
-		4CAA94CF15EF6E64007CD4C5 /* osxansold.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = osxansold.cpp; path = src/osxansold.cpp; sourceTree = "<group>"; };
 		4CC1535614E7FB91009FA80E /* paragrafattr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = paragrafattr.cpp; path = src/paragrafattr.cpp; sourceTree = "<group>"; };
 		4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldstyledtext.cpp; path = src/fieldstyledtext.cpp; sourceTree = "<group>"; };
 		4CC55320180D546000C10387 /* graphics_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graphics_util.h; path = src/graphics_util.h; sourceTree = "<group>"; };
@@ -954,7 +950,6 @@
 		4D055BB01079F6E7007F6E13 /* libcore.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libcore.xcodeproj; path = ../libcore/libcore.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D05B90C13E06AAB001CD82A /* dsklnxmain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dsklnxmain.cpp; path = src/dsklnxmain.cpp; sourceTree = "<group>"; };
 		4D05B90D13E06AAB001CD82A /* dskmain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskmain.cpp; path = src/dskmain.cpp; sourceTree = "<group>"; };
-		4D05B90E13E06AAC001CD82A /* dskosxmain.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = dskosxmain.mm; path = src/dskosxmain.mm; sourceTree = "<group>"; };
 		4D05B90F13E06AAC001CD82A /* dskw32main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskw32main.cpp; path = src/dskw32main.cpp; sourceTree = "<group>"; };
 		4D140F6F15A5A82300191B5E /* AdModule.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = AdModule.java; sourceTree = "<group>"; };
 		4D140F7015A5A82300191B5E /* Alert.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = Alert.java; sourceTree = "<group>"; };
@@ -1010,7 +1005,6 @@
 		4D377261150785AF000B0EB0 /* fieldhtml.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldhtml.cpp; path = src/fieldhtml.cpp; sourceTree = "<group>"; };
 		4D3772671507869A000B0EB0 /* textbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = textbuffer.h; path = src/textbuffer.h; sourceTree = "<group>"; };
 		4D37727D150787EA000B0EB0 /* fieldrtf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldrtf.cpp; path = src/fieldrtf.cpp; sourceTree = "<group>"; };
-		4D407C0B15F8D15600AA3ABC /* osxscriptold.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = osxscriptold.cpp; path = src/osxscriptold.cpp; sourceTree = "<group>"; };
 		4D432F1E141A2DFE001164F9 /* tilecachesw.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tilecachesw.cpp; path = src/tilecachesw.cpp; sourceTree = "<group>"; };
 		4D433503141BC5FC001164F9 /* tilecachecg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tilecachecg.cpp; path = src/tilecachecg.cpp; sourceTree = "<group>"; };
 		4D444FB4188DCB4400C7B349 /* mac-cursor.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-cursor.mm"; path = "src/mac-cursor.mm"; sourceTree = "<group>"; };
@@ -1204,21 +1198,15 @@
 		4D587E980B8096FD00200116 /* cmdsf.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = cmdsf.cpp; path = src/cmdsf.cpp; sourceTree = "<group>"; };
 		4D587E990B8096FD00200116 /* cmdse.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = cmdse.cpp; path = src/cmdse.cpp; sourceTree = "<group>"; };
 		4D587F5C0B809A2D00200116 /* osxflst.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = osxflst.h; path = src/osxflst.h; sourceTree = "<group>"; };
-		4D587F600B809A2D00200116 /* osxdc.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = osxdc.h; path = src/osxdc.h; sourceTree = "<group>"; };
 		4D587FB30B809C1A00200116 /* libpcre.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libpcre.xcodeproj; path = ../thirdparty/libpcre/libpcre.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D587FBC0B809C2600200116 /* libjpeg.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libjpeg.xcodeproj; path = ../thirdparty/libjpeg/libjpeg.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D587FC50B809C2E00200116 /* libpng.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libpng.xcodeproj; path = ../thirdparty/libpng/libpng.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D587FCE0B809C3600200116 /* libz.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libz.xcodeproj; path = ../thirdparty/libz/libz.xcodeproj; sourceTree = SOURCE_ROOT; };
-		4D5880130B80A4F800200116 /* osxdcs.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxdcs.cpp; path = src/osxdcs.cpp; sourceTree = "<group>"; };
 		4D5880140B80A4F800200116 /* osxcoreimage.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxcoreimage.cpp; path = src/osxcoreimage.cpp; sourceTree = "<group>"; };
-		4D5880150B80A4F800200116 /* osxdc.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxdc.cpp; path = src/osxdc.cpp; sourceTree = "<group>"; };
 		4D5880160B80A4F800200116 /* osxflst.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxflst.cpp; path = src/osxflst.cpp; sourceTree = "<group>"; };
 		4D5880180B80A4F800200116 /* osxtheme.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxtheme.cpp; path = src/osxtheme.cpp; sourceTree = "<group>"; };
-		4D5880190B80A4F800200116 /* osxans.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = osxans.mm; path = src/osxans.mm; sourceTree = "<group>"; };
-		4D58801A0B80A4F800200116 /* osxdcmac.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxdcmac.cpp; path = src/osxdcmac.cpp; sourceTree = "<group>"; };
 		4D58801B0B80A4F800200116 /* osxstack.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxstack.cpp; path = src/osxstack.cpp; sourceTree = "<group>"; };
 		4D58801C0B80A4F800200116 /* osxspec.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxspec.cpp; path = src/osxspec.cpp; sourceTree = "<group>"; };
-		4D5880200B80A4F800200116 /* osxdce.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = osxdce.mm; path = src/osxdce.mm; sourceTree = "<group>"; };
 		4D5880850B80BDF000200116 /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = /System/Library/Frameworks/QuickTime.framework; sourceTree = "<absolute>"; };
 		4D5881200B80BF1E00200116 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = /System/Library/Frameworks/IOKit.framework; sourceTree = "<absolute>"; };
 		4D5881B90B80C79600200116 /* osxcisupport.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = osxcisupport.mm; path = src/osxcisupport.mm; sourceTree = "<group>"; };
@@ -1244,17 +1232,12 @@
 		4D5885690B80DEAC00200116 /* zh_TW.lproj */ = {isa = PBXFileReference; lastKnownFileType = folder; name = zh_TW.lproj; path = rsrc/zh_TW.lproj; sourceTree = "<group>"; };
 		4D592DEA14EED23600EADBB6 /* fonttable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fonttable.cpp; path = src/fonttable.cpp; sourceTree = "<group>"; };
 		4D5A21F0170343FD003C62E2 /* encodederrors.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = encodederrors.cpp; path = src/encodederrors.cpp; sourceTree = "<group>"; };
-		4D61BD980CCF74C800D74FDB /* osxclipboard.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxclipboard.cpp; path = src/osxclipboard.cpp; sourceTree = "<group>"; };
-		4D61BD990CCF74C800D74FDB /* osxscript.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxscript.cpp; path = src/osxscript.cpp; sourceTree = "<group>"; };
-		4D61BD9A0CCF74C800D74FDB /* osxtransfer.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = osxtransfer.mm; path = src/osxtransfer.mm; sourceTree = "<group>"; };
 		4D61BD9B0CCF74C800D74FDB /* pickle.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = pickle.cpp; path = src/pickle.cpp; sourceTree = "<group>"; };
 		4D61BD9C0CCF74C800D74FDB /* styledtext.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = styledtext.cpp; path = src/styledtext.cpp; sourceTree = "<group>"; };
 		4D61BD9D0CCF74C800D74FDB /* transfer.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = transfer.cpp; path = src/transfer.cpp; sourceTree = "<group>"; };
-		4D61BDAA0CCF74EF00D74FDB /* osxtransfer.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = osxtransfer.h; path = src/osxtransfer.h; sourceTree = "<group>"; };
 		4D61BDAB0CCF74EF00D74FDB /* scriptenvironment.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = scriptenvironment.h; path = src/scriptenvironment.h; sourceTree = "<group>"; };
 		4D61BDAC0CCF74EF00D74FDB /* styledtext.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = styledtext.h; path = src/styledtext.h; sourceTree = "<group>"; };
 		4D61BDAD0CCF74EF00D74FDB /* transfer.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = transfer.h; path = src/transfer.h; sourceTree = "<group>"; };
-		4D61BE370CCF789000D74FDB /* osxdnd.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxdnd.cpp; path = src/osxdnd.cpp; sourceTree = "<group>"; };
 		4D6A00EE10C578C600FA48D2 /* customprinter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = customprinter.cpp; path = src/customprinter.cpp; sourceTree = "<group>"; };
 		4D6ED4F30E4B3B8800BDFDE4 /* objectstream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectstream.cpp; path = src/objectstream.cpp; sourceTree = "<group>"; };
 		4D6ED4F40E4B3B8800BDFDE4 /* objectstream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = objectstream.h; path = src/objectstream.h; sourceTree = "<group>"; };
@@ -1305,8 +1288,6 @@
 		4D79B5D318A9087B00D4974C /* mac-printer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-printer.mm"; path = "src/mac-printer.mm"; sourceTree = "<group>"; };
 		4D81A4C111171F6A008AE3F1 /* objectprops.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectprops.cpp; path = src/objectprops.cpp; sourceTree = "<group>"; };
 		4D81A4C211171F6B008AE3F1 /* variablevalue.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = variablevalue.cpp; path = src/variablevalue.cpp; sourceTree = "<group>"; };
-		4D81A4C311171F6B008AE3F1 /* osxcolor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = osxcolor.cpp; path = src/osxcolor.cpp; sourceTree = "<group>"; };
-		4D81A4C811171FD6008AE3F1 /* osxcursor.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = osxcursor.mm; path = src/osxcursor.mm; sourceTree = "<group>"; };
 		4D81C0260D742F48004EC824 /* w32printer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = w32printer.cpp; path = src/w32printer.cpp; sourceTree = "<group>"; };
 		4D81C0270D742F48004EC824 /* w32printer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = w32printer.h; path = src/w32printer.h; sourceTree = "<group>"; };
 		4D8387191678B2C9003BEC7C /* ibmp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ibmp.cpp; path = src/ibmp.cpp; sourceTree = "<group>"; };
@@ -1323,7 +1304,6 @@
 		4D8770FF18C8B30700A88AF9 /* quicktime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = quicktime.cpp; path = src/quicktime.cpp; sourceTree = "<group>"; };
 		4D88B73815F4C66F002CFBD6 /* libgif.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libgif.xcodeproj; path = ../thirdparty/libgif/libgif.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D8B47960BE7B3240046CD2F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
-		4D8BEC3F11B9379500DED42A /* osxicon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = osxicon.cpp; path = src/osxicon.cpp; sourceTree = "<group>"; };
 		4D8BEC4411B9389C00DED42A /* bsdiff_build.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bsdiff_build.cpp; path = src/bsdiff_build.cpp; sourceTree = "<group>"; };
 		4D8BED0111B959F500DED42A /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		4D9797D10D1845B700CD2DD0 /* itransform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = itransform.cpp; path = src/itransform.cpp; sourceTree = "<group>"; };
@@ -1538,7 +1518,6 @@
 		A71F80610F4F17F9003012FD /* StandaloneDoc.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = StandaloneDoc.icns; path = rsrc/StandaloneDoc.icns; sourceTree = "<group>"; };
 		BE4D6171189A5495002DA467 /* AttachmentProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = AttachmentProvider.java; sourceTree = "<group>"; };
 		E82206E0184F810A00117D10 /* resolution.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = resolution.cpp; path = src/resolution.cpp; sourceTree = "<group>"; };
-		E8238D1C188818EA0068154B /* osxhighdpi.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = osxhighdpi.mm; path = src/osxhighdpi.mm; sourceTree = "<group>"; };
 		E85130F3180D9969004D1DB4 /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
 		E86A04F6142A49EF005ECD82 /* srvsession.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvsession.cpp; path = src/srvsession.cpp; sourceTree = "<group>"; };
 		E86A04F7142A49EF005ECD82 /* srvsession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = srvsession.h; path = src/srvsession.h; sourceTree = "<group>"; };
@@ -2064,41 +2043,22 @@
 			isa = PBXGroup;
 			children = (
 				E8AE876B177B3F5C0041B7E0 /* cgimageutil.cpp */,
-				4D5880190B80A4F800200116 /* osxans.mm */,
-				4CAA94CF15EF6E64007CD4C5 /* osxansold.cpp */,
 				4D5880140B80A4F800200116 /* osxcoreimage.cpp */,
 				4D5881B90B80C79600200116 /* osxcisupport.mm */,
-				4D61BD980CCF74C800D74FDB /* osxclipboard.cpp */,
-				4D81A4C311171F6B008AE3F1 /* osxcolor.cpp */,
-				4D81A4C811171FD6008AE3F1 /* osxcursor.mm */,
-				4D5880150B80A4F800200116 /* osxdc.cpp */,
-				4D587F600B809A2D00200116 /* osxdc.h */,
-				4D5880200B80A4F800200116 /* osxdce.mm */,
-				4D58801A0B80A4F800200116 /* osxdcmac.cpp */,
-				4D5880130B80A4F800200116 /* osxdcs.cpp */,
 				4D4F9E6613CDFB8100B9B15D /* osxfield.cpp */,
 				4D03C2160BC5803900026EA7 /* osxfiles.cpp */,
 				4D5880160B80A4F800200116 /* osxflst.cpp */,
 				4D587F5C0B809A2D00200116 /* osxflst.h */,
-				E8238D1C188818EA0068154B /* osxhighdpi.mm */,
 				4D4F9E3913CDF24A00B9B15D /* osximage.cpp */,
 				4D4F9E3A13CDF24A00B9B15D /* osxmisc.cpp */,
 				4D4F9E1113CDEC5600B9B15D /* osxprefix.h */,
 				4D2192420C63871D0027A96D /* osxprinter.cpp */,
 				4D2192430C63871D0027A96D /* osxprinter.h */,
-				4D61BD990CCF74C800D74FDB /* osxscript.cpp */,
-				4D407C0B15F8D15600AA3ABC /* osxscriptold.cpp */,
 				4D58801C0B80A4F800200116 /* osxspec.cpp */,
 				4DCFFD1B10CE8F5800FA2262 /* osxtextlayout.cpp */,
 				4D5880180B80A4F800200116 /* osxtheme.cpp */,
 				4D4F9E4D13CDF6EA00B9B15D /* osxtheme.h */,
-				4D61BD9A0CCF74C800D74FDB /* osxtransfer.mm */,
-				4D61BDAA0CCF74EF00D74FDB /* osxtransfer.h */,
-				4D61BE370CCF789000D74FDB /* osxdnd.cpp */,
-				4C6F241D1529B33000C5AFB6 /* osxsnapshot.mm */,
-				4D8BEC3F11B9379500DED42A /* osxicon.cpp */,
 				4D58801B0B80A4F800200116 /* osxstack.cpp */,
-				4D05B90E13E06AAC001CD82A /* dskosxmain.mm */,
 				4DECC93E18856CB100463D52 /* desktop.cpp */,
 				4DECDC2518894CAA00463D52 /* desktop-dc.h */,
 				4DECC9E61885803D00463D52 /* desktop-dc.cpp */,
@@ -3700,7 +3660,6 @@
 				4DEE2AE60FDE42710009423C /* osxprinter.cpp in Sources */,
 				4DEE2AE80FDE42710009423C /* osxspec.cpp in Sources */,
 				4DEE2AEA0FDE42710009423C /* osxtheme.cpp in Sources */,
-				4DEE2AEB0FDE42710009423C /* osxtransfer.mm in Sources */,
 				4DEE2AEC0FDE42710009423C /* paragraf.cpp in Sources */,
 				4DEE2AED0FDE42710009423C /* param.cpp in Sources */,
 				4DEE2AEE0FDE42710009423C /* parentscript.cpp in Sources */,
@@ -3771,7 +3730,6 @@
 				4D592DEB14EED23600EADBB6 /* fonttable.cpp in Sources */,
 				4D377262150785AF000B0EB0 /* fieldhtml.cpp in Sources */,
 				4D37727E150787EA000B0EB0 /* fieldrtf.cpp in Sources */,
-				4D407C0C15F8D15600AA3ABC /* osxscriptold.cpp in Sources */,
 				4DCB65721653B2F700E438E6 /* stackcache.cpp in Sources */,
 				4D83871E1678B2C9003BEC7C /* ibmp.cpp in Sources */,
 				4D83871F1678B2C9003BEC7C /* image_rep_encoded.cpp in Sources */,
