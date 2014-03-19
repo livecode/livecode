@@ -520,7 +520,17 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
 				{
 					r_bitmap . setPixelRef(t_pixelref);
 					t_pixelref -> unref();
+					// MM-2014-03-07: [[ Bug 11885 ]] Make sure we free up the data as well as pixel ref.
+                    t_data -> unref();
 				}
+                
+                if (!t_success)
+                {
+                    if (t_pixelref != NULL)
+                        t_pixelref -> unref();
+                    if (t_data != NULL)
+                        t_data -> unref();
+                }
                 
                 break;
             }

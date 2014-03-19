@@ -889,7 +889,8 @@ Boolean MCButton::mfocus(int2 x, int2 y)
 				if ((MClook != LF_WIN95) || menuname != NULL)
 					break;
 			case WM_COMBO:
-				if (state & CS_MFOCUSED)
+				// MW-2014-03-11: [[ Bug 11893 ]] Make sure we don't do anything to a stack panel.
+				if (state & CS_MFOCUSED && menuname == NULL)
 				{
 					uint2 fheight;
 					fheight = gettextheight();
@@ -3605,7 +3606,8 @@ void MCButton::openmenu(Boolean grab)
 		menu->openrect(rel, (Window_mode)menumode, NULL, WP_DEFAULT, OP_NONE);
 		menu -> mode_openasmenu(t_did_grab ? sptr : NULL);
 		
-		if (menumode == WM_OPTION)
+		// MW-2014-03-11: [[ Bug 11893 ]] Make sure we don't do anything to a stack panel.
+		if (menumode == WM_OPTION && menuname == nil)
 		{
 			MCField *t_field = NULL;
 			MCObjptr *t_obj = menu->getcurcard()->getrefs();

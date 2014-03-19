@@ -35,7 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 static CGPoint s_snapshot_start_point, s_snapshot_end_point;
-static bool s_snapshot_done = false;
+static volatile bool s_snapshot_done = false;
 
 static float menu_screen_height(void)
 {
@@ -182,6 +182,9 @@ static Rect rect_from_points(CGPoint x, CGPoint y)
 	[m_region setHidden: YES];
 	[[self contentView] setNeedsDisplayInRect: [m_region frame]];
 	[self displayIfNeeded];
+
+	// MW-2014-03-11: [[ Bug 11654 ]] Make sure we force the wait to finish.
+	PostEvent(mouseUp, 0);
 }
 
 - (void)mouseDragged: (NSEvent *)event
@@ -278,6 +281,11 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, uint32_t p_window, cons
 		// Remove the window from display.
 		[t_window orderOut: nil];
 		[t_window release];
+        
+        // MW-2014-03-19: [[ Bug 11654 ]] Wait enough time for the screen to update to a new
+        //   frame. Ideally there'd be an API to wait until the screen has been updated, but
+        //   this doesn't seem to be the case.
+        MCscreen -> wait(1.0/50.0, False, False);
 
 		// Return the cursor to arrow.
 		setcursor(nil, MCcursors[PI_ARROW]);

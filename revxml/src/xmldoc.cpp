@@ -234,7 +234,15 @@ Bool CXMLDocument::Read(char *data, unsigned long tlength, Bool wellformed)
 {
 	xmlKeepBlanksDefault(0);
 	Free(); //free document	
-	doc =  xmlSAXParseMemory(&SAXHandlerTable, data, tlength, !wellformed);
+	
+	// MW-2014-03-10: [[ Bug 11903 ]] Use modified libXML functions that allow us to
+	//   pass through XML_PARSE_HUGE (so the new 2.9 limits don't apply!).
+	int options;
+	options = XML_PARSE_HUGE;
+	if (!wellformed)
+		options |= XML_PARSE_RECOVER;
+	
+	doc =  xmlSAXParseMemoryWithDataAndOptions(&SAXHandlerTable, data, tlength, options, NULL);
 
 	// OK-2007-12-17 : Bug 5632. If Validate() is called in this context it crashes
 	// For now we just remove the validation step from here as it proved difficult to
@@ -250,7 +258,15 @@ Bool CXMLDocument::ReadFile(char *filename,  Bool wellformed)
 {
 	xmlKeepBlanksDefault(0);
 	Free(); //free document	
-	doc =  xmlSAXParseFile(&SAXHandlerTable, filename, !wellformed);
+	
+	// MW-2014-03-10: [[ Bug 11903 ]] Use modified libXML functions that allow us to
+	//   pass through XML_PARSE_HUGE (so the new 2.9 limits don't apply!).
+	int options;
+	options = XML_PARSE_HUGE;
+	if (!wellformed)
+		options |= XML_PARSE_RECOVER;
+		
+	doc =  xmlSAXParseFileWithDataAndOptions(&SAXHandlerTable, filename, options, NULL);
 
 	// OK-2007-12-17 : Bug 5632. If Validate() is called in this context it crashes
 	// For now we just remove the validation step from here as it proved difficult to

@@ -559,11 +559,23 @@ Boolean MCStack::takewindow(MCStack *sptr)
 	// MW-2011-01-10: [[ Effects ]] Take the snapshot.
 	takewindowsnapshot(sptr);
 	
+    // MW-2014-03-14: [[ Bug 11915 ]] Make sure we copy the view (fullscreenmode related)
+    //   props to this stack.
+    view_copy(*sptr);
+    
 	mode_takewindow(sptr);
 	
 	if (MCmousestackptr == sptr)
 		MCmousestackptr = this;
 	start_externals();
+    
+#ifdef _MOBILE
+    // MW-2014-03-14: [[ Bug 11813 ]] Make sure we tell MCScreenDC that the top window
+    //   has changed, and mark our stack as its own window.
+    MCscreen -> openwindow((Window)this, False);
+    window = (Window)this;
+#endif
+    
 	return True;
 }
 
@@ -1962,8 +1974,11 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 
 	if (mode == WM_PULLDOWN || mode == WM_POPUP || mode == WM_CASCADE || (mode == WM_OPTION && MClook != LF_WIN95))
 	{
-		if (menuheight == 0)
+		// MW-2014-03-12: [[ Bug 11914 ]] Only fiddle with scrolling and such
+		//   if this is an engine menu.
+		if (m_is_menu && menuheight == 0)
 			menuheight = trect.height ;
+		
 		int2 oldy = rect.y;
 
 		const MCDisplay *t_display;
@@ -1999,6 +2014,12 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 				oldy = rect . y;
 			}
 		}
+		
+		// MW-2014-03-12: [[ Bug 11914 ]] Constrain the popup menu appropriately horizontally.
+		if (rect . x < t_workarea . x + MENU_SPACE)
+			rect . x = t_workarea . x + MENU_SPACE;
+		if (rect . x + rect . width > t_workarea . x + t_workarea . width - MENU_SPACE)
+			rect . x = t_workarea . x + t_workarea . width - rect . width - MENU_SPACE;
 
 		// Get the middle point (Y) of the work area.
 		int t_screen_mid_y ;
@@ -2035,8 +2056,9 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			}
 		}
 
-
-		minheight = maxheight = rect.height;
+		if (m_is_menu)
+			minheight = maxheight = rect.height;
+		
 		if (mode == WM_CASCADE && rect.x != trect.x)
 		{
 			trect = rel;
@@ -2590,7 +2612,10 @@ void MCStack::render(MCContext *p_context, const MCRectangle& p_dirty)
 	p_context -> setopacity(255);
 
     MCRectangle t_clipped_visible = p_dirty;
-    if (menuheight > rect . height || menuy != 0)
+	
+	// MW-2014-03-12: [[ Bug 11914 ]] Only fiddle with scrolling and such
+	//   if this is an engine menu.
+    if (m_is_menu && (menuheight > rect . height || menuy != 0))
         clipmenu(p_context, t_clipped_visible);
     
     curcard -> draw(p_context, t_clipped_visible, false);

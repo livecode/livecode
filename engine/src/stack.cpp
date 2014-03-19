@@ -136,6 +136,9 @@ MCStack::MCStack()
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
+
+	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
+	m_is_menu = false;
 	
 	cursoroverride = false ;
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
@@ -321,7 +324,10 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	
 	// MW-2010-11-17: [[ Valgrind ]] Uninitialized value.
 	cursoroverride = false;
-
+	
+	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
+	m_is_menu = false;
+	
 	view_copy(sref);
 
 	mode_copy(sref);
@@ -512,12 +518,15 @@ void MCStack::close()
 	//   so nothing is seen.
 	MCRedrawLockScreen();
 				
-	if (menuheight && (rect.height != menuheight || menuy != 0))
+	// MW-2014-03-12: [[ Bug 11914 ]] Only fiddle with scrolling and such
+	//   if this is an engine menu.
+	if (m_is_menu && menuheight && (rect.height != menuheight || menuy != 0))
 	{
 		if (menuy != 0)
 			scrollmenu(-menuy, False);
 		minheight = maxheight = rect.height = menuheight;
 	}
+	
 	if (state & CS_IGNORE_CLOSE)
 	{
 		state &= ~(CS_IGNORE_CLOSE);
@@ -638,7 +647,10 @@ Boolean MCStack::kfocusnext(Boolean top)
 	if (!opened || flags & F_CANT_MODIFY || gettool(this) != T_BROWSE)
 		return False;
 	Boolean done = curcard->kfocusnext(top);
-	if (menuheight && (rect.height != menuheight || menuy != 0))
+	
+	// MW-2014-03-12: [[ Bug 11914 ]] Only fiddle with scrolling and such
+	//   if this is an engine menu.
+	if (m_is_menu && menuheight && (rect.height != menuheight || menuy != 0))
 		scrollintoview();
 	return done;
 }
@@ -648,7 +660,10 @@ Boolean MCStack::kfocusprev(Boolean bottom)
 	if (!opened || flags & F_CANT_MODIFY || gettool(this) != T_BROWSE)
 		return False;
 	Boolean done = curcard->kfocusprev(bottom);
-	if (menuheight && (rect.height != menuheight || menuy != 0))
+	
+	// MW-2014-03-12: [[ Bug 11914 ]] Only fiddle with scrolling and such
+	//   if this is an engine menu.
+	if (m_is_menu && menuheight && (rect.height != menuheight || menuy != 0))
 		scrollintoview();
 	return done;
 }
@@ -834,8 +849,12 @@ Boolean MCStack::kup(const char *string, KeySym key)
 	if (!opened || state & CS_IGNORE_CLOSE)
 		return False;
 	Boolean done = curcard->kup(string, key);
-	if (menuheight && (rect.height != menuheight || menuy != 0))
+	
+	// MW-2014-03-12: [[ Bug 11914 ]] Only fiddle with scrolling and such
+	//   if this is an engine menu.
+	if (m_is_menu && menuheight && (rect.height != menuheight || menuy != 0))
 		scrollintoview();
+	
 	return done;
 }
 
@@ -846,7 +865,10 @@ Boolean MCStack::mfocus(int2 x, int2 y)
 	//XCURSORS
 	if ( !cursoroverride )
 		setcursor(getcursor(), False);
-	if (menuheight && (rect.height != menuheight || menuy != 0))
+	
+	// MW-2014-03-12: [[ Bug 11914 ]] Only fiddle with scrolling and such
+	//   if this is an engine menu.
+	if (m_is_menu && menuheight && (rect.height != menuheight || menuy != 0))
 	{
 		MCControl *cptr = curcard->getmfocused();
 		if (x < rect.width || cptr != NULL && !cptr->getstate(CS_SUBMENU))
@@ -1023,7 +1045,10 @@ void MCStack::setrect(const MCRectangle &nrect)
 	if (opened && mode_haswindow())
 	{
 		mode_constrain(rect);
-		if (mode == WM_PULLDOWN || mode == WM_OPTION)
+		
+		// MW-2014-03-12: [[ Bug 11914 ]] Only fiddle with scrolling and such
+		//   if this is an engine menu.
+		if (m_is_menu && (mode == WM_PULLDOWN || mode == WM_OPTION))
 		{
 			rect.x = oldrect.x;
 			rect.y = oldrect.y;

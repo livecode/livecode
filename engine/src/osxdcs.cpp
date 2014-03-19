@@ -456,7 +456,14 @@ void MCScreenDC::openwindow(Window w, Boolean override)
 {
 	if (IsWindowVisible((WindowPtr)w->handle.window))
 		return;
-		
+	
+	// MW-2014-03-11: [[ Bug 11819 ]] Make sure we invalidate the view for all window's
+	//   on open (otherwise non-decorated windows don't redraw for some reason...)
+	HIViewRef t_root, t_view;
+	GetRootControl((WindowPtr)w -> handle . window, &t_root);
+	GetIndexedSubControl(t_root, 1, &t_view);
+	HIViewSetNeedsDisplay(t_view, TRUE);
+	
 	if (override)
 	{
         // MM-2012-04-02: Use new MC*Window wrapper function - fixes bugs where a cocoa NSWindow has been
@@ -1246,6 +1253,12 @@ void MCScreenDC::updatebackdrop(const MCRectangle& p_dirty)
 	HUnlock((Handle)t_pix);
 	UnlockPixels(t_pix);
 	UnlockPortBits(t_gptr);
+	
+	// MW-2014-03-14: [[ Bug 11728 ]] Make sure we tell the port what's dirty as
+	//   we are poking its bits directly.
+	Rect t_r;
+	SetRect(&t_r, p_dirty . x, p_dirty . y, p_dirty . x + p_dirty . width, p_dirty . y + p_dirty . height);
+	QDAddRectToDirtyRegion(t_gptr, &t_r);
 }
 
 void MCScreenDC::redrawbackdrop(MCContext *p_context, const MCRectangle& p_dirty)
