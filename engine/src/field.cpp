@@ -254,6 +254,7 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
 	firstparagraph = lastparagraph = NULL;
 	foundlength = 0;
     cursor_movement = fref.cursor_movement;
+    text_direction= fref.text_direction;
 	if (fref.vscrollbar != NULL)
 	{
 		vscrollbar = new MCScrollbar(*fref.vscrollbar);
