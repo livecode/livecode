@@ -21,7 +21,6 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		1D836A3518AD0978004E8999 /* inapppurchase_lesson.livecode in Resources */ = {isa = PBXBuildFile; fileRef = 1D836A3418AD0978004E8999 /* inapppurchase_lesson.livecode */; };
 		3CC6F42812AD0A6100852B3B /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CC6F42712AD0A6100852B3B /* CFNetwork.framework */; };
 		4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4CD038F216C8FE1700EBCCBA /* Default-568h@2x.png */; };
 		4CD7DFE318A140D800CBCB57 /* opensslsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEA61040AD9300CAC7EF /* opensslsocket.cpp */; };
@@ -35,6 +34,7 @@
 		4D222098171D782800E7E557 /* stacksecurity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CE7B26D1704A8810072029F /* stacksecurity.cpp */; };
 		4D2220BA171D7A3E00E7E557 /* mbliphonead.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4C34550114F3FEA1008D7E50 /* mbliphonead.mm */; };
 		4D222406171D7F9D00E7E557 /* libsecurity-community.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D222092171D770900E7E557 /* libsecurity-community.a */; };
+		4D232D6018DAF07F00A4FF3E /* quicktime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D232D5F18DAF06800A4FF3E /* quicktime.cpp */; };
 		4D7B149717141A5F006782C1 /* libpngmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7B13F41714198F006782C1 /* libpngmobile.a */; };
 		4D7B149817141A63006782C1 /* libgifmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7B13AD171418F2006782C1 /* libgifmobile.a */; };
 		4D7B149917141A67006782C1 /* libjpegmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7B13B5171418FC006782C1 /* libjpegmobile.a */; };
@@ -498,7 +498,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		1D836A3418AD0978004E8999 /* inapppurchase_lesson.livecode */ = {isa = PBXFileReference; lastKnownFileType = file; name = inapppurchase_lesson.livecode; path = ../../Desktop/inapppurchase_lesson.livecode; sourceTree = "<group>"; };
 		3C07062E12942ADC0021FFAA /* mbliphonescroller.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonescroller.mm; path = src/mbliphonescroller.mm; sourceTree = "<group>"; };
 		3CC6F42712AD0A6100852B3B /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
 		4C3454FC14F3FE56008D7E50 /* mblad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblad.cpp; path = src/mblad.cpp; sourceTree = "<group>"; };
@@ -535,6 +534,7 @@
 		4D18948C1323CCFD00488783 /* mbliphoneplayer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneplayer.mm; path = src/mbliphoneplayer.mm; sourceTree = "<group>"; };
 		4D1F75B0135CD559005EE740 /* mblandroidtextlayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtextlayout.cpp; path = src/mblandroidtextlayout.cpp; sourceTree = "<group>"; };
 		4D222092171D770900E7E557 /* libsecurity-community.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libsecurity-community.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D232D5F18DAF06800A4FF3E /* quicktime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = quicktime.cpp; path = src/quicktime.cpp; sourceTree = "<group>"; };
 		4D2D91891386E2610057811A /* libstandalone-mobile-lib-community.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libstandalone-mobile-lib-community.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D33766A13F926410096DCFE /* fiber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fiber.h; path = src/fiber.h; sourceTree = "<group>"; };
 		4D33766B13F926410096DCFE /* fiber.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fiber.cpp; path = src/fiber.cpp; sourceTree = "<group>"; };
@@ -1297,7 +1297,6 @@
 				4D82FCD8171485CA00C48403 /* mobile-template.plist */,
 				4D82FCD9171485D000C48403 /* mobile-remote-notification-template.plist */,
 				4D82FCDA171485D600C48403 /* mobile-url-scheme-template.plist */,
-				1D836A3418AD0978004E8999 /* inapppurchase_lesson.livecode */,
 				4DB322B0174BD4D100046FFE /* Security.framework */,
 			);
 			sourceTree = "<group>";
@@ -1638,6 +1637,7 @@
 		E84BE35B170C967B00807CF6 /* System */ = {
 			isa = PBXGroup;
 			children = (
+				4D232D5F18DAF06800A4FF3E /* quicktime.cpp */,
 				4DD3DEA31040AD9300CAC7EF /* osspec.h */,
 				4DFFC8F613DD90CE006233A4 /* syscfdate.cpp */,
 				4D01C36F13CE3C810041A281 /* sysdefs.h */,
@@ -1987,7 +1987,6 @@
 			files = (
 				4D7E3A591281835D00E7F80A /* Default.png in Resources */,
 				4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */,
-				1D836A3518AD0978004E8999 /* inapppurchase_lesson.livecode in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2180,6 +2179,7 @@
 				4DABCE0615ECD4B50085E214 /* mbliphonenotification.mm in Sources */,
 				4DABCE0715ECD4B50085E214 /* mbliphonepick.mm in Sources */,
 				4DABCE0815ECD4B50085E214 /* mbliphonepickdate.mm in Sources */,
+				4D232D6018DAF07F00A4FF3E /* quicktime.cpp in Sources */,
 				4DABCE0915ECD4B50085E214 /* mbliphoneplayer.mm in Sources */,
 				4DABCE0A15ECD4B50085E214 /* mbliphonereachability.mm in Sources */,
 				4DABCE0B15ECD4B50085E214 /* mbliphonescroller.mm in Sources */,
