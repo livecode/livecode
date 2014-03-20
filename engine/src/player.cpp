@@ -312,7 +312,7 @@ MCPlayer::~MCPlayer()
 #ifdef FEATURE_QUICKTIME
 	if (this == MCtemplateplayer && qtstate == QT_INITTED && MCplayers == NULL)
 	{
-		stoprecording();
+		MCQTStopRecording();
 		if (qtvrstate == QTVR_INITTED)
 		{
 #ifdef _WINDOWS
