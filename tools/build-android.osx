@@ -18,7 +18,7 @@ export JCOUNT=20
 export PREBUILT_LIB_DIR=$SRCROOT/prebuilt/lib/android
 
 # Path variables
-export CLASSPATH="$ANDROID_SDK/platforms/android-8/android.jar":"$ANDROID_SDK/platforms/android-8/in-app-purchasing-1.0.3.jar"
+export CLASSPATH="$ANDROID_SDK/platforms/android-8/android.jar"
 export NDKBUILD=$ANDROID_NDK/ndk-build
 export DSTROOT=$SRCROOT/_build/android/$MODE
 export RAWROOT=$SRCROOT/_build/android/$MODE/assets
@@ -86,8 +86,15 @@ if [ $? != 0 ]; then
 	exit $?
 fi
 
-# add amazon IAP classes to the classes_livecode_community folder ready for inclusion in jar
-unzip -o "$ANDROID_SDK/platforms/android-8/in-app-purchasing-1.0.3.jar" com/amazon/inapp/purchasing/* -d "$DSTROOT/classes_livecode_community"
+"$JAVAC" -d "$DSTROOT/classes_livecode_community" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/billing/google/GoogleBillingProvider.java"
+if [ $? != 0 ]; then
+	exit $?
+fi
+
+"$JAVAC" -d "$DSTROOT/classes_livecode_community" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/billing/samsung/SamsungBillingProvider.java"
+if [ $? != 0 ]; then
+	exit $?
+fi
 
 # add LiveCode classes to jar
 echo "Create Classes jar"
