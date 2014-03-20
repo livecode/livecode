@@ -1492,6 +1492,10 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\src\quicktime.cpp"
+				>
+			</File>
 			<Filter
 				Name="Platform - Linux"
 				>

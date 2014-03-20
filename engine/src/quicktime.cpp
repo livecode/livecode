@@ -29,6 +29,12 @@
 #include "osspec.h"
 
 #ifdef _WINDOWS_DESKTOP
+#include "w32prefix.h"
+#include "w32dc.h"
+#include "w32context.h"
+
+#include "digitalv.h"
+#include "QTML.h"
 #include <Movies.h>
 #include <MediaHandlers.h>
 #include <QuickTimeVR.h>
@@ -38,6 +44,8 @@
 #include <ImageCodec.h>
 
 #define PIXEL_FORMAT_32 k32BGRAPixelFormat
+
+OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec);
 
 #elif defined(_MAC_DESKTOP)
 #include "osxprefix.h"
@@ -1018,8 +1026,9 @@ void MCQTEffectsList(MCExecPoint& ep)
 	ep . clear();
 }
 
-void MCQTEffectsDialog(MCExecPoint& ep, const char *p_title, Boolean p_sheet)
+Boolean MCQTEffectsDialog(MCExecPoint& ep, const char *p_title, Boolean p_sheet)
 {
+	return True;
 }
 
 void MCQTRecordSound(char *file)

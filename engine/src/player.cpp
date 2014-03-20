@@ -137,7 +137,7 @@ PixMapHandle GetPortPixMap(CGrafPtr port)
 #define LoWord LOWORD
 #endif
 
-static OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec);
+OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec);
 #endif
 
 #define QTMFORMATS 6
@@ -312,6 +312,7 @@ MCPlayer::~MCPlayer()
 #ifdef FEATURE_QUICKTIME
 	if (this == MCtemplateplayer && qtstate == QT_INITTED && MCplayers == NULL)
 	{
+		extern void MCQTStopRecording(void);
 		MCQTStopRecording();
 		if (qtvrstate == QTVR_INITTED)
 		{
