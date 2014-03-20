@@ -87,7 +87,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy /Y &quot;$(SolutionDir)prebuilt\lib\libcef\win32\*.dll&quot; &quot;$(OutDir)&quot;&#x0D;&#x0A;xcopy /E /Y &quot;$(SolutionDir)thirdparty\libcef\res\win32\*&quot; &quot;$(OutDir)&quot;"
+				CommandLine="xcopy /E /Y &quot;$(SolutionDir)prebuilt\lib\libcef\win32\*&quot; &quot;$(OutDir)&quot;&#x0D;&#x0A;"
+				ExcludedFromBuild="false"
 			/>
 		</Configuration>
 		<Configuration
@@ -163,7 +164,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy /Y &quot;$(SolutionDir)prebuilt\lib\libcef\win32\*.dll&quot; &quot;$(OutDir)&quot;&#x0D;&#x0A;xcopy /E /Y &quot;$(SolutionDir)thirdparty\libcef\res\win32\*.* &quot;$(OutDir)&quot;"
+				CommandLine=""
 			/>
 		</Configuration>
 	</Configurations>
@@ -226,13 +227,6 @@
 			<File
 				RelativePath=".\src\w32browser.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
