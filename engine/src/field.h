@@ -351,6 +351,7 @@ public:
 	void stopcomposition(Boolean del, Boolean force);
 	void setcompositioncursoroffset(uint2 coffset);
 	void setcompositionconvertingrange(uint1 si,uint1 ei);
+	bool getcompositionrange(int32_t& si, int32_t& ei);
 	void deletecomposition();
 	Boolean getcompositionrect(MCRectangle &r, int2 offset);
 	void syncfonttokeyboard();
@@ -409,6 +410,7 @@ public:
 	void loctext(MCExecPoint &ep, Boolean click);
 	Boolean locmark(Boolean wholeline, Boolean wholeword,
 	                Boolean click, Boolean chunk, Boolean inc_cr, int4 &si, int4 &ei);
+	Boolean locmarkpoint(MCPoint p, Boolean wholeline, Boolean wholeword, Boolean chunk, Boolean inc_cr, int4 &si, int4 &ei);
 
 	void foundchunk(MCExecPoint &ep);
 	void foundline(MCExecPoint &ep);
@@ -540,6 +542,7 @@ public:
 	void adjustpixmapoffset(MCDC *dc, uint2 index, int4 dy = 0);
 
 	bool imagechanged(MCImage *p_image, bool p_deleting);
-
+	
+	MCRectangle firstRectForCharacterRange(int32_t& si, int32_t& ei);
 };
 #endif

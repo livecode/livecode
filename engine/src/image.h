@@ -161,6 +161,10 @@ public:
 	uint32_t GetDataCompression();
 
 	// implementation
+	
+	// IM-2013-12-17: [[ Bug 11604 ]] Notify image rep when the image object is moved
+	void owner_rect_changed(const MCRectangle &p_new_rect);
+	
 	bool copy_selection(MCImageBitmap *&r_bitmap);
 
 	Boolean image_mfocus(int2 x, int2 y);
@@ -456,6 +460,7 @@ public:
 	// in idraw.cc
 	void drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy);
 	void drawcentered(MCDC *dc, int2 x, int2 y, Boolean reverse);
+    void drawnodata(MCDC *dc, MCRectangle drect, uint2 sw, uint2 sh, int2 dx, int2 dy);
 
 	void canceldraw(void);
 	void startmag(int2 x, int2 y);

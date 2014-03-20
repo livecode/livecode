@@ -16,6 +16,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
+#include "core.h"
+
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -200,6 +202,9 @@ MCUIDC::MCUIDC()
 	lockmods = False;
 
 	m_sound_internal = NULL ;
+
+	// IM-2014-03-06: [[ revBrowserCEF ]] List of callback functions to call during wait()
+	m_runloop_actions = nil;
 }
 
 MCUIDC::~MCUIDC()
@@ -336,78 +341,94 @@ MCRectangle MCUIDC::fullscreenrect(const MCDisplay *p_display)
 	return p_display->viewport;
 }
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 uint2 MCUIDC::getwidth()
 {
-	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
-	
-	return ceil(device_getwidth() / t_scale) ;
+	return platform_getwidth();
 }
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 uint2 MCUIDC::getheight()
 {
-	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
-	
-	return ceil(device_getheight() / t_scale);
+	return platform_getheight();
 }
 
 //////////
 
-uint16_t MCUIDC::device_getwidth()
+uint16_t MCUIDC::platform_getwidth()
 {
 	return 1;
 }
 
-uint16_t MCUIDC::device_getheight()
+uint16_t MCUIDC::platform_getheight()
 {
 	return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uint4 MCUIDC::getdisplays(const MCDisplay*& p_rectangles, bool p_effective)
+MCDisplay *MCUIDC::s_displays = NULL;
+uint4 MCUIDC::s_display_count = 0;
+bool MCUIDC::s_display_info_effective = false;
+
+// IM-2014-01-24: [[ HiDPI ]] Refactor to implement caching of display info in MCUIDC instead of subclasses
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+uint4 MCUIDC::getdisplays(const MCDisplay *&r_displays, bool p_effective)
+{
+	if (p_effective != s_display_info_effective || !platform_displayinfocacheable())
+		cleardisplayinfocache();
+	
+	if (s_displays == nil)
+	{
+		/* UNCHECKED */ platform_getdisplays(p_effective, s_displays, s_display_count);
+		s_display_info_effective = p_effective;
+	}
+	
+	r_displays = s_displays;
+	return s_display_count;
+}
+
+void MCUIDC::updatedisplayinfo(bool &r_changed)
 {
 	MCDisplay *t_displays;
 	t_displays = nil;
-	
-	uint32_t t_count;
-	t_count = 0;
-	
-	if (!device_getdisplays(p_effective, t_displays, t_count))
-		return 0;
-	
-	for (uint32_t i = 0; i < t_count; i++)
-	{
-		t_displays[i].viewport = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_displays[i].device_viewport));
-		t_displays[i].workarea = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_displays[i].device_workarea));
-	}
-	
-	p_rectangles = t_displays;
-	
-	return t_count;
+
+	uint32_t t_display_count;
+	t_display_count = 0;
+
+	/* UNCHECKED */ platform_getdisplays(s_display_info_effective, t_displays, t_display_count);
+
+	r_changed = t_display_count != s_display_count ||
+		(MCMemoryCompare(t_displays, s_displays, sizeof(MCDisplay) * s_display_count) != 0);
+
+	MCMemoryDeleteArray(s_displays);
+	s_displays = t_displays;
+	s_display_count = t_display_count;
+}
+
+void MCUIDC::cleardisplayinfocache(void)
+{
+	MCMemoryDeleteArray(s_displays);
+	s_displays = nil;
+	s_display_count = 0;
+}
+
+bool MCUIDC::platform_displayinfocacheable(void)
+{
+	return false;
 }
 
 //////////
 
-bool MCUIDC::device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
+bool MCUIDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
 {
 	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 const MCDisplay *MCUIDC::getnearestdisplay(const MCRectangle& p_rectangle)
-{
-	MCRectangle t_device_rect;
-	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_rectangle));
-	
-	return device_getnearestdisplay(t_device_rect);
-}
-
-//////////
-
-const MCDisplay *MCUIDC::device_getnearestdisplay(const MCRectangle& p_rectangle)
 {
 	MCDisplay const *t_displays;
 	uint4 t_display_count;
@@ -422,7 +443,7 @@ const MCDisplay *MCUIDC::device_getnearestdisplay(const MCRectangle& p_rectangle
 	for(uint4 t_display = 0; t_display < t_display_count; ++t_display)
 	{
 		MCRectangle t_workarea;
-		t_workarea = t_displays[t_display] . device_workarea;
+		t_workarea = t_displays[t_display] . workarea;
 		
 		MCRectangle t_intersection;
 		uint4 t_area, t_distance;
@@ -457,19 +478,46 @@ const MCDisplay *MCUIDC::device_getnearestdisplay(const MCRectangle& p_rectangle
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-01-24: [[ HiDPI ]] Return the maximum pixel scale of all displays in use
+bool MCUIDC::getmaxdisplayscale(MCGFloat &r_scale)
+{
+	const MCDisplay *t_displays;
+	t_displays = nil;
+	
+	uint32_t t_count;
+	t_count = 0;
+	
+	t_count = MCscreen->getdisplays(t_displays, false);
+	
+	MCGFloat t_scale;
+	if (t_count == 0)
+		t_scale = 1.0;
+	else
+		t_scale = t_displays[0].pixel_scale;
+	
+	for (uint32_t i = 1; i < t_count; i++)
+		if (t_displays[i].pixel_scale > t_scale)
+			t_scale = t_displays[i].pixel_scale;
+	
+	r_scale = t_scale;
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 Boolean MCUIDC::getwindowgeometry(Window p_window, MCRectangle &r_rect)
 {
-	MCRectangle t_rect;
-	if (!device_getwindowgeometry(p_window, t_rect))
+	if (!platform_getwindowgeometry(p_window, r_rect))
 		return False;
 	
-	r_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_rect));
 	return True;
 }
 
 //////////
 
-bool MCUIDC::device_getwindowgeometry(Window p_window, MCRectangle &r_rect)
+bool MCUIDC::platform_getwindowgeometry(Window p_window, MCRectangle &r_rect)
 {
 	r_rect = MCU_make_rect(0, 0, 32, 32);
 	return true;
@@ -477,67 +525,54 @@ bool MCUIDC::device_getwindowgeometry(Window p_window, MCRectangle &r_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 void MCUIDC::boundrect(MCRectangle &x_rect, Boolean p_title, Window_mode p_mode)
 {
-	MCRectangle t_rect;
-	t_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(x_rect));
-	
-	MCscreen->device_boundrect(t_rect, p_title, p_mode);
-	
-	x_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_rect));
+	platform_boundrect(x_rect, p_title, p_mode);
 }
 
 //////////
 
-void MCUIDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+void MCUIDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
 { }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 void MCUIDC::querymouse(int2 &x, int2 &y)
 {
-	int16_t t_x, t_y;
-	device_querymouse(t_x, t_y);
-	
-	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
-	x = t_x / t_scale;
-	y = t_y / t_scale;
+	platform_querymouse(x, y);
 }
 
 //////////
 
-void MCUIDC::device_querymouse(int2 &x, int2 &y)
+void MCUIDC::platform_querymouse(int2 &x, int2 &y)
 { }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 void MCUIDC::setmouse(int2 x, int2 y)
 {
-	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
-	
-	device_setmouse(x * t_scale, y * t_scale);
+	platform_setmouse(x, y);
 }
 
 //////////
 
-void MCUIDC::device_setmouse(int2 x, int2 y)
+void MCUIDC::platform_setmouse(int2 x, int2 y)
 { }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 MCStack *MCUIDC::getstackatpoint(int32_t x, int32_t y)
 {
-	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
-
-	return device_getstackatpoint(x * t_scale, y * t_scale);
+	return platform_getstackatpoint(x, y);
 }
 
 //////////
 
-MCStack *MCUIDC::device_getstackatpoint(int32_t x, int32_t y)
+MCStack *MCUIDC::platform_getstackatpoint(int32_t x, int32_t y)
 {
 	return nil;
 }
@@ -644,8 +679,8 @@ Window MCUIDC::getroot()
 	return (Window)1;
 }
 
-MCImageBitmap *MCUIDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window,
-                           const char *displayname)
+MCImageBitmap *MCUIDC::snapshot(MCRectangle &r, uint4 window,
+                           const char *displayname, MCPoint *size)
 {
 	return NULL;
 }
@@ -791,6 +826,9 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	Boolean donepending = False;
 	do
 	{
+		// IM-2014-03-06: [[ revBrowserCEF ]] call additional runloop callbacks
+		DoRunloopActions();
+
 		real8 eventtime = exittime;
 		donepending = handlepending(curtime, eventtime, dispatch);
 		siguser();
@@ -813,6 +851,74 @@ void MCUIDC::pingwait(void)
 	//   any running wait.
 	MCNotifyPing(false);
 #endif
+}
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Add callback & context to runloop action list
+bool MCUIDC::AddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action)
+{
+	MCRunloopAction *t_action;
+	t_action = nil;
+
+	if (!MCMemoryNew(t_action))
+		return false;
+
+	t_action->callback = p_callback;
+	t_action->context = p_context;
+
+	t_action->next = m_runloop_actions;
+	m_runloop_actions = t_action;
+
+	r_action = t_action;
+
+	return true;
+}
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Remove action from runloop action list
+void MCUIDC::RemoveRunloopAction(MCRunloopActionRef p_action)
+{
+	if (p_action == nil)
+		return;
+
+	MCRunloopAction *t_remove_action;
+	t_remove_action = nil;
+
+	if (p_action == m_runloop_actions)
+	{
+		t_remove_action = m_runloop_actions;
+		m_runloop_actions = p_action->next;
+	}
+	else
+	{
+		MCRunloopAction *t_action;
+		t_action = m_runloop_actions;
+
+		while (t_action != nil && t_remove_action == nil)
+		{
+			if (t_action->next == p_action)
+			{
+				t_remove_action = p_action;
+				t_action->next = p_action->next;
+			}
+
+			t_action = t_action->next;
+		}
+	}
+
+	if (t_remove_action != nil)
+		MCMemoryDelete(t_remove_action);
+}
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Call runloop action callbacks
+void MCUIDC::DoRunloopActions(void)
+{
+	MCRunloopAction *t_action;
+	t_action = m_runloop_actions;
+
+	while (t_action != nil)
+	{
+		t_action->callback(t_action->context);
+		t_action = t_action->next;
+	}
 }
 
 void MCUIDC::flushevents(uint2 e)
@@ -1361,7 +1467,7 @@ void MCUIDC::dropper(Window w, int2 mx, int2 my, MCColor *cptr)
 		}
 	}
 	
-	MCImageBitmap *image = snapshot(t_rect, 1.0, 0, nil);
+	MCImageBitmap *image = snapshot(t_rect, 0, nil, nil);
 
 	// If fetching the mouse pixel fails, then just return black.
 	if (image == NULL)
@@ -1608,7 +1714,7 @@ bool MCUIDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font
 
 //
 
-MCDragAction MCUIDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
+MCDragAction MCUIDC::dodragdrop(Window w, MCPasteboard* p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
 {
 	return DRAG_ACTION_NONE;
 }
@@ -1634,4 +1740,14 @@ int32_t MCUIDC::popupanswerdialog(const char **p_buttons, uint32_t p_button_coun
 char *MCUIDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint)
 {
 	return nil;
+}
+
+//
+
+void MCUIDC::controlgainedfocus(MCStack *s, uint32_t id)
+{
+}
+
+void MCUIDC::controllostfocus(MCStack *s, uint32_t id)
+{
 }

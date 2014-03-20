@@ -202,17 +202,26 @@ bool MCBitmapEffectsScale(MCBitmapEffectsRef& self, int32_t p_scale)
 	return true;
 }
 
+// MM-2013-12-10: [[ Bug  11568 ]] Store colors as BGRA instead of native since never directly rasterized.
 static void MCBitmapEffectColorToMCColor(uint32_t p_color, MCColor &r_color)
 {
-	r_color.pixel = p_color;
-	MCscreen->querycolor(r_color);
+	uint8_t r, g, b, a;
+	MCGPixelUnpack(kMCGPixelFormatBGRA, p_color, r, g, b, a);
+	r_color . pixel = MCGPixelPackNative(r, g, b, a);
+	r_color . red = r;
+	r_color . green = g;
+	r_color . blue = b;
+	r_color . red |= r_color . red << 8;
+	r_color . green |= r_color . green << 8;
+	r_color . blue |= r_color . blue << 8;	
 }
 
+// MM-2013-12-10: [[ Bug  11568 ]] Store colors as BGRA instead of native since never directly rasterized.
 static void MCBitmapEffectColorFromMCColor(MCColor &p_color, uint32_t &r_color)
 {
-	MCColor t_color = p_color;
-	MCscreen->alloccolor(t_color);
-	r_color = t_color.pixel;
+	uint8_t r, g, b, a;
+	MCGPixelUnpackNative(p_color . pixel, r, g, b, a);
+	r_color = MCGPixelPack(kMCGPixelFormatBGRA, r, g, b, a);
 }
 
 // Fetch the given property from the specified type of effect. Note that we assume that 'which'
@@ -243,7 +252,8 @@ static Exec_stat MCBitmapEffectGetProperty(MCBitmapEffect *effect, MCBitmapEffec
 			break;
 
 		case kMCBitmapEffectPropertyOpacity:
-			ep . setuint(MCGPixelGetNativeAlpha(effect -> layer . color));
+            // MM-2013-12-10: [[ Bug  11568 ]] Store colors as BGRA instead of native since never directly rasterized.
+			ep . setuint(MCGPixelGetAlpha(kMCGPixelFormatBGRA, effect -> layer . color));
 			break;
 		
 		// BLUR EFFECTS
@@ -474,8 +484,9 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 				return ES_ERROR;
 			}
 
+            // MM-2013-12-10: [[ Bug  11568 ]] Store colors as BGRA instead of native since never directly rasterized.
 			uint4 t_new_color;
-			t_new_color = MCGPixelPackNative(t_mc_color.red >> 8, t_mc_color.green >> 8, t_mc_color.blue >> 8, MCGPixelGetNativeAlpha(self->layer.color));
+			t_new_color = MCGPixelPack(kMCGPixelFormatBGRA, t_mc_color.red >> 8, t_mc_color.green >> 8, t_mc_color.blue >> 8, MCGPixelGetAlpha(kMCGPixelFormatBGRA, self->layer.color));
 
 			if (t_new_color != self -> layer . color)
 			{
@@ -510,14 +521,15 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 
 		case kMCBitmapEffectPropertyOpacity:
 		{
+            // MM-2013-12-10: [[ Bug  11568 ]] Store colors as BGRA instead of native since never directly rasterized.
 			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(255, t_data, MCGPixelGetNativeAlpha(self -> layer . color), t_value, r_dirty) != ES_NORMAL)
+			if (MCBitmapEffectSetCardinalProperty(255, t_data, MCGPixelGetAlpha(kMCGPixelFormatBGRA, self -> layer . color), t_value, r_dirty) != ES_NORMAL)
 				return ES_ERROR;
 			
 			uint8_t r, g, b, a;
-			MCGPixelUnpackNative(self->layer.color, r, g, b, a);
+			MCGPixelUnpack(kMCGPixelFormatBGRA, self->layer.color, r, g, b, a);
 			
-			self -> layer . color = MCGPixelPackNative(r, g, b, t_value);
+			self -> layer . color = MCGPixelPack(kMCGPixelFormatBGRA, r, g, b, t_value);
 		}
 		break;
 
@@ -795,8 +807,8 @@ uint32_t MCBitmapEffectsWeigh(MCBitmapEffectsRef self)
 static IO_stat MCLayerEffectPickle(MCLayerEffect *self, MCObjectOutputStream& p_stream)
 {
 	IO_stat t_stat;
-	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color to standard format when saving
-	t_stat = p_stream . WriteU32(MCGPixelFromNative(kMCGPixelFormatBGRA, self -> color));
+    // MM-2013-12-10: [[ Bug  11568 ]] Colors are now BGRA so no longer need to convert to standard form.
+	t_stat = p_stream . WriteU32(self -> color);
 	if (t_stat == IO_NORMAL)
 		t_stat = p_stream . WriteU8(self -> blend_mode << 4);
 	return t_stat;
@@ -805,8 +817,8 @@ static IO_stat MCLayerEffectPickle(MCLayerEffect *self, MCObjectOutputStream& p_
 static IO_stat MCShadowEffectPickle(MCShadowEffect *self, MCObjectOutputStream& p_stream)
 {
 	IO_stat t_stat;
-	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color to standard format when saving
-	t_stat = p_stream . WriteU32(MCGPixelFromNative(kMCGPixelFormatBGRA, self -> color));
+    // MM-2013-12-10: [[ Bug  11568 ]] Colors are now BGRA so no longer need to convert to standard form.
+    t_stat = p_stream . WriteU32(self -> color);
 	if (t_stat == IO_NORMAL)
 		t_stat = p_stream . WriteU32((self -> blend_mode << 28) | (self -> filter << 25) | (self -> size << 17) | (self -> spread << 9) | (self -> angle << 0));
 	if (t_stat == IO_NORMAL)
@@ -817,8 +829,8 @@ static IO_stat MCShadowEffectPickle(MCShadowEffect *self, MCObjectOutputStream& 
 static IO_stat MCGlowEffectPickle(MCGlowEffect *self, MCObjectOutputStream& p_stream)
 {
 	IO_stat t_stat;
-	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color to standard format when saving
-	t_stat = p_stream . WriteU32(MCGPixelFromNative(kMCGPixelFormatBGRA, self -> color));
+    // MM-2013-12-10: [[ Bug  11568 ]] Colors are now BGRA so no longer need to convert to standard form.
+    t_stat = p_stream . WriteU32(self -> color);
 	if (t_stat == IO_NORMAL)
 		t_stat = p_stream . WriteU32((self -> blend_mode << 28) | (self -> filter << 25) | (self -> size << 17) | (self -> spread << 9) | (self -> range << 1) | (self -> source << 0));
 	return t_stat;
@@ -865,8 +877,8 @@ static IO_stat MCLayerEffectUnpickle(MCLayerEffect *self, MCObjectInputStream& p
 	IO_stat t_stat;
 	uint32_t t_color;
 	t_stat = p_stream . ReadU32(t_color);
-	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color from standard format when loading
-	self -> color = MCGPixelToNative(kMCGPixelFormatBGRA, t_color);
+    // MM-2013-12-10: [[ Bug  11568 ]] Colors are now BGRA so no longer need to convert from standard form.
+	self -> color = t_color;
 	
 	uint8_t t_flags;
 	if (t_stat == IO_NORMAL)
@@ -885,8 +897,8 @@ static IO_stat MCShadowEffectUnpickle(MCShadowEffect *self, MCObjectInputStream&
 	IO_stat t_stat;
 	uint32_t t_color;
 	t_stat = p_stream . ReadU32(t_color);
-	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color from standard format when loading
-	self -> color = MCGPixelToNative(kMCGPixelFormatBGRA, t_color);
+    // MM-2013-12-10: [[ Bug  11568 ]] Colors are now BGRA so no longer need to convert from standard form.
+    self -> color = t_color;
 	
 	uint32_t t_data_a;
 	if (t_stat == IO_NORMAL)
@@ -915,8 +927,8 @@ static IO_stat MCGlowEffectUnpickle(MCGlowEffect *self, MCObjectInputStream& p_s
 	IO_stat t_stat;
 	uint32_t t_color;
 	t_stat = p_stream . ReadU32(t_color);
-	// IM-2013-10-18: [[ RefactorGraphics ]] Convert color from standard format when loading
-	self -> color = MCGPixelToNative(kMCGPixelFormatBGRA, t_color);
+    // MM-2013-12-10: [[ Bug  11568 ]] Colors are now BGRA so no longer need to convert from standard form.
+    self -> color = t_color;
 	
 	uint32_t t_data;
 	if (t_stat == IO_NORMAL)

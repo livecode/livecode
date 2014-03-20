@@ -164,7 +164,7 @@ bool MCStackRenderEffect(MCStackSurface *p_target, MCRegionRef p_region, void *p
 			break;
 #endif
 			
-#ifdef FEATURE_QUICKTIME
+#ifdef FEATURE_QUICKTIME_EFFECTS
 		case VE_QTEFFECT:
 			t_drawn = MCQTEffectStep(context->effect_area, p_target, context->delta, context->duration);
 			break;
@@ -225,12 +225,13 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
     t_effect_area = MCRectangleGetTransformedBounds(t_effect_area, getviewtransform());
     t_effect_area = MCU_intersect_rect(t_effect_area, MCU_make_rect(0, 0, view_getrect() . width, view_getrect() . height));
 	
-    MCRectangle t_device_rect, t_user_rect;
-	t_device_rect = MCRectangleGetTransformedBounds(t_effect_area, MCResGetDeviceTransform());
-	t_user_rect = MCRectangleGetTransformedBounds(t_device_rect, MCGAffineTransformInvert(t_transform));
-	
+	// IM-2014-01-24: [[ HiDPI ]] scale effect region to backing surface coords
 	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
+	t_scale = view_getbackingscale();
+	
+    MCRectangle t_device_rect, t_user_rect;
+	t_device_rect = MCRectangleGetScaledBounds(t_effect_area, t_scale);
+	t_user_rect = MCRectangleGetTransformedBounds(t_device_rect, MCGAffineTransformInvert(t_transform));
 	
 	// IM-2013-08-29: [[ RefactorGraphics ]] get device height for CoreImage effects
 	// IM-2013-09-30: [[ FullscreenMode ]] Use view rect to get device height
@@ -239,11 +240,12 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 	
 	// Make a region of the effect area
 	// IM-2013-08-29: [[ ResIndependence ]] scale effect region to device coords
-	MCRegionRef t_device_region;
-	t_device_region = nil;
-	/* UNCHECKED */ MCRegionCreate(t_device_region);
-	/* UNCHECKED */ MCRegionSetRect(t_device_region, t_device_rect);
+	MCRegionRef t_effect_region;
+	t_effect_region = nil;
+	/* UNCHECKED */ MCRegionCreate(t_effect_region);
+	/* UNCHECKED */ MCRegionSetRect(t_effect_region, t_effect_area);
 	
+#ifndef FEATURE_PLATFORM_PLAYER
 #if defined(FEATURE_QUICKTIME)
 	// MW-2010-07-07: Make sure QT is only loaded if we actually are doing an effect
 	if (t_effects != nil)
@@ -251,6 +253,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 			if (!MCtemplateplayer -> isQTinitted())
 				MCtemplateplayer -> initqt();
 #endif	
+#endif
 
 	// Lock the screen to prevent any updates occuring until we want them.
 	MCRedrawLockScreen();
@@ -349,7 +352,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		
 		// MW-2011-10-20: [[ Bug 9824 ]] Make sure dst point is correct.
 		// Initialize the destination with the start image.
-		device_updatewindowwithcallback(t_device_region, MCStackRenderInitial, &t_context);
+		view_platform_updatewindowwithcallback(t_effect_region, MCStackRenderInitial, &t_context);
 		
 		// If there is a sound, then start playing it.
 		if (t_effects -> sound != NULL)
@@ -396,10 +399,12 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				t_effects -> type = VE_CIEFFECT;
 			else
 #endif
-#ifdef FEATURE_QUICKTIME
+#ifdef FEATURE_QUICKTIME_EFFECTS
 				// IM-2013-08-29: [[ ResIndependence ]] use scaled effect rect for QT effects
 				if (t_effects -> type == VE_UNDEFINED && MCQTEffectBegin(t_effects -> type, t_effects -> name, t_effects -> direction, t_initial_image, t_final_image, t_device_rect))
 					t_effects -> type = VE_QTEFFECT;
+#else
+				;
 #endif
 		}
 		
@@ -416,7 +421,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				t_context.delta = t_delta;
 				
 				Boolean t_drawn = False;
-				device_updatewindowwithcallback(t_device_region, MCStackRenderEffect, &t_context);
+				view_platform_updatewindowwithcallback(t_effect_region, MCStackRenderEffect, &t_context);
 				
 				// Now redraw the window with the new image.
 //				if (t_drawn)
@@ -478,7 +483,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 			MCCoreImageEffectEnd();
 		else
 #endif
-#ifdef FEATURE_QUICKTIME
+#ifdef FEATURE_QUICKTIME_EFFECTS
 			if (t_effects -> type == VE_QTEFFECT)
 				MCQTEffectEnd();
 #endif
@@ -514,7 +519,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		}
 	}
 
-	MCRegionDestroy(t_device_region);
+	MCRegionDestroy(t_effect_region);
 	
 	MCGImageRelease(m_snapshot);
 	m_snapshot = nil;

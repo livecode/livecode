@@ -192,6 +192,7 @@ MCNameRef MCN_default_text_font;
 
 MCNameRef MCM_apple_event;
 MCNameRef MCM_arrow_key;
+MCNameRef MCM_assert_error;
 MCNameRef MCM_backspace_key;
 MCNameRef MCM_close_background;
 MCNameRef MCM_close_card;
@@ -441,6 +442,9 @@ MCNameRef MCM_input_begin_editing;
 MCNameRef MCM_input_end_editing;
 MCNameRef MCM_input_return_key;
 MCNameRef MCM_input_text_changed;
+MCNameRef MCM_product_details_received;
+MCNameRef MCM_product_request_error;
+
 #endif
 
 #ifdef _IOS_MOBILE
@@ -456,8 +460,8 @@ MCNameRef MCM_player_state_changed;
 MCNameRef MCM_player_movie_changed;
 MCNameRef MCM_player_stopped;
 MCNameRef MCM_reachability_changed;
-MCNameRef MCM_product_details_received;
-MCNameRef MCM_product_request_error;
+//MCNameRef MCM_product_details_received;
+//MCNameRef MCM_product_request_error;
 MCNameRef MCM_protected_data_available;
 MCNameRef MCM_protected_data_unavailable;
 
@@ -475,6 +479,7 @@ void MCU_initialize_names(void)
 
 	/* UNCHECKED */ MCNameCreateWithCString("appleEvent", MCM_apple_event);
 	/* UNCHECKED */ MCNameCreateWithCString("arrowKey", MCM_arrow_key);
+	/* UNCHECKED */ MCNameCreateWithCString("assertError", MCM_assert_error);
 	/* UNCHECKED */ MCNameCreateWithCString("backspaceKey", MCM_backspace_key);
 	/* UNCHECKED */ MCNameCreateWithCString("closeBackground", MCM_close_background);
 	/* UNCHECKED */ MCNameCreateWithCString("closeCard", MCM_close_card);
@@ -725,6 +730,8 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("inputEndEditing", MCM_input_end_editing);
 	/* UNCHECKED */ MCNameCreateWithCString("inputReturnKey", MCM_input_return_key);
 	/* UNCHECKED */ MCNameCreateWithCString("inputTextChanged", MCM_input_text_changed);
+    /* UNCHECKED */ MCNameCreateWithCString("productDetailsReceived", MCM_product_details_received);
+    /* UNCHECKED */ MCNameCreateWithCString("productRequestError", MCM_product_request_error);
 #endif
 	
 #ifdef _IOS_MOBILE
@@ -740,8 +747,8 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("playerMovieChanged", MCM_player_movie_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("playerStopped", MCM_player_stopped);
 	/* UNCHECKED */ MCNameCreateWithCString("reachabilityChanged", MCM_reachability_changed);
-    /* UNCHECKED */ MCNameCreateWithCString("productDetailsReceived", MCM_product_details_received);
-    /* UNCHECKED */ MCNameCreateWithCString("productRequestError", MCM_product_request_error);
+    ///* UNCHECKED */ MCNameCreateWithCString("productDetailsReceived", MCM_product_details_received);
+    ///* UNCHECKED */ MCNameCreateWithCString("productRequestError", MCM_product_request_error);
     /* UNCHECKED */ MCNameCreateWithCString("protectedDataDidBecomeAvailable", MCM_protected_data_available);
     /* UNCHECKED */ MCNameCreateWithCString("protectedDataWillBecomeUnavailable", MCM_protected_data_unavailable);
 	
@@ -760,6 +767,7 @@ void MCU_finalize_names(void)
 
 	MCNameDelete(MCM_apple_event);
 	MCNameDelete(MCM_arrow_key);
+	MCNameDelete(MCM_assert_error);
 	MCNameDelete(MCM_backspace_key);
 	MCNameDelete(MCM_close_background);
 	MCNameDelete(MCM_close_card);

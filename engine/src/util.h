@@ -180,14 +180,14 @@ extern bool MCU_random_bytes(size_t count, void *buffer);
 
 // 
 
-struct MCRange
+struct MCInterval
 {
 	int from;
 	int to;
 };
 
-extern bool MCU_disjointrangeinclude(MCRange*& p_ranges, int& p_count, int p_from, int p_to);
-extern bool MCU_disjointrangecontains(MCRange* p_ranges, int p_count, int p_element);
+extern bool MCU_disjointrangeinclude(MCInterval*& p_ranges, int& p_count, int p_from, int p_to);
+extern bool MCU_disjointrangecontains(MCInterval* p_ranges, int p_count, int p_element);
 
 //
 

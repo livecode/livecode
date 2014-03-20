@@ -199,14 +199,6 @@ static bool MCNotifyIsMainThread(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(_MACOSX)
-extern bool g_osx_dispatch_event;
-static OSStatus MCNotifyEventHandler(EventHandlerCallRef p_ref, EventRef p_event, void *p_data)
-{
-	MCNotifyDispatch(g_osx_dispatch_event);
-}
-#endif
-
 bool MCNotifyInitialize(void)
 {
 	if (s_initialized)
@@ -225,8 +217,6 @@ bool MCNotifyInitialize(void)
 	InitializeCriticalSection(&s_notify_lock);
 	s_main_thread_id = GetCurrentThreadId();
 #elif defined(_MACOSX)
-	static EventTypeSpec t_events[] = { 'revo', 'wkup' };
-	::InstallApplicationEventHandler(MCNotifyEventHandler, 1, t_events, NULL, NULL);
 	pthread_mutex_init(&s_notify_lock, NULL);
 	s_main_thread = pthread_self();
 #elif defined(_LINUX)
@@ -451,10 +441,8 @@ void MCNotifyPing(bool p_high_priority)
 	if (!s_notify_sent)
 	{
 		s_notify_sent = true;
-		EventRef t_event;
-		::CreateEvent(NULL, 'revo', 'wkup', 0, kEventAttributeNone, &t_event);
-		::PostEventToQueue(::GetMainEventQueue(), t_event, p_high_priority ? kEventPriorityHigh : kEventPriorityStandard);
-		::ReleaseEvent(t_event);
+		extern void MCMacBreakWait(void);
+		MCMacBreakWait();
 	}
 #elif defined(_LINUX)
 	if (!s_notify_sent)

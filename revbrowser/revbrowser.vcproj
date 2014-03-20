@@ -38,6 +38,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)thirdparty\libcef&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;REVBROWSER_EXPORTS;ATLASSUME="
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -56,7 +57,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="user32.lib"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)prebuilt\lib\libcef\win32&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -84,6 +87,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy /Y &quot;$(SolutionDir)prebuilt\lib\libcef\win32\*.dll&quot; &quot;$(OutDir)&quot;&#x0D;&#x0A;xcopy /E /Y &quot;$(SolutionDir)thirdparty\libcef\res\win32\*&quot; &quot;$(OutDir)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -110,6 +114,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)thirdparty\libcef&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;REVBROWSER_EXPORTS"
 				UsePrecompiledHeader="0"
 				DebugInformationFormat="3"
@@ -126,7 +131,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="user32.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)prebuilt\lib\libcef\win32&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -156,6 +163,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy /Y &quot;$(SolutionDir)prebuilt\lib\libcef\win32\*.dll&quot; &quot;$(OutDir)&quot;&#x0D;&#x0A;xcopy /E /Y &quot;$(SolutionDir)thirdparty\libcef\res\win32\*.* &quot;$(OutDir)&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -168,6 +176,14 @@
 			ReferencedProjectIdentifier="{6899CD7E-BE16-44CE-A28B-27304F42E127}"
 			RelativePathToProject=".\libcore\libcore.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{A9D6DC71-C0DC-4549-AEA0-3B15B44E86A9}"
+			RelativePathToProject=".\thirdparty\libcef\libcef_dll_wrapper.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{58314BC9-A2EE-49F0-8B40-7BA12517A60C}"
+			RelativePathToProject=".\thirdparty\libcef\libcef.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -175,6 +191,14 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
+			<File
+				RelativePath=".\src\cefbrowser.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\cefbrowser_w32.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\src\osxbrowser.cpp"
 				>
@@ -202,6 +226,21 @@
 			<File
 				RelativePath=".\src\w32browser.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
@@ -209,6 +248,14 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\src\cefbrowser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\cefbrowser_msg.h"
+				>
+			</File>
 			<File
 				RelativePath=".\src\osxbrowser.h"
 				>

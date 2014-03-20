@@ -86,6 +86,15 @@ typedef struct MCExternalInterface
 	MCError (*object_retain)(MCObjectRef object);
 	MCError (*object_release)(MCObjectRef object);
 	MCError (*object_dispatch)(MCObjectRef object, MCDispatchType type, const char *message, MCVariableRef *argv, uint32_t argc, MCDispatchStatus *r_status);
+	
+	/////////
+	
+	// MM-2014-03-18: [[ iOS 7.1 Support ]] Added new WaitRun and WaitBreak functions required by reviphone external for iOS 7.1 support.
+	MCError (*wait_run)(void *unused, unsigned int options);
+	MCError (*wait_break)(void *unused, unsigned int options);
+	
+	/////////
+	
 } MCExternalInterface;
 
 typedef struct MCExternalInfo
@@ -277,6 +286,19 @@ MCError MCContextDefaultCard(MCObjectRef *r_object)
 MCError MCRunOnMainThread(MCThreadCallback callback, void *state, MCRunOnMainThreadOptions options)
 {
 	return s_interface -> engine_run_on_main_thread(callback, state, options);
+}
+
+//////////
+// MM-2014-03-18: [[ iOS 7.1 Support ]] Added new WaitRun and WaitBreak functions required by reviphone external for iOS 7.1 support.
+
+MCError MCWaitRun(void)
+{
+	return s_interface -> wait_run(nil, 0);
+}
+
+MCError MCWaitBreak(void)
+{
+	return s_interface -> wait_break(nil, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

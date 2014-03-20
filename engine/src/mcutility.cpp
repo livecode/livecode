@@ -38,7 +38,7 @@ Boolean strequal(const char *one, const char *two)
 	return (Boolean)(strcmp(one, two) == 0);
 }
 
-Boolean strnequal(const int1 *one, const int1 *two, size_t n)
+Boolean strnequal(const char *one, const char *two, size_t n)
 {
 	if ((one == NULL) != (two == NULL))
 		return False;

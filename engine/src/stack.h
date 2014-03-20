@@ -69,6 +69,7 @@ enum MCStackSurfaceTargetType
 ////////////////////////////////////////////////////////////////////////////////
 
 // IM-2013-09-23: [[ FullscreenMode ]] Available fullscreen modes
+// IM-2013-12-16: [[ ShowAll ]] Add showAll mode to fullscreen modes
 enum MCStackFullscreenMode
 {
 	kMCStackFullscreenModeNone,
@@ -78,6 +79,7 @@ enum MCStackFullscreenMode
 	kMCStackFullscreenLetterbox,	// "letterbox"	whole stack is shown, scaled to take up as much screen space as possible. Both full width and height are visible
 	kMCStackFullscreenNoBorder,		// "noBorder"	scaled to cover whole screen, top+bottom or left+right of stack may be clipped
 	kMCStackFullscreenNoScale,		// "noScale"	stack is centered on screen with no scaling
+	kMCStackFullscreenShowAll,		// "showAll"	whole stack is shown, scaled to take up as much screen space as possible. Visible areas outside the stack rect will be drawn.
 };
 
 extern const char *MCStackFullscreenModeToString(MCStackFullscreenMode p_mode);
@@ -207,8 +209,13 @@ protected:
 	bool m_view_fullscreen;
 	MCStackFullscreenMode m_view_fullscreenmode;
 
-	MCRectangle m_view_stack_rect;
+	// IM-2014-01-16: [[ StackScale ]] Store the requested stack rect here rather than reset
+	// to the old_rect held by the stack
+	MCRectangle m_view_requested_stack_rect;
+	MCRectangle m_view_adjusted_stack_rect;
 	MCRectangle m_view_rect;
+	// IM-2013-12-20: [[ ShowAll ]] The visible area of the stack
+	MCRectangle m_view_stack_visible_rect;
 
 	// IM-2013-10-14: [[ FullscreenMode ]] Indicates whether the view needs to be redrawn
 	bool m_view_need_redraw;
@@ -224,6 +231,16 @@ protected:
 	// MW-2011-08-19: [[ Redraw ]] The region of the view that needs to be
 	//   drawn to the screen on the next update.
 	MCRegionRef m_view_update_region;
+	
+	// IM-2014-01-07: [[ StackScale ]] the drawing scale of the stack
+	// IM-2014-01-16: [[ StackScale ]] Move stack scale factor to view abstraction
+	MCGFloat m_view_content_scale;
+
+	// IM-2014-01-23: [[ HiDPI ]] The backing scale of the surface onto which this view is drawn
+    
+	MCGFloat m_view_backing_scale;
+	// MW-2014-03-12: [[ Bug 11914 ]] If this is true then the stack is an engine menu.
+	bool m_is_menu : 1;
 	
 public:
 	Boolean menuwindow;
@@ -278,32 +295,32 @@ public:
 	virtual bool recomputefonts(MCFontRef parent_font);
 	
 	//////////
-	// device interface
+	// view interface
 
-	MCRectangle device_getwindowrect() const;
-	MCRectangle device_setgeom(const MCRectangle &p_rect);
-	
-	// IM-2013-08-29: [[ ResIndependence ]] add device-specific version of updatewindow.
-	//   device_updatewindow takes a region in device coordinates.
-	void device_updatewindow(MCRegionRef p_region);
-	// MW-2011-09-13: [[ Redraw ]] Request an immediate update of the given region of the
-	//   window using the presented pixmap. This is a platform-specific method - note that
-	//   any window-mask is ignored with per-pixel alpha assumed to come from the the image.
-	//   (although a window-mask needs to be present in the stack for it not to be ignored).
-	// IM-2013-06-19: [[ RefactorGraphics ]] Replace pixmap update method with this
-	//   version which uses a callback function to perform the actual drawing using a
-	//    provided MCStackSurface instance. The MCStackSurface class is now responsible
-	//    for handling any window mask present.
-	// IM-2013-08-29: [[ ResIndependence ]] change updatewindowwithcallback to device-specific version.
-	//   device_updatewindowwithcallback takes a region in device coordinates.
-	void device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context);
-	
-	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given
-	//   surface.
-	void device_redrawwindow(MCStackSurface *surface, MCRegionRef region);
+	// IM-2014-01-24: [[ HiDPI ]] Convert device-space methods to logical-space platform-specific methods
 	
 	//////////
-	// view interface
+	// platform-specific view methods
+	
+	MCRectangle view_platform_getwindowrect() const;
+	MCRectangle view_platform_setgeom(const MCRectangle &p_rect);
+
+	// Request an immediate update of the given region of the window.
+	// IM-2014-01-24: [[ HiDPI ]] The request region is specified in logical coordinates.
+	void view_platform_updatewindow(MCRegionRef p_region);
+
+	// IM-2014-01-24: [[ Redraw ]] Request an immediate update of the given region of the
+	//   window using the given callback to perform the drawing.
+	// IM-2014-01-24: [[ HiDPI ]] The request region is specified in logical coordinates.
+	void view_platform_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context);
+	
+	//////////
+	
+	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given surface.
+	// IM-2014-01-24: [[ HiDPI ]] Update region is given in surface coordinates.
+	void view_surface_redrawwindow(MCStackSurface *surface, MCRegionRef region);
+	
+	//////////
 
 	void view_init(void);
 	void view_copy(const MCStack &p_view);
@@ -314,8 +331,19 @@ public:
 	// Set the visible stack region. Returns modified rect if constrained by fullscreen mode
 	MCRectangle view_setstackviewport(const MCRectangle &p_viewport);
 
+	// IM-2013-12-19: [[ ShowAll ]] Return the visible area of the view into which the stack will be rendered
+	MCRectangle view_getstackvisiblerect(void);
+
 	// Return the visible stack region constrained by the fullscreen settings
-	MCRectangle view_constrainstackviewport(const MCRectangle &p_viewport);
+	// IM-2014-02-13: [[ StackScale ]] Update to work with MCGRectangles
+	MCGRectangle view_constrainstackviewport(const MCGRectangle &p_viewport);
+	
+	// IM-2014-01-16: [[ StackScale ]] Ensure the view rect & transform are in sync with the configured view properties
+	// (stack viewport, fullscreen mode, fullscreen, scale factor)
+	void view_update_transform(void);
+	
+	// IM-2014-01-16: [[ StackScale ]] Calculate the new view rect, transform, and adjusted stack rect for the given stack rect
+	void view_calculate_viewports(const MCRectangle &p_stack_rect, MCRectangle &r_adjusted_stack_rect, MCRectangle &r_view_rect, MCGAffineTransform &r_transform);
 	
 	// Return the rect of the view in logical screen coords.
 	MCRectangle view_getrect(void) const;
@@ -379,8 +407,12 @@ public:
 	void view_activatetilecache(void);
 	void view_compacttilecache(void);
 	
+	// IM-2014-01-24: [[ HiDPI ]] Update the tilecache viewport to match the view rect at the current backing scale
+	void view_updatetilecacheviewport(void);
+	
 	// IM-2013-10-10: [[ FullscreenMode ]] Reconfigure view after window rect changes
 	void view_configure(bool p_user);
+	void view_configure_with_rect(bool p_user, MCRectangle rect);
 	
 	// IM-2013-10-10: [[ FullscreenMode ]] Update the on-screen bounds of the view
 	void view_setrect(const MCRectangle &p_new_rect);
@@ -400,6 +432,26 @@ public:
 	// IM-2013-10-14: [[ FullscreenMode ]] Ensure the view content is up to date
 	void view_apply_updates(void);
 	
+	// IM-2013-12-05: [[ PixelScale ]] Update view window geometry to scaled view rect
+	void view_sync_window_geometry(void);
+	
+	// IM-2014-01-07: [[ StackScale ]] Get / Set the content scale of the stack
+	// IM-2014-01-16: [[ StackScale ]] Move stack scale factor to view abstraction
+	MCGFloat view_get_content_scale() const;
+	void view_set_content_scale(MCGFloat p_scale);
+
+	// IM_2014-01-24: [[ HiDPI ]] Return the view window rect in logical coords
+	MCRectangle view_getwindowrect() const;
+
+	// IM-2014-01-24: [[ HiDPI ]] Set the view window rect in logical coords
+	MCRectangle view_setgeom(const MCRectangle &p_rect);
+	
+	// IM-2014-01-24: [[ HiDPI ]] Return the scale factor from logical to pixel coords for the surface onto which the view is drawn
+	MCGFloat view_getbackingscale(void) const;
+
+	// IM-2014-01-24: [[ HiDPI ]] Called to update the view's backing scale to match the target surface before drawing
+	void view_setbackingscale(MCGFloat p_scale);
+	
 	//////////
 	
 	// IM-2013-10-14: [[ FullscreenMode ]] Return the stack -> stack viewport coordinate transform (Currently only applies the stack vertical scroll)
@@ -415,12 +467,13 @@ public:
 	// factor of the stack -> device coordinate transform
 	MCGFloat getdevicescale(void) const;
 	
+	// IM-2013-12-20: [[ ShowAll ]] Return the visible area of the stack contents
+	MCRectangle getvisiblerect(void);
+	
 	//////////
 	
 	// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within min/max width & height
 	MCRectangle constrainstackrect(const MCRectangle &p_rect);
-	// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within screen bounds
-	MCRectangle constrainstackrecttoscreen(const MCRectangle &p_rect);
 	
     // IM-2012-05-15: [[ Effective Rect ]] get the rect of the window (including decorations)
     MCRectangle getwindowrect() const;
@@ -433,7 +486,17 @@ public:
 	MCPoint stacktogloballoc(const MCPoint &p_stackloc) const;
 	MCPoint globaltostackloc(const MCPoint &p_globalloc) const;
 
+	//////////
+	
+	// IM-2014-01-07: [[ StackScale ]] Return the card rect after scale adjustment
+	MCRectangle getcardrect() const;
+	// IM-2014-01-07: [[ StackScale ]] Update the rect of the current card to fit the stack
+	void updatecardsize();
+	
+	//////////
+	
 	void setgeom();
+	
 	//////////
 	
     virtual MCRectangle getrectangle(bool p_effective) const;
@@ -764,6 +827,8 @@ public:
 	
 	MCWindowShape *getwindowshape(void) { return m_window_shape; }
 
+	void constrain(MCPoint p_size, MCPoint& r_out_size);
+	
 #if defined(_WINDOWS_DESKTOP)
 	MCSysWindowHandle getrealwindow();
 	MCSysWindowHandle getqtwindow(void);
@@ -779,21 +844,25 @@ public:
 	void getstyle(uint32_t &wstyle, uint32_t &exstyle);
 	void constrain(intptr_t lp);
 #elif defined(_MAC_DESKTOP)
-	MCSysWindowHandle getrealwindow()
-	{
-		return window->handle.window;
-	}
-	MCSysWindowHandle getqtwindow(void);
-	void showmenubar();
-	void getWinstyle(uint32_t &wstyle, uint32_t &wclass);
-
-	void getminmax(MCMacSysRect *winrect);
 #elif defined(_LINUX_DESKTOP)
 	void setmodalhints(void);
 
 	// MW-201-09-15: [[ Redraw ]] The 'onexpose()' method is called when a sequence
 	//   of Expose events are recevied.
 	void onexpose(MCRegionRef dirty);
+
+	// IM-2014-01-29: [[ HiDPI ]] platform-specific view device methods
+
+	MCRectangle view_device_getwindowrect() const;
+	MCRectangle view_device_setgeom(const MCRectangle &p_rect,
+		uint32_t p_minwidth, uint32_t p_minheight,
+		uint32_t p_maxwidth, uint32_t p_maxheight);
+	void view_device_updatewindow(MCRegionRef p_region);
+#elif defined(_MOBILE)
+
+	// IM-2014-01-30: [[ HiDPI ]] platform-specific view device methods
+	
+	void view_device_updatewindow(MCRegionRef p_region);
 #endif
 	
 	bool cursoroverride ;

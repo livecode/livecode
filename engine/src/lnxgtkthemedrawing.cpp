@@ -1337,7 +1337,8 @@ moz_gtk_scale_track_paint(GtkThemeWidgetType type,
 
 	style = GTK_WIDGET(scale)->style;
 
-	moz_gtk_label_paint(drawable, rect, cliprect);
+    // AL-2014-01-16: [[ Bug 11656 ]] Don't paint box around slider trough.
+	// moz_gtk_label_paint(drawable, rect, cliprect);
 
 	TSOffsetStyleGCs(style, rect->x, rect->y);
 

@@ -68,7 +68,12 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
 #include <sys/socket.h>
 
 #include <netinet/in_systm.h>
+
+// MM-2014-02-04: [[ LibOpenSSL 1.0.1e ]] Header netinet/udp.h is not included in the iOS device SDK.
+#if !defined(TARGET_SUBPLATFORM_IPHONE) || defined(__i386__)
 #include <netinet/udp.h>
+#endif
+
 #include <netinet/in.h>
 
 #include <arpa/inet.h>
@@ -90,7 +95,7 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
 #include <openssl/ssl.h>
 #include <openssl/x509v3.h>
 
-#if !defined(X11) && (!defined(_MACOSX))
+#if !defined(X11) && (!defined(_MACOSX)) && (!defined(TARGET_SUBPLATFORM_IPHONE))
 #define socklen_t int
 #endif
 
@@ -152,7 +157,7 @@ static void socketCallback (CFSocketRef cfsockref, CFSocketCallBackType type, CF
 			break;
 		}
 	}
-	//MCS_poll(0.0,0);//quick poll of other sockets
+	MCS_poll(0.0,0);//quick poll of other sockets
 }
 #endif
 
@@ -733,7 +738,9 @@ void MCS_write_socket(const MCString &d, MCSocket *s, MCObject *optr, MCNameRef 
 	}
 	else
 	{
-		MCSocketwrite *eptr = new MCSocketwrite(d, optr, mptr);
+		// MM-2014-02-12: [[ SecureSocket ]] Store against the write if it should be encrypted.
+		//  This way, upon securing a socket, all pending writes will remain unencrypted whilst all new writes will be encrypted.
+		MCSocketwrite *eptr = new MCSocketwrite(d, optr, mptr, s->secure);
 		eptr->appendto(s->wevents);
 		s->setselect();
 		if (mptr == NULL)
@@ -838,6 +845,17 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 	char *portname = new char[U2L];
 	sprintf(portname, "%d", port);
 	return new MCSocket(portname, object, message, datagram, sock, True, False, secure);
+}
+
+// MM-2014-02-12: [[ SecureSocket ]] New secure socket command. If socket is not already secure, flag as secure to ensure future communications are encrypted.
+void MCS_secure_socket(MCSocket *s, Boolean sslverify)
+{
+	if (!s -> secure)
+	{
+		s -> secure = True;
+		s -> sslverify = sslverify;
+		s -> sslstate |= SSTATE_RETRYCONNECT;
+	}
 }
 
 // Return the IP address of the host interface that is used to connect to the
@@ -990,7 +1008,7 @@ MCSocketread::~MCSocketread()
 	delete until;
 }
 
-MCSocketwrite::MCSocketwrite(const MCString &d, MCObject *o, MCNameRef m)
+MCSocketwrite::MCSocketwrite(const MCString &d, MCObject *o, MCNameRef m, Boolean securewrite)
 {
 	if (m != NULL)
 		buffer = d.clone();
@@ -998,6 +1016,7 @@ MCSocketwrite::MCSocketwrite(const MCString &d, MCObject *o, MCNameRef m)
 		buffer = (char *)d.getstring();
 	size = d.getlength();
 	timeout = curtime + MCsockettimeout;
+	secure = securewrite;
 	optr = o;
 	done = 0;
 	if (m != nil)
@@ -1292,13 +1311,15 @@ void MCSocket::readsome()
 				errno = 0;
 #ifdef _WINDOWS
 
-				if ((l = read(rbuffer + nread, l)) <= 0 || l == SOCKET_ERROR )
+				// MM-2014-02-12: [[ SecureSocket ]] If a scoket is secured, all data read should be assumed to be encrypted.
+				if ((l = read(rbuffer + nread, l, secure)) <= 0 || l == SOCKET_ERROR )
 				{
 					int wsaerr = WSAGetLastError();
 					if (!doread && errno != EAGAIN && wsaerr != WSAEWOULDBLOCK && wsaerr != WSAENOTCONN && errno != EINTR)
 					{
 #else
-				if ((l = read(rbuffer + nread, l)) <= 0)
+				// MM-2014-02-12: [[ SecureSocket ]] If a scoket is secured, all data read should be assumed to be encrypted.
+				if ((l = read(rbuffer + nread, l, secure)) <= 0)
 				{
 					if (!doread && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
 					{
@@ -1390,7 +1411,10 @@ void MCSocket::writesome()
 	while (wevents != NULL)
 	{
 		uint4 towrite = wevents->size - wevents->done;
-		int4 nwritten = write( wevents->buffer + wevents->done, towrite);
+
+		// MM-2014-02-12: [[ SecureSocket ]] The write should only be encrypted if the write object has been flagged as secured.
+		//  (Was previously using the secure flag stored against the socket).
+		int4 nwritten = write( wevents->buffer + wevents->done, towrite, wevents->secure);
 #ifdef _WINDOWS
 
 		if (nwritten == SOCKET_ERROR)
@@ -1517,7 +1541,7 @@ Boolean MCSocket::init(MCSocketHandle newfd)
 	if (cfsockref)
 	{
 		rlref = CFSocketCreateRunLoopSource(kCFAllocatorDefault, cfsockref, 0);
-		CFRunLoopAddSource((CFRunLoopRef)GetCFRunLoopFromEventLoop(GetMainEventLoop()), rlref, kCFRunLoopDefaultMode);
+		CFRunLoopAddSource((CFRunLoopRef)CFRunLoopGetCurrent(), rlref, kCFRunLoopDefaultMode);
 		CFOptionFlags socketOptions = 0 ;
 		CFSocketSetSocketFlags( cfsockref, socketOptions );
 	}
@@ -1562,10 +1586,11 @@ void MCSocket::close()
 	}
 }
 
-int4 MCSocket::write(const char *buffer, uint4 towrite)
+// MM-2014-02-12: [[ SecureSocket ]] Updated to pass in if this write should be encrypted, rather than checking against socket.
+int4 MCSocket::write(const char *buffer, uint4 towrite, Boolean securewrite)
 {
 	int4 rc = 0;
-	if (secure)
+	if (securewrite)
 	{
 		sslstate &= ~SSTATE_RETRYWRITE;
 #ifdef _WINDOWS
@@ -1627,10 +1652,11 @@ int4 MCSocket::write(const char *buffer, uint4 towrite)
 #endif
 }
 
-int4 MCSocket::read(char *buffer, uint4 toread)
+// MM-2014-02-12: [[ SecureSocket ]] Updated to pass in if this read is encrypted, rather than checking against socket.
+int4 MCSocket::read(char *buffer, uint4 toread, Boolean secureread)
 {
 	int4 rc = 0;
-	if (secure)
+	if (secureread)
 	{
 		sslstate &= ~SSTATE_RETRYREAD;
 #ifdef _WINDOWS
@@ -1809,13 +1835,6 @@ Boolean MCSocket::initsslcontext()
 	return t_success;
 }
 
-#if defined(TARGET_PLATFORM_MACOS_X)
-bool load_ssl_ctx_certs_from_folder(SSL_CTX *p_ssl_ctx, const char *p_path)
-{
-	// on OSX, we're still using the provided version of openSSL so this should still work
-	return SSL_CTX_load_verify_locations(p_ssl_ctx, NULL, p_path);
-}
-#else
 struct cert_folder_load_context_t
 {
 	const char *path;
@@ -1850,7 +1869,6 @@ bool load_ssl_ctx_certs_from_folder(SSL_CTX *p_ssl_ctx, const char *p_path)
 	
 	return t_success;
 }
-#endif
 
 bool load_ssl_ctx_certs_from_file(SSL_CTX *p_ssl_ctx, const char *p_path)
 {
@@ -1987,11 +2005,7 @@ bool export_system_root_cert_stack(STACK_OF(X509) *&r_x509_stack)
 		for (UInt32 i = 0; t_success && i < t_anchor_count; i++)
 		{
 			X509 *t_x509 = NULL;
-#if (__MAC_OS_X_VERSION_MAX_ALLOWED > 1050)
 			const unsigned char* t_data_ptr = NULL;
-#else
-			unsigned char *t_data_ptr = NULL;
-#endif
 			UInt32 t_data_len = 0;
 			
 			CSSM_DATA t_cert_data;

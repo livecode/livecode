@@ -30,7 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "osspec.h"
 
-#include "osxdc.h"
 #include "osxflst.h"
 
 #define MAX_XFONT2MACFONT    11
@@ -41,6 +40,8 @@ typedef struct _x2MacFont
 	const char *Macfontname;
 }
 X2MacFontTable;
+
+extern WindowPtr MCMacGetInvisibleWindow(void);
 
 static X2MacFontTable XMfonts[MAX_XFONT2MACFONT] = { // X to Mac font table
             { "Charter", "Courier" },
@@ -99,8 +100,8 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size, uint2 style)
 	CGrafPtr oldport;
 	GDHandle olddevice;
 	GetGWorld(&oldport, &olddevice);
-	MCScreenDC *pms = (MCScreenDC *)MCscreen;
-	SetGWorld(GetWindowPort(pms->getinvisiblewin()), GetMainDevice());
+	//MCScreenDC *pms = (MCScreenDC *)MCscreen;
+	SetGWorld(GetWindowPort(MCMacGetInvisibleWindow()), GetMainDevice());
 	TextFont(ffamilyid);
 
 	Style tstyle = 0;

@@ -186,7 +186,7 @@ void MCTooltip::opentip()
 	openrect(trect, WM_TOOLTIP, NULL, WP_DEFAULT,OP_NONE);
 	state |= CS_NO_FOCUS;
 
-	if (MCcurtheme != NULL && window != DNULL)
+	if (MCcurtheme != NULL && window != NULL)
 		MCcurtheme -> applythemetotooltipwindow(window, rect);
 }
 

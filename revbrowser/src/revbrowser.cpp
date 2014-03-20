@@ -105,6 +105,7 @@ public:
 	int GetCallbackDepth(int p_id);
 	
 	bool Callback(int p_instance_id, const char *p_message, const char *p_url = NULL);
+	bool Callback(int p_id, const char *p_message, char **p_args, uint32_t p_arg_count, bool &r_pass);
 
 	void SetActiveInstanceId(int t_id);
 
@@ -124,6 +125,9 @@ private:
 	BrowserInstance *m_instances;
 	BrowserInstance *m_active_instance;
 	int m_last_instance_id;
+
+	bool FindInstanceById(int p_id, BrowserInstance *&r_instance);
+	void SendMessage(BrowserInstance *p_instance, const char *p_message, bool &r_pass);
 };
 
 static BrowserInstances s_browsers;
@@ -150,6 +154,20 @@ BrowserInstances::~BrowserInstances(void)
 		
 		m_instances = t_next;
 	}
+}
+
+bool BrowserInstances::FindInstanceById(int p_id, BrowserInstance *&r_instance)
+{
+	for(BrowserInstance *t_instance = m_instances; t_instance != nil; t_instance = t_instance->next)
+	{
+		if (t_instance->instance_id == p_id)
+		{
+			r_instance = t_instance;
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void BrowserInstances::Add(CWebBrowserBase *p_browser, bool p_is_xbrowser)
@@ -217,18 +235,18 @@ CWebBrowserBase *BrowserInstances::GetActiveInstance(void)
 
 CWebBrowserBase *BrowserInstances::GetInstance(int p_id)
 {
-	for(BrowserInstance *t_instance = m_instances; t_instance != NULL; t_instance = t_instance -> next)
-		if (t_instance -> instance_id == p_id)
-			return t_instance -> browser;
-
-	return NULL;
+	BrowserInstance *t_instance;
+	if (FindInstanceById(p_id, t_instance))
+		return t_instance->browser;
+	else
+		return nil;
 }
 
 void BrowserInstances::SetActiveInstanceId(int p_id)
 {
-	for(BrowserInstance *t_instance = m_instances; t_instance != NULL; t_instance = t_instance -> next)
-		if (t_instance -> instance_id == p_id)
-			m_active_instance = t_instance;
+	BrowserInstance *t_instance;
+	if (FindInstanceById(p_id, t_instance))
+		m_active_instance = t_instance;
 }
 
 char *BrowserInstances::GetInstanceIds(void)
@@ -251,14 +269,196 @@ char *BrowserInstances::GetInstanceIds(void)
 int BrowserInstances::GetCallbackDepth(int p_id)
 {
 	BrowserInstance *t_instance;
-	for(t_instance = m_instances; t_instance != NULL; t_instance = t_instance -> next)
-		if (t_instance -> instance_id == p_id)
-			break;
+	if (FindInstanceById(p_id, t_instance))
+		return t_instance->callback_depth;
+	else
+		return 0;
+}
 
-	if (t_instance != NULL)
-		return t_instance -> callback_depth;
+bool is_escape_char(char p_char)
+{
+	return p_char == '"';
+}
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Handle double-quote in strings by generating LC expression
+// that evaluates to the original string (using string concatenation with the "quote" constant)
+bool MCCStringQuote(const char *p_string, char *&r_quoted)
+{
+	if (p_string == nil || p_string[0] == '\0')
+		return MCCStringClone("", r_quoted);
+
+	bool t_success;
+	t_success = true;
+
+	char *t_quoted;
+	t_quoted = nil;
+
+	while (t_success && *p_string)
+	{
+		if (!is_escape_char(*p_string))
+		{
+			const char *t_run_start;
+			t_run_start = p_string;
+
+			uint32_t t_run_length;
+			t_run_length = 0;
+
+			while (*p_string != '\0' && !is_escape_char(*p_string))
+				p_string++;
+
+			t_run_length = p_string - t_run_start;
+
+			t_success = MCCStringAppendFormat(t_quoted, t_quoted == nil ? "\"%*.*s\"" : "&\"%*.*s\"", t_run_length, t_run_length, t_run_start);
+		}
+		else if (*p_string == '"')
+		{
+			t_success = MCCStringAppend(t_quoted, t_quoted == nil ? "quote" : "&quote");
+			p_string++;
+		}
+	}
+
+	if (t_success)
+		r_quoted = t_quoted;
+	else if (t_quoted != nil)
+		MCCStringFree(t_quoted);
+
+	return t_success;
+}
+
+#define MCSCRIPT_CALLBACK "\
+local tID=%d;\
+local tWinID=%d\
+%s;%s\
+global XBrowservar;\
+if XBrowservar is empty or the windowId of XBrowservar is not tWinID then;\
+repeat for each line tLine in the openStacks;\
+if the windowId of stack tLine is tWinID then;\
+put the long id of stack tLine into XBrowservar;\
+exit repeat;\
+end if;\
+end repeat;\
+end if;\
+send \"%s tID%s\" to this card of XBrowservar"
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Create script to call handler with the given parameters
+bool revBrowserCreateCallbackScript(int p_id, int p_window_id, const char *p_message, char **p_args, uint32_t p_arg_count, char *&r_script)
+{
+	bool t_success;
+	t_success = true;
+
+	char *t_assigns;
+	t_assigns = nil;
+
+	char *t_locals;
+	t_locals = nil;
+
+	for (uint32_t i = 0; t_success && i < p_arg_count; i++)
+	{
+		char *t_quoted_string;
+		t_quoted_string = nil;
+
+		t_success = MCCStringQuote(p_args[i], t_quoted_string);
+		if (t_success)
+		{
+			t_success = MCCStringAppendFormat(t_locals, ", tArg%d", i);
+			if (t_success)
+				t_success = MCCStringAppendFormat(t_assigns, "put %s into tArg%d;", t_quoted_string, i);
+		}
+
+		if (t_quoted_string != nil)
+			MCCStringFree(t_quoted_string);
+	}
+
+	char *t_script;
+	t_script = nil;
+
+	if (t_success)
+	{
+		// IM-2014-03-13: [[ revBrowserCEF ]] fix const ptr compile error
+		const char *t_locals_str = t_locals ? t_locals : "";
+		const char *t_assigns_str = t_assigns ? t_assigns : "";
+		t_success = MCCStringFormat(t_script, MCSCRIPT_CALLBACK, p_id, p_window_id, t_locals_str, t_assigns_str, p_message, t_locals_str);
+	}
+	if (t_locals)
+		MCCStringFree(t_locals);
+	if (t_assigns)
+		MCCStringFree(t_assigns);
+
+	if (t_success)
+		r_script = t_script;
+	else
+	{
+		if (t_script)
+			MCCStringFree(t_script);
+	}
+
+	return t_success;
+}
+
+bool BrowserInstances::Callback(int p_id, const char *p_message, char **p_args, uint32_t p_arg_count, bool &r_pass)
+{
+	bool t_success;
+	t_success = true;
+
+	BrowserInstance *t_instance;
+	if (t_success)
+		t_success = FindInstanceById(p_id, t_instance);
+
+	if (t_success)
+	{
+		int t_retval;
+		if (t_instance -> stack_id != NULL)
+			SetGlobal("XBrowservar", t_instance -> stack_id, &t_retval);
+		else
+			SetGlobal("XBrowservar", "", &t_retval);
+	}
+
+	char *t_script;
+	t_script = nil;
+
+	if (t_success)
+		t_success = revBrowserCreateCallbackScript(p_id, t_instance->browser->GetWindowId(), p_message, p_args, p_arg_count, t_script);
+
+	bool t_pass;
+	if (t_success)
+		SendMessage(t_instance, t_script, t_pass);
+
+	if (t_script)
+		MCCStringFree(t_script);
+
+	if (t_success)
+		r_pass = t_pass;
+
+	return t_success;
+}
+
+void BrowserInstances::SendMessage(BrowserInstance *p_instance, const char *p_message, bool &r_pass)
+{
+	int t_retval;
+	SetGlobal(p_instance->xbrowser_callbacks ? "XBrowserCancel" : "browserCancel", "FALSE", &t_retval);
+
+	p_instance -> callback_depth += 1;
+	SendCardMessage(p_message, &t_retval);
+	p_instance -> callback_depth -= 1;
 	
-	return 0;
+	if (p_instance -> stack_id != NULL)
+		free(p_instance -> stack_id);
+
+	p_instance -> stack_id = GetGlobal("XBrowservar", &t_retval);
+
+	bool t_pass;
+
+	char *t_cancel;
+	t_cancel = GetGlobal(p_instance -> xbrowser_callbacks ? "XBrowserCancel" : "browserCancel", &t_retval);
+	if (t_cancel != NULL)
+	{
+		t_pass = !StrToBool(t_cancel);
+		free(t_cancel);
+	}
+	else
+		t_pass = true;
+
+	r_pass = t_pass;
 }
 
 bool BrowserInstances::Callback(int p_id, const char *p_message, const char *p_argument)
@@ -301,11 +501,7 @@ end if;\
 send \"browser%s\" && %d, quote & \"%s\" & quote to this card of XBrowservar";
 
 	BrowserInstance *t_instance;
-	for(t_instance = m_instances; t_instance != NULL; t_instance = t_instance -> next)
-		if (t_instance -> instance_id == p_id)
-			break;
-
-	if (t_instance == NULL)
+	if (!FindInstanceById(p_id, t_instance))
 		return true;
 
 	int t_retval;
@@ -435,6 +631,15 @@ BrowserProp browserProperties[] =
 //
 //  CALLBACKS
 //
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Send a custom callback with the given params
+void CB_Custom(int p_instance_id, const char *p_message, char **p_args, uint32_t p_arg_count, bool *r_cancel)
+{
+	bool t_success, t_pass;
+	t_success = s_browsers.Callback(p_instance_id, p_message, p_args, p_arg_count, t_pass);
+
+	*r_cancel = t_success && !t_pass;
+}
 
 // Callback:
 //   XBrowser_BeforeNavigate pURL
@@ -601,7 +806,7 @@ void CB_NewWindow(int p_instance_id, const char *p_url)
 // Result:
 //   The instance ID of the new browser.
 //
-void commonBrowserOpen(bool p_is_xbrowser, char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+void commonBrowserOpen(bool p_is_xbrowser, bool p_is_cef_browser, char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
 	char *result = NULL;
 	char inID[255];
@@ -609,7 +814,11 @@ void commonBrowserOpen(bool p_is_xbrowser, char *args[], int nargs, char **retst
 	if( nargs > 0  )
 	{
 		CWebBrowserBase *t_browser;
-		t_browser = InstantiateBrowser(atoi(args[0]));
+		if (p_is_cef_browser)
+			t_browser = MCCefBrowserInstantiate(atoi(args[0]));
+		else
+			t_browser = InstantiateBrowser(atoi(args[0]));
+
 
 		if (t_browser != NULL)
 		{
@@ -641,12 +850,18 @@ void commonBrowserOpen(bool p_is_xbrowser, char *args[], int nargs, char **retst
 
 void revBrowserOpen(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
-	commonBrowserOpen(false, args, nargs, retstring, pass, error);
+	commonBrowserOpen(false, false, args, nargs, retstring, pass, error);
+}
+
+// IM-2014-03-18: [[ revBrowserCEF ]] create new browser instance using CEF
+void revBrowserOpenCef(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	commonBrowserOpen(false, true, args, nargs, retstring, pass, error);
 }
 
 void XBrowserOpen(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
-	commonBrowserOpen(true, args, nargs, retstring, pass, error);
+	commonBrowserOpen(true, false, args, nargs, retstring, pass, error);
 }
 
 // Command:
@@ -808,7 +1023,7 @@ void revBrowserExecuteScript(CWebBrowserBase *p_instance, char *args[], int narg
 		t_result = t_browser -> ExecuteScript(args[0]);
 		if (t_result == NULL)
 		{
-			*retstring = "error in script";
+			*retstring = strdup("error in script");
 			*error = True;
 		}
 		else
@@ -1108,6 +1323,61 @@ void revBrowserSnapshot(CWebBrowserBase *p_instance, char *args[], int nargs, ch
 	*retstring = result != NULL ? result: (char *)calloc(1,0);
 }
 
+// IM-2014-03-06: [[ revBrowserCEF ]] Allows a LiveCode handler to be called from within JavaScript
+// creates a JS function with the same name as the handler within a global liveCode JS object
+void revBrowserAddJavaScriptHandler(CWebBrowserBase *p_instance, char *p_args[], int p_arg_count, char **r_result, Bool *r_pass, Bool *r_error)
+{
+	char *result = NULL;
+
+	bool t_success;
+	t_success = true;
+
+	// We must be given 1 argument. The argument is the handler name to add.
+	if (t_success)
+	{
+		if (p_arg_count != 1)
+		{
+			/* UNCHECKED */ MCCStringClone("incorrect number of arguments", *r_result);
+			t_success = false;
+		}
+	}
+
+	if (t_success)
+		p_instance->AddJavaScriptHandler(p_args[0]);
+
+	*r_error = !t_success;
+	*r_pass = False;
+	if (*r_result == nil)
+		/* UNCHECKED */ MCCStringClone("", *r_result);
+}
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Removes the named handler function from the global liveCode JS object
+void revBrowserRemoveJavaScriptHandler(CWebBrowserBase *p_instance, char *p_args[], int p_arg_count, char **r_result, Bool *r_pass, Bool *r_error)
+{
+	char *result = NULL;
+
+	bool t_success;
+	t_success = true;
+
+	// We must be given 1 argument. The argument is the handler name to add.
+	if (t_success)
+	{
+		if (p_arg_count != 1)
+		{
+			/* UNCHECKED */ MCCStringClone("incorrect number of arguments", *r_result);
+			t_success = false;
+		}
+	}
+
+	if (t_success)
+		p_instance->RemoveJavaScriptHandler(p_args[0]);
+
+	*r_error = !t_success;
+	*r_pass = False;
+	if (*r_result == nil)
+		/* UNCHECKED */ MCCStringClone("", *r_result);
+}
+
 // Function:
 //   revBrowserGet(pInstanceId, pProperty)
 // Description:
@@ -1254,7 +1524,7 @@ void revBrowserGetProp(CWebBrowserBase *p_instance, char *args[], int nargs, cha
 	break;
 	}
 
-	*retstring = result != NULL ? result: (char *)calloc(1,0);
+	*retstring = result != NULL ? result: (char *)calloc(1,1);
 }
 
 // Property:
@@ -1423,7 +1693,7 @@ void revBrowserSetProp(CWebBrowserBase *p_instance, char *args[], int nargs, cha
 		break;
 		
 		case BROWSERPROP_HSCROLL:
-			t_browser -> SetHScroll(atof(args[1]));
+			t_browser -> SetHScroll(atoi(args[1]));
 		break;
 
 		case BROWSERPROP_WINDOWID:
@@ -1617,6 +1887,7 @@ template<BrowserHandler u_handler> void revBrowserWrapper(char *p_arguments[], i
 
 EXTERNAL_BEGIN_DECLARATIONS("revBrowser")
 	EXTERNAL_DECLARE_FUNCTION_OBJC("revBrowserOpen", revBrowserOpen)
+	EXTERNAL_DECLARE_FUNCTION_OBJC("revBrowserOpenCef", revBrowserOpenCef)
 	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserClose", revBrowserWrapper<revBrowserClose>)
 	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserStop", revBrowserWrapper<revBrowserStop>)
 	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserRefresh", revBrowserWrapper<revBrowserRefresh>)
@@ -1634,6 +1905,8 @@ EXTERNAL_BEGIN_DECLARATIONS("revBrowser")
 	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserSnapshot", revBrowserWrapper<revBrowserSnapshot>)
 	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserFind", revBrowserWrapper<revBrowserFind>)
 	EXTERNAL_DECLARE_FUNCTION_OBJC("revBrowserCallScript", revBrowserWrapper<revBrowserCallScript>)
+	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserAddJavaScriptHandler", revBrowserWrapper<revBrowserAddJavaScriptHandler>)
+	EXTERNAL_DECLARE_COMMAND_OBJC("revBrowserRemoveJavaScriptHandler", revBrowserWrapper<revBrowserRemoveJavaScriptHandler>)
 	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Open", XBrowserOpen)
 	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Close", XBrowserWrapper<revBrowserClose> )
 	EXTERNAL_DECLARE_COMMAND_OBJC("XBrowser_Stop", XBrowserWrapper<revBrowserStop> )

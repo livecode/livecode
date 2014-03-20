@@ -63,13 +63,6 @@ MCImage *MCButton::macrbhilite = NULL;
 MCImage *MCButton::macrbhilitetrack = NULL;
 uint2 MCButton::focusedtab = MAXUINT2;
 
-// MW-2007-12-11: [[ Bug 5670 ]] This global is set to false before a card issues an
-//   mdown to its focused control. If the mdown resulted in a popup being shown on OS X, then it will be
-//   set to true. This is to work around the problem with the mouse down message being 'cancelled' on a
-//   popup-menu action resulting in the group mdown not returning true, and thus causing the card to
-//   send an errant mdown message to the script.
-
-bool MCosxmenupoppedup = false;
 bool MCmenupoppedup = false;
 
 Keynames MCButton::button_keys[] =
@@ -253,11 +246,7 @@ MCButton::MCButton()
 	menulines = DEFAULT_MENU_LINES;
 	menuhasitemtags = false;
 	menu = NULL; //stack based menu
-
-#ifdef _MAC_DESKTOP
-	bMenuID = 0; //for button/object based menus
-#endif
-
+	m_system_menu = NULL;
 	entry = NULL;
 	tabs = NULL;
 	ntabs = 0;
@@ -308,6 +297,7 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
 		memcpy(menustring, bref.menustring, menusize);
 	}
 	menu = NULL;
+	m_system_menu = NULL;
 	entry = NULL;
 	tabs = NULL;
 	ntabs = 0;
@@ -323,10 +313,6 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
 	accelmods = bref.accelmods;
 	mnemonic = bref.mnemonic;
 	ishovering = False;
-
-#ifdef _MAC_DESKTOP
-	bMenuID = 0;
-#endif
 
 	if (bref.bdata != NULL)
 	{
@@ -498,6 +484,10 @@ void MCButton::close()
 			tabs = NULL;
 			ntabs = 0;
 		}
+		// AL-2013-01-13 [[ Bug 11363 ]] Close menu on button close. 
+		if (state & CS_SUBMENU)
+			closemenu(True, True);
+
 		freemenu(False);
 		if (entry != NULL)
 		{
@@ -899,7 +889,8 @@ Boolean MCButton::mfocus(int2 x, int2 y)
 				if ((MClook != LF_WIN95) || menuname != NULL)
 					break;
 			case WM_COMBO:
-				if (state & CS_MFOCUSED)
+				// MW-2014-03-11: [[ Bug 11893 ]] Make sure we don't do anything to a stack panel.
+				if (state & CS_MFOCUSED && menuname == NULL)
 				{
 					uint2 fheight;
 					fheight = gettextheight();
@@ -1165,6 +1156,7 @@ Boolean MCButton::mdown(uint2 which)
 		return True;
 	}
 	if (which == Button1)
+	{
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
@@ -1214,8 +1206,11 @@ Boolean MCButton::mdown(uint2 which)
 		default:
 			return False;
 		}
+	}
 	else
+	{
 		message_with_args(MCM_mouse_down, which);
+	}
 	return True;
 }
 
@@ -1369,6 +1364,7 @@ Boolean MCButton::mup(uint2 which)
 		return True;
 	}
 	if (which == Button1)
+	{
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
@@ -1461,7 +1457,9 @@ Boolean MCButton::mup(uint2 which)
 		default:
 			return False;
 		}
+	}
 	else
+	{
 		if (MCU_point_in_rect(rect, mx, my))
 		{
 			state |= CS_VISITED;
@@ -1469,6 +1467,7 @@ Boolean MCButton::mup(uint2 which)
 		}
 		else
 			message_with_args(MCM_mouse_release, which);
+	}
 	if (state & CS_ARMED)
 	{
 		state &= ~CS_ARMED;
@@ -2727,8 +2726,8 @@ void MCButton::activate(Boolean notify, uint2 key)
 		if (menu != NULL)
 			menu->findaccel(key, pick, t_disabled);
 #ifdef _MAC_DESKTOP
-		else if (bMenuID != 0)
-			getmacmenuitemtextfromaccelerator(bMenuID, key, MCmodifierstate, pick, hasunicode(), false);
+		else if (m_system_menu != nil)
+			getmacmenuitemtextfromaccelerator(m_system_menu, key, MCmodifierstate, pick, hasunicode(), false);
 #endif
 		if (pick.getstring() == NULL)
 		{
@@ -3607,7 +3606,8 @@ void MCButton::openmenu(Boolean grab)
 		menu->openrect(rel, (Window_mode)menumode, NULL, WP_DEFAULT, OP_NONE);
 		menu -> mode_openasmenu(t_did_grab ? sptr : NULL);
 		
-		if (menumode == WM_OPTION)
+		// MW-2014-03-11: [[ Bug 11893 ]] Make sure we don't do anything to a stack panel.
+		if (menumode == WM_OPTION && menuname == nil)
 		{
 			MCField *t_field = NULL;
 			MCObjptr *t_obj = menu->getcurcard()->getrefs();

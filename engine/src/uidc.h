@@ -110,14 +110,18 @@ typedef struct
 }
 MCMessageList;
 
+// IM-2014-01-23: [[ HiDPI ]] Add screen pixelScale field to display info
+// IM-2014-01-23: [[ HiDPI ]] Remove device-coordinate versions of viewport & workarea rects
 struct MCDisplay
 {
 	uint4 index;
-	MCRectangle device_viewport;
-	MCRectangle device_workarea;
+//	MCRectangle device_viewport;
+//	MCRectangle device_workarea;
 	
 	MCRectangle viewport;
 	MCRectangle workarea;
+	
+	MCGFloat pixel_scale;
 };
 
 enum MCColorSpaceType
@@ -203,6 +207,17 @@ struct MCImageBuffer;
 
 //
 
+// IM-2014-03-06: [[ revBrowserCEF ]] Actions to call during the runloop
+typedef void (*MCRunloopActionCallback)(void *context);
+
+typedef struct _MCRunloopAction
+{
+	MCRunloopActionCallback callback;
+	void *context;
+
+	_MCRunloopAction *next;
+} MCRunloopAction, *MCRunloopActionRef;
+
 enum
 {
 	kMCAnswerDialogButtonOk,
@@ -255,6 +270,15 @@ protected:
 	uint2 greenbits;
 	uint2 bluebits;
 	const char *  m_sound_internal ;
+	
+	// IM-2014-01-24: [[ HiDPI ]] Cache displays array returned from platform-specific methods
+	static MCDisplay *s_displays;
+	static uint4 s_display_count;
+	static bool s_display_info_effective;
+
+	// IM-2014-03-06: [[ revBrowserCEF ]] List of actions to run during the runloop
+	MCRunloopAction *m_runloop_actions;
+	
 public:
 	MCColor white_pixel;
 	MCColor black_pixel;
@@ -305,7 +329,24 @@ public:
 	// IM-2013-07-31: [[ ResIndependence ]] refactor logical coordinate based methods
 	uint2 getwidth();
 	uint2 getheight();
+	
 	uint4 getdisplays(MCDisplay const *& p_displays, bool effective);
+	
+	// IM-2014-01-28: [[ HiDPI ]] Update the currently held display info, returning whether or not an changes have occured
+	void updatedisplayinfo(bool &r_changed);
+
+	// IM-2014-01-24: [[ HiDPI ]] Clear the currently held display information. Should be called
+	// when the display info needs to be refreshed, for example when a screen is (dis)connected
+	// or screen resolution settings are changed.
+	void cleardisplayinfocache(void);
+	
+	// IM-2014-01-28: [[ HiDPI ]] Return true if the platform can detect
+	//   desktop changes and will clear the cache when changes occur.
+	virtual bool platform_displayinfocacheable(void);
+	
+	// IM-2014-01-24: [[ HiDPI ]] Return the maximum pixel scale of all displays in use
+	bool getmaxdisplayscale(MCGFloat &r_scale);
+	
 	const MCDisplay *getnearestdisplay(const MCRectangle& p_rectangle);
 	Boolean getwindowgeometry(Window w, MCRectangle &drect);
 	void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
@@ -317,17 +358,17 @@ public:
 	
 //////////
 	
-	const MCDisplay *device_getnearestdisplay(const MCRectangle& p_rectangle);
+	// IM-2014-01-23: [[ HiDPI ]] Change device methods to platform-specific logical-coordinate based methods
 	
-	virtual uint16_t device_getwidth(void);
-	virtual uint16_t device_getheight(void);
-	virtual bool device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
-	virtual bool device_getwindowgeometry(Window w, MCRectangle &drect);
-	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
-	virtual void device_querymouse(int16_t &r_x, int16_t &r_y);
-	virtual void device_setmouse(int16_t p_x, int16_t p_y);
+	virtual uint16_t platform_getwidth(void);
+	virtual uint16_t platform_getheight(void);
+	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
+	virtual bool platform_getwindowgeometry(Window w, MCRectangle &drect);
+	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void platform_querymouse(int16_t &r_x, int16_t &r_y);
+	virtual void platform_setmouse(int16_t p_x, int16_t p_y);
 
-	virtual MCStack *device_getstackatpoint(int32_t x, int32_t y);
+	virtual MCStack *platform_getstackatpoint(int32_t x, int32_t y);
 	
 ////////////////////////////////////////////////////////////////////////////////
 	
@@ -378,7 +419,7 @@ public:
 	virtual void getvendorstring(MCExecPoint &ep);
 	virtual uint2 getpad();
 	virtual Window getroot();
-	virtual MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale, uint4 window, const char *displayname);
+	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size);
 
 	virtual void enablebackdrop(bool p_hard = false);
 	virtual void disablebackdrop(bool p_hard = false);
@@ -413,6 +454,13 @@ public:
 	// and such to be processed. If the wait was called with 'anyevent' True
 	// then it will cause termination of the wait.
 	virtual void pingwait(void);
+
+	// IM-2014-03-06: [[ revBrowserCEF ]] Add action to runloop
+	bool AddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action);
+	// IM-2014-03-06: [[ revBrowserCEF ]] Remove action from runloop
+	void RemoveRunloopAction(MCRunloopActionRef p_action);
+	// IM-2014-03-06: [[ revBrowserCEF ]] Perform runloop actions
+	void DoRunloopActions(void);
 
 	virtual void flushevents(uint2 e);
 	virtual void updatemenubar(Boolean force);
@@ -517,7 +565,7 @@ public:
 	// The method returns the actual result of the drag-drop operation - DRAG_ACTION_NONE meaning
 	// that no drop occured.
 	//
-	virtual MCDragAction dodragdrop(MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset);
+	virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset);
 	
 	//
 
@@ -535,6 +583,11 @@ public:
     virtual bool unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle);
     
     //
+	
+	virtual void controlgainedfocus(MCStack *s, uint32_t id);
+	virtual void controllostfocus(MCStack *s, uint32_t id);
+	
+	//
 
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
 	void cancelmessageindex(uint2 i, Boolean dodelete);

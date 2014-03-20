@@ -565,7 +565,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 			
 			// IM-2013-08-12: [[ ResIndependence ]] Scale mouse coords to user space
 			MCGFloat t_scale;
-			t_scale = MCResGetDeviceScale();
+			t_scale = MCResGetPixelScale();
 			
 			MCPoint t_mouseloc;
 			t_mouseloc = MCPointMake(mevent->x / t_scale, mevent->y / t_scale);
@@ -610,7 +610,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 			
 			// IM-2013-08-12: [[ ResIndependence ]] Scale mouse coords to user space
 			MCGFloat t_scale;
-			t_scale = MCResGetDeviceScale();
+			t_scale = MCResGetPixelScale();
 			
 			MCPoint t_clickloc;
 			t_clickloc = MCPointMake(brevent->x / t_scale, brevent->y / t_scale);

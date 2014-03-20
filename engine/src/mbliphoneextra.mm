@@ -1277,8 +1277,9 @@ static Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_p
 	if (!s_resolved)
 	{
 		s_resolved = true;
+        // SN-2014-01-31: [[ Bug 11703 ]] dlsym returns a pointer to NSString and not a NSString
 		for(int i = 0; i < sizeof(s_props) / sizeof(s_props[0]); i++)
-			s_props[i] . property = (NSString *)dlsym(RTLD_SELF, s_props[i] . property_symbol);
+			s_props[i] . property = *(NSString **)dlsym(RTLD_SELF, s_props[i] . property_symbol);
 		s_info_center = NSClassFromString(@"MPNowPlayingInfoCenter");
 	}
 	
@@ -1318,6 +1319,8 @@ static Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_p
 				case kRCDPropTypeImage:
                 {
                     UIImage *t_image;
+                    // SN-2014-01-31: [[ Bug 11703 ]] t_image wasn't initialised to nil
+                    t_image = nil;
                     if (MCImageDataIsJPEG(ep . getsvalue()) ||
                         MCImageDataIsGIF(ep . getsvalue()) ||
                         MCImageDataIsPNG(ep . getsvalue()))
@@ -1390,6 +1393,14 @@ extern Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters);
+
+extern Exec_stat MCHandleMakePurchase(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleConfirmPurchase(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleConsumePurchase(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleGetPurchases(void *context, MCParameter *p_parameters);
+
 
 extern Exec_stat MCHandleComposeTextMessage(void *, MCParameter *);
 extern Exec_stat MCHandleCanComposeTextMessage(void *, MCParameter *);
@@ -1737,6 +1748,20 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "mobilePurchaseSendRequest", MCHandlePurchaseSendRequest, nil},
 	{false, "mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},
     
+    {false, "mobileStoreCanMakePurchase", MCHandleCanMakePurchase, nil},
+    {false, "mobileStoreEnablePurchaseUpdates", MCHandleEnablePurchaseUpdates, nil},
+	{false, "mobileStoreDisablePurchaseUpdates", MCHandleDisablePurchaseUpdates, nil},
+    {false, "mobileStoreRestorePurchases", MCHandleRestorePurchases, nil},
+    {false, "mobileStoreMakePurchase", MCHandleMakePurchase, nil},
+    {false, "mobileStoreConfirmPurchase", MCHandleConfirmPurchase, nil},
+    {false, "mobileStoreProductProperty", MCHandleGetPurchaseProperty, nil},
+    {false, "mobileStoreSetProductType", MCHandleProductSetType, nil},
+    {false, "mobileStoreRequestProductDetails", MCHandleRequestProductDetails, nil},
+    {false, "mobileStoreConsumePurchase", MCHandleConsumePurchase, nil},
+    {false, "mobileStorePurchasedProducts", MCHandleGetPurchases, nil},
+    {false, "mobileStorePurchaseError", MCHandlePurchaseError, nil},
+    //{false, "mobileGetPurchases", MCHandlePurchaseList, nil},
+
     {false, "iphoneRequestProductDetails", MCHandleRequestProductDetails, nil},
     
     {true, "mobilePickContact", MCHandlePickContact, nil},       // ABPeoplePickerNavigationController

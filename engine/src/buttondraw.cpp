@@ -718,25 +718,24 @@ void MCButton::drawcheck(MCDC *dc, MCRectangle &srect, Boolean white)
 		}
 		if (state & CS_HILITED)
 		{
-			MCPoint p[9];
-			p[0].x = p[5].x = p[6].x = trect.x + 1;
-			p[1].x = p[4].x = p[7].x = p[0].x + 2;
-			p[2].x = p[3].x = p[8].x = p[1].x + 4;
+			// MM-2013-12-16: [[ Bug 11558 ]] Convert checkmark drawing to use polygons rather than lines.
+			MCPoint p[6];
+			p[0].x = p[5].x = trect.x + 1;
+			p[1].x = p[4].x = p[0].x + 2;
+			p[2].x = p[3].x = p[1].x + 5;
 			p[0].y = trect.y + 3;
 			p[1].y = p[0].y + 2;
-			p[2].y = p[1].y - 4;
-			p[3].y = p[2].y + 1;
-			p[4].y = p[1].y + 1;
-			p[5].y = p[0].y + 1;
-			p[6].y = p[0].y + 2;
-			p[7].y = p[1].y + 2;
-			p[8].y = p[2].y + 2;
+			p[2].y = p[1].y - 5;
+			p[3].y = p[2].y + 3;
+			p[4].y = p[1].y + 3;
+			p[5].y = p[0].y + 3;
+
 			if (white && state & CS_ARMED)
 				dc->setforeground(dc->getwhite());
 			else
 				dc->setforeground(dc->getblack());
 			dc->setfillstyle(FillSolid, nil, 0, 0);
-			dc->drawlines(p, 9);
+			dc->fillpolygon(p, 6);
 		}
 		break;
 	case LF_MOTIF:

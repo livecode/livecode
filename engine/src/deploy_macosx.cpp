@@ -1736,7 +1736,10 @@ Exec_stat MCDeployToMacOSX(const MCDeployParameters& p_params)
 
 				fat_arch t_ppc_arch;
 				t_ppc_arch . cputype = CPU_TYPE_POWERPC;
-				t_ppc_arch . cpusubtype = CPU_SUBTYPE_POWERPC_ALL;
+				
+				// MM-2014-02-06: [[ GCC Update ]] Updating the version of GCC to 4.2 has meant that we now produce ppc7400 only executables (rather than ppc all).
+				t_ppc_arch . cpusubtype = CPU_SUBTYPE_POWERPC_7400;
+				
 				t_ppc_arch . offset = t_ppc_offset;
 				t_ppc_arch . size = t_ppc_size;
 				t_ppc_arch . align = 12;

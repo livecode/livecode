@@ -677,17 +677,17 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 						MCperror -> add(PE_IMPORT_BADFILENAME, sp);
 						return PS_ERROR;
 					}
-					
-					if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
-					{
-						if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
-							sp . parseexp(False, True, &size) != PS_NORMAL)
-						{
-							MCperror -> add(PE_IMPORT_BADFILENAME, sp);
-							return PS_ERROR;
-						}
-					}
 				}
+			}
+		}
+		
+		if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
+		{
+			if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
+				sp . parseexp(False, True, &size) != PS_NORMAL)
+			{
+				MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+				return PS_ERROR;
 			}
 		}
 	}
@@ -943,7 +943,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			t_bitmap = MCscreen->snapshot(r, 1.0, w, sdisp);
+			t_bitmap = MCscreen->snapshot(r, w, sdisp, size == NULL ? nil : &t_wanted_size);
 			if (t_bitmap == nil)
 			{
 				delete sdisp;
@@ -1656,7 +1656,7 @@ Parse_stat MCImport::parse(MCScriptPoint &sp)
 					bool t_need_effects;
 					if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 						t_need_effects = true, with_effects = true;
-				else if (sp . skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
+					else if (sp . skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
 						t_need_effects = true, with_effects = false;
 					else
 						t_need_effects = false;
@@ -1667,19 +1667,21 @@ Parse_stat MCImport::parse(MCScriptPoint &sp)
 						MCperror -> add(PE_IMPORT_BADFILENAME, sp);
 						return PS_ERROR;
 					}
-					
-					if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
-					{
-						if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
-							sp . parseexp(False, True, &size) != PS_NORMAL)
-						{
-							MCperror -> add(PE_IMPORT_BADFILENAME, sp);
-							return PS_ERROR;
-						}
-					}
 				}
 			}
 		}
+		
+		// MW-2014-02-20: [[ Bug 11811 ]] Add the 'at size' clause to screen snapshot.
+		if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
+		{
+			if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
+				sp . parseexp(False, True, &size) != PS_NORMAL)
+			{
+				MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+				return PS_ERROR;
+			}
+		}
+		
 		return PS_NORMAL;
 	}
 	if (sp.skip_token(SP_FACTOR, TT_FROM) != PS_NORMAL)
@@ -1777,10 +1779,6 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 	t_needs_unpremultiply = false;
 	if (format == EX_SNAPSHOT)
 	{
-		// IM-2013-08-01: [[ ResIndependence ]] Resolution scale for snapshots - unless specified should produce point-scale image
-		MCGFloat t_image_scale;
-		t_image_scale = 1.0;
-		
 		char *disp = NULL;
 		if (dname != NULL)
 		{
@@ -1852,7 +1850,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 				return ES_ERROR;
 			}
 		
-			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, t_image_scale, with_effects);
+			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, 1.0f, with_effects);
 			// OK-2007-04-24: If the import rect doesn't intersect with the object, MCobject::snapshot
 			// may return null. In this case, return an error.
 			if (t_bitmap == NULL)
@@ -1867,7 +1865,8 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			t_bitmap = MCscreen->snapshot(r, t_image_scale, w, disp);
+			// MW-2014-02-20: [[ Bug 11811 ]] Pass the wanted size to the snapshot method.
+			t_bitmap = MCscreen->snapshot(r, w, disp, size != nil ? &t_wanted_size : nil);
 
 			delete disp;
 		}
@@ -1883,7 +1882,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 			/* UNCHECKED */ iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
 			// IM-2013-08-01: [[ ResIndependence ]] pass image scale when setting bitmap
 			if (t_bitmap != nil)
-				iptr->setbitmap(t_bitmap, t_image_scale, true);
+				iptr->setbitmap(t_bitmap, 1.0f, true);
 			MCImageFreeBitmap(t_bitmap);
 		}
 	
@@ -3671,4 +3670,110 @@ Exec_stat MCWrite::exec(MCExecPoint &ep)
 	MCresult->clear(False);
 	return ES_NORMAL;
 #endif /* MCWrite */
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// MM-2014-02-12: [[ SecureSocket ]] 
+//  New secure socket command, used to ensure all future communications over the given socket are encrypted.
+//
+//  After securing:
+//    All pending and future reads from the socket will assumed to be encrypted.
+//    All pending writes will continue unencrypted. All future writes will be encrypted.
+//
+//  Unless specified, the connection will be verified.
+//
+//  Syntax:
+//    secure socket <socket>
+//    secure socket <socket> with verification
+//    secure socket <socket> without verification
+//
+MCSecure::~MCSecure()
+{
+	delete m_sock_name;
+}
+
+Parse_stat MCSecure::parse(MCScriptPoint &sp)
+{	
+	initpoint(sp);
+	
+	Symbol_type type;
+	if (sp . next(type) != PS_NORMAL)
+	{
+		MCperror -> add(PE_SECURE_NOSOCKET, sp);
+		return PS_ERROR;
+	}
+	
+	const LT *te;
+	if (sp . lookup(SP_OPEN, te) != PS_NORMAL)
+	{
+		MCperror -> add(PE_SECURE_NOSOCKET, sp);
+		return PS_ERROR;
+	}
+	
+	Open_argument t_open_arg;
+	t_open_arg = (Open_argument) te -> which;
+	if (t_open_arg != OA_SOCKET)
+	{
+		MCperror -> add(PE_SECURE_NOSOCKET, sp);
+		return PS_ERROR;
+	}
+	
+	if (sp . parseexp(False, True, &m_sock_name) != PS_NORMAL)
+	{
+		MCperror -> add(PE_SECURE_BADNAME, sp);
+		return PS_ERROR;
+	}
+	
+	if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+	{
+		if (sp . skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) == PS_NORMAL)
+			secureverify = True;
+		else
+		{
+			MCperror -> add(PE_SECURE_BADMESSAGE, sp);
+			return PS_ERROR;
+		}
+	}
+	
+	if (sp . skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
+	{
+		if (sp . skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) == PS_NORMAL)
+			secureverify = False;
+		else
+		{
+			MCperror -> add(PE_SECURE_BADMESSAGE, sp);
+			return PS_ERROR;
+		}
+	}
+	
+	return PS_NORMAL;
+}
+
+Exec_stat MCSecure::exec(MCExecPoint &ep)
+{
+#ifdef /* MCSecure */ LEGACY_EXEC
+	
+	if (m_sock_name -> eval(ep) != ES_NORMAL)
+	{
+		MCeerror -> add(EE_SECURE_BADNAME, line, pos);
+		return ES_ERROR;
+	}
+	
+	char *t_sock_name;
+	t_sock_name = ep . getsvalue() . clone();
+	
+	uint2 t_index;
+	if (IO_findsocket(t_sock_name, t_index))
+	{
+		MCS_secure_socket(MCsockets[t_index], secureverify);
+		MCresult->clear(False);
+	}
+	else
+		MCresult->sets("socket is not open");
+	
+	MCCStringFree(t_sock_name);
+	
+	return ES_NORMAL;
+#endif /* MCSecure */
 }

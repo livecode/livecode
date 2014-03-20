@@ -99,9 +99,13 @@ void MCS_shutdown(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// This is needed by opensslsocket.
+real8 curtime;
+
 real8 MCS_time(void)
 {
-	return MCsystem -> GetCurrentTime();
+	curtime = MCsystem -> GetCurrentTime();
+	return curtime;
 }
 
 void MCS_setenv(const char *p_name, const char *p_value)
@@ -1204,6 +1208,7 @@ bool MCSTextConvertToUnicode(MCTextEncoding p_encoding, const void *p_input, uin
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if !defined(TARGET_SUBPLATFORM_IPHONE)
 MCSocket::~MCSocket(void)
 {
 }
@@ -1245,6 +1250,11 @@ void MCS_write_socket(const MCString& p_data, MCSocket *p_socket, MCObject *p_ob
 MCSocket *MCS_accept(uint2 p_port, MCObject* p_object, MCNameRef p_message, Boolean p_datagram, Boolean p_secure, Boolean p_ssl_verify, char *p_ssl_cert_file)
 {
 	return NULL;
+}
+
+// MM-2014-02-12: [[ SecureSocket ]] New secure socket command
+void MCS_secure_socket(MCSocket *s, Boolean sslverify)
+{
 }
 
 void MCS_ha(MCExecPoint& ep, MCSocket *p_socket)
@@ -1310,10 +1320,6 @@ void MCS_ntoa(MCExecPoint& ep, MCExecPoint& ep2)
 	delete t_hostname;
 }
 
-void MCS_getDNSservers(MCExecPoint& ep)
-{
-}
-
 char *MCS_dnsresolve(const char *p_hostname)
 {
 	return NULL;
@@ -1322,6 +1328,12 @@ char *MCS_dnsresolve(const char *p_hostname)
 char *MCS_hostaddress(void)
 {
 	return NULL;
+}
+
+#endif
+
+void MCS_getDNSservers(MCExecPoint& ep)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////

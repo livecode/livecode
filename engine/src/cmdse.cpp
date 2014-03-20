@@ -303,7 +303,8 @@ Exec_stat MCClickCmd::exec(MCExecPoint &ep)
 
 	// IM-2013-09-23: [[ FullscreenMode ]] get / set mouseloc & clickloc in view coords
 	MCPoint t_view_clickloc;
-	t_view_clickloc = MCdefaultstackptr->view_stacktoviewloc(t_clickloc);
+	// IM-2014-01-06: [[ Bug 11624 ]] Use MCStack::stacktowindowloc to account for stack scroll
+	t_view_clickloc = MCdefaultstackptr->stacktowindowloc(t_clickloc);
 
 	uint2 oldmstate = MCmodifierstate;
 	uint2 oldbstate = MCbuttonstate;
@@ -748,7 +749,8 @@ Exec_stat MCDispatchCmd::exec(MCExecPoint& ep)
 		{
 			tptr -> clear_argument();
 			while ((stat = tptr->eval(ep)) != ES_NORMAL && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				MCB_error(ep, line, pos, EE_STATEMENT_BADPARAM);
+				if (!MCB_error(ep, line, pos, EE_STATEMENT_BADPARAM))
+					break;
 			if (stat != ES_NORMAL)
 			{
 				MCeerror->add(EE_STATEMENT_BADPARAM, line, pos);
@@ -2254,7 +2256,8 @@ Exec_stat MCStop::exec(MCExecPoint &ep)
 				MCU_play_stop();
 		break;
 	case SC_RECORDING:
-		MCtemplateplayer->stoprecording();
+		extern void MCQTStopRecording(void);	
+		MCQTStopRecording();
 		break;
 	case SC_USING:
 		{

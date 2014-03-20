@@ -425,6 +425,18 @@ extern void ShowImageByNum(const char *p_group, int p_index, int *r_success);
 extern void ShowImageById(const char *p_group, unsigned long p_id, int *r_success);
 extern void ShowImageByLongId(const char *p_long_id, int *r_success);
 
+// IM-2014-03-06: [[ revBrowserCEF ]] Definition of runloop action callback & action ref
+typedef void (*MCRunloopActionCallback)(void *context);
+typedef void *MCRunloopActionRef;
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Register the callback to run during the engine's run loop
+extern void AddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef *r_action, int *r_success);
+// IM-2014-03-06: [[ revBrowserCEF ]] Remove the runloop action from the run loop
+extern void RemoveRunloopAction(MCRunloopActionRef p_action, int *r_success);
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Run the engine runloop
+extern void RunloopWait(int *r_success);
+
 //
 extern Bool SecurityCanAccessFile(const char *p_file);
 extern Bool SecurityCanAccessHost(const char *p_host);	

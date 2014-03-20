@@ -506,9 +506,21 @@ void MCScreenDC::ungrabpointer()
 	XUngrabPointer(dpy, MCeventtime);
 }
 
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+uint16_t MCScreenDC::platform_getwidth(void)
+{
+	return device_getwidth();
+}
+
 uint16_t MCScreenDC::device_getwidth(void)
 {
 	return DisplayWidth(dpy, getscreen());
+}
+
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+uint16_t MCScreenDC::platform_getheight(void)
+{
+	return device_getheight();
 }
 
 uint16_t MCScreenDC::device_getheight(void)
@@ -646,6 +658,12 @@ Pixmap MCScreenDC::createpixmap(uint2 width, uint2 height,
 	assert ( pm != DNULL ) ;
 	
 	return pm;
+}
+
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+bool MCScreenDC::platform_getwindowgeometry(Window w, MCRectangle &r_rect)
+{
+	return device_getwindowgeometry(w, r_rect);
 }
 
 bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
@@ -930,8 +948,7 @@ Window MCScreenDC::getroot()
 	return RootWindow(dpy, getscreen());
 }
 
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
-                               const char *displayname)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size)
 {
 	Display *olddpy = dpy;
 	Colormap oldcmap = cmap;
@@ -1111,6 +1128,15 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
 	MCImageBitmap *t_bitmap = nil;
 	/* UNCHECKED */ MCImageBitmapCreateWithXImage(t_image, t_bitmap);
 	XDestroyImage(t_image);
+	
+	if (size != nil && 
+		(size -> x != t_bitmap -> width || size -> y != t_bitmap -> height))
+	{
+		MCImageBitmap *t_new_bitmap;
+		MCImageScaleBitmap(t_bitmap, size -> x, size -> y, INTERPOLATION_BILINEAR, t_new_bitmap);
+		MCImageFreeBitmap(t_bitmap);
+		t_bitmap = t_new_bitmap;
+	}
 
 	return t_bitmap;
 }
