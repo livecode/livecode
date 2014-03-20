@@ -155,7 +155,7 @@
 		E8589AF118C9F84000958234 /* cefprocess_w32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cefprocess_w32.cpp; path = src/cefprocess_w32.cpp; sourceTree = "<group>"; };
 		E858A19D18CA29F800958234 /* libcef.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcef.dylib; path = ../prebuilt/lib/libcef/mac/libcef.dylib; sourceTree = SOURCE_ROOT; };
 		E858A20D18CDD1FB00958234 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
-		E897308018D07D1D005FFFBE /* Resources */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Resources; path = ../thirdparty/libcef/res/osx/Resources; sourceTree = SOURCE_ROOT; };
+		E897308018D07D1D005FFFBE /* Resources */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Resources; path = ../prebuilt/lib/libcef/mac/Resources; sourceTree = SOURCE_ROOT; };
 		E8AA049B18C9E6DD00AE8663 /* libcef_dll_wrapper.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libcef_dll_wrapper.xcodeproj; path = ../thirdparty/libcef/libcef_dll_wrapper.xcodeproj; sourceTree = SOURCE_ROOT; };
 		E8D371CC18CDD2D7005C1182 /* libcore.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libcore.xcodeproj; path = ../libcore/libcore.xcodeproj; sourceTree = SOURCE_ROOT; };
 		E8D3735718CDDA3F005C1182 /* revbrowser-cefprocess.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "revbrowser-cefprocess.app"; sourceTree = BUILT_PRODUCTS_DIR; };
