@@ -240,6 +240,14 @@
 		4D221FDD171D65AA00E7E557 /* libcups.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A69171D574F00E7E557 /* libcups.dylib */; };
 		4D221FDE171D65AA00E7E557 /* libcurl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A6B171D574F00E7E557 /* libcurl.dylib */; };
 		4D221FDF171D65AA00E7E557 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A6D171D574F00E7E557 /* libssl.dylib */; };
+		4D232D9318DB037B00A4FF3E /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DAF5A3F18C0B7A900B9713C /* QuickTime.framework */; };
+		4D232D9418DB037D00A4FF3E /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DAF5A3F18C0B7A900B9713C /* QuickTime.framework */; };
+		4D232D9518DB037F00A4FF3E /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DAF5A3F18C0B7A900B9713C /* QuickTime.framework */; };
+		4D232D9618DB038200A4FF3E /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D30D43D18A293650034CDC6 /* QTKit.framework */; };
+		4D232D9718DB038300A4FF3E /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D30D43D18A293650034CDC6 /* QTKit.framework */; };
+		4D232D9818DB038300A4FF3E /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D30D43D18A293650034CDC6 /* QTKit.framework */; };
+		4D232D9918DB03A800A4FF3E /* platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DECC9AB18857A9100463D52 /* platform.cpp */; };
+		4D232D9A18DB03F200A4FF3E /* quicktime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D8770FF18C8B30700A88AF9 /* quicktime.cpp */; };
 		4D2A57AF1198634300135143 /* LiveCode-Community.rsrc in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885620B80DEAC00200116 /* LiveCode-Community.rsrc */; };
 		4D2A57B01198634300135143 /* da.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58854C0B80DEAB00200116 /* da.lproj */; };
 		4D2A57B11198634300135143 /* French.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58854E0B80DEAC00200116 /* French.lproj */; };
@@ -386,7 +394,6 @@
 		4DE7ED0E13B33B7F002634F5 /* dskspec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE7ED0D13B33B7F002634F5 /* dskspec.cpp */; };
 		4DECC93C18856C7500463D52 /* mac-core.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DECC93B18856C7500463D52 /* mac-core.mm */; };
 		4DECC93F18856CB100463D52 /* desktop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DECC93E18856CB100463D52 /* desktop.cpp */; };
-		4DECC9AC18857A9100463D52 /* platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DECC9AB18857A9100463D52 /* platform.cpp */; };
 		4DECC9E71885803D00463D52 /* desktop-dc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DECC9E61885803D00463D52 /* desktop-dc.cpp */; };
 		4DECC9E91885808100463D52 /* desktop-stack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DECC9E81885808100463D52 /* desktop-stack.cpp */; };
 		4DECCA511885958300463D52 /* osxstack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D58801B0B80A4F800200116 /* osxstack.cpp */; };
@@ -1583,6 +1590,7 @@
 				4DB384BF1714420A00D3F102 /* libpng.a in Frameworks */,
 				4DB384C01714420A00D3F102 /* libjpeg.a in Frameworks */,
 				4DB384C11714420A00D3F102 /* libgif.a in Frameworks */,
+				4D232D9818DB038300A4FF3E /* QTKit.framework in Frameworks */,
 				4DB384C21714420A00D3F102 /* libpcre.a in Frameworks */,
 				4C13881D18A12ED800EFF7B6 /* libopenssl.a in Frameworks */,
 				E8A554B61785A7C600DABC1A /* libskia.a in Frameworks */,
@@ -1596,6 +1604,7 @@
 				4D221FDC171D65AA00E7E557 /* libcrypto.dylib in Frameworks */,
 				4D221FDD171D65AA00E7E557 /* libcups.dylib in Frameworks */,
 				4D221FDE171D65AA00E7E557 /* libcurl.dylib in Frameworks */,
+				4D232D9418DB037D00A4FF3E /* QuickTime.framework in Frameworks */,
 				4D221FDF171D65AA00E7E557 /* libssl.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1651,9 +1660,11 @@
 				4D7740CB1226AA58001C9150 /* Quartz.framework in Frameworks */,
 				4DE18D870B82296A0086DB92 /* QuickTime.framework in Frameworks */,
 				4DE18D880B82296A0086DB92 /* IOKit.framework in Frameworks */,
+				4D232D9618DB038200A4FF3E /* QTKit.framework in Frameworks */,
 				4D8B479A0BE7B3240046CD2F /* Cocoa.framework in Frameworks */,
 				4D8BED0311B95A0300DED42A /* Security.framework in Frameworks */,
 				4D00C62A0CE1F27300341AD3 /* SystemConfiguration.framework in Frameworks */,
+				4D232D9318DB037B00A4FF3E /* QuickTime.framework in Frameworks */,
 				4D221A6F171D577400E7E557 /* libcrypto.dylib in Frameworks */,
 				4D221A70171D577400E7E557 /* libcups.dylib in Frameworks */,
 				4D221A71171D577400E7E557 /* libcurl.dylib in Frameworks */,
@@ -1686,7 +1697,9 @@
 				4DFD495B13BA2BC0008DB91F /* CoreFoundation.framework in Frameworks */,
 				4D982B1213C1CDC10066119A /* CoreServices.framework in Frameworks */,
 				4D982B1913C1CDD20066119A /* ApplicationServices.framework in Frameworks */,
+				4D232D9718DB038300A4FF3E /* QTKit.framework in Frameworks */,
 				4D221A68171D574F00E7E557 /* libcrypto.dylib in Frameworks */,
+				4D232D9518DB037F00A4FF3E /* QuickTime.framework in Frameworks */,
 				4D221A6A171D574F00E7E557 /* libcups.dylib in Frameworks */,
 				4D221A6C171D574F00E7E557 /* libcurl.dylib in Frameworks */,
 				4D221A6E171D574F00E7E557 /* libssl.dylib in Frameworks */,
@@ -3512,6 +3525,7 @@
 				4D1F9DAE171C682E0091C6CB /* image_rep_encoded.cpp in Sources */,
 				4D1F9DAF171C682E0091C6CB /* image_rep_mutable.cpp in Sources */,
 				4D1F9DB0171C682E0091C6CB /* image_rep_resampled.cpp in Sources */,
+				4D232D9A18DB03F200A4FF3E /* quicktime.cpp in Sources */,
 				4D1F9DB1171C682E0091C6CB /* imagebitmap.cpp in Sources */,
 				4D1F9DB2171C682E0091C6CB /* irle.cpp in Sources */,
 				4D1F9DB3171C682E0091C6CB /* stackcache.cpp in Sources */,
@@ -3575,7 +3589,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D221F46171D632600E7E557 /* startupstack.cpp in Sources */,
-				4DECC9AC18857A9100463D52 /* platform.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3662,6 +3675,7 @@
 				4DEE2AD60FDE42710009423C /* objptr.cpp in Sources */,
 				4DEE2AD70FDE42710009423C /* opensslsocket.cpp in Sources */,
 				4DEE2AD80FDE42710009423C /* operator.cpp in Sources */,
+				4D232D9918DB03A800A4FF3E /* platform.cpp in Sources */,
 				4DEE2ADA0FDE42710009423C /* osxcoreimage.cpp in Sources */,
 				4DEE2AE40FDE42710009423C /* osxfiles.cpp in Sources */,
 				4DEE2AE50FDE42710009423C /* osxflst.cpp in Sources */,

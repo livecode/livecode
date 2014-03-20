@@ -1390,11 +1390,6 @@ double MCMacGetAnimationCurrentTime(void)
 	return s_animation_current_time;
 }
 
-WindowPtr MCMacGetInvisibleWindow(void)
-{
-	return nil;
-}
-
 void MCMacBreakWait(void)
 {
 	MCPlatformBreakWait();

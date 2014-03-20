@@ -295,7 +295,7 @@ Exec_stat MCClickCmd::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	if (!MCdefaultstackptr->getopened()
-	        || !MCdefaultstackptr->mode_haswindow())
+	        || !MCdefaultstackptr->haswindow())
 	{
 		MCeerror->add(EE_CLICK_STACKNOTOPEN, line, pos, ep.getsvalue());
 		return ES_ERROR;

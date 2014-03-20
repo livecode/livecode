@@ -907,7 +907,7 @@ public:
 	MCRectangle rectfromroot(const MCRectangle& rrect);
 	
 	void enablewindow(bool p_enable);
-	bool mode_haswindow(void);
+	bool haswindow(void);
 
 	void mode_openasmenu(MCStack *grab);
 	void mode_closeasmenu(void);

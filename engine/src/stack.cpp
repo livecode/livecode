@@ -1042,7 +1042,7 @@ void MCStack::setrect(const MCRectangle &nrect)
 	old_rect = rect = t_new_rect;
 	
 	menuy = menuheight = 0;
-	if (opened && mode_haswindow())
+	if (opened && haswindow())
 	{
 		mode_constrain(rect);
 		
@@ -3089,3 +3089,12 @@ void MCStack::constrain(MCPoint p_size, MCPoint& r_new_size)
 	r_new_size . x = MCMax(minwidth, MCMin(maxwidth, p_size . x));
 	r_new_size . y = MCMax(minheight, MCMin(maxheight, p_size . y));
 }
+
+//////////
+
+bool MCStack::haswindow(void)
+{
+	return window != NULL;
+}
+
+//////////

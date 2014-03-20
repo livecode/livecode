@@ -159,7 +159,7 @@ void MCStack::resize(uint2 oldw, uint2 oldh)
 void MCStack::configure(Boolean user)
 {
 	// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
-	if (MCRedrawIsScreenLocked() || state & CS_NO_CONFIG || !mode_haswindow() || !opened)
+	if (MCRedrawIsScreenLocked() || state & CS_NO_CONFIG || !haswindow() || !opened)
 		return;
 #ifdef TARGET_PLATFORM_LINUX
  	if (!getflag(F_VISIBLE))
@@ -511,7 +511,7 @@ Boolean MCStack::takewindow(MCStack *sptr)
 {
 	// If there is no window ptr and we 'have' a window (i.e. plugin)
 	// we can't take another one's window.
-	if (window == NULL && mode_haswindow())
+	if (window == NULL && haswindow())
 		return False;
 
 	// MW-2008-10-31: [[ ParentScripts ]] Send closeControl messages appropriately

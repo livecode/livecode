@@ -187,7 +187,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 
 	// If the window isn't opened or hasn't been attached (plugin) or if we have no
 	// snapshot to use, this is a no-op.
-	if (!opened || !mode_haswindow() || m_snapshot == nil)
+	if (!opened || !haswindow() || m_snapshot == nil)
 	{
 		while(t_effects != NULL)
 		{
