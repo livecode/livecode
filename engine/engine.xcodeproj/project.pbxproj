@@ -1864,6 +1864,18 @@
 			path = billing;
 			sourceTree = "<group>";
 		};
+		4D232D5618DAEDEF00A4FF3E /* Platform */ = {
+			isa = PBXGroup;
+			children = (
+				4DECC94018856DB400463D52 /* platform.h */,
+				4DECC9AB18857A9100463D52 /* platform.cpp */,
+				4DECC9A918857A3900463D52 /* platform-internal.h */,
+				4DECD1FC1887F24E00463D52 /* platform-window.cpp */,
+				4DECD26D188807E400463D52 /* platform-surface.cpp */,
+			);
+			name = Platform;
+			sourceTree = "<group>";
+		};
 		4D587D920B80944100200116 = {
 			isa = PBXGroup;
 			children = (
@@ -1914,6 +1926,7 @@
 				E8A49109170F192000769C7A /* Core - Objects */,
 				E8A7EEFD16FC985100C39491 /* Core - Security */,
 				4DE7ED0B13B33B4E002634F5 /* Desktop */,
+				4D232D5618DAEDEF00A4FF3E /* Platform */,
 				4D6F92F012AA5C8000026A72 /* Desktop - Linux */,
 				4D6F92ED12AA5C7800026A72 /* Desktop - Mac */,
 				4D6F92EF12AA5C7D00026A72 /* Desktop - Windows */,
@@ -2059,19 +2072,6 @@
 				4D5880180B80A4F800200116 /* osxtheme.cpp */,
 				4D4F9E4D13CDF6EA00B9B15D /* osxtheme.h */,
 				4D58801B0B80A4F800200116 /* osxstack.cpp */,
-				4DECC93E18856CB100463D52 /* desktop.cpp */,
-				4DECDC2518894CAA00463D52 /* desktop-dc.h */,
-				4DECC9E61885803D00463D52 /* desktop-dc.cpp */,
-				4DECC9E81885808100463D52 /* desktop-stack.cpp */,
-				4DECCA5A188595F500463D52 /* desktop-menu.cpp */,
-				4D30C37018995E840034CDC6 /* desktop-pasteboard.cpp */,
-				4D30D5D118A394250034CDC6 /* desktop-image.cpp */,
-				4D30E44518AA7C200034CDC6 /* desktop-ans.cpp */,
-				4DECC94018856DB400463D52 /* platform.h */,
-				4DECC9AB18857A9100463D52 /* platform.cpp */,
-				4DECC9A918857A3900463D52 /* platform-internal.h */,
-				4DECD1FC1887F24E00463D52 /* platform-window.cpp */,
-				4DECD26D188807E400463D52 /* platform-surface.cpp */,
 				4DECC94218856FE000463D52 /* mac-internal.h */,
 				4DECC93B18856C7500463D52 /* mac-core.mm */,
 				4DECD0C71886E4FD00463D52 /* mac-window.mm */,
@@ -2376,6 +2376,14 @@
 				4D05B90D13E06AAB001CD82A /* dskmain.cpp */,
 				4D05B90F13E06AAC001CD82A /* dskw32main.cpp */,
 				4DE7ED0D13B33B7F002634F5 /* dskspec.cpp */,
+				4DECC93E18856CB100463D52 /* desktop.cpp */,
+				4DECDC2518894CAA00463D52 /* desktop-dc.h */,
+				4DECC9E61885803D00463D52 /* desktop-dc.cpp */,
+				4DECC9E81885808100463D52 /* desktop-stack.cpp */,
+				4DECCA5A188595F500463D52 /* desktop-menu.cpp */,
+				4D30C37018995E840034CDC6 /* desktop-pasteboard.cpp */,
+				4D30D5D118A394250034CDC6 /* desktop-image.cpp */,
+				4D30E44518AA7C200034CDC6 /* desktop-ans.cpp */,
 				4D8770FF18C8B30700A88AF9 /* quicktime.cpp */,
 			);
 			name = Desktop;
