@@ -717,7 +717,38 @@ struct MCBitmap
 
 ////////////////////////////////////////
 
-#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
+
+typedef MCPlatformWindowRef Window;
+typedef MCSysWindowHandle Drawable;
+
+#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+
+// MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
+#ifndef __LP64__
+#   if !defined(Window)
+        typedef unsigned long Window;
+#   endif
+#   if !defined(Pixmap)
+        typedef unsigned long Pixmap;
+#   endif
+#   if !defined(Drawable)
+        typedef unsigned long Drawable;
+#   endif
+#else
+#   if !defined(Window)
+        typedef unsigned long int Window;
+#   endif
+#   if !defined(Pixmap)
+        typedef unsigned long int Pixmap;
+#   endif
+#   if !defined(Drawable)
+        typedef unsigned long int Drawable;
+#   endif
+#endif
+
+#else
+
 enum
 {
     DC_WINDOW,
@@ -744,34 +775,6 @@ struct _ExtendedDrawable: public _Drawable
 typedef  _Drawable *        Window;
 typedef  _Drawable *        Pixmap;
 typedef  _Drawable *        Drawable;
-#elif defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
-
-typedef MCPlatformWindowRef Window;
-typedef MCSysWindowHandle Drawable;
-
-#else
-// MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
-#ifndef __LP64__
-	#if !defined(Window)
-		typedef unsigned long Window;
-	#endif
-	#if !defined(Pixmap)
-		typedef unsigned long Pixmap;
-	#endif
-	#if !defined(Drawable)
-		typedef unsigned long Drawable;
-	#endif
-#else
-	#if !defined(Window)
-		typedef unsigned long int Window;
-	#endif
-	#if !defined(Pixmap)
-		typedef unsigned long int Pixmap;
-	#endif
-	#if !defined(Drawable)
-		typedef unsigned long int Drawable;
-	#endif
-#endif
 
 #endif
 
