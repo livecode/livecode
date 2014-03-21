@@ -196,27 +196,15 @@ on generateModule pModule
   output "  module_" & pModule & " = NULL;"
   output "}"
   output
-  output "int initialise_weak_link_" & pModule & "(void)"
+  
+  -- IM-2014-03-21: [[ revBrowserCEF ]] Modify init function to take a path
+  output "int initialise_weak_link_" & pModule & "_with_path(const char *p_path)"
   output "{"
   output "  module_" & pModule & " = NULL;"
-
-
-   output "#if defined(_LINUX)"
-  --Modified to allow comma seperated list of possible lib names on linux
-  set the itemdelimiter to ","
-  local tModuleItem
-  repeat for each item tModuleItem in tUnixLibrary
-    output merge("  if (!module_load(" & quote & tModuleItem & quote & ", &module_[[pModule]]))")
-  end repeat
-
-  output "#else"
-
-  output merge("  if (!module_load(MODULE_[[toUpper(pModule)]]_NAME, &module_[[pModule]]))")
-  output "#endif"
-
+  output merge("  if (!module_load(p_path, &module_[[pModule]]))")
   output "{"
   output "#ifdef _DEBUG"
-  output "    fprintf(stderr, " & quote & "Unable to load library: " & tUnixLibrary & "\n" & quote & ") ;"
+  output "    fprintf(stderr, " & quote & "Unable to load library: %s\n" & quote & ", p_path);"
   output "#endif"
   output "goto err;"
   output "}"
@@ -249,6 +237,34 @@ on generateModule pModule
   output "  return 0;"
   output "}"
   output
+
+  -- IM-2014-03-21: [[ revBrowserCEF ]] Standard init calls initialise_weak_link_*_with_path
+  output "int initialise_weak_link_" & pModule & "(void)"
+  output "{"
+   output "#if defined(_LINUX)"
+  --Modified to allow comma seperated list of possible lib names on linux
+  set the itemdelimiter to ","
+  local tModuleItem
+  repeat for each item tModuleItem in tUnixLibrary
+    output merge("  if (!initialise_weak_link_[[pModule]]_with_path([[quote & tModuleItem & quote]]))")
+  end repeat
+
+  output "#else"
+
+  output merge("  if (!initialise_weak_link_[[pModule]]_with_path(MODULE_[[toUpper(pModule)]]_NAME))")
+  output "#endif"
+
+  output "{"
+  output "#ifdef _DEBUG"
+  output "    fprintf(stderr, " & quote & "Unable to load library: " & tUnixLibrary & "\n" & quote & ") ;"
+  output "#endif"
+  output "return 0;"
+  output "}"
+  output
+  output "return -1;"
+  output "}"
+  output
+
 
   repeat for each line tSymbol in tSymbols
     local tInputs, tOutputs, tArgs, tIndex

@@ -23,7 +23,7 @@
 		E858A20E18CDD1FB00958234 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E858A20D18CDD1FB00958234 /* AppKit.framework */; };
 		E897315018D07D2A005FFFBE /* Resources in CopyFiles */ = {isa = PBXBuildFile; fileRef = E897308018D07D1D005FFFBE /* Resources */; };
 		E8D3736118CDDA5A005C1182 /* cefprocess.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8D3736018CDDA5A005C1182 /* cefprocess.cpp */; };
-		E8D3736A18CDDBEE005C1182 /* cefprocess_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8D3736918CDDBEE005C1182 /* cefprocess_osx.cpp */; };
+		E8D3736A18CDDBEE005C1182 /* cefprocess_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = E8D3736918CDDBEE005C1182 /* cefprocess_osx.mm */; };
 		E8D373BF18CDE872005C1182 /* libcef_dll_wrapper.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AA04C018C9E72A00AE8663 /* libcef_dll_wrapper.a */; };
 		E8D3770118CF2903005C1182 /* libcore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8D371D118CDD2D7005C1182 /* libcore.a */; };
 		E8D3779F18CF2992005C1182 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D03BCA40BC2780100026EA7 /* Foundation.framework */; };
@@ -162,7 +162,7 @@
 		E8D3735918CDDA40005C1182 /* revbrowser-cefprocess-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "revbrowser-cefprocess-Info.plist"; sourceTree = "<group>"; };
 		E8D3736018CDDA5A005C1182 /* cefprocess.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cefprocess.cpp; path = src/cefprocess.cpp; sourceTree = "<group>"; };
 		E8D3736418CDDA9B005C1182 /* cefbrowser_w32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cefbrowser_w32.cpp; path = src/cefbrowser_w32.cpp; sourceTree = "<group>"; };
-		E8D3736918CDDBEE005C1182 /* cefprocess_osx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cefprocess_osx.cpp; path = src/cefprocess_osx.cpp; sourceTree = "<group>"; };
+		E8D3736918CDDBEE005C1182 /* cefprocess_osx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = cefprocess_osx.mm; path = src/cefprocess_osx.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -304,7 +304,7 @@
 			isa = PBXGroup;
 			children = (
 				E8D3736018CDDA5A005C1182 /* cefprocess.cpp */,
-				E8D3736918CDDBEE005C1182 /* cefprocess_osx.cpp */,
+				E8D3736918CDDBEE005C1182 /* cefprocess_osx.mm */,
 				E8589AF118C9F84000958234 /* cefprocess_w32.cpp */,
 				E8589AD918C9F77800958234 /* cefbrowser.h */,
 				E8589AD718C9F77800958234 /* cefbrowser_msg.h */,
@@ -459,7 +459,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E8D3736118CDDA5A005C1182 /* cefprocess.cpp in Sources */,
-				E8D3736A18CDDBEE005C1182 /* cefprocess_osx.cpp in Sources */,
+				E8D3736A18CDDBEE005C1182 /* cefprocess_osx.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

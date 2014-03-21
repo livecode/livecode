@@ -17,6 +17,8 @@
 #include "external.h"
 #include "cefbrowser.h"
 
+#include "core.h"
+
 #include <AppKit/AppKit.h>
 
 #include <include/cef_app.h>
@@ -44,7 +46,32 @@ private:
 
 const char *MCCefPlatformGetSubProcessName(void)
 {
-	return "revbrowser-cefprocess.app/Contents/MacOS/revbrowser-cefprocess";
+	static char *s_exe_path = nil;
+	
+	if (s_exe_path == nil)
+	{
+		NSBundle *t_bundle;
+		t_bundle = [NSBundle bundleWithIdentifier:@"com.runrev.revbrowser"];
+		
+		NSString *t_parent_path;
+		t_parent_path = [[t_bundle bundlePath] stringByDeletingLastPathComponent];
+		
+		char *t_exe_path;
+		t_exe_path = nil;
+		
+		bool t_success;
+		t_success = MCCStringClone([t_parent_path cStringUsingEncoding:NSUTF8StringEncoding], t_exe_path);
+		if (t_success)
+			t_success = MCCStringAppend(t_exe_path,
+										"/revbrowser-cefprocess.app/Contents/MacOS/revbrowser-cefprocess");
+		
+		if (t_success)
+			s_exe_path = t_exe_path;
+		else if (t_exe_path != nil)
+			MCCStringFree(t_exe_path);
+	}
+	
+	return s_exe_path;
 }
 
 bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser)
