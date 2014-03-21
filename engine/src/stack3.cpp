@@ -1828,6 +1828,7 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 	MCAutoArray<MCSortnode> items;
 	uint4 nitems = 0;
 	MCerrorlock++;
+    
 	do
 	{
 		items.Extend(nitems + 1);
@@ -1904,7 +1905,11 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 	setcard(cards, True, False);
 	dirtywindowname();
 	MCdefaultstackptr = olddefault;
-	return ES_NORMAL;
+    
+    // SN-2014-03-21: [[ Bug 11953 ]] sort card of stack crashes
+    // This function must discard a bad target expression error, since a -MAXREAL8/empty string  is provided in that case
+    ctxt . IgnoreLastError();
+	return true;
 }
 
 void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uindex_t &nstrings, Find_mode fmode)

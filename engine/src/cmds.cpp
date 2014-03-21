@@ -2335,6 +2335,11 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
     
     MCObjectPtr t_object;
     MCAutoStringRef t_target;
+    
+    // SN-2014-03-21: [[ Bug 11953 ]] sort card does not work
+    t_object . object = nil;
+    t_object . part_id = 0;
+    
 	if (of != NULL)
 	{
 		MCerrorlock++;
@@ -2352,7 +2357,7 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
         }
 		if (t_object . object != nil && t_object . object->gettype() > CT_GROUP && chunktype <= CT_GROUP)
 			chunktype = CT_LINE;
-	}
+	} 
     
 	if (chunktype == CT_CARD || chunktype == CT_MARKED)
 		MCInterfaceExecSortCardsOfStack(ctxt, (MCStack *)t_object . object, direction == ST_ASCENDING, format, by, chunktype == CT_MARKED);
@@ -2380,9 +2385,6 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
 		}
 		MCInterfaceExecSortField(ctxt, t_object, chunktype, direction == ST_ASCENDING, format, by);
 	}
-    
-    // SN-2014-03-21 [[ Bug 11953 ]]: 'sort' shouldn't throw an error on a failure
-    ctxt . IgnoreLastError();
 }
 
 void MCSort::compile(MCSyntaxFactoryRef ctxt)
