@@ -2380,6 +2380,9 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
 		}
 		MCInterfaceExecSortField(ctxt, t_object, chunktype, direction == ST_ASCENDING, format, by);
 	}
+    
+    // SN-2014-03-21 [[ Bug 11953 ]]: 'sort' shouldn't throw an error on a failure
+    ctxt . IgnoreLastError();
 }
 
 void MCSort::compile(MCSyntaxFactoryRef ctxt)

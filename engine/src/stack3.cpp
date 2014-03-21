@@ -1837,7 +1837,9 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 		case ST_DATETIME:
         {
             MCAutoValueRef t_value;
-            if (!marked || curcard->getmark() && ctxt . EvalExprAsValueRef(by, EE_SORT_BADTARGET, &t_value))
+            // SN-2014-03-21 [[ Bug 11953 ]]: missing parentheses around the OR where letting t_value storing a nil value.
+            if ((!marked || curcard->getmark())
+                    && ctxt . EvalExprAsValueRef(by, EE_SORT_BADTARGET, &t_value))
 			{
 				MCAutoStringRef t_out;
 				if (MCD_convert(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
