@@ -1010,7 +1010,7 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
     return MCStringMapIndices(self, kMCBreakIteratorTypeCharacter, p_locale, p_in_range, r_out_range);
 }
 
-static bool MCStringCodepointIsWordPart(codepoint_t p_codepoint)
+bool MCStringCodepointIsWordPart(codepoint_t p_codepoint)
 {
     return MCUnicodeIsAlphabetic(p_codepoint) || MCUnicodeIsDigit(p_codepoint);
 }

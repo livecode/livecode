@@ -6147,5 +6147,100 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
     MCSyntaxFactoryEndExpression(ctxt);
 #endif
 }
-								  
+
 ////////////////////////////////////////////////////////////////////////////////
+
+MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text)
+{
+    /* UNCHECKED */ MCStringCopy(p_text, text);
+    type = p_chunk_type;
+    
+    if (MCStringIsNative(p_text) && p_chunk_type == CT_CHARACTER)
+        type = CT_CODEUNIT;
+    
+    sp = nil;
+    break_iterator = nil;
+    range = MCRangeMake(0, 0);
+    
+    switch (p_chunk_type)
+    {
+        case CT_TOKEN:
+            sp = new MCScriptPoint(p_text);
+            break;
+        case CT_CHARACTER:
+                /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeCharacter, break_iterator);
+                /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, text);
+            break;
+        case CT_TRUEWORD:
+            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeWord, break_iterator);
+            /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, text);
+            break;
+        case CT_SENTENCE:
+            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeSentence, break_iterator);
+            /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, text);
+            break;
+        default:
+            break;
+    }
+}
+
+MCTextChunkIterator::~MCTextChunkIterator()
+{
+    if (break_iterator != nil)
+        MCLocaleBreakIteratorRelease(break_iterator);
+    
+    MCValueRelease(text);
+    delete sp;
+}
+
+bool MCTextChunkIterator::next()
+{
+    if (break_iterator != nil)
+    {
+        if (type == CT_TRUEWORD)
+        {
+            uindex_t t_start, t_left_break, t_right_break;
+            t_right_break = range . offset + range . length;
+            t_start = t_right_break;
+            bool found = false;
+            
+            // Advance to the beginning of the specified range
+            while (t_right_break != kMCLocaleBreakIteratorDone && !found)
+            {
+                t_left_break = t_right_break;
+                t_start = t_left_break;
+                
+                t_right_break = MCLocaleBreakIteratorAdvance(break_iterator);
+                
+                // if the intervening chars contain a letter or number then it was a valid 'word'
+                while (t_left_break < t_right_break)
+                {
+                    if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(text, t_left_break)))
+                        break;
+                    if (MCStringIsValidSurrogatePair(text, t_left_break++))
+                        t_left_break++;
+                }
+                
+                if (t_left_break < t_right_break)
+                    found = true;
+            }
+            if (t_start == kMCLocaleBreakIteratorDone)
+            {
+                range = MCRangeMake(MCStringGetLength(text), 0);
+                return false;
+            }
+            
+            range = MCRangeMake(t_start, t_right_break - t_start);
+            return true;
+        }
+    }
+        
+}
+
+bool MCTextChunkIterator::getstring(MCStringRef& r_string)
+{
+    MCStringCopySubstring(text, range, r_string);
+}
+
+
+

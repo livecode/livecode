@@ -225,4 +225,26 @@ public:
                 && codepoint == NULL && codeunit == NULL && byte == NULL;
 	}
 };
+
+class MCTextChunkIterator
+{
+    MCStringRef text;
+    MCScriptPoint *sp;
+    Chunk_term type;
+    MCBreakIteratorRef break_iterator;
+    MCRange range;
+    
+    public:
+    MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text);
+    ~MCTextChunkIterator();
+    
+    MCRange getrange()
+    {
+        return range;
+    }
+    
+    bool next();
+    
+    bool getstring(MCStringRef& r_string);
+};
 #endif

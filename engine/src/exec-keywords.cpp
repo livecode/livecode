@@ -375,6 +375,8 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
     MCScriptPoint *sp = nil;
     int4 count = 0;
     
+    MCTextChunkIterator *tci = nil;
+    
     if (!ctxt . TryToEvaluateExpression(endcond, line, pos, EE_REPEAT_BADFORCOND, &t_condition))
         return;
     
@@ -426,6 +428,11 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             return;
         count = MCU_max(count, 0);
     }
+    
+   if (each == FU_TRUEWORD)
+   {
+       tci = new MCTextChunkIterator(CT_TRUEWORD, *t_string);
+   }
     
     bool done;
     done = false;
@@ -499,7 +506,8 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                             t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_WORD, t_length, t_chunk_range, t_found, endnext);
                             break;
                         case FU_TRUEWORD:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_TRUEWORD, t_length, t_chunk_range, t_found, endnext);
+                            //t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_TRUEWORD, t_length, t_chunk_range, t_found, endnext);
+                            t_found = tci -> next();
                             break;
                         case FU_TOKEN:
                             t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_TOKEN, t_length, t_chunk_range, t_found, endnext);
@@ -520,6 +528,8 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                         t_unit = kMCEmptyString;
                         done = true;
                     }
+                    else if (each == FU_TRUEWORD)
+                        tci -> getstring(&t_unit);
                     else
                         MCStringCopySubstring(*t_string, t_chunk_range, &t_unit);
                 }
