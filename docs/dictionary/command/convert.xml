@@ -10,7 +10,7 @@
 	<synonyms>
 	</synonyms>
 
-	<summary><change></change>format</a>.</summary>
+	<summary>Changes a date, a time, or a date and time to a specified format.</summary>
 
 	<examples>
 <example>convert "11/22/90" to long english date</example>

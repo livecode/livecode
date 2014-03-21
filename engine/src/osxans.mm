@@ -276,12 +276,15 @@ static bool filter_to_type_list(const char *p_filter, char ***r_types, uint32_t 
 		/* UNCHECKED */ MCCStringFree(t_types);
 	}		
 	
-	return t_success;	
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface FileDialogAccessoryView : NSView
+// MM-2014-01-09: [[ LibSkiaUpdate ]] The update to libskia required a compiler update.
+//   Update interface definition in order to appease the new compiler.
+//   (Only required if using llvm compiler with newer versions of Xcode. GCC 4.2 is happy without the protocol).
+@interface FileDialogAccessoryView : NSView //<NSOpenSavePanelDelegate>
 {
 	NSTextField *m_label;
 	NSPopUpButton *m_options;

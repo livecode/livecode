@@ -27,6 +27,11 @@ Bool DBConnection_ORACLE::connect(char **args, int numargs)
 {
 	if (isConnected)
 		return True;
+	
+	// MW-2014-01-30: [[ Sqlite382 ]] Relaxed revdb_connect() so it only checks for at least
+	//   one argument - we need at least 4 though.
+	if (numargs < 4)
+		return False;
 
 	char *t_user;
 	t_user = args[2];

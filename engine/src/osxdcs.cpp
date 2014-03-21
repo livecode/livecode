@@ -350,24 +350,23 @@ void MCScreenDC::ungrabpointer()
 	grabbed = False;
 }
 
-uint16_t MCScreenDC::device_getwidth(void)
+// IM-2014-01-24: [[ HiDPI ]] Use Cocoa-based function to get main display width & height
+extern void MCOSXGetMainDisplayInfo(MCDisplay &r_display);
+uint16_t MCScreenDC::platform_getwidth(void)
 {
-	GDHandle mainScreen = GetMainDevice();
-	HLock((Handle)mainScreen);
-	uint2 swidth = ((GDPtr)*mainScreen)->gdRect.right
-	               - ((GDPtr)*mainScreen)->gdRect.left;
-	HUnlock((Handle)mainScreen);
-	return swidth;
+	MCDisplay t_main_display;
+	MCOSXGetMainDisplayInfo(t_main_display);
+	
+	return t_main_display.viewport.width;
 }
 
-uint16_t MCScreenDC::device_getheight(void)
+// IM-2014-01-24: [[ HiDPI ]] Use Cocoa-based function to get main display width & height
+uint16_t MCScreenDC::platform_getheight(void)
 {
-	GDHandle mainScreen = GetMainDevice();
-	HLock((Handle)mainScreen);
-	uint2 sheight = ((GDPtr)*mainScreen)->gdRect.bottom
-	                - ((GDPtr)*mainScreen)->gdRect.top;
-	HUnlock((Handle)mainScreen);
-	return sheight;
+	MCDisplay t_main_display;
+	MCOSXGetMainDisplayInfo(t_main_display);
+	
+	return t_main_display.viewport.height;
 }
 
 uint2 MCScreenDC::getmaxpoints()
@@ -434,7 +433,14 @@ void MCScreenDC::openwindow(Window w, Boolean override)
 {
 	if (IsWindowVisible((WindowPtr)w->handle.window))
 		return;
-		
+	
+	// MW-2014-03-11: [[ Bug 11819 ]] Make sure we invalidate the view for all window's
+	//   on open (otherwise non-decorated windows don't redraw for some reason...)
+	HIViewRef t_root, t_view;
+	GetRootControl((WindowPtr)w -> handle . window, &t_root);
+	GetIndexedSubControl(t_root, 1, &t_view);
+	HIViewSetNeedsDisplay(t_view, TRUE);
+	
 	if (override)
 	{
         // MM-2012-04-02: Use new MC*Window wrapper function - fixes bugs where a cocoa NSWindow has been
@@ -771,7 +777,8 @@ void MCScreenDC::unlockpixmap(Pixmap p_pixmap, void *p_bits, uint4 p_stride)
 	UnlockPixels(t_src_pixmap);
 }
 
-bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+bool MCScreenDC::platform_getwindowgeometry(Window w, MCRectangle &drect)
 {//get the client window's geometry in screen coord
 	if (w == DNULL || w->handle.window == 0)
 		return false;
@@ -783,6 +790,7 @@ bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 	GetRegionBounds(r, &windowRect);
 	DisposeRgn(r);
 	drect = MCMacRectToMCRect(windowRect);
+	
 	if (drect.height == 0)
 		drect.x = drect.y = -1; // windowshaded, so don't move it
 
@@ -964,7 +972,7 @@ void MCScreenDC::enablebackdrop(bool p_hard)
 	if (!t_error)
 	{
 		MCRectangle t_rect;
-		MCU_set_rect(t_rect, 0, 0, device_getwidth(), device_getheight());
+		MCU_set_rect(t_rect, 0, 0, platform_getwidth(), platform_getheight());
 		updatebackdrop(t_rect);
 		
 		MCstacks -> refresh();
@@ -1004,7 +1012,7 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 	else
 	{
 		MCRectangle t_rect;
-		MCU_set_rect(t_rect, 0, 0, device_getwidth(), device_getheight());
+		MCU_set_rect(t_rect, 0, 0, platform_getwidth(), platform_getheight());
 		updatebackdrop(t_rect);
 	}
 }
@@ -1020,7 +1028,7 @@ bool MCScreenDC::initialisebackdrop(void)
 	t_error = false;
 
 	Rect t_bounds;
-	SetRect(&t_bounds, 0, 0, device_getwidth(), device_getheight());
+	SetRect(&t_bounds, 0, 0, platform_getwidth(), platform_getheight());
 	t_error = CreateNewWindow(kPlainWindowClass, kWindowNoAttributes, &t_bounds, &backdrop_window) != noErr;
 	if (!t_error)
 		t_error = CreateWindowGroup(kWindowGroupAttrLayerTogether | kWindowGroupAttrSelectAsLayer, &backdrop_group);
@@ -1104,7 +1112,7 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 		if (backdrop_active || backdrop_hard)
 		{
 			MCRectangle t_rect;
-			MCU_set_rect(t_rect, 0, 0, device_getwidth(), device_getheight());
+			MCU_set_rect(t_rect, 0, 0, platform_getwidth(), platform_getheight());
 	
 			updatebackdrop(t_rect);
 		}
@@ -1190,6 +1198,12 @@ void MCScreenDC::updatebackdrop(const MCRectangle& p_dirty)
 	HUnlock((Handle)t_pix);
 	UnlockPixels(t_pix);
 	UnlockPortBits(t_gptr);
+	
+	// MW-2014-03-14: [[ Bug 11728 ]] Make sure we tell the port what's dirty as
+	//   we are poking its bits directly.
+	Rect t_r;
+	SetRect(&t_r, p_dirty . x, p_dirty . y, p_dirty . x + p_dirty . width, p_dirty . y + p_dirty . height);
+	QDAddRectToDirtyRegion(t_gptr, &t_r);
 }
 
 void MCScreenDC::redrawbackdrop(MCContext *p_context, const MCRectangle& p_dirty)
@@ -1216,22 +1230,16 @@ void MCScreenDC::hidemenu()
 {
 	HideMenuBar();
 	menubarhidden = true ;
-	if (s_monitor_count != 0)
-	{
-		delete[] s_monitor_displays;
-		s_monitor_displays = NULL;
-		s_monitor_count = 0;
-	}
+	
+	// IM-2014-01-24: [[ HiDPI ]] Use refactored method to update display info
+	cleardisplayinfocache();
 }
 
 void MCScreenDC::showmenu()
 {
 	ShowMenuBar();
 	menubarhidden = false ;
-	if (s_monitor_count != 0)
-	{
-		delete[] s_monitor_displays;
-		s_monitor_displays = NULL;
-		s_monitor_count = 0;
-	}
+
+	// IM-2014-01-24: [[ HiDPI ]] Use refactored method to update display info
+	cleardisplayinfocache();
 }

@@ -472,10 +472,11 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 	Boolean down;
 	char buffer[XLOOKUPSTRING_SIZE];
 
-	// IM-2013-08-08: [[ ResIndependence ]] scale mouse position from device to user space
 	MCPoint t_mouseloc;
-	t_mouseloc.x = LOWORD(lParam) / MCResGetPixelScale();
-	t_mouseloc.y = HIWORD(lParam) / MCResGetPixelScale();
+	t_mouseloc = MCPointMake(LOWORD(lParam), HIWORD(lParam));
+
+	// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
+	t_mouseloc = ((MCScreenDC*)MCscreen)->screentologicalpoint(t_mouseloc);
 
 	// MW-2005-02-20: Seed the SSL random number generator
 #ifdef MCSSL

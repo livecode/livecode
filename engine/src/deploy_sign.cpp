@@ -955,13 +955,9 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	t_counter_sig = nil;
 	if (t_success)
 	{
-#if defined(TARGET_PLATFORM_LINUX) || defined(TARGET_PLATFORM_WINDOWS) || (__MAC_OS_X_VERSION_MAX_ALLOWED > 1050)
 		const unsigned char *t_data;
 		t_data = (const unsigned char *)ep . getsvalue() . getstring();
-#else
-		unsigned char *t_data;
-		t_data = (unsigned char *)ep . getsvalue() . getstring();
-#endif
+
 		int t_length;
 		t_length = ep . getsvalue() . getlength();
 		t_counter_sig = d2i_PKCS7(&t_counter_sig, &t_data, t_length);

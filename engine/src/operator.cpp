@@ -852,8 +852,10 @@ Exec_stat MCLessThanEqual::eval(MCExecPoint &ep)
 
 Exec_stat MCNotEqual::eval(MCExecPoint &ep)
 {
+	// MW-2014-01-30: [[ Bug 11732 ]] Enable array comparison mode - this stops
+	//   auto-conversion of arrays to empty.
 	int2 i;
-	if (compare(ep, i) != ES_NORMAL)
+	if (compare(ep, i, true) != ES_NORMAL)
 	{
 		MCeerror->add
 		(EE_NOTEQUAL_OPS, line, pos);

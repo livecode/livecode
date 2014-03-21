@@ -125,13 +125,18 @@ void MCStack::resize(uint2 oldw, uint2 oldh)
 {
 	uint2 newy = getscroll();
 	
+	// IM-2014-01-07: [[ StackScale ]] compare old & new card rects and notify if changed
+	MCRectangle t_new_cardrect;
+	t_new_cardrect = getcardrect();
+	
+	MCRectangle t_old_cardrect;
+	t_old_cardrect = curcard->getrect();
+	
 	// MW-2011-08-18: [[ Redraw ]] Use global screen lock, rather than stack.
 	MCRedrawLockScreen();
-	if (curcard->getrect().width != rect.width || curcard->getrect().height != rect.height + newy)
+	if (t_old_cardrect.width != t_new_cardrect.width || t_old_cardrect.height != t_new_cardrect.height)
 	{
-		// MW-2011-08-19: [[ Layers ]] Notify of change in size of canvas.
-		//   This call also calls MCCard::resize to update the rect.
-		curcard -> layer_setviewport(0, 0, rect . width, rect . height + newy);
+		updatecardsize();
 
 		// MM-2012-09-05: [[ Property Listener ]] Make sure resizing a stack sends the propertyChanged message to any listeners.
 		//    This effects both the current card and the stack.
@@ -162,15 +167,9 @@ void MCStack::configure(Boolean user)
 #endif
 	Boolean beenchanged = False;
 	MCRectangle trect;
-	// IM-2013-09-30: [[ FullscreenMode ]] Use view methods for fullscreen stacks
-	if (view_getfullscreen())
-		trect = view_setstackviewport(old_rect);
-	else
-	{
-		// IM-2013-10-09: [[ FullscreenMode ]] Non-fullscreen stacks should use
-		// the whole view rect
-		trect = view_getrect();
-	}
+	// IM-2014-01-16: [[ StackScale ]] Get stack viewport from the view
+	trect = view_getstackviewport();
+	
 	if (trect.width != 0 && trect.height != 0
 	        && (trect.width != rect.width || trect.height != rect.height))
 	{
@@ -560,11 +559,23 @@ Boolean MCStack::takewindow(MCStack *sptr)
 	// MW-2011-01-10: [[ Effects ]] Take the snapshot.
 	takewindowsnapshot(sptr);
 	
+    // MW-2014-03-14: [[ Bug 11915 ]] Make sure we copy the view (fullscreenmode related)
+    //   props to this stack.
+    view_copy(*sptr);
+    
 	mode_takewindow(sptr);
 	
 	if (MCmousestackptr == sptr)
 		MCmousestackptr = this;
 	start_externals();
+    
+#ifdef _MOBILE
+    // MW-2014-03-14: [[ Bug 11813 ]] Make sure we tell MCScreenDC that the top window
+    //   has changed, and mark our stack as its own window.
+    MCscreen -> openwindow((Window)this, False);
+    window = (Window)this;
+#endif
+    
 	return True;
 }
 
@@ -830,7 +841,7 @@ void MCStack::startedit(MCGroup *group)
 	}
 
 	curcard->open();
-	curcard->resize(rect.width, rect.height + getscroll());
+	updatecardsize();
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
 	dirtywindowname();
@@ -868,7 +879,7 @@ void MCStack::stopedit()
 	uncacheobjectbyid(oldcard);
 	
 	curcard->open();
-	curcard->resize(rect.width, rect.height + getscroll());
+	updatecardsize();
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
 	oldcard->scheduledelete();
@@ -1637,15 +1648,14 @@ void MCStack::reopenwindow()
 	if (getstyleint(flags) != 0)
 		mode = (Window_mode)(getstyleint(flags) + WM_TOP_LEVEL_LOCKED);
 
-	// IM-2013-09-30: [[ FullscreenMode ]] Restore old rect when changing fullscreen modes
-	if (view_getfullscreen())
-		rect = old_rect;
-	
 	// MW-2011-08-18: [[ Redraw ]] Use global screen lock
 	MCRedrawLockScreen();
 	realize();
 	sethints();
-	setgeom();
+	
+	// IM-2014-01-16: [[ StackScale ]] Call configure to update the stack rect after fullscreen change
+	configure(True);
+	
 	MCRedrawUnlockScreen();
 
 	dirtywindowname();
@@ -1766,6 +1776,10 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	}
 	else
 		setparentwindow(parentptr->getw());
+	
+	// IM-2014-01-16: [[ StackScale ]] Ensure view has the current stack rect
+	view_setstackviewport(rect);
+	
 	if (window == DNULL)
 		realize();
 
@@ -1911,7 +1925,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	// MW-2011-09-12: [[ MacScroll / Bug 5268 ]] Make sure the scroll of the stack
 	//   reflects what it should be taking into account menu settings.
 	applyscroll();
-	curcard->resize(rect.width, rect.height + getscroll());
+	updatecardsize();
 	
 	MCCard *startcard = curcard;
 
@@ -1960,8 +1974,11 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 
 	if (mode == WM_PULLDOWN || mode == WM_POPUP || mode == WM_CASCADE || (mode == WM_OPTION && MClook != LF_WIN95))
 	{
-		if (menuheight == 0)
+		// MW-2014-03-12: [[ Bug 11914 ]] Only fiddle with scrolling and such
+		//   if this is an engine menu.
+		if (m_is_menu && menuheight == 0)
 			menuheight = trect.height ;
+		
 		int2 oldy = rect.y;
 
 		const MCDisplay *t_display;
@@ -1997,6 +2014,12 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 				oldy = rect . y;
 			}
 		}
+		
+		// MW-2014-03-12: [[ Bug 11914 ]] Constrain the popup menu appropriately horizontally.
+		if (rect . x < t_workarea . x + MENU_SPACE)
+			rect . x = t_workarea . x + MENU_SPACE;
+		if (rect . x + rect . width > t_workarea . x + t_workarea . width - MENU_SPACE)
+			rect . x = t_workarea . x + t_workarea . width - rect . width - MENU_SPACE;
 
 		// Get the middle point (Y) of the work area.
 		int t_screen_mid_y ;
@@ -2033,8 +2056,9 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			}
 		}
 
-
-		minheight = maxheight = rect.height;
+		if (m_is_menu)
+			minheight = maxheight = rect.height;
+		
 		if (mode == WM_CASCADE && rect.x != trect.x)
 		{
 			trect = rel;
@@ -2316,22 +2340,21 @@ void MCStack::dirtyrect(const MCRectangle& p_dirty_rect)
 	if (curcard == nil)
 		return;
 
-	// Make sure the dirty rect falls within the card bounds.
-	MCRectangle t_actual_dirty_rect;
-	t_actual_dirty_rect = MCU_intersect_rect(curcard -> getrect(), p_dirty_rect);
-	if (MCU_empty_rect(t_actual_dirty_rect))
-		return;
+	// IM-2013-12-19: [[ ShowAll ]] clip the transformed dirty rect to the visible viewport
+	MCRectangle t_dirty_rect;
+	t_dirty_rect = MCRectangleGetTransformedBounds(p_dirty_rect, gettransform());
+	
+	t_dirty_rect = MCU_intersect_rect(view_getstackvisiblerect(), t_dirty_rect);
 
 	// Make sure the dirty rect falls within the windowshape bounds.
 	if (m_window_shape != nil)
-	{
-		t_actual_dirty_rect = MCU_intersect_rect(MCU_make_rect(0, 0, m_window_shape -> width, m_window_shape -> height), t_actual_dirty_rect);
-		if (MCU_empty_rect(t_actual_dirty_rect))
-			return;
-	}
+		t_dirty_rect = MCU_intersect_rect(MCU_make_rect(0, 0, m_window_shape -> width, m_window_shape -> height), t_dirty_rect);
 
+	if (MCU_empty_rect(t_dirty_rect))
+		return;
+	
 	MCRectangle t_view_rect;
-	t_view_rect = MCRectangleGetTransformedBounds(t_actual_dirty_rect, getviewtransform());
+	t_view_rect = MCRectangleGetTransformedBounds(t_dirty_rect, view_getviewtransform());
 	
 	view_dirty_rect(t_view_rect);
 }
@@ -2431,11 +2454,15 @@ void MCStack::applyupdates(void)
 
 void MCStack::render(MCGContextRef p_context, const MCRectangle &p_rect)
 {
-	// IM-2013-10-11: [[ FullscreenMode ]] Apply transform & modify redraw rect to account for stack scroll
-	MCGContextTranslateCTM(p_context, 0.0, -(MCGFloat)getscroll());
+	// IM-2014-01-07: [[ StackScale ]] Apply stack transform to context
+	MCGAffineTransform t_transform;
+	t_transform = gettransform();
+	
+	MCGContextConcatCTM(p_context, t_transform);
+
+	// IM-2014-01-07: [[ StackScale ]] Use inverse stack transform to get redraw rect in card coords
 	MCRectangle t_rect;
-	t_rect = p_rect;
-	t_rect.y += getscroll();
+	t_rect = MCRectangleGetTransformedBounds(p_rect, MCGAffineTransformInvert(t_transform));
 	
 	MCGraphicsContext *t_old_context = nil;
 	t_old_context = new MCGraphicsContext(p_context);
@@ -2444,7 +2471,7 @@ void MCStack::render(MCGContextRef p_context, const MCRectangle &p_rect)
 	delete t_old_context;
 }
 
-void MCStack::device_redrawwindow(MCStackSurface *p_surface, MCRegionRef p_region)
+void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCRegionRef p_region)
 {
 	MCTileCacheRef t_tilecache;
 	t_tilecache = view_gettilecache();
@@ -2452,21 +2479,20 @@ void MCStack::device_redrawwindow(MCStackSurface *p_surface, MCRegionRef p_regio
 	if (t_tilecache == nil || !MCTileCacheIsValid(t_tilecache))
 	{
 		// If there is no tilecache, or the tilecache is invalid then fetch an
-		// MCContext for the surface and render.
+		// MCGContext for the surface and render.
 		MCGContextRef t_context = nil;
 		if (p_surface -> LockGraphics(p_region, t_context))
 		{
-			// p_region is in device coordinates, translate to user-space coords & ensure any fractional pixels are accounted for
-			MCGRectangle t_user_rect;
-			t_user_rect = MCGRectangleToUserSpace(MCRectangleToMCGRectangle(MCRegionGetBoundingBox(p_region)));
+			// IM-2014-01-24: [[ HiDPI ]] Use view backing scale to transform surface -> logical coords
+			MCGFloat t_backing_scale;
+			t_backing_scale = view_getbackingscale();
 			
+			// p_region is in surface coordinates, translate to user-space coords & ensure any fractional pixels are accounted for
 			MCRectangle t_rect;
-			t_rect = MCGRectangleGetIntegerBounds(t_user_rect);
+			t_rect = MCRectangleGetScaledBounds(MCRegionGetBoundingBox(p_region), 1 / t_backing_scale);
 			
-			// scale user -> device space
-			MCGFloat t_scale;
-			t_scale = MCResGetPixelScale();
-			MCGContextScaleCTM(t_context, t_scale, t_scale);
+			// scale user -> surface space
+			MCGContextScaleCTM(t_context, t_backing_scale, t_backing_scale);
 			
 			view_render(t_context, t_rect);
 			
@@ -2530,16 +2556,16 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 		t_effect_area = MCRectangleGetTransformedBounds(t_effect_area, getviewtransform());
 		t_effect_area = MCU_intersect_rect(t_effect_area, MCU_make_rect(0, 0, view_getrect() . width, view_getrect() . height));
 		
-		MCRectangle t_device_rect, t_user_rect;
-		t_device_rect = MCRectangleGetTransformedBounds(t_effect_area, MCResGetDeviceTransform());		
-		t_user_rect = MCRectangleGetTransformedBounds(t_device_rect, MCGAffineTransformInvert(t_transform));
+		MCRectangle t_surface_rect, t_user_rect;
+		t_surface_rect = MCRectangleGetScaledBounds(t_effect_area, view_getbackingscale());
+		t_user_rect = MCRectangleGetTransformedBounds(t_surface_rect, MCGAffineTransformInvert(t_transform));
 		
 		if (t_success)
-			t_success = MCGContextCreate(t_device_rect.width, t_device_rect.height, true, t_context);
+			t_success = MCGContextCreate(t_surface_rect.width, t_surface_rect.height, true, t_context);
 
 		if (t_success)
 		{
-			MCGContextTranslateCTM(t_context, -t_device_rect.x, -t_device_rect.y);
+			MCGContextTranslateCTM(t_context, -t_surface_rect.x, -t_surface_rect.y);
 			
 			// IM-2013-09-30: [[ FullscreenMode ]] Apply stack transform to snapshot context
 			MCGContextConcatCTM(t_context, t_transform);
@@ -2582,7 +2608,10 @@ void MCStack::render(MCContext *p_context, const MCRectangle& p_dirty)
 	p_context -> setopacity(255);
 
     MCRectangle t_clipped_visible = p_dirty;
-    if (menuheight > rect . height || menuy != 0)
+	
+	// MW-2014-03-12: [[ Bug 11914 ]] Only fiddle with scrolling and such
+	//   if this is an engine menu.
+    if (m_is_menu && (menuheight > rect . height || menuy != 0))
         clipmenu(p_context, t_clipped_visible);
     
     curcard -> draw(p_context, t_clipped_visible, false);
@@ -2597,8 +2626,11 @@ void MCStack::updatewindow(MCRegionRef p_region)
 
 MCGAffineTransform MCStack::gettransform(void) const
 {
+	MCGAffineTransform t_transform;
 	// IM-2013-10-11: [[ FullscreenMode ]] Add scroll offset to stack transform
-	return MCGAffineTransformMakeTranslation(0.0, -(MCGFloat)getscroll());
+	t_transform = MCGAffineTransformMakeTranslation(0.0, -(MCGFloat)getscroll());
+	
+	return t_transform;
 }
 
 MCGAffineTransform MCStack::getviewtransform(void) const
@@ -2608,7 +2640,10 @@ MCGAffineTransform MCStack::getviewtransform(void) const
 
 MCGAffineTransform MCStack::getdevicetransform(void) const
 {
-	return MCGAffineTransformConcat(MCResGetDeviceTransform(), getviewtransform());
+	MCGFloat t_scale;
+	t_scale = view_getbackingscale();
+	
+	return MCGAffineTransformConcat(MCGAffineTransformMakeScale(t_scale, t_scale), getviewtransform());
 }
 
 MCGAffineTransform MCStack::getroottransform(void) const
@@ -2644,78 +2679,66 @@ MCRectangle MCStack::constrainstackrect(const MCRectangle &p_rect)
 	return MCRectangleMake(p_rect.x, p_rect.y, t_width, t_height);
 }
 
-// IM-2013-10-08: [[ FullscreenMode ]] Ensure rect of resizable stacks is within screen bounds
-MCRectangle MCStack::constrainstackrecttoscreen(const MCRectangle &p_rect)
-{
-	if (!getflag(F_RESIZABLE))
-		return p_rect;
-		
-	uint32_t t_width, t_height;
-	const MCDisplay *t_display;
-	t_display = MCscreen->getnearestdisplay(p_rect);
-	
-	MCRectangle t_screenrect;
-	t_screenrect = MCscreen->fullscreenrect(t_display);
-		
-	t_width = MCMin(p_rect.width, t_screenrect.width);
-	t_height = MCMin(p_rect.height, t_screenrect.height);
-	
-	return MCRectangleMake(p_rect.x, p_rect.y, t_width, t_height);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPoint MCStack::windowtostackloc(const MCPoint &p_windowloc) const
 {
-	MCPoint t_stackloc;
-	t_stackloc = view_viewtostackloc(p_windowloc);
-	
-	// IM-2013-10-09: [[ FullscreenMode ]] Adjust loc by stack scroll
-	t_stackloc.y += getscroll();
-	
-	return t_stackloc;
+	// IM-2014-01-07: [[ StackScale ]] Use view->stack transform to convert coords
+	return MCGPointToMCPoint(MCGPointApplyAffineTransform(MCPointToMCGPoint(p_windowloc), MCGAffineTransformInvert(getviewtransform())));
 }
 
 MCPoint MCStack::stacktowindowloc(const MCPoint &p_stackloc) const
 {
-	MCPoint t_windowloc;
-	t_windowloc = p_stackloc;
-	
-	// IM-2013-10-09: [[ FullscreenMode ]] Adjust loc by stack scroll
-	t_windowloc.y -= getscroll();
-	t_windowloc = view_stacktoviewloc(t_windowloc);
-	
-	return t_windowloc;
+	// IM-2014-01-07: [[ StackScale ]] Use stack->view transform to convert coords
+	return MCGPointToMCPoint(MCGPointApplyAffineTransform(MCPointToMCGPoint(p_stackloc), getviewtransform()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPoint MCStack::globaltostackloc(const MCPoint &p_windowloc) const
 {
-	MCPoint t_loc;
-	t_loc = p_windowloc;
-
-	MCRectangle t_view_rect;
-	t_view_rect = view_getrect();
-
-	t_loc.x -= t_view_rect.x;
-	t_loc.y -= t_view_rect.y;
-	
-	return windowtostackloc(t_loc);
+	// IM-2014-01-07: [[ StackScale ]] Use root->stack transform to convert coords
+	return MCGPointToMCPoint(MCGPointApplyAffineTransform(MCPointToMCGPoint(p_windowloc), MCGAffineTransformInvert(getroottransform())));
 }
 
 MCPoint MCStack::stacktogloballoc(const MCPoint &p_stackloc) const
 {
-	MCPoint t_loc;
-	t_loc = stacktowindowloc(p_stackloc);
-	
-	MCRectangle t_view_rect;
-	t_view_rect = view_getrect();
+	// IM-2014-01-07: [[ StackScale ]] Use stack->root transform to convert coords
+	return MCGPointToMCPoint(MCGPointApplyAffineTransform(MCPointToMCGPoint(p_stackloc), getroottransform()));
+}
 
-	t_loc.x += t_view_rect.x;
-	t_loc.y += t_view_rect.y;
+////////////////////////////////////////////////////////////////////////////////
+
+MCRectangle MCStack::getcardrect() const
+{
+	MCRectangle t_stackrect;
+	t_stackrect = MCRectangleMake(0, 0, rect.width, rect.height);
 	
-	return t_loc;
+	MCRectangle t_cardrect;
+	t_cardrect = MCRectangleGetTransformedBounds(t_stackrect, MCGAffineTransformInvert(gettransform()));
+	
+	t_cardrect.x = t_cardrect.y = 0;
+	t_cardrect.height += getscroll();
+	
+	return t_cardrect;
+}
+
+void MCStack::updatecardsize()
+{
+	MCRectangle t_cardrect;
+	t_cardrect = getcardrect();
+	
+	// MW-2011-08-19: [[ Layers ]] Notify of change in size of canvas.
+	//   This call also calls MCCard::resize to update the rect.
+	curcard -> layer_setviewport(0, 0, t_cardrect.width, t_cardrect.height);
+}
+
+MCRectangle MCStack::getvisiblerect(void)
+{
+	MCRectangle t_rect;
+	t_rect = view_getstackvisiblerect();
+	
+	return MCRectangleGetTransformedBounds(t_rect, MCGAffineTransformInvert(gettransform()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

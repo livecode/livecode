@@ -938,8 +938,8 @@ bool X_open(int argc, char *argv[], char *envp[])
 		MCscreen->alloccolor(MClinkatts.visitedcolor);
 	}
 	
-	// IM-2013-12-06: [[ PixelScale ]] Initialise pixelScale property to the systemPixelScale
-	MCResSetPixelScale(MCResGetSystemScale());
+	// IM-2014-01-27: [[ HiDPI ]] Initialize pixel scale settings
+	MCResInitPixelScaling();
 	
 	// MW-2012-02-14: [[ FontRefs ]] Open the dispatcher after we have an open
 	//   screen, otherwise we don't have a root fontref!
@@ -988,6 +988,9 @@ bool X_open(int argc, char *argv[], char *envp[])
 
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsInitialize();
+	
+	// MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Initialise the openlSSL module.
+	InitialiseSSL();
 	
 	// MW-2009-07-02: Clear the result as a startup failure will be indicated
 	//   there.

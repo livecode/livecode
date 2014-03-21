@@ -35,7 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 static CGPoint s_snapshot_start_point, s_snapshot_end_point;
-static bool s_snapshot_done = false;
+static volatile bool s_snapshot_done = false;
 
 static float menu_screen_height(void)
 {
@@ -182,6 +182,9 @@ static Rect rect_from_points(CGPoint x, CGPoint y)
 	[m_region setHidden: YES];
 	[[self contentView] setNeedsDisplayInRect: [m_region frame]];
 	[self displayIfNeeded];
+
+	// MW-2014-03-11: [[ Bug 11654 ]] Make sure we force the wait to finish.
+	PostEvent(mouseUp, 0);
 }
 
 - (void)mouseDragged: (NSEvent *)event
@@ -250,8 +253,10 @@ MCImageBitmap *getimage(CGrafPtr src)
 	return image;
 }
 
-/* OVERHAUL - REVISIT: p_scale_factor parameter currently ignored */
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, MCGFloat p_scale_factor, uint32_t p_window, const char *p_display_name)
+extern bool MCOSXCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context);
+
+// MW-2014-02-20: [[ Bug 11811 ]] Updated to take into account size parameter.
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, uint32_t p_window, const char *p_display_name, MCPoint *size)
 {
 	// Compute the rectangle to grab in screen co-ords.
 	MCRectangle t_screen_rect;
@@ -276,6 +281,11 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, MCGFloat p_scale_factor
 		// Remove the window from display.
 		[t_window orderOut: nil];
 		[t_window release];
+        
+        // MW-2014-03-19: [[ Bug 11654 ]] Wait enough time for the screen to update to a new
+        //   frame. Ideally there'd be an API to wait until the screen has been updated, but
+        //   this doesn't seem to be the case.
+        MCscreen -> wait(1.0/50.0, False, False);
 
 		// Return the cursor to arrow.
 		setcursor(nil, MCcursors[PI_ARROW]);
@@ -298,84 +308,57 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, MCGFloat p_scale_factor
 		t_screen_rect = MCU_offset_rect(p_rect, t_window_bounds . left, t_window_bounds . top);
 	}
 
-	// Now we have a screen rect, we can grab the contents. On 10.5 and above we
-	// use the CGWindow APIs; otherwise we fall back to QD for now.
 	MCImageBitmap *t_snapshot;
 	t_snapshot = nil;
-	if (MCmajorosversion >= 0x1050)
+
+	CGRect t_area;
+	t_area = CGRectMake(t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
+	
+	CGImageRef t_image;
+	t_image = CGWindowListCreateImage(t_area, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault);
+	if (t_image != nil)
 	{
-		typedef CGImageRef (*CGWindowListCreateImageProc)(CGRect, uint32_t listOption, uint32_t windowID, uint32_t imageOption);
-		typedef CFDataRef (*CGDataProviderCopyDataProc)(CGDataProviderRef);
-		static CGWindowListCreateImageProc s_cg_window_list_create_image = nil;
-		static CGDataProviderCopyDataProc s_cg_data_provider_copy_data = nil;
-		if (s_cg_window_list_create_image == nil)
+		// IM-2014-01-24: [[ HiDPI ]] Snapshots will be at the density of the display device,
+		// so we need to scale down if the dimensions of the returned image don't match
+		
+		uint32_t t_width, t_height;
+		uint32_t t_image_width, t_image_height;
+		t_image_width = CGImageGetWidth(t_image);
+		t_image_height = CGImageGetHeight(t_image);
+
+		if (size == nil)
 		{
-			s_cg_window_list_create_image = (CGWindowListCreateImageProc)CFBundleGetFunctionPointerForName(CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices")), CFSTR("CGWindowListCreateImage"));
-			s_cg_data_provider_copy_data = (CGDataProviderCopyDataProc)CFBundleGetFunctionPointerForName(CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices")), CFSTR("CGDataProviderCopyData"));
+			t_width = t_screen_rect . width;
+			t_height = t_screen_rect . height;
+		}
+		else
+		{
+			t_width = size -> x;
+			t_height = size -> y;
 		}
 		
-		CGRect t_area;
-		t_area = CGRectMake(t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
+		MCGFloat t_hscale, t_vscale;
+		t_hscale = (MCGFloat)t_width / (MCGFloat)t_image_width;
+		t_vscale = (MCGFloat)t_height / (MCGFloat)t_image_height;
 		
-		CGImageRef t_image;
-		t_image = s_cg_window_list_create_image(t_area, /*kCGWindowListOptionOnScreenOnly*/ (1 << 0), /*kCGNullWindowID*/ 0, /*kCGWindowImageDefault*/ 0);
-		if (t_image != nil)
-		{
-			MCImageBitmap *t_bitmap;
-			/* UNCHECKED */ MCImageBitmapCreate(CGImageGetWidth(t_image), CGImageGetHeight(t_image), t_bitmap);
-			
-			CFDataRef t_data;
-			t_data = s_cg_data_provider_copy_data(CGImageGetDataProvider(t_image));
-			
-			uint8_t *t_bytes;
-			t_bytes = (uint8_t *)CFDataGetBytePtr(t_data);
-			
-			for(int32_t y = 0; y < CGImageGetHeight(t_image); y++)
-				memcpy((uint8_t*)t_bitmap -> data + y * t_bitmap -> stride, t_bytes + y * CGImageGetBytesPerRow(t_image), CGImageGetWidth(t_image) * 4);
-			
-			CFRelease(t_data);
-			
-			CGImageRelease(t_image);
-			
-			t_snapshot = t_bitmap;
-		}
+		MCImageBitmap *t_bitmap;
+		/* UNCHECKED */ MCImageBitmapCreate(t_width, t_height, t_bitmap);
+
+		MCImageBitmapClear(t_bitmap);
+		
+		CGContextRef t_context;
+		/* UNCHECKED */ MCOSXCreateCGContextForBitmap(t_bitmap, t_context);
+		
+		// Draw the image scaled down onto the bitmap
+		CGContextScaleCTM(t_context, t_hscale, t_vscale);
+		CGContextDrawImage(t_context, CGRectMake(0, 0, t_image_width, t_image_height), t_image);
+		
+		CGContextRelease(t_context);
+		CGImageRelease(t_image);
+		
+		t_snapshot = t_bitmap;
 	}
-	else
-	{
-		Rect t_src_rect, t_dst_rect;
-		SetRect(&t_src_rect, t_screen_rect . x, t_screen_rect . y, t_screen_rect . x + t_screen_rect . width, t_screen_rect . y + t_screen_rect . height);
-		SetRect(&t_dst_rect, 0, 0, t_screen_rect . width, t_screen_rect . height);
-
-		Pixmap t_snap_pixmap;
-		t_snap_pixmap = createpixmap(t_screen_rect . width, t_screen_rect . height, 32, False);
-
-		CGrafPtr port;
-		port = CreateNewPort();
-		
-		PixMapHandle spm, dpm;
-		spm = GetGWorldPixMap(port);
-		dpm = GetGWorldPixMap((CGrafPtr)t_snap_pixmap -> handle . pixmap);
-		LockPixels(spm);
-		LockPixels(dpm);
-		
-		const BitMap *sbm, *dbm;
-		sbm = (BitMap *)*spm;
-		dbm = (BitMap *)*dpm;
-		
-		CopyBits(sbm, dbm, &t_src_rect, &t_dst_rect, srcCopy, NULL);
-		
-		UnlockPixels(dpm);
-		UnlockPixels(spm);
-		
-		DisposePort(port);
-		
-		MCImageBitmap *snapimage;
-		snapimage = getimage((CGrafPtr)t_snap_pixmap -> handle . pixmap);
-		freepixmap(t_snap_pixmap);
-		
-		t_snapshot = snapimage;
-	}
-
+	
 	return t_snapshot;
 }
 
