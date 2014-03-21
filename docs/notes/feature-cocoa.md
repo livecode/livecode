@@ -18,5 +18,6 @@ With the release of dp-1 there are a number of known issues:
 * Cursor issues over window borders and during drag-drop - the cursor will sometimes stick or change to the wrong type, this is being investigated.
 * Cmd-Shift-'_' does not work - this is being investigated.
 * Themed scrollbars sometimes do not work correctly on Retina displays - this is being investigated.
+* Some aspects of the player are currently non-functional - in particular, user callbacks and QTVR related properties.
 
 Finally, an important internal change which will affect maintainers of Mac externals that use the windowId is that this property now returns the 'global window number' (which is the unique ID the Window Server uses to identify windows). To turn this into a Cocoa NSWindow pointer use [NSApp windowWithWindowNumber: t_window_id]. Note that it is no longer possible to get a Carbon WindowRef, nor should this be attempted as trying to mix Carbon and Cocoa in this manner will cause instability inside the sandbox environment required by the Mac AppStore.

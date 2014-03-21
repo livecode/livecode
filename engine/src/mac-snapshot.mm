@@ -181,12 +181,6 @@ static Rect rect_from_points(CGPoint x, CGPoint y)
 	[[self contentView] setNeedsDisplayInRect: [m_region frame]];
 	[self displayIfNeeded];
     
-	// Remove the region from display and force an update to ensure in QD mode, we don't get
-	// partial grayness over the selected area.
-	[m_region setHidden: YES];
-	[[self contentView] setNeedsDisplayInRect: [m_region frame]];
-	[self displayIfNeeded];
-    
 	// MW-2014-03-11: [[ Bug 11654 ]] Make sure we force the wait to finish.
 	MCPlatformBreakWait();
 }
