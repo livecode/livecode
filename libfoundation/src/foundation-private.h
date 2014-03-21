@@ -258,8 +258,16 @@ void __MCValueDestroy(__MCValue *value);
 
 bool __MCValueImmutableCopy(__MCValue *value, bool release, __MCValue*& r_new_value);
 
+inline bool __MCValueIsTagged(__MCValue *self)
+{
+    return (((uintptr_t)self) & 0x3) != 0;
+}
+
 inline MCValueTypeCode __MCValueGetTypeCode(__MCValue *self)
 {
+    if (__MCValueIsTagged(self))
+        return kMCValueTypeCodeNumber;
+
 	return (self -> flags >> 28);
 }
 

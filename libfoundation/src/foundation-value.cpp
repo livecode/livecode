@@ -54,7 +54,10 @@ MCValueRef MCValueRetain(MCValueRef p_value)
 	__MCValue *self = (__MCValue *)p_value;
 
 	MCAssert(self != nil);
-
+    
+    if (__MCValueIsTagged(self))
+        return p_value;
+    
 	self -> references += 1;
 
 	return self;
@@ -63,7 +66,10 @@ MCValueRef MCValueRetain(MCValueRef p_value)
 void MCValueRelease(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
-
+    
+    if (__MCValueIsTagged(self))
+        return;
+    
 	if (self != nil)
 	{
 		self -> references -= 1;
@@ -230,6 +236,9 @@ bool MCValueIsUnique(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
 
+    if (__MCValueIsTagged(self))
+        return true;
+    
 	switch(__MCValueGetTypeCode(self))
 	{
 	case kMCValueTypeCodeNull:
@@ -316,6 +325,9 @@ bool __MCValueCreate(MCValueTypeCode p_type_code, size_t p_size, __MCValue*& r_v
 
 void __MCValueDestroy(__MCValue *self)
 {
+    if (__MCValueIsTagged(self))
+        return;
+    
 	if ((self -> flags & kMCValueFlagIsInterred) != 0)
 		__MCValueUninter(self);
 
@@ -640,6 +652,12 @@ static bool __MCValueRehashUniqueValues(index_t p_new_item_count)
 
 static bool __MCValueInter(__MCValue *self, bool p_release, MCValueRef& r_unique_self)
 {
+    if (__MCValueIsTagged(self))
+    {
+        r_unique_self = self;
+        return true;
+    }
+    
 	// Compute the hash code for the value.
 	hash_t t_hash;
 	t_hash = MCValueHash(self);
@@ -690,6 +708,9 @@ static bool __MCValueInter(__MCValue *self, bool p_release, MCValueRef& r_unique
 
 static void __MCValueUninter(__MCValue *self)
 {
+    if (__MCValueIsTagged(self))
+        return;
+    
 	// Compute the hash code for the value.
 	hash_t t_hash;
 	t_hash = MCValueHash(self);
@@ -712,6 +733,12 @@ static void __MCValueUninter(__MCValue *self)
 
 bool __MCValueImmutableCopy(__MCValue *self, bool p_release, __MCValue*& r_new_value)
 {
+    if (__MCValueIsTagged(self))
+    {
+        r_new_value = self;
+        return true;
+    }
+    
 	switch(__MCValueGetTypeCode(self))
 	{
 	case kMCValueTypeCodeString:

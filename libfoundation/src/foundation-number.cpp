@@ -21,8 +21,17 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define TAGGED_INTEGER_MIN (-(1 << 30))
+#define TAGGED_INTEGER_MAX ((1 << 30) - 1)
+
 bool MCNumberCreateWithInteger(integer_t p_value, MCNumberRef& r_number)
 {
+    if (0 && p_value >= TAGGED_INTEGER_MIN && p_value < TAGGED_INTEGER_MAX)
+    {
+        r_number = (MCNumberRef)(uintptr_t)((p_value << 2) | 0x01);
+        return true;
+    }
+    
 	__MCNumber *self;
 	if (!__MCValueCreate(kMCValueTypeCodeNumber, self))
 		return false;
@@ -36,10 +45,15 @@ bool MCNumberCreateWithInteger(integer_t p_value, MCNumberRef& r_number)
 
 bool MCNumberCreateWithReal(real64_t p_value, MCNumberRef& r_number)
 {
+    double t_frac, t_int;
+    t_frac = modf(p_value, &t_int);
+    if (t_frac == 0.0 && t_int >= INTEGER_MIN && t_int < INTEGER_MAX)
+        return MCNumberCreateWithInteger((integer_t)t_int, r_number);
+    
 	__MCNumber *self;
 	if (!__MCValueCreate(kMCValueTypeCodeNumber, self))
 		return false;
-
+    
 	self -> real = p_value;
 	self -> flags |= (1 << 0);
 
@@ -59,16 +73,22 @@ bool MCNumberCreateWithUnsignedInteger(uinteger_t p_value, MCNumberRef& r_number
 
 bool MCNumberIsInteger(MCNumberRef self)
 {
+    if (__MCValueIsTagged(self))
+        return true;
 	return (self -> flags & kMCNumberFlagIsReal) == 0;
 }
 
 bool MCNumberIsReal(MCNumberRef self)
 {
+    if (__MCValueIsTagged(self))
+        return false;
 	return (self -> flags & kMCNumberFlagIsReal) != 0;
 }
 
 real64_t MCNumberFetchAsReal(MCNumberRef self)
 {
+    if (__MCValueIsTagged(self))
+        return (real64_t)(((intptr_t)self) >> 2);
 	if (MCNumberIsReal(self))
 		return self -> real;
 	return (real64_t)self -> integer;
@@ -76,6 +96,8 @@ real64_t MCNumberFetchAsReal(MCNumberRef self)
 
 integer_t MCNumberFetchAsInteger(MCNumberRef self)
 {
+    if (__MCValueIsTagged(self))
+        return (((intptr_t)self) >> 2);
 	if (MCNumberIsInteger(self))
 		return self -> integer;
 	return self -> real < 0.0 ? (integer_t)(self -> real - 0.5) : (integer_t)(self -> real + 0.5);
@@ -83,6 +105,14 @@ integer_t MCNumberFetchAsInteger(MCNumberRef self)
 
 uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef self)
 {
+    if (__MCValueIsTagged(self))
+    {
+        integer_t t_integer;
+        t_integer = (((intptr_t)self) >> 2);
+        if (t_integer >= 0)
+            return t_integer;
+        return 0;
+    }
 	if (MCNumberIsInteger(self))
 		return self -> integer >= 0 ? self -> integer : 0;
 	return self -> real >= 0.0 ? (uinteger_t)(self -> real + 0.5) : (uinteger_t)0.0;
@@ -90,19 +120,40 @@ uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef self)
 
 compare_t MCNumberCompareTo(MCNumberRef self, MCNumberRef p_other_self)
 {
-	// First determine the storage types of both numbers.
-	bool t_self_is_integer, t_other_self_is_integer;
-	t_self_is_integer = MCNumberIsInteger(self);
-	t_other_self_is_integer = MCNumberIsInteger(p_other_self);
-	
+    bool t_self_is_integer;
+    integer_t t_self_value;
+    if (__MCValueIsTagged(self))
+    {
+        t_self_is_integer = true;
+        t_self_value = (((intptr_t)self) >> 2);
+    }
+    else if ((self -> flags & kMCNumberFlagIsReal) == 0)
+    {
+        t_self_is_integer = true;
+        t_self_value = self -> integer;
+    }
+    
+    bool t_other_self_is_integer;
+    integer_t t_other_self_value;
+    if (__MCValueIsTagged(p_other_self))
+    {
+        t_other_self_is_integer = true;
+        t_other_self_value = (((intptr_t)p_other_self) >> 2);
+    }
+    else if ((self -> flags & kMCNumberFlagIsReal) == 0)
+    {
+        t_other_self_is_integer = true;
+        t_other_self_value = p_other_self -> integer;
+    }
+
 	// If both are stored as integers then compare.
 	if (t_self_is_integer && t_other_self_is_integer)
-		return self -> integer - p_other_self -> integer;
-
+        return t_self_value - t_other_self_value;
+    
 	// Otherwise fetch both as reals.
 	double x, y;
-	x = t_self_is_integer ? (double)self -> integer : self -> real;
-	y = t_self_is_integer ? (double)p_other_self -> integer : p_other_self -> real;
+	x = t_self_is_integer ? (double)t_self_value : self -> real;
+	y = t_self_is_integer ? (double)t_other_self_value : p_other_self -> real;
 
 	// TODO: Handle nan / infinity / etc.
 		
@@ -191,14 +242,14 @@ bool MCNumberParseUnicodeChars(const unichar_t *p_chars, uindex_t p_char_count, 
 bool __MCNumberCopyDescription(__MCNumber *self, MCStringRef& r_string)
 {
 	if (MCNumberIsInteger(self))
-		return MCStringFormat(r_string, "%d", self -> integer);
+		return MCStringFormat(r_string, "%d", MCNumberFetchAsInteger(self));
 	return MCStringFormat(r_string, "%lf", self -> real);
 }
 
 hash_t __MCNumberHash(__MCNumber *self)
 {
 	if (MCNumberIsInteger(self))
-		return MCHashInteger(self -> integer);
+		return MCHashInteger(MCNumberFetchAsInteger(self));
 	return MCHashDouble(self -> real);
 }
 
