@@ -12,6 +12,7 @@
 		4D8F6A81113D141F0056ED41 /* reviphone.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D8F6A80113D141F0056ED41 /* reviphone.mm */; };
 		4D8F6B35113D231C0056ED41 /* libexternalv1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8F6B32113D22FB0056ED41 /* libexternalv1.a */; };
 		4D8F6B4B113D23FE0056ED41 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8F6B4A113D23FE0056ED41 /* Foundation.framework */; };
+		4DA027EA18DB2BE7000CFCF8 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8F6B4A113D23FE0056ED41 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,6 +72,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4DA027EA18DB2BE7000CFCF8 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -196,6 +198,8 @@
 /* Begin PBXProject section */
 		4D8F6A0C113D13140056ED41 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4D8F6A0F113D13140056ED41 /* Build configuration list for PBXProject "reviphone" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -288,6 +292,7 @@
 					AppKit,
 				);
 				PRODUCT_NAME = reviphoneproxy;
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -303,6 +308,7 @@
 					AppKit,
 				);
 				PRODUCT_NAME = reviphoneproxy;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};
@@ -335,7 +341,7 @@
 					Carbon,
 				);
 				PRODUCT_NAME = reviphone;
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx10.6;
 				WRAPPER_EXTENSION = bundle;
 			};
 			name = Debug;
@@ -348,7 +354,7 @@
 				GENERATE_PKGINFO_FILE = YES;
 				INFOPLIST_FILE = "reviphone-Info.plist";
 				PRODUCT_NAME = reviphone;
-				SDKROOT = macosx10.5;
+				SDKROOT = macosx10.6;
 				WRAPPER_EXTENSION = bundle;
 			};
 			name = Release;
