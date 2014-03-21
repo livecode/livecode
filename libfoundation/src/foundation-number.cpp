@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 bool MCNumberCreateWithInteger(integer_t p_value, MCNumberRef& r_number)
 {
-    if (0 && p_value >= TAGGED_INTEGER_MIN && p_value < TAGGED_INTEGER_MAX)
+    if (p_value >= TAGGED_INTEGER_MIN && p_value < TAGGED_INTEGER_MAX)
     {
         r_number = (MCNumberRef)(uintptr_t)((p_value << 2) | 0x01);
         return true;
