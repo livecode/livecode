@@ -3135,7 +3135,10 @@ Exec_stat MCKeys::eval(MCExecPoint &ep)
 						break;
 
 					case TRANSFER_TYPE_STYLED_TEXT:
-						ep . concatcstring("styles", EC_RETURN, i == 0);
+						// MW-2014-03-12: [[ ClipboardStyledText ]] Synthentic 'styledText' key - always present
+						//   if styles is on the clipboard.
+						ep . concatcstring("styledText", EC_RETURN, i == 0);
+						ep . concatcstring("styles", EC_RETURN, false);
 						ep . concatcstring("rtf", EC_RETURN, false);
 						ep . concatcstring("unicode", EC_RETURN, false);
 						ep . concatcstring("text", EC_RETURN, false);

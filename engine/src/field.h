@@ -506,6 +506,7 @@ public:
 	void exportashtmltext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index, bool p_effective);
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to styled text arrays.
 	void exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool p_formatted, bool p_effective);
+	void exportasstyledtext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index, bool p_formatted, bool p_effective);
 
 	// MW-2012-03-07: [[ FieldImport ]] Conver the htmlText string to a list of paragraphs.
 	MCParagraph *importhtmltext(const MCString& p_data);
