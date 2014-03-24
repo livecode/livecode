@@ -82,3 +82,11 @@ build/
 # SDKs          #
 #################
 sdks/
+
+# Ignore prebuilts #
+###################
+prebuilt/include
+prebuilt/lib
+prebuilt/build
+prebuilt/packaged
+
