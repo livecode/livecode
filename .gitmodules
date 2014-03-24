@@ -1,6 +1,3 @@
-[submodule "prebuilt"]
-	path = prebuilt
-	url = https://github.com/runrev/livecode-prebuilt
 [submodule "ide"]
 	path = ide
 	url = https://github.com/runrev/livecode-ide
