@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 	t_c_path = [t_lib_path cStringUsingEncoding:NSUTF8StringEncoding];
 	
 	// IM-2014-03-19: [[ revBrowserCEF ]] Initialise dynamically loaded cef library
-	if (!initialise_weak_link_cef_with_path(t_c_path)) && !initialise_weak_link_cef())
+	if (!initialise_weak_link_cef_with_path(t_c_path) && !initialise_weak_link_cef())
 	{
 		printf("failed to load libcef library: %s", t_c_path);
 		return -1;
