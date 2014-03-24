@@ -2160,7 +2160,9 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 			{
 				// Break up the list of items.
 				MCString *t_ptrs;
+				t_ptrs = NULL;
 				uint2 t_nptrs;
+				t_nptrs = 0;
 				MCU_break_string(MCString(menustring, menusize), t_ptrs, t_nptrs, hasunicode());
 				
 				// Loop through looking for the new label (taking into account
