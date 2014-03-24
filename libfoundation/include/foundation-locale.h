@@ -391,6 +391,8 @@ uindex_t MCLocaleBreakIteratorBefore(MCBreakIteratorRef, uindex_t);
 // Finds the first boundary after the given code unit index
 uindex_t MCLocaleBreakIteratorAfter(MCBreakIteratorRef, uindex_t);
 
+// Custom advance method for word break iterator.
+bool MCLocaleWordBreakIteratorAdvance(MCStringRef self, MCBreakIteratorRef p_iter, MCRange& x_range);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

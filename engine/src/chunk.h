@@ -233,6 +233,9 @@ class MCTextChunkIterator
     Chunk_term type;
     MCBreakIteratorRef break_iterator;
     MCRange range;
+    bool exhausted;
+    uindex_t length;
+    bool first_chunk;
     
     public:
     MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text);
@@ -243,8 +246,15 @@ class MCTextChunkIterator
         return range;
     }
     
-    bool next();
+    bool isexhausted()
+    {
+        return exhausted;
+    }
     
-    bool getstring(MCStringRef& r_string);
+    bool next(MCExecContext& ctxt);
+    bool copystring(MCStringRef& r_string);
+    uindex_t countchunks(MCExecContext& ctxt);
+    bool isamong(MCExecContext& ctxt, MCStringRef p_needle);
+    uindex_t chunkoffset(MCExecContext& ctxt, MCStringRef p_needle, uindex_t p_start_offset);
 };
 #endif
