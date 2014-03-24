@@ -45,6 +45,8 @@ function doPackage {
 	# Package up Curl
 	if [ -f "${LIBPATH}/libcurl.a" ] ; then
 		tar -cf "${CURL_TAR}" "${LIBPATH}/libcurl.a"
+	elif [ -f "${LIBPATH}/libcurl_a.lib" ] ; then
+		tar -cf "${CURL_TAR}" "${LIBPATH}/libcurl_a.lib"
 	fi
 
 	# Package up ICU
