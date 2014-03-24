@@ -96,3 +96,11 @@ for PLATFORM in `find lib/ -type d -mindepth 1 -maxdepth 1` ; do
 	fi	
 done
 
+# Package up the includes
+OPENSSL_HDR_TAR="${PACKAGE_DIR}/OpenSSL-${OPENSSL_VERSION}-All-Universal-Headers.tar"
+ICU_HDR_TAR="${PACKAGE_DIR}/ICU-${ICU_VERSION}-All-Universal-Headers.tar"
+tar -cf "${OPENSSL_HDR_TAR}" include/openssl/*.h
+tar -cf "${ICU_HDR_TAR}" include/layout/*.h include/unicode/*.h
+bzip2 -z --best "${OPENSSL_HDR_TAR}"
+bzip2 -z --best "${ICU_HDR_TAR}"
+
