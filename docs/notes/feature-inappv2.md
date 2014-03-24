@@ -1,4 +1,4 @@
-# **In-App Purchasing
+# In-App Purchasing
 
 **Why has the API changed?**
 
@@ -8,11 +8,12 @@ The LiveCode engine until now supported in-app purchasing for apps distributed t
 
 To start with, the main changes are the following:
 
-1.  Each item has an extra property, the *itemType*, that has to be specified before making a purchase. This is done using the **mobileStoreSetProductType** command. The *itemType* can either be *subs*, for subscription items, or *inapp* for consumable and non-consumable items.
+*  Each item has an extra property, the *itemType*, that has to be specified before making a purchase. This is done using the **mobileStoreSetProductType** command. The *itemType* can either be *subs*, for subscription items, or *inapp* for consumable and non-consumable items.
 
-2.  Due to a restriction of the newest version of Google In-App Billing API, you cannot buy consumable items more than once, unless you consume them. This is done using the **mobileStoreConsumePurchase** command. Note that this command is actually only used when interacting with the Google Play Store API. What it does is sending a consumption request to Google Play, so that you will be able to buy this product again. You would typically implement consumption for items that can be purchased multiple times (i.e. for consumable products, such as in-game currency, fuel etc). Note that in case you call mobileStoreConsumePurchase on a non consumable product, then you no longer own this item.
+*  Due to a restriction of the newest version of Google In-App Billing API, you cannot buy consumable items more than once, unless you consume them. This is done using the **mobileStoreConsumePurchase** command. Note that this command is actually only used when interacting with the Google Play Store API. What it does is sending a consumption request to Google Play, so that you will be able to buy this product again. You would typically implement consumption for items that can be purchased multiple times (i.e. for consumable products, such as in-game currency, fuel etc). Note that in case you call mobileStoreConsumePurchase on a non consumable product, then you no longer own this item.
 
-3.  The new purchase flow has become simpler. 
+*  The new purchase flow has become simpler.
+
 	Instead of
 
 	- creating a purchase request (**mobilePurchaseCreate** productID)
@@ -30,23 +31,23 @@ To start with, the main changes are the following:
 	- make a purchase (**mobileStoreMakePurchase** productID, quantity, developerPayload)
 
 
-4.  The **purchaseStateUpdate** message that the store sends in response to **mobileStoreMakePurchase**, contains not only the purchase identifier and the state of the purchase, but also the product identifier of the requested item:
+*  The **purchaseStateUpdate** message that the store sends in response to **mobileStoreMakePurchase**, contains not only the purchase identifier and the state of the purchase, but also the product identifier of the requested item:
 
 	**purchaseStateUpdate** *purchaseID*, *productID*, *state*
 
-5.  So you can query a purchased product property using the product identifier, instead of the purchase identifier:
+*  So you can query a purchased product property using the product identifier, instead of the purchase identifier:
 
 	**mobileStoreProductProperty** *productID*, *propertyName*
 
 	Note that the old function **mobileGetPurchase** *purchaseID*, *propertyName* will still work.
 
-6.  You can get information on a specific item (such as product identifier, product type, price etc), using the **mobileStoreRequestProductDetails** command. The store responds:
+*  You can get information on a specific item (such as product identifier, product type, price etc), using the **mobileStoreRequestProductDetails** command. The store responds:
 
 	In case the request is successful, a **productDetailsReceived** message is sent by the store.
 
 	In case of failure, a **productRequestError** message is sent by the store.
 
-7.  You can get a list of all known completed purchases using **mobileStorePurchasedProducts** function. This returns a list of product identifiers of restored or newly bought purchases.
+*  You can get a list of all known completed purchases using **mobileStorePurchasedProducts** function. This returns a list of product identifiers of restored or newly bought purchases.
 
 **What needs to change in existing scripts?**
 
@@ -64,7 +65,7 @@ If you want to build apps for Amazon and/or Samsung Store, you have to use the n
 
 **Setup**
 
-Before you can use IAP, you must set up products in each vendor's developer portal. In general terms, you have to:
+Before you can use IAP, you must set up products in each vendor's developer portal. In brief, you have to:
 
 - Create each product you want to sell, giving it a unique identifier. Note that for the Samsung Seller Office, the developer cannot choose the product identifier. This is assigned by the store.
 - Submit the items for approval to the appropriate store. Some stores may require additional metadata, such as screenshots of your for sale items.
@@ -90,7 +91,7 @@ For more detailed store-specific information, you can have a look at the links b
 
 Each vendor uses different terminology for these purchases : 
 
-|        | Apple           | Google  |Amazon       |Samsung  |
+|        | Apple       | Google  |Amazon       |Samsung  |
 ----------------------------------------------------------------
 |   one-time, gets consumed    | consumable | unmanaged |consumable       |consumable  |
 | one-time, lasts forever     | non-consumable      |   managed |entitlement       |non-consumable  |
@@ -147,28 +148,28 @@ The *productID* is the identifier of the item, and *details* is an array with th
 
 For Android stores (Google, Amazon, Samsung), the keys are:
 
-- *productID* – identifier of the requested product
-- *price* – price of the requested product
-- *description* –  description of the requested product
-- *title* – title of the requested product
-- *itemType* – type of the requested product
-- *itemImageUrl* – URL where the image (if any) of the requested product is stored
-- *itemDownloadUrl* – URL to download the requested product
-- *subscriptionDurationUnit* — subscription duration unit of the requested product
-- *subscriptionDurationMultiplier* — subscription duration multiplier of the requested product
+- *productID* : identifier of the requested product
+- *price* : price of the requested product
+- *description* : description of the requested product
+- *title* : title of the requested product
+- *itemType* : type of the requested product
+- *itemImageUrl* : URL where the image (if any) of the requested product is stored
+- *itemDownloadUrl* : URL to download the requested product
+- *subscriptionDurationUnit* : subscription duration unit of the requested product
+- *subscriptionDurationMultiplier* : subscription duration multiplier of the requested product
 
 Note that some Android stores do not provide values for all the above keys. In this case, the value for the corresponding key will be empty.
 
 For iTunes Connect store (Apple), the keys of *details* array are the following:
 
-- *price* – price of the requested product
-- *description* –  description of the requested product
-- *title* – title of the requested product
-- *currency code* – price currency code of the requested product
-- *currency symbol* — currency symbol of the requested product
-- *unicode description* — unicode description of the requested product
-- *unicode title* — unicode title of the requested product
-- *unicode currency symbol* — unicode currency symbol of the requested product
+- *price* : price of the requested product
+- *description* : description of the requested product
+- *title* : title of the requested product
+- *currency code* : price currency code of the requested product
+- *currency symbol* : currency symbol of the requested product
+- *unicode description* : unicode description of the requested product
+- *unicode title* : unicode title of the requested product
+- *unicode currency symbol* : unicode currency symbol of the requested product
 
 If **mobileStoreRequestProductDetails** is not successful, then a *productRequestError* message is sent :
 
@@ -201,53 +202,53 @@ Once a purchase is complete, you can retrieve the properties of the purchased pr
 
 The parameters are as follows:
 
-- *productID* – identifier of the requested product
-- *property* – name of the purchase request property to get
+- *productID* : identifier of the requested product
+- *property* : name of the purchase request property to get
 
-Properties which can be queried can differ depending on the store: 
+Properties which can be queried can differ depending on the store:
 
 For the Samsung Apps Store (Android), you can query the properties:
 
-- *title*– title of the purchased product
-- *productId* – identifier of the purchased product
-- *price* – price of the purchased product
-- *currencyUnit* – currency unit of the product price
-- *description* – description of the product as specified in the Samsung Seller Office
-- *itemImageUrl* — URL where the image of the purchased product is stored
-- *itemDownLoadUrl* — URL to download the purchased product 
-- *paymentId* — payment identifier of the purchased product
-- *purchaseId* — purchase identifier of the purchased product
-- *purchaseDate* — purchase date, in milliseconds
-- *verifyUrl* — IAP server URL for checking if the purchase is valid for the IAP server, using the *purchaseId* value
+- *title* : title of the purchased product
+- *productId* : identifier of the purchased product
+- *price* : price of the purchased product
+- *currencyUnit* : currency unit of the product price
+- *description* : description of the product as specified in the Samsung Seller Office
+- *itemImageUrl* : URL where the image of the purchased product is stored
+- *itemDownLoadUrl* : URL to download the purchased product
+- *paymentId* : payment identifier of the purchased product
+- *purchaseId* : purchase identifier of the purchased product
+- *purchaseDate* : purchase date, in milliseconds
+- *verifyUrl* : IAP server URL for checking if the purchase is valid for the IAP server, using the *purchaseId* value
 
 For the Google Play Store (Android), you can query the properties:
 
-- *productId* – identifier of the purchased product
-- *packageName* – application package from which the purchase originated
-- *orderId* – unique order identifier for the transaction. This corresponds to the Google Wallet Order ID
-- *purchaseTime* – time the product was purchased, in milliseconds
-- *developerPayload*– developer-specified string that contains supplemental information about an order. You can specify a value for this in **mobileStoreMakePurchase**
-- *purchaseToken*– token that uniquely identifies a purchase for a given item and user pair.
-- *itemType* — type of the purchased item, *inapp* or *subs*
-- *signature* — string containing the signature of the purchase data that was signed with the private key of the developer. The data signature uses the RSASSA-PKCS1-v1_5 scheme
+- *productId* : identifier of the purchased product
+- *packageName* : application package from which the purchase originated
+- *orderId* : unique order identifier for the transaction. This corresponds to the Google Wallet Order ID
+- *purchaseTime* : time the product was purchased, in milliseconds
+- *developerPayload* : developer-specified string that contains supplemental information about an order. You can specify a value for this in **mobileStoreMakePurchase**
+- *purchaseToken* : token that uniquely identifies a purchase for a given item and user pair.
+- *itemType* : type of the purchased item, *inapp* or *subs*
+- *signature* : string containing the signature of the purchase data that was signed with the private key of the developer. The data signature uses the RSASSA-PKCS1-v1_5 scheme
 
 For the Amazon Appstore (Android), you can query the properties:
 
-- *productId* – identifier of the purchased product
-- *itemType* — type of the purchased product. This can be *CONSUMABLE*, *ENTITLED* or *SUBSCRIPTION*
-- *subscriptionPeriod* – string indicating the start and end date for subscription (for subscription products only)
-- *purchaseToken*– purchase token that can be used from an external server to validate purchase
+- *productId* : identifier of the purchased product
+- *itemType* : type of the purchased product. This can be *CONSUMABLE*, *ENTITLED* or *SUBSCRIPTION*
+- *subscriptionPeriod* : string indicating the start and end date for subscription (for subscription products only)
+- *purchaseToken* : purchase token that can be used from an external server to validate purchase
 
 For Apple AppStore (iOS), you can query the properties:
 
-- *quantity* – amount of item purchased. You can specify a value for this in **mobileStoreMakePurchase**
-- *productId* – identifier of the purchased product
-- *receipt* – block of data that can be used to confirm the purchase from a remote server with the iTunes Connect store 
-- *purchaseDate* – date the purchase / restoration request was sent
-- *transactionIdentifier* – unique identifier for a successful purchase / restoration request
-- *originalPurchaseDate* –  date of the original purchase, for restored purchases 
-- *originalTransactionIdentifier* – the transaction identifier of the original purchase, for restored purchases
-- *originalReceipt* – the receipt for the original purchase, for restored purchases
+- *quantity* : amount of item purchased. You can specify a value for this in **mobileStoreMakePurchase**
+- *productId* : identifier of the purchased product
+- *receipt* : block of data that can be used to confirm the purchase from a remote server with the iTunes Connect store
+- *purchaseDate* : date the purchase / restoration request was sent
+- *transactionIdentifier* : unique identifier for a successful purchase / restoration request
+- *originalPurchaseDate* :  date of the original purchase, for restored purchases 
+- *originalTransactionIdentifier* : the transaction identifier of the original purchase, for restored purchases
+- *originalReceipt* : the receipt for the original purchase, for restored purchases
 
 Once you have sent your purchase request and it has been confirmed, you can then unlock or download new content to fulfil the requirements of the in-app purchase. You must inform the store once you have completely fulfiled the purchase using:
 
@@ -282,11 +283,11 @@ The store sends **purchaseStateUpdate** messages to notifies your app of any cha
 
 The state can be any one of the following:
 
-- *sendingRequest* – the purchase request is being sent to the store / marketplace
-- *paymentReceived* – the requested item has been paid for. The item should now be delivered to the user and confirmed via the mobileStoreConfirmPurchase command
-- *alreadyEntitled* – the requested item is already owned, and cannot be purchased again
-- *invalidSKU* – the requested item does not exist in the store listing
-- *complete* – the purchase has now been paid for and delivered
-- *restored* – the purchase has been restored after a call to mobileStoreRestorePurchases. The purchase should now be delivered to the user and confirmed via the mobileStoreConfirmPurchase command
-- *cancelled* – the purchase was cancelled by the user before payment was received
-- *error* – An error occurred during the payment request. More detailed information is available from the mobileStorePurchaseError function
+- *sendingRequest* : the purchase request is being sent to the store / marketplace
+- *paymentReceived* : the requested item has been paid for. The item should now be delivered to the user and confirmed via the mobileStoreConfirmPurchase command
+- *alreadyEntitled* : the requested item is already owned, and cannot be purchased again
+- *invalidSKU* : the requested item does not exist in the store listing
+- *complete* : the purchase has now been paid for and delivered
+- *restored* : the purchase has been restored after a call to mobileStoreRestorePurchases. The purchase should now be delivered to the user and confirmed via the mobileStoreConfirmPurchase command
+- *cancelled* : the purchase was cancelled by the user before payment was received
+- *error* : An error occurred during the payment request. More detailed information is available from the mobileStorePurchaseError function
