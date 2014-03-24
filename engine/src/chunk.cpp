@@ -6265,6 +6265,9 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
     /* UNCHECKED */ MCStringCopy(p_text, text);
     type = p_chunk_type;
     
+    if (type == CT_CHARACTER && MCStringIsNative(text))
+        type = CT_CODEPOINT;
+    
     sp = nil;
     break_iterator = nil;
     range = MCRangeMake(0, 0);
@@ -6277,15 +6280,14 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
         case CT_TOKEN:
             sp = new MCScriptPoint(p_text);
             break;
+        case CT_CHARACTER:
+        case CT_SENTENCE:
+            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, p_chunk_type == CT_SENTENCE ? kMCBreakIteratorTypeSentence : kMCBreakIteratorTypeCharacter, break_iterator);
+            /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, text);
+            break;
         case CT_TRUEWORD:
             /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeWord, break_iterator);
             /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, text);
-            break;
-        case CT_SENTENCE:
-        case CT_CHARACTER:
-            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, p_chunk_type == CT_SENTENCE ? kMCBreakIteratorTypeSentence : kMCBreakIteratorTypeCharacter, break_iterator);
-            /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, text);
-            range . offset = MCLocaleBreakIteratorAdvance(break_iterator);
             break;
         default:
             break;
@@ -6306,18 +6308,25 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
     if (break_iterator != nil)
     {
         if (type == CT_TRUEWORD)
-            return MCLocaleWordBreakIteratorAdvance(text, break_iterator, range);
+        {
+            if (!MCLocaleWordBreakIteratorAdvance(text, break_iterator, range))
+                return false;
+            
+            if (range . offset + range . length == kMCLocaleBreakIteratorDone)
+                return false;
+
+            return true;
+        }
         else
         {
-            if (exhausted)
-                return false;
             range . offset += range . length;
             uindex_t t_end = MCLocaleBreakIteratorAdvance(break_iterator);
             if (t_end == kMCLocaleBreakIteratorDone)
-            {
+                return false;
+
+            if (t_end == length)
                 exhausted = true;
-                t_end = length;
-            }
+            
             range . length = t_end - range . offset;
             return true;
         }
@@ -6487,12 +6496,10 @@ uindex_t MCTextChunkIterator::chunkoffset(MCExecContext& ctxt, MCStringRef p_nee
 	
     // Ensure that when no item is skipped, the offset starts from the first item - without skipping it
     uindex_t t_chunk_offset;
-    if (p_start_offset == 0)
-        t_chunk_offset = 1;
-    else
-        t_chunk_offset = 0;
+    t_chunk_offset = 1;
     
-	// Skip ahead to the first chunk of interest.
+	// Skip ahead to the first (1-indexed) chunk of interest.
+    p_start_offset += 1;
     while (p_start_offset)
     {
         if (!next(ctxt))
@@ -6502,7 +6509,7 @@ uindex_t MCTextChunkIterator::chunkoffset(MCExecContext& ctxt, MCStringRef p_nee
 	
 	// If we skip past the last chunk, we are done.
 	if (p_start_offset > 0)
-		return false;
+		return 0;
 	
     // MW-2013-01-21: item/line/paragraph offset do not currently operate on a 'split' basis.
     //   Instead, they return the index of the chunk in which p_chunk starts and if
@@ -6545,10 +6552,9 @@ uindex_t MCTextChunkIterator::chunkoffset(MCExecContext& ctxt, MCStringRef p_nee
             break;
     }
     
-    // Otherwise, just iterate through the chunks. 
-    while (next(ctxt))
+    // Otherwise, just iterate through the chunks.
+    do
 	{
-        t_chunk_offset = 1;
         if (ctxt.GetWholeMatches())
         {
             if (MCStringSubstringIsEqualTo(text, range, p_needle, t_options))
@@ -6561,6 +6567,9 @@ uindex_t MCTextChunkIterator::chunkoffset(MCExecContext& ctxt, MCStringRef p_nee
         }
         t_chunk_offset++;
 	}
+    while (next(ctxt));
+    
+    // if not found then return 0.
 	return 0;
 }
 

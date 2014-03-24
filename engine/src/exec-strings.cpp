@@ -1418,7 +1418,9 @@ void MCStringsEvalBeginsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringR
 }
 
 void MCStringsEvalEndsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
-{MCStringOptions t_compare_option = ctxt.GetStringComparisonType();	r_result = MCStringEndsWith(p_whole, p_part, t_compare_option);
+{
+    MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
+    r_result = MCStringEndsWith(p_whole, p_part, t_compare_option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1557,7 +1559,9 @@ uindex_t MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCString
 {
     MCTextChunkIterator *tci;
     tci = new MCTextChunkIterator(p_chunk_type, p_string);
-    return tci -> chunkoffset(ctxt, p_chunk, p_start_offset);
+    uindex_t t_offset = tci -> chunkoffset(ctxt, p_chunk, p_start_offset);
+    delete tci;
+    return t_offset;
 }
 
 void MCStringsEvalLineOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)

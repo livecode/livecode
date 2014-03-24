@@ -95,6 +95,7 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
     MCTextChunkIterator *tci;
     tci = new MCTextChunkIterator(p_chunk_type, p_string);
     r_count = tci -> countchunks(ctxt);
+    delete tci;
     return;
  }
 
