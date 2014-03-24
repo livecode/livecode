@@ -12,8 +12,13 @@ mkdir -p "${BUILDDIR}"
 mkdir -p "${INSTALL_DIR}"
 mkdir -p "${OUTPUT_DIR}"
 
-# Target platform
+# Target platform and architecture
 export PLATFORM=$1
+export CUSTOM_ARCH=$2
+
+# Capture the existing CC and CXX variables, if any
+export CUSTOM_CC="${CC}"
+export CUSTOM_CXX="${CXX}"
 
 # Special behaviour if "all" is specified as the platform
 if [ "${PLATFORM}" == "all" ] ; then

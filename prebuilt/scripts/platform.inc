@@ -51,6 +51,11 @@ case "${PLATFORM}" in
 		export ANDROID_DEV="${ANDROID_PLATFORM}/arch-arm/usr"
 esac
 
+# Allow the arch to be set manually
+if [ ! -z "${CUSTOM_ARCH}" ] ; then
+	export ARCHS="${CUSTOM_ARCH}"
+fi
+
 if [ "${PLATFORM}" == "ios" ] ; then
 	source "${BASEDIR}/scripts/ios.inc"
 fi
@@ -64,6 +69,13 @@ function setArchs {
 function setCCForArch {
 	local ARCH=$1
 	local SUBPLATFORM_INDEX=$2
+	
+	# Use the custom CC and CXX, if set
+	if [ ! -z "${CUSTOM_CC}" ] ; then
+		export CC="${CUSTOM_CC}"
+		export CXX="${CUSTOM_CXX}"
+		return
+	fi
 	
 	case "${PLATFORM}" in
 		mac)
