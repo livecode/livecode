@@ -1035,19 +1035,18 @@ bool MCStringMapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
     p_in_range . offset++;
     
     MCRange t_word_range = MCRangeMake(0, 0);
-    bool t_found = true;
     
     // Advance to the beginning of the specified range
-    while (t_found && p_in_range . offset)
-        t_found = MCLocaleWordBreakIteratorAdvance(self, t_iter, t_word_range);
+    while (p_in_range . offset-- && MCLocaleWordBreakIteratorAdvance(self, t_iter, t_word_range))
+        ;
 
     // Advance to the end of the current word
     uindex_t t_start = t_word_range . offset;
     p_in_range . length--;
     
     // While more words are requested, find the end of the next word.
-    while (t_found && p_in_range . length)
-        t_found = MCLocaleWordBreakIteratorAdvance(self, t_iter, t_word_range);
+    while (p_in_range . length-- && MCLocaleWordBreakIteratorAdvance(self, t_iter, t_word_range))
+        ;
     
     MCRange t_units;
     t_units = MCRangeMake(t_start, t_word_range . offset + t_word_range . length - t_start);
@@ -1851,7 +1850,7 @@ uindex_t MCStringCount(MCStringRef self, MCRange p_range, MCStringRef p_needle, 
 uindex_t MCStringCountChar(MCStringRef self, MCRange p_range, codepoint_t p_needle, MCStringOptions p_options)
 {
 	// We only support ASCII for now.
-	MCAssert(p_needle < 128);
+	//MCAssert(p_needle < 128);
 	
 	strchar_t t_native_needle;
 	t_native_needle = (strchar_t)p_needle;

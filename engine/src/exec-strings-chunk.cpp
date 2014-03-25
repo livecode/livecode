@@ -395,20 +395,15 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             
             uint2 t_pos;
             Parse_stat ps = sp.nexttoken();
-            t_pos = sp . getindex();
             
             while (p_first-- && ps != PS_ERROR && ps != PS_EOF)
-            {
                 ps = sp.nexttoken();
-                t_pos += sp . getindex();
-            }
-            r_start = t_pos;
+
+            r_start = sp . getindex();
             while (--p_count && ps != PS_ERROR && ps != PS_EOF)
-            {
                 ps = sp.nexttoken();
-                t_pos += sp . getindex();
-            }
-            r_end = t_pos + MCStringGetLength(sp.gettoken_stringref());
+            
+            r_end = sp . getindex() + MCStringGetLength(sp.gettoken_stringref());
             MCerrorlock--;
         }
             break;

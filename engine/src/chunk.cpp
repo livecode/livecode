@@ -6152,7 +6152,7 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 
 static bool need_increment(Chunk_term p_chunk_type)
 {
-    return (p_chunk_type == CT_LINE || p_chunk_type == CT_ITEM || p_chunk_type == CT_WORD || p_chunk_type == CT_PARAGRAPH);
+    return (p_chunk_type == CT_LINE || p_chunk_type == CT_ITEM || p_chunk_type == CT_PARAGRAPH);
 }
 
 static bool MCStringsIsAmongTheChunksOfRange(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, Chunk_term p_chunk_type, MCStringOptions p_options, MCRange p_range)
@@ -6266,7 +6266,7 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
     type = p_chunk_type;
     
     if (type == CT_CHARACTER && MCStringIsNative(text))
-        type = CT_CODEPOINT;
+        type = CT_CODEUNIT;
     
     sp = nil;
     break_iterator = nil;
@@ -6344,9 +6344,7 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
         
         if (t_found)
         {
-            t_pos = sp -> getindex();
-        
-            range . offset = t_pos;
+            range . offset = sp -> getindex();
             range . length = MCStringGetLength(sp -> gettoken_stringref());
         }
         
@@ -6409,14 +6407,14 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             
         case CT_WORD:
         {
-            uindex_t t_space_offset;
             // if there are consecutive spaces at the beginning, skip them
-            while (MCStringFirstIndexOfChar(text, ' ', t_offset, kMCCompareExact, t_space_offset) &&
-                   t_space_offset == t_offset)
+            while (t_offset < length && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(text, t_offset)))
                 t_offset++;
             
             if (t_offset >= length)
                 return false;
+            
+            range . offset = t_offset;
             
             MCStringsSkipWord(ctxt, text, false, t_offset);
             

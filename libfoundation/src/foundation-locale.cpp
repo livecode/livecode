@@ -1122,12 +1122,14 @@ bool MCLocaleWordBreakIteratorAdvance(MCStringRef self, MCBreakIteratorRef p_ite
     bool found = false;
     
     // Advance to the beginning of the specified range
-    while (t_right_break != kMCLocaleBreakIteratorDone && !found)
+    while (!found)
     {
         t_left_break = t_right_break;
         t_start = t_left_break;
         
         t_right_break = MCLocaleBreakIteratorAdvance(p_iter);
+        if (t_right_break == kMCLocaleBreakIteratorDone)
+            return false;
         
         // if the intervening chars contain a letter or number then it was a valid 'word'
         while (t_left_break < t_right_break)
@@ -1142,10 +1144,7 @@ bool MCLocaleWordBreakIteratorAdvance(MCStringRef self, MCBreakIteratorRef p_ite
             found = true;
     }
     if (t_start == kMCLocaleBreakIteratorDone)
-    {
-        x_range = MCRangeMake(MCStringGetLength(self), 0);
         return false;
-    }
     
     x_range .  offset = t_start;
     x_range . length = t_right_break - t_start;
