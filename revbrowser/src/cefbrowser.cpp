@@ -98,6 +98,7 @@ void MCCefBrowserRunloopAction(void *p_context)
 }
 
 extern "C" int initialise_weak_link_cef(void);
+extern "C" int initialise_weak_link_cef_with_path(const char *p_path);
 
 // IM-2014-03-13: [[ revBrowserCEF ]] Initialisation of the CEF library
 bool MCCefInitialise(void)
@@ -137,7 +138,16 @@ bool MCCefBrowserInitialise(void)
 	
 	// IM-2014-03-18: [[ revBrowserCEF ]] Initialise dynamically loaded cef library
 	if (t_success)
-		t_success = initialise_weak_link_cef();
+	{
+		const char *t_lib_path;
+		t_lib_path = MCCefPlatformGetCefLibraryPath();
+		
+		// IM-2014-03-25: [[ revBrowserCEF ]] Look for libcef in platform-defined location
+		if (t_lib_path != nil)
+			t_success = initialise_weak_link_cef_with_path(t_lib_path);
+		else
+			t_success = initialise_weak_link_cef();
+	}
 
 	if (t_success)
 		t_success = MCCefInitialise();

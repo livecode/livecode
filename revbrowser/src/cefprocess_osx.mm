@@ -32,6 +32,7 @@ extern "C" int initialise_weak_link_cef_with_path(const char *p_path);
 int main(int argc, char *argv[])
 {
 	// IM-2014-03-21: [[ revBrowserCEF ]] Look for libcef.dylib library in containing bundle
+	// IM-2014-03-25: [[ revBrowserCEF ]] cef library located in same folder as this app bundle
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
 	
@@ -43,8 +44,6 @@ int main(int argc, char *argv[])
 	t_components = [[t_bundle_path pathComponents] mutableCopy];
 
 	// Remove "revbrowser-cefprocess.app" path component
-	[t_components removeLastObject];
-	// Remove "Externals" path component
 	[t_components removeLastObject];
 	
 	// Add library name path component
