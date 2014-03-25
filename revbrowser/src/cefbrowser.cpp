@@ -114,6 +114,16 @@ bool MCCefInitialise(void)
 	bool t_success;
 	t_success = MCCefStringFromCString(MCCefPlatformGetSubProcessName(), &t_settings.browser_subprocess_path);
 
+	if (t_success)
+	{
+		// IM-2014-03-25: [[ revBrowserCEF ]] Allow per-platform locale path settings
+		const char *t_locale_path;
+		t_locale_path = MCCefPlatformGetLocalePath();
+
+		if (t_locale_path != nil)
+			t_success = MCCefStringFromCString(t_locale_path, &t_settings.locales_dir_path);
+	}
+
 	CefRefPtr<CefApp> t_app = nil;
 
 	if (t_success)

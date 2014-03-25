@@ -197,6 +197,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\cefbrowser_osx.mm"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\src\cefbrowser_w32.cpp"
 				>
 			</File>
@@ -227,13 +239,6 @@
 			<File
 				RelativePath=".\src\w32browser.cpp"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter

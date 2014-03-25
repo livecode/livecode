@@ -168,5 +168,5 @@ bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser);
 void MCCefPlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser);
 const char *MCCefPlatformGetSubProcessName(void);
 const char *MCCefPlatformGetCefLibraryPath(void);
-
+const char *MCCefPlatformGetLocalePath(void);
 #endif /* __CEF_BROWSER_H__ */

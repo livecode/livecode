@@ -107,6 +107,12 @@ const char *MCCefPlatformGetCefLibraryPath(void)
 	return s_lib_path;
 }
 
+// IM-2014-03-25: [[ revBrowserCEF ]] Can't change the locale path on OSX so return nil
+const char *MCCefPlatformGetLocalePath(void)
+{
+	return nil;
+}
+
 bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser)
 {
 	NSWindow *t_app_window;
