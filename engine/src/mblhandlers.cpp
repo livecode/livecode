@@ -6236,6 +6236,7 @@ Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters)
     MCNativeControlGetTarget(ctxt, t_identifier);
     MCAutoStringRef t_string;
     MCNativeControlIdentifierFormat(ctxt, t_identifier, &t_string);
+    MCNativeControlIdentifierFree(ctxt, t_identifier);
     if (*t_string != nil)
         ctxt . SetTheResultToValue(*t_string);
 }
