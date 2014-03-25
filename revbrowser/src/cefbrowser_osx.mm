@@ -59,11 +59,12 @@ const char *MCCefPlatformGetSubProcessName(void)
 		char *t_exe_path;
 		t_exe_path = nil;
 		
+		// IM-2014-03-25: [[ revBrowserCEF ]] Look for subprocess executable in CEF subfolder
 		bool t_success;
 		t_success = MCCStringClone([t_parent_path cStringUsingEncoding:NSUTF8StringEncoding], t_exe_path);
 		if (t_success)
 			t_success = MCCStringAppend(t_exe_path,
-										"/revbrowser-cefprocess.app/Contents/MacOS/revbrowser-cefprocess");
+										"/CEF/revbrowser-cefprocess.app/Contents/MacOS/revbrowser-cefprocess");
 		
 		if (t_success)
 			s_exe_path = t_exe_path;
@@ -72,6 +73,38 @@ const char *MCCefPlatformGetSubProcessName(void)
 	}
 	
 	return s_exe_path;
+}
+
+// IM-2014-03-25: [[ revBrowserCEF ]] Return the path to the libcef.dylib library file
+// located in CEF subfolder beside the revbrowser bundle
+const char *MCCefPlatformGetCefLibraryPath(void)
+{
+	static char *s_lib_path = nil;
+	
+	if (s_lib_path == nil)
+	{
+		NSBundle *t_bundle;
+		t_bundle = [NSBundle bundleWithIdentifier:@"com.runrev.revbrowser"];
+		
+		NSString *t_parent_path;
+		t_parent_path = [[t_bundle bundlePath] stringByDeletingLastPathComponent];
+		
+		char *t_path;
+		t_path = nil;
+		
+		bool t_success;
+		t_success = MCCStringClone([t_parent_path cStringUsingEncoding:NSUTF8StringEncoding], t_path);
+		if (t_success)
+			t_success = MCCStringAppend(t_path,
+										"/CEF/libcef.dylib");
+		
+		if (t_success)
+			s_lib_path = t_path;
+		else if (t_path != nil)
+			MCCStringFree(t_path);
+	}
+	
+	return s_lib_path;
 }
 
 bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser)
