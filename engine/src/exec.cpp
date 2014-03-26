@@ -1567,7 +1567,7 @@ static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uin
 		MCAutoStringRef t_uint_string;
 		uinteger_t t_d;
 		
-		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
         if (t_new_offset <= t_old_offset)
@@ -1618,7 +1618,7 @@ static bool MCPropertyParseDoubleList(MCStringRef p_input, char_t p_delimiter, u
 		MCAutoStringRef t_double_string;
 		double t_d;
 		
-		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
         if (t_new_offset <= t_old_offset)
@@ -1668,7 +1668,7 @@ static bool MCPropertyParseStringList(MCStringRef p_input, char_t p_delimiter, u
 	{
 		MCStringRef t_string;
 		
-		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
         if (t_new_offset <= t_old_offset)
@@ -1716,7 +1716,7 @@ static bool MCPropertyParsePointList(MCStringRef p_input, char_t p_delimiter, ui
 		MCAutoStringRef t_point_string;
         MCPoint t_point;
 		
-		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
         if (t_new_offset < t_old_offset)

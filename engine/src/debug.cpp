@@ -447,7 +447,7 @@ void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
 	{
 		uindex_t t_length;
 		MCAutoStringRef t_break;
-		t_found = MCStringFirstIndexOfChar(p_input, '\n', t_last_offset, kMCCompareCaseless, t_return_offset);
+		t_found = MCStringFirstIndexOfChar(p_input, '\n', t_last_offset, kMCCompareExact, t_return_offset);
 
 		if (!t_found) //last line
 			t_length = t_input_length - t_last_offset;
@@ -618,7 +618,7 @@ void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input)
 	{
 		uindex_t t_length;
 		MCAutoStringRef t_watch;
-		t_found = MCStringFirstIndexOfChar(p_input, '\n', t_last_offset, kMCCompareCaseless, t_return_offset);
+		t_found = MCStringFirstIndexOfChar(p_input, '\n', t_last_offset, kMCCompareExact, t_return_offset);
 
 		if (!t_found) //last line
 			t_length = t_input_length - t_last_offset;
@@ -631,19 +631,19 @@ void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input)
 		MCAutoStringRef t_obj_tail;
 
 		if (t_success)
-			t_success = MCStringDivideAtChar(*t_watch, ',', kMCCompareCaseless, &t_obj, &t_obj_tail);
+			t_success = MCStringDivideAtChar(*t_watch, ',', kMCCompareExact, &t_obj, &t_obj_tail);
 
 		MCAutoStringRef t_express;
 		MCAutoStringRef t_express_tail;
 
 		if (t_success)
-			t_success = MCStringDivideAtChar(*t_obj_tail, ',', kMCCompareCaseless, &t_express, &t_express_tail);
+			t_success = MCStringDivideAtChar(*t_obj_tail, ',', kMCCompareExact, &t_express, &t_express_tail);
 
 		MCAutoStringRef t_vname;
 		MCAutoStringRef t_hname;
 
 		if (t_success)
-			t_success = MCStringDivideAtChar(*t_express_tail, ',', kMCCompareCaseless, &t_vname, &t_hname);
+			t_success = MCStringDivideAtChar(*t_express_tail, ',', kMCCompareExact, &t_vname, &t_hname);
 
 		MCObjectPtr t_object;
 

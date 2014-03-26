@@ -2872,7 +2872,7 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 
                             MCStringCopy(*t_position_data, &t_position);
                         }
-						else if (MCStringFirstIndexOfChar(*t_position_data, ',', 0, kMCCompareCaseless, t_delimiter))
+						else if (MCStringFirstIndexOfChar(*t_position_data, ',', 0, kMCCompareExact, t_delimiter))
 						{
 							MCStringCopySubstring(*t_position_data, MCRangeMake(0, t_delimiter), &t_position);
 							t_delimiter++;
