@@ -446,3 +446,13 @@ rei_boolean_t coreimage_visualeffect_end(void)
 
 	return t_result;
 }
+
+const char * getMachineVersion()
+{
+    NSString *t_versionString;
+    NSDictionary * t_dictionary = [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
+    t_versionString = [t_dictionary objectForKey:@"ProductVersion"];
+    if (t_versionString != NULL)
+        return [t_versionString cStringUsingEncoding: NSMacOSRomanStringEncoding];
+    return "unknown";
+}

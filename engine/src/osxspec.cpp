@@ -1710,8 +1710,13 @@ const char *MCS_getaddress()
 	return buffer;
 }
 
+extern const char * getMachineVersion();
+
+// PM-2014-03-26: [[ Bug 2627 ]] - The machine() function returned "unknown" under Mac OS X
+// This was because Gestalt is deprecated
 const char *MCS_getmachine()
 {
+/*
 	static Str255 machineName;
 	long response;
 	if ((errno = Gestalt(gestaltMachineType, &response)) == noErr)
@@ -1724,6 +1729,8 @@ const char *MCS_getmachine()
 		}
 	}
 	return "unknown";
+*/
+    return getMachineVersion();
 }
 
 // MW-2006-05-03: [[ Bug 3524 ]] - Make sure processor returns something appropriate in Intel
