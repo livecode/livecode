@@ -129,7 +129,7 @@ static void MCInterfaceFlaggedRangesParse(MCExecContext& ctxt, MCStringRef p_inp
 		MCAutoStringRef t_uintx2_string;
 		MCInterfaceFlaggedRange t_range;
 		
-		if (!MCStringFirstIndexOfChar(p_input, '\n', t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_input, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
         if (t_new_offset <= t_old_offset)

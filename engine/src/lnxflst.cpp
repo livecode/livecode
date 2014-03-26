@@ -156,7 +156,7 @@ MCFontStruct *MCNewFontlist::getfont(MCNameRef p_family, uint2& p_size, uint2 p_
     uindex_t t_offset;
     MCAutoStringRef t_family_name;
     MCStringRef t_family_string = MCNameGetString(p_family);
-    if (MCStringFirstIndexOfChar(t_family_string, ',', 0, kMCStringOptionCompareCaseless, t_offset))
+    if (MCStringFirstIndexOfChar(t_family_string, ',', 0, kMCStringOptionCompareExact, t_offset))
         {
             MCStringCopySubstring(t_family_string, MCRangeMake(0, t_offset), &t_family_name);
             t_family_string = *t_family_name;

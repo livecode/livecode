@@ -823,7 +823,7 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 	{
 		MCAutoStringRef t_leaf_name;
 		uindex_t t_leaf_index;
-		if (MCStringLastIndexOfChar(p_name, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareCaseless, t_leaf_index))
+		if (MCStringLastIndexOfChar(p_name, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
 			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMake(t_leaf_index + 1, MCStringGetLength(p_name) - (t_leaf_index + 1)), &t_leaf_name);
 		else
 			t_leaf_name = p_name;

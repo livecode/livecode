@@ -60,16 +60,16 @@ static void getfilter(MCStringRef p_filter, MCStringRef &r_filter)
 		
 		uindex_t t_offset;
 
-		if (!MCStringFirstIndexOfChar(*t_filterstring, '\n', 0, kMCStringOptionCompareCaseless, t_offset) &&
-				!MCStringFirstIndexOfChar(*t_filterstring, ',', 0, kMCStringOptionCompareCaseless, t_offset))
+		if (!MCStringFirstIndexOfChar(*t_filterstring, '\n', 0, kMCStringOptionCompareExact, t_offset) &&
+				!MCStringFirstIndexOfChar(*t_filterstring, ',', 0, kMCStringOptionCompareExact, t_offset))
 		{
 			MCStringAppendChar(*t_filterstring, '\0');
 			MCStringAppend(*t_filterstring, p_filter);
 		}
 
 		/* UNCHECKED */ MCStringAppendChar(*t_filterstring, '\0');
-		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_filterstring, '\n', '\0', kMCStringOptionCompareCaseless);
-		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_filterstring, ',', '\0', kMCStringOptionCompareCaseless);
+		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_filterstring, '\n', '\0', kMCStringOptionCompareExact);
+		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_filterstring, ',', '\0', kMCStringOptionCompareExact);
 
 		MCStringCopy(*t_filterstring, r_filter);
 	}
@@ -343,7 +343,7 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 		else if ((p_options & MCA_OPTION_SAVE_DIALOG) != 0)
 		{
 			uindex_t t_last_slash;
-			if (!MCStringLastIndexOfChar(*t_fixed_path, '/', UINDEX_MAX, kMCStringOptionCompareCaseless, t_last_slash))
+			if (!MCStringLastIndexOfChar(*t_fixed_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
 			{
 				if (MCStringGetLength(*t_fixed_path) != 0)
 					t_initial_file = *t_fixed_path;
@@ -363,7 +363,7 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 		{
 			uindex_t t_last_slash;
 
-			if (MCStringLastIndexOfChar(*t_fixed_path, '/', UINDEX_MAX, kMCStringOptionCompareCaseless, t_last_slash))
+			if (MCStringLastIndexOfChar(*t_fixed_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash))
 			{
 				MCAutoStringRef t_folder_split;
 				/* UNCHECKED */ MCStringCopySubstring(*t_fixed_path, MCRangeMake(0, t_last_slash - 1), &t_folder_split);
