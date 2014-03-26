@@ -59,6 +59,7 @@ foreach my $line (@sourceLines)
 ($tempFH2, $tempName2) = tempfile();
 print $tempFH join("\n", keys %tokens);
 close $tempFH;
+close $tempFH2;		# Need to close because Win32 opens exclusively
 
 # Path to the "perfect" executable
 my $perfectExe = dirname($0) . "/perfect/$perfectCmd";
@@ -68,6 +69,7 @@ my $result = system("\"$perfectExe\" <\"$tempName\" >\"$tempName2\"");
 die unless ($result == 0);
 
 # Strip of any leading warning message
+open $tempFH2, "<$tempName2";
 my @lines = <$tempFH2>;
 close $tempFH2;
 unlink $tempName;
