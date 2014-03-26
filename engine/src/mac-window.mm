@@ -35,6 +35,13 @@ static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCRectangle MCRectangleFromNSRect(const NSRect &p_rect)
+{
+	return MCRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static bool s_lock_responder_change = false;
 
 @implementation com_runrev_livecode_MCWindow
@@ -1545,6 +1552,12 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
 		case kMCPlatformWindowPropertySystemId:
 			assert(p_type == kMCPlatformPropertyTypeUInt32);
 			*(uint32_t *)r_value = m_window_handle != nil ? [m_window_handle windowNumber] : 0;
+			return true;
+			
+		// IM-2014-03-26: [[ Bug 12021 ]] Return NSWindow frame rect
+		case kMCPlatformWindowPropertyFrameRect:
+			assert(p_type == kMCPlatformPropertyTypeRectangle);
+			*(MCRectangle *)r_value = m_window_handle != nil ? MCRectangleFromNSRect([m_window_handle frame]) : MCRectangleMake(0, 0, 0, 0);
 			return true;
 	}
 	return false;
