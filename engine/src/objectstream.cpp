@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "object.h"
 #include "objectstream.h"
 
-MCObjectInputStream::MCObjectInputStream(IO_handle p_stream, uint32_t p_remaining)
+MCObjectInputStream::MCObjectInputStream(IO_handle p_stream, uint32_t p_remaining, bool p_new_format)
 {
 	m_stream = p_stream;
 	m_buffer = NULL;
@@ -35,6 +35,7 @@ MCObjectInputStream::MCObjectInputStream(IO_handle p_stream, uint32_t p_remainin
 	m_bound = 0;
 	m_remaining = p_remaining;
 	m_mark = 0;
+    m_new_format = p_new_format;
 }
 
 MCObjectInputStream::~MCObjectInputStream(void)
@@ -81,7 +82,7 @@ IO_stat MCObjectInputStream::Skip(uint32_t p_length)
 	// offset by length.
 
 	return t_stat;
-}
+}    
 
 IO_stat MCObjectInputStream::ReadTag(uint32_t& r_flags, uint32_t& r_length, uint32_t& r_header_length)
 {
