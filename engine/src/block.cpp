@@ -1731,10 +1731,33 @@ findex_t MCBlock::GetCursorIndex(int2 x, Boolean chunk, Boolean last)
 	int32_t t_last_width;
 	t_last_width = is_rtl() ? width : 0;
     
+    MCRange t_char_range;
+    MCRange t_cp_range;
+    
+    uindex_t t_last_boundary;
+    t_last_boundary = i;
+    
     while(i < m_index + m_size)
     {
         findex_t t_new_i;
-        t_new_i = parent->IncrementIndex(i);
+        t_cp_range . offset = i;
+        t_cp_range . length = 1;
+        t_char_range . length = 1;
+        
+        // SN-2014-03-26 [[ CombiningChars ]] We need to find the size of a char, starting from a given codepoint
+        // There is no other choice than looping up to the point we have 2 chars in the codepoint range
+        // or the string is over - and the char as well
+        while (t_cp_range . offset + t_cp_range . length + 1 < m_index + m_size && t_char_range . length < 2)
+        {
+            ++t_cp_range . length;
+            MCStringUnmapIndices(parent -> GetInternalStringRef(), kMCCharChunkTypeGrapheme, t_cp_range, t_char_range);
+        }
+        
+        // We reached a char boundary
+        if (t_char_range . length == 2)
+            t_new_i = i + t_cp_range . length - 1;
+        else
+            t_new_i = i + t_cp_range . length;
         
         int32_t t_new_width;
         t_new_width = GetCursorX(t_new_i) - origin;
@@ -1750,13 +1773,16 @@ findex_t MCBlock::GetCursorIndex(int2 x, Boolean chunk, Boolean last)
         
         t_last_width = t_new_width;
         
+        // SN-2014-03-26 [[ CombiningChars ]]: We now keep the last boundary before the character getting the width bigger than the one specified
+        // Since that character might be composed of several composed codepoints, we only want to get the index of the beginning of this char
+        t_last_boundary = parent -> IncrementIndex(i);
         i = t_new_i;
     }
 
-	if (i == m_index + m_size && last && (m_index + m_size != parent->gettextlength()))
-        return i - parent->DecrementIndex(i);
+	if (t_last_boundary == m_index + m_size && last && (m_index + m_size != parent->gettextlength()))
+        return parent -> DecrementIndex(t_last_boundary);
 	else
-		return i;
+		return t_last_boundary;
 }
 
 uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
