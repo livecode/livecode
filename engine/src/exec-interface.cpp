@@ -3281,8 +3281,8 @@ void MCInterfaceExecLockScreenForEffect(MCExecContext& ctxt, MCRectangle *p_regi
 		if (p_region == nil)
 			MCcur_effects_rect = MCdefaultstackptr -> getcurcard() -> getrect();
 		else
-			MCcur_effects_rect = MCRectangleMake(0,0,0,0);
-		
+            // AL-2014-03-27: [[ Bug 12038 ]] Actually set the effect rect.
+			MCcur_effects_rect = *p_region;
 		
 		MCdefaultstackptr -> snapshotwindow(MCcur_effects_rect);
 	}
