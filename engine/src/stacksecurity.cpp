@@ -54,9 +54,9 @@ bool MCStackSecurityCopyStack(const MCStack *p_stack, MCStack *&r_copy)
 
 ///////////
 
-bool MCStackSecurityCreateObjectInputStream(IO_handle p_stream, uint32_t p_length, MCObjectInputStream *&r_object_stream)
+bool MCStackSecurityCreateObjectInputStream(IO_handle p_stream, uint32_t p_length, bool p_new_format, MCObjectInputStream *&r_object_stream)
 {
-	r_object_stream = new MCObjectInputStream(p_stream, p_length);
+	r_object_stream = new MCObjectInputStream(p_stream, p_length, p_new_format);
 	return r_object_stream != nil;
 }
 

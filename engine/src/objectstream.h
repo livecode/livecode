@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCObjectInputStream
 {
 public:
-	MCObjectInputStream(IO_handle p_stream, uint32_t p_remaining);
+	MCObjectInputStream(IO_handle p_stream, uint32_t p_remaining, bool p_new_format);
 	virtual ~MCObjectInputStream(void);
 
 	IO_stat ReadTag(uint32_t& r_flags, uint32_t& r_length, uint32_t& r_header_length);
@@ -68,6 +68,10 @@ protected:
 
 	// The amount of data remaining in the input file for this stream
 	uint32_t m_remaining;
+    
+    // SN-2014-03-27 [[ Bug 11993 ]] We need to know whether we are reading from a 7.0 file
+    // in order to add the missing nil byte in the end before decrypting.  
+    bool m_new_format;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
