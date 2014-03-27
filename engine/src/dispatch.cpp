@@ -148,7 +148,11 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 		return ES_NORMAL;
 	case P_BACK_COLOR:
 	case P_HILITE_COLOR:
+#if defined(_MACOSX)
+        ep.setstaticcstring("light blue");
+#else
 		ep.setstaticcstring("white");
+#endif
 		return ES_NORMAL;
 	case P_FORE_COLOR:
 	case P_BORDER_COLOR:
