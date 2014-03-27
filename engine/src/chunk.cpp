@@ -4971,9 +4971,11 @@ bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
         && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
         t_function = true;
 
-    if (!t_function && cline == nil && item == nil
-        && token == nil && word == nil && character == nil
-        && codepoint == nil && codeunit == nil && byte == nil)
+    // AL-2014-03-27: [[ Bug 12042 ]] Object chunk evaluation should include
+    //  paragraph, sentence, and trueword chunks.
+    if (!t_function && cline == nil && paragraph == nil && sentence == nil
+        && item == nil && word == nil && trueword == nil && token == nil
+        && character == nil && codepoint == nil && codeunit == nil && byte == nil)
     {
         MCMarkedText t_mark;
         t_mark . finish = INDEX_MAX;
