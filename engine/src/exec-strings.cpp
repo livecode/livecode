@@ -2023,8 +2023,7 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter
 	{
         // set the source grapheme range
         t_srange . offset = s_index;
-        while (++s_index < s_end && !MCLocaleBreakIteratorIsBoundary(p_siter, s_index))
-            ;
+        s_index = MCLocaleBreakIteratorAfter(p_siter, s_index);
         t_srange . length = s_index - t_srange . offset;
         
 		switch (MCStringGetCharAtIndex(p_pattern, p_index))
@@ -2064,8 +2063,7 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter
                             // We have a char range (eg [a-z]), so skip past the '-',
                             // find the current pattern grapheme range and compare.
                             t_prange . offset = ++p_index;
-                            while (++p_index < p_end && !MCLocaleBreakIteratorIsBoundary(p_piter, p_index))
-                                ;
+                            p_index = MCLocaleBreakIteratorAfter(p_piter, p_index);
                             t_prange . length = p_index - t_prange . offset;
                             
 							if (notflag)
@@ -2090,8 +2088,7 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter
 						{
                             // This could be one of a choice of characters (eg [abc]).
                             t_prange . offset = p_index;
-                            while (++p_index < p_end && !MCLocaleBreakIteratorIsBoundary(p_piter, p_index))
-                                ;
+                            p_index = MCLocaleBreakIteratorAfter(p_piter, p_index);
                             t_prange . length = p_index - t_prange . offset;
 							if (notflag)
 							{
@@ -2128,8 +2125,7 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter
                 
                 // Get the range of the next pattern grapheme
                 t_prange . offset = p_index;
-                while (++p_index < p_end && !MCLocaleBreakIteratorIsBoundary(p_piter, p_index))
-                    ;
+                p_index = MCLocaleBreakIteratorAfter(p_piter, p_index);
                 t_prange . length = p_index - t_prange . offset;
                 
                 // try and match the rest of the source string recursively.
@@ -2153,8 +2149,7 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter
                     
                     // Otherwise eat the char
                     t_srange . offset = s_index;
-                    while (++s_index < s_end && !MCLocaleBreakIteratorIsBoundary(p_siter, s_index))
-                        ;
+                    s_index = MCLocaleBreakIteratorAfter(p_siter, s_index);
                     t_srange . length = s_index - t_srange . offset;
                 }
             }
@@ -2164,8 +2159,7 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter
             default:
                 // default - just compare chars
                 t_prange . offset = p_index;
-                while (++p_index < p_end && !MCLocaleBreakIteratorIsBoundary(p_piter, p_index))
-                    ;
+                p_index = MCLocaleBreakIteratorAfter(p_piter, p_index);
                 t_prange . length = p_index - t_prange . offset;
                 if (MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_prange . offset, t_prange . length, t_comparison) != 0)
                     return false;
