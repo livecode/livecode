@@ -1169,7 +1169,24 @@ static bool s_lock_responder_change = false;
 
 - (void)setFrameSize: (NSSize)size
 {
+	CGFloat t_height_diff = size.height - [self frame].size.height;
+	
 	[super setFrameSize: size];
+	
+	// IM-2014-03-28: [[ Bug 12046 ]] Adjust subviews upward to retain same height from top of view
+	NSArray *t_subviews;
+	t_subviews = [self subviews];
+	for (uint32_t i = 0; i < [t_subviews count]; i++)
+	{
+		NSView *t_subview;
+		t_subview = [t_subviews objectAtIndex:i];
+		
+		NSPoint t_origin;
+		t_origin = [t_subview frame].origin;
+		t_origin.y += t_height_diff;
+		
+		[t_subview setFrameOrigin:t_origin];
+	}
 	
 	if ([self window] == nil)
 		return;
@@ -1184,7 +1201,8 @@ static bool s_lock_responder_change = false;
 
 - (BOOL)autoresizesSubviews
 {
-	return YES;
+	// IM-2014-03-28: [[ Bug 12046 ]] Prevent embedded content from being automatically resized with this view
+	return NO;
 }
 	
 //////////
