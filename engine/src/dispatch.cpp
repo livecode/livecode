@@ -157,6 +157,7 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 	case P_SHADOW_COLOR:
         ep.setstaticcstring("black");
         return ES_NORMAL;
+    // PM-2014-03-28: [[ Bug 11449 ]] "effective focusColor" now returns correct value under OSX
 	case P_FOCUS_COLOR:
 #if defined(_MACOSX)
         ep.setstaticcstring("light blue");
