@@ -1959,6 +1959,11 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                 dc->fillrect(srect);
             }
             
+            // AL-2014-03-28: [[ Bug 11960 ]] Break out of the loop if we have dealt with the last block
+            //  in this line, otherwise GetCursorX will not be happy with the index passed to it.
+            if (bptr == lastblock)
+                break;
+            
             bptr = bptr->next();
         }
         while (bptr != firstblock);
