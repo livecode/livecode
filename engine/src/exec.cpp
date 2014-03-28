@@ -249,7 +249,11 @@ bool MCExecContext::ConvertToNumberOrArray(MCExecValue& x_value)
     switch(x_value . type)
     {
     case kMCExecValueTypeNone:
-        return false;
+        // Returns 0 - since we are trying to get a number from something non-assigned
+        MCExecTypeRelease(x_value);
+        x_value . double_value = 0.0;
+        x_value . type = kMCExecValueTypeDouble;
+        return true;
 
     case kMCExecValueTypeValueRef:
     case kMCExecValueTypeBooleanRef:
