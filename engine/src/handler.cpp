@@ -335,14 +335,17 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 			}
 			else
 			{
+//                MCExecValue t_value;
+//				if (!plist->eval_argument_ctxt(ctxt, t_value))
                 MCAutoValueRef t_value;
-				if (!plist->eval_argument(ctxt, &t_value))
+                if (!plist->eval_argument(ctxt, &t_value))
 				{
 					err = True;
 					break;
 				}
 				/* UNCHECKED */ MCVariable::createwithname(i < npnames ? pinfo[i] . name : kMCEmptyName, newparams[i]);
-				newparams[i]->set(ctxt, *t_value);
+//				newparams[i]->give_value(ctxt, t_value);
+                newparams[i]->set(ctxt, *t_value);
 			}
 			plist = plist->getnext();
 		}

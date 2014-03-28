@@ -89,6 +89,10 @@ void MCExecTypeConvertAndReleaseAlways(MCExecContext& ctxt, MCExecValueType from
 void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCExecValueType p_from_type, void *p_from_value, MCValueRef& r_value);
 void MCExecTypeConvertFromValueRefAndReleaseAlways(MCExecContext& ctxt, MCValueRef p_from_value, MCExecValueType p_to_type, void *p_to_value);
 void MCExecTypeRelease(MCExecValue &self);
+void MCExecTypeSetValueRef(MCExecValue &self, MCValueRef p_value);
+bool MCExecTypeIsValueRef(const MCExecValue &self);
+bool MCExecTypeIsNumber(const MCExecValue &self);
+void MCExecTypeCopy(const MCExecValue &self, MCExecValue &r_dest);
 
 // Defined for convenience in exec-interface-field-chunk.cpp
 // where the template system needs only one parameter
@@ -1515,14 +1519,15 @@ public:
 	// This method evaluates the given expression returning the result in 'result'.
 	// If an error is raised during the course of evaluation, 'false' is returned.
 	// Note: This method throws any errors that occur.
-	bool EvaluateExpression(MCExpression *expr, MCValueRef& r_result);
+	bool EvaluateExpression(MCExpression *expr, Exec_errors p_error, MCExecValue& r_result);
     
     // These methods try to evaluate / set, as many times as the debug context dictates,
     // only throwing an error if they ultimately fail.
     bool TryToEvaluateExpression(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result);
+    bool TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, double& r_result);
     bool TryToEvaluateParameter(MCParameter *p_param, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result);
     bool TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr, uint2 line, uint2 pos, Exec_errors p_error, bool& r_result);
-    bool TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef p_value);
+    bool TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCExecValue p_value);
     
 	//////////
 	
@@ -5270,8 +5275,7 @@ template<> struct MCExecValueTraits<MCValueRef>
 
     inline static void set(MCExecValue& self, MCValueRef p_value)
     {
-        self . type = kMCExecValueTypeValueRef;
-        self . valueref_value = p_value;
+        MCExecTypeSetValueRef(self, p_value);
     }
 
     inline static void release(MCValueRef& self)
