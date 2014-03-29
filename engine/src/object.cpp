@@ -1841,8 +1841,9 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	if (MClockmessages || MCexitall || state & CS_NO_MESSAGES || parent == NULL || (flags & F_DISABLED && mystack->gettool(this) == T_BROWSE && !send && !p_is_debug_message))
 			return ES_NOT_HANDLED;
 
-	if (MCNameIsEqualTo(mess, MCM_mouse_down, kMCCompareCaseless) && hashandlers & HH_MOUSE_STILL_DOWN)
-		MCscreen->addtimer(this, MCM_idle, MCidleRate);
+    // AL-2013-01-14: [[ Bug 11343 ]] Moved check and time addition to MCCard::mdown methods.
+	//if (MCNameIsEqualTo(mess, MCM_mouse_down, kMCCompareCaseless) && hashandlers & HH_MOUSE_STILL_DOWN)
+    //	MCscreen->addtimer(this, MCM_idle, MCidleRate);
 
 	MCscreen->flush(mystack->getw());
 
@@ -2150,8 +2151,8 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 {
 	if (!force && hashandlers & HH_DEAD_SCRIPT)
 		return False;
-	if (script == NULL || parent == NULL)
-		hashandlers = 0;
+	if (script == nil || parent == NULL)
+        hashandlers = 0;
 	else
 		if (force || hlist == NULL)
 		{
@@ -2205,6 +2206,25 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 			}
 		}
 	return True;
+}
+
+bool MCObject::handlesmessage(MCNameRef p_message)
+{
+	MCObject *t_object;
+	t_object = this;
+	while(t_object != nil)
+	{
+		if (t_object -> hlist != nil && should_send_message(t_object -> hlist, p_message))
+            return true;
+		
+		// If the object has a parent script, skip to its parent script (if any).
+		if (t_object -> parent_script != nil)
+			t_object = t_object -> parent_script -> GetParent() -> GetObject();
+		else
+			t_object = nil;
+	}
+    
+	return false;
 }
 
 Bool MCObject::hashandler(Handler_type p_type, MCNameRef p_message)
@@ -2671,16 +2691,30 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 
 	MCGContextConcatCTM(t_gcontext, t_transform);
 	
-	MCContext *t_context = new MCGraphicsContext(t_gcontext);
+	// MW-2014-01-07: [[ bug 11632 ]] Use the offscreen variant of the context so its
+	//   type field is appropriate for use by the player.
+	MCContext *t_context = new MCOffscreenGraphicsContext(t_gcontext);
 	t_context -> setclip(r);
 
 	// MW-2011-01-29: [[ Bug 9355 ]] Make sure we only open a control if it needs it!
 	// IM-2013-03-19: [[ BZ 10753 ]] Any parents of this object must also be opened to
 	// safely & correctly snapshot objects with inherited patterns
 	// MW-2013-03-25: [[ Bug ]] Make sure use appropriate methods to open/close the objects.
+    // SN-2014-01-30: [[ Bug 11721 ]] Make sure the parentless templates are handled properly
+    // as they need a temporary parent
+    bool t_parent_added = false;
 	MCObject *t_opened_control = nil;
 	if (opened == 0)
+    {
+        if (parent == nil)
+        {
+            setparent(MCdefaultstackptr -> getcard());
+            t_parent_added = true;
+        }
+        
 		t_opened_control = this;
+    }
+    
 	if (t_opened_control != nil)
 	{
 		t_opened_control -> open();
@@ -2708,6 +2742,9 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	// MW-2013-03-25: [[ Bug ]] Make sure use appropriate methods to open/close the objects.
 	if (t_opened_control != nil)
 	{
+        // SN-2014-01-30: [[ Bug 11721 ]] Remove the temporary added parent for the parentless object (template)
+        if (t_parent_added)
+            setparent(nil);
 		MCObject *t_closing_control;
 		t_closing_control = this;
 		t_closing_control -> close();

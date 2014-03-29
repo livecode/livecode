@@ -530,8 +530,12 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		// If we have paragraph metadata set, then emit that field.
 		if (p_event_data . paragraph_style . has_metadata)
 		{
-			ctxt . has_metadata = true;
-			// TODO: ctxt . buffer . appendtextf("{{\\field{\\*\\fldinst LCLINEMETADATA \"%s\"}}", MCNameGetCString(p_event_data . paragraph_style . metadata));
+			// TODO: paragraph metadata roundtrip - this clause breaks things at the moment :(
+			//ctxt . buffer . appendtextf("{{\\field{\\*\\fldinst LCLINEMETADATA \"%s\"}}", MCNameGetCString(p_event_data . paragraph_style . metadata));
+			//ctxt . has_metadata = true;
+			// MW-2014-03-12: [[ Bug 11769 ]] We haven't emitted any metadata (as it doesn't work right yet) so
+			//   best not to emit an end brace!
+			ctxt . has_metadata = false;
 		}
 		else
 			ctxt . has_metadata = false;

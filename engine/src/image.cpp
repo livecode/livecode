@@ -741,6 +741,18 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 					MCMemoryClear(t_data_ptr, t_data_size);
 				else
 				{
+                    // SN-2014-01-31: [[ Bug 11462 ]] Opening an image to get its data should not
+                    // reset its size: F_LOCK_LOCATION ensures the size - and the location, which
+                    // doesn't matter here - are read as they are stored.
+                    bool t_tmp_locked;
+                    t_tmp_locked = false;
+                    
+                    if (!getflag(F_LOCK_LOCATION))
+                    {
+                        setflag(true, F_LOCK_LOCATION);
+                        t_tmp_locked = true;
+                    }
+                    
 					openimage();
 					
 					MCImageBitmap *t_bitmap = nil;
@@ -761,6 +773,9 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 					}
 					MCImageFreeBitmap(t_bitmap);
 					
+                    if (t_tmp_locked)
+                        setflag(false, F_LOCK_LOCATION);
+                    
 					closeimage();
 				}
 			}
@@ -2495,8 +2510,20 @@ bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *
 				t_combined_transform = MCGAffineTransformConcat(t_combined_transform, t_transform);
 			t_combined_transform = MCGAffineTransformConcat(t_combined_transform, MCGAffineTransformMakeScale(1.0 / t_frame->density, 1.0 / t_frame->density));
 				
-				MCGImageFilter t_filter;
-				t_filter = resizequality == INTERPOLATION_BICUBIC ? kMCGImageFilterBicubic : (resizequality == INTERPOLATION_BILINEAR ? kMCGImageFilterBilinear : kMCGImageFilterNearest);
+            // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
+            MCGImageFilter t_filter;
+            switch (resizequality)
+            {
+                case INTERPOLATION_NEAREST:
+                    t_filter = kMCGImageFilterNone;
+                    break;
+                case INTERPOLATION_BILINEAR:
+                    t_filter = kMCGImageFilterMedium;
+                    break;
+                case INTERPOLATION_BICUBIC:
+                    t_filter = kMCGImageFilterHigh;
+                    break;
+            }
 				
 			t_success = MCImageBitmapCopyWithTransform(t_frame->image, t_premultiplied, t_combined_transform, t_filter, r_bitmap);
 				
@@ -2548,8 +2575,20 @@ bool MCImage::lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_
 		MCGAffineTransform t_combined_transform;
 		t_combined_transform = MCGAffineTransformConcat(t_transform, MCGAffineTransformMakeScale(1.0 / m_locked_frame->density, 1.0 / m_locked_frame->density));
 
-		MCGImageFilter t_filter;
-		t_filter = resizequality == INTERPOLATION_BICUBIC ? kMCGImageFilterBicubic : (resizequality == INTERPOLATION_BILINEAR ? kMCGImageFilterBilinear : kMCGImageFilterNearest);
+        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
+        MCGImageFilter t_filter;
+        switch (resizequality)
+        {
+            case INTERPOLATION_NEAREST:
+                t_filter = kMCGImageFilterNone;
+                break;
+            case INTERPOLATION_BILINEAR:
+                t_filter = kMCGImageFilterMedium;
+                break;
+            case INTERPOLATION_BICUBIC:
+                t_filter = kMCGImageFilterHigh;
+                break;
+        }
 
 		bool t_success;
 		t_success = MCImageBitmapCopyWithTransform(m_locked_frame->image, true, t_combined_transform, t_filter, m_transformed_bitmap);

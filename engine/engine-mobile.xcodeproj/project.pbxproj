@@ -23,6 +23,7 @@
 /* Begin PBXBuildFile section */
 		3CC6F42812AD0A6100852B3B /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CC6F42712AD0A6100852B3B /* CFNetwork.framework */; };
 		4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4CD038F216C8FE1700EBCCBA /* Default-568h@2x.png */; };
+		4CD7DFE318A140D800CBCB57 /* opensslsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEA61040AD9300CAC7EF /* opensslsocket.cpp */; };
 		4D08A0D0138EA51D0081F990 /* libstandalone-mobile-lib-community.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D2D91891386E2610057811A /* libstandalone-mobile-lib-community.a */; };
 		4D08A0D6138EA58E0081F990 /* libcoremobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DA2CA251136CFDF00B9F27B /* libcoremobile.a */; };
 		4D08A113138EA7C60081F990 /* dummy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D08A112138EA7C60081F990 /* dummy.cpp */; };
@@ -202,7 +203,6 @@
 		4DABCE2B15ECD4B50085E214 /* objectpropsets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC8F213DD90AF006233A4 /* objectpropsets.cpp */; };
 		4DABCE2C15ECD4B50085E214 /* objectstream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE9B1040AD9300CAC7EF /* objectstream.cpp */; };
 		4DABCE2D15ECD4B50085E214 /* objptr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE991040AD9300CAC7EF /* objptr.cpp */; };
-		4DABCE2E15ECD4B50085E214 /* opensslsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEA61040AD9300CAC7EF /* opensslsocket.cpp */; };
 		4DABCE2F15ECD4B50085E214 /* operator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEA51040AD9300CAC7EF /* operator.cpp */; };
 		4DABCE3015ECD4B50085E214 /* paragraf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEB31040ADAF00CAC7EF /* paragraf.cpp */; };
 		4DABCE3115ECD4B50085E214 /* paragrafattr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CAEA83F14E911FE006DFECF /* paragrafattr.cpp */; };
@@ -255,6 +255,8 @@
 		4DABCE6515ECD4FF0085E214 /* libstandalone-mobile-kernel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DABCD8A15ECD40F0085E214 /* libstandalone-mobile-kernel.a */; };
 		4DABCE7A15ECD62C0085E214 /* mbliphoneappview.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D839A0F1430BBE300984D5D /* mbliphoneappview.mm */; };
 		4DB322B1174BD4D100046FFE /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DB322B0174BD4D100046FFE /* Security.framework */; };
+		4DBF5B111802E327009CAB2E /* libopensslmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DBF5B0C1802E2F8009CAB2E /* libopensslmobile.a */; };
+		4DBF5B291802E63F009CAB2E /* socket_resolve.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DBF5B281802E635009CAB2E /* socket_resolve.cpp */; };
 		4DC684BE1348EAD7002469A4 /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DC684BD1348EAD7002469A4 /* OpenGLES.framework */; };
 		4DD3E17B1040BDAF00CAC7EF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD3E17A1040BDAF00CAC7EF /* libz.dylib */; };
 		4DE5E7EB174BBE89001AB76D /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE5E7E6174BBE64001AB76D /* uuid.cpp */; };
@@ -337,6 +339,13 @@
 			remoteGlobalIDString = 4DD3E0171040BB5D00CAC7EF;
 			remoteInfo = pngmobile;
 		};
+		4D76D93D1804281D0091FFE7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DBF5B061802E2F8009CAB2E /* libopenssl-mobile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DBF5ABE1802C0E7009CAB2E;
+			remoteInfo = revsecurity;
+		};
 		4D7B13AC171418F2006782C1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D88B96415F54C13002CFBD6 /* libgif-mobile.xcodeproj */;
@@ -406,6 +415,27 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4DABCD8915ECD40F0085E214;
 			remoteInfo = "standalone-mobile-kernel";
+		};
+		4DBF5B0B1802E2F8009CAB2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DBF5B061802E2F8009CAB2E /* libopenssl-mobile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DD3E0181040BB5D00CAC7EF;
+			remoteInfo = opensslmobile;
+		};
+		4DBF5B0D1802E2F8009CAB2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DBF5B061802E2F8009CAB2E /* libopenssl-mobile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DBF5ABF1802C0E7009CAB2E;
+			remoteInfo = revsecurity;
+		};
+		4DBF5B0F1802E309009CAB2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DBF5B061802E2F8009CAB2E /* libopenssl-mobile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DD3E0171040BB5D00CAC7EF;
+			remoteInfo = opensslmobile;
 		};
 		4DE7ED5C13B33C9D002634F5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -590,6 +620,8 @@
 		4DB983CD130BB1DF008A03DC /* mblandroidprocess.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidprocess.cpp; path = src/mblandroidprocess.cpp; sourceTree = "<group>"; };
 		4DB983CE130BB1DF008A03DC /* mblandroidurl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidurl.cpp; path = src/mblandroidurl.cpp; sourceTree = "<group>"; };
 		4DB983CF130BB1DF008A03DC /* mblandroidutil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblandroidutil.h; path = src/mblandroidutil.h; sourceTree = "<group>"; };
+		4DBF5B061802E2F8009CAB2E /* libopenssl-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libopenssl-mobile.xcodeproj"; path = "../thirdparty/libopenssl/libopenssl-mobile.xcodeproj"; sourceTree = SOURCE_ROOT; };
+		4DBF5B281802E635009CAB2E /* socket_resolve.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = socket_resolve.cpp; path = src/socket_resolve.cpp; sourceTree = "<group>"; };
 		4DC684741348E50D002469A4 /* mbliphonegfx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonegfx.mm; path = src/mbliphonegfx.mm; sourceTree = "<group>"; };
 		4DC684761348E5AC002469A4 /* mbliphoneview.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mbliphoneview.h; path = src/mbliphoneview.h; sourceTree = "<group>"; };
 		4DC684BD1348EAD7002469A4 /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
@@ -844,6 +876,7 @@
 		4DFFC8EE13DD909F006233A4 /* name.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = name.cpp; path = src/name.cpp; sourceTree = "<group>"; };
 		4DFFC8F213DD90AF006233A4 /* objectpropsets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectpropsets.cpp; path = src/objectpropsets.cpp; sourceTree = "<group>"; };
 		4DFFC8F613DD90CE006233A4 /* syscfdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syscfdate.cpp; path = src/syscfdate.cpp; sourceTree = "<group>"; };
+		BE4D6179189A54C0002DA467 /* AttachmentProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = AttachmentProvider.java; sourceTree = "<group>"; };
 		E8111F8B1541938E00DB16E3 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		E8111F8D154193A500DB16E3 /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
 		E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBookUI.framework; path = System/Library/Frameworks/AddressBookUI.framework; sourceTree = SDKROOT; };
@@ -962,6 +995,7 @@
 				4D7B149817141A63006782C1 /* libgifmobile.a in Frameworks */,
 				4D7B149917141A67006782C1 /* libjpegmobile.a in Frameworks */,
 				4D7B149A17141A6B006782C1 /* libpcremobile.a in Frameworks */,
+				4DBF5B111802E327009CAB2E /* libopensslmobile.a in Frameworks */,
 				4DABCE6515ECD4FF0085E214 /* libstandalone-mobile-kernel.a in Frameworks */,
 				4D222406171D7F9D00E7E557 /* libsecurity-community.a in Frameworks */,
 			);
@@ -1111,6 +1145,7 @@
 		4D91B3E4134CB7AE000D7AA5 /* android */ = {
 			isa = PBXGroup;
 			children = (
+				BE4D6179189A54C0002DA467 /* AttachmentProvider.java */,
 				E823E62B14D01359001F73C4 /* billing */,
 				E867E3B1163EC582003579AC /* nativecontrol */,
 				4D91B3E5134CB7AE000D7AA5 /* AccelerationChangeListener.java */,
@@ -1228,6 +1263,15 @@
 				4DB983CF130BB1DF008A03DC /* mblandroidutil.h */,
 			);
 			name = Android;
+			sourceTree = "<group>";
+		};
+		4DBF5B071802E2F8009CAB2E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4DBF5B0C1802E2F8009CAB2E /* libopensslmobile.a */,
+				4DBF5B0E1802E2F8009CAB2E /* librevsecurity.a */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		4DD3DD7B1040AA4700CAC7EF = {
@@ -1576,6 +1620,7 @@
 		E82D43BF1712CF1A00A10289 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
+				4DBF5B061802E2F8009CAB2E /* libopenssl-mobile.xcodeproj */,
 				E8C22C47177B1B78003785D3 /* libgraphics-mobile.xcodeproj */,
 				E8C22C4D177B1B87003785D3 /* libskia-mobile.xcodeproj */,
 				4D7B13EC1714198F006782C1 /* libpng-mobile.xcodeproj */,
@@ -1604,6 +1649,7 @@
 		E84BE35C170C96D500807CF6 /* Core - Misc */ = {
 			isa = PBXGroup;
 			children = (
+				4DBF5B281802E635009CAB2E /* socket_resolve.cpp */,
 				4DD3DE051040ACE300CAC7EF /* debug.cpp */,
 				4DD3DE041040ACE300CAC7EF /* debug.h */,
 				4DD3DE101040ACED00CAC7EF /* dllst.cpp */,
@@ -1771,6 +1817,7 @@
 				4D2220AA171D78F500E7E557 /* PBXTargetDependency */,
 				4D2220AC171D78F800E7E557 /* PBXTargetDependency */,
 				4D2220AE171D78FA00E7E557 /* PBXTargetDependency */,
+				4DBF5B101802E309009CAB2E /* PBXTargetDependency */,
 			);
 			name = "standalone-mobile-kernel";
 			productName = "standalone-mobile-kernel";
@@ -1785,11 +1832,13 @@
 				4DD3DD961040AA9A00CAC7EF /* Sources */,
 				4DD3DD971040AA9A00CAC7EF /* Frameworks */,
 				F670DB65147D45A5008FEA1E /* CopyFiles */,
+				4DBF5B5B1802E7C1009CAB2E /* Copy revsecurity */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				4D08A0D3138EA52B0081F990 /* PBXTargetDependency */,
+				4D76D93E1804281D0091FFE7 /* PBXTargetDependency */,
 			);
 			name = "standalone-mobile-community";
 			productName = "standalone-mobile";
@@ -1833,6 +1882,10 @@
 				{
 					ProductGroup = 4D7B13B1171418FC006782C1 /* Products */;
 					ProjectRef = 4DD3E0E51040BC6F00CAC7EF /* libjpeg-mobile.xcodeproj */;
+				},
+				{
+					ProductGroup = 4DBF5B071802E2F8009CAB2E /* Products */;
+					ProjectRef = 4DBF5B061802E2F8009CAB2E /* libopenssl-mobile.xcodeproj */;
 				},
 				{
 					ProductGroup = 4D7B13B917141906006782C1 /* Products */;
@@ -1894,6 +1947,20 @@
 			remoteRef = 4DA2CA241136CFDF00B9F27B /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		4DBF5B0C1802E2F8009CAB2E /* libopensslmobile.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libopensslmobile.a;
+			remoteRef = 4DBF5B0B1802E2F8009CAB2E /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4DBF5B0E1802E2F8009CAB2E /* librevsecurity.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = librevsecurity.a;
+			remoteRef = 4DBF5B0D1802E2F8009CAB2E /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		E8C22C4C177B1B79003785D3 /* libgraphicsmobile.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -1953,8 +2020,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ $CONFIGURATION = \"Debug\" ]; then\n  $PLATFORM_DEVELOPER_BIN_DIR/g++ -nodefaultlibs -Wl,-r -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol\nelse\n  $PLATFORM_DEVELOPER_BIN_DIR/g++ -nodefaultlibs -Wl,-r -Wl,-x -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol\nfi\n";
+			shellScript = "if [ -e $PLATFORM_DEVELOPER_BIN_DIR/g++ ]; then\n    BIN_DIR=$PLATFORM_DEVELOPER_BIN_DIR\nelse\n    BIN_DIR=$DEVELOPER_BIN_DIR\nfi\n\nif [ $CONFIGURATION = \"Debug\" ]; then\n  $BIN_DIR/g++ -nodefaultlibs -Wl,-r -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol\nelse\n  $BIN_DIR/g++ -nodefaultlibs -Wl,-r -Wl,-x -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol\nfi\n";
 			showEnvVarsInLog = 0;
+		};
+		4DBF5B5B1802E7C1009CAB2E /* Copy revsecurity */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(TARGET_BUILD_DIR)/revsecurity.dylib",
+			);
+			name = "Copy revsecurity";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/standalone-mobile-community.app/revsecurity.dylib",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cp \"$TARGET_BUILD_DIR/revsecurity.dylib\" \"$TARGET_BUILD_DIR/standalone-mobile-community.app/\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -2116,6 +2199,7 @@
 				4DABCE1D15ECD4B50085E214 /* mcio.cpp in Sources */,
 				4DABCE1E15ECD4B50085E214 /* mcssl.cpp in Sources */,
 				4DABCE1F15ECD4B50085E214 /* mcstring.cpp in Sources */,
+				4CD7DFE318A140D800CBCB57 /* opensslsocket.cpp in Sources */,
 				4DABCE2015ECD4B50085E214 /* mctheme.cpp in Sources */,
 				4DABCE2115ECD4B50085E214 /* mcutility.cpp in Sources */,
 				4DABCE2215ECD4B50085E214 /* md5.cpp in Sources */,
@@ -2130,7 +2214,6 @@
 				4DABCE2B15ECD4B50085E214 /* objectpropsets.cpp in Sources */,
 				4DABCE2C15ECD4B50085E214 /* objectstream.cpp in Sources */,
 				4DABCE2D15ECD4B50085E214 /* objptr.cpp in Sources */,
-				4DABCE2E15ECD4B50085E214 /* opensslsocket.cpp in Sources */,
 				4DABCE2F15ECD4B50085E214 /* operator.cpp in Sources */,
 				4DABCE3015ECD4B50085E214 /* paragraf.cpp in Sources */,
 				4DABCE3115ECD4B50085E214 /* paragrafattr.cpp in Sources */,
@@ -2181,6 +2264,7 @@
 				4DABCE5E15ECD4B50085E214 /* variablevalue.cpp in Sources */,
 				4DABCE5F15ECD4B50085E214 /* vclip.cpp in Sources */,
 				4DABCE6115ECD4B50085E214 /* visual.cpp in Sources */,
+				4DBF5B291802E63F009CAB2E /* socket_resolve.cpp in Sources */,
 				E8C22C46177B1700003785D3 /* cgimageutil.cpp in Sources */,
 				E8C22E57177B2884003785D3 /* imagelist.cpp in Sources */,
 				E8C22E73177B2960003785D3 /* graphicscontext.cpp in Sources */,
@@ -2243,6 +2327,11 @@
 			name = pngmobile;
 			targetProxy = 4D2220AD171D78FA00E7E557 /* PBXContainerItemProxy */;
 		};
+		4D76D93E1804281D0091FFE7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = revsecurity;
+			targetProxy = 4D76D93D1804281D0091FFE7 /* PBXContainerItemProxy */;
+		};
 		4D7B149017141A3C006782C1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = jpegmobile;
@@ -2267,6 +2356,11 @@
 			isa = PBXTargetDependency;
 			target = 4DABCD8915ECD40F0085E214 /* standalone-mobile-kernel */;
 			targetProxy = 4DABCE6315ECD4E80085E214 /* PBXContainerItemProxy */;
+		};
+		4DBF5B101802E309009CAB2E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = opensslmobile;
+			targetProxy = 4DBF5B0F1802E309009CAB2E /* PBXContainerItemProxy */;
 		};
 		4DE7ED5D13B33C9D002634F5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

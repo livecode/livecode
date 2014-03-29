@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 void *memdup(const void *p_src, unsigned int p_src_length);
 
 Boolean strequal(const char *one, const char *two);
-Boolean strnequal(const int1 *one, const int1 *two, size_t n);
+Boolean strnequal(const char *one, const char *two, size_t n);
 char *strclone(const char *one);
 char *strclone(const char *one, uint4 length);
 

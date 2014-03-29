@@ -69,6 +69,7 @@ static PropList stackprops[] =
         {"name", P_SHORT_NAME},
         {"rect", P_RECTANGLE},
         {"resizable", P_RESIZABLE},
+		{"scalefactor", P_SCALE_FACTOR},
         {"shadow", P_SHADOW},
         {"shadowColor", P_SHADOW_COLOR},
         {"shadowPattern", P_SHADOW_PATTERN},

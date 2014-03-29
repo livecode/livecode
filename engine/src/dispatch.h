@@ -162,6 +162,9 @@ public:
 	// IM-2013-12-04: [[ PixelScale ]] Reset window size of all open stacks
 	void sync_stack_windows();
 	
+	// IM-2014-01-27: [[ HiDPI ]] Reopen all currently open stack windows
+	void reopen_stack_windows();
+	
 	// This method iterates through all stacks and ensures none have a reference
 	// to one of the ones in MCcursors.
 	void clearcursors(void);

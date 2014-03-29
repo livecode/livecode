@@ -460,6 +460,7 @@ public:
 	// in idraw.cc
 	void drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy);
 	void drawcentered(MCDC *dc, int2 x, int2 y, Boolean reverse);
+    void drawnodata(MCDC *dc, MCRectangle drect, uint2 sw, uint2 sh, int2 dx, int2 dy);
 
 	void canceldraw(void);
 	void startmag(int2 x, int2 y);

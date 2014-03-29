@@ -2436,6 +2436,22 @@ enum Exec_errors
 	// IM-2013-12-04: [[ PixelScale ]]
 	// {EE-0801} pixelScale: not a valid scale value
 	EE_PROPERTY_BADPIXELSCALE,
+	
+	// IM-2014-01-07: [[ StackScale ]]
+	// {EE-0802} scaleFactor: not a valid scale value
+	EE_STACK_BADSCALEFACTOR,
+
+	// IM-2014-01-30: [[ HiDPI ]]
+	// {EE-0803} pixelScale: the pixelScale property cannot be set on this platform
+	EE_PROPERTY_PIXELSCALENOTSUPPORTED,
+
+	// IM-2014-01-30: [[ HiDPI ]]
+	// {EE-0804} usePixelScaling: the usePixelScaling property cannot be set on this platform
+	EE_PROPERTY_USEPIXELSCALENOTSUPPORTED,
+    
+	// MM-2014-02-12: [[ SecureSocket ]]
+	// {EE-0805} secure: error in socket expression
+	EE_SECURE_BADNAME,
 };
 
 extern const char *MCexecutionerrors;

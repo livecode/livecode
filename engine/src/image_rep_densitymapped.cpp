@@ -558,7 +558,7 @@ bool MCImageRepGetDensityMapped(const char *p_filename, MCImageRep *&r_rep)
 			MCImageFreeScaledRepList(t_list, t_count);
 		}
 	}
-	
+	    
 	if (t_success)
 	{
 		r_rep = t_rep;

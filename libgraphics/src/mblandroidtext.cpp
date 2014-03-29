@@ -98,7 +98,7 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 		uindex_t t_length;
 		t_length = MCCStringLength(t_text);
 		t_width =  (MCGFloat) t_paint . measureText(t_text, t_length);
-	}
+    }
 	
 	MCCStringFree(t_text);
 	//self -> is_valid = t_success;

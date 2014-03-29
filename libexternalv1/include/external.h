@@ -580,6 +580,12 @@ MCError MCContextDefaultCard(MCObjectRef *r_default_card);
 MCError MCRunOnMainThread(MCThreadCallback callback, void *state, MCRunOnMainThreadOptions options);
 
 ////////////////////////////////////////////////////////////////////////////////
+	
+// MM-2014-03-18: [[ iOS 7.1 Support ]] Added new WaitRun and WaitBreak functions required by reviphone external for iOS 7.1 support.
+MCError MCWaitRun(void);
+MCError MCWaitBreak(void);
+	
+////////////////////////////////////////////////////////////////////////////////
 
 MCError MCObjectResolve(const char *chunk, MCObjectRef *r_object);
 MCError MCObjectExists(MCObjectRef object, bool *r_exists);

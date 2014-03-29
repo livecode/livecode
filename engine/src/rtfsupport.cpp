@@ -146,18 +146,38 @@ RTFStatus RTFState::Restore(void)
 	return t_status;
 }
 
-// MW-2012-08-29: [[ Bug 10324 ]] Returns 'true' if the list props will change when
-//   restoring state.
-bool RTFState::HasListChanged(void) const
+// MW-2014-01-08: [[ Bug 11627 ]] Used to detect if a paragraph needs to be emiited
+//   on change of group (otherwise paragraph state is lost if there has been no
+//   style changes on text within the group).
+bool RTFState::HasParagraphChanged(void) const
 {
-	// MW-2012-10-12: [[ Bug 10464 ]] If we have no entries, then there's nothing to do.
 	if (m_entries == nil)
 		return false;
 	
 	if (m_entries -> previous == nil)
-		return m_entries -> list_style != kMCTextListStyleNone || m_entries -> list_level != 0 || m_entries -> list_index != 0;
+		return
+			m_entries -> list_style != kMCTextListStyleNone || m_entries -> list_level != 0 || m_entries -> list_index != 0 ||
+			m_entries -> text_align != kMCTextTextAlignLeft || m_entries -> border_width != 0 || m_entries -> padding != 0 ||
+			m_entries -> first_indent != 0 || m_entries -> left_indent != 0 || m_entries -> right_indent != 0 ||
+			m_entries -> space_above != 0 || m_entries -> space_below != 0 ||
+			m_entries -> paragraph_background_color != 0xffffffff ||
+			m_entries -> border_color !=0xffffffff ||
+			m_entries -> paragraph_metadata != kMCEmptyName;
 	
-	return m_entries -> list_style != m_entries -> previous -> list_style || m_entries -> list_level != m_entries -> previous -> list_level || m_entries -> list_index != m_entries -> previous -> list_index;
+	return m_entries -> list_style != m_entries -> previous -> list_style ||
+			m_entries -> list_level != m_entries -> previous -> list_level ||
+			m_entries -> list_index != m_entries -> previous -> list_index ||
+			m_entries -> text_align != m_entries -> previous -> text_align ||
+			m_entries -> border_width != m_entries -> previous -> border_width ||
+			m_entries -> padding != m_entries -> previous -> padding ||
+			m_entries -> first_indent != m_entries -> previous -> first_indent ||
+			m_entries -> left_indent != m_entries -> previous -> left_indent ||
+			m_entries -> right_indent != m_entries -> previous -> right_indent ||
+			m_entries -> space_above != m_entries -> previous -> space_above ||
+			m_entries -> space_below != m_entries -> previous -> space_below ||
+			m_entries -> paragraph_background_color != m_entries -> previous -> paragraph_background_color ||
+			m_entries -> border_color != m_entries -> previous -> border_color ||
+			m_entries -> paragraph_metadata != m_entries -> previous -> paragraph_metadata;
 }
 
 //

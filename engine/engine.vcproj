@@ -290,8 +290,8 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Encoding environment..."
-					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)compress_data.rev&quot; &quot;$(InputDir)Environment.rev&quot; &quot;$(InputDir)startupstack.cpp&quot; &quot;MCstartupstack&quot;&#x0D;&#x0A;"
-					Outputs="$(InputDir)startupstack.cpp"
+					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputDir)compress_data.rev&quot; &quot;$(InputDir)Environment.rev&quot; &quot;$(InputDir)startupstack.cpp&quot; &quot;MCstartupstack&quot;&#x0D;&#x0A;"
+					Outputs="&quot;$(InputDir)startupstack.cpp&quot;"
 				/>
 			</FileConfiguration>
 			<FileConfiguration
@@ -300,8 +300,8 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Encoding environment..."
-					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)compress_data.rev&quot; &quot;$(InputDir)Environment.rev&quot; &quot;$(InputDir)startupstack.cpp&quot; &quot;MCstartupstack&quot;&#x0D;&#x0A;"
-					Outputs="$(InputDir)startupstack.cpp"
+					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputDir)compress_data.rev&quot; &quot;$(InputDir)Environment.rev&quot; &quot;$(InputDir)startupstack.cpp&quot; &quot;MCstartupstack&quot;&#x0D;&#x0A;"
+					Outputs="&quot;$(InputDir)startupstack.cpp&quot;"
 				/>
 			</FileConfiguration>
 		</File>
