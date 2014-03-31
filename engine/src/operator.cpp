@@ -1863,6 +1863,42 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
                 else
                     MCStringsEvalIsNotAmongTheItemsOf(ctxt, *t_left, *t_right, t_result);
                 break;
+            case CT_PARAGRAPH:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheParagraphsOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheParagraphsOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_SENTENCE:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheSentencesOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheSentencesOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_TRUEWORD:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheTrueWordsOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheTrueWordsOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_CODEPOINT:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheCodepointsOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheCodepointsOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_CODEUNIT:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheCodeunitsOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheCodeunitsOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_BYTE:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheBytesOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheBytesOf(ctxt, *t_left, *t_right, t_result);
+                break;
             }
         }
         break;

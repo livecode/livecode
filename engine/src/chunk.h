@@ -225,4 +225,36 @@ public:
                 && codepoint == NULL && codeunit == NULL && byte == NULL;
 	}
 };
+
+class MCTextChunkIterator
+{
+    MCStringRef text;
+    MCScriptPoint *sp;
+    Chunk_term type;
+    MCBreakIteratorRef break_iterator;
+    MCRange range;
+    bool exhausted;
+    uindex_t length;
+    bool first_chunk;
+    
+    public:
+    MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text);
+    ~MCTextChunkIterator();
+    
+    MCRange getrange()
+    {
+        return range;
+    }
+    
+    bool isexhausted()
+    {
+        return exhausted;
+    }
+    
+    bool next(MCExecContext& ctxt);
+    bool copystring(MCStringRef& r_string);
+    uindex_t countchunks(MCExecContext& ctxt);
+    bool isamong(MCExecContext& ctxt, MCStringRef p_needle);
+    uindex_t chunkoffset(MCExecContext& ctxt, MCStringRef p_needle, uindex_t p_start_offset);
+};
 #endif
