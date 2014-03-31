@@ -424,6 +424,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             }
             return;
         case CT_CODEUNIT:
+        case CT_BYTE:
             if (p_include_chars)
             {
                 r_start = p_first;

@@ -6265,6 +6265,8 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
     /* UNCHECKED */ MCStringCopy(p_text, text);
     type = p_chunk_type;
     
+    // WARNING: At the moment, MCStringIsNative normalizes the string
+    //  if that allows it to nativise it 'losslessly'.
     if (type == CT_CHARACTER && MCStringIsNative(text))
         type = CT_CODEUNIT;
     
@@ -6275,7 +6277,7 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
     length = MCStringGetLength(text);
     first_chunk = true;
     
-    switch (p_chunk_type)
+    switch (type)
     {
         case CT_TOKEN:
             sp = new MCScriptPoint(p_text);
@@ -6430,6 +6432,7 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             return true;
             
         case CT_CODEUNIT:
+        case CT_BYTE:
             range . length = 1;
             
             if (t_offset == length - 1)
@@ -6444,7 +6447,7 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
 
 bool MCTextChunkIterator::copystring(MCStringRef& r_string)
 {
-    MCStringCopySubstring(text, range, r_string);
+    return MCStringCopySubstring(text, range, r_string);
 }
 
 uindex_t MCTextChunkIterator::countchunks(MCExecContext& ctxt)
