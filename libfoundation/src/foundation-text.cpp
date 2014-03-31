@@ -240,6 +240,7 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepoint()
 bool MCTextFilter_NormalizeNFC::AdvanceCursor()
 {
     m_ReadIndex++;
+	return HasData();
 }
 
 bool MCTextFilter_NormalizeNFC::HasData() const
