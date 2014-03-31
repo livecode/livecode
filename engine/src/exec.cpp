@@ -768,7 +768,7 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
 	return false;
 }
 
-bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result)
+bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uint2 pos, Exec_errors p_error, MCExecValue& r_result)
 {
     MCAssert(p_param != nil);
 	
@@ -777,7 +777,7 @@ bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uin
     
     do
     {
-        if (p_param -> eval(*this, r_result))
+        if (p_param -> eval_ctxt(*this, r_result))
             t_success = true;
         else
             t_can_debug = MCB_error(*this, line, pos, p_error);

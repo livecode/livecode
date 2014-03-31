@@ -148,15 +148,17 @@ bool MCParameter::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (value . type != kMCExecValueTypeNone)
         MCExecTypeCopy(value, r_value);
     else
-    {
-        MCValueRef t_value;
-        if (ctxt . EvalOptionalExprAsValueRef(exp, (MCValueRef)kMCEmptyString, EE_PARAM_BADEXP, t_value))
+    {        
+        if (exp != nil)
         {
-            MCExecTypeSetValueRef(value, t_value);
-            return true;
+            if (!ctxt . EvaluateExpression(exp, EE_PARAM_BADEXP, r_value))
+                return false;
         }
-        return false;
+        else
+            MCExecTypeSetValueRef(r_value, MCValueRetain(kMCEmptyString));
     }
+    
+    return true;
 }
 
 #ifdef LEGACY_EXEC

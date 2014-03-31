@@ -1525,7 +1525,7 @@ public:
     // only throwing an error if they ultimately fail.
     bool TryToEvaluateExpression(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result);
     bool TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, double& r_result);
-    bool TryToEvaluateParameter(MCParameter *p_param, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result);
+    bool TryToEvaluateParameter(MCParameter *p_param, uint2 line, uint2 pos, Exec_errors p_error, MCExecValue& r_result);
     bool TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr, uint2 line, uint2 pos, Exec_errors p_error, bool& r_result);
     bool TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCExecValue p_value);
     

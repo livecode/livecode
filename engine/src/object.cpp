@@ -2071,15 +2071,15 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
     MCmessagemessages = False;
 
     MCExecContext ctxt(this, nil, nil);
-    MCAutoValueRef t_value;
-	MCresult->eval(ctxt, &t_value);
+    MCExecValue t_value;
+	MCresult->eval_ctxt(ctxt, t_value);
 
 	if (h)
 		message_with_valueref_args(MCM_message_handled, MCSTR(htypes[htype]), m);
 	else
 		message_with_valueref_args(MCM_message_not_handled, MCSTR(htypes[htype]), m);
 
-	MCresult->set(ctxt, *t_value);
+	MCresult->give_value(ctxt, t_value);
 
 	MCmessagemessages = True;
 }

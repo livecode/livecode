@@ -335,17 +335,14 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 			}
 			else
 			{
-//                MCExecValue t_value;
-//				if (!plist->eval_argument_ctxt(ctxt, t_value))
-                MCAutoValueRef t_value;
-                if (!plist->eval_argument(ctxt, &t_value))
+                MCExecValue t_value;
+				if (!plist->eval_argument_ctxt(ctxt, t_value))
 				{
 					err = True;
 					break;
 				}
 				/* UNCHECKED */ MCVariable::createwithname(i < npnames ? pinfo[i] . name : kMCEmptyName, newparams[i]);
-//				newparams[i]->give_value(ctxt, t_value);
-                newparams[i]->set(ctxt, *t_value);
+				newparams[i]->give_value(ctxt, t_value);
 			}
 			plist = plist->getnext();
 		}
@@ -958,6 +955,21 @@ void MCHandler::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &
     else
         ctxt . Throw();
 
+    delete exp;
+}
+
+void MCHandler::eval_ctxt(MCExecContext &ctxt, MCStringRef p_expression, MCExecValue &r_value)
+{
+    MCScriptPoint sp(ctxt, p_expression);
+	sp.sethandler(this);
+    MCExpression *exp = NULL;
+    Symbol_type type;
+    
+	if (sp.parseexp(False, True, &exp) == PS_NORMAL && sp.next(type) == PS_EOF)
+        ctxt . EvaluateExpression(exp, EE_HANDLER_BADEXP, r_value);
+    else
+        ctxt . Throw();
+    
     delete exp;
 }
 

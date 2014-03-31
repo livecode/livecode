@@ -454,11 +454,7 @@ bool MCVariable::append_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef
     MCExecValue t_exec_value;
     
     if (p_value . type != kMCExecValueTypeStringRef)
-    {
-        MCExecValue t_copy;
-        MCExecTypeCopy(p_value, t_copy);
-        MCExecTypeConvertAndReleaseAlways(ctxt, t_copy . type, &t_copy, kMCExecValueTypeStringRef, &(&t_value));
-    }
+        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_value));
     
     if (ctxt . HasError())
         return ctxt . IgnoreLastError(), false;

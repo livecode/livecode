@@ -1190,10 +1190,10 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
             
             // MW-2011-08-11: [[ Bug 9668 ]] Make sure we copy 'pdata' if we use it, since
             //   mptr (into which it points) only lasts as long as this method call.
-            MCAutoValueRef t_value;
-            ctxt . GetHandler() -> eval(ctxt, *t_expression, &t_value);
+            MCExecValue t_value;
+            ctxt . GetHandler() -> eval_ctxt(ctxt, *t_expression, t_value);
             if (!ctxt.HasError())
-                newparam->setvalueref_argument(*t_value);
+                newparam->set_exec_argument(ctxt, t_value);
             else
                 newparam->setvalueref_argument(*t_expression);
             

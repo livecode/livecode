@@ -158,10 +158,11 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 		if (t_var == NULL)
 		{
 			tptr -> clear_argument();
-            MCAutoValueRef t_value;
-			if (!ctxt . TryToEvaluateParameter(tptr, line, pos, is_function ? EE_FUNCTION_BADSOURCE : EE_STATEMENT_BADPARAM, &t_value))
+            MCExecValue t_value;
+            //HERE
+			if (!ctxt . TryToEvaluateParameter(tptr, line, pos, is_function ? EE_FUNCTION_BADSOURCE : EE_STATEMENT_BADPARAM, t_value))
                 return;
-			tptr->setvalueref_argument(*t_value);
+			tptr->give_exec_argument(t_value);
 		}
 		else
 			tptr->set_argument_var(t_var);
