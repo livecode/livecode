@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <external.h>
 #include "DVTiPhoneSimulatorRemoteClient.h"
 #include <objc/objc-runtime.h>
+#include <CoreFoundation/CFPreferences.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -517,10 +518,28 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 		// MM-2014-03-18: [[ iOS 7.1 Support ]] Device name is required by the DVT framework.
 		if ([t_session_config respondsToSelector: @selector(setSimulatedDeviceInfoName:)])
 		{
+            // MW-2014-03-20: [[ Bug 11946 ]] Fetch the current device preference from the simulator
+            //   and if it matches the requested family, then use that string for the device. This
+            //   ensures the last set device in the simulator gets used rather than falling back to
+            //   just iPad or iPhone.
+            NSString *t_current;
+            t_current = (NSString *)CFPreferencesCopyAppValue((CFStringRef)@"SimulateDevice", (CFStringRef)@"com.apple.iphonesimulator");
+            
 			if (strcasecmp(t_family, "ipad") == 0)
-				[t_session_config setSimulatedDeviceInfoName: @"iPad"];
+            {
+                if ([t_current hasPrefix: @"iPad"])
+                    [t_session_config setSimulatedDeviceInfoName: t_current];
+                else
+                    [t_session_config setSimulatedDeviceInfoName: @"iPad"];
+            }
 			else
-				[t_session_config setSimulatedDeviceInfoName: @"iPhone"];			
+            {
+                if ([t_current hasPrefix: @"iPhone"])
+                    [t_session_config setSimulatedDeviceInfoName: t_current];
+                else
+                    [t_session_config setSimulatedDeviceInfoName: @"iPhone"];
+            }
+            [t_current release];
 		}		
 		
 		s_simulator_session = [s_simulator_proxy newSession];
