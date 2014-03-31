@@ -127,8 +127,9 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
         case kMCStringEncodingNative:
             return MCStringCreateWithNativeChars(p_bytes, p_byte_count, r_string);
         case kMCStringEncodingUTF16:
-        case kMCStringEncodingUTF16LE:
             return MCStringCreateWithChars((unichar_t *)p_bytes, p_byte_count / 2, r_string);
+        // AL-2014-31-03: [[ Bug 12067 ]] Fix conversion from little endian bytes.    
+        case kMCStringEncodingUTF16LE:
         case kMCStringEncodingUTF16BE:
         {
             unichar_t *t_buffer;
@@ -136,7 +137,12 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
             MCMemoryAllocate(t_length * sizeof(unichar_t), t_buffer);
 
             for (uindex_t i = 0; i < t_length; i++)
-                t_buffer[i] = (unichar_t)MCSwapInt16HostToBig(((unichar_t *)p_bytes)[i]);
+            {
+                if (p_encoding == kMCStringEncodingUTF16BE)
+                    t_buffer[i] = (unichar_t)MCSwapInt16BigToHost(((unichar_t *)p_bytes)[i]);
+                else
+                    t_buffer[i] = (unichar_t)MCSwapInt16LittleToHost(((unichar_t *)p_bytes)[i]);
+            }
             return MCStringCreateWithCharsAndRelease(t_buffer, t_length, r_string);
         }
             
@@ -1331,7 +1337,9 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
             }
             return false;
         }
+    // AL-2014-31-03: [[ Bug 12067 ]] Implement conversion to big endian bytes.
     case kMCStringEncodingUTF16LE:
+    case kMCStringEncodingUTF16BE:
         {
             uindex_t t_char_count;
             unichar_t *t_bytes;
@@ -1341,8 +1349,12 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
                 MCMemoryAllocate((t_char_count + 1) * sizeof(unichar_t), t_buffer);
                 
                 for (uindex_t i = 0; i < t_char_count; i++)
-                    t_buffer[i] = (unichar_t)MCSwapInt16HostToLittle((t_bytes)[i]);
-                
+                {
+                    if (p_encoding == kMCStringEncodingUTF16BE)
+                        t_buffer[i] = (unichar_t)MCSwapInt16HostToBig((t_bytes)[i]);   
+                    else
+                        t_buffer[i] = (unichar_t)MCSwapInt16HostToLittle((t_bytes)[i]);
+                }
                 r_bytes = (byte_t*&)t_buffer;
                 r_byte_count = t_char_count * sizeof(unichar_t);
                 return true;
