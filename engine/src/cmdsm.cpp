@@ -256,9 +256,7 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
 		}
 		else
 		{
-            MCAutoValueRef t_value;
-            MCExecTypeConvertAndReleaseAlways(ctxt, t_result . type, &t_result, kMCExecValueTypeValueRef, &(&t_value));
-			if (!ctxt . HasError() && dest->set(ctxt, PT_INTO, *t_value))
+			if (dest->set(ctxt, PT_INTO, t_result))
 				return;
 			ctxt . LegacyThrow(EE_ADD_CANTSET);
 		}
@@ -501,9 +499,7 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
 		}
 		else
 		{
-            MCAutoValueRef t_value;
-            MCExecTypeConvertAndReleaseAlways(ctxt, t_result . type, &t_result, kMCExecValueTypeValueRef, &(&t_value));
-            if (!ctxt . HasError() && dest->set(ctxt, PT_INTO, *t_value))
+            if (dest->set(ctxt, PT_INTO, t_result))
                 return;
 
 			ctxt . LegacyThrow(EE_DIVIDE_CANTSET);
@@ -744,11 +740,8 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
 			ctxt . Throw();
 		}
 		else
-		{
-            MCAutoValueRef t_value;
-            MCExecTypeConvertAndReleaseAlways(ctxt, t_result . type, &t_result, kMCExecValueTypeValueRef, &(&t_value));
-            
-			if (!ctxt . HasError() && dest->set(ctxt, PT_INTO, *t_value))
+		{            
+			if (dest->set(ctxt, PT_INTO, t_result))
                 return;
 
 			ctxt . LegacyThrow(EE_MULTIPLY_CANTSET);
@@ -973,10 +966,7 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
 		}
 		else
 		{
-            MCAutoValueRef t_value;
-            MCExecTypeConvertAndReleaseAlways(ctxt, t_result . type, &t_result, kMCExecValueTypeValueRef, &(&t_value));
-            
-			if (!ctxt . HasError() && dest->set(ctxt, PT_INTO, *t_value))
+			if (dest->set(ctxt, PT_INTO, t_result))
                 return;
 
 			ctxt . LegacyThrow(EE_SUBTRACT_CANTSET);

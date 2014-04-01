@@ -453,8 +453,7 @@ bool MCVariable::append_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef
     MCAutoStringRef t_value;
     MCExecValue t_exec_value;
     
-    if (p_value . type != kMCExecValueTypeStringRef)
-        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_value));
+    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_value));
     
     if (ctxt . HasError())
         return ctxt . IgnoreLastError(), false;
@@ -547,10 +546,13 @@ bool MCVariable::converttomutablearray(void)
 {
 	if (value . type == kMCExecValueTypeArrayRef)
 	{
-		MCArrayRef t_array;
-		if (!MCArrayMutableCopyAndRelease(value . arrayref_value, t_array))
-			return false;
-		value . arrayref_value = t_array;
+        if (!MCArrayIsMutable(value . arrayref_value))
+        {
+            MCArrayRef t_array;
+            if (!MCArrayMutableCopyAndRelease(value . arrayref_value, t_array))
+                return false;
+            value . arrayref_value = t_array;
+        }
 	}
 	else
 	{
@@ -640,13 +642,17 @@ bool MCVariable::converttomutablestring(MCExecContext& ctxt)
         }
 	}
     
-	MCStringRef t_mutable_string;
-	if (MCStringMutableCopyAndRelease(value . stringref_value, t_mutable_string))
-	{
-		value . stringref_value = t_mutable_string;
-		return true;
-	}
-	return false;
+    if (!MCStringIsMutable(value . stringref_value))
+    {
+        MCStringRef t_mutable_string;
+        if (MCStringMutableCopyAndRelease(value . stringref_value, t_mutable_string))
+        {
+            value . stringref_value = t_mutable_string;
+            return true;
+        }
+        return false;
+    }
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
