@@ -1734,6 +1734,7 @@ bool MCStringLastIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_
 bool MCStringFind(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStringOptions p_options, MCRange *r_result)
 {
     // Make sure the length of the range is valid
+    p_range.offset = MCMin(p_range.offset, self -> char_count);
     p_range.length = MCMin(p_range.length, self -> char_count - p_range.offset);
     
     bool t_result;
@@ -1746,6 +1747,9 @@ bool MCStringFind(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStr
         t_result = MCStrCharsFindFolded(self -> chars + p_range . offset, p_range . length, p_needle -> chars, p_needle -> char_count, t_range);
     else
         t_result = MCStrCharsFindCaseless(self -> chars + p_range . offset, p_range . length, p_needle -> chars, p_needle -> char_count, t_range);
+    
+    // Correct the range
+    t_range.offset += p_range.offset;
     
     if (r_result != nil)
         *r_result = t_range;

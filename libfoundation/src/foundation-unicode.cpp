@@ -882,60 +882,49 @@ int32_t MCUnicodeCompare(const unichar_t *p_first, uindex_t p_first_length,
                          const unichar_t *p_second, uindex_t p_second_length,
                          MCUnicodeCompareOption p_option)
 {
-    // This is a bit more complicated than a plain comparison and requires the
-    // construction of UnicodeString objects.
-    UErrorCode t_error = U_ZERO_ERROR;
-    icu::UnicodeString t_first(p_first, p_first_length);
-    icu::UnicodeString t_second(p_second, p_second_length);
+    // Create the filters
+    MCTextFilter *t_first_filter = MCTextFilterCreate(p_first, p_first_length, kMCStringEncodingUTF16, p_option);
+    MCTextFilter *t_second_filter = MCTextFilterCreate(p_second, p_second_length, kMCStringEncodingUTF16, p_option);
     
-    // Normalise, if required
-    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionNormalised)
+    while (t_first_filter->HasData() && t_second_filter->HasData())
     {
-        // Construct the normaliser
-        const icu::Normalizer2 *t_nfc = icu::Normalizer2::getNFCInstance(t_error);
-        t_first = t_nfc->normalize(t_first, t_error);
-        t_second = t_nfc->normalize(t_second, t_error);
+        // NOTE: this is a simple codepoint compare and produces a binary
+        // ordering rather than a lexical ordering.
+        int32_t t_diff;
+        t_diff = t_first_filter->GetNextCodepoint() - t_second_filter->GetNextCodepoint();
+        if (t_diff != 0)
+        {
+            MCTextFilterRelease(t_first_filter);
+            MCTextFilterRelease(t_second_filter);
+            return t_diff;
+        }
+        
+        t_first_filter->AdvanceCursor();
+        t_second_filter->AdvanceCursor();
     }
     
-    // Case-fold, if required
-    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionFolded)
-    {
-        __MCUnicodeSimpleCaseFold(t_first);
-        __MCUnicodeSimpleCaseFold(t_second);
-    }
+    bool t_first_longer = t_first_filter->HasData();
+    bool t_second_longer = t_second_filter->HasData();
     
-    // Perform the comparison
-    return t_first.compareCodePointOrder(t_second);
+    MCTextFilterRelease(t_first_filter);
+    MCTextFilterRelease(t_second_filter);
+    
+    if (t_first_longer)
+        return 1;
+    else if (t_second_longer)
+        return -1;
+    else
+        return 0;
 }
 
 bool MCUnicodeBeginsWith(const unichar_t *p_first, uindex_t p_first_length,
                          const unichar_t *p_second, uindex_t p_second_length,
                          MCUnicodeCompareOption p_option)
 {
-    // This is a bit more complicated than a plain comparison and requires the
-    // construction of UnicodeString objects.
-    UErrorCode t_error = U_ZERO_ERROR;
-    icu::UnicodeString t_first(p_first, p_first_length);
-    icu::UnicodeString t_second(p_second, p_second_length);
-    
-    // Normalise, if required
-    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionNormalised)
-    {
-        // Construct the normaliser
-        const icu::Normalizer2 *t_nfc = icu::Normalizer2::getNFCInstance(t_error);
-        t_first = t_nfc->normalize(t_first, t_error);
-        t_second = t_nfc->normalize(t_second, t_error);
-    }
-    
-    // Case-fold, if required
-    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionFolded)
-    {
-        __MCUnicodeSimpleCaseFold(t_first);
-        __MCUnicodeSimpleCaseFold(t_second);
-    }
-    
-    // Perform the comparison
-    return t_first.startsWith(t_second);
+    // Check for a shared prefix
+    uindex_t t_first_match_length, t_second_match_length;
+    MCUnicodeSharedPrefix(p_first, p_first_length, p_second, p_second_length, p_option, t_first_match_length, t_second_match_length);
+    return t_second_match_length == p_second_length;
 }
 
 bool MCUnicodeEndsWith(const unichar_t *p_first, uindex_t p_first_length,
@@ -972,30 +961,8 @@ bool MCUnicodeContains(const unichar_t *p_string, uindex_t p_string_length,
                        const unichar_t *p_needle, uindex_t p_needle_length,
                        MCUnicodeCompareOption p_option)
 {
-    // This is a bit more complicated than a plain comparison and requires the
-    // construction of UnicodeString objects.
-    UErrorCode t_error = U_ZERO_ERROR;
-    icu::UnicodeString t_string(p_string, p_string_length);
-    icu::UnicodeString t_needle(p_needle, p_needle_length);
-    
-    // Normalise, if required
-    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionNormalised)
-    {
-        // Construct the normaliser
-        const icu::Normalizer2 *t_nfc = icu::Normalizer2::getNFCInstance(t_error);
-        t_string = t_nfc->normalize(t_string, t_error);
-        t_needle = t_nfc->normalize(t_needle, t_error);
-    }
-    
-    // Case-fold, if required
-    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionFolded)
-    {
-        __MCUnicodeSimpleCaseFold(t_string);
-        __MCUnicodeSimpleCaseFold(t_needle);
-    }
-    
-    // Perform the comparison
-    return t_string.indexOf(t_needle) >= 0;
+    uindex_t ignored;
+    return MCUnicodeFirstIndexOf(p_string, p_string_length, p_needle, p_needle_length, p_option, ignored);
 }
 
 bool MCUnicodeFirstIndexOf(const unichar_t *p_string, uindex_t p_string_length,
@@ -1159,10 +1126,16 @@ void MCUnicodeSharedPrefix(const unichar_t *p_string, uindex_t p_string_length, 
     // Keep looping until the strings no longer match
     while (t_string_filter->GetNextCodepoint() == t_prefix_filter->GetNextCodepoint())
     {
-        if (!t_string_filter->AdvanceCursor())
+        t_string_filter->AdvanceCursor();
+        t_prefix_filter->AdvanceCursor();
+        
+        if (!t_string_filter->HasData() || !t_prefix_filter->HasData())
+        {
+            // One more to empty the buffers in the filters
+            t_string_filter->AdvanceCursor();
+            t_prefix_filter->AdvanceCursor();
             break;
-        if (!t_prefix_filter->AdvanceCursor())
-            break;
+        }
     }
     
     // Return the lengths in each. Note we don't accept here to avoid matching
@@ -1229,6 +1202,7 @@ hash_t MCUnicodeHash(const unichar_t *p_string, uindex_t p_string_length, MCUnic
             t_hash *= kPrime;
         }
         
+        MCTextFilterRelease(t_filter);
         return t_hash;
     }
     else
@@ -1253,6 +1227,7 @@ hash_t MCUnicodeHash(const unichar_t *p_string, uindex_t p_string_length, MCUnic
             t_hash *= kPrime;
         }
         
+        MCTextFilterRelease(t_filter);
         return t_hash;
     }
 }
