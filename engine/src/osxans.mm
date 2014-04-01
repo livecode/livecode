@@ -509,7 +509,8 @@ static bool filter_to_type_list(MCStringRef p_filter, MCStringRef *&r_types, uin
 		if (MCStringCreateWithCFString((CFStringRef)t_filename_resolved, &t_filename) && *t_filename != nil)
 		{
 			uindex_t t_dot;
-            if (MCStringFirstIndexOfChar(*t_filename, '.', 0, kMCCompareExact, t_dot))
+            // AL-2014-04-01: [[ Bug 12081 ]] Find last occurrence of '.' rather than first, for file extension detection.
+            if (MCStringLastIndexOfChar(*t_filename, '.', UINDEX_MAX, kMCCompareExact, t_dot))
             {
                 MCRange t_range = MCRangeMake(t_dot + 1, UINDEX_MAX);
                 for (uint32_t i = 0; i < m_filter->extension_count && !t_should_show; i++)
