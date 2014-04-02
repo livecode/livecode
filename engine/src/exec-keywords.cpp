@@ -375,6 +375,8 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
     MCScriptPoint *sp = nil;
     int4 count = 0;
     
+    MCTextChunkIterator *tci = nil;
+    
     if (!ctxt . TryToEvaluateExpression(endcond, line, pos, EE_REPEAT_BADFORCOND, &t_condition))
         return;
     
@@ -417,7 +419,40 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             if (!ctxt . ConvertToString(*t_condition, &t_string))
                 return;
             
-            t_length = MCStringGetLength(*t_string);
+            switch (each)
+            {
+                case FU_LINE:
+                    tci = new MCTextChunkIterator(CT_LINE, *t_string);
+                    break;
+                case FU_PARAGRAPH:
+                    tci = new MCTextChunkIterator(CT_PARAGRAPH, *t_string);
+                    break;
+                case FU_SENTENCE:
+                    tci = new MCTextChunkIterator(CT_SENTENCE, *t_string);
+                    break;
+                case FU_ITEM:
+                    tci = new MCTextChunkIterator(CT_ITEM, *t_string);
+                    break;
+                case FU_WORD:
+                    tci = new MCTextChunkIterator(CT_WORD, *t_string);
+                    break;
+                case FU_TRUEWORD:
+                    tci = new MCTextChunkIterator(CT_TRUEWORD, *t_string);
+                    break;
+                case FU_TOKEN:
+                    tci = new MCTextChunkIterator(CT_TOKEN, *t_string);
+                    break;
+                case FU_CODEPOINT:
+                    tci = new MCTextChunkIterator(CT_CODEPOINT, *t_string);
+                    break;
+                case FU_CODEUNIT:
+                    tci = new MCTextChunkIterator(CT_CODEUNIT, *t_string);
+                    break;
+                case FU_CHARACTER:
+                default:
+                    tci = new MCTextChunkIterator(CT_CHARACTER, *t_string);
+                    break;
+            } 
         }
     }
     else
@@ -481,47 +516,16 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                     
                 default:
                 {
-                    switch (each)
-                    {
-                        case FU_LINE:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_LINE, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_PARAGRAPH:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_PARAGRAPH, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_SENTENCE:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_SENTENCE, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_ITEM:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_ITEM, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_WORD:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_WORD, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_TRUEWORD:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_TRUEWORD, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_TOKEN:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_TOKEN, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_CODEPOINT:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_CODEPOINT, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_CODEUNIT:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_CODEUNIT, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_CHARACTER:
-                        default:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_CHARACTER, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                    }
+                    t_found = tci -> next(ctxt);
+                    endnext = tci -> isexhausted();
+
                     if (!t_found)
                     {
                         t_unit = kMCEmptyString;
                         done = true;
                     }
                     else
-                        MCStringCopySubstring(*t_string, t_chunk_range, &t_unit);
+                        tci -> copystring(&t_unit);
                 }
             }
             // MW-2010-12-15: [[ Bug 9218 ]] Added KEY to the type of repeat that already
@@ -554,6 +558,8 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
         
         done = done || endnext;
     }
+    
+    delete tci;
 }
 
 void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCExpression *step, MCExpression *startcond, MCExpression *endcond, MCVarref *loopvar, real8 stepval, uint2 line, uint2 pos)

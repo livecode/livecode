@@ -637,6 +637,15 @@ void MCField::replacecursor(Boolean force, Boolean goal)
 		return;
 
 	MCRectangle drectp, drects;
+    // AL-2014-03-21: [[ Bug 11963 ]] If the field has list behavior, don't split
+    //  the cursor rect.
+    if (flags & F_LIST_BEHAVIOR)
+	{
+		drectp = focusedparagraph->getcursorrect(-1, fixedheight, true);
+		positioncursor(force, goal, drectp, focusedy, true);
+		return;
+	}
+    
 	if (composing && composelength)
 	{
 		findex_t compsi, compei;

@@ -611,7 +611,7 @@ static void MCInterfaceTextStyleParse(MCExecContext& ctxt, MCStringRef p_input, 
 	{
 		MCAutoStringRef t_text_style;
 		
-		if (!MCStringFirstIndexOfChar(p_input, ',', t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_input, ',', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 
 		while (MCStringGetNativeCharAtIndex(p_input, t_old_offset) == ' ')
@@ -2045,7 +2045,7 @@ void MCObject::SetColors(MCExecContext& ctxt, MCStringRef p_input)
 	for (uint2 index = DI_FORE; index <= DI_FOCUS; index++)
 	{
 		MCAutoStringRef t_color_string;
-		if (!MCStringFirstIndexOfChar(p_input, '\n', t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_input, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
 		if (t_new_offset > t_old_offset)
@@ -2397,7 +2397,7 @@ void MCObject::SetPatterns(MCExecContext& ctxt, MCStringRef patterns)
 	{
 		MCAutoStringRef t_pattern;
 		uint4 t_id;
-		if (!MCStringFirstIndexOfChar(patterns, '\n', t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(patterns, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
 		if (t_new_offset > t_old_offset)

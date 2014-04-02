@@ -384,6 +384,60 @@ public:
 	}
 };
 
+class MCParagraphOffset : public MCChunkOffset
+{
+public:
+	MCParagraphOffset()
+	{
+		delimiter = CT_PARAGRAPH;
+	}
+};
+
+class MCSentenceOffset : public MCChunkOffset
+{
+public:
+	MCSentenceOffset()
+	{
+		delimiter = CT_SENTENCE;
+	}
+};
+
+class MCTrueWordOffset : public MCChunkOffset
+{
+public:
+	MCTrueWordOffset()
+	{
+		delimiter = CT_TRUEWORD;
+	}
+};
+
+class MCCodepointOffset : public MCChunkOffset
+{
+public:
+	MCCodepointOffset()
+	{
+		delimiter = CT_CODEPOINT;
+	}
+};
+
+class MCCodeunitOffset : public MCChunkOffset
+{
+public:
+	MCCodeunitOffset()
+	{
+		delimiter = CT_CODEUNIT;
+	}
+};
+
+class MCByteOffset : public MCChunkOffset
+{
+public:
+	MCByteOffset()
+	{
+		delimiter = CT_BYTE;
+	}
+};
+
 class MCClickChar : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalClickChar>
 {
 public:

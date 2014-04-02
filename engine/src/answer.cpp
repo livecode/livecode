@@ -318,8 +318,8 @@ void MCAnswer::exec_ctxt(MCExecContext& ctxt)
 			MCColor t_initial_color;
 			MCColor *t_initial_color_ptr = &t_initial_color;
 			
-            if (!ctxt . EvalOptionalExprAsColor(colour . initial, nil, EE_ANSWER_BADQUESTION, t_initial_color_ptr))
-                return;
+            // AL-2014-04-01: [[ Bug 12071 ]] If the intial color is empty (i.e. unset), pass nil ptr to dialog.
+            ctxt . TryToEvalOptionalExprAsColor(colour . initial, nil, EE_ANSWER_BADQUESTION, t_initial_color_ptr);
             
 			MCDialogExecAnswerColor(ctxt, t_initial_color_ptr, *t_title, sheet == True);
 			break;

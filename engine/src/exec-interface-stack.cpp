@@ -1149,7 +1149,7 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 		MCAutoStringRef t_name_string;
 		MCNewAutoNameRef t_name;
 		
-		if (!MCStringFirstIndexOfChar(p_substacks, '\n', t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_substacks, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 
 		t_success = MCStringCopySubstring(p_substacks, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_name_string);

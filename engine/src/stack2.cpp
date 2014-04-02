@@ -2688,7 +2688,7 @@ bool MCStack::stringtostackfiles(MCStringRef d_strref, MCStackfile **sf, uint2 &
 	{
 		MCAutoStringRef t_line;
 		
-		if (!MCStringFirstIndexOfChar(d_strref, '\n', t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(d_strref, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
         
 		t_success = MCStringCopySubstring(d_strref, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_line);

@@ -129,7 +129,7 @@ static void MCInterfaceFlaggedRangesParse(MCExecContext& ctxt, MCStringRef p_inp
 		MCAutoStringRef t_uintx2_string;
 		MCInterfaceFlaggedRange t_range;
 		
-		if (!MCStringFirstIndexOfChar(p_input, '\n', t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_input, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
         if (t_new_offset <= t_old_offset)
@@ -415,25 +415,29 @@ void MCField::SetShowLines(MCExecContext& ctxt, bool setting)
 
 void MCField::GetHGrid(MCExecContext& ctxt, bool& r_setting)
 {
-	r_setting = getflag(F_LOCK_TEXT);
+    // AL-2014-03-31: [[ Bug 12070 ]] Get the F_HGRID flag.
+	r_setting = getflag(F_HGRID);
 }
 
 void MCField::SetHGrid(MCExecContext& ctxt, bool setting)
 {
 	// MW-2012-12-25: [[ Bug ]] Changing the hGrid requires a recalculation.
-	if (changeflag(setting, F_SHOW_LINES))
+    // AL-2014-03-31: [[ Bug 12070 ]] Set the F_HGRID flag.
+	if (changeflag(setting, F_HGRID))
 		Redraw(true, textx, texty);
 }
 
 void MCField::GetVGrid(MCExecContext& ctxt, bool& r_setting)
 {
-	r_setting = getflag(F_LOCK_TEXT);
+    // AL-2014-03-31: [[ Bug 12070 ]] Get the F_VGRID flag.
+	r_setting = getflag(F_VGRID);
 }
 
 void MCField::SetVGrid(MCExecContext& ctxt, bool setting)
 {
+    // AL-2014-03-31: [[ Bug 12070 ]] Set the F_VGRID flag.
 	bool t_dirty;
-	t_dirty = changeflag(setting, F_SHOW_LINES);
+	t_dirty = changeflag(setting, F_VGRID);
 
 	if (flags & F_VGRID)
 		flags |= F_DONT_WRAP;

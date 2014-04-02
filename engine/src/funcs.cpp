@@ -1379,21 +1379,40 @@ void MCChunkOffset::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	{
 	case CT_ITEM:
 		MCStringsEvalItemOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
-        r_value . type = kMCExecValueTypeUInt;
 		break;
 	case CT_LINE:
 		MCStringsEvalLineOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
-        r_value . type = kMCExecValueTypeUInt;
 		break;
 	case CT_WORD:
 		MCStringsEvalWordOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
-        r_value . type = kMCExecValueTypeUInt;
 		break;
+    case CT_TOKEN:
+        MCStringsEvalTokenOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
+        break;
 	case CT_CHARACTER:
 		MCStringsEvalOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
-        r_value . type = kMCExecValueTypeUInt;
 		break;
+    case CT_PARAGRAPH:
+        MCStringsEvalParagraphOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
+        break;
+    case CT_SENTENCE:
+        MCStringsEvalSentenceOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
+        break;
+    case CT_TRUEWORD:
+        MCStringsEvalTrueWordOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
+        break;
+    case CT_CODEPOINT:
+        MCStringsEvalCodepointOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
+        break;
+    case CT_CODEUNIT:
+        MCStringsEvalCodeunitOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
+        break;
+    case CT_BYTE:
+        MCStringsEvalByteOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
+        break;
 	}
+    
+    r_value . type = kMCExecValueTypeUInt;
 }
 
 void MCChunkOffset::compile(MCSyntaxFactoryRef ctxt)

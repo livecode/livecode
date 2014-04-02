@@ -2285,7 +2285,7 @@ static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uin
 		MCAutoStringRef t_uint_string;
 		uinteger_t t_d;
 		
-		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
         if (t_new_offset <= t_old_offset)
@@ -2334,7 +2334,7 @@ static bool MCPropertyParseStringList(MCStringRef p_input, char_t p_delimiter, u
 	{
 		MCStringRef t_string;
 		
-		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
         if (t_new_offset <= t_old_offset)

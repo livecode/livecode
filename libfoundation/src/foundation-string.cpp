@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd
+ /* Copyright (C) 2003-2013 Runtime Revolution Ltd
 
 This file is part of LiveCode.
 
@@ -62,7 +62,7 @@ static void __MCStringClampRange(MCStringRef string, MCRange& x_range);
 static void __MCStringNativize(MCStringRef string);
 
 // This method marks the string as changed.
-static void __MCStringChanged(MCStringRef string, bool simple = false);
+static void __MCStringChanged(MCStringRef string, uindex_t simple = kMCStringFlagNoChange, uindex_t combined = kMCStringFlagNoChange);
 
 // Creates a string
 
@@ -127,8 +127,9 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
         case kMCStringEncodingNative:
             return MCStringCreateWithNativeChars(p_bytes, p_byte_count, r_string);
         case kMCStringEncodingUTF16:
-        case kMCStringEncodingUTF16LE:
             return MCStringCreateWithChars((unichar_t *)p_bytes, p_byte_count / 2, r_string);
+        // AL-2014-31-03: [[ Bug 12067 ]] Fix conversion from little endian bytes.    
+        case kMCStringEncodingUTF16LE:
         case kMCStringEncodingUTF16BE:
         {
             unichar_t *t_buffer;
@@ -136,7 +137,12 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
             MCMemoryAllocate(t_length * sizeof(unichar_t), t_buffer);
 
             for (uindex_t i = 0; i < t_length; i++)
-                t_buffer[i] = (unichar_t)MCSwapInt16HostToBig(((unichar_t *)p_bytes)[i]);
+            {
+                if (p_encoding == kMCStringEncodingUTF16BE)
+                    t_buffer[i] = (unichar_t)MCSwapInt16BigToHost(((unichar_t *)p_bytes)[i]);
+                else
+                    t_buffer[i] = (unichar_t)MCSwapInt16LittleToHost(((unichar_t *)p_bytes)[i]);
+            }
             return MCStringCreateWithCharsAndRelease(t_buffer, t_length, r_string);
         }
             
@@ -838,12 +844,17 @@ bool MCStringIsSimple(MCStringRef self)
     return (self -> flags & kMCStringFlagIsSimple) != 0;
 }
 
+bool MCStringIsUncombined(MCStringRef self)
+{
+    return (self -> flags & kMCStringFlagIsUncombined) != 0;
+}
+
 bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &r_out_range)
 {
     MCAssert(self != nil);
     
     // Shortcut for strings containing only BMP characters
-    if (MCStringIsSimple(self))
+    if (MCStringIsSimple(self) && MCStringIsUncombined(self))
     {
         __MCStringClampRange(self, p_in_range);
         r_out_range = p_in_range;
@@ -864,6 +875,7 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
     
     // Scan through the string, counting the number of codepoints
     bool t_is_simple = true;
+    bool t_is_uncombined = true;
     uindex_t t_cp_counter = 0;
     uindex_t t_codeunit_pos = 0;
     MCRange t_units = MCRangeMake(0, 0);
@@ -878,6 +890,9 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
         else
             t_length = 1;
         
+        if (MCUnicodeGetIntegerProperty(MCStringGetCharAtIndex(self, t_codeunit_pos), kMCUnicodePropertyCanonicalCombiningClass))
+            t_is_uncombined = false;
+            
         // Update the appropriate field of the output
         if (t_codeunit_pos < p_in_range.offset)
             t_units.offset += t_length;
@@ -904,6 +919,11 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
     if (t_is_simple && t_scan_end == self -> char_count)
         self -> flags |= kMCStringFlagIsSimple;
     
+    if (t_is_uncombined)
+        self -> flags |= kMCStringFlagIsUncombined;
+    else
+        self -> flags &= ~kMCStringFlagIsUncombined;
+    
     // All done
     r_out_range = t_units;
     return true;
@@ -914,7 +934,7 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
     MCAssert(self != nil);
     
     // Shortcut for strings containing only BMP characters
-    if (MCStringIsSimple(self))
+    if (MCStringIsSimple(self) && MCStringIsUncombined(self))
     {
         __MCStringClampRange(self, p_in_range);
         r_out_range = p_in_range;
@@ -927,6 +947,8 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
     
     // Scan through the string, counting the number of code points
     bool t_is_simple = true;
+    bool t_is_uncombined = true;
+    
     uindex_t t_counter = 0;
     MCRange t_codepoints = MCRangeMake(0, 0);
     while (t_counter < p_in_range.offset + p_in_range.length)
@@ -937,6 +959,9 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
             t_length = 2, t_is_simple = false;
         else
             t_length = 1;
+        
+        if (MCUnicodeGetIntegerProperty(MCStringGetCharAtIndex(self, t_counter), kMCUnicodePropertyCanonicalCombiningClass))
+            t_is_uncombined = false;
         
         // Increment the counters
         if (t_counter < p_in_range.offset)
@@ -949,6 +974,11 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
     // If no surrogates were found, mark the string as simple
     if (t_is_simple && p_in_range.offset + p_in_range.length >= self -> char_count)
         self -> flags |= kMCStringFlagIsSimple;
+            
+    if (t_is_uncombined)
+        self -> flags |= kMCStringFlagIsUncombined;
+    else
+        self -> flags &= ~kMCStringFlagIsUncombined;
     
     // All done
     r_out_range = t_codepoints;
@@ -1000,7 +1030,7 @@ bool MCStringMapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRe
 bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
 {
     // Quick-n-dirty workaround
-    if (MCStringIsNative(self))
+    if (MCStringIsNative(self) && MCStringIsUncombined(self))
     {
         __MCStringClampRange(self, p_in_range);
         r_out_range = p_in_range;
@@ -1010,7 +1040,7 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
     return MCStringMapIndices(self, kMCBreakIteratorTypeCharacter, p_locale, p_in_range, r_out_range);
 }
 
-static bool MCStringCodepointIsWordPart(codepoint_t p_codepoint)
+bool MCStringCodepointIsWordPart(codepoint_t p_codepoint)
 {
     return MCUnicodeIsAlphabetic(p_codepoint) || MCUnicodeIsDigit(p_codepoint);
 }
@@ -1032,68 +1062,24 @@ bool MCStringMapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
         return false;
     }
 
-    uindex_t t_start, t_left_break, t_right_break;
-    t_right_break = 0;
-    t_start = t_right_break;
     p_in_range . offset++;
     
-    // Advance to the beginning of the specified range
-    while (t_right_break != kMCLocaleBreakIteratorDone && p_in_range . offset)
-    {
-        t_left_break = t_right_break;
-        t_start = t_left_break;
-        
-        t_right_break = MCLocaleBreakIteratorAdvance(t_iter);
-        
-        // if the intervening chars contain a letter or number then it was a valid 'word'
-        while (t_left_break < t_right_break)
-        {
-            if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(self, t_left_break)))
-                break;
-            if (MCStringIsValidSurrogatePair(self, t_left_break++))
-                t_left_break++;
-        }
-        
-        if (t_left_break < t_right_break)
-            p_in_range . offset--;
-    }
+    MCRange t_word_range = MCRangeMake(0, 0);
     
-    if (t_start == kMCLocaleBreakIteratorDone)
-    {
-        r_out_range = MCRangeMake(self -> char_count, 0);
-        return true;
-    }
+    // Advance to the beginning of the specified range
+    while (p_in_range . offset-- && MCLocaleWordBreakIteratorAdvance(self, t_iter, t_word_range))
+        ;
 
     // Advance to the end of the current word
-    uindex_t t_end = t_right_break;
+    uindex_t t_start = t_word_range . offset;
     p_in_range . length--;
     
     // While more words are requested, find the end of the next word.
-    while (t_end != kMCLocaleBreakIteratorDone && p_in_range . length)
-    {
-        t_left_break = t_right_break;
-        t_right_break = MCLocaleBreakIteratorAdvance(t_iter);
-        
-        // if the intervening chars contain a letter or number then it was a valid 'word'
-        while (t_left_break < t_right_break)
-        {
-            if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(self, t_left_break)))
-                break;
-            if (MCStringIsValidSurrogatePair(self, t_left_break++))
-                t_left_break++;
-        }
-        
-        if (t_left_break < t_right_break)
-            p_in_range . length--;
-        
-        t_end = t_right_break;
-    }
-    
-    if (t_end == kMCLocaleBreakIteratorDone)
-        t_end = self -> char_count;
+    while (p_in_range . length-- && MCLocaleWordBreakIteratorAdvance(self, t_iter, t_word_range))
+        ;
     
     MCRange t_units;
-    t_units = MCRangeMake(t_start, t_end - t_start);
+    t_units = MCRangeMake(t_start, t_word_range . offset + t_word_range . length - t_start);
     
     // All done
     MCLocaleBreakIteratorRelease(t_iter);
@@ -1133,8 +1119,7 @@ bool MCStringUnmapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocale
     t_offset = 0;
     while (t_offset < p_in_range.offset)
     {
-        t_offset++;
-        if (MCLocaleBreakIteratorIsBoundary(t_iter, t_offset))
+        if (MCLocaleBreakIteratorIsBoundary(t_iter, t_offset++))
             t_start++;
         
         if (t_offset >= self -> char_count)
@@ -1149,8 +1134,7 @@ bool MCStringUnmapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocale
     t_end = 0;
     while (t_offset < p_in_range.offset + p_in_range.length)
     {
-        t_offset++;
-        if (MCLocaleBreakIteratorIsBoundary(t_iter, t_offset))
+        if (MCLocaleBreakIteratorIsBoundary(t_iter, t_offset++))
             t_end++;
         
         if (t_offset >= self -> char_count)
@@ -1169,7 +1153,7 @@ bool MCStringUnmapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocale
 bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
 {
     // Quick-n-dirty workaround
-    if (self -> flags & kMCStringFlagIsNative)
+    if (self -> flags & kMCStringFlagIsNative && self -> flags & kMCStringFlagIsUncombined)
     {
         __MCStringClampRange(self, p_in_range);
         r_out_range = p_in_range;
@@ -1331,7 +1315,9 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
             }
             return false;
         }
+    // AL-2014-31-03: [[ Bug 12067 ]] Implement conversion to big endian bytes.
     case kMCStringEncodingUTF16LE:
+    case kMCStringEncodingUTF16BE:
         {
             uindex_t t_char_count;
             unichar_t *t_bytes;
@@ -1341,8 +1327,12 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
                 MCMemoryAllocate((t_char_count + 1) * sizeof(unichar_t), t_buffer);
                 
                 for (uindex_t i = 0; i < t_char_count; i++)
-                    t_buffer[i] = (unichar_t)MCSwapInt16HostToLittle((t_bytes)[i]);
-                
+                {
+                    if (p_encoding == kMCStringEncodingUTF16BE)
+                        t_buffer[i] = (unichar_t)MCSwapInt16HostToBig((t_bytes)[i]);   
+                    else
+                        t_buffer[i] = (unichar_t)MCSwapInt16HostToLittle((t_bytes)[i]);
+                }
                 r_bytes = (byte_t*&)t_buffer;
                 r_byte_count = t_char_count * sizeof(unichar_t);
                 return true;
@@ -1894,7 +1884,7 @@ uindex_t MCStringCount(MCStringRef self, MCRange p_range, MCStringRef p_needle, 
 uindex_t MCStringCountChar(MCStringRef self, MCRange p_range, codepoint_t p_needle, MCStringOptions p_options)
 {
 	// We only support ASCII for now.
-	MCAssert(p_needle < 128);
+	//MCAssert(p_needle < 128);
 	
 	strchar_t t_native_needle;
 	t_native_needle = (strchar_t)p_needle;
@@ -2073,7 +2063,10 @@ bool MCStringAppend(MCStringRef self, MCStringRef p_suffix)
                         && (p_suffix -> flags & kMCStringFlagIsSimple)
                         && !MCStringIsValidSurrogatePair(self, self -> char_count - p_suffix -> char_count - 1);
         
-		__MCStringChanged(self, t_simple);
+        bool t_uncombined = (self -> flags & kMCStringFlagIsUncombined)
+                            && (p_suffix -> flags & kMCStringFlagIsUncombined);
+        
+		__MCStringChanged(self, t_simple, t_uncombined);
 		
 		// We succeeded.
 		return true;
@@ -2108,8 +2101,11 @@ bool MCStringAppendSubstring(MCStringRef self, MCStringRef p_suffix, MCRange p_r
         bool t_simple = (self -> flags & kMCStringFlagIsSimple)
                         && (p_suffix -> flags & kMCStringFlagIsSimple)
                         && !MCStringIsValidSurrogatePair(self, self -> char_count - p_range . length - 1);
+                
+        bool t_uncombined = (self -> flags & kMCStringFlagIsUncombined)
+                            && (p_suffix -> flags & kMCStringFlagIsUncombined);
         
-		__MCStringChanged(self, t_simple);
+		__MCStringChanged(self, t_simple, t_uncombined);
         
 		// We succeeded.
 		return true;
@@ -2137,9 +2133,7 @@ bool MCStringAppendNativeChars(MCStringRef self, const char_t *p_chars, uindex_t
 	self -> chars[self -> char_count] = '\0';
 	
     // Appending native chars cannot change the simple status
-    bool t_simple = self -> flags & kMCStringFlagIsSimple;
-    
-	__MCStringChanged(self, t_simple);
+	__MCStringChanged(self);
 	
 	// We succeeded.
 	return true;
@@ -2159,7 +2153,7 @@ bool MCStringAppendChars(MCStringRef self, const unichar_t *p_chars, uindex_t p_
 	// Set the NULL
 	self -> chars[self -> char_count] = '\0';
 	
-	__MCStringChanged(self);
+	__MCStringChanged(self, false, false);
 	
 	// We succeeded.
 	return true;
@@ -2194,7 +2188,10 @@ bool MCStringPrepend(MCStringRef self, MCStringRef p_prefix)
                         && (p_prefix -> flags & kMCStringFlagIsSimple)
                         && !MCStringIsValidSurrogatePair(self, p_prefix -> char_count - 1);
         
-		__MCStringChanged(self, t_simple);
+        bool t_uncombined = (self -> flags & kMCStringFlagIsUncombined)
+                            && (p_prefix -> flags & kMCStringFlagIsUncombined);
+        
+		__MCStringChanged(self, t_simple, t_uncombined);
 
 		// We succeeded.
 		return true;
@@ -2227,7 +2224,10 @@ bool MCStringPrependSubstring(MCStringRef self, MCStringRef p_prefix, MCRange p_
                         && (p_prefix -> flags & kMCStringFlagIsSimple)
                         && !MCStringIsValidSurrogatePair(self, p_range . length - 1);
         
-		__MCStringChanged(self);
+        bool t_uncombined = (self -> flags & kMCStringFlagIsUncombined)
+                            && (p_prefix -> flags & kMCStringFlagIsUncombined);
+        
+		__MCStringChanged(self, t_simple, t_uncombined);
 
 		// We succeeded.
 		return true;
@@ -2252,9 +2252,7 @@ bool MCStringPrependNativeChars(MCStringRef self, const char_t *p_chars, uindex_
 		self -> chars[i] = MCUnicodeCharMapFromNative(p_chars[i]);
 	
     // Prepending native chars cannot change the simple status
-    bool t_simple = self -> flags & kMCStringFlagIsSimple;
-    
-	__MCStringChanged(self, t_simple);
+	__MCStringChanged(self);
 	
 	// We succeeded.
 	return true;
@@ -2271,7 +2269,7 @@ bool MCStringPrependChars(MCStringRef self, const unichar_t *p_chars, uindex_t p
 	// Now copy the chars across.
 	MCMemoryCopy(self -> chars, p_chars, p_char_count * sizeof(unichar_t));
 	
-	__MCStringChanged(self);
+	__MCStringChanged(self, false, false);
 	
 	// We succeeded.
 	return true;
@@ -2308,7 +2306,10 @@ bool MCStringInsert(MCStringRef self, uindex_t p_at, MCStringRef p_substring)
                         && !MCStringIsValidSurrogatePair(self, p_at - 1)
                         && !MCStringIsValidSurrogatePair(self, p_at + p_substring -> char_count - 1);
         
-		__MCStringChanged(self, t_simple);
+        bool t_uncombined = (self -> flags & kMCStringFlagIsUncombined)
+                            && (p_substring -> flags & kMCStringFlagIsUncombined);
+        
+		__MCStringChanged(self, t_simple, t_uncombined);
 		
 		// We succeeded.
 		return true;
@@ -2342,7 +2343,10 @@ bool MCStringInsertSubstring(MCStringRef self, uindex_t p_at, MCStringRef p_subs
                         && !MCStringIsValidSurrogatePair(self, p_at - 1)
                         && !MCStringIsValidSurrogatePair(self, p_at + p_range . length - 1);
         
-		__MCStringChanged(self, t_simple);
+        bool t_uncombined = (self -> flags & kMCStringFlagIsUncombined)
+                            && (p_substring -> flags & kMCStringFlagIsUncombined);
+        
+		__MCStringChanged(self, t_simple, t_uncombined);
 		
 		// We succeeded.
 		return true;
@@ -2368,10 +2372,8 @@ bool MCStringInsertNativeChars(MCStringRef self, uindex_t p_at, const char_t *p_
 	for(uindex_t i = 0; i < p_char_count; i++)
 		self -> chars[p_at + i] = MCUnicodeCharMapFromNative(p_chars[i]);
 	
-    // Inserting native chars cannot change simple status
-    bool t_simple = (self -> flags & kMCStringFlagIsSimple);
-    
-	__MCStringChanged(self, t_simple);
+    // Inserting native chars cannot change simple status    
+	__MCStringChanged(self);
 	
 	// We succeeded.
 	return true;
@@ -2390,7 +2392,7 @@ bool MCStringInsertChars(MCStringRef self, uindex_t p_at, const unichar_t *p_cha
 	// Now copy the chars across.
 	MCMemoryCopy(self -> chars + p_at, p_chars, p_char_count * sizeof(unichar_t));
 	
-	__MCStringChanged(self);
+	__MCStringChanged(self, false, false);
 	
 	// We succeeded.
 	return true;
@@ -2416,7 +2418,7 @@ bool MCStringRemove(MCStringRef self, MCRange p_range)
 	// NUL.
 	__MCStringShrinkAt(self, p_range . offset, p_range . length);
 	
-	__MCStringChanged(self);
+	__MCStringChanged(self, false, false);
 	
 	// We succeeded.
 	return true;
@@ -2472,7 +2474,7 @@ bool MCStringReplace(MCStringRef self, MCRange p_range, MCStringRef p_replacemen
 		// Copy across the replacement chars.
 		MCMemoryCopy(self -> chars + p_range . offset, p_replacement -> chars, p_replacement -> char_count * sizeof(strchar_t));
 		
-		__MCStringChanged(self);
+		__MCStringChanged(self, false, false);
 		
 		// We succeeded.
 		return true;
@@ -2520,31 +2522,31 @@ bool MCStringAppendFormatV(MCStringRef self, const char *p_format, va_list p_arg
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void split_find_end_of_element_exact(const strchar_t *sptr, const strchar_t *eptr, codepoint_t del, const strchar_t*& r_end_ptr)
+static void split_find_end_of_element_exact(const strchar_t *sptr, const strchar_t *eptr, const strchar_t* p_del, uindex_t t_del_length, const strchar_t*& r_end_ptr)
 {
 	uindex_t t_index;
-    if (!MCUnicodeFirstIndexOfChar(sptr, eptr-sptr, del, kMCUnicodeCompareOptionExact, t_index))
+    if (!MCUnicodeFirstIndexOf(sptr, eptr-sptr, p_del, t_del_length, kMCUnicodeCompareOptionExact, t_index))
         t_index = eptr-sptr;
     
     r_end_ptr = sptr + t_index;
 }
 
-static void split_find_end_of_element_caseless(const strchar_t *sptr, const strchar_t *eptr, codepoint_t del, const strchar_t*& r_end_ptr)
+static void split_find_end_of_element_caseless(const strchar_t *sptr, const strchar_t *eptr, const strchar_t* p_del, uindex_t t_del_length, const strchar_t*& r_end_ptr)
 {
     uindex_t t_index;
-    if (!MCUnicodeFirstIndexOfChar(sptr, eptr-sptr, del, kMCUnicodeCompareOptionCaseless, t_index))
+    if (!MCUnicodeFirstIndexOf(sptr, eptr-sptr, p_del, t_del_length, kMCUnicodeCompareOptionCaseless, t_index))
         t_index = eptr-sptr;
     
     r_end_ptr = sptr + t_index;
 }
 
-static void split_find_end_of_element_and_key_exact(const strchar_t *sptr, const strchar_t *eptr, strchar_t del, strchar_t key, const strchar_t*& r_key_ptr, const strchar_t *& r_end_ptr)
+static void split_find_end_of_element_and_key_exact(const strchar_t *sptr, const strchar_t *eptr, const strchar_t *del, uindex_t t_del_length, const strchar_t *key, uindex_t t_key_length, const strchar_t*& r_key_ptr, const strchar_t *& r_end_ptr)
 {
 	// Not as fast as it could be...
     uindex_t t_key_idx, t_del_idx;
-    if (!MCUnicodeFirstIndexOfChar(sptr, eptr-sptr, key, kMCUnicodeCompareOptionExact, t_key_idx))
+    if (!MCUnicodeFirstIndexOf(sptr, eptr-sptr, key, t_key_length, kMCUnicodeCompareOptionExact, t_key_idx))
         t_key_idx = eptr-sptr;
-    if (!MCUnicodeFirstIndexOfChar(sptr, eptr-sptr, del, kMCUnicodeCompareOptionExact, t_del_idx))
+    if (!MCUnicodeFirstIndexOf(sptr, eptr-sptr, del, t_del_length, kMCUnicodeCompareOptionExact, t_del_idx))
         t_del_idx = eptr-sptr;
     
     if (t_key_idx > t_del_idx)
@@ -2555,16 +2557,16 @@ static void split_find_end_of_element_and_key_exact(const strchar_t *sptr, const
     }
     
     r_key_ptr = sptr + t_key_idx;
-    split_find_end_of_element_exact(sptr, eptr, del, r_end_ptr);
+    split_find_end_of_element_exact(sptr, eptr, del, t_key_length, r_end_ptr);
 }
 
-static void split_find_end_of_element_and_key_caseless(const strchar_t *sptr, const strchar_t *eptr, strchar_t del, strchar_t key, const strchar_t*& r_key_ptr, const strchar_t *& r_end_ptr)
+static void split_find_end_of_element_and_key_caseless(const strchar_t *sptr, const strchar_t *eptr, const strchar_t *del, uindex_t t_del_length, const strchar_t *key, uindex_t t_key_length, const strchar_t*& r_key_ptr, const strchar_t *& r_end_ptr)
 {
 	// Not as fast as it could be...
     uindex_t t_key_idx, t_del_idx;
-    if (!MCUnicodeFirstIndexOfChar(sptr, eptr-sptr, key, kMCUnicodeCompareOptionCaseless, t_key_idx))
+    if (!MCUnicodeFirstIndexOf(sptr, eptr-sptr, key, t_key_length, kMCUnicodeCompareOptionCaseless, t_key_idx))
         t_key_idx = eptr-sptr;
-    if (!MCUnicodeFirstIndexOfChar(sptr, eptr-sptr, del, kMCUnicodeCompareOptionCaseless, t_del_idx))
+    if (!MCUnicodeFirstIndexOf(sptr, eptr-sptr, del, t_del_length, kMCUnicodeCompareOptionCaseless, t_del_idx))
         t_del_idx = eptr-sptr;
     
     if (t_key_idx > t_del_idx)
@@ -2575,15 +2577,13 @@ static void split_find_end_of_element_and_key_caseless(const strchar_t *sptr, co
     }
     
     r_key_ptr = sptr + t_key_idx;
-    split_find_end_of_element_exact(sptr, eptr, del, r_end_ptr);
+    split_find_end_of_element_exact(sptr, eptr, del, t_del_length, r_end_ptr);
 }
 
 bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_del, MCStringOptions p_options, MCArrayRef& r_array)
 {
-	if (MCStringGetLength(p_elem_del) != 1 ||
-		(p_key_del != nil && MCStringGetLength(p_key_del) != 1))
-		return false;
-
+    // SN-2014-03-24: [[ SplitWithStrings ]] No longer checks whether the delimiter is actually 1-char long.
+    
 	if (self -> char_count == 0)
 	{
 		r_array = MCValueRetain(kMCEmptyArray);
@@ -2594,13 +2594,20 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 	if (!MCArrayCreateMutable(&t_array))
 		return false;
 
-	strchar_t t_echar, t_kchar;
-	t_echar = p_elem_del -> chars[0];
+	const strchar_t *t_echar, *t_kchar;
+    uindex_t t_del_length;
+    uindex_t t_key_length = 0;
+	t_echar = (const strchar_t*)p_elem_del -> chars;
+    t_del_length = MCStringGetLength(p_elem_del);
 	if (p_key_del != nil)
-		t_kchar = p_key_del -> chars[0];
+    {
+		t_kchar = (const strchar_t*)p_key_del -> chars;
+        t_key_length = MCStringGetLength(p_key_del);
+    }
 
 	const strchar_t *t_sptr;
 	const strchar_t *t_eptr;
+    
 	t_sptr = self -> chars;
 	t_eptr = self -> chars + self -> char_count;
 	if (p_key_del == nil)
@@ -2611,9 +2618,9 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 		{
 			const strchar_t *t_element_end;
 			if (p_options == kMCStringOptionCompareExact)
-				split_find_end_of_element_exact(t_sptr, t_eptr, t_echar, t_element_end);
+				split_find_end_of_element_exact(t_sptr, t_eptr, t_echar, t_del_length, t_element_end);
 			else
-				split_find_end_of_element_caseless(t_sptr, t_eptr, t_echar, t_element_end);
+				split_find_end_of_element_caseless(t_sptr, t_eptr, t_echar, t_del_length, t_element_end);
 			
 			MCAutoStringRef t_string;
 			if (!MCStringCreateWithChars(t_sptr, t_element_end - t_sptr, &t_string))
@@ -2622,12 +2629,12 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 			if (!MCArrayStoreValueAtIndex(*t_array, t_index, *t_string))
 				return false;
 
-			if (t_element_end + 1 >= t_eptr)
+			if (t_element_end + t_del_length >= t_eptr)
 				break;
 
-			t_index += 1;
+			t_index += t_del_length;
 
-			t_sptr = t_element_end + 1;
+			t_sptr = t_element_end + t_del_length;
 		}
 	}
 	else
@@ -2637,16 +2644,16 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 			const strchar_t *t_element_end;
 			const strchar_t *t_key_end;
 			if (p_options == kMCStringOptionCompareExact)
-				split_find_end_of_element_and_key_exact(t_sptr, t_eptr, t_echar, t_kchar, t_key_end, t_element_end);
+				split_find_end_of_element_and_key_exact(t_sptr, t_eptr, t_echar, t_del_length, t_kchar, t_key_length, t_key_end, t_element_end);
 			else
-				split_find_end_of_element_and_key_caseless(t_sptr, t_eptr, t_echar, t_kchar, t_key_end, t_element_end);
+				split_find_end_of_element_and_key_caseless(t_sptr, t_eptr, t_echar, t_del_length, t_kchar, t_key_length, t_key_end, t_element_end);
 			
 			MCNewAutoNameRef t_name;
 			if (!MCNameCreateWithChars(t_sptr, t_key_end - t_sptr, &t_name))
 				return false;	
 
 			if (t_key_end != t_element_end)
-				t_key_end += 1;
+				t_key_end += t_key_length;
 
 			MCAutoStringRef t_string;
 			if (!MCStringCreateWithChars(t_key_end, t_element_end - t_key_end, &t_string))
@@ -2655,10 +2662,10 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 			if (!MCArrayStoreValue(*t_array, true, *t_name, *t_string))
 				return false;
 
-			if (t_element_end + 1 >= t_eptr)
+			if (t_element_end + t_del_length >= t_eptr)
 				break;
 
-			t_sptr = t_element_end + 1;
+			t_sptr = t_element_end + t_del_length;
 		}
 	}
 
@@ -2778,7 +2785,7 @@ bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef
 		self -> char_count = t_output_length;
 		self -> capacity = t_output_capacity;
 		
-		__MCStringChanged(self);
+		__MCStringChanged(self, false, false);
 	}
 
 	return true;
@@ -2986,15 +2993,21 @@ static void __MCStringNativize(MCStringRef self)
 		self -> flags &= ~kMCStringFlagIsNative;
 }
 
-static void __MCStringChanged(MCStringRef self, bool simple)
+static void __MCStringChanged(MCStringRef self, uindex_t simple, uindex_t uncombined)
 {
 	// String changed to assume that it is no longer simple
-    if (simple)
+    if (simple == kMCStringFlagSetTrue)
         self -> flags |=  kMCStringFlagIsSimple;
-    else
+    else if (simple == kMCStringFlagSetFalse)
         self -> flags &= ~kMCStringFlagIsSimple;
     
+    if (uncombined == kMCStringFlagSetTrue)
+        self -> flags |= kMCStringFlagIsUncombined;
+    else if (uncombined == kMCStringFlagSetFalse)
+        self -> flags &= ~kMCStringFlagIsUncombined;
+    
     self -> flags &= ~kMCStringFlagIsChecked;
+    self -> flags &= ~kMCStringFlagIsNative;
     MCMemoryDeleteArray(self -> native_chars);
 	self -> native_chars = nil;
 }

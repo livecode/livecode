@@ -1222,6 +1222,25 @@ bool MCExecContext::EvalOptionalExprAsColor(MCExpression *p_expr, MCColor *p_def
     return EvalExprAsColor(p_expr, p_error, *r_value);
 }
 
+// AL-2014-04-01: [[ Bug 12071 ]] Need to be able to fail to eval color without throwing an error.
+void MCExecContext::TryToEvalOptionalExprAsColor(MCExpression *p_expr, MCColor *p_default, Exec_errors p_error, MCColor *&r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = p_default;
+		return;
+    }
+    
+    // Makes sure the return parameter isn't a nil pointer
+    MCAssert(r_value != nil);
+    
+    if (EvalExprAsColor(p_expr, p_error, *r_value))
+        return;
+    
+    IgnoreLastError();
+    r_value = nil;
+}
+
 bool MCExecContext::EvalExprAsRectangle(MCExpression *p_expr, Exec_errors p_error, MCRectangle& r_value)
 {
 	MCAssert(p_expr != nil);
@@ -1567,7 +1586,7 @@ static bool MCPropertyParseUIntList(MCStringRef p_input, char_t p_delimiter, uin
 		MCAutoStringRef t_uint_string;
 		uinteger_t t_d;
 		
-		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
         if (t_new_offset <= t_old_offset)
@@ -1618,7 +1637,7 @@ static bool MCPropertyParseDoubleList(MCStringRef p_input, char_t p_delimiter, u
 		MCAutoStringRef t_double_string;
 		double t_d;
 		
-		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
         if (t_new_offset <= t_old_offset)
@@ -1668,7 +1687,7 @@ static bool MCPropertyParseStringList(MCStringRef p_input, char_t p_delimiter, u
 	{
 		MCStringRef t_string;
 		
-		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
         if (t_new_offset <= t_old_offset)
@@ -1716,7 +1735,7 @@ static bool MCPropertyParsePointList(MCStringRef p_input, char_t p_delimiter, ui
 		MCAutoStringRef t_point_string;
         MCPoint t_point;
 		
-		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_input, p_delimiter, t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
         if (t_new_offset < t_old_offset)
@@ -3172,11 +3191,14 @@ void MCExecTypeRelease(MCExecValue &self)
 
 void MCExecResolveCharsOfField(MCField *p_field, uint32_t p_part, int32_t& x_start, int32_t& x_finish, uint32_t p_start, uint32_t p_count)
 {
+    x_start = p_start;
+    x_finish = p_start + p_count;
+    /*
     findex_t t_start = x_start;
     findex_t t_finish = x_finish;
     p_field -> resolvechars(p_part, t_start, t_finish, p_start, p_count);
     x_start = t_start;
-    x_finish = t_finish;
+    x_finish = t_finish; */
 }
 
 void MCExecParseSet(MCExecContext& ctxt, MCExecSetTypeInfo *p_info, MCExecValue p_value, intset_t& r_value)
