@@ -4580,7 +4580,7 @@ void MCParagraph::getclickindex(int2 x, int2 y,
 	bptr = indextoblock(si, False);
 	if (!wholeword)
 	{
-		ei = IncrementIndex(si);
+		ei = NextChar(si);
 		return;
 	}
 

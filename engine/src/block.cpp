@@ -1731,10 +1731,18 @@ findex_t MCBlock::GetCursorIndex(int2 x, Boolean chunk, Boolean last)
 	int32_t t_last_width;
 	t_last_width = is_rtl() ? width : 0;
     
+    MCRange t_char_range;
+    MCRange t_cp_range;
+    
+    uindex_t t_last_boundary;
+    t_last_boundary = i;
+    
     while(i < m_index + m_size)
     {
         findex_t t_new_i;
-        t_new_i = parent->IncrementIndex(i);
+        
+        // SN-2014-03-26 [[ CombiningChars ]] We need to find the size of a char, starting from a given codepoint
+        t_new_i = parent -> NextChar(i);
         
         int32_t t_new_width;
         t_new_width = GetCursorX(t_new_i) - origin;
@@ -1750,11 +1758,13 @@ findex_t MCBlock::GetCursorIndex(int2 x, Boolean chunk, Boolean last)
         
         t_last_width = t_new_width;
         
+        // SN-2014-03-26 [[ CombiningChars ]]: We now keep the last boundary before the character getting the width bigger than the one specified
+        // Since that character might be composed of several composed codepoints, we only want to get the index of the beginning of this char
         i = t_new_i;
     }
 
 	if (i == m_index + m_size && last && (m_index + m_size != parent->gettextlength()))
-        return i - parent->DecrementIndex(i);
+        return parent -> PrevChar(i);
 	else
 		return i;
 }
@@ -2014,7 +2024,7 @@ MCBlock *MCBlock::AdvanceIndex(findex_t& x_index)
 		while(t_block -> m_size == 0 && t_block -> next() != parent -> getblocks());
 	}
 	
-	x_index = parent->IncrementIndex(x_index);
+	x_index = parent->NextChar(x_index);
 
 	// MW-2012-03-10: [[ Bug ]] Loop while the block is empty, or the block doesn't
 	//   contain the index.
