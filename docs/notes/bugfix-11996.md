@@ -1,0 +1,1 @@
+# numToByte works differently form numToChar in 6.6

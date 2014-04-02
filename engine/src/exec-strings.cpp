@@ -149,7 +149,9 @@ void MCStringsEvalNumToChar(MCExecContext &ctxt, uinteger_t p_codepoint, MCValue
         r_character = MCValueRetain(*t_data);
     }
     else
-        MCStringsEvalNumToNativeChar(ctxt, p_codepoint, (MCStringRef&)r_character);
+        // AL-2014-03-26: [[ Bug 11996 ]] For backwards compatibility, we must
+        //  use codepoint % 256 here.
+        MCStringsEvalNumToNativeChar(ctxt, p_codepoint % 256, (MCStringRef&)r_character);
 }
 
 void MCStringsEvalNumToNativeChar(MCExecContext& ctxt, uinteger_t p_codepoint, MCStringRef& r_character)
