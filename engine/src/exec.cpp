@@ -1222,6 +1222,25 @@ bool MCExecContext::EvalOptionalExprAsColor(MCExpression *p_expr, MCColor *p_def
     return EvalExprAsColor(p_expr, p_error, *r_value);
 }
 
+// AL-2014-04-01: [[ Bug 12071 ]] Need to be able to fail to eval color without throwing an error.
+void MCExecContext::TryToEvalOptionalExprAsColor(MCExpression *p_expr, MCColor *p_default, Exec_errors p_error, MCColor *&r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = p_default;
+		return;
+    }
+    
+    // Makes sure the return parameter isn't a nil pointer
+    MCAssert(r_value != nil);
+    
+    if (EvalExprAsColor(p_expr, p_error, *r_value))
+        return;
+    
+    IgnoreLastError();
+    r_value = nil;
+}
+
 bool MCExecContext::EvalExprAsRectangle(MCExpression *p_expr, Exec_errors p_error, MCRectangle& r_value)
 {
 	MCAssert(p_expr != nil);
