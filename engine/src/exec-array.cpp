@@ -629,7 +629,7 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
 	t_stream = nil;
 	if (t_success)
 	{
-		t_stream = new MCObjectInputStream(t_stream_handle, MCDataGetLength(p_encoding));
+		t_stream = new MCObjectInputStream(t_stream_handle, MCDataGetLength(p_encoding), false);
 		if (t_stream == nil)
 			t_success = false;
 	}
