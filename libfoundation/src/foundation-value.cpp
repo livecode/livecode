@@ -274,12 +274,36 @@ bool MCValueInterAndRelease(MCValueRef p_value, MCValueRef& r_unique_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2014-03-21: [[ Faster ]] Memory allocation is relatively slow, therefore
+//   we use a per-typecode pool of previously used __MCValue's. This saves a
+//   a per-value malloc, particularly for types which are short-lived (such
+//   as numbers).
+struct MCValuePool
+{
+    __MCValue *values;
+    uindex_t count;
+};
+static MCValuePool s_value_pools[kMCValueTypeCodeList + 1];
+
 bool __MCValueCreate(MCValueTypeCode p_type_code, size_t p_size, __MCValue*& r_value)
 {
 	void *t_value;
-	if (!MCMemoryNew(p_size, t_value))
-		return false;
-
+    
+    // MW-2014-03-21: [[ Faster ]] If we are pooling this typecode, and the
+    //   pool isn't empty grab the ptr from there.
+    if (p_type_code <= kMCValueTypeCodeList && s_value_pools[p_type_code] . count > 0)
+    {
+        t_value = s_value_pools[p_type_code] . values;
+        s_value_pools[p_type_code] . count -= 1;
+        s_value_pools[p_type_code] . values = *(__MCValue **)t_value;
+        MCMemoryClear(t_value, p_size);
+    }
+    else
+    {
+        if (!MCMemoryNew(p_size, t_value))
+            return false;
+    }
+    
 	__MCValue *self = (__MCValue *)t_value;
 
 	self -> references = 1;
@@ -295,7 +319,9 @@ void __MCValueDestroy(__MCValue *self)
 	if ((self -> flags & kMCValueFlagIsInterred) != 0)
 		__MCValueUninter(self);
 
-	switch(__MCValueGetTypeCode(self))
+    MCValueTypeCode t_code;
+    t_code = __MCValueGetTypeCode(self);
+	switch(t_code)
 	{
 	case kMCValueTypeCodeNull:
 	case kMCValueTypeCodeBoolean:
@@ -326,6 +352,16 @@ void __MCValueDestroy(__MCValue *self)
         MCAssert(false);
 	}
 
+    // MW-2014-03-21: [[ Faster ]] If we are pooling this typecode, and the
+    //   pool isn't full, add it to the pool.
+    if (t_code <= kMCValueTypeCodeList && s_value_pools[t_code] . count < 32)
+    {
+        s_value_pools[t_code] . count += 1;
+        *(__MCValue **)self = s_value_pools[t_code] . values;
+        s_value_pools[t_code] . values = self;
+        return;
+    }
+    
 	MCMemoryDelete(self);
 }
 
@@ -758,11 +794,23 @@ bool __MCValueInitialize(void)
 	if (!__MCValueRehashUniqueValues(1))
 		return false;
 
+    MCMemoryClear(s_value_pools, sizeof(s_value_pools));
+    
 	return true;
 }
 
 void __MCValueFinalize(void)
 {
+    for(uindex_t i = 0; i < sizeof(s_value_pools) / sizeof(s_value_pools[0]); i++)
+        while(s_value_pools[i] . count > 0)
+        {
+            __MCValue *t_value;
+            t_value = s_value_pools[i] . values;
+            s_value_pools[i] . values = *(__MCValue **)t_value;
+			s_value_pools[i] . count -= 1;
+            MCMemoryDelete(t_value);
+        }
+    
 	MCMemoryDeleteArray(s_unique_values);
 	s_unique_values = nil;
 

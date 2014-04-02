@@ -678,9 +678,10 @@ void MCInterfaceEvalMouseV(MCExecContext& ctxt, integer_t& r_value)
 void MCInterfaceEvalMouseLoc(MCExecContext& ctxt, MCStringRef& r_string)
 {
 	int16_t x, y;
-	MCscreen->querymouse(x, y);
-    MCRectangle t_rect = MCdefaultstackptr -> getrect();
-    if (MCStringFormat(r_string, "%d,%d", x - t_rect . x, y - t_rect . y))
+	MCscreen->querymouse(x, y); 
+    MCPoint t_mouse_loc;
+    t_mouse_loc = MCdefaultstackptr -> globaltostackloc(MCPointMake(x, y));
+    if (MCStringFormat(r_string, "%d,%d", t_mouse_loc. x, t_mouse_loc . y))
         return;
     ctxt . Throw();
 }
@@ -3281,8 +3282,8 @@ void MCInterfaceExecLockScreenForEffect(MCExecContext& ctxt, MCRectangle *p_regi
 		if (p_region == nil)
 			MCcur_effects_rect = MCdefaultstackptr -> getcurcard() -> getrect();
 		else
-			MCcur_effects_rect = MCRectangleMake(0,0,0,0);
-		
+            // AL-2014-03-27: [[ Bug 12038 ]] Actually set the effect rect.
+			MCcur_effects_rect = *p_region;
 		
 		MCdefaultstackptr -> snapshotwindow(MCcur_effects_rect);
 	}
@@ -3732,7 +3733,9 @@ void MCInterfaceExecExportSnapshotOfObjectToFile(MCExecContext& ctxt, MCObject *
 	MCImageBitmap *t_bitmap;
 	t_bitmap = MCInterfaceGetSnapshotOfObjectBitmap(ctxt, p_target, p_region, p_with_effects, p_at_size);
     
-	MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_filename, p_mask_filename);
+    // AL-2014-03-20: [[ Bug 11948 ]] t_bitmap nil here causes a crash.
+    if (t_bitmap != nil)
+        MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_filename, p_mask_filename);
 }
 
 MCImage* MCInterfaceExecExportSelectImage(MCExecContext& ctxt)
@@ -3970,7 +3973,7 @@ void MCInterfaceExecSortCardsOfStack(MCExecContext &ctxt, MCStack *p_target, boo
 	if (p_target == nil)
 		p_target = MCdefaultstackptr;
 
-	if (p_target->sort(ctxt, p_ascending ? ST_ASCENDING : ST_DESCENDING, (Sort_type)p_format, p_by, p_only_marked) != ES_NORMAL)
+	if (!p_target->sort(ctxt, p_ascending ? ST_ASCENDING : ST_DESCENDING, (Sort_type)p_format, p_by, p_only_marked))
 		ctxt . LegacyThrow(EE_SORT_CANTSORT);
 }
 

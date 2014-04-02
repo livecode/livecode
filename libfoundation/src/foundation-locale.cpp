@@ -1113,3 +1113,40 @@ uindex_t MCLocaleBreakIteratorAfter(MCBreakIteratorRef p_iter, uindex_t p_index)
     t_result = p_iter->m_icu_iter.following(p_index);
     return (t_result == icu::BreakIterator::DONE) ? kMCLocaleBreakIteratorDone : t_result;
 }
+
+bool MCLocaleWordBreakIteratorAdvance(MCStringRef self, MCBreakIteratorRef p_iter, MCRange& x_range)
+{
+    uindex_t t_start, t_left_break, t_right_break;
+    t_right_break = x_range . offset + x_range . length;
+    t_start = t_right_break;
+    bool found = false;
+    
+    // Advance to the beginning of the specified range
+    while (!found)
+    {
+        t_left_break = t_right_break;
+        t_start = t_left_break;
+        
+        t_right_break = MCLocaleBreakIteratorAdvance(p_iter);
+        if (t_right_break == kMCLocaleBreakIteratorDone)
+            return false;
+        
+        // if the intervening chars contain a letter or number then it was a valid 'word'
+        while (t_left_break < t_right_break)
+        {
+            if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(self, t_left_break)))
+                break;
+            if (MCStringIsValidSurrogatePair(self, t_left_break++))
+                t_left_break++;
+        }
+        
+        if (t_left_break < t_right_break)
+            found = true;
+    }
+    if (t_start == kMCLocaleBreakIteratorDone)
+        return false;
+    
+    x_range .  offset = t_start;
+    x_range . length = t_right_break - t_start;
+    return true;
+}

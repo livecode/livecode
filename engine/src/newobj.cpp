@@ -352,6 +352,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCBinaryDecode;
 	case F_BUILD_NUMBER:
 		return new MCBuildNumber;
+    case F_BYTE_OFFSET:
+        return new MCByteOffset;
 	case F_CACHED_URLS:
 		return new MCCachedUrls;
 	case F_CAPS_LOCK_KEY:
@@ -384,6 +386,10 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCClickV;
 	case F_CLIPBOARD:
 		return new MCClipboard;
+    case F_CODEPOINT_OFFSET:
+        return new MCCodepointOffset;
+    case F_CODEUNIT_OFFSET:
+        return new MCCodeunitOffset;
 	case F_COLOR_NAMES:
 		return new MCColorNames;
 	case F_COMMAND_KEY:
@@ -632,6 +638,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCOwner;
 	case F_PA:
 		return new MCPeerAddress;
+    case F_PARAGRAPH_OFFSET:
+        return new MCParagraphOffset;
 	case F_PARAM:
 		return new MCParam;
 	case F_PARAMS:
@@ -707,6 +715,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCSelectedObject;
 	case F_SELECTED_TEXT:
 		return new MCSelectedText;
+    case F_SENTENCE_OFFSET:
+        return new MCSentenceOffset;
 	case F_SET_REGISTRY:
 		return new MCSetRegistry;
 	case F_SET_RESOURCE:
@@ -769,6 +779,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCToUpper;
 	case F_TRANSPOSE:
 		return new MCTranspose;
+    case F_TRUEWORD_OFFSET:
+        return new MCTrueWordOffset;
 	case F_TRUNC:
 		return new MCTrunc;
     case F_UNICODE_CHAR_TO_NUM:
