@@ -41,7 +41,7 @@ To start with, the main changes are the following:
 
 	**mobileStoreProductProperty** *productID*, *propertyName*
 
-	Note that the old function **mobileGetPurchase** *purchaseID*, *propertyName* will still work.
+	Note that the old function **mobilePurchaseGet** *purchaseID*, *propertyName* will still work.
 
 *  You can get information on a specific item (such as product identifier, product type, price etc), using the **mobileStoreRequestProductDetails** command. The store responds:
 
