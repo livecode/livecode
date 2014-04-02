@@ -2189,11 +2189,13 @@ bool MCBlock::GetFirstLineBreak(findex_t& r_index)
 	uindex_t t_offset;
     if (!MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\v', t_index, kMCStringOptionCompareExact, t_offset))
         return false;
-    if (t_offset > m_index + m_size)
+    
+    // SN-2014-03-20: [[ bug 11947 ]] ensure the index is incremented to avoid an infinite loop...
+	r_index = parent -> IncrementIndex(t_offset);
+    
+    if (r_index > m_index + m_size)
         return false;
 
-	r_index = t_offset;
-    parent -> IncrementIndex(r_index);
     return true;
 }
 
