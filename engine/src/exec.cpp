@@ -3318,12 +3318,11 @@ void MCExecResolveCharsOfField(MCField *p_field, uint32_t p_part, int32_t& x_sta
 
 void MCExecParseSet(MCExecContext& ctxt, MCExecSetTypeInfo *p_info, MCExecValue p_value, intset_t& r_value)
 {
+    // AL-2014-04-02: [[ Bug 12097 ]] No need to use c-string array (and indeed delete an unallocated one)
     MCAutoStringRef t_string;
     MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_string));
     
     intset_t t_value = 0;
-    char **t_elements;
-    uindex_t t_element_count;
     MCAutoArrayRef t_split_strings;
     
     MCStringSplit(*t_string, MCSTR(","), nil, kMCStringOptionCompareExact, &t_split_strings);
@@ -3342,7 +3341,6 @@ void MCExecParseSet(MCExecContext& ctxt, MCExecSetTypeInfo *p_info, MCExecValue 
         }
     }
     
-    MCCStringArrayFree(t_elements, t_element_count);
     r_value = t_value;
 }
 
