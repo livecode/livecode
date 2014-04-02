@@ -3732,7 +3732,9 @@ void MCInterfaceExecExportSnapshotOfObjectToFile(MCExecContext& ctxt, MCObject *
 	MCImageBitmap *t_bitmap;
 	t_bitmap = MCInterfaceGetSnapshotOfObjectBitmap(ctxt, p_target, p_region, p_with_effects, p_at_size);
     
-	MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_filename, p_mask_filename);
+    // AL-2014-03-20: [[ Bug 11948 ]] t_bitmap nil here causes a crash.
+    if (t_bitmap != nil)
+        MCInterfaceExportBitmapToFile(ctxt, t_bitmap, p_format, p_palette, MCInterfaceGetDitherImage(nil), p_filename, p_mask_filename);
 }
 
 MCImage* MCInterfaceExecExportSelectImage(MCExecContext& ctxt)
