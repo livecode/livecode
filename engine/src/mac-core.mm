@@ -1209,7 +1209,10 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 		// Show the cursor attached to the window.
 		MCPlatformCursorRef t_cursor;
 		MCPlatformGetWindowProperty(t_new_mouse_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
-		MCPlatformShowCursor(t_cursor);
+        
+        // PM-2014-04-02: [[Bug 12100]] IDE crashed when some stack properties were modified
+        if (t_cursor != nil)
+            MCPlatformShowCursor(t_cursor);
 	}
 }
 
