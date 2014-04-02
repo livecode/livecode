@@ -1387,20 +1387,27 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
 #endif /* MCPut */
 
     
-    MCAutoValueRef t_value;
-    if (!ctxt . EvalExprAsValueRef(source, EE_PUT_BADEXP, &t_value))
+    MCExecValue t_value;
+    if (!ctxt . EvaluateExpression(source, EE_PUT_BADEXP, t_value))
         return;
 	
     if (dest != nil)
     {
-        dest -> set(ctxt, prep, *t_value, is_unicode);
+//        MCAutoValueRef t_valueref;
+//        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeValueRef, &(&t_valueref));
+//        dest -> set(ctxt, prep, *t_valueref, is_unicode);
+        dest -> set(ctxt, prep, t_value, is_unicode);
 	}
     else
-	{
+	{        
+        if (ctxt . HasError())
+            return;
+        
 		MCAutoValueRef t_val;
 		if (is_unicode && (prep == PT_UNDEFINED || prep == PT_CONTENT || prep == PT_MARKUP))
         {
-			if (!ctxt . ConvertToData(*t_value, (MCDataRef&)&t_val))
+            MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeDataRef, &(&t_val));
+			if (ctxt . HasError())
 			{
                 ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
 				return;
@@ -1408,8 +1415,8 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
         }
 		else
         {
-			if (!ctxt . ConvertToString(*t_value, (MCStringRef&)&t_val))
-                
+            MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeStringRef, &(&t_val));
+            if (ctxt . HasError())
 			{
                 ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
 				return;

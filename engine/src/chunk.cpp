@@ -3211,15 +3211,18 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
 
 void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
 {
-    MCAutoValueRef t_text;
+    MCExecValue t_text;
+    MCAutoValueRef t_valueref;
+    bool t_exec_expr = false;
 
     if (source != NULL && url == NULL && stack == NULL && background == NULL && card == NULL
         && group == NULL && object == NULL)
     {
         if (desttype != DT_OWNER)
         {
-            if (!ctxt . EvalExprAsValueRef(source, EE_CHUNK_CANTGETSOURCE, &t_text))
+            if (!ctxt . EvaluateExpression(source, EE_CHUNK_CANTGETSOURCE, t_text))
                 return;
+            t_exec_expr = true;
         }
         else
         {
@@ -3233,13 +3236,14 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                 return;
             }
 
-            MCEngineEvalOwner(ctxt, t_object, (MCStringRef&)&t_text);
+            MCEngineEvalOwner(ctxt, t_object, (MCStringRef&)&t_valueref);
         }
     }
     else if (destvar != NULL)
     {
-        if (!ctxt . EvalExprAsValueRef(destvar, EE_CHUNK_CANTGETDEST, &t_text))
+        if (!ctxt . EvaluateExpression(destvar, EE_CHUNK_CANTGETDEST, t_text))
             return;
+        t_exec_expr = true;
     }
     else
     {
@@ -3264,72 +3268,81 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                 ctxt . LegacyThrow(EE_CHUNK_CANTFINDOBJECT);
                 return;
             }
-            t_text = *t_url_output;
+            t_valueref = *t_url_output;
         }
         else
         {
             switch (function)
             {
                 case F_CLICK_CHUNK:
-                    MCInterfaceEvalClickChunk(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalClickChunk(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_CLICK_CHAR_CHUNK:
-                    MCInterfaceEvalClickCharChunk(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalClickCharChunk(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_CLICK_LINE:
-                    MCInterfaceEvalClickLine(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalClickLine(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_CLICK_TEXT:
-                    MCInterfaceEvalClickText(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalClickText(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_SELECTED_CHUNK:
-                    MCInterfaceEvalSelectedChunk(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalSelectedChunk(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_SELECTED_LINE:
-                    MCInterfaceEvalSelectedLine(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalSelectedLine(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_SELECTED_TEXT:
-                    MCInterfaceEvalSelectedText(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalSelectedText(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_FOUND_CHUNK:
-                    MCInterfaceEvalFoundChunk(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalFoundChunk(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_FOUND_LINE:
-                    MCInterfaceEvalFoundLine(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalFoundLine(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_FOUND_TEXT:
-                    MCInterfaceEvalFoundText(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalFoundText(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_MOUSE_CHUNK:
-                    MCInterfaceEvalMouseChunk(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalMouseChunk(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_MOUSE_LINE:
-                    MCInterfaceEvalMouseLine(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalMouseLine(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_MOUSE_CHAR_CHUNK:
-                    MCInterfaceEvalMouseCharChunk(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalMouseCharChunk(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_MOUSE_TEXT:
-                    MCInterfaceEvalMouseText(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalMouseText(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 default:
                     MCMarkedText t_mark;
                     MCInterfaceMarkContainer(ctxt, t_object, t_mark);
-                    MCStringsEvalTextChunk(ctxt, t_mark, (MCStringRef&)&t_text);
+                    MCStringsEvalTextChunk(ctxt, t_mark, (MCStringRef&)&t_valueref);
                     MCValueRelease(t_mark . text);
                     break;
             }
         }
     }
 
-    if (*t_text != nil)
+    if (*t_valueref != nil || t_exec_expr)
     {
         if (cline != nil || paragraph != nil || sentence != nil || item != nil || trueword != nil || word != nil
             || token != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil)
         {
             // Must be a string ref
             MCAutoStringRef t_text_str;
-            if (!ctxt . ConvertToString(*t_text, &t_text_str))
+            bool t_success = true;
+            if (t_exec_expr)
+            {
+                MCExecTypeConvertAndReleaseAlways(ctxt, t_text . type, &t_text, kMCExecValueTypeStringRef, &(&t_text_str));
+                t_success = !ctxt . HasError();
+            }
+            else
+                t_success = ctxt . ConvertToString(*t_valueref, &t_text_str);
+            
+            if (!t_success)
             {
                 ctxt.Throw();
                 return;
@@ -3342,22 +3355,22 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
             mark(ctxt, false, false, t_new_mark);
             
             if (byte == nil)
-                MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value);
+                MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value), r_text . type = kMCExecValueTypeStringRef;
             else
-                MCStringsEvalByteChunk(ctxt, t_new_mark, r_text . dataref_value);
+                MCStringsEvalByteChunk(ctxt, t_new_mark, r_text . dataref_value), r_text . type = kMCExecValueTypeDataRef;
             
             MCValueRelease(t_new_mark . text);
         }
         else
-            r_text . valueref_value = MCValueRetain(*t_text);
+        {
+            if (t_exec_expr)
+                r_text = t_text;
+            else
+                MCExecTypeSetValueRef(r_text, MCValueRetain(*t_valueref));
+        }
     }
     else
-        r_text . stringref_value = MCValueRetain(kMCEmptyString);
-
-    if (!ctxt . HasError())
-    {
-        r_text . type = kMCExecValueTypeValueRef;
-    }
+        MCExecTypeSetValueRef(r_text, MCValueRetain(kMCEmptyString));
 }
 
 #ifdef LEGACY_EXEC
@@ -3702,6 +3715,84 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
     if (!ctxt . HasError())
         return true;
 
+    return false;
+}
+
+bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCExecValue p_value, bool p_unicode)
+{    
+    if (destvar != nil)
+    {
+        MCAutoValueRef t_valueref;
+        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeValueRef, &(&t_valueref));
+        MCVariableChunkPtr t_var_chunk;
+        if (!evalvarchunk(ctxt, false, true, t_var_chunk))
+            return false;
+        
+        MCEngineExecPutIntoVariable(ctxt, *t_valueref, p_type, t_var_chunk);
+//        MCEngineExecPutIntoVariable(ctxt, p_value, p_type, t_var_chunk);
+        MCValueRelease(t_var_chunk . mark . text);
+    }
+    else if (isurlchunk())
+    {
+        MCAutoValueRef t_valueref;
+        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeValueRef, &(&t_valueref));
+        MCUrlChunkPtr t_url_chunk;
+        t_url_chunk . url = nil;
+        if (!evalurlchunk(ctxt, false, true, t_url_chunk))
+            return false;
+        
+        MCNetworkExecPutIntoUrl(ctxt, *t_valueref, p_type, t_url_chunk);
+        
+        MCValueRelease(t_url_chunk . url);
+        MCValueRelease(t_url_chunk . mark . text);
+    }
+    else
+    {
+        MCObjectChunkPtr t_obj_chunk;
+        if (!evalobjectchunk(ctxt, false, true, t_obj_chunk))
+            return false;
+        
+        if (p_unicode)
+        {
+            if (t_obj_chunk . object -> gettype() != CT_FIELD)
+            {
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETUNICODEDEST);
+                MCValueRelease(t_obj_chunk . mark . text);
+                return false;
+            }
+            
+            MCAutoDataRef t_data;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeDataRef, &(&t_data));
+            if (ctxt . HasError())
+            {
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETUNICODEDEST);
+                MCValueRelease(t_obj_chunk . mark . text);
+                return false;
+            }
+            MCInterfaceExecPutUnicodeIntoField(ctxt, *t_data, p_type, t_obj_chunk);
+        }
+        else if (t_obj_chunk . object -> gettype() == CT_FIELD)
+        {
+            MCAutoStringRef t_string;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_string));
+            if (ctxt . HasError())
+            {
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
+                MCValueRelease(t_obj_chunk . mark . text);
+                return false;
+            }            
+            
+            MCInterfaceExecPutIntoField(ctxt, *t_string, p_type, t_obj_chunk);
+        }
+        else
+            MCInterfaceExecPutIntoObject(ctxt, p_value, p_type, t_obj_chunk);
+
+        MCValueRelease(t_obj_chunk . mark . text);
+    }
+    
+    if (!ctxt . HasError())
+        return true;
+    
     return false;
 }
 

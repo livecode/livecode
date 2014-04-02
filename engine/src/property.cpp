@@ -5367,7 +5367,7 @@ void MCProperty::set_variable(MCExecContext& ctxt, MCExecValue p_value)
 {
     MCAutoValueRef t_value;
     MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeValueRef, &(&t_value));
-    destvar -> set(ctxt, *t_value);
+    destvar -> give_value(ctxt, p_value);
 }
 
 void MCProperty::set_global_property(MCExecContext& ctxt, MCExecValue p_value)

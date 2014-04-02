@@ -149,6 +149,7 @@ public:
     Exec_stat set(MCExecPoint& ep, Preposition_type p_type, MCValueRef p_text, bool p_unicode = false);
 #endif
     bool set(MCExecContext& ctxt, Preposition_type p_type, MCValueRef p_value, bool p_unicode = false);
+    bool set(MCExecContext& ctxt, Preposition_type p_type, MCExecValue p_value, bool p_unicode = false);
 
 #ifdef LEGACY_EXEC 
 	Exec_stat gets(MCExecPoint &);

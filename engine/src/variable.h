@@ -574,7 +574,7 @@ class MCVariable
 {
 protected:
 	MCNameRef name;
-	MCValueRef value;
+	MCExecValue value;
 	MCVariable *next;
 
 	bool is_msg : 1;
@@ -621,14 +621,30 @@ public:
     bool append(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length);
     // Remove the content (nested key) of the variable.
     bool remove(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length);
+    
+    // Evaluate the contents of the variable (nested key) into the ep.
+	// Evalue the contents of the variable (nested key) into r_value.
+    bool eval_ctxt(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length, MCExecValue &r_value);
+    // Copy the contents of the ep into the variable (nested key).
+    bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCNameRef *p_path, uindex_t p_length);
+    // Append the content of the ep to the variable (nested key).
+    bool append_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef *p_path, uindex_t p_length);
 	
     bool setvalueref(MCValueRef value);
 	MCValueRef getvalueref(void);
 	bool copyasvalueref(MCValueRef& r_value);
+    bool copyasexecvalue(MCExecValue &r_value);
+	// Return the content of the variable as an exec value. This does not copy the value.
+	MCExecValue getexecvalue(void);
 
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
     bool set(MCExecContext& ctxt, MCValueRef p_value);
     bool append(MCExecContext& ctxt, MCValueRef p_value);
+    
+    bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
+    bool give_value(MCExecContext& ctxt, MCExecValue p_value);
+    bool append_ctxt(MCExecContext& ctxt, MCExecValue p_value);
+    
     bool remove(MCExecContext& ctxt);
     
 	// Converts the value in the variable to an array of strings.
@@ -802,6 +818,10 @@ public:
     bool set(MCExecContext& ctxt, MCValueRef p_value);
     bool append(MCExecContext& ctxt, MCValueRef p_value);
     
+    bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
+    bool give_value(MCExecContext& ctxt, MCExecValue p_value);
+    bool append_ctxt(MCExecContext& ctxt, MCExecValue p_value);
+    
 	//
 
 	bool clear(void);
@@ -918,6 +938,7 @@ public:
 	Exec_stat set(MCExecPoint &, Boolean append = False);
 #endif
     bool set(MCExecContext& ctxt, MCValueRef p_value, bool p_append = false);
+    bool give_value(MCExecContext& ctxt, MCExecValue p_value, bool p_append = false);
 	Parse_stat parsearray(MCScriptPoint &);
 	Exec_stat sets(const MCString &s);
 	void clear();

@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_HANDLER__
 #define	__MC_HANDLER__
 
+struct MCExecValue;
+
 // A single variable definition. If 'init' is nil then it means the var should
 // be created as a uql.
 struct MCHandlerVarInfo
@@ -117,7 +119,7 @@ public:
 #ifdef LEGACY_EXEC
 	Exec_stat getvarnames(MCExecPoint &, Boolean all);
 #endif
-	Exec_stat eval_ctxt(MCExecContext& ctxt, MCValueRef& r_value);
+	void eval_ctxt(MCExecContext& ctxt, MCStringRef p_expression, MCExecValue& r_value);
 	void eval(MCExecContext& ctxt, MCStringRef p_expression, MCValueRef& r_value);
 	//Exec_stat eval(MCExecPoint &);
 	uint4 linecount();

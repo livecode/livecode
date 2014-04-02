@@ -59,27 +59,35 @@ void MCParameter::setvalueref_argument(MCValueRef p_value)
 	MCValueRef t_value;
 	t_value = MCValueRetain(p_value);
 
-	MCValueRelease(value);
-	value = t_value;
+	MCExecTypeRelease(value);
+    MCExecTypeSetValueRef(value, t_value);
 }
 
+void MCParameter::give_exec_argument(MCExecValue p_value)
+{
+    MCExecTypeRelease(value);
+    value = p_value;
+}
+
+// Converts the exec value to a valueref
 MCValueRef MCParameter::getvalueref_argument(void)
 {
-	return value;
+    MCExecContext ctxt(nil, nil, nil);
+    MCExecTypeConvertAndReleaseAlways(ctxt, value . type, &value, kMCExecValueTypeValueRef, &value);
+    
+	return value . valueref_value;
 }
 
 void MCParameter::setn_argument(real8 p_number)
 {
-	MCNumberRef t_number_ref;
-	/* UNCHECKED */ MCNumberCreateWithReal(p_number, t_number_ref);
-	MCValueRelease(value);
-	value = t_number_ref;
+    MCExecTypeRelease(value);
+    value . type  = kMCExecValueTypeDouble;
+    value . double_value = p_number;
 }
 
 void MCParameter::clear_argument(void)
 {
-	MCValueRelease(value);
-	value = nil;
+	MCExecTypeRelease(value);
 }
 
 ////////
@@ -119,14 +127,38 @@ Exec_stat MCParameter::eval(MCExecPoint& ep)
 
 bool MCParameter::eval(MCExecContext &ctxt, MCValueRef &r_value)
 {
-    if (value != nil)
+    if (value . type != kMCExecValueTypeNone)
     {
-        r_value = MCValueRetain(value);
-
-        return true;
+        if (MCExecTypeIsValueRef(value))
+            return MCValueCopy(value . valueref_value, r_value);
+        else
+        {
+            MCExecValue t_value;
+            MCExecTypeCopy(value, t_value);
+            MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, t_value . type, &t_value, r_value);
+            return true;
+        }
     }
     else
         return ctxt . EvalOptionalExprAsValueRef(exp, (MCValueRef)kMCEmptyString, EE_PARAM_BADEXP, r_value);
+}
+
+bool MCParameter::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+{
+    if (value . type != kMCExecValueTypeNone)
+        MCExecTypeCopy(value, r_value);
+    else
+    {        
+        if (exp != nil)
+        {
+            if (!ctxt . EvaluateExpression(exp, EE_PARAM_BADEXP, r_value))
+                return false;
+        }
+        else
+            MCExecTypeSetValueRef(r_value, MCValueRetain(kMCEmptyString));
+    }
+    
+    return true;
 }
 
 #ifdef LEGACY_EXEC
@@ -152,14 +184,31 @@ bool MCParameter::eval_argument(MCExecContext &ctxt, MCValueRef &r_value)
     if (var != NULL)
         return var -> eval(ctxt, r_value);
 
-    if (value == nil)
+    if (value . type == kMCExecValueTypeNone)
         return r_value = MCValueRetain(kMCEmptyString), true;
 
     MCValueRef t_value;
-    if (!MCValueCopy(value, t_value))
-        return false;
+    if (MCExecTypeIsValueRef(value))
+    {
+        if (!MCValueCopy(value . valueref_value, t_value))
+            return false;
+    }
+    else
+    {
+        MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, value . type, &value, t_value);
+    }
+    
 
     r_value = t_value;
+    return true;
+}
+
+bool MCParameter::eval_argument_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+{
+    if (var != NULL)
+        return var -> eval_ctxt(ctxt, r_value);
+    
+    MCExecTypeCopy(value, r_value);
     return true;
 }
 
@@ -185,10 +234,19 @@ MCVariable *MCParameter::eval_argument_var(void)
 
 void MCParameter::set_argument(MCExecContext& ctxt, MCValueRef p_value)
 {
-	MCValueRef t_old_value;
+    MCValueRef t_new_value;
+    t_new_value = MCValueRetain(p_value);
+    MCExecTypeRelease(value);
+    MCExecTypeSetValueRef(value, t_new_value);
+	var = NULL;
+}
+
+void MCParameter::set_exec_argument(MCExecContext& ctxt, MCExecValue p_value)
+{
+	MCExecValue t_old_value;
 	t_old_value = value;
-    value = MCValueRetain(p_value);
-	MCValueRelease(t_old_value);
+    MCExecTypeCopy(p_value, value);
+	MCExecTypeRelease(t_old_value);
 	var = NULL;
 }
 

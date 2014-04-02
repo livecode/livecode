@@ -31,13 +31,14 @@ public:
 		exp = nil;
 		next = nil;
 		var = nil;
-		value = nil;
+		value . type = kMCExecValueTypeNone;
+        value . valueref_value = nil;
 	}
 
 	~MCParameter(void)
 	{
 		delete exp;
-		MCValueRelease(value);
+		MCExecTypeRelease(value);
 	}
 
 	void setnext(MCParameter *n)
@@ -65,6 +66,7 @@ public:
 #endif
 
 	void setvalueref_argument(MCValueRef name);
+	void give_exec_argument(MCExecValue name);
 	void setn_argument(real8 n);
 	void clear_argument(void);
 	
@@ -79,9 +81,11 @@ public:
     MCVariable *eval_argument_var(void);
 
     bool eval_argument(MCExecContext& ctxt, MCValueRef &r_value);
+    bool eval_argument_ctxt(MCExecContext& ctxt, MCExecValue &r_value);
 
 	// Set the value of the parameter to be used by the callee.
-    void set_argument(MCExecContext& ctxt, MCValueRef p_value);
+    void set_argument(MCExecContext &ctxt, MCValueRef p_value);
+    void set_exec_argument(MCExecContext& ctxt, MCExecValue p_value);
 #ifdef LEGACY_EXEC
 	void set_argument(MCExecPoint& ep);
 #endif
@@ -97,6 +101,7 @@ public:
 #endif
 
     bool eval(MCExecContext& ctxt, MCValueRef &r_value);
+    bool eval_ctxt(MCExecContext& ctxt, MCExecValue &r_value);
     bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
     MCVariable *evalvar(MCExecContext& ctxt);
 
@@ -119,7 +124,7 @@ private:
 	// Parameter as value (i.e. value of the argument when
 	// passed to a function/command).
 	MCVariable *var;
-	MCValueRef value;
+	MCExecValue value;
 };
 
 #endif

@@ -37,25 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////
 
-bool valueref_tona(MCExecContext &ctxt, Exec_errors p_error, MCValueRef p_value, MCValueRef &r_value)
-{
-    if (!MCValueIsArray(p_value))
-    {
-        MCAutoNumberRef t_number;
-        if (!ctxt . ConvertToNumber(p_value, &t_number))
-        {
-            ctxt . LegacyThrow(p_error);
-            return false;
-        }
-
-        r_value = MCValueRetain((MCValueRef)*t_number);
-    }
-    else
-        r_value = MCValueRetain(p_value);
-
-    return true;
-}
-
 //
 
 inline bool MCMathOpCommandComputeOverlap(MCExpression *p_source, MCExpression *p_dest, MCVarref *p_destvar)
@@ -204,40 +185,50 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
 	return ES_NORMAL;
 #endif /* MCAdd */
 
-    MCAutoValueRef t_src;
-    MCAutoValueRef t_src_as_number;
-    if (!ctxt . EvalExprAsValueRef(source, EE_ADD_BADSOURCE, &t_src)
-            || !valueref_tona(ctxt, EE_ADD_BADSOURCE, *t_src, &t_src_as_number))
+    MCExecValue t_src;
+    if (!ctxt . EvaluateExpression(source, EE_ADD_BADSOURCE, t_src)
+            || !ctxt . ConvertToNumberOrArray(t_src))
         return;
 	
-	MCAutoValueRef t_dst;
-    MCAutoValueRef t_dst_as_number;
+	MCExecValue t_dst;
     MCAutoPointer<MCContainer> t_dst_container;
 	if (destvar != nil)
 	{
         if (!destvar -> evalcontainer(ctxt, &t_dst_container))
         {
             ctxt . LegacyThrow(EE_ADD_BADDEST);
+            MCExecTypeRelease(t_src);
             return;
 		}
 		
-        if (!t_dst_container -> eval(ctxt, &t_dst))
+        if (!t_dst_container -> eval_ctxt(ctxt, t_dst))
+        {
+            MCExecTypeRelease(t_src);
             return;
+        }
 	}
 	else
     {
-        if (!ctxt . EvalExprAsValueRef(dest, EE_ADD_BADDEST, &t_dst))
+        if (!ctxt . EvaluateExpression(dest, EE_ADD_BADDEST, t_dst))
+        {
+            MCExecTypeRelease(t_src);
             return;
+        }
     }
 
-    if (!valueref_tona(ctxt, EE_ADD_BADDEST, *t_dst, &t_dst_as_number))
+    if (!ctxt . ConvertToNumberOrArray(t_dst))
+    {
+        MCExecTypeRelease(t_src);
+        MCExecTypeRelease(t_dst);
         return;
+    }
 
-	MCAutoValueRef t_result;
-    if (MCValueIsArray(*t_src_as_number))
+	MCExecValue t_result;
+    t_result . type = t_dst . type;
+    if (t_src . type == kMCExecValueTypeArrayRef)
 	{
-        if (MCValueIsArray(*t_dst_as_number))
-            MCMathExecAddArrayToArray(ctxt, (MCArrayRef)*t_src_as_number, (MCArrayRef)*t_dst_as_number, (MCArrayRef&)&t_result);
+        if (t_dst . type == kMCExecValueTypeArrayRef)
+            MCMathExecAddArrayToArray(ctxt, t_src . arrayref_value, t_dst . arrayref_value, t_result . arrayref_value);
 		else
 		{
             ctxt . LegacyThrow(EE_ADD_MISMATCH);
@@ -246,28 +237,26 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
 	}
 	else
 	{
-        if (MCValueIsArray(*t_dst_as_number))
-            MCMathExecAddNumberToArray(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_src_as_number), (MCArrayRef)*t_dst_as_number, (MCArrayRef&)&t_result);
+        if (t_dst . type == kMCExecValueTypeArrayRef)
+            MCMathExecAddNumberToArray(ctxt, t_src . double_value, t_dst . arrayref_value, t_result . arrayref_value);
 		else
-		{
-			double t_real_result;
-            MCMathExecAddNumberToNumber(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_src_as_number), MCNumberFetchAsReal((MCNumberRef)*t_dst_as_number), t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
-		}
+            MCMathExecAddNumberToNumber(ctxt, t_src . double_value, t_dst . double_value, t_result . double_value);
 	}
+    
+    MCExecTypeRelease(t_src);
+    MCExecTypeRelease(t_dst);
 	
 	if (!ctxt . HasError())
 	{
 		if (destvar != nil)
 		{
-			if (t_dst_container -> set_valueref(*t_result))
+			if (t_dst_container -> give_value(ctxt, t_result))
                 return;
 			ctxt . Throw();
 		}
 		else
 		{
-
-			if (dest->set(ctxt, PT_INTO, *t_result))
+			if (dest->set(ctxt, PT_INTO, t_result))
 				return;
 			ctxt . LegacyThrow(EE_ADD_CANTSET);
 		}
@@ -439,40 +428,50 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
 	return ES_NORMAL;
 #endif /* MCDivide */
 
-	MCAutoValueRef t_src;
-    MCAutoValueRef t_src_as_number;
-    if (!ctxt . EvalExprAsValueRef(source, EE_DIVIDE_BADSOURCE, &t_src)
-            || !valueref_tona(ctxt, EE_DIVIDE_BADSOURCE, *t_src, &t_src_as_number))
+	MCExecValue t_src;
+    if (!ctxt . EvaluateExpression(source, EE_DIVIDE_BADSOURCE, t_src)
+            || !ctxt . ConvertToNumberOrArray(t_src))
         return;
 	
-	MCAutoValueRef t_dst;
-    MCAutoValueRef t_dst_as_number;
+	MCExecValue t_dst;
 	MCAutoPointer<MCContainer> t_dst_container;
 	if (destvar != nil)
 	{
         if (!destvar -> evalcontainer(ctxt, &t_dst_container))
 		{
             ctxt . LegacyThrow(EE_DIVIDE_BADDEST);
+            MCExecTypeRelease(t_src);
             return;
 		}
 		
-        if (!t_dst_container -> eval(ctxt, &t_dst))
+        if (!t_dst_container -> eval_ctxt(ctxt, t_dst))
+        {
+            MCExecTypeRelease(t_src);
             return;
+        }
 	}
 	else
 	{
-        if (!ctxt . EvalExprAsValueRef(dest, EE_DIVIDE_BADDEST, &t_dst))
+        if (!ctxt . EvaluateExpression(dest, EE_DIVIDE_BADDEST, t_dst))
+        {
+            MCExecTypeRelease(t_src);
             return;
+        }
 	}
 
-    if (!valueref_tona(ctxt, EE_DIVIDE_BADDEST, *t_dst, &t_dst_as_number))
+    if (!ctxt . ConvertToNumberOrArray(t_dst))
+    {
+        MCExecTypeRelease(t_src);
+        MCExecTypeRelease(t_dst);
         return;
+    }
 	
-	MCAutoValueRef t_result;
-    if (MCValueIsArray(*t_src_as_number))
+	MCExecValue t_result;
+    t_result . type = t_dst . type;
+    if (t_src . type == kMCExecValueTypeArrayRef)
 	{
-        if (MCValueIsArray(*t_dst_as_number))
-            MCMathExecDivideArrayByArray(ctxt, (MCArrayRef)*t_dst_as_number, (MCArrayRef)*t_src_as_number, (MCArrayRef&)&t_result);
+        if (t_dst . type == kMCExecValueTypeArrayRef)
+            MCMathExecDivideArrayByArray(ctxt, t_dst .arrayref_value, t_src . arrayref_value, t_result . arrayref_value);
 		else
 		{
             ctxt . LegacyThrow(EE_DIVIDE_MISMATCH);
@@ -481,27 +480,26 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
 	}
 	else
 	{
-        if (MCValueIsArray(*t_dst_as_number))
-            MCMathExecDivideArrayByNumber(ctxt, (MCArrayRef)*t_dst_as_number, MCNumberFetchAsReal((MCNumberRef)*t_src_as_number), (MCArrayRef&)&t_result);
+        if (t_dst . type == kMCExecValueTypeArrayRef)
+            MCMathExecDivideArrayByNumber(ctxt, t_dst . arrayref_value, t_src . double_value, t_result . arrayref_value);
 		else
-		{
-			double t_real_result;
-            MCMathExecDivideNumberByNumber(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_dst_as_number), MCNumberFetchAsReal((MCNumberRef)*t_src_as_number), t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
-		}
+            MCMathExecDivideNumberByNumber(ctxt, t_dst . double_value, t_src . double_value, t_result . double_value);
 	}
+    
+    MCExecTypeRelease(t_src);
+    MCExecTypeRelease(t_dst);
 	
 	if (!ctxt . HasError())
 	{
 		if (destvar != nil)
 		{
-			if (t_dst_container -> set_valueref(*t_result))
+			if (t_dst_container -> give_value(ctxt, t_result))
                 return;
 			ctxt . Throw();
 		}
 		else
 		{
-            if (dest->set(ctxt, PT_INTO, *t_result))
+            if (dest->set(ctxt, PT_INTO, t_result))
                 return;
 
 			ctxt . LegacyThrow(EE_DIVIDE_CANTSET);
@@ -671,41 +669,51 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
 	return ES_NORMAL;
 #endif /* MCMultiply */
 
-    MCAutoValueRef t_src;
-    MCAutoValueRef t_src_as_number;
+    MCExecValue t_src;
 
-    if(!ctxt . EvalExprAsValueRef(source, EE_MULTIPLY_BADSOURCE, &t_src)
-            || !valueref_tona(ctxt, EE_MULTIPLY_BADSOURCE, *t_src, &t_src_as_number))
+    if(!ctxt . EvaluateExpression(source, EE_MULTIPLY_BADSOURCE, t_src)
+            || !ctxt . ConvertToNumberOrArray(t_src))
         return;
 	
-	MCAutoValueRef t_dst;
-    MCAutoValueRef t_dst_as_number;
+	MCExecValue t_dst;
 	MCAutoPointer<MCContainer> t_dst_container;
 	if (destvar != nil)
 	{
         if (!destvar -> evalcontainer(ctxt, &t_dst_container))
 		{
             ctxt . LegacyThrow(EE_MULTIPLY_BADDEST);
+            MCExecTypeRelease(t_src);
             return;
 		}
 		
-        if (!t_dst_container -> eval(ctxt, &t_dst))
+        if (!t_dst_container -> eval_ctxt(ctxt, t_dst))
+        {
+            MCExecTypeRelease(t_src);
             return;
+        }
 	}
 	else
 	{
-        if (!ctxt . EvalExprAsValueRef(dest, EE_MULTIPLY_BADDEST, &t_dst))
+        if (!ctxt . EvaluateExpression(dest, EE_MULTIPLY_BADDEST, t_dst))
+        {
+            MCExecTypeRelease(t_src);
             return;
+        }
 	}
 
-    if (!valueref_tona(ctxt, EE_MULTIPLY_BADDEST, *t_dst, &t_dst_as_number))
+    if (!ctxt . ConvertToNumberOrArray(t_dst))
+    {
+        MCExecTypeRelease(t_src);
+        MCExecTypeRelease(t_dst);
         return;
+    }
 	
-	MCAutoValueRef t_result;
-    if (MCValueIsArray(*t_src_as_number))
+	MCExecValue t_result;
+    t_result . type = t_dst . type;
+    if (t_src . type == kMCExecValueTypeArrayRef)
 	{
-        if (MCValueIsArray(*t_dst_as_number))
-            MCMathExecMultiplyArrayByArray(ctxt, (MCArrayRef)*t_dst_as_number, (MCArrayRef)*t_src_as_number, (MCArrayRef&)&t_result);
+        if (t_dst . type == kMCExecValueTypeArrayRef)
+            MCMathExecMultiplyArrayByArray(ctxt, t_dst . arrayref_value, t_src . arrayref_value, t_result . arrayref_value);
 		else
 		{
             ctxt . LegacyThrow(EE_MULTIPLY_MISMATCH);
@@ -714,27 +722,26 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
 	}
 	else
 	{
-        if (MCValueIsArray(*t_dst_as_number))
-            MCMathExecMultiplyArrayByNumber(ctxt, (MCArrayRef)*t_dst_as_number, MCNumberFetchAsReal((MCNumberRef)*t_src_as_number), (MCArrayRef&)&t_result);
+        if (t_dst . type == kMCExecValueTypeArrayRef)
+            MCMathExecMultiplyArrayByNumber(ctxt, t_dst . arrayref_value, t_src . double_value, t_result . arrayref_value);
 		else
-		{
-			double t_real_result;
-            MCMathExecMultiplyNumberByNumber(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_dst_as_number), MCNumberFetchAsReal((MCNumberRef)*t_src_as_number), t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
-		}
+            MCMathExecMultiplyNumberByNumber(ctxt, t_dst . double_value, t_src . double_value, t_result . double_value);
 	}
+    
+    MCExecTypeRelease(t_src);
+    MCExecTypeRelease(t_dst);
 	
 	if (!ctxt . HasError())
 	{
 		if (destvar != nil)
 		{
-			if (t_dst_container -> set_valueref(*t_result))
+			if (t_dst_container -> give_value(ctxt, t_result))
                 return;
 			ctxt . Throw();
 		}
 		else
-		{
-			if (dest->set(ctxt, PT_INTO, *t_result))
+		{            
+			if (dest->set(ctxt, PT_INTO, t_result))
                 return;
 
 			ctxt . LegacyThrow(EE_MULTIPLY_CANTSET);
@@ -887,41 +894,51 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
 	return ES_NORMAL;
 #endif /* MCSubtract */
 
-	MCAutoValueRef t_src;
-    MCAutoValueRef t_src_as_number;
+	MCExecValue t_src;
 
-    if (!ctxt . EvalExprAsValueRef(source, EE_SUBTRACT_BADSOURCE, &t_src)
-            || !valueref_tona(ctxt, EE_SUBTRACT_BADSOURCE, *t_src, &t_src_as_number))
+    if (!ctxt . EvaluateExpression(source, EE_SUBTRACT_BADSOURCE, t_src)
+            || !ctxt . ConvertToNumberOrArray(t_src))
         return;
 	
-	MCAutoValueRef t_dst;
-    MCAutoValueRef t_dst_as_number;
+	MCExecValue t_dst;
 	MCAutoPointer<MCContainer> t_dst_container;
 	if (destvar != nil)
 	{
         if (!destvar -> evalcontainer(ctxt, &t_dst_container))
 		{
             ctxt . LegacyThrow(EE_SUBTRACT_BADDEST);
+            MCExecTypeRelease(t_src);
             return;
 		}
 		
-        if (!t_dst_container -> eval(ctxt, &t_dst))
+        if (!t_dst_container -> eval_ctxt(ctxt, t_dst))
+        {
+            MCExecTypeRelease(t_src);
             return;
+        }
 	}
 	else
 	{
-        if (!ctxt . EvalExprAsValueRef(dest, EE_SUBTRACT_BADDEST, &t_dst))
+        if (!ctxt . EvaluateExpression(dest, EE_SUBTRACT_BADDEST, t_dst))
+        {
+            MCExecTypeRelease(t_src);
             return;
+        }
 	}
 
-    if (!valueref_tona(ctxt, EE_SUBTRACT_BADDEST, *t_dst, &t_dst_as_number))
+    if (!ctxt . ConvertToNumberOrArray(t_dst))
+    {
+        MCExecTypeRelease(t_src);
+        MCExecTypeRelease(t_dst);
         return;
+    }
 	
-	MCAutoValueRef t_result;
-    if (MCValueIsArray(*t_src_as_number))
+	MCExecValue t_result;
+    t_result . type = t_dst . type;
+    if (t_src . type == kMCExecValueTypeArrayRef)
 	{
-        if (MCValueIsArray(*t_dst_as_number))
-            MCMathExecSubtractArrayFromArray(ctxt, (MCArrayRef)*t_src_as_number, (MCArrayRef)*t_dst_as_number, (MCArrayRef&)&t_result);
+        if (t_dst . type == kMCExecValueTypeArrayRef)
+            MCMathExecSubtractArrayFromArray(ctxt, t_src . arrayref_value, t_dst . arrayref_value, t_result . arrayref_value);
 		else
 		{
             ctxt . LegacyThrow(EE_SUBTRACT_MISMATCH);
@@ -930,27 +947,26 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
 	}
 	else
 	{
-        if (MCValueIsArray(*t_dst_as_number))
-            MCMathExecSubtractNumberFromArray(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_src_as_number), (MCArrayRef)*t_dst_as_number, (MCArrayRef&)&t_result);
+        if (t_dst . type == kMCExecValueTypeArrayRef)
+            MCMathExecSubtractNumberFromArray(ctxt, t_src . double_value, t_dst . arrayref_value, t_result . arrayref_value);
 		else
-		{
-			double t_real_result;
-            MCMathExecSubtractNumberFromNumber(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_src_as_number), MCNumberFetchAsReal((MCNumberRef)*t_dst_as_number), t_real_result);
-			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
-		}
+            MCMathExecSubtractNumberFromNumber(ctxt, t_src . double_value, t_dst . double_value, t_result . double_value);
 	}
+    
+    MCExecTypeRelease(t_src);
+    MCExecTypeRelease(t_dst);
 	
 	if (!ctxt . HasError())
 	{
 		if (destvar != nil)
 		{
-			if (t_dst_container -> set_valueref(*t_result))
+			if (t_dst_container -> give_value(ctxt, t_result))
                 return;
 			ctxt . Throw();
 		}
 		else
 		{
-			if (dest->set(ctxt, PT_INTO, *t_result))
+			if (dest->set(ctxt, PT_INTO, t_result))
                 return;
 
 			ctxt . LegacyThrow(EE_SUBTRACT_CANTSET);
