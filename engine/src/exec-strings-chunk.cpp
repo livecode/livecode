@@ -130,7 +130,8 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
                 
                 t_offset = MCU_min(t_newline_found ? t_offset : UINDEX_MAX, t_pg_found ? t_pg_offset : UINDEX_MAX);
                 
-                if (t_newline_found || t_pg_found)
+                // AL-2014-03-20: [[ Bug 11945 ]] Break if paragraph delimiters are not found, rather than if they are.
+                if (!t_newline_found && !t_pg_found)
                     break;
                 if (t_offset < t_end_index)
                     nchunks++;
