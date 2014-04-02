@@ -1100,32 +1100,41 @@ void MCMarking::exec_ctxt(MCExecContext &ctxt)
         else
             MCInterfaceExecUnmarkCard(ctxt, t_object);
 	}
-    if (tofind == nil)
-        if (mark)
-        {
-            if (where != nil)
-                MCInterfaceExecMarkCardsConditional(ctxt, where);
-            else
-                MCInterfaceExecMarkAllCards(ctxt);
-        }
-        else
-        {
-            if (where != nil)
-                MCInterfaceExecUnmarkCardsConditional(ctxt, where);
-            else
-                MCInterfaceExecUnmarkAllCards(ctxt);
-        }
-	else
+    // SN-2014-03-21 [[ Bug 11950 ]]: 'mark' shouldn't throw an error when failing to mark when card is nil
+    // Any error set is discarded in the end of this block - unless is was triggered by a bad string.
+    else
     {
-        MCAutoStringRef t_needle;
-
-        if (!ctxt . EvalExprAsStringRef(tofind, EE_MARK_BADSTRING, &t_needle))
-            return;
-
-        if (mark)
-            MCInterfaceExecMarkFind(ctxt, mode, *t_needle, field);
+        if (tofind == nil)
+        {
+            if (mark)
+            {
+                if (where != nil)
+                    MCInterfaceExecMarkCardsConditional(ctxt, where);
+                else
+                    MCInterfaceExecMarkAllCards(ctxt);
+            }
+            else
+            {
+                if (where != nil)
+                    MCInterfaceExecUnmarkCardsConditional(ctxt, where);
+                else
+                    MCInterfaceExecUnmarkAllCards(ctxt);
+            }
+        }
         else
-            MCInterfaceExecUnmarkFind(ctxt, mode, *t_needle, field);
+        {
+            MCAutoStringRef t_needle;
+            
+            if (!ctxt . EvalExprAsStringRef(tofind, EE_MARK_BADSTRING, &t_needle))
+                return;
+            
+            if (mark)
+                MCInterfaceExecMarkFind(ctxt, mode, *t_needle, field);
+            else
+                MCInterfaceExecUnmarkFind(ctxt, mode, *t_needle, field);
+        }
+        
+        ctxt . IgnoreLastError();
     }
 }
 
