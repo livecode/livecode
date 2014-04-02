@@ -1009,7 +1009,8 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
                     unichar_t t_hexa_num[5];
                     t_hexa_num[0] = '0';
                     t_hexa_num[1] = 'x';
-                    memcpy(&t_hexa_num[1], format, 2*sizeof(unichar_t));
+                    // AL-2014-04-02: [[ Bug 12065 ]] Typo in target array index (t_hexa_num[1]) caused crash.
+                    memcpy(&t_hexa_num[2], format, 2*sizeof(unichar_t));
                     t_hexa_num[4] = '\0';
 
                     MCAutoNumberRef t_number;
