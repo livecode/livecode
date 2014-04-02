@@ -4,6 +4,8 @@
 
 The LiveCode engine until now supported in-app purchasing for apps distributed through the Google Play store (formerly Android Market), as well as the Apple AppStore. This support is now extended so that apps distributed through other avenues (the Amazon & Samsung app stores) can make use of the in-app purchase features provided. For this reason, new LiveCode commands have been added, and some of the old ones have slightly changed. However, all of the old commands are still supported (for the Google Play Store and the Apple AppStore). In order the existing scripts users have written to continue to work, all it needs is to add one or two extra lines, depending on the store. More details on this later. Moreover, the new API allows the user to query specific product information (such as price, description etc) before they make a purchase, and supports purchasing of subscription items for all available stores. Furthermore, for the Google Play Store, the new API uses the newest version of Google In-App Billing API (v3), that offers synchronous purchase flow, and purchase information is available immediately after it completes. This information of in-app purchases is maintained within the Google Play system until the purchase is *consumed*. More on the consumption of purchased items later.
 
+Note that our in-app purchasing implementation for the Amazon Appstore is unfortunately restricted to commercial license holders only. This is due to the Amazon PML license being incompatible with the GPL. If you wish to use the Amazon in-app purchasing features of LiveCode you will need to be a valid commercial licence holder.
+
 **What has changed?**
 
 To start with, the main changes are the following:
@@ -39,7 +41,7 @@ To start with, the main changes are the following:
 
 	**mobileStoreProductProperty** *productID*, *propertyName*
 
-	Note that the old function **mobileGetPurchase** *purchaseID*, *propertyName* will still work.
+	Note that the old function **mobilePurchaseGet** *purchaseID*, *propertyName* will still work.
 
 *  You can get information on a specific item (such as product identifier, product type, price etc), using the **mobileStoreRequestProductDetails** command. The store responds:
 
