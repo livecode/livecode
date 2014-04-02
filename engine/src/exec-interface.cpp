@@ -678,9 +678,10 @@ void MCInterfaceEvalMouseV(MCExecContext& ctxt, integer_t& r_value)
 void MCInterfaceEvalMouseLoc(MCExecContext& ctxt, MCStringRef& r_string)
 {
 	int16_t x, y;
-	MCscreen->querymouse(x, y);
-    MCRectangle t_rect = MCdefaultstackptr -> getrect();
-    if (MCStringFormat(r_string, "%d,%d", x - t_rect . x, y - t_rect . y))
+	MCscreen->querymouse(x, y); 
+    MCPoint t_mouse_loc;
+    t_mouse_loc = MCdefaultstackptr -> globaltostackloc(MCPointMake(x, y));
+    if (MCStringFormat(r_string, "%d,%d", t_mouse_loc. x, t_mouse_loc . y))
         return;
     ctxt . Throw();
 }
