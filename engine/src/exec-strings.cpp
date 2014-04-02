@@ -1729,9 +1729,12 @@ bool MCRegexMatcher::compile(MCStringRef& r_error)
     return true;
 }
 
-bool MCRegexMatcher::match(MCStringRef s)
+bool MCRegexMatcher::match(MCRange p_range)
 {
-	return MCR_exec(compiled, s);
+    MCAutoStringRef t_string;
+    MCStringCopySubstring(source, p_range, &t_string);
+    
+	return MCR_exec(compiled, *t_string);
 }
 
 bool MCWildcardMatcher::compile(MCStringRef& r_error)
@@ -1743,118 +1746,119 @@ bool MCWildcardMatcher::compile(MCStringRef& r_error)
 #define OPEN_BRACKET '['
 #define CLOSE_BRACKET ']'
 
-//bool MCStringsWildcardMatch(const char *s, uindex_t s_length, const char *p, uindex_t p_length, bool casesensitive)
-//{
-//	uindex_t s_index = 0;
-//	uindex_t p_index = 0;
-//	uint1 scc, c;
-//
-//	while (s_index < s_length)
-//	{
-//		scc = *s++;
-//		s_index++;
-//		c = *p++;
-//		p_index++;
-//		switch (c)
-//		{
-//		case OPEN_BRACKET:
-//			{
-//				bool ok = false;
-//				int lc = -1;
-//				int notflag = 0;
-//
-//				if (*p == '!' )
-//				{
-//					notflag = 1;
-//					p++;
-//					p_index++;
-//				}
-//				while (p_index < p_length)
-//				{
-//					c = *p++;
-//					p_index++;
-//					if (c == CLOSE_BRACKET && lc >= 0)
-//						return ok ? MCStringsWildcardMatch(s, s_length - s_index, p, p_length - p_index, casesensitive) : false;
-//					else
-//						if (c == '-' && lc >= 0 && *p != CLOSE_BRACKET)
-//						{
-//							c = *p++;
-//							p_index++;
-//							if (notflag)
-//							{
-//								if (lc > scc || scc > c)
-//									ok = true;
-//								else
-//									return false;
-//							}
-//							else
-//							{
-//								if (lc < scc && scc <= c)
-//									ok = true;
-//							}
-//						}
-//						else
-//						{
-//							if (notflag)
-//							{
-//								if (scc != c)
-//									ok = true;
-//								else
-//									return false;
-//							}
-//							else
-//								if (scc == c)
-//									ok = true;
-//							lc = c;
-//						}
-//				}
-//			}
-//			return false;
-//		case '?':
-//			break;
-//		case '*':
-//			while (*p == '*')
-//			{
-//				p++;
-//				p_index++;
-//			}
-//			if (*p == 0)
-//				return true;
-//			--s;
-//			--s_index;
-//			c = *p;
-//			while (*s)
-//				if ((casesensitive ? c != *s : MCS_tolower(c) != MCS_tolower(*s))
-//				        && *p != '?' && *p != OPEN_BRACKET)
-//				{
-//					s++;
-//					s_index++;
-//				}
-//				else
-//					if (MCStringsWildcardMatch(s++, s_length - s_index++, p, p_length - p_index, casesensitive))
-//						return true;
-//			return false;
-//		case 0:
-//			return scc == 0;
-//		default:
-//			if (casesensitive)
-//			{
-//				if (c != scc)
-//					return false;
-//			}
-//			else
-//				if (MCS_tolower(c) != MCS_tolower(scc))
-//					return false;
-//			break;
-//		}
-//	}
-//	while (p_index < p_length && *p == '*')
-//	{
-//		p++;
-//		p_index++;
-//	}
-//	return p_index == p_length;
-//}
+/*
+bool MCStringsWildcardMatch(const char *s, uindex_t s_length, const char *p, uindex_t p_length, bool casesensitive)
+{
+	uindex_t s_index = 0;
+	uindex_t p_index = 0;
+	uint1 scc, c;
+
+	while (s_index < s_length)
+	{
+		scc = *s++;
+		s_index++;
+		c = *p++;
+		p_index++;
+		switch (c)
+		{
+		case OPEN_BRACKET:
+			{
+				bool ok = false;
+				int lc = -1;
+				int notflag = 0;
+
+				if (*p == '!' )
+				{
+					notflag = 1;
+					p++;
+					p_index++;
+				}
+				while (p_index < p_length)
+				{
+					c = *p++;
+					p_index++;
+					if (c == CLOSE_BRACKET && lc >= 0)
+						return ok ? MCStringsWildcardMatch(s, s_length - s_index, p, p_length - p_index, casesensitive) : false;
+					else
+						if (c == '-' && lc >= 0 && *p != CLOSE_BRACKET)
+						{
+							c = *p++;
+							p_index++;
+							if (notflag)
+							{
+								if (lc > scc || scc > c)
+									ok = true;
+								else
+									return false;
+							}
+							else
+							{
+								if (lc < scc && scc <= c)
+									ok = true;
+							}
+						}
+						else
+						{
+							if (notflag)
+							{
+								if (scc != c)
+									ok = true;
+								else
+									return false;
+							}
+							else
+								if (scc == c)
+									ok = true;
+							lc = c;
+						}
+				}
+			}
+			return false;
+		case '?':
+			break;
+		case '*':
+			while (*p == '*')
+			{
+				p++;
+				p_index++;
+			}
+			if (*p == 0)
+				return true;
+			--s;
+			--s_index;
+			c = *p;
+			while (*s)
+				if ((casesensitive ? c != *s : MCS_tolower(c) != MCS_tolower(*s))
+				        && *p != '?' && *p != OPEN_BRACKET)
+				{
+					s++;
+					s_index++;
+				}
+				else
+					if (MCStringsWildcardMatch(s++, s_length - s_index++, p, p_length - p_index, casesensitive))
+						return true;
+			return false;
+		case 0:
+			return scc == 0;
+		default:
+			if (casesensitive)
+			{
+				if (c != scc)
+					return false;
+			}
+			else
+				if (MCS_tolower(c) != MCS_tolower(scc))
+					return false;
+			break;
+		}
+	}
+	while (p_index < p_length && *p == '*')
+	{
+		p++;
+		p_index++;
+	}
+	return p_index == p_length;
+}
 
 index_t MCStringsWildcardCompareChar(MCStringRef p_input, uindex_t p_string_cu_offset, MCStringRef p_pattern, uindex_t p_pattern_cu_offset, MCUnicodeCompareOption p_option, uindex_t &r_string_char_cu, uindex_t &r_pattern_char_cu)
 {
@@ -1997,10 +2001,184 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, uindex_t p_string_offset, 
     
 	return p_index == p_length;
 }
-
-bool MCWildcardMatcher::match(MCStringRef s)
+*/
+bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter, MCRange p_srange, MCStringRef p_pattern, MCBreakIteratorRef p_piter, uindex_t p_pattern_offset, bool casesensitive)
 {
-	return MCStringsExecWildcardMatch(s, 0, pattern, 0, casesensitive);
+    // Break iterators locate the grapheme boundaries. Whenever we need to compare chars,
+    // we record the index, advance the iterator, and compare the intervening codeunits.
+	uindex_t s_index = p_srange . offset;
+	uindex_t p_index = p_pattern_offset;
+    
+    uindex_t s_end = s_index + p_srange . length;
+    uindex_t p_end = MCStringGetLength(p_pattern);
+    
+    MCUnicodeCompareOption t_comparison = casesensitive ? kMCUnicodeCompareOptionNormalised : kMCUnicodeCompareOptionCaseless;
+    
+    const unichar_t *sptr = MCStringGetCharPtr(p_string);
+    const unichar_t *pptr = MCStringGetCharPtr(p_pattern);
+    
+    // Codeunit ranges for the target source char pattern char, and previous pattern char
+    // (for expressions like [a-z])
+    MCRange t_srange, t_prange, t_lprange;
+    
+	while (s_index < s_end)
+	{
+        // set the source grapheme range
+        t_srange . offset = s_index;
+        s_index = MCLocaleBreakIteratorAfter(p_siter, s_index);
+        t_srange . length = s_index - t_srange . offset;
+        
+		switch (MCStringGetCharAtIndex(p_pattern, p_index))
+		{
+            case OPEN_BRACKET:
+			{
+                // Records whether we currently have a match for this bracket.
+				bool ok = false;
+                
+                t_lprange . offset = 0;
+                
+				int notflag = 0;
+                p_index++;
+                
+				if (MCStringGetCharAtIndex(p_pattern, p_index) == '!' )
+				{
+					notflag = 1;
+                    p_index++;
+				}
+				while (p_index < p_end)
+				{
+					if (MCStringGetCharAtIndex(p_pattern, p_index) == CLOSE_BRACKET && t_lprange . offset != 0)
+                    {
+                        // if the bracket was close with no match found then return false;
+                        if (!ok)
+                            return false;
+                        
+                        // otherwise, recurse.
+                        p_srange . offset++;
+                        p_srange . length--;
+						return MCStringsExecWildcardMatch(p_string, p_siter, p_srange, p_pattern, p_piter, ++p_index, casesensitive);
+                    }
+					else
+                    {
+						if (MCStringGetCharAtIndex(p_pattern, p_index) == '-' && t_lprange . offset != 0 && MCStringGetCharAtIndex(p_pattern, p_index + 1) != CLOSE_BRACKET)
+                        {
+                            // We have a char range (eg [a-z]), so skip past the '-',
+                            // find the current pattern grapheme range and compare.
+                            t_prange . offset = ++p_index;
+                            p_index = MCLocaleBreakIteratorAfter(p_piter, p_index);
+                            t_prange . length = p_index - t_prange . offset;
+                            
+							if (notflag)
+							{
+                                // wer're still ok if the current source grapheme falls outwith the appropriate range. Otherwise, we fail.
+								if (MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_lprange . offset, t_lprange . length, t_comparison) < 0
+                                    || MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_prange . offset, t_prange . length, t_comparison) > 0)
+									ok = true;
+								else
+									return false;
+							}
+							else
+							{
+                                 // we're still ok if the current source grapheme falls within the appropriate range.
+                                 // If not, there may be other options within this pair of brackets
+								if (MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_lprange . offset, t_lprange . length, t_comparison) > 0
+                                    && MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_prange . offset, t_prange . length, t_comparison) <= 0)
+									ok = true;
+							}
+						}
+						else
+						{
+                            // This could be one of a choice of characters (eg [abc]).
+                            t_prange . offset = p_index;
+                            p_index = MCLocaleBreakIteratorAfter(p_piter, p_index);
+                            t_prange . length = p_index - t_prange . offset;
+							if (notflag)
+							{
+								if (MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_prange . offset, t_prange . length, t_comparison) != 0)
+                                    ok = true;
+								else
+									return false;
+							}
+							else
+                                if (MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_prange . offset, t_prange . length, t_comparison) == 0)
+									ok = true;
+                            
+                            // record the grapheme in case it is the first character of a range.
+                            t_lprange . offset = t_prange . offset;
+                            t_lprange . length = t_prange . length;
+						}
+                    }
+				}
+			}
+                return false;
+            case '?':
+            {
+                // Matches any character, so increment the pattern index.
+                p_index++;
+                break;
+            }
+            case '*':
+            {
+                // consume any more * characters.
+                while (++p_index < p_end && MCStringGetCharAtIndex(p_pattern, p_index) == '*');
+                
+                if (p_index == p_end)
+                    return true;
+                
+                // Get the range of the next pattern grapheme
+                t_prange . offset = p_index;
+                p_index = MCLocaleBreakIteratorAfter(p_piter, p_index);
+                t_prange . length = p_index - t_prange . offset;
+                
+                // try and match the rest of the source string recursively.
+                while (t_srange . offset < s_end)
+                {
+                    // if this is a candidate for a match, recurse.
+                    if (MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_prange . offset, t_prange . length, t_comparison) == 0)
+                    {
+                        p_srange . length = p_srange . length - s_index + p_srange . offset;
+                        p_srange . offset = s_index;
+                        if (MCStringsExecWildcardMatch(p_string, p_siter, p_srange, p_pattern, p_piter, p_index, casesensitive))
+                            return true;
+                    }
+                    else if (MCStringGetCharAtIndex(p_pattern, t_prange . offset) == '?' || MCStringGetCharAtIndex(p_pattern, t_prange . offset) == OPEN_BRACKET)
+                    {
+                        p_srange . length = p_srange . length - t_srange . offset + p_srange . offset;
+                        p_srange . offset = t_srange . offset;
+                        if (MCStringsExecWildcardMatch(p_string, p_siter, p_srange, p_pattern, p_piter, t_prange . offset, casesensitive))
+                            return true;
+                    }
+                    
+                    // Otherwise eat the char
+                    t_srange . offset = s_index;
+                    s_index = MCLocaleBreakIteratorAfter(p_siter, s_index);
+                    t_srange . length = s_index - t_srange . offset;
+                }
+            }
+                return false;
+            case 0:
+                return MCStringGetCharAtIndex(p_string, s_index) == 0;
+            default:
+                // default - just compare chars
+                t_prange . offset = p_index;
+                p_index = MCLocaleBreakIteratorAfter(p_piter, p_index);
+                t_prange . length = p_index - t_prange . offset;
+                if (MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_prange . offset, t_prange . length, t_comparison) != 0)
+                    return false;
+                
+                break;
+		}
+	}
+    // Eat any remaining '*'s
+	while (p_index < p_end && MCStringGetCharAtIndex(p_pattern, p_index) == '*')
+		p_index++;
+    
+	return p_index == p_end;
+}
+
+bool MCWildcardMatcher::match(MCRange p_source_range)
+{
+	return MCStringsExecWildcardMatch(source, source_iter, p_source_range, pattern, pattern_iter, 0, casesensitive);
 }
 
 void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, bool p_without, char_t p_delimiter, MCPatternMatcher *p_matcher, MCStringRef &r_result)
@@ -2020,23 +2198,29 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
     uindex_t t_last_offset = 0;
 	bool t_found = true;
     bool t_success = true;
+    
+    MCRange t_chunk_range;
+    
 	while (t_found && t_success)
 	{
         MCAutoStringRef t_line;
-		t_found = MCStringFirstIndexOfChar(p_source, p_delimiter, t_last_offset, kMCCompareCaseless, t_return_offset);
+		t_found = MCStringFirstIndexOfChar(p_source, p_delimiter, t_last_offset, kMCCompareExact, t_return_offset);
 		if (!t_found) //last line or item
-            t_success = MCStringCopySubstring(p_source, MCRangeMake(t_last_offset, t_length - t_last_offset), &t_line);
+        {
+            t_chunk_range . offset = t_last_offset;
+            t_chunk_range . length = t_length - t_last_offset;
+        }
 		else
         {
-            if (t_return_offset == t_last_offset)
-                // Two delimiters in a row
-                t_line = kMCEmptyString;
-            else
-                t_success = MCStringCopySubstring(p_source, MCRangeMake(t_last_offset, t_return_offset - t_last_offset), &t_line);
+            t_chunk_range . offset = t_last_offset;
+            t_chunk_range . length = t_return_offset - t_last_offset;
         }
         
-        if (t_success && p_matcher -> match(*t_line) != p_without)
-            t_success = MCListAppend(*t_output, *t_line);
+        if (t_success && (p_matcher -> match(t_chunk_range) != p_without))
+        {
+            MCAutoStringRef t_line;
+            t_success = MCStringCopySubstring(p_source, t_chunk_range, &t_line) && MCListAppend(*t_output, *t_line);
+        }
 
 		t_last_offset = t_return_offset + 1;
 	}
@@ -2057,7 +2241,7 @@ void MCStringsExecFilterWildcard(MCExecContext& ctxt, MCStringRef p_source, MCSt
 {
     // Create the pattern matcher
 	MCPatternMatcher *matcher;
-    matcher = new MCWildcardMatcher(p_pattern, ctxt . GetCaseSensitive());
+    matcher = new MCWildcardMatcher(p_pattern, p_source, ctxt . GetCaseSensitive(), ctxt . GetFormSensitive());
     
     MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), matcher, r_result);
     
@@ -2068,7 +2252,7 @@ void MCStringsExecFilterRegex(MCExecContext& ctxt, MCStringRef p_source, MCStrin
 {
 	// Create the pattern matcher
 	MCPatternMatcher *matcher;
-    matcher = new MCRegexMatcher(p_pattern, ctxt . GetCaseSensitive());
+    matcher = new MCRegexMatcher(p_pattern, p_source, ctxt . GetCaseSensitive(), ctxt . GetFormSensitive());
     
     MCAutoStringRef t_regex_error;
     if (!matcher -> compile(&t_regex_error))

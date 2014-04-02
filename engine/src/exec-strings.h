@@ -24,16 +24,20 @@ class MCPatternMatcher
 {
 protected:
 	MCStringRef pattern;
+    MCStringRef source;
 	bool casesensitive;
+    bool formsensitive;
 public:
-	MCPatternMatcher(MCStringRef p, bool cs)
+	MCPatternMatcher(MCStringRef p, MCStringRef s, bool cs, bool fs)
 	{
 		pattern = MCValueRetain(p);
+        source = MCValueRetain(s);
 		casesensitive = cs;
+        formsensitive = fs;
 	}
 	virtual ~MCPatternMatcher();
 	virtual bool compile(MCStringRef& r_error) = 0;
-	virtual bool match(MCStringRef s) = 0;
+	virtual bool match(MCRange p_range) = 0;
 };
 
 class MCRegexMatcher : public MCPatternMatcher
@@ -41,29 +45,43 @@ class MCRegexMatcher : public MCPatternMatcher
 protected:
 	regexp *compiled;
 public:
-	MCRegexMatcher(MCStringRef p, bool cs) : MCPatternMatcher(p, cs)
+	MCRegexMatcher(MCStringRef p, MCStringRef s, bool cs, bool fs) : MCPatternMatcher(p, s, cs, fs)
 	{
 		compiled = NULL;
 	}
 	virtual bool compile(MCStringRef& r_error);
-	virtual bool match(MCStringRef s);
+	virtual bool match(MCRange p_range);
 };
 
 class MCWildcardMatcher : public MCPatternMatcher
 {
+    MCBreakIteratorRef pattern_iter;
+    MCBreakIteratorRef source_iter;
 public:
-	MCWildcardMatcher(MCStringRef p, Boolean cs) : MCPatternMatcher(p, cs)
+	MCWildcardMatcher(MCStringRef p, MCStringRef s, bool cs, bool fs) : MCPatternMatcher(p, s, cs, fs)
 	{
+        MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeCharacter, pattern_iter);
+        MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeCharacter, source_iter);
+        MCLocaleBreakIteratorSetText(pattern_iter, p);
+        MCLocaleBreakIteratorSetText(source_iter, s);
 	}
+    ~MCWildcardMatcher();
 	virtual bool compile(MCStringRef& r_error);
-	virtual bool match(MCStringRef s);
+	virtual bool match(MCRange p_range);
 protected:
 	static bool match(const char *s, const char *p, Boolean cs);
 };
 
+MCWildcardMatcher::~MCWildcardMatcher()
+{
+    MCLocaleBreakIteratorRelease(pattern_iter);
+    MCLocaleBreakIteratorRelease(source_iter);
+}
+
 MCPatternMatcher::~MCPatternMatcher()
 {
 	MCValueRelease(pattern);
+    MCValueRelease(source);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
