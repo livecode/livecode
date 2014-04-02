@@ -3973,7 +3973,7 @@ void MCInterfaceExecSortCardsOfStack(MCExecContext &ctxt, MCStack *p_target, boo
 	if (p_target == nil)
 		p_target = MCdefaultstackptr;
 
-	if (p_target->sort(ctxt, p_ascending ? ST_ASCENDING : ST_DESCENDING, (Sort_type)p_format, p_by, p_only_marked) != ES_NORMAL)
+	if (!p_target->sort(ctxt, p_ascending ? ST_ASCENDING : ST_DESCENDING, (Sort_type)p_format, p_by, p_only_marked))
 		ctxt . LegacyThrow(EE_SORT_CANTSORT);
 }
 
