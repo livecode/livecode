@@ -875,6 +875,10 @@ void MCFind::exec_ctxt(MCExecContext& ctxt)
         return;
 
     MCInterfaceExecFind(ctxt, mode, *t_needle, field);
+    
+    // SN-2014-03-21: [[ Bug 11949 ]] 'find' shouldn't throw an error on a failure
+    // but MCInterfaceExecFind would cause the context to be set on error if finding fails
+    ctxt . IgnoreLastError();
 }
 
 void MCFind::compile(MCSyntaxFactoryRef ctxt)
