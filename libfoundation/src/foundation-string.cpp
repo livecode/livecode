@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd
+ /* Copyright (C) 2003-2013 Runtime Revolution Ltd
 
 This file is part of LiveCode.
 
@@ -1010,7 +1010,7 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
     return MCStringMapIndices(self, kMCBreakIteratorTypeCharacter, p_locale, p_in_range, r_out_range);
 }
 
-static bool MCStringCodepointIsWordPart(codepoint_t p_codepoint)
+bool MCStringCodepointIsWordPart(codepoint_t p_codepoint)
 {
     return MCUnicodeIsAlphabetic(p_codepoint) || MCUnicodeIsDigit(p_codepoint);
 }
@@ -1032,68 +1032,24 @@ bool MCStringMapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
         return false;
     }
 
-    uindex_t t_start, t_left_break, t_right_break;
-    t_right_break = 0;
-    t_start = t_right_break;
     p_in_range . offset++;
     
-    // Advance to the beginning of the specified range
-    while (t_right_break != kMCLocaleBreakIteratorDone && p_in_range . offset)
-    {
-        t_left_break = t_right_break;
-        t_start = t_left_break;
-        
-        t_right_break = MCLocaleBreakIteratorAdvance(t_iter);
-        
-        // if the intervening chars contain a letter or number then it was a valid 'word'
-        while (t_left_break < t_right_break)
-        {
-            if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(self, t_left_break)))
-                break;
-            if (MCStringIsValidSurrogatePair(self, t_left_break++))
-                t_left_break++;
-        }
-        
-        if (t_left_break < t_right_break)
-            p_in_range . offset--;
-    }
+    MCRange t_word_range = MCRangeMake(0, 0);
     
-    if (t_start == kMCLocaleBreakIteratorDone)
-    {
-        r_out_range = MCRangeMake(self -> char_count, 0);
-        return true;
-    }
+    // Advance to the beginning of the specified range
+    while (p_in_range . offset-- && MCLocaleWordBreakIteratorAdvance(self, t_iter, t_word_range))
+        ;
 
     // Advance to the end of the current word
-    uindex_t t_end = t_right_break;
+    uindex_t t_start = t_word_range . offset;
     p_in_range . length--;
     
     // While more words are requested, find the end of the next word.
-    while (t_end != kMCLocaleBreakIteratorDone && p_in_range . length)
-    {
-        t_left_break = t_right_break;
-        t_right_break = MCLocaleBreakIteratorAdvance(t_iter);
-        
-        // if the intervening chars contain a letter or number then it was a valid 'word'
-        while (t_left_break < t_right_break)
-        {
-            if (MCStringCodepointIsWordPart(MCStringGetCodepointAtIndex(self, t_left_break)))
-                break;
-            if (MCStringIsValidSurrogatePair(self, t_left_break++))
-                t_left_break++;
-        }
-        
-        if (t_left_break < t_right_break)
-            p_in_range . length--;
-        
-        t_end = t_right_break;
-    }
-    
-    if (t_end == kMCLocaleBreakIteratorDone)
-        t_end = self -> char_count;
+    while (p_in_range . length-- && MCLocaleWordBreakIteratorAdvance(self, t_iter, t_word_range))
+        ;
     
     MCRange t_units;
-    t_units = MCRangeMake(t_start, t_end - t_start);
+    t_units = MCRangeMake(t_start, t_word_range . offset + t_word_range . length - t_start);
     
     // All done
     MCLocaleBreakIteratorRelease(t_iter);
@@ -1894,7 +1850,7 @@ uindex_t MCStringCount(MCStringRef self, MCRange p_range, MCStringRef p_needle, 
 uindex_t MCStringCountChar(MCStringRef self, MCRange p_range, codepoint_t p_needle, MCStringOptions p_options)
 {
 	// We only support ASCII for now.
-	MCAssert(p_needle < 128);
+	//MCAssert(p_needle < 128);
 	
 	strchar_t t_native_needle;
 	t_native_needle = (strchar_t)p_needle;

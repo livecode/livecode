@@ -2118,18 +2118,39 @@ void MCStringsEvalDoesNotContain(MCExecContext& ctxt, MCStringRef p_whole, MCStr
 void MCStringsEvalBeginsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result);
 void MCStringsEvalEndsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result);
 
-void MCStringsEvalIsAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_token, MCStringRef p_string, bool& r_result);
-void MCStringsEvalIsNotAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_token, MCStringRef p_string, bool& r_result);
-void MCStringsEvalIsAmongTheWordsOf(MCExecContext& ctxt, MCStringRef p_word, MCStringRef p_string, bool& r_result);
-void MCStringsEvalIsNotAmongTheWordsOf(MCExecContext& ctxt, MCStringRef p_word, MCStringRef p_string, bool& r_result);
-void MCStringsEvalIsAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_line, MCStringRef p_string, bool& r_result);
-void MCStringsEvalIsNotAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_line, MCStringRef p_string, bool& r_result);
-void MCStringsEvalIsAmongTheItemsOf(MCExecContext& ctxt, MCStringRef p_item, MCStringRef p_string, bool& r_result);
-void MCStringsEvalIsNotAmongTheItemsOf(MCExecContext& ctxt, MCStringRef p_item, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheParagraphsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheParagraphsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheSentencesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheSentencesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheItemsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheItemsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheWordsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheWordsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheTrueWordsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheTrueWordsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheCharsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheCharsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheCodepointsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheCodepointsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheCodeunitsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheCodeunitsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheBytesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheBytesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
 
-void MCStringsEvalItemOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
 void MCStringsEvalLineOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
+void MCStringsEvalParagraphOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
+void MCStringsEvalSentenceOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
+void MCStringsEvalItemOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
 void MCStringsEvalWordOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
+void MCStringsEvalTrueWordOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
+void MCStringsEvalTokenOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
+void MCStringsEvalCodepointOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
+void MCStringsEvalCodeunitOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
+void MCStringsEvalByteOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
 void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
 
 void MCStringsExecReplace(MCExecContext& ctxt, MCStringRef p_pattern, MCStringRef p_replacement, MCStringRef p_target);
@@ -2228,7 +2249,6 @@ void MCStringsMarkBytesOfTextByRange(MCExecContext& ctxt, integer_t p_first, int
 void MCStringsMarkBytesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark);
 
 void MCStringsSkipWord(MCExecContext& ctxt, MCStringRef p_string, bool p_skip_spaces, uindex_t& x_offset);
-bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_chunk_type, uindex_t t_length, MCRange& x_range, bool p_not_first, bool& r_last);
 
 ///////////
 

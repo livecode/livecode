@@ -1493,6 +1493,9 @@ bool MCStringMapParagraphIndices(MCStringRef, MCLocaleRef, MCRange p_paragraph_r
 // Maps from a codeunit (StringRef) range to a word range
 bool MCStringUnmapParagraphIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange &r_paragraph_range);
 
+// Returns true if the codepoint is alphabetic or numeric.
+bool MCStringCodepointIsWordPart(codepoint_t p_codepoint);
+
 // Flexible grapheme/codepoint/codeunit mapping used for "char" chunk expressions
 enum MCCharChunkType
 {

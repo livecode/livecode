@@ -33,6 +33,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "exec-strings.h"
 
+#include "chunk.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, ToLower, 2)
@@ -58,17 +60,38 @@ MC_EXEC_DEFINE_EVAL_METHOD(Strings, Contains, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, DoesNotContain, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, BeginsWith, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, EndsWith, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheTokensOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheTokensOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheWordsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheWordsOf, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheLinesOf, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheLinesOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheParagraphsOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheParagraphsOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheSentencesOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheSentencesOf, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheItemsOf, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheItemsOf, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ItemOffset, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheWordsOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheWordsOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheTrueWordsOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheTrueWordsOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheTokensOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheTokensOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheCharsOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheCharsOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheCodepointsOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheCodepointsOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheCodeunitsOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheCodeunitsOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAmongTheBytesOf, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAmongTheBytesOf, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, LineOffset, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, ParagraphOffset, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, SentenceOffset, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, ItemOffset, 4)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, WordOffset, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, TrueWordOffset, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, TokenOffset, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, CodepointOffset, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, CodeunitOffset, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Strings, ByteOffset, 4)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, Offset, 4)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsAscii, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Strings, IsNotAscii, 2)
@@ -1395,230 +1418,200 @@ void MCStringsEvalBeginsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringR
 }
 
 void MCStringsEvalEndsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
-{MCStringOptions t_compare_option = ctxt.GetStringComparisonType();	r_result = MCStringEndsWith(p_whole, p_part, t_compare_option);
+{
+    MCStringOptions t_compare_option = ctxt.GetStringComparisonType();
+    r_result = MCStringEndsWith(p_whole, p_part, t_compare_option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCStringsEvalIsAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_token, MCStringRef p_string, bool& r_result)
+bool MCStringsEvalIsAmongTheChunksOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_text, Chunk_term p_chunk_type)
 {
-	// IM-2012-08-24 Note - this relies on the old parser stuff, not sure if this
-	// will be replaced or dropped
-
-	MCCompareOptions t_options = ctxt.GetStringComparisonType();
-
-	MCScriptPoint sp(p_string);
-	Parse_stat ps = sp.nexttoken();
-	while (ps != PS_ERROR && ps != PS_EOF)
-	{
-        if (MCStringIsEqualTo(p_token, sp.gettoken_stringref(), t_options))
-		{
-			r_result = true;
-			return;
-		}
-		ps = sp.nexttoken();
-	}
-
-	r_result = false;
+    MCTextChunkIterator *tci;
+    tci = new MCTextChunkIterator(p_chunk_type, p_text);
+    return tci -> isamong(ctxt, p_chunk);
 }
 
-void MCStringsEvalIsNotAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_token, MCStringRef p_string, bool& r_result)
+void MCStringsEvalIsAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
 {
-	MCStringsEvalIsAmongTheTokensOf(ctxt, p_token, p_string, r_result);
+    r_result = MCStringsEvalIsAmongTheChunksOf(ctxt, p_chunk, p_string, CT_LINE);
+}
+
+void MCStringsEvalIsNotAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
+{
+    MCStringsEvalIsAmongTheLinesOf(ctxt, p_chunk, p_string, r_result);
 	r_result = !r_result;
 }
 
-bool MCStringsIterateWords(MCExecContext& ctxt, uindex_t& x_index, MCStringRef p_string, MCRange& r_word_range)
+void MCStringsEvalIsAmongTheParagraphsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
 {
-	uindex_t t_length = MCStringGetLength(p_string);
-    
-    unichar_t t_char;
-    
-    while (x_index < t_length && isspace(t_char = MCStringGetCharAtIndex(p_string, x_index)))
-        x_index++;
-    
-	if (x_index < t_length)
-	{
-		uindex_t t_word_start;
-		t_word_start = x_index;
-
-		if (t_char == '"')
-		{
-			x_index++;
-			while (x_index < t_length && (t_char = MCStringGetCharAtIndex(p_string, x_index) != '"') && t_char != '\n')
-				x_index++;
-			if (x_index < t_length)
-				x_index++;
-		}
-		else
-			while (x_index < t_length && !isspace(t_char))
-            {
-                x_index++;
-                t_char = MCStringGetCharAtIndex(p_string, x_index);
-            }
-
-		r_word_range = MCRangeMake(t_word_start, x_index - t_word_start);
-		return true;
-	}
-
-	return false;
+    r_result = MCStringsEvalIsAmongTheChunksOf(ctxt, p_chunk, p_string, CT_PARAGRAPH);
 }
 
-bool MCStringsIterateChunks(MCExecContext& ctxt, uindex_t& x_index, MCStringRef p_string, Chunk_term p_chunk_type, MCRange& r_chunk_range)
+void MCStringsEvalIsNotAmongTheParagraphsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
 {
-	if (p_chunk_type == CT_WORD)
-		return MCStringsIterateWords(ctxt, x_index, p_string, r_chunk_range);
-
-	codepoint_t t_delim = p_chunk_type == CT_LINE ? ctxt.GetLineDelimiter() : ctxt.GetItemDelimiter();
-
-	uindex_t t_length = MCStringGetLength(p_string);
-
-	if (x_index < t_length)
-	{
-		uindex_t t_offset;
-		if (MCStringFirstIndexOfChar(p_string, t_delim, x_index, kMCStringOptionCompareExact, t_offset))
-		{
-			r_chunk_range = MCRangeMake(x_index, t_offset - x_index);
-			x_index = t_offset + 1;
-		}
-		else
-		{
-			r_chunk_range = MCRangeMake(x_index, t_length - x_index);
-			x_index = t_length;
-		}
-		return true;
-	}
-	return false;
+    MCStringsEvalIsAmongTheParagraphsOf(ctxt, p_chunk, p_string, r_result);
+	r_result = !r_result;
 }
 
-//////////
-
-bool MCStringsIsAmongTheSplitChunksOf(MCExecContext& ctxt, MCStringRef p_item, MCStringRef p_string, Chunk_term p_chunk_type)
+void MCStringsEvalIsAmongTheSentencesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
 {
-	uindex_t t_index = 0;
-	MCRange t_range;
-	MCStringOptions t_options = ctxt.GetStringComparisonType();
-	while (MCStringsIterateChunks(ctxt, t_index, p_string, p_chunk_type, t_range))
-	{
-		if (MCStringSubstringIsEqualTo(p_string, t_range, p_item, t_options))
-			return true;
-	}
-	return false;
+    r_result = MCStringsEvalIsAmongTheChunksOf(ctxt, p_chunk, p_string, CT_SENTENCE);
 }
 
-void MCStringsEvalIsAmongTheWordsOf(MCExecContext& ctxt, MCStringRef p_word, MCStringRef p_string, bool& r_result)
+void MCStringsEvalIsNotAmongTheSentencesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
 {
-	r_result = MCStringsIsAmongTheSplitChunksOf(ctxt, p_word, p_string, CT_WORD);
+    MCStringsEvalIsAmongTheSentencesOf(ctxt, p_chunk, p_string, r_result);
+	r_result = !r_result;
 }
 
-void MCStringsEvalIsNotAmongTheWordsOf(MCExecContext& ctxt, MCStringRef p_word, MCStringRef p_string, bool& r_result)
+void MCStringsEvalIsAmongTheItemsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
 {
-	r_result = !MCStringsIsAmongTheSplitChunksOf(ctxt, p_word, p_string, CT_WORD);
+    r_result = MCStringsEvalIsAmongTheChunksOf(ctxt, p_chunk, p_string, CT_ITEM);
 }
 
-
-static bool MCStringsIsAmongTheChunksOfRange(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, Chunk_term p_chunk_type, MCStringOptions p_options, MCRange p_range)
+void MCStringsEvalIsNotAmongTheItemsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
 {
-	MCRange t_range;
-	if (!MCStringFind(p_string, p_range, p_chunk, p_options, &t_range))
-		return false;
-    
-	char_t t_delimiter;
-	t_delimiter = p_chunk_type == CT_ITEM ? ctxt . GetItemDelimiter() : ctxt . GetLineDelimiter();
-	
-    // if there is no delimiter to the left then continue searching the string.
-	if (t_range . offset != 0 &&
-		MCStringGetNativeCharAtIndex(p_string, t_range . offset - 1) != t_delimiter)
-		return MCStringsIsAmongTheChunksOfRange(ctxt, p_chunk, p_string, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
-    
-    // if there is no delimiter to the right then continue searching the string.
-	if (t_range . offset + t_range . length != MCStringGetLength(p_string) &&
-		MCStringGetNativeCharAtIndex(p_string, t_range . offset + t_range . length) != t_delimiter)
-		return MCStringsIsAmongTheChunksOfRange(ctxt, p_chunk, p_string, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
-    
-	return true;
+    MCStringsEvalIsAmongTheItemsOf(ctxt, p_chunk, p_string, r_result);
+	r_result = !r_result;
 }
 
-// MW-2013-01-21: The (current) behavior of 'is among' compares chunks if
-//   the pattern is empty. Otherwise, it (essentially) searches for the
-//   pattern in the string and ensures it has a delimiter either side.
-//   i.e. "a,b" is among the items of "a,b,c" -- TRUE
-//        "a,b" is among the items of "aa,b,cc" -- FALSE
-
-static bool MCStringsIsAmongTheChunksOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, Chunk_term p_chunk_type)
+void MCStringsEvalIsAmongTheWordsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
 {
-	// First search for the pattern.
-	MCStringOptions t_options;
-	t_options = ctxt.GetStringComparisonType();
-    return MCStringsIsAmongTheChunksOfRange(ctxt, p_chunk, p_string, p_chunk_type, t_options, MCRangeMake(0, UINDEX_MAX));
+    r_result = MCStringsEvalIsAmongTheChunksOf(ctxt, p_chunk, p_string, CT_WORD);
 }
 
-void MCStringsEvalIsAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_line, MCStringRef p_string, bool& r_result)
+void MCStringsEvalIsNotAmongTheWordsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
 {
-	if (MCValueIsEmpty(p_line))
-		r_result = MCStringsIsAmongTheSplitChunksOf(ctxt, p_line, p_string, CT_LINE);
-	else
-		r_result = MCStringsIsAmongTheChunksOf(ctxt, p_line, p_string, CT_LINE);
+    MCStringsEvalIsAmongTheWordsOf(ctxt, p_chunk, p_string, r_result);
+	r_result = !r_result;
 }
 
-void MCStringsEvalIsNotAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_line, MCStringRef p_string, bool& r_result)
+void MCStringsEvalIsAmongTheTrueWordsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
 {
-	if (MCValueIsEmpty(p_line))
-		r_result = !MCStringsIsAmongTheSplitChunksOf(ctxt, p_line, p_string, CT_LINE);
-	else
-		r_result = !MCStringsIsAmongTheChunksOf(ctxt, p_line, p_string, CT_LINE);
+    r_result = MCStringsEvalIsAmongTheChunksOf(ctxt, p_chunk, p_string, CT_TRUEWORD);
 }
 
-void MCStringsEvalIsAmongTheItemsOf(MCExecContext& ctxt, MCStringRef p_item, MCStringRef p_string, bool& r_result)
+void MCStringsEvalIsNotAmongTheTrueWordsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
 {
-	if (MCValueIsEmpty(p_item))
-		r_result = MCStringsIsAmongTheSplitChunksOf(ctxt, p_item, p_string, CT_ITEM);
-	else
-		r_result = MCStringsIsAmongTheChunksOf(ctxt, p_item, p_string, CT_ITEM);
+    MCStringsEvalIsAmongTheTrueWordsOf(ctxt, p_chunk, p_string, r_result);
+	r_result = !r_result;
 }
 
-void MCStringsEvalIsNotAmongTheItemsOf(MCExecContext& ctxt, MCStringRef p_item, MCStringRef p_string, bool& r_result)
+void MCStringsEvalIsAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
 {
-	if (MCValueIsEmpty(p_item))
-		r_result = !MCStringsIsAmongTheSplitChunksOf(ctxt, p_item, p_string, CT_ITEM);
-	else
-		r_result = !MCStringsIsAmongTheChunksOf(ctxt, p_item, p_string, CT_ITEM);
+    r_result = MCStringsEvalIsAmongTheChunksOf(ctxt, p_chunk, p_string, CT_TOKEN);
+}
+
+void MCStringsEvalIsNotAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
+{
+    MCStringsEvalIsAmongTheTokensOf(ctxt, p_chunk, p_string, r_result);
+	r_result = !r_result;
+}
+
+void MCStringsEvalIsAmongTheCharsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
+{
+    r_result = MCStringsEvalIsAmongTheChunksOf(ctxt, p_chunk, p_string, CT_CHARACTER);
+}
+
+void MCStringsEvalIsNotAmongTheCharsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
+{
+    MCStringsEvalIsAmongTheCharsOf(ctxt, p_chunk, p_string, r_result);
+	r_result = !r_result;
+}
+
+void MCStringsEvalIsAmongTheCodepointsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
+{
+    r_result = MCStringsEvalIsAmongTheChunksOf(ctxt, p_chunk, p_string, CT_CODEPOINT);
+}
+
+void MCStringsEvalIsNotAmongTheCodepointsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
+{
+    MCStringsEvalIsAmongTheCodepointsOf(ctxt, p_chunk, p_string, r_result);
+	r_result = !r_result;
+}
+
+void MCStringsEvalIsAmongTheCodeunitsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
+{
+    r_result = MCStringsEvalIsAmongTheChunksOf(ctxt, p_chunk, p_string, CT_CODEUNIT);
+}
+
+void MCStringsEvalIsNotAmongTheCodeunitsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
+{
+    MCStringsEvalIsAmongTheCodeunitsOf(ctxt, p_chunk, p_string, r_result);
+	r_result = !r_result;
+}
+
+void MCStringsEvalIsAmongTheBytesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
+{
+    r_result = MCStringsEvalIsAmongTheChunksOf(ctxt, p_chunk, p_string, CT_BYTE);
+}
+
+void MCStringsEvalIsNotAmongTheBytesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
+{
+    MCStringsEvalIsAmongTheBytesOf(ctxt, p_chunk, p_string, r_result);
+	r_result = !r_result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCStringsSplitChunkOffset(MCExecContext& ctxt, MCStringRef p_item, MCStringRef p_string, Chunk_term p_chunk_type, uindex_t p_skip, uindex_t& r_offset)
+uindex_t MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, Chunk_term p_chunk_type)
 {
-	uindex_t t_index = 0;
-	r_offset = 1;
-	MCRange t_range;
-	MCStringOptions t_options = ctxt.GetStringComparisonType();
-	while (MCStringsIterateChunks(ctxt, t_index, p_string, p_chunk_type, t_range))
-	{
-		if (p_skip > 0)
-			p_skip--;
-		else
-		{
-			if (ctxt.GetWholeMatches())
-			{
-				if (MCStringSubstringIsEqualTo(p_string, t_range, p_item, t_options))
-					return true;
-			}
-			else
-			{
-				if (MCStringSubstringContains(p_string, t_range, p_item, t_options))
-					return true;
-			}
-			r_offset++;
-		}
-	}
-	return false;
+    MCTextChunkIterator *tci;
+    tci = new MCTextChunkIterator(p_chunk_type, p_string);
+    uindex_t t_offset = tci -> chunkoffset(ctxt, p_chunk, p_start_offset);
+    delete tci;
+    return t_offset;
+}
+
+void MCStringsEvalLineOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
+{
+    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_LINE);
+}
+
+void MCStringsEvalParagraphOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
+{
+    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_PARAGRAPH);
+}
+
+void MCStringsEvalSentenceOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
+{
+    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_SENTENCE);
+}
+
+void MCStringsEvalItemOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
+{
+    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_ITEM);
 }
 
 void MCStringsEvalWordOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-	if (!MCStringsSplitChunkOffset(ctxt, p_chunk, p_string, CT_WORD, p_start_offset, r_result))
-		r_result = 0;
+    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_WORD);
+}
+
+void MCStringsEvalTrueWordOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
+{
+    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_TRUEWORD);
+}
+
+void MCStringsEvalTokenOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
+{
+    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_TOKEN);
+}
+
+void MCStringsEvalCodepointOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
+{
+    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_CODEPOINT);
+}
+
+void MCStringsEvalCodeunitOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
+{
+    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_CODEUNIT);
+}
+
+void MCStringsEvalByteOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
+{
+    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_BYTE);
 }
 
 void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
@@ -1628,76 +1621,6 @@ void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p
 		r_result = 0;
 	else
 		r_result = r_result + 1 - p_start_offset;
-}
-
-// MW-2013-01-21: item/line offset do not currently operate on a 'split' basis.
-//   Instead, they return the index of the chunk in which p_chunk starts and if
-//   wholeMatches is true, then before and after the found range must be the del
-//   or eos. e.g.
-//     itemOffset("a,b", "aa,b,cc") => 1 if wholeMatches false, 0 otherwise
-//     itemOffset("b,c", "a,b,c") => 2
-
-bool MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_item, MCStringRef p_string, Chunk_term p_chunk_type, uindex_t p_skip, uindex_t& r_offset)
-{
-	MCStringOptions t_options;
-	t_options = ctxt.GetStringComparisonType();
-	
-	// Skip ahead to the first chunk of interest.
-	uindex_t t_index;
-	MCRange t_first_chunk_range;
-	t_index = 0;
-    t_first_chunk_range = MCRangeMake(0, MCStringGetLength(p_string));
-
-    // Ensure that when no item is skipped, the offset starts from the first item - without skipping it
-    if (p_skip == 0)
-        r_offset = 1;
-    else
-        r_offset = 0;
-
-	while(p_skip > 0 && MCStringsIterateChunks(ctxt, t_index, p_string, p_chunk_type, t_first_chunk_range))
-		p_skip -= 1;
-	
-	// If we skip past the last chunk, we are done.
-	if (p_skip > 0)
-		return false;
-	
-	// If we can't find the chunk in the remainder of the string, we are done.
-	MCRange t_range;
-	if (!MCStringFind(p_string, MCRangeMake(t_index, MCStringGetLength(p_string) - t_index), p_item, t_options, &t_range))
-		return false;
-	
-	// Work out the delimiter.
-	char_t t_delimiter;
-	t_delimiter = p_chunk_type == CT_ITEM ? ctxt . GetItemDelimiter() : ctxt . GetLineDelimiter();
-	
-	// If we are in wholeMatches mode, ensure the delimiter is either side.
-	if (ctxt . GetWholeMatches())
-	{
-		if (t_range . offset > 0 &&
-			MCStringGetNativeCharAtIndex(p_string, t_range . offset - 1) != t_delimiter)
-			return false;
-		if (t_range . offset + t_range . length < MCStringGetLength(p_string) &&
-			MCStringGetNativeCharAtIndex(p_string, t_range . offset + t_range . length) != t_delimiter)
-			return false;
-	}
-	
-	// Now count the number of delimiters between the start of the first chunk
-	// and the start of the found string.
-    r_offset += MCStringCountChar(p_string, MCRangeMake(t_first_chunk_range . offset, t_range . offset - t_first_chunk_range . offset), t_delimiter, t_options);
-
-	return true;
-}
-
-void MCStringsEvalItemOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
-{
-	if (!MCStringsChunkOffset(ctxt, p_chunk, p_string, CT_ITEM, p_start_offset, r_result))
-		r_result = 0;
-}
-
-void MCStringsEvalLineOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
-{
-	if (!MCStringsChunkOffset(ctxt, p_chunk, p_string, CT_LINE, p_start_offset, r_result))
-		r_result = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
