@@ -3459,7 +3459,7 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
         moving_forward = false;
 		if (focusedindex == 0)
 			return FT_BACKCHAR;
-        focusedindex = DecrementIndex(focusedindex);
+        focusedindex = PrevChar(focusedindex);
 
         // TODO: is this necessary with the ICU break iterator?
         while (focusedindex && TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
@@ -3477,11 +3477,11 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
         moving_forward = true;
         if (focusedindex == t_length)
 			return FT_FORWARDCHAR;
-        focusedindex = IncrementIndex(focusedindex);
+        focusedindex = NextChar(focusedindex);
 
         // TODO: is this necessary with the ICU break iterator?
         while (focusedindex < t_length && TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
-            focusedindex = IncrementIndex(focusedindex);
+            focusedindex = NextChar(focusedindex);
             
         focusedindex = NextWord(focusedindex);
 		break;
@@ -3592,12 +3592,8 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 							// thus selecting everything before the original index in this paragraph.
 							// This loop rounds up the original index to the next word boundary
 							bptr = indextoblock(originalindex, False);
-							if (originalindex < gettextlength() && TextIsWordBreak(GetCodepointAtIndex(originalindex)))
-							{
+							if (originalindex < gettextlength() && !TextIsWordBreak(GetCodepointAtIndex(originalindex)))
 								originalindex = findwordbreakafter(bptr, originalindex);
-								bptr = indextoblock(originalindex, False);
-								bptr -> AdvanceIndex(originalindex);
-							}
 						}
 					}
 				state |= PS_FRONT;
@@ -3749,13 +3745,8 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 					// It then rounds focusedindex down to the beginning of the
 					// previous word.
 					bptr = indextoblock(originalindex, False);
-					originalindex = findwordbreakafter(bptr, originalindex);
 					if (originalindex < gettextlength() && !TextIsWordBreak(GetCodepointAtIndex(originalindex)))
-					{
 						originalindex = findwordbreakafter(bptr, originalindex);
-						bptr = indextoblock(originalindex, False);
-						bptr -> AdvanceIndex(originalindex);
-					}
 
 					bptr = indextoblock(focusedindex, False);
 					focusedindex = findwordbreakbefore(bptr, focusedindex);
@@ -3786,18 +3777,12 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 					// It then rounds originalindex down to the beginning of the
 					// word it is in.
 					bptr = indextoblock(focusedindex, False);
-					focusedindex = findwordbreakafter(bptr, focusedindex);
 					if (focusedindex < gettextlength() && !TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
-					{
 						focusedindex = findwordbreakafter(bptr, focusedindex);
-						bptr = indextoblock(focusedindex, False);
-						bptr -> AdvanceIndex(focusedindex);
-					}
 
 					bptr = indextoblock(originalindex, False);
 					if (originalindex != startindex)
-						originalindex = DecrementIndex(originalindex);
-					originalindex = findwordbreakbefore(bptr, originalindex);
+                        originalindex = findwordbreakbefore(bptr, originalindex);
 				}
 				if (direction < 0 || last)
 					state &= ~PS_BACK;
@@ -3862,8 +3847,6 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 				// If the last index is not pointing at a space, when we increment to ensure we
 				// get a non-empty selection.
 				bptr = indextoblock(focusedindex, False);
-				if (focusedindex < gettextlength() && !TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
-					bptr -> AdvanceIndex(focusedindex);
 					
 				endindex = focusedindex;
 
