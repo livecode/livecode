@@ -1094,8 +1094,8 @@ bool MCD_convert_to_datetime(MCExecContext &ctxt, MCValueRef p_input, Convert_fo
 					return false;
 			}
 			
-            
-			if (!MCValueIsEmpty(p_input))
+            // AL-2014-03-04: [[ Bug 12104 ]] If we have more to parse here, then parsing failed.
+			if (MCStringGetLength(*t_string) > t_offset)
 				return false;
             
 			if ((t_valid_dateitems & DATETIME_ITEM_DATE) != DATETIME_ITEM_DATE)
@@ -1312,7 +1312,8 @@ bool MCD_convert_from_datetime(MCExecContext &ctxt, MCDateTime p_datetime, Conve
 			t_buffer = t_new;
 		}
 		
-		ctxt.SetTheResultToValue(t_buffer);
+        // AL-2014-03-04: [[ Bug 12104 ]] The result should be empty if conversion is successful.
+		//ctxt.SetTheResultToValue(t_buffer);
 		r_output = t_buffer;
 	}
     
