@@ -65,8 +65,13 @@ void MCParameter::setvalueref_argument(MCValueRef p_value)
 
 void MCParameter::give_exec_argument(MCExecValue p_value)
 {
-    MCExecTypeRelease(value);
-    value = p_value;
+    if (MCExecTypeIsValueRef(p_value))
+        setvalueref_argument(p_value . valueref_value);
+    else
+    {
+        MCExecTypeRelease(value);
+        value = p_value;
+    }
 }
 
 // Converts the exec value to a valueref

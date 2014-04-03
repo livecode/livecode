@@ -2081,7 +2081,7 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter
             }
                 return false;
             case 0:
-                return MCStringGetCharAtIndex(p_string, s_index) == 0;
+                return MCStringGetCharAtIndex(p_string, t_srange. offset) == 0;
             default:
                 // default - just compare chars
                 t_prange . offset = p_index;
