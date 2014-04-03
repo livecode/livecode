@@ -23,15 +23,6 @@
 #include "foundation-locale.h"
 
 
-// General information on GetNextCodepoint():
-//
-//  If a top-level (has no following filters) filter needs to re-fill its
-//  internal state, it marks all text up to the refill point as being accepted.
-//  This means a comparison process can just keep calling GetNextCodepoint until
-//  it finds a non-match and it doesn't need to worry about keeping track of
-//  boundaries for things like non-normalised sequences.
-
-
 class MCTextFilter
 {
 public:
@@ -46,11 +37,12 @@ public:
     virtual bool HasData() const = 0;
     
     // Marks the codepoints read up to this point as being accepted (this is
-    // used by comparisons to find the range of indices that match)
-    virtual void AcceptText();
+    // used by comparisons to find the range of indices that match). Filters
+    // that have multiple codepoints of state should only mark on boundaries.
+    virtual void MarkText();
     
     // Returns the index into the underlying data that has been accepted
-    virtual uindex_t GetAcceptedIndex() const;
+    virtual uindex_t GetMarkedLength() const;
     
     // Destructor also destroys all connected filters (i.e the entire chain is
     // destroyed at one) - this is to simplify filter chain management.
@@ -112,8 +104,8 @@ public:
     virtual codepoint_t GetNextCodepoint();
     virtual bool AdvanceCursor();
     virtual bool HasData() const;
-    virtual void AcceptText();
-    virtual uindex_t GetAcceptedIndex() const;
+    virtual void MarkText();
+    virtual uindex_t GetMarkedLength() const;
     
     MCTextFilter_DecodeUTF16(const unichar_t*, uindex_t);
     ~MCTextFilter_DecodeUTF16();
@@ -169,6 +161,8 @@ public:
     virtual codepoint_t GetNextCodepoint();
     virtual bool AdvanceCursor();
     virtual bool HasData() const;
+    virtual void MarkText();
+    virtual uindex_t GetMarkedLength() const;
     
     MCTextFilter_NormalizeNFC();
     ~MCTextFilter_NormalizeNFC();
@@ -186,6 +180,10 @@ private:
     
     // Cursor
     uindex_t m_ReadIndex;
+    
+    // Marked length
+    uindex_t m_MarkedLength;
+    uindex_t m_MarkPoint;
 };
 
 

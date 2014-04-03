@@ -20,16 +20,16 @@
 #include "foundation-auto.h"
 
 
-void MCTextFilter::AcceptText()
+void MCTextFilter::MarkText()
 {
     // All filters other than the first just pass on the message
-    m_Prev->AcceptText();
+    m_Prev->MarkText();
 }
 
-uindex_t MCTextFilter::GetAcceptedIndex() const
+uindex_t MCTextFilter::GetMarkedLength() const
 {
     // All filters other than the first just pass on the message
-    return m_Prev->GetAcceptedIndex();
+    return m_Prev->GetMarkedLength();
 }
 
 MCTextFilter::~MCTextFilter()
@@ -120,18 +120,18 @@ bool MCTextFilter_DecodeUTF16::HasData() const
     return m_ReadIndex < m_DataLength;
 }
 
-void MCTextFilter_DecodeUTF16::AcceptText()
+void MCTextFilter_DecodeUTF16::MarkText()
 {
     m_AcceptedIndex = m_ReadIndex;
 }
 
-uindex_t MCTextFilter_DecodeUTF16::GetAcceptedIndex() const
+uindex_t MCTextFilter_DecodeUTF16::GetMarkedLength() const
 {
-    return m_AcceptedIndex;
+    return m_AcceptedIndex + 1;
 }
 
 MCTextFilter_DecodeUTF16::MCTextFilter_DecodeUTF16(const unichar_t *p_text, uindex_t p_length)
-  : m_surrogate(false), m_AcceptedIndex(0), m_ReadIndex(0), m_Data(p_text), m_DataLength(p_length)
+  : m_surrogate(false), m_AcceptedIndex(-1), m_ReadIndex(0), m_Data(p_text), m_DataLength(p_length)
 {
     ;
 }
@@ -157,10 +157,6 @@ codepoint_t MCTextFilter_SimpleCaseFold::GetNextCodepoint()
 
 bool MCTextFilter_SimpleCaseFold::AdvanceCursor()
 {
-    // If toplevel, accept all preceding text
-    if (NextFilter() == nil)
-        AcceptText();
-    
     return PrevFilter()->AdvanceCursor();
 }
 
@@ -186,9 +182,8 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepoint()
     if (m_ReadIndex < m_StateLength)
         return m_State[m_ReadIndex];
     
-    // Need to refresh therefore all text has been accepted
-    if (NextFilter() == nil)
-        AcceptText();
+    PrevFilter()->MarkText();
+    m_MarkPoint = PrevFilter()->GetMarkedLength();
     
     // Otherwise, the state needs to be refreshed. Loop until we get to a
     // normalisation boundary (i.e a base character)
@@ -248,8 +243,19 @@ bool MCTextFilter_NormalizeNFC::HasData() const
     return m_ReadIndex < m_StateLength || PrevFilter()->HasData();
 }
 
+void MCTextFilter_NormalizeNFC::MarkText()
+{
+    // Only mark on run boundaries
+    m_MarkedLength = m_MarkPoint;
+}
+
+uindex_t MCTextFilter_NormalizeNFC::GetMarkedLength() const
+{
+    return m_MarkedLength;
+}
+
 MCTextFilter_NormalizeNFC::MCTextFilter_NormalizeNFC()
-  : m_StateLength(0), m_ReadIndex(0)
+  : m_StateLength(0), m_ReadIndex(0), m_MarkedLength(0), m_MarkPoint(0)
 {
     ;
 }

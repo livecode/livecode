@@ -991,9 +991,11 @@ bool MCUnicodeFirstIndexOf(const unichar_t *p_string, uindex_t p_string_length,
         if (t_cp == t_needle_start)
         {
             // Do a fresh string comparison at this point
-            t_string_filter->AcceptText();
-            uindex_t t_offset = t_string_filter->GetAcceptedIndex();
-            if (MCUnicodeCompare(p_string + t_offset, p_string_length - t_offset, p_needle, p_needle_length, p_option) == 0)
+            t_string_filter->MarkText();
+            uindex_t t_offset = t_string_filter->GetMarkedLength() - 1;
+            uindex_t t_string_matched_len, t_needle_matched_len;
+            MCUnicodeSharedPrefix(p_string + t_offset, p_string_length - t_offset, p_needle, p_needle_length, p_option, t_string_matched_len, t_needle_matched_len);
+            if (t_needle_matched_len == p_needle_length)
             {
                 r_index = t_offset;
                 MCTextFilterRelease(t_string_filter);
@@ -1038,9 +1040,11 @@ bool MCUnicodeLastIndexOf(const unichar_t *p_string, uindex_t p_string_length,
         if (t_cp == t_needle_start)
         {
             // Do a fresh string comparison at this point
-            t_string_filter->AcceptText();
-            uindex_t t_offset = t_string_filter->GetAcceptedIndex();
-            if (MCUnicodeCompare(p_string + t_offset, p_string_length - t_offset, p_needle, p_needle_length, p_option) == 0)
+            t_string_filter->MarkText();
+            uindex_t t_offset = t_string_filter->GetMarkedLength() - 1;
+            uindex_t t_string_matched_len, t_needle_matched_len;
+            MCUnicodeSharedPrefix(p_string + t_offset, p_string_length - t_offset, p_needle, p_needle_length, p_option, t_string_matched_len, t_needle_matched_len);
+            if (t_needle_matched_len == p_needle_length)
             {
                 r_index = t_offset;
                 t_found = true;
@@ -1069,8 +1073,8 @@ bool MCUnicodeFirstIndexOfChar(const unichar_t *p_string, uindex_t p_string_leng
         codepoint_t t_cp = t_string_filter->GetNextCodepoint();
         if (t_cp == p_needle)
         {
-            t_string_filter->AcceptText();
-            r_index = t_string_filter->GetAcceptedIndex();
+            t_string_filter->MarkText();
+            r_index = t_string_filter->GetMarkedLength() - 1;
             MCTextFilterRelease(t_string_filter);
             return true;
         }
@@ -1097,8 +1101,8 @@ bool MCUnicodeLastIndexOfChar(const unichar_t *p_string, uindex_t p_string_lengt
         codepoint_t t_cp = t_string_filter->GetNextCodepoint();
         if (t_cp == p_needle)
         {
-            t_string_filter->AcceptText();
-            r_index = t_string_filter->GetAcceptedIndex();
+            t_string_filter->MarkText();
+            r_index = t_string_filter->GetMarkedLength() - 1;
             t_found = true;
         }
         
@@ -1126,22 +1130,22 @@ void MCUnicodeSharedPrefix(const unichar_t *p_string, uindex_t p_string_length, 
     // Keep looping until the strings no longer match
     while (t_string_filter->GetNextCodepoint() == t_prefix_filter->GetNextCodepoint())
     {
+        t_string_filter->MarkText();
+        t_prefix_filter->MarkText();
+        
         t_string_filter->AdvanceCursor();
         t_prefix_filter->AdvanceCursor();
         
         if (!t_string_filter->HasData() || !t_prefix_filter->HasData())
         {
-            // One more to empty the buffers in the filters
-            t_string_filter->AdvanceCursor();
-            t_prefix_filter->AdvanceCursor();
             break;
         }
     }
     
     // Return the lengths in each. Note we don't accept here to avoid matching
     // subsequences of normalised runs of combining chars.
-    r_len_in_string = t_string_filter->GetAcceptedIndex();
-    r_len_in_prefix = t_string_filter->GetAcceptedIndex();
+    r_len_in_string = t_string_filter->GetMarkedLength();
+    r_len_in_prefix = t_string_filter->GetMarkedLength();
     
     MCTextFilterRelease(t_string_filter);
     MCTextFilterRelease(t_prefix_filter);
