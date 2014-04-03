@@ -902,7 +902,7 @@ void MCField::GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encod
     pgptr -> GetEncoding(ctxt, t_encoding);
     pgptr = pgptr -> next();
     
-    while (pgptr != paragraphs);
+    while (pgptr != paragraphs)
     {
         pgptr -> GetEncoding(ctxt, t_next);
         if (t_next != t_encoding)
