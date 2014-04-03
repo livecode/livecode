@@ -24,7 +24,7 @@ sub symbolIsOptional;
 sub trim
 {
 	my $trim = $_[0];
-	$trim =~ s/^\s+|\s+$// ;
+	$trim =~ s/^\s+|\s+$//g ;
 	return $trim;
 }
 
@@ -363,7 +363,7 @@ sub symbolInputs
 	my @items = split(':', $symbol);
 	my $spec = $items[1];
 	
-	if (@items < 2)
+	if (scalar @items < 2)
 	{
 		$spec = "() -> ()";
 	}
@@ -372,8 +372,7 @@ sub symbolInputs
 	
 	# Remove leading/trailing whitespace and parentheses
 	$inputs = trim($inputs);
-	substr($inputs, 0) = "";
-	substr($inputs, -1) = "";
+	$inputs = substr($inputs, 1, -1);
 	
 	@items = split(',', $inputs);
 	my $result = "";
@@ -401,8 +400,7 @@ sub symbolOutputs
 	
 	# Remove leading/trailing whitespace and parentheses
 	$outputs = trim($outputs);
-	substr($outputs, 0) = "";
-	substr($outputs, -1) = "";
+	$outputs = substr($outputs, 1, -1);
 	
 	@items = split(',', $outputs);
 	my $result = "";
@@ -420,7 +418,7 @@ sub typeListToProto
 	my $withArgs = $_[1];
 	
 	my $proto = "";
-	my $index = 1;
+	my $index = 0;
 	
 	my @lines = split("\n", $list);
 	foreach my $line (@lines)
