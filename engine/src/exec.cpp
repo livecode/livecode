@@ -249,7 +249,11 @@ bool MCExecContext::ConvertToNumberOrArray(MCExecValue& x_value)
     switch(x_value . type)
     {
     case kMCExecValueTypeNone:
-        return false;
+        // Returns 0 - since we are trying to get a number from something non-assigned
+        MCExecTypeRelease(x_value);
+        x_value . double_value = 0.0;
+        x_value . type = kMCExecValueTypeDouble;
+        return true;
 
     case kMCExecValueTypeValueRef:
     case kMCExecValueTypeBooleanRef:
@@ -668,11 +672,18 @@ bool FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_output)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-bool MCExecContext::EvaluateExpression(MCExpression *p_expr, MCValueRef& r_result)
+bool MCExecContext::EvaluateExpression(MCExpression *p_expr, Exec_errors p_error, MCExecValue& r_result)
 {
-    if (!EvalExprAsValueRef(p_expr, EE_EXPR_EVALERROR, r_result))
-        return false;
-    return true;
+	MCAssert(p_expr != nil);
+	
+	p_expr -> eval_ctxt(*this, r_result);
+	
+	if (!HasError())
+		return true;
+	
+	LegacyThrow(p_error);
+	
+	return false;
 }
 
 #ifdef LEGACY_EXEC
@@ -711,7 +722,7 @@ bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, ui
         IgnoreLastError();
     }
 	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
-        
+    
 	if (t_success)
 		return true;
 	
@@ -719,7 +730,45 @@ bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, ui
 	return false;
 }
 
-bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result)
+bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, double& r_result)
+{
+    MCAssert(p_expr != nil);
+	
+    bool t_success, t_can_debug;
+    t_success = false;
+    
+    do
+    {
+        MCExecValue t_value;
+        p_expr -> eval_ctxt(*this, t_value);
+        
+        if (!MCExecTypeIsNumber(t_value))
+            MCExecTypeConvertAndReleaseAlways(*this, t_value . type, &t_value, kMCExecValueTypeDouble, &r_result);
+        else if (t_value . type == kMCExecValueTypeInt)
+            r_result = t_value . int_value;
+        else if (t_value . type == kMCExecValueTypeUInt)
+            r_result = t_value . uint_value;
+        else if (t_value . type == kMCExecValueTypeFloat)
+            r_result = t_value . float_value;
+        else
+            r_result = t_value . double_value;
+        
+        if (!HasError())
+            t_success = true;
+        else
+            t_can_debug = MCB_error(*this, line, pos, p_error);
+        IgnoreLastError();
+    }
+	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
+    
+	if (t_success)
+		return true;
+	
+	LegacyThrow(p_error);
+	return false;
+}
+
+bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uint2 pos, Exec_errors p_error, MCExecValue& r_result)
 {
     MCAssert(p_param != nil);
 	
@@ -728,7 +777,7 @@ bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uin
     
     do
     {
-        if (p_param -> eval(*this, r_result))
+        if (p_param -> eval_ctxt(*this, r_result))
             t_success = true;
         else
             t_can_debug = MCB_error(*this, line, pos, p_error);
@@ -766,14 +815,14 @@ bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr
 	return false;
 }
 
-bool MCExecContext::TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef p_value)
+bool MCExecContext::TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCExecValue p_value)
 {
     bool t_success, t_can_debug;
     t_success = false;
     
     do
     {
-        p_var -> set(*this, p_value);
+        p_var -> give_value(*this, p_value);
         if (!HasError())
             t_success = true;
         else
@@ -1220,6 +1269,25 @@ bool MCExecContext::EvalOptionalExprAsColor(MCExpression *p_expr, MCColor *p_def
     MCAssert(r_value != nil);
 
     return EvalExprAsColor(p_expr, p_error, *r_value);
+}
+
+// AL-2014-04-01: [[ Bug 12071 ]] Need to be able to fail to eval color without throwing an error.
+void MCExecContext::TryToEvalOptionalExprAsColor(MCExpression *p_expr, MCColor *p_default, Exec_errors p_error, MCColor *&r_value)
+{
+	if (p_expr == nil)
+	{
+		r_value = p_default;
+		return;
+    }
+    
+    // Makes sure the return parameter isn't a nil pointer
+    MCAssert(r_value != nil);
+    
+    if (EvalExprAsColor(p_expr, p_error, *r_value))
+        return;
+    
+    IgnoreLastError();
+    r_value = nil;
 }
 
 bool MCExecContext::EvalExprAsRectangle(MCExpression *p_expr, Exec_errors p_error, MCRectangle& r_value)
@@ -3066,7 +3134,9 @@ void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCExecValu
             if (!MCStringCreateWithNativeChars((const char_t *)p_from_value, 1, (MCStringRef&)r_value))
                 ctxt . Throw();
             break;
-
+        case kMCExecValueTypeNone:
+            r_value = MCValueRetain(kMCNull);
+            break;
 		default:
 			ctxt . Unimplemented();
 			break;
@@ -3147,6 +3217,7 @@ void MCExecTypeRelease(MCExecValue &self)
 {
     switch (self . type)
     {
+    case kMCExecValueTypeNone:
     case kMCExecValueTypeValueRef:
     case kMCExecValueTypeBooleanRef:
     case kMCExecValueTypeStringRef:
@@ -3165,28 +3236,93 @@ void MCExecTypeRelease(MCExecValue &self)
     case kMCExecValueTypePoint:
     case kMCExecValueTypeColor:
     case kMCExecValueTypeRectangle:
-    case kMCExecValueTypeNone:
         break;
     }
+    self . type = kMCExecValueTypeNone;
+    self . valueref_value = nil;
+}
+
+void MCExecTypeCopy(const MCExecValue &self, MCExecValue &r_dest)
+{
+    // Retain the value if one is stored
+    if (MCExecTypeIsValueRef(self)
+            || (self . type == kMCExecValueTypeNone && self . valueref_value != nil))
+        r_dest . valueref_value = MCValueRetain(self . valueref_value);
+    else
+        r_dest = self;
+    
+    r_dest . type = self . type;
+}
+
+// Set a valueref in the exec value, taking in account its type
+void MCExecTypeSetValueRef(MCExecValue &self, MCValueRef p_value)
+{
+    MCExecValueType t_type;
+    switch(MCValueGetTypeCode(p_value))
+    {
+        case kMCValueTypeCodeArray:
+            t_type = kMCExecValueTypeArrayRef;
+            break;
+        case kMCValueTypeCodeData:
+            t_type = kMCExecValueTypeDataRef;
+            break;
+        case kMCValueTypeCodeString:
+            t_type = kMCExecValueTypeStringRef;
+            break;
+        case kMCValueTypeCodeBoolean:
+            t_type = kMCExecValueTypeBooleanRef;
+            break;
+        case kMCValueTypeCodeNumber:
+            t_type = kMCExecValueTypeNumberRef;
+            break;
+        case kMCValueTypeCodeName:
+            t_type = kMCExecValueTypeNameRef;
+            break;
+        case kMCValueTypeCodeList:
+        case kMCValueTypeCodeSet:
+            t_type = kMCExecValueTypeValueRef;
+            break;
+        case kMCValueTypeCodeNull:
+            t_type = kMCExecValueTypeNone;
+            break;
+        default:
+            t_type = kMCExecValueTypeValueRef;
+            break;
+            
+    }
+    self . type = t_type;
+    self . valueref_value = p_value;
+}
+
+bool MCExecTypeIsValueRef(const MCExecValue &self)
+{
+    return self . type > kMCExecValueTypeNone && self . type < kMCExecValueTypeUInt;
+}
+
+bool MCExecTypeIsNumber(const MCExecValue &self)
+{
+    return self . type > kMCExecValueTypeNumberRef && self . type < kMCExecValueTypeChar && self . type != kMCExecValueTypeBool;
 }
 
 void MCExecResolveCharsOfField(MCField *p_field, uint32_t p_part, int32_t& x_start, int32_t& x_finish, uint32_t p_start, uint32_t p_count)
 {
+    x_start = p_start;
+    x_finish = p_start + p_count;
+    /*
     findex_t t_start = x_start;
     findex_t t_finish = x_finish;
     p_field -> resolvechars(p_part, t_start, t_finish, p_start, p_count);
     x_start = t_start;
-    x_finish = t_finish;
+    x_finish = t_finish; */
 }
 
 void MCExecParseSet(MCExecContext& ctxt, MCExecSetTypeInfo *p_info, MCExecValue p_value, intset_t& r_value)
 {
+    // AL-2014-04-02: [[ Bug 12097 ]] No need to use c-string array (and indeed delete an unallocated one)
     MCAutoStringRef t_string;
     MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_string));
     
     intset_t t_value = 0;
-    char **t_elements;
-    uindex_t t_element_count;
     MCAutoArrayRef t_split_strings;
     
     MCStringSplit(*t_string, MCSTR(","), nil, kMCStringOptionCompareExact, &t_split_strings);
@@ -3205,7 +3341,6 @@ void MCExecParseSet(MCExecContext& ctxt, MCExecSetTypeInfo *p_info, MCExecValue 
         }
     }
     
-    MCCStringArrayFree(t_elements, t_element_count);
     r_value = t_value;
 }
 

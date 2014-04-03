@@ -589,43 +589,31 @@ void MCMinus::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
             || !ctxt . ConvertToNumberOrArray(t_right))
     {
         ctxt . LegacyThrow(EE_MINUS_BADRIGHT);
-        MCValueRelease(t_left . valueref_value);
+        MCExecTypeRelease(t_left);
         return;
     }
 
+    r_value . valueref_value = nil;
     if (t_left. type == kMCExecValueTypeArrayRef)
     {
-        MCArrayRef t_result;
-
         if (t_right . type == kMCExecValueTypeArrayRef)
-            MCMathEvalSubtractArrayFromArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, t_result);
+            MCMathEvalSubtractArrayFromArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, r_value . arrayref_value);
         else
-            MCMathEvalSubtractNumberFromArray(ctxt, t_left . arrayref_value, t_right . double_value, t_result);
-
-        if (!ctxt . HasError())
-            MCExecValueTraits<MCArrayRef>::set(r_value, t_result);
+            MCMathEvalSubtractNumberFromArray(ctxt, t_left . arrayref_value, t_right . double_value, r_value . arrayref_value);
     }
     else
     {
         if (t_right . type == kMCExecValueTypeArrayRef)
             ctxt . LegacyThrow(EE_MINUS_MISMATCH);
         else
-        {
-            real64_t t_real_result = 0.0;
-            MCMathEvalSubtract(ctxt, t_left . double_value, t_right . double_value, t_real_result);
-
-            if (!ctxt . HasError())
-                MCExecValueTraits<double>::set(r_value, (double)t_real_result);
-        }
+            MCMathEvalSubtract(ctxt, t_left . double_value, t_right . double_value, r_value . double_value);
     }
 
-    if (ctxt . HasError())
-        return;
-
-    if (t_left . type == kMCValueTypeCodeArray)
-        MCValueRelease(t_left . valueref_value);
-    if (t_right . type == kMCValueTypeCodeArray)
-        MCValueRelease(t_right . valueref_value);
+    if (!ctxt . HasError())
+        r_value . type = t_left . type;
+    
+    MCExecTypeRelease(t_left);
+    MCExecTypeRelease(t_right);
 }
 
 void MCMinus::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
@@ -1034,10 +1022,8 @@ void MCGrouping::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (right != NULL)
     {
         MCValueRef t_value;
-        if (!ctxt . EvalExprAsValueRef(right, EE_GROUPING_BADRIGHT, t_value))
+        if (!ctxt . EvaluateExpression(right, EE_GROUPING_BADRIGHT, r_value))
             return;
-
-        MCExecValueTraits<MCValueRef>::set(r_value, t_value);
     }
     else
         ctxt . LegacyThrow(EE_GROUPING_BADRIGHT);
@@ -1862,6 +1848,42 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
                     MCStringsEvalIsAmongTheItemsOf(ctxt, *t_left, *t_right, t_result);
                 else
                     MCStringsEvalIsNotAmongTheItemsOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_PARAGRAPH:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheParagraphsOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheParagraphsOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_SENTENCE:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheSentencesOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheSentencesOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_TRUEWORD:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheTrueWordsOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheTrueWordsOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_CODEPOINT:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheCodepointsOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheCodepointsOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_CODEUNIT:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheCodeunitsOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheCodeunitsOf(ctxt, *t_left, *t_right, t_result);
+                break;
+            case CT_BYTE:
+                if (form == IT_AMONG)
+                    MCStringsEvalIsAmongTheBytesOf(ctxt, *t_left, *t_right, t_result);
+                else
+                    MCStringsEvalIsNotAmongTheBytesOf(ctxt, *t_left, *t_right, t_result);
                 break;
             }
         }

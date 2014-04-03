@@ -112,6 +112,22 @@ void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
 	MCServerDebugVariableChanged(ctxt, name);
 }
 
+
+
+void MCB_setvalue(MCExecContext &ctxt, MCExecValue p_value, MCNameRef name)
+{
+    if (!MCExecTypeIsValueRef(p_value))
+    {
+        MCAutoValueRef t_value;
+        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeValueRef, &(&t_value));
+        MCB_setvar(ctxt, *t_value);
+    }
+    else
+    {
+        MCB_setvar(p_value . valueref_value);
+    }
+}
+
 #else
 
 void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string)
@@ -319,6 +335,29 @@ void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
 	p3.setvalueref_argument(p_value);
 	MCB_message(ctxt, MCM_update_var, &p1);
 
+	if (added)
+		MCnexecutioncontexts--;
+}
+
+void MCB_setvalue(MCExecContext &ctxt, MCExecValue p_value, MCNameRef name)
+{
+	Boolean added = False;
+	if (MCnexecutioncontexts < MAX_CONTEXTS)
+	{
+		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+		added = True;
+	}
+    
+	MCParameter p1, p2, p3;
+    MCExecValue t_copy;
+    p1.setn_argument(ctxt . GetLine());
+	p1.setnext(&p2);
+	p2.setvalueref_argument(name);
+	p2.setnext(&p3);
+    MCExecTypeCopy(p_value, t_copy);
+	p3.give_exec_argument(t_copy);
+	MCB_message(ctxt, MCM_update_var, &p1);
+    
 	if (added)
 		MCnexecutioncontexts--;
 }

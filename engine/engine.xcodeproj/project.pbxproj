@@ -3356,7 +3356,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_errors.rev\" \"$SRCROOT/src\" \"$SRCROOT/src/encodederrors.cpp\"";
+			shellScript = "#\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_errors.rev\" \"$SRCROOT/src\" \"$SRCROOT/src/encodederrors.cpp\"\n\"$SOLUTION_DIR/util/encode_errors.pl\" \"$SRCROOT/src\" \"$SRCROOT/src/encodederrors.cpp\"";
 			showEnvVarsInLog = 0;
 		};
 		4D221AD1171D5A0D00E7E557 /* Build keyword hash table */ = {
@@ -3373,7 +3373,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/hash_strings.rev\" \"$SRCROOT/src/lextable.cpp\" \"$SRCROOT/src/hashedstrings.cpp\" \"$SOLUTION_DIR/prebuilt/bin/perfect.osx\"";
+			shellScript = "#\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/hash_strings.rev\" \"$SRCROOT/src/lextable.cpp\" \"$SRCROOT/src/hashedstrings.cpp\" \"$SOLUTION_DIR/prebuilt/bin/perfect.osx\"\n\"$SOLUTION_DIR/util/hash_strings.pl\" \"$SRCROOT/src/lextable.cpp\" \"$SRCROOT/src/hashedstrings.cpp\" \"perfect.osx\"";
 			showEnvVarsInLog = 0;
 		};
 		4D221AE1171D5EC500E7E557 /* Encode Errors */ = {
@@ -3391,7 +3391,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_errors.rev\" \"$SRCROOT/src\" \"$SRCROOT/src/encodederrors.cpp\"";
+			shellScript = "#\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_errors.rev\" \"$SRCROOT/src\" \"$SRCROOT/src/encodederrors.cpp\"\n\"$SOLUTION_DIR/util/encode_errors.pl\" \"$SRCROOT/src\" \"$SRCROOT/src/encodederrors.cpp\"";
 			showEnvVarsInLog = 0;
 		};
 		4D221AE2171D5EC500E7E557 /* Build keyword hash table */ = {
@@ -3408,7 +3408,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/hash_strings.rev\" \"$SRCROOT/src/lextable.cpp\" \"$SRCROOT/src/hashedstrings.cpp\" \"$SOLUTION_DIR/prebuilt/bin/perfect.osx\"";
+			shellScript = "#\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/hash_strings.rev\" \"$SRCROOT/src/lextable.cpp\" \"$SRCROOT/src/hashedstrings.cpp\" \"$SOLUTION_DIR/prebuilt/bin/perfect.osx\"\n\"$SOLUTION_DIR/util/hash_strings.pl\" \"$SRCROOT/src/lextable.cpp\" \"$SRCROOT/src/hashedstrings.cpp\" \"perfect.osx\"";
 			showEnvVarsInLog = 0;
 		};
 		4D221F45171D62E300E7E557 /* Encode Environment */ = {
@@ -3425,7 +3425,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/compress_data.rev\" \"$SRCROOT/src/Environment.rev\" \"$SRCROOT/src/startupstack.cpp\" \"MCstartupstack\"";
+			shellScript = "#\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/compress_data.rev\" \"$SRCROOT/src/Environment.rev\" \"$SRCROOT/src/startupstack.cpp\" \"MCstartupstack\"\n\"$SOLUTION_DIR/util/compress_data.pl\" \"$SRCROOT/src/Environment.rev\" \"$SRCROOT/src/startupstack.cpp\" \"MCstartupstack\"";
 			showEnvVarsInLog = 0;
 		};
 		4D22200E171D72A500E7E557 /* Encode Version */ = {
@@ -3443,7 +3443,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_version.rev\" \"$SRCROOT\"";
+			shellScript = "#\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_version.rev\" \"$SRCROOT\"\n\"$SOLUTION_DIR/util/encode_version.pl\" \"$SRCROOT\"";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

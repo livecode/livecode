@@ -758,6 +758,53 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
 	}
 }
 
+void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue p_value, int p_where, MCVariableChunkPtr p_var)
+{
+	p_var . variable -> clearuql();
+	
+	if (p_var . chunk == CT_UNDEFINED)
+	{
+		if (p_where == PT_INTO)
+			p_var . variable -> give_value(ctxt, p_value, false);
+		else if (p_where == PT_AFTER)
+			p_var . variable -> give_value(ctxt, p_value, true);
+		else
+        {
+            MCAutoStringRef t_string;
+            if (!ctxt . EvalExprAsMutableStringRef(p_var . variable, EE_ENGINE_PUT_BADVARIABLE, &t_string))
+                return;
+            
+			MCAutoStringRef t_value_string;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_value_string));
+            if (ctxt . HasError())
+                return;
+			
+			/* UNCHECKED */ MCStringPrepend(*t_string, *t_value_string);
+			p_var . variable -> set(ctxt, *t_string, False);
+		}
+	}
+	else
+    {
+        MCAutoStringRef t_string;
+        if (!MCStringMutableCopy(p_var . mark . text, &t_string))
+            return;
+        
+        MCAutoStringRef t_value_string;
+        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_value_string));
+        if (ctxt . HasError())
+            return;
+		
+		if (p_where == PT_BEFORE)
+			p_var . mark . finish = p_var . mark . start;
+		else if (p_where == PT_AFTER)
+			p_var . mark . start = p_var . mark . finish;
+        
+		/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
+        
+		p_var . variable -> set(ctxt, *t_string, False);
+	}
+}
+
 void MCEngineExecReturnValue(MCExecContext& ctxt, MCValueRef p_value)
 {
 	ctxt . SetTheResultToValue(p_value);
@@ -1190,10 +1237,10 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
             
             // MW-2011-08-11: [[ Bug 9668 ]] Make sure we copy 'pdata' if we use it, since
             //   mptr (into which it points) only lasts as long as this method call.
-            MCAutoValueRef t_value;
-            ctxt . GetHandler() -> eval(ctxt, *t_expression, &t_value);
+            MCExecValue t_value;
+            ctxt . GetHandler() -> eval_ctxt(ctxt, *t_expression, t_value);
             if (!ctxt.HasError())
-                newparam->setvalueref_argument(*t_value);
+                newparam->set_exec_argument(ctxt, t_value);
             else
                 newparam->setvalueref_argument(*t_expression);
             

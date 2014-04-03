@@ -62,6 +62,8 @@ extern uint2 MCnexecutioncontexts;
 extern uint2 MCdebugcontext;
 extern Boolean MCmessagemessages;
 
+struct MCExecValue;
+
 extern void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string);
 extern void MCB_message(MCExecContext &ctxt, MCNameRef message, MCParameter *p);
 extern void MCB_prepmessage(MCExecContext &ctxt, MCNameRef message, uint2 line, uint2 pos, uint2 id, MCStringRef p_info = kMCEmptyString);
@@ -70,6 +72,7 @@ extern void MCB_trace(MCExecContext &ctxt, uint2 line, uint2 pos);
 extern bool MCB_error(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id);
 extern void MCB_done(MCExecContext &ctxt);
 extern void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name);
+extern void MCB_setvalue(MCExecContext &ctxt, MCExecValue p_value, MCNameRef name);
 
 extern void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input);
 #ifdef LEGACY_EXEC

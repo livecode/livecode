@@ -1099,12 +1099,12 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 
 		if (t_var == NULL)
         {
-            MCAutoValueRef t_value;
+            MCExecValue t_value;
             tptr -> clear_argument();
 
             do
             {
-                if (!(t_success = tptr->eval(ctxt, &t_value)))
+                if (!(t_success = tptr->eval_ctxt(ctxt, t_value)))
                     t_can_debug = MCB_error(ctxt, line, pos, EE_STATEMENT_BADPARAM);
                 ctxt.IgnoreLastError();
             }
@@ -1116,7 +1116,7 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
                 return;
 			}
 
-            tptr->setvalueref_argument(*t_value);
+            tptr->give_exec_argument(t_value);
 		}
 		else
 			tptr->set_argument_var(t_var);

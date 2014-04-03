@@ -72,11 +72,13 @@ SOURCES=\
 	syntax.cpp \
 	foundation-legacy.cpp legacy_spec.cpp
 
-linuxstubs.cpp: src/linux.stubs
-	../prebuilt/bin/Revolution.lnx "../tools/weak_stub_maker.lc" <./src/linux.stubs >./src/linuxstubs.cpp
+linuxstubs.cpp: src/linux.stubs ../util/weak_stub_maker.pl
+#	../prebuilt/bin/Revolution.lnx "../tools/weak_stub_maker.lc" <./src/linux.stubs >./src/linuxstubs.cpp
+	../util/weak_stub_maker.pl <./src/linux.stubs >./src/linuxstubs.cpp
 
-include/revbuild.h: include/revbuild.h.in ../version
-	../prebuilt/bin/Revolution.lnx "./encode_version.rev" "./"
+include/revbuild.h: include/revbuild.h.in ../version ../util/encode_version.pl
+#	../prebuilt/bin/Revolution.lnx "./encode_version.rev" "./"
+	../util/encode_version.pl
 
 $(CACHE_DIR)/mcstring.o: include/revbuild.h
 

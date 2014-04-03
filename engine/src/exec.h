@@ -89,6 +89,10 @@ void MCExecTypeConvertAndReleaseAlways(MCExecContext& ctxt, MCExecValueType from
 void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCExecValueType p_from_type, void *p_from_value, MCValueRef& r_value);
 void MCExecTypeConvertFromValueRefAndReleaseAlways(MCExecContext& ctxt, MCValueRef p_from_value, MCExecValueType p_to_type, void *p_to_value);
 void MCExecTypeRelease(MCExecValue &self);
+void MCExecTypeSetValueRef(MCExecValue &self, MCValueRef p_value);
+bool MCExecTypeIsValueRef(const MCExecValue &self);
+bool MCExecTypeIsNumber(const MCExecValue &self);
+void MCExecTypeCopy(const MCExecValue &self, MCExecValue &r_dest);
 
 // Defined for convenience in exec-interface-field-chunk.cpp
 // where the template system needs only one parameter
@@ -1515,14 +1519,15 @@ public:
 	// This method evaluates the given expression returning the result in 'result'.
 	// If an error is raised during the course of evaluation, 'false' is returned.
 	// Note: This method throws any errors that occur.
-	bool EvaluateExpression(MCExpression *expr, MCValueRef& r_result);
+	bool EvaluateExpression(MCExpression *expr, Exec_errors p_error, MCExecValue& r_result);
     
     // These methods try to evaluate / set, as many times as the debug context dictates,
     // only throwing an error if they ultimately fail.
     bool TryToEvaluateExpression(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result);
-    bool TryToEvaluateParameter(MCParameter *p_param, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result);
+    bool TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, double& r_result);
+    bool TryToEvaluateParameter(MCParameter *p_param, uint2 line, uint2 pos, Exec_errors p_error, MCExecValue& r_result);
     bool TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr, uint2 line, uint2 pos, Exec_errors p_error, bool& r_result);
-    bool TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef p_value);
+    bool TryToSetVariable(MCVarref *p_var, uint2 line, uint2 pos, Exec_errors p_error, MCExecValue p_value);
     
 	//////////
 	
@@ -1678,6 +1683,7 @@ public:
     bool EvalOptionalExprAsRectangle(MCExpression *expr, MCRectangle *default_value, Exec_errors error, MCRectangle *&r_rectangle);
     
 	void TryToEvalExprAsArrayRef(MCExpression *p_expr, Exec_errors p_error, MCArrayRef& r_value);
+    void TryToEvalOptionalExprAsColor(MCExpression *p_expr, MCColor *p_default, Exec_errors p_error, MCColor *&r_value);
     
 private:
 #ifdef LEGACY_EXEC
@@ -2118,18 +2124,39 @@ void MCStringsEvalDoesNotContain(MCExecContext& ctxt, MCStringRef p_whole, MCStr
 void MCStringsEvalBeginsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result);
 void MCStringsEvalEndsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result);
 
-void MCStringsEvalIsAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_token, MCStringRef p_string, bool& r_result);
-void MCStringsEvalIsNotAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_token, MCStringRef p_string, bool& r_result);
-void MCStringsEvalIsAmongTheWordsOf(MCExecContext& ctxt, MCStringRef p_word, MCStringRef p_string, bool& r_result);
-void MCStringsEvalIsNotAmongTheWordsOf(MCExecContext& ctxt, MCStringRef p_word, MCStringRef p_string, bool& r_result);
-void MCStringsEvalIsAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_line, MCStringRef p_string, bool& r_result);
-void MCStringsEvalIsNotAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_line, MCStringRef p_string, bool& r_result);
-void MCStringsEvalIsAmongTheItemsOf(MCExecContext& ctxt, MCStringRef p_item, MCStringRef p_string, bool& r_result);
-void MCStringsEvalIsNotAmongTheItemsOf(MCExecContext& ctxt, MCStringRef p_item, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheParagraphsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheParagraphsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheSentencesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheSentencesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheItemsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheItemsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheWordsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheWordsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheTrueWordsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheTrueWordsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheCharsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheCharsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheCodepointsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheCodepointsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheCodeunitsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheCodeunitsOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsAmongTheBytesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
+void MCStringsEvalIsNotAmongTheBytesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result);
 
-void MCStringsEvalItemOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
 void MCStringsEvalLineOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
+void MCStringsEvalParagraphOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
+void MCStringsEvalSentenceOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
+void MCStringsEvalItemOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
 void MCStringsEvalWordOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
+void MCStringsEvalTrueWordOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
+void MCStringsEvalTokenOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
+void MCStringsEvalCodepointOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
+void MCStringsEvalCodeunitOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
+void MCStringsEvalByteOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
 void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result);
 
 void MCStringsExecReplace(MCExecContext& ctxt, MCStringRef p_pattern, MCStringRef p_replacement, MCStringRef p_target);
@@ -2228,7 +2255,6 @@ void MCStringsMarkBytesOfTextByRange(MCExecContext& ctxt, integer_t p_first, int
 void MCStringsMarkBytesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark);
 
 void MCStringsSkipWord(MCExecContext& ctxt, MCStringRef p_string, bool p_skip_spaces, uindex_t& x_offset);
-bool MCStringsFindNextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_chunk_type, uindex_t t_length, MCRange& x_range, bool p_not_first, bool& r_last);
 
 ///////////
 
@@ -2936,6 +2962,7 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 void MCInterfaceExecFind(MCExecContext& ctxt, int p_mode, MCStringRef p_needle, MCChunk *p_target);
 
 void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef value, int where, MCObjectChunkPtr target);
+void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCExecValue value, int where, MCObjectChunkPtr target);
 void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef value, int where, MCObjectChunkPtr target);
 void MCInterfaceExecPutUnicodeIntoField(MCExecContext& ctxt, MCDataRef p_data, int p_where, MCObjectChunkPtr p_chunk);
 
@@ -3648,6 +3675,7 @@ void MCEngineEvalErrorObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 
 void MCEngineExecGet(MCExecContext& ctxt, MCValueRef value);
 void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef value, int where, MCVariableChunkPtr t_target);
+void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue value, int where, MCVariableChunkPtr t_target);
 void MCEngineExecPutOutput(MCExecContext& ctxt, MCStringRef value);
 void MCEngineExecPutOutputUnicode(MCExecContext& ctxt, MCDataRef value);
 
@@ -5270,8 +5298,7 @@ template<> struct MCExecValueTraits<MCValueRef>
 
     inline static void set(MCExecValue& self, MCValueRef p_value)
     {
-        self . type = kMCExecValueTypeValueRef;
-        self . valueref_value = p_value;
+        MCExecTypeSetValueRef(self, p_value);
     }
 
     inline static void release(MCValueRef& self)

@@ -2071,15 +2071,15 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
     MCmessagemessages = False;
 
     MCExecContext ctxt(this, nil, nil);
-    MCAutoValueRef t_value;
-	MCresult->eval(ctxt, &t_value);
+    MCExecValue t_value;
+	MCresult->eval_ctxt(ctxt, t_value);
 
 	if (h)
 		message_with_valueref_args(MCM_message_handled, MCSTR(htypes[htype]), m);
 	else
 		message_with_valueref_args(MCM_message_not_handled, MCSTR(htypes[htype]), m);
 
-	MCresult->set(ctxt, *t_value);
+	MCresult->give_value(ctxt, t_value);
 
 	MCmessagemessages = True;
 }
@@ -3032,7 +3032,9 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			// we pass t_length - 1 to extendedload (after adjusting for script). We
 			// then verify we've read a nice NUL byte at the end.
 			MCObjectInputStream *t_stream = nil;
-			/* UNCHECKED */ MCStackSecurityCreateObjectInputStream(stream, t_length, t_stream);
+            // SN-2014-03-27 [[ Bug 11993 ]] 7.0 file format doesn't put the nil byte needed for decryption
+            // We need to provide the information to the ObjectInputStream
+			/* UNCHECKED */ MCStackSecurityCreateObjectInputStream(stream, t_length, version >= 7000, t_stream);
 			if (version < 7000)
 			{
 				t_length -= 1;

@@ -158,10 +158,11 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 		if (t_var == NULL)
 		{
 			tptr -> clear_argument();
-            MCAutoValueRef t_value;
-			if (!ctxt . TryToEvaluateParameter(tptr, line, pos, is_function ? EE_FUNCTION_BADSOURCE : EE_STATEMENT_BADPARAM, &t_value))
+            MCExecValue t_value;
+            //HERE
+			if (!ctxt . TryToEvaluateParameter(tptr, line, pos, is_function ? EE_FUNCTION_BADSOURCE : EE_STATEMENT_BADPARAM, t_value))
                 return;
-			tptr->setvalueref_argument(*t_value);
+			tptr->give_exec_argument(t_value);
 		}
 		else
 			tptr->set_argument_var(t_var);
@@ -375,6 +376,8 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
     MCScriptPoint *sp = nil;
     int4 count = 0;
     
+    MCTextChunkIterator *tci = nil;
+    
     if (!ctxt . TryToEvaluateExpression(endcond, line, pos, EE_REPEAT_BADFORCOND, &t_condition))
         return;
     
@@ -417,7 +420,40 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             if (!ctxt . ConvertToString(*t_condition, &t_string))
                 return;
             
-            t_length = MCStringGetLength(*t_string);
+            switch (each)
+            {
+                case FU_LINE:
+                    tci = new MCTextChunkIterator(CT_LINE, *t_string);
+                    break;
+                case FU_PARAGRAPH:
+                    tci = new MCTextChunkIterator(CT_PARAGRAPH, *t_string);
+                    break;
+                case FU_SENTENCE:
+                    tci = new MCTextChunkIterator(CT_SENTENCE, *t_string);
+                    break;
+                case FU_ITEM:
+                    tci = new MCTextChunkIterator(CT_ITEM, *t_string);
+                    break;
+                case FU_WORD:
+                    tci = new MCTextChunkIterator(CT_WORD, *t_string);
+                    break;
+                case FU_TRUEWORD:
+                    tci = new MCTextChunkIterator(CT_TRUEWORD, *t_string);
+                    break;
+                case FU_TOKEN:
+                    tci = new MCTextChunkIterator(CT_TOKEN, *t_string);
+                    break;
+                case FU_CODEPOINT:
+                    tci = new MCTextChunkIterator(CT_CODEPOINT, *t_string);
+                    break;
+                case FU_CODEUNIT:
+                    tci = new MCTextChunkIterator(CT_CODEUNIT, *t_string);
+                    break;
+                case FU_CHARACTER:
+                default:
+                    tci = new MCTextChunkIterator(CT_CHARACTER, *t_string);
+                    break;
+            } 
         }
     }
     else
@@ -481,47 +517,16 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                     
                 default:
                 {
-                    switch (each)
-                    {
-                        case FU_LINE:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_LINE, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_PARAGRAPH:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_PARAGRAPH, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_SENTENCE:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_SENTENCE, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_ITEM:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_ITEM, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_WORD:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_WORD, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_TRUEWORD:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_TRUEWORD, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_TOKEN:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_TOKEN, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_CODEPOINT:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_CODEPOINT, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_CODEUNIT:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_CODEUNIT, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                        case FU_CHARACTER:
-                        default:
-                            t_found = MCStringsFindNextChunk(ctxt, *t_string, CT_CHARACTER, t_length, t_chunk_range, t_found, endnext);
-                            break;
-                    }
+                    t_found = tci -> next(ctxt);
+                    endnext = tci -> isexhausted();
+
                     if (!t_found)
                     {
                         t_unit = kMCEmptyString;
                         done = true;
                     }
                     else
-                        MCStringCopySubstring(*t_string, t_chunk_range, &t_unit);
+                        tci -> copystring(&t_unit);
                 }
             }
             // MW-2010-12-15: [[ Bug 9218 ]] Added KEY to the type of repeat that already
@@ -554,19 +559,18 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
         
         done = done || endnext;
     }
+    
+    delete tci;
 }
 
 void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCExpression *step, MCExpression *startcond, MCExpression *endcond, MCVarref *loopvar, real8 stepval, uint2 line, uint2 pos)
 {
     real8 endn = 0.0;
-    MCAutoValueRef t_condition, t_step;
+    MCExecValue t_condition;
     
     if (step != NULL)
     {
-        if (!ctxt . TryToEvaluateExpression(step, line, pos, EE_REPEAT_BADWITHSTEP, &t_step))
-            return;
-        
-        if (!ctxt . ConvertToReal(*t_step, stepval) || stepval == 0.0)
+        if (!ctxt . TryToEvaluateExpressionAsDouble(step, line, pos, EE_REPEAT_BADWITHSTEP, stepval) || stepval == 0)
         {
             ctxt . LegacyThrow(EE_REPEAT_BADWITHSTEP);
             return;
@@ -574,11 +578,8 @@ void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCEx
         
     }
     
-    if (!ctxt . TryToEvaluateExpression(startcond, line, pos, EE_REPEAT_BADWITHSTART, &t_condition))
-        return;
-    
     real8 t_loop;
-    if (!ctxt . ConvertToReal(*t_condition, t_loop))
+    if (!ctxt . TryToEvaluateExpressionAsDouble(startcond, line, pos, EE_REPEAT_BADWITHSTART, t_loop))
     {
         ctxt . LegacyThrow(EE_REPEAT_BADWITHSTART);
         return;
@@ -586,13 +587,13 @@ void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCEx
     
     t_loop -= stepval;
     
-    MCAutoNumberRef t_loop_var;
-    if (!MCNumberCreateWithReal(t_loop, &t_loop_var) || !ctxt . TryToSetVariable(loopvar, line, pos, EE_REPEAT_BADWITHVAR, *t_loop_var))
+    MCExecValue t_loop_var;
+    t_loop_var . type = kMCExecValueTypeDouble;
+    t_loop_var . double_value = t_loop;
+    if (!ctxt . TryToSetVariable(loopvar, line, pos, EE_REPEAT_BADWITHVAR, t_loop_var))
         return;
     
-    MCAutoValueRef t_end_condition;
-    if (!ctxt . TryToEvaluateExpression(endcond, line, pos, EE_REPEAT_BADWITHSTART, &t_end_condition) ||
-        !ctxt . ConvertToReal(*t_end_condition, endn))
+    if (!ctxt . TryToEvaluateExpressionAsDouble(endcond, line, pos, EE_REPEAT_BADWITHSTART, endn))
         return;
     
     bool done;
@@ -600,10 +601,8 @@ void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCEx
     
     while (!done)
     {
-        MCAutoValueRef t_loop_pos;
         real8 t_cur_value;
-        if (!ctxt . TryToEvaluateExpression(loopvar, line, pos, EE_REPEAT_BADWITHVAR, &t_loop_pos) ||
-            !ctxt . ConvertToReal(*t_loop_pos, t_cur_value))
+        if (!ctxt . TryToEvaluateExpressionAsDouble(loopvar, line, pos, EE_REPEAT_BADWITHVAR, t_cur_value))
             return;
         
         if (stepval < 0)
@@ -617,8 +616,8 @@ void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCEx
         
         if (!done)
         {
-            MCAutoNumberRef t_cur_loop;
-            if (!MCNumberCreateWithReal(t_cur_value + stepval, &t_cur_loop) || !ctxt . TryToSetVariable(loopvar, line, pos, EE_REPEAT_BADWITHVAR, *t_cur_loop))
+            t_loop_var . double_value = t_cur_value + stepval;
+            if (!ctxt . TryToSetVariable(loopvar, line, pos, EE_REPEAT_BADWITHVAR, t_loop_var))
                 return;
             
             MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);

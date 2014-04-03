@@ -172,8 +172,9 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 	for(;;)
 	{
 		// Consume all spaces after the break index.
+        // AL-2014-03-21: [[ Bug 11958 ]] Break index is paragraph index, not block index.
 		while(t_break_index < (t_break_block -> GetOffset() + t_break_block -> GetLength()) &&
-			  parent -> TextIsWordBreak(t_break_block -> GetCodepointAtIndex(t_break_index)))
+			  parent -> TextIsWordBreak(parent -> GetCodepointAtIndex(t_break_index)))
 			t_break_index++;
 		
 		if (t_break_index < (t_break_block -> GetOffset() + t_break_block -> GetLength()))
@@ -191,7 +192,8 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 		
 		// If the first char of the next block is not a space, then there is nothing more
 		// to do.
-		if (!parent -> TextIsWordBreak(t_next_block -> GetCodepointAtIndex(t_break_index)))
+        // AL-2014-03-21: [[ Bug 11958 ]] Break index is paragraph index, not block index.
+		if (!parent -> TextIsWordBreak(parent -> GetCodepointAtIndex(t_break_index)))
 			break;
 		
 		// The next block starts with a space, so advance the break block.

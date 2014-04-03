@@ -3211,15 +3211,18 @@ Exec_stat MCChunk::eval(MCExecPoint &ep)
 
 void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
 {
-    MCAutoValueRef t_text;
+    MCExecValue t_text;
+    MCAutoValueRef t_valueref;
+    bool t_exec_expr = false;
 
     if (source != NULL && url == NULL && stack == NULL && background == NULL && card == NULL
         && group == NULL && object == NULL)
     {
         if (desttype != DT_OWNER)
         {
-            if (!ctxt . EvalExprAsValueRef(source, EE_CHUNK_CANTGETSOURCE, &t_text))
+            if (!ctxt . EvaluateExpression(source, EE_CHUNK_CANTGETSOURCE, t_text))
                 return;
+            t_exec_expr = true;
         }
         else
         {
@@ -3233,13 +3236,14 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                 return;
             }
 
-            MCEngineEvalOwner(ctxt, t_object, (MCStringRef&)&t_text);
+            MCEngineEvalOwner(ctxt, t_object, (MCStringRef&)&t_valueref);
         }
     }
     else if (destvar != NULL)
     {
-        if (!ctxt . EvalExprAsValueRef(destvar, EE_CHUNK_CANTGETDEST, &t_text))
+        if (!ctxt . EvaluateExpression(destvar, EE_CHUNK_CANTGETDEST, t_text))
             return;
+        t_exec_expr = true;
     }
     else
     {
@@ -3264,72 +3268,81 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                 ctxt . LegacyThrow(EE_CHUNK_CANTFINDOBJECT);
                 return;
             }
-            t_text = *t_url_output;
+            t_valueref = *t_url_output;
         }
         else
         {
             switch (function)
             {
                 case F_CLICK_CHUNK:
-                    MCInterfaceEvalClickChunk(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalClickChunk(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_CLICK_CHAR_CHUNK:
-                    MCInterfaceEvalClickCharChunk(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalClickCharChunk(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_CLICK_LINE:
-                    MCInterfaceEvalClickLine(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalClickLine(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_CLICK_TEXT:
-                    MCInterfaceEvalClickText(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalClickText(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_SELECTED_CHUNK:
-                    MCInterfaceEvalSelectedChunk(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalSelectedChunk(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_SELECTED_LINE:
-                    MCInterfaceEvalSelectedLine(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalSelectedLine(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_SELECTED_TEXT:
-                    MCInterfaceEvalSelectedText(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalSelectedText(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_FOUND_CHUNK:
-                    MCInterfaceEvalFoundChunk(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalFoundChunk(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_FOUND_LINE:
-                    MCInterfaceEvalFoundLine(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalFoundLine(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_FOUND_TEXT:
-                    MCInterfaceEvalFoundText(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalFoundText(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_MOUSE_CHUNK:
-                    MCInterfaceEvalMouseChunk(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalMouseChunk(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_MOUSE_LINE:
-                    MCInterfaceEvalMouseLine(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalMouseLine(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_MOUSE_CHAR_CHUNK:
-                    MCInterfaceEvalMouseCharChunk(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalMouseCharChunk(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 case F_MOUSE_TEXT:
-                    MCInterfaceEvalMouseText(ctxt, (MCStringRef&)&t_text);
+                    MCInterfaceEvalMouseText(ctxt, (MCStringRef&)&t_valueref);
                     break;
                 default:
                     MCMarkedText t_mark;
                     MCInterfaceMarkContainer(ctxt, t_object, t_mark);
-                    MCStringsEvalTextChunk(ctxt, t_mark, (MCStringRef&)&t_text);
+                    MCStringsEvalTextChunk(ctxt, t_mark, (MCStringRef&)&t_valueref);
                     MCValueRelease(t_mark . text);
                     break;
             }
         }
     }
 
-    if (*t_text != nil)
+    if (*t_valueref != nil || t_exec_expr)
     {
         if (cline != nil || paragraph != nil || sentence != nil || item != nil || trueword != nil || word != nil
             || token != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil)
         {
             // Must be a string ref
             MCAutoStringRef t_text_str;
-            if (!ctxt . ConvertToString(*t_text, &t_text_str))
+            bool t_success = true;
+            if (t_exec_expr)
+            {
+                MCExecTypeConvertAndReleaseAlways(ctxt, t_text . type, &t_text, kMCExecValueTypeStringRef, &(&t_text_str));
+                t_success = !ctxt . HasError();
+            }
+            else
+                t_success = ctxt . ConvertToString(*t_valueref, &t_text_str);
+            
+            if (!t_success)
             {
                 ctxt.Throw();
                 return;
@@ -3342,22 +3355,22 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
             mark(ctxt, false, false, t_new_mark);
             
             if (byte == nil)
-                MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value);
+                MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value), r_text . type = kMCExecValueTypeStringRef;
             else
-                MCStringsEvalByteChunk(ctxt, t_new_mark, r_text . dataref_value);
+                MCStringsEvalByteChunk(ctxt, t_new_mark, r_text . dataref_value), r_text . type = kMCExecValueTypeDataRef;
             
             MCValueRelease(t_new_mark . text);
         }
         else
-            r_text . valueref_value = MCValueRetain(*t_text);
+        {
+            if (t_exec_expr)
+                r_text = t_text;
+            else
+                MCExecTypeSetValueRef(r_text, MCValueRetain(*t_valueref));
+        }
     }
     else
-        r_text . stringref_value = MCValueRetain(kMCEmptyString);
-
-    if (!ctxt . HasError())
-    {
-        r_text . type = kMCExecValueTypeValueRef;
-    }
+        MCExecTypeSetValueRef(r_text, MCValueRetain(kMCEmptyString));
 }
 
 #ifdef LEGACY_EXEC
@@ -3702,6 +3715,84 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
     if (!ctxt . HasError())
         return true;
 
+    return false;
+}
+
+bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCExecValue p_value, bool p_unicode)
+{    
+    if (destvar != nil)
+    {
+        MCAutoValueRef t_valueref;
+        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeValueRef, &(&t_valueref));
+        MCVariableChunkPtr t_var_chunk;
+        if (!evalvarchunk(ctxt, false, true, t_var_chunk))
+            return false;
+        
+        MCEngineExecPutIntoVariable(ctxt, *t_valueref, p_type, t_var_chunk);
+//        MCEngineExecPutIntoVariable(ctxt, p_value, p_type, t_var_chunk);
+        MCValueRelease(t_var_chunk . mark . text);
+    }
+    else if (isurlchunk())
+    {
+        MCAutoValueRef t_valueref;
+        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeValueRef, &(&t_valueref));
+        MCUrlChunkPtr t_url_chunk;
+        t_url_chunk . url = nil;
+        if (!evalurlchunk(ctxt, false, true, t_url_chunk))
+            return false;
+        
+        MCNetworkExecPutIntoUrl(ctxt, *t_valueref, p_type, t_url_chunk);
+        
+        MCValueRelease(t_url_chunk . url);
+        MCValueRelease(t_url_chunk . mark . text);
+    }
+    else
+    {
+        MCObjectChunkPtr t_obj_chunk;
+        if (!evalobjectchunk(ctxt, false, true, t_obj_chunk))
+            return false;
+        
+        if (p_unicode)
+        {
+            if (t_obj_chunk . object -> gettype() != CT_FIELD)
+            {
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETUNICODEDEST);
+                MCValueRelease(t_obj_chunk . mark . text);
+                return false;
+            }
+            
+            MCAutoDataRef t_data;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeDataRef, &(&t_data));
+            if (ctxt . HasError())
+            {
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETUNICODEDEST);
+                MCValueRelease(t_obj_chunk . mark . text);
+                return false;
+            }
+            MCInterfaceExecPutUnicodeIntoField(ctxt, *t_data, p_type, t_obj_chunk);
+        }
+        else if (t_obj_chunk . object -> gettype() == CT_FIELD)
+        {
+            MCAutoStringRef t_string;
+            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_string));
+            if (ctxt . HasError())
+            {
+                ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
+                MCValueRelease(t_obj_chunk . mark . text);
+                return false;
+            }            
+            
+            MCInterfaceExecPutIntoField(ctxt, *t_string, p_type, t_obj_chunk);
+        }
+        else
+            MCInterfaceExecPutIntoObject(ctxt, p_value, p_type, t_obj_chunk);
+
+        MCValueRelease(t_obj_chunk . mark . text);
+    }
+    
+    if (!ctxt . HasError())
+        return true;
+    
     return false;
 }
 
@@ -4971,9 +5062,11 @@ bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
         && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
         t_function = true;
 
-    if (!t_function && cline == nil && item == nil
-        && token == nil && word == nil && character == nil
-        && codepoint == nil && codeunit == nil && byte == nil)
+    // AL-2014-03-27: [[ Bug 12042 ]] Object chunk evaluation should include
+    //  paragraph, sentence, and trueword chunks.
+    if (!t_function && cline == nil && paragraph == nil && sentence == nil
+        && item == nil && word == nil && trueword == nil && token == nil
+        && character == nil && codepoint == nil && codeunit == nil && byte == nil)
     {
         MCMarkedText t_mark;
         t_mark . finish = INDEX_MAX;
@@ -6147,5 +6240,431 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
     MCSyntaxFactoryEndExpression(ctxt);
 #endif
 }
-								  
+
 ////////////////////////////////////////////////////////////////////////////////
+
+static bool need_increment(Chunk_term p_chunk_type)
+{
+    return (p_chunk_type == CT_LINE || p_chunk_type == CT_ITEM || p_chunk_type == CT_PARAGRAPH);
+}
+
+static bool MCStringsIsAmongTheChunksOfRange(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, Chunk_term p_chunk_type, MCStringOptions p_options, MCRange p_range)
+{
+	MCRange t_range;
+	if (!MCStringFind(p_string, p_range, p_chunk, p_options, &t_range))
+		return false;
+    
+	char_t t_delimiter;
+	t_delimiter = p_chunk_type == CT_ITEM ? ctxt . GetItemDelimiter() : ctxt . GetLineDelimiter();
+	
+    // if there is no delimiter to the left then continue searching the string.
+	if (t_range . offset != 0 &&
+		MCStringGetNativeCharAtIndex(p_string, t_range . offset - 1) != t_delimiter)
+		return MCStringsIsAmongTheChunksOfRange(ctxt, p_chunk, p_string, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
+    
+    // if there is no delimiter to the right then continue searching the string.
+	if (t_range . offset + t_range . length != MCStringGetLength(p_string) &&
+		MCStringGetNativeCharAtIndex(p_string, t_range . offset + t_range . length) != t_delimiter)
+		return MCStringsIsAmongTheChunksOfRange(ctxt, p_chunk, p_string, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
+    
+	return true;
+}
+
+static bool MCStringsIsAmongTheParagraphsOfRange(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, MCStringOptions p_options, MCRange p_range)
+{
+	MCRange t_range;
+	if (!MCStringFind(p_string, p_range, p_chunk, p_options, &t_range))
+		return false;
+
+	codepoint_t t_delimiter;
+    // if there is no delimiter to the left then continue searching the string.
+	if (t_range . offset != 0)
+    {
+        t_delimiter = MCStringGetCodepointAtIndex(p_string, t_range . offset - 1);
+        if (t_delimiter != '\n' && t_delimiter != 0x2029)
+            return MCStringsIsAmongTheParagraphsOfRange(ctxt, p_chunk, p_string, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
+    }
+    
+    // if there is no delimiter to the right then continue searching the string.
+	if (t_range . offset + t_range . length != MCStringGetLength(p_string))
+    {
+        t_delimiter = MCStringGetCodepointAtIndex(p_string, t_range . offset + t_range . length);
+        if (t_delimiter != '\n' && t_delimiter != 0x2029)
+            return MCStringsIsAmongTheParagraphsOfRange(ctxt, p_chunk, p_string, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
+    }
+	return true;
+}
+
+static bool MCStringsFindChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_needle, Chunk_term p_chunk_type, MCStringOptions p_options, MCRange p_range, uindex_t& r_offset)
+{
+    // If we can't find the chunk in the remainder of the string, we are done.
+    MCRange t_range;
+    if (!MCStringFind(p_string, p_range, p_needle, p_options, &t_range))
+        return false;
+    
+    // Work out the delimiter.
+	char_t t_delimiter;
+	t_delimiter = p_chunk_type == CT_ITEM ? ctxt . GetItemDelimiter() : ctxt . GetLineDelimiter();
+    
+    // If we are in wholeMatches mode, ensure the delimiter is either side.
+	if (ctxt . GetWholeMatches())
+	{
+		if (t_range . offset > 0 &&
+			MCStringGetNativeCharAtIndex(p_string, t_range . offset - 1) != t_delimiter)
+			return MCStringsFindChunkInRange(ctxt, p_string, p_needle, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length), r_offset);
+		if (t_range . offset + t_range . length < MCStringGetLength(p_string) &&
+			MCStringGetNativeCharAtIndex(p_string, t_range . offset + t_range . length) != t_delimiter)
+			return MCStringsFindChunkInRange(ctxt, p_string, p_needle, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length + 1, p_range . length), r_offset);
+	}
+    
+    r_offset = t_range . offset;
+    return true;
+}
+
+static bool MCStringsFindParagraphInRange(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_needle, MCStringOptions p_options, MCRange p_range, uindex_t& r_offset)
+{
+    // If we can't find the chunk in the remainder of the string, we are done.
+    MCRange t_range;
+    if (!MCStringFind(p_string, p_range, p_needle, p_options, &t_range))
+        return false;
+    
+    // If we are in wholeMatches mode, ensure the delimiter is either side.
+	if (ctxt . GetWholeMatches())
+	{
+        codepoint_t t_delimiter;
+        // if there is no delimiter to the left then continue searching the string.
+        if (t_range . offset != 0)
+        {
+            t_delimiter = MCStringGetCodepointAtIndex(p_string, t_range . offset - 1);
+            if (t_delimiter != '\n' && t_delimiter != 0x2029)
+                return MCStringsFindParagraphInRange(ctxt, p_string, p_needle, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length), r_offset);
+        }
+        
+        // if there is no delimiter to the right then continue searching the string.
+        if (t_range . offset + t_range . length != MCStringGetLength(p_string))
+        {
+            t_delimiter = MCStringGetCodepointAtIndex(p_string, t_range . offset + t_range . length);
+            if (t_delimiter != '\n' && t_delimiter != 0x2029)
+                return MCStringsFindParagraphInRange(ctxt, p_string, p_needle, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length), r_offset);
+        }
+	}
+    
+    r_offset = t_range . offset;
+    return true;
+}
+
+MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text)
+{
+    /* UNCHECKED */ MCStringCopy(p_text, text);
+    type = p_chunk_type;
+    
+    // WARNING: At the moment, MCStringIsNative normalizes the string
+    //  if that allows it to nativise it 'losslessly'.
+    if (type == CT_CHARACTER && MCStringIsNative(text))
+        type = CT_CODEUNIT;
+    
+    sp = nil;
+    break_iterator = nil;
+    range = MCRangeMake(0, 0);
+    exhausted = false;
+    length = MCStringGetLength(text);
+    first_chunk = true;
+    
+    switch (type)
+    {
+        case CT_TOKEN:
+            sp = new MCScriptPoint(p_text);
+            break;
+        case CT_CHARACTER:
+        case CT_SENTENCE:
+            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, p_chunk_type == CT_SENTENCE ? kMCBreakIteratorTypeSentence : kMCBreakIteratorTypeCharacter, break_iterator);
+            /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, text);
+            break;
+        case CT_TRUEWORD:
+            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeWord, break_iterator);
+            /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, text);
+            break;
+        default:
+            break;
+    }
+}
+
+MCTextChunkIterator::~MCTextChunkIterator()
+{
+    if (break_iterator != nil)
+        MCLocaleBreakIteratorRelease(break_iterator);
+    
+    MCValueRelease(text);
+    delete sp;
+}
+
+bool MCTextChunkIterator::next(MCExecContext& ctxt)
+{
+    if (break_iterator != nil)
+    {
+        if (type == CT_TRUEWORD)
+        {
+            if (!MCLocaleWordBreakIteratorAdvance(text, break_iterator, range))
+                return false;
+            
+            if (range . offset + range . length == kMCLocaleBreakIteratorDone)
+                return false;
+
+            return true;
+        }
+        else
+        {
+            range . offset += range . length;
+            uindex_t t_end = MCLocaleBreakIteratorAdvance(break_iterator);
+            if (t_end == kMCLocaleBreakIteratorDone)
+                return false;
+
+            if (t_end == length)
+                exhausted = true;
+            
+            range . length = t_end - range . offset;
+            return true;
+        }
+    }
+    
+    if (sp != nil)
+    {
+        MCerrorlock++;
+        
+        bool t_found = true;
+        uint2 t_pos;
+        Parse_stat ps = sp -> nexttoken();
+        if (ps == PS_ERROR || ps == PS_EOF)
+            t_found = false;
+        
+        if (t_found)
+        {
+            range . offset = sp -> getindex();
+            range . length = MCStringGetLength(sp -> gettoken_stringref());
+        }
+        
+        return t_found;
+    }
+    
+    uindex_t t_offset = range . offset + range . length;
+    
+    if (!first_chunk && need_increment(type))
+        t_offset++;
+    
+    if (t_offset >= length)
+        return false;
+    
+    range . offset = t_offset;
+    first_chunk = false;
+    
+    switch (type)
+    {
+        case CT_LINE:
+        case CT_ITEM:
+        {
+            char_t t_line_delimiter = ctxt . GetLineDelimiter();
+            char_t t_item_delimiter = ctxt . GetItemDelimiter();
+            
+            char_t t_delimiter = (type == CT_LINE) ? t_line_delimiter : t_item_delimiter;
+            
+            // calculate the length of the line / item
+            if (!MCStringFirstIndexOfChar(text, t_delimiter, t_offset, kMCCompareExact, t_offset))
+            {
+                range . length = length - range . offset;
+                exhausted = true;
+            }
+            else
+                range . length = t_offset - range . offset;
+        }
+            return true;
+            
+        case CT_PARAGRAPH:
+        {
+            uindex_t t_pg_offset;
+            bool t_newline_found, t_pg_found;
+            
+            t_pg_offset = t_offset;
+            t_newline_found = MCStringFirstIndexOfChar(text, '\n', t_offset, kMCCompareExact, t_offset);
+            t_pg_found = MCStringFirstIndexOfChar(text, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);
+            
+            t_offset = MCU_min(t_newline_found ? t_offset : UINDEX_MAX, t_pg_found ? t_pg_offset : UINDEX_MAX);
+            
+            // calculate the length of the paragraph
+            if (t_newline_found || t_pg_found)
+                range . length = t_offset - range . offset;
+            else
+            {
+                // AL-2014-03-20: [[ Bug 11945 ]] We've got a final paragraph if delimiters are not found
+                range . length = length - t_offset;
+                exhausted = true;
+            }
+        }
+            return true;
+            
+        case CT_WORD:
+        {
+            // if there are consecutive spaces at the beginning, skip them
+            while (t_offset < length && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(text, t_offset)))
+                t_offset++;
+            
+            if (t_offset >= length)
+                return false;
+            
+            range . offset = t_offset;
+            
+            MCStringsSkipWord(ctxt, text, false, t_offset);
+            
+            if (t_offset == length)
+                exhausted = true;
+            
+            range . length = t_offset - range . offset;
+        }
+            return true;
+            
+        case CT_CODEPOINT:
+            range . length = MCStringIsValidSurrogatePair(text, range . offset) ? 2 : 1;
+            return true;
+            
+        case CT_CODEUNIT:
+        case CT_BYTE:
+            range . length = 1;
+            
+            if (t_offset == length - 1)
+                exhausted = true;
+            
+            return true;
+    
+        default:
+            assert(false);
+    }
+}
+
+bool MCTextChunkIterator::copystring(MCStringRef& r_string)
+{
+    return MCStringCopySubstring(text, range, r_string);
+}
+
+uindex_t MCTextChunkIterator::countchunks(MCExecContext& ctxt)
+{
+    uindex_t t_count = 0;
+    while (next(ctxt))
+        t_count++;
+    
+    return t_count;
+}
+
+bool MCTextChunkIterator::isamong(MCExecContext& ctxt, MCStringRef p_needle)
+{
+    switch (type)
+    {
+        case CT_LINE:
+        case CT_ITEM:
+        case CT_PARAGRAPH:
+        {
+            // if the pattern is empty, we use the default behavior -
+            // i.e. go through chunk by chunk to find an empty one.
+            if (MCStringIsEmpty(p_needle))
+                break;
+            
+            if (type == CT_PARAGRAPH)
+                return MCStringsIsAmongTheParagraphsOfRange(ctxt, p_needle, text, ctxt . GetStringComparisonType(), MCRangeMake(0, length));
+            
+            return MCStringsIsAmongTheChunksOfRange(ctxt, p_needle, text, type, ctxt . GetStringComparisonType(), MCRangeMake(0, length));
+        }
+        default:
+            if (MCStringIsEmpty(p_needle))
+                return false;
+            break;
+    }
+    
+    while (next(ctxt))
+        if (MCStringSubstringIsEqualTo(text, range, p_needle, ctxt . GetStringComparisonType()))
+            return true;
+    
+    return false;
+}
+
+uindex_t MCTextChunkIterator::chunkoffset(MCExecContext& ctxt, MCStringRef p_needle, uindex_t p_start_offset)
+{
+    MCStringOptions t_options;
+	t_options = ctxt.GetStringComparisonType();
+	
+    // Ensure that when no item is skipped, the offset starts from the first item - without skipping it
+    uindex_t t_chunk_offset;
+    t_chunk_offset = 1;
+    
+	// Skip ahead to the first (1-indexed) chunk of interest.
+    p_start_offset += 1;
+    while (p_start_offset)
+    {
+        if (!next(ctxt))
+            break;
+        p_start_offset--;
+    }
+	
+	// If we skip past the last chunk, we are done.
+	if (p_start_offset > 0)
+		return 0;
+	
+    // MW-2013-01-21: item/line/paragraph offset do not currently operate on a 'split' basis.
+    //   Instead, they return the index of the chunk in which p_chunk starts and if
+    //   wholeMatches is true, then before and after the found range must be the del
+    //   or eos. e.g.
+    //     itemOffset("a,b", "aa,b,cc") => 1 if wholeMatches false, 0 otherwise
+    //     itemOffset("b,c", "a,b,c") => 2
+    
+    switch (type)
+    {
+        case CT_ITEM:
+        case CT_LINE:
+        case CT_PARAGRAPH:
+        {
+            uindex_t t_found_offset;
+            if (type != CT_PARAGRAPH)
+            {
+                if (!MCStringsFindChunkInRange(ctxt, text, p_needle, type, t_options, MCRangeMake(range . offset, length - range . offset), t_found_offset))
+                    return 0;
+            }
+            else
+            {
+                if (!MCStringsFindParagraphInRange(ctxt, text, p_needle, t_options, MCRangeMake(range . offset, length - range . offset), t_found_offset))
+                    return 0;
+            }
+            
+            codepoint_t t_delimiter;
+            t_delimiter = type == CT_ITEM ? ctxt . GetItemDelimiter() : ctxt . GetLineDelimiter();
+            
+            // Count the number of delimiters between the start of the first chunk
+            // and the start of the found string.
+            t_chunk_offset += MCStringCountChar(text, MCRangeMake(range . offset, t_found_offset - range . offset), t_delimiter, t_options);
+            
+            if (type == CT_PARAGRAPH)
+                t_chunk_offset += MCStringCountChar(text, MCRangeMake(range . offset, t_found_offset - range . offset), 0x2029, t_options);
+            
+            return t_chunk_offset;
+        }
+        default:
+            break;
+    }
+    
+    // Otherwise, just iterate through the chunks.
+    do
+	{
+        if (ctxt.GetWholeMatches())
+        {
+            if (MCStringSubstringIsEqualTo(text, range, p_needle, t_options))
+                return t_chunk_offset;
+        }
+        else
+        {
+            if (MCStringSubstringContains(text, range, p_needle, t_options))
+                return t_chunk_offset;
+        }
+        t_chunk_offset++;
+	}
+    while (next(ctxt));
+    
+    // if not found then return 0.
+	return 0;
+}
+

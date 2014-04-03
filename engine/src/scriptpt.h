@@ -135,7 +135,7 @@ public:
     
     uindex_t getindex(void)
     {
-        return tokenptr - backupptr;
+        return tokenptr + length - endptr;
     }
 
 	Parse_stat skip_space();

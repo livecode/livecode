@@ -171,31 +171,26 @@ public:
             return;
         }
 
+        r_value . valueref_value = nil;
         if (t_left . type == kMCExecValueTypeArrayRef)
         {
-            MCArrayRef t_result;
-
             if (t_right . type == kMCExecValueTypeArrayRef)
-                EvalArrayByArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, t_result);
+                EvalArrayByArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, r_value . arrayref_value);
             else
-                EvalArrayByNumber(ctxt, t_left . arrayref_value, t_right . double_value, t_result);
-
-            if (!ctxt . HasError())
-                MCExecValueTraits<MCArrayRef>::set(r_value, t_result);
+                EvalArrayByNumber(ctxt, t_left . arrayref_value, t_right . double_value, r_value . arrayref_value);
         }
         else
         {
             if (t_right . type == kMCExecValueTypeArrayRef)
                 ctxt . LegacyThrow(MismatchError);
             else
-            {
-                real64_t t_real_result = 0.0;
-                Eval(ctxt, t_left . double_value, t_right . double_value, t_real_result);
-
-                if (!ctxt . HasError())
-                    MCExecValueTraits<double>::set(r_value, (double)t_real_result);
-            }
+                Eval(ctxt, t_left . double_value, t_right . double_value, r_value . double_value);
         }
+        
+        if (ctxt . HasError())
+            MCExecTypeRelease(r_value);
+        else
+            r_value . type = t_left . type;
 
         if (t_left . type == kMCExecValueTypeArrayRef)
             MCValueRelease(t_left . arrayref_value);
@@ -251,37 +246,28 @@ public:
             return;
         }
 
+        r_value . valueref_value = nil;
         if (t_left . type == kMCExecValueTypeArrayRef)
         {
-            MCArrayRef t_result;
-
             if (t_right . type == kMCExecValueTypeArrayRef)
-                EvalArrayByArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, t_result);
+                EvalArrayByArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, r_value . arrayref_value);
             else
-                EvalArrayByNumber(ctxt, t_left . arrayref_value, t_right . double_value, t_result);
-
-            if (!ctxt . HasError())
-                MCExecValueTraits<MCArrayRef>::set(r_value, t_result);
+                EvalArrayByNumber(ctxt, t_left . arrayref_value, t_right . double_value, r_value . arrayref_value);
         }
         else
         {
             if (t_right . type == kMCExecValueTypeArrayRef)
-            {
-                MCArrayRef t_result;
-                EvalArrayByNumber(ctxt, t_right . arrayref_value, t_left . double_value, t_result);
-
-                if (!ctxt . HasError())
-                    MCExecValueTraits<MCArrayRef>::set(r_value, t_result);
-            }
+                EvalArrayByNumber(ctxt, t_right . arrayref_value, t_left . double_value, r_value . arrayref_value);
             else
-            {
-                real64_t t_real_result = 0.0;
-                Eval(ctxt, t_left . double_value, t_right . double_value, t_real_result);
-
-                if (!ctxt . HasError())
-                    MCExecValueTraits<double>::set(r_value, (double)t_real_result);
-            }
+                Eval(ctxt, t_left . double_value, t_right . double_value, r_value . double_value);
         }
+        
+        if (ctxt . HasError())
+            MCExecTypeRelease(r_value);
+        else if (t_left . type == kMCExecValueTypeDouble && t_right . type == kMCExecValueTypeDouble)
+            r_value . type = kMCExecValueTypeDouble;
+        else
+            r_value . type = kMCExecValueTypeArrayRef;
 
         if (t_left . type == kMCExecValueTypeArrayRef)
             MCValueRelease(t_left . valueref_value);

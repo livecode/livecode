@@ -1959,6 +1959,11 @@ void MCParagraph::fillselect(MCDC *dc, MCLine *lptr, int2 x, int2 y, uint2 heigh
                 dc->fillrect(srect);
             }
             
+            // AL-2014-03-28: [[ Bug 11960 ]] Break out of the loop if we have dealt with the last block
+            //  in this line, otherwise GetCursorX will not be happy with the index passed to it.
+            if (bptr == lastblock)
+                break;
+            
             bptr = bptr->next();
         }
         while (bptr != firstblock);
@@ -3454,7 +3459,7 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
         moving_forward = false;
 		if (focusedindex == 0)
 			return FT_BACKCHAR;
-        focusedindex = DecrementIndex(focusedindex);
+        focusedindex = PrevChar(focusedindex);
 
         // TODO: is this necessary with the ICU break iterator?
         while (focusedindex && TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
@@ -3472,11 +3477,11 @@ uint1 MCParagraph::fmovefocus(Field_translations type, bool p_force_logical)
         moving_forward = true;
         if (focusedindex == t_length)
 			return FT_FORWARDCHAR;
-        focusedindex = IncrementIndex(focusedindex);
+        focusedindex = NextChar(focusedindex);
 
         // TODO: is this necessary with the ICU break iterator?
         while (focusedindex < t_length && TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
-            focusedindex = IncrementIndex(focusedindex);
+            focusedindex = NextChar(focusedindex);
             
         focusedindex = NextWord(focusedindex);
 		break;
@@ -3587,12 +3592,8 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 							// thus selecting everything before the original index in this paragraph.
 							// This loop rounds up the original index to the next word boundary
 							bptr = indextoblock(originalindex, False);
-							if (originalindex < gettextlength() && TextIsWordBreak(GetCodepointAtIndex(originalindex)))
-							{
+							if (originalindex < gettextlength() && !TextIsWordBreak(GetCodepointAtIndex(originalindex)))
 								originalindex = findwordbreakafter(bptr, originalindex);
-								bptr = indextoblock(originalindex, False);
-								bptr -> AdvanceIndex(originalindex);
-							}
 						}
 					}
 				state |= PS_FRONT;
@@ -3744,13 +3745,8 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 					// It then rounds focusedindex down to the beginning of the
 					// previous word.
 					bptr = indextoblock(originalindex, False);
-					originalindex = findwordbreakafter(bptr, originalindex);
 					if (originalindex < gettextlength() && !TextIsWordBreak(GetCodepointAtIndex(originalindex)))
-					{
 						originalindex = findwordbreakafter(bptr, originalindex);
-						bptr = indextoblock(originalindex, False);
-						bptr -> AdvanceIndex(originalindex);
-					}
 
 					bptr = indextoblock(focusedindex, False);
 					focusedindex = findwordbreakbefore(bptr, focusedindex);
@@ -3781,18 +3777,12 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 					// It then rounds originalindex down to the beginning of the
 					// word it is in.
 					bptr = indextoblock(focusedindex, False);
-					focusedindex = findwordbreakafter(bptr, focusedindex);
 					if (focusedindex < gettextlength() && !TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
-					{
 						focusedindex = findwordbreakafter(bptr, focusedindex);
-						bptr = indextoblock(focusedindex, False);
-						bptr -> AdvanceIndex(focusedindex);
-					}
 
 					bptr = indextoblock(originalindex, False);
 					if (originalindex != startindex)
-						originalindex = DecrementIndex(originalindex);
-					originalindex = findwordbreakbefore(bptr, originalindex);
+                        originalindex = findwordbreakbefore(bptr, originalindex);
 				}
 				if (direction < 0 || last)
 					state &= ~PS_BACK;
@@ -3857,8 +3847,6 @@ int2 MCParagraph::setfocus(int4 x, int4 y, uint2 fixedheight,
 				// If the last index is not pointing at a space, when we increment to ensure we
 				// get a non-empty selection.
 				bptr = indextoblock(focusedindex, False);
-				if (focusedindex < gettextlength() && !TextIsWordBreak(GetCodepointAtIndex(focusedindex)))
-					bptr -> AdvanceIndex(focusedindex);
 					
 				endindex = focusedindex;
 
@@ -4575,7 +4563,7 @@ void MCParagraph::getclickindex(int2 x, int2 y,
 	bptr = indextoblock(si, False);
 	if (!wholeword)
 	{
-		ei = IncrementIndex(si);
+		ei = NextChar(si);
 		return;
 	}
 
@@ -4633,50 +4621,32 @@ static codepoint_t GetCodepointAtRelativeIndex(MCBlock *p_block, findex_t p_inde
 
 findex_t MCParagraph::findwordbreakbefore(MCBlock *p_block, findex_t p_index)
 {
-	codepoint_t xc, x, y, yc;
-	xc = GetCodepointAtRelativeIndex(p_block, p_index, -2);
-	x = GetCodepointAtRelativeIndex(p_block, p_index, -1);
-	y = GetCodepointAtRelativeIndex(p_block, p_index, 0);
-	yc = GetCodepointAtRelativeIndex(p_block, p_index, 1);
-
-	while(p_block != NULL)
-	{
-		if (MCUnicodeCanBreakWordBetween(xc, x, y, yc))
-			return p_index;
-
-		p_block = p_block -> RetreatIndex(p_index);
-
-		yc = y;
-		y = x;
-		x = xc;
-		xc = GetCodepointAtRelativeIndex(p_block, p_index, -2);
-	}
-
-	return p_index;
+	// Create the word break iterator
+    MCBreakIteratorRef t_breaker;
+    MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeWord, t_breaker);
+    MCLocaleBreakIteratorSetText(t_breaker, m_text);
+    
+    // Find the preceding word break
+    findex_t t_break;
+    t_break = MCLocaleBreakIteratorBefore(t_breaker, p_index);
+    MCLocaleBreakIteratorRelease(t_breaker);
+    
+    return (t_break == kMCLocaleBreakIteratorDone) ? MCStringGetLength(m_text) : t_break;
 }
 
 findex_t MCParagraph::findwordbreakafter(MCBlock *p_block, findex_t p_index)
 {
-	uint4 xc, x, y, yc;
-	xc = GetCodepointAtRelativeIndex(p_block, p_index, -1);
-	x = GetCodepointAtRelativeIndex(p_block, p_index, 0);
-	y = GetCodepointAtRelativeIndex(p_block, p_index, 1);
-	yc = GetCodepointAtRelativeIndex(p_block, p_index, 2);
-
-	while(p_block != NULL)
-	{
-		if (MCUnicodeCanBreakWordBetween(xc, x, y, yc))
-			return p_index;
-
-		p_block = p_block -> AdvanceIndex(p_index);
-
-		xc = x;
-		x = y;
-		y = yc;
-		yc = GetCodepointAtRelativeIndex(p_block, p_index, 2);
-	}
-
-	return p_index;
+	// Create the word break iterator
+    MCBreakIteratorRef t_breaker;
+    MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeWord, t_breaker);
+    MCLocaleBreakIteratorSetText(t_breaker, m_text);
+    
+    // Find the succeeding word break
+    findex_t t_break;
+    t_break = MCLocaleBreakIteratorAfter(t_breaker, p_index);
+    MCLocaleBreakIteratorRelease(t_breaker);
+    
+    return (t_break == kMCLocaleBreakIteratorDone) ? MCStringGetLength(m_text) : t_break;
 }
 
 void MCParagraph::sethilite(Boolean newstate)

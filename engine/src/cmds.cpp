@@ -875,6 +875,10 @@ void MCFind::exec_ctxt(MCExecContext& ctxt)
         return;
 
     MCInterfaceExecFind(ctxt, mode, *t_needle, field);
+    
+    // SN-2014-03-21: [[ Bug 11949 ]] 'find' shouldn't throw an error on a failure
+    // but MCInterfaceExecFind would cause the context to be set on error if finding fails
+    ctxt . IgnoreLastError();
 }
 
 void MCFind::compile(MCSyntaxFactoryRef ctxt)
@@ -1096,32 +1100,41 @@ void MCMarking::exec_ctxt(MCExecContext &ctxt)
         else
             MCInterfaceExecUnmarkCard(ctxt, t_object);
 	}
-    if (tofind == nil)
-        if (mark)
-        {
-            if (where != nil)
-                MCInterfaceExecMarkCardsConditional(ctxt, where);
-            else
-                MCInterfaceExecMarkAllCards(ctxt);
-        }
-        else
-        {
-            if (where != nil)
-                MCInterfaceExecUnmarkCardsConditional(ctxt, where);
-            else
-                MCInterfaceExecUnmarkAllCards(ctxt);
-        }
-	else
+    // SN-2014-03-21 [[ Bug 11950 ]]: 'mark' shouldn't throw an error when failing to mark when card is nil
+    // Any error set is discarded in the end of this block - unless is was triggered by a bad string.
+    else
     {
-        MCAutoStringRef t_needle;
-
-        if (!ctxt . EvalExprAsStringRef(tofind, EE_MARK_BADSTRING, &t_needle))
-            return;
-
-        if (mark)
-            MCInterfaceExecMarkFind(ctxt, mode, *t_needle, field);
+        if (tofind == nil)
+        {
+            if (mark)
+            {
+                if (where != nil)
+                    MCInterfaceExecMarkCardsConditional(ctxt, where);
+                else
+                    MCInterfaceExecMarkAllCards(ctxt);
+            }
+            else
+            {
+                if (where != nil)
+                    MCInterfaceExecUnmarkCardsConditional(ctxt, where);
+                else
+                    MCInterfaceExecUnmarkAllCards(ctxt);
+            }
+        }
         else
-            MCInterfaceExecUnmarkFind(ctxt, mode, *t_needle, field);
+        {
+            MCAutoStringRef t_needle;
+            
+            if (!ctxt . EvalExprAsStringRef(tofind, EE_MARK_BADSTRING, &t_needle))
+                return;
+            
+            if (mark)
+                MCInterfaceExecMarkFind(ctxt, mode, *t_needle, field);
+            else
+                MCInterfaceExecUnmarkFind(ctxt, mode, *t_needle, field);
+        }
+        
+        ctxt . IgnoreLastError();
     }
 }
 
@@ -1374,20 +1387,27 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
 #endif /* MCPut */
 
     
-    MCAutoValueRef t_value;
-    if (!ctxt . EvalExprAsValueRef(source, EE_PUT_BADEXP, &t_value))
+    MCExecValue t_value;
+    if (!ctxt . EvaluateExpression(source, EE_PUT_BADEXP, t_value))
         return;
 	
     if (dest != nil)
     {
-        dest -> set(ctxt, prep, *t_value, is_unicode);
+//        MCAutoValueRef t_valueref;
+//        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeValueRef, &(&t_valueref));
+//        dest -> set(ctxt, prep, *t_valueref, is_unicode);
+        dest -> set(ctxt, prep, t_value, is_unicode);
 	}
     else
-	{
+	{        
+        if (ctxt . HasError())
+            return;
+        
 		MCAutoValueRef t_val;
 		if (is_unicode && (prep == PT_UNDEFINED || prep == PT_CONTENT || prep == PT_MARKUP))
         {
-			if (!ctxt . ConvertToData(*t_value, (MCDataRef&)&t_val))
+            MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeDataRef, &(&t_val));
+			if (ctxt . HasError())
 			{
                 ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
 				return;
@@ -1395,8 +1415,8 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
         }
 		else
         {
-			if (!ctxt . ConvertToString(*t_value, (MCStringRef&)&t_val))
-                
+            MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeStringRef, &(&t_val));
+            if (ctxt . HasError())
 			{
                 ctxt . LegacyThrow(EE_CHUNK_CANTSETDEST);
 				return;
@@ -2335,6 +2355,11 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
     
     MCObjectPtr t_object;
     MCAutoStringRef t_target;
+    
+    // SN-2014-03-21: [[ Bug 11953 ]] sort card does not work
+    t_object . object = nil;
+    t_object . part_id = 0;
+    
 	if (of != NULL)
 	{
 		MCerrorlock++;
@@ -2352,7 +2377,7 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
         }
 		if (t_object . object != nil && t_object . object->gettype() > CT_GROUP && chunktype <= CT_GROUP)
 			chunktype = CT_LINE;
-	}
+	} 
     
 	if (chunktype == CT_CARD || chunktype == CT_MARKED)
 		MCInterfaceExecSortCardsOfStack(ctxt, (MCStack *)t_object . object, direction == ST_ASCENDING, format, by, chunktype == CT_MARKED);

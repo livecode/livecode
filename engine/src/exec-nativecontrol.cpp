@@ -668,6 +668,8 @@ void MCNativeControlGetTarget(MCExecContext& ctxt, MCNativeControlIdentifier& r_
 	else
     {
         r_target . type = kMCNativeControlIdentifierName;
+        // SN-2014-03-25: [[ Bug 11981 ]] calling mobileControlTarget () crashes the application
+        r_target . name = nil;
     }
 }
 
