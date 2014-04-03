@@ -63,6 +63,12 @@ static NSRect cocoa_rect_from_carbon(CGRect p_rect)
 	return NSMakeRect(t_top_left . x, t_top_left . y, p_rect . size . width, p_rect . size . height);
 }
 
+static CGRect carbon_rect_from_cocoa(NSRect p_rect)
+{
+	return CGRectMake(p_rect.origin.x, menu_screen_height() - (p_rect.origin.y + p_rect.size.height),
+					  p_rect.size.width, p_rect.size.height);
+}
+
 static CGPoint carbon_point_from_cocoa(NSPoint p_point)
 {
 	return CGPointMake(p_point . x, menu_screen_height() - p_point . y);
@@ -281,23 +287,26 @@ void MCPlatformScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitma
 
 void MCPlatformScreenSnapshotOfWindow(uint32_t p_window_id, MCPoint *p_size, MCImageBitmap*& r_bitmap)
 {
-	CGImageRef t_image;
-	t_image = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, p_window_id, kCGWindowImageBoundsIgnoreFraming);
+	// IM-2014-04-03: [[ Bug 12085 ]] Update to use Cocoa API to get window bounds
+	NSWindow *t_window;
+	t_window = [NSApp windowWithWindowNumber: p_window_id];
 	
-	NSArray *t_info_array;
-	t_info_array = (NSArray *)CGWindowListCreateDescriptionFromArray((CFArrayRef)[NSArray arrayWithObject: [NSNumber numberWithUnsignedInt: p_window_id]]);
+	if (t_window == nil)
+		return;
 	
-	NSDictionary *t_rect_dict;
-	t_rect_dict = [[t_info_array objectAtIndex: 0] objectForKey: (NSString *)kCGWindowBounds];
+	NSRect t_frame_rect = [t_window frame];
+	NSRect t_content_rect = [[t_window contentView] frame];
 	
-	CGRect t_rect;
-	CGRectMakeWithDictionaryRepresentation((CFDictionaryRef)t_rect_dict, &t_rect);
+	NSRect t_rect = NSOffsetRect(t_content_rect, t_frame_rect.origin.x, t_frame_rect.origin.y);
 	
 	MCPoint t_size;
 	if (p_size == 0)
 		t_size = MCPointMake(t_rect . size . width, t_rect . size . height);
 	else
 		t_size = *p_size;
+	
+	CGImageRef t_image;
+	t_image = CGWindowListCreateImage(carbon_rect_from_cocoa(t_rect), kCGWindowListOptionIncludingWindow, p_window_id, kCGWindowImageBoundsIgnoreFraming);
 	
 	MCMacPlatformCGImageToMCImageBitmap(t_image, t_size, r_bitmap);
 	CGImageRelease(t_image);
