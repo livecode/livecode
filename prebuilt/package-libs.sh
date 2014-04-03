@@ -52,7 +52,7 @@ function doPackage {
 	# Package up ICU
 	local ICU_LIBS=
 	if [ -f "${LIBPATH}/libicudata.a" ] ; then
-		for LIB in data i18n io ule ulx tu uuc ; do
+		for LIB in data i18n io le lx tu uc ; do
 			if [ -f "${LIBPATH}/libicu${LIB}.a" ] ; then
 				ICU_LIBS+="${LIBPATH}/libicu${LIB}.a "
 			fi	
