@@ -2598,7 +2598,7 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 			if (t_element_end + t_del_length >= t_eptr)
 				break;
 
-			t_index += t_del_length;
+			t_index += 1;
 
 			t_sptr = t_element_end + t_del_length;
 		}
