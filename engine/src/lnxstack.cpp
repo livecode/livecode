@@ -50,6 +50,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 
+#include "license.h"
+#include "revbuild.h"
+
 static uint2 calldepth;
 static uint2 nwait;
 
@@ -280,7 +283,19 @@ void MCStack::sethints()
 	XClassHint chints;
 	chints.res_name = (char *)getname_cstring();
 
-	chints.res_class = (char *)MCapplicationstring;
+    // Build the class name
+    MCAutoStringRef t_class_name;
+    MCAutoStringRefAsCString t_class_name_cstr;
+    bool t_community;
+    t_community = MClicenseparameters.license_class == kMCLicenseClassCommunity;
+    
+    /* UNCHECKED */ MCStringCreateMutable(0, &t_class_name);
+    /* UNCHECKED */ MCStringAppendFormat(*t_class_name, "%s%s_%s", MCapplicationstring, t_community ? "community" : "", MC_BUILD_ENGINE_SHORT_VERSION);
+    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_class_name, '.', '_', kMCStringOptionCompareExact);
+    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_class_name, '-', '_', kMCStringOptionCompareExact);
+    /* UNCHECKED */ t_class_name_cstr.Lock(*t_class_name);
+    
+	chints.res_class = (char*)*t_class_name_cstr;
 	XSetClassHint(MCdpy, window, &chints);
     MCMemoryDelete(chints.res_name);
 
