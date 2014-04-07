@@ -148,7 +148,7 @@ static void iphone_send_email_prewait(void *p_context)
 	
 	NSArray *t_recipients;
 	t_recipients = nil;
-	if (ctxt -> to_addresses != nil && !MCStringIsEqualTo(ctxt -> to_addresses, kMCEmptyString, kMCCompareCaseless))
+	if (ctxt -> to_addresses != nil && !MCStringIsEmpty(ctxt -> to_addresses))
 		t_recipients = [[NSString stringWithMCStringRef: ctxt -> to_addresses] componentsSeparatedByString: @","];
 	
 	NSArray *t_ccs;
@@ -502,17 +502,17 @@ static void compose_mail_prewait(void *p_context)
 	
 	NSArray *t_ns_to;
 	t_ns_to = nil;
-	if (ctxt -> to != nil && !MCStringIsEqualTo(ctxt -> to, kMCEmptyString, kMCCompareCaseless))
+	if (ctxt -> to != nil && !MCStringIsEmpty(ctxt -> to))
 		t_ns_to = mcstringref_to_nsarray(ctxt -> to, t_separator_set);
 	
 	NSArray *t_ns_cc;
 	t_ns_cc = nil;
-	if (ctxt -> cc != nil && !MCStringIsEqualTo(ctxt -> cc, kMCEmptyString, kMCCompareCaseless))
+	if (ctxt -> cc != nil && !MCStringIsEmpty(ctxt -> cc))
 		t_ns_cc = mcstringref_to_nsarray(ctxt -> cc, t_separator_set);
 
 	NSArray *t_ns_bcc;
 	t_ns_bcc = nil;
-	if (ctxt -> bcc != nil && !MCStringIsEqualTo(ctxt -> bcc, kMCEmptyString, kMCCompareCaseless))
+	if (ctxt -> bcc != nil && !MCStringIsEmpty(ctxt -> bcc))
 		t_ns_bcc = mcstringref_to_nsarray(ctxt -> bcc, t_separator_set);	
 
 	[ ctxt -> dialog setSubject: t_ns_subject ];

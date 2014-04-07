@@ -697,7 +697,7 @@ void MCNetworkSetFtpProxy(MCExecContext& ctxt, MCStringRef p_value)
 {
 	
 	MCAutoStringRef t_host, t_port;
-	/* UNCHECKED */ MCStringDivideAtChar(p_value, ':', kMCCompareCaseless, &t_host, &t_port);
+	/* UNCHECKED */ MCStringDivideAtChar(p_value, ':', kMCCompareExact, &t_host, &t_port);
 	if (*t_port != nil)
 		/* UNCHECKED */ MCStringToUInt16(*t_port, MCftpproxyport);
 	else

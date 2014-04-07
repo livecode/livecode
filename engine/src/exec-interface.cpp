@@ -2387,7 +2387,7 @@ void MCInterfaceExecSelectTextOfButton(MCExecContext& ctxt, Preposition_type p_t
 	if (t_success)
 	{
 		uindex_t t_lines;
-		t_lines = MCStringCountChar(*t_text, MCRangeMake(0, p_target . mark . start), '\n', kMCStringOptionCompareCaseless);
+		t_lines = MCStringCountChar(*t_text, MCRangeMake(0, p_target . mark . start), '\n', kMCStringOptionCompareExact);
 		
 		static_cast<MCButton *>(p_target . object) -> setmenuhistory(t_lines + 1);
 	}

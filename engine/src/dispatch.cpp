@@ -469,7 +469,7 @@ Boolean MCDispatch::openenv(MCStringRef sname, MCStringRef env,
 	{
 		MCAutoStringRef t_env_path;
 		MCStringRef t_next_rest_of_env;
-		/* UNCHECKED */ MCStringDivideAtChar(t_rest_of_env, ENV_SEPARATOR, kMCStringOptionCompareCaseless, &t_env_path, t_next_rest_of_env);
+		/* UNCHECKED */ MCStringDivideAtChar(t_rest_of_env, ENV_SEPARATOR, kMCStringOptionCompareExact, &t_env_path, t_next_rest_of_env);
 		if (attempt_to_loadfile(stream, outpath, "%@/%@", *t_env_path, sname))
 			t_found = true;
 
