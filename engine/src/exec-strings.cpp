@@ -745,7 +745,7 @@ void MCStringsEvalLength(MCExecContext& ctxt, MCStringRef p_string, integer_t& r
 	// Ensure that the returned length is in codepoints
     MCRange t_cp_range, t_cu_range;
     t_cu_range = MCRangeMake(0, MCStringGetLength(p_string));
-    /* UNCHECKED */ MCStringUnmapIndices(p_string, kMCCharChunkTypeCodepoint, t_cu_range, t_cp_range);
+    /* UNCHECKED */ MCStringUnmapIndices(p_string, kMCDefaultCharChunkType, t_cu_range, t_cp_range);
     
     r_length = t_cp_range.length;
 }
@@ -2081,7 +2081,7 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter
             }
                 return false;
             case 0:
-                return MCStringGetCharAtIndex(p_string, s_index) == 0;
+                return MCStringGetCharAtIndex(p_string, t_srange. offset) == 0;
             default:
                 // default - just compare chars
                 t_prange . offset = p_index;

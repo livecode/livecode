@@ -72,9 +72,7 @@ void MCLiteralNumber::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         ep.setboth(MCNameGetOldString(value), nvalue);
 	return ES_NORMAL;
 #else
-    if (nvalue == BAD_NUMERIC)
-        MCExecTypeSetValueRef(r_value, MCValueRetain(value));
-    else
-        MCExecValueTraits<double>::set(r_value, nvalue);
+    r_value . type = kMCExecValueTypeValueRef;
+    r_value . valueref_value = MCValueRetain(value);
 #endif
 }
