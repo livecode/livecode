@@ -422,13 +422,13 @@ static void MCFontDrawTextCallback(MCFontRef p_font, MCStringRef p_text, MCRange
     ctxt -> x += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, t_font);
 }
 
-void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCFontRef font, bool p_rtl)
+void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCFontRef font, bool p_rtl, bool p_can_break)
 {
 	MCRange t_range = MCRangeMake(0, MCStringGetLength(p_text));
-	return MCFontDrawTextSubstring(p_gcontext, x, y, p_text, t_range, font, p_rtl);
+	return MCFontDrawTextSubstring(p_gcontext, x, y, p_text, t_range, font, p_rtl, p_can_break);
 }
 
-void MCFontDrawTextSubstring(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef p_font, bool p_rtl)
+void MCFontDrawTextSubstring(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef p_font, bool p_rtl, bool p_can_break)
 {
     font_draw_text_context ctxt;
     ctxt.x = x;
@@ -436,7 +436,10 @@ void MCFontDrawTextSubstring(MCGContextRef p_gcontext, int32_t x, int32_t y, MCS
     ctxt.m_gcontext = p_gcontext;
     ctxt.rtl = p_rtl;
     
-    MCFontBreakText(p_font, p_text, p_range, (MCFontBreakTextCallback)MCFontDrawTextCallback, &ctxt, p_rtl);
+    if (p_can_break)
+        MCFontBreakText(p_font, p_text, p_range, (MCFontBreakTextCallback)MCFontDrawTextCallback, &ctxt, p_rtl);
+    else
+        MCFontDrawTextCallback(p_font, p_text, p_range, &ctxt);
 }
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 p_text_style)
