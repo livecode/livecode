@@ -220,6 +220,7 @@ findex_t MCParagraph::NextChar(findex_t p_in)
     /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_iter, m_text);
     uindex_t t_index;
     t_index = MCLocaleBreakIteratorAfter(t_iter, p_in);
+    MCLocaleBreakIteratorRelease(t_iter);
     return (t_index == kMCLocaleBreakIteratorDone) ? MCStringGetLength(m_text) : t_index;
 }
 
@@ -230,6 +231,7 @@ findex_t MCParagraph::PrevChar(findex_t p_in)
     /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_iter, m_text);
     uindex_t t_index;
     t_index = MCLocaleBreakIteratorBefore(t_iter, p_in);
+    MCLocaleBreakIteratorRelease(t_iter);
     return (t_index == kMCLocaleBreakIteratorDone) ? 0 : t_index;
 }
 
@@ -240,6 +242,7 @@ findex_t MCParagraph::NextWord(findex_t p_in)
     /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_iter, m_text);
     uindex_t t_index;
     t_index = MCLocaleBreakIteratorAfter(t_iter, p_in);
+    MCLocaleBreakIteratorRelease(t_iter);
     return (t_index == kMCLocaleBreakIteratorDone) ? MCStringGetLength(m_text) : t_index;
 }
 
@@ -250,6 +253,7 @@ findex_t MCParagraph::PrevWord(findex_t p_in)
     /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_iter, m_text);
     uindex_t t_index;
     t_index = MCLocaleBreakIteratorBefore(t_iter, p_in);
+    MCLocaleBreakIteratorRelease(t_iter);
     return (t_index == kMCLocaleBreakIteratorDone) ? 0 : t_index;
 }
 
