@@ -386,7 +386,7 @@ public class Engine extends View implements EngineApi
 	{
 		if ((p_orientation == 1 || p_orientation == 2) && Build.VERSION.SDK_INT < 9) // Build.VERSION_CODES.GINGERBREAD
 			return;
-		((LiveCodeActivity)getContext()).setRequestedOrientation(s_orientation_map[p_orientation]);
+        ((LiveCodeActivity)getContext()).setRequestedOrientation(s_orientation_map[p_orientation]);
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2656,6 +2656,9 @@ public class Engine extends View implements EngineApi
 	{
 		m_shake_listener.onResume();
 		m_orientation_listener.enable();
+        // PM-2014-04-07: [[Bug 12099]] On awakening Android Device from sleep, make sure we update the orientation
+        // so as no part of the screen is blacked out
+        updateOrientation(getDeviceRotation());
 
 		if (m_sensor_module != null)
             m_sensor_module.onResume();
