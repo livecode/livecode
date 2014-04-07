@@ -1281,7 +1281,12 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 		{
 		case P_FORE_COLOR:
 			if (color == NULL)
+            {
 				ep.clear();
+                // PM-2014-04-07: [[Bug 11933]] Make sure that effective textColor will not return empty value for styled text
+                ep.setstaticcstring("0,0,0");
+            }
+                
 			else if (mixed & MIXED_COLORS)
 				ep.setstaticcstring(MCmixedstring);
 			else
