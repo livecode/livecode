@@ -793,6 +793,9 @@ public:
     
     MCRectangle measuretext(MCStringRef p_text, bool p_is_unicode);
     
+    // Currently non-functional: always returns false
+    bool is_rtl() const { return false; }
+    
 	////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(void);
