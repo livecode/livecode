@@ -3348,14 +3348,15 @@ uint1 MCParagraph::fmovefocus_visual(Field_translations type)
             if ((t_is_rtl && focusedindex == i + l) || (!t_is_rtl && focusedindex == i))
             {
                 ebptr = sbptr->GetPrevBlockVisualOrder();
-                if (ebptr != nil)
+                // Shortcut for the character moving
+                if (ebptr != nil && type == FT_LEFTCHAR)
                 {
                     t_done = true;
                     moving_forward = !ebptr->is_rtl();
                     if (ebptr->is_rtl())
-                        focusedindex = ebptr->GetOffset() + 1;
+                        focusedindex = NextChar(ebptr->GetOffset());
                     else
-                        focusedindex = ebptr->GetOffset() + ebptr->GetLength() - 1;
+                        focusedindex = PrevChar(ebptr->GetOffset() + ebptr->GetLength());
                 }
             }
             if (!t_done)
@@ -3377,14 +3378,15 @@ uint1 MCParagraph::fmovefocus_visual(Field_translations type)
             if ((t_is_rtl && focusedindex == i) || (!t_is_rtl && focusedindex == i + l))
             {
                 ebptr = sbptr->GetNextBlockVisualOrder();
-                if (ebptr != nil)
+                // Shortcut for the character moving
+                if (ebptr != nil && type == FT_RIGHTCHAR)
                 {
                     t_done = true;
                     moving_forward = ebptr->is_rtl();
                     if (ebptr->is_rtl())
-                        focusedindex = ebptr->GetOffset() + ebptr->GetLength() - 1;
+                        focusedindex = PrevChar(ebptr->GetOffset() + ebptr->GetLength());
                     else
-                        focusedindex = ebptr->GetOffset() + 1;
+                        focusedindex = NextChar(ebptr->GetOffset());
                 }
             }
             if (!t_done)
