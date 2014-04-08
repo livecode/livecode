@@ -5342,7 +5342,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Generating version info..."
-					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputPath)&quot; &quot;$(ProjectDir)&quot;&#x0D;&#x0A;"
+					CommandLine="&quot;$(SolutionDir)util\encode_version.pl&quot; &quot;$(ProjectDir)&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(ProjectDir)include\revbuilt.h.in;$(SolutionDir)\version"
 					Outputs="$(ProjectDir)include\revbuild.h"
 				/>
@@ -5353,7 +5353,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Generating version info..."
-					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputPath)&quot; &quot;$(ProjectDir)&quot;&#x0D;&#x0A;"
+					CommandLine="&quot;$(SolutionDir)util\encode_version.pl&quot; &quot;$(ProjectDir)&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(ProjectDir)include\revbuilt.h.in;$(SolutionDir)\version"
 					Outputs="$(ProjectDir)include\revbuild.h"
 				/>

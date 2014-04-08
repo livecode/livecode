@@ -215,7 +215,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Encoding error strings"
-					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputDir)encode_errors.rev&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;"
+					CommandLine="&quot;perl&quot; &quot;$(SolutionDir)\util\encode_errors.pl&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(InputDir)src\executionerrors.h;$(InputDir)src\parseerrors.h"
 					Outputs="$(InputDir)src\encodederrors.cpp"
 				/>
@@ -226,7 +226,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Encoding error strings"
-					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputDir)encode_errors.rev&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;&#x0D;&#x0A;"
+					CommandLine="&quot;perl&quot; &quot;$(SolutionDir)\util\encode_errors.pl&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(InputDir)src\executionerrors.h;$(InputDir)src\parseerrors.h"
 					Outputs="$(InputDir)src\encodederrors.cpp"
 				/>
@@ -241,7 +241,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Generating hashed strings for colorization..."
-					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputDir)hash_strings.rev&quot;  &quot;$(InputDir)src\lextable.cpp&quot; &quot;$(InputDir)src\hashedstrings.cpp&quot;"
+					CommandLine="&quot;perl&quot; &quot;$(SolutionDir)util\hash_strings.pl&quot;  &quot;$(InputDir)src\lextable.cpp&quot; &quot;$(InputDir)src\hashedstrings.cpp&quot; &quot;perfect.exe&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(InputDir)src\lextable.cpp"
 					Outputs="$(InputDir)src\hashedstrings.cpp"
 				/>
@@ -252,7 +252,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Generating hashed strings for colorization..."
-					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputDir)hash_strings.rev&quot;  &quot;$(InputDir)src\lextable.cpp&quot; &quot;$(InputDir)src\hashedstrings.cpp&quot;"
+					CommandLine="&quot;perl&quot; &quot;$(SolutionDir)util\hash_strings.pl&quot;  &quot;$(InputDir)src\lextable.cpp&quot; &quot;$(InputDir)src\hashedstrings.cpp&quot; &quot;perfect.exe&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(InputDir)src\lextable.cpp"
 					Outputs="$(InputDir)src\hashedstrings.cpp"
 				/>
