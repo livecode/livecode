@@ -28,6 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <Quartz/Quartz.h>
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
@@ -445,14 +446,4 @@ rei_boolean_t coreimage_visualeffect_end(void)
 	OBJC_LEAVE
 
 	return t_result;
-}
-
-const char * getMachineVersion()
-{
-    NSString *t_versionString;
-    NSDictionary * t_dictionary = [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
-    t_versionString = [t_dictionary objectForKey:@"ProductVersion"];
-    if (t_versionString != NULL)
-        return [t_versionString cStringUsingEncoding: NSMacOSRomanStringEncoding];
-    return "unknown";
 }
