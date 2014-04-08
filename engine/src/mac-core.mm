@@ -377,7 +377,7 @@ void MCPlatformBreakWait(void)
 
 static void runloop_observer(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
 {
-	if (s_in_blocking_wait)
+ 	if (s_in_blocking_wait)
 		MCPlatformBreakWait();
 }
 
