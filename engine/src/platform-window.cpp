@@ -341,6 +341,9 @@ void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			m_cursor = *(MCPlatformCursorRef *)p_value;
 			if (m_cursor != nil)
 				MCPlatformRetainCursor(m_cursor);
+            
+            // MW-2014-04-08: [[ Bug 12073 ]] Mark the cursor as changed.
+            m_changes . cursor_changed = true;
 			break;
 		default:
 			assert(false);
