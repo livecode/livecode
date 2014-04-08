@@ -1358,12 +1358,21 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
 MCImageBitmap *MCScreenDC::snapshot(MCRectangle &p_rect, uint4 p_window, const char *p_display_name, MCPoint *p_size)
 {
 	MCImageBitmap *t_bitmap;
-	if (p_window == 0 && (p_rect . width == 0 || p_rect . height == 0))
-		MCPlatformScreenSnapshotOfUserArea(p_size, t_bitmap);
-	else if (p_window != 0)
-		MCPlatformScreenSnapshotOfWindow(p_window, p_size, t_bitmap);
+	if (p_window == 0)
+	{
+		if (p_rect . width == 0 || p_rect . height == 0)
+			MCPlatformScreenSnapshotOfUserArea(p_size, t_bitmap);
+		else
+			MCPlatformScreenSnapshot(p_rect, p_size, t_bitmap);
+	}
 	else
-		MCPlatformScreenSnapshot(p_rect, p_size, t_bitmap);
+	{
+		if (p_rect.width == 0 || p_rect.height == 0)
+			MCPlatformScreenSnapshotOfWindow(p_window, p_size, t_bitmap);
+		else
+			// IM-2014-04-03: [[ Bug 12115 ]] If window and non-empty rect given then call appropriate snapshot function
+			MCPlatformScreenSnapshotOfWindowArea(p_window, p_rect, p_size, t_bitmap);
+	}
 	return t_bitmap;
 }
 
