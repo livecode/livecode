@@ -271,7 +271,7 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
 			t_player -> Unrealize();
 		
 		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
-		
+        
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
 	}
 	else
@@ -331,9 +331,15 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 	NSError *t_error;
 	t_error = nil;
 	
+    id t_filename_or_url;
+    if (!p_is_url)
+        t_filename_or_url = [NSString stringWithCString: p_filename encoding: NSMacOSRomanStringEncoding];
+    else
+        t_filename_or_url = [NSURL URLWithString: [NSString stringWithCString: p_filename encoding: NSMacOSRomanStringEncoding]];
+    
 	NSDictionary *t_attrs;
 	t_attrs = [NSDictionary dictionaryWithObjectsAndKeys:
-			   [NSString stringWithCString: p_filename encoding: NSMacOSRomanStringEncoding], p_is_url ? QTMovieURLAttribute : QTMovieFileNameAttribute,
+			   t_filename_or_url, p_is_url ? QTMovieURLAttribute : QTMovieFileNameAttribute,
 			   /* [NSNumber numberWithBool: YES], QTMovieOpenForPlaybackAttribute, */
 			   [NSNumber numberWithBool: NO], QTMovieOpenAsyncOKAttribute,
 			   [NSNumber numberWithBool: NO], QTMovieOpenAsyncRequiredAttribute,
