@@ -1555,6 +1555,11 @@ void MCMacPlatformWindow::DoSynchronize(void)
 	if (m_changes . use_live_resizing_changed)
 		;
 	
+    // MW-2014-04-08: [[ Bug 12073 ]] If the cursor has changed, make sure we try to
+    //   update it - should this window be the mouse window.
+    if (m_changes . cursor_changed)
+        MCMacPlatformHandleMouseCursorChange(this);
+    
 	m_synchronizing = false;
 }
 
