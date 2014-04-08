@@ -1506,6 +1506,10 @@ void MCMacPlatformWindow::DoRealize(void)
 	[m_window_handle setReleasedWhenClosed: NO];
 	
 	[m_window_handle setCanBecomeKeyWindow: m_style != kMCPlatformWindowStylePopUp && m_style != kMCPlatformWindowStyleToolTip];
+    
+    // MW-2014-04-08: [[ Bug 12080 ]] Make sure we turn off automatic 'hiding on deactivate'.
+    //   The engine handles this itself.
+    [m_window_handle setHidesOnDeactivate: NO];
 }
 
 void MCMacPlatformWindow::DoSynchronize(void)
