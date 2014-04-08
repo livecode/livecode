@@ -1141,6 +1141,22 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
 	}
 }
 
+void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
+{
+    // If the mouse is not currently over the window whose cursor has
+    // changed - do nothing.
+    if (s_mouse_window != p_window)
+        return;
+
+    // Show the cursor attached to the window.
+    MCPlatformCursorRef t_cursor;
+    MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
+    
+    // PM-2014-04-02: [[ Bug 12082 ]] IDE no longer crashes when changing an applied pattern
+    if (t_cursor != nil)
+        MCPlatformShowCursor(t_cursor);
+}
+
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 {
 	// First compute the window that should be active now.
@@ -1205,14 +1221,9 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 				MCPlatformCallbackSendMouseDrag(s_mouse_window, s_mouse_drag_button);
 			}
 		}
-		
-		// Show the cursor attached to the window.
-		MCPlatformCursorRef t_cursor;
-		MCPlatformGetWindowProperty(t_new_mouse_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
         
-        //PM-2014-04-02: [[Bug 12082]] IDE no longer crashes when changing an applied pattern
-        if (t_cursor != nil)
-            MCPlatformShowCursor(t_cursor);
+        // Update the mouse cursor for the mouse window.
+        MCMacPlatformHandleMouseCursorChange(s_mouse_window);
 	}
 }
 
