@@ -354,7 +354,9 @@ void MCCard::kunfocus()
 		oldkfocused = kfocused;
 		kfocused = NULL;
 		oldkfocused->getref()->kunfocus();
-		MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
+        // PM-2014-04-03: [[Bug 12056]] Make sure oldkfocused is not NULL, or else IDE crashes
+        if (oldkfocused != NULL)
+            MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
 	}
 	else
 	{
