@@ -1062,15 +1062,11 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 				
 				// MW-2012-03-19: [[ FixedTable ]] If we have reached the final tab in fixed
 				//   table mode, we are done.
-				if (ct == nt - 2 && t[nt - 2] == t[nt - 1])
-					break;
-                
-                // PM-2014-04-08: [[ Bug 12146 ]] Setting tabstops to 2 equal numbers and then
+				// PM-2014-04-08: [[ Bug 12146 ]] Setting tabstops to 2 equal numbers and then
                 //  turning VGrid on, hangs LC, because this while loop ran forever
-                if (ct == nt - 1 && t[nt - 2] == t[nt - 1])
+                if (ct == nt - 1 && (nt < 2 || t[nt - 2] == t[nt - 1]))
                     break;
 			}
-            
 		}
 
 		if (cursoron && cursorfield == this)
