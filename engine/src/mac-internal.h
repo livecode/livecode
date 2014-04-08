@@ -335,7 +335,9 @@ public:
 	MCWindowView *GetView(void);
 	id GetHandle(void);
 	
-	void ProcessCloseRequest();
+    bool IsSynchronizing(void);
+    
+	void ProcessCloseRequest(void);
 	void ProcessDidMove(void);
 	void ProcessDidResize(void);
 	void ProcessWillMiniaturize(void);
