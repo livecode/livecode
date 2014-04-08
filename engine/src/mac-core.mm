@@ -1147,7 +1147,27 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
     // changed - do nothing.
     if (s_mouse_window != p_window)
         return;
-
+    
+    // If we are on Lion+ then check to see if the mouse location is outside
+    // of any of the system tracking rects (used for resizing etc.)
+    extern uint4 MCmajorosversion;
+    if (MCmajorosversion >= 0x1070)
+    {
+        MCMacPlatformWindow *t_window;
+        t_window = (MCMacPlatformWindow *)p_window;
+        
+        NSArray *t_tracking_areas;
+        t_tracking_areas = [[t_window -> GetView() superview] trackingAreas];
+        
+        NSPoint t_mouse_loc;
+        t_mouse_loc = [t_window -> GetView() mapMCPointToNSPoint: s_mouse_position];
+        for(uindex_t i = 0; i < [t_tracking_areas count]; i++)
+        {
+            if (NSPointInRect(t_mouse_loc, [(NSTrackingArea *)[t_tracking_areas objectAtIndex: i] rect]))
+                return;
+        }
+    }
+    
     // Show the cursor attached to the window.
     MCPlatformCursorRef t_cursor;
     MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
