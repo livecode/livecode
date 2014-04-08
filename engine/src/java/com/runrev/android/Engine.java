@@ -2038,6 +2038,9 @@ public class Engine extends View implements EngineApi
             return;
         
         mBillingProvider = mBillingModule.getBillingProvider();
+        // PM-2014-04-03: [[Bug 12116]] Avoid a NullPointerException is in-app purchasing is not used
+        if (mBillingProvider == null)
+            return;
         mBillingProvider.setActivity(getActivity());
         mPurchaseObserver = new EnginePurchaseObserver((Activity)getContext());
         mBillingProvider.setPurchaseObserver(mPurchaseObserver);
@@ -2697,7 +2700,9 @@ public class Engine extends View implements EngineApi
 	public void onDestroy()
 	{
 		doDestroy();
-        mBillingProvider.onDestroy();
+        // PM-2014-04-03: [[Bug 12116]] Avoid a NullPointerException is in-app purchasing is not used
+        if (mBillingProvider != null)
+            mBillingProvider.onDestroy();
         s_engine_instance = null;
 	}
 
