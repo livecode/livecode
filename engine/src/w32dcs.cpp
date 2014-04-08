@@ -1289,7 +1289,8 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 		InvalidateRect(backdrop_window, NULL, TRUE);
 }
 
-void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge)
+// MM-2014-04-08: [[ Bug 12058 ]] Update prototype to take a MCPatternRef.
+void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge)
 {
 	if (backdrop_badge != p_badge || backdrop_pattern != p_pattern || backdrop_colour . red != p_colour . red || backdrop_colour . green != p_colour . green || backdrop_colour . blue != p_colour . blue)
 	{
@@ -1366,8 +1367,9 @@ void MCScreenDC::redrawbackdrop(void)
 	if (t_success)
 	{
         // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
-		if (backdrop_pattern != nil)
-			MCGContextSetFillPattern(t_context, backdrop_pattern, MCGAffineTransformMakeIdentity(), kMCGImageFilterNone);
+		// MM-2014-04-08: [[ Bug 12058 ]] Update back_pattern to be a MCPatternRef.
+		if (backdrop_pattern != nil && backdrop_pattern -> image != nil)
+			MCGContextSetFillPattern(t_context, backdrop_pattern -> image, MCGAffineTransformMakeIdentity(), kMCGImageFilterNone);
 		else
 			MCGContextSetFillRGBAColor(t_context, backdrop_colour.red / 65535.0, backdrop_colour.green / 65535.0, backdrop_colour.blue / 65535.0, 1.0);
 		MCGContextAddRectangle(t_context, MCGRectangleMake(0, 0, t_width, t_height));
