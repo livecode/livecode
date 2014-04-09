@@ -395,7 +395,7 @@ void MCPlatformBreakWait(void)
 
 static void runloop_observer(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
 {
-	if (s_in_blocking_wait)
+ 	if (s_in_blocking_wait)
 		MCPlatformBreakWait();
 }
 
@@ -1164,6 +1164,42 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
 	}
 }
 
+void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
+{
+    // If the mouse is not currently over the window whose cursor has
+    // changed - do nothing.
+    if (s_mouse_window != p_window)
+        return;
+    
+    // If we are on Lion+ then check to see if the mouse location is outside
+    // of any of the system tracking rects (used for resizing etc.)
+    extern uint4 MCmajorosversion;
+    if (MCmajorosversion >= 0x1070)
+    {
+        MCMacPlatformWindow *t_window;
+        t_window = (MCMacPlatformWindow *)p_window;
+        
+        NSArray *t_tracking_areas;
+        t_tracking_areas = [[t_window -> GetView() superview] trackingAreas];
+        
+        NSPoint t_mouse_loc;
+        t_mouse_loc = [t_window -> GetView() mapMCPointToNSPoint: s_mouse_position];
+        for(uindex_t i = 0; i < [t_tracking_areas count]; i++)
+        {
+            if (NSPointInRect(t_mouse_loc, [(NSTrackingArea *)[t_tracking_areas objectAtIndex: i] rect]))
+                return;
+        }
+    }
+    
+    // Show the cursor attached to the window.
+    MCPlatformCursorRef t_cursor;
+    MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
+    
+    // PM-2014-04-02: [[ Bug 12082 ]] IDE no longer crashes when changing an applied pattern
+    if (t_cursor != nil)
+        MCPlatformShowCursor(t_cursor);
+}
+
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 {
 	// First compute the window that should be active now.
@@ -1228,14 +1264,9 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 				MCPlatformCallbackSendMouseDrag(s_mouse_window, s_mouse_drag_button);
 			}
 		}
-		
-		// Show the cursor attached to the window.
-		MCPlatformCursorRef t_cursor;
-		MCPlatformGetWindowProperty(t_new_mouse_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
         
-        //PM-2014-04-02: [[Bug 12082]] IDE no longer crashes when changing an applied pattern
-        if (t_cursor != nil)
-            MCPlatformShowCursor(t_cursor);
+        // Update the mouse cursor for the mouse window.
+        MCMacPlatformHandleMouseCursorChange(s_mouse_window);
 	}
 }
 

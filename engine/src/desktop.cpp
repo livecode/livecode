@@ -40,6 +40,7 @@
 #include "redraw.h"
 #include "player.h"
 #include "aclip.h"
+#include "stacklst.h"
 
 #include "desktop-dc.h"
 
@@ -95,14 +96,49 @@ void MCPlatformHandleApplicationShutdownRequest(bool& r_terminate)
 	}
 }
 
+// MW-2014-04-08: [[ Bug 12080 ]] Show or hide palette windows as required.
+static void show_or_hide_palettes(bool p_show)
+{
+    if (MCstacks -> isempty())
+        return;
+    
+    MCStacknode *t_stack_node;
+    t_stack_node = MCstacks -> bottomnode();
+    do
+    {
+        MCStack *t_stack;
+        t_stack = t_stack_node -> getstack();
+        
+        if (t_stack -> getrealmode() == WM_PALETTE && t_stack -> getflag(F_VISIBLE))
+        {
+            if (MChidepalettes)
+            {
+                if (p_show)
+                    MCPlatformShowWindow(t_stack -> getwindow());
+                else
+                    MCPlatformHideWindow(t_stack -> getwindow());
+            }
+        }
+        
+        t_stack_node = t_stack_node -> next();
+    }
+    while(t_stack_node != MCstacks -> bottomnode());
+}
+
 void MCPlatformHandleApplicationSuspend(void)
 {
 	MCdefaultstackptr -> getcard() -> message(MCM_suspend);
 	MCappisactive = False;
+    
+    // MW-2014-04-08: [[ Bug 12080 ]] Hide any palettes based on MChidepalettes.
+    show_or_hide_palettes(false);
 }
 
 void MCPlatformHandleApplicationResume(void)
 {
+    // MW-2014-04-08: [[ Bug 12080 ]] Show any palettes based on MChidepalettes.
+    show_or_hide_palettes(true);
+    
 	MCappisactive = True;
 	MCdefaultstackptr -> getcard() -> message(MCM_resume);
 }
