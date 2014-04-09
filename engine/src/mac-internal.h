@@ -467,6 +467,9 @@ bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, S
 
 void MCMacPlatformResetCursor(void);
 
+void MCMacPlatformGetGlobalVolume(double& r_volume);
+void MCMacPlatformSetGlobalVolume(double volume);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NSDragOperation MCMacPlatformMapDragOperationToNSDragOperation(MCPlatformDragOperation);

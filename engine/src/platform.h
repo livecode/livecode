@@ -452,9 +452,12 @@ enum MCPlatformSystemProperty
 	
 	kMCPlatformSystemPropertyMaximumCursorSize,
 	kMCPlatformSystemPropertyCursorImageSupport,
+    
+    kMCPlatformSystemPropertyVolume,
 };
 
 void MCPlatformGetSystemProperty(MCPlatformSystemProperty property, MCPlatformPropertyType type, void *value);
+void MCPlatformSetSystemProperty(MCPlatformSystemProperty property, MCPlatformPropertyType type, void *value);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -501,6 +504,9 @@ uint32_t MCPlatformGetEventTime(void);
 
 // Flush events of the specified types in mask.
 void MCPlatformFlushEvents(MCPlatformEventMask mask);
+
+// Produce a system beep.
+void MCPlatformBeep(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1051,6 +1057,32 @@ void MCPlatformScriptEnvironmentRelease(MCPlatformScriptEnvironmentRef env);
 bool MCPlatformScriptEnvironmentDefine(MCPlatformScriptEnvironmentRef env, const char *function, MCPlatformScriptEnvironmentCallback callback);
 void MCPlatformScriptEnvironmentRun(MCPlatformScriptEnvironmentRef env, const char *script, char*& r_result);
 void MCPlatformScriptEnvironmentCall(MCPlatformScriptEnvironmentRef env, const char *method, const char **arguments, uindex_t argument_count, char*& r_result);
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct MCPlatformSound *MCPlatformSoundRef;
+
+enum MCPlatformSoundProperty
+{
+    kMCPlatformSoundPropertyVolume,
+    kMCPlatformSoundPropertyLooping,
+    kMCPlatformSoundPropertyDuration,
+};
+
+void MCPlatformSoundCreateWithData(const void *data, size_t data_size, MCPlatformSoundRef& r_sound);
+
+void MCPlatformSoundRetain(MCPlatformSoundRef sound);
+void MCPlatformSoundRelease(MCPlatformSoundRef sound);
+
+bool MCPlatformSoundIsPlaying(MCPlatformSoundRef sound);
+
+void MCPlatformSoundPlay(MCPlatformSoundRef sound);
+void MCPlatformSoundPause(MCPlatformSoundRef sound);
+void MCPlatformSoundResume(MCPlatformSoundRef sound);
+void MCPlatformSoundStop(MCPlatformSoundRef sound);
+
+void MCPlatformSoundSetProperty(MCPlatformSoundRef sound, MCPlatformSoundProperty property, MCPlatformPropertyType type, void *value);
+void MCPlatformSoundGetProperty(MCPlatformSoundRef sound, MCPlatformSoundProperty property, MCPlatformPropertyType type, void *value);
 
 ////////////////////////////////////////////////////////////////////////////////
 

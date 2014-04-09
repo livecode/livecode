@@ -39,6 +39,7 @@
 #include "graphics_util.h"
 #include "redraw.h"
 #include "player.h"
+#include "aclip.h"
 
 #include "desktop-dc.h"
 
@@ -1034,6 +1035,14 @@ void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef p_player)
 			break;
 		}
 	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCPlatformHandleSoundFinished(MCPlatformSoundRef p_sound)
+{
+    if (MCacptr != nil)
+        MCscreen -> addtimer(MCacptr, MCM_internal, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -309,10 +309,28 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 			*(MCPlatformCursorImageSupport *)r_value = kMCPlatformCursorImageSupportAlpha; 
 			break;
 			
+        case kMCPlatformSystemPropertyVolume:
+            MCMacPlatformGetGlobalVolume(*(double *)r_value);
+            break;
+            
 		default:
 			assert(false);
 			break;
 	}
+}
+
+void MCPlatformSetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *p_value)
+{
+    switch(p_property)
+    {
+        case kMCPlatformSystemPropertyVolume:
+            MCMacPlatformSetGlobalVolume(*(double *)p_value);
+            break;
+        
+        default:
+            assert(false);
+            break;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -795,6 +813,11 @@ void MCPlatformFlushEvents(MCPlatformEventMask p_mask)
 		if (t_event == nil)
 			break;
 	}
+}
+
+void MCPlatformBeep(void)
+{
+    NSBeep();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

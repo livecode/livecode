@@ -336,6 +336,8 @@
 		4D8BED4811B95A1000DED42A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
 		4D982B1213C1CDC10066119A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D982B1113C1CDC10066119A /* CoreServices.framework */; };
 		4D982B1913C1CDD20066119A /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D982B1813C1CDD20066119A /* ApplicationServices.framework */; };
+		4DA028F618F54B5D000CFCF8 /* mac-sound.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA028F518F54B5D000CFCF8 /* mac-sound.mm */; };
+		4DA028F818F550E1000CFCF8 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DA028F718F550E1000CFCF8 /* AudioToolbox.framework */; };
 		4DAB7D280FF3A0100009F91E /* md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7D270FF3A0100009F91E /* md5.cpp */; };
 		4DADCD5B12392EAF003CD17C /* sha1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DADCD5912392EAF003CD17C /* sha1.cpp */; };
 		4DADCDFD12393F55003CD17C /* Installer.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4DADCDFC12393F26003CD17C /* Installer.icns */; };
@@ -1321,6 +1323,8 @@
 		4D982BF513C2E8360066119A /* srvmain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = srvmain.h; path = src/srvmain.h; sourceTree = "<group>"; };
 		4D982FE113C5D59D0066119A /* executionerrors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = executionerrors.h; path = src/executionerrors.h; sourceTree = "<group>"; };
 		4D982FE213C5D5AE0066119A /* parseerrors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = parseerrors.h; path = src/parseerrors.h; sourceTree = "<group>"; };
+		4DA028F518F54B5D000CFCF8 /* mac-sound.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-sound.mm"; path = "src/mac-sound.mm"; sourceTree = "<group>"; };
+		4DA028F718F550E1000CFCF8 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		4DA0BEB715AB6046006C0677 /* mblandroidjava.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidjava.cpp; path = src/mblandroidjava.cpp; sourceTree = "<group>"; };
 		4DA0BEB815AB6046006C0677 /* mblandroidjava.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblandroidjava.h; path = src/mblandroidjava.h; sourceTree = "<group>"; };
 		4DAB7B350FE120060009F91E /* bitmapeffect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bitmapeffect.cpp; path = src/bitmapeffect.cpp; sourceTree = "<group>"; };
@@ -1631,6 +1635,7 @@
 				4D8B47990BE7B3240046CD2F /* Cocoa.framework in Frameworks */,
 				4D00C6290CE1F27300341AD3 /* SystemConfiguration.framework in Frameworks */,
 				4D8BED0211B959F500DED42A /* Security.framework in Frameworks */,
+				4DA028F818F550E1000CFCF8 /* AudioToolbox.framework in Frameworks */,
 				4D221A73171D577E00E7E557 /* libcrypto.dylib in Frameworks */,
 				4D221A74171D577E00E7E557 /* libcups.dylib in Frameworks */,
 				4D221A75171D577E00E7E557 /* libcurl.dylib in Frameworks */,
@@ -1976,6 +1981,7 @@
 		4D5880AA0B80BDFE00200116 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4DA028F718F550E1000CFCF8 /* AudioToolbox.framework */,
 				4D982B1813C1CDD20066119A /* ApplicationServices.framework */,
 				4D8B47960BE7B3240046CD2F /* Cocoa.framework */,
 				4DFD495A13BA2BC0008DB91F /* CoreFoundation.framework */,
@@ -2100,6 +2106,7 @@
 				4D30E18118AA2FCE0034CDC6 /* mac-abort.mm */,
 				4D30E40618AA73870034CDC6 /* mac-dialog.mm */,
 				4DAF5C8618C0E76500B9713C /* mac-scripting.mm */,
+				4DA028F518F54B5D000CFCF8 /* mac-sound.mm */,
 			);
 			name = "Desktop - Mac";
 			sourceTree = "<group>";
@@ -3695,6 +3702,7 @@
 				4DEE2AF70FDE42710009423C /* regex.cpp in Sources */,
 				4DEE2AF80FDE42710009423C /* rtf.cpp in Sources */,
 				4DEE2AF90FDE42710009423C /* rtfsupport.cpp in Sources */,
+				4DA028F618F54B5D000CFCF8 /* mac-sound.mm in Sources */,
 				4DEE2AFA0FDE42710009423C /* scriptpt.cpp in Sources */,
 				4DEE2AFB0FDE42710009423C /* scrolbar.cpp in Sources */,
 				4DEE2AFC0FDE42710009423C /* scrollbardraw.cpp in Sources */,

@@ -379,8 +379,10 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				MCU_play_stop();
 				MCacptr = acptr;
 				MCU_play();
+#ifndef FEATURE_PLATFORM_AUDIO
 				if (MCacptr != NULL)
 					MCscreen->addtimer(MCacptr, MCM_internal, PLAY_RATE);
+#endif
 			}
 			
 			if (MCscreen->wait((real8)MCsyncrate / 1000.0, False, True))

@@ -647,8 +647,7 @@ bool MCScreenDC::transformimagecolors(MCColorTransformRef transform, MCImageBitm
 
 void MCScreenDC::beep()
 {
-	SndSetSysBeepState(sysBeepEnable | sysBeepSynchronous);
-	SysBeep(beepduration / 16);
+    MCPlatformBeep();
 }
 
 void MCScreenDC::getbeep(uint4 which, MCExecPoint &ep)
@@ -657,38 +656,19 @@ void MCScreenDC::getbeep(uint4 which, MCExecPoint &ep)
 	switch (which)
 	{
 		case P_BEEP_LOUDNESS:
-			GetSysBeepVolume(&v);
-			ep.setint(v);
+			ep.setint(100);
 			break;
 		case P_BEEP_PITCH:
-			ep.setint(beeppitch);
+			ep.setint(1440);
 			break;
 		case P_BEEP_DURATION:
-			ep.setint(beepduration);
+			ep.setint(500);
 			break;
 	}
 }
 
 void MCScreenDC::setbeep(uint4 which, int4 beep)
 {
-	switch (which)
-	{
-		case P_BEEP_LOUDNESS:
-			SetSysBeepVolume(beep);
-			break;
-		case P_BEEP_PITCH:
-			if (beep == -1)
-				beeppitch = 1440;
-			else
-				beeppitch = beep;
-			break;
-		case P_BEEP_DURATION:
-			if (beep == -1)
-				beepduration = 500;
-			else
-				beepduration = beep;
-			break;
-	}
 }	
 
 ////////////////////////////////////////////////////////////////////////////////

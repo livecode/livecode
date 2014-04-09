@@ -57,6 +57,8 @@ void MCPlatformHandleViewFocusSwitched(MCPlatformWindowRef window, uint32_t id);
 
 void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef player);
 
+void MCPlatformHandleSoundFinished(MCPlatformSoundRef sound);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformCallbackSendApplicationStartup(int p_argc, char **p_argv, char **p_envp, int& r_error_code, char*& r_error_message)
@@ -350,6 +352,14 @@ void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef p_window, uint3
 void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef p_player)
 {
 	MCPlatformHandlePlayerFrameChanged(p_player);
+}
+
+//////////
+
+void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef p_sound)
+{
+    MCLog("Sound(%p) -> Finished()", p_sound);
+    MCPlatformHandleSoundFinished(p_sound);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

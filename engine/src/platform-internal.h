@@ -287,6 +287,8 @@ void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef window, uint32_
 
 void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef player);
 
+void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef sound);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif
