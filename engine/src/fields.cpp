@@ -732,6 +732,11 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 	pgptr->setparent(this);
 	pgptr->setselectionindex(si, si, False, False);
 
+	// MM-2014-04-09: [[ Bug 12088 ]] Get the width of the paragraph before insertion and layout.
+	//  If as a result of the update the width of the field has changed, we need to recompute.
+	int2 t_initial_width;
+	t_initial_width = pgptr -> getwidth();
+	
 	// MW-2012-02-13: [[ Block Unicode ]] Use the new finsert method in native mode.
 	// MW-2012-02-23: [[ PutUnicode ]] Pass through the encoding to finsertnew.
 	if (s.getlength())
@@ -752,13 +757,16 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 		
 		// If we haven't already affected many, then lay out the paragraph and see if the
 		// height has changed. If it has we must do a recompute and need to redraw below.
+		// MM-2014-04-09: [[ Bug 12088 ]] If the height hasn't changed, then check to see 
+		//  if the width has changed and a re-compute is needed.
 		if (!t_affect_many)
 			t_initial_pgptr -> layout(false);
 		if (t_affect_many || t_initial_pgptr -> getheight(fixedheight) != t_initial_height)
 		{
 				do_recompute(false);
 				t_affect_many = true;
-		}
+		} else if (t_initial_width == textwidth && pgptr -> getwidth() != textwidth)
+			do_recompute(false);
 		
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		// MW-2013-10-24: [[ FasterField ]] Tweak to minimize redraw.
