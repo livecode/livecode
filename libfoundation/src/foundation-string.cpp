@@ -2958,8 +2958,15 @@ bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef
 
 void __MCStringDestroy(__MCString *self)
 {
-	MCMemoryDeleteArray(self -> chars);
-	MCMemoryDeleteArray(self -> native_chars);
+    if (__MCStringIsIndirect(self))
+    {
+        MCValueRelease(self -> string);
+    }
+    else
+    {
+        MCMemoryDeleteArray(self -> chars);
+        MCMemoryDeleteArray(self -> native_chars);
+    }
 }
 
 bool __MCStringCopyDescription(__MCString *self, MCStringRef& r_desc)
