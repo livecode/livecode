@@ -427,7 +427,9 @@ Boolean MCImage::mup(uint2 which)
 			{
 				crop(NULL);
 			}
-			state &= ~(CS_SIZE | CS_EDITED);
+			// MM-2014-04-09: [[ Bug 11689 ]] Let end take care of unsetting the CS_SIZE flag.
+			//  Doing so here prevents resize control being sent.
+			state &= ~CS_EDITED;
 			end(false);
 			if (state & CS_MAGNIFY)
 				magredrawdest(rect);
