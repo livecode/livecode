@@ -1262,29 +1262,16 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 		}
 		while (ei > 0);
 
-		if (!has)
-		{
-			if (effective)
-			{
-				// MW-2011-11-23: [[ Array TextStyle ]] Make sure we call the correct
-				//   method for textStyle (its now an array property).
-				if (which != P_TEXT_STYLE)
-					return getprop(parid, which, ep, effective);
-				else
-					return getarrayprop(parid, which, ep, index, effective);
-			}
-			ep.clear();
-			return ES_NORMAL;
-		}
 		Exec_stat stat = ES_NORMAL;
 		switch (which)
 		{
 		case P_FORE_COLOR:
 			if (color == NULL)
             {
-				ep.clear();
                 // PM-2014-04-07: [[Bug 11933]] Make sure that effective textColor will not return empty value for styled text
-                ep.setstaticcstring("0,0,0");
+                if (effective)
+                    return getprop(parid, which, ep, effective);
+				ep.clear();
             }
                 
 			else if (mixed & MIXED_COLORS)
@@ -1294,7 +1281,12 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 			break;
 		case P_BACK_COLOR:
 			if (bcolor == NULL)
+            {
+                // PM-2014-04-07: [[Bug 11933]] Make sure that effective textColor will not return empty value for styled text
+                if (effective)
+                    return getprop(parid, which, ep, effective);
 				ep.clear();
+            }
 			else if (mixed & MIXED_COLORS)
 				ep.setstaticcstring(MCmixedstring);
 			else
