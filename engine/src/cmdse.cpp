@@ -1738,7 +1738,6 @@ Exec_stat MCMM::exec(MCExecPoint &ep)
 			delete fname;
 		}
 		MCacptr->setlooping(looping);
-        MCacptr -> play();
 		MCU_play();
 #ifndef FEATURE_PLATFORM_AUDIO
 		if (MCacptr != NULL)

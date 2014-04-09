@@ -615,8 +615,46 @@ Boolean MCAudioClip::import(const char *fname, IO_handle stream)
 
 #if defined FEATURE_PLATFORM_AUDIO
 
+struct au_file_header_t
+{
+    uint32_t magic;
+    uint32_t offset;
+    uint32_t size;
+    uint32_t encoding;
+    uint32_t sample_rate;
+    uint32_t channels;
+};
+
 void MCAudioClip::convert_tocontainer(void*& r_data, size_t& r_data_size)
 {
+    au_file_header_t t_header;
+    t_header . magic = 0x2e736e64;
+    t_header . offset = sizeof(au_file_header_t);
+    t_header . size = size;
+    if (format == AF_MULAW)
+        t_header . encoding = 1;
+    else if (format == AF_SLINEAR)
+        t_header . encoding = (swidth == 1 ? 2 : (swidth == 2 ? 3 : 4));
+    else if (format == AF_ULINEAR)
+    {
+        convert_ulintoslin();
+        t_header . encoding = (swidth == 1 ? 2 : (swidth == 2 ? 3 : 4));
+    }
+    t_header . sample_rate = rate;
+    t_header . channels = nchannels;
+    
+    swap_uint4(&t_header . magic);
+    swap_uint4(&t_header . offset);
+    swap_uint4(&t_header . size);
+    swap_uint4(&t_header . encoding);
+    swap_uint4(&t_header . sample_rate);
+    swap_uint4(&t_header . channels);
+    
+    r_data = malloc(sizeof(au_file_header_t) + size);
+    r_data_size = sizeof(au_file_header_t) + size;
+    
+    memcpy(r_data, &t_header, sizeof(au_file_header_t));
+    memcpy(((au_file_header_t *)r_data) + 1, samples, size);
 }
 
 Boolean MCAudioClip::open_audio(void)
@@ -629,6 +667,11 @@ Boolean MCAudioClip::open_audio(void)
     convert_tocontainer(t_data, t_data_size);
     
     MCPlatformSoundCreateWithData(t_data, t_data_size, s_current_sound);
+    
+    free(t_data);
+    
+    if (s_current_sound == nil)
+        return False;
     
     double t_volume;
     t_volume = loudness / 100.0;
