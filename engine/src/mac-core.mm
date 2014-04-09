@@ -434,7 +434,7 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	NSEvent *t_event;
 	t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
 								 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
-									inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode)
+									inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
 								   dequeue: YES];
 	
 	s_in_blocking_wait = false;
