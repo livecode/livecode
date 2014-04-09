@@ -56,6 +56,12 @@ void MCPlatformHandlePasteboardResolve(MCPlatformPasteboardRef pasteboard, MCPla
 void MCPlatformHandleViewFocusSwitched(MCPlatformWindowRef window, uint32_t id);
 
 void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef player);
+void MCPlatformHandlePlayerMarkerChanged(MCPlatformPlayerRef player, uint32_t time);
+void MCPlatformHandlePlayerCurrentTimeChanged(MCPlatformPlayerRef player);
+void MCPlatformHandlePlayerSelectionChanged(MCPlatformPlayerRef player);
+void MCPlatformHandlePlayerStarted(MCPlatformPlayerRef player);
+void MCPlatformHandlePlayerStopped(MCPlatformPlayerRef player);
+void MCPlatformHandlePlayerPaused(MCPlatformPlayerRef player);
 
 void MCPlatformHandleSoundFinished(MCPlatformSoundRef sound);
 
@@ -352,6 +358,42 @@ void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef p_window, uint3
 void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef p_player)
 {
 	MCPlatformHandlePlayerFrameChanged(p_player);
+}
+
+void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef p_player, uint32_t p_time)
+{
+    MCLog("Player(%p) -> MarkerChanged(%d)", p_player, p_time);
+    MCPlatformHandlePlayerMarkerChanged(p_player, p_time);
+}
+
+void MCPlatformCallbackSendPlayerSelectionChanged(MCPlatformPlayerRef p_player)
+{
+    MCLog("Player(%p) -> SelectionChanged()", p_player);
+    MCPlatformHandlePlayerSelectionChanged(p_player);
+}
+
+void MCPlatformCallbackSendPlayerCurrentTimeChanged(MCPlatformPlayerRef p_player)
+{
+    MCLog("Player(%p) -> CurrentTimeChanged()", p_player);
+    MCPlatformHandlePlayerCurrentTimeChanged(p_player);
+}
+
+void MCPlatformCallbackSendPlayerStarted(MCPlatformPlayerRef p_player)
+{
+    MCLog("Player(%p) -> Started()", p_player);
+    MCPlatformHandlePlayerStarted(p_player);
+}
+
+void MCPlatformCallbackSendPlayerPaused(MCPlatformPlayerRef p_player)
+{
+    MCLog("Player(%p) -> Paused()", p_player);
+    MCPlatformHandlePlayerPaused(p_player);
+}
+
+void MCPlatformCallbackSendPlayerStopped(MCPlatformPlayerRef p_player)
+{
+    MCLog("Player(%p) -> Stopped()", p_player);
+    MCPlatformHandlePlayerStopped(p_player);
 }
 
 //////////

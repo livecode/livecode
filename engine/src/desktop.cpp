@@ -1060,17 +1060,86 @@ void MCPlatformHandlePasteboardResolve(MCPlatformPasteboardRef p_pasteboard, MCP
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef p_player)
+static MCPlayer *find_player(MCPlatformPlayerRef p_player)
 {
 	for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
 	{
 		if (t_player -> getplatformplayer() == p_player)
-		{
-			t_player -> layer_redrawall();
-			MCPlatformBreakWait();
-			break;
-		}
-	}
+            return t_player;
+    }
+    
+    return nil;
+}
+
+void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> layer_redrawall();
+    MCPlatformBreakWait();
+}
+
+void MCPlatformHandlePlayerMarkerChanged(MCPlatformPlayerRef p_player, uint32_t p_time)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> markerchanged(p_time);
+}
+
+void MCPlatformHandlePlayerCurrentTimeChanged(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> timer(MCM_current_time_changed, nil);
+}
+
+void MCPlatformHandlePlayerSelectionChanged(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> timer(MCM_selection_changed, nil);
+}
+
+void MCPlatformHandlePlayerStarted(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> timer(MCM_play_started, nil);
+}
+
+void MCPlatformHandlePlayerPaused(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> timer(MCM_play_paused, nil);
+}
+
+void MCPlatformHandlePlayerStopped(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> timer(MCM_play_stopped, nil);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

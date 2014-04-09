@@ -289,6 +289,12 @@ void MCPlatformCallbackSendPasteboardResolve(MCPlatformPasteboardRef pasteboard,
 void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef window, uint32_t view_id);
 
 void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef player);
+void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef player, uint32_t time);
+void MCPlatformCallbackSendPlayerSelectionChanged(MCPlatformPlayerRef player);
+void MCPlatformCallbackSendPlayerCurrentTimeChanged(MCPlatformPlayerRef player);
+void MCPlatformCallbackSendPlayerStarted(MCPlatformPlayerRef player);
+void MCPlatformCallbackSendPlayerPaused(MCPlatformPlayerRef player);
+void MCPlatformCallbackSendPlayerStopped(MCPlatformPlayerRef player);
 
 void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef sound);
 

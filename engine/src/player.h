@@ -36,7 +36,18 @@ enum QTVRstate {
 };
 #endif
 
+#ifndef FEATURE_PLATFORM_PLAYER
 struct MCPlayerOffscreenBuffer;
+#endif
+
+#ifdef FEATURE_PLATFORM_PLAYER
+struct MCPlayerCallback
+{
+    MCNameRef message;
+    MCNameRef parameter;
+    uint32_t time;
+};
+#endif
 
 class MCPlayer : public MCControl
 {
@@ -57,6 +68,8 @@ class MCPlayer : public MCControl
 
 #ifdef FEATURE_PLATFORM_PLAYER
 	MCPlatformPlayerRef m_platform_player;
+    MCPlayerCallback *m_callbacks;
+    uindex_t m_callback_count;
 #endif
 	
 #ifdef FEATURE_MPLAYER
@@ -312,6 +325,8 @@ public:
 	{
 		return m_platform_player;
 	}
+    
+    void markerchanged(uint32_t p_time);
 #endif
 	
 #ifndef FEATURE_PLATFORM_PLAYER

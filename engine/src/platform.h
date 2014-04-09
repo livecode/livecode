@@ -31,6 +31,12 @@
 struct MCImageBitmap;
 struct MCColorSpaceInfo;
 
+template<typename T> struct array_t
+{
+    T *ptr;
+    uindex_t count;
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCPlatformCallbackType
@@ -115,6 +121,8 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypePlayerQTVRConstraints,
 	
 	kMCPlatformPropertyTypeCursorRef,
+    
+    kMCPlatformPropertyTypeUInt32Array,
 };
 
 // The lower 21-bits hold a codepoint, the upper bits hold modifiers. Some
@@ -960,6 +968,7 @@ enum MCPlatformPlayerProperty
 	kMCPlatformPlayerPropertyFinishTime,
 	kMCPlatformPlayerPropertyPlayRate,
 	kMCPlatformPlayerPropertyVolume,
+    kMCPlatformPlayerPropertyMarkers,
 	
 	kMCPlatformPlayerPropertyShowBadge,
 	kMCPlatformPlayerPropertyShowController,
