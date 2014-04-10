@@ -3204,8 +3204,72 @@ void MCExecTypeConvertFromValueRefAndReleaseAlways(MCExecContext& ctxt, MCValueR
         ctxt . Throw();
 }
 
+static void MCExecTypeAssign(MCExecContext& ctxt, MCExecValueType p_from_type, void *p_from_value, void *p_to_value)
+{
+    switch (p_from_type)
+    {
+        case kMCExecValueTypeNone:
+            *(MCNullRef *)p_to_value = kMCNull;
+            break;
+        case kMCExecValueTypeValueRef:
+            *(MCValueRef *)p_to_value = *(MCValueRef *)p_from_value;
+            break;
+        case kMCExecValueTypeBooleanRef:
+            *(MCBooleanRef *)p_to_value = *(MCBooleanRef *)p_from_value;
+            break;
+        case kMCExecValueTypeStringRef:
+            *(MCStringRef *)p_to_value = *(MCStringRef *)p_from_value;
+            break;
+        case kMCExecValueTypeNameRef:
+            *(MCNameRef *)p_to_value = *(MCNameRef *)p_from_value;
+            break;
+        case kMCExecValueTypeDataRef:
+            *(MCDataRef *)p_to_value = *(MCDataRef *)p_from_value;
+            break;
+        case kMCExecValueTypeArrayRef:
+            *(MCArrayRef *)p_to_value = *(MCArrayRef *)p_from_value;
+            break;
+        case kMCExecValueTypeNumberRef:
+            *(MCNumberRef *)p_to_value = *(MCNumberRef *)p_from_value;
+            break;
+        case kMCExecValueTypeUInt:
+            *(uinteger_t *)p_to_value =  *(uinteger_t *)p_from_value;
+            break;
+        case kMCExecValueTypeInt:
+            *(integer_t *)p_to_value =  *(integer_t *)p_from_value;
+            break;
+        case kMCExecValueTypeBool:
+            *(bool *)p_to_value =  *(bool *)p_from_value;
+            break;
+        case kMCExecValueTypeDouble:
+            *(double *)p_to_value =  *(double *)p_from_value;
+            break;
+        case kMCExecValueTypeFloat:
+            *(float *)p_to_value =  *(float *)p_from_value;
+            break;
+        case kMCExecValueTypeChar:
+            *(char *)p_to_value =  *(char *)p_from_value;
+            break;
+        case kMCExecValueTypePoint:
+            *(MCPoint *)p_to_value =  *(MCPoint *)p_from_value;
+            break;
+        case kMCExecValueTypeColor:
+            *(MCColor *)p_to_value =  *(MCColor *)p_from_value;
+            break;
+        case kMCExecValueTypeRectangle:
+            *(MCRectangle *)p_to_value =  *(MCRectangle *)p_from_value;
+            break;
+    }
+}
+
 void MCExecTypeConvertAndReleaseAlways(MCExecContext& ctxt, MCExecValueType p_from_type, void *p_from_value, MCExecValueType p_to_type, void *p_to_value)
 {
+    if (p_from_type == p_to_type)
+    {
+        MCExecTypeAssign(ctxt, p_from_type, p_from_value, p_to_value);
+        return;
+    }
+
 	MCValueRef t_pivot;
 	MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, p_from_type, p_from_value, t_pivot);
 	if (ctxt . HasError())
