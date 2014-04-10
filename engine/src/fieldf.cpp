@@ -611,7 +611,11 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 			p_context->begin(false);
 		}
 		
+        // MW-2014-04-10: [[ Bug 12020 ]] Make sure we use a linesize of 1 rather than 0 (hairline)
+        //   to ensure caret is not too thin on retina displays.
+        p_context->setlineatts(1, LineSolid, CapButt, JoinBevel);
 		p_context->drawline(cursorrect.x, cursorrect.y, cursorrect.x, cursorrect.y + cursorrect.height - 1);
+        p_context->setlineatts(0, LineSolid, CapButt, JoinBevel);
 		
 		if (t_is_opaque)
 		{
