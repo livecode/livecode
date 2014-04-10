@@ -429,10 +429,12 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	if (t_modal)
 		[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
 	
+    // MW-2014-04-09: [[ Bug 10767 ]] Don't run in the modal panel runloop mode as this stops
+    //   WebViews from working.
 	NSEvent *t_event;
 	t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
 								 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
-									inMode: p_blocking ? NSEventTrackingRunLoopMode : (t_modal ? NSModalPanelRunLoopMode : NSDefaultRunLoopMode)
+									inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
 								   dequeue: YES];
 	
 	s_in_blocking_wait = false;
