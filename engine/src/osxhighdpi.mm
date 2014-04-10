@@ -22,6 +22,7 @@
 #include "dispatch.h"
 
 #include "graphics.h"
+#include "stacklst.h"
 
 #include <AppKit/AppKit.h>
 
