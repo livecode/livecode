@@ -6634,6 +6634,10 @@ uindex_t MCTextChunkIterator::chunkoffset(MCExecContext& ctxt, MCStringRef p_nee
         case CT_LINE:
         case CT_PARAGRAPH:
         {
+            // If we're looking for empty, then we have to iterate through the chunks.
+            if (MCStringIsEmpty(p_needle))
+                break;
+            
             uindex_t t_found_offset;
             if (type != CT_PARAGRAPH)
             {

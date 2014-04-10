@@ -253,7 +253,7 @@ bool MCObject::findpropset(MCNameRef p_name, bool p_empty_is_default, MCObjectPr
 {
 	MCObjectPropertySet *t_set;
 	t_set = props;
-	if (!p_empty_is_default || !MCNameIsEqualTo(p_name, kMCEmptyName, kMCCompareCaseless))
+	if (!p_empty_is_default || !MCNameIsEmpty(p_name))
 		while(t_set != nil && !t_set -> hasname(p_name))
 			t_set = t_set -> getnext();
 
@@ -274,7 +274,7 @@ bool MCObject::ensurepropset(MCNameRef p_name, bool p_empty_is_default, MCObject
 
 	MCObjectPropertySet *t_set;
 	t_set = props;
-	if (!p_empty_is_default || !MCNameIsEqualTo(p_name, kMCEmptyName, kMCCompareCaseless))
+	if (!p_empty_is_default || !MCNameIsEmpty(p_name))
 		while(t_set != nil && !t_set -> hasname(p_name))
 			t_set = t_set -> getnext();
 

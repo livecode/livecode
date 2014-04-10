@@ -144,7 +144,7 @@ static void MCPrintingPrintDeviceOutputParse(MCExecContext& ctxt, MCStringRef p_
 	}
 	
 	MCAutoStringRef t_head, t_tail;
-	if (MCStringDivideAtChar(p_input, ':', kMCCompareCaseless, &t_head, &t_tail))
+	if (MCStringDivideAtChar(p_input, ':', kMCCompareExact, &t_head, &t_tail))
 	{
 		if (MCStringIsEqualToCString(*t_head, "file", kMCCompareCaseless))
 		{
@@ -213,7 +213,7 @@ struct MCPrintingPrinterPageRange
 static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_input, MCPrintingPrinterPageRange& r_output)
 {
 	if (MCStringIsEqualToCString(p_input, "all", kMCCompareCaseless) ||
-		MCStringIsEqualToCString(p_input, "", kMCCompareCaseless))
+		MCStringIsEmpty(p_input))
 	{
 		r_output . count = PRINTER_PAGE_RANGE_ALL;
 		r_output . ranges = nil;

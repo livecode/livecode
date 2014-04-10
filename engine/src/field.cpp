@@ -2959,10 +2959,11 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     x_si += t_cu_range.length;
     x_ei = x_si - t_cu_range.length;
     
+
     // Now we need to do it again but measuring ahead p_count chars. Again,
     // start at the beginning of the current paragraph.
-    p_count += p_start;    
-    
+    p_count += p_start;
+
     // Loop until we get to the final paragraph
     // Note that t_pg_length already contains the measurement for the current pg
     while (t_pg_char_length <= p_count)
@@ -2984,7 +2985,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
         t_pg_char_length = t_pg -> gettextlengthcr(true);
     }
     
-    // We know the char offset into the paragraph and need to convert this
+    // We know the codepoint offset into the paragraph and need to convert this
     // back into a code unit offset.
     t_char_range = MCRangeMake(0, p_count);
     /* UNCHECKED */ MCStringMapIndices(t_pg->GetInternalStringRef(), kMCCharChunkTypeGrapheme, t_char_range, t_cu_range);

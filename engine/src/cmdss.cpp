@@ -2878,6 +2878,10 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 							t_delimiter++;
 							MCStringCopySubstring(*t_position_data, MCRangeMake(t_delimiter, MCStringGetLength(*t_position_data) - t_delimiter), &t_alignment);
 						}
+                        // AL-2014-04-07: [[ Bug 12138 ]] 'drawer ... at <position>' codepath resulted in t_position uninitialised
+                        else
+                            t_position = *t_position_data;
+                        
 						if (MCStringIsEqualToCString(*t_position, "right", kMCCompareCaseless))
 							t_pos = WP_PARENTRIGHT;
 						else if (MCStringIsEqualToCString(*t_position, "left", kMCCompareCaseless))

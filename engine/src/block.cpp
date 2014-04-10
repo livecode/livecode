@@ -1731,12 +1731,6 @@ findex_t MCBlock::GetCursorIndex(int2 x, Boolean chunk, Boolean last)
 	int32_t t_last_width;
 	t_last_width = is_rtl() ? width : 0;
     
-    MCRange t_char_range;
-    MCRange t_cp_range;
-    
-    uindex_t t_last_boundary;
-    t_last_boundary = i;
-    
     while(i < m_index + m_size)
     {
         findex_t t_new_i;
@@ -1758,8 +1752,6 @@ findex_t MCBlock::GetCursorIndex(int2 x, Boolean chunk, Boolean last)
         
         t_last_width = t_new_width;
         
-        // SN-2014-03-26 [[ CombiningChars ]]: We now keep the last boundary before the character getting the width bigger than the one specified
-        // Since that character might be composed of several composed codepoints, we only want to get the index of the beginning of this char
         i = t_new_i;
     }
 
