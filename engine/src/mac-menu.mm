@@ -309,18 +309,25 @@ void MCMacPlatformUnlockMenuSelect(void)
 	// flow as normal.
 	if (![[[event window] delegate] isKindOfClass: [MCWindowDelegate class]])
 		return [super performKeyEquivalent: event];
-	
+    
 	// Otherwise, we lock menuSelect firing, and propagate a keydown/keyup.
 	BOOL t_key_equiv;
 	MCMacPlatformLockMenuSelect();
 	t_key_equiv = [super performKeyEquivalent: event];
 	MCMacPlatformUnlockMenuSelect();
 	
-	MCPlatformWindowRef t_window = [(MCWindowDelegate *)[[event window] delegate] platformWindow];
-	[[[event window] contentView] handleKeyPress: event isDown: YES];
-	[[[event window] contentView] handleKeyPress: event isDown: NO];
-	
-	return YES;
+    // MW-2014-04-10: [[ Bug 12047 ]] If it was found as a key equivalent dispatch
+    //   a keypress so the engine can handle it. Otherwise we return NO and the
+    //   event is handled normally.
+    if (t_key_equiv)
+    {
+        MCPlatformWindowRef t_window = [(MCWindowDelegate *)[[event window] delegate] platformWindow];
+        [[[event window] contentView] handleKeyPress: event isDown: YES];
+        [[[event window] contentView] handleKeyPress: event isDown: NO];
+        return YES;
+    }
+        
+	return NO;
 }
 
 @end
