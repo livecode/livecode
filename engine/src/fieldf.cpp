@@ -1045,6 +1045,7 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 			uint2 ct = 0;
 			int4 x;
 			x = t_delta + t[0];
+            
 			while (x <= grect.x + grect.width)
 			{
 				// MW-2012-05-03: [[ Bug 10200 ]] If set at the field level, the vGrid should start
@@ -1061,8 +1062,10 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 				
 				// MW-2012-03-19: [[ FixedTable ]] If we have reached the final tab in fixed
 				//   table mode, we are done.
-				if (ct == nt - 2 && t[nt - 2] == t[nt - 1])
-					break;
+				// PM-2014-04-08: [[ Bug 12146 ]] Setting tabstops to 2 equal numbers and then
+                //  turning VGrid on, hangs LC, because this while loop ran forever
+                if (ct == nt - 1 && (nt < 2 || t[nt - 2] == t[nt - 1]))
+                    break;
 			}
 		}
 
