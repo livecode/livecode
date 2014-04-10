@@ -652,4 +652,23 @@ void MCStacklist::enableformodal(Window modalwindow, Boolean isenabled)
 	while(t_node != stacks);
 }
 
+void MCStacklist::reopenallstackwindows(void)
+{
+	if (stacks != NULL)
+	{
+		MCStacknode *tptr = stacks;
+		do
+		{
+            MCStack *t_stack;
+            t_stack = tptr -> getstack();
+			
+            if (t_stack->getopened() && t_stack->getwindow() != nil)
+                t_stack->reopenwindow();
+            
+            tptr = tptr->next();
+		}
+		while (tptr != stacks);
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
