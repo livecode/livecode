@@ -3722,14 +3722,11 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCExecValue p_va
 {    
     if (destvar != nil)
     {
-        MCAutoValueRef t_valueref;
-        MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeValueRef, &(&t_valueref));
         MCVariableChunkPtr t_var_chunk;
         if (!evalvarchunk(ctxt, false, true, t_var_chunk))
             return false;
-        
-        MCEngineExecPutIntoVariable(ctxt, *t_valueref, p_type, t_var_chunk);
-//        MCEngineExecPutIntoVariable(ctxt, p_value, p_type, t_var_chunk);
+
+        MCEngineExecPutIntoVariable(ctxt, p_value, p_type, t_var_chunk);
         MCValueRelease(t_var_chunk . mark . text);
     }
     else if (isurlchunk())

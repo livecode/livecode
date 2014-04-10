@@ -355,8 +355,13 @@ bool MCVariable::set(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path,
 
 bool MCVariable::give_value(MCExecContext& ctxt, MCExecValue p_value)
 {
-    MCExecTypeRelease(value);
-    value = p_value;
+    if (MCExecTypeIsValueRef(p_value))
+        setvalueref(p_value . valueref_value);
+    else
+    {
+        MCExecTypeRelease(value);
+        value = p_value;
+    }
     
     synchronize(ctxt);
     return true;
