@@ -23,6 +23,8 @@
 
 #include <include/cef_app.h>
 
+#include <objc/objc-runtime.h>
+
 class MCCefBrowserOSX : public MCCefBrowserBase
 {
 public:
@@ -135,6 +137,13 @@ bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser)
 void MCCefBrowserOSX::PlatformConfigureWindow(CefWindowInfo &r_info)
 {
 	r_info.SetAsChild(m_parent_window, 0,0,1,1);
+    
+    
+	NSView *t_handle;
+	if (!GetWindowHandle(t_handle))
+		return false;
+    
+    t_handle = t_handle;
 }
 
 void MCCefPlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser)
@@ -156,6 +165,11 @@ MCCefBrowserOSX::~MCCefBrowserOSX(void)
 {
 }
 
+static unsigned int cef_com_runrev_livecode_nativeViewId(id self, SEL _cmd)
+{
+    return 0xffffffffU;
+}
+
 bool MCCefBrowserOSX::GetWindowHandle(CefWindowHandle &r_hwnd)
 {
 	CefRefPtr<CefBrowser> t_browser;
@@ -169,6 +183,15 @@ bool MCCefBrowserOSX::GetWindowHandle(CefWindowHandle &r_hwnd)
 	
 	if (t_handle == nil)
 		return false;
+    
+    // MW-2014-04-10: [[ Bug 12047 ]] First time we get the window handle
+    //   inject the method that the engine needs to process focus.
+    if (![t_handle respondsToSelector: @selector(com_runrev_livecode_nativeViewId)])
+    {
+        Class t_class;
+        t_class = object_getClass(t_handle);
+        class_addMethod(t_class, @selector(com_runrev_livecode_nativeViewId), (IMP)cef_com_runrev_livecode_nativeViewId, "I@:");
+    }
 	
 	r_hwnd = t_handle;
 	
