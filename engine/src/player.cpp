@@ -579,7 +579,10 @@ void MCPlayer::setrect(const MCRectangle &nrect)
 	if (m_platform_player != nil)
 	{ 
 		MCRectangle trect = MCU_reduce_rect(rect, getflag(F_SHOW_BORDER) ? borderwidth : 0);
-		trect = MCRectangleGetTransformedBounds(trect, getstack()->getdevicetransform());
+        
+        // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
+        //   (backscale factor handled in platform layer).
+		trect = MCRectangleGetTransformedBounds(trect, getstack()->getviewtransform());
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
 	}
 #else
@@ -1769,7 +1772,9 @@ Boolean MCPlayer::prepare(const char *options)
 	MCRectangle trect = resize(t_movie_rect);
 	
 	// IM-2011-11-12: [[ Bug 11320 ]] Transform player rect to device coords
-	trect = MCRectangleGetTransformedBounds(trect, getstack()->getdevicetransform());
+    // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
+    //   (backscale factor handled in platform layer).
+	trect = MCRectangleGetTransformedBounds(trect, getstack()->getviewtransform());
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
 	
