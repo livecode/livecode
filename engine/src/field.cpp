@@ -2956,6 +2956,7 @@ void MCField::resolvechars(uint32_t p_part_id, findex_t& x_si, findex_t& x_ei, f
     // this back into a code unit offset.
     t_char_range = MCRangeMake(0, p_start);
     /* UNCHECKED */ MCStringMapIndices(t_pg->GetInternalStringRef(), kMCCharChunkTypeGrapheme, t_char_range, t_cu_range);
+    x_si  += t_cu_range . length;
     x_ei = x_si - t_cu_range.length;
     
 
