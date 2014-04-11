@@ -110,7 +110,8 @@ bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data)
 		t_success = MCmb -> set(ctxt, p_data);
         break;
     case kMCSPutAfterMessage:
-        t_success = MCmb -> append(ctxt, p_data);
+        // SN-2014-04-11 [[ FasterVariable ]] parameter updated to use the new 'set' operation on variables
+        t_success = MCmb -> set(ctxt, p_data, kMCVariableSetAfter);
         break;
 	default:
         t_success = false;
