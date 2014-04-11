@@ -1416,7 +1416,7 @@ MCGFloat MCResPlatformGetUIDeviceScale(void)
 void MCResPlatformHandleScaleChange(void)
 {
 	// Global use-pixel-scaling value has been updated, so now we just need to reopen any open stack windows
-	MCdispatcher->reopen_stack_windows();
+	MCstacks->reopenallstackwindows();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
