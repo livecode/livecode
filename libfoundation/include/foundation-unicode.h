@@ -25,6 +25,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 codepoint_t MCUnicodeSurrogatesToCodepoint(uint16_t first, uint16_t second);
+// We assume that the unichar_t pointer already has enough memory to handle the addition of the surrogate pair
+// Returns true in case the codepoint actually generated a surrogate pair
+bool MCUnicodeCodepointToSurrogates(codepoint_t t_codepoint, unichar_t* r_surrogates);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -328,10 +331,10 @@ bool    MCUnicodeCaseFold(const unichar_t *p_in, uindex_t p_in_length,
 // Comparison options
 enum MCUnicodeCompareOption
 {
-    kMCUnicodeCompareOptionExact,       // Codepoint (not code unit!) equality
-    kMCUnicodeCompareOptionNormalised,  // Normalise inputs before comparison
-    kMCUnicodeCompareOptionFolded,      // Case fold inputs before comparison
-    kMCUnicodeCompareOptionCaseless     // Both normalise and case fold
+    kMCUnicodeCompareOptionExact = 0,       // Codepoint (not code unit!) equality
+    kMCUnicodeCompareOptionNormalised = 1,  // Normalise inputs before comparison
+    kMCUnicodeCompareOptionFolded = 2,      // Case fold inputs before comparison
+    kMCUnicodeCompareOptionCaseless = 3    // Both normalise and case fold
 };
 
 ////////////////////////////////////////////////////////////////////////////////

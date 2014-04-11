@@ -184,6 +184,8 @@ private:
     // Marked length
     uindex_t m_MarkedLength;
     uindex_t m_MarkPoint;
+    
+    bool m_surrogate;
 };
 
 

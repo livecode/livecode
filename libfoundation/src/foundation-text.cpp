@@ -180,7 +180,16 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepoint()
 {
     // If possible, return a codepoint from the cached state
     if (m_ReadIndex < m_StateLength)
+    {
+        // Check whether we have a surrogate pair
+        // We are sure to have the following trail surrogate if we find a lead surrogate
+        if (m_State[m_ReadIndex] > 0xD800 && m_State[m_ReadIndex] < 0xDBFF)
+        {
+            m_surrogate = true;
+            return MCUnicodeSurrogatesToCodepoint(m_State[m_ReadIndex], m_State[m_ReadIndex + 1]);
+        }
         return m_State[m_ReadIndex];
+    }
     
     PrevFilter()->MarkText();
     m_MarkPoint = PrevFilter()->GetMarkedLength();
@@ -196,18 +205,27 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepoint()
         // The first character is always added to the state
         if (m_StateLength == 0)
         {
-            m_State[m_StateLength++] = t_cp;
+            // Check whether the codepoint we got is a surrogate pair
+            if (MCUnicodeCodepointToSurrogates(t_cp, &(m_State[m_StateLength])))
+                m_StateLength++;
+            
+            m_StateLength++;
+            
             PrevFilter()->AdvanceCursor();
         }
         // Non-first grapheme base characters terminate the run
-        else if (MCUnicodeGetBinaryProperty(t_cp, kMCUnicodePropertyGraphemeBase))
+        else if (MCUnicodeGetBinaryProperty(t_cp, kMCUnicodePropertyGraphemeBase) || MCUnicodeGetBinaryProperty(t_cp, kMCUnicodePropertyWhiteSpace))
         {
             break;
         }
         // All other characters are appended to the state
         else
         {
-            m_State[m_StateLength++] = t_cp;
+            // Check whether the codepoint we got is a surrogate pair
+            if (MCUnicodeCodepointToSurrogates(t_cp, &(m_State[m_StateLength])))
+                m_StateLength++;
+            
+            m_StateLength++;
             PrevFilter()->AdvanceCursor();
         }
         
@@ -229,12 +247,24 @@ codepoint_t MCTextFilter_NormalizeNFC::GetNextCodepoint()
     delete[] t_norm;
     
     // All done
-    return m_State[0];
+    if (m_State[0] > 0xD800 && m_State[0] < 0xDBFF)
+    {
+        m_surrogate = true;
+        return MCUnicodeSurrogatesToCodepoint(m_State[0], m_State[1]);
+    }
+    else
+        return m_State[0];
 }
 
 bool MCTextFilter_NormalizeNFC::AdvanceCursor()
 {
     m_ReadIndex++;
+    if (m_surrogate)
+    {
+        m_ReadIndex++;
+        m_surrogate = false;
+    }
+    
 	return HasData();
 }
 
@@ -255,7 +285,7 @@ uindex_t MCTextFilter_NormalizeNFC::GetMarkedLength() const
 }
 
 MCTextFilter_NormalizeNFC::MCTextFilter_NormalizeNFC()
-  : m_StateLength(0), m_ReadIndex(0), m_MarkedLength(0), m_MarkPoint(0)
+  : m_StateLength(0), m_ReadIndex(0), m_MarkedLength(0), m_MarkPoint(0), m_surrogate(false)
 {
     ;
 }
