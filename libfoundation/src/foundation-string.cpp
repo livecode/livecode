@@ -78,6 +78,9 @@ static bool __MCStringMakeIndirect(__MCString *self);
 // Ensures the given mutable but indirect string is direct.
 static bool __MCStringResolveIndirect(__MCString *self);
 
+// Makes direct mutable string indirect, referencing r_new_string.
+static bool __MCStringCopyMutable(__MCString *self, __MCString*& r_new_string);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // This method creates a 'constant' MCStringRef from the given c-string. At some
@@ -616,7 +619,7 @@ bool MCStringFormat(MCStringRef& r_string, const char *p_format, ...)
 static bool __MCStringClone(MCStringRef self, MCStringRef& r_new_string)
 {
     MCAssert(!__MCStringIsIndirect(self));
-    
+
     // create a direct copy of self.
 	return MCStringCreateWithChars(self -> chars, self -> char_count, r_new_string);
 }
@@ -638,8 +641,10 @@ bool MCStringCopy(MCStringRef self, MCStringRef& r_new_string)
         return true;
     }
 
-	// Otherwise make a copy of the string.
-	return __MCStringClone(self, r_new_string);
+    // Otherwise make the mutable direct string immutable,
+    // assign the new string as that, and make self indirect
+    // referencing it.
+    return __MCStringCopyMutable(self, r_new_string);
 }
 
 bool MCStringCopyAndRelease(MCStringRef self, MCStringRef& r_new_string)
@@ -662,13 +667,8 @@ bool MCStringCopyAndRelease(MCStringRef self, MCStringRef& r_new_string)
 	// If the reference count is one, then shrink the buffer and mark as immutable.
 	if (self -> references == 1)
 	{
-        // Shrink the char buffer to be just long enough for the characters plus
-        // an implicit NUL.
-        if (!MCMemoryResizeArray(self -> char_count + 1, self -> chars, self -> char_count))
-            return false;
-        
-        self -> char_count -= 1;
-		self -> flags &= ~kMCStringFlagIsMutable;
+        __MCStringMakeImmutable(self);
+        self -> flags &= ~kMCStringFlagIsMutable;
 		r_new_string = self;
 		return true;
 	}
@@ -3571,7 +3571,8 @@ static bool __MCStringResolveIndirect(__MCString *self)
 	{
         self -> char_count = t_string -> char_count;
         self -> chars = t_string -> chars;
-
+        self -> capacity = t_string -> char_count;
+        
 		t_string -> char_count = 0;
 		t_string -> chars = nil;
 	}
@@ -3585,6 +3586,7 @@ static bool __MCStringResolveIndirect(__MCString *self)
         
         self -> char_count = t_clone -> char_count;
         self -> chars = t_clone -> chars;
+        self -> capacity = t_clone -> char_count;
 	}
     
 	// Make sure we take the flags, but mark as not indirect.
@@ -3592,5 +3594,29 @@ static bool __MCStringResolveIndirect(__MCString *self)
 	self -> flags &= ~kMCStringFlagIsIndirect;
     
 	return true;
+}
 
+static bool __MCStringCopyMutable(__MCString *self, __MCString*& r_new_string)
+{
+    if (!__MCStringMakeImmutable(self))
+        return false;
+    
+    __MCString *t_string;
+	t_string = nil;
+	
+    if (!__MCValueCreate(kMCValueTypeCodeString, t_string))
+        return false;
+    
+    t_string -> char_count = self -> char_count;
+    t_string -> chars = self -> chars;
+    t_string -> native_chars = self -> native_chars;
+    
+    self -> char_count = 0;
+    self -> chars = nil;
+    self -> capacity = t_string -> char_count;
+    self -> string = MCValueRetain(t_string);
+    self -> flags |= kMCStringFlagIsIndirect;
+    
+    r_new_string = t_string;
+    return true;
 }
