@@ -1,0 +1,1 @@
+# Windows engine hangs after multiple stack redraws.

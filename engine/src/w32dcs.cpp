@@ -840,8 +840,6 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *di
 	for(uint4 t_index = 1; t_index < t_display_count; ++t_index)
 		t_virtual_viewport = MCU_union_rect(t_virtual_viewport, t_displays[t_index] . viewport);
 
-	t_virtual_viewport . width = 500;
-
 	HWND hwndsnap = CreateWindowExA(WS_EX_TRANSPARENT | WS_EX_TOPMOST,
 	                               MC_SNAPSHOT_WIN_CLASS_NAME,"", WS_POPUP, t_virtual_viewport . x, t_virtual_viewport . y,
 	                               t_virtual_viewport . width, t_virtual_viewport . height, invisiblehwnd,
