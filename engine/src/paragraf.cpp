@@ -3478,8 +3478,9 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 }
 
 // JS-2013-05-15: [[ PageRanges ]] pagerange as variant of pageheight
+// MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indicies.
 Boolean MCParagraph::pagerange(uint2 fixedheight, uint2 &theight,
-                               uint2 &tend, MCLine *&lptr)
+                               uint4 &tend, MCLine *&lptr)
 {
 	if (lptr == NULL)
 		lptr = lines;
