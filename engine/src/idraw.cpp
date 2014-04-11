@@ -423,10 +423,29 @@ Boolean MCImage::magmfocus(int2 x, int2 y)
 	return True;
 }
 
+static Boolean isEditingTool(Tool p_tool)
+{
+    switch (p_tool)
+    {
+        case T_SELECT:
+        case T_BUCKET:
+        case T_SPRAY:
+        case T_ERASER:
+        case T_POLYGON:
+        case T_CURVE:
+        case T_PENCIL:
+        case T_BRUSH:
+            return True;
+        default:
+            return False;
+    }
+}
+
 Boolean MCImage::magmdown(uint2 which)
 {
 	if (state & CS_MFOCUSED)
 		return False;
+    
 	if (getstack()->gettool(this) == T_DROPPER)
 	{
 		MCscreen->dropper(MCmagnifier->getw(),
@@ -441,6 +460,10 @@ Boolean MCImage::magmdown(uint2 which)
 		return False;
 	}
 
+    // PM-2014-04-01: [[Bug 11072]] Convert image to mutable if an editing tool is selected, to prevent LC crashing
+    if (isEditingTool(getstack()->gettool(this)))
+        convert_to_mutable();
+    
 	if (static_cast<MCMutableImageRep *>(m_rep)->image_mdown(which) == True)
 		return True;
 
