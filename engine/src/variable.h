@@ -654,6 +654,11 @@ public:
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
     bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
     
+    // SN-2014-04-11 [[ FasterVariable ]]
+    // Replace the content of the internal string according to the range given to avoid unnecessary copy
+    bool replace(MCExecContext& ctxt, MCStringRef p_replacement, MCRange p_range);
+    
+    
     bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
     
@@ -832,7 +837,7 @@ public:
     bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
     
-	//
+	bool replace(MCExecContext& ctxt, MCStringRef p_replacement, MCRange p_range);
 
 	bool clear(void);
 #ifdef LEGACY_EXEC
@@ -949,6 +954,7 @@ public:
 #endif
     bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
+    bool replace(MCExecContext& ctxt, MCStringRef p_replacement, MCRange p_range);
 	Parse_stat parsearray(MCScriptPoint &);
 	Exec_stat sets(const MCString &s);
 	void clear();

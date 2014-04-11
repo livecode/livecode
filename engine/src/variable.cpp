@@ -523,6 +523,15 @@ bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef
 	return false;
 }
 
+bool MCVariable::replace(MCExecContext& ctxt, MCStringRef p_replacement, MCRange p_range)
+{
+    if (!converttomutablestring(ctxt))
+        return false;
+    
+    // We are now sure to have a stringref in our ExecValue
+    return MCStringReplace(value . stringref_value, p_range, p_replacement);
+}
+
 #ifdef LEGACY_EXEC
 Exec_stat MCVariable::remove(MCExecPoint& ep)
 {
@@ -948,6 +957,11 @@ bool MCContainer::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariabl
 	return m_variable -> give_value(ctxt, p_value, m_path, m_length, p_setting);
 }
 
+bool MCContainer::replace(MCExecContext &ctxt, MCStringRef p_replacement, MCRange p_range)
+{
+    return m_variable -> replace(ctxt, p_replacement, p_range);
+}
+
 bool MCContainer::remove(MCExecContext& ctxt)
 {
 	return m_variable -> remove(ctxt, m_path, m_length);
@@ -1262,6 +1276,24 @@ bool MCVarref::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSe
 		return false;
 	
     return t_container -> give_value(ctxt, p_value, p_setting);
+}
+
+bool MCVarref::replace(MCExecContext &ctxt, MCStringRef p_replacement, MCRange p_range)
+{
+    if (dimensions == 0)
+    {
+        MCVariable *t_resolved_ref;
+        
+        t_resolved_ref = fetchvar(ctxt);
+        
+        return t_resolved_ref -> replace(ctxt, p_replacement, p_range);
+    }
+    
+    MCAutoPointer<MCContainer> t_container;
+    if (!resolve(ctxt, &t_container))
+        return false;
+    
+    return t_container -> replace(ctxt, p_replacement, p_range);
 }
 
 
