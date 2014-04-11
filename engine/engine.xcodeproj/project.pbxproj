@@ -290,6 +290,9 @@
 		4D4F9E3B13CDF24A00B9B15D /* osximage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9E3913CDF24A00B9B15D /* osximage.cpp */; };
 		4D4F9E3C13CDF24A00B9B15D /* osxmisc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9E3A13CDF24A00B9B15D /* osxmisc.cpp */; };
 		4D4F9E6713CDFB8100B9B15D /* osxfield.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9E6613CDFB8100B9B15D /* osxfield.cpp */; };
+		4D52656018F83DA1007D4C13 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DA028F718F550E1000CFCF8 /* AudioToolbox.framework */; };
+		4D52656118F83DA2007D4C13 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DA028F718F550E1000CFCF8 /* AudioToolbox.framework */; };
+		4D52656218F83DA3007D4C13 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DA028F718F550E1000CFCF8 /* AudioToolbox.framework */; };
 		4D5881210B80BF1E00200116 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881200B80BF1E00200116 /* IOKit.framework */; };
 		4D58856B0B80DEAC00200116 /* da.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58854C0B80DEAB00200116 /* da.lproj */; };
 		4D58856C0B80DEAC00200116 /* French.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58854E0B80DEAC00200116 /* French.lproj */; };
@@ -1598,6 +1601,7 @@
 				4DB384C21714420A00D3F102 /* libpcre.a in Frameworks */,
 				4C13881D18A12ED800EFF7B6 /* libopenssl.a in Frameworks */,
 				E8A554B61785A7C600DABC1A /* libskia.a in Frameworks */,
+				4D52656218F83DA3007D4C13 /* AudioToolbox.framework in Frameworks */,
 				4DB386091714423500D3F102 /* Carbon.framework in Frameworks */,
 				4D7740CC1226AA65001C9150 /* Quartz.framework in Frameworks */,
 				4D2A57CA1198634300135143 /* QuickTime.framework in Frameworks */,
@@ -1654,6 +1658,7 @@
 				4D1F9E51171C69940091C6CB /* libsecurity-community.a in Frameworks */,
 				4D055BE01079F732007F6E13 /* libcore.a in Frameworks */,
 				E8A554B11785A70600DABC1A /* libgraphics.a in Frameworks */,
+				4D52656018F83DA1007D4C13 /* AudioToolbox.framework in Frameworks */,
 				4DB382EE1714418A00D3F102 /* libz.a in Frameworks */,
 				4DB382EF1714418A00D3F102 /* libpng.a in Frameworks */,
 				4DB382F01714418A00D3F102 /* libjpeg.a in Frameworks */,
@@ -1691,6 +1696,7 @@
 				4D1F9DC1171C68760091C6CB /* libkernel-server.a in Frameworks */,
 				4D1F9C5A171C66D70091C6CB /* libsecurity-community.a in Frameworks */,
 				4DFD495313BA2B89008DB91F /* libcore.a in Frameworks */,
+				4D52656118F83DA2007D4C13 /* AudioToolbox.framework in Frameworks */,
 				E8A554B71785A83A00DABC1A /* libgraphics.a in Frameworks */,
 				4DB386101714426200D3F102 /* libz.a in Frameworks */,
 				4DB386111714426200D3F102 /* libpng.a in Frameworks */,
