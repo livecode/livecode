@@ -868,9 +868,9 @@ void MCStringsEvalByteChunk(MCExecContext& ctxt, MCMarkedText p_source, MCDataRe
     if (!ctxt . ConvertToData(p_source . text, &t_data))
         return;
     
-    // The incoming indices are byte indices
-    const byte_t *bytes = MCDataGetBytePtr(*t_data);
-    if (MCDataCreateWithBytes(bytes + p_source . start, p_source . finish - p_source. start, r_bytes))
+    // MW-2014-04-11: [[ Bug 12179 ]] Use a subrange copy - previously clamping wasn't being
+    //   performed.
+    if (MCDataCopyRange(*t_data, MCRangeMake(p_source . start, p_source . finish - p_source. start), r_bytes))
         return;
     
     ctxt . Throw();
