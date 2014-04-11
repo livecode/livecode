@@ -682,6 +682,7 @@ bool MCStringCopyAndRelease(MCStringRef self, MCStringRef& r_new_string)
     
     // And return a copy of the string
     r_new_string = MCValueRetain(self -> string);
+    return true;
 }
 
 bool MCStringMutableCopy(MCStringRef self, MCStringRef& r_new_string)
