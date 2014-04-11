@@ -56,10 +56,12 @@ static CGFloat s_primary_screen_height = 0.0f;
 {
 	MCPlatformInitializeColorTransform();
 	MCPlatformInitializeAbortKey();
+    MCPlatformInitializeMenu();
 }
 
 - (void)finalizeModules
 {
+    MCPlatformFinalizeMenu();
 	MCPlatformFinalizeAbortKey();
 	MCPlatformFinalizeColorTransform();
 }

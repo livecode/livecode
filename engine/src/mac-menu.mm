@@ -834,3 +834,21 @@ bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, S
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// MW-2014-04-11: [[ Bug 12068 ]] On startup setup an empty default menubar
+//   so that all apps get Quit / About items.
+bool MCPlatformInitializeMenu(void)
+{
+    MCPlatformMenuRef t_menubar;
+    MCPlatformCreateMenu(t_menubar);
+    MCPlatformSetMenubar(t_menubar);
+    MCPlatformReleaseMenu(t_menubar);
+    return true;
+}
+
+void MCPlatformFinalizeMenu(void)
+{
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
