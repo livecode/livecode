@@ -223,7 +223,7 @@ MCValueRef MCVariable::getvalueref(void)
 {
 	if (!is_uql)
     {
-        if (!MCExecTypeIsValueRef(value))
+        if (!MCExecTypeIsValueRef(value . type))
         {
             MCExecContext ctxt(nil, nil, nil);
             /* UNCHECKED */ MCExecTypeConvertAndReleaseAlways(ctxt, value . type, &value, kMCExecValueTypeValueRef, &value);
@@ -355,7 +355,7 @@ bool MCVariable::set(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path,
 
 bool MCVariable::give_value(MCExecContext& ctxt, MCExecValue p_value)
 {
-    if (MCExecTypeIsValueRef(p_value))
+    if (MCExecTypeIsValueRef(p_value . type))
         setvalueref(p_value . valueref_value);
     else
     {

@@ -90,8 +90,8 @@ void MCExecTypeConvertToValueRefAndReleaseAlways(MCExecContext& ctxt, MCExecValu
 void MCExecTypeConvertFromValueRefAndReleaseAlways(MCExecContext& ctxt, MCValueRef p_from_value, MCExecValueType p_to_type, void *p_to_value);
 void MCExecTypeRelease(MCExecValue &self);
 void MCExecTypeSetValueRef(MCExecValue &self, MCValueRef p_value);
-bool MCExecTypeIsValueRef(const MCExecValue &self);
-bool MCExecTypeIsNumber(const MCExecValue &self);
+bool MCExecTypeIsValueRef(MCExecValueType p_type);
+bool MCExecTypeIsNumber(MCExecValueType p_type);
 void MCExecTypeCopy(const MCExecValue &self, MCExecValue &r_dest);
 
 // Defined for convenience in exec-interface-field-chunk.cpp

@@ -65,7 +65,7 @@ void MCParameter::setvalueref_argument(MCValueRef p_value)
 
 void MCParameter::give_exec_argument(MCExecValue p_value)
 {
-    if (MCExecTypeIsValueRef(p_value))
+    if (MCExecTypeIsValueRef(p_value . type))
         setvalueref_argument(p_value . valueref_value);
     else
     {
@@ -134,7 +134,7 @@ bool MCParameter::eval(MCExecContext &ctxt, MCValueRef &r_value)
 {
     if (value . type != kMCExecValueTypeNone)
     {
-        if (MCExecTypeIsValueRef(value))
+        if (MCExecTypeIsValueRef(value . type))
             return MCValueCopy(value . valueref_value, r_value);
         else
         {
@@ -193,7 +193,7 @@ bool MCParameter::eval_argument(MCExecContext &ctxt, MCValueRef &r_value)
         return r_value = MCValueRetain(kMCEmptyString), true;
 
     MCValueRef t_value;
-    if (MCExecTypeIsValueRef(value))
+    if (MCExecTypeIsValueRef(value . type))
     {
         if (!MCValueCopy(value . valueref_value, t_value))
             return false;
