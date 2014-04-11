@@ -2891,6 +2891,9 @@ static void __MCStringShrinkAt(MCStringRef self, uindex_t p_at, uindex_t p_count
 
 static void __MCStringNativize(MCStringRef self)
 {
+    if (self -> native_chars != nil)
+        return;
+    
     bool t_not_native;
     t_not_native = false;
     /* UNCHECKED */ MCMemoryNewArray(self -> char_count + 1, self -> native_chars);
