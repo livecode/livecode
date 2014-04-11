@@ -319,7 +319,10 @@ bool MCStringCreateWithNativeChars(const char_t *p_chars, uindex_t p_char_count,
 	}
 
     if (t_success)
+    {
         self -> flags |= kMCStringFlagIsSimple;
+        self -> flags |= kMCStringFlagIsUncombined;
+    }
     
 	return t_success;
 }
@@ -980,6 +983,8 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
     else
         self -> flags &= ~kMCStringFlagIsUncombined;
     
+    // The string has been checked
+    self -> flags |= kMCStringFlagIsChecked;
     // All done
     r_out_range = t_codepoints;
     return true;
@@ -1029,13 +1034,24 @@ bool MCStringMapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRe
 
 bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
 {
+    // SN-2014-04-11 [[ FasterStrings ]] Process a checking of the string - in case we can ensure it is
+    // combining chars/surrogate pairs-free
+    if ((self -> flags & kMCStringFlagIsChecked) == 0)
+    {        
+        MCRange t_input, t_out;
+        t_input . offset = 0;
+        t_input . length = self -> char_count;
+        MCStringUnmapCodepointIndices(self, t_input, t_out);
+    }
+    
     // Quick-n-dirty workaround
-    if (MCStringIsNative(self) && MCStringIsUncombined(self))
+    if (MCStringIsNative(self) && MCStringIsUncombined(self) && MCStringIsSimple(self))
     {
         __MCStringClampRange(self, p_in_range);
         r_out_range = p_in_range;
         return true;
     }
+    
     
     return MCStringMapIndices(self, kMCBreakIteratorTypeCharacter, p_locale, p_in_range, r_out_range);
 }
@@ -1152,8 +1168,18 @@ bool MCStringUnmapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocale
 
 bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
 {
+    // SN-2014-04-11 [[ FasterStrings ]] Process a checking of the string - in case we can ensure it is
+    // combining chars/surrogate pairs-free
+    if ((self -> flags & kMCStringFlagIsChecked) == 0)
+    {
+        MCRange t_input, t_out;
+        t_input . offset = 0;
+        t_input . length = self -> char_count;
+        MCStringUnmapCodepointIndices(self, t_input, t_out);
+    }
+    
     // Quick-n-dirty workaround
-    if (self -> flags & kMCStringFlagIsNative && self -> flags & kMCStringFlagIsUncombined)
+    if (self -> flags & kMCStringFlagIsSimple && self -> flags & kMCStringFlagIsUncombined)
     {
         __MCStringClampRange(self, p_in_range);
         r_out_range = p_in_range;
