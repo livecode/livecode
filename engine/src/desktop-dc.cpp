@@ -44,6 +44,7 @@
 #include "graphicscontext.h"
 #include "region.h"
 #include "scriptenvironment.h"
+#include "stacklst.h"
 
 #include "desktop-dc.h"
 
