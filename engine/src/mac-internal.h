@@ -482,6 +482,9 @@ void MCMacPlatformPasteboardCreate(NSPasteboard *pasteboard, MCPlatformPasteboar
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCPlatformInitializeMenu(void);
+void MCPlatformFinalizeMenu(void);
+
 bool MCPlatformInitializeAbortKey(void);
 void MCPlatformFinalizeAbortKey(void);
 
