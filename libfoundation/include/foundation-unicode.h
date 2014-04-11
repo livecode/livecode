@@ -374,6 +374,27 @@ bool MCUnicodeFirstIndexOfChar(const unichar_t *p_string, uindex_t p_string_leng
 bool MCUnicodeLastIndexOfChar(const unichar_t *p_string, uindex_t p_string_length,
                               codepoint_t p_needle, MCUnicodeCompareOption, uindex_t &r_index);
 
+// Returns the length in both sequences of a matching prefix
+void MCUnicodeSharedPrefix(const unichar_t *p_string, uindex_t p_string_length,
+                           const unichar_t *p_prefix, uindex_t p_prefix_length,
+                           MCUnicodeCompareOption p_option, uindex_t &r_len_in_string, uindex_t &r_len_in_prefix);
+
+// Returns the length in both sequences of a matching suffix
+void MCUnicodeSharedSuffix(const unichar_t *p_string, uindex_t p_string_length,
+                           const unichar_t *p_prefix, uindex_t p_prefix_length,
+                           MCUnicodeCompareOption p_option, uindex_t &r_len_in_string, uindex_t &r_len_in_prefix);
+
+// Searches a string for a given substring and returns the range that was equal
+// to the substring (note that this may be a different length to the substring!)
+bool MCUnicodeFind(const unichar_t *p_string, uindex_t p_string_length,
+                   const unichar_t *p_needle, uindex_t p_needle_length,
+                   MCUnicodeCompareOption, MCRange &r_matched_range);
+
+// Hashes the given string, ignoring case or normalisation differences if
+// requested (i.e the string is folded or normalised before hashing)
+hash_t MCUnicodeHash(const unichar_t *p_string, uindex_t p_string_length,
+                     MCUnicodeCompareOption);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

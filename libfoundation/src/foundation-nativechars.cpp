@@ -45,7 +45,7 @@ bool MCNativeCharsFormatV(char_t*& r_string, uindex_t& r_size, const char *p_for
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 compare_t MCNativeCharsCompareExact(const char_t *p_left, uindex_t p_left_length, const char_t *p_right, uindex_t p_right_length)
 {
 	for(;;)
@@ -346,3 +346,4 @@ char_t MCNativeCharLowercase(char_t p_char)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+*/
