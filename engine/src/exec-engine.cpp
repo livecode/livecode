@@ -713,6 +713,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
 	
 	if (p_var . chunk == CT_UNDEFINED)
 	{
+        // SN-2014-04-11 [[ FasterVariables ]] Now chosing from here the position where to add a string on a variable
 		if (p_where == PT_INTO)
 			p_var . variable -> set(ctxt, p_value, kMCVariableSetInto);
 		else if (p_where == PT_AFTER)
@@ -750,6 +751,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue p_value, int p
 	
 	if (p_var . chunk == CT_UNDEFINED)
 	{
+        // SN-2014-04-11 [[ FasterVariables ]] Now chosing from here the position where to add a string on a variable
 		if (p_where == PT_INTO)
 			p_var . variable -> give_value(ctxt, p_value, kMCVariableSetInto);
 		else if (p_where == PT_AFTER)

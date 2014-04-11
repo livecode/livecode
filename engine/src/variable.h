@@ -604,13 +604,24 @@ protected:
 	// which can catch a failure.
 	MCVariable(void) {}
 	MCVariable(const MCVariable& other) {}
-
+    
+    // Modify the content of the variable - append or prepend (nested key).
+    bool modify(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting);
+    // Modify the variable by appending/prepending the value given (nested key).
+    bool modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting);
+    
+    bool modify(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting);
+    bool modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting);
 public:
 	
 	// Destructor
 	~MCVariable(void);
 
 	/////////
+    
+    // SN-2014-04-11 [[ FasterVariables ]] Now able to handle prepending a string to a variable.
+    // A style of setting allows us to set the variable or to modify it by appending/prepending
+    // '::append' has been renamed '::modify' to take in consideration this new ability
 
 	// Set the content of the variable (nested key) to the given value.
 	bool setvalueref(MCNameRef *path, uindex_t length, bool case_sensitive, MCValueRef value);
@@ -622,20 +633,16 @@ public:
     // Evaluate the contents of the variable (nested key) into the ep.
 	// Evalue the contents of the variable (nested key) into r_value.
     bool eval(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length, MCValueRef &r_value);
-    // Copy the contents of the ep into the variable (nested key).
+    // Copy the contents of the valueref into the variable (nested key).
     bool set(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting = kMCVariableSetInto);
-    // Append the content of the ep to the variable (nested key).
-    bool modify(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting);
     // Remove the content (nested key) of the variable.
     bool remove(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length);
     
     // Evaluate the contents of the variable (nested key) into the ep.
 	// Evalue the contents of the variable (nested key) into r_value.
     bool eval_ctxt(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length, MCExecValue &r_value);
-    // Copy the contents of the ep into the variable (nested key).
+    // Give the exec value to the variable (nested key).
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting = kMCVariableSetInto);
-    // Append the content of the ep to the variable (nested key).
-    bool modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting);
 	
     bool setvalueref(MCValueRef value);
 	MCValueRef getvalueref(void);
@@ -646,11 +653,9 @@ public:
 
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
     bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
-    bool modify(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting);
     
     bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
-    bool modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting);
     
     bool remove(MCExecContext& ctxt);
     

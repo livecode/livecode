@@ -430,6 +430,7 @@ bool MCVariable::modify(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_pa
             return false;
         
         bool t_success = false;
+        // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
         // The value is now a stringref
         if (p_setting == kMCVariableSetAfter)
             t_success = MCStringAppend(value . stringref_value, *t_value);
@@ -449,6 +450,7 @@ bool MCVariable::modify(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_pa
 	
 	MCStringRef t_current_value_as_string;
 	t_current_value_as_string = nil;
+    // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
 	if (ctxt . ConvertToString(t_current_value, t_current_value_as_string) &&
 		MCStringMutableCopyAndRelease(t_current_value_as_string, t_current_value_as_string) &&
 		((p_setting == kMCVariableSetAfter && MCStringAppend(t_current_value_as_string, *t_value)) ||
@@ -484,6 +486,7 @@ bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef
         if (!converttomutablestring(ctxt))
             return false;
         
+        // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
         // The value is now a stringref
         bool t_success = false;        
         if (p_setting == kMCVariableSetAfter)
@@ -504,6 +507,7 @@ bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef
 	
 	MCStringRef t_current_value_as_string;
 	t_current_value_as_string = nil;
+    // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
 	if (ctxt . ConvertToString(t_current_value, t_current_value_as_string) &&
 		MCStringMutableCopyAndRelease(t_current_value_as_string, t_current_value_as_string) &&
 		((p_setting == kMCVariableSetAfter && MCStringAppend(t_current_value_as_string, *t_value)) ||
