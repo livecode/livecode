@@ -714,25 +714,11 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
 	if (p_var . chunk == CT_UNDEFINED)
 	{
 		if (p_where == PT_INTO)
-			p_var . variable -> set(ctxt, p_value, false);
+			p_var . variable -> set(ctxt, p_value, kMCVariableSetInto);
 		else if (p_where == PT_AFTER)
-			p_var . variable -> set(ctxt, p_value, true);
+			p_var . variable -> set(ctxt, p_value, kMCVariableSetAfter);
 		else
-        {
-            MCAutoStringRef t_string;
-            if (!ctxt . EvalExprAsMutableStringRef(p_var . variable, EE_ENGINE_PUT_BADVARIABLE, &t_string))
-                return;
-
-			MCAutoStringRef t_value_string;
-			if (!ctxt . ConvertToString(p_value, &t_value_string))
-			{
-				ctxt . Throw();
-				return;
-			}
-			
-			/* UNCHECKED */ MCStringPrepend(*t_string, *t_value_string);
-			p_var . variable -> set(ctxt, *t_string, False);
-		}
+			p_var . variable -> set(ctxt, p_value, kMCVariableSetBefore);
 	}
 	else
     {
@@ -754,7 +740,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
         
 		/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
         
-		p_var . variable -> set(ctxt, *t_string, False);
+		p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);
 	}
 }
 
@@ -765,23 +751,11 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue p_value, int p
 	if (p_var . chunk == CT_UNDEFINED)
 	{
 		if (p_where == PT_INTO)
-			p_var . variable -> give_value(ctxt, p_value, false);
+			p_var . variable -> give_value(ctxt, p_value, kMCVariableSetInto);
 		else if (p_where == PT_AFTER)
-			p_var . variable -> give_value(ctxt, p_value, true);
-		else
-        {
-            MCAutoStringRef t_string;
-            if (!ctxt . EvalExprAsMutableStringRef(p_var . variable, EE_ENGINE_PUT_BADVARIABLE, &t_string))
-                return;
-            
-			MCAutoStringRef t_value_string;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_value_string));
-            if (ctxt . HasError())
-                return;
-			
-			/* UNCHECKED */ MCStringPrepend(*t_string, *t_value_string);
-			p_var . variable -> set(ctxt, *t_string, False);
-		}
+			p_var . variable -> give_value(ctxt, p_value, kMCVariableSetAfter);
+        else
+            p_var . variable -> give_value(ctxt, p_value, kMCVariableSetBefore);
 	}
 	else
     {
@@ -801,7 +775,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue p_value, int p
         
 		/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
         
-		p_var . variable -> set(ctxt, *t_string, False);
+		p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);
 	}
 }
 
@@ -1010,7 +984,7 @@ void MCEngineExecDeleteVariableChunks(MCExecContext& ctxt, MCVariableChunkPtr *p
 
         if (MCStringReplace(*t_string, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start), kMCEmptyString))
         {
-            p_chunks[i] . variable -> set(ctxt, *t_string, false);
+            p_chunks[i] . variable -> set(ctxt, *t_string, kMCVariableSetInto);
         }
 	}
 }
