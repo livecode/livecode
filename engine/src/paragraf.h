@@ -465,7 +465,8 @@ public:
 	// false and set lastline to the line that would be clipped.
 	// Called by:
 	//   MCField::getprop
-	Boolean pagerange(uint2 fixedheight, uint2 &theight, uint2 &tend, MCLine *&lastline);
+    // MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indicies.
+	Boolean pagerange(uint2 fixedheight, uint2 &theight, uint4 &tend, MCLine *&lastline);
 
 	// Returns true if any of the paragraph attributes are non-default.
 	bool hasattrs(void);
