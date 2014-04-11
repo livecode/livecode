@@ -1284,6 +1284,12 @@ struct MCMarkedText
     bool changed;
 };
 
+struct MCMarkedData
+{
+    MCDataRef data;
+    uint32_t start, finish;
+};
+
 struct MCObjectChunkPtr
 {
 	MCObject *object;
