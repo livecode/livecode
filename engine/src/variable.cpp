@@ -123,9 +123,15 @@ bool MCVariable::isuql(void) const
 }
 
 void MCVariable::clearuql(void)
-{
+{    
 	if (!is_uql)
 		return;
+    
+    // SN-2014-04-09 [[ Bug 12160 ]] Put after/before on an uninitialised, by-reference parameter inserts the variable's name in it
+    // The content of a UQL value was not cleared when needed
+    if (value . type == kMCExecValueTypeNameRef && MCNameIsEqualTo(value . nameref_value, name))
+        clear();
+    
 	is_uql = false;
 }
 
