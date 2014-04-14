@@ -4596,7 +4596,8 @@ void MCParagraph::getclickindex(int2 x, int2 y,
 		ei = findwordbreakafter(bptr, ei);
 
 		bptr = indextoblock(ei, False);
-		bptr -> AdvanceIndex(ei);
+		// AL-2014-04-07: [[ Bug 12143 ]] Advancing the index here causes the mouseChunk to report incorrect end index
+        // bptr -> AdvanceIndex(ei);
 		
 		return;
 	}
