@@ -1228,7 +1228,9 @@ uint4 MCRepeat::linecount()
 Parse_stat MCExit::parse(MCScriptPoint &sp)
 {
     // PM-2014-04-14: [[Bug 12107]] Do this check to avoid a crash in LC server
-    if (sp.getscript() == nil) {
+    if (sp.getscript() == nil)
+    {
+        MCperror->add(PE_EXIT_NULL_SCRIPT, sp);
         return PS_ERROR;
     }
 	Symbol_type type;
