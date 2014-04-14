@@ -197,6 +197,9 @@ protected:
 		bool has_shadow_changed : 1;
 		bool has_modified_mark_changed : 1;
 		bool use_live_resizing_changed : 1;
+        
+        // MW-2014-04-08: [[ Bug 12073 ]] Changed flag for mouse cursor.
+        bool cursor_changed : 1;
 	} m_changes;
 	MCPlatformWindowStyle m_style;
 	char *m_title;
@@ -286,6 +289,14 @@ void MCPlatformCallbackSendPasteboardResolve(MCPlatformPasteboardRef pasteboard,
 void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef window, uint32_t view_id);
 
 void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef player);
+void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef player, uint32_t time);
+void MCPlatformCallbackSendPlayerSelectionChanged(MCPlatformPlayerRef player);
+void MCPlatformCallbackSendPlayerCurrentTimeChanged(MCPlatformPlayerRef player);
+void MCPlatformCallbackSendPlayerStarted(MCPlatformPlayerRef player);
+void MCPlatformCallbackSendPlayerPaused(MCPlatformPlayerRef player);
+void MCPlatformCallbackSendPlayerStopped(MCPlatformPlayerRef player);
+
+void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef sound);
 
 ////////////////////////////////////////////////////////////////////////////////
 

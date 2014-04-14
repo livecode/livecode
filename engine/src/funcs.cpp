@@ -4908,7 +4908,6 @@ Exec_stat MCSound::eval(MCExecPoint &ep)
 		return ES_NORMAL;
 	}
 #endif
-	
 	MCU_play();
 	if (MCacptr != NULL)
 		return MCacptr->getprop(0, P_NAME, ep, False);

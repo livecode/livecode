@@ -39,6 +39,8 @@
 #include "graphics_util.h"
 #include "redraw.h"
 #include "player.h"
+#include "aclip.h"
+#include "stacklst.h"
 
 #include "desktop-dc.h"
 
@@ -94,14 +96,49 @@ void MCPlatformHandleApplicationShutdownRequest(bool& r_terminate)
 	}
 }
 
+// MW-2014-04-08: [[ Bug 12080 ]] Show or hide palette windows as required.
+static void show_or_hide_palettes(bool p_show)
+{
+    if (MCstacks -> isempty())
+        return;
+    
+    MCStacknode *t_stack_node;
+    t_stack_node = MCstacks -> bottomnode();
+    do
+    {
+        MCStack *t_stack;
+        t_stack = t_stack_node -> getstack();
+        
+        if (t_stack -> getrealmode() == WM_PALETTE && t_stack -> getflag(F_VISIBLE))
+        {
+            if (MChidepalettes)
+            {
+                if (p_show)
+                    MCPlatformShowWindow(t_stack -> getwindow());
+                else
+                    MCPlatformHideWindow(t_stack -> getwindow());
+            }
+        }
+        
+        t_stack_node = t_stack_node -> next();
+    }
+    while(t_stack_node != MCstacks -> bottomnode());
+}
+
 void MCPlatformHandleApplicationSuspend(void)
 {
 	MCdefaultstackptr -> getcard() -> message(MCM_suspend);
 	MCappisactive = False;
+    
+    // MW-2014-04-08: [[ Bug 12080 ]] Hide any palettes based on MChidepalettes.
+    show_or_hide_palettes(false);
 }
 
 void MCPlatformHandleApplicationResume(void)
 {
+    // MW-2014-04-08: [[ Bug 12080 ]] Show any palettes based on MChidepalettes.
+    show_or_hide_palettes(true);
+    
 	MCappisactive = True;
 	MCdefaultstackptr -> getcard() -> message(MCM_resume);
 }
@@ -1023,17 +1060,94 @@ void MCPlatformHandlePasteboardResolve(MCPlatformPasteboardRef p_pasteboard, MCP
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef p_player)
+static MCPlayer *find_player(MCPlatformPlayerRef p_player)
 {
 	for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
 	{
 		if (t_player -> getplatformplayer() == p_player)
-		{
-			t_player -> layer_redrawall();
-			MCPlatformBreakWait();
-			break;
-		}
-	}
+            return t_player;
+    }
+    
+    return nil;
+}
+
+void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> layer_redrawall();
+    MCPlatformBreakWait();
+}
+
+void MCPlatformHandlePlayerMarkerChanged(MCPlatformPlayerRef p_player, uint32_t p_time)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> markerchanged(p_time);
+}
+
+void MCPlatformHandlePlayerCurrentTimeChanged(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> timer(MCM_current_time_changed, nil);
+}
+
+void MCPlatformHandlePlayerSelectionChanged(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> timer(MCM_selection_changed, nil);
+}
+
+void MCPlatformHandlePlayerStarted(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> timer(MCM_play_started, nil);
+}
+
+void MCPlatformHandlePlayerPaused(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> timer(MCM_play_paused, nil);
+}
+
+void MCPlatformHandlePlayerStopped(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> timer(MCM_play_stopped, nil);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCPlatformHandleSoundFinished(MCPlatformSoundRef p_sound)
+{
+    if (MCacptr != nil)
+        MCscreen -> addtimer(MCacptr, MCM_internal, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

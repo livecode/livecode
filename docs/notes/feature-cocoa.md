@@ -4,9 +4,9 @@ With 6.7 we have replaced the majority of Carbon API usage with Cocoa. The goals
 * Enable submission of LiveCode apps to the Mac AppStore.
 * Enable eventual building of 64-bit versions of LiveCode for Mac.
 
-As of DP 1 we have achieved the first goal and revBrowser has been updated as a result. The main upshot of this is that the browser is now part of the host window and as such works correctly regardless of the type of window (dialog, palette, document etc).
+As of DP 2 we have achieved the first goal and revBrowser has been updated as a result. The main upshot of this is that the browser is now part of the host window and as such works correctly regardless of the type of window (dialog, palette, document etc).
 
-The instability issues caused by the AppStore sandbox when using mixed Cocoa and Carbon APIs should also be resolved in DP 1. However, the engine still statically links with QuickTime and QTKit which are now not allowed in apps submitted to the Mac AppStore. This will be addressed in DP 2 along with an AVKit implementation of the player and other multimedia features.
+The instability issues caused by the AppStore sandbox when using mixed Cocoa and Carbon APIs should also be resolved in DP 2. However, the engine still statically links with QuickTime and QTKit which are now not allowed in apps submitted to the Mac AppStore. This will be addressed in DP 3 along with an AVKit implementation of the player and other multimedia features.
 
 The final goal (64-bit support) will be gradually worked towards over the next few LiveCode versions as the engine gets 'decarbonated' (usage of Carbon APIs which do not have 64-bit equivalents removed).
 
@@ -15,9 +15,9 @@ As there has been quite a substantial rework on the Mac port it is expected that
 With the release of dp-1 there are a number of known issues:
 * No backdrop support - we are currently working out how to implement this feature using Cocoa APIs
 * No drawer support - we are currently working out how to implement this feature using Cocoa APIs
-* Cursor issues over window borders and during drag-drop - the cursor will sometimes stick or change to the wrong type, this is being investigated.
 * Cmd-Shift-'_' does not work - this is being investigated.
-* Themed scrollbars sometimes do not work correctly on Retina displays - this is being investigated.
-* Some aspects of the player are currently non-functional - in particular, user callbacks and QTVR related properties.
+* QTVR related aspects of the player do not work - this is being worked on.
 
-Finally, an important internal change which will affect maintainers of Mac externals that use the windowId is that this property now returns the 'global window number' (which is the unique ID the Window Server uses to identify windows). To turn this into a Cocoa NSWindow pointer use [NSApp windowWithWindowNumber: t_window_id]. Note that it is no longer possible to get a Carbon WindowRef, nor should this be attempted as trying to mix Carbon and Cocoa in this manner will cause instability inside the sandbox environment required by the Mac AppStore.
+An important internal change which will affect maintainers of Mac externals that use the windowId is that this property now returns the 'global window number' (which is the unique ID the Window Server uses to identify windows). To turn this into a Cocoa NSWindow pointer use [NSApp windowWithWindowNumber: t_window_id]. Note that it is no longer possible to get a Carbon WindowRef, nor should this be attempted as trying to mix Carbon and Cocoa in this manner will cause instability inside the sandbox environment required by the Mac AppStore.
+
+An important script visible change that has occurred due to the move to Cocoa is screen updating. Previously (when using Carbon) the OS would 'coalesce' successive requests to update the screen - the window buffer would be updated, but the window buffer would only be flushed when the OS decided to. In Cocoa, after a screen update the window buffer is *always* flushed. Outside of 'lock screen', the engine applies any screen updates after each command execution therefore in 6.7+ make sure you use lock screen around blocks of code that make many screen updates - unless you want each update to be visible. It should be noted that the behavior in 6.7 is now the same as on Windows and Linux however the OS takes longer to flush window updates to the screen on Mac than on the other platforms meaning that using lock screen is important.

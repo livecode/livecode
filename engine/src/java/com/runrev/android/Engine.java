@@ -174,9 +174,6 @@ public class Engine extends View implements EngineApi
 		{
 			public void onScreenOrientationChanged(int orientation)
 			{
-				// IM-2013-11-15: [[ Bug 10485 ]] Record the change in orientation
-				updateOrientation(orientation);
-				
 				doOrientationChanged(orientation);
 				if (m_wake_on_event)
 					doProcess(false);
@@ -388,6 +385,13 @@ public class Engine extends View implements EngineApi
 	{
 		if ((p_orientation == 1 || p_orientation == 2) && Build.VERSION.SDK_INT < 9) // Build.VERSION_CODES.GINGERBREAD
 			return;
+        
+        // MM-2014-03-25: [[ Bug 11708 ]] Moved call to update orientation (from onScreenOrientationChanged).
+        //  This way we only flag orientation changed if the we've set it in the activity (i.e. or app has actually rotated).
+        //  Prevents changes in device orientation during lock screen confusing things.
+        // IM-2013-11-15: [[ Bug 10485 ]] Record the change in orientation
+        updateOrientation(p_orientation);
+        
 		((LiveCodeActivity)getContext()).setRequestedOrientation(s_orientation_map[p_orientation]);
 	}
 
@@ -2038,6 +2042,9 @@ public class Engine extends View implements EngineApi
             return;
         
         mBillingProvider = mBillingModule.getBillingProvider();
+        // PM-2014-04-03: [[Bug 12116]] Avoid a NullPointerException is in-app purchasing is not used
+        if (mBillingProvider == null)
+            return;
         mBillingProvider.setActivity(getActivity());
         mPurchaseObserver = new EnginePurchaseObserver((Activity)getContext());
         mBillingProvider.setPurchaseObserver(mPurchaseObserver);
@@ -2674,6 +2681,9 @@ public class Engine extends View implements EngineApi
 	{
 		m_shake_listener.onResume();
 		m_orientation_listener.enable();
+        // PM-2014-04-07: [[Bug 12099]] On awakening Android Device from sleep, make sure we update the orientation
+        // so as no part of the screen is blacked out
+        updateOrientation(getDeviceRotation());
 
 		if (m_sensor_module != null)
             m_sensor_module.onResume();
@@ -2697,7 +2707,9 @@ public class Engine extends View implements EngineApi
 	public void onDestroy()
 	{
 		doDestroy();
-        mBillingProvider.onDestroy();
+        // PM-2014-04-03: [[Bug 12116]] Avoid a NullPointerException is in-app purchasing is not used
+        if (mBillingProvider != null)
+            mBillingProvider.onDestroy();
         s_engine_instance = null;
 	}
 

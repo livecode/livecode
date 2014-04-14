@@ -290,6 +290,9 @@
 		4D4F9E3B13CDF24A00B9B15D /* osximage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9E3913CDF24A00B9B15D /* osximage.cpp */; };
 		4D4F9E3C13CDF24A00B9B15D /* osxmisc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9E3A13CDF24A00B9B15D /* osxmisc.cpp */; };
 		4D4F9E6713CDFB8100B9B15D /* osxfield.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9E6613CDFB8100B9B15D /* osxfield.cpp */; };
+		4D52656018F83DA1007D4C13 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DA028F718F550E1000CFCF8 /* AudioToolbox.framework */; };
+		4D52656118F83DA2007D4C13 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DA028F718F550E1000CFCF8 /* AudioToolbox.framework */; };
+		4D52656218F83DA3007D4C13 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DA028F718F550E1000CFCF8 /* AudioToolbox.framework */; };
 		4D5881210B80BF1E00200116 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881200B80BF1E00200116 /* IOKit.framework */; };
 		4D58856B0B80DEAC00200116 /* da.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58854C0B80DEAB00200116 /* da.lproj */; };
 		4D58856C0B80DEAC00200116 /* French.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58854E0B80DEAC00200116 /* French.lproj */; };
@@ -336,6 +339,8 @@
 		4D8BED4811B95A1000DED42A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
 		4D982B1213C1CDC10066119A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D982B1113C1CDC10066119A /* CoreServices.framework */; };
 		4D982B1913C1CDD20066119A /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D982B1813C1CDD20066119A /* ApplicationServices.framework */; };
+		4DA028F618F54B5D000CFCF8 /* mac-sound.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA028F518F54B5D000CFCF8 /* mac-sound.mm */; };
+		4DA028F818F550E1000CFCF8 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DA028F718F550E1000CFCF8 /* AudioToolbox.framework */; };
 		4DAB7D280FF3A0100009F91E /* md5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7D270FF3A0100009F91E /* md5.cpp */; };
 		4DADCD5B12392EAF003CD17C /* sha1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DADCD5912392EAF003CD17C /* sha1.cpp */; };
 		4DADCDFD12393F55003CD17C /* Installer.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4DADCDFC12393F26003CD17C /* Installer.icns */; };
@@ -1321,6 +1326,8 @@
 		4D982BF513C2E8360066119A /* srvmain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = srvmain.h; path = src/srvmain.h; sourceTree = "<group>"; };
 		4D982FE113C5D59D0066119A /* executionerrors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = executionerrors.h; path = src/executionerrors.h; sourceTree = "<group>"; };
 		4D982FE213C5D5AE0066119A /* parseerrors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = parseerrors.h; path = src/parseerrors.h; sourceTree = "<group>"; };
+		4DA028F518F54B5D000CFCF8 /* mac-sound.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-sound.mm"; path = "src/mac-sound.mm"; sourceTree = "<group>"; };
+		4DA028F718F550E1000CFCF8 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		4DA0BEB715AB6046006C0677 /* mblandroidjava.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidjava.cpp; path = src/mblandroidjava.cpp; sourceTree = "<group>"; };
 		4DA0BEB815AB6046006C0677 /* mblandroidjava.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblandroidjava.h; path = src/mblandroidjava.h; sourceTree = "<group>"; };
 		4DAB7B350FE120060009F91E /* bitmapeffect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bitmapeffect.cpp; path = src/bitmapeffect.cpp; sourceTree = "<group>"; };
@@ -1594,6 +1601,7 @@
 				4DB384C21714420A00D3F102 /* libpcre.a in Frameworks */,
 				4C13881D18A12ED800EFF7B6 /* libopenssl.a in Frameworks */,
 				E8A554B61785A7C600DABC1A /* libskia.a in Frameworks */,
+				4D52656218F83DA3007D4C13 /* AudioToolbox.framework in Frameworks */,
 				4DB386091714423500D3F102 /* Carbon.framework in Frameworks */,
 				4D7740CC1226AA65001C9150 /* Quartz.framework in Frameworks */,
 				4D2A57CA1198634300135143 /* QuickTime.framework in Frameworks */,
@@ -1631,6 +1639,7 @@
 				4D8B47990BE7B3240046CD2F /* Cocoa.framework in Frameworks */,
 				4D00C6290CE1F27300341AD3 /* SystemConfiguration.framework in Frameworks */,
 				4D8BED0211B959F500DED42A /* Security.framework in Frameworks */,
+				4DA028F818F550E1000CFCF8 /* AudioToolbox.framework in Frameworks */,
 				4D221A73171D577E00E7E557 /* libcrypto.dylib in Frameworks */,
 				4D221A74171D577E00E7E557 /* libcups.dylib in Frameworks */,
 				4D221A75171D577E00E7E557 /* libcurl.dylib in Frameworks */,
@@ -1649,6 +1658,7 @@
 				4D1F9E51171C69940091C6CB /* libsecurity-community.a in Frameworks */,
 				4D055BE01079F732007F6E13 /* libcore.a in Frameworks */,
 				E8A554B11785A70600DABC1A /* libgraphics.a in Frameworks */,
+				4D52656018F83DA1007D4C13 /* AudioToolbox.framework in Frameworks */,
 				4DB382EE1714418A00D3F102 /* libz.a in Frameworks */,
 				4DB382EF1714418A00D3F102 /* libpng.a in Frameworks */,
 				4DB382F01714418A00D3F102 /* libjpeg.a in Frameworks */,
@@ -1686,6 +1696,7 @@
 				4D1F9DC1171C68760091C6CB /* libkernel-server.a in Frameworks */,
 				4D1F9C5A171C66D70091C6CB /* libsecurity-community.a in Frameworks */,
 				4DFD495313BA2B89008DB91F /* libcore.a in Frameworks */,
+				4D52656118F83DA2007D4C13 /* AudioToolbox.framework in Frameworks */,
 				E8A554B71785A83A00DABC1A /* libgraphics.a in Frameworks */,
 				4DB386101714426200D3F102 /* libz.a in Frameworks */,
 				4DB386111714426200D3F102 /* libpng.a in Frameworks */,
@@ -1976,6 +1987,7 @@
 		4D5880AA0B80BDFE00200116 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4DA028F718F550E1000CFCF8 /* AudioToolbox.framework */,
 				4D982B1813C1CDD20066119A /* ApplicationServices.framework */,
 				4D8B47960BE7B3240046CD2F /* Cocoa.framework */,
 				4DFD495A13BA2BC0008DB91F /* CoreFoundation.framework */,
@@ -2100,6 +2112,7 @@
 				4D30E18118AA2FCE0034CDC6 /* mac-abort.mm */,
 				4D30E40618AA73870034CDC6 /* mac-dialog.mm */,
 				4DAF5C8618C0E76500B9713C /* mac-scripting.mm */,
+				4DA028F518F54B5D000CFCF8 /* mac-sound.mm */,
 			);
 			name = "Desktop - Mac";
 			sourceTree = "<group>";
@@ -3695,6 +3708,7 @@
 				4DEE2AF70FDE42710009423C /* regex.cpp in Sources */,
 				4DEE2AF80FDE42710009423C /* rtf.cpp in Sources */,
 				4DEE2AF90FDE42710009423C /* rtfsupport.cpp in Sources */,
+				4DA028F618F54B5D000CFCF8 /* mac-sound.mm in Sources */,
 				4DEE2AFA0FDE42710009423C /* scriptpt.cpp in Sources */,
 				4DEE2AFB0FDE42710009423C /* scrolbar.cpp in Sources */,
 				4DEE2AFC0FDE42710009423C /* scrollbardraw.cpp in Sources */,

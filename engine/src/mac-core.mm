@@ -56,10 +56,12 @@ static CGFloat s_primary_screen_height = 0.0f;
 {
 	MCPlatformInitializeColorTransform();
 	MCPlatformInitializeAbortKey();
+    MCPlatformInitializeMenu();
 }
 
 - (void)finalizeModules
 {
+    MCPlatformFinalizeMenu();
 	MCPlatformFinalizeAbortKey();
 	MCPlatformFinalizeColorTransform();
 }
@@ -309,10 +311,28 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 			*(MCPlatformCursorImageSupport *)r_value = kMCPlatformCursorImageSupportAlpha; 
 			break;
 			
+        case kMCPlatformSystemPropertyVolume:
+            MCMacPlatformGetGlobalVolume(*(double *)r_value);
+            break;
+            
 		default:
 			assert(false);
 			break;
 	}
+}
+
+void MCPlatformSetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *p_value)
+{
+    switch(p_property)
+    {
+        case kMCPlatformSystemPropertyVolume:
+            MCMacPlatformSetGlobalVolume(*(double *)p_value);
+            break;
+        
+        default:
+            assert(false);
+            break;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -377,7 +397,7 @@ void MCPlatformBreakWait(void)
 
 static void runloop_observer(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
 {
-	if (s_in_blocking_wait)
+ 	if (s_in_blocking_wait)
 		MCPlatformBreakWait();
 }
 
@@ -411,10 +431,12 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	if (t_modal)
 		[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
 	
+    // MW-2014-04-09: [[ Bug 10767 ]] Don't run in the modal panel runloop mode as this stops
+    //   WebViews from working.
 	NSEvent *t_event;
 	t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
 								 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
-									inMode: p_blocking ? NSEventTrackingRunLoopMode : (t_modal ? NSModalPanelRunLoopMode : NSDefaultRunLoopMode)
+									inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
 								   dequeue: YES];
 	
 	s_in_blocking_wait = false;
@@ -797,6 +819,11 @@ void MCPlatformFlushEvents(MCPlatformEventMask p_mask)
 	}
 }
 
+void MCPlatformBeep(void)
+{
+    NSBeep();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformGetScreenCount(uindex_t& r_count)
@@ -1141,6 +1168,42 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
 	}
 }
 
+void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
+{
+    // If the mouse is not currently over the window whose cursor has
+    // changed - do nothing.
+    if (s_mouse_window != p_window)
+        return;
+    
+    // If we are on Lion+ then check to see if the mouse location is outside
+    // of any of the system tracking rects (used for resizing etc.)
+    extern uint4 MCmajorosversion;
+    if (MCmajorosversion >= 0x1070)
+    {
+        MCMacPlatformWindow *t_window;
+        t_window = (MCMacPlatformWindow *)p_window;
+        
+        NSArray *t_tracking_areas;
+        t_tracking_areas = [[t_window -> GetView() superview] trackingAreas];
+        
+        NSPoint t_mouse_loc;
+        t_mouse_loc = [t_window -> GetView() mapMCPointToNSPoint: s_mouse_position];
+        for(uindex_t i = 0; i < [t_tracking_areas count]; i++)
+        {
+            if (NSPointInRect(t_mouse_loc, [(NSTrackingArea *)[t_tracking_areas objectAtIndex: i] rect]))
+                return;
+        }
+    }
+    
+    // Show the cursor attached to the window.
+    MCPlatformCursorRef t_cursor;
+    MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
+    
+    // PM-2014-04-02: [[ Bug 12082 ]] IDE no longer crashes when changing an applied pattern
+    if (t_cursor != nil)
+        MCPlatformShowCursor(t_cursor);
+}
+
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 {
 	// First compute the window that should be active now.
@@ -1205,11 +1268,9 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 				MCPlatformCallbackSendMouseDrag(s_mouse_window, s_mouse_drag_button);
 			}
 		}
-		
-		// Show the cursor attached to the window.
-		MCPlatformCursorRef t_cursor;
-		MCPlatformGetWindowProperty(t_new_mouse_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
-		MCPlatformShowCursor(t_cursor);
+        
+        // Update the mouse cursor for the mouse window.
+        MCMacPlatformHandleMouseCursorChange(s_mouse_window);
 	}
 }
 

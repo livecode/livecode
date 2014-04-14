@@ -335,7 +335,9 @@ public:
 	MCWindowView *GetView(void);
 	id GetHandle(void);
 	
-	void ProcessCloseRequest();
+    bool IsSynchronizing(void);
+    
+	void ProcessCloseRequest(void);
 	void ProcessDidMove(void);
 	void ProcessDidResize(void);
 	void ProcessWillMiniaturize(void);
@@ -428,6 +430,7 @@ void MCMacPlatformScheduleCallback(void (*)(void*), void *);
 void MCMacPlatformBeginModalSession(MCMacPlatformWindow *window);
 void MCMacPlatformEndModalSession(MCMacPlatformWindow *window);
 
+void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef window);
 void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_is_down);
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_location);
 void MCMacPlatformHandleMouseScroll(CGFloat dx, CGFloat dy);
@@ -467,6 +470,9 @@ bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, S
 
 void MCMacPlatformResetCursor(void);
 
+void MCMacPlatformGetGlobalVolume(double& r_volume);
+void MCMacPlatformSetGlobalVolume(double volume);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NSDragOperation MCMacPlatformMapDragOperationToNSDragOperation(MCPlatformDragOperation);
@@ -475,6 +481,9 @@ MCPlatformDragOperation MCMacPlatformMapNSDragOperationToDragOperation(NSDragOpe
 void MCMacPlatformPasteboardCreate(NSPasteboard *pasteboard, MCPlatformPasteboardRef& r_pasteboard);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCPlatformInitializeMenu(void);
+void MCPlatformFinalizeMenu(void);
 
 bool MCPlatformInitializeAbortKey(void);
 void MCPlatformFinalizeAbortKey(void);

@@ -1739,8 +1739,10 @@ Exec_stat MCMM::exec(MCExecPoint &ep)
 		}
 		MCacptr->setlooping(looping);
 		MCU_play();
+#ifndef FEATURE_PLATFORM_AUDIO
 		if (MCacptr != NULL)
 			MCscreen->addtimer(MCacptr, MCM_internal, looping ? LOOP_RATE : PLAY_RATE);
+#endif
 	}
 	return ES_NORMAL;
 #endif /* MCMM */
