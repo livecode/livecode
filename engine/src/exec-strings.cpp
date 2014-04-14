@@ -1545,12 +1545,26 @@ void MCStringsEvalIsNotAmongTheCodeunitsOf(MCExecContext& ctxt, MCStringRef p_ch
 	r_result = !r_result;
 }
 
-void MCStringsEvalIsAmongTheBytesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
+void MCStringsEvalIsAmongTheBytesOf(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, bool& r_result)
 {
-    r_result = MCStringsEvalIsAmongTheChunksOf(ctxt, p_chunk, p_string, CT_BYTE);
+    uindex_t t_byte_count = MCDataGetLength(p_string);
+    uindex_t t_chunk_byte_count = MCDataGetLength(p_chunk);
+    
+    const byte_t *t_bytes = MCDataGetBytePtr(p_string);
+    const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
+    
+    bool t_found = false;
+    for (uindex_t i = 0; i < t_byte_count - t_chunk_byte_count + 1; i++)
+        if (MCMemoryCompare(t_bytes++, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
+        {
+            t_found = true;
+            break;
+        }
+    
+    r_result = t_found;
 }
 
-void MCStringsEvalIsNotAmongTheBytesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
+void MCStringsEvalIsNotAmongTheBytesOf(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, bool& r_result)
 {
     MCStringsEvalIsAmongTheBytesOf(ctxt, p_chunk, p_string, r_result);
 	r_result = !r_result;
@@ -1612,9 +1626,23 @@ void MCStringsEvalCodeunitOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStr
     r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_CODEUNIT);
 }
 
-void MCStringsEvalByteOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
+void MCStringsEvalByteOffset(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_BYTE);
+    uindex_t t_byte_count = MCDataGetLength(p_string);
+    uindex_t t_chunk_byte_count = MCDataGetLength(p_chunk);
+    
+    const byte_t *t_bytes = MCDataGetBytePtr(p_string);
+    const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
+    
+    uindex_t t_offset;
+    r_result = 0;
+    
+    for (t_offset = p_start_offset; t_offset < t_byte_count - t_chunk_byte_count + 1; t_offset++)
+        if (MCMemoryCompare(t_bytes + t_offset, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
+        {
+            r_result = t_offset - p_start_offset + 1;
+            break;
+        }
 }
 
 void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)

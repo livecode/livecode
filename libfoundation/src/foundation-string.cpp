@@ -2951,9 +2951,26 @@ static void __MCStringShrinkAt(MCStringRef self, uindex_t p_at, uindex_t p_count
 
 static void __MCStringNativize(MCStringRef self)
 {
-	if (self -> native_chars != nil)
-		return;
-	
+    if (self -> native_chars != nil)
+        return;
+    
+    bool t_not_native;
+    t_not_native = false;
+    /* UNCHECKED */ MCMemoryNewArray(self -> char_count + 1, self -> native_chars);
+    for(uindex_t i = 0; i < self -> char_count; i++)
+        if (!MCUnicodeCharMapToNative(self -> chars[i], self -> native_chars[i]))
+        {
+            t_not_native = true;
+            break;
+        }
+    
+    if (!t_not_native)
+    {
+        self -> flags |= kMCStringFlagIsNative;
+        self -> native_chars[self -> char_count] = '\0';
+        return;
+    }
+    
     // The string needs to be normalised before conversion to native characters.
     // All the native character sets we support use pre-composed characters.
     MCAutoStringRef t_norm;
@@ -2966,7 +2983,8 @@ static void __MCStringNativize(MCStringRef self)
     /* UNCHECKED */ MCStringUnmapIndices(*t_norm, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
     
     // Allocate an array for the native characters
-    /* UNCHECKED */ MCMemoryNewArray(t_char_range . length + 1, self -> native_chars);
+    uindex_t t_temp;
+    /* UNCHECKED */ MCMemoryResizeArray(t_char_range . length + 1, self -> native_chars, t_temp);
     
     // Create a character break iterator and go through the string
     MCBreakIteratorRef t_breaker;
