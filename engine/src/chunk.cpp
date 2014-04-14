@@ -831,7 +831,8 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                 MCEngineEvalValueAsObject(ctxt, *t_value, t_object);
 */
 
-                MCScriptPoint sp(*t_value);
+                // SN-2014-04-08 [[ Bug 12147 ]] create button in group command fails 
+                MCScriptPoint sp(ctxt, *t_value);
                 MCChunk *tchunk = new MCChunk(False);
                 MCerrorlock++;
                 Symbol_type type;
@@ -2627,7 +2628,11 @@ void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedTex
         else
             MCStringsMarkCodeunitsOfTextByOrdinal(ctxt, codeunit -> etype, force, wholechunk, t_further_chunks, x_mark);
     }
+}
 
+void MCChunk::markbytes(MCExecContext& ctxt, MCMarkedData& x_mark)
+{
+    int4 t_first, t_last;
     if (byte != nil)
     {
         if (byte -> etype == CT_RANGE || byte -> etype == CT_EXPRESSION)
@@ -3328,36 +3333,70 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
 
     if (*t_valueref != nil || t_exec_expr)
     {
-        if (cline != nil || paragraph != nil || sentence != nil || item != nil || trueword != nil || word != nil
-            || token != nil || character != nil || codepoint != nil || codeunit != nil || byte != nil)
+        bool t_mark_text;
+        t_mark_text = (cline != nil || paragraph != nil || sentence != nil || item != nil || trueword != nil || word != nil
+                       || token != nil || character != nil || codepoint != nil || codeunit != nil);
+        
+        if (t_mark_text || byte != nil)
         {
-            // Must be a string ref
-            MCAutoStringRef t_text_str;
-            bool t_success = true;
-            if (t_exec_expr)
-            {
-                MCExecTypeConvertAndReleaseAlways(ctxt, t_text . type, &t_text, kMCExecValueTypeStringRef, &(&t_text_str));
-                t_success = !ctxt . HasError();
-            }
-            else
-                t_success = ctxt . ConvertToString(*t_valueref, &t_text_str);
-            
-            if (!t_success)
-            {
-                ctxt.Throw();
-                return;
-            }
-            
             MCMarkedText t_new_mark;
-            t_new_mark . text = MCValueRetain(*t_text_str);
+            t_new_mark . text = nil;
             t_new_mark . start = 0;
             t_new_mark . finish = MAXUINT4;
-            mark(ctxt, false, false, t_new_mark);
+            
+            bool t_success = true;
+            
+            if (t_mark_text)
+            {
+                // Must be a string ref
+                MCAutoStringRef t_text_str;
+                if (t_exec_expr)
+                {
+                    MCExecTypeConvertAndReleaseAlways(ctxt, t_text . type, &t_text, kMCExecValueTypeStringRef, &(&t_text_str));
+                    t_success = !ctxt . HasError();
+                }
+                else
+                    t_success = ctxt . ConvertToString(*t_valueref, &t_text_str);
+                
+                if (!t_success)
+                {
+                    ctxt.Throw();
+                    return;
+                }
+                t_new_mark . text = MCValueRetain(*t_text_str);
+                mark(ctxt, false, false, t_new_mark);
+                
+            }
             
             if (byte == nil)
                 MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value), r_text . type = kMCExecValueTypeStringRef;
             else
-                MCStringsEvalByteChunk(ctxt, t_new_mark, r_text . dataref_value), r_text . type = kMCExecValueTypeDataRef;
+            {
+                MCMarkedData t_data_mark;
+                MCAutoDataRef t_data;
+                if (t_new_mark . text != nil)
+                    t_success = ctxt . ConvertToData(t_new_mark . text, &t_data);
+                else if (t_exec_expr)
+                {
+                    MCExecTypeConvertAndReleaseAlways(ctxt, t_text . type, &t_text, kMCExecValueTypeDataRef, &(&t_data));
+                    t_success = !ctxt . HasError();
+                }
+                else
+                    t_success = ctxt . ConvertToData(*t_valueref, &t_data);
+                
+                if (!t_success)
+                {
+                    MCValueRelease(t_new_mark . text);
+                    ctxt.Throw();
+                    return;
+                }
+                
+                t_data_mark . data = MCValueRetain(*t_data);
+                markbytes(ctxt, t_data_mark);
+                MCStringsEvalByteChunk(ctxt, t_data_mark, r_text . dataref_value), r_text . type = kMCExecValueTypeDataRef;
+                
+                MCValueRelease(t_data_mark . data);
+            }
             
             MCValueRelease(t_new_mark . text);
         }
@@ -4013,6 +4052,22 @@ void MCChunk::count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, u
             }
         r_count = i;
     }
+    else if (tocount < CT_BYTE)
+    {
+        MCAutoStringRef t_string;
+        if (!ctxt . EvalExprAsStringRef(this, EE_CHUNK_BADEXPRESSION, &t_string))
+            return;
+        
+        MCStringsCountChunks(ctxt, tocount, *t_string, r_count);
+    }
+    else if (tocount == CT_BYTE)
+    {
+        MCAutoDataRef t_data;
+        if (!ctxt . EvalExprAsDataRef(this, EE_CHUNK_BADEXPRESSION, &t_data))
+            return;
+        
+       r_count = MCDataGetLength(*t_data);
+    }
     else
     {
         MCAutoValueRef t_value;
@@ -4034,7 +4089,7 @@ void MCChunk::count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, u
                 ctxt.LegacyThrow(EE_CHUNK_BADEXPRESSION);
                 return;
             }
-
+            
             MCStringsCountChunks(ctxt, tocount, *t_string, r_count);
         }
     }
@@ -6357,15 +6412,18 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
     
     // WARNING: At the moment, MCStringIsNative normalizes the string
     //  if that allows it to nativise it 'losslessly'.
-    if (type == CT_CHARACTER && MCStringIsNative(text))
+    if (type == CT_CHARACTER && MCStringIsSimple(text) && MCStringIsUncombined(text))
         type = CT_CODEUNIT;
     
-    sp = nil;
+    MCBreakIteratorRef break_iterator;
+    
     break_iterator = nil;
+    sp = nil;
     range = MCRangeMake(0, 0);
     exhausted = false;
     length = MCStringGetLength(text);
     first_chunk = true;
+    break_position = 0;
     
     switch (type)
     {
@@ -6374,54 +6432,66 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
             break;
         case CT_CHARACTER:
         case CT_SENTENCE:
+        {
+            MCRange t_range;
+            uindex_t t_end;
             /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, p_chunk_type == CT_SENTENCE ? kMCBreakIteratorTypeSentence : kMCBreakIteratorTypeCharacter, break_iterator);
             /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, text);
+            t_range . length = 0;
+            t_range . offset = 0;
+            
+            while ((t_end = MCLocaleBreakIteratorAdvance(break_iterator)) != kMCLocaleBreakIteratorDone)
+            {
+                t_range . offset += t_range . length;
+                t_range . length = t_end - t_range . offset;                
+                breaks . Push(t_range);
+            }
+        }
             break;
         case CT_TRUEWORD:
+        {
+            MCAutoArray<uindex_t> t_breaks;
             /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeWord, break_iterator);
             /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, text);
+            MCRange t_range = MCRangeMake(0, 0);
+
+            while (MCLocaleWordBreakIteratorAdvance(text, break_iterator, t_range)
+                    && t_range . offset + t_range . length != kMCLocaleBreakIteratorDone)
+            {
+                breaks . Push(t_range);
+            }
+        }
             break;
         default:
             break;
     }
+    
+    if (break_iterator != nil)
+        MCLocaleBreakIteratorRelease(break_iterator);
 }
 
 MCTextChunkIterator::~MCTextChunkIterator()
-{
-    if (break_iterator != nil)
-        MCLocaleBreakIteratorRelease(break_iterator);
-    
+{    
     MCValueRelease(text);
     delete sp;
 }
 
 bool MCTextChunkIterator::next(MCExecContext& ctxt)
 {
-    if (break_iterator != nil)
+    if (type == CT_TRUEWORD || type == CT_SENTENCE || type == CT_CHARACTER)
     {
-        if (type == CT_TRUEWORD)
+        // We have a word, sentence or character delimiter, we just have to get the range stored from the constructor
+        if (break_position < breaks . Size())
         {
-            if (!MCLocaleWordBreakIteratorAdvance(text, break_iterator, range))
-                return false;
+            range = breaks[break_position++];
             
-            if (range . offset + range . length == kMCLocaleBreakIteratorDone)
-                return false;
-
-            return true;
-        }
-        else
-        {
-            range . offset += range . length;
-            uindex_t t_end = MCLocaleBreakIteratorAdvance(break_iterator);
-            if (t_end == kMCLocaleBreakIteratorDone)
-                return false;
-
-            if (t_end == length)
+            if (break_position == breaks . Size())
                 exhausted = true;
             
-            range . length = t_end - range . offset;
             return true;
         }
+        
+        return false;
     }
     
     if (sp != nil)

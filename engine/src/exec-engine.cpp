@@ -713,26 +713,13 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
 	
 	if (p_var . chunk == CT_UNDEFINED)
 	{
+        // SN-2014-04-11 [[ FasterVariables ]] Now chosing from here the position where to add a string on a variable
 		if (p_where == PT_INTO)
-			p_var . variable -> set(ctxt, p_value, false);
+			p_var . variable -> set(ctxt, p_value, kMCVariableSetInto);
 		else if (p_where == PT_AFTER)
-			p_var . variable -> set(ctxt, p_value, true);
+			p_var . variable -> set(ctxt, p_value, kMCVariableSetAfter);
 		else
-        {
-            MCAutoStringRef t_string;
-            if (!ctxt . EvalExprAsMutableStringRef(p_var . variable, EE_ENGINE_PUT_BADVARIABLE, &t_string))
-                return;
-
-			MCAutoStringRef t_value_string;
-			if (!ctxt . ConvertToString(p_value, &t_value_string))
-			{
-				ctxt . Throw();
-				return;
-			}
-			
-			/* UNCHECKED */ MCStringPrepend(*t_string, *t_value_string);
-			p_var . variable -> set(ctxt, *t_string, False);
-		}
+			p_var . variable -> set(ctxt, p_value, kMCVariableSetBefore);
 	}
 	else
     {
@@ -751,10 +738,9 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
 			p_var . mark . finish = p_var . mark . start;
 		else if (p_where == PT_AFTER)
 			p_var . mark . start = p_var . mark . finish;
-        
-		/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
-        
-		p_var . variable -> set(ctxt, *t_string, False);
+
+        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
+        p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);
 	}
 }
 
@@ -764,24 +750,13 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue p_value, int p
 	
 	if (p_var . chunk == CT_UNDEFINED)
 	{
+        // SN-2014-04-11 [[ FasterVariables ]] Now chosing from here the position where to add a string on a variable
 		if (p_where == PT_INTO)
-			p_var . variable -> give_value(ctxt, p_value, false);
+			p_var . variable -> give_value(ctxt, p_value, kMCVariableSetInto);
 		else if (p_where == PT_AFTER)
-			p_var . variable -> give_value(ctxt, p_value, true);
-		else
-        {
-            MCAutoStringRef t_string;
-            if (!ctxt . EvalExprAsMutableStringRef(p_var . variable, EE_ENGINE_PUT_BADVARIABLE, &t_string))
-                return;
-            
-			MCAutoStringRef t_value_string;
-            MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_value_string));
-            if (ctxt . HasError())
-                return;
-			
-			/* UNCHECKED */ MCStringPrepend(*t_string, *t_value_string);
-			p_var . variable -> set(ctxt, *t_string, False);
-		}
+			p_var . variable -> give_value(ctxt, p_value, kMCVariableSetAfter);
+        else
+            p_var . variable -> give_value(ctxt, p_value, kMCVariableSetBefore);
 	}
 	else
     {
@@ -797,11 +772,14 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue p_value, int p
 		if (p_where == PT_BEFORE)
 			p_var . mark . finish = p_var . mark . start;
 		else if (p_where == PT_AFTER)
-			p_var . mark . start = p_var . mark . finish;
+			p_var . mark . start = p_var . mark . finish;        
         
-		/* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
+        /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
+        p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);
         
-		p_var . variable -> set(ctxt, *t_string, False);
+        // This part would deserve to be implemented, but more consideration must be given over MCEngineMarkVariable, which may need to add chunk
+        // separators and thus change the string stored in the variable instead of the string in mark . text
+//		p_var . variable -> replace(ctxt, *t_value_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start));
 	}
 }
 
@@ -1004,14 +982,8 @@ void MCEngineExecDeleteVariableChunks(MCExecContext& ctxt, MCVariableChunkPtr *p
 {
 	for(uindex_t i = 0; i < p_chunk_count; i++)
     {
-        MCAutoStringRef t_string;
-        if (!ctxt . EvalExprAsMutableStringRef(p_chunks[i] . variable, EE_ENGINE_DELETE_BADVARCHUNK, &t_string))
-            return;
-
-        if (MCStringReplace(*t_string, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start), kMCEmptyString))
-        {
-            p_chunks[i] . variable -> set(ctxt, *t_string, false);
-        }
+        // SN-2014-04-11 [[ FasterVariables ]] Deletiong of the content of a variable is now done without copying
+        p_chunks[i] . variable -> replace(ctxt, kMCEmptyString, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start));
 	}
 }
 
@@ -1836,9 +1808,21 @@ void MCEngineMarkVariable(MCExecContext& ctxt, MCVarref *p_variable, MCMarkedTex
 		return;
 	}
 
+//    MCVariable *t_resolved_var;
+//    t_resolved_var = p_variable -> evalvar(ctxt);
+//    
+//    if (t_resolved_var == NULL)
+//    {
+//        ctxt . LegacyThrow(EE_CHUNK_SETCANTGETDEST);
+//        return;
+//    }    
+    // Ensure to convert the inner variable into a string ref
+//    t_resolved_var -> converttomutablestring(ctxt);
+//    r_mark . text = (MCStringRef)t_resolved_var -> getvalueref();
+    
     if (!ctxt . EvalExprAsStringRef(p_variable, EE_CHUNK_SETCANTGETDEST, r_mark . text))
         return;
-
+    
     r_mark . start = 0;
     r_mark . finish = MAXUINT4;
 }

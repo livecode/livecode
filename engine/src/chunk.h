@@ -132,7 +132,7 @@ public:
     /* WRAPPER */ Exec_stat mark(MCExecPoint &ep, Boolean force, Boolean wholechunk, MCMarkedText& r_mark, bool includechars = true);
 #endif
     void mark(MCExecContext &ctxt, bool set, bool wholechunk, MCMarkedText& x_mark, bool includechars = true);
-    void markbytes(MCExecContext &ctxt, MCMarkedText& x_mark);
+    void markbytes(MCExecContext &ctxt, MCMarkedData& x_mark);
 #ifdef LEGACY_EXEC
 	Exec_stat mark_legacy(MCExecPoint &, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool include_characters = true);
 
@@ -233,11 +233,12 @@ class MCTextChunkIterator
     MCStringRef text;
     MCScriptPoint *sp;
     Chunk_term type;
-    MCBreakIteratorRef break_iterator;
     MCRange range;
     bool exhausted;
     uindex_t length;
     bool first_chunk;
+    MCAutoArray<MCRange> breaks;
+    uindex_t break_position;
     
     public:
     MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text);

@@ -1421,6 +1421,9 @@ bool MCStringIsNative(MCStringRef string);
 // Returns true if the string only requires BMP characters to represent.
 bool MCStringIsSimple(MCStringRef string);
 
+// Returns true if the string only comprises non-combining characters.
+bool MCStringIsUncombined(MCStringRef string);
+
 /////////
 
 // Returns the number of chars that make up the string. Note that a char is
@@ -1774,6 +1777,11 @@ bool MCDataCopy(MCDataRef p_data, MCDataRef& r_new_data);
 bool MCDataCopyAndRelease(MCDataRef p_data, MCDataRef& r_new_data);
 bool MCDataMutableCopy(MCDataRef p_data, MCDataRef& r_mutable_data);
 bool MCDataMutableCopyAndRelease(MCDataRef p_data, MCDataRef& r_mutable_data);
+
+bool MCDataCopyRange(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+bool MCDataCopyRangeAndRelease(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+bool MCDataMutableCopyRange(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+bool MCDataMutableCopyRangeAndRelease(MCDataRef data, MCRange range, MCDataRef& r_new_data);
 
 bool MCDataIsMutable(const MCDataRef p_data);
 

@@ -88,6 +88,15 @@ enum
     kMCStringFlagIsSimple = 1 << 3,
     // If set, the string has been checked for simplicity
     kMCStringFlagIsChecked = 1 << 4,
+    // If set, the string has NO combining chars
+    kMCStringFlagIsUncombined = 1 << 5,
+};
+
+enum
+{
+    kMCStringFlagSetFalse,
+    kMCStringFlagSetTrue,
+    kMCStringFlagNoChange
 };
 
 
