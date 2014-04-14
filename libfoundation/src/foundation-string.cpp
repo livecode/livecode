@@ -616,12 +616,17 @@ bool MCStringFormat(MCStringRef& r_string, const char *p_format, ...)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool __MCStringClone(MCStringRef self, MCStringRef& r_new_string)
+static bool __MCStringCloneBuffer(MCStringRef self, strchar_t*& chars, uindex_t& char_count)
 {
     MCAssert(!__MCStringIsIndirect(self));
-
-    // create a direct copy of self.
-	return MCStringCreateWithChars(self -> chars, self -> char_count, r_new_string);
+    
+	if (MCMemoryNewArray(self -> char_count + 1, chars))
+	{
+		MCStrCharsMapFromUnicode(self -> chars, self -> char_count, chars, char_count);
+        return true;
+    }
+    
+    return false;
 }
 
 bool MCStringCopy(MCStringRef self, MCStringRef& r_new_string)
@@ -3573,25 +3578,24 @@ static bool __MCStringResolveIndirect(__MCString *self)
         self -> char_count = t_string -> char_count;
         self -> chars = t_string -> chars;
         self -> capacity = t_string -> char_count;
-        
+        self -> flags |= t_string -> flags;
+
 		t_string -> char_count = 0;
 		t_string -> chars = nil;
+        MCValueRelease(t_string);
 	}
 	else
 	{
-        MCStringRef t_clone;
-		if (!__MCStringClone(t_string, t_clone))
+        MCValueRelease(self -> string);
+		if (!__MCStringCloneBuffer(t_string, self -> chars, self -> char_count))
             return false;
         
-        MCValueRelease(self -> string);
+        self -> capacity = t_string -> char_count;
         
-        self -> char_count = t_clone -> char_count;
-        self -> chars = t_clone -> chars;
-        self -> capacity = t_clone -> char_count;
+        // Make sure we take the flags, but mark as not indirect -- this shouldn't be necessary
+        self -> flags |= t_string -> flags;
 	}
     
-	// Make sure we take the flags, but mark as not indirect.
-    self -> flags |= t_string -> flags;
 	self -> flags &= ~kMCStringFlagIsIndirect;
     
 	return true;

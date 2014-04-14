@@ -356,7 +356,10 @@ bool MCVariable::set(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path,
 bool MCVariable::give_value(MCExecContext& ctxt, MCExecValue p_value)
 {
     if (MCExecTypeIsValueRef(p_value . type))
+    {
         setvalueref(p_value . valueref_value);
+        MCValueRelease(p_value . valueref_value);
+    }
     else
     {
         MCExecTypeRelease(value);
