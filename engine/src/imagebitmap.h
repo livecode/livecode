@@ -112,4 +112,9 @@ bool MCImageDataIsGIF(const MCString& data);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-04-14: [[ ImageRepUpdate ]] Legacy bitmap conversion
+MCGRaster MCImageBitmapGetMCGRaster(MCImageBitmap *p_bitmap, bool p_is_premultiplied);
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif // __MC_IMAGE_BITMAP_H__

@@ -858,3 +858,17 @@ bool MCImageDataIsGIF(const MCString& data)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCGRaster MCImageBitmapGetMCGRaster(MCImageBitmap *p_bitmap, bool p_is_premultiplied)
+{
+	MCGRaster t_raster;
+	t_raster.width = p_bitmap->width;
+	t_raster.height = p_bitmap->height;
+	t_raster.stride = p_bitmap->stride;
+	t_raster.pixels = p_bitmap->data;
+	t_raster.format = MCImageBitmapHasTransparency(p_bitmap) ? (p_is_premultiplied ? kMCGRasterFormat_ARGB : kMCGRasterFormat_U_ARGB) : kMCGRasterFormat_xRGB;
+	
+	return t_raster;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+

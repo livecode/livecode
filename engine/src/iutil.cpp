@@ -801,11 +801,7 @@ bool MCImage::createpattern(MCPatternRef &r_image)
 	if (t_success)
 	{
 		MCGRaster t_raster;
-		t_raster.width = t_bitmap->width;
-		t_raster.height = t_bitmap->height;
-		t_raster.pixels = t_bitmap->data;
-		t_raster.stride = t_bitmap->stride;
-		t_raster.format = t_bitmap->has_transparency ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
+		t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
 	
 		t_success = MCGImageCreateWithRaster(t_raster, t_image);
 	}

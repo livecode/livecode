@@ -1157,14 +1157,8 @@ void MCGraphicsContext::draweps(real8 sx, real8 sy, int2 angle, real8 xscale, re
 
 void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy)
 {
-	MCImageBitmap *t_bits = p_image.bitmap;
-
 	MCGRaster t_raster;
-	t_raster . width = t_bits -> width;
-	t_raster . height = t_bits -> height;
-	t_raster . stride = t_bits -> stride;
-	t_raster . pixels = t_bits -> data;
-	t_raster . format = t_bits -> has_transparency ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
+	t_raster = MCImageBitmapGetMCGRaster(p_image.bitmap, true);
 
 	MCGRectangle t_clip;
 	t_clip . origin . x = dx;
