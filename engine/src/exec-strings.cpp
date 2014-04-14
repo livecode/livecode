@@ -742,12 +742,12 @@ void MCStringsEvalCodepointProperty(MCExecContext& ctxt, MCStringRef p_codepoint
 
 void MCStringsEvalLength(MCExecContext& ctxt, MCStringRef p_string, integer_t& r_length)
 {
-	// Ensure that the returned length is in codepoints
+	// Ensure that the returned length is in chars
     MCRange t_cp_range, t_cu_range;
     t_cu_range = MCRangeMake(0, MCStringGetLength(p_string));
-    /* UNCHECKED */ MCStringUnmapIndices(p_string, kMCDefaultCharChunkType, t_cu_range, t_cp_range);
+    /* UNCHECKED */ MCStringUnmapIndices(p_string, kMCCharChunkTypeGrapheme, t_cu_range, t_cp_range);
     
-    r_length = t_cp_range.length;
+    r_length = t_cp_range . length;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

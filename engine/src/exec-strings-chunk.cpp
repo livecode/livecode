@@ -348,7 +348,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             //r_start = p_first;
             //r_end = p_first + p_count;
         }
-            return;
+            break;
             
         case CT_WORD:
         {
@@ -422,7 +422,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
                 //r_start = p_first;
                 //r_end = p_first + p_count;
             }
-            return;
+            break;
         case CT_CODEUNIT:
         case CT_BYTE:
             if (p_include_chars)
@@ -430,17 +430,19 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
                 r_start = p_first;
                 r_end = p_first + p_count;
             }
-            return;
+            break;
         default:
             MCAssert(false);
     }
     
+    // SN-2014-04-07 [[ CombiningChars ]] The indices are already returned in codeunit, not codepoints
+    
     // for line, paragraph, item, word and token, start and end are codepoint indices, so map them back to codeunits.
-    MCRange t_cp_range, t_cu_range;
-    t_cp_range = MCRangeMake(r_start, r_end - r_start);
-    MCStringMapIndices(p_string, kMCCharChunkTypeCodepoint, t_cp_range, t_cu_range);
-    r_start = t_cu_range . offset;
-    r_end = t_cu_range . offset + t_cu_range . length;
+//    MCRange t_cp_range, t_cu_range;
+//    t_cp_range = MCRangeMake(r_start, r_end - r_start);
+//    MCStringMapIndices(p_string, kMCCharChunkTypeCodepoint, t_cp_range, t_cu_range);
+//    r_start = t_cu_range . offset;
+//    r_end = t_cu_range . offset + t_cu_range . length;
 }
 
 void MCStringsGetTextChunk(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, integer_t p_count, bool p_eval_mutable, MCStringRef& r_result)

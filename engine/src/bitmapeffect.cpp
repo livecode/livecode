@@ -710,7 +710,7 @@ bool MCBitmapEffectsGetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
     
     // If 'p_index' is the empty name, this is a whole array op.
     bool t_is_array;
-    t_is_array = MCNameIsEqualTo(p_index, kMCEmptyName, kMCCompareCaseless);
+    t_is_array = MCNameIsEmpty(p_index);
     
 	// Now fetch the bitmap effect we are processing - note that if this is
 	// NULL it means it isn't set. In this case we still carry on since we
@@ -952,7 +952,7 @@ bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
     
     // If 'p_index' is the empty name, this is a whole array op.
     bool t_is_array;
-    t_is_array = MCNameIsEqualTo(p_index, kMCEmptyName, kMCCompareCaseless);
+    t_is_array = MCNameIsEmpty(p_index);
 
     if (t_is_array && p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
     {

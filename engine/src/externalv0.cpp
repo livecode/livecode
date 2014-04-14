@@ -688,7 +688,11 @@ static char *get_variable_ex(const char *arg1, const char *arg2,
     /* UNCHECKED */ MCECptr -> ConvertToString(*t_value, &t_string);
     char *t_result;
     /* UNCHECKED */ MCStringConvertToCString(*t_string, t_result);
-	*value = t_result;
+    
+    // SN-2014-04-07 [[ Bug 12118 ]] revExecuteSQL writes incomplete data into SQLite BLOB columns
+    // arg3 is not a char* but rather a MCString; whence setting the length should not be forgotten,
+    // in case '\0' are present in the value fetched.
+	value -> set(t_result, MCStringGetLength(*t_string));
 	return NULL;
 }
 
