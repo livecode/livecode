@@ -1432,7 +1432,10 @@ bool MCStringsEvalIsAmongTheChunksOf(MCExecContext& ctxt, MCStringRef p_chunk, M
 {
     MCTextChunkIterator *tci;
     tci = new MCTextChunkIterator(p_chunk_type, p_text);
-    return tci -> isamong(ctxt, p_chunk);
+    bool t_result;
+    t_result = tci -> isamong(ctxt, p_chunk);
+    delete tci;
+    return t_result;
 }
 
 void MCStringsEvalIsAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
