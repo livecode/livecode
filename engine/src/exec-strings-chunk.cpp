@@ -94,7 +94,8 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
     
     if (p_chunk_type == CT_CODEUNIT)
     {
-        return MCStringGetLength(p_string);
+        r_count = MCStringGetLength(p_string);
+        return;
     }
     
     MCTextChunkIterator *tci;
