@@ -1421,6 +1421,9 @@ bool MCStringIsNative(MCStringRef string);
 // Returns true if the string only requires BMP characters to represent.
 bool MCStringIsSimple(MCStringRef string);
 
+// Returns true if the string only comprises non-combining characters.
+bool MCStringIsUncombined(MCStringRef string);
+
 /////////
 
 // Returns the number of chars that make up the string. Note that a char is
