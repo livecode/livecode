@@ -1658,6 +1658,10 @@ enum Parse_errors
 	// MM-2014-02-12: [[ SecureSocket ]]	
 	// {PE-0541} secure: expected 'verification'
 	PE_SECURE_BADMESSAGE,
+    
+    // PM-2014-04-14: [[Bug 12107]] 
+    // {PE-0542} exit: script is null
+	PE_EXIT_NULL_SCRIPT,
 };
 
 extern const char *MCparsingerrors;
