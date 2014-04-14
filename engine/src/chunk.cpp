@@ -6357,15 +6357,18 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
     
     // WARNING: At the moment, MCStringIsNative normalizes the string
     //  if that allows it to nativise it 'losslessly'.
-    if (type == CT_CHARACTER && MCStringIsNative(text))
+    if (type == CT_CHARACTER && MCStringIsSimple(text) && MCStringIsUncombined(text))
         type = CT_CODEUNIT;
     
-    sp = nil;
+    MCBreakIteratorRef break_iterator;
+    
     break_iterator = nil;
+    sp = nil;
     range = MCRangeMake(0, 0);
     exhausted = false;
     length = MCStringGetLength(text);
     first_chunk = true;
+    break_position = 0;
     
     switch (type)
     {
@@ -6374,54 +6377,66 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
             break;
         case CT_CHARACTER:
         case CT_SENTENCE:
+        {
+            MCRange t_range;
+            uindex_t t_end;
             /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, p_chunk_type == CT_SENTENCE ? kMCBreakIteratorTypeSentence : kMCBreakIteratorTypeCharacter, break_iterator);
             /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, text);
+            t_range . length = 0;
+            t_range . offset = 0;
+            
+            while ((t_end = MCLocaleBreakIteratorAdvance(break_iterator)) != kMCLocaleBreakIteratorDone)
+            {
+                t_range . offset += t_range . length;
+                t_range . length = t_end - t_range . offset;                
+                breaks . Push(t_range);
+            }
+        }
             break;
         case CT_TRUEWORD:
+        {
+            MCAutoArray<uindex_t> t_breaks;
             /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeWord, break_iterator);
             /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, text);
+            MCRange t_range = MCRangeMake(0, 0);
+
+            while (MCLocaleWordBreakIteratorAdvance(text, break_iterator, t_range)
+                    && t_range . offset + t_range . length != kMCLocaleBreakIteratorDone)
+            {
+                breaks . Push(t_range);
+            }
+        }
             break;
         default:
             break;
     }
+    
+    if (break_iterator != nil)
+        MCLocaleBreakIteratorRelease(break_iterator);
 }
 
 MCTextChunkIterator::~MCTextChunkIterator()
-{
-    if (break_iterator != nil)
-        MCLocaleBreakIteratorRelease(break_iterator);
-    
+{    
     MCValueRelease(text);
     delete sp;
 }
 
 bool MCTextChunkIterator::next(MCExecContext& ctxt)
 {
-    if (break_iterator != nil)
+    if (type == CT_TRUEWORD || type == CT_SENTENCE || type == CT_CHARACTER)
     {
-        if (type == CT_TRUEWORD)
+        // We have a word, sentence or character delimiter, we just have to get the range stored from the constructor
+        if (break_position < breaks . Size())
         {
-            if (!MCLocaleWordBreakIteratorAdvance(text, break_iterator, range))
-                return false;
+            range = breaks[break_position++];
             
-            if (range . offset + range . length == kMCLocaleBreakIteratorDone)
-                return false;
-
-            return true;
-        }
-        else
-        {
-            range . offset += range . length;
-            uindex_t t_end = MCLocaleBreakIteratorAdvance(break_iterator);
-            if (t_end == kMCLocaleBreakIteratorDone)
-                return false;
-
-            if (t_end == length)
+            if (break_position == breaks . Size())
                 exhausted = true;
             
-            range . length = t_end - range . offset;
             return true;
         }
+        
+        return false;
     }
     
     if (sp != nil)

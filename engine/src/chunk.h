@@ -233,11 +233,12 @@ class MCTextChunkIterator
     MCStringRef text;
     MCScriptPoint *sp;
     Chunk_term type;
-    MCBreakIteratorRef break_iterator;
     MCRange range;
     bool exhausted;
     uindex_t length;
     bool first_chunk;
+    MCAutoArray<MCRange> breaks;
+    uindex_t break_position;
     
     public:
     MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text);
