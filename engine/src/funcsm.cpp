@@ -108,11 +108,34 @@ bool MCParamFunction::params_to_doubles(MCExecContext& ctxt, real64_t *&r_double
 	else
 	{
         MCParameter *t_param = params;
+        bool t_success;
+        t_success = true;
 		while (t_param != NULL)
 		{
-            MCAutoValueRef t_value;
+            MCExecValue t_value;
             real64_t t_double;
-            if (!t_param->eval(ctxt, &t_value) || !ctxt . ConvertToReal(*t_value, t_double))
+            
+            // SN-2014-04-08 [[ NumberExpectation ]]
+            // Lookup for an exec value, and does the conversion - might save up boxing / unboxing throught ValueRef
+            t_success = t_param->eval_ctxt(ctxt, t_value);
+            
+            if (t_success)
+            {
+                if (!MCExecTypeIsNumber(t_value))
+                    MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeDouble, &t_double);
+                else if (t_value . type == kMCExecValueTypeFloat)
+                    t_double = (double) t_value . float_value;
+                else if (t_value . type == kMCExecValueTypeInt)
+                    t_double = (double) t_value . int_value;
+                else if (t_value . type == kMCExecValueTypeUInt)
+                    t_double = (double) t_value . uint_value;
+                else // double
+                    t_double = t_value . double_value;
+                
+                t_success = !ctxt . HasError();
+            }            
+            
+            if (!t_success)
 			{
                 ctxt . LegacyThrow(EE_FUNCTION_BADSOURCE);
                 return false;

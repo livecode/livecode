@@ -186,9 +186,18 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
 #endif /* MCAdd */
 
     MCExecValue t_src;
+    Boolean t_old_expectation;
+    
+    // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
+    t_old_expectation = ctxt . GetNumberExpected();
+    ctxt . SetNumberExpected(True);
+    
     if (!ctxt . EvaluateExpression(source, EE_ADD_BADSOURCE, t_src)
             || !ctxt . ConvertToNumberOrArray(t_src))
+    {
+        ctxt . SetNumberExpected(t_old_expectation);
         return;
+    }
 	
 	MCExecValue t_dst;
     MCAutoPointer<MCContainer> t_dst_container;
@@ -198,12 +207,14 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
         {
             ctxt . LegacyThrow(EE_ADD_BADDEST);
             MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
 		}
 		
         if (!t_dst_container -> eval_ctxt(ctxt, t_dst))
         {
             MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 	}
@@ -212,9 +223,13 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
         if (!ctxt . EvaluateExpression(dest, EE_ADD_BADDEST, t_dst))
         {
             MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
-    }
+    }    
+    
+    // Set the number expectation back to its previous state
+    ctxt . SetNumberExpected(t_old_expectation);
 
     if (!ctxt . ConvertToNumberOrArray(t_dst))
     {
@@ -231,7 +246,7 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
             MCMathExecAddArrayToArray(ctxt, t_src . arrayref_value, t_dst . arrayref_value, t_result . arrayref_value);
 		else
 		{
-            ctxt . LegacyThrow(EE_ADD_MISMATCH);
+            ctxt . LegacyThrow(EE_ADD_MISMATCH);    
             return;
 		}
 	}
@@ -429,9 +444,18 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
 #endif /* MCDivide */
 
 	MCExecValue t_src;
+    Boolean t_old_expectation;
+    
+    // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
+    t_old_expectation = ctxt . GetNumberExpected();
+    ctxt . SetNumberExpected(True);
+    
     if (!ctxt . EvaluateExpression(source, EE_DIVIDE_BADSOURCE, t_src)
             || !ctxt . ConvertToNumberOrArray(t_src))
+    {
+        ctxt . SetNumberExpected(t_old_expectation);
         return;
+    }
 	
 	MCExecValue t_dst;
 	MCAutoPointer<MCContainer> t_dst_container;
@@ -441,12 +465,14 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
 		{
             ctxt . LegacyThrow(EE_DIVIDE_BADDEST);
             MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
 		}
 		
         if (!t_dst_container -> eval_ctxt(ctxt, t_dst))
         {
             MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 	}
@@ -455,9 +481,13 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
         if (!ctxt . EvaluateExpression(dest, EE_DIVIDE_BADDEST, t_dst))
         {
             MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 	}
+    
+    // Set the number expectation back to its previous state
+    ctxt . SetNumberExpected(t_old_expectation);
 
     if (!ctxt . ConvertToNumberOrArray(t_dst))
     {
@@ -670,10 +700,18 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
 #endif /* MCMultiply */
 
     MCExecValue t_src;
+    Boolean t_old_expectation;
+    
+    // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
+    t_old_expectation = ctxt . GetNumberExpected();
+    ctxt . SetNumberExpected(True);
 
     if(!ctxt . EvaluateExpression(source, EE_MULTIPLY_BADSOURCE, t_src)
             || !ctxt . ConvertToNumberOrArray(t_src))
+    {
+        ctxt . SetNumberExpected(t_old_expectation);
         return;
+    }
 	
 	MCExecValue t_dst;
 	MCAutoPointer<MCContainer> t_dst_container;
@@ -683,12 +721,14 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
 		{
             ctxt . LegacyThrow(EE_MULTIPLY_BADDEST);
             MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
 		}
 		
         if (!t_dst_container -> eval_ctxt(ctxt, t_dst))
         {
             MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 	}
@@ -697,9 +737,13 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
         if (!ctxt . EvaluateExpression(dest, EE_MULTIPLY_BADDEST, t_dst))
         {
             MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 	}
+    
+    // Set the number expectation back to the previous state
+    ctxt . SetNumberExpected(t_old_expectation);
 
     if (!ctxt . ConvertToNumberOrArray(t_dst))
     {
@@ -895,10 +939,18 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
 #endif /* MCSubtract */
 
 	MCExecValue t_src;
+    Boolean t_old_expectation;
+    
+    // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
+    t_old_expectation = ctxt . GetNumberExpected();
+    ctxt . SetNumberExpected(True);
 
     if (!ctxt . EvaluateExpression(source, EE_SUBTRACT_BADSOURCE, t_src)
             || !ctxt . ConvertToNumberOrArray(t_src))
+    {
+        ctxt . SetNumberExpected(t_old_expectation);
         return;
+    }
 	
 	MCExecValue t_dst;
 	MCAutoPointer<MCContainer> t_dst_container;
@@ -908,12 +960,14 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
 		{
             ctxt . LegacyThrow(EE_SUBTRACT_BADDEST);
             MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
 		}
 		
         if (!t_dst_container -> eval_ctxt(ctxt, t_dst))
         {
             MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 	}
@@ -922,9 +976,13 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
         if (!ctxt . EvaluateExpression(dest, EE_SUBTRACT_BADDEST, t_dst))
         {
             MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 	}
+    
+    // Set the number expectation back to its previous state
+    ctxt . SetNumberExpected(t_old_expectation);
 
     if (!ctxt . ConvertToNumberOrArray(t_dst))
     {
