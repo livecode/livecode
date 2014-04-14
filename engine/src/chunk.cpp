@@ -831,7 +831,8 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                 MCEngineEvalValueAsObject(ctxt, *t_value, t_object);
 */
 
-                MCScriptPoint sp(*t_value);
+                // SN-2014-04-08 [[ Bug 12147 ]] create button in group command fails 
+                MCScriptPoint sp(ctxt, *t_value);
                 MCChunk *tchunk = new MCChunk(False);
                 MCerrorlock++;
                 Symbol_type type;
