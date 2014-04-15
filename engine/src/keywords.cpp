@@ -1227,7 +1227,6 @@ uint4 MCRepeat::linecount()
 
 Parse_stat MCExit::parse(MCScriptPoint &sp)
 {
-   
 	Symbol_type type;
 	const LT *te;
 
