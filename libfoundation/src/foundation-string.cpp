@@ -1650,6 +1650,9 @@ bool MCStringSubstringIsEqualTo(MCStringRef self, MCRange p_sub, MCStringRef p_o
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
+    if (__MCStringIsIndirect(p_other))
+        p_other = p_other -> string;
+    
 	__MCStringClampRange(self, p_sub);
 
     if (p_options == kMCStringOptionCompareExact)
@@ -1666,6 +1669,9 @@ bool MCStringSubstringIsEqualToSubstring(MCStringRef self, MCRange p_sub, MCStri
 {
     if (__MCStringIsIndirect(self))
         self = self -> string;
+    
+    if (__MCStringIsIndirect(p_other))
+        p_other = p_other -> string;
     
 	__MCStringClampRange(self, p_sub);
     __MCStringClampRange(p_other, p_other_sub);
@@ -1692,6 +1698,9 @@ compare_t MCStringCompareTo(MCStringRef self, MCStringRef p_other, MCStringOptio
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
+    if (__MCStringIsIndirect(p_other))
+        p_other = p_other -> string;
+    
     if (p_options == kMCStringOptionCompareExact)
         return MCStrCharsCompareExact(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
     else if (p_options == kMCStringOptionCompareNonliteral)
@@ -1706,6 +1715,9 @@ bool MCStringBeginsWith(MCStringRef self, MCStringRef p_prefix, MCStringOptions 
 {
     if (__MCStringIsIndirect(self))
         self = self -> string;
+    
+    if (__MCStringIsIndirect(p_prefix))
+        p_prefix = p_prefix -> string;
     
 	if (p_options == kMCStringOptionCompareExact)
         return MCStrCharsBeginsWithExact(self -> chars, self -> char_count, p_prefix -> chars, p_prefix -> char_count);
@@ -1729,6 +1741,9 @@ bool MCStringEndsWith(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
+    if (__MCStringIsIndirect(p_suffix))
+        p_suffix = p_suffix -> string;
+    
     if (p_options == kMCStringOptionCompareExact)
         return MCStrCharsEndsWithExact(self -> chars, self -> char_count, p_suffix -> chars, p_suffix -> char_count);
     else if (p_options == kMCStringOptionCompareNonliteral)
@@ -1751,6 +1766,9 @@ bool MCStringContains(MCStringRef self, MCStringRef p_needle, MCStringOptions p_
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
+    if (__MCStringIsIndirect(p_needle))
+        p_needle = p_needle -> string;
+    
 	if (p_options == kMCStringOptionCompareExact)
         return MCStrCharsContainsExact(self -> chars, self -> char_count, p_needle -> chars, p_needle -> char_count);
     else if (p_options == kMCStringOptionCompareNonliteral)
@@ -1765,6 +1783,9 @@ bool MCStringSubstringContains(MCStringRef self, MCRange p_range, MCStringRef p_
 {
     if (__MCStringIsIndirect(self))
         self = self -> string;
+    
+    if (__MCStringIsIndirect(p_needle))
+        p_needle = p_needle -> string;
     
 	__MCStringClampRange(self, p_range);
 
@@ -1784,6 +1805,9 @@ bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_aft
 {
     if (__MCStringIsIndirect(self))
         self = self -> string;
+    
+    if (__MCStringIsIndirect(p_needle))
+        p_needle = p_needle -> string;
     
 	// Make sure the after index is in range.
 	p_after = MCMin(p_after, self -> char_count);
@@ -1835,6 +1859,9 @@ bool MCStringLastIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_befo
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
+    if (__MCStringIsIndirect(p_needle))
+        p_needle = p_needle -> string;
+    
 	// Make sure the before index is in range.
 	p_before = MCMin(p_before, self -> char_count);
 
@@ -1876,6 +1903,9 @@ bool MCStringFind(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStr
 {
     if (__MCStringIsIndirect(self))
         self = self -> string;
+
+    if (__MCStringIsIndirect(p_needle))
+        p_needle = p_needle -> string;
     
     // Make sure the length of the range is valid
     p_range.offset = MCMin(p_range.offset, self -> char_count);
@@ -2724,6 +2754,12 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 		return true;
 	}
 
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+    
+    if (__MCStringIsIndirect(p_elem_del))
+        p_elem_del = p_elem_del -> string;
+    
 	MCAutoArrayRef t_array;
 	if (!MCArrayCreateMutable(&t_array))
 		return false;
@@ -2773,6 +2809,9 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 	}
 	else
 	{
+        if (__MCStringIsIndirect(p_key_del))
+            p_key_del = p_key_del -> string;
+        
 		for(;;)
 		{
 			const strchar_t *t_element_end;
@@ -3012,6 +3051,8 @@ static uindex_t __MCStringGetCapacity(MCStringRef self)
 
 static bool __MCStringExpandAt(MCStringRef self, uindex_t p_at, uindex_t p_count)
 {
+    MCAssert(!__MCStringIsIndirect(self));
+    
 	// Fetch the capacity.
 	uindex_t t_capacity;
 	t_capacity = __MCStringGetCapacity(self);
@@ -3069,6 +3110,8 @@ static bool __MCStringExpandAt(MCStringRef self, uindex_t p_at, uindex_t p_count
 
 static void __MCStringShrinkAt(MCStringRef self, uindex_t p_at, uindex_t p_count)
 {
+    MCAssert(!__MCStringIsIndirect(self));
+    
 	// Shift the chars above 'at' down to remove 'count', remembering to include
 	// the implicit NUL.
 	MCMemoryMove(self -> chars + p_at, self -> chars + (p_at + p_count), (self -> char_count - (p_at + p_count) + 1) * sizeof(strchar_t));
@@ -3172,6 +3215,8 @@ static void __MCStringNativize(MCStringRef self)
 
 static void __MCStringChanged(MCStringRef self, uindex_t simple, uindex_t uncombined)
 {
+    MCAssert(!__MCStringIsIndirect(self));
+    
 	// String changed to assume that it is no longer simple
     if (simple == kMCStringFlagSetTrue)
         self -> flags |=  kMCStringFlagIsSimple;
