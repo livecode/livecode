@@ -126,8 +126,12 @@ class MCMacPlatformSurface;
 @interface com_runrev_livecode_MCWindowView: NSView<NSTextInputClient>
 {
 	NSTrackingArea *m_tracking_area;
+    
+    // The last event that was passed to the IME.
 	NSEvent *m_input_method_event;
-	bool m_use_input_method : 1;
+    // Whether to pass events through the IME or not.
+    bool m_use_input_method : 1;
+    
 	NSDragOperation m_allowed_drag_operations;
 }
 
@@ -441,7 +445,8 @@ void MCMacPlatformSyncMouseAfterTracking(void);
 
 void MCMacPlatformHandleModifiersChanged(MCPlatformModifiers modifiers);
 
-bool MCMacMapKeyCode(uint32_t mac_key_code, MCPlatformKeyCode& r_key_code);
+bool MCMacPlatformMapKeyCode(uint32_t mac_key_code, uint32_t modifier_flags, MCPlatformKeyCode& r_key_code);
+
 bool MCMacMapNSStringToCodepoint(NSString *string, codepoint_t& r_codepoint);
 bool MCMacMapCodepointToNSString(codepoint_t p_codepoint, NSString*& r_string);
 bool MCMacMapSelectorToTextInputAction(SEL p_selector, MCPlatformTextInputAction& r_action);

@@ -542,6 +542,8 @@ void MCPlatformHandleDragDrop(MCPlatformWindowRef p_window, bool& r_accepted)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCPlatformKeyCode s_last_key_code = 0;
+
 void MCPlatformHandleModifiersChanged(MCPlatformModifiers p_modifiers)
 {
 	MCmodifierstate = 0;
@@ -555,6 +557,14 @@ void MCPlatformHandleModifiersChanged(MCPlatformModifiers p_modifiers)
 		MCmodifierstate |= MS_MOD2;
 	if ((p_modifiers & kMCPlatformModifierCapsLock) != 0)
 		MCmodifierstate |= MS_CAPS_LOCK;
+}
+
+// MW-2014-04-15: [[ Bug 12086 ]] This method is invoked to give us the last key
+//   code that was passed to an IME session. This allows us to correctly synthesize
+//   a keydown / keyup pair if a single character is produced.
+void MCPlatformHandleRawKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code)
+{
+    s_last_key_code = p_key_code;
 }
 
 void MCPlatformHandleKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
@@ -728,8 +738,11 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 				t_s_ei == t_r_ei)
 			{
 				t_char[1] = '\0';
-				MCdispatcher -> wkdown(p_window, (const char *)t_char, t_char[0]);
-				MCdispatcher -> wkup(p_window, (const char *)t_char, t_char[0]);
+				
+                // MW-2014-04-15: [[ Bug 12086 ]] Pass the keycode from the last event that was
+                //   passed to the IME.
+                MCdispatcher -> wkdown(p_window, (const char *)t_char, s_last_key_code);
+				MCdispatcher -> wkup(p_window, (const char *)t_char, s_last_key_code);
 				return;
 			}
 		}
