@@ -154,7 +154,7 @@ typedef int (*GetUserDataItem_t)(void *pArg1, void *pArg2, int pArg3, int pArg4,
 GetUserDataItem_t GetUserDataItem_ptr = NULL;
 typedef int (*MCMovieChanged_t)(void *pArg1, void *pArg2);
 MCMovieChanged_t MCMovieChanged_ptr = NULL;
-typedef int (*MCSetActionFilterWithRefCon_t)(void *pArg1, int pArg2, int pArg3);
+typedef int (*MCSetActionFilterWithRefCon_t)(void *pArg1, void *pArg2, int pArg3);
 MCSetActionFilterWithRefCon_t MCSetActionFilterWithRefCon_ptr = NULL;
 typedef int (*MakeImageDescriptionForEffect_t)(int pArg1, void *pArg2);
 MakeImageDescriptionForEffect_t MakeImageDescriptionForEffect_ptr = NULL;
@@ -238,7 +238,7 @@ typedef int (*SGStartRecord_t)(void *pArg1);
 SGStartRecord_t SGStartRecord_ptr = NULL;
 typedef int (*SGStop_t)(void *pArg1);
 SGStop_t SGStop_ptr = NULL;
-typedef void (*SetMovieDrawingCompleteProc_t)(void *pArg1, int pArg2, int pArg3, int pArg4);
+typedef void (*SetMovieDrawingCompleteProc_t)(void *pArg1, int pArg2, void *pArg3, int pArg4);
 SetMovieDrawingCompleteProc_t SetMovieDrawingCompleteProc_ptr = NULL;
 typedef void (*SetTimeBaseRate_t)(void *pArg1, int pArg2);
 SetTimeBaseRate_t SetTimeBaseRate_ptr = NULL;
@@ -937,7 +937,7 @@ int MCMovieChanged(void *pArg1, void *pArg2)
   return MCMovieChanged_ptr(pArg1, pArg2);
 }
 
-int MCSetActionFilterWithRefCon(void *pArg1, int pArg2, int pArg3)
+int MCSetActionFilterWithRefCon(void *pArg1, void *pArg2, int pArg3)
 {
   return MCSetActionFilterWithRefCon_ptr(pArg1, pArg2, pArg3);
 }
@@ -1147,7 +1147,7 @@ int SGStop(void *pArg1)
   return SGStop_ptr(pArg1);
 }
 
-void SetMovieDrawingCompleteProc(void *pArg1, int pArg2, int pArg3, int pArg4)
+void SetMovieDrawingCompleteProc(void *pArg1, int pArg2, void *pArg3, int pArg4)
 {
   SetMovieDrawingCompleteProc_ptr(pArg1, pArg2, pArg3, pArg4);
 }
