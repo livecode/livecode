@@ -988,8 +988,8 @@ bool MCUnicodeFirstIndexOf(const unichar_t *p_string, uindex_t p_string_length,
     if (p_string_length == 0 || p_needle_length == 0)
         return false;
     
-    // Shortcut
-    if (p_needle_length == 1)
+    // Shortcut for native char - for which we are sure to have only one char to compare, and no composing characters
+    if (p_needle_length == 1 && *p_needle < 0x10)
         return MCUnicodeFirstIndexOfChar(p_string, p_string_length, *p_needle, p_option, r_index);
     
     // Create filter chains for the strings being searched
@@ -1153,15 +1153,24 @@ void MCUnicodeSharedPrefix(const unichar_t *p_string, uindex_t p_string_length, 
         
         if (!t_string_filter->HasData() || !t_prefix_filter->HasData())
         {
+            // We need to read the next codepoint to update the cursor position - and place it at the end of the last matching character
+            t_string_filter -> GetNextCodepoint();
+            t_prefix_filter -> GetNextCodepoint();
             break;
         }
     }
-
+    
+    // GetNextCodepoint reads the next codepoint, but doesn't update the read index.
+    // We need to get the actual last matching index, we need to mark the last character as being the same - indeed
+    // And we'll get the length minus 1, since GetMarkedLength returns the marked position + 1 - which is not the actual
+    // position in a string when the last character compared is more than a byte long.
+    t_string_filter->MarkText();
+    t_prefix_filter->MarkText();
     
     // Return the lengths in each. Note we don't accept here to avoid matching
     // subsequences of normalised runs of combining chars.
-    r_len_in_string = t_string_filter->GetMarkedLength();
-    r_len_in_prefix = t_prefix_filter->GetMarkedLength();
+    r_len_in_string = t_string_filter->GetMarkedLength() - 1;
+    r_len_in_prefix = t_prefix_filter->GetMarkedLength() - 1;
     
     MCTextFilterRelease(t_string_filter);
     MCTextFilterRelease(t_prefix_filter);

@@ -333,8 +333,8 @@ enum MCUnicodeCompareOption
 {
     kMCUnicodeCompareOptionExact = 0,       // Codepoint (not code unit!) equality
     kMCUnicodeCompareOptionNormalised = 1,  // Normalise inputs before comparison
-    kMCUnicodeCompareOptionFolded = 2,      // Case fold inputs before comparison
-    kMCUnicodeCompareOptionCaseless = 3    // Both normalise and case fold
+    kMCUnicodeCompareOptionCaseless = 2,    // Both normalise and case fold
+    kMCUnicodeCompareOptionFolded = 3,      // Case fold inputs before comparison
 };
 
 ////////////////////////////////////////////////////////////////////////////////
