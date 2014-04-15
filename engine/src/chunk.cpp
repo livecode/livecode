@@ -6410,9 +6410,7 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
     /* UNCHECKED */ MCStringCopy(p_text, text);
     type = p_chunk_type;
     
-    // WARNING: At the moment, MCStringIsNative normalizes the string
-    //  if that allows it to nativise it 'losslessly'.
-    if (type == CT_CHARACTER && MCStringIsSimple(text) && MCStringIsUncombined(text))
+    if (type == CT_CHARACTER && (MCStringIsNative(text) || (MCStringIsSimple(text) && MCStringIsUncombined(text))))
         type = CT_CODEUNIT;
     
     MCBreakIteratorRef break_iterator;
