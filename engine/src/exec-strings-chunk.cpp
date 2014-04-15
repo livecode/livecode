@@ -92,6 +92,12 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
         return;
     }
     
+    if (p_chunk_type == CT_CODEUNIT)
+    {
+        r_count = MCStringGetLength(p_string);
+        return;
+    }
+    
     MCTextChunkIterator *tci;
     tci = new MCTextChunkIterator(p_chunk_type, p_string);
     r_count = tci -> countchunks(ctxt);
@@ -99,15 +105,26 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
     return;
  }
 
-void MCStringsGetExtentsByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, MCStringRef p_string, integer_t& r_first, integer_t& r_chunk_count)
+void MCStringsGetExtentsByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, MCValueRef p_string, integer_t& r_first, integer_t& r_chunk_count)
 {
     uinteger_t t_count = 0;
     switch (p_ordinal_type)
     {
         case CT_ANY:
-            MCStringsCountChunks(ctxt, p_chunk_type, p_string, t_count);
-            r_first = MCU_any(t_count);
-            break;
+        case CT_LAST:
+        case CT_MIDDLE:
+            if (MCValueGetTypeCode(p_string) == kMCValueTypeCodeData)
+                t_count = MCDataGetLength((MCDataRef)p_string);
+            else
+                MCStringsCountChunks(ctxt, p_chunk_type, (MCStringRef)p_string, t_count);
+            
+            if (p_ordinal_type == CT_ANY)
+                r_first = MCU_any(t_count);
+            else if (p_ordinal_type == CT_LAST)
+                r_first = t_count - 1;
+            else
+                r_first = t_count / 2;                
+            break; 
         case CT_FIRST:
         case CT_SECOND:
         case CT_THIRD:
@@ -119,14 +136,6 @@ void MCStringsGetExtentsByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_type, 
         case CT_NINTH:
         case CT_TENTH:
             r_first = p_ordinal_type - CT_FIRST;
-            break;
-        case CT_LAST:
-            MCStringsCountChunks(ctxt, p_chunk_type, p_string, t_count);
-            r_first = t_count - 1;
-            break;
-        case CT_MIDDLE:
-            MCStringsCountChunks(ctxt, p_chunk_type, p_string, t_count);
-            r_first = t_count / 2;
             break;
         default:
             fprintf(stderr, "MCChunk: ERROR bad extents\n");
@@ -143,14 +152,17 @@ void MCStringsGetExtentsByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_type, 
         r_chunk_count = 1;
 }
 
-void MCStringsGetExtentsByRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, MCStringRef p_string, integer_t& r_first, integer_t& r_chunk_count)
+void MCStringsGetExtentsByRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, MCValueRef p_string, integer_t& r_first, integer_t& r_chunk_count)
 {
     int4 t_chunk_count;
     
     if (p_first < 0 || p_last < 0)
     {
         uinteger_t t_count;
-        MCStringsCountChunks(ctxt, p_chunk_type, p_string, t_count);
+        if (MCValueGetTypeCode(p_string) == kMCValueTypeCodeData)
+            t_count = MCDataGetLength((MCDataRef)p_string);
+        else
+            MCStringsCountChunks(ctxt, p_chunk_type, (MCStringRef)p_string, t_count);
         
         if (p_first < 0)
             p_first += t_count;
@@ -861,18 +873,14 @@ void MCStringsEvalTextChunk(MCExecContext& ctxt, MCMarkedText p_source, MCString
     ctxt . Throw();
 }
 
-void MCStringsEvalByteChunk(MCExecContext& ctxt, MCMarkedText p_source, MCDataRef& r_bytes)
+void MCStringsEvalByteChunk(MCExecContext& ctxt, MCMarkedData p_source, MCDataRef& r_bytes)
 {
-    if (p_source . text == nil)
+    if (p_source . data == nil)
         return;
     
-    MCAutoDataRef t_data;
-    if (!ctxt . ConvertToData(p_source . text, &t_data))
-        return;
-    
-    // The incoming indices are byte indices
-    const byte_t *bytes = MCDataGetBytePtr(*t_data);
-    if (MCDataCreateWithBytes(bytes + p_source . start, p_source . finish - p_source. start, r_bytes))
+    // MW-2014-04-11: [[ Bug 12179 ]] Use a subrange copy - previously clamping wasn't being
+    //   performed.
+    if (MCDataCopyRange(p_source . data, MCRangeMake(p_source . start, p_source . finish - p_source. start), r_bytes))
         return;
     
     ctxt . Throw();
@@ -1034,36 +1042,36 @@ void MCStringsMarkCodeunitsOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ord
     MCStringsMarkTextChunkByOrdinal(ctxt, CT_CODEUNIT, p_ordinal_type, p_force, p_whole_chunk, p_further_chunks, x_mark);
 }
 
-void MCStringsMarkBytesOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedText& x_mark)
+void MCStringsMarkBytesOfTextByRange(MCExecContext& ctxt, integer_t p_first, integer_t p_last, MCMarkedData& x_mark)
 {
     // The incoming indices are for codeunits
     MCRange t_cu_range;
     t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
     
-    MCAutoStringRef t_string;
-    MCStringCopySubstring(x_mark . text, t_cu_range, &t_string);
+    MCAutoDataRef t_data;
+    MCDataCopyRange(x_mark . data, t_cu_range, &t_data);
     
     int4 t_first;
     int4 t_chunk_count;
-    MCStringsGetExtentsByRange(ctxt, CT_BYTE, p_first, p_last, *t_string, t_first, t_chunk_count);
+    MCStringsGetExtentsByRange(ctxt, CT_BYTE, p_first, p_last, *t_data, t_first, t_chunk_count);
     
     // convert codeunit indices to byte indices
     x_mark . start = x_mark . start + t_first;
     x_mark . finish = x_mark . start + t_chunk_count;
 }
 
-void MCStringsMarkBytesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedText& x_mark)
+void MCStringsMarkBytesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal_type, MCMarkedData& x_mark)
 {
     // The incoming indices are for codeunits
     MCRange t_cu_range;
     t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
     
-    MCAutoStringRef t_string;
-    MCStringCopySubstring(x_mark . text, t_cu_range, &t_string);
+    MCAutoDataRef t_data;
+    MCDataCopyRange(x_mark . data, t_cu_range, &t_data);
     
     int4 t_first;
     int4 t_chunk_count;
-    MCStringsGetExtentsByOrdinal(ctxt, CT_BYTE, p_ordinal_type, *t_string, t_first, t_chunk_count);
+    MCStringsGetExtentsByOrdinal(ctxt, CT_BYTE, p_ordinal_type, *t_data, t_first, t_chunk_count);
     
     x_mark . start = x_mark . start + t_first;
     x_mark . finish = x_mark . start + t_chunk_count;

@@ -202,6 +202,24 @@ bool MCDataMutableCopyAndRelease(MCDataRef p_data, MCDataRef& r_mutable_data)
     return false;
 }
 
+bool MCDataCopyRange(MCDataRef self, MCRange p_range, MCDataRef& r_new_data)
+{
+    __MCDataClampRange(self, p_range);
+    
+    return MCDataCreateWithBytes(self -> bytes + p_range . offset, p_range . length, r_new_data);
+}
+
+bool MCDataCopyRangeAndRelease(MCDataRef self, MCRange p_range, MCDataRef& r_new_data)
+{
+    if (MCDataCopyRange(self, p_range, r_new_data))
+    {
+        MCValueRelease(self);
+        return true;
+    }
+    
+    return false;
+}
+
 bool MCDataIsMutable(const MCDataRef p_data)
 {
     return (p_data->flags & kMCDataFlagIsMutable) != 0;

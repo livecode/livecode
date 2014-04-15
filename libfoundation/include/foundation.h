@@ -1778,6 +1778,11 @@ bool MCDataCopyAndRelease(MCDataRef p_data, MCDataRef& r_new_data);
 bool MCDataMutableCopy(MCDataRef p_data, MCDataRef& r_mutable_data);
 bool MCDataMutableCopyAndRelease(MCDataRef p_data, MCDataRef& r_mutable_data);
 
+bool MCDataCopyRange(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+bool MCDataCopyRangeAndRelease(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+bool MCDataMutableCopyRange(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+bool MCDataMutableCopyRangeAndRelease(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+
 bool MCDataIsMutable(const MCDataRef p_data);
 
 bool MCDataAppend(MCDataRef r_data, MCDataRef p_suffix);

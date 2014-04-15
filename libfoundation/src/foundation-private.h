@@ -77,11 +77,12 @@ struct __MCNumber: public __MCValue
 
 enum
 {
-	// If set then the string is encoded as UTF-16 rather than native.
-	kMCStringFlagIsUnicode = 1 << 0,
+	// If set then the string is indirect (i.e. contents is within another
+	// immutable string).
+	kMCStringFlagIsIndirect = 1 << 0,
 	// If set then the string is mutable.
 	kMCStringFlagIsMutable = 1 << 1,
-	// If set then the native and unicode strings are equivalent
+	// If set then the string is binary (native)
 	kMCStringFlagIsNative = 1 << 2,
     // If set, the string contains no non-BMP characters
     kMCStringFlagIsSimple = 1 << 3,
@@ -160,10 +161,21 @@ typedef unichar_t strchar_t;
 
 struct __MCString: public __MCValue
 {
-	uindex_t char_count;
-	strchar_t *chars;
-	char_t *native_chars;
-	uindex_t capacity;
+    union
+    {
+        union
+        {
+            MCStringRef string;
+            MCDataRef data;
+        };
+        struct
+        {
+            uindex_t char_count;
+            strchar_t *chars;
+            char_t *native_chars;
+            uindex_t capacity;
+        };
+    };
 };
 
 //////////
