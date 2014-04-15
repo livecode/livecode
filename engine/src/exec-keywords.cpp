@@ -654,7 +654,8 @@ void MCKeywordsExecRepeatUntil(MCExecContext& ctxt, MCStatement *statements, MCE
     
     while (!done)
     {
-        if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(endcond, line, pos, EE_REPEAT_BADUNTILCOND, done))            return;
+        if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(endcond, line, pos, EE_REPEAT_BADUNTILCOND, done))
+            return;
         if (!done)
             MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);
     }
