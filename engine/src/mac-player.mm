@@ -253,8 +253,8 @@ void MCPlatformPlayer::DoWindowStateChanged(void *p_ctxt, bool p_realized)
 
 MCQTKitPlayer::MCQTKitPlayer(void)
 {
-	m_movie = [[QTMovie movie] retain];
-	m_view = [[QTMovieView alloc] initWithFrame: NSZeroRect];
+	m_movie = [[NSClassFromString(@"QTMovie") movie] retain];
+	m_view = [[NSClassFromString(@"QTMovieView") alloc] initWithFrame: NSZeroRect];
 	m_observer = [[com_runrev_livecode_MCQTKitPlayerObserver alloc] initWithPlayer: this];
     
 	m_current_frame = nil;
@@ -295,9 +295,16 @@ void MCQTKitPlayer::MovieFinished(void)
     MCPlatformCallbackSendPlayerStopped(this);
 }
 
+inline NSComparisonResult do_QTTimeCompare (QTTime time, QTTime otherTime)
+{
+    typedef NSComparisonResult (*QTTimeComparePtr)(QTTime time, QTTime otherTime);
+    extern QTTimeComparePtr QTTimeCompare_ptr;
+    return QTTimeCompare_ptr(time, otherTime);
+}
+
 void MCQTKitPlayer::RateChanged(void)
 {
-    if (m_playing && [m_movie rate] == 0.0 && QTTimeCompare([m_movie currentTime], [m_movie duration]) != 0)
+    if (m_playing && [m_movie rate] == 0.0 && do_QTTimeCompare([m_movie currentTime], [m_movie duration]) != 0)
     {
         m_playing = false;
         MCPlatformCallbackSendPlayerPaused(this);
@@ -498,15 +505,20 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
         t_filename_or_url = [NSURL URLWithString: [NSString stringWithCString: p_filename encoding: NSMacOSRomanStringEncoding]];
     
 	NSDictionary *t_attrs;
+    extern NSString **QTMovieFileNameAttribute_ptr;
+    extern NSString **QTMovieOpenAsyncOKAttribute_ptr;
+    extern NSString **QTMovieOpenAsyncRequiredAttribute_ptr;
+    extern NSString **QTMovieURLAttribute_ptr;
+    
 	t_attrs = [NSDictionary dictionaryWithObjectsAndKeys:
-			   t_filename_or_url, p_is_url ? QTMovieURLAttribute : QTMovieFileNameAttribute,
+			   t_filename_or_url, p_is_url ? *QTMovieURLAttribute_ptr : *QTMovieFileNameAttribute_ptr,
 			   /* [NSNumber numberWithBool: YES], QTMovieOpenForPlaybackAttribute, */
-			   [NSNumber numberWithBool: NO], QTMovieOpenAsyncOKAttribute,
-			   [NSNumber numberWithBool: NO], QTMovieOpenAsyncRequiredAttribute,
+			   [NSNumber numberWithBool: NO], *QTMovieOpenAsyncOKAttribute_ptr,
+			   [NSNumber numberWithBool: NO], *QTMovieOpenAsyncRequiredAttribute_ptr,
 			   nil];
 	
 	QTMovie *t_new_movie;
-	t_new_movie = [[QTMovie alloc] initWithAttributes: t_attrs
+	t_new_movie = [[NSClassFromString(@"QTMovie") alloc] initWithAttributes: t_attrs
 												error: &t_error];
 	
 	if (t_error != nil)
@@ -520,10 +532,17 @@ void MCQTKitPlayer::Load(const char *p_filename, bool p_is_url)
 	m_movie = t_new_movie;
     
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
-    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(movieFinished:) name: QTMovieDidEndNotification object: m_movie];
-    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: QTMovieTimeDidChangeNotification object: m_movie];
-    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(rateChanged:) name: QTMovieRateDidChangeNotification object: m_movie];
-    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(selectionChanged:) name: QTMovieSelectionDidChangeNotification object: m_movie];
+    extern NSString **QTMovieDidEndNotification_ptr;
+    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(movieFinished:) name: *QTMovieDidEndNotification_ptr object: m_movie];
+    
+    extern NSString **QTMovieTimeDidChangeNotification_ptr;
+    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: *QTMovieTimeDidChangeNotification_ptr object: m_movie];
+    
+    extern NSString **QTMovieRateDidChangeNotification_ptr;
+    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(rateChanged:) name: *QTMovieRateDidChangeNotification_ptr object: m_movie];
+    
+    extern NSString **QTMovieSelectionDidChangeNotification_ptr;
+    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(selectionChanged:) name: *QTMovieSelectionDidChangeNotification_ptr object: m_movie];
     
 	// This method seems to be there - but isn't 'public'. Given QTKit is now deprecated as long
 	// as it works on the platforms we support, it should be fine.
@@ -645,6 +664,16 @@ void MCQTKitPlayer::UnlockBitmap(MCImageBitmap *bitmap)
 	delete bitmap;
 }
 
+inline QTTime do_QTMakeTime(long long timeValue, long timeScale)
+{
+    typedef QTTime (*QTMakeTimePtr)(long long timeValue, long timescale);
+    extern QTMakeTimePtr QTMakeTime_ptr;
+    return QTMakeTime_ptr(timeValue, timeScale);
+}
+
+extern NSString **QTMovieLoopsAttribute_ptr;
+extern NSString **QTMoviePlaysSelectionOnlyAttribute_ptr;
+
 void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformPropertyType p_type, void *p_value)
 {
     m_synchronizing = true;
@@ -671,7 +700,7 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyCurrentTime:
-			[m_movie setCurrentTime: QTMakeTime(*(uint32_t *)p_value, [m_movie duration] . timeScale)];
+			[m_movie setCurrentTime: do_QTMakeTime(*(uint32_t *)p_value, [m_movie duration] . timeScale)];
 			break;
 		case kMCPlatformPlayerPropertyStartTime:
 		{
@@ -732,10 +761,10 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyOnlyPlaySelection:
-			[m_movie setAttribute: [NSNumber numberWithBool: *(bool *)p_value] forKey: QTMoviePlaysSelectionOnlyAttribute];
+			[m_movie setAttribute: [NSNumber numberWithBool: *(bool *)p_value] forKey: *QTMoviePlaysSelectionOnlyAttribute_ptr];
 			break;
 		case kMCPlatformPlayerPropertyLoop:
-			[m_movie setAttribute: [NSNumber numberWithBool: *(bool *)p_value] forKey: QTMovieLoopsAttribute];
+			[m_movie setAttribute: [NSNumber numberWithBool: *(bool *)p_value] forKey: *QTMovieLoopsAttribute_ptr];
 			break;
         case kMCPlatformPlayerPropertyMarkers:
         {
@@ -804,7 +833,8 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 		case kMCPlatformPlayerPropertyMovieRect:
 		{
 			NSValue *t_value;
-			t_value = [m_movie attributeForKey: QTMovieNaturalSizeAttribute];
+            extern NSString **QTMovieNaturalSizeAttribute_ptr;
+			t_value = [m_movie attributeForKey: *QTMovieNaturalSizeAttribute_ptr];
 			*(MCRectangle *)r_value = MCRectangleMake(0, 0, [t_value sizeValue] . width, [t_value sizeValue] . height);
 		}
 		break;
@@ -860,10 +890,10 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			*(bool *)r_value = m_show_selection;
 			break;
 		case kMCPlatformPlayerPropertyOnlyPlaySelection:
-			*(bool *)r_value = [(NSNumber *)[m_movie attributeForKey: QTMoviePlaysSelectionOnlyAttribute] boolValue] == YES;
+			*(bool *)r_value = [(NSNumber *)[m_movie attributeForKey: *QTMoviePlaysSelectionOnlyAttribute_ptr] boolValue] == YES;
 			break;
 		case kMCPlatformPlayerPropertyLoop:
-			*(bool *)r_value = [(NSNumber *)[m_movie attributeForKey: QTMovieLoopsAttribute] boolValue] == YES;
+			*(bool *)r_value = [(NSNumber *)[m_movie attributeForKey: *QTMovieLoopsAttribute_ptr] boolValue] == YES;
 			break;
 	}
 }

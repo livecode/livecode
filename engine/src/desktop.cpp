@@ -56,10 +56,15 @@ void X_main_loop(void)
 		X_main_loop_iteration();
 }
 
+extern "C" int initialise_weak_link_QuickTime(void);
+extern "C" int initialise_weak_link_QTKit(void);
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformHandleApplicationStartup(int p_argc, char **p_argv, char **p_envp, int& r_error_code, char*& r_error_message)
 {
+    initialise_weak_link_QuickTime();
+    initialise_weak_link_QTKit();
+
 	if (X_init(p_argc, p_argv, p_envp))
 	{
 		r_error_code = 0;
