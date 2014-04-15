@@ -982,8 +982,16 @@ void MCEngineExecDeleteVariableChunks(MCExecContext& ctxt, MCVariableChunkPtr *p
 {
 	for(uindex_t i = 0; i < p_chunk_count; i++)
     {
-        // SN-2014-04-11 [[ FasterVariables ]] Deletiong of the content of a variable is now done without copying
-        p_chunks[i] . variable -> replace(ctxt, kMCEmptyString, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start));
+        MCAutoStringRef t_string;
+        if (!ctxt . EvalExprAsMutableStringRef(p_chunks[i] . variable, EE_ENGINE_DELETE_BADVARCHUNK, &t_string))
+            return;
+
+        if (MCStringReplace(*t_string, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start), kMCEmptyString))
+        {
+            p_chunks[i] . variable -> set(ctxt, *t_string, kMCVariableSetInto);
+        }
+//        // SN-2014-04-11 [[ FasterVariables ]] Deletiong of the content of a variable is now done without copying
+//        p_chunks[i] . variable -> replace(ctxt, kMCEmptyString, MCRangeMake(p_chunks[i] . mark . start, p_chunks[i] . mark . finish - p_chunks[i] . mark . start));
 	}
 }
 
