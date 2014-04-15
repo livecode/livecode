@@ -1,5 +1,5 @@
 
-QuickTime none QuickTime.framework none
+QuickTime none /System/Library/Frameworks/QuickTime.framework/QuickTime none
 	CDSequenceEnd: (integer) -> (integer)
 	CDSequenceNewDataSource: (integer, pointer, integer, integer, pointer, pointer, pointer) -> (integer)
 	CDSequenceSetSourceData: (integer, pointer, integer) -> (integer)
@@ -74,7 +74,7 @@ QuickTime none QuickTime.framework none
 	SetTrackEnabled: (pointer, integer) -> ()
 	
 	
-QTKit none QTKit.framework none
+QTKit none /System/Library/Frameworks/QTKit.framework/QTKit none
 	@ QTMovieSelectionDidChangeNotification
 	@ QTMovieDidEndNotification
 	@ QTMovieTimeDidChangeNotification
