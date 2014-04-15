@@ -1757,6 +1757,9 @@ Boolean MCPlayer::prepare(const char *options)
 		return False;
 
 #ifdef FEATURE_PLATFORM_PLAYER
+    extern bool MCQTInit(void);
+    if (!MCQTInit())
+        return False;
 
 	if (m_platform_player == nil)
 		MCPlatformCreatePlayer(m_platform_player);

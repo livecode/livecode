@@ -73,12 +73,17 @@ static bool s_qt_initted = false;
 static QTEffect *qteffects = NULL;
 static uint2 neffects = 0;
 
-static bool MCQTInit(void);
+bool MCQTInit(void);
 static void MCQTFinit(void);
 
 //////////
 
-bool MCQTInit()
+extern "C" int initialise_weak_link_QuickTime(void);
+extern "C" int initialise_weak_link_QTKit(void);
+
+/////////
+
+bool MCQTInit(void)
 {
 	if (MCdontuseQT)
 		return false;
@@ -86,6 +91,13 @@ bool MCQTInit()
 	if (s_qt_initted)
 		return true;
 	
+    if (initialise_weak_link_QuickTime() == 0 ||
+        initialise_weak_link_QTKit() == 0)
+    {
+        s_qt_initted = false;
+        return false;
+    }
+        
 #ifdef _WINDOWS
 	if (InitializeQTML(0L) != noErr || EnterMovies() != noErr)
 		s_qt_initted = false;
