@@ -1658,7 +1658,6 @@ enum Parse_errors
 	// MM-2014-02-12: [[ SecureSocket ]]	
 	// {PE-0541} secure: expected 'verification'
 	PE_SECURE_BADMESSAGE,
-    
 };
 
 extern const char *MCparsingerrors;
