@@ -620,6 +620,15 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 {
 	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 	
+    // Make the event key code to a platform keycode.
+    MCPlatformKeyCode t_key_code;
+    MCMacPlatformMapKeyCode([event keyCode], [event modifierFlags], t_key_code);
+    
+    // Notify the host that a keyDown event has been received - this is to work around the
+    // issue with IME not playing nice with rawKey messages. Eventually this should work
+    // by completely separating rawKey messages from text input messages.
+    MCPlatformCallbackSendRawKeyDown([self platformWindow], t_key_code);
+    
 	if ([self useTextInput])
 	{
 		// Store the event being processed, if it results in a doCommandBySelector,
@@ -1066,20 +1075,6 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 //////////
 
-#if 0
-- (void)capitalizeWord:(id)sender;
-- (void)changeCaseOfLetter:(id)sender;
-- (void)deleteBackward:(id)sender;
-- (void)deleteBackwardByDecomposingPreviousCharacter:(id)sender;
-- (void)deleteForward:(id)sender;
-- (void)deleteToBeginningOfLine:(id)sender;
-- (void)deleteToBeginningOfParagraph:(id)sender;
-- (void)deleteToEndOfLine:(id)sender;
-- (void)delete
-#endif
-
-//////////
-
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem
 {
 	return [menuItem isEnabled];
@@ -1315,7 +1310,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 - (void)handleKeyPress: (NSEvent *)event isDown: (BOOL)pressed
 {	
 	MCPlatformKeyCode t_key_code;
-	MCMacMapKeyCode([event keyCode], t_key_code);
+	MCMacPlatformMapKeyCode([event keyCode], [event modifierFlags], t_key_code);
 	
 	codepoint_t t_mapped_codepoint;
 	if (!MCMacMapNSStringToCodepoint([event characters], t_mapped_codepoint))
@@ -2056,151 +2051,6 @@ void MCPlatformSwitchFocusToView(MCPlatformWindowRef p_window, uint32_t p_id)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-MCPlatformKeyCode s_mac_keycode_map[] =
-{
-	/* 0x00 */ kMCPlatformKeyCodeA,
-	/* 0x01 */ kMCPlatformKeyCodeS,
-	/* 0x02 */ kMCPlatformKeyCodeD,
-	/* 0x03 */ kMCPlatformKeyCodeF,
-	/* 0x04 */ kMCPlatformKeyCodeH,
-	/* 0x05 */ kMCPlatformKeyCodeG,
-	/* 0x06 */ kMCPlatformKeyCodeZ,
-	/* 0x07 */ kMCPlatformKeyCodeX,
-	/* 0x08 */ kMCPlatformKeyCodeC,
-	/* 0x09 */ kMCPlatformKeyCodeV,
-	/* 0x0A */ kMCPlatformKeyCodeISOSection,
-	/* 0x0B */ kMCPlatformKeyCodeB,
-	/* 0x0C */ kMCPlatformKeyCodeQ,
-	/* 0x0D */ kMCPlatformKeyCodeW,
-	/* 0x0E */ kMCPlatformKeyCodeE,
-	/* 0x0F */ kMCPlatformKeyCodeR,
-	/* 0x10 */ kMCPlatformKeyCodeY,
-	/* 0x11 */ kMCPlatformKeyCodeT,
-	/* 0x12 */ kMCPlatformKeyCode1,
-	/* 0x13 */ kMCPlatformKeyCode2,
-	/* 0x14 */ kMCPlatformKeyCode3,
-	/* 0x15 */ kMCPlatformKeyCode4,
-	/* 0x16 */ kMCPlatformKeyCode6,
-	/* 0x17 */ kMCPlatformKeyCode5,
-	/* 0x18 */ kMCPlatformKeyCodeEqual,
-	/* 0x19 */ kMCPlatformKeyCode9,
-	/* 0x1A */ kMCPlatformKeyCode7,
-	/* 0x1B */ kMCPlatformKeyCodeMinus,
-	/* 0x1C */ kMCPlatformKeyCode8,
-	/* 0x1D */ kMCPlatformKeyCode0,
-	/* 0x1E */ kMCPlatformKeyCodeRightBracket,
-	/* 0x1F */ kMCPlatformKeyCodeO,
-	/* 0x20 */ kMCPlatformKeyCodeU,
-	/* 0x21 */ kMCPlatformKeyCodeLeftBracket,
-	/* 0x22 */ kMCPlatformKeyCodeI,
-	/* 0x23 */ kMCPlatformKeyCodeP,
-	/* 0x24 */ kMCPlatformKeyCodeReturn,
-	/* 0x25 */ kMCPlatformKeyCodeL,
-	/* 0x26 */ kMCPlatformKeyCodeJ,
-	/* 0x27 */ kMCPlatformKeyCodeQuote,
-	/* 0x28 */ kMCPlatformKeyCodeK,
-	/* 0x29 */ kMCPlatformKeyCodeSemicolon,
-	/* 0x2A */ kMCPlatformKeyCodeBackslash,
-	/* 0x2B */ kMCPlatformKeyCodeComma,
-	/* 0x2C */ kMCPlatformKeyCodeSlash,
-	/* 0x2D */ kMCPlatformKeyCodeN,
-	/* 0x2E */ kMCPlatformKeyCodeM,
-	/* 0x2F */ kMCPlatformKeyCodePeriod,
-	/* 0x30 */ kMCPlatformKeyCodeTab,
-	/* 0x31 */ kMCPlatformKeyCodeSpace,
-	/* 0x32 */ kMCPlatformKeyCodeGrave,
-	/* 0x33 */ kMCPlatformKeyCodeBackspace,
-	/* 0x34 */ kMCPlatformKeyCodeUndefined,
-	/* 0x35 */ kMCPlatformKeyCodeEscape,
-	/* 0x36 */ kMCPlatformKeyCodeRightCommand,
-	/* 0x37 */ kMCPlatformKeyCodeLeftCommand,
-	/* 0x38 */ kMCPlatformKeyCodeLeftShift,
-	/* 0x39 */ kMCPlatformKeyCodeCapsLock,
-	/* 0x3A */ kMCPlatformKeyCodeLeftOption,
-	/* 0x3B */ kMCPlatformKeyCodeLeftControl,
-	/* 0x3C */ kMCPlatformKeyCodeRightShift,
-	/* 0x3D */ kMCPlatformKeyCodeRightOption,
-	/* 0x3E */ kMCPlatformKeyCodeRightControl,
-	/* 0x3F */ kMCPlatformKeyCodeFunction,
-	/* 0x40 */ kMCPlatformKeyCodeF17,
-	/* 0x41 */ kMCPlatformKeyCodeKeypadDecimal,
-	/* 0x42 */ kMCPlatformKeyCodeUndefined,
-	/* 0x43 */ kMCPlatformKeyCodeKeypadMultiply,
-	/* 0x44 */ kMCPlatformKeyCodeUndefined,
-	/* 0x45 */ kMCPlatformKeyCodeKeypadAdd,
-	/* 0x46 */ kMCPlatformKeyCodeUndefined,
-	/* 0x47 */ kMCPlatformKeyCodeNumLock, // COCO-TODO: This should be keypad-clear - double-check!
-	/* 0x48 */ kMCPlatformKeyCodeVolumeUp,
-	/* 0x49 */ kMCPlatformKeyCodeVolumeDown,
-	/* 0x4A */ kMCPlatformKeyCodeMute,
-	/* 0x4B */ kMCPlatformKeyCodeKeypadDivide,
-	/* 0x4C */ kMCPlatformKeyCodeKeypadEnter,
-	/* 0x4D */ kMCPlatformKeyCodeUndefined,
-	/* 0x4E */ kMCPlatformKeyCodeKeypadSubtract,
-	/* 0x4F */ kMCPlatformKeyCodeF18,
-	/* 0x50 */ kMCPlatformKeyCodeF19,
-	/* 0x51 */ kMCPlatformKeyCodeKeypadEqual,
-	/* 0x52 */ kMCPlatformKeyCodeKeypad0,
-	/* 0x53 */ kMCPlatformKeyCodeKeypad1,
-	/* 0x54 */ kMCPlatformKeyCodeKeypad2,
-	/* 0x55 */ kMCPlatformKeyCodeKeypad3,
-	/* 0x56 */ kMCPlatformKeyCodeKeypad4,
-	/* 0x57 */ kMCPlatformKeyCodeKeypad5,
-	/* 0x58 */ kMCPlatformKeyCodeKeypad6,
-	/* 0x59 */ kMCPlatformKeyCodeKeypad7,
-	/* 0x5A */ kMCPlatformKeyCodeF20,
-	/* 0x5B */ kMCPlatformKeyCodeKeypad8,
-	/* 0x5C */ kMCPlatformKeyCodeKeypad9,
-	/* 0x5D */ kMCPlatformKeyCodeJISYen,
-	/* 0x5E */ kMCPlatformKeyCodeJISUnderscore,
-	/* 0x5F */ kMCPlatformKeyCodeJISKeypadComma,
-	/* 0x60 */ kMCPlatformKeyCodeF5,
-	/* 0x61 */ kMCPlatformKeyCodeF6,
-	/* 0x62 */ kMCPlatformKeyCodeF7,
-	/* 0x63 */ kMCPlatformKeyCodeF3,
-	/* 0x64 */ kMCPlatformKeyCodeF8,
-	/* 0x65 */ kMCPlatformKeyCodeF9,
-	/* 0x66 */ kMCPlatformKeyCodeJISEisu,
-	/* 0x67 */ kMCPlatformKeyCodeF11,
-	/* 0x68 */ kMCPlatformKeyCodeJISKana,
-	/* 0x69 */ kMCPlatformKeyCodeF13,
-	/* 0x6A */ kMCPlatformKeyCodeF16,
-	/* 0x6B */ kMCPlatformKeyCodeF14,
-	/* 0x6C */ kMCPlatformKeyCodeUndefined,
-	/* 0x6D */ kMCPlatformKeyCodeF10,
-	/* 0x6E */ kMCPlatformKeyCodeUndefined,
-	/* 0x6F */ kMCPlatformKeyCodeF12,
-	/* 0x70 */ kMCPlatformKeyCodeUndefined,
-	/* 0x71 */ kMCPlatformKeyCodeF15,
-	/* 0x72 */ kMCPlatformKeyCodeHelp,
-	/* 0x73 */ kMCPlatformKeyCodeBegin,
-	/* 0x74 */ kMCPlatformKeyCodePrevious,
-	/* 0x75 */ kMCPlatformKeyCodeDelete,
-	/* 0x76 */ kMCPlatformKeyCodeF4,
-	/* 0x77 */ kMCPlatformKeyCodeEnd,
-	/* 0x78 */ kMCPlatformKeyCodeF2,
-	/* 0x79 */ kMCPlatformKeyCodeNext,
-	/* 0x7A */ kMCPlatformKeyCodeF1,
-	/* 0x7B */ kMCPlatformKeyCodeLeft,
-	/* 0x7C */ kMCPlatformKeyCodeRight,
-	/* 0x7D */ kMCPlatformKeyCodeDown,
-	/* 0x7E */ kMCPlatformKeyCodeUp,
-	/* 0x7F */ kMCPlatformKeyCodeUndefined,
-};
-
-bool MCMacMapKeyCode(uint32_t p_mac_keycode, MCPlatformKeyCode& r_keycode)
-{
-	if (p_mac_keycode > 0x7f)
-		return false;
-	
-	if (s_mac_keycode_map[p_mac_keycode] == kMCPlatformKeyCodeUndefined)
-		return false;
-	
-	r_keycode = s_mac_keycode_map[p_mac_keycode];
-
-	return true;
-}
 
 bool MCMacMapNSStringToCodepoint(NSString *p_string, codepoint_t& r_codepoint)
 {
