@@ -4002,7 +4002,7 @@ Exec_stat MCChunk::count(Chunk_term tocount, Chunk_term ptype, MCExecPoint &ep)
 void MCChunk::count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, uinteger_t& r_count)
 {
     // MW-2009-07-22: First non-control chunk is now CT_ELEMENT.
-    if (tocount < CT_ELEMENT)
+    if (tocount <= CT_LAST_CONTROL)
     {
         uint2 i = 0;
         MCObject *optr;
