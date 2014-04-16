@@ -4126,6 +4126,12 @@ Exec_stat MCParamCount::eval(MCExecPoint &ep)
 {
 #ifdef /* MCParamCount */ LEGACY_EXEC
 	uint2 count;
+    // PM-2014-04-14: [[Bug 12105]] Do this check to prevent crash in LC server
+    if (h == NULL)
+    {
+        MCeerror->add(EE_PARAMCOUNT_NOHANDLER, line, pos);
+        return ES_ERROR;
+    }
 	h->getnparams(count);
 	ep.setnvalue(count);
 	return ES_NORMAL;

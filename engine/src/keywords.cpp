@@ -1234,7 +1234,8 @@ Parse_stat MCExit::parse(MCScriptPoint &sp)
 	if (sp.next(type) != PS_NORMAL
 	        || sp.lookup(SP_EXIT, te) != PS_NORMAL)
 	{
-		if (!sp.gethandler()->hasname(sp.gettoken_nameref()))
+        // PM-2014-04-14: [[Bug 12107]] Do this check to avoid a crash in LC server
+		if (sp.gethandler() == nil || !sp.gethandler()->hasname(sp.gettoken_nameref()))
 		{
 			MCperror->add(PE_EXIT_BADDEST, sp);
 			return PS_ERROR;

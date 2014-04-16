@@ -841,7 +841,18 @@ bool X_open(int argc, char *argv[], char *envp[])
 	MCU_init();
 	
 	////
-
+    
+    // MW-2014-04-15: [[ Bug 12185 ]] Initialize graphics and openssl before anything
+    //   that might use them.
+    
+	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
+	MCGraphicsInitialize();
+	
+	// MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Initialise the openlSSL module.
+	InitialiseSSL();
+    
+    ////
+    
 	MCpatternlist = new MCImageList();
 
 	/* UNCHECKED */ MCVariable::ensureglobal(MCN_msg, MCmb);
@@ -982,12 +993,6 @@ bool X_open(int argc, char *argv[], char *envp[])
 
 	MCsystemprinter = MCprinter = MCscreen -> createprinter();
 	MCprinter -> Initialize();
-
-	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
-	MCGraphicsInitialize();
-	
-	// MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Initialise the openlSSL module.
-	InitialiseSSL();
 	
 	// MW-2009-07-02: Clear the result as a startup failure will be indicated
 	//   there.

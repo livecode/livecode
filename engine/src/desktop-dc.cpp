@@ -371,17 +371,15 @@ void MCScreenDC::setcursor(Window w, MCCursorRef c)
 	// Disable cursor setting when we are a drag-target
 	if (MCdispatcher -> isdragtarget())
 		return;
-		
-	/*if (c == nil)
-		MCPlatformHideCursor();
-	else
-		MCPlatformShowCursor(c);*/
 	
 	MCPlatformSetWindowProperty(w, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &c);
 }
 
 MCCursorRef MCScreenDC::createcursor(MCImageBitmap *image, int2 xhot, int2 yhot)
 {
+    if (image == nil)
+        return nil;
+    
 	MCCursorRef t_cursor;
 	MCPlatformCreateCustomCursor(image, MCPointMake(xhot, yhot), t_cursor);
 	return t_cursor;
