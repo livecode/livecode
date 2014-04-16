@@ -17,7 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "prefix.h"
 
 #include "text.h"
-#include "unicode.h"
 
 // p_input - pointer to UTF-16 codepoints
 // p_input_length - number of codepoints pointed to by <p_input>

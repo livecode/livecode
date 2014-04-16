@@ -27,7 +27,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "scriptpt.h"
 #include "util.h"
-#include "foundation-unicode.h"
 #include "chunk.h"
 
 #include "exec.h"

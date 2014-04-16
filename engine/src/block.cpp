@@ -31,11 +31,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "MCBlock.h"
 #include "util.h"
 #include "context.h"
-#include "unicode.h"
 #include "mctheme.h"
 #include "font.h"
 #include "path.h"
-#include "foundation-unicode.h"
 
 #include "exec-interface.h"
 

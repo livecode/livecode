@@ -24,7 +24,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "field.h"
 #include "paragraf.h"
-#include "unicode.h"
 #include "text.h"
 #include "osspec.h"
 //#include "execpt.h"

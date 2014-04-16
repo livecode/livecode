@@ -30,7 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //#include "execpt.h"
 #include "util.h"
 #include "mcerror.h"
-#include "unicode.h"
 #include "text.h"
 
 #include "globals.h"
@@ -39,9 +38,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "context.h"
 #include "exec-interface.h"
-
-#include "foundation-unicode.h"
-#include "foundation-bidi.h"
 
 const char *ER_reverse[256] =
     {

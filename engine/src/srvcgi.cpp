@@ -29,7 +29,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "param.h"
 #include "external.h"
 #include "handler.h"
-#include "unicode.h"
 #include "date.h"
 
 #include "system.h"

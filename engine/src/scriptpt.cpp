@@ -39,8 +39,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "variable.h"
 
 #include "globals.h"
-#include <foundation-unicode.h>
-#include "unicode.h"
 
 #define LOWERED_PAD 64
 

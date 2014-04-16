@@ -32,9 +32,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 
 #include "graphics_util.h"
-#include "unicode.h"
-
-#include "foundation-unicode.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
