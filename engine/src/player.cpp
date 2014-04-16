@@ -1399,7 +1399,8 @@ void MCPlayer::syncbuffering(MCContext *p_dc)
 void MCPlayer::getversion(MCExecPoint &ep)
 {
 #ifdef FEATURE_PLATFORM_PLAYER
-	ep . clear();
+    extern void MCQTGetVersion(MCExecPoint& ep);
+    MCQTGetVersion(ep);
 #else
 #if defined(X11)
 	ep.setstaticcstring("2.0");
