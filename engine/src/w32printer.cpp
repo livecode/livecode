@@ -40,6 +40,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "graphics.h"
 #include "graphicscontext.h"
+#include "graphics_util.h"
 
 #include "font.h"
 
@@ -767,6 +768,12 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 
 		case MARK_TYPE_RECTANGLE:
 		{
+            // PM-2014-04-16: [[Bug 11884]] Make sure the 'inside' param is taken into account
+            if (p_mark -> rectangle . inside)
+            {
+                p_mark -> rectangle . bounds = MCRectangleMake(p_mark -> rectangle . bounds . x + p_mark -> stroke -> width / 2, p_mark -> rectangle . bounds . y + p_mark -> stroke -> width / 2, p_mark -> rectangle . bounds . width - p_mark -> stroke -> width, p_mark -> rectangle . bounds . height - p_mark -> stroke -> width);
+            }
+            
 			int4 t_adjust;
 			t_adjust = p_mark -> stroke != NULL ? 0 : 1;
 			Rectangle(t_dc, p_mark -> rectangle . bounds . x, p_mark -> rectangle . bounds . y,
@@ -777,6 +784,11 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 
 		case MARK_TYPE_ROUND_RECTANGLE:
 		{
+            // PM-2014-04-16: [[Bug 11884]] Make sure the 'inside' param is taken into account
+            if (p_mark -> round_rectangle . inside)
+            {
+                p_mark -> round_rectangle . bounds = MCRectangleMake(p_mark -> round_rectangle . bounds . x + p_mark -> stroke -> width / 2, p_mark -> round_rectangle . bounds . y + p_mark -> stroke -> width / 2, p_mark -> round_rectangle . bounds . width - p_mark -> stroke -> width, p_mark -> round_rectangle . bounds . height - p_mark -> stroke -> width);
+            }
 			int4 t_adjust;
 			t_adjust = p_mark -> stroke != NULL ? 0 : 1;
 			RoundRect(t_dc, p_mark -> round_rectangle . bounds . x, p_mark -> round_rectangle . bounds . y,
@@ -787,6 +799,12 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 		break;
 
 		case MARK_TYPE_ARC:
+            // PM-2014-04-16: [[Bug 11884]] Make sure the 'inside' param is taken into account
+            if (p_mark -> arc . inside)
+            {
+                p_mark -> arc . bounds = MCRectangleMake(p_mark -> arc . bounds . x + p_mark -> stroke -> width / 2, p_mark -> arc . bounds . y + p_mark -> stroke -> width / 2, p_mark -> arc . bounds . width - p_mark -> stroke -> width, p_mark -> arc . bounds . height - p_mark -> stroke -> width);
+            }
+            
 			gdi_do_arc(t_dc, NULL, p_mark -> stroke == NULL, p_mark -> arc . bounds . x, p_mark -> arc . bounds . y, p_mark -> arc . bounds . x + p_mark -> arc . bounds . width, p_mark -> arc . bounds . y + p_mark -> arc . bounds . height, p_mark -> arc . start, p_mark -> arc . start + p_mark -> arc . angle);
 			if (p_mark -> stroke != NULL)
 			{
