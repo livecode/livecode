@@ -512,14 +512,60 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		// IM-2014-03-06: [[ revBrowserCEF ]] Call additional runloop callbacks
 		DoRunloopActions();
 
+		// Always handle notifications first.
+
 		// MW-2009-08-26: Handle any pending notifications
 		if (MCNotifyDispatch(dispatch == True) && anyevent)
 			break;
 
-		real8 eventtime = exittime;
-		Boolean donepending = handlepending(curtime, eventtime, dispatch);
-		real8 waittime = donepending ? 0.0 : eventtime - curtime;
-		
+		// MW-2014-04-16: [[ Bug 11690 ]] Work out the next pending message time.
+		real8 t_pending_eventtime;
+		if (nmessages == 0)
+			t_pending_eventtime = exittime;
+		else
+			t_pending_eventtime = messages[0] . time;
+
+		// MW-2014-04-16: [[ Bug 11690 ]] Work out the next system event time.
+		real8 t_system_eventtime;
+		MSG t_msg;
+		if (PeekMessageA(&t_msg, NULL, 0, 0, FALSE))
+		{
+			// MW-2014-04-16: [[ Bug 11690 ]] Event times are in ticks since system startup,
+			//   but pending messages use real time. Thus we need to adjust for the difference,
+			//   and take into account the potential wrapping of the system ticks.
+			static real8 s_event_start = 0.0f;
+			static DWORD s_event_start_ticks = 0xffffffffU;
+
+			// If the start ticks > message time then tick counter has wrapped so re-sync.
+			if (s_event_start_ticks > t_msg . time)
+			{
+				s_event_start = MCS_time();
+				s_event_start_ticks = GetTickCount();
+			}
+
+			// Compute the system event time in real time.
+			t_system_eventtime = s_event_start + (t_msg . time - s_event_start_ticks) / 1000.0;
+		}
+		else
+			t_system_eventtime = DBL_MAX;
+
+		// MW-2014-04-16: [[ Bug 11690 ]] If the pending event time is less than system eventime
+		//   then dispatch a pending message. Otherwise don't do that, and move directly to
+		//   dispatching a system message.
+		Boolean donepending;
+		real8 waittime;
+		if (t_pending_eventtime < t_system_eventtime)
+		{
+			real8 eventtime = exittime;
+			donepending = handlepending(curtime, eventtime, dispatch);
+			waittime = donepending ? 0.0 : eventtime - curtime;
+		}
+		else
+		{
+			donepending = False;
+			waittime = t_pending_eventtime - curtime;
+		}
+
 		MCModeQueueEvents();
 		if (MCquit)
 		{
