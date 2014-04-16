@@ -768,49 +768,6 @@ Boolean MCUIDC::getmouseclick(uint2 button, Boolean& r_abort)
 	return False;
 }
 
-void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, char *p1, char *p2)
-{
-	if (nmessages == maxmessages)
-	{
-		maxmessages++;
-		MCU_realloc((char **)&messages, nmessages, maxmessages, sizeof(MCMessageList));
-	}
-	messages[nmessages].object = optr;
-	/* UNCHECKED */ MCNameClone(mptr, messages[nmessages].message);
-	messages[nmessages].time = MCS_time();
-	messages[nmessages].id = ++messageid;
-	MCParameter *params = NULL;
-	if (p1 != NULL)
-	{
-		params = new MCParameter;
-		params->setbuffer(p1, strlen(p1));
-		if (p2 != NULL)
-		{
-			params->setnext(new MCParameter);
-			params->getnext()->setbuffer(p2, strlen(p2));
-		}
-	}
-	messages[nmessages++].params = params;
-}
-
-void MCUIDC::addmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter *params)
-{
-	if (nmessages == maxmessages)
-	{
-		maxmessages++;
-		MCU_realloc((char **)&messages, nmessages,
-		            maxmessages, sizeof(MCMessageList));
-	}
-	messages[nmessages].object = optr;
-	/* UNCHECKED */ MCNameClone(mptr, messages[nmessages].message);
-	messages[nmessages].time = time;
-	messages[nmessages].id = ++messageid;
-	char buffer[U4L];
-	sprintf(buffer, "%u", messages[nmessages].id);
-	MCresult->copysvalue(buffer);
-	messages[nmessages++].params = params;
-}
-
 Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
 	real8 curtime = MCS_time();
@@ -908,26 +865,85 @@ void MCUIDC::updatemenubar(Boolean force)
 	}
 };
 
-void MCUIDC::addtimer(MCObject *optr, MCNameRef mptr, uint4 delay)
+void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, MCParameter *params)
 {
-	uint2 i;
-	for (i = 0 ; i < nmessages ; i++)
-		if (messages[i].object == optr && MCNameIsEqualTo(messages[i].message, mptr, kMCCompareCaseless))
-		{
-			messages[i].time = MCS_time() + delay / 1000.0;
-			return;
-		}
 	if (nmessages == maxmessages)
 	{
 		maxmessages++;
-		MCU_realloc((char **)&messages, nmessages,
-		            maxmessages, sizeof(MCMessageList));
+		MCU_realloc((char **)&messages, nmessages, maxmessages, sizeof(MCMessageList));
 	}
-	messages[nmessages].object = optr;
-	/* UNCHECKED */ MCNameClone(mptr, messages[nmessages].message);
-	messages[nmessages].time = MCS_time() + delay / 1000.0;
-	messages[nmessages].id = 0;
-	messages[nmessages++].params = NULL;
+    
+    int t_index;
+    for(t_index = 0; t_index < nmessages; t_index++)
+        if (messages[t_index] . time > time)
+            break;
+    
+    MCMemoryMove(&messages[t_index + 1], &messages[t_index], (nmessages - t_index) * sizeof(MCMessageList));
+    
+	messages[t_index].object = optr;
+	/* UNCHECKED */ MCNameClone(mptr, messages[t_index].message);
+	messages[t_index].time = time;
+	messages[t_index].id = id;
+	messages[t_index].params = params;
+    
+    nmessages += 1;
+}
+
+int MCUIDC::doshiftmessage(int index, real8 newtime)
+{
+    if (index == nmessages - 1)
+        return index;
+    
+    int t_index;
+    for(t_index = index + 1; t_index < nmessages; t_index++)
+        if (messages[t_index] . time > newtime)
+            break;
+    
+    MCMessageList t_msg;
+    t_msg = messages[index];
+    
+    MCMemoryMove(&messages[index], &messages[index + 1], (t_index - index - 1) * sizeof(MCMessageList));
+    
+    messages[t_index] = t_msg;
+    messages[t_index] . time = newtime;
+    
+    return index;
+}
+
+void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, char *p1, char *p2)
+{
+	MCParameter *params = NULL;
+	if (p1 != NULL)
+	{
+		params = new MCParameter;
+		params->setbuffer(p1, strlen(p1));
+		if (p2 != NULL)
+		{
+			params->setnext(new MCParameter);
+			params->getnext()->setbuffer(p2, strlen(p2));
+		}
+	}
+    
+    doaddmessage(optr, mptr, MCS_time(), ++messageid, params);
+}
+
+void MCUIDC::addmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter *params)
+{
+    uint4 t_id;
+    t_id = ++messageid;
+    doaddmessage(optr, mptr, time, t_id, params);
+    
+	char buffer[U4L];
+	sprintf(buffer, "%u", t_id);
+	MCresult->copysvalue(buffer);
+}
+
+void MCUIDC::addtimer(MCObject *optr, MCNameRef mptr, uint4 delay)
+{
+    // Remove existing message from the queue.
+    cancelmessageobject(optr, mptr);
+    
+    doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, 0, NULL);
 }
 
 void MCUIDC::cancelmessageindex(uint2 i, Boolean dodelete)
@@ -988,6 +1004,61 @@ void MCUIDC::listmessages(MCExecPoint &ep)
 	}
 }
 
+Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch)
+{
+    Boolean t_handled;
+    t_handled = False;
+    for(int i = 0; i < nmessages; i++)
+    {
+        // If the next message is later than curtime, we've not processed a message.
+        if (messages[i] . time > curtime)
+            break;
+        
+        if (!dispatch && messages[i] . id == 0 && MCNameIsEqualTo(messages[i] . message, MCM_idle, kMCCompareCaseless))
+        {
+            i = doshiftmessage(i, curtime + MCidleRate / 1000.0);
+            continue;
+        }
+        
+        if (dispatch || messages[i] . id == 0)
+        {
+            MCParameter *p = messages[i].params;
+            MCNameRef m = messages[i].message;
+            MCObject *o = messages[i].object;
+            cancelmessageindex(i, False);
+            MCSaveprops sp;
+            MCU_saveprops(sp);
+            MCU_resetprops(False);
+            o->timer(m, p);
+            MCU_restoreprops(sp);
+            while (p != NULL)
+            {
+                MCParameter *tmp = p;
+                p = p->getnext();
+                delete tmp;
+            }
+            MCNameDelete(m);
+            curtime = MCS_time();
+            
+            t_handled = True;
+            break;
+        }
+    }
+    
+    if (moving != NULL)
+        handlemoves(curtime, eventtime);
+    
+	real8 stime = IO_cleansockets(curtime);
+    if (stime < eventtime)
+        eventtime = stime;
+    
+    if (nmessages > 0 && messages[0] . time < eventtime)
+        eventtime = messages[0] . time;
+    
+    return t_handled;
+}
+
+#if 0
 Boolean MCUIDC::handlepending(real8 &curtime, real8 &eventtime,
                               Boolean dispatch)
 {
@@ -1053,6 +1124,7 @@ Boolean MCUIDC::handlepending(real8 &curtime, real8 &eventtime,
 	}
 	return doneone;
 }
+#endif
 
 void MCUIDC::addmove(MCObject *optr, MCPoint *pts, uint2 npts,
                      real8 &duration, Boolean waiting)
