@@ -130,6 +130,22 @@ void MCQTFinit(void)
 	}
 }
 
+void MCQTGetVersion(MCExecPoint& ep)
+{
+    if (!MCQTInit())
+    {
+        ep . setstaticcstring("0.0");
+        return;
+    }
+    
+    long attrs;
+    if (Gestalt(gestaltQuickTimeVersion, &attrs) == noErr)
+        ep.setstringf("%ld.%ld.%ld", attrs >> 24, (attrs >> 20) & 0xF, (attrs >> 16) & 0xF);
+    else
+        ep.setstaticcstring("0.0");  //indicates that no QT installed
+    
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Related class variables
