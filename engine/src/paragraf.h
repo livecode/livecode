@@ -144,7 +144,7 @@ class MCParagraph : public MCDLlist
 	bool needs_layout : 1;
 	// MW-2012-01-25: [[ ParaStyles ]] This paragraphs collection of attrs.
 	MCParagraphAttrs *attrs;
-    MCFieldTextDirection base_direction;
+    MCTextDirection base_direction;
 
     static uint2 cursorwidth;
 
@@ -244,7 +244,7 @@ public:
 	
 	////////// BIDIRECTIONAL SUPPORT
     
-    MCFieldTextDirection getbasetextdirection() const
+    MCTextDirection getbasetextdirection() const
     {
         return base_direction;
     }

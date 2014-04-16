@@ -2558,6 +2558,31 @@ void MCObject::positionrel(const MCRectangle &drect,
 	}
 }
 
+// SN-2014-04-03 [[ Bug 12075 ]] Tooltips need to be able to resolve the text direction of their label
+void MCObject::drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_string, MCFontRef font)
+{
+    MCAutoArray<uint8_t> t_levels;
+    
+    MCBidiResolveTextDirection(p_string, MCBidiFirstStrongIsolate(p_string, 0), t_levels . PtrRef(), t_levels . SizeRef());
+    
+    MCRange t_block_range;
+    for (uindex_t i = 0; i < t_levels . Size(); ++i)
+    {
+        // Check the range of this text direction
+        uint8_t t_cur_level = t_levels[i];
+        
+        t_block_range . offset = i;
+        while (i + 1 < t_levels . Size() && t_cur_level == t_levels[i + 1])
+            ++i;
+        
+        t_block_range . length = i + 1 - t_block_range . offset;
+        
+        // RTL when the level is odd
+        dc -> drawtext_substring(sx, sy, p_string, t_block_range, font, false, kMCDrawTextNoBreak, (t_cur_level & 1) ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
+        sx += MCFontMeasureTextSubstring(font, p_string, t_block_range);
+    }
+}
+
 Exec_stat MCObject::domess(MCStringRef sptr)
 {
 	MCAutoStringRef t_temp_script;

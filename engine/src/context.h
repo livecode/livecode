@@ -170,8 +170,8 @@ public:
 	virtual void drawline(int2 x1, int2 y1, int2 x2, int2 y2) = 0;
 	virtual void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false) = 0;
 	virtual void drawsegments(MCSegment *segments, uint2 nsegs) = 0;
-	virtual void drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image, MCDrawTextDirection = kMCDrawTextDirectionLTR, MCDrawTextBreaking = kMCDrawTextBreak) = 0;
-    virtual void drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image, MCDrawTextDirection = kMCDrawTextDirectionLTR, MCDrawTextBreaking = kMCDrawTextBreak) = 0;
+	virtual void drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image, MCDrawTextBreaking = kMCDrawTextBreak, MCDrawTextDirection = kMCDrawTextDirectionLTR) = 0;
+    virtual void drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image, MCDrawTextBreaking = kMCDrawTextBreak, MCDrawTextDirection = kMCDrawTextDirectionLTR) = 0;
 	virtual void drawrect(const MCRectangle& rect, bool inside = false) = 0;
 	virtual void fillrect(const MCRectangle& rect, bool inside = false) = 0;
 	virtual void fillrects(MCRectangle *rects, uint2 nrects) = 0;

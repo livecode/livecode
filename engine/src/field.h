@@ -173,29 +173,6 @@ typedef bool (*MCFieldExportCallback)(void *context, MCFieldExportEventType even
 struct MCInterfaceFlaggedRanges;
 struct MCInterfaceFlaggedRange;
 
-// The values assigned to these constants are significant: they represent the
-// starting values in the Unicode BiDi algorithm and should not be changed. 
-enum MCFieldTextDirection
-{
-    kMCFieldTextDirectionAuto = -1,     // Detect based on contents
-    kMCFieldTextDirectionLTR = 0,       // Force left-to-right direction
-    kMCFieldTextDirectionRTL = 1,       // Force right-to-left direction
-};
-
-// Significant characters for BiDi processing
-#define kMCBidiLRE      0x202A      // Left-to-right embedding
-#define kMCBidiRLE      0x202B      // Right-to-left embedding
-#define kMCBidiLRO      0x202D      // Left-to-right override
-#define kMCBidiRLO      0x202E      // Right-to-left override
-#define kMCBidiPDF      0x202C      // Pop directional formatting
-#define kMCBidiLRI      0x2066      // Left-to-right isolate
-#define kMCBidiRLI      0x2067      // Right-to-left isolate
-#define kMCBidiFSI      0x2068      // First strong isolate
-#define kMCBidiPDI      0x2069      // Pop directional isolate
-#define kMCBidiLRM      0x200E      // Left-to-right mark
-#define kMCBidiRLM      0x200F      // Right-to-left mark
-#define kMCBidiALM      0x061C      // Arabic letter mark
-
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCField : public MCControl
@@ -229,7 +206,7 @@ class MCField : public MCControl
 	MCScrollbar *vscrollbar;
 	MCScrollbar *hscrollbar;
 	MCStringRef label;
-    MCFieldTextDirection text_direction;
+    MCTextDirection text_direction;
     MCInterfaceFieldCursorMovement cursor_movement;
 	
 	static int2 clickx;
@@ -364,7 +341,7 @@ public:
 	int32_t getfirstindent(void) const;
 	int32_t getfixedheight(void) const { return fixedheight; }
     
-    MCFieldTextDirection gettextdirection() const { return text_direction; }
+    MCTextDirection gettextdirection() const { return text_direction; }
 
 	bool getshowlines(void) const;
 
@@ -650,7 +627,7 @@ public:
 
     ////////// BIDIRECTIONAL SUPPORT
     
-    MCFieldTextDirection getbasetextdirection() { return text_direction; }
+    MCTextDirection getbasetextdirection() { return text_direction; }
     bool IsCursorMovementVisual();
 
     ////////// PROPERTY SUPPORT METHODS

@@ -636,6 +636,9 @@ public:
 	            Etch style, uint2 bwidth);
 	void drawborder(MCDC *dc, const MCRectangle &drect, uint2 bwidth);
 	void positionrel(const MCRectangle &dptr, Object_pos xpos, Object_pos ypos);
+    
+    // SN-2014-04-16 [[ Bug 12078 ]] Buttons and tooltip label are not drawn in the text direction
+    void drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_string, MCFontRef font);
 
 	Exec_stat domess(MCStringRef sptr);
 	void eval(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value);

@@ -25,6 +25,7 @@
 		721CAAA81834D10D00858545 /* foundation-locale.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 721CAAA61834D10D00858545 /* foundation-locale.cpp */; };
 		721CAAA91834D10D00858545 /* foundation-unicode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 721CAAA71834D10D00858545 /* foundation-unicode.cpp */; };
 		76EF31A8181E7E0A00FAC195 /* foundation-data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D17A9C517C22DD30024CCA8 /* foundation-data.cpp */; };
+		BE19F5D818FE92600001B410 /* foundation-bidi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE19F5D718FE92600001B410 /* foundation-bidi.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -71,6 +72,8 @@
 		721CAAAA1834D13300858545 /* foundation-locale.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-locale.h"; path = "include/foundation-locale.h"; sourceTree = "<group>"; };
 		721CAAAB1834D13300858545 /* foundation-unicode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-unicode.h"; path = "include/foundation-unicode.h"; sourceTree = "<group>"; };
 		721CAAAC18350B0E00858545 /* foundation-unicode-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-unicode-private.h"; path = "src/foundation-unicode-private.h"; sourceTree = "<group>"; };
+		BE19F5D718FE92600001B410 /* foundation-bidi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-bidi.cpp"; path = "src/foundation-bidi.cpp"; sourceTree = "<group>"; };
+		BE19F5D918FE93490001B410 /* foundation-bidi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-bidi.h"; path = "include/foundation-bidi.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +97,7 @@
 				4D7FA7AD1594E09F00EEF440 /* foundation.h */,
 				721CAAAA1834D13300858545 /* foundation-locale.h */,
 				721CAAAB1834D13300858545 /* foundation-unicode.h */,
+				BE19F5D918FE93490001B410 /* foundation-bidi.h */,
 			);
 			name = Headers;
 			sourceTree = "<group>";
@@ -149,6 +153,7 @@
 				721CAAA61834D10D00858545 /* foundation-locale.cpp */,
 				721CAAA71834D10D00858545 /* foundation-unicode.cpp */,
 				721CAAAC18350B0E00858545 /* foundation-unicode-private.h */,
+				BE19F5D718FE92600001B410 /* foundation-bidi.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -221,6 +226,7 @@
 				76EF31A8181E7E0A00FAC195 /* foundation-data.cpp in Sources */,
 				721CAAA81834D10D00858545 /* foundation-locale.cpp in Sources */,
 				721CAAA91834D10D00858545 /* foundation-unicode.cpp in Sources */,
+				BE19F5D818FE92600001B410 /* foundation-bidi.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
