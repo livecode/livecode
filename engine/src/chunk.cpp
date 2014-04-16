@@ -3336,7 +3336,7 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
         bool t_mark_text;
         t_mark_text = (cline != nil || paragraph != nil || sentence != nil || item != nil || trueword != nil || word != nil
                        || token != nil || character != nil || codepoint != nil || codeunit != nil);
-        
+
         if (t_mark_text || byte != nil)
         {
             MCMarkedText t_new_mark;
@@ -3373,6 +3373,10 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
             else
             {
                 MCMarkedData t_data_mark;
+                t_data_mark . start = 0;
+                t_data_mark . finish = MAXUINT4;
+                t_data_mark . data = nil;
+                
                 MCAutoDataRef t_data;
                 if (t_new_mark . text != nil)
                     t_success = ctxt . ConvertToData(t_new_mark . text, &t_data);
@@ -3998,7 +4002,7 @@ Exec_stat MCChunk::count(Chunk_term tocount, Chunk_term ptype, MCExecPoint &ep)
 void MCChunk::count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, uinteger_t& r_count)
 {
     // MW-2009-07-22: First non-control chunk is now CT_ELEMENT.
-    if (tocount < CT_ELEMENT)
+    if (tocount <= CT_LAST_CONTROL)
     {
         uint2 i = 0;
         MCObject *optr;

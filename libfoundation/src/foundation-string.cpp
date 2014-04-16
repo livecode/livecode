@@ -321,9 +321,9 @@ bool MCStringCreateWithNativeChars(const char_t *p_chars, uindex_t p_char_count,
 		r_string = self;
         
         // Also take a copy of the native chars to avoid doing so again later
-        MCMemoryAllocate(p_char_count + 1, self -> native_chars);
-        MCMemoryCopy(self -> native_chars, p_chars, p_char_count);
-        self -> native_chars[p_char_count] = '\0';
+        /*MCMemoryAllocate(p_char_count + 1, self -> native_chars);
+        MCMemoryCopy(self -> native_chars, p_chars, p_char_count);*/
+        self -> native_chars = nil;
 	}
 	else
 	{
@@ -3663,7 +3663,7 @@ static bool __MCStringCopyMutable(__MCString *self, __MCString*& r_new_string)
     
     t_string -> char_count = self -> char_count;
     t_string -> chars = self -> chars;
-    t_string -> native_chars = self -> native_chars;
+    t_string -> native_chars = nil;
     
     self -> char_count = 0;
     self -> chars = nil;

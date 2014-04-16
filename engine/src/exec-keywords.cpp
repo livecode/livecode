@@ -509,9 +509,15 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                 
                 case FU_BYTE:
                 {
-                    MCDataCreateWithBytes(t_data_ptr++, 1, &t_byte);
-                    if (t_data_ptr == t_data_end)
-                        endnext = true;
+                    // SN-2014-04-14 [[ Bug 12184 ]] If we have no data at all, we don't want to start the loop
+                    if (t_length)
+                    {
+                        MCDataCreateWithBytes(t_data_ptr++, 1, &t_byte);
+                        
+                        endnext = (--t_length) == 0;
+                    }
+                    else
+                        done = true;
                 }
                     break;
                     
@@ -535,7 +541,11 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
             //   'element'.
             // Set the loop variable to whatever the value was in the last iteration.
             if (each == FU_BYTE)
-                loopvar -> set(ctxt, *t_byte);
+            {
+                // SN-2014-04-14 [[ Bug 12184 ]] We don't need to set anything since we are not going in the loop
+                if (!done)
+                    loopvar -> set(ctxt, *t_byte);
+            }
             else if (each != FU_ELEMENT && each != FU_KEY)
                 loopvar -> set(ctxt, *t_unit);
         }
@@ -644,7 +654,8 @@ void MCKeywordsExecRepeatUntil(MCExecContext& ctxt, MCStatement *statements, MCE
     
     while (!done)
     {
-        if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(endcond, line, pos, EE_REPEAT_BADUNTILCOND, done))            return;
+        if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(endcond, line, pos, EE_REPEAT_BADUNTILCOND, done))
+            return;
         if (!done)
             MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);
     }
