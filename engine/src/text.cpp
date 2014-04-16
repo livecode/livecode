@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // p_output - pointer to buffer to hold output
 // r_used - returns amount of input consumed
 // r_made - returns amount of output used
-void MCTextRunnify(const uint2 *p_input, uint4 p_input_length, uint1 *p_output, uint4& r_used, uint4& r_made)
+void MCTextRunnify(const unichar_t *p_input, uint4 p_input_length, char_t *p_output, uint4& r_used, uint4& r_made)
 {
 	uint4 t_index;
 	t_index = 0;
