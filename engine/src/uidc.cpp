@@ -865,6 +865,9 @@ void MCUIDC::updatemenubar(Boolean force)
 	}
 };
 
+// MW-2014-04-16: [[ Bug 11690 ]] Pending message list is now sorted by time, all
+//   pending message generation functions use 'doaddmessage()' to insert the
+//   message in the right place.
 void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, MCParameter *params)
 {
 	if (nmessages == maxmessages)
@@ -889,6 +892,7 @@ void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, 
     nmessages += 1;
 }
 
+// MW-2014-04-16: [[ Bug 11690 ]] Shift a message to a new time in the future.
 int MCUIDC::doshiftmessage(int index, real8 newtime)
 {
     if (index == nmessages - 1)
@@ -1004,6 +1008,8 @@ void MCUIDC::listmessages(MCExecPoint &ep)
 	}
 }
 
+// MW-2014-04-16: [[ Bug 11690 ]] Rework pending message handling to take advantage
+//   of messages[] now being a sorted list.
 Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch)
 {
     Boolean t_handled;
@@ -1057,74 +1063,6 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
     
     return t_handled;
 }
-
-#if 0
-Boolean MCUIDC::handlepending(real8 &curtime, real8 &eventtime,
-                              Boolean dispatch)
-{
-	Boolean doneone = False;
-	uint2 mdone = 0;
-	while (nmessages > mdone)
-	{
-		int2 minindex = -1;
-		uint2 i;
-		for (i = 0 ; i < nmessages ; i++)
-			if ((dispatch || messages[i].id == 0)
-			        && (minindex == -1 || messages[i].time < messages[minindex].time))
-				minindex = i;
-		if (minindex == -1)
-			break;
-		if (curtime < messages[minindex].time)
-		{
-			if (eventtime > messages[minindex].time
-			        && (dispatch || messages[minindex].id == 0))
-				eventtime = messages[minindex].time;
-			break;
-		}
-		if (dispatch || messages[minindex].id == 0)
-		{
-			mdone++;
-			if (!dispatch && MCNameIsEqualTo(messages[minindex].message, MCM_idle, kMCCompareCaseless))
-				messages[minindex].time = curtime + ((real8)MCidleRate / 1000.0);
-			else
-			{
-				doneone = True;
-				MCParameter *p = messages[minindex].params;
-				MCNameRef m = messages[minindex].message;
-				MCObject *o = messages[minindex].object;
-				cancelmessageindex(minindex, False);
-				MCSaveprops sp;
-				MCU_saveprops(sp);
-				MCU_resetprops(False);
-				o->timer(m, p);
-				MCU_restoreprops(sp);
-				while (p != NULL)
-				{
-					MCParameter *tmp = p;
-					p = p->getnext();
-					delete tmp;
-				}
-				MCNameDelete(m);
-				curtime = MCS_time();
-			}
-		}
-	}
-	if (moving != NULL)
-		handlemoves(curtime, eventtime);
-	real8 stime = IO_cleansockets(curtime);
-	if (stime < eventtime)
-		eventtime = stime;
-	// MW-2012-08-27: [[ Bug ]] Make sure the 'eventtime' is correct - it should be the
-	//   time of the next message to process in the queue.
-	if (doneone)
-	{
-		for(uint32_t i = 0; i < nmessages; i++)
-			if (eventtime > messages[i] . time)
-				eventtime = messages[i] . time;
-	}
-	return doneone;
-}
-#endif
 
 void MCUIDC::addmove(MCObject *optr, MCPoint *pts, uint2 npts,
                      real8 &duration, Boolean waiting)
