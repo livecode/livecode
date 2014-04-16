@@ -1,0 +1,1 @@
+# Circles in PDF output is drawn too large
