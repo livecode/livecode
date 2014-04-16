@@ -588,7 +588,25 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 	            && menumode == WM_OPTION))
 		sy--;
 
-    dc -> drawtext(sx, sy, p_label, m_font, false);
+    // SN-2014-04-03 [[ Bug 12075 ]] Buttons need to resolve the text direction of their label
+    MCAutoArray<uint8_t> t_levels;
+
+    MCUnicodeResolveDirection(p_label, MCUnicodeGetFirstStrongIsolate(p_label, 0), t_levels . PtrRef(), t_levels . SizeRef());
+    MCRange t_block_range;
+    for (uindex_t i = 0; i < t_levels . Size(); ++i)
+    {
+        // Check the range of this text direction
+        uint8_t t_cur_level = t_levels[i];
+        
+        t_block_range . offset = i;
+        while (i + 1 < t_levels . Size() && t_cur_level == t_levels[i + 1])
+            ++i;
+        
+        t_block_range . length = i + 1 - t_block_range . offset;
+        
+        dc -> drawtext_substring(sx, sy, p_label, t_block_range, m_font, false, t_cur_level & 1);
+        sx += MCFontMeasureTextSubstring(m_font, p_label, t_block_range);
+    }
 	
 	if (!MCStringIsEmpty(acceltext))
 	{

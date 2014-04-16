@@ -233,9 +233,30 @@ void MCTooltip::render(MCContext *dc, const MCRectangle &dirty)
 	{
 		MCStringRef t_line = nil;
 		MCValueRef t_lineval = nil;
+        uindex_t sx = 4;
+        
 		/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, t_lineval);
 		t_line = (MCStringRef)t_lineval;
-        dc -> drawtext(4, t_y + t_fheight, t_line, m_font, false);
+        
+        // SN-2014-04-03 [[ Bug 12075 ]] Tooltips need to resolve the text direction of their label
+        MCAutoArray<uint8_t> t_levels;
+        
+        MCUnicodeResolveDirection(t_line, MCUnicodeGetFirstStrongIsolate(t_line, 0), t_levels . PtrRef(), t_levels . SizeRef());
+        MCRange t_block_range;
+        for (uindex_t i = 0; i < t_levels . Size(); ++i)
+        {
+            // Check the range of this text direction
+            uint8_t t_cur_level = t_levels[i];
+            
+            t_block_range . offset = i;
+            while (i + 1 < t_levels . Size() && t_cur_level == t_levels[i + 1])
+                ++i;
+            
+            t_block_range . length = i + 1 - t_block_range . offset;
+            
+            dc -> drawtext_substring(sx, t_y + t_fheight, t_line, t_block_range, m_font, false, t_cur_level & 1);
+            sx += MCFontMeasureTextSubstring(m_font, t_line, t_block_range);
+        }
 
 		t_y += t_fheight + 3;
 	}
