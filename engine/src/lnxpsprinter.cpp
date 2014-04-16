@@ -49,6 +49,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxans.h"
 
 #include "graphicscontext.h"
+#include "graphics_util.h"
 
 #define A4_PAPER_HEIGHT	210
 #define A4_PAPER_WIDTH	297
@@ -1019,6 +1020,12 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 		
 		
 		case MARK_TYPE_RECTANGLE:
+            // PM-2014-04-16: [[Bug 11884]] Make sure the 'inside' param is taken into account
+            if (p_mark -> rectangle . inside)
+            {
+                p_mark -> rectangle . bounds = MCRectangleMake(p_mark -> rectangle . bounds . x + p_mark -> stroke -> width / 2, p_mark -> rectangle . bounds . y + p_mark -> stroke -> width / 2, p_mark -> rectangle . bounds . width - p_mark -> stroke -> width, p_mark -> rectangle . bounds . height - p_mark -> stroke -> width);
+            }
+            
 			if (isStroke)
 			{
 				MCRectangle t_rect;
@@ -1046,6 +1053,12 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 		
 		
 		case MARK_TYPE_ROUND_RECTANGLE:
+        
+            // PM-2014-04-16: [[Bug 11884]] Make sure the 'inside' param is taken into account
+            if (p_mark -> round_rectangle . inside)
+            {
+                p_mark -> round_rectangle . bounds = MCRectangleMake(p_mark -> round_rectangle . bounds . x + p_mark -> stroke -> width / 2, p_mark -> round_rectangle . bounds . y + p_mark -> stroke -> width / 2, p_mark -> round_rectangle . bounds . width - p_mark -> stroke -> width, p_mark -> round_rectangle . bounds . height - p_mark -> stroke -> width);
+            }
 			
 			//%usage: topLeftx, topLefty, width, height, radius  FRR
 			if ( !isStroke ) 
@@ -1066,7 +1079,14 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 		break;
 		
 		case MARK_TYPE_ARC:
-			uint4 t_x, t_y, t_r, t_rw ;
+			
+            // PM-2014-04-16: [[Bug 11884]] Make sure the 'inside' param is taken into account
+            if (p_mark -> arc . inside)
+            {
+                p_mark -> arc . bounds = MCRectangleMake(p_mark -> arc . bounds . x + p_mark -> stroke -> width / 2, p_mark -> arc . bounds . y + p_mark -> stroke -> width / 2, p_mark -> arc . bounds . width - p_mark -> stroke -> width, p_mark -> arc . bounds . height - p_mark -> stroke -> width);
+            }
+            
+            uint4 t_x, t_y, t_r, t_rw ;
 			uint4 t_width, t_height ;
 			
 			t_x = p_mark -> arc . bounds . x;
