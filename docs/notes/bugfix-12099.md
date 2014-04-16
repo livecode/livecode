@@ -1,0 +1,1 @@
+# On awakening Android device from sleep, part of app is blacked out

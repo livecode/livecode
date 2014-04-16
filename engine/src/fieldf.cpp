@@ -611,7 +611,11 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 			p_context->begin(false);
 		}
 		
+        // MW-2014-04-10: [[ Bug 12020 ]] Make sure we use a linesize of 1 rather than 0 (hairline)
+        //   to ensure caret is not too thin on retina displays.
+        p_context->setlineatts(1, LineSolid, CapButt, JoinBevel);
 		p_context->drawline(cursorrect.x, cursorrect.y, cursorrect.x, cursorrect.y + cursorrect.height - 1);
+        p_context->setlineatts(0, LineSolid, CapButt, JoinBevel);
 		
 		if (t_is_opaque)
 		{
@@ -1045,6 +1049,7 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 			uint2 ct = 0;
 			int4 x;
 			x = t_delta + t[0];
+            
 			while (x <= grect.x + grect.width)
 			{
 				// MW-2012-05-03: [[ Bug 10200 ]] If set at the field level, the vGrid should start
@@ -1061,8 +1066,10 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 				
 				// MW-2012-03-19: [[ FixedTable ]] If we have reached the final tab in fixed
 				//   table mode, we are done.
-				if (ct == nt - 2 && t[nt - 2] == t[nt - 1])
-					break;
+				// PM-2014-04-08: [[ Bug 12146 ]] Setting tabstops to 2 equal numbers and then
+                //  turning VGrid on, hangs LC, because this while loop ran forever
+                if (ct == nt - 1 && (nt < 2 || t[nt - 2] == t[nt - 1]))
+                    break;
 			}
 		}
 
@@ -2316,12 +2323,21 @@ void MCField::startcomposition()
 	composelength = 0;
 }
 
+bool MCField::getcompositionrange(int32_t& si, int32_t& ei)
+{
+	if (!composing)
+		return false;
+	
+	si = composeoffset;
+	ei = si + composelength;
+
+	return true;
+}
+
 void MCField::setcompositioncursoroffset(uint2 coffset)
 {
 	composecursorindex = coffset;
 }
-
-
 
 void MCField::setcompositionconvertingrange(uint1 si, uint1 ei)
 {

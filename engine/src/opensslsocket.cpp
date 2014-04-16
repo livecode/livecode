@@ -157,7 +157,7 @@ static void socketCallback (CFSocketRef cfsockref, CFSocketCallBackType type, CF
 			break;
 		}
 	}
-	//MCS_poll(0.0,0);//quick poll of other sockets
+	MCS_poll(0.0,0);//quick poll of other sockets
 }
 #endif
 
@@ -1541,7 +1541,7 @@ Boolean MCSocket::init(MCSocketHandle newfd)
 	if (cfsockref)
 	{
 		rlref = CFSocketCreateRunLoopSource(kCFAllocatorDefault, cfsockref, 0);
-		CFRunLoopAddSource((CFRunLoopRef)GetCFRunLoopFromEventLoop(GetMainEventLoop()), rlref, kCFRunLoopDefaultMode);
+		CFRunLoopAddSource((CFRunLoopRef)CFRunLoopGetCurrent(), rlref, kCFRunLoopDefaultMode);
 		CFOptionFlags socketOptions = 0 ;
 		CFSocketSetSocketFlags( cfsockref, socketOptions );
 	}

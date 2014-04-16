@@ -1045,7 +1045,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		bool t_error;
 		t_error = false;
 
-		MCRange *t_ranges;
+		MCInterval *t_ranges;
 		int t_range_count;
 		t_ranges = NULL;
 
@@ -1331,13 +1331,24 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 				MCeerror -> add(EE_PROPERTY_BADEXPRESSION, line, pos);
 				return ES_ERROR;
 			}
+
 			t_type = MCTransferData::StringToType(ep2 . getsvalue());
 		}
 
 		if (t_type != TRANSFER_TYPE_NULL)
 		{
 			MCSharedString *t_data;
-			t_data = MCSharedString::Create(ep . getsvalue());
+			
+			// MW-2014-03-12: [[ ClipboardStyledText ]] If styledText is being requested, then
+			//   convert the array to a styles pickle and store that.
+			if (t_type == TRANSFER_TYPE_STYLED_TEXT_ARRAY)
+			{
+				t_type =  TRANSFER_TYPE_STYLED_TEXT;
+				t_data = MCConvertStyledTextArrayToStyledText(ep . getarray());
+			}
+			else
+				t_data = MCSharedString::Create(ep . getsvalue());
+			
 			if (t_data != NULL)
 			{
 				bool t_success;
@@ -2216,7 +2227,10 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			if (ep.getboolean(trecording, line, pos, EE_PROPERTY_NAB) != ES_NORMAL)
 				return ES_ERROR;
 			if (!trecording)
-				MCtemplateplayer->stoprecording();
+			{
+				extern void MCQTStopRecording(void);
+				MCQTStopRecording();
+			}
 		}
 		break;
 	case P_LZW_KEY:
@@ -3062,7 +3076,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			ep . setstaticcstring("all");
 		else
 		{
-			const MCRange *t_ranges;
+			const MCInterval *t_ranges;
 			t_ranges = MCprinter -> GetJobRanges();
 
 			ep . clear();
@@ -3158,7 +3172,21 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 				t_type = MCTransferData::StringToType(ep . getsvalue());
 			}
 
-			if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
+			// MW-2014-03-12: [[ ClipboardStyledText ]] If styledText is being requested, then
+			//   convert the styles data to an array and return that.
+			if (t_type == TRANSFER_TYPE_STYLED_TEXT_ARRAY &&
+				t_pasteboard -> Contains(TRANSFER_TYPE_STYLED_TEXT, true))
+			{
+				MCSharedString *t_data;
+				t_data = t_pasteboard -> Fetch(TRANSFER_TYPE_STYLED_TEXT);
+				if (t_data != NULL)
+				{
+					ep . setarray(MCConvertStyledTextToStyledTextArray(t_data), True);
+					t_data -> Release();
+					t_query_success = true;
+				}
+			}
+			else if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
 			{
 				MCSharedString *t_data;
 				t_data = t_pasteboard -> Fetch(t_type);

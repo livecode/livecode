@@ -207,6 +207,17 @@ struct MCImageBuffer;
 
 //
 
+// IM-2014-03-06: [[ revBrowserCEF ]] Actions to call during the runloop
+typedef void (*MCRunloopActionCallback)(void *context);
+
+typedef struct _MCRunloopAction
+{
+	MCRunloopActionCallback callback;
+	void *context;
+
+	_MCRunloopAction *next;
+} MCRunloopAction, *MCRunloopActionRef;
+
 enum
 {
 	kMCAnswerDialogButtonOk,
@@ -264,6 +275,9 @@ protected:
 	static MCDisplay *s_displays;
 	static uint4 s_display_count;
 	static bool s_display_info_effective;
+
+	// IM-2014-03-06: [[ revBrowserCEF ]] List of actions to run during the runloop
+	MCRunloopAction *m_runloop_actions;
 	
 public:
 	MCColor white_pixel;
@@ -441,6 +455,13 @@ public:
 	// then it will cause termination of the wait.
 	virtual void pingwait(void);
 
+	// IM-2014-03-06: [[ revBrowserCEF ]] Add action to runloop
+	bool AddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action);
+	// IM-2014-03-06: [[ revBrowserCEF ]] Remove action from runloop
+	void RemoveRunloopAction(MCRunloopActionRef p_action);
+	// IM-2014-03-06: [[ revBrowserCEF ]] Perform runloop actions
+	void DoRunloopActions(void);
+
 	virtual void flushevents(uint2 e);
 	virtual void updatemenubar(Boolean force);
 	virtual Boolean istripleclick();
@@ -544,7 +565,7 @@ public:
 	// The method returns the actual result of the drag-drop operation - DRAG_ACTION_NONE meaning
 	// that no drop occured.
 	//
-	virtual MCDragAction dodragdrop(MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset);
+	virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset);
 	
 	//
 
@@ -562,6 +583,11 @@ public:
     virtual bool unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle);
     
     //
+	
+	virtual void controlgainedfocus(MCStack *s, uint32_t id);
+	virtual void controllostfocus(MCStack *s, uint32_t id);
+	
+	//
 
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
 	void cancelmessageindex(uint2 i, Boolean dodelete);

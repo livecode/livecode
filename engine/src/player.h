@@ -34,16 +34,20 @@ enum QTVRstate {
     QTVR_INITTED,
     QTVR_FAILED
 };
-
-typedef struct
-{
-	char *token;
-	long type;
-}
-QTEffect;
 #endif
 
+#ifndef FEATURE_PLATFORM_PLAYER
 struct MCPlayerOffscreenBuffer;
+#endif
+
+#ifdef FEATURE_PLATFORM_PLAYER
+struct MCPlayerCallback
+{
+    MCNameRef message;
+    MCNameRef parameter;
+    uint32_t time;
+};
+#endif
 
 class MCPlayer : public MCControl
 {
@@ -62,17 +66,22 @@ class MCPlayer : public MCControl
 	uint2 loudness;
 	int4 lasttime;
 
+#ifdef FEATURE_PLATFORM_PLAYER
+	MCPlatformPlayerRef m_platform_player;
+    MCPlayerCallback *m_callbacks;
+    uindex_t m_callback_count;
+#endif
+	
 #ifdef FEATURE_MPLAYER
 	char *command;
 	Atom atom;
 	MPlayer *m_player ;
 #endif
-
+	
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	static QTstate qtstate;
 	static long qtversion;
-	static QTEffect *qteffects;
-	static uint2 neffects;
 	static void *sgSoundComp;
 	static const char  *recordtempfile;
 	static char  *recordexportfile;
@@ -106,6 +115,7 @@ class MCPlayer : public MCControl
 	bool m_has_port_association;
 #endif
 
+#endif
 #endif
 
 public:
@@ -182,21 +192,17 @@ public:
 	Boolean setenabledtracks(const MCString &s);
 	void getnodes(MCExecPoint &ep);
 	void gethotspots(MCExecPoint &ep);
-	void geteffectlist(MCExecPoint &ep);
-	void recordsound(char *fname);
-	void getrecordloudness(MCExecPoint &ep);
-	void getrecordcompressionlist(MCExecPoint &ep);
-
-	// MW-2005-05-15: Augment call with extra title field for consistency
-	void stdrecorddlg(MCExecPoint& ep, const char *p_title, Boolean sheet);
-	void stoprecording();
 
 	// MW-2011-09-23: Ensures the buffering state is consistent with current flags
 	//   and such.
 	void syncbuffering(MCContext *dc);
 
-	Boolean stdeffectdlg(MCExecPoint &ep, const char *p_title, Boolean sheet);
-
+#ifdef FEATURE_PLATFORM_PLAYER
+	MCRectangle resize(MCRectangle rect);
+	void SynchronizeUserCallbacks(void);
+	Boolean isbuffering(void);
+#endif
+	
 #ifdef _LINUX_DESKTOP
 	const char *getcommand()
 	{
@@ -205,6 +211,7 @@ public:
 	Boolean syncxanim();
 #endif
 
+#ifndef FEATURE_PLATFORM_PLAYER
 #if !defined(FEATURE_QUICKTIME)
 	Boolean isbuffering()
 	{
@@ -218,7 +225,6 @@ public:
 	void checktimes();
 
 	// MW-2005-05-15: Augment call with extra title field for consistency
-	void queryeffects(void **effectatomptr);
 	void handlerecord();
 	void reloadcallbacks(Boolean reloadstopmovie, long p_from_time);
 
@@ -241,15 +247,6 @@ public:
 	Boolean isInteractive()
 	{
 		return isinteractive;
-	}
-	QTEffect *geteffects()
-	{
-		queryeffects(NULL);
-		return qteffects;
-	}
-	uint2 getneffects()
-	{
-		return neffects;
 	}
 	void deleteUserCallbacks();
 	Boolean installUserCallbacks();
@@ -278,6 +275,7 @@ public:
 	{
 		return hwndMovie;
 	}
+#endif
 #endif
 #endif
 
@@ -322,6 +320,16 @@ public:
 		lasttime = ltime;
 	}
 
+#ifdef FEATURE_PLATFORM_PLAYER
+	MCPlatformPlayerRef getplatformplayer(void)
+	{
+		return m_platform_player;
+	}
+    
+    void markerchanged(uint32_t p_time);
+#endif
+	
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	Boolean qt_prepare(void);
 	Boolean qt_playpause(Boolean on);
@@ -414,6 +422,7 @@ public:
 	
 	pid_t getpid(void);
 	void  shutdown(void);
+#endif
 #endif
 };
 

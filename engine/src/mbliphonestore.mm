@@ -141,6 +141,42 @@ Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 	return ES_NOT_HANDLED;
 }
 
+char* MCStoreGetPurchaseProperty(const char *p_product_id, const char*  p_prop_name)
+{
+    bool t_success = true;
+    MCPurchase *t_purchase = nil;
+	MCPurchaseProperty t_property;
+
+	if (t_success)
+		t_success =
+		MCPurchaseFindByProdId(p_product_id, t_purchase) &&
+		MCPurchaseLookupProperty(p_prop_name, t_property);
+        
+        /*
+    if (t_success)
+		t_success = MCPurchaseLookupProperty(p_prop_name, t_property);
+    
+    if (t_success)
+        MCLog("Success in lookUpProperty!...",nil);
+    
+    if (t_success)
+		t_success = MCPurchaseFindByProdId(p_product_id, t_purchase);
+    
+    if (t_success)
+        MCLog("Success in finding Purchase!...",nil);
+        */
+
+	
+	MCExecPoint ep(nil, nil, nil);
+	if (t_success)
+		t_success = MCPurchaseGet(t_purchase, t_property, ep) == ES_NORMAL;
+	
+    char *temp;
+    MCCStringFormat(temp, "%s", ep.getcstring());
+    return temp;
+	
+}
+
 
 Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
 {
@@ -190,6 +226,7 @@ Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 				break;
 			
 			ep.setnvalue([[t_transaction transactionDate] timeIntervalSince1970]);
+            ep.ntos();
 			return ES_NORMAL;
 
 		case kMCPurchasePropertyTransactionIdentifier:
@@ -244,6 +281,26 @@ bool MCPurchaseSendRequest(MCPurchase *p_purchase)
 	return true;
 }
 
+bool MCStoreMakePurchase(const char *p_product_id, const char *p_quantity, const char *p_payload)
+{
+    MCPurchase *t_purchase = nil;
+    MCPurchaseFindByProdId(p_product_id, t_purchase);
+    MCExecPoint ep(nil,nil,nil);
+    ep.setcstring(p_quantity);
+    MCPurchaseSet(t_purchase, kMCPurchasePropertyQuantity, ep);
+
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)t_purchase->platform_data;
+	
+	if (t_ios_data->payment == nil)
+		return false;
+	
+	s_purchase_request = t_purchase;
+	[[SKPaymentQueue defaultQueue] addPayment: t_ios_data->payment];
+	s_purchase_request = nil;
+	
+	return true;
+}
+
 bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase)
 {
 	if (p_purchase == nil || !(p_purchase->state == kMCPurchaseStatePaymentReceived || p_purchase->state == kMCPurchaseStateRestored))
@@ -252,7 +309,6 @@ bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase)
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
 	
 	[[SKPaymentQueue defaultQueue] finishTransaction: t_ios_data->transaction];
-	
 	p_purchase->state = kMCPurchaseStateComplete;
 	MCPurchaseNotifyUpdate(p_purchase);
 	MCPurchaseRelease(p_purchase);
@@ -363,7 +419,7 @@ void update_purchase_state(MCPurchase *p_purchase)
 				t_success = nil != (t_ios_data->product_id = [[t_transaction payment] productIdentifier]);
 
 			if (t_success)
-				t_success = MCPurchaseCreate(nil, t_ios_data, t_purchase);
+				t_success = MCPurchaseCreate([t_ios_data->product_id cStringUsingEncoding:NSMacOSRomanStringEncoding], t_ios_data, t_purchase);
 
 			if (!t_success)
 				MCMemoryDelete(t_ios_data);
@@ -384,11 +440,15 @@ void update_purchase_state(MCPurchase *p_purchase)
 			
 			update_purchase_state(t_purchase);
 			MCPurchaseNotifyUpdate(t_purchase);
-			
-			if ([t_transaction transactionState] == SKPaymentTransactionStateFailed)
+			           
+			//if ([t_transaction transactionState] == SKPaymentTransactionStateFailed)
+            if ([t_transaction transactionState] != SKPaymentTransactionStatePurchasing)
 			{
 				[[SKPaymentQueue defaultQueue] finishTransaction: t_transaction];
-				MCPurchaseRelease(t_purchase);
+                if ([t_transaction transactionState] == SKPaymentTransactionStateFailed)
+                {
+                    MCPurchaseRelease(t_purchase);
+                }
 			}
 		}
 	}
@@ -774,4 +834,52 @@ Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters
     
     return ES_NORMAL;
 #endif /* MCHandleRequestProductDetails */
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+bool MCStoreProductSetType(const char *p_product_id, const char *p_product_type)
+{
+    return true;
+}
+
+bool MCStoreConsumePurchase(char const*)
+{
+    return true;
+}
+
+char *MCStoreGetPurchaseList()
+{
+    bool found;
+    
+    MCExecPoint ep(nil,nil,nil);
+    for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != nil; t_purchase = t_purchase->next)
+    {
+        found = false;
+        for (MCPurchase *t_next_purchase = t_purchase->next ; t_next_purchase != nil; t_next_purchase = t_next_purchase->next)
+        {
+            if (strcmp(t_next_purchase->prod_id, t_purchase->prod_id) == 0)
+            {
+                found = true;
+                break;
+            }
+        }
+        
+        if (!found)
+        {
+            ep.concatcstring(t_purchase->prod_id, EC_RETURN, ep.isempty());
+        }
+    }
+    return strdup(ep.getcstring());
+}
+
+bool MCStoreSetPurchaseProperty(char const*, char const*, char const*)
+{
+    return true;
+}
+
+char *MCStoreReceiveProductDetails(char const*)
+{
+    return nil;
 }

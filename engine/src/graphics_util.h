@@ -37,6 +37,11 @@ inline MCRectangle MCRectangleMake(int16_t x, int16_t y, uint16_t width, uint16_
 	return t_rect;
 }
 
+inline MCRectangle MCRectangleOffset(const MCRectangle &p_rect, int32_t p_dx, int32_t p_dy)
+{
+	return MCRectangleMake(p_rect.x + p_dx, p_rect.y + p_dy, p_rect.width, p_rect.height);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // MCRectangle32 Utility Functions
 

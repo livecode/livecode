@@ -16,6 +16,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
+#include "core.h"
+
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -200,6 +202,9 @@ MCUIDC::MCUIDC()
 	lockmods = False;
 
 	m_sound_internal = NULL ;
+
+	// IM-2014-03-06: [[ revBrowserCEF ]] List of callback functions to call during wait()
+	m_runloop_actions = nil;
 }
 
 MCUIDC::~MCUIDC()
@@ -821,6 +826,9 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	Boolean donepending = False;
 	do
 	{
+		// IM-2014-03-06: [[ revBrowserCEF ]] call additional runloop callbacks
+		DoRunloopActions();
+
 		real8 eventtime = exittime;
 		donepending = handlepending(curtime, eventtime, dispatch);
 		siguser();
@@ -843,6 +851,74 @@ void MCUIDC::pingwait(void)
 	//   any running wait.
 	MCNotifyPing(false);
 #endif
+}
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Add callback & context to runloop action list
+bool MCUIDC::AddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action)
+{
+	MCRunloopAction *t_action;
+	t_action = nil;
+
+	if (!MCMemoryNew(t_action))
+		return false;
+
+	t_action->callback = p_callback;
+	t_action->context = p_context;
+
+	t_action->next = m_runloop_actions;
+	m_runloop_actions = t_action;
+
+	r_action = t_action;
+
+	return true;
+}
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Remove action from runloop action list
+void MCUIDC::RemoveRunloopAction(MCRunloopActionRef p_action)
+{
+	if (p_action == nil)
+		return;
+
+	MCRunloopAction *t_remove_action;
+	t_remove_action = nil;
+
+	if (p_action == m_runloop_actions)
+	{
+		t_remove_action = m_runloop_actions;
+		m_runloop_actions = p_action->next;
+	}
+	else
+	{
+		MCRunloopAction *t_action;
+		t_action = m_runloop_actions;
+
+		while (t_action != nil && t_remove_action == nil)
+		{
+			if (t_action->next == p_action)
+			{
+				t_remove_action = p_action;
+				t_action->next = p_action->next;
+			}
+
+			t_action = t_action->next;
+		}
+	}
+
+	if (t_remove_action != nil)
+		MCMemoryDelete(t_remove_action);
+}
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Call runloop action callbacks
+void MCUIDC::DoRunloopActions(void)
+{
+	MCRunloopAction *t_action;
+	t_action = m_runloop_actions;
+
+	while (t_action != nil)
+	{
+		t_action->callback(t_action->context);
+		t_action = t_action->next;
+	}
 }
 
 void MCUIDC::flushevents(uint2 e)
@@ -1638,7 +1714,7 @@ bool MCUIDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font
 
 //
 
-MCDragAction MCUIDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
+MCDragAction MCUIDC::dodragdrop(Window w, MCPasteboard* p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
 {
 	return DRAG_ACTION_NONE;
 }
@@ -1664,4 +1740,14 @@ int32_t MCUIDC::popupanswerdialog(const char **p_buttons, uint32_t p_button_coun
 char *MCUIDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint)
 {
 	return nil;
+}
+
+//
+
+void MCUIDC::controlgainedfocus(MCStack *s, uint32_t id)
+{
+}
+
+void MCUIDC::controllostfocus(MCStack *s, uint32_t id)
+{
 }

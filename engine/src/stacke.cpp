@@ -164,7 +164,7 @@ bool MCStackRenderEffect(MCStackSurface *p_target, MCRegionRef p_region, void *p
 			break;
 #endif
 			
-#ifdef FEATURE_QUICKTIME
+#ifdef FEATURE_QUICKTIME_EFFECTS
 		case VE_QTEFFECT:
 			t_drawn = MCQTEffectStep(context->effect_area, p_target, context->delta, context->duration);
 			break;
@@ -187,7 +187,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 
 	// If the window isn't opened or hasn't been attached (plugin) or if we have no
 	// snapshot to use, this is a no-op.
-	if (!opened || !mode_haswindow() || m_snapshot == nil)
+	if (!opened || !haswindow() || m_snapshot == nil)
 	{
 		while(t_effects != NULL)
 		{
@@ -245,6 +245,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 	/* UNCHECKED */ MCRegionCreate(t_effect_region);
 	/* UNCHECKED */ MCRegionSetRect(t_effect_region, t_effect_area);
 	
+#ifndef FEATURE_PLATFORM_PLAYER
 #if defined(FEATURE_QUICKTIME)
 	// MW-2010-07-07: Make sure QT is only loaded if we actually are doing an effect
 	if (t_effects != nil)
@@ -252,6 +253,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 			if (!MCtemplateplayer -> isQTinitted())
 				MCtemplateplayer -> initqt();
 #endif	
+#endif
 
 	// Lock the screen to prevent any updates occuring until we want them.
 	MCRedrawLockScreen();
@@ -377,8 +379,10 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				MCU_play_stop();
 				MCacptr = acptr;
 				MCU_play();
+#ifndef FEATURE_PLATFORM_AUDIO
 				if (MCacptr != NULL)
 					MCscreen->addtimer(MCacptr, MCM_internal, PLAY_RATE);
+#endif
 			}
 			
 			if (MCscreen->wait((real8)MCsyncrate / 1000.0, False, True))
@@ -397,10 +401,12 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				t_effects -> type = VE_CIEFFECT;
 			else
 #endif
-#ifdef FEATURE_QUICKTIME
+#ifdef FEATURE_QUICKTIME_EFFECTS
 				// IM-2013-08-29: [[ ResIndependence ]] use scaled effect rect for QT effects
 				if (t_effects -> type == VE_UNDEFINED && MCQTEffectBegin(t_effects -> type, t_effects -> name, t_effects -> direction, t_initial_image, t_final_image, t_device_rect))
 					t_effects -> type = VE_QTEFFECT;
+#else
+				;
 #endif
 		}
 		
@@ -479,7 +485,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 			MCCoreImageEffectEnd();
 		else
 #endif
-#ifdef FEATURE_QUICKTIME
+#ifdef FEATURE_QUICKTIME_EFFECTS
 			if (t_effects -> type == VE_QTEFFECT)
 				MCQTEffectEnd();
 #endif

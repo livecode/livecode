@@ -316,11 +316,12 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		case F_ROUNDRECT:
 			if (borderwidth != 0)
 			{
-				MCRectangle trect = MCU_reduce_rect(shadowrect, borderwidth >> 1);
+				// MM-2014-04-08: [[ Bug 11662/11398 ]] Let the context take care of insetting the rectangle.
+				//  This solves 2 bugs. Round rect buttons are drawn at the wrong size (compared to square buttons) (11662)
+				//  and the corners of round rect buttons are inconsistent (11398).
 				dc->setlineatts(borderwidth - 1, LineSolid, CapButt, JoinBevel);
-
 				setforeground(dc, DI_FORE, False);
-				dc->drawroundrect(trect, DEFAULT_RADIUS);
+				dc->drawroundrect(shadowrect, DEFAULT_RADIUS, true);
 				dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
 			}
 			break;

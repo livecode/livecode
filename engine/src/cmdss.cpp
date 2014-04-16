@@ -720,7 +720,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 	MCStack *oldstack = NULL;
 	if (window != NULL || thisstack)
 	{
-		Window w = DNULL;
+		Window w = NULL;
 		if (thisstack)
 		{
 			oldstack = MCdefaultstackptr;

@@ -732,6 +732,11 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 	pgptr->setparent(this);
 	pgptr->setselectionindex(si, si, False, False);
 
+	// MM-2014-04-09: [[ Bug 12088 ]] Get the width of the paragraph before insertion and layout.
+	//  If as a result of the update the width of the field has changed, we need to recompute.
+	int2 t_initial_width;
+	t_initial_width = pgptr -> getwidth();
+	
 	// MW-2012-02-13: [[ Block Unicode ]] Use the new finsert method in native mode.
 	// MW-2012-02-23: [[ PutUnicode ]] Pass through the encoding to finsertnew.
 	if (s.getlength())
@@ -752,13 +757,16 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 		
 		// If we haven't already affected many, then lay out the paragraph and see if the
 		// height has changed. If it has we must do a recompute and need to redraw below.
+		// MM-2014-04-09: [[ Bug 12088 ]] If the height hasn't changed, then check to see 
+		//  if the width has changed and a re-compute is needed.
 		if (!t_affect_many)
 			t_initial_pgptr -> layout(false);
 		if (t_affect_many || t_initial_pgptr -> getheight(fixedheight) != t_initial_height)
 		{
 				do_recompute(false);
 				t_affect_many = true;
-		}
+		} else if (t_initial_width == textwidth && pgptr -> getwidth() != textwidth)
+			do_recompute(false);
 		
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		// MW-2013-10-24: [[ FasterField ]] Tweak to minimize redraw.
@@ -1193,7 +1201,7 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 
 			// MW-2012-02-14: [[ FontRefs ]] Previously this process would open/close the
 			//   paragraph, but this is unnecessary as it doesn't rely on anything active.
-			if (sptr->getatts(si, ei, t_text_style, tname, tsize, tstyle, tcolor, tbcolor, tshift, tspecstyle, tmixed))
+			if (sptr->getatts(si, ei, which, t_text_style, tname, tsize, tstyle, tcolor, tbcolor, tshift, tspecstyle, tmixed))
 			{
 				tspecstyle = MCF_istextstyleset(tstyle, t_text_style);
 
@@ -1261,27 +1269,28 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 				ei = 0;
 		}
 		while (ei > 0);
+        
+        if (!has)
+        {
+            if (effective)
+            {
+                // MW-2011-11-23: [[ Array TextStyle ]] Make sure we call the correct
+                //   method for textStyle (its now an array property).
+                if (which != P_TEXT_STYLE)
+                    return getprop(parid, which, ep, effective);
+                else
+                    return getarrayprop(parid, which, ep, index, effective);
+            }
+            ep.clear();
+            return ES_NORMAL;
+        }
 
-		if (!has)
-		{
-			if (effective)
-			{
-				// MW-2011-11-23: [[ Array TextStyle ]] Make sure we call the correct
-				//   method for textStyle (its now an array property).
-				if (which != P_TEXT_STYLE)
-					return getprop(parid, which, ep, effective);
-				else
-					return getarrayprop(parid, which, ep, index, effective);
-			}
-			ep.clear();
-			return ES_NORMAL;
-		}
 		Exec_stat stat = ES_NORMAL;
 		switch (which)
 		{
 		case P_FORE_COLOR:
 			if (color == NULL)
-				ep.clear();
+                ep.clear();
 			else if (mixed & MIXED_COLORS)
 				ep.setstaticcstring(MCmixedstring);
 			else
@@ -2052,13 +2061,12 @@ void MCField::loctext(MCExecPoint &ep, Boolean click)
 	else
 		ep.clear();
 }
-
+				 
 Boolean MCField::locmark(Boolean wholeline, Boolean wholeword,
                          Boolean click, Boolean chunk, Boolean inc_cr, int4 &si, int4 &ei)
 {
-	MCRectangle frect = getfrect();
 	int4 cx, cy;
-
+	
 	// MW-2012-01-25: [[ FieldMetrics ]] Fetch which co-ords should be used.
 	if (click)
 	{
@@ -2071,10 +2079,25 @@ Boolean MCField::locmark(Boolean wholeline, Boolean wholeword,
 		cy = MCmousey;
 	}
 
+	MCPoint p;
+	p . x = cx;
+	p . y = cy;
+	
+	return locmarkpoint(p, wholeline, wholeword, chunk, inc_cr, si, ei);
+}
+
+Boolean MCField::locmarkpoint(MCPoint p, Boolean wholeline, Boolean wholeword, Boolean chunk, Boolean inc_cr, int4 &si, int4 &ei)
+{
+	MCRectangle frect = getfrect();
+	int4 cx, cy;
+	
+	cx = p . x;
+	cy = p . y;
+	
 	// MW-2012-01-25: [[ FieldMetrics ]] Convert them to field coords.
 	cx -= getcontentx();
 	cy -= getcontenty() + cury;
-
+	
 	MCParagraph *pgptr = paragraphs;
 	si = 0;
 	while (pgptr != curparagraph)
@@ -2763,6 +2786,49 @@ void MCField::insertparagraph(MCParagraph *newtext)
 	firstparagraph = lastparagraph = NULL;
 	setfocus(x, y);
 	state |= CS_CHANGED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCRectangle MCField::firstRectForCharacterRange(int32_t& si, int32_t& ei)
+{
+	MCParagraph *pgptr = resolveparagraphs(0);
+	
+	// These will be paragraph relative (after indextoparagraph).
+	int32_t t_si, t_ei;
+	t_si = si;
+	t_ei = ei;
+	
+	// Fetch the paragraph and indicies within it.
+	int4 t_line_index;
+	MCParagraph *sptr;
+	sptr = indextoparagraph(pgptr, t_si, t_ei, &t_line_index);
+	
+	// Restrict the range to the line t_si starts on.
+	sptr -> restricttoline(t_si, t_ei);
+	
+	// Now update the output range (the indices get munged in what follows)
+	si = si + t_si;
+	ei = si + t_ei;
+	
+	// Get the x, y of the initial index.
+	int2 x, y;
+	sptr->indextoloc(t_si, fixedheight, x, y);
+	
+	// Get the offset for computing card coords.
+	int4 yoffset = getcontenty() + paragraphtoy(sptr);
+	
+	// Get the extent of the range.
+	int2 minx, maxx;
+	sptr -> getxextents(t_si, t_ei, minx, maxx);
+	
+	MCRectangle t_rect;
+	t_rect . x = minx + getcontentx();
+	t_rect . y = y + yoffset;
+	t_rect . width = maxx - minx;
+	t_rect . height = sptr -> heightoflinewithindex(t_si, fixedheight);
+	
+	return t_rect;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

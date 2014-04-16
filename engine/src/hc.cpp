@@ -155,24 +155,38 @@ static uint1 h2[256] =
 
 static uint1 patbytes[8] = {0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55};
 
-#ifdef LIBGRAPHICS_BROKEN
-static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
+static uint32_t MCHCBitmapStride(uint32_t p_width)
 {
+	// rows are padded to a multiple of 4 bytes
+	return ((p_width + 31) & ~0x1F ) / 8;
+}
+
+// IM-2014-04-08: [[ Bug 12101 ]] Modify to return decoded bitmap data directly 
+static bool convert_hcbitmap_data(uint1 *sptr, uint2 width, uint2 height, uint8_t *&r_bitmapdata)
+{
+	uint8_t *t_data;
+	uint32_t t_stride;
+
+	t_stride = MCHCBitmapStride(width);
+
+	if (!MCMemoryNewArray(t_stride * (height + 64), t_data))
+		return false;
+
+	r_bitmapdata = t_data;
+
 	uint1 xorcode = 0x89;
 	uint2 patindex = 0;
-	MCBitmap *newdata = MCscreen->createimage(1, width, height + 64,
-	                    True, 0, False, False);
-	newdata->height = height;
-	uint2 bpl = newdata->bytes_per_line;
-	uint1 *dptr = (uint1 *)newdata->data;
-	uint1 *deptr = (uint1 *)&newdata->data[height * bpl];
+
+	uint2 bpl = t_stride;
+	uint1 *dptr = t_data;
+	uint1 *deptr = t_data + height * bpl;
 	uint1 *startptr = sptr;
 	uint2 repcount = 1;
 	uint2 line = 0;
 	while (dptr < deptr)
 	{
 		uint2 hrepcount = bpl;
-		line = (dptr - (uint1 *)newdata->data) / bpl;
+		line = (dptr - t_data) / bpl;
 		uint1 opcode = *sptr++;
 		if (opcode == 0)
 			opcode = *sptr++;
@@ -274,7 +288,7 @@ static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 				sprintf(hcbuffer, "Unknown BMAP opcode %x at offset %d, line %d",
 				        opcode, (int)(sptr - startptr), line);
 				MCU_addline(MChcstat, hcbuffer, False);
-				return newdata;
+				return true;
 			}
 			repcount = 1;
 			continue;
@@ -282,7 +296,7 @@ static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 			sprintf(hcbuffer, "Unknown BMAP opcode %x at offset %d, line %d",
 			        opcode, (int)(sptr - startptr), line);
 			MCU_addline(MChcstat, hcbuffer, False);
-			return newdata;
+			return true;
 		case 0xA0:
 		case 0xB0:
 			repcount = opcode & 0x1F;
@@ -300,9 +314,9 @@ static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 				*dptr++ = 0;
 			break;
 		}
-		if ((dptr - (uint1 *)newdata->data) % bpl == 0)
+		if ((dptr - t_data) % bpl == 0)
 		{
-			line = (dptr - (uint1 *)newdata->data) / bpl - 1;
+			line = (dptr - t_data) / bpl - 1;
 			uint1 remainder = 0;
 			hrepcount = bpl;
 			uint1 *t1ptr = dptr - bpl;
@@ -364,9 +378,8 @@ static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 		        (int)(sptr - startptr), line);
 		MCU_addline(MChcstat, hcbuffer, False);
 	}
-	return newdata;
+	return true;
 }
-#endif
 
 static const char *convert_font(char *sptr)
 {
@@ -1090,10 +1103,8 @@ MCControl *MCHcbutton::build(MCHcstak *hcsptr, MCStack *sptr)
 MCHcbmap::MCHcbmap()
 {
 	name = NULL;
-#ifdef LIBGRAPHICS_BROKEN
-	mask = NULL;
-	data = NULL;
-#endif
+	mask = nil;
+	data = nil;
 	visible = True;
 	xhot = yhot = 1;
 }
@@ -1101,12 +1112,10 @@ MCHcbmap::MCHcbmap()
 MCHcbmap::~MCHcbmap()
 {
 	delete name;
-#ifdef LIBGRAPHICS_BROKEN
-	if (data != NULL)
-		MCscreen->destroyimage(data);
-	if (mask != NULL)
-		MCscreen->destroyimage(mask);
-#endif
+	if (data != nil)
+		MCMemoryDeleteArray(data);
+	if (mask != nil)
+		MCMemoryDeleteArray(mask);
 }
 
 void MCHcbmap::setvisible(Boolean newvis)
@@ -1127,11 +1136,8 @@ void MCHcbmap::icon(uint4 inid, char *inname, char *sptr)
 		icony += 32;
 	}
 	rect.width = rect.height = 32;
-#ifdef LIBGRAPHICS_BROKEN
-	data = MCscreen->createimage(1, rect.width, rect.height,
-	                             False, 0, False, False);
-	memcpy(data->data, sptr, 128);
-#endif
+	// IM-2014-04-08: [[ Bug 12101 ]] Copy raw bitmap to data
+	/* UNCHECKED */ MCMemoryAllocateCopy((uint8_t*)sptr, 128, data);
 }
 
 void MCHcbmap::cursor(uint4 inid, char *inname, char *sptr)
@@ -1148,16 +1154,9 @@ void MCHcbmap::cursor(uint4 inid, char *inname, char *sptr)
 	}
 	rect.width = rect.height = 16;
 	mrect = rect;
-#ifdef LIBGRAPHICS_BROKEN
-	data = MCscreen->createimage(1, rect.width, rect.height,
-	                             False, 0, False, False);
-	data->bytes_per_line = 2;
-	memcpy(data->data, sptr, 32);
-	mask = MCscreen->createimage(1, rect.width, rect.height,
-	                             True, 0, False, False);
-	mask->bytes_per_line = 2;
-	memcpy(mask->data, &sptr[32], 32);
-#endif
+	// IM-2014-04-08: [[ Bug 12101 ]] Copy raw bitmaps to data and mask
+	/* UNCHECKED */ MCMemoryAllocateCopy((uint8_t*)sptr, 32, data);
+	/* UNCHECKED */ MCMemoryAllocateCopy((uint8_t*)sptr + 32, 32, mask);
 	xhot = get_uint2(&sptr[64]);
 	yhot = get_uint2(&sptr[66]);
 }
@@ -1196,112 +1195,141 @@ IO_stat MCHcbmap::parse(char *sptr)
 		masksize = swap_uint4(&uint4ptr[14]);
 		offset = 64;
 	}
-#ifdef LIBGRAPHICS_BROKEN
+	// IM-2014-04-08: [[ Bug 12101 ]] Decode bitmap to mask
 	if (masksize != 0)
-		mask = convert_bitmap((uint1 *)&sptr[offset], mrect.width, mrect.height);
+		/* UNCHECKED */ convert_hcbitmap_data((uint8_t*)&sptr[offset], mrect.width, mrect.height, mask);
 	offset += masksize;
+	// IM-2014-04-08: [[ Bug 12101 ]] Decode bitmap to data
 	if (rect.width != 0 && rect.height != 0)
-		data = convert_bitmap((uint1 *)&sptr[offset], rect.width, rect.height);
-#endif
+		/* UNCHECKED */ convert_hcbitmap_data((uint8_t*)&sptr[offset], rect.width, rect.height, data);
 	return IO_NORMAL;
 }
 
 void MCImageBitmapApplyPlane(MCImageBitmap *p_dst, uint8_t *p_src, uindex_t p_src_stride, uint32_t p_value);
+void surface_merge_with_mask(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_offset, uint4 p_width, uint4 p_height);
 MCControl *MCHcbmap::build()
 {
-#ifdef LIBGRAPHICS_BROKEN
-	if (data == NULL)
-		return NULL;
-	MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
-	MCBitmap *data2 = NULL;
-	iptr->obj_id = id;
-	if (mask == NULL)
+	if (data == nil)
+		return nil;
+
+	uint8_t *data2;
+	data2 = nil;
+
+	if (mask == nil)
 	{
-		iptr->ncolors = 1;
-		iptr->dflags = MCImage::cmasks[1];
-		iptr->colors = new MCColor[1];
-		iptr->colors[0].red = iptr->colors[0].green = iptr->colors[0].blue = 0;
-		iptr->colornames = new char *[1];
-		iptr->colornames[0] = NULL;
-		mask = MCscreen->copyimage(data, False);
+		// IM-2014-04-08: [[ Bug 12101 ]] Use data bitmap as mask if not given
+		/* UNCHECKED */ MCMemoryAllocateCopy(data, rect.height * MCHCBitmapStride(rect.width), mask);
+		mrect = rect;
 	}
 	else
 	{
 		MCRectangle trect = MCU_union_rect(mrect, rect);
-		MCBitmap *newmask = MCscreen->createimage(1, trect.width, trect.height,
-		                    True, 0, False, False);
-		uint4 sbpl = mask->bytes_per_line;
-		uint4 dbpl = newmask->bytes_per_line;
-		uint4 offset = (mrect.y - trect.y) * dbpl + (mrect.x - trect.x) / 8;
-		uint2 i;
-		for (i = 0 ; i < mask->height ; i++)
-			memcpy(&newmask->data[i * dbpl + offset], &mask->data[i * sbpl], sbpl);
-		MCscreen->destroyimage(mask);
-		mask = newmask;
-		MCBitmap *newdata = MCscreen->createimage(1, trect.width, trect.height,
-		                    True, 0, False, False);
-		sbpl = data->bytes_per_line;
-		offset = (rect.y - trect.y) * dbpl + (rect.x - trect.x) / 8;
-		for (i = 0 ; i < data->height ; i++)
-			memcpy(&newdata->data[i * dbpl + offset], &data->data[i * sbpl], sbpl);
-		MCscreen->destroyimage(data);
-		data = newdata;
-		uint4 bytes = mask->bytes_per_line * mask->height;
-		uint1 *sptr = (uint1 *)data->data;
-		uint1 *dptr = (uint1 *)mask->data;
+
+		uint32_t t_stride;
+		t_stride = MCHCBitmapStride(trect.width);
+
+		uint32_t t_bytes;
+		t_bytes = t_stride * trect.height;
+
+		if (!MCU_equal_rect(trect, mrect))
+		{
+			// IM-2014-04-08: [[ Bug 12101 ]] Resize mask bitmap to new size
+			uint8_t *t_newmask;
+			t_newmask = nil;
+
+			/* UNCHECKED */ MCMemoryNewArray(t_bytes, t_newmask);
+
+			uint32_t t_mask_stride;
+			t_mask_stride = MCHCBitmapStride(mrect.width);
+
+			uint4 sbpl = t_mask_stride;
+			uint4 offset = (mrect.y - trect.y) * t_stride + (mrect.x - trect.x) / 8;
+			for (uint32_t i = 0 ; i < mrect.height ; i++)
+				MCMemoryCopy(&t_newmask[i * t_stride + offset], &mask[i * sbpl], sbpl);
+			MCMemoryDeleteArray(mask);
+			mask = t_newmask;
+			mrect = trect;
+		}
+
+		if (!MCU_equal_rect(trect, rect))
+		{
+			// IM-2014-04-08: [[ Bug 12101 ]] Resize data bitmap to new size
+			uint8_t* t_newdata;
+			t_newdata = nil;
+
+			/* UNCHECKED */ MCMemoryNewArray(t_bytes, t_newdata);
+
+			uint4 sbpl = MCHCBitmapStride(rect.width);
+			uint4 offset = (rect.y - trect.y) * t_stride + (rect.x - trect.x) / 8;
+			for (uint32_t i = 0 ; i < rect.height ; i++)
+				MCMemoryCopy(&t_newdata[i * t_stride + offset], &data[i * sbpl], sbpl);
+			MCMemoryDeleteArray(data);
+			data = t_newdata;
+			rect = trect;
+		}
+
+		// IM-2014-04-08: [[ Bug 12101 ]] Make bits set in data opaque in mask
+		uint4 bytes = t_bytes;
+		uint1 *sptr = data;
+		uint1 *dptr = mask;
 		while (bytes--)
 			*dptr++ |= *sptr++;
-		rect = trect;
-		iptr->ncolors = 2;
-		iptr->dflags = MCImage::cmasks[2];
-		iptr->colors = new MCColor[2];
-		iptr->colors[0].red = iptr->colors[0].green = iptr->colors[0].blue = 0x0;
-		iptr->colors[1].red = iptr->colors[1].green
-		                      = iptr->colors[1].blue = 0xFFFF;
-		iptr->colornames = new char *[2];
-		iptr->colornames[0] = iptr->colornames[1] = NULL;
-		data2 = MCscreen->copyimage(mask, False);
-		bytes = mask->bytes_per_line * mask->height;
-		sptr = (uint1 *)data->data;
-		dptr = (uint1 *)data2->data;
+
+		// IM-2014-04-08: [[ Bug 12101 ]] Extract bits set in mask but not in data - these will be opaque white in final image
+		/* UNCHECKED */ MCMemoryAllocateCopy(mask, t_bytes, data2);
+		bytes = t_bytes;
+		sptr = data;
+		dptr = data2;
 		while (bytes--)
 			*dptr++ ^= *sptr++;
 	}
+
+	MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
+
+	iptr->obj_id = id;
 	iptr->rect = rect;
 	if (!visible)
 		iptr->flags &= ~F_VISIBLE;
 	iptr->flags |= MCscreen->getpad() >> 3;
 	iptr->flags |= F_RLE;
 
+	uint32_t t_bytes, t_stride;
+	t_stride = MCHCBitmapStride(rect.width);
+	t_bytes = t_stride * rect.height;
+
 	MCImageBitmap *t_bitmap = nil;
 	MCImageCompressedBitmap *t_compressed = nil;
 	/* UNCHECKED */ MCImageBitmapCreate(rect.width, rect.height, t_bitmap);
 	// set first plane to opaque black
-	MCImageBitmapApplyPlane(t_bitmap, (uint8_t*)data->data, data->bytes_per_line, 0xFF000000);
+	MCImageBitmapApplyPlane(t_bitmap, data, t_stride, 0xFF000000);
 	// set second plane to opaque white
-	if (iptr->ncolors == 2)
-		MCImageBitmapApplyPlane(t_bitmap, (uint8_t*)data2->data, data2->bytes_per_line, 0xFFFFFFFF);
+	if (data2 != nil)
+		MCImageBitmapApplyPlane(t_bitmap, data2, t_stride, 0xFFFFFFFF);
 	if (mask != nil)
-		MCImageBitmapSetAlphaFromMask(t_bitmap, mask);
+	{
+		surface_merge_with_mask(t_bitmap->data, t_bitmap->stride, mask, t_stride, 0, rect.width, rect.height);
+		MCImageBitmapCheckTransparency(t_bitmap);
+	}
 	MCImageCompress(t_bitmap, false, t_compressed);
 	iptr->setcompressedbitmap(t_compressed);
 	MCImageFreeBitmap(t_bitmap);
 	MCImageFreeCompressedBitmap(t_compressed);
 
-	MCscreen->destroyimage(mask);
-	MCscreen->destroyimage(data);
-	if (iptr->ncolors == 2)
-		MCscreen->destroyimage(data2);
-	mask = data = NULL;
+	if (mask != nil)
+		MCMemoryDeleteArray(mask);
+	if (data != nil)
+		MCMemoryDeleteArray(data);
+	if (data2 != nil)
+		MCMemoryDeleteArray(data2);
+
+	mask = data = data2 = nil;
+
 	iptr->setname_cstring(name);
 	delete name;
 	name = NULL;
 	iptr->xhot = xhot;
 	iptr->yhot = yhot;
 	return iptr;
-#else
-	return nil;
-#endif
 }
 
 MCHccard::MCHccard()

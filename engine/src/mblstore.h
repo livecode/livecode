@@ -56,6 +56,9 @@ enum MCPurchaseState
 	kMCPurchaseStateComplete,
 	kMCPurchaseStateRestored,
 	kMCPurchaseStateCancelled,
+    //Amazon
+    kMCPurchaseStateInvalidSKU,
+    kMCPurchaseStateAlreadyEntitled,
 	kMCPurchaseStateRefunded,
 	kMCPurchaseStateError,
     kMCPurchaseStateUnverified,
@@ -65,6 +68,7 @@ enum MCPurchaseState
 
 typedef struct _mcpurchase_t
 {
+    const char *              prod_id;
 	uint32_t			id;
 	MCPurchaseState		state;
 	uint32_t			ref_count;
@@ -82,6 +86,7 @@ Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 bool MCPurchaseLookupProperty(const char *p_property, MCPurchaseProperty &r_property);
 
 bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase);
+bool MCPurchaseFindByProdId(const char *p_prod_id, MCPurchase *&r_purchase);
 bool MCPurchaseList(MCPurchaseListCallback p_callback, void *p_context);
 
 bool MCPurchaseCreate(const char *p_product_id, void *p_context, MCPurchase *&r_purchase);
@@ -96,6 +101,18 @@ bool MCStoreCanMakePurchase();
 
 bool MCStoreEnablePurchaseUpdates();
 bool MCStoreDisablePurchaseUpdates();
+bool MCStoreProductSetType(const char *p_purchase_id, const char *p_product_type);
+bool MCStoreSetPurchaseProperty(const char *p_purchase_id, const char *p_property_name, const char *p_property_value);
+char* MCStoreGetPurchaseProperty(const char *p_purchase_id, const char *p_property_name);
+char* MCStoreGetPurchaseList();
+bool MCStoreConsumePurchase(const char *p_product_id);
+bool MCStoreMakePurchase(const char *p_product_id, const char *p_quantity, const char *p_payload);
+//bool MCStoreMakePurchase(MCPurchase *p);
+bool MCStoreRequestProductDetails(const char *p_product_id);
+bool MCStoreRequestForProductDetails(const char *p_product_id);
+char* MCStoreReceiveProductDetails(const char *p_product_id);
+//char* MCStoreAndroidRequestProductDetails(const char *p_product_id);
+
 
 bool MCStoreRestorePurchases();
 

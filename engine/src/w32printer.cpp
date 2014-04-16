@@ -1510,7 +1510,7 @@ MCPrinterDialogResult MCWindowsPrinter::DoPrinterSetup(bool p_window_modal, Wind
 
 	if (t_apply)
 	{
-		MCRange *t_page_ranges;
+		MCInterval *t_page_ranges;
 		t_page_ranges = NULL;
 		int t_page_range_count;
 		t_page_range_count = 0;

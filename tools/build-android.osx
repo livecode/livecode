@@ -48,8 +48,21 @@ fi
 
 export JAVASRC=$SRCROOT/engine/src/java
 
-# generate the MarketBillingService interface class from the aidl file
-"$AIDL" -I"JAVASRC" -p"$ANDROID_SDK/platforms/android-8/framework.aidl" "$JAVASRC/com/android/vending/billing/IMarketBillingService.aidl"
+# generate the  interface classes from the aidl files
+
+"$AIDL" -I"$JAVASRC" -p"$ANDROID_SDK/platforms/android-8/framework.aidl" "$JAVASRC/com/sec/android/iap/IAPServiceCallback.aidl"
+if [ $? != 0 ]; then
+	exit $?
+fi
+
+"$AIDL" -I"$JAVASRC" -p"$ANDROID_SDK/platforms/android-8/framework.aidl" "$JAVASRC/com/sec/android/iap/IAPConnector.aidl"
+if [ $? != 0 ]; then
+	exit $?
+fi
+
+
+# generate the IInAppBillingService interface class from the aidl file
+"$AIDL" -I"JAVASRC" -p"$ANDROID_SDK/platforms/android-8/framework.aidl" "$JAVASRC/com/android/vending/billing/IInAppBillingService.aidl"
 if [ $? != 0 ]; then
 	exit $?
 fi
@@ -69,6 +82,16 @@ if [ $? != 0 ]; then
 fi
 
 "$JAVAC" -d "$DSTROOT/classes_livecode_community" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/PushReceiver.java"
+if [ $? != 0 ]; then
+	exit $?
+fi
+
+"$JAVAC" -d "$DSTROOT/classes_livecode_community" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/billing/google/GoogleBillingProvider.java"
+if [ $? != 0 ]; then
+	exit $?
+fi
+
+"$JAVAC" -d "$DSTROOT/classes_livecode_community" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/billing/samsung/SamsungBillingProvider.java"
 if [ $? != 0 ]; then
 	exit $?
 fi
