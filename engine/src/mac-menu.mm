@@ -321,9 +321,9 @@ void MCMacPlatformUnlockMenuSelect(void)
     //   event is handled normally.
     if (t_key_equiv)
     {
-        MCPlatformWindowRef t_window = [(MCWindowDelegate *)[[event window] delegate] platformWindow];
-        [[[event window] contentView] handleKeyPress: event isDown: YES];
-        [[[event window] contentView] handleKeyPress: event isDown: NO];
+        MCMacPlatformWindow *t_window = [(MCWindowDelegate *)[[event window] delegate] platformWindow];
+        [t_window -> GetView() handleKeyPress: event isDown: YES];
+        [t_window -> GetView() handleKeyPress: event isDown: NO];
         return YES;
     }
         

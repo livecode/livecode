@@ -1335,7 +1335,7 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
         t_window = (MCMacPlatformWindow *)p_window;
         
         NSArray *t_tracking_areas;
-        t_tracking_areas = [[t_window -> GetView() superview] trackingAreas];
+        t_tracking_areas = [[t_window -> GetContainerView() superview] trackingAreas];
         
         NSPoint t_mouse_loc;
         t_mouse_loc = [t_window -> GetView() mapMCPointToNSPoint: s_mouse_position];

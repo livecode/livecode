@@ -423,12 +423,13 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 //////////
 
-- (id)initWithFrame:(NSRect)frameRect
+- (id)initWithPlatformWindow:(MCMacPlatformWindow *)window
 {
-	self = [super initWithFrame: frameRect];
+	self = [super initWithFrame: NSZeroRect];
 	if (self == nil)
 		return nil;
 	
+    m_window = window;
 	m_tracking_area = nil;
 	m_use_input_method = false;
 	m_input_method_event = nil;
@@ -449,9 +450,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 - (MCMacPlatformWindow *)platformWindow
 {
-	MCWindowDelegate *t_delegate;
-	t_delegate = (MCWindowDelegate *)[[self window] delegate];
-	return [t_delegate platformWindow];
+    return m_window;
 }
 
 /////////
@@ -474,7 +473,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 												   options: (NSTrackingMouseEnteredAndExited | 
 															 NSTrackingMouseMoved | 
 															 NSTrackingActiveAlways | 
-															 NSTrackingInVisibleRect | 
+															 NSTrackingInVisibleRect |
 															 NSTrackingEnabledDuringMouseDrag)
 													 owner: self
 												  userInfo: nil];
@@ -1214,7 +1213,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 - (void)draggingExited: (id<NSDraggingInfo>)sender
 {
 	MCMacPlatformWindow *t_window;
-	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	t_window = [self platformWindow];
 	t_window -> HandleDragLeave();
 }
 
@@ -1379,12 +1378,6 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	
 	t_window -> ProcessDidResize();
 }
-
-- (BOOL)autoresizesSubviews
-{
-	// IM-2014-03-28: [[ Bug 12046 ]] Prevent embedded content from being automatically resized with this view
-	return NO;
-}
 	
 //////////
 
@@ -1449,12 +1442,37 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 @end
 
+@implementation com_runrev_livecode_MCWindowContainerView
+
+- (id)initWithPlatformWindow:(MCMacPlatformWindow *)window
+{
+    self = [super initWithFrame: NSZeroRect];
+    if (self == nil)
+        return nil;
+    
+    m_window = window;
+    
+    return self;
+}
+
+- (void)setFrameSize: (NSSize)size
+{
+    [super setFrameSize: size];
+    
+    MCMacPlatformWindow *t_window = m_window;
+    if (t_window != nil)
+        [t_window -> GetView() setFrameSize: size];
+}
+
+@end
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCMacPlatformWindow::MCMacPlatformWindow(void)
 {
 	m_delegate = nil;
 	m_view = nil;
+    m_container_view = nil;
 	m_handle = nil;
 	
 	m_shadow_changed = false;
@@ -1471,9 +1489,12 @@ MCMacPlatformWindow::~MCMacPlatformWindow(void)
 
 	[m_handle setDelegate: nil];
 	[m_handle setContentView: nil];
+    
 	[m_handle close];
 	[m_handle release];
-	[m_view release];
+    [m_view removeFromSuperview];
+    [m_view release];
+	[m_container_view release];
 	[m_delegate release];
 }
 
@@ -1482,6 +1503,11 @@ MCMacPlatformWindow::~MCMacPlatformWindow(void)
 MCWindowView *MCMacPlatformWindow::GetView(void)
 {
 	return m_view;
+}
+
+MCWindowContainerView *MCMacPlatformWindow::GetContainerView(void)
+{
+    return m_container_view;
 }
 
 id MCMacPlatformWindow::GetHandle(void)
@@ -1679,9 +1705,14 @@ void MCMacPlatformWindow::DoRealize(void)
 	m_delegate = [[com_runrev_livecode_MCWindowDelegate alloc] initWithPlatformWindow: this];
 	[m_window_handle setDelegate: m_delegate];
 	
-	m_view = [[com_runrev_livecode_MCWindowView alloc] initWithFrame: NSZeroRect];
-	[m_window_handle setContentView: m_view];
-	
+    m_container_view = [[MCWindowContainerView alloc] initWithPlatformWindow: this];
+    [m_container_view setAutoresizesSubviews: NO];
+    
+	m_view = [[com_runrev_livecode_MCWindowView alloc] initWithPlatformWindow: this];
+    [m_container_view addSubview: m_view];
+    
+	[m_window_handle setContentView: m_container_view];
+    
 	[m_window_handle setLevel: t_window_level];
 	[m_window_handle setOpaque: m_mask == nil];
 	[m_window_handle setHasShadow: m_has_shadow];

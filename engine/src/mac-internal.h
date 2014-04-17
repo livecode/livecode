@@ -123,8 +123,23 @@ class MCMacPlatformSurface;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@interface com_runrev_livecode_MCWindowContainerView: NSView
+{
+    MCMacPlatformWindow *m_window;
+}
+
+- (id)initWithPlatformWindow:(MCMacPlatformWindow *)window;
+
+- (void)setFrameSize: (NSSize)size;
+
+@end
+
+@compatibility_alias MCWindowContainerView com_runrev_livecode_MCWindowContainerView;
+
 @interface com_runrev_livecode_MCWindowView: NSView<NSTextInputClient>
 {
+    MCMacPlatformWindow *m_window;
+    
 	NSTrackingArea *m_tracking_area;
     
     // The last event that was passed to the IME.
@@ -135,7 +150,7 @@ class MCMacPlatformSurface;
 	NSDragOperation m_allowed_drag_operations;
 }
 
-- (id)initWithFrame:(NSRect)frameRect;
+- (id)initWithPlatformWindow:(MCMacPlatformWindow *)window;
 - (void)dealloc;
 
 - (void)updateTrackingAreas;
@@ -228,6 +243,7 @@ class MCMacPlatformSurface;
 
 //////////
 
+- (void)setFrameSize: (NSSize)size;
 - (void)drawRect: (NSRect)dirtyRect;
 
 //////////
@@ -337,6 +353,8 @@ public:
 	virtual ~MCMacPlatformWindow(void);
 
 	MCWindowView *GetView(void);
+    MCWindowContainerView *GetContainerView(void);
+    
 	id GetHandle(void);
 	
     bool IsSynchronizing(void);
@@ -394,9 +412,12 @@ private:
 	// The window delegate object.
 	MCWindowDelegate *m_delegate;
 	
-	// The window content view.
-	MCWindowView *m_view;
+	// The window container view.
+	MCWindowContainerView *m_container_view;
 	
+    // The window's content view.
+    MCWindowView *m_view;
+    
 	struct
 	{
 		// When the mask changes and the window has a shadow we have to
