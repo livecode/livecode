@@ -1443,6 +1443,8 @@ const unichar_t *MCStringGetCharPtr(MCStringRef string);
 // the method returns nil, then GetNativeChars() must be used to fetch the contents
 // in native encoding.
 const char_t *MCStringGetNativeCharPtr(MCStringRef string);
+// The native length may be different from the string char count.
+const char_t *MCStringGetNativeCharPtrAndLength(MCStringRef self, uindex_t& r_native_length);
 
 // Returns the Unicode codepoint at the given codepoint index
 codepoint_t MCStringGetCodepointAtIndex(MCStringRef string, uindex_t index);

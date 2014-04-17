@@ -318,7 +318,9 @@ bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
         return false;
     
     // Strings always convert to data as native characters
-    return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string), r_data);
+    uindex_t t_native_length;
+    const byte_t *t_data = (const byte_t *)MCStringGetNativeCharPtrAndLength(*t_string, t_native_length);
+    return MCDataCreateWithBytes(t_data, t_native_length, r_data);
 }
 
 bool MCExecContext::ConvertToName(MCValueRef p_value, MCNameRef& r_name)

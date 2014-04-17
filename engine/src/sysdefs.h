@@ -1252,7 +1252,6 @@ enum Chunk_term {
     CT_COLOR_PALETTE,
     CT_FIELD,
 	CT_LAST_CONTROL = CT_FIELD,
-	CT_ELEMENT,
     CT_LINE,
     CT_PARAGRAPH,
     CT_SENTENCE,
@@ -1265,6 +1264,8 @@ enum Chunk_term {
     CT_CODEPOINT,
     CT_CODEUNIT,
     CT_BYTE,
+    // SN-2014-04-15 [[ ByteChunk ]] CT_ELEMENT should be put after the char chunks, as the value won't be evaluated as a string
+	CT_ELEMENT,
     CT_TYPES,
 	CT_KEY
 };
