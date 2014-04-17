@@ -1992,7 +1992,8 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		uint2 twidth = 0;
 		for (i = 0 ; i < nlines ; i++)
 		{
-			twidth = MCFontMeasureText(m_font, lines[i].getstring(), lines[i].getlength(), isunicode);
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+			twidth = MCFontMeasureText(m_font, lines[i].getstring(), lines[i].getlength(), isunicode, getstack() -> getdevicetransform());
 			switch (flags & F_ALIGNMENT)
 			{
 			case F_ALIGN_LEFT:
