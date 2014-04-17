@@ -152,6 +152,10 @@ class MCScreenDC : public MCUIDC
 	HWND backdrop_window;
 	MCColor backdrop_colour;
 
+	// IM-2014-04-17: [[ Bug 12223 ]] Size and scale of backdrop window
+	MCRectangle m_backdrop_rect;
+	MCGFloat m_backdrop_scale;
+
 	// MM-2014-04-08: [[ Bug 12058 ]] Update back_pattern to be a MCPatternRef.
 	MCPatternRef backdrop_pattern;
 	
