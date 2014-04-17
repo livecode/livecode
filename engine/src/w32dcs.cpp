@@ -1314,23 +1314,31 @@ bool MCScreenDC::initialisebackdrop(void)
 
 	t_display_count = getdisplays(t_displays, false);
 
+	MCRectangle t_rect;
+
 	// MW-2012-10-08: [[ Bug 10286 ]] If the taskbar is hidden then show it and then
 	//   present the backdrop as fullscreen.
 	if (taskbarhidden)
 	{
 		settaskbarstate(true);
 		taskbarhidden = false;
-		backdrop_window = CreateWindowExA(0, MC_BACKDROP_WIN_CLASS_NAME, "", WS_POPUP, t_displays[0] . viewport . x, t_displays[0] . viewport . y, t_displays[0] . viewport . width, t_displays[0] . viewport . height, invisiblehwnd, NULL, MChInst, NULL);
+		t_rect = t_displays[0].viewport;
 	}
 	else
 	{
-		int32_t t_height;
-		if (t_displays[0] . workarea . height == t_displays[0] . viewport . height)
-			t_height = t_displays[0] . viewport . height - 2;
-		else
-			t_height = t_displays[0] . workarea . height;
-		backdrop_window = CreateWindowExA(0, MC_BACKDROP_WIN_CLASS_NAME, "", WS_POPUP, t_displays[0] . workarea . x, t_displays[0] . workarea . y, t_displays[0] . workarea . width, t_height, invisiblehwnd, NULL, MChInst, NULL);
+		t_rect = t_displays[0].workarea;
+		if (t_rect.height == t_displays[0].viewport . height)
+			t_rect.height -= 2;
 	}
+
+	// IM-2014-04-17: [[ Bug 12223 ]] Record the backdrop rect and scale
+	m_backdrop_rect = MCRectangleMake(0, 0, t_rect.width, t_rect.height);
+	m_backdrop_scale = t_displays[0].pixel_scale;
+
+	// IM-2014-04-17: [[ Bug 12223 ]] Convert window rect to screen coords
+	t_rect = logicaltoscreenrect(m_backdrop_rect);
+
+	backdrop_window = CreateWindowExA(0, MC_BACKDROP_WIN_CLASS_NAME, "", WS_POPUP, t_rect . x, t_rect . y, t_rect . width, t_rect . height, invisiblehwnd, NULL, MChInst, NULL);
 
 	return true;
 }
@@ -1354,6 +1362,10 @@ void MCScreenDC::redrawbackdrop(void)
 	MCGContextRef t_context = nil;
 	uint32_t t_width, t_height;
 
+	// IM-2014-04-17: [[ Bug 12223 ]] Account for pixelScale when drawing backdrop
+	MCGAffineTransform t_transform;
+	t_transform = MCGAffineTransformMakeScale(m_backdrop_scale, m_backdrop_scale);
+
 	GetClientRect(backdrop_window, &t_winrect);
 	t_width = t_winrect.right - t_winrect.left;
 	t_height = t_winrect.bottom - t_winrect.top;
@@ -1364,13 +1376,23 @@ void MCScreenDC::redrawbackdrop(void)
 
 	if (t_success)
 	{
-        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+		MCGContextConcatCTM(t_context, t_transform);
+
+		// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 		// MM-2014-04-08: [[ Bug 12058 ]] Update back_pattern to be a MCPatternRef.
 		if (backdrop_pattern != nil && backdrop_pattern -> image != nil)
-			MCGContextSetFillPattern(t_context, backdrop_pattern -> image, MCGAffineTransformMakeIdentity(), kMCGImageFilterNone);
+		{
+			MCGImageRef t_image;
+			t_image = backdrop_pattern->image;
+
+			MCGAffineTransform t_pattern_transform;
+			t_pattern_transform = MCGAffineTransformMakeScale(1.0 / backdrop_pattern->scale, 1.0 / backdrop_pattern->scale);
+
+			MCGContextSetFillPattern(t_context, t_image, t_pattern_transform, kMCGImageFilterNone);
+		}
 		else
 			MCGContextSetFillRGBAColor(t_context, backdrop_colour.red / 65535.0, backdrop_colour.green / 65535.0, backdrop_colour.blue / 65535.0, 1.0);
-		MCGContextAddRectangle(t_context, MCGRectangleMake(0, 0, t_width, t_height));
+		MCGContextAddRectangle(t_context, MCRectangleToMCGRectangle(m_backdrop_rect));
 		MCGContextFill(t_context);
 
 		if (backdrop_badge != NULL && backdrop_hard)
@@ -1382,7 +1404,7 @@ void MCScreenDC::redrawbackdrop(void)
 			{
 				MCRectangle t_rect;
 				t_rect = backdrop_badge -> getrect();
-				backdrop_badge -> drawme(t_gfxcontext, 0, 0, t_rect . width, t_rect . height, 32, getheight() - 32 - t_rect . height);
+				backdrop_badge -> drawme(t_gfxcontext, 0, 0, t_rect . width, t_rect . height, 32, m_backdrop_rect.height - 32 - t_rect . height);
 			}
 
 			delete t_gfxcontext;
