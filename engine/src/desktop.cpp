@@ -131,13 +131,13 @@ void MCPlatformHandleApplicationSuspend(void)
 	MCappisactive = False;
     
     // MW-2014-04-08: [[ Bug 12080 ]] Hide any palettes based on MChidepalettes.
-    show_or_hide_palettes(false);
+    //show_or_hide_palettes(false);
 }
 
 void MCPlatformHandleApplicationResume(void)
 {
     // MW-2014-04-08: [[ Bug 12080 ]] Show any palettes based on MChidepalettes.
-    show_or_hide_palettes(true);
+    //show_or_hide_palettes(true);
     
 	MCappisactive = True;
 	MCdefaultstackptr -> getcard() -> message(MCM_resume);
