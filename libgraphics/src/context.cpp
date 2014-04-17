@@ -2619,7 +2619,7 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 		t_key_ptr += sizeof(p_font . style);
 
 		// MM-2014-04-16: [[ Bug 11964 ]] Store the scale of the transform in the key.
-		//  We only need to stoe the (x?) scale of the transform as that is all that will effect the text measurment.
+		//  We only need to store the (x?) scale of the transform as that is all that will effect the text measurment.
 		//  (We are ignoring rotation for the time being).
 		MCMemoryCopy(t_key_ptr, &p_transform . a, sizeof(p_transform . a));
 		t_key_ptr += sizeof(p_transform . a);

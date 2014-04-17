@@ -335,7 +335,7 @@ struct font_measure_text_context
 	// MW-2013-12-19: [[ Bug 11606 ]] Make sure we use a float to accumulate the width.
     MCGFloat m_width;
 
-	// MM-2014-04-16: [[ Bug 11964 ]] Store the transform that effect the measurement.
+	// MM-2014-04-16: [[ Bug 11964 ]] Store the transform that effects the measurement.
 	MCGAffineTransform m_transform;
 };
 

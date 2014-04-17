@@ -513,10 +513,6 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 	if (t_success)
 		t_success = SelectObject(t_gdicontext, p_font . fid) != NULL;
 	
-	SIZE t_size;
-	if (t_success)
-		t_success = GetTextExtentPoint32W(t_gdicontext, (LPCWSTR)p_text, p_length, &t_size);
-	
 	TEXTMETRICA t_metrics;
 	if (t_success)
 		t_success = GetTextMetricsA(t_gdicontext, &t_metrics);
