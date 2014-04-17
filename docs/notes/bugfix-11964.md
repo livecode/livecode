@@ -1,1 +1,1 @@
-# Spacing is incoorect for Windows scaled text
+# Spacing is incorrect for Windows scaled text
