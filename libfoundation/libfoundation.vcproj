@@ -144,6 +144,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\foundation-bidi.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\foundation-core.cpp"
 				>
 			</File>
@@ -196,6 +200,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\foundation-text.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\foundation-unicode-private.h"
 				>
 			</File>
@@ -231,6 +239,10 @@
 			</File>
 			<File
 				RelativePath=".\include\foundation-stdlib.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\foundation-text.h"
 				>
 			</File>
 			<File

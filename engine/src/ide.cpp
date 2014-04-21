@@ -844,6 +844,39 @@ static unsigned char next_valid_char(const unsigned char *p_text, uindex_t &x_in
 	return p_text[x_index += 1];
 }
 
+// Get the position of the next correct unicode char - jumping over surrogates and combining characters
+// And return the (beginning of the) this new char.
+static unichar_t next_valid_unichar(MCStringRef p_string, uindex_t &x_index)
+{
+    if (x_index + 1 <= MCStringGetLength(p_string))
+    {        
+        MCRange t_char_range;
+        MCRange t_cu_range;
+        
+        t_char_range . length = 1;
+        t_cu_range . offset = x_index + 1;
+        t_cu_range . length = 1;
+        do
+        {
+            ++t_cu_range . length;
+            MCStringUnmapIndices(p_string, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
+        }
+        while (t_cu_range . offset + t_cu_range . length < MCStringGetLength(p_string) && t_char_range . length != 2);
+        
+        x_index += t_cu_range . length - 1;
+    }
+    
+    return MCStringGetCharAtIndex(p_string, x_index);
+}
+
+static uint8_t get_codepoint_type(unichar_t p_char)
+{
+    if (p_char < 256)
+        return type_table[p_char];
+    else
+        return ST_ID;
+}
+
 
 // Parameters
 //   p_text : pointer to the buffer containing the text we are tokenizing
@@ -1197,6 +1230,393 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 	r_out_nesting = t_nesting;
 	r_min_nesting = t_min_nesting;
 }
+// Parameters
+//   p_text : pointer to the buffer containing the text we are tokenizing
+//   p_length : the length of p_text
+//   x_index : the index of the char we are currently at. This value will be mutated to contain the index of the next char after the comment if one was found.
+//   r_class : this will contain the type of comment that was found, if applicable
+//   r_nesting_delta : this will contain the nesting depth difference from the original x_index to the value of x_index that is returned.
+//   r_update_min_nesting : whether or not to update the min nesting
+//   r_multiple_lines : whether or not the comment actually contains multiple lines.
+// Returns
+//   true if the start of a comment is found at char x_index of p_text, false otherwise.
+// Description
+//   If the function returns false, then all the return parameters are not changed.
+static bool match_comment_stringref(MCStringRef p_string, uint4 &x_index, MCColourizeClass &r_class, uint4 &r_nesting_delta, bool &r_update_min_nesting, bool &r_multiple_lines)
+{
+	r_nesting_delta = 0;
+	r_update_min_nesting = false;
+	r_multiple_lines = false;
+    
+    uindex_t t_length = MCStringGetLength(p_string);
+    
+    const unichar_t * t_string = MCStringGetCharPtr(p_string);
+	unichar_t t_char = t_string[x_index];
+	while(x_index < t_length)
+	{
+		switch(get_codepoint_type(MCStringGetCharAtIndex(p_string, x_index)))
+		{
+			case ST_MIN:
+			{
+				uindex_t t_new_index = x_index;
+				if (get_codepoint_type(next_valid_unichar(p_string, t_new_index)) == ST_MIN)
+				{
+					r_class = COLOURIZE_CLASS_SINGLE_COMMENT;
+					while(t_new_index < t_length && get_codepoint_type(next_valid_unichar(p_string, t_new_index)))
+                        ;
+                    
+					x_index = t_new_index;
+					return true;
+				}
+				else
+					return false;
+				break;
+			}
+                
+			case ST_COM:
+				r_class = COLOURIZE_CLASS_SINGLE_COMMENT;
+				while(x_index < t_length && get_codepoint_type(next_valid_unichar(p_string, x_index)))
+                    ;
+				
+				return true;
+				break;
+                
+			case ST_OP:
+			{
+				uindex_t t_new_index = x_index;
+				if (t_char == '/' && next_valid_unichar(p_string, t_new_index) == '/')
+				{
+					r_class = COLOURIZE_CLASS_SINGLE_COMMENT;
+					while(t_new_index < t_length && get_codepoint_type(next_valid_unichar(p_string, t_new_index)))
+                        ;
+                    
+					x_index = t_new_index;
+					return true;
+				}
+				
+				t_new_index = x_index;
+				if (t_char == '/' && (t_char = next_valid_unichar(p_string, t_new_index)) == '*')
+				{
+					// As we only need to return the nesting difference, we start the nesting off at 0
+					uint4 t_nesting;
+					t_nesting = 0;
+                    
+					x_index = t_new_index;
+					t_char = next_valid_unichar(p_string, x_index);
+					t_nesting += 1;
+					r_class = COLOURIZE_CLASS_MULTI_COMMENT;
+					while(x_index < t_length && t_nesting > 0)
+					{
+						if (get_codepoint_type(t_char) == ST_EOL)
+							r_multiple_lines = true;
+                        
+						t_new_index = x_index;
+						if (t_char == '*' && next_valid_unichar(p_string, t_new_index)  == '/')
+						{
+							t_nesting -= 1;
+							x_index = t_new_index;
+                            
+							r_update_min_nesting = true;
+						}
+						
+						t_char = next_valid_unichar(p_string, x_index);
+					}
+					if (t_nesting != 0 && x_index < t_length)
+						t_char = next_valid_unichar(p_string, x_index);
+                    
+					r_nesting_delta = t_nesting;
+                    
+					return true;
+				}
+				else
+					return false;
+				break;
+			}
+			default:
+				return false;
+		}
+	}
+	return false;
+    
+}
+
+
+static void tokenize_stringref(MCStringRef p_string, uint4 p_in_nesting, uint4& r_out_nesting, uint4& r_min_nesting, MCColourizeCallback p_callback, void *p_context)
+{
+    uint4 t_index;
+    t_index = 0;
+    
+    uint4 t_nesting;
+    t_nesting = p_in_nesting;
+    
+    uint4 t_min_nesting;
+    t_min_nesting = t_nesting;
+    
+    MCColourizeClass t_class;
+    t_class = COLOURIZE_CLASS_NONE;
+    
+    uindex_t t_length = MCStringGetLength(p_string);
+    
+    if (t_length == 0)
+    {
+        r_min_nesting = p_in_nesting;
+        r_out_nesting = p_in_nesting;
+        return;
+    }
+    
+    if (MCStringIsUncombined(p_string))
+    {
+        MCAutoStringRefAsCString t_cstring;
+        t_cstring . Lock(p_string);
+        
+        tokenize((unsigned char*) *t_cstring, t_length, p_in_nesting, r_out_nesting, r_min_nesting, p_callback, p_context);
+        return;
+    }
+        
+	unichar_t t_char = MCStringGetCharAtIndex(p_string, 0);
+    
+    if (t_nesting > 0)
+    {
+        while(t_nesting > 0 && t_index < t_length - 1)
+        {
+            uindex_t t_new_index = t_index;
+            if (t_char == '/' && next_valid_unichar(p_string, t_new_index) == '*')
+			{
+				t_nesting += 1;
+				t_index = t_new_index;
+			}
+			else if (t_char == '*' && next_valid_unichar(p_string, t_new_index) == '/')
+			{
+				t_nesting -= 1;
+				t_index = t_new_index;
+                
+				t_min_nesting = MCU_min(t_min_nesting, t_nesting);
+			}
+			
+			t_char = next_valid_unichar(p_string, t_index);
+		}
+        
+		if (t_nesting != 0 && t_index < t_length)
+			t_char = next_valid_unichar(p_string, t_index);
+        
+		p_callback(p_context, COLOURIZE_CLASS_MULTI_COMMENT, 0, 0, t_index);
+	}
+    
+	while(t_index < t_length)
+	{
+		uint4 t_class_index;
+		t_class_index = 0;
+        
+		uint4 t_start, t_end;
+		t_start = t_index;
+        
+		MCColourizeClass t_comment_class;
+		uint4 t_nesting_delta;
+		bool t_update_min_nesting;
+		bool t_multiple_lines;
+        
+		if (match_comment_stringref(p_string, t_index, t_comment_class, t_nesting_delta, t_update_min_nesting, t_multiple_lines))
+		{
+			t_end = t_index;
+			t_nesting = t_nesting + t_nesting_delta;
+            
+			if (t_update_min_nesting)
+				t_min_nesting = MCU_min(t_min_nesting, t_nesting);
+            
+			t_class = t_comment_class;
+            
+		}
+		else
+		{
+			switch(get_codepoint_type(t_char))
+			{
+				case ST_SPC:
+					t_class = COLOURIZE_CLASS_WHITESPACE;
+					while(t_index < t_length && get_codepoint_type(t_char = next_valid_unichar(p_string, t_index)) == ST_SPC)
+						;
+					t_end = t_index;
+                    break;
+                    
+				case ST_MIN:
+					t_index++;
+					t_class = COLOURIZE_CLASS_OPERATOR;
+					while(t_index < t_length && get_codepoint_type(t_char = next_valid_unichar(p_string, t_index)) == ST_OP)
+						;
+					t_end = t_index;
+                    break;
+                    
+				case ST_OP:
+					t_class = COLOURIZE_CLASS_OPERATOR;
+					while(t_index < t_length && get_codepoint_type(t_char = next_valid_unichar(p_string, t_index)) == ST_OP)
+						;
+					t_end = t_index;
+                    break;
+                    
+				case ST_LP:
+				case ST_RP:
+				case ST_LB:
+				case ST_RB:
+				case ST_SEP:
+					t_char = next_valid_unichar(p_string, t_index);
+					t_class = COLOURIZE_CLASS_OPERATOR;
+					t_end = t_index;
+                    break;
+                    
+				case ST_ESC:
+					t_char = next_valid_unichar(p_string, t_index);
+					p_callback(p_context, COLOURIZE_CLASS_CONTINUATION, 0, t_start, t_index);
+					t_start = t_index;
+					while(t_index < t_length && get_codepoint_type(t_char) == ST_SPC)
+						t_char = next_valid_unichar(p_string, t_index);
+					if (t_start != t_index)
+						p_callback(p_context, COLOURIZE_CLASS_WHITESPACE, 0, t_start, t_index);
+                    
+					t_start = t_index;
+					t_class = COLOURIZE_CLASS_ERROR;
+                    
+					// OK-2008-05-19 : Comments are permitted after continuation chars, providing that they don't contain multiple lines.
+					if (match_comment_stringref(p_string, t_index, t_comment_class, t_nesting_delta, t_update_min_nesting, t_multiple_lines))
+					{
+						t_end = t_index;
+						if (!t_multiple_lines)
+							t_class = t_comment_class;
+                        
+						p_callback(p_context, t_class, 0, t_start, t_end);
+						t_start = t_end;
+                        
+						// Once we've had a comment, there may be more stuff after it ends (if its a multi-line one), this stuff should be colourized
+						// as errors, even though it will actually compile.
+						t_class = COLOURIZE_CLASS_ERROR;
+						while(t_index < t_length && (get_codepoint_type(MCStringGetCharAtIndex(p_string, t_index)) != ST_EOL))
+							t_index++;
+                        
+						t_end = t_index;
+					}
+					else
+					{
+						while(t_index < t_length && (get_codepoint_type(t_char) != ST_EOL))
+							t_char = next_valid_unichar(p_string, t_index);
+                        
+						t_end = t_index;
+					}
+                    
+                    break;
+					
+				case ST_SEMI:
+				case ST_EOL:
+					t_char = next_valid_unichar(p_string, t_index);
+					t_class = COLOURIZE_CLASS_SEPARATOR;
+					t_end = t_index;
+                    break;
+                    
+				case ST_EOF:
+				case ST_ERR:
+					t_char = next_valid_unichar(p_string, t_index);
+					t_class = COLOURIZE_CLASS_ERROR;
+					t_end = t_index;
+                    break;
+                    
+                    // MW-2011-07-18: Make sure we handle ST_TAG like ST_ID - ST_TAG
+                    //  is only used in server-mode when tag processing is turned on
+				case ST_TAG:
+				case ST_ID:
+				{
+					char t_keyword[SCRIPT_KEYWORD_LARGEST + 1];
+					uint4 t_hash;
+					uint4 t_klength;
+					t_hash = SCRIPT_KEYWORD_SALT;
+					t_klength = 0;
+					t_class = COLOURIZE_CLASS_KEYWORD;
+					while(t_index < t_length && (get_codepoint_type(t_char) == ST_ID || get_codepoint_type(t_char) == ST_NUM || get_codepoint_type(t_char) == ST_TAG))
+					{
+						if (t_class == COLOURIZE_CLASS_KEYWORD)
+						{
+							if (t_klength == SCRIPT_KEYWORD_LARGEST)
+								t_class = COLOURIZE_CLASS_IDENTIFIER;
+							else if (t_char == REPLACEMENT_CHAR_UTF16)
+								t_class = COLOURIZE_CLASS_IDENTIFIER;
+							else
+							{
+                                // SN-2014-03-26 [[ CombiningChars ]] Need to discard any unicode char - a whitespace is not meant to be in any keyword
+                                if (t_char < 256)
+                                    t_keyword[t_klength] = MCS_tolower(t_char);
+                                else
+                                    t_keyword[t_klength] = ' ';
+                                
+								t_hash = (t_hash ^ t_keyword[t_klength]) + ((t_hash << 26) + (t_hash >> 6));
+								t_klength++;
+							}
+						}
+						
+						t_char = next_valid_unichar(p_string, t_index);
+					}
+					// MW-2013-08-23: [[ Bug 11122 ]] Special-case '$#'.
+					if (t_index < t_length && t_klength == 1 && t_keyword[0] == '$' && MCStringGetCharAtIndex(p_string, t_index) == '#')
+					{
+						t_keyword[t_klength] = '#';
+						t_klength++;
+						t_char = next_valid_unichar(p_string, t_index);
+					}
+                    // SN-2014-03-26 [[ ComposingChars ]] We are 1 byte too far since the last char we read was not a LIT, NUM or TAG (which excludes unicode chars)
+//                    if (t_index != t_length)
+//                        --t_index;
+                    
+                    t_end = t_index;
+					if (t_class == COLOURIZE_CLASS_KEYWORD)
+					{
+						t_keyword[t_klength] = '\0';
+						t_hash = script_keyword_hash(t_hash);
+						if (t_hash >= SCRIPT_KEYWORD_COUNT || strcmp(s_script_keywords[t_hash], t_keyword) != 0)
+							t_class = COLOURIZE_CLASS_IDENTIFIER;
+						else
+						{
+							t_class_index = t_hash;
+							t_class = COLOURIZE_CLASS_KEYWORD;
+						}
+					}
+				}
+                    break;
+                    
+				case ST_LIT:
+					t_char = next_valid_unichar(p_string, t_index);
+					while(t_index < t_length && get_codepoint_type(t_char) != ST_EOL && get_codepoint_type(t_char) != ST_LIT)
+						t_char = next_valid_unichar(p_string, t_index);
+					if (t_index < t_length && get_codepoint_type(t_char) == ST_LIT)
+					{
+						t_char = next_valid_unichar(p_string, t_index);
+						t_class = COLOURIZE_CLASS_STRING;
+					}
+					else
+						t_class = COLOURIZE_CLASS_ERROR;
+					t_end = t_index;
+                    break;
+                    
+				case ST_NUM:
+					t_class = COLOURIZE_CLASS_NUMBER;
+					while(t_index < t_length && get_codepoint_type(t_char = next_valid_unichar(p_string, t_index)) == ST_NUM)
+						;
+					t_end = t_index;
+                    break;
+			}
+		}
+        
+        // SN-2014-03-27 [[ CombiningChars ]] We need to check whether the last char is more than one codeunit
+        // Get the start index of the next character
+//        uindex_t t_end_of_char = t_end;
+//        next_valid_unichar(p_string, t_end_of_char);
+//        // Update the actual end of this section to colourise
+//        if (t_end_of_char == t_length)
+//            t_end = t_end_of_char;
+//        else
+//            t_end = t_end_of_char - 1;
+//        
+////        t_index = t_end;
+        p_callback(p_context, t_class, t_class_index, t_start, t_end);
+	}
+    
+	r_out_nesting = t_nesting;
+	r_min_nesting = t_min_nesting;
+}
 
 static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_type, uint4 p_start, uint4 p_end, MCColourizeCallback p_callback, bool p_mutate = true)
 {
@@ -1266,13 +1686,17 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		
 		// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
 		//   works.
-        MCAutoStringRefAsCString t_text;
+        MCAutoStringRefAsNativeChars t_text;
 		uint4 t_nesting, t_min_nesting;
-
-        t_text . Lock(t_paragraph -> GetInternalStringRef());
+        
+        // SN-2014-03-24: We need the native string rather than the CString - avoid any compression of combining chars
+        uindex_t t_size;
+        char_t* t_native_chars;
+        t_text . Lock(t_paragraph -> GetInternalStringRef(), t_native_chars, t_size);
         
 		t_paragraph -> clearzeros();
-		tokenize((const char_t *)*t_text, MCCStringLength(*t_text), t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
+//		tokenize(t_native_chars, t_size, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
+        tokenize_stringref(t_paragraph -> GetInternalStringRef(), t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
 
 		t_old_nesting += t_state -> GetCommentDelta(t_line);
 		if (p_mutate)
@@ -1287,13 +1711,17 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 			
 			// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
 			//   works.
-            MCAutoStringRefAsCString t_text;    
+            MCAutoStringRefAsNativeChars t_text;
 			uint4 t_nesting, t_min_nesting;
             
-            /* UNCHECKED */ t_text . Lock(t_paragraph -> GetInternalStringRef());
+            // SN-2014-03-24: Use the nativised string which comprises the combining chars
+            uindex_t t_length;
+            char_t *t_native_chars;
+            
+            /* UNCHECKED */ t_text . Lock(t_paragraph -> GetInternalStringRef(), t_native_chars, t_length);
             
 			t_paragraph -> clearzeros();
-			tokenize((const char_t *)*t_text, MCCStringLength(*t_text), t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
+			tokenize(t_native_chars, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
 
 			t_old_nesting += t_state -> GetCommentDelta(t_line);
 			t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);

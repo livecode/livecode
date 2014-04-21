@@ -248,7 +248,15 @@ void MCGroup::SetHilitedButtonName(MCExecContext& ctxt, uint32_t part, MCStringR
 			if (cptr->gettype() == CT_BUTTON)
 			{
 				MCButton *bptr = (MCButton *)cptr;
-				bptr->resethilite(part, bptr->hasname(MCNameLookup(p_name)));
+                // SN-2014-04-08 [[ Bug 12150 ]] LiveCode crashes when changing the window kind
+                // Clicking on the button attemps to hilite the option "title,menu,maximize,minimise,close"
+                // but only "title,menu,minimize,maximise,close" exists, returning a nil NameRef
+                MCNameRef t_nameref;
+                t_nameref = MCNameLookup(p_name);
+                if (t_nameref != nil)
+                    bptr->resethilite(part, bptr->hasname(t_nameref));
+                else
+                    bptr->resethilite(part, false);
 			}
 			cptr = cptr->next();
 		}

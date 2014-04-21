@@ -742,12 +742,12 @@ void MCStringsEvalCodepointProperty(MCExecContext& ctxt, MCStringRef p_codepoint
 
 void MCStringsEvalLength(MCExecContext& ctxt, MCStringRef p_string, integer_t& r_length)
 {
-	// Ensure that the returned length is in codepoints
+	// Ensure that the returned length is in chars
     MCRange t_cp_range, t_cu_range;
     t_cu_range = MCRangeMake(0, MCStringGetLength(p_string));
-    /* UNCHECKED */ MCStringUnmapIndices(p_string, kMCDefaultCharChunkType, t_cu_range, t_cp_range);
+    /* UNCHECKED */ MCStringUnmapIndices(p_string, kMCCharChunkTypeGrapheme, t_cu_range, t_cp_range);
     
-    r_length = t_cp_range.length;
+    r_length = t_cp_range . length;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1432,7 +1432,10 @@ bool MCStringsEvalIsAmongTheChunksOf(MCExecContext& ctxt, MCStringRef p_chunk, M
 {
     MCTextChunkIterator *tci;
     tci = new MCTextChunkIterator(p_chunk_type, p_text);
-    return tci -> isamong(ctxt, p_chunk);
+    bool t_result;
+    t_result = tci -> isamong(ctxt, p_chunk);
+    delete tci;
+    return t_result;
 }
 
 void MCStringsEvalIsAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
@@ -1545,12 +1548,26 @@ void MCStringsEvalIsNotAmongTheCodeunitsOf(MCExecContext& ctxt, MCStringRef p_ch
 	r_result = !r_result;
 }
 
-void MCStringsEvalIsAmongTheBytesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
+void MCStringsEvalIsAmongTheBytesOf(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, bool& r_result)
 {
-    r_result = MCStringsEvalIsAmongTheChunksOf(ctxt, p_chunk, p_string, CT_BYTE);
+    uindex_t t_byte_count = MCDataGetLength(p_string);
+    uindex_t t_chunk_byte_count = MCDataGetLength(p_chunk);
+    
+    const byte_t *t_bytes = MCDataGetBytePtr(p_string);
+    const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
+    
+    bool t_found = false;
+    for (uindex_t i = 0; i < t_byte_count - t_chunk_byte_count + 1; i++)
+        if (MCMemoryCompare(t_bytes++, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
+        {
+            t_found = true;
+            break;
+        }
+    
+    r_result = t_found;
 }
 
-void MCStringsEvalIsNotAmongTheBytesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
+void MCStringsEvalIsNotAmongTheBytesOf(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, bool& r_result)
 {
     MCStringsEvalIsAmongTheBytesOf(ctxt, p_chunk, p_string, r_result);
 	r_result = !r_result;
@@ -1612,18 +1629,41 @@ void MCStringsEvalCodeunitOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStr
     r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_CODEUNIT);
 }
 
-void MCStringsEvalByteOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
+void MCStringsEvalByteOffset(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_BYTE);
+    uindex_t t_byte_count = MCDataGetLength(p_string);
+    uindex_t t_chunk_byte_count = MCDataGetLength(p_chunk);
+    
+    const byte_t *t_bytes = MCDataGetBytePtr(p_string);
+    const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
+    
+    uindex_t t_offset;
+    r_result = 0;
+    
+    for (t_offset = p_start_offset; t_offset < t_byte_count - t_chunk_byte_count + 1; t_offset++)
+        if (MCMemoryCompare(t_bytes + t_offset, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
+        {
+            r_result = t_offset - p_start_offset + 1;
+            break;
+        }
 }
 
 void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
 	MCStringOptions t_options = ctxt.GetStringComparisonType();
-	if (!MCStringFirstIndexOf(p_string, p_chunk, p_start_offset, t_options, r_result))
+    uindex_t t_offset;
+	if (!MCStringFirstIndexOf(p_string, p_chunk, p_start_offset, t_options, t_offset))
 		r_result = 0;
 	else
-		r_result = r_result + 1 - p_start_offset;
+    {
+        // We want to get the grapheme length, not the codeunit one
+        MCRange t_cu_range, t_char_range;
+        t_cu_range . offset = p_start_offset;
+        t_cu_range . length = t_offset - p_start_offset;
+        MCStringUnmapIndices(p_string, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
+        
+		r_result = t_char_range . offset + t_char_range . length + 1;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

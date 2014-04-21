@@ -363,7 +363,7 @@ sub symbolInputs
 	my @items = split(':', $symbol);
 	my $spec = $items[1];
 	
-	if (@items < 2)
+	if (scalar @items < 2)
 	{
 		$spec = "() -> ()";
 	}

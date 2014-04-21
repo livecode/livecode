@@ -466,7 +466,7 @@ public:
 #endif
 	bool selectedtext(MCStringRef& r_string);
 	Boolean selectedmark(Boolean wholeline, findex_t &si, findex_t &ei,
-	                     Boolean force, Boolean inc_cr);
+	                     Boolean force, Boolean inc_cr, bool p_char_indices = false);
 
 	bool returnchunk(findex_t si, findex_t ei, MCStringRef& r_string);
 	bool returnline(findex_t si, findex_t ei, MCStringRef& r_string);

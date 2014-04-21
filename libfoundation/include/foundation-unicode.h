@@ -24,6 +24,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 codepoint_t MCUnicodeSurrogatesToCodepoint(uint16_t first, uint16_t second);
+// We assume that the unichar_t pointer already has enough memory to handle the addition of the surrogate pair
+// Returns true in case the codepoint actually generated a surrogate pair
+bool MCUnicodeCodepointToSurrogates(codepoint_t t_codepoint, unichar_t* r_surrogates);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -327,10 +330,10 @@ bool    MCUnicodeCaseFold(const unichar_t *p_in, uindex_t p_in_length,
 // Comparison options
 enum MCUnicodeCompareOption
 {
-    kMCUnicodeCompareOptionExact,       // Codepoint (not code unit!) equality
-    kMCUnicodeCompareOptionNormalised,  // Normalise inputs before comparison
-    kMCUnicodeCompareOptionFolded,      // Case fold inputs before comparison
-    kMCUnicodeCompareOptionCaseless     // Both normalise and case fold
+    kMCUnicodeCompareOptionExact = 0,       // Codepoint (not code unit!) equality
+    kMCUnicodeCompareOptionNormalised = 1,  // Normalise inputs before comparison
+    kMCUnicodeCompareOptionCaseless = 2,    // Both normalise and case fold
+    kMCUnicodeCompareOptionFolded = 3,      // Case fold inputs before comparison
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -372,6 +375,27 @@ bool MCUnicodeFirstIndexOfChar(const unichar_t *p_string, uindex_t p_string_leng
 // Returns the index of the last occurence of the codepoint in the given string
 bool MCUnicodeLastIndexOfChar(const unichar_t *p_string, uindex_t p_string_length,
                               codepoint_t p_needle, MCUnicodeCompareOption, uindex_t &r_index);
+
+// Returns the length in both sequences of a matching prefix
+void MCUnicodeSharedPrefix(const unichar_t *p_string, uindex_t p_string_length,
+                           const unichar_t *p_prefix, uindex_t p_prefix_length,
+                           MCUnicodeCompareOption p_option, uindex_t &r_len_in_string, uindex_t &r_len_in_prefix);
+
+// Returns the length in both sequences of a matching suffix
+void MCUnicodeSharedSuffix(const unichar_t *p_string, uindex_t p_string_length,
+                           const unichar_t *p_prefix, uindex_t p_prefix_length,
+                           MCUnicodeCompareOption p_option, uindex_t &r_len_in_string, uindex_t &r_len_in_prefix);
+
+// Searches a string for a given substring and returns the range that was equal
+// to the substring (note that this may be a different length to the substring!)
+bool MCUnicodeFind(const unichar_t *p_string, uindex_t p_string_length,
+                   const unichar_t *p_needle, uindex_t p_needle_length,
+                   MCUnicodeCompareOption, MCRange &r_matched_range);
+
+// Hashes the given string, ignoring case or normalisation differences if
+// requested (i.e the string is folded or normalised before hashing)
+hash_t MCUnicodeHash(const unichar_t *p_string, uindex_t p_string_length,
+                     MCUnicodeCompareOption);
 
 
 ////////////////////////////////////////////////////////////////////////////////

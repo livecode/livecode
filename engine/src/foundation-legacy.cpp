@@ -1495,11 +1495,16 @@ IO_stat MCArrayLoadFromStreamLegacy(MCArrayRef self, MCObjectInputStream& p_stre
 
 					if (t_stat == IO_NORMAL)
 					{
+                        // AL-2014-04-14: [[ Bug 11989 ]] Prevent memory leak in array loading.
 						MCStringRef t_string_val;
+                        t_string_val = nil;
 						if (MCStringCreateWithNativeChars((const char_t *)t_string, t_string_length, t_string_val))
 							t_value = t_string_val;
 						else
+                        {
 							t_stat = IO_ERROR;
+                            MCValueRelease(t_string_val);
+                        }
 					}
 
 					MCMemoryDeleteArray(t_string);
@@ -1512,11 +1517,16 @@ IO_stat MCArrayLoadFromStreamLegacy(MCArrayRef self, MCObjectInputStream& p_stre
 					t_stat = p_stream . ReadFloat64(t_real);
 					if (t_stat == IO_NORMAL)
 					{
+                        // AL-2014-04-14: [[ Bug 11989 ]] Prevent memory leak in array loading.
 						MCNumberRef t_number;
+                        t_number = nil;
 						if (MCNumberCreateWithReal(t_real, t_number))
 							t_value = t_number;
 						else
+                        {
 							t_stat = IO_ERROR;
+                            MCValueRelease(t_number);
+                        }
 					}
 				}
 				break;

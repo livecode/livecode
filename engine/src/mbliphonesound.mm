@@ -513,7 +513,7 @@ bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSou
 		t_channel -> current_player . player != nil)
 	{	
 		// If no file is given, cancel the next sound.
-		if (p_file == nil || MCStringIsEqualToCString(p_file, MCnullstring, kMCCompareCaseless))
+		if (p_file == nil || MCStringIsEmpty(p_file))
 			return true;
 		
 		if (new_player_for_channel(t_channel, p_file, false, p_object, t_channel -> next_player))
@@ -536,7 +536,7 @@ bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSou
 		delete_player_on_channel(t_channel, t_channel -> current_player);
 	
 	// If no file is given, cancel the current sound.
-	if (p_file == nil || MCStringIsEqualToCString(p_file, MCnullstring, kMCCompareCaseless))
+	if (p_file == nil || MCStringIsEmpty(p_file))
 		return true;
 	
 	if (new_player_for_channel(t_channel, p_file, p_type == kMCSoundChannelPlayLooping, p_object, t_channel -> current_player))

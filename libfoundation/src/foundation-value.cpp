@@ -283,7 +283,7 @@ struct MCValuePool
     __MCValue *values;
     uindex_t count;
 };
-static MCValuePool s_value_pools[kMCValueTypeCodeList + 1];
+static MCValuePool *s_value_pools;
 
 bool __MCValueCreate(MCValueTypeCode p_type_code, size_t p_size, __MCValue*& r_value)
 {
@@ -782,6 +782,9 @@ MCBooleanRef kMCFalse;
 
 bool __MCValueInitialize(void)
 {
+    if (!MCMemoryNewArray(kMCValueTypeCodeList + 1, s_value_pools))
+        return false;
+    
 	if (!__MCValueCreate(kMCValueTypeCodeNull, kMCNull))
 		return false;
 
@@ -793,8 +796,6 @@ bool __MCValueInitialize(void)
 
 	if (!__MCValueRehashUniqueValues(1))
 		return false;
-
-    MCMemoryClear(s_value_pools, sizeof(s_value_pools));
     
 	return true;
 }

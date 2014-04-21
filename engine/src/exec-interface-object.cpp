@@ -3976,7 +3976,7 @@ void MCObject::GetCustomPropertiesElement(MCExecContext& ctxt, MCNameRef p_index
 void MCObject::SetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCStringRef p_string)
 {
     MCObjectPropertySet *t_propset;
-    if (MCStringIsEqualTo(p_string, kMCEmptyString, kMCCompareCaseless))
+    if (MCStringIsEmpty(p_string))
     {
         if (findpropset(p_index, true, t_propset))
             t_propset -> clear();
