@@ -1658,11 +1658,11 @@ void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p
     {
         // We want to get the grapheme length, not the codeunit one
         MCRange t_cu_range, t_char_range;
-        t_cu_range . offset = p_start_offset;
-        t_cu_range . length = t_offset - p_start_offset;
+        t_cu_range . offset = 0;
+        t_cu_range . length = t_offset;
         MCStringUnmapIndices(p_string, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
         
-		r_result = t_char_range . offset + t_char_range . length + 1;
+		r_result = t_char_range . length - p_start_offset + 1;
     }
 }
 
