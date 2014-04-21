@@ -64,12 +64,14 @@ void MCStringsSkipWord(MCExecContext& ctxt, MCStringRef p_string, bool p_skip_sp
         // then bump the offset up to the next quotation mark + 1, or the beginning of the next line
         // if neither of these are present then set offset to string length.
         MCStringFirstIndexOfChar(p_string, '"', x_offset + 1, kMCCompareExact, t_end_quote_offset);
-        MCStringFirstIndexOfChar(p_string, ctxt . GetLineDelimiter(), x_offset + 1, kMCCompareExact, t_end_line_offset);
+        MCStringFirstIndexOf(p_string, ctxt . GetLineDelimiter(), x_offset + 1, kMCCompareExact, t_end_line_offset);
         
-        if (t_end_quote_offset == t_length && t_end_line_offset == t_length)
-            x_offset = t_length;
+        if (t_end_quote_offset < t_end_line_offset)
+            x_offset = t_end_quote_offset + 1;
+        else if (t_end_line_offset < t_end_quote_offset)
+            x_offset = t_end_line_offset + MCStringGetLength(ctxt . GetLineDelimiter());
         else
-            x_offset = MCU_min(t_end_quote_offset, t_end_line_offset) + 1;
+            x_offset = t_length;
     }
     else
     {
@@ -245,16 +247,16 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
         case CT_LINE:
         case CT_ITEM:
         {
-            char_t t_line_delimiter = ctxt . GetLineDelimiter();
-            char_t t_item_delimiter = ctxt . GetItemDelimiter();
+            MCStringRef t_line_delimiter = ctxt . GetLineDelimiter();
+            MCStringRef t_item_delimiter = ctxt . GetItemDelimiter();
             
-            char_t t_delimiter = (p_chunk_type == CT_LINE) ? t_line_delimiter : t_item_delimiter;
+            MCStringRef t_delimiter = (p_chunk_type == CT_LINE) ? t_line_delimiter : t_item_delimiter;
             
             // calculate the start of the (p_first)th line or item
-            while (p_first && MCStringFirstIndexOfChar(p_string, t_delimiter, t_offset, kMCCompareExact, t_offset))
+            while (p_first && MCStringFirstIndexOf(p_string, t_delimiter, t_offset, kMCCompareExact, t_offset))
             {
                 p_first--;
-                t_offset++;
+                t_offset += MCStringGetLength(t_delimiter);
             }
             
             // if we couldn't find enough delimiters, set r_add to the number of
@@ -270,7 +272,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             // calculate the length of the next p_count lines / items
             while (p_count--)
             {
-                if (t_offset > t_end_index || !MCStringFirstIndexOfChar(p_string, t_delimiter, t_offset, kMCCompareExact, t_offset))
+                if (t_offset > t_end_index || !MCStringFirstIndexOf(p_string, t_delimiter, t_offset, kMCCompareExact, t_offset))
                 {
                     r_end = t_length;
                     break;
@@ -278,7 +280,7 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
                 if (p_count == 0)
                     r_end = t_offset;
                 else
-                    t_offset++;
+                    t_offset += MCStringGetLength(t_delimiter);
             }
             
             if (p_whole_chunk && !p_further_chunks)
@@ -497,11 +499,11 @@ void MCStringsSetTextChunk(MCExecContext& ctxt, MCStringRef p_source, Prepositio
     
     if (t_add && (p_chunk_type == CT_ITEM || p_chunk_type == CT_LINE))
     {
-        char_t t_delimiter;
+        MCStringRef t_delimiter;
         t_delimiter = p_chunk_type == CT_LINE ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter();
         while (t_add--)
         {
-            MCStringPrependNativeChar(x_target, t_delimiter);
+            MCStringPrepend(x_target, t_delimiter);
         }
     }
     
@@ -845,14 +847,14 @@ void MCStringsAddChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, uindex_t p
     if ((p_chunk_type != CT_ITEM && p_chunk_type != CT_LINE) || !p_to_add)
         return;
 
-    char_t t_delimiter;
+    MCStringRef t_delimiter;
     MCAutoStringRef t_string;
     /* UNCHECKED */ MCStringMutableCopyAndRelease((MCStringRef)x_text . text, &t_string);
     t_delimiter = p_chunk_type == CT_LINE ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter();
     uindex_t t_count = p_to_add;
     
     while (t_count--)
-        /* UNCHECKED */ MCStringInsertNativeChar(*t_string, x_text . finish, t_delimiter);
+        /* UNCHECKED */ MCStringInsert(*t_string, x_text . finish, t_delimiter);
     
     /* UNCHECKED */ MCStringCopy(*t_string, (MCStringRef&)x_text . text);
     

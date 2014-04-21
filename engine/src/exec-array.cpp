@@ -245,7 +245,7 @@ void MCArraysExecCombineByRowOrColumn(MCExecContext& ctxt, MCArrayRef p_array, b
         return;
     }
 
-    char_t t_delimiter;
+    MCStringRef t_delimiter;
     if (p_is_row)
         t_delimiter = ctxt . GetRowDelimiter();
     else
@@ -349,7 +349,7 @@ void MCArraysExecSplit(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_
 
 void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArrayRef& r_array)
 {
-    codepoint_t t_row_delim, t_column_delim;
+    MCStringRef t_row_delim, t_column_delim;
     t_row_delim = ctxt . GetRowDelimiter();
     t_column_delim = ctxt . GetColumnDelimiter();
     
@@ -372,7 +372,7 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
     {
         // Find the end of this row
         uindex_t t_row_end;
-        if (!MCStringFirstIndexOfChar(p_string, t_row_delim, t_offset, ctxt . GetCaseSensitive(), t_row_end))
+        if (!MCStringFirstIndexOf(p_string, t_row_delim, t_offset, ctxt . GetCaseSensitive(), t_row_end))
             t_row_end = t_length;
         
         // Iterate over the cells of this row
@@ -383,7 +383,7 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
         {
             // Find the end of this cell
             uindex_t t_cell_end;
-            if (!MCStringFirstIndexOfChar(p_string, t_column_delim, t_cell_offset, ctxt . GetCaseSensitive(), t_cell_end) || t_cell_end > t_row_end)
+            if (!MCStringFirstIndexOf(p_string, t_column_delim, t_cell_offset, ctxt . GetCaseSensitive(), t_cell_end) || t_cell_end > t_row_end)
                 t_cell_end = t_row_end;
             
             // Check that the output array has a slot for this column
@@ -398,9 +398,9 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
                 t_success = MCStringMutableCopySubstring(p_string, t_range, t_temp_array[t_column_index]);
             else
             {
-                t_success = MCStringAppendChar(t_temp_array[t_column_index], t_row_delim);
+                t_success = MCStringAppend(t_temp_array[t_column_index], t_row_delim);
                 if (t_success)
-                    t_success = MCStringAppendFormat(t_temp_array[t_column_delim], "%*@", t_range, p_string);
+                    t_success = MCStringAppendFormat(t_temp_array[t_column_index], "%*@", t_range, p_string);
             }
             
             if (!t_success)
@@ -411,11 +411,11 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
             
             // Next cell
             t_column_index++;
-            t_cell_offset = t_cell_end + 1;
+            t_cell_offset = t_cell_end + MCStringGetLength(t_column_delim);
         }
         
         // Next row
-        t_offset = t_row_end;
+        t_offset = t_row_end + MCStringGetLength(t_row_delim);
     }
     
     // Convert the temporary array into a "proper" array

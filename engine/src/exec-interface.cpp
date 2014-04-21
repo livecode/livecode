@@ -3927,7 +3927,7 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 	// all other forms of search default to the lineDelimiter for now. Note that this is a slight
 	// change of behavior as previously sorting containers by line ignored the lineDelimiter and
 	// always delimited by ascii 10.
-	char t_delimiter;
+	MCStringRef t_delimiter;
 	if (p_type == CT_ITEM)
 		t_delimiter = ctxt . GetItemDelimiter();
 	else
@@ -3938,7 +3938,7 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 
     MCAutoStringRefArray t_chunks;
     
-    extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
+    extern bool MCStringsSplit(MCStringRef p_string, MCStringRef p_separator, MCStringRef*&r_strings, uindex_t& r_count);
     
     if (!MCStringsSplit(p_data, t_delimiter, t_chunks . PtrRef(), t_chunks . CountRef()))
         return false;

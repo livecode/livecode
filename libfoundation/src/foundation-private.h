@@ -240,7 +240,7 @@ enum
 
 struct __MCList: public __MCValue
 {
-	char_t delimiter;
+	MCStringRef delimiter;
 	MCStringRef buffer;
 };
 

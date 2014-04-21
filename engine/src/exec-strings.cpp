@@ -107,19 +107,47 @@ bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&
 {
 	uindex_t t_current = 0;
 	uindex_t t_found = 0;
-
+    
 	MCAutoStringRefArray t_strings;
-
+    
 	uindex_t t_count = 0;
-
+    
 	while (MCStringFirstIndexOfChar(p_string, p_separator, t_current, kMCStringOptionCompareExact, t_found))
 	{
 		if (!t_strings.Extend(t_count + 1))
 			return false;
 		if (!MCStringCopySubstring(p_string, MCRangeMake(t_current, t_found - t_current), t_strings[t_count++]))
 			return false;
-
+        
 		t_current = t_found + 1;
+	}
+    
+	if (!t_strings.Extend(t_count + 1))
+		return false;
+	if (!MCStringCopySubstring(p_string, MCRangeMake(t_current, MCStringGetLength(p_string) - t_current), t_strings[t_count++]))
+		return false;
+    
+	t_strings.Take(r_strings, r_count);
+	return true;
+}
+
+bool MCStringsSplit(MCStringRef p_string, MCStringRef p_separator, MCStringRef*&r_strings, uindex_t& r_count)
+{
+	uindex_t t_current = 0;
+	uindex_t t_found = 0;
+
+	MCAutoStringRefArray t_strings;
+
+	uindex_t t_count = 0;
+
+	while (MCStringFirstIndexOf(p_string, p_separator, t_current, kMCStringOptionCompareExact, t_found))
+	{
+		if (!t_strings.Extend(t_count + 1))
+			return false;
+		if (!MCStringCopySubstring(p_string, MCRangeMake(t_current, t_found - t_current), t_strings[t_count++]))
+			return false;
+
+		t_current = t_found + MCStringGetLength(p_separator);
 	}
 
 	if (!t_strings.Extend(t_count + 1))
@@ -2145,7 +2173,7 @@ bool MCWildcardMatcher::match(MCRange p_source_range)
 	return MCStringsExecWildcardMatch(source, source_iter, p_source_range, pattern, pattern_iter, 0, casesensitive);
 }
 
-void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, bool p_without, char_t p_delimiter, MCPatternMatcher *p_matcher, MCStringRef &r_result)
+void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, bool p_without, MCStringRef p_delimiter, MCPatternMatcher *p_matcher, MCStringRef &r_result)
 {
 	uint32_t t_length = MCStringGetLength(p_source);
 	if (t_length == 0)
@@ -2168,7 +2196,7 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
 	while (t_found && t_success)
 	{
         MCAutoStringRef t_line;
-		t_found = MCStringFirstIndexOfChar(p_source, p_delimiter, t_last_offset, kMCCompareExact, t_return_offset);
+		t_found = MCStringFirstIndexOf(p_source, p_delimiter, t_last_offset, kMCCompareExact, t_return_offset);
 		if (!t_found) //last line or item
         {
             t_chunk_range . offset = t_last_offset;
@@ -2186,7 +2214,7 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
             t_success = MCStringCopySubstring(p_source, t_chunk_range, &t_line) && MCListAppend(*t_output, *t_line);
         }
 
-		t_last_offset = t_return_offset + 1;
+		t_last_offset = t_return_offset + MCStringGetLength(p_delimiter);
 	}
 	
     if (!t_success)

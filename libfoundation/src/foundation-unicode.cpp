@@ -1109,8 +1109,7 @@ bool MCUnicodeLastIndexOfChar(const unichar_t *p_string, uindex_t p_string_lengt
     // Create filter chain for the string being searched
     MCTextFilter* t_string_filter = MCTextFilterCreate(p_string, p_string_length, kMCStringEncodingUTF16, p_option);
     
-    // Loop until we reach the end of the string
-    bool t_found = false;
+    // Loop until we find the character
     while (t_string_filter->HasData())
     {
         codepoint_t t_cp = t_string_filter->GetNextCodepoint();
@@ -1118,15 +1117,16 @@ bool MCUnicodeLastIndexOfChar(const unichar_t *p_string, uindex_t p_string_lengt
         {
             t_string_filter->MarkText();
             r_index = t_string_filter->GetMarkedLength() - 1;
-            t_found = true;
+            MCTextFilterRelease(t_string_filter);
+            return true;
         }
         
         t_string_filter->AdvanceCursor();
     }
     
-    // Return whether the character was found
+    // Could not find the character
     MCTextFilterRelease(t_string_filter);
-    return t_found;
+    return false;
 }
 
 void MCUnicodeSharedPrefix(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_prefix, uindex_t p_prefix_length, MCUnicodeCompareOption p_option, uindex_t &r_len_in_string, uindex_t &r_len_in_prefix)
