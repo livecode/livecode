@@ -1276,41 +1276,36 @@ struct MCObjectPtr
 	uint32_t part_id;
 };
 
-// NOTE: the indices in this structure are UTF-16 code unit indices.
+// NOTE: the indices in this structure are UTF-16 code unit indices if the value is a stringref,
+//  and byte indices if it is a dataref.
 struct MCMarkedText
 {
-    MCStringRef text;
+    MCValueRef text;
     uint32_t start, finish;
     // flag if the contents of the string have changed due to forcing additional delimiters
     bool changed;
-};
-
-struct MCMarkedData
-{
-    MCDataRef data;
-    uint32_t start, finish;
 };
 
 struct MCObjectChunkPtr
 {
 	MCObject *object;
 	uint32_t part_id;
-	Chunk_term chunk; 
-	MCMarkedText mark;
+	Chunk_term chunk;
+    MCMarkedText mark;
 };
 
 struct MCVariableChunkPtr
 {
 	MCVarref *variable;
 	Chunk_term chunk;
-	MCMarkedText mark;
+    MCMarkedText mark;
 };
 
 struct MCUrlChunkPtr
 {
 	MCStringRef url;
 	Chunk_term chunk;
-	MCMarkedText mark;
+    MCMarkedText mark;
 };
 
 struct MCObjectIndexPtr
