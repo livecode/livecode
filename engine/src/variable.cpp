@@ -534,20 +534,74 @@ bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef
 
 bool MCVariable::replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range)
 {
-    if (MCValueGetTypeCode(p_replacement) == kMCValueTypeCodeData)
+    return replace(ctxt, p_replacement, p_range, nil, 0);
+}
+
+bool MCVariable::replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range, MCNameRef *p_path, uindex_t p_length)
+{
+    if (p_length == 0)
     {
-        if (!converttomutabledata(ctxt))
-            return false;
+        if (MCValueGetTypeCode(p_replacement) == kMCValueTypeCodeData)
+        {
+            if (!converttomutabledata(ctxt))
+                return false;
+            
+            // We are now sure to have a dataref in our ExecValue
+            MCDataReplace(value . dataref_value, p_range, (MCDataRef)p_replacement);
+        }
+        else
+        {
+            if (!converttomutablestring(ctxt))
+                return false;
         
-        // We are now sure to have a stringref in our ExecValue
-        return MCDataReplace(value . dataref_value, p_range, (MCDataRef)p_replacement);
+            // We are now sure to have a stringref in our ExecValue
+            MCStringReplace(value . stringref_value, p_range, (MCStringRef)p_replacement);
+        }
+        
+        synchronize(ctxt, true);
+        
+        return true;
     }
     
-    if (!converttomutablestring(ctxt))
-        return false;
     
-    // We are now sure to have a stringref in our ExecValue
-    return MCStringReplace(value . stringref_value, p_range, (MCStringRef)p_replacement);
+	MCValueRef t_current_value;
+	t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
+	
+    
+    if (MCValueGetTypeCode(p_replacement) == kMCValueTypeCodeData)
+    {
+        MCDataRef t_current_value_as_data;
+        t_current_value_as_data = nil;
+
+        if (ctxt . ConvertToData(t_current_value, t_current_value_as_data) &&
+            MCDataMutableCopyAndRelease(t_current_value_as_data, t_current_value_as_data) &&
+            MCDataReplace(t_current_value_as_data, p_range, (MCDataRef)p_replacement) &&
+            setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_current_value_as_data))
+        {
+            MCValueRelease(t_current_value_as_data);
+            synchronize(ctxt, true);
+            return true;
+        }
+        
+        MCValueRelease(t_current_value_as_data);
+        return false;
+    }
+    
+	MCStringRef t_current_value_as_string;
+	t_current_value_as_string = nil;
+    // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
+	if (ctxt . ConvertToString(t_current_value, t_current_value_as_string) &&
+		MCStringMutableCopyAndRelease(t_current_value_as_string, t_current_value_as_string) &&
+        MCStringReplace(t_current_value_as_string, p_range, (MCStringRef)p_replacement) &&
+		setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_current_value_as_string))
+	{
+		MCValueRelease(t_current_value_as_string);
+        synchronize(ctxt, true);
+		return true;
+	}
+    
+	MCValueRelease(t_current_value_as_string);
+	return false;
 }
 
 bool MCVariable::deleterange(MCExecContext& ctxt, MCRange p_range)
@@ -556,6 +610,14 @@ bool MCVariable::deleterange(MCExecContext& ctxt, MCRange p_range)
         return replace(ctxt, kMCEmptyData, p_range);
     
     return replace(ctxt, kMCEmptyString, p_range);
+}
+
+bool MCVariable::deleterange(MCExecContext& ctxt, MCRange p_range, MCNameRef *p_path, uindex_t p_length)
+{
+    if (MCValueGetTypeCode(getvalueref(p_path, p_length, ctxt . GetCaseSensitive())) == kMCValueTypeCodeData)
+        return replace(ctxt, kMCEmptyData, p_range, p_path, p_length);
+    
+    return replace(ctxt, kMCEmptyString, p_range, p_path, p_length);
 }
 
 #ifdef LEGACY_EXEC
@@ -1033,12 +1095,12 @@ bool MCContainer::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariabl
 
 bool MCContainer::replace(MCExecContext &ctxt, MCValueRef p_replacement, MCRange p_range)
 {
-    return m_variable -> replace(ctxt, p_replacement, p_range);
+    return m_variable -> replace(ctxt, p_replacement, p_range, m_path, m_length);
 }
 
 bool MCContainer::deleterange(MCExecContext &ctxt, MCRange p_range)
 {
-    return m_variable -> deleterange(ctxt, p_range);
+    return m_variable -> deleterange(ctxt, p_range, m_path, m_length);
 }
 
 bool MCContainer::remove(MCExecContext& ctxt)

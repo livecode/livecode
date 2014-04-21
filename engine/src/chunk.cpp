@@ -5757,6 +5757,11 @@ bool MCTextChunkIterator::isamong(MCExecContext& ctxt, MCStringRef p_needle)
             if (MCStringIsEmpty(p_needle))
                 break;
             
+            
+            // Otherwise we need to find p_needle and check to see if there is a delimiter either side.
+            // This is because of the case where the delimiter is within p_needle - e.g.
+            // "a,b" is among the items of "a,b,c,d" should return true.
+            
             if (type == CT_PARAGRAPH)
                 return MCStringsIsAmongTheParagraphsOfRange(ctxt, p_needle, text, ctxt . GetStringComparisonType(), MCRangeMake(0, length));
             
