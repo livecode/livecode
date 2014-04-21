@@ -1521,6 +1521,10 @@ bool MCStringUnmapIndices(MCStringRef, MCCharChunkType, MCRange p_codeunit_range
 // but this is not reflected in the byte count.
 bool MCStringConvertToBytes(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, byte_t*& r_bytes, uindex_t& r_byte_count);
 
+// [[ Bug 12204 ]] textEncode ASCII support is actually native
+// Converts the contents of the string to ASCII characters - excluding the characters from the extended range
+bool MCStringConvertToAscii(MCStringRef self, char_t *&r_chars, uindex_t& r_char_count);
+
 // Converts the contents of the string to unicode. The caller takes ownership of the
 // char array. Note that the returned array is NUL terminated, but this is not
 // reflected in the char count.

@@ -1510,7 +1510,9 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
     
     switch(p_encoding)
     {
+    // [[ Bug 12204 ]] textEncode ASCII support is actually native
     case kMCStringEncodingASCII:
+        return MCStringConvertToAscii(self, (char_t*&)r_bytes, r_byte_count);
     case kMCStringEncodingNative:
         return MCStringConvertToNative(self, (char_t*&)r_bytes, r_byte_count);
     case kMCStringEncodingUTF16:
@@ -1566,6 +1568,27 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
     }
     
     return false;
+}
+
+bool MCStringConvertToAscii(MCStringRef self, char_t *&r_chars, uindex_t& r_char_count)
+{
+    // Get the native chars, but excludes any char belonging to the extended part of the ASCII -
+    char_t *t_chars;
+    uindex_t t_char_count = MCStringGetLength(self);
+    if (!MCMemoryNewArray(t_char_count + 1, t_chars))
+        return false;
+    
+    t_char_count = MCStringGetNativeChars(self, MCRangeMake(0, t_char_count), t_chars);
+    
+    for (uindex_t i = 0; i < t_char_count; ++i)
+    {
+        if (t_chars[i] > 127)
+            t_chars[i] = '?';
+    }
+    
+    r_chars = t_chars;
+    r_char_count = t_char_count;
+    return true;
 }
 
 bool MCStringConvertToUnicode(MCStringRef self, unichar_t*& r_chars, uindex_t& r_char_count)
