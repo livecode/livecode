@@ -82,8 +82,8 @@ enum
 	kMCStringFlagIsIndirect = 1 << 0,
 	// If set then the string is mutable.
 	kMCStringFlagIsMutable = 1 << 1,
-	// If set then the string is binary (native)
-	kMCStringFlagIsNative = 1 << 2,
+	// If set then the string is not native
+	kMCStringFlagIsNotNative = 1 << 2,
     // If set, the string contains no non-BMP characters
     kMCStringFlagIsSimple = 1 << 3,
     // If set, the string has been checked for simplicity
@@ -164,19 +164,15 @@ struct __MCString: public __MCValue
 {
     union
     {
-        union
-        {
-            MCStringRef string;
-            MCDataRef data;
-        };
+        MCStringRef string;
         struct
         {
             uindex_t char_count;
-            strchar_t *chars;
+            unichar_t *chars;
             char_t *native_chars;
-            uindex_t capacity;
         };
     };
+    uindex_t capacity;
 };
 
 //////////
