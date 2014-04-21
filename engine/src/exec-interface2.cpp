@@ -3321,10 +3321,10 @@ void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wh
 {
     if (p_object . object -> gettype() == CT_FIELD || p_object . object -> gettype() == CT_BUTTON)
     {
-        p_object . object -> getstringprop(ctxt, p_object . part_id, P_TEXT, False, r_mark . text);
+        p_object . object -> getstringprop(ctxt, p_object . part_id, P_TEXT, False, (MCStringRef &)r_mark . text);
         
         r_mark . start = 0;
-        r_mark . finish = MCStringGetLength(r_mark . text);
+        r_mark . finish = MCStringGetLength((MCStringRef)r_mark . text);
         r_mark . changed = false;
     	return;
     }
@@ -3342,9 +3342,9 @@ void MCInterfaceMarkContainer(MCExecContext& ctxt, MCObjectPtr p_container, MCMa
         case CT_IMAGE:
         case CT_AUDIO_CLIP:
         case CT_VIDEO_CLIP:
-            p_container . object -> getstringprop(ctxt, p_container . part_id, P_TEXT, False, r_mark . text);
+            p_container . object -> getstringprop(ctxt, p_container . part_id, P_TEXT, False, (MCStringRef &)r_mark . text);
             r_mark . start = 0;
-            r_mark . finish = MCStringGetLength(r_mark . text);
+            r_mark . finish = MCStringGetLength((MCStringRef)r_mark . text);
             return;
         default:
             break;

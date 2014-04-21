@@ -3174,7 +3174,7 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
     if (p_chunk . mark . changed)
     {
         MCAutoStringRef t_string;
-        if (!MCStringMutableCopy(p_chunk . mark . text, &t_string))
+        if (!MCStringMutableCopy((MCStringRef)p_chunk . mark . text, &t_string))
             return;
         
         // in this case the chunk indices will be correct whatever the preposition
@@ -3236,7 +3236,7 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCStringRef p_string, int
 			t_start = t_finish = p_chunk . mark . start;
 		
         MCAutoStringRef t_string;
-        if (!MCStringMutableCopy(p_chunk . mark . text, &t_string))
+        if (!MCStringMutableCopy((MCStringRef)p_chunk . mark . text, &t_string))
             return;
         
         /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(t_start, t_finish - t_start), p_string);
@@ -3262,7 +3262,7 @@ void MCInterfaceExecPutIntoObject(MCExecContext& ctxt, MCExecValue p_value, int 
 			t_start = t_finish = p_chunk . mark . start;
 		
         MCAutoStringRef t_string;
-        if (!MCStringMutableCopy(p_chunk . mark . text, &t_string))
+        if (!MCStringMutableCopy((MCStringRef)p_chunk . mark . text, &t_string))
             return;
         
         MCAutoStringRef t_string_value;
