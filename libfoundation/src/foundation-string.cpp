@@ -1117,7 +1117,7 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
     MCAssert(self != nil);
     
     // Shortcut for strings containing only BMP characters
-    if (MCStringIsNative || (MCStringIsSimple(self) && MCStringIsUncombined(self)))
+    if (MCStringIsNative(self) || (MCStringIsSimple(self) && MCStringIsUncombined(self)))
     {
         __MCStringClampRange(self, p_in_range);
         r_out_range = p_in_range;
@@ -1361,7 +1361,7 @@ bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
     }
     
     // Quick-n-dirty workaround
-    if (self -> flags & kMCStringFlagIsSimple && self -> flags & kMCStringFlagIsUncombined)
+    if (MCStringIsNative(self) || (MCStringIsUncombined(self) && MCStringIsSimple(self)))
     {
         __MCStringClampRange(self, p_in_range);
         r_out_range = p_in_range;
