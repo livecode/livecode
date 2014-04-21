@@ -1142,7 +1142,7 @@ static bool import_html_parse_attr_value(const char *p_start_ptr, const char *p_
 			uint32_t t_codepoint;
 			if (import_html_parse_entity(p_start_ptr, p_end_ptr, t_codepoint))
 			{
-				uint16_t t_utf16_codepoint;
+				unichar_t t_utf16_codepoint;
 				t_utf16_codepoint = t_codepoint;
 				if (!MCUnicodeMapToNative(&t_utf16_codepoint, 1, t_char))
 					t_char = '?';
@@ -1416,8 +1416,8 @@ static void import_html_append_unicode_char(import_html_t& ctxt, uint32_t p_code
 	if (ctxt . list_depth > 0 && !ctxt . list_in_li)
 		return;
 
-	uint16_t t_unicode_char;
-	t_unicode_char = (uint16_t)p_codepoint;
+	unichar_t t_unicode_char;
+	t_unicode_char = (unichar_t)p_codepoint;
 	
 	// See if we can map the char to native.
 	if (p_codepoint < 65536)
