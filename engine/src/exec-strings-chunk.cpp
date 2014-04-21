@@ -92,6 +92,11 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
         return;
     }
     
+    // When the string doesn't contain combining characters or surrogate pairs, we can shortcut.
+    if ((p_chunk_type == CT_CHARACTER || p_chunk_type == CT_CODEPOINT))
+        if (MCStringIsNative(p_string) || (MCStringIsUncombined(p_string) && MCStringIsSimple(p_string)))
+            p_chunk_type = CT_CODEUNIT;
+    
     if (p_chunk_type == CT_CODEUNIT)
     {
         r_count = MCStringGetLength(p_string);

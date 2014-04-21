@@ -1035,7 +1035,7 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
     MCAssert(self != nil);
     
     // Shortcut for strings containing only BMP characters
-    if (MCStringIsNative || (MCStringIsSimple(self) && MCStringIsUncombined(self)))
+    if (MCStringIsNative(self) || (MCStringIsSimple(self) && MCStringIsUncombined(self)))
     {
         __MCStringClampRange(self, p_in_range);
         r_out_range = p_in_range;
