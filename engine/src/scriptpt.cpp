@@ -156,6 +156,7 @@ MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)
 	in_tag = sp.in_tag;
 	was_in_tag = sp.was_in_tag;
 	token_nameref = MCValueRetain(kMCEmptyName);
+    m_type = ST_UNDEFINED;
 }
 
 #ifdef LEGACY_EXEC
@@ -214,6 +215,7 @@ MCScriptPoint::MCScriptPoint(MCExecContext &ctxt)
     in_tag = False;
     was_in_tag = False;
     token_nameref = MCValueRetain(kMCEmptyName);
+    m_type = ST_UNDEFINED;
 }
 
 MCScriptPoint::MCScriptPoint(MCExecContext &ctxt, MCStringRef p_string)
@@ -238,6 +240,8 @@ MCScriptPoint::MCScriptPoint(MCExecContext &ctxt, MCStringRef p_string)
     in_tag = False;
     was_in_tag = False;
     token_nameref = MCValueRetain(kMCEmptyName);
+    
+    m_type = ST_UNDEFINED;
 }
 
 MCScriptPoint::MCScriptPoint(MCStringRef p_string)
@@ -262,6 +266,8 @@ MCScriptPoint::MCScriptPoint(MCStringRef p_string)
 	in_tag = False;
 	was_in_tag = False;
 	token_nameref = MCValueRetain(kMCEmptyName);
+    
+    m_type = ST_UNDEFINED;
 }
 
 MCScriptPoint& MCScriptPoint::operator =(const MCScriptPoint& sp)
@@ -280,6 +286,7 @@ MCScriptPoint& MCScriptPoint::operator =(const MCScriptPoint& sp)
 	token = sp.token;
 	line = sp.line;
 	pos = sp.pos;
+    m_type = sp.m_type;
     MCValueAssign(token_nameref, sp.token_nameref);
 	return *this;
 }

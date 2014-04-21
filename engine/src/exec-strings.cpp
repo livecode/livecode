@@ -1651,10 +1651,19 @@ void MCStringsEvalByteOffset(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p
 void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
 	MCStringOptions t_options = ctxt.GetStringComparisonType();
-	if (!MCStringFirstIndexOf(p_string, p_chunk, p_start_offset, t_options, r_result))
+    uindex_t t_offset;
+	if (!MCStringFirstIndexOf(p_string, p_chunk, p_start_offset, t_options, t_offset))
 		r_result = 0;
 	else
-		r_result = r_result + 1 - p_start_offset;
+    {
+        // We want to get the grapheme length, not the codeunit one
+        MCRange t_cu_range, t_char_range;
+        t_cu_range . offset = p_start_offset;
+        t_cu_range . length = t_offset - p_start_offset;
+        MCStringUnmapIndices(p_string, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
+        
+		r_result = t_char_range . offset + t_char_range . length + 1;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
