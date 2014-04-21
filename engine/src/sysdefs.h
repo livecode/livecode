@@ -1253,7 +1253,6 @@ enum Chunk_term {
     CT_COLOR_PALETTE,
     CT_FIELD,
 	CT_LAST_CONTROL = CT_FIELD,
-	CT_ELEMENT,
     CT_LINE,
     CT_PARAGRAPH,
     CT_SENTENCE,
@@ -1266,6 +1265,8 @@ enum Chunk_term {
     CT_CODEPOINT,
     CT_CODEUNIT,
     CT_BYTE,
+    // SN-2014-04-15 [[ ByteChunk ]] CT_ELEMENT should be put after the char chunks, as the value won't be evaluated as a string
+	CT_ELEMENT,
     CT_TYPES,
 	CT_KEY
 };
@@ -1276,10 +1277,11 @@ struct MCObjectPtr
 	uint32_t part_id;
 };
 
-// NOTE: the indices in this structure are UTF-16 code unit indices.
+// NOTE: the indices in this structure are UTF-16 code unit indices if the value is a stringref,
+//  and byte indices if it is a dataref.
 struct MCMarkedText
 {
-    MCStringRef text;
+    MCValueRef text;
     uint32_t start, finish;
     // flag if the contents of the string have changed due to forcing additional delimiters
     bool changed;
@@ -1289,22 +1291,22 @@ struct MCObjectChunkPtr
 {
 	MCObject *object;
 	uint32_t part_id;
-	Chunk_term chunk; 
-	MCMarkedText mark;
+	Chunk_term chunk;
+    MCMarkedText mark;
 };
 
 struct MCVariableChunkPtr
 {
 	MCVarref *variable;
 	Chunk_term chunk;
-	MCMarkedText mark;
+    MCMarkedText mark;
 };
 
 struct MCUrlChunkPtr
 {
 	MCStringRef url;
 	Chunk_term chunk;
-	MCMarkedText mark;
+    MCMarkedText mark;
 };
 
 struct MCObjectIndexPtr

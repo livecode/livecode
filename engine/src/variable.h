@@ -570,6 +570,13 @@ inline MCHashentry *MCHashentry::Create(const MCString& p_key, uint32_t p_hash)
 
 #endif
 
+typedef enum
+{
+    kMCVariableSetInto,
+    kMCVariableSetAfter,
+    kMCVariableSetBefore
+} MCVariableSettingStyle;
+
 class MCVariable
 {
 protected:
@@ -597,13 +604,24 @@ protected:
 	// which can catch a failure.
 	MCVariable(void) {}
 	MCVariable(const MCVariable& other) {}
-
+    
+    // Modify the content of the variable - append or prepend (nested key).
+    bool modify(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting);
+    // Modify the variable by appending/prepending the value given (nested key).
+    bool modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting);
+    
+    bool modify(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting);
+    bool modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting);
 public:
 	
 	// Destructor
 	~MCVariable(void);
 
 	/////////
+    
+    // SN-2014-04-11 [[ FasterVariables ]] Now able to handle prepending a string to a variable.
+    // A style of setting allows us to set the variable or to modify it by appending/prepending
+    // '::append' has been renamed '::modify' to take in consideration this new ability
 
 	// Set the content of the variable (nested key) to the given value.
 	bool setvalueref(MCNameRef *path, uindex_t length, bool case_sensitive, MCValueRef value);
@@ -615,20 +633,16 @@ public:
     // Evaluate the contents of the variable (nested key) into the ep.
 	// Evalue the contents of the variable (nested key) into r_value.
     bool eval(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length, MCValueRef &r_value);
-    // Copy the contents of the ep into the variable (nested key).
-    bool set(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length);
-    // Append the content of the ep to the variable (nested key).
-    bool append(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length);
+    // Copy the contents of the valueref into the variable (nested key).
+    bool set(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting = kMCVariableSetInto);
     // Remove the content (nested key) of the variable.
     bool remove(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length);
     
     // Evaluate the contents of the variable (nested key) into the ep.
 	// Evalue the contents of the variable (nested key) into r_value.
     bool eval_ctxt(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_length, MCExecValue &r_value);
-    // Copy the contents of the ep into the variable (nested key).
-    bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCNameRef *p_path, uindex_t p_length);
-    // Append the content of the ep to the variable (nested key).
-    bool append_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef *p_path, uindex_t p_length);
+    // Give the exec value to the variable (nested key).
+    bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting = kMCVariableSetInto);
 	
     bool setvalueref(MCValueRef value);
 	MCValueRef getvalueref(void);
@@ -638,12 +652,18 @@ public:
 	MCExecValue getexecvalue(void);
 
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
-    bool set(MCExecContext& ctxt, MCValueRef p_value);
-    bool append(MCExecContext& ctxt, MCValueRef p_value);
+    bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
+    
+    // SN-2014-04-11 [[ FasterVariable ]]
+    // Replace the content of the internal string according to the range given to avoid unnecessary copy
+	bool replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range);
+    bool replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range, MCNameRef *p_path, uindex_t p_length);
+    
+	bool deleterange(MCExecContext& ctxt, MCRange p_range);
+    bool deleterange(MCExecContext& ctxt, MCRange p_range, MCNameRef *p_path, uindex_t p_length);
     
     bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
-    bool give_value(MCExecContext& ctxt, MCExecValue p_value);
-    bool append_ctxt(MCExecContext& ctxt, MCExecValue p_value);
+    bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
     
     bool remove(MCExecContext& ctxt);
     
@@ -662,7 +682,9 @@ public:
 	bool converttomutablestring(MCExecPoint& ep);
 #endif
     bool converttomutablestring(MCExecContext& ctxt);
-	// Converts the value to a (mutable) array.
+    bool converttomutabledata(MCExecContext& ctxt);
+
+    // Converts the value to a (mutable) array.
 	bool converttomutablearray(void);
 
 	/////////
@@ -815,14 +837,13 @@ public:
     
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
 	bool remove(MCExecContext& ctxt);
-    bool set(MCExecContext& ctxt, MCValueRef p_value);
-    bool append(MCExecContext& ctxt, MCValueRef p_value);
+    bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
     
     bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
-    bool give_value(MCExecContext& ctxt, MCExecValue p_value);
-    bool append_ctxt(MCExecContext& ctxt, MCExecValue p_value);
+    bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
     
-	//
+	bool replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range);
+	bool deleterange(MCExecContext& ctxt, MCRange p_range);
 
 	bool clear(void);
 #ifdef LEGACY_EXEC
@@ -937,8 +958,10 @@ public:
 #ifdef LEGACY_EXEC
 	Exec_stat set(MCExecPoint &, Boolean append = False);
 #endif
-    bool set(MCExecContext& ctxt, MCValueRef p_value, bool p_append = false);
-    bool give_value(MCExecContext& ctxt, MCExecValue p_value, bool p_append = false);
+    bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
+    bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
+    bool replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range);
+    bool deleterange(MCExecContext& ctxt, MCRange p_range);
 	Parse_stat parsearray(MCScriptPoint &);
 	Exec_stat sets(const MCString &s);
 	void clear();

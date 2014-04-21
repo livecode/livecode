@@ -1729,6 +1729,9 @@ findex_t MCBlock::GetCursorIndex(int2 x, Boolean chunk, Boolean last)
 	int32_t t_last_width;
 	t_last_width = is_rtl() ? width : 0;
     
+    MCRange t_char_range;
+    MCRange t_cp_range;
+        
     while(i < m_index + m_size)
     {
         findex_t t_new_i;
@@ -1749,7 +1752,6 @@ findex_t MCBlock::GetCursorIndex(int2 x, Boolean chunk, Boolean last)
             break;
         
         t_last_width = t_new_width;
-        
         i = t_new_i;
     }
 

@@ -1867,8 +1867,9 @@ void MCScreenDC::updatemenubar(Boolean force)
 				//   2) The edit menu has as last item one with tag "Preferences", or with name that begins with "Preferences"
 				//   3) The relevant item, itself, is enabled.
 				//
-				const char *tname = bptr->getname_cstring();
-				if (!t_pref_item_found && MCU_strncasecmp("Edit", tname, strlen(tname)) == 0)
+                MCNameRef t_name;
+				t_name = bptr->getname();
+				if (!t_pref_item_found && MCNameIsEqualToCString(t_name, "Edit", kMCCompareCaseless))
 				{
 					uint32_t count = CountMenuItems(menu);
 					MenuCommand t_id;
@@ -1909,7 +1910,7 @@ void MCScreenDC::updatemenubar(Boolean force)
 				
 				// MW-2011-02-28: [[ Bug 818 ]] Be more specific about the 'About' item, and
 				//   remove/disable if its not present / not enabled.
-				if (!t_about_item_found && MCU_strncasecmp("Help", tname, strlen(tname)) == 0)
+				if (!t_about_item_found && MCNameIsEqualToCString(t_name, "Help", kMCCompareCaseless))
 				{
 					uint32_t count = CountMenuItems(menu);
 					MenuCommand t_id;

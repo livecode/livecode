@@ -8,7 +8,7 @@ SOURCES=foundation-array.cpp foundation-core.cpp foundation-debug.cpp \
         foundation-data.cpp foundation-number.cpp foundation-set.cpp \
         foundation-stream.cpp foundation-string.cpp foundation-unicodechars.cpp \
         foundation-value.cpp foundation-error.cpp foundation-unicode.cpp \
-	foundation-locale.cpp foundation-bidi.cpp
+	foundation-locale.cpp foundation-bidi.cpp foundation-text.cpp
 
 CUSTOM_DEFINES=
 

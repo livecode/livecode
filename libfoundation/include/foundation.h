@@ -1421,6 +1421,9 @@ bool MCStringIsNative(MCStringRef string);
 // Returns true if the string only requires BMP characters to represent.
 bool MCStringIsSimple(MCStringRef string);
 
+// Returns true if the string only comprises non-combining characters.
+bool MCStringIsUncombined(MCStringRef string);
+
 /////////
 
 // Returns the number of chars that make up the string. Note that a char is
@@ -1440,6 +1443,8 @@ const unichar_t *MCStringGetCharPtr(MCStringRef string);
 // the method returns nil, then GetNativeChars() must be used to fetch the contents
 // in native encoding.
 const char_t *MCStringGetNativeCharPtr(MCStringRef string);
+// The native length may be different from the string char count.
+const char_t *MCStringGetNativeCharPtrAndLength(MCStringRef self, uindex_t& r_native_length);
 
 // Returns the Unicode codepoint at the given codepoint index
 codepoint_t MCStringGetCodepointAtIndex(MCStringRef string, uindex_t index);
@@ -1774,6 +1779,11 @@ bool MCDataCopy(MCDataRef p_data, MCDataRef& r_new_data);
 bool MCDataCopyAndRelease(MCDataRef p_data, MCDataRef& r_new_data);
 bool MCDataMutableCopy(MCDataRef p_data, MCDataRef& r_mutable_data);
 bool MCDataMutableCopyAndRelease(MCDataRef p_data, MCDataRef& r_mutable_data);
+
+bool MCDataCopyRange(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+bool MCDataCopyRangeAndRelease(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+bool MCDataMutableCopyRange(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+bool MCDataMutableCopyRangeAndRelease(MCDataRef data, MCRange range, MCDataRef& r_new_data);
 
 bool MCDataIsMutable(const MCDataRef p_data);
 

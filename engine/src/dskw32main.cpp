@@ -170,6 +170,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			sptr++;
 		}
 	}
+
+	if (!MCInitialize())
+		exit(-1);
 	
     // Ensure the command line variable gets set
     /* UNCHECKED */ MCStringCreateWithWString(lpWCmdLine, MCcmdline);
@@ -206,9 +209,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	ITfThreadMgr *t_tsf_mgr;
 	t_tsf_mgr = nil;
 	CoCreateInstance(CLSID_TF_ThreadMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, (void**)&t_tsf_mgr);
-
-	if (!MCInitialize())
-		exit(-1);
 
 	// Create the main thread's principal fiber.
 	s_main_fiber = ConvertThreadToFiber(nil);
