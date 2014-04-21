@@ -107,19 +107,6 @@ typedef unichar_t strchar_t;
 #define MCStrCharMapToUnicode(x) (x)
 #define MCStrCharsMapFromUnicode(x, y, z, w) (MCMemoryCopy(z, x, y * sizeof(strchar_t)), w = y)
 #define MCStrCharsMapFromNative(x, y, z) MCUnicodeCharsMapFromNative(y, z, x)
-#define MCStrCharsHashExact(x, y) MCUnicodeCharsHashExact(x, y)
-#define MCStrCharsHashCaseless(x, y) MCUnicodeCharsHashCaseless(x, y)
-
-// These will probably go away
-//#define MCStrCharFold(x) MCStrCharFoldSimple(x)
-//#define MCStrCharLowercase(x) MCUnicodeCharLowercase(x)
-//#define MCStrCharUppercase(x) MCUnicodeCharUppercase(x)
-#define MCStrCharsSharedPrefixExact(x, y, z, w) MCUnicodeCharsSharedPrefixExact(x, y, z, w)
-#define MCStrCharsSharedPrefixCaseless(x, y, z, w) MCUnicodeCharsSharedPrefixCaseless(x, y, z, w)
-#define MCStrCharsSharedSuffixExact(x, y, z, w) MCUnicodeCharsSharedSuffixExact(x, y, z, w)
-#define MCStrCharsSharedSuffixCaseless(x, y, z, w) MCUnicodeCharsSharedSuffixCaseless(x, y, z, w)
-//#define MCStrCharsLowercase(x, y) MCUnicodeCharsLowercase(x, y)
-//#define MCStrCharsUppercase(x, y) MCUnicodeCharsUppercase(x, y)
 
 // Modified to use foundation-unicode
 #define MCStrCharFoldSimple(x) MCUnicodeGetCharacterProperty(x, kMCUnicodePropertySimpleCaseFolding)
@@ -159,6 +146,18 @@ typedef unichar_t strchar_t;
 #define MCStrCharsLastIndexOfCharCaseless(x, y, z, r) MCUnicodeLastIndexOfChar(x, y, z, kMCUnicodeCompareOptionCaseless, r)
 #define MCStrCharsLastIndexOfCharNonliteral(x, y, z, r) MCUnicodeLastIndexOfChar(x, y, z, kMCUnicodeCompareOptionNormalised, r)
 #define MCStrCharsLastIndexOfCharFolded(x, y, z, r) MCUnicodeLastIndexOfChar(x, y, z, kMCUnicodeCompareOptionFolded, r)
+#define MCStrCharsSharedPrefixExact(x, y, z, w, r, s) MCUnicodeSharedPrefix(x, y, z, w, kMCUnicodeCompareOptionExact, r, s)
+#define MCStrCharsSharedPrefixCaseless(x, y, z, w, r, s) MCUnicodeSharedPrefix(x, y, z, w, kMCUnicodeCompareOptionCaseless, r, s)
+#define MCStrCharsSharedPrefixNonliteral(x, y, z, w, r, s) MCUnicodeSharedPrefix(x, y, z, w, kMCUnicodeCompareOptionNormalised, r, s)
+#define MCStrCharsSharedPrefixFolded(x, y, z, w, r, s) MCUnicodeSharedPrefix(x, y, z, w, kMCUnicodeCompareOptionFolded, r, s)
+#define MCStrCharsFindExact(x, y, z, w, r) MCUnicodeFind(x, y, z, w, kMCUnicodeCompareOptionExact, r)
+#define MCStrCharsFindCaseless(x, y, z, w, r) MCUnicodeFind(x, y, z, w, kMCUnicodeCompareOptionCaseless, r)
+#define MCStrCharsFindNonliteral(x, y, z, w, r) MCUnicodeFind(x, y, z, w, kMCUnicodeCompareOptionNormalised, r)
+#define MCStrCharsFindFolded(x, y, z, w, r) MCUnicodeFind(x, y, z, w, kMCUnicodeCompareOptionFolded, r)
+#define MCStrCharsHashExact(x, y) MCUnicodeHash(x, y, kMCUnicodeCompareOptionExact)
+#define MCStrCharsHashCaseless(x, y) MCUnicodeHash(x, y, kMCUnicodeCompareOptionCaseless)
+#define MCStrCharsHashNonliteral(x, y) MCUnicodeHash(x, y, kMCUnicodeOptionNormalised)
+#define MCStrCharsHashFolded(x, y) MCUnicode(x, y, kMCUnicodeOptionFolded)
 
 struct __MCString: public __MCValue
 {
@@ -356,7 +355,7 @@ bool __MCDataImmutableCopy(__MCData *self, bool p_release, __MCData *&r_immutabl
 
 ////////////////////////////////////////////////////////////////////////////////
 
-hash_t MCNativeCharsHashExact(const char_t *chars, uindex_t char_count);
+/*hash_t MCNativeCharsHashExact(const char_t *chars, uindex_t char_count);
 hash_t MCNativeCharsHashCaseless(const char_t *chars, uindex_t char_count);
 
 bool MCNativeCharsEqualExact(const char_t *left, uindex_t left_length, const char_t *right, uindex_t right_length);
@@ -389,39 +388,39 @@ char_t MCNativeCharLowercase(char_t c);
 
 // Uppercase the given char
 char_t MCNativeCharUppercase(char_t c);
-
+*/
 // Format the given string - the return string is NUL formatted.
 bool MCNativeCharsFormatV(char_t*& r_string, uindex_t& r_size, const char *format, va_list args);
 
 //////////
 
-hash_t MCUnicodeCharsHashExact(const unichar_t *chars, uindex_t char_count);
-hash_t MCUnicodeCharsHashCaseless(const unichar_t *chars, uindex_t char_count);
+//hash_t MCUnicodeCharsHashExact(const unichar_t *chars, uindex_t char_count);
+//hash_t MCUnicodeCharsHashCaseless(const unichar_t *chars, uindex_t char_count);
 
-bool MCUnicodeCharsEqualExact(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
-bool MCUnicodeCharsEqualCaseless(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
+//bool MCUnicodeCharsEqualExact(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
+//bool MCUnicodeCharsEqualCaseless(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
 
-compare_t MCUnicodeCharsCompareExact(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
-compare_t MCUnicodeCharsCompareCaseless(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
+//compare_t MCUnicodeCharsCompareExact(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
+//compare_t MCUnicodeCharsCompareCaseless(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
 
 // Return the number of characters of prefix that are equal to those at the
 // beginning of string.
-uindex_t MCUnicodeCharsSharedPrefixExact(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
-uindex_t MCUnicodeCharsSharedPrefixCaseless(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
+//uindex_t MCUnicodeCharsSharedPrefixExact(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
+//uindex_t MCUnicodeCharsSharedPrefixCaseless(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
 
 // Return the number of characters of suffix that are equal to those at the
 // end of string.
-uindex_t MCUnicodeCharsSharedSuffixExact(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
-uindex_t MCUnicodeCharsSharedSuffixCaseless(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
+//uindex_t MCUnicodeCharsSharedSuffixExact(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
+//uindex_t MCUnicodeCharsSharedSuffixCaseless(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
 
 // Lowercase all the characters in-place.
-void MCUnicodeCharsLowercase(unichar_t *chars, uindex_t char_count);
+//void MCUnicodeCharsLowercase(unichar_t *chars, uindex_t char_count);
 
 // Uppercase all the characters in-place.
-void MCUnicodeCharsUppercase(unichar_t *chars, uindex_t char_count);
+//void MCUnicodeCharsUppercase(unichar_t *chars, uindex_t char_count);
 
-bool MCUnicodeCharsEqualExact(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
-bool MCUnicodeCharsEqualCaseless(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
+//bool MCUnicodeCharsEqualExact(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
+//bool MCUnicodeCharsEqualCaseless(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
 
 bool MCUnicodeCharsMapToNative(const unichar_t *uchars, uindex_t uchar_count, char_t *nchars, uindex_t& r_nchar_count, char_t invalid);
 void MCUnicodeCharsMapFromNative(const char_t *chars, uindex_t char_count, unichar_t *uchars);
@@ -433,11 +432,11 @@ bool MCUnicodeCharMapToNative(unichar_t uchar, char_t& r_nchar);
 char_t MCUnicodeCharMapToNativeLossy(unichar_t nchar);
 unichar_t MCUnicodeCharMapFromNative(char_t nchar);
 
-unichar_t MCUnicodeCharFold(unichar_t);
+//unichar_t MCUnicodeCharFold(unichar_t);
 
-unichar_t MCUnicodeCharLowercase(unichar_t);
+//unichar_t MCUnicodeCharLowercase(unichar_t);
 
-unichar_t MCUnicodeCharUppercase(unichar_t);
+//unichar_t MCUnicodeCharUppercase(unichar_t);
 
 ////////////////////////////////////////////////////////////////////////////////
 
