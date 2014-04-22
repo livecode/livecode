@@ -1003,7 +1003,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 
 			t_cell_clip = MCU_intersect_rect(t_cell_clip, t_old_clip);
 			dc -> setclip(t_cell_clip);
-            dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True, is_rtl());
+            dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True, is_rtl() ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
 
 			// Only draw the various boxes/lines if there is any content.
 			if (t_next_index - t_index > 0)
@@ -1078,7 +1078,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 				twidth = MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
 				twidth += gettabwidth(cx + twidth, eptr);
 
-                dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True, is_rtl());
+                dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True, is_rtl() ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
 
 				cx += twidth;
 				x += twidth;
@@ -1100,7 +1100,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 
 		MCRange t_range;
 		t_range = MCRangeMake(sptr, size);
-        dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True, is_rtl());
+        dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True, is_rtl() ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
 
 		// Apply strike/underline.
 		if ((style & FA_UNDERLINE) != 0)

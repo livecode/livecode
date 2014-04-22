@@ -235,7 +235,7 @@ void MCTooltip::render(MCContext *dc, const MCRectangle &dirty)
 		MCValueRef t_lineval = nil;
 		/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, t_lineval);
 		t_line = (MCStringRef)t_lineval;
-        dc -> drawtext(4, t_y + t_fheight, t_line, m_font, false);
+        dc -> drawtext(4, t_y + t_fheight, t_line, m_font, false, is_rtl() ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR, kMCDrawTextNoBreak);
 
 		t_y += t_fheight + 3;
 	}

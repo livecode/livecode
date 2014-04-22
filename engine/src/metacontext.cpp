@@ -396,14 +396,14 @@ void MCMetaContext::drawsegments(MCSegment *segments, uint2 nsegs)
 		drawline(segments[t_segment] . x1, segments[t_segment] . y1, segments[t_segment] . x2, segments[t_segment] . y2);
 }
 
-void MCMetaContext::drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image)
+void MCMetaContext::drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image, MCDrawTextDirection p_direction, MCDrawTextBreaking p_can_break)
 {
     MCRange t_range;
     t_range = MCRangeMake(0, MCStringGetLength(p_string));
-    drawtext_substring(x, y, p_string, t_range, p_font, image);
+    drawtext_substring(x, y, p_string, t_range, p_font, image, p_direction, p_can_break);
 }
 
-void MCMetaContext::drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image, bool p_rtl)
+void MCMetaContext::drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image, MCDrawTextDirection p_direction, MCDrawTextBreaking p_can_break)
 {
 	// MW-2009-12-22: Make sure we don't generate 0 length text mark records
 	if (MCStringIsEmpty(p_string) || p_range.length == 0)
