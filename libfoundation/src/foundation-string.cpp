@@ -3748,62 +3748,71 @@ bool MCStringFindAndReplaceNative(MCStringRef self, MCStringRef p_pattern, MCStr
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void split_find_end_of_element_exact(const strchar_t *sptr, const strchar_t *eptr, const strchar_t* p_del, uindex_t t_del_length, const strchar_t*& r_end_ptr)
+static void split_find_end_of_element(const strchar_t *sptr, const strchar_t *eptr, const strchar_t* p_del, uindex_t p_del_length, MCStringOptions p_options, const strchar_t*& r_end_ptr, uindex_t& r_found_length)
 {
-	uindex_t t_index;
-    if (!MCUnicodeFirstIndexOf(sptr, eptr-sptr, p_del, t_del_length, kMCUnicodeCompareOptionExact, t_index))
-        t_index = eptr-sptr;
-    
-    r_end_ptr = sptr + t_index;
-}
+	bool t_found;
+    MCRange t_found_range;
+    if (p_options == kMCStringOptionCompareCaseless)
+        t_found = MCStrCharsFindCaseless(sptr, eptr-sptr, p_del, p_del_length, t_found_range);
+    else if (p_options == kMCStringOptionCompareNonliteral)
+        t_found = MCStrCharsFindNonliteral(sptr, eptr-sptr, p_del, p_del_length, t_found_range);
+    else if (p_options == kMCStringOptionCompareExact)
+        t_found = MCStrCharsFindExact(sptr, eptr-sptr, p_del, p_del_length, t_found_range);
+    else
+        t_found = MCStrCharsFindFolded(sptr, eptr-sptr, p_del, p_del_length, t_found_range);
 
-static void split_find_end_of_element_caseless(const strchar_t *sptr, const strchar_t *eptr, const strchar_t* p_del, uindex_t t_del_length, const strchar_t*& r_end_ptr)
-{
-    uindex_t t_index;
-    if (!MCUnicodeFirstIndexOf(sptr, eptr-sptr, p_del, t_del_length, kMCUnicodeCompareOptionCaseless, t_index))
-        t_index = eptr-sptr;
-    
-    r_end_ptr = sptr + t_index;
-}
-
-static void split_find_end_of_element_and_key_exact(const strchar_t *sptr, const strchar_t *eptr, const strchar_t *del, uindex_t t_del_length, const strchar_t *key, uindex_t t_key_length, const strchar_t*& r_key_ptr, const strchar_t *& r_end_ptr)
-{
-	// Not as fast as it could be...
-    uindex_t t_key_idx, t_del_idx;
-    if (!MCUnicodeFirstIndexOf(sptr, eptr-sptr, key, t_key_length, kMCUnicodeCompareOptionExact, t_key_idx))
-        t_key_idx = eptr-sptr;
-    if (!MCUnicodeFirstIndexOf(sptr, eptr-sptr, del, t_del_length, kMCUnicodeCompareOptionExact, t_del_idx))
-        t_del_idx = eptr-sptr;
-    
-    if (t_key_idx > t_del_idx)
+    if (!t_found)
     {
-        // Delimiter came before the key
-        r_key_ptr = r_end_ptr = sptr + t_del_idx;
+        r_end_ptr = eptr;
         return;
     }
     
-    r_key_ptr = sptr + t_key_idx;
-    split_find_end_of_element_exact(sptr, eptr, del, t_key_length, r_end_ptr);
+    r_end_ptr = sptr + t_found_range . offset;
+    r_found_length = t_found_range . length;
 }
 
-static void split_find_end_of_element_and_key_caseless(const strchar_t *sptr, const strchar_t *eptr, const strchar_t *del, uindex_t t_del_length, const strchar_t *key, uindex_t t_key_length, const strchar_t*& r_key_ptr, const strchar_t *& r_end_ptr)
+static void split_find_end_of_element_and_key(const strchar_t *sptr, const strchar_t *eptr, const strchar_t *p_del, uindex_t p_del_length, const strchar_t *p_key, uindex_t p_key_length, MCStringOptions p_options, const strchar_t*& r_key_ptr, const strchar_t *& r_end_ptr, uindex_t& r_del_found_length, uindex_t& r_key_found_length)
 {
 	// Not as fast as it could be...
-    uindex_t t_key_idx, t_del_idx;
-    if (!MCUnicodeFirstIndexOf(sptr, eptr-sptr, key, t_key_length, kMCUnicodeCompareOptionCaseless, t_key_idx))
-        t_key_idx = eptr-sptr;
-    if (!MCUnicodeFirstIndexOf(sptr, eptr-sptr, del, t_del_length, kMCUnicodeCompareOptionCaseless, t_del_idx))
-        t_del_idx = eptr-sptr;
+	bool t_key_found, t_del_found;
+    MCRange t_key_found_range, t_del_found_range;
+    if (p_options == kMCStringOptionCompareCaseless)
+    {
+        t_del_found = MCStrCharsFindCaseless(sptr, eptr-sptr, p_del, p_del_length, t_del_found_range);
+        t_key_found = MCStrCharsFindCaseless(sptr, eptr-sptr, p_key, p_key_length, t_key_found_range);
+    }
+    else if (p_options == kMCStringOptionCompareNonliteral)
+    {
+        t_del_found = MCStrCharsFindNonliteral(sptr, eptr-sptr, p_del, p_del_length, t_del_found_range);
+        t_key_found = MCStrCharsFindNonliteral(sptr, eptr-sptr, p_key, p_key_length, t_key_found_range);
+    }
+    else if (p_options == kMCStringOptionCompareExact)
+    {
+        t_del_found = MCStrCharsFindExact(sptr, eptr-sptr, p_del, p_del_length, t_del_found_range);
+        t_key_found = MCStrCharsFindExact(sptr, eptr-sptr, p_key, p_key_length, t_key_found_range);
+    }
+    else
+    {
+        t_del_found = MCStrCharsFindFolded(sptr, eptr-sptr, p_del, p_del_length, t_del_found_range);
+        t_key_found = MCStrCharsFindFolded(sptr, eptr-sptr, p_key, p_key_length, t_key_found_range);
+    }
     
-    if (t_key_idx > t_del_idx)
+    if (!t_key_found)
+        r_key_ptr = eptr;
+    
+    if (!t_del_found)
+        r_end_ptr = eptr;
+    
+    if (t_key_found_range . offset > t_del_found_range . offset)
     {
         // Delimiter came before the key
-        r_key_ptr = r_end_ptr = sptr + t_del_idx;
+        r_key_ptr = r_end_ptr = eptr;
         return;
     }
     
-    r_key_ptr = sptr + t_key_idx;
-    split_find_end_of_element_exact(sptr, eptr, del, t_del_length, r_end_ptr);
+    r_key_ptr = sptr + t_key_found_range . offset;
+    r_key_found_length = t_key_found_range . length;
+    split_find_end_of_element(sptr, eptr, p_del, p_key_length, p_options, r_end_ptr, r_del_found_length);
 }
 
 bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_del, MCStringOptions p_options, MCArrayRef& r_array)
@@ -3832,10 +3841,8 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
         __MCStringUnnativize(p_elem_del, true);
     
 	const strchar_t *t_echar, *t_kchar;
-    uindex_t t_del_length;
-    uindex_t t_key_length = 0;
 	t_echar = (const strchar_t*)p_elem_del -> chars;
-    t_del_length = MCStringGetLength(p_elem_del);
+
 	if (p_key_del != nil)
     {
         if (__MCStringIsIndirect(p_key_del))
@@ -3845,7 +3852,6 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
             __MCStringUnnativize(p_key_del, true);
         
 		t_kchar = (const strchar_t*)p_key_del -> chars;
-        t_key_length = MCStringGetLength(p_key_del);
     }
 
 	const strchar_t *t_sptr;
@@ -3859,11 +3865,9 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 		t_index = 1;
 		for(;;)
 		{
+            uindex_t t_del_length;
 			const strchar_t *t_element_end;
-			if (p_options == kMCStringOptionCompareExact)
-				split_find_end_of_element_exact(t_sptr, t_eptr, t_echar, t_del_length, t_element_end);
-			else
-				split_find_end_of_element_caseless(t_sptr, t_eptr, t_echar, t_del_length, t_element_end);
+            split_find_end_of_element(t_sptr, t_eptr, t_echar, t_del_length, p_options, t_element_end, t_del_length);
 			
 			MCAutoStringRef t_string;
 			if (!MCStringCreateWithChars(t_sptr, t_element_end - t_sptr, &t_string))
@@ -3886,10 +3890,10 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 		{
 			const strchar_t *t_element_end;
 			const strchar_t *t_key_end;
-			if (p_options == kMCStringOptionCompareExact)
-				split_find_end_of_element_and_key_exact(t_sptr, t_eptr, t_echar, t_del_length, t_kchar, t_key_length, t_key_end, t_element_end);
-			else
-				split_find_end_of_element_and_key_caseless(t_sptr, t_eptr, t_echar, t_del_length, t_kchar, t_key_length, t_key_end, t_element_end);
+            uindex_t t_del_length;
+            uindex_t t_key_length;
+
+            split_find_end_of_element_and_key(t_sptr, t_eptr, t_echar, t_del_length, t_kchar, t_key_length, p_options, t_key_end, t_element_end, t_del_length, t_key_length);
 			
 			MCNewAutoNameRef t_name;
 			if (!MCNameCreateWithChars(t_sptr, t_key_end - t_sptr, &t_name))

@@ -371,20 +371,26 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
     while (t_offset < t_length)
     {
         // Find the end of this row
-        uindex_t t_row_end;
-        if (!MCStringFirstIndexOf(p_string, t_row_delim, t_offset, ctxt . GetCaseSensitive(), t_row_end))
-            t_row_end = t_length;
+        MCRange t_row_found;
+        if (!MCStringFind(p_string, MCRangeMake(t_offset, UINDEX_MAX), t_row_delim, ctxt . GetStringComparisonType(), &t_row_found))
+        {
+            t_row_found . offset = t_length;
+            t_row_found . length = 0;
+        }
         
         // Iterate over the cells of this row
         uindex_t t_cell_offset, t_column_index;
         t_cell_offset = t_offset;
         t_column_index = 0;
-        while (t_cell_offset < t_row_end)
+        while (t_cell_offset < t_row_found . offset)
         {
             // Find the end of this cell
-            uindex_t t_cell_end;
-            if (!MCStringFirstIndexOf(p_string, t_column_delim, t_cell_offset, ctxt . GetCaseSensitive(), t_cell_end) || t_cell_end > t_row_end)
-                t_cell_end = t_row_end;
+            MCRange t_cell_found;
+            if (!MCStringFind(p_string, MCRangeMake(t_cell_offset, UINDEX_MAX), t_column_delim, ctxt . GetStringComparisonType(), &t_cell_found) || t_cell_found . offset > t_row_found . offset)
+            {
+                t_cell_found . offset = t_row_found . offset;
+                t_cell_found . length = 0;
+            }
             
             // Check that the output array has a slot for this column
             if (t_temp_array.Size() <= t_column_index)
@@ -393,7 +399,7 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
             // Check that a string has been created to store this column
             bool t_success;
             MCRange t_range;
-            t_range = MCRangeMake(t_cell_offset, t_cell_end - t_cell_offset);
+            t_range = MCRangeMake(t_cell_offset, t_cell_found . offset - t_cell_offset);
             if (t_temp_array[t_column_index] == nil)
                 t_success = MCStringMutableCopySubstring(p_string, t_range, t_temp_array[t_column_index]);
             else
@@ -411,11 +417,11 @@ void MCArraysExecSplitByColumn(MCExecContext& ctxt, MCStringRef p_string, MCArra
             
             // Next cell
             t_column_index++;
-            t_cell_offset = t_cell_end + MCStringGetLength(t_column_delim);
+            t_cell_offset = t_cell_found . offset + t_cell_found . length;
         }
         
         // Next row
-        t_offset = t_row_end + MCStringGetLength(t_row_delim);
+        t_offset = t_row_found . offset + t_row_found . length;
     }
     
     // Convert the temporary array into a "proper" array
