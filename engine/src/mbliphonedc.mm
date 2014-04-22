@@ -507,9 +507,17 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextScaleCTM(t_img_context, 1.0, -1.0);
 			CGContextTranslateCTM(t_img_context, 0, -(CGFloat)t_bitmap_height);
 			
-			CGContextScaleCTM(t_img_context, (MCGFloat)t_bitmap_width / r . width , (MCGFloat)t_bitmap_width / r . height);
-			
+            // MW-2014-04-22: [[ Bug 12008 ]] Translate before scale.
 			CGContextTranslateCTM(t_img_context, -(CGFloat)r.x, -(CGFloat)r.y);
+            
+            // MW-2014-04-22: [[ Bug 12008 ]] Make sure we take into account the logical to device screen
+            //   scale (and invert appropriately!).
+            float t_scale;
+            t_scale = ((MCScreenDC *)MCscreen) -> logicaltoscreenscale();
+			CGContextScaleCTM(t_img_context, 1.0 / t_scale, 1.0 / t_scale);
+            
+			CGContextScaleCTM(t_img_context, (MCGFloat)t_bitmap_width / r . width , (MCGFloat)t_bitmap_height / r . height);
+			
 			
 			bool t_is_rotated;
 			CGSize t_offset;
@@ -543,12 +551,8 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextTranslateCTM(t_img_context, t_screen_rect . width / 2, t_screen_rect . height / 2);
 			CGContextRotateCTM(t_img_context, t_angle);
 			CGContextTranslateCTM(t_img_context, -t_offset . width, -t_offset . height);
-			
-            // MM-2013-01-10: [[ Bug 11653 ]] As above, our rects are also in device pixels, so use the device scale when working out x and y of bounds.
-            //float t_scale;
-            //t_scale = MCIPhoneGetDeviceScale();
-			//CGContextScaleCTM(t_img_context, t_scale, t_scale);
-			
+            
+            
 #ifndef USE_UNDOCUMENTED_METHODS
 			NSArray *t_windows;
 			t_windows = [[[UIApplication sharedApplication] windows] retain];
