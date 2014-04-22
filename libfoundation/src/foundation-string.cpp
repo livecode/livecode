@@ -2014,7 +2014,9 @@ bool MCStringEndsWith(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_
     else if (MCStringIsNative(p_suffix))
     {
         MCAutoStringRef t_self;
-        MCStringCopySubstring(self, MCRangeMake(0, p_suffix -> char_count), &t_self);
+        // SN-2014-04-22 [[ Bug 11979 ]] IDE fails to launch when installed on a Unicode path
+        // 'launch' was failing when having a non-native path, and going in that if-branch
+        MCStringCopySubstring(self, MCRangeMake(self -> char_count - p_suffix -> char_count, p_suffix -> char_count), &t_self);
         return MCStringIsEqualTo(*t_self, p_suffix, p_options);
     }
     
