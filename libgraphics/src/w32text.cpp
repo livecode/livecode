@@ -515,21 +515,28 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 	
 	SIZE t_size;
 	if (t_success)
-		t_success = GetTextExtentPoint32W(t_gdicontext, (LPCWSTR)p_text, p_length, &t_size);
+		t_success = GetTextExtentPoint32W(t_gdicontext, (LPCWSTR)p_text, p_length >> 1, &t_size);
 	
 	TEXTMETRICA t_metrics;
 	if (t_success)
 		t_success = GetTextMetricsA(t_gdicontext, &t_metrics);
 
 	// MM-2013-12-16: [[ Bug 11564 ]] Take into account any overhang of italic text to prevent clipping.
-	MCGFloat t_overhang;
+	// MM-2014-04-22: [[ Bug 11904 ]] Also take into account any underhang of the first char. Use this to offset
+	//  the x-location we draw at. Also, make sure we measure the correct char - added a fudge on the overhang as a result.
+	MCGFloat t_overhang, t_x_offset;
 	if (t_success)
 	{
 		ABCFLOAT t_abc_widths;
-		if (GetCharABCWidthsFloatW(t_gdicontext, *(p_text + p_length - 1), *(p_text + p_length - 1), &t_abc_widths) != 0)
-			t_overhang = t_abc_widths . abcfA + t_abc_widths . abcfC;
+		if (GetCharABCWidthsFloatW(t_gdicontext, *(p_text + p_length / 2 - 1), *(p_text + p_length / 2 - 1), &t_abc_widths) != 0)
+			t_overhang = fabs(t_abc_widths . abcfC) + 1;
 		else
 			t_overhang = 0.0f;
+
+		if (GetCharABCWidthsFloatW(t_gdicontext, *(p_text), *(p_text), &t_abc_widths) != 0)
+			t_x_offset = t_abc_widths . abcfA, t_overhang += fabs(t_abc_widths . abcfA);
+		else
+			t_x_offset = 0;
 	}
 	
 	MCGIntRectangle t_text_bounds, t_clipped_bounds;
@@ -537,8 +544,9 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 	MCGPoint t_device_location;
 	if (t_success)
 	{
+		// MM-2014-04-22: [[ Bug 11904 ]] Offset the x value to take into account any underhang of the first char of italic text.
 		MCGRectangle t_float_text_bounds;
-		t_float_text_bounds . origin . x = 0;
+		t_float_text_bounds . origin . x = t_x_offset;
 		t_float_text_bounds . origin . y = -t_metrics . tmAscent;
 		t_float_text_bounds . size . width = t_size . cx + t_overhang;
 		t_float_text_bounds . size . height = t_metrics . tmAscent + t_metrics . tmDescent;
@@ -556,7 +564,7 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 		t_transform . ty = t_device_location . y - t_int_y;
 		t_device_location . x = t_int_x;
 		t_device_location . y = t_int_y;
-		
+
 		// IM-2013-09-02: [[ RefactorGraphics ]] constrain device clip rect to device bounds
 		SkISize t_device_size;
 		t_device_size = self->layer->canvas->getDeviceSize();
@@ -586,12 +594,13 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 	
 	if (t_success)
 	{
+		// MM-2014-04-22: [[ Bug 11904 ]] Take into account any x-offset of the bounds.
 		XFORM t_xform;
 		t_xform . eM11 = t_transform . a;
 		t_xform . eM12 = t_transform . b;
 		t_xform . eM21 = t_transform . c;
 		t_xform . eM22 = t_transform . d;
-		t_xform . eDx = t_transform . tx - (t_clipped_bounds . x - t_text_bounds . x);
+		t_xform . eDx = t_transform . tx - (t_clipped_bounds . x);
 		t_xform . eDy = t_transform . ty - (t_clipped_bounds . y - t_text_bounds . y);
 		t_success = SetWorldTransform(t_gdicontext, &t_xform);
 	}
