@@ -602,7 +602,10 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 - (void)mouseEntered: (NSEvent *)event
 {
-	[self handleMouseMove: event];
+    // MW-2014-04-22: [[ Bug 12255 ]] mouseEntered can get sent before dragEntered and when it is
+    //   it isn't possible to tell if a dragging operation is going to start. Thus we don't handle
+    //   this message, and rely on the first mouseMove instead.
+	//[self handleMouseMove: event];
 }
 
 - (void)mouseExited: (NSEvent *)event
