@@ -2530,6 +2530,8 @@ bool MCStringFind(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStr
     
     if (__MCStringIsIndirect(p_needle))
         p_needle = p_needle -> string;
+ 
+    __MCStringClampRange(self, p_range);
     
     if (MCStringIsNative(self))
     {
@@ -3856,6 +3858,7 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 
 	const strchar_t *t_sptr;
 	const strchar_t *t_eptr;
+    uindex_t t_del_length = MCStringGetLength(p_elem_del);
     
 	t_sptr = self -> chars;
 	t_eptr = self -> chars + self -> char_count;
@@ -3865,9 +3868,9 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 		t_index = 1;
 		for(;;)
 		{
-            uindex_t t_del_length;
+            uindex_t t_found_del_length;
 			const strchar_t *t_element_end;
-            split_find_end_of_element(t_sptr, t_eptr, t_echar, t_del_length, p_options, t_element_end, t_del_length);
+            split_find_end_of_element(t_sptr, t_eptr, t_echar, t_del_length, p_options, t_element_end, t_found_del_length);
 			
 			MCAutoStringRef t_string;
 			if (!MCStringCreateWithChars(t_sptr, t_element_end - t_sptr, &t_string))
@@ -3876,31 +3879,32 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 			if (!MCArrayStoreValueAtIndex(*t_array, t_index, *t_string))
 				return false;
 
-			if (t_element_end + t_del_length >= t_eptr)
+			if (t_element_end + t_found_del_length >= t_eptr)
 				break;
 
 			t_index += 1;
 
-			t_sptr = t_element_end + t_del_length;
+			t_sptr = t_element_end + t_found_del_length;
 		}
 	}
 	else
-	{        
+	{
+        uindex_t t_key_length = MCStringGetLength(p_key_del);
 		for(;;)
 		{
 			const strchar_t *t_element_end;
 			const strchar_t *t_key_end;
-            uindex_t t_del_length;
-            uindex_t t_key_length;
+            uindex_t t_found_del_length;
+            uindex_t t_found_key_length;
 
-            split_find_end_of_element_and_key(t_sptr, t_eptr, t_echar, t_del_length, t_kchar, t_key_length, p_options, t_key_end, t_element_end, t_del_length, t_key_length);
+            split_find_end_of_element_and_key(t_sptr, t_eptr, t_echar, t_del_length, t_kchar, t_key_length, p_options, t_key_end, t_element_end, t_found_del_length, t_found_key_length);
 			
 			MCNewAutoNameRef t_name;
 			if (!MCNameCreateWithChars(t_sptr, t_key_end - t_sptr, &t_name))
 				return false;	
 
 			if (t_key_end != t_element_end)
-				t_key_end += t_key_length;
+				t_key_end += t_found_key_length;
 
 			MCAutoStringRef t_string;
 			if (!MCStringCreateWithChars(t_key_end, t_element_end - t_key_end, &t_string))
@@ -3909,10 +3913,10 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 			if (!MCArrayStoreValue(*t_array, true, *t_name, *t_string))
 				return false;
 
-			if (t_element_end + t_del_length >= t_eptr)
+			if (t_element_end + t_found_del_length >= t_eptr)
 				break;
 
-			t_sptr = t_element_end + t_del_length;
+			t_sptr = t_element_end + t_found_del_length;
 		}
 	}
 
