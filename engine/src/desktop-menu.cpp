@@ -325,6 +325,7 @@ public:
             // MW-2014-04-22: [[ Bug 12252 ]] If the menuitem didn't have a direct tag, map
             //   special-cased actions to appropriate tag.
             const char *t_tag;
+            t_tag = *t_item_tag;
             if (!p_menuitem -> has_tag)
             {
                 if (t_action == kMCPlatformMenuItemActionAbout)
@@ -333,11 +334,7 @@ public:
                     t_tag = "Quit";
                 else if (t_action == kMCPlatformMenuItemActionPreferences)
                     t_tag = "Preferences";
-                else
-                    t_tag = "";
             }
-            else
-                t_tag = *t_item_tag;
 			
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeUTF8CString, &t_item_title . PtrRef());
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeUTF8CString, &t_tag);
