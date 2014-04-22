@@ -356,16 +356,17 @@ void MCImage::magredrawrect(MCContext *dest_context, const MCRectangle &drect)
 		endmag(False);
 
 	MCRectangle t_mr;
-	MCU_set_rect(t_mr, magrect . x + rect . x, magrect . y + rect . y, magrect . width, magrect . height);
+	t_mr = MCU_offset_rect(magrect, rect.x, rect.y);
 
 	MCImageBitmap *t_magimage = nil;
 	/* UNCHECKED */ MCImageBitmapCreate(magrect.width, magrect.height, t_magimage);
 
 	MCGContextRef t_context = nil;
 	/* UNCHECKED */ MCGContextCreateWithPixels(t_magimage->width, t_magimage->height, t_magimage->stride, t_magimage->data, true, t_context);
-	MCGContextTranslateCTM(t_context, -(int32_t)(magrect.x + rect.x), -(int32_t)(magrect.y - rect.y));
-	MCGRectangle t_clip = MCGRectangleMake(magrect.x + rect.x, magrect.y + rect.y, magrect.width, magrect.height);
-	MCGContextClipToRect(t_context, t_clip);
+	// IM-2014-04-22: [[ Bug 12239 ]] Previous offset calculation was wrong.
+	// We can use the calculated redraw rect to get the correct offset.
+	MCGContextTranslateCTM(t_context, -t_mr.x, -t_mr.y);
+	MCGContextClipToRect(t_context, MCRectangleToMCGRectangle(t_mr));
 
 	MCContext *t_gfxcontext = nil;
 	/* UNCHECKED */ t_gfxcontext = new MCGraphicsContext(t_context);
@@ -384,11 +385,13 @@ void MCImage::magredrawrect(MCContext *dest_context, const MCRectangle &drect)
 	uint4 yoffset = dy / MCmagnification * sbytes;
 	while (dy < drect.y + drect.height)
 	{
-		uint32_t *t_src_row = (uint32_t*)(uint8_t*)t_magimage->data + yoffset;
+		// IM-2014-04-22: [[ Bug 12239 ]] Add brackets to ensure pointer arithmetic is
+		// performed on the uint8_t pointer rather than the uint32_t pointer
+		uint32_t *t_src_row = (uint32_t*)((uint8_t*)t_magimage->data + yoffset);
 		uint32_t *t_dst_row = (uint32_t*)t_line->data;
 		for (uindex_t x = 0 ; x < magrect.width ; x++)
 		{
-			uint4 color = 0xFF000000 | *t_src_row++;
+			uint4 color = *t_src_row++;
 			for (uint32_t i = 0; i < MCmagnification; i++)
 				*t_dst_row++ = color;
 		}
