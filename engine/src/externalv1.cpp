@@ -1576,16 +1576,16 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, void
 		*(bool *)result = MCECptr -> GetWholeMatches();
 		break;
 	case kMCExternalContextQueryItemDelimiter:
-		*(uint32_t *)result = MCECptr -> GetItemDelimiter();
+		*(MCStringRef *)result = MCECptr -> GetItemDelimiter();
 		break;
 	case kMCExternalContextQueryLineDelimiter:
-		*(uint32_t *)result = MCECptr -> GetLineDelimiter();
+		*(MCStringRef *)result = MCECptr -> GetLineDelimiter();
 		break;
 	case kMCExternalContextQueryColumnDelimiter:
-		*(uint32_t *)result = MCECptr -> GetColumnDelimiter();
+		*(MCStringRef *)result = MCECptr -> GetColumnDelimiter();
 		break;
 	case kMCExternalContextQueryRowDelimiter:
-		*(uint32_t *)result = MCECptr -> GetRowDelimiter();
+		*(MCStringRef *)result = MCECptr -> GetRowDelimiter();
 		break;
 	case kMCExternalContextQueryDefaultStack:
 		{

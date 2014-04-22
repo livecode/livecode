@@ -946,30 +946,10 @@ bool MCUnicodeEndsWith(const unichar_t *p_first, uindex_t p_first_length,
                          const unichar_t *p_second, uindex_t p_second_length,
                          MCUnicodeCompareOption p_option)
 {
-    // This is a bit more complicated than a plain comparison and requires the
-    // construction of UnicodeString objects.
-    UErrorCode t_error = U_ZERO_ERROR;
-    icu::UnicodeString t_first(p_first, p_first_length);
-    icu::UnicodeString t_second(p_second, p_second_length);
-    
-    // Normalise, if required
-    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionNormalised)
-    {
-        // Construct the normaliser
-        const icu::Normalizer2 *t_nfc = icu::Normalizer2::getNFCInstance(t_error);
-        t_first = t_nfc->normalize(t_first, t_error);
-        t_second = t_nfc->normalize(t_second, t_error);
-    }
-    
-    // Case-fold, if required
-    if (p_option == kMCUnicodeCompareOptionCaseless || p_option == kMCUnicodeCompareOptionFolded)
-    {
-        __MCUnicodeSimpleCaseFold(t_first);
-        __MCUnicodeSimpleCaseFold(t_second);
-    }
-    
-    // Perform the comparison
-    return t_first.endsWith(t_second);
+    // Check for a shared suffix
+    uindex_t t_first_match_length, t_second_match_length;
+    MCUnicodeSharedSuffix(p_first, p_first_length, p_second, p_second_length, p_option, t_first_match_length, t_second_match_length);
+    return t_second_match_length == p_second_length;
 }
 
 bool MCUnicodeContains(const unichar_t *p_string, uindex_t p_string_length,
@@ -1036,43 +1016,44 @@ bool MCUnicodeLastIndexOf(const unichar_t *p_string, uindex_t p_string_length,
     if (p_string_length == 0 || p_needle_length == 0)
         return false;
     
-    // Shortcut
-    if (p_needle_length == 1)
+    // Shortcut for native char - for which we are sure to have only one char to compare, and no composing characters
+    if (p_needle_length == 1 && *p_needle < 0x10)
         return MCUnicodeFirstIndexOfChar(p_string, p_string_length, *p_needle, p_option, r_index);
     
     // Create filter chains for the strings being searched
-    MCTextFilter* t_string_filter = MCTextFilterCreate(p_string, p_string_length, kMCStringEncodingUTF16, p_option);
-    MCTextFilter* t_needle_filter = MCTextFilterCreate(p_needle, p_needle_length, kMCStringEncodingUTF16, p_option);
+    MCTextFilter* t_string_filter = MCTextFilterCreate(p_string, p_string_length, kMCStringEncodingUTF16, p_option, true);
+    MCTextFilter* t_needle_filter = MCTextFilterCreate(p_needle, p_needle_length, kMCStringEncodingUTF16, p_option, true);
     
-    // We only want the first codepoint of the needle (for now)
-    codepoint_t t_needle_start = t_needle_filter->GetNextCodepoint();
+    // We only want the last codepoint of the needle (for now)
+    codepoint_t t_needle_end = t_needle_filter->GetNextCodepoint();
     
-    // Search for the beginning of the needle
-    bool t_found = false;
+    // Search for the end of the needle
     while (t_string_filter->HasData())
     {
         codepoint_t t_cp = t_string_filter->GetNextCodepoint();
-        if (t_cp == t_needle_start)
+        if (t_cp == t_needle_end)
         {
             // Do a fresh string comparison at this point
             t_string_filter->MarkText();
             uindex_t t_offset = t_string_filter->GetMarkedLength() - 1;
             uindex_t t_string_matched_len, t_needle_matched_len;
-            MCUnicodeSharedPrefix(p_string + t_offset, p_string_length - t_offset, p_needle, p_needle_length, p_option, t_string_matched_len, t_needle_matched_len);
+            MCUnicodeSharedSuffix(p_string + p_string_length - t_offset, t_offset, p_needle, p_needle_length, p_option, t_string_matched_len, t_needle_matched_len);
             if (t_needle_matched_len == p_needle_length)
             {
-                r_index = t_offset;
-                t_found = true;
+                r_index = p_string_length - t_offset;
+                MCTextFilterRelease(t_string_filter);
+                MCTextFilterRelease(t_needle_filter);
+                return true;
             }
         }
         
         t_string_filter->AdvanceCursor();
     }
     
-    // Return whether a match was found
+    // No match was found
     MCTextFilterRelease(t_string_filter);
     MCTextFilterRelease(t_needle_filter);
-    return t_found;
+    return false;
 }
 
 bool MCUnicodeFirstIndexOfChar(const unichar_t *p_string, uindex_t p_string_length,
@@ -1109,8 +1090,7 @@ bool MCUnicodeLastIndexOfChar(const unichar_t *p_string, uindex_t p_string_lengt
     // Create filter chain for the string being searched
     MCTextFilter* t_string_filter = MCTextFilterCreate(p_string, p_string_length, kMCStringEncodingUTF16, p_option);
     
-    // Loop until we reach the end of the string
-    bool t_found = false;
+    // Loop until we find the character
     while (t_string_filter->HasData())
     {
         codepoint_t t_cp = t_string_filter->GetNextCodepoint();
@@ -1118,15 +1098,16 @@ bool MCUnicodeLastIndexOfChar(const unichar_t *p_string, uindex_t p_string_lengt
         {
             t_string_filter->MarkText();
             r_index = t_string_filter->GetMarkedLength() - 1;
-            t_found = true;
+            MCTextFilterRelease(t_string_filter);
+            return true;
         }
         
         t_string_filter->AdvanceCursor();
     }
     
-    // Return whether the character was found
+    // Could not find the character
     MCTextFilterRelease(t_string_filter);
-    return t_found;
+    return false;
 }
 
 void MCUnicodeSharedPrefix(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_prefix, uindex_t p_prefix_length, MCUnicodeCompareOption p_option, uindex_t &r_len_in_string, uindex_t &r_len_in_prefix)
@@ -1171,6 +1152,55 @@ void MCUnicodeSharedPrefix(const unichar_t *p_string, uindex_t p_string_length, 
     // subsequences of normalised runs of combining chars.
     r_len_in_string = t_string_filter->GetMarkedLength() - 1;
     r_len_in_prefix = t_prefix_filter->GetMarkedLength() - 1;
+    
+    MCTextFilterRelease(t_string_filter);
+    MCTextFilterRelease(t_prefix_filter);
+}
+
+void MCUnicodeSharedSuffix(const unichar_t *p_string, uindex_t p_string_length,
+                           const unichar_t *p_suffix, uindex_t p_suffix_length,
+                           MCUnicodeCompareOption p_option, uindex_t &r_len_in_string, uindex_t &r_len_in_suffix)
+{
+    // Avoid degenerate cases
+    if (p_string_length == 0 || p_suffix_length == 0)
+    {
+        r_len_in_string = r_len_in_suffix = 0;
+        return;
+    }
+    
+    // Set up the filter chains for the strings
+    MCTextFilter *t_string_filter = MCTextFilterCreate(p_string, p_string_length, kMCStringEncodingUTF16, p_option, true);
+    MCTextFilter *t_prefix_filter = MCTextFilterCreate(p_suffix, p_suffix_length, kMCStringEncodingUTF16, p_option, true);
+    
+    // Keep looping until the strings no longer match
+    while (t_string_filter->GetNextCodepoint() == t_prefix_filter->GetNextCodepoint())
+    {
+        t_string_filter->MarkText();
+        t_prefix_filter->MarkText();
+        
+        t_string_filter->AdvanceCursor();
+        t_prefix_filter->AdvanceCursor();
+        
+        if (!t_string_filter->HasData() || !t_prefix_filter->HasData())
+        {
+            // We need to read the next codepoint to update the cursor position - and place it at the end of the last matching character
+            t_string_filter -> GetNextCodepoint();
+            t_prefix_filter -> GetNextCodepoint();
+            break;
+        }
+    }
+    
+    // GetNextCodepoint reads the next codepoint, but doesn't update the read index.
+    // We need to get the actual last matching index, we need to mark the last character as being the same - indeed
+    // And we'll get the length minus 1, since GetMarkedLength returns the marked position + 1 - which is not the actual
+    // position in a string when the last character compared is more than a byte long.
+    t_string_filter->MarkText();
+    t_prefix_filter->MarkText();
+    
+    // Return the lengths in each. Note we don't accept here to avoid matching
+    // subsequences of normalised runs of combining chars.
+    r_len_in_string = t_string_filter->GetMarkedLength() - 1;
+    r_len_in_suffix = t_prefix_filter->GetMarkedLength() - 1;
     
     MCTextFilterRelease(t_string_filter);
     MCTextFilterRelease(t_prefix_filter);

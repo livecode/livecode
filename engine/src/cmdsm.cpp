@@ -1158,7 +1158,6 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 
 	MCAutoStringRef t_element_del;
 	MCAutoStringRef t_key_del;
-    codepoint_t t_delim_char;
 	uint4 chunk;
 	chunk = mode;
 	switch(chunk)
@@ -1174,20 +1173,16 @@ void MCArrayOp::exec_ctxt(MCExecContext &ctxt)
 			}
 		break;
         case TYPE_ROW:
-            t_delim_char = ctxt.GetRowDelimiter();
-            /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)&t_delim_char, 4, kMCStringEncodingUTF32, false, &t_element_del);
+            t_element_del = ctxt.GetRowDelimiter();
             break;
         case TYPE_COLUMN:
-            t_delim_char = ctxt.GetColumnDelimiter();
-            /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)&t_delim_char, 4, kMCStringEncodingUTF32, false, &t_element_del);
+            t_element_del = ctxt.GetColumnDelimiter();
             break;
         case TYPE_LINE:
-            t_delim_char = ctxt.GetLineDelimiter();
-            /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)&t_delim_char, 4, kMCStringEncodingUTF32, false, &t_element_del);
+            t_element_del = ctxt.GetLineDelimiter();
             break;
         case TYPE_ITEM:
-            t_delim_char = ctxt.GetItemDelimiter();
-            /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)&t_delim_char, 4, kMCStringEncodingUTF32, false, &t_element_del);
+            t_element_del = ctxt.GetItemDelimiter();
             break;
         case TYPE_WORD:
         case TYPE_TOKEN:

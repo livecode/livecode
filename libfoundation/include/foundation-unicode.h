@@ -383,8 +383,8 @@ void MCUnicodeSharedPrefix(const unichar_t *p_string, uindex_t p_string_length,
 
 // Returns the length in both sequences of a matching suffix
 void MCUnicodeSharedSuffix(const unichar_t *p_string, uindex_t p_string_length,
-                           const unichar_t *p_prefix, uindex_t p_prefix_length,
-                           MCUnicodeCompareOption p_option, uindex_t &r_len_in_string, uindex_t &r_len_in_prefix);
+                           const unichar_t *p_suffix, uindex_t p_suffix_length,
+                           MCUnicodeCompareOption p_option, uindex_t &r_len_in_string, uindex_t &r_len_in_suffix);
 
 // Searches a string for a given substring and returns the range that was equal
 // to the substring (note that this may be a different length to the substring!)

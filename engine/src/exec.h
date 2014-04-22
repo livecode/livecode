@@ -1193,10 +1193,10 @@ public:
     MCExecContext()
     {
         memset(this, 0, sizeof(MCExecContext));
-        m_itemdel = ',';
-        m_columndel = '\t';
-        m_linedel = '\n';
-        m_rowdel = '\n';
+        MCStringCreateWithNativeChars((const char_t *)",", 1, m_itemdel);
+        MCStringCreateWithNativeChars((const char_t *)"\t", 1, m_columndel);
+        MCStringCreateWithNativeChars((const char_t *)"\n", 1, m_rowdel);
+        MCStringCreateWithNativeChars((const char_t *)"\n", 1, m_linedel);
         m_nffw = 8;
         m_nftrailing = 6;
         m_cutoff = 35;
@@ -1222,10 +1222,10 @@ public:
         m_object = object;
         m_hlist = hlist;
         m_curhandler = handler;
-        m_itemdel = ',';
-        m_columndel = '\t';
-        m_linedel = '\n';
-        m_rowdel = '\n';
+        MCStringCreateWithNativeChars((const char_t *)",", 1, m_itemdel);
+        MCStringCreateWithNativeChars((const char_t *)"\t", 1, m_columndel);
+        MCStringCreateWithNativeChars((const char_t *)"\n", 1, m_rowdel);
+        MCStringCreateWithNativeChars((const char_t *)"\n", 1, m_linedel);
         m_nffw = 8;
         m_nftrailing = 6;
         m_cutoff = 35;
@@ -1328,24 +1328,24 @@ public:
         return m_usesystemdate == True;
 	}
 
-	char_t GetLineDelimiter(void) const
+	MCStringRef GetLineDelimiter(void) const
 	{
         return m_linedel;
 	}
 
-	char_t GetItemDelimiter(void) const
+	MCStringRef GetItemDelimiter(void) const
 	{
         return m_itemdel;
 	}
 
-	char_t GetColumnDelimiter(void) const
+	MCStringRef GetColumnDelimiter(void) const
 	{
         return m_columndel;
 	}
 
-	char_t GetRowDelimiter(void) const
+	MCStringRef GetRowDelimiter(void) const
 	{
-        return (char_t)m_rowdel;
+        return m_rowdel;
 	}
 
 	uint2 GetCutOff(void) const
@@ -1412,24 +1412,24 @@ public:
         m_cutoff = p_value;
 	}
 
-	void SetLineDelimiter(char_t p_value)
+	void SetLineDelimiter(MCStringRef p_value)
 	{
-        m_linedel = p_value;
+        MCValueAssign(m_linedel, p_value);
 	}
 
-	void SetItemDelimiter(char_t p_value)
+	void SetItemDelimiter(MCStringRef p_value)
 	{
-        m_itemdel = p_value;
+        MCValueAssign(m_itemdel, p_value);
 	}
 
-	void SetColumnDelimiter(char_t p_value)
+	void SetColumnDelimiter(MCStringRef p_value)
 	{
-        m_columndel = p_value;
+        MCValueAssign(m_columndel, p_value);
 	}
 
-	void SetRowDelimiter(char_t p_value)
+	void SetRowDelimiter(MCStringRef p_value)
 	{
-        m_rowdel = p_value;
+        MCValueAssign(m_rowdel, p_value);
     }
 
     //////////
@@ -1714,10 +1714,10 @@ private:
     Boolean m_usesystemdate;
     Boolean m_useunicode;
     Boolean m_deletearray;
-    char m_itemdel;
-    char m_columndel;
-    char m_linedel;
-    char m_rowdel;
+    MCStringRef m_itemdel;
+    MCStringRef m_columndel;
+    MCStringRef m_linedel;
+    MCStringRef m_rowdel;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3723,14 +3723,14 @@ void MCEngineSetCenturyCutOff(MCExecContext& ctxt, integer_t p_value);
 void MCEngineGetCenturyCutOff(MCExecContext& ctxt, integer_t& r_value);
 void MCEngineSetConvertOctals(MCExecContext& ctxt, bool p_value);
 void MCEngineGetConvertOctals(MCExecContext& ctxt, bool& r_value);
-void MCEngineSetItemDelimiter(MCExecContext& ctxt, char_t p_value);
-void MCEngineGetItemDelimiter(MCExecContext& ctxt, char_t& r_value);
-void MCEngineSetLineDelimiter(MCExecContext& ctxt, char_t p_value);
-void MCEngineGetLineDelimiter(MCExecContext& ctxt, char_t& r_value);
-void MCEngineSetColumnDelimiter(MCExecContext& ctxt, char_t p_value);
-void MCEngineGetColumnDelimiter(MCExecContext& ctxt, char_t& r_value);
-void MCEngineSetRowDelimiter(MCExecContext& ctxt, char_t p_value);
-void MCEngineGetRowDelimiter(MCExecContext& ctxt, char_t& r_value);
+void MCEngineSetItemDelimiter(MCExecContext& ctxt, MCStringRef p_value);
+void MCEngineGetItemDelimiter(MCExecContext& ctxt, MCStringRef& r_value);
+void MCEngineSetLineDelimiter(MCExecContext& ctxt, MCStringRef p_value);
+void MCEngineGetLineDelimiter(MCExecContext& ctxt, MCStringRef& r_value);
+void MCEngineSetColumnDelimiter(MCExecContext& ctxt, MCStringRef p_value);
+void MCEngineGetColumnDelimiter(MCExecContext& ctxt, MCStringRef& r_value);
+void MCEngineSetRowDelimiter(MCExecContext& ctxt, MCStringRef p_value);
+void MCEngineGetRowDelimiter(MCExecContext& ctxt, MCStringRef& r_value);
 void MCEngineSetWholeMatches(MCExecContext& ctxt, bool p_value);
 void MCEngineGetWholeMatches(MCExecContext& ctxt, bool& r_value);
 void MCEngineSetUseSystemDate(MCExecContext& ctxt, bool p_value);

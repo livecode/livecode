@@ -107,7 +107,7 @@ public:
     virtual void MarkText();
     virtual uindex_t GetMarkedLength() const;
     
-    MCTextFilter_DecodeUTF16(const unichar_t*, uindex_t);
+    MCTextFilter_DecodeUTF16(const unichar_t*, uindex_t, bool);
     ~MCTextFilter_DecodeUTF16();
     
 private:
@@ -121,6 +121,9 @@ private:
     // Text storage
     const unichar_t *m_Data;
     uindex_t m_DataLength;
+    
+    // Going backwards, for things like shared suffix
+    bool m_Reverse;
 };
 
 
@@ -164,7 +167,7 @@ public:
     virtual void MarkText();
     virtual uindex_t GetMarkedLength() const;
     
-    MCTextFilter_NormalizeNFC();
+    MCTextFilter_NormalizeNFC(bool);
     ~MCTextFilter_NormalizeNFC();
     
 private:
@@ -186,13 +189,17 @@ private:
     uindex_t m_MarkPoint;
     
     bool m_surrogate;
+    
+    // Going backwards, for things like shared suffix
+    bool m_Reverse;
+    codepoint_t GetNextCodepointReverse();
 };
 
 
 // Utility functions for creating filter chains
 MCTextFilter *MCTextFilterCreate(MCStringRef, MCStringOptions);
 MCTextFilter *MCTextFilterCreate(MCDataRef, MCStringEncoding, MCStringOptions);
-MCTextFilter *MCTextFilterCreate(const void *, uindex_t, MCStringEncoding, MCStringOptions);
+MCTextFilter *MCTextFilterCreate(const void *, uindex_t, MCStringEncoding, MCStringOptions, bool from_end = false);
 
 // Equivalent to deleting the text filter
 void MCTextFilterRelease(MCTextFilter *);
