@@ -251,12 +251,13 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             MCStringRef t_item_delimiter = ctxt . GetItemDelimiter();
             
             MCStringRef t_delimiter = (p_chunk_type == CT_LINE) ? t_line_delimiter : t_item_delimiter;
+            MCRange t_found_range;
             
             // calculate the start of the (p_first)th line or item
-            while (p_first && MCStringFirstIndexOf(p_string, t_delimiter, t_offset, kMCCompareExact, t_offset))
+            while (p_first && MCStringFind(p_string, MCRangeMake(t_offset, UINDEX_MAX), t_delimiter, ctxt . GetStringComparisonType(), &t_found_range))
             {
                 p_first--;
-                t_offset += MCStringGetLength(t_delimiter);
+                t_offset = t_found_range . offset + t_found_range . length;
             }
             
             // if we couldn't find enough delimiters, set r_add to the number of
@@ -272,15 +273,15 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             // calculate the length of the next p_count lines / items
             while (p_count--)
             {
-                if (t_offset > t_end_index || !MCStringFirstIndexOf(p_string, t_delimiter, t_offset, kMCCompareExact, t_offset))
+                if (t_offset > t_end_index || !MCStringFind(p_string, MCRangeMake(t_offset, UINDEX_MAX), t_delimiter, ctxt . GetStringComparisonType(), &t_found_range))
                 {
                     r_end = t_length;
                     break;
                 }
                 if (p_count == 0)
-                    r_end = t_offset;
+                    r_end = t_found_range . offset;
                 else
-                    t_offset += MCStringGetLength(t_delimiter);
+                    t_offset = t_found_range . offset + t_found_range . length;
             }
             
             if (p_whole_chunk && !p_further_chunks)

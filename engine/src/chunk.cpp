@@ -5421,20 +5421,6 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static uindex_t delim_increment(MCExecContext& ctxt, Chunk_term p_chunk_type)
-{
-    if (p_chunk_type == CT_PARAGRAPH)
-        return 1;
-    
-    if (p_chunk_type == CT_LINE)
-        return MCStringGetLength(ctxt . GetLineDelimiter());
-    
-    if (p_chunk_type == CT_ITEM)
-        return MCStringGetLength(ctxt . GetItemDelimiter());
-    
-    return 0;
-}
-
 static bool MCStringsIsAmongTheChunksOfRange(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, Chunk_term p_chunk_type, MCStringOptions p_options, MCRange p_range)
 {
 	MCRange t_range;
@@ -5444,14 +5430,16 @@ static bool MCStringsIsAmongTheChunksOfRange(MCExecContext& ctxt, MCStringRef p_
 	MCStringRef t_delimiter;
 	t_delimiter = p_chunk_type == CT_ITEM ? ctxt . GetItemDelimiter() : ctxt . GetLineDelimiter();
 	
+
+    uindex_t t_length;
     // if there is no delimiter to the left then continue searching the string.
 	if (t_range . offset != 0 &&
-        !MCStringSubstringEndsWith(p_string, MCRangeMake(0, t_range . offset), t_delimiter, p_options))
+        !MCStringSharedSuffix(p_string, MCRangeMake(0, t_range . offset), t_delimiter, p_options, t_length))
 		return MCStringsIsAmongTheChunksOfRange(ctxt, p_chunk, p_string, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
     
     // if there is no delimiter to the right then continue searching the string.
 	if (t_range . offset + t_range . length != MCStringGetLength(p_string) &&
-        !MCStringSubstringBeginsWith(p_string, MCRangeMake(t_range . offset + t_range . length, UINDEX_MAX), t_delimiter, p_options))
+        !MCStringSharedPrefix(p_string, MCRangeMake(t_range . offset + t_range . length, UINDEX_MAX), t_delimiter, p_options, t_length))
 		return MCStringsIsAmongTheChunksOfRange(ctxt, p_chunk, p_string, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length));
     
 	return true;
@@ -5493,14 +5481,15 @@ static bool MCStringsFindChunkInRange(MCExecContext& ctxt, MCStringRef p_string,
 	MCStringRef t_delimiter;
 	t_delimiter = p_chunk_type == CT_ITEM ? ctxt . GetItemDelimiter() : ctxt . GetLineDelimiter();
     
+    uindex_t t_length;
     // If we are in wholeMatches mode, ensure the delimiter is either side.
 	if (ctxt . GetWholeMatches())
 	{
 		if (t_range . offset > 0 &&
-			!MCStringSubstringEndsWith(p_string, MCRangeMake(0, t_range . offset), t_delimiter, p_options))
+            !MCStringSharedSuffix(p_string, MCRangeMake(0, t_range . offset), t_delimiter, p_options, t_length))
 			return MCStringsFindChunkInRange(ctxt, p_string, p_needle, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length, p_range . length), r_offset);
 		if (t_range . offset + t_range . length < MCStringGetLength(p_string) &&
-			!MCStringSubstringBeginsWith(p_string, MCRangeMake(t_range . offset + t_range . length, UINDEX_MAX), t_delimiter, p_options))
+            !MCStringSharedPrefix(p_string, MCRangeMake(t_range . offset + t_range . length, UINDEX_MAX), t_delimiter, p_options, t_length))
 			return MCStringsFindChunkInRange(ctxt, p_string, p_needle, p_chunk_type, p_options, MCRangeMake(t_range . offset + t_range . length + 1, p_range . length), r_offset);
 	}
     
@@ -5557,6 +5546,7 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
     length = MCStringGetLength(text);
     first_chunk = true;
     break_position = 0;
+    delimiter_length = 0;
     
     switch (type)
     {
@@ -5595,6 +5585,11 @@ MCTextChunkIterator::MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_
             }
         }
             break;
+        case CT_LINE:
+        case CT_ITEM:
+        case CT_PARAGRAPH:
+            // delimiter length may vary for line and item.
+            delimiter_length = 1;
         default:
             break;
     }
@@ -5649,7 +5644,7 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
     uindex_t t_offset = range . offset + range . length;
     
     if (!first_chunk)
-        t_offset += delim_increment(ctxt, type);
+        t_offset += delimiter_length;
     
     if (t_offset >= length)
         return false;
@@ -5667,14 +5662,20 @@ bool MCTextChunkIterator::next(MCExecContext& ctxt)
             
             MCStringRef t_delimiter = (type == CT_LINE) ? t_line_delimiter : t_item_delimiter;
             
+            MCRange t_found_range;
             // calculate the length of the line / item
-            if (!MCStringFirstIndexOf(text, t_delimiter, t_offset, kMCCompareExact, t_offset))
+            if (!MCStringFind(text, MCRangeMake(t_offset, UINDEX_MAX), t_delimiter, ctxt . GetStringComparisonType(), &t_found_range))
             {
                 range . length = length - range . offset;
                 exhausted = true;
             }
             else
-                range . length = t_offset - range . offset;
+            {
+                range . length = t_found_range . offset - range . offset;
+                // keep track of matched delimiter length.
+                //delimiter_length = t_found_range . length;
+            }
+            
         }
             return true;
             

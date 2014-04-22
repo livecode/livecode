@@ -1580,13 +1580,13 @@ compare_t MCStringCompareTo(MCStringRef string, MCStringRef other, MCStringOptio
 // Returns true if the string begins with the prefix string, processing as
 // appropriate according to options.
 bool MCStringBeginsWith(MCStringRef string, MCStringRef prefix, MCStringOptions options);
-bool MCStringSubstringBeginsWith(MCStringRef string, MCRange p_range, MCStringRef prefix, MCStringOptions options);
+bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefix, MCStringOptions p_options, uindex_t& r_self_match_length);
 bool MCStringBeginsWithCString(MCStringRef string, const char_t *prefix_cstring, MCStringOptions options);
 
 // Returns true if the string ends with the suffix string, processing as
 // appropriate according to options.
 bool MCStringEndsWith(MCStringRef string, MCStringRef suffix, MCStringOptions options);
-bool MCStringSubstringEndsWith(MCStringRef string, MCRange p_range, MCStringRef suffix, MCStringOptions options);
+bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffix, MCStringOptions p_options, uindex_t& r_self_match_length);
 bool MCStringEndsWithCString(MCStringRef string, const char_t *suffix_cstring, MCStringOptions options);
 
 // Returns true if the string contains the given needle string, processing as
