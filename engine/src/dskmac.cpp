@@ -7453,7 +7453,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         else
             MCS_startprocess_unix(name, NULL, mode, elevated);
 #endif /* MCS_startprocess_dsk_mac */
-        if (MCStringEndsWithCString(MCNameGetString(p_name), (const char_t *)".app", kMCStringOptionCompareCaseless) || (p_doc != nil && MCStringGetLength(p_doc) != 0))
+        // SN-2014-04-22 [[ Bug 11979 ]] IDE fails to launch when installed on a Unicode path
+        // p_doc might be empty when startprocess_launch is targetted
+        if (MCStringEndsWithCString(MCNameGetString(p_name), (const char_t *)".app", kMCStringOptionCompareCaseless) || (p_doc != nil))
             MCS_startprocess_launch(p_name, p_doc, (Open_mode)p_mode);
         else
             MCS_startprocess_unix(p_name, kMCEmptyString, (Open_mode)p_mode, p_elevated);
