@@ -23,7 +23,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "field.h"
 #include "paragraf.h"
-#include "unicode.h"
 #include "text.h"
 #include "osspec.h"
 //#include "execpt.h"
@@ -787,7 +786,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 				// the number of unicode chars consumed in 'used', and the number of native
 				// chars created in made.
 				uint32_t t_made, t_used;
-				MCTextRunnify((const uint2*)t_chars, t_char_count, t_native_text, t_used, t_made);
+				MCTextRunnify(t_chars, t_char_count, t_native_text, t_used, t_made);
 
 				// If made is 0 then we have 'used' unicode chars to emit; otherwise we
 				// have 'made' native chars to emit.

@@ -502,7 +502,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			if (labelwidth != 0 && !isunnamed())
 			{
 				MCStringRef t_name = MCNameGetString(getname());
-                dc -> drawtext(rect.x + leftmargin, starty, t_name, m_font, false);
+                drawdirectionaltext(dc, rect.x + leftmargin, starty, t_name, m_font);
 			}
 
 			// MW-2012-01-27: [[ Bug 9432 ]] Native GTK handles focus borders itself
@@ -588,15 +588,15 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 	            && menumode == WM_OPTION))
 		sy--;
 
-    dc -> drawtext(sx, sy, p_label, m_font, false);
+    drawdirectionaltext(dc, sx, sy, p_label, m_font);
 	
 	if (!MCStringIsEmpty(acceltext))
 	{
 		uint2 awidth = MCFontMeasureText(m_font, acceltext);
 		if (rightmargin == defaultmargin || menucontrol == MENUCONTROL_ITEM)
-            dc -> drawtext(srect.x + srect.width - rightmargin - awidth, sy, acceltext, m_font, false);
+            drawdirectionaltext(dc, srect.x + srect.width - rightmargin - awidth, sy, acceltext, m_font);
 		else
-            dc -> drawtext(srect.x + srect.width - rightmargin, sy, acceltext, m_font, false);
+            drawdirectionaltext(dc, srect.x + srect.width - rightmargin, sy, acceltext, m_font);
 	}
 
 	if (fstyle & FA_UNDERLINE)
@@ -1503,7 +1503,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				break;
 			default:
 				setforeground(dc, DI_TOP, False);
-                dc -> drawtext(textx, cury + yoffset + 1, t_tab, m_font, false);
+                dc -> drawtext(textx, cury + yoffset + 1, t_tab, m_font, false, kMCDrawTextNoBreak);
 				setforeground(dc, DI_BOTTOM, False);
 				break;
 			}
@@ -1514,7 +1514,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 			else
 				setforeground(dc, DI_FORE, False);
         
-        dc -> drawtext(textx, cury + yoffset, t_tab, m_font, false);
+        dc -> drawtext(textx, cury + yoffset, t_tab, m_font, false, kMCDrawTextNoBreak);
 		if ((disabled || flags & F_DISABLED) && MClook == LF_MOTIF)
 			dc->setfillstyle(FillSolid, nil, 0 , 0);
 		curx += twidth;

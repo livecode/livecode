@@ -31,7 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "MCBlock.h"
 #include "line.h"
 #include "globals.h"
-#include "unicode.h"
 #include "text.h"
 #include "osspec.h"
 

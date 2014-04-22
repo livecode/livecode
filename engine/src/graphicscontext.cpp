@@ -1233,14 +1233,14 @@ void MCGraphicsContext::drawlink(MCStringRef link, const MCRectangle& region)
 }
 
 
-void MCGraphicsContext::drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image)
+void MCGraphicsContext::drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image, MCDrawTextBreaking p_breaking, MCDrawTextDirection p_direction)
 {
     MCRange t_range;
     t_range = MCRangeMake(0, MCStringGetLength(p_string));
-    drawtext_substring(x, y, p_string, t_range, p_font, image);
+    drawtext_substring(x, y, p_string, t_range, p_font, image, p_breaking, p_direction);
 }	
 
-void MCGraphicsContext::drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean p_image, bool p_rtl)
+void MCGraphicsContext::drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean p_image, MCDrawTextBreaking p_break, MCDrawTextDirection p_direction)
 {
     // MW-2013-10-29: [[ Bug 11338 ]] If 'image' is true, then render the background
 	//   rect.
@@ -1255,7 +1255,7 @@ void MCGraphicsContext::drawtext_substring(int2 x, int2 y, MCStringRef p_string,
 		MCGContextRestore(m_gcontext);
 	}
     
-	MCFontDrawTextSubstring(m_gcontext, x, y, p_string, p_range, p_font, p_rtl);
+	MCFontDrawTextSubstring(m_gcontext, x, y, p_string, p_range, p_font, p_direction == kMCDrawTextDirectionRTL, p_break == kMCDrawTextBreak);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

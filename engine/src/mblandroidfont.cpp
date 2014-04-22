@@ -28,7 +28,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "card.h"
 #include "field.h"
-#include "unicode.h"
 #include "notify.h"
 #include "statemnt.h"
 #include "funcs.h"

@@ -60,8 +60,8 @@ MCGFloat MCFontMeasureTextSubstringFloat(MCFontRef font, MCStringRef p_text, MCR
 int32_t MCFontMeasureTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range);
 int32_t MCFontMeasureText(MCFontRef font, MCStringRef p_text);
 
-void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCFontRef font);
-void MCFontDrawTextSubstring(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef font, bool p_rtl);
+void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCFontRef font, bool p_rtl, bool p_can_break);
+void MCFontDrawTextSubstring(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef font, bool p_rtl, bool p_can_break);
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 text_style);
 uint16_t MCFontStyleToTextStyle(MCFontStyle font_style);

@@ -37,7 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 
 #include "globals.h"
-#include "unicode.h"
 
 #include "lnxdc.h"
 #include "lnxgtkthemedrawing.h"

@@ -40,7 +40,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "notify.h"
 #include "osspec.h"
-#include "unicode.h"
 
 #include "mctheme.h"
 #include "menuparse.h"
