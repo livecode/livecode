@@ -2101,9 +2101,9 @@ bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffi
         else
         {
             if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
-                r_self_match_length = MCNativeCharsSharedPrefixCaseless(self -> native_chars + p_range . offset, p_range . length, p_suffix -> native_chars, p_suffix -> char_count);
+                r_self_match_length = MCNativeCharsSharedSuffixCaseless(self -> native_chars + p_range . offset, p_range . length, p_suffix -> native_chars, p_suffix -> char_count);
             else
-                r_self_match_length = MCNativeCharsSharedPrefixExact(self -> native_chars + p_range . offset, p_range . length, p_suffix -> native_chars, p_suffix -> char_count);
+                r_self_match_length = MCNativeCharsSharedSuffixExact(self -> native_chars + p_range . offset, p_range . length, p_suffix -> native_chars, p_suffix -> char_count);
             
             return r_self_match_length == p_suffix -> char_count;
         }
@@ -2113,13 +2113,13 @@ bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffi
     
     uindex_t t_suffix_share;
 	if (p_options == kMCStringOptionCompareExact)
-        MCStrCharsSharedPrefixExact(self -> chars + p_range . offset, p_range . length, p_suffix -> chars, p_suffix -> char_count, r_self_match_length, t_suffix_share);
+        MCStrCharsSharedSuffixExact(self -> chars + p_range . offset, p_range . length, p_suffix -> chars, p_suffix -> char_count, r_self_match_length, t_suffix_share);
     else if (p_options == kMCStringOptionCompareNonliteral)
-        MCStrCharsSharedPrefixNonliteral(self -> chars + p_range . offset, p_range . length, p_suffix -> chars, p_suffix -> char_count, r_self_match_length, t_suffix_share);
+        MCStrCharsSharedSuffixNonliteral(self -> chars + p_range . offset, p_range . length, p_suffix -> chars, p_suffix -> char_count, r_self_match_length, t_suffix_share);
     else if (p_options == kMCStringOptionCompareFolded)
-        MCStrCharsSharedPrefixFolded(self -> chars + p_range . offset, p_range . length, p_suffix -> chars, p_suffix -> char_count, r_self_match_length, t_suffix_share);
+        MCStrCharsSharedSuffixFolded(self -> chars + p_range . offset, p_range . length, p_suffix -> chars, p_suffix -> char_count, r_self_match_length, t_suffix_share);
     else
-        MCStrCharsSharedPrefixCaseless(self -> chars + p_range . offset, p_range . length, p_suffix -> chars, p_suffix -> char_count, r_self_match_length, t_suffix_share);
+        MCStrCharsSharedSuffixCaseless(self -> chars + p_range . offset, p_range . length, p_suffix -> chars, p_suffix -> char_count, r_self_match_length, t_suffix_share);
     
     return t_suffix_share == MCStringGetLength(p_suffix);
 }
