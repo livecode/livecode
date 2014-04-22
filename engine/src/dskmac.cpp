@@ -7372,7 +7372,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 
                 MCAutoStringRefAsUTF8String t_utf_path;
                 /* UNCHECKED */ t_utf_path . Lock(p_command);
-                write(tochild[1], *t_utf_path, MCStringGetLength(p_command));
+                write(tochild[1], *t_utf_path, t_utf_path . Size());
 
                 write(tochild[1], "\n", 1);
                 close(tochild[1]);
@@ -8981,14 +8981,14 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 			// Fork
 			if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
 			{
-				char *t_name_dup;
-                /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(name), t_name_dup);
+				MCAutoStringRefAsUTF8String t_utf8_string;
+                /* UNCHECKED */ t_utf8_string . Lock(MCNameGetString(name));
 				
 				// The pid is 0, so here we are in the child process.
 				// Construct the argument string to pass to the process..
 				char **argv = NULL;
 				uint32_t argc = 0;
-				startprocess_create_argv(t_name_dup, t_doc, argc, argv);
+				startprocess_create_argv(*t_utf8_string, t_doc, argc, argv);
 				
 				// The parent is reading, so we (we are child) are writing.
 				if (reading)

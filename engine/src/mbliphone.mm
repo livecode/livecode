@@ -904,7 +904,7 @@ bool MCIPhoneSystem::Shell(MCStringRef filename, MCDataRef& r_data, int& r_retco
 			// Write the command to it
             MCAutoStringRefAsUTF8String t_mccmd_utf8;
             t_mccmd_utf8 . Lock(MCcmd);
-			write(t_to_child[1], *t_mccmd_utf8, MCStringGetLength(MCcmd));
+			write(t_to_child[1], *t_mccmd_utf8, t_mccmd_utf8.Size());
 			write(t_to_child[1], "\n", 1);
 			
 			// Close the writing side of the pipe <parent -> child>
