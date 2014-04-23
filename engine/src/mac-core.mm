@@ -821,66 +821,35 @@ void MCPlatformGetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale)
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCPlatformWindowRef s_backdrop_window = nil;
-static MCMacPlatformWindow **s_visible_windows = nil;
-static uindex_t s_visible_window_count = 0;
 
-static void MCMacPlatformAddVisibleWindow(MCMacPlatformWindow *p_window)
+void MCMacPlatformSyncBackdrop(void)
 {
-	/* UNCHECKED */ MCMemoryResizeArray(s_visible_window_count + 1, s_visible_windows, s_visible_window_count);
-	s_visible_windows[s_visible_window_count - 1] = p_window;
-}
-
-static void MCMacPlatformRemoveVisibleWindow(MCMacPlatformWindow *p_window)
-{
-	for(uindex_t i = 0; i < s_visible_window_count; i++)
-		if (s_visible_windows[i] == p_window)
-		{
-			MCMemoryMove(s_visible_windows + i, s_visible_windows + i + 1, sizeof(MCMacPlatformWindow *) * (s_visible_window_count - i - 1));
-			s_visible_window_count -= 1;
-			break;
-		}
-}
-
-static void MCMacPlatformSyncBackdropForStyle(MCPlatformWindowStyle p_style)
-{
-	bool t_need_backdrop;
-	if (s_backdrop_window != nil)
-		t_need_backdrop = MCPlatformIsWindowVisible(s_backdrop_window);
-	else
-		t_need_backdrop = false;
-	
-	for(uindex_t i = 0; i < s_visible_window_count; i++)
-	{
-		MCPlatformWindowStyle t_style;
-		s_visible_windows[i] -> GetProperty(kMCPlatformWindowPropertyStyle, kMCPlatformPropertyTypeWindowStyle, &t_style);
-		if (t_style == p_style)
-			s_visible_windows[i] -> SetBackdropWindow(t_need_backdrop ? s_backdrop_window : nil);
-	}
-}
-
-static void MCMacPlatformSyncBackdrop(void)
-{
-	NSDisableScreenUpdates();
-	MCMacPlatformSyncBackdropForStyle(kMCPlatformWindowStyleDocument);
-	MCMacPlatformSyncBackdropForStyle(kMCPlatformWindowStylePalette);
-	MCMacPlatformSyncBackdropForStyle(kMCPlatformWindowStyleDialog);
-	NSEnableScreenUpdates();
-	/*bool t_need_backdrop;
-	if (s_backdrop_window != nil)
-		t_need_backdrop = MCPlatformIsWindowVisible(s_backdrop_window);
-	else
-		t_need_backdrop = false;
-	
-	for(uindex_t i = 0; i < s_visible_window_count; i++)
-		s_visible_windows[i] -> SetBackdropWindow(nil);
-	if (s_backdrop_window != nil)
-		for(index_t i = 0; i < s_visible_window_count; i++)
-			s_visible_windows[i] -> SetBackdropWindow(s_backdrop_window);*/
+    if (s_backdrop_window == nil)
+        return;
+    
+    // Loop from front to back on our windows, making sure the backdrop window is
+    // at the back.
+    NSInteger t_window_above_id;
+    t_window_above_id = -1;
+    for(NSNumber *t_window_id in [NSWindow windowNumbersWithOptions: 0])
+    {
+        NSWindow *t_window;
+        t_window = [NSApp windowWithWindowNumber: [t_window_id longValue]];
+        
+        if (t_window == ((MCMacPlatformWindow *)s_backdrop_window) -> GetHandle())
+            continue;
+        
+        if (t_window_above_id != -1)
+            [t_window orderWindow: NSWindowBelow relativeTo: t_window_above_id];
+        
+        t_window_above_id = [t_window_id longValue];
+    }
+    
+    [((MCMacPlatformWindow *)s_backdrop_window) -> GetHandle() orderWindow: NSWindowBelow relativeTo: t_window_above_id];
 }
 
 void MCPlatformConfigureBackdrop(MCPlatformWindowRef p_backdrop_window)
 {
-#if TO_FIX
 	if (s_backdrop_window != nil)
 	{
 		MCPlatformReleaseWindow(s_backdrop_window);
@@ -893,33 +862,8 @@ void MCPlatformConfigureBackdrop(MCPlatformWindowRef p_backdrop_window)
 		MCPlatformRetainWindow(s_backdrop_window);
 	
 	MCMacPlatformSyncBackdrop();
-#endif
 }
 
-void MCMacPlatformWindowFocusing(MCMacPlatformWindow *p_window)
-{
-#if TO_FIX
-	MCMacPlatformRemoveVisibleWindow(p_window);
-	MCMacPlatformAddVisibleWindow(p_window);
-	MCMacPlatformSyncBackdrop();
-#endif
-}
-
-void MCMacPlatformWindowShowing(MCMacPlatformWindow *p_window)
-{
-#if TO_FIX
-	MCMacPlatformAddVisibleWindow(p_window);
-	MCMacPlatformSyncBackdrop();
-#endif
-}
-
-void MCMacPlatformWindowHiding(MCMacPlatformWindow *p_window)
-{	
-#if TO_FIX
-	MCMacPlatformRemoveVisibleWindow(p_window);
-	MCMacPlatformSyncBackdrop();
-#endif
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

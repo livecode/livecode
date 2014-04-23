@@ -13,7 +13,6 @@ The final goal (64-bit support) will be gradually worked towards over the next f
 As there has been quite a substantial rework on the Mac port it is expected that there will be issues to address during the release cycle. We want to ensure that the functionality of 6.7 is as close as possible to that of 6.6, so please do report any differences you notice however minor you think they might be.
 
 With the release of dp-1 there are a number of known issues:
-* No backdrop support - we are currently working out how to implement this feature using Cocoa APIs
 * No drawer support - we are currently working out how to implement this feature using Cocoa APIs
 * QTVR related aspects of the player do not work - this is being worked on.
 
