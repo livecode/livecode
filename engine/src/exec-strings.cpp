@@ -1712,7 +1712,7 @@ bool MCRegexMatcher::compile(MCStringRef& r_error)
 {
 	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
 	//   no reason not to use the cache.
-	compiled = MCR_compile(pattern, casesensitive);
+	compiled = MCR_compile(pattern, (options == kMCStringOptionCompareExact || kMCStringOptionCompareNonliteral));
 	if (compiled == nil)
 	{
         MCR_copyerror(r_error);
@@ -1723,10 +1723,19 @@ bool MCRegexMatcher::compile(MCStringRef& r_error)
 
 bool MCRegexMatcher::match(MCRange p_range)
 {
-    MCAutoStringRef t_string;
-    MCStringCopySubstring(source, p_range, &t_string);
+    MCStringRef t_string;
+    MCStringCopySubstring(source, p_range, t_string);
     
-	return MCR_exec(compiled, *t_string);
+    // if appropriate, normalize the source string.
+    if (options == kMCStringOptionCompareNonliteral || kMCStringOptionCompareCaseless)
+    {
+        MCAutoStringRef normalized_source;
+        MCStringNormalizedCopyNFC(pattern, &normalized_source);
+        MCValueAssign(t_string, *normalized_source);
+    }
+    
+	return MCR_exec(compiled, t_string);
+    MCValueRelease(t_string);
 }
 
 bool MCWildcardMatcher::compile(MCStringRef& r_error)
@@ -1738,8 +1747,7 @@ bool MCWildcardMatcher::compile(MCStringRef& r_error)
 #define OPEN_BRACKET '['
 #define CLOSE_BRACKET ']'
 
-/*
-bool MCStringsWildcardMatch(const char *s, uindex_t s_length, const char *p, uindex_t p_length, bool casesensitive)
+static bool MCStringsWildcardMatchNative(const char *s, uindex_t s_length, const char *p, uindex_t p_length, bool casesensitive)
 {
 	uindex_t s_index = 0;
 	uindex_t p_index = 0;
@@ -1770,7 +1778,7 @@ bool MCStringsWildcardMatch(const char *s, uindex_t s_length, const char *p, uin
 					c = *p++;
 					p_index++;
 					if (c == CLOSE_BRACKET && lc >= 0)
-						return ok ? MCStringsWildcardMatch(s, s_length - s_index, p, p_length - p_index, casesensitive) : false;
+						return ok ? MCStringsWildcardMatchNative(s, s_length - s_index, p, p_length - p_index, casesensitive) : false;
 					else
 						if (c == '-' && lc >= 0 && *p != CLOSE_BRACKET)
 						{
@@ -1827,7 +1835,7 @@ bool MCStringsWildcardMatch(const char *s, uindex_t s_length, const char *p, uin
 					s_index++;
 				}
 				else
-					if (MCStringsWildcardMatch(s++, s_length - s_index++, p, p_length - p_index, casesensitive))
+					if (MCStringsWildcardMatchNative(s++, s_length - s_index++, p, p_length - p_index, casesensitive))
 						return true;
 			return false;
 		case 0:
@@ -1851,7 +1859,7 @@ bool MCStringsWildcardMatch(const char *s, uindex_t s_length, const char *p, uin
 	}
 	return p_index == p_length;
 }
-
+/*
 index_t MCStringsWildcardCompareChar(MCStringRef p_input, uindex_t p_string_cu_offset, MCStringRef p_pattern, uindex_t p_pattern_cu_offset, MCUnicodeCompareOption p_option, uindex_t &r_string_char_cu, uindex_t &r_pattern_char_cu)
 {
     // Comparison of the characters
@@ -1994,7 +2002,9 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, uindex_t p_string_offset, 
 	return p_index == p_length;
 }
 */
-bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter, MCRange p_srange, MCStringRef p_pattern, MCBreakIteratorRef p_piter, uindex_t p_pattern_offset, bool casesensitive)
+
+// TODO : Implement using new text filter stuff.
+bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter, MCRange p_srange, MCStringRef p_pattern, MCBreakIteratorRef p_piter, uindex_t p_pattern_offset, MCStringOptions p_options)
 {
     // Break iterators locate the grapheme boundaries. Whenever we need to compare chars,
     // we record the index, advance the iterator, and compare the intervening codeunits.
@@ -2004,7 +2014,25 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter
     uindex_t s_end = s_index + p_srange . length;
     uindex_t p_end = MCStringGetLength(p_pattern);
     
-    MCUnicodeCompareOption t_comparison = casesensitive ? kMCUnicodeCompareOptionNormalised : kMCUnicodeCompareOptionCaseless;
+    MCUnicodeCompareOption t_comparison;
+    switch (p_options)
+    {
+        case kMCStringOptionCompareExact:
+            t_comparison = kMCUnicodeCompareOptionExact;
+            break;
+            
+        case kMCStringOptionCompareNonliteral:
+            t_comparison = kMCUnicodeCompareOptionNormalised;
+            break;
+            
+        case kMCStringOptionCompareCaseless:
+            t_comparison = kMCUnicodeCompareOptionCaseless;
+            break;
+            
+        case kMCStringOptionCompareFolded:
+            t_comparison = kMCUnicodeCompareOptionFolded;
+            break;
+    }
     
     const unichar_t *sptr = MCStringGetCharPtr(p_string);
     const unichar_t *pptr = MCStringGetCharPtr(p_pattern);
@@ -2048,7 +2076,7 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter
                         // otherwise, recurse.
                         p_srange . offset++;
                         p_srange . length--;
-						return MCStringsExecWildcardMatch(p_string, p_siter, p_srange, p_pattern, p_piter, ++p_index, casesensitive);
+						return MCStringsExecWildcardMatch(p_string, p_siter, p_srange, p_pattern, p_piter, ++p_index, p_options);
                     }
 					else
                     {
@@ -2130,14 +2158,14 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter
                     {
                         p_srange . length = p_srange . length - s_index + p_srange . offset;
                         p_srange . offset = s_index;
-                        if (MCStringsExecWildcardMatch(p_string, p_siter, p_srange, p_pattern, p_piter, p_index, casesensitive))
+                        if (MCStringsExecWildcardMatch(p_string, p_siter, p_srange, p_pattern, p_piter, p_index, p_options))
                             return true;
                     }
                     else if (MCStringGetCharAtIndex(p_pattern, t_prange . offset) == '?' || MCStringGetCharAtIndex(p_pattern, t_prange . offset) == OPEN_BRACKET)
                     {
                         p_srange . length = p_srange . length - t_srange . offset + p_srange . offset;
                         p_srange . offset = t_srange . offset;
-                        if (MCStringsExecWildcardMatch(p_string, p_siter, p_srange, p_pattern, p_piter, t_prange . offset, casesensitive))
+                        if (MCStringsExecWildcardMatch(p_string, p_siter, p_srange, p_pattern, p_piter, t_prange . offset, p_options))
                             return true;
                     }
                     
@@ -2153,7 +2181,7 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter
             default:
                 // default - just compare chars
                 t_prange . offset = p_index;
-                p_index = MCLocaleBreakIteratorAfter(p_piter, p_index);
+                p_index = MCU_min(MCLocaleBreakIteratorAfter(p_piter, p_index), p_end);
                 t_prange . length = p_index - t_prange . offset;
                 if (MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_prange . offset, t_prange . length, t_comparison) != 0)
                     return false;
@@ -2170,7 +2198,9 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter
 
 bool MCWildcardMatcher::match(MCRange p_source_range)
 {
-	return MCStringsExecWildcardMatch(source, source_iter, p_source_range, pattern, pattern_iter, 0, casesensitive);
+    if (native)
+        return MCStringsWildcardMatchNative((const char *)MCStringGetNativeCharPtr(source) + p_source_range . offset, p_source_range . length, (const char *)MCStringGetNativeCharPtr(pattern), MCStringGetLength(pattern), (options == kMCStringOptionCompareExact || kMCStringOptionCompareNonliteral));
+	return MCStringsExecWildcardMatch(source, source_iter, p_source_range, pattern, pattern_iter, 0, options);
 }
 
 void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, bool p_without, MCStringRef p_delimiter, MCPatternMatcher *p_matcher, MCStringRef &r_result)
@@ -2232,7 +2262,7 @@ void MCStringsExecFilterWildcard(MCExecContext& ctxt, MCStringRef p_source, MCSt
 {
     // Create the pattern matcher
 	MCPatternMatcher *matcher;
-    matcher = new MCWildcardMatcher(p_pattern, p_source, ctxt . GetCaseSensitive(), ctxt . GetFormSensitive());
+    matcher = new MCWildcardMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
     
     MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), matcher, r_result);
     
@@ -2243,7 +2273,7 @@ void MCStringsExecFilterRegex(MCExecContext& ctxt, MCStringRef p_source, MCStrin
 {
 	// Create the pattern matcher
 	MCPatternMatcher *matcher;
-    matcher = new MCRegexMatcher(p_pattern, p_source, ctxt . GetCaseSensitive(), ctxt . GetFormSensitive());
+    matcher = new MCRegexMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
     
     MCAutoStringRef t_regex_error;
     if (!matcher -> compile(&t_regex_error))

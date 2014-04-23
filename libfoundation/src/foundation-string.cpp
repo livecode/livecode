@@ -1758,7 +1758,7 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
     {
         if (!MCStringIsNative(p_other))
         {
-            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral || MCStringIsUncombined(p_other))
+            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded || MCStringIsUncombined(p_other))
                 return false;
             
             __MCStringUnnativize(self, true);
@@ -1777,7 +1777,7 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
             if (MCStringGetLength(self) != MCStringGetLength(p_other))
                 return false;
         
-            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral)
+            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded)
                 return MCNativeCharsEqualExact(self -> native_chars, self -> char_count, p_other -> native_chars, p_other -> char_count);
             else
                 return MCNativeCharsEqualCaseless(self -> native_chars, self -> char_count, p_other -> native_chars, p_other -> char_count);
@@ -1786,7 +1786,7 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
     }
     else if (MCStringIsNative(p_other))
     {
-        if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral || MCStringIsUncombined(p_other))
+        if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded || MCStringIsUncombined(p_other))
             return false;
         
         __MCStringUnnativize(p_other, true);
@@ -1830,7 +1830,7 @@ bool MCStringSubstringIsEqualTo(MCStringRef self, MCRange p_sub, MCStringRef p_o
     {
         if (!MCStringIsNative(p_other))
         {
-            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral || MCStringIsUncombined(p_other))
+            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded || MCStringIsUncombined(p_other))
                 return false;
             __MCStringUnnativize(p_other, true);
         }
@@ -1968,7 +1968,7 @@ bool MCStringBeginsWith(MCStringRef self, MCStringRef p_prefix, MCStringOptions 
     {
         if (!MCStringIsNative(p_prefix))
         {
-            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral || MCStringIsUncombined(p_prefix))
+            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded || MCStringIsUncombined(p_prefix))
                 return false;
             
             __MCStringUnnativize(self, true);
@@ -2011,7 +2011,7 @@ bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefi
     {
         if (!MCStringIsNative(p_prefix))
         {
-            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral || MCStringIsUncombined(p_prefix))
+            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded || MCStringIsUncombined(p_prefix))
                 return false;
             
             __MCStringUnnativize(self, true);
@@ -2075,7 +2075,7 @@ bool MCStringEndsWith(MCStringRef self, MCStringRef p_suffix, MCStringOptions p_
     {
         if (!MCStringIsNative(p_suffix))
         {
-            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral || MCStringIsUncombined(p_suffix))
+            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded || MCStringIsUncombined(p_suffix))
                 return false;
             
             __MCStringUnnativize(self, true);
@@ -2119,7 +2119,7 @@ bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffi
     {
         if (!MCStringIsNative(p_suffix))
         {
-            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral || MCStringIsUncombined(p_suffix))
+            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded || MCStringIsUncombined(p_suffix))
                 return false;
             
             __MCStringUnnativize(self, true);
@@ -2183,7 +2183,7 @@ bool MCStringContains(MCStringRef self, MCStringRef p_needle, MCStringOptions p_
     {
         if (!MCStringIsNative(p_needle))
         {
-            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral || MCStringIsUncombined(p_needle))
+            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded || MCStringIsUncombined(p_needle))
                 return false;
             
             __MCStringUnnativize(self, true);
@@ -2237,7 +2237,7 @@ bool MCStringSubstringContains(MCStringRef self, MCRange p_range, MCStringRef p_
     {
         if (!MCStringIsNative(p_needle))
         {
-            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral || MCStringIsUncombined(p_needle))
+            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded || MCStringIsUncombined(p_needle))
                 return false;
             
             __MCStringUnnativize(self, true);
@@ -2295,7 +2295,7 @@ bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_aft
     {
         if (!MCStringIsNative(p_needle))
         {
-            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral || MCStringIsUncombined(p_needle))
+            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded || MCStringIsUncombined(p_needle))
                 return false;
             
             __MCStringUnnativize(self, true);
@@ -2406,7 +2406,7 @@ bool MCStringLastIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_befo
     {
         if (!MCStringIsNative(p_needle))
         {
-            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral || MCStringIsUncombined(p_needle))
+            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded || MCStringIsUncombined(p_needle))
                 return false;
             
             __MCStringUnnativize(self, true);
@@ -2573,7 +2573,7 @@ bool MCStringFind(MCStringRef self, MCRange p_range, MCStringRef p_needle, MCStr
     {
         if (!MCStringIsNative(p_needle))
         {
-            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral || MCStringIsUncombined(p_needle))
+            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded || MCStringIsUncombined(p_needle))
                 return false;
             
             __MCStringUnnativize(self, true);
@@ -4408,7 +4408,11 @@ static void __MCStringUnnativize(MCStringRef self, bool keep_native)
         return;
     
     if (self -> chars != nil)
+    {
+        if (!keep_native)
+            self -> flags |= kMCStringFlagIsNotNative;
         return;
+    }
     
     if (__MCStringIsIndirect(self))
         __MCStringResolveIndirect(self);
@@ -4430,6 +4434,8 @@ static void __MCStringUnnativize(MCStringRef self, bool keep_native)
 	{
 		MCStrCharsMapFromNative(self -> chars, self -> native_chars, t_char_count);
 		self -> char_count = t_char_count;
+        // Set the NUL char.
+        self -> chars[t_char_count] = '\0';
     }
     
     if (!keep_native)
