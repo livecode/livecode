@@ -89,6 +89,18 @@ static bool s_lock_responder_change = false;
 	return YES;
 }
 
+// MW-2014-04-23: [[ Bug 12270 ]] If user reshaping then apply standard
+//   constrain, otherwise don't constrain.
+- (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen
+{
+    MCWindowDelegate *t_delegate;
+    t_delegate = (MCWindowDelegate *)[self delegate];
+    if ([t_delegate inUserReshape])
+        return [super constrainFrameRect: frameRect toScreen: screen];
+    
+    return frameRect;
+}
+
 @end
 
 @implementation com_runrev_livecode_MCPanel
@@ -134,6 +146,18 @@ static bool s_lock_responder_change = false;
 	[(MCWindowDelegate *)[self delegate] viewFocusSwitched: 0];
 	
 	return YES;
+}
+
+// MW-2014-04-23: [[ Bug 12270 ]] If user reshaping then apply standard
+//   constrain, otherwise don't constrain.
+- (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen
+{
+    MCWindowDelegate *t_delegate;
+    t_delegate = (MCWindowDelegate *)[self delegate];
+    if ([t_delegate inUserReshape])
+        return [super constrainFrameRect: frameRect toScreen: screen];
+    
+    return frameRect;
 }
 
 @end
@@ -318,6 +342,8 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 		return nil;
 	
 	m_window = window;
+    
+    m_user_reshape = false;
 	
 	return self;
 }
@@ -330,6 +356,11 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 - (MCMacPlatformWindow *)platformWindow
 {
 	return m_window;
+}
+
+- (bool)inUserReshape
+{
+    return m_user_reshape;
 }
 
 //////////
@@ -371,12 +402,34 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
         t_thread = [[MCWindowTrackingThread alloc] initWithWindow: m_window];
         [t_thread autorelease];
         [t_thread start];
+        
+        // MW-2014-04-23: [[ Bug 12270 ]] The user has started moving the window
+        //   so set us as reshape by user.
+        m_user_reshape = true;
     }
 }
 
 - (void)windowDidMove:(NSNotification *)notification
 {
+    // MW-2014-04-23: [[ Bug 12270 ]] The user has stopped moving the window
+    //   so unset us as reshape by user.
+    m_user_reshape = false;
+    
 	m_window -> ProcessDidMove();
+}
+
+- (void)windowWillStartLiveResize:(NSNotification *)notification
+{
+    // MW-2014-04-23: [[ Bug 12270 ]] The user has started sizing the window
+    //   so set us as reshape by user.
+    m_user_reshape = true;
+}
+
+- (void)windowDidEndLiveResize:(NSNotification *)notification
+{
+    // MW-2014-04-23: [[ Bug 12270 ]] The user has stopped sizing the window
+    //   so unset us as reshape by user.
+    m_user_reshape = false;
 }
 
 - (void)windowWillMiniaturize:(NSNotification *)notification
