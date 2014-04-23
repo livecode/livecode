@@ -387,6 +387,32 @@ bool MCStringCreateWithNativeCharsAndRelease(char_t *p_chars, uindex_t p_char_co
 	return false;
 }
 
+static bool MCStringCreateMutableUnicode(uindex_t p_initial_capacity, MCStringRef& r_string)
+{
+	bool t_success;
+	t_success = true;
+    
+	__MCString *self;
+	self = nil;
+	if (t_success)
+		t_success = __MCValueCreate(kMCValueTypeCodeString, self);
+    
+	if (t_success)
+    {
+        self -> flags |= kMCStringFlagIsNotNative;
+		t_success = __MCStringExpandAt(self, 0, p_initial_capacity);
+    }
+    
+	if (t_success)
+	{
+		self -> flags |= kMCStringFlagIsMutable;
+        self -> native_chars = nil;
+		r_string = self;
+	}
+    
+	return t_success;
+}
+
 bool MCStringCreateMutable(uindex_t p_initial_capacity, MCStringRef& r_string)
 {
 	bool t_success;
@@ -822,24 +848,24 @@ bool MCStringMutableCopySubstring(MCStringRef self, MCRange p_range, MCStringRef
 	// temporary - any 'r_' (out) parameter should never be updated until the end
 	// of the method and then only if the method is succeeding.
 	MCStringRef t_new_string;
-	if (!MCStringCreateMutable(p_range . length + 1, t_new_string))
-		return false;
-    
-	// Now copy across the chars (note we set the implicit NUL too, just to be
-	// on the safe-side!).
     
     if (MCStringIsNative(self))
     {
+        if (!MCStringCreateMutable(p_range . length + 1, t_new_string))
+            return false;
+        
+        // Now copy across the chars (note we set the implicit NUL too, just to be
+        // on the safe-side!).
         MCMemoryCopy(t_new_string -> native_chars, self -> native_chars + p_range . offset, p_range . length);
         t_new_string -> native_chars[p_range . length] = '\0';
-        t_new_string -> chars = nil;
     }
     else
     {
-        __MCStringUnnativize(t_new_string);
+        if (!MCStringCreateMutableUnicode(p_range . length + 1, t_new_string))
+            return false;
+        
         MCMemoryCopy(t_new_string -> chars, self -> chars + p_range . offset, p_range . length * sizeof(strchar_t));
         t_new_string -> chars[p_range . length] = '\0';
-        t_new_string -> native_chars = nil;
     }
 
 	t_new_string -> char_count = p_range . length;
@@ -4816,11 +4842,16 @@ static bool __MCStringMakeImmutable(__MCString *self)
     {
         if (!MCMemoryResizeArray(self -> char_count + 1, self -> native_chars, self -> char_count))
             return false;
+        MCMemoryDeleteArray(self -> chars);
+        self -> chars = nil;
     }
     else
     {
         if (!MCMemoryResizeArray(self -> char_count + 1, self -> chars, self -> char_count))
             return false;
+    
+        MCMemoryDeleteArray(self -> native_chars);
+        self -> native_chars = nil;
     }
     
     self -> char_count -= 1;
@@ -4847,17 +4878,10 @@ static bool __MCStringMakeIndirect(__MCString *self)
     t_string -> flags &= ~kMCStringFlagIsMutable;
     
 	t_string -> char_count = self -> char_count;
-    if (MCStringIsNative(self))
-    {
-        t_string -> native_chars = self -> native_chars;
-        self -> native_chars = nil;
-    }
-    else
-    {
-        t_string -> chars = self -> chars;
-        self -> chars = nil;
-    }
-    
+
+    t_string -> native_chars = self -> native_chars;
+    t_string -> chars = self -> chars;
+
 	// 'self' now becomes indirect with a reference to the new string.
 	self -> flags |= kMCStringFlagIsIndirect;
 	self -> string = t_string;
@@ -4881,13 +4905,10 @@ static bool __MCStringResolveIndirect(__MCString *self)
         self -> char_count = t_string -> char_count;
         self -> capacity = t_string -> char_count;
         self -> flags |= t_string -> flags;
-        if (MCStringIsNative(t_string))
-            self -> native_chars = t_string -> native_chars;
-        else
-        {
-            self -> chars = t_string -> chars;
+        self -> native_chars = t_string -> native_chars;
+        self -> chars = t_string -> chars;
+        if (!MCStringIsNative(t_string))
             self -> flags |= kMCStringFlagIsNotNative;
-        }
 
 		t_string -> char_count = 0;
 		t_string -> chars = nil;
@@ -4902,15 +4923,16 @@ static bool __MCStringResolveIndirect(__MCString *self)
         {
             if (!__MCStringCloneNativeBuffer(t_string, self -> native_chars, self -> char_count))
                 return false;
+            self -> chars = nil;
         }
         else
         {
             if (!__MCStringCloneBuffer(t_string, self -> chars, self -> char_count))
                 return false;
+            self -> native_chars = nil;
             self -> flags |= kMCStringFlagIsNotNative;
         }
 
-        
         self -> capacity = t_string -> char_count;
 	}
     
@@ -4931,14 +4953,11 @@ static bool __MCStringCopyMutable(__MCString *self, __MCString*& r_new_string)
         return false;
     
     t_string -> char_count = self -> char_count;
-
-    if (MCStringIsNative(self))
-        t_string -> native_chars = self -> native_chars;
-    else
-    {
-        t_string -> chars = self -> chars;
+    t_string -> native_chars = self -> native_chars;
+    t_string -> chars = self -> chars;
+    
+    if (!MCStringIsNative(self))
         t_string -> flags |= kMCStringFlagIsNotNative;
-    }
     
     self -> char_count = 0;
     self -> chars = nil;
