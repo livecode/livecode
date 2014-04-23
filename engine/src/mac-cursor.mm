@@ -44,6 +44,59 @@ public:
 
 static MCPlatformCursor *s_hidden_cursor = nil;
 static MCPlatformCursor *s_current_cursor = nil;
+static NSCursor *s_watch_cursor = nil;
+
+static unsigned char s_watch_cursor_bits[] =
+{
+    0x07, 0xE0, 0x07, 0xE0, 0x07, 0xE0, 0x07, 0xE0, 0x08, 0x10, 0x10, 0x88, 0x10, 0x88, 0x10, 0x88,
+    0x13, 0x88, 0x10, 0x08, 0x10, 0x08, 0x08, 0x10, 0x07, 0xE0, 0x07, 0xE0, 0x07, 0xE0, 0x07, 0xE0
+};
+
+static unsigned char s_watch_cursor_mask[] =
+{
+    0x07, 0xE0, 0x07, 0xE0, 0x07, 0xE0, 0x07, 0xE0, 0x0F, 0xF0, 0x1F, 0xF8, 0x1F, 0xF8, 0x1F, 0xF8,
+    0x1F, 0xF8, 0x1F, 0xF8, 0x1F, 0xF8, 0x0F, 0xF0, 0x07, 0xE0, 0x07, 0xE0, 0x07, 0xE0, 0x07, 0xE0,
+};
+
+static int s_watch_cursor_hotspot[2] = { 8, 8 };
+
+static NSImage *CreateNSImageFromBits(int p_width, int p_height, unsigned char *p_bits, unsigned char *p_mask)
+{
+    NSImage *t_image;
+    t_image = [[NSImage alloc] initWithSize: NSMakeSize(p_width, p_height)];
+    
+    int t_stride;
+    t_stride = (p_width + 7) >> 3;
+    
+    NSBitmapImageRep *t_rep;
+    t_rep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes: NULL
+                                                    pixelsWide:p_width
+                                                    pixelsHigh:p_height
+                                                 bitsPerSample:1
+                                               samplesPerPixel:2
+                                                      hasAlpha:YES
+                                                      isPlanar:YES
+                                                colorSpaceName:NSCalibratedWhiteColorSpace
+                                                   bytesPerRow: t_stride
+                                                  bitsPerPixel: 1];
+    
+    unsigned char *t_planes[5];
+    [t_rep getBitmapDataPlanes: t_planes];
+    
+    for(int y = 0; y < p_height; y++)
+    {
+        for(int x = 0; x < t_stride; x++)
+        {
+            t_planes[0][y * t_stride + x] = (~p_bits[y * t_stride + x] & p_mask[y * t_stride + x]);
+            t_planes[1][y * t_stride + x] = p_mask[y * t_stride + x];
+        }
+    }
+    
+    [t_image addRepresentation: t_rep];
+    [t_rep release];
+    
+    return t_image;
+}
 
 // This function expects to be called after a pool has been allocated.
 static NSImage *CreateNSImageFromCGImage(CGImageRef p_image)
@@ -130,23 +183,29 @@ void MCPlatformReleaseCursor(MCPlatformCursorRef p_cursor)
 }
 
 void MCPlatformShowCursor(MCPlatformCursorRef p_cursor)
-{	
-	[NSCursor unhide];
+{
 	if (p_cursor -> is_standard)
 	{
 		switch(p_cursor -> standard)
 		{
 		case kMCPlatformStandardCursorArrow:
-			SetThemeCursor(kThemeArrowCursor);
+            [[NSCursor arrowCursor] set];
 			break;
 		case kMCPlatformStandardCursorWatch:
-			SetThemeCursor(kThemeWatchCursor);
+            if (s_watch_cursor == nil)
+            {
+                NSImage *t_image;
+                t_image = CreateNSImageFromBits(16, 16, s_watch_cursor_bits, s_watch_cursor_mask);
+                s_watch_cursor = [[NSCursor alloc] initWithImage: t_image hotSpot: NSMakePoint(s_watch_cursor_hotspot[0], s_watch_cursor_hotspot[1])];
+                [t_image release];
+            }
+            [s_watch_cursor set];
 			break;
 		case kMCPlatformStandardCursorCross:
-			SetThemeCursor(kThemeCrossCursor);
+            [[NSCursor crosshairCursor] set];
 			break;
 		case kMCPlatformStandardCursorIBeam:
-			SetThemeCursor(kThemeIBeamCursor);
+            [[NSCursor IBeamCursor] set];
 			break;
 		default:
 			assert(false);
@@ -182,6 +241,5 @@ void MCPlatformHideCursor(void)
 
 void MCMacPlatformResetCursor(void)
 {
-	[NSCursor unhide];
-	SetThemeCursor(kThemeArrowCursor);
+    [[NSCursor arrowCursor] set];
 }
