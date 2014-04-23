@@ -193,6 +193,9 @@ void MCStack::realize(void)
 		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHasSizeWidget, t_has_sizebox);
 		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHasShadow, (decorations & WD_NOSHADOW) == 0);
 		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyUseLiveResizing, (decorations & WD_LIVERESIZING) != 0);
+        
+        // MW-2014-04-23: [[ Bug 12080 ]] If the window is a palette and hidePalettes is true then HideOnSuspend.
+        MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHideOnSuspend, MChidepalettes && t_window_style == kMCPlatformWindowStylePalette);
 		
 		setopacity(blendlevel * 255 / 100);
 		

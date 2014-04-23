@@ -200,6 +200,8 @@ protected:
         
         // MW-2014-04-08: [[ Bug 12073 ]] Changed flag for mouse cursor.
         bool cursor_changed : 1;
+        
+        bool hides_on_suspend_changed : 1;
 	} m_changes;
 	MCPlatformWindowStyle m_style;
 	char *m_title;
@@ -217,6 +219,7 @@ protected:
 		bool m_has_shadow : 1;
 		bool m_has_modified_mark : 1;
 		bool m_use_live_resizing : 1;
+        bool m_hides_on_suspend : 1;
 	};
 	
 	// Universal state.

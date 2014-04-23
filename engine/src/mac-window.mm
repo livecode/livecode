@@ -1713,7 +1713,12 @@ void MCMacPlatformWindow::DoRealize(void)
     
 	[m_window_handle setContentView: m_container_view];
     
-	[m_window_handle setLevel: t_window_level];
+    // MW-2014-04-23: [[ Bug 12080 ]] If the window is a palette and the app is active
+    //   then make sure its floating (if app is not active it gets made floating on resume).
+    if (t_window_level == kCGFloatingWindowLevelKey)
+        [m_panel_handle setFloatingPanel: [NSApp isActive]];
+    else
+        [m_window_handle setLevel: t_window_level];
 	[m_window_handle setOpaque: m_mask == nil];
 	[m_window_handle setHasShadow: m_has_shadow];
 	if (!m_has_zoom_widget)
@@ -1726,7 +1731,7 @@ void MCMacPlatformWindow::DoRealize(void)
     
     // MW-2014-04-08: [[ Bug 12080 ]] Make sure we turn off automatic 'hiding on deactivate'.
     //   The engine handles this itself.
-    [m_window_handle setHidesOnDeactivate: NO];
+    [m_window_handle setHidesOnDeactivate: m_hides_on_suspend];
 }
 
 void MCMacPlatformWindow::DoSynchronize(void)
@@ -1780,6 +1785,10 @@ void MCMacPlatformWindow::DoSynchronize(void)
     //   update it - should this window be the mouse window.
     if (m_changes . cursor_changed)
         MCMacPlatformHandleMouseCursorChange(this);
+    
+    // MW-2014-04-23: [[ Bug 12080 ]] Sync hidesOnSuspend.
+    if (m_changes . hides_on_suspend_changed)
+        [m_window_handle setHidesOnDeactivate: m_hides_on_suspend];
     
 	m_synchronizing = false;
 }

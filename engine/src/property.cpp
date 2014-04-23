@@ -2095,7 +2095,12 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	case P_ACTIVATE_PALETTES:
 		return ep.getboolean(MCactivatepalettes, line, pos, EE_PROPERTY_NAB);
 	case P_HIDE_PALETTES:
-		return ep.getboolean(MChidepalettes, line, pos, EE_PROPERTY_NAB);
+		stat = ep.getboolean(MChidepalettes, line, pos, EE_PROPERTY_NAB);
+#ifdef _MACOSX
+        // MW-2014-04-23: [[ Bug 12080 ]] Make sure we update the hidesOnSuspend of all palettes.
+        MCstacks -> hidepaletteschanged();
+#endif
+        return stat;
 	case P_RAISE_PALETTES:
 		// MW-2004-11-17: On Linux, effect a restack if 'raisepalettes' is changed
 		// MW-2004-11-24: Altered MCStacklst::restack to find right stack if passed NULL
