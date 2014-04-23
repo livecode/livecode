@@ -1315,6 +1315,15 @@ extern MCStringRef kMCFalseString;
 // The default string for the 'mixed' value of chunk properties.
 extern MCStringRef kMCMixedString;
 
+// The default string for ','.
+extern MCStringRef kMCCommaString;
+
+// The default string for '\n'.
+extern MCStringRef kMCLineEndString;
+
+// The default string for '\t'.
+extern MCStringRef kMCTabString;
+
 /////////
 
 // Creates an MCStringRef wrapping the given constant c-string. Note that

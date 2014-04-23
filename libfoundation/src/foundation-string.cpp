@@ -4463,6 +4463,9 @@ MCStringRef kMCEmptyString;
 MCStringRef kMCTrueString;
 MCStringRef kMCFalseString;
 MCStringRef kMCMixedString;
+MCStringRef kMCCommaString;
+MCStringRef kMCLineEndString;
+MCStringRef kMCTabString;
 
 bool __MCStringInitialize(void)
 {
@@ -4476,6 +4479,15 @@ bool __MCStringInitialize(void)
 		return false;
     
     if (!MCStringCreateWithNativeChars((const char_t *)"mixed", 5, kMCMixedString))
+		return false;
+    
+    if (!MCStringCreateWithNativeChars((const char_t *)",", 1, kMCCommaString))
+		return false;
+    
+	if (!MCStringCreateWithNativeChars((const char_t *)"\n", 1, kMCLineEndString))
+		return false;
+    
+    if (!MCStringCreateWithNativeChars((const char_t *)"\t", 1, kMCTabString))
 		return false;
 
 	return true;
@@ -4491,6 +4503,13 @@ void __MCStringFinalize(void)
 	kMCEmptyString = nil;
     MCValueRelease(kMCMixedString);
     kMCMixedString = nil;
+    
+    MCValueRelease(kMCCommaString);
+    kMCCommaString = nil;
+    MCValueRelease(kMCLineEndString);
+    kMCLineEndString = nil;
+    MCValueRelease(kMCTabString);
+    kMCTabString = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

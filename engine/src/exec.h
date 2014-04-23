@@ -1193,10 +1193,10 @@ public:
     MCExecContext()
     {
         memset(this, 0, sizeof(MCExecContext));
-        MCStringCreateWithNativeChars((const char_t *)",", 1, m_itemdel);
-        MCStringCreateWithNativeChars((const char_t *)"\t", 1, m_columndel);
-        MCStringCreateWithNativeChars((const char_t *)"\n", 1, m_rowdel);
-        MCStringCreateWithNativeChars((const char_t *)"\n", 1, m_linedel);
+        m_itemdel = MCValueRetain(kMCCommaString);
+        m_columndel = MCValueRetain(kMCTabString);
+        m_rowdel = MCValueRetain(kMCLineEndString);
+        m_linedel = MCValueRetain(kMCLineEndString);
         m_nffw = 8;
         m_nftrailing = 6;
         m_cutoff = 35;
@@ -1214,6 +1214,10 @@ public:
         : m_stat(ES_NORMAL)
 	{
         *this = p_ctxt;
+        MCValueRetain(p_ctxt . m_itemdel);
+        MCValueRetain(p_ctxt . m_linedel);
+        MCValueRetain(p_ctxt . m_rowdel);
+        MCValueRetain(p_ctxt . m_columndel);
 	}
 
     MCExecContext(MCObject *object, MCHandlerlist *hlist, MCHandler *handler)
@@ -1222,16 +1226,24 @@ public:
         m_object = object;
         m_hlist = hlist;
         m_curhandler = handler;
-        MCStringCreateWithNativeChars((const char_t *)",", 1, m_itemdel);
-        MCStringCreateWithNativeChars((const char_t *)"\t", 1, m_columndel);
-        MCStringCreateWithNativeChars((const char_t *)"\n", 1, m_rowdel);
-        MCStringCreateWithNativeChars((const char_t *)"\n", 1, m_linedel);
+        m_itemdel = MCValueRetain(kMCCommaString);
+        m_columndel = MCValueRetain(kMCTabString);
+        m_rowdel = MCValueRetain(kMCLineEndString);
+        m_linedel = MCValueRetain(kMCLineEndString);
         m_nffw = 8;
         m_nftrailing = 6;
         m_cutoff = 35;
         m_stat = ES_NORMAL;
     }
 
+    ~MCExecContext()
+    {
+        MCValueRelease(m_itemdel);
+        MCValueRelease(m_linedel);
+        MCValueRelease(m_rowdel);
+        MCValueRelease(m_columndel);
+    }
+    
 	//////////
 
 #ifdef LEGACY_EXEC
