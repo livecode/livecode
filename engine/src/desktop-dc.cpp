@@ -44,6 +44,7 @@
 #include "graphicscontext.h"
 #include "region.h"
 #include "scriptenvironment.h"
+#include "stacklst.h"
 
 #include "desktop-dc.h"
 
@@ -370,17 +371,15 @@ void MCScreenDC::setcursor(Window w, MCCursorRef c)
 	// Disable cursor setting when we are a drag-target
 	if (MCdispatcher -> isdragtarget())
 		return;
-		
-	/*if (c == nil)
-		MCPlatformHideCursor();
-	else
-		MCPlatformShowCursor(c);*/
 	
 	MCPlatformSetWindowProperty(w, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &c);
 }
 
 MCCursorRef MCScreenDC::createcursor(MCImageBitmap *image, int2 xhot, int2 yhot)
 {
+    if (image == nil)
+        return nil;
+    
 	MCCursorRef t_cursor;
 	MCPlatformCreateCustomCursor(image, MCPointMake(xhot, yhot), t_cursor);
 	return t_cursor;
@@ -647,8 +646,7 @@ bool MCScreenDC::transformimagecolors(MCColorTransformRef transform, MCImageBitm
 
 void MCScreenDC::beep()
 {
-	SndSetSysBeepState(sysBeepEnable | sysBeepSynchronous);
-	SysBeep(beepduration / 16);
+    MCPlatformBeep();
 }
 
 void MCScreenDC::getbeep(uint4 which, MCExecPoint &ep)
@@ -657,38 +655,19 @@ void MCScreenDC::getbeep(uint4 which, MCExecPoint &ep)
 	switch (which)
 	{
 		case P_BEEP_LOUDNESS:
-			GetSysBeepVolume(&v);
-			ep.setint(v);
+			ep.setint(100);
 			break;
 		case P_BEEP_PITCH:
-			ep.setint(beeppitch);
+			ep.setint(1440);
 			break;
 		case P_BEEP_DURATION:
-			ep.setint(beepduration);
+			ep.setint(500);
 			break;
 	}
 }
 
 void MCScreenDC::setbeep(uint4 which, int4 beep)
 {
-	switch (which)
-	{
-		case P_BEEP_LOUDNESS:
-			SetSysBeepVolume(beep);
-			break;
-		case P_BEEP_PITCH:
-			if (beep == -1)
-				beeppitch = 1440;
-			else
-				beeppitch = beep;
-			break;
-		case P_BEEP_DURATION:
-			if (beep == -1)
-				beepduration = 500;
-			else
-				beepduration = beep;
-			break;
-	}
 }	
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1358,12 +1337,21 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
 MCImageBitmap *MCScreenDC::snapshot(MCRectangle &p_rect, uint4 p_window, const char *p_display_name, MCPoint *p_size)
 {
 	MCImageBitmap *t_bitmap;
-	if (p_window == 0 && (p_rect . width == 0 || p_rect . height == 0))
-		MCPlatformScreenSnapshotOfUserArea(p_size, t_bitmap);
-	else if (p_window != 0)
-		MCPlatformScreenSnapshotOfWindow(p_window, p_size, t_bitmap);
+	if (p_window == 0)
+	{
+		if (p_rect . width == 0 || p_rect . height == 0)
+			MCPlatformScreenSnapshotOfUserArea(p_size, t_bitmap);
+		else
+			MCPlatformScreenSnapshot(p_rect, p_size, t_bitmap);
+	}
 	else
-		MCPlatformScreenSnapshot(p_rect, p_size, t_bitmap);
+	{
+		if (p_rect.width == 0 || p_rect.height == 0)
+			MCPlatformScreenSnapshotOfWindow(p_window, p_size, t_bitmap);
+		else
+			// IM-2014-04-03: [[ Bug 12115 ]] If window and non-empty rect given then call appropriate snapshot function
+			MCPlatformScreenSnapshotOfWindowArea(p_window, p_rect, p_size, t_bitmap);
+	}
 	return t_bitmap;
 }
 
@@ -1427,7 +1415,7 @@ MCGFloat MCResPlatformGetUIDeviceScale(void)
 void MCResPlatformHandleScaleChange(void)
 {
 	// Global use-pixel-scaling value has been updated, so now we just need to reopen any open stack windows
-	MCdispatcher->reopen_stack_windows();
+	MCstacks->reopenallstackwindows();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

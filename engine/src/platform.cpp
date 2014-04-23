@@ -24,6 +24,7 @@ void MCPlatformHandleWindowConstrain(MCPlatformWindowRef window, MCPoint propose
 
 void MCPlatformHandleModifiersChanged(MCPlatformModifiers modifiers);
 
+void MCPlatformHandleRawKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code);
 void MCPlatformHandleKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 void MCPlatformHandleKeyUp(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 
@@ -56,6 +57,14 @@ void MCPlatformHandlePasteboardResolve(MCPlatformPasteboardRef pasteboard, MCPla
 void MCPlatformHandleViewFocusSwitched(MCPlatformWindowRef window, uint32_t id);
 
 void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef player);
+void MCPlatformHandlePlayerMarkerChanged(MCPlatformPlayerRef player, uint32_t time);
+void MCPlatformHandlePlayerCurrentTimeChanged(MCPlatformPlayerRef player);
+void MCPlatformHandlePlayerSelectionChanged(MCPlatformPlayerRef player);
+void MCPlatformHandlePlayerStarted(MCPlatformPlayerRef player);
+void MCPlatformHandlePlayerStopped(MCPlatformPlayerRef player);
+void MCPlatformHandlePlayerPaused(MCPlatformPlayerRef player);
+
+void MCPlatformHandleSoundFinished(MCPlatformSoundRef sound);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -259,6 +268,13 @@ void MCPlatformCallbackSendDragDrop(MCPlatformWindowRef p_window, bool& r_accept
 
 //////////
 
+void MCPlatformCallbackSendRawKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code)
+{
+    MCLog("Window(%p) -> RawKeyDown(%d)", p_window, p_key_code);
+    MCPlatformWindowDeathGrip(p_window);
+    MCPlatformHandleRawKeyDown(p_window, p_key_code);
+}
+
 void MCPlatformCallbackSendKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
 {
 	MCLog("Window(%p) -> KeyDown(%04x, %06x, %06x)", p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
@@ -350,6 +366,50 @@ void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef p_window, uint3
 void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef p_player)
 {
 	MCPlatformHandlePlayerFrameChanged(p_player);
+}
+
+void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef p_player, uint32_t p_time)
+{
+    MCLog("Player(%p) -> MarkerChanged(%d)", p_player, p_time);
+    MCPlatformHandlePlayerMarkerChanged(p_player, p_time);
+}
+
+void MCPlatformCallbackSendPlayerSelectionChanged(MCPlatformPlayerRef p_player)
+{
+    MCLog("Player(%p) -> SelectionChanged()", p_player);
+    MCPlatformHandlePlayerSelectionChanged(p_player);
+}
+
+void MCPlatformCallbackSendPlayerCurrentTimeChanged(MCPlatformPlayerRef p_player)
+{
+    MCLog("Player(%p) -> CurrentTimeChanged()", p_player);
+    MCPlatformHandlePlayerCurrentTimeChanged(p_player);
+}
+
+void MCPlatformCallbackSendPlayerStarted(MCPlatformPlayerRef p_player)
+{
+    MCLog("Player(%p) -> Started()", p_player);
+    MCPlatformHandlePlayerStarted(p_player);
+}
+
+void MCPlatformCallbackSendPlayerPaused(MCPlatformPlayerRef p_player)
+{
+    MCLog("Player(%p) -> Paused()", p_player);
+    MCPlatformHandlePlayerPaused(p_player);
+}
+
+void MCPlatformCallbackSendPlayerStopped(MCPlatformPlayerRef p_player)
+{
+    MCLog("Player(%p) -> Stopped()", p_player);
+    MCPlatformHandlePlayerStopped(p_player);
+}
+
+//////////
+
+void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef p_sound)
+{
+    MCLog("Sound(%p) -> Finished()", p_sound);
+    MCPlatformHandleSoundFinished(p_sound);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

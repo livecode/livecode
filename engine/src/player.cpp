@@ -579,7 +579,10 @@ void MCPlayer::setrect(const MCRectangle &nrect)
 	if (m_platform_player != nil)
 	{ 
 		MCRectangle trect = MCU_reduce_rect(rect, getflag(F_SHOW_BORDER) ? borderwidth : 0);
-		trect = MCRectangleGetTransformedBounds(trect, getstack()->getdevicetransform());
+        
+        // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
+        //   (backscale factor handled in platform layer).
+		trect = MCRectangleGetTransformedBounds(trect, getstack()->getviewtransform());
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
 	}
 #else
@@ -650,31 +653,42 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 #endif
 #endif
 	
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (MCNameIsEqualTo(mptr, MCM_play_started, kMCCompareCaseless))
+    {
+        state &= ~CS_PAUSED;
+    }
+    else
+#endif
 	if (MCNameIsEqualTo(mptr, MCM_play_stopped, kMCCompareCaseless))
 	{
 		state |= CS_PAUSED;
+#ifndef FEATURE_PLATFORM_PLAYER
 		if (isbuffering()) //so the last frame gets to be drawn
 		{
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();
 		}
+#endif
 		if (disposable)
 		{
 			playstop();
 			return; //obj is already deleted, do not pass msg up.
 		}
 	}
-#ifndef FEATURE_PLATFORM_PLAYER
-#ifdef FEATURE_QUICKTIME
 	else if (MCNameIsEqualTo(mptr, MCM_play_paused, kMCCompareCaseless))
 		{
 			state |= CS_PAUSED;
+#ifndef FEATURE_PLATFORM_PLAYER
 			if (isbuffering()) //so the last frame gets to be drawn
 			{
 				// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 				layer_redrawall();
 			}
+#endif
 		}
+#ifndef FEATURE_PLATFORM_PLAYER
+#ifdef FEATURE_QUICKTIME
 	else if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless) && qtstate == QT_INITTED && state & CS_PREPARED)
 			{
 				checktimes();
@@ -1385,7 +1399,8 @@ void MCPlayer::syncbuffering(MCContext *p_dc)
 void MCPlayer::getversion(MCExecPoint &ep)
 {
 #ifdef FEATURE_PLATFORM_PLAYER
-	ep . clear();
+    extern void MCQTGetVersion(MCExecPoint& ep);
+    MCQTGetVersion(ep);
 #else
 #if defined(X11)
 	ep.setstaticcstring("2.0");
@@ -1743,6 +1758,9 @@ Boolean MCPlayer::prepare(const char *options)
 		return False;
 
 #ifdef FEATURE_PLATFORM_PLAYER
+    extern bool MCQTInit(void);
+    if (!MCQTInit())
+        return False;
 
 	if (m_platform_player == nil)
 		MCPlatformCreatePlayer(m_platform_player);
@@ -1758,7 +1776,9 @@ Boolean MCPlayer::prepare(const char *options)
 	MCRectangle trect = resize(t_movie_rect);
 	
 	// IM-2011-11-12: [[ Bug 11320 ]] Transform player rect to device coords
-	trect = MCRectangleGetTransformedBounds(trect, getstack()->getdevicetransform());
+    // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
+    //   (backscale factor handled in platform layer).
+	trect = MCRectangleGetTransformedBounds(trect, getstack()->getviewtransform());
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
 	
@@ -2369,9 +2389,89 @@ MCRectangle MCPlayer::resize(MCRectangle movieRect)
 	return trect;
 }
 
+void MCPlayer::markerchanged(uint32_t p_time)
+{
+    // Search for the first marker with the given time, and dispatch the message.
+    for(uindex_t i = 0; i < m_callback_count; i++)
+        if (p_time == m_callbacks[i] . time)
+            message_with_args(m_callbacks[i] . message, m_callbacks[i] . parameter);
+}
+
 void MCPlayer::SynchronizeUserCallbacks(void)
 {
-	// COCOA-TODO: Sort out player user callbacks.
+    if (userCallbackStr == nil)
+        return;
+    
+    if (m_platform_player == nil)
+        return;
+    
+    // Free the existing callback table.
+    for(uindex_t i = 0; i < m_callback_count; i++)
+    {
+        MCNameDelete(m_callbacks[i] . message);
+        MCNameDelete(m_callbacks[i] . parameter);
+    }
+    MCMemoryDeleteArray(m_callbacks);
+    m_callbacks = nil;
+    m_callback_count = 0;
+    
+    // Now reparse the callback string and build the table.
+    char *cblist = strclone(userCallbackStr);
+	char *str;
+	str = cblist;
+	while (*str)
+	{
+		char *ptr, *data1, *data2;
+		if ((data1 = strchr(str, ',')) == NULL)
+		{
+            //search ',' as separator
+			delete cblist;
+			return;
+		}
+		*data1 = '\0';
+		data1 ++;
+		if ((data2 = strchr(data1, '\n')) != NULL)// more than one callback
+			*data2++ = '\0';
+		else
+			data2 = data1 + strlen(data1);
+        
+        /* UNCHECKED */ MCMemoryResizeArray(m_callback_count + 1, m_callbacks, m_callback_count);
+        m_callbacks[m_callback_count - 1] . time = strtol(str, NULL, 10);
+        
+        while (isspace(*data1))//strip off preceding and trailing blanks
+            data1++;
+        ptr = data1;
+        while (*ptr)
+        {
+            if (isspace(*ptr))
+            {
+                *ptr++ = '\0';
+                /* UNCHECKED */ MCNameCreateWithCString(ptr, m_callbacks[m_callback_count - 1] . parameter);
+                break;
+            }
+            ptr++;
+        }
+
+        /* UNCHECKED */ MCNameCreateWithCString(data1, m_callbacks[m_callback_count - 1] . message);
+        
+        // If no parameter is specified, use the time.
+        if (m_callbacks[m_callback_count - 1] . parameter == nil)
+            /* UNCHECKED */ MCNameCreateWithCString(str, m_callbacks[m_callback_count - 1] . parameter);
+		
+        str = data2;
+	}
+	delete cblist;
+    
+    // Now set the markers in the player so that we get notified.
+    array_t<uint32_t> t_markers;
+    /* UNCHECKED */ MCMemoryNewArray(m_callback_count, t_markers . ptr);
+    for(uindex_t i = 0; i < m_callback_count; i++)
+        t_markers . ptr[i] = m_callbacks[i] . time;
+    t_markers . count = m_callback_count;
+    MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMarkers, kMCPlatformPropertyTypeUInt32Array, &t_markers);
+    MCMemoryDeleteArray(t_markers . ptr);
+    
+	return True;
 }
 
 Boolean MCPlayer::isbuffering(void)

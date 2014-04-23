@@ -140,6 +140,175 @@ static bool s_lock_responder_change = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// The window tracking thread manages an event tap on mouseUp and mouseDragged
+// events. These are used to update the window frame whilst a window is being
+// moved.
+@interface com_runrev_livecode_MCWindowTrackingThread: NSThread<NSPortDelegate>
+{
+	NSPort *m_termination_port;
+	BOOL m_is_running;
+    
+    MCMacPlatformWindow *m_window;
+    bool m_signalled : 1;
+}
+
+- (id)initWithWindow: (MCMacPlatformWindow *)window;
+
+- (MCMacPlatformWindow *)platformWindow;
+
+- (void)setSignalled: (bool)p_value;
+
+- (void)main;
+- (void)terminate;
+
+- (void)handlePortMessage: (NSPortMessage *)message;
+
+@end
+
+@compatibility_alias MCWindowTrackingThread com_runrev_livecode_MCWindowTrackingThread;
+
+// This NSWindow addition handles a message 'windowMoved' which is generated
+// by the window tracking thread.
+@interface NSWindow (com_runrev_livecode_MCWindowTrackingAdditions)
+
+- (void)com_runrev_livecode_windowMoved: (MCWindowTrackingThread *)tracker;
+
+@end
+
+@implementation NSWindow (com_runrev_livecode_MCWindowTrackingAdditions)
+
+- (void)com_runrev_livecode_windowMoved: (MCWindowTrackingThread *)tracker
+{
+    // The NSWindow's frame isn't updated whilst a window is being moved. However,
+    // the window server's bounds *are*. Thus we ask for the updated bounds from
+    // the window server each time we get a mouseDragged event (sent on the main
+    // thread to the NSWindow from the MCWindowTrackingThread event tap).
+    
+    uintptr_t t_window_ids[1];
+    t_window_ids[0] = (uintptr_t)[self windowNumber];
+    
+    CFArrayRef t_window_id_array;
+    t_window_id_array = CFArrayCreate(kCFAllocatorDefault, (const void **)t_window_ids, 1, NULL);
+    
+	NSArray *t_info_array;
+	t_info_array = (NSArray *)CGWindowListCreateDescriptionFromArray(t_window_id_array);
+	
+    if ([t_info_array count] > 0)
+    {
+        NSDictionary *t_rect_dict;
+        t_rect_dict = [[t_info_array objectAtIndex: 0] objectForKey: (NSString *)kCGWindowBounds];
+        
+        CGRect t_rect;
+        CGRectMakeWithDictionaryRepresentation((CFDictionaryRef)t_rect_dict, &t_rect);
+        
+        _frame . origin . x = t_rect . origin . x;
+        _frame . origin . y = [[NSScreen mainScreen] frame] . size . height - t_rect . origin . y - t_rect . size . height;
+        
+        [tracker platformWindow] -> ProcessDidMove();
+    }
+    
+    [t_info_array release];
+    CFRelease(t_window_id_array);
+    
+    [tracker setSignalled: false];
+}
+
+@end
+
+@implementation com_runrev_livecode_MCWindowTrackingThread
+
+static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_type, CGEventRef p_event, void *p_refcon)
+{
+    MCWindowTrackingThread *t_self;
+    t_self = (MCWindowTrackingThread *)p_refcon;
+
+    // If the event is a MouseUp then terminate the thread. Otherwise if we haven't already
+    // signalled for a windowMoved message, send one.
+    if (p_type == kCGEventLeftMouseUp)
+        [t_self terminate];
+    else if (!t_self -> m_signalled)
+    {
+        t_self -> m_signalled = true;
+        [(NSWindow *)(t_self -> m_window -> GetHandle()) performSelectorOnMainThread: @selector(com_runrev_livecode_windowMoved:) withObject: t_self waitUntilDone: NO];
+    }
+    
+    return p_event;
+}
+
+- (id)initWithWindow: (MCMacPlatformWindow *)window
+{
+    self = [super init];
+    if (self == nil)
+        return nil;
+    
+    m_window = window;
+    m_signalled = false;
+    
+    return self;
+}
+
+- (MCMacPlatformWindow *)platformWindow
+{
+    return m_window;
+}
+
+- (void)setSignalled:(bool)p_value
+{
+    m_signalled = p_value;
+}
+
+- (void)main
+{
+	NSRunLoop *t_loop;
+	t_loop = [NSRunLoop currentRunLoop];
+	
+	NSData *t_future;
+	t_future = [NSDate distantFuture];
+	
+	m_termination_port = [[NSPort port] retain];
+	[m_termination_port setDelegate: self];
+	[t_loop addPort: m_termination_port forMode: NSDefaultRunLoopMode];
+    
+	ProcessSerialNumber t_psn;
+	GetCurrentProcess(&t_psn);
+	
+	CFMachPortRef t_event_tap_port;
+	t_event_tap_port = CGEventTapCreateForPSN(&t_psn, kCGHeadInsertEventTap, kCGEventTapOptionListenOnly, CGEventMaskBit(kCGEventLeftMouseDragged) | CGEventMaskBit(kCGEventLeftMouseUp), mouse_event_callback, self);
+	
+	CFRunLoopSourceRef t_event_tap_source;
+	t_event_tap_source = CFMachPortCreateRunLoopSource(NULL, t_event_tap_port, 0);
+	CFRunLoopAddSource([t_loop getCFRunLoop], t_event_tap_source, kCFRunLoopDefaultMode);
+	
+	m_is_running = true;
+	while(m_is_running &&
+		  [t_loop runMode: NSDefaultRunLoopMode beforeDate: [NSDate distantFuture]])
+		;
+    
+	CFRunLoopRemoveSource([t_loop getCFRunLoop], t_event_tap_source, kCFRunLoopDefaultMode);
+	CFRelease(t_event_tap_source);
+	CFRelease(t_event_tap_port);
+    
+	[m_termination_port release];
+	m_termination_port = nil;
+}
+
+- (void)terminate
+{
+	NSPortMessage *t_message;
+	t_message = [[NSPortMessage alloc] initWithSendPort: m_termination_port
+											receivePort: m_termination_port
+											 components: nil];
+	[t_message sendBeforeDate: [NSDate distantFuture]];
+	[t_message release];
+}
+
+- (void)handlePortMessage: (NSPortMessage *)message
+{
+	m_is_running = false;
+}
+
+@end
+
 @implementation com_runrev_livecode_MCWindowDelegate
 
 - (id)initWithPlatformWindow: (MCMacPlatformWindow *)window
@@ -183,13 +352,30 @@ static bool s_lock_responder_change = false;
 	return NSMakeSize(t_new_size . x, t_new_size . y);
 }
 
+- (void)windowWillMove:(NSNotification *)notification
+{
+    // The window server will not send continuous updates when moving a window which is
+    // a bad thing. Even worse, it won't even update the frame of the window whilst it
+    // is being dragged. This means that the only way to track window movement during a
+    // move is to track mouse movements on a separate thread, which we do using an
+    // event tap.
+
+    // If the window is 'synchronizing'. i.e. Updating itself from property changes
+    // then *don't* spawn a tracking thread as this movement will be because of script
+    // setting the window frame, rather than a user interaction.
+    if (!m_window -> IsSynchronizing())
+    {
+        // MW-2014-04-08: [[ Bug 12087 ]] Launch a tracking thread so that we get
+        //   continuous moveStack messages.
+        MCWindowTrackingThread *t_thread;
+        t_thread = [[MCWindowTrackingThread alloc] initWithWindow: m_window];
+        [t_thread autorelease];
+        [t_thread start];
+    }
+}
+
 - (void)windowDidMove:(NSNotification *)notification
 {
-	// COCOA-TODO: This only gives a final notification - perhaps use RunLoop
-	//   observer to monitor what's going on and check for updates.
-	// UPDATE: RunLoop observer does not work - seems the window server only
-	//   updates the loc of the window (from the app point of view) when *it*
-	//   decides too. Hmph.
 	m_window -> ProcessDidMove();
 }
 
@@ -237,12 +423,13 @@ static bool s_lock_responder_change = false;
 
 //////////
 
-- (id)initWithFrame:(NSRect)frameRect
+- (id)initWithPlatformWindow:(MCMacPlatformWindow *)window
 {
-	self = [super initWithFrame: frameRect];
+	self = [super initWithFrame: NSZeroRect];
 	if (self == nil)
 		return nil;
 	
+    m_window = window;
 	m_tracking_area = nil;
 	m_use_input_method = false;
 	m_input_method_event = nil;
@@ -263,9 +450,7 @@ static bool s_lock_responder_change = false;
 
 - (MCMacPlatformWindow *)platformWindow
 {
-	MCWindowDelegate *t_delegate;
-	t_delegate = (MCWindowDelegate *)[[self window] delegate];
-	return [t_delegate platformWindow];
+    return m_window;
 }
 
 /////////
@@ -288,7 +473,7 @@ static bool s_lock_responder_change = false;
 												   options: (NSTrackingMouseEnteredAndExited | 
 															 NSTrackingMouseMoved | 
 															 NSTrackingActiveAlways | 
-															 NSTrackingInVisibleRect | 
+															 NSTrackingInVisibleRect |
 															 NSTrackingEnabledDuringMouseDrag)
 													 owner: self
 												  userInfo: nil];
@@ -434,6 +619,15 @@ static bool s_lock_responder_change = false;
 {
 	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 	
+    // Make the event key code to a platform keycode.
+    MCPlatformKeyCode t_key_code;
+    MCMacPlatformMapKeyCode([event keyCode], [event modifierFlags], t_key_code);
+    
+    // Notify the host that a keyDown event has been received - this is to work around the
+    // issue with IME not playing nice with rawKey messages. Eventually this should work
+    // by completely separating rawKey messages from text input messages.
+    MCPlatformCallbackSendRawKeyDown([self platformWindow], t_key_code);
+    
 	if ([self useTextInput])
 	{
 		// Store the event being processed, if it results in a doCommandBySelector,
@@ -880,20 +1074,6 @@ static bool s_lock_responder_change = false;
 
 //////////
 
-#if 0
-- (void)capitalizeWord:(id)sender;
-- (void)changeCaseOfLetter:(id)sender;
-- (void)deleteBackward:(id)sender;
-- (void)deleteBackwardByDecomposingPreviousCharacter:(id)sender;
-- (void)deleteForward:(id)sender;
-- (void)deleteToBeginningOfLine:(id)sender;
-- (void)deleteToBeginningOfParagraph:(id)sender;
-- (void)deleteToEndOfLine:(id)sender;
-- (void)delete
-#endif
-
-//////////
-
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem
 {
 	return [menuItem isEnabled];
@@ -1033,7 +1213,7 @@ static bool s_lock_responder_change = false;
 - (void)draggingExited: (id<NSDraggingInfo>)sender
 {
 	MCMacPlatformWindow *t_window;
-	t_window = [(MCWindowDelegate *)[[self window] delegate] platformWindow];
+	t_window = [self platformWindow];
 	t_window -> HandleDragLeave();
 }
 
@@ -1129,7 +1309,7 @@ static bool s_lock_responder_change = false;
 - (void)handleKeyPress: (NSEvent *)event isDown: (BOOL)pressed
 {	
 	MCPlatformKeyCode t_key_code;
-	MCMacMapKeyCode([event keyCode], t_key_code);
+	MCMacPlatformMapKeyCode([event keyCode], [event modifierFlags], t_key_code);
 	
 	codepoint_t t_mapped_codepoint;
 	if (!MCMacMapNSStringToCodepoint([event characters], t_mapped_codepoint))
@@ -1198,12 +1378,6 @@ static bool s_lock_responder_change = false;
 	
 	t_window -> ProcessDidResize();
 }
-
-- (BOOL)autoresizesSubviews
-{
-	// IM-2014-03-28: [[ Bug 12046 ]] Prevent embedded content from being automatically resized with this view
-	return NO;
-}
 	
 //////////
 
@@ -1268,12 +1442,37 @@ static bool s_lock_responder_change = false;
 
 @end
 
+@implementation com_runrev_livecode_MCWindowContainerView
+
+- (id)initWithPlatformWindow:(MCMacPlatformWindow *)window
+{
+    self = [super initWithFrame: NSZeroRect];
+    if (self == nil)
+        return nil;
+    
+    m_window = window;
+    
+    return self;
+}
+
+- (void)setFrameSize: (NSSize)size
+{
+    [super setFrameSize: size];
+    
+    MCMacPlatformWindow *t_window = m_window;
+    if (t_window != nil)
+        [t_window -> GetView() setFrameSize: size];
+}
+
+@end
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCMacPlatformWindow::MCMacPlatformWindow(void)
 {
 	m_delegate = nil;
 	m_view = nil;
+    m_container_view = nil;
 	m_handle = nil;
 	
 	m_shadow_changed = false;
@@ -1290,9 +1489,12 @@ MCMacPlatformWindow::~MCMacPlatformWindow(void)
 
 	[m_handle setDelegate: nil];
 	[m_handle setContentView: nil];
+    
 	[m_handle close];
 	[m_handle release];
-	[m_view release];
+    [m_view removeFromSuperview];
+    [m_view release];
+	[m_container_view release];
 	[m_delegate release];
 }
 
@@ -1301,6 +1503,11 @@ MCMacPlatformWindow::~MCMacPlatformWindow(void)
 MCWindowView *MCMacPlatformWindow::GetView(void)
 {
 	return m_view;
+}
+
+MCWindowContainerView *MCMacPlatformWindow::GetContainerView(void)
+{
+    return m_container_view;
 }
 
 id MCMacPlatformWindow::GetHandle(void)
@@ -1352,6 +1559,11 @@ void MCMacPlatformWindow::MapMCRectangleToNSRect(MCRectangle p_rect, NSRect& r_n
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCMacPlatformWindow::IsSynchronizing(void)
+{
+    return m_synchronizing;
+}
 
 void MCMacPlatformWindow::ProcessCloseRequest(void)
 {
@@ -1493,9 +1705,14 @@ void MCMacPlatformWindow::DoRealize(void)
 	m_delegate = [[com_runrev_livecode_MCWindowDelegate alloc] initWithPlatformWindow: this];
 	[m_window_handle setDelegate: m_delegate];
 	
-	m_view = [[com_runrev_livecode_MCWindowView alloc] initWithFrame: NSZeroRect];
-	[m_window_handle setContentView: m_view];
-	
+    m_container_view = [[MCWindowContainerView alloc] initWithPlatformWindow: this];
+    [m_container_view setAutoresizesSubviews: NO];
+    
+	m_view = [[com_runrev_livecode_MCWindowView alloc] initWithPlatformWindow: this];
+    [m_container_view addSubview: m_view];
+    
+	[m_window_handle setContentView: m_container_view];
+    
 	[m_window_handle setLevel: t_window_level];
 	[m_window_handle setOpaque: m_mask == nil];
 	[m_window_handle setHasShadow: m_has_shadow];
@@ -1559,6 +1776,11 @@ void MCMacPlatformWindow::DoSynchronize(void)
 	if (m_changes . use_live_resizing_changed)
 		;
 	
+    // MW-2014-04-08: [[ Bug 12073 ]] If the cursor has changed, make sure we try to
+    //   update it - should this window be the mouse window.
+    if (m_changes . cursor_changed)
+        MCMacPlatformHandleMouseCursorChange(this);
+    
 	m_synchronizing = false;
 }
 
@@ -1860,151 +2082,6 @@ void MCPlatformSwitchFocusToView(MCPlatformWindowRef p_window, uint32_t p_id)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-MCPlatformKeyCode s_mac_keycode_map[] =
-{
-	/* 0x00 */ kMCPlatformKeyCodeA,
-	/* 0x01 */ kMCPlatformKeyCodeS,
-	/* 0x02 */ kMCPlatformKeyCodeD,
-	/* 0x03 */ kMCPlatformKeyCodeF,
-	/* 0x04 */ kMCPlatformKeyCodeH,
-	/* 0x05 */ kMCPlatformKeyCodeG,
-	/* 0x06 */ kMCPlatformKeyCodeZ,
-	/* 0x07 */ kMCPlatformKeyCodeX,
-	/* 0x08 */ kMCPlatformKeyCodeC,
-	/* 0x09 */ kMCPlatformKeyCodeV,
-	/* 0x0A */ kMCPlatformKeyCodeISOSection,
-	/* 0x0B */ kMCPlatformKeyCodeB,
-	/* 0x0C */ kMCPlatformKeyCodeQ,
-	/* 0x0D */ kMCPlatformKeyCodeW,
-	/* 0x0E */ kMCPlatformKeyCodeE,
-	/* 0x0F */ kMCPlatformKeyCodeR,
-	/* 0x10 */ kMCPlatformKeyCodeY,
-	/* 0x11 */ kMCPlatformKeyCodeT,
-	/* 0x12 */ kMCPlatformKeyCode1,
-	/* 0x13 */ kMCPlatformKeyCode2,
-	/* 0x14 */ kMCPlatformKeyCode3,
-	/* 0x15 */ kMCPlatformKeyCode4,
-	/* 0x16 */ kMCPlatformKeyCode6,
-	/* 0x17 */ kMCPlatformKeyCode5,
-	/* 0x18 */ kMCPlatformKeyCodeEqual,
-	/* 0x19 */ kMCPlatformKeyCode9,
-	/* 0x1A */ kMCPlatformKeyCode7,
-	/* 0x1B */ kMCPlatformKeyCodeMinus,
-	/* 0x1C */ kMCPlatformKeyCode8,
-	/* 0x1D */ kMCPlatformKeyCode0,
-	/* 0x1E */ kMCPlatformKeyCodeRightBracket,
-	/* 0x1F */ kMCPlatformKeyCodeO,
-	/* 0x20 */ kMCPlatformKeyCodeU,
-	/* 0x21 */ kMCPlatformKeyCodeLeftBracket,
-	/* 0x22 */ kMCPlatformKeyCodeI,
-	/* 0x23 */ kMCPlatformKeyCodeP,
-	/* 0x24 */ kMCPlatformKeyCodeReturn,
-	/* 0x25 */ kMCPlatformKeyCodeL,
-	/* 0x26 */ kMCPlatformKeyCodeJ,
-	/* 0x27 */ kMCPlatformKeyCodeQuote,
-	/* 0x28 */ kMCPlatformKeyCodeK,
-	/* 0x29 */ kMCPlatformKeyCodeSemicolon,
-	/* 0x2A */ kMCPlatformKeyCodeBackslash,
-	/* 0x2B */ kMCPlatformKeyCodeComma,
-	/* 0x2C */ kMCPlatformKeyCodeSlash,
-	/* 0x2D */ kMCPlatformKeyCodeN,
-	/* 0x2E */ kMCPlatformKeyCodeM,
-	/* 0x2F */ kMCPlatformKeyCodePeriod,
-	/* 0x30 */ kMCPlatformKeyCodeTab,
-	/* 0x31 */ kMCPlatformKeyCodeSpace,
-	/* 0x32 */ kMCPlatformKeyCodeGrave,
-	/* 0x33 */ kMCPlatformKeyCodeBackspace,
-	/* 0x34 */ kMCPlatformKeyCodeUndefined,
-	/* 0x35 */ kMCPlatformKeyCodeEscape,
-	/* 0x36 */ kMCPlatformKeyCodeRightCommand,
-	/* 0x37 */ kMCPlatformKeyCodeLeftCommand,
-	/* 0x38 */ kMCPlatformKeyCodeLeftShift,
-	/* 0x39 */ kMCPlatformKeyCodeCapsLock,
-	/* 0x3A */ kMCPlatformKeyCodeLeftOption,
-	/* 0x3B */ kMCPlatformKeyCodeLeftControl,
-	/* 0x3C */ kMCPlatformKeyCodeRightShift,
-	/* 0x3D */ kMCPlatformKeyCodeRightOption,
-	/* 0x3E */ kMCPlatformKeyCodeRightControl,
-	/* 0x3F */ kMCPlatformKeyCodeFunction,
-	/* 0x40 */ kMCPlatformKeyCodeF17,
-	/* 0x41 */ kMCPlatformKeyCodeKeypadDecimal,
-	/* 0x42 */ kMCPlatformKeyCodeUndefined,
-	/* 0x43 */ kMCPlatformKeyCodeKeypadMultiply,
-	/* 0x44 */ kMCPlatformKeyCodeUndefined,
-	/* 0x45 */ kMCPlatformKeyCodeKeypadAdd,
-	/* 0x46 */ kMCPlatformKeyCodeUndefined,
-	/* 0x47 */ kMCPlatformKeyCodeNumLock, // COCO-TODO: This should be keypad-clear - double-check!
-	/* 0x48 */ kMCPlatformKeyCodeVolumeUp,
-	/* 0x49 */ kMCPlatformKeyCodeVolumeDown,
-	/* 0x4A */ kMCPlatformKeyCodeMute,
-	/* 0x4B */ kMCPlatformKeyCodeKeypadDivide,
-	/* 0x4C */ kMCPlatformKeyCodeKeypadEnter,
-	/* 0x4D */ kMCPlatformKeyCodeUndefined,
-	/* 0x4E */ kMCPlatformKeyCodeKeypadSubtract,
-	/* 0x4F */ kMCPlatformKeyCodeF18,
-	/* 0x50 */ kMCPlatformKeyCodeF19,
-	/* 0x51 */ kMCPlatformKeyCodeKeypadEqual,
-	/* 0x52 */ kMCPlatformKeyCodeKeypad0,
-	/* 0x53 */ kMCPlatformKeyCodeKeypad1,
-	/* 0x54 */ kMCPlatformKeyCodeKeypad2,
-	/* 0x55 */ kMCPlatformKeyCodeKeypad3,
-	/* 0x56 */ kMCPlatformKeyCodeKeypad4,
-	/* 0x57 */ kMCPlatformKeyCodeKeypad5,
-	/* 0x58 */ kMCPlatformKeyCodeKeypad6,
-	/* 0x59 */ kMCPlatformKeyCodeKeypad7,
-	/* 0x5A */ kMCPlatformKeyCodeF20,
-	/* 0x5B */ kMCPlatformKeyCodeKeypad8,
-	/* 0x5C */ kMCPlatformKeyCodeKeypad9,
-	/* 0x5D */ kMCPlatformKeyCodeJISYen,
-	/* 0x5E */ kMCPlatformKeyCodeJISUnderscore,
-	/* 0x5F */ kMCPlatformKeyCodeJISKeypadComma,
-	/* 0x60 */ kMCPlatformKeyCodeF5,
-	/* 0x61 */ kMCPlatformKeyCodeF6,
-	/* 0x62 */ kMCPlatformKeyCodeF7,
-	/* 0x63 */ kMCPlatformKeyCodeF3,
-	/* 0x64 */ kMCPlatformKeyCodeF8,
-	/* 0x65 */ kMCPlatformKeyCodeF9,
-	/* 0x66 */ kMCPlatformKeyCodeJISEisu,
-	/* 0x67 */ kMCPlatformKeyCodeF11,
-	/* 0x68 */ kMCPlatformKeyCodeJISKana,
-	/* 0x69 */ kMCPlatformKeyCodeF13,
-	/* 0x6A */ kMCPlatformKeyCodeF16,
-	/* 0x6B */ kMCPlatformKeyCodeF14,
-	/* 0x6C */ kMCPlatformKeyCodeUndefined,
-	/* 0x6D */ kMCPlatformKeyCodeF10,
-	/* 0x6E */ kMCPlatformKeyCodeUndefined,
-	/* 0x6F */ kMCPlatformKeyCodeF12,
-	/* 0x70 */ kMCPlatformKeyCodeUndefined,
-	/* 0x71 */ kMCPlatformKeyCodeF15,
-	/* 0x72 */ kMCPlatformKeyCodeHelp,
-	/* 0x73 */ kMCPlatformKeyCodeBegin,
-	/* 0x74 */ kMCPlatformKeyCodePrevious,
-	/* 0x75 */ kMCPlatformKeyCodeDelete,
-	/* 0x76 */ kMCPlatformKeyCodeF4,
-	/* 0x77 */ kMCPlatformKeyCodeEnd,
-	/* 0x78 */ kMCPlatformKeyCodeF2,
-	/* 0x79 */ kMCPlatformKeyCodeNext,
-	/* 0x7A */ kMCPlatformKeyCodeF1,
-	/* 0x7B */ kMCPlatformKeyCodeLeft,
-	/* 0x7C */ kMCPlatformKeyCodeRight,
-	/* 0x7D */ kMCPlatformKeyCodeDown,
-	/* 0x7E */ kMCPlatformKeyCodeUp,
-	/* 0x7F */ kMCPlatformKeyCodeUndefined,
-};
-
-bool MCMacMapKeyCode(uint32_t p_mac_keycode, MCPlatformKeyCode& r_keycode)
-{
-	if (p_mac_keycode > 0x7f)
-		return false;
-	
-	if (s_mac_keycode_map[p_mac_keycode] == kMCPlatformKeyCodeUndefined)
-		return false;
-	
-	r_keycode = s_mac_keycode_map[p_mac_keycode];
-
-	return true;
-}
 
 bool MCMacMapNSStringToCodepoint(NSString *p_string, codepoint_t& r_codepoint)
 {

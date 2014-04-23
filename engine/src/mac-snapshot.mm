@@ -63,6 +63,23 @@ static NSRect cocoa_rect_from_carbon(CGRect p_rect)
 	return NSMakeRect(t_top_left . x, t_top_left . y, p_rect . size . width, p_rect . size . height);
 }
 
+static CGRect carbon_rect_from_cocoa(NSRect p_rect)
+{
+	return CGRectMake(p_rect.origin.x, menu_screen_height() - (p_rect.origin.y + p_rect.size.height),
+					  p_rect.size.width, p_rect.size.height);
+}
+
+static CGRect carbon_rect_from_mcrect(MCRectangle p_rect)
+{
+	return CGRectMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+}
+
+static MCRectangle mcrect_from_cocoa(NSRect p_rect)
+{
+	return MCRectangleMake(p_rect.origin.x, menu_screen_height() - (p_rect.origin.y + p_rect.size.height),
+						   p_rect.size.width, p_rect.size.height);
+}
+
 static CGPoint carbon_point_from_cocoa(NSPoint p_point)
 {
 	return CGPointMake(p_point . x, menu_screen_height() - p_point . y);
@@ -279,28 +296,58 @@ void MCPlatformScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitma
 	MCPlatformScreenSnapshot(t_screen_rect, p_size, r_bitmap);
 }
 
-void MCPlatformScreenSnapshotOfWindow(uint32_t p_window_id, MCPoint *p_size, MCImageBitmap*& r_bitmap)
+void MCMacPlatformScreenSnapshotOfWindowWithinBounds(uint32_t p_window_id, MCRectangle p_bounds, MCPoint *p_size, MCImageBitmap *&r_bitmap)
 {
 	CGImageRef t_image;
-	t_image = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, p_window_id, kCGWindowImageBoundsIgnoreFraming);
-	
-	NSArray *t_info_array;
-	t_info_array = (NSArray *)CGWindowListCreateDescriptionFromArray((CFArrayRef)[NSArray arrayWithObject: [NSNumber numberWithUnsignedInt: p_window_id]]);
-	
-	NSDictionary *t_rect_dict;
-	t_rect_dict = [[t_info_array objectAtIndex: 0] objectForKey: (NSString *)kCGWindowBounds];
-	
-	CGRect t_rect;
-	CGRectMakeWithDictionaryRepresentation((CFDictionaryRef)t_rect_dict, &t_rect);
+	t_image = CGWindowListCreateImage(carbon_rect_from_mcrect(p_bounds), kCGWindowListOptionIncludingWindow, p_window_id, kCGWindowImageBoundsIgnoreFraming);
 	
 	MCPoint t_size;
 	if (p_size == 0)
-		t_size = MCPointMake(t_rect . size . width, t_rect . size . height);
+		t_size = MCPointMake(p_bounds . width, p_bounds . height);
 	else
 		t_size = *p_size;
 	
 	MCMacPlatformCGImageToMCImageBitmap(t_image, t_size, r_bitmap);
 	CGImageRelease(t_image);
+}
+
+void MCPlatformScreenSnapshotOfWindow(uint32_t p_window_id, MCPoint *p_size, MCImageBitmap*& r_bitmap)
+{
+	// IM-2014-04-03: [[ Bug 12085 ]] Update to use Cocoa API to get window bounds
+	NSWindow *t_window;
+	t_window = [NSApp windowWithWindowNumber: p_window_id];
+	
+	if (t_window == nil)
+		return;
+	
+	NSRect t_frame_rect = [t_window frame];
+	NSRect t_content_rect = [[t_window contentView] frame];
+	
+	NSRect t_rect = NSOffsetRect(t_content_rect, t_frame_rect.origin.x, t_frame_rect.origin.y);
+	
+	MCMacPlatformScreenSnapshotOfWindowWithinBounds(p_window_id, mcrect_from_cocoa(t_rect), p_size, r_bitmap);
+}
+
+// IM-2014-04-03: [[ Bug 12115 ]] Implement snapshot of rect of window
+void MCPlatformScreenSnapshotOfWindowArea(uint32_t p_window_id, MCRectangle p_area, MCPoint *p_size, MCImageBitmap*& r_bitmap)
+{
+	NSWindow *t_window;
+	t_window = [NSApp windowWithWindowNumber: p_window_id];
+	
+	if (t_window == nil)
+		return;
+	
+	NSRect t_frame_rect = [t_window frame];
+	NSRect t_content_rect = [[t_window contentView] frame];
+	
+	CGFloat t_content_top, t_content_left;
+	t_content_top = menu_screen_height() - (t_frame_rect.origin.y + t_content_rect.origin.y + t_content_rect.size.height);
+	t_content_left = t_frame_rect.origin.x + t_content_rect.origin.x;
+	
+	MCRectangle t_rect;
+	t_rect = MCRectangleMake(p_area.x + t_content_left, p_area.y + t_content_top, p_area.width, p_area.height);
+	
+	MCMacPlatformScreenSnapshotOfWindowWithinBounds(p_window_id, t_rect, p_size, r_bitmap);
 }
 
 void MCPlatformScreenSnapshot(MCRectangle p_screen_rect, MCPoint *p_size, MCImageBitmap*& r_bitmap)

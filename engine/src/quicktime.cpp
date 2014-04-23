@@ -73,12 +73,17 @@ static bool s_qt_initted = false;
 static QTEffect *qteffects = NULL;
 static uint2 neffects = 0;
 
-static bool MCQTInit(void);
+bool MCQTInit(void);
 static void MCQTFinit(void);
 
 //////////
 
-bool MCQTInit()
+extern "C" int initialise_weak_link_QuickTime(void);
+extern "C" int initialise_weak_link_QTKit(void);
+
+/////////
+
+bool MCQTInit(void)
 {
 	if (MCdontuseQT)
 		return false;
@@ -94,6 +99,13 @@ bool MCQTInit()
 		s_qt_initted = true;
 	}
 #elif defined _MACOSX
+    if (initialise_weak_link_QuickTime() == 0 ||
+        initialise_weak_link_QTKit() == 0)
+    {
+        s_qt_initted = false;
+        return false;
+    }
+
 	if (EnterMovies() != noErr)
 		s_qt_initted = false;
 	else
@@ -116,6 +128,22 @@ void MCQTFinit(void)
 		qteffects = NULL;
 		neffects = 0;
 	}
+}
+
+void MCQTGetVersion(MCExecPoint& ep)
+{
+    if (!MCQTInit())
+    {
+        ep . setstaticcstring("0.0");
+        return;
+    }
+    
+    long attrs;
+    if (Gestalt(gestaltQuickTimeVersion, &attrs) == noErr)
+        ep.setstringf("%ld.%ld.%ld", attrs >> 24, (attrs >> 20) & 0xF, (attrs >> 16) & 0xF);
+    else
+        ep.setstaticcstring("0.0");  //indicates that no QT installed
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////

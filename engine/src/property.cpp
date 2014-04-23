@@ -3889,7 +3889,9 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 				MCExecPoint ep2(ep);
 				MCexecutioncontexts[i]->getobj()->getprop(0, P_LONG_ID, ep2, False);
 				ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i == 0);
-				ep.concatnameref(MCexecutioncontexts[i]->gethandler()->getname(), EC_COMMA, false);
+                // PM-2014-04-14: [[Bug 12125]] Do this check to avoid a crash in LC server
+                if (MCexecutioncontexts[i]->gethandler() != NULL)
+                    ep.concatnameref(MCexecutioncontexts[i]->gethandler()->getname(), EC_COMMA, false);
 				ep.concatuint(MCexecutioncontexts[i]->getline(), EC_COMMA, false);
 				if (MCexecutioncontexts[i] -> getparentscript() != NULL)
 				{

@@ -56,10 +56,12 @@ static CGFloat s_primary_screen_height = 0.0f;
 {
 	MCPlatformInitializeColorTransform();
 	MCPlatformInitializeAbortKey();
+    MCPlatformInitializeMenu();
 }
 
 - (void)finalizeModules
 {
+    MCPlatformFinalizeMenu();
 	MCPlatformFinalizeAbortKey();
 	MCPlatformFinalizeColorTransform();
 }
@@ -309,10 +311,28 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 			*(MCPlatformCursorImageSupport *)r_value = kMCPlatformCursorImageSupportAlpha; 
 			break;
 			
+        case kMCPlatformSystemPropertyVolume:
+            MCMacPlatformGetGlobalVolume(*(double *)r_value);
+            break;
+            
 		default:
 			assert(false);
 			break;
 	}
+}
+
+void MCPlatformSetSystemProperty(MCPlatformSystemProperty p_property, MCPlatformPropertyType p_type, void *p_value)
+{
+    switch(p_property)
+    {
+        case kMCPlatformSystemPropertyVolume:
+            MCMacPlatformSetGlobalVolume(*(double *)p_value);
+            break;
+        
+        default:
+            assert(false);
+            break;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -377,7 +397,7 @@ void MCPlatformBreakWait(void)
 
 static void runloop_observer(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info)
 {
-	if (s_in_blocking_wait)
+ 	if (s_in_blocking_wait)
 		MCPlatformBreakWait();
 }
 
@@ -411,10 +431,12 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	if (t_modal)
 		[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
 	
+    // MW-2014-04-09: [[ Bug 10767 ]] Don't run in the modal panel runloop mode as this stops
+    //   WebViews from working.
 	NSEvent *t_event;
 	t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
 								 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
-									inMode: p_blocking ? NSEventTrackingRunLoopMode : (t_modal ? NSModalPanelRunLoopMode : NSDefaultRunLoopMode)
+									inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
 								   dequeue: YES];
 	
 	s_in_blocking_wait = false;
@@ -545,48 +567,6 @@ void MCPlatformWindowDeathGrip(MCPlatformWindowRef p_window)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// These tables are taken from the Carbon implementation - as keysDown takes into
-// account shift states. I'm not sure this is entirely correct, but we must keep
-// backwards compat.
-
-static uint4 keysyms[] = {
-	0x61, 0x73, 0x64, 0x66, 0x68, 0x67, 0x7A, 0x78, 0x63, 0x76, 0, 0x62,
-	0x71, 0x77, 0x65, 0x72, 0x79, 0x74, 0x31, 0x32, 0x33, 0x34, 0x36,
-	0x35, 0x3D, 0x39, 0x37, 0x2D, 0x38, 0x30, 0x5D, 0x6F, 0x75, 0x5B,
-	0x69, 0x70, 0xFF0D, 0x6C, 0x6A, 0x27, 0x6B, 0x3B, 0x5C, 0x2C, 0x2F,
-	0x6E, 0x6D, 0x2E, 0xFF09, 0x20, 0x60, 0xFF08, 0xFF8D, 0xFF1B, 0, 0,
-	0xFFE1, 0xFFE5, 0, 0xFFE3, 0, 0, 0, 0, 0, 0xFF9F, 0, 0xFFAA, 0,
-	0xFFAB, 0, 0xFF7F, 0, 0, 0, 0xFFAF, 0xFF8D, 0, 0xFFAD, 0, 0, 0xFFD5,
-	0xFF9E, 0xFF9C, 0xFF99, 0xFF9B, 0xFF96, 0xFF9D, 0xFF98, 0xFF95, 0,
-	0xFF97, 0xFF9A, 0, 0, 0, 0xFFC2, 0xFFC3, 0xFFC4, 0xFFC0, 0xFFC5,
-	0xFFC6, 0, 0xFFC8, 0, 0xFFCA, 0xFFCD, 0xFF14, 0, 0xFFC7, 0, 0xFFC9, 0,
-	0xFF13, 0x1004FF6A, 0xFF50, 0xFF55, 0xFFFF, 0xFFC1, 0xFF57, 0xFFBF,
-	0xFF56, 0xFFBE, 0xFF51, 0xFF53, 0xFF54, 0xFF52, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-
-static uint4 shift_keysyms[] = {
-	0x41, 0x53, 0x44, 0x46, 0x48, 0x47, 0x5A, 0x58, 0x43, 0x56, 0, 0x42,
-	0x51, 0x57, 0x45, 0x52, 0x59, 0x54, 0x21, 0x40, 0x23, 0x24, 0x5E,
-	0x25, 0x2B, 0x28, 0x26, 0x5F, 0x2A, 0x29, 0x7D, 0x4F, 0x55, 0x7B,
-	0x49, 0x50, 0xFF0D, 0x4C, 0x4A, 0x22, 0x4B, 0x3A, 0x7C, 0x3C, 0x3F,
-	0x4E, 0x4D, 0x3E, 0xFF09, 0x20, 0x7E, 0xFF08, 0xFF8D, 0xFF1B, 0, 0,
-	0xFFE1, 0xFFE5, 0, 0xFFE3, 0, 0, 0, 0, 0, 0xFFAE, 0, 0xFFAA, 0,
-	0xFFAB, 0, 0xFF7F, 0, 0, 0, 0xFFAF, 0xFF8D, 0, 0xFFAD, 0, 0, 0xFFD5,
-	0xFFB0, 0xFFB1, 0xFFB2, 0xFFB3, 0xFFB4, 0xFFB5, 0xFFB6, 0xFFB7, 0,
-	0xFFB8, 0xFFB9, 0, 0, 0, 0xFFC2, 0xFFC3, 0xFFC4, 0xFFC0, 0xFFC5,
-	0xFFC6, 0, 0xFFC8, 0, 0xFF62, 0, 0xFF20, 0, 0xFFC7, 0, 0xFFC9, 0,
-	0xFF6B, 0x1004FF6A, 0xFF50, 0xFF55, 0xFFFF, 0xFFC1, 0xFF57, 0xFFBF,
-	0xFF56, 0xFFBE, 0xFF51, 0xFF53, 0xFF54, 0xFF52, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-
 bool MCPlatformGetMouseButtonState(uindex_t p_button)
 {
 	NSUInteger t_buttons;
@@ -613,9 +593,9 @@ bool MCPlatformGetKeyState(MCPlatformKeyCode*& r_codes, uindex_t& r_code_count)
 	if (!MCMemoryNewArray(128, t_codes))
 		return false;
 	
-	bool t_is_shift;
-	t_is_shift = ([NSEvent modifierFlags] & (NSShiftKeyMask | NSAlphaShiftKeyMask)) != 0;
-	
+	bool t_flags;
+	t_flags = [NSEvent modifierFlags];
+    
 	uindex_t t_code_count;
 	t_code_count = 0;
 	for(uindex_t i = 0; i < 127; i++)
@@ -624,12 +604,7 @@ bool MCPlatformGetKeyState(MCPlatformKeyCode*& r_codes, uindex_t& r_code_count)
 			continue;
 		
 		MCPlatformKeyCode t_code;
-		if (t_is_shift)
-			t_code = shift_keysyms[i];
-		else
-			t_code = keysyms[i];
-		
-		if (t_code != 0)
+        if (MCMacPlatformMapKeyCode(i, t_flags, t_code))
 			t_codes[t_code_count++] = t_code;
 	}
 	
@@ -797,6 +772,11 @@ void MCPlatformFlushEvents(MCPlatformEventMask p_mask)
 	}
 }
 
+void MCPlatformBeep(void)
+{
+    NSBeep();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformGetScreenCount(uindex_t& r_count)
@@ -939,6 +919,204 @@ void MCMacPlatformWindowHiding(MCMacPlatformWindow *p_window)
 	MCMacPlatformRemoveVisibleWindow(p_window);
 	MCMacPlatformSyncBackdrop();
 #endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// These tables are taken from the Carbon implementation - as keysDown takes into
+// account shift states. I'm not sure this is entirely correct, but we must keep
+// backwards compat.
+
+static uint4 keysyms[] = {
+	0x61, 0x73, 0x64, 0x66, 0x68, 0x67, 0x7A, 0x78, 0x63, 0x76, 0, 0x62,
+	0x71, 0x77, 0x65, 0x72, 0x79, 0x74, 0x31, 0x32, 0x33, 0x34, 0x36,
+	0x35, 0x3D, 0x39, 0x37, 0x2D, 0x38, 0x30, 0x5D, 0x6F, 0x75, 0x5B,
+	0x69, 0x70, 0xFF0D, 0x6C, 0x6A, 0x27, 0x6B, 0x3B, 0x5C, 0x2C, 0x2F,
+	0x6E, 0x6D, 0x2E, 0xFF09, 0x20, 0x60, 0xFF08, 0xFF8D, 0xFF1B, 0, 0,
+	0xFFE1, 0xFFE5, 0, 0xFFE3, 0, 0, 0, 0, 0, 0xFF9F, 0, 0xFFAA, 0,
+	0xFFAB, 0, 0xFF7F, 0, 0, 0, 0xFFAF, 0xFF8D, 0, 0xFFAD, 0, 0, 0xFFD5,
+	0xFF9E, 0xFF9C, 0xFF99, 0xFF9B, 0xFF96, 0xFF9D, 0xFF98, 0xFF95, 0,
+	0xFF97, 0xFF9A, 0, 0, 0, 0xFFC2, 0xFFC3, 0xFFC4, 0xFFC0, 0xFFC5,
+	0xFFC6, 0, 0xFFC8, 0, 0xFFCA, 0xFFCD, 0xFF14, 0, 0xFFC7, 0, 0xFFC9, 0,
+	0xFF13, 0xFF6A, 0xFF50, 0xFF55, 0xFFFF, 0xFFC1, 0xFF57, 0xFFBF,
+	0xFF56, 0xFFBE, 0xFF51, 0xFF53, 0xFF54, 0xFF52, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+static uint4 shift_keysyms[] = {
+	0x41, 0x53, 0x44, 0x46, 0x48, 0x47, 0x5A, 0x58, 0x43, 0x56, 0, 0x42,
+	0x51, 0x57, 0x45, 0x52, 0x59, 0x54, 0x21, 0x40, 0x23, 0x24, 0x5E,
+	0x25, 0x2B, 0x28, 0x26, 0x5F, 0x2A, 0x29, 0x7D, 0x4F, 0x55, 0x7B,
+	0x49, 0x50, 0xFF0D, 0x4C, 0x4A, 0x22, 0x4B, 0x3A, 0x7C, 0x3C, 0x3F,
+	0x4E, 0x4D, 0x3E, 0xFF09, 0x20, 0x7E, 0xFF08, 0xFF8D, 0xFF1B, 0, 0,
+	0xFFE1, 0xFFE5, 0, 0xFFE3, 0, 0, 0, 0, 0, 0xFFAE, 0, 0xFFAA, 0,
+	0xFFAB, 0, 0xFF7F, 0, 0, 0, 0xFFAF, 0xFF8D, 0, 0xFFAD, 0, 0, 0xFFD5,
+	0xFFB0, 0xFFB1, 0xFFB2, 0xFFB3, 0xFFB4, 0xFFB5, 0xFFB6, 0xFFB7, 0,
+	0xFFB8, 0xFFB9, 0, 0, 0, 0xFFC2, 0xFFC3, 0xFFC4, 0xFFC0, 0xFFC5,
+	0xFFC6, 0, 0xFFC8, 0, 0xFF62, 0, 0xFF20, 0, 0xFFC7, 0, 0xFFC9, 0,
+	0xFF6B, 0xFF6A, 0xFF50, 0xFF55, 0xFFFF, 0xFFC1, 0xFF57, 0xFFBF,
+	0xFF56, 0xFFBE, 0xFF51, 0xFF53, 0xFF54, 0xFF52, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+static MCPlatformKeyCode s_mac_keycode_map[] =
+{
+	/* 0x00 */ kMCPlatformKeyCodeA,
+	/* 0x01 */ kMCPlatformKeyCodeS,
+	/* 0x02 */ kMCPlatformKeyCodeD,
+	/* 0x03 */ kMCPlatformKeyCodeF,
+	/* 0x04 */ kMCPlatformKeyCodeH,
+	/* 0x05 */ kMCPlatformKeyCodeG,
+	/* 0x06 */ kMCPlatformKeyCodeZ,
+	/* 0x07 */ kMCPlatformKeyCodeX,
+	/* 0x08 */ kMCPlatformKeyCodeC,
+	/* 0x09 */ kMCPlatformKeyCodeV,
+	/* 0x0A */ kMCPlatformKeyCodeISOSection,
+	/* 0x0B */ kMCPlatformKeyCodeB,
+	/* 0x0C */ kMCPlatformKeyCodeQ,
+	/* 0x0D */ kMCPlatformKeyCodeW,
+	/* 0x0E */ kMCPlatformKeyCodeE,
+	/* 0x0F */ kMCPlatformKeyCodeR,
+	/* 0x10 */ kMCPlatformKeyCodeY,
+	/* 0x11 */ kMCPlatformKeyCodeT,
+	/* 0x12 */ kMCPlatformKeyCode1,
+	/* 0x13 */ kMCPlatformKeyCode2,
+	/* 0x14 */ kMCPlatformKeyCode3,
+	/* 0x15 */ kMCPlatformKeyCode4,
+	/* 0x16 */ kMCPlatformKeyCode6,
+	/* 0x17 */ kMCPlatformKeyCode5,
+	/* 0x18 */ kMCPlatformKeyCodeEqual,
+	/* 0x19 */ kMCPlatformKeyCode9,
+	/* 0x1A */ kMCPlatformKeyCode7,
+	/* 0x1B */ kMCPlatformKeyCodeMinus,
+	/* 0x1C */ kMCPlatformKeyCode8,
+	/* 0x1D */ kMCPlatformKeyCode0,
+	/* 0x1E */ kMCPlatformKeyCodeRightBracket,
+	/* 0x1F */ kMCPlatformKeyCodeO,
+	/* 0x20 */ kMCPlatformKeyCodeU,
+	/* 0x21 */ kMCPlatformKeyCodeLeftBracket,
+	/* 0x22 */ kMCPlatformKeyCodeI,
+	/* 0x23 */ kMCPlatformKeyCodeP,
+	/* 0x24 */ kMCPlatformKeyCodeReturn,
+	/* 0x25 */ kMCPlatformKeyCodeL,
+	/* 0x26 */ kMCPlatformKeyCodeJ,
+	/* 0x27 */ kMCPlatformKeyCodeQuote,
+	/* 0x28 */ kMCPlatformKeyCodeK,
+	/* 0x29 */ kMCPlatformKeyCodeSemicolon,
+	/* 0x2A */ kMCPlatformKeyCodeBackslash,
+	/* 0x2B */ kMCPlatformKeyCodeComma,
+	/* 0x2C */ kMCPlatformKeyCodeSlash,
+	/* 0x2D */ kMCPlatformKeyCodeN,
+	/* 0x2E */ kMCPlatformKeyCodeM,
+	/* 0x2F */ kMCPlatformKeyCodePeriod,
+	/* 0x30 */ kMCPlatformKeyCodeTab,
+	/* 0x31 */ kMCPlatformKeyCodeSpace,
+	/* 0x32 */ kMCPlatformKeyCodeGrave,
+	/* 0x33 */ kMCPlatformKeyCodeBackspace,
+	/* 0x34 */ kMCPlatformKeyCodeUndefined,
+	/* 0x35 */ kMCPlatformKeyCodeEscape,
+	/* 0x36 */ kMCPlatformKeyCodeRightCommand,
+	/* 0x37 */ kMCPlatformKeyCodeLeftCommand,
+	/* 0x38 */ kMCPlatformKeyCodeLeftShift,
+	/* 0x39 */ kMCPlatformKeyCodeCapsLock,
+	/* 0x3A */ kMCPlatformKeyCodeLeftOption,
+	/* 0x3B */ kMCPlatformKeyCodeLeftControl,
+	/* 0x3C */ kMCPlatformKeyCodeRightShift,
+	/* 0x3D */ kMCPlatformKeyCodeRightOption,
+	/* 0x3E */ kMCPlatformKeyCodeRightControl,
+	/* 0x3F */ kMCPlatformKeyCodeFunction,
+	/* 0x40 */ kMCPlatformKeyCodeF17,
+	/* 0x41 */ kMCPlatformKeyCodeKeypadDecimal,
+	/* 0x42 */ kMCPlatformKeyCodeUndefined,
+	/* 0x43 */ kMCPlatformKeyCodeKeypadMultiply,
+	/* 0x44 */ kMCPlatformKeyCodeUndefined,
+	/* 0x45 */ kMCPlatformKeyCodeKeypadAdd,
+	/* 0x46 */ kMCPlatformKeyCodeUndefined,
+	/* 0x47 */ kMCPlatformKeyCodeNumLock, // COCO-TODO: This should be keypad-clear - double-check!
+	/* 0x48 */ kMCPlatformKeyCodeVolumeUp,
+	/* 0x49 */ kMCPlatformKeyCodeVolumeDown,
+	/* 0x4A */ kMCPlatformKeyCodeMute,
+	/* 0x4B */ kMCPlatformKeyCodeKeypadDivide,
+	/* 0x4C */ kMCPlatformKeyCodeKeypadEnter,
+	/* 0x4D */ kMCPlatformKeyCodeUndefined,
+	/* 0x4E */ kMCPlatformKeyCodeKeypadSubtract,
+	/* 0x4F */ kMCPlatformKeyCodeF18,
+	/* 0x50 */ kMCPlatformKeyCodeF19,
+	/* 0x51 */ kMCPlatformKeyCodeKeypadEqual,
+	/* 0x52 */ kMCPlatformKeyCodeKeypad0,
+	/* 0x53 */ kMCPlatformKeyCodeKeypad1,
+	/* 0x54 */ kMCPlatformKeyCodeKeypad2,
+	/* 0x55 */ kMCPlatformKeyCodeKeypad3,
+	/* 0x56 */ kMCPlatformKeyCodeKeypad4,
+	/* 0x57 */ kMCPlatformKeyCodeKeypad5,
+	/* 0x58 */ kMCPlatformKeyCodeKeypad6,
+	/* 0x59 */ kMCPlatformKeyCodeKeypad7,
+	/* 0x5A */ kMCPlatformKeyCodeF20,
+	/* 0x5B */ kMCPlatformKeyCodeKeypad8,
+	/* 0x5C */ kMCPlatformKeyCodeKeypad9,
+	/* 0x5D */ kMCPlatformKeyCodeJISYen,
+	/* 0x5E */ kMCPlatformKeyCodeJISUnderscore,
+	/* 0x5F */ kMCPlatformKeyCodeJISKeypadComma,
+	/* 0x60 */ kMCPlatformKeyCodeF5,
+	/* 0x61 */ kMCPlatformKeyCodeF6,
+	/* 0x62 */ kMCPlatformKeyCodeF7,
+	/* 0x63 */ kMCPlatformKeyCodeF3,
+	/* 0x64 */ kMCPlatformKeyCodeF8,
+	/* 0x65 */ kMCPlatformKeyCodeF9,
+	/* 0x66 */ kMCPlatformKeyCodeJISEisu,
+	/* 0x67 */ kMCPlatformKeyCodeF11,
+	/* 0x68 */ kMCPlatformKeyCodeJISKana,
+	/* 0x69 */ kMCPlatformKeyCodeF13,
+	/* 0x6A */ kMCPlatformKeyCodeF16,
+	/* 0x6B */ kMCPlatformKeyCodeF14,
+	/* 0x6C */ kMCPlatformKeyCodeUndefined,
+	/* 0x6D */ kMCPlatformKeyCodeF10,
+	/* 0x6E */ kMCPlatformKeyCodeUndefined,
+	/* 0x6F */ kMCPlatformKeyCodeF12,
+	/* 0x70 */ kMCPlatformKeyCodeUndefined,
+	/* 0x71 */ kMCPlatformKeyCodeF15,
+	/* 0x72 */ kMCPlatformKeyCodeHelp,
+	/* 0x73 */ kMCPlatformKeyCodeBegin,
+	/* 0x74 */ kMCPlatformKeyCodePrevious,
+	/* 0x75 */ kMCPlatformKeyCodeDelete,
+	/* 0x76 */ kMCPlatformKeyCodeF4,
+	/* 0x77 */ kMCPlatformKeyCodeEnd,
+	/* 0x78 */ kMCPlatformKeyCodeF2,
+	/* 0x79 */ kMCPlatformKeyCodeNext,
+	/* 0x7A */ kMCPlatformKeyCodeF1,
+	/* 0x7B */ kMCPlatformKeyCodeLeft,
+	/* 0x7C */ kMCPlatformKeyCodeRight,
+	/* 0x7D */ kMCPlatformKeyCodeDown,
+	/* 0x7E */ kMCPlatformKeyCodeUp,
+	/* 0x7F */ kMCPlatformKeyCodeUndefined,
+};
+
+bool MCMacPlatformMapKeyCode(uint32_t p_mac_keycode, uint32_t p_modifier_flags, MCPlatformKeyCode& r_keycode)
+{
+	if (p_mac_keycode > 0x7f)
+		return false;
+    
+	if (s_mac_keycode_map[p_mac_keycode] == kMCPlatformKeyCodeUndefined)
+		return false;
+    
+    // PLATFORM-TODO: Shifted keysym handling should be in the engine rather than
+    //   here.
+    bool t_is_shift;
+    t_is_shift = (p_modifier_flags & (NSShiftKeyMask | NSAlphaShiftKeyMask)) != 0;
+    if (t_is_shift)
+        r_keycode = shift_keysyms[p_mac_keycode];
+    else
+        r_keycode = keysyms[p_mac_keycode];
+    
+	// r_keycode = s_mac_keycode_map[p_mac_keycode];
+    
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1141,6 +1319,42 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
 	}
 }
 
+void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
+{
+    // If the mouse is not currently over the window whose cursor has
+    // changed - do nothing.
+    if (s_mouse_window != p_window)
+        return;
+    
+    // If we are on Lion+ then check to see if the mouse location is outside
+    // of any of the system tracking rects (used for resizing etc.)
+    extern uint4 MCmajorosversion;
+    if (MCmajorosversion >= 0x1070)
+    {
+        MCMacPlatformWindow *t_window;
+        t_window = (MCMacPlatformWindow *)p_window;
+        
+        NSArray *t_tracking_areas;
+        t_tracking_areas = [[t_window -> GetContainerView() superview] trackingAreas];
+        
+        NSPoint t_mouse_loc;
+        t_mouse_loc = [t_window -> GetView() mapMCPointToNSPoint: s_mouse_position];
+        for(uindex_t i = 0; i < [t_tracking_areas count]; i++)
+        {
+            if (NSPointInRect(t_mouse_loc, [(NSTrackingArea *)[t_tracking_areas objectAtIndex: i] rect]))
+                return;
+        }
+    }
+    
+    // Show the cursor attached to the window.
+    MCPlatformCursorRef t_cursor;
+    MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
+    
+    // PM-2014-04-02: [[ Bug 12082 ]] IDE no longer crashes when changing an applied pattern
+    if (t_cursor != nil)
+        MCPlatformShowCursor(t_cursor);
+}
+
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 {
 	// First compute the window that should be active now.
@@ -1205,11 +1419,9 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 				MCPlatformCallbackSendMouseDrag(s_mouse_window, s_mouse_drag_button);
 			}
 		}
-		
-		// Show the cursor attached to the window.
-		MCPlatformCursorRef t_cursor;
-		MCPlatformGetWindowProperty(t_new_mouse_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
-		MCPlatformShowCursor(t_cursor);
+        
+        // Update the mouse cursor for the mouse window.
+        MCMacPlatformHandleMouseCursorChange(s_mouse_window);
 	}
 }
 

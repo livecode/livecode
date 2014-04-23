@@ -39,6 +39,7 @@
 #include "graphics_util.h"
 #include "redraw.h"
 #include "player.h"
+#include "aclip.h"
 #include "stacklst.h"
 
 #include "desktop-dc.h"
@@ -130,13 +131,13 @@ void MCPlatformHandleApplicationSuspend(void)
 	MCappisactive = False;
     
     // MW-2014-04-08: [[ Bug 12080 ]] Hide any palettes based on MChidepalettes.
-    show_or_hide_palettes(false);
+    //show_or_hide_palettes(false);
 }
 
 void MCPlatformHandleApplicationResume(void)
 {
     // MW-2014-04-08: [[ Bug 12080 ]] Show any palettes based on MChidepalettes.
-    show_or_hide_palettes(true);
+    //show_or_hide_palettes(true);
     
 	MCappisactive = True;
 	MCdefaultstackptr -> getcard() -> message(MCM_resume);
@@ -541,6 +542,8 @@ void MCPlatformHandleDragDrop(MCPlatformWindowRef p_window, bool& r_accepted)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCPlatformKeyCode s_last_key_code = 0;
+
 void MCPlatformHandleModifiersChanged(MCPlatformModifiers p_modifiers)
 {
 	MCmodifierstate = 0;
@@ -554,6 +557,14 @@ void MCPlatformHandleModifiersChanged(MCPlatformModifiers p_modifiers)
 		MCmodifierstate |= MS_MOD2;
 	if ((p_modifiers & kMCPlatformModifierCapsLock) != 0)
 		MCmodifierstate |= MS_CAPS_LOCK;
+}
+
+// MW-2014-04-15: [[ Bug 12086 ]] This method is invoked to give us the last key
+//   code that was passed to an IME session. This allows us to correctly synthesize
+//   a keydown / keyup pair if a single character is produced.
+void MCPlatformHandleRawKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code)
+{
+    s_last_key_code = p_key_code;
 }
 
 void MCPlatformHandleKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
@@ -727,8 +738,11 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 				t_s_ei == t_r_ei)
 			{
 				t_char[1] = '\0';
-				MCdispatcher -> wkdown(p_window, (const char *)t_char, t_char[0]);
-				MCdispatcher -> wkup(p_window, (const char *)t_char, t_char[0]);
+				
+                // MW-2014-04-15: [[ Bug 12086 ]] Pass the keycode from the last event that was
+                //   passed to the IME.
+                MCdispatcher -> wkdown(p_window, (const char *)t_char, s_last_key_code);
+				MCdispatcher -> wkup(p_window, (const char *)t_char, s_last_key_code);
 				return;
 			}
 		}
@@ -1059,17 +1073,94 @@ void MCPlatformHandlePasteboardResolve(MCPlatformPasteboardRef p_pasteboard, MCP
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef p_player)
+static MCPlayer *find_player(MCPlatformPlayerRef p_player)
 {
 	for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
 	{
 		if (t_player -> getplatformplayer() == p_player)
-		{
-			t_player -> layer_redrawall();
-			MCPlatformBreakWait();
-			break;
-		}
-	}
+            return t_player;
+    }
+    
+    return nil;
+}
+
+void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> layer_redrawall();
+    MCPlatformBreakWait();
+}
+
+void MCPlatformHandlePlayerMarkerChanged(MCPlatformPlayerRef p_player, uint32_t p_time)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> markerchanged(p_time);
+}
+
+void MCPlatformHandlePlayerCurrentTimeChanged(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> timer(MCM_current_time_changed, nil);
+}
+
+void MCPlatformHandlePlayerSelectionChanged(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> timer(MCM_selection_changed, nil);
+}
+
+void MCPlatformHandlePlayerStarted(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> timer(MCM_play_started, nil);
+}
+
+void MCPlatformHandlePlayerPaused(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> timer(MCM_play_paused, nil);
+}
+
+void MCPlatformHandlePlayerStopped(MCPlatformPlayerRef p_player)
+{
+    MCPlayer *t_player;
+    t_player = find_player(p_player);
+    if (t_player == nil)
+        return;
+    
+    t_player -> timer(MCM_play_stopped, nil);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCPlatformHandleSoundFinished(MCPlatformSoundRef p_sound)
+{
+    if (MCacptr != nil)
+        MCscreen -> addtimer(MCacptr, MCM_internal, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

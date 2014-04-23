@@ -123,15 +123,34 @@ class MCMacPlatformSurface;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@interface com_runrev_livecode_MCWindowContainerView: NSView
+{
+    MCMacPlatformWindow *m_window;
+}
+
+- (id)initWithPlatformWindow:(MCMacPlatformWindow *)window;
+
+- (void)setFrameSize: (NSSize)size;
+
+@end
+
+@compatibility_alias MCWindowContainerView com_runrev_livecode_MCWindowContainerView;
+
 @interface com_runrev_livecode_MCWindowView: NSView<NSTextInputClient>
 {
+    MCMacPlatformWindow *m_window;
+    
 	NSTrackingArea *m_tracking_area;
+    
+    // The last event that was passed to the IME.
 	NSEvent *m_input_method_event;
-	bool m_use_input_method : 1;
+    // Whether to pass events through the IME or not.
+    bool m_use_input_method : 1;
+    
 	NSDragOperation m_allowed_drag_operations;
 }
 
-- (id)initWithFrame:(NSRect)frameRect;
+- (id)initWithPlatformWindow:(MCMacPlatformWindow *)window;
 - (void)dealloc;
 
 - (void)updateTrackingAreas;
@@ -224,6 +243,7 @@ class MCMacPlatformSurface;
 
 //////////
 
+- (void)setFrameSize: (NSSize)size;
 - (void)drawRect: (NSRect)dirtyRect;
 
 //////////
@@ -333,9 +353,13 @@ public:
 	virtual ~MCMacPlatformWindow(void);
 
 	MCWindowView *GetView(void);
+    MCWindowContainerView *GetContainerView(void);
+    
 	id GetHandle(void);
 	
-	void ProcessCloseRequest();
+    bool IsSynchronizing(void);
+    
+	void ProcessCloseRequest(void);
 	void ProcessDidMove(void);
 	void ProcessDidResize(void);
 	void ProcessWillMiniaturize(void);
@@ -388,9 +412,12 @@ private:
 	// The window delegate object.
 	MCWindowDelegate *m_delegate;
 	
-	// The window content view.
-	MCWindowView *m_view;
+	// The window container view.
+	MCWindowContainerView *m_container_view;
 	
+    // The window's content view.
+    MCWindowView *m_view;
+    
 	struct
 	{
 		// When the mask changes and the window has a shadow we have to
@@ -428,6 +455,7 @@ void MCMacPlatformScheduleCallback(void (*)(void*), void *);
 void MCMacPlatformBeginModalSession(MCMacPlatformWindow *window);
 void MCMacPlatformEndModalSession(MCMacPlatformWindow *window);
 
+void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef window);
 void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_is_down);
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_location);
 void MCMacPlatformHandleMouseScroll(CGFloat dx, CGFloat dy);
@@ -438,7 +466,8 @@ void MCMacPlatformSyncMouseAfterTracking(void);
 
 void MCMacPlatformHandleModifiersChanged(MCPlatformModifiers modifiers);
 
-bool MCMacMapKeyCode(uint32_t mac_key_code, MCPlatformKeyCode& r_key_code);
+bool MCMacPlatformMapKeyCode(uint32_t mac_key_code, uint32_t modifier_flags, MCPlatformKeyCode& r_key_code);
+
 bool MCMacMapNSStringToCodepoint(NSString *string, codepoint_t& r_codepoint);
 bool MCMacMapCodepointToNSString(codepoint_t p_codepoint, NSString*& r_string);
 bool MCMacMapSelectorToTextInputAction(SEL p_selector, MCPlatformTextInputAction& r_action);
@@ -467,6 +496,9 @@ bool MCMacPlatformMapMenuItemActionToSelector(MCPlatformMenuItemAction action, S
 
 void MCMacPlatformResetCursor(void);
 
+void MCMacPlatformGetGlobalVolume(double& r_volume);
+void MCMacPlatformSetGlobalVolume(double volume);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NSDragOperation MCMacPlatformMapDragOperationToNSDragOperation(MCPlatformDragOperation);
@@ -475,6 +507,9 @@ MCPlatformDragOperation MCMacPlatformMapNSDragOperationToDragOperation(NSDragOpe
 void MCMacPlatformPasteboardCreate(NSPasteboard *pasteboard, MCPlatformPasteboardRef& r_pasteboard);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCPlatformInitializeMenu(void);
+void MCPlatformFinalizeMenu(void);
 
 bool MCPlatformInitializeAbortKey(void);
 void MCPlatformFinalizeAbortKey(void);
