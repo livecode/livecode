@@ -2186,17 +2186,16 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
 	// OK-2010-01-11: Bug 7649 - Filter command was incorrectly removing empty lines.
 	// Now ignores delimiter for matching but includes it in the append.
 
-	uindex_t t_return_offset = 0;
     uindex_t t_last_offset = 0;
 	bool t_found = true;
     bool t_success = true;
     
-    MCRange t_chunk_range;
-    
+    MCRange t_chunk_range, t_found_range;
+    MCStringOptions t_options = ctxt . GetStringComparisonType();
 	while (t_found && t_success)
 	{
         MCAutoStringRef t_line;
-		t_found = MCStringFirstIndexOf(p_source, p_delimiter, t_last_offset, kMCCompareExact, t_return_offset);
+		t_found = MCStringFind(p_source, MCRangeMake(t_last_offset, UINDEX_MAX), p_delimiter, t_options, &t_found_range);
 		if (!t_found) //last line or item
         {
             t_chunk_range . offset = t_last_offset;
@@ -2205,7 +2204,7 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
 		else
         {
             t_chunk_range . offset = t_last_offset;
-            t_chunk_range . length = t_return_offset - t_last_offset;
+            t_chunk_range . length = t_found_range . offset - t_last_offset;
         }
         
         if (t_success && (p_matcher -> match(t_chunk_range) != p_without))
@@ -2214,7 +2213,7 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
             t_success = MCStringCopySubstring(p_source, t_chunk_range, &t_line) && MCListAppend(*t_output, *t_line);
         }
 
-		t_last_offset = t_return_offset + MCStringGetLength(p_delimiter);
+		t_last_offset = t_found_range . offset + t_found_range . length;
 	}
 	
     if (!t_success)
