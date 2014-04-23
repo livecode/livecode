@@ -1,0 +1,1 @@
+# the qtVersion returns empty

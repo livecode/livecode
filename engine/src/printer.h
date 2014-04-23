@@ -278,9 +278,9 @@ public:
 	void SetJobColor(bool p_color);
 	bool GetJobColor(void) const;
 
-	void SetJobRanges(MCPrinterPageRangeCount p_count_type, const MCRange *p_ranges);
+	void SetJobRanges(MCPrinterPageRangeCount p_count_type, const MCInterval *p_ranges);
 	MCPrinterPageRangeCount GetJobRangeCount(void) const;
-	const MCRange* GetJobRanges(void) const;
+	const MCInterval* GetJobRanges(void) const;
 
 	int GetJobPageNumber(void) const;
 
@@ -421,7 +421,7 @@ private:
 	MCPrinterDuplexMode m_job_duplex;
 	bool m_job_color;
 	MCPrinterPageRangeCount m_job_range_count;
-	MCRange *m_job_ranges;
+	MCInterval *m_job_ranges;
 	
 	bool m_layout_show_borders;
 	int32_t m_layout_row_spacing;
@@ -534,7 +534,7 @@ inline MCPrinterPageRangeCount MCPrinter::GetJobRangeCount(void) const
 	return m_job_range_count;
 }
 
-inline const MCRange* MCPrinter::GetJobRanges(void) const
+inline const MCInterval* MCPrinter::GetJobRanges(void) const
 {
 	return m_job_ranges;
 }

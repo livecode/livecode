@@ -251,7 +251,11 @@ MCRectangle MCControl::layer_getcontentrect(void)
 {
 	// As getcontentrect is only called if 'isscrolling' is true, this unchecked
 	// cast is safe.
-	return static_cast<MCGroup *>(this) -> getminrect();
+	MCRectangle t_content_rect = static_cast<MCGroup *>(this) -> getminrect();
+	// IM-2014-04-16: [[ Bug 12044 ]] Include rect when computing the coverage of opaque groups
+	if (flags & F_OPAQUE)
+		t_content_rect = MCU_union_rect(t_content_rect, rect);
+	return t_content_rect;
 }
 
 void MCControl::layer_redrawall(void)

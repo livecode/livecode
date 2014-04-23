@@ -507,7 +507,13 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextScaleCTM(t_img_context, 1.0, -1.0);
 			CGContextTranslateCTM(t_img_context, 0, -(CGFloat)t_bitmap_height);
 			
-			CGContextScaleCTM(t_img_context, (MCGFloat)t_bitmap_width / r . width , (MCGFloat)t_bitmap_width / r . height);
+            // MM-2013-01-10: [[ Bug 12008 ]] Make sure we take into account the logical to device screen
+            //   scale.
+            float t_scale;
+            t_scale = ((MCScreenDC *)MCscreen) -> logicaltoscreenscale();
+			CGContextScaleCTM(t_img_context, t_scale, t_scale);
+            
+			CGContextScaleCTM(t_img_context, (MCGFloat)t_bitmap_width / r . width , (MCGFloat)t_bitmap_height / r . height);
 			
 			CGContextTranslateCTM(t_img_context, -(CGFloat)r.x, -(CGFloat)r.y);
 			
@@ -543,12 +549,8 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextTranslateCTM(t_img_context, t_screen_rect . width / 2, t_screen_rect . height / 2);
 			CGContextRotateCTM(t_img_context, t_angle);
 			CGContextTranslateCTM(t_img_context, -t_offset . width, -t_offset . height);
-			
-            // MM-2013-01-10: [[ Bug 11653 ]] As above, our rects are also in device pixels, so use the device scale when working out x and y of bounds.
-            //float t_scale;
-            //t_scale = MCIPhoneGetDeviceScale();
-			//CGContextScaleCTM(t_img_context, t_scale, t_scale);
-			
+            
+            
 #ifndef USE_UNDOCUMENTED_METHODS
 			NSArray *t_windows;
 			t_windows = [[[UIApplication sharedApplication] windows] retain];
@@ -654,6 +656,9 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	
 	do
 	{
+		// IM-2014-03-06: [[ revBrowserCEF ]] Call additional runloop callbacks
+		DoRunloopActions();
+		
 		// MW-2013-08-18: [[ XPlatNotify ]] Handle any pending notifications
 		if (MCNotifyDispatch(dispatch == True) && anyevent)
 			break;

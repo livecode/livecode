@@ -28,18 +28,18 @@ struct MCThemeDrawInfo
 	{
 		struct
 		{
-			ThemeTrackDrawInfo info;
+			HIThemeTrackDrawInfo info;
 			ItemCount count;
 		} slider;
 		
 		struct
 		{
-			ThemeTrackDrawInfo info;
+			HIThemeTrackDrawInfo info;
 		} progress;
 		
 		struct
 		{
-			ThemeTrackDrawInfo info;
+			HIThemeTrackDrawInfo info;
 			Boolean horizontal;
 		} scrollbar;
 		

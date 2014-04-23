@@ -34,6 +34,7 @@
 		4D222098171D782800E7E557 /* stacksecurity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CE7B26D1704A8810072029F /* stacksecurity.cpp */; };
 		4D2220BA171D7A3E00E7E557 /* mbliphonead.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4C34550114F3FEA1008D7E50 /* mbliphonead.mm */; };
 		4D222406171D7F9D00E7E557 /* libsecurity-community.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D222092171D770900E7E557 /* libsecurity-community.a */; };
+		4D232D6018DAF07F00A4FF3E /* quicktime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D232D5F18DAF06800A4FF3E /* quicktime.cpp */; };
 		4D7B149717141A5F006782C1 /* libpngmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7B13F41714198F006782C1 /* libpngmobile.a */; };
 		4D7B149817141A63006782C1 /* libgifmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7B13AD171418F2006782C1 /* libgifmobile.a */; };
 		4D7B149917141A67006782C1 /* libjpegmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7B13B5171418FC006782C1 /* libjpegmobile.a */; };
@@ -533,6 +534,7 @@
 		4D18948C1323CCFD00488783 /* mbliphoneplayer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneplayer.mm; path = src/mbliphoneplayer.mm; sourceTree = "<group>"; };
 		4D1F75B0135CD559005EE740 /* mblandroidtextlayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtextlayout.cpp; path = src/mblandroidtextlayout.cpp; sourceTree = "<group>"; };
 		4D222092171D770900E7E557 /* libsecurity-community.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libsecurity-community.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D232D5F18DAF06800A4FF3E /* quicktime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = quicktime.cpp; path = src/quicktime.cpp; sourceTree = "<group>"; };
 		4D2D91891386E2610057811A /* libstandalone-mobile-lib-community.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libstandalone-mobile-lib-community.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D33766A13F926410096DCFE /* fiber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fiber.h; path = src/fiber.h; sourceTree = "<group>"; };
 		4D33766B13F926410096DCFE /* fiber.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fiber.cpp; path = src/fiber.cpp; sourceTree = "<group>"; };
@@ -1635,6 +1637,7 @@
 		E84BE35B170C967B00807CF6 /* System */ = {
 			isa = PBXGroup;
 			children = (
+				4D232D5F18DAF06800A4FF3E /* quicktime.cpp */,
 				4DD3DEA31040AD9300CAC7EF /* osspec.h */,
 				4DFFC8F613DD90CE006233A4 /* syscfdate.cpp */,
 				4D01C36F13CE3C810041A281 /* sysdefs.h */,
@@ -2176,6 +2179,7 @@
 				4DABCE0615ECD4B50085E214 /* mbliphonenotification.mm in Sources */,
 				4DABCE0715ECD4B50085E214 /* mbliphonepick.mm in Sources */,
 				4DABCE0815ECD4B50085E214 /* mbliphonepickdate.mm in Sources */,
+				4D232D6018DAF07F00A4FF3E /* quicktime.cpp in Sources */,
 				4DABCE0915ECD4B50085E214 /* mbliphoneplayer.mm in Sources */,
 				4DABCE0A15ECD4B50085E214 /* mbliphonereachability.mm in Sources */,
 				4DABCE0B15ECD4B50085E214 /* mbliphonescroller.mm in Sources */,
@@ -2434,6 +2438,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEAD_CODE_STRIPPING = NO;
+				GCC_VERSION = "";
 				INFOPLIST_FILE = "rsrc/standalone-mobile-Info.plist";
 				OTHER_LDFLAGS = (
 					"-Wl,-x",
@@ -2470,6 +2475,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GCC_VERSION = "";
 				INFOPLIST_FILE = "rsrc/standalone-mobile-Info.plist";
 				PRODUCT_NAME = "standalone-mobile-community";
 				PROVISIONING_PROFILE = "";

@@ -503,7 +503,7 @@ Window MCStacklist::restack(MCStack *sptr)
 		if (bottompalette != NULL)
 			return bottompalette->getstack()->getwindow();
 	}
-	return DNULL;
+	return NULL;
 }
 
 void MCStacklist::restartidle()
@@ -540,11 +540,9 @@ void MCStacklist::refresh(void)
 	while(t_node != stacks);
 }
 
-#if !defined(_MAC_DESKTOP)
 void MCStacklist::ensureinputfocus(Window window)
 {
 }
-#endif
 
 void MCStacklist::purgefonts()
 {
@@ -650,6 +648,25 @@ void MCStacklist::enableformodal(Window modalwindow, Boolean isenabled)
 		t_node = t_node -> next();
 	}
 	while(t_node != stacks);
+}
+
+void MCStacklist::reopenallstackwindows(void)
+{
+	if (stacks != NULL)
+	{
+		MCStacknode *tptr = stacks;
+		do
+		{
+            MCStack *t_stack;
+            t_stack = tptr -> getstack();
+			
+            if (t_stack->getopened() && t_stack->getwindow() != nil)
+                t_stack->reopenwindow();
+            
+            tptr = tptr->next();
+		}
+		while (tptr != stacks);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

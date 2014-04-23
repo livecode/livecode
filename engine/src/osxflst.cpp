@@ -30,7 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "osspec.h"
 
-#include "osxdc.h"
 #include "osxflst.h"
 
 #define MAX_XFONT2MACFONT    11
@@ -99,8 +98,8 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size, uint2 style)
 	CGrafPtr oldport;
 	GDHandle olddevice;
 	GetGWorld(&oldport, &olddevice);
-	MCScreenDC *pms = (MCScreenDC *)MCscreen;
-	SetGWorld(GetWindowPort(pms->getinvisiblewin()), GetMainDevice());
+	//MCScreenDC *pms = (MCScreenDC *)MCscreen;
+	SetGWorld(GetWindowPort(nil), GetMainDevice());
 	TextFont(ffamilyid);
 
 	Style tstyle = 0;
