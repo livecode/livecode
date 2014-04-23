@@ -68,7 +68,7 @@ static uindex_t __MCStringNativize(MCStringRef string, bool keep_unichars = fals
 static void __MCStringUnnativize(MCStringRef self, bool keep_native = false);
 
 // This method marks the string as changed.
-static void __MCStringChanged(MCStringRef string, uindex_t simple = kMCStringFlagNoChange, uindex_t combined = kMCStringFlagNoChange);
+static void __MCStringChanged(MCStringRef string, uindex_t simple = kMCStringFlagNoChange, uindex_t combined = kMCStringFlagNoChange, bool native = false);
 
 // Creates an indirect mutable string with contents.
 static bool __MCStringCreateIndirect(__MCString *contents, __MCString*& r_string);
@@ -888,7 +888,7 @@ const unichar_t *MCStringGetCharPtr(MCStringRef self)
 
 const char_t *MCStringGetNativeCharPtr(MCStringRef self)
 {
-    // Whenever the unicode chars change, __MCStringChanged is called.
+    // Whenever the chars change, __MCStringChanged is called.
     // Therefore if native_chars is not nil, it will accurately reflect
     // the nativized form of the string.
     if (__MCStringHasNativeChars(self))
@@ -2809,6 +2809,7 @@ bool MCStringFold(MCStringRef self, MCStringOptions p_options)
     if (MCStringIsNative(self))
     {
         MCNativeCharsLowercase(self -> native_chars, self -> char_count);
+        __MCStringChanged(self, true, true, true);
         return true;
     }
     
@@ -2841,6 +2842,7 @@ bool MCStringLowercase(MCStringRef self, MCLocaleRef p_locale)
     if (MCStringIsNative(self))
     {
         MCNativeCharsLowercase(self -> native_chars, self -> char_count);
+        __MCStringChanged(self, true, true, true);
         return true;
     }
     
@@ -2872,6 +2874,7 @@ bool MCStringUppercase(MCStringRef self, MCLocaleRef p_locale)
     if (MCStringIsNative(self))
     {
         MCNativeCharsUppercase(self -> native_chars, self -> char_count);
+        __MCStringChanged(self, true, true, true);
         return true;
     }
     
@@ -2938,6 +2941,7 @@ bool MCStringAppendNativeChars(MCStringRef self, const char_t *p_chars, uindex_t
     {
         MCMemoryCopy(self -> native_chars + self -> char_count - p_char_count, p_chars, p_char_count);
         self -> native_chars[self -> char_count] = '\0';
+        __MCStringChanged(self, true, true, true);
         return true;
     }
     
@@ -2982,6 +2986,7 @@ bool MCStringAppendChars(MCStringRef self, const unichar_t *p_chars, uindex_t p_
         if (!t_not_native)
         {
             self -> native_chars[self -> char_count] = '\0';
+            __MCStringChanged(self, true, true, true);
             return true;
         }
         
@@ -3057,6 +3062,7 @@ bool MCStringPrependNativeChars(MCStringRef self, const char_t *p_chars, uindex_
     if (MCStringIsNative(self))
     {
         MCMemoryCopy(self -> native_chars, p_chars, p_char_count);
+        __MCStringChanged(self, true, true, true);
         return true;
     }
     
@@ -3098,6 +3104,7 @@ bool MCStringPrependChars(MCStringRef self, const unichar_t *p_chars, uindex_t p
         if (!t_not_native)
         {
             self -> native_chars[self -> char_count] = '\0';
+            __MCStringChanged(self, true, true, true);
             return true;
         }
         
@@ -3170,6 +3177,7 @@ bool MCStringInsertNativeChars(MCStringRef self, uindex_t p_at, const char_t *p_
     if (MCStringIsNative(self))
     {
         MCMemoryCopy(self -> native_chars + p_at, p_chars, p_char_count);
+        __MCStringChanged(self, true, true, true);
         return true;
     }
     
@@ -3213,6 +3221,7 @@ bool MCStringInsertChars(MCStringRef self, uindex_t p_at, const unichar_t *p_cha
         if (!t_not_native)
         {
             self -> native_chars[self -> char_count] = '\0';
+            __MCStringChanged(self, true, true, true);
             return true;
         }
         
@@ -3260,6 +3269,8 @@ bool MCStringRemove(MCStringRef self, MCRange p_range)
 	
     if (!MCStringIsNative(self))
         __MCStringChanged(self, false, false);
+    else
+        __MCStringChanged(self, true, true, true);
 	
 	// We succeeded.
 	return true;
@@ -3324,6 +3335,7 @@ bool MCStringReplaceNativeChars(MCStringRef self, MCRange p_range, const char_t 
     {
         // Copy across the replacement chars.
         MCMemoryCopy(self -> native_chars + p_range . offset, p_chars, p_char_count);
+        __MCStringChanged(self, true, true, true);
         return true;
     }
     
@@ -3381,6 +3393,7 @@ bool MCStringReplaceChars(MCStringRef self, MCRange p_range, const unichar_t *p_
         if (!t_not_native)
         {
             self -> native_chars[self -> char_count] = '\0';
+            __MCStringChanged(self, true, true, true);
             return true;
         }
         
@@ -3740,11 +3753,11 @@ bool MCStringFindAndReplaceNative(MCStringRef self, MCStringRef p_pattern, MCStr
 		MCMemoryDeleteArray(self -> native_chars);
         
 		self -> native_chars = t_output;
-        self -> chars = nil;
 		self -> char_count = t_output_length;
 		self -> capacity = t_output_capacity;
 	}
     
+    __MCStringChanged(self, true, true, true);
 	return true;
 }
 
@@ -4274,9 +4287,9 @@ static uindex_t __MCStringNativize(MCStringRef self, bool keep_unichars)
     
     if (!t_not_native)
     {
-        MCMemoryDeleteArray(self -> chars);
+        MCMemoryDeleteArray(self -> native_chars);
         self -> native_chars = chars;
-        self -> chars = nil;
+        __MCStringChanged(self, true, true, true);
         self -> flags &= ~kMCStringFlagIsNotNative;
         self -> native_chars[self -> char_count] = '\0';
         return self -> char_count;
@@ -4346,8 +4359,7 @@ static uindex_t __MCStringNativize(MCStringRef self, bool keep_unichars)
     
     if (!keep_unichars)
     {
-        MCMemoryDeleteArray(self -> chars);
-        self -> chars = nil;
+        __MCStringChanged(self, true, true, true);
         self -> char_count = t_char_range . length;
         self -> flags &= ~kMCStringFlagIsNotNative;
     }
@@ -4357,6 +4369,9 @@ static uindex_t __MCStringNativize(MCStringRef self, bool keep_unichars)
 static void __MCStringUnnativize(MCStringRef self, bool keep_native)
 {    
     if (!MCStringIsNative(self))
+        return;
+    
+    if (self -> chars != nil)
         return;
     
     if (__MCStringIsIndirect(self))
@@ -4388,7 +4403,7 @@ static void __MCStringUnnativize(MCStringRef self, bool keep_native)
     }
 }
 
-static void __MCStringChanged(MCStringRef self, uindex_t simple, uindex_t uncombined)
+static void __MCStringChanged(MCStringRef self, uindex_t simple, uindex_t uncombined, bool native)
 {
     MCAssert(!__MCStringIsIndirect(self));
     
@@ -4403,8 +4418,16 @@ static void __MCStringChanged(MCStringRef self, uindex_t simple, uindex_t uncomb
     else if (uncombined == kMCStringFlagSetFalse)
         self -> flags &= ~kMCStringFlagIsUncombined;
     
-    MCMemoryDeleteArray(self -> native_chars);
-    self -> native_chars = nil;
+    if (!native)
+    {
+        MCMemoryDeleteArray(self -> native_chars);
+        self -> native_chars = nil;
+    }
+    else
+    {
+        MCMemoryDeleteArray(self -> chars);
+        self -> chars = nil;
+    }
     self -> flags &= ~kMCStringFlagIsChecked;
 }
 
