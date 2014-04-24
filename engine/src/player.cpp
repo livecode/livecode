@@ -1377,6 +1377,9 @@ void MCPlayer::syncbuffering(MCContext *p_dc)
 	
 	// MW-2011-09-13: [[ Layers ]] If the layer is dynamic then the player must be buffered.
 	t_should_buffer = getstate(CS_SELECTED) || getflag(F_ALWAYS_BUFFER) || getstack() -> getstate(CS_EFFECT) || (p_dc != nil && p_dc -> gettype() != CONTEXT_TYPE_SCREEN) || !MCModeMakeLocalWindows() || layer_issprite();
+    
+    // MW-2014-04-24: [[ Bug 12249 ]] If we are not in browse mode for this object, then it should be buffered.
+    t_should_buffer = t_should_buffer || getstack() -> gettool(this) != T_BROWSE;
 	
 #ifdef FEATURE_PLATFORM_PLAYER
 	if (m_platform_player != nil)
@@ -2395,6 +2398,13 @@ void MCPlayer::markerchanged(uint32_t p_time)
     for(uindex_t i = 0; i < m_callback_count; i++)
         if (p_time == m_callbacks[i] . time)
             message_with_args(m_callbacks[i] . message, m_callbacks[i] . parameter);
+}
+
+void MCPlayer::selectionchanged(void)
+{
+    MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
+    MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+    timer(MCM_selection_changed, nil);
 }
 
 void MCPlayer::SynchronizeUserCallbacks(void)
