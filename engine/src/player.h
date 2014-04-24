@@ -327,6 +327,7 @@ public:
 	}
     
     void markerchanged(uint32_t p_time);
+    void selectionchanged(void);
 #endif
 	
 #ifndef FEATURE_PLATFORM_PLAYER
