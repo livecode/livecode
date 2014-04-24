@@ -132,7 +132,6 @@ Boolean MCScreenDC::open()
 	backdrop_enabled = false;
 	backdrop_pattern = nil;
 	MCPlatformCreateWindow(backdrop_window);
-	MCPlatformConfigureBackdrop(backdrop_window);
 	
 	MCPlatformCreateMenu(icon_menu);
 	MCPlatformSetIconMenu(icon_menu);
@@ -501,10 +500,12 @@ void MCScreenDC::enactraisewindows(void)
 		t_rect = MCRectangleMake(0, 0, 0, 0);
 		MCPlatformSetWindowProperty(backdrop_window, kMCPlatformWindowPropertyFrameRect, kMCPlatformPropertyTypeRectangle, &t_rect);
 		MCPlatformShowWindow(backdrop_window);
+        MCPlatformConfigureBackdrop(backdrop_window);
 	}
 	else
 	{
 		MCPlatformHideWindow(backdrop_window);
+        MCPlatformConfigureBackdrop(nil);
 	}
 }
 
@@ -517,8 +518,9 @@ void MCScreenDC::enablebackdrop(bool p_hard)
 	
 	MCRectangle t_rect;
 	MCPlatformGetScreenViewport(0, t_rect);
-	MCPlatformSetWindowProperty(backdrop_window, kMCPlatformWindowPropertyFrameRect, kMCPlatformPropertyTypeRectangle, &t_rect);
+	MCPlatformSetWindowProperty(backdrop_window, kMCPlatformWindowPropertyContentRect, kMCPlatformPropertyTypeRectangle, &t_rect);
 	MCPlatformShowWindow(backdrop_window);
+	MCPlatformConfigureBackdrop(backdrop_window);
 }
 
 void MCScreenDC::disablebackdrop(bool p_hard)
@@ -564,7 +566,7 @@ void MCScreenDC::redrawbackdrop(MCPlatformSurfaceRef p_surface, MCRegionRef p_re
 			t_gfxcontext -> setfillstyle(FillTiled, backdrop_pattern, 0, 0);
 		else
 			t_gfxcontext -> setfillstyle(FillSolid, NULL, 0, 0);
-		t_gfxcontext -> fillrect(MCRegionGetBoundingBox(p_region), true);
+		t_gfxcontext -> fillrect(MCRegionGetBoundingBox(p_region), false);
 		delete t_gfxcontext;
 		
 		MCPlatformSurfaceUnlockGraphics(p_surface);
