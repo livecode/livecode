@@ -470,7 +470,8 @@ void *MCGCacheTableGet(MCGCacheTableRef cache_table, void *key, uint32_t key_len
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font);
+// MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
+MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform);
 
 ////////////////////////////////////////////////////////////////////////////////
 
