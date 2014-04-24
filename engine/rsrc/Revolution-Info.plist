@@ -99,5 +99,7 @@
 	</array>
 	<key>NSHighResolutionCapable</key>
 	<true/>
+	<key>NSPrincipalClass</key>
+	<string>com_runrev_livecode_MCApplication</string>
 </dict>
 </plist>
