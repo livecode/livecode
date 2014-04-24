@@ -459,7 +459,8 @@ void MCPlatformDoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOpe
 	t_image_loc . width = t_image_loc . height = 0.0f;
 	if (p_image_loc != nil)
 	{
-		t_image_loc . width = p_image_loc -> x;
+        // MW-2014-04-22: [[ Bug 12253 ]] Horizontal image offset obviously goes the other way.
+		t_image_loc . width = -p_image_loc -> x;
 		t_image_loc . height = p_image_loc -> y;
 	}
 		
