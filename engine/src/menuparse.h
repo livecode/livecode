@@ -31,6 +31,7 @@ struct MCMenuItem
 	uint1 modifiers;
 	uint4 mnemonic;
 	MCString tag;
+    bool has_tag;
 	uint1 menumode;
 	
 	void assignFrom(MCMenuItem *p_from)

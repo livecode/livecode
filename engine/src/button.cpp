@@ -3970,12 +3970,16 @@ public:
 		
 		MCExecPoint ep;
 		if (p_menu_item -> tag . getstring() != nil)
+        {
 			ep . setsvalue(p_menu_item -> tag);
+            p_menu_item -> has_tag = true;
+        }
 		else
 		{
 			ep . setsvalue(p_menu_item -> label);
 			if (p_menu_item -> is_unicode)
 				ep . utf16toutf8();
+            p_menu_item -> has_tag = false;
 		}
 		
 		MCCStringClone(ep . getcstring(), t_tag);
