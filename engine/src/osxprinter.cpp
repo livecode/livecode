@@ -1354,8 +1354,6 @@ static void OSX_CGContextAddArc(CGContextRef p_context, CGRect p_rect, float p_s
 		p_start += t_delta;
 		t_first = false;
 	}
-	
-	CGContextClosePath(p_context);
 }
 
 static void OSX_CGContextAddSegment(CGContextRef p_context, CGRect p_rect, float p_start, float p_angle)
@@ -1812,49 +1810,44 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 		break;
 		
 		case MARK_TYPE_RECTANGLE:
+		{
+            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds.
+			CGRect t_bounds;
+			t_bounds = CGRectMake(p_mark -> rectangle . bounds . x + p_mark -> rectangle . inset / 2.0f, p_mark -> rectangle . bounds . y + p_mark -> rectangle . inset / 2.0f,
+								  p_mark -> rectangle . bounds . width - p_mark -> rectangle . inset, p_mark -> rectangle . bounds . height - p_mark -> rectangle . inset);
+			
+			CGContextAddRect(m_context, t_bounds);
 			if (t_is_stroke)
-			{
-				CGRect t_rect;
-				CGContextAddRect(m_context,
-					CGRectMake(p_mark -> rectangle . bounds . x + 0.5f, p_mark -> rectangle . bounds . y + 0.5f,
-						p_mark -> rectangle . bounds . width - 1.0f, p_mark -> rectangle . bounds . height - 1.0f));
 				CGContextDrawPath(m_context, kCGPathStroke);
-			}
 			else
-			{
-				CGRect t_rect;
-				CGContextAddRect(m_context,
-					CGRectMake(p_mark -> rectangle . bounds . x, p_mark -> rectangle . bounds . y,
-						p_mark -> rectangle . bounds . width, p_mark -> rectangle . bounds . height));
 				CGContextDrawPath(m_context, kCGPathFill);
-			}
-		break;
+			break;
+		}
 		
 		case MARK_TYPE_ROUND_RECTANGLE:
+		{
+            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds.
+			CGRect t_bounds;
+			t_bounds = CGRectMake(p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . inset / 2.0f, p_mark -> round_rectangle . bounds . y + p_mark -> round_rectangle . inset / 2.0f,
+								  p_mark -> round_rectangle . bounds . width - p_mark -> round_rectangle . inset, p_mark -> round_rectangle . bounds . height - p_mark -> round_rectangle . inset);
+			
+			OSX_CGContextAddRoundedRect(m_context, t_bounds, p_mark -> round_rectangle . radius);
 			if (t_is_stroke)
-			{
-				OSX_CGContextAddRoundedRect(m_context,
-					CGRectMake(p_mark -> rectangle . bounds . x + 0.5f, p_mark -> rectangle . bounds . y + 0.5f,
-						p_mark -> rectangle . bounds . width - 1.0f, p_mark -> rectangle . bounds . height - 1.0f),
-						p_mark -> round_rectangle . radius - 1.0f);
 				CGContextDrawPath(m_context, kCGPathStroke);
-			}
 			else
-			{
-				OSX_CGContextAddRoundedRect(m_context,
-					CGRectMake(p_mark -> rectangle . bounds . x, p_mark -> rectangle . bounds . y,
-						p_mark -> rectangle . bounds . width, p_mark -> rectangle . bounds . height),
-						p_mark -> round_rectangle . radius);
 				CGContextDrawPath(m_context, kCGPathFill);
-			}
-		break;
+			break;
+		}
 		
 		case MARK_TYPE_ARC:
+		{
+            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds.
+			CGRect t_bounds;
+			t_bounds = CGRectMake(p_mark -> arc . bounds . x + p_mark -> arc . inset / 2.0f, p_mark -> arc . bounds . y + p_mark -> arc . inset / 2.0f,
+								  p_mark -> arc . bounds . width - p_mark -> arc . inset, p_mark -> arc . bounds . height - p_mark -> arc . inset);
+			
 			if (t_is_stroke)
 			{
-				CGRect t_bounds;
-				t_bounds = CGRectMake(p_mark -> rectangle . bounds . x + 0.5f, p_mark -> rectangle . bounds . y + 0.5f,
-						p_mark -> rectangle . bounds . width - 1.0f, p_mark -> rectangle . bounds . height - 1.0f);
 				if (p_mark -> arc . complete)
 					OSX_CGContextAddSegment(m_context, t_bounds, p_mark -> arc . start, p_mark -> arc . angle);
 				else
@@ -1863,13 +1856,11 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			}
 			else
 			{
-				OSX_CGContextAddSegment(m_context,
-					CGRectMake(p_mark -> arc . bounds . x, p_mark -> arc . bounds . y,
-						p_mark -> arc . bounds . width, p_mark -> arc . bounds . height),
-						p_mark -> arc . start, p_mark -> arc . angle);
+				OSX_CGContextAddSegment(m_context, t_bounds, p_mark -> arc . start, p_mark -> arc . angle);
 				CGContextDrawPath(m_context, kCGPathFill);
 			}
-		break;
+			break;
+		}
 		
 		case MARK_TYPE_IMAGE:
 		{

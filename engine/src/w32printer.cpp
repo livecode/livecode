@@ -533,7 +533,12 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 	bool t_is_pattern_fill, t_is_stroke;
 	t_is_pattern_fill = false;
 	t_is_stroke = false;
-
+	
+    // MM-2014-04-23: [[ Bug 11884 ]] If possible, we should let GDI handle insetting, using the PS_INSIDEFRAME pen type.
+    //  This only works for stroking solid lines, so for fills and dashed strokes, inset ourselves.
+	bool t_should_inset;
+	t_should_inset = false;
+	
 	if (p_mark -> stroke != NULL)
 	{
 		uint4 t_style;
@@ -579,7 +584,24 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 
 			t_width = p_mark -> stroke -> width;
 
-			if (t_width < 2)
+            // MM-2014-04-23: [[ Bug 11884 ]] If we want to inset this mark, use the PS_INSIDEFRAME pen type.
+			uint2 t_inset;
+			switch(p_mark -> type)
+			{
+				case MARK_TYPE_RECTANGLE:
+					t_inset = p_mark -> rect . inset;
+					break;
+				case MARK_TYPE_ROUND_RECTANGLE:
+					t_inset = p_mark -> round_rect . inset;
+					break;
+				case MARK_TYPE_ARC:
+					t_inset = p_mark -> arc . inset;
+					break;
+				default:
+					t_inset = 0;
+					break;
+			}
+			if (t_width < 2 || t_inset > 0)
 				t_style |= PS_INSIDEFRAME;
 		}
 
@@ -623,6 +645,9 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			t_style |= PS_USERSTYLE;
 			
 			resolve_dashes(p_mark -> stroke -> dash . offset, p_mark -> stroke -> dash . data, p_mark -> stroke -> dash . length, t_dashes, t_dash_length);
+
+            // MM-2014-04-23: [[ Bug 11884 ]] For dashed lines, we can't use the PS_INSIDEFRAME, so we must inset ourselves.
+			t_should_inset = true;
 		}
 
 		t_brush . lbColor = colour_to_pixel(p_mark -> fill -> colour);
@@ -684,11 +709,17 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 
 		SetBrushOrgEx(t_dc, t_origin.x, t_origin.y, NULL);
 		SelectObject(t_dc, GetStockObject(NULL_PEN));
+		
+        // MM-2014-04-23: [[ Bug 11884 ]] For fills, we can't use the PS_INSIDEFRAME, so we must inset ourselves.
+		t_should_inset = true;
 	}
 	else
 	{
 		SelectObject(t_dc, GetStockObject(NULL_PEN));
 		SelectObject(t_dc, GetStockObject(NULL_BRUSH));
+		
+        // MM-2014-04-23: [[ Bug 11884 ]] For fills, we can't use the PS_INSIDEFRAME, so we must inset ourselves.
+		t_should_inset = true;
 	}
 
 	if (t_is_pattern_fill)
@@ -767,26 +798,60 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 
 		case MARK_TYPE_RECTANGLE:
 		{
-			int4 t_adjust;
-			t_adjust = p_mark -> stroke != NULL ? 0 : 1;
+			if (t_should_inset)
+			{
+                // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since GDI only accepts ints, if the inset value is uneven,
+                // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
+				if (!(p_mark -> rectangle . inset % 2))
+					p_mark -> rectangle . inset ++;
+				p_mark -> rectangle . bounds = MCRectangleMake(p_mark -> rectangle . bounds . x + p_mark -> rectangle . inset / 2,
+															   p_mark -> rectangle . bounds . y + p_mark -> rectangle . inset / 2, 
+															   p_mark -> rectangle . bounds . width - p_mark -> rectangle . inset, 
+															   p_mark -> rectangle . bounds . height - p_mark -> rectangle . inset);
+			}
+			
 			Rectangle(t_dc, p_mark -> rectangle . bounds . x, p_mark -> rectangle . bounds . y,
-											p_mark -> rectangle . bounds . x + p_mark -> rectangle . bounds . width + t_adjust,
-											p_mark -> rectangle . bounds . y + p_mark -> rectangle . bounds . height + t_adjust);
+											p_mark -> rectangle . bounds . x + p_mark -> rectangle . bounds . width,
+											p_mark -> rectangle . bounds . y + p_mark -> rectangle . bounds . height);
 		}
 		break;
 
 		case MARK_TYPE_ROUND_RECTANGLE:
 		{
+			if (t_should_inset)
+			{
+                // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since GDI only accepts ints, if the inset value is uneven,
+                // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
+				if (!(p_mark -> round_rectangle . inset % 2))
+					p_mark -> round_rectangle . inset ++;
+				p_mark -> round_rectangle . bounds = MCRectangleMake(p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . inset / 2,
+																	 p_mark -> round_rectangle . bounds . y + p_mark -> round_rectangle . inset / 2, 
+																	 p_mark -> round_rectangle . bounds . width - p_mark -> round_rectangle . inset, 
+																	 p_mark -> round_rectangle . bounds . height - p_mark -> round_rectangle . inset);
+			}
+			
 			int4 t_adjust;
 			t_adjust = p_mark -> stroke != NULL ? 0 : 1;
 			RoundRect(t_dc, p_mark -> round_rectangle . bounds . x, p_mark -> round_rectangle . bounds . y,
-											p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . bounds . width + t_adjust,
-											p_mark -> round_rectangle . bounds . y + p_mark -> round_rectangle . bounds . height + t_adjust, p_mark -> round_rectangle . radius,
+											p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . bounds . width,
+											p_mark -> round_rectangle . bounds . y + p_mark -> round_rectangle . bounds . height, p_mark -> round_rectangle . radius,
 											p_mark -> round_rectangle . radius);
 		}
 		break;
 
 		case MARK_TYPE_ARC:
+			if (t_should_inset)
+			{
+                // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since GDI only accepts ints, if the inset value is uneven,
+                // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
+				if (!(p_mark -> arc . inset % 2))
+					p_mark -> arc . inset ++;
+				p_mark -> arc . bounds = MCRectangleMake(p_mark -> arc . bounds . x + p_mark -> arc . inset / 2,
+														 p_mark -> arc . bounds . y + p_mark -> arc . inset / 2, 
+														 p_mark -> arc . bounds . width - p_mark -> arc . inset, 
+														 p_mark -> arc . bounds . height - p_mark -> arc . inset);				
+			}
+			
 			gdi_do_arc(t_dc, NULL, p_mark -> stroke == NULL, p_mark -> arc . bounds . x, p_mark -> arc . bounds . y, p_mark -> arc . bounds . x + p_mark -> arc . bounds . width, p_mark -> arc . bounds . y + p_mark -> arc . bounds . height, p_mark -> arc . start, p_mark -> arc . start + p_mark -> arc . angle);
 			if (p_mark -> stroke != NULL)
 			{
