@@ -57,7 +57,8 @@ void MCPlatformSurfaceUnlockPixels(MCPlatformSurfaceRef p_surface)
 
 bool MCPlatformSurfaceLockSystemContext(MCPlatformSurfaceRef p_surface, void*& r_context)
 {
-	p_surface -> LockSystemContext(r_context);
+    // MW-2014-04-18: [[ Bug 12230 ]] Make sure we return the result.
+	return p_surface -> LockSystemContext(r_context);
 }
 
 void MCPlatformSurfaceUnlockSystemContext(MCPlatformSurfaceRef p_surface)
