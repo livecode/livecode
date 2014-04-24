@@ -33,6 +33,37 @@ static CGFloat s_primary_screen_height = 0.0f;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum
+{
+	kMCMacPlatformBreakEvent = 0,
+	kMCMacPlatformMouseSyncEvent = 1,
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+// MW-2014-04-22: [[ Bug 12259 ]] Override sendEvent so that we always get a chance
+//   at the MouseSync event.
+@interface com_runrev_livecode_MCApplication: NSApplication
+
+- (void)sendEvent:(NSEvent *)event;
+
+@end
+
+@implementation com_runrev_livecode_MCApplication
+
+- (void)sendEvent:(NSEvent *)event
+{
+    if ([event type] == NSApplicationDefined &&
+        [event subtype] == kMCMacPlatformMouseSyncEvent)
+        MCMacPlatformHandleMouseSync();
+    else
+        [super sendEvent: event];
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////
+
 @implementation com_runrev_livecode_MCApplicationDelegate
 
 //////////
@@ -362,12 +393,6 @@ struct MCCallback
 static MCCallback *s_callbacks = nil;
 static uindex_t s_callback_count;
 
-enum
-{
-	kMCMacPlatformBreakEvent = 0,
-	kMCMacPlatformMouseSyncEvent = 1,
-};
-
 void MCPlatformBreakWait(void)
 {
 	if (s_wait_broken)
@@ -443,12 +468,7 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 
 	if (t_event != nil)
 	{
-		if ([t_event type] == NSApplicationDefined)
-		{
-			if ([t_event subtype] == kMCMacPlatformMouseSyncEvent)
-				MCMacPlatformHandleMouseSync();
-		}
-		else if ([t_event type] == NSLeftMouseDown || [t_event type] == NSLeftMouseDragged)
+		if ([t_event type] == NSLeftMouseDown || [t_event type] == NSLeftMouseDragged)
 		{
 			s_last_mouse_event = t_event;
 			[t_event retain];
@@ -1614,7 +1634,7 @@ int main(int argc, char *argv[], char *envp[])
 	
 	// Create the normal NSApplication object.
 	NSApplication *t_application;
-	t_application = [NSApplication sharedApplication];
+	t_application = [com_runrev_livecode_MCApplication sharedApplication];
 	
 	// Register for reconfigurations.
 	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);
