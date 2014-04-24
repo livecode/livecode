@@ -1467,44 +1467,44 @@ void MCEngineGetConvertOctals(MCExecContext& ctxt, bool& r_value)
 	r_value = ctxt . GetConvertOctals();
 }
 
-void MCEngineSetItemDelimiter(MCExecContext& ctxt, char_t p_value)
+void MCEngineSetItemDelimiter(MCExecContext& ctxt, MCStringRef p_value)
 {
 	ctxt . SetItemDelimiter(p_value);
 }
 
-void MCEngineGetItemDelimiter(MCExecContext& ctxt, char_t& r_value)
+void MCEngineGetItemDelimiter(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	r_value = ctxt . GetItemDelimiter();
+	r_value = MCValueRetain(ctxt . GetItemDelimiter());
 }
 
-void MCEngineSetLineDelimiter(MCExecContext& ctxt, char_t p_value)
+void MCEngineSetLineDelimiter(MCExecContext& ctxt, MCStringRef p_value)
 {
 	ctxt . SetLineDelimiter(p_value);
 }
 
-void MCEngineGetLineDelimiter(MCExecContext& ctxt, char_t& r_value)
+void MCEngineGetLineDelimiter(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	r_value = ctxt . GetLineDelimiter();
+	r_value = MCValueRetain(ctxt . GetLineDelimiter());
 }
 
-void MCEngineSetColumnDelimiter(MCExecContext& ctxt, char_t p_value)
+void MCEngineSetColumnDelimiter(MCExecContext& ctxt, MCStringRef p_value)
 {
 	ctxt . SetColumnDelimiter(p_value);
 }
 
-void MCEngineGetColumnDelimiter(MCExecContext& ctxt, char_t& r_value)
+void MCEngineGetColumnDelimiter(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	r_value = ctxt . GetColumnDelimiter();
+	r_value = MCValueRetain(ctxt . GetColumnDelimiter());
 }
 
-void MCEngineSetRowDelimiter(MCExecContext& ctxt, char_t p_value)
+void MCEngineSetRowDelimiter(MCExecContext& ctxt, MCStringRef p_value)
 {
 	ctxt . SetRowDelimiter(p_value);
 }
 
-void MCEngineGetRowDelimiter(MCExecContext& ctxt, char_t& r_value)
+void MCEngineGetRowDelimiter(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	r_value = ctxt . GetRowDelimiter();
+	r_value = MCValueRetain(ctxt . GetRowDelimiter());
 }
 
 void MCEngineSetWholeMatches(MCExecContext& ctxt, bool p_value)

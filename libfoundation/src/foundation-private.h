@@ -150,6 +150,10 @@ typedef unichar_t strchar_t;
 #define MCStrCharsSharedPrefixCaseless(x, y, z, w, r, s) MCUnicodeSharedPrefix(x, y, z, w, kMCUnicodeCompareOptionCaseless, r, s)
 #define MCStrCharsSharedPrefixNonliteral(x, y, z, w, r, s) MCUnicodeSharedPrefix(x, y, z, w, kMCUnicodeCompareOptionNormalised, r, s)
 #define MCStrCharsSharedPrefixFolded(x, y, z, w, r, s) MCUnicodeSharedPrefix(x, y, z, w, kMCUnicodeCompareOptionFolded, r, s)
+#define MCStrCharsSharedSuffixExact(x, y, z, w, r, s) MCUnicodeSharedSuffix(x, y, z, w, kMCUnicodeCompareOptionExact, r, s)
+#define MCStrCharsSharedSuffixCaseless(x, y, z, w, r, s) MCUnicodeSharedSuffix(x, y, z, w, kMCUnicodeCompareOptionCaseless, r, s)
+#define MCStrCharsSharedSuffixNonliteral(x, y, z, w, r, s) MCUnicodeSharedSuffix(x, y, z, w, kMCUnicodeCompareOptionNormalised, r, s)
+#define MCStrCharsSharedSuffixFolded(x, y, z, w, r, s) MCUnicodeSharedSuffix(x, y, z, w, kMCUnicodeCompareOptionFolded, r, s)
 #define MCStrCharsFindExact(x, y, z, w, r) MCUnicodeFind(x, y, z, w, kMCUnicodeCompareOptionExact, r)
 #define MCStrCharsFindCaseless(x, y, z, w, r) MCUnicodeFind(x, y, z, w, kMCUnicodeCompareOptionCaseless, r)
 #define MCStrCharsFindNonliteral(x, y, z, w, r) MCUnicodeFind(x, y, z, w, kMCUnicodeCompareOptionNormalised, r)
@@ -240,7 +244,7 @@ enum
 
 struct __MCList: public __MCValue
 {
-	char_t delimiter;
+	MCStringRef delimiter;
 	MCStringRef buffer;
 };
 

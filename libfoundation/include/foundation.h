@@ -1315,6 +1315,15 @@ extern MCStringRef kMCFalseString;
 // The default string for the 'mixed' value of chunk properties.
 extern MCStringRef kMCMixedString;
 
+// The default string for ','.
+extern MCStringRef kMCCommaString;
+
+// The default string for '\n'.
+extern MCStringRef kMCLineEndString;
+
+// The default string for '\t'.
+extern MCStringRef kMCTabString;
+
 /////////
 
 // Creates an MCStringRef wrapping the given constant c-string. Note that
@@ -1584,11 +1593,13 @@ compare_t MCStringCompareTo(MCStringRef string, MCStringRef other, MCStringOptio
 // Returns true if the string begins with the prefix string, processing as
 // appropriate according to options.
 bool MCStringBeginsWith(MCStringRef string, MCStringRef prefix, MCStringOptions options);
+bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefix, MCStringOptions p_options, uindex_t& r_self_match_length);
 bool MCStringBeginsWithCString(MCStringRef string, const char_t *prefix_cstring, MCStringOptions options);
 
 // Returns true if the string ends with the suffix string, processing as
 // appropriate according to options.
 bool MCStringEndsWith(MCStringRef string, MCStringRef suffix, MCStringOptions options);
+bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffix, MCStringOptions p_options, uindex_t& r_self_match_length);
 bool MCStringEndsWithCString(MCStringRef string, const char_t *suffix_cstring, MCStringOptions options);
 
 // Returns true if the string contains the given needle string, processing as
@@ -1897,6 +1908,7 @@ extern MCListRef kMCEmptyList;
 
 // Create a mutable list - initially empty.
 bool MCListCreateMutable(char_t delimiter, MCListRef& r_list);
+bool MCListCreateMutable(MCStringRef p_delimiter, MCListRef& r_list);
 
 // Eventually this will accept any value type, but for now - just strings, names, and booleans.
 bool MCListAppend(MCListRef list, MCValueRef value);

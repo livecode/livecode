@@ -240,6 +240,10 @@ class MCTextChunkIterator
     MCAutoArray<MCRange> breaks;
     uindex_t break_position;
     
+    // store the number of codeunits matched in text when searching for
+    //  delimiter, so that we can increment the range appropriately.
+    uindex_t delimiter_length;
+    
     public:
     MCTextChunkIterator(Chunk_term p_chunk_type, MCStringRef p_text);
     ~MCTextChunkIterator();

@@ -26,10 +26,23 @@ bool MCListCreateMutable(char_t p_delimiter, MCListRef& r_list)
 	if (!__MCValueCreate(kMCValueTypeCodeList, self))
 		return false;
 
-	self -> delimiter = p_delimiter;
+	MCStringCreateWithNativeChars((const char_t *)&p_delimiter, 1, self -> delimiter);
 
 	r_list = self;
 
+	return true;
+}
+
+bool MCListCreateMutable(MCStringRef p_delimiter, MCListRef& r_list)
+{
+	__MCList *self;
+	if (!__MCValueCreate(kMCValueTypeCodeList, self))
+		return false;
+    
+	self -> delimiter = MCValueRetain(p_delimiter);
+    
+	r_list = self;
+    
 	return true;
 }
 
@@ -67,7 +80,7 @@ bool MCListAppend(MCListRef self, MCValueRef p_value)
 		MCAssert(false);
 		return false;
 	}
-	if (!t_first && !MCStringAppendNativeChars(self -> buffer, (const char_t *)&self -> delimiter, 1))
+	if (!t_first && !MCStringAppend(self -> buffer, self -> delimiter))
 		return false;
 
 	return MCStringAppend(self -> buffer, t_string);
@@ -177,7 +190,7 @@ bool MCListAppendNativeChars(MCListRef self, const char_t *p_chars, uindex_t p_c
 		if (!MCStringCreateMutable(0, self -> buffer))
 			return false;
 
-	if (!t_first && !MCStringAppendNativeChars(self -> buffer, &self -> delimiter, 1))
+	if (!t_first && !MCStringAppend(self -> buffer, self -> delimiter))
 		return false;
 
 	return MCStringAppendNativeChars(self -> buffer, p_chars, p_char_count);
