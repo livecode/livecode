@@ -41,6 +41,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphics.h"
 #include "graphicscontext.h"
 
+#include "graphics_util.h"
+
 #include "font.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -589,10 +591,10 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			switch(p_mark -> type)
 			{
 				case MARK_TYPE_RECTANGLE:
-					t_inset = p_mark -> rect . inset;
+					t_inset = p_mark -> rectangle . inset;
 					break;
 				case MARK_TYPE_ROUND_RECTANGLE:
-					t_inset = p_mark -> round_rect . inset;
+					t_inset = p_mark -> round_rectangle . inset;
 					break;
 				case MARK_TYPE_ARC:
 					t_inset = p_mark -> arc . inset;
