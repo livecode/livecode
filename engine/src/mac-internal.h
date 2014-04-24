@@ -397,8 +397,6 @@ public:
 	void MapMCRectangleToNSRect(MCRectangle rect, NSRect& r_ns_rect);
 	void MapNSRectToMCRectangle(NSRect rect, MCRectangle& r_mc_rect);
 	
-	void SetBackdropWindow(MCPlatformWindowRef window);
-	
 protected:
 	virtual void DoRealize(void);
 	virtual void DoSynchronize(void);
@@ -498,10 +496,6 @@ MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifier
 
 NSEvent *MCMacPlatformGetLastMouseEvent(void);
 
-void MCMacPlatformWindowFocusing(MCMacPlatformWindow *window);
-void MCMacPlatformWindowShowing(MCMacPlatformWindow *window);
-void MCMacPlatformWindowHiding(MCMacPlatformWindow *window);
-
 NSMenu *MCMacPlatformGetIconMenu(void);
 
 void MCMacPlatformLockMenuSelect(void);
@@ -514,6 +508,9 @@ void MCMacPlatformResetCursor(void);
 
 void MCMacPlatformGetGlobalVolume(double& r_volume);
 void MCMacPlatformSetGlobalVolume(double volume);
+
+// MW-2014-04-23: [[ CocoaBackdrop ]] Ensures the windows are stacked correctly.
+void MCMacPlatformSyncBackdrop(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 

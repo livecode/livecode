@@ -547,6 +547,9 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)theEvent
 {
+    // MW-2014-04-23: [[ CocoaBackdrop ]] This method is called after the window has
+    //   been re-ordered but before anything else - an ideal time to sync the backdrop.
+    MCMacPlatformSyncBackdrop();
 	return YES;
 }
 
@@ -1540,9 +1543,6 @@ MCMacPlatformWindow::MCMacPlatformWindow(void)
 
 MCMacPlatformWindow::~MCMacPlatformWindow(void)
 {
-	if (m_is_visible)
-		MCMacPlatformWindowHiding(this);
-
 	[m_handle setDelegate: nil];
 	[m_handle setContentView: nil];
     
@@ -1569,38 +1569,6 @@ MCWindowContainerView *MCMacPlatformWindow::GetContainerView(void)
 id MCMacPlatformWindow::GetHandle(void)
 {
 	return m_handle;
-}
-
-void MCMacPlatformWindow::SetBackdropWindow(MCPlatformWindowRef p_window)
-{
-	if (m_window_handle == nil)
-		return;
-	
-	if (p_window == this)
-		return;
-	
-	// Any windows that float above everything don't need to be parented by the
-	// backdrop window.
-	if (m_style == kMCPlatformWindowStyleDialog ||
-		m_style == kMCPlatformWindowStyleUtility ||
-		m_style == kMCPlatformWindowStylePopUp ||
-		m_style == kMCPlatformWindowStyleToolTip)
-		return;
-	
-	
-	MCMacPlatformWindow *t_backdrop;
-	t_backdrop = (MCMacPlatformWindow *)p_window;
-	if ([m_window_handle parentWindow] != nil)
-		[[m_window_handle parentWindow] removeChildWindow: m_window_handle];
-	
-	if (t_backdrop != nil &&
-		t_backdrop -> m_window_handle != nil)
-	{
-		NSInteger t_level;
-		t_level = [m_window_handle level];
-		[t_backdrop -> m_window_handle addChildWindow: m_window_handle ordered: NSWindowAbove];
-		[m_window_handle setLevel: t_level];
-	}
 }
 
 void MCMacPlatformWindow::MapMCPointToNSPoint(MCPoint p_location, NSPoint& r_location)
@@ -1655,8 +1623,6 @@ void MCMacPlatformWindow::ProcessWillMiniaturize(void)
 	// Unset the parent window to make sure things don't propagate.
 	if ([m_window_handle parentWindow] != nil)
 		[[m_window_handle parentWindow] removeChildWindow: m_window_handle];
-	
-	MCMacPlatformWindowHiding(this);
 }
 
 void MCMacPlatformWindow::ProcessDidMiniaturize(void)
@@ -1666,7 +1632,6 @@ void MCMacPlatformWindow::ProcessDidMiniaturize(void)
 
 void MCMacPlatformWindow::ProcessDidDeminiaturize(void)
 {
-	MCMacPlatformWindowShowing(this);
 	HandleUniconify();
 }
 
@@ -1880,7 +1845,6 @@ void MCMacPlatformWindow::DoShow(void)
 	{
 		[m_view setNeedsDisplay: YES];
 		[m_window_handle makeKeyAndOrderFront: nil];
-		MCMacPlatformWindowShowing(this);
 	}
 }
 
@@ -1926,7 +1890,6 @@ void MCMacPlatformWindow::DoHide(void)
 		if ([m_window_handle parentWindow] != nil)
 			[[m_window_handle parentWindow] removeChildWindow: m_window_handle];
 	
-		MCMacPlatformWindowHiding(this);
 		[m_window_handle orderOut: nil];
 	}
 }
@@ -1938,7 +1901,6 @@ void MCMacPlatformWindow::DoFocus(void)
 
 void MCMacPlatformWindow::DoRaise(void)
 {
-	MCMacPlatformWindowShowing(this);
 	[m_window_handle orderFront: nil];
 }
 
