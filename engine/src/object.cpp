@@ -4557,8 +4557,9 @@ MCRectangle MCObject::measuretext(const MCString& p_text, bool p_is_unicode)
     t_bounds . x = 0;
 	// MW-2013-08-23: [[ MeasureText ]] Shortcut if no text - useful for just
 	//   getting the font ascent/descent (as used in MCGroup methods).
+	// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 	if (p_text . getlength() != 0)
-		t_bounds . width = MCFontMeasureText(m_font, p_text . getstring(), p_text . getlength(), p_is_unicode);
+		t_bounds . width = MCFontMeasureText(m_font, p_text . getstring(), p_text . getlength(), p_is_unicode, getstack() -> getdevicetransform());
 	else
 		t_bounds . width = 0;
     t_bounds . y = -MCFontGetAscent(m_font);

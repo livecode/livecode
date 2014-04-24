@@ -416,9 +416,10 @@ void MCField::gettabs(uint2 *&t, uint2 &n, Boolean &fixed)
 		// MW-2012-02-14: [[ FontRefs ]] Compute the width of a space in the field's
 		//   font.
 		// MW-2012-02-17: If we aren't opened, then just use a default value.
+		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 		int4 t_space_width;
 		if (opened)
-			t_space_width = MCFontMeasureText(m_font, " ", 1, false);
+			t_space_width = MCFontMeasureText(m_font, " ", 1, false, getstack() -> getdevicetransform());
 		else
 			t_space_width = 8;
 		 

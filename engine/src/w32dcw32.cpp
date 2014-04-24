@@ -1020,9 +1020,13 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 	case WM_APP:
 		if (MCmousestackptr != NULL && MCdispatcher->getmenu() == NULL)
 		{
+			// IM-2014-04-17: [[ Bug 12227 ]] Convert logical stack rect to screen coords when testing for mouse intersection
+			MCRectangle t_rect;
+			t_rect = pms->logicaltoscreenrect(MCmousestackptr->getrect());
+
 			POINT p;
 			if (!GetCursorPos(&p)
-			        || !MCU_point_in_rect(MCmousestackptr->getrect(),
+			        || !MCU_point_in_rect(t_rect,
 			                              (int2)p.x, (int2)p.y))
 			{
 				if (MCmousestackptr != MCtracestackptr)
