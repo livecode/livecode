@@ -1440,8 +1440,10 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 			}
 		}
         
+        // MW-2014-04-22: [[ Bug 12253 ]] Ending a drag-drop can cause the mouse window to go.
         // Update the mouse cursor for the mouse window.
-        MCMacPlatformHandleMouseCursorChange(s_mouse_window);
+        if (s_mouse_window != nil)
+            MCMacPlatformHandleMouseCursorChange(s_mouse_window);
 	}
 }
 
