@@ -3449,7 +3449,7 @@ bool MCStringReplaceChars(MCStringRef self, MCRange p_range, const unichar_t *p_
     __MCStringClampRange(self, p_range);
     
     // Copy across the replacement chars.
-    MCMemoryCopy(self -> chars + p_range . offset, p_chars, p_char_count);
+    MCMemoryCopy(self -> chars + p_range . offset, p_chars, p_char_count * sizeof(unichar_t));
     
     __MCStringChanged(self, false, false);
     
