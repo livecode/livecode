@@ -350,10 +350,6 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 	if (t_success)
 		t_success = SelectObject(s_draw_dc, p_font . fid) != NULL;
 	
-	SIZE t_size;
-	if (t_success)
-		t_success = GetTextExtentPoint32W(s_draw_dc, (LPCWSTR)p_text, p_length, &t_size);
-	
 	TEXTMETRICA t_metrics;
 	if (t_success)
 		t_success = GetTextMetricsA(s_draw_dc, &t_metrics);
@@ -373,15 +369,16 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 	MCGAffineTransform t_transform;
 	MCGPoint t_device_location;
 	if (t_success)
-	{
+	{	
+		t_transform = MCGContextGetDeviceTransform(self);
+		t_device_location = MCGPointApplyAffineTransform(p_location, t_transform);
+		
+		// MM-2014-04-16: [[ Bug 11964 ]] Use MCGContextMeasurePlatformText to fetch the width of the text.
 		MCGRectangle t_float_text_bounds;
 		t_float_text_bounds . origin . x = 0;
 		t_float_text_bounds . origin . y = -t_metrics . tmAscent;
-		t_float_text_bounds . size . width = t_size . cx + t_overhang;
+		t_float_text_bounds . size . width = MCGContextMeasurePlatformText(self, p_text, p_length, p_font, t_transform) + t_overhang;
 		t_float_text_bounds . size . height = t_metrics . tmAscent + t_metrics . tmDescent;
-		
-		t_transform = MCGContextGetDeviceTransform(self);
-		t_device_location = MCGPointApplyAffineTransform(p_location, t_transform);
 		
 		// IM-2013-09-02: [[ RefactorGraphics ]] modff will round to zero rather than
 		// negative infinity (which we need) so calculate manually
@@ -573,13 +570,29 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 
 //////////
 
-MCGFloat __MCGContextMeasurePlatformTextScreen(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
+// MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
+MCGFloat __MCGContextMeasurePlatformTextScreen(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform)
 {	
 	bool t_success;
 	t_success = true;
 
 	if (t_success)
 		t_success = SelectObject(s_measure_dc, p_font . fid) != NULL;
+
+	// MM-2014-04-16: [[ Bug 11964 ]] Take into account any transform passed. Windows doesn't scale text
+	//  linearly, so if the text we are measuring is to be drawn scaled, or measurement needs to be adjusted.
+	//  GetTextExtentPoint32 returns logical units, so we don't need to revserse the transfom to convert back.
+	if (t_success)
+	{
+		XFORM t_xform;
+		t_xform . eM11 = p_transform . a;
+		t_xform . eM12 = 0;
+		t_xform . eM21 = 0;
+		t_xform . eM22 = p_transform . d;
+		t_xform . eDx = 0;
+		t_xform . eDy = 0;
+		t_success = SetWorldTransform(s_measure_dc, &t_xform);
+	}
 
 	SIZE t_size;
 	if (t_success)
@@ -643,12 +656,13 @@ MCGFloat __MCGContextMeasurePlatformTextIdeal(MCGContextRef self, const unichar_
 
 // MW-2013-11-07: [[ Bug 11393 ]] What codepath we use depends on whether we are
 //   using ideal metrics or not.
-MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
+// MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
+MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform)
 {
 	if (p_font . ideal)
 		return __MCGContextMeasurePlatformTextIdeal(self, p_text, p_length, p_font);
 
-	return __MCGContextMeasurePlatformTextScreen(self, p_text, p_length, p_font);
+	return __MCGContextMeasurePlatformTextScreen(self, p_text, p_length, p_font, p_transform);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

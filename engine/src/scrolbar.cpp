@@ -890,7 +890,8 @@ void MCScrollbar::compute_barsize()
 			else
 				if ((uint2)strlen(endstring) > barsize)
 					barsize = strlen(endstring);
-			barsize *= MCFontMeasureText(m_font, "0", 1, false);
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+			barsize *= MCFontMeasureText(m_font, "0", 1, false, getstack() -> getdevicetransform());
 			barsize = twidth - (barsize + barsize * (twidth - barsize) / twidth);
 		}
 		else

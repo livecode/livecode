@@ -1237,7 +1237,8 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 	char *text = new char[l + 1];
 	memcpy(text, p_mark -> text . data , l);
 	
-    uint2 w = MCFontMeasureText(p_mark -> text . font, text, l, false);
+	// MM-2014-04-16: [[ Bug 11964 ]] Prototype for MCFontMeasureText now takes transform param. Pass through identity.
+    uint2 w = MCFontMeasureText(p_mark -> text . font, text, l, false, MCGAffineTransformMakeIdentity());
 	
 	text[l] = '\0';
 	const char *sptr = text;
