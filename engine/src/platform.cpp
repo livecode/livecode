@@ -90,11 +90,13 @@ void MCPlatformCallbackSendApplicationRun(void)
 
 void MCPlatformCallbackSendApplicationSuspend(void)
 {
+	MCLog("Application -> Suspend()", 0);
 	MCPlatformHandleApplicationSuspend();
 }
 
 void MCPlatformCallbackSendApplicationResume(void)
 {
+	MCLog("Application -> Resume()", 0);
 	MCPlatformHandleApplicationResume();
 }
 
@@ -102,7 +104,7 @@ void MCPlatformCallbackSendApplicationResume(void)
 
 void MCPlatformCallbackSendScreenParametersChanged(void)
 {
-	MCLog("ScreenParametersChanged()", 0);
+	MCLog("Application -> ScreenParametersChanged()", 0);
 	MCPlatformHandleScreenParametersChanged();
 }
 

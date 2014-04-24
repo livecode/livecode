@@ -1368,6 +1368,30 @@ void MCScreenDC::controllostfocus(MCStack *p_stack, uint32_t p_id)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2014-04-23: [[ Bug 12080 ]] Make sure the HideOnSuspend property of all
+//   palettes is in sync with hidePalettes.
+void MCStacklist::hidepaletteschanged(void)
+{
+	if (stacks != NULL)
+	{
+		MCStacknode *tptr = stacks;
+		do
+		{
+            MCStack *t_stack;
+            t_stack = tptr -> getstack();
+			
+            if (t_stack->getwindow() != nil)
+                MCPlatformSetWindowBoolProperty(t_stack -> getwindow(), kMCPlatformWindowPropertyHideOnSuspend, MChidepalettes && t_stack -> getrealmode() == WM_PALETTE);
+            
+            tptr = tptr->next();
+		}
+		while (tptr != stacks);
+	}
+    
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 double MCMacGetAnimationStartTime(void)
 {
 	return s_animation_start_time;

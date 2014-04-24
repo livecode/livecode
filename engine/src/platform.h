@@ -783,6 +783,8 @@ enum MCPlatformWindowProperty
 	kMCPlatformWindowPropertySystemId,
 	
 	kMCPlatformWindowPropertyCursor,
+    
+    kMCPlatformWindowPropertyHideOnSuspend,
 };
 
 void MCPlatformSetWindowProperty(MCPlatformWindowRef window, MCPlatformWindowProperty property, MCPlatformPropertyType type, const void *value);

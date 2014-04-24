@@ -124,6 +124,13 @@ enum
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
 	
+    // MW-2014-04-23: [[ Bug 12080 ]] Always create a dummy window which should
+    //   always sit at the bottom of our window list so that palettes have something
+    //   to float above.
+    NSWindow *t_dummy_window;
+    t_dummy_window = [[NSWindow alloc] initWithContentRect: NSZeroRect styleMask: NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:YES];
+    [t_dummy_window orderFront: nil];
+    
 	// Dispatch the startup callback.
 	int t_error_code;
 	char *t_error_message;
@@ -224,6 +231,20 @@ enum
 
 - (void)applicationWillBecomeActive:(NSNotification *)notification
 {
+    // MW-2014-04-23: [[ Bug 12080 ]] Loop through all our windows and any MCPanels
+    //   get set to not be floating. This is so that they sit behind the windows
+    //   of other applications (like we did before).
+    for(NSNumber *t_window_id in [[NSWindow windowNumbersWithOptions: 0] reverseObjectEnumerator])
+    {
+        NSWindow *t_window;
+        t_window = [NSApp windowWithWindowNumber: [t_window_id longValue]];
+        if (![t_window isKindOfClass: [com_runrev_livecode_MCPanel class]])
+        {
+            continue;
+        }
+        
+        [t_window setFloatingPanel: YES];
+    }
 }
 
 - (void)applicationDidBecomeActive:(NSNotification *)notification
@@ -233,11 +254,28 @@ enum
 
 - (void)applicationWillResignActive:(NSNotification *)notification
 {
-	MCPlatformCallbackSendApplicationSuspend();
+    // MW-2014-04-23: [[ Bug 12080 ]] Loop through all our windows and move any
+    //   MCPanels to be above the top-most non-panel.
+    NSInteger t_above_window_id;
+    for(NSNumber *t_window_id in [[NSWindow windowNumbersWithOptions: 0] reverseObjectEnumerator])
+    {
+        NSWindow *t_window;
+        t_window = [NSApp windowWithWindowNumber: [t_window_id longValue]];
+        if (![t_window isKindOfClass: [com_runrev_livecode_MCPanel class]])
+        {
+            t_above_window_id = [t_window_id longValue];
+            continue;
+        }
+        
+        [t_window setFloatingPanel: NO];
+        [t_window orderWindow: NSWindowAbove relativeTo: t_above_window_id];
+        t_above_window_id = [t_window_id longValue];
+    }
 }
 
 - (void)applicationDidResignActive:(NSNotification *)notification
 {
+	MCPlatformCallbackSendApplicationSuspend();
 }
 
 //////////
