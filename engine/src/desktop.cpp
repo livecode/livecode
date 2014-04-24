@@ -1087,7 +1087,9 @@ void MCPlatformHandlePlayerSelectionChanged(MCPlatformPlayerRef p_player)
     if (t_player == nil)
         return;
     
-    t_player -> timer(MCM_selection_changed, nil);
+    // MW-2014-04-24: [[ Bug ]] Make sure we update the start/end time of the
+    //   player.
+    t_player -> selectionchanged();
 }
 
 void MCPlatformHandlePlayerStarted(MCPlatformPlayerRef p_player)
