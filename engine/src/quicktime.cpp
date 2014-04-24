@@ -91,13 +91,6 @@ bool MCQTInit(void)
 	if (s_qt_initted)
 		return true;
 	
-    if (initialise_weak_link_QuickTime() == 0 ||
-        initialise_weak_link_QTKit() == 0)
-    {
-        s_qt_initted = false;
-        return false;
-    }
-        
 #ifdef _WINDOWS
 	if (InitializeQTML(0L) != noErr || EnterMovies() != noErr)
 		s_qt_initted = false;
@@ -106,6 +99,13 @@ bool MCQTInit(void)
 		s_qt_initted = true;
 	}
 #elif defined _MACOSX
+    if (initialise_weak_link_QuickTime() == 0 ||
+        initialise_weak_link_QTKit() == 0)
+    {
+        s_qt_initted = false;
+        return false;
+    }
+
 	if (EnterMovies() != noErr)
 		s_qt_initted = false;
 	else
