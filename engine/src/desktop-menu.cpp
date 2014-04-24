@@ -47,7 +47,8 @@ static struct { const char *tag; MCPlatformMenuItemAction action; } s_known_menu
 {
 	{ "About", kMCPlatformMenuItemActionAbout },
 	{ "Preferences", kMCPlatformMenuItemActionPreferences },
-	
+	{ "Quit", kMCPlatformMenuItemActionQuit },
+    
 	{ "Undo", kMCPlatformMenuItemActionUndo },
 	{ "Redo", kMCPlatformMenuItemActionRedo },
 	{ "Cut", kMCPlatformMenuItemActionCut },
@@ -248,6 +249,13 @@ public:
 			if (MCU_strcasecmp(m_menu_title, "Help") == 0 &&
 				MCU_strncasecmp(p_item_title, "About", 5) == 0)
 				return kMCPlatformMenuItemActionAbout;
+            
+            // MW-2014-04-22: [[ Bug 12252 ]] Special-case 'File > Exit' item - mark it as a quit.
+            // If the menu title is "File" and the item title is "Exit"
+            // then tag with the quit action.
+            if (MCU_strcasecmp(m_menu_title, "File") == 0 &&
+                MCU_strcasecmp(p_item_title, "Exit") == 0)
+                return kMCPlatformMenuItemActionQuit;
 		}
 		
 		// There is no known action tied to the given tag.
@@ -313,9 +321,23 @@ public:
 			
 			MCPlatformMenuItemAction t_action;
 			t_action = ComputeAction(*t_item_title, *t_item_tag);
+            
+            // MW-2014-04-22: [[ Bug 12252 ]] If the menuitem didn't have a direct tag, map
+            //   special-cased actions to appropriate tag.
+            const char *t_tag;
+            t_tag = *t_item_tag;
+            if (!p_menuitem -> has_tag)
+            {
+                if (t_action == kMCPlatformMenuItemActionAbout)
+                    t_tag = "About";
+                else if (t_action == kMCPlatformMenuItemActionQuit)
+                    t_tag = "Quit";
+                else if (t_action == kMCPlatformMenuItemActionPreferences)
+                    t_tag = "Preferences";
+            }
 			
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeUTF8CString, &t_item_title . PtrRef());
-			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeUTF8CString, &t_item_tag . PtrRef());
+			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeUTF8CString, &t_tag);
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyAction, kMCPlatformPropertyTypeMenuItemAction, &t_action);
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyAccelerator, kMCPlatformPropertyTypeAccelerator, &t_item_accelerator);
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyEnabled, kMCPlatformPropertyTypeBool, &t_item_enabled);
