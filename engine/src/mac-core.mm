@@ -885,6 +885,12 @@ void MCMacPlatformSyncBackdrop(void)
     if (s_backdrop_window == nil)
         return;
     
+    NSWindow *t_backdrop;
+    t_backdrop = ((MCMacPlatformWindow *)s_backdrop_window) -> GetHandle();
+    
+    NSDisableScreenUpdates();
+    [t_backdrop orderOut: nil];
+    
     // Loop from front to back on our windows, making sure the backdrop window is
     // at the back.
     NSInteger t_window_above_id;
@@ -894,7 +900,7 @@ void MCMacPlatformSyncBackdrop(void)
         NSWindow *t_window;
         t_window = [NSApp windowWithWindowNumber: [t_window_id longValue]];
         
-        if (t_window == ((MCMacPlatformWindow *)s_backdrop_window) -> GetHandle())
+        if (t_window == t_backdrop)
             continue;
         
         if (t_window_above_id != -1)
@@ -903,7 +909,9 @@ void MCMacPlatformSyncBackdrop(void)
         t_window_above_id = [t_window_id longValue];
     }
     
-    [((MCMacPlatformWindow *)s_backdrop_window) -> GetHandle() orderWindow: NSWindowBelow relativeTo: t_window_above_id];
+    [t_backdrop orderWindow: NSWindowBelow relativeTo: t_window_above_id];
+    
+    NSEnableScreenUpdates();
 }
 
 void MCPlatformConfigureBackdrop(MCPlatformWindowRef p_backdrop_window)

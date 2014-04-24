@@ -541,6 +541,7 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 	alloccolor(backdrop_colour);
 	
 	MCPlatformInvalidateWindow(backdrop_window, nil);
+    MCPlatformUpdateWindow(backdrop_window);
 }
 
 void MCScreenDC::assignbackdrop(Window_mode p_mode, Window p_window)

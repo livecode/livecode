@@ -101,9 +101,12 @@ void MCPlatformWindow::Invalidate(MCRegionRef p_region)
 	// If the window is not visible, there is nothing to do.
 	if (!m_is_visible)
 		return;
-
+    
 	// Union the dirty region.
-	MCRegionUnion(m_dirty_region, m_dirty_region, p_region);
+    if (p_region == nil)
+        MCRegionIncludeRect(m_dirty_region, m_content);
+    else
+        MCRegionUnion(m_dirty_region, m_dirty_region, p_region);
 }
 
 void MCPlatformWindow::Show(void)
