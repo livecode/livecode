@@ -650,6 +650,7 @@ void MCPlatformReleaseCursor(MCPlatformCursorRef cursor);
 
 void MCPlatformShowCursor(MCPlatformCursorRef cursor);
 void MCPlatformHideCursor(void);
+void MCPlatformHideCursorUntilMouseMoves(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 

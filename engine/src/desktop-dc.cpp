@@ -1371,6 +1371,13 @@ void MCScreenDC::controllostfocus(MCStack *p_stack, uint32_t p_id)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCScreenDC::hidecursoruntilmousemoves(void)
+{
+    MCPlatformHideCursorUntilMouseMoves();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // MW-2014-04-23: [[ Bug 12080 ]] Make sure the HideOnSuspend property of all
 //   palettes is in sync with hidePalettes.
 void MCStacklist::hidepaletteschanged(void)
