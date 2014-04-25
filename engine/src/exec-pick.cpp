@@ -385,11 +385,15 @@ void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCString
     char_t t_delimiter;
     switch ((MCChunkType)p_chunk_type)
     {
+        // No access to the line/item delimiter set in the handler from the mobile-specific functions/commands
+        // so following the old engine default values for them
         case kMCItems:
-            t_delimiter = ctxt . GetItemDelimiter();
-        default:
+            t_delimiter = ',';
+            break;
+        case kMCWords:
         case kMCLines:
             t_delimiter = '\n';
+            break;
     }
     uindex_t t_old_offset = 0;
     uindex_t t_new_offset = 0;
