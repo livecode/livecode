@@ -65,27 +65,11 @@ public:
 
 class MCWildcardMatcher : public MCPatternMatcher
 {
-    MCBreakIteratorRef pattern_iter;
-    MCBreakIteratorRef source_iter;
     bool native;
 public:
 	MCWildcardMatcher(MCStringRef p, MCStringRef s, MCStringOptions o) : MCPatternMatcher(p, s, o)
 	{
-        if (MCStringIsNative(p) && MCStringIsNative(s))
-        {
-            native = true;
-            pattern_iter = nil;
-            source_iter = nil;
-        }
-        else
-        {
-            // When text streaming stuff is used for filter, we can get rid of the break iterators.
-            native = false;
-            MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeCharacter, pattern_iter);
-            MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeCharacter, source_iter);
-            MCLocaleBreakIteratorSetText(pattern_iter, p);
-            MCLocaleBreakIteratorSetText(source_iter, s);
-        }
+        native = (MCStringIsNative(p) && MCStringIsNative(s));
 	}
     ~MCWildcardMatcher();
 	virtual bool compile(MCStringRef& r_error);
@@ -96,11 +80,6 @@ protected:
 
 MCWildcardMatcher::~MCWildcardMatcher()
 {
-    if (!native)
-    {
-        MCLocaleBreakIteratorRelease(pattern_iter);
-        MCLocaleBreakIteratorRelease(source_iter);
-    }
 }
 
 MCPatternMatcher::~MCPatternMatcher()

@@ -1430,6 +1430,7 @@ bool MCUnicodeCreateSortKey(MCLocaleRef p_locale, MCUnicodeCollateOption p_optio
     return true;
 }
 
+<<<<<<< HEAD
 // SN-2014-04-16:
 // Relocating the function from engine/src/unicode.h here since some are needed in foundation-bidi
 
@@ -2162,3 +2163,203 @@ bool MCUnicodeCanBreakWordBetween(uinteger_t xc, uinteger_t x, uinteger_t y, uin
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCUnicodeWildcardMatch(const unichar_t *source_chars, uindex_t source_length, const unichar_t *pattern_chars, uindex_t pattern_length, MCUnicodeCompareOption p_option)
+{
+    // Set up the filter chains for the strings
+    MCTextFilter *t_source_filter = MCTextFilterCreate(source_chars, source_length, kMCStringEncodingUTF16, p_option);
+    MCTextFilter *t_pattern_filter = MCTextFilterCreate(pattern_chars, pattern_length, kMCStringEncodingUTF16, p_option);
+    
+    codepoint_t t_source_cp, t_pattern_cp;
+
+    if (t_source_filter -> HasData() != t_pattern_filter -> HasData())
+        return false;
+    
+    while (t_source_filter -> HasData())
+    {
+        t_source_cp = t_source_filter -> GetNextCodepoint();
+        t_pattern_cp = t_pattern_filter -> GetNextCodepoint();
+        switch (t_pattern_cp)
+        {
+            case '[':
+            {
+                // Records whether we currently have a match for this bracket.
+				bool ok = false;
+                // Records whether we have yet seen anything to match within these brackets.
+                bool t_character_found = false;
+                // Store the 'lower limit' if we have a range.
+                codepoint_t t_lower_limit;
+                
+				int notflag = 0;
+                t_pattern_filter -> AdvanceCursor();
+                t_pattern_cp = t_pattern_filter -> GetNextCodepoint();
+				if (t_pattern_cp == '!' )
+				{
+					notflag = 1;
+                    t_pattern_filter -> AdvanceCursor();
+                    t_pattern_cp = t_pattern_filter -> GetNextCodepoint();
+				}
+				while (t_pattern_filter -> HasData())
+				{
+                    t_pattern_filter -> MarkText();
+					if (t_pattern_cp == ']' && t_character_found)
+                    {
+                        // if the bracket was close with no match found then return false;
+                        if (!ok)
+                            return false;
+                        
+                        // otherwise, recurse.
+                        uindex_t t_sindex, t_pindex;
+                        // update the read position.
+                        t_source_filter -> AdvanceCursor();
+                        t_source_filter -> GetNextCodepoint();
+                        t_source_filter -> MarkText();
+                        
+                        t_pattern_filter -> AdvanceCursor();
+                        t_pattern_filter -> GetNextCodepoint();
+                        t_pattern_filter -> MarkText();
+                        
+                        t_sindex = t_source_filter -> GetMarkedLength() - 1;
+                        t_pindex = t_pattern_filter -> GetMarkedLength() - 1;
+                        
+                        source_chars += t_sindex;
+                        source_length -= t_sindex;
+                        pattern_chars += t_pindex;
+                        pattern_length -= t_pindex;
+                        
+						return MCUnicodeWildcardMatch(source_chars, source_length, pattern_chars, pattern_length, p_option);
+                    }
+					else
+                    {
+                        t_pattern_filter -> AdvanceCursor();
+						if (t_pattern_cp == '-' && t_character_found && t_pattern_filter -> GetNextCodepoint() != ']')
+                        {
+                            // We have a char range (eg [a-z]), so skip past the '-',
+                            // find the current pattern grapheme range and compare.
+                            t_pattern_cp = t_pattern_filter -> GetNextCodepoint();
+                            
+							if (notflag)
+							{
+                                // wer're still ok if the current source grapheme falls outwith the appropriate range. Otherwise, we fail.
+								if (t_source_cp < t_lower_limit || t_source_cp > t_pattern_cp)
+									ok = true;
+								else
+									return false;
+							}
+							else
+							{
+                                // we're still ok if the current source grapheme falls within the appropriate range.
+                                // If not, there may be other options within this pair of brackets
+								if (t_source_cp >= t_lower_limit || t_source_cp <= t_pattern_cp)
+									ok = true;
+							}
+						}
+						else
+						{
+                            // This could be one of a choice of characters (eg [abc]).
+							if (notflag)
+							{
+								if (t_source_cp != t_pattern_cp)
+                                    ok = true;
+								else
+									return false;
+							}
+							else
+                                if (t_source_cp == t_pattern_cp)
+									ok = true;
+                            
+                            // record the codepoint in case it is the first character of a range.
+                            t_lower_limit = t_pattern_cp;
+                            t_character_found = true;
+						}
+                    }
+                    t_pattern_cp = t_pattern_filter -> GetNextCodepoint();
+				}
+            }
+                return false;
+            case '?':
+            {
+                // Matches any character, so increment the pattern index.
+                
+                break;
+            }
+            case '*':
+            {
+                // consume any more * characters.
+                while (t_pattern_filter -> HasData())
+                {
+                    if ((t_pattern_cp = t_pattern_filter -> GetNextCodepoint()) != '*')
+                        break;
+                    t_pattern_filter -> AdvanceCursor();
+                }
+                if (!t_pattern_filter -> HasData())
+                    return true;
+                
+                // try and match the rest of the source string recursively.
+                while (t_source_filter -> HasData())
+                {
+                    t_source_cp = t_source_filter -> GetNextCodepoint();
+                    
+                    uindex_t t_sindex, t_pindex;
+                    // if this is a candidate for a match, recurse.
+                    if (t_source_cp == t_pattern_cp)
+                    {
+                        t_source_filter -> AdvanceCursor();
+                        t_source_filter -> GetNextCodepoint();
+                        t_source_filter -> MarkText();
+                        
+                        t_pattern_filter -> AdvanceCursor();
+                        t_pattern_filter -> GetNextCodepoint();
+                        t_pattern_filter -> MarkText();
+                        
+                        t_sindex = t_source_filter -> GetMarkedLength() - 1;
+                        t_pindex = t_pattern_filter -> GetMarkedLength() - 1;
+                        
+                        if (MCUnicodeWildcardMatch(source_chars + t_sindex, source_length - t_sindex, pattern_chars + t_pindex, pattern_length - t_pindex, p_option))
+                            return true;
+                    }
+                    else if (t_pattern_cp == '?' || t_pattern_cp == '[')
+                    {
+                        t_source_filter -> AdvanceCursor();
+                        t_source_filter -> GetNextCodepoint();
+                        t_source_filter -> MarkText();
+
+                        t_pattern_filter -> AdvanceCursor();
+                        t_pattern_filter -> AdvanceCursor();
+                        t_pattern_filter -> GetNextCodepoint();
+                        t_pattern_filter -> MarkText();
+                        
+                        t_sindex = t_source_filter -> GetMarkedLength() - 1;
+                        t_pindex = t_pattern_filter -> GetMarkedLength() - 1;
+                        
+                        if (MCUnicodeWildcardMatch(source_chars + t_sindex, source_length - t_sindex, pattern_chars + t_pindex, pattern_length - t_pindex, p_option))
+                            return true;
+                    }
+                    
+                    // if we don't find a match, eat the source codepoint and continue.
+                    t_source_filter -> AdvanceCursor();
+                }
+            }
+                return false;
+            case 0:
+                return t_source_cp == 0;
+            default:
+                // default - just compare chars
+                if (t_source_cp != t_pattern_cp)
+                    return false;
+            
+                break;
+		}
+        t_source_filter -> AdvanceCursor();
+        t_pattern_filter -> AdvanceCursor();
+	}
+    // Eat any remaining '*'s
+    while (t_pattern_filter -> HasData())
+    {
+        if ((t_pattern_cp = t_pattern_filter -> GetNextCodepoint()) != '*')
+            return false;
+        t_pattern_filter -> AdvanceCursor();
+    }
+   
+    return true;
+}

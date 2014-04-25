@@ -397,6 +397,9 @@ bool MCUnicodeFind(const unichar_t *p_string, uindex_t p_string_length,
 hash_t MCUnicodeHash(const unichar_t *p_string, uindex_t p_string_length,
                      MCUnicodeCompareOption);
 
+// Returns true if source_chars are a match for pattern_chars under the rules
+// of LiveCode wildcard matches.
+bool MCUnicodeWildcardMatch(const unichar_t *source_chars, uindex_t source_length, const unichar_t *pattern_chars, uindex_t pattern_length, MCUnicodeCompareOption p_option);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
