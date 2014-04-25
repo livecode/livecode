@@ -239,6 +239,11 @@ void MCPlatformHideCursor(void)
 	MCPlatformShowCursor(s_hidden_cursor);
 }
 
+void MCPlatformHideCursorUntilMouseMoves(void)
+{
+    [NSCursor setHiddenUntilMouseMoves: YES];
+}
+
 void MCMacPlatformResetCursor(void)
 {
     [[NSCursor arrowCursor] set];

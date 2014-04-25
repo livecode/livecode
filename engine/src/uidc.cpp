@@ -1761,3 +1761,11 @@ void MCUIDC::controlgainedfocus(MCStack *s, uint32_t id)
 void MCUIDC::controllostfocus(MCStack *s, uint32_t id)
 {
 }
+
+//
+
+void MCUIDC::hidecursoruntilmousemoves(void)
+{
+    // Default action is to do nothing - Mac overrides and performs the
+    // appropriate function.
+}

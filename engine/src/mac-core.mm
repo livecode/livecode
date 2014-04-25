@@ -1363,6 +1363,8 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
     // PM-2014-04-02: [[ Bug 12082 ]] IDE no longer crashes when changing an applied pattern
     if (t_cursor != nil)
         MCPlatformShowCursor(t_cursor);
+    else
+        MCPlatformHideCursor();
 }
 
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)

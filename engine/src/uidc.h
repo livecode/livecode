@@ -587,6 +587,12 @@ public:
 	virtual void controllostfocus(MCStack *s, uint32_t id);
 	
 	//
+    
+    // MW-2014-04-26: [[ Bug 5545 ]] Hides the cursor until the mouse moves on platforms which
+    //   require this action.
+    virtual void hidecursoruntilmousemoves(void);
+    
+    //
 
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
 	void cancelmessageindex(uint2 i, Boolean dodelete);
