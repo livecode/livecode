@@ -1290,8 +1290,11 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 
 			if (i==0)
 				tabwinfo.attributes |= WTHEME_ATT_FIRSTTAB;
-			else if (i == (ntabs-1))
+			
+            // MW-2014-04-25: [[ Bug 6400 ]] A tab can be both first and last :)
+            if (i == (ntabs-1))
 				tabwinfo.attributes |= WTHEME_ATT_LASTTAB;
+            
 			MCRectangle tabrect = MCU_compute_rect(curx, srect.y + yoffset, curx + twidth, srect.y + theight);
 			if (MCcurtheme->getthemeid() != LF_NATIVEGTK || (srect.x + srect.width > curx + twidth + 5 &&
 			        srect.y + srect.height > (srect.y + theight * 2)))
