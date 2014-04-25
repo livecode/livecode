@@ -1430,7 +1430,6 @@ bool MCUnicodeCreateSortKey(MCLocaleRef p_locale, MCUnicodeCollateOption p_optio
     return true;
 }
 
-<<<<<<< HEAD
 // SN-2014-04-16:
 // Relocating the function from engine/src/unicode.h here since some are needed in foundation-bidi
 
