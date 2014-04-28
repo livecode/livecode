@@ -998,55 +998,22 @@ bool MCExecContext::EvalExprAsMutableStringRef(MCExpression *p_expr, Exec_errors
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCExecContext::EnsurePrintingIsAllowed(void)
+template<bool (&check)(uint2, uint2)>
+static bool EnsureIsAllowed(MCExecContext* self)
 {
-	if (MCSecureModeCheckPrinter(0, 0))
+	if (check(0, 0))
 		return true;
 		
-	Throw();
+	self -> Throw();
 	
 	return false;
 }
 
-bool MCExecContext::EnsureDiskAccessIsAllowed(void)
-{
-	if (MCSecureModeCheckDisk(0, 0))
-		return true;
-		
-	Throw();
-	
-	return false;
-}
-
-bool MCExecContext::EnsureProcessIsAllowed(void)
-{
-	if (MCSecureModeCheckProcess(0, 0))
-		return true;
-
-	Throw();
-
-	return false;
-}
-
-bool MCExecContext::EnsureNetworkAccessIsAllowed(void)
-{
-	if (MCSecureModeCheckNetwork(0, 0))
-		return true;
-
-	Throw();
-
-	return false;
-}
-
-bool MCExecContext::EnsurePrivacyIsAllowed(void)
-{
-	if (MCSecureModeCheckPrivacy(0, 0))
-		return true;
-
-	Throw();
-
-	return false;
-}
+bool MCExecContext::EnsurePrintingIsAllowed(void)      { EnsureIsAllowed<MCSecureModeCheckPrinter>(this); }
+bool MCExecContext::EnsureDiskAccessIsAllowed(void)    { EnsureIsAllowed<MCSecureModeCheckDisk>(this); }
+bool MCExecContext::EnsureProcessIsAllowed(void)       { EnsureIsAllowed<MCSecureModeCheckProcess>(this); }
+bool MCExecContext::EnsureNetworkAccessIsAllowed(void) { EnsureIsAllowed<MCSecureModeCheckNetwork>(this); }
+bool MCExecContext::EnsurePrivacyIsAllowed(void)       { EnsureIsAllowed<MCSecureModeCheckPrivacy>(this); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
