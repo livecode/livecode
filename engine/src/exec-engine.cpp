@@ -723,6 +723,11 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
 	}
 	else
     {
+        if (p_where == PT_BEFORE)
+            p_var . mark . finish = p_var . mark . start;
+        else if (p_where == PT_AFTER)
+            p_var . mark . start = p_var . mark . finish;
+        
         if (MCValueGetTypeCode(p_var . mark . text) == kMCValueTypeCodeString)
         {
             MCAutoStringRef t_string;
@@ -735,11 +740,6 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 ctxt . Throw();
                 return;
             }
-            
-            if (p_where == PT_BEFORE)
-                p_var . mark . finish = p_var . mark . start;
-            else if (p_where == PT_AFTER)
-                p_var . mark . start = p_var . mark . finish;
             
             /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
             p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);
@@ -756,11 +756,6 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef p_value, int p_
                 ctxt . Throw();
                 return;
             }
-            
-            if (p_where == PT_BEFORE)
-                p_var . mark . finish = p_var . mark . start;
-            else if (p_where == PT_AFTER)
-                p_var . mark . start = p_var . mark . finish;
             
             /* UNCHECKED */ MCDataReplace(*t_data, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_data);
             p_var . variable -> set(ctxt, *t_data, kMCVariableSetInto);
@@ -785,6 +780,11 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue p_value, int p
 	}
 	else
     {
+        if (p_where == PT_BEFORE)
+            p_var . mark . finish = p_var . mark . start;
+        else if (p_where == PT_AFTER)
+            p_var . mark . start = p_var . mark . finish;
+        
         if (MCValueGetTypeCode(p_var . mark . text) == kMCValueTypeCodeData)
         {
             MCAutoDataRef t_value_data;
@@ -797,12 +797,7 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue p_value, int p
                 MCAutoDataRef t_data;
                 if (!MCDataMutableCopy((MCDataRef)p_var . mark . text, &t_data))
                     return;
-                
-                if (p_where == PT_BEFORE)
-                    p_var . mark . finish = p_var . mark . start;
-                else if (p_where == PT_AFTER)
-                    p_var . mark . start = p_var . mark . finish;
-                
+            
                 /* UNCHECKED */ MCDataReplace(*t_data, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_data);
                 p_var . variable -> set(ctxt, *t_data, kMCVariableSetInto);
             }
@@ -821,11 +816,6 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue p_value, int p
                 MCAutoStringRef t_string;
                 if (!MCStringMutableCopy((MCStringRef)p_var . mark . text, &t_string))
                     return;
-                
-                if (p_where == PT_BEFORE)
-                    p_var . mark . finish = p_var . mark . start;
-                else if (p_where == PT_AFTER)
-                    p_var . mark . start = p_var . mark . finish;
                 
                 /* UNCHECKED */ MCStringReplace(*t_string, MCRangeMake(p_var . mark . start, p_var . mark . finish - p_var . mark . start), *t_value_string);
                 p_var . variable -> set(ctxt, *t_string, kMCVariableSetInto);

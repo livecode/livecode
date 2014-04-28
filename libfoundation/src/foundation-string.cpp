@@ -1800,7 +1800,7 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
             if (MCStringGetLength(self) != MCStringGetLength(p_other))
                 return false;
         
-            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareFolded)
+            if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral)
                 return MCNativeCharsEqualExact(self -> native_chars, self -> char_count, p_other -> native_chars, p_other -> char_count);
             else
                 return MCNativeCharsEqualCaseless(self -> native_chars, self -> char_count, p_other -> native_chars, p_other -> char_count);
