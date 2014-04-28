@@ -124,7 +124,9 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
                 if (!MCU_stor8(MCStringGetOldString(MCNameGetString((MCNameRef)p_value)), t_number, m_convertoctals))
                     break;
 
-                MCStringSetNumericValue(MCNameGetString((MCNameRef)p_value), t_number);
+                // Converting to octals doesn't generate the 10-based number stored in the string
+                if (!m_convertoctals)
+                    MCStringSetNumericValue(MCNameGetString((MCNameRef)p_value), t_number);
             }
 
             return MCNumberCreateWithReal(t_number, r_number);
@@ -140,7 +142,9 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
                 if (!MCU_stor8(MCStringGetOldString((MCStringRef)p_value), t_number, m_convertoctals))
                     break;
 
-                MCStringSetNumericValue((MCStringRef)p_value, t_number);
+                // Converting to octals doesn't generate the 10-based number stored in the string
+                if (!m_convertoctals)
+                    MCStringSetNumericValue((MCStringRef)p_value, t_number);
             }
 
             return MCNumberCreateWithReal(t_number, r_number);
@@ -3489,7 +3493,7 @@ void MCExecTypeCopy(const MCExecValue &self, MCExecValue &r_dest)
     // Retain the value if one is stored
     if (MCExecTypeIsValueRef(self . type)
             || (self . type == kMCExecValueTypeNone && self . valueref_value != nil))
-        r_dest . valueref_value = MCValueRetain(self . valueref_value);
+        MCValueCopy(self . valueref_value, r_dest . valueref_value);
     else
         r_dest = self;
     
