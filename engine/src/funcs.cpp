@@ -5019,7 +5019,7 @@ Parse_stat MCTextDecode::parse(MCScriptPoint& sp, Boolean the)
 void MCTextDecode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
     MCAutoDataRef t_data;
-    m_data->eval_dataref(ctxt, &t_data);
+    m_data->eval(ctxt, &t_data);
     if (ctxt.HasError())
     {
         ctxt.LegacyThrow(EE_TEXTDECODE_BADDATA);
@@ -5029,7 +5029,7 @@ void MCTextDecode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     MCAutoStringRef t_encoding;
     if (m_encoding != NULL)
     {
-        m_encoding->eval_stringref(ctxt, &t_encoding);
+        m_encoding->eval(ctxt, &t_encoding);
         if (ctxt.HasError())
         {
             ctxt.LegacyThrow(EE_TEXTDECODE_BADENCODING);
@@ -5070,7 +5070,7 @@ Parse_stat MCTextEncode::parse(MCScriptPoint& sp, Boolean the)
 void MCTextEncode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
     MCAutoStringRef t_string;
-    m_string->eval_stringref(ctxt, &t_string);
+    m_string->eval(ctxt, &t_string);
     if (ctxt.HasError())
     {
         ctxt.LegacyThrow(EE_TEXTENCODE_BADTEXT);
@@ -5080,7 +5080,7 @@ void MCTextEncode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     MCAutoStringRef t_encoding;
     if (m_encoding != NULL)
     {
-        m_encoding->eval_stringref(ctxt, &t_encoding);
+        m_encoding->eval(ctxt, &t_encoding);
         if (ctxt.HasError())
         {
             ctxt.LegacyThrow(EE_TEXTENCODE_BADENCODING);
@@ -5121,7 +5121,7 @@ Parse_stat MCNormalizeText::parse(MCScriptPoint& sp, Boolean the)
 void MCNormalizeText::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
     MCAutoStringRef t_text;
-    m_text->eval_stringref(ctxt, &t_text);
+    m_text->eval(ctxt, &t_text);
     if (ctxt.HasError())
     {
         ctxt.LegacyThrow(EE_NORMALIZETEXT_BADTEXT);
@@ -5129,7 +5129,7 @@ void MCNormalizeText::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     }
     
     MCAutoStringRef t_form;
-    m_form->eval_stringref(ctxt, &t_form);
+    m_form->eval(ctxt, &t_form);
     if (ctxt.HasError())
     {
         ctxt.LegacyThrow(EE_NORMALIZETEXT_BADFORM);
@@ -5165,7 +5165,7 @@ Parse_stat MCCodepointProperty::parse(MCScriptPoint &sp, Boolean the)
 void MCCodepointProperty::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
     MCAutoStringRef t_codepoint;
-    m_codepoint->eval_stringref(ctxt, &t_codepoint);
+    m_codepoint->eval(ctxt, &t_codepoint);
     if (ctxt.HasError())
     {
         ctxt.LegacyThrow(EE_CODEPOINTPROPERTY_BADCODEPOINT);
@@ -5173,7 +5173,7 @@ void MCCodepointProperty::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     }
     
     MCAutoStringRef t_property;
-    m_property->eval_stringref(ctxt, &t_property);
+    m_property->eval(ctxt, &t_property);
     if (ctxt.HasError())
     {
         ctxt.LegacyThrow(EE_CODEPOINTPROPERTY_BADPROPERTY);
