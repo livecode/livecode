@@ -1762,6 +1762,11 @@ bool MCStringNormalizedCopyNFD(MCStringRef, MCStringRef&);
 bool MCStringNormalizedCopyNFKC(MCStringRef, MCStringRef&);
 bool MCStringNormalizedCopyNFKD(MCStringRef, MCStringRef&);
 
+//////////
+
+// Utility to avoid multiple number conversion from a string when possible
+bool MCStringSetNumericValue(MCStringRef self, double p_value);
+bool MCStringGetNumericValue(MCStringRef self, double &r_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

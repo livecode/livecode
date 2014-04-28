@@ -4494,6 +4494,7 @@ static void __MCStringChanged(MCStringRef self, uindex_t simple, uindex_t uncomb
         self -> chars = nil;
     }
     self -> flags &= ~kMCStringFlagIsChecked;
+    self -> flags &= ~kMCStringFlagHasNumber;
 }
 
 codepoint_t MCStringSurrogatesToCodepoint(unichar_t p_lead, unichar_t p_trail)
@@ -4847,6 +4848,35 @@ bool MCStringNormalizedCopyNFKD(MCStringRef self, MCStringRef &r_string)
         return true;
     MCMemoryDelete(t_norm);
     return false;
+}
+
+/////////
+
+
+
+bool MCStringSetNumericValue(MCStringRef self, double p_value)
+{
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+
+    self -> flags |= kMCStringFlagHasNumber;
+    self -> number = p_value;
+
+    return true;
+}
+
+bool MCStringGetNumericValue(MCStringRef self, double &r_value)
+{
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+
+    if ((self -> flags & kMCStringFlagHasNumber) != 0)
+    {
+        r_value = self -> number;
+        return true;
+    }
+    else
+        return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
