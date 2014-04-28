@@ -29,7 +29,7 @@ else
 	STATIC_LIBS+=stdc++
 endif
 
-LDFLAGS=$(CUSTOM_LDFLAGS) -shared $(addprefix -Xlinker --exclude-libs -Xlinker ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS)))) -Xlinker -no-undefined -static-libgcc
+LDFLAGS=$(LDFLAGS_$(ARCH)) $(CUSTOM_LDFLAGS) -shared $(addprefix -Xlinker --exclude-libs -Xlinker ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS)))) -Xlinker -no-undefined -static-libgcc
 
 TARGET_PATH=$(BUILD_DIR)/$(NAME).so
 
@@ -40,6 +40,6 @@ $(TARGET_PATH): $(OBJECTS) $(DEPS)
 		objcopy --only-keep-debug "$(NAME).so" "$(NAME).so.dbg" && \
 		strip --strip-debug --strip-unneeded "$(NAME).so" && \
 		objcopy --add-gnu-debuglink="$(NAME).so.dbg" "$(NAME).so"
-		
+
 .PHONY: $(NAME)
 $(NAME): $(TARGET_PATH)

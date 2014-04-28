@@ -37,7 +37,7 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/thirdparty/libskia/include/ports \
 	$(SOLUTION_DIR)/thirdparty/libskia/include/utils \
 	$(SOLUTION_DIR)/prebuilt/include
-	
+
 GLOBAL_LIBS=\
 	$(PREBUILT_LIB_DIR) \
 	$(SOLUTION_DIR)/prebuilt/lib/linux/$(ARCH)
@@ -57,9 +57,9 @@ FALLBACK_INCLUDES=-I$(SOLUTION_DIR)/thirdparty/headers/linux/include -I$(SOLUTIO
 INCLUDES=$(CUSTOM_INCLUDES) $(TYPE_INCLUDES) $(GLOBAL_INCLUDES)
 
 ifeq ($(MODE),release)
-	CCFLAGS=-m32 $(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -O2 -fvisibility=hidden -g
+	CCFLAGS=$(CCFLAGS_$(ARCH)) $(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -O2 -fvisibility=hidden -g
 else
-	CCFLAGS=-m32 $(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -g -fvisibility=hidden
+	CCFLAGS=$(CCFLAGS_$(ARCH)) $(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -g -fvisibility=hidden
 endif
 
 DEPS=$(addprefix $(BUILD_DIR)/, $(CUSTOM_DEPS))

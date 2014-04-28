@@ -21,6 +21,9 @@ ifeq ($(ARCH),)
     endif
 endif
 
+CCFLAGS_i386=-m32
+LDFLAGS_i386=-m32
+
 ifeq ($(CC),)
 	CC:=gcc
 endif
