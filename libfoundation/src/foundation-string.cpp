@@ -2962,25 +2962,43 @@ bool MCStringAppend(MCStringRef self, MCStringRef p_suffix)
     if (__MCStringIsIndirect(p_suffix))
         p_suffix = p_suffix -> string;
     
-    if (MCStringIsNative(p_suffix))
-        return MCStringAppendNativeChars(self, p_suffix -> native_chars, p_suffix -> char_count);
+    // Only do the append now if self != suffix.
+	if (self != p_suffix)
+	{
+        if (MCStringIsNative(p_suffix))
+            return MCStringAppendNativeChars(self, p_suffix -> native_chars, p_suffix -> char_count);
     
-    return MCStringAppendChars(self, p_suffix -> chars, p_suffix -> char_count);
+        return MCStringAppendChars(self, p_suffix -> chars, p_suffix -> char_count);
+    }
+    
+    // Otherwise copy and recurse.
+	MCAutoStringRef t_suffix_copy;
+	MCStringCopy(p_suffix, &t_suffix_copy);
+	return MCStringAppend(self, *t_suffix_copy);
 }
 
 bool MCStringAppendSubstring(MCStringRef self, MCStringRef p_suffix, MCRange p_range)
 {
 	MCAssert(MCStringIsMutable(self));
   
-    __MCStringClampRange(p_suffix, p_range);
-    
     if (__MCStringIsIndirect(p_suffix))
         p_suffix = p_suffix -> string;
+
+	// Only do the append now if self != suffix.
+	if (self != p_suffix)
+	{
+        __MCStringClampRange(p_suffix, p_range);
+        
+        if (MCStringIsNative(p_suffix))
+            return MCStringAppendNativeChars(self, p_suffix -> native_chars + p_range . offset, p_range . length);
+        
+        return MCStringAppendChars(self, p_suffix -> chars + p_range . offset, p_range . length);
+    }
     
-    if (MCStringIsNative(p_suffix))
-        return MCStringAppendNativeChars(self, p_suffix -> native_chars + p_range . offset, p_range . length);
-    
-    return MCStringAppendChars(self, p_suffix -> chars + p_range . offset, p_range . length);
+    // Otherwise copy substring and append.
+	MCAutoStringRef t_suffix_substring;
+	return MCStringCopySubstring(p_suffix, p_range, &t_suffix_substring) &&
+    MCStringAppend(self, *t_suffix_substring);
 }
 
 bool MCStringAppendNativeChars(MCStringRef self, const char_t *p_chars, uindex_t p_char_count)
@@ -3080,29 +3098,47 @@ bool MCStringAppendChar(MCStringRef self, unichar_t p_char)
 bool MCStringPrepend(MCStringRef self, MCStringRef p_prefix)
 {
 	MCAssert(MCStringIsMutable(self));
- 
+    
     if (__MCStringIsIndirect(p_prefix))
         p_prefix = p_prefix -> string;
     
-    if (MCStringIsNative(p_prefix))
-        return MCStringPrependNativeChars(self, p_prefix -> native_chars, p_prefix -> char_count);
+ 	// Only do the prepend now if self != prefix.
+	if (self != p_prefix)
+	{
+        if (MCStringIsNative(p_prefix))
+            return MCStringPrependNativeChars(self, p_prefix -> native_chars, p_prefix -> char_count);
+        
+        return MCStringPrependChars(self, p_prefix -> chars, p_prefix -> char_count);
+    }
     
-    return MCStringPrependChars(self, p_prefix -> chars, p_prefix -> char_count);
+    // Otherwise copy and recurse.
+	MCAutoStringRef t_prefix_copy;
+	MCStringCopy(p_prefix, &t_prefix_copy);
+	return MCStringPrepend(self, *t_prefix_copy);
 }
 
 bool MCStringPrependSubstring(MCStringRef self, MCStringRef p_prefix, MCRange p_range)
 {
 	MCAssert(MCStringIsMutable(self));
 
-    __MCStringClampRange(p_prefix, p_range);
-    
     if (__MCStringIsIndirect(p_prefix))
         p_prefix = p_prefix -> string;
     
-    if (MCStringIsNative(p_prefix))
-        return MCStringAppendNativeChars(self, p_prefix -> native_chars + p_range . offset, p_range . length);
+    // Only do the prepend now if self != prefix.
+	if (self != p_prefix)
+	{
+        __MCStringClampRange(p_prefix, p_range);
+        
+        if (MCStringIsNative(p_prefix))
+            return MCStringAppendNativeChars(self, p_prefix -> native_chars + p_range . offset, p_range . length);
+        
+        return MCStringAppendChars(self, p_prefix -> chars + p_range . offset, p_range . length);
+    }
     
-    return MCStringAppendChars(self, p_prefix -> chars + p_range . offset, p_range . length);
+    // Otherwise copy substring and prepend.
+	MCAutoStringRef t_prefix_substring;
+	return MCStringCopySubstring(p_prefix, p_range, &t_prefix_substring) &&
+    MCStringPrepend(self, *t_prefix_substring);
 }
 
 bool MCStringPrependNativeChars(MCStringRef self, const char_t *p_chars, uindex_t p_char_count)
@@ -3199,10 +3235,19 @@ bool MCStringInsert(MCStringRef self, uindex_t p_at, MCStringRef p_substring)
     if (__MCStringIsIndirect(p_substring))
         p_substring = p_substring -> string;
     
-    if (MCStringIsNative(p_substring))
-        return MCStringInsertNativeChars(self, p_at, p_substring -> native_chars, p_substring -> char_count);
+	// Only do the insert now if self != substring.
+	if (self != p_substring)
+	{
+        if (MCStringIsNative(p_substring))
+            return MCStringInsertNativeChars(self, p_at, p_substring -> native_chars, p_substring -> char_count);
+        
+        return MCStringInsertChars(self, p_at, p_substring -> chars, p_substring -> char_count);
+    }
     
-    return MCStringInsertChars(self, p_at, p_substring -> chars, p_substring -> char_count);
+    // Otherwise copy and recurse.
+	MCAutoStringRef t_substring_copy;
+	MCStringCopy(p_substring, &t_substring_copy);
+	return MCStringInsert(self, p_at, *t_substring_copy);
 }
 
 bool MCStringInsertSubstring(MCStringRef self, uindex_t p_at, MCStringRef p_substring, MCRange p_range)
@@ -3212,10 +3257,19 @@ bool MCStringInsertSubstring(MCStringRef self, uindex_t p_at, MCStringRef p_subs
     if (__MCStringIsIndirect(p_substring))
         p_substring = p_substring -> string;
     
-    if (MCStringIsNative(p_substring))
-        return MCStringInsertNativeChars(self, p_at, p_substring -> native_chars + p_range . offset, p_range . length);
+	// Only do the insert now if self != substring.
+	if (self != p_substring)
+	{
+        if (MCStringIsNative(p_substring))
+            return MCStringInsertNativeChars(self, p_at, p_substring -> native_chars + p_range . offset, p_range . length);
+        
+        return MCStringInsertChars(self, p_at, p_substring -> chars + p_range . offset, p_range . length);
+    }
     
-    return MCStringInsertChars(self, p_at, p_substring -> chars + p_range . offset, p_range . length);
+	// Otherwise copy substring and insert.
+	MCAutoStringRef t_substring_substring;
+	return MCStringCopySubstring(p_substring, p_range, &t_substring_substring) &&
+    MCStringInsert(self, p_at, *t_substring_substring);
 }
 
 bool MCStringInsertNativeChars(MCStringRef self, uindex_t p_at, const char_t *p_chars, uindex_t p_char_count)
@@ -3485,10 +3539,19 @@ bool MCStringReplace(MCStringRef self, MCRange p_range, MCStringRef p_replacemen
     if (__MCStringIsIndirect(p_replacement))
         p_replacement = p_replacement -> string;
     
-    if (MCStringIsNative(p_replacement))
-        return MCStringReplaceNativeChars(self, p_range, p_replacement -> native_chars, p_replacement -> char_count);
-
-    return MCStringReplaceChars(self, p_range, p_replacement -> chars, p_replacement -> char_count);
+	// Only do the replace now if self != substring.
+	if (self != p_replacement)
+	{
+        if (MCStringIsNative(p_replacement))
+            return MCStringReplaceNativeChars(self, p_range, p_replacement -> native_chars, p_replacement -> char_count);
+        
+        return MCStringReplaceChars(self, p_range, p_replacement -> chars, p_replacement -> char_count);
+    }
+    
+    // Otherwise copy and recurse.
+	MCAutoStringRef t_replacement_copy;
+	MCStringCopy(p_replacement, &t_replacement_copy);
+	return MCStringReplace(self, p_range, *t_replacement_copy);
 }
 
 bool MCStringPad(MCStringRef self, uindex_t p_at, uindex_t p_count, MCStringRef p_value)
