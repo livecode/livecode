@@ -178,7 +178,6 @@ struct __MCString: public __MCValue
         };
     };
     uindex_t capacity;
-    double number;
 };
 
 //////////
