@@ -78,6 +78,8 @@ enum
 	m_argv = argv;
 	m_envp = envp;
 	
+    m_explicit_quit = false;
+    
 	return self;
 }
 
@@ -163,7 +165,13 @@ enum
 - (void)runMainLoop
 {
 	MCPlatformCallbackSendApplicationRun();
-	[NSApp terminate: self];
+    
+    // If we get here then it was due to an exit from the main runloop caused
+    // by an explicit quit. In this case, then we set a flag so that termination
+    // happens without sending messages.
+    m_explicit_quit = true;
+	
+    [NSApp terminate: self];
 }
 
 //////////
@@ -177,6 +185,10 @@ enum
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
 {
+    // If the quit was explicit (runloop exited) then just terminate now.
+    if (m_explicit_quit)
+        return NSTerminateNow;
+    
 	// There is an NSApplicationTerminateReplyLater result code which will place
 	// the runloop in a modal loop for exit dialogs. We'll try the simpler
 	// option for now of just sending the callback and seeing what AppKit does

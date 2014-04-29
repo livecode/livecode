@@ -13,6 +13,8 @@ class MCMacPlatformSurface;
 	int m_argc;
 	char **m_argv;
 	char **m_envp;
+    
+    bool m_explicit_quit : 1;
 }
 
 // Platform init / finit.
