@@ -28,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 // String conversion
 
-static bool MCCefStringToCString(const CefString &p_cef_string, char *&r_c_string)
+bool MCCefStringToCString(const CefString &p_cef_string, char *&r_c_string)
 {
 	if (p_cef_string.empty())
 		return MCCStringClone("", r_c_string);
@@ -50,7 +50,7 @@ static bool MCCefStringToCString(const CefString &p_cef_string, char *&r_c_strin
 	return t_success;
 }
 
-static bool MCCefStringFromCString(const char *p_c_string, cef_string_t *r_cef_string)
+bool MCCefStringFromCString(const char *p_c_string, cef_string_t *r_cef_string)
 {
 	bool t_success;
 	t_success = true;
@@ -69,9 +69,39 @@ static bool MCCefStringFromCString(const char *p_c_string, cef_string_t *r_cef_s
 	return t_success;
 }
 
-static bool MCCefStringFromCString(const char *p_c_string, CefString &r_cef_string)
+bool MCCefStringFromCString(const char *p_c_string, CefString &r_cef_string)
 {
 	return MCCefStringFromCString(p_c_string, r_cef_string.GetWritableStruct());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static const char *s_auth_scheme_strings[] =
+{
+	"basic",
+	"digest",
+	"ntlm",
+	"negotiate",
+	"spdyproxy",
+	
+	nil
+};
+
+bool MCCefAuthSchemeFromCefString(const CefString &p_string, MCCefAuthScheme &r_scheme)
+{
+	const char **t_strings;
+	t_strings = s_auth_scheme_strings;
+	
+	for (uint32_t i = 0; s_auth_scheme_strings[i] != nil; i++)
+	{
+		if (p_string == s_auth_scheme_strings[i])
+		{
+			r_scheme = (MCCefAuthScheme)i;
+			return true;
+		}
+	}
+	
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -329,6 +359,8 @@ private:
 
 	MCCefMessageResult m_message_result;
 	std::map<int64_t, CefString> m_load_error_frames;
+	
+	CefString m_last_request_url;
 
 	// Error handling - we need to keep track of url that failed to load in a
 	// frame so we can send the correct url in onLoadEnd()
@@ -532,6 +564,8 @@ public:
 
 	virtual bool OnBeforeResourceLoad(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefRefPtr<CefRequest> p_request) OVERRIDE
 	{
+		m_last_request_url = p_request->GetURL();
+		
 		CefString t_user_agent;
 		if (!m_owner->GetUserAgent(t_user_agent))
 			return false;
@@ -551,6 +585,30 @@ public:
 		p_request->SetHeaderMap(t_headers);
 
 		return false;
+	}
+
+	// IM-2014-04-28: [[ CefBrowser ]] Use platform-specific method to get credentials when requested
+	virtual bool GetAuthCredentials( CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, bool p_is_proxy, const CefString &p_host, int p_port, const CefString &p_realm, const CefString &p_method, CefRefPtr<CefAuthCallback> p_callback) OVERRIDE
+	{
+		bool t_success;
+		t_success = true;
+		
+		CefString t_user, t_pass;
+		MCCefAuthScheme t_auth;
+		
+		if (t_success)
+			t_success = MCCefAuthSchemeFromCefString(p_method, t_auth);
+		
+		if (t_success)
+			t_success = m_owner->PlatformGetAuthCredentials(p_is_proxy, m_last_request_url, p_realm, t_auth, t_user, t_pass);
+		
+		if (t_success)
+			t_success = !t_user.empty() && !t_pass.empty();
+		
+		if (t_success)
+			p_callback->Continue(t_user, t_pass);
+		
+		return t_success;
 	}
 
 	// CefDownloadHandler interface
