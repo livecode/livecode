@@ -4864,19 +4864,20 @@ bool MCStringSetNumericValue(MCStringRef self, double p_value)
 
     bool t_success = false;
 
+    // Ensure we have a 8-byte aligned position for the number value
     if (MCStringIsNative(self))
     {
-        if (MCMemoryReallocate(self -> native_chars, self -> char_count + 8, self -> native_chars))
+        if (MCMemoryReallocate(self -> native_chars, ((self -> char_count + 7) & ~7) + 8, self -> native_chars))
         {
-            *(double*)(&(self -> native_chars[self -> char_count])) = p_value;
+            *(double*)(&(self -> native_chars[(self -> char_count + 7) & ~7])) = p_value;
             t_success= true;
         }
     }
     else
     {
-        if (MCMemoryReallocate(self -> chars, self -> char_count * 2 + 8, self -> chars))
+        if (MCMemoryReallocate(self -> chars, ((self -> char_count * 2 + 7) & ~7) + 8, self -> chars))
         {
-            *(double*)(&(self -> chars[self -> char_count])) = p_value;
+            *(double*)(&(self -> chars[(self -> char_count + 7) & ~7])) = p_value;
             t_success = true;
         }
     }
@@ -4895,9 +4896,9 @@ bool MCStringGetNumericValue(MCStringRef self, double &r_value)
     if ((self -> flags & kMCStringFlagHasNumber) != 0)
     {
         if (MCStringIsNative(self))
-            r_value = *(double*)(&(self -> native_chars[self -> char_count]));
+            r_value = *(double*)(&(self -> native_chars[(self -> char_count + 7) & ~7]));
         else
-            r_value = *(double*)(&(self -> chars[self -> char_count]));
+            r_value = *(double*)(&(self -> chars[(self -> char_count + 7) & ~7]));
 
         return true;
     }
