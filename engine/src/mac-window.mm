@@ -1096,6 +1096,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 //////////
 
+#if 0
 - (void)undo:(id)sender
 {
 	[self handleAction: @selector(undo:) with: sender];
@@ -1130,6 +1131,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 {
 	[self handleAction: @selector(delete:) with: sender];
 }
+#endif
 
 //////////
 
