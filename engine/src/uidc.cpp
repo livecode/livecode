@@ -881,6 +881,8 @@ void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, 
         if (messages[t_index] . time > time)
             break;
     
+    // MW-2014-04-29: [[ Bug 12294 ]] Moved 1 too few MCMessageList structurs causing over-release of
+    //   MCNameRefs and pending message lost (i.e. intermittantly flaky and unstable engine).
     MCMemoryMove(&messages[t_index + 1], &messages[t_index], (nmessages - t_index) * sizeof(MCMessageList));
     
 	messages[t_index].object = optr;
@@ -906,7 +908,7 @@ int MCUIDC::doshiftmessage(int index, real8 newtime)
     MCMessageList t_msg;
     t_msg = messages[index];
     
-    MCMemoryMove(&messages[index], &messages[index + 1], (t_index - index - 1) * sizeof(MCMessageList));
+    MCMemoryMove(&messages[index], &messages[index + 1], (t_index - index) * sizeof(MCMessageList));
     
     messages[t_index] = t_msg;
     messages[t_index] . time = newtime;
