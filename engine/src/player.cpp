@@ -766,7 +766,7 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 		ep.setint(getpreferredrect().height);
 		break;
 	case P_FORMATTED_WIDTH:
-		ep.setint(getpreferredrect().width);
+        ep.setint(getpreferredrect().width);
 		break;
 	case P_MOVIE_CONTROLLER_ID:
 #ifndef FEATURE_QUICKTIME
@@ -2054,7 +2054,11 @@ MCRectangle MCPlayer::getpreferredrect()
 	MCRectangle t_bounds;
 	MCU_set_rect(t_bounds, 0, 0, 0, 0);
 	if (m_platform_player != nil)
+    {
 		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_bounds);
+        // PM-2014-04-28: [[Bug 12299]] Make sure the correct MCRectangle is returned
+        return t_bounds;
+    }
 #else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
