@@ -571,8 +571,10 @@ Boolean MCField::kdown(const char *string, KeySym key)
 		{
 			if (MCnullmcstring == string)
 				return False;
-
-			getstack()->hidecursor();
+            
+            // MW-2014-04-25: [[ Bug 5545 ]] This method will do the appropriate behavior
+            //   based on platform.
+            MCscreen -> hidecursoruntilmousemoves();
 
 			// MW-2012-02-13: [[ Block Unicode ]] Use the new 'finsert' method in
 			//   native mode.
