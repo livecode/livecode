@@ -975,7 +975,10 @@ codepoint_t MCStringGetCodepointAtIndex(MCStringRef self, uindex_t p_index)
         self = self -> string;
     
     if (MCStringIsNative(self))
-        return self -> native_chars[p_index];
+    {
+        char_t native_char = self -> native_chars[p_index];
+        return MCUnicodeCharMapFromNative(native_char);
+    }
     
     // Get the codepoint at this index
     unichar_t t_lead, t_trail;
