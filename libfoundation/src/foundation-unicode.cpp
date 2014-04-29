@@ -2170,9 +2170,6 @@ bool MCUnicodeWildcardMatch(const unichar_t *source_chars, uindex_t source_lengt
     MCTextFilter *t_pattern_filter = MCTextFilterCreate(pattern_chars, pattern_length, kMCStringEncodingUTF16, p_option);
     
     codepoint_t t_source_cp, t_pattern_cp;
-
-    if (t_source_filter -> HasData() != t_pattern_filter -> HasData())
-        return false;
     
     while (t_source_filter -> HasData())
     {
@@ -2319,13 +2316,7 @@ bool MCUnicodeWildcardMatch(const unichar_t *source_chars, uindex_t source_lengt
                     }
                     else if (t_pattern_cp == '?' || t_pattern_cp == '[')
                     {
-                        t_source_filter -> AdvanceCursor();
-                        t_source_filter -> GetNextCodepoint();
                         t_source_filter -> MarkText();
-
-                        t_pattern_filter -> AdvanceCursor();
-                        t_pattern_filter -> AdvanceCursor();
-                        t_pattern_filter -> GetNextCodepoint();
                         t_pattern_filter -> MarkText();
                         
                         t_sindex = t_source_filter -> GetMarkedLength() - 1;
@@ -2346,7 +2337,7 @@ bool MCUnicodeWildcardMatch(const unichar_t *source_chars, uindex_t source_lengt
                 // default - just compare chars
                 if (t_source_cp != t_pattern_cp)
                     return false;
-            
+                
                 break;
 		}
         t_source_filter -> AdvanceCursor();
@@ -2359,6 +2350,9 @@ bool MCUnicodeWildcardMatch(const unichar_t *source_chars, uindex_t source_lengt
             return false;
         t_pattern_filter -> AdvanceCursor();
     }
-   
+    
+    if (t_source_filter -> HasData())
+        return false;
+    
     return true;
 }
