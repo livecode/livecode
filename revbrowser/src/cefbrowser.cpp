@@ -74,6 +74,27 @@ bool MCCefStringFromCString(const char *p_c_string, CefString &r_cef_string)
 	return MCCefStringFromCString(p_c_string, r_cef_string.GetWritableStruct());
 }
 
+bool MCCefStringToUInt(const CefString &p_string, uint32_t &r_int)
+{
+	char_t * t_tmp_string;
+	t_tmp_string = nil;
+	
+	uint32_t t_int;
+	
+	bool t_success;
+	t_success = MCCefStringToCString(p_string, t_tmp_string);
+	if (t_success)
+		t_success = MCCStringToCardinal(t_tmp_string, t_int);
+	
+	if (t_tmp_string != nil)
+		MCCStringFree(t_tmp_string);
+	
+	if (t_success)
+		r_int = t_int;
+	
+	return t_success;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static const char *s_auth_scheme_strings[] =
@@ -142,7 +163,7 @@ bool MCCefInitialise(void)
 	t_settings.command_line_args_disabled = true;
 
 	bool t_success;
-	t_success = MCCefStringFromCString(MCCefPlatformGetSubProcessName(), &t_settings.browser_subprocess_path);
+	t_success = MCCefStringFromCString(MCCefPlatformGetSubProcessName(), CefString(&t_settings.browser_subprocess_path));
 
 	if (t_success)
 	{

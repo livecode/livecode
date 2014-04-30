@@ -183,6 +183,7 @@ const char *MCCefPlatformGetLocalePath(void);
 
 bool MCCefStringToCString(const CefString &p_cef_string, char *&r_c_string);
 bool MCCefStringFromCString(const char *p_c_string, CefString &r_cef_string);
+bool MCCefStringToUInt(const CefString &p_string, uint32_t &r_int);
 
 bool MCCefAuthSchemeFromCefString(const CefString &p_string, MCCefAuthScheme &r_scheme);
 

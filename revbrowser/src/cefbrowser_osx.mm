@@ -75,27 +75,6 @@ bool MCCefStringToNSString(const CefString &p_string, NSString *&r_string)
 	return t_success;
 }
 
-bool MCCefStringToInt(const CefString &p_string, int32_t &r_int)
-{
-	char_t * t_tmp_string;
-	t_tmp_string = nil;
-	
-	uint32_t t_int;
-	
-	bool t_success;
-	t_success = MCCefStringToCString(p_string, t_tmp_string);
-	if (t_success)
-		t_success = MCCStringToCardinal(t_tmp_string, t_int) && t_int <= INT32_MAX;
-	
-	if (t_tmp_string != nil)
-		MCCStringFree(t_tmp_string);
-	
-	if (t_success)
-		r_int = t_int;
-	
-	return t_success;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCCefBrowserOSX : public MCCefBrowserBase
@@ -386,7 +365,7 @@ bool CreateNSURLAuthenticationChallenge(bool p_is_proxy, const CefString &p_url,
 	NSString *t_realm;
 	t_realm = nil;
 	
-	NSInteger t_port;
+	uint32_t t_port;
 	t_port = 0;
 	
 	CefURLParts t_parts;
@@ -402,7 +381,7 @@ bool CreateNSURLAuthenticationChallenge(bool p_is_proxy, const CefString &p_url,
 	{
 		CefString t_port_string(&t_parts.port);
 		if (!t_port_string.empty())
-			t_success = MCCefStringToInt(t_port_string, t_port);
+			t_success = MCCefStringToUInt(t_port_string, t_port);
 	}
 	
 	if (t_success)
