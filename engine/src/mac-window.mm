@@ -1720,10 +1720,11 @@ void MCMacPlatformWindow::DoRealize(void)
 	
 	// For floating window levels, we use a panel, otherwise a normal window will do.
 	// (Note that NSPanel is a subclass of NSWindow)
+    // MW-2014-04-30: [[ Bug 12328 ]] Don't defer window creation, otherwise we don't have a windowId.
 	if (t_window_level != kCGFloatingWindowLevel)
-		m_window_handle = [[com_runrev_livecode_MCWindow alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: YES];
+		m_window_handle = [[com_runrev_livecode_MCWindow alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: NO];
 	else
-		m_panel_handle = [[com_runrev_livecode_MCPanel alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: YES];
+		m_panel_handle = [[com_runrev_livecode_MCPanel alloc] initWithContentRect: t_cocoa_content styleMask: t_window_style backing: NSBackingStoreBuffered defer: NO];
 	
 	m_delegate = [[com_runrev_livecode_MCWindowDelegate alloc] initWithPlatformWindow: this];
 	[m_window_handle setDelegate: m_delegate];
@@ -1827,12 +1828,18 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
 	{
 		case kMCPlatformWindowPropertySystemId:
 			assert(p_type == kMCPlatformPropertyTypeUInt32);
+            // MW-2014-04-30: [[ Bug 12328 ]] If we don't have a handle yet make sure we create one.
+            if (m_window_handle == nil)
+                RealizeAndNotify();
 			*(uint32_t *)r_value = m_window_handle != nil ? [m_window_handle windowNumber] : 0;
 			return true;
 			
 		// IM-2014-03-26: [[ Bug 12021 ]] Return NSWindow frame rect
 		case kMCPlatformWindowPropertyFrameRect:
 			assert(p_type == kMCPlatformPropertyTypeRectangle);
+            // MW-2014-04-30: [[ Bug 12328 ]] If we don't have a handle yet make sure we create one.
+            if (m_window_handle == nil)
+                RealizeAndNotify();
 			*(MCRectangle *)r_value = m_window_handle != nil ? MCRectangleFromNSRect([m_window_handle frame]) : MCRectangleMake(0, 0, 0, 0);
 			return true;
 	}
