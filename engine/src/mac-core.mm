@@ -33,6 +33,37 @@ static CGFloat s_primary_screen_height = 0.0f;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum
+{
+	kMCMacPlatformBreakEvent = 0,
+	kMCMacPlatformMouseSyncEvent = 1,
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+// MW-2014-04-22: [[ Bug 12259 ]] Override sendEvent so that we always get a chance
+//   at the MouseSync event.
+@interface com_runrev_livecode_MCApplication: NSApplication
+
+- (void)sendEvent:(NSEvent *)event;
+
+@end
+
+@implementation com_runrev_livecode_MCApplication
+
+- (void)sendEvent:(NSEvent *)event
+{
+    if ([event type] == NSApplicationDefined &&
+        [event subtype] == kMCMacPlatformMouseSyncEvent)
+        MCMacPlatformHandleMouseSync();
+    else
+        [super sendEvent: event];
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////
+
 @implementation com_runrev_livecode_MCApplicationDelegate
 
 //////////
@@ -47,6 +78,8 @@ static CGFloat s_primary_screen_height = 0.0f;
 	m_argv = argv;
 	m_envp = envp;
 	
+    m_explicit_quit = false;
+    
 	return self;
 }
 
@@ -93,6 +126,13 @@ static CGFloat s_primary_screen_height = 0.0f;
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
 	
+    // MW-2014-04-23: [[ Bug 12080 ]] Always create a dummy window which should
+    //   always sit at the bottom of our window list so that palettes have something
+    //   to float above.
+    NSWindow *t_dummy_window;
+    t_dummy_window = [[NSWindow alloc] initWithContentRect: NSZeroRect styleMask: NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:YES];
+    [t_dummy_window orderFront: nil];
+    
 	// Dispatch the startup callback.
 	int t_error_code;
 	char *t_error_message;
@@ -125,7 +165,13 @@ static CGFloat s_primary_screen_height = 0.0f;
 - (void)runMainLoop
 {
 	MCPlatformCallbackSendApplicationRun();
-	[NSApp terminate: self];
+    
+    // If we get here then it was due to an exit from the main runloop caused
+    // by an explicit quit. In this case, then we set a flag so that termination
+    // happens without sending messages.
+    m_explicit_quit = true;
+	
+    [NSApp terminate: self];
 }
 
 //////////
@@ -139,6 +185,10 @@ static CGFloat s_primary_screen_height = 0.0f;
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
 {
+    // If the quit was explicit (runloop exited) then just terminate now.
+    if (m_explicit_quit)
+        return NSTerminateNow;
+    
 	// There is an NSApplicationTerminateReplyLater result code which will place
 	// the runloop in a modal loop for exit dialogs. We'll try the simpler
 	// option for now of just sending the callback and seeing what AppKit does
@@ -193,6 +243,20 @@ static CGFloat s_primary_screen_height = 0.0f;
 
 - (void)applicationWillBecomeActive:(NSNotification *)notification
 {
+    // MW-2014-04-23: [[ Bug 12080 ]] Loop through all our windows and any MCPanels
+    //   get set to not be floating. This is so that they sit behind the windows
+    //   of other applications (like we did before).
+    for(NSNumber *t_window_id in [[NSWindow windowNumbersWithOptions: 0] reverseObjectEnumerator])
+    {
+        NSWindow *t_window;
+        t_window = [NSApp windowWithWindowNumber: [t_window_id longValue]];
+        if (![t_window isKindOfClass: [com_runrev_livecode_MCPanel class]])
+        {
+            continue;
+        }
+        
+        [t_window setFloatingPanel: YES];
+    }
 }
 
 - (void)applicationDidBecomeActive:(NSNotification *)notification
@@ -202,11 +266,28 @@ static CGFloat s_primary_screen_height = 0.0f;
 
 - (void)applicationWillResignActive:(NSNotification *)notification
 {
-	MCPlatformCallbackSendApplicationSuspend();
+    // MW-2014-04-23: [[ Bug 12080 ]] Loop through all our windows and move any
+    //   MCPanels to be above the top-most non-panel.
+    NSInteger t_above_window_id;
+    for(NSNumber *t_window_id in [[NSWindow windowNumbersWithOptions: 0] reverseObjectEnumerator])
+    {
+        NSWindow *t_window;
+        t_window = [NSApp windowWithWindowNumber: [t_window_id longValue]];
+        if (![t_window isKindOfClass: [com_runrev_livecode_MCPanel class]])
+        {
+            t_above_window_id = [t_window_id longValue];
+            continue;
+        }
+        
+        [t_window setFloatingPanel: NO];
+        [t_window orderWindow: NSWindowAbove relativeTo: t_above_window_id];
+        t_above_window_id = [t_window_id longValue];
+    }
 }
 
 - (void)applicationDidResignActive:(NSNotification *)notification
 {
+	MCPlatformCallbackSendApplicationSuspend();
 }
 
 //////////
@@ -362,12 +443,6 @@ struct MCCallback
 static MCCallback *s_callbacks = nil;
 static uindex_t s_callback_count;
 
-enum
-{
-	kMCMacPlatformBreakEvent = 0,
-	kMCMacPlatformMouseSyncEvent = 1,
-};
-
 void MCPlatformBreakWait(void)
 {
 	if (s_wait_broken)
@@ -443,12 +518,7 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 
 	if (t_event != nil)
 	{
-		if ([t_event type] == NSApplicationDefined)
-		{
-			if ([t_event subtype] == kMCMacPlatformMouseSyncEvent)
-				MCMacPlatformHandleMouseSync();
-		}
-		else if ([t_event type] == NSLeftMouseDown || [t_event type] == NSLeftMouseDragged)
+		if ([t_event type] == NSLeftMouseDown || [t_event type] == NSLeftMouseDragged)
 		{
 			s_last_mouse_event = t_event;
 			[t_event retain];
@@ -821,66 +891,43 @@ void MCPlatformGetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale)
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCPlatformWindowRef s_backdrop_window = nil;
-static MCMacPlatformWindow **s_visible_windows = nil;
-static uindex_t s_visible_window_count = 0;
 
-static void MCMacPlatformAddVisibleWindow(MCMacPlatformWindow *p_window)
+void MCMacPlatformSyncBackdrop(void)
 {
-	/* UNCHECKED */ MCMemoryResizeArray(s_visible_window_count + 1, s_visible_windows, s_visible_window_count);
-	s_visible_windows[s_visible_window_count - 1] = p_window;
-}
-
-static void MCMacPlatformRemoveVisibleWindow(MCMacPlatformWindow *p_window)
-{
-	for(uindex_t i = 0; i < s_visible_window_count; i++)
-		if (s_visible_windows[i] == p_window)
-		{
-			MCMemoryMove(s_visible_windows + i, s_visible_windows + i + 1, sizeof(MCMacPlatformWindow *) * (s_visible_window_count - i - 1));
-			s_visible_window_count -= 1;
-			break;
-		}
-}
-
-static void MCMacPlatformSyncBackdropForStyle(MCPlatformWindowStyle p_style)
-{
-	bool t_need_backdrop;
-	if (s_backdrop_window != nil)
-		t_need_backdrop = MCPlatformIsWindowVisible(s_backdrop_window);
-	else
-		t_need_backdrop = false;
-	
-	for(uindex_t i = 0; i < s_visible_window_count; i++)
-	{
-		MCPlatformWindowStyle t_style;
-		s_visible_windows[i] -> GetProperty(kMCPlatformWindowPropertyStyle, kMCPlatformPropertyTypeWindowStyle, &t_style);
-		if (t_style == p_style)
-			s_visible_windows[i] -> SetBackdropWindow(t_need_backdrop ? s_backdrop_window : nil);
-	}
-}
-
-static void MCMacPlatformSyncBackdrop(void)
-{
-	NSDisableScreenUpdates();
-	MCMacPlatformSyncBackdropForStyle(kMCPlatformWindowStyleDocument);
-	MCMacPlatformSyncBackdropForStyle(kMCPlatformWindowStylePalette);
-	MCMacPlatformSyncBackdropForStyle(kMCPlatformWindowStyleDialog);
-	NSEnableScreenUpdates();
-	/*bool t_need_backdrop;
-	if (s_backdrop_window != nil)
-		t_need_backdrop = MCPlatformIsWindowVisible(s_backdrop_window);
-	else
-		t_need_backdrop = false;
-	
-	for(uindex_t i = 0; i < s_visible_window_count; i++)
-		s_visible_windows[i] -> SetBackdropWindow(nil);
-	if (s_backdrop_window != nil)
-		for(index_t i = 0; i < s_visible_window_count; i++)
-			s_visible_windows[i] -> SetBackdropWindow(s_backdrop_window);*/
+    if (s_backdrop_window == nil)
+        return;
+    
+    NSWindow *t_backdrop;
+    t_backdrop = ((MCMacPlatformWindow *)s_backdrop_window) -> GetHandle();
+    
+    NSDisableScreenUpdates();
+    [t_backdrop orderOut: nil];
+    
+    // Loop from front to back on our windows, making sure the backdrop window is
+    // at the back.
+    NSInteger t_window_above_id;
+    t_window_above_id = -1;
+    for(NSNumber *t_window_id in [NSWindow windowNumbersWithOptions: 0])
+    {
+        NSWindow *t_window;
+        t_window = [NSApp windowWithWindowNumber: [t_window_id longValue]];
+        
+        if (t_window == t_backdrop)
+            continue;
+        
+        if (t_window_above_id != -1)
+            [t_window orderWindow: NSWindowBelow relativeTo: t_window_above_id];
+        
+        t_window_above_id = [t_window_id longValue];
+    }
+    
+    [t_backdrop orderWindow: NSWindowBelow relativeTo: t_window_above_id];
+    
+    NSEnableScreenUpdates();
 }
 
 void MCPlatformConfigureBackdrop(MCPlatformWindowRef p_backdrop_window)
 {
-#if TO_FIX
 	if (s_backdrop_window != nil)
 	{
 		MCPlatformReleaseWindow(s_backdrop_window);
@@ -893,33 +940,8 @@ void MCPlatformConfigureBackdrop(MCPlatformWindowRef p_backdrop_window)
 		MCPlatformRetainWindow(s_backdrop_window);
 	
 	MCMacPlatformSyncBackdrop();
-#endif
 }
 
-void MCMacPlatformWindowFocusing(MCMacPlatformWindow *p_window)
-{
-#if TO_FIX
-	MCMacPlatformRemoveVisibleWindow(p_window);
-	MCMacPlatformAddVisibleWindow(p_window);
-	MCMacPlatformSyncBackdrop();
-#endif
-}
-
-void MCMacPlatformWindowShowing(MCMacPlatformWindow *p_window)
-{
-#if TO_FIX
-	MCMacPlatformAddVisibleWindow(p_window);
-	MCMacPlatformSyncBackdrop();
-#endif
-}
-
-void MCMacPlatformWindowHiding(MCMacPlatformWindow *p_window)
-{	
-#if TO_FIX
-	MCMacPlatformRemoveVisibleWindow(p_window);
-	MCMacPlatformSyncBackdrop();
-#endif
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1353,6 +1375,8 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
     // PM-2014-04-02: [[ Bug 12082 ]] IDE no longer crashes when changing an applied pattern
     if (t_cursor != nil)
         MCPlatformShowCursor(t_cursor);
+    else
+        MCPlatformHideCursor();
 }
 
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
@@ -1420,8 +1444,10 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 			}
 		}
         
+        // MW-2014-04-22: [[ Bug 12253 ]] Ending a drag-drop can cause the mouse window to go.
         // Update the mouse cursor for the mouse window.
-        MCMacPlatformHandleMouseCursorChange(s_mouse_window);
+        if (s_mouse_window != nil)
+            MCMacPlatformHandleMouseCursorChange(s_mouse_window);
 	}
 }
 
@@ -1614,7 +1640,7 @@ int main(int argc, char *argv[], char *envp[])
 	
 	// Create the normal NSApplication object.
 	NSApplication *t_application;
-	t_application = [NSApplication sharedApplication];
+	t_application = [com_runrev_livecode_MCApplication sharedApplication];
 	
 	// Register for reconfigurations.
 	CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, nil);

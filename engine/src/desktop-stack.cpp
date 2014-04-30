@@ -112,8 +112,9 @@ void MCStack::realize(void)
 			t_has_titlebox = (decorations & WD_TITLE) != 0;
 			t_has_closebox = (decorations & WD_CLOSE) != 0;
 			t_has_collapsebox = (decorations & WD_MINIMIZE) != 0;
-			t_has_zoombox = (decorations & WD_MAXIMIZE) == 0;
-			t_has_sizebox = getflag(F_RESIZABLE);
+            
+            // MW-2014-04-22: [[ Bug 12264 ]] Wrong test for maximize (was == 0!).
+			t_has_zoombox = (decorations & WD_MAXIMIZE) != 0;
 		}
 		else
 		{
@@ -137,6 +138,10 @@ void MCStack::realize(void)
 				t_has_titlebox = true;
 		}
 		
+        // MW-2014-04-22: [[ Bug 12264 ]] Make sure we use the resizable property in all cases, to be
+        //   switched off for certain window types.
+        t_has_sizebox = getflag(F_RESIZABLE);
+        
 		if (getflag(F_DECORATIONS) && ((decorations & (WD_TITLE | WD_MENU | WD_CLOSE | WD_MINIMIZE | WD_MAXIMIZE)) == 0))
 			t_has_sizebox = false;
 		
@@ -193,6 +198,9 @@ void MCStack::realize(void)
 		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHasSizeWidget, t_has_sizebox);
 		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHasShadow, (decorations & WD_NOSHADOW) == 0);
 		MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyUseLiveResizing, (decorations & WD_LIVERESIZING) != 0);
+        
+        // MW-2014-04-23: [[ Bug 12080 ]] If the window is a palette and hidePalettes is true then HideOnSuspend.
+        MCPlatformSetWindowBoolProperty(t_window, kMCPlatformWindowPropertyHideOnSuspend, MChidepalettes && t_window_style == kMCPlatformWindowStylePalette);
 		
 		setopacity(blendlevel * 255 / 100);
 		

@@ -295,7 +295,7 @@ IO_stat MCDispatch::startup(void)
 		t_stream = android_get_mainstack_stream();
 #else
 		char *t_path;
-		MCCStringFormat(t_path, "%.*s/iphone_test.livecode", strrchr(MCcmd, '/') - MCcmd, MCcmd);
+		MCCStringFormat(t_path, "%.*s/TRiPiLiTE.livecode", strrchr(MCcmd, '/') - MCcmd, MCcmd);
 		t_stream = MCS_open(t_path, IO_READ_MODE, False, False, 0);
 		MCCStringFree(t_path);
 #endif
@@ -934,9 +934,28 @@ uint32_t MCModePopUpMenu(MCMacSysMenuHandle p_menu, int32_t p_x, int32_t p_y, ui
 
 #ifdef TARGET_PLATFORM_WINDOWS
 
+// MW-2014-04-22: [[ Bug 12237 ]] Attempt to attach to a console if available.
+//   This shouldn't have any adverse consequences on anything as if the engine
+//   isn't launched from the console (i.e. run from the desktop) it will be as
+//   before; and if it is launched from the console then it will probably do
+//   what is expected.
+typedef BOOL (WINAPI *AttachConsolePtr)(DWORD id);
 void MCModePreMain(void)
 {
+	HMODULE t_kernel;
+	t_kernel = LoadLibraryA("kernel32.dll");
+	if (t_kernel != nil)
+	{
+		void *t_attach_console;
+		t_attach_console = GetProcAddress(t_kernel, "AttachConsole");
+		if (t_attach_console != nil)
+		{
+			((AttachConsolePtr)t_attach_console)(-1);
+			return;
+		}
+	}
 }
+
 
 void MCModeSetupCrashReporting(void)
 {

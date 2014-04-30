@@ -162,6 +162,28 @@ inline MCRectangle MCGRectangleGetIntegerRect(const MCGRectangle &p_rect)
 	return MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
 }
 
+inline MCRectangle MCGRectangleGetIntegerFloorRect(const MCGRectangle &p_rect)
+{
+	int32_t t_left, t_top, t_width, t_height;
+	t_left = floorf(p_rect.origin.x);
+	t_top = floorf(p_rect.origin.y);
+	t_width = floorf(p_rect.size.width);
+	t_height = floorf(p_rect.size.height);
+	
+	return MCRectangleMake(t_left, t_top, t_width, t_height);
+}
+
+inline MCRectangle MCGRectangleGetIntegerCeilingRect(const MCGRectangle &p_rect)
+{
+	int32_t t_left, t_top, t_width, t_height;
+	t_left = ceilf(p_rect.origin.x);
+	t_top = ceilf(p_rect.origin.y);
+	t_width = ceilf(p_rect.size.width);
+	t_height = ceilf(p_rect.size.height);
+	
+	return MCRectangleMake(t_left, t_top, t_width, t_height);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static inline MCPoint MCPointMake(int16_t x, int16_t y)
@@ -218,6 +240,16 @@ inline MCRectangle MCRectangleGetTransformedRect(const MCRectangle &p_rect, cons
 	return MCGRectangleGetIntegerRect(MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_rect), p_transform));
 }
 
+inline MCRectangle MCRectangleGetTransformedFloorRect(const MCRectangle &p_rect, const MCGAffineTransform &p_transform)
+{
+	return MCGRectangleGetIntegerFloorRect(MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_rect), p_transform));
+}
+
+inline MCRectangle MCRectangleGetTransformedCeilingRect(const MCRectangle &p_rect, const MCGAffineTransform &p_transform)
+{
+	return MCGRectangleGetIntegerCeilingRect(MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(p_rect), p_transform));
+}
+
 static inline MCRectangle MCRectangleGetScaledBounds(const MCRectangle &p_rect, MCGFloat p_scale)
 {
 	return MCRectangleGetTransformedBounds(p_rect, MCGAffineTransformMakeScale(p_scale, p_scale));
@@ -226,6 +258,16 @@ static inline MCRectangle MCRectangleGetScaledBounds(const MCRectangle &p_rect, 
 static inline MCRectangle MCRectangleGetScaledInterior(const MCRectangle &p_rect, MCGFloat p_scale)
 {
 	return MCRectangleGetTransformedInterior(p_rect, MCGAffineTransformMakeScale(p_scale, p_scale));
+}
+
+static inline MCRectangle MCRectangleGetScaledFloorRect(const MCRectangle &p_rect, MCGFloat p_scale)
+{
+	return MCRectangleGetTransformedFloorRect(p_rect, MCGAffineTransformMakeScale(p_scale, p_scale));
+}
+
+static inline MCRectangle MCRectangleGetScaledCeilingRect(const MCRectangle &p_rect, MCGFloat p_scale)
+{
+	return MCRectangleGetTransformedCeilingRect(p_rect, MCGAffineTransformMakeScale(p_scale, p_scale));
 }
 
 inline MCPoint MCPointTransform(const MCPoint &p_point, const MCGAffineTransform &p_transform)

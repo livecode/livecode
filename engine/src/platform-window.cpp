@@ -48,6 +48,7 @@ MCPlatformWindow::MCPlatformWindow(void)
 	m_has_shadow = false;
 	m_has_modified_mark = false;
 	m_use_live_resizing = false;
+    m_hides_on_suspend = false;
 	
 	/* UNCHECKED */ MCRegionCreate(m_dirty_region);
 	m_is_visible = false;
@@ -100,9 +101,12 @@ void MCPlatformWindow::Invalidate(MCRegionRef p_region)
 	// If the window is not visible, there is nothing to do.
 	if (!m_is_visible)
 		return;
-
+    
 	// Union the dirty region.
-	MCRegionUnion(m_dirty_region, m_dirty_region, p_region);
+    if (p_region == nil)
+        MCRegionIncludeRect(m_dirty_region, m_content);
+    else
+        MCRegionUnion(m_dirty_region, m_dirty_region, p_region);
 }
 
 void MCPlatformWindow::Show(void)
@@ -344,6 +348,11 @@ void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatfo
             
             // MW-2014-04-08: [[ Bug 12073 ]] Mark the cursor as changed.
             m_changes . cursor_changed = true;
+			break;
+		case kMCPlatformWindowPropertyHideOnSuspend:
+			assert(p_type == kMCPlatformPropertyTypeBool);
+			m_hides_on_suspend = *(bool *)p_value;
+			m_changes . hides_on_suspend_changed = true;
 			break;
 		default:
 			assert(false);

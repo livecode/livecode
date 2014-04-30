@@ -96,49 +96,14 @@ void MCPlatformHandleApplicationShutdownRequest(bool& r_terminate)
 	}
 }
 
-// MW-2014-04-08: [[ Bug 12080 ]] Show or hide palette windows as required.
-static void show_or_hide_palettes(bool p_show)
-{
-    if (MCstacks -> isempty())
-        return;
-    
-    MCStacknode *t_stack_node;
-    t_stack_node = MCstacks -> bottomnode();
-    do
-    {
-        MCStack *t_stack;
-        t_stack = t_stack_node -> getstack();
-        
-        if (t_stack -> getrealmode() == WM_PALETTE && t_stack -> getflag(F_VISIBLE))
-        {
-            if (MChidepalettes)
-            {
-                if (p_show)
-                    MCPlatformShowWindow(t_stack -> getwindow());
-                else
-                    MCPlatformHideWindow(t_stack -> getwindow());
-            }
-        }
-        
-        t_stack_node = t_stack_node -> next();
-    }
-    while(t_stack_node != MCstacks -> bottomnode());
-}
-
 void MCPlatformHandleApplicationSuspend(void)
 {
 	MCdefaultstackptr -> getcard() -> message(MCM_suspend);
 	MCappisactive = False;
-    
-    // MW-2014-04-08: [[ Bug 12080 ]] Hide any palettes based on MChidepalettes.
-    //show_or_hide_palettes(false);
 }
 
 void MCPlatformHandleApplicationResume(void)
 {
-    // MW-2014-04-08: [[ Bug 12080 ]] Show any palettes based on MChidepalettes.
-    //show_or_hide_palettes(true);
-    
 	MCappisactive = True;
 	MCdefaultstackptr -> getcard() -> message(MCM_resume);
 }
@@ -1122,7 +1087,9 @@ void MCPlatformHandlePlayerSelectionChanged(MCPlatformPlayerRef p_player)
     if (t_player == nil)
         return;
     
-    t_player -> timer(MCM_selection_changed, nil);
+    // MW-2014-04-24: [[ Bug ]] Make sure we update the start/end time of the
+    //   player.
+    t_player -> selectionchanged();
 }
 
 void MCPlatformHandlePlayerStarted(MCPlatformPlayerRef p_player)

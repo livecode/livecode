@@ -596,10 +596,15 @@ Boolean MCGroup::mdown(uint2 which)
 {
 	if (state & CS_MENU_ATTACHED)
 		return MCObject::mdown(which);
-	if (sbdown(which, hscrollbar, vscrollbar))
-		return True;
+
 	Tool tool = getstack()->gettool(this);
-	if (tool == T_POINTER && (mfocused == NULL || !MCselectgrouped || getflag(F_SELECT_GROUP)))
+	
+    // MW-2014-04-25: [[ Bug 8041 ]] Only handle the group scrollbars in browse mode.
+    //   This is consistent with field behavior.
+    if (tool == T_BROWSE && sbdown(which, hscrollbar, vscrollbar))
+        return True;
+    
+    if (tool == T_POINTER && (mfocused == NULL || !MCselectgrouped || getflag(F_SELECT_GROUP)))
 	{
 		if (which == Button1)
 		{
@@ -612,6 +617,7 @@ Boolean MCGroup::mdown(uint2 which)
 			message_with_args(MCM_mouse_down, which);
 		return True;
 	}
+    
 	if (mfocused == NULL)
 		return False;
 	mgrabbed = True;
@@ -2627,7 +2633,8 @@ void MCGroup::drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawfra
 				slabel.set(label,labelsize), isunicode = hasunicode();
 			else
 				slabel = getname_oldstring(), isunicode = false;
-			textrect.width = MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), isunicode) + 4;
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+			textrect.width = MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), isunicode, getstack() -> getdevicetransform()) + 4;
 			//exclude text area from widget drawing region for those themes that draw text on top of frame.
 			winfo.datatype = WTHEME_DATA_RECT;
 			winfo.data = &textrect;
@@ -2679,7 +2686,8 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 				slabel.set(label,labelsize), isunicode = hasunicode();
 			else
 				slabel = getname_oldstring(), isunicode = false;
-			textrect.width = MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), isunicode) + 4;
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+			textrect.width = MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), isunicode, getstack() -> getdevicetransform()) + 4;
 
 			if (flags & F_SHOW_BORDER)
 			{

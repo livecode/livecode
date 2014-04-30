@@ -55,11 +55,20 @@
 // stream on a secondary thread (i.e. where events are posted to the internal
 // event queue)...
 
-static volatile bool s_abort_key_pressed = false;
+// WATCHDOG
+//
+// In previous engines, 'CheckEventQueueForUserCancel()' would be used periodically
+// to check for abort. This prevented the SPOD from ever appearing when script was
+// in tight loops as the event queue was being serviced. With Cocoa, we don't have
+// this call anymore so the only thing we can do is try and tickle the event queue
+// at specific points and hopefully this will not have any side-effects.
+//
+// To achieve this we use the same thread as the AbortKey and when that checks for
+// keys being down it also sets the 's_abort_key_checked' flag to false. This can
+// then be picked up on the main thread to cause a tickle.
 
-#ifdef USE_EVENTTAP
+static volatile bool s_abort_key_pressed = false;
 static volatile bool s_abort_key_checked = false;
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -139,9 +148,8 @@ static CGEventRef abort_key_callback(CGEventTapProxy p_proxy, CGEventType p_type
 
 static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 {
-#ifdef USE_EVENTTAP
 	s_abort_key_checked = false;
-#else
+
 	// Update our period key mapping if the input source has changed / hasn't
 	// been initialized.
 	TISInputSourceRef t_input_source;
@@ -211,7 +219,6 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 		//
 		s_abort_key_pressed = true;
 	}
-#endif
 }
 
 @implementation com_runrev_livecode_MCAbortKeyThread
@@ -283,7 +290,8 @@ static void abort_key_timer_callback(CFRunLoopTimerRef p_timer, void *p_info)
 
 bool MCPlatformGetAbortKeyPressed(void)
 {
-#ifdef USE_EVENTTAP
+    // MW-2014-04-23: [[ Bug 12163 ]] If the abortKey hasn't been checked
+    //   recently, then tickle the event queue so that we suppress the SPOD.
 	if (!s_abort_key_checked)
 	{
 		NSDisableScreenUpdates();
@@ -294,7 +302,6 @@ bool MCPlatformGetAbortKeyPressed(void)
 		NSEnableScreenUpdates();
 		s_abort_key_checked = true;
 	}
-#endif
 	
 	if (!s_abort_key_pressed)
 		return false;

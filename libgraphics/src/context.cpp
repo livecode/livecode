@@ -2563,13 +2563,16 @@ void MCGTextMeasureCacheCompact(void)
 	MCGCacheTableCompact(s_measure_cache);
 }
 
-MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
+// MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
+//  The transform is used when we are measuring text with the intention of drawing it scaled. The width is still returned in logical units.
+//  (i.e. we measure the text as if scaled, the transform back to logical units - needed where text doesn't scale linearly).
+MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform)
 {
 	if (p_length == 0 || p_text == NULL)
 		return 0.0;
 	
 	if (p_length >= kMCGTextMeasureCacheMaxStringLength)
-		return __MCGContextMeasurePlatformText(self, p_text, p_length, p_font);
+		return __MCGContextMeasurePlatformText(self, p_text, p_length, p_font, p_transform);
 	
 	bool t_success;
 	t_success = true;
@@ -2582,7 +2585,7 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 	uint32_t t_key_length;
 	if (t_success)
 	{
-		t_key_length = p_length + sizeof(p_length) + sizeof(p_font . fid) + sizeof(p_font . size) + sizeof(p_font . style);
+		t_key_length = p_length + sizeof(p_length) + sizeof(p_font . fid) + sizeof(p_font . size) + sizeof(p_font . style) + 2 * sizeof(p_transform . a);
 		t_success = MCMemoryNew(t_key_length, t_key);
 	}
 	
@@ -2617,6 +2620,14 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 
 		MCMemoryCopy(t_key_ptr, &p_font . style, sizeof(p_font . style));
 		t_key_ptr += sizeof(p_font . style);
+
+		// MM-2014-04-16: [[ Bug 11964 ]] Store the scale of the transform in the key.
+		//  We only need to store the (x?) scale of the transform as that is all that will effect the text measurment.
+		//  (We are ignoring rotation for the time being).
+		MCMemoryCopy(t_key_ptr, &p_transform . a, sizeof(p_transform . a));
+		t_key_ptr += sizeof(p_transform . a);
+		MCMemoryCopy(t_key_ptr, &p_transform . d, sizeof(p_transform . d));
+		t_key_ptr += sizeof(p_transform . d);
 		
 		MCGFloat *t_width_ptr;
 		t_width_ptr = (MCGFloat *) MCGCacheTableGet(s_measure_cache, t_key, t_key_length);		
@@ -2627,7 +2638,7 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 		}		
 	
 		MCGFloat t_width;
-		t_width = __MCGContextMeasurePlatformText(self, p_text, p_length, p_font);
+		t_width = __MCGContextMeasurePlatformText(self, p_text, p_length, p_font, p_transform);
 		MCGCacheTableSet(s_measure_cache, t_key, t_key_length, &t_width, sizeof(MCGFloat));
 		return t_width;
 	}

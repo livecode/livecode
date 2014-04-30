@@ -322,6 +322,13 @@ void MCMacPlatformUnlockMenuSelect(void)
     if (t_key_equiv)
     {
         MCMacPlatformWindow *t_window = [(MCWindowDelegate *)[[event window] delegate] platformWindow];
+        
+        // MW-2014-04-24: [[ Bug 12284 ]] If we get here then it could have come from
+        //   an 'external' view and thus the event will not have gone through any
+        //   of our view code - so make sure modifiers are up to date (otherwise command
+        //   key shortcuts don't work!).
+        MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
+        
         [t_window -> GetView() handleKeyPress: event isDown: YES];
         [t_window -> GetView() handleKeyPress: event isDown: NO];
         return YES;

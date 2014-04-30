@@ -132,7 +132,6 @@ Boolean MCScreenDC::open()
 	backdrop_enabled = false;
 	backdrop_pattern = nil;
 	MCPlatformCreateWindow(backdrop_window);
-	MCPlatformConfigureBackdrop(backdrop_window);
 	
 	MCPlatformCreateMenu(icon_menu);
 	MCPlatformSetIconMenu(icon_menu);
@@ -501,10 +500,12 @@ void MCScreenDC::enactraisewindows(void)
 		t_rect = MCRectangleMake(0, 0, 0, 0);
 		MCPlatformSetWindowProperty(backdrop_window, kMCPlatformWindowPropertyFrameRect, kMCPlatformPropertyTypeRectangle, &t_rect);
 		MCPlatformShowWindow(backdrop_window);
+        MCPlatformConfigureBackdrop(backdrop_window);
 	}
 	else
 	{
 		MCPlatformHideWindow(backdrop_window);
+        MCPlatformConfigureBackdrop(nil);
 	}
 }
 
@@ -517,8 +518,9 @@ void MCScreenDC::enablebackdrop(bool p_hard)
 	
 	MCRectangle t_rect;
 	MCPlatformGetScreenViewport(0, t_rect);
-	MCPlatformSetWindowProperty(backdrop_window, kMCPlatformWindowPropertyFrameRect, kMCPlatformPropertyTypeRectangle, &t_rect);
+	MCPlatformSetWindowProperty(backdrop_window, kMCPlatformWindowPropertyContentRect, kMCPlatformPropertyTypeRectangle, &t_rect);
 	MCPlatformShowWindow(backdrop_window);
+	MCPlatformConfigureBackdrop(backdrop_window);
 }
 
 void MCScreenDC::disablebackdrop(bool p_hard)
@@ -539,6 +541,7 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 	alloccolor(backdrop_colour);
 	
 	MCPlatformInvalidateWindow(backdrop_window, nil);
+    MCPlatformUpdateWindow(backdrop_window);
 }
 
 void MCScreenDC::assignbackdrop(Window_mode p_mode, Window p_window)
@@ -564,7 +567,7 @@ void MCScreenDC::redrawbackdrop(MCPlatformSurfaceRef p_surface, MCRegionRef p_re
 			t_gfxcontext -> setfillstyle(FillTiled, backdrop_pattern, 0, 0);
 		else
 			t_gfxcontext -> setfillstyle(FillSolid, NULL, 0, 0);
-		t_gfxcontext -> fillrect(MCRegionGetBoundingBox(p_region), true);
+		t_gfxcontext -> fillrect(MCRegionGetBoundingBox(p_region), false);
 		delete t_gfxcontext;
 		
 		MCPlatformSurfaceUnlockGraphics(p_surface);
@@ -1364,6 +1367,37 @@ void MCScreenDC::controlgainedfocus(MCStack *p_stack, uint32_t p_id)
 
 void MCScreenDC::controllostfocus(MCStack *p_stack, uint32_t p_id)
 {
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCScreenDC::hidecursoruntilmousemoves(void)
+{
+    MCPlatformHideCursorUntilMouseMoves();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// MW-2014-04-23: [[ Bug 12080 ]] Make sure the HideOnSuspend property of all
+//   palettes is in sync with hidePalettes.
+void MCStacklist::hidepaletteschanged(void)
+{
+	if (stacks != NULL)
+	{
+		MCStacknode *tptr = stacks;
+		do
+		{
+            MCStack *t_stack;
+            t_stack = tptr -> getstack();
+			
+            if (t_stack->getwindow() != nil)
+                MCPlatformSetWindowBoolProperty(t_stack -> getwindow(), kMCPlatformWindowPropertyHideOnSuspend, MChidepalettes && t_stack -> getrealmode() == WM_PALETTE);
+            
+            tptr = tptr->next();
+		}
+		while (tptr != stacks);
+	}
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////

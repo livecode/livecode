@@ -89,6 +89,18 @@ static bool s_lock_responder_change = false;
 	return YES;
 }
 
+// MW-2014-04-23: [[ Bug 12270 ]] If user reshaping then apply standard
+//   constrain, otherwise don't constrain.
+- (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen
+{
+    MCWindowDelegate *t_delegate;
+    t_delegate = (MCWindowDelegate *)[self delegate];
+    if ([t_delegate inUserReshape])
+        return [super constrainFrameRect: frameRect toScreen: screen];
+    
+    return frameRect;
+}
+
 @end
 
 @implementation com_runrev_livecode_MCPanel
@@ -134,6 +146,18 @@ static bool s_lock_responder_change = false;
 	[(MCWindowDelegate *)[self delegate] viewFocusSwitched: 0];
 	
 	return YES;
+}
+
+// MW-2014-04-23: [[ Bug 12270 ]] If user reshaping then apply standard
+//   constrain, otherwise don't constrain.
+- (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen
+{
+    MCWindowDelegate *t_delegate;
+    t_delegate = (MCWindowDelegate *)[self delegate];
+    if ([t_delegate inUserReshape])
+        return [super constrainFrameRect: frameRect toScreen: screen];
+    
+    return frameRect;
 }
 
 @end
@@ -318,6 +342,8 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 		return nil;
 	
 	m_window = window;
+    
+    m_user_reshape = false;
 	
 	return self;
 }
@@ -330,6 +356,11 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 - (MCMacPlatformWindow *)platformWindow
 {
 	return m_window;
+}
+
+- (bool)inUserReshape
+{
+    return m_user_reshape;
 }
 
 //////////
@@ -371,12 +402,34 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
         t_thread = [[MCWindowTrackingThread alloc] initWithWindow: m_window];
         [t_thread autorelease];
         [t_thread start];
+        
+        // MW-2014-04-23: [[ Bug 12270 ]] The user has started moving the window
+        //   so set us as reshape by user.
+        m_user_reshape = true;
     }
 }
 
 - (void)windowDidMove:(NSNotification *)notification
 {
+    // MW-2014-04-23: [[ Bug 12270 ]] The user has stopped moving the window
+    //   so unset us as reshape by user.
+    m_user_reshape = false;
+    
 	m_window -> ProcessDidMove();
+}
+
+- (void)windowWillStartLiveResize:(NSNotification *)notification
+{
+    // MW-2014-04-23: [[ Bug 12270 ]] The user has started sizing the window
+    //   so set us as reshape by user.
+    m_user_reshape = true;
+}
+
+- (void)windowDidEndLiveResize:(NSNotification *)notification
+{
+    // MW-2014-04-23: [[ Bug 12270 ]] The user has stopped sizing the window
+    //   so unset us as reshape by user.
+    m_user_reshape = false;
 }
 
 - (void)windowWillMiniaturize:(NSNotification *)notification
@@ -494,6 +547,9 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)theEvent
 {
+    // MW-2014-04-23: [[ CocoaBackdrop ]] This method is called after the window has
+    //   been re-ordered but before anything else - an ideal time to sync the backdrop.
+    MCMacPlatformSyncBackdrop();
 	return YES;
 }
 
@@ -602,7 +658,10 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 - (void)mouseEntered: (NSEvent *)event
 {
-	[self handleMouseMove: event];
+    // MW-2014-04-22: [[ Bug 12255 ]] mouseEntered can get sent before dragEntered and when it is
+    //   it isn't possible to tell if a dragging operation is going to start. Thus we don't handle
+    //   this message, and rely on the first mouseMove instead.
+	//[self handleMouseMove: event];
 }
 
 - (void)mouseExited: (NSEvent *)event
@@ -1037,6 +1096,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 //////////
 
+#if 0
 - (void)undo:(id)sender
 {
 	[self handleAction: @selector(undo:) with: sender];
@@ -1071,6 +1131,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 {
 	[self handleAction: @selector(delete:) with: sender];
 }
+#endif
 
 //////////
 
@@ -1484,9 +1545,6 @@ MCMacPlatformWindow::MCMacPlatformWindow(void)
 
 MCMacPlatformWindow::~MCMacPlatformWindow(void)
 {
-	if (m_is_visible)
-		MCMacPlatformWindowHiding(this);
-
 	[m_handle setDelegate: nil];
 	[m_handle setContentView: nil];
     
@@ -1513,38 +1571,6 @@ MCWindowContainerView *MCMacPlatformWindow::GetContainerView(void)
 id MCMacPlatformWindow::GetHandle(void)
 {
 	return m_handle;
-}
-
-void MCMacPlatformWindow::SetBackdropWindow(MCPlatformWindowRef p_window)
-{
-	if (m_window_handle == nil)
-		return;
-	
-	if (p_window == this)
-		return;
-	
-	// Any windows that float above everything don't need to be parented by the
-	// backdrop window.
-	if (m_style == kMCPlatformWindowStyleDialog ||
-		m_style == kMCPlatformWindowStyleUtility ||
-		m_style == kMCPlatformWindowStylePopUp ||
-		m_style == kMCPlatformWindowStyleToolTip)
-		return;
-	
-	
-	MCMacPlatformWindow *t_backdrop;
-	t_backdrop = (MCMacPlatformWindow *)p_window;
-	if ([m_window_handle parentWindow] != nil)
-		[[m_window_handle parentWindow] removeChildWindow: m_window_handle];
-	
-	if (t_backdrop != nil &&
-		t_backdrop -> m_window_handle != nil)
-	{
-		NSInteger t_level;
-		t_level = [m_window_handle level];
-		[t_backdrop -> m_window_handle addChildWindow: m_window_handle ordered: NSWindowAbove];
-		[m_window_handle setLevel: t_level];
-	}
 }
 
 void MCMacPlatformWindow::MapMCPointToNSPoint(MCPoint p_location, NSPoint& r_location)
@@ -1599,8 +1625,6 @@ void MCMacPlatformWindow::ProcessWillMiniaturize(void)
 	// Unset the parent window to make sure things don't propagate.
 	if ([m_window_handle parentWindow] != nil)
 		[[m_window_handle parentWindow] removeChildWindow: m_window_handle];
-	
-	MCMacPlatformWindowHiding(this);
 }
 
 void MCMacPlatformWindow::ProcessDidMiniaturize(void)
@@ -1610,7 +1634,6 @@ void MCMacPlatformWindow::ProcessDidMiniaturize(void)
 
 void MCMacPlatformWindow::ProcessDidDeminiaturize(void)
 {
-	MCMacPlatformWindowShowing(this);
 	HandleUniconify();
 }
 
@@ -1713,7 +1736,12 @@ void MCMacPlatformWindow::DoRealize(void)
     
 	[m_window_handle setContentView: m_container_view];
     
-	[m_window_handle setLevel: t_window_level];
+    // MW-2014-04-23: [[ Bug 12080 ]] If the window is a palette and the app is active
+    //   then make sure its floating (if app is not active it gets made floating on resume).
+    if (t_window_level == kCGFloatingWindowLevelKey)
+        [m_panel_handle setFloatingPanel: [NSApp isActive]];
+    else
+        [m_window_handle setLevel: t_window_level];
 	[m_window_handle setOpaque: m_mask == nil];
 	[m_window_handle setHasShadow: m_has_shadow];
 	if (!m_has_zoom_widget)
@@ -1726,7 +1754,7 @@ void MCMacPlatformWindow::DoRealize(void)
     
     // MW-2014-04-08: [[ Bug 12080 ]] Make sure we turn off automatic 'hiding on deactivate'.
     //   The engine handles this itself.
-    [m_window_handle setHidesOnDeactivate: NO];
+    [m_window_handle setHidesOnDeactivate: m_hides_on_suspend];
 }
 
 void MCMacPlatformWindow::DoSynchronize(void)
@@ -1781,6 +1809,10 @@ void MCMacPlatformWindow::DoSynchronize(void)
     if (m_changes . cursor_changed)
         MCMacPlatformHandleMouseCursorChange(this);
     
+    // MW-2014-04-23: [[ Bug 12080 ]] Sync hidesOnSuspend.
+    if (m_changes . hides_on_suspend_changed)
+        [m_window_handle setHidesOnDeactivate: m_hides_on_suspend];
+    
 	m_synchronizing = false;
 }
 
@@ -1815,7 +1847,6 @@ void MCMacPlatformWindow::DoShow(void)
 	{
 		[m_view setNeedsDisplay: YES];
 		[m_window_handle makeKeyAndOrderFront: nil];
-		MCMacPlatformWindowShowing(this);
 	}
 }
 
@@ -1861,7 +1892,6 @@ void MCMacPlatformWindow::DoHide(void)
 		if ([m_window_handle parentWindow] != nil)
 			[[m_window_handle parentWindow] removeChildWindow: m_window_handle];
 	
-		MCMacPlatformWindowHiding(this);
 		[m_window_handle orderOut: nil];
 	}
 }
@@ -1873,7 +1903,6 @@ void MCMacPlatformWindow::DoFocus(void)
 
 void MCMacPlatformWindow::DoRaise(void)
 {
-	MCMacPlatformWindowShowing(this);
 	[m_window_handle orderFront: nil];
 }
 

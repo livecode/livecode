@@ -13,6 +13,8 @@ class MCMacPlatformSurface;
 	int m_argc;
 	char **m_argv;
 	char **m_envp;
+    
+    bool m_explicit_quit : 1;
 }
 
 // Platform init / finit.
@@ -72,6 +74,9 @@ class MCMacPlatformSurface;
 - (BOOL)canBecomeKeyWindow;
 - (BOOL)makeFirstResponder: (NSResponder *)responder;
 
+// MW-2014-04-23: [[ Bug 12270 ]] Override so we can stop constraining.
+- (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen;
+
 @end
 
 @interface com_runrev_livecode_MCPanel: NSPanel
@@ -84,6 +89,9 @@ class MCMacPlatformSurface;
 - (BOOL)canBecomeKeyWindow;
 - (BOOL)makeFirstResponder: (NSResponder *)responder;
 
+// MW-2014-04-23: [[ Bug 12270 ]] Override so we can stop constraining.
+- (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen;
+
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,6 +99,10 @@ class MCMacPlatformSurface;
 @interface com_runrev_livecode_MCWindowDelegate: NSObject<NSWindowDelegate>
 {
 	MCMacPlatformWindow *m_window;
+    
+    // MW-2014-04-23: [[ Bug 12270 ]] If true the size / position of the window is
+    //   being changed by the user.
+    bool m_user_reshape : 1;
 }
 
 //////////
@@ -100,12 +112,18 @@ class MCMacPlatformSurface;
 
 - (MCMacPlatformWindow *)platformWindow;
 
+// MW-2014-04-23: [[ Bug 12270 ]] Returns the value of 'm_user_reshape'
+- (bool)inUserReshape;
+
 //////////
 
 - (BOOL)windowShouldClose:(id)sender;
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize;
 - (void)windowDidMove:(NSNotification *)notification;
+
+- (void)windowWillStartLiveResize:(NSNotification *)notification;
+- (void)windowDidEndLiveResize:(NSNotification *)notification;
 
 - (void)windowDidMiniaturize:(NSNotification *)notification;
 - (void)windowDidDeminiaturize:(NSNotification *)notification;
@@ -381,8 +399,6 @@ public:
 	void MapMCRectangleToNSRect(MCRectangle rect, NSRect& r_ns_rect);
 	void MapNSRectToMCRectangle(NSRect rect, MCRectangle& r_mc_rect);
 	
-	void SetBackdropWindow(MCPlatformWindowRef window);
-	
 protected:
 	virtual void DoRealize(void);
 	virtual void DoSynchronize(void);
@@ -482,10 +498,6 @@ MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifier
 
 NSEvent *MCMacPlatformGetLastMouseEvent(void);
 
-void MCMacPlatformWindowFocusing(MCMacPlatformWindow *window);
-void MCMacPlatformWindowShowing(MCMacPlatformWindow *window);
-void MCMacPlatformWindowHiding(MCMacPlatformWindow *window);
-
 NSMenu *MCMacPlatformGetIconMenu(void);
 
 void MCMacPlatformLockMenuSelect(void);
@@ -498,6 +510,9 @@ void MCMacPlatformResetCursor(void);
 
 void MCMacPlatformGetGlobalVolume(double& r_volume);
 void MCMacPlatformSetGlobalVolume(double volume);
+
+// MW-2014-04-23: [[ CocoaBackdrop ]] Ensures the windows are stacked correctly.
+void MCMacPlatformSyncBackdrop(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
