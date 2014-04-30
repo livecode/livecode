@@ -169,6 +169,12 @@ static uint32_t s_key_equivalent_depth = 0;
 	return [item isEnabled];
 }
 
+// MW-2014-04-30: [[ Bug 12329 ]] We want our menu items to still be activatible in modal dialogs.
+- (BOOL)worksWhenModal
+{
+    return YES;
+}
+
 //////////
 
 - (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action
