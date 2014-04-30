@@ -25,6 +25,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCCefBrowserClient;
 class MCCefMessageResult;
 
+enum MCCefAuthScheme
+{
+	kMCCefAuthBasic = 0,
+	kMCCefAuthDigest,
+	kMCCefAuthNTLM,
+	kMCCefAuthNegotiate,
+	kMCCefAuthSPDYProxy,
+};
+
 class MCCefBrowserBase : public CWebBrowserBase
 {
 private:
@@ -155,6 +164,8 @@ public:
 	virtual bool PlatformSetRect(int32_t t_left, int32_t t_top, int32_t t_right, int32_t t_bottom) = 0;
 
 	virtual bool PlatformGetWindowID(int32_t &r_id) = 0;
+	
+	virtual bool PlatformGetAuthCredentials(bool p_is_proxy, const CefString &p_url, const CefString &p_realm, MCCefAuthScheme p_auth_scheme, CefString &r_user, CefString &r_password) = 0;
 
 	// Access methods
 
@@ -169,4 +180,11 @@ void MCCefPlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser);
 const char *MCCefPlatformGetSubProcessName(void);
 const char *MCCefPlatformGetCefLibraryPath(void);
 const char *MCCefPlatformGetLocalePath(void);
+
+bool MCCefStringToCString(const CefString &p_cef_string, char *&r_c_string);
+bool MCCefStringFromCString(const char *p_c_string, CefString &r_cef_string);
+bool MCCefStringToUInt(const CefString &p_string, uint32_t &r_int);
+
+bool MCCefAuthSchemeFromCefString(const CefString &p_string, MCCefAuthScheme &r_scheme);
+
 #endif /* __CEF_BROWSER_H__ */
