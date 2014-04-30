@@ -2199,6 +2199,9 @@ bool MCStringEndsWithCString(MCStringRef self, const char_t *p_suffix_cstring, M
 
 bool MCStringContains(MCStringRef self, MCStringRef p_needle, MCStringOptions p_options)
 {
+    if (MCStringIsEmpty(p_needle))
+        return false;
+    
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
