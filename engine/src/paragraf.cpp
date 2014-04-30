@@ -3826,7 +3826,7 @@ static codepoint_t GetCodepointAtRelativeIndex(MCBlock *p_block, findex_t p_inde
 }
 
 findex_t MCParagraph::findwordbreakbefore(MCBlock *p_block, findex_t p_index)
-{
+{    
 	// Create the word break iterator
     MCBreakIteratorRef t_breaker;
     MCLocaleBreakIteratorCreate(kMCBasicLocale, kMCBreakIteratorTypeWord, t_breaker);
@@ -3837,7 +3837,7 @@ findex_t MCParagraph::findwordbreakbefore(MCBlock *p_block, findex_t p_index)
     t_break = MCLocaleBreakIteratorBefore(t_breaker, p_index);
     MCLocaleBreakIteratorRelease(t_breaker);
     
-    return (t_break == kMCLocaleBreakIteratorDone) ? MCStringGetLength(m_text) : t_break;
+    return (t_break == kMCLocaleBreakIteratorDone) ? 0 : t_break;
 }
 
 findex_t MCParagraph::findwordbreakafter(MCBlock *p_block, findex_t p_index)

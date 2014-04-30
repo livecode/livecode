@@ -75,7 +75,9 @@ bool MCExecContext::ConvertToString(MCValueRef p_value, MCStringRef& r_string)
     case kMCValueTypeCodeNumber:
     {
         if (MCNumberIsInteger((MCNumberRef)p_value))
-            return MCStringFormat(r_string, "%d", MCNumberFetchAsInteger((MCNumberRef)p_value));
+            // SN-2014-04-28 [[ StonCache ]]
+            // Stores the numeric value in the string
+            return MCStringFormat(r_string, "%d", MCNumberFetchAsInteger((MCNumberRef)p_value)) && MCStringSetNumericValue(r_string, MCNumberFetchAsReal((MCNumberRef)p_value));
 
         char *t_buffer;
         uint32_t t_buffer_size;
@@ -86,7 +88,8 @@ bool MCExecContext::ConvertToString(MCValueRef p_value, MCStringRef& r_string)
         t_length = MCU_r8tos(t_buffer, t_buffer_size, MCNumberFetchAsReal((MCNumberRef)p_value), m_nffw, m_nftrailing, m_nfforce);
 
         bool t_success;
-        t_success = MCStringCreateWithNativeCharsAndRelease((char_t *)t_buffer, t_length, r_string);
+        t_success = MCStringCreateWithNativeCharsAndRelease((char_t *)t_buffer, t_length, r_string) &&
+                MCStringSetNumericValue(r_string, MCNumberFetchAsReal((MCNumberRef)p_value));
 
         return t_success;
     }
@@ -113,18 +116,37 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
         {
             double t_number;
             t_number = 0.0;
-            if (MCStringGetLength(MCNameGetString((MCNameRef)p_value)) != 0)
+            // SN-2014-04-28 [[ StonCache ]]
+            // Fetches the numeric value in case it exists, or stores the one therefore computed otherwise
+            if (MCStringGetLength(MCNameGetString((MCNameRef)p_value)) != 0 &&
+                    !MCStringGetNumericValue(MCNameGetString((MCNameRef)p_value), t_number))
+            {
                 if (!MCU_stor8(MCStringGetOldString(MCNameGetString((MCNameRef)p_value)), t_number, m_convertoctals))
                     break;
+
+                // Converting to octals doesn't generate the 10-based number stored in the string
+                if (!m_convertoctals)
+                    MCStringSetNumericValue(MCNameGetString((MCNameRef)p_value), t_number);
+            }
+
             return MCNumberCreateWithReal(t_number, r_number);
         }
     case kMCValueTypeCodeString:
         {
             double t_number;
             t_number = 0.0;
-            if (MCStringGetLength((MCStringRef)p_value) != 0)
+            // SN-2014-04-28 [[ StonCache ]]
+            // Fetches the numeric value in case it exists, or stores the one therefore computed otherwise
+            if (MCStringGetLength((MCStringRef)p_value) != 0 && !MCStringGetNumericValue((MCStringRef)p_value, t_number))
+            {
                 if (!MCU_stor8(MCStringGetOldString((MCStringRef)p_value), t_number, m_convertoctals))
                     break;
+
+                // Converting to octals doesn't generate the 10-based number stored in the string
+                if (!m_convertoctals)
+                    MCStringSetNumericValue((MCStringRef)p_value, t_number);
+            }
+
             return MCNumberCreateWithReal(t_number, r_number);
         }
     case kMCValueTypeCodeData:
@@ -3322,6 +3344,88 @@ void MCExecTypeConvertNumbers(MCExecContext& ctxt, MCExecValueType p_from_type, 
         ctxt . Throw();
 }
 
+void MCExecTypeConvertStringToNumber(MCExecContext &ctxt, MCStringRef p_from, MCExecValueType p_to_type, void* r_to_value)
+{
+    bool t_success;
+    double t_real_value;
+    if (MCStringGetNumericValue(p_from, t_real_value))
+    {
+        t_success = true;
+        switch (p_to_type)
+        {
+        case kMCExecValueTypeDouble:
+            *(double*) r_to_value = t_real_value;
+            break;
+        case kMCExecValueTypeInt:
+            *(integer_t*) r_to_value = (integer_t)t_real_value;
+            break;
+        case kMCExecValueTypeUInt:
+            *(uinteger_t*) r_to_value = (uinteger_t)t_real_value;
+            break;
+        case kMCExecValueTypeFloat:
+            *(float*) r_to_value = (float)t_real_value;
+            break;
+        default:
+            t_success = false;
+        }
+    }
+    else
+    {
+        switch (p_to_type)
+        {
+        case kMCExecValueTypeInt:
+        {
+            integer_t t_value;
+            t_success = ctxt . ConvertToInteger((MCValueRef)p_from, t_value);
+            if (t_success)
+            {
+                MCStringSetNumericValue(p_from, (double)t_value);
+                *(integer_t*)r_to_value = t_value;
+            }
+            break;
+        }
+        case kMCExecValueTypeUInt:
+        {
+            uinteger_t t_value;
+            t_success =  ctxt . ConvertToUnsignedInteger((MCValueRef)p_from, t_value);
+            if (t_success)
+            {
+                MCStringSetNumericValue(p_from, (double)t_value);
+                *(uinteger_t*)r_to_value = t_value;
+            }
+            break;
+        }
+        case kMCExecValueTypeFloat:
+        {
+            double t_value;
+            t_success = ctxt . ConvertToReal((MCValueRef)p_from, t_value);
+            if (t_success)
+            {
+                MCStringSetNumericValue(p_from, (double)t_value);
+                *(float*) r_to_value = (float)t_value;
+            }
+            break;
+        }
+        case kMCExecValueTypeDouble:
+        {
+            double t_value;
+            t_success = ctxt . ConvertToReal((MCValueRef)p_from, t_value);
+            if (t_success)
+            {
+                MCStringSetNumericValue(p_from, t_value);
+                *(double*)r_to_value = t_value;
+            }
+            break;
+        }
+        default:
+            t_success = false;
+        }
+    }
+
+    if (!t_success)
+        ctxt . Throw();
+}
+
 void MCExecTypeConvertAndReleaseAlways(MCExecContext& ctxt, MCExecValueType p_from_type, void *p_from_value, MCExecValueType p_to_type, void *p_to_value)
 {
     if (p_from_type == p_to_type)
@@ -3329,10 +3433,23 @@ void MCExecTypeConvertAndReleaseAlways(MCExecContext& ctxt, MCExecValueType p_fr
         MCExecTypeAssign(ctxt, p_from_type, p_from_value, p_to_value);
         return;
     }
-    else if(MCExecTypeIsNumber(p_from_type) && MCExecTypeIsNumber(p_to_type))
+    else if(MCExecTypeIsNumber(p_to_type))
     {
-        MCExecTypeConvertNumbers(ctxt, p_from_type, p_from_value, p_to_type, p_to_value);
-        return;
+        if (MCExecTypeIsNumber(p_from_type))
+        {
+            MCExecTypeConvertNumbers(ctxt, p_from_type, p_from_value, p_to_type, p_to_value);
+            return;
+        }
+        else if (p_from_type == kMCExecTypeString)
+        {
+            MCExecTypeConvertStringToNumber(ctxt, *(MCStringRef*)p_from_value, p_to_type, p_to_value);
+            return;
+        }
+        else if (p_from_type == kMCExecTypeName)
+        {
+            MCExecTypeConvertStringToNumber(ctxt, MCNameGetString(*(MCNameRef*)p_from_value), p_to_type, p_to_value);
+            return;
+        }
     }
 
 	MCValueRef t_pivot;
@@ -3376,7 +3493,7 @@ void MCExecTypeCopy(const MCExecValue &self, MCExecValue &r_dest)
     // Retain the value if one is stored
     if (MCExecTypeIsValueRef(self . type)
             || (self . type == kMCExecValueTypeNone && self . valueref_value != nil))
-        r_dest . valueref_value = MCValueRetain(self . valueref_value);
+        MCValueCopy(self . valueref_value, r_dest . valueref_value);
     else
         r_dest = self;
     

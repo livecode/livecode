@@ -2199,6 +2199,9 @@ bool MCStringEndsWithCString(MCStringRef self, const char_t *p_suffix_cstring, M
 
 bool MCStringContains(MCStringRef self, MCStringRef p_needle, MCStringOptions p_options)
 {
+    if (MCStringIsEmpty(p_needle))
+        return false;
+    
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
@@ -4536,6 +4539,7 @@ static void __MCStringChanged(MCStringRef self, uindex_t simple, uindex_t uncomb
         self -> chars = nil;
     }
     self -> flags &= ~kMCStringFlagIsChecked;
+    self -> flags &= ~kMCStringFlagHasNumber;
 }
 
 codepoint_t MCStringSurrogatesToCodepoint(unichar_t p_lead, unichar_t p_trail)
@@ -4889,6 +4893,62 @@ bool MCStringNormalizedCopyNFKD(MCStringRef self, MCStringRef &r_string)
         return true;
     MCMemoryDelete(t_norm);
     return false;
+}
+
+/////////
+
+
+
+bool MCStringSetNumericValue(MCStringRef self, double p_value)
+{
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+
+    if (MCStringIsMutable(self))
+        return false;
+
+    bool t_success = false;
+
+    // Ensure we have a 8-byte aligned position for the number value
+    if (MCStringIsNative(self))
+    {
+        if (MCMemoryReallocate(self -> native_chars, ((self -> char_count + 7) & ~7) + 8, self -> native_chars))
+        {
+            *(double*)(&(self -> native_chars[(self -> char_count + 7) & ~7])) = p_value;
+            t_success= true;
+        }
+    }
+    else
+    {
+        if (MCMemoryReallocate(self -> chars, ((self -> char_count * 2 + 7) & ~7) + 8, self -> chars))
+        {
+            *(double*)(&(self -> chars[(self -> char_count + 7) & ~7])) = p_value;
+            t_success = true;
+        }
+    }
+
+    if (t_success)
+        self -> flags |= kMCStringFlagHasNumber;
+
+    return t_success;
+}
+
+bool MCStringGetNumericValue(MCStringRef self, double &r_value)
+{
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+
+    if ((self -> flags & kMCStringFlagHasNumber) != 0)
+    {
+        if (MCStringIsNative(self))
+            r_value = *(double*)(&(self -> native_chars[(self -> char_count + 7) & ~7]));
+        else
+            r_value = *(double*)(&(self -> chars[(self -> char_count + 7) & ~7]));
+
+        return true;
+    }
+    else
+        return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
