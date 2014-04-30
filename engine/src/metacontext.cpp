@@ -390,7 +390,7 @@ void MCMetaContext::drawlines(MCPoint *points, uint2 npoints, bool p_closed)
 	polygon_mark(true, false, points, npoints, p_closed);
 }
 
-void MCMetaContext::drawsegments(MCSegment *segments, uint2 nsegs)
+void MCMetaContext::drawsegments(MCLineSegment *segments, uint2 nsegs)
 {
 	for(uint2 t_segment = 0; t_segment < nsegs; ++t_segment)
 		drawline(segments[t_segment] . x1, segments[t_segment] . y1, segments[t_segment] . x2, segments[t_segment] . y2);

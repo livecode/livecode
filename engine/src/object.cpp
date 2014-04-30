@@ -2388,14 +2388,14 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 	bwidth = MCU_min(bwidth, drect.height >> 1);
 	if (bwidth == 0)
 		return;
-	MCSegment tb[DEFAULT_BORDER * 2];
-	MCSegment bb[DEFAULT_BORDER * 2];
-	MCSegment *t = tb;
-	MCSegment *b = bb;
+	MCLineSegment tb[DEFAULT_BORDER * 2];
+	MCLineSegment bb[DEFAULT_BORDER * 2];
+	MCLineSegment *t = tb;
+	MCLineSegment *b = bb;
 	if (bwidth > DEFAULT_BORDER)
 	{
-		t = new MCSegment[bwidth * 2];
-		b = new MCSegment[bwidth * 2];
+		t = new MCLineSegment[bwidth * 2];
+		b = new MCLineSegment[bwidth * 2];
 	}
 	int2 lx = drect.x;
 	int2 rx = drect.x + drect.width;
