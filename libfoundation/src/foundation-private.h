@@ -90,6 +90,8 @@ enum
     kMCStringFlagIsChecked = 1 << 4,
     // If set, the string has NO combining chars
     kMCStringFlagIsUncombined = 1 << 5,
+    // If set, the string has been converted to a number
+    kMCStringFlagHasNumber = 1 << 6
 };
 
 enum
