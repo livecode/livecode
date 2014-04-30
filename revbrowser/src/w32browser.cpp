@@ -2015,6 +2015,11 @@ CWebBrowserModule _AtlModule;
 
 HINSTANCE theInstance;
 
+HINSTANCE MCWin32BrowserGetHINSTANCE()
+{
+	return theInstance;
+}
+
 // DLL Entry Point
 extern "C" BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
