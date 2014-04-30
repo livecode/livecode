@@ -1313,7 +1313,9 @@ bool CWebBrowser::GetImage(void*& r_data, int& r_length)
 		desthdc = CreateCompatibleDC(desktophdc);
 		ReleaseDC(NULL, desktophdc);
 		HBITMAP odbm = (HBITMAP)SelectObject(desthdc, browserimage->bm);
-		BOOL res = Draw(desthdc);
+		// MW-2014-04-30: [[ Bug 12210 ]] Use IViewObject to render rather than DrawToDC as the latter
+		//   has been deprecated in IE9+.
+		BOOL res = Draw(twidth, theight, desthdc);
 		SelectObject(desthdc, odbm);
 		DeleteDC(desthdc);
 		if (res)
