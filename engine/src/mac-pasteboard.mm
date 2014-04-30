@@ -60,6 +60,7 @@ static struct { NSString *type; MCPlatformPasteboardFlavor flavor; bool (*conver
 	{ (NSString *)kUTTypeTIFF, kMCPlatformPasteboardFlavorPNG, MCMacPasteboardConvertTIFFToPNG },
 	
 	// COCOA-TODO: Declare objects UT type so copy/paste objects works between LiveCode instances.
+    // PM-2014-04-29: [[Bug 12304]] Updated Revolution-Info.plist to declare objects UT type 
 	{ kMCMacPasteboardObjectsUTString, kMCPlatformPasteboardFlavorObjects, MCMacPasteboardConvertIdentity },
 	//{ @"com.runrev.livecode.text-styled-1", kMCPlatformPasteboardFlavorStyledText, MCMacPasteboardConvertIdentity },
 };
