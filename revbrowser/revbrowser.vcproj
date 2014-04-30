@@ -263,6 +263,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\revbrowser.rc.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\w32browser.h"
 				>
 			</File>
@@ -272,6 +276,14 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+			<File
+				RelativePath=".\src\revbrowser.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\images\security_warning.ico"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
