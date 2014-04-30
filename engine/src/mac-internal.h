@@ -299,6 +299,8 @@ class MCMacPlatformSurface;
 
 - (BOOL)validateMenuItem: (NSMenuItem *)item;
 
+- (BOOL)worksWhenModal;
+
 - (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action;
 
 @end
