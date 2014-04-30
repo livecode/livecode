@@ -975,7 +975,10 @@ codepoint_t MCStringGetCodepointAtIndex(MCStringRef self, uindex_t p_index)
         self = self -> string;
     
     if (MCStringIsNative(self))
-        return self -> native_chars[p_index];
+    {
+        char_t native_char = self -> native_chars[p_index];
+        return MCUnicodeCharMapFromNative(native_char);
+    }
     
     // Get the codepoint at this index
     unichar_t t_lead, t_trail;
@@ -3651,7 +3654,11 @@ static void split_find_end_of_element_and_key_native(const char_t *sptr, const c
 		sptr += 1;
 	}
     
-	return split_find_end_of_element_native(sptr, eptr, del, p_del_length, r_end_ptr, p_options);
+    // key not found
+    if (sptr == eptr - p_key_length + 1)
+        r_key_ptr = sptr;
+    
+	split_find_end_of_element_native(sptr, eptr, del, p_del_length, r_end_ptr, p_options);
 }
 
 bool MCStringSplitNative(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_del, MCStringOptions p_options, MCArrayRef& r_array)
@@ -3667,11 +3674,6 @@ bool MCStringSplitNative(MCStringRef self, MCStringRef p_elem_del, MCStringRef p
         p_elem_del = p_elem_del -> string;
     
     
-    if (!MCStringIsNative(p_elem_del))
-    {
-        p_elem_del = kMCEmptyString;
-    }
-    
     const char_t *t_sptr;
     const char_t *t_eptr;
     t_sptr = self -> native_chars;
@@ -3682,58 +3684,30 @@ bool MCStringSplitNative(MCStringRef self, MCStringRef p_elem_del, MCStringRef p
         uindex_t t_index;
 		t_index = 1;
         
-        // TODO: contingency
-        /*if (!MCStringIsNative(p_elem_del))
+        for(;;)
         {
-            if (!MCArrayStoreValueAtIndex(*t_array, t_index, self))
+            const char_t *t_element_end;
+            split_find_end_of_element_native(t_sptr, t_eptr, p_elem_del -> native_chars, p_elem_del -> char_count, t_element_end, p_options);
+            
+            MCAutoStringRef t_string;
+            if (!MCStringCreateWithNativeChars(t_sptr, t_element_end - t_sptr, &t_string))
                 return false;
-        }
-        else*/
-        {
-            for(;;)
-            {
-                const char_t *t_element_end;
-                split_find_end_of_element_native(t_sptr, t_eptr, p_elem_del -> native_chars, p_elem_del -> char_count, t_element_end, p_options);
-                
-                MCAutoStringRef t_string;
-                if (!MCStringCreateWithNativeChars(t_sptr, t_element_end - t_sptr, &t_string))
-                    return false;
-                
-                if (!MCArrayStoreValueAtIndex(*t_array, t_index, *t_string))
-                    return false;
-                
-                if (t_element_end + 1 >= t_eptr)
-                    break;
-                
-                t_index += 1;
-                
-                t_sptr = t_element_end + 1;
-            }
+            
+            if (!MCArrayStoreValueAtIndex(*t_array, t_index, *t_string))
+                return false;
+            
+            if (t_element_end + p_elem_del -> char_count >= t_eptr)
+                break;
+            
+            t_index += 1;
+            
+            t_sptr = t_element_end + p_elem_del -> char_count;
         }
 	}
 	else
 	{
-        // TODO: contingencies
-        /*
-        if (!MCStringIsNative(p_elem_del))
-        {
-            if (!MCStringIsNative(p_key_del))
-            {
-                MCNewAutoNameRef t_key;
-                MCNameCreate(self, &t_key);
-                if (!MCArrayStoreValue(*t_array, true, *t_key, kMCEmptyString))
-                    return false;
-            }
-        }*/
-        
         if (__MCStringIsIndirect(p_key_del))
             p_elem_del = p_key_del -> string;
-        
-        
-        if (!MCStringIsNative(p_key_del))
-        {
-            p_key_del = kMCEmptyString;
-        }
         
 		for(;;)
 		{
@@ -3747,7 +3721,7 @@ bool MCStringSplitNative(MCStringRef self, MCStringRef p_elem_del, MCStringRef p
 				return false;
             
 			if (t_key_end != t_element_end)
-				t_key_end += 1;
+				t_key_end += p_key_del -> char_count;
             
 			MCAutoStringRef t_string;
 			if (!MCStringCreateWithNativeChars(t_key_end, t_element_end - t_key_end, &t_string))
@@ -3756,10 +3730,10 @@ bool MCStringSplitNative(MCStringRef self, MCStringRef p_elem_del, MCStringRef p
 			if (!MCArrayStoreValue(*t_array, true, *t_name, *t_string))
 				return false;
             
-			if (t_element_end + 1 >= t_eptr)
+			if (t_element_end + p_elem_del -> char_count >= t_eptr)
 				break;
             
-			t_sptr = t_element_end + 1;
+			t_sptr = t_element_end + p_elem_del -> char_count;
 		}
 	}
     
@@ -3962,7 +3936,12 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 	}
     
     if (MCStringIsNative(self))
-        return MCStringSplitNative(self, p_elem_del, p_key_del, p_options, r_array);
+    {
+        if (MCStringIsNative(p_elem_del) && (p_key_del == nil || MCStringIsNative(p_key_del)))
+            return MCStringSplitNative(self, p_elem_del, p_key_del, p_options, r_array);
+        
+        __MCStringUnnativize(self, true);
+    }
 
     MCAutoArrayRef t_array;
 	if (!MCArrayCreateMutable(&t_array))

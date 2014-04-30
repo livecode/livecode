@@ -1035,12 +1035,12 @@ bool MCUnicodeLastIndexOf(const unichar_t *p_string, uindex_t p_string_length,
         {
             // Do a fresh string comparison at this point
             t_string_filter->MarkText();
-            uindex_t t_offset = t_string_filter->GetMarkedLength() - 1;
+            uindex_t t_offset = p_string_length - t_string_filter->GetMarkedLength();
             uindex_t t_string_matched_len, t_needle_matched_len;
-            MCUnicodeSharedSuffix(p_string + p_string_length - t_offset, t_offset, p_needle, p_needle_length, p_option, t_string_matched_len, t_needle_matched_len);
+            MCUnicodeSharedSuffix(p_string, t_offset, p_needle, p_needle_length, p_option, t_string_matched_len, t_needle_matched_len);
             if (t_needle_matched_len == p_needle_length)
             {
-                r_index = p_string_length - t_offset;
+                r_index = t_offset - t_string_matched_len;
                 MCTextFilterRelease(t_string_filter);
                 MCTextFilterRelease(t_needle_filter);
                 return true;
@@ -1088,7 +1088,7 @@ bool MCUnicodeLastIndexOfChar(const unichar_t *p_string, uindex_t p_string_lengt
                                uindex_t &r_index)
 {
     // Create filter chain for the string being searched
-    MCTextFilter* t_string_filter = MCTextFilterCreate(p_string, p_string_length, kMCStringEncodingUTF16, p_option);
+    MCTextFilter* t_string_filter = MCTextFilterCreate(p_string, p_string_length, kMCStringEncodingUTF16, p_option, true);
     
     // Loop until we find the character
     while (t_string_filter->HasData())
@@ -1097,7 +1097,7 @@ bool MCUnicodeLastIndexOfChar(const unichar_t *p_string, uindex_t p_string_lengt
         if (t_cp == p_needle)
         {
             t_string_filter->MarkText();
-            r_index = t_string_filter->GetMarkedLength() - 1;
+            r_index = p_string_length - t_string_filter->GetMarkedLength();
             MCTextFilterRelease(t_string_filter);
             return true;
         }
@@ -2170,9 +2170,6 @@ bool MCUnicodeWildcardMatch(const unichar_t *source_chars, uindex_t source_lengt
     MCTextFilter *t_pattern_filter = MCTextFilterCreate(pattern_chars, pattern_length, kMCStringEncodingUTF16, p_option);
     
     codepoint_t t_source_cp, t_pattern_cp;
-
-    if (t_source_filter -> HasData() != t_pattern_filter -> HasData())
-        return false;
     
     while (t_source_filter -> HasData())
     {
@@ -2319,13 +2316,7 @@ bool MCUnicodeWildcardMatch(const unichar_t *source_chars, uindex_t source_lengt
                     }
                     else if (t_pattern_cp == '?' || t_pattern_cp == '[')
                     {
-                        t_source_filter -> AdvanceCursor();
-                        t_source_filter -> GetNextCodepoint();
                         t_source_filter -> MarkText();
-
-                        t_pattern_filter -> AdvanceCursor();
-                        t_pattern_filter -> AdvanceCursor();
-                        t_pattern_filter -> GetNextCodepoint();
                         t_pattern_filter -> MarkText();
                         
                         t_sindex = t_source_filter -> GetMarkedLength() - 1;
@@ -2346,7 +2337,7 @@ bool MCUnicodeWildcardMatch(const unichar_t *source_chars, uindex_t source_lengt
                 // default - just compare chars
                 if (t_source_cp != t_pattern_cp)
                     return false;
-            
+                
                 break;
 		}
         t_source_filter -> AdvanceCursor();
@@ -2359,6 +2350,9 @@ bool MCUnicodeWildcardMatch(const unichar_t *source_chars, uindex_t source_lengt
             return false;
         t_pattern_filter -> AdvanceCursor();
     }
-   
+    
+    if (t_source_filter -> HasData())
+        return false;
+    
     return true;
 }
