@@ -133,19 +133,19 @@ public:
 	{
         return m_ec . GetConvertOctals();
 	}
-	char getitemdel() const
+	MCStringRef getitemdel() const
 	{
         return m_ec . GetItemDelimiter();
 	}
-	char getcolumndel() const
+	MCStringRef getcolumndel() const
 	{
         return m_ec . GetColumnDelimiter();
 	}
-	char getrowdel() const
+	MCStringRef getrowdel() const
 	{
         return m_ec . GetRowDelimiter();
 	}
-	char getlinedel()
+	MCStringRef getlinedel()
 	{
         return m_ec . GetLineDelimiter();
 	}
@@ -198,10 +198,10 @@ public:
     void setuseunicode(bool p_value) { m_ec . SetUseUnicode(p_value);}
     void setusesystemdate(bool p_value) { m_ec . SetUseSystemDate(p_value);}
     void setcutoff(uint2 p_value) { m_ec . SetCutOff(p_value);}
-    void setitemdel(char_t p_value) { m_ec . SetItemDelimiter(p_value);}
-    void setcolumndel(char_t p_value) { m_ec . SetColumnDelimiter(p_value);}
-    void setlinedel(char_t p_value) { m_ec . SetLineDelimiter(p_value);}
-    void setrowdel(char_t p_value) { m_ec . SetRowDelimiter(p_value);}
+    void setitemdel(MCStringRef p_value) { m_ec . SetItemDelimiter(p_value);}
+    void setcolumndel(MCStringRef p_value) { m_ec . SetColumnDelimiter(p_value);}
+    void setlinedel(MCStringRef p_value) { m_ec . SetLineDelimiter(p_value);}
+    void setrowdel(MCStringRef p_value) { m_ec . SetRowDelimiter(p_value);}
     void setnumberformat(uint2 fw, uint2 trailing, uint2 force) {m_ec . SetNumberFormat(fw, trailing, force);}
 
 	void setobj(MCObject *p_object)

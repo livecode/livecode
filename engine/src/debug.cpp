@@ -527,7 +527,7 @@ void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
 			MCAutoStringRef t_info;
 
 			if (t_success)
-				t_success = MCStringDivideAtChar(*t_tail, ',', kMCCompareCaseless, &t_line_string, &t_info);
+				t_success = MCStringDivideAtChar(*t_tail, ',', kMCCompareExact, &t_line_string, &t_info);
 			
 			int32_t t_line;
 

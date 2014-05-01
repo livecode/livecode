@@ -43,7 +43,7 @@ SOURCES=\
 	eps.cpp mcssl.cpp opensslsocket.cpp socket_resolve.cpp \
 	answer.cpp ask.cpp external.cpp stacke.cpp player.cpp surface.cpp \
 	combiners.cpp path.cpp metacontext.cpp \
-	printer.cpp unicode.cpp rtf.cpp rtfsupport.cpp text.cpp pathgray.cpp \
+	printer.cpp rtf.cpp rtfsupport.cpp text.cpp pathgray.cpp \
 	pathprocess.cpp \
     objectstream.cpp \
 	menuparse.cpp parentscript.cpp securemode.cpp \

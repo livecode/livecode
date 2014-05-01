@@ -634,7 +634,7 @@ void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef p_value, int p_wher
         /* UNCHECKED */ ctxt . ConvertToString(p_value, &t_value);
         
         MCStringRef t_string;
-		/* UNCHECKED */ MCStringMutableCopy(p_chunk . mark . text, t_string);
+		/* UNCHECKED */ MCStringMutableCopy((MCStringRef)p_chunk . mark . text, t_string);
 		/* UNCHECKED */ MCStringReplace(t_string, MCRangeMake(p_chunk.mark.start, p_chunk.mark.finish - p_chunk.mark.start), *t_value);
 		/* UNCHECKED */ MCStringCopyAndRelease(t_string, (MCStringRef&)&t_new_value);
 	}
@@ -697,7 +697,7 @@ void MCNetworkSetFtpProxy(MCExecContext& ctxt, MCStringRef p_value)
 {
 	
 	MCAutoStringRef t_host, t_port;
-	/* UNCHECKED */ MCStringDivideAtChar(p_value, ':', kMCCompareCaseless, &t_host, &t_port);
+	/* UNCHECKED */ MCStringDivideAtChar(p_value, ':', kMCCompareExact, &t_host, &t_port);
 	if (*t_port != nil)
 		/* UNCHECKED */ MCStringToUInt16(*t_port, MCftpproxyport);
 	else
@@ -852,7 +852,7 @@ void MCNetworkMarkUrl(MCExecContext& ctxt, MCStringRef p_url, MCMarkedText& r_ma
     MCAutoValueRef t_data;
 
     MCU_geturl(ctxt, p_url, &t_data);
-    /* UNCHECKED */ ctxt . ConvertToString(*t_data, r_mark . text);
+    /* UNCHECKED */ ctxt . ConvertToString(*t_data, (MCStringRef &)r_mark . text);
     
     r_mark . start = 0;
     r_mark . finish = MAXUINT4;

@@ -1315,6 +1315,15 @@ extern MCStringRef kMCFalseString;
 // The default string for the 'mixed' value of chunk properties.
 extern MCStringRef kMCMixedString;
 
+// The default string for ','.
+extern MCStringRef kMCCommaString;
+
+// The default string for '\n'.
+extern MCStringRef kMCLineEndString;
+
+// The default string for '\t'.
+extern MCStringRef kMCTabString;
+
 /////////
 
 // Creates an MCStringRef wrapping the given constant c-string. Note that
@@ -1443,6 +1452,8 @@ const unichar_t *MCStringGetCharPtr(MCStringRef string);
 // the method returns nil, then GetNativeChars() must be used to fetch the contents
 // in native encoding.
 const char_t *MCStringGetNativeCharPtr(MCStringRef string);
+// The native length may be different from the string char count.
+const char_t *MCStringGetNativeCharPtrAndLength(MCStringRef self, uindex_t& r_native_length);
 
 // Returns the Unicode codepoint at the given codepoint index
 codepoint_t MCStringGetCodepointAtIndex(MCStringRef string, uindex_t index);
@@ -1519,6 +1530,10 @@ bool MCStringUnmapIndices(MCStringRef, MCCharChunkType, MCRange p_codeunit_range
 // but this is not reflected in the byte count.
 bool MCStringConvertToBytes(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, byte_t*& r_bytes, uindex_t& r_byte_count);
 
+// [[ Bug 12204 ]] textEncode ASCII support is actually native
+// Converts the contents of the string to ASCII characters - excluding the characters from the extended range
+bool MCStringConvertToAscii(MCStringRef self, char_t *&r_chars, uindex_t& r_char_count);
+
 // Converts the contents of the string to unicode. The caller takes ownership of the
 // char array. Note that the returned array is NUL terminated, but this is not
 // reflected in the char count.
@@ -1578,11 +1593,13 @@ compare_t MCStringCompareTo(MCStringRef string, MCStringRef other, MCStringOptio
 // Returns true if the string begins with the prefix string, processing as
 // appropriate according to options.
 bool MCStringBeginsWith(MCStringRef string, MCStringRef prefix, MCStringOptions options);
+bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefix, MCStringOptions p_options, uindex_t& r_self_match_length);
 bool MCStringBeginsWithCString(MCStringRef string, const char_t *prefix_cstring, MCStringOptions options);
 
 // Returns true if the string ends with the suffix string, processing as
 // appropriate according to options.
 bool MCStringEndsWith(MCStringRef string, MCStringRef suffix, MCStringOptions options);
+bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffix, MCStringOptions p_options, uindex_t& r_self_match_length);
 bool MCStringEndsWithCString(MCStringRef string, const char_t *suffix_cstring, MCStringOptions options);
 
 // Returns true if the string contains the given needle string, processing as
@@ -1745,6 +1762,11 @@ bool MCStringNormalizedCopyNFD(MCStringRef, MCStringRef&);
 bool MCStringNormalizedCopyNFKC(MCStringRef, MCStringRef&);
 bool MCStringNormalizedCopyNFKD(MCStringRef, MCStringRef&);
 
+//////////
+
+// Utility to avoid multiple number conversion from a string when possible
+bool MCStringSetNumericValue(MCStringRef self, double p_value);
+bool MCStringGetNumericValue(MCStringRef self, double &r_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -1777,6 +1799,11 @@ bool MCDataCopy(MCDataRef p_data, MCDataRef& r_new_data);
 bool MCDataCopyAndRelease(MCDataRef p_data, MCDataRef& r_new_data);
 bool MCDataMutableCopy(MCDataRef p_data, MCDataRef& r_mutable_data);
 bool MCDataMutableCopyAndRelease(MCDataRef p_data, MCDataRef& r_mutable_data);
+
+bool MCDataCopyRange(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+bool MCDataCopyRangeAndRelease(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+bool MCDataMutableCopyRange(MCDataRef data, MCRange range, MCDataRef& r_new_data);
+bool MCDataMutableCopyRangeAndRelease(MCDataRef data, MCRange range, MCDataRef& r_new_data);
 
 bool MCDataIsMutable(const MCDataRef p_data);
 
@@ -1886,6 +1913,7 @@ extern MCListRef kMCEmptyList;
 
 // Create a mutable list - initially empty.
 bool MCListCreateMutable(char_t delimiter, MCListRef& r_list);
+bool MCListCreateMutable(MCStringRef p_delimiter, MCListRef& r_list);
 
 // Eventually this will accept any value type, but for now - just strings, names, and booleans.
 bool MCListAppend(MCListRef list, MCValueRef value);

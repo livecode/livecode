@@ -161,7 +161,6 @@
 		4D1F9D8E171C682E0091C6CB /* transfer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BD9D0CCF74C800D74FDB /* transfer.cpp */; };
 		4D1F9D8F171C682E0091C6CB /* uidc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E8A0B8096FD00200116 /* uidc.cpp */; };
 		4D1F9D90171C682E0091C6CB /* undolst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E5F0B8096FD00200116 /* undolst.cpp */; };
-		4D1F9D91171C682E0091C6CB /* unicode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD27ACB0D5B3A280000CC15 /* unicode.cpp */; };
 		4D1F9D92171C682E0091C6CB /* util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E8D0B8096FD00200116 /* util.cpp */; };
 		4D1F9D93171C682E0091C6CB /* variable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E600B8096FD00200116 /* variable.cpp */; };
 		4D1F9D96171C682E0091C6CB /* vclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E620B8096FD00200116 /* vclip.cpp */; };
@@ -484,7 +483,6 @@
 		4DEE2B070FDE42710009423C /* transfer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BD9D0CCF74C800D74FDB /* transfer.cpp */; };
 		4DEE2B080FDE42710009423C /* uidc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E8A0B8096FD00200116 /* uidc.cpp */; };
 		4DEE2B0A0FDE42710009423C /* undolst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E5F0B8096FD00200116 /* undolst.cpp */; };
-		4DEE2B0B0FDE42710009423C /* unicode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD27ACB0D5B3A280000CC15 /* unicode.cpp */; };
 		4DEE2B0C0FDE42710009423C /* util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E8D0B8096FD00200116 /* util.cpp */; };
 		4DEE2B0D0FDE42710009423C /* variable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E600B8096FD00200116 /* variable.cpp */; };
 		4DEE2B0F0FDE42710009423C /* vclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E620B8096FD00200116 /* vclip.cpp */; };
@@ -1366,8 +1364,6 @@
 		4DD27A8A0D5B36E70000CC15 /* rtfsupport.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = rtfsupport.cpp; path = src/rtfsupport.cpp; sourceTree = "<group>"; };
 		4DD27ABE0D5B39C20000CC15 /* text.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = text.cpp; path = src/text.cpp; sourceTree = "<group>"; };
 		4DD27ABF0D5B39C20000CC15 /* text.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = text.h; path = src/text.h; sourceTree = "<group>"; };
-		4DD27ACB0D5B3A280000CC15 /* unicode.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = unicode.cpp; path = src/unicode.cpp; sourceTree = "<group>"; };
-		4DD27ACC0D5B3A280000CC15 /* unicode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = unicode.h; path = src/unicode.h; sourceTree = "<group>"; };
 		4DD54D18134F591500981610 /* AccelerationChangeListener.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = AccelerationChangeListener.java; sourceTree = "<group>"; };
 		4DD54D19134F591500981610 /* CameraCompat.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = CameraCompat.java; sourceTree = "<group>"; };
 		4DD54D1A134F591500981610 /* Email.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = Email.java; sourceTree = "<group>"; };
@@ -2885,8 +2881,6 @@
 				4D61BDAD0CCF74EF00D74FDB /* transfer.h */,
 				4D587E8A0B8096FD00200116 /* uidc.cpp */,
 				4D587DDA0B8096E600200116 /* uidc.h */,
-				4DD27ACB0D5B3A280000CC15 /* unicode.cpp */,
-				4DD27ACC0D5B3A280000CC15 /* unicode.h */,
 				4D587E8D0B8096FD00200116 /* util.cpp */,
 				4D587E1D0B8096E600200116 /* util.h */,
 				4D8589AA173A856600B20951 /* uuid.cpp */,
@@ -3581,7 +3575,6 @@
 				4D1F9D8E171C682E0091C6CB /* transfer.cpp in Sources */,
 				4D1F9D8F171C682E0091C6CB /* uidc.cpp in Sources */,
 				4D1F9D90171C682E0091C6CB /* undolst.cpp in Sources */,
-				4D1F9D91171C682E0091C6CB /* unicode.cpp in Sources */,
 				4D1F9D92171C682E0091C6CB /* util.cpp in Sources */,
 				4D1F9D93171C682E0091C6CB /* variable.cpp in Sources */,
 				4D1F9D96171C682E0091C6CB /* vclip.cpp in Sources */,
@@ -3796,7 +3789,6 @@
 				4DEE2B070FDE42710009423C /* transfer.cpp in Sources */,
 				4DEE2B080FDE42710009423C /* uidc.cpp in Sources */,
 				4DEE2B0A0FDE42710009423C /* undolst.cpp in Sources */,
-				4DEE2B0B0FDE42710009423C /* unicode.cpp in Sources */,
 				4DEE2B0C0FDE42710009423C /* util.cpp in Sources */,
 				4DEE2B0D0FDE42710009423C /* variable.cpp in Sources */,
 				4DEE2B0F0FDE42710009423C /* vclip.cpp in Sources */,

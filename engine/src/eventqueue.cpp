@@ -24,7 +24,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "card.h"
 #include "field.h"
-#include "unicode.h"
 #include "mode.h"
 #include "dispatch.h"
 #include "eventqueue.h"

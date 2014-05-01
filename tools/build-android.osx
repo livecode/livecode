@@ -36,7 +36,9 @@ export AIDL=$ANDROID_SDK/platform-tools/aidl
 
 # Update version info
 #$TRUNK/prebuilt/bin/Revolution.osx -ui $TRUNK/engine/encode_version.rev $TRUNK/engine
+cd $TRUNK/engine
 $TRUNK/util/encode_version.pl $TRUNK/engine
+cd $TRUNK
 
 # Build the native code components
 export NDK_PROJECT_PATH=$DSTROOT

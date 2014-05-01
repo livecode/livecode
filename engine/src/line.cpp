@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "uidc.h"
 
 #include "globals.h"
+#include "foundation-bidi.h"
 
 MCLine::MCLine(MCParagraph *paragraph)
 {
@@ -593,7 +594,7 @@ void MCLine::ResolveDisplayOrder()
     
     // Tabs are always done using the dominant paragraph direction
     bool t_para_is_rtl;
-    t_para_is_rtl = parent->getbasetextdirection() == kMCFieldTextDirectionRTL;
+    t_para_is_rtl = parent->getbasetextdirection() == kMCTextDirectionRTL;
     
     uint2 t_tabpos = (t_para_is_rtl) ? width : 0;
     

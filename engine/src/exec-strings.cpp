@@ -107,19 +107,47 @@ bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&
 {
 	uindex_t t_current = 0;
 	uindex_t t_found = 0;
-
+    
 	MCAutoStringRefArray t_strings;
-
+    
 	uindex_t t_count = 0;
-
+    
 	while (MCStringFirstIndexOfChar(p_string, p_separator, t_current, kMCStringOptionCompareExact, t_found))
 	{
 		if (!t_strings.Extend(t_count + 1))
 			return false;
 		if (!MCStringCopySubstring(p_string, MCRangeMake(t_current, t_found - t_current), t_strings[t_count++]))
 			return false;
-
+        
 		t_current = t_found + 1;
+	}
+    
+	if (!t_strings.Extend(t_count + 1))
+		return false;
+	if (!MCStringCopySubstring(p_string, MCRangeMake(t_current, MCStringGetLength(p_string) - t_current), t_strings[t_count++]))
+		return false;
+    
+	t_strings.Take(r_strings, r_count);
+	return true;
+}
+
+bool MCStringsSplit(MCStringRef p_string, MCStringRef p_separator, MCStringRef*&r_strings, uindex_t& r_count)
+{
+	uindex_t t_current = 0;
+	uindex_t t_found = 0;
+
+	MCAutoStringRefArray t_strings;
+
+	uindex_t t_count = 0;
+
+	while (MCStringFirstIndexOf(p_string, p_separator, t_current, kMCStringOptionCompareExact, t_found))
+	{
+		if (!t_strings.Extend(t_count + 1))
+			return false;
+		if (!MCStringCopySubstring(p_string, MCRangeMake(t_current, t_found - t_current), t_strings[t_count++]))
+			return false;
+
+		t_current = t_found + MCStringGetLength(p_separator);
 	}
 
 	if (!t_strings.Extend(t_count + 1))
@@ -742,12 +770,12 @@ void MCStringsEvalCodepointProperty(MCExecContext& ctxt, MCStringRef p_codepoint
 
 void MCStringsEvalLength(MCExecContext& ctxt, MCStringRef p_string, integer_t& r_length)
 {
-	// Ensure that the returned length is in codepoints
+	// Ensure that the returned length is in chars
     MCRange t_cp_range, t_cu_range;
     t_cu_range = MCRangeMake(0, MCStringGetLength(p_string));
-    /* UNCHECKED */ MCStringUnmapIndices(p_string, kMCCharChunkTypeCodepoint, t_cu_range, t_cp_range);
+    /* UNCHECKED */ MCStringUnmapIndices(p_string, kMCCharChunkTypeGrapheme, t_cu_range, t_cp_range);
     
-    r_length = t_cp_range.length;
+    r_length = t_cp_range . length;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1432,7 +1460,10 @@ bool MCStringsEvalIsAmongTheChunksOf(MCExecContext& ctxt, MCStringRef p_chunk, M
 {
     MCTextChunkIterator *tci;
     tci = new MCTextChunkIterator(p_chunk_type, p_text);
-    return tci -> isamong(ctxt, p_chunk);
+    bool t_result;
+    t_result = tci -> isamong(ctxt, p_chunk);
+    delete tci;
+    return t_result;
 }
 
 void MCStringsEvalIsAmongTheLinesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
@@ -1545,12 +1576,26 @@ void MCStringsEvalIsNotAmongTheCodeunitsOf(MCExecContext& ctxt, MCStringRef p_ch
 	r_result = !r_result;
 }
 
-void MCStringsEvalIsAmongTheBytesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
+void MCStringsEvalIsAmongTheBytesOf(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, bool& r_result)
 {
-    r_result = MCStringsEvalIsAmongTheChunksOf(ctxt, p_chunk, p_string, CT_BYTE);
+    uindex_t t_byte_count = MCDataGetLength(p_string);
+    uindex_t t_chunk_byte_count = MCDataGetLength(p_chunk);
+    
+    const byte_t *t_bytes = MCDataGetBytePtr(p_string);
+    const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
+    
+    bool t_found = false;
+    for (uindex_t i = 0; i < t_byte_count - t_chunk_byte_count + 1; i++)
+        if (MCMemoryCompare(t_bytes++, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
+        {
+            t_found = true;
+            break;
+        }
+    
+    r_result = t_found;
 }
 
-void MCStringsEvalIsNotAmongTheBytesOf(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, bool& r_result)
+void MCStringsEvalIsNotAmongTheBytesOf(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, bool& r_result)
 {
     MCStringsEvalIsAmongTheBytesOf(ctxt, p_chunk, p_string, r_result);
 	r_result = !r_result;
@@ -1612,18 +1657,41 @@ void MCStringsEvalCodeunitOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStr
     r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_CODEUNIT);
 }
 
-void MCStringsEvalByteOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
+void MCStringsEvalByteOffset(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_BYTE);
+    uindex_t t_byte_count = MCDataGetLength(p_string);
+    uindex_t t_chunk_byte_count = MCDataGetLength(p_chunk);
+    
+    const byte_t *t_bytes = MCDataGetBytePtr(p_string);
+    const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
+    
+    uindex_t t_offset;
+    r_result = 0;
+    
+    for (t_offset = p_start_offset; t_offset < t_byte_count - t_chunk_byte_count + 1; t_offset++)
+        if (MCMemoryCompare(t_bytes + t_offset, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
+        {
+            r_result = t_offset - p_start_offset + 1;
+            break;
+        }
 }
 
 void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
 	MCStringOptions t_options = ctxt.GetStringComparisonType();
-	if (!MCStringFirstIndexOf(p_string, p_chunk, p_start_offset, t_options, r_result))
+    uindex_t t_offset;
+	if (!MCStringFirstIndexOf(p_string, p_chunk, p_start_offset, t_options, t_offset))
 		r_result = 0;
 	else
-		r_result = r_result + 1 - p_start_offset;
+    {
+        // We want to get the grapheme length, not the codeunit one
+        MCRange t_cu_range, t_char_range;
+        t_cu_range . offset = 0;
+        t_cu_range . length = t_offset;
+        MCStringUnmapIndices(p_string, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
+        
+		r_result = t_char_range . length - p_start_offset + 1;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1644,7 +1712,7 @@ bool MCRegexMatcher::compile(MCStringRef& r_error)
 {
 	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
 	//   no reason not to use the cache.
-	compiled = MCR_compile(pattern, casesensitive);
+	compiled = MCR_compile(pattern, (options == kMCStringOptionCompareExact || kMCStringOptionCompareNonliteral));
 	if (compiled == nil)
 	{
         MCR_copyerror(r_error);
@@ -1655,10 +1723,19 @@ bool MCRegexMatcher::compile(MCStringRef& r_error)
 
 bool MCRegexMatcher::match(MCRange p_range)
 {
-    MCAutoStringRef t_string;
-    MCStringCopySubstring(source, p_range, &t_string);
+    MCStringRef t_string;
+    MCStringCopySubstring(source, p_range, t_string);
     
-	return MCR_exec(compiled, *t_string);
+    // if appropriate, normalize the source string.
+    if (options == kMCStringOptionCompareNonliteral || kMCStringOptionCompareCaseless)
+    {
+        MCAutoStringRef normalized_source;
+        MCStringNormalizedCopyNFC(pattern, &normalized_source);
+        MCValueAssign(t_string, *normalized_source);
+    }
+    
+	return MCR_exec(compiled, t_string);
+    MCValueRelease(t_string);
 }
 
 bool MCWildcardMatcher::compile(MCStringRef& r_error)
@@ -1670,8 +1747,7 @@ bool MCWildcardMatcher::compile(MCStringRef& r_error)
 #define OPEN_BRACKET '['
 #define CLOSE_BRACKET ']'
 
-/*
-bool MCStringsWildcardMatch(const char *s, uindex_t s_length, const char *p, uindex_t p_length, bool casesensitive)
+static bool MCStringsWildcardMatchNative(const char *s, uindex_t s_length, const char *p, uindex_t p_length, bool casesensitive)
 {
 	uindex_t s_index = 0;
 	uindex_t p_index = 0;
@@ -1702,7 +1778,7 @@ bool MCStringsWildcardMatch(const char *s, uindex_t s_length, const char *p, uin
 					c = *p++;
 					p_index++;
 					if (c == CLOSE_BRACKET && lc >= 0)
-						return ok ? MCStringsWildcardMatch(s, s_length - s_index, p, p_length - p_index, casesensitive) : false;
+						return ok ? MCStringsWildcardMatchNative(s, s_length - s_index, p, p_length - p_index, casesensitive) : false;
 					else
 						if (c == '-' && lc >= 0 && *p != CLOSE_BRACKET)
 						{
@@ -1759,7 +1835,7 @@ bool MCStringsWildcardMatch(const char *s, uindex_t s_length, const char *p, uin
 					s_index++;
 				}
 				else
-					if (MCStringsWildcardMatch(s++, s_length - s_index++, p, p_length - p_index, casesensitive))
+					if (MCStringsWildcardMatchNative(s++, s_length - s_index++, p, p_length - p_index, casesensitive))
 						return true;
 			return false;
 		case 0:
@@ -1783,7 +1859,7 @@ bool MCStringsWildcardMatch(const char *s, uindex_t s_length, const char *p, uin
 	}
 	return p_index == p_length;
 }
-
+/*
 index_t MCStringsWildcardCompareChar(MCStringRef p_input, uindex_t p_string_cu_offset, MCStringRef p_pattern, uindex_t p_pattern_cu_offset, MCUnicodeCompareOption p_option, uindex_t &r_string_char_cu, uindex_t &r_pattern_char_cu)
 {
     // Comparison of the characters
@@ -1926,186 +2002,43 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, uindex_t p_string_offset, 
 	return p_index == p_length;
 }
 */
-bool MCStringsExecWildcardMatch(MCStringRef p_string, MCBreakIteratorRef p_siter, MCRange p_srange, MCStringRef p_pattern, MCBreakIteratorRef p_piter, uindex_t p_pattern_offset, bool casesensitive)
+
+bool MCStringsExecWildcardMatch(MCStringRef p_string, MCRange p_srange, MCStringRef p_pattern, MCStringOptions p_options)
 {
-    // Break iterators locate the grapheme boundaries. Whenever we need to compare chars,
-    // we record the index, advance the iterator, and compare the intervening codeunits.
-	uindex_t s_index = p_srange . offset;
-	uindex_t p_index = p_pattern_offset;
-    
-    uindex_t s_end = s_index + p_srange . length;
-    uindex_t p_end = MCStringGetLength(p_pattern);
-    
-    MCUnicodeCompareOption t_comparison = casesensitive ? kMCUnicodeCompareOptionNormalised : kMCUnicodeCompareOptionCaseless;
+    MCUnicodeCompareOption t_comparison;
+    switch (p_options)
+    {
+        case kMCStringOptionCompareExact:
+            t_comparison = kMCUnicodeCompareOptionExact;
+            break;
+            
+        case kMCStringOptionCompareNonliteral:
+            t_comparison = kMCUnicodeCompareOptionNormalised;
+            break;
+            
+        case kMCStringOptionCompareCaseless:
+            t_comparison = kMCUnicodeCompareOptionCaseless;
+            break;
+            
+        case kMCStringOptionCompareFolded:
+            t_comparison = kMCUnicodeCompareOptionFolded;
+            break;
+    }
     
     const unichar_t *sptr = MCStringGetCharPtr(p_string);
     const unichar_t *pptr = MCStringGetCharPtr(p_pattern);
-    
-    // Codeunit ranges for the target source char pattern char, and previous pattern char
-    // (for expressions like [a-z])
-    MCRange t_srange, t_prange, t_lprange;
-    
-	while (s_index < s_end)
-	{
-        // set the source grapheme range
-        t_srange . offset = s_index;
-        s_index = MCLocaleBreakIteratorAfter(p_siter, s_index);
-        t_srange . length = s_index - t_srange . offset;
-        
-		switch (MCStringGetCharAtIndex(p_pattern, p_index))
-		{
-            case OPEN_BRACKET:
-			{
-                // Records whether we currently have a match for this bracket.
-				bool ok = false;
-                
-                t_lprange . offset = 0;
-                
-				int notflag = 0;
-                p_index++;
-                
-				if (MCStringGetCharAtIndex(p_pattern, p_index) == '!' )
-				{
-					notflag = 1;
-                    p_index++;
-				}
-				while (p_index < p_end)
-				{
-					if (MCStringGetCharAtIndex(p_pattern, p_index) == CLOSE_BRACKET && t_lprange . offset != 0)
-                    {
-                        // if the bracket was close with no match found then return false;
-                        if (!ok)
-                            return false;
-                        
-                        // otherwise, recurse.
-                        p_srange . offset++;
-                        p_srange . length--;
-						return MCStringsExecWildcardMatch(p_string, p_siter, p_srange, p_pattern, p_piter, ++p_index, casesensitive);
-                    }
-					else
-                    {
-						if (MCStringGetCharAtIndex(p_pattern, p_index) == '-' && t_lprange . offset != 0 && MCStringGetCharAtIndex(p_pattern, p_index + 1) != CLOSE_BRACKET)
-                        {
-                            // We have a char range (eg [a-z]), so skip past the '-',
-                            // find the current pattern grapheme range and compare.
-                            t_prange . offset = ++p_index;
-                            p_index = MCLocaleBreakIteratorAfter(p_piter, p_index);
-                            t_prange . length = p_index - t_prange . offset;
-                            
-							if (notflag)
-							{
-                                // wer're still ok if the current source grapheme falls outwith the appropriate range. Otherwise, we fail.
-								if (MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_lprange . offset, t_lprange . length, t_comparison) < 0
-                                    || MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_prange . offset, t_prange . length, t_comparison) > 0)
-									ok = true;
-								else
-									return false;
-							}
-							else
-							{
-                                 // we're still ok if the current source grapheme falls within the appropriate range.
-                                 // If not, there may be other options within this pair of brackets
-								if (MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_lprange . offset, t_lprange . length, t_comparison) > 0
-                                    && MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_prange . offset, t_prange . length, t_comparison) <= 0)
-									ok = true;
-							}
-						}
-						else
-						{
-                            // This could be one of a choice of characters (eg [abc]).
-                            t_prange . offset = p_index;
-                            p_index = MCLocaleBreakIteratorAfter(p_piter, p_index);
-                            t_prange . length = p_index - t_prange . offset;
-							if (notflag)
-							{
-								if (MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_prange . offset, t_prange . length, t_comparison) != 0)
-                                    ok = true;
-								else
-									return false;
-							}
-							else
-                                if (MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_prange . offset, t_prange . length, t_comparison) == 0)
-									ok = true;
-                            
-                            // record the grapheme in case it is the first character of a range.
-                            t_lprange . offset = t_prange . offset;
-                            t_lprange . length = t_prange . length;
-						}
-                    }
-				}
-			}
-                return false;
-            case '?':
-            {
-                // Matches any character, so increment the pattern index.
-                p_index++;
-                break;
-            }
-            case '*':
-            {
-                // consume any more * characters.
-                while (++p_index < p_end && MCStringGetCharAtIndex(p_pattern, p_index) == '*');
-                
-                if (p_index == p_end)
-                    return true;
-                
-                // Get the range of the next pattern grapheme
-                t_prange . offset = p_index;
-                p_index = MCLocaleBreakIteratorAfter(p_piter, p_index);
-                t_prange . length = p_index - t_prange . offset;
-                
-                // try and match the rest of the source string recursively.
-                while (t_srange . offset < s_end)
-                {
-                    // if this is a candidate for a match, recurse.
-                    if (MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_prange . offset, t_prange . length, t_comparison) == 0)
-                    {
-                        p_srange . length = p_srange . length - s_index + p_srange . offset;
-                        p_srange . offset = s_index;
-                        if (MCStringsExecWildcardMatch(p_string, p_siter, p_srange, p_pattern, p_piter, p_index, casesensitive))
-                            return true;
-                    }
-                    else if (MCStringGetCharAtIndex(p_pattern, t_prange . offset) == '?' || MCStringGetCharAtIndex(p_pattern, t_prange . offset) == OPEN_BRACKET)
-                    {
-                        p_srange . length = p_srange . length - t_srange . offset + p_srange . offset;
-                        p_srange . offset = t_srange . offset;
-                        if (MCStringsExecWildcardMatch(p_string, p_siter, p_srange, p_pattern, p_piter, t_prange . offset, casesensitive))
-                            return true;
-                    }
-                    
-                    // Otherwise eat the char
-                    t_srange . offset = s_index;
-                    s_index = MCLocaleBreakIteratorAfter(p_siter, s_index);
-                    t_srange . length = s_index - t_srange . offset;
-                }
-            }
-                return false;
-            case 0:
-                return MCStringGetCharAtIndex(p_string, t_srange. offset) == 0;
-            default:
-                // default - just compare chars
-                t_prange . offset = p_index;
-                p_index = MCLocaleBreakIteratorAfter(p_piter, p_index);
-                t_prange . length = p_index - t_prange . offset;
-                if (MCUnicodeCompare(sptr + t_srange . offset, t_srange . length, pptr + t_prange . offset, t_prange . length, t_comparison) != 0)
-                    return false;
-                
-                break;
-		}
-	}
-    // Eat any remaining '*'s
-	while (p_index < p_end && MCStringGetCharAtIndex(p_pattern, p_index) == '*')
-		p_index++;
-    
-	return p_index == p_end;
+
+    return MCUnicodeWildcardMatch(sptr + p_srange . offset, p_srange . length, pptr, MCStringGetLength(p_pattern), t_comparison);
 }
 
 bool MCWildcardMatcher::match(MCRange p_source_range)
 {
-	return MCStringsExecWildcardMatch(source, source_iter, p_source_range, pattern, pattern_iter, 0, casesensitive);
+    if (native)
+        return MCStringsWildcardMatchNative((const char *)MCStringGetNativeCharPtr(source) + p_source_range . offset, p_source_range . length, (const char *)MCStringGetNativeCharPtr(pattern), MCStringGetLength(pattern), (options == kMCStringOptionCompareExact || kMCStringOptionCompareNonliteral));
+	return MCStringsExecWildcardMatch(source, p_source_range, pattern, options);
 }
 
-void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, bool p_without, char_t p_delimiter, MCPatternMatcher *p_matcher, MCStringRef &r_result)
+void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, bool p_without, MCStringRef p_delimiter, MCPatternMatcher *p_matcher, MCStringRef &r_result)
 {
 	uint32_t t_length = MCStringGetLength(p_source);
 	if (t_length == 0)
@@ -2118,17 +2051,16 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
 	// OK-2010-01-11: Bug 7649 - Filter command was incorrectly removing empty lines.
 	// Now ignores delimiter for matching but includes it in the append.
 
-	uindex_t t_return_offset = 0;
     uindex_t t_last_offset = 0;
 	bool t_found = true;
     bool t_success = true;
     
-    MCRange t_chunk_range;
-    
+    MCRange t_chunk_range, t_found_range;
+    MCStringOptions t_options = ctxt . GetStringComparisonType();
 	while (t_found && t_success)
 	{
         MCAutoStringRef t_line;
-		t_found = MCStringFirstIndexOfChar(p_source, p_delimiter, t_last_offset, kMCCompareExact, t_return_offset);
+		t_found = MCStringFind(p_source, MCRangeMake(t_last_offset, UINDEX_MAX), p_delimiter, t_options, &t_found_range);
 		if (!t_found) //last line or item
         {
             t_chunk_range . offset = t_last_offset;
@@ -2137,7 +2069,7 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
 		else
         {
             t_chunk_range . offset = t_last_offset;
-            t_chunk_range . length = t_return_offset - t_last_offset;
+            t_chunk_range . length = t_found_range . offset - t_last_offset;
         }
         
         if (t_success && (p_matcher -> match(t_chunk_range) != p_without))
@@ -2146,7 +2078,7 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
             t_success = MCStringCopySubstring(p_source, t_chunk_range, &t_line) && MCListAppend(*t_output, *t_line);
         }
 
-		t_last_offset = t_return_offset + 1;
+		t_last_offset = t_found_range . offset + t_found_range . length;
 	}
 	
     if (!t_success)
@@ -2165,7 +2097,7 @@ void MCStringsExecFilterWildcard(MCExecContext& ctxt, MCStringRef p_source, MCSt
 {
     // Create the pattern matcher
 	MCPatternMatcher *matcher;
-    matcher = new MCWildcardMatcher(p_pattern, p_source, ctxt . GetCaseSensitive(), ctxt . GetFormSensitive());
+    matcher = new MCWildcardMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
     
     MCStringsExecFilterDelimited(ctxt, p_source, p_without, p_lines ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), matcher, r_result);
     
@@ -2176,7 +2108,7 @@ void MCStringsExecFilterRegex(MCExecContext& ctxt, MCStringRef p_source, MCStrin
 {
 	// Create the pattern matcher
 	MCPatternMatcher *matcher;
-    matcher = new MCRegexMatcher(p_pattern, p_source, ctxt . GetCaseSensitive(), ctxt . GetFormSensitive());
+    matcher = new MCRegexMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
     
     MCAutoStringRef t_regex_error;
     if (!matcher -> compile(&t_regex_error))

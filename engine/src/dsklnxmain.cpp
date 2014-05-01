@@ -55,6 +55,9 @@ int main(int argc, char *argv[], char *envp[])
 	setlocale(LC_ALL, "");
 	MCsysencoding = strclone(nl_langinfo(CODESET));
 	
+	if (!MCInitialize())
+		exit(-1);
+    
 	// Convert the argv array to StringRefs
 	MCStringRef* t_argv;
 	/* UNCHECKED */ MCMemoryNewArray(argc, t_argv);
@@ -80,9 +83,6 @@ int main(int argc, char *argv[], char *envp[])
 	extern int MCSystemElevatedMain(int, char* argv[]);
 	if (argc == 3&& strcmp(argv[1], "-elevated-slave") == 0)
 		return MCSystemElevatedMain(argc, argv);
-	
-	if (!MCInitialize())
-		exit(-1);
 	
 	if (!X_init(argc, t_argv, t_envp))
     {

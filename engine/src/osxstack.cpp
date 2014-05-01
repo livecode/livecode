@@ -325,7 +325,7 @@ void MCStack::realize()
 		const unsigned char *namePascal;
 		if (!isunnamed())
 		{ //set window title to name of stack temporarily.
-			tmpname = strclone(getname_cstring()); //it will be changed by setname() later.
+			MCStringConvertToCString(MCNameGetString(getname()), tmpname); //it will be changed by setname() later.
 			namePascal = c2pstr(tmpname);
 		}
 		else

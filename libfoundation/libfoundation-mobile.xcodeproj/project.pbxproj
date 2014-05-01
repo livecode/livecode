@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		4D5837B41806A0C6006DE6A2 /* foundation-objc.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D5837B31806A0C6006DE6A2 /* foundation-objc.mm */; };
+		7237189218E98BE60006C484 /* foundation-text.h in Headers */ = {isa = PBXBuildFile; fileRef = 7237189118E98BE60006C484 /* foundation-text.h */; };
+		7237189418E98BF80006C484 /* foundation-text.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7237189318E98BF80006C484 /* foundation-text.cpp */; };
 		729903A918438B3900A93FA8 /* foundation-locale.h in Headers */ = {isa = PBXBuildFile; fileRef = 729903A718438B3900A93FA8 /* foundation-locale.h */; };
 		729903AA18438B3900A93FA8 /* foundation-unicode.h in Headers */ = {isa = PBXBuildFile; fileRef = 729903A818438B3900A93FA8 /* foundation-unicode.h */; };
 		729903AE18438B5300A93FA8 /* foundation-locale.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 729903AB18438B5300A93FA8 /* foundation-locale.cpp */; };
@@ -32,6 +34,8 @@
 		BE096E2C175CD70A00F92F90 /* foundation-inline.h in Headers */ = {isa = PBXBuildFile; fileRef = BE096E28175CD70A00F92F90 /* foundation-inline.h */; };
 		BE096E2D175CD70A00F92F90 /* foundation-stdlib.h in Headers */ = {isa = PBXBuildFile; fileRef = BE096E29175CD70A00F92F90 /* foundation-stdlib.h */; };
 		BE096E2E175CD70A00F92F90 /* foundation.h in Headers */ = {isa = PBXBuildFile; fileRef = BE096E2A175CD70A00F92F90 /* foundation.h */; };
+		BE957D3B1906D105000DE760 /* foundation-bidi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE957D3A1906D105000DE760 /* foundation-bidi.cpp */; };
+		BE957D3D1906D111000DE760 /* foundation-bidi.h in Headers */ = {isa = PBXBuildFile; fileRef = BE957D3C1906D111000DE760 /* foundation-bidi.h */; };
 		BE9AE948179EECAE00206A6D /* foundation-data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE9AE947179EECAE00206A6D /* foundation-data.cpp */; };
 /* End PBXBuildFile section */
 
@@ -42,6 +46,8 @@
 		4DD3DF461040B04D00CAC7EF /* Debug Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Debug Mobile.xcconfig"; path = "../rules/Debug Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
 		4DD3DF4A1040B13E00CAC7EF /* Release Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Release Mobile.xcconfig"; path = "../rules/Release Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
 		4DD3E06B1040BC4700CAC7EF /* libfoundationmobile.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libfoundationmobile.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		7237189118E98BE60006C484 /* foundation-text.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-text.h"; path = "include/foundation-text.h"; sourceTree = "<group>"; };
+		7237189318E98BF80006C484 /* foundation-text.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-text.cpp"; path = "src/foundation-text.cpp"; sourceTree = "<group>"; };
 		729903A718438B3900A93FA8 /* foundation-locale.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-locale.h"; path = "include/foundation-locale.h"; sourceTree = "<group>"; };
 		729903A818438B3900A93FA8 /* foundation-unicode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-unicode.h"; path = "include/foundation-unicode.h"; sourceTree = "<group>"; };
 		729903AB18438B5300A93FA8 /* foundation-locale.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-locale.cpp"; path = "src/foundation-locale.cpp"; sourceTree = "<group>"; };
@@ -66,6 +72,8 @@
 		BE096E28175CD70A00F92F90 /* foundation-inline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-inline.h"; path = "include/foundation-inline.h"; sourceTree = "<group>"; };
 		BE096E29175CD70A00F92F90 /* foundation-stdlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-stdlib.h"; path = "include/foundation-stdlib.h"; sourceTree = "<group>"; };
 		BE096E2A175CD70A00F92F90 /* foundation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = foundation.h; path = include/foundation.h; sourceTree = "<group>"; };
+		BE957D3A1906D105000DE760 /* foundation-bidi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-bidi.cpp"; path = "src/foundation-bidi.cpp"; sourceTree = "<group>"; };
+		BE957D3C1906D111000DE760 /* foundation-bidi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-bidi.h"; path = "include/foundation-bidi.h"; sourceTree = "<group>"; };
 		BE9AE947179EECAE00206A6D /* foundation-data.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-data.cpp"; path = "src/foundation-data.cpp"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -83,12 +91,14 @@
 		4D5837B11806A0A9006DE6A2 /* Headers */ = {
 			isa = PBXGroup;
 			children = (
+				BE957D3C1906D111000DE760 /* foundation-bidi.h */,
 				729903A718438B3900A93FA8 /* foundation-locale.h */,
 				729903A818438B3900A93FA8 /* foundation-unicode.h */,
 				BE096E27175CD70A00F92F90 /* foundation-auto.h */,
 				BE096E28175CD70A00F92F90 /* foundation-inline.h */,
 				BE096E29175CD70A00F92F90 /* foundation-stdlib.h */,
 				4D5837B21806A0C1006DE6A2 /* foundation-objc.h */,
+				7237189118E98BE60006C484 /* foundation-text.h */,
 				BE096E2A175CD70A00F92F90 /* foundation.h */,
 			);
 			name = Headers;
@@ -115,6 +125,8 @@
 		4DD3DDAC1040ABB000CAC7EF /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				BE957D3A1906D105000DE760 /* foundation-bidi.cpp */,
+				7237189318E98BF80006C484 /* foundation-text.cpp */,
 				729903AB18438B5300A93FA8 /* foundation-locale.cpp */,
 				729903AC18438B5300A93FA8 /* foundation-unicode-private.h */,
 				729903AD18438B5300A93FA8 /* foundation-unicode.cpp */,
@@ -164,6 +176,8 @@
 				729903A918438B3900A93FA8 /* foundation-locale.h in Headers */,
 				729903AA18438B3900A93FA8 /* foundation-unicode.h in Headers */,
 				729903AF18438B5300A93FA8 /* foundation-unicode-private.h in Headers */,
+				7237189218E98BE60006C484 /* foundation-text.h in Headers */,
+				BE957D3D1906D111000DE760 /* foundation-bidi.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -238,6 +252,8 @@
 				4D5837B41806A0C6006DE6A2 /* foundation-objc.mm in Sources */,
 				729903AE18438B5300A93FA8 /* foundation-locale.cpp in Sources */,
 				729903B018438B5300A93FA8 /* foundation-unicode.cpp in Sources */,
+				7237189418E98BF80006C484 /* foundation-text.cpp in Sources */,
+				BE957D3B1906D105000DE760 /* foundation-bidi.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

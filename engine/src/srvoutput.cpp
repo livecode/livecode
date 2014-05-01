@@ -25,7 +25,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //#include "execpt.h"
 #include "util.h"
 
-#include "unicode.h"
 #include "srvmain.h"
 
 ////////////////////////////////////////////////////////////////////////////////

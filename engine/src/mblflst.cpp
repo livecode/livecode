@@ -25,7 +25,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 #include "util.h"
 #include "globals.h"
-#include "unicode.h"
 
 #include "mblflst.h"
 

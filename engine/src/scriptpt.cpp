@@ -39,8 +39,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "variable.h"
 
 #include "globals.h"
-#include <foundation-unicode.h>
-#include "unicode.h"
 
 #define LOWERED_PAD 64
 
@@ -125,7 +123,7 @@ MCScriptPoint::MCScriptPoint(MCObject *o, MCHandlerlist *hl, MCStringRef s)
     endptr = curptr + length;
     
     uindex_t t_index = 0;
-    codepoint = MCUnicodeCodepointAdvance((const uint2 *)curptr, length, t_index);
+    codepoint = MCUnicodeCodepointAdvance(curptr, length, t_index);
     curlength = t_index;
     
 	line = pos = 1;
@@ -156,6 +154,7 @@ MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)
 	in_tag = sp.in_tag;
 	was_in_tag = sp.was_in_tag;
 	token_nameref = MCValueRetain(kMCEmptyName);
+    m_type = ST_UNDEFINED;
 }
 
 #ifdef LEGACY_EXEC
@@ -214,6 +213,7 @@ MCScriptPoint::MCScriptPoint(MCExecContext &ctxt)
     in_tag = False;
     was_in_tag = False;
     token_nameref = MCValueRetain(kMCEmptyName);
+    m_type = ST_UNDEFINED;
 }
 
 MCScriptPoint::MCScriptPoint(MCExecContext &ctxt, MCStringRef p_string)
@@ -229,7 +229,7 @@ MCScriptPoint::MCScriptPoint(MCExecContext &ctxt, MCStringRef p_string)
     endptr = curptr + length;
     
     uindex_t t_index = 0;
-    codepoint = MCUnicodeCodepointAdvance((const uint2 *)curptr, length, t_index);
+    codepoint = MCUnicodeCodepointAdvance(curptr, length, t_index);
     curlength = t_index;
     
     line = pos = 0;
@@ -238,6 +238,8 @@ MCScriptPoint::MCScriptPoint(MCExecContext &ctxt, MCStringRef p_string)
     in_tag = False;
     was_in_tag = False;
     token_nameref = MCValueRetain(kMCEmptyName);
+    
+    m_type = ST_UNDEFINED;
 }
 
 MCScriptPoint::MCScriptPoint(MCStringRef p_string)
@@ -253,7 +255,7 @@ MCScriptPoint::MCScriptPoint(MCStringRef p_string)
     endptr = curptr + length;
     
     uindex_t t_index = 0;
-    codepoint = MCUnicodeCodepointAdvance((const uint2 *)curptr, length, t_index);
+    codepoint = MCUnicodeCodepointAdvance(curptr, length, t_index);
     curlength = t_index;
     
 	line = pos = 0;
@@ -262,6 +264,8 @@ MCScriptPoint::MCScriptPoint(MCStringRef p_string)
 	in_tag = False;
 	was_in_tag = False;
 	token_nameref = MCValueRetain(kMCEmptyName);
+    
+    m_type = ST_UNDEFINED;
 }
 
 MCScriptPoint& MCScriptPoint::operator =(const MCScriptPoint& sp)
@@ -280,6 +284,7 @@ MCScriptPoint& MCScriptPoint::operator =(const MCScriptPoint& sp)
 	token = sp.token;
 	line = sp.line;
 	pos = sp.pos;
+    m_type = sp.m_type;
     MCValueAssign(token_nameref, sp.token_nameref);
 	return *this;
 }
@@ -383,12 +388,12 @@ void MCScriptPoint::advance(uindex_t number)
     
     uindex_t t_index = 0;
     while (--number)
-        MCUnicodeCodepointAdvance((const uint2 *)curptr, endptr - curptr, t_index);
+        MCUnicodeCodepointAdvance(curptr, endptr - curptr, t_index);
 
     curptr += t_index;
     
     t_index = 0;
-    codepoint = MCUnicodeCodepointAdvance((const uint2 *)curptr, endptr - curptr, t_index);
+    codepoint = MCUnicodeCodepointAdvance(curptr, endptr - curptr, t_index);
     curlength = t_index;
 }
 
@@ -400,23 +405,23 @@ codepoint_t MCScriptPoint::getcurrent()
 codepoint_t MCScriptPoint::getnext()
 {
     uindex_t t_index = 0;
-    return MCUnicodeCodepointAdvance((const uint2 *)(curptr + curlength), endptr - curptr - curlength, t_index);
+    return MCUnicodeCodepointAdvance((curptr + curlength), endptr - curptr - curlength, t_index);
 }
 
 codepoint_t MCScriptPoint::getcodepointatindex(uindex_t p_index)
 {
     uindex_t t_index = 0;
     while (p_index--)
-        MCUnicodeCodepointAdvance((const uint2 *)(curptr + t_index), endptr - curptr - t_index, t_index);
+        MCUnicodeCodepointAdvance((curptr + t_index), endptr - curptr - t_index, t_index);
     
-    return MCUnicodeCodepointAdvance((const uint2 *)(curptr + t_index), endptr - curptr - t_index, t_index);
+	return MCUnicodeCodepointAdvance((curptr + t_index), endptr - curptr - t_index, t_index);
 }
 
 void MCScriptPoint::setcurptr(const unichar_t *ptr)
 {
     curptr = ptr;
     uindex_t t_index = 0;
-    codepoint = MCUnicodeCodepointAdvance((const uint2 *)curptr, endptr - curptr, t_index);
+    codepoint = MCUnicodeCodepointAdvance(curptr, endptr - curptr, t_index);
     curlength = t_index;
 }
 

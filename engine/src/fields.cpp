@@ -2221,7 +2221,7 @@ Boolean MCField::foundmark(Boolean wholeline, Boolean inc_cr, findex_t &si, find
 bool MCField::selectedchunk(MCStringRef& r_string)
 {
 	findex_t si, ei;
-	if (selectedmark(False, si, ei, False, False))
+	if (selectedmark(False, si, ei, False, False, true))
 		return returnchunk(si, ei, r_string);
 	r_string = MCValueRetain(kMCEmptyString);
 	return true;
@@ -2298,9 +2298,15 @@ bool MCField::selectedtext(MCStringRef& r_string)
 	}
 }
 
+// SN-2014-04-04 [[ CombiningChars ]] We need to pay attention whether we are execpted characters or codeunit
+// indices as a return value.
 Boolean MCField::selectedmark(Boolean whole, findex_t &si, findex_t &ei,
-                              Boolean force, Boolean include_cr)
+                              Boolean force, Boolean include_cr, bool p_char_indices)
 {
+    // SN-2014-04-03 selectedchunk return codepoint range instead of char range
+    MCRange t_cu_range;
+    MCRange t_char_range;
+    
 	MCParagraph *pgptr = paragraphs;
 	si = ei = 0;
 	if (flags & F_LIST_BEHAVIOR)
@@ -2312,17 +2318,18 @@ Boolean MCField::selectedmark(Boolean whole, findex_t &si, findex_t &ei,
 			
 		while (!pgptr->gethilite())
 		{
-			si += pgptr->gettextlengthcr();
+            si += pgptr->gettextlengthcr(p_char_indices);
+            
 			pgptr = pgptr->next();
 			if (pgptr == paragraphs)
 				return False;
 		}
 		ei = si;
-		ei += pgptr->gettextlengthcr();
+		ei += pgptr->gettextlengthcr(p_char_indices);
 		pgptr = pgptr->next();
 		while (pgptr != paragraphs && pgptr->gethilite())
 		{
-			ei += pgptr->gettextlengthcr();
+			ei += pgptr->gettextlengthcr(p_char_indices);
 			pgptr = pgptr->next();
 		}
 		ei--;
@@ -2341,50 +2348,78 @@ Boolean MCField::selectedmark(Boolean whole, findex_t &si, findex_t &ei,
 		{
 			while (pgptr != focusedparagraph)
 			{
-				si += pgptr->gettextlengthcr();
+                si += pgptr -> gettextlengthcr(p_char_indices);
 				pgptr = pgptr->next();
 			}
 			if (whole)
-				ei = si + focusedparagraph->gettextlengthcr();
+            {
+                ei = si + focusedparagraph->gettextlengthcr(p_char_indices);
+            }
 			else
 			{
 				focusedparagraph->getselectionindex(s, e);
-				ei = si += s;
+                if (p_char_indices)
+                {
+                    t_cu_range . offset = 0;
+                    t_cu_range . length = s;
+                    MCStringUnmapIndices(focusedparagraph -> GetInternalStringRef(), kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
+                    ei = si += t_char_range . length;
+                }
+                else
+                    ei = si += s;
 			}
 		}
 		else
 		{
 			while (pgptr != firstparagraph)
 			{
-				si += pgptr->gettextlengthcr();
+                si += pgptr->gettextlengthcr(p_char_indices);                
 				pgptr = pgptr->next();
 			}
 			ei = si;
 			if (!whole)
 			{
 				pgptr->getselectionindex(s, e);
-				si += s;
+                if (p_char_indices)
+                {
+                    t_cu_range . offset = 0;
+                    t_cu_range . length = s;
+                    MCStringUnmapIndices(pgptr -> GetInternalStringRef(), kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
+                    si += t_char_range . length;
+                }
+                else
+                    si += s;
 			}
 			while (pgptr != lastparagraph)
 			{
-				ei += pgptr->gettextlengthcr();
+                ei += pgptr->gettextlengthcr(p_char_indices);                
 				pgptr = pgptr->next();
 			}
 			if (whole)
 			{
-				ei += pgptr->gettextlengthcr();
+                ei += pgptr->gettextlengthcr(p_char_indices);
+                
 				if (pgptr->next() == paragraphs)
 					ei--;
 			}
 			else
 			{
 				pgptr->getselectionindex(s, e);
-				ei += e;
+                if (p_char_indices)
+                {
+                    t_cu_range . offset = 0;
+                    t_cu_range . length = e;
+                    MCStringUnmapIndices(pgptr -> GetInternalStringRef(), kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
+                    ei += t_char_range . length;
+                }
+                else
+                    ei += e;
 			}
 		}
 		if (include_cr && pgptr != NULL && e == pgptr->gettextlength() && pgptr->next() != paragraphs)
 			ei++;
 	}
+    
 	return True;
 }
 

@@ -73,11 +73,11 @@ static MCExecEnumTypeElementInfo _kMCInterfaceFieldCursorMovementElementInfo[] =
     { "logical", kMCFieldCursorMovementLogical, false },
 };
 
-static MCExecEnumTypeElementInfo _kMCInterfaceFieldTextDirectionElementInfo[] =
+static MCExecEnumTypeElementInfo _kMCInterfaceTextDirectionElementInfo[] =
 {
-    { "auto", kMCFieldTextDirectionAuto, false },
-    { "rtl", kMCFieldTextDirectionRTL, false },
-    { "ltr", kMCFieldTextDirectionLTR, false },
+    { "auto", kMCTextDirectionAuto, false },
+    { "rtl", kMCTextDirectionRTL, false },
+    { "ltr", kMCTextDirectionLTR, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceFieldStyleTypeInfo =
@@ -94,11 +94,11 @@ static MCExecEnumTypeInfo _kMCInterfaceFieldCursorMovementTypeInfo =
     _kMCInterfaceFieldCursorMovementElementInfo
 };
 
-static MCExecEnumTypeInfo _kMCInterfaceFieldTextDirectionTypeInfo =
+static MCExecEnumTypeInfo _kMCInterfaceTextDirectionTypeInfo =
 {
     "Interface.TextDirection",
-    sizeof(_kMCInterfaceFieldTextDirectionElementInfo) / sizeof(MCExecEnumTypeElementInfo),
-    _kMCInterfaceFieldTextDirectionElementInfo
+    sizeof(_kMCInterfaceTextDirectionElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceTextDirectionElementInfo
 };
 
 //////////
@@ -220,7 +220,7 @@ static MCExecEnumTypeInfo _kMCInterfaceLayerModeTypeInfo =
 MCExecEnumTypeInfo *kMCInterfaceFieldStyleTypeInfo = &_kMCInterfaceFieldStyleTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceFlaggedRangesTypeInfo = &_kMCInterfaceFlaggedRangesTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceFieldCursorMovementTypeInfo = &_kMCInterfaceFieldCursorMovementTypeInfo;
-MCExecEnumTypeInfo *kMCInterfaceFieldTextDirectionTypeInfo = &_kMCInterfaceFieldTextDirectionTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceTextDirectionTypeInfo = &_kMCInterfaceTextDirectionTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -902,7 +902,7 @@ void MCField::GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encod
     pgptr -> GetEncoding(ctxt, t_encoding);
     pgptr = pgptr -> next();
     
-    while (pgptr != paragraphs);
+    while (pgptr != paragraphs)
     {
         pgptr -> GetEncoding(ctxt, t_next);
         if (t_next != t_encoding)
@@ -927,7 +927,7 @@ void MCField::GetCursorMovement(MCExecContext& ctxt, intenum_t &r_movement)
 
 void MCField::SetTextDirection(MCExecContext& ctxt, intenum_t p_direction)
 {
-    text_direction = (MCFieldTextDirection)p_direction;
+    text_direction = (MCTextDirection)p_direction;
 }
 
 void MCField::GetTextDirection(MCExecContext& ctxt, intenum_t &r_direction)

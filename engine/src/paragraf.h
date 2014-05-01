@@ -144,7 +144,7 @@ class MCParagraph : public MCDLlist
 	bool needs_layout : 1;
 	// MW-2012-01-25: [[ ParaStyles ]] This paragraphs collection of attrs.
 	MCParagraphAttrs *attrs;
-    MCFieldTextDirection base_direction;
+    MCTextDirection base_direction;
 
     static uint2 cursorwidth;
 
@@ -244,7 +244,7 @@ public:
 	
 	////////// BIDIRECTIONAL SUPPORT
     
-    MCFieldTextDirection getbasetextdirection() const
+    MCTextDirection getbasetextdirection() const
     {
         return base_direction;
     }
@@ -396,18 +396,28 @@ public:
 
 	// If there is no text buffer then initialize it and return the length of the
 	// paragraph in bytes.
-	findex_t gettextlength()
+    // SN-2014-04-04 [[ CombiningChars ]] We want to be able to get the numbers of actual characters of a paragraph
+    // not the numbers of codeunits.
+	findex_t gettextlength(bool p_char_indices = false)
 	{
 		if (blocks == NULL)
 			inittext();
 			
-		return MCStringGetLength(m_text);
+        if (p_char_indices)
+        {
+            MCRange t_cu_range = {0,MCStringGetLength(m_text)};
+            MCRange t_char_range;
+            MCStringUnmapIndices(m_text, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
+            return t_char_range . length;
+        }
+        else
+            return MCStringGetLength(m_text);
 	}
 
 	// Same as gettextsize, except adjust by one for the CR character.
-	findex_t gettextlengthcr()
+	findex_t gettextlengthcr(bool p_char_indices = false)
 	{
-		return gettextlength() + 1;
+		return gettextlength(p_char_indices) + 1;
 	}
 
 	// 'gettext()' returns a direct pointer to the backstore

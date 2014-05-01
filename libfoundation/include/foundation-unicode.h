@@ -20,11 +20,13 @@
 #include "foundation.h"
 #include "foundation-locale.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
 codepoint_t MCUnicodeSurrogatesToCodepoint(uint16_t first, uint16_t second);
+// We assume that the unichar_t pointer already has enough memory to handle the addition of the surrogate pair
+// Returns true in case the codepoint actually generated a surrogate pair
+bool MCUnicodeCodepointToSurrogates(codepoint_t t_codepoint, unichar_t* r_surrogates);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -328,10 +330,10 @@ bool    MCUnicodeCaseFold(const unichar_t *p_in, uindex_t p_in_length,
 // Comparison options
 enum MCUnicodeCompareOption
 {
-    kMCUnicodeCompareOptionExact,       // Codepoint (not code unit!) equality
-    kMCUnicodeCompareOptionNormalised,  // Normalise inputs before comparison
-    kMCUnicodeCompareOptionFolded,      // Case fold inputs before comparison
-    kMCUnicodeCompareOptionCaseless     // Both normalise and case fold
+    kMCUnicodeCompareOptionExact = 0,       // Codepoint (not code unit!) equality
+    kMCUnicodeCompareOptionNormalised = 1,  // Normalise inputs before comparison
+    kMCUnicodeCompareOptionCaseless = 2,    // Both normalise and case fold
+    kMCUnicodeCompareOptionFolded = 3,      // Case fold inputs before comparison
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -374,6 +376,30 @@ bool MCUnicodeFirstIndexOfChar(const unichar_t *p_string, uindex_t p_string_leng
 bool MCUnicodeLastIndexOfChar(const unichar_t *p_string, uindex_t p_string_length,
                               codepoint_t p_needle, MCUnicodeCompareOption, uindex_t &r_index);
 
+// Returns the length in both sequences of a matching prefix
+void MCUnicodeSharedPrefix(const unichar_t *p_string, uindex_t p_string_length,
+                           const unichar_t *p_prefix, uindex_t p_prefix_length,
+                           MCUnicodeCompareOption p_option, uindex_t &r_len_in_string, uindex_t &r_len_in_prefix);
+
+// Returns the length in both sequences of a matching suffix
+void MCUnicodeSharedSuffix(const unichar_t *p_string, uindex_t p_string_length,
+                           const unichar_t *p_suffix, uindex_t p_suffix_length,
+                           MCUnicodeCompareOption p_option, uindex_t &r_len_in_string, uindex_t &r_len_in_suffix);
+
+// Searches a string for a given substring and returns the range that was equal
+// to the substring (note that this may be a different length to the substring!)
+bool MCUnicodeFind(const unichar_t *p_string, uindex_t p_string_length,
+                   const unichar_t *p_needle, uindex_t p_needle_length,
+                   MCUnicodeCompareOption, MCRange &r_matched_range);
+
+// Hashes the given string, ignoring case or normalisation differences if
+// requested (i.e the string is folded or normalised before hashing)
+hash_t MCUnicodeHash(const unichar_t *p_string, uindex_t p_string_length,
+                     MCUnicodeCompareOption);
+
+// Returns true if source_chars are a match for pattern_chars under the rules
+// of LiveCode wildcard matches.
+bool MCUnicodeWildcardMatch(const unichar_t *source_chars, uindex_t source_length, const unichar_t *pattern_chars, uindex_t pattern_length, MCUnicodeCompareOption p_option);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -436,6 +462,235 @@ bool    MCUnicodeCreateSortKey(MCLocaleRef, MCUnicodeCollateOption,
 
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// SN-2014-04-16
+// Relocating of the engine/src/unicode.h here as they are now needed by foundation-bidi
+
+// Returns true if the given codepoint has a non-zero combining class, this
+// is not inlined as it requires table lookup and looping.
+extern bool MCUnicodeCodepointIsCombiner(uinteger_t x);
+
+extern uinteger_t MCUnicodeMapFromNativeSingleton_Windows1252(unsigned char x);
+extern uinteger_t MCUnicodeMapFromNativeSingleton_MacRoman(unsigned char x);
+extern uinteger_t MCUnicodeMapFromNativeSingleton_ISO8859_1(unsigned char x);
+
+extern bool MCUnicodeMapToNativeSingleton_Windows1252(uinteger_t x, char_t& r_char);
+extern bool MCUnicodeMapToNativeSingleton_MacRoman(uinteger_t x, char_t& r_char);
+extern bool MCUnicodeMapToNativeSingleton_ISO8859_1(uinteger_t x, char_t& r_char);
+
+extern bool MCUnicodeMapToNativePair_Windows1252(uinteger_t x, uinteger_t y, char_t& r_char);
+extern bool MCUnicodeMapToNativePair_MacRoman(uinteger_t x, uinteger_t y, char_t& r_char);
+extern bool MCUnicodeMapToNativePair_ISO8859_1(uinteger_t x, uinteger_t y, char_t& r_char);
+
+extern bool MCUnicodeCodepointIsIdeographicLookup(uinteger_t x);
+
+// Returns true if there's a word break between x and y with the given context.
+// Note that this is only a crude approximation to the full Unicode rules.
+extern bool MCUnicodeCanBreakWordBetween(uinteger_t xc, uinteger_t x, uinteger_t y, uinteger_t yc);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Returns true if the given codepoint should be treated as ideographic when
+// breaking
+inline bool MCUnicodeCodepointIsIdeographic(uinteger_t x)
+{
+	if (x < 0x0E01)
+		return false;
+	return MCUnicodeCodepointIsIdeographicLookup(x);
+}
+
+// Returns the break class of the codepoint. If Bit 0 is set, breaking is
+// prohibited before, it Bit 1 is set, breaking is prohibited after
+extern uinteger_t MCUnicodeCodepointGetBreakClass(uinteger_t x);
+
+// Returns true if the given codepoint is in the high surrogate area
+inline bool MCUnicodeCodepointIsHighSurrogate(uinteger_t x)
+{
+	if (x < 0xD800)
+		return false;
+    
+	if (x > 0xDBFF)
+		return false;
+    
+	return true;
+}
+
+// Returns true if the given codepoint is in the low surrogate area
+inline bool MCUnicodeCodepointIsLowSurrogate(uinteger_t x)
+{
+	if (x < 0xDC00)
+		return false;
+	if (x > 0xDFFF)
+		return false;
+	return true;
+}
+
+// Returns true if the given codepoint is a base character
+inline bool MCUnicodeCodepointIsBase(uinteger_t x)
+{
+	if (x < 0x0300)
+		return true;
+    
+	return !MCUnicodeCodepointIsCombiner(x);
+}
+
+// Compute and advance the current surrogate pair (used by MCUnicodeCodepointAdvance to
+// help the compiler make good choices about inlining - effectively a 'trap' to a very
+// rare case).
+inline uinteger_t MCUnicodeCodepointAdvanceSurrogate(const unichar_t* p_input, uinteger_t p_length, uinteger_t& x_index)
+{
+	if (x_index + 1 < p_length && MCUnicodeCodepointIsLowSurrogate(p_input[1]))
+	{
+		uinteger_t t_codepoint;
+		t_codepoint = ((p_input[x_index] - 0xD800) << 10) | (p_input[x_index + 1] - 0xDC00);
+		x_index += 2;
+		return t_codepoint;
+	}
+    
+	uinteger_t t_codepoint;
+	t_codepoint = p_input[x_index];
+    
+	x_index += 1;
+    
+	return t_codepoint;
+}
+
+// Consume and return the next codepoint - this automatically combines surrogates. If the
+// surrogate is invalid it is still returned (i.e. the expectation is it will be processed
+// as an illegal character).
+inline uinteger_t MCUnicodeCodepointAdvance(const unichar_t* p_input, uinteger_t p_length, uinteger_t& x_index)
+{
+	uinteger_t t_codepoint;
+	t_codepoint = p_input[x_index];
+    
+	if (MCUnicodeCodepointIsHighSurrogate(t_codepoint))
+		return MCUnicodeCodepointAdvanceSurrogate(p_input, p_length, x_index);
+    
+	x_index += 1;
+    
+	return t_codepoint;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+inline bool MCUnicodeMapToNative_Windows1252(const unichar_t *p_codepoints, uinteger_t p_length, char_t& r_char)
+{
+	if (p_length == 1)
+	{
+		if (p_codepoints[0] <= 0x7F || (p_codepoints[0] >= 0xA0 && p_codepoints[0] <= 0xFF))
+		{
+			r_char = (char_t)p_codepoints[0];
+			return true;
+		}
+		return MCUnicodeMapToNativeSingleton_Windows1252(p_codepoints[0], r_char);
+	}
+    
+	if (p_length == 2)
+	{
+		if (p_codepoints[0] < 'A' || p_codepoints[0] > 'z')
+			return false;
+        
+		if (p_codepoints[1] < 0x0300 || p_codepoints[1] > 0x0327)
+			return false;
+        
+		return MCUnicodeMapToNativePair_Windows1252(p_codepoints[0], p_codepoints[1], r_char);
+	}
+    
+	return false;
+}
+
+inline bool MCUnicodeMapToNative_MacRoman(const unichar_t *p_codepoints, uinteger_t p_length, char_t& r_char)
+{
+	if (p_length == 1)
+	{
+		if (p_codepoints[0] <= 0x7f)
+		{
+			r_char = (char_t)p_codepoints[0];
+			return true;
+		}
+		
+		return MCUnicodeMapToNativeSingleton_MacRoman(p_codepoints[0], r_char);
+	}
+	
+	if (p_length == 2)
+	{
+		if (p_codepoints[0] < 'A' || p_codepoints[0] > 'z')
+			return false;
+        
+		if (p_codepoints[1] < 0x0300 || p_codepoints[1] > 0x0327)
+			return false;
+        
+		return MCUnicodeMapToNativePair_MacRoman(p_codepoints[0], p_codepoints[1], r_char);
+	}
+    
+	return false;
+}
+
+inline bool MCUnicodeMapToNative_ISO8859_1(const unichar_t *p_codepoints, uinteger_t p_length, char_t& r_char)
+{
+	if (p_length == 1)
+	{
+		if (p_codepoints[0] <= 0xff)
+		{
+			r_char = (char_t)p_codepoints[0];
+			return true;
+		}
+		
+		return false;
+	}
+    
+	if (p_length == 2)
+	{
+		if (p_codepoints[0] < 'A' || p_codepoints[0] > 'y')
+			return false;
+        
+		if (p_codepoints[1] < 0x0300 || p_codepoints[1] > 0x0327)
+			return false;
+        
+		return MCUnicodeMapToNativePair_ISO8859_1(p_codepoints[0], p_codepoints[1], r_char);
+	}
+    
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+inline uinteger_t MCUnicodeMapFromNative_Windows1252(char_t p_native)
+{
+	if (p_native <= 0x7F)
+		return p_native;
+	if (p_native >= 0xA0)
+		return p_native;
+	return MCUnicodeMapFromNativeSingleton_Windows1252(p_native);
+}
+
+inline uinteger_t MCUnicodeMapFromNative_MacRoman(char_t p_native)
+{
+	if (p_native <= 0x7F)
+		return p_native;
+	return MCUnicodeMapFromNativeSingleton_MacRoman(p_native);
+}
+
+inline uinteger_t MCUnicodeMapFromNative_ISO8859_1(char_t p_native)
+{
+	return p_native;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if defined(__WINDOWS_1252__)
+#define MCUnicodeMapFromNative(x) MCUnicodeMapFromNative_Windows1252(x)
+#define MCUnicodeMapToNative(x, y, z) MCUnicodeMapToNative_Windows1252(x, y, z)
+#elif defined(__MACROMAN__)
+#define MCUnicodeMapFromNative(x) MCUnicodeMapFromNative_MacRoman(x)
+#define MCUnicodeMapToNative(x, y, z) MCUnicodeMapToNative_MacRoman(x, y, z)
+#elif defined(__ISO_8859_1__)
+#define MCUnicodeMapFromNative(x) MCUnicodeMapFromNative_ISO8859_1(x)
+#define MCUnicodeMapToNative(x, y, z) MCUnicodeMapToNative_ISO8859_1(x, y, z)
+#else
+#error Unknown native text encoding.
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 

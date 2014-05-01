@@ -1823,6 +1823,22 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
             else
                 MCArraysEvalIsNotAmongTheKeysOf(ctxt, *t_name, *t_array, t_result);
         }
+        else if (delimiter == CT_BYTE)
+        {
+            MCAutoDataRef t_left, t_right;
+            
+            if (!ctxt . EvalExprAsDataRef(left, EE_IS_BADLEFT, &t_left))
+                return;
+
+            if (!ctxt . EvalExprAsDataRef(right, EE_IS_BADRIGHT, &t_right))
+                return;
+            
+            if (form == IT_AMONG)
+                MCStringsEvalIsAmongTheBytesOf(ctxt, *t_left, *t_right, t_result);
+            else
+                MCStringsEvalIsNotAmongTheBytesOf(ctxt, *t_left, *t_right, t_result);
+            break;
+        }
         else
         {
             MCAutoStringRef t_left, t_right;
@@ -1888,12 +1904,6 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
                     MCStringsEvalIsAmongTheCodeunitsOf(ctxt, *t_left, *t_right, t_result);
                 else
                     MCStringsEvalIsNotAmongTheCodeunitsOf(ctxt, *t_left, *t_right, t_result);
-                break;
-            case CT_BYTE:
-                if (form == IT_AMONG)
-                    MCStringsEvalIsAmongTheBytesOf(ctxt, *t_left, *t_right, t_result);
-                else
-                    MCStringsEvalIsNotAmongTheBytesOf(ctxt, *t_left, *t_right, t_result);
                 break;
             }
         }

@@ -28,7 +28,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "card.h"
 #include "field.h"
-#include "unicode.h"
 #include "notify.h"
 #include "statemnt.h"
 #include "funcs.h"
@@ -572,7 +571,7 @@ float android_font_measure_text(void *p_font, const char *p_text, uint32_t p_tex
         MCAutoStringRefAsUTF8String t_utf8_string;
         /* UNCHECKED */ t_utf8_string . Lock(*t_string);
         
-        /* UNCHECKED */ MCAndroidTypefaceMeasureText(t_font->typeface, t_font->size, *t_utf8_string, MCStringGetLength(*t_string), false, t_length);
+        /* UNCHECKED */ MCAndroidTypefaceMeasureText(t_font->typeface, t_font->size, *t_utf8_string, t_utf8_string.Size(), false, t_length);
 	}
 	
 	return t_length;

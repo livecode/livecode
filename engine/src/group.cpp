@@ -2895,7 +2895,7 @@ void MCGroup::drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawfra
 		if (showtextlabel && drawframe)
 		{
 			setforeground(dc, DI_FORE, False);
-            dc -> drawtext(textrect.x + 2, textrect.y + fascent, t_label, m_font, false);
+            dc -> drawtext(textrect.x + 2, textrect.y + fascent, t_label, m_font, false, kMCDrawTextNoBreak);
 		}
 	}
 }
@@ -3014,7 +3014,7 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 				}
 			}
 			setforeground(dc, DI_FORE, False);
-            dc -> drawtext(textrect.x + 2, textrect.y + fascent, t_label, m_font, false);
+            dc -> drawtext(textrect.x + 2, textrect.y + fascent, t_label, m_font, false, kMCDrawTextNoBreak);
 		}
 		else
 		{

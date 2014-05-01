@@ -17,10 +17,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation.h>
 
 #include "foundation-private.h"
+#include "foundation-text.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uindex_t MCUnicodeCharsSharedPrefixExact(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_prefix, uindex_t p_prefix_length)
+/*uindex_t MCUnicodeCharsSharedPrefixExact(const unichar_t *p_string, uindex_t p_string_length, const unichar_t *p_prefix, uindex_t p_prefix_length)
 {
 	// TODO: use ICU
     // Unfortunately, this is less than trivial as ICU doesn't provide a
@@ -167,7 +168,7 @@ void MCUnicodeCharsUppercase(unichar_t *p_chars, uindex_t p_char_count)
 	for(uindex_t i = 0; i < p_char_count; i++)
 		p_chars[i] = MCUnicodeCharUppercase(p_chars[i]);
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCUnicodeCharsMapToNative(const unichar_t *p_uchars, uindex_t p_uchar_count, char_t *p_nchars, uindex_t& r_nchar_count, char_t p_invalid)
@@ -198,7 +199,7 @@ void MCUnicodeCharsMapFromNative(const char_t *p_chars, uindex_t p_char_count, u
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 unichar_t MCUnicodeCharFold(unichar_t p_char)
 {
 	char_t t_native_char;
@@ -214,7 +215,7 @@ unichar_t MCUnicodeCharUppercase(unichar_t p_char)
 		return MCUnicodeCharMapFromNative(MCNativeCharUppercase(t_native_char));
 	return p_char;
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 // Convert the given UTF-8 string to Unicode. Both counts are in bytes.

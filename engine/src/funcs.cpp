@@ -1363,6 +1363,25 @@ void MCChunkOffset::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	return ES_NORMAL;
 #endif /* MCChunkOffset */
 
+    uinteger_t t_start;
+    if (!ctxt . EvalOptionalExprAsUInt(offset, 0, EE_OFFSET_BADOFFSET, t_start))
+        return;
+
+    if (delimiter == CT_BYTE)
+    {
+        MCAutoDataRef t_chunk;
+        if (!ctxt . EvalExprAsDataRef(part, EE_OFFSET_BADPART, &t_chunk))
+            return;
+        
+        MCAutoDataRef t_string;
+        if (!ctxt . EvalExprAsDataRef(whole, EE_OFFSET_BADWHOLE, &t_string))
+            return;
+        
+        MCStringsEvalByteOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
+        r_value . type = kMCExecValueTypeUInt;
+        return;
+    }
+    
     MCAutoStringRef t_chunk;
     if (!ctxt . EvalExprAsStringRef(part, EE_OFFSET_BADPART, &t_chunk))
         return;
@@ -1371,10 +1390,6 @@ void MCChunkOffset::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (!ctxt . EvalExprAsStringRef(whole, EE_OFFSET_BADWHOLE, &t_string))
         return;
     
-    uinteger_t t_start;
-    if (!ctxt . EvalOptionalExprAsUInt(offset, 0, EE_OFFSET_BADOFFSET, t_start))
-        return;
-
 	switch (delimiter)
 	{
 	case CT_ITEM:
@@ -1406,9 +1421,6 @@ void MCChunkOffset::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         break;
     case CT_CODEUNIT:
         MCStringsEvalCodeunitOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
-        break;
-    case CT_BYTE:
-        MCStringsEvalByteOffset(ctxt, *t_chunk, *t_string, t_start, r_value . uint_value);
         break;
 	}
     

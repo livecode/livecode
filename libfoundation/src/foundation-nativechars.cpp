@@ -208,22 +208,54 @@ uindex_t MCNativeCharsSharedSuffixCaseless(const char_t *p_string, uindex_t p_st
 
 ////////////////////////////////////////////////////////////////////////////////
 
-hash_t MCNativeCharsHashExact(const char_t *p_chars, uindex_t p_char_count)
+hash_t MCNativeCharsHash(const char_t *p_chars, uindex_t p_char_count, MCStringOptions p_options)
 {
-	hash_t t_value;
-	t_value = 0;
-	while(p_char_count--)
-		t_value += (t_value << 3) + *p_chars++;
-	return t_value;
-}
+    bool t_fold;
+    t_fold = (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded);
+    // Fowler-Noll-Vo 1a hash function
+    if (sizeof(hash_t) == sizeof(uint64_t))
+    {
+        // 64-bit variant
+        const uint64_t kPrime = 1099511628211ULL;
+        const uint64_t kOffset = 14695981039346656037ULL;
+        uint64_t t_hash = kOffset;
+        
+        while (p_char_count--)
+        {
+            // Hash the byte
+            if (t_fold)
+                t_hash ^= (uint16_t)(MCNativeCharFold(*p_chars++)) & 0xFF;
+            else
+                t_hash ^= (uint16_t)(*p_chars++) & 0xFF;
+            t_hash *= kPrime;
+            
+            // Hash the 0 byte that would be there if we were hashing the unichars.
+            t_hash *= kPrime;
+        }
+        return t_hash;
+    }
+    else
+    {
+        // 32-bit variant
+        const uint32_t kPrime = 16777619UL;
+        const uint32_t kOffset = 2166136261UL;
+        uint32_t t_hash = kOffset;
+        
+        while (p_char_count--)
+        {
+            // Hash the byte
+            if (t_fold)
+                t_hash ^= (uint16_t)(MCNativeCharFold(*p_chars++)) & 0xFF;
+            else
+                t_hash ^= (uint16_t)(*p_chars++) & 0xFF;
+            t_hash *= kPrime;
+            
+            // Hash the 0 byte that would be there if we were hashing the unichars.
+            t_hash *= kPrime;
+        }
+        return t_hash;
+    }
 
-hash_t MCNativeCharsHashCaseless(const char_t *p_chars, uindex_t p_char_count)
-{
-	hash_t t_value;
-	t_value = 0;
-	while(p_char_count--)
-		t_value += (t_value << 3) + MCNativeCharFold(*p_chars++);
-	return t_value;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -346,3 +378,4 @@ char_t MCNativeCharLowercase(char_t p_char)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+

@@ -433,7 +433,7 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 	//
 	MCNameRef t_getprop_name;
 	MCNameRef t_param_name;
-	if (MCNameIsEqualTo(p_set_name, kMCEmptyName, kMCCompareCaseless))
+	if (MCNameIsEmpty(p_set_name))
 		t_getprop_name = p_prop_name, t_param_name = kMCEmptyName;
 	else
 		t_getprop_name = p_set_name, t_param_name = p_prop_name;
@@ -1536,7 +1536,7 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 	// otherwise we send a 'setProp <setname>[<propname>] <value>'.
 	MCNameRef t_setprop_name;
 	MCNameRef t_param_name;
-	if (MCNameIsEqualTo(p_set_name, kMCEmptyName, kMCCompareCaseless))
+	if (MCNameIsEmpty(p_set_name))
 		t_setprop_name = p_prop_name, t_param_name = kMCEmptyName;
 	else
 		t_setprop_name = p_set_name, t_param_name = p_prop_name;
