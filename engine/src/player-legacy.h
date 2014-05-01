@@ -17,8 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 // MCPlayer class declarations
 //
-#ifndef	PLAYER_H
-#define	PLAYER_H
+#ifndef	PLAYER_LEGACY_H
+#define	PLAYER_LEGACY_H
 
 #include "control.h"
 

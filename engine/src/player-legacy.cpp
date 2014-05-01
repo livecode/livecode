@@ -31,7 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "card.h"
 #include "field.h"
-#include "player.h"
+#include "player-legacy.h"
 #include "aclip.h"
 #include "mcerror.h"
 #include "param.h"
