@@ -125,6 +125,8 @@ struct MCParagraphAttrs
 	}
 };
 
+class MCSegment;
+
 // Don't change this until everything dealing with fields, paragraphs, etc
 // is capable of dealing with 32-bit offsets or things will break!
 #define PARAGRAPH_MAX_LEN	INT32_MAX
@@ -134,6 +136,7 @@ class MCParagraph : public MCDLlist
 	MCField *parent;
 	MCStringRef m_text;
 	MCBlock *blocks;
+    MCSegment *segments;
 	MCLine *lines;
 	findex_t focusedindex;
 	findex_t startindex, endindex, originalindex;
@@ -147,6 +150,10 @@ class MCParagraph : public MCDLlist
     MCTextDirection base_direction;
 
     static uint2 cursorwidth;
+    
+    // Dirty hack until we have a proper styled text object...
+    friend class MCSegment;
+    friend class MCLine;
 
 public:
 	MCParagraph();
@@ -971,7 +978,7 @@ private:
 	// Flow the paragraph for a single line using the given parent font.
 	void noflow(void);
 
-	// Delete the lines computed for flow:
+	// Delete the lines and segments computed for flow:
 	//   - only called by MCParagraph
 	void deletelines();
 
