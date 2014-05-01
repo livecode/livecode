@@ -1077,7 +1077,7 @@ void MCPlatformHandlePlayerCurrentTimeChanged(MCPlatformPlayerRef p_player)
     if (t_player == nil)
         return;
     
-    t_player -> timer(MCM_current_time_changed, nil);
+    t_player -> currenttimechanged();
 }
 
 void MCPlatformHandlePlayerSelectionChanged(MCPlatformPlayerRef p_player)

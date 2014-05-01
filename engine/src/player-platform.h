@@ -182,7 +182,19 @@ public:
     
     void markerchanged(uint32_t p_time);
     void selectionchanged(void);
+    void currenttimechanged(void);
 	
+    MCRectangle getcontrollerrect(void);
+    MCRectangle getcontrollerpartrect(const MCRectangle& total_rect, int part);
+
+    void drawcontroller(MCDC *dc);
+    void drawcontrollerbutton(MCDC *dc, const MCRectangle& rect);
+
+    void redrawcontroller(void);
+    
+    int hittestcontroller(int x, int y);
+    
+    void handle_mdown(int which);
 };
 
 #endif

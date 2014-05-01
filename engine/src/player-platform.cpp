@@ -68,6 +68,22 @@ static const char *ppmediastrings[] =
 	"flash"
 };
 
+#define CONTROLLER_HEIGHT 16
+
+enum
+{
+    kMCPlayerControllerPartUnknown,
+    
+    kMCPlayerControllerPartVolume,
+    kMCPlayerControllerPartPlay,
+    kMCPlayerControllerPartScrubBack,
+    kMCPlayerControllerPartScrubForward,
+    kMCPlayerControllerPartThumb,
+    kMCPlayerControllerPartWell,
+    kMCPlayerControllerPartSelectionStart,
+    kMCPlayerControllerPartSelectionFinish,
+};
+
 //-----------------------------------------------------------------------------
 // Control Implementation
 //
@@ -203,8 +219,8 @@ Boolean MCPlayer::mdown(uint2 which)
             switch (getstack()->gettool(this))
 		{
             case T_BROWSE:
-                if (message_with_args(MCM_mouse_down, "1") == ES_NORMAL)
-                    return True;
+                message_with_args(MCM_mouse_down, "1");
+                handle_mdown(which);
                 break;
             case T_POINTER:
             case T_PLAYER:  //when the movie object is in editing mode
@@ -291,6 +307,9 @@ void MCPlayer::setrect(const MCRectangle &nrect)
 	if (m_platform_player != nil)
 	{
 		MCRectangle trect = MCU_reduce_rect(rect, getflag(F_SHOW_BORDER) ? borderwidth : 0);
+        
+        if (getflag(F_SHOW_CONTROLLER))
+            trect . height -= CONTROLLER_HEIGHT;
         
         // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
         //   (backscale factor handled in platform layer).
@@ -988,12 +1007,20 @@ Boolean MCPlayer::ispaused()
 
 void MCPlayer::showcontroller(Boolean show)
 {
+#if 0
 	if (m_platform_player != nil)
 	{
 		bool t_show;
 		t_show = show;
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show);
 	}
+#endif
+    
+    // The showController property has changed, this means we must do two things - resize
+    // the movie rect and then redraw ourselves to make sure we can see the controller.
+    
+    setrect(rect);
+    layer_redrawall();
 }
 
 Boolean MCPlayer::prepare(const char *options)
@@ -1022,6 +1049,10 @@ Boolean MCPlayer::prepare(const char *options)
 	MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_movie_rect);
 	
 	MCRectangle trect = resize(t_movie_rect);
+    
+    // Adjust so that the controller isn't included in the movie rect.
+    if (getflag(F_SHOW_CONTROLLER))
+        trect . height -= CONTROLLER_HEIGHT;
 	
 	// IM-2011-11-12: [[ Bug 11320 ]] Transform player rect to device coords
     // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
@@ -1030,15 +1061,15 @@ Boolean MCPlayer::prepare(const char *options)
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
 	
-	bool t_show_controller, t_show_badge, t_looping, t_show_selection, t_play_selection;
-	t_show_controller = getflag(F_SHOW_CONTROLLER);
+	bool /*t_show_controller, */t_show_badge, t_looping, t_show_selection, t_play_selection;
+	//t_show_controller = getflag(F_SHOW_CONTROLLER);
 	t_show_badge = getflag(F_SHOW_BADGE);
 	t_looping = getflag(F_LOOPING);
 	t_show_selection = getflag(F_SHOW_SELECTION);
 	t_play_selection = getflag(F_PLAY_SELECTION);
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &lasttime);
-	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show_controller);
+	// MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show_controller);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowBadge, kMCPlatformPropertyTypeBool, &t_show_badge);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
@@ -1349,7 +1380,7 @@ MCRectangle MCPlayer::resize(MCRectangle movieRect)
 	{
 		if (formattedheight == 0)
 		{ // audio clip
-			trect.height = 16;
+			trect.height = CONTROLLER_HEIGHT;
 			rect = trect;
 		}
 		else
@@ -1359,7 +1390,7 @@ MCRectangle MCPlayer::resize(MCRectangle movieRect)
 			trect.width = (uint2)(formattedwidth * scale);
 			trect.height = (uint2)(formattedheight * scale);
 			if (flags & F_SHOW_CONTROLLER)
-				trect.height += 16;
+				trect.height += CONTROLLER_HEIGHT;
 			trect.x = x - (trect.width >> 1);
 			trect.y = y - (trect.height >> 1);
 			if (flags & F_SHOW_BORDER)
@@ -1392,6 +1423,13 @@ void MCPlayer::selectionchanged(void)
     MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
     MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
     timer(MCM_selection_changed, nil);
+}
+
+void MCPlayer::currenttimechanged(void)
+{
+    redrawcontroller();
+
+    timer(MCM_current_time_changed, nil);
 }
 
 void MCPlayer::SynchronizeUserCallbacks(void)
@@ -1514,32 +1552,6 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
     
 	if (MClook == LF_MOTIF && state & CS_KFOCUSED && !(extraflags & EF_NO_FOCUS_BORDER))
 		drawfocus(dc, p_dirty);
-    
-	/*if (!(state & CS_CLOSING))
-     prepare(MCnullstring);
-     
-     if (m_platform_player != nil)
-     {
-     bool t_visible;
-     t_visible = getflag(F_VISIBLE);
-     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
-     
-     MCRectangle trect = MCU_reduce_rect(rect, flags & F_SHOW_BORDER ? borderwidth : 0);
-     
-     // MW-2011-09-23: Sync the buffering state.
-     syncbuffering(dc);
-     
-     if (isbuffering())
-     {
-     MCImageDescriptor t_image;
-     MCMemoryClear(&t_image, sizeof(t_image));
-     t_image.filter = kMCGImageFilterNone;
-     MCPlatformLockPlayerBitmap(m_platform_player, t_image . bitmap);
-     if (t_image . bitmap != nil)
-     dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
-     MCPlatformUnlockPlayerBitmap(m_platform_player, t_image . bitmap);
-     }
-     }*/
 	
 	if (m_platform_player != nil)
 	{
@@ -1562,6 +1574,10 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		}
 	}
     
+    // Draw our controller
+    if (getflag(F_SHOW_CONTROLLER))
+        drawcontroller(dc);
+    
 	if (getflag(F_SHOW_BORDER))
 		if (getflag(F_3D))
 			draw3d(dc, rect, ETCH_SUNKEN, borderwidth);
@@ -1576,4 +1592,118 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
     
 	if (!p_isolated)
 		dc -> end();
+}
+
+void MCPlayer::drawcontroller(MCDC *dc)
+{
+    MCRectangle t_rect;
+    t_rect = getcontrollerrect();
+    
+    drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolume));
+    drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartPlay));
+    
+    drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb));
+    
+}
+
+int MCPlayer::hittestcontroller(int x, int y)
+{
+    MCRectangle t_rect;
+    t_rect = getcontrollerrect();
+    
+    if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartPlay), x, y))
+        return kMCPlayerControllerPartPlay;
+    
+    return kMCPlayerControllerPartUnknown;
+}
+
+void MCPlayer::drawcontrollerbutton(MCDC *dc, const MCRectangle& p_rect)
+{
+    dc -> setforeground(dc -> getwhite());
+    dc -> fillrect(p_rect, true);
+    
+    dc -> setforeground(dc -> getblack());
+    dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
+    
+    dc -> drawrect(p_rect, true);
+}
+
+MCRectangle MCPlayer::getcontrollerrect(void)
+{
+    MCRectangle t_rect;
+    t_rect = rect;
+    
+    if (getflag(F_SHOW_BORDER))
+        t_rect = MCU_reduce_rect(t_rect, borderwidth);
+    
+    t_rect . y = t_rect . y + t_rect . height - CONTROLLER_HEIGHT;
+    t_rect . height = CONTROLLER_HEIGHT;
+    
+    return t_rect;
+}
+
+MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_part)
+{
+    switch(p_part)
+    {
+        case kMCPlayerControllerPartVolume:
+            return MCRectangleMake(p_rect . x, p_rect . y, CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
+        case kMCPlayerControllerPartPlay:
+            return MCRectangleMake(p_rect . x + CONTROLLER_HEIGHT, p_rect . y, CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
+            
+        case kMCPlayerControllerPartThumb:
+        {
+            if (m_platform_player == nil)
+                return MCRectangleMake(0, 0, 0, 0);
+            
+            uint32_t t_current_time, t_duration;
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            
+            MCRectangle t_well_rect;
+            t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
+            
+            int t_active_well_width;
+            t_active_well_width = t_well_rect . width - CONTROLLER_HEIGHT;
+            
+            int t_thumb_left;
+            t_thumb_left = t_active_well_width * t_current_time / t_duration;
+            
+            return MCRectangleMake(t_well_rect . x + t_thumb_left, t_well_rect . y, CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
+        }
+        break;
+        
+        case kMCPlayerControllerPartWell:
+            return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT, p_rect . y, p_rect . width - 4 * CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
+            
+        default:
+            break;
+    }
+    
+    return MCRectangleMake(0, 0, 0, 0);
+}
+
+void MCPlayer::redrawcontroller(void)
+{
+    if (!getflag(F_SHOW_CONTROLLER))
+        return;
+    
+    layer_redrawrect(getcontrollerrect());
+}
+
+void MCPlayer::handle_mdown(int p_which)
+{
+    switch(hittestcontroller(mx, my))
+    {
+        case kMCPlayerControllerPartPlay:
+            if (getstate(CS_PREPARED))
+            {
+                playpause(!ispaused());
+            }
+            else
+                playstart(nil);
+            break;
+        default:
+            break;
+    }
 }

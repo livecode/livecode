@@ -23,6 +23,9 @@
 /* Begin PBXBuildFile section */
 		1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DC1249418FC422300C2FEF3 /* quicktimestubs.mac.cpp */; };
 		1DC1249618FC423200C2FEF3 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DC1249418FC422300C2FEF3 /* quicktimestubs.mac.cpp */; };
+		1DED772C19129F27000FFFE3 /* button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E3F0B8096FD00200116 /* button.cpp */; };
+		1DED772D1912A03B000FFFE3 /* player-platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED771E19126451000FFFE3 /* player-platform.cpp */; };
+		1DED772E1912A03C000FFFE3 /* player-platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED771E19126451000FFFE3 /* player-platform.cpp */; };
 		3C03ED921134205A009DE406 /* socket_resolve.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C03ED911134205A009DE406 /* socket_resolve.cpp */; };
 		3C0A3CC410BAF6120074D630 /* iquantization.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C0A3CC310BAF6120074D630 /* iquantization.cpp */; };
 		4C10D82C16BFADDB00D25197 /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C10D82916BFADB800D25197 /* libgraphics.a */; };
@@ -144,7 +147,6 @@
 		4D1F9D76171C682E0091C6CB /* pathgray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD27A820D5B36CE0000CC15 /* pathgray.cpp */; };
 		4D1F9D77171C682E0091C6CB /* pathprocess.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD27A840D5B36CE0000CC15 /* pathprocess.cpp */; };
 		4D1F9D78171C682E0091C6CB /* pickle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BD9B0CCF74C800D74FDB /* pickle.cpp */; };
-		4D1F9D79171C682E0091C6CB /* player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E5A0B8096FD00200116 /* player.cpp */; };
 		4D1F9D7A171C682E0091C6CB /* printer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D28FDA80C8C9CDA00B7A342 /* printer.cpp */; };
 		4D1F9D7B171C682E0091C6CB /* property.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E630B8096FD00200116 /* property.cpp */; };
 		4D1F9D7D171C682E0091C6CB /* regex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E720B8096FD00200116 /* regex.cpp */; };
@@ -405,7 +407,6 @@
 		4DEE2A8E0FDE42710009423C /* answer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E730B8096FD00200116 /* answer.cpp */; };
 		4DEE2A8F0FDE42710009423C /* ask.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E5C0B8096FD00200116 /* ask.cpp */; };
 		4DEE2A900FDE42710009423C /* block.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E6B0B8096FD00200116 /* block.cpp */; };
-		4DEE2A910FDE42710009423C /* button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E3F0B8096FD00200116 /* button.cpp */; };
 		4DEE2A920FDE42710009423C /* buttondraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E520B8096FD00200116 /* buttondraw.cpp */; };
 		4DEE2A930FDE42710009423C /* card.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E7B0B8096FD00200116 /* card.cpp */; };
 		4DEE2A940FDE42710009423C /* cardlst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E7F0B8096FD00200116 /* cardlst.cpp */; };
@@ -484,7 +485,6 @@
 		4DEE2AF00FDE42710009423C /* pathgray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD27A820D5B36CE0000CC15 /* pathgray.cpp */; };
 		4DEE2AF10FDE42710009423C /* pathprocess.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD27A840D5B36CE0000CC15 /* pathprocess.cpp */; };
 		4DEE2AF20FDE42710009423C /* pickle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BD9B0CCF74C800D74FDB /* pickle.cpp */; };
-		4DEE2AF30FDE42710009423C /* player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E5A0B8096FD00200116 /* player.cpp */; };
 		4DEE2AF40FDE42710009423C /* printer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D28FDA80C8C9CDA00B7A342 /* printer.cpp */; };
 		4DEE2AF50FDE42710009423C /* property.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E630B8096FD00200116 /* property.cpp */; };
 		4DEE2AF70FDE42710009423C /* regex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E720B8096FD00200116 /* regex.cpp */; };
@@ -3503,7 +3503,6 @@
 				4D1F9D76171C682E0091C6CB /* pathgray.cpp in Sources */,
 				4D1F9D77171C682E0091C6CB /* pathprocess.cpp in Sources */,
 				4D1F9D78171C682E0091C6CB /* pickle.cpp in Sources */,
-				4D1F9D79171C682E0091C6CB /* player.cpp in Sources */,
 				4D1F9D7A171C682E0091C6CB /* printer.cpp in Sources */,
 				4D1F9D7B171C682E0091C6CB /* property.cpp in Sources */,
 				4D1F9D7D171C682E0091C6CB /* regex.cpp in Sources */,
@@ -3572,6 +3571,7 @@
 				E85130F5180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */,
 				E82206E2184F810A00117D10 /* resolution.cpp in Sources */,
 				1DC1249618FC423200C2FEF3 /* quicktimestubs.mac.cpp in Sources */,
+				1DED772E1912A03C000FFFE3 /* player-platform.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3642,7 +3642,6 @@
 				4DEE2A8E0FDE42710009423C /* answer.cpp in Sources */,
 				4DEE2A8F0FDE42710009423C /* ask.cpp in Sources */,
 				4DEE2A900FDE42710009423C /* block.cpp in Sources */,
-				4DEE2A910FDE42710009423C /* button.cpp in Sources */,
 				4DEE2A920FDE42710009423C /* buttondraw.cpp in Sources */,
 				4DEE2A930FDE42710009423C /* card.cpp in Sources */,
 				4DEE2A940FDE42710009423C /* cardlst.cpp in Sources */,
@@ -3722,7 +3721,6 @@
 				4DEE2AF00FDE42710009423C /* pathgray.cpp in Sources */,
 				4DEE2AF10FDE42710009423C /* pathprocess.cpp in Sources */,
 				4DEE2AF20FDE42710009423C /* pickle.cpp in Sources */,
-				4DEE2AF30FDE42710009423C /* player.cpp in Sources */,
 				4DEE2AF40FDE42710009423C /* printer.cpp in Sources */,
 				4DEE2AF50FDE42710009423C /* property.cpp in Sources */,
 				4DEE2AF70FDE42710009423C /* regex.cpp in Sources */,
@@ -3830,6 +3828,8 @@
 				4DAF5C8718C0E76500B9713C /* mac-scripting.mm in Sources */,
 				4D87710018C8B30700A88AF9 /* quicktime.cpp in Sources */,
 				1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */,
+				1DED772C19129F27000FFFE3 /* button.cpp in Sources */,
+				1DED772D1912A03B000FFFE3 /* player-platform.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
