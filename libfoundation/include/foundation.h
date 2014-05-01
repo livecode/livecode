@@ -1425,6 +1425,9 @@ bool MCStringIsMutable(const MCStringRef string);
 bool MCStringIsEmpty(MCStringRef string);
 
 // Returns true if the the string only requires native characters to represent.
+bool MCStringCanBeNative(MCStringRef string);
+
+// Returns true if the string is stored as native chars.
 bool MCStringIsNative(MCStringRef string);
 
 // Returns true if the string only requires BMP characters to represent.
@@ -1476,6 +1479,9 @@ uindex_t MCStringGetChars(MCStringRef string, MCRange range, unichar_t *chars);
 // returns the number of chars generated. If 'chars' is nil, just the number of chars
 // that would be generated is returned. Any unmappable chars get generated as '?'.
 uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, char_t *chars);
+
+// Nativize self
+void MCStringNativize(MCStringRef string);
 
 // Maps from a codepoint (character) range to a code unit (StringRef) range
 bool MCStringMapCodepointIndices(MCStringRef, MCRange p_codepoint_range, MCRange& r_string_range);

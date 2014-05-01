@@ -711,10 +711,10 @@ bool MCStringCreateWithOldString(const MCString& p_old_string, MCStringRef& r_st
 
 MCString MCStringGetOldString(MCStringRef p_string)
 {
-	const char *t_cstring;
-	t_cstring = MCStringGetCString(p_string);
-
-	return MCString(t_cstring, MCStringGetLength(p_string));
+    if (MCStringIsNative(p_string))
+        return MCString((const char *)MCStringGetNativeCharPtr(p_string), MCStringGetLength(p_string));
+    
+    return MCnullmcstring;
 }
 
 bool MCStringIsEqualToOldString(MCStringRef p_string, const MCString& p_oldstring, MCCompareOptions p_options)
@@ -742,10 +742,13 @@ bool MCStringToDouble(MCStringRef p_string, double& r_real)
 	char *t_end;
 	t_end = nil;
 	
+    MCAutoStringRefAsCString t_string;
+    t_string . Lock(p_string);
+    
 	double t_value;
-	t_value = strtod(MCStringGetCString(p_string), &t_end);
+	t_value = strtod(*t_string, &t_end);
 	
-	if (t_end != MCStringGetCString(p_string) + strlen(MCStringGetCString(p_string)))
+	if (t_end != *t_string + strlen(*t_string))
 		return false;
 	
 	r_real = t_value;

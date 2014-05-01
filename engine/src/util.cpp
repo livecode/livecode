@@ -653,7 +653,9 @@ uint4 MCU_r8tos(char *&d, uint4 &s, real8 n,
 /* WRAPPER */
 bool MCU_stor8(MCStringRef p_string, real8 &r_d, bool p_convert_octals)
 {
-	return True == MCU_stor8(MCStringGetOldString(p_string), r_d, p_convert_octals);
+    MCAutoStringRefAsCString t_cstring;
+    t_cstring . Lock(p_string);
+	return True == MCU_stor8(MCString(*t_cstring, strlen(*t_cstring)), r_d, p_convert_octals);
 }
 
 Boolean MCU_stor8(const MCString &s, real8 &d, Boolean convertoctals)

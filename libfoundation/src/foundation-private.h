@@ -91,7 +91,9 @@ enum
     // If set, the string has NO combining chars
     kMCStringFlagIsUncombined = 1 << 5,
     // If set, the string has been converted to a number
-    kMCStringFlagHasNumber = 1 << 6
+    kMCStringFlagHasNumber = 1 << 6,
+    // If set, indicates that the string can be losslessly nativized
+    kMCStringFlagCanBeNative = 1 << 7
 };
 
 enum
@@ -173,11 +175,14 @@ struct __MCString: public __MCValue
         struct
         {
             uindex_t char_count;
-            unichar_t *chars;
-            char_t *native_chars;
+            union
+            {
+                unichar_t *chars;
+                char_t *native_chars;
+            };
+            uindex_t capacity;
         };
     };
-    uindex_t capacity;
 };
 
 //////////
