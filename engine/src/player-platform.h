@@ -134,14 +134,6 @@ public:
 	void SynchronizeUserCallbacks(void);
 	Boolean isbuffering(void);
 	
-#ifdef _LINUX_DESKTOP
-	const char *getcommand()
-	{
-		return command;
-	}
-	Boolean syncxanim();
-#endif
-        
 	Boolean isdisposable()
 	{
 		return disposable;

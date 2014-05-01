@@ -941,6 +941,10 @@
 		1DED771B19124D75000FFFE3 /* player-platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "player-platform.h"; sourceTree = "<group>"; };
 		1DED771C19124F24000FFFE3 /* player-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "player-legacy.cpp"; path = "src/player-legacy.cpp"; sourceTree = "<group>"; };
 		1DED771D19124F24000FFFE3 /* player-legacy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "player-legacy.h"; path = "src/player-legacy.h"; sourceTree = "<group>"; };
+		1DED771E19126451000FFFE3 /* player-platform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "player-platform.cpp"; path = "src/player-platform.cpp"; sourceTree = "<group>"; };
+		1DED771F19126451000FFFE3 /* player-platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "player-platform.h"; path = "src/player-platform.h"; sourceTree = "<group>"; };
+		1DED77201912652B000FFFE3 /* player.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = player.cpp; path = src/player.cpp; sourceTree = "<group>"; };
+		1DED77211912652B000FFFE3 /* player.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = player.h; path = src/player.h; sourceTree = "<group>"; };
 		3C03ED911134205A009DE406 /* socket_resolve.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = socket_resolve.cpp; path = src/socket_resolve.cpp; sourceTree = "<group>"; };
 		3C0A3CC310BAF6120074D630 /* iquantization.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = iquantization.cpp; path = src/iquantization.cpp; sourceTree = "<group>"; };
 		3C0A3CC510BAF63B0074D630 /* iquantization.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = iquantization.h; path = src/iquantization.h; sourceTree = "<group>"; };
@@ -2599,6 +2603,8 @@
 		E8A49109170F192000769C7A /* Core - Objects */ = {
 			isa = PBXGroup;
 			children = (
+				1DED771E19126451000FFFE3 /* player-platform.cpp */,
+				1DED771F19126451000FFFE3 /* player-platform.h */,
 				1DED771C19124F24000FFFE3 /* player-legacy.cpp */,
 				1DED771D19124F24000FFFE3 /* player-legacy.h */,
 				4D587E870B8096FD00200116 /* aclip.cpp */,
@@ -2608,6 +2614,8 @@
 				4D587E3F0B8096FD00200116 /* button.cpp */,
 				4D587E160B8096E600200116 /* button.h */,
 				4D587E520B8096FD00200116 /* buttondraw.cpp */,
+				1DED77201912652B000FFFE3 /* player.cpp */,
+				1DED77211912652B000FFFE3 /* player.h */,
 				4D587E7B0B8096FD00200116 /* card.cpp */,
 				4D587DFB0B8096E600200116 /* card.h */,
 				4D587E7F0B8096FD00200116 /* cardlst.cpp */,

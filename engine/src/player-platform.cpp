@@ -44,43 +44,6 @@
 
 #include "graphics_util.h"
 
-#ifdef _WINDOWS_DESKTOP
-#include "w32prefix.h"
-#include "w32dc.h"
-#include "w32context.h"
-
-#include "digitalv.h"
-#include "QTML.h"
-#include <Movies.h>
-#include <MediaHandlers.h>
-#include <QuickTimeVR.h>
-#include <QuickTimeVRFormat.h>
-#include <Endian.h>
-#include <QuickTimeComponents.h>
-#include <ImageCodec.h>
-
-#define PIXEL_FORMAT_32 k32BGRAPixelFormat
-
-#elif defined(_MAC_DESKTOP)
-#include "osxprefix.h"
-
-#ifdef __LITTLE_ENDIAN__
-#define PIXEL_FORMAT_32 k32BGRAPixelFormat
-#else
-#define PIXEL_FORMAT_32 k32ARGBPixelFormat
-#endif
-
-#elif defined(_LINUX_DESKTOP)
-#include "lnxmplayer.h"
-#endif
-
-//// X11
-
-#undef X11
-#ifdef TARGET_PLATFORM_LINUX
-#define X11
-#endif
-
 //// PLATFORM PLAYER
 
 #include "platform.h"
@@ -104,10 +67,6 @@ static const char *ppmediastrings[] =
 	"sprite",
 	"flash"
 };
-
-#ifdef _WINDOWS
-extern bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
-#endif
 
 //-----------------------------------------------------------------------------
 // Control Implementation
@@ -435,22 +394,18 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
             ep.setint(getpreferredrect().width);
             break;
         case P_MOVIE_CONTROLLER_ID:
-#ifndef FEATURE_QUICKTIME
             ep.setint((int)NULL);
-#endif
             break;
         case P_PLAY_LOUDNESS:
             ep.setint(getloudness());
             break;
         case P_TRACK_COUNT:
-#ifdef FEATURE_PLATFORM_PLAYER
             if (m_platform_player != nil)
             {
                 uindex_t t_count;
                 MCPlatformCountPlayerTracks(m_platform_player, t_count);
                 i = t_count;
             }
-#endif
             ep.setint(i);
             break;
         case P_TRACKS:
@@ -625,13 +580,6 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                     MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
                     return ES_ERROR;
                 }
-#ifndef _MOBILE
-                if (endtime == MAXUINT4) //if endtime is not set, set it to the length of movie
-                    endtime = getduration();
-                else
-                    if (starttime > endtime)
-                        endtime = starttime;
-#endif
             }
             setselection();
             break;
@@ -645,13 +593,6 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
                     MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
                     return ES_ERROR;
                 }
-#ifndef _MOBILE
-                if (starttime == MAXUINT4)
-                    starttime = 0;
-                else
-                    if (starttime > endtime)
-                        starttime = endtime;
-#endif
             }
             setselection();
             break;
@@ -1541,41 +1482,6 @@ Boolean MCPlayer::isbuffering(void)
 	return t_buffering;
 }
 
-#ifdef _WINDOWS
-void MCPlayer::changewindow(MCSysWindowHandle p_old_window)
-{
-	HWND t_new_window;
-	t_new_window = (HWND)getstack()->getqtwindow();
-	SetParent((HWND)hwndMovie, t_new_window);
-}
-
-HWND create_player_child_window(MCRectangle &p_rect, HWND p_parent, LPCSTR p_window_class);
-
-LRESULT CALLBACK MCQTPlayerWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
-                                      LPARAM lParam)
-{
-	MSG t_winMsg;
-	EventRecord t_qtEvent;
-	t_winMsg.hwnd = hwnd;
-	t_winMsg.message = msg;
-	t_winMsg.wParam = wParam;
-	t_winMsg.lParam = lParam;
-    
-	NativeEventToMacEvent(&t_winMsg, &t_qtEvent);
-    
-    
-	for (MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player->getnextplayer())
-	{
-		if ((HWND)t_player->getplayerwindow() == hwnd)
-		{
-			MCIsPlayerEvent((MovieController)t_player->getMovieController(), &t_qtEvent);
-			break;
-		}
-	}
-    
-	return DefWindowProcA(hwnd, msg, wParam, lParam);
-}
-#endif
 
 //-----------------------------------------------------------------------------
 //  Redraw Management
