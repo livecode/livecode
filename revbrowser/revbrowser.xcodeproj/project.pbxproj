@@ -17,6 +17,7 @@
 		E832B1A618D9C27700083DF8 /* libcef_stubs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E832B19B18D9C20D00083DF8 /* libcef_stubs.a */; };
 		E832B1A918D9C27B00083DF8 /* libcef_stubs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E832B19B18D9C20D00083DF8 /* libcef_stubs.a */; };
 		E832B1B618D9C3C100083DF8 /* osxbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D03BBDB0BC2423D00026EA7 /* osxbrowser.cpp */; };
+		E857DDAB19081FAA002714D6 /* WebAuthenticationPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = E857DDA919081FAA002714D6 /* WebAuthenticationPanel.m */; };
 		E8589ADA18C9F77800958234 /* cefbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8589AD818C9F77800958234 /* cefbrowser.cpp */; };
 		E8589AF018C9F82200958234 /* cefbrowser_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = E8589AEF18C9F82200958234 /* cefbrowser_osx.mm */; };
 		E8589D9B18CA20CF00958234 /* libcef_dll_wrapper.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AA04C018C9E72A00AE8663 /* libcef_dll_wrapper.a */; };
@@ -148,6 +149,9 @@
 		4DF42AE40B0489A5003F2D95 /* libexternal.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libexternal.xcodeproj; path = ../libexternal/libexternal.xcodeproj; sourceTree = SOURCE_ROOT; };
 		769568ED1823D0E700779255 /* libcore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcore.a; path = ../_build/mac/Debug/libcore.a; sourceTree = "<group>"; };
 		E832B19618D9C20D00083DF8 /* libcef.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libcef.xcodeproj; path = ../thirdparty/libcef/libcef.xcodeproj; sourceTree = SOURCE_ROOT; };
+		E857DDA819081FA9002714D6 /* WebAuthenticationPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WebAuthenticationPanel.h; path = src/WebAuthenticationPanel.h; sourceTree = "<group>"; };
+		E857DDA919081FAA002714D6 /* WebAuthenticationPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = WebAuthenticationPanel.m; path = src/WebAuthenticationPanel.m; sourceTree = "<group>"; };
+		E857DDAA19081FAA002714D6 /* WebAuthenticationPanel.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = WebAuthenticationPanel.nib; path = src/WebAuthenticationPanel.nib; sourceTree = "<group>"; };
 		E8589AD718C9F77800958234 /* cefbrowser_msg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cefbrowser_msg.h; path = src/cefbrowser_msg.h; sourceTree = "<group>"; };
 		E8589AD818C9F77800958234 /* cefbrowser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cefbrowser.cpp; path = src/cefbrowser.cpp; sourceTree = "<group>"; };
 		E8589AD918C9F77800958234 /* cefbrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cefbrowser.h; path = src/cefbrowser.h; sourceTree = "<group>"; };
@@ -303,6 +307,9 @@
 		E8D3736618CDDAA3005C1182 /* CEF */ = {
 			isa = PBXGroup;
 			children = (
+				E857DDA819081FA9002714D6 /* WebAuthenticationPanel.h */,
+				E857DDA919081FAA002714D6 /* WebAuthenticationPanel.m */,
+				E857DDAA19081FAA002714D6 /* WebAuthenticationPanel.nib */,
 				E8D3736018CDDA5A005C1182 /* cefprocess.cpp */,
 				E8D3736918CDDBEE005C1182 /* cefprocess_osx.mm */,
 				E8589AF118C9F84000958234 /* cefprocess_w32.cpp */,
@@ -451,6 +458,7 @@
 				E8589ADA18C9F77800958234 /* cefbrowser.cpp in Sources */,
 				E8589AF018C9F82200958234 /* cefbrowser_osx.mm in Sources */,
 				E832B1B618D9C3C100083DF8 /* osxbrowser.cpp in Sources */,
+				E857DDAB19081FAA002714D6 /* WebAuthenticationPanel.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -547,7 +555,6 @@
 					"\"$(SRCROOT)/../_build/mac/Debug\"",
 					"\"$(SRCROOT)/../thirdparty/_build/mac/Debug\"",
 					"\"$(SRCROOT)/../prebuilt/lib/libcef\"",
-					"\"$(SRCROOT)/../prebuilt/lib/libcef/Chromium Embedded Framework.framework/Libraries\"",
 				);
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -572,7 +579,6 @@
 					"\"$(SRCROOT)/../_build/mac/Debug\"",
 					"\"$(SRCROOT)/../thirdparty/_build/mac/Debug\"",
 					"\"$(SRCROOT)/../prebuilt/lib/libcef\"",
-					"\"$(SRCROOT)/../prebuilt/lib/libcef/Chromium Embedded Framework.framework/Libraries\"",
 				);
 				OTHER_LDFLAGS = (
 					"-framework",
