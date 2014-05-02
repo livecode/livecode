@@ -195,6 +195,7 @@ public:
     int hittestcontroller(int x, int y);
     
     void handle_mdown(int which);
+    void handle_mup(int which);
 };
 
 #endif

@@ -194,8 +194,8 @@ Boolean MCPlayer::mfocus(int2 x, int2 y)
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
         || flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
 		return False;
-        
-	return MCControl::mfocus(x, y);
+    
+    return MCControl::mfocus(x, y);
 }
 
 void MCPlayer::munfocus()
@@ -263,7 +263,10 @@ Boolean MCPlayer::mup(uint2 which) //mouse up
 		{
             case T_BROWSE:
                 if (MCU_point_in_rect(rect, mx, my))
+                {
                     message_with_args(MCM_mouse_up, "1");
+                    handle_mup(which);
+                }
                 else
                     message_with_args(MCM_mouse_release, "1");
                 
@@ -1601,8 +1604,14 @@ void MCPlayer::drawcontroller(MCDC *dc)
     
     drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolume));
     drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartPlay));
+    drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartWell));
+
     
     drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb));
+    drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartScrubBack));
+    drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartScrubForward));
+
+    
     
 }
 
@@ -1614,7 +1623,20 @@ int MCPlayer::hittestcontroller(int x, int y)
     if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartPlay), x, y))
         return kMCPlayerControllerPartPlay;
     
-    return kMCPlayerControllerPartUnknown;
+    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolume), x, y))
+        return kMCPlayerControllerPartVolume;
+
+    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartWell), x, y))
+        return kMCPlayerControllerPartWell;
+
+    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartScrubBack), x, y))
+        return kMCPlayerControllerPartScrubBack;
+
+    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartScrubForward), x, y))
+        return kMCPlayerControllerPartScrubForward;
+
+    else
+        return kMCPlayerControllerPartUnknown;
 }
 
 void MCPlayer::drawcontrollerbutton(MCDC *dc, const MCRectangle& p_rect)
@@ -1675,7 +1697,12 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
         
         case kMCPlayerControllerPartWell:
             return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT, p_rect . y, p_rect . width - 4 * CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
+          
+        case kMCPlayerControllerPartScrubBack:
+            return MCRectangleMake(p_rect . x + p_rect . width - 2 * CONTROLLER_HEIGHT, p_rect . y, CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
             
+        case kMCPlayerControllerPartScrubForward:
+            return MCRectangleMake(p_rect . x + p_rect . width - CONTROLLER_HEIGHT, p_rect . y, CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
         default:
             break;
     }
@@ -1702,6 +1729,58 @@ void MCPlayer::handle_mdown(int p_which)
             }
             else
                 playstart(nil);
+            break;
+        case kMCPlayerControllerPartVolume:
+            break;
+        case kMCPlayerControllerPartWell:
+        {
+            MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
+            
+            uint32_t t_new_time, t_duration;
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            
+            t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+            setcurtime(t_new_time);
+        }
+            break;
+        case kMCPlayerControllerPartScrubBack:
+            if(ispaused())
+                playstepback();
+            else
+            {
+                playstepback();
+                playpause(!ispaused());
+            }
+            break;
+        case kMCPlayerControllerPartScrubForward:
+            if(ispaused())
+                playstepforward();
+            else
+            {
+                playstepforward();
+                playpause(!ispaused());
+            }
+            break;
+            
+        default:
+            break;
+    }
+}
+
+void MCPlayer::handle_mup(int p_which)
+{
+    switch(hittestcontroller(mx, my))
+    {
+        case kMCPlayerControllerPartWell:
+        {
+            MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
+            
+            uint32_t t_new_time, t_duration;
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            
+            t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+            setcurtime(t_new_time);
+        }
             break;
         default:
             break;
