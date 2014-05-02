@@ -278,6 +278,15 @@ void MCLine::appendsegments(MCSegment *first, MCSegment *last)
     uint2 oldwidth = width;
     width = 0;
     dirtywidth = MCU_max(width, oldwidth);
+    
+    // Take ownership of the segments
+    MCSegment *sgptr = firstsegment;
+    do
+    {
+        sgptr->SetParent(this);
+        sgptr = sgptr->next();
+    }
+    while (sgptr->prev() != lastsegment);
 }
 
 void MCLine::draw(MCDC *dc, int2 x, int2 y, findex_t si, findex_t ei, MCStringRef p_string, uint2 pstyle)
