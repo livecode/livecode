@@ -85,6 +85,10 @@ public:
     {
         return m_LastBlock;
     }
+    void SetParent(MCLine *parent)
+    {
+        m_Parent = parent;
+    }
     
     // Adds a range of blocks to the segment
     void AddBlockRange(MCBlock *first, MCBlock *last);
