@@ -257,6 +257,10 @@ MCLine *MCSegment::Fit(int16_t p_max_width)
 	if (t_need_break_block)
     {
 		t_break_block -> split(t_break_index);
+        
+        // Temporarily update the last block pointer, if required
+        if (t_break_block == m_LastBlock)
+            m_LastBlock = m_LastBlock->next();
     }
     
     // Was breaking required?
@@ -271,6 +275,10 @@ MCLine *MCSegment::Fit(int16_t p_max_width)
             t_split_segment = new MCSegment(this);
             append(t_split_segment);
             t_split_segment->AddBlockRange(t_break_block->next(), m_LastBlock);
+            
+            // Temporarily update the last segment pointer, if required
+            if (m_Parent->lastsegment == this)
+                m_Parent->lastsegment = t_split_segment;
         }
         else
         {
