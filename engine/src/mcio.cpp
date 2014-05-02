@@ -220,7 +220,10 @@ IO_stat IO_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
 IO_stat IO_read_to_eof(IO_handle stream, MCExecPoint &ep)
 {
 	uint4 nread;
-	nread = (uint4)MCS_fsize(stream) - (uint4)MCS_tell(stream);
+    // SN-2014-05-02 [[ Bug 12351 ]] Ensure we read the right size from a device.
+    // With some of them - like mouse pointer - no error is triggered, but writing on it moves the file pointer
+    // without increasing the size; that results in nread being 0 - MCS_tell, so a really large unsigned number
+	nread = MCMin((uint4)MCS_fsize(stream), (uint4)MCS_fsize(stream) - (uint4)MCS_tell(stream));
 	char *dptr = ep.getbuffer(nread);
 	MCS_read(dptr, 1, nread, stream);
 	ep.setlength(nread);
