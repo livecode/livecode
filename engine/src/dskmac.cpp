@@ -6775,7 +6775,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             fcntl(t_serial_in, F_SETFL, val);
             configureSerialPort((short)t_serial_in);
             
-            t_handle = new MCSerialPortFileHandle(t_serial_in);
+            // SN-2014-05-02 [[ Bug 12246 ]] Serial I/O fails on write
+            // The serial port number is never used in the 6.X engine... and switching to an STDIO file
+            // is enough to have the serial devices working perfectly.
+            t_handle = new MCStdioFileHandle(fptr);
         }
         
         return t_handle;
