@@ -335,7 +335,8 @@ void MCLine::GetRange(findex_t &i, findex_t &l)
 
 uint2 MCLine::GetCursorXHelper(findex_t fi, bool prefer_forward)
 {
-    MCBlock *bptr = (MCBlock *)firstblock;
+    MCBlock *bptr = firstblock;
+    MCSegment *sgptr = firstsegment;
 	findex_t i, l;
 	bptr->GetRange(i, l);
     
@@ -345,9 +346,14 @@ uint2 MCLine::GetCursorXHelper(findex_t fi, bool prefer_forward)
     {
         bptr = bptr -> next();
         bptr -> GetRange(i, l);
+        
+        // Advance to the next segment, if necessary
+        if (sgptr->next()->GetFirstBlock() == bptr)
+            sgptr = sgptr->next();
     }
    
-    return bptr->GetCursorX(fi);
+    // The position of the segment containing the block needs to be included
+    return bptr->GetCursorX(fi) + sgptr->GetLeft();
 }
 
 uint2 MCLine::GetCursorXPrimary(findex_t fi, bool moving_forward)
@@ -381,15 +387,32 @@ findex_t MCLine::GetCursorIndex(int2 cx, Boolean chunk, bool moving_left)
     // TODO: when cx > line width, return the last block in visual order
     
     MCBlock *bptr = firstblock;
-    while (bptr != lastblock)
+    MCSegment *sgptr = firstsegment;
+    bool done = false;
+    do
     {
-        if (cx >= (int4)bptr->getorigin() && cx < (int4)(bptr->getorigin() + bptr->getwidth()))
+        bptr = sgptr->GetFirstBlock()->prev();
+        do
+        {
+            bptr = bptr->next();
+            
+            int4 origin = bptr->getorigin() + sgptr->GetLeft();
+            if (cx >= origin && cx < (origin + bptr->getwidth()))
+            {
+                done = true;
+                break;
+            }
+        }
+        while (bptr != sgptr->GetLastBlock());
+        
+        if (done)
             break;
         
-        bptr = bptr->next();
+        sgptr = sgptr->next();
     }
-        
-    return bptr->GetCursorIndex(cx, chunk, bptr == lastblock);
+    while (sgptr->prev() != lastsegment);
+    
+    return bptr->GetCursorIndex(cx - sgptr->GetLeft(), chunk, bptr == lastblock);
 }
 
 uint2 MCLine::getwidth()
@@ -445,7 +468,8 @@ void MCLine::SegmentLine()
             && t_offset < bptr->GetOffset()+bptr->GetLength())
         {
             // Split the block at the tab
-            if ((t_offset + 1) < bptr->GetOffset() + bptr->GetLength())
+            // Note that we want to create empty blocks after the tab
+            if ((t_offset + 1) <= bptr->GetOffset() + bptr->GetLength())
             {
                 bptr->split(t_offset + 1);
                 if (bptr == lastblock)
