@@ -48,21 +48,21 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = E832B19618D9C20D00083DF8 /* libcef.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = E832B11018D8AD4800083DF8 /* libcef_stubs.a */;
+			remoteGlobalIDString = E832B11018D8AD4800083DF8;
 			remoteInfo = cef_stubs;
 		};
 		E832B19E18D9C22300083DF8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E832B19618D9C20D00083DF8 /* libcef.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = E832B10F18D8AD4800083DF8 /* cef_stubs */;
+			remoteGlobalIDString = E832B10F18D8AD4800083DF8;
 			remoteInfo = cef_stubs;
 		};
 		E832B1A218D9C25400083DF8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E832B19618D9C20D00083DF8 /* libcef.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = E832B10F18D8AD4800083DF8 /* cef_stubs */;
+			remoteGlobalIDString = E832B10F18D8AD4800083DF8;
 			remoteInfo = cef_stubs;
 		};
 		E8589AFE18C9FA9F00958234 /* PBXContainerItemProxy */ = {
