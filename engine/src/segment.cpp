@@ -291,7 +291,6 @@ MCLine *MCSegment::Fit(int16_t p_max_width)
         
         // Create a new line containing the segments and blocks that don't fit
         t_newline = new MCLine(*m_Parent);
-        m_Parent->append(t_newline);
         t_newline->appendsegments(t_split_segment, m_Parent->lastsegment);
         
         // Update the parent line's block and segment pointers
