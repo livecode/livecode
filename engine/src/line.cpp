@@ -590,6 +590,12 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
         int16_t t_segment_pos;
         t_segment_pos = CalculateTabPosition(t_segments, t_last_segment_end);
         
+        // Set the alignment of the segment.
+        // This is done early to ensure all segments have an alignment set.
+        // TODO: per-tab alignments
+        sgptr->SetHorizontalAlignment(parent->gettextalign());
+        sgptr->SetVerticalAlignment(kMCSegmentTextVAlignTop);
+        
         // We now know where the segment will be placed and therefore how much
         // room remains in the line for the segment. Tell it to do block fitting
         // - if not all blocks can fit, a segment containing the remainder will
@@ -636,17 +642,15 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
             sgptr->SetBoundaries(t_left, t_right, t_top, t_bottom);
         }
         
-        // Finally, set the alignment of the segment.
-        // TODO: get alignment from paragraph
-        // TODO: per-tab alignments
-        sgptr->SetHorizontalAlignment(parent->gettextalign());
-        sgptr->SetVerticalAlignment(kMCSegmentTextVAlignTop);
-        
         // End the segment fitting if we have run out of space
         if (t_remaining != NULL)
             break;
+        
+        // Next segment
+        t_segments++;
+        sgptr = sgptr->next();
     }
-    while (sgptr != firstsegment);
+    while (sgptr->prev() != lastsegment);
     
     // Update the line's drawing properties
     dirtywidth = width;
