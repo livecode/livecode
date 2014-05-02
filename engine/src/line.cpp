@@ -469,7 +469,11 @@ void MCLine::SegmentLine()
     MCSegment *new_segment = new MCSegment(this);
     new_segment->AddBlockRange(segment_start, lastblock);
     if (firstsegment == NULL)
+    {
         firstsegment = lastsegment = new_segment;
+        if (parent->segments == NULL)
+            parent->segments = new_segment;
+    }
     else
     {
         lastsegment->append(new_segment);
