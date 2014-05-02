@@ -436,6 +436,7 @@ void MCLine::SegmentLine()
     // Scan through each block on this line, looking for tab characters
     MCBlock *bptr = firstblock;
     MCBlock *segment_start = firstblock;
+    uindex_t t_segment_length = 0;
     do
     {
         // Does this block contain a tab?
@@ -467,6 +468,11 @@ void MCLine::SegmentLine()
             }
 
             segment_start = bptr->next();
+            t_segment_length = 0;
+        }
+        else
+        {
+            t_segment_length++;
         }
         
         // Move on to the next block
@@ -475,18 +481,21 @@ void MCLine::SegmentLine()
     while (bptr != firstblock);
     
     // Create a segment covering the remaining text
-    MCSegment *new_segment = new MCSegment(this);
-    new_segment->AddBlockRange(segment_start, lastblock);
-    if (firstsegment == NULL)
+    if (t_segment_length > 0)
     {
-        firstsegment = lastsegment = new_segment;
-        if (parent->segments == NULL)
-            parent->segments = new_segment;
-    }
-    else
-    {
-        lastsegment->append(new_segment);
-        lastsegment = new_segment;
+        MCSegment *new_segment = new MCSegment(this);
+        new_segment->AddBlockRange(segment_start, lastblock);
+        if (firstsegment == NULL)
+        {
+            firstsegment = lastsegment = new_segment;
+            if (parent->segments == NULL)
+                parent->segments = new_segment;
+        }
+        else
+        {
+            lastsegment->append(new_segment);
+            lastsegment = new_segment;
+        }
     }
 }
 
