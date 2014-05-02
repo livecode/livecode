@@ -6762,7 +6762,24 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (!t_path_utf.Lock(p_path))
             return NULL;
         
-        fptr = fopen(*t_path_utf, IO_READ_MODE);
+        // SN-2014-05-02 [[ Bug 12246 ]] Enable an opening mode different from IO_READ...
+        switch (p_mode)
+        {
+            case kMCSystemFileModeAppend:
+                fptr = fopen(*t_path_utf, IO_APPEND_MODE);
+                break;
+            case kMCSystemFileModeRead:
+                fptr = fopen(*t_path_utf, IO_READ_MODE);
+                break;
+            case kMCSystemFileModeUpdate:
+                fptr = fopen(*t_path_utf, IO_UPDATE_MODE);
+                break;
+            case kMCSystemFileModeWrite:
+                fptr = fopen(*t_path_utf, IO_WRITE_MODE);
+                break;
+            default:
+                break;
+        }
         
 		if (fptr != NULL)
         {
