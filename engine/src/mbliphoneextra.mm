@@ -340,9 +340,33 @@ void MCSystemListFontFamilies(MCExecPoint& ep)
 
 void MCSystemListFontsForFamily(MCExecPoint& ep, const char *p_family)
 {
+    // MM-2014-04-30: [[ Bug 12350 ]] Instead of listing the fonts withjing a family, list the styles. Brings things into line with the other platforms.
+    //  Currently assumes anything without a bold/italic suffix is a plain font.
+    bool t_plain, t_bold, t_italic, t_bold_italic;
+    t_plain = t_bold = t_italic = t_bold_italic = false;
 	ep . clear();
 	for(NSString *t_font in [UIFont fontNamesForFamilyName: [NSString stringWithCString: p_family encoding: NSMacOSRomanStringEncoding]])
-		ep . concatcstring([t_font cStringUsingEncoding: NSMacOSRomanStringEncoding], EC_RETURN, ep . getsvalue() . getlength() == 0);
+    {
+        const char *t_font_name;
+        t_font_name = [t_font cStringUsingEncoding: NSMacOSRomanStringEncoding];
+        if (MCCStringEndsWithCaseless(t_font_name, "-Bold"))
+            t_bold = true;
+        else if (MCCStringEndsWithCaseless(t_font_name, "-Italic") || MCCStringEndsWithCaseless(t_font_name, "-Oblique"))
+            t_italic = true;
+        else if (MCCStringEndsWithCaseless(t_font_name, "-BoldItalic") || MCCStringEndsWithCaseless(t_font_name, "-BoldOblique"))
+            t_bold_italic = true;
+        else
+            t_plain = true;
+    }
+    
+    if (t_plain)
+        ep . concatcstring("plain", EC_RETURN, ep . getsvalue() . getlength() == 0);
+    if (t_bold)
+        ep . concatcstring("bold", EC_RETURN, ep . getsvalue() . getlength() == 0);
+    if (t_italic)
+        ep . concatcstring("italic", EC_RETURN, ep . getsvalue() . getlength() == 0);
+    if (t_bold_italic)
+        ep . concatcstring("bold-italic", EC_RETURN, ep . getsvalue() . getlength() == 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

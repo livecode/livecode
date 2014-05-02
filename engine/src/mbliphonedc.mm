@@ -803,6 +803,12 @@ Window MCScreenDC::get_current_window(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void strip_suffix(const char *p_suffix, char *x_font_name)
+{
+    if (MCCStringEndsWithCaseless(x_font_name, p_suffix))
+        x_font_name[MCCStringLength(x_font_name) - MCCStringLength(p_suffix)] = '\0';
+}
+
 struct do_iphone_font_create_env
 {
 	const char *name;
@@ -827,20 +833,25 @@ static void do_iphone_font_create(void *p_env)
 	p_bold = env -> bold;
 	p_italic = env -> italic;
 	
-	char t_font_name[256];
-	UIFont *t_font;
-	t_font = nil;
-	
     // MW-2012-03-22: [[ Bug ]] First see if we can find the font with the given name. We
     //   use this to get the correct 'family' name so styled names work correctly.
     UIFont *t_base_font;
     t_base_font = [ UIFont fontWithName: [ NSString stringWithCString: p_name encoding: NSMacOSRomanStringEncoding ] size: p_size ];
-    
+
     char t_base_name[256];
     if (t_base_font != nil)
         sprintf(t_base_name, "%s", [[t_base_font fontName] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
     else
         strcpy(t_base_name, p_name);
+    
+    // MM-2014-04-30: [[ Bug 12173 ]] Strip any unwanted suffixes from base font name. This was preventing certain styled fonts being found.
+    strip_suffix("-Roman", t_base_name);
+    strip_suffix("-Regular", t_base_name);
+    strip_suffix("-Reg", t_base_name);
+   
+    char t_font_name[256];
+	UIFont *t_font;
+	t_font = nil;
     
 	if (p_bold && p_italic)
 	{
