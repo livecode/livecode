@@ -671,6 +671,7 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
         // Next segment
         t_segments++;
         sgptr = sgptr->next();
+        t_last_segment_end = t_segment_pos + t_segment_width;
     }
     while (sgptr->prev() != lastsegment);
     
