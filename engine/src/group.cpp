@@ -2520,7 +2520,11 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 				!MCcurtheme -> drawmetalbackground(dc, dirty, rect, this))
 			{
 				setforeground(dc, DI_BACK, False);
-				dc->fillrect(rect);
+				// IM-2014-04-16: [[ Bug 12044 ]] The sprite background should fill the whole redraw area. 
+				if (!p_sprite)
+					dc->fillrect(rect);
+				else
+					dc->fillrect(p_dirty);
 			}
 
 			// MW-2009-06-14: Non-themed, opaque backgrounds are (unsurprisingly!) opaque.
