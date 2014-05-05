@@ -142,8 +142,8 @@ private:
 	MCRectangle m_rect;
 	bool m_visible : 1;
 	bool m_offscreen : 1;
-	bool m_show_controller : 1;
-	bool m_show_selection : 1;
+	//bool m_show_controller : 1;
+	//bool m_show_selection : 1;
 	bool m_pending_offscreen : 1;
 	bool m_switch_scheduled : 1;
     bool m_playing : 1;
@@ -266,8 +266,6 @@ MCQTKitPlayer::MCQTKitPlayer(void)
 	m_visible = true;
 	m_offscreen = false;
 	m_pending_offscreen = false;
-	m_show_controller = false;
-	m_show_selection = false;
 	
 	m_switch_scheduled = false;
     
@@ -573,9 +571,6 @@ void MCQTKitPlayer::Synchronize(void)
 	
 	[m_view setHidden: !m_visible];
 	
-	[m_view setEditable: m_show_selection];
-	[m_view setControllerVisible: m_show_controller];
-    
 	MCMovieChanged([m_movie quickTimeMovieController], [m_movie quickTimeMovie]);
     
     m_synchronizing = false;
@@ -750,17 +745,7 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 		case kMCPlatformPlayerPropertyVolume:
 			[m_movie setVolume: *(uint16_t *)p_value / 100.0f];
 			break;
-		case kMCPlatformPlayerPropertyShowBadge:
-			break;
-		case kMCPlatformPlayerPropertyShowController:
-			m_show_controller = *(bool *)p_value;
-			Synchronize();
-			break;
-		case kMCPlatformPlayerPropertyShowSelection:
-			m_show_selection = *(bool *)p_value;
-			Synchronize();
-			break;
-		case kMCPlatformPlayerPropertyOnlyPlaySelection:
+        case kMCPlatformPlayerPropertyOnlyPlaySelection:
 			[m_movie setAttribute: [NSNumber numberWithBool: *(bool *)p_value] forKey: *QTMoviePlaysSelectionOnlyAttribute_ptr];
 			break;
 		case kMCPlatformPlayerPropertyLoop:
@@ -880,14 +865,6 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			break;
 		case kMCPlatformPlayerPropertyVolume:
 			*(uint16_t *)r_value = [m_movie volume] * 100.0f;
-			break;
-		case kMCPlatformPlayerPropertyShowBadge:
-			break;
-		case kMCPlatformPlayerPropertyShowController:
-			*(bool *)r_value = m_show_controller;
-			break;
-		case kMCPlatformPlayerPropertyShowSelection:
-			*(bool *)r_value = m_show_selection;
 			break;
 		case kMCPlatformPlayerPropertyOnlyPlaySelection:
 			*(bool *)r_value = [(NSNumber *)[m_movie attributeForKey: *QTMoviePlaysSelectionOnlyAttribute_ptr] boolValue] == YES;

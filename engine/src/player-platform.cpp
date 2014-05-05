@@ -974,22 +974,26 @@ void MCPlayer::setplayrate()
 
 void MCPlayer::showbadge(Boolean show)
 {
+#if 0
 	if (m_platform_player != nil)
 	{
 		bool t_show;
 		t_show = show;
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowBadge, kMCPlatformPropertyTypeBool, &t_show);
 	}
+#endif
 }
 
 void MCPlayer::editmovie(Boolean edit)
 {
+#if 0
 	if (m_platform_player != nil)
 	{
 		bool t_edit;
 		t_edit = edit;
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_edit);
 	}
+#endif
 }
 
 void MCPlayer::playselection(Boolean play)
@@ -1064,18 +1068,14 @@ Boolean MCPlayer::prepare(const char *options)
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
 	
-	bool /*t_show_controller, */t_show_badge, t_looping, t_show_selection, t_play_selection;
-	//t_show_controller = getflag(F_SHOW_CONTROLLER);
-	t_show_badge = getflag(F_SHOW_BADGE);
+	bool t_looping, t_play_selection;
+	
 	t_looping = getflag(F_LOOPING);
-	t_show_selection = getflag(F_SHOW_SELECTION);
 	t_play_selection = getflag(F_PLAY_SELECTION);
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &lasttime);
-	// MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show_controller);
-	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowBadge, kMCPlatformPropertyTypeBool, &t_show_badge);
-	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
-	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
+    MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
+
 	setselection();
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
 	SynchronizeUserCallbacks();
