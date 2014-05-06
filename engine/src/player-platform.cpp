@@ -195,7 +195,11 @@ Boolean MCPlayer::mfocus(int2 x, int2 y)
         || flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
 		return False;
     
-    return MCControl::mfocus(x, y);
+    Boolean t_success;
+    t_success = MCControl::mfocus(x, y);
+    if (t_success)
+        handle_mfocus(x,y);
+    return t_success;
 }
 
 void MCPlayer::munfocus()
@@ -206,9 +210,9 @@ void MCPlayer::munfocus()
 
 Boolean MCPlayer::mdown(uint2 which)
 {
-	if (state & CS_MFOCUSED || flags & F_DISABLED)
+    if (state & CS_MFOCUSED || flags & F_DISABLED)
 		return False;
-	if (state & CS_MENU_ATTACHED)
+    if (state & CS_MENU_ATTACHED)
 		return MCObject::mdown(which);
 	state |= CS_MFOCUSED;
 	if (flags & F_TRAVERSAL_ON && !(state & CS_KFOCUSED))
@@ -263,10 +267,7 @@ Boolean MCPlayer::mup(uint2 which) //mouse up
 		{
             case T_BROWSE:
                 if (MCU_point_in_rect(rect, mx, my))
-                {
                     message_with_args(MCM_mouse_up, "1");
-                    handle_mup(which);
-                }
                 else
                     message_with_args(MCM_mouse_release, "1");
                 
@@ -1150,6 +1151,17 @@ void MCPlayer::playstepforward()
 		MCPlatformStepPlayer(m_platform_player, 1);
 }
 
+/*
+void MCPlayer::playfastforward()
+{
+	if (!getstate(CS_PREPARED))
+		return;
+    
+	if (m_platform_player != nil)
+		MCPlatformFastForwardPlayer(m_platform_player);
+}
+*/
+
 void MCPlayer::playstepback()
 {
 	if (!getstate(CS_PREPARED))
@@ -1751,6 +1763,7 @@ void MCPlayer::handle_mdown(int p_which)
                 playstepback();
                 playpause(!ispaused());
             }
+            
             break;
         case kMCPlayerControllerPartScrubForward:
             if(ispaused())
@@ -1767,22 +1780,54 @@ void MCPlayer::handle_mdown(int p_which)
     }
 }
 
-void MCPlayer::handle_mup(int p_which)
+void MCPlayer::handle_mfocus(int x, int y)
 {
-    switch(hittestcontroller(mx, my))
+    if (state & CS_MFOCUSED)
     {
-        case kMCPlayerControllerPartWell:
+        switch(hittestcontroller(mx, my))
         {
-            MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
-            
-            uint32_t t_new_time, t_duration;
-            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
-            
-            t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
-            setcurtime(t_new_time);
+            case kMCPlayerControllerPartWell:
+            {
+                MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
+                
+                uint32_t t_new_time, t_duration;
+                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+                
+                t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+                setcurtime(t_new_time);
+            }
+                break;
+                
+            case kMCPlayerControllerPartScrubForward:
+            {
+                uint32_t t_current_time;
+                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
+                t_current_time += 10000;
+                setcurtime(t_current_time);
+            }
+                break;
+            default:
+                break;
         }
-            break;
-        default:
-            break;
+    }
+}
+
+void MCPlayer::handle_mstilldown(int p_which)
+{
+    if (state & CS_MFOCUSED)
+    {
+        switch(hittestcontroller(mx, my))
+        {
+            case kMCPlayerControllerPartScrubForward:
+            {
+                uint32_t t_current_time;
+                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
+                t_current_time += 10000;
+                setcurtime(t_current_time);
+            }
+                break;
+            default:
+                break;
+        }
     }
 }
