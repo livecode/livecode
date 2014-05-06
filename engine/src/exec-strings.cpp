@@ -2034,7 +2034,14 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, MCRange p_srange, MCString
 bool MCWildcardMatcher::match(MCRange p_source_range)
 {
     if (native)
-        return MCStringsWildcardMatchNative((const char *)MCStringGetNativeCharPtr(source) + p_source_range . offset, p_source_range . length, (const char *)MCStringGetNativeCharPtr(pattern), MCStringGetLength(pattern), (options == kMCStringOptionCompareExact || kMCStringOptionCompareNonliteral));
+    {
+        const char *t_source = (const char *)MCStringGetNativeCharPtr(source);
+        const char *t_pattern = (const char *)MCStringGetNativeCharPtr(pattern);
+        
+        if (t_source != nil && t_pattern != nil)
+            return MCStringsWildcardMatchNative(t_source + p_source_range . offset, p_source_range . length, t_pattern, MCStringGetLength(pattern), (options == kMCStringOptionCompareExact || kMCStringOptionCompareNonliteral));
+    }
+
 	return MCStringsExecWildcardMatch(source, p_source_range, pattern, options);
 }
 

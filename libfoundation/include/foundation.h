@@ -1427,6 +1427,9 @@ bool MCStringIsEmpty(MCStringRef string);
 // Returns true if the the string only requires native characters to represent.
 bool MCStringCanBeNative(MCStringRef string);
 
+// Returns true if under the given comparison conditions, string cannot be represented natively.
+bool MCStringCantBeNative(MCStringRef string, MCStringOptions p_options);
+
 // Returns true if the string is stored as native chars.
 bool MCStringIsNative(MCStringRef string);
 
