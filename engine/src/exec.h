@@ -3377,10 +3377,17 @@ extern MCExecSetTypeInfo *kMCInterfaceButtonAcceleratorModifiersTypeInfo;
 
 ///////////
 
+struct MCInterfaceFieldTabAlignments
+{
+    uindex_t m_count;
+    intenum_t *m_alignments;
+};
+
 extern MCExecEnumTypeInfo *kMCInterfaceFieldStyleTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceFlaggedRangesTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceFieldCursorMovementTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceTextDirectionTypeInfo;
+extern MCExecCustomTypeInfo *kMCInterfaceFieldTabAlignmentsTypeInfo;
 
 ///////////
 

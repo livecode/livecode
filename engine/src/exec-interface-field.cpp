@@ -217,10 +217,106 @@ static MCExecEnumTypeInfo _kMCInterfaceLayerModeTypeInfo =
 
 //////////
 
+static void MCInterfaceFieldTabAlignmentsParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceFieldTabAlignments& r_output)
+{
+    MCAutoArrayRef t_array;
+    /* UNCHECKED */ MCStringSplit(p_input, MCSTR(","), nil, kMCStringOptionCompareExact, &t_array);
+    uindex_t t_count;
+    t_count = MCArrayGetCount(*t_array);
+    
+    MCAutoArray<intenum_t> t_alignments;
+    t_alignments.Extend(t_count);
+    
+    for (uindex_t i = 0; i < t_count; i++)
+    {
+        MCValueRef t_item;
+        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, i + 1, t_item);
+        if (MCStringIsEqualToCString((MCStringRef)t_item, "left", kMCStringOptionCompareCaseless))
+        {
+            t_alignments[i] = kMCParagraphTextAlignLeft;
+        }
+        else if (MCStringIsEqualToCString((MCStringRef)t_item, "right", kMCStringOptionCompareCaseless))
+        {
+            t_alignments[i] = kMCParagraphTextAlignRight;
+        }
+        else if (MCStringIsEqualToCString((MCStringRef)t_item, "center", kMCStringOptionCompareCaseless))
+        {
+            t_alignments[i] = kMCParagraphTextAlignCenter;
+        }
+        else
+        {
+            ctxt . Throw();
+            return;
+        }
+    }
+    
+    t_alignments . Take(r_output . m_alignments, r_output . m_count);
+}
+
+static void MCInterfaceFieldTabAlignmentsFormat(MCExecContext& ctxt, const MCInterfaceFieldTabAlignments& p_input, MCStringRef& r_output)
+{
+    if (p_input . m_count == 0)
+    {
+        r_output = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
+    MCAutoListRef t_list;
+    /* UNCHECKED */ MCListCreateMutable(',', &t_list);
+    
+    for (uindex_t i = 0; i < p_input . m_count; i++)
+    {
+        switch (p_input . m_alignments[i])
+        {
+            case kMCParagraphTextAlignLeft:
+                /* UNCHECKED */ MCListAppendCString(*t_list, "left");
+                break;
+                
+            case kMCParagraphTextAlignRight:
+                /* UNCHECKED */ MCListAppendCString(*t_list, "right");
+                break;
+                
+            case kMCParagraphTextAlignCenter:
+                /* UNCHECKED */ MCListAppendCString(*t_list, "center");
+                break;
+                
+            case kMCParagraphTextAlignJustify:
+                /* UNCHECKED */ MCListAppendCString(*t_list, "justify");
+                break;
+                
+            default:
+            {
+                MCAssert(false);
+                ctxt . Throw();
+                return;
+            }
+        }
+    }
+    
+    /* UNCHECKED */ MCListCopyAsString(*t_list, r_output);
+}
+
+static void MCInterfaceFieldTabAlignmentsFree(MCExecContext& ctxt, MCInterfaceFieldTabAlignments& p_input)
+{
+    MCMemoryDelete(p_input.m_alignments);
+}
+
+static MCExecCustomTypeInfo _kMCInterfaceFieldTabAlignmentsTypeInfo =
+{
+    "Interface.FieldTabAlignments",
+    sizeof(MCInterfaceFieldTabAlignments),
+    (void *)MCInterfaceFieldTabAlignmentsParse,
+    (void *)MCInterfaceFieldTabAlignmentsFormat,
+    (void *)MCInterfaceFieldTabAlignmentsFree
+};
+
+//////////
+
 MCExecEnumTypeInfo *kMCInterfaceFieldStyleTypeInfo = &_kMCInterfaceFieldStyleTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceFlaggedRangesTypeInfo = &_kMCInterfaceFlaggedRangesTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceFieldCursorMovementTypeInfo = &_kMCInterfaceFieldCursorMovementTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceTextDirectionTypeInfo = &_kMCInterfaceTextDirectionTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceFieldTabAlignmentsTypeInfo = &_kMCInterfaceFieldTabAlignmentsTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1088,6 +1184,19 @@ void MCField::GetTabWidths(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& 
     }
     
     t_tabs . Take(r_tabs, r_count);
+}
+
+void MCField::SetTabAlignments(MCExecContext& ctxt, const MCInterfaceFieldTabAlignments& t_alignments)
+{
+    MCMemoryDelete(alignments);
+    MCMemoryAllocateCopy(t_alignments.m_alignments, t_alignments.m_count * sizeof(intenum_t), alignments);
+    nalignments = t_alignments.m_count;
+}
+
+void MCField::GetTabAlignments(MCExecContext& ctxt, MCInterfaceFieldTabAlignments& r_alignments)
+{
+    MCMemoryAllocateCopy(alignments, nalignments * sizeof(intenum_t), r_alignments.m_alignments);
+    r_alignments.m_count = nalignments;
 }
 
 void MCField::GetPageHeights(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_heights)

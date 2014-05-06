@@ -69,6 +69,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // MW-2012-11-13: [[ ParaListIndex ]] This flag is set if the paragraph has
 //   a list index attribute set.
 #define PA_HAS_LIST_INDEX (1 << 18)
+// FG-2014-05-06: [[ TabAlignments ]] This flag is set if the paragraph has
+//   tab alignments set.
+#define PA_HAS_TAB_ALIGNMENTS (1 << 19)
 
 enum
 {
@@ -118,6 +121,9 @@ struct MCParagraphAttrs
 	uint32_t background_color;
 	uint32_t border_color;
     MCStringRef metadata;
+    
+    uint16_t alignments_count;
+    intenum_t *alignments;
 
 	MCParagraphAttrs(void)
 	{
@@ -926,6 +932,10 @@ public:
     void GetEffectiveTabStops(MCExecContext& ctxt, vector_t<uinteger_t> &r_tabs);
     void SetTabStops(MCExecContext& ctxt, const vector_t<uinteger_t>& p_tabs);
 
+    void GetTabAlignments(MCExecContext& ctxt, MCInterfaceFieldTabAlignments &r_alignments);
+    void GetEffectiveTabAlignments(MCExecContext& ctxt, MCInterfaceFieldTabAlignments &r_alignments);
+    void SetTabAlignments(MCExecContext& ctxt, const MCInterfaceFieldTabAlignments &p_alignments);
+    
     void GetBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
     void GetEffectiveBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
     void SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor &p_color);
