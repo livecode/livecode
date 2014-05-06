@@ -675,26 +675,14 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
         // Update the width of the line
         width += t_next_segment_pos - t_segment_pos;
         
-        // Tell the segment its boundaries. If the line is right-to-left, the
-        // segment offsets are from the right-hand edge rather than left.
-        if (parent->getbasetextdirection() == kMCTextDirectionRTL)
-        {
-            int16_t t_left, t_right, t_top, t_bottom;
-            t_right = p_linewidth - t_segment_pos;
-            t_left = p_linewidth - t_next_segment_pos;
-            t_top = 0;
-            t_bottom = 0;
-            sgptr->SetBoundaries(t_left, t_right, t_top, t_bottom);
-        }
-        else
-        {
-            int16_t t_left, t_right, t_top, t_bottom;
-            t_left = t_segment_pos;
-            t_right = t_next_segment_pos;
-            t_top = 0;
-            t_bottom = 0;
-            sgptr->SetBoundaries(t_left, t_right, t_top, t_bottom);
-        }
+        // Tell the segment its boundaries. If the line is right-to-left, some
+        // post-processing will be required to fix up the boundaries.
+        int16_t t_left, t_right, t_top, t_bottom;
+        t_left = t_segment_pos;
+        t_right = t_next_segment_pos;
+        t_top = 0;
+        t_bottom = 0;
+        sgptr->SetBoundaries(t_left, t_right, t_top, t_bottom);
         
         // End the segment fitting if we have run out of space
         if (t_remaining != NULL)
@@ -706,6 +694,24 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
         t_last_segment_end = t_segment_pos + t_segment_width;
     }
     while (sgptr->prev() != lastsegment);
+    
+    // Fix the segment boundaries for right-to-left lines
+    if (parent->getbasetextdirection() == kMCTextDirectionRTL)
+    {
+        sgptr = firstsegment;
+        do
+        {
+            int16_t t_left, t_right, t_top, t_bottom;
+            t_left = width - sgptr->GetRight();
+            t_right = width - sgptr->GetLeft();
+            t_top = 0;
+            t_bottom = 0;
+            sgptr->SetBoundaries(t_left, t_right, t_top, t_bottom);
+            
+            sgptr = sgptr->next();
+        }
+        while (sgptr->prev() != lastsegment);
+    }
     
     // Calculate the drawing offset for this line, based on alignment (this is
     // only appropriate for fields with a fixed width, however)

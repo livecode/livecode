@@ -253,6 +253,8 @@ public:
     
     MCTextDirection getbasetextdirection() const
     {
+        if (base_direction == kMCTextDirectionAuto)
+            return parent->getbasetextdirection();
         return base_direction;
     }
     
