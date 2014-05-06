@@ -25,22 +25,33 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCParagraph;
 class MCBlock;
+class MCSegment;
 
 class MCLine : public MCDLlist
 {
 	MCParagraph *parent;
 	MCBlock *firstblock;
 	MCBlock *lastblock;
+    MCSegment *firstsegment;
+    MCSegment *lastsegment;
 	uint2 width;
 	uint2 ascent;
 	uint2 descent;
 	uint2 dirtywidth;
+    
+    // Offset at which to start drawing segments (for whole-line alignment)
+    int16_t m_offset;
+    
+    // Dirty hack
+    friend class MCSegment;
+    
 public:
 	MCLine(MCParagraph *paragraph);
 	~MCLine();
 	void takebreaks(MCLine *lptr);
 	MCBlock *fitblocks(MCBlock *p_first, MCBlock *p_sentinal, uint2 maxwidth);
-	void appendall(MCBlock *bptr);
+	void appendall(MCBlock *bptr, bool p_flow);
+    void appendsegments(MCSegment *first, MCSegment *last);
 	void draw(MCDC *dc, int2 x, int2 y, findex_t si, findex_t ei, MCStringRef p_text, uint2 pstyle);
 	void setscents(MCBlock *bptr);
 	uint2 getdirtywidth();
@@ -60,6 +71,11 @@ public:
 		r_last = lastblock;
 	}
 	
+    MCParagraph *getparent() const
+    {
+        return parent;
+    }
+    
     //////////
 	
 	void GetRange(findex_t &r_index, findex_t &r_length);
@@ -70,6 +86,24 @@ public:
     uint2 GetCursorXSecondary(findex_t i, bool forward);
     uint2 GetCursorXHelper(findex_t i, bool moving_forward);
 	
+    ////////// Layout
+    
+    // Fits as many blocks/segments into this line as possible using the given
+    // width and returns a line containing the parts that would not fit (or NULL
+    // if everything could be added).
+    MCLine *Fit(int16_t linewidth);
+    
+    // Sets the correct drawing properties, etc for non-flowed lines
+    void NoFlowLayout();
+    
+    // Utility method for calculating tab positions
+    int16_t CalculateTabPosition(uindex_t p_which_tab, int16_t p_from_position);
+    
+    int16_t GetLineOffset() const
+    {
+        return m_offset;
+    }
+    
 	//////////
 	
 	MCLine *next()
@@ -110,6 +144,11 @@ private:
     ////////// BIDIRECTIONAL SUPPORT
     
     void ResolveDisplayOrder();
+    
+    ////////// TAB ALIGNMENT SUPPORT
+    
+    void SegmentLine();
+    MCLine *DoLayout(bool p_flow, int16_t p_line_width);
 };
 
 #endif

@@ -32,7 +32,7 @@ typedef struct
 {
 	int2 x1, y1, x2, y2;
 }
-MCSegment;
+MCLineSegment;
 
 typedef struct
 {
