@@ -90,26 +90,12 @@ extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStri
 // converting / to \ so these must be done before calling this
 static void legacy_path_to_nt_path(MCStringRef p_legacy, MCStringRef &r_nt)
 {
-	// Don't do anything if it isn't necessary
-	if (MCStringGetLength(p_legacy) < (MAX_PATH - 1))
-	{
-		r_nt = MCValueRetain(p_legacy);
-		return;
-	}
-
-	// Check for serial devices
-	// (these are opened as "COM<n>:" where <n> is an integer)
-	if (MCStringBeginsWithCString(p_legacy, (const char_t*)"COM", kMCStringOptionCompareCaseless) 
-		&& MCStringGetCharAtIndex(p_legacy, MCStringGetLength(p_legacy) - 1) == ':')
-	{
-		// Serial ports live in the NT device namespace (but don't have a ':' suffix)
-		MCStringRef t_temp;
-		/* UNCHECKED */ MCStringCreateMutable(0, t_temp);
-		/* UNCHECKED */ MCStringAppend(t_temp, MCSTR("\\\\.\\"));
-		/* UNCHECKED */ MCStringAppendSubstring(t_temp, p_legacy, MCRangeMake(0, MCStringGetLength(p_legacy) - 1));
-		/* UNCHECKED */ MCStringCopyAndRelease(t_temp, r_nt);
-		return;
-	}
+    // Don't do anything if it isn't necessary
+    if (MCStringGetLength(p_legacy) < (MAX_PATH - 1))
+    {
+        r_nt = MCValueRetain(p_legacy);
+        return;
+    }
 
 	// UNC and local paths are treated differently
 	if (MCStringGetCharAtIndex(p_legacy, 0) == '\\' && MCStringGetCharAtIndex(p_legacy, 1) == '\\')
@@ -156,6 +142,23 @@ static void nt_path_to_legacy_path(MCStringRef p_nt, MCStringRef &r_legacy)
 		// Not an NT-style path, no changes required.
 		r_legacy = MCValueRetain(p_nt);
 	}
+}
+
+static bool get_device_path(MCStringRef p_path, MCStringRef &r_device_path)
+{
+	// Device paths are opened as "COM<n>:" where <n> is an integer
+	if (MCStringBeginsWithCString(p_path, (const char_t*)"COM", kMCStringOptionCompareCaseless)
+		&& MCStringGetCharAtIndex(p_path, MCStringGetLength(p_path) - 1) == ':')
+	{
+		// Serial ports live in the NT device namespace (but don't have a ':' suffix)
+		MCStringRef t_temp;
+		return MCStringCreateMutable(0, t_temp)
+                && MCStringAppend(t_temp, MCSTR("\\\\.\\"))
+                && MCStringAppendSubstring(t_temp, p_path, MCRangeMake(0, MCStringGetLength(p_path) - 1))
+                && MCStringCopyAndRelease(t_temp, r_device_path);
+	}
+    else
+        return MCStringCopy(p_path, r_device_path);
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -1214,11 +1217,11 @@ private:
 
 struct MCStdioFileHandle: public MCSystemFileHandle
 {
-	MCStdioFileHandle(MCWinSysHandle p_handle)
+	MCStdioFileHandle(MCWinSysHandle p_handle, bool p_is_pipe = false)
 	{
 		m_handle = p_handle;
 		m_is_eof = false;
-		m_is_pipe = handle_is_pipe(m_handle);
+		m_is_pipe = p_is_pipe;
 		m_putback = -1;
 	}
 
@@ -3146,7 +3149,8 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		if (t_handle == INVALID_HANDLE_VALUE)
 			return nil;
 
-		t_stdio_handle = new MCStdioFileHandle((MCWinSysHandle)t_handle);
+		// Since we can only have an STD fd, we know we have a pipe.
+		t_stdio_handle = new MCStdioFileHandle((MCWinSysHandle)t_handle, true);
 
 		return t_stdio_handle;
 	}
@@ -3154,7 +3158,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode)
 	{
 		// For Windows, the path is used to determine whether a file or a device is being opened
-		return OpenFile(p_path, p_mode, True);
+        MCAutoStringRef t_device_path;        
+		if (get_device_path(p_path, &t_device_path))
+			return OpenFile(*t_device_path, p_mode, True);
+		else
+			return nil;
 	}
 	
 	// NOTE: 'GetTemporaryFileName' returns a non-native path.
@@ -3903,7 +3911,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         MCprocesses[index].name = (MCNameRef)MCValueRetain(MCM_shell);
         MCprocesses[index].mode = OM_NEITHER;
         MCprocesses[index].ohandle = new MCMemoryFileHandle;
-		MCprocesses[index].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd);
+		MCprocesses[index].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
         if (created)
         {
             HANDLE phandle = GetCurrentProcess();
@@ -4599,12 +4607,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         if (created)
         {
             if (writing)
-				MCprocesses[MCnprocesses].ohandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdinWr);
+				MCprocesses[MCnprocesses].ohandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdinWr, true);
             else
                 CloseHandle(hChildStdinWr);
 
             if (reading)
-				MCprocesses[MCnprocesses].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd);
+				MCprocesses[MCnprocesses].ihandle = new MCStdioFileHandle((MCWinSysHandle)hChildStdoutRd, true);
             else
                 CloseHandle(hChildStdoutRd);
         }
