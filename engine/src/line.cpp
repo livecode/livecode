@@ -646,7 +646,7 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
         // Set the alignment of the segment.
         // This is done early to ensure all segments have an alignment set.
         // TODO: per-tab alignments
-        sgptr->SetHorizontalAlignment(parent->gettextalign());
+        sgptr->SetHorizontalAlignment(parent->getbasetextdirection() == kMCTextDirectionRTL ? kMCSegmentTextHAlignRight : kMCSegmentTextHAlignLeft);
         sgptr->SetVerticalAlignment(kMCSegmentTextVAlignTop);
         
         // We now know where the segment will be placed and therefore how much
