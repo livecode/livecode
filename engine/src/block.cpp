@@ -765,7 +765,7 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, findex_t& r_break_index, bool& r_break
 		// MW-2013-11-07: [[ Bug 11393 ]] Previous per-platform implementations all fold into the optimized
 		//   case now (previously iOS / Windows printer were measuring break by break, which is what we do
 		//   generally now).
-        // FG-2014-04-30: [[ TabAlignment ]] Blocks no longer contain tabs
+        // FG-2014-04-30: [[ TabAlignments ]] Blocks no longer contain tabs
 		/*if (t_this_char == '\t')
 		{
 			twidth += gettabwidth(x + twidth, initial_i);

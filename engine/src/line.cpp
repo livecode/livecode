@@ -39,6 +39,7 @@ MCLine::MCLine(MCParagraph *paragraph)
     firstsegment = lastsegment = NULL;
 	width = ascent = descent = 0;
 	dirtywidth = 0;
+    m_offset = 0;
 }
 
 MCLine::~MCLine()
@@ -627,6 +628,12 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
     // length of text between the stops.
     int16_t t_last_segment_end = 0;
     
+    // We need to know whether the tabstops are fixed or flexible
+    Boolean t_fixed_tabs;
+    uint16_t *t_tab_positions;
+    uint16_t t_num_tabs;
+    parent->gettabs(t_tab_positions, t_num_tabs, t_fixed_tabs);
+    
     // Try to fit each segment into the line
     MCSegment *sgptr = firstsegment;
     MCLine *t_remaining = NULL;
@@ -655,18 +662,18 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
         // the segment boundaries can be calculated
         int16_t t_segment_width;
         t_segment_width = sgptr->GetContentLength();
-        
-        // Update the width of the line
-        width += t_segment_width;
-        
+
         // Position at which the next segment will be placed
         int16_t t_next_segment_pos;
-        t_next_segment_pos = CalculateTabPosition(t_segments + 1, t_last_segment_end + t_segment_width);
+        t_next_segment_pos = CalculateTabPosition(t_segments + 1, t_segment_pos + t_segment_width);
         
         // The last segment of the line should be no larger than its contents
         // (because it doesn't contain the whitespace of another tab)
-        if (sgptr == lastsegment)
-            t_next_segment_pos = t_segment_width;
+        if (!t_fixed_tabs && sgptr == lastsegment)
+            t_next_segment_pos = t_segment_pos + t_segment_width;
+        
+        // Update the width of the line
+        width += t_next_segment_pos - t_segment_pos;
         
         // Tell the segment its boundaries. If the line is right-to-left, the
         // segment offsets are from the right-hand edge rather than left.
@@ -699,6 +706,32 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
         t_last_segment_end = t_segment_pos + t_segment_width;
     }
     while (sgptr->prev() != lastsegment);
+    
+    // Calculate the drawing offset for this line, based on alignment (this is
+    // only appropriate for fields with a fixed width, however)
+    if (p_flow)
+    {
+        switch (parent->gettextalign())
+        {
+            case kMCParagraphTextAlignLeft:
+            case kMCParagraphTextAlignJustify:
+                m_offset = 0;
+                break;
+                
+            case kMCParagraphTextAlignCenter:
+                m_offset = (p_linewidth - width) / 2;
+                break;
+                
+            case kMCParagraphTextAlignRight:
+                m_offset = p_linewidth - width;
+                break;
+        }
+    }
+    else
+    {
+        // Alignment for non-wrapping lines is handled by the paragraph
+        m_offset = 0;
+    }
     
     // Update the line's drawing properties
     dirtywidth = width;

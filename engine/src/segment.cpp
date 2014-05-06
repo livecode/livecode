@@ -325,7 +325,7 @@ void MCSegment::Draw(MCDC *dc, int16_t p_line_origin_x, int16_t p_line_origin_y,
     else if (m_HAlign == kMCSegmentTextHAlignCenter)
     {
         // Centre of the cell minus half the length of the content
-        x = p_line_origin_x + ((m_RightEdge - m_LeftEdge) >> 1) - (GetContentLength() >> 1);
+        x = p_line_origin_x + m_LeftEdge + ((m_RightEdge - m_LeftEdge) >> 1) - (GetContentLength() >> 1);
     }
     else if (m_HAlign == kMCSegmentTextHAlignRight)
     {

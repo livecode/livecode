@@ -39,6 +39,9 @@ class MCLine : public MCDLlist
 	uint2 descent;
 	uint2 dirtywidth;
     
+    // Offset at which to start drawing segments (for whole-line alignment)
+    int16_t m_offset;
+    
     // Dirty hack
     friend class MCSegment;
     
@@ -95,6 +98,11 @@ public:
     
     // Utility method for calculating tab positions
     int16_t CalculateTabPosition(uindex_t p_which_tab, int16_t p_from_position);
+    
+    int16_t GetLineOffset() const
+    {
+        return m_offset;
+    }
     
 	//////////
 	
