@@ -973,6 +973,8 @@ enum MCPlatformPlayerProperty
 	kMCPlatformPlayerPropertyVolume,
     kMCPlatformPlayerPropertyMarkers,
 	
+    kMCPlatformPlayerPropertyShowController,
+
 	kMCPlatformPlayerPropertyOnlyPlaySelection,
 	
 	kMCPlatformPlayerPropertyLoop,
