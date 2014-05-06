@@ -2253,12 +2253,15 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             break;
             
         case kMCPropertyTypeLinesOfString:
+        case kMCPropertyTypeItemsOfString:
         {
             MCStringRef* t_value = nil;
             uindex_t t_count = 0;
             ((void(*)(MCExecContext&, void *, uindex_t&, MCStringRef*&))prop -> getter)(ctxt, mark, t_count, t_value);
             if (!ctxt . HasError())
             {
+                char_t t_delimiter;
+                t_delimiter = prop -> type == kMCPropertyTypeLinesOfString ? '\n' : ',';
                 if (MCPropertyFormatStringList(t_value, t_count, '\n', r_value . stringref_value))
                 {
                     r_value . type = kMCExecValueTypeStringRef;
@@ -2547,6 +2550,33 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                     t_enum_info = (MCExecEnumTypeInfo *)(prop -> type_info);
                     MCExecFormatEnum(ctxt, t_enum_info, t_value, r_value);
                 }
+            }
+        }
+            break;
+           
+        case kMCPropertyTypeMixedItemsOfString:
+        {
+            bool t_mixed;
+            MCStringRef* t_value;
+            uindex_t t_count;
+            ((void(*)(MCExecContext&, void *, bool&, uindex_t&, MCStringRef*&))prop -> getter)(ctxt, mark, t_mixed, t_count, t_value);
+            if (!ctxt . HasError())
+            {
+                if (t_mixed)
+                {
+                    r_value . type = kMCExecValueTypeStringRef;
+                    r_value . stringref_value = MCSTR(MCmixedstring);
+                }
+                else
+                {
+                    char_t t_delimiter;
+                    t_delimiter = prop -> type == kMCPropertyTypeLinesOfString ? '\n' : ',';
+                    if (MCPropertyFormatStringList(t_value, t_count, t_delimiter, r_value . stringref_value))
+                    {
+                        r_value . type = kMCExecValueTypeStringRef;
+                    }
+                }
+                MCMemoryDeleteArray(t_value);
             }
         }
             break;
@@ -3012,15 +3042,20 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+        case kMCPropertyTypeMixedItemsOfString:
         case kMCPropertyTypeLinesOfString:
+        case kMCPropertyTypeItemsOfString:
         {
             MCAutoStringRef t_input;
             MCStringRef *t_value;
             uindex_t t_count;
             
+            char_t t_delimiter;
+            t_delimiter = prop -> type == kMCPropertyTypeLinesOfString ? '\n' : ',';
+            
             MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_input));
             
-            if (!MCPropertyParseStringList(*t_input, '\n', t_count, t_value))
+            if (!MCPropertyParseStringList(*t_input, t_delimiter, t_count, t_value))
                 ctxt . LegacyThrow(EE_PROPERTY_NAS);
             
             if (!ctxt . HasError())
