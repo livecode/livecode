@@ -2894,6 +2894,7 @@ MCOpen::~MCOpen()
 	delete fname;
 	delete message;
 	delete go;
+    delete encoding;
 	MCValueRelease(destination);
 	delete certificate;
 }
@@ -2991,38 +2992,38 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 		}
 
         // SN-2014-02-13: text encoding option added to the 'open' function
-        if (sp.lookup(SP_ENCODING, te) == PS_NORMAL)
+        // SN-2014-05-06 [[ Bug 12360 ]] 'open' doesn't take expressions as encoding type
+        // Now check for the encoding as an expression instead of a token        
+        if (sp.lookup(SP_MODE, te) != PS_NORMAL)
         {
-            encoding = (Encoding_type)te->which;
+            // Look for an encoding at first
+            if (sp.backup() != PS_NORMAL || sp.parseexp(True, True, &encoding) != PS_NORMAL)
+            {
+                MCperror -> add(PE_OPEN_BADENCODING, sp);
+                return PS_ERROR;
+            }
+            
             if (sp.next(type) != PS_NORMAL)
             {
                 MCperror -> add(PE_OPEN_BADMODE, sp);
                 return PS_ERROR;
             }
         }
-
-		if (sp.lookup(SP_MODE, te) != PS_NORMAL)
-		{
-			MCperror->add
-			(PE_OPEN_BADMODE, sp);
-			return PS_ERROR;
-		}
-
-        // An encoding can only be given with a text reading
-        // An error may help a user to notify a wrong read mode
-        if (encoding != EN_BOM_BASED &&
-                te->which != OM_TEXT)
+        
+        if (sp.lookup(SP_MODE, te) != PS_NORMAL)
         {
-            MCperror->add(PE_OPEN_BADMODE, sp);
+            MCperror -> add(PE_OPEN_BADMODE, sp);
+            return PS_ERROR;
+        }
+        
+        if (encoding != NULL && te->which == OM_BINARY)
+        {
+            MCperror->add(PE_OPEN_BADBINARYENCODING, sp);
             return PS_ERROR;
         }
 
 		if (te->which == OM_BINARY || te->which == OM_TEXT)
         {
-            // Encoding now replaces textmode
-            if (te->which == OM_BINARY)
-                encoding = EN_BINARY;
-
 			if (sp.next(type) != PS_NORMAL)
 			{
 				MCperror->add
@@ -3283,23 +3284,77 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
 	{
         MCNewAutoNameRef t_name;
         MCNewAutoNameRef t_message_name;
+        MCAutoStringRef t_encoding_as_string;
+        Encoding_type t_encoding;
 
         if (!ctxt . EvalExprAsNameRef(fname, EE_OPEN_BADNAME, &t_name))
             return;
+        
+        if (encoding != NULL)
+        {
+            extern bool MCStringsEvalTextEncoding(MCStringRef p_encoding, MCStringEncoding &r_encoding);
+            
+            if (!ctxt . EvalExprAsStringRef(encoding, EE_OPEN_BADENCODING, &t_encoding_as_string))
+                return;
+            
+            if (MCStringIsEqualToCString(*t_encoding_as_string, "binary", kMCStringOptionCompareCaseless))
+                t_encoding = EN_BINARY;
+            else
+            {
+                MCStringEncoding t_string_encoding;
+                if (!MCStringsEvalTextEncoding(*t_encoding_as_string, (MCStringEncoding&)t_string_encoding))
+                {
+                    ctxt . LegacyThrow(EE_OPEN_BADENCODING);
+                    return;
+                }
+                                
+                switch (t_string_encoding)
+                {
+                    case kMCStringEncodingUTF8:
+                        t_encoding = EN_UTF8;
+                        break;
+                        
+                    case kMCStringEncodingUTF16LE:
+                        t_encoding = EN_UTF16LE;
+                        break;
+                        
+                    case kMCStringEncodingUTF16BE:
+                        t_encoding = EN_UTF16BE;
+                        break;
+                        
+                    case kMCStringEncodingUTF16:
+                        t_encoding = EN_UTF16;
+                        break;
+                        
+                    case kMCStringEncodingNative:
+                        t_encoding = EN_NATIVE;
+                        break;
+                        
+                    default:
+                        // UTF32 and ASCII
+                        ctxt . LegacyThrow(EE_OPEN_UNSUPPORTED_ENCODING);
+                        break;
+                }        
+            }
+        }
+        else if (mode == OM_BINARY)
+            t_encoding = EN_BINARY;
+        else
+            t_encoding = EN_BOM_BASED;
 
 		switch (arg)
 		{
         case OA_DRIVER:
-            MCFilesExecOpenDriver(ctxt, *t_name, mode, encoding);
+            MCFilesExecOpenDriver(ctxt, *t_name, mode, t_encoding);
 			break;
         case OA_FILE:
-            MCFilesExecOpenFile(ctxt, *t_name, mode, encoding);
+            MCFilesExecOpenFile(ctxt, *t_name, mode, t_encoding);
 			break;
 		case OA_PROCESS:
 			if (elevated)
-                MCFilesExecOpenElevatedProcess(ctxt, *t_name, mode, encoding);
+                MCFilesExecOpenElevatedProcess(ctxt, *t_name, mode, t_encoding);
 			else
-                MCFilesExecOpenProcess(ctxt, *t_name, mode, encoding);
+                MCFilesExecOpenProcess(ctxt, *t_name, mode, t_encoding);
 			break;
 		case OA_SOCKET:
             if (!ctxt . EvalOptionalExprAsNullableNameRef(message, EE_OPEN_BADMESSAGE, &t_message_name))
@@ -3359,21 +3414,21 @@ void MCOpen::compile(MCSyntaxFactoryRef ctxt)
 		{
 		case OA_DRIVER:
 			MCSyntaxFactoryEvalConstantInt(ctxt, mode);
-            MCSyntaxFactoryEvalConstantBool(ctxt, encoding != EN_BINARY);
+            encoding -> compile(ctxt);
 
 			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecOpenDriverMethodInfo);
 			break;
 
 		case OA_FILE:
 			MCSyntaxFactoryEvalConstantInt(ctxt, mode);
-            MCSyntaxFactoryEvalConstantBool(ctxt, encoding != EN_BINARY);
+            encoding -> compile(ctxt);
 
 			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecOpenFileMethodInfo);
 			break;
 
 		case OA_PROCESS:
 			MCSyntaxFactoryEvalConstantInt(ctxt, mode);
-            MCSyntaxFactoryEvalConstantBool(ctxt, encoding != EN_BINARY);
+            encoding -> compile(ctxt);
 
 			if (elevated)
 				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecOpenElevatedProcessMethodInfo);
