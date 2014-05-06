@@ -684,9 +684,14 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
         t_next_segment_pos = CalculateTabPosition(t_segments + 1, t_segment_pos + t_segment_width);
         
         // The last segment of the line should be no larger than its contents
-        // (because it doesn't contain the whitespace of another tab)
-        if (!t_fixed_tabs && sgptr == lastsegment)
+        // (because it doesn't contain the whitespace of another tab) unless it
+        // is to be right aligned in LTR text or left-aligned in RTL text
+        if (!t_fixed_tabs && sgptr == lastsegment
+            && ((parent->getbasetextdirection() != kMCTextDirectionRTL && sgptr->GetHorizontalAlignment() != kMCSegmentTextHAlignRight)
+            ||  (parent->getbasetextdirection() == kMCTextDirectionRTL && sgptr->GetHorizontalAlignment() != kMCSegmentTextHAlignLeft)))
+        {
             t_next_segment_pos = t_segment_pos + t_segment_width;
+        }
         
         // Update the width of the line
         width += t_next_segment_pos - t_segment_pos;
