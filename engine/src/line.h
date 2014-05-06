@@ -96,8 +96,9 @@ public:
     // Sets the correct drawing properties, etc for non-flowed lines
     void NoFlowLayout();
     
-    // Utility method for calculating tab positions
+    // Utility methods for calculating tab positions and alignments
     int16_t CalculateTabPosition(uindex_t p_which_tab, int16_t p_from_position);
+    intenum_t CalculateTabAlignment(uindex_t p_which_tab);
     
     int16_t GetLineOffset() const
     {

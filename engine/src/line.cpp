@@ -530,6 +530,8 @@ int16_t MCLine::CalculateTabPosition(uindex_t p_which_tab, int16_t p_from_positi
     if (p_which_tab == 0)
         return 0;
     
+    p_which_tab--;
+    
     // Get the tab information from the parent paragraph
     uint16_t *t_tabs;
     uint16_t t_numtabs;
@@ -606,6 +608,21 @@ int16_t MCLine::CalculateTabPosition(uindex_t p_which_tab, int16_t p_from_positi
     return t_segment_pos;
 }
 
+intenum_t MCLine::CalculateTabAlignment(uindex_t p_which_tab)
+{
+    intenum_t *t_alignments;
+    uint16_t t_count;
+    parent -> gettabaligns(t_alignments, t_count);
+    
+    if (t_count == 0)
+        return parent->getbasetextdirection() == kMCTextDirectionRTL ? kMCSegmentTextHAlignRight : kMCSegmentTextHAlignLeft;
+    
+    if (p_which_tab < t_count)
+        return t_alignments[p_which_tab];
+    else
+        return t_alignments[t_count - 1];
+}
+
 void MCLine::NoFlowLayout()
 {
     MCLine *test = DoLayout(false, 0);
@@ -645,8 +662,7 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
         
         // Set the alignment of the segment.
         // This is done early to ensure all segments have an alignment set.
-        // TODO: per-tab alignments
-        sgptr->SetHorizontalAlignment(parent->getbasetextdirection() == kMCTextDirectionRTL ? kMCSegmentTextHAlignRight : kMCSegmentTextHAlignLeft);
+        sgptr->SetHorizontalAlignment(CalculateTabAlignment(t_segments));
         sgptr->SetVerticalAlignment(kMCSegmentTextVAlignTop);
         
         // We now know where the segment will be placed and therefore how much

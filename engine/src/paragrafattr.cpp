@@ -1658,6 +1658,17 @@ void MCParagraph::gettabs(uint16_t*& r_tabs, uint16_t& r_tab_count, Boolean& r_f
 	r_fixed = getvgrid();
 }
 
+void MCParagraph::gettabaligns(intenum_t*& r_tab_aligns, uint16_t& r_tab_count) const
+{
+    if (attrs != nil && (attrs -> flags & PA_HAS_TAB_ALIGNMENTS) != 0)
+    {
+        r_tab_aligns = attrs -> alignments;
+        r_tab_count = attrs -> alignments_count;
+    }
+    else
+        parent -> gettabaligns(r_tab_aligns, r_tab_count);
+}
+
 bool MCParagraph::getvgrid(void) const
 {
 	if (attrs != nil && (attrs -> flags & PA_HAS_LIST_STYLE) != 0)

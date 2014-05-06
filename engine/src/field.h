@@ -330,6 +330,7 @@ public:
 	void closeparagraphs(MCParagraph *pgptr);
 	MCParagraph *getparagraphs(void) {return paragraphs;}
 	void gettabs(uint2 *&t, uint2 &n, Boolean &fixed);
+    void gettabaligns(intenum_t *&t, uint16_t &n);
 	void getlisttabs(int32_t& r_first, int32_t& r_second);
 
 	uint2 getfwidth() const;

@@ -684,6 +684,7 @@ public:
 
 	// Fetch the (effective) tabs for the paragraph.
 	void gettabs(uint16_t*& r_tabs, uint16_t& r_tab_count, Boolean& r_fixed) const;
+    void gettabaligns(intenum_t*& r_tabaligns, uint16_t& r_tab_count) const;
 	// Get the (effective) hGrid.
 	bool gethgrid(void) const;
 	// Get the (effective) vGrid.
