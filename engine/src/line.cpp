@@ -663,9 +663,10 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
         int16_t t_next_segment_pos;
         t_next_segment_pos = CalculateTabPosition(t_segments + 1, t_last_segment_end + t_segment_width);
         
-        // Clamp the next position to the end of the line
-        if (p_flow && t_next_segment_pos > p_linewidth)
-            t_next_segment_pos = p_linewidth;
+        // The last segment of the line should be no larger than its contents
+        // (because it doesn't contain the whitespace of another tab)
+        if (sgptr == lastsegment)
+            t_next_segment_pos = t_segment_width;
         
         // Tell the segment its boundaries. If the line is right-to-left, the
         // segment offsets are from the right-hand edge rather than left.
