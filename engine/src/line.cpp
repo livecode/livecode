@@ -588,7 +588,7 @@ int16_t MCLine::CalculateTabPosition(uindex_t p_which_tab, int16_t p_from_positi
             
             // There have been (t_segments - t_numtabs) tabs beyond the last
             // fixed tabstop
-            t_segment_pos = t_tabs[t_numtabs - 1] + (p_which_tab - t_numtabs) * t_diff;
+            t_segment_pos = t_tabs[t_numtabs - 1] + ((p_which_tab+1) - t_numtabs) * t_diff;
         }
         
         // If the position of the current tab co-incides with the last x position then
