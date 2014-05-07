@@ -969,10 +969,10 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 { prop, false, kMCPropertyTypeMixedCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetCustomType(obj, Get##tag##OfLineChunk, MC##type), (void *)MCPropertyObjectChunkMixedThunkSetCustomType(obj, Set##tag##OfLineChunk, MC##type), false, false, kMCPropertyInfoChunkTypeLine },
 
 #define DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_CUSTOM_PROPERTY(prop, type, obj, tag) \
-{ prop, true, kMCPropertyTypeMixedCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetCustomType(obj, Get##tag##OfLineChunk, MC##type), (void *)MCPropertyObjectChunkMixedThunkSetCustomType(obj, Set##tag##OfLineChunk, MC##type), false, false, kMCPropertyInfoChunkTypeLine },
+{ prop, false, kMCPropertyTypeMixedCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetCustomType(obj, Get##tag##OfLineChunk, MC##type), (void *)MCPropertyObjectChunkMixedThunkSetCustomType(obj, Set##tag##OfLineChunk, MC##type), true, false, kMCPropertyInfoChunkTypeLine },
 
 #define DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_CUSTOM_PROPERTY(prop, type, obj, tag) \
-{ prop, true, kMCPropertyTypeMixedCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetCustomType(obj, Get##tag##OfLineChunk, MC##type), nil, true, false, kMCPropertyInfoChunkTypeLine },
+{ prop, true, kMCPropertyTypeMixedCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetCustomType(obj, GetEffective##tag##OfLineChunk, MC##type), nil, true, false, kMCPropertyInfoChunkTypeLine },
 
 #define DEFINE_RW_OBJ_LINE_CHUNK_MIXED_ENUM_PROPERTY(prop, type, obj, tag) \
 { prop, false, kMCPropertyTypeMixedEnum, kMC##type##TypeInfo, (void *)MCPropertyObjectChunkMixedThunkGetEnumType(obj, Get##tag##OfLineChunk), (void *)MCPropertyObjectChunkMixedThunkSetEnumType(obj, Set##tag##OfLineChunk), false, false, kMCPropertyInfoChunkTypeLine },
