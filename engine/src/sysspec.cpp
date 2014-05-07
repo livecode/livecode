@@ -747,6 +747,11 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	
 	if (!t_state -> files != p_entry -> is_folder)
 		return true;
+    
+    // Mac doesn't list the '..' folder
+    if (p_entry -> is_folder && MCListIsEmpty(t_state -> list)
+            && !MCStringIsEqualToCString(p_entry -> name, "..", kMCStringOptionCompareExact))
+        MCListAppendCString(t_state -> list, "..");
 	
 	if (t_state -> details)
 	{
@@ -760,14 +765,31 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
                                        p_entry -> modification_time,
                                        p_entry -> access_time,
                                        p_entry -> permissions);
+#elif defined(_MACOSX)
+		/* UNCHECKED */ MCStringFormat(&t_details,
+                                       "%@,%lld,%lld,%u,%u,%u,%u,%d,%d,%03o,%.8s",
+                                       p_entry -> name,
+                                       p_entry -> data_size,
+                                       p_entry -> resource_size,
+                                       p_entry -> creation_time,
+                                       p_entry -> modification_time,
+                                       p_entry -> access_time,
+                                       p_entry -> backup_time,
+                                       p_entry -> user_id,
+                                       p_entry -> group_id,
+                                       p_entry -> permissions,
+                                       p_entry -> file_type);
 #else
 		/* UNCHECKED */ MCStringFormat(&t_details,
                                        "%@,%lld,,,%u,%u,,%d,%d,%03o,",
                                        p_entry -> name,
                                        p_entry -> data_size,
-                                       p_entry -> modification_time, p_entry -> access_time,
-                                       p_entry -> user_id, p_entry -> group_id,
+                                       p_entry -> modification_time,
+                                       p_entry -> access_time,
+                                       p_entry -> user_id,
+                                       p_entry -> group_id,
                                        p_entry -> permissions);
+        
 #endif
 
 		/* UNCHECKED */ MCListAppend(t_state->list, *t_details);

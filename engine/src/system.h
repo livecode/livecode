@@ -53,7 +53,7 @@ struct MCSystemFolderEntry
 	uint32_t group_id;
 	uint32_t permissions;
 	uint32_t file_creator;
-	uint32_t file_type;
+	char* file_type;
 	bool is_folder;
 };
 
