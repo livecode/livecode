@@ -354,7 +354,7 @@ uint2 MCLine::GetCursorXHelper(findex_t fi, bool prefer_forward)
     }
    
     // The position of the segment containing the block needs to be included
-    return bptr->GetCursorX(fi) + sgptr->GetLeft();
+    return bptr->GetCursorX(fi) + sgptr->GetCursorOffset();
 }
 
 uint2 MCLine::GetCursorXPrimary(findex_t fi, bool moving_forward)
@@ -392,19 +392,46 @@ findex_t MCLine::GetCursorIndex(int2 cx, Boolean chunk, bool moving_left)
     bool done = false;
     do
     {
+        // Temporaries for visual ordering
+        MCBlock *t_firstvisual, *t_lastvisual;
+        t_firstvisual = t_lastvisual = bptr;
+        
         bptr = sgptr->GetFirstBlock()->prev();
         do
         {
             bptr = bptr->next();
             
-            int4 origin = bptr->getorigin() + sgptr->GetLeft();
+            int4 origin = bptr->getorigin() + sgptr->GetCursorOffset();
             if (cx >= origin && cx < (origin + bptr->getwidth()))
             {
                 done = true;
                 break;
             }
+            
+            if (bptr->GetVisualIndex() < t_firstvisual->GetVisualIndex())
+                t_firstvisual = bptr;
+            if (bptr->GetVisualIndex() > t_lastvisual->GetVisualIndex())
+                t_lastvisual = bptr;
         }
         while (bptr != sgptr->GetLastBlock());
+        
+        // It is possible to be within the segment but not within a block due to
+        // alignment within the segment. Pick the appropriate block.
+        if (!done && cx >= sgptr->GetLeft() && cx < sgptr->GetRight())
+        {
+            if (t_firstvisual->getorigin() + sgptr->GetCursorOffset() > cx)
+            {
+                // Before the first block in visual ordering
+                bptr = t_firstvisual;
+                done = true;
+            }
+            else
+            {
+                // Otherwise, must be after the last block in visual ordering
+                bptr = t_lastvisual;
+                done = true;
+            }
+        }
         
         if (done)
             break;
@@ -413,7 +440,7 @@ findex_t MCLine::GetCursorIndex(int2 cx, Boolean chunk, bool moving_left)
     }
     while (sgptr->prev() != lastsegment);
     
-    return bptr->GetCursorIndex(cx - sgptr->GetLeft(), chunk, bptr == lastblock);
+    return bptr->GetCursorIndex(cx - sgptr->GetCursorOffset(), chunk, bptr == lastblock);
 }
 
 uint2 MCLine::getwidth()

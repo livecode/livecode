@@ -533,3 +533,24 @@ void MCSegment::ResolveDisplayOrder()
         t_width += bptr -> getwidth(NULL);
     }
 }
+
+int16_t MCSegment::GetCursorOffset()
+{
+    // The offset depends on the alignment of the segment
+    switch (m_HAlign)
+    {
+        case kMCSegmentTextHAlignLeft:
+        case kMCSegmentTextHAlignJustify:
+            return m_LeftEdge;
+            
+        case kMCSegmentTextHAlignCenter:
+            return m_LeftEdge + ((m_RightEdge - m_LeftEdge) >> 1) - (GetContentLength() >> 1);
+            
+        case kMCSegmentTextHAlignRight:
+            return m_RightEdge - GetContentLength();
+            
+        default:
+            MCAssert(false);
+            return 0;
+    }
+}

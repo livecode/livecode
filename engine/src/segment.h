@@ -161,6 +161,9 @@ public:
     // Arranges the blocks of this segment into visual order for display
     void ResolveDisplayOrder();
     
+    // Returns the offset used for cursor positioning within the segment
+    int16_t GetCursorOffset();
+    
     // Linked list management
     MCSegment *next()
     {
