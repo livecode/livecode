@@ -146,6 +146,8 @@ public:
 	Boolean playstart(const char *options);
 	Boolean playpause(Boolean on);
 	void playstepforward();
+    void playfastforward();
+    void playfastback();
 	void playstepback();
 	Boolean playstop();
 	void setvolume(uint2 tloudness);
@@ -196,6 +198,7 @@ public:
     
     void handle_mdown(int which);
     void handle_mstilldown(int which);
+    void handle_mup(int which);
     void handle_mfocus(int x, int y);
 };
 

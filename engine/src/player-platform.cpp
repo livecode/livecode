@@ -270,7 +270,7 @@ Boolean MCPlayer::mup(uint2 which) //mouse up
                     message_with_args(MCM_mouse_up, "1");
                 else
                     message_with_args(MCM_mouse_release, "1");
-                
+                handle_mup(which);
                 break;
             case T_PLAYER:
             case T_POINTER:
@@ -344,6 +344,16 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 			state |= CS_PAUSED;
 
 		}
+        else if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+        {
+            if (mup(Button1))
+            {
+                handle_mstilldown(Button1);
+                //MCscreen->addtimer(this, MCM_internal, MCsyncrate);
+            }
+
+        }
+        
 	MCControl::timer(mptr, params);
 }
 
@@ -1151,7 +1161,7 @@ void MCPlayer::playstepforward()
 		MCPlatformStepPlayer(m_platform_player, 1);
 }
 
-/*
+
 void MCPlayer::playfastforward()
 {
 	if (!getstate(CS_PREPARED))
@@ -1160,7 +1170,15 @@ void MCPlayer::playfastforward()
 	if (m_platform_player != nil)
 		MCPlatformFastForwardPlayer(m_platform_player);
 }
-*/
+
+void MCPlayer::playfastback()
+{
+	if (!getstate(CS_PREPARED))
+		return;
+    
+	if (m_platform_player != nil)
+		MCPlatformFastBackPlayer(m_platform_player);
+}
 
 void MCPlayer::playstepback()
 {
@@ -1756,6 +1774,9 @@ void MCPlayer::handle_mdown(int p_which)
         }
             break;
         case kMCPlayerControllerPartScrubBack:
+        
+            MCscreen->addtimer(this, MCM_internal, MCblinkrate);
+            
             if(ispaused())
                 playstepback();
             else
@@ -1766,6 +1787,9 @@ void MCPlayer::handle_mdown(int p_which)
             
             break;
         case kMCPlayerControllerPartScrubForward:
+            
+            MCscreen->addtimer(this, MCM_internal, MCblinkrate);
+            
             if(ispaused())
                 playstepforward();
             else
@@ -1773,6 +1797,7 @@ void MCPlayer::handle_mdown(int p_which)
                 playstepforward();
                 playpause(!ispaused());
             }
+            
             break;
             
         default:
@@ -1798,14 +1823,6 @@ void MCPlayer::handle_mfocus(int x, int y)
             }
                 break;
                 
-            case kMCPlayerControllerPartScrubForward:
-            {
-                uint32_t t_current_time;
-                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
-                t_current_time += 10000;
-                setcurtime(t_current_time);
-            }
-                break;
             default:
                 break;
         }
@@ -1814,20 +1831,54 @@ void MCPlayer::handle_mfocus(int x, int y)
 
 void MCPlayer::handle_mstilldown(int p_which)
 {
-    if (state & CS_MFOCUSED)
+    switch(hittestcontroller(mx, my))
     {
-        switch(hittestcontroller(mx, my))
+        case kMCPlayerControllerPartScrubForward:
         {
-            case kMCPlayerControllerPartScrubForward:
+            uint32_t t_current_time, t_duration;
+            Boolean t_was_paused;
+            t_was_paused = ispaused();
+            while (mdown(p_which))
             {
-                uint32_t t_current_time;
                 MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
-                t_current_time += 10000;
-                setcurtime(t_current_time);
+                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+                
+                if (t_current_time > t_duration)
+                    t_current_time = t_duration;
+                
+                playfastforward();
             }
-                break;
-            default:
-                break;
+            playpause(t_was_paused);
         }
+            break;
+            
+        case kMCPlayerControllerPartScrubBack:
+        {
+            uint32_t t_current_time, t_duration;
+            Boolean t_was_paused;
+            t_was_paused = ispaused();
+            while (mdown(p_which))
+            {
+                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
+                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+                
+                if (t_current_time < 0.0)
+                    t_current_time = 0.0;
+                
+                playfastback();
+            }
+            
+            playpause(t_was_paused);
+        }
+            break;
+            
+        default:
+            break;
     }
+    
+    
+}
+
+void MCPlayer::handle_mup(int p_which)
+{
 }

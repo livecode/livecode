@@ -43,7 +43,8 @@ public:
 	
 	virtual bool IsPlaying(void) = 0;
 	virtual void Start(void) = 0;
-    //virtual void FastForward(void) = 0;
+    virtual void FastForward(void) = 0;
+    virtual void FastBack(void) = 0;
 	virtual void Stop(void) = 0;
 	virtual void Step(int amount) = 0;
 	
@@ -96,7 +97,8 @@ public:
 	
 	virtual bool IsPlaying(void);
 	virtual void Start(void);
-    //virtual void FastForward(void);
+    virtual void FastForward(void);
+    virtual void FastBack(void);
 	virtual void Stop(void);
 	virtual void Step(int amount);
 	
@@ -589,12 +591,16 @@ void MCQTKitPlayer::Start(void)
 	[m_movie setRate: 1.0];
 }
 
-/*
+
 void MCQTKitPlayer::FastForward(void)
 {
-	[m_movie setRate: 10.0];
+	[m_movie setRate: 50.0];
 }
-*/
+
+void MCQTKitPlayer::FastBack(void)
+{
+	[m_movie setRate: -50.0];
+}
 
 void MCQTKitPlayer::Stop(void)
 {
@@ -1006,12 +1012,16 @@ void MCPlatformStartPlayer(MCPlatformPlayerRef player)
 	player -> Start();
 }
 
-/*
+
 void MCPlatformFastForwardPlayer(MCPlatformPlayerRef player)
 {
 	player -> FastForward();
 }
-*/
+
+void MCPlatformFastBackPlayer(MCPlatformPlayerRef player)
+{
+	player -> FastBack();
+}
 
 void MCPlatformStopPlayer(MCPlatformPlayerRef player)
 {
