@@ -763,7 +763,7 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
     
     // Calculate the drawing offset for this line, based on alignment (this is
     // only appropriate for fields with a fixed width, however)
-    if (p_flow)
+    if (p_flow && !parent->getvgrid())
     {
         switch (parent->gettextalign())
         {
