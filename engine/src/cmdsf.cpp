@@ -3329,11 +3329,23 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
                     case kMCStringEncodingNative:
                         t_encoding = EN_NATIVE;
                         break;
+                    
+                    case kMCStringEncodingUTF32:
+                        t_encoding = EN_UTF32;
+                        break;
+                        
+                    case kMCStringEncodingUTF32LE:
+                        t_encoding = EN_UTF32LE;
+                        break;
+                        
+                    case kMCStringEncodingUTF32BE:
+                        t_encoding = EN_UTF32BE;
+                        break;
                         
                     default:
-                        // UTF32 and ASCII
+                        // ASCII
                         ctxt . LegacyThrow(EE_OPEN_UNSUPPORTED_ENCODING);
-                        break;
+                        return;
                 }        
             }
         }

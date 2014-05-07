@@ -375,6 +375,15 @@ MCStringEncoding MCS_file_to_string_encoding(MCSFileEncodingType p_encoding)
 
     case kMCFileEncodingUTF16BE:
         return kMCStringEncodingUTF16BE;
+            
+    case kMCFileEncodingUTF32:
+        return kMCStringEncodingUTF32;
+            
+    case kMCFileEncodingUTF32BE:
+        return kMCStringEncodingUTF32BE;
+            
+    case kMCFileEncodingUTF32LE:
+        return kMCStringEncodingUTF32LE;
 
     default:
         return kMCStringEncodingNative;

@@ -1549,6 +1549,9 @@ bool MCStringConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_c
 // reflected in the char count.
 bool MCStringConvertToUTF8(MCStringRef string, char*& r_chars, uindex_t& r_char_count);
 
+// Converts the contents of the string to UTF-32.
+bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_t &r_char_count);
+
 // Converts the content to char_t*
 bool MCStringConvertToCString(MCStringRef string, char*& r_cstring);
 

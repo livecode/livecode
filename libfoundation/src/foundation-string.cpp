@@ -183,6 +183,8 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
         }
         break;
         case kMCStringEncodingUTF32:
+        case kMCStringEncodingUTF32LE:
+        case kMCStringEncodingUTF32BE:
 		{
 			// Round the byte count to a multiple of UTF-32 units
 			p_byte_count = ((p_byte_count + sizeof(uint32_t) - 1) & ~(sizeof(uint32_t) - 1));
@@ -197,6 +199,12 @@ bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStr
 				// BMP characters are output unchanged, non-BMP requires surrogate pairs
 				codepoint_t t_codepoint;
 				t_codepoint = *(uint32_t*)&p_bytes[t_in_offset];
+                
+                if (p_encoding == kMCStringEncodingUTF32BE)
+                    t_codepoint = MCSwapInt32BigToHost(t_codepoint);
+                else if (p_encoding == kMCStringEncodingUTF32LE)
+                    t_codepoint = MCSwapInt32LittleToHost(t_codepoint);
+                
 				if (t_codepoint < 0x10000)
 				{
 					t_buffer[t_out_offset] = unichar_t(t_codepoint);
@@ -1581,6 +1589,38 @@ bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool 
     case kMCStringEncodingUTF8:
         return MCStringConvertToUTF8(self, (char*&)r_bytes, r_byte_count);
     case kMCStringEncodingUTF32:
+        {
+            uindex_t t_char_count;
+            uint32_t *t_codepoints;
+            if (MCStringConvertToUTF32(self, t_codepoints, t_char_count))
+            {
+                r_bytes = (byte_t*) t_codepoints;
+                r_byte_count = t_char_count * sizeof(uint32_t);
+                return true;
+            }
+        }
+        break;            
+    case kMCStringEncodingUTF32BE:
+    case kMCStringEncodingUTF32LE:
+        {
+            uindex_t t_char_count;
+            uint32_t* t_codepoints;
+            
+            if (MCStringConvertToUTF32(self, t_codepoints, t_char_count))
+            {
+                for (uinteger_t i = 0 ; i < t_char_count ; ++i)
+                {
+                    if (p_encoding == kMCStringEncodingUTF32BE)
+                        t_codepoints[i] = MCSwapInt32HostToBig(t_codepoints[i]);
+                    else
+                        t_codepoints[i] = MCSwapInt32HostToLittle(t_codepoints[i]);
+                }
+                
+                r_bytes = (byte_t*)t_codepoints;
+                r_byte_count = t_char_count * sizeof(uint32_t);
+                return true;
+            }
+        }
         break;
 #if !defined(__LINUX__) && !defined(__ANDROID__)
     case kMCStringEncodingISO8859_1:
@@ -1705,6 +1745,86 @@ bool MCStringConvertToUTF8(MCStringRef p_string, char*& r_utf8string, uindex_t& 
     MCMemoryDeleteArray(t_unichars);
     
     return true;
+}
+
+bool MCStringConvertToUTF32(MCStringRef self, uint32_t *&r_codepoints, uinteger_t &r_char_count)
+{
+    if (MCStringIsNative(self))
+    {
+        // Shortcut for native string - no surrogate pair checking
+        uindex_t t_char_count;
+        const char_t* t_chars;
+        uint32_t *t_codepoints;
+        
+        t_chars = MCStringGetNativeCharPtrAndLength(self, t_char_count);
+        
+        if (!MCMemoryAllocate(t_char_count + 1, t_codepoints))
+            return false;
+        
+        for (uindex_t i = 0 ; i < t_char_count; ++i)
+            t_codepoints[i] = (uint32_t)t_chars[i];
+        
+        r_codepoints = t_codepoints;
+        r_char_count = t_char_count;
+        return true;
+    }
+    else
+    {
+        uindex_t t_char_count;
+        uindex_t t_codepoint_count;
+        const unichar_t *t_unichars;
+        MCAutoArray<uint32_t> t_codepoints;
+        bool t_invalid_char;
+        
+        t_unichars = MCStringGetCharPtr(self);
+        t_char_count = MCStringGetLength(self);
+        t_codepoint_count = 0;
+        t_invalid_char = false; 
+        
+        if (!t_codepoints . New(t_char_count + 1))
+            return false;
+        
+        // Loop up to the penultimate char, to avoid the checking of the index each
+        // time a trail surrogate must be found - a pair may be broken if imported for instance
+        uindex_t i = 0;
+        for (; i < t_char_count - 1 && !t_invalid_char; ++i)
+        {
+            if (t_unichars[i] > 0xD7FF && t_unichars[i] < 0xDC00)
+            {
+                // Surrogate lead found
+                if (t_unichars[i+1] > 0xDBFF && t_unichars[i+1] < 0xE000)
+                {
+                    // Surogate trail found: valid surrogate pair
+                    t_codepoints[i] = MCUnicodeSurrogatesToCodepoint(t_unichars[i], t_unichars[i+1]);
+                    ++i;
+                }
+                else
+                    t_invalid_char = true;
+            }
+            else
+            {
+                t_codepoints[i] = (uint32_t)t_unichars[i];
+            }
+            
+            ++t_codepoint_count;
+        }
+        
+        if (t_invalid_char)
+            return false;
+        
+        // Add the last codeunit
+        if (i < t_char_count)
+        {
+            t_codepoints[i] = (uint32_t)t_unichars[i];
+            ++t_codepoint_count;
+        }
+        
+        t_codepoints . Shrink(t_codepoint_count + 1);
+        t_codepoints . Take(r_codepoints, r_char_count);
+        return true;
+    }
+    
+    return false;
 }
 
 #if defined(__MAC__) || defined (__IOS__)
