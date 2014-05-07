@@ -1191,6 +1191,8 @@ void MCField::SetTabAlignments(MCExecContext& ctxt, const MCInterfaceFieldTabAli
     MCMemoryDelete(alignments);
     MCMemoryAllocateCopy(t_alignments.m_alignments, t_alignments.m_count * sizeof(intenum_t), alignments);
     nalignments = t_alignments.m_count;
+    
+    Redraw(true);
 }
 
 void MCField::GetTabAlignments(MCExecContext& ctxt, MCInterfaceFieldTabAlignments& r_alignments)
