@@ -371,7 +371,7 @@ static LCError LCValueArrayValueToObjcValue(MCVariableRef var, id& r_dst)
 	{
 		bool t_is_array;
 		t_error = MCVariableIsAnArray(var, &t_is_array);
-		if (t_error == kMCErrorNone && t_is_array)
+		if (t_error == kMCErrorNone && !t_is_array)
 			return LCValueFetch(var, kLCValueOptionAsObjcString, &r_dst);
 	}
 	
@@ -407,6 +407,9 @@ static LCError LCValueArrayValueFromObjcValue(MCVariableRef var, id src)
 	if ([src isKindOfClass: [NSString class]])
 		return LCValueStore(var, kLCValueOptionAsObjcString, &src);
 		
+	if ([src isKindOfClass: [NSData class]])
+		return LCValueStore(var, kLCValueOptionAsObjcData, &src);
+    
 	if ([src isKindOfClass: [NSArray class]])
 		return LCValueArrayFromObjcArray(var, (NSArray *)src);
 	
