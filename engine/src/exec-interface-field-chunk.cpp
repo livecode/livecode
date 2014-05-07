@@ -2151,6 +2151,11 @@ void MCField::SetTabAlignmentsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_i
     SetParagraphPropOfCharChunk< PodFieldPropType<MCInterfaceFieldTabAlignments> >(ctxt, this, true, p_part_id, si, ei, &MCParagraph::SetTabAlignments, p_values);
 }
 
+void MCField::GetEffectiveTabAlignmentsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceFieldTabAlignments &r_values)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<MCInterfaceFieldTabAlignments> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveTabAlignments, r_mixed, r_values);
+}
+
 //////////
 // Paragraph border properties
 //////////
@@ -2824,6 +2829,8 @@ void MCParagraph::SetTabAlignments(MCExecContext& ctxt, const MCInterfaceFieldTa
     
     if (attrs -> alignments != nil)
         attrs -> flags |= PA_HAS_TAB_ALIGNMENTS;
+    else
+        attrs -> flags &= ~PA_HAS_TAB_ALIGNMENTS;
 }
 
 void MCParagraph::GetBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color)

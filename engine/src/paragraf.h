@@ -98,7 +98,7 @@ enum
 // MW-2012-01-25: [[ ParaStyles ]] A collection of paragraph attributes.
 struct MCParagraphAttrs
 {
-	unsigned flags : 19;
+	unsigned flags : 20;
 	unsigned text_align : 2;
 	unsigned list_style : 4;
 	unsigned list_depth : 4;
