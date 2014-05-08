@@ -26,6 +26,7 @@
 #include "platform-internal.h"
 
 #include "mac-internal.h"
+#define FAST_RATE 50
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -43,8 +44,9 @@ public:
 	
 	virtual bool IsPlaying(void) = 0;
 	virtual void Start(void) = 0;
-    virtual void FastForward(void) = 0;
-    virtual void FastBack(void) = 0;
+    virtual void Fast(Boolean forward) = 0;
+    //virtual void FastForward(void) = 0;
+    //virtual void FastBack(void) = 0;
 	virtual void Stop(void) = 0;
 	virtual void Step(int amount) = 0;
 	
@@ -97,8 +99,9 @@ public:
 	
 	virtual bool IsPlaying(void);
 	virtual void Start(void);
-    virtual void FastForward(void);
-    virtual void FastBack(void);
+    virtual void Fast(Boolean forward);
+    //virtual void FastForward(void);
+    //virtual void FastBack(void);
 	virtual void Stop(void);
 	virtual void Step(int amount);
 	
@@ -591,7 +594,18 @@ void MCQTKitPlayer::Start(void)
 	[m_movie setRate: 1.0];
 }
 
+void MCQTKitPlayer::Fast(Boolean forward)
+{
+    float t_rate;
+    if (forward)
+        t_rate = FAST_RATE;
+    else
+        t_rate = -FAST_RATE;
+    
+	[m_movie setRate: t_rate];
+}
 
+/*
 void MCQTKitPlayer::FastForward(void)
 {
 	[m_movie setRate: 50.0];
@@ -601,6 +615,7 @@ void MCQTKitPlayer::FastBack(void)
 {
 	[m_movie setRate: -50.0];
 }
+*/
 
 void MCQTKitPlayer::Stop(void)
 {
@@ -1012,7 +1027,12 @@ void MCPlatformStartPlayer(MCPlatformPlayerRef player)
 	player -> Start();
 }
 
+void MCPlatformFastPlayer(MCPlatformPlayerRef player, Boolean forward)
+{
+	player -> Fast(forward);
+}
 
+/*
 void MCPlatformFastForwardPlayer(MCPlatformPlayerRef player)
 {
 	player -> FastForward();
@@ -1022,6 +1042,7 @@ void MCPlatformFastBackPlayer(MCPlatformPlayerRef player)
 {
 	player -> FastBack();
 }
+*/
 
 void MCPlatformStopPlayer(MCPlatformPlayerRef player)
 {

@@ -69,6 +69,7 @@ static const char *ppmediastrings[] =
 };
 
 #define CONTROLLER_HEIGHT 16
+#define FAST_RATE 50
 
 enum
 {
@@ -1161,7 +1162,16 @@ void MCPlayer::playstepforward()
 		MCPlatformStepPlayer(m_platform_player, 1);
 }
 
+void MCPlayer::playfast(Boolean forward)
+{
+	if (!getstate(CS_PREPARED))
+		return;
+    
+	if (m_platform_player != nil)
+		MCPlatformFastPlayer(m_platform_player, forward);
+}
 
+/*
 void MCPlayer::playfastforward()
 {
 	if (!getstate(CS_PREPARED))
@@ -1179,6 +1189,7 @@ void MCPlayer::playfastback()
 	if (m_platform_player != nil)
 		MCPlatformFastBackPlayer(m_platform_player);
 }
+*/
 
 void MCPlayer::playstepback()
 {
@@ -1846,7 +1857,8 @@ void MCPlayer::handle_mstilldown(int p_which)
                 if (t_current_time > t_duration)
                     t_current_time = t_duration;
                 
-                playfastforward();
+                //playfastforward();
+                playfast(True);
             }
             playpause(t_was_paused);
         }
@@ -1865,7 +1877,8 @@ void MCPlayer::handle_mstilldown(int p_which)
                 if (t_current_time < 0.0)
                     t_current_time = 0.0;
                 
-                playfastback();
+                //playfastback();
+                playfast(False);
             }
             
             playpause(t_was_paused);
