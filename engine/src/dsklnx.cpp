@@ -1725,6 +1725,7 @@ public:
             t_fptr = fdopen(p_fd, IO_READ_MODE);
             break;
         case kMCOpenFileModeWrite:
+        case kMCOpenFileModeExecutableWrite:
             t_fptr = fdopen(p_fd, IO_WRITE_MODE);
             break;
         case kMCOpenFileModeUpdate:
@@ -1751,7 +1752,7 @@ public:
 
         if (p_mode == kMCOpenFileModeRead)
             t_fptr = fopen(*t_path_sys, IO_READ_MODE);
-        else if (p_mode == kMCOpenFileModeWrite)
+        else if (p_mode == kMCOpenFileModeWrite || p_mode == kMCOpenFileModeExecutableWrite)
             t_fptr = fopen(*t_path_sys, IO_WRITE_MODE);
         else if (p_mode == kMCOpenFileModeUpdate)
             t_fptr = fopen(*t_path_sys, IO_UPDATE_MODE);

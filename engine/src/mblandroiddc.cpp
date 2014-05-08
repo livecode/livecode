@@ -2364,7 +2364,7 @@ bool MCAndroidLoadDeviceConfiguration()
 
 	if (t_success)
 	{
-		t_filehandle = MCS_open(*t_config_file_path, kMCSOpenFileModeRead, false, false, 0);
+        t_filehandle = MCS_open(*t_config_file_path, kMCOpenFileModeRead, false, false, 0);
 		t_success = t_filehandle != NULL;
 	}
 
