@@ -68,7 +68,8 @@ static const char *ppmediastrings[] =
 	"flash"
 };
 
-#define CONTROLLER_HEIGHT 16
+#define CONTROLLER_HEIGHT 20
+#define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 4
 #define FAST_RATE 50
 
 enum
@@ -941,7 +942,7 @@ void MCPlayer::setcurtime(uint4 newtime)
 	if (m_platform_player != nil)
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &newtime);
 }
-
+/*
 void MCPlayer::setselection()
 {
 	if (m_platform_player != nil)
@@ -955,6 +956,20 @@ void MCPlayer::setselection()
 			et = endtime;
 		}
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+	}
+}
+*/
+void MCPlayer::setselection()
+{
+    if (m_platform_player != nil)
+	{
+		if (starttime == MAXUINT4 && endtime == MAXUINT4)
+        {
+            starttime = 0;
+            endtime = getduration();
+        }
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
 	}
 }
@@ -1466,6 +1481,8 @@ void MCPlayer::selectionchanged(void)
 {
     MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
     MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+    
+    redrawcontroller();
     timer(MCM_selection_changed, nil);
 }
 
@@ -1651,6 +1668,12 @@ void MCPlayer::drawcontroller(MCDC *dc)
     drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb));
     drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartScrubBack));
     drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartScrubForward));
+    
+    if (getflag(F_SHOW_SELECTION))
+    {
+        drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionStart));
+        drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionFinish));
+    }
 
     
     
@@ -1667,15 +1690,21 @@ int MCPlayer::hittestcontroller(int x, int y)
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolume), x, y))
         return kMCPlayerControllerPartVolume;
 
-    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartWell), x, y))
-        return kMCPlayerControllerPartWell;
-
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartScrubBack), x, y))
         return kMCPlayerControllerPartScrubBack;
 
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartScrubForward), x, y))
         return kMCPlayerControllerPartScrubForward;
+    
+    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionStart), x, y))
+        return kMCPlayerControllerPartSelectionStart;
+    
+    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionFinish), x, y))
+        return kMCPlayerControllerPartSelectionFinish;
 
+    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartWell), x, y))
+        return kMCPlayerControllerPartWell;
+    
     else
         return kMCPlayerControllerPartUnknown;
 }
@@ -1732,18 +1761,54 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             int t_thumb_left;
             t_thumb_left = t_active_well_width * t_current_time / t_duration;
             
-            return MCRectangleMake(t_well_rect . x + t_thumb_left, t_well_rect . y, CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
+            return MCRectangleMake(t_well_rect . x + t_thumb_left, t_well_rect . y, CONTROLLER_HEIGHT, CONTROLLER_HEIGHT / 2);
         }
-        break;
+            break;
         
         case kMCPlayerControllerPartWell:
-            return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT, p_rect . y, p_rect . width - 4 * CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
+            return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT + SELECTION_RECT_WIDTH, p_rect . y + CONTROLLER_HEIGHT / 4, p_rect . width - 4 * CONTROLLER_HEIGHT - 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT / 2);
           
         case kMCPlayerControllerPartScrubBack:
             return MCRectangleMake(p_rect . x + p_rect . width - 2 * CONTROLLER_HEIGHT, p_rect . y, CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
             
         case kMCPlayerControllerPartScrubForward:
             return MCRectangleMake(p_rect . x + p_rect . width - CONTROLLER_HEIGHT, p_rect . y, CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
+            
+        case kMCPlayerControllerPartSelectionStart:
+        {
+            uint32_t t_start_time, t_duration;
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_start_time);
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            
+            MCRectangle t_well_rect;
+            t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
+            
+            int t_active_well_width;
+            t_active_well_width = t_well_rect . width - CONTROLLER_HEIGHT;
+            
+            int t_selection_start_left;
+            t_selection_start_left = t_active_well_width * t_start_time / t_duration;
+            
+            return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y - CONTROLLER_HEIGHT / 4, SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT);
+        }
+            
+        case kMCPlayerControllerPartSelectionFinish:
+        {
+            uint32_t t_finish_time, t_duration;
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_finish_time);
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            
+            MCRectangle t_well_rect;
+            t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
+            
+            
+            int t_selection_finish_left;
+            t_selection_finish_left = t_well_rect . width * t_finish_time / t_duration;
+            
+            return MCRectangleMake(t_well_rect . x + t_selection_finish_left, t_well_rect . y - CONTROLLER_HEIGHT / 4, SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT);
+        }
+            break;
+            
         default:
             break;
     }
@@ -1818,12 +1883,14 @@ void MCPlayer::handle_mdown(int p_which)
 
 void MCPlayer::handle_mfocus(int x, int y)
 {
-    if (state & CS_MFOCUSED)
-    {
+    
         switch(hittestcontroller(mx, my))
         {
+                
             case kMCPlayerControllerPartWell:
             {
+                if (state & CS_MFOCUSED)
+                {
                 MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
                 
                 uint32_t t_new_time, t_duration;
@@ -1831,13 +1898,45 @@ void MCPlayer::handle_mfocus(int x, int y)
                 
                 t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
                 setcurtime(t_new_time);
+                }
+            }
+                break;
+                
+                
+            case kMCPlayerControllerPartSelectionStart:
+            {
+                //MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
+                MCRectangle t_part_well_rect = MCRectangleMake(getcontrollerrect() . x  + 2 * CONTROLLER_HEIGHT, getcontrollerrect() . y, getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell) . width + 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT);
+                
+                uint32_t t_new_start_time, t_duration;
+                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+                
+                t_new_start_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+                //setstarttime(t_new_start_time);
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_new_start_time);
+                
+            }
+                break;
+                
+            case kMCPlayerControllerPartSelectionFinish:
+            {
+                //MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
+                MCRectangle t_part_well_rect = MCRectangleMake(getcontrollerrect() . x  + 2 * CONTROLLER_HEIGHT, getcontrollerrect() . y, getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell) . width + 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT);
+                
+                uint32_t t_new_finish_time, t_duration;
+                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+                
+                t_new_finish_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+                //setendtime(t_new_finish_time);
+                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_new_finish_time);
+                
             }
                 break;
                 
             default:
                 break;
         }
-    }
+    
 }
 
 void MCPlayer::handle_mstilldown(int p_which)
