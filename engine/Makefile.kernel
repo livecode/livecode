@@ -30,6 +30,7 @@ SOURCES=\
 	scriptpt.cpp \
 	scrolbar.cpp \
 	scrollbardraw.cpp \
+	segment.cpp \
 	sellst.cpp \
 	stack.cpp \
 	stack2.cpp \
