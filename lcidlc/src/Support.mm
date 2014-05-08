@@ -584,7 +584,7 @@ static LCError LCValueArrayFromObjcDictionary(MCVariableRef var, NSDictionary *p
 	t_pool = [[NSAutoreleasePool alloc] init];
 #ifndef __OBJC2__
 	NSEnumerator *t_enumerator;
-	t_enumerator = [p_src objectEnumerator];
+	t_enumerator = [p_src keyEnumerator];
 	for(;;)
 	{
 		id t_key;
