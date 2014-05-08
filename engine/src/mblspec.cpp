@@ -677,7 +677,7 @@ void MCS_downloadurl(MCObject *p_target, MCStringRef p_url, MCStringRef p_file)
 	IO_handle t_output = nil;
 	MCSDownloadUrlState t_state;
 	
-	t_output = MCS_open(p_file, kMCSOpenFileModeWrite, False, False, 0);
+	t_output = MCS_open(p_file, kMCOpenFileModeWrite, False, False, 0);
 	if (t_output == nil)
 	{
 		MCresult -> sets("can't open that file");

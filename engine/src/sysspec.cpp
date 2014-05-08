@@ -996,13 +996,13 @@ IO_handle MCS_open(const char *p_path, const char *p_mode, Boolean p_map, Boolea
     
     uint32_t t_mode;
     if (strequal(p_mode, IO_READ_MODE))
-        t_mode = kMCSystemFileModeRead;
+        t_mode = kMCOpenFileModeRead;
     else if (strequal(p_mode, IO_WRITE_MODE))
-        t_mode = kMCSystemFileModeWrite;
+        t_mode = kMCOpenFileModeWrite;
     else if (strequal(p_mode, IO_UPDATE_MODE))
-        t_mode = kMCSystemFileModeUpdate;
+        t_mode = kMCOpenFileModeUpdate;
     else if (strequal(p_mode, IO_APPEND_MODE))
-        t_mode = kMCSystemFileModeAppend;
+        t_mode = kMCOpenFileModeAppend;
     
     MCSystemFileHandle *t_handle;
     if (!p_driver)
@@ -1052,11 +1052,11 @@ IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_
 	if (t_handle == NULL)
 		return NULL;
 #ifdef OLD_IO_HANDLE
-    if (p_mode == kMCSystemFileModeAppend)
+    if (p_mode == kMCOpenFileModeAppend)
         t_handle -> flags |= IO_SEEKED;
 #endif
 
-    if (p_mode == kMCSystemFileModeAppend)
+    if (p_mode == kMCOpenFileModeAppend)
         t_handle -> Seek(0, kMCSystemFileSeekEnd);
     else if (p_offset > 0)
         t_handle -> Seek(p_offset, kMCSystemFileSeekSet);
@@ -1070,13 +1070,13 @@ void MCS_close(IO_handle &x_stream)
 }
 
 // Inspects the BOM of a text file to retrieve its encoding
-MCSFileEncodingType MCS_resolve_BOM(IO_handle x_stream)
+MCFileEncodingType MCS_resolve_BOM(IO_handle x_stream)
 {
     uint1 t_BOM[3];
     int64_t t_size;
     uint32_t t_size_read;
     uint32_t t_position;
-    MCSFileEncodingType t_encoding;
+    MCFileEncodingType t_encoding;
     t_encoding = kMCFileEncodingNative;
 
     t_size = x_stream -> GetFileSize();
@@ -1154,7 +1154,7 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
         return false;
 	
 	IO_handle t_file;
-	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeRead, false);
+    t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCOpenFileModeRead, false);
 	
 	if (t_file == NULL)
 	{
@@ -1174,7 +1174,7 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 
     if (t_success)
     {
-        MCSFileEncodingType t_file_encoding;
+        MCFileEncodingType t_file_encoding;
         MCAutoStringRef t_text;
         uindex_t t_bom_size;
 
@@ -1225,7 +1225,7 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
         return false;
 	
 	IO_handle t_file;
-	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeRead, false);
+    t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCOpenFileModeRead, false);
 	
 	if (t_file == NULL)
 	{
@@ -1274,7 +1274,8 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
         return false;
 	
 	IO_handle t_file;
-	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeWrite, false);
+    // SN-2014-05-08 [[ Bug 12192 ]] Files created with 'url' should have the executable permission
+    t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCOpenFileModeExecutableWrite, false);
 	
 	if (t_file == NULL)
 	{
@@ -1314,7 +1315,8 @@ bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
         return false;
 	
 	IO_handle t_file;
-	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeWrite, false);
+    // SN-2014-05-08 [[ Bug 12192 ]] Files created with 'url' should have the executable permission
+    t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCOpenFileModeExecutableWrite, false);
 	
 	if (t_file == NULL)
 	{

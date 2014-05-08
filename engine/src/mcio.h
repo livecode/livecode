@@ -47,16 +47,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define ENV_SEPARATOR ':'
 #endif
 
-enum MCSOpenFileMode
+enum MCOpenFileMode
 {
-	kMCSOpenFileModeRead,
-	kMCSOpenFileModeWrite,
-	kMCSOpenFileModeUpdate,
-	kMCSOpenFileModeAppend,
-    kMCSOpenFileModeCreate
+    kMCOpenFileModeRead,
+    kMCOpenFileModeWrite,
+    kMCOpenFileModeUpdate,
+    kMCOpenFileModeAppend,
+    kMCOpenFileModeCreate,
+    // [[ Bug 12192 ]] Need a specific mode for Linux, to enable the creation
+    // of an executable file from MCS_save(text|binary)file instead of 0664 permission
+    kMCOpenFileModeExecutableWrite
 };
 
-enum MCSFileEncodingType
+enum MCFileEncodingType
 {
     kMCFileEncodingText,
     kMCFileEncodingNative,
@@ -107,7 +110,7 @@ extern IO_stat IO_write_uint2or4(uint4 dest, IO_handle stream);
 
 extern void IO_iso_to_mac(char *sptr, uint4 len);
 extern void IO_mac_to_iso(char *sptr, uint4 len);
-extern MCStringEncoding MCS_file_to_string_encoding(MCSFileEncodingType p_encoding);
+extern MCStringEncoding MCS_file_to_string_encoding(MCFileEncodingType p_encoding);
 
 extern IO_stat IO_read_mccolor(MCColor& r_color, IO_handle stream);
 extern IO_stat IO_write_mccolor(const MCColor& color, IO_handle stream);
@@ -184,7 +187,7 @@ extern IO_handle MCS_deploy_open(MCStringRef path, intenum_t p_mode);
 /* LEGACY */ extern IO_handle MCS_open(const char *path, const char *mode, Boolean map, Boolean driver, uint4 offset);
 extern IO_handle MCS_open(MCStringRef path, intenum_t mode, Boolean map, Boolean driver, uint4 offset);
 extern void MCS_close(IO_handle &stream);
-extern MCSFileEncodingType MCS_resolve_BOM(IO_handle x_stream);
+extern MCFileEncodingType MCS_resolve_BOM(IO_handle x_stream);
 
 ///* LEGACY */ extern IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream);
 extern IO_stat MCS_readfixed(void *p_ptr, uint32_t p_byte_size, IO_handle p_stream);

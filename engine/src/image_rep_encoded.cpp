@@ -159,7 +159,7 @@ bool MCReferencedImageRep::GetDataStream(IO_handle &r_stream)
 {
 	IO_handle t_stream = nil;
 	if (MCSecureModeCanAccessDisk())
-		t_stream = MCS_open(m_file_name, kMCSOpenFileModeRead, false, false, 0);
+		t_stream = MCS_open(m_file_name, kMCOpenFileModeRead, false, false, 0);
 	
 	// MW-2013-09-25: [[ Bug 10983 ]] Only ever try to load the rep as a url once.
 	if (t_stream == nil && !m_url_load_attempted)

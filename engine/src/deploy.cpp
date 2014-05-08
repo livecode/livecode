@@ -215,13 +215,13 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 	// Open the stackfile.
 	MCDeployFileRef t_stackfile;
 	t_stackfile = NULL;
-	if (t_success && !MCDeployFileOpen(p_params . stackfile, kMCSOpenFileModeRead, t_stackfile))
+	if (t_success && !MCDeployFileOpen(p_params . stackfile, kMCOpenFileModeRead, t_stackfile))
 		t_success = MCDeployThrow(kMCDeployErrorNoStackfile);
 
 	// Open the spill file, if required
 	MCDeployFileRef t_spill;
 	t_spill = NULL;
-	if (t_success && !MCStringIsEmpty(p_params . spill) && !MCDeployFileOpen(p_params . spill, kMCSOpenFileModeCreate, t_spill))
+	if (t_success && !MCStringIsEmpty(p_params . spill) && !MCDeployFileOpen(p_params . spill, kMCOpenFileModeCreate, t_spill))
 		t_success = MCDeployThrow(kMCDeployErrorNoSpill);
 
 	// First create our deployment capsule
@@ -257,7 +257,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 		{
 			MCValueRef t_val;
             /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.auxillary_stackfiles, i + 1, t_val);
-			if (t_success && !MCDeployFileOpen((MCStringRef)t_val, kMCSOpenFileModeRead, t_aux_stackfiles[i]))
+			if (t_success && !MCDeployFileOpen((MCStringRef)t_val, kMCOpenFileModeRead, t_aux_stackfiles[i]))
 				t_success = MCDeployThrow(kMCDeployErrorNoAuxStackfile);
 			if (t_success)
 				t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeAuxillaryStack, t_aux_stackfiles[i]);
@@ -350,7 +350,7 @@ bool MCDeployWritePayload(const MCDeployParameters& p_params, bool p_to_network,
 	// First try to open the payload file
 	MCDeployFileRef t_payload;
 	t_payload = nil;
-	if (t_success && !MCDeployFileOpen(p_params . payload, kMCSOpenFileModeRead, t_payload))
+	if (t_success && !MCDeployFileOpen(p_params . payload, kMCOpenFileModeRead, t_payload))
 		t_success = MCDeployThrow(kMCDeployErrorNoPayload);
 
 	// Next measure the file to find out how big it is

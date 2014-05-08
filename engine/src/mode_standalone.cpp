@@ -330,7 +330,7 @@ IO_stat MCDispatch::startup(void)
         MCAutoStringRef t_dir;
         /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_dir);
         /* UNCHECKED */ MCStringFormat(&t_path, "%@/iphone_test.livecode", *t_dir);
-        t_stream = MCS_open(*t_path, kMCSOpenFileModeRead, False, False, 0);
+        t_stream = MCS_open(*t_path, kMCOpenFileModeRead, False, False, 0);
 #endif
 		
 		if (t_stream == NULL)
@@ -466,7 +466,7 @@ IO_stat MCDispatch::startup(void)
     {
         MCStack *t_stack;
         IO_handle t_stream;
-        t_stream = MCS_open(*t_env, kMCSystemFileModeRead, False, False, 0);
+        t_stream = MCS_open(*t_env, kMCOpenFileModeRead, False, False, 0);
 
 		if (t_stream == nil || MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
 		{
