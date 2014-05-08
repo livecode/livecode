@@ -216,6 +216,9 @@
 /* Begin PBXProject section */
 		4D57DF2A1338F1280044FFEC /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0510;
+			};
 			buildConfigurationList = 4D57DF2D1338F1280044FFEC /* Build configuration list for PBXProject "lcidlc" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -325,6 +328,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D99EA321363A8E20056938B /* Debug.xcconfig */;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Debug;
 		};
@@ -332,7 +337,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D3B10121367E35D00E00C1E /* Release.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 			};
 			name = Release;
 		};
@@ -340,9 +344,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_VERSION = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				PRODUCT_NAME = lcidlc;
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -352,7 +357,7 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				PRODUCT_NAME = lcidlc;
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};

@@ -608,7 +608,7 @@ static LCError LCValueArrayFromObjcDictionary(MCVariableRef var, NSDictionary *p
 		
 		MCVariableRef t_value;
 		if (t_error == kLCErrorNone)
-			t_error = (LCError)s_interface -> variable_lookup_key(var, kMCOptionAsCString, (void *)t_key_cstring, true, &t_value);
+			t_error = (LCError)s_interface -> variable_lookup_key(var, kMCOptionAsCString, (void *)&t_key_cstring, true, &t_value);
 		
 		if (t_error == kLCErrorNone)
 			t_error = LCValueArrayValueFromObjcValue(t_value, [p_src objectForKey: t_key]);
