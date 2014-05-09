@@ -76,6 +76,8 @@ enum
     kMCPlayerControllerPartUnknown,
     
     kMCPlayerControllerPartVolume,
+    kMCPlayerControllerPartVolumeBar,
+    kMCPlayerControllerPartVolumeSelector,
     kMCPlayerControllerPartPlay,
     kMCPlayerControllerPartScrubBack,
     kMCPlayerControllerPartScrubForward,
@@ -1709,7 +1711,11 @@ void MCPlayer::drawcontroller(MCDC *dc)
         drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionFinish));
     }
 
-    
+    if (getflag(F_SHOW_VOLUME))
+    {
+        drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolumeBar));
+        drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolumeSelector));
+    }
     
 }
 
@@ -1738,6 +1744,9 @@ int MCPlayer::hittestcontroller(int x, int y)
 
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartWell), x, y))
         return kMCPlayerControllerPartWell;
+    
+    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolumeBar), x, y))
+        return kMCPlayerControllerPartVolumeBar;
     
     else
         return kMCPlayerControllerPartUnknown;
@@ -1842,7 +1851,16 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             return MCRectangleMake(t_well_rect . x + t_selection_finish_left, t_well_rect . y - CONTROLLER_HEIGHT / 4, SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT);
         }
             break;
-            
+          
+        case kMCPlayerControllerPartVolumeBar:
+            return MCRectangleMake(p_rect . x , p_rect . y - 2 * CONTROLLER_HEIGHT, CONTROLLER_HEIGHT, 2 * CONTROLLER_HEIGHT);
+
+        case kMCPlayerControllerPartVolumeSelector:
+        {
+            int32_t t_height = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar) . height;
+            return MCRectangleMake(p_rect . x , p_rect . y - (t_height - SELECTION_RECT_WIDTH) * loudness / 100 - SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT, SELECTION_RECT_WIDTH);
+        }
+            break;
         default:
             break;
     }
@@ -1871,6 +1889,31 @@ void MCPlayer::handle_mdown(int p_which)
                 playstart(nil);
             break;
         case kMCPlayerControllerPartVolume:
+        {
+            if (!getflag(F_SHOW_VOLUME))
+                setflag(True, F_SHOW_VOLUME);
+            else
+                setflag(False, F_SHOW_VOLUME);
+            layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar));
+        }
+            break;
+            
+        case kMCPlayerControllerPartVolumeBar:
+        {
+            MCRectangle t_part_volume_selector_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeSelector);
+            int32_t t_new_volume, t_height;
+            
+            t_height = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar) . height;
+            
+            
+            t_new_volume = (getcontrollerrect() . y - my - SELECTION_RECT_WIDTH) * 100 / (t_height - SELECTION_RECT_WIDTH);
+            loudness = t_new_volume;
+            
+            setloudness();
+            
+            layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar));
+            layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeSelector));
+        }
             break;
         case kMCPlayerControllerPartWell:
         {
@@ -1917,14 +1960,13 @@ void MCPlayer::handle_mdown(int p_which)
 
 void MCPlayer::handle_mfocus(int x, int y)
 {
-    
+    if (state & CS_MFOCUSED)
+    {
         switch(hittestcontroller(mx, my))
         {
                 
             case kMCPlayerControllerPartWell:
             {
-                if (state & CS_MFOCUSED)
-                {
                 MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
                 
                 uint32_t t_new_time, t_duration;
@@ -1932,7 +1974,6 @@ void MCPlayer::handle_mfocus(int x, int y)
                 
                 t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
                 setcurtime(t_new_time);
-                }
             }
                 break;
                 
@@ -1970,6 +2011,7 @@ void MCPlayer::handle_mfocus(int x, int y)
             default:
                 break;
         }
+    }
     
 }
 
