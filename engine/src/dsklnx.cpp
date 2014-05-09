@@ -701,7 +701,7 @@ public:
         }
 
         r_read = offset + nread;
-        return stat;
+        return true;
     }
 
     virtual bool Write(const void *p_buffer, uint32_t p_length)
