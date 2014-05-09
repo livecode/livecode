@@ -70,7 +70,6 @@ static const char *ppmediastrings[] =
 
 #define CONTROLLER_HEIGHT 20
 #define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 4
-#define FAST_RATE 50
 
 enum
 {
@@ -179,6 +178,42 @@ void MCPlayer::close()
 
 Boolean MCPlayer::kdown(const char *string, KeySym key)
 {
+    if (state & CS_PREPARED)
+    {
+        switch (key)
+        {
+            case XK_Return:
+                playpause(!ispaused());
+                break;
+            case XK_space:
+                playpause(!ispaused());
+                break;
+            case XK_Right:
+            {
+                if(ispaused())
+                    playstepforward();
+                else
+                {
+                    playstepforward();
+                    playpause(!ispaused());
+                }
+            }
+                break;
+            case XK_Left:
+            {
+                if(ispaused())
+                    playstepback();
+                else
+                {
+                    playstepback();
+                    playpause(!ispaused());
+                }
+            }
+                break;
+            default:
+                break;
+        }
+    }
 	if (!(state & CS_NO_MESSAGES))
 		if (MCObject::kdown(string, key))
 			return True;
@@ -355,8 +390,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
             }
 
         }
-        
-	MCControl::timer(mptr, params);
+        MCControl::timer(mptr, params);
 }
 
 Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
@@ -1990,6 +2024,9 @@ void MCPlayer::handle_mstilldown(int p_which)
     
     
 }
+
+
+
 
 void MCPlayer::handle_mup(int p_which)
 {

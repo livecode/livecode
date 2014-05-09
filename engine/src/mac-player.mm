@@ -26,7 +26,7 @@
 #include "platform-internal.h"
 
 #include "mac-internal.h"
-#define FAST_RATE 50
+#define FAST_RATE 10
 
 ////////////////////////////////////////////////////////////////////////////////
 
