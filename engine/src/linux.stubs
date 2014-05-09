@@ -112,6 +112,10 @@ gdk libgdk-x11-2.0.so.0
 	gdk_gc_set_colormap: (pointer, pointer) -> ()
 	gdk_gc_set_rgb_fg_color: (pointer, pointer) -> ()
 	gdk_rectangle_intersect: (pointer, pointer, pointer) -> (integer)
+	gdk_window_new: (pointer, pointer, integer) -> (pointer)
+	gdk_visual_get_system: () -> (pointer)
+	gdk_visual_get_best: () -> (pointer)
+	gdk_init: (integer, pointer) -> ()
 
 gtk libgtk-x11-2.0.so.0
 	#@ gtk_major_version

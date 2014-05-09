@@ -53,6 +53,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "license.h"
 #include "revbuild.h"
 
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
+
 static uint2 calldepth;
 static uint2 nwait;
 
@@ -128,10 +131,10 @@ void MCStack::realize()
 	if (MCModeMakeLocalWindows())
 	{
 		MCScreenDC *screen = (MCScreenDC *)MCscreen;
-		XSetWindowAttributes xswa;
-		unsigned long xswamask = CWBorderPixel | CWColormap;
-		xswa.border_pixel = 0;
-		xswa.colormap = screen->getcmap();
+		//XSetWindowAttributes xswa;
+		//unsigned long xswamask = CWBorderPixel | CWColormap;
+		//xswa.border_pixel = 0;
+		//xswa.colormap = screen->getcmap();
 
 		// IM-2013-10-08: [[ FullscreenMode ]] Don't change stack rect if fullscreen
 		/* CODE DELETED */
@@ -145,10 +148,38 @@ void MCStack::realize()
 		if (t_rect.height == 0)
 			t_rect.height = MCminsize << 3;
 		
-		window = XCreateWindow(MCdpy, screen->getroot(), t_rect.x, t_rect.y,
-							   t_rect.width, t_rect.height,
-							   0, screen->getrealdepth(), InputOutput,
-							   screen->getvisual(), xswamask, &xswa);
+        // Ugly hack
+        static bool gdk_inited = false;
+        if (!gdk_inited)
+        {
+            gdk_init(0, NULL);
+            gdk_inited = true;
+        }
+        
+        GdkWindowAttr gdkwa;
+        guint gdk_valid_wa;
+        gdk_valid_wa = GDK_WA_X|GDK_WA_Y;
+        gdkwa.x = t_rect.x;
+        gdkwa.y = t_rect.y;
+        gdkwa.width = t_rect.width;
+        gdkwa.height = t_rect.height;
+        gdkwa.wclass = GDK_INPUT_OUTPUT;
+        gdkwa.window_type = GDK_WINDOW_TOPLEVEL;
+        gdkwa.visual = gdk_visual_get_best();
+        gdkwa.event_mask = 0;
+        //gdkwa.event_mask = GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+            GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_POINTER_MOTION_MASK |
+            GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | GDK_VISIBILITY_NOTIFY_MASK |
+            GDK_FOCUS_CHANGE_MASK | GDK_STRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK;
+        
+        // TODO: set correct parent window
+        gdk_window = gdk_window_new(NULL, &gdkwa, gdk_valid_wa);
+        window = GDK_WINDOW_XID(gdk_window);
+        
+		//window = XCreateWindow(MCdpy, screen->getroot(), t_rect.x, t_rect.y,
+		//					   t_rect.width, t_rect.height,
+		//					   0, screen->getrealdepth(), InputOutput,
+		//					   screen->getvisual(), xswamask, &xswa);
 		
 		//XDND
 		xdnd_make_window_aware ( window ) ;
@@ -156,10 +187,10 @@ void MCStack::realize()
 			XSetTransientForHint(MCdpy, window, screen-> get_backdrop());
 
 		
-		XSelectInput(MCdpy, window,  ButtonPressMask | ButtonReleaseMask
-					 | EnterWindowMask | LeaveWindowMask | PointerMotionMask
-					 | KeyPressMask | KeyReleaseMask | ExposureMask
-					 | FocusChangeMask | StructureNotifyMask | PropertyChangeMask);
+		//XSelectInput(MCdpy, window,  ButtonPressMask | ButtonReleaseMask
+		//			 | EnterWindowMask | LeaveWindowMask | PointerMotionMask
+		//			 | KeyPressMask | KeyReleaseMask | ExposureMask
+		//			 | FocusChangeMask | StructureNotifyMask | PropertyChangeMask);
 		loadwindowshape();
 		if (m_window_shape != nil && m_window_shape -> is_sharp)
 			XShapeCombineMask(MCdpy,window, ShapeBounding, 0, 0, (Pixmap)m_window_shape -> handle, ShapeSet);

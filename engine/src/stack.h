@@ -17,6 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	STACK_H
 #define	STACK_H
 
+#ifdef _LINUX_DESKTOP
+#include <gdk/gdk.h>
+#endif
+
 #ifndef __MC_OBJECT__
 #include "object.h"
 #endif
@@ -128,6 +132,11 @@ class MCStack : public MCObject
 	friend class MCHccard;
 
 protected:
+    
+#ifdef _LINUX_DESKTOP
+    GdkWindow *gdk_window;       // GDK window object
+#endif
+    
 	Window window;
 	MCCursorRef cursor;
 	MCStack *substacks;
