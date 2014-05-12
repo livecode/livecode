@@ -158,6 +158,44 @@ MCTextFilter_DecodeUTF16::~MCTextFilter_DecodeUTF16()
     ;
 }
 
+codepoint_t MCTextFilter_DecodeNative::GetNextCodepoint()
+{
+    if (m_Reverse)
+        return MCUnicodeMapFromNative(m_Data[m_DataLength - m_ReadIndex - 1]);
+    
+    return MCUnicodeMapFromNative(m_Data[m_ReadIndex]);
+}
+
+bool MCTextFilter_DecodeNative::AdvanceCursor()
+{
+    return ++m_ReadIndex < m_DataLength;
+}
+
+bool MCTextFilter_DecodeNative::HasData() const
+{
+    return m_ReadIndex < m_DataLength;
+}
+
+void MCTextFilter_DecodeNative::MarkText()
+{
+    m_AcceptedIndex = m_ReadIndex;
+}
+
+uindex_t MCTextFilter_DecodeNative::GetMarkedLength() const
+{
+    return m_AcceptedIndex + 1;
+}
+
+MCTextFilter_DecodeNative::MCTextFilter_DecodeNative(const char_t *p_text, uindex_t p_length, bool p_from_end)
+: m_AcceptedIndex(-1), m_ReadIndex(0), m_Data(p_text), m_DataLength(p_length), m_Reverse(p_from_end)
+{
+    ;
+}
+
+MCTextFilter_DecodeNative::~MCTextFilter_DecodeNative()
+{
+    ;
+}
 
 codepoint_t MCTextFilter_SimpleCaseFold::GetNextCodepoint()
 {
@@ -418,7 +456,7 @@ MCTextFilter* MCTextFilterCreate(const void *p_data, uindex_t p_length, MCString
     if (p_encoding == kMCStringEncodingUTF16)
         t_chain = new MCTextFilter_DecodeUTF16(reinterpret_cast<const unichar_t*>(p_data), p_length, p_from_end);
     else
-        return nil;
+        t_chain = new MCTextFilter_DecodeNative(reinterpret_cast<const char_t*>(p_data), p_length, p_from_end);
     
     // Add filters based on the options given
     if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareFolded)
@@ -429,7 +467,7 @@ MCTextFilter* MCTextFilterCreate(const void *p_data, uindex_t p_length, MCString
         t_chain = t_filter;
     }
     
-    if (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareNonliteral)
+    if (p_encoding == kMCStringEncodingUTF16 && (p_options == kMCStringOptionCompareCaseless || p_options == kMCStringOptionCompareNonliteral))
     {
         MCTextFilter *t_filter;
         t_filter = new MCTextFilter_NormalizeNFC(p_from_end);

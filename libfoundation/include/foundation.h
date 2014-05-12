@@ -1738,6 +1738,8 @@ bool MCStringPad(MCStringRef string, uindex_t at, uindex_t count, MCStringRef va
 bool MCStringFindAndReplace(MCStringRef string, MCStringRef pattern, MCStringRef replacement, MCStringOptions options);
 bool MCStringFindAndReplaceChar(MCStringRef string, codepoint_t pattern, codepoint_t replacement, MCStringOptions options);
 
+bool MCStringWildcardMatch(MCStringRef source, MCRange source_range, MCStringRef pattern, MCStringOptions p_options);
+
 /////////
 
 // Append a formatted string to another string.

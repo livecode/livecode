@@ -2003,34 +2003,6 @@ bool MCStringsExecWildcardMatch(MCStringRef p_string, uindex_t p_string_offset, 
 }
 */
 
-bool MCStringsExecWildcardMatch(MCStringRef p_string, MCRange p_srange, MCStringRef p_pattern, MCStringOptions p_options)
-{
-    MCUnicodeCompareOption t_comparison;
-    switch (p_options)
-    {
-        case kMCStringOptionCompareExact:
-            t_comparison = kMCUnicodeCompareOptionExact;
-            break;
-            
-        case kMCStringOptionCompareNonliteral:
-            t_comparison = kMCUnicodeCompareOptionNormalised;
-            break;
-            
-        case kMCStringOptionCompareCaseless:
-            t_comparison = kMCUnicodeCompareOptionCaseless;
-            break;
-            
-        case kMCStringOptionCompareFolded:
-            t_comparison = kMCUnicodeCompareOptionFolded;
-            break;
-    }
-    
-    const unichar_t *sptr = MCStringGetCharPtr(p_string);
-    const unichar_t *pptr = MCStringGetCharPtr(p_pattern);
-
-    return MCUnicodeWildcardMatch(sptr + p_srange . offset, p_srange . length, pptr, MCStringGetLength(p_pattern), t_comparison);
-}
-
 bool MCWildcardMatcher::match(MCRange p_source_range)
 {
     if (native)
@@ -2042,7 +2014,7 @@ bool MCWildcardMatcher::match(MCRange p_source_range)
             return MCStringsWildcardMatchNative(t_source + p_source_range . offset, p_source_range . length, t_pattern, MCStringGetLength(pattern), (options == kMCStringOptionCompareExact || kMCStringOptionCompareNonliteral));
     }
 
-	return MCStringsExecWildcardMatch(source, p_source_range, pattern, options);
+	return MCStringWildcardMatch(source, p_source_range, pattern, options);
 }
 
 void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, bool p_without, MCStringRef p_delimiter, MCPatternMatcher *p_matcher, MCStringRef &r_result)

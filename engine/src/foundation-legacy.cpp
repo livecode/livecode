@@ -711,10 +711,10 @@ bool MCStringCreateWithOldString(const MCString& p_old_string, MCStringRef& r_st
 
 MCString MCStringGetOldString(MCStringRef p_string)
 {
-    if (MCStringIsNative(p_string))
-        return MCString((const char *)MCStringGetNativeCharPtr(p_string), MCStringGetLength(p_string));
+    if (!MCStringIsNative(p_string))
+        MCStringNativize(p_string);
     
-    return MCnullmcstring;
+    return MCString((const char *)MCStringGetNativeCharPtr(p_string), MCStringGetLength(p_string));
 }
 
 bool MCStringIsEqualToOldString(MCStringRef p_string, const MCString& p_oldstring, MCCompareOptions p_options)
@@ -1736,7 +1736,11 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 		case VF_STRING:
 			t_stat = ctxt -> stream -> WriteU32(MCStringGetLength(t_str_value));
 			if (t_stat == IO_NORMAL)
-				t_stat = ctxt -> stream -> Write(MCStringGetCString(t_str_value), MCStringGetLength(t_str_value));
+            {
+                MCAutoStringRefAsCString t_cstring;
+                t_cstring . Lock(t_str_value);
+				t_stat = ctxt -> stream -> Write(*t_cstring, strlen(*t_cstring));
+            }
 			break;
 		case VF_NUMBER:
 			t_stat = ctxt -> stream -> WriteFloat64(MCNumberFetchAsReal((MCNumberRef)p_value));
