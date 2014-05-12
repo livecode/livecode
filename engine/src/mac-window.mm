@@ -1096,7 +1096,9 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 //////////
 
-#if 0
+// MW-2014-05-12: [[ Bug 12383 ]] We need these handlers to ensure things are
+//   not disabled in menus when they have a standard tag.
+
 - (void)undo:(id)sender
 {
 	[self handleAction: @selector(undo:) with: sender];
@@ -1131,7 +1133,6 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 {
 	[self handleAction: @selector(delete:) with: sender];
 }
-#endif
 
 //////////
 
