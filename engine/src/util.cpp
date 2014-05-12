@@ -743,7 +743,9 @@ real8 MCU_strtor8(const char *&r_str, uint4 &r_len, int1 p_delim, Boolean &r_don
 
 /* WRAPPER */ bool MCU_stoi2(MCStringRef p_string, int2 &r_d)
 {
-	return True == MCU_stoi2(MCStringGetOldString(p_string), r_d);
+    MCAutoStringRefAsCString t_cstring;
+    t_cstring . Lock(p_string);
+	return True == MCU_stoi2(MCString(*t_cstring, strlen(*t_cstring)), r_d);
 }
 
 Boolean MCU_stoi2(const MCString &s, int2 &d)
@@ -759,7 +761,9 @@ Boolean MCU_stoi2(const MCString &s, int2 &d)
 
 /* WRAPPER */ bool MCU_stoui2(MCStringRef p_string, uint2 &r_d)
 {
-	return True == MCU_stoui2(MCStringGetOldString(p_string), r_d);
+    MCAutoStringRefAsCString t_cstring;
+    t_cstring . Lock(p_string);
+	return True == MCU_stoui2(MCString(*t_cstring, strlen(*t_cstring)), r_d);
 }
 
 Boolean MCU_stoui2(const MCString &s, uint2 &d)
@@ -789,7 +793,9 @@ Boolean MCU_stoi2x2(const MCString &s, int2 &d1, int2 &d2)
 
 /* WRAPPER */ bool MCU_stoi2x2(MCStringRef p_string, int16_t& r_d1, int16_t& r_d2)
 {
-	return True == MCU_stoi2x2(MCStringGetOldString(p_string), r_d1, r_d2);
+    MCAutoStringRefAsCString t_cstring;
+    t_cstring . Lock(p_string);
+	return True == MCU_stoi2x2(MCString(*t_cstring, strlen(*t_cstring)), r_d1, r_d2);
 }
 
 Boolean MCU_stoi2x4(const MCString &s, int2 &d1, int2 &d2, int2 &d3, int2 &d4)
@@ -808,12 +814,16 @@ Boolean MCU_stoi2x4(const MCString &s, int2 &d1, int2 &d2, int2 &d3, int2 &d4)
 
 /* WRAPPER */ bool MCU_stoi2x4(MCStringRef p_string, int16_t& r_d1, int16_t& r_d2, int16_t& r_d3, int16_t& r_d4)
 {
-	return True == MCU_stoi2x4(MCStringGetOldString(p_string), r_d1, r_d2, r_d3, r_d4);
+    MCAutoStringRefAsCString t_cstring;
+    t_cstring . Lock(p_string);
+	return True == MCU_stoi2x4(MCString(*t_cstring, strlen(*t_cstring)), r_d1, r_d2, r_d3, r_d4);
 }
 
 /* WRAPPER */ bool MCU_stoi4x4(MCStringRef p_string, int32_t& r_d1, int32_t& r_d2, int32_t& r_d3, int32_t& r_d4)
 {
-	return True == MCU_stoi4x4(MCStringGetOldString(p_string), r_d1, r_d2, r_d3, r_d4);
+    MCAutoStringRefAsCString t_cstring;
+    t_cstring . Lock(p_string);
+	return True == MCU_stoi4x4(MCString(*t_cstring, strlen(*t_cstring)), r_d1, r_d2, r_d3, r_d4);
 }
 
 Boolean MCU_stoi4x4(const MCString &s, int32_t &d1, int32_t &d2, int32_t &d3, int32_t &d4)
@@ -852,7 +862,9 @@ Boolean MCU_stoi4x2(const MCString &s, int32_t &d1, int32_t &d2)
 
 /* WRAPPER */ bool MCU_stoi4(MCStringRef p_string, int4& r_d)
 {
-    return True == MCU_stoi4(MCStringGetOldString(p_string), r_d);
+    MCAutoStringRefAsCString t_cstring;
+    t_cstring . Lock(p_string);
+	return True == MCU_stoi4(MCString(*t_cstring, strlen(*t_cstring)), r_d);
 }
 
 Boolean MCU_stoi4(const MCString &s, int4 &d)
@@ -867,7 +879,9 @@ Boolean MCU_stoi4(const MCString &s, int4 &d)
 }
 /* WRAPPER */ bool MCU_stoui4(MCStringRef p_string, uint4 &r_d)
 {
-	return True == MCU_stoui4(MCStringGetOldString(p_string), r_d);
+    MCAutoStringRefAsCString t_cstring;
+    t_cstring . Lock(p_string);
+	return True == MCU_stoui4(MCString(*t_cstring, strlen(*t_cstring)), r_d);
 }
 
 Boolean MCU_stoui4(const MCString &s, uint4 &d)
@@ -901,7 +915,11 @@ bool MCU_stoui4x2(MCStringRef p_string, uint4 &r_d1, uint4 &r_d2)
 {
 	Boolean t_condition;
 	bool t_success;
-	t_success = True == MCU_stob(MCStringGetOldString(p_string), t_condition);
+    
+    MCAutoStringRefAsCString t_cstring;
+    t_cstring . Lock(p_string);
+	t_success = True == MCU_stob(MCString(*t_cstring, strlen(*t_cstring)), t_condition);
+    
 	if (t_success)
 	{
 		r_condition = t_condition == True;

@@ -222,7 +222,7 @@ public:
         if (p_string == nil)
 			return false;
 		
-		if (MCStringGetCharPtr(p_string) == nil)
+		if (MCStringIsNative(p_string))
         {
             m_ref = nil;
             return MCStringConvertToWString(p_string, m_wstring);

@@ -122,6 +122,8 @@ const char *MCStringGetCString(MCStringRef p_string)
     if (p_string == nil)
         return nil;
     
+    MCStringNativize(p_string);
+    
 	const char *t_cstring;
 	t_cstring = (const char *)MCStringGetNativeCharPtr(p_string);
 	
@@ -1776,6 +1778,9 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
     if (MCStringIsEmpty(self) != MCStringIsEmpty(p_other))
         return false;
 
+    if (MCStringCantBeNative(self, p_options) != MCStringCantBeNative(p_other, p_options))
+        return false;
+    
     if (MCStringIsNative(self) && MCStringIsNative(p_other))
     {
         if (MCStringGetLength(self) != MCStringGetLength(p_other))
@@ -3757,11 +3762,11 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
             split_find_end_of_element(t_sptr, t_to_end, self_native, t_echar, t_del_length, del_native, p_options, t_end_offset, t_found_del_length);
 			
 			MCAutoStringRef t_string;
-			if (!MCStringCopySubstring(self, MCRangeMake(t_offset, t_end_offset - t_offset), &t_string))
+			if (!MCStringCopySubstring(self, MCRangeMake(t_offset, t_end_offset), &t_string))
 				return false;
 
 			if (!MCArrayStoreValueAtIndex(*t_array, t_index, *t_string))
-				return false;
+				return false; 
 
 			if (t_end_offset + t_found_del_length >= t_to_end)
 				break;
@@ -3769,7 +3774,7 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 			t_index += 1;
             
             t_offset += t_end_offset + t_found_del_length;
-			t_sptr = (const char *)t_sptr + (self_native ? t_end_offset + t_found_del_length : (2 * t_end_offset + t_found_del_length));
+			t_sptr = (const char *)t_sptr + (self_native ? t_end_offset + t_found_del_length : 2 * (t_end_offset + t_found_del_length));
             t_to_end -= (t_end_offset + t_found_del_length);
 		}
 	}
@@ -3783,7 +3788,7 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
             split_find_end_of_element_and_key(t_sptr, t_to_end, self_native, t_echar, t_del_length, del_native, t_kchar, t_key_length, key_native, p_options, t_key_end, t_element_end, t_found_del_length, t_found_key_length);
 			
 			MCAutoStringRef t_key_string;
-			if (!MCStringCopySubstring(self, MCRangeMake(t_offset, t_key_end - t_offset), &t_key_string))
+			if (!MCStringCopySubstring(self, MCRangeMake(t_offset, t_key_end), &t_key_string))
 				return false;
             
             MCNewAutoNameRef t_key_name;
@@ -3804,7 +3809,7 @@ bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_d
 				break;
 
             t_offset += t_element_end + t_found_del_length;
-			t_sptr = (const char *)t_sptr + (self_native ? t_element_end + t_found_del_length : (2 * t_element_end + t_found_del_length));
+			t_sptr = (const char *)t_sptr + (self_native ? t_element_end + t_found_del_length : 2 * (t_element_end + t_found_del_length));
             t_to_end -= (t_element_end + t_found_del_length);
 		}
 	}

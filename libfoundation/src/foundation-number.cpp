@@ -115,17 +115,24 @@ compare_t MCNumberCompareTo(MCNumberRef self, MCNumberRef p_other_self)
 	return 0;
 }
 
-bool MCNumberParse(MCStringRef p_string, MCNumberRef &r_number)
+bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number)
 {
+    uindex_t length = MCStringGetLength(p_string);
+    if (offset > length)
+        offset = length;
+    
+    if (char_count > length - offset)
+        char_count = length - offset;
+    
     if (!MCStringIsNative(p_string))
-        return MCNumberParseUnicodeChars(MCStringGetCharPtr(p_string), MCStringGetLength(p_string), r_number);
+        return MCNumberParseUnicodeChars(MCStringGetCharPtr(p_string) + offset, MCStringGetLength(p_string), r_number);
 
     bool t_success;
     t_success = false;
 
-    const char* t_chars = (const char*)MCStringGetNativeCharPtr(p_string);
-
-    if (MCStringGetLength(p_string) > 2 &&
+    const char* t_chars = (const char*)MCStringGetNativeCharPtr(p_string) + offset;
+    
+    if (char_count > 2 &&
             t_chars[0] == '0' &&
             (t_chars[1] == 'x' || t_chars[1] == 'X'))
         t_success = MCNumberCreateWithInteger(strtoul(t_chars + 2, nil, 16), r_number);
@@ -148,6 +155,11 @@ bool MCNumberParse(MCStringRef p_string, MCNumberRef &r_number)
     }
 
     return t_success;
+}
+
+bool MCNumberParse(MCStringRef p_string, MCNumberRef &r_number)
+{
+    return MCNumberParseOffset(p_string, 0, MCStringGetLength(p_string), r_number);
 }
 
 bool MCNumberParseUnicodeChars(const unichar_t *p_chars, uindex_t p_char_count, MCNumberRef& r_number)
