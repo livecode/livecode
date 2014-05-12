@@ -601,7 +601,7 @@ static bool MCU_gettemplate(MCStringRef format, uindex_t &x_offset, unichar_t &c
         while (isdigit(MCStringGetCharAtIndex(format, x_offset + t_number_size)))
             t_number_size++;
 
-        if (MCNumberParseUnicodeChars(MCStringGetCharPtr(format) + x_offset, t_number_size, &t_number))
+        if (MCNumberParseOffset(format, x_offset, t_number_size, &t_number))
         {        
             count = MCNumberFetchAsUnsignedInteger(*t_number);
             x_offset += t_number_size;
@@ -1387,7 +1387,7 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
                         MCRange t_cu_range;
                         MCStringMapIndices(*t_param, kMCCharChunkTypeGrapheme, MCRangeMake(t_char_pos, 1), t_cu_range);
                         
-                        MCStringCreateWithChars(MCStringGetCharPtr(*t_param) + t_cu_range . offset, t_cu_range . length, t_char_substring);
+                        MCStringCopySubstring(*t_param, t_cu_range, t_char_substring);
                         
                         MCStringEncodeAndRelease(t_char_substring, t_encoding, false, &t_encoded_char);
                         

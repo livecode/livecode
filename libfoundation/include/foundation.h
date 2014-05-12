@@ -1198,6 +1198,7 @@ integer_t MCNumberFetchAsInteger(MCNumberRef number);
 uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef number);
 real64_t MCNumberFetchAsReal(MCNumberRef number);
 
+bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number);
 bool MCNumberParse(MCStringRef string, MCNumberRef& r_number);
 bool MCNumberParseUnicodeChars(const unichar_t *chars, uindex_t char_count, MCNumberRef& r_number);
 

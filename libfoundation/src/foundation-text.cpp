@@ -440,6 +440,9 @@ MCTextFilter_NormalizeNFC::~MCTextFilter_NormalizeNFC()
 
 MCTextFilter* MCTextFilterCreate(MCStringRef p_string, MCStringOptions p_options)
 {
+    if (MCStringIsNative(p_string))
+        return MCTextFilterCreate(MCStringGetNativeCharPtr(p_string), MCStringGetLength(p_string), kMCStringEncodingNative, p_options, false);
+    
     return MCTextFilterCreate(MCStringGetCharPtr(p_string), MCStringGetLength(p_string), kMCStringEncodingUTF16, p_options, false);
 }
 
