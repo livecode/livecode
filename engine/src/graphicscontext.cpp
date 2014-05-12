@@ -1157,9 +1157,6 @@ void MCGraphicsContext::draweps(real8 sx, real8 sy, int2 angle, real8 xscale, re
 
 void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy)
 {
-	MCGRaster t_raster;
-	t_raster = MCImageBitmapGetMCGRaster(p_image.bitmap, true);
-
 	MCGRectangle t_clip;
 	t_clip . origin . x = dx;
 	t_clip . origin . y = dy;
@@ -1169,8 +1166,8 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 	MCGRectangle t_dest;
 	t_dest.origin.x = dx - sx;
 	t_dest.origin.y = dy - sy;
-	t_dest.size.width = t_raster.width;
-	t_dest.size.height = t_raster.height;
+	t_dest.size.width = MCGImageGetWidth(p_image.image);
+	t_dest.size.height = MCGImageGetHeight(p_image.image);
 
 	MCGContextSave(m_gcontext);
 	MCGContextClipToRect(m_gcontext, t_clip);
@@ -1193,7 +1190,7 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 		MCGContextTranslateCTM(m_gcontext, -t_dest.origin.x, -t_dest.origin.y);
 	}
 
-	MCGContextDrawPixels(m_gcontext, t_raster, t_dest, p_image.filter);
+	MCGContextDrawImage(m_gcontext, p_image.image, t_dest, p_image.filter);
 	MCGContextRestore(m_gcontext);
 }
 

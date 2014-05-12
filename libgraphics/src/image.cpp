@@ -127,6 +127,23 @@ bool MCGImageGetRaster(MCGImageRef p_image, MCGRaster &r_raster)
 	return true;
 }
 
+bool MCGImageGetPixel(MCGImageRef p_image, uint32_t x, uint32_t y, uint32_t &r_pixel)
+{
+	MCGRaster t_raster;
+	if (!MCGImageGetRaster(p_image, t_raster) || x >= t_raster.width || y >= t_raster.height)
+		return false;
+
+	uint8_t* t_row_ptr;
+	t_row_ptr = ((uint8_t*)t_raster.pixels) + y * t_raster.stride;
+
+	if (t_raster.format == kMCGRasterFormat_A)
+		r_pixel = t_row_ptr[x];
+	else
+		r_pixel = ((uint32_t*)t_row_ptr)[x];
+
+	return true;
+}
+
 bool MCGImageCreateWithData(const void *p_bytes, uindex_t p_byte_count, MCGImageRef& r_image)
 {
 	// TODO: Implement
@@ -196,6 +213,41 @@ MCGSize MCGImageGetSize(MCGImageRef self)
 bool MCGImageIsOpaque(MCGImageRef self)
 {
 	return self != nil && self -> bitmap -> isOpaque();
+}
+
+bool MCGImageHasPartialTransparency(MCGImageRef self)
+{
+	if (self == nil)
+		return false;
+
+	if (self->bitmap->isOpaque())
+		return false;
+
+	MCGRaster t_raster;
+	/* UNCHECKED */ MCGImageGetRaster(self, t_raster);
+
+	if (t_raster.format == kMCGRasterFormat_A)
+		return true;
+
+	uint8_t *t_row_ptr;
+	t_row_ptr = (uint8_t*)t_raster.pixels;
+
+	for (uint32_t y = 0; y < t_raster.height; y++)
+	{
+		uint32_t *t_pixel_ptr;
+		t_pixel_ptr = (uint32_t*)t_row_ptr;
+		for (uint32_t x = 0; x < t_raster.width; x++)
+		{
+			uint8_t t_alpha;
+			t_alpha = MCGPixelGetNativeAlpha(*t_pixel_ptr++);
+			if (t_alpha > 0 && t_alpha < 255)
+				return true;
+		}
+
+		t_row_ptr += t_raster.stride;
+	}
+
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

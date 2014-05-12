@@ -1094,7 +1094,7 @@ void MCImage::resetimage()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCImageFreeFrames(MCImageFrame *p_frames, uindex_t p_count)
+void MCImageFreeFrames(MCBitmapFrame *p_frames, uindex_t p_count)
 {
 	if (p_frames != nil)
 	{

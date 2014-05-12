@@ -1320,11 +1320,7 @@ void MCPSMetaContext::printraster(const MCGRaster &p_raster, int16_t dx, int16_t
 void MCPSMetaContext::printimage(MCImageBitmap *p_image, int16_t dx, int16_t dy, real64_t xscale, real64_t yscale)
 {
 	MCGRaster t_raster;
-	t_raster.width = p_image->width;
-	t_raster.height = p_image->height;
-	t_raster.pixels = p_image->data;
-	t_raster.stride = p_image->stride;
-	t_raster.format = kMCGRasterFormat_xRGB;
+	t_raster = MCImageBitmapGetMCGRaster(p_image, true);
 	
 	printraster(t_raster, dx, dy, xscale, yscale);
 }

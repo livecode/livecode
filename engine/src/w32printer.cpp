@@ -52,7 +52,7 @@ extern void Windows_RenderMetaFile(HDC p_color_dc, HDC p_mask_dc, uint1 *p_data,
 extern void MCRemotePrintSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
 extern void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
 
-extern bool MCImageBitmapSplitHBITMAPWithMask(HDC p_dc, MCImageBitmap *p_bitmap, HBITMAP &r_bitmap, HBITMAP &r_mask);
+extern bool MCGImageSplitHBITMAPWithMask(HDC p_dc, MCGImageRef p_image, HBITMAP &r_bitmap, HBITMAP &r_mask);
 extern bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -893,11 +893,11 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			int32_t t_src_y = p_mark->image.dy - p_mark->image.sy;
 
 			DWORD t_err;
-			if (p_mark->image.descriptor.bitmap != nil)
+			if (p_mark->image.descriptor.image != nil)
 			{
-				/* UNCHECKED */ MCImageBitmapSplitHBITMAPWithMask(t_src_dc, p_mark->image.descriptor.bitmap, t_src_bitmap, t_src_mask);
-				t_src_width = p_mark->image.descriptor.bitmap->width;
-				t_src_height = p_mark->image.descriptor.bitmap->height;
+				/* UNCHECKED */ MCGImageSplitHBITMAPWithMask(t_src_dc, p_mark->image.descriptor.image, t_src_bitmap, t_src_mask);
+				t_src_width = MCGImageGetWidth(p_mark->image.descriptor.image);
+				t_src_height = MCGImageGetHeight(p_mark->image.descriptor.image);
 			}
 
 			if (!p_mark->image.descriptor.has_transform)

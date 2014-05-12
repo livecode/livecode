@@ -264,7 +264,8 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 			// Devices have to support unmasked images (otherwise we couldn't
 			// rasterize!).
 			bool t_mask, t_alpha;
-			t_mask = MCImageBitmapHasTransparency(p_mark -> image . descriptor . bitmap, t_alpha);
+			t_mask = !MCGImageIsOpaque(p_mark->image.descriptor.image);
+			t_alpha = t_mask && MCGImageHasPartialTransparency(p_mark->image.descriptor.image);
 
 			if (!t_mask)
 				return true;
@@ -494,23 +495,29 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 	}
 
 	uint2 t_img_width, t_img_height;
-	MCImageBitmap *t_img_bitmap = nil;
-	t_img_bitmap = p_mark -> image . descriptor . bitmap;
-	t_img_width = t_img_bitmap -> width;
-	t_img_height = t_img_bitmap -> height;
+	MCGRaster t_raster;
 
 	if (!m_execute_error)
 	{
+		if (!MCGImageGetRaster(p_mark->image.descriptor.image, t_raster))
+			m_execute_error = true;
+	}
+
+	if (!m_execute_error)
+	{
+		t_img_width = t_raster.width;
+		t_img_height = t_raster.height;
+
 		// Fill in the printer image info
 		MCCustomPrinterImage t_image;
 		if (t_image_type == kMCCustomPrinterImageNone)
 		{
 			bool t_mask, t_alpha;
-			t_mask = MCImageBitmapHasTransparency(t_img_bitmap, t_alpha);
-			t_image . type = t_alpha ? kMCCustomPrinterImageRawARGB : (t_mask ? kMCCustomPrinterImageRawMRGB : kMCCustomPrinterImageRawXRGB);
-			t_image . id = (uint32_t)(intptr_t)t_img_bitmap;
-			t_image . data = t_img_bitmap -> data;
-			t_image . data_size = t_img_bitmap -> stride * t_img_height;
+			t_mask = !MCGImageIsOpaque(p_mark->image.descriptor.image);
+			t_alpha = t_mask && MCGImageHasPartialTransparency(p_mark->image.descriptor.image);
+			t_image . id = (uint32_t)(intptr_t)p_mark->image.descriptor.image;
+			t_image . data = t_raster.pixels;
+			t_image . data_size = t_raster.stride * t_img_height;
 		}
 		else
 		{
