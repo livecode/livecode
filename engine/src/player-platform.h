@@ -52,6 +52,9 @@ class MCPlayer : public MCControl
     uindex_t m_callback_count;
     
     int m_grabbed_part;
+    double m_initial_rate;
+    Boolean m_was_paused;
+    Boolean m_inside;
 	
 public:
 	MCPlayer();
