@@ -2027,10 +2027,20 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
 		}
 		else if (p_pattern != NULL)
 		{
+			// IM-2014-05-13: [[ HiResPatterns ]] Need to check the combined context & pattern transform
+			// to prevent assertion failure when rendering with hi-dpi patterns
+			SkMatrix t_matrix;
+			t_matrix = self->layer->canvas->getTotalMatrix();
+
+			SkMatrix t_pattern_matrix;
+			MCGAffineTransformToSkMatrix(p_pattern->transform, t_pattern_matrix);
+
+			t_matrix.postConcat(t_pattern_matrix);
+
 			// MM-2014-03-12: [[ Bug 11892 ]] If we are not transforming the pattern, there's no need to apply any filtering.
 			//  Was causing issues in Skia with non null blend modes.
 			SkMatrix::TypeMask t_transform_type;
-			t_transform_type = self -> layer -> canvas -> getTotalMatrix() . getType();
+			t_transform_type = t_matrix . getType();
 			if (t_transform_type != SkMatrix::kIdentity_Mask && t_transform_type != SkMatrix::kTranslate_Mask)
 				t_filter = p_pattern -> filter;
 			t_success = MCGPatternToSkShader(p_pattern, t_shader);
