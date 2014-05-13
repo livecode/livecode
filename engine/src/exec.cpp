@@ -409,8 +409,9 @@ bool MCExecContext::ConvertToLegacyRectangle(MCValueRef p_value, MCRectangle& r_
 	{
 		r_rect . x = t_left;
 		r_rect . y = t_top;
-		r_rect . width = t_right - t_left;
-		r_rect . height = t_bottom - t_top;
+        // AL-2014-05-13: [[ Bug 12288 ]] Ensure width and height don't underflow.
+		r_rect . width = MCU_max(1, t_right - t_left);
+		r_rect . height = MCU_max(1, t_bottom - t_top);
     
 		return true;
 	}
