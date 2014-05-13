@@ -176,7 +176,7 @@ static bool s_lock_responder_change = false;
     bool m_signalled : 1;
 }
 
-- (id)initWithWindow: (MCMacPlatformWindow *)window;
+- (id)initWithPlatformWindow: (MCMacPlatformWindow *)window;
 
 - (MCMacPlatformWindow *)platformWindow;
 
@@ -259,7 +259,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
     return p_event;
 }
 
-- (id)initWithWindow: (MCMacPlatformWindow *)window
+- (id)initWithPlatformWindow: (MCMacPlatformWindow *)window
 {
     self = [super init];
     if (self == nil)
@@ -399,7 +399,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
         // MW-2014-04-08: [[ Bug 12087 ]] Launch a tracking thread so that we get
         //   continuous moveStack messages.
         MCWindowTrackingThread *t_thread;
-        t_thread = [[MCWindowTrackingThread alloc] initWithWindow: m_window];
+        t_thread = [[MCWindowTrackingThread alloc] initWithPlatformWindow: m_window];
         [t_thread autorelease];
         [t_thread start];
         

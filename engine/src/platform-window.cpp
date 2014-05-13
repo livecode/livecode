@@ -50,6 +50,9 @@ MCPlatformWindow::MCPlatformWindow(void)
 	m_use_live_resizing = false;
     m_hides_on_suspend = false;
 	
+    // MW-2014-05-02: [[ Bug 12348 ]] Make sure we initialize this value appropriately.
+    m_use_text_input = false;
+    
 	/* UNCHECKED */ MCRegionCreate(m_dirty_region);
 	m_is_visible = false;
 	m_is_focused = false;

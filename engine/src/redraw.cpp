@@ -140,6 +140,10 @@ MCLayerModeHint MCControl::layer_computeattrs(bool p_commit)
 			// A group is unadorned if it has no scrollbars, no border and doesn't
 			// show a name.
 			t_is_unadorned = !getflag(F_HSCROLLBAR | F_VSCROLLBAR | F_SHOW_NAME | F_SHOW_BORDER);
+				
+			uint16_t t_index;
+			// IM-2014-05-02: [[ Bugfix 12044 ]] An opaque group is unadorned if its background is a color and it disallows overscroll
+			t_is_unadorned &= !getflag(F_OPAQUE) || (getcindex(DI_BACK, t_index) && !getflag(F_UNBOUNDED_HSCROLL | F_UNBOUNDED_VSCROLL));
 			break;
 		case CT_FIELD:
 			// A field is unadorned if it has no shadow, no scrollbars, no border and no focus

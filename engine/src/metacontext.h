@@ -192,6 +192,9 @@ public:
 
 	void drawtheme(MCThemeDrawType type, MCThemeDrawInfo* p_parameters);
 
+	bool lockgcontext(MCGContextRef& r_ctxt);
+	void unlockgcontext(MCGContextRef ctxt);
+
 	void clear(const MCRectangle *rect);
 	MCRegionRef computemaskregion(void);
 	

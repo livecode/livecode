@@ -631,6 +631,15 @@ const MCColor& MCMetaContext::getbg(void) const
 	return MCscreen -> white_pixel;
 }
 
+bool MCMetaContext::lockgcontext(MCGContextRef& r_ctxt)
+{
+	return false;
+}
+
+void MCMetaContext::unlockgcontext(MCGContextRef ctxt)
+{
+}
+
 static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_mark, const MCRectangle& p_clip)
 {
 	MCRectangle t_clip;

@@ -2122,7 +2122,7 @@ static bool MCGContextSetupStrokePaint(MCGContextRef self, SkPaint &r_paint)
 		
 		// MM-2014-04-08: [[ Bug 11370 ]] Fudge 1 pixel line widths. This prevents Skia from treating them as hairlines,
 		//  which was causing inconstancies with anti-aliasing.
-		if (self -> state -> stroke_attr . width == 1.0)
+		if (self -> state -> stroke_attr . width == 1.0 && self -> state -> should_antialias)
 			r_paint . setStrokeWidth(SkFloatToScalar(1.01f));
 		else
 			r_paint . setStrokeWidth(MCGFloatToSkScalar(self -> state -> stroke_attr . width));
