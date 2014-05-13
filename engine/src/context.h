@@ -184,7 +184,9 @@ public:
 	virtual void applywindowshape(MCWindowShape *p_mask, uint4 p_u_width, uint4 p_u_height) = 0;
 
 	virtual void drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p_parameters) = 0;
-
+	
+	virtual bool lockgcontext(MCGContextRef& r_ctxt) = 0;
+	virtual void unlockgcontext(MCGContextRef ctxt) = 0;
 	
 	virtual MCRegionRef computemaskregion(void) = 0;
 	virtual void clear(const MCRectangle* rect) = 0;

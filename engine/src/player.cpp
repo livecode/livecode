@@ -2484,8 +2484,6 @@ void MCPlayer::SynchronizeUserCallbacks(void)
     t_markers . count = m_callback_count;
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMarkers, kMCPlatformPropertyTypeUInt32Array, &t_markers);
     MCMemoryDeleteArray(t_markers . ptr);
-    
-	return True;
 }
 
 Boolean MCPlayer::isbuffering(void)

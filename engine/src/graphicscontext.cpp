@@ -1255,6 +1255,20 @@ void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MC
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCGraphicsContext::lockgcontext(MCGContextRef& r_gcontext)
+{
+	MCGContextSave(m_gcontext);
+	r_gcontext = m_gcontext;
+	return true;
+}
+
+void MCGraphicsContext::unlockgcontext(MCGContextRef p_gcontext)
+{
+	MCGContextRestore(p_gcontext);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 uint2 MCGraphicsContext::getdepth(void) const
 {
 	return 32;

@@ -210,13 +210,13 @@ static bool set_device_volume(AudioDeviceID p_device, double p_volume)
         return false;
     
     if (!AudioHardwareServiceHasProperty(p_device, &t_addr))
-        return;
+        return false;
     
     Boolean t_can_set;
     t_can_set = NO;
     if (AudioHardwareServiceIsPropertySettable(p_device, &t_addr, &t_can_set) != noErr ||
         !t_can_set)
-        return;
+        return false;
     
     UInt32 t_prop_size;
     Float32 t_volume;

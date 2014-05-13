@@ -90,6 +90,9 @@ public:
 	// IM-2014-01-31: [[ HiDPI ]] Return the underlying MCGContextRef
 	MCGContextRef getgcontextref(void) const;
 	
+	bool lockgcontext(MCGContextRef& r_gcontext);
+	void unlockgcontext(MCGContextRef gcontext);
+	
 private:
 	void init(MCGContextRef p_context);
 
