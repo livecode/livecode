@@ -778,8 +778,6 @@ bool MCImage::createpattern(MCPatternRef &r_image)
 	MCImageBitmap *t_bitmap = nil;
 	MCImageBitmap *t_blank = nil;
 
-	MCGImageRef t_image = nil;
-	
 	MCPatternRef t_pattern;
 	t_pattern = nil;
 
@@ -793,31 +791,26 @@ bool MCImage::createpattern(MCPatternRef &r_image)
 		{
 			MCImageBitmapClear(t_blank);
 			t_bitmap = t_blank;
+
+			MCGRaster t_raster;
+			t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
+			
+			// IM-2013-08-14: [[ ResIndependence ]] Wrap image in MCPattern with scale factor
+			t_success = MCPatternCreate(t_raster, 1.0, t_pattern);
 		}
 	}
 	else
-		t_success = lockbitmap(t_bitmap, true);
-
-	if (t_success)
 	{
-		MCGRaster t_raster;
-		t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
-	
-		t_success = MCGImageCreateWithRaster(t_raster, t_image);
+		// IM-2014-05-13: [[ HiResPatterns ]] Rather than create a pattern with a static bitmap image,
+		// we can now supply the source rep and the image transform to enable density-mapped patterns
+		apply_transform();
+		t_success = MCPatternCreate(m_rep, m_has_transform ? m_transform : MCGAffineTransformMakeIdentity(), t_pattern);
 	}
 
-	// IM-2013-08-14: [[ ResIndependence ]] Wrap image in MCPattern with scale factor
-	if (t_success)
-		t_success = MCPatternCreate(t_image, getscalefactor(), t_pattern);
-		
 	if (t_blank != nil)
 		MCImageFreeBitmap(t_blank);
-	else
-		unlockbitmap(t_bitmap);
 
 	closeimage();
-	
-	MCGImageRelease(t_image);
 	
 	if (t_success)
 		r_image = t_pattern;

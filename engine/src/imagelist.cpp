@@ -12,11 +12,69 @@
 
 #include "globals.h"
 
+#include "graphics_util.h"
+
 ////////////////////////////////////////////////////////////////////////////////
+
+// IM-2013-08-14: [[ ResIndependence ]] MCPattern struct which associates an image with a scale
+struct MCPattern
+{
+	MCImageRep *source;
+	MCGAffineTransform transform;
+	
+	MCGImageRef image;
+	
+	MCGImageRef locked_image;
+	MCGImageFrame *locked_frame;
+	
+	struct
+	{
+		MCGImageRef image;
+		MCGAffineTransform transform;
+		MCGFloat density;
+	} cache;
+	
+	uint32_t references;
+};
 
 // IM-2013-08-14: [[ ResIndependence ]] pattern create / retain / release functions
 
-bool MCPatternCreate(MCGImageRef p_image, MCGFloat p_scale, MCPatternRef &r_pattern)
+bool MCPatternCreate(const MCGRaster &p_raster, MCGFloat p_scale, MCPatternRef &r_pattern)
+
+{
+	bool t_success;
+	t_success = true;
+	
+	MCPatternRef t_pattern;
+	t_pattern = nil;
+	
+	t_success = MCMemoryNew(t_pattern);
+	
+	MCGImageRef t_image;
+	t_image = nil;
+	
+	if (t_success)
+		t_success = MCGImageCreateWithRaster(p_raster, t_image);
+	
+	if (t_success)
+	{
+		t_pattern -> image = MCGImageRetain(t_image);
+		t_pattern -> transform = MCGAffineTransformMakeScale(p_scale, p_scale);
+		t_pattern -> references = 1;
+		
+		r_pattern = t_pattern;
+	}
+	else
+	{
+		MCMemoryDelete(t_pattern);
+	}
+	
+	MCGImageRelease(t_image);
+	
+	return t_success;
+}
+
+bool MCPatternCreate(MCImageRep *p_source, MCGAffineTransform p_transform, MCPatternRef &r_pattern)
 {
 	bool t_success;
 	t_success = true;
@@ -28,15 +86,11 @@ bool MCPatternCreate(MCGImageRef p_image, MCGFloat p_scale, MCPatternRef &r_patt
 	
 	if (t_success)
 	{
-		t_pattern -> image = MCGImageRetain(p_image);
-		t_pattern -> scale = p_scale;
-		t_pattern -> references = 1;
+		t_pattern->source = p_source->Retain();
+		t_pattern->transform = p_transform;
+		t_pattern->references = 1;
 		
 		r_pattern = t_pattern;
-	}
-	else
-	{
-		MCMemoryDelete(t_pattern);
 	}
 	
 	return t_success;
@@ -61,13 +115,179 @@ void MCPatternRelease(MCPatternRef p_pattern)
 	if (p_pattern->references == 0)
 	{
 		MCGImageRelease(p_pattern->image);
+		MCGImageRelease(p_pattern->cache.image);
+		if (p_pattern->source != nil)
+			p_pattern->source->Release();
 		MCMemoryDelete(p_pattern);
 	}
 }
 
 bool MCPatternIsOpaque(MCPatternRef p_pattern)
 {
-	return p_pattern != nil && MCGImageIsOpaque(p_pattern->image);
+	if (p_pattern == nil)
+		return false;
+	
+	if (p_pattern->image != nil)
+		return MCGImageIsOpaque(p_pattern->image);
+	
+	/* TODO - determine if source rep is opaque */
+	return false;
+}
+
+bool MCPatternGetGeometry(MCPatternRef p_pattern, uint32_t &r_width, uint32_t &r_height)
+{
+	if (p_pattern == nil)
+		return false;
+	
+	MCGAffineTransform t_transform;
+	t_transform = p_pattern->transform;
+	
+	uindex_t t_src_width, t_src_height;
+	
+	if (p_pattern->image != nil)
+	{
+		t_src_width = MCGImageGetWidth(p_pattern->image);
+		t_src_height = MCGImageGetHeight(p_pattern->image);
+	}
+	else
+	{
+		if (!p_pattern->source->GetGeometry(t_src_width, t_src_height))
+			return false;
+
+		MCGFloat t_density;
+		t_density = p_pattern->source->GetDensity();
+		
+		t_transform = MCGAffineTransformScale(t_transform, 1.0 / t_density, 1.0 / t_density);
+	}
+	
+	
+	MCGRectangle t_rect;
+	t_rect = MCGRectangleApplyAffineTransform(MCGRectangleMake(0, 0, t_src_width, t_src_height), t_transform);
+
+	r_width = ceilf(t_rect.size.width);
+	r_height = ceilf(t_rect.size.height);
+	
+	return true;
+}
+
+bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTransform &p_transform, MCGImageRef &r_image, MCGAffineTransform &r_pattern_transform)
+{
+	if (p_pattern == nil)
+		
+		return false;
+	
+	if (p_pattern->locked_image != nil)
+		return false;
+	
+	MCGImageRef t_image;
+	t_image = nil;
+	
+	MCGImageFrame *t_frame;
+	t_frame = nil;
+	
+	MCGAffineTransform t_transform;
+	
+	bool t_success = t_success = true;
+	
+	if (p_pattern->image != nil)
+	{
+		t_image = MCGImageRetain(p_pattern->image);
+		t_transform = p_pattern->transform;
+	}
+	else
+	{
+		MCGAffineTransform t_combined;
+		t_combined = MCGAffineTransformConcat(p_pattern->transform, p_transform);
+		
+		MCGFloat t_scale;
+		t_scale = MCGAffineTransformGetEffectiveScale(t_combined);
+		
+		t_success = p_pattern->source->LockImageFrame(0, t_scale, t_frame);
+		
+		if (t_success)
+		{
+			t_transform = MCGAffineTransformMakeScale(1.0 / t_frame->density, 1.0 / t_frame->density);
+			
+			if (!MCGAffineTransformIsRectangular(p_pattern->transform))
+			{
+				if (p_pattern->cache.density != t_frame->density)
+				{
+					MCGImageRelease(p_pattern->cache.image);
+					p_pattern->cache.image = nil;
+				}
+				if (p_pattern->cache.image == nil)
+				{
+					MCImageBitmap *t_bitmap;
+					t_bitmap = nil;
+					
+					MCGAffineTransform t_copy_transform;
+					t_copy_transform = MCGAffineTransformConcat(p_pattern->transform, t_transform);
+					t_copy_transform = MCGAffineTransformConcat(MCGAffineTransformInvert(t_transform), t_copy_transform);
+					
+					t_success = MCImageBitmapCreateWithTransformedMCGImage(t_frame->image, t_copy_transform, kMCGImageFilterNone, t_bitmap);
+					
+					if (t_success)
+						t_success = MCImageBitmapCopyAsMCGImageAndRelease(t_bitmap, true, t_image);
+					
+					if (t_success)
+					{
+						p_pattern->cache.image = t_image;
+						p_pattern->cache.transform = t_transform;
+						p_pattern->cache.density = t_frame->density;
+					}
+					
+					MCImageFreeBitmap(t_bitmap);
+				}
+				
+				if (t_success)
+				{
+					t_image = MCGImageRetain(p_pattern->cache.image);
+					t_transform = p_pattern->cache.transform;
+				}
+			}
+			else
+			{
+				// return image & transform scaled for image density
+				t_transform = MCGAffineTransformConcat(p_pattern->transform, t_transform);
+				
+				t_image = MCGImageRetain(t_frame->image);
+			}
+			p_pattern->source->UnlockImageFrame(0, t_frame);
+		}
+		
+		if (!t_success)
+		{
+//			p_pattern->source->UnlockImageFrame(0, t_frame);
+			t_frame = nil;
+		}
+	}
+	
+	if (t_success)
+	{
+		p_pattern->locked_image = t_image;
+//		p_pattern->locked_frame = t_frame;
+		
+		r_image = t_image;
+		r_pattern_transform = t_transform;
+	}
+	
+	return t_success;
+}
+
+void MCPatternUnlock(MCPatternRef p_pattern, MCGImageRef p_locked_image)
+{
+	if (p_pattern == nil)
+		return;
+	
+	if (p_locked_image != p_pattern->locked_image)
+		return;
+	
+	MCGImageRelease(p_pattern->locked_image);
+	p_pattern->locked_image = nil;
+	
+//	if (p_pattern->locked_frame != nil)
+//		p_pattern->source->UnlockImageFrame(0, p_pattern->locked_frame);
+//	p_pattern->locked_frame = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

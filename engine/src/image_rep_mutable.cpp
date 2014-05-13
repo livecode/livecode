@@ -1230,8 +1230,19 @@ void MCMutableImageRep::apply_fill_paint(MCGContextRef p_context, MCPatternRef p
 	else if (p_pattern == nil)
 		MCGContextSetFillRGBAColor(p_context, p_color.red / 65535.0, p_color.green / 65535.0, p_color.blue / 65535.0, 1.0);
 	else
-        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
-		MCGContextSetFillPattern(p_context, p_pattern->image, MCGAffineTransformMakeScale(1.0 / p_pattern->scale, 1.0 / p_pattern->scale), kMCGImageFilterNone);
+	{
+		MCGImageRef t_image;
+		MCGAffineTransform t_transform;
+		
+		// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+		if (MCPatternLockForContextTransform(p_pattern, MCGContextGetDeviceTransform(p_context), t_image, t_transform))
+		{
+			// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+			MCGContextSetFillPattern(p_context, t_image, t_transform, kMCGImageFilterNone);
+			
+			MCPatternUnlock(p_pattern, t_image);
+		}
+	}
 }
 
 void MCMutableImageRep::apply_stroke_paint(MCGContextRef p_context, MCPatternRef p_pattern, const MCColor &p_color)
@@ -1241,8 +1252,19 @@ void MCMutableImageRep::apply_stroke_paint(MCGContextRef p_context, MCPatternRef
 	else if (p_pattern == nil)
 		MCGContextSetStrokeRGBAColor(p_context, p_color.red / 65535.0, p_color.green / 65535.0, p_color.blue / 65535.0, 1.0);
 	else
-        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
-		MCGContextSetStrokePattern(p_context, p_pattern->image, MCGAffineTransformMakeScale(1.0 / p_pattern->scale, 1.0 / p_pattern->scale), kMCGImageFilterNone);
+	{
+		MCGImageRef t_image;
+		MCGAffineTransform t_transform;
+		
+		// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+		if (MCPatternLockForContextTransform(p_pattern, MCGContextGetDeviceTransform(p_context), t_image, t_transform))
+		{
+			// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+			MCGContextSetStrokePattern(p_context, t_image, t_transform, kMCGImageFilterNone);
+			
+			MCPatternUnlock(p_pattern, t_image);
+		}
+	}
 }
 
 void MCMutableImageRep::fill_path(MCGPathRef p_path)

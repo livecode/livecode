@@ -541,17 +541,21 @@ void MCGraphicsContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y
 	// MW-2014-03-11: [[ Bug 11704 ]] Make sure we set both fill and stroke paints.
 	if (style == FillTiled && p != NULL)
 	{
-		// IM-2013-08-14: [[ ResIndependence ]] apply pattern image scale to transform
-		MCGFloat t_scale;
-		t_scale = 1.0 / p->scale;
-		
+		MCGImageRef t_image;
 		MCGAffineTransform t_transform;
-		t_transform = MCGAffineTransformMakeScale(t_scale, t_scale);
-		t_transform = MCGAffineTransformTranslate(t_transform, x, y);
-
-        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was bilinear).
-		MCGContextSetFillPattern(m_gcontext, p->image, t_transform, kMCGImageFilterMedium);
-		MCGContextSetStrokePattern(m_gcontext, p->image, t_transform, kMCGImageFilterMedium);
+		
+		// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+		if (MCPatternLockForContextTransform(p, MCGContextGetDeviceTransform(m_gcontext), t_image, t_transform))
+		{
+			t_transform = MCGAffineTransformTranslate(t_transform, x, y);
+			
+			// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+			MCGContextSetFillPattern(m_gcontext, t_image, t_transform, kMCGImageFilterMedium);
+			MCGContextSetStrokePattern(m_gcontext, t_image, t_transform, kMCGImageFilterMedium);
+			
+			MCPatternUnlock(p, t_image);
+		}
+		
 		m_pattern = MCPatternRetain(p);
 		m_pattern_x = x;
 		m_pattern_y = y;
