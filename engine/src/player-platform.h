@@ -50,6 +50,8 @@ class MCPlayer : public MCControl
 	MCPlatformPlayerRef m_platform_player;
     MCPlayerCallback *m_callbacks;
     uindex_t m_callback_count;
+    
+    int m_grabbed_part;
 	
 public:
 	MCPlayer();

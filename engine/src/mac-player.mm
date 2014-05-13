@@ -644,7 +644,7 @@ void MCQTKitPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 	NSRect t_movie_rect;
 	t_movie_rect = [m_view movieBounds];
 	
-	NSBitmapImageRep *t_rep;
+	/*NSBitmapImageRep *t_rep;
 	t_rep = [m_view bitmapImageRepForCachingDisplayInRect: t_rect];
 	[m_view cacheDisplayInRect: t_rect toBitmapImageRep: t_rep];
 	
@@ -654,7 +654,15 @@ void MCQTKitPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 	t_bitmap -> height = [t_rep pixelsHigh];
 	t_bitmap -> stride = [t_rep bytesPerRow];
 	t_bitmap -> data = (uint32_t *)[t_rep bitmapData];
-	t_bitmap -> has_alpha = t_bitmap -> has_transparency = true;
+	t_bitmap -> has_alpha = t_bitmap -> has_transparency = true;*/
+    
+    MCImageBitmap *t_bitmap;
+    t_bitmap = new MCImageBitmap;
+    t_bitmap -> width = t_rect . size . width;
+    t_bitmap -> height = t_rect . size . height;
+    t_bitmap -> stride = sizeof(uint32_t) * t_rect . size . width;
+    t_bitmap -> data = (uint32_t *)malloc(t_bitmap -> height * t_bitmap -> stride);
+    t_bitmap -> has_alpha = t_bitmap -> has_transparency = false;
 	
 	// Now if we have a current frame, then composite at the appropriate size into
 	// the movie portion of the buffer.
@@ -662,6 +670,9 @@ void MCQTKitPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 	{
 		extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
 		
+        NSAutoreleasePool *t_pool;
+        t_pool = [[NSAutoreleasePool alloc] init];
+        
 		CGColorSpaceRef t_colorspace;
 		t_colorspace = CGColorSpaceCreateDeviceRGB();
 		
@@ -680,6 +691,8 @@ void MCQTKitPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 		
 		CGContextRelease(t_cg_context);
 		CGColorSpaceRelease(t_colorspace);
+        
+        [t_pool release];
 	}
 	
 	r_bitmap = t_bitmap;
@@ -687,6 +700,7 @@ void MCQTKitPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 
 void MCQTKitPlayer::UnlockBitmap(MCImageBitmap *bitmap)
 {
+    delete bitmap -> data;
 	delete bitmap;
 }
 
