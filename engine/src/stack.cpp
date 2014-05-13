@@ -208,7 +208,7 @@ MCStack::MCStack()
 	parentwindow = DNULL;
 	cursor = None;
 	substacks = NULL;
-	cards = curcard = savecards = NULL;
+	cards = curcard = /*savecards =*/ NULL;
 	controls = NULL;
 	editing = NULL;
 	aclips = NULL;
@@ -309,7 +309,7 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	parentwindow = DNULL;
 	cursor = None;
 	substacks = NULL;
-	cards = curcard = savecards = NULL;
+	cards = curcard = /*savecards =*/ NULL;
 	controls = NULL;
 	editing = NULL;
 	aclips = NULL;

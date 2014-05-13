@@ -46,6 +46,8 @@ class MCGroup : public MCControl
 	// MERG-2013-06-02: [[ GrpLckUpdates ]] True if updates to bounding rect and
 	//   parents locked.
     bool m_updates_locked : 1;
+    
+    bool m_editing : 1;
 
 	static uint2 labeloffset;
 	static MCPropertyInfo kProperties[];
@@ -189,6 +191,9 @@ public:
 	//   group.
     bool islocked(void) { return m_updates_locked; }
 
+    void setediting(bool p_editing);
+    bool getediting(void) const;
+    
 	MCGroup *next()
 	{
 		return (MCGroup *)MCDLlist::next();

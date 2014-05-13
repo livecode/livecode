@@ -125,6 +125,8 @@ MCGroup::MCGroup()
 	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
 	//   when created.
     m_updates_locked = false;
+    
+    m_editing = false;
 }
 
 MCGroup::MCGroup(const MCGroup &gref) : MCControl(gref)
@@ -192,6 +194,8 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
 	//   when cloned.
     m_updates_locked = false;
+    
+    m_editing = false;
 }
 
 MCGroup::~MCGroup()
@@ -537,6 +541,14 @@ Boolean MCGroup::mfocus(int2 x, int2 y)
 	else
 		if (getstate(CS_GRAB))
 			return MCControl::mfocus(x, y);
+    
+    bool t_is_edit_target;
+    if (m_editing &&
+        getstack() -> getediting() == this)
+        t_is_edit_target = true;
+    else
+        t_is_edit_target = false;
+    
 	mx = x;
 	my = y;
 	Tool tool = getstack()->gettool(this);
@@ -545,15 +557,20 @@ Boolean MCGroup::mfocus(int2 x, int2 y)
 		if (mgrabbed && mfocused->mfocus(x, y))
 			return True;
 		mgrabbed = False;
-		if (sbfocus(x, y, hscrollbar, vscrollbar))
-		{
-			if (mfocused != NULL)
-			{
-				mfocused->munfocus();
-				mfocused = NULL;
-			}
-			return True;
-		}
+        
+        if (!m_editing)
+        {
+            if (sbfocus(x, y, hscrollbar, vscrollbar))
+            {
+                if (mfocused != NULL)
+                {
+                    mfocused->munfocus();
+                    mfocused = NULL;
+                }
+                return True;
+            }
+        }
+        
 		if (MCControl::mfocus(x, y))
 		{
 			// MW-2008-01-30: [[ Bug 5832 ]] Previously we would have been immediately
@@ -564,31 +581,36 @@ Boolean MCGroup::mfocus(int2 x, int2 y)
 				MCControl *tptr = controls->prev();
 				do
 				{
-					if (tptr->mfocus(x, y))
-					{
-						if (mfocused != NULL && tptr != mfocused)
-							mfocused->munfocus();
-						if (tptr != mfocused)
-						{
-							mfocused = tptr;
-							if (mfocused->gettype() != CT_GROUP)
-							{
-								mfocused->enter();
+                    if (!m_editing ||
+                        t_is_edit_target ||
+                        (tptr -> gettype() == CT_GROUP && static_cast<MCGroup *>(tptr) -> getediting()))
+                    {
+                        if (tptr->mfocus(x, y))
+                        {
+                            if (mfocused != NULL && tptr != mfocused)
+                                mfocused->munfocus();
+                            if (tptr != mfocused)
+                            {
+                                mfocused = tptr;
+                                if (mfocused->gettype() != CT_GROUP)
+                                {
+                                    mfocused->enter();
 
-								// MW-2007-10-31: mouseMove sent before mouseEnter - make sure we send an mouseMove
-								//   ... and now lets make sure it doesn't crash!
-								//   Here mfocused can be NULL if a control was deleted in mfocused -> enter()
-								if (mfocused != NULL)
-									mfocused->mfocus(x, y);
-							}
-						}
-						return True;
-					}
-					else if (tptr == mfocused)
-					{
-						mfocused->munfocus();//changed
-						mfocused = NULL;
-					}
+                                    // MW-2007-10-31: mouseMove sent before mouseEnter - make sure we send an mouseMove
+                                    //   ... and now lets make sure it doesn't crash!
+                                    //   Here mfocused can be NULL if a control was deleted in mfocused -> enter()
+                                    if (mfocused != NULL)
+                                        mfocused->mfocus(x, y);
+                                }
+                            }
+                            return True;
+                        }
+                        else if (tptr == mfocused)
+                        {
+                            mfocused->munfocus();//changed
+                            mfocused = NULL;
+                        }
+                    }
 					tptr = tptr->prev();
 				}
 				while (tptr != controls->prev());
@@ -644,7 +666,7 @@ Boolean MCGroup::mdown(uint2 which)
 	if (sbdown(which, hscrollbar, vscrollbar))
 		return True;
 	Tool tool = getstack()->gettool(this);
-	if (tool == T_POINTER && (mfocused == NULL || !MCselectgrouped || getflag(F_SELECT_GROUP)))
+	if (!m_editing && tool == T_POINTER && (mfocused == NULL || !MCselectgrouped || getflag(F_SELECT_GROUP)))
 	{
 		if (which == Button1)
 		{
@@ -694,7 +716,7 @@ Boolean MCGroup::mup(uint2 which)
 	if (sbup(which, hscrollbar, vscrollbar))
 		return True;
 	Tool tool = getstack()->gettool(this);
-	if (tool == T_POINTER && (mfocused == NULL || !MCselectgrouped || getflag(F_SELECT_GROUP)))
+	if (!m_editing && tool == T_POINTER && (mfocused == NULL || !MCselectgrouped || getflag(F_SELECT_GROUP)))
 	{
 		if (which == Button1)
 		{
@@ -2726,68 +2748,64 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 	MCRectangle dirty;
 	dirty = p_dirty;
 
-	if (!p_isolated)
-	{
-		// MW-2011-09-06: [[ Redraw ]] If rendering as a sprite, don't change opacity or ink.
-		if (!p_sprite)
-		{
-			dc -> setopacity(blendlevel * 255 / 100);
-			dc -> setfunction(ink);
-		}
+    bool t_is_edit_target;
+    if (m_editing &&
+        getstack() -> getediting() == this)
+        t_is_edit_target = true;
+    else
+        t_is_edit_target = false;
+    
+    if (!m_editing)
+    {
+        if (!p_isolated)
+        {
+            // MW-2011-09-06: [[ Redraw ]] If rendering as a sprite, don't change opacity or ink.
+            if (!p_sprite)
+            {
+                dc -> setopacity(blendlevel * 255 / 100);
+                dc -> setfunction(ink);
+            }
 
-		// MW-2011-09-06: [[ Redraw ]] If rendering as a sprite, then we don't need a new layer.
-		if (m_bitmap_effects == NULL)
-			dc -> begin(p_sprite || ink == GXcopy ? false : true);
-		else
-		{
-			if (!dc -> begin_with_effects(m_bitmap_effects, rect))
-				return;
-			dirty = dc -> getclip();
-		}
-	}
+            // MW-2011-09-06: [[ Redraw ]] If rendering as a sprite, then we don't need a new layer.
+            if (m_bitmap_effects == NULL)
+                dc -> begin(p_sprite || ink == GXcopy ? false : true);
+            else
+            {
+                if (!dc -> begin_with_effects(m_bitmap_effects, rect))
+                    return;
+                dirty = dc -> getclip();
+            }
+        }
 
-	// MW-2009-06-14: This flag will be set to true if when the group
-	//   renders an opaque background.
-	bool t_is_opaque;
-	t_is_opaque = false;
-
-	if (MCcurtheme != NULL &&
-		getstack() -> hasmenubar() && hasname(getstack() -> getmenubar()) &&
-		MCcurtheme -> drawmenubarbackground(dc, dirty, getrect(), MCmenubar == this))
-	{
-		// MW-2009-06-14: Vista menu backgrounds are assumed opaque
-		t_is_opaque = true;
-	}
-	else if (flags & F_OPAQUE)
-	{
-		uint2 i;
-		if (MCcurtheme && borderwidth == DEFAULT_BORDER &&
-		        !getcindex(DI_BACK, i) && !getpindex(DI_BACK, i) &&
-		        flags & F_SHOW_BORDER && borderwidth && flags & F_3D &&
-		        MCcurtheme->iswidgetsupported(WTHEME_TYPE_GROUP_FRAME) )
-		{
-			// MW-2009-06-14: It appears that themed group borders are never opaque
-			//   but this needs to be verified on the different platforms.
-			drawthemegroup(dc,dirty,False);
-		}
-		else
-		{
-			if (MCcurtheme == NULL || !getstack() -> ismetal() ||
-				!MCcurtheme -> drawmetalbackground(dc, dirty, rect, this))
-			{
-				setforeground(dc, DI_BACK, False);
-				dc->fillrect(rect);
-			}
-
-			// MW-2009-06-14: Non-themed, opaque backgrounds are (unsurprisingly!) opaque.
-			t_is_opaque = true;
-		}
-	}
-
-	// MW-2009-06-14: Change opaqueness if it is so
-	bool t_was_opaque;
-	if (t_is_opaque)
-		t_was_opaque = dc -> changeopaque(t_is_opaque);
+        if (MCcurtheme != NULL &&
+            getstack() -> hasmenubar() && hasname(getstack() -> getmenubar()) &&
+            MCcurtheme -> drawmenubarbackground(dc, dirty, getrect(), MCmenubar == this))
+        {
+            //
+        }
+        else if (flags & F_OPAQUE)
+        {
+            uint2 i;
+            if (MCcurtheme && borderwidth == DEFAULT_BORDER &&
+                    !getcindex(DI_BACK, i) && !getpindex(DI_BACK, i) &&
+                    flags & F_SHOW_BORDER && borderwidth && flags & F_3D &&
+                    MCcurtheme->iswidgetsupported(WTHEME_TYPE_GROUP_FRAME) )
+            {
+                // MW-2009-06-14: It appears that themed group borders are never opaque
+                //   but this needs to be verified on the different platforms.
+                drawthemegroup(dc,dirty,False);
+            }
+            else
+            {
+                if (MCcurtheme == NULL || !getstack() -> ismetal() ||
+                    !MCcurtheme -> drawmetalbackground(dc, dirty, rect, this))
+                {
+                    setforeground(dc, DI_BACK, False);
+                    dc->fillrect(rect);
+                }
+            }
+        }
+    }
 
 	// MW-2011-10-03: If we are rendering in sprite mode, we don't clip further. (Previously
 	//   we would clip to the 'minrect' in this case, but sometimes that isn't in sync with
@@ -2802,56 +2820,61 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		MCControl *cptr = controls;
 		do
 		{
-			if (cptr -> getopened() != 0 && (MCshowinvisibles || cptr -> getflag(F_VISIBLE)))
-			{
-				MCRectangle trect = MCU_intersect_rect(drect, cptr -> geteffectiverect());
-				if (trect.width != 0 && trect.height != 0)
-				{
-					dc -> setopacity(255);
-					dc -> setfunction(GXcopy);
-					dc -> setclip(trect);
-					cptr -> draw(dc, trect, false, false);
-				}
+            if (!m_editing ||
+                t_is_edit_target ||
+                (cptr -> gettype() == CT_GROUP && static_cast<MCGroup *>(cptr) -> getediting()))
+            {
+                if (cptr -> getopened() != 0 && (MCshowinvisibles || cptr -> getflag(F_VISIBLE)))
+                {
+                    MCRectangle trect = MCU_intersect_rect(drect, cptr -> geteffectiverect());
+                    if (trect.width != 0 && trect.height != 0)
+                    {
+                        dc -> setopacity(255);
+                        dc -> setfunction(GXcopy);
+                        dc -> setclip(trect);
+                        cptr -> draw(dc, trect, false, false);
+                    }
 
-			}
+                }
+            }
 
 			cptr = cptr->next();
 		}
 		while (cptr != controls);
 	}
+    
+    if (!m_editing)
+    {
+        drect = MCU_intersect_rect(dirty, rect);
+        dc->setclip(drect);
 
-	if (t_is_opaque)
-		dc -> changeopaque(t_was_opaque);
+        if (flags & F_HSCROLLBAR)
+        {
+            MCRectangle hrect = MCU_intersect_rect(hscrollbar->getrect(), drect);
+            if (hrect.width != 0 && hrect.height != 0)
+                hscrollbar->draw(dc, hrect, false, false);
+        }
 
-	drect = MCU_intersect_rect(dirty, rect);
-	dc->setclip(drect);
+        if (flags & F_VSCROLLBAR)
+        {
+            MCRectangle vrect = MCU_intersect_rect(vscrollbar->getrect(), drect);
+            if (vrect.width != 0 && vrect.height != 0)
+                vscrollbar->draw(dc, vrect, false, false);
+        }
 
-	if (flags & F_HSCROLLBAR)
-	{
-		MCRectangle hrect = MCU_intersect_rect(hscrollbar->getrect(), drect);
-		if (hrect.width != 0 && hrect.height != 0)
-			hscrollbar->draw(dc, hrect, false, false);
-	}
+        dc -> setopacity(255);
+        dc -> setfunction(GXcopy);
+        dc -> setclip(dirty);
+        drawbord(dc, dirty);
 
-	if (flags & F_VSCROLLBAR)
-	{
-		MCRectangle vrect = MCU_intersect_rect(vscrollbar->getrect(), drect);
-		if (vrect.width != 0 && vrect.height != 0)
-			vscrollbar->draw(dc, vrect, false, false);
-	}
+        if (!p_isolated)
+        {
+            dc -> end();
 
-	dc -> setopacity(255);
-	dc -> setfunction(GXcopy);
-	dc -> setclip(dirty);
-	drawbord(dc, dirty);
-
-	if (!p_isolated)
-	{
-		dc -> end();
-
-		if (getstate(CS_SELECTED))
-			drawselected(dc);
-	}
+            if (getstate(CS_SELECTED))
+                drawselected(dc);
+        }
+    }
 }
 
 void MCGroup::drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawframe)
@@ -3554,4 +3577,17 @@ void MCGroup::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 
 	if (!computeminrect(False))
 		p_control -> layer_redrawall();
+}
+
+void MCGroup::setediting(bool p_editing)
+{
+    m_editing = p_editing;
+    
+    if (parent -> gettype() == CT_GROUP)
+        static_cast<MCGroup *>(parent) -> setediting(p_editing);
+}
+
+bool MCGroup::getediting(void) const
+{
+    return m_editing;
 }

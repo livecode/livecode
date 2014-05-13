@@ -798,10 +798,13 @@ void MCStack::startedit(MCGroup *group)
 		MCselected->clear(True);
 		kunfocus();
 	}
-	curcard->close();
-	MCscreen->cancelmessageobject(curcard, NULL);
+    munfocus();
+    
 	editing = group;
 
+#if 0
+	curcard->close();
+	MCscreen->cancelmessageobject(curcard, NULL);
 	// Save the current list of object references and cards
 	savecontrols = controls;
 	savecard = curcard;
@@ -843,6 +846,10 @@ void MCStack::startedit(MCGroup *group)
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
 	dirtywindowname();
+#endif
+    
+    editing -> setediting(true);
+    dirtyall();
 }
 
 void MCStack::stopedit()
@@ -850,7 +857,7 @@ void MCStack::stopedit()
 	if (editing == NULL)
 		return;
 	MCselected->clear(True);
-	curcard->close();
+	/*curcard->close();
 	MCObjptr *clist = curcard->getrefs();
 	MCControl *oldcontrols = controls;
 	controls = NULL;
@@ -884,7 +891,11 @@ void MCStack::stopedit()
 	kfocus();
 	dirtywindowname();
 	if (gettool(this) == T_POINTER)
-		MCselected->add(oldediting);
+		MCselected->add(oldediting);*/
+    
+    editing -> setediting(false);
+    editing = NULL;
+    dirtyall();
 }
 
 void MCStack::updatemenubar()
@@ -1249,9 +1260,9 @@ MCCard *MCStack::getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term
 
 	// OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
 	MCCard *cptr;
-	if (editing != NULL && savecards != NULL)
+	/*if (editing != NULL && savecards != NULL)
 		cptr = savecards;
-	else
+	else*/
 		cptr = cards;
 
 	MCCard *found = NULL;
@@ -1320,9 +1331,9 @@ MCCard *MCStack::getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term
 		{
 			// OK-2008-06-27: <Bug where looking up a card by id when in edit group mode could cause an infinite loop>
 			MCCard *t_cards;
-			if (editing != NULL && savecards != NULL)
+			/*if (editing != NULL && savecards != NULL)
 				t_cards = savecards;
-			else
+			else*/
 				t_cards = cards;
 		
 			// OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
@@ -1609,9 +1620,9 @@ MCCard *MCStack::getchildbyid(uinteger_t p_id)
     
     // OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
     MCCard *cptr;
-    if (editing != nil && savecards != nil)
+    /*if (editing != nil && savecards != nil)
         cptr = savecards;
-    else
+    else*/
         cptr = cards;
     
     MCCard *found = nil;
@@ -1648,9 +1659,9 @@ MCCard *MCStack::getchildbyname(MCNameRef p_name)
 	}
     
     MCCard *cptr;
-	if (editing != NULL && savecards != NULL)
+	/*if (editing != NULL && savecards != NULL)
 		cptr = savecards;
-	else
+	else*/
 		cptr = cards;
     
     uint2 t_num = 0;
@@ -1689,9 +1700,9 @@ MCGroup *MCStack::getbackground(Chunk_term etype, MCStringRef p_string,
 		return NULL;
 
 	MCControl *cptr;
-	if (editing != NULL)
+	/*if (editing != NULL)
 		cptr = savecontrols;
-	else
+	else*/
 		cptr = controls;
 	MCControl *startcptr = cptr;
 	if (cptr == NULL)
@@ -1877,9 +1888,9 @@ MCGroup *MCStack::getbackgroundbyordinal(Chunk_term p_ordinal)
 MCGroup *MCStack::getbackgroundbyid(uinteger_t p_id)
 {
 	MCControl *cptr;
-	if (editing != NULL)
+	/*if (editing != NULL)
 		cptr = savecontrols;
-	else
+	else*/
 		cptr = controls;
 	MCControl *startcptr = cptr;
 	if (cptr == NULL)
@@ -1898,9 +1909,9 @@ MCGroup *MCStack::getbackgroundbyid(uinteger_t p_id)
 MCGroup *MCStack::getbackgroundbyname(MCNameRef p_name)
 {
 	MCControl *cptr;
-	if (editing != nil)
+	/*if (editing != nil)
 		cptr = savecontrols;
-	else
+	else*/
 		cptr = controls;
 	MCControl *startcptr = cptr;
 	if (cptr == nil)

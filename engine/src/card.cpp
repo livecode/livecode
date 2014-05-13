@@ -547,37 +547,42 @@ Boolean MCCard::mfocus(int2 x, int2 y)
 			
 			freed = False;
 			
-			if (t_tptr_object->mfocus(x, y))
-			{
-				// MW-2010-10-28: If mfocus calls relayer, then the objptrs can get changed.
-				//   Reloop to find the correct one.
-				MCObjptr *tptr = objptrs -> prev();
-				while(tptr -> getref() != t_tptr_object)
-					tptr = tptr -> prev();
-				
-				Boolean newfocused = tptr != mfocused;
-				if (newfocused && mfocused != NULL)
-				{
-					MCControl *oldfocused = mfocused->getref();
-					mfocused = tptr;
-					oldfocused->munfocus();
-				}
-				else
-					mfocused = tptr;
+            if (getstack() -> getediting() == nil ||
+                (t_tptr_object -> gettype() == CT_GROUP && static_cast<MCGroup *>(t_tptr_object) -> getediting()))
+            {
+                if (t_tptr_object->mfocus(x, y))
+                {
+                    // MW-2010-10-28: If mfocus calls relayer, then the objptrs can get changed.
+                    //   Reloop to find the correct one.
+                    MCObjptr *tptr = objptrs -> prev();
+                    while(tptr -> getref() != t_tptr_object)
+                        tptr = tptr -> prev();
+                    
+                    Boolean newfocused = tptr != mfocused;
+                    if (newfocused && mfocused != NULL)
+                    {
+                        MCControl *oldfocused = mfocused->getref();
+                        mfocused = tptr;
+                        oldfocused->munfocus();
+                    }
+                    else
+                        mfocused = tptr;
 
-				if (newfocused && mfocused != NULL && mfocused -> getref() -> gettype() != CT_GROUP)
-				{
-					mfocused->getref()->enter();
-					
-					// MW-2007-10-31: mouseMove sent before mouseEnter - make sure we send an mouseMove
-					//   It is possible for mfocused to become NULL if its deleted in mouseEnter so
-					//   we check first.
-					if (mfocused != NULL)
-						mfocused->getref()->mfocus(x, y);
-				}
+                    if (newfocused && mfocused != NULL && mfocused -> getref() -> gettype() != CT_GROUP)
+                    {
+                        mfocused->getref()->enter();
+                        
+                        // MW-2007-10-31: mouseMove sent before mouseEnter - make sure we send an mouseMove
+                        //   It is possible for mfocused to become NULL if its deleted in mouseEnter so
+                        //   we check first.
+                        if (mfocused != NULL)
+                            mfocused->getref()->mfocus(x, y);
+                    }
 
-				return True;
-			}
+                    return True;
+                }
+            }
+            
 			if (tptr == mfocused)
 			{
 				// MW-2012-02-22: [[ Bug 10018 ]] Previously, if a group was hidden and it had
@@ -3260,7 +3265,11 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 		MCObjptr *tptr = objptrs;
 		do
 		{
-			tptr->getref()->redraw(dc, dirty);
+            MCObject *t_object;
+            t_object = tptr -> getref();
+            if (getstack() -> getediting() == nil ||
+                (t_object -> gettype() == CT_GROUP && static_cast<MCGroup *>(t_object) -> getediting()))
+                tptr->getref()->redraw(dc, dirty);
 			tptr = tptr->next();
 		}
 		while (tptr != objptrs);

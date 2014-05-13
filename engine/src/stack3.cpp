@@ -893,10 +893,10 @@ MCCard *MCStack::getcardid(uint4 inid)
 MCCard *MCStack::findcardbyid(uint4 p_id)
 {
 	MCCard *t_cards;
-	if (editing == NULL)
+	//if (editing == NULL)
 		t_cards = cards;
-	else
-		t_cards = savecards;
+	//else
+	//	t_cards = savecards;
 
 	MCCard *t_card;
 	t_card = t_cards;
@@ -916,7 +916,7 @@ MCCard *MCStack::findcardbyid(uint4 p_id)
 
 MCControl *MCStack::getcontrolid(Chunk_term type, uint4 inid, bool p_recurse)
 {
-	if (controls == NULL && (editing == NULL || savecontrols == NULL))
+	if (controls == NULL && (editing == NULL /*|| savecontrols == NULL*/))
 		return NULL;
 	if (controls != NULL)
 	{
@@ -955,6 +955,7 @@ MCControl *MCStack::getcontrolid(Chunk_term type, uint4 inid, bool p_recurse)
 		}
 		while (tobj != controls);
 	}
+#if 0
 	if (editing != NULL && savecontrols != NULL)
 	{
 		MCControl *tobj = savecontrols;
@@ -971,6 +972,7 @@ MCControl *MCStack::getcontrolid(Chunk_term type, uint4 inid, bool p_recurse)
 		}
 		while (tobj != savecontrols);
 	}
+#endif
 	return NULL;
 }
 

@@ -1240,7 +1240,7 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 
 void MCStack::GetGroupProps(MCExecContext& ctxt, Properties which, MCStringRef& r_props)
 {
-	MCControl *startptr = editing == nil ? controls : savecontrols;
+	MCControl *startptr = /*editing == nil ?*/ controls /*: savecontrols*/;
 	MCControl *optr = startptr;
 
 	MCAutoListRef t_prop_list;

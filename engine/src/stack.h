@@ -135,9 +135,9 @@ protected:
 	MCCard *curcard;
 	MCControl *controls;
 	MCGroup *editing;
-	MCCard *savecard;
+	/*MCCard *savecard;
 	MCCard *savecards;
-	MCControl *savecontrols;
+	MCControl *savecontrols;*/
 	MCAudioClip *aclips;
 	MCVideoClip *vclips;
 	uint4 backgroundid;
