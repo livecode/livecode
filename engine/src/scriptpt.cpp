@@ -1326,7 +1326,9 @@ Parse_stat MCScriptPoint::lookup(Script_point t, const LT *&dlt)
 		uint2 high = table_sizes[t];
 		uint2 low = 0;
 		int4 cond;
-        const char *token_cstring = MCStringGetCString(gettoken_stringref());
+        MCAutoStringRefAsCString t_token;
+        t_token . Lock(gettoken_stringref());
+        const char *token_cstring = *t_token;
         
 		while (low < high)
 		{
@@ -1361,7 +1363,10 @@ Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
 	uint2 high = constant_table_size;
 	uint2 low = 0;
 	int4 cond;
-    const char *token_cstring = MCStringGetCString(gettoken_stringref());
+    
+    MCAutoStringRefAsCString t_token;
+    t_token . Lock(gettoken_stringref());
+    const char *token_cstring = *t_token;
     
 	while (low < high)
 	{

@@ -339,33 +339,33 @@ enum MCUnicodeCompareOption
 ////////////////////////////////////////////////////////////////////////////////
 
 // Compares two strings using the locale-independent collator
-int32_t MCUnicodeCompare(const unichar_t *p_first, uindex_t p_first_length,
-                         const unichar_t *p_second, uindex_t p_second_length,
+int32_t MCUnicodeCompare(const void *p_first, uindex_t p_first_length, bool p_first_native,
+                         const void *p_second, uindex_t p_second_length, bool p_second_native,
                          MCUnicodeCompareOption);
 
 // Returns whether the first string begins with the second
-bool MCUnicodeBeginsWith(const unichar_t *p_first, uindex_t p_first_length,
-                         const unichar_t *p_second, uindex_t p_second_length,
+bool MCUnicodeBeginsWith(const void *p_first, uindex_t p_first_length, bool p_first_native,
+                         const void *p_second, uindex_t p_second_length, bool p_second_native,
                          MCUnicodeCompareOption);
 
 // Returns whether the first string ends with the second
-bool MCUnicodeEndsWith(const unichar_t *p_first, uindex_t p_first_length,
-                       const unichar_t *p_second, uindex_t p_second_length,
+bool MCUnicodeEndsWith(const void *p_first, uindex_t p_first_length, bool p_first_native,
+                       const void *p_second, uindex_t p_second_length, bool p_second_native,
                        MCUnicodeCompareOption);
 
 // Returns whether the string contains the given substring
-bool MCUnicodeContains(const unichar_t *p_string, uindex_t p_string_length,
-                       const unichar_t *p_needle, uindex_t p_needle_length,
+bool MCUnicodeContains(const void *p_string, uindex_t p_string_length, bool p_string_native,
+                       const void *p_needle, uindex_t p_needle_length, bool p_needle_native,
                        MCUnicodeCompareOption);
 
 // Returns the index of the first occurence of the substring in the given string
-bool MCUnicodeFirstIndexOf(const unichar_t *p_string, uindex_t p_string_length,
-                           const unichar_t *p_needle, uindex_t p_needle_length,
+bool MCUnicodeFirstIndexOf(const void *p_string, uindex_t p_string_length, bool p_string_native,
+                           const void *p_needle, uindex_t p_needle_length, bool p_needle_native,
                            MCUnicodeCompareOption, uindex_t &r_index);
 
 // Returns the index of the last occurence of the substring in the given string
-bool MCUnicodeLastIndexOf(const unichar_t *p_string, uindex_t p_string_length,
-                          const unichar_t *p_needle, uindex_t p_needle_length,
+bool MCUnicodeLastIndexOf(const void *p_string, uindex_t p_string_length, bool p_string_native,
+                          const void *p_needle, uindex_t p_needle_length, bool p_needle_native,
                           MCUnicodeCompareOption, uindex_t &r_index);
 
 // Returns the index of the first occurence of the codepoint in the given string
@@ -377,20 +377,20 @@ bool MCUnicodeLastIndexOfChar(const unichar_t *p_string, uindex_t p_string_lengt
                               codepoint_t p_needle, MCUnicodeCompareOption, uindex_t &r_index);
 
 // Returns the length in both sequences of a matching prefix
-void MCUnicodeSharedPrefix(const unichar_t *p_string, uindex_t p_string_length,
-                           const unichar_t *p_prefix, uindex_t p_prefix_length,
+void MCUnicodeSharedPrefix(const void *p_string, uindex_t p_string_length, bool p_string_native,
+                           const void *p_needle, uindex_t p_needle_length, bool p_needle_native,
                            MCUnicodeCompareOption p_option, uindex_t &r_len_in_string, uindex_t &r_len_in_prefix);
 
 // Returns the length in both sequences of a matching suffix
-void MCUnicodeSharedSuffix(const unichar_t *p_string, uindex_t p_string_length,
-                           const unichar_t *p_suffix, uindex_t p_suffix_length,
+void MCUnicodeSharedSuffix(const void *p_string, uindex_t p_string_length, bool p_string_native,
+                           const void *p_needle, uindex_t p_needle_length, bool p_needle_native,
                            MCUnicodeCompareOption p_option, uindex_t &r_len_in_string, uindex_t &r_len_in_suffix);
 
 // Searches a string for a given substring and returns the range that was equal
 // to the substring (note that this may be a different length to the substring!)
-bool MCUnicodeFind(const unichar_t *p_string, uindex_t p_string_length,
-                   const unichar_t *p_needle, uindex_t p_needle_length,
-                   MCUnicodeCompareOption, MCRange &r_matched_range);
+bool MCUnicodeFind(const void *p_string, uindex_t p_string_length, bool p_string_native,
+                   const void *p_needle, uindex_t p_needle_length, bool p_needle_native,
+                   MCUnicodeCompareOption p_option, MCRange &r_matched_range);
 
 // Hashes the given string, ignoring case or normalisation differences if
 // requested (i.e the string is folded or normalised before hashing)
@@ -399,7 +399,7 @@ hash_t MCUnicodeHash(const unichar_t *p_string, uindex_t p_string_length,
 
 // Returns true if source_chars are a match for pattern_chars under the rules
 // of LiveCode wildcard matches.
-bool MCUnicodeWildcardMatch(const unichar_t *source_chars, uindex_t source_length, const unichar_t *pattern_chars, uindex_t pattern_length, MCUnicodeCompareOption p_option);
+bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bool p_source_native, const void *pattern_chars, uindex_t pattern_length, bool p_pattern_native, MCUnicodeCompareOption p_option);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
