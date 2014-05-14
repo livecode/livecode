@@ -421,7 +421,7 @@ bool MCSystemListFontsForFamily(MCStringRef p_family, MCListRef& r_styles)
         if (!MCStringCreateWithCFString((CFStringRef)t_font, &t_font_string))
 			return false;
 
-        if (MCStringIsEqualToString(*t_font_string, MCSTR("-Bold"), kMCStringOptionCompareCaseless))
+        if (MCStringEndsWith(*t_font_string, MCSTR("-Bold"), kMCStringOptionCompareCaseless))
             t_bold = true;
         else if (MCStringEndsWith(*t_font_string, MCSTR("-italic"), kMCStringOptionCompareCaseless) ||
                  MCStringEndsWith(*t_font_string, MCSTR("-oblique"), kMCStringOptionCompareCaseless))
