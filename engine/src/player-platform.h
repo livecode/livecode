@@ -196,7 +196,21 @@ public:
     MCRectangle getcontrollerpartrect(const MCRectangle& total_rect, int part);
 
     void drawcontroller(MCDC *dc);
+    void drawnicecontroller(MCDC *dc);
+    void drawControllerVolumeButton(MCDC *dc);
+    void drawControllerVolumeBarButton(MCDC *dc);
+    void drawControllerVolumeSelectorButton(MCDC *dc);
+    void drawControllerPlayPauseButton(MCDC *dc);
+    void drawControllerWellButton(MCDC *dc);
+    void drawControllerThumbButton(MCDC *dc);
+    void drawControllerScrubForwardButton(MCDC *dc);
+    void drawControllerScrubBackButton(MCDC *dc);
+    void drawControllerSelectionStartButton(MCDC *dc);
+    void drawControllerSelectionFinishButton(MCDC *dc);
+
+
     void drawcontrollerbutton(MCDC *dc, const MCRectangle& rect);
+    void drawnicecontrollerbutton(MCGContextRef &r_gcontext, const MCRectangle& p_rect);
 
     void redrawcontroller(void);
     
