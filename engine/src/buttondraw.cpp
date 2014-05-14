@@ -316,11 +316,12 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		case F_ROUNDRECT:
 			if (borderwidth != 0)
 			{
-				MCRectangle trect = MCU_reduce_rect(shadowrect, borderwidth >> 1);
+				// MM-2014-04-08: [[ Bug 11662/11398 ]] Let the context take care of insetting the rectangle.
+				//  This solves 2 bugs. Round rect buttons are drawn at the wrong size (compared to square buttons) (11662)
+				//  and the corners of round rect buttons are inconsistent (11398).
 				dc->setlineatts(borderwidth - 1, LineSolid, CapButt, JoinBevel);
-
 				setforeground(dc, DI_FORE, False);
-				dc->drawroundrect(trect, DEFAULT_RADIUS);
+				dc->drawroundrect(shadowrect, DEFAULT_RADIUS, true);
 				dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
 			}
 			break;
@@ -424,7 +425,8 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				MCValueRef lineval = nil;
 				/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, lineval);
 				MCStringRef line = (MCStringRef)(lineval);
-				twidth = MCFontMeasureText(m_font, line);
+                // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+                twidth = MCFontMeasureText(m_font, line, getstack() -> getdevicetransform());
 				
 				// Mnemonic position calculation
 				uindex_t t_mnemonic = 0;
@@ -592,7 +594,8 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 	
 	if (!MCStringIsEmpty(acceltext))
 	{
-		uint2 awidth = MCFontMeasureText(m_font, acceltext);
+        // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+        uint2 awidth = MCFontMeasureText(m_font, acceltext, getstack() -> getdevicetransform());
 		if (rightmargin == defaultmargin || menucontrol == MENUCONTROL_ITEM)
             drawdirectionaltext(dc, srect.x + srect.width - rightmargin - awidth, sy, acceltext, m_font);
 		else
@@ -613,9 +616,11 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 		{
 			MCRange t_before = MCRangeMake(0, mnemonic - 1);
 			MCRange t_letter = MCRangeMake(mnemonic - 1, 1);
-			
-			int32_t mstart = sx + MCFontMeasureTextSubstring(m_font, p_label, t_before);
-			int32_t mwidth = MCFontMeasureTextSubstring(m_font, p_label, t_letter);
+
+            // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            int32_t mstart = sx + MCFontMeasureTextSubstring(m_font, p_label, t_before, getstack() -> getdevicetransform());
+            int32_t mwidth = MCFontMeasureTextSubstring(m_font, p_label, t_letter, getstack() -> getdevicetransform());
+
 			sy += mnemonicoffset;
 			dc->drawline(mstart, sy, mstart + mwidth, sy);
 		}
@@ -1245,7 +1250,9 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 			t_range.length--;
 		}
 		uint2 textx; //x coord of the begining of the button text
-		uint2 twidth = MCFontMeasureTextSubstring(m_font, t_tab, t_range);
+        // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+        uint2 twidth = MCFontMeasureTextSubstring(m_font, t_tab, t_range, getstack() -> getdevicetransform());
+
 		if (MCcurtheme && MCcurtheme->iswidgetsupported(WTHEME_TYPE_TABPANE) &&
 		        MCcurtheme->iswidgetsupported(WTHEME_TYPE_TAB))
 		{
@@ -1301,9 +1308,11 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 			//
 
 			if (i==0)
-				tabwinfo.attributes |= WTHEME_ATT_FIRSTTAB;
-			else if (i == (t_ntabs - 1))
+                tabwinfo.attributes |= WTHEME_ATT_FIRSTTAB;
+            // MW-2014-04-25: [[ Bug 6400 ]] A tab can be both first and last :)
+            if (i == (t_ntabs - 1))
 				tabwinfo.attributes |= WTHEME_ATT_LASTTAB;
+            
 			MCRectangle tabrect = MCU_compute_rect(curx, srect.y + yoffset, curx + twidth, srect.y + theight);
 			if (MCcurtheme->getthemeid() != LF_NATIVEGTK || (srect.x + srect.width > curx + twidth + 5 &&
 			        srect.y + srect.height > (srect.y + theight * 2)))

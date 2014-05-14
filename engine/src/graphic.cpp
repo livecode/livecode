@@ -2044,11 +2044,12 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		uint2 twidth = 0;
 		for (i = 0 ; i < nlines ; i++)
 		{
-			// Note: 'lines' is an array of strings
+            // Note: 'lines' is an array of strings
 			MCValueRef lineval = nil;
 			/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, lineval);
 			MCStringRef line = (MCStringRef)(lineval);
-			twidth = MCFontMeasureText(m_font, line);
+            // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            twidth = MCFontMeasureText(m_font, line, getstack() -> getdevicetransform());
 			
 			switch (flags & F_ALIGNMENT)
 			{

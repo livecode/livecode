@@ -54,6 +54,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
+#include <sys/sysctl.h>
 
 #include <Security/Authorization.h>
 #include <Security/AuthorizationTags.h>
@@ -1709,20 +1710,22 @@ const char *MCS_getaddress()
 	return buffer;
 }
 
+// PM-2014-03-26: [[ Bug 2627 ]] - The machine() function returned "unknown" under Mac OS X
+// This was because Gestalt is deprecated
 const char *MCS_getmachine()
 {
-	static Str255 machineName;
-	long response;
-	if ((errno = Gestalt(gestaltMachineType, &response)) == noErr)
-	{
-		GetIndString(machineName, kMachineNameStrID, response);
-		if (machineName != nil)
-		{
-			p2cstr(machineName);
-			return (const char*)machineName;
-		}
-	}
-	return "unknown";
+    size_t t_len = 0;
+    sysctlbyname("hw.model", NULL, &t_len, NULL, 0);
+    
+    if (t_len)
+    {
+        char *t_model = (char*)malloc(t_len*sizeof(char));
+        sysctlbyname("hw.model", t_model, &t_len, NULL, 0);
+        
+        return t_model;
+    }
+    
+    return "unknown"; //in case model name can't be read
 }
 
 // MW-2006-05-03: [[ Bug 3524 ]] - Make sure processor returns something appropriate in Intel

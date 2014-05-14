@@ -419,9 +419,10 @@ void MCField::gettabs(uint2 *&t, uint2 &n, Boolean &fixed)
 		// MW-2012-02-14: [[ FontRefs ]] Compute the width of a space in the field's
 		//   font.
 		// MW-2012-02-17: If we aren't opened, then just use a default value.
+		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 		int4 t_space_width;
 		if (opened)
-			t_space_width = MCFontMeasureText(m_font, MCSTR(" "));
+            t_space_width = MCFontMeasureText(m_font, MCSTR(" "), getstack() -> getdevicetransform());
 		else
 			t_space_width = 8;
 		 
@@ -619,8 +620,12 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 			p_context->begin(false);
 		}
 		
+        // MW-2014-04-10: [[ Bug 12020 ]] Make sure we use a linesize of 1 rather than 0 (hairline)
+        //   to ensure caret is not too thin on retina displays.
+        p_context->setlineatts(1, LineSolid, CapButt, JoinBevel);
 		p_context->drawline(cursorrectp.x, cursorrectp.y, cursorrectp.x, cursorrectp.y + cursorrectp.height - 1);
         p_context->drawline(cursorrects.x, cursorrects.y, cursorrects.x, cursorrects.y + cursorrects.height - 1);
+        p_context->setlineatts(0, LineSolid, CapButt, JoinBevel);
 		
 		if (t_is_opaque)
 		{
@@ -1069,6 +1074,7 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 			uint2 ct = 0;
 			int4 x;
 			x = t_delta + t[0];
+            
 			while (x <= grect.x + grect.width)
 			{
 				// MW-2012-05-03: [[ Bug 10200 ]] If set at the field level, the vGrid should start
@@ -1085,8 +1091,10 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 				
 				// MW-2012-03-19: [[ FixedTable ]] If we have reached the final tab in fixed
 				//   table mode, we are done.
-				if (ct == nt - 2 && t[nt - 2] == t[nt - 1])
-					break;
+				// PM-2014-04-08: [[ Bug 12146 ]] Setting tabstops to 2 equal numbers and then
+                //  turning VGrid on, hangs LC, because this while loop ran forever
+                if (ct == nt - 1 && (nt < 2 || t[nt - 2] == t[nt - 1]))
+                    break;
 			}
 		}
 

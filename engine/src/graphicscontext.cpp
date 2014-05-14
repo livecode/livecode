@@ -1246,8 +1246,9 @@ void MCGraphicsContext::drawtext_substring(int2 x, int2 y, MCStringRef p_string,
 	//   rect.
 	if (p_image)
 	{
+		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the context to make sure we measure the width of scaled text correctly.
 		int32_t t_width;
-		t_width = MCFontMeasureTextSubstring(p_font, p_string, p_range);
+        t_width = MCFontMeasureTextSubstring(p_font, p_string, p_range, MCGContextGetDeviceTransform(m_gcontext));
 		
 		MCGContextSave(m_gcontext);
 		setforeground(m_background);

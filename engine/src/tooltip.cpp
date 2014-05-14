@@ -179,7 +179,8 @@ void MCTooltip::opentip()
 		MCValueRef t_lineval = nil;
 		/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, t_lineval);
 		t_line = (MCStringRef)t_lineval;
-		rect.width = MCU_max(MCFontMeasureText(m_font, t_line) + 8, rect.width);
+        // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+        rect.width = MCU_max(MCFontMeasureText(m_font, t_line, getstack() -> getdevicetransform()) + 8, rect.width);
 		rect.height += t_fheight +3;
 	}
 
