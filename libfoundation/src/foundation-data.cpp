@@ -404,6 +404,17 @@ bool MCDataPad(MCDataRef p_data, byte_t p_byte, uindex_t p_count)
 	return true;
 }
 
+compare_t MCDataCompareTo(MCDataRef p_left, MCDataRef p_right)
+{
+    compare_t t_result;
+    t_result = memcmp(p_left -> bytes, p_right -> bytes, MCMin(p_left -> byte_count, p_right -> byte_count));
+    
+    if (t_result != 0)
+        return t_result;
+    
+    return p_left -> byte_count - p_right -> byte_count;
+}
+
 #if defined(__MAC__) || defined (__IOS__)
 bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata)
 {

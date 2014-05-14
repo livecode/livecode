@@ -449,6 +449,9 @@ int32_t MCUnicodeCollate(MCLocaleRef, MCUnicodeCollateOption,
                             const unichar_t* p_first, uindex_t p_first_len,
                             const unichar_t* p_second, uindex_t p_second_len);
 
+// Returns the appropriate collation options from the string comparison type.
+MCUnicodeCollateOption MCUnicodeCollateOptionFromCompareOption(MCUnicodeCompareOption p_option);
+
 // Creates a sort key using the given collator that can be used for simple
 // binary comparisons of strings. In general, the sort key will be distinct from
 // the string itself and cannot be used to recover the source string.

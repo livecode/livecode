@@ -1829,69 +1829,31 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 	uint4 nitems = 0;
 	MCerrorlock++;
     
+    extern void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, int form, MCValueRef p_input, MCExpression *by);
+    extern void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type p_form, MCStringOptions p_options);
+    
 	do
 	{
 		items.Extend(nitems + 1);
 		items[nitems].data = (void *)curcard;
-		switch (form)
-		{
-		case ST_DATETIME:
+        
+        if (!marked || curcard->getmark())
+            MCStringsSortAddItem(ctxt, items . Ptr(), nitems, form, nil, by);
+        else
         {
-            MCAutoValueRef t_value;
-            // SN-2014-03-21 [[ Bug 11953 ]]: missing parentheses around the OR where letting t_value storing a nil value.
-            if ((!marked || curcard->getmark())
-                    && ctxt . EvalExprAsValueRef(by, EE_SORT_BADTARGET, &t_value))
-			{
-				MCAutoStringRef t_out;
-				if (MCD_convert(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_out))
-					if (ctxt.ConvertToNumber(*t_out, items[nitems].nvalue))
-						break;
-			}
-
-			/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
-			break;
+            if (form == ST_DATETIME || form == ST_NUMERIC)
+                /* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
+            else if (form == ST_BINARY)
+                items[nitems] . dvalue = MCValueRetain(kMCEmptyData);
+            else
+                items[nitems] . svalue = MCValueRetain(kMCEmptyString);
         }
-		case ST_NUMERIC:
-        {
-            MCAutoValueRef t_value;
-			if ((!marked || curcard->getmark())
-                    && ctxt . EvalExprAsValueRef(by, EE_SORT_BADTARGET, &t_value)
-					&& ctxt.ConvertToNumber(*t_value, items[nitems].nvalue))
-				break;
-
-			/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
-			break;
-        }
-		case ST_INTERNATIONAL:
-		case ST_TEXT:
-        {
-            MCAutoStringRef t_string;
-            if ((!marked || curcard->getmark()) && ctxt . EvalExprAsStringRef(by, EE_SORT_BADTARGET, &t_string))
-            {
-				if (ctxt.GetCaseSensitive())
-                    items[nitems].svalue = MCValueRetain(*t_string);
-				else
-				{
-					MCStringRef t_mutable;
-                    /* UNCHECKED */ MCStringMutableCopy(*t_string, t_mutable);
-					/* UNCHECKED */ MCStringLowercase(t_mutable, kMCSystemLocale);
-					/* UNCHECKED */ MCStringCopyAndRelease(t_mutable, items[nitems].svalue);
-				}
-			}
-			else
-				items[nitems].svalue = MCValueRetain(kMCEmptyString);
-			break;
-        }
-		default:
-			break;
-		}
-		nitems++;
 		curcard = (MCCard *)curcard->next();
 	}
 	while (curcard != cptr);
 	MCerrorlock--;
 	if (nitems > 1)
-		MCU_sort(items.Ptr(), nitems, dir, form);
+		MCStringsSort(items . Ptr(), nitems, dir, form, ctxt . GetStringComparisonType());
 	MCCard *newcards = NULL;
 	uint4 i;
 	for (i = 0 ; i < nitems ; i++)

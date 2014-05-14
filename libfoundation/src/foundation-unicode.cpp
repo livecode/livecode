@@ -1305,6 +1305,28 @@ hash_t MCUnicodeHash(const unichar_t *p_string, uindex_t p_string_length, MCUnic
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCUnicodeCollateOption MCUnicodeCollateOptionFromCompareOption(MCUnicodeCompareOption p_option)
+{
+    intenum_t t_option;
+    
+    if (p_option == kMCUnicodeCompareOptionExact)
+        t_option = kMCUnicodeCollateOptionStrengthIdentical;
+    else if (p_option == kMCUnicodeCompareOptionNormalised)
+    {
+        t_option = kMCUnicodeCollateOptionStrengthIdentical;
+        t_option |= kMCUnicodeCollateOptionAutoNormalise;
+    }
+    else if (p_option == kMCUnicodeCompareOptionFolded)
+        t_option = kMCUnicodeCollateOptionStrengthTertiary;
+    else
+    {
+        t_option = kMCUnicodeCollateOptionStrengthSecondary;
+        t_option |= kMCUnicodeCollateOptionAutoNormalise;
+    }
+    
+    return (MCUnicodeCollateOption)t_option;
+}
+
 int32_t MCUnicodeCollate(MCLocaleRef p_locale, MCUnicodeCollateOption p_options,
                          const unichar_t *p_first, uindex_t p_first_length,
                          const unichar_t *p_second, uindex_t p_second_length)

@@ -34,6 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec-strings.h"
 
 #include "chunk.h"
+#include "date.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2025,3 +2026,193 @@ void MCStringsEvalIsNotAscii(MCExecContext& ctxt, MCValueRef p_value, bool& r_re
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCStringsDoSort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, bool reverse, MCStringOptions p_options)
+{
+    if (n <= 1)
+		return;
+    
+	uint4 n1 = n / 2;
+	uint4 n2 = n - n1;
+	MCSortnode *b1 = b;
+	MCSortnode *b2 = b + n1;
+    
+	MCStringsDoSort(b1, n1, t, form, reverse, p_options);
+	MCStringsDoSort(b2, n2, t, form, reverse, p_options);
+    
+	MCSortnode *tmp = t;
+	while (n1 > 0 && n2 > 0)
+	{
+		// NOTE:
+		//
+		// This code assumes the types in the MCSortnodes are correct for the
+		// requested sort type. Bad things will happen if this isn't true...
+		bool first;
+		switch (form)
+		{
+            case ST_INTERNATIONAL:
+			{
+                const unichar_t *t1, *t2;
+                t1 = MCStringGetCharPtr(b1->svalue);
+                t2 = MCStringGetCharPtr(b2->svalue);
+                
+                compare_t result = MCUnicodeCollate(kMCSystemLocale, MCUnicodeCollateOptionFromCompareOption((MCUnicodeCompareOption)p_options), t1, MCStringGetLength(b1->svalue), t2, MCStringGetLength(b2->svalue));
+				first = reverse ? result >= 0 : result <= 0;
+				break;
+			}
+                
+            case ST_TEXT:
+			{
+				// This mode performs the comparison in a locale-independent,
+                // case-sensitive manner. The strings are sorted by order of
+                // codepoint values rather than any lexical sorting order.
+                compare_t result = MCStringCompareTo(b1->svalue, b2->svalue, kMCStringOptionCompareExact);
+                
+				first = reverse ? result >= 0 : result <= 0;
+				break;
+			}
+            case ST_BINARY:
+            {
+                compare_t result = MCDataCompareTo(b1->dvalue, b2->dvalue);
+                
+				first = reverse ? result >= 0 : result <= 0;
+				break;
+            }
+            default:
+			{
+				first = reverse
+                ? MCNumberFetchAsReal(b1->nvalue) >= MCNumberFetchAsReal(b2->nvalue)
+                : MCNumberFetchAsReal(b1->nvalue) <= MCNumberFetchAsReal(b2->nvalue);
+				break;
+			}
+        }
+		if (first)
+		{
+			*tmp++ = *b1++;
+			n1--;
+		}
+		else
+		{
+			*tmp++ = *b2++;
+			n2--;
+		}
+	}
+    
+	for (uindex_t i = 0; i < n1; i++)
+		tmp[i] = b1[i];
+	for (uindex_t i = 0; i < (n - n2); i++)
+		b[i] = t[i];
+}
+
+void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type p_form, MCStringOptions p_options)
+{
+    if (nitems > 1)
+    {
+        MCSortnode *tmp = new MCSortnode[nitems];
+        MCStringsDoSort(p_items, nitems, tmp, p_form, p_dir == ST_DESCENDING, p_options);
+        delete[] tmp;
+    }
+}
+
+void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, int form, MCValueRef p_input, MCExpression *by)
+{
+    bool t_success;
+    t_success = true;
+    
+	MCAutoValueRef t_output;
+	if (by != NULL)
+	{
+		MCerrorlock++;
+        if (p_input != nil)
+            MCeach->set(ctxt, p_input);
+        t_success = ctxt . EvalExprAsValueRef(by, EE_UNDEFINED, &t_output);
+		MCerrorlock--;
+	}
+	else
+        t_output = p_input;
+	
+	MCAutoStringRef t_converted;
+	switch (form)
+	{
+        case ST_DATETIME:
+            if (t_success && MCD_convert(ctxt, *t_output, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_converted))
+                if (ctxt.ConvertToNumber(*t_converted, items[nitems].nvalue))
+                    break;
+            
+            /* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
+            break;
+			
+        case ST_NUMERIC:
+            if (t_success && ctxt.ConvertToNumber(*t_output, items[nitems].nvalue))
+                break;
+			
+            /* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
+            break;
+        case ST_BINARY:
+            if (t_success && ctxt.ConvertToData(*t_output, items[nitems].dvalue))
+                break;
+            items[nitems] . dvalue = MCValueRetain(kMCEmptyData);
+        default:
+            if (ctxt . GetCaseSensitive())
+			{
+                if (t_success && ctxt.ConvertToString(*t_output, items[nitems].svalue))
+                    break;
+            }
+            else
+            {
+                MCStringRef t_fixed, t_mutable;
+                t_fixed = nil;
+                t_mutable = nil;
+                if (t_success)
+                    t_success = ctxt.ConvertToString(*t_output, t_fixed) &&
+                                MCStringMutableCopyAndRelease(t_fixed, t_mutable) &&
+                                MCStringLowercase(t_mutable, kMCSystemLocale) &&
+                                MCStringCopyAndRelease(t_mutable, items[nitems].svalue);
+                
+                if (t_success)
+                    break;
+                
+                MCValueRelease(t_fixed);
+                MCValueRelease(t_mutable);
+            }
+            items[nitems].svalue = MCValueRetain(kMCEmptyString);
+			
+            break;
+	}
+	nitems++;
+}
+
+void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, MCStringRef *p_strings_array, uindex_t p_count, MCExpression *p_by, MCStringRef*& r_sorted_array, uindex_t& r_sorted_count)
+{
+	// OK-2008-12-11: [[Bug 7503]] - If there are 0 items in the string, don't carry out the search,
+	// this keeps the behavior consistent with previous versions of Revolution.
+	if (p_count < 1)
+	{
+        r_sorted_count = 0;
+        return;
+	}
+    
+	// Now we know the item count, we can allocate an array of MCSortnodes to store them.
+	MCAutoArray<MCSortnode> t_items;
+	t_items.Extend(p_count + 1);
+    uindex_t t_added = 0;
+    
+	// Next, populate the MCSortnodes with all the items to be sorted
+    for (uindex_t i = 0; i < p_count; i++)
+    {
+        MCStringsSortAddItem(ctxt, t_items . Ptr(), t_added, p_form, p_strings_array[i], p_by);
+        t_items[t_added - 1] . data = (void *)p_strings_array[i];
+    }
+
+    MCStringsSort(t_items . Ptr(), t_added, p_dir, p_form, ctxt . GetStringComparisonType());
+
+    MCAutoArray<MCStringRef> t_sorted;
+    
+ 	for (uindex_t i = 0; i < t_added; i++)
+    {
+        t_sorted . Push((MCStringRef)t_items[i] . data);
+        MCValueRelease(t_items[i] . svalue);
+    }
+    
+    t_sorted . Take(r_sorted_array, r_sorted_count);
+}

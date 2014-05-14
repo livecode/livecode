@@ -46,6 +46,7 @@ struct MCSortnode
 	{
 		MCStringRef svalue;
 		MCNumberRef nvalue;
+        MCDataRef dvalue;
 	};
 	
 	const void *data;

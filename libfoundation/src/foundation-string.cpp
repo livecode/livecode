@@ -58,9 +58,6 @@ static void __MCStringShrinkAt(MCStringRef string, uindex_t at, uindex_t count);
 // This method clamps the given range to the valid limits for the string.
 static void __MCStringClampRange(MCStringRef string, MCRange& x_range);
 
-// This method checks to see if self has a native char ptr already.
-static bool __MCStringHasNativeChars(MCStringRef self);
-
 // This method forces a nativization of a string even if there is already a native char ptr.
 static uindex_t __MCStringNativize(MCStringRef string);
 
@@ -1895,14 +1892,6 @@ compare_t MCStringCompareTo(MCStringRef self, MCStringRef p_other, MCStringOptio
     
     if (__MCStringIsIndirect(p_other))
         p_other = p_other -> string;
-    
-    if (MCStringIsNative(self) && MCStringIsNative(p_other))
-    {
-        if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral)
-            return MCNativeCharsCompareExact(self -> native_chars, self -> char_count, p_other -> native_chars, p_other -> char_count);
-        
-        return MCNativeCharsCompareCaseless(self -> native_chars, self -> char_count, p_other -> native_chars, p_other -> char_count);
-    }
 
     return MCUnicodeCompare(self -> chars, self -> char_count, MCStringIsNative(self), p_other -> chars, p_other -> char_count, MCStringIsNative(p_other), (MCUnicodeCompareOption)p_options);
 }
@@ -2500,9 +2489,9 @@ static uindex_t MCStringCountStrChars(MCStringRef self, MCRange p_range, const v
     bool self_native = MCStringIsNative(self);
     const void *self_chars;
     if (self_native)
-        self_chars = self -> chars + p_range . offset;
-    else
         self_chars = self -> native_chars + p_range . offset;
+    else
+        self_chars = self -> chars + p_range . offset;
     
 	// Loop through the char range checking for occurrences of needle.
 	uindex_t t_offset;
@@ -4151,14 +4140,6 @@ static void __MCStringShrinkAt(MCStringRef self, uindex_t p_at, uindex_t p_count
 	self -> char_count -= p_count;
 
 	// TODO: Shrink the buffer if its too big.
-}
-
-static bool __MCStringHasNativeChars(MCStringRef self)
-{
-    if (__MCStringIsIndirect(self))
-        self = self -> string;
-    
-    return (self -> native_chars != nil || MCStringIsNative(self));
 }
 
 static uindex_t __MCStringNativize(MCStringRef self)

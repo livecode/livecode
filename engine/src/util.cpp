@@ -1270,7 +1270,13 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 				first = reverse ? result >= 0 : result <= 0;
 				break;
 			}
-				
+        case ST_BINARY:
+            {
+                compare_t result = MCDataCompareTo(b1->dvalue, b2->dvalue);
+                
+				first = reverse ? result >= 0 : result <= 0;
+				break;
+            }
 		default:
 			{
 				first = reverse
