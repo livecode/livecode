@@ -2495,7 +2495,7 @@ static uindex_t MCStringCountStrChars(MCStringRef self, MCRange p_range, const v
     
 	// Loop through the char range checking for occurrences of needle.
 	uindex_t t_offset;
-	t_offset = 0;
+	t_offset = p_range . offset;
 	while(t_offset < p_range . offset + p_range . length)
 	{
 		// Compute the length of the shared prefix at the current offset.
@@ -2514,7 +2514,7 @@ static uindex_t MCStringCountStrChars(MCStringRef self, MCRange p_range, const v
 			t_offset += 1;
 	}
 
-	// Return the number of occurances.
+	// Return the number of occurrences.
 	return t_count;
 }
 
