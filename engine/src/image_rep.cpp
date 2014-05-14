@@ -107,8 +107,9 @@ bool MCLoadableImageRep::ConvertToMCGFrames(MCBitmapFrame *&x_frames, uint32_t p
 	
 	for (uint32_t i = 0; t_success && i < p_frame_count; i++)
 	{
-		t_frames[i].density = t_frames[i].density;
-		t_frames[i].duration = t_frames[i].duration;
+		// IM-2014-05-14: [[ ImageRepUpdate ]] Fix density & duration not being copied from the bitmap frames
+		t_frames[i].density = x_frames[i].density;
+		t_frames[i].duration = x_frames[i].duration;
 		
 		t_success = MCImageBitmapCopyAsMCGImageAndRelease(x_frames[i].image, p_premultiplied, t_frames[i].image);
 	}

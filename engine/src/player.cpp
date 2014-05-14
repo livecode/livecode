@@ -2610,10 +2610,17 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			MCImageDescriptor t_image;
 			MCMemoryClear(&t_image, sizeof(t_image));
 			t_image.filter = kMCGImageFilterNone;
-			MCPlatformLockPlayerBitmap(m_platform_player, t_image . bitmap);
-			if (t_image . bitmap != nil)
+			
+			// IM-2014-05-14: [[ ImageRepUpdate ]] Wrap locked bitmap in MCGImage
+			MCImageBitmap *t_bitmap = nil;
+			MCPlatformLockPlayerBitmap(m_platform_player, t_bitmap);
+			
+			MCGRaster t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
+			MCGImageCreateWithRasterNoCopy(t_raster, t_image.image);
+			if (t_image . image != nil)
 				dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
-			MCPlatformUnlockPlayerBitmap(m_platform_player, t_image . bitmap);
+			MCGImageRelease(t_image.image);
+			MCPlatformUnlockPlayerBitmap(m_platform_player, t_bitmap);
 		}
 	}
 #else
