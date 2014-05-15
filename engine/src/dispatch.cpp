@@ -426,7 +426,7 @@ static bool attempt_to_loadfile(IO_handle& r_stream, MCStringRef& r_path, const 
 	va_end(t_args);
 
 	IO_handle t_trial_stream;
-	t_trial_stream = MCS_open(*t_trial_path, kMCSOpenFileModeRead, True, False, 0);
+	t_trial_stream = MCS_open(*t_trial_path, kMCOpenFileModeRead, True, False, 0);
 
 	if (t_trial_stream != nil)
 	{
@@ -801,7 +801,7 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 	t_found = false;
 	if (!t_found)
 	{
-		if ((stream = MCS_open(p_name, kMCSOpenFileModeRead, True, False, 0)) != NULL)
+		if ((stream = MCS_open(p_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
 		{
 			// This should probably use resolvepath().
 			if (MCStringGetCharAtIndex(p_name, 0) != PATH_SEPARATOR 
@@ -827,7 +827,7 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 			/* UNCHECKED */ MCStringCopySubstring(p_name, MCRangeMake(t_leaf_index + 1, MCStringGetLength(p_name) - (t_leaf_index + 1)), &t_leaf_name);
 		else
 			t_leaf_name = p_name;
-		if ((stream = MCS_open(*t_leaf_name, kMCSOpenFileModeRead, True, False, 0)) != NULL)
+		if ((stream = MCS_open(*t_leaf_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
 		{
 			MCAutoStringRef t_curpath;
 			/* UNCHECKED */ MCS_getcurdir(&t_curpath);
@@ -936,7 +936,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	}
 	IO_handle stream;
 
-	if ((stream = MCS_open(*t_linkname, kMCSOpenFileModeWrite, True, False, 0)) == NULL)
+	if ((stream = MCS_open(*t_linkname, kMCOpenFileModeWrite, True, False, 0)) == NULL)
 	{
 		MCresult->sets("can't open stack file");
 		cleanup(stream, *t_linkname, *t_backup);
@@ -1639,7 +1639,9 @@ check:
 
             MCAutoValueRef t_output;
             MCU_geturl(*ctxt, MCNameGetString(p_name), &t_output);
-			if (MCresult->isempty())
+            // SN-2014-05-09 [[ Bug 12409 ]] Fields in LC 7 fail to display binfile url imagesource
+            // isempty is not what we want to use, since it returns false for a cleared result
+			if (MCresult->isclear())
             {
                 MCAutoDataRef t_data;
 

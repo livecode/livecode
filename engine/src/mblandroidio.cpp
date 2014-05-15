@@ -254,16 +254,17 @@ IO_handle MCAndroidSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolea
     uint32_t t_mode;
     switch(p_mode)
     {
-    case kMCSOpenFileModeRead:
+    case kMCOpenFileModeRead:
         t_mode = 0;
         break;
-    case kMCSOpenFileModeWrite:
+    case kMCOpenFileModeWrite:
+    case kMCOpenFileModeExecutableWrite:
         t_mode = 1;
         break;
-    case kMCSOpenFileModeUpdate:
+    case kMCOpenFileModeUpdate:
         t_mode = 2;
         break;
-    case kMCSOpenFileModeAppend:
+    case kMCOpenFileModeAppend:
         t_mode = 3;
         break;
     }
@@ -278,7 +279,7 @@ IO_handle MCAndroidSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolea
 		int32_t t_size = 0;
 		int32_t t_offset = 0;
         
-		if (p_mode != kMCSOpenFileModeRead)
+        if (p_mode != kMCOpenFileModeRead)
 			return NULL;
         
 		if (!apk_get_file_length(*t_apk_path, t_size) || !apk_get_file_offset(*t_apk_path, t_offset))
@@ -307,7 +308,7 @@ IO_handle MCAndroidSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolea
 		if (t_stream == NULL)
 			return NULL;
         
-		if (t_stream == NULL && p_mode == kMCSystemFileModeUpdate)
+		if (t_stream == NULL && p_mode == kMCOpenFileModeUpdate)
 			t_stream = fopen(*t_utf8_path, "w+");
         
         if (t_stream == NULL)

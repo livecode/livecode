@@ -4416,9 +4416,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             setlinebuf(stderr);
         }
 #endif /* MCS_init_dsk_mac */
-        IO_stdin = MCsystem -> OpenFd(0, kMCSystemFileModeRead);
-        IO_stdout = MCsystem -> OpenFd(1, kMCSystemFileModeWrite);
-        IO_stderr = MCsystem -> OpenFd(2, kMCSystemFileModeWrite);
+        IO_stdin = MCsystem -> OpenFd(0, kMCOpenFileModeRead);
+        IO_stdout = MCsystem -> OpenFd(1, kMCOpenFileModeWrite);
+        IO_stderr = MCsystem -> OpenFd(2, kMCOpenFileModeWrite);
         struct sigaction action;
         memset((char *)&action, 0, sizeof(action));
         action.sa_handler = handle_signal;
@@ -6566,7 +6566,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	
     virtual IO_handle DeployOpen(MCStringRef p_path, intenum_t p_mode)
     {
-        if (p_mode != kMCSOpenFileModeCreate)
+        if (p_mode != kMCOpenFileModeCreate)
             return OpenFile(p_path, p_mode, False);
         
         FILE *fptr;
@@ -6669,7 +6669,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (fptr != NULL)
         {
             created = False;
-            if (p_mode != kMCSOpenFileModeRead)
+            if (p_mode != kMCOpenFileModeRead)
             {
                 fclose(fptr);
                 fptr = NULL;
@@ -6680,16 +6680,17 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         {
             switch(p_mode)
             {
-                case kMCSystemFileModeRead:
+                case kMCOpenFileModeRead:
                     fptr = fopen(*t_path_utf, IO_READ_MODE);
                     break;
-                case kMCSystemFileModeUpdate:
+                case kMCOpenFileModeUpdate:
                     fptr = fopen(*t_path_utf, IO_UPDATE_MODE);
                     break;
-                case kMCSystemFileModeAppend:
+                case kMCOpenFileModeAppend:
                     fptr = fopen(*t_path_utf, IO_APPEND_MODE);
                     break;
-                case kMCSystemFileModeWrite:
+                case kMCOpenFileModeWrite:
+                case kMCOpenFileModeExecutableWrite:
                     fptr = fopen(*t_path_utf, IO_WRITE_MODE);
                     break;
                 default:
@@ -6697,7 +6698,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             }
         }
         
-        if (fptr == NULL && p_mode != kMCSystemFileModeRead)
+        if (fptr == NULL && p_mode != kMCOpenFileModeRead)
             fptr = fopen(*t_path_utf, IO_CREATE_MODE);
         
         if (fptr != NULL && created)
@@ -6730,16 +6731,17 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         switch (p_mode)
         {
-            case kMCSystemFileModeAppend:
+            case kMCOpenFileModeAppend:
                 t_stream = fdopen(p_fd, IO_APPEND_MODE);
                 break;
-            case kMCSystemFileModeRead:
+            case kMCOpenFileModeRead:
                 t_stream = fdopen(p_fd, IO_READ_MODE);
                 break;
-            case kMCSystemFileModeUpdate:
+            case kMCOpenFileModeUpdate:
                 t_stream = fdopen(p_fd, IO_UPDATE_MODE);
                 break;
-            case kMCSystemFileModeWrite:
+            case kMCOpenFileModeWrite:
+            case kMCOpenFileModeExecutableWrite:
                 t_stream = fdopen(p_fd, IO_WRITE_MODE);
                 break;
             default:
@@ -6750,7 +6752,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 			return NULL;
 		
 		// MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
-		if (p_mode == kMCSystemFileModeWrite)
+        if (p_mode == kMCOpenFileModeWrite || p_mode == kMCOpenFileModeExecutableWrite)
 			setvbuf(t_stream, NULL, _IONBF, 0);
 		
 		IO_handle t_handle;
@@ -9056,13 +9058,13 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 				close(toparent[1]);
 				MCS_mac_nodelay(toparent[0]);
 				// Store the in handle for the "process".
-				MCprocesses[index].ihandle = MCsystem -> OpenFd(toparent[0], kMCSystemFileModeRead);
+				MCprocesses[index].ihandle = MCsystem -> OpenFd(toparent[0], kMCOpenFileModeRead);
 			}
 			if (writing)
 			{
 				close(tochild[0]);
 				// Store the out handle for the "process".
-				MCprocesses[index].ohandle = MCsystem -> OpenFd(tochild[1], kMCSystemFileModeWrite);
+				MCprocesses[index].ohandle = MCsystem -> OpenFd(tochild[1], kMCOpenFileModeWrite);
 			}
 		}
 	}
@@ -9147,10 +9149,10 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 				int t_fd;
 				t_fd = dup(fileno(t_stream));
 				MCS_mac_nodelay(t_fd);
-				MCprocesses[index].ihandle = MCsystem -> OpenFd(t_fd, kMCSystemFileModeRead);
+				MCprocesses[index].ihandle = MCsystem -> OpenFd(t_fd, kMCOpenFileModeRead);
 			}
 			if (writing)
-				MCprocesses[index].ohandle = MCsystem -> OpenFd(dup(fileno(t_stream)), kMCSystemFileModeWrite);
+				MCprocesses[index].ohandle = MCsystem -> OpenFd(dup(fileno(t_stream)), kMCOpenFileModeWrite);
 			
 			noerror = True;
 		}

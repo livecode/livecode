@@ -192,7 +192,8 @@ void MCSellist::sort()
 	while (optr != objects);
 	if (nitems > 1)
 	{
-		MCU_sort(items.Ptr(), nitems, ST_ASCENDING, ST_NUMERIC);
+        extern void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type p_form, MCStringOptions p_options);
+		MCStringsSort(items.Ptr(), nitems, ST_ASCENDING, ST_NUMERIC, kMCStringOptionCompareExact);
 		uint4 i;
 		MCSelnode *newobjects = NULL;
 		for (i = 0 ; i < nitems ; i++)

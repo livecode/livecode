@@ -286,6 +286,62 @@ struct PodFieldPropType<MCInterfaceTextStyle>
     }
 };
 
+template <>
+struct PodFieldPropType<MCInterfaceFieldTabAlignments>
+{
+    typedef MCInterfaceFieldTabAlignments value_type;
+    typedef MCInterfaceFieldTabAlignments stack_type;
+    typedef MCInterfaceFieldTabAlignments return_type;
+    typedef const MCInterfaceFieldTabAlignments& arg_type;
+    
+    template<typename X> static void getter(MCExecContext& ctxt, X *sptr, void (X::*p_getter)(MCExecContext& ctxt, return_type&), return_type& r_value)
+    {
+        (sptr ->* p_getter)(ctxt, r_value);
+    }
+    
+    template<typename X> static void setter(MCExecContext &ctxt, X *sptr, void (X::*p_setter)(MCExecContext& ctxt, arg_type), arg_type p_value)
+    {
+        (sptr ->* p_setter)(ctxt, p_value);
+    }
+    
+    static void init(MCInterfaceFieldTabAlignments& self)
+    {
+        self . m_count = 0;
+        self . m_alignments = 0;
+    }
+    
+    static void input(value_type p_value, stack_type& r_value)
+    {
+        r_value = p_value;
+    }
+    
+    static bool equal(const stack_type& a, const stack_type& b)
+    {
+        return (a . m_count == b . m_count
+                && MCMemoryCompare(a . m_alignments, b . m_alignments, a . m_count * sizeof(intenum_t)) == 0);
+    }
+    
+    //static void assign(stack_type& x, stack_type y)
+    //{
+    //    x = y;
+    //}
+    
+    static void output(stack_type p_value, return_type& r_value)
+    {
+        r_value = p_value;
+    }
+    
+    static bool need_layout()
+    {
+        return true;
+    }
+    
+    static bool is_set(const MCInterfaceFieldTabAlignments& p_alignments)
+    {
+        return p_alignments.m_alignments != nil;
+    }
+};
+
 template<typename T> struct VectorFieldPropType
 {
     typedef vector_t<T> value_type;
@@ -2085,6 +2141,21 @@ void MCField::SetTabWidthsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, i
     SetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, true, p_part_id, si, ei, &MCParagraph::SetTabWidths, t_vector);
 }
 
+void MCField::GetTabAlignmentsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceFieldTabAlignments &r_values)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<MCInterfaceFieldTabAlignments> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetTabAlignments, r_mixed, r_values);
+}
+
+void MCField::SetTabAlignmentsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceFieldTabAlignments &p_values)
+{
+    SetParagraphPropOfCharChunk< PodFieldPropType<MCInterfaceFieldTabAlignments> >(ctxt, this, true, p_part_id, si, ei, &MCParagraph::SetTabAlignments, p_values);
+}
+
+void MCField::GetEffectiveTabAlignmentsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceFieldTabAlignments &r_values)
+{
+    GetParagraphPropOfCharChunk< PodFieldPropType<MCInterfaceFieldTabAlignments> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveTabAlignments, r_mixed, r_values);
+}
+
 //////////
 // Paragraph border properties
 //////////
@@ -2718,6 +2789,48 @@ void MCParagraph::GetEffectiveTabWidths(MCExecContext& ctxt, vector_t<uinteger_t
 void MCParagraph::SetTabWidths(MCExecContext& ctxt, const vector_t<uinteger_t>& p_tabs)
 {
     DoSetTabStops(ctxt, true, p_tabs);
+}
+
+void MCParagraph::GetTabAlignments(MCExecContext& ctxt, MCInterfaceFieldTabAlignments& r_alignments)
+{
+    if (attrs == nil || (attrs -> flags & PA_HAS_TAB_ALIGNMENTS) == 0)
+    {
+        r_alignments . m_count = 0;
+        r_alignments . m_alignments = nil;
+    }
+    else
+    {
+        GetEffectiveTabAlignments(ctxt, r_alignments);
+    }
+}
+
+void MCParagraph::GetEffectiveTabAlignments(MCExecContext& ctxt, MCInterfaceFieldTabAlignments& r_alignments)
+{
+    if (attrs != nil && (attrs -> flags & PA_HAS_TAB_ALIGNMENTS))
+    {
+        MCMemoryAllocateCopy(attrs -> alignments, attrs -> alignments_count * sizeof(intenum_t), r_alignments . m_alignments);
+        r_alignments . m_count = attrs -> alignments_count;
+    }
+    else
+    {
+        parent->GetTabAlignments(ctxt, r_alignments);
+    }
+}
+
+void MCParagraph::SetTabAlignments(MCExecContext& ctxt, const MCInterfaceFieldTabAlignments& p_alignments)
+{
+    if (attrs == nil)
+        attrs = new MCParagraphAttrs;
+    else
+        delete attrs -> alignments;
+    
+    MCMemoryAllocateCopy(p_alignments . m_alignments, p_alignments . m_count * sizeof(intenum_t), attrs -> alignments);
+    attrs -> alignments_count = p_alignments . m_count;
+    
+    if (attrs -> alignments != nil)
+        attrs -> flags |= PA_HAS_TAB_ALIGNMENTS;
+    else
+        attrs -> flags &= ~PA_HAS_TAB_ALIGNMENTS;
 }
 
 void MCParagraph::GetBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color)

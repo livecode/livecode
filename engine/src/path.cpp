@@ -243,7 +243,7 @@ MCPath *MCPath::create_polyline(MCPoint *points, uint2 count, bool adjust)
 	return t_path;
 }
 
-MCPath *MCPath::create_polypolyline(MCSegment *segments, uint2 count, bool adjust)
+MCPath *MCPath::create_polypolyline(MCLineSegment *segments, uint2 count, bool adjust)
 {
 	MCPath *t_path;
 	uint2 t_count;

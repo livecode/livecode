@@ -1685,12 +1685,12 @@ Exec_stat MCDeployToMacOSX(const MCDeployParameters& p_params)
 	MCDeployFileRef t_engine, t_engine_ppc, t_engine_x86, t_output;
 	t_engine = t_engine_ppc = t_engine_x86 = t_output = NULL;
 	if (t_success &&
-		((!MCStringIsEmpty(p_params . engine) && !MCDeployFileOpen(p_params . engine, kMCSOpenFileModeRead, t_engine)) ||
-		 (!MCStringIsEmpty(p_params . engine_ppc) && !MCDeployFileOpen(p_params . engine_ppc, kMCSOpenFileModeRead, t_engine_ppc)) ||
-		 (!MCStringIsEmpty(p_params . engine_x86) && !MCDeployFileOpen(p_params . engine_x86, kMCSOpenFileModeRead, t_engine_x86))))
+		((!MCStringIsEmpty(p_params . engine) && !MCDeployFileOpen(p_params . engine, kMCOpenFileModeRead, t_engine)) ||
+		 (!MCStringIsEmpty(p_params . engine_ppc) && !MCDeployFileOpen(p_params . engine_ppc, kMCOpenFileModeRead, t_engine_ppc)) ||
+		 (!MCStringIsEmpty(p_params . engine_x86) && !MCDeployFileOpen(p_params . engine_x86, kMCOpenFileModeRead, t_engine_x86))))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
-	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeCreate, t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCOpenFileModeCreate, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
 	// MW-2013-06-13:  If we have a single engine, process that in the appropriate
@@ -1826,11 +1826,11 @@ Exec_stat MCDeployToIOS(const MCDeployParameters& p_params, bool p_embedded)
 	MCDeployFileRef t_engine, t_output;
 	t_engine = t_output = NULL;
 	if (t_success &&
-		((MCStringIsEmpty(p_params . engine)) || !MCDeployFileOpen(p_params . engine, kMCSOpenFileModeRead, t_engine)))
+		((MCStringIsEmpty(p_params . engine)) || !MCDeployFileOpen(p_params . engine, kMCOpenFileModeRead, t_engine)))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
 	// Make sure we can open the output file.
-	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeCreate, t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCOpenFileModeCreate, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 	
 	// Generate the binary.
@@ -2435,10 +2435,10 @@ Exec_stat MCDeployDietMacOSX(const MCDeployDietParameters& p_params)
 	// First thing we do is open the files.
 	MCDeployFileRef t_engine, t_output;
 	t_engine = t_output = NULL;
-	if (t_success && !MCDeployFileOpen(p_params . input, kMCSOpenFileModeRead, t_engine))
+	if (t_success && !MCDeployFileOpen(p_params . input, kMCOpenFileModeRead, t_engine))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
-	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeWrite, t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCOpenFileModeWrite, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
 	// Next we count the number of architectures that we will be including in
@@ -2577,7 +2577,7 @@ Exec_stat MCDeployExtractMacOSX(MCStringRef p_filename, MCStringRef p_segment, M
 	// First thing we do is open the input file.
 	MCDeployFileRef t_input;
 	t_input = NULL;
-	if (t_success && !MCDeployFileOpen(p_filename, kMCSOpenFileModeRead, t_input))
+	if (t_success && !MCDeployFileOpen(p_filename, kMCOpenFileModeRead, t_input))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	
 	// Next just run the callback to get the offset of the section within the

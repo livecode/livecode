@@ -206,7 +206,7 @@ bool MCVideoClip::getfile(MCStringRef& r_file)
 		//char *tmpfile = strclone(MCS_tmpnam());
 		
 		IO_handle tstream;
-		if ((tstream = MCS_open(*t_tmpfile, kMCSOpenFileModeWrite, False, False, 0)) == NULL)
+		if ((tstream = MCS_open(*t_tmpfile, kMCOpenFileModeWrite, False, False, 0)) == NULL)
 			return false;
 		IO_stat stat = IO_write(frames, sizeof(int1), size, tstream);
 		MCS_close(tstream);

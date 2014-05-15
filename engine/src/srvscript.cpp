@@ -371,7 +371,7 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 		MCAutoStringRef t_filename_string;
 		/* UNCHECKED */ MCStringCreateWithCString(t_file -> filename, &t_filename_string);
 
-		t_handle = MCsystem -> OpenFile(p_filename, kMCSystemFileModeRead | kMCSystemFileModeNulTerminate, true);
+		t_handle = MCsystem -> OpenFile(p_filename, kMCOpenFileModeRead | kMCOpenFileModeNulTerminate, true);
 		if (t_handle == NULL)
 		{
 			MCeerror -> add(EE_INCLUDE_FILENOTFOUND, 0, 0, t_file -> filename);
