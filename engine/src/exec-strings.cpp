@@ -34,6 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec-strings.h"
 
 #include "chunk.h"
+#include "date.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1859,183 +1860,19 @@ static bool MCStringsWildcardMatchNative(const char *s, uindex_t s_length, const
 	}
 	return p_index == p_length;
 }
-/*
-index_t MCStringsWildcardCompareChar(MCStringRef p_input, uindex_t p_string_cu_offset, MCStringRef p_pattern, uindex_t p_pattern_cu_offset, MCUnicodeCompareOption p_option, uindex_t &r_string_char_cu, uindex_t &r_pattern_char_cu)
-{
-    // Comparison of the characters
-    MCRange t_string_cu_range;
-    MCStringUnmapIndices(p_input, kMCCharChunkTypeGrapheme, MCRangeMake(p_string_cu_offset, 1), t_string_cu_range);
-    
-    MCRange t_pattern_cu_range;
-    MCStringUnmapIndices(p_pattern, kMCCharChunkTypeGrapheme, MCRangeMake(p_pattern_cu_offset, 1), t_pattern_cu_range);
-    
-    r_string_char_cu = t_string_cu_range . length;
-    r_pattern_char_cu = t_pattern_cu_range . length;
-    
-    return MCUnicodeCompare(MCStringGetCharPtr(p_input) + t_string_cu_range . offset,
-                            t_string_cu_range . length,
-                            MCStringGetCharPtr(p_pattern) + t_pattern_cu_range . offset,
-                            t_pattern_cu_range . length,
-                            p_option);
-}
-
-bool MCStringsExecWildcardMatch(MCStringRef p_string, uindex_t p_string_offset, MCStringRef p_pattern, uindex_t p_pattern_offset, bool casesensitive)
-{
-	uindex_t s_index = p_string_offset;
-	uindex_t p_index = p_pattern_offset;
-    
-    uindex_t s_length = MCStringGetLength(p_string);
-    uindex_t p_length = MCStringGetLength(p_pattern);
-    
-    uindex_t t_string_move;
-    uindex_t t_pattern_move;
-    
-    MCUnicodeCompareOption t_comparison = casesensitive ? kMCUnicodeCompareOptionNormalised : kMCUnicodeCompareOptionCaseless;
-    
-	while (s_index < s_length)
-	{        
-		switch (MCStringGetCharAtIndex(p_pattern, p_index))
-		{
-            case OPEN_BRACKET:
-			{
-				bool ok = false;
-                
-                uindex_t t_last_char_offset = 0;
-                unichar_t t_pattern_char;
-                
-				int notflag = 0;
-                ++p_index;
-                
-				if (MCStringGetCharAtIndex(p_pattern, p_index) == '!' )
-				{
-					notflag = 1;
-					p_index++;
-				}
-				while (p_index < p_length)
-				{                    
-					if (MCStringGetCharAtIndex(p_pattern, p_index) == CLOSE_BRACKET && t_last_char_offset != 0)
-						return ok ? MCStringsExecWildcardMatch(p_string, ++s_index, p_pattern, ++p_index, casesensitive) : false;
-					else
-                    {
-						if (MCStringGetCharAtIndex(p_pattern, p_index) == '-' && t_last_char_offset != 0 && MCStringGetCharAtIndex(p_pattern, ++p_index) != CLOSE_BRACKET)
-                        {
-							if (notflag)
-							{
-								if (MCStringsWildcardCompareChar(p_string, s_index, p_pattern, t_last_char_offset, t_comparison, t_string_move, t_pattern_move) < 0
-                                        || MCStringsWildcardCompareChar(p_string, s_index, p_pattern, p_index, t_comparison, t_string_move, t_pattern_move) > 0)
-									ok = true;
-								else
-									return false;
-							}
-							else
-							{
-								if (MCStringsWildcardCompareChar(p_string, s_index, p_pattern, t_last_char_offset, t_comparison, t_string_move, t_pattern_move) > 0
-                                        && MCStringsWildcardCompareChar(p_string, s_index, p_pattern, p_index, t_comparison, t_string_move, t_pattern_move) <= 0)
-									ok = true;
-							}
-						}
-						else
-						{
-							if (notflag)
-							{
-								if (MCStringsWildcardCompareChar(p_string, s_index, p_pattern, p_index, t_comparison, t_string_move, t_pattern_move) != 0)
-                                    ok = true;
-								else
-									return false;
-							}
-							else
-                                if (MCStringsWildcardCompareChar(p_string, s_index, p_pattern, p_index, t_comparison, t_string_move, t_pattern_move) == 0)
-									ok = true;
-                            
-                            t_last_char_offset = p_index;
-                            p_index += t_pattern_move;
-						}
-                    }
-				}
-			}
-                return false;
-            case '?':
-            {
-                // get the offsets to jump over the next pattern and string chars
-                MCStringsWildcardCompareChar(p_string, s_index, p_pattern, p_index, t_comparison, t_string_move, t_pattern_move);
-                s_index += t_string_move;
-                p_index += t_pattern_move;
-                break;
-            }
-            case '*':
-            {
-                while (p_index != p_length && MCStringGetCharAtIndex(p_pattern, p_index) == '*')
-                    p_index++;
-                
-                if (p_index == p_length)
-                    return true;
-                
-                while (s_index != s_length)
-                {
-                    if ((MCStringsWildcardCompareChar(p_string, s_index, p_pattern, p_index, t_comparison, t_string_move, t_pattern_move) == 0
-                            || MCStringGetCharAtIndex(p_pattern, p_index) == '?'
-                            || MCStringGetCharAtIndex(p_pattern, p_index) == OPEN_BRACKET)
-                            && MCStringsExecWildcardMatch(p_string, s_index, p_pattern, p_index, casesensitive))
-                        return true;
-                    
-                    s_index += t_string_move;
-                }
-            }
-                return false;
-            case 0:
-                return MCStringGetCharAtIndex(p_string, s_index) == 0;
-            default:
-                if (MCStringsWildcardCompareChar(p_string, s_index, p_pattern, p_index, t_comparison, t_string_move, t_pattern_move) == 0)
-                {
-                    s_index += t_string_move;
-                    p_index += t_pattern_move;
-                }
-                else
-                    return false;
-                
-                break;
-		}
-	}
-	while (p_index < p_length && MCStringGetCharAtIndex(p_pattern, p_index) == '*')
-		p_index++;
-    
-	return p_index == p_length;
-}
-*/
-
-bool MCStringsExecWildcardMatch(MCStringRef p_string, MCRange p_srange, MCStringRef p_pattern, MCStringOptions p_options)
-{
-    MCUnicodeCompareOption t_comparison;
-    switch (p_options)
-    {
-        case kMCStringOptionCompareExact:
-            t_comparison = kMCUnicodeCompareOptionExact;
-            break;
-            
-        case kMCStringOptionCompareNonliteral:
-            t_comparison = kMCUnicodeCompareOptionNormalised;
-            break;
-            
-        case kMCStringOptionCompareCaseless:
-            t_comparison = kMCUnicodeCompareOptionCaseless;
-            break;
-            
-        case kMCStringOptionCompareFolded:
-            t_comparison = kMCUnicodeCompareOptionFolded;
-            break;
-    }
-    
-    const unichar_t *sptr = MCStringGetCharPtr(p_string);
-    const unichar_t *pptr = MCStringGetCharPtr(p_pattern);
-
-    return MCUnicodeWildcardMatch(sptr + p_srange . offset, p_srange . length, pptr, MCStringGetLength(p_pattern), t_comparison);
-}
 
 bool MCWildcardMatcher::match(MCRange p_source_range)
 {
     if (native)
-        return MCStringsWildcardMatchNative((const char *)MCStringGetNativeCharPtr(source) + p_source_range . offset, p_source_range . length, (const char *)MCStringGetNativeCharPtr(pattern), MCStringGetLength(pattern), (options == kMCStringOptionCompareExact || kMCStringOptionCompareNonliteral));
-	return MCStringsExecWildcardMatch(source, p_source_range, pattern, options);
+    {
+        const char *t_source = (const char *)MCStringGetNativeCharPtr(source);
+        const char *t_pattern = (const char *)MCStringGetNativeCharPtr(pattern);
+        
+        if (t_source != nil && t_pattern != nil)
+            return MCStringsWildcardMatchNative(t_source + p_source_range . offset, p_source_range . length, t_pattern, MCStringGetLength(pattern), (options == kMCStringOptionCompareExact || kMCStringOptionCompareNonliteral));
+    }
+
+	return MCStringWildcardMatch(source, p_source_range, pattern, options);
 }
 
 void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, bool p_without, MCStringRef p_delimiter, MCPatternMatcher *p_matcher, MCStringRef &r_result)
@@ -2189,3 +2026,193 @@ void MCStringsEvalIsNotAscii(MCExecContext& ctxt, MCValueRef p_value, bool& r_re
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCStringsDoSort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, bool reverse, MCStringOptions p_options)
+{
+    if (n <= 1)
+		return;
+    
+	uint4 n1 = n / 2;
+	uint4 n2 = n - n1;
+	MCSortnode *b1 = b;
+	MCSortnode *b2 = b + n1;
+    
+	MCStringsDoSort(b1, n1, t, form, reverse, p_options);
+	MCStringsDoSort(b2, n2, t, form, reverse, p_options);
+    
+	MCSortnode *tmp = t;
+	while (n1 > 0 && n2 > 0)
+	{
+		// NOTE:
+		//
+		// This code assumes the types in the MCSortnodes are correct for the
+		// requested sort type. Bad things will happen if this isn't true...
+		bool first;
+		switch (form)
+		{
+            case ST_INTERNATIONAL:
+			{
+                const unichar_t *t1, *t2;
+                t1 = MCStringGetCharPtr(b1->svalue);
+                t2 = MCStringGetCharPtr(b2->svalue);
+                
+                compare_t result = MCUnicodeCollate(kMCSystemLocale, MCUnicodeCollateOptionFromCompareOption((MCUnicodeCompareOption)p_options), t1, MCStringGetLength(b1->svalue), t2, MCStringGetLength(b2->svalue));
+				first = reverse ? result >= 0 : result <= 0;
+				break;
+			}
+                
+            case ST_TEXT:
+			{
+				// This mode performs the comparison in a locale-independent,
+                // case-sensitive manner. The strings are sorted by order of
+                // codepoint values rather than any lexical sorting order.
+                compare_t result = MCStringCompareTo(b1->svalue, b2->svalue, kMCStringOptionCompareExact);
+                
+				first = reverse ? result >= 0 : result <= 0;
+				break;
+			}
+            case ST_BINARY:
+            {
+                compare_t result = MCDataCompareTo(b1->dvalue, b2->dvalue);
+                
+				first = reverse ? result >= 0 : result <= 0;
+				break;
+            }
+            default:
+			{
+				first = reverse
+                ? MCNumberFetchAsReal(b1->nvalue) >= MCNumberFetchAsReal(b2->nvalue)
+                : MCNumberFetchAsReal(b1->nvalue) <= MCNumberFetchAsReal(b2->nvalue);
+				break;
+			}
+        }
+		if (first)
+		{
+			*tmp++ = *b1++;
+			n1--;
+		}
+		else
+		{
+			*tmp++ = *b2++;
+			n2--;
+		}
+	}
+    
+	for (uindex_t i = 0; i < n1; i++)
+		tmp[i] = b1[i];
+	for (uindex_t i = 0; i < (n - n2); i++)
+		b[i] = t[i];
+}
+
+void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type p_form, MCStringOptions p_options)
+{
+    if (nitems > 1)
+    {
+        MCSortnode *tmp = new MCSortnode[nitems];
+        MCStringsDoSort(p_items, nitems, tmp, p_form, p_dir == ST_DESCENDING, p_options);
+        delete[] tmp;
+    }
+}
+
+void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, int form, MCValueRef p_input, MCExpression *by)
+{
+    bool t_success;
+    t_success = true;
+    
+	MCAutoValueRef t_output;
+	if (by != NULL)
+	{
+		MCerrorlock++;
+        if (p_input != nil)
+            MCeach->set(ctxt, p_input);
+        t_success = ctxt . EvalExprAsValueRef(by, EE_UNDEFINED, &t_output);
+		MCerrorlock--;
+	}
+	else
+        t_output = p_input;
+	
+	MCAutoStringRef t_converted;
+	switch (form)
+	{
+        case ST_DATETIME:
+            if (t_success && MCD_convert(ctxt, *t_output, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_converted))
+                if (ctxt.ConvertToNumber(*t_converted, items[nitems].nvalue))
+                    break;
+            
+            /* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
+            break;
+			
+        case ST_NUMERIC:
+            if (t_success && ctxt.ConvertToNumber(*t_output, items[nitems].nvalue))
+                break;
+			
+            /* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
+            break;
+        case ST_BINARY:
+            if (t_success && ctxt.ConvertToData(*t_output, items[nitems].dvalue))
+                break;
+            items[nitems] . dvalue = MCValueRetain(kMCEmptyData);
+        default:
+            if (ctxt . GetCaseSensitive())
+			{
+                if (t_success && ctxt.ConvertToString(*t_output, items[nitems].svalue))
+                    break;
+            }
+            else
+            {
+                MCStringRef t_fixed, t_mutable;
+                t_fixed = nil;
+                t_mutable = nil;
+                if (t_success)
+                    t_success = ctxt.ConvertToString(*t_output, t_fixed) &&
+                                MCStringMutableCopyAndRelease(t_fixed, t_mutable) &&
+                                MCStringLowercase(t_mutable, kMCSystemLocale) &&
+                                MCStringCopyAndRelease(t_mutable, items[nitems].svalue);
+                
+                if (t_success)
+                    break;
+                
+                MCValueRelease(t_fixed);
+                MCValueRelease(t_mutable);
+            }
+            items[nitems].svalue = MCValueRetain(kMCEmptyString);
+			
+            break;
+	}
+	nitems++;
+}
+
+void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, MCStringRef *p_strings_array, uindex_t p_count, MCExpression *p_by, MCStringRef*& r_sorted_array, uindex_t& r_sorted_count)
+{
+	// OK-2008-12-11: [[Bug 7503]] - If there are 0 items in the string, don't carry out the search,
+	// this keeps the behavior consistent with previous versions of Revolution.
+	if (p_count < 1)
+	{
+        r_sorted_count = 0;
+        return;
+	}
+    
+	// Now we know the item count, we can allocate an array of MCSortnodes to store them.
+	MCAutoArray<MCSortnode> t_items;
+	t_items.Extend(p_count + 1);
+    uindex_t t_added = 0;
+    
+	// Next, populate the MCSortnodes with all the items to be sorted
+    for (uindex_t i = 0; i < p_count; i++)
+    {
+        MCStringsSortAddItem(ctxt, t_items . Ptr(), t_added, p_form, p_strings_array[i], p_by);
+        t_items[t_added - 1] . data = (void *)p_strings_array[i];
+    }
+
+    MCStringsSort(t_items . Ptr(), t_added, p_dir, p_form, ctxt . GetStringComparisonType());
+
+    MCAutoArray<MCStringRef> t_sorted;
+    
+ 	for (uindex_t i = 0; i < t_added; i++)
+    {
+        t_sorted . Push((MCStringRef)t_items[i] . data);
+        MCValueRelease(t_items[i] . svalue);
+    }
+    
+    t_sorted . Take(r_sorted_array, r_sorted_count);
+}

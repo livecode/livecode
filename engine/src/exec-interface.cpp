@@ -3862,59 +3862,6 @@ void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, in
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCInterfaceExecSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, int form, MCValueRef p_input, MCExpression *by)
-{
-	MCAutoValueRef t_output;
-	if (by != NULL)
-	{
-		MCerrorlock++;
-		//ctxt . GetEP() . setvalueref(p_input);
-		MCeach->set(ctxt, p_input);
-        bool t_success;
-        t_success = false;
-        t_success = ctxt . EvalExprAsValueRef(by, EE_UNDEFINED, &t_output);
-        if (!t_success)
-            t_output = kMCEmptyString;
-		MCerrorlock--;
-	}
-	else
-        t_output = p_input;
-	
-	MCAutoStringRef t_converted;
-	switch (form)
-	{
-	case ST_DATETIME:
-		if (MCD_convert(ctxt, *t_output, CF_UNDEFINED, CF_UNDEFINED, CF_SECONDS, CF_UNDEFINED, &t_converted))
-			if (ctxt.ConvertToNumber(*t_converted, items[nitems].nvalue))
-				break;
-	
-		/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
-		break;
-			
-	case ST_NUMERIC:
-		if (ctxt.ConvertToNumber(*t_output, items[nitems].nvalue))
-			break;
-			
-		/* UNCHECKED */ MCNumberCreateWithReal(-MAXREAL8, items[nitems].nvalue);
-		break;
-			
-	default:
-		if (ctxt . GetCaseSensitive())
-			/* UNCHECKED */ ctxt.ConvertToString(*t_output, items[nitems].svalue);
-		else
-		{
-			MCStringRef t_fixed, t_mutable;
-			/* UNCHECKED */ ctxt.ConvertToString(*t_output, t_fixed);
-			/* UNCHECKED */ MCStringMutableCopyAndRelease(t_fixed, t_mutable);
-			/* UNCHECKED */ MCStringLowercase(t_mutable, kMCSystemLocale);
-			/* UNCHECKED */ MCStringCopyAndRelease(t_mutable, items[nitems].svalue);
-		}
-			
-		break;
-	}
-	nitems++;
-}
-
 bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p_type, Sort_type p_direction, int p_form, MCExpression *p_by, MCStringRef &r_output)
 {
 	if (MCStringIsEmpty(p_data))
@@ -3937,6 +3884,8 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 		return false;
 
     MCAutoStringRefArray t_chunks;
+    MCStringRef *t_sorted;
+    uindex_t t_sorted_count;
     
     extern bool MCStringsSplit(MCStringRef p_string, MCStringRef p_separator, MCStringRef*&r_strings, uindex_t& r_count);
     
@@ -3945,54 +3894,31 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
     
     uindex_t t_item_count;
     t_item_count = t_chunks . Count();
-
+    
 	bool t_trailing_delim = false;
 	if (p_type != CT_ITEM && MCStringIsEmpty(t_chunks[t_item_count - 1]))
     {
         t_trailing_delim = true;
         t_item_count--;
 	}
-
-	// OK-2008-12-11: [[Bug 7503]] - If there are 0 items in the string, don't carry out the search,
-	// this keeps the behavior consistent with previous versions of Revolution.
-	if (t_item_count < 1)
-	{
-		MCStringCopy(p_data, r_output);
-		return true;
-	}
-
-	// Now we know the item count, we can allocate an array of MCSortnodes to store them.
-	MCAutoArray<MCSortnode> t_items;
-	t_items.Extend(t_item_count + 1);
-    uindex_t t_added = 0;
-
-	// Next, populate the MCSortnodes with all the items to be sorted
-    for (uindex_t i = 0; i < t_item_count; i++)
-    {
-        MCInterfaceExecSortAddItem(ctxt, t_items . Ptr(), t_added, p_form, t_chunks[i], p_by);
-        t_items[t_added - 1] . data = (void *)t_chunks[i];
-    }
-
+    
 	// Sort the array
-	MCU_sort(t_items.Ptr(), t_added, p_direction, (Sort_type)p_form);
+	MCStringsExecSort(ctxt, p_direction, (Sort_type)p_form, *t_chunks, t_item_count, p_by, t_sorted, t_sorted_count);
 
 	// Build the output string
 	MCAutoListRef t_list;
     MCListCreateMutable(t_delimiter, &t_list);
 
     uindex_t i;
-	for (i = 0; i < t_added; i++)
-    {
-        MCListAppend(*t_list, (MCStringRef)t_items[i] . data);
-        MCValueRelease((MCStringRef)t_items[i] . svalue);
-    }
+	for (i = 0; i < t_sorted_count; i++)
+        MCListAppend(*t_list, t_sorted[i]);
 
     MCAutoStringRef t_list_string;
     /* UNCHECKED */ MCListCopyAsString(*t_list, &t_list_string);
     
-    if (t_trailing_delim || i < t_added - 1)
+    if (t_trailing_delim)
     {
-        return MCStringFormat(r_output, "%@%c", *t_list_string, t_delimiter);
+        return MCStringFormat(r_output, "%@%@", *t_list_string, t_delimiter);
     }
     
     r_output = MCValueRetain(*t_list_string);
@@ -4088,8 +4014,6 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 
 		rel = parentptr -> getrect();
 	}
-
-	t_stack->stopedit();
 
 	Window_mode wm = (Window_mode)p_mode;
 	if (wm == WM_LAST && t_stack->userlevel() != 0 && p_window == nil && !p_this_stack)

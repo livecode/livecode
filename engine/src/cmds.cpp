@@ -2139,6 +2139,7 @@ Parse_stat MCSort::parse(MCScriptPoint &sp)
 					chunktype = CT_CARD;
 				break;
 			case ST_TEXT:
+            case ST_BINARY:
 			case ST_NUMERIC:
 			case ST_INTERNATIONAL:
 			case ST_DATETIME:

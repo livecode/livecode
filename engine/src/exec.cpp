@@ -121,7 +121,7 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
             if (MCStringGetLength(MCNameGetString((MCNameRef)p_value)) != 0 &&
                     !MCStringGetNumericValue(MCNameGetString((MCNameRef)p_value), t_number))
             {
-                if (!MCU_stor8(MCStringGetOldString(MCNameGetString((MCNameRef)p_value)), t_number, m_convertoctals))
+                if (!MCU_stor8(MCNameGetString((MCNameRef)p_value), t_number, m_convertoctals))
                     break;
 
                 // Converting to octals doesn't generate the 10-based number stored in the string
@@ -139,7 +139,7 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
             // Fetches the numeric value in case it exists, or stores the one therefore computed otherwise
             if (MCStringGetLength((MCStringRef)p_value) != 0 && !MCStringGetNumericValue((MCStringRef)p_value, t_number))
             {
-                if (!MCU_stor8(MCStringGetOldString((MCStringRef)p_value), t_number, m_convertoctals))
+                if (!MCU_stor8((MCStringRef)p_value, t_number, m_convertoctals))
                     break;
 
                 // Converting to octals doesn't generate the 10-based number stored in the string
@@ -397,7 +397,7 @@ bool MCExecContext::ConvertToBool(MCValueRef p_value, bool& r_bool)
 bool MCExecContext::ConvertToLegacyPoint(MCValueRef p_value, MCPoint& r_point)
 {
     MCAutoStringRef t_string;
-	return ConvertToString(p_value, &t_string) && MCU_stoi2x2(MCStringGetOldString(*t_string), r_point . x, r_point . y);
+	return ConvertToString(p_value, &t_string) && MCU_stoi2x2(*t_string, r_point . x, r_point . y);
 }
 
 bool MCExecContext::ConvertToLegacyRectangle(MCValueRef p_value, MCRectangle& r_rect)
@@ -405,12 +405,13 @@ bool MCExecContext::ConvertToLegacyRectangle(MCValueRef p_value, MCRectangle& r_
     MCAutoStringRef t_string;
 	int16_t t_left, t_top, t_right, t_bottom;
 	if (ConvertToString(p_value, &t_string) &&
-		MCU_stoi2x4(MCStringGetOldString(*t_string), t_left, t_top, t_right, t_bottom))
+		MCU_stoi2x4(*t_string, t_left, t_top, t_right, t_bottom))
 	{
 		r_rect . x = t_left;
 		r_rect . y = t_top;
-		r_rect . width = t_right - t_left;
-		r_rect . height = t_bottom - t_top;
+        // AL-2014-05-13: [[ Bug 12288 ]] Ensure width and height don't underflow.
+		r_rect . width = MCU_max(1, t_right - t_left);
+		r_rect . height = MCU_max(1, t_bottom - t_top);
     
 		return true;
 	}
@@ -468,7 +469,7 @@ bool MCExecContext::TryToConvertToLegacyPoint(MCValueRef p_value, bool& r_conver
 {
 	MCAutoStringRef t_string;
     if (ConvertToString(p_value, &t_string) &&
-		MCU_stoi2x2(MCStringGetOldString(*t_string), r_point . x, r_point . y))
+		MCU_stoi2x2(*t_string, r_point . x, r_point . y))
 	{
 		r_converted = true;
 		return true;
@@ -484,7 +485,7 @@ bool MCExecContext::TryToConvertToLegacyRectangle(MCValueRef p_value, bool& r_co
 	MCAutoStringRef t_string;
 	int16_t t_left, t_top, t_right, t_bottom;
     if (ConvertToString(p_value, &t_string) &&
-		MCU_stoi2x4(MCStringGetOldString(*t_string), t_left, t_top, t_right, t_bottom))
+		MCU_stoi2x4(*t_string, t_left, t_top, t_right, t_bottom))
 	{
 		r_rect . x = t_left;
 		r_rect . y = t_top;

@@ -3048,6 +3048,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			omode = GENERIC_WRITE;
 			createmode = CREATE_ALWAYS;
 		}
+
+		// SN-2014-05-02 [[ Bug 12061 ]] Can't test app on Android
+		// Issue when reading the deployed file when deploying to Linux/Android
+		if (p_mode == kMCOpenFileModeCreate)
+			omode |= GENERIC_READ;
 		if (p_mode == kMCOpenFileModeUpdate)
 			omode = GENERIC_WRITE | GENERIC_READ;
 		if (p_mode == kMCOpenFileModeAppend)
