@@ -1307,8 +1307,9 @@ void MCSocket::readsome()
 				char *t = inet_ntoa(addr.sin_addr);
 				MCAutoStringRef n;
 				MCNewAutoNameRef t_name;
-				/* UNCHECKED */ MCStringCreateMutable(strlen(t) + U2L, &n);
-				/* UNCHECKED */ MCStringAppendFormat(&n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
+                // SN-2014-05-08 [[ Bug 12407 ]] 'Garbage' with read from socket
+                // Was creating a string with the data length, and then appending instead of putting data inside
+				/* UNCHECKED */ MCStringFormat(&n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
 				/* UNCHECKED */ MCNameCreate(*n, &t_name);
 				uindex_t index;
 				MCU_realloc((char **)&MCsockets, MCnsockets,
