@@ -656,7 +656,8 @@ void MCStacklist::reopenallstackwindows(void)
 {
 	if (stacks != NULL)
 	{
-		MCStacknode *tptr = stacks;
+        // MW-2014-05-15: [[ Bug 12414 ]] Go backwards through the list to stop infinite loopage.
+		MCStacknode *tptr = stacks -> prev();
 		do
 		{
             MCStack *t_stack;
@@ -665,9 +666,9 @@ void MCStacklist::reopenallstackwindows(void)
             if (t_stack->getopened() && t_stack->getwindow() != nil)
                 t_stack->reopenwindow();
             
-            tptr = tptr->next();
+            tptr = tptr->prev();
 		}
-		while (tptr != stacks);
+		while (tptr != stacks -> prev());
 	}
 }
 
