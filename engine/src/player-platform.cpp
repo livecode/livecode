@@ -68,7 +68,7 @@ static const char *ppmediastrings[] =
 	"flash"
 };
 
-#define CONTROLLER_HEIGHT 24
+#define CONTROLLER_HEIGHT 40
 #define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 4
 #define LIGHTGRAY 1
 #define MAGENDA 2
@@ -98,7 +98,7 @@ static MCColor controllercolors[] = {
     
     {0, 0xCCCC, 0xCCCC, 0xCCCC, 0, 0},         /* 20% gray -- 80% white */
     
-    {0, 0xcccc, 0x9999, 0xffff, 0, 0},         /*  */
+    {0, 0xcccc, 0x9999, 0xffff, 0, 0},         /* Magenda */
 
 
 };
@@ -1806,6 +1806,7 @@ void MCPlayer::drawControllerVolumeButton(MCDC *dc)
     dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
     MCGContextRef t_gcontext = nil;
     
+    
     dc -> lockgcontext(t_gcontext);
     
     MCGContextBeginPath(t_gcontext);
@@ -1815,6 +1816,7 @@ void MCPlayer::drawControllerVolumeButton(MCDC *dc)
     MCGContextLineTo(t_gcontext, MCGPointMake(0.6 , 0.8));
     MCGContextLineTo(t_gcontext, MCGPointMake(0.6 , 0.2));
     MCGContextLineTo(t_gcontext, MCGPointMake(0.4 , 0.4));
+    MCGContextCloseSubpath(t_gcontext);
     
     if (getloudness() > 30)
     {
@@ -1822,25 +1824,21 @@ void MCPlayer::drawControllerVolumeButton(MCDC *dc)
         MCGContextAddRectangle(t_gcontext, t_grect);
     }
     
+    
     if (getloudness() > 60)
     {
-        MCGContextAddArc(t_gcontext, MCGPointMake(0.71, 0.5), MCGSizeMake(0.1, 0.4), 0.5, -80, 80);
+        MCGContextAddArc(t_gcontext, MCGPointMake(0.68, 0.5), MCGSizeMake(0.05, 0.2), 0.0, -60, 60);
     }
 
     if (getloudness() > 95)
     {
-        MCGContextAddArc(t_gcontext, MCGPointMake(0.79, 0.5), MCGSizeMake(0.15, 0.6), 0.5, -80, 80);
+        MCGContextAddArc(t_gcontext, MCGPointMake(0.72, 0.5), MCGSizeMake(0.1, 0.4), 0.0, -60, 60);
     }
     
 
-
-    MCGContextCloseSubpath(t_gcontext);
-    
     MCGContextTranslateCTM(t_gcontext, t_volume_rect . x, t_volume_rect . y);
     MCGContextScaleCTM(t_gcontext, t_volume_rect . width, t_volume_rect . height);
-    
     MCGContextFill(t_gcontext);
-    
     
     dc -> unlockgcontext(t_gcontext);
 }
@@ -1940,16 +1938,23 @@ void MCPlayer::drawControllerWellButton(MCDC *dc)
     MCRectangle t_well_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartWell);
     
     dc -> setforeground(maccolors[MAC_SHADOW]);
-    dc -> fillrect(t_well_rect, true);
+    //dc -> fillrect(t_well_rect, true);
+    
+    dc -> setforeground(maccolors[MAC_SHADOW]);
+    dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
     
     MCGContextRef t_gcontext = nil;
     
     dc -> lockgcontext(t_gcontext);
-  
-    MCGContextTranslateCTM(t_gcontext, t_well_rect . x, t_well_rect . y);
-    MCGContextScaleCTM(t_gcontext, t_well_rect . width, t_well_rect . height);
     
-    //MCGContextFill(t_gcontext);
+    MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_well_rect);
+    
+    MCGContextAddRoundedRectangle(t_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
+  
+    //MCGContextTranslateCTM(t_gcontext, t_well_rect . x, t_well_rect . y);
+    //MCGContextScaleCTM(t_gcontext, t_well_rect . width, t_well_rect . height);
+    
+    MCGContextFill(t_gcontext);
     
     dc -> unlockgcontext(t_gcontext);
 }
@@ -1960,16 +1965,22 @@ void MCPlayer::drawControllerThumbButton(MCDC *dc)
     t_rect = getcontrollerrect();
     MCRectangle t_thumb_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb);
     
-    dc -> setforeground(controllercolors[LIGHTGRAY]);
+    //dc -> setforeground(controllercolors[LIGHTGRAY]);
     
-    dc -> fillrect(t_thumb_rect, true);
+    //dc -> fillrect(t_thumb_rect, true);
+    dc -> setforeground(controllercolors[LIGHTGRAY]);
+    dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
     
     MCGContextRef t_gcontext = nil;
     
     dc -> lockgcontext(t_gcontext);
     
-    MCGContextTranslateCTM(t_gcontext, t_thumb_rect . x, t_thumb_rect . y);
-    MCGContextScaleCTM(t_gcontext, t_thumb_rect . width, t_thumb_rect . height);
+    MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_thumb_rect);
+    MCGContextAddRoundedRectangle(t_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
+    
+    //MCGContextTranslateCTM(t_gcontext, t_thumb_rect . x, t_thumb_rect . y);
+    //MCGContextScaleCTM(t_gcontext, t_thumb_rect . width, t_thumb_rect . height);
+    MCGContextFill(t_gcontext);
         
     dc -> unlockgcontext(t_gcontext);
 }
