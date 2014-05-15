@@ -2285,6 +2285,7 @@ struct MCInterfaceNamedColor;
 struct MCInterfaceImagePaletteSettings;
 struct MCInterfaceVisualEffect;
 struct MCInterfaceVisualEffectArgument;
+struct MCInterfaceStackFileVersion;
 
 extern MCExecCustomTypeInfo *kMCInterfaceNamedColorTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfacePaintCompressionTypeInfo;
@@ -2299,6 +2300,7 @@ extern MCExecCustomTypeInfo *kMCInterfaceVisualEffectTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceVisualEffectArgumentTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceButtonIconTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo;
+extern MCExecCustomTypeInfo *kMCInterfaceStackFileVersionTypeInfo;
 
 extern MCExecMethodInfo *kMCInterfaceMakeCustomImagePaletteSettingsMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceMakeOptimalImagePaletteSettingsMethodInfo;
@@ -3118,8 +3120,8 @@ void MCInterfaceGetDragDelta(MCExecContext& ctxt, uinteger_t& r_value);
 void MCInterfaceSetDragDelta(MCExecContext& ctxt, uinteger_t p_value);
 void MCInterfaceGetStackFileType(MCExecContext& ctxt, MCStringRef& r_value);
 void MCInterfaceSetStackFileType(MCExecContext& ctxt, MCStringRef p_value);
-void MCInterfaceGetStackFileVersion(MCExecContext& ctxt, MCStringRef& r_value);
-void MCInterfaceSetStackFileVersion(MCExecContext& ctxt, MCStringRef p_value);
+void MCInterfaceGetStackFileVersion(MCExecContext& ctxt, MCInterfaceStackFileVersion& r_value);
+void MCInterfaceSetStackFileVersion(MCExecContext& ctxt, const MCInterfaceStackFileVersion& p_value);
 
 void MCInterfaceGetIconMenu(MCExecContext& ctxt, MCStringRef& r_menu);
 void MCInterfaceSetIconMenu(MCExecContext& ctxt, MCStringRef menu);
