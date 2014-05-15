@@ -64,6 +64,41 @@ public class AttachmentProvider
             return p_uri.getPath().substring(1, p_uri.getPath().length());
     }
     
+    private boolean validQuery(String[] projection)
+    {
+        boolean t_valid = true;
+        for (int i = 0; i < projection . length && t_valid; ++i)
+        {
+            if (projection[i].equals(this.NAME)
+                    || projection[i].equals(this.MIME_TYPE)
+                    || projection[i].equals(this.SIZE)
+                    || projection[i].equals(this.TEMPORARY)
+                    || projection[i].equals(this.FILE))
+                continue;
+            
+            Log.i("revandroid", "incorrect projection: " + projection[i]);
+            t_valid = false;
+        }
+        
+        return t_valid;
+    }
+    
+    private int projectionToInfoIndex(String projection)
+    {
+        if (projection.equals(this.NAME))
+            return 0;
+        else if (projection.equals(this.MIME_TYPE))
+            return 1;
+        else if (projection.equals(this.SIZE))
+            return 2;
+        else if (projection.equals(this.TEMPORARY))
+            return 3;
+        else if (projection.equals(this.FILE))
+            return 4;
+        
+        return -1;
+    }
+    
     // Open a file
     public ParcelFileDescriptor doOpenFile(Uri uri)
         throws FileNotFoundException
@@ -105,21 +140,29 @@ public class AttachmentProvider
     // Fetch the information stored for the asked email
     public Cursor doQuery(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder)
     {
-          if (projection . length < 2 ||
-                !projection[0].equals(this.NAME) ||
-                !projection[1].equals(this.SIZE))
+        // SN-2014-05-15 [[ Bug 11895 ]] mobileComposeMail missing attachment in Android (Android Mail)
+        // Some versions of Email ask for the name and the type in two different queries, not a single one...
+        if (!validQuery(projection))
+        {
+            Log.i("revandroid", "Unexpected projection:");            
+            for (int i = 0; i < projection . length; ++i)
+                Log.i("revandroid", String.format("\t\tprojection[%d]: %s", i, projection[i]));
+            
             return null;
+        }
         
-        String t_path = uri.getPath();        
+        String t_path = uri.getPath();
         ArrayList<String> t_infos = m_infos.get(t_path);
         
-        String t_values[] = new String[2];
-        t_values[0] = t_infos . get(0);
-        t_values[1] = t_infos . get(1);
+        String t_values[] = new String[projection.length];
         
-//        Log.i("revandroid", "query(" + uri.toString() + "): " +
-//              t_values[0] + ", " +
-//              t_values[1]);
+        for (int i = 0; i < projection.length; ++i)
+            t_values[i] = t_infos.get(projectionToInfoIndex(projection[i]));
+        
+//        Log.i("revandroid", "query for " + uri.toString());
+//        
+//        for (int i = 0; i < t_values . length; ++i)
+//            Log.i("revandroid", "\t" + t_values[i]);
         
         MatrixCursor t_cursor = new MatrixCursor(projection);
         t_cursor . addRow(t_values);
@@ -188,7 +231,7 @@ public class AttachmentProvider
                 t_infos . add(p_values . getAsBoolean(this.TEMPORARY).toString());
                 t_infos . add(t_cached_file);
                 
-//                Log.i("revandroid", String.format("insert (%s, %d, %s, %s, %s)",
+//                Log.i("revandroid", String.format("insert (\n\tname: %s, \n\tsize: %d, \n\tMIME: %s, \n\ttemp: %s, \n\tCache: %s)",
 //                                                  p_values . getAsString(this.NAME),
 //                                                  t_size,
 //                                                  p_values . getAsString(this.MIME_TYPE),
