@@ -203,20 +203,24 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
     MCAutoPointer<MCContainer> t_dst_container;
 	if (destvar != nil)
 	{
-        if (!destvar -> evalcontainer(ctxt, &t_dst_container))
+        bool t_success;
+        if (destvar -> needsContainer())
+            t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
+                            && t_dst_container -> eval_ctxt(ctxt, t_dst);
+        else
+        {
+            destvar -> eval_ctxt(ctxt, t_dst);
+            t_success = !ctxt . HasError();
+        }
+        
+        if (!t_success)
         {
             ctxt . LegacyThrow(EE_ADD_BADDEST);
             MCExecTypeRelease(t_src);
             ctxt . SetNumberExpected(t_old_expectation);
             return;
-		}
-		
-        if (!t_dst_container -> eval_ctxt(ctxt, t_dst))
-        {
-            MCExecTypeRelease(t_src);
-            ctxt . SetNumberExpected(t_old_expectation);
-            return;
         }
+            
 	}
 	else
     {
@@ -265,9 +269,14 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
 	{
 		if (destvar != nil)
 		{
-			if (t_dst_container -> give_value(ctxt, t_result))
-                return;
-			ctxt . Throw();
+            bool t_success;
+            if (destvar -> needsContainer())
+                t_success = t_dst_container -> give_value(ctxt, t_result);
+            else
+                t_success = destvar -> give_value(ctxt, t_result);
+            
+            if (!t_success)
+                ctxt . Throw();
 		}
 		else
 		{
@@ -461,16 +470,19 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
 	MCAutoPointer<MCContainer> t_dst_container;
 	if (destvar != nil)
 	{
-        if (!destvar -> evalcontainer(ctxt, &t_dst_container))
-		{
-            ctxt . LegacyThrow(EE_DIVIDE_BADDEST);
-            MCExecTypeRelease(t_src);
-            ctxt . SetNumberExpected(t_old_expectation);
-            return;
-		}
-		
-        if (!t_dst_container -> eval_ctxt(ctxt, t_dst))
+        bool t_success;
+        if (destvar -> needsContainer())
+            t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
+                            && t_dst_container -> eval_ctxt(ctxt, t_dst);
+        else
         {
+            destvar -> eval_ctxt(ctxt, t_dst);
+            t_success = !ctxt.HasError();
+        }
+        
+        if (!t_success)
+        {
+            ctxt . LegacyThrow(EE_DIVIDE_BADDEST);
             MCExecTypeRelease(t_src);
             ctxt . SetNumberExpected(t_old_expectation);
             return;
@@ -523,9 +535,15 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
 	{
 		if (destvar != nil)
 		{
-			if (t_dst_container -> give_value(ctxt, t_result))
-                return;
-			ctxt . Throw();
+            bool t_success;
+            
+            if (destvar -> needsContainer())
+                t_success = t_dst_container -> give_value(ctxt, t_result);
+            else
+                t_success = destvar -> give_value(ctxt, t_result);
+            
+            if (!t_success)
+                ctxt . Throw();
 		}
 		else
 		{
@@ -717,16 +735,19 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
 	MCAutoPointer<MCContainer> t_dst_container;
 	if (destvar != nil)
 	{
-        if (!destvar -> evalcontainer(ctxt, &t_dst_container))
-		{
-            ctxt . LegacyThrow(EE_MULTIPLY_BADDEST);
-            MCExecTypeRelease(t_src);
-            ctxt . SetNumberExpected(t_old_expectation);
-            return;
-		}
-		
-        if (!t_dst_container -> eval_ctxt(ctxt, t_dst))
+        bool t_success;
+        if (destvar -> needsContainer())
+            t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
+                            && t_dst_container -> eval_ctxt(ctxt, t_dst);
+        else
         {
+            destvar -> eval_ctxt(ctxt, t_dst);
+            t_success = !ctxt . HasError();
+        }
+        
+        if (!t_success)
+        {
+            ctxt . LegacyThrow(EE_MULTIPLY_BADDEST);
             MCExecTypeRelease(t_src);
             ctxt . SetNumberExpected(t_old_expectation);
             return;
@@ -779,9 +800,15 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
 	{
 		if (destvar != nil)
 		{
-			if (t_dst_container -> give_value(ctxt, t_result))
-                return;
-			ctxt . Throw();
+            bool t_success;
+            
+            if (destvar -> needsContainer())
+                t_success = t_dst_container -> give_value(ctxt, t_result);
+            else
+                t_success = destvar -> give_value(ctxt, t_result);
+            
+            if (!t_success)
+                ctxt . Throw();
 		}
 		else
 		{            
@@ -956,16 +983,19 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
 	MCAutoPointer<MCContainer> t_dst_container;
 	if (destvar != nil)
 	{
-        if (!destvar -> evalcontainer(ctxt, &t_dst_container))
-		{
-            ctxt . LegacyThrow(EE_SUBTRACT_BADDEST);
-            MCExecTypeRelease(t_src);
-            ctxt . SetNumberExpected(t_old_expectation);
-            return;
-		}
-		
-        if (!t_dst_container -> eval_ctxt(ctxt, t_dst))
+        bool t_success;
+        if (destvar -> needsContainer())
+            t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
+                            && t_dst_container -> eval_ctxt(ctxt, t_dst);
+        else
         {
+            destvar -> eval_ctxt(ctxt, t_dst);
+            t_success = !ctxt . HasError();
+        }
+        
+        if (!t_success)
+        {
+            ctxt . LegacyThrow(EE_SUBTRACT_BADDEST);
             MCExecTypeRelease(t_src);
             ctxt . SetNumberExpected(t_old_expectation);
             return;
@@ -1018,9 +1048,15 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
 	{
 		if (destvar != nil)
 		{
-			if (t_dst_container -> give_value(ctxt, t_result))
-                return;
-			ctxt . Throw();
+            bool t_success;
+            
+            if (destvar -> needsContainer())
+                t_success =  t_dst_container -> give_value(ctxt, t_result);
+            else
+                t_success = destvar -> give_value(ctxt, t_result);
+            
+            if (!t_success)
+                ctxt . Throw();
 		}
 		else
 		{
