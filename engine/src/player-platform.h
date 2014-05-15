@@ -207,11 +207,11 @@ public:
     void drawControllerScrubBackButton(MCDC *dc);
     void drawControllerSelectionStartButton(MCDC *dc);
     void drawControllerSelectionFinishButton(MCDC *dc);
-
+    void drawControllerSelectedAreaButton(MCDC *dc);
+    void drawControllerVolumeAreaButton(MCDC *dc);
+    void drawControllerPlayedAreaButton(MCDC *dc);
 
     void drawcontrollerbutton(MCDC *dc, const MCRectangle& rect);
-    void drawnicecontrollerbutton(MCGContextRef &r_gcontext, const MCRectangle& p_rect);
-
     void redrawcontroller(void);
     
     int hittestcontroller(int x, int y);

@@ -71,6 +71,7 @@ static const char *ppmediastrings[] =
 #define CONTROLLER_HEIGHT 24
 #define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 4
 #define LIGHTGRAY 1
+#define MAGENDA 2
 
 enum
 {
@@ -86,12 +87,19 @@ enum
     kMCPlayerControllerPartWell,
     kMCPlayerControllerPartSelectionStart,
     kMCPlayerControllerPartSelectionFinish,
+    kMCPlayerControllerPartSelectedArea,
+    kMCPlayerControllerPartVolumeArea,
+    kMCPlayerControllerPartPlayedArea,
+    
 };
 
 static MCColor controllercolors[] = {
     {0, 0x8000, 0x8000, 0x8000, 0, 0},         /* 50% gray */
     
-    {0, 0xCCCC, 0xCCCC, 0xCCCC, 0, 0}          /* 20% gray -- 80% white */
+    {0, 0xCCCC, 0xCCCC, 0xCCCC, 0, 0},         /* 20% gray -- 80% white */
+    
+    {0, 0xcccc, 0x9999, 0xffff, 0, 0},         /*  */
+
 
 };
 //-----------------------------------------------------------------------------
@@ -260,6 +268,11 @@ Boolean MCPlayer::mfocus(int2 x, int2 y)
 
 void MCPlayer::munfocus()
 {
+    if ( getflag(F_SHOW_VOLUME) )
+    {
+        if (state & CS_PLAYING || state & CS_PAUSED)
+        setflag(False, F_SHOW_VOLUME);
+    }
 	getstack()->resetcursor(True);
 	MCControl::munfocus();
 }
@@ -273,6 +286,7 @@ Boolean MCPlayer::mdown(uint2 which)
 	state |= CS_MFOCUSED;
 	if (flags & F_TRAVERSAL_ON && !(state & CS_KFOCUSED))
 		getstack()->kfocusset(this);
+    
 	switch (which)
 	{
         case Button1:
@@ -1739,14 +1753,31 @@ void MCPlayer::drawcontroller(MCDC *dc)
 
 void MCPlayer::drawnicecontroller(MCDC *dc)
 {
+    MCRectangle t_rect;
+    t_rect = getcontrollerrect();
+    dc -> setforeground(dc -> getblack());
+    dc -> fillrect(t_rect, true);
+    
     drawControllerVolumeButton(dc);
     if (getflag(F_SHOW_VOLUME))
     {
         drawControllerVolumeBarButton(dc);
+        drawControllerVolumeAreaButton(dc);
         drawControllerVolumeSelectorButton(dc);
     }
     drawControllerPlayPauseButton(dc);
     drawControllerWellButton(dc);
+    
+    
+    if (getflag(F_SHOW_SELECTION))
+    {
+        drawControllerSelectedAreaButton(dc);
+    }
+    
+    drawControllerScrubForwardButton(dc);
+    drawControllerScrubBackButton(dc);
+    
+    drawControllerPlayedAreaButton(dc);
     drawControllerThumbButton(dc);
     
     if (getflag(F_SHOW_SELECTION))
@@ -1754,9 +1785,6 @@ void MCPlayer::drawnicecontroller(MCDC *dc)
         drawControllerSelectionStartButton(dc);
         drawControllerSelectionFinishButton(dc);
     }
-    
-    drawControllerScrubForwardButton(dc);
-    drawControllerScrubBackButton(dc);
 }
 
 void MCPlayer::drawControllerVolumeButton(MCDC *dc)
@@ -1765,8 +1793,14 @@ void MCPlayer::drawControllerVolumeButton(MCDC *dc)
     t_rect = getcontrollerrect();
     MCRectangle t_volume_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolume);
     
-    dc -> setforeground(dc -> getblack());
-    dc -> fillrect(t_rect, true);
+    /*
+    if (getflag(F_SHOW_VOLUME))
+    {
+        dc -> setforeground(dc -> getwhite());
+        dc -> fillrect(t_volume_rect, true);
+        layer_redrawrect(t_volume_rect);
+    }
+    */
     
     dc -> setforeground(controllercolors[LIGHTGRAY]);
     dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
@@ -2055,6 +2089,69 @@ void MCPlayer::drawControllerScrubBackButton(MCDC *dc)
     dc -> unlockgcontext(t_gcontext);
 }
 
+void MCPlayer::drawControllerSelectedAreaButton(MCDC *dc)
+{
+    MCRectangle t_selected_area;
+    t_selected_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartSelectedArea);
+    
+    dc -> setforeground(dc -> getwhite());
+    dc -> fillrect(t_selected_area, true);
+    //dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
+    MCGContextRef t_gcontext = nil;
+    
+    dc -> lockgcontext(t_gcontext);
+    
+    MCGContextTranslateCTM(t_gcontext, t_selected_area . x, t_selected_area . y);
+    MCGContextScaleCTM(t_gcontext, t_selected_area . width, t_selected_area . height);
+    
+    //MCGContextFill(t_gcontext);
+    
+    dc -> unlockgcontext(t_gcontext);
+    
+}
+
+void MCPlayer::drawControllerVolumeAreaButton(MCDC *dc)
+{
+    MCRectangle t_volume_area;
+    t_volume_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeArea);
+    
+    dc -> setforeground(controllercolors[MAGENDA]);
+    dc -> fillrect(t_volume_area, true);
+    //dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
+    MCGContextRef t_gcontext = nil;
+    
+    dc -> lockgcontext(t_gcontext);
+    
+    MCGContextTranslateCTM(t_gcontext, t_volume_area . x, t_volume_area . y);
+    MCGContextScaleCTM(t_gcontext, t_volume_area . width, t_volume_area . height);
+    
+    //MCGContextFill(t_gcontext);
+    
+    dc -> unlockgcontext(t_gcontext);
+    
+}
+
+void MCPlayer::drawControllerPlayedAreaButton(MCDC *dc)
+{
+    MCRectangle t_played_area;
+    t_played_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartPlayedArea);
+    
+    dc -> setforeground(controllercolors[2]);
+    dc -> fillrect(t_played_area, true);
+    //dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
+    MCGContextRef t_gcontext = nil;
+    
+    dc -> lockgcontext(t_gcontext);
+    
+    MCGContextTranslateCTM(t_gcontext, t_played_area . x, t_played_area . y);
+    MCGContextScaleCTM(t_gcontext, t_played_area . width, t_played_area . height);
+    
+    //MCGContextFill(t_gcontext);
+    
+    dc -> unlockgcontext(t_gcontext);
+    
+}
+
 int MCPlayer::hittestcontroller(int x, int y)
 {
     MCRectangle t_rect;
@@ -2103,11 +2200,6 @@ void MCPlayer::drawcontrollerbutton(MCDC *dc, const MCRectangle& p_rect)
     dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
     
     dc -> drawrect(p_rect, true);
-}
-
-void MCPlayer::drawnicecontrollerbutton(MCGContextRef &r_gcontext, const MCRectangle& p_rect)
-{
-
 }
 
 MCRectangle MCPlayer::getcontrollerrect(void)
@@ -2210,6 +2302,78 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             return MCRectangleMake(p_rect . x , p_rect . y - (t_height - SELECTION_RECT_WIDTH) * loudness / 100 - SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT, SELECTION_RECT_WIDTH);
         }
             break;
+        case kMCPlayerControllerPartSelectedArea:
+        {
+            uint32_t t_start_time, t_finish_time, t_duration;
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_start_time);
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_finish_time);
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            
+            MCRectangle t_well_rect;
+            t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
+            
+            int t_active_well_width;
+            t_active_well_width = t_well_rect . width - CONTROLLER_HEIGHT;
+            
+            int t_selection_start_left, t_selection_finish_left;
+            t_selection_start_left = t_active_well_width * t_start_time / t_duration;
+            t_selection_finish_left = t_active_well_width * t_finish_time / t_duration;
+            
+            return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, t_selection_finish_left - t_selection_start_left + CONTROLLER_HEIGHT, t_well_rect . height);
+        }
+            break;
+        
+        case kMCPlayerControllerPartVolumeArea:
+        {
+            MCRectangle t_volume_bar_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar);
+            int32_t t_bar_height = t_volume_bar_rect . height;
+            int32_t t_bar_width = t_volume_bar_rect . width;
+            int32_t t_width = CONTROLLER_HEIGHT / 4;
+            
+            int32_t t_x_offset = (t_bar_width - t_width) / 2;
+            return MCRectangleMake(p_rect . x + t_x_offset , p_rect . y - (t_bar_height - SELECTION_RECT_WIDTH) * loudness / 100 - SELECTION_RECT_WIDTH, t_width, t_bar_height * loudness /100);
+        }
+            break;
+            
+        case kMCPlayerControllerPartPlayedArea:
+        {
+            uint32_t t_start_time, t_current_time, t_finish_time, t_duration;
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            
+            if (getflag(F_SHOW_SELECTION))
+            {
+                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_start_time);
+                MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_finish_time);
+            }
+            else
+            {
+                t_start_time = 0;
+                t_finish_time = t_duration;
+            }
+            
+    
+            MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
+            
+            if (t_current_time == 0)
+                t_current_time = t_start_time;
+            if (t_current_time > t_finish_time)
+                t_current_time = t_finish_time;
+            if (t_current_time < t_start_time)
+                t_current_time = t_start_time;
+            
+            MCRectangle t_well_rect;
+            t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
+            
+            int t_active_well_width;
+            t_active_well_width = t_well_rect . width - CONTROLLER_HEIGHT;
+            
+            int t_selection_start_left, t_current_time_left;
+            t_selection_start_left = t_active_well_width * t_start_time / t_duration;
+            t_current_time_left = t_active_well_width * t_current_time / t_duration;
+            
+            return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, t_current_time_left - t_selection_start_left, t_well_rect . height);
+        }
+            break;
         default:
             break;
     }
@@ -2231,6 +2395,12 @@ void MCPlayer::handle_mdown(int p_which)
 
     int t_part;
     t_part = hittestcontroller(mx, my);
+    
+    if (getflag(F_SHOW_VOLUME) && t_part != kMCPlayerControllerPartVolumeSelector && t_part != kMCPlayerControllerPartVolumeBar && t_part != kMCPlayerControllerPartVolume)
+    {
+        setflag(False, F_SHOW_VOLUME);
+        layer_redrawall();
+    }
     switch(t_part)
     {
         case kMCPlayerControllerPartPlay:
@@ -2389,7 +2559,6 @@ void MCPlayer::handle_mfocus(int x, int y)
                 MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_new_start_time);
                 
                 layer_redrawrect(getcontrollerrect());
-                
             }
                 break;
                 
