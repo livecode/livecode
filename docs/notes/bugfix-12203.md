@@ -1,0 +1,1 @@
+# Unicode does not survive arrayEncode

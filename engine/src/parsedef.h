@@ -2119,7 +2119,8 @@ enum Value_format {
     VF_STRING,
     VF_NUMBER,
     VF_BOTH,
-    VF_ARRAY
+    VF_ARRAY,
+    VF_UNICODE_STRING
 };
 
 enum Url_type {
