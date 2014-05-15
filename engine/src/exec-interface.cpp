@@ -4089,8 +4089,6 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 		rel = parentptr -> getrect();
 	}
 
-	t_stack->stopedit();
-
 	Window_mode wm = (Window_mode)p_mode;
 	if (wm == WM_LAST && t_stack->userlevel() != 0 && p_window == nil && !p_this_stack)
 		wm = (Window_mode)(t_stack->userlevel() + WM_TOP_LEVEL_LOCKED);
