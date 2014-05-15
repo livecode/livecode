@@ -1319,7 +1319,28 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 			}
 			else
 				MCFilesExecPerformWait(ctxt, p_index, x_duration, r_stat);
-			break;
+            break;
+                
+        case kMCFileEncodingUTF32:
+        case kMCFileEncodingUTF32LE:
+        case kMCFileEncodingUTF32BE:
+            t_bytes . New(4);
+            r_stat = MCS_readall(t_bytes.Bytes(), 4, p_stream, t_bytes_read);
+            
+            if (t_bytes_read == 4 || r_stat == EOF)
+            {
+                uint32_t t_codeunit;
+                MCAutoStringRef t_string;
+                
+                /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)&t_codeunit, t_bytes_read, MCS_file_to_string_encoding((MCSFileEncodingType)p_encoding), false, &t_string);
+                /* UNCHECKED */ MCStringAppend(x_buffer, *t_string);
+                
+                t_codeunit_added = MCStringGetLength(*t_string);
+            }
+            else
+                MCFilesExecPerformWait(ctxt, p_index, x_duration, r_stat);
+            break;
+                
 		case kMCFileEncodingUTF8:
 			t_bytes . New(1);
 			r_stat = MCS_readall(t_bytes . Bytes(), 1, p_stream, t_bytes_read);
@@ -2128,17 +2149,16 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
                     break;
                 }
             case kMCFileEncodingUTF16LE:
-                {
-                    MCAutoDataRef t_output;
-                    /* UNCHECKED */ MCStringEncode(p_data, kMCStringEncodingUTF16LE, false, &t_output);
-                    r_stat = MCS_write(MCDataGetBytePtr(*t_output), 1, MCDataGetLength(*t_output), p_stream);
-                    break;
-                }
             case kMCFileEncodingUTF16BE:
+            case kMCFileEncodingUTF32:
+            case kMCFileEncodingUTF32BE:
+            case kMCFileEncodingUTF32LE:
                 {
                     MCAutoDataRef t_output;
-                    /* UNCHECKED */ MCStringEncode(p_data, kMCStringEncodingUTF16BE, false, &t_output);
-                    r_stat = MCS_write(MCDataGetBytePtr(*t_output), 1, MCDataGetLength(*t_output), p_stream);
+                    if (MCStringEncode(p_data, MCS_file_to_string_encoding((MCSFileEncodingType)p_encoding), false, &t_output))
+                        r_stat = MCS_write(MCDataGetBytePtr(*t_output), 1, MCDataGetLength(*t_output), p_stream);
+                    else
+                        r_stat = IO_ERROR;
                     break;
                 }
             default:

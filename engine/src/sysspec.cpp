@@ -1072,7 +1072,7 @@ void MCS_close(IO_handle &x_stream)
 // Inspects the BOM of a text file to retrieve its encoding
 MCSFileEncodingType MCS_resolve_BOM(IO_handle x_stream)
 {
-    uint1 t_BOM[3];
+    uint1 t_BOM[4];
     int64_t t_size;
     uint32_t t_size_read;
     uint32_t t_position;
@@ -1082,9 +1082,29 @@ MCSFileEncodingType MCS_resolve_BOM(IO_handle x_stream)
     t_size = x_stream -> GetFileSize();
 
     t_position = x_stream -> Tell();
-    x_stream -> Seek(0, 1);
+    x_stream -> Seek(0, 1);    
+    
+    // Reading to find a UTF-32 BOM
+    if (t_size > 3)
+    {
+        if (x_stream -> Read(t_BOM, 4, t_size_read))
+        {
+            if (t_BOM[0] == 0xFF
+                    && t_BOM[1] == 0xFE
+                    && t_BOM[2] == 0x0
+                    && t_BOM[3] == 0x0)
+                t_encoding = kMCFileEncodingUTF32LE;
+            else if (t_BOM[0] == 0x0
+                     && t_BOM[1] == 0x0
+                     && t_BOM[2] == 0xFE
+                     && t_BOM[3] == 0xFF)
+                t_encoding = kMCFileEncodingUTF32BE;
+            else
+                x_stream -> Seek(0,1);
+        }
+    }
 
-    if (t_size > 1)
+    if (t_encoding == kMCFileEncodingNative && t_size > 1)
     {
         if (x_stream -> Read(t_BOM, 2, t_size_read))
         {

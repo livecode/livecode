@@ -64,6 +64,9 @@ enum MCSFileEncodingType
     kMCFileEncodingUTF16,
     kMCFileEncodingUTF16LE,
     kMCFileEncodingUTF16BE,
+    kMCFileEncodingUTF32,
+    kMCFileEncodingUTF32LE,
+    kMCFileEncodingUTF32BE,
     kMCFileEncodingBinary
 };
 

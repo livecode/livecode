@@ -1728,7 +1728,6 @@ enum Script_point {
     SP_ASK,
     SP_COMMAND,
     SP_CONVERT,
-    SP_ENCODING,
     SP_ENCRYPTION,
     SP_EXIT,
     SP_EXPORT,

@@ -2581,6 +2581,13 @@ enum Exec_errors
 	// MM-2014-02-12: [[ SecureSocket ]]
 	// {EE-0805} secure: error in socket expression
 	EE_SECURE_BADNAME,
+    
+    // SN-2014-05-06: [[ Bug 12360 ]]
+    // {EE-0806} open: bad text encoding
+    EE_OPEN_BADENCODING,
+    
+    // {EE-0807} open: unsupported encoding
+    EE_OPEN_UNSUPPORTED_ENCODING,
 };
 
 extern const char *MCexecutionerrors;
