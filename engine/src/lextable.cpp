@@ -2005,6 +2005,7 @@ static LT show_table[] =
 static LT sort_table[] =
     {
         {"ascending", TT_UNDEFINED, ST_ASCENDING},
+        {"binary", TT_UNDEFINED, ST_BINARY},
         {"by", TT_UNDEFINED, ST_BY},
         {"cards", TT_UNDEFINED, ST_CARDS},
         {"cds", TT_UNDEFINED, ST_CARDS},

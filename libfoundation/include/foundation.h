@@ -1198,6 +1198,7 @@ integer_t MCNumberFetchAsInteger(MCNumberRef number);
 uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef number);
 real64_t MCNumberFetchAsReal(MCNumberRef number);
 
+bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number);
 bool MCNumberParse(MCStringRef string, MCNumberRef& r_number);
 bool MCNumberParseUnicodeChars(const unichar_t *chars, uindex_t char_count, MCNumberRef& r_number);
 
@@ -1425,6 +1426,12 @@ bool MCStringIsMutable(const MCStringRef string);
 bool MCStringIsEmpty(MCStringRef string);
 
 // Returns true if the the string only requires native characters to represent.
+bool MCStringCanBeNative(MCStringRef string);
+
+// Returns true if under the given comparison conditions, string cannot be represented natively.
+bool MCStringCantBeNative(MCStringRef string, MCStringOptions p_options);
+
+// Returns true if the string is stored as native chars.
 bool MCStringIsNative(MCStringRef string);
 
 // Returns true if the string only requires BMP characters to represent.
@@ -1476,6 +1483,9 @@ uindex_t MCStringGetChars(MCStringRef string, MCRange range, unichar_t *chars);
 // returns the number of chars generated. If 'chars' is nil, just the number of chars
 // that would be generated is returned. Any unmappable chars get generated as '?'.
 uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, char_t *chars);
+
+// Nativize self
+void MCStringNativize(MCStringRef string);
 
 // Maps from a codepoint (character) range to a code unit (StringRef) range
 bool MCStringMapCodepointIndices(MCStringRef, MCRange p_codepoint_range, MCRange& r_string_range);
@@ -1731,6 +1741,8 @@ bool MCStringPad(MCStringRef string, uindex_t at, uindex_t count, MCStringRef va
 // Note that 'string' must be mutable.
 bool MCStringFindAndReplace(MCStringRef string, MCStringRef pattern, MCStringRef replacement, MCStringOptions options);
 bool MCStringFindAndReplaceChar(MCStringRef string, codepoint_t pattern, codepoint_t replacement, MCStringOptions options);
+
+bool MCStringWildcardMatch(MCStringRef source, MCRange source_range, MCStringRef pattern, MCStringOptions p_options);
 
 /////////
 

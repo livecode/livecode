@@ -1900,7 +1900,7 @@ void MCBlock::openimage()
 		// Search for the appropriate image object using the standard method - here we
 		// use the field as the starting point.
 		uint4 t_image_id;
-		if (MCU_stoui4(MCStringGetOldString(atts->imagesource), t_image_id))
+		if (MCU_stoui4(atts->imagesource, t_image_id))
 			atts -> image = t_field -> resolveimageid(t_image_id);
 		else
 		{

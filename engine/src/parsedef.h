@@ -1786,6 +1786,7 @@ enum Sort_type {
     ST_MARKED,
     ST_CARDS,
     ST_TEXT,
+    ST_BINARY,
     ST_NUMERIC,
     ST_INTERNATIONAL,
     ST_DATETIME,
