@@ -192,16 +192,16 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		MCGRectangle t_float_text_bounds;
         t_float_text_bounds . origin . x = 0;
         t_float_text_bounds . origin . y = -p_font . ascent;
-        t_float_text_bounds . size . width = MCGContextMeasurePlatformText(self, p_text, p_length, p_font);
+        t_float_text_bounds . size . width = MCGContextMeasurePlatformText(self, p_text, p_length, p_font, MCGContextGetDeviceTransform(self));
         
         // MM-2013-11-11: [[ Bug 11413 11572 ]] Fudge to make sure fonts with descent are not clipped.
         //   It appears that each version of iOS is a little different. Updated fudge to be a factor of the font size rather than a fixed value.
-        t_float_text_bounds . size . height = ceilf([t_font lineHeight]) + ceilf(0.20f * p_font . size);
+        t_float_text_bounds . size . height = ceilf([t_font lineHeight]) + ceilf(0.25f * p_font . size);
                 
         // MM-2013-10-24: [[ Bug 11310 ]] It appears that you can only get the typographic bounds of a UIFont, which is causing horizontal clipping for italic fonts
         //   (and possibly further clipping issues for other fonts). Fudge for italic fonts by adding the width of w to bounds.
         if ([[t_font fontName] rangeOfString:@"italic" options:NSCaseInsensitiveSearch] . length > 0 || [[t_font fontName] rangeOfString:@"oblique" options: NSCaseInsensitiveSearch] . length > 0)
-            t_float_text_bounds . size . width += MCGContextMeasurePlatformText(self, (const unichar_t *)L"w", 2, p_font);
+            t_float_text_bounds . size . width += MCGContextMeasurePlatformText(self, (const unichar_t *)L"w", 2, p_font, MCGContextGetDeviceTransform(self));
         
 		t_transform = MCGContextGetDeviceTransform(self);
 		t_device_location = MCGPointApplyAffineTransform(p_location, t_transform);		
@@ -272,7 +272,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	self -> is_valid = t_success;
 }
 
-MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
+MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform)
 {
 	//if (!MCGContextIsValid(self))
 	//	return 0.0;

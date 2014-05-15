@@ -602,8 +602,11 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 		//   inbetween timer invocations was too high. So, instead, we process
 		//   all events at this point to ensure the mouseUp is handled.
 		//   (In the future we should flush mouseUp events to the dispatch queue)
-
-		MCscreen->wait(MCsyncrate / 1000.0, True, False); // dispatch mup
+        // MW-2014-04-16: [[ Bug 12183 ]] This wait does not seem to make much
+        //   sense. It seems to be so that a mouseUp in a short space of time
+        //   stops the scrollbar from moving. This isn't how things should be I
+        //   don't think - so commenting it out for now.
+        // MCscreen->wait(MCsyncrate / 1000.0, True, False); // dispatch mup
 		if (state & CS_MFOCUSED && !MCbuttonstate)
 		{
 			mup(Button1);
@@ -919,8 +922,9 @@ void MCScrollbar::compute_barsize()
 			if (MCStringIsEmpty(endstring))
 				barsize = MCU_max(barsize, 5);
 			else
-				barsize = MCU_max((uindex_t)barsize, MCStringGetLength(endstring));
-			barsize *= MCFontMeasureText(m_font, MCSTR("0"));
+                barsize = MCU_max((uindex_t)barsize, MCStringGetLength(endstring));
+            // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            barsize *= MCFontMeasureText(m_font, MCSTR("0"), getstack() -> getdevicetransform());
 			barsize = twidth - (barsize + barsize * (twidth - barsize) / twidth);
 		}
 		else

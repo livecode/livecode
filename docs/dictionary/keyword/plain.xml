@@ -16,7 +16,6 @@
   <references>
     <keyword tag="box">box Keyword</keyword>
     <keyword tag="italic">italic Keyword</keyword>
-    <keyword tag="expanded">expanded Keyword</keyword>
   </references>
   <history>
     <introduced version="1.0">Added.</introduced>

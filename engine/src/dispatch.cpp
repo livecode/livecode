@@ -1353,45 +1353,6 @@ void MCDispatch::property(Window w, Atom atom)
 {
 }
 
-void MCDispatch::sync_stack_windows(void)
-{
-	if (stacks == nil)
-		return;
-	
-	MCStack *t_stack;
-	t_stack = stacks;
-	
-	do
-	{
-		if (t_stack->getopened() && t_stack->isvisible())
-		{
-			t_stack->view_sync_window_geometry();
-			t_stack->view_dirty_all();
-		}
-		
-		t_stack = (MCStack*)t_stack->next();
-	}
-	while (t_stack != stacks);
-}
-
-void MCDispatch::reopen_stack_windows(void)
-{
-	if (stacks == nil)
-		return;
-	
-	MCStack *t_stack;
-	t_stack = stacks;
-	
-	do
-	{
-		if (t_stack->getopened() && t_stack->getwindow() != nil)
-			t_stack->reopenwindow();
-		
-		t_stack = (MCStack*)t_stack->next();
-	}
-	while (t_stack != stacks);
-}
-
 void MCDispatch::configure(Window w)
 {
 	MCStack *target = findstackd(w);

@@ -1332,7 +1332,7 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
                 uint32_t t_codeunit;
                 MCAutoStringRef t_string;
                 
-                /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)&t_codeunit, t_bytes_read, MCS_file_to_string_encoding((MCSFileEncodingType)p_encoding), false, &t_string);
+                /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)&t_codeunit, t_bytes_read, MCS_file_to_string_encoding((MCFileEncodingType)p_encoding), false, &t_string);
                 /* UNCHECKED */ MCStringAppend(x_buffer, *t_string);
                 
                 t_codeunit_added = MCStringGetLength(*t_string);
@@ -2152,7 +2152,7 @@ void MCFilesExecWriteToStream(MCExecContext& ctxt, IO_handle p_stream, MCStringR
             case kMCFileEncodingUTF32LE:
                 {
                     MCAutoDataRef t_output;
-                    if (MCStringEncode(p_data, MCS_file_to_string_encoding((MCSFileEncodingType)p_encoding), false, &t_output))
+                    if (MCStringEncode(p_data, MCS_file_to_string_encoding((MCFileEncodingType)p_encoding), false, &t_output))
                         r_stat = MCS_write(MCDataGetBytePtr(*t_output), 1, MCDataGetLength(*t_output), p_stream);
                     else
                         r_stat = IO_ERROR;

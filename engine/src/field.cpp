@@ -561,8 +561,8 @@ void MCField::kfocus()
 		if (flags & F_LIST_BEHAVIOR)
 		{
 			if (!(flags & F_TOGGLE_HILITE))
-				if (!focusedparagraph->isselection()
-				        && !focusedparagraph->IsEmpty()
+                if (!focusedparagraph->isselection()
+                        && !focusedparagraph->IsEmpty()
 				        || focusedparagraph->next() != focusedparagraph)
 				{
 					focusedparagraph->sethilite(True);
@@ -825,7 +825,7 @@ Boolean MCField::mfocus(int2 x, int2 y)
 {
 	Tool tool = getstack()->gettool(this);
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-	        || flags & F_DISABLED && tool == T_BROWSE || state & CS_NO_FILE)
+            || flags & F_DISABLED && tool == T_BROWSE || state & CS_NO_FILE)
 		return False;
 	if (sbfocus(x, y, hscrollbar, vscrollbar))
 	{
@@ -1021,7 +1021,7 @@ Boolean MCField::mdown(uint2 which)
 				}
 			}
 			if (flags & F_TRAVERSAL_ON ||
-				(flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL) && flags & F_LIST_BEHAVIOR)
+                (flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL) && flags & F_LIST_BEHAVIOR)
 			{
 				if (flags & F_TRAVERSAL_ON && !(state & CS_KFOCUSED)
 				        && !(flags & F_NO_AUTO_HILITE))
@@ -1147,7 +1147,7 @@ Boolean MCField::mup(uint2 which)
 			if (!(state & CS_DRAG_TEXT))
 				if ((flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL))
 					if (MCU_point_in_rect(rect, mx, my))
-						if (flags & F_LIST_BEHAVIOR
+                        if (flags & F_LIST_BEHAVIOR
                                 && (my - rect.y > (int4)(textheight + topmargin - texty)
                                     || paragraphs == paragraphs->next()
                                     && paragraphs->IsEmpty()))
@@ -1555,8 +1555,9 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
             MCParagraph *pgptr = paragraphs;
             uint2 height = getfheight();
             uint2 theight = height;
-            uint2 tstart = 1;
-            uint2 tend = 0;
+            // MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indicies.
+            uint4 tstart = 1;
+            uint4 tend = 0;
             MCLine *lastline = NULL;
             uint2 j = 0;
             while (True)

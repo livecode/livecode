@@ -1315,26 +1315,32 @@ void XML_SetElementContents(char *args[], int nargs, char **retstring, Bool *pas
 					}
 
 					telement . GetNodePtr() -> children = t_new_first_node;
+                    
+                    // MW-2014-04-30: [[ Bug 11748 ]] If the encoded string is empty, then GetNodeList doesn't
+                    //   return anything anymore.
+                    
+                    if (*t_encoded_string != '\0')
+                    {
+                        // Insert a new text node before all the children
+                        xmlNodePtr t_new_node_list;
+                        t_new_node_list = xmlStringGetNodeList(tdoc -> GetDocPtr(), t_encoded_string);
 
-					// Insert a new text node before all the children
-					xmlNodePtr t_new_node_list;
-					t_new_node_list = xmlStringGetNodeList(tdoc -> GetDocPtr(), t_encoded_string);
+                        // Create a new text element to hold the content
+                        CXMLElement *t_new_element;
+                        t_new_element = new CXMLElement();
+                        t_new_element -> SetNodePtr(t_new_node_list);
 
-					// Create a new text element to hold the content
-					CXMLElement *t_new_element;
-					t_new_element = new CXMLElement();
-					t_new_element -> SetNodePtr(t_new_node_list);
+                        // Save the previous first child element
+                        xmlNodePtr t_old_first_element;
+                        t_old_first_element = telement . GetNodePtr() -> children;
 
-					// Save the previous first child element
-					xmlNodePtr t_old_first_element;
-					t_old_first_element = telement . GetNodePtr() -> children;
+                        // Set the new text element to be the first child
+                        telement . GetNodePtr() -> children = t_new_element -> GetNodePtr();
+                        telement . GetNodePtr() -> children -> next = t_old_first_element;
 
-					// Set the new text element to be the first child
-					telement . GetNodePtr() -> children = t_new_element -> GetNodePtr();
-					telement . GetNodePtr() -> children -> next = t_old_first_element;
-
-					if (t_old_first_element != NULL)
-						t_old_first_element -> prev = t_new_element -> GetNodePtr();
+                        if (t_old_first_element != NULL)
+                            t_old_first_element -> prev = t_new_element -> GetNodePtr();
+                    }
 				}
 				else
 					telement . SetContent((char *)t_encoded_string);

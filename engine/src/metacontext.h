@@ -289,22 +289,25 @@ struct MCMarkPolygon
 struct MCMarkRectangle
 {
 	MCRectangle bounds;
-	bool inside : 1;
+    // MM-2014-04-23: [[ Bug 11884 ]] Store by how much we want to inset (rather than we just want to inset).
+	uint2 inset;
 };
 
 struct MCMarkRoundRectangle
 {
 	MCRectangle bounds;
 	uint2 radius;
-	bool inside : 1;
+    // MM-2014-04-23: [[ Bug 11884 ]] Store by how much we want to inset (rather than we just want to inset).
+	uint2 inset;
 };
 
 struct MCMarkArc
 {
 	MCRectangle bounds;
 	uint2 start, angle;
-	bool complete : 1;
-	bool inside : 1;
+    bool complete : 1;
+    // MM-2014-04-23: [[ Bug 11884 ]] Store by how much we want to inset (rather than we just want to inset).
+	uint2 inset;
 };
 
 struct MCMarkImage
