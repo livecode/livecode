@@ -44,7 +44,7 @@ public:
 	static MCPath *create_path(uint1 *commands, uint32_t command_count, int4 *ordinates, uint32_t ordinate_count);
 	static MCPath *create_line(int2 fx, int2 fy, int2 tx, int2 ty, bool adjust);
 	static MCPath *create_polyline(MCPoint *points, uint2 count, bool adjust);
-	static MCPath *create_polypolyline(MCSegment *segments, uint2 count, bool adjust);
+	static MCPath *create_polypolyline(MCLineSegment *segments, uint2 count, bool adjust);
 	static MCPath *create_rectangle(const MCRectangle& rect, bool adjust);
 	static MCPath *create_rounded_rectangle(const MCRectangle& rect, uint2 radius, bool adjust);
 	static MCPath *create_polygon(MCPoint *points, uint2 count, bool adjust);

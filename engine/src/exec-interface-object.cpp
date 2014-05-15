@@ -287,6 +287,7 @@ static PropList fieldprops[] =
         {"showFocusBorder", P_SHOW_FOCUS_BORDER},
         {"showLines", P_SHOW_LINES},
         {"style", P_STYLE},
+        {"tabAlign", P_TAB_ALIGN},
         {"tabStops", P_TAB_STOPS},
         {"textAlign", P_TEXT_ALIGN},
         {"textDirection", P_TEXTDIRECTION},

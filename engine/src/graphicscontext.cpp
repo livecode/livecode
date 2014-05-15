@@ -1021,7 +1021,7 @@ void MCGraphicsContext::drawsegment(const MCRectangle& rect, uint2 start, uint2 
 	MCGContextStroke(m_gcontext);
 }
 
-void MCGraphicsContext::drawsegments(MCSegment *segments, uint2 nsegs)
+void MCGraphicsContext::drawsegments(MCLineSegment *segments, uint2 nsegs)
 {
 	MCGContextBeginPath(m_gcontext);
 	for (uint32_t i = 0; i < nsegs; i++)
