@@ -393,7 +393,7 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 			/* UNCHECKED */ MCS_tmpnam(&t_temp);
 			IO_handle t_stream;
 			
-			if ((t_stream = MCS_open(*t_temp, kMCSOpenFileModeWrite, False, False, 0)) == NULL)
+			if ((t_stream = MCS_open(*t_temp, kMCOpenFileModeWrite, False, False, 0)) == NULL)
 			{
 				ctxt . SetTheResultToStaticCString("error opening temp file");
 				return;
@@ -481,7 +481,7 @@ void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p
 		IO_handle stream;
 		
 		if (!MCS_exists(p_clip, True)
-		        || (stream = MCS_open(p_clip, kMCSOpenFileModeRead, True, False, 0)) == NULL)
+		        || (stream = MCS_open(p_clip, kMCOpenFileModeRead, True, False, 0)) == NULL)
 		{
 			MCAutoValueRef t_url;
             MCAutoDataRef t_data;

@@ -22,16 +22,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 enum
 {
-	kMCSystemFileModeRead = 0,
-	kMCSystemFileModeWrite = 1,
-	kMCSystemFileModeUpdate = 2,
-	kMCSystemFileModeAppend = 3,
-	
-	kMCSystemFileModeNulTerminate = 1 << 16
-};
-
-enum
-{
     kMCSystemFileSeekSet = 1,
     kMCSystemFileSeekCurrent = 0,
     kMCSystemFileSeekEnd = -1,

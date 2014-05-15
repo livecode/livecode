@@ -360,7 +360,7 @@ void IO_mac_to_iso(char *string, uint4 len)
 	}
 }
 
-MCStringEncoding MCS_file_to_string_encoding(MCSFileEncodingType p_encoding)
+MCStringEncoding MCS_file_to_string_encoding(MCFileEncodingType p_encoding)
 {
     switch(p_encoding)
     {

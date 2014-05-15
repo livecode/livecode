@@ -299,7 +299,7 @@ bool MCCapsuleFillFromFile(MCCapsuleRef self, MCStringRef p_path, uint32_t p_off
 	t_stream = nil;
 	if (t_success)
 	{
-		t_stream = MCS_open(p_path, kMCSOpenFileModeRead, True, False, 0);
+        t_stream = MCS_open(p_path, kMCOpenFileModeRead, True, False, 0);
 		if (t_stream == nil)
 			t_success = false;
 	}

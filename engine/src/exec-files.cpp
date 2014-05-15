@@ -870,7 +870,7 @@ void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, i
 	Encoding_type t_encoding = (Encoding_type)p_encoding;
     if (p_encoding == kMCFileEncodingText)
     {
-        IO_handle t_BOM_stream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeRead, True, p_is_driver, 0);
+        IO_handle t_BOM_stream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeRead, True, p_is_driver, 0);
 		if (t_BOM_stream != NULL)
 		{
 			t_encoding = (Encoding_type)MCS_resolve_BOM(t_BOM_stream);
@@ -887,18 +887,18 @@ void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, i
 	switch (p_mode)
 	{
 	case OM_APPEND:
-        ostream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeAppend, False, p_is_driver, 0);
+        ostream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeAppend, False, p_is_driver, 0);
 		break;
 	case OM_NEITHER:
 		break;
 	case OM_READ:
-        istream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeRead, True, p_is_driver, 0);
+        istream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeRead, True, p_is_driver, 0);
 		break;
 	case OM_WRITE:
-        ostream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeWrite, False, p_is_driver, 0);
+        ostream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeWrite, False, p_is_driver, 0);
 		break;
 	case OM_UPDATE:
-        istream = ostream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeUpdate, False, p_is_driver, 0);
+        istream = ostream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeUpdate, False, p_is_driver, 0);
 		break;
 	default:
 		break;
@@ -1953,7 +1953,7 @@ void MCFilesExecReadGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_e
 void MCFilesExecReadFromFileOrDriverFor(MCExecContext& ctxt, bool p_driver, bool p_is_end, MCNameRef p_file, int64_t p_at, bool p_has_at, uint4 p_count, int p_unit_type, double p_max_wait, int p_time_units)
 {
 	IO_handle t_stream = NULL;
-    MCSFileEncodingType t_encoding;
+    MCFileEncodingType t_encoding;
 	IO_stat t_stat = IO_NORMAL;
 	
     MCFilesExecReadGetStream(ctxt, p_file, p_is_end, p_at, p_has_at, t_stream, (intenum_t&)t_encoding, t_stat);
@@ -1980,7 +1980,7 @@ void MCFilesExecReadFromFileOrDriverFor(MCExecContext& ctxt, bool p_driver, bool
 void MCFilesExecReadFromFileOrDriverUntil(MCExecContext& ctxt, bool p_driver, bool p_is_end, MCNameRef p_file, MCStringRef p_sentinel, int64_t p_at, bool p_has_at, double p_max_wait, int p_time_units)
 {
 	IO_handle t_stream = NULL;
-    MCSFileEncodingType t_encoding;
+    MCFileEncodingType t_encoding;
 	IO_stat t_stat = IO_NORMAL;
 	
     MCFilesExecReadGetStream(ctxt, p_file, p_is_end, p_at, p_has_at, t_stream, (intenum_t&)t_encoding, t_stat);
@@ -2284,7 +2284,7 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 {
 	
 	IO_handle t_stream = NULL;
-    MCSFileEncodingType t_encoding;
+    MCFileEncodingType t_encoding;
 	IO_stat t_stat = IO_NORMAL;
 	
     MCFilesExecWriteGetStream(ctxt, p_file, p_is_end, p_at, p_has_at, t_stream, (intenum_t&)t_encoding, t_stat);
@@ -2371,11 +2371,11 @@ void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStrin
 			MCValueAssign(t_text_data, *t_substring);
 			haseof = True;
 		}
-        MCFilesExecWriteToStream(ctxt, t_stream, t_text_data, p_unit_type, MCS_file_to_string_encoding((MCSFileEncodingType)MCprocesses[t_index].encoding), t_stat);
+        MCFilesExecWriteToStream(ctxt, t_stream, t_text_data, p_unit_type, MCS_file_to_string_encoding((MCFileEncodingType)MCprocesses[t_index].encoding), t_stat);
 		MCValueRelease(t_text_data);
 	}
 	else
-        MCFilesExecWriteToStream(ctxt, t_stream, p_data, p_unit_type, MCS_file_to_string_encoding((MCSFileEncodingType)MCprocesses[t_index].encoding), t_stat);
+        MCFilesExecWriteToStream(ctxt, t_stream, p_data, p_unit_type, MCS_file_to_string_encoding((MCFileEncodingType)MCprocesses[t_index].encoding), t_stat);
 
     if (haseof)
 	{

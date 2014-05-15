@@ -1878,9 +1878,9 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         signal(SIGFPE, handle_fp_exception);
 
 #endif /* MCS_init_dsk_w32 */
-		IO_stdin = MCsystem -> OpenFd(STD_INPUT_HANDLE, kMCSystemFileModeRead);
-		IO_stdout = MCsystem -> OpenFd(STD_OUTPUT_HANDLE, kMCSystemFileModeWrite);
-		IO_stderr = MCsystem -> OpenFd(STD_ERROR_HANDLE, kMCSystemFileModeWrite);
+		IO_stdin = MCsystem -> OpenFd(STD_INPUT_HANDLE, kMCOpenFileModeRead);
+		IO_stdout = MCsystem -> OpenFd(STD_OUTPUT_HANDLE, kMCOpenFileModeWrite);
+		IO_stderr = MCsystem -> OpenFd(STD_ERROR_HANDLE, kMCOpenFileModeWrite);
 
 		setlocale(LC_CTYPE, MCnullstring);
 		setlocale(LC_COLLATE, MCnullstring);
@@ -3036,25 +3036,26 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			// Is this a path to a serial port?
 			if (MCStringBeginsWithCString(p_path, (const char_t*)"\\\\.\\COM", kMCStringOptionCompareCaseless))
 				t_serial_device = true;
-		}
+        }
 
-		if (p_mode == kMCSOpenFileModeRead)
+		if (p_mode == kMCOpenFileModeRead)
 		{
 			omode = GENERIC_READ;
 			createmode = OPEN_EXISTING;
 		}
-		if (p_mode== kMCSOpenFileModeWrite || p_mode == kMCSOpenFileModeCreate)
+        if (p_mode== kMCOpenFileModeWrite || p_mode == kMCOpenFileModeExecutableWrite || p_mode == kMCOpenFileModeCreate)
 		{
 			omode = GENERIC_WRITE;
 			createmode = CREATE_ALWAYS;
 		}
+
 		// SN-2014-05-02 [[ Bug 12061 ]] Can't test app on Android
 		// Issue when reading the deployed file when deploying to Linux/Android
-		if (p_mode == kMCSOpenFileModeCreate)
+		if (p_mode == kMCOpenFileModeCreate)
 			omode |= GENERIC_READ;
-		if (p_mode == kMCSOpenFileModeUpdate)
+		if (p_mode == kMCOpenFileModeUpdate)
 			omode = GENERIC_WRITE | GENERIC_READ;
-		if (p_mode == kMCSOpenFileModeAppend)
+		if (p_mode == kMCOpenFileModeAppend)
 		{
 			omode = GENERIC_WRITE;
 			appendmode = True;

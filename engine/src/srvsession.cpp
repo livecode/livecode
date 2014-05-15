@@ -91,7 +91,7 @@ bool MCSessionOpenIndex(MCSessionIndexRef &r_index)
 	
 	// open file
 	if (t_success)
-		t_success = NULL != (t_index->file = MCsystem->OpenFile(*t_path_string, kMCSystemFileModeUpdate, false));
+		t_success = NULL != (t_index->file = MCsystem->OpenFile(*t_path_string, kMCOpenFileModeUpdate, false));
 
 	// lock file
 	if (t_success)
@@ -375,7 +375,7 @@ bool MCSessionOpenSession(MCSessionIndexRef p_index, MCSession *p_session)
 	t_success = MCStringFormat(&t_path_string, "%s/%s", p_index->save_path, p_session->filename);
 	
 	if (t_success)
-		t_success = NULL != (p_session->filehandle = MCsystem->OpenFile(*t_path_string, kMCSystemFileModeUpdate, false));
+		t_success = NULL != (p_session->filehandle = MCsystem->OpenFile(*t_path_string, kMCOpenFileModeUpdate, false));
 	
 	if (t_success)
 		t_success = MCSystemLockFile(p_session->filehandle, false, true);
@@ -640,7 +640,7 @@ bool MCSessionCleanup(void)
 			MCAutoStringRef t_full_path_string;
 			if (MCStringFormat(&t_full_path_string, "%s/%s", t_index->save_path, t_index->session[i]->filename)  && MCS_exists(*t_full_path_string, True))
 			{
-				t_file = MCsystem->OpenFile(*t_full_path_string, kMCSystemFileModeRead, false);
+				t_file = MCsystem->OpenFile(*t_full_path_string, kMCOpenFileModeRead, false);
 				if (t_file != NULL)
 				{
 					bool t_locked = false;

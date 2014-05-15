@@ -70,16 +70,16 @@ public:
         
         switch(p_mode)
         {
-            case kMCSystemFileModeRead:
+            case kMCOpenFileModeRead:
                 t_stream = fopen(*t_path_utf, IO_READ_MODE);
                 break;
-            case kMCSystemFileModeUpdate:
+            case kMCOpenFileModeUpdate:
                 t_stream = fopen(*t_path_utf, IO_UPDATE_MODE);
                 break;
-            case kMCSystemFileModeAppend:
+            case kMCOpenFileModeAppend:
                 t_stream = fopen(*t_path_utf, IO_APPEND_MODE);
                 break;
-            case kMCSystemFileModeWrite:
+            case kMCOpenFileModeWrite:
                 t_stream = fopen(*t_path_utf, IO_WRITE_MODE);
                 break;
             default:
@@ -102,16 +102,16 @@ public:
         
         switch (p_mode)
         {
-            case kMCSystemFileModeAppend:
+            case kMCOpenFileModeAppend:
                 t_stream = fdopen(fd, IO_APPEND_MODE);
                 break;
-            case kMCSystemFileModeRead:
+            case kMCOpenFileModeRead:
                 t_stream = fdopen(fd, IO_READ_MODE);
                 break;
-            case kMCSystemFileModeUpdate:
+            case kMCOpenFileModeUpdate:
                 t_stream = fdopen(fd, IO_UPDATE_MODE);
                 break;
-            case kMCSystemFileModeWrite:
+            case kMCOpenFileModeWrite:
                 t_stream = fdopen(fd, IO_WRITE_MODE);
                 break;
             default:
@@ -452,7 +452,7 @@ struct MCMacSystem: public MCSystemInterface
 		
 		MCSystemFileHandle *t_handle;
 		t_handle = MCStdioFileHandle::Open(t_path, s_modes[p_mode & 0xff]);
-		if (t_handle == NULL && p_mode == kMCSystemFileModeUpdate)
+		if (t_handle == NULL && p_mode == kMCOpenFileModeUpdate)
 			t_handle = MCStdioFileHandle::Open(t_path, "w+");
 		
 		return t_handle;

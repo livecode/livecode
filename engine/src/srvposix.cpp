@@ -428,7 +428,7 @@ struct MCPosixSystem: public MCSystemInterface
 
 		MCSystemFileHandle *t_handle;
 		t_handle = MCStdioFileHandle::Open(t_path, s_modes[p_mode & 0xff]);
-		if (t_handle == NULL && p_mode == kMCSystemFileModeUpdate)
+		if (t_handle == NULL && p_mode == kMCOpenFileModeUpdate)
 			t_handle = MCStdioFileHandle::Open(t_path, "w+");
 		
 		return t_handle;

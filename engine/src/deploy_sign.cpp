@@ -1052,7 +1052,7 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 	// First open input and output executable files
 	MCDeployFileRef t_input;
 	t_input = nil;
-	if (t_success && !MCDeployFileOpen(p_params . input, kMCSOpenFileModeRead, t_input))
+	if (t_success && !MCDeployFileOpen(p_params . input, kMCOpenFileModeRead, t_input))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 
 	BIO *t_output;
