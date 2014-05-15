@@ -249,6 +249,12 @@ static void dozoomwindow(WindowPtr win, short zoomInOrOut)
 		GetRegionBounds(r, &tbRect);
 		DisposeRgn(r);
 		int2 wTitleHeight = tbRect.bottom - tbRect.top;
+        
+        // MW-2014-04-24: [[ Bug 12286 ]] Use the combined content and titlebar rect
+        //   to make sure there will be some overlap (if the user can click the zoom
+        //   box, then it must be visible!).
+        UnionRect(&windRect, &tbRect, &windRect);
+        
 		/*-------------------------------------------------------------------------*/
 		long  sectArea = 0;
 		long greatestArea = 0;

@@ -167,7 +167,7 @@ public:
 
 	void drawline(int2 x1, int2 y1, int2 x2, int2 y2);
 	void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false);
-	void drawsegments(MCSegment *segments, uint2 nsegs);
+	void drawsegments(MCLineSegment *segments, uint2 nsegs);
 	void drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image, MCDrawTextBreaking = kMCDrawTextBreak, MCDrawTextDirection = kMCDrawTextDirectionLTR);
     void drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image, MCDrawTextBreaking = kMCDrawTextBreak, MCDrawTextDirection = kMCDrawTextDirectionLTR);
 	void drawrect(const MCRectangle& rect, bool inside);
@@ -289,22 +289,25 @@ struct MCMarkPolygon
 struct MCMarkRectangle
 {
 	MCRectangle bounds;
-	bool inside : 1;
+    // MM-2014-04-23: [[ Bug 11884 ]] Store by how much we want to inset (rather than we just want to inset).
+	uint2 inset;
 };
 
 struct MCMarkRoundRectangle
 {
 	MCRectangle bounds;
 	uint2 radius;
-	bool inside : 1;
+    // MM-2014-04-23: [[ Bug 11884 ]] Store by how much we want to inset (rather than we just want to inset).
+	uint2 inset;
 };
 
 struct MCMarkArc
 {
 	MCRectangle bounds;
 	uint2 start, angle;
-	bool complete : 1;
-	bool inside : 1;
+    bool complete : 1;
+    // MM-2014-04-23: [[ Bug 11884 ]] Store by how much we want to inset (rather than we just want to inset).
+	uint2 inset;
 };
 
 struct MCMarkImage

@@ -641,10 +641,15 @@ Boolean MCGroup::mdown(uint2 which)
 {
 	if (state & CS_MENU_ATTACHED)
 		return MCObject::mdown(which);
-	if (sbdown(which, hscrollbar, vscrollbar))
-		return True;
+
 	Tool tool = getstack()->gettool(this);
-	if (tool == T_POINTER && (mfocused == NULL || !MCselectgrouped || getflag(F_SELECT_GROUP)))
+	
+    // MW-2014-04-25: [[ Bug 8041 ]] Only handle the group scrollbars in browse mode.
+    //   This is consistent with field behavior.
+    if (tool == T_BROWSE && sbdown(which, hscrollbar, vscrollbar))
+        return True;
+    
+    if (tool == T_POINTER && (mfocused == NULL || !MCselectgrouped || getflag(F_SELECT_GROUP)))
 	{
 		if (which == Button1)
 		{
@@ -657,6 +662,7 @@ Boolean MCGroup::mdown(uint2 which)
 			message_with_args(MCM_mouse_down, which);
 		return True;
 	}
+    
 	if (mfocused == NULL)
 		return False;
 	mgrabbed = True;
@@ -2776,7 +2782,11 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 				!MCcurtheme -> drawmetalbackground(dc, dirty, rect, this))
 			{
 				setforeground(dc, DI_BACK, False);
-				dc->fillrect(rect);
+				// IM-2014-04-16: [[ Bug 12044 ]] The sprite background should fill the whole redraw area. 
+				if (!p_sprite)
+					dc->fillrect(rect);
+				else
+					dc->fillrect(p_dirty);
 			}
 
 			// MW-2009-06-14: Non-themed, opaque backgrounds are (unsurprisingly!) opaque.
@@ -2879,7 +2889,8 @@ void MCGroup::drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawfra
 				t_label = label;
 			else
 				t_label = MCNameGetString(getname());
-			textrect.width = MCFontMeasureText(m_font, t_label) + 4;
+            // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            textrect.width = MCFontMeasureText(m_font, t_label, getstack() -> getdevicetransform()) + 4;
 			//exclude text area from widget drawing region for those themes that draw text on top of frame.
 			winfo.datatype = WTHEME_DATA_RECT;
 			winfo.data = &textrect;
@@ -2930,7 +2941,8 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 				t_label = label;
 			else
 				t_label = MCNameGetString(getname());
-			textrect.width = MCFontMeasureText(m_font, t_label) + 4;
+            // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            textrect.width = MCFontMeasureText(m_font, t_label, getstack() -> getdevicetransform()) + 4;
 
 			if (flags & F_SHOW_BORDER)
 			{
@@ -2984,7 +2996,7 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 					}
 					if (flags & F_3D)
 						setforeground(dc, DI_BOTTOM, True);
-					MCSegment s[5];
+					MCLineSegment s[5];
 					s[0].x1 = textrect.x;
 					s[0].x2 = s[1].x1 = s[1].x2 = trect.x + halfwidth;
 					s[0].y1 = s[0].y2 = s[1].y1 = s[4].y1 = s[4].y2= trect.y + halfwidth;

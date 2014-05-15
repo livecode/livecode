@@ -4416,9 +4416,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             setlinebuf(stderr);
         }
 #endif /* MCS_init_dsk_mac */
-        IO_stdin = MCsystem -> OpenFd(0, kMCSystemFileModeRead);
-        IO_stdout = MCsystem -> OpenFd(1, kMCSystemFileModeWrite);
-        IO_stderr = MCsystem -> OpenFd(2, kMCSystemFileModeWrite);
+        IO_stdin = MCsystem -> OpenFd(0, kMCOpenFileModeRead);
+        IO_stdout = MCsystem -> OpenFd(1, kMCOpenFileModeWrite);
+        IO_stderr = MCsystem -> OpenFd(2, kMCOpenFileModeWrite);
         struct sigaction action;
         memset((char *)&action, 0, sizeof(action));
         action.sa_handler = handle_signal;
@@ -6043,13 +6043,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         uint4 t_entry_count;
         t_entry_count = 0;
         
-        // Add ".." folder on Mac, for now impossible since there is no direct access to MCS_getentries_state type
-//        if (!p_files)
-//        {
-//            t_entry_count++;
-//            /* UNCHECKED */ MCListAppendCString(*t_list, "..");
-//        }
-        
         ItemCount t_max_objects, t_actual_objects;
         t_max_objects = CATALOG_MAX_ENTRIES;
         t_actual_objects = 0;
@@ -6080,6 +6073,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 MCSystemFolderEntry t_entry;
                 
                 MCStringRef t_unicode_name;
+                bool t_is_entry_folder;
+                
+                t_is_entry_folder = t_catalog_infos[t_i] . nodeFlags & kFSNodeIsDirectoryMask;
                 
                 // MW-2008-02-27: [[ Bug 5920 ]] Make sure we convert Finder to POSIX style paths                
                 for(uint4 i = 0; i < t_names[t_i] . length; ++i)
@@ -6096,17 +6092,31 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 
                 uint32_t t_creator;
                 uint32_t t_type;
+                char t_filetype[9];
                 
                 t_creator = 0;
                 t_type = 0;
                 
-                if (!t_is_folder)
+                if (!t_is_entry_folder)
                 {
                     FileInfo *t_file_info;
                     t_file_info = (FileInfo *) &t_catalog_infos[t_i] . finderInfo;
+                    uint4 t_creator;
                     t_creator = MCSwapInt32NetworkToHost(t_file_info -> fileCreator);
+                    uint4 t_type;
                     t_type = MCSwapInt32NetworkToHost(t_file_info -> fileType);
+                    
+                    if (t_file_info != NULL)
+                    {
+                        memcpy(t_filetype, (char*)&t_creator, 4);
+                        memcpy(&t_filetype[4], (char *)&t_type, 4);
+                        t_filetype[8] = '\0';
+                    }
+                    else
+                        t_filetype[0] = '\0';
                 }
+                else
+                    strcpy(t_filetype, "????????"); // this is what the "old" getentries did
                 
                 CFAbsoluteTime t_creation_time;
                 UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . createDate, &t_creation_time);
@@ -6140,7 +6150,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 t_entry.group_id = (uint32_t) t_permissions -> groupID;
                 t_entry.permissions = (uint32_t) t_permissions->mode & 0777;
                 t_entry.file_creator = t_creator;
-                t_entry.file_type = t_type;
+                t_entry.file_type = t_filetype;
                 t_entry.is_folder = t_catalog_infos[t_i] . nodeFlags & kFSNodeIsDirectoryMask;
             
                 p_callback(x_context, &t_entry);
@@ -6556,7 +6566,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	
     virtual IO_handle DeployOpen(MCStringRef p_path, intenum_t p_mode)
     {
-        if (p_mode != kMCSOpenFileModeCreate)
+        if (p_mode != kMCOpenFileModeCreate)
             return OpenFile(p_path, p_mode, False);
         
         FILE *fptr;
@@ -6659,7 +6669,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (fptr != NULL)
         {
             created = False;
-            if (p_mode != kMCSOpenFileModeRead)
+            if (p_mode != kMCOpenFileModeRead)
             {
                 fclose(fptr);
                 fptr = NULL;
@@ -6670,16 +6680,17 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         {
             switch(p_mode)
             {
-                case kMCSystemFileModeRead:
+                case kMCOpenFileModeRead:
                     fptr = fopen(*t_path_utf, IO_READ_MODE);
                     break;
-                case kMCSystemFileModeUpdate:
+                case kMCOpenFileModeUpdate:
                     fptr = fopen(*t_path_utf, IO_UPDATE_MODE);
                     break;
-                case kMCSystemFileModeAppend:
+                case kMCOpenFileModeAppend:
                     fptr = fopen(*t_path_utf, IO_APPEND_MODE);
                     break;
-                case kMCSystemFileModeWrite:
+                case kMCOpenFileModeWrite:
+                case kMCOpenFileModeExecutableWrite:
                     fptr = fopen(*t_path_utf, IO_WRITE_MODE);
                     break;
                 default:
@@ -6687,7 +6698,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             }
         }
         
-        if (fptr == NULL && p_mode != kMCSystemFileModeRead)
+        if (fptr == NULL && p_mode != kMCOpenFileModeRead)
             fptr = fopen(*t_path_utf, IO_CREATE_MODE);
         
         if (fptr != NULL && created)
@@ -6720,16 +6731,17 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         switch (p_mode)
         {
-            case kMCSystemFileModeAppend:
+            case kMCOpenFileModeAppend:
                 t_stream = fdopen(p_fd, IO_APPEND_MODE);
                 break;
-            case kMCSystemFileModeRead:
+            case kMCOpenFileModeRead:
                 t_stream = fdopen(p_fd, IO_READ_MODE);
                 break;
-            case kMCSystemFileModeUpdate:
+            case kMCOpenFileModeUpdate:
                 t_stream = fdopen(p_fd, IO_UPDATE_MODE);
                 break;
-            case kMCSystemFileModeWrite:
+            case kMCOpenFileModeWrite:
+            case kMCOpenFileModeExecutableWrite:
                 t_stream = fdopen(p_fd, IO_WRITE_MODE);
                 break;
             default:
@@ -6740,7 +6752,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 			return NULL;
 		
 		// MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
-		if (p_mode == kMCSystemFileModeWrite)
+        if (p_mode == kMCOpenFileModeWrite || p_mode == kMCOpenFileModeExecutableWrite)
 			setvbuf(t_stream, NULL, _IONBF, 0);
 		
 		IO_handle t_handle;
@@ -9046,13 +9058,13 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 				close(toparent[1]);
 				MCS_mac_nodelay(toparent[0]);
 				// Store the in handle for the "process".
-				MCprocesses[index].ihandle = MCsystem -> OpenFd(toparent[0], kMCSystemFileModeRead);
+				MCprocesses[index].ihandle = MCsystem -> OpenFd(toparent[0], kMCOpenFileModeRead);
 			}
 			if (writing)
 			{
 				close(tochild[0]);
 				// Store the out handle for the "process".
-				MCprocesses[index].ohandle = MCsystem -> OpenFd(tochild[1], kMCSystemFileModeWrite);
+				MCprocesses[index].ohandle = MCsystem -> OpenFd(tochild[1], kMCOpenFileModeWrite);
 			}
 		}
 	}
@@ -9137,10 +9149,10 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 				int t_fd;
 				t_fd = dup(fileno(t_stream));
 				MCS_mac_nodelay(t_fd);
-				MCprocesses[index].ihandle = MCsystem -> OpenFd(t_fd, kMCSystemFileModeRead);
+				MCprocesses[index].ihandle = MCsystem -> OpenFd(t_fd, kMCOpenFileModeRead);
 			}
 			if (writing)
-				MCprocesses[index].ohandle = MCsystem -> OpenFd(dup(fileno(t_stream)), kMCSystemFileModeWrite);
+				MCprocesses[index].ohandle = MCsystem -> OpenFd(dup(fileno(t_stream)), kMCOpenFileModeWrite);
 			
 			noerror = True;
 		}

@@ -710,7 +710,7 @@ static const char *s_handler_types[] =
     "A",
 };
 
-static bool enumerate_handlers(MCExecContext& ctxt, MCStringRef p_type, MCHandlerArray& p_handlers, uindex_t& r_count, MCStringRef*& r_handlers, bool p_first = false, MCObject *p_object = nil)
+static bool enumerate_handlers(MCExecContext& ctxt, const char *p_type, MCHandlerArray& p_handlers, uindex_t& r_count, MCStringRef*& r_handlers, bool p_first = false, MCObject *p_object = nil)
 {
     MCAutoArray<MCStringRef> t_handlers;
     MCAutoStringRef t_long_id;
@@ -726,11 +726,11 @@ static bool enumerate_handlers(MCExecContext& ctxt, MCStringRef p_type, MCHandle
 		// allow the script editor to look up handlers faster.
 		if (p_first && p_object != nil)
         {
-            t_format = "%s%@ %@ %d %d %@";
+            t_format = "%s%s %@ %d %d %@";
             p_object -> GetLongId(ctxt, &t_long_id);
         }
         else
-            t_format = "%s%@ %@ %d %d";
+            t_format = "%s%s %@ %d %d";
         
         /* UNCHECKED */ MCStringFormat(t_string,
                                        t_format,
@@ -757,16 +757,19 @@ bool MCHandlerlist::enumerate(MCExecContext& ctxt, bool p_first, uindex_t& r_cou
     
     MCAutoArray<MCStringRef> t_handlers;
     
-    MCStringRef *t_handler_array;
-    uindex_t t_count;
-    
     for (uindex_t i = 0; i < 6; i++)
     {
-        p_first = enumerate_handlers(ctxt, MCSTR(s_handler_types[i]), handlers[i], t_count, t_handler_array, p_first, t_object);
+        MCStringRef *t_handler_array;
+        t_handler_array = nil;
+        uindex_t t_count;
+        
+        p_first = enumerate_handlers(ctxt, s_handler_types[i], handlers[i], t_count, t_handler_array, p_first, t_object);
         for (uindex_t j = 0; j < t_count; j++)
             t_handlers . Push(t_handler_array[j]);
+        
+        MCMemoryDeleteArray(t_handler_array);
     }
-	
+    
     t_handlers . Take(r_handlers, r_count);
 	return p_first;
 }

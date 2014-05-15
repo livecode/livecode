@@ -747,7 +747,7 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevic
     MCAutoStringRef t_path;
     /* UNCHECKED */ MCStringCreateWithSysString(t_output_file, &t_path);
 
-    stream = MCS_open(*t_path, kMCSOpenFileModeWrite, False, False, 0);
+    stream = MCS_open(*t_path, kMCOpenFileModeWrite, False, False, 0);
     
     // MW-2013-11-11: [[ Bug 11197 ]] Make sure we check we managed to open the file.
 	if (stream == nil)
@@ -1046,78 +1046,66 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 		
 		
 		case MARK_TYPE_RECTANGLE:
-			if (isStroke)
-			{
-				MCRectangle t_rect;
-				t_rect = p_mark->rectangle.bounds;
+		{
+            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds.
+			MCGRectangle t_rect;
+			t_rect = MCGRectangleMake(p_mark-> rectangle . bounds . x + p_mark-> rectangle . inset / 2.0f, p_mark-> rectangle . bounds . y + p_mark-> rectangle . inset / 2.0f,
+							 p_mark-> rectangle . bounds . width - p_mark-> rectangle . inset, p_mark-> rectangle . bounds . height - p_mark-> rectangle . inset);
 			
-				sprintf( buffer, "%d %d %d %d R \n", t_rect . width, t_rect . height, t_rect . x , cardheight - (t_rect.y + t_rect.height) ) ;
-				PSwrite ( buffer ) ;
-				
-			}
+			if (!isStroke)
+				sprintf(buffer, "%f %f %f %f FR \n", t_rect . size . width, t_rect . size . height, t_rect . origin . x , cardheight - (t_rect. origin . y + t_rect . size . height));
 			else
-			{
-				if ( isFilled ) 
-					sprintf( buffer, "%d %d %d %d FR \n", p_mark -> rectangle .bounds. width , p_mark -> rectangle . bounds . height , 
-														  p_mark -> rectangle . bounds . x ,
-														  cardheight - ( p_mark -> rectangle . bounds . y + p_mark -> rectangle . bounds . height ) );
-				else
-					sprintf( buffer, "%d %d %d %d R \n", p_mark -> rectangle .bounds. width , p_mark -> rectangle . bounds . height , 
-														  p_mark -> rectangle . bounds . x ,
-														  cardheight - ( p_mark -> rectangle . bounds . y + p_mark -> rectangle . bounds . height ) );
-				PSwrite ( buffer ) ;
-			}
-
-		break;
-		
+				sprintf(buffer, "%f %f %f %f R \n", t_rect . size . width, t_rect . size . height, t_rect . origin . x , cardheight - (t_rect. origin . y + t_rect . size . height));
+			PSwrite ( buffer ) ;			
+			break;
+		}		
 		
 		
 		case MARK_TYPE_ROUND_RECTANGLE:
+		{
+            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds.
+			MCGRectangle t_rect;
+			t_rect = MCGRectangleMake(p_mark-> round_rectangle . bounds . x + p_mark-> round_rectangle . inset / 2.0f, p_mark-> round_rectangle . bounds . y + p_mark-> round_rectangle . inset / 2.0f,
+									  p_mark-> round_rectangle . bounds . width - p_mark-> round_rectangle . inset, p_mark-> round_rectangle . bounds . height - p_mark-> round_rectangle . inset);
+			float t_radius;
+			t_radius = p_mark -> round_rectangle . radius / 2.0f;
 			
-			//%usage: topLeftx, topLefty, width, height, radius  FRR
-			if ( !isStroke ) 
-				sprintf( buffer, "%d %d %d %d %d FRR \n",  p_mark -> round_rectangle . bounds. x , 
-													   	cardheight - ( p_mark -> round_rectangle . bounds . y  ),  //+ p_mark -> round_rectangle . bounds . height
-														p_mark -> round_rectangle . bounds . width,
-													   	p_mark -> round_rectangle . bounds . height,
-														p_mark -> round_rectangle . radius);
+			if (!isStroke)
+				sprintf(buffer, "%f %f %f %f %f FRR \n", t_rect . origin . x, cardheight - t_rect . origin . y, t_rect . size . width, t_rect . size . height, t_radius);
 			else
-				sprintf( buffer, "%d %d %d %d %d RR \n",   p_mark -> round_rectangle . bounds. x , 
-													   	cardheight - ( p_mark -> round_rectangle . bounds . y ) , 
-														p_mark -> round_rectangle . bounds . width ,
-													   	p_mark -> round_rectangle . bounds . height ,
-														p_mark -> round_rectangle . radius);
-		
+				sprintf(buffer, "%f %f %f %f %f RR \n", t_rect . origin . x, cardheight - t_rect . origin . y, t_rect . size . width, t_rect . size . height, t_radius);
 			PSwrite ( buffer ) ;
-
-		break;
+			break;
+		}
 		
 		case MARK_TYPE_ARC:
-			uint4 t_x, t_y, t_r, t_rw ;
-			uint4 t_width, t_height ;
+		{
+			real8 t_x, t_y, t_r, t_rw ;
+			real8 t_width, t_height ;
 			
-			t_x = p_mark -> arc . bounds . x;
-			t_y = p_mark -> arc . bounds . y ;
-			t_width = p_mark -> arc . bounds . width ;
-			t_height = p_mark -> arc . bounds . height ;
+            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds and store as floating point values.
+			t_x = p_mark -> arc . bounds . x + p_mark -> arc . inset / 2.0;
+			t_y = p_mark -> arc . bounds . y + p_mark -> arc . inset / 2.0;
+			t_width = p_mark -> arc . bounds . width - p_mark -> arc . inset;
+			t_height = p_mark -> arc . bounds . height - p_mark -> arc . inset;
 		
 			t_r = (t_height / 2.0 );
 			t_rw = ( t_width / 2.0 ) ;
 		
 		
 			if ( isStroke ) 
-				sprintf(buffer, "%g 0 0 %d %d %d %g %d %d DA\n", (real8)t_height / (real8)t_width ,
-																 t_height >> 1,
+				sprintf(buffer, "%g 0 0 %g %d %d %g %g %g DA\n", t_height / t_width ,
+																 t_height / 2.0,
 																 p_mark -> arc . start,
 																 p_mark -> arc . angle + p_mark -> arc . start, 
-																 (real8)t_width / (real8)t_height, 
+																 t_width / t_height, 
 																 t_x + t_rw ,
 																 cardheight - ( t_y + t_r )  ) ;				
 			else			
-				sprintf(buffer, "%d %d %d %g %d %d FA\n", t_height >>1 , 
+				sprintf(buffer, "%g %d %d %g %g %g FA\n", t_height / 2 , 
 														  p_mark -> arc . start ,
  														  p_mark -> arc . angle + p_mark -> arc . start, 
-														  (real8) t_width / (real8)t_height, 
+														  t_width / t_height, 
 						 								  t_x + t_rw ,
 														  cardheight - ( t_y + t_r )  ) ;		
 		
@@ -1125,8 +1113,8 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 			
 			if ( ( p_mark -> arc . complete ) && ( p_mark -> arc . angle < 360 ) )
 			{
-				int2 cx = t_x + t_rw ;
-				int2 cy = cardheight - ( t_y + t_r ) ;
+				real8 cx = t_x + t_rw ;
+				real8 cy = cardheight - ( t_y + t_r ) ;
 				
 				real8 torad = M_PI * 2.0 / 360.0;
 				
@@ -1135,26 +1123,22 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 				
 				real8 sa = (real8)p_mark -> arc . start * torad;
 				
-				int2 dx = cx + (int2)(cos(sa) * tw / 2.0);
-				int2 dy = cy + (int2)(sin(sa) * th / 2.0);
+				real8 dx = cx + (int2)(cos(sa) * tw / 2.0);
+				real8 dy = cy + (int2)(sin(sa) * th / 2.0);
 				
-				sprintf(buffer, "%d %d %d %d L\n", cx, cy, dx, dy ) ;
+				sprintf(buffer, "%g %g %g %g L\n", cx, cy, dx, dy ) ;
 				PSwrite ( buffer ) ;
 
 				sa = (real8)(p_mark -> arc . start + p_mark -> arc . angle) * torad;
 				dx = cx + (int2)(cos(sa) * tw / 2.0);
 				dy = cy + (int2)(sin(sa) * th / 2.0);
 				
-				sprintf(buffer, "%d %d %d %d L\n", cx, cy, dx, dy ) ;
+				sprintf(buffer, "%g %g %g %g L\n", cx, cy, dx, dy ) ;
 				PSwrite ( buffer ) ;
-			}
+			}			
 		
-		
-			
-		
-		break;
-		
-		
+			break;
+		}
 		
 		case MARK_TYPE_IMAGE:
 		{
@@ -1269,8 +1253,9 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
     
 	MCAutoStringRef t_text_string;
 	/* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)p_mark -> text . data, p_mark -> text . length, t_is_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative, false, &t_text_string);
-    
-    uint2 w = MCFontMeasureText(p_mark -> text . font, *t_text_string);
+
+    // MM-2014-04-16: [[ Bug 11964 ]] Prototype for MCFontMeasureText now takes transform param. Pass through identity.
+    uint2 w = MCFontMeasureText(p_mark -> text . font, *t_text_string, MCGAffineTransformMakeIdentity());
 	
 	text[l] = '\0';
 	const char *sptr = text;

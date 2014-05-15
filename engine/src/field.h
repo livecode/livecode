@@ -195,6 +195,8 @@ class MCField : public MCControl
 	uint2 scrollbarwidth;
 	uint2 ntabs;
 	uint2 *tabs;
+    uint2 nalignments;
+    intenum_t *alignments;
 	MCParagraph *curparagraph;
 	int4 cury;
 	MCParagraph *focusedparagraph;
@@ -328,6 +330,7 @@ public:
 	void closeparagraphs(MCParagraph *pgptr);
 	MCParagraph *getparagraphs(void) {return paragraphs;}
 	void gettabs(uint2 *&t, uint2 &n, Boolean &fixed);
+    void gettabaligns(intenum_t *&t, uint16_t &n);
 	void getlisttabs(int32_t& r_first, int32_t& r_second);
 
 	uint2 getfwidth() const;
@@ -728,6 +731,8 @@ public:
     void GetTabStops(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tabs);
     void SetTabWidths(MCExecContext& ctxt, uindex_t p_count, uinteger_t *p_tabs);
     void GetTabWidths(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tabs);
+    void SetTabAlignments(MCExecContext& ctxt, const MCInterfaceFieldTabAlignments &t_alignments);
+    void GetTabAlignments(MCExecContext& ctxt, MCInterfaceFieldTabAlignments &r_alignments);
     void GetPageHeights(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_heights);
     
     virtual void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
@@ -832,6 +837,9 @@ public:
 	void GetTabWidthsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uindex_t& r_count, uinteger_t*& r_values);
 	void SetTabWidthsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uindex_t count, uinteger_t *values);
 	void GetEffectiveTabWidthsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uindex_t& r_count, uinteger_t*& r_values);
+    void GetTabAlignmentsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceFieldTabAlignments& r_values);
+    void SetTabAlignmentsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceFieldTabAlignments& r_values);
+    void GetEffectiveTabAlignmentsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, MCInterfaceFieldTabAlignments& r_values);
 	
 	void GetBorderWidthOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t*& r_value);
     void SetBorderWidthOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t *p_width);

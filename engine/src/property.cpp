@@ -5066,10 +5066,31 @@ Exec_stat MCProperty::eval_object_property(MCExecPoint& ep)
 		//   MCChunk::setprop.
 		if (t_stat == ES_NORMAL)
 		{
-			if (t_index_name == nil)
-				t_stat = t_object -> getcustomprop(ep, t_object -> getdefaultpropsetname(), t_prop_name);
-			else
-				t_stat = t_object -> getcustomprop(ep, t_prop_name, t_index_name);
+			ep.clear();
+			Boolean added = False;
+			if (MCnexecutioncontexts < MAX_CONTEXTS)
+			{
+				ep.setline(line);
+				MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+				added = True;
+			}
+			for (i = 0 ; i < MCnexecutioncontexts ; i++)
+			{
+				MCExecPoint ep2(ep);
+				MCexecutioncontexts[i]->getobj()->getprop(0, P_LONG_ID, ep2, False);
+				ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i == 0);
+                // PM-2014-04-14: [[Bug 12125]] Do this check to avoid a crash in LC server
+                if (MCexecutioncontexts[i]->gethandler() != NULL)
+                    ep.concatnameref(MCexecutioncontexts[i]->gethandler()->getname(), EC_COMMA, false);
+				ep.concatuint(MCexecutioncontexts[i]->getline(), EC_COMMA, false);
+				if (MCexecutioncontexts[i] -> getparentscript() != NULL)
+				{
+					MCexecutioncontexts[i] -> getparentscript() -> GetParent() -> GetObject() -> getprop(0, P_LONG_ID, ep2, False);
+					ep.concatmcstring(ep2.getsvalue(), EC_COMMA, false);
+				}
+			}
+			if (added)
+				MCnexecutioncontexts--;
 		}
 	}
 	else
@@ -5365,8 +5386,6 @@ void MCProperty::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 
 void MCProperty::set_variable(MCExecContext& ctxt, MCExecValue p_value)
 {
-    MCAutoValueRef t_value;
-    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeValueRef, &(&t_value));
     destvar -> give_value(ctxt, p_value);
 }
 

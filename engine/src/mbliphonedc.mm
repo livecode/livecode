@@ -507,9 +507,17 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextScaleCTM(t_img_context, 1.0, -1.0);
 			CGContextTranslateCTM(t_img_context, 0, -(CGFloat)t_bitmap_height);
 			
-			CGContextScaleCTM(t_img_context, (MCGFloat)t_bitmap_width / r . width , (MCGFloat)t_bitmap_width / r . height);
-			
+            // MW-2014-04-22: [[ Bug 12008 ]] Translate before scale.
 			CGContextTranslateCTM(t_img_context, -(CGFloat)r.x, -(CGFloat)r.y);
+            
+            // MW-2014-04-22: [[ Bug 12008 ]] Make sure we take into account the logical to device screen
+            //   scale (and invert appropriately!).
+            float t_scale;
+            t_scale = ((MCScreenDC *)MCscreen) -> logicaltoscreenscale();
+			CGContextScaleCTM(t_img_context, 1.0 / t_scale, 1.0 / t_scale);
+            
+			CGContextScaleCTM(t_img_context, (MCGFloat)t_bitmap_width / r . width , (MCGFloat)t_bitmap_height / r . height);
+			
 			
 			bool t_is_rotated;
 			CGSize t_offset;
@@ -543,12 +551,8 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextTranslateCTM(t_img_context, t_screen_rect . width / 2, t_screen_rect . height / 2);
 			CGContextRotateCTM(t_img_context, t_angle);
 			CGContextTranslateCTM(t_img_context, -t_offset . width, -t_offset . height);
-			
-            // MM-2013-01-10: [[ Bug 11653 ]] As above, our rects are also in device pixels, so use the device scale when working out x and y of bounds.
-            //float t_scale;
-            //t_scale = MCIPhoneGetDeviceScale();
-			//CGContextScaleCTM(t_img_context, t_scale, t_scale);
-			
+            
+            
 #ifndef USE_UNDOCUMENTED_METHODS
 			NSArray *t_windows;
 			t_windows = [[[UIApplication sharedApplication] windows] retain];
@@ -805,6 +809,12 @@ Window MCScreenDC::get_current_window(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void strip_suffix(const char *p_suffix, char *x_font_name)
+{
+    if (MCCStringEndsWithCaseless(x_font_name, p_suffix))
+        x_font_name[MCCStringLength(x_font_name) - MCCStringLength(p_suffix)] = '\0';
+}
+
 struct do_iphone_font_create_env
 {
 	MCStringRef name;
@@ -829,10 +839,6 @@ static void do_iphone_font_create(void *p_env)
 	p_bold = env -> bold;
 	p_italic = env -> italic;
 	
-	char t_font_name[256];
-	UIFont *t_font;
-	t_font = nil;
-	
     // MW-2012-03-22: [[ Bug ]] First see if we can find the font with the given name. We
     //   use this to get the correct 'family' name so styled names work correctly.
     UIFont *t_base_font;
@@ -847,6 +853,15 @@ static void do_iphone_font_create(void *p_env)
         /* UNCHECKED */ MCStringConvertToCString(*p_name, &t_name);
         strcpy(t_base_name, *t_name);
     }
+    
+    // MM-2014-04-30: [[ Bug 12173 ]] Strip any unwanted suffixes from base font name. This was preventing certain styled fonts being found.
+    strip_suffix("-Roman", t_base_name);
+    strip_suffix("-Regular", t_base_name);
+    strip_suffix("-Reg", t_base_name);
+   
+    char t_font_name[256];
+	UIFont *t_font;
+	t_font = nil;
     
 	if (p_bold && p_italic)
 	{

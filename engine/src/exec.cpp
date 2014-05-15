@@ -121,7 +121,7 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
             if (MCStringGetLength(MCNameGetString((MCNameRef)p_value)) != 0 &&
                     !MCStringGetNumericValue(MCNameGetString((MCNameRef)p_value), t_number))
             {
-                if (!MCU_stor8(MCStringGetOldString(MCNameGetString((MCNameRef)p_value)), t_number, m_convertoctals))
+                if (!MCU_stor8(MCNameGetString((MCNameRef)p_value), t_number, m_convertoctals))
                     break;
 
                 // Converting to octals doesn't generate the 10-based number stored in the string
@@ -139,7 +139,7 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
             // Fetches the numeric value in case it exists, or stores the one therefore computed otherwise
             if (MCStringGetLength((MCStringRef)p_value) != 0 && !MCStringGetNumericValue((MCStringRef)p_value, t_number))
             {
-                if (!MCU_stor8(MCStringGetOldString((MCStringRef)p_value), t_number, m_convertoctals))
+                if (!MCU_stor8((MCStringRef)p_value, t_number, m_convertoctals))
                     break;
 
                 // Converting to octals doesn't generate the 10-based number stored in the string
@@ -341,8 +341,16 @@ bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
     
     // Strings always convert to data as native characters
     uindex_t t_native_length;
-    const byte_t *t_data = (const byte_t *)MCStringGetNativeCharPtrAndLength(*t_string, t_native_length);
-    return MCDataCreateWithBytes(t_data, t_native_length, r_data);
+    if (MCStringIsNative(*t_string))
+    {
+        const byte_t *t_data = (const byte_t *)MCStringGetNativeCharPtrAndLength(*t_string, t_native_length);
+        return MCDataCreateWithBytes(t_data, t_native_length, r_data);
+    }
+    
+    char_t *t_native_chars;
+    MCMemoryNewArray(MCStringGetLength(*t_string), t_native_chars);
+    t_native_length = MCStringGetNativeChars(*t_string, MCRangeMake(0, UINDEX_MAX), t_native_chars);
+    return MCDataCreateWithBytesAndRelease((byte_t *)t_native_chars, t_native_length, r_data);
 }
 
 bool MCExecContext::ConvertToName(MCValueRef p_value, MCNameRef& r_name)
@@ -397,7 +405,7 @@ bool MCExecContext::ConvertToBool(MCValueRef p_value, bool& r_bool)
 bool MCExecContext::ConvertToLegacyPoint(MCValueRef p_value, MCPoint& r_point)
 {
     MCAutoStringRef t_string;
-	return ConvertToString(p_value, &t_string) && MCU_stoi2x2(MCStringGetOldString(*t_string), r_point . x, r_point . y);
+	return ConvertToString(p_value, &t_string) && MCU_stoi2x2(*t_string, r_point . x, r_point . y);
 }
 
 bool MCExecContext::ConvertToLegacyRectangle(MCValueRef p_value, MCRectangle& r_rect)
@@ -405,12 +413,13 @@ bool MCExecContext::ConvertToLegacyRectangle(MCValueRef p_value, MCRectangle& r_
     MCAutoStringRef t_string;
 	int16_t t_left, t_top, t_right, t_bottom;
 	if (ConvertToString(p_value, &t_string) &&
-		MCU_stoi2x4(MCStringGetOldString(*t_string), t_left, t_top, t_right, t_bottom))
+		MCU_stoi2x4(*t_string, t_left, t_top, t_right, t_bottom))
 	{
 		r_rect . x = t_left;
 		r_rect . y = t_top;
-		r_rect . width = t_right - t_left;
-		r_rect . height = t_bottom - t_top;
+        // AL-2014-05-13: [[ Bug 12288 ]] Ensure width and height don't underflow.
+		r_rect . width = MCU_max(1, t_right - t_left);
+		r_rect . height = MCU_max(1, t_bottom - t_top);
     
 		return true;
 	}
@@ -468,7 +477,7 @@ bool MCExecContext::TryToConvertToLegacyPoint(MCValueRef p_value, bool& r_conver
 {
 	MCAutoStringRef t_string;
     if (ConvertToString(p_value, &t_string) &&
-		MCU_stoi2x2(MCStringGetOldString(*t_string), r_point . x, r_point . y))
+		MCU_stoi2x2(*t_string, r_point . x, r_point . y))
 	{
 		r_converted = true;
 		return true;
@@ -484,7 +493,7 @@ bool MCExecContext::TryToConvertToLegacyRectangle(MCValueRef p_value, bool& r_co
 	MCAutoStringRef t_string;
 	int16_t t_left, t_top, t_right, t_bottom;
     if (ConvertToString(p_value, &t_string) &&
-		MCU_stoi2x4(MCStringGetOldString(*t_string), t_left, t_top, t_right, t_bottom))
+		MCU_stoi2x4(*t_string, t_left, t_top, t_right, t_bottom))
 	{
 		r_rect . x = t_left;
 		r_rect . y = t_top;
@@ -2287,12 +2296,15 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             break;
             
         case kMCPropertyTypeLinesOfString:
+        case kMCPropertyTypeItemsOfString:
         {
             MCStringRef* t_value = nil;
             uindex_t t_count = 0;
             ((void(*)(MCExecContext&, void *, uindex_t&, MCStringRef*&))prop -> getter)(ctxt, mark, t_count, t_value);
             if (!ctxt . HasError())
             {
+                char_t t_delimiter;
+                t_delimiter = prop -> type == kMCPropertyTypeLinesOfString ? '\n' : ',';
                 if (MCPropertyFormatStringList(t_value, t_count, '\n', r_value . stringref_value))
                 {
                     r_value . type = kMCExecValueTypeStringRef;
@@ -2581,6 +2593,33 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
                     t_enum_info = (MCExecEnumTypeInfo *)(prop -> type_info);
                     MCExecFormatEnum(ctxt, t_enum_info, t_value, r_value);
                 }
+            }
+        }
+            break;
+           
+        case kMCPropertyTypeMixedItemsOfString:
+        {
+            bool t_mixed;
+            MCStringRef* t_value;
+            uindex_t t_count;
+            ((void(*)(MCExecContext&, void *, bool&, uindex_t&, MCStringRef*&))prop -> getter)(ctxt, mark, t_mixed, t_count, t_value);
+            if (!ctxt . HasError())
+            {
+                if (t_mixed)
+                {
+                    r_value . type = kMCExecValueTypeStringRef;
+                    r_value . stringref_value = MCSTR(MCmixedstring);
+                }
+                else
+                {
+                    char_t t_delimiter;
+                    t_delimiter = prop -> type == kMCPropertyTypeLinesOfString ? '\n' : ',';
+                    if (MCPropertyFormatStringList(t_value, t_count, t_delimiter, r_value . stringref_value))
+                    {
+                        r_value . type = kMCExecValueTypeStringRef;
+                    }
+                }
+                MCMemoryDeleteArray(t_value);
             }
         }
             break;
@@ -3046,15 +3085,20 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+        case kMCPropertyTypeMixedItemsOfString:
         case kMCPropertyTypeLinesOfString:
+        case kMCPropertyTypeItemsOfString:
         {
             MCAutoStringRef t_input;
             MCStringRef *t_value;
             uindex_t t_count;
             
+            char_t t_delimiter;
+            t_delimiter = prop -> type == kMCPropertyTypeLinesOfString ? '\n' : ',';
+            
             MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_input));
             
-            if (!MCPropertyParseStringList(*t_input, '\n', t_count, t_value))
+            if (!MCPropertyParseStringList(*t_input, t_delimiter, t_count, t_value))
                 ctxt . LegacyThrow(EE_PROPERTY_NAS);
             
             if (!ctxt . HasError())

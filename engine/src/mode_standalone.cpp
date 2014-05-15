@@ -330,7 +330,8 @@ IO_stat MCDispatch::startup(void)
         MCAutoStringRef t_dir;
         /* UNCHECKED */ MCStringCopySubstring(MCcmd, MCRangeMake(0, t_last_slash), &t_dir);
         /* UNCHECKED */ MCStringFormat(&t_path, "%@/iphone_test.livecode", *t_dir);
-        t_stream = MCS_open(*t_path, kMCSOpenFileModeRead, False, False, 0);
+
+        t_stream = MCS_open(*t_path, kMCOpenFileModeRead, False, False, 0);
 #endif
 		
 		if (t_stream == NULL)
@@ -466,7 +467,7 @@ IO_stat MCDispatch::startup(void)
     {
         MCStack *t_stack;
         IO_handle t_stream;
-        t_stream = MCS_open(*t_env, kMCSystemFileModeRead, False, False, 0);
+        t_stream = MCS_open(*t_env, kMCOpenFileModeRead, False, False, 0);
 
 		if (t_stream == nil || MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
 		{
@@ -935,9 +936,28 @@ uint32_t MCModePopUpMenu(MCMacSysMenuHandle p_menu, int32_t p_x, int32_t p_y, ui
 
 #ifdef TARGET_PLATFORM_WINDOWS
 
+// MW-2014-04-22: [[ Bug 12237 ]] Attempt to attach to a console if available.
+//   This shouldn't have any adverse consequences on anything as if the engine
+//   isn't launched from the console (i.e. run from the desktop) it will be as
+//   before; and if it is launched from the console then it will probably do
+//   what is expected.
+typedef BOOL (WINAPI *AttachConsolePtr)(DWORD id);
 void MCModePreMain(void)
 {
+	HMODULE t_kernel;
+	t_kernel = LoadLibraryA("kernel32.dll");
+	if (t_kernel != nil)
+	{
+		void *t_attach_console;
+		t_attach_console = GetProcAddress(t_kernel, "AttachConsole");
+		if (t_attach_console != nil)
+		{
+			((AttachConsolePtr)t_attach_console)(-1);
+			return;
+		}
+	}
 }
+
 
 void MCModeSetupCrashReporting(void)
 {

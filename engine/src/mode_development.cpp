@@ -1706,8 +1706,6 @@ void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r
     t_first = true;
     
     MCAutoArray<MCStringRef> t_handlers;
-    MCStringRef *t_handler_array;
-    uindex_t t_count;
     
     // IM-2014-02-25: [[ Bug 11841 ]] Collect non-repeating objects in the message path
     MCObjectList *t_object_list;
@@ -1759,10 +1757,16 @@ void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r
             
             if (t_handler_list != NULL)
             {
+                MCStringRef *t_handler_array;
+                t_handler_array = nil;
+                uindex_t t_count;
+                
                 t_first = t_handler_list -> enumerate(ctxt, t_first, t_count, t_handler_array);
             
                 for (uindex_t i = 0; i < t_count; i++)
                     t_handlers . Push(t_handler_array[i]);
+                
+                MCMemoryDeleteArray(t_handler_array);
             }
             
             t_object_ref = t_object_ref -> next();

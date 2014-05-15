@@ -659,7 +659,7 @@ struct MCWindowsSystem: public MCSystemInterface
 
 		MCSystemFileHandle *t_handle;
 		t_handle = MCStdioFileHandle::Open(MCStringGetCString(p_path), s_modes[p_mode & 0xff]);
-		if (t_handle == NULL && p_mode == kMCSystemFileModeUpdate)
+		if (t_handle == NULL && p_mode == kMCOpenFileModeUpdate)
 			t_handle = MCStdioFileHandle::Open(MCStringGetCString(p_path), "wb+");
 		
 		return t_handle;

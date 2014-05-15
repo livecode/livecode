@@ -353,6 +353,8 @@ void dilateDistanceXY(const uint8_t *src, uint8_t *dst, int xradius, int yradius
         }
     }
 	
+    free(buffer);
+    
 	r_new_width = new_width;
 	r_new_height = new_height;
 }

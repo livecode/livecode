@@ -2388,14 +2388,14 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 	bwidth = MCU_min(bwidth, drect.height >> 1);
 	if (bwidth == 0)
 		return;
-	MCSegment tb[DEFAULT_BORDER * 2];
-	MCSegment bb[DEFAULT_BORDER * 2];
-	MCSegment *t = tb;
-	MCSegment *b = bb;
+	MCLineSegment tb[DEFAULT_BORDER * 2];
+	MCLineSegment bb[DEFAULT_BORDER * 2];
+	MCLineSegment *t = tb;
+	MCLineSegment *b = bb;
 	if (bwidth > DEFAULT_BORDER)
 	{
-		t = new MCSegment[bwidth * 2];
-		b = new MCSegment[bwidth * 2];
+		t = new MCLineSegment[bwidth * 2];
+		b = new MCLineSegment[bwidth * 2];
 	}
 	int2 lx = drect.x;
 	int2 rx = drect.x + drect.width;
@@ -4742,8 +4742,9 @@ MCRectangle MCObject::measuretext(MCStringRef p_text, bool p_is_unicode)
     t_bounds . x = 0;
 	// MW-2013-08-23: [[ MeasureText ]] Shortcut if no text - useful for just
 	//   getting the font ascent/descent (as used in MCGroup methods).
+    // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 	if (MCStringGetLength(p_text) != 0)
-		t_bounds . width = MCFontMeasureText(m_font, p_text);
+        t_bounds . width = MCFontMeasureText(m_font, p_text, getstack() -> getdevicetransform());
 	else
 		t_bounds . width = 0;
     t_bounds . y = -MCFontGetAscent(m_font);

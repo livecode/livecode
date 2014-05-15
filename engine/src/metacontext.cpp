@@ -390,7 +390,7 @@ void MCMetaContext::drawlines(MCPoint *points, uint2 npoints, bool p_closed)
 	polygon_mark(true, false, points, npoints, p_closed);
 }
 
-void MCMetaContext::drawsegments(MCSegment *segments, uint2 nsegs)
+void MCMetaContext::drawsegments(MCLineSegment *segments, uint2 nsegs)
 {
 	for(uint2 t_segment = 0; t_segment < nsegs; ++t_segment)
 		drawline(segments[t_segment] . x1, segments[t_segment] . y1, segments[t_segment] . x2, segments[t_segment] . y2);
@@ -453,7 +453,8 @@ void MCMetaContext::drawrect(const MCRectangle& rect, bool inside)
 	
 void MCMetaContext::fillrect(const MCRectangle& rect, bool inside)
 {
-	rectangle_mark(false, true, rect, false); 
+    // MM-2014-04-23: [[ Bug 11884 ]] Make sure we store the inside param for fills. This ensures the fill path is the samde as the stroke.
+	rectangle_mark(false, true, rect, inside); 
 }
 
 void MCMetaContext::fillrects(MCRectangle *rects, uint2 nrects)
@@ -474,7 +475,8 @@ void MCMetaContext::drawroundrect(const MCRectangle& rect, uint2 radius, bool in
 
 void MCMetaContext::fillroundrect(const MCRectangle& rect, uint2 radius, bool inside)
 {
-	round_rectangle_mark(false, true, rect, radius, false);
+        // MM-2014-04-23: [[ Bug 11884 ]] Make sure we store the inside param for fills. This ensures the fill path is the samde as the stroke.
+	round_rectangle_mark(false, true, rect, radius, inside);
 }
 
 void MCMetaContext::drawarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
@@ -489,7 +491,8 @@ void MCMetaContext::drawsegment(const MCRectangle& rect, uint2 start, uint2 angl
 
 void MCMetaContext::fillarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
 {
-	arc_mark(false, true, rect, start, angle, true, false);
+        // MM-2014-04-23: [[ Bug 11884 ]] Make sure we store the inside param for fills. This ensures the fill path is the samde as the stroke.
+	arc_mark(false, true, rect, start, angle, true, inside);
 }
 
 
@@ -751,14 +754,14 @@ static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_m
 			
 			case MARK_TYPE_RECTANGLE:
 				if (p_mark -> stroke != NULL)
-					p_context -> drawrect(p_mark -> rectangle . bounds, p_mark -> rectangle . inside);
+					p_context -> drawrect(p_mark -> rectangle . bounds, p_mark -> rectangle . inset > 0);
 				else
 					p_context -> fillrect(p_mark -> rectangle . bounds);
 			break;
 			
 			case MARK_TYPE_ROUND_RECTANGLE:
 				if (p_mark -> stroke != NULL)
-					p_context -> drawroundrect(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . radius, p_mark -> round_rectangle . inside);
+					p_context -> drawroundrect(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . radius, p_mark -> round_rectangle . inset > 0);
 				else
 					p_context -> fillroundrect(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . radius);
 			break;
@@ -767,9 +770,9 @@ static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_m
 				if (p_mark -> stroke != NULL)
 				{
 					if (p_mark -> arc . complete)
-						p_context -> drawsegment(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle, p_mark -> arc . inside);
+						p_context -> drawsegment(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle, p_mark -> arc . inset > 0);
 					else
-						p_context -> drawarc(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle, p_mark -> arc . inside);
+						p_context -> drawarc(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle, p_mark -> arc . inset > 0);
 				}
 				else
 					p_context -> fillarc(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle);
@@ -1032,7 +1035,8 @@ void MCMetaContext::rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle
 	if (t_mark != NULL)
 	{
 		t_mark -> rectangle . bounds = rect;
-		t_mark -> rectangle . inside = inside;
+        // MM-2014-04-23: [[ Bug 11884 ]] Store by how much we want to inset (rather than we just want to inset).
+		t_mark -> rectangle . inset = (inside) ? f_stroke -> width : 0 ;
 	}
 }
 
@@ -1044,7 +1048,8 @@ void MCMetaContext::round_rectangle_mark(bool p_stroke, bool p_fill, const MCRec
 	{
 		t_mark -> round_rectangle . bounds = rect;
 		t_mark -> round_rectangle . radius = radius;
-		t_mark -> round_rectangle . inside = inside;
+        // MM-2014-04-23: [[ Bug 11884 ]] Store by how much we want to inset (rather than we just want to inset).
+		t_mark -> round_rectangle . inset = (inside) ? f_stroke -> width : 0 ;
 	}
 }
 
@@ -1074,7 +1079,8 @@ void MCMetaContext::arc_mark(bool p_stroke, bool p_fill, const MCRectangle& p_bo
 		t_mark -> arc . start = p_start;
 		t_mark -> arc . angle = p_angle;
 		t_mark -> arc . complete = p_complete;
-		t_mark -> arc . inside = inside;
+        // MM-2014-04-23: [[ Bug 11884 ]] Store by how much we want to inset (rather than we just want to inset).
+		t_mark -> arc . inset = (inside) ? f_stroke -> width : 0 ;
 	}
 }
 

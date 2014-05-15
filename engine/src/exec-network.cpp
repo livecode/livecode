@@ -231,11 +231,13 @@ void MCNetworkEvalHostNameToAddress(MCExecContext& ctxt, MCStringRef p_hostname,
 	}
 
 	MCAutoListRef t_list;
-	if (MCS_ntoa(p_hostname, ctxt.GetObject(), p_message, &t_list) &&
-		MCListCopyAsString(*t_list, r_string))
-		return;
-
-	ctxt . Throw();
+    if (MCS_ntoa(p_hostname, ctxt.GetObject(), p_message, &t_list))
+    {
+        if (!MCListCopyAsString(*t_list, r_string))
+            ctxt . Throw();
+    }
+    else
+        r_string = MCValueRetain(kMCEmptyString);
 }
 
 //////////

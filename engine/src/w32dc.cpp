@@ -498,12 +498,16 @@ MCPoint MCScreenDC::screentologicalpoint(const MCPoint &p_point)
 
 MCRectangle MCScreenDC::logicaltoscreenrect(const MCRectangle &p_rect)
 {
-	return MCRectangleGetScaledInterior(p_rect, MCWin32GetLogicalToScreenScale());
+	// IM-2014-04-21: [[ Bug 12236 ]] Switch to scaled floor function which
+	// gives consistent width & height for different x, y values
+	return MCRectangleGetScaledFloorRect(p_rect, MCWin32GetLogicalToScreenScale());
 }
 
 MCRectangle MCScreenDC::screentologicalrect(const MCRectangle &p_rect)
 {
-	return MCRectangleGetScaledBounds(p_rect, 1 / MCWin32GetLogicalToScreenScale());
+	// IM-2014-04-21: [[ Bug 12236 ]] Switch to scaled ceiling function which
+	// gives consistent width & height for different x, y values
+	return MCRectangleGetScaledCeilingRect(p_rect, 1 / MCWin32GetLogicalToScreenScale());
 }
 
 ///////////////////////////////////////////////////////////////////////////////

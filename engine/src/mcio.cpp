@@ -360,7 +360,7 @@ void IO_mac_to_iso(char *string, uint4 len)
 	}
 }
 
-MCStringEncoding MCS_file_to_string_encoding(MCSFileEncodingType p_encoding)
+MCStringEncoding MCS_file_to_string_encoding(MCFileEncodingType p_encoding)
 {
     switch(p_encoding)
     {
@@ -375,6 +375,15 @@ MCStringEncoding MCS_file_to_string_encoding(MCSFileEncodingType p_encoding)
 
     case kMCFileEncodingUTF16BE:
         return kMCStringEncodingUTF16BE;
+            
+    case kMCFileEncodingUTF32:
+        return kMCStringEncodingUTF32;
+            
+    case kMCFileEncodingUTF32BE:
+        return kMCStringEncodingUTF32BE;
+            
+    case kMCFileEncodingUTF32LE:
+        return kMCStringEncodingUTF32LE;
 
     default:
         return kMCStringEncodingNative;

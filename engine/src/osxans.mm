@@ -671,10 +671,12 @@ int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p
 			[t_panel setMessage: [NSString stringWithMCStringRef: p_prompt]];
 		}
 		else
+        // MAYBE BUG
 			[t_panel setTitle: [NSString stringWithMCStringRef: p_prompt]];
 		[t_panel setDelegate: /*(id<NSOpenSavePanelDelegate>)*/t_accessory];
 
 		if (p_type_count > 1)	
+
 		{
 			[t_accessory setLabel: @"Format:"];
 			[t_panel setAccessoryView: t_accessory];

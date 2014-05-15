@@ -1670,6 +1670,14 @@ enum Parse_errors
     
     // {PE-0545} codepointProperty: bad parameters
     PE_CODEPOINTPROPERTY_BADPARAM,
+    
+    // SN-2014-05-06 [[ Bug 12360 ]] Bad encoding expression
+    // {PE-0546} open: bad encoding parameter
+    PE_OPEN_BADENCODING,
+    
+    // SN-2014-05-06 [[ Bug 12360 ]]
+    // {PE-0547} open: no encoding when opening in binary mode
+    PE_OPEN_BADBINARYENCODING,
 };
 
 extern const char *MCparsingerrors;

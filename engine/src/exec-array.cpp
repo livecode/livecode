@@ -644,8 +644,15 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
 	if (t_success)
 		if (t_stream -> ReadU8(t_type) != IO_NORMAL)
 			t_success = false;
-
-	MCArrayRef t_array;
+    
+    // AL-2014-05-01: [[ Bug 11989 ]] If the type is 'empty' then just return the empty array.
+	if (t_type == kMCEncodedValueTypeEmpty)
+    {
+        r_array = MCValueRetain(kMCEmptyArray);
+        return;
+    }
+    
+    MCArrayRef t_array;
 	t_array = nil;
 	if (t_success)
 		t_success = MCArrayCreateMutable(t_array);
