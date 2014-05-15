@@ -126,10 +126,18 @@ uint32_t MCArrayMeasureForStreamLegacy(MCArrayRef array, bool nested_only);
 bool MCArrayIsNestedLegacy(MCArrayRef array);
 // Loads keys from the IO_handle, adding them to the array.
 IO_stat MCArrayLoadFromHandleLegacy(MCArrayRef array, IO_handle stream);
-// Loads keys from the InputStream, adding them to the array.
-IO_stat MCArrayLoadFromStreamLegacy(MCArrayRef array, MCObjectInputStream& stream);
 // Saves keys to the IO_handle.
 IO_stat MCArraySaveToHandleLegacy(MCArrayRef array, IO_handle stream);
+
+// AL-2014-05-14: The structure of the array has changed slightly to facilitate
+// unicode strings and array keys. The first byte for each array entry encodes the
+// value format of the array entry, and the key is assumed to be native. If the key
+// is utf 8 encoded then the first byte encodes the value format VF_UNICODE_STRING,
+// and there will be another byte after the key encoding the value format of the array entry.
+
+// Loads keys from the InputStream, adding them to the array.
+IO_stat MCArrayLoadFromStreamLegacy(MCArrayRef array, MCObjectInputStream& stream);
+
 // Saves keys to the outputstream. If 'nested_only' is true, only keys with
 // array values are saved.
 IO_stat MCArraySaveToStreamLegacy(MCArrayRef array, bool nested_only, MCObjectOutputStream& stream);

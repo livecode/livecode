@@ -1285,11 +1285,32 @@ static uint32_t measure_array_entry(MCNameRef p_key, MCValueRef p_value)
 	// Size of record is:
 	//   1 byte - identifier
 	//   4 bytes - length not including identifier byte
-	//   * bytes - C string of key
+	//   * bytes - length of key (+ 1 for nul char)
+    //   1 byte (if key is utf8 encoded) - identifier 
+    //   * bytes - length of entry
 
+    MCValueTypeCode t_value_type;
+    t_value_type = MCValueGetTypeCode(p_value);
+    
+    bool t_key_native = true;
+    if (!MCStringIsNative(MCNameGetString(p_key)) ||
+        (t_value_type == kMCValueTypeCodeString && !MCStringIsNative((MCStringRef)p_value)) ||
+        (t_value_type == kMCValueTypeCodeName && !MCStringIsNative(MCNameGetString((MCNameRef)p_value))))
+        t_key_native = false;
+    
 	uint32_t t_size;
-	t_size = 1 + 4 + MCCStringLength(MCStringGetCString(MCNameGetString(p_key))) + 1;
-	switch(MCValueGetTypeCode(p_value))
+    if (t_key_native)
+        t_size = 1 + 4 + MCCStringLength(MCStringGetCString(MCNameGetString(p_key))) + 1;
+    else
+    {
+        // AL-2014-05-14: [[ Bug 12203 ]] Adjust size measurement to preserve unicode.
+        MCAutoStringRefAsUTF8String t_utf8_key;
+        t_utf8_key . Lock(MCNameGetString(p_key));
+        t_size = 1 + 4 + t_utf8_key . Size() + 1;
+        t_size += 1; // For extra identifier encoding.
+    }
+    
+	switch(t_value_type)
 	{
 	case kMCValueTypeCodeNull:
 		break;
@@ -1297,10 +1318,24 @@ static uint32_t measure_array_entry(MCNameRef p_key, MCValueRef p_value)
 		t_size += 4 + (p_value == kMCTrue ? 4 : 5);
 		break;
 	case kMCValueTypeCodeString:
-		t_size += 4 + MCStringGetLength((MCStringRef)p_value);
+        if (MCStringIsNative((MCStringRef)p_value))
+            t_size += 4 + MCStringGetLength((MCStringRef)p_value);
+        else
+        {
+            MCAutoStringRefAsUTF8String t_utf8_value;
+            t_utf8_value . Lock((MCStringRef)p_value);
+            t_size += 4 + t_utf8_value . Size();
+        }
 		break;
 	case kMCValueTypeCodeName:
-		t_size += 4 + MCStringGetLength(MCNameGetString((MCNameRef)p_value));
+        if (MCStringIsNative(MCNameGetString((MCNameRef)p_value)))
+            t_size += 4 + MCStringGetLength(MCNameGetString((MCNameRef)p_value));
+        else
+        {
+            MCAutoStringRefAsUTF8String t_utf8_value;
+            t_utf8_value . Lock(MCNameGetString((MCNameRef)p_value));
+            t_size += 4 + t_utf8_value . Size();
+        }
         break;
 	case kMCValueTypeCodeNumber:
 		t_size += 8;
@@ -1453,31 +1488,30 @@ IO_stat MCArrayLoadFromStreamLegacy(MCArrayRef self, MCObjectInputStream& p_stre
 		if (t_stat == IO_NORMAL && t_type == 0)
 			break;
 
+        Value_format t_format = (Value_format)(t_type - 1);
+        
 		uint32_t t_length;
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . ReadU32(t_length);
 
-		MCAutoStringRef t_key;
-		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . ReadStringRefNew(&t_key, false);
-
 		MCNewAutoNameRef t_key_name;
 		if (t_stat == IO_NORMAL)
-		{
-			if (!MCStringIsEmpty(*t_key))
-			{
-				if (!MCNameCreate(*t_key, &t_key_name))
-					t_stat = IO_ERROR;
-			}
-			else
-				t_key_name = kMCEmptyName;
-		}
-
+            t_stat = p_stream . ReadNameRefNew(&t_key_name, t_format == VF_UNICODE_STRING);
+        
+        // AL-2014-05-14: [[ Bug 12203 ]] To allow arrayDеcode to handle unicode keys and entries,
+        //  if the key was written out as utf-8 then the value format of the corresponding array
+        //  element is written afterwards.
+        if (t_format == VF_UNICODE_STRING && t_stat == IO_NORMAL)
+        {
+			t_stat = p_stream . ReadU8(t_type);
+            t_format = (Value_format)(t_type - 1);
+        }
+        
 		MCValueRef t_value;
 		t_value = nil;
 		if (t_stat == IO_NORMAL)
 		{
-			switch((Value_format)(t_type - 1))
+			switch(t_format)
 			{
 			case VF_UNDEFINED:
 				t_value = kMCEmptyString;
@@ -1486,16 +1520,16 @@ IO_stat MCArrayLoadFromStreamLegacy(MCArrayRef self, MCObjectInputStream& p_stre
 				{
 					uint32_t t_string_length;
 					t_stat = p_stream . ReadU32(t_string_length);
-
+                    
 					char *t_string;
 					t_string = nil;
 					if (t_stat == IO_NORMAL)
 						if (!MCMemoryNewArray(t_string_length, t_string))
 							t_stat = IO_ERROR;
-
+                    
 					if (t_stat == IO_NORMAL)
 						t_stat = p_stream . Read(t_string, t_string_length);
-
+                    
 					if (t_stat == IO_NORMAL)
 					{
                         // AL-2014-04-14: [[ Bug 11989 ]] Prevent memory leak in array loading.
@@ -1509,10 +1543,15 @@ IO_stat MCArrayLoadFromStreamLegacy(MCArrayRef self, MCObjectInputStream& p_stre
                             MCValueRelease(t_string_val);
                         }
 					}
-
+                    
 					MCMemoryDeleteArray(t_string);
 				}
-				break;
+                    break;
+            case VF_UNICODE_STRING:
+				{
+                    t_stat = p_stream . ReadStringRefNew((MCStringRef&)t_value, true);
+                    break;
+                }
 			case VF_BOTH:
 			case VF_NUMBER:
 				{
@@ -1547,6 +1586,9 @@ IO_stat MCArrayLoadFromStreamLegacy(MCArrayRef self, MCObjectInputStream& p_stre
 						MCValueRelease(t_array);
 				}
 				break;
+            default:
+                t_stat = IO_ERROR;
+                break;
 			}
 		}
 
@@ -1682,7 +1724,7 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 
 	if (ctxt -> nested_only && MCValueGetTypeCode(p_value) != kMCValueTypeCodeArray)
 		return true;
-
+    
 	MCStringRef t_str_value;
     MCAutoStringRef t_string_buffer;
 	unsigned int t_type;
@@ -1699,10 +1741,19 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 	case kMCValueTypeCodeName:
 		t_type = VF_STRING;
 		t_str_value = MCNameGetString((MCNameRef)p_value);
+        // AL-2014-05-14: [[ Bug 12203 ]] Make sure arrayEncode handles unicode strings
+        if (MCStringIsNative(t_str_value))
+            t_type = VF_STRING;
+        else
+            t_type = VF_UNICODE_STRING;
 		break;
 	case kMCValueTypeCodeString:
-		t_type = VF_STRING;
 		t_str_value = (MCStringRef)p_value;
+        // AL-2014-05-14: [[ Bug 12203 ]] Make sure arrayEncode handles unicode strings
+        if (MCStringIsNative(t_str_value))
+            t_type = VF_STRING;
+        else
+            t_type = VF_UNICODE_STRING;
 		break;
     case kMCValueTypeCodeData:
         t_type = VF_STRING;
@@ -1722,25 +1773,41 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 		break;
 	}
 
+    // AL-2014-05-14: [[ Bug 12203 ]] To allow arrayEncode to handle unicode keys and entries,
+    //  if the key is not native then we write out VF_UNICODE_KEY then the value format of the
+    // corresponding array element is written afterwards.
+    bool t_key_utf8 = (!MCStringIsNative(MCNameGetString(p_key)) || t_type == VF_UNICODE_STRING);
+
 	IO_stat t_stat;
-	t_stat = ctxt -> stream -> WriteU8(t_type + 1);
+    if (t_key_utf8)
+        t_stat = ctxt -> stream -> WriteU8(VF_UNICODE_STRING + 1);
+    else
+        t_stat = ctxt -> stream -> WriteU8(t_type + 1);
+    
 	if (t_stat == IO_NORMAL)
 		t_stat = ctxt -> stream -> WriteU32(measure_array_entry(p_key, p_value) - 1);
 	if (t_stat == IO_NORMAL)
-		t_stat = ctxt -> stream -> WriteStringRefNew(MCNameGetString(p_key), false);
+		t_stat = ctxt -> stream -> WriteStringRefNew(MCNameGetString(p_key), t_key_utf8);
+    
+    if (t_key_utf8)
+        t_stat = ctxt -> stream -> WriteU8(t_type + 1);
+    
 	if (t_stat == IO_NORMAL)
 		switch((Value_format)t_type)
 		{
 		case VF_UNDEFINED:
 			break;
 		case VF_STRING:
-			t_stat = ctxt -> stream -> WriteU32(MCStringGetLength(t_str_value));
-			if (t_stat == IO_NORMAL)
             {
                 MCAutoStringRefAsCString t_cstring;
                 t_cstring . Lock(t_str_value);
-				t_stat = ctxt -> stream -> Write(*t_cstring, strlen(*t_cstring));
+                t_stat = ctxt -> stream -> WriteU32(strlen(*t_cstring));
+                if (t_stat == IO_NORMAL)
+                    t_stat = ctxt -> stream -> Write(*t_cstring, strlen(*t_cstring));
             }
+            break;
+        case VF_UNICODE_STRING:
+            t_stat = ctxt -> stream -> WriteStringRefNew(t_str_value, true);
 			break;
 		case VF_NUMBER:
 			t_stat = ctxt -> stream -> WriteFloat64(MCNumberFetchAsReal((MCNumberRef)p_value));
