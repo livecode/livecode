@@ -341,8 +341,16 @@ bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
     
     // Strings always convert to data as native characters
     uindex_t t_native_length;
-    const byte_t *t_data = (const byte_t *)MCStringGetNativeCharPtrAndLength(*t_string, t_native_length);
-    return MCDataCreateWithBytes(t_data, t_native_length, r_data);
+    if (MCStringIsNative(*t_string))
+    {
+        const byte_t *t_data = (const byte_t *)MCStringGetNativeCharPtrAndLength(*t_string, t_native_length);
+        return MCDataCreateWithBytes(t_data, t_native_length, r_data);
+    }
+    
+    char_t *t_native_chars;
+    MCMemoryNewArray(MCStringGetLength(*t_string), t_native_chars);
+    t_native_length = MCStringGetNativeChars(*t_string, MCRangeMake(0, UINDEX_MAX), t_native_chars);
+    return MCDataCreateWithBytesAndRelease((byte_t *)t_native_chars, t_native_length, r_data);
 }
 
 bool MCExecContext::ConvertToName(MCValueRef p_value, MCNameRef& r_name)
