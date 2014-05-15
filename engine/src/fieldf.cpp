@@ -443,6 +443,12 @@ void MCField::gettabs(uint2 *&t, uint2 &n, Boolean &fixed)
 	fixed = (flags & F_VGRID) != 0;
 }
 
+void MCField::gettabaligns(intenum_t *&a, uint16_t &n)
+{
+    a = alignments;
+    n = nalignments;
+}
+
 void MCField::getlisttabs(int32_t& r_first, int32_t& r_second)
 {
 	uint2 *tabs;

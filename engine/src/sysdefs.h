@@ -548,7 +548,7 @@ struct MCColor
 //  GRAPHICS STRUCTURES AND DEFINITIONS
 //
 
-struct MCSegment
+struct MCLineSegment
 {
 	int2 x1, y1, x2, y2;
 };

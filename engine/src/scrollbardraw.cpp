@@ -872,7 +872,7 @@ void MCScrollbar::drawmacthumb(MCDC *dc, MCRectangle &thumb)
 	uint2 shift = state & CS_SCROLL ? 1 : 0;
 
 	MCPoint p[3];
-	MCSegment grid[5];
+	MCLineSegment grid[5];
 	uint2 gridpoints;
 	if (getstyleint(flags) == F_VERTICAL)
 	{

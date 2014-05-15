@@ -60,13 +60,6 @@ const char *MCliststylestrings[] =
 Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
                         Sort_type dir, Sort_type form, MCExpression *by)
 {
-	MCAutoArray<MCSortnode> items;
-	uint4 nitems = 0;
-	uint4 itemsize = 0;
-	MCParagraph *pgptr;
-    char *temp;
-    temp = NULL;
-
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
 
@@ -83,45 +76,50 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
         settext(parid, *t_sorted, False);
         return ES_NORMAL;
 	}
-	else
-	{
-		if (opened && parid == 0)
-			pgptr = paragraphs;
-		else
-			pgptr = getcarddata(fdata, parid, True)->getparagraphs();
 
-		// MW-2008-02-29: [[ Bug 5763 ]] The crash report seems to suggest a problem with
-		//   a NULL-pointer access on a paragraph - this is the only place I can see this
-		//   happening, so we will guard against it.
-		if (pgptr != NULL)
-		{
-			MCParagraph *tpgptr = pgptr;
-			do
-			{
-				nitems++;
-				tpgptr = tpgptr->next();
-			}
-			while (tpgptr != pgptr);
-			items.Extend(nitems);
-			nitems = 0;
-            
-            extern void MCInterfaceExecSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, int form, MCValueRef p_input, MCExpression *by);
+    MCAutoArray<MCSortnode> items;
+	uint4 nitems = 0;
+	MCParagraph *pgptr;
+    
+    if (opened && parid == 0)
+        pgptr = paragraphs;
+    else
+        pgptr = getcarddata(fdata, parid, True)->getparagraphs();
+    
+    // MW-2008-02-29: [[ Bug 5763 ]] The crash report seems to suggest a problem with
+    //   a NULL-pointer access on a paragraph - this is the only place I can see this
+    //   happening, so we will guard against it.
+    if (pgptr != NULL)
+    {
+        MCParagraph *tpgptr = pgptr;
+        do
+        {
+            nitems++;
+            tpgptr = tpgptr->next();
+        }
+        while (tpgptr != pgptr);
+        items.Extend(nitems);
+        nitems = 0;
+        
+        extern void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, int form, MCValueRef p_input, MCExpression *by);
+        
+        do
+        {
+            if (tpgptr->next() != pgptr || !tpgptr->IsEmpty())
+            {
+                MCAutoStringRef t_string;
+                /* UNCHECKED */ MCStringCopy(tpgptr->GetInternalStringRef(), &t_string);
+                MCStringsSortAddItem(ctxt, items.Ptr(), nitems, form, *t_string, by);
+                items[nitems - 1].data = (void *)tpgptr;
+            }
+            tpgptr = tpgptr->next();
+        }
+        while (tpgptr != pgptr);
+    }
+    
+    extern void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type p_form, MCStringOptions p_options);
 
-			do
-			{
-				if (tpgptr->next() != pgptr || !tpgptr->IsEmpty())
-				{
-					MCAutoStringRef t_string;
-					/* UNCHECKED */ MCStringCopy(tpgptr->GetInternalStringRef(), &t_string);
-					MCInterfaceExecSortAddItem(ctxt, items.Ptr(), nitems, form, *t_string, by);
-					items[nitems - 1].data = (void *)tpgptr;
-				}
-				tpgptr = tpgptr->next();
-			}
-			while (tpgptr != pgptr);
-		}
-	}
-	MCU_sort(items.Ptr(), nitems, dir, form);
+    MCStringsSort(items.Ptr(), nitems, dir, form, ctxt . GetStringComparisonType());
     
     if (nitems > 0)
 	{
@@ -147,7 +145,6 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 			layer_redrawall();
 		}
 	}
-	delete temp;
     
 	return ES_NORMAL;
 }

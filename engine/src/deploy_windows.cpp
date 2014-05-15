@@ -773,7 +773,7 @@ static bool MCWindowsResourcesAddIcon(MCWindowsResources& self, MCStringRef p_ic
 	MCDeployFileRef t_icon;
 	t_icon = NULL;
 	if (t_success)
-		t_success = MCDeployFileOpen(p_icon_file, kMCSOpenFileModeRead, t_icon);
+		t_success = MCDeployFileOpen(p_icon_file, kMCOpenFileModeRead, t_icon);
 
 	// Next read the header - care here to ensure correct structure size
 	ICONDIR t_dir;
@@ -1223,7 +1223,7 @@ static bool MCWindowsResourcesAddManifest(MCWindowsResources& self, MCStringRef 
 	MCDeployFileRef t_manifest;
 	t_manifest = NULL;
 	if (t_success)
-		t_success = MCDeployFileOpen(p_manifest_path, kMCSOpenFileModeRead, t_manifest);
+		t_success = MCDeployFileOpen(p_manifest_path, kMCOpenFileModeRead, t_manifest);
 
 	// Measure the manifest
 	uint32_t t_size;
@@ -1640,9 +1640,9 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	// First thing to do is to open the files.
 	MCDeployFileRef t_engine, t_output;
 	t_engine = t_output = NULL;
-	if (t_success && !MCDeployFileOpen(p_params . engine, kMCSOpenFileModeRead, t_engine))
+	if (t_success && !MCDeployFileOpen(p_params . engine, kMCOpenFileModeRead, t_engine))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
-	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeCreate, t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCOpenFileModeCreate, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
 	// First load the headers we need

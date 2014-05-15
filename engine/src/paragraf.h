@@ -69,6 +69,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // MW-2012-11-13: [[ ParaListIndex ]] This flag is set if the paragraph has
 //   a list index attribute set.
 #define PA_HAS_LIST_INDEX (1 << 18)
+// FG-2014-05-06: [[ TabAlignments ]] This flag is set if the paragraph has
+//   tab alignments set.
+#define PA_HAS_TAB_ALIGNMENTS (1 << 19)
 
 enum
 {
@@ -95,7 +98,7 @@ enum
 // MW-2012-01-25: [[ ParaStyles ]] A collection of paragraph attributes.
 struct MCParagraphAttrs
 {
-	unsigned flags : 19;
+	unsigned flags : 20;
 	unsigned text_align : 2;
 	unsigned list_style : 4;
 	unsigned list_depth : 4;
@@ -118,12 +121,17 @@ struct MCParagraphAttrs
 	uint32_t background_color;
 	uint32_t border_color;
     MCStringRef metadata;
+    
+    uint16_t alignments_count;
+    intenum_t *alignments;
 
 	MCParagraphAttrs(void)
 	{
 		memset(this, 0, sizeof(MCParagraphAttrs));
 	}
 };
+
+class MCSegment;
 
 // Don't change this until everything dealing with fields, paragraphs, etc
 // is capable of dealing with 32-bit offsets or things will break!
@@ -134,6 +142,7 @@ class MCParagraph : public MCDLlist
 	MCField *parent;
 	MCStringRef m_text;
 	MCBlock *blocks;
+    MCSegment *segments;
 	MCLine *lines;
 	findex_t focusedindex;
 	findex_t startindex, endindex, originalindex;
@@ -147,6 +156,10 @@ class MCParagraph : public MCDLlist
     MCTextDirection base_direction;
 
     static uint2 cursorwidth;
+    
+    // Dirty hack until we have a proper styled text object...
+    friend class MCSegment;
+    friend class MCLine;
 
 public:
 	MCParagraph();
@@ -246,6 +259,8 @@ public:
     
     MCTextDirection getbasetextdirection() const
     {
+        if (base_direction == kMCTextDirectionAuto)
+            return parent->getbasetextdirection();
         return base_direction;
     }
     
@@ -670,6 +685,7 @@ public:
 
 	// Fetch the (effective) tabs for the paragraph.
 	void gettabs(uint16_t*& r_tabs, uint16_t& r_tab_count, Boolean& r_fixed) const;
+    void gettabaligns(intenum_t*& r_tabaligns, uint16_t& r_tab_count) const;
 	// Get the (effective) hGrid.
 	bool gethgrid(void) const;
 	// Get the (effective) vGrid.
@@ -918,6 +934,10 @@ public:
     void GetEffectiveTabStops(MCExecContext& ctxt, vector_t<uinteger_t> &r_tabs);
     void SetTabStops(MCExecContext& ctxt, const vector_t<uinteger_t>& p_tabs);
 
+    void GetTabAlignments(MCExecContext& ctxt, MCInterfaceFieldTabAlignments &r_alignments);
+    void GetEffectiveTabAlignments(MCExecContext& ctxt, MCInterfaceFieldTabAlignments &r_alignments);
+    void SetTabAlignments(MCExecContext& ctxt, const MCInterfaceFieldTabAlignments &p_alignments);
+    
     void GetBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
     void GetEffectiveBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_color);
     void SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor &p_color);
@@ -972,7 +992,7 @@ private:
 	// Flow the paragraph for a single line using the given parent font.
 	void noflow(void);
 
-	// Delete the lines computed for flow:
+	// Delete the lines and segments computed for flow:
 	//   - only called by MCParagraph
 	void deletelines();
 

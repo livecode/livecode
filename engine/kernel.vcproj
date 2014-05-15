@@ -540,6 +540,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\segment.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\segment.h"
+				>
+			</File>
+			<File
 				RelativePath="src\sellst.cpp"
 				>
 			</File>

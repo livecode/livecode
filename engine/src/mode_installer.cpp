@@ -610,7 +610,7 @@ public:
 			t_context . stream = nil;
 
 			if (!MCStringIsEmpty(*t_file))
-				t_context . stream = MCS_open(*t_file, kMCSOpenFileModeWrite, False, False, 0);
+				t_context . stream = MCS_open(*t_file, kMCOpenFileModeWrite, False, False, 0);
 
 			t_context . var -> clear();
 			if (MCStringIsEmpty(*t_file) || t_context . stream != nil)
@@ -767,7 +767,7 @@ public:
 			t_output_handle = nil;
 			if (t_success)
 			{
-				t_output_handle = MCS_open(*t_output_filename, kMCSOpenFileModeWrite, False, False, 0);
+				t_output_handle = MCS_open(*t_output_filename, kMCOpenFileModeWrite, False, False, 0);
 				if (t_output_handle == nil)
 					t_success = false;
 			}

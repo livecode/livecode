@@ -1473,6 +1473,7 @@ class MCOpen : public MCStatement
 {
 	MCExpression *fname;
 	MCExpression *message;
+    MCExpression *encoding;
 	union
 	{
 		MCExpression *certificate; // if open secure socket
@@ -1482,7 +1483,6 @@ class MCOpen : public MCStatement
 	MCStringRef destination;
 	Open_argument arg : 4;
 	Open_mode mode : 4;
-    Encoding_type encoding : 4;
 	Boolean dialog : 1;
 	Boolean datagram : 1;
 	Boolean sheet : 1;
@@ -1497,7 +1497,7 @@ public:
 	{
 		fname = message = NULL;
 		mode = OM_UPDATE;
-        encoding = EN_BOM_BASED;
+        encoding = NULL;
 		datagram = dialog = sheet = False;
 		go = NULL;
 		certificate = NULL;

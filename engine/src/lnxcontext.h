@@ -109,7 +109,7 @@ public:
 	
 	void drawline(int2 x1, int2 y1, int2 x2, int2 y2);
 	void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false);
-	void drawsegments(MCSegment *segments, uint2 nsegs);
+	void drawsegments(MCLineSegment *segments, uint2 nsegs);
 	void drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override = false);
 	void drawrect(const MCRectangle& rect);
 	void fillrect(const MCRectangle& rect);
@@ -261,7 +261,7 @@ private:
 	
 	MCPoint * adjustPoints ( MCPoint *n_points, MCPoint *points, uint2 npoints, MCRectangle *p_bounds );
 	MCRectangle * adjustRects ( MCRectangle *n_rects, MCRectangle *rects, uint2 nrects, MCRectangle *p_bounds  );
-	MCSegment * adjustSegs(MCSegment *n_segs, MCSegment *segs, uint2 nsegs, MCRectangle *p_bounds );
+	MCLineSegment * adjustSegs(MCLineSegment *n_segs, MCLineSegment *segs, uint2 nsegs, MCRectangle *p_bounds );
 
 	
 public:

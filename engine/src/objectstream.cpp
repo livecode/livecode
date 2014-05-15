@@ -290,8 +290,10 @@ IO_stat MCObjectInputStream::ReadTranslatedStringRef(MCStringRef &r_value)
     // If the string needs to be converted, do so
     if (MCtranslatechars)
     {
+        MCAutoStringRefAsCString t_string;
+        t_string . Lock(t_read);
         char *t_cstring;
-        t_cstring = MCStringGetOldString(t_read).clone();
+        t_cstring = strclone(*t_string);
 #ifdef __MACROMAN__
         IO_iso_to_mac(t_cstring, strlen(t_cstring));
 #else

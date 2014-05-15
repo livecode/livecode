@@ -33,7 +33,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	regex.cpp \
 	resolution.cpp \
 	scriptpt.cpp \
-	scrolbar.cpp scrollbardraw.cpp sellst.cpp \
+	scrolbar.cpp scrollbardraw.cpp segment.cpp sellst.cpp \
 	stack.cpp \
 	stack2.cpp \
 	stack3.cpp \

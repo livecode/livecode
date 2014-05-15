@@ -932,9 +932,9 @@ public:
         
         MCshellcmd = strclone("/bin/sh");
 #endif /* MCS_init_dsk_lnx */
-        IO_stdin = MCsystem -> OpenFd(0, kMCSOpenFileModeRead);
-        IO_stdout = MCsystem -> OpenFd(1, kMCSOpenFileModeWrite);
-        IO_stderr = MCsystem -> OpenFd(2, kMCSOpenFileModeWrite);
+        IO_stdin = MCsystem -> OpenFd(0, kMCOpenFileModeRead);
+        IO_stdout = MCsystem -> OpenFd(1, kMCOpenFileModeWrite);
+        IO_stderr = MCsystem -> OpenFd(2, kMCOpenFileModeWrite);
 		
 		// Internally, LiveCode assumes sorting orders etc are those of en_US.
 		// Additionally, the "native" string encoding for Linux is ISO-8859-1
@@ -1583,7 +1583,7 @@ public:
 
     virtual IO_handle DeployOpen(MCStringRef p_path, intenum_t p_mode)
     {
-        if (p_mode != kMCSOpenFileModeCreate)
+        if (p_mode != kMCOpenFileModeCreate)
             return OpenFile(p_path, p_mode, False);
         
         FILE *fptr;
@@ -1654,7 +1654,7 @@ public:
         MCAutoStringRefAsSysString t_path_sys;
         /* UNCHECKED */ t_path_sys.Lock(p_path);
 
-        if (p_map && MCmmap && p_mode == kMCSOpenFileModeRead)
+        if (p_map && MCmmap && p_mode == kMCOpenFileModeRead)
         {
             int t_fd = open(*t_path_sys, O_RDONLY);
             struct stat64 t_buf;
@@ -1677,20 +1677,34 @@ public:
             }
         }
 
-        const char *t_mode;
-        if (p_mode == kMCSOpenFileModeRead)
-            t_mode = IO_READ_MODE;
-        else if (p_mode == kMCSOpenFileModeWrite)
-            t_mode = IO_WRITE_MODE;
-        else if (p_mode == kMCSOpenFileModeUpdate)
-            t_mode = IO_UPDATE_MODE;
-        else if (p_mode == kMCSOpenFileModeAppend)
-            t_mode = IO_APPEND_MODE;
+        FILE *t_fptr;
+        // [[ Bug 12192 ]] We want to create an executable file on Linux
+        // when calling OpenFile from MCS_save(binary|text)file
+        if (p_mode == kMCOpenFileModeExecutableWrite)
+        {
+            int t_fd = open(*t_path_sys, O_CREAT | O_TRUNC | O_WRONLY, 0777);
+            if (t_fd != -1)
+                t_fptr = fdopen(t_fd, "w");
+            else
+                t_fptr = NULL;
+        }
+        else
+        {
+            const char *t_mode;
+            if (p_mode == kMCOpenFileModeRead)
+                t_mode = IO_READ_MODE;
+            else if (p_mode == kMCOpenFileModeWrite)
+                t_mode = IO_WRITE_MODE;
+            else if (p_mode == kMCOpenFileModeUpdate)
+                t_mode = IO_UPDATE_MODE;
+            else if (p_mode == kMCOpenFileModeAppend)
+                t_mode = IO_APPEND_MODE;
 
-        FILE *t_fptr = fopen(*t_path_sys, t_mode);
+            t_fptr = fopen(*t_path_sys, t_mode);
 
-        if (t_fptr == NULL && p_mode != kMCSOpenFileModeRead)
-            t_fptr = fopen(*t_path_sys, IO_CREATE_MODE);
+            if (t_fptr == NULL && p_mode != kMCOpenFileModeRead)
+                t_fptr = fopen(*t_path_sys, IO_CREATE_MODE);
+        }
 
         if (t_fptr != NULL)
         {
@@ -1707,16 +1721,17 @@ public:
 
         switch (p_mode)
         {
-        case kMCSOpenFileModeRead:
+        case kMCOpenFileModeRead:
             t_fptr = fdopen(p_fd, IO_READ_MODE);
             break;
-        case kMCSOpenFileModeWrite:
+        case kMCOpenFileModeWrite:
+        case kMCOpenFileModeExecutableWrite:
             t_fptr = fdopen(p_fd, IO_WRITE_MODE);
             break;
-        case kMCSOpenFileModeUpdate:
+        case kMCOpenFileModeUpdate:
             t_fptr = fdopen(p_fd, IO_UPDATE_MODE);
             break;
-        case kMCSOpenFileModeAppend:
+        case kMCOpenFileModeAppend:
             t_fptr = fdopen(p_fd, IO_APPEND_MODE);
             break;
         }
@@ -1735,16 +1750,16 @@ public:
         MCAutoStringRefAsSysString t_path_sys;
         /* UNCHECKED */ t_path_sys.Lock(p_path);
 
-        if (p_mode == kMCSOpenFileModeRead)
+        if (p_mode == kMCOpenFileModeRead)
             t_fptr = fopen(*t_path_sys, IO_READ_MODE);
-        else if (p_mode == kMCSOpenFileModeWrite)
+        else if (p_mode == kMCOpenFileModeWrite || p_mode == kMCOpenFileModeExecutableWrite)
             t_fptr = fopen(*t_path_sys, IO_WRITE_MODE);
-        else if (p_mode == kMCSOpenFileModeUpdate)
+        else if (p_mode == kMCOpenFileModeUpdate)
             t_fptr = fopen(*t_path_sys, IO_UPDATE_MODE);
-        else if (p_mode == kMCSOpenFileModeAppend)
+        else if (p_mode == kMCOpenFileModeAppend)
             t_fptr = fopen(*t_path_sys, IO_APPEND_MODE);
 
-        if (t_fptr == NULL && p_mode != kMCSOpenFileModeRead)
+        if (t_fptr == NULL && p_mode != kMCOpenFileModeRead)
             t_fptr = fopen(*t_path_sys, IO_CREATE_MODE);
 
         configureSerialPort((short)fileno(t_fptr));
@@ -2853,12 +2868,12 @@ public:
                 {
                     close(toparent[1]);
                     MCS_lnx_nodelay(toparent[0]);
-                    MCprocesses[index].ihandle = OpenFd(toparent[0], kMCSOpenFileModeRead);
+                    MCprocesses[index].ihandle = OpenFd(toparent[0], kMCOpenFileModeRead);
                 }
                 if (writing)
                 {
                     close(tochild[0]);
-                    MCprocesses[index].ohandle = OpenFd(tochild[1], kMCSOpenFileModeWrite);
+                    MCprocesses[index].ohandle = OpenFd(tochild[1], kMCOpenFileModeWrite);
                 }
             }
         }
@@ -2873,13 +2888,13 @@ public:
                 if (reading)
                 {
                     MCS_lnx_nodelay(t_input_fd);
-                    MCprocesses[index] . ihandle = OpenFd(t_input_fd, kMCSOpenFileModeRead);
+                    MCprocesses[index] . ihandle = OpenFd(t_input_fd, kMCOpenFileModeRead);
                 }
                 else
                     close(t_input_fd);
 
                 if (writing)
-                    MCprocesses[index] . ohandle = OpenFd(t_output_fd, kMCSOpenFileModeWrite);
+                    MCprocesses[index] . ohandle = OpenFd(t_output_fd, kMCOpenFileModeWrite);
                 else
                     close(t_output_fd);
 

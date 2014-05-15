@@ -249,7 +249,7 @@ void MCParseMenuString(MCStringRef p_string, IParseMenuCallback *p_callback, uin
 {
 	MCAutoArrayRef t_lines;
 	uindex_t t_nlines = 0;
-	/* UNCHECKED */ MCStringSplit(p_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, &t_lines);
+	/* UNCHECKED */ MCStringSplit(p_string, kMCLineEndString, nil, kMCStringOptionCompareExact, &t_lines);
 	t_nlines = MCArrayGetCount(*t_lines);
 	bool t_hastags = false;
 	

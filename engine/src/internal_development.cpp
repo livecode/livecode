@@ -324,7 +324,7 @@ public:
 		t_old_handle = nil;
 		if (t_success)
 		{
-			t_old_handle = MCS_open(*t_old_filename, kMCSOpenFileModeRead, False, False, 0);
+			t_old_handle = MCS_open(*t_old_filename, kMCOpenFileModeRead, False, False, 0);
 			if (t_old_handle == nil)
 				t_success = false;
 		}
@@ -333,7 +333,7 @@ public:
 		t_new_handle = nil;
 		if (t_success)
 		{
-			t_new_handle = MCS_open(*t_new_filename, kMCSOpenFileModeRead, False, False, 0);
+			t_new_handle = MCS_open(*t_new_filename, kMCOpenFileModeRead, False, False, 0);
 			if (t_new_handle == nil)
 				t_success = false;
 		}
@@ -342,7 +342,7 @@ public:
 		t_patch_handle = nil;
 		if (t_success)
 		{
-			t_patch_handle = MCS_open(*t_patch_filename, kMCSOpenFileModeWrite, False, False, 0);
+			t_patch_handle = MCS_open(*t_patch_filename, kMCOpenFileModeWrite, False, False, 0);
 			if (t_patch_handle == nil)
 				t_success = false;
 		}

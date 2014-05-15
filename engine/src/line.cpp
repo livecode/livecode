@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "field.h"
 #include "paragraf.h"
 #include "MCBlock.h"
+#include "segment.h"
 #include "line.h"
 #include "context.h"
 #include "uidc.h"
@@ -35,15 +36,17 @@ MCLine::MCLine(MCParagraph *paragraph)
 {
 	parent = paragraph;
 	firstblock = lastblock = NULL;
+    firstsegment = lastsegment = NULL;
 	width = ascent = descent = 0;
 	dirtywidth = 0;
+    m_offset = 0;
 }
 
 MCLine::~MCLine()
 {
 }
 
-void MCLine::takebreaks(MCLine *lptr)
+/*void MCLine::takebreaks(MCLine *lptr)
 {
 	if (firstblock != lptr->firstblock)
 	{
@@ -65,9 +68,9 @@ void MCLine::takebreaks(MCLine *lptr)
 	lptr->ascent = lptr->descent = 0;
 	lptr->firstblock = lptr->lastblock = NULL;
 	lptr->width = 0;
-}
+}*/
 
-MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_width)
+/*MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_width)
 {
 	MCBlock *t_block;
 	t_block = p_first;
@@ -241,9 +244,9 @@ MCBlock *MCLine::fitblocks(MCBlock* p_first, MCBlock* p_sentinal, uint2 p_max_wi
 	dirtywidth = width;
 	
 	return lastblock -> next();
-}
+}*/
 
-void MCLine::appendall(MCBlock *bptr)
+void MCLine::appendall(MCBlock *bptr, bool p_flow)
 {
 	firstblock = bptr;
 	lastblock = (MCBlock *)bptr->prev();
@@ -251,122 +254,51 @@ void MCLine::appendall(MCBlock *bptr)
 	width = 0;
 	bptr = lastblock;
 	ascent = descent = 0;
-    ResolveDisplayOrder();
-	/*do
-	{
-		// TODO: RTL support
-        
-        bptr = (MCBlock *)bptr->next();
-		setscents(bptr);
-        bptr -> setorigin(width);
-		width += bptr->getwidth(NULL, width);
-	}
-	while (bptr != lastblock);*/
-	dirtywidth = MCU_max(width, oldwidth);
+    SegmentLine();
+    
+    // Only resolve the display order if this line is not flowed (if it is
+    // flowed, line breaking will be required and this effort will be wasted)
+    if (!p_flow)
+    {
+        ResolveDisplayOrder();
+    }
+	
+    dirtywidth = MCU_max(width, oldwidth);
+}
+
+void MCLine::appendsegments(MCSegment *first, MCSegment *last)
+{
+    firstblock = first->GetFirstBlock();
+    lastblock = last->GetLastBlock();
+    
+    firstsegment = first;
+    lastsegment = last;
+    
+    ascent = descent = 0;
+    
+    uint2 oldwidth = width;
+    width = 0;
+    dirtywidth = MCU_max(width, oldwidth);
+    
+    // Take ownership of the segments
+    MCSegment *sgptr = firstsegment;
+    do
+    {
+        sgptr->SetParent(this);
+        sgptr = sgptr->next();
+    }
+    while (sgptr->prev() != lastsegment);
 }
 
 void MCLine::draw(MCDC *dc, int2 x, int2 y, findex_t si, findex_t ei, MCStringRef p_string, uint2 pstyle)
 {
-	//int2 cx = 0;
-	MCBlock *bptr = (MCBlock *)firstblock->prev();
-	
-	uint32_t t_flags;
-	t_flags = 0;
-	
-	bool t_is_flagged;
-	t_is_flagged = false;
-	int32_t t_flagged_sx, t_flagged_ex;
-	t_flagged_sx = 0;
-	t_flagged_ex = 0;
-	do
-	{
-		bptr = (MCBlock *)bptr->next();
-		
-		// MW-2012-02-27: [[ Bug 2939 ]] We need to compute whether to render the left/right
-		//   edge of the box style. This is determined by whether the previous block has such
-		//   a style or not.
-		
-		// Fetch the style of this block.
-		uint2 t_this_style;
-		if (!bptr -> gettextstyle(t_this_style))
-			t_this_style = pstyle;
-		
-		// Start off with 0 flags.
-		t_flags = 0;
-		
-		// If this block has a box style then we have something to do.
-		if ((t_this_style & (FA_BOX | FA_3D_BOX)) != 0)
-		{
-			// If we are not the first block, check the text style of the previous one.
-			// Otherwise we must render the left edge.
-			if (bptr != firstblock)
-			{
-				uint2 t_prev_style;
-				if (!bptr -> prev() -> gettextstyle(t_prev_style))
-					t_prev_style = pstyle;
-				if ((t_this_style & FA_BOX) != 0 && (t_prev_style & FA_BOX) == 0)
-					t_flags |= DBF_DRAW_LEFT_EDGE;
-				else if ((t_this_style & FA_3D_BOX) != 0 && (t_prev_style & FA_3D_BOX) == 0)
-					t_flags |= DBF_DRAW_LEFT_EDGE;
-			}
-			else
-				t_flags |= DBF_DRAW_LEFT_EDGE;
-			
-			// If we are not the last block, check the text style of the next one.
-			// Otherwise we must render the right edge.
-			if (bptr != lastblock)
-			{
-				uint2 t_next_style;
-				if (!bptr -> next() -> gettextstyle(t_next_style))
-					t_next_style = pstyle;
-				if ((t_this_style & FA_BOX) != 0 && (t_next_style & FA_BOX) == 0)
-					t_flags |= DBF_DRAW_RIGHT_EDGE;
-				else if ((t_this_style & FA_3D_BOX) != 0 && (t_next_style & FA_3D_BOX) == 0)
-					t_flags |= DBF_DRAW_RIGHT_EDGE;
-			}
-			else
-				t_flags |= DBF_DRAW_RIGHT_EDGE;
-		}
-		
-		// Pass the computed flags to the block to draw.
-		bptr->draw(dc, x + bptr->getorigin(), bptr->getorigin(), y, si, ei, p_string, pstyle, t_flags);
-		
-		uint2 twidth;
-		twidth = bptr->getwidth(dc);
-		
-		if (bptr -> getflagged())
-		{
-			if (!t_is_flagged)
-			{
-				t_is_flagged = true;
-				t_flagged_sx = x;
-			}
-			t_flagged_ex = x + twidth;
-		}
-		
-		if (t_is_flagged && (!bptr -> getflagged() || bptr == lastblock))
-		{
-			static uint1 s_dashes[2] = {3, 2};
-			MCColor t_color;
-			t_color . red = 255 << 8;
-			t_color . green = 0 << 8;
-			t_color . blue = 0 << 8;
-			MCscreen -> alloccolor(t_color);
-			dc -> setforeground(t_color);
-			dc -> setquality(QUALITY_SMOOTH);
-			dc -> setlineatts(2, LineOnOffDash, CapButt, JoinRound);
-			dc -> setdashes(0, s_dashes, 2);
-			dc -> drawline(t_flagged_sx, y + 1, t_flagged_ex, y + 1);
-			dc -> setlineatts(0, LineSolid, CapButt, JoinBevel);
-			dc -> setquality(QUALITY_DEFAULT);
-			t_is_flagged = false;
-			parent->getparent()->setforeground(dc, DI_FORE, False, True);
-		}
-		
-		//x += twidth;
-		//cx += twidth;
-	}
-	while (bptr != lastblock);
+	MCSegment *sgptr = firstsegment;
+    do
+    {
+        sgptr->Draw(dc, x, y, si, ei, p_string, pstyle);
+        sgptr = sgptr->next();
+    }
+    while (sgptr->prev() != lastsegment);
 }
 
 void MCLine::setscents(MCBlock *bptr)
@@ -404,7 +336,8 @@ void MCLine::GetRange(findex_t &i, findex_t &l)
 
 uint2 MCLine::GetCursorXHelper(findex_t fi, bool prefer_forward)
 {
-    MCBlock *bptr = (MCBlock *)firstblock;
+    MCBlock *bptr = firstblock;
+    MCSegment *sgptr = firstsegment;
 	findex_t i, l;
 	bptr->GetRange(i, l);
     
@@ -414,9 +347,14 @@ uint2 MCLine::GetCursorXHelper(findex_t fi, bool prefer_forward)
     {
         bptr = bptr -> next();
         bptr -> GetRange(i, l);
+        
+        // Advance to the next segment, if necessary
+        if (sgptr->next()->GetFirstBlock() == bptr)
+            sgptr = sgptr->next();
     }
    
-    return bptr->GetCursorX(fi);
+    // The position of the segment containing the block needs to be included
+    return bptr->GetCursorX(fi) + sgptr->GetCursorOffset();
 }
 
 uint2 MCLine::GetCursorXPrimary(findex_t fi, bool moving_forward)
@@ -450,15 +388,59 @@ findex_t MCLine::GetCursorIndex(int2 cx, Boolean chunk, bool moving_left)
     // TODO: when cx > line width, return the last block in visual order
     
     MCBlock *bptr = firstblock;
-    while (bptr != lastblock)
+    MCSegment *sgptr = firstsegment;
+    bool done = false;
+    do
     {
-        if (cx >= (int4)bptr->getorigin() && cx < (int4)(bptr->getorigin() + bptr->getwidth()))
+        // Temporaries for visual ordering
+        MCBlock *t_firstvisual, *t_lastvisual;
+        t_firstvisual = t_lastvisual = bptr;
+        
+        bptr = sgptr->GetFirstBlock()->prev();
+        do
+        {
+            bptr = bptr->next();
+            
+            int4 origin = bptr->getorigin() + sgptr->GetCursorOffset();
+            if (cx >= origin && cx < (origin + bptr->getwidth()))
+            {
+                done = true;
+                break;
+            }
+            
+            if (bptr->GetVisualIndex() < t_firstvisual->GetVisualIndex())
+                t_firstvisual = bptr;
+            if (bptr->GetVisualIndex() > t_lastvisual->GetVisualIndex())
+                t_lastvisual = bptr;
+        }
+        while (bptr != sgptr->GetLastBlock());
+        
+        // It is possible to be within the segment but not within a block due to
+        // alignment within the segment. Pick the appropriate block.
+        if (!done && cx >= sgptr->GetLeft() && cx < sgptr->GetRight())
+        {
+            if (t_firstvisual->getorigin() + sgptr->GetCursorOffset() > cx)
+            {
+                // Before the first block in visual ordering
+                bptr = t_firstvisual;
+                done = true;
+            }
+            else
+            {
+                // Otherwise, must be after the last block in visual ordering
+                bptr = t_lastvisual;
+                done = true;
+            }
+        }
+        
+        if (done)
             break;
         
-        bptr = bptr->next();
+        sgptr = sgptr->next();
     }
-        
-    return bptr->GetCursorIndex(cx, chunk, bptr == lastblock);
+    while (sgptr->prev() != lastsegment);
+    
+    return bptr->GetCursorIndex(cx - sgptr->GetCursorOffset(), chunk, bptr == lastblock);
 }
 
 uint2 MCLine::getwidth()
@@ -490,121 +472,324 @@ void MCLine::setwidth(uint2 p_new_width)
 
 void MCLine::ResolveDisplayOrder()
 {
-    // Count the number of blocks in the line
-    uindex_t t_block_count;
-    t_block_count = 1;
-    MCBlock *bptr;
-    bptr = firstblock;
-    while (bptr != lastblock)
+    // Resolve the display order of each of the segments in turn
+    MCSegment *sgptr = firstsegment;
+    do
     {
-        t_block_count++;
-        bptr = bptr->next();
+        sgptr->ResolveDisplayOrder();
+        sgptr = sgptr->next();
     }
-    
-    // Create an array to store the blocks in visual order
-    MCAutoArray<MCBlock *> t_visual_order;
-    /* UNCHECKED */ t_visual_order.New(t_block_count);
-    
-    // Initialise the visual order to be the logical order. Also take this
-    // opportunity to find the highest and lowest direction level in the line.
-    uint8_t t_max_level, t_min_level;
-    t_max_level = 0;
-    t_min_level = 255;
-    bptr = firstblock;
-    for (uindex_t i = 0; i < t_block_count; i++)
+    while (sgptr->prev() != lastsegment);
+}
+
+void MCLine::SegmentLine()
+{
+    // Scan through each block on this line, looking for tab characters
+    MCBlock *bptr = firstblock;
+    MCBlock *segment_start = firstblock;
+    uindex_t t_segment_length = 0;
+    do
     {
-        uint8_t t_level;
-        t_level = bptr->GetDirectionLevel();
-        if (t_level > t_max_level)
-            t_max_level = t_level;
-        
-        if (t_level < t_min_level)
-            t_min_level = t_level;
-        
-        t_visual_order[i] = bptr;
-        bptr = bptr->next();
-    }
-    
-    // Unicode Bidi Algorithm rule L2:
-    //  "From the highest level found in the text to the lowest odd level on each line,
-    //   including intermediate levels not actually present in the text, reverse any
-    //   contiguous sequence of characters that are at that level or higher."
-    //
-    // We don't actually reverse the text here, just the ordering of the blocks.
-    // To avoid creating a new stringref, a simple flag is used to indicate reversal.
-    
-    // Adjust the min level to be the minimum odd level
-    t_min_level += (t_min_level & 1) ? 0 : 1;
-    
-    for (uindex_t i = t_max_level; i >= t_min_level; i--)
-    {
-        // Scan the block list for a block at this level or higher
-        uindex_t j = 0;
-        while (j < t_block_count)
+        // Does this block contain a tab?
+        uindex_t t_offset;
+        if (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', bptr->GetOffset(), kMCStringOptionCompareExact, t_offset)
+            && t_offset < bptr->GetOffset()+bptr->GetLength())
         {
-            // Not at the desired level; move to the next block
-            if (t_visual_order[j]->GetDirectionLevel() < i)
+            // Split the block at the tab
+            // Note that we want to create empty blocks after the tab
+            if ((t_offset + 1) <= bptr->GetOffset() + bptr->GetLength())
             {
-                j++;
-                continue;
+                bptr->split(t_offset + 1);
+                if (bptr == lastblock)
+                    lastblock = bptr->next();
             }
             
-            // Scan for the last contigious block at or above this level
-            uindex_t t_length;
-            t_length = 0;
-            while (j + t_length < t_block_count && t_visual_order[j + t_length]->GetDirectionLevel() >= i)
-                t_length++;
-            
-            // Reverse the affected section of the visual order array
-            uindex_t t_even, t_pivot, t_stride;
-            t_even = 1 - (t_length & 1);
-            t_stride = t_length >> 1;
-            t_pivot = j + t_stride;
-            while (t_stride > 0)
+            // Create a segment covering the text up to this tab character
+            MCSegment *new_segment = new MCSegment(this);
+            new_segment->AddBlockRange(segment_start, bptr);
+            if (firstsegment == NULL)
             {
-                uindex_t t_low, t_high;
-                t_low = t_pivot - t_stride;
-                t_high = t_pivot + t_stride - t_even;
-                
-                // TODO: toggle the "reversed" flag on the block or is the encoding enough?
-                
-                MCBlock *temp = t_visual_order[t_low];
-                t_visual_order[t_low] = t_visual_order[t_high];
-                t_visual_order[t_high] = temp;
-                
-                t_stride--;
+                firstsegment = lastsegment = new_segment;
+                if (parent->segments == NULL)
+                    parent->segments = new_segment;
             }
-            
-            // This run of blocks has been reversed
-            j += t_length;
+            else
+            {
+                lastsegment->append(new_segment);
+                lastsegment = new_segment;
+            }
+
+            segment_start = bptr->next();
+            t_segment_length = 0;
+        }
+        else
+        {
+            t_segment_length++;
+        }
+        
+        // Move on to the next block
+        bptr = bptr->next();
+    }
+    while (bptr != firstblock);
+    
+    // Create a segment covering the remaining text
+    if (t_segment_length > 0)
+    {
+        MCSegment *new_segment = new MCSegment(this);
+        new_segment->AddBlockRange(segment_start, lastblock);
+        if (firstsegment == NULL)
+        {
+            firstsegment = lastsegment = new_segment;
+            if (parent->segments == NULL)
+                parent->segments = new_segment;
+        }
+        else
+        {
+            lastsegment->append(new_segment);
+            lastsegment = new_segment;
         }
     }
+}
+
+int16_t MCLine::CalculateTabPosition(uindex_t p_which_tab, int16_t p_from_position)
+{
+    // No tabs means the beginning of the line
+    if (p_which_tab == 0)
+        return 0;
     
-    // The blocks are now in visual order. Calculate their positions (and also
-    // the width of this line). A second pass will be needed to resolve the
-    // offsets to be used when calculating tabstops.
-    for (uindex_t i = 0; i < t_block_count; i++)
+    p_which_tab--;
+    
+    // Get the tab information from the parent paragraph
+    uint16_t *t_tabs;
+    uint16_t t_numtabs;
+    Boolean t_fixed_tabs;
+    parent->gettabs(t_tabs, t_numtabs, t_fixed_tabs);
+    
+    // What is the line offset for the beginning of this segment?
+    uint16_t t_segment_pos = 0;
+    if (t_fixed_tabs)
     {
-        bptr = t_visual_order[i];
-        setscents(bptr);
-        bptr -> setorigin(width);
-        bptr -> SetVisualIndex(i);
-        width += bptr -> getwidth(NULL);
-    }
-    
-    // Tabs are always done using the dominant paragraph direction
-    bool t_para_is_rtl;
-    t_para_is_rtl = parent->getbasetextdirection() == kMCTextDirectionRTL;
-    
-    uint2 t_tabpos = (t_para_is_rtl) ? width : 0;
-    
-    // Tell each block what pixel offset it should use when calculating tabstops
-    for (uindex_t i = 0; i < t_block_count; i++)
-    {
-        bptr -> settabpos(t_tabpos);
-        if (t_para_is_rtl)
-            t_tabpos -= bptr->getwidth(NULL);
+        if (p_which_tab < t_numtabs)
+        {
+            // Just get the position for the list of tabstops
+            t_segment_pos = t_tabs[p_which_tab];
+        }
         else
-            t_tabpos += bptr->getwidth(NULL);
+        {
+            // We have gone past the end of the list of fixed tabstops. In
+            // this case, we calculate the position based on implicit stops;
+            // these implicit stops are the same width as the gap between
+            // the last two fixed stops.
+            uint16_t t_diff;
+            if (t_numtabs == 1)
+                t_diff = t_tabs[0];     // Previous tabstop is implicitly 0
+            else
+                t_diff = t_tabs[t_numtabs - 1] - t_tabs[t_numtabs - 2];
+            
+            // There have been (t_segments - t_numtabs) tabs beyond the last
+            // fixed tabstop
+            t_segment_pos = t_tabs[t_numtabs - 1] + ((p_which_tab+1) - t_numtabs) * t_diff;
+        }
+        
+        // If the position of the current tab co-incides with the last x position then
+		// adjust upward by one to ensure we don't overwrite anything (legacy behavior).
+		if (t_segment_pos == p_from_position)
+			t_segment_pos += 1;
     }
+    else
+    {
+        // Find the first fixed-position tabstop that is beyond the end of
+        // the previous segment
+        uindex_t i = 0;
+        while (i < t_numtabs && t_segment_pos <= p_from_position)
+            t_segment_pos = t_tabs[i++];
+        
+        // If no valid fixed-position tabstops were found, use implicit
+        if (p_from_position >= t_segment_pos && t_numtabs != 0)
+        {
+            // We have gone past the end of the list of fixed tabstops. In
+            // this case, we calculate the position based on implicit stops;
+            // these implicit stops are the same width as the gap between
+            // the last two fixed stops.
+            uint16_t t_diff;
+            if (t_numtabs == 1)
+                t_diff = t_tabs[0];     // Previous tabstop is implicitly 0
+            else
+                t_diff = t_tabs[t_numtabs - 1] - t_tabs[t_numtabs - 2];
+            
+            // MW-2012-09-19: [[ Bug 10239 ]] The tab difference can now be zero, in
+            //   the non-vGrid case, if this is the case then just take lasttab to be
+            //   x.
+            if (t_diff != 0)
+                t_segment_pos = t_tabs[t_numtabs - 1] + t_diff * ((p_from_position - t_tabs[t_numtabs - 1]) / t_diff + 1);
+            else
+                t_segment_pos = p_from_position;
+        }
+        
+        // If the position of the current tab co-incides with the last x position then
+		// adjust upward by one to ensure we don't overwrite anything (legacy behavior).
+		if (t_segment_pos == p_from_position)
+			t_segment_pos += 1;
+    }
+    
+    return t_segment_pos;
+}
+
+intenum_t MCLine::CalculateTabAlignment(uindex_t p_which_tab)
+{
+    intenum_t *t_alignments;
+    uint16_t t_count;
+    parent -> gettabaligns(t_alignments, t_count);
+    
+    if (t_count == 0)
+        return parent->getbasetextdirection() == kMCTextDirectionRTL ? kMCSegmentTextHAlignRight : kMCSegmentTextHAlignLeft;
+    
+    if (p_which_tab < t_count)
+        return t_alignments[p_which_tab];
+    else
+        return t_alignments[t_count - 1];
+}
+
+void MCLine::NoFlowLayout()
+{
+    MCLine *test = DoLayout(false, 0);
+    MCAssert(test == NULL);
+}
+
+MCLine *MCLine::Fit(int16_t p_linewidth)
+{
+    return DoLayout(true, p_linewidth);
+}
+
+MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
+{
+    // A count of fitted segments is required so that the correct tab can be
+    // chosen when fitting segments.
+    uindex_t t_segments = 0;
+    
+    // Non-fixed tabstops are calculated as offsets from the last tab position
+    // while fixed tabstops are always at the same position, regardless of the
+    // length of text between the stops.
+    int16_t t_last_segment_end = 0;
+    
+    // We need to know whether the tabstops are fixed or flexible
+    Boolean t_fixed_tabs;
+    uint16_t *t_tab_positions;
+    uint16_t t_num_tabs;
+    parent->gettabs(t_tab_positions, t_num_tabs, t_fixed_tabs);
+    
+    // Try to fit each segment into the line
+    MCSegment *sgptr = firstsegment;
+    MCLine *t_remaining = NULL;
+    do
+    {
+        // Get the starting position for this segment
+        int16_t t_segment_pos;
+        t_segment_pos = CalculateTabPosition(t_segments, t_last_segment_end);
+        
+        // Set the alignment of the segment.
+        // This is done early to ensure all segments have an alignment set.
+        sgptr->SetHorizontalAlignment(CalculateTabAlignment(t_segments));
+        sgptr->SetVerticalAlignment(kMCSegmentTextVAlignTop);
+        
+        // We now know where the segment will be placed and therefore how much
+        // room remains in the line for the segment. Tell it to do block fitting
+        // - if not all blocks can fit, a segment containing the remainder will
+        // be returned.
+        if (p_flow)
+            t_remaining = sgptr->Fit(p_linewidth - t_segment_pos);
+        else
+            t_remaining = NULL;
+        
+        // Fitting has been completed; get the width of the segment so that
+        // the segment boundaries can be calculated
+        int16_t t_segment_width;
+        t_segment_width = sgptr->GetContentLength();
+
+        // Position at which the next segment will be placed
+        int16_t t_next_segment_pos;
+        t_next_segment_pos = CalculateTabPosition(t_segments + 1, t_segment_pos + t_segment_width);
+        
+        // The last segment of the line should be no larger than its contents
+        // (because it doesn't contain the whitespace of another tab) unless it
+        // is to be right aligned in LTR text or left-aligned in RTL text
+        if (!t_fixed_tabs && sgptr == lastsegment
+            && ((parent->getbasetextdirection() != kMCTextDirectionRTL && sgptr->GetHorizontalAlignment() != kMCSegmentTextHAlignRight)
+            ||  (parent->getbasetextdirection() == kMCTextDirectionRTL && sgptr->GetHorizontalAlignment() != kMCSegmentTextHAlignLeft)))
+        {
+            t_next_segment_pos = t_segment_pos + t_segment_width;
+        }
+        
+        // Update the width of the line
+        width += t_next_segment_pos - t_segment_pos;
+        
+        // Tell the segment its boundaries. If the line is right-to-left, some
+        // post-processing will be required to fix up the boundaries.
+        int16_t t_left, t_right, t_top, t_bottom;
+        t_left = t_segment_pos;
+        t_right = t_next_segment_pos;
+        t_top = 0;
+        t_bottom = 0;
+        sgptr->SetBoundaries(t_left, t_right, t_top, t_bottom);
+        
+        // End the segment fitting if we have run out of space
+        if (t_remaining != NULL)
+            break;
+        
+        // Next segment
+        t_segments++;
+        sgptr = sgptr->next();
+        t_last_segment_end = t_segment_pos + t_segment_width;
+    }
+    while (sgptr->prev() != lastsegment);
+    
+    // Fix the segment boundaries for right-to-left lines
+    if (parent->getbasetextdirection() == kMCTextDirectionRTL)
+    {
+        sgptr = firstsegment;
+        do
+        {
+            int16_t t_left, t_right, t_top, t_bottom;
+            t_left = width - sgptr->GetRight();
+            t_right = width - sgptr->GetLeft();
+            t_top = 0;
+            t_bottom = 0;
+            sgptr->SetBoundaries(t_left, t_right, t_top, t_bottom);
+            
+            sgptr = sgptr->next();
+        }
+        while (sgptr->prev() != lastsegment);
+    }
+    
+    // Calculate the drawing offset for this line, based on alignment (this is
+    // only appropriate for fields with a fixed width, however)
+    if (p_flow && !parent->getvgrid())
+    {
+        switch (parent->gettextalign())
+        {
+            case kMCParagraphTextAlignLeft:
+            case kMCParagraphTextAlignJustify:
+                m_offset = 0;
+                break;
+                
+            case kMCParagraphTextAlignCenter:
+                m_offset = (p_linewidth - width) / 2;
+                break;
+                
+            case kMCParagraphTextAlignRight:
+                m_offset = p_linewidth - width;
+                break;
+        }
+    }
+    else
+    {
+        // Alignment for non-wrapping lines is handled by the paragraph
+        m_offset = 0;
+    }
+    
+    // Update the line's drawing properties
+    dirtywidth = width;
+    ResolveDisplayOrder();
+    
+    return t_remaining;
 }

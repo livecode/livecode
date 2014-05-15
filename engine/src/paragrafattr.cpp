@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //#include "execpt.h"
 #include "util.h"
 #include "mcerror.h"
+#include "segment.h"
 
 #include "globals.h"
 
@@ -1658,6 +1659,17 @@ void MCParagraph::gettabs(uint16_t*& r_tabs, uint16_t& r_tab_count, Boolean& r_f
 	r_fixed = getvgrid();
 }
 
+void MCParagraph::gettabaligns(intenum_t*& r_tab_aligns, uint16_t& r_tab_count) const
+{
+    if (attrs != nil && (attrs -> flags & PA_HAS_TAB_ALIGNMENTS) != 0)
+    {
+        r_tab_aligns = attrs -> alignments;
+        r_tab_count = attrs -> alignments_count;
+    }
+    else
+        parent -> gettabaligns(r_tab_aligns, r_tab_count);
+}
+
 bool MCParagraph::getvgrid(void) const
 {
 	if (attrs != nil && (attrs -> flags & PA_HAS_LIST_STYLE) != 0)
@@ -1940,7 +1952,7 @@ void MCParagraph::computeparaoffsetandwidth(int32_t& r_offset, int32_t& r_width)
 	t_layout_width = parent -> getlayoutwidth();
 	t_para_width = getwidth();
 
-	int32_t t_offset;
+    int32_t t_offset;
 	if (t_para_width > t_layout_width)
 	{
 		switch(gettextalign())
@@ -1959,7 +1971,7 @@ void MCParagraph::computeparaoffsetandwidth(int32_t& r_offset, int32_t& r_width)
 	}
 	else
 		t_offset = 0;
-
+    
 	r_offset = t_offset;
 	r_width = t_para_width;
 }
@@ -2020,6 +2032,11 @@ int32_t MCParagraph::computelineinneroffset(int32_t p_layout_width, MCLine *p_li
 		}
 	}
 
+
+    // FG-2014-05-06: [[ TabAlignments ]]
+    // Lines now handle offsets themselves
+    t_offset += p_line->GetLineOffset();
+    /*
 	if (p_layout_width > t_line_width)
 		switch(gettextalign())
 		{
@@ -2033,6 +2050,7 @@ int32_t MCParagraph::computelineinneroffset(int32_t p_layout_width, MCLine *p_li
 			t_offset += p_layout_width - t_line_width;
 			break;
 		}
+     */
 
 	return t_offset;
 }

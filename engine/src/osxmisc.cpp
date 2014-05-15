@@ -571,7 +571,17 @@ char *MCSystemLowercaseInternational(const MCString& p_string)
 
 int MCSystemCompareInternational(MCStringRef p_left, MCStringRef p_right)
 {
-	return CompareText(p_left, p_right, MCStringGetLength(p_left), MCStringGetLength(p_right), NULL);
+	CFStringRef t_left_ref, t_right_ref;
+    /* UNCHECKED */ MCStringConvertToCFStringRef(p_left, t_left_ref);
+    /* UNCHECKED */ MCStringConvertToCFStringRef(p_right, t_right_ref);
+    
+	int t_result;
+	t_result = CFStringCompare(t_left_ref, t_right_ref, kCFCompareLocalized);
+	
+	CFRelease(t_left_ref);
+	CFRelease(t_right_ref);
+	
+	return t_result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

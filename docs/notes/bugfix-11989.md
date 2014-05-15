@@ -1,1 +1,1 @@
-# arrayDecode statement error
+# arrayDecode on a file containing the result of arrayEncode on an empty array causes execution error

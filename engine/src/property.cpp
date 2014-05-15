@@ -5386,8 +5386,6 @@ void MCProperty::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 
 void MCProperty::set_variable(MCExecContext& ctxt, MCExecValue p_value)
 {
-    MCAutoValueRef t_value;
-    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeValueRef, &(&t_value));
     destvar -> give_value(ctxt, p_value);
 }
 

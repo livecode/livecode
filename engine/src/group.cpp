@@ -2996,7 +2996,7 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 					}
 					if (flags & F_3D)
 						setforeground(dc, DI_BOTTOM, True);
-					MCSegment s[5];
+					MCLineSegment s[5];
 					s[0].x1 = textrect.x;
 					s[0].x2 = s[1].x1 = s[1].x2 = trect.x + halfwidth;
 					s[0].y1 = s[0].y2 = s[1].y1 = s[4].y1 = s[4].y2= trect.y + halfwidth;

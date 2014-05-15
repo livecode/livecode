@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "stack.h"
 #include "MCBlock.h"
+#include "segment.h"
 #include "line.h"
 #include "field.h"
 #include "paragraf.h"
@@ -107,6 +108,7 @@ MCParagraph::MCParagraph()
 	parent = NULL;
 	/* UNCHECKED */ MCStringCreateMutable(0, m_text);
 	blocks = NULL;
+    segments = NULL;
 	lines = NULL;
 	focusedindex = 0;
 	opened = 0;
@@ -147,6 +149,7 @@ MCParagraph::MCParagraph(const MCParagraph &pref) : MCDLlist(pref)
 	attrs = nil;
 	copyattrs(pref);
 
+    segments = NULL;
 	lines = NULL;
 	focusedindex = 0;
 	startindex = endindex = originalindex = PARAGRAPH_MAX_LEN;
@@ -868,12 +871,21 @@ Boolean MCParagraph::clearzeros()
 // **** mutate lines
 void MCParagraph::deletelines()
 {
-	while (lines != NULL)
+	while (segments != NULL)
+    {
+        MCSegment *sptr = segments->remove(segments);
+        delete sptr;
+    }
+    
+    while (lines != NULL)
 	{
 		MCLine *lptr = lines->remove(lines);
 		delete lptr;
 	}
 	
+    segments = NULL;
+    lines = NULL;
+    
 	// MP-2013-09-02: [[ FasterField ]] Deleting the lines means layout is needed.
 	needs_layout = true;
 }
@@ -967,56 +979,34 @@ void MCParagraph::flow(void)
 	//   text.
 	defrag();
 
-	MCBlock *bptr = blocks;
-	MCLine *lptr = new MCLine(this);
-	MCLine *olptr = lines;
-
 	// MW-2012-01-25: [[ ParaStyles ]] Compute the normal and first line layout width for
 	//   wrapping purposes.
 	int32_t pwidth, twidth;
 	computelayoutwidths(pwidth, twidth);
 
-	do
-	{
-		bptr = lptr -> fitblocks(bptr, blocks, twidth);
-		if (bptr != blocks)
-		{
-			if (olptr != NULL)
-			{
-				olptr->takebreaks(lptr);
-				olptr = olptr->next();
-				if (olptr == lines)
-					olptr = NULL;
-			}
-			else
-			{
-				lptr->appendto(lines);
-				lptr = new MCLine(this);
-			}
-		}
-		
-		// MW-2008-06-12: [[ Bug 6482 ]] Make sure we only take the firstIndent into account
+    // Delete all existing lines and segments
+    deletelines();
+    
+    // Initially, add all of the blocks to the one line (this segments them)
+    MCLine *lptr = new MCLine(this);
+    lptr->appendall(blocks, true);
+    
+    // Do the line wrapping
+    do
+    {
+        // Add this line to the list of lines in this paragraph
+        lptr->appendto(lines);
+        
+        // Do block fitting on this line and get back a line containing the
+        // left-overs that would not fit into the line
+        lptr = lptr->Fit(twidth);
+        
+        // MW-2008-06-12: [[ Bug 6482 ]] Make sure we only take the firstIndent into account
 		//   on the first line of the paragraph.
 		twidth = pwidth;
-	}
-	while (bptr != blocks);
-	if (olptr != NULL)
-	{
-		olptr->takebreaks(lptr);
-		delete lptr;
-		olptr = olptr->next();
-		while (olptr != lines)
-		{
-			lptr = olptr->remove(olptr);
-			delete lptr;
-		}
-	}
-	else
-	{
-		lptr->appendto(lines);
-		lptr->makedirty();
-	}
-
+    }
+    while (lptr != NULL);
+    
 	state &= ~PS_LINES_NOT_SYNCHED;
 }
 
@@ -1026,15 +1016,10 @@ void MCParagraph::noflow(void)
 	// MW-2008-04-01: [[ Bug ]] Calling clearzeros meant styling of empty 
 	// selections didn't work.
 	defrag();
-	if (lines == NULL)
-		lines = new MCLine(this);
-	else
-		while (lines->next() != lines)
-		{
-			MCLine *lptr = lines->remove(lines);
-			delete lptr;
-		}
-	lines->appendall(blocks);
+	deletelines();
+    lines = new MCLine(this);
+	lines->appendall(blocks, false);
+    lines->NoFlowLayout();
 
 	// MW-2012-02-10: [[ FixedTable ]] If there is a non-zero table width then
 	//   use that as the line width.

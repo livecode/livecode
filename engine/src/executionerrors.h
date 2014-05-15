@@ -2567,24 +2567,31 @@ enum Exec_errors
 	EE_PROPERTY_BADPIXELSCALE,
 	
 	// IM-2014-01-07: [[ StackScale ]]
-	// {EE-0802} scaleFactor: not a valid scale value
+	// {EE-0832} scaleFactor: not a valid scale value
 	EE_STACK_BADSCALEFACTOR,
 
 	// IM-2014-01-30: [[ HiDPI ]]
-	// {EE-0803} pixelScale: the pixelScale property cannot be set on this platform
+	// {EE-0833} pixelScale: the pixelScale property cannot be set on this platform
 	EE_PROPERTY_PIXELSCALENOTSUPPORTED,
 
 	// IM-2014-01-30: [[ HiDPI ]]
-	// {EE-0804} usePixelScaling: the usePixelScaling property cannot be set on this platform
+	// {EE-0834} usePixelScaling: the usePixelScaling property cannot be set on this platform
 	EE_PROPERTY_USEPIXELSCALENOTSUPPORTED,
     
 	// MM-2014-02-12: [[ SecureSocket ]]
-	// {EE-0805} secure: error in socket expression
+	// {EE-0835} secure: error in socket expression
 	EE_SECURE_BADNAME,
     
     // PM-2014-04-15: [[Bug 12105]]
-    // {EE-0806} paramCount: could not find handler
+    // {EE-0836} paramCount: could not find handler
     EE_PARAMCOUNT_NOHANDLER,
+
+    // SN-2014-05-06: [[ Bug 12360 ]]
+    // {EE-0837} open: bad text encoding
+    EE_OPEN_BADENCODING,
+    
+    // {EE-0838} open: unsupported encoding
+    EE_OPEN_UNSUPPORTED_ENCODING,
 };
 
 extern const char *MCexecutionerrors;
