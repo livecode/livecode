@@ -723,6 +723,10 @@ public:
     void SetTextDirection(MCExecContext&, intenum_t);
     void GetTextDirection(MCExecContext&, intenum_t&);
     
+    void SetTextAlign(MCExecContext&, intenum_t*);
+    void GetTextAlign(MCExecContext&, intenum_t*&);
+    void GetEffectiveTextAlign(MCExecContext& ctxt, intenum_t& r_align);
+    
     void GetHilitedLines(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_lines);
     void SetHilitedLines(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_lines);
     void GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterfaceFlaggedRanges& r_ranges);

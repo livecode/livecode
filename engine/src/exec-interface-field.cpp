@@ -1031,6 +1031,29 @@ void MCField::GetTextDirection(MCExecContext& ctxt, intenum_t &r_direction)
     r_direction = intenum_t(text_direction);
 }
 
+void MCField::GetTextAlign(MCExecContext& ctxt, intenum_t*& r_align)
+{
+	intenum_t align;
+	align = (intenum_t)(flags & F_ALIGNMENT);
+	*r_align = align;
+}
+
+void MCField::SetTextAlign(MCExecContext& ctxt, intenum_t* align)
+{
+	flags &= ~F_ALIGNMENT;
+	if (align == nil)
+		flags |= F_ALIGN_LEFT;
+	else
+		flags |= *align;
+    
+	Redraw(true);
+}
+
+void MCField::GetEffectiveTextAlign(MCExecContext& ctxt, intenum_t& r_align)
+{
+	r_align = (flags & F_ALIGNMENT);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////
 
 void MCField::GetHilitedLines(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_lines)
