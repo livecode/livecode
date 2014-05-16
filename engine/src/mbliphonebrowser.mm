@@ -89,7 +89,7 @@ public:
     void SetUrl(MCExecContext& ctxt, MCStringRef p_url);
     void SetAutoFit(MCExecContext& ctxt, bool p_value);
     void SetDelayRequests(MCExecContext& ctxt, bool p_value);
-    void SetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType p_type);
+    void SetDataDetectorTypes(MCExecContext& ctxt, intset_t p_type);
     void SetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool p_value);
     void SetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool p_value);
     void SetCanBounce(MCExecContext& ctxt, bool p_value);
@@ -98,7 +98,7 @@ public:
     void GetUrl(MCExecContext& ctxt, MCStringRef& r_url);
     void GetAutoFit(MCExecContext& ctxt, bool& r_value);
     void GetDelayRequests(MCExecContext& ctxt, bool& r_value);
-    void GetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType& r_type);
+    void GetDataDetectorTypes(MCExecContext& ctxt, intset_t& r_type);
     void GetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool& r_value);
     void GetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool& r_value);
     void GetCanBounce(MCExecContext& ctxt, bool& r_value);
@@ -221,7 +221,7 @@ void MCiOSBrowserControl::SetDelayRequests(MCExecContext& ctxt, bool p_value)
     m_delay_requests = p_value;
 }
 
-void MCiOSBrowserControl::SetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType p_type)
+void MCiOSBrowserControl::SetDataDetectorTypes(MCExecContext& ctxt, intset_t p_type)
 {
     UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
@@ -321,7 +321,7 @@ void MCiOSBrowserControl::GetDelayRequests(MCExecContext& ctxt, bool& r_value)
     r_value = m_delay_requests;
 }
 
-void MCiOSBrowserControl::GetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType& r_type)
+void MCiOSBrowserControl::GetDataDetectorTypes(MCExecContext& ctxt, intset_t& r_type)
 {
     UIWebView *t_view;
 	t_view = (UIWebView *)GetView();

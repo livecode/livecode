@@ -1185,6 +1185,8 @@ typedef struct MCFont *MCFontRef;
 
 typedef struct MCSyntaxFactory *MCSyntaxFactoryRef;
 
+struct MCDisplay;
+
 //////////////////////////////////////////////////////////////////////
 
 // Chunks, containers and ordinals (and dest for Go command)
@@ -1236,7 +1238,8 @@ enum Chunk_term {
     // pseudo-objects
     CT_SOCKET,
     CT_FIRST_PSEUDOOBJECT = CT_SOCKET,
-    CT_LAST_PSEUDOOBJECT = CT_SOCKET,
+    CT_DISPLAY,
+    CT_LAST_PSEUDOOBJECT = CT_DISPLAY,
     
     CT_STACK,
     CT_AUDIO_CLIP,
@@ -1334,7 +1337,7 @@ struct MCObjectChunkIndexPtr
 enum MCPseudoObjectType
 {
     kMCPseudoObjectTypeSocket,
-    kMCPseudoObjectTypeScreen
+    kMCPseudoObjectTypeDisplay
 };
 
 struct MCPseudoObjectPtr
@@ -1343,7 +1346,7 @@ struct MCPseudoObjectPtr
     union
     {
         MCSocket *socket;
-        MCUIDC *screen;
+        const MCDisplay *display;
     };
 };
 

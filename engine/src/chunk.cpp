@@ -413,6 +413,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
                     
                     // pseudo-object parsing
                     case CT_SOCKET:
+                    case CT_DISPLAY:
                         pseudoobject = curref;
                         break;
 					case CT_STACK:
@@ -4162,6 +4163,19 @@ static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_tab
 	return nil;
 }
 
+static const MCObjectPropertyTable *get_object_property_table(MCPseudoObjectPtr t_ptr)
+{
+    switch (t_ptr . type)
+    {
+        case kMCPseudoObjectTypeSocket:
+            return t_ptr . socket -> getpropertytable();
+        case kMCPseudoObjectTypeDisplay:
+            return MCDisplayGetPropertyTable();
+        default:
+            return nil;
+    }
+}
+
 bool MCChunk::setpseudoprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value)
 {
     MCPseudoObjectPtr t_ptr;
@@ -4176,7 +4190,12 @@ bool MCChunk::getpseudoprop(MCExecContext& ctxt, Properties which, MCNameRef ind
         return false;
     
     MCPropertyInfo *t_info;
-    t_info = lookup_object_property(t_ptr . socket -> getpropertytable(), which, false, false, kMCPropertyInfoChunkTypeNone);
+    const MCObjectPropertyTable *t_table;
+    t_table = get_object_property_table(t_ptr);
+    if (t_table == nil)
+        return false;
+    
+    t_info = lookup_object_property(t_table, which, false, false, kMCPropertyInfoChunkTypeNone);
     
     if (t_info == nil)
         return false;
@@ -4482,8 +4501,28 @@ bool MCChunk::evalpseudoobject(MCExecContext &ctxt, MCPseudoObjectPtr &t_obj)
                 return false;
             
             t_obj . socket = MCsockets[t_index];
+            t_obj . type = kMCPseudoObjectTypeSocket;
             break;
             
+        }
+        case CT_DISPLAY:
+        {
+            if (pseudoobject -> etype != CT_EXPRESSION)
+                return false;
+            
+            uindex_t t_display;
+            if (!ctxt . EvalExprAsUInt(pseudoobject -> startpos, EE_CHUNK_CANTFINDOBJECT, t_display))
+                return false;
+            
+            const MCDisplay *t_displays;
+            uindex_t t_count = MCscreen -> getdisplays(t_displays, /*p_effective*/ false);
+            
+            if (t_display > t_count)
+                return false;
+            
+            t_obj . display = &t_displays[t_display - 1];
+            t_obj . type = kMCPseudoObjectTypeDisplay;
+            break;
         }
         default:
             return false;

@@ -805,6 +805,7 @@ LT factor_table[] =
         {"disabled", TT_PROPERTY, P_DISABLED},
         {"disabledicon", TT_PROPERTY, P_DISABLED_ICON},
         {"diskspace", TT_FUNCTION, F_DISK_SPACE},
+        {"display", TT_CHUNK, CT_DISPLAY},
         {"div", TT_BINOP, O_DIV},
         {"dnsservers", TT_FUNCTION, F_DNS_SERVERS},
 		{"document", TT_CHUNK, CT_DOCUMENT},
