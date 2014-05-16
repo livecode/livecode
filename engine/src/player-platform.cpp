@@ -79,6 +79,7 @@ enum
     
     kMCPlayerControllerPartVolume,
     kMCPlayerControllerPartVolumeBar,
+    kMCPlayerControllerPartVolumeWell,
     kMCPlayerControllerPartVolumeSelector,
     kMCPlayerControllerPartPlay,
     kMCPlayerControllerPartScrubBack,
@@ -1762,6 +1763,7 @@ void MCPlayer::drawnicecontroller(MCDC *dc)
     if (getflag(F_SHOW_VOLUME))
     {
         drawControllerVolumeBarButton(dc);
+        drawControllerVolumeWellButton(dc);
         drawControllerVolumeAreaButton(dc);
         drawControllerVolumeSelectorButton(dc);
     }
@@ -2169,6 +2171,28 @@ void MCPlayer::drawControllerPlayedAreaButton(MCDC *dc)
     
 }
 
+void MCPlayer::drawControllerVolumeWellButton(MCDC *dc)
+{
+    MCRectangle t_volume_well;
+    t_volume_well = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeWell);
+    
+    dc -> setforeground(dc -> getwhite());
+    dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
+    MCGContextRef t_gcontext = nil;
+    
+    dc -> lockgcontext(t_gcontext);
+    
+    MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_volume_well);
+    
+    MCGContextAddRoundedRectangle(t_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
+    
+    MCGContextFill(t_gcontext);
+    dc -> lockgcontext(t_gcontext);
+    
+    dc -> unlockgcontext(t_gcontext);
+    
+}
+
 int MCPlayer::hittestcontroller(int x, int y)
 {
     MCRectangle t_rect;
@@ -2200,6 +2224,9 @@ int MCPlayer::hittestcontroller(int x, int y)
     
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolumeSelector), x, y))
         return kMCPlayerControllerPartVolumeSelector;
+    
+    else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolumeWell), x, y))
+        return kMCPlayerControllerPartVolumeWell;
     
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolumeBar), x, y))
         return kMCPlayerControllerPartVolumeBar;
@@ -2318,11 +2345,15 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
 
         case kMCPlayerControllerPartVolumeSelector:
         {
+            MCRectangle t_volume_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeWell);
             MCRectangle t_volume_bar_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar);
             
-            int32_t t_actual_height = t_volume_bar_rect . height - CONTROLLER_HEIGHT / 2;
+            // The width and height of the volumeselector are CONTROLLER_HEIGHT / 2
+            int32_t t_actual_height = t_volume_well_rect . height - CONTROLLER_HEIGHT / 2;
+            
+            int32_t t_x_offset = t_volume_well_rect . y - t_volume_bar_rect . y;
             //TOCHECK
-            return MCRectangleMake(p_rect . x + CONTROLLER_HEIGHT / 4 , p_rect . y - (t_actual_height ) * loudness / 100 - CONTROLLER_HEIGHT / 2, CONTROLLER_HEIGHT / 2, CONTROLLER_HEIGHT / 2 );
+            return MCRectangleMake(p_rect . x + CONTROLLER_HEIGHT / 4 , t_volume_well_rect . y + t_volume_well_rect . height - t_actual_height * loudness / 100 - CONTROLLER_HEIGHT / 2, CONTROLLER_HEIGHT / 2, CONTROLLER_HEIGHT / 2 );
         }
             break;
         case kMCPlayerControllerPartSelectedArea:
@@ -2349,14 +2380,15 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
         
         case kMCPlayerControllerPartVolumeArea:
         {
-            MCRectangle t_volume_bar_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar);
+            MCRectangle t_volume_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeWell);
             MCRectangle t_volume_selector_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeSelector);
-            int32_t t_bar_height = t_volume_bar_rect . height - t_volume_selector_rect . height;
-            int32_t t_bar_width = t_volume_bar_rect . width;
+            int32_t t_bar_height = t_volume_well_rect . height ;//- t_volume_selector_rect . height;
+            int32_t t_bar_width = t_volume_well_rect . width;
             int32_t t_width = CONTROLLER_HEIGHT / 4;
             
             int32_t t_x_offset = (t_bar_width - t_width) / 2;
-            return MCRectangleMake(p_rect . x + t_x_offset , p_rect . y - (t_bar_height) * loudness / 100 , t_width, t_bar_height * loudness / 100 );
+            //return MCRectangleMake(t_volume_selector_rect. x , t_volume_selector_rect . y , t_width, t_bar_height * loudness / 100 );
+            return MCRectangleMake(t_volume_well_rect. x , t_volume_selector_rect . y , t_width, t_volume_well_rect . y + t_volume_well_rect . height - t_volume_selector_rect . y );
         }
             break;
             
@@ -2400,6 +2432,16 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, t_current_time_left - t_selection_start_left + t_thumb_rect . width / 2, t_well_rect . height);
         }
             break;
+        case kMCPlayerControllerPartVolumeWell:
+        {
+            MCRectangle t_volume_bar_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar);
+            int32_t t_width = CONTROLLER_HEIGHT / 4;
+            
+            int32_t t_x_offset = (t_volume_bar_rect . width - t_width) / 2;
+            
+            return MCRectangleMake(t_volume_bar_rect . x + t_x_offset, t_volume_bar_rect . y + t_x_offset, t_width, t_volume_bar_rect . height - 2 * t_x_offset);
+        }
+            break;
         default:
             break;
     }
@@ -2422,7 +2464,7 @@ void MCPlayer::handle_mdown(int p_which)
     int t_part;
     t_part = hittestcontroller(mx, my);
     
-    if (getflag(F_SHOW_VOLUME) && t_part != kMCPlayerControllerPartVolumeSelector && t_part != kMCPlayerControllerPartVolumeBar && t_part != kMCPlayerControllerPartVolume)
+    if (getflag(F_SHOW_VOLUME) && t_part != kMCPlayerControllerPartVolumeSelector && t_part != kMCPlayerControllerPartVolumeBar && t_part != kMCPlayerControllerPartVolume && t_part != kMCPlayerControllerPartVolumeWell)
     {
         setflag(False, F_SHOW_VOLUME);
         layer_redrawall();
@@ -2453,18 +2495,19 @@ void MCPlayer::handle_mdown(int p_which)
             m_grabbed_part = t_part;
         }
             break;
-            
+         
+        case kMCPlayerControllerPartVolumeWell:
         case kMCPlayerControllerPartVolumeBar:
         {
             if (!getflag(F_SHOW_VOLUME))
                 return;
             MCRectangle t_part_volume_selector_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeSelector);
+            MCRectangle t_volume_well;
+            t_volume_well = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeWell);
             int32_t t_new_volume, t_height;
             
-            t_height = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar) . height - t_part_volume_selector_rect . height;
-            
-            
-            t_new_volume = (getcontrollerrect() . y - my) * 100 / (t_height);
+            t_height = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeWell) . height;
+            t_new_volume = (t_volume_well . y + t_volume_well . height - my) * 100 / (t_height);
             
             if (t_new_volume < 0)
                 t_new_volume = 0;
@@ -2540,13 +2583,19 @@ void MCPlayer::handle_mfocus(int x, int y)
         {
             case kMCPlayerControllerPartVolumeSelector:
             {
-    
-                int32_t t_new_volume, t_height;
+                MCRectangle t_part_volume_selector_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeSelector);
+                MCRectangle t_volume_well, t_volume_bar;
+                t_volume_well = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeWell);
+                t_volume_bar = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar);
                 
-                t_height = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar) . height - getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeSelector) . height;
+                int32_t t_new_volume, t_height, t_offset;
+                t_offset = t_volume_well . y - t_volume_bar . y;
+                
+                t_height = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeWell) . height; // - getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeSelector) . height;
                 
                 
-                t_new_volume = (getcontrollerrect() . y  - y ) * 100 / (t_height);
+                t_new_volume = (getcontrollerrect() . y - t_offset - y ) * 100 / (t_height);
+                //t_new_volume = (t_volume_well . y + t_volume_well . height  - y ) * 100 / (t_height);
                 
                 if (t_new_volume < 0)
                     t_new_volume = 0;
@@ -2556,9 +2605,10 @@ void MCPlayer::handle_mfocus(int x, int y)
                 
                 setloudness();
                 
-                layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar));
-                layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeSelector));
-                layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolume));
+                layer_redrawall();
+                //layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar));
+                //layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeSelector));
+                //layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolume));
             }
                 break;
                 

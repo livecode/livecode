@@ -210,7 +210,8 @@ public:
     void drawControllerSelectedAreaButton(MCDC *dc);
     void drawControllerVolumeAreaButton(MCDC *dc);
     void drawControllerPlayedAreaButton(MCDC *dc);
-
+    void drawControllerVolumeWellButton(MCDC *dc);
+    
     void drawcontrollerbutton(MCDC *dc, const MCRectangle& rect);
     void redrawcontroller(void);
     
