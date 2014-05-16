@@ -68,7 +68,7 @@ static const char *ppmediastrings[] =
 	"flash"
 };
 
-#define CONTROLLER_HEIGHT 40
+#define CONTROLLER_HEIGHT 50
 #define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 4
 #define LIGHTGRAY 1
 #define MAGENDA 2
@@ -1793,17 +1793,16 @@ void MCPlayer::drawControllerVolumeButton(MCDC *dc)
     t_rect = getcontrollerrect();
     MCRectangle t_volume_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolume);
     
-    /*
+    
     if (getflag(F_SHOW_VOLUME))
     {
-        dc -> setforeground(dc -> getwhite());
+        dc -> setforeground(controllercolors[MAGENDA]);
         dc -> fillrect(t_volume_rect, true);
-        layer_redrawrect(t_volume_rect);
     }
-    */
+    
     
     dc -> setforeground(controllercolors[LIGHTGRAY]);
-    dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
+    dc -> setlineatts(2, LineSolid, CapButt, JoinMiter);
     MCGContextRef t_gcontext = nil;
     
     
@@ -1813,8 +1812,8 @@ void MCPlayer::drawControllerVolumeButton(MCDC *dc)
     MCGContextMoveTo(t_gcontext, MCGPointMake(0.2 , 0.4));
     MCGContextLineTo(t_gcontext, MCGPointMake(0.2 , 0.6));
     MCGContextLineTo(t_gcontext, MCGPointMake(0.4 , 0.6));
-    MCGContextLineTo(t_gcontext, MCGPointMake(0.6 , 0.8));
-    MCGContextLineTo(t_gcontext, MCGPointMake(0.6 , 0.2));
+    MCGContextLineTo(t_gcontext, MCGPointMake(0.5 , 0.7));
+    MCGContextLineTo(t_gcontext, MCGPointMake(0.5 , 0.3));
     MCGContextLineTo(t_gcontext, MCGPointMake(0.4 , 0.4));
     MCGContextCloseSubpath(t_gcontext);
     
@@ -1835,11 +1834,10 @@ void MCPlayer::drawControllerVolumeButton(MCDC *dc)
         MCGContextAddArc(t_gcontext, MCGPointMake(0.72, 0.5), MCGSizeMake(0.1, 0.4), 0.0, -60, 60);
     }
     
-
     MCGContextTranslateCTM(t_gcontext, t_volume_rect . x, t_volume_rect . y);
     MCGContextScaleCTM(t_gcontext, t_volume_rect . width, t_volume_rect . height);
     MCGContextFill(t_gcontext);
-    
+   
     dc -> unlockgcontext(t_gcontext);
 }
 
@@ -1877,7 +1875,8 @@ void MCPlayer::drawControllerVolumeSelectorButton(MCDC *dc)
     
     dc -> lockgcontext(t_gcontext);
     
-    MCGContextAddEllipse(t_gcontext, MCGPointMake(0.5, 0.5), MCGSizeMake(0.9, 0.9), 1.0);
+    //MCGContextAddEllipse(t_gcontext, MCGPointMake(0.5, 0.5), MCGSizeMake(0.9, 0.9), 1.0);
+    MCGContextAddArc(t_gcontext, MCGPointMake(0.5, 0.5), MCGSizeMake(0.4, 0.4), 0, 0, 360);
     
     MCGContextTranslateCTM(t_gcontext, t_volume_selector_rect . x, t_volume_selector_rect . y);
     MCGContextScaleCTM(t_gcontext, t_volume_selector_rect . width, t_volume_selector_rect . height);
@@ -1904,9 +1903,9 @@ void MCPlayer::drawControllerPlayPauseButton(MCDC *dc)
     if (ispaused())
     {
         MCGContextBeginPath(t_gcontext);
-        MCGContextMoveTo(t_gcontext, MCGPointMake(0.2 , 0.2));
-        MCGContextLineTo(t_gcontext, MCGPointMake(0.2 , 0.8));
-        MCGContextLineTo(t_gcontext, MCGPointMake(0.8 , 0.5));
+        MCGContextMoveTo(t_gcontext, MCGPointMake(0.3 , 0.3));
+        MCGContextLineTo(t_gcontext, MCGPointMake(0.3 , 0.7));
+        MCGContextLineTo(t_gcontext, MCGPointMake(0.7 , 0.5));
         MCGContextCloseSubpath(t_gcontext);
     }
     else
@@ -1975,11 +1974,13 @@ void MCPlayer::drawControllerThumbButton(MCDC *dc)
     
     dc -> lockgcontext(t_gcontext);
     
-    MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_thumb_rect);
-    MCGContextAddRoundedRectangle(t_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
+    //MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_thumb_rect);
+    //MCGContextAddRoundedRectangle(t_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
     
-    //MCGContextTranslateCTM(t_gcontext, t_thumb_rect . x, t_thumb_rect . y);
-    //MCGContextScaleCTM(t_gcontext, t_thumb_rect . width, t_thumb_rect . height);
+    MCGContextAddArc(t_gcontext, MCGPointMake(0.5, 0.5), MCGSizeMake(0.5, 0.5), 0.0, 0, 360);
+    
+    MCGContextTranslateCTM(t_gcontext, t_thumb_rect . x, t_thumb_rect . y);
+    MCGContextScaleCTM(t_gcontext, t_thumb_rect . width, t_thumb_rect . height);
     MCGContextFill(t_gcontext);
         
     dc -> unlockgcontext(t_gcontext);
@@ -1996,7 +1997,7 @@ void MCPlayer::drawControllerSelectionStartButton(MCDC *dc)
     MCGContextRef t_gcontext = nil;
     
     dc -> lockgcontext(t_gcontext);
-    
+ /*
     MCGRectangle t_grect1, t_grect2, t_grect3;
     t_grect1 = MCGRectangleMake(0.0, 0.0, 1.0, 0.25);
     t_grect2 = MCGRectangleMake(0.0, 0.25, 0.5, 0.5);
@@ -2007,7 +2008,9 @@ void MCPlayer::drawControllerSelectionStartButton(MCDC *dc)
     
     MCGContextTranslateCTM(t_gcontext, t_selection_start_rect . x, t_selection_start_rect . y);
     MCGContextScaleCTM(t_gcontext, t_selection_start_rect . width, t_selection_start_rect . height);
-    
+ */
+    MCGRectangle t_grect= MCRectangleToMCGRectangle(t_selection_start_rect);
+    MCGContextAddRoundedRectangle(t_gcontext, t_grect, MCGSizeMake(10, 10));
     MCGContextFill(t_gcontext);
     
     dc -> unlockgcontext(t_gcontext);
@@ -2024,7 +2027,7 @@ void MCPlayer::drawControllerSelectionFinishButton(MCDC *dc)
     MCGContextRef t_gcontext = nil;
     
     dc -> lockgcontext(t_gcontext);
-    
+/*
     MCGRectangle t_grect1, t_grect2, t_grect3;
     t_grect1 = MCGRectangleMake(0.0, 0.0, 1.0, 0.25);
     t_grect2 = MCGRectangleMake(0.5, 0.25, 0.5, 0.5);
@@ -2035,7 +2038,9 @@ void MCPlayer::drawControllerSelectionFinishButton(MCDC *dc)
     
     MCGContextTranslateCTM(t_gcontext, t_selection_finish_rect . x, t_selection_finish_rect . y);
     MCGContextScaleCTM(t_gcontext, t_selection_finish_rect . width, t_selection_finish_rect . height);
-    
+*/
+    MCGRectangle t_grect= MCRectangleToMCGRectangle(t_selection_finish_rect);
+    MCGContextAddRoundedRectangle(t_gcontext, t_grect, MCGSizeMake(30, 30));
     MCGContextFill(t_gcontext);
     
     dc -> unlockgcontext(t_gcontext);
@@ -2148,16 +2153,17 @@ void MCPlayer::drawControllerPlayedAreaButton(MCDC *dc)
     t_played_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartPlayedArea);
     
     dc -> setforeground(controllercolors[2]);
-    dc -> fillrect(t_played_area, true);
-    //dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
+    dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
     MCGContextRef t_gcontext = nil;
-    
+        
     dc -> lockgcontext(t_gcontext);
     
-    MCGContextTranslateCTM(t_gcontext, t_played_area . x, t_played_area . y);
-    MCGContextScaleCTM(t_gcontext, t_played_area . width, t_played_area . height);
+    MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_played_area);
     
-    //MCGContextFill(t_gcontext);
+    MCGContextAddRoundedRectangle(t_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
+    
+    MCGContextFill(t_gcontext);
+    dc -> lockgcontext(t_gcontext);
     
     dc -> unlockgcontext(t_gcontext);
     
@@ -2248,18 +2254,19 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             MCRectangle t_well_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
             
+            // The width of the thumb is CONTROLLER_HEIGHT / 2
             int t_active_well_width;
-            t_active_well_width = t_well_rect . width - CONTROLLER_HEIGHT;
+            t_active_well_width = t_well_rect . width - CONTROLLER_HEIGHT / 2;
             
             int t_thumb_left;
             t_thumb_left = t_active_well_width * t_current_time / t_duration;
             
-            return MCRectangleMake(t_well_rect . x + t_thumb_left, t_well_rect . y, CONTROLLER_HEIGHT, CONTROLLER_HEIGHT / 2);
+            return MCRectangleMake(t_well_rect . x + t_thumb_left, t_well_rect . y - t_well_rect . height / 2, CONTROLLER_HEIGHT / 2, 2 * t_well_rect . height);
         }
             break;
         
         case kMCPlayerControllerPartWell:
-            return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT + SELECTION_RECT_WIDTH, p_rect . y + CONTROLLER_HEIGHT / 4, p_rect . width - 4 * CONTROLLER_HEIGHT - 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT / 2);
+            return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT + SELECTION_RECT_WIDTH, p_rect . y + 2 * CONTROLLER_HEIGHT / 5, p_rect . width - 4 * CONTROLLER_HEIGHT - 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT / 5);
           
         case kMCPlayerControllerPartScrubBack:
             return MCRectangleMake(p_rect . x + p_rect . width - 2 * CONTROLLER_HEIGHT, p_rect . y, CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
@@ -2273,16 +2280,17 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_start_time);
             MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
             
-            MCRectangle t_well_rect;
+            MCRectangle t_well_rect, t_thumb_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
+            t_thumb_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartThumb);
             
             int t_active_well_width;
-            t_active_well_width = t_well_rect . width - CONTROLLER_HEIGHT;
+            t_active_well_width = t_well_rect . width - t_thumb_rect . width;
             
             int t_selection_start_left;
             t_selection_start_left = t_active_well_width * t_start_time / t_duration;
             
-            return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y - CONTROLLER_HEIGHT / 4, SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT);
+            return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y - CONTROLLER_HEIGHT / 6, SELECTION_RECT_WIDTH, t_well_rect . height + CONTROLLER_HEIGHT / 3);
         }
             
         case kMCPlayerControllerPartSelectionFinish:
@@ -2291,26 +2299,30 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_finish_time);
             MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
             
-            MCRectangle t_well_rect;
+            MCRectangle t_well_rect, t_thumb_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
+            t_thumb_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartThumb);
             
             int t_active_well_width;
-            t_active_well_width = t_well_rect . width - CONTROLLER_HEIGHT;
+            t_active_well_width = t_well_rect . width - t_thumb_rect . width;;
             
             int t_selection_finish_left;
             t_selection_finish_left = t_active_well_width * t_finish_time / t_duration;
             
-            return MCRectangleMake(t_well_rect . x + t_selection_finish_left + CONTROLLER_HEIGHT - SELECTION_RECT_WIDTH, t_well_rect . y - CONTROLLER_HEIGHT / 4, SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT);
+            return MCRectangleMake(t_well_rect . x + t_selection_finish_left + CONTROLLER_HEIGHT / 2 - SELECTION_RECT_WIDTH, t_well_rect . y - CONTROLLER_HEIGHT / 6, SELECTION_RECT_WIDTH, t_well_rect . height + CONTROLLER_HEIGHT / 3);
         }
             break;
           
         case kMCPlayerControllerPartVolumeBar:
-            return MCRectangleMake(p_rect . x , p_rect . y - 5 * CONTROLLER_HEIGHT, CONTROLLER_HEIGHT, 5 * CONTROLLER_HEIGHT);
+            return MCRectangleMake(p_rect . x , p_rect . y - 3 * CONTROLLER_HEIGHT, CONTROLLER_HEIGHT, 3 * CONTROLLER_HEIGHT);
 
         case kMCPlayerControllerPartVolumeSelector:
         {
-            int32_t t_height = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar) . height;
-            return MCRectangleMake(p_rect . x , p_rect . y - (t_height - SELECTION_RECT_WIDTH) * loudness / 100 - SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT, SELECTION_RECT_WIDTH);
+            MCRectangle t_volume_bar_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar);
+            
+            int32_t t_actual_height = t_volume_bar_rect . height - CONTROLLER_HEIGHT / 2;
+            //TOCHECK
+            return MCRectangleMake(p_rect . x + CONTROLLER_HEIGHT / 4 , p_rect . y - (t_actual_height ) * loudness / 100 - CONTROLLER_HEIGHT / 2, CONTROLLER_HEIGHT / 2, CONTROLLER_HEIGHT / 2 );
         }
             break;
         case kMCPlayerControllerPartSelectedArea:
@@ -2320,29 +2332,31 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_finish_time);
             MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
             
-            MCRectangle t_well_rect;
+            MCRectangle t_well_rect, t_thumb_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
-            
+            t_thumb_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartThumb);
+
             int t_active_well_width;
-            t_active_well_width = t_well_rect . width - CONTROLLER_HEIGHT;
+            t_active_well_width = t_well_rect . width - t_thumb_rect . width;
             
             int t_selection_start_left, t_selection_finish_left;
             t_selection_start_left = t_active_well_width * t_start_time / t_duration;
             t_selection_finish_left = t_active_well_width * t_finish_time / t_duration;
             
-            return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, t_selection_finish_left - t_selection_start_left + CONTROLLER_HEIGHT, t_well_rect . height);
+            return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, t_selection_finish_left - t_selection_start_left + t_thumb_rect . width, t_well_rect . height);
         }
             break;
         
         case kMCPlayerControllerPartVolumeArea:
         {
             MCRectangle t_volume_bar_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar);
-            int32_t t_bar_height = t_volume_bar_rect . height;
+            MCRectangle t_volume_selector_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeSelector);
+            int32_t t_bar_height = t_volume_bar_rect . height - t_volume_selector_rect . height;
             int32_t t_bar_width = t_volume_bar_rect . width;
             int32_t t_width = CONTROLLER_HEIGHT / 4;
             
             int32_t t_x_offset = (t_bar_width - t_width) / 2;
-            return MCRectangleMake(p_rect . x + t_x_offset , p_rect . y - (t_bar_height - SELECTION_RECT_WIDTH) * loudness / 100 - SELECTION_RECT_WIDTH, t_width, t_bar_height * loudness /100);
+            return MCRectangleMake(p_rect . x + t_x_offset , p_rect . y - (t_bar_height) * loudness / 100 , t_width, t_bar_height * loudness / 100 );
         }
             break;
             
@@ -2372,17 +2386,18 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             if (t_current_time < t_start_time)
                 t_current_time = t_start_time;
             
-            MCRectangle t_well_rect;
+            MCRectangle t_well_rect, t_thumb_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
+            t_thumb_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartThumb);
             
             int t_active_well_width;
-            t_active_well_width = t_well_rect . width - CONTROLLER_HEIGHT;
+            t_active_well_width = t_well_rect . width - t_thumb_rect . width;
             
             int t_selection_start_left, t_current_time_left;
             t_selection_start_left = t_active_well_width * t_start_time / t_duration;
             t_current_time_left = t_active_well_width * t_current_time / t_duration;
             
-            return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, t_current_time_left - t_selection_start_left, t_well_rect . height);
+            return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, t_current_time_left - t_selection_start_left + t_thumb_rect . width / 2, t_well_rect . height);
         }
             break;
         default:
@@ -2429,6 +2444,7 @@ void MCPlayer::handle_mdown(int p_which)
             else
                 setflag(False, F_SHOW_VOLUME);
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar));
+            layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolume));
         }
             break;
             
@@ -2440,13 +2456,15 @@ void MCPlayer::handle_mdown(int p_which)
             
         case kMCPlayerControllerPartVolumeBar:
         {
+            if (!getflag(F_SHOW_VOLUME))
+                return;
             MCRectangle t_part_volume_selector_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeSelector);
             int32_t t_new_volume, t_height;
             
-            t_height = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar) . height;
+            t_height = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar) . height - t_part_volume_selector_rect . height;
             
             
-            t_new_volume = (getcontrollerrect() . y - my - SELECTION_RECT_WIDTH) * 100 / (t_height - SELECTION_RECT_WIDTH);
+            t_new_volume = (getcontrollerrect() . y - my) * 100 / (t_height);
             
             if (t_new_volume < 0)
                 t_new_volume = 0;
@@ -2525,10 +2543,10 @@ void MCPlayer::handle_mfocus(int x, int y)
     
                 int32_t t_new_volume, t_height;
                 
-                t_height = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar) . height;
+                t_height = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar) . height - getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeSelector) . height;
                 
                 
-                t_new_volume = (getcontrollerrect() . y - y - SELECTION_RECT_WIDTH) * 100 / (t_height - SELECTION_RECT_WIDTH);
+                t_new_volume = (getcontrollerrect() . y  - y ) * 100 / (t_height);
                 
                 if (t_new_volume < 0)
                     t_new_volume = 0;
@@ -2548,10 +2566,13 @@ void MCPlayer::handle_mfocus(int x, int y)
             {
                 MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
                 
-                uint32_t t_new_time, t_duration;
+                int32_t t_new_time, t_duration;
                 MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
                 
                 t_new_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+                
+                if (t_new_time < 0)
+                    t_new_time = 0;
                 setcurtime(t_new_time);
                 
                 layer_redrawrect(getcontrollerrect());
@@ -2579,8 +2600,6 @@ void MCPlayer::handle_mfocus(int x, int y)
                 
                 uint32_t t_new_finish_time, t_duration;
                 MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
-                uint32_t t_thumb_width;
-                t_thumb_width = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb) . width;
                 
                 t_new_finish_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
                 setendtime(t_new_finish_time);
