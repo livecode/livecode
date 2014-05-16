@@ -182,30 +182,40 @@ Parse_stat MCFunction::parsetarget(MCScriptPoint &sp, Boolean the,
 
 ////
 
-/*
- encoded_array_t:
-	uint8_t type; // always 5
-	array_t array; // the array value.
- 
- array_t:
-	uint32_t length; // the number of key/values in the array
-	array_entry_t[length] keys; // the sequence of key/values in the array
-	uint8_t terminator; // always 0
- 
- array_entry_t:
-	uint8_t type; // the type of the content of the key
-	uint32_t byte_size; // the size of the key/value in bytes, not including the type byte.
-	cstring_t key; // the key for the entry
-	if type == 1 then
-		// undefined value
-	else if type == 2 then
-		uint32_t length; // the number of bytes in the string
-		uint8_t[length] string; // the bytes comprising the string
-	else if type == 3 then
-		float64_t number; // the numeric value as a 64-bit IEEE double
-	else if type == 5 then
-		array_t array; // the array value
-*/
+MCArrayEncode::~MCArrayEncode()
+{
+	delete source;
+	delete version;
+}
+
+Parse_stat MCArrayEncode::parse(MCScriptPoint &sp, Boolean the)
+{
+	if (get1or2params(sp, &source, &version, the) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_BASECONVERT_BADPARAM, sp);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+void MCArrayEncode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{    
+    MCAutoArrayRef t_array;
+    if (!ctxt . EvalExprAsArrayRef(source, EE_ARRAYENCODE_BADSOURCE, &t_array))
+        return;
+    
+    // AL-2014-05-15: [[ Bug 12203 ]] Add version parameter to arrayEncode, to allow
+    //  version 7.0 variant to preserve unicode.
+    MCAutoStringRef t_version;
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(version, EE_ARRAYENCODE_BADSOURCE, &t_version))
+        return;
+    
+	MCArraysEvalArrayEncode(ctxt, *t_array, *t_version, r_value . dataref_value);
+    
+    if (!ctxt . HasError())
+        r_value . type = kMCExecValueTypeDataRef;
+}
 
 #ifdef /* MCBase64Decode */ LEGACY_EXEC
     if (source->eval(ep) != ES_NORMAL)
@@ -226,6 +236,23 @@ Parse_stat MCFunction::parsetarget(MCScriptPoint &sp, Boolean the,
 	MCU_base64encode(ep);
 	return ES_NORMAL;
 #endif /* MCBase64Encode */
+
+void MCArrayEncode::compile(MCSyntaxFactoryRef ctxt)
+{
+    MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+    
+    source -> compile(ctxt);
+    
+    if (version)
+        version -> compile(ctxt);
+    else
+        MCSyntaxFactoryEvalConstantNil(ctxt);
+        
+	MCSyntaxFactoryEvalMethod(ctxt, kMCArraysEvalArrayEncodeMethodInfo);
+    
+	MCSyntaxFactoryEndExpression(ctxt);
+        
+}
 
 MCBaseConvert::~MCBaseConvert()
 {
@@ -365,9 +392,6 @@ void MCBaseConvert::compile(MCSyntaxFactoryRef ctxt)
 {
 	compile_with_args(ctxt,kMCMathEvalBaseConvertMethodInfo, source, sourcebase, destbase);
 }
-
-
-
 
 MCBinaryDecode::~MCBinaryDecode()
 {

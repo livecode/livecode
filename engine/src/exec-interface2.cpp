@@ -546,6 +546,61 @@ static MCExecCustomTypeInfo _kMCInterfaceBackdropTypeInfo =
 
 //////////
 
+void MCInterfaceStackFileVersionParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceStackFileVersion& r_version)
+{
+	uint4 major = 0, minor = 0, revision = 0, version = 0;
+	uint4 count;
+	// MW-2006-03-24: This should be snscanf - except it doesn't exist on BSD!!
+	char *t_version;
+	/* UNCHECKED */ MCStringConvertToCString(p_input, t_version);
+    count = sscanf(t_version, "%d.%d.%d", &major, &minor, &revision);
+	delete t_version;
+	
+	version = major * 1000 + minor * 100 + revision * 10;
+	
+	// MW-2012-03-04: [[ StackFile5500 ]] Allow versions up to 5500 to be set.
+	// MW-2013-12-05: [[ UnicodeFileFormat ]] Allow versions up to 7000 to be set.
+	if (count < 2 || version < 2400 || version > 7000)
+	{
+		ctxt . LegacyThrow(EE_PROPERTY_STACKFILEBADVERSION);
+		return;
+	}
+    
+    r_version . version = version;
+}
+
+void MCInterfaceStackFileVersionFormat(MCExecContext& ctxt, const MCInterfaceStackFileVersion& p_version, MCStringRef& r_output)
+{
+	if (p_version . version % 100 == 0)
+	{
+		if (MCStringFormat(r_output, "%d.%d", p_version . version / 1000, (p_version . version % 1000) / 100))
+			return;
+	}
+	else
+	{
+		if (MCStringFormat(r_output, "%d.%d.%d", p_version . version / 1000, (p_version . version % 1000) / 100, (p_version . version % 100) / 10))
+			return;
+	}
+    
+	ctxt . Throw();
+}
+
+void MCInterfaceStackFileVersionFree(MCExecContext& ctxt, MCInterfaceStackFileVersion& p_version)
+{
+
+}
+
+static MCExecCustomTypeInfo _kMCInterfaceStackFileVersionTypeInfo =
+{
+	"Interface.StackFileVersion",
+	sizeof(MCInterfaceStackFileVersion),
+	(void *)MCInterfaceStackFileVersionParse,
+	(void *)MCInterfaceStackFileVersionFormat,
+	(void *)MCInterfaceStackFileVersionFree,
+};
+
+//////////
+
 static MCExecEnumTypeElementInfo _kMCInterfaceLookAndFeelElementInfo[] =
 {	
 	{ "Appearance Manager", LF_AM, false },
@@ -616,6 +671,7 @@ MCExecCustomTypeInfo *kMCInterfaceNamedColorTypeInfo = &_kMCInterfaceNamedColorT
 MCExecEnumTypeInfo *kMCInterfacePaintCompressionTypeInfo = &_kMCInterfacePaintCompressionTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceProcessTypeTypeInfo = &_kMCInterfaceProcessTypeTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceSelectionModeTypeInfo = &_kMCInterfaceSelectionModeTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceStackFileVersionTypeInfo = &_kMCInterfaceStackFileVersionTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1282,43 +1338,14 @@ void MCInterfaceSetStackFileType(MCExecContext& ctxt, MCStringRef p_value)
 	MCValueAssign(MCstackfiletype, p_value);
 }
 
-
-void MCInterfaceGetStackFileVersion(MCExecContext& ctxt, MCStringRef& r_value)
+void MCInterfaceGetStackFileVersion(MCExecContext& ctxt, MCInterfaceStackFileVersion& r_value)
 {
-	if (MCstackfileversion % 100 == 0) 
-	{
-		if (MCStringFormat(r_value, "%d.%d", MCstackfileversion / 1000, (MCstackfileversion % 1000) / 100))
-			return;
-	}
-	else
-	{
-		if (MCStringFormat(r_value, "%d.%d.%d", MCstackfileversion / 1000, (MCstackfileversion % 1000) / 100, (MCstackfileversion % 100) / 10))
-			return;
-	}
-
-	ctxt . Throw();
+    r_value . version = MCstackfileversion;
 }
 
-void MCInterfaceSetStackFileVersion(MCExecContext& ctxt, MCStringRef p_value)
+void MCInterfaceSetStackFileVersion(MCExecContext& ctxt, const MCInterfaceStackFileVersion& p_version)
 {
-	uint4 major = 0, minor = 0, revision = 0, version = 0;
-	uint4 count;
-	// MW-2006-03-24: This should be snscanf - except it doesn't exist on BSD!!
-	char *t_version;
-	/* UNCHECKED */ MCStringConvertToCString(p_value, t_version);
-    count = sscanf(t_version, "%d.%d.%d", &major, &minor, &revision);
-	delete t_version;
-	
-	version = major * 1000 + minor * 100 + revision * 10;
-	
-	// MW-2012-03-04: [[ StackFile5500 ]] Allow versions up to 5500 to be set.
-	// MW-2013-12-05: [[ UnicodeFileFormat ]] Allow versions up to 7000 to be set.
-	if (count < 2 || version < 2400 || version > 7000)
-	{
-		ctxt . LegacyThrow(EE_PROPERTY_STACKFILEBADVERSION);
-		return;
-	}
-	MCstackfileversion = version;
+	MCstackfileversion = p_version . version;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

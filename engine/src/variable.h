@@ -279,7 +279,8 @@ inline uint32_t MCVariableArray::getnfilled(void) const
 #define kMCEncodedValueTypeEmpty 2
 #define kMCEncodedValueTypeString 3
 #define kMCEncodedValueTypeNumber 4
-#define kMCEncodedValueTypeArray 5
+#define kMCEncodedValueTypeLegacyArray 5
+#define kMCEncodedValueTypeArray 6
 
 #ifdef LEGACY_EXEC
 class MCVariableValue
