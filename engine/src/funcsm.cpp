@@ -108,11 +108,22 @@ bool MCParamFunction::params_to_doubles(MCExecContext& ctxt, real64_t *&r_double
 	else
 	{
         MCParameter *t_param = params;
+        bool t_success;
+        t_success = true;
 		while (t_param != NULL)
 		{
-            MCAutoValueRef t_value;
+            MCExecValue t_value;
             real64_t t_double;
-            if (!t_param->eval(ctxt, &t_value) || !ctxt . ConvertToReal(*t_value, t_double))
+            
+            t_success = t_param->eval_ctxt(ctxt, t_value);
+            
+            if (t_success)
+            {
+                MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeDouble, &t_double);
+                t_success = !ctxt . HasError();
+            }            
+            
+            if (!t_success)
 			{
                 ctxt . LegacyThrow(EE_FUNCTION_BADSOURCE);
                 return false;

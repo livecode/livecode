@@ -1242,6 +1242,7 @@ public:
         m_nftrailing = 6;
         m_cutoff = 35;
         m_stat = ES_NORMAL;
+        m_numberexpected = False;
     }
 
     ~MCExecContext()
@@ -1387,6 +1388,11 @@ public:
 	{
         return m_nfforce;
 	}
+    
+    Boolean GetNumberExpected() const
+    {
+        return m_numberexpected;
+    }
 	
 	//////////
 
@@ -1450,6 +1456,11 @@ public:
 	void SetRowDelimiter(MCStringRef p_value)
 	{
         MCValueAssign(m_rowdel, p_value);
+    }
+    
+    void SetNumberExpected(Boolean p_value)
+    {
+        m_numberexpected = p_value;
     }
 
     //////////
@@ -1734,6 +1745,10 @@ private:
     Boolean m_usesystemdate;
     Boolean m_useunicode;
     Boolean m_deletearray;
+    // SN-2014-04-08 [[ NumberExpectation ]]
+    // New property allowing to specify, when evaluating a literal number,
+    // that we expect a number over a valueref
+    Boolean m_numberexpected;
     MCStringRef m_itemdel;
     MCStringRef m_columndel;
     MCStringRef m_linedel;

@@ -72,7 +72,16 @@ void MCLiteralNumber::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         ep.setboth(MCNameGetOldString(value), nvalue);
 	return ES_NORMAL;
 #else
-    r_value . type = kMCExecValueTypeValueRef;
-    r_value . valueref_value = MCValueRetain(value);
+    // SN-2014-04-08 [[ NumberExpectation ]]
+    // Ensure we return a number when it's possible and asked for, instead of a ValueRef
+    if (ctxt . GetNumberExpected() && nvalue != BAD_NUMERIC)
+    {
+        MCExecValueTraits<double>::set(r_value, nvalue);
+    }
+    else
+    {
+        r_value . type = kMCExecValueTypeValueRef;
+        r_value . valueref_value = MCValueRetain(value);
+    }
 #endif
 }

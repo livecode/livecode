@@ -931,6 +931,8 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 #endif
     
+    bool needsContainer(void) const {return dimensions != 0;}
+    
     void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 #ifdef LEGACY_EXEC
 	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
