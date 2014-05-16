@@ -770,9 +770,12 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
     bool t_success, t_can_debug;
     t_success = false;
     
+    // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
+    Boolean t_old_expectation = m_numberexpected;
+    m_numberexpected = True;
     do
     {
-        MCExecValue t_value;
+        MCExecValue t_value;        
         p_expr -> eval_ctxt(*this, t_value);
         
         if (!MCExecTypeIsNumber(t_value . type))
@@ -794,6 +797,7 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
     }
 	while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
     
+    m_numberexpected = t_old_expectation;
 	if (t_success)
 		return true;
 	
@@ -1108,7 +1112,17 @@ bool MCExecContext::EvalExprAsUInt(MCExpression *p_expr, Exec_errors p_error, ui
 {
 	MCAssert(p_expr != nil);
 	
-	p_expr -> eval_uint(*this, r_value);
+    // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
+    MCExecValue t_value;
+    Boolean t_number_expected = m_numberexpected;
+    m_numberexpected = True;
+    
+	p_expr -> eval_ctxt(*this, t_value);
+    
+    m_numberexpected = t_number_expected;
+    
+    if (!HasError())
+        MCExecTypeConvertAndReleaseAlways(*this, t_value . type, &t_value, kMCExecValueTypeUInt, &r_value);
 	
 	if (!HasError())
 		return true;
@@ -1133,7 +1147,17 @@ bool MCExecContext::EvalExprAsInt(MCExpression *p_expr, Exec_errors p_error, int
 {
 	MCAssert(p_expr != nil);
 	
-	p_expr -> eval_int(*this, r_value);
+    // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
+    MCExecValue t_value;
+    Boolean t_number_expected = m_numberexpected;
+    m_numberexpected = True;
+	
+	p_expr -> eval_ctxt(*this, t_value);
+    
+    m_numberexpected = t_number_expected;
+    
+    if (!HasError())
+        MCExecTypeConvertAndReleaseAlways(*this, t_value . type, &t_value, kMCExecValueTypeInt, &r_value);
 	
 	if (!HasError())
 		return true;
@@ -1201,7 +1225,17 @@ bool MCExecContext::EvalExprAsDouble(MCExpression *p_expr, Exec_errors p_error, 
 {
 	MCAssert(p_expr != nil);
 	
-	p_expr -> eval_double(*this, r_value);
+    // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
+    Boolean t_number_expected = m_numberexpected;
+    MCExecValue t_value;
+    m_numberexpected = True;
+	
+	p_expr -> eval_ctxt(*this, t_value);
+    
+    m_numberexpected = t_number_expected;
+    
+    if (!HasError())
+        MCExecTypeConvertAndReleaseAlways(*this, t_value . type, &t_value, kMCExecValueTypeDouble, &r_value);
 	
 	if (!HasError())
 		return true;
