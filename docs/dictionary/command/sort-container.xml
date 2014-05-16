@@ -1,1 +1,125 @@
-<doc>	<legacy_id>1105</legacy_id>	<name>sort container</name>	<type>command</type>	<syntax>		<example>sort [{lines | items} of] <i>container</i> [<i>direction</i>] [<i>sortType</i>] [by <i>sortKey</i>]</example>	</syntax>	<synonyms>	</synonyms>	<summary><glossary tag="sort">Sorts</glossary> the <keyword tag="lines">lines</keyword> or <keyword tag="items">items</keyword> of a <glossary tag="container">container</glossary> into a new order.</summary>	<examples><example>sort field "Output"</example><example><p>put "5,4,3,2,1" into tNumbers</p><p>sort items of tNumbers ascending numeric -- 5,4,3,2,1 becomes 1,2,3,4,5</p></example><example><p>put "1,ben" into line 1 of tData</p><p>put "2,elanor" into line 2 of tData</p><p>put "3,ali" into line 3 of tData</p><p>sort lines of tData descending numeric by item 1 of each </p><p></p><p># RESULT</p><p># 3,ali</p><p># 2,elanor</p><p># 1,ben</p></example><example>sort items of myInfo by word 2 of each <i>-- sort by word 2 of the line</i></example>	</examples>	<history>		<introduced version="1.0">Added.</introduced>		<deprecated version=""></deprecated>		<removed version=""></removed>				<experimental version=""></experimental>		<nonexperimental version=""></nonexperimental>	</history>	<objects>	</objects>	<platforms>		<mac/>		<windows/>		<linux/>		<ios/>		<android/>	</platforms>	<classes>		<desktop/>		<server/>		<web/>		<mobile/>	</classes>	<security>	</security>	<classification>		<category>Text and Data Processing</category>	</classification>	<references>		<function tag="offset">offset Function</function>		<command tag="convert">convert Command</command>		<command tag="sort">sort Command</command>		<keyword tag="ascending">ascending Keyword</keyword>		<keyword tag="descending">descending Keyword</keyword>		<keyword tag="text">text Keyword</keyword>		<keyword tag="each">each Keyword</keyword>	</references>	<description>Use the <b>sort container</b> <glossary tag="command">command</glossary> to shuffle the order of <keyword tag="lines">lines</keyword> or <keyword tag="items">items</keyword> in a <glossary tag="container">container</glossary>.<p></p><p><b>Parameters:</b></p><p>The <i>container</i> is a <keyword tag="field">field</keyword>, <keyword tag="button">button</keyword>, or <glossary tag="variable">variable</glossary>, or the <keyword tag="message box">message box</keyword>.</p><p></p><p>The <i>direction</i> is either ascending or descending. If you don't specify a <i>direction</i>, the <command tag="sort">sort</command> is ascending.</p><p></p><p>The <i>sortType</i> is one of text, numeric, or dateTime. If you don't specify a <i>sortType</i>, the <command tag="sort">sort</command> is by text.</p><p></p><p>The <i>sortKey</i> is an <glossary tag="expression">expression</glossary> that <glossary tag="evaluate">evaluates</glossary> to a <function tag="value">value</function> for each <keyword tag="line">line</keyword> or <keyword tag="item">item</keyword> in the <i>container</i>. If the <i>sortKey</i> contains a <glossary tag="chunk expression">chunk expression</glossary>, the <glossary tag="keyword">keyword</glossary> <keyword tag="each">each</keyword> indicates that the <glossary tag="chunk expression">chunk expression</glossary> is <glossary tag="evaluate">evaluated</glossary> for each <keyword tag="line">line</keyword> or <keyword tag="item">item</keyword>. If you don't specify a <i>sortKey</i>, the entire <keyword tag="line">line</keyword> (or <keyword tag="item">item</keyword>) is used as the <i>sortKey</i>.</p><p></p><p><b>Comments:</b></p><p>If you don't specify lines or items, the lines of the container are sorted.</p><p></p><p>The sort international form is like sort text, except that it sorts accented characters together with their unaccented counterparts. For example, "" sorts between "e" and "f", rather than at the end of the alphabet as it would using the sort text form.</p><p></p><p>The <b>each</b> <glossary tag="keyword">keyword</glossary>, when used in the <i>sortKey</i>, specifies the entire <keyword tag="line">line</keyword> or <keyword tag="item">item</keyword>. You can use the <keyword tag="each">each</keyword> <glossary tag="keyword">keyword</glossary> in an expression, as a placeholder for the current <keyword tag="line">line</keyword> or <keyword tag="item">item</keyword>. For example, this <glossary tag="statement">statement</glossary> sorts the lines of a variable by the third <keyword tag="word">word</keyword> of each <keyword tag="line">line</keyword>:</p><p>  sort lines of myVariable by word 3 of each</p><p></p><p>You can use the <b>each</b> <glossary tag="keyword">keyword</glossary> in any <glossary tag="expression">expression</glossary>, not just <glossary tag="chunk expression">chunk expressions</glossary>.</p><p></p><p>The sort text form sorts by the ASCII value of each character. The sort numeric form sorts by number. Use this form if the <i>sortKey</i> consists of numbers. The sort dateTime form treats the <i>sortKey</i> as a date and/or time.</p><p></p><p>The <b>sort container</b> command is a stable <command tag="sort">sort</command>. This means that if the <i>sortKey</i> for two <keyword tag="items">items</keyword> or lines is the same, <glossary tag="sort">sorting</glossary> does not change their order, so you can do two successive <glossary tag="sort">sorts</glossary> to create subcategories within the major <command tag="sort">sort</command> categories.</p><p></p><p></p><tip>To create a custom sort order, use the <keyword tag="each">each</keyword> <glossary tag="keyword">keyword</glossary> to pass each <keyword tag="line">line</keyword> or <keyword tag="item">item</keyword> to a custom function. The <function tag="value">value</function> <glossary tag="return">returned</glossary> by the <control_st tag="function">function</control_st> is used as the <glossary tag="sort key">sort key</glossary> for that <keyword tag="line">line</keyword> or <keyword tag="item">item</keyword>. It is not currently possible to debug custom sort functions, and doing so could make the IDE unstable. It is recommended to use logging messages instead.</tip></description></doc>
+<doc>
+	<legacy_id>1105</legacy_id>
+	<name>sort container</name>
+	<type>command</type>
+
+	<syntax>
+		<example>sort [{lines | items} of] container [direction] [sortType] [by sortKey ]</example>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Sorts the lines or items of a container into a new order.</summary>
+
+	<examples>
+<example><p>sort field "Output"</p></example>
+<example><p>put "5,4,3,2,1" into tNumbers</p><p>sort items of tNumbers ascending numeric -- 5,4,3,2,1 becomes 1,2,3,4,5</p></example>
+<example><p>put "1,ben" into line 1 of tData</p><p>put "2,elanor" into line 2 of tData</p><p>put "3,ali" into line 3 of tData</p><p>sort lines of tData descending numeric by item 1 of each </p><p></p><p># RESULT</p><p># 3,ali</p><p># 2,elanor</p><p># 1,ben</p></example>
+<example><p>sort items of myInfo by word 2 of each -- sort by word 2 of the line</p></example>
+<example><p></p></example>
+	</examples>
+
+	<history>
+		<introduced version="1.0">Added.</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
+	</history>
+
+	<objects>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+		<ios/>
+		<android/>
+	</platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+		<web/>
+		<mobile/>
+	</classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+		<category>Text and Data Processing</category>
+		<category></category>
+	</classification>
+
+	<references>
+		<function tag="offset">offset function</function>
+		<command tag="convert">convert command</command>
+		<command tag="sort">sort command</command>
+		<keyword tag="ascending">ascending keyword</keyword>
+		<keyword tag="descending">descending keyword</keyword>
+		<keyword tag="text">text keyword</keyword>
+		<keyword tag="each">each keyword</keyword>
+	</references>
+
+	<description>
+	<overview>Use the sort container command to shuffle the order of lines or items in a container.</overview>
+
+		<parameters>
+  <parameter>
+    <name>container</name>
+    <description>Is a reference to a field, button, variable, or the message box.</description>
+  </parameter>
+  <parameter>
+    <name>direction</name>
+    <description>Is one of the following options. If you don't specify a direction, the sort is 'ascending'.</description>
+    <options title="">
+      <option>
+        <item>ascending</item>
+        <description>sorts in ascending order</description>
+      </option>
+      <option>
+        <item>descending</item>
+        <description>sorts in descending order</description>
+      </option>
+    </options>
+  </parameter>
+  <parameter>
+    <name>sortType</name>
+    <description>Is one of the following options. If you don't specify a sortType, the sortType is 'text'.</description>
+    <options title="">
+      <option>
+        <item>text</item>
+        <description>sorts using a codepoint by codepoint comparison</description>
+      </option>
+      <option>
+        <item>binary</item>
+        <description>sorts using a byte by byte comparison</description>
+      </option>
+      <option>
+        <item>international</item>
+        <description>sorts by collation according to the system locale</description>
+      </option>
+      <option>
+        <item>numeric</item>
+        <description>sorts by number. (Use this form if the sortKey consists of numbers)</description>
+      </option>
+      <option>
+        <item>datetime</item>
+        <description>treats the sortKey as a date and/or time</description>
+      </option>
+    </options>
+  </parameter>
+  <parameter>
+    <name>sortKey</name>
+    <description>is an expression that evaluates to a value for each line or item in the container. If the sortKey contains a chunk expression, the keyword each indicates that the chunk expression is evaluated for each line or item. If you don't specify a sortKey, the entire line (or item) is used as the sortKey.</description>
+  </parameter>		</parameters>
+
+	<value></value>
+	<comments><p>If you don't specify lines or items, the lines of the container are sorted.</p><p></p><p>The each keyword, when used in the sortKey, specifies the entire line or item. You can use the each keyword in an expression, as a placeholder for the current line or item. For example, this statement sorts the lines of a variable by the third word of each line:</p><p></p><p>sort lines of myVariable by word 3 of each</p><p></p><p>You can use the each keyword in any expression, not just chunk expressions.</p><p></p><p>The sort container command is a stable sort. This means that if the sortKey for two items or lines is the same, sorting does not change their order, so you can do two successive sorts to create subcategories within the major sort categories.</p><p></p><p>Tip: To create a custom sort order, use the each keyword to pass each line or item to a custom function. The value returned by the function is used as the sort key for that line or item. It is not currently possible to debug custom sort functions, and doing so could make the IDE unstable. It is recommended to use logging messages instead.</p></comments>
+	</description>
+</doc>

@@ -1163,7 +1163,13 @@ bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
 {
 	char *t_end;
 	index_t t_index;
-	t_index = strtol(MCStringGetCString(MCNameGetString(p_name)), &t_end, 10);
+    
+    // AL-2014-05-15: [[ Bug 12203 ]] Don't nativize array name when checking
+    //  for a sequential array.
+    
+    MCAutoStringRefAsCString t_cstring;
+    t_cstring . Lock(MCNameGetString(p_name));
+	t_index = strtol(*t_cstring, &t_end, 10);
 	if (*t_end == '\0')
 	{
 		r_index = t_index;
