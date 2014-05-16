@@ -207,11 +207,19 @@ public:
     virtual ~MCArrayDecode(){}
 };
 
-class MCArrayEncode: public MCUnaryFunctionCtxt<MCArrayRef, MCDataRef, MCArraysEvalArrayEncode, EE_ARRAYENCODE_BADSOURCE, PE_ARRAYENCODE_BADPARAM, kMCArraysEvalArrayEncodeMethodInfo>
+class MCArrayEncode: public MCFunction
 {
+    MCExpression *source;
+    MCExpression *version;
 public:
-    MCArrayEncode(){}
-    virtual ~MCArrayEncode(){}
+    MCArrayEncode()
+    {
+        source = version = NULL;
+    }
+    virtual ~MCArrayEncode();
+    virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
+	virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCBase64Decode : public MCUnaryFunctionCtxt<MCStringRef, MCDataRef, MCFiltersEvalBase64Decode, EE_BASE64DECODE_BADSOURCE, PE_BASE64DECODE_BADPARAM, kMCFiltersEvalBase64DecodeMethodInfo>

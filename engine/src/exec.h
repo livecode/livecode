@@ -1834,7 +1834,7 @@ void MCArraysExecUnion(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p
 void MCArraysExecIntersect(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
 void MCArraysExecUnionRecursive(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
 void MCArraysExecIntersectRecursive(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
-void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCDataRef& r_encoding);
+void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef version, MCDataRef& r_encoding);
 void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayRef& r_array);
 void MCArraysEvalMatrixMultiply(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, MCArrayRef& r_result);
 void MCArraysEvalTransposeMatrix(MCExecContext& ctxt, MCArrayRef p_matrix, MCArrayRef& r_result);
@@ -2300,6 +2300,7 @@ struct MCInterfaceNamedColor;
 struct MCInterfaceImagePaletteSettings;
 struct MCInterfaceVisualEffect;
 struct MCInterfaceVisualEffectArgument;
+struct MCInterfaceStackFileVersion;
 
 extern MCExecCustomTypeInfo *kMCInterfaceNamedColorTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfacePaintCompressionTypeInfo;
@@ -2314,6 +2315,7 @@ extern MCExecCustomTypeInfo *kMCInterfaceVisualEffectTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceVisualEffectArgumentTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceButtonIconTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo;
+extern MCExecCustomTypeInfo *kMCInterfaceStackFileVersionTypeInfo;
 
 extern MCExecMethodInfo *kMCInterfaceMakeCustomImagePaletteSettingsMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceMakeOptimalImagePaletteSettingsMethodInfo;
@@ -3133,8 +3135,8 @@ void MCInterfaceGetDragDelta(MCExecContext& ctxt, uinteger_t& r_value);
 void MCInterfaceSetDragDelta(MCExecContext& ctxt, uinteger_t p_value);
 void MCInterfaceGetStackFileType(MCExecContext& ctxt, MCStringRef& r_value);
 void MCInterfaceSetStackFileType(MCExecContext& ctxt, MCStringRef p_value);
-void MCInterfaceGetStackFileVersion(MCExecContext& ctxt, MCStringRef& r_value);
-void MCInterfaceSetStackFileVersion(MCExecContext& ctxt, MCStringRef p_value);
+void MCInterfaceGetStackFileVersion(MCExecContext& ctxt, MCInterfaceStackFileVersion& r_value);
+void MCInterfaceSetStackFileVersion(MCExecContext& ctxt, const MCInterfaceStackFileVersion& p_value);
 
 void MCInterfaceGetIconMenu(MCExecContext& ctxt, MCStringRef& r_menu);
 void MCInterfaceSetIconMenu(MCExecContext& ctxt, MCStringRef menu);
