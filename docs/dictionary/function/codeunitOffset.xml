@@ -72,7 +72,6 @@
 		<function tag="codepointOffset">codepointOffset function</function>
 		<function tag="sentenceOffset">sentenceOffset function</function>
 		<function tag="byteOffset">byteOffset function</function>
-		<function tag="segmentOffest">segmentOffest function</function>
 		<property tag="wholeMatches">wholeMatches property</property>
 		<keyword tag="codeunit">codeunit keyword</keyword>
 	</references>

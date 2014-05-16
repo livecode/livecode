@@ -70,7 +70,6 @@
 		<function tag="codepointOffset">codepointOffset function</function>
 		<function tag="codeunitOffset">codeunitOffset function</function>
 		<function tag="byteOffset">byteOffset function</function>
-		<function tag="segmentOffest">segmentOffest function</function>
 		<property tag="wholeMatches">wholeMatches property</property>
 		<keyword tag="trueword">trueword keyword</keyword>
 	</references>
