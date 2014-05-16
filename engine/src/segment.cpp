@@ -269,7 +269,7 @@ MCLine *MCSegment::Fit(int16_t p_max_width)
     {
         // A block was broken and therefore the segment possibly needs to be split
         MCSegment *t_split_segment;
-        if (t_need_break_block)
+        if (t_break_block != m_LastBlock)
         {
             // Split this segment
             t_split_segment = new MCSegment(this);
