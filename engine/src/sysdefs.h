@@ -1232,7 +1232,12 @@ enum Chunk_term {
     CT_PULLDOWN,
     CT_POPUP,
     CT_OPTION,
-
+   
+    // pseudo-objects
+    CT_SOCKET,
+    CT_FIRST_PSEUDOOBJECT = CT_SOCKET,
+    CT_LAST_PSEUDOOBJECT = CT_SOCKET,
+    
     CT_STACK,
     CT_AUDIO_CLIP,
     CT_VIDEO_CLIP,
@@ -1269,6 +1274,7 @@ enum Chunk_term {
 	CT_ELEMENT,
     CT_TYPES,
 	CT_KEY
+
 };
 
 struct MCObjectPtr
@@ -1323,6 +1329,22 @@ struct MCObjectChunkIndexPtr
 	Chunk_term chunk;
 	MCMarkedText mark;
     MCNameRef index;
+};
+
+enum MCPseudoObjectType
+{
+    kMCPseudoObjectTypeSocket,
+    kMCPseudoObjectTypeScreen
+};
+
+struct MCPseudoObjectPtr
+{
+    MCPseudoObjectType type;
+    union
+    {
+        MCSocket *socket;
+        MCUIDC *screen;
+    };
 };
 
 //////////////////////////////////////////////////////////////////////

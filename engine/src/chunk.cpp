@@ -53,6 +53,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "syntax.h"
 #include "exec.h"
 
+#include "socket.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef COLLECTING_CHUNKS
@@ -140,6 +142,7 @@ MCChunk::MCChunk(Boolean isforset)
 	function = F_UNDEFINED;
 	marked = False;
 	next = NULL;
+    pseudoobject = NULL;
 }
 
 MCChunk::~MCChunk()
@@ -178,6 +181,8 @@ MCChunk::~MCChunk()
     delete trueword;
 	delete source;
 	delete destvar;
+    
+    delete pseudoobject;
 }
 
 Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
@@ -405,6 +410,11 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 					case CT_PULLDOWN:
 					case CT_POPUP:
 					case CT_OPTION:
+                    
+                    // pseudo-object parsing
+                    case CT_SOCKET:
+                        pseudoobject = curref;
+                        break;
 					case CT_STACK:
 						if (oterm > CT_STACK)
 						{
@@ -4152,9 +4162,34 @@ static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_tab
 	return nil;
 }
 
+bool MCChunk::setpseudoprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value)
+{
+    MCPseudoObjectPtr t_ptr;
+    if (evalpseudoobject(ctxt, t_ptr) != ES_NORMAL)
+        return false;
+}
+
+bool MCChunk::getpseudoprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value)
+{
+    MCPseudoObjectPtr t_ptr;
+    if (evalpseudoobject(ctxt, t_ptr) != ES_NORMAL)
+        return false;
+    
+    MCPropertyInfo *t_info;
+    t_info = lookup_object_property(t_ptr . socket -> getpropertytable(), which, false, false, kMCPropertyInfoChunkTypeNone);
+    
+    if (t_info == nil)
+        return false;
+    
+    MCExecFetchProperty(ctxt, t_info, &t_ptr, r_value);
+}
+
 // MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
 bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value)
 {
+    if (pseudoobject != nil)
+        return getpseudoprop(ctxt, which, index, effective, r_value);
+    
     MCObjectChunkPtr t_obj_chunk;
     if (evalobjectchunk(ctxt, false, false, t_obj_chunk) != ES_NORMAL)
         return false;
@@ -4215,6 +4250,9 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
 // MW-2011-11-23: [[ Array Chunk Props ]] If index is not nil, then treat as an array chunk prop
 bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value)
 {
+    if (pseudoobject != nil)
+        return setpseudoprop(ctxt, which, index, effective, p_value);
+    
     MCObjectChunkPtr t_obj_chunk;
     if (evalobjectchunk(ctxt, false, true, t_obj_chunk) != ES_NORMAL)
         return false;
@@ -4404,6 +4442,52 @@ bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
     r_chunk . object = t_object . object;
     r_chunk . part_id = t_object . part_id;
     r_chunk . chunk = !t_function ? getlastchunktype() : CT_CHARACTER;
+
+    return true;
+}
+
+bool MCChunk::evalpseudoobject(MCExecContext &ctxt, MCPseudoObjectPtr &t_obj)
+{
+    if (pseudoobject -> etype != CT_EXPRESSION)
+        return false;
+    
+    MCNewAutoNameRef t_exp;
+    if (!ctxt . EvalExprAsNameRef(pseudoobject -> startpos, EE_CHUNK_CANTFINDOBJECT, &t_exp))
+        return false;
+    
+    switch (pseudoobject -> otype)
+    {
+        case CT_SOCKET:
+        {
+            if (pseudoobject -> etype != CT_EXPRESSION)
+                return false;
+            
+            MCNewAutoNameRef t_socket;
+            if (!ctxt . EvalExprAsNameRef(pseudoobject -> startpos, EE_CHUNK_CANTFINDOBJECT, &t_socket))
+                return false;
+
+            uindex_t t_index;
+            bool t_converted;
+            ctxt . TryToConvertToUnsignedInteger(*t_socket, t_converted, t_index);
+            
+            if (t_converted)
+            {
+                if (t_index > MCnsockets)
+                    return false;
+                t_obj . socket = MCsockets[t_index - 1];
+                break;
+            }
+            
+            if (!IO_findsocket(*t_socket, t_index))
+                return false;
+            
+            t_obj . socket = MCsockets[t_index];
+            break;
+            
+        }
+        default:
+            return false;
+    }
 
     return true;
 }

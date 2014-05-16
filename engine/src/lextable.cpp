@@ -1572,6 +1572,8 @@ LT factor_table[] =
         {"sixthpixel", TT_PROPERTY, P_BOTTOM_PIXEL},
         {"size", TT_PROPERTY, P_SIZE},
         {"slices", TT_PROPERTY, P_SLICES},
+        // Add socket pseudo object
+        {"socket", TT_CHUNK, CT_SOCKET},
         {"sockettimeoutinterval", TT_PROPERTY, P_SOCKET_TIMEOUT},
         {"sound", TT_FUNCTION, F_SOUND},
         {"soundchannel", TT_PROPERTY, P_SOUND_CHANNEL},
