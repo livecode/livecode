@@ -2286,8 +2286,10 @@ bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_aft
     if (__MCStringIsIndirect(p_needle))
         p_needle = p_needle -> string;
     
-	// Make sure the after index is in range.
-	p_after = MCMin(p_after, self -> char_count);
+	// Make sure we are not looking after the string length
+	if (p_after > self -> char_count)
+        return false;
+        
     
     bool self_native = MCStringIsNative(self);
     if (self_native)
