@@ -154,11 +154,9 @@ public class AttachmentProvider
         String t_path = uri.getPath();
         ArrayList<String> t_infos = m_infos.get(t_path);
         
-        String t_values[] = new String[projection.length];
-        
+        String t_values[] = new String[projection.length];        
         for (int i = 0; i < projection.length; ++i)
             t_values[i] = t_infos.get(projectionToInfoIndex(projection[i]));
-        
 //        Log.i("revandroid", "query for " + uri.toString());
 //        
 //        for (int i = 0; i < t_values . length; ++i)
