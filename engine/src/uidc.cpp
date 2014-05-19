@@ -873,8 +873,12 @@ void MCUIDC::DoRunloopActions(void)
 
 	while (t_action != nil)
 	{
+		// IM-2014-05-06: [[ Bug 12364 ]] Guard against runloop action deletion within callback
+		MCRunloopAction *t_next;
+		t_next = t_action->next;
+
 		t_action->callback(t_action->context);
-		t_action = t_action->next;
+		t_action = t_next;
 	}
 }
 
