@@ -53,8 +53,8 @@ class MCPlayer : public MCControl
     
     int m_grabbed_part;
     double m_initial_rate;
-    Boolean m_was_paused;
-    Boolean m_inside;
+    bool m_was_paused : 1;
+    bool m_inside : 1;
 	
 public:
 	MCPlayer();
