@@ -946,19 +946,22 @@ void MCUIDC::updatemenubar(Boolean force)
 //   message in the right place.
 void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, MCParameter *params)
 {
+    // MW-2014-05-14: [[ Bug 12294 ]] Rejigged to correct flaws.
+    
+    // If we are at capacity, then extend the message list.
 	if (nmessages == maxmessages)
 	{
 		maxmessages++;
 		MCU_realloc((char **)&messages, nmessages, maxmessages, sizeof(MCMessageList));
 	}
     
+    // Find where in the list to insert the pending message.
     int t_index;
     for(t_index = 0; t_index < nmessages; t_index++)
         if (messages[t_index] . time > time)
             break;
     
-    // MW-2014-04-29: [[ Bug 12294 ]] Moved 1 too few MCMessageList structurs causing over-release of
-    //   MCNameRefs and pending message lost (i.e. intermittantly flaky and unstable engine).
+    // Move all messages in the range [t_index, nmessages) up one.
     MCMemoryMove(&messages[t_index + 1], &messages[t_index], (nmessages - t_index) * sizeof(MCMessageList));
     
 	messages[t_index].object = optr;
@@ -973,23 +976,31 @@ void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, 
 // MW-2014-04-16: [[ Bug 11690 ]] Shift a message to a new time in the future.
 int MCUIDC::doshiftmessage(int index, real8 newtime)
 {
-    if (index == nmessages - 1)
-        return index;
+    assert(index < nmessages);
     
-    int t_index;
-    for(t_index = index + 1; t_index < nmessages; t_index++)
-        if (messages[t_index] . time > newtime)
+    // MW-2014-05-14: [[ Bug 12294 ]] Rejigged to correct flaws.
+    
+    // Find the first message after the new time.
+    uindex_t t_index;
+    for(t_index = index; t_index < nmessages - 1; t_index++)
+        if (messages[t_index + 1] . time > newtime)
             break;
     
+    if (t_index == index)
+        return index;
+    
+    // Save the current message.
     MCMessageList t_msg;
     t_msg = messages[index];
     
+    // Move all messages in the range [index + 1, t_index) down one.
     MCMemoryMove(&messages[index], &messages[index + 1], (t_index - index) * sizeof(MCMessageList));
     
+    // Move the target message to its new location.
     messages[t_index] = t_msg;
     messages[t_index] . time = newtime;
     
-    return index;
+    return t_index;
 }
 
 void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, char *p1, char *p2)
@@ -1040,9 +1051,11 @@ void MCUIDC::cancelmessageindex(uint2 i, Boolean dodelete)
 		}
 		MCNameDelete(messages[i] . message);
 	}
+    
+    // MW-2014-05-14: [[ Bug 12294 ]] Use a memmove here (more efficient as the MCMessageList struct can be moved).
+    MCMemoryMove(&messages[i], &messages[i + 1], (nmessages - (i + 1)) * sizeof(MCMessageList));
+    
 	nmessages--;
-	while (i++ < nmessages)
-		messages[i - 1] = messages[i];
 }
 
 void MCUIDC::cancelmessageid(uint4 id)
@@ -1058,11 +1071,11 @@ void MCUIDC::cancelmessageid(uint4 id)
 
 void MCUIDC::cancelmessageobject(MCObject *optr, MCNameRef mptr)
 {
-	uint2 i;
-	for (i = 0 ; i < nmessages ; i++)
-		if (messages[i].object == optr
-		        && (mptr == NULL || MCNameIsEqualTo(messages[i].message, mptr, kMCCompareCaseless)))
-			cancelmessageindex(i--, True);
+    // MW-2014-05-14: [[ Bug 12294 ]] Cancel list in reverse order to minimize movement.
+	for (uindex_t i = nmessages ; i > 0 ; i--)
+		if (messages[i - 1].object == optr
+		        && (mptr == NULL || MCNameIsEqualTo(messages[i - 1].message, mptr, kMCCompareCaseless)))
+			cancelmessageindex(i - 1, True);
 }
 
 void MCUIDC::listmessages(MCExecPoint &ep)
@@ -1100,7 +1113,7 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
         
         if (!dispatch && messages[i] . id == 0 && MCNameIsEqualTo(messages[i] . message, MCM_idle, kMCCompareCaseless))
         {
-            i = doshiftmessage(i, curtime + MCidleRate / 1000.0);
+            doshiftmessage(i, curtime + MCidleRate / 1000.0);
             continue;
         }
         
