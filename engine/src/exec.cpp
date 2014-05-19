@@ -1662,10 +1662,8 @@ static bool MCPropertyFormatPointList(MCPoint *p_list, uindex_t p_count, char_t 
         if (t_success && i != 0)
 			t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
         
-        // Special case when two points in the vertex aren't linked
-        if (p_list[i].x == MININT2 && p_list[i].y == MININT2)
-            t_success = MCStringAppendNativeChar(*t_list, p_delimiter);
-        else
+        // AL-2014-05-19: [[ Bug 12428 ]] Only add one empty line for non-linked vertices.
+        if (p_list[i].x != MININT2 && p_list[i].y != MININT2)
             t_success = MCStringAppendFormat(*t_list, "%d,%d", p_list[i].x, p_list[i].y);
 	}
 	
@@ -1846,7 +1844,8 @@ static bool MCPropertyParsePointList(MCStringRef p_input, char_t p_delimiter, ui
 	uindex_t t_new_offset;
 	t_new_offset = 0;
 	
-	while (t_success && t_old_offset <= t_length)
+    // AL-2014-05-19: [[ Bug 12428 ]] Don't do the loop if the next offset is after the end of the string.
+	while (t_success && t_old_offset < t_length)
 	{
 		MCAutoStringRef t_point_string;
         MCPoint t_point;
