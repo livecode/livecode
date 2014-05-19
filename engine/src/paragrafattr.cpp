@@ -1953,7 +1953,7 @@ void MCParagraph::computeparaoffsetandwidth(int32_t& r_offset, int32_t& r_width)
 	t_para_width = getwidth();
 
     int32_t t_offset;
-	if (t_para_width > t_layout_width)
+	if (getdontwrap())
 	{
 		switch(gettextalign())
 		{
@@ -2034,23 +2034,27 @@ int32_t MCParagraph::computelineinneroffset(int32_t p_layout_width, MCLine *p_li
 
 
     // FG-2014-05-06: [[ TabAlignments ]]
-    // Lines now handle offsets themselves
-    t_offset += p_line->GetLineOffset();
-    /*
-	if (p_layout_width > t_line_width)
-		switch(gettextalign())
-		{
-		case kMCParagraphTextAlignLeft:
-		case kMCParagraphTextAlignJustify:
-			break;
-		case kMCParagraphTextAlignCenter:
-			t_offset += (p_layout_width - t_line_width) / 2;
-			break;
-		case kMCParagraphTextAlignRight:
-			t_offset += p_layout_width - t_line_width;
-			break;
-		}
-     */
+    // Lines now handle offsets themselves unless they are non-flowed
+    if (getdontwrap())
+    {
+        if (p_layout_width > t_line_width)
+            switch(gettextalign())
+            {
+            case kMCParagraphTextAlignLeft:
+            case kMCParagraphTextAlignJustify:
+                break;
+            case kMCParagraphTextAlignCenter:
+                t_offset += (p_layout_width - t_line_width) / 2;
+                break;
+            case kMCParagraphTextAlignRight:
+                t_offset += p_layout_width - t_line_width;
+                break;
+            }
+    }
+    else
+    {
+           t_offset += p_line->GetLineOffset(); 
+    }
 
 	return t_offset;
 }
