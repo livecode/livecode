@@ -322,10 +322,11 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 	if (hlist == NULL)
 	{
 		hlist = new MCHandlerlist;
+	}
 	
 	if (m_ctxt == NULL)
 	{
-		m_ctxt = new MCExecContext(*new MCExecPoint(this, hlist, NULL));
+		m_ctxt = new MCExecContext(this, hlist, NULL);
 		// MW-2013-11-08: [[ RefactorIt ]] Make sure we have an 'it' var in global context.
 		/* UNCHECKED */ hlist -> newvar(MCN_it, nil, &m_it, False);
 	}
@@ -371,7 +372,7 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 		MCAutoStringRef t_filename_string;
 		/* UNCHECKED */ MCStringCreateWithCString(t_file -> filename, &t_filename_string);
 
-		t_handle = MCsystem -> OpenFile(p_filename, kMCOpenFileModeRead | kMCOpenFileModeNulTerminate, true);
+		t_handle = MCsystem -> OpenFile(p_filename, kMCOpenFileModeRead, true);
 		if (t_handle == NULL)
 		{
 			MCeerror -> add(EE_INCLUDE_FILENOTFOUND, 0, 0, t_file -> filename);
@@ -473,22 +474,29 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 		while(t_stat == PS_NORMAL && !MCexitall && t_statement != nil)
 		{
 			if (MCtrace || MCnbreakpoints)
-				MCB_trace(m_ctxt->GetEP(), t_statement -> getline(), t_statement -> getpos());
+				MCB_trace(*m_ctxt, t_statement -> getline(), t_statement -> getpos());
 			
 			if (!MCexitall)
 			{
+				m_ctxt -> SetLineAndPos(t_statement -> getline(), t_statement -> getpos());
+				
 				Exec_stat t_exec_stat;
-				t_exec_stat = t_statement -> exec(m_ctxt->GetEP());
+				t_statement -> exec_ctxt(*m_ctxt);
+				t_exec_stat = m_ctxt -> GetExecStat();
+				m_ctxt -> IgnoreLastError();
+				
 				if (t_exec_stat != ES_NORMAL)
 				{
 					// Throw an error in the debugger
 					if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
 						do
 						{
-							if (!MCB_error(m_ctxt, t_statement->getline(), t_statement->getpos(), EE_HANDLER_BADSTATEMENT))
+							if (!MCB_error(*m_ctxt, t_statement->getline(), t_statement->getpos(), EE_HANDLER_BADSTATEMENT))
 								break;
+							m_ctxt -> IgnoreLastError();
+							t_statement -> exec_ctxt(*m_ctxt);
 						}
-						while (MCtrace && (t_exec_stat = t_statement->exec(m_ctxt->GetEP())) != ES_NORMAL);
+						while (MCtrace && (t_exec_stat = m_ctxt -> GetExecStat()) != ES_NORMAL);
 
 					// Flag an error.
 					t_stat = PS_ERROR;
@@ -520,7 +528,7 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 		
 		// Throw an error in the debugger
 		if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-			MCB_error(m_ctxt->GetEP(), 0, 0, EE_SCRIPT_SYNTAXERROR);
+			MCB_error(*m_ctxt, 0, 0, EE_SCRIPT_SYNTAXERROR);
 	}
 	else
 	{

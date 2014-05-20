@@ -472,7 +472,7 @@ void MCServerPutMarkup(MCStringRef s)
 
 void MCServerPutUnicodeMarkup(MCDataRef p_data)
 {
-	MCServerOutputUnicodeMarkup((const unichar_t *)MCDataGetBytePtr(p_data), MCDataGetLength(s) / 2, false);
+	MCServerOutputUnicodeMarkup((const unichar_t *)MCDataGetBytePtr(p_data), MCDataGetLength(p_data) / 2, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -126,52 +126,52 @@ public:
 	
 	bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
 	{
-		return m_delegate -> handle -> Read(p_buffer, p_length, r_read);
+		return m_delegate -> Read(p_buffer, p_length, r_read);
 	}
 	
-	bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	bool Write(const void *p_buffer, uint32_t p_length)
 	{
-		return m_delegate -> handle -> Write(p_buffer, p_length, r_written);
+		return m_delegate -> Write(p_buffer, p_length);
 	}
 	
 	bool Seek(int64_t p_offset, int p_dir)
 	{
-		return m_delegate -> handle -> Seek(p_offset, p_dir);
+		return m_delegate -> Seek(p_offset, p_dir);
 	}
 	
 	bool Truncate(void)
 	{
-		return m_delegate -> handle -> Truncate();
+		return m_delegate -> Truncate();
 	}
 	
 	bool Sync(void)
 	{
-		return m_delegate -> handle -> Sync();
+		return m_delegate -> Sync();
 	}
 	
 	bool Flush(void)
 	{
-		return m_delegate -> handle -> Flush();
+		return m_delegate -> Flush();
 	}
 	
 	bool PutBack(char p_char)
 	{
-		return m_delegate -> handle -> PutBack(p_char);
+		return m_delegate -> PutBack(p_char);
 	}
 	
 	int64_t Tell(void)
 	{
-		return m_delegate -> handle -> Tell();
+		return m_delegate -> Tell();
 	}
 	
 	void *GetFilePointer(void)
 	{
-		return m_delegate -> handle -> GetFilePointer();
+		return m_delegate -> GetFilePointer();
 	}
 	
 	int64_t GetFileSize(void)
 	{
-		return m_delegate -> handle -> GetFileSize();
+		return m_delegate -> GetFileSize();
 	}
 	
 protected:
@@ -192,14 +192,14 @@ public:
 		MCDelegateFileHandle::Close();
 	}
 	
-	bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	bool Write(const void *p_buffer, uint32_t p_length)
 	{
 		Close();
 
 		if (!(cgi_send_cookies() && cgi_send_headers()))
 			return false;
 		
-		return IO_stdout -> handle -> Write(p_buffer, p_length, r_written);
+		return IO_stdout -> Write(p_buffer, p_length);
 	}
 };
 
@@ -228,7 +228,7 @@ private:
 	uint32_t m_cache_length;
 	void *m_cache_buffer;
 	IO_handle m_cache_file;
-	const char *m_cache_filename;
+	MCStringRef m_cache_filename;
 };
 
 MCStreamCache::MCStreamCache(MCSystemFileHandle *p_source_stream)
@@ -413,7 +413,7 @@ public:
 		return t_success;
 	}
 	
-	bool Write(const void *p_buffer, uint32_t p_length, uint32_t &r_written)
+	bool Write(const void *p_buffer, uint32_t p_length)
 	{
 		return false;
 	}
@@ -492,6 +492,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef SERVER7_TODO
 const char *strchr_limit(const char *s, const char *l, char c)
 {
 	while(s < l && *s != c)
@@ -727,6 +728,7 @@ static void cgi_store_form_urlencoded(MCExecPoint& ep, MCVariable *p_variable, c
 {
 	return cgi_store_data_urlencoded(ep, p_variable, p_data_start, p_data_end, p_native_encoding, '&', false);
 }
+#endif
 
 static void cgi_fix_path_variables()
 {
@@ -739,8 +741,6 @@ static void cgi_fix_path_variables()
 		t_path = strdup(MCStringGetCString(*env));
 		t_path_end = t_path + strlen(t_path);
 	}
-
-	
 
 #ifdef _WINDOWS_SERVER
 	for(uint32_t i = 0; t_path[i] != '\0'; i++)

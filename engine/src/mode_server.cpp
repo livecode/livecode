@@ -140,6 +140,7 @@ void MCStack::mode_destroy(void)
 {
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
@@ -149,6 +150,7 @@ Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, 
 {
 	return ES_NOT_HANDLED;
 }
+#endif
 
 void MCStack::mode_load(void)
 {
@@ -206,6 +208,7 @@ void MCStack::mode_constrain(MCRectangle& rect)
 {
 }
 
+#ifdef LEGACY_EXEC
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCObject::mode_get/setprop for SERVER mode.
@@ -230,6 +233,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 {
 	return ES_NOT_HANDLED;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //

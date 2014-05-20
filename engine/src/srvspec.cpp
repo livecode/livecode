@@ -50,6 +50,7 @@ uint32_t g_current_background_colour = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef LEGACY_EXEC
 extern void MCS_common_init(void);
 
 extern MCSystemInterface *MCServerCreatePosixSystem(void);
@@ -221,10 +222,13 @@ void MCS_init(void)
 
 	MCS_common_init();
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef const char *(*MCUrlExecuteCallback)(void *state, CURL *curl_handle);
+
+extern char *strndup(const char *, size_t);
 
 static bool url_build_header_list(const char *p_list, curl_slist*& r_headers)
 {
@@ -281,10 +285,10 @@ static bool url_build_header_list(const char *p_list, curl_slist*& r_headers)
 
 static size_t url_write_callback(void *p_buffer, size_t p_size, size_t p_count, void *p_context)
 {
-	MCString t_string((char *)p_buffer, p_size * p_count);
-	MCExecPoint ep;
-	ep . setsvalue(t_string);
-	MCurlresult -> append(ep);
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_buffer, p_size * p_count, &t_string);
+	MCExecContext ctxt;
+	MCurlresult -> set(ctxt, *t_string, kMCVariableSetAfter);
 	return p_count;
 }
 
@@ -638,23 +642,23 @@ bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_data_ref)
 	case kMCSPutBeforeMessage:
 	case kMCSPutIntoMessage:
 	case kMCSPutAfterMessage:
-		MCServerPutOutput(p_data);
+		MCServerPutOutput(p_data_ref);
 		break;
 			
 	case kMCSPutHeader:
-		MCServerPutHeader(p_data, false);
+		MCServerPutHeader(p_data_ref, false);
 		break;
 
 	case kMCSPutNewHeader:
-		MCServerPutHeader(p_data, true);
+		MCServerPutHeader(p_data_ref, true);
 		break;
 
 	case kMCSPutContent:
-		MCServerPutContent(p_data);
+		MCServerPutContent(p_data_ref);
 		break;
 
 	case kMCSPutMarkup:
-		MCServerPutMarkup(p_data);
+		MCServerPutMarkup(p_data_ref);
 		break;
 			
 	default:
@@ -789,7 +793,6 @@ void MCA_setcolordialogcolors(MCExecPoint& p_ep)
 
 void MCA_getcolordialogcolors(MCColor*& r_colors, uindex_t& r_count)
 {
-	p_ep.clear();
 }
 
 

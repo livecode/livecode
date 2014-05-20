@@ -185,35 +185,29 @@ bool MCSessionIndexRemoveSession(MCSessionIndexRef p_index, MCSession *p_session
 
 bool write_uint32(MCSystemFileHandle *p_file, uint32_t p_val)
 {
-	uint32_t t_written;
-	return p_file->Write(&p_val, sizeof(p_val), t_written) && t_written == sizeof(p_val);
+	return p_file->Write(&p_val, sizeof(p_val));
 }
 
 bool write_real64(MCSystemFileHandle *p_file, real64_t p_val)
 {
-	uint32_t t_written;
-	return p_file->Write(&p_val, sizeof(p_val), t_written) && t_written == sizeof(p_val);
+	return p_file->Write(&p_val, sizeof(p_val));
 }
 
 bool write_cstring(MCSystemFileHandle *p_file, const char *p_string)
 {
-	uint32_t t_written;
-	
 	uint32_t t_strlen = MCCStringLength(p_string);
 	if (!write_uint32(p_file, t_strlen))
 		return false;
 
-	return p_file->Write(p_string, t_strlen, t_written) && t_written == t_strlen;
+	return p_file->Write(p_string, t_strlen);
 }
 
 bool write_binary(MCSystemFileHandle *p_file, void *p_data, uint32_t p_length)
-{
-	uint32_t t_written;
-	
+{	
 	if (!write_uint32(p_file, p_length))
 		return false;
 	
-	return p_file->Write(p_data, p_length, t_written) && t_written == p_length;
+	return p_file->Write(p_data, p_length);
 }
 
 bool read_uint32(MCSystemFileHandle *p_file, uint32_t &r_val)
