@@ -2262,7 +2262,7 @@ void MCIdeScriptTokenize::exec_ctxt(MCExecContext& ctxt)
     MCAutoStringRef t_script;
     // By default, the result is empty
     ctxt . SetTheResultToEmpty();
-    m_script -> eval_stringref(ctxt, &t_script);
+    m_script -> eval(ctxt, &t_script);
 
     if (!ctxt . HasError())
     {
