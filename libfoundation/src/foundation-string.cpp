@@ -3105,7 +3105,7 @@ bool MCStringPrependChars(MCStringRef self, const unichar_t *p_chars, uindex_t p
         bool t_not_native;
         t_not_native = false;
         for(uindex_t i = 0; i < p_char_count; i++)
-            if (!MCUnicodeCharMapToNative(p_chars[i], self -> native_chars[i + self -> char_count - p_char_count]))
+            if (!MCUnicodeCharMapToNative(p_chars[i], self -> native_chars[i]))
             {
                 t_not_native = true;
                 break;
