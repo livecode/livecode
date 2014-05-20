@@ -17,6 +17,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphics.h"
 #include "graphics-internal.h"
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+#include <hb.h>
+#include <hb-ft.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern bool MCCStringFromUnicodeSubstring(const unichar_t * p_text, uindex_t p_length, char*& r_text);
@@ -66,12 +72,27 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		if (t_blend_mode != NULL)
 			t_blend_mode -> unref();
 		
-		SkTypeface *t_typeface;
-		t_typeface = (SkTypeface *) p_font . fid;
-		t_paint . setTypeface(t_typeface);
-		
-		// MM-2013-12-05: [[ Bug 11527 ]] Make sure we calculate the UTF-8 string length correctly.
-		self -> layer -> canvas -> drawText(*t_utf8_string, t_utf8_string . Size(), MCGCoordToSkCoord(p_location . x), MCGCoordToSkCoord(p_location . y), t_paint);
+		FT_Face *t_typeface = (FT_face *)p_font . fid;
+        
+        // draw the glyphs that are output from harfbuzz
+        t_paint . setTextEncoding(SkPaint::kGlyphID_TextEncoding);
+        hb_font_t *font = hb_ft_font_create(*t_typeface, NULL);
+        
+        /* Create a buffer for harfbuzz to use */
+        hb_buffer_t *buffer = hb_buffer_create();
+        
+        hb_buffer_set_direction(buffer, p_rtl ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
+        
+        /* Layout the text */
+        hb_buffer_add_utf16(buffer, p_text, p_length, 0, p_length);
+        hb_ot_shape(font, buffer, NULL, 0, 0);
+        
+        int glyph_count = hb_buffer_get_length(buffer);
+        hb_glyph_info_t *glyph_info = hb_buffer_get_glyph_infos(buffer, 0);
+        hb_glyph_position_t *glyph_pos = hb_buffer_get_glyph_positions(buffer,
+                                                                       0);
+        
+		self -> layer -> canvas -> drawPosText(glyph_info, glyph_count, glyph_pos, t_paint);
 	}
 	
 	self -> is_valid = t_success;

@@ -24,5 +24,7 @@ LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/../thirdparty/libskia/include/config \
 	$(LOCAL_PATH)/../thirdparty/libskia/include/core \
 	$(LOCAL_PATH)/../thirdparty/libskia/include/effects \
+	$(LOCAL_PATH)/../thirdparty/libfreetype/include \
+	$(LOCAL_PATH)/../thirdparty/libharfbuzz/src \
 
 include $(BUILD_STATIC_LIBRARY)
