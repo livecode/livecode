@@ -73,10 +73,10 @@
 		721CAAAA1834D13300858545 /* foundation-locale.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-locale.h"; path = "include/foundation-locale.h"; sourceTree = "<group>"; };
 		721CAAAB1834D13300858545 /* foundation-unicode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-unicode.h"; path = "include/foundation-unicode.h"; sourceTree = "<group>"; };
 		721CAAAC18350B0E00858545 /* foundation-unicode-private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-unicode-private.h"; path = "src/foundation-unicode-private.h"; sourceTree = "<group>"; };
-		BE19F5D718FE92600001B410 /* foundation-bidi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-bidi.cpp"; path = "src/foundation-bidi.cpp"; sourceTree = "<group>"; };
-		BE19F5D918FE93490001B410 /* foundation-bidi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-bidi.h"; path = "include/foundation-bidi.h"; sourceTree = "<group>"; };
 		7237187618E3210B0006C484 /* foundation-text.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "foundation-text.h"; path = "include/foundation-text.h"; sourceTree = "<group>"; };
 		7237187718E42F580006C484 /* foundation-text.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-text.cpp"; path = "src/foundation-text.cpp"; sourceTree = "<group>"; };
+		BE19F5D718FE92600001B410 /* foundation-bidi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-bidi.cpp"; path = "src/foundation-bidi.cpp"; sourceTree = "<group>"; };
+		BE19F5D918FE93490001B410 /* foundation-bidi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-bidi.h"; path = "include/foundation-bidi.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
