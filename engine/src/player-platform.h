@@ -55,6 +55,7 @@ class MCPlayer : public MCControl
     double m_initial_rate;
     bool m_was_paused : 1;
     bool m_inside : 1;
+    bool m_show_volume : 1;
 	
 public:
 	MCPlayer();
