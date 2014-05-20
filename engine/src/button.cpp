@@ -3672,10 +3672,10 @@ void MCButton::docascade(MCStringRef p_pick)
 			else
 				t_label = pptr->getlabeltext();
 			
-			if (*t_pick == nil)
+            if (*t_pick == nil)
                 /* UNCHECKED */ MCStringMutableCopy(p_pick, &t_pick);
             
-            /* UNCHECKED */ MCStringPrependChar(*t_pick, '|');
+            /* UNCHECKED */ MCStringPrependNativeChar(*t_pick, '|');
             /* UNCHECKED */ MCStringPrepend(*t_pick, t_label);
 
 			pptr = (MCButton *)pptr->parent->getparent()->getparent();
@@ -3931,8 +3931,7 @@ public:
 		/* UNCHECKED */ MCStringMutableCopy(m_tags[0], t_string);
 		for(uint32_t i = 1; i < m_tag_count; i++)
 		{
-			MCStringAppendFormat(t_string, "|");
-			MCStringAppend(t_string, m_tags[i]);
+            MCStringAppendFormat(t_string, "|%@", m_tags[i]);
 		}
 		MCStringCopyAndRelease(t_string, r_string);
 	}
