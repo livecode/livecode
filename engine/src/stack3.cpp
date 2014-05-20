@@ -1847,6 +1847,8 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
                 items[nitems] . dvalue = MCValueRetain(kMCEmptyData);
             else
                 items[nitems] . svalue = MCValueRetain(kMCEmptyString);
+            // AL-2014-05-20: [[ Bug 12457 ]] Increment items when 'default' item is added
+            nitems++;
         }
 		curcard = (MCCard *)curcard->next();
 	}
