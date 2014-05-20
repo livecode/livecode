@@ -1895,10 +1895,14 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
     if (MCStringIsEmpty(self) != MCStringIsEmpty(p_other))
         return false;
 
-    if (MCStringCantBeNative(self, p_options) != MCStringCantBeNative(p_other, p_options))
+    bool self_native, other_native;
+    self_native = MCStringIsNative(self);
+    other_native = MCStringIsNative(p_other);
+    
+    if ((self_native && MCStringCantBeNative(p_other, p_options)) || (other_native && MCStringCantBeNative(self, p_options)))
         return false;
     
-    if (MCStringIsNative(self) && MCStringIsNative(p_other))
+    if (self_native && other_native)
     {
         if (MCStringGetLength(self) != MCStringGetLength(p_other))
             return false;
@@ -1909,7 +1913,7 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
             return MCNativeCharsEqualCaseless(self -> native_chars, self -> char_count, p_other -> native_chars, p_other -> char_count);
     }
 
-    return MCUnicodeCompare(self -> chars, self -> char_count, MCStringIsNative(self), p_other -> chars, p_other -> char_count, MCStringIsNative(p_other), (MCUnicodeCompareOption)p_options) == 0;
+    return MCUnicodeCompare(self -> chars, self -> char_count, self_native, p_other -> chars, p_other -> char_count, other_native, (MCUnicodeCompareOption)p_options) == 0;
 }
 
 bool MCStringIsEmpty(MCStringRef string)
