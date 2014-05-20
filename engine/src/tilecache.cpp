@@ -2526,7 +2526,8 @@ bool MCTileCacheSnapshot(MCTileCacheRef self, MCRectangle p_area, MCGImageRef& r
 	t_raster.height = p_area.height;
 	t_raster.pixels = nil;
 	t_raster.stride = p_area.width * sizeof(uint32_t);
-	t_raster.format = kMCGRasterFormat_ARGB;
+	// IM-2014-05-20: [[ GraphicsPerformance ]] Use opaque raster format for snapshot
+	t_raster.format = kMCGRasterFormat_xRGB;
 	
 	if (t_success)
 		t_success = MCMemoryAllocate(t_raster.stride * t_raster.height, t_raster.pixels);

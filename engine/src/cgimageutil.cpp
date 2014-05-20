@@ -137,9 +137,13 @@ bool MCGRasterToCGImage(const MCGRaster &p_raster, MCGRectangle p_src_rect, CGCo
 		
 	}
 	
+	// IM-2014-05-20: [[ GraphicsPerformance ]] Opaque rasters should indicate no alpha in the bitmap info
+	bool t_alpha;
+	t_alpha = p_raster.format != kMCGRasterFormat_xRGB;
+	
 	// IM-2013-08-21: [[ RefactorGraphics ]] Refactor CGImage creation code to be pixel-format independent
 	CGBitmapInfo t_bm_info;
-	t_bm_info = MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true);
+	t_bm_info = MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, t_alpha);
 	
 	if (t_success)
 		t_success = nil != (t_image = CGImageCreate(t_width, t_height, 8, 32, t_dst_stride, p_colorspace, t_bm_info, t_data_provider, nil, true, kCGRenderingIntentDefault));

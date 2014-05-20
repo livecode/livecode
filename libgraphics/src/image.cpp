@@ -116,7 +116,8 @@ bool MCGImageGetRaster(MCGImageRef p_image, MCGRaster &r_raster)
 	// from the bitmap's pixel ref
 	t_image->bitmap->lockPixels();
 	
-	r_raster.format = MCGRasterFormatFromSkBitmapConfig(t_image->bitmap->config());
+	// IM-2014-05-20: [[ GraphicsPerformance ]] Use bitmap opaqueness when setting the raster format.
+	r_raster.format = MCGRasterFormatFromSkBitmapConfig(t_image->bitmap->config(), t_image->bitmap->isOpaque());
 	r_raster.width = t_image->bitmap->width();
 	r_raster.height = t_image->bitmap->height();
 	r_raster.pixels = t_image->bitmap->getPixels();
