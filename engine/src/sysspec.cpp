@@ -236,8 +236,8 @@ void MCS_init(void)
 	MCsystem = MCServerCreateWindowsSystem();
 #elif defined(_MAC_SERVER)
 	MCsystem = MCDesktopCreateMacSystem();
-#elif defined(_LINUX_SERVER) || defined(_DARWIN_SERVER)
-	MCsystem = MCServerCreatePosixSystem();
+#elif defined(_LINUX_SERVER) /*|| defined(_DARWIN_SERVER)*/
+	MCsystem = MCDesktopCreateLinuxSystem();
 #elif defined(_MAC_DESKTOP)
     MCsystem = MCDesktopCreateMacSystem();
 #elif defined(_WINDOWS_DESKTOP)
