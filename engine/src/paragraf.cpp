@@ -3841,8 +3841,14 @@ void MCParagraph::getclickindex(int2 x, int2 y,
 			ei = si;
 			return;
 		}
-
-		si = findwordbreakbefore(bptr, si);
+        
+        // SN-2014-05-16 [[ Bug 12432 ]]
+        // If si is now a wordbreak, then it was a worbreak boundary beforehand - and nothing should have been done
+        uindex_t t_si;
+		t_si = findwordbreakbefore(bptr, si);
+        if (!TextIsWordBreak(GetCodepointAtIndex(t_si)))
+            si = t_si;
+        
 		ei = si;
 		bptr = indextoblock(ei, False);
 		ei = findwordbreakafter(bptr, ei);

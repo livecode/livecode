@@ -2898,6 +2898,8 @@ findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
         si = 0;
         /* UNCHECKED */ MCStringUnmapIndices(t_pg->GetInternalStringRef(), kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
         ++t_cu_range.length; // implicit paragraph break
+        // SN-2014-05-20 [[ Bug 12432 ]] Add the paragraph break to the number of chars
+        ++t_char_range.length; // implicit paragraph break
 
         t_count += t_char_range.length;
         
