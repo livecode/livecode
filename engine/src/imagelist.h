@@ -28,9 +28,12 @@ class MCImageRep;
 //////////
 
 // IM-2014-05-13: [[ HiResPatterns ]] Create pattern from bitmap image at given scale
-extern bool MCPatternCreate(const MCGRaster &p_raster, MCGFloat p_scale, MCPatternRef &r_pattern);
+// IM-2014-05-21: [[ HiResPatterns ]] Add filter param to pattern creation functions
+extern bool MCPatternCreate(const MCGRaster &p_raster, MCGFloat p_scale, MCGImageFilter p_filter, MCPatternRef &r_pattern);
+
 // IM-2014-05-13: [[ HiResPatterns ]] Create pattern from source rep and transform
-extern bool MCPatternCreate(MCImageRep *p_source, MCGAffineTransform p_transform, MCPatternRef &r_pattern);
+// IM-2014-05-21: [[ HiResPatterns ]] Add filter param to pattern creation functions
+extern bool MCPatternCreate(MCImageRep *p_source, MCGAffineTransform p_transform, MCGImageFilter p_filter, MCPatternRef &r_pattern);
 
 extern MCPatternRef MCPatternRetain(MCPatternRef p_pattern);
 extern void MCPatternRelease(MCPatternRef p_pattern);
@@ -39,6 +42,9 @@ extern bool MCPatternIsOpaque(MCPatternRef p_pattern);
 
 // IM-2014-05-13: [[ HiResPatterns ]] Return the logical width + height of the pattern (after transform is applied)
 extern bool MCPatternGetGeometry(MCPatternRef p_pattern, uint32_t &r_width, uint32_t &r_height);
+
+// IM-2014-05-21: [[ HiResPatterns ]] Get the image filter to use with this pattern
+extern bool MCPatternGetFilter(MCPatternRef p_pattern, MCGImageFilter &r_filter);
 
 // IM-2014-05-13: [[ HiResPatterns ]] Obtain an image & transform most suitable for the current transform of the target context
 extern bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTransform &p_transform, MCGImageRef &r_image, MCGAffineTransform &r_pattern_transform);

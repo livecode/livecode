@@ -363,6 +363,9 @@ public:
 	static MCPatternInfo *s_control_pixmapids;
 	static uint16_t s_control_color_flags;
 	
+	// IM-2014-05-21: [[ HiResPatterns ]] Convert image resize quality to MCGImageFilter
+	static MCGImageFilter resizequalitytoimagefilter(uint8_t p_quality);
+
 private:
 	void setrep(MCImageRep *p_rep);
 	
@@ -437,6 +440,12 @@ public:
 	uint8_t getresizequality()
 	{
 		return resizequality;
+	}
+
+	// IM-2014-05-21: [[ HiResPatterns ]] Return the image filter used when transforming this image
+	MCGImageFilter getimagefilter()
+	{
+		return resizequalitytoimagefilter(resizequality);
 	}
 
 	void setframe(int32_t p_newframe);

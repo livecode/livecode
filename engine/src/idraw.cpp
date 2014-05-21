@@ -153,21 +153,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 				t_image.scale_factor = t_frame->density;
 
                 // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
-				switch (resizequality)
-				{
-                    case INTERPOLATION_NEAREST:
-                        t_image . filter = kMCGImageFilterNone;
-                        break;
-                    case INTERPOLATION_BOX:
-                        t_image . filter = kMCGImageFilterMedium;
-                        break;
-                    case INTERPOLATION_BILINEAR:
-                        t_image . filter = kMCGImageFilterMedium;
-                        break;
-                    case INTERPOLATION_BICUBIC:
-                        t_image . filter = kMCGImageFilterHigh;
-                        break;
-				}
+				t_image.filter = getimagefilter();
 
 				t_image . image = t_frame->image;
 

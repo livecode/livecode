@@ -548,10 +548,13 @@ void MCGraphicsContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y
 		if (MCPatternLockForContextTransform(p, MCGContextGetDeviceTransform(m_gcontext), t_image, t_transform))
 		{
 			t_transform = MCGAffineTransformTranslate(t_transform, x, y);
+			// IM-2014-05-21: [[ HiResPatterns ]] Use the pattern filter value
+			MCGImageFilter t_filter;
+			/* UNCHECKED */ MCPatternGetFilter(p, t_filter);
 			
 			// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
-			MCGContextSetFillPattern(m_gcontext, t_image, t_transform, kMCGImageFilterMedium);
-			MCGContextSetStrokePattern(m_gcontext, t_image, t_transform, kMCGImageFilterMedium);
+			MCGContextSetFillPattern(m_gcontext, t_image, t_transform, t_filter);
+			MCGContextSetStrokePattern(m_gcontext, t_image, t_transform, t_filter);
 			
 			MCPatternUnlock(p, t_image);
 		}

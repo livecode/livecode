@@ -21,6 +21,7 @@ struct MCPattern
 {
 	MCImageRep *source;
 	MCGAffineTransform transform;
+	MCGImageFilter filter;
 	
 	MCGImageRef image;
 	
@@ -39,8 +40,7 @@ struct MCPattern
 
 // IM-2013-08-14: [[ ResIndependence ]] pattern create / retain / release functions
 
-bool MCPatternCreate(const MCGRaster &p_raster, MCGFloat p_scale, MCPatternRef &r_pattern)
-
+bool MCPatternCreate(const MCGRaster &p_raster, MCGFloat p_scale, MCGImageFilter p_filter, MCPatternRef &r_pattern)
 {
 	bool t_success;
 	t_success = true;
@@ -60,6 +60,7 @@ bool MCPatternCreate(const MCGRaster &p_raster, MCGFloat p_scale, MCPatternRef &
 	{
 		t_pattern -> image = MCGImageRetain(t_image);
 		t_pattern -> transform = MCGAffineTransformMakeScale(p_scale, p_scale);
+		t_pattern -> filter = p_filter;
 		t_pattern -> references = 1;
 		
 		r_pattern = t_pattern;
@@ -74,7 +75,7 @@ bool MCPatternCreate(const MCGRaster &p_raster, MCGFloat p_scale, MCPatternRef &
 	return t_success;
 }
 
-bool MCPatternCreate(MCImageRep *p_source, MCGAffineTransform p_transform, MCPatternRef &r_pattern)
+bool MCPatternCreate(MCImageRep *p_source, MCGAffineTransform p_transform, MCGImageFilter p_filter, MCPatternRef &r_pattern)
 {
 	bool t_success;
 	t_success = true;
@@ -88,6 +89,7 @@ bool MCPatternCreate(MCImageRep *p_source, MCGAffineTransform p_transform, MCPat
 	{
 		t_pattern->source = p_source->Retain();
 		t_pattern->transform = p_transform;
+		t_pattern->filter = p_filter;
 		t_pattern->references = 1;
 		
 		r_pattern = t_pattern;
@@ -170,10 +172,19 @@ bool MCPatternGetGeometry(MCPatternRef p_pattern, uint32_t &r_width, uint32_t &r
 	return true;
 }
 
+bool MCPatternGetFilter(MCPatternRef p_pattern, MCGImageFilter &r_filter)
+{
+	if (p_pattern == nil)
+		return nil;
+
+	r_filter = p_pattern->filter;
+
+	return true;
+}
+
 bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTransform &p_transform, MCGImageRef &r_image, MCGAffineTransform &r_pattern_transform)
 {
 	if (p_pattern == nil)
-		
 		return false;
 	
 	if (p_pattern->locked_image != nil)
@@ -224,7 +235,7 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 					t_copy_transform = MCGAffineTransformConcat(p_pattern->transform, t_transform);
 					t_copy_transform = MCGAffineTransformConcat(MCGAffineTransformInvert(t_transform), t_copy_transform);
 					
-					t_success = MCImageBitmapCreateWithTransformedMCGImage(t_frame->image, t_copy_transform, kMCGImageFilterNone, t_bitmap);
+					t_success = MCImageBitmapCreateWithTransformedMCGImage(t_frame->image, t_copy_transform, p_pattern->filter, t_bitmap);
 					
 					if (t_success)
 						t_success = MCImageBitmapCopyAsMCGImageAndRelease(t_bitmap, true, t_image);
@@ -284,10 +295,6 @@ void MCPatternUnlock(MCPatternRef p_pattern, MCGImageRef p_locked_image)
 	
 	MCGImageRelease(p_pattern->locked_image);
 	p_pattern->locked_image = nil;
-	
-//	if (p_pattern->locked_frame != nil)
-//		p_pattern->source->UnlockImageFrame(0, p_pattern->locked_frame);
-//	p_pattern->locked_frame = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

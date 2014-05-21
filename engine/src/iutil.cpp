@@ -168,6 +168,29 @@ void MCImage::notifyneeds(bool p_deleting)
 
 //////////
 
+MCGImageFilter MCImage::resizequalitytoimagefilter(uint8_t p_quality)
+{
+	switch (p_quality)
+	{
+        case INTERPOLATION_NEAREST:
+            return kMCGImageFilterNone;
+
+        case INTERPOLATION_BOX:
+            return kMCGImageFilterMedium;
+
+		case INTERPOLATION_BILINEAR:
+            return kMCGImageFilterMedium;
+
+		case INTERPOLATION_BICUBIC:
+            return kMCGImageFilterHigh;
+
+		default:
+			return kMCGImageFilterNone;
+	}
+}
+
+//////////
+
 // composite image against black, opaque = alpha > 0
 void MCImageBitmapFlattenAlpha(MCImageBitmap *p_bitmap, bool p_preserve_mask)
 {
@@ -796,7 +819,7 @@ bool MCImage::createpattern(MCPatternRef &r_image)
 			t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
 			
 			// IM-2013-08-14: [[ ResIndependence ]] Wrap image in MCPattern with scale factor
-			t_success = MCPatternCreate(t_raster, 1.0, t_pattern);
+			t_success = MCPatternCreate(t_raster, 1.0, getimagefilter(), t_pattern);
 		}
 	}
 	else
@@ -804,7 +827,7 @@ bool MCImage::createpattern(MCPatternRef &r_image)
 		// IM-2014-05-13: [[ HiResPatterns ]] Rather than create a pattern with a static bitmap image,
 		// we can now supply the source rep and the image transform to enable density-mapped patterns
 		apply_transform();
-		t_success = MCPatternCreate(m_rep, m_has_transform ? m_transform : MCGAffineTransformMakeIdentity(), t_pattern);
+		t_success = MCPatternCreate(m_rep, m_has_transform ? m_transform : MCGAffineTransformMakeIdentity(), getimagefilter(), t_pattern);
 	}
 
 	if (t_blank != nil)

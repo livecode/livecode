@@ -2543,19 +2543,7 @@ bool MCImage::lockbitmap(bool p_premultiplied, bool p_update_transform, MCGFloat
 				// IM-2013-11-06: [[ RefactorGraphics ]] Factor out transformed image creation code
 				// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
 				MCGImageFilter t_filter;
-				t_filter = kMCGImageFilterNone;
-				switch (resizequality)
-				{
-					case INTERPOLATION_NEAREST:
-						t_filter = kMCGImageFilterNone;
-						break;
-					case INTERPOLATION_BILINEAR:
-						t_filter = kMCGImageFilterMedium;
-						break;
-					case INTERPOLATION_BICUBIC:
-						t_filter = kMCGImageFilterHigh;
-						break;
-				}
+				t_filter = getimagefilter();
 				
 				t_success = MCImageBitmapCreateWithTransformedMCGImage(t_frame->image, t_transform, t_filter, m_locked_bitmap);
 				
