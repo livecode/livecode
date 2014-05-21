@@ -374,7 +374,8 @@ IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
 			nread = size * n;
 			if (nread > stream->len - (stream->ioptr - stream->buffer))
 			{
-				n = stream->len - (stream->ioptr - stream->buffer) / size;
+				// IM-2014-05-21: [[ Bug 12458 ]] Fix incorrect calculation of remaining blocks
+				n = (stream->len - (stream->ioptr - stream->buffer)) / size;
 				nread = size * n;
 				stat = IO_EOF;
 			}
