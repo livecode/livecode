@@ -471,7 +471,7 @@ public:
 	Boolean selectedmark(Boolean wholeline, findex_t &si, findex_t &ei,
 	                     Boolean force, Boolean inc_cr, bool p_char_indices = false);
 
-	bool returnchunk(findex_t si, findex_t ei, MCStringRef& r_string);
+	bool returnchunk(findex_t si, findex_t ei, MCStringRef& r_string, bool p_char_indices = false);
 	bool returnline(findex_t si, findex_t ei, MCStringRef& r_string);
 	bool returnloc(findex_t si, MCStringRef& r_string);
 #ifdef LEGACY_EXEC
