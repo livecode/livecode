@@ -341,11 +341,20 @@ void MCDialogExecAnswerNotify(MCExecContext &ctxt, integer_t p_type, MCStringRef
 		/* UNCHECKED */ MCListAppend(*t_button_list, p_buttons[i]);
 	/* UNCHECKED */ MCListCopyAsString(*t_button_list, &t_buttons_string);
 
-	MCStringRef p_args[3];
-	p_args[0] = p_title;
-	p_args[1] = p_prompt;
-	p_args[2] = *t_buttons_string;
-	MCDialogExecCustomAnswerDialog(ctxt, MCN_answer_dialog, *s_dialog_types[p_type], p_sheet, p_args, 3, &t_value);
+	MCStringRef t_args[4];
+	t_args[0] = p_title;
+	t_args[1] = p_prompt;
+	t_args[2] = *t_buttons_string;
+
+    // AL-2014-05-21: [[ Bug 12074 ]] Pass through directionality of prompt to
+    //  dialogData for appropriate dialog layout.
+    if (!MCStringResolvesLeftToRight(p_prompt))
+        t_args[3] = kMCTrueString;
+    else
+        t_args[3] = kMCFalseString;
+    
+    
+	MCDialogExecCustomAnswerDialog(ctxt, MCN_answer_dialog, *s_dialog_types[p_type], p_sheet, t_args, 4, &t_value);
 
 	if (ctxt.HasError())
 		return;
@@ -430,14 +439,21 @@ void MCDialogExecCustomAnswerDialog(MCExecContext &ctxt, MCNameRef p_stack, MCNa
 void MCDialogExecAskQuestion(MCExecContext& ctxt, int p_type, MCStringRef p_prompt, MCStringRef p_answer, bool p_hint_answer, MCStringRef p_title, bool p_as_sheet)
 {
 #ifndef _MOBILE
-	MCStringRef t_args[3];
+	MCStringRef t_args[4];
 	t_args[0] = p_title;
 	t_args[1] = p_prompt;
 	t_args[2] = p_answer;
 	
+    // AL-2014-05-21: [[ Bug 12074 ]] Pass through directionality of prompt to
+    //  dialogData for appropriate dialog layout.
+    if (!MCStringResolvesLeftToRight(p_prompt))
+        t_args[3] = kMCTrueString;
+    else
+        t_args[3] = kMCFalseString;
+    
 	bool t_cancelled;
 	MCAutoStringRef t_result;
-	MCDialogExecCustomAskDialog(ctxt, MCN_ask_dialog, *s_dialog_types[p_type], p_as_sheet, t_args, 3, t_cancelled, &t_result);
+	MCDialogExecCustomAskDialog(ctxt, MCN_ask_dialog, *s_dialog_types[p_type], p_as_sheet, t_args, 4, t_cancelled, &t_result);
 	if (ctxt . HasError())
 		return;
 	

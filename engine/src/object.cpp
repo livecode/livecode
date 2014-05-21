@@ -2583,7 +2583,7 @@ void MCObject::drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_str
     }*/
     
     bool t_is_rtl;
-    t_is_rtl = MCBidiFirstStrongIsolate(p_string, 0) == 1;
+    t_is_rtl = !MCStringResolvesLeftToRight(p_string);
     
     dc -> drawtext(sx, sy, p_string, font, false, kMCDrawTextNoBreak, t_is_rtl ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
 }
