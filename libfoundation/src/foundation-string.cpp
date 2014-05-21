@@ -3105,6 +3105,8 @@ bool MCStringPrependChars(MCStringRef self, const unichar_t *p_chars, uindex_t p
         bool t_not_native;
         t_not_native = false;
         for(uindex_t i = 0; i < p_char_count; i++)
+            // SN-2014-05-20 [[ Bug 12344 ]] [[ Bug 12345 ]]
+            // Prepending chars was appending them
             if (!MCUnicodeCharMapToNative(p_chars[i], self -> native_chars[i]))
             {
                 t_not_native = true;
