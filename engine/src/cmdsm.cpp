@@ -186,35 +186,54 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
 #endif /* MCAdd */
 
     MCExecValue t_src;
+    Boolean t_old_expectation;
+    
+    // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
+    t_old_expectation = ctxt . GetNumberExpected();
+    ctxt . SetNumberExpected(True);
+    
     if (!ctxt . EvaluateExpression(source, EE_ADD_BADSOURCE, t_src)
             || !ctxt . ConvertToNumberOrArray(t_src))
+    {
+        ctxt . SetNumberExpected(t_old_expectation);
         return;
+    }
 	
 	MCExecValue t_dst;
     MCAutoPointer<MCContainer> t_dst_container;
 	if (destvar != nil)
 	{
-        if (!destvar -> evalcontainer(ctxt, &t_dst_container))
+        bool t_success;
+        if (destvar -> needsContainer())
+            t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
+                            && t_dst_container -> eval_ctxt(ctxt, t_dst);
+        else
+        {
+            destvar -> eval_ctxt(ctxt, t_dst);
+            t_success = !ctxt . HasError();
+        }
+        
+        if (!t_success)
         {
             ctxt . LegacyThrow(EE_ADD_BADDEST);
             MCExecTypeRelease(t_src);
-            return;
-		}
-		
-        if (!t_dst_container -> eval_ctxt(ctxt, t_dst))
-        {
-            MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
+            
 	}
 	else
     {
         if (!ctxt . EvaluateExpression(dest, EE_ADD_BADDEST, t_dst))
         {
             MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
-    }
+    }    
+    
+    // Set the number expectation back to its previous state
+    ctxt . SetNumberExpected(t_old_expectation);
 
     if (!ctxt . ConvertToNumberOrArray(t_dst))
     {
@@ -250,9 +269,14 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
 	{
 		if (destvar != nil)
 		{
-			if (t_dst_container -> give_value(ctxt, t_result))
-                return;
-			ctxt . Throw();
+            bool t_success;
+            if (destvar -> needsContainer())
+                t_success = t_dst_container -> give_value(ctxt, t_result);
+            else
+                t_success = destvar -> give_value(ctxt, t_result);
+            
+            if (!t_success)
+                ctxt . Throw();
 		}
 		else
 		{
@@ -429,24 +453,38 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
 #endif /* MCDivide */
 
 	MCExecValue t_src;
+    Boolean t_old_expectation;
+    
+    // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
+    t_old_expectation = ctxt . GetNumberExpected();
+    ctxt . SetNumberExpected(True);
+    
     if (!ctxt . EvaluateExpression(source, EE_DIVIDE_BADSOURCE, t_src)
             || !ctxt . ConvertToNumberOrArray(t_src))
+    {
+        ctxt . SetNumberExpected(t_old_expectation);
         return;
+    }
 	
 	MCExecValue t_dst;
 	MCAutoPointer<MCContainer> t_dst_container;
 	if (destvar != nil)
 	{
-        if (!destvar -> evalcontainer(ctxt, &t_dst_container))
-		{
+        bool t_success;
+        if (destvar -> needsContainer())
+            t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
+                            && t_dst_container -> eval_ctxt(ctxt, t_dst);
+        else
+        {
+            destvar -> eval_ctxt(ctxt, t_dst);
+            t_success = !ctxt.HasError();
+        }
+        
+        if (!t_success)
+        {
             ctxt . LegacyThrow(EE_DIVIDE_BADDEST);
             MCExecTypeRelease(t_src);
-            return;
-		}
-		
-        if (!t_dst_container -> eval_ctxt(ctxt, t_dst))
-        {
-            MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 	}
@@ -455,9 +493,13 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
         if (!ctxt . EvaluateExpression(dest, EE_DIVIDE_BADDEST, t_dst))
         {
             MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 	}
+    
+    // Set the number expectation back to its previous state
+    ctxt . SetNumberExpected(t_old_expectation);
 
     if (!ctxt . ConvertToNumberOrArray(t_dst))
     {
@@ -493,9 +535,15 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
 	{
 		if (destvar != nil)
 		{
-			if (t_dst_container -> give_value(ctxt, t_result))
-                return;
-			ctxt . Throw();
+            bool t_success;
+            
+            if (destvar -> needsContainer())
+                t_success = t_dst_container -> give_value(ctxt, t_result);
+            else
+                t_success = destvar -> give_value(ctxt, t_result);
+            
+            if (!t_success)
+                ctxt . Throw();
 		}
 		else
 		{
@@ -670,25 +718,38 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
 #endif /* MCMultiply */
 
     MCExecValue t_src;
+    Boolean t_old_expectation;
+    
+    // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
+    t_old_expectation = ctxt . GetNumberExpected();
+    ctxt . SetNumberExpected(True);
 
     if(!ctxt . EvaluateExpression(source, EE_MULTIPLY_BADSOURCE, t_src)
             || !ctxt . ConvertToNumberOrArray(t_src))
+    {
+        ctxt . SetNumberExpected(t_old_expectation);
         return;
+    }
 	
 	MCExecValue t_dst;
 	MCAutoPointer<MCContainer> t_dst_container;
 	if (destvar != nil)
 	{
-        if (!destvar -> evalcontainer(ctxt, &t_dst_container))
-		{
+        bool t_success;
+        if (destvar -> needsContainer())
+            t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
+                            && t_dst_container -> eval_ctxt(ctxt, t_dst);
+        else
+        {
+            destvar -> eval_ctxt(ctxt, t_dst);
+            t_success = !ctxt . HasError();
+        }
+        
+        if (!t_success)
+        {
             ctxt . LegacyThrow(EE_MULTIPLY_BADDEST);
             MCExecTypeRelease(t_src);
-            return;
-		}
-		
-        if (!t_dst_container -> eval_ctxt(ctxt, t_dst))
-        {
-            MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 	}
@@ -697,9 +758,13 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
         if (!ctxt . EvaluateExpression(dest, EE_MULTIPLY_BADDEST, t_dst))
         {
             MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 	}
+    
+    // Set the number expectation back to the previous state
+    ctxt . SetNumberExpected(t_old_expectation);
 
     if (!ctxt . ConvertToNumberOrArray(t_dst))
     {
@@ -735,9 +800,15 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
 	{
 		if (destvar != nil)
 		{
-			if (t_dst_container -> give_value(ctxt, t_result))
-                return;
-			ctxt . Throw();
+            bool t_success;
+            
+            if (destvar -> needsContainer())
+                t_success = t_dst_container -> give_value(ctxt, t_result);
+            else
+                t_success = destvar -> give_value(ctxt, t_result);
+            
+            if (!t_success)
+                ctxt . Throw();
 		}
 		else
 		{            
@@ -895,25 +966,38 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
 #endif /* MCSubtract */
 
 	MCExecValue t_src;
+    Boolean t_old_expectation;
+    
+    // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
+    t_old_expectation = ctxt . GetNumberExpected();
+    ctxt . SetNumberExpected(True);
 
     if (!ctxt . EvaluateExpression(source, EE_SUBTRACT_BADSOURCE, t_src)
             || !ctxt . ConvertToNumberOrArray(t_src))
+    {
+        ctxt . SetNumberExpected(t_old_expectation);
         return;
+    }
 	
 	MCExecValue t_dst;
 	MCAutoPointer<MCContainer> t_dst_container;
 	if (destvar != nil)
 	{
-        if (!destvar -> evalcontainer(ctxt, &t_dst_container))
-		{
+        bool t_success;
+        if (destvar -> needsContainer())
+            t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
+                            && t_dst_container -> eval_ctxt(ctxt, t_dst);
+        else
+        {
+            destvar -> eval_ctxt(ctxt, t_dst);
+            t_success = !ctxt . HasError();
+        }
+        
+        if (!t_success)
+        {
             ctxt . LegacyThrow(EE_SUBTRACT_BADDEST);
             MCExecTypeRelease(t_src);
-            return;
-		}
-		
-        if (!t_dst_container -> eval_ctxt(ctxt, t_dst))
-        {
-            MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 	}
@@ -922,9 +1006,13 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
         if (!ctxt . EvaluateExpression(dest, EE_SUBTRACT_BADDEST, t_dst))
         {
             MCExecTypeRelease(t_src);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 	}
+    
+    // Set the number expectation back to its previous state
+    ctxt . SetNumberExpected(t_old_expectation);
 
     if (!ctxt . ConvertToNumberOrArray(t_dst))
     {
@@ -960,9 +1048,15 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
 	{
 		if (destvar != nil)
 		{
-			if (t_dst_container -> give_value(ctxt, t_result))
-                return;
-			ctxt . Throw();
+            bool t_success;
+            
+            if (destvar -> needsContainer())
+                t_success =  t_dst_container -> give_value(ctxt, t_result);
+            else
+                t_success = destvar -> give_value(ctxt, t_result);
+            
+            if (!t_success)
+                ctxt . Throw();
 		}
 		else
 		{

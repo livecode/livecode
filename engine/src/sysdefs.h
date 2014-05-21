@@ -344,9 +344,9 @@ struct MCFontStruct
 #include <math.h>
 #include <signal.h>
 #include <assert.h>
+#ifndef _CTYPE_H
 #define _CTYPE_H
-
-#define _CTYPE_H
+#endif
 
 #define SIGBOGUS 100
 
@@ -548,7 +548,7 @@ struct MCColor
 //  GRAPHICS STRUCTURES AND DEFINITIONS
 //
 
-struct MCSegment
+struct MCLineSegment
 {
 	int2 x1, y1, x2, y2;
 };

@@ -269,7 +269,7 @@ static bool build_pick_string(MenuRef p_menu, UInt32 p_command, MCStringRef& x_s
 			GetMenuItemHierarchicalMenu(p_menu, t_index, &t_current_menu);
 			if (t_current_menu != NULL && build_pick_string(t_current_menu, p_command, x_string))
 			{
-                /* UNCHECKED */ MCStringPrependChar(x_string, '|');
+                /* UNCHECKED */ MCStringPrependNativeChar(x_string, '|');
 				t_success = true;
 			}
 		}

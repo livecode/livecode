@@ -90,7 +90,7 @@ void MCImageFreeBitmap(MCImageBitmap *p_bitmap)
 
 bool MCImageCopyBitmap(MCImageBitmap *p_bitmap, MCImageBitmap *&r_copy)
 {
-	if (!MCImageBitmapCreate(p_bitmap->width, p_bitmap->height, r_copy))
+	if (p_bitmap == nil || !MCImageBitmapCreate(p_bitmap->width, p_bitmap->height, r_copy))
 		return false;
 
 	r_copy->has_alpha = p_bitmap->has_alpha;
@@ -287,6 +287,8 @@ void MCImageBitmapCopyRegionFromBuffer(MCImageBitmap *p_bitmap, MCRectangle &p_r
 
 void MCImageBitmapCheckTransparency(MCImageBitmap *p_bitmap)
 {
+    if (p_bitmap == nil)
+        return;
 	uint8_t *t_row_ptr = (uint8_t*)p_bitmap->data;
 	p_bitmap->has_transparency = false;
 	p_bitmap->has_alpha = false;
@@ -314,11 +316,15 @@ void MCImageBitmapCheckTransparency(MCImageBitmap *p_bitmap)
 
 bool MCImageBitmapHasTransparency(MCImageBitmap *p_bitmap)
 {
+    if (p_bitmap == nil)
+        return false;
 	return p_bitmap->has_transparency;
 }
 
 bool MCImageBitmapHasTransparency(MCImageBitmap *p_bitmap, bool &r_has_alpha)
 {
+    if (p_bitmap == nil)
+        return false;
 	r_has_alpha = p_bitmap->has_alpha;
 	return p_bitmap->has_transparency;
 }

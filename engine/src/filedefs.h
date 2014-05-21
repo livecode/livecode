@@ -46,6 +46,9 @@ enum Encoding_type
     EN_UTF16,
     EN_UTF16LE,
     EN_UTF16BE,
+    EN_UTF32,
+    EN_UTF32LE,
+    EN_UTF32BE,
     EN_BINARY
 };
 

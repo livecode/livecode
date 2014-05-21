@@ -152,12 +152,18 @@ public:
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     {
         MCExecValue t_left, t_right;
+        Boolean t_old_expectation;
+        
+        t_old_expectation = ctxt . GetNumberExpected();
+        
+        ctxt . SetNumberExpected(True);
 
         left -> eval_ctxt(ctxt, t_left);
         if (ctxt . HasError()
                 || ! ctxt . ConvertToNumberOrArray(t_left))
         {
             ctxt . LegacyThrow(EvalLeftError);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 
@@ -168,8 +174,12 @@ public:
             ctxt . LegacyThrow(EvalRightError);
             if (t_left . type == kMCExecValueTypeArrayRef)
                 MCValueRelease(t_left . arrayref_value);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
+        
+        // Set the numiber expectation back to its previous state
+        ctxt . SetNumberExpected(t_old_expectation);
 
         r_value . valueref_value = nil;
         if (t_left . type == kMCExecValueTypeArrayRef)
@@ -229,11 +239,16 @@ public:
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     {
         MCExecValue t_left, t_right;
+        Boolean t_old_expectation;
+        
+        t_old_expectation = ctxt . GetNumberExpected();
+        ctxt . SetNumberExpected(True);
 
         if ((left -> eval_ctxt(ctxt, t_left), ctxt . HasError())
                 || !ctxt . ConvertToNumberOrArray(t_left))
         {
             ctxt . LegacyThrow(EvalLeftError);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 
@@ -243,6 +258,7 @@ public:
             ctxt . LegacyThrow(EvalRightError);
             if (t_left . type == kMCExecValueTypeArrayRef)
                 MCValueRelease(t_left . valueref_value);
+            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 
@@ -262,6 +278,9 @@ public:
                 Eval(ctxt, t_left . double_value, t_right . double_value, r_value . double_value);
         }
         
+        // Set the number expectation back to its previous state
+        ctxt . SetNumberExpected(t_old_expectation);
+        
         if (ctxt . HasError())
             MCExecTypeRelease(r_value);
         else if (t_left . type == kMCExecValueTypeDouble && t_right . type == kMCExecValueTypeDouble)
@@ -273,6 +292,7 @@ public:
             MCValueRelease(t_left . valueref_value);
         if (t_right . type == kMCExecValueTypeArrayRef)
             MCValueRelease(t_right . valueref_value);
+        
     }
 
     virtual bool canbeunary() const { return CanBeUnary; }

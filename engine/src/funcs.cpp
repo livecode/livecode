@@ -182,30 +182,40 @@ Parse_stat MCFunction::parsetarget(MCScriptPoint &sp, Boolean the,
 
 ////
 
-/*
- encoded_array_t:
-	uint8_t type; // always 5
-	array_t array; // the array value.
- 
- array_t:
-	uint32_t length; // the number of key/values in the array
-	array_entry_t[length] keys; // the sequence of key/values in the array
-	uint8_t terminator; // always 0
- 
- array_entry_t:
-	uint8_t type; // the type of the content of the key
-	uint32_t byte_size; // the size of the key/value in bytes, not including the type byte.
-	cstring_t key; // the key for the entry
-	if type == 1 then
-		// undefined value
-	else if type == 2 then
-		uint32_t length; // the number of bytes in the string
-		uint8_t[length] string; // the bytes comprising the string
-	else if type == 3 then
-		float64_t number; // the numeric value as a 64-bit IEEE double
-	else if type == 5 then
-		array_t array; // the array value
-*/
+MCArrayEncode::~MCArrayEncode()
+{
+	delete source;
+	delete version;
+}
+
+Parse_stat MCArrayEncode::parse(MCScriptPoint &sp, Boolean the)
+{
+	if (get1or2params(sp, &source, &version, the) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_BASECONVERT_BADPARAM, sp);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+void MCArrayEncode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{    
+    MCAutoArrayRef t_array;
+    if (!ctxt . EvalExprAsArrayRef(source, EE_ARRAYENCODE_BADSOURCE, &t_array))
+        return;
+    
+    // AL-2014-05-15: [[ Bug 12203 ]] Add version parameter to arrayEncode, to allow
+    //  version 7.0 variant to preserve unicode.
+    MCAutoStringRef t_version;
+    if (!ctxt . EvalOptionalExprAsNullableStringRef(version, EE_ARRAYENCODE_BADSOURCE, &t_version))
+        return;
+    
+	MCArraysEvalArrayEncode(ctxt, *t_array, *t_version, r_value . dataref_value);
+    
+    if (!ctxt . HasError())
+        r_value . type = kMCExecValueTypeDataRef;
+}
 
 #ifdef /* MCBase64Decode */ LEGACY_EXEC
     if (source->eval(ep) != ES_NORMAL)
@@ -226,6 +236,23 @@ Parse_stat MCFunction::parsetarget(MCScriptPoint &sp, Boolean the,
 	MCU_base64encode(ep);
 	return ES_NORMAL;
 #endif /* MCBase64Encode */
+
+void MCArrayEncode::compile(MCSyntaxFactoryRef ctxt)
+{
+    MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+    
+    source -> compile(ctxt);
+    
+    if (version)
+        version -> compile(ctxt);
+    else
+        MCSyntaxFactoryEvalConstantNil(ctxt);
+        
+	MCSyntaxFactoryEvalMethod(ctxt, kMCArraysEvalArrayEncodeMethodInfo);
+    
+	MCSyntaxFactoryEndExpression(ctxt);
+        
+}
 
 MCBaseConvert::~MCBaseConvert()
 {
@@ -365,9 +392,6 @@ void MCBaseConvert::compile(MCSyntaxFactoryRef ctxt)
 {
 	compile_with_args(ctxt,kMCMathEvalBaseConvertMethodInfo, source, sourcebase, destbase);
 }
-
-
-
 
 MCBinaryDecode::~MCBinaryDecode()
 {
@@ -3957,18 +3981,15 @@ Parse_stat MCParamCount::parse(MCScriptPoint &sp, Boolean the)
 
 
 #ifdef /* MCParamCount */ LEGACY_EXEC
-	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
-	//   makes no sense so just return 0.
-	if (ep.gethandler() != nil)
-	{
-		uint2 count;
-		ep.gethandler()->getnparams(count);
-		ep.setnvalue(count);
-	}
-	else
-	{
-		ep.setnvalue(0);
-	}
+	uint2 count;
+    // PM-2014-04-14: [[Bug 12105]] Do this check to prevent crash in LC server
+    if (h == NULL)
+    {
+        MCeerror->add(EE_PARAMCOUNT_NOHANDLER, line, pos);
+        return ES_ERROR;
+    }
+	h->getnparams(count);
+	ep.setnvalue(count);
 	return ES_NORMAL;
 #endif /* MCParamCount */
 
@@ -5019,7 +5040,7 @@ Parse_stat MCTextDecode::parse(MCScriptPoint& sp, Boolean the)
 void MCTextDecode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
     MCAutoDataRef t_data;
-    m_data->eval_dataref(ctxt, &t_data);
+    m_data->eval(ctxt, &t_data);
     if (ctxt.HasError())
     {
         ctxt.LegacyThrow(EE_TEXTDECODE_BADDATA);
@@ -5029,7 +5050,7 @@ void MCTextDecode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     MCAutoStringRef t_encoding;
     if (m_encoding != NULL)
     {
-        m_encoding->eval_stringref(ctxt, &t_encoding);
+        m_encoding->eval(ctxt, &t_encoding);
         if (ctxt.HasError())
         {
             ctxt.LegacyThrow(EE_TEXTDECODE_BADENCODING);
@@ -5070,7 +5091,7 @@ Parse_stat MCTextEncode::parse(MCScriptPoint& sp, Boolean the)
 void MCTextEncode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
     MCAutoStringRef t_string;
-    m_string->eval_stringref(ctxt, &t_string);
+    m_string->eval(ctxt, &t_string);
     if (ctxt.HasError())
     {
         ctxt.LegacyThrow(EE_TEXTENCODE_BADTEXT);
@@ -5080,7 +5101,7 @@ void MCTextEncode::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     MCAutoStringRef t_encoding;
     if (m_encoding != NULL)
     {
-        m_encoding->eval_stringref(ctxt, &t_encoding);
+        m_encoding->eval(ctxt, &t_encoding);
         if (ctxt.HasError())
         {
             ctxt.LegacyThrow(EE_TEXTENCODE_BADENCODING);
@@ -5121,7 +5142,7 @@ Parse_stat MCNormalizeText::parse(MCScriptPoint& sp, Boolean the)
 void MCNormalizeText::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
     MCAutoStringRef t_text;
-    m_text->eval_stringref(ctxt, &t_text);
+    m_text->eval(ctxt, &t_text);
     if (ctxt.HasError())
     {
         ctxt.LegacyThrow(EE_NORMALIZETEXT_BADTEXT);
@@ -5129,7 +5150,7 @@ void MCNormalizeText::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     }
     
     MCAutoStringRef t_form;
-    m_form->eval_stringref(ctxt, &t_form);
+    m_form->eval(ctxt, &t_form);
     if (ctxt.HasError())
     {
         ctxt.LegacyThrow(EE_NORMALIZETEXT_BADFORM);
@@ -5165,7 +5186,7 @@ Parse_stat MCCodepointProperty::parse(MCScriptPoint &sp, Boolean the)
 void MCCodepointProperty::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
     MCAutoStringRef t_codepoint;
-    m_codepoint->eval_stringref(ctxt, &t_codepoint);
+    m_codepoint->eval(ctxt, &t_codepoint);
     if (ctxt.HasError())
     {
         ctxt.LegacyThrow(EE_CODEPOINTPROPERTY_BADCODEPOINT);
@@ -5173,7 +5194,7 @@ void MCCodepointProperty::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     }
     
     MCAutoStringRef t_property;
-    m_property->eval_stringref(ctxt, &t_property);
+    m_property->eval(ctxt, &t_property);
     if (ctxt.HasError())
     {
         ctxt.LegacyThrow(EE_CODEPOINTPROPERTY_BADPROPERTY);

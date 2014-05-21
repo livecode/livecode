@@ -60,13 +60,6 @@ const char *MCliststylestrings[] =
 Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
                         Sort_type dir, Sort_type form, MCExpression *by)
 {
-	MCAutoArray<MCSortnode> items;
-	uint4 nitems = 0;
-	uint4 itemsize = 0;
-	MCParagraph *pgptr;
-    char *temp;
-    temp = NULL;
-
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
 
@@ -83,45 +76,50 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
         settext(parid, *t_sorted, False);
         return ES_NORMAL;
 	}
-	else
-	{
-		if (opened && parid == 0)
-			pgptr = paragraphs;
-		else
-			pgptr = getcarddata(fdata, parid, True)->getparagraphs();
 
-		// MW-2008-02-29: [[ Bug 5763 ]] The crash report seems to suggest a problem with
-		//   a NULL-pointer access on a paragraph - this is the only place I can see this
-		//   happening, so we will guard against it.
-		if (pgptr != NULL)
-		{
-			MCParagraph *tpgptr = pgptr;
-			do
-			{
-				nitems++;
-				tpgptr = tpgptr->next();
-			}
-			while (tpgptr != pgptr);
-			items.Extend(nitems);
-			nitems = 0;
-            
-            extern void MCInterfaceExecSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, int form, MCValueRef p_input, MCExpression *by);
+    MCAutoArray<MCSortnode> items;
+	uint4 nitems = 0;
+	MCParagraph *pgptr;
+    
+    if (opened && parid == 0)
+        pgptr = paragraphs;
+    else
+        pgptr = getcarddata(fdata, parid, True)->getparagraphs();
+    
+    // MW-2008-02-29: [[ Bug 5763 ]] The crash report seems to suggest a problem with
+    //   a NULL-pointer access on a paragraph - this is the only place I can see this
+    //   happening, so we will guard against it.
+    if (pgptr != NULL)
+    {
+        MCParagraph *tpgptr = pgptr;
+        do
+        {
+            nitems++;
+            tpgptr = tpgptr->next();
+        }
+        while (tpgptr != pgptr);
+        items.Extend(nitems);
+        nitems = 0;
+        
+        extern void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, int form, MCValueRef p_input, MCExpression *by);
+        
+        do
+        {
+            if (tpgptr->next() != pgptr || !tpgptr->IsEmpty())
+            {
+                MCAutoStringRef t_string;
+                /* UNCHECKED */ MCStringCopy(tpgptr->GetInternalStringRef(), &t_string);
+                MCStringsSortAddItem(ctxt, items.Ptr(), nitems, form, *t_string, by);
+                items[nitems - 1].data = (void *)tpgptr;
+            }
+            tpgptr = tpgptr->next();
+        }
+        while (tpgptr != pgptr);
+    }
+    
+    extern void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type p_form, MCStringOptions p_options);
 
-			do
-			{
-				if (tpgptr->next() != pgptr || !tpgptr->IsEmpty())
-				{
-					MCAutoStringRef t_string;
-					/* UNCHECKED */ MCStringCopy(tpgptr->GetInternalStringRef(), &t_string);
-					MCInterfaceExecSortAddItem(ctxt, items.Ptr(), nitems, form, *t_string, by);
-					items[nitems - 1].data = (void *)tpgptr;
-				}
-				tpgptr = tpgptr->next();
-			}
-			while (tpgptr != pgptr);
-		}
-	}
-	MCU_sort(items.Ptr(), nitems, dir, form);
+    MCStringsSort(items.Ptr(), nitems, dir, form, ctxt . GetStringComparisonType());
     
     if (nitems > 0)
 	{
@@ -147,7 +145,6 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 			layer_redrawall();
 		}
 	}
-	delete temp;
     
 	return ES_NORMAL;
 }
@@ -758,7 +755,12 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
 	pgptr->setparent(this);
 	pgptr->setselectionindex(si, si, False, False);
 
-    // MW-2012-02-13: [[ Block Unicode ]] Use the new finsert method in native mode.
+	// MM-2014-04-09: [[ Bug 12088 ]] Get the width of the paragraph before insertion and layout.
+	//  If as a result of the update the width of the field has changed, we need to recompute.
+	int2 t_initial_width;
+	t_initial_width = pgptr -> getwidth();
+	
+	// MW-2012-02-13: [[ Block Unicode ]] Use the new finsert method in native mode.
 	// MW-2012-02-23: [[ PutUnicode ]] Pass through the encoding to finsertnew.
 	if (!MCStringIsEmpty(p_text))
 	{
@@ -778,13 +780,16 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
 		
 		// If we haven't already affected many, then lay out the paragraph and see if the
 		// height has changed. If it has we must do a recompute and need to redraw below.
+		// MM-2014-04-09: [[ Bug 12088 ]] If the height hasn't changed, then check to see 
+		//  if the width has changed and a re-compute is needed.
 		if (!t_affect_many)
 			t_initial_pgptr -> layout(false);
 		if (t_affect_many || t_initial_pgptr -> getheight(fixedheight) != t_initial_height)
 		{
 				do_recompute(false);
 				t_affect_many = true;
-		}
+		} else if (t_initial_width == textwidth && pgptr -> getwidth() != textwidth)
+			do_recompute(false);
 		
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		// MW-2013-10-24: [[ FasterField ]] Tweak to minimize redraw.
@@ -1219,7 +1224,7 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 
 			// MW-2012-02-14: [[ FontRefs ]] Previously this process would open/close the
 			//   paragraph, but this is unnecessary as it doesn't rely on anything active.
-			if (sptr->getatts(si, ei, t_text_style, tname, tsize, tstyle, tcolor, tbcolor, tshift, tspecstyle, tmixed))
+			if (sptr->getatts(si, ei, which, t_text_style, tname, tsize, tstyle, tcolor, tbcolor, tshift, tspecstyle, tmixed))
 			{
 				tspecstyle = MCF_istextstyleset(tstyle, t_text_style);
 
@@ -1287,29 +1292,28 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 				ei = 0;
 		}
 		while (ei > 0);
+        
+        if (!has)
+        {
+            if (effective)
+            {
+                // MW-2011-11-23: [[ Array TextStyle ]] Make sure we call the correct
+                //   method for textStyle (its now an array property).
+                if (which != P_TEXT_STYLE)
+                    return getprop(parid, which, ep, effective);
+                else
+                    return getarrayprop(parid, which, ep, index, effective);
+            }
+            ep.clear();
+            return ES_NORMAL;
+        }
 
-        MCAutoStringRef t_fname;
-        /* UNCHECKED */ MCStringCreateWithCString(fname, &t_fname);
-		if (!has)
-		{
-			if (effective)
-			{
-				// MW-2011-11-23: [[ Array TextStyle ]] Make sure we call the correct
-				//   method for textStyle (its now an array property).
-				if (which != P_TEXT_STYLE)
-					return getprop(parid, which, ep, effective);
-				else
-					return getarrayprop(parid, which, ep, index, effective);
-			}
-			ep.clear();
-			return ES_NORMAL;
-		}
 		Exec_stat stat = ES_NORMAL;
 		switch (which)
 		{
 		case P_FORE_COLOR:
 			if (color == NULL)
-				ep.clear();
+                ep.clear();
 			else if (mixed & MIXED_COLORS)
 				ep.setstaticcstring(MCmixedstring);
 			else

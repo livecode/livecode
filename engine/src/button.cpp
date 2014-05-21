@@ -1857,7 +1857,8 @@ Exec_stat MCButton::getprop_legacy(uint4 parid, Properties which, MCExecPoint& e
 				if (slabel.getstring() == NULL)
 					fwidth = 0;
 				else
-					fwidth = leftmargin + rightmargin + MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), t_is_unicode);
+					// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+					fwidth = leftmargin + rightmargin + MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), t_is_unicode, getstack() -> getdevicetransform());
 				if (flags & F_SHOW_ICON && icons != NULL)
 				{
 					reseticon();
@@ -3051,7 +3052,8 @@ void MCButton::makemenu(sublist *bstack, int2 &stackdepth, uint2 menuflags, MCFo
 	if (stackdepth > 0)
 	{
 		MCStringRef t_lastname = MCNameGetString(bstack[stackdepth].parent->getname());
-		pwidth = MCFontMeasureText(fontref, t_lastname) + 16;
+        // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+        pwidth = MCFontMeasureText(fontref, t_lastname, getstack() -> getdevicetransform()) + 16;
 	}
 	sublist *m = &bstack[stackdepth--];
 
@@ -3351,9 +3353,11 @@ public:
 					}
 				}
 			}
-			int32_t width = MCFontMeasureText(fontref, p_menuitem->label);
+            // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            int32_t width = MCFontMeasureText(fontref, p_menuitem->label, parent -> getstack() -> getdevicetransform());
 			if (!MCStringIsEmpty(newbutton->acceltext))
-				bstack[stackdepth].maxaccelwidth = MCU_max(bstack[stackdepth].maxaccelwidth, MCFontMeasureText(fontref, newbutton->acceltext));
+                bstack[stackdepth].maxaccelwidth = MCU_max(bstack[stackdepth].maxaccelwidth, MCFontMeasureText(fontref, newbutton->acceltext, parent -> getstack() -> getdevicetransform()));
+
 			if (width > bstack[stackdepth].maxwidth)
 				bstack[stackdepth].maxwidth = width;
 			MCValueAssign(newbutton->label, p_menuitem->label);
@@ -3668,10 +3672,10 @@ void MCButton::docascade(MCStringRef p_pick)
 			else
 				t_label = pptr->getlabeltext();
 			
-			if (*t_pick == nil)
+            if (*t_pick == nil)
                 /* UNCHECKED */ MCStringMutableCopy(p_pick, &t_pick);
             
-            /* UNCHECKED */ MCStringPrependChar(*t_pick, '|');
+            /* UNCHECKED */ MCStringPrependNativeChar(*t_pick, '|');
             /* UNCHECKED */ MCStringPrepend(*t_pick, t_label);
 
 			pptr = (MCButton *)pptr->parent->getparent()->getparent();
@@ -3927,8 +3931,7 @@ public:
 		/* UNCHECKED */ MCStringMutableCopy(m_tags[0], t_string);
 		for(uint32_t i = 1; i < m_tag_count; i++)
 		{
-			MCStringAppendFormat(t_string, "|");
-			MCStringAppend(t_string, m_tags[i]);
+            MCStringAppendFormat(t_string, "|%@", m_tags[i]);
 		}
 		MCStringCopyAndRelease(t_string, r_string);
 	}
@@ -4027,7 +4030,8 @@ uint2 MCButton::getmousetab(int2 &curx)
 				t_range.offset++;
 				t_range.length--;
 			}
-			totalwidth += MCFontMeasureTextSubstring(m_font, t_tab, t_range) + 23;
+            // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            totalwidth += MCFontMeasureTextSubstring(m_font, t_tab, t_range, getstack() -> getdevicetransform()) + 23;
 		}
 		if (totalwidth < rect.width)
 			curx += rect.width - totalwidth >> 1;
@@ -4058,14 +4062,15 @@ uint2 MCButton::getmousetab(int2 &curx)
 		/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i + 1, t_tabval);
 		MCStringRef t_tab;
 		t_tab = (MCStringRef)t_tabval;
+        // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 		if (MCcurtheme)
-			tx += MCFontMeasureText(m_font, t_tab) + tabrightmargin + tableftmargin - taboverlap;
+            tx += MCFontMeasureText(m_font, t_tab, getstack() -> getdevicetransform()) + tabrightmargin + tableftmargin - taboverlap;
 		else
 		{
 			if (IsMacLF())
-				tx += MCFontMeasureText(m_font, t_tab) + theight * 2 / 3 + 7;
+                tx += MCFontMeasureText(m_font, t_tab, getstack() -> getdevicetransform()) + theight * 2 / 3 + 7;
 			else
-				tx += MCFontMeasureText(m_font, t_tab) + 12;
+                tx += MCFontMeasureText(m_font, t_tab, getstack() -> getdevicetransform()) + 12;
 
 		}
 		if (mx < tx)
@@ -4093,20 +4098,20 @@ int4 MCButton::formattedtabwidth(void)
 	uindex_t t_ntabs;
 	t_ntabs = MCArrayGetCount(tabs);
 	for (uint4 i = 0 ; i < t_ntabs ; i++)
-	{
+    {
 		MCValueRef t_tabval = nil;
 		/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i + 1, t_tabval);
 		MCStringRef t_tab;
 		t_tab = (MCStringRef)t_tabval;
+        // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 		if (MCcurtheme)
-			tx += MCFontMeasureText(m_font, t_tab) + tabrightmargin + tableftmargin - taboverlap;
+            tx += MCFontMeasureText(m_font, t_tab, getstack() -> getdevicetransform()) + tabrightmargin + tableftmargin - taboverlap;
 		else
 		{
 			if (IsMacLF())
-				tx += MCFontMeasureText(m_font, t_tab) + theight * 2 / 3 + 7;
+                tx += MCFontMeasureText(m_font, t_tab, getstack() -> getdevicetransform()) + theight * 2 / 3 + 7;
 			else
-				tx += MCFontMeasureText(m_font, t_tab) + 12;
-
+                tx += MCFontMeasureText(m_font, t_tab, getstack() -> getdevicetransform()) + 12;
 		}
 	}
 	if (t_ntabs > 0)

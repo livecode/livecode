@@ -1131,7 +1131,7 @@ IO_handle android_get_mainstack_stream(void)
 	if (!MCStringFormat(&t_asset_filename, "%@/revandroidmain.rev", MCcmd))
 		return nil;
     
-	return MCS_open(*t_asset_filename, kMCSOpenFileModeRead, False, False, 0);
+    return MCS_open(*t_asset_filename, kMCOpenFileModeRead, False, False, 0);
 }
 
 static void empty_signal_handler(int)
@@ -2364,7 +2364,7 @@ bool MCAndroidLoadDeviceConfiguration()
 
 	if (t_success)
 	{
-		t_filehandle = MCS_open(*t_config_file_path, kMCSOpenFileModeRead, false, false, 0);
+        t_filehandle = MCS_open(*t_config_file_path, kMCOpenFileModeRead, false, false, 0);
 		t_success = t_filehandle != NULL;
 	}
 

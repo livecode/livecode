@@ -511,6 +511,7 @@
 		7278F6401843A2B100E35A65 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC718351E7400858545 /* libicuuc.a */; };
 		72876DE618CF32C400C20405 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 76F0CC9018CA28E500C01A67 /* libskia.a */; };
 		72876DE718CF32D700C20405 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 76F0CC9018CA28E500C01A67 /* libskia.a */; };
+		72C28AFA1911300D007F2AA0 /* segment.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 72C28AF91911300D007F2AA0 /* segment.cpp */; };
 		72D6032418476FC90022379C /* libicudata.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC218351E7400858545 /* libicudata.a */; };
 		72D6032518476FC90022379C /* libicui18n.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC018351E1800858545 /* libicui18n.a */; };
 		72D6032618476FC90022379C /* libicuio.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC318351E7400858545 /* libicuio.a */; };
@@ -1500,6 +1501,8 @@
 		721CAAC618351E7400858545 /* libicutu.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicutu.a; path = ../prebuilt/lib/mac/libicutu.a; sourceTree = "<group>"; };
 		721CAAC718351E7400858545 /* libicuuc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libicuuc.a; path = ../prebuilt/lib/mac/libicuuc.a; sourceTree = "<group>"; };
 		7238DF4E1848B189007EA049 /* MCBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MCBlock.h; path = src/MCBlock.h; sourceTree = "<group>"; };
+		72C28AF819112FDE007F2AA0 /* segment.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = segment.h; path = src/segment.h; sourceTree = "<group>"; };
+		72C28AF91911300D007F2AA0 /* segment.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = segment.cpp; path = src/segment.cpp; sourceTree = "<group>"; };
 		72D6038218477E560022379C /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/QuartzCore.framework; sourceTree = DEVELOPER_DIR; };
 		72D6038418477E5C0022379C /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
@@ -2801,6 +2804,8 @@
 				4D587E670B8096FD00200116 /* scrolbar.cpp */,
 				4D587E0E0B8096E600200116 /* scrolbar.h */,
 				4D587E770B8096FD00200116 /* scrollbardraw.cpp */,
+				72C28AF819112FDE007F2AA0 /* segment.h */,
+				72C28AF91911300D007F2AA0 /* segment.cpp */,
 				4D587E8E0B8096FD00200116 /* sellst.cpp */,
 				4D587E250B8096E600200116 /* sellst.h */,
 				4D587E940B8096FD00200116 /* stack.cpp */,
@@ -3901,6 +3906,7 @@
 				763FF4EA18522CC100B45FBA /* image_rep_resampled.cpp in Sources */,
 				E82206E1184F810A00117D10 /* resolution.cpp in Sources */,
 				E8238D1D188818EA0068154B /* osxhighdpi.mm in Sources */,
+				72C28AFA1911300D007F2AA0 /* segment.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

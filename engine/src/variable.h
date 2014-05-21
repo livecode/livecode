@@ -279,7 +279,8 @@ inline uint32_t MCVariableArray::getnfilled(void) const
 #define kMCEncodedValueTypeEmpty 2
 #define kMCEncodedValueTypeString 3
 #define kMCEncodedValueTypeNumber 4
-#define kMCEncodedValueTypeArray 5
+#define kMCEncodedValueTypeLegacyArray 5
+#define kMCEncodedValueTypeArray 6
 
 #ifdef LEGACY_EXEC
 class MCVariableValue
@@ -930,6 +931,8 @@ public:
 #ifdef LEGACY_EXEC
 	virtual Exec_stat eval(MCExecPoint &);
 #endif
+    
+    bool needsContainer(void) const {return dimensions != 0;}
     
     void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 #ifdef LEGACY_EXEC

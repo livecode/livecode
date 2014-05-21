@@ -711,10 +711,10 @@ bool MCStringCreateWithOldString(const MCString& p_old_string, MCStringRef& r_st
 
 MCString MCStringGetOldString(MCStringRef p_string)
 {
-	const char *t_cstring;
-	t_cstring = MCStringGetCString(p_string);
-
-	return MCString(t_cstring, MCStringGetLength(p_string));
+    if (!MCStringIsNative(p_string))
+        MCStringNativize(p_string);
+    
+    return MCString((const char *)MCStringGetNativeCharPtr(p_string), MCStringGetLength(p_string));
 }
 
 bool MCStringIsEqualToOldString(MCStringRef p_string, const MCString& p_oldstring, MCCompareOptions p_options)
@@ -742,10 +742,13 @@ bool MCStringToDouble(MCStringRef p_string, double& r_real)
 	char *t_end;
 	t_end = nil;
 	
+    MCAutoStringRefAsCString t_string;
+    t_string . Lock(p_string);
+    
 	double t_value;
-	t_value = strtod(MCStringGetCString(p_string), &t_end);
+	t_value = strtod(*t_string, &t_end);
 	
-	if (t_end != MCStringGetCString(p_string) + strlen(MCStringGetCString(p_string)))
+	if (t_end != *t_string + strlen(*t_string))
 		return false;
 	
 	r_real = t_value;
@@ -1160,7 +1163,13 @@ bool MCNameGetAsIndex(MCNameRef p_name, index_t& r_index)
 {
 	char *t_end;
 	index_t t_index;
-	t_index = strtol(MCStringGetCString(MCNameGetString(p_name)), &t_end, 10);
+    
+    // AL-2014-05-15: [[ Bug 12203 ]] Don't nativize array name when checking
+    //  for a sequential array.
+    
+    MCAutoStringRefAsCString t_cstring;
+    t_cstring . Lock(MCNameGetString(p_name));
+	t_index = strtol(*t_cstring, &t_end, 10);
 	if (*t_end == '\0')
 	{
 		r_index = t_index;
@@ -1733,7 +1742,11 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 		case VF_STRING:
 			t_stat = ctxt -> stream -> WriteU32(MCStringGetLength(t_str_value));
 			if (t_stat == IO_NORMAL)
-				t_stat = ctxt -> stream -> Write(MCStringGetCString(t_str_value), MCStringGetLength(t_str_value));
+            {
+                MCAutoStringRefAsCString t_cstring;
+                t_cstring . Lock(t_str_value);
+				t_stat = ctxt -> stream -> Write(*t_cstring, strlen(*t_cstring));
+            }
 			break;
 		case VF_NUMBER:
 			t_stat = ctxt -> stream -> WriteFloat64(MCNumberFetchAsReal((MCNumberRef)p_value));

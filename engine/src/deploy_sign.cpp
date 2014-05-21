@@ -937,8 +937,10 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 			t_data . setnext(&t_url);
 			t_url . setvalueref_argument(p_params . timestamper);
             extern MCExecContext *MCECptr;
+            // SN-2014-05-09 [[ ClearResult ]]
+            // isempty is different from isclear - 'isempty' returns false for a cleared result
 			if (MCECptr->GetObject() -> message(MCM_post_url, &t_data, False, True) == ES_NORMAL &&
-				MCresult -> isempty())
+				MCresult -> isclear())
 			{
 				t_failed = false;
 				break;
@@ -1050,7 +1052,7 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 	// First open input and output executable files
 	MCDeployFileRef t_input;
 	t_input = nil;
-	if (t_success && !MCDeployFileOpen(p_params . input, kMCSOpenFileModeRead, t_input))
+	if (t_success && !MCDeployFileOpen(p_params . input, kMCOpenFileModeRead, t_input))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 
 	BIO *t_output;

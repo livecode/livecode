@@ -40,6 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphicscontext.h"
 #include "font.h"
 
+#include "graphics_util.h"
+
 #ifdef _LINUX_DESKTOP
 #include "flst.h"
 #endif
@@ -353,6 +355,15 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 		break;
 	case MARK_TYPE_RECTANGLE:
 		{
+            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
+            // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
+			if (!(p_mark -> rectangle . inset % 2))
+				p_mark -> rectangle . inset ++;
+			p_mark -> rectangle . bounds = MCRectangleMake(p_mark -> rectangle . bounds . x + p_mark -> rectangle . inset / 2,
+														   p_mark -> rectangle . bounds . y + p_mark -> rectangle . inset / 2, 
+														   p_mark -> rectangle . bounds . width - p_mark -> rectangle . inset, 
+														   p_mark -> rectangle . bounds . height - p_mark -> rectangle . inset);
+			
 			MCPath *t_path;
 			if (p_mark -> stroke != nil && p_mark -> rectangle . bounds . height == 1)
 				t_path = MCPath::create_line(p_mark -> rectangle . bounds . x, p_mark -> rectangle . bounds . y, p_mark -> rectangle . bounds . x + p_mark -> rectangle . bounds . width - 1, p_mark -> rectangle . bounds . y, true);
@@ -371,8 +382,17 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 		break;
 	case MARK_TYPE_ROUND_RECTANGLE:
 		{
+            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
+            // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
+			if (!(p_mark -> round_rectangle . inset % 2))
+				p_mark -> round_rectangle . inset ++;
+			p_mark -> round_rectangle . bounds = MCRectangleMake(p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . inset / 2,
+														   p_mark -> round_rectangle . bounds . y + p_mark -> round_rectangle . inset / 2, 
+														   p_mark -> round_rectangle . bounds . width - p_mark -> round_rectangle . inset, 
+														   p_mark -> round_rectangle . bounds . height - p_mark -> round_rectangle . inset);
+			
 			MCPath *t_path;
-			t_path = MCPath::create_rounded_rectangle(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . radius, p_mark -> stroke != nil);
+			t_path = MCPath::create_rounded_rectangle(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . radius / 2, p_mark -> stroke != nil);
 			if (t_path != nil)
 			{
 				dopathmark(p_mark, t_path);
@@ -384,6 +404,15 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 		break;
 	case MARK_TYPE_ARC:
 		{
+            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
+            // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
+			if (!(p_mark -> arc . inset % 2))
+				p_mark -> arc . inset ++;
+			p_mark -> arc . bounds = MCRectangleMake(p_mark -> arc . bounds . x + p_mark -> arc . inset / 2,
+														   p_mark -> arc . bounds . y + p_mark -> arc . inset / 2, 
+														   p_mark -> arc . bounds . width - p_mark -> arc . inset, 
+														   p_mark -> arc . bounds . height - p_mark -> arc . inset);
+			
 			MCPath *t_path;
 			if (p_mark -> arc . complete)
 				t_path = MCPath::create_segment(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle, p_mark -> stroke != nil);

@@ -32,9 +32,9 @@ uint1 *MCuppercasingtable;
 
 bool MCAndroidSystem::Initialize(void)
 {
-    IO_stdin = MCsystem -> OpenFd(0, kMCSOpenFileModeRead);
-    IO_stdout = MCsystem -> OpenFd(1, kMCSOpenFileModeWrite);
-    IO_stderr = MCsystem -> OpenFd(2, kMCSOpenFileModeWrite);
+    IO_stdin = MCsystem -> OpenFd(0, kMCOpenFileModeRead);
+    IO_stdout = MCsystem -> OpenFd(1, kMCOpenFileModeWrite);
+    IO_stderr = MCsystem -> OpenFd(2, kMCOpenFileModeWrite);
     
     // Initialize our case mapping tables
     

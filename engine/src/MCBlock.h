@@ -105,7 +105,6 @@ public:
 
 	bool fit(int2 x, uint2 width, findex_t& r_break_index, bool& r_break_fits);
 	void split(findex_t p_index);
-	int2 gettabwidth(int2 x, findex_t index);
 	void drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style);
 	
 	// MW-2012-02-27: [[ Bug 2939 ]] The 'flags' parameter indicates whether the left and/or

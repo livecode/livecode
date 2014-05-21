@@ -123,9 +123,13 @@ MCPropertyInfo MCField::kProperties[] =
     DEFINE_RW_OBJ_LIST_PROPERTY(P_HILITED_LINES, ItemsOfUInt, MCField, HilitedLines)
     DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_FLAGGED_RANGES, InterfaceFlaggedRanges, MCField, FlaggedRanges)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_STOPS, ItemsOfUInt, MCField, TabStops)
+    DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_TAB_ALIGN, InterfaceFieldTabAlignments, MCField, TabAlignments)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfUInt, MCField, TabWidths)
     DEFINE_RO_OBJ_LIST_PROPERTY(P_PAGE_HEIGHTS, LinesOfUInt, MCField, PageHeights)
 
+    DEFINE_RW_OBJ_NON_EFFECTIVE_OPTIONAL_ENUM_PROPERTY(P_TEXT_ALIGN, InterfaceTextAlign, MCField, TextAlign)
+	DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_TEXT_ALIGN, InterfaceTextAlign, MCField, TextAlign)
+    
 	DEFINE_RW_OBJ_CHAR_CHUNK_PROPERTY(P_TEXT, String, MCField, Text)
 	DEFINE_RW_OBJ_CHAR_CHUNK_PROPERTY(P_UNICODE_TEXT, BinaryString, MCField, UnicodeText)
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_PLAIN_TEXT, String, MCField, PlainText)
@@ -174,6 +178,8 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_PROPERTY(P_SPACE_BELOW, UInt16, MCField, SpaceBelow)
 	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_STOPS, ItemsOfUInt, MCField, TabStops)
 	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_STOPS, ItemsOfUInt, MCField, TabStops)
+    DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_CUSTOM_PROPERTY(P_TAB_ALIGN, InterfaceFieldTabAlignments, MCField, TabAlignments)
+    DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_CUSTOM_PROPERTY(P_TAB_ALIGN, InterfaceFieldTabAlignments, MCField, TabAlignments)
 	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_PROPERTY(P_BORDER_WIDTH, OptionalUInt8, MCField, BorderWidth)
 	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_PROPERTY(P_BORDER_WIDTH, UInt8, MCField, BorderWidth)
 	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_CUSTOM_PROPERTY(P_BACK_COLOR, InterfaceNamedColor, MCField, BackColor)
@@ -236,6 +242,8 @@ MCField::MCField()
 	scrollbarwidth = MCscrollbarwidth;
 	tabs = NULL;
 	ntabs = 0;
+    alignments = NULL;
+    nalignments = 0;
     cursor_movement = kMCFieldCursorMovementDefault;
     text_direction = kMCTextDirectionAuto;
 	label = MCValueRetain(kMCEmptyString);
@@ -290,6 +298,16 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
 	}
 	else
 		tabs = NULL;
+    nalignments = fref.nalignments;
+    if (nalignments)
+    {
+        alignments = new intenum_t[ntabs];
+        uint2 i;
+        for (i = 0; i < nalignments; i++)
+            alignments[i] = fref.alignments[i];
+    }
+    else
+        alignments = NULL;
 	if (fref.fdata != NULL)
 	{
 		MCCdata *fptr = fref.fdata;
@@ -546,8 +564,8 @@ void MCField::kfocus()
 		if (flags & F_LIST_BEHAVIOR)
 		{
 			if (!(flags & F_TOGGLE_HILITE))
-				if (!focusedparagraph->isselection()
-				        && !focusedparagraph->IsEmpty()
+                if (!focusedparagraph->isselection()
+                        && !focusedparagraph->IsEmpty()
 				        || focusedparagraph->next() != focusedparagraph)
 				{
 					focusedparagraph->sethilite(True);
@@ -810,7 +828,7 @@ Boolean MCField::mfocus(int2 x, int2 y)
 {
 	Tool tool = getstack()->gettool(this);
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-	        || flags & F_DISABLED && tool == T_BROWSE || state & CS_NO_FILE)
+            || flags & F_DISABLED && tool == T_BROWSE || state & CS_NO_FILE)
 		return False;
 	if (sbfocus(x, y, hscrollbar, vscrollbar))
 	{
@@ -1006,7 +1024,7 @@ Boolean MCField::mdown(uint2 which)
 				}
 			}
 			if (flags & F_TRAVERSAL_ON ||
-				(flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL) && flags & F_LIST_BEHAVIOR)
+                (flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL) && flags & F_LIST_BEHAVIOR)
 			{
 				if (flags & F_TRAVERSAL_ON && !(state & CS_KFOCUSED)
 				        && !(flags & F_NO_AUTO_HILITE))
@@ -1132,7 +1150,7 @@ Boolean MCField::mup(uint2 which)
 			if (!(state & CS_DRAG_TEXT))
 				if ((flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL))
 					if (MCU_point_in_rect(rect, mx, my))
-						if (flags & F_LIST_BEHAVIOR
+                        if (flags & F_LIST_BEHAVIOR
                                 && (my - rect.y > (int4)(textheight + topmargin - texty)
                                     || paragraphs == paragraphs->next()
                                     && paragraphs->IsEmpty()))
@@ -1540,8 +1558,9 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
             MCParagraph *pgptr = paragraphs;
             uint2 height = getfheight();
             uint2 theight = height;
-            uint2 tstart = 1;
-            uint2 tend = 0;
+            // MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indicies.
+            uint4 tstart = 1;
+            uint4 tend = 0;
             MCLine *lastline = NULL;
             uint2 j = 0;
             while (True)

@@ -765,7 +765,8 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, findex_t& r_break_index, bool& r_break
 		// MW-2013-11-07: [[ Bug 11393 ]] Previous per-platform implementations all fold into the optimized
 		//   case now (previously iOS / Windows printer were measuring break by break, which is what we do
 		//   generally now).
-		if (t_this_char == '\t')
+        // FG-2014-04-30: [[ TabAlignments ]] Blocks no longer contain tabs
+		/*if (t_this_char == '\t')
 		{
 			twidth += gettabwidth(x + twidth, initial_i);
 			twidth_float = (MCGFloat)twidth;
@@ -773,11 +774,12 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, findex_t& r_break_index, bool& r_break
 			t_last_break_width = twidth;
 			t_last_break_i = i;
 		}
-		else
+		else*/
         {
             MCRange t_range;
             t_range = MCRangeMake(initial_i, i - initial_i);
-			twidth_float += MCFontMeasureTextSubstringFloat(m_font,  parent->GetInternalStringRef(), t_range);
+            // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            twidth_float += MCFontMeasureTextSubstringFloat(m_font,  parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform());
 			twidth = (int32_t)floorf(twidth_float);
 		}
 
@@ -827,7 +829,8 @@ void MCBlock::split(findex_t p_index)
 }
 
 // Compute the distance between x and the next tab stop position.
-int2 MCBlock::gettabwidth(int2 x, findex_t i)
+// FG-2014-04-30: [[ TabAlignments ]] Blocks no longer contain tabs
+/*int2 MCBlock::gettabwidth(int2 x, findex_t i)
 {
 	uint2 *tabs;
 	uint2 ntabs;
@@ -939,7 +942,7 @@ int2 MCBlock::gettabwidth(int2 x, findex_t i)
 		// Return the difference between x and the last tab.
 		return lasttab - x;
 	}
-}
+}*/
 
 void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style)
 {
@@ -970,12 +973,13 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 		while(t_index < start + length)
 		{
 			uindex_t t_next_tab;
-			if (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', t_index, kMCStringOptionCompareExact, t_next_tab))
+            // FG-2014-04-30: [[ TabAlignments ]] Blocks no longer contain tabs
+			/*if (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', t_index, kMCStringOptionCompareExact, t_next_tab))
             {
-				if (t_next_tab >= m_index + m_size)
+                if (t_next_tab >= m_index + m_size)
 					t_next_tab = -1;
             }
-			else
+			else*/
 				t_next_tab = -1;
 
 			findex_t t_next_index;
@@ -985,15 +989,17 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 				t_next_index = t_next_tab;
 
 			int2 t_tab_width;
-			t_tab_width = gettabwidth(0, t_index);
+			t_tab_width = 64; //gettabwidth(0, t_index);
 
 			uint2 t_cell_right;
 			t_cell_right = t_tab_width - t_delta;
 
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 			uint2 t_width;
 			MCRange t_range;
 			t_range = MCRangeMake(t_index, t_next_index - t_index);
-			t_width = MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
+            t_width = MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform());
+
 
 			// MW-2012-02-09: [[ ParaStyles ]] Compute the cell clip, taking into account padding.
 			t_cell_clip . x = x - 1;
@@ -1060,7 +1066,8 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 		if ((style & (FA_UNDERLINE | FA_STRIKEOUT)) != 0)
 			t_line_width = getsubwidth(dc, cx, start, size);
 		
-		if (flags & F_HAS_TAB)
+        // FG-2014-04-30: [[ TabAlignments ]] Blocks no longer contain tabs
+		/*if (flags & F_HAS_TAB)
 		{
 			uindex_t eptr;
 			while (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', sptr, kMCStringOptionCompareExact, eptr))
@@ -1068,12 +1075,13 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 				// If beyond this block, ignore
 				findex_t l = eptr - sptr;
 				if (l >= size)
-					break;
-				
-				uint2 twidth;
+                    break;
+
+                // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+                uint2 twidth;
 				MCRange t_range;
 				t_range = MCRangeMake(sptr, l);
-				twidth = MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
+                twidth = MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform());
 				twidth += gettabwidth(cx + twidth, eptr);
 
                 dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True, kMCDrawTextBreak, is_rtl() ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
@@ -1094,7 +1102,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 //				sptr = l;
 //                size = length - l;
 			}
-		}
+		}*/
 
 		MCRange t_range;
 		t_range = MCRangeMake(sptr, size);
@@ -1780,8 +1788,9 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
 		//   to 65535 - this means that we force wrapping when the line is too long.
 		// MW-2013-08-08: [[ Bug 10654 ]] Make sure we use a signed integer here, otherwise
 		//   we get incorrect clamping when converted to unsigned.
+        // FG-2014-04-30: [[ TabAlignments ]] Blocks no longer contain tabs
 		int4 twidth = 0;
-		if (flags & F_HAS_TAB)
+		/*if (flags & F_HAS_TAB)
 		{
 			uindex_t eptr;
 			while (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', sptr, kMCStringOptionCompareExact, eptr))
@@ -1792,7 +1801,8 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
 				
 				MCRange t_range;
 				t_range = MCRangeMake(sptr, eptr - sptr);
-				twidth += MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range);
+                // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+                twidth += MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform());
 
 				twidth += gettabwidth(x + twidth, eptr);
 
@@ -1803,10 +1813,11 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
 				sptr += sl;
 				l -= sl;
 			}
-		}
+		}*/
 		MCRange t_range;
 		t_range = MCRangeMake(sptr, l);
-		return MCU_min(65535, twidth + MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range));
+        // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+        return MCU_min(65535, twidth + MCFontMeasureTextSubstring(m_font, parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform()));
 	}
 }
 
@@ -1816,7 +1827,8 @@ uint2 MCBlock::getwidth(MCDC *dc, int2 x)
 		return atts->image->getrect().width;
 	else if (dc != NULL && dc -> gettype() == CONTEXT_TYPE_PRINTER)
 		return getsubwidth(dc, x, m_index, m_size);
-	else if (width == 0 || flags & F_HAS_TAB)
+    // FG-2014-04-30 [[ TabAlignments ]] Blocks no longer contain tabs
+	else if (width == 0 /*|| flags & F_HAS_TAB*/) 
 		return width = getsubwidth(dc, x, m_index, m_size);
 	else
 		return width;
@@ -1900,7 +1912,7 @@ void MCBlock::openimage()
 		// Search for the appropriate image object using the standard method - here we
 		// use the field as the starting point.
 		uint4 t_image_id;
-		if (MCU_stoui4(MCStringGetOldString(atts->imagesource), t_image_id))
+		if (MCU_stoui4(atts->imagesource, t_image_id))
 			atts -> image = t_field -> resolveimageid(t_image_id);
 		else
 		{
@@ -2236,12 +2248,13 @@ void MCBlock::SetRange(findex_t p_index, findex_t p_length)
 	width = 0;
     
 	// Update the 'has tabs' flag
-	uindex_t t_where;
+    // FG-2014-04-30 [[ TabAlignments ]] Blocks no longer contain tabs
+	/*uindex_t t_where;
 	if (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', m_index, kMCStringOptionCompareExact, t_where)
 		&& t_where < m_index + m_size)
 		flags |= F_HAS_TAB;
 	else
-		flags &= ~F_HAS_TAB;
+		flags &= ~F_HAS_TAB;*/
 }
 
 void MCBlock::MoveRange(findex_t p_index, findex_t p_length)
@@ -2252,12 +2265,13 @@ void MCBlock::MoveRange(findex_t p_index, findex_t p_length)
         width = 0;
     
 	// Update the 'has tabs' flag
-	uindex_t t_where;
+    // FG-2014-04-30 [[ TabAlignments ]] Blocks no longer contain tabs
+	/*uindex_t t_where;
 	if (MCStringFirstIndexOfChar(parent->GetInternalStringRef(), '\t', m_index, kMCStringOptionCompareExact, t_where)
 		&& t_where < m_index + m_size)
 		flags |= F_HAS_TAB;
 	else
-		flags &= ~F_HAS_TAB;
+		flags &= ~F_HAS_TAB;*/
 }
 
 codepoint_t MCBlock::GetCodepointAtIndex(findex_t p_index) const

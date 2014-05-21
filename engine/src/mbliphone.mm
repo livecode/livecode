@@ -589,16 +589,17 @@ IO_handle MCIPhoneSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean
     
     switch (p_mode)
     {
-    case kMCSOpenFileModeRead:
+    case kMCOpenFileModeRead:
         t_mode = 0;
         break;
-    case kMCSOpenFileModeWrite:
+    case kMCOpenFileModeWrite:
+    case kMCOpenFileModeExecutableWrite:
         t_mode = 1;
         break;
-    case kMCSOpenFileModeUpdate:
+    case kMCOpenFileModeUpdate:
         t_mode = 2;
         break;
-    case kMCSOpenFileModeAppend:
+    case kMCOpenFileModeAppend:
         t_mode = 3;
         break;
     }
@@ -608,7 +609,7 @@ IO_handle MCIPhoneSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean
     /* UNCHECKED */ t_utf8_path . Lock(p_path);
     t_stream = fopen(*t_utf8_path, s_modes[t_mode]);
     
-	if (t_stream == NULL && p_mode == kMCSystemFileModeUpdate)
+	if (t_stream == NULL && p_mode == kMCOpenFileModeUpdate)
 		t_stream = fopen(*t_utf8_path, "w+");
     
     if (t_stream == NULL)
@@ -1034,9 +1035,9 @@ void MCIPhoneSystem::SetErrno(int p_errno)
 
 bool MCIPhoneSystem::Initialize(void)
 {
-    IO_stdin = OpenFd(0, kMCSystemFileModeRead);
-    IO_stdout = OpenFd(1, kMCSystemFileModeWrite);
-    IO_stderr = OpenFd(2, kMCSystemFileModeWrite);
+    IO_stdin = OpenFd(0, kMCOpenFileModeRead);
+    IO_stdout = OpenFd(1, kMCOpenFileModeWrite);
+    IO_stderr = OpenFd(2, kMCOpenFileModeWrite);
     
     // Initialize our case mapping tables
     
@@ -1149,9 +1150,10 @@ MCSystemInterface *MCMobileCreateIPhoneSystem(void)
 // MW-2013-05-21: [[ RandomBytes ]] System function for random bytes on iOS.
 bool MCS_random_bytes(size_t p_count, MCDataRef& r_buffer)
 {
+    // IM-2014-04-16: [[ Bug 11860 ]] SecRandomCopyBytes returns 0 on success
     MCAutoByteArray t_bytes;
     return (t_bytes . New(p_count) &&
-            SecRandomCopyBytes(kSecRandomDefault, p_count, (uint8_t *)t_bytes . Bytes()) != 0 &&
+            SecRandomCopyBytes(kSecRandomDefault, p_count, (uint8_t *)t_bytes . Bytes()) == 0 &&
             t_bytes . CreateData(r_buffer));
 }
 

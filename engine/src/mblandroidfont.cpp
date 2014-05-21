@@ -382,7 +382,7 @@ static bool load_custom_font_file_into_buffer_from_path(MCStringRef p_path, char
     t_font_file_handle = nil;
     if (t_success)
 	{
-        t_font_file_handle = MCS_open(*t_font_path, kMCSOpenFileModeRead, false, false, 0);
+        t_font_file_handle = MCS_open(*t_font_path, kMCOpenFileModeRead, false, false, 0);
 		t_success = t_font_file_handle != nil;
 	}
     

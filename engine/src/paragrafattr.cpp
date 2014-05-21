@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //#include "execpt.h"
 #include "util.h"
 #include "mcerror.h"
+#include "segment.h"
 
 #include "globals.h"
 
@@ -1641,7 +1642,8 @@ int32_t MCParagraph::getlistindent(void) const
 	if (attrs != nil && (attrs -> flags & PA_HAS_LIST_INDENT) != 0)
 		return MCAbs(attrs -> first_indent);
 
-	return 8 * MCFontMeasureText(parent -> getfontref(), MCSTR(" "));
+    // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+    return 8 * MCFontMeasureText(parent -> getfontref(), MCSTR(" "), parent -> getstack() -> getdevicetransform());
 }
 
 void MCParagraph::gettabs(uint16_t*& r_tabs, uint16_t& r_tab_count, Boolean& r_fixed) const
@@ -1655,6 +1657,17 @@ void MCParagraph::gettabs(uint16_t*& r_tabs, uint16_t& r_tab_count, Boolean& r_f
 		parent -> gettabs(r_tabs, r_tab_count, r_fixed);
 
 	r_fixed = getvgrid();
+}
+
+void MCParagraph::gettabaligns(intenum_t*& r_tab_aligns, uint16_t& r_tab_count) const
+{
+    if (attrs != nil && (attrs -> flags & PA_HAS_TAB_ALIGNMENTS) != 0)
+    {
+        r_tab_aligns = attrs -> alignments;
+        r_tab_count = attrs -> alignments_count;
+    }
+    else
+        parent -> gettabaligns(r_tab_aligns, r_tab_count);
 }
 
 bool MCParagraph::getvgrid(void) const
@@ -1939,8 +1952,8 @@ void MCParagraph::computeparaoffsetandwidth(int32_t& r_offset, int32_t& r_width)
 	t_layout_width = parent -> getlayoutwidth();
 	t_para_width = getwidth();
 
-	int32_t t_offset;
-	if (t_para_width > t_layout_width)
+    int32_t t_offset;
+	if (getdontwrap())
 	{
 		switch(gettextalign())
 		{
@@ -1958,7 +1971,7 @@ void MCParagraph::computeparaoffsetandwidth(int32_t& r_offset, int32_t& r_width)
 	}
 	else
 		t_offset = 0;
-
+    
 	r_offset = t_offset;
 	r_width = t_para_width;
 }
@@ -2019,19 +2032,29 @@ int32_t MCParagraph::computelineinneroffset(int32_t p_layout_width, MCLine *p_li
 		}
 	}
 
-	if (p_layout_width > t_line_width)
-		switch(gettextalign())
-		{
-		case kMCParagraphTextAlignLeft:
-		case kMCParagraphTextAlignJustify:
-			break;
-		case kMCParagraphTextAlignCenter:
-			t_offset += (p_layout_width - t_line_width) / 2;
-			break;
-		case kMCParagraphTextAlignRight:
-			t_offset += p_layout_width - t_line_width;
-			break;
-		}
+
+    // FG-2014-05-06: [[ TabAlignments ]]
+    // Lines now handle offsets themselves unless they are non-flowed
+    if (getdontwrap())
+    {
+        if (p_layout_width > t_line_width)
+            switch(gettextalign())
+            {
+            case kMCParagraphTextAlignLeft:
+            case kMCParagraphTextAlignJustify:
+                break;
+            case kMCParagraphTextAlignCenter:
+                t_offset += (p_layout_width - t_line_width) / 2;
+                break;
+            case kMCParagraphTextAlignRight:
+                t_offset += p_layout_width - t_line_width;
+                break;
+            }
+    }
+    else
+    {
+           t_offset += p_line->GetLineOffset(); 
+    }
 
 	return t_offset;
 }

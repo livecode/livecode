@@ -151,7 +151,14 @@ class MCScreenDC : public MCUIDC
 	bool backdrop_hard;
 	HWND backdrop_window;
 	MCColor backdrop_colour;
-	MCGImageRef backdrop_pattern;
+
+	// IM-2014-04-17: [[ Bug 12223 ]] Size and scale of backdrop window
+	MCRectangle m_backdrop_rect;
+	MCGFloat m_backdrop_scale;
+
+	// MM-2014-04-08: [[ Bug 12058 ]] Update back_pattern to be a MCPatternRef.
+	MCPatternRef backdrop_pattern;
+	
 	MCImage *backdrop_badge;
 
 	HDC m_printer_dc;
@@ -279,7 +286,10 @@ public:
 
 	virtual void enablebackdrop(bool p_hard);
 	virtual void disablebackdrop(bool p_hard);
-	virtual void configurebackdrop(const MCColor& p_color, MCGImageRef p_pattern, MCImage *p_badge);
+
+	// MM-2014-04-08: [[ Bug 12058 ]] Update prototype to take a MCPatternRef.
+	virtual void configurebackdrop(const MCColor& p_color, MCPatternRef p_pattern, MCImage *p_badge);
+
 	virtual void assignbackdrop(enum Window_mode p_mode, Window p_window);
 
 	virtual void seticon(uint4 p_icon);

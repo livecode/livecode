@@ -21,6 +21,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static HDC s_measure_dc = NULL;
+static HDC s_draw_dc = NULL;
+
+////////////////////////////////////////////////////////////////////////////////
+
 static inline uint32_t packed_scale_bounded(uint32_t x, uint8_t a)
 {
 	uint32_t u, v;
@@ -332,163 +337,6 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 	return t_success;
 }
 
-static bool w32_draw_text_to_context_at_device_location(MCGContextRef p_context, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, MCGIntRectangle p_bounds, HDC p_gdicontext)
-{
-	bool t_success;
-	t_success = true;
-
-	void *t_dib_data;
-	t_dib_data = NULL;
-	HBITMAP t_gdibitmap;
-	t_gdibitmap = NULL;
-	if (t_success)
-	{
-		BITMAPINFO t_bitmapinfo;
-		MCMemoryClear(&t_bitmapinfo, sizeof(BITMAPINFO));
-		t_bitmapinfo . bmiHeader . biSize = sizeof(BITMAPINFOHEADER);
-		t_bitmapinfo . bmiHeader . biCompression = BI_RGB;
-		t_bitmapinfo . bmiHeader . biWidth = p_bounds . width;
-		t_bitmapinfo . bmiHeader . biHeight = -p_bounds . height;
-		t_bitmapinfo . bmiHeader . biPlanes = 1;
-		t_bitmapinfo . bmiHeader . biBitCount = 32;
-		t_gdibitmap = CreateDIBSection(p_gdicontext, &t_bitmapinfo, DIB_RGB_COLORS, &t_dib_data, NULL, 0);
-		t_success = t_gdibitmap != NULL && t_dib_data != NULL;
-	}
-
-	if (t_success)
-		t_success = SelectObject(p_gdicontext, t_gdibitmap) != NULL;	
-
-	if (t_success)
-	{
-		SetTextColor(p_gdicontext, 0x00000000);
-		SetBkColor(p_gdicontext, 0x00FFFFFF);
-		SetBkMode(p_gdicontext, OPAQUE);		
-		t_success = ExtTextOutW(p_gdicontext, 0, 0, false ? ETO_RTLREADING : 0, NULL, (LPCWSTR)p_text, p_length >> 1, NULL);
-	}
-	
-	if (t_success)
-		t_success = GdiFlush();
-	
-	void *t_data;
-	t_data = NULL;
-	if (t_success)
-		t_success = MCMemoryNew(p_bounds . width * p_bounds . height, t_data);
-	
-	if (t_success)
-	{
-		uint32_t *t_src_data;
-		t_src_data = (uint32_t *) t_dib_data;
-		
-		uint8_t *t_dst_data;
-		t_dst_data = (uint8_t *) t_data;
-		
-		for (uint32_t y = 0; y < p_bounds . height; y++)
-		{
-			for (uint32_t x = 0; x < p_bounds . width; x++)
-			{
-				uint32_t t_lcd32_val;
-				t_lcd32_val = *(t_src_data + y * p_bounds . width + x);		
-				
-				uint8_t t_a8_val;
-				t_a8_val = ((t_lcd32_val & 0xFF) + ((t_lcd32_val & 0xFF00) >> 8) + ((t_lcd32_val & 0xFF0000) >> 16)) / 3;
-				
-				*(t_dst_data + y * p_bounds . width + x) = 255 - t_a8_val;
-			}
-		}
-		
-		SkPaint t_paint;
-		t_paint . setStyle(SkPaint::kFill_Style);	
-		t_paint . setAntiAlias(p_context -> state -> should_antialias);
-		t_paint . setColor(MCGColorToSkColor(p_context -> state -> fill_color));
-		
-		SkXfermode *t_blend_mode;
-		t_blend_mode = MCGBlendModeToSkXfermode(p_context -> state -> blend_mode);
-		t_paint . setXfermode(t_blend_mode);
-		if (t_blend_mode != NULL)
-			t_blend_mode -> unref();		
-		
-		SkBitmap t_bitmap;
-		t_bitmap . setConfig(SkBitmap::kA8_Config, p_bounds . width, p_bounds . height);
-        t_bitmap . setAlphaType(kPremul_SkAlphaType);
-		t_bitmap . setPixels(t_data);
-		p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, 
-											  p_bounds . y + p_location . y, &t_paint);
-	}
-	
-	DeleteObject(t_gdibitmap);
-	MCMemoryDelete(t_data);
-	return t_success;
-}
-
-static bool w32_draw_opaque_text_to_context_at_device_location(MCGContextRef p_context, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, MCGIntRectangle p_bounds, HDC p_gdicontext)
-{
-	bool t_success;
-	t_success = true;
-
-	void *t_dib_data;
-	t_dib_data = NULL;
-	HBITMAP t_gdibitmap;
-	t_gdibitmap = NULL;
-	if (t_success)
-	{
-		BITMAPINFO t_bitmapinfo;
-		MCMemoryClear(&t_bitmapinfo, sizeof(BITMAPINFO));
-		t_bitmapinfo . bmiHeader . biSize = sizeof(BITMAPINFOHEADER);
-		t_bitmapinfo . bmiHeader . biCompression = BI_RGB;
-		t_bitmapinfo . bmiHeader . biWidth = p_bounds . width;
-		t_bitmapinfo . bmiHeader . biHeight = -p_bounds . height;
-		t_bitmapinfo . bmiHeader . biPlanes = 1;
-		t_bitmapinfo . bmiHeader . biBitCount = 32;
-		t_gdibitmap = CreateDIBSection(p_gdicontext, &t_bitmapinfo, DIB_RGB_COLORS, &t_dib_data, NULL, 0);
-		t_success = t_gdibitmap != NULL && t_dib_data != NULL;
-	}
-
-	if (t_success)
-		t_success = SelectObject(p_gdicontext, t_gdibitmap) != NULL;	
-
-	uint32_t *t_context_pxls, *t_dib_pxls;
-	uint32_t t_context_width, t_x_offset, t_y_offset;
-	if (t_success)
-	{
-		t_context_pxls = (uint32_t *) p_context -> layer -> canvas -> getTopDevice() -> accessBitmap(true) . getPixels();
-		t_dib_pxls = (uint32_t *) t_dib_data;
-
-		t_context_width = p_context -> layer-> canvas -> getTopDevice() -> accessBitmap(false) . rowBytes() / 4;		
-		t_x_offset = p_location . x + p_bounds . x;
-		t_y_offset = p_location . y + p_bounds . y;
-
-		for (uint32_t y = 0; y < p_bounds . height; y++)
-			for (uint32_t x = 0; x < p_bounds . width; x++)
-				*(t_dib_pxls + y * p_bounds . width + x) = *(t_context_pxls + (y + t_y_offset) * t_context_width + x + t_x_offset);
-
-		SetBkMode(p_gdicontext, TRANSPARENT);
-		SetTextColor(p_gdicontext, RGB((p_context -> state -> fill_color >> 16) & 0xFF, (p_context -> state -> fill_color >> 8) & 0xFF, (p_context -> state -> fill_color >> 0) & 0xFF));
-		t_success = ExtTextOutW(p_gdicontext, 0, 0, false ? ETO_RTLREADING : 0, NULL, (LPCWSTR)p_text, p_length >> 1, NULL);
-	}	
-
-	if (t_success)
-		t_success = GdiFlush();
-
-	if (t_success)
-	{
-		for (uint32_t y = 0; y < p_bounds . height; y++)
-			for (uint32_t x = 0; x < p_bounds . width; x++)
-				*(t_context_pxls + (y + t_y_offset) * t_context_width + x + t_x_offset) = *(t_dib_pxls + y * p_bounds . width + x) | 0xFF000000;
-	}
-
-	return t_success;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MCGPlatformInitialize(void)
-{
-}
-
-void MCGPlatformFinalize(void)
-{
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font, bool p_rtl)
@@ -498,53 +346,47 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 	
 	bool t_success;
 	t_success = true;
-
-	HDC t_gdicontext;
-	t_gdicontext = NULL;
-	if (t_success)
-	{
-		t_gdicontext = CreateCompatibleDC(NULL);
-		t_success = t_gdicontext != NULL;
-	}
 	
 	if (t_success)
-		t_success = SetGraphicsMode(t_gdicontext, GM_ADVANCED) != 0;
-	
-	if (t_success)
-		t_success = SelectObject(t_gdicontext, p_font . fid) != NULL;
-	
-	SIZE t_size;
-	if (t_success)
-		t_success = GetTextExtentPoint32W(t_gdicontext, (LPCWSTR)p_text, p_length, &t_size);
+		t_success = SelectObject(s_draw_dc, p_font . fid) != NULL;
 	
 	TEXTMETRICA t_metrics;
 	if (t_success)
-		t_success = GetTextMetricsA(t_gdicontext, &t_metrics);
-    
+		t_success = GetTextMetricsA(s_draw_dc, &t_metrics);
+
 	// MM-2013-12-16: [[ Bug 11564 ]] Take into account any overhang of italic text to prevent clipping.
-	MCGFloat t_overhang;
+	// MM-2014-04-22: [[ Bug 11904 ]] Also take into account any underhang of the first char. Use this to offset
+	//  the x-location we draw at. Also, make sure we measure the correct char - added a fudge on the overhang as a result.
+	MCGFloat t_overhang, t_x_offset;
 	if (t_success)
 	{
 		ABCFLOAT t_abc_widths;
-		if (GetCharABCWidthsFloatW(t_gdicontext, *(p_text + p_length - 1), *(p_text + p_length - 1), &t_abc_widths) != 0)
-			t_overhang = t_abc_widths . abcfA + t_abc_widths . abcfC;
+		if (GetCharABCWidthsFloatW(s_draw_dc, *(p_text + p_length / 2 - 1), *(p_text + p_length / 2 - 1), &t_abc_widths) != 0)
+			t_overhang = fabs(t_abc_widths . abcfC) + 1;
 		else
 			t_overhang = 0.0f;
+
+		if (GetCharABCWidthsFloatW(s_draw_dc, *(p_text), *(p_text), &t_abc_widths) != 0)
+			t_x_offset = t_abc_widths . abcfA, t_overhang += fabs(t_abc_widths . abcfA);
+		else
+			t_x_offset = 0;
 	}
 	
 	MCGIntRectangle t_text_bounds, t_clipped_bounds;
 	MCGAffineTransform t_transform;
 	MCGPoint t_device_location;
 	if (t_success)
-	{
-		MCGRectangle t_float_text_bounds;
-		t_float_text_bounds . origin . x = 0;
-		t_float_text_bounds . origin . y = -t_metrics . tmAscent;
-		t_float_text_bounds . size . width = t_size . cx + t_overhang;
-		t_float_text_bounds . size . height = t_metrics . tmAscent + t_metrics . tmDescent;
-		
+	{	
 		t_transform = MCGContextGetDeviceTransform(self);
 		t_device_location = MCGPointApplyAffineTransform(p_location, t_transform);
+		
+		// MM-2014-04-16: [[ Bug 11964 ]] Use MCGContextMeasurePlatformText to fetch the width of the text.
+		// MM-2014-04-22: [[ Bug 11904 ]] Offset the x value to take into account any underhang of the first char of italic text.
+		MCGRectangle t_float_text_bounds;
+		t_float_text_bounds . origin . x = t_x_offset;
+		t_float_text_bounds . origin . y = -t_metrics . tmAscent;
+		t_float_text_bounds . size . width = MCGContextMeasurePlatformText(self, p_text, p_length, p_font, t_transform) + t_overhang;
+		t_float_text_bounds . size . height = t_metrics . tmAscent + t_metrics . tmDescent;
 		
 		// IM-2013-09-02: [[ RefactorGraphics ]] modff will round to zero rather than
 		// negative infinity (which we need) so calculate manually
@@ -556,7 +398,7 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 		t_transform . ty = t_device_location . y - t_int_y;
 		t_device_location . x = t_int_x;
 		t_device_location . y = t_int_y;
-		
+
 		// IM-2013-09-02: [[ RefactorGraphics ]] constrain device clip rect to device bounds
 		SkISize t_device_size;
 		t_device_size = self->layer->canvas->getDeviceSize();
@@ -578,28 +420,25 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 		t_clipped_bounds = MCGRectangleIntegerBounds(t_float_clipped_bounds);
 		
 		if (t_clipped_bounds . width == 0 || t_clipped_bounds . height == 0)
-		{
-			DeleteDC(t_gdicontext);
 			return;
-		}
 	}
 	
 	if (t_success)
 	{
+		// MM-2014-04-22: [[ Bug 11904 ]] Take into account any x-offset of the bounds.
 		XFORM t_xform;
 		t_xform . eM11 = t_transform . a;
 		t_xform . eM12 = t_transform . b;
 		t_xform . eM21 = t_transform . c;
 		t_xform . eM22 = t_transform . d;
-		t_xform . eDx = t_transform . tx - (t_clipped_bounds . x - t_text_bounds . x);
+		t_xform . eDx = t_transform . tx - (t_clipped_bounds . x);
 		t_xform . eDy = t_transform . ty - (t_clipped_bounds . y - t_text_bounds . y);
-		t_success = SetWorldTransform(t_gdicontext, &t_xform);
+		t_success = SetWorldTransform(s_draw_dc, &t_xform);
 	}
 
 	if (t_success)
-		t_success = w32_draw_text_using_mask_to_context_at_device_location(self, p_text, p_length, t_device_location, t_clipped_bounds, t_gdicontext, p_rtl);
+        t_success = w32_draw_text_using_mask_to_context_at_device_location(self, p_text, p_length, t_device_location, t_clipped_bounds, s_draw_dc, p_rtl);
 
-	DeleteDC(t_gdicontext);
 	self -> is_valid = t_success;
 }
 
@@ -742,30 +581,33 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 
 //////////
 
-MCGFloat __MCGContextMeasurePlatformTextScreen(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
+// MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
+MCGFloat __MCGContextMeasurePlatformTextScreen(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform)
 {	
 	bool t_success;
 	t_success = true;
-	
-	HDC t_gdicontext;
-	t_gdicontext = NULL;
+
+	if (t_success)
+		t_success = SelectObject(s_measure_dc, p_font . fid) != NULL;
+
+	// MM-2014-04-16: [[ Bug 11964 ]] Take into account any transform passed. Windows doesn't scale text
+	//  linearly, so if the text we are measuring is to be drawn scaled, or measurement needs to be adjusted.
+	//  GetTextExtentPoint32 returns logical units, so we don't need to revserse the transfom to convert back.
 	if (t_success)
 	{
-		t_gdicontext = CreateCompatibleDC(NULL);
-		t_success = t_gdicontext != NULL;
+		XFORM t_xform;
+		t_xform . eM11 = p_transform . a;
+		t_xform . eM12 = 0;
+		t_xform . eM21 = 0;
+		t_xform . eM22 = p_transform . d;
+		t_xform . eDx = 0;
+		t_xform . eDy = 0;
+		t_success = SetWorldTransform(s_measure_dc, &t_xform);
 	}
-	
-	if (t_success)
-		t_success = SetGraphicsMode(t_gdicontext, GM_ADVANCED) != 0;
-	
-	if (t_success)
-		t_success = SelectObject(t_gdicontext, p_font . fid) != NULL;
 
 	SIZE t_size;
 	if (t_success)
-		t_success = GetTextExtentPoint32W(t_gdicontext, (LPCWSTR)p_text, p_length >> 1, &t_size);
-	
-	DeleteDC(t_gdicontext);
+		t_success = GetTextExtentPoint32W(s_measure_dc, (LPCWSTR)p_text, p_length >> 1, &t_size);
 	
 	if (t_success)
 		return t_size . cx;
@@ -825,12 +667,30 @@ MCGFloat __MCGContextMeasurePlatformTextIdeal(MCGContextRef self, const unichar_
 
 // MW-2013-11-07: [[ Bug 11393 ]] What codepath we use depends on whether we are
 //   using ideal metrics or not.
-MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
+// MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
+MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font, const MCGAffineTransform &p_transform)
 {
 	if (p_font . ideal)
 		return __MCGContextMeasurePlatformTextIdeal(self, p_text, p_length, p_font);
 
-	return __MCGContextMeasurePlatformTextScreen(self, p_text, p_length, p_font);
+	return __MCGContextMeasurePlatformTextScreen(self, p_text, p_length, p_font, p_transform);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCGPlatformInitialize(void)
+{
+	s_measure_dc = CreateCompatibleDC(NULL);
+	SetGraphicsMode(s_measure_dc, GM_ADVANCED);
+
+	s_draw_dc = CreateCompatibleDC(NULL);
+	SetGraphicsMode(s_draw_dc, GM_ADVANCED);
+}
+
+void MCGPlatformFinalize(void)
+{
+	DeleteDC(s_draw_dc);
+	DeleteDC(s_measure_dc);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

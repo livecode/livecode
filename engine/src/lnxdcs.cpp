@@ -61,6 +61,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCImageBitmapCreateWithXImage(XImage *p_image, MCImageBitmap *&r_bitmap);
+bool MCPatternToX11Pixmap(MCPatternRef p_pattern, Pixmap &r_pixmap);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1271,17 +1272,23 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 
 
 
-void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge)
+void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge)
 {
-#ifdef LIBGRAPHICS_BROKEN
+	// IM-2014-04-15: [[ Bug 11603 ]] Convert pattern to Pixmap for use with XSetWindowAttributes structure
+	freepixmap(m_backdrop_pixmap);
+	
+	if (p_pattern != nil)
+		/* UNCHECKED */ MCPatternToX11Pixmap(p_pattern, m_backdrop_pixmap);
+		
 	if ( backdrop == DNULL ) 
 		createbackdrop_window();
-	
-	if (p_pattern == nil)
-	{
-		backdropcolor = p_color;
-		alloccolor(backdropcolor);
-	}
+
+    // MAYBE
+    if (m_backdrop_pixmap == nil)
+    {
+        backdropcolor = p_colour;
+        alloccolor(backdropcolor);
+    }
 	else
 		backdropcolor.pixel = 0;
 	
@@ -1291,10 +1298,10 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCGImageRef p_patter
 	xswa.border_pixel = 0;
 	xswa.colormap = cmap ;
 
-	if (p_pattern != DNULL)
+	if (m_backdrop_pixmap != DNULL)
 	{
 		xswamask |= CWBackPixmap;
-		xswa.background_pixmap = p_pattern;
+		xswa.background_pixmap = m_backdrop_pixmap;
 	}
 	else
 	{
@@ -1309,7 +1316,6 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCGImageRef p_patter
 	}
 	
 	MCstacks -> refresh();
-#endif
 }
 
 
@@ -1322,25 +1328,20 @@ void MCScreenDC::assignbackdrop(Window_mode p_mode, Window p_window)
 
 
 
-void MCScreenDC::createbackdrop(const char *color)
+void MCScreenDC::createbackdrop(MCStringRef color)
 {
-#ifdef LIBGRAPHICS_BROKEN
-	char *cname = NULL;
-	if (MCbackdroppm == DNULL &&
-	        parsecolor(color, &backdropcolor, &cname))
-	{
-		delete cname;
-		alloccolor(backdropcolor);
-	}
+	if (m_backdrop_pixmap == DNULL &&
+            parsecolor(color, backdropcolor))
+        alloccolor(backdropcolor);
 	else
 		backdropcolor.pixel = 0;
 	
 	XSetWindowAttributes xswa;
 	unsigned long xswamask = 0;
-	if (MCbackdroppm != DNULL)
+	if (m_backdrop_pixmap != DNULL)
 	{
 		xswamask |= CWBackPixmap;
-		xswa.background_pixmap = MCbackdroppm;
+		xswa.background_pixmap = m_backdrop_pixmap;
 	}
 	else
 	{
@@ -1371,7 +1372,6 @@ void MCScreenDC::createbackdrop(const char *color)
 	
 	
 	XMapWindow(dpy, backdrop);
-#endif
 }
 
 
@@ -1384,6 +1384,8 @@ void MCScreenDC::destroybackdrop()
 		backdrop = DNULL;
 		backdropcolor.pixel = 0;
 	}
+	
+	freepixmap(m_backdrop_pixmap);
 }
 
 

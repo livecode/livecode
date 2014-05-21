@@ -126,6 +126,32 @@ private:
     bool m_Reverse;
 };
 
+class MCTextFilter_DecodeNative : public MCTextFilter_Decoder
+{
+public:
+    
+    // Inherited from MCTextFilter
+    virtual codepoint_t GetNextCodepoint();
+    virtual bool AdvanceCursor();
+    virtual bool HasData() const;
+    virtual void MarkText();
+    virtual uindex_t GetMarkedLength() const;
+    
+    MCTextFilter_DecodeNative(const char_t*, uindex_t, bool);
+    ~MCTextFilter_DecodeNative();
+    
+private:
+
+    // Text storage
+    const char_t *m_Data;
+    uindex_t m_DataLength;
+    
+    // Accepted and reading indices into the code units
+    uindex_t m_AcceptedIndex, m_ReadIndex;
+    
+    // Going backwards, for things like shared suffix
+    bool m_Reverse;
+};
 
 class MCTextFilter_EncodeUTF16 : public MCTextFilter_Encoder
 {
