@@ -867,8 +867,9 @@ void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, i
 	IO_handle ostream = NULL;
 
 	// Attempt to open the file to find out its current encoding
+    // FG-2014-05-21: [[ Bugfix 12246 ]] Don't open devices for BOM read
 	Encoding_type t_encoding = (Encoding_type)p_encoding;
-    if (p_encoding == kMCFileEncodingText)
+    if (p_encoding == kMCFileEncodingText && !p_is_driver)
     {
         IO_handle t_BOM_stream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeRead, True, p_is_driver, 0);
 		if (t_BOM_stream != NULL)
