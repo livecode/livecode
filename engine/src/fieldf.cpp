@@ -2262,24 +2262,28 @@ void MCField::setupentry(MCButton *bptr, const MCString &s, Boolean isunicode)
 	settext(0, s, False, isunicode);
 }
 
+// MW-2014-05-21: [[ Bug 11878 ]] Operate on a c-string copy of newtext as the caller
+//   owns it.
 void MCField::typetext(const MCString &newtext)
 {
 	if (newtext . getlength() == 0)
 		return;
 
+    char *t_newtext_cstring;
+    t_newtext_cstring = newtext . clone();
+    
 	if (MCactivefield == this)
 		unselect(False, True);
 	if (newtext.getlength() < MAX_PASTE_MESSAGES)
 	{
 		char string[2];
 		string[1] = '\0';
-		char *sptr = (char *)newtext.getstring();
-		const char *eptr = sptr + newtext.getlength();
-		while (sptr < eptr)
+		char *sptr = t_newtext_cstring;
+		while (sptr[0] != '\0')
 		{
 			string[0] = *sptr;
 			if (message_with_args(MCM_key_down, string) == ES_NORMAL)
-				strcpy(sptr, sptr + 1);
+				memmove(sptr, sptr + 1, strlen(sptr) - 1);
 			else
 				sptr++;
 			message_with_args(MCM_key_up, string);
@@ -2288,10 +2292,10 @@ void MCField::typetext(const MCString &newtext)
 	uint2 oldfocused;
 	focusedparagraph->getselectionindex(oldfocused, oldfocused);
 	state |= CS_CHANGED;
-	if (newtext.getlength() && focusedparagraph->finsertnew(newtext, false))
+	if (t_newtext_cstring[0] != '\0' && focusedparagraph->finsertnew(t_newtext_cstring, false))
 	{
 		do_recompute(true);
-		int4 endindex = oldfocused + newtext.getlength();
+		int4 endindex = oldfocused + strlen(t_newtext_cstring);
 		int4 junk;
 		MCParagraph *newfocused = indextoparagraph(focusedparagraph, endindex, junk);
 		while (focusedparagraph != newfocused)
@@ -2305,7 +2309,7 @@ void MCField::typetext(const MCString &newtext)
 	}
 	else
 		updateparagraph(True, False);
-	delete (char *)newtext.getstring();
+	delete t_newtext_cstring;
 }
 
 void MCField::startcomposition()
