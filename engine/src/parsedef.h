@@ -1653,6 +1653,9 @@ enum Properties {
     P_LOCALIZED_TITLE,
     P_LOCALIZED_DESCRIPTION,
     P_LOCALIZED_PRICE,
+    
+    // PSEUDO-OBJECT PROPERTIES
+    P_OPEN_MODE,
 };
 
 enum Look_and_feel {

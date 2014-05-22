@@ -888,6 +888,7 @@ LT factor_table[] =
         {"fifth", TT_CHUNK, CT_FIFTH},
         {"fifthcolor", TT_PROPERTY, P_TOP_COLOR},
         {"fifthpixel", TT_PROPERTY, P_TOP_PIXEL},
+        {"file", TT_CHUNK, CT_FILE},
         {"filename", TT_PROPERTY, P_FILE_NAME},
         {"files", TT_FUNCTION, F_FILES},
         {"filetype", TT_PROPERTY, P_FILE_TYPE},
@@ -1248,6 +1249,7 @@ LT factor_table[] =
         {"onto", TT_PREP, PT_INTO},
         {"opaque", TT_PROPERTY, P_OPAQUE},
         {"openfiles", TT_FUNCTION, F_OPEN_FILES},
+        {"openmode", TT_PROPERTY, P_OPEN_MODE},
         {"openprocesses", TT_FUNCTION, F_OPEN_PROCESSES},
         {"openprocessids", TT_FUNCTION, F_OPEN_PROCESS_IDS},
         {"opensockets", TT_FUNCTION, F_OPEN_SOCKETS},
@@ -1365,6 +1367,7 @@ LT factor_table[] =
 		{"printtitle", TT_PROPERTY, P_PRINT_JOB_NAME},
 		
         {"privatecolors", TT_PROPERTY, P_PRIVATE_COLORS},
+        {"process", TT_CHUNK, CT_PROCESS},
         {"processid", TT_FUNCTION, F_PROCESS_ID},
         {"processor", TT_FUNCTION, F_PROCESSOR},
 		{"processtype", TT_PROPERTY, P_PROCESS_TYPE},

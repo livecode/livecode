@@ -1068,20 +1068,31 @@ template<typename A, void Method(MCExecContext&, MCPurchase *, A)> inline void M
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<typename A, void (MCSocket::*Method)(MCExecContext&, A)> inline void MCSocketPropertyThunk(MCExecContext& ctxt, MCPseudoObjectPtr *obj, A arg)
+template<typename A, void (MCSocket::*Method)(MCExecContext&, A)> inline void MCSocketPropertyThunk(MCExecContext& ctxt, MCPseudoObjectChunkPtr *obj, A arg)
 {
     (static_cast<MCSocket *>(obj -> socket) ->* Method)(ctxt, arg);
 }
 
-template<typename A, void Method(MCExecContext&, const MCDisplay *, A)> inline void MCDisplayPropertyThunk(MCExecContext& ctxt, MCPseudoObjectPtr *obj, A arg)
+template<typename A, void Method(MCExecContext&, const MCDisplay *, A)> inline void MCScreenPropertyThunk(MCExecContext& ctxt, MCPseudoObjectChunkPtr *obj, A arg)
 {
-    const MCDisplay *display;
-    display = static_cast<const MCDisplay *>(obj -> display);
-    Method(ctxt, display, arg);
+    Method(ctxt, obj -> display, arg);
 }
 
-#define MCSocketPropertyThunkImp(obj,mth,typ) (void(*)(MCExecContext&,MCPseudoObjectPtr*,typ))MCSocketPropertyThunk<typ,&obj::mth>
-#define MCDisplayPropertyThunkImp(obj,mth,typ) (void(*)(MCExecContext&,const MCDisplay *,typ))MCDisplayPropertyThunk<typ,MCDisplay##mth>
+template<typename A, void Method(MCExecContext&, Streamnode *, A)> inline void MCProcessPropertyThunk(MCExecContext& ctxt, MCPseudoObjectChunkPtr *obj, A arg)
+{
+    Method(ctxt, obj -> process, arg);
+}
+
+template<typename A, void Method(MCExecContext&, Streamnode *, A)> inline void MCFilePropertyThunk(MCExecContext& ctxt, MCPseudoObjectChunkPtr *obj, A arg)
+{
+    Method(ctxt, obj -> file, arg);
+}
+
+#define MCSocketPropertyThunkImp(obj,mth,typ) (void(*)(MCExecContext&,MCPseudoObjectChunkPtr*,typ))MCSocketPropertyThunk<typ,&obj::mth>
+#define MCFilePropertyThunkImp(obj,mth,typ) (void(*)(MCExecContext&,Streamnode *,typ))MCFilePropertyThunk<typ,MCFile##mth>
+#define MCProcessPropertyThunkImp(obj,mth,typ) (void(*)(MCExecContext&,Streamnode *,typ))MCProcessPropertyThunk<typ,MCProcess##mth>
+
+#define MCScreenPropertyThunkImp(obj,mth,typ) (void(*)(MCExecContext&,const MCDisplay *,typ))MCScreenPropertyThunk<typ,MCScreen##mth>
 
 #define MCPropertyPseudoObjectThunkImp(obj, mth, typ) obj##PropertyThunkImp(obj,mth,typ)
 
@@ -1089,25 +1100,25 @@ template<typename A, void Method(MCExecContext&, const MCDisplay *, A)> inline v
 { prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(PseudoObject, pobj, Get##tag), nil },
 
 #define DEFINE_RW_PSEUDO_OBJ_PROPERTY(prop, type, pobj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(PseudoObject, pobj, Get##tag), nil },
+{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(PseudoObject, pobj, Get##tag), (void *)MCPropertyObjectThunkSet##type(PseudoObject, pobj, Set##tag) },
 
 #define DEFINE_RO_PSEUDO_OBJ_SET_PROPERTY(prop, type, pobj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(PseudoObject, pobj, Get##tag), nil },
+{ prop, false, kMCPropertyTypeSet, kMC##type##SetTypeInfo, (void *)MCPropertyObjectThunkGetSetType(PseudoObject, pobj, Get##tag), nil },
 
 #define DEFINE_RO_PSEUDO_OBJ_ENUM_PROPERTY(prop, type, pobj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(PseudoObject, pobj, Get##tag), nil },
+{ prop, false, kMCPropertyTypeEnum, kMC##type##EnumTypeInfo, (void *)MCPropertyObjectThunkGetEnumType(PseudoObject, pobj, Get##tag), nil },
 
 #define DEFINE_RO_PSEUDO_OBJ_CUSTOM_PROPERTY(prop, type, pobj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(PseudoObject, pobj, Get##tag), nil },
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(PseudoObject, pobj, Get##tag), nil },
 
 #define DEFINE_RW_PSEUDO_OBJ_SET_PROPERTY(prop, type, pobj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(PseudoObject, pobj, Get##tag), nil },
+{ prop, false, kMCPropertyTypeSet, kMC##type##SetTypeInfo, (void *)MCPropertyObjectThunkGetSetType(PseudoObject, pobj, Get##tag), (void *)MCPropertyObjectThunkSetSetType(PseudoObject, pobj, Set##tag) },
 
 #define DEFINE_RW_PSEUDO_OBJ_ENUM_PROPERTY(prop, type, pobj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(PseudoObject, pobj, Get##tag), nil },
+{ prop, false, kMCPropertyTypeEnum, kMC##type##EnumTypeInfo, (void *)MCPropertyObjectThunkGetEnumType(PseudoObject, pobj, Get##tag), (void *)MCPropertyObjectThunkSetEnumType(PseudoObject, pobj, Set##tag) },
 
 #define DEFINE_RW_PSEUDO_OBJ_CUSTOM_PROPERTY(prop, type, pobj, tag) \
-{ prop, false, kMCPropertyType##type, nil, (void *)MCPropertyObjectThunkGet##type(PseudoObject, pobj, Get##tag), nil },
+{ prop, false, kMCPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyObjectThunkGetCustomType(PseudoObject, pobj, Get##tag), (void *)MCPropertyObjectThunkSetCustomType(PseudoObject, pobj, Set##tag) },
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3722,6 +3733,8 @@ void MCEngineEvalMD5Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStri
 void MCEngineEvalSHA1Uuid(MCExecContext& ctxt, MCStringRef p_namespace_id, MCStringRef p_name, MCStringRef& r_uuid);
 
 ///////////
+
+extern MCExecEnumTypeInfo *kMCFilesOpenModeEnumTypeInfo;
 
 extern MCExecMethodInfo *kMCFilesEvalDirectoriesMethodInfo;
 extern MCExecMethodInfo *kMCFilesEvalFilesMethodInfo;

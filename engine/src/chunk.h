@@ -93,7 +93,7 @@ public:
     bool evalvarchunk(MCExecContext& ctxt, bool whole_chunk, bool force, MCVariableChunkPtr& r_chunk);
     bool evalurlchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCUrlChunkPtr& r_chunk);
 
-    bool evalpseudoobject(MCExecContext &ctxt, MCPseudoObjectPtr &t_obj);
+    bool evalpseudoobject(MCExecContext &ctxt, MCPseudoObjectChunkPtr &t_obj);
     
 	void take_components(MCChunk *tchunk);
 

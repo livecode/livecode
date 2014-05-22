@@ -1238,6 +1238,8 @@ enum Chunk_term {
     // pseudo-objects
     CT_SOCKET,
     CT_FIRST_PSEUDOOBJECT = CT_SOCKET,
+    CT_FILE,
+    CT_PROCESS,
     CT_DISPLAY,
     CT_LAST_PSEUDOOBJECT = CT_DISPLAY,
     
@@ -1337,17 +1339,23 @@ struct MCObjectChunkIndexPtr
 enum MCPseudoObjectType
 {
     kMCPseudoObjectTypeSocket,
-    kMCPseudoObjectTypeDisplay
+    kMCPseudoObjectTypeFile,
+    kMCPseudoObjectTypeProcess,
+    kMCPseudoObjectTypeScreen
 };
 
-struct MCPseudoObjectPtr
+struct MCPseudoObjectChunkPtr
 {
     MCPseudoObjectType type;
     union
     {
         MCSocket *socket;
         const MCDisplay *display;
+        Streamnode *file;
+        Streamnode *process;
     };
+    Chunk_term chunk;
+    MCMarkedText mark;
 };
 
 //////////////////////////////////////////////////////////////////////

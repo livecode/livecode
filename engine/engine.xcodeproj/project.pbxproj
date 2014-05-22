@@ -524,6 +524,10 @@
 		72D6038618477E640022379C /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 72D6038418477E5C0022379C /* QuartzCore.framework */; };
 		7635171D182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
 		7635171E182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
+		7637AC20192DFD2F008FF003 /* exec-files-file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7637AC1C192DFD2D008FF003 /* exec-files-file.cpp */; };
+		7637AC21192DFD2F008FF003 /* exec-files-process.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7637AC1D192DFD2D008FF003 /* exec-files-process.cpp */; };
+		7637AC22192DFD2F008FF003 /* exec-interface-screen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7637AC1E192DFD2E008FF003 /* exec-interface-screen.cpp */; };
+		7637AC23192DFD2F008FF003 /* exec-network-socket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7637AC1F192DFD2E008FF003 /* exec-network-socket.cpp */; };
 		763FF4E918522CBE00B45FBA /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 763FF4E718522CB200B45FBA /* image_rep_resampled.cpp */; };
 		763FF4EA18522CC100B45FBA /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 763FF4E718522CB200B45FBA /* image_rep_resampled.cpp */; };
 		766E3298180EE4ED00CF7FCF /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 766E3293180EE4E000CF7FCF /* graphicscontext.cpp */; };
@@ -1506,6 +1510,10 @@
 		72D6038218477E560022379C /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/QuartzCore.framework; sourceTree = DEVELOPER_DIR; };
 		72D6038418477E5C0022379C /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
+		7637AC1C192DFD2D008FF003 /* exec-files-file.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-files-file.cpp"; path = "src/exec-files-file.cpp"; sourceTree = "<group>"; };
+		7637AC1D192DFD2D008FF003 /* exec-files-process.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-files-process.cpp"; path = "src/exec-files-process.cpp"; sourceTree = "<group>"; };
+		7637AC1E192DFD2E008FF003 /* exec-interface-screen.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-screen.cpp"; path = "src/exec-interface-screen.cpp"; sourceTree = "<group>"; };
+		7637AC1F192DFD2E008FF003 /* exec-network-socket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-network-socket.cpp"; path = "src/exec-network-socket.cpp"; sourceTree = "<group>"; };
 		763FF4E718522CB200B45FBA /* image_rep_resampled.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_resampled.cpp; path = src/image_rep_resampled.cpp; sourceTree = "<group>"; };
 		766E3292180EE4E000CF7FCF /* graphics_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = graphics_util.h; path = src/graphics_util.h; sourceTree = "<group>"; };
 		766E3293180EE4E000CF7FCF /* graphicscontext.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = graphicscontext.cpp; path = src/graphicscontext.cpp; sourceTree = "<group>"; };
@@ -2424,6 +2432,10 @@
 		4DE3B0EE15888AA1008EB6B5 /* Exec */ = {
 			isa = PBXGroup;
 			children = (
+				7637AC1C192DFD2D008FF003 /* exec-files-file.cpp */,
+				7637AC1D192DFD2D008FF003 /* exec-files-process.cpp */,
+				7637AC1E192DFD2E008FF003 /* exec-interface-screen.cpp */,
+				7637AC1F192DFD2E008FF003 /* exec-network-socket.cpp */,
 				76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */,
 				768D665F1762076000F203A3 /* exec-ad.cpp */,
 				768D66601762076000F203A3 /* exec-addressbook.cpp */,
@@ -3907,6 +3919,10 @@
 				E82206E1184F810A00117D10 /* resolution.cpp in Sources */,
 				E8238D1D188818EA0068154B /* osxhighdpi.mm in Sources */,
 				72C28AFA1911300D007F2AA0 /* segment.cpp in Sources */,
+				7637AC20192DFD2F008FF003 /* exec-files-file.cpp in Sources */,
+				7637AC21192DFD2F008FF003 /* exec-files-process.cpp in Sources */,
+				7637AC22192DFD2F008FF003 /* exec-interface-screen.cpp in Sources */,
+				7637AC23192DFD2F008FF003 /* exec-network-socket.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

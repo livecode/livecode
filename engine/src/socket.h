@@ -116,9 +116,6 @@ typedef struct ssl_ctx_st SSL_CTX;
 
 class MCSocket
 {
-    static MCPropertyInfo kProperties[];
-	static MCObjectPropertyTable kPropertyTable;
-    
 public:
 	MCNameRef name;
 	Boolean closing;
@@ -179,7 +176,7 @@ public:
 	Boolean sslaccept();
 	void sslclose();
     
-    const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    void GetName(MCExecContext& ctxt, MCNameRef& r_name);
     
 protected:
 #ifdef _MACOSX
@@ -194,9 +191,11 @@ protected:
 	SSL *_ssl_conn;
 	SSL_CTX *_ssl_context;
 #endif
-    
-    void GetName(MCExecContext& ctxt, MCNameRef& r_name);
 };
+
+struct MCObjectPropertyTable;
+MCObjectPropertyTable *MCSocketGetPropertyTable();
+bool MCSocketGetObject(MCExecContext& ctxt, MCNameRef p_expression, MCPseudoObjectChunkPtr& r_pobj);
 
 typedef bool (*MCHostNameResolveCallback)(void *p_context, bool p_resolved, bool p_final, struct sockaddr *p_addr, int p_addrlen);
 typedef void (*MCSockAddrToStringCallback)(void *p_context, bool p_resolved, const char *p_hostname);

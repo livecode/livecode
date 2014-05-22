@@ -1720,25 +1720,3 @@ bool MCUIDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-static MCPropertyInfo kProperties[] =
-{
-    DEFINE_RO_PSEUDO_OBJ_PROPERTY(P_RECTANGLE, Rectangle, MCDisplay, Rect)
-};
-
-static MCObjectPropertyTable kPropertyTable =
-{
-    nil,
-	sizeof(kProperties) / sizeof(kProperties[0]),
-	&kProperties[0],
-};
-
-MCObjectPropertyTable *MCDisplayGetPropertyTable()
-{
-    return &kPropertyTable;
-}
-
-void MCDisplayGetRect(MCExecContext& ctxt, const MCDisplay *display, MCRectangle& r_rect)
-{
-    r_rect = display -> viewport;
-}

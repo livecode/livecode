@@ -123,20 +123,6 @@ Boolean MCSocket::sslinited = False;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCPropertyInfo MCSocket::kProperties[] =
-{
-	DEFINE_RO_PSEUDO_OBJ_PROPERTY(P_NAME, Name, MCSocket, Name)
-};
-
-MCObjectPropertyTable MCSocket::kPropertyTable =
-{
-	nil,
-	sizeof(kProperties) / sizeof(kProperties[0]),
-	&kProperties[0],
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 #ifdef _MACOSX
 static void socketCallback (CFSocketRef cfsockref, CFSocketCallBackType type, CFDataRef address, const void *pData, void *pInfo)
 {
@@ -2512,10 +2498,5 @@ static int verify_callback(int ok, X509_STORE_CTX *store)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-    
-void MCSocket::GetName(MCExecContext& ctxt, MCNameRef& r_name)
-{
-    r_name = MCValueRetain(name);
-}
     
 #endif

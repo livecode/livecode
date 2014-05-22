@@ -413,6 +413,8 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
                     
                     // pseudo-object parsing
                     case CT_SOCKET:
+                    case CT_FILE:
+                    case CT_PROCESS:
                     case CT_DISPLAY:
                         pseudoobject = curref;
                         break;
@@ -4163,14 +4165,18 @@ static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_tab
 	return nil;
 }
 
-static const MCObjectPropertyTable *get_object_property_table(MCPseudoObjectPtr t_ptr)
+static const MCObjectPropertyTable *get_object_property_table(MCPseudoObjectChunkPtr t_ptr)
 {
     switch (t_ptr . type)
     {
         case kMCPseudoObjectTypeSocket:
-            return t_ptr . socket -> getpropertytable();
-        case kMCPseudoObjectTypeDisplay:
-            return MCDisplayGetPropertyTable();
+            return MCSocketGetPropertyTable();
+        case kMCPseudoObjectTypeScreen:
+            return MCScreenGetPropertyTable();
+        case kMCPseudoObjectTypeFile:
+            return MCFileGetPropertyTable();
+        case kMCPseudoObjectTypeProcess:
+            return MCProcessGetPropertyTable();
         default:
             return nil;
     }
@@ -4178,14 +4184,27 @@ static const MCObjectPropertyTable *get_object_property_table(MCPseudoObjectPtr 
 
 bool MCChunk::setpseudoprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value)
 {
-    MCPseudoObjectPtr t_ptr;
+    MCPseudoObjectChunkPtr t_ptr;
     if (evalpseudoobject(ctxt, t_ptr) != ES_NORMAL)
         return false;
+    
+    MCPropertyInfo *t_info;
+    const MCObjectPropertyTable *t_table;
+    t_table = get_object_property_table(t_ptr);
+    if (t_table == nil)
+        return false;
+    
+    t_info = lookup_object_property(t_table, which, false, false, kMCPropertyInfoChunkTypeNone);
+    
+    if (t_info == nil)
+        return false;
+    
+    MCExecStoreProperty(ctxt, t_info, &t_ptr, p_value);
 }
 
 bool MCChunk::getpseudoprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value)
 {
-    MCPseudoObjectPtr t_ptr;
+    MCPseudoObjectChunkPtr t_ptr;
     if (evalpseudoobject(ctxt, t_ptr) != ES_NORMAL)
         return false;
     
@@ -4465,7 +4484,7 @@ bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
     return true;
 }
 
-bool MCChunk::evalpseudoobject(MCExecContext &ctxt, MCPseudoObjectPtr &t_obj)
+bool MCChunk::evalpseudoobject(MCExecContext &ctxt, MCPseudoObjectChunkPtr &r_chunk)
 {
     if (pseudoobject -> etype != CT_EXPRESSION)
         return false;
@@ -4477,57 +4496,34 @@ bool MCChunk::evalpseudoobject(MCExecContext &ctxt, MCPseudoObjectPtr &t_obj)
     switch (pseudoobject -> otype)
     {
         case CT_SOCKET:
-        {
-            if (pseudoobject -> etype != CT_EXPRESSION)
+            if (!MCSocketGetObject(ctxt, *t_exp, r_chunk))
                 return false;
-            
-            MCNewAutoNameRef t_socket;
-            if (!ctxt . EvalExprAsNameRef(pseudoobject -> startpos, EE_CHUNK_CANTFINDOBJECT, &t_socket))
-                return false;
-
-            uindex_t t_index;
-            bool t_converted;
-            ctxt . TryToConvertToUnsignedInteger(*t_socket, t_converted, t_index);
-            
-            if (t_converted)
-            {
-                if (t_index > MCnsockets)
-                    return false;
-                t_obj . socket = MCsockets[t_index - 1];
-                break;
-            }
-            
-            if (!IO_findsocket(*t_socket, t_index))
-                return false;
-            
-            t_obj . socket = MCsockets[t_index];
-            t_obj . type = kMCPseudoObjectTypeSocket;
             break;
-            
-        }
+        case CT_PROCESS:
+            if (!MCProcessGetObject(ctxt, *t_exp, r_chunk))
+                return false;
+            break;
+        case CT_FILE:
+            if (!MCFileGetObject(ctxt, *t_exp, r_chunk))
+                return false;
+            break;
         case CT_DISPLAY:
-        {
-            if (pseudoobject -> etype != CT_EXPRESSION)
+            if (!MCScreenGetObject(ctxt, *t_exp, r_chunk))
                 return false;
-            
-            uindex_t t_display;
-            if (!ctxt . EvalExprAsUInt(pseudoobject -> startpos, EE_CHUNK_CANTFINDOBJECT, t_display))
-                return false;
-            
-            const MCDisplay *t_displays;
-            uindex_t t_count = MCscreen -> getdisplays(t_displays, /*p_effective*/ false);
-            
-            if (t_display > t_count)
-                return false;
-            
-            t_obj . display = &t_displays[t_display - 1];
-            t_obj . type = kMCPseudoObjectTypeDisplay;
             break;
-        }
         default:
             return false;
     }
 
+    MCMarkedText t_mark;
+    t_mark . finish = INDEX_MAX;
+    t_mark . start = 0;
+    t_mark . changed = false;
+    t_mark . text = nil;
+
+    r_chunk . chunk = CT_UNDEFINED;
+    r_chunk . mark = t_mark;
+    
     return true;
 }
 

@@ -114,9 +114,8 @@ typedef struct
 MCMessageList;
 
 struct MCObjectPropertyTable;
-struct MCPropertyInfo;
-
-MCObjectPropertyTable *MCDisplayGetPropertyTable();
+MCObjectPropertyTable *MCScreenGetPropertyTable();
+bool MCScreenGetObject(MCExecContext& ctxt, MCNameRef p_expression, MCPseudoObjectChunkPtr& r_pobj);
 
 // IM-2014-01-23: [[ HiDPI ]] Add screen pixelScale field to display info
 // IM-2014-01-23: [[ HiDPI ]] Remove device-coordinate versions of viewport & workarea rects
@@ -132,7 +131,7 @@ struct MCDisplay
 	MCGFloat pixel_scale;
 };
 
-void MCDisplayGetRect(MCExecContext& ctxt, const MCDisplay *display, MCRectangle& r_rect);
+void MCScreenGetRect(MCExecContext& ctxt, const MCDisplay *display, MCRectangle& r_rect);
 
 enum MCColorSpaceType
 {
