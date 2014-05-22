@@ -1741,13 +1741,45 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		dc -> end();
 }
 
-
 inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha)
 {
 	return ((uint8_t)(p_red * 255) << 16) | ((uint8_t)(p_green * 255) << 8) | ((uint8_t)(p_blue * 255) << 0) | ((uint8_t)(p_alpha * 255) << 24);
 }
 
-static void MCGraphicsContextAngleAndDistanceToXYOffset(int p_angle, int p_distance, MCGFloat &r_x_offset, MCGFloat &r_y_offset)
+inline void setRamp(MCGColor *&r_colors, MCGFloat *&r_stops)
+{
+    if (r_colors == nil)
+        /* UNCHECKED */ MCMemoryNewArray(3, r_colors);
+    r_colors[0] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
+    r_colors[1] = MCGColorMakeRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+    r_colors[2] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
+    
+    if (r_stops == nil)
+        /* UNCHECKED */ MCMemoryNewArray(3, r_stops);
+    r_stops[0] = (MCGFloat)0.00000;
+    r_stops[1] = (MCGFloat)0.50000;
+    r_stops[2] = (MCGFloat)1.00000;
+}
+
+inline void setTransform(MCGAffineTransform &r_transform, MCGFloat origin_x, MCGFloat origin_y, MCGFloat primary_x, MCGFloat primary_y, MCGFloat secondary_x, MCGFloat secondary_y)
+{
+    MCGAffineTransform t_transform;
+    t_transform . a = primary_x - origin_x;
+    t_transform . b = primary_y - origin_y;
+    t_transform . c = secondary_x - origin_x;
+    t_transform . d = secondary_y - origin_y;
+    
+    t_transform . tx = origin_x;
+    t_transform . ty = origin_y;
+    r_transform = t_transform;
+}
+
+inline MCGPoint MCRectangleScalePoints(MCRectangle p_rect, MCGFloat p_x, MCGFloat p_y)
+{
+    return MCGPointMake(p_rect . x + p_x * p_rect . width, p_rect . y + p_y * p_rect . height);
+}
+
+inline void MCGraphicsContextAngleAndDistanceToXYOffset(int p_angle, int p_distance, MCGFloat &r_x_offset, MCGFloat &r_y_offset)
 {
 	r_x_offset = floor(0.5f + p_distance * cos(p_angle * M_PI / 180.0));
 	r_y_offset = floor(0.5f + p_distance * sin(p_angle * M_PI / 180.0));
@@ -1898,10 +1930,36 @@ void MCPlayer::drawControllerVolumeSelectorButton(MCDC *dc)
     t_rect = getcontrollerrect();
     MCRectangle t_volume_selector_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolumeSelector);
     
-    dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
+    MCGColor *t_colors = nil;
+    MCGFloat *t_stops = nil;
+    setRamp(t_colors, t_stops);
+        
+    MCGAffineTransform t_transform;
+    float origin_x = t_volume_selector_rect.x + t_volume_selector_rect.width / 2.0;
+	float origin_y = t_volume_selector_rect.y + t_volume_selector_rect.height;
+	float primary_x = t_volume_selector_rect.x + t_volume_selector_rect.width / 2.0;
+	float primary_y = t_volume_selector_rect.y;
+	float secondary_x = t_volume_selector_rect.x - t_volume_selector_rect.width / 2.0;
+	float secondary_y = t_volume_selector_rect.y + t_volume_selector_rect.height;
+    
+    setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
+    //dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
     MCGContextRef t_gcontext = nil;
     
     dc -> lockgcontext(t_gcontext);
+    
+    MCGContextSetFillGradient(t_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
+    
+    MCGContextSetShouldAntialias(t_gcontext, true);
+    MCGContextAddArc(t_gcontext, MCRectangleScalePoints(t_volume_selector_rect, 0.5, 0.5), MCGSizeMake(0.8 * t_volume_selector_rect . width, 0.8 * t_volume_selector_rect . height), 0, 0, 360);
+
+    MCGContextFill(t_gcontext);
+    
+    MCMemoryDeleteArray(t_stops);
+    MCMemoryDeleteArray(t_colors);
+
+    
+    /*
     MCGContextSetShouldAntialias(t_gcontext, true);
     MCGContextSetFillRGBAColor(t_gcontext, 1.0f, 1.0f, 1.0f, 1.0f);
     MCGContextAddArc(t_gcontext, MCGPointMake(0.5, 0.5), MCGSizeMake(0.8, 0.8), 0, 0, 360);
@@ -1910,6 +1968,7 @@ void MCPlayer::drawControllerVolumeSelectorButton(MCDC *dc)
     MCGContextScaleCTM(t_gcontext, t_volume_selector_rect . width, t_volume_selector_rect . height);
     
     MCGContextFill(t_gcontext);
+    */
     
     dc -> unlockgcontext(t_gcontext);
 }
@@ -1920,13 +1979,52 @@ void MCPlayer::drawControllerPlayPauseButton(MCDC *dc)
     t_rect = getcontrollerrect();
     MCRectangle t_playpause_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartPlay);
     
-    dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
+    MCGColor *t_colors = nil;
+    MCGFloat *t_stops = nil;
+    setRamp(t_colors, t_stops);
+    
+    MCGAffineTransform t_transform;
+    float origin_x = t_playpause_rect.x + t_playpause_rect.width / 2.0;
+	float origin_y = t_playpause_rect.y + t_playpause_rect.height * 2 / 3;
+	float primary_x = t_playpause_rect.x + t_playpause_rect.width / 2.0;
+	float primary_y = t_playpause_rect.y + t_playpause_rect.height / 3;
+	float secondary_x = t_playpause_rect.x;
+	float secondary_y = t_playpause_rect.y + t_playpause_rect.height * 2 / 3;
+    
+    setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
+    
+
+    //dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
     MCGContextRef t_gcontext = nil;
     
     dc -> lockgcontext(t_gcontext);
-    MCGContextSetFillRGBAColor(t_gcontext, 1.0f, 1.0f, 1.0f, 1.0f);
+    
+    MCGContextSetFillGradient(t_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
+    
     MCGContextSetShouldAntialias(t_gcontext, true);
     
+    if (ispaused())
+    {
+        MCGContextMoveTo(t_gcontext, MCRectangleScalePoints(t_playpause_rect, 0.3, 0.3));
+        MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_playpause_rect, 0.3, 0.7));
+        MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_playpause_rect, 0.7, 0.5));
+        MCGContextCloseSubpath(t_gcontext);
+    }
+
+    else
+    {
+        MCGRectangle t_grect1, t_grect2;
+        
+        t_grect1 = MCGRectangleMake(t_playpause_rect . x + 0.2 * t_playpause_rect . width, t_playpause_rect . y + 0.3 * t_playpause_rect . height, 0.2 * t_playpause_rect . width, 0.4 * t_playpause_rect . height);
+        MCGContextAddRectangle(t_gcontext, t_grect1);
+        
+        t_grect2 = MCGRectangleMake(t_playpause_rect . x + 0.5 * t_playpause_rect . width, t_playpause_rect . y + 0.3 * t_playpause_rect . height, 0.2 * t_playpause_rect . width, 0.4 * t_playpause_rect . height);
+        MCGContextAddRectangle(t_gcontext, t_grect2);
+
+    }
+    
+    
+    /*
     if (ispaused())
     {
         MCGContextBeginPath(t_gcontext);
@@ -1946,6 +2044,7 @@ void MCPlayer::drawControllerPlayPauseButton(MCDC *dc)
     }
     MCGContextTranslateCTM(t_gcontext, t_playpause_rect . x, t_playpause_rect . y);
     MCGContextScaleCTM(t_gcontext, t_playpause_rect . width, t_playpause_rect . height);
+    */
     
     MCGContextFill(t_gcontext);
     dc -> unlockgcontext(t_gcontext);
@@ -2010,33 +2109,18 @@ void MCPlayer::drawControllerThumbButton(MCDC *dc)
     t_rect = getcontrollerrect();
     MCRectangle t_thumb_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb);
     
-    
+    /*
+     t_colors[0] = 4290230199;
+     t_colors[1] = 4294967295;
+     t_colors[2] = 4290230199;
+     */
+
     MCGContextRef t_gcontext = nil;
     
-    MCGColor *t_colors;
-    /* UNCHECKED */ MCMemoryNewArray(3, t_colors);
+    MCGColor *t_colors = nil;
+    MCGFloat *t_stops = nil;
+    setRamp(t_colors, t_stops);
     
-    
-    t_colors[0] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
-    t_colors[1] = MCGColorMakeRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-    t_colors[2] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
-    
-    /*
-    t_colors[0] = 4290230199;
-    t_colors[1] = 4294967295;
-    t_colors[2] = 4290230199;
-    */
-    
-    MCGFloat *t_stops;
-    /* UNCHECKED */ MCMemoryNewArray(3, t_stops);
-    t_stops[0] = (MCGFloat)0.00000;
-    t_stops[1] = (MCGFloat)0.50000;
-    t_stops[2] = (MCGFloat)1.00000;
-    
-    MCLog("t_stops are %.6f, %.6f, %.6f", t_stops[0],t_stops[1],t_stops[2]);
-    MCLog("t_colors are %u, %u, %u", t_colors[0],t_colors[1],t_colors[2]);
-
-
     MCGAffineTransform t_transform;
     /*
      t_transform . a = p_gradient -> primary . x - p_gradient -> origin . x;
@@ -2054,13 +2138,7 @@ void MCPlayer::drawControllerThumbButton(MCDC *dc)
 	float secondary_x = t_thumb_rect.x - t_thumb_rect.width / 2.0;
 	float secondary_y = t_thumb_rect.y + t_thumb_rect.height;
        
-    t_transform . a = primary_x - origin_x;
-    t_transform . b = primary_y - origin_y;
-    t_transform . c = secondary_x - origin_x;
-    t_transform . d = secondary_y - origin_y;
-
-    t_transform . tx = origin_x;
-    t_transform . ty = origin_y;
+    setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
     
     ////////////////////////////////////////////////////////
     
@@ -2071,15 +2149,15 @@ void MCPlayer::drawControllerThumbButton(MCDC *dc)
    // MCGContextScaleCTM(t_gcontext, t_thumb_rect . width, t_thumb_rect . height);
     
     MCGContextSetFillGradient(t_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
-  
+    
     MCGContextSetShouldAntialias(t_gcontext, true);
     MCGRectangle t_grect= MCRectangleToMCGRectangle(t_thumb_rect);
     MCGContextAddRoundedRectangle(t_gcontext, t_grect, MCGSizeMake(10, 10));
-  
-   // MCGContextAddArc(t_gcontext, MCGPointMake(0.5, 0.5), MCGSizeMake(0.8, 1.0), 0.0, 0, 360);
+    
+    // MCGContextAddArc(t_gcontext, MCGPointMake(0.5, 0.5), MCGSizeMake(0.8, 1.0), 0.0, 0, 360);
     
     MCGContextFill(t_gcontext);
-
+    
     MCMemoryDeleteArray(t_stops);
     MCMemoryDeleteArray(t_colors);
     dc -> unlockgcontext(t_gcontext);
@@ -2111,20 +2189,9 @@ void MCPlayer::drawControllerSelectionStartButton(MCDC *dc)
     dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
     MCGContextRef t_gcontext = nil;
     
-    
-    MCGColor *t_colors;
-    /* UNCHECKED */ MCMemoryNewArray(3, t_colors);
-    
-    t_colors[0] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
-    t_colors[1] = MCGColorMakeRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-    t_colors[2] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
-    
-    MCGFloat *t_stops;
-    /* UNCHECKED */ MCMemoryNewArray(3, t_stops);
-    
-    t_stops[0] = 0.00000;
-    t_stops[1] = 0.50000;
-    t_stops[2] = 1.00000;
+    MCGColor *t_colors = nil;
+    MCGFloat *t_stops = nil;
+    setRamp(t_colors, t_stops);
     
     MCGAffineTransform t_transform;
         
@@ -2135,13 +2202,7 @@ void MCPlayer::drawControllerSelectionStartButton(MCDC *dc)
 	float secondary_x = t_selection_start_rect.x - 2 * t_selection_start_rect.width;
 	float secondary_y = t_selection_start_rect.y;
     
-    t_transform . a = primary_x - origin_x;
-    t_transform . b = primary_y - origin_y;
-    t_transform . c = secondary_x - origin_x;
-    t_transform . d = secondary_y - origin_y;
-    
-    t_transform . tx = origin_x;
-    t_transform . ty = origin_y;
+    setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
     
     dc -> lockgcontext(t_gcontext);
     
@@ -2188,19 +2249,9 @@ void MCPlayer::drawControllerSelectionFinishButton(MCDC *dc)
     dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
     MCGContextRef t_gcontext = nil;
     
-    MCGColor *t_colors;
-    /* UNCHECKED */ MCMemoryNewArray(3, t_colors);
-    
-    t_colors[0] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
-    t_colors[1] = MCGColorMakeRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-    t_colors[2] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
-    
-    MCGFloat *t_stops;
-    /* UNCHECKED */ MCMemoryNewArray(3, t_stops);
-    
-    t_stops[0] = 0.00000;
-    t_stops[1] = 0.50000;
-    t_stops[2] = 1.00000;
+    MCGColor *t_colors = nil;
+    MCGFloat *t_stops = nil;
+    setRamp(t_colors, t_stops);
     
     MCGAffineTransform t_transform;
     
@@ -2211,13 +2262,7 @@ void MCPlayer::drawControllerSelectionFinishButton(MCDC *dc)
 	float secondary_x = t_selection_finish_rect.x - 2 * t_selection_finish_rect.width;
 	float secondary_y = t_selection_finish_rect.y;
     
-    t_transform . a = primary_x - origin_x;
-    t_transform . b = primary_y - origin_y;
-    t_transform . c = secondary_x - origin_x;
-    t_transform . d = secondary_y - origin_y;
-    
-    t_transform . tx = origin_x;
-    t_transform . ty = origin_y;
+    setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
     
     dc -> lockgcontext(t_gcontext);
     
@@ -2249,19 +2294,9 @@ void MCPlayer::drawControllerScrubForwardButton(MCDC *dc)
     dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
     MCGContextRef t_gcontext = nil;
     
-    MCGColor *t_colors;
-    /* UNCHECKED */ MCMemoryNewArray(3, t_colors);
-    
-    t_colors[0] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
-    t_colors[1] = MCGColorMakeRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-    t_colors[2] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
-    
-    MCGFloat *t_stops;
-    /* UNCHECKED */ MCMemoryNewArray(3, t_stops);
-    
-    t_stops[0] = 0.00000;
-    t_stops[1] = 0.50000;
-    t_stops[2] = 1.00000;
+    MCGColor *t_colors = nil;
+    MCGFloat *t_stops = nil;
+    setRamp(t_colors, t_stops);
     
     MCGAffineTransform t_transform;
     
@@ -2272,15 +2307,7 @@ void MCPlayer::drawControllerScrubForwardButton(MCDC *dc)
 	float secondary_x = t_scrub_forward_rect.x;
 	float secondary_y = t_scrub_forward_rect.y + t_scrub_forward_rect.height * 2 / 3;
 
-    
-    t_transform . a = primary_x - origin_x;
-    t_transform . b = primary_y - origin_y;
-    t_transform . c = secondary_x - origin_x;
-    t_transform . d = secondary_y - origin_y;
-    
-    t_transform . tx = origin_x;
-    t_transform . ty = origin_y;
-
+    setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
     
     dc -> lockgcontext(t_gcontext);
         
@@ -2292,9 +2319,9 @@ void MCPlayer::drawControllerScrubForwardButton(MCDC *dc)
     MCGContextBeginPath(t_gcontext);
     MCGContextAddRectangle(t_gcontext, t_grect);
     
-    MCGContextMoveTo(t_gcontext, MCGPointMake(t_scrub_forward_rect . x + 0.5 * t_scrub_forward_rect . width, t_scrub_forward_rect . y + 0.3 * t_scrub_forward_rect . height));
-    MCGContextLineTo(t_gcontext, MCGPointMake(t_scrub_forward_rect . x + 0.5 * t_scrub_forward_rect . width, t_scrub_forward_rect . y + 0.7 * t_scrub_forward_rect . height));
-    MCGContextLineTo(t_gcontext, MCGPointMake(t_scrub_forward_rect . x + 0.7 * t_scrub_forward_rect . width, t_scrub_forward_rect . y + 0.5 * t_scrub_forward_rect . height));
+    MCGContextMoveTo(t_gcontext, MCRectangleScalePoints(t_scrub_forward_rect, 0.5, 0.3));
+    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_scrub_forward_rect, 0.5, 0.7));
+    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_scrub_forward_rect, 0.7, 0.5));
     MCGContextCloseSubpath(t_gcontext);
     
     /*
@@ -2332,19 +2359,9 @@ void MCPlayer::drawControllerScrubBackButton(MCDC *dc)
     dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
     MCGContextRef t_gcontext = nil;
     
-    MCGColor *t_colors;
-    /* UNCHECKED */ MCMemoryNewArray(3, t_colors);
-    
-    t_colors[0] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
-    t_colors[1] = MCGColorMakeRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-    t_colors[2] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
-    
-    MCGFloat *t_stops;
-    /* UNCHECKED */ MCMemoryNewArray(3, t_stops);
-    
-    t_stops[0] = 0.00000;
-    t_stops[1] = 0.50000;
-    t_stops[2] = 1.00000;
+    MCGColor *t_colors = nil;
+    MCGFloat *t_stops = nil;
+    setRamp(t_colors, t_stops);
     
     MCGAffineTransform t_transform;
     
@@ -2355,23 +2372,16 @@ void MCPlayer::drawControllerScrubBackButton(MCDC *dc)
 	float secondary_x = t_scrub_back_rect.x;
 	float secondary_y = t_scrub_back_rect.y + t_scrub_back_rect.height * 2 / 3;
     
-    t_transform . a = primary_x - origin_x;
-    t_transform . b = primary_y - origin_y;
-    t_transform . c = secondary_x - origin_x;
-    t_transform . d = secondary_y - origin_y;
-    
-    t_transform . tx = origin_x;
-    t_transform . ty = origin_y;
-
+    setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
     
     dc -> lockgcontext(t_gcontext);
     
     MCGContextSetFillGradient(t_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
 
     MCGContextBeginPath(t_gcontext);
-    MCGContextMoveTo(t_gcontext, MCGPointMake(t_scrub_back_rect . x + 0.2 * t_scrub_back_rect . width, t_scrub_back_rect . y + 0.5 * t_scrub_back_rect . height));
-    MCGContextLineTo(t_gcontext, MCGPointMake(t_scrub_back_rect . x + 0.4 * t_scrub_back_rect . width, t_scrub_back_rect . y + 0.3 * t_scrub_back_rect . height));
-    MCGContextLineTo(t_gcontext, MCGPointMake(t_scrub_back_rect . x + 0.4 * t_scrub_back_rect . width, t_scrub_back_rect . y + 0.7 * t_scrub_back_rect . height));
+    MCGContextMoveTo(t_gcontext, MCRectangleScalePoints(t_scrub_back_rect, 0.2, 0.5));
+    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_scrub_back_rect, 0.4, 0.3));
+    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_scrub_back_rect, 0.4, 0.7));
     
     MCGRectangle t_grect;
     t_grect = MCGRectangleMake(t_scrub_back_rect . x + 0.5 * t_scrub_back_rect . width, t_scrub_back_rect . y + 0.3 * t_scrub_back_rect . height, 0.2 * t_scrub_back_rect . width, 0.4 * t_scrub_back_rect . height);
