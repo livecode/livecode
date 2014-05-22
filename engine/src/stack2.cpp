@@ -2568,7 +2568,7 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 		t_user_rect = MCRectangleGetTransformedBounds(t_surface_rect, MCGAffineTransformInvert(t_transform));
 		
 		if (t_success)
-			t_success = MCGContextCreate(t_surface_rect.width, t_surface_rect.height, true, t_context);
+			t_success = MCGContextCreate(t_surface_rect.width, t_surface_rect.height, false, t_context);
 
 		if (t_success)
 		{
