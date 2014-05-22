@@ -142,6 +142,8 @@ MCPlayer::MCPlayer()
     m_was_paused = True;
     m_inside = False;
     m_show_volume = false;
+    m_scrub_back_is_pressed = false;
+    m_scrub_forward_is_pressed = false;
 }
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
@@ -166,6 +168,8 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
     m_was_paused = True;
     m_inside = False;
     m_show_volume = false;
+    m_scrub_back_is_pressed = false;
+    m_scrub_forward_is_pressed = false;
 }
 
 MCPlayer::~MCPlayer()
@@ -2235,6 +2239,13 @@ void MCPlayer::drawControllerScrubForwardButton(MCDC *dc)
     t_rect = getcontrollerrect();
     MCRectangle t_scrub_forward_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartScrubForward);
     
+    if (m_scrub_forward_is_pressed)
+    {
+        dc -> setforeground(controllercolors[PURPLE]);
+        dc -> fillrect(t_scrub_forward_rect, true);
+    }
+
+    
     dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
     MCGContextRef t_gcontext = nil;
     
@@ -2311,6 +2322,12 @@ void MCPlayer::drawControllerScrubBackButton(MCDC *dc)
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
     MCRectangle t_scrub_back_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartScrubBack);
+    
+    if (m_scrub_back_is_pressed)
+    {
+        dc -> setforeground(controllercolors[PURPLE]);
+        dc -> fillrect(t_scrub_back_rect, true);
+    }
     
     dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
     MCGContextRef t_gcontext = nil;
@@ -2829,8 +2846,10 @@ void MCPlayer::handle_mdown(int p_which)
         }
             break;
         case kMCPlayerControllerPartScrubBack:
-        
+            
+            m_scrub_back_is_pressed = true;
             m_was_paused = ispaused();
+            
             if(ispaused())
                 playstepback();
             else
@@ -2843,6 +2862,7 @@ void MCPlayer::handle_mdown(int p_which)
             
         case kMCPlayerControllerPartScrubForward:
             
+            m_scrub_forward_is_pressed = true;
             m_was_paused = ispaused();
             
             if(ispaused())
@@ -3025,8 +3045,15 @@ void MCPlayer::handle_mup(int p_which)
     switch (m_grabbed_part)
     {
         case kMCPlayerControllerPartScrubBack:
-        case kMCPlayerControllerPartScrubForward:
+            m_scrub_back_is_pressed = false;
             playpause(m_was_paused);
+            layer_redrawall();
+            break;
+
+        case kMCPlayerControllerPartScrubForward:
+            m_scrub_forward_is_pressed = false;
+            playpause(m_was_paused);
+            layer_redrawall();
             break;
         default:
             break;

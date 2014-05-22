@@ -56,6 +56,8 @@ class MCPlayer : public MCControl
     bool m_was_paused : 1;
     bool m_inside : 1;
     bool m_show_volume : 1;
+    bool m_scrub_back_is_pressed : 1;
+    bool m_scrub_forward_is_pressed : 1;
 	
 public:
 	MCPlayer();
