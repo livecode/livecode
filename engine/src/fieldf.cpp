@@ -2283,7 +2283,7 @@ void MCField::typetext(const MCString &newtext)
 		{
 			string[0] = *sptr;
 			if (message_with_args(MCM_key_down, string) == ES_NORMAL)
-				memmove(sptr, sptr + 1, strlen(sptr) - 1);
+				memmove(sptr, sptr + 1, strlen(sptr));
 			else
 				sptr++;
 			message_with_args(MCM_key_up, string);
