@@ -1376,6 +1376,43 @@ void MCGContextClipToRect(MCGContextRef self, MCGRectangle p_rect)
 	self -> layer -> canvas -> clipRect(MCGRectangleToSkRect(p_rect), SkRegion::kIntersect_Op, self -> state -> should_antialias);
 }
 
+void MCGContextSetClipToDeviceRegion(MCGContextRef self, MCGRegionRef p_region)
+{
+	if (!MCGContextIsValid(self) || p_region == nil)
+		return;
+	
+	self->layer->canvas->clipRegion(p_region->region, SkRegion::kReplace_Op);
+}
+
+void MCGContextClipToDeviceRegion(MCGContextRef self, MCGRegionRef p_region)
+{
+	if (!MCGContextIsValid(self) || p_region == nil)
+		return;
+	
+	self -> layer -> canvas -> clipRegion(p_region->region, SkRegion::kIntersect_Op);
+}
+
+void MCGContextClipToRegion(MCGContextRef self, MCGRegionRef p_region)
+{
+	MCGAffineTransform t_transform;
+	t_transform = MCGContextGetDeviceTransform(self);
+	
+	MCGRegionRef t_transformed;
+	t_transformed = nil;
+	
+	if (MCGAffineTransformIsIdentity(t_transform))
+	{
+		MCGContextClipToDeviceRegion(self, p_region);
+		return;
+	}
+	
+	/* UNCHECKED */ MCGRegionCopyWithTransform(p_region, MCGContextGetDeviceTransform(self), t_transformed);
+	
+	MCGContextClipToDeviceRegion(self, t_transformed);
+	
+	MCGRegionDestroy(t_transformed);
+}
+
 MCGRectangle MCGContextGetClipBounds(MCGContextRef self)
 {	
 	// MM-2013-11-25: [[ Bug 11496 ]] When using getClipBounds, Skia outsets the clip by 1 pixel to take account of antialiasing.
