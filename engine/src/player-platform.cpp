@@ -1857,6 +1857,20 @@ void MCPlayer::drawControllerVolumeButton(MCDC *dc)
     t_rect = getcontrollerrect();
     MCRectangle t_volume_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolume);
     
+    MCGColor *t_colors = nil;
+    MCGFloat *t_stops = nil;
+    setRamp(t_colors, t_stops);
+    
+    MCGAffineTransform t_transform;
+    float origin_x = t_volume_rect.x + t_volume_rect.width / 2.0;
+	float origin_y = t_volume_rect.y + t_volume_rect.height * 2 / 3;
+	float primary_x = t_volume_rect.x + t_volume_rect.width / 2.0;
+	float primary_y = t_volume_rect.y + t_volume_rect.height / 3;
+	float secondary_x = t_volume_rect.x;
+	float secondary_y = t_volume_rect.y + t_volume_rect.height * 2 / 3;
+    
+    setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
+
     
     if (m_show_volume)
     {
@@ -1864,9 +1878,47 @@ void MCPlayer::drawControllerVolumeButton(MCDC *dc)
         dc -> fillrect(t_volume_rect, true);
     }
     
-    //dc -> setforeground(dc -> getwhite());
     MCGContextRef t_gcontext = nil;
     
+    dc -> lockgcontext(t_gcontext);
+    
+    MCGContextSetFillGradient(t_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
+    MCGContextSetShouldAntialias(t_gcontext, true);
+    
+    MCGContextBeginPath(t_gcontext);
+    MCGContextMoveTo(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.2 , 0.4));
+    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.2 , 0.6));
+    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.4 , 0.6));
+    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.5 , 0.7));
+    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.5 , 0.3));
+    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.4 , 0.4));
+    MCGContextCloseSubpath(t_gcontext);
+    MCGContextFill(t_gcontext);
+    
+    MCGContextSetStrokeGradient(t_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
+    
+    if (getloudness() > 30)
+    {
+        MCGContextAddArc(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.6 , 0.5), MCGSizeMake(0.05 * t_volume_rect . width, 0.2 * t_volume_rect . height), 0.0, -60, 60);
+    }
+    
+    if (getloudness() > 60)
+    {
+        MCGContextAddArc(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.66 , 0.5), MCGSizeMake(0.1 * t_volume_rect . width, 0.4 * t_volume_rect . height), 0.0, -60, 60);
+    }
+    
+    if (getloudness() > 95)
+    {
+        MCGContextAddArc(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.72 , 0.5), MCGSizeMake(0.2 * t_volume_rect . width, 0.8 * t_volume_rect . height), 0.0, -60, 60);
+    }
+    
+    MCGContextSetStrokeWidth(t_gcontext, t_volume_rect . width / 20.0 );
+    MCGContextStroke(t_gcontext);
+    
+    dc -> unlockgcontext(t_gcontext);
+    
+    
+    /*
     dc -> lockgcontext(t_gcontext);
     MCGContextSetFillRGBAColor(t_gcontext, 1.0f, 1.0f, 1.0f, 1.0f);
     MCGContextSetShouldAntialias(t_gcontext, true);
@@ -1903,6 +1955,7 @@ void MCPlayer::drawControllerVolumeButton(MCDC *dc)
     MCGContextStroke(t_gcontext);
    
     dc -> unlockgcontext(t_gcontext);
+    */
 }
 
 void MCPlayer::drawControllerVolumeBarButton(MCDC *dc)
