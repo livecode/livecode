@@ -29,6 +29,8 @@
 
 #include "mac-internal.h"
 
+#include "graphics_util.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static NSDragOperation s_drag_operation_result = NSDragOperationNone;
@@ -1456,10 +1458,14 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	NSInteger t_update_rect_count;
 	[self getRectsBeingDrawn: &t_update_rects count: &t_update_rect_count];
 	
-	MCRegionRef t_update_rgn;
-	/* UNCHECKED */ MCRegionCreate(t_update_rgn);
+	MCGRegionRef t_update_region;
+	t_update_region = nil;
+	
+	/* UNCHECKED */ MCGRegionCreate(t_update_region);
 	for(NSInteger i = 0; i < t_update_rect_count; i++)
-		/* UNCHECKED */ MCRegionIncludeRect(t_update_rgn, [self mapNSRectToMCRectangle: t_update_rects[i]]);
+		/* UNCHECKED */ MCGRegionAddRect(t_update_region, MCRectangleToMCGIntegerRectangle([self mapNSRectToMCRectangle: t_update_rects[i]]));
+	
+	MCLog("update rect count: %d", t_update_rect_count);
 
 	//////////
 	
@@ -1467,8 +1473,8 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	CGContextSaveGState(t_graphics);
 	
 	{
-		MCMacPlatformSurface t_surface(t_window, t_graphics, t_update_rgn);
-		t_window -> HandleRedraw(&t_surface, t_update_rgn);
+		MCMacPlatformSurface t_surface(t_window, t_graphics, t_update_region);
+		t_window -> HandleRedraw(&t_surface, t_update_region);
 	}
 	
 	// Restore the context state
@@ -1476,7 +1482,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	
 	//////////
 	
-	MCRegionDestroy(t_update_rgn);
+	MCGRegionDestroy(t_update_region);
 }
 
 //////////
@@ -1913,6 +1919,14 @@ void MCMacPlatformWindow::DoRaise(void)
 	[m_window_handle orderFront: nil];
 }
 
+static uint32_t s_rect_count = 0;
+bool MCMacDoUpdateRegionCallback(void *p_context, const MCRectangle &p_rect)
+{
+	MCWindowView *t_view = static_cast<MCWindowView*>(p_context);
+	[t_view setNeedsDisplayInRect: [t_view mapMCRectangleToNSRect: p_rect]];
+	
+	return true;
+}
 void MCMacPlatformWindow::DoUpdate(void)
 {	
 	// If the shadow has changed (due to the mask changing) we must disable
@@ -1922,7 +1936,8 @@ void MCMacPlatformWindow::DoUpdate(void)
 	
 	// Mark the bounding box of the dirty region for needing display.
 	// COCOA-TODO: Make display update more specific.
-	[m_view setNeedsDisplayInRect: [m_view mapMCRectangleToNSRect: MCRegionGetBoundingBox(m_dirty_region)]];
+	s_rect_count = 0;
+	MCRegionForEachRect(m_dirty_region, MCMacDoUpdateRegionCallback, m_view);
 	
 	// Force a re-display, this will cause drawRect to be invoked on our view
 	// which in term will result in a redraw window callback being sent.

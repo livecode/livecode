@@ -2491,7 +2491,7 @@ static bool MCTileCacheDoComposite(MCTileCacheRef self)
 	return t_success;
 }
 
-bool MCTileCacheComposite(MCTileCacheRef self, MCStackSurface *p_surface, MCRegionRef p_dirty_rgn)
+bool MCTileCacheComposite(MCTileCacheRef self, MCStackSurface *p_surface, MCGRegionRef p_dirty_rgn)
 {
 	// Keep track of whether the compositor calls succeeded.
 	bool t_success;

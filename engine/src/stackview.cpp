@@ -81,52 +81,6 @@ bool MCStackFullscreenModeFromString(const char *p_string, MCStackFullscreenMode
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct MCRegionTransformContext
-{
-	MCRegionRef region;
-	MCGAffineTransform transform;
-};
-
-bool MCRegionTransformCallback(void *p_context, const MCRectangle &p_rect)
-{
-	MCRegionTransformContext *t_context;
-	t_context = static_cast<MCRegionTransformContext*>(p_context);
-
-	MCRectangle t_transformed_rect;
-	t_transformed_rect = MCRectangleGetTransformedBounds(p_rect, t_context->transform);
-
-	return MCRegionIncludeRect(t_context->region, t_transformed_rect);
-}
-
-bool MCRegionTransform(MCRegionRef p_region, const MCGAffineTransform &p_transform, MCRegionRef &r_transformed_region)
-{
-	bool t_success;
-	t_success = true;
-
-	MCRegionRef t_new_region;
-	t_new_region = nil;
-
-	t_success = MCRegionCreate(t_new_region);
-
-	if (t_success)
-	{
-		MCRegionTransformContext t_context;
-		t_context.region = t_new_region;
-		t_context.transform = p_transform;
-
-		t_success = MCRegionForEachRect(p_region, MCRegionTransformCallback, &t_context);
-	}
-
-	if (t_success)
-		r_transformed_region = t_new_region;
-	else
-		MCRegionDestroy(t_new_region);
-
-	return t_success;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCStack::view_init(void)
 {
 	m_view_fullscreen = false;

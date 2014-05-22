@@ -337,7 +337,7 @@ public:
 	{
 	}
 	
-	bool LockGraphics(MCRegionRef p_area, MCGContextRef& r_context)
+	bool LockGraphics(MCGRegionRef p_area, MCGContextRef& r_context)
 	{
 		return MCPlatformSurfaceLockGraphics(m_surface, p_area, r_context);
 	}
@@ -347,7 +347,7 @@ public:
 		MCPlatformSurfaceUnlockGraphics(m_surface);
 	}
 	
-	bool LockPixels(MCRegionRef p_area, MCGRaster& r_raster)
+	bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster)
 	{
 		return MCPlatformSurfaceLockPixels(m_surface, p_area, r_raster);
 	}
@@ -376,7 +376,7 @@ public:
 
 // This method is not an MCStack method, however it is related to the file locals
 // in here to do with update. At some point it should be refactored appropriately.
-void MCDispatch::wredraw(Window p_window, MCPlatformSurfaceRef p_surface, MCRegionRef p_update_rgn)
+void MCDispatch::wredraw(Window p_window, MCPlatformSurfaceRef p_surface, MCGRegionRef p_update_rgn)
 {
 	MCStack *t_stack;
 	t_stack = findstackd(p_window);
@@ -390,7 +390,7 @@ void MCDispatch::wredraw(Window p_window, MCPlatformSurfaceRef p_surface, MCRegi
 	
 	// If we don't have an update pixmap, then use redrawwindow.
 	if (s_update_callback == nil)
-		t_stack -> view_surface_redrawwindow(&t_stack_surface, (MCRegionRef)p_update_rgn);
+		t_stack -> view_surface_redrawwindow(&t_stack_surface, p_update_rgn);
 	else
 		s_update_callback(&t_stack_surface, (MCRegionRef)p_update_rgn, s_update_context);
 }

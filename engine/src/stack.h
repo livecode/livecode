@@ -93,13 +93,13 @@ class MCStackSurface
 {
 public:
 	// Lock the surface for access with an MCGContextRef
-	virtual bool LockGraphics(MCRegionRef area, MCGContextRef& r_context) = 0;
+	virtual bool LockGraphics(MCGRegionRef area, MCGContextRef& r_context) = 0;
 	// Unlock the surface.
 	virtual void UnlockGraphics(void) = 0;
 	
 	// Lock the pixels within the given region. The bits are returned relative
 	// to the top-left of the region.
-	virtual bool LockPixels(MCRegionRef area, MCGRaster& r_raster) = 0;
+	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster) = 0;
 	// Unlock the surface.
 	virtual void UnlockPixels(void) = 0;
 	
@@ -318,7 +318,7 @@ public:
 	
 	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given surface.
 	// IM-2014-01-24: [[ HiDPI ]] Update region is given in surface coordinates.
-	void view_surface_redrawwindow(MCStackSurface *surface, MCRegionRef region);
+	void view_surface_redrawwindow(MCStackSurface *surface, MCGRegionRef region);
 	
 	//////////
 

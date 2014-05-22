@@ -26,6 +26,8 @@
 
 #include "mac-internal.h"
 
+#include "graphics_util.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern bool MCOSXCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef &r_context);

@@ -333,13 +333,13 @@ class MCMacPlatformSurface;
 class MCMacPlatformSurface: public MCPlatformSurface
 {
 public:
-	MCMacPlatformSurface(MCMacPlatformWindow *window, CGContextRef cg_context, MCRegionRef update_rgn);
+	MCMacPlatformSurface(MCMacPlatformWindow *window, CGContextRef cg_context, MCGRegionRef update_rgn);
 	~MCMacPlatformSurface(void);
 	
-	virtual bool LockGraphics(MCRegionRef region, MCGContextRef& r_context);
+	virtual bool LockGraphics(MCGRegionRef region, MCGContextRef& r_context);
 	virtual void UnlockGraphics(void);
 	
-	virtual bool LockPixels(MCRegionRef region, MCGRaster& r_raster);
+	virtual bool LockPixels(MCGIntegerRectangle region, MCGRaster& r_raster);
 	virtual void UnlockPixels(void);
 	
 	virtual bool LockSystemContext(void*& r_context);
@@ -356,12 +356,12 @@ private:
 private:
 	MCMacPlatformWindow *m_window;
 	CGContextRef m_cg_context;
-	MCRegionRef m_update_rgn;
+	MCGRegionRef m_update_rgn;
 	
-	MCRectangle m_locked_area;
+	MCGIntegerRectangle m_locked_area;
 	MCGContextRef m_locked_context;
+	MCGRaster m_locked_raster;
 	void *m_locked_bits;
-	int32_t m_locked_stride;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

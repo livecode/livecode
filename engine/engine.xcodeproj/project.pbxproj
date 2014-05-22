@@ -369,7 +369,6 @@
 		4DCB65721653B2F700E438E6 /* stackcache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCB65711653B2F700E438E6 /* stackcache.cpp */; };
 		4DCFFD1C10CE8F5800FA2262 /* osxtextlayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCFFD1B10CE8F5800FA2262 /* osxtextlayout.cpp */; };
 		4DCFFD2E10CE927700FA2262 /* iquantize_new.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCFFD2D10CE927700FA2262 /* iquantize_new.cpp */; };
-		4DDB66591413993500E5C84C /* sysosxregion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66581413993500E5C84C /* sysosxregion.cpp */; };
 		4DDB666F14139FF500E5C84C /* tilecache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB666D14139FF500E5C84C /* tilecache.cpp */; };
 		4DDB66721413A02000E5C84C /* redraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66701413A02000E5C84C /* redraw.cpp */; };
 		4DDC26C9122692B10071CB31 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
@@ -530,6 +529,7 @@
 		E8252264174E2BF500055329 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AF4895174D5563000B2F9E /* libskia.a */; };
 		E85130F4180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85130F3180D9969004D1DB4 /* image_rep_densitymapped.cpp */; };
 		E85130F5180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85130F3180D9969004D1DB4 /* image_rep_densitymapped.cpp */; };
+		E87FAFEC1924F25000ED338B /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E87FAFEB1924F24300ED338B /* region.cpp */; };
 		E88869AC180D63FC0026BFDA /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8988A8917FDD5B700F640F4 /* stackview.cpp */; };
 		E8988A8A17FDD5B700F640F4 /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8988A8917FDD5B700F640F4 /* stackview.cpp */; };
 		E8A554B11785A70600DABC1A /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C10D82916BFADB800D25197 /* libgraphics.a */; };
@@ -1531,6 +1531,7 @@
 		E86A04F7142A49EF005ECD82 /* srvsession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = srvsession.h; path = src/srvsession.h; sourceTree = "<group>"; };
 		E86D598F170AEE0000060AED /* deploysecurity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = deploysecurity.h; path = src/deploysecurity.h; sourceTree = "<group>"; };
 		E86D59AE170AF0E000060AED /* deploysecurity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = deploysecurity.cpp; path = src/deploysecurity.cpp; sourceTree = "<group>"; };
+		E87FAFEB1924F24300ED338B /* region.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = region.cpp; path = src/region.cpp; sourceTree = "<group>"; };
 		E8988A8917FDD5B700F640F4 /* stackview.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackview.cpp; path = src/stackview.cpp; sourceTree = "<group>"; };
 		E8A49103170F16D000769C7A /* name.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = name.h; path = src/name.h; sourceTree = "<group>"; };
 		E8A49104170F16D000769C7A /* rawarray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rawarray.h; path = src/rawarray.h; sourceTree = "<group>"; };
@@ -2489,9 +2490,9 @@
 				4D592DEA14EED23600EADBB6 /* fonttable.cpp */,
 				4DB902510DAA5C980014A170 /* gradient.cpp */,
 				4DB902520DAA5C980014A170 /* gradient.h */,
+				4CC55320180D546000C10387 /* graphics_util.h */,
 				4C10D76D16BF9BFA00D25197 /* graphicscontext.cpp */,
 				4C10D76E16BF9BFA00D25197 /* graphicscontext.h */,
-				4CC55320180D546000C10387 /* graphics_util.h */,
 				E8B5BB1216DF77DF00CA02FB /* imagelist.cpp */,
 				E8B5BB1316DF77DF00CA02FB /* imagelist.h */,
 				4D587E370B8096FD00200116 /* mctheme.cpp */,
@@ -2509,6 +2510,7 @@
 				4D2192330C6386C90027A96D /* printer.h */,
 				4DDB66701413A02000E5C84C /* redraw.cpp */,
 				4DDB66711413A02000E5C84C /* redraw.h */,
+				E87FAFEB1924F24300ED338B /* region.cpp */,
 				E8A49106170F179000769C7A /* region.h */,
 				E82206E0184F810A00117D10 /* resolution.cpp */,
 				E8D7F8C21785D82F00EC051A /* resolution.h */,
@@ -3760,7 +3762,6 @@
 				4DFFC7E713DD8AB9006233A4 /* objectpropsets.cpp in Sources */,
 				4DFFC7EF13DD8AFC006233A4 /* name.cpp in Sources */,
 				4D05B91013E06AB3001CD82A /* dskmain.cpp in Sources */,
-				4DDB66591413993500E5C84C /* sysosxregion.cpp in Sources */,
 				4DDB666F14139FF500E5C84C /* tilecache.cpp in Sources */,
 				4DDB66721413A02000E5C84C /* redraw.cpp in Sources */,
 				4D432F1F141A2DFE001164F9 /* tilecachesw.cpp in Sources */,
@@ -3814,6 +3815,7 @@
 				4DAF5C8718C0E76500B9713C /* mac-scripting.mm in Sources */,
 				4D87710018C8B30700A88AF9 /* quicktime.cpp in Sources */,
 				1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */,
+				E87FAFEC1924F25000ED338B /* region.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

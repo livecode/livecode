@@ -894,10 +894,10 @@ void MCPlatformConfigureBackdrop(MCPlatformWindowRef backdrop_window);
 
 typedef class MCPlatformSurface *MCPlatformSurfaceRef;
 
-bool MCPlatformSurfaceLockGraphics(MCPlatformSurfaceRef surface, MCRegionRef region, MCGContextRef& r_context);
+bool MCPlatformSurfaceLockGraphics(MCPlatformSurfaceRef surface, MCGRegionRef region, MCGContextRef& r_context);
 void MCPlatformSurfaceUnlockGraphics(MCPlatformSurfaceRef surface);
 
-bool MCPlatformSurfaceLockPixels(MCPlatformSurfaceRef surface, MCRegionRef region, MCGRaster& r_raster);
+bool MCPlatformSurfaceLockPixels(MCPlatformSurfaceRef surface, MCGIntegerRectangle region, MCGRaster& r_raster);
 void MCPlatformSurfaceUnlockPixels(MCPlatformSurfaceRef surface);
 
 bool MCPlatformSurfaceLockSystemContext(MCPlatformSurfaceRef surface, void*& r_context);

@@ -19,7 +19,7 @@ void MCPlatformHandleWindowUniconify(MCPlatformWindowRef window);
 void MCPlatformHandleWindowReshape(MCPlatformWindowRef window);
 void MCPlatformHandleWindowFocus(MCPlatformWindowRef window);
 void MCPlatformHandleWindowUnfocus(MCPlatformWindowRef window);
-void MCPlatformHandleWindowRedraw(MCPlatformWindowRef window, MCPlatformSurfaceRef surface, MCRegionRef dirty_rgn);
+void MCPlatformHandleWindowRedraw(MCPlatformWindowRef window, MCPlatformSurfaceRef surface, MCGRegionRef dirty_rgn);
 void MCPlatformHandleWindowConstrain(MCPlatformWindowRef window, MCPoint proposed_size, MCPoint& r_wanted_size);
 
 void MCPlatformHandleModifiersChanged(MCPlatformModifiers modifiers);
@@ -137,7 +137,7 @@ void MCPlatformCallbackSendWindowConstrain(MCPlatformWindowRef p_window, MCPoint
 	MCPlatformHandleWindowConstrain(p_window, p_proposed_size, r_wanted_size);
 }
 
-void MCPlatformCallbackSendWindowRedraw(MCPlatformWindowRef p_window, MCPlatformSurfaceRef p_surface, MCRegionRef p_dirty_rgn)
+void MCPlatformCallbackSendWindowRedraw(MCPlatformWindowRef p_window, MCPlatformSurfaceRef p_surface, MCGRegionRef p_dirty_rgn)
 {
 	//MCLog("Window(%p) -> WindowRedraw(%p, %p)", p_window, p_surface);
 	MCPlatformWindowDeathGrip(p_window);

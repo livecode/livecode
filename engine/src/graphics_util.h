@@ -186,6 +186,18 @@ inline MCRectangle MCGRectangleGetIntegerCeilingRect(const MCGRectangle &p_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+inline MCGIntegerRectangle MCRectangleToMCGIntegerRectangle(const MCRectangle &p_rect)
+{
+	return MCGIntegerRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+}
+
+inline MCRectangle MCRectangleFromMCGIntegerRectangle(const MCGIntegerRectangle &p_rect)
+{
+	return MCRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static inline MCPoint MCPointMake(int16_t x, int16_t y)
 {
 	MCPoint t_point;
