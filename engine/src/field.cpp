@@ -1266,12 +1266,8 @@ Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 			ep.setint(0);
 		break;
 	case P_FORMATTED_WIDTH:
-		if (opened)
-			ep.setint(textwidth + rect.width - getfwidth()
-			          + leftmargin + rightmargin
-			          + (flags & F_VSCROLLBAR ? (flags & F_DONT_WRAP ? 0 : -vscrollbar->getrect().width) : 0));
-		else
-			ep.setint(0);
+        // FG-2014-05-23: [[ Bugfix 12241 ]] Don't take shortcuts when calculating formatted widths 
+        gettextatts(parid, which, ep, nil, effective, 0, -1, false);
 		break;
 	case P_LIST_BEHAVIOR:
 		ep.setboolean(getflag(F_LIST_BEHAVIOR));
