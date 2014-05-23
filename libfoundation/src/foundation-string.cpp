@@ -1299,11 +1299,17 @@ bool MCStringMapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
     p_in_range . offset++;
     
     MCRange t_word_range = MCRangeMake(0, 0);
-    
+    bool t_found;
     // Advance to the beginning of the specified range
-    while (p_in_range . offset-- && MCLocaleWordBreakIteratorAdvance(self, t_iter, t_word_range))
+    while (p_in_range . offset-- && (t_found = MCLocaleWordBreakIteratorAdvance(self, t_iter, t_word_range)))
         ;
 
+    if (!t_found)
+    {
+        r_out_range = MCRangeMake(MCStringGetLength(self), 0);
+        return true;
+    }
+    
     // Advance to the end of the current word
     uindex_t t_start = t_word_range . offset;
     p_in_range . length--;
