@@ -3403,7 +3403,7 @@ struct MCInterfaceFieldTabAlignments
 };
 
 extern MCExecEnumTypeInfo *kMCInterfaceFieldStyleTypeInfo;
-extern MCExecCustomTypeInfo *kMCInterfaceFlaggedRangesTypeInfo;
+extern MCExecCustomTypeInfo *kMCInterfaceFieldRangesTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceFieldCursorMovementTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceTextDirectionTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceFieldTabAlignmentsTypeInfo;
