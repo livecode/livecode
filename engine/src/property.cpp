@@ -239,7 +239,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_SERIAL_CONTROL_STRING, String, Files, SerialControlString)
 	DEFINE_RW_PROPERTY(P_HIDE_CONSOLE_WINDOWS, Bool, Files, HideConsoleWindows)
 
-	DEFINE_RW_PROPERTY(P_RANDOM_SEED, Int16, Math, RandomSeed)
+    // AL-2014-05-23: [[ Bug 12494 ]] Random seed is a 32-bit integer
+	DEFINE_RW_PROPERTY(P_RANDOM_SEED, Int32, Math, RandomSeed)
 
 	DEFINE_RW_PROPERTY(P_LOCK_CURSOR, Bool, Interface, LockCursor)
 	DEFINE_RW_PROPERTY(P_LOCK_ERRORS, Bool, Interface, LockErrors)
