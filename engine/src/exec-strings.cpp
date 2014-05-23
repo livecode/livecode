@@ -1828,7 +1828,8 @@ static bool MCStringsWildcardMatchNative(const char *s, uindex_t s_length, const
 			--s;
 			--s_index;
 			c = *p;
-			while (*s)
+            // AL-2014-05-23: [[ Bug 12489 ]] Ensure source string does not overrun length
+			while (*s && s_index < s_length)
 				if ((casesensitive ? c != *s : MCS_tolower(c) != MCS_tolower(*s))
 				        && *p != '?' && *p != OPEN_BRACKET)
 				{
@@ -1868,8 +1869,9 @@ bool MCWildcardMatcher::match(MCRange p_source_range)
         const char *t_source = (const char *)MCStringGetNativeCharPtr(source);
         const char *t_pattern = (const char *)MCStringGetNativeCharPtr(pattern);
         
+        // AL-2014-05-23: [[ Bug 12489 ]] Pass through case sensitivity properly
         if (t_source != nil && t_pattern != nil)
-            return MCStringsWildcardMatchNative(t_source + p_source_range . offset, p_source_range . length, t_pattern, MCStringGetLength(pattern), (options == kMCStringOptionCompareExact || kMCStringOptionCompareNonliteral));
+            return MCStringsWildcardMatchNative(t_source + p_source_range . offset, p_source_range . length, t_pattern, MCStringGetLength(pattern), (options == kMCStringOptionCompareExact || options == kMCStringOptionCompareNonliteral));
     }
 
 	return MCStringWildcardMatch(source, p_source_range, pattern, options);
