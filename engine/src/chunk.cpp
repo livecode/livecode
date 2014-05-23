@@ -203,6 +203,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 	while (True)
 	{
 		if (sp.next(type) != PS_NORMAL)
+        {
 			if (need_target)
 			{
 				MCperror->add(PE_CHUNK_NOCHUNK, sp);
@@ -210,50 +211,56 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 			}
 			else
 				break;
+        }
 		if (type == ST_ID)
 		{
 			te = NULL;
 			if (sp.lookup(SP_FACTOR, te) != PS_NORMAL || te->type == TT_PROPERTY)
 			{
-				if (need_target)
-				{
-					if (desttype == DT_ISDEST && stack == NULL && background == NULL
-					        && card == NULL && group == NULL && object == NULL)
-					{
-						MCExpression *newfact = NULL;
-						// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
-						//   execution outwith a handler.
-						if (doingthe
-						        || sp.findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL
+                // AL-2014-05-23: [[ PseudoObjectProps ]] Since screen is a property name,
+                //  we have to jump through a few hoops to parse it as a pseudo-object.
+                if (te == NULL || te->which != P_SCREEN || doingthe)
+                {
+                    if (need_target)
+                    {
+                        if (desttype == DT_ISDEST && stack == NULL && background == NULL
+					        && card == NULL && group == NULL && object == NULL && pseudoobject == NULL)
+                        {
+                            MCExpression *newfact = NULL;
+                            // MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
+                            //   execution outwith a handler.
+                            if (doingthe
+						        || (sp.findvar(sp.gettoken_nameref(), &destvar) != PS_NORMAL
 						        && (MCexplicitvariables
 						            || sp.lookupconstant(&newfact) == PS_NORMAL
-						            || sp.findnewvar(sp.gettoken_nameref(), kMCEmptyName, &destvar) != PS_NORMAL))
-						{
-							delete newfact;
-							MCperror->add(PE_CHUNK_NOVARIABLE, sp);
-							return PS_ERROR;
-						}
-						destvar->parsearray(sp);
-						desttype = DT_VARIABLE;
-						return PS_NORMAL;
-					}
-					else
-					{
-						if (doingthe)
-							sp.backup();
-						sp.backup();
-						if (sp.parseexp(True, False, &source) != PS_NORMAL)
-						{
-							MCperror->add
-							(PE_CHUNK_BADEXP, sp);
-							return PS_ERROR;
-						}
-						desttype = DT_EXPRESSION;
-					}
-				}
-				else
-					sp.backup();
-				break;
+						            || sp.findnewvar(sp.gettoken_nameref(), kMCEmptyName, &destvar) != PS_NORMAL)))
+                            {
+                                delete newfact;
+                                MCperror->add(PE_CHUNK_NOVARIABLE, sp);
+                                return PS_ERROR;
+                            }
+                            destvar->parsearray(sp);
+                            desttype = DT_VARIABLE;
+                            return PS_NORMAL;
+                        }
+                        else
+                        {
+                            if (doingthe)
+                                sp.backup();
+                            sp.backup();
+                            if (sp.parseexp(True, False, &source) != PS_NORMAL)
+                            {
+                                MCperror->add
+                                (PE_CHUNK_BADEXP, sp);
+                                return PS_ERROR;
+                            }
+                            desttype = DT_EXPRESSION;
+                        }
+                    }
+                    else
+                        sp.backup();
+                    break;
+                }
 			}
 			switch (te->type)
 			{
@@ -332,8 +339,18 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 				}
 				marked = True;
 				break;
+            case TT_PROPERTY:
 			case TT_CHUNK:
-				nterm = (Chunk_term)te->which;
+                // AL-2014-05-23: [[ PseudoObjectProps ]] Since screen is a property name,
+                //  we have to jump through a few hoops to parse it as a pseudo-object.
+                if (te->type == TT_PROPERTY)
+                {
+                    if (te -> which != P_SCREEN)
+                        break;
+                    nterm = CT_SCREEN;
+                }
+                else
+                    nterm = (Chunk_term)te->which;
 				// MW-2013-08-05: [[ ThisMe ]] If 'this' is followed by 'me' we become 'this me'.
 				if (nterm == CT_THIS &&
 					sp . skip_token(SP_FACTOR, TT_FUNCTION, F_ME) == PS_NORMAL)
@@ -415,7 +432,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
                     case CT_SOCKET:
                     case CT_FILE:
                     case CT_PROCESS:
-                    case CT_DISPLAY:
+                    case CT_SCREEN:
                         pseudoobject = curref;
                         break;
 					case CT_STACK:
@@ -4507,7 +4524,7 @@ bool MCChunk::evalpseudoobject(MCExecContext &ctxt, MCPseudoObjectChunkPtr &r_ch
             if (!MCFileGetObject(ctxt, *t_exp, r_chunk))
                 return false;
             break;
-        case CT_DISPLAY:
+        case CT_SCREEN:
             if (!MCScreenGetObject(ctxt, *t_exp, r_chunk))
                 return false;
             break;
