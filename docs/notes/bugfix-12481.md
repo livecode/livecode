@@ -1,0 +1,1 @@
+# The player does not re-appear after switching visibility
