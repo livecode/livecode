@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation-unicode.h>
 
 #include "foundation-private.h"
+#include "foundation-bidi.h"
 
 #ifdef __LINUX__
 #include <errno.h>
@@ -3497,6 +3498,14 @@ bool MCStringPad(MCStringRef self, uindex_t p_at, uindex_t p_count, MCStringRef 
 	__MCStringChanged(self);
 	
 	return true;
+}
+
+bool MCStringResolvesLeftToRight(MCStringRef self)
+{
+    if (MCStringIsNative(self) || MCStringCanBeNative(self))
+        return true;
+    
+    return MCBidiFirstStrongIsolate(self, 0) == 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

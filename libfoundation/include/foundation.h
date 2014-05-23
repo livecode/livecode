@@ -1736,6 +1736,10 @@ bool MCStringReplace(MCStringRef string, MCRange range, MCStringRef replacement)
 // Note that 'string' must be mutable.
 bool MCStringPad(MCStringRef string, uindex_t at, uindex_t count, MCStringRef value);
 
+// Resolves the directionality of the string and returns true if it is left to right.
+// (Uses MCBidiFirstStrongIsolate to determine directionality).
+bool MCStringResolvesLeftToRight(MCStringRef p_string);
+
 // Find and replace all instances of pattern in target with replacement.
 //
 // Note that 'string' must be mutable.
