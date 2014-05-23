@@ -3713,7 +3713,8 @@ bool MCStringFindAndReplaceNative(MCStringRef self, MCStringRef p_pattern, MCStr
 			// Search for the next occurence of from in whole.
 			uindex_t t_next_offset;
 			bool t_found;
-			t_found = MCStringFirstIndexOf(self, p_pattern, t_offset, p_options == kMCStringOptionCompareCaseless, t_next_offset);
+            // AL-2014-05-23: [[ Bug 12482 ]] Pass through string options themselves, rather than a bool.
+			t_found = MCStringFirstIndexOf(self, p_pattern, t_offset, p_options, t_next_offset);
             
 			// If we found an instance of from, then we need space for to; otherwise,
 			// we update the offset, and need just room up to it.
