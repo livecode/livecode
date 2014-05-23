@@ -1467,6 +1467,8 @@ IO_stat MCArrayLoadFromStreamLegacy(MCArrayRef self, MCObjectInputStream& p_stre
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . ReadStringRefNew(&t_key, false);
 
+        MCLog("%s", MCStringGetCString(*t_key));
+        
 		MCNewAutoNameRef t_key_name;
 		if (t_stat == IO_NORMAL)
 		{
@@ -1553,6 +1555,9 @@ IO_stat MCArrayLoadFromStreamLegacy(MCArrayRef self, MCObjectInputStream& p_stre
 						MCValueRelease(t_array);
 				}
 				break;
+            // AL-2014-05-23: [[ Bug 12493 ]] Prevent crash cause by bad type data while decoding array
+            default:
+                t_stat = IO_ERROR;
 			}
 		}
 
