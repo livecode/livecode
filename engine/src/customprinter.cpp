@@ -1208,8 +1208,13 @@ MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCArrayRef p_o
 		ctxt . index = 0;
 		ctxt . option_keys = t_option_keys;
 		ctxt . option_values = t_option_values;
-		if (!MCArrayApply(p_options, convert_options_array, &ctxt))
-			t_result = PRINTER_RESULT_ERROR;
+        
+        // FG-2014-05-23: [[ Bugfix 12502 ]] Don't try to convert empty options
+        if (p_options != nil && !MCArrayIsEmpty(p_options))
+        {
+            if (!MCArrayApply(p_options, convert_options_array, &ctxt))
+                t_result = PRINTER_RESULT_ERROR;
+        }
 	}
 
 	if (t_result == PRINTER_RESULT_SUCCESS)
