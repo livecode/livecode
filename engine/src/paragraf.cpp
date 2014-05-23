@@ -4070,7 +4070,7 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, findex_t
 // This method accumulates the ranges of the paragraph that have 'flagged' set
 // to true. The output is placed in the uinteger_t array, with indices
 // adjusted by the 'delta'.
-void MCParagraph::getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei, int32_t p_delta, MCInterfaceFlaggedRanges& r_ranges)
+void MCParagraph::getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei, int32_t p_delta, MCInterfaceFieldRanges& r_ranges)
 {
 	// If the paragraph is empty, there is nothing to do.
 	if (gettextlength() == 0)
@@ -4094,7 +4094,7 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei,
 		bptr -> GetRange(i, l);
 	}
     
-    MCAutoArray<MCInterfaceFlaggedRange> t_ranges;
+    MCAutoArray<MCInterfaceFieldRange> t_ranges;
     
 	// Now loop through all the blocks until we reach the end.
 	int32_t t_flagged_start, t_flagged_end;
@@ -4102,7 +4102,7 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei,
 	t_flagged_end = -1;
 	for(;;)
 	{
-        MCInterfaceFlaggedRange t_range;
+        MCInterfaceFieldRange t_range;
 		// Ignore any blocks of zero width;
 		if (bptr -> GetLength() != 0)
 		{
@@ -4181,7 +4181,7 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 
 // JS-2013-05-15: [[ PageRanges ]] pagerange as variant of pageheight
 // MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indicies.
-/*Boolean MCParagraph::pagerange(uint2 fixedheight, uint2 &theight,
+Boolean MCParagraph::pagerange(uint2 fixedheight, uint2 &theight,
                                uint4 &tend, MCLine *&lptr)
 {
 	if (lptr == NULL)
@@ -4200,7 +4200,7 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 	while (lptr != lines);
 	lptr = NULL;
 	return True;
-}*/
+}
 
 bool MCParagraph::imagechanged(MCImage *p_image, bool p_deleting)
 {
