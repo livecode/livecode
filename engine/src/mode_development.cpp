@@ -1740,12 +1740,8 @@ void MCObject::GetEffectiveRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r
         t_object_ref = t_object_list;
         do
         {
-            // OK-2008-08-22: [[Check in case the object is itself a frontscript]]
-            if (t_object_ref -> getobject() == this)
-            {
-                t_object_ref = t_object_ref -> next();
-                continue;
-            }
+            // AL-2014-05-23: [[ Bug 12491 ]] The object list checks for uniqueness,
+            //  so no need to check if the object is itself a frontscript.
             
             t_first = true;
             MCHandlerlist *t_handler_list;
