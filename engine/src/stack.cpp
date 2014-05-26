@@ -101,6 +101,10 @@ MCPropertyInfo MCStack::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_SHADOW, Bool, MCStack, Shadow)
 	DEFINE_RW_OBJ_PROPERTY(P_RESIZABLE, Bool, MCStack, Resizable)
 
+    // AL-2014-05-26: [[ Bug 12510 ]] Stack decoration synonyms not implemented in 7.0
+    DEFINE_RW_OBJ_PROPERTY(P_MAXIMIZE_BOX, Bool, MCStack, ZoomBox)
+	DEFINE_RW_OBJ_PROPERTY(P_MINIMIZE_BOX, Bool, MCStack, CollapseBox)
+    
 	DEFINE_RW_OBJ_PROPERTY(P_MIN_WIDTH, UInt16, MCStack, MinWidth)
 	DEFINE_RW_OBJ_PROPERTY(P_MAX_WIDTH, UInt16, MCStack, MaxWidth)
 	DEFINE_RW_OBJ_PROPERTY(P_MIN_HEIGHT, UInt16, MCStack, MinHeight)
