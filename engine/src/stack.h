@@ -242,6 +242,9 @@ protected:
 	// MW-2014-03-12: [[ Bug 11914 ]] If this is true then the stack is an engine menu.
 	bool m_is_menu : 1;
 	
+	// IM-2014-05-27: [[ Bug 12321 ]] Indicate if we need to purge fonts when reopening the window
+	bool m_purge_fonts;
+
 public:
 	Boolean menuwindow;
 
