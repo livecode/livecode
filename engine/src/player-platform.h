@@ -200,20 +200,20 @@ public:
 
     void drawcontroller(MCDC *dc);
     void drawnicecontroller(MCDC *dc);
-    void drawControllerVolumeButton(MCDC *dc);
-    void drawControllerVolumeBarButton(MCDC *dc);
-    void drawControllerVolumeSelectorButton(MCDC *dc);
-    void drawControllerPlayPauseButton(MCDC *dc);
-    void drawControllerWellButton(MCDC *dc);
-    void drawControllerThumbButton(MCDC *dc);
-    void drawControllerScrubForwardButton(MCDC *dc);
-    void drawControllerScrubBackButton(MCDC *dc);
-    void drawControllerSelectionStartButton(MCDC *dc);
-    void drawControllerSelectionFinishButton(MCDC *dc);
-    void drawControllerSelectedAreaButton(MCDC *dc);
-    void drawControllerVolumeAreaButton(MCDC *dc);
-    void drawControllerPlayedAreaButton(MCDC *dc);
-    void drawControllerVolumeWellButton(MCDC *dc);
+    void drawControllerVolumeButton(MCGContextRef p_gcontext);
+    void drawControllerVolumeBarButton(MCGContextRef p_gcontext);
+    void drawControllerVolumeSelectorButton(MCGContextRef p_gcontext);
+    void drawControllerPlayPauseButton(MCGContextRef p_gcontext);
+    void drawControllerWellButton(MCGContextRef p_gcontext);
+    void drawControllerThumbButton(MCGContextRef p_gcontext);
+    void drawControllerScrubForwardButton(MCGContextRef p_gcontext);
+    void drawControllerScrubBackButton(MCGContextRef p_gcontext);
+    void drawControllerSelectionStartButton(MCGContextRef p_gcontext);
+    void drawControllerSelectionFinishButton(MCGContextRef p_gcontext);
+    void drawControllerSelectedAreaButton(MCGContextRef p_gcontext);
+    void drawControllerVolumeAreaButton(MCGContextRef p_gcontext);
+    void drawControllerPlayedAreaButton(MCGContextRef p_gcontext);
+    void drawControllerVolumeWellButton(MCGContextRef p_gcontext);
     
     void drawcontrollerbutton(MCDC *dc, const MCRectangle& rect);
     void redrawcontroller(void);

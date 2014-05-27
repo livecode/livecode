@@ -109,8 +109,8 @@ static MCColor controllercolors[] = {
     {0, 0x2b2b, 0x2b2b, 0x2b2b, 0, 0},         /* gray */
     
     {0, 0x2222, 0x2222, 0x2222, 0, 0},         /* dark gray */
-
-
+    
+    
 };
 //-----------------------------------------------------------------------------
 // Control Implementation
@@ -182,7 +182,7 @@ MCPlayer::~MCPlayer()
     
 	if (m_platform_player != nil)
 		MCPlatformPlayerRelease(m_platform_player);
-
+    
 	delete filename;
 	delete userCallbackStr;
 }
@@ -285,12 +285,12 @@ Boolean MCPlayer::mfocus(int2 x, int2 y)
 void MCPlayer::munfocus()
 {
     /*
-    if ( m_show_volume )
-    {
-        if (state & CS_PLAYING || state & CS_PAUSED)
-            m_show_volume = false;
-    }
-    */
+     if ( m_show_volume )
+     {
+     if (state & CS_PLAYING || state & CS_PAUSED)
+     m_show_volume = false;
+     }
+     */
 	getstack()->resetcursor(True);
 	MCControl::munfocus();
 }
@@ -413,7 +413,7 @@ void MCPlayer::setrect(const MCRectangle &nrect)
 }
 
 void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
-{	
+{
     if (MCNameIsEqualTo(mptr, MCM_play_started, kMCCompareCaseless))
     {
         state &= ~CS_PAUSED;
@@ -422,7 +422,7 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
         if (MCNameIsEqualTo(mptr, MCM_play_stopped, kMCCompareCaseless))
         {
             state |= CS_PAUSED;
-
+            
             if (disposable)
             {
                 playstop();
@@ -432,14 +432,14 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
         else if (MCNameIsEqualTo(mptr, MCM_play_paused, kMCCompareCaseless))
 		{
 			state |= CS_PAUSED;
-
+            
 		}
         else if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
         {
             handle_mstilldown(Button1);
             MCscreen -> addtimer(this, MCM_internal, MCblinkrate);
         }
-        MCControl::timer(mptr, params);
+    MCControl::timer(mptr, params);
 }
 
 Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
@@ -557,7 +557,7 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 			real8 pan = 0.0;
 			if (m_platform_player != nil)
 				MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRPan, kMCPlatformPropertyTypeDouble, &pan);
-
+            
 			ep.setr8(pan, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
 		}
             break;
@@ -566,7 +566,7 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 			real8 tilt = 0.0;
 			if (m_platform_player != nil)
 				MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRTilt, kMCPlatformPropertyTypeDouble, &tilt);
-
+            
 			ep.setr8(tilt, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
 		}
             break;
@@ -575,7 +575,7 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 			real8 zoom = 0.0;
 			if (m_platform_player != nil)
 				MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRZoom, kMCPlatformPropertyTypeDouble, &zoom);
-
+            
 			ep.setr8(zoom, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
 		}
             break;
@@ -812,7 +812,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 			}
 			if (m_platform_player != nil)
 				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRPan, kMCPlatformPropertyTypeDouble, &pan);
-
+            
 			if (isbuffering())
 				dirty = True;
 		}
@@ -827,7 +827,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 			}
 			if (m_platform_player != nil)
 				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRTilt, kMCPlatformPropertyTypeDouble, &tilt);
-
+            
 			if (isbuffering())
 				dirty = True;
 		}
@@ -842,7 +842,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 			}
 			if (m_platform_player != nil)
 				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRZoom, kMCPlatformPropertyTypeDouble, &zoom);
-
+            
 			if (isbuffering())
 				dirty = True;
 		}
@@ -860,7 +860,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 				t_visible = getflag(F_VISIBLE);
 				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
 			}
-	
+            
 			return stat;
 		}
             break;
@@ -1026,23 +1026,23 @@ void MCPlayer::setcurtime(uint4 newtime)
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &newtime);
 }
 /*
-void MCPlayer::setselection()
-{
-	if (m_platform_player != nil)
-	{
-		uint4 st, et;
-		if (starttime == MAXUINT4 || endtime == MAXUINT4)
-			st = et = 0;
-		else
-		{
-			st = starttime;
-			et = endtime;
-		}
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
-	}
-}
-*/
+ void MCPlayer::setselection()
+ {
+ if (m_platform_player != nil)
+ {
+ uint4 st, et;
+ if (starttime == MAXUINT4 || endtime == MAXUINT4)
+ st = et = 0;
+ else
+ {
+ st = starttime;
+ et = endtime;
+ }
+ MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
+ MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+ }
+ }
+ */
 void MCPlayer::setselection()
 {
     if (m_platform_player != nil)
@@ -1185,7 +1185,7 @@ Boolean MCPlayer::prepare(const char *options)
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &lasttime);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
-
+    
 	setselection();
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
 	SynchronizeUserCallbacks();
@@ -1270,24 +1270,24 @@ void MCPlayer::playfast(Boolean forward)
 }
 
 /*
-void MCPlayer::playfastforward()
-{
-	if (!getstate(CS_PREPARED))
-		return;
-    
-	if (m_platform_player != nil)
-		MCPlatformFastForwardPlayer(m_platform_player);
-}
-
-void MCPlayer::playfastback()
-{
-	if (!getstate(CS_PREPARED))
-		return;
-    
-	if (m_platform_player != nil)
-		MCPlatformFastBackPlayer(m_platform_player);
-}
-*/
+ void MCPlayer::playfastforward()
+ {
+ if (!getstate(CS_PREPARED))
+ return;
+ 
+ if (m_platform_player != nil)
+ MCPlatformFastForwardPlayer(m_platform_player);
+ }
+ 
+ void MCPlayer::playfastback()
+ {
+ if (!getstate(CS_PREPARED))
+ return;
+ 
+ if (m_platform_player != nil)
+ MCPlatformFastBackPlayer(m_platform_player);
+ }
+ */
 
 void MCPlayer::playstepback()
 {
@@ -1572,7 +1572,7 @@ void MCPlayer::selectionchanged(void)
 void MCPlayer::currenttimechanged(void)
 {
     redrawcontroller();
-
+    
     timer(MCM_current_time_changed, nil);
 }
 
@@ -1721,7 +1721,7 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
     // Draw our controller
     if (getflag(F_SHOW_CONTROLLER))
     {
-       // drawcontroller(dc);
+        // drawcontroller(dc);
         drawnicecontroller(dc);
     }
     
@@ -1749,13 +1749,13 @@ inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_bl
 inline void setRamp(MCGColor *&r_colors, MCGFloat *&r_stops)
 {
     if (r_colors == nil)
-        /* UNCHECKED */ MCMemoryNewArray(3, r_colors);
+    /* UNCHECKED */ MCMemoryNewArray(3, r_colors);
     r_colors[0] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
     r_colors[1] = MCGColorMakeRGBA(1.0f, 1.0f, 1.0f, 1.0f);
     r_colors[2] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
     
     if (r_stops == nil)
-        /* UNCHECKED */ MCMemoryNewArray(3, r_stops);
+    /* UNCHECKED */ MCMemoryNewArray(3, r_stops);
     r_stops[0] = (MCGFloat)0.00000;
     r_stops[1] = (MCGFloat)0.50000;
     r_stops[2] = (MCGFloat)1.00000;
@@ -1793,7 +1793,7 @@ void MCPlayer::drawcontroller(MCDC *dc)
     drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolume));
     drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartPlay));
     drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartWell));
-
+    
     
     drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb));
     drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartScrubBack));
@@ -1804,7 +1804,7 @@ void MCPlayer::drawcontroller(MCDC *dc)
         drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionStart));
         drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionFinish));
     }
-
+    
     if (m_show_volume)
     {
         drawcontrollerbutton(dc, getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolumeBar));
@@ -1817,41 +1817,45 @@ void MCPlayer::drawnicecontroller(MCDC *dc)
 {
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
-
+    
     dc -> setforeground(controllercolors[DARKGRAY]);
     dc -> fillrect(t_rect, true);
     
-    drawControllerVolumeButton(dc);
+    MCGContextRef t_gcontext = nil;
+    dc -> lockgcontext(t_gcontext);
+    
+    drawControllerVolumeButton(t_gcontext);
     if (m_show_volume)
     {
-        drawControllerVolumeBarButton(dc);
-        drawControllerVolumeWellButton(dc);
-        drawControllerVolumeAreaButton(dc);
-        drawControllerVolumeSelectorButton(dc);
+        drawControllerVolumeBarButton(t_gcontext);
+        drawControllerVolumeWellButton(t_gcontext);
+        drawControllerVolumeAreaButton(t_gcontext);
+        drawControllerVolumeSelectorButton(t_gcontext);
     }
-    drawControllerPlayPauseButton(dc);
-    drawControllerWellButton(dc);
+    drawControllerPlayPauseButton(t_gcontext);
+    drawControllerWellButton(t_gcontext);
     
     
     if (getflag(F_SHOW_SELECTION))
     {
-        drawControllerSelectedAreaButton(dc);
+        drawControllerSelectedAreaButton(t_gcontext);
     }
     
-    drawControllerScrubForwardButton(dc);
-    drawControllerScrubBackButton(dc);
+    drawControllerScrubForwardButton(t_gcontext);
+    drawControllerScrubBackButton(t_gcontext);
     
-    drawControllerPlayedAreaButton(dc);
-    drawControllerThumbButton(dc);
+    drawControllerPlayedAreaButton(t_gcontext);
+    drawControllerThumbButton(t_gcontext);
     
     if (getflag(F_SHOW_SELECTION))
     {
-        drawControllerSelectionStartButton(dc);
-        drawControllerSelectionFinishButton(dc);
+        drawControllerSelectionStartButton(t_gcontext);
+        drawControllerSelectionFinishButton(t_gcontext);
     }
+    dc -> unlockgcontext(t_gcontext);
 }
 
-void MCPlayer::drawControllerVolumeButton(MCDC *dc)
+void MCPlayer::drawControllerVolumeButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
@@ -1870,114 +1874,61 @@ void MCPlayer::drawControllerVolumeButton(MCDC *dc)
 	float secondary_y = t_volume_rect.y + t_volume_rect.height * 2 / 3;
     
     setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
-
+    
     
     if (m_show_volume)
     {
-        dc -> setforeground(controllercolors[PURPLE]);
-        dc -> fillrect(t_volume_rect, true);
+        MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_volume_rect));
+        MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); // PURPLE
+        MCGContextFill(p_gcontext);
     }
     
-    MCGContextRef t_gcontext = nil;
+    MCGContextSetFillGradient(p_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
+    MCGContextSetShouldAntialias(p_gcontext, true);
     
-    dc -> lockgcontext(t_gcontext);
+    MCGContextBeginPath(p_gcontext);
+    MCGContextMoveTo(p_gcontext, MCRectangleScalePoints(t_volume_rect, 0.2 , 0.4));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_volume_rect, 0.2 , 0.6));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_volume_rect, 0.4 , 0.6));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_volume_rect, 0.5 , 0.7));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_volume_rect, 0.5 , 0.3));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_volume_rect, 0.4 , 0.4));
+    MCGContextCloseSubpath(p_gcontext);
+    MCGContextFill(p_gcontext);
     
-    MCGContextSetFillGradient(t_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
-    MCGContextSetShouldAntialias(t_gcontext, true);
-    
-    MCGContextBeginPath(t_gcontext);
-    MCGContextMoveTo(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.2 , 0.4));
-    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.2 , 0.6));
-    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.4 , 0.6));
-    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.5 , 0.7));
-    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.5 , 0.3));
-    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.4 , 0.4));
-    MCGContextCloseSubpath(t_gcontext);
-    MCGContextFill(t_gcontext);
-    
-    MCGContextSetStrokeGradient(t_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
+    MCGContextSetStrokeGradient(p_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
     
     if (getloudness() > 30)
     {
-        MCGContextAddArc(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.6 , 0.5), MCGSizeMake(0.05 * t_volume_rect . width, 0.2 * t_volume_rect . height), 0.0, -60, 60);
+        MCGContextAddArc(p_gcontext, MCRectangleScalePoints(t_volume_rect, 0.6 , 0.5), MCGSizeMake(0.05 * t_volume_rect . width, 0.2 * t_volume_rect . height), 0.0, -60, 60);
     }
     
     if (getloudness() > 60)
     {
-        MCGContextAddArc(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.66 , 0.5), MCGSizeMake(0.1 * t_volume_rect . width, 0.4 * t_volume_rect . height), 0.0, -60, 60);
+        MCGContextAddArc(p_gcontext, MCRectangleScalePoints(t_volume_rect, 0.66 , 0.5), MCGSizeMake(0.1 * t_volume_rect . width, 0.4 * t_volume_rect . height), 0.0, -60, 60);
     }
     
     if (getloudness() > 95)
     {
-        MCGContextAddArc(t_gcontext, MCRectangleScalePoints(t_volume_rect, 0.72 , 0.5), MCGSizeMake(0.2 * t_volume_rect . width, 0.8 * t_volume_rect . height), 0.0, -60, 60);
+        MCGContextAddArc(p_gcontext, MCRectangleScalePoints(t_volume_rect, 0.72 , 0.5), MCGSizeMake(0.2 * t_volume_rect . width, 0.8 * t_volume_rect . height), 0.0, -60, 60);
     }
     
-    MCGContextSetStrokeWidth(t_gcontext, t_volume_rect . width / 20.0 );
-    MCGContextStroke(t_gcontext);
-    
-    dc -> unlockgcontext(t_gcontext);
-    
-    
-    /*
-    dc -> lockgcontext(t_gcontext);
-    MCGContextSetFillRGBAColor(t_gcontext, 1.0f, 1.0f, 1.0f, 1.0f);
-    MCGContextSetShouldAntialias(t_gcontext, true);
-    MCGContextSetStrokeWidth(t_gcontext, 1.0 / 20.0);
-    
-    MCGContextTranslateCTM(t_gcontext, t_volume_rect . x, t_volume_rect . y);
-    MCGContextScaleCTM(t_gcontext, t_volume_rect . width, t_volume_rect . height);
-    
-    MCGContextBeginPath(t_gcontext);
-    MCGContextMoveTo(t_gcontext, MCGPointMake(0.2 , 0.4));
-    MCGContextLineTo(t_gcontext, MCGPointMake(0.2 , 0.6));
-    MCGContextLineTo(t_gcontext, MCGPointMake(0.4 , 0.6));
-    MCGContextLineTo(t_gcontext, MCGPointMake(0.5 , 0.7));
-    MCGContextLineTo(t_gcontext, MCGPointMake(0.5 , 0.3));
-    MCGContextLineTo(t_gcontext, MCGPointMake(0.4 , 0.4));
-    MCGContextCloseSubpath(t_gcontext);
-    MCGContextFill(t_gcontext);
-    
-    if (getloudness() > 30)
-    {
-        MCGContextAddArc(t_gcontext, MCGPointMake(0.60, 0.5), MCGSizeMake(0.05, 0.2), 0.0, -60, 60);
-    }
-    
-    if (getloudness() > 60)
-    {
-        MCGContextAddArc(t_gcontext, MCGPointMake(0.66, 0.5), MCGSizeMake(0.1, 0.4), 0.0, -60, 60);
-    }
-
-    if (getloudness() > 95)
-    {
-        MCGContextAddArc(t_gcontext, MCGPointMake(0.72, 0.5), MCGSizeMake(0.2, 0.8), 0.0, -60, 60);
-    }
-    MCGContextSetStrokeRGBAColor(t_gcontext, 1.0f, 1.0f, 1.0f, 1.0f);
-    MCGContextStroke(t_gcontext);
-   
-    dc -> unlockgcontext(t_gcontext);
-    */
+    MCGContextSetStrokeWidth(p_gcontext, t_volume_rect . width / 20.0 );
+    MCGContextStroke(p_gcontext);
 }
 
-void MCPlayer::drawControllerVolumeBarButton(MCDC *dc)
+void MCPlayer::drawControllerVolumeBarButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
     MCRectangle t_volume_bar_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolumeBar);
     
-    dc -> setforeground(controllercolors[DARKGRAY]);
-    dc -> fillrect(t_volume_bar_rect, true);
-    
-    MCGContextRef t_gcontext = nil;
-    
-    dc -> lockgcontext(t_gcontext);
-    
-    MCGContextTranslateCTM(t_gcontext, t_volume_bar_rect . x, t_volume_bar_rect . y);
-    MCGContextScaleCTM(t_gcontext, t_volume_bar_rect . width, t_volume_bar_rect . height);
-    
-    dc -> unlockgcontext(t_gcontext);
+    MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_volume_bar_rect));
+    MCGContextSetFillRGBAColor(p_gcontext, 34 / 255.0, 34 / 255.0, 34 / 255.0, 1.0f); // DARKGRAY
+    MCGContextFill(p_gcontext);
 }
 
-void MCPlayer::drawControllerVolumeSelectorButton(MCDC *dc)
+void MCPlayer::drawControllerVolumeSelectorButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
@@ -1986,7 +1937,7 @@ void MCPlayer::drawControllerVolumeSelectorButton(MCDC *dc)
     MCGColor *t_colors = nil;
     MCGFloat *t_stops = nil;
     setRamp(t_colors, t_stops);
-        
+    
     MCGAffineTransform t_transform;
     float origin_x = t_volume_selector_rect.x + t_volume_selector_rect.width / 2.0;
 	float origin_y = t_volume_selector_rect.y + t_volume_selector_rect.height;
@@ -1996,37 +1947,19 @@ void MCPlayer::drawControllerVolumeSelectorButton(MCDC *dc)
 	float secondary_y = t_volume_selector_rect.y + t_volume_selector_rect.height;
     
     setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
-    //dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
-    MCGContextRef t_gcontext = nil;
     
-    dc -> lockgcontext(t_gcontext);
+    MCGContextSetFillGradient(p_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
     
-    MCGContextSetFillGradient(t_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
+    MCGContextSetShouldAntialias(p_gcontext, true);
+    MCGContextAddArc(p_gcontext, MCRectangleScalePoints(t_volume_selector_rect, 0.5, 0.5), MCGSizeMake(0.8 * t_volume_selector_rect . width, 0.8 * t_volume_selector_rect . height), 0, 0, 360);
     
-    MCGContextSetShouldAntialias(t_gcontext, true);
-    MCGContextAddArc(t_gcontext, MCRectangleScalePoints(t_volume_selector_rect, 0.5, 0.5), MCGSizeMake(0.8 * t_volume_selector_rect . width, 0.8 * t_volume_selector_rect . height), 0, 0, 360);
-
-    MCGContextFill(t_gcontext);
+    MCGContextFill(p_gcontext);
     
     MCMemoryDeleteArray(t_stops);
     MCMemoryDeleteArray(t_colors);
-
-    
-    /*
-    MCGContextSetShouldAntialias(t_gcontext, true);
-    MCGContextSetFillRGBAColor(t_gcontext, 1.0f, 1.0f, 1.0f, 1.0f);
-    MCGContextAddArc(t_gcontext, MCGPointMake(0.5, 0.5), MCGSizeMake(0.8, 0.8), 0, 0, 360);
-    
-    MCGContextTranslateCTM(t_gcontext, t_volume_selector_rect . x, t_volume_selector_rect . y);
-    MCGContextScaleCTM(t_gcontext, t_volume_selector_rect . width, t_volume_selector_rect . height);
-    
-    MCGContextFill(t_gcontext);
-    */
-    
-    dc -> unlockgcontext(t_gcontext);
 }
 
-void MCPlayer::drawControllerPlayPauseButton(MCDC *dc)
+void MCPlayer::drawControllerPlayPauseButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
@@ -2046,64 +1979,34 @@ void MCPlayer::drawControllerPlayPauseButton(MCDC *dc)
     
     setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
     
-
-    //dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
-    MCGContextRef t_gcontext = nil;
+    MCGContextSetFillGradient(p_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
     
-    dc -> lockgcontext(t_gcontext);
-    
-    MCGContextSetFillGradient(t_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
-    
-    MCGContextSetShouldAntialias(t_gcontext, true);
+    MCGContextSetShouldAntialias(p_gcontext, true);
     
     if (ispaused())
     {
-        MCGContextMoveTo(t_gcontext, MCRectangleScalePoints(t_playpause_rect, 0.3, 0.3));
-        MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_playpause_rect, 0.3, 0.7));
-        MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_playpause_rect, 0.7, 0.5));
-        MCGContextCloseSubpath(t_gcontext);
+        MCGContextMoveTo(p_gcontext, MCRectangleScalePoints(t_playpause_rect, 0.3, 0.3));
+        MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_playpause_rect, 0.3, 0.7));
+        MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_playpause_rect, 0.7, 0.5));
+        MCGContextCloseSubpath(p_gcontext);
     }
-
+    
     else
     {
         MCGRectangle t_grect1, t_grect2;
         
         t_grect1 = MCGRectangleMake(t_playpause_rect . x + 0.2 * t_playpause_rect . width, t_playpause_rect . y + 0.3 * t_playpause_rect . height, 0.2 * t_playpause_rect . width, 0.4 * t_playpause_rect . height);
-        MCGContextAddRectangle(t_gcontext, t_grect1);
+        MCGContextAddRectangle(p_gcontext, t_grect1);
         
         t_grect2 = MCGRectangleMake(t_playpause_rect . x + 0.5 * t_playpause_rect . width, t_playpause_rect . y + 0.3 * t_playpause_rect . height, 0.2 * t_playpause_rect . width, 0.4 * t_playpause_rect . height);
-        MCGContextAddRectangle(t_gcontext, t_grect2);
-
-    }
-    
-    
-    /*
-    if (ispaused())
-    {
-        MCGContextBeginPath(t_gcontext);
-        MCGContextMoveTo(t_gcontext, MCGPointMake(0.3 , 0.3));
-        MCGContextLineTo(t_gcontext, MCGPointMake(0.3 , 0.7));
-        MCGContextLineTo(t_gcontext, MCGPointMake(0.7 , 0.5));
-        MCGContextCloseSubpath(t_gcontext);
-    }
-    else
-    {
-        MCGRectangle t_grect1, t_grect2;
-        t_grect1 = MCGRectangleMake(0.25, 0.3, 0.2, 0.45);
-        MCGContextAddRectangle(t_gcontext, t_grect1);
+        MCGContextAddRectangle(p_gcontext, t_grect2);
         
-        t_grect2 = MCGRectangleMake(0.55, 0.3, 0.2, 0.45);
-        MCGContextAddRectangle(t_gcontext, t_grect2);
     }
-    MCGContextTranslateCTM(t_gcontext, t_playpause_rect . x, t_playpause_rect . y);
-    MCGContextScaleCTM(t_gcontext, t_playpause_rect . width, t_playpause_rect . height);
-    */
     
-    MCGContextFill(t_gcontext);
-    dc -> unlockgcontext(t_gcontext);
+    MCGContextFill(p_gcontext);
 }
 
-void MCPlayer::drawControllerWellButton(MCDC *dc)
+void MCPlayer::drawControllerWellButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
@@ -2134,29 +2037,21 @@ void MCPlayer::drawControllerWellButton(MCDC *dc)
     t_inner_shadow . knockout = false;
     
     t_effects . inner_shadow = t_inner_shadow;
+  
+    MCGContextSetShouldAntialias(p_gcontext, true);
     
-
-    //dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
-    
-    MCGContextRef t_gcontext = nil;
-    
-    dc -> lockgcontext(t_gcontext);
-    MCGContextSetShouldAntialias(t_gcontext, true);
-    
-    //dc -> setforeground(dc -> getblack());
-    MCGContextSetFillRGBAColor(t_gcontext, 0.0f, 0.0f, 0.0f, 1.0f);
+    MCGContextSetFillRGBAColor(p_gcontext, 0.0f, 0.0f, 0.0f, 1.0f); // BLACK
     MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_well_rect);
     
-    MCGContextAddRoundedRectangle(t_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
+    MCGContextAddRoundedRectangle(p_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
     
-    MCGContextBeginWithEffects(t_gcontext, t_rounded_rect, t_effects);
+    MCGContextBeginWithEffects(p_gcontext, t_rounded_rect, t_effects);
     
-    MCGContextFill(t_gcontext);
-    MCGContextEnd(t_gcontext);
-    dc -> unlockgcontext(t_gcontext);
+    MCGContextFill(p_gcontext);
+    MCGContextEnd(p_gcontext);
 }
 
-void MCPlayer::drawControllerThumbButton(MCDC *dc)
+void MCPlayer::drawControllerThumbButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
@@ -2167,22 +2062,12 @@ void MCPlayer::drawControllerThumbButton(MCDC *dc)
      t_colors[1] = 4294967295;
      t_colors[2] = 4290230199;
      */
-
-    MCGContextRef t_gcontext = nil;
     
     MCGColor *t_colors = nil;
     MCGFloat *t_stops = nil;
     setRamp(t_colors, t_stops);
     
     MCGAffineTransform t_transform;
-    /*
-     t_transform . a = p_gradient -> primary . x - p_gradient -> origin . x;
-     t_transform . b = p_gradient -> primary . y - p_gradient -> origin . y;
-     t_transform . c = p_gradient -> secondary . x - p_gradient -> origin . x;
-     t_transform . d = p_gradient -> secondary . y - p_gradient -> origin . y;
-     t_transform . tx = p_gradient -> origin . x;
-     t_transform . ty = p_gradient -> origin . y;
-     */
     
     float origin_x = t_thumb_rect.x + t_thumb_rect.width / 2.0;
 	float origin_y = t_thumb_rect.y + t_thumb_rect.height;
@@ -2190,33 +2075,26 @@ void MCPlayer::drawControllerThumbButton(MCDC *dc)
 	float primary_y = t_thumb_rect.y;
 	float secondary_x = t_thumb_rect.x - t_thumb_rect.width / 2.0;
 	float secondary_y = t_thumb_rect.y + t_thumb_rect.height;
-       
+    
     setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
     
     ////////////////////////////////////////////////////////
     
     ///////////////////////////////////////////////////////
     
-    dc -> lockgcontext(t_gcontext);
-   // MCGContextTranslateCTM(t_gcontext, t_thumb_rect . x, t_thumb_rect . y);
-   // MCGContextScaleCTM(t_gcontext, t_thumb_rect . width, t_thumb_rect . height);
+    MCGContextSetFillGradient(p_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
     
-    MCGContextSetFillGradient(t_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
-    
-    MCGContextSetShouldAntialias(t_gcontext, true);
+    MCGContextSetShouldAntialias(p_gcontext, true);
     MCGRectangle t_grect= MCRectangleToMCGRectangle(t_thumb_rect);
-    MCGContextAddRoundedRectangle(t_gcontext, t_grect, MCGSizeMake(10, 10));
-    
-    // MCGContextAddArc(t_gcontext, MCGPointMake(0.5, 0.5), MCGSizeMake(0.8, 1.0), 0.0, 0, 360);
-    
-    MCGContextFill(t_gcontext);
+    MCGContextAddRoundedRectangle(p_gcontext, t_grect, MCGSizeMake(10, 10));
+        
+    MCGContextFill(p_gcontext);
     
     MCMemoryDeleteArray(t_stops);
     MCMemoryDeleteArray(t_colors);
-    dc -> unlockgcontext(t_gcontext);
 }
 
-void MCPlayer::drawControllerSelectionStartButton(MCDC *dc)
+void MCPlayer::drawControllerSelectionStartButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
@@ -2231,7 +2109,7 @@ void MCPlayer::drawControllerSelectionStartButton(MCDC *dc)
     
     MCGGlowEffect t_outer_glow;
     t_outer_glow . color = MCGColorMakeRGBA(0.0f, 0.0f, 0.0f, 1.0f);
-
+    
     t_outer_glow . blend_mode = kMCGBlendModeClear;
     t_outer_glow . size = t_selection_start_rect . width / 2;
     t_outer_glow . spread = 0;
@@ -2239,15 +2117,12 @@ void MCPlayer::drawControllerSelectionStartButton(MCDC *dc)
     
     t_effects . outer_glow = t_outer_glow;
     
-    dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
-    MCGContextRef t_gcontext = nil;
-    
     MCGColor *t_colors = nil;
     MCGFloat *t_stops = nil;
     setRamp(t_colors, t_stops);
     
     MCGAffineTransform t_transform;
-        
+    
     float origin_x = t_selection_start_rect.x + t_selection_start_rect . width / 2.0;
 	float origin_y = t_selection_start_rect.y;
 	float primary_x = t_selection_start_rect.x + t_selection_start_rect.width / 2.0;
@@ -2256,26 +2131,21 @@ void MCPlayer::drawControllerSelectionStartButton(MCDC *dc)
 	float secondary_y = t_selection_start_rect.y;
     
     setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
-    
-    dc -> lockgcontext(t_gcontext);
-    
-    MCGContextSetFillGradient(t_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
         
-    MCGContextSetShouldAntialias(t_gcontext, true);
-    MCGRectangle t_grect= MCRectangleToMCGRectangle(t_selection_start_rect);
-    MCGContextAddRoundedRectangle(t_gcontext, t_grect, MCGSizeMake(10, 10));
-    MCGContextBeginWithEffects(t_gcontext, t_grect, t_effects);
+    MCGContextSetFillGradient(p_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
     
-      
-    MCGContextFill(t_gcontext);
-    MCGContextEnd(t_gcontext);
+    MCGContextSetShouldAntialias(p_gcontext, true);
+    MCGRectangle t_grect= MCRectangleToMCGRectangle(t_selection_start_rect);
+    MCGContextAddRoundedRectangle(p_gcontext, t_grect, MCGSizeMake(10, 10));
+    MCGContextBeginWithEffects(p_gcontext, t_grect, t_effects);
+    
+    MCGContextFill(p_gcontext);
+    MCGContextEnd(p_gcontext);
     MCMemoryDeleteArray(t_stops);
     MCMemoryDeleteArray(t_colors);
-    
-    dc -> unlockgcontext(t_gcontext);
 }
 
-void MCPlayer::drawControllerSelectionFinishButton(MCDC *dc)
+void MCPlayer::drawControllerSelectionFinishButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
@@ -2299,9 +2169,6 @@ void MCPlayer::drawControllerSelectionFinishButton(MCDC *dc)
     
     t_effects . outer_glow = t_outer_glow;
     
-    dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
-    MCGContextRef t_gcontext = nil;
-    
     MCGColor *t_colors = nil;
     MCGFloat *t_stops = nil;
     setRamp(t_colors, t_stops);
@@ -2316,22 +2183,19 @@ void MCPlayer::drawControllerSelectionFinishButton(MCDC *dc)
 	float secondary_y = t_selection_finish_rect.y;
     
     setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
+        
+    MCGContextSetFillGradient(p_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
     
-    dc -> lockgcontext(t_gcontext);
-    
-    MCGContextSetFillGradient(t_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
-    
-    MCGContextSetShouldAntialias(t_gcontext, true);
+    MCGContextSetShouldAntialias(p_gcontext, true);
     
     MCGRectangle t_grect= MCRectangleToMCGRectangle(t_selection_finish_rect);
-    MCGContextAddRoundedRectangle(t_gcontext, t_grect, MCGSizeMake(10, 10));
-    MCGContextBeginWithEffects(t_gcontext, t_grect, t_effects);
-    MCGContextFill(t_gcontext);
-    MCGContextEnd(t_gcontext);
-    dc -> unlockgcontext(t_gcontext);
+    MCGContextAddRoundedRectangle(p_gcontext, t_grect, MCGSizeMake(10, 10));
+    MCGContextBeginWithEffects(p_gcontext, t_grect, t_effects);
+    MCGContextFill(p_gcontext);
+    MCGContextEnd(p_gcontext);
 }
 
-void MCPlayer::drawControllerScrubForwardButton(MCDC *dc)
+void MCPlayer::drawControllerScrubForwardButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
@@ -2339,13 +2203,10 @@ void MCPlayer::drawControllerScrubForwardButton(MCDC *dc)
     
     if (m_scrub_forward_is_pressed)
     {
-        dc -> setforeground(controllercolors[PURPLE]);
-        dc -> fillrect(t_scrub_forward_rect, true);
+        MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_scrub_forward_rect));
+        MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); //PURPLE
+        MCGContextFill(p_gcontext);
     }
-
-    
-    dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
-    MCGContextRef t_gcontext = nil;
     
     MCGColor *t_colors = nil;
     MCGFloat *t_stops = nil;
@@ -2359,45 +2220,26 @@ void MCPlayer::drawControllerScrubForwardButton(MCDC *dc)
 	float primary_y = t_scrub_forward_rect.y + t_scrub_forward_rect . height / 3;
 	float secondary_x = t_scrub_forward_rect.x;
 	float secondary_y = t_scrub_forward_rect.y + t_scrub_forward_rect.height * 2 / 3;
-
-    setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
     
-    dc -> lockgcontext(t_gcontext);
+    setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
         
-    MCGContextSetFillGradient(t_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
-    MCGContextSetShouldAntialias(t_gcontext, true);
+    MCGContextSetFillGradient(p_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
+    MCGContextSetShouldAntialias(p_gcontext, true);
     
     MCGRectangle t_grect;
     t_grect = MCGRectangleMake(t_scrub_forward_rect . x + 0.2 * t_scrub_forward_rect . width, t_scrub_forward_rect . y + 0.3 * t_scrub_forward_rect . height, 0.2 * t_scrub_forward_rect . width, 0.4 * t_scrub_forward_rect . height);
-    MCGContextBeginPath(t_gcontext);
-    MCGContextAddRectangle(t_gcontext, t_grect);
+    MCGContextBeginPath(p_gcontext);
+    MCGContextAddRectangle(p_gcontext, t_grect);
     
-    MCGContextMoveTo(t_gcontext, MCRectangleScalePoints(t_scrub_forward_rect, 0.5, 0.3));
-    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_scrub_forward_rect, 0.5, 0.7));
-    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_scrub_forward_rect, 0.7, 0.5));
-    MCGContextCloseSubpath(t_gcontext);
+    MCGContextMoveTo(p_gcontext, MCRectangleScalePoints(t_scrub_forward_rect, 0.5, 0.3));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_scrub_forward_rect, 0.5, 0.7));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_scrub_forward_rect, 0.7, 0.5));
+    MCGContextCloseSubpath(p_gcontext);
     
-    /*
-    MCGRectangle t_grect;
-    t_grect = MCGRectangleMake(0.2, 0.3, 0.2, 0.4);
-    MCGContextBeginPath(t_gcontext);
-    MCGContextAddRectangle(t_gcontext, t_grect);
-    
-    MCGContextMoveTo(t_gcontext, MCGPointMake(0.5 , 0.3));
-    MCGContextLineTo(t_gcontext, MCGPointMake(0.5 , 0.7));
-    MCGContextLineTo(t_gcontext, MCGPointMake(0.7 , 0.5));
-    MCGContextCloseSubpath(t_gcontext);
-    
-    
-    MCGContextTranslateCTM(t_gcontext, t_scrub_forward_rect . x, t_scrub_forward_rect . y);
-    MCGContextScaleCTM(t_gcontext, t_scrub_forward_rect . width, t_scrub_forward_rect . height);
-    */
-    MCGContextFill(t_gcontext);
-    
-    dc -> unlockgcontext(t_gcontext);
+    MCGContextFill(p_gcontext);
 }
 
-void MCPlayer::drawControllerScrubBackButton(MCDC *dc)
+void MCPlayer::drawControllerScrubBackButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
@@ -2405,12 +2247,10 @@ void MCPlayer::drawControllerScrubBackButton(MCDC *dc)
     
     if (m_scrub_back_is_pressed)
     {
-        dc -> setforeground(controllercolors[PURPLE]);
-        dc -> fillrect(t_scrub_back_rect, true);
+        MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_scrub_back_rect));
+        MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); //PURPLE
+        MCGContextFill(p_gcontext);
     }
-    
-    dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
-    MCGContextRef t_gcontext = nil;
     
     MCGColor *t_colors = nil;
     MCGFloat *t_stops = nil;
@@ -2426,97 +2266,64 @@ void MCPlayer::drawControllerScrubBackButton(MCDC *dc)
 	float secondary_y = t_scrub_back_rect.y + t_scrub_back_rect.height * 2 / 3;
     
     setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
+        
+    MCGContextSetFillGradient(p_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
     
-    dc -> lockgcontext(t_gcontext);
-    
-    MCGContextSetFillGradient(t_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
-
-    MCGContextBeginPath(t_gcontext);
-    MCGContextMoveTo(t_gcontext, MCRectangleScalePoints(t_scrub_back_rect, 0.2, 0.5));
-    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_scrub_back_rect, 0.4, 0.3));
-    MCGContextLineTo(t_gcontext, MCRectangleScalePoints(t_scrub_back_rect, 0.4, 0.7));
+    MCGContextBeginPath(p_gcontext);
+    MCGContextMoveTo(p_gcontext, MCRectangleScalePoints(t_scrub_back_rect, 0.2, 0.5));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_scrub_back_rect, 0.4, 0.3));
+    MCGContextLineTo(p_gcontext, MCRectangleScalePoints(t_scrub_back_rect, 0.4, 0.7));
     
     MCGRectangle t_grect;
     t_grect = MCGRectangleMake(t_scrub_back_rect . x + 0.5 * t_scrub_back_rect . width, t_scrub_back_rect . y + 0.3 * t_scrub_back_rect . height, 0.2 * t_scrub_back_rect . width, 0.4 * t_scrub_back_rect . height);
     
-    MCGContextAddRectangle(t_gcontext, t_grect);
-    MCGContextCloseSubpath(t_gcontext);
-    
-    /*
-    MCGContextMoveTo(t_gcontext, MCGPointMake(0.2 , 0.5));
-    MCGContextLineTo(t_gcontext, MCGPointMake(0.4 , 0.3));
-    MCGContextLineTo(t_gcontext, MCGPointMake(0.4 , 0.7));
-    MCGContextCloseSubpath(t_gcontext);
-    
-    MCGRectangle t_grect;
-    t_grect = MCGRectangleMake(0.5, 0.3, 0.2, 0.4);
-    MCGContextAddRectangle(t_gcontext, t_grect);
-    
-    MCGContextTranslateCTM(t_gcontext, t_scrub_back_rect . x, t_scrub_back_rect . y);
-    MCGContextScaleCTM(t_gcontext, t_scrub_back_rect . width, t_scrub_back_rect . height);
-    */
-    
-    MCGContextFill(t_gcontext);
-    
-    dc -> unlockgcontext(t_gcontext);
+    MCGContextAddRectangle(p_gcontext, t_grect);
+    MCGContextCloseSubpath(p_gcontext);
+       
+    MCGContextFill(p_gcontext);
 }
 
-void MCPlayer::drawControllerSelectedAreaButton(MCDC *dc)
+void MCPlayer::drawControllerSelectedAreaButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_selected_area;
     t_selected_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartSelectedArea);
     
-    dc -> setforeground(controllercolors[SOMEGRAY]);
-    dc -> fillrect(t_selected_area, true);
+    MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_selected_area));
+    MCGContextSetFillRGBAColor(p_gcontext, 43 / 255.0, 43 / 255.0, 43 / 255.0, 1.0f); //SOMEGRAY
+    MCGContextFill(p_gcontext);
 }
 
-void MCPlayer::drawControllerVolumeAreaButton(MCDC *dc)
+void MCPlayer::drawControllerVolumeAreaButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_volume_area;
     t_volume_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeArea);
     
-    dc -> setforeground(controllercolors[PURPLE]);
-    dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
-    MCGContextRef t_gcontext = nil;
-    
-    dc -> lockgcontext(t_gcontext);
+    MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); //PURPLE
     
     MCGRectangle t_grect = MCRectangleToMCGRectangle(t_volume_area);
-    MCGContextAddRoundedRectangle(t_gcontext, t_grect, MCGSizeMake(30, 30));
-    MCGContextFill(t_gcontext);
-    
-    
-    dc -> unlockgcontext(t_gcontext);
+    MCGContextAddRoundedRectangle(p_gcontext, t_grect, MCGSizeMake(30, 30));
+    MCGContextFill(p_gcontext);
     
 }
 
-void MCPlayer::drawControllerPlayedAreaButton(MCDC *dc)
+void MCPlayer::drawControllerPlayedAreaButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_played_area;
     t_played_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartPlayedArea);
     
-    dc -> setforeground(controllercolors[PURPLE]);
-    dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
-    MCGContextRef t_gcontext = nil;
-        
-    dc -> lockgcontext(t_gcontext);
+    MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); //PURPLE
     
     MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_played_area);
     
-    MCGContextAddRoundedRectangle(t_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
+    MCGContextAddRoundedRectangle(p_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
     
-    MCGContextFill(t_gcontext);
-    dc -> lockgcontext(t_gcontext);
-    
-    dc -> unlockgcontext(t_gcontext);
-    
+    MCGContextFill(p_gcontext);
 }
 
-void MCPlayer::drawControllerVolumeWellButton(MCDC *dc)
+void MCPlayer::drawControllerVolumeWellButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_volume_well;
     t_volume_well = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeWell);
-    
     
     MCGBitmapEffects t_effects;
 	t_effects . has_drop_shadow = false;
@@ -2544,22 +2351,15 @@ void MCPlayer::drawControllerVolumeWellButton(MCDC *dc)
     
     t_effects . inner_shadow = t_inner_shadow;
     
-    //dc -> setforeground(dc -> getblack());
-    
-    MCGContextRef t_gcontext = nil;
-    
-    dc -> lockgcontext(t_gcontext);
-    MCGContextSetFillRGBAColor(t_gcontext, 0.0f, 0.0f, 0.0f, 1.0f);
-    MCGContextSetShouldAntialias(t_gcontext, true);
+    MCGContextSetFillRGBAColor(p_gcontext, 0.0f, 0.0f, 0.0f, 1.0f);
+    MCGContextSetShouldAntialias(p_gcontext, true);
     
     MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_volume_well);
     
-    MCGContextAddRoundedRectangle(t_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
-    MCGContextBeginWithEffects(t_gcontext, t_rounded_rect, t_effects);
-    MCGContextFill(t_gcontext);
-    MCGContextEnd(t_gcontext);
-    
-    dc -> unlockgcontext(t_gcontext);
+    MCGContextAddRoundedRectangle(p_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
+    MCGContextBeginWithEffects(p_gcontext, t_rounded_rect, t_effects);
+    MCGContextFill(p_gcontext);
+    MCGContextEnd(p_gcontext);
 }
 
 int MCPlayer::hittestcontroller(int x, int y)
@@ -2572,10 +2372,10 @@ int MCPlayer::hittestcontroller(int x, int y)
     
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolume), x, y))
         return kMCPlayerControllerPartVolume;
-
+    
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartScrubBack), x, y))
         return kMCPlayerControllerPartScrubBack;
-
+    
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartScrubForward), x, y))
         return kMCPlayerControllerPartScrubForward;
     
@@ -2587,7 +2387,7 @@ int MCPlayer::hittestcontroller(int x, int y)
     
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb), x, y))
         return kMCPlayerControllerPartThumb;
-
+    
     else if (MCU_point_in_rect(getcontrollerpartrect(t_rect, kMCPlayerControllerPartWell), x, y))
         return kMCPlayerControllerPartWell;
     
@@ -2660,10 +2460,10 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             return MCRectangleMake(t_well_rect . x + t_thumb_left, t_well_rect . y - t_well_rect . height / 2, CONTROLLER_HEIGHT / 2, 2 * t_well_rect . height);
         }
             break;
-        
+            
         case kMCPlayerControllerPartWell:
             return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT + SELECTION_RECT_WIDTH, p_rect . y + 2 * CONTROLLER_HEIGHT / 5, p_rect . width - 4 * CONTROLLER_HEIGHT - 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT / 5);
-          
+            
         case kMCPlayerControllerPartScrubBack:
             return MCRectangleMake(p_rect . x + p_rect . width - 2 * CONTROLLER_HEIGHT, p_rect . y, CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
             
@@ -2708,10 +2508,10 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             return MCRectangleMake(t_well_rect . x + t_selection_finish_left + CONTROLLER_HEIGHT / 2 - SELECTION_RECT_WIDTH, t_well_rect . y - CONTROLLER_HEIGHT / 6, SELECTION_RECT_WIDTH, t_well_rect . height + CONTROLLER_HEIGHT / 3);
         }
             break;
-          
+            
         case kMCPlayerControllerPartVolumeBar:
             return MCRectangleMake(p_rect . x , p_rect . y - 3 * CONTROLLER_HEIGHT, CONTROLLER_HEIGHT, 3 * CONTROLLER_HEIGHT);
-
+            
         case kMCPlayerControllerPartVolumeSelector:
         {
             MCRectangle t_volume_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeWell);
@@ -2735,7 +2535,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             MCRectangle t_well_rect, t_thumb_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
             t_thumb_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartThumb);
-
+            
             int t_active_well_width;
             t_active_well_width = t_well_rect . width - t_thumb_rect . width;
             
@@ -2746,7 +2546,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, t_selection_finish_left - t_selection_start_left + t_thumb_rect . width, t_well_rect . height);
         }
             break;
-        
+            
         case kMCPlayerControllerPartVolumeArea:
         {
             MCRectangle t_volume_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeWell);
@@ -2756,7 +2556,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             int32_t t_width = t_volume_well_rect . width;
             
             int32_t t_x_offset = (t_bar_width - t_width) / 2;
-            // Adjust y by 2 pixels 
+            // Adjust y by 2 pixels
             return MCRectangleMake(t_volume_well_rect. x , t_volume_selector_rect . y + 2 , t_width, t_volume_well_rect . y + t_volume_well_rect . height - t_volume_selector_rect . y );
         }
             break;
@@ -2777,7 +2577,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
                 t_finish_time = t_duration;
             }
             
-    
+            
             MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
             
             if (t_current_time == 0)
@@ -2829,17 +2629,17 @@ void MCPlayer::redrawcontroller(void)
 void MCPlayer::handle_mdown(int p_which)
 {
     m_inside = true;
-
+    
     int t_part;
     t_part = hittestcontroller(mx, my);
     
     /*
-    if (m_show_volume && t_part != kMCPlayerControllerPartVolumeSelector && t_part != kMCPlayerControllerPartVolumeBar && t_part != kMCPlayerControllerPartVolume && t_part != kMCPlayerControllerPartVolumeWell)
-    {
-        m_show_volume = False;
-        layer_redrawall();
-    }
-    */
+     if (m_show_volume && t_part != kMCPlayerControllerPartVolumeSelector && t_part != kMCPlayerControllerPartVolumeBar && t_part != kMCPlayerControllerPartVolume && t_part != kMCPlayerControllerPartVolumeWell)
+     {
+     m_show_volume = False;
+     layer_redrawall();
+     }
+     */
     switch(t_part)
     {
         case kMCPlayerControllerPartPlay:
@@ -2850,7 +2650,7 @@ void MCPlayer::handle_mdown(int p_which)
             else
                 playstart(nil);
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartPlay));
-
+            
             break;
         case kMCPlayerControllerPartVolume:
         {
@@ -2869,7 +2669,7 @@ void MCPlayer::handle_mdown(int p_which)
             m_grabbed_part = t_part;
         }
             break;
-         
+            
         case kMCPlayerControllerPartVolumeWell:
         case kMCPlayerControllerPartVolumeBar:
         {
@@ -2895,11 +2695,11 @@ void MCPlayer::handle_mdown(int p_which)
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar));
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeSelector));
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolume));
-
+            
         }
             break;
             
-
+            
         case kMCPlayerControllerPartWell:
         {
             MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
@@ -2917,6 +2717,7 @@ void MCPlayer::handle_mdown(int p_which)
         case kMCPlayerControllerPartScrubBack:
             
             m_scrub_back_is_pressed = true;
+            // This is needed for handle_mup
             m_was_paused = ispaused();
             
             if(ispaused())
@@ -2932,6 +2733,7 @@ void MCPlayer::handle_mdown(int p_which)
         case kMCPlayerControllerPartScrubForward:
             
             m_scrub_forward_is_pressed = true;
+            // This is needed for handle_mup
             m_was_paused = ispaused();
             
             if(ispaused())
@@ -2971,7 +2773,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 int32_t t_new_volume, t_height, t_offset;
                 t_offset = t_volume_well . y - t_volume_bar . y;
                 
-                t_height = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeWell) . height; 
+                t_height = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeWell) . height;
                 
                 t_new_volume = (getcontrollerrect() . y - t_offset - y ) * 100 / (t_height);
                 
@@ -3035,7 +2837,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 
             }
                 break;
-              
+                
             case kMCPlayerControllerPartScrubBack:
             case kMCPlayerControllerPartScrubForward:
                 if (MCU_point_in_rect(getcontrollerpartrect(getcontrollerrect(), m_grabbed_part), x, y))
@@ -3045,7 +2847,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 else
                 {
                     m_inside = False;
-                }                
+                }
                 break;
             default:
                 break;
@@ -3055,7 +2857,7 @@ void MCPlayer::handle_mfocus(int x, int y)
 }
 
 void MCPlayer::handle_mstilldown(int p_which)
-{  
+{
     switch (m_grabbed_part)
     {
         case kMCPlayerControllerPartScrubForward:
@@ -3119,7 +2921,7 @@ void MCPlayer::handle_mup(int p_which)
             playpause(m_was_paused);
             layer_redrawall();
             break;
-
+            
         case kMCPlayerControllerPartScrubForward:
             m_scrub_forward_is_pressed = false;
             playpause(m_was_paused);
