@@ -1,0 +1,1 @@
+# Delete player object from stack causes eventual crash
