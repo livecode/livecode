@@ -14,9 +14,6 @@
 	<examples>
 <example><p>put "This is the first sentence. This is the second sentence." into tText</p><p>put sentence 2 of tText -- returns "This is the second sentence."</p></example>
 <example><p>put "The green apple costs $0.50, the red apple costs $0.60. Which one should I buy?" into tText</p><p>put the first sentence of tText -- returns "The green apple costs $0.50, the red apple costs $0.60. " also note that the space after the full stop is included in the return value.</p></example>
-<example><p></p></example>
-<example><p></p></example>
-<example><p></p></example>
 	</examples>
 
 	<history>
