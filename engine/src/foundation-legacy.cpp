@@ -1466,8 +1466,6 @@ IO_stat MCArrayLoadFromStreamLegacy(MCArrayRef self, MCObjectInputStream& p_stre
 		MCAutoStringRef t_key;
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . ReadStringRefNew(&t_key, false);
-
-        MCLog("%s", MCStringGetCString(*t_key));
         
 		MCNewAutoNameRef t_key_name;
 		if (t_stat == IO_NORMAL)
