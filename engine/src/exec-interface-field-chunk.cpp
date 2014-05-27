@@ -1531,7 +1531,8 @@ void MCField::GetEffectiveFormattedStyledTextOfCharChunk(MCExecContext& ctxt, ui
 
 //////////
 
-void MCField::GetCharIndexOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value)
+// AL-2014-05-27: [[ Bug 12511 ]] charIndex is a char chunk property
+void MCField::GetCharIndexOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value)
 {
     MCParagraph *t_paragraph;
     t_paragraph = resolveparagraphs(p_part_id);
