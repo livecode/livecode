@@ -1825,13 +1825,7 @@ void MCPlayer::drawnicecontroller(MCDC *dc)
     dc -> lockgcontext(t_gcontext);
     
     drawControllerVolumeButton(t_gcontext);
-    if (m_show_volume)
-    {
-        drawControllerVolumeBarButton(t_gcontext);
-        drawControllerVolumeWellButton(t_gcontext);
-        drawControllerVolumeAreaButton(t_gcontext);
-        drawControllerVolumeSelectorButton(t_gcontext);
-    }
+    
     drawControllerPlayPauseButton(t_gcontext);
     drawControllerWellButton(t_gcontext);
     
@@ -1851,6 +1845,14 @@ void MCPlayer::drawnicecontroller(MCDC *dc)
     {
         drawControllerSelectionStartButton(t_gcontext);
         drawControllerSelectionFinishButton(t_gcontext);
+    }
+    
+    if (m_show_volume)
+    {
+        drawControllerVolumeBarButton(t_gcontext);
+        drawControllerVolumeWellButton(t_gcontext);
+        drawControllerVolumeAreaButton(t_gcontext);
+        drawControllerVolumeSelectorButton(t_gcontext);
     }
     dc -> unlockgcontext(t_gcontext);
 }
