@@ -218,6 +218,8 @@ MCPlayer::MCPlayer()
 	userCallbackStr = NULL;
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
+    m_callback_count = 0;
+    m_callbacks = NULL;
 
 #ifdef FEATURE_PLATFORM_PLAYER
 	m_platform_player = nil;
@@ -264,6 +266,8 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	userCallbackStr = strclone(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
+    m_callback_count = sref.m_callback_count;
+    m_callbacks = sref.m_callbacks;
 	
 #ifdef FEATURE_PLATFORM_PLAYER
 	m_platform_player = nil;
