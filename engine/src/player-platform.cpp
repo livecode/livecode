@@ -2994,7 +2994,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                     t_new_time = 0;
                 setcurtime(t_new_time);
                 
-                layer_redrawrect(getcontrollerrect());
+                layer_redrawall();
             }
                 break;
                 
@@ -3009,7 +3009,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 setstarttime(t_new_start_time);
                 MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_new_start_time);
                 
-                layer_redrawrect(getcontrollerrect());
+                layer_redrawall();
             }
                 break;
                 
@@ -3024,7 +3024,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 setendtime(t_new_finish_time);
                 MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_new_finish_time);
                 
-                layer_redrawrect(getcontrollerrect());
+                layer_redrawall();
                 
             }
                 break;
