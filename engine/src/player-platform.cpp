@@ -2849,6 +2849,8 @@ void MCPlayer::handle_mdown(int p_which)
             }
             else
                 playstart(nil);
+            layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartPlay));
+
             break;
         case kMCPlayerControllerPartVolume:
         {
@@ -2858,6 +2860,7 @@ void MCPlayer::handle_mdown(int p_which)
                 m_show_volume = false;
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar));
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolume));
+            layer_redrawall();
         }
             break;
             
@@ -2906,6 +2909,9 @@ void MCPlayer::handle_mdown(int p_which)
             
             t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
             setcurtime(t_new_time);
+            
+            layer_redrawall();
+            layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb));
         }
             break;
         case kMCPlayerControllerPartScrubBack:
@@ -2995,6 +3001,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 setcurtime(t_new_time);
                 
                 layer_redrawall();
+                layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb));
             }
                 break;
                 
