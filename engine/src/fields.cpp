@@ -639,9 +639,6 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 	{
 		clearfound();
 		unselect(False, True);
-        // SN-2014-05-12 [[ Bug 12365 ]]
-        // There might be several paragraph to be inserted, the cursor must be removed
-        removecursor();
 		focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
 	}
 	int4 oldsi = si;
@@ -782,10 +779,6 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 		layer_redrawrect(drect);
 		
 		focusedy = paragraphtoy(focusedparagraph);
-        
-        // SN-2014-05-12 [[ Bug 12365 ]]
-        // Redraw the cursor after the update
-        replacecursor(True, True);
 	}
 
 	return ES_NORMAL;
