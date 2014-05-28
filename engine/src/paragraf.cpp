@@ -1113,7 +1113,9 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 				//   table mode, we are done.
 				// MW-2013-05-20: [[ Bug 10878 ]] Tweaked conditions to work for min two tabStops
 				//   rather than 3.
-				if (ct >= nt - 2 && t[nt - 2] == t[nt - 1])
+                // MW-2015-05-28: [[ Bug 12341 ]] Only stop rendering lines if in 'fixed width table'
+                //   mode - indicated by the last two tabstops being the same.
+				if (nt >= 2 && t[nt - 1] == t[nt - 2] && ct == nt - 1)
 					break;
 			}
 		}
