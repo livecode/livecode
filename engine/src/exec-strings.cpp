@@ -1681,7 +1681,8 @@ void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p
 {
 	MCStringOptions t_options = ctxt.GetStringComparisonType();
     uindex_t t_offset;
-	if (!MCStringFirstIndexOf(p_string, p_chunk, p_start_offset, t_options, t_offset))
+    // AL-2014-05-27: [[ Bug 12517 ]] Offset should be 0 for an empty input string
+	if (MCStringIsEmpty(p_chunk) || !MCStringFirstIndexOf(p_string, p_chunk, p_start_offset, t_options, t_offset))
 		r_result = 0;
 	else
     {
