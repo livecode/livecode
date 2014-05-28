@@ -1323,7 +1323,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	// MW-2012-03-15: [[ Bug 10001 ]] Compute the selection offset and width. Notice that
 	//   the width is at least the textwidth.
 	int32_t t_select_x, t_select_width;
-	t_select_x = x + t_paragraph_offset;
+	t_select_x = x;
 	t_select_width = MCMax(t_paragraph_width, textwidth);
 
 	// If the field is in listbehavior mode the selection fill also covers the left and
