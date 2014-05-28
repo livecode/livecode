@@ -42,7 +42,7 @@ public:
 	void Detach(void);
 	
 	virtual bool IsPlaying(void) = 0;
-	virtual void Start(void) = 0;
+	virtual void Start(double rate) = 0;
 	virtual void Stop(void) = 0;
 	virtual void Step(int amount) = 0;
 	
@@ -94,7 +94,7 @@ public:
 	virtual ~MCQTKitPlayer(void);
 	
 	virtual bool IsPlaying(void);
-	virtual void Start(void);
+	virtual void Start(double rate);
 	virtual void Stop(void);
 	virtual void Step(int amount);
 	
@@ -586,9 +586,10 @@ bool MCQTKitPlayer::IsPlaying(void)
 	return [m_movie rate] != 0;
 }
 
-void MCQTKitPlayer::Start(void)
+// PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
+void MCQTKitPlayer::Start(double rate)
 {
-	[m_movie setRate: 1.0];
+	[m_movie setRate: rate];
 }
 
 void MCQTKitPlayer::Stop(void)
@@ -1005,9 +1006,10 @@ void MCPlatformStepPlayer(MCPlatformPlayerRef player, int amount)
 	player -> Step(amount);
 }
 
-void MCPlatformStartPlayer(MCPlatformPlayerRef player)
+// PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
+void MCPlatformStartPlayer(MCPlatformPlayerRef player, double rate)
 {
-	player -> Start();
+	player -> Start(rate);
 }
 
 void MCPlatformStopPlayer(MCPlatformPlayerRef player)
