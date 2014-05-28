@@ -1020,6 +1020,22 @@ bool MCStack::getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object)
 	if (objs == NULL)
 		return false;
 	MCObject *tobj = objs;
+
+    // AL-2014-05-27: [[ Bug 12530 ]] Expression for audio or video clip can be numerical
+    uint2 t_num;
+    if (MCU_stoui2(MCNameGetString(p_name), t_num))
+    {
+        --t_num;
+        while (t_num--)
+        {
+            tobj = tobj->next();
+            if (tobj == objs)
+                return false;
+        }
+        r_object = tobj;
+        return true;
+    }
+    
 	do
 	{
 		if (MCU_matchname(p_name, type, tobj->getname()))
