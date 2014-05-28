@@ -158,6 +158,10 @@ public:
 	void purgefonts(void);
 
 	void ensureinputfocus(Window window);
+
+#ifdef _MACOSX
+    void flushallwindows(void);
+#endif
 };
 
 #endif

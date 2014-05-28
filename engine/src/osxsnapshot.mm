@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "image.h"
 #include "osxdc.h"
+#include "stacklst.h"
 
 #include <Cocoa/Cocoa.h>
 
@@ -258,6 +259,11 @@ extern bool MCOSXCreateCGContextForBitmap(MCImageBitmap *p_bitmap, CGContextRef 
 // MW-2014-02-20: [[ Bug 11811 ]] Updated to take into account size parameter.
 MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, uint32_t p_window, const char *p_display_name, MCPoint *size)
 {
+    // MW-2014-05-28: [[ Bug 12404 ]] We try to force and flush and update to the window buffer
+    //   before taking the snapshot. We only do this on the non-interactive path.
+    bool t_flushed;
+    t_flushed = false;
+    
 	// Compute the rectangle to grab in screen co-ords.
 	MCRectangle t_screen_rect;
 	if (p_window == 0 && (p_rect . width == 0 || p_rect . height == 0))
@@ -292,6 +298,8 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, uint32_t p_window, cons
 		
 		// Compute the selected rectangle.
 		t_screen_rect = mcrect_from_points(s_snapshot_start_point, s_snapshot_end_point);
+        
+        t_flushed = true;
 	}
 	else if (p_window == 0)
 	{
@@ -307,7 +315,13 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, uint32_t p_window, cons
 		// We have a rect relative to a window so map the co-ords.
 		t_screen_rect = MCU_offset_rect(p_rect, t_window_bounds . left, t_window_bounds . top);
 	}
-
+    
+    if (!t_flushed)
+    {
+        MCstacks -> flushallwindows();
+        MCscreen -> wait(1.0/50.0, False, False);
+    }
+    
 	MCImageBitmap *t_snapshot;
 	t_snapshot = nil;
 

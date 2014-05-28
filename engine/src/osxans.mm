@@ -596,7 +596,7 @@ int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *p_promp
 		}
 		else
 			[t_panel setTitle: [NSString stringWithCString: p_prompt encoding: NSMacOSRomanStringEncoding]];
-		[t_panel setDelegate: t_accessory];
+		[t_panel setDelegate: (id<NSOpenSavePanelDelegate>)t_accessory];
 		
 		if (p_type_count > 1)
 		{
