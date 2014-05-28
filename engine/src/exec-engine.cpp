@@ -1286,6 +1286,8 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
         {
             while (t_offset < t_length && MCStringGetCharAtIndex(p_script, ++t_offset) != '"')
                 ;
+            // AL-2014-05-28: [[ Bug 12544 ]] Increment offset past closing quotation mark
+            t_offset++;
         }
         else
             t_offset++;
