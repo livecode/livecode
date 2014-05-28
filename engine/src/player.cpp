@@ -1982,6 +1982,10 @@ Boolean MCPlayer::playstop()
 		needmessage = getduration() > getmoviecurtime();
 		
 		MCPlatformDetachPlayer(m_platform_player);
+        
+        // PM_2014-05-27: [[ Bug 12506 ]] Fix crash when deleting player object
+        MCPlatformPlayerRelease(m_platform_player);
+        m_platform_player = nil;
 	}
 #else
 	

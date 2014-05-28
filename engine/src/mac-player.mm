@@ -253,9 +253,13 @@ void MCPlatformPlayer::DoWindowStateChanged(void *p_ctxt, bool p_realized)
 
 MCQTKitPlayer::MCQTKitPlayer(void)
 {
+    // PM_2014-05-27: [[ Bug 12506 ]] Fix crash when deleting player object
+    NSAutoreleasePool *t_pool;
+    t_pool = [[NSAutoreleasePool alloc] init];
 	m_movie = [[NSClassFromString(@"QTMovie") movie] retain];
 	m_view = [[NSClassFromString(@"QTMovieView") alloc] initWithFrame: NSZeroRect];
 	m_observer = [[com_runrev_livecode_MCQTKitPlayerObserver alloc] initWithPlayer: this];
+    [t_pool release];
     
 	m_current_frame = nil;
 	
@@ -278,12 +282,23 @@ MCQTKitPlayer::MCQTKitPlayer(void)
 
 MCQTKitPlayer::~MCQTKitPlayer(void)
 {
+    MCLog("Destroying %p - %d", this, [m_movie retainCount]);
+
 	if (m_current_frame != nil)
 		CFRelease(m_current_frame);
 	
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
     [m_observer release];
+
+    // PM_2014-05-27: [[ Bug 12506 ]] Fix crash when deleting player object
+    [m_view setMovie: nil];
 	[m_view release];
+    
+    MCLog("  refcount = %d, %d, %p", [m_movie retainCount], [m_view retainCount], [m_view superview]);
+    
+    // PM_2014-05-27: [[ Bug 12506 ]] Fix crash when deleting player object
+    MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], nil, nil);
+    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
 	[m_movie release];
     
     MCMemoryDeleteArray(m_markers);
@@ -428,6 +443,8 @@ void MCQTKitPlayer::Realize(void)
 	{
 		MCWindowView *t_parent_view;
 		t_parent_view = t_window -> GetView();
+        
+        MCLog("Add %p", m_view);
 		[t_parent_view addSubview: m_view];
 	}
 	
@@ -447,6 +464,7 @@ void MCQTKitPlayer::Unrealize(void)
 		MCWindowView *t_parent_view;
 		t_parent_view = t_window -> GetView();
 	
+        MCLog("Remove %p", m_view);
 		[m_view removeFromSuperview];
 	}
 }
@@ -460,7 +478,7 @@ Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void 
             MCQTKitPlayer *self;
             self = (MCQTKitPlayer *)refcon;
             
-            if (self -> m_marker_count > 0)
+            if (self -> m_marker_count > 0 )
             {
                 QTTime t_current_time;
                 t_current_time = [self -> m_movie currentTime];
