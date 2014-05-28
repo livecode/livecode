@@ -1430,7 +1430,11 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			lastpgptr = pgptr;
 		else
 			pgptr->defrag();
-		lastpgptr->join();
+        // MW-2014-05-28: [[ Bug 10593 ]] When replacing a range of text with styles, paragraph styles from
+        //   the new content should replace paragraph styles for the old content whenever the range touches
+        //   the 0 index of a paragraph. Thus when joining the end of the range again, we want to preserve
+        //   the new contents styles even if it is an empty paragraph.
+		lastpgptr->join(true);
 		lastpgptr->defrag();
 		fptr->setparagraphs(oldparagraphs);
 		paragraphs = oldparagraphs;
