@@ -176,9 +176,6 @@ void MCFontRelease(MCFontRef self)
 
 bool MCFontHasPrinterMetrics(MCFontRef self)
 {
-    // PM-2014-05-23: [[ Bug 12385 ]] If the font is nil, do nothing.
-    if (self == nil)
-        return;
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
 	if (self -> fontstruct == nil)
 		return false;
@@ -188,9 +185,6 @@ bool MCFontHasPrinterMetrics(MCFontRef self)
 
 int32_t MCFontGetAscent(MCFontRef self)
 {
-    // PM-2014-05-23: [[ Bug 12385 ]] If the font is nil, do nothing.
-    if (self == nil)
-        return;
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
 	if (self -> fontstruct == nil)
 		return 0;
@@ -200,9 +194,6 @@ int32_t MCFontGetAscent(MCFontRef self)
 
 int32_t MCFontGetDescent(MCFontRef self)
 {
-    // PM-2014-05-23: [[ Bug 12385 ]] If the font is nil, do nothing.
-    if (self == nil)
-        return;
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
 	if (self -> fontstruct == nil)
 		return 0;
@@ -212,9 +203,6 @@ int32_t MCFontGetDescent(MCFontRef self)
 
 void MCFontBreakText(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, MCFontBreakTextCallback p_callback, void *p_callback_data)
 {
-    // PM-2014-05-23: [[ Bug 12385 ]] If the font is nil, do nothing.
-    if (p_font == nil)
-        return;
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
 	if (p_font -> fontstruct == nil)
 		return;
