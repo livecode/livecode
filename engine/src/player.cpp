@@ -269,14 +269,8 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	loudness = sref.loudness;
     
     // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
-    m_callback_count = sref.m_callback_count;
-    if (m_callback_count > 0)
-	{
-		m_callbacks = new MCPlayerCallback[m_callback_count];
-		memcpy(m_callbacks, sref.m_callbacks, m_callback_count);
-	}
-	else
-        m_callbacks = NULL;
+    m_callback_count = 0;
+    m_callbacks = NULL;
 	
 #ifdef FEATURE_PLATFORM_PLAYER
 	m_platform_player = nil;
