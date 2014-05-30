@@ -768,7 +768,9 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 		{
 				do_recompute(false);
 				t_affect_many = true;
-		} else if (t_initial_width == textwidth && pgptr -> getwidth() != textwidth)
+		}
+        else if ((t_initial_width == textwidth && pgptr -> getwidth() != textwidth)
+                 || pgptr -> getwidth() > textwidth)
 			do_recompute(false);
 		
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
