@@ -1,0 +1,1 @@
+# Hiding and then showing a player results in an empty player object
