@@ -1384,6 +1384,16 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			}
 		}
 	break;
+    case WM_NCHITTEST:
+    {
+        MCStack *sptr = MCdispatcher->findstackd(dw);
+        if (sptr != NULL && sptr -> getextendedstate(ECS_IGNORE_MOUSE_EVENTS))
+        {
+            return HTTRANSPARENT;
+        }
+        return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
+    }
+    break;
 	default:
 		return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
 	}
