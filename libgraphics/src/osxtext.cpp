@@ -27,6 +27,7 @@ static ATSUStyle s_style = NULL;
 static ATSUTextLayout s_layout = NULL;
 static CGColorSpaceRef s_colour_space = NULL;
 static CGColorRef s_colour = NULL;
+static ATSUTextMeasurement s_imposed_width = kATSUseGlyphAdvance;
 
 static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFont &p_font, bool p_skip_bidi)
 {
@@ -56,7 +57,6 @@ static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFon
 	ATSUFontID t_font_id;
 	Fixed t_font_size;
 	Boolean t_font_is_italic;
-	ATSUTextMeasurement t_imposed_width;
     if (t_err == noErr)
     {
         t_font_size = p_font . size << 16;
@@ -69,10 +69,12 @@ static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFon
 		
 		// MW-2013-12-05: [[ Bug 11535 ]] Set the imposed width to the fixed advance width
 		//   if non-zero. Otherwise use the glyph advance.
-		if (p_font . fixed_advance != 0)
-			t_imposed_width = p_font . fixed_advance << 16;
+        // SN-2014-06-02 [[ Bug 11980 ]] 7.0 text rendering issues
+        // We need to store the imposed width - we need it later to amend the drawing location when the string contains BiDi chars
+		if (p_font . fixed_advance != 0)            
+			s_imposed_width = p_font . fixed_advance << 16;
 		else
-			t_imposed_width = kATSUseGlyphAdvance;
+			s_imposed_width = kATSUseGlyphAdvance;
 			
 		// if the specified font can't be found, just use the default
 		// MM-2013-09-16: [[ Bug 11283 ]] Do the same for font styles - if the font/style paring cannot be found, try font with no style.
@@ -103,7 +105,7 @@ static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFon
 		&t_font_id,
 		&t_font_size,
 		&t_font_is_italic,
-		&t_imposed_width,
+		&s_imposed_width,
 	};
     uindex_t t_char_count;
     t_char_count = p_length / 2;
@@ -137,9 +139,9 @@ static bool osx_measure_text_substring_width(uindex_t p_length, MCGFloat &r_widt
             t_offset += 1, t_length -= 2;
         
         ATSUTextMeasurement t_before, t_after, t_ascent, t_descent;
-		t_err = ATSUGetUnjustifiedBounds(s_layout, t_offset, t_length, &t_before, &t_after, &t_ascent, &t_descent);
-		
-		t_width = t_after / 65536.0f;		
+        t_err = ATSUGetUnjustifiedBounds(s_layout, t_offset, t_length, &t_before, &t_after, &t_ascent, &t_descent);
+
+        t_width = t_after / 65536.0f;
 	}
 	
     if (t_err == noErr)         
@@ -170,8 +172,14 @@ static bool osx_measure_text_substring_bounds(uindex_t p_length, MCGIntRectangle
     if (t_err == noErr)
 	{
 		r_bounds . x = t_bounds . left - kMCGMeasureTextFudge;
+        
+        // SN-2014-06-02 [[ Bug 11980 ]] 7.0 text rendering issues
+        // Amend the position and width in case BiDi chars are present and the font has a fixed width
+        if (p_skip_bidi && s_imposed_width != kATSUseGlyphAdvance)
+            r_bounds . x -= s_imposed_width >> 16;
+        
 		r_bounds . y = t_bounds . top - kMCGMeasureTextFudge;
-		r_bounds . width = t_bounds . right - t_bounds . left + 2 * kMCGMeasureTextFudge;
+		r_bounds . width = t_bounds . right - r_bounds . x + 3 * kMCGMeasureTextFudge;
 		r_bounds . height = t_bounds . bottom - t_bounds . top + 2 * kMCGMeasureTextFudge;
 	}
     
@@ -210,7 +218,13 @@ static bool osx_draw_text_substring_to_cgcontext_at_location(uindex_t p_length, 
     uindex_t t_offset = 0;
     uindex_t t_length = p_length / 2;
     if (p_skip_bidi)
+    {
         t_offset += 1, t_length -= 2;
+        // SN-2014-06-02 [[ Bug 11980 ]] 7.0 text rendering issues
+        // Amend the location when a BiDi controlling char is present and the font has a fixed width
+        if (s_imposed_width != kATSUseGlyphAdvance)
+            p_location . x -= s_imposed_width >> 16;
+    }
     
     if (t_err == noErr)
         t_err = ATSUDrawText(s_layout, t_offset, t_length, ((int32_t)p_location . x) << 16, ((int32_t)p_location . y) << 16);
