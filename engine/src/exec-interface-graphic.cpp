@@ -720,8 +720,11 @@ void MCGraphic::SetMarkerPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* 
     if (flags & F_MARKER_DRAWN && flags & F_MARKER_OPAQUE)
         closepolygon(markerpoints, nmarkerpoints);
     
+    // SN-2014-06-02 [[ Bug 12576 ]] drawing_bug_when_rotating_graphic
+    // Ensure that the functions which might change the size of the graphic redraw the former rectangle
+    MCRectangle oldrect = rect;
     compute_minrect();
-    Redraw();
+    Redraw(oldrect);
 }
 
 void MCGraphic::GetDashes(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_dashes)
@@ -793,8 +796,11 @@ void MCGraphic::SetPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_poin
     if (flags & F_OPAQUE)
         closepolygon(realpoints, nrealpoints);
     
+    // SN-2014-06-02 [[ Bug 12576 ]] drawing_bug_when_rotating_graphic
+    // The rectangle might change, we need to redraw what was the previous size.
+    MCRectangle oldrect = rect;
     compute_minrect();
-    Redraw();
+    Redraw(oldrect);
 }
 
 void MCGraphic::GetRelativePoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points)
@@ -826,8 +832,11 @@ void MCGraphic::SetRelativePoints(MCExecContext& ctxt, uindex_t p_count, MCPoint
     if (flags & F_OPAQUE)
         closepolygon(realpoints, nrealpoints);
     
+    // SN-2014-06-02 [[ Bug 12576 ]] drawing_bug_when_rotating_graphic
+    // Ensure that the functions which might change the size of the graphic redraw the former rectangle
+    MCRectangle oldrect = rect;
     compute_minrect();
-    Redraw();
+    Redraw(oldrect);
 }
 
 //////////
