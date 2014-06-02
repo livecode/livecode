@@ -28,12 +28,26 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static CGColorSpaceRef s_colour_space = NULL;
+static CGColorRef s_text_colour = NULL;
+
 void MCGPlatformInitialize(void)
 {
+    s_colour_space = NULL;
+    s_text_colour = NULL;    
+    const float t_colour_components[] = {1.0, 1.0};
+    s_colour_space = CGColorSpaceCreateWithName(kCGColorSpaceGenericGray);
+    s_text_colour = CGColorCreate(s_colour_space, t_colour_components);
 }
 
 void MCGPlatformFinalize(void)
 {
+    if (s_text_colour != NULL)
+        CGColorRelease(s_text_colour);
+    if (s_colour_space != NULL)
+        CGColorSpaceRelease(s_colour_space);
+    s_colour_space = NULL;
+    s_text_colour = NULL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,9 +73,11 @@ static CTLineRef unitext_to_cfline(const unichar_t *p_text, uindex_t p_length, c
 		t_font = (CTFontRef) p_font . fid;
 		CFStringRef t_keys[] = {
             kCTFontAttributeName,
+            kCTForegroundColorAttributeName,
         };
 		CFTypeRef t_values[] = {
             t_font,
+            s_text_colour,
         };
         t_attributes = CFDictionaryCreate(NULL,
                                           (const void **)&t_keys, (const void **)&t_values,
@@ -147,7 +163,11 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_clipped_bounds = MCGRectangleIntegerBounds(t_float_clipped_bounds);
 		
 		if (t_clipped_bounds . width == 0 || t_clipped_bounds . height == 0)
+        {
+            if (t_line != NULL)
+                CFRelease(t_line);
 			return;
+        }
 	}
 	
 	void *t_data;
@@ -159,7 +179,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	t_cgcontext = NULL;
 	if (t_success)
 	{
-        t_cgcontext = CGBitmapContextCreate(t_data, t_clipped_bounds . width, t_clipped_bounds . height, 8, t_clipped_bounds . width * 1, NULL, kCGImageAlphaOnly);
+        t_cgcontext = CGBitmapContextCreate(t_data, t_clipped_bounds . width, t_clipped_bounds . height, 8, t_clipped_bounds . width * 1, s_colour_space, kCGImageAlphaNone);
 		t_success = t_cgcontext != NULL;
 	}
     
@@ -167,7 +187,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	{
 		CGContextTranslateCTM(t_cgcontext, -t_clipped_bounds . x, t_clipped_bounds . height + t_clipped_bounds . y);
 		CGContextConcatCTM(t_cgcontext, CGAffineTransformMake(t_transform . a, t_transform . b, t_transform . c, t_transform . d, t_transform . tx, t_transform . ty));
-		
+
 		CTLineDraw(t_line, t_cgcontext);
 		CGContextFlush(t_cgcontext);
 		
@@ -190,7 +210,9 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 											  t_clipped_bounds . y + t_device_location . y, &t_paint);		
 	}
 	
-	MCMemoryDelete(t_data);	
+    if (t_line != NULL)
+        CFRelease(t_line);
+	MCMemoryDelete(t_data);
 	CGContextRelease(t_cgcontext);	
 	self -> is_valid = t_success;
 }

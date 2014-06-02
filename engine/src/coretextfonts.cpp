@@ -135,12 +135,10 @@ void *coretext_font_create_with_name_size_and_style(const char *p_name, uint32_t
     if (t_name != NULL)
         CFRelease(t_name);
     
-    CFStringRef t_font_name = CTFontCopyFullName(t_font);
-    
     return (void *)t_font;
     
     /*CTFontRef t_base_font;
-    t_base_font = coretext_font_create_with_name_and_size(p_name, p_size);
+    t_base_font = (CTFontRef)coretext_font_create_with_name_and_size(p_name, p_size);
 	
 	CTFontRef t_font;
 	t_font = NULL;
@@ -160,7 +158,7 @@ void *coretext_font_create_with_name_size_and_style(const char *p_name, uint32_t
 	if (t_font != t_base_font && t_base_font != NULL)
 		CFRelease(t_base_font);
 	
-	return t_font;*/
+	return (void *)t_font;*/
 }
 
 void coretext_font_destroy(void *p_font)
