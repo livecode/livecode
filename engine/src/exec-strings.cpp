@@ -815,12 +815,14 @@ void MCStringsEvalMatchText(MCExecContext& ctxt, MCStringRef p_string, MCStringR
             t_start = t_compiled->matchinfo[t_match_index].rm_so;
             t_length = t_compiled->matchinfo[t_match_index].rm_eo - t_start;
             t_success = MCStringCopySubstring(p_string, MCRangeMake(t_start, t_length), r_results[i]);
-            
-            if (++t_match_index >= NSUBEXP)
-                t_match_index = 0;
         }
         else
             r_results[i] = MCValueRetain(kMCEmptyString);
+        
+        // SN-02-06-2014 [[ Bug 12574 ]] REGEX : matchText result not as expected
+        // Once a pattern didn't match, the index was stuck on this non-matching index
+        if (++t_match_index >= NSUBEXP)
+            t_match_index = 0;
     }
     
     if (t_success)
