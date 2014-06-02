@@ -32,6 +32,7 @@
 		4C13881D18A12ED800EFF7B6 /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DBF58631801CA57009CAB2E /* libopenssl.a */; };
 		4C4D3DF417E355B50012FB12 /* osxflst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880160B80A4F800200116 /* osxflst.cpp */; };
 		4C4D3E0117E358230012FB12 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DB3856E1714422200D3F102 /* Carbon.framework */; };
+		4C977251193CAF5D00DB2F4A /* coretextfonts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C977250193CAF5000DB2F4A /* coretextfonts.cpp */; };
 		4CC1535714E7FB91009FA80E /* paragrafattr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1535614E7FB91009FA80E /* paragrafattr.cpp */; };
 		4CC1536214E7FE1D009FA80E /* fieldstyledtext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */; };
 		4D00C6290CE1F27300341AD3 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D00C6280CE1F27300341AD3 /* SystemConfiguration.framework */; };
@@ -944,6 +945,7 @@
 		4C10D76D16BF9BFA00D25197 /* graphicscontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = graphicscontext.cpp; path = src/graphicscontext.cpp; sourceTree = "<group>"; };
 		4C10D76E16BF9BFA00D25197 /* graphicscontext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graphicscontext.h; path = src/graphicscontext.h; sourceTree = "<group>"; };
 		4C10D82416BFADB800D25197 /* libgraphics.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libgraphics.xcodeproj; path = ../libgraphics/libgraphics.xcodeproj; sourceTree = SOURCE_ROOT; };
+		4C977250193CAF5000DB2F4A /* coretextfonts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = coretextfonts.cpp; path = src/coretextfonts.cpp; sourceTree = "<group>"; };
 		4CC1535614E7FB91009FA80E /* paragrafattr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = paragrafattr.cpp; path = src/paragrafattr.cpp; sourceTree = "<group>"; };
 		4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldstyledtext.cpp; path = src/fieldstyledtext.cpp; sourceTree = "<group>"; };
 		4CC55320180D546000C10387 /* graphics_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graphics_util.h; path = src/graphics_util.h; sourceTree = "<group>"; };
@@ -2061,6 +2063,7 @@
 			isa = PBXGroup;
 			children = (
 				E8AE876B177B3F5C0041B7E0 /* cgimageutil.cpp */,
+				4C977250193CAF5000DB2F4A /* coretextfonts.cpp */,
 				4D5880140B80A4F800200116 /* osxcoreimage.cpp */,
 				4D5881B90B80C79600200116 /* osxcisupport.mm */,
 				4D4F9E6613CDFB8100B9B15D /* osxfield.cpp */,
@@ -3625,6 +3628,7 @@
 				4DEE2A910FDE42710009423C /* button.cpp in Sources */,
 				4DEE2A920FDE42710009423C /* buttondraw.cpp in Sources */,
 				4DEE2A930FDE42710009423C /* card.cpp in Sources */,
+				4C977251193CAF5D00DB2F4A /* coretextfonts.cpp in Sources */,
 				4DEE2A940FDE42710009423C /* cardlst.cpp in Sources */,
 				4DEE2A950FDE42710009423C /* cdata.cpp in Sources */,
 				4DEE2A960FDE42710009423C /* chunk.cpp in Sources */,
