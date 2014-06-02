@@ -413,7 +413,7 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
 	// IM-2014-05-14: [[ HiResPatterns ]] MCPatternCreate refactored to work with MCGRaster
 	// IM-2013-08-14: [[ ResIndependence ]] create MCPattern wrapper
 	if (t_success)
-		t_success = MCPatternCreate(t_raster, 1.0, r_pattern);
+		t_success = MCPatternCreate(t_raster, 1.0, kMCGImageFilterNone, r_pattern);
 
 	if (t_success)
 		s_patterns[t_index] = r_pattern;
