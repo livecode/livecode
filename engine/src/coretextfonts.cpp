@@ -32,23 +32,26 @@
 #import <ApplicationServices/ApplicationServices.h>
 #endif
 
-void *coretext_font_create_with_name_and_size(const char *p_name, uint32_t p_size)
+static void *coretext_font_create_with_name_and_size(const char *p_name, uint32_t p_size)
 {
 	CFStringRef t_name;
 	t_name = CFStringCreateWithCString(NULL, p_name, kCFStringEncodingMacRoman);
 	
 	CTFontRef t_font;
-    t_font = CTFontCreateWithName(t_name, p_size, NULL);
-	
+    t_font = NULL;
+    
     if (t_name != NULL)
+    {
+        t_font = CTFontCreateWithName(t_name, p_size, NULL);
         CFRelease(t_name);
+    }
     
 	return (void *)t_font;
 }
 
 void *coretext_font_create_with_name_size_and_style(const char *p_name, uint32_t p_size, bool p_bold, bool p_italic)
 {
-    bool t_success;
+    /*bool t_success;
     t_success = true;
     
     CFStringRef t_name;
@@ -135,9 +138,9 @@ void *coretext_font_create_with_name_size_and_style(const char *p_name, uint32_t
     if (t_name != NULL)
         CFRelease(t_name);
     
-    return (void *)t_font;
+    return (void *)t_font;*/
     
-    /*CTFontRef t_base_font;
+    CTFontRef t_base_font;
     t_base_font = (CTFontRef)coretext_font_create_with_name_and_size(p_name, p_size);
 	
 	CTFontRef t_font;
@@ -157,8 +160,8 @@ void *coretext_font_create_with_name_size_and_style(const char *p_name, uint32_t
      
 	if (t_font != t_base_font && t_base_font != NULL)
 		CFRelease(t_base_font);
-	
-	return (void *)t_font;*/
+    
+	return (void *)t_font;
 }
 
 void coretext_font_destroy(void *p_font)
@@ -210,15 +213,8 @@ void core_text_get_font_styles(const char *p_name, uint32_t p_size, MCExecPoint 
 {
 	ep . clear();
     
-    CFStringRef t_name;
-	t_name = CFStringCreateWithCString(NULL, p_name, kCFStringEncodingMacRoman);
-	
     CTFontRef t_font_family;
-    if (t_name != NULL)
-        t_font_family = CTFontCreateWithName(t_name, p_size, NULL);
-	
-    if (t_name != NULL)
-        CFRelease(t_name);
+    t_font_family = (CTFontRef)coretext_font_create_with_name_and_size(p_name, p_size);
 	
 	if (t_font_family != NULL)
 	{
