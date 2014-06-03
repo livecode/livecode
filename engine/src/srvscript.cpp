@@ -93,7 +93,7 @@ uint4 MCServerScript::GetFileIndexForContext(MCExecContext &ctxt)
 	return t_file_index;
 }
 
-const char *MCServerScript::GetFileForContext(MCExecContext &ctxt)
+bool MCServerScript::GetFileForContext(MCExecContext &ctxt, MCStringRef &r_file)
 {
 	uint32_t t_file_index;
 	if (ctxt.GetHandler() != NULL)
@@ -103,9 +103,9 @@ const char *MCServerScript::GetFileForContext(MCExecContext &ctxt)
 	
 	for(File *t_file = m_files; t_file != NULL; t_file = t_file -> next)
 		if (t_file -> index == t_file_index)
-			return t_file -> filename;
+            return MCStringCreateWithCString(t_file -> filename, r_file);
 	
-	return NULL;
+    return false;
 }
 
 uint4 MCServerScript::FindFileIndex(MCStringRef p_filename, bool p_add)

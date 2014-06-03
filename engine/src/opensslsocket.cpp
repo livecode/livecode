@@ -95,7 +95,7 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
 #include <openssl/ssl.h>
 #include <openssl/x509v3.h>
 
-#if !defined(X11) && (!defined(_MACOSX)) && (!defined(TARGET_SUBPLATFORM_IPHONE))
+#if !defined(X11) && (!defined(_MACOSX)) && (!defined(TARGET_SUBPLATFORM_IPHONE)) && !defined(_LINUX_SERVER)
 #define socklen_t int
 #endif
 

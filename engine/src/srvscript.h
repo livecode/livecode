@@ -40,7 +40,7 @@ public:
 
 	uint4 GetFileIndexForContext(MCExecContext &ctxt);
 	
-	const char *GetFileForContext(MCExecContext &ctxt);
+    bool GetFileForContext(MCExecContext &ctxt, MCStringRef &r_file);
 	
 	// Lookup the file index for the given filename. If <p_add> is true then
 	// add new entry and return its index.

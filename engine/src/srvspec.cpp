@@ -430,7 +430,7 @@ void MCS_geturl(MCObject *p_target, MCStringRef p_url)
 	if (!MCStringIsEmpty(*t_error))
 	{
 		MCurlresult -> clear();
-		MCresult -> sets(MCStringGetOldString(*t_error));
+        MCresult -> setvalueref(*t_error);
 	}
 }
 
@@ -481,7 +481,7 @@ void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 	if (!MCStringIsEmpty(*t_error))
 	{
 		MCurlresult -> clear();
-		MCresult -> sets(MCStringGetOldString(*t_error));
+        MCresult -> setvalueref(*t_error);
 	}
 }
 
@@ -528,7 +528,7 @@ static const char *url_execute_upload(void *p_state, CURL *p_curl)
 	return t_error;
 }
 
-void MCS_putintourl(MCObject *p_target, const MCString& p_data, MCStringRef p_url)
+void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 {
 	MCAutoStringRef t_error;
 		
@@ -539,16 +539,14 @@ void MCS_putintourl(MCObject *p_target, const MCString& p_data, MCStringRef p_ur
 	}
 	
 	if (MCStringIsEmpty(*t_error))
-	{
-		MCString t_data;
-		t_data = p_data;
-		url_execute(p_url, url_execute_upload, (void *)&t_data, &t_error);
+    {
+        url_execute(p_url, url_execute_upload, (void *)MCDataGetBytePtr(p_data), &t_error);
 	}
 	
 	if (!MCStringIsEmpty(*t_error))
 	{
 		MCurlresult -> clear();
-		MCresult -> sets(MCStringGetOldString(*t_error));
+        MCresult -> setvalueref(*t_error);
 	}
 }
 
@@ -611,7 +609,7 @@ void MCS_deleteurl(MCObject *p_target, MCStringRef p_url)
 	if (!MCStringIsEmpty(*t_error))
 	{
 		MCurlresult -> clear();
-		MCresult -> sets(MCStringGetOldString(*t_error));
+        MCresult -> setvalueref(*t_error);
 	}
 }
 
@@ -786,7 +784,7 @@ bool MCA_color(MCStringRef title, MCColor initial_color, bool as_sheet, bool& r_
 }
 
 // MERG-2013-08-18: Stubs for colorDialogColors.
-void MCA_setcolordialogcolors(MCExecPoint& p_ep)
+void MCA_setcolordialogcolors(MCColor* p_list, uindex_t p_count)
 {
     
 }

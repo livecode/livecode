@@ -103,7 +103,7 @@ bool MCB_error(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id)
 	return true;
 }
 
-void MCB_done(MCExecPoint &ep)
+void MCB_done(MCExecContext &ctxt)
 {
 }
 

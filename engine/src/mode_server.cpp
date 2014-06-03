@@ -437,3 +437,17 @@ void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, u
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//
+// Implementation of Linux-specific mode hooks for SERVER mode.
+//
+
+#ifdef _LINUX_SERVER
+void MCModePreSelectHook(int& maxfd, fd_set& rfds, fd_set& wfds, fd_set& efds)
+{
+}
+
+void MCModePostSelectHook(fd_set& rfds, fd_set& wfds, fd_set& efds)
+{
+}
+
+#endif

@@ -42,7 +42,7 @@ typedef struct
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemLockFile(MCSystemFileHandle *p_file, bool p_shared, bool p_wait);
+extern bool MCSystemLockFile(IO_handle p_file, bool p_shared, bool p_wait);
 bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expires, MCStringRef p_path, MCStringRef p_domain, bool p_secure, bool p_http_only);
 
 ////////////////////////////////////////////////////////////////////////////////

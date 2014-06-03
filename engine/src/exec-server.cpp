@@ -132,12 +132,12 @@ void MCServerExecDeleteSession(MCExecContext& ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCServerStartSession();
+bool MCServerStartSession(MCExecContext &ctxt);
 
 void MCServerExecStartSession(MCExecContext& ctxt)
 {
 #ifdef _SERVER
-	if (!MCServerStartSession())
+    if (!MCServerStartSession(ctxt))
 		ctxt . LegacyThrow(EE_UNDEFINED);
 #endif
 }

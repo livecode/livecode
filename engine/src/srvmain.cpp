@@ -88,16 +88,16 @@ struct mcservercookie_t *MCservercgicookies = NULL;
 uint32_t MCservercgicookiecount = 0;
 
 // The current document root of the CGI execution.
-char *MCservercgidocumentroot = NULL;
+MCStringRef MCservercgidocumentroot = NULL;
 
 // The session data save path
-char *MCsessionsavepath = NULL;
+MCStringRef MCsessionsavepath = NULL;
 
 // The session cookie name
-char *MCsessionname = NULL;
+MCStringRef MCsessionname = NULL;
 
 // The session ID of the current session
-char *MCsessionid = NULL;
+MCStringRef MCsessionid = NULL;
 
 // The lifetime of session data in seconds.  default = 24mins
 uint32_t MCsessionlifetime = 60 * 24;
@@ -398,18 +398,18 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	if (!X_open(argc, argv, envp))
 		return False;
 
-	if (s_server_cgi)
-	{
-		MCS_set_errormode(kMCSErrorModeInline);
+//	if (s_server_cgi)
+//	{
+//		MCS_set_errormode(kMCSErrorModeInline);
 		
-		if (!cgi_initialize())
-			return False;
+//		if (!cgi_initialize())
+//			return False;
 
-		// MW-2011-08-02: If we initialize as cgi we *don't* want env vars to
-		//   be created.
-		envp = nil;
-	}
-	else
+//		// MW-2011-08-02: If we initialize as cgi we *don't* want env vars to
+//		//   be created.
+//		envp = nil;
+//	}
+//	else
 	{
 		MCS_set_errormode(kMCSErrorModeStderr);
 		
@@ -424,7 +424,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 			if (argv[i] != nil)
 			create_var(argv[i]);
 		create_var(nvars);
-	}
+    }
 	
 	return True;
 }
@@ -448,7 +448,7 @@ static bool load_extension_callback(void *p_context, const MCSystemFolderEntry *
 		return true;
 	
 	MCAutoStringRef t_filename;
-	if (!MCStringFormat(&t_filename, "%s/externals/%s", s_server_home, p_entry -> name))
+    if (!MCStringFormat(&t_filename, "%@/externals/%@", s_server_home, p_entry -> name))
 		return false;
 
 	MCdispatcher -> loadexternal(*t_filename);
@@ -565,8 +565,8 @@ void X_main_loop(void)
 		}
 	}
 	
-	if (s_server_cgi)
-		cgi_finalize();
+//	if (s_server_cgi)
+//		cgi_finalize();
 #ifdef _IREVIAM
 	if (s_server_cgi)
 		MCServerDebugDisconnect();
