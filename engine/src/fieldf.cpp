@@ -887,7 +887,9 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 	trect = MCU_intersect_rect(trect, dirty);
 	if (trect.width != 0 && trect.height != 0)
 	{
-		dc->setclip(trect);
+		dc->save();
+		dc->cliprect(trect);
+		
 		// MW-2008-07-23: [[ Bug ]] Previously the background wouldn't be repainted if
 		//   linkstart != NULL and this was the field containing it. This caused redraw
 		//   oddness on Windows, so have removed the clause.
@@ -1077,17 +1079,22 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 		if (cursoron && cursorfield == this)
 			drawcursor(dc, dirty);
 
-		dc->clearclip();
+		dc->restore();
 	}
+	
 	trect = MCU_intersect_rect(rect, dirty);
 	if (flags & F_HSCROLLBAR)
 	{
 		MCRectangle hrect = MCU_intersect_rect(hscrollbar->getrect(), trect);
 		if (hrect.width != 0 && hrect.height != 0)
 		{
-			dc->setclip(hrect);
+			dc->save();
+			dc->cliprect(hrect);
+			
 			// MW-2011-09-06: [[ Redraw ]] Render the scrollbar normally (not as a sprite).
 			hscrollbar->draw(dc, hrect, false, false);
+			
+			dc->restore();
 		}
 	}
 	if (flags & F_VSCROLLBAR)
@@ -1095,12 +1102,15 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 		MCRectangle vrect = MCU_intersect_rect(vscrollbar->getrect(), trect);
 		if (vrect.width != 0 && vrect.height != 0)
 		{
-			dc->setclip(vrect);
+			dc->save();
+			dc->cliprect(vrect);
+			
 			// MW-2011-09-06: [[ Redraw ]] Render the scrollbar normally (not as a sprite).
 			vscrollbar->draw(dc, vrect, false, false);
+			
+			dc->restore();
 		}
 	}
-	dc->clearclip();
 }
 
 void MCField::draw3dhilite(MCDC *dc, const MCRectangle &trect)

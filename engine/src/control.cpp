@@ -1012,12 +1012,17 @@ void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 	MCRectangle trect = MCU_intersect_rect(dirty, geteffectiverect());
 	if (trect.width != 0 && trect.height != 0)
 	{
+		dc->save();
+		
 		dc -> setopacity(255);
 		dc -> setfunction(GXcopy);
-		dc -> setclip(trect);
+		dc->cliprect(trect);
+		
 		// MW-2011-09-06: [[ Redraw ] Make sure we draw the control normally (not
 		//   as a sprite).
 		draw(dc, trect, false, false);
+		
+		dc->restore();
 	}
 }
 

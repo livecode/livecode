@@ -2561,10 +2561,15 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 				MCRectangle trect = MCU_intersect_rect(drect, cptr -> geteffectiverect());
 				if (trect.width != 0 && trect.height != 0)
 				{
+					dc->save();
+					
 					dc -> setopacity(255);
 					dc -> setfunction(GXcopy);
-					dc -> setclip(trect);
+					dc->cliprect(trect);
+
 					cptr -> draw(dc, trect, false, false);
+					
+					dc->restore();
 				}
 
 			}
@@ -2578,7 +2583,9 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		dc -> changeopaque(t_was_opaque);
 
 	drect = MCU_intersect_rect(dirty, rect);
-	dc->setclip(drect);
+	
+	dc->save();
+	dc->cliprect(drect);
 
 	if (flags & F_HSCROLLBAR)
 	{
@@ -2594,9 +2601,10 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 			vscrollbar->draw(dc, vrect, false, false);
 	}
 
+	dc->restore();
+	
 	dc -> setopacity(255);
 	dc -> setfunction(GXcopy);
-	dc -> setclip(dirty);
 	drawbord(dc, dirty);
 
 	if (!p_isolated)

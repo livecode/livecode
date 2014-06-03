@@ -57,6 +57,11 @@ MCMetaContext::MCMetaContext(const MCRectangle& p_page)
 	f_fill_foreground_used = false;
 	f_fill_background_used = false;
 	f_state_stack = NULL;
+	
+	m_clip_stack = nil;
+	m_clip_stack_size = 0;
+	m_clip_stack_index = 0;
+	
 	begin(true);
 }
 
@@ -76,6 +81,8 @@ MCMetaContext::~MCMetaContext(void)
 		MCPatternRelease(f_fill_background -> pattern);
 		f_fill_background = f_fill_background -> previous;
 	}
+	
+	MCMemoryDeleteArray(m_clip_stack);
 }
 
 
@@ -176,6 +183,24 @@ bool MCMetaContext::changeopaque(bool p_new_value)
 
 void MCMetaContext::setprintmode(void)
 {
+}
+
+void MCMetaContext::save()
+{
+	if (m_clip_stack_index + 1 > m_clip_stack_size)
+		/* UNCHECKED */ MCMemoryResizeArray(m_clip_stack_size + 1, m_clip_stack, m_clip_stack_size);
+	m_clip_stack[m_clip_stack_index++] = f_clip;
+}
+
+void MCMetaContext::restore()
+{
+	if (m_clip_stack_index > 0)
+		f_clip = m_clip_stack[--m_clip_stack_index];
+}
+
+void MCMetaContext::cliprect(const MCRectangle &p_rect)
+{
+	f_clip = MCU_intersect_rect(f_clip, p_rect);
 }
 
 void MCMetaContext::setclip(const MCRectangle& rect)

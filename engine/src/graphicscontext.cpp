@@ -288,6 +288,21 @@ bool MCGraphicsContext::changeopaque(bool p_value)
 	return true;
 }
 
+void MCGraphicsContext::save()
+{
+	MCGContextSave(m_gcontext);
+}
+
+void MCGraphicsContext::restore()
+{
+	MCGContextRestore(m_gcontext);
+}
+
+void MCGraphicsContext::cliprect(const MCRectangle &p_rect)
+{
+	MCGContextClipToRect(m_gcontext, MCRectangleToMCGRectangle(p_rect));
+}
+
 void MCGraphicsContext::setclip(const MCRectangle& p_clip)
 {
 	//m_clip = p_clip;

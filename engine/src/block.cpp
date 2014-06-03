@@ -910,11 +910,8 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 		int32_t t_padding;
 		t_padding = parent -> gethpadding();
 
-		MCRectangle t_old_clip;
-		t_old_clip = dc -> getclip();
-
 		MCRectangle t_cell_clip;
-		t_cell_clip = t_old_clip;
+		t_cell_clip = dc->getclip();
 
 		int32_t t_delta;
 		t_delta = cx - x;
@@ -946,8 +943,9 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 			t_cell_clip . x = x - 1;
 			t_cell_clip . width = MCU_max(t_cell_right - x - t_padding * 2, 0);
 
-			t_cell_clip = MCU_intersect_rect(t_cell_clip, t_old_clip);
-			dc -> setclip(t_cell_clip);
+			dc->save();
+			dc->cliprect(t_cell_clip);
+			
             dc -> drawtext(x, y, t_text + t_index, t_next_index - t_index, m_font, image == True, hasunicode());
 
 			// Only draw the various boxes/lines if there is any content.
@@ -983,9 +981,9 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 			}
 
 			t_index = t_next_index;
-		}
 
-		dc -> setclip(t_old_clip);
+			dc->restore();
+		}
 	}
 	else
 	{
@@ -1144,8 +1142,13 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 			MCRectangle t_clip;
 			t_clip = t_old_clip;
 			t_clip . width = (x + t_start_dx) - t_clip . x;
-			dc -> setclip(t_clip);
+			
+			dc->save();
+			dc->cliprect(t_clip);
+			
 			drawstring(dc, x, cx, y, index, size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
+			
+			dc->restore();
 		}
 
 		// If there is some unselected text at the end of the block, then render it.
@@ -1160,12 +1163,18 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 			t_clip = t_old_clip;
 			t_clip . x = x + t_end_dx;
 			t_clip . width = (t_old_clip . x + t_old_clip . width) - t_clip . x;
-			dc -> setclip(t_clip);
+			
+			dc->save();
+			dc->cliprect(t_clip);
+			
 			drawstring(dc, x, cx, y, index, size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
+			
+			dc->restore();
 		}
 		
 		// Now use the clip rect we've computed for the selected portion.
-		dc -> setclip(t_sel_clip);
+		dc->save();
+		dc->cliprect(t_sel_clip);
 		
 		// Change the hilite color (if necessary).
 		// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
@@ -1194,7 +1203,8 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 			dc->setforeground(*t_foreground_color);
 		else if (!(flags & F_HAS_COLOR))
 			f->setforeground(dc, DI_FORE, False, True);
-		dc-> setclip(t_old_clip);
+		
+		dc->restore();
 	}
 	
 	// MW-2012-01-25: [[ ParaStyles ]] Use the owning paragraph to test for vGrid-ness.
@@ -1224,7 +1234,8 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 			t_clip . width = x + t_width - t_clip . x;
 		
 		// Set the clip temporarily.
-		dc -> setclip(t_clip);
+		dc->save();
+		dc->cliprect(t_clip);
 		
 		if (fontstyle & FA_BOX)
 		{
@@ -1248,7 +1259,7 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		}
 		
 		// Revert the clip back to the previous setting.
-		dc -> setclip(t_old_clip);
+		dc->restore();
 	}
 	
 	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
