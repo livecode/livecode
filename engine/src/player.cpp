@@ -3183,7 +3183,7 @@ void MCPlayer::unbufferDraw()
 #endif
 }
 
-static MCRegionRef PicToRegion(PicHandle thePicture)
+static RgnHandle PicToRegion(PicHandle thePicture)
 {
 	Rect					myRect;
 	GWorldPtr				myGWorld = NULL;
@@ -3240,7 +3240,7 @@ bail:
 		DisposeGWorld(myGWorld);
 	// restore the original graphics port and device
 	SetGWorld(mySavedPort, mySavedDevice);
-	return (MCRegionRef)myRegion;
+	return myRegion;
 }
 
 MCRegionRef MCPlayer::makewindowregion()

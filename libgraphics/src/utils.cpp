@@ -675,12 +675,7 @@ MCGIntegerRectangle MCGIntegerRectangleIntersection(const MCGIntegerRectangle &p
 	return MCGIntegerRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
 }
 
-MCGRectangle MCGIntegerRectangleToMCGRectangle(const MCGIntegerRectangle &p_rect)
-{
-	return MCGRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
-}
-
-MCGIntegerRectangle MCGRectangleGetIntegerBounds(const MCGRectangle &p_rect)
+MCGIntegerRectangle MCGRectangleGetBounds(const MCGRectangle &p_rect)
 {
 	int32_t t_left, t_right, t_top, t_bottom;
 	t_left = floor(p_rect.origin.x);
@@ -705,7 +700,7 @@ MCGIntegerRectangle MCGRectangleGetIntegerBounds(const MCGRectangle &p_rect)
 
 MCGIntegerRectangle MCGIntegerRectangleGetTransformedBounds(const MCGIntegerRectangle &p_rect, const MCGAffineTransform &p_transform)
 {
-	return MCGRectangleGetIntegerBounds(MCGRectangleApplyAffineTransform(MCGIntegerRectangleToMCGRectangle(p_rect), p_transform));
+	return MCGRectangleGetBounds(MCGRectangleApplyAffineTransform(MCGIntegerRectangleToMCGRectangle(p_rect), p_transform));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

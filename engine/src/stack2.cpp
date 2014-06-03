@@ -2493,7 +2493,7 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef 
 			
 			// p_region is in surface coordinates, translate to user-space coords & ensure any fractional pixels are accounted for
 			MCRectangle t_rect;
-			t_rect = MCRectangleGetScaledBounds(Mt_bounds, 1 / t_backing_scale);
+			t_rect = MCRectangleGetScaledBounds(t_bounds, 1 / t_backing_scale);
 			
 			// scale user -> surface space
 			MCGContextScaleCTM(t_context, t_backing_scale, t_backing_scale);

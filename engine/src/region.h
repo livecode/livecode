@@ -51,7 +51,6 @@ bool MCRegionForEachRect(MCRegionRef region, MCRegionForEachRectCallback callbac
 
 #ifdef _WINDOWS_DESKTOP
 bool MCRegionConvertToDeviceAndClip(MCRegionRef region, MCSysContextHandle dc);
-bool MCRegionSetAsWindowShape(MCRegionRef region, MCSysWindowHandle window);
 #endif
 
 #ifdef _MAC_DESKTOP

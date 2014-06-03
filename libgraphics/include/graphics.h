@@ -542,6 +542,13 @@ inline bool MCGIntegerRectangleIsEmpty(const MCGIntegerRectangle &p_rect)
 
 MCGIntegerRectangle MCGIntegerRectangleIntersection(const MCGIntegerRectangle &rect_1, const MCGIntegerRectangle &rect_2);
 
+inline MCGRectangle MCGIntegerRectangleToMCGRectangle(const MCGIntegerRectangle &p_rect)
+{
+	return MCGRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+}
+
+MCGIntegerRectangle MCGRectangleGetBounds(const MCGRectangle &p_rect);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCGraphicsInitialize(void);
