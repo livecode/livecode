@@ -323,14 +323,15 @@ MCPlayer* MCMultimediaExecGetClip(MCStringRef p_clip, int p_chunk_type)
 	tptr = nil;
 	if (p_chunk_type == CT_EXPRESSION)
 	{
-		MCNewAutoNameRef t_obj_name;
-		&t_obj_name = MCNameLookup(p_clip);
-		if (*t_obj_name != nil)
+        // AL-2014-05-27: [[ Bug 12517 ]] MCNameLookup does not increase the ref count
+		MCNameRef t_obj_name;
+		t_obj_name = MCNameLookup(p_clip);
+		if (t_obj_name != nil)
 		{
 			tptr = MCplayers;
 			while (tptr != NULL)
 			{
-				if (tptr -> hasname(*t_obj_name))
+				if (tptr -> hasname(t_obj_name))
 					break;
 				tptr = tptr->getnextplayer();
 			}
@@ -366,8 +367,8 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 
 	MCNewAutoNameRef t_filename;
 	/* UNCHECKED */ MCNameCreate(p_filename, &t_filename);
-	if ((vcptr = (MCVideoClip *)p_target->getAV((Chunk_term)p_chunk_type, p_filename, CT_VIDEO_CLIP)) == NULL && 
-		(vcptr = (MCVideoClip *)p_target->getobjname(CT_VIDEO_CLIP, *t_filename)) == NULL)
+	if ((vcptr = (MCVideoClip *)(sptr->getAV((Chunk_term)p_chunk_type, p_filename, CT_VIDEO_CLIP))) == NULL &&
+		(vcptr = (MCVideoClip *)(sptr->getobjname(CT_VIDEO_CLIP, *t_filename))) == NULL)
 	{
 		MCAutoValueRef t_file;
 		bool t_url = true;
@@ -384,7 +385,11 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 				}
 			}
 			else
+            {
+                // AL-2014-05-27: [[ Bug 12517 ]] Set t_temp if this isn't a url
 				t_url = false;
+                t_temp = p_filename;
+            }
 		}
 		else
             /* UNCHECKED */ t_file = p_filename;
@@ -476,7 +481,7 @@ void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p
 	MCNewAutoNameRef t_clipname;
 	/* UNCHECKED */ MCNameCreate(p_clip, &t_clipname);
 	if ((MCacptr = (MCAudioClip *)(sptr->getAV((Chunk_term)p_chunk_type, p_clip, CT_AUDIO_CLIP))) == NULL && 
-		(MCacptr = (MCAudioClip *)sptr->getobjname(CT_AUDIO_CLIP, *t_clipname)) == NULL)
+		(MCacptr = (MCAudioClip *)(sptr->getobjname(CT_AUDIO_CLIP, *t_clipname))) == NULL)
 	{
 		IO_handle stream;
 		

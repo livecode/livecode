@@ -2468,6 +2468,7 @@ void MCInterfaceEvalAudioClipOfStackById(MCExecContext& ctxt, MCObjectPtr p_stac
 void MCInterfaceEvalAudioClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_stack, MCNameRef p_name, MCObjectPtr& r_clip)
 {
     MCObject *t_clip;
+    t_clip = nil;
     
     if (!static_cast<MCStack *>(p_stack . object) -> getAVname(CT_AUDIO_CLIP, p_name, t_clip) &&
         (MCacptr != NULL && MCacptr -> hasname(p_name)))
@@ -2516,6 +2517,8 @@ void MCInterfaceEvalVideoClipOfStackById(MCExecContext& ctxt, MCObjectPtr p_stac
 void MCInterfaceEvalVideoClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_stack, MCNameRef p_name, MCObjectPtr& r_clip)
 {
     MCObject *t_clip;
+    // AL-2014-05-27: [[ Bug 12517 ]] Set t_clip to nil otherwise it causes crash
+    t_clip = nil;
     
     if (!static_cast<MCStack *>(p_stack . object) -> getAVname(CT_VIDEO_CLIP, p_name, t_clip))
     {

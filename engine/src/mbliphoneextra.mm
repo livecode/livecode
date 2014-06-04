@@ -93,7 +93,8 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
         MCAutoValueRef t_value;
 		if (p_parameters != nil)
         {
-			t_success = p_parameters -> eval(ctxt, &t_value);
+            // AL-2014-05-28: [[ Bug 12477 ]] Use eval_argument here otherwise variable references do not get resolved
+			t_success = p_parameters -> eval_argument(ctxt, &t_value);
         }
 		else if (t_now_optional)
 			break;

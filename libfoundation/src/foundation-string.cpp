@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation-unicode.h>
 
 #include "foundation-private.h"
+#include "foundation-bidi.h"
 
 #ifdef __LINUX__
 #include <errno.h>
@@ -1299,11 +1300,17 @@ bool MCStringMapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
     p_in_range . offset++;
     
     MCRange t_word_range = MCRangeMake(0, 0);
-    
+    bool t_found;
     // Advance to the beginning of the specified range
-    while (p_in_range . offset-- && MCLocaleWordBreakIteratorAdvance(self, t_iter, t_word_range))
+    while (p_in_range . offset-- && (t_found = MCLocaleWordBreakIteratorAdvance(self, t_iter, t_word_range)))
         ;
 
+    if (!t_found)
+    {
+        r_out_range = MCRangeMake(MCStringGetLength(self), 0);
+        return true;
+    }
+    
     // Advance to the end of the current word
     uindex_t t_start = t_word_range . offset;
     p_in_range . length--;
@@ -1895,10 +1902,14 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
     if (MCStringIsEmpty(self) != MCStringIsEmpty(p_other))
         return false;
 
-    if (MCStringCantBeNative(self, p_options) != MCStringCantBeNative(p_other, p_options))
+    bool self_native, other_native;
+    self_native = MCStringIsNative(self);
+    other_native = MCStringIsNative(p_other);
+    
+    if ((self_native && MCStringCantBeNative(p_other, p_options)) || (other_native && MCStringCantBeNative(self, p_options)))
         return false;
     
-    if (MCStringIsNative(self) && MCStringIsNative(p_other))
+    if (self_native && other_native)
     {
         if (MCStringGetLength(self) != MCStringGetLength(p_other))
             return false;
@@ -1909,7 +1920,7 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
             return MCNativeCharsEqualCaseless(self -> native_chars, self -> char_count, p_other -> native_chars, p_other -> char_count);
     }
 
-    return MCUnicodeCompare(self -> chars, self -> char_count, MCStringIsNative(self), p_other -> chars, p_other -> char_count, MCStringIsNative(p_other), (MCUnicodeCompareOption)p_options) == 0;
+    return MCUnicodeCompare(self -> chars, self -> char_count, self_native, p_other -> chars, p_other -> char_count, other_native, (MCUnicodeCompareOption)p_options) == 0;
 }
 
 bool MCStringIsEmpty(MCStringRef string)
@@ -3101,7 +3112,9 @@ bool MCStringPrependChars(MCStringRef self, const unichar_t *p_chars, uindex_t p
         bool t_not_native;
         t_not_native = false;
         for(uindex_t i = 0; i < p_char_count; i++)
-            if (!MCUnicodeCharMapToNative(p_chars[i], self -> native_chars[i + self -> char_count - p_char_count]))
+            // SN-2014-05-20 [[ Bug 12344 ]] [[ Bug 12345 ]]
+            // Prepending chars was appending them
+            if (!MCUnicodeCharMapToNative(p_chars[i], self -> native_chars[i]))
             {
                 t_not_native = true;
                 break;
@@ -3487,6 +3500,14 @@ bool MCStringPad(MCStringRef self, uindex_t p_at, uindex_t p_count, MCStringRef 
 	return true;
 }
 
+bool MCStringResolvesLeftToRight(MCStringRef self)
+{
+    if (MCStringIsNative(self) || MCStringCanBeNative(self))
+        return true;
+    
+    return MCBidiFirstStrongIsolate(self, 0) == 0;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCStringAppendFormat(MCStringRef self, const char *p_format, ...)
@@ -3707,7 +3728,8 @@ bool MCStringFindAndReplaceNative(MCStringRef self, MCStringRef p_pattern, MCStr
 			// Search for the next occurence of from in whole.
 			uindex_t t_next_offset;
 			bool t_found;
-			t_found = MCStringFirstIndexOf(self, p_pattern, t_offset, p_options == kMCStringOptionCompareCaseless, t_next_offset);
+            // AL-2014-05-23: [[ Bug 12482 ]] Pass through string options themselves, rather than a bool.
+			t_found = MCStringFirstIndexOf(self, p_pattern, t_offset, p_options, t_next_offset);
             
 			// If we found an instance of from, then we need space for to; otherwise,
 			// we update the offset, and need just room up to it.
@@ -4813,7 +4835,7 @@ bool MCStringSetNumericValue(MCStringRef self, double p_value)
     {
         if (MCMemoryReallocate(self -> chars, ((self -> char_count * 2 + 7) & ~7) + 8, self -> chars))
         {
-            *(double*)(&(self -> chars[(self -> char_count + 7) & ~7])) = p_value;
+            *(double*)(&(self -> chars[(self -> char_count + 3) & ~3])) = p_value;
             t_success = true;
         }
     }

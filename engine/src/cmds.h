@@ -1488,6 +1488,7 @@ class MCOpen : public MCStatement
 	Boolean sheet : 1;
 	Boolean secure : 1;
 	Boolean secureverify : 1;
+    Boolean textmode : 1;
 
 	// MW-2010-05-09: Indicates that the process should be opened with elevated
 	//   (admin) permissions
@@ -1505,6 +1506,7 @@ public:
 		secureverify = True;
 		destination = nil;
 		elevated = False;
+        textmode = True;
 	}
 	virtual ~MCOpen();
 	virtual Parse_stat parse(MCScriptPoint &);

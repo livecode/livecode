@@ -1,0 +1,1 @@
+# trueWord n + m of tText for n the number of trueWords of tText always returns trueWord n

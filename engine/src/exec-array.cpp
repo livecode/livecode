@@ -578,13 +578,14 @@ void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRe
 	}
 
     // AL-2014-05-15: [[ Bug 12203 ]] Add version parameter to arrayEncode, to allow
-    //  version 7.0 variant to preserve unicode.
+    //  version 7.0 variant to preserve unicode. 
     MCInterfaceStackFileVersion t_version;
     if (p_version != nil)
         MCInterfaceStackFileVersionParse(ctxt, p_version, t_version);
     
+    // AL-2014-05-22: [[ Bug 12203 ]] Make arrayEncode encode in legacy format by default.
     bool t_legacy;
-    t_legacy = p_version != nil && t_version . version < 7000;
+    t_legacy = p_version == nil || t_version . version < 7000;
     
     if (t_legacy)
     {

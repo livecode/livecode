@@ -343,7 +343,12 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
         
         p_callback(p_font, *t_temp, MCRangeMake(0, MCStringGetLength(*t_temp)), p_callback_data);
 #else
-        p_callback(p_font, p_text, t_range, p_callback_data);
+        // Another ugly hack - this time, to avoid incoming strings being coerced
+        // into Unicode strings needlessly (because the drawing code uses unichars).
+        // Do a mutable copy (to ensure an actual copy) before drawing.
+        MCAutoStringRef t_temp;
+        /* UNCHECKED */ MCStringMutableCopySubstring(p_text, t_range, &t_temp);
+        p_callback(p_font, *t_temp, MCRangeMake(0, t_range.length), p_callback_data);
 #endif
         
         // Explicitly show breaking points

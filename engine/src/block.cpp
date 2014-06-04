@@ -944,7 +944,7 @@ void MCBlock::split(findex_t p_index)
 	}
 }*/
 
-void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style)
+void MCBlock::drawstring(MCDC *dc, int2 x, int2 p_cell_right, int2 y, findex_t start, findex_t length, Boolean image, uint32_t style)
 {
 	// MW-2012-02-16: [[ FontRefs ]] Fetch the font metrics we need to draw.
 	int32_t t_ascent, t_descent;
@@ -964,9 +964,6 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 
 		MCRectangle t_cell_clip;
 		t_cell_clip = t_old_clip;
-
-		int32_t t_delta;
-		t_delta = cx - x;
 
 		findex_t t_index;
 		t_index = start;
@@ -991,9 +988,6 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 			int2 t_tab_width;
 			t_tab_width = 64; //gettabwidth(0, t_index);
 
-			uint2 t_cell_right;
-			t_cell_right = t_tab_width - t_delta;
-
 			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 			uint2 t_width;
 			MCRange t_range;
@@ -1003,7 +997,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 
 			// MW-2012-02-09: [[ ParaStyles ]] Compute the cell clip, taking into account padding.
 			t_cell_clip . x = x - 1;
-			t_cell_clip . width = MCU_max(t_cell_right - x - t_padding * 2, 0);
+			t_cell_clip . width = MCU_max(p_cell_right - x - t_padding * 2, 0);
 
 			t_cell_clip = MCU_intersect_rect(t_cell_clip, t_old_clip);
 			dc -> setclip(t_cell_clip);
@@ -1037,7 +1031,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 
 			if (t_next_tab != -1)
 			{
-				x = t_cell_right;
+				x = p_cell_right;
 				t_next_index = parent->IncrementIndex(t_next_index);
 			}
 
@@ -1064,7 +1058,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, findex_t start, find
 		t_line_width = 0;
 		t_line_x = x;
 		if ((style & (FA_UNDERLINE | FA_STRIKEOUT)) != 0)
-			t_line_width = getsubwidth(dc, cx, start, size);
+			t_line_width = getsubwidth(dc, 0, start, size);
 		
         // FG-2014-04-30: [[ TabAlignments ]] Blocks no longer contain tabs
 		/*if (flags & F_HAS_TAB)
@@ -1769,7 +1763,7 @@ findex_t MCBlock::GetCursorIndex(int2 x, Boolean chunk, Boolean last)
 		return i;
 }
 
-uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, findex_t i, findex_t l)
+uint2 MCBlock::getsubwidth(MCDC *dc, int2 x /* IGNORED */, findex_t i, findex_t l)
 {
 	if (l == 0)
 		return 0;
