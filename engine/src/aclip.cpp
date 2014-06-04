@@ -683,6 +683,10 @@ Boolean MCAudioClip::open_audio(void)
     
     MCPlatformSoundPlay(s_current_sound);
     
+    // PM-2014-05-28: [[Bug 12529]] Make sure we release s_current_sound after it is played
+    MCPlatformSoundRelease(s_current_sound);
+    s_current_sound = nil;
+    
     return True;
 }
 #elif defined _WINDOWS
