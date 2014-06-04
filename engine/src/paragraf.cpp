@@ -1581,7 +1581,11 @@ MCLine *MCParagraph::indextoline(uint2 tindex)
 	return lines->prev();
 }
 
-void MCParagraph::join()
+// MW-2014-05-28: [[ Bug 12303 ]] Special-case added for when setting 'text' of field chunks. If
+//   'preserve_if_zero' is true, then 'this' paragraph's styles are preserved even if it has no
+//   text. This is used in the case of 'set the text of <chunk>' to ensure that paragraph properties
+//   of the first paragraph the text is set in do not get clobbered.
+void MCParagraph::join(bool p_preserve_zero_length_styles_if_zero)
 {
 	if (blocks == NULL)
 		inittext();
@@ -1592,7 +1596,9 @@ void MCParagraph::join()
 	//   the next paragraphs attrs.
 	// MW-2012-08-31: [[ Bug 10344 ]] If the textsize is 0 then always take the next
 	//   paragraphs attrs.
-	if (textsize == 0)
+	// MW-2014-05-28: [[ Bug 12303 ]] If the textsize is 0 and we don't want to preserve the style
+    //   changes, then copy the next paragraph's.
+	if (!p_preserve_zero_length_styles_if_zero && textsize == 0)
 		copyattrs(*pgptr);
 
 	// MW-2006-04-13: If the total new text size is greater than 65536 - 34 we just delete the next paragraph

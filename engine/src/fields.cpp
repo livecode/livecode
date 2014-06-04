@@ -1402,6 +1402,12 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		MCCdata *fptr = getcarddata(fdata, parid, True);
 		MCParagraph *oldparagraphs = fptr->getparagraphs();
 		fptr->setset(0);
+        
+        // MW-2014-05-28: [[ Bug 12303 ]] If we are setting 'text' then we don't want to touch the paragraph
+        //   styles of the first paragraph it is being put into. (In the other cases they are styled formats
+        //   so if the first paragraph is empty, we replace styles - this is what you'd expect).
+        bool t_preserve_zero_length_styles;
+        t_preserve_zero_length_styles = false;
 		switch (which)
 		{
 		case P_HTML_TEXT:
@@ -1415,9 +1421,10 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			setstyledtext(parid, ep);
 			break;
 		case P_UNICODE_TEXT:
-		case P_TEXT:
-			setpartialtext(parid, s, which == P_UNICODE_TEXT);
-			break;
+        case P_TEXT:
+            t_preserve_zero_length_styles = true;
+            setpartialtext(parid, s, which == P_UNICODE_TEXT);
+            break;
 		default:
 			break;
 		}
@@ -1429,12 +1436,16 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		pgptr->setselectionindex(si, si, False, False);
 		pgptr->split();
 		pgptr->append(newpgptr);
-		pgptr->join();
+		pgptr->join(t_preserve_zero_length_styles);
 		if (lastpgptr == NULL)
 			lastpgptr = pgptr;
 		else
 			pgptr->defrag();
-		lastpgptr->join();
+        // MW-2014-05-28: [[ Bug 10593 ]] When replacing a range of text with styles, paragraph styles from
+        //   the new content should replace paragraph styles for the old content whenever the range touches
+        //   the 0 index of a paragraph. Thus when joining the end of the range again, we want to preserve
+        //   the new contents styles even if it is an empty paragraph.
+		lastpgptr->join(true);
 		lastpgptr->defrag();
 		fptr->setparagraphs(oldparagraphs);
 		paragraphs = oldparagraphs;
