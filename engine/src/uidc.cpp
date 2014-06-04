@@ -880,7 +880,7 @@ void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, 
 	}
     
     // Find where in the list to insert the pending message.
-    int t_index;
+    uint32_t t_index;
     for(t_index = 0; t_index < nmessages; t_index++)
         if (messages[t_index] . time > time)
             break;
@@ -950,9 +950,8 @@ void MCUIDC::addmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter 
     t_id = ++messageid;
     doaddmessage(optr, mptr, time, t_id, params);
     
-	char buffer[U4L];
-	sprintf(buffer, "%u", t_id);
-	MCresult->copysvalue(buffer);
+    // MW-2014-05-28: [[ Bug 12463 ]] Previously the result would have been set here which is
+    //   incorrect as engine pending messages should not set the result.
 }
 
 void MCUIDC::addtimer(MCObject *optr, MCNameRef mptr, uint4 delay)
@@ -984,8 +983,7 @@ void MCUIDC::cancelmessageindex(uint2 i, Boolean dodelete)
 
 void MCUIDC::cancelmessageid(uint4 id)
 {
-	uint2 i;
-	for (i = 0 ; i < nmessages ; i++)
+	for(uindex_t i = 0 ; i < nmessages ; i++)
 		if (messages[i].id == id)
 		{
 			cancelmessageindex(i, True);
@@ -1004,12 +1002,11 @@ void MCUIDC::cancelmessageobject(MCObject *optr, MCNameRef mptr)
 
 void MCUIDC::listmessages(MCExecPoint &ep)
 {
-	uint2 i;
 	MCExecPoint ep1(ep);
 	bool first;
 	first = true;
 	ep.clear();
-	for (i = 0 ; i < nmessages ; i++)
+	for (uindex_t i = 0 ; i < nmessages ; i++)
 	{
 		if (messages[i].id != 0)
 		{
@@ -1023,13 +1020,32 @@ void MCUIDC::listmessages(MCExecPoint &ep)
 	}
 }
 
+// MW-2014-05-28: [[ Bug 12463 ]] This is called by 'send in time' to queue a user defined message.
+//   It puts a limit on the number of script sent messages of 64k which should be enough for any
+//   reasonable app. Note that the engine's internal / sent messages are still allowed beyond this
+//   limit as they definitely do not have a double-propagation problem that could cause engine lock-up.
+bool MCUIDC::addusermessage(MCObject* optr, MCNameRef name, real8 time, MCParameter *params)
+{
+    if (nmessages >= 65536)
+        return false;
+    
+    addmessage(optr, name, time, params);
+    
+    // MW-2014-05-28: [[ Bug 12463 ]] Set the result to the pending message id.
+	char buffer[U4L];
+	sprintf(buffer, "%u", messageid);
+	MCresult->copysvalue(buffer);
+    
+    return true;
+}
+
 // MW-2014-04-16: [[ Bug 11690 ]] Rework pending message handling to take advantage
 //   of messages[] now being a sorted list.
 Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch)
 {
     Boolean t_handled;
     t_handled = False;
-    for(int i = 0; i < nmessages; i++)
+    for(uindex_t i = 0; i < nmessages; i++)
     {
         // If the next message is later than curtime, we've not processed a message.
         if (messages[i] . time > curtime)
