@@ -375,7 +375,7 @@ void MCImage::SetText(MCExecContext& ctxt, MCDataRef p_text)
 	else
 	{
 		if (t_success)
-			t_success = nil != (t_stream = MCS_fakeopen(MCString((const char *)MCDataGetBytePtr(p_text), MCDataGetLength(p_text))));
+            t_success = nil != (t_stream = MCS_fakeopen(MCDataGetBytePtr(p_text), MCDataGetLength(p_text)));
 		if (t_success)
 			t_success = MCImageImport(t_stream, nil, t_hotspot, t_name, t_compressed, t_bitmap);
 		if (t_success)

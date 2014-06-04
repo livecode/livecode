@@ -1577,9 +1577,7 @@ bool MCServerStartSession(MCExecContext &ctxt)
 	if (t_success)
     {
         if (s_current_session->data_length > 0)
-            // TODO
-            t_success = false;
-//            t_success = t_session_var->decode(s_current_session->data, s_current_session->data_length);
+            t_success = t_session_var->decode(s_current_session->data, s_current_session->data_length);
 	}
 	
 	if (t_success)
@@ -1611,9 +1609,7 @@ bool MCServerStopSession()
 	t_session_var = MCVariable::lookupglobal_cstring("$_SESSION");
 
     if (t_session_var != NULL)
-        // TODO
-        t_success = false;
-//        t_success = t_session_var->encode((void*&)t_data, t_data_length);
+        t_success = t_session_var->encode((void*&)t_data, t_data_length);
 
 	if (t_success)
 	{

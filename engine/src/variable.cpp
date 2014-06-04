@@ -20,6 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "filedefs.h"
 #include "objdefs.h"
+#include "mcio.h"
 
 #include "stack.h"
 #include "card.h"
@@ -106,7 +107,133 @@ bool MCVariable::createcopy(MCVariable& p_var, MCVariable*& r_new_var)
 	else
 		delete self;
 
-	return t_success;
+    return t_success;
+}
+
+bool MCVariable::encode(void *&r_buffer, uindex_t r_size)
+{
+    IO_handle t_stream;
+    t_stream = MCS_fakeopenwrite();
+    if (t_stream == NULL)
+        return false;
+
+    IO_stat t_stat;
+    t_stat = IO_NORMAL;
+
+    if (value . type == kMCExecValueTypeArrayRef)
+    {
+        t_stat = IO_write_uint1(kMCEncodedValueTypeLegacyArray, t_stream);
+
+        if (t_stat == IO_NORMAL)
+            t_stat = MCArraySaveToHandleLegacy(value . arrayref_value, t_stream);
+    }
+    else if (value . type == kMCExecValueTypeDataRef)
+    {
+        t_stat = IO_write_uint1(kMCEncodedValueTypeString, t_stream);
+        if (t_stat == IO_NORMAL)
+            t_stat = IO_write(MCDataGetBytePtr(value . dataref_value), 1, MCDataGetLength(value . dataref_value), t_stream);
+    }
+    else if (value . type == kMCExecValueTypeStringRef)
+    {
+        t_stat = IO_write_uint1(kMCEncodedValueTypeString, t_stream);
+        if (t_stat == IO_NORMAL)
+            t_stat = IO_write_stringref_legacy(value . stringref_value, t_stream, false);
+    }
+    else if (value . type == kMCExecValueTypeNone)
+    {
+        t_stat = IO_write_uint1((uint1)kMCEncodedValueTypeEmpty, t_stream);
+    }
+    else if (MCExecTypeIsNumber(value . type))
+    {
+        double t_value;
+        if (value . type == kMCExecTypeUInt)
+            t_value = (double)value . uint_value;
+        else if (value . type == kMCExecTypeInt)
+            t_value = (double) value . int_value;
+        else if (value . type == kMCExecTypeFloat)
+            t_value = (double) value . float_value;
+        else if (value . type == kMCExecTypeDouble)
+            t_value = value . double_value;
+
+        t_stat = IO_write_uint1((uint1)kMCEncodedValueTypeNumber, t_stream);
+
+        if (t_stat == IO_NORMAL)
+            t_stat = IO_write_real8(t_value, t_stream);
+    }
+    else
+        t_stat = IO_ERROR;
+
+    char *t_buffer;
+    uint32_t t_length;
+    if (t_stat == IO_NORMAL)
+    {
+        t_stat = MCS_closetakingbuffer(t_stream, (void*&)t_buffer, t_length);
+
+        if (t_stat == IO_NORMAL)
+        {
+            r_buffer = t_buffer;
+            r_size = t_length;
+        }
+        else
+            delete t_buffer;
+    }
+
+    return t_stat == IO_NORMAL;
+}
+
+bool MCVariable::decode(void *p_buffer, uindex_t p_size)
+{
+    IO_handle t_stream;
+    t_stream = MCS_fakeopen(p_buffer, p_size);
+    if (t_stream == NULL)
+        return false;
+
+    IO_stat t_stat;
+    t_stat = IO_NORMAL;
+
+    uint8_t t_type;
+    t_stat = IO_read_uint1((uint1*)&t_type, t_stream);
+    if (t_stat == IO_NORMAL)
+    {
+        switch(t_type)
+        {
+        case kMCEncodedValueTypeEmpty:
+            clear();
+        break;
+        case kMCEncodedValueTypeString:
+        {
+            MCAutoStringRef t_value;
+            t_stat = IO_read_stringref_legacy(&t_value, t_stream, false);
+
+            if (t_stat == IO_NORMAL)
+                /* UNCHECKED */ setvalueref(*t_value);
+        }
+        break;
+        case kMCEncodedValueTypeNumber:
+        {
+            real8 t_value;
+            t_stat = IO_read_real8(&t_value, t_stream);
+
+            if (t_stat == IO_NORMAL)
+                setnvalue(t_value);
+        }
+        break;
+        case kMCEncodedValueTypeLegacyArray:
+        {
+            MCAutoArrayRef t_array;
+            t_stat = MCArrayLoadFromHandleLegacy(&t_array, t_stream);
+
+            if (t_stat == IO_NORMAL)
+                /* UNCHECKED */ setvalueref(*t_array);
+        }
+        default:
+            t_stat = IO_ERROR;
+        break;
+        }
+    }
+
+    MCS_close(t_stream);
+    return t_stat == IO_NORMAL;
 }
 
 MCVariable::~MCVariable(void)

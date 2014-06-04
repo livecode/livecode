@@ -282,6 +282,7 @@ inline uint32_t MCVariableArray::getnfilled(void) const
 #define kMCEncodedValueTypeLegacyArray 5
 #define kMCEncodedValueTypeArray 6
 
+
 #ifdef LEGACY_EXEC
 class MCVariableValue
 {
@@ -818,6 +819,11 @@ public:
 	/* CAN FAIL */ static bool createwithname(MCNameRef name, MCVariable*& r_var);
 
 	/* CAN FAIL */ static bool createcopy(MCVariable& other, MCVariable*& r_var);
+
+    ///////////
+    // Does what MCVariableValue equivalent was doing
+    bool encode(void *&r_buffer, uindex_t r_size);
+    bool decode(void *p_buffer, uindex_t p_size);
 };
 
 ///////////////////////////////////////////////////////////////////////////////

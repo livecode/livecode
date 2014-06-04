@@ -520,8 +520,11 @@ MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term et
     uint4 offset;
     if (MCStringFirstIndexOf(p_value, MCSTR(SIGNATURE), 0, kMCCompareExact, offset)
             || (MCStringGetLength(p_value) > 8 && MCStringBeginsWithCString(p_value, (char_t*)"REVO", kMCCompareExact)))
-	{
-        IO_handle stream = MCS_fakeopen(MCStringGetOldString(p_value));
+    {
+        char_t* t_cstring_value;
+        uindex_t t_length;
+        /* UNCHECKED */ MCStringConvertToNative(p_value, t_cstring_value, t_length);
+        IO_handle stream = MCS_fakeopen(t_cstring_value, t_length);
 		if (MCdispatcher->readfile(NULL, NULL, stream, sptr) != IO_NORMAL)
 		{
 			MCS_close(stream);

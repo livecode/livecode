@@ -1058,10 +1058,10 @@ bool MCS_pathfromnative(MCStringRef p_native_path, MCStringRef& r_livecode_path)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-IO_handle MCS_fakeopen(const MCString& data)
+IO_handle MCS_fakeopen(const void *p_data, uindex_t p_size)
 {
 	MCMemoryFileHandle *t_handle;
-	t_handle = new MCMemoryFileHandle(data . getstring(), data . getlength());
+    t_handle = new MCMemoryFileHandle(p_data, p_size);
 	return t_handle;
 }
 

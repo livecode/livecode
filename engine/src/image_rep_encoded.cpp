@@ -178,7 +178,7 @@ bool MCReferencedImageRep::GetDataStream(IO_handle &r_stream)
         /* UNCHECKED */ MCMemoryAllocateCopy(MCDataGetBytePtr(*t_dataref), MCDataGetLength(*t_dataref), m_url_data);
         m_url_data_size = MCDataGetLength(*t_dataref);
 
-		t_stream = MCS_fakeopen(MCString((const char *)m_url_data, m_url_data_size));
+        t_stream = MCS_fakeopen((const char *)m_url_data, m_url_data_size);
 	}
 
 	if (t_stream != nil)
@@ -202,7 +202,7 @@ MCResidentImageRep::~MCResidentImageRep()
 
 bool MCResidentImageRep::GetDataStream(IO_handle &r_stream)
 {
-	r_stream = MCS_fakeopen(MCString((const char *)m_data, m_size));
+    r_stream = MCS_fakeopen((const char *)m_data, m_size);
 	return r_stream != nil;
 }
 
@@ -240,7 +240,7 @@ bool MCVectorImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
 
 	IO_handle t_stream = nil;
     if (t_success)
-        t_success = nil != (t_stream = MCS_fakeopen(MCString((const char *)m_data, m_size)));
+        t_success = nil != (t_stream = MCS_fakeopen((const char *)m_data, m_size));
 
 	if (t_success)
 		t_success = MCImageGetMetafileGeometry(t_stream, r_width, r_height);
