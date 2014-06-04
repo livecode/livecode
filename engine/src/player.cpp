@@ -2568,9 +2568,10 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		drawfocus(dc, p_dirty);
 
 #ifdef FEATURE_PLATFORM_PLAYER
-	/*if (!(state & CS_CLOSING))
+    // PM-2014-05-23: [[ Bug 12481 ]] This fixes the switch visibility glitch
+	if (!(state & CS_CLOSING))
 		prepare(MCnullstring);
-	
+	/*
 	if (m_platform_player != nil)
 	{
 		bool t_visible;
