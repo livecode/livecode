@@ -196,11 +196,12 @@ void coretext_get_font_names(MCExecPoint &ep)
         CFStringRef t_font_name;
         t_font_name = (CFStringRef)CTFontDescriptorCopyAttribute(t_font, kCTFontDisplayNameAttribute);
         
-		if (CFStringGetCString(t_font_name, t_cstring_font_name, 256, kCFStringEncodingMacRoman) &&
+		if (t_font_name != NULL && CFStringGetCString(t_font_name, t_cstring_font_name, 256, kCFStringEncodingMacRoman) &&
             t_cstring_font_name[0] != '%' && t_cstring_font_name[0] != '.')
 			ep . concatcstring(t_cstring_font_name, EC_RETURN, i == 0);
         
-        CFRelease(t_font_name);
+        if (t_font_name != NULL)
+            CFRelease(t_font_name);
     }
     
     if (t_descriptors != NULL)
@@ -236,3 +237,40 @@ void core_text_get_font_styles(const char *p_name, uint32_t p_size, MCExecPoint 
     if (t_font_family != NULL)
         CFRelease(t_font_family);
 }
+
+#ifdef _MACOSX
+ATSUFontID coretext_font_to_atsufontid(void *p_font)
+{
+    bool t_success;
+    t_success = true;
+    
+    CTFontRef t_ctfont;
+    t_ctfont = NULL;
+    if (t_success)
+    {
+        t_ctfont = (CTFontRef)p_font;
+        t_success = t_ctfont != NULL;
+    }
+    
+    char t_name[256];
+    if (t_success)
+    {
+        CFStringRef t_cfname;
+        t_cfname = CTFontCopyPostScriptName(t_ctfont);
+        t_success = t_cfname != NULL && CFStringGetCString(t_cfname, t_name, 256, kCFStringEncodingMacRoman);
+        if (t_cfname != NULL)
+            CFRelease(t_cfname);
+    }
+    
+    ATSUFontID t_font_id;
+    t_font_id = 0;
+    if (t_success)
+    {
+        uint32_t t_name_length;
+        t_name_length = MCCStringLength(t_name);
+        t_success = ATSUFindFontFromName(t_name, t_name_length, kFontPostscriptName, kFontNoPlatform, kFontNoScript, kFontNoLanguage, &t_font_id) == noErr;
+    }
+    
+    return t_font_id;
+}
+#endif
