@@ -58,11 +58,16 @@ MCServerScript::~MCServerScript(void)
 		File *t_file;
 		t_file = m_files;
 		m_files = m_files -> next;
-		
-		if (t_file -> handle != NULL)
-			t_file -> handle -> Close();
-		delete t_file -> filename;
-		delete t_file -> script;
+
+        // Closing a MCMemoryMappedFileHandle calls unmap()
+        // and thus deallocates the memory mapped - which is what's stored in t_file -> script
+        if (t_file -> handle != NULL)
+            t_file -> handle -> Close();
+        else
+            delete t_file -> script;
+
+        delete t_file -> filename;
+
 		delete t_file;
 	}
 	

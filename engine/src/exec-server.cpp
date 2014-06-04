@@ -180,7 +180,7 @@ void MCServerExecInclude(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_
 
 void MCServerExecEcho(MCExecContext& ctxt, MCStringRef p_data)
 {
-	if (!MCS_put(ctxt, kMCSPutBinaryOutput, p_data))
+    if (!MCS_put(ctxt, kMCSPutOutput, p_data))
 		MCexitall = True;
 }
 

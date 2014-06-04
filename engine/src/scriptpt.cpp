@@ -412,9 +412,9 @@ codepoint_t MCScriptPoint::getcodepointatindex(uindex_t p_index)
 {
     uindex_t t_index = 0;
     while (p_index--)
-        MCUnicodeCodepointAdvance((curptr + t_index), endptr - curptr - t_index, t_index);
+        MCUnicodeCodepointAdvance(curptr, endptr - curptr - t_index, t_index);
     
-	return MCUnicodeCodepointAdvance((curptr + t_index), endptr - curptr - t_index, t_index);
+    return MCUnicodeCodepointAdvance(curptr, endptr - curptr - t_index, t_index);
 }
 
 void MCScriptPoint::setcurptr(const unichar_t *ptr)
