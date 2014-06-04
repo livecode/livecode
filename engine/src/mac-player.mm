@@ -1017,7 +1017,6 @@ private:
     static Boolean MovieActionFilter(MovieController mc, short action, void *params, long refcon);
     
 	AVPlayer *m_player;
-    AVAsset *m_movie_asset;
     NSView *m_view;
     AVPlayerLayer *m_player_layer;
     CMTime m_selection_start, m_selection_finish;
@@ -1478,10 +1477,7 @@ void MCAVFoundationPlayer::Stop(void)
 
 void MCAVFoundationPlayer::Step(int amount)
 {
-	if (amount > 0)
-		[m_movie stepForward];
-	else if (amount < 0)
-		[m_movie stepBackward];
+    [[m_player currentItem] stepByCount:amount];
 }
 
 void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
@@ -1590,6 +1586,7 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 				t_end_time = t_start_time;
             }
             
+            SelectionChanged();
             if (m_play_selection_only)
                 [m_player seekToTime:CMTimeMake(t_start_time, 1) toleranceBefore:kCMTimeZero toleranceAfter: CMTimeMake(t_end_time - t_start_time,1)];
             
@@ -1613,12 +1610,14 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 				t_end_time = t_start_time;
             }
             
+            SelectionChanged();
             if (m_play_selection_only)
                 [m_player seekToTime:CMTimeMake(t_start_time, 1) toleranceBefore:kCMTimeZero toleranceAfter: CMTimeMake(t_end_time - t_start_time,1)];
         }
             break;
 		case kMCPlatformPlayerPropertyPlayRate:
             [m_player setRate: *(double *)p_value];
+            RateChanged();
 			break;
 		case kMCPlatformPlayerPropertyVolume:
             [m_player setVolume: *(uint16_t *)p_value / 100.0f];
@@ -1647,6 +1646,7 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
     m_synchronizing = false;
 }
 
+/*
 static Boolean IsQTVRMovie(Movie theMovie)
 {
 	Boolean IsQTVR = False;
@@ -1682,6 +1682,14 @@ static Boolean QTMovieHasType(Movie tmovie, OSType movtype)
 										 movieTrackMediaType) != NULL);
 	}
 }
+*/
+
+static Boolean AVAssetHasType(AVAsset *p_asset, NSString *p_type)
+{
+    NSArray *t_tracks = [p_asset tracksWithMediaType:p_type];
+    return [t_tracks count] != 0;
+}
+
 
 void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformPropertyType p_type, void *r_value)
 {
@@ -1693,6 +1701,17 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 		case kMCPlatformPlayerPropertyRect:
 			*(MCRectangle *)r_value = m_rect;
 			break;
+        case kMCPlatformPlayerPropertyMovieRect:
+		{
+			AVAssetTrack *t_assetTrack;
+            NSArray *t_tracks = [[[m_player currentItem] asset] tracks];
+            t_assetTrack = [t_tracks objectAtIndex:0];
+            CGSize t_size = [t_assetTrack naturalSize];
+            
+			*(MCRectangle *)r_value = MCRectangleMake(0, 0, t_size . width, t_size . height);
+		}
+            break;
+        /*
 		case kMCPlatformPlayerPropertyMovieRect:
 		{
 			NSValue *t_value;
@@ -1702,10 +1721,27 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 			*(MCRectangle *)r_value = MCRectangleMake(0, 0, [t_value sizeValue] . width, [t_value sizeValue] . height);
 		}
             break;
+        */
 		case kMCPlatformPlayerPropertyVisible:
 			*(bool *)r_value = m_visible;
 			break;
-            //TODO
+        case kMCPlatformPlayerPropertyMediaTypes:
+		{
+			MCPlatformPlayerMediaTypes t_types;
+			t_types = 0;
+            AVAsset *t_asset = [[m_player currentItem] asset];
+            
+			if (AVAssetHasType(t_asset, AVMediaTypeVideo))
+				t_types |= kMCPlatformPlayerMediaTypeVideo;
+			if (AVAssetHasType(t_asset, AVMediaTypeAudio))
+				t_types |= kMCPlatformPlayerMediaTypeAudio;
+			if (AVAssetHasType(t_asset, AVMediaTypeText))
+				t_types |= kMCPlatformPlayerMediaTypeText;
+            // TODO: Add more types??
+            *(MCPlatformPlayerMediaTypes *)r_value = t_types;
+		}
+            break;
+        /*
 		case kMCPlatformPlayerPropertyMediaTypes:
 		{
 			MCPlatformPlayerMediaTypes t_types;
@@ -1725,6 +1761,7 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 			*(MCPlatformPlayerMediaTypes *)r_value = t_types;
 		}
             break;
+        */
 		case kMCPlatformPlayerPropertyDuration:
             *(uint32_t *)r_value = [m_player currentItem] . duration . value;
 			*(uint32_t *)r_value = [m_movie duration] . timeValue;
@@ -1760,19 +1797,17 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 void MCAVFoundationPlayer::CountTracks(uindex_t& r_count)
 {
     NSArray *t_tracks;
-    // TODO: link m_movie_asset with m_player
-    t_tracks = [m_movie_asset tracks];
+    t_tracks = [[[m_player currentItem] asset] tracks];
     r_count = [t_tracks count];
 }
 
 bool MCAVFoundationPlayer::FindTrackWithId(uint32_t p_id, uindex_t& r_index)
 {
     NSArray *t_tracks;
-    // TODO: link m_movie_asset with m_player
-    t_tracks = [m_movie_asset tracks];
+    t_tracks = [[[m_player currentItem] asset] tracks];
     
     AVAssetTrack *t_assetTrack;
-    t_assetTrack = [m_movie_asset trackWithTrackID: p_id];
+    t_assetTrack = [[[m_player currentItem] asset] trackWithTrackID: p_id];
     if (t_assetTrack == nil)
         return false;
     r_index = [t_tracks indexOfObject:t_assetTrack];
@@ -1786,8 +1821,7 @@ void MCAVFoundationPlayer::SetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
 		return;
     
     NSArray *t_tracks;
-    // TODO: link m_movie_asset with m_player
-    t_tracks = [m_movie_asset tracks];
+    t_tracks = [[[m_player currentItem] asset] tracks];
     
     AVPlayerItemTrack *t_playerItemTrack;
     t_playerItemTrack = [t_tracks objectAtIndex:p_index];
@@ -1798,8 +1832,7 @@ void MCAVFoundationPlayer::SetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
 void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTrackProperty p_property, MCPlatformPropertyType p_type, void *r_value)
 {
     NSArray *t_tracks;
-    // TODO: link m_movie_asset with m_player
-    t_tracks = [m_movie_asset tracks];
+    t_tracks = [[[m_player currentItem] asset] tracks];
     
     AVPlayerItemTrack *t_playerItemTrack;
     t_playerItemTrack = [t_tracks objectAtIndex:p_index];
