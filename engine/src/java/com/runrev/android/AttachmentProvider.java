@@ -68,24 +68,30 @@ public class AttachmentProvider
     public ParcelFileDescriptor doOpenFile(Uri uri)
         throws FileNotFoundException
     {
+//        Log.i("revandroid", "doOpenFile(" + uri.toString());
         // Check whether we are asked for a file from the APK
         String t_filepath = getFilePath(uri);
         String t_path = uri.getPath();
                 
-        ParcelFileDescriptor pfd;                
+        ParcelFileDescriptor pfd;            
         try
         {
-            boolean t_apk = isAPK(uri);
-            if (t_apk)
-            {
-                AssetFileDescriptor afd = m_context.getAssets().openFd(t_filepath);
-                pfd = afd.getParcelFileDescriptor();
+            String t_accessible_filepath;
+            if (isAPK(uri))
+            {                
+                // SN-2014-05-09 [[ Bug 12418 ]]
+                // We should already have stored the cached file path in case
+                // the file is in the APK
+                if (m_infos.containsKey(t_path))
+                    t_accessible_filepath = m_infos.get(t_path).get(4);
+                else
+                    throw new IOException();
             }
             else
-            {
-                File t_file = new File(t_filepath);
-                pfd = ParcelFileDescriptor.open(t_file, ParcelFileDescriptor.MODE_READ_ONLY);                
-            }
+                t_accessible_filepath = t_filepath;
+                
+            File t_file = new File(t_accessible_filepath);
+            pfd = ParcelFileDescriptor.open(t_file, ParcelFileDescriptor.MODE_READ_ONLY);                
             
             return pfd;
         }
@@ -135,38 +141,70 @@ public class AttachmentProvider
         
         if (p_values . containsKey(this.NAME) && p_values . containsKey(this.TEMPORARY) && p_values . containsKey(this.MIME_TYPE))
         {
-            ArrayList<String> t_infos = new ArrayList<String>(2);
+            ArrayList<String> t_infos = new ArrayList<String>(5);
                         
-            // get the file descriptor to have the correct size.
-            ParcelFileDescriptor t_file;
             try
             {
-                t_file = doOpenFile(uri);
+                // get the file descriptor to have the correct size.
+                Long t_size;
+                String t_cached_file;
+                if (isAPK(uri))
+                {
+                    // SN-2014-05-09 [[ Bug 12418 ]]
+                    // Since AssetFileDescriptor.getParcelFileDescriptor() returns a parcel file descriptor for the whole asset file,
+                    // and not only the one targeted when, we can only read the bytes from the location, it's impossible to get a file descriptor
+                    // Thus, creating a copy of the file in the application cache folder is inevitable.
+                    
+                    AssetFileDescriptor afd = m_context.getAssets().openFd(getFilePath(uri));
+                    t_size = afd.getLength();
+                    
+                    FileInputStream fis = afd.createInputStream();
+                    byte[] t_bytes = new byte[t_size.intValue()];
+                    
+                    fis.read(t_bytes, 0, t_size.intValue());
+                    
+                    // Copy the file data at the temporary destination - same way it's done by Email
+                    File t_tempfile;
+                    t_tempfile = File.createTempFile("eml", p_values . getAsString(this.NAME), m_context . getCacheDir());
+                    
+                    FileOutputStream t_out = new FileOutputStream(t_tempfile);
+                    t_out.write(t_bytes);
+                    t_out.close();
+                    
+                    t_cached_file = t_tempfile.getPath();                    
+                    afd.close();
+                }
+                else
+                {
+                    ParcelFileDescriptor pfd = doOpenFile(uri);
+                    t_size = pfd.getStatSize();
+                    pfd . close();
+                    t_cached_file = "";
+                }
                 
                 t_infos . add(p_values . getAsString(this.NAME));
-                t_infos . add(Long.toString(t_file . getStatSize()));
+                t_infos . add(Long.toString(t_size));
                 t_infos . add(p_values . getAsString(this.MIME_TYPE));
                 t_infos . add(p_values . getAsBoolean(this.TEMPORARY).toString());
+                t_infos . add(t_cached_file);
                 
-//                Log.i("revandroid", String.format("insert (%s, %d, %s, %s)",
+//                Log.i("revandroid", String.format("insert (%s, %d, %s, %s, %s)",
 //                                                  p_values . getAsString(this.NAME),
-//                                                  t_file . getStatSize(),
+//                                                  t_size,
 //                                                  p_values . getAsString(this.MIME_TYPE),
-//                                                  p_values . getAsBoolean(this.TEMPORARY).toString()));
-                
-                t_file . close();
+//                                                  p_values . getAsBoolean(this.TEMPORARY).toString(),
+//                                                  t_cached_file));
                 
                 m_infos . put(t_path, t_infos);
-//                m_references . put(t_path, 1);
             }
             catch (FileNotFoundException e)
             {
-                Log.d("revandroid", e.getMessage());
+                Log.d("revandroid", String.format("File not found (%s)", e.getMessage()));
                 return uri;
             }
             catch (IOException e)
             {
-                Log.d("revandroid", e.getMessage());
+                Log.d("revandroid", String.format("IOException (&s)", e.getMessage()));
                 return uri;
             }
         }
