@@ -1879,21 +1879,14 @@ bool MCDeferredVariable::createwithname(MCNameRef p_name, MCDeferredVariableComp
 	return true;
 }
 
-Exec_stat MCDeferredVariable::compute(void)
+bool MCDeferredVariable::compute(void)
 {
 	// Compute can only be called once. By setting deferred to false here, any
 	// future access of the variable via an MCDeferredVarref will result in this
 	// not being called.
 	is_deferred = false;
 
-	// Request the variable's value be computed.
-	Exec_stat t_stat;
-	t_stat = m_callback(m_context, this);
-	if (t_stat != ES_NORMAL)
-		return t_stat;
-
-	// We are done.
-	return ES_NORMAL;
+    return m_callback(m_context, this);
 }
 
 #ifdef LEGACY_EXEC

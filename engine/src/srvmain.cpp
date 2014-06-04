@@ -325,6 +325,7 @@ static Boolean byte_swapped()
 ////////////////////////////////////////////////////////////////////////////////
 
 bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
+extern void X_clear_globals(void);
 int X_close();
 
 extern bool cgi_initialize();
@@ -346,6 +347,10 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	////
 
 	MCS_init();
+
+    ////
+
+    X_clear_globals();
 
 	////
 	

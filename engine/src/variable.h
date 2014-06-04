@@ -991,7 +991,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 
 // This callback is invoked by a deferred variable when its value is needed.
-typedef Exec_stat (*MCDeferredVariableComputeCallback)(void *context, MCVariable *variable);
+typedef bool (*MCDeferredVariableComputeCallback)(void *context, MCVariable *variable);
 
 class MCDeferredVariable: public MCVariable
 {
@@ -1002,7 +1002,7 @@ protected:
 public:
 	static bool createwithname(MCNameRef p_name, MCDeferredVariableComputeCallback callback, void *context, MCVariable*& r_var);
 
-	Exec_stat compute(void);
+    bool compute(void);
 };
 
 // A 'deferred' varref works identically to a normal varref except that it
