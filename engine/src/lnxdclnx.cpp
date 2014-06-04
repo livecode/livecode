@@ -866,59 +866,74 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 				
 			}
 
+            // MW-2014-05-22: [[ Bug 12468 ]] Make sure we use the appropriate store when
+            //   selection is requested from another app.
+            MCXTransferStore *t_store;
+            if (sendevent . selection == XA_PRIMARY)
+            {
+                if (ownsselection())
+                    t_store = m_Selection_store;
+            }
+            else if (sendevent . selection = MCclipboardatom)
+            {
+                if (ownsclipboard())
+                    t_store = m_Clipboard_store;
+            }
+            else
+                t_store = nil;
 			
-			if ( srevent -> target == XA_TARGETS )
-			{
-					
-				uint4 t_count ;
-				Atom *t_atoms ;
-				t_atoms = m_Clipboard_store -> QueryAtoms ( t_count );
-				
-				if ( t_atoms != NULL)
-				{
-#ifdef DEBUG_DND
-					fprintf(stderr, "Responding with : \n");
-					for ( uint4 a = 0; a < t_count; a++)
-						fprintf(stderr, "\t%s\n", XGetAtomName (dpy, t_atoms[a]));
-#endif
-					
-					
-					XChangeProperty(dpy, srevent -> requestor, srevent -> property,
-					                srevent->target, 32, PropModeReplace,
-					                (const unsigned char *)t_atoms,
-					                t_count);
+            if (t_store != nil)
+            {
+                if ( srevent -> target == XA_TARGETS )
+                {
+                        
+                    uint4 t_count ;
+                    Atom *t_atoms ;
+                    t_atoms = t_store -> QueryAtoms ( t_count );
+                    
+                    if ( t_atoms != NULL)
+                    {
+    #ifdef DEBUG_DND
+                        fprintf(stderr, "Responding with : \n");
+                        for ( uint4 a = 0; a < t_count; a++)
+                            fprintf(stderr, "\t%s\n", XGetAtomName (dpy, t_atoms[a]));
+    #endif
+                        
+                        
+                        XChangeProperty(dpy, srevent -> requestor, srevent -> property,
+                                        srevent->target, 32, PropModeReplace,
+                                        (const unsigned char *)t_atoms,
+                                        t_count);
 
-					XSendEvent(dpy, srevent -> requestor, False, 0, (XEvent *)&sendevent);
-					
-					free(t_atoms) ;
+                        XSendEvent(dpy, srevent -> requestor, False, 0, (XEvent *)&sendevent);
+                        
+                        free(t_atoms) ;
 
-				}
-			}
-			else 
-			{
-				
-				sendevent.property = None ;
-				// If I don't own the clipboard at this point, then something has gone wrong	
-				if ( ownsclipboard() ) 
-				{
-					MCSharedString * t_data; 
-					if (m_Clipboard_store -> Fetch(  new MCMIMEtype(dpy, srevent -> target), t_data, None, None, DNULL, DNULL, MCeventtime ))
-					{
-						XChangeProperty(dpy, srevent -> requestor, srevent -> property,
-					                srevent -> target, 8, PropModeReplace,
-					                (const unsigned char *)t_data -> Get() . getstring(),
-					                t_data -> Get() . getlength());
-						
-						if (srevent->property != None)
-							sendevent.property = srevent->property;
-						else
-							sendevent.property = srevent -> target;
+                    }
+                }
+                else 
+                {
+                    
+                    sendevent.property = None ;
+                    // If I don't own the clipboard at this point, then something has gone wrong
+                    MCSharedString * t_data;
+                    if (t_store -> Fetch(  new MCMIMEtype(dpy, srevent -> target), t_data, None, None, DNULL, DNULL, MCeventtime ))
+                    {
+                        XChangeProperty(dpy, srevent -> requestor, srevent -> property,
+                                    srevent -> target, 8, PropModeReplace,
+                                    (const unsigned char *)t_data -> Get() . getstring(),
+                                    t_data -> Get() . getlength());
+                        
+                        if (srevent->property != None)
+                            sendevent.property = srevent->property;
+                        else
+                            sendevent.property = srevent -> target;
 
-					}
-				}
+                    }
 
-				XSendEvent (dpy, sendevent.requestor, False, 0, (XEvent *)&sendevent );
-			}
+                    XSendEvent (dpy, sendevent.requestor, False, 0, (XEvent *)&sendevent );
+                }
+            }
 			break;
 		case MappingNotify:
 			if (mnevent->request == MappingKeyboard)
