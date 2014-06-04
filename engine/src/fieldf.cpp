@@ -326,7 +326,7 @@ void MCField::resetparagraphs()
 		//      in the future
 		if (flags & F_LIST_BEHAVIOR)
 			hilitedlines(oldhilitedlines);
-		selectedmark(False, si, ei, True, False);
+		selectedmark(False, si, ei, True);
 		if (flags & F_LIST_BEHAVIOR)
 			sethilitedlines(MCnullmcstring);
 		unselect(False, True);
@@ -832,7 +832,7 @@ void MCField::computedrag()
 {
 	int4 ti, si, ei;
 	locmark(False, False, False, False, True, ti, ei);
-	selectedmark(False, si, ei, False, False);
+	selectedmark(False, si, ei, False);
 	uint2 c = ti >= si && ti < ei ? PI_ARROW : PI_IBEAM;
 
 	getstack()->setcursor(MCcursors[c], False);
@@ -1218,7 +1218,7 @@ void MCField::setfocus(int2 x, int2 y)
 	if (!(flags & F_LOCK_TEXT))
 	{
 		int4 si,ei;
-		selectedmark(False, si, ei, False, False);
+		selectedmark(False, si, ei, False);
 		if (composing)
 			if (!(si >= composeoffset && ei <= composeoffset + composelength))
 				stopcomposition(False, True);
@@ -1341,7 +1341,7 @@ void MCField::startselection(int2 x, int2 y, Boolean words)
 					int4 ti, si, ei;
 					if (locmark(False, False, False, True, True, ti, ei))
 					{
-						selectedmark(False, si, ei, False, False);
+						selectedmark(False, si, ei, False);
 						if (ti >= si && ti < ei && si != ei)
 						{
 							// Here we mark the fact a mouse-down has occured in
@@ -1435,7 +1435,7 @@ void MCField::endselection()
 		{
 			int4 ti, si, ei;
 			locmark(False, False, False, False, True, ti, ei);
-			selectedmark(False, si, ei, False, False);
+			selectedmark(False, si, ei, False);
 			uint2 c = ti >= si && ti <= ei ? PI_ARROW : PI_IBEAM;
 			getstack()->setcursor(MCcursors[c], False);
 		}
@@ -1516,7 +1516,7 @@ Boolean MCField::deleteselection(Boolean force)
 		focusedparagraph->clearzeros();
 
 		int4 si, ei;
-		selectedmark(False, si, ei, False, False);
+		selectedmark(False, si, ei, False);
 		Ustruct *us = new Ustruct;
 		us->type = UT_DELETE_TEXT;
 		us->ud.text.index = si;
@@ -1692,14 +1692,14 @@ void MCField::finsertnew(Field_translations function, const MCString& p_string, 
 	
 	// Compute the start and end point of the selection.
 	int4 si,ei;
-	selectedmark(False, si, ei, False, False);
+	selectedmark(False, si, ei, False);
 
 	// Defer to the paragraph method to insert the text.
 	focusedparagraph -> finsertnew(p_string, p_is_unicode);
 
 	// Compute the end of the selection.
 	int4 ti;
-	selectedmark(False, ei, ti, False, False);
+	selectedmark(False, ei, ti, False);
 	if (composing)
 	{
 		composeoffset = si;
@@ -1826,7 +1826,7 @@ void MCField::fdel(Field_translations function, const char *string, KeySym key)
 		}
 		int4 si, ei;
 		us->type = UT_DELETE_TEXT;
-		selectedmark(False, si, ei, False, False);
+		selectedmark(False, si, ei, False);
 		us->ud.text.index = si;
 		MCundos->freestate();
 		MCundos->savestate(this, us);
@@ -2116,7 +2116,7 @@ void MCField::fmove(Field_translations function, const char *string, KeySym key)
 				&& focusedparagraph->isselection())
 	{
 		int4 si, ei;
-		selectedmark(False, si, ei, False, False);
+		selectedmark(False, si, ei, False);
 		unselect(False, True);
 		if (function == FT_LEFTCHAR)
 			seltext(si, si, False);
