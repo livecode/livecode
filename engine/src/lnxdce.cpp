@@ -88,6 +88,8 @@ void MCScreenDC::expose()
 	while (True)
 	{
 		MCRegionRef t_dirty;
+		t_dirty = nil;
+		
 		Window t_window;
 		if (XCheckTypedEvent(dpy, Expose, &event))
 		{
