@@ -597,7 +597,7 @@ void MCPlatformHandleTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRa
 	}
 	
 	int4 si, ei;
-	MCactivefield -> selectedmark(False, si, ei, False);
+	MCactivefield -> selectedmark(False, si, ei, False, False);
 	MCactivefield -> unresolvechars(0, si, ei);
 	r_selected_range = MCRangeMake(si, ei - si);
 	if (MCactivefield -> getcompositionrange(si, ei))
@@ -699,7 +699,7 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 			p_selection_range . length == 0)
 		{
 			int32_t t_s_si, t_s_ei;
-			MCactivefield -> selectedmark(False, t_s_si, t_s_ei, False);
+			MCactivefield -> selectedmark(False, t_s_si, t_s_ei, False, False);
 			if (t_s_si == t_r_si &&
 				t_s_ei == t_r_ei)
 			{
