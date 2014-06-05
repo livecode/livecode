@@ -5,6 +5,9 @@ libexternal/include/revolution
 libexternalv1/include
 libfoundation/include
 libfoundation/src
+libgraphics/include
+libexternal/include
+libexternalv1/include
 revbrowser/src
 revdb/src
 revfont/src

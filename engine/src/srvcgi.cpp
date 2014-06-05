@@ -663,7 +663,7 @@ static void cgi_store_data_urlencoded(MCVariable *p_variable, MCDataRef p_data, 
         /* UNCHECKED */ MCNameCreate(*t_key_as_string, &t_key_as_name);
 
         uindex_t t_encoded_value_end;
-        t_encoded_value_end = t_delimiter_index - 1;
+        t_encoded_value_end = t_delimiter_index;
 		
 		if (p_remove_whitespace)
             while (t_encoded_value_end > t_encoded_value_index && MCDataGetByteAtIndex(p_data, t_encoded_value_end) == ' ')

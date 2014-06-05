@@ -288,6 +288,7 @@ engine/src/lnxprefix.h
 engine/src/lnxpsprinter.h
 engine/src/lnxtheme.h
 engine/src/lnxtransfer.h
+engine/src/lnxtxt.cpp
 engine/src/magnify.h
 engine/src/mblad.h
 engine/src/mblandroidcontrol.h
@@ -417,7 +418,6 @@ engine/src/w32text.h
 engine/src/w32theme.h
 engine/src/w32transfer.h
 
-
 libfoundation/include/foundation-auto.h
 libfoundation/include/foundation-inline.h
 libfoundation/include/foundation-locale.h
@@ -443,6 +443,23 @@ libfoundation/src/foundation-unicodechars.cpp
 libfoundation/src/foundation-unicode.cpp
 libfoundation/src/foundation-unicode-private.h
 libfoundation/src/foundation-value.cpp
+
+libgraphics/include/graphics.h
+libgraphics/src/blur.cpp
+libgraphics/src/cachetable.cpp
+libgraphics/src/context.cpp
+libgraphics/src/graphics-internal.h
+libgraphics/src/image.cpp
+libgraphics/src/legacyblendmodes.cpp
+libgraphics/src/legacygradients.cpp
+libgraphics/src/lnxtext.cpp
+libgraphics/src/mblandroidtext.cpp
+libgraphics/src/mbliphonetext.mm
+libgraphics/src/osxtext.cpp
+libgraphics/src/path.cpp
+libgraphics/src/spread.cpp
+libgraphics/src/utils.cpp
+libgraphics/src/w32text.cpp
 
 Makefile
 engine/Makefile.standalone

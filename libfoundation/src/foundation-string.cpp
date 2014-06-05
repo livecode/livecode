@@ -814,6 +814,10 @@ bool MCStringCopySubstring(MCStringRef self, MCRange p_range, MCStringRef& r_sub
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
+    // Avoid copying in case the substring is actually the whole string
+    if (p_range . offset == 0 && self -> char_count < p_range . length)
+        return MCStringCopy(self, r_substring);
+
 	__MCStringClampRange(self, p_range);
 	
     if (MCStringIsNative(self))
