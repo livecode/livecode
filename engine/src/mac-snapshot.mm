@@ -18,6 +18,9 @@
 
 #include "core.h"
 #include "globdefs.h"
+#include "parsedef.h"
+#include "globals.h"
+#include "desktop-dc.h"
 
 #include "imagebitmap.h"
 

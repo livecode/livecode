@@ -218,11 +218,12 @@ MCPlayer::MCPlayer()
 	userCallbackStr = NULL;
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
+
+#ifdef FEATURE_PLATFORM_PLAYER
     // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
     m_callback_count = 0;
     m_callbacks = NULL;
-
-#ifdef FEATURE_PLATFORM_PLAYER
+    
 	m_platform_player = nil;
 #else
 	
@@ -268,11 +269,11 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
     
+#ifdef FEATURE_PLATFORM_PLAYER
     // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
     m_callback_count = 0;
     m_callbacks = NULL;
-	
-#ifdef FEATURE_PLATFORM_PLAYER
+    
 	m_platform_player = nil;
 #else
 	
