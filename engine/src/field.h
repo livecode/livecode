@@ -422,9 +422,8 @@ public:
 	void selectedline(MCExecPoint &ep);
 	void selectedloc(MCExecPoint &ep);
 	void selectedtext(MCExecPoint &ep);
-    // MW-2014-05-28: [[ Bug 11928 ]] The 'inc_cr' parameter is unnecessary - it is determined
-    //   by 'wholeline'.
-	Boolean selectedmark(Boolean wholeline, int4 &si, int4 &ei, Boolean force);
+	Boolean selectedmark(Boolean wholeline, int4 &si, int4 &ei,
+	                     Boolean force, Boolean inc_cr);
 
 	void returnchunk(MCExecPoint &ep, int4 si, int4 ei);
 	void returnline(MCExecPoint &ep, int4 si, int4 ei);
