@@ -62,6 +62,10 @@ extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p
 
 ///////////////////////////////////////////////////////////////////////////////
 
+extern ATSUFontID coretext_font_to_atsufontid(void *p_font);
+
+///////////////////////////////////////////////////////////////////////////////
+
 CGAffineTransform MCGAffineTransformToCGAffineTransform(const MCGAffineTransform &p_transform)
 {
 	CGAffineTransform t_transform;
@@ -1721,9 +1725,11 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			
 			UniCharCount t_run = len / 2;
 			Rect t_bounds;
-			
-			FMFontStyle t_intrinsic_style;
-			t_err = ATSUFONDtoFontID((short)(intptr_t)f -> fid, f -> style, &t_font_id);
+			         
+            FMFontStyle t_intrinsic_style;
+            
+            // MM-2014-06-04: [[ CoreText ]] Fonts are now coretext font refs. Make sure we convert to ATSUFontIDs.
+            t_font_id = coretext_font_to_atsufontid(f -> fid);
 
 			t_font_size = f -> size << 16;
 			t_err = ATSUCreateStyle(&t_style);

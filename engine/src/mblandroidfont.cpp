@@ -86,7 +86,7 @@ void MCSystemListFontFamilies(MCExecPoint& ep)
     /*UNCHECKED */ MCCStringFree(t_custom_font_names);
 }
 
-void MCSystemListFontsForFamily(MCExecPoint& ep, const char *p_family)
+void MCSystemListFontsForFamily(MCExecPoint& ep, const char *p_family, uint2 p_size)
 {
     uint32_t t_styles;
     t_styles = 0;
