@@ -403,18 +403,18 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	if (!X_open(argc, argv, envp))
 		return False;
 
-//	if (s_server_cgi)
-//	{
-//		MCS_set_errormode(kMCSErrorModeInline);
+    if (s_server_cgi)
+    {
+        MCS_set_errormode(kMCSErrorModeInline);
 		
-//		if (!cgi_initialize())
-//			return False;
+        if (!cgi_initialize())
+            return False;
 
-//		// MW-2011-08-02: If we initialize as cgi we *don't* want env vars to
-//		//   be created.
-//		envp = nil;
-//	}
-//	else
+        // MW-2011-08-02: If we initialize as cgi we *don't* want env vars to
+        //   be created.
+        envp = nil;
+    }
+    else
 	{
 		MCS_set_errormode(kMCSErrorModeStderr);
 		
