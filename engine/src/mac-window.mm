@@ -1846,7 +1846,13 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
             // MW-2014-04-30: [[ Bug 12328 ]] If we don't have a handle yet make sure we create one.
             if (m_window_handle == nil)
                 RealizeAndNotify();
-			*(MCRectangle *)r_value = m_window_handle != nil ? MCRectangleFromNSRect([m_window_handle frame]) : MCRectangleMake(0, 0, 0, 0);
+            
+            // PM-2014-06-05: [[ Bug 12593 ]] Make sure we flip coordinates so as 0,0 is top left
+            if (m_window_handle != nil)
+                MCMacPlatformMapScreenNSRectToMCRectangle([m_window_handle frame], *(MCRectangle *)r_value);
+            else
+                *(MCRectangle *)r_value = *(MCRectangle *)r_value;
+    
 			return true;
 	}
 	return false;
