@@ -860,9 +860,9 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
 	//   pixmap tile in this case to ensure the offset falls within 32767.
 	if (MCU_abs(t_offset_y) > 32767 || MCU_abs(t_offset_x) > 32767)
 	{
-		uint2 t_width, t_height, t_depth;
-		t_width = MCGImageGetWidth(t_current_pixmap->image) / t_current_pixmap->scale;
-		t_height = MCGImageGetHeight(t_current_pixmap->image) / t_current_pixmap->scale;
+		// IM-2014-05-13: [[ HiResPatterns ]] Update to use pattern geometry function
+		uint32_t t_width, t_height;
+		/* UNCHECKED */ MCPatternGetGeometry(t_current_pixmap, t_width, t_height);
 
 		t_offset_x %= t_width;
 		if (t_offset_x < 0)

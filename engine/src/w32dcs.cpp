@@ -1392,15 +1392,16 @@ void MCScreenDC::redrawbackdrop(void)
 
 		// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 		// MM-2014-04-08: [[ Bug 12058 ]] Update back_pattern to be a MCPatternRef.
-		if (backdrop_pattern != nil && backdrop_pattern -> image != nil)
+		if (backdrop_pattern != nil)
 		{
 			MCGImageRef t_image;
-			t_image = backdrop_pattern->image;
-
 			MCGAffineTransform t_pattern_transform;
-			t_pattern_transform = MCGAffineTransformMakeScale(1.0 / backdrop_pattern->scale, 1.0 / backdrop_pattern->scale);
-
-			MCGContextSetFillPattern(t_context, t_image, t_pattern_transform, kMCGImageFilterNone);
+			// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+			if (MCPatternLockForContextTransform(backdrop_pattern, t_transform, t_image, t_pattern_transform))
+			{
+				MCGContextSetFillPattern(t_context, t_image, t_pattern_transform, kMCGImageFilterNone);
+				MCPatternUnlock(backdrop_pattern, t_image);
+			}
 		}
 		else
 			MCGContextSetFillRGBAColor(t_context, backdrop_colour.red / 65535.0, backdrop_colour.green / 65535.0, backdrop_colour.blue / 65535.0, 1.0);

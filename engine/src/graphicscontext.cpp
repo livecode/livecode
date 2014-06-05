@@ -541,17 +541,24 @@ void MCGraphicsContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y
 	// MW-2014-03-11: [[ Bug 11704 ]] Make sure we set both fill and stroke paints.
 	if (style == FillTiled && p != NULL)
 	{
-		// IM-2013-08-14: [[ ResIndependence ]] apply pattern image scale to transform
-		MCGFloat t_scale;
-		t_scale = 1.0 / p->scale;
-		
+		MCGImageRef t_image;
 		MCGAffineTransform t_transform;
-		t_transform = MCGAffineTransformMakeScale(t_scale, t_scale);
-		t_transform = MCGAffineTransformTranslate(t_transform, x, y);
-
-        // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was bilinear).
-		MCGContextSetFillPattern(m_gcontext, p->image, t_transform, kMCGImageFilterMedium);
-		MCGContextSetStrokePattern(m_gcontext, p->image, t_transform, kMCGImageFilterMedium);
+		
+		// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+		if (MCPatternLockForContextTransform(p, MCGContextGetDeviceTransform(m_gcontext), t_image, t_transform))
+		{
+			t_transform = MCGAffineTransformTranslate(t_transform, x, y);
+			// IM-2014-05-21: [[ HiResPatterns ]] Use the pattern filter value
+			MCGImageFilter t_filter;
+			/* UNCHECKED */ MCPatternGetFilter(p, t_filter);
+			
+			// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
+			MCGContextSetFillPattern(m_gcontext, t_image, t_transform, t_filter);
+			MCGContextSetStrokePattern(m_gcontext, t_image, t_transform, t_filter);
+			
+			MCPatternUnlock(p, t_image);
+		}
+		
 		m_pattern = MCPatternRetain(p);
 		m_pattern_x = x;
 		m_pattern_y = y;
@@ -1157,15 +1164,6 @@ void MCGraphicsContext::draweps(real8 sx, real8 sy, int2 angle, real8 xscale, re
 
 void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy)
 {
-	MCImageBitmap *t_bits = p_image.bitmap;
-
-	MCGRaster t_raster;
-	t_raster . width = t_bits -> width;
-	t_raster . height = t_bits -> height;
-	t_raster . stride = t_bits -> stride;
-	t_raster . pixels = t_bits -> data;
-	t_raster . format = t_bits -> has_transparency ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
-
 	MCGRectangle t_clip;
 	t_clip . origin . x = dx;
 	t_clip . origin . y = dy;
@@ -1175,8 +1173,8 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 	MCGRectangle t_dest;
 	t_dest.origin.x = dx - sx;
 	t_dest.origin.y = dy - sy;
-	t_dest.size.width = t_raster.width;
-	t_dest.size.height = t_raster.height;
+	t_dest.size.width = MCGImageGetWidth(p_image.image);
+	t_dest.size.height = MCGImageGetHeight(p_image.image);
 
 	MCGContextSave(m_gcontext);
 	MCGContextClipToRect(m_gcontext, t_clip);
@@ -1199,7 +1197,7 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 		MCGContextTranslateCTM(m_gcontext, -t_dest.origin.x, -t_dest.origin.y);
 	}
 
-	MCGContextDrawPixels(m_gcontext, t_raster, t_dest, p_image.filter);
+	MCGContextDrawImage(m_gcontext, p_image.image, t_dest, p_image.filter);
 	MCGContextRestore(m_gcontext);
 }
 
