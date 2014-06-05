@@ -255,8 +255,9 @@ protected:
 	MCMessageList *messages;
 	MCMovingList *moving;
 	uint4 messageid;
-	uint2 nmessages;
-	uint2 maxmessages;
+    // MW-2014-05-28: [[ Bug 12463 ]] Change these to 32-bit to stop wrap-around of messages.
+	uint32_t nmessages;
+	uint32_t maxmessages;
 	MCColor *colors;
 	char **colornames;
 	int2 *allocs;
@@ -601,6 +602,10 @@ public:
 	void delaymessage(MCObject *optr, MCNameRef name, char *p1 = NULL, char *p2 = NULL);
     void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params);
     int doshiftmessage(int index, real8 newtime);
+    
+    // MW-2014-05-28: [[ Bug 12463 ]] This is used by 'send in time' - separating user sent messages from
+    //   engine sent messages. The former are subject to a limit to stop pending message queue overflow.
+    bool addusermessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
     
 	void listmessages(MCExecPoint &ep);
 	Boolean handlepending(real8 &curtime, real8 &eventtime, Boolean dispatch);

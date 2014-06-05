@@ -1379,6 +1379,11 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
         MCPlatformHideCursor();
 }
 
+void MCMacPlatformHandleMouseAfterWindowHidden(void)
+{
+	MCMacPlatformHandleMouseMove(s_mouse_screen_position);
+}
+
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 {
 	// First compute the window that should be active now.
@@ -1396,6 +1401,8 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 	}
 	
 	// If the mouse window has changed, then we must exit/enter.
+	bool t_window_changed;
+	t_window_changed = false;
 	if (t_new_mouse_window != s_mouse_window)
 	{
 		if (s_mouse_window != nil)
@@ -1415,6 +1422,8 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 		
 		if (s_mouse_window != nil)
 			MCPlatformRetainWindow(s_mouse_window);
+			
+		t_window_changed = true;
 	}
 	
 	// Regardless of whether we post a mouse move, update the screen mouse position.
@@ -1426,7 +1435,8 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 		MCPoint t_window_loc;
 		MCPlatformMapPointFromScreenToWindow(s_mouse_window, p_screen_loc, t_window_loc);
 		
-		if (t_window_loc . x != s_mouse_position . x ||
+		if (t_window_changed ||
+			t_window_loc . x != s_mouse_position . x ||
 			t_window_loc . y != s_mouse_position . y)
 		{
 			s_mouse_position = t_window_loc;

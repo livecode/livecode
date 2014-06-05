@@ -1907,6 +1907,8 @@ void MCMacPlatformWindow::DoHide(void)
 	
 		[m_window_handle orderOut: nil];
 	}
+	
+	MCMacPlatformHandleMouseAfterWindowHidden();
 }
 
 void MCMacPlatformWindow::DoFocus(void)

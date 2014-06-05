@@ -140,6 +140,9 @@ MCStack::MCStack()
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
 	
+	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
+	m_purge_fonts = false;
+
 	cursoroverride = false ;
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
 
@@ -328,7 +331,10 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
 	
-    view_copy(sref);
+	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
+	m_purge_fonts = false;
+
+	view_copy(sref);
 
 	mode_copy(sref);
 }
@@ -1630,16 +1636,10 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 				if (t_bval)
 					old_rect = rect;
 				
-				// IM-2014-02-12: [[ Bug 11783 ]] We may also need to reset the fonts on Windows when
-				//   fullscreen is changed
-				bool t_ideal_layout;
-				t_ideal_layout = getuseideallayout();
+				// IM-2014-05-27: [[ Bug 12321 ]] Move font purging to reopenstack() to avoid multiple redraws.
 
 				setextendedstate(t_bval, ECS_FULLSCREEN);
 				view_setfullscreen(t_bval);
-
-				if ((t_ideal_layout != getuseideallayout()) && opened)
-					purgefonts();
 			}
 		}
 	break;

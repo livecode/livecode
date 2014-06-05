@@ -218,6 +218,9 @@ MCPlayer::MCPlayer()
 	userCallbackStr = NULL;
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
+    // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
+    m_callback_count = 0;
+    m_callbacks = NULL;
 
 #ifdef FEATURE_PLATFORM_PLAYER
 	m_platform_player = nil;
@@ -264,6 +267,10 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	userCallbackStr = strclone(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
+    
+    // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
+    m_callback_count = 0;
+    m_callbacks = NULL;
 	
 #ifdef FEATURE_PLATFORM_PLAYER
 	m_platform_player = nil;
@@ -1732,9 +1739,18 @@ void MCPlayer::showcontroller(Boolean show)
 #ifdef FEATURE_PLATFORM_PLAYER
 	if (m_platform_player != nil)
 	{
+        // PM-2014-05-28: [[ Bug 12524 ]] Resize the rect height to avoid stretching of the movie when showing/hiding controller
+        MCRectangle drect;
+        drect = rect;
+        if (show )
+            drect . height += 16;
+        else
+            drect . height -= 16;
+        
 		bool t_show;
 		t_show = show;
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show);
+        layer_setrect(drect, true);
 	}
 #else
 #ifdef FEATURE_QUICKTIME
