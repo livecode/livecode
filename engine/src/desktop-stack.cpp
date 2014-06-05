@@ -207,6 +207,9 @@ void MCStack::realize(void)
 		// Sort out drawers
 		
 		updatemodifiedmark();
+        
+        // MERG-2014-06-02: [[ IgnoreMouseEvents ]] update the window with the ignore mouse events property
+        updateignoremouseevents();
 	}
 	
 	start_externals();
@@ -275,6 +278,16 @@ void MCStack::updatemodifiedmark(void)
 	
 	MCPlatformSetWindowBoolProperty(window, kMCPlatformWindowPropertyHasModifiedMark, getextendedstate(ECS_MODIFIED_MARK) == True);
 }
+
+// MERG-2014-06-02: [[ IgnoreMouseEvents ]] update the window with the ignore mouse events property
+void MCStack::updateignoremouseevents(void)
+{
+	if (window == nil)
+		return;
+	
+	MCPlatformSetWindowBoolProperty(window, kMCPlatformWindowPropertyIgnoreMouseEvents, getextendedstate(ECS_IGNORE_MOUSE_EVENTS) == True);
+}
+
 
 // MW-2011-09-11: [[ Redraw ]] Force an immediate update of the window within the given
 //   region. The actual rendering is done by deferring to the 'redrawwindow' method.

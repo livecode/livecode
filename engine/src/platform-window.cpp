@@ -49,6 +49,8 @@ MCPlatformWindow::MCPlatformWindow(void)
 	m_has_modified_mark = false;
 	m_use_live_resizing = false;
     m_hides_on_suspend = false;
+    // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Default ignoreMouseEvents to false
+    m_ignore_mouse_events = false;
 	
     // MW-2014-05-02: [[ Bug 12348 ]] Make sure we initialize this value appropriately.
     m_use_text_input = false;
@@ -356,6 +358,12 @@ void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			assert(p_type == kMCPlatformPropertyTypeBool);
 			m_hides_on_suspend = *(bool *)p_value;
 			m_changes . hides_on_suspend_changed = true;
+			break;
+        // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Handle ignoreMouseEvents.
+        case kMCPlatformWindowPropertyIgnoreMouseEvents:
+			assert(p_type == kMCPlatformPropertyTypeBool);
+			m_ignore_mouse_events = *(bool *)p_value;
+			m_changes . ignore_mouse_events_changed = true;
 			break;
 		default:
 			assert(false);

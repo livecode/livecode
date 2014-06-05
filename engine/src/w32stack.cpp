@@ -243,6 +243,9 @@ void MCStack::getstyle(uint32_t &wstyle, uint32_t &exstyle)
 	}
 	else if (blendlevel < 100)
 		exstyle |= WS_EX_LAYERED;
+
+	if (getextendedstate(ECS_IGNORE_MOUSE_EVENTS) == True)
+		exstyle |= WS_EX_LAYERED | WS_EX_TRANSPARENT;
 }
 
 static RECT getwrect(MCRectangle rect, DWORD wstyle, DWORD exstyle)
@@ -661,6 +664,18 @@ void MCStack::stop_externals()
 
 void MCStack::updatemodifiedmark(void)
 {
+}
+
+// MERG-2014-06-02: [[ IgnoreMouseEvents ]] Stub for ignoreMouseEvents.
+void MCStack::updateignoremouseevents(void)
+{
+	uint32_t t_window_style_ex;
+	uint32_t t_window_style;
+	
+	getstyle(t_window_style, t_window_style_ex);
+	
+	SetWindowLongA((HWND)getw() -> handle . window, GWL_STYLE, t_window_style);
+	SetWindowLongA((HWND)getw() -> handle . window, GWL_EXSTYLE, t_window_style_ex);
 }
 
 void MCStack::enablewindow(bool p_enable)

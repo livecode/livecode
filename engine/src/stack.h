@@ -551,6 +551,8 @@ public:
 	void setopacity(uint1 p_value);
 	
 	void updatemodifiedmark(void);
+    
+    void updateignoremouseevents(void);
 
     // MW-2008-10-28: [[ ParentScripts ]]
 	// This method is used to resolve any
