@@ -55,7 +55,7 @@ private:
 		File *next;
 		
 		// The absolute filename of the file it refers to.
-		char *filename;
+        MCStringRef filename;
 		
 		// The buffer containing the file's contents. This should be treated
 		// as read-only as it could be mmapped. We need to keep this around

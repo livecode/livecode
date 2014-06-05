@@ -66,7 +66,7 @@ MCServerScript::~MCServerScript(void)
         else
             delete t_file -> script;
 
-        delete t_file -> filename;
+        MCValueRelease(filename);
 
 		delete t_file;
 	}
@@ -108,7 +108,7 @@ bool MCServerScript::GetFileForContext(MCExecContext &ctxt, MCStringRef &r_file)
 	
 	for(File *t_file = m_files; t_file != NULL; t_file = t_file -> next)
 		if (t_file -> index == t_file_index)
-            return MCStringCreateWithCString(t_file -> filename, r_file);
+            return MCStringCopy(t_file -> filename, r_file);
 	
     return false;
 }
@@ -134,7 +134,7 @@ MCServerScript::File *MCServerScript::FindFile(MCStringRef p_filename, bool p_ad
 	// Look through the file list...
 	File *t_file;
 	for(t_file = m_files; t_file != NULL; t_file = t_file -> next)
-		if (strcmp(t_file -> filename, MCStringGetCString(*t_resolved_filename)) == 0)
+        if (MCStringIsEqualTo(t_file -> filename, *t_resolved_filename, kMCStringOptionCompareExact) == 0)
 			break;
 	
 	// If we are here the file doesn't exist (yet). If we aren't in
@@ -147,7 +147,7 @@ MCServerScript::File *MCServerScript::FindFile(MCStringRef p_filename, bool p_ad
 	// Create a new entry.
 	t_file = new File;
 	t_file -> next = m_files;
-	t_file -> filename = (char*) MCStringGetCString(*t_resolved_filename);
+    t_file -> filename = MCValueRetain(*t_resolved_filename);
 	t_file -> index = m_files == NULL ? 1 : m_files -> index + 1;
 	t_file -> script = NULL;
 	t_file -> handle = NULL;
@@ -341,13 +341,10 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 	MCsystem->GetCurrentFolder(&t_old_folder);
 
 	if (m_current_file != nil)
-	{
-		MCAutoStringRef t_current_filename;
-		/* UNCHECKED */ MCStringCreateWithCString(m_current_file -> filename, &t_current_filename);
-		
+    {
 		// Set the default folder to the folder containing the current script
 		MCAutoStringRef t_full_path;
-		/* UNCHECKED */ MCsystem->LongFilePath(*t_current_filename, &t_full_path);
+        /* UNCHECKED */ MCsystem->LongFilePath(m_current_file -> filename, &t_full_path);
 		
 		uindex_t t_last_separator;
 		if (MCStringLastIndexOfChar(*t_full_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_separator))
@@ -373,11 +370,9 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 	if (t_file -> script == NULL)
 	{
 		// Attempt to open the file
-		MCSystemFileHandle *t_handle;
-		MCAutoStringRef t_filename_string;
-		/* UNCHECKED */ MCStringCreateWithCString(t_file -> filename, &t_filename_string);
+        MCSystemFileHandle *t_handle;
+        t_handle = MCsystem -> OpenFile(t_file -> filename, kMCOpenFileModeRead, true);
 
-		t_handle = MCsystem -> OpenFile(p_filename, kMCOpenFileModeRead, true);
 		if (t_handle == NULL)
 		{
 			MCeerror -> add(EE_INCLUDE_FILENOTFOUND, 0, 0, t_file -> filename);
