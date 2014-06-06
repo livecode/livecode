@@ -15,7 +15,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <Cocoa/Cocoa.h>
-//#include <QTKit/QTKit.h>
+#include <QTKit/QTKit.h>
 #include <AVFoundation/AVFoundation.h>
 
 #include "core.h"
@@ -1764,7 +1764,6 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
         */
 		case kMCPlatformPlayerPropertyDuration:
             *(uint32_t *)r_value = [m_player currentItem] . duration . value;
-			*(uint32_t *)r_value = [m_movie duration] . timeValue;
 			break;
 		case kMCPlatformPlayerPropertyTimescale:
 			*(uint32_t *)r_value = [m_player currentTime] . timescale;
@@ -1839,13 +1838,6 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
     
     AVAssetTrack *t_assetTrack = [t_playerItemTrack assetTrack];
     
-    
-	Movie t_movie;
-	t_movie = [m_movie quickTimeMovie];
-    
-	Track t_track;
-	t_track = GetMovieIndTrack(t_movie, p_index + 1);
-    
 	switch(p_property)
 	{
 		case kMCPlatformPlayerTrackPropertyId:
@@ -1855,16 +1847,20 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
 		{
             NSString *t_mediaType;
             t_mediaType = [t_assetTrack mediaType];
-            *(char **)r_value = [t_mediaType cStringUsingEncoding: NSMacOSRomanStringEncoding];
+            *(char **)r_value = (char *)[t_mediaType cStringUsingEncoding: NSMacOSRomanStringEncoding];
 		}
             break;
 		case kMCPlatformPlayerTrackPropertyOffset:
+        {
 			CMTimeRange t_timeRange = [t_assetTrack timeRange];
             *(uint32_t *)r_value = t_timeRange . start . value;
+        }
 			break;
 		case kMCPlatformPlayerTrackPropertyDuration:
+        {
             CMTimeRange t_timeRange = [t_assetTrack timeRange];
             *(uint32_t *)r_value = t_timeRange . duration . value;
+        }
 			break;
 		case kMCPlatformPlayerTrackPropertyEnabled:
 			*(bool *)r_value = [t_playerItemTrack isEnabled];
