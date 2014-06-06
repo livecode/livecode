@@ -874,6 +874,9 @@ extern bool MCGRegionContainsRegion(MCGRegionRef p_region, MCGRegionRef p_other)
 extern bool MCGRegionAddRect(MCGRegionRef p_region, const MCGIntegerRectangle &p_rect);
 extern bool MCGRegionAddRegion(MCGRegionRef p_region, MCGRegionRef p_other);
 
+extern bool MCGRegionIntersectRect(MCGRegionRef p_region, const MCGIntegerRectangle &p_rect);
+extern bool MCGRegionIntersectRegion(MCGRegionRef p_region, MCGRegionRef p_other);
+
 extern bool MCGRegionTranslate(MCGRegionRef p_region, int32_t p_dx, int32_t p_dy);
 
 typedef bool (*MCGRegionIterateCallback)(void *p_context, const MCGIntegerRectangle &p_rect);

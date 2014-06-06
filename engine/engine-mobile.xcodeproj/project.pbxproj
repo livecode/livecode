@@ -278,6 +278,7 @@
 		E8C22E57177B2884003785D3 /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22E55177B2884003785D3 /* imagelist.cpp */; };
 		E8C22E73177B2960003785D3 /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22E71177B2960003785D3 /* graphicscontext.cpp */; };
 		E8C22E75177B2B53003785D3 /* mbltheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22E74177B2B53003785D3 /* mbltheme.cpp */; };
+		E8F7445A194071C400DCCE28 /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8F74459194071C400DCCE28 /* region.cpp */; };
 		F670DB6A147D462B008FEA1E /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F62512621455C7F100BDAACF /* CoreMedia.framework */; };
 		F6DF4CA615597DD000450B64 /* EventKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6DF4CA515597DD000450B64 /* EventKit.framework */; };
 		F6DF4CA815597DEB00450B64 /* EventKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6DF4CA715597DEA00450B64 /* EventKitUI.framework */; };
@@ -955,6 +956,7 @@
 		E8EB28CF147C0DF20081452B /* mblandroidsensor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidsensor.cpp; path = src/mblandroidsensor.cpp; sourceTree = "<group>"; };
 		E8EB28D0147D12660081452B /* SensorModule.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = SensorModule.java; sourceTree = "<group>"; };
 		E8EB28D1147D36790081452B /* ScreenOrientationEventListener.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = ScreenOrientationEventListener.java; sourceTree = "<group>"; };
+		E8F74459194071C400DCCE28 /* region.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = region.cpp; path = src/region.cpp; sourceTree = "<group>"; };
 		E8F7CAE91497ACF600A5D60B /* NetworkModule.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = NetworkModule.java; sourceTree = "<group>"; };
 		F60A5A3F148003E9000982BF /* mblbusyindicator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblbusyindicator.cpp; path = src/mblbusyindicator.cpp; sourceTree = "<group>"; };
 		F60A5A4114800404000982BF /* mbliphonebusyindicator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonebusyindicator.mm; path = src/mbliphonebusyindicator.mm; sourceTree = "<group>"; };
@@ -1351,6 +1353,7 @@
 		E81AC137170C8E1000315861 /* Core - Graphics */ = {
 			isa = PBXGroup;
 			children = (
+				E8F74459194071C400DCCE28 /* region.cpp */,
 				4DD3DDAD1040AC1A00CAC7EF /* bitmapeffect.cpp */,
 				4DD3DDB71040AC1A00CAC7EF /* bitmapeffect.h */,
 				4DD3DDB61040AC1A00CAC7EF /* bitmapeffectblur.cpp */,
@@ -2106,6 +2109,7 @@
 				4DABCDC115ECD4700085E214 /* fiber.cpp in Sources */,
 				4DABCDC315ECD4700085E214 /* field.cpp in Sources */,
 				4DABCDC415ECD4700085E214 /* fieldf.cpp in Sources */,
+				E8F7445A194071C400DCCE28 /* region.cpp in Sources */,
 				4DABCDC515ECD4700085E214 /* fieldh.cpp in Sources */,
 				4DABCDC615ECD4700085E214 /* fieldhtml.cpp in Sources */,
 				4DABCDC715ECD4700085E214 /* fieldrtf.cpp in Sources */,

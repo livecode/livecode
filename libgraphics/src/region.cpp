@@ -145,6 +145,26 @@ bool MCGRegionAddRegion(MCGRegionRef p_region, MCGRegionRef p_other)
 	return true;
 }
 
+bool MCGRegionIntersectRect(MCGRegionRef p_region, const MCGIntegerRectangle &p_rect)
+{
+	if (p_region == nil)
+		return false;
+	
+	p_region->region.op(p_rect.origin.x, p_rect.origin.y, p_rect.origin.x + p_rect.size.width, p_rect.origin. y + p_rect.size.height, SkRegion::kIntersect_Op);
+	
+	return true;
+}
+
+bool MCGRegionIntersectRegion(MCGRegionRef p_region, MCGRegionRef p_other)
+{
+	if (p_region == nil || p_other == nil)
+		return false;
+	
+	p_region->region.op(p_other->region, SkRegion::kIntersect_Op);
+	
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCGRegionIterate(MCGRegionRef p_region, MCGRegionIterateCallback p_callback, void *p_context)
