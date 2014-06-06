@@ -1497,7 +1497,11 @@ int32_t MCParagraph::getlistindent(void) const
 		return MCAbs(attrs -> first_indent);
 
 	// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-	return 8 * MCFontMeasureText(parent -> getfontref(), " ", 1, false, parent -> getstack() -> getdevicetransform());
+    // PM-2014-05-29: [[ Bug 12385 ]] Check if the font has been initialized to prevent a crash
+    if (parent -> getfontref() != nil)
+        return 8 * MCFontMeasureText(parent -> getfontref(), " ", 1, false, parent -> getstack() -> getdevicetransform());
+    
+    return 0;
 }
 
 void MCParagraph::gettabs(uint16_t*& r_tabs, uint16_t& r_tab_count, Boolean& r_fixed) const
