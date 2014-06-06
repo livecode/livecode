@@ -674,7 +674,6 @@ void MCStack::updateignoremouseevents(void)
 	
 	getstyle(t_window_style, t_window_style_ex);
 	
-	SetWindowLongA((HWND)getw() -> handle . window, GWL_STYLE, t_window_style);
 	SetWindowLongA((HWND)getw() -> handle . window, GWL_EXSTYLE, t_window_style_ex);
 }
 
