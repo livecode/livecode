@@ -81,7 +81,8 @@ void MCStack::realize(void)
 		
 		// IM-2013-08-01: [[ ResIndependence ]] scale stack rect to device coords
 		MCRectangle t_device_rect;
-		t_device_rect = rect;
+		// IM-2014-06-06: [[ Bug 12321 ]] Get the window rect from the view rather than the stack
+		t_device_rect = view_getrect();
 	
 		// Sort out name ?
 		
