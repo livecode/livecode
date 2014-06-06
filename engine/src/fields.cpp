@@ -737,8 +737,10 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 
 	// MM-2014-04-09: [[ Bug 12088 ]] Get the width of the paragraph before insertion and layout.
 	//  If as a result of the update the width of the field has changed, we need to recompute.
+    // MW-2014-06-06: [[ Bug 12385 ]] Don't do anything layout related if not open.
 	int2 t_initial_width;
-	t_initial_width = pgptr -> getwidth();
+    if (opened != 0)
+        t_initial_width = pgptr -> getwidth();
 	
 	// MW-2012-02-13: [[ Block Unicode ]] Use the new finsert method in native mode.
 	// MW-2012-02-23: [[ PutUnicode ]] Pass through the encoding to finsertnew.
