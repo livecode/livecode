@@ -280,7 +280,7 @@ void MCAVFoundationPlayer::CacheCurrentFrame(void)
 }
 
 //TODO
-OSErr MCAVFoundationPlayer::MovieDrawingComplete(Movie p_movie, long p_ref)
+/*OSErr MCAVFoundationPlayer::MovieDrawingComplete(Movie p_movie, long p_ref)
 {
 	MCAVFoundationPlayer *t_self;
 	t_self = (MCAVFoundationPlayer *)p_ref;
@@ -290,7 +290,7 @@ OSErr MCAVFoundationPlayer::MovieDrawingComplete(Movie p_movie, long p_ref)
 	MCPlatformCallbackSendPlayerFrameChanged(t_self);
     
 	return noErr;
-}
+}*/
 
 void MCAVFoundationPlayer::Switch(bool p_new_offscreen)
 {
@@ -329,7 +329,7 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 		if (t_player -> m_view != nil)
 			t_player -> Unrealize();
         
-		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
+		//SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
         
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
 	}
@@ -340,7 +340,7 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 			CFRelease(t_player -> m_current_frame);
 			t_player -> m_current_frame = nil;
 		}
-		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
+		//SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
         
 		// Switching to non-offscreen
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
@@ -385,6 +385,7 @@ void MCAVFoundationPlayer::Unrealize(void)
 	}
 }
 
+/*
 Boolean MCAVFoundationPlayer::MovieActionFilter(MovieController mc, short action, void *params, long refcon)
 {
     switch(action)
@@ -426,6 +427,7 @@ Boolean MCAVFoundationPlayer::MovieActionFilter(MovieController mc, short action
     
     return False;
 }
+*/
 
 
 void MCAVFoundationPlayer::Load(const char *p_filename, bool p_is_url)
@@ -511,7 +513,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename, bool p_is_url)
     // Set the last marker to very large so that any marker will trigger.
     m_last_marker = UINT32_MAX;
     
-    MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], MovieActionFilter, (long)this);
+    //MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], MovieActionFilter, (long)this);
 }
 
 
@@ -532,7 +534,7 @@ void MCAVFoundationPlayer::Synchronize(void)
     
 	[m_view setHidden: !m_visible];
     
-	MCMovieChanged([m_movie quickTimeMovieController], [m_movie quickTimeMovie]);
+	//MCMovieChanged([m_movie quickTimeMovieController], [m_movie quickTimeMovie]);
     
     m_synchronizing = false;
 }
@@ -569,7 +571,7 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 		t_rect = [m_view frame];
     
 	NSRect t_movie_rect;
-	t_movie_rect = [m_view movieBounds];
+	//t_movie_rect = [m_view movieBounds];
     
 	NSBitmapImageRep *t_rep;
 	t_rep = [m_view bitmapImageRepForCachingDisplayInRect: t_rect];

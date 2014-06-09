@@ -259,6 +259,7 @@ IO_stat MCHcstak::macreadresources(void)
 //  REFACTORED FROM ITRANSFORM.CPP 
 //
 
+#if 0
 void MCMacScaleImageBox(void *p_src_ptr, uint4 p_src_stride, void *p_dst_ptr, uint4 p_dst_stride, uint4 p_src_width, uint4 p_src_height, uint4 p_dst_width, uint4 p_dst_height)
 {
 	Rect t_src_rect;
@@ -295,13 +296,15 @@ void MCMacScaleImageBox(void *p_src_ptr, uint4 p_src_stride, void *p_dst_ptr, ui
 	
 	DisposeGWorld(t_dst_gworld);
 	DisposeGWorld(t_src_gworld);
-}	
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  MISC 
 //
 
+#if 0
 bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPatternRef &r_pattern)
 {
 	bool t_success = true;
@@ -422,4 +425,6 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
 	
 	return t_success;
 }
+#endif
+
 
