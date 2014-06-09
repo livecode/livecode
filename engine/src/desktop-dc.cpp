@@ -1278,6 +1278,8 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
 				t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorObjects;
 				break;
 			case TRANSFER_TYPE_PRIVATE:
+                // PM-2014-05-23: [[ Bug 12388 ]] Make sure the dragMove message is sent
+                t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorUTF8;
 				break;
 		}
 		

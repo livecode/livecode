@@ -1,0 +1,1 @@
+# dragMove not sent when dragData["private"] is set
