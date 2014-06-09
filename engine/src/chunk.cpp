@@ -3597,7 +3597,12 @@ void MCChunk::count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, u
         if (optr == nil)
         {
             if (stack != NULL)
+            {
+                // AL-2014-06-09: [[ Bug 12596 ]] Throw error when the chunk expression
+                //  does not resolve to an object on the specified stack.
+                ctxt . Throw();
                 return;
+            }
             optr = MCdefaultstackptr;
         }
         if (tocount == CT_MARKED)
