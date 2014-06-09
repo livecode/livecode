@@ -273,7 +273,10 @@ void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mod
 	
 	// COCOA-TODO: This is Mac specific
 	Rect screenRect;
-	SetRect(&screenRect, srect . x, srect . y, srect . x + srect . width, srect . y + srect . height);
+    screenRect . left = srect . x;
+    screenRect . top = srect . y;
+    screenRect . right = srect . x + srect . width;
+    screenRect . bottom = srect . x + srect . height;
 	
 	if (title && mode <= WM_SHEET && mode != WM_DRAWER)
 	{

@@ -114,8 +114,11 @@ static Rect rect_from_points(CGPoint x, CGPoint y)
 	b = MCMax(x . y, y . y);
 	
 	Rect t_rect;
-	SetRect(&t_rect, l, t, r, b);
-	
+    t_rect . left = l;
+    t_rect . top = t;
+    t_rect . right = r;
+    t_rect . bottom = b;
+    
 	return t_rect;
 }
 

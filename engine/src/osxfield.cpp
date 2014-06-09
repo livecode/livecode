@@ -36,6 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "text.h"
 
+#if 0
 MCParagraph *MCField::macunicodestyletexttoparagraphs(const MCString& p_text, const MCString& p_style_data)
 {
 	bool t_success;
@@ -739,3 +740,5 @@ bool MCField::macmatchfontname(const char *p_font_name, char p_derived_font_name
 	
 	return false;
 }
+#endif
+

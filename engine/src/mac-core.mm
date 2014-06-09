@@ -370,11 +370,12 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 			
 		case kMCPlatformSystemPropertyHiliteColor:
 		{
-			RGBColor hiliteRGB;
-			LMGetHiliteRGB(&hiliteRGB);
-			((MCColor *)r_value) -> red = hiliteRGB.red;
-			((MCColor *)r_value) -> green = hiliteRGB.green;
-			((MCColor *)r_value) -> blue = hiliteRGB.blue;
+            // LION-SDK-TODO: Update to more appropriate call.
+			//RGBColor hiliteRGB;
+			//LMGetHiliteRGB(&hiliteRGB);
+			((MCColor *)r_value) -> red = 65535; //hiliteRGB.red;
+			((MCColor *)r_value) -> green = 0; //hiliteRGB.green;
+			((MCColor *)r_value) -> blue = 65535; //hiliteRGB.blue;
 		}
 		break;
 			

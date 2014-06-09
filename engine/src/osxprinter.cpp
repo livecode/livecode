@@ -1339,9 +1339,10 @@ struct RegionToRectsInfo
 	CGRect *rectangles;
 };
 
+// LION-SDK-TODO: Update to remove QD regions.
 static OSStatus RegionToRectsCallback(UInt16 p_message, RgnHandle p_region, const Rect *p_rect, void *p_context)
 {
-	RegionToRectsInfo *t_info;
+	/*RegionToRectsInfo *t_info;
 	t_info = (RegionToRectsInfo *)p_context;
 	
 	if (p_message == kQDRegionToRectsMsgParse)
@@ -1349,19 +1350,20 @@ static OSStatus RegionToRectsCallback(UInt16 p_message, RgnHandle p_region, cons
 		t_info -> count += 1;
 		t_info -> rectangles = (CGRect *)realloc(t_info -> rectangles, t_info -> count * sizeof(CGRect));
 		t_info -> rectangles[t_info -> count - 1] = CGRectMake(p_rect -> left, p_rect -> top, p_rect -> right - p_rect -> left, p_rect -> bottom - p_rect -> top);
-	}
+	}*/
 	
 	return noErr;
 }
 
+// LION-SDK-TODO: Update to remove QD regions.
 static void OSX_CGContextClipToRegion(CGContextRef p_context, RgnHandle p_region)
 {
-	RegionToRectsInfo t_info;
+	/* RegionToRectsInfo t_info;
 	t_info . count = 0;
 	t_info . rectangles = NULL;
 	QDRegionToRects(p_region, 0, (RegionToRectsUPP)RegionToRectsCallback, &t_info);
 	CGContextClipToRects(p_context, t_info . rectangles, t_info . count);
-	free(t_info . rectangles);
+	free(t_info . rectangles); */
 }
 
 // MW-2013-10-01: [[ ImprovedPrint ]] Create a CGImageRef from encoded image data. If
