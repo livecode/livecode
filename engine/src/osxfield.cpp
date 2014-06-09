@@ -699,6 +699,7 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCExecPoint& ep, MCParagraph *p_
 	
 	return ES_NORMAL;
 }
+#endif
 
 bool MCField::macmatchfontname(const char *p_font_name, char p_derived_font_name[])
 {
@@ -740,5 +741,5 @@ bool MCField::macmatchfontname(const char *p_font_name, char p_derived_font_name
 	
 	return false;
 }
-#endif
+
 

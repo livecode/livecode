@@ -1049,6 +1049,16 @@ void MCQTEffectEnd(void)
 
 #else
 
+bool MCQTInit(void)
+{
+    return false;
+}
+
+void MCQTGetVersion(MCExecPoint& ep)
+{
+    ep . clear();
+}
+
 void MCQTEffectsList(MCExecPoint& ep)
 {
 	ep . clear();

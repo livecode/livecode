@@ -292,7 +292,7 @@ static void scaleimage_nearest(void *p_src_ptr, uint4 p_src_stride, void *p_dst_
 
 static void scaleimage_box(void *p_src_ptr, uint4 p_src_stride, void *p_dst_ptr, uint4 p_dst_stride, uint4 p_src_width, uint4 p_src_height, uint4 p_dst_width, uint4 p_dst_height, bool p_has_alpha)
 {
-#ifdef _MAC_DESKTOP
+#if 0
 	if (p_has_alpha)
 	{
 		scaleimage_nearest(p_src_ptr, p_src_stride, p_dst_ptr, p_dst_stride, p_src_width, p_src_height, p_dst_width, p_dst_height);

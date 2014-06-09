@@ -304,9 +304,10 @@ void MCMacScaleImageBox(void *p_src_ptr, uint4 p_src_stride, void *p_dst_ptr, ui
 //  MISC 
 //
 
-#if 0
 bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPatternRef &r_pattern)
 {
+    return false;
+#if 0
 	bool t_success = true;
 	
 	static MCPatternRef s_patterns[8] = {nil, nil, nil, nil, nil, nil, nil, nil};
@@ -424,7 +425,7 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
 	DisposeGWorld(t_gworld);
 	
 	return t_success;
-}
 #endif
+}
 
 
