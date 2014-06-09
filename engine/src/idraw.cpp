@@ -88,7 +88,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			// source images from flushing everything else out of the cache.
 			bool t_success = true;
 
-			MCImageFrame *t_frame = nil;
+			MCGImageFrame *t_frame = nil;
 
 			bool t_printer = dc->gettype() == CONTEXT_TYPE_PRINTER;
 			bool t_update = !((state & CS_SIZE) && (state & CS_EDITED));
@@ -138,7 +138,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			
 			// IM-2014-01-31: [[ HiDPI ]] Get the appropriate image for the combined
 			//   context device & image transforms
-			t_success = t_rep->LockImageFrame(currentframe, true, t_device_scale, t_frame);
+			t_success = t_rep->LockImageFrame(currentframe, t_device_scale, t_frame);
 			if (t_success)
 			{
 				MCImageDescriptor t_image;
@@ -153,23 +153,9 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 				t_image.scale_factor = t_frame->density;
 
                 // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types.
-				switch (resizequality)
-				{
-                    case INTERPOLATION_NEAREST:
-                        t_image . filter = kMCGImageFilterNone;
-                        break;
-                    case INTERPOLATION_BOX:
-                        t_image . filter = kMCGImageFilterMedium;
-                        break;
-                    case INTERPOLATION_BILINEAR:
-                        t_image . filter = kMCGImageFilterMedium;
-                        break;
-                    case INTERPOLATION_BICUBIC:
-                        t_image . filter = kMCGImageFilterHigh;
-                        break;
-				}
+				t_image.filter = getimagefilter();
 
-				t_image . bitmap = t_frame->image;
+				t_image . image = t_frame->image;
 
 				if (t_printer && m_rep->GetType() == kMCImageRepResident)
 				{
@@ -202,8 +188,8 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 
 		if (state & CS_DO_START)
 		{
-			MCImageFrame *t_frame = nil;
-			if (m_rep->LockImageFrame(currentframe, true, getdevicescale(), t_frame))
+			MCGImageFrame *t_frame = nil;
+			if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
 			{
 				MCscreen->addtimer(this, MCM_internal, t_frame->duration);
 				m_rep->UnlockImageFrame(currentframe, t_frame);
@@ -401,15 +387,22 @@ void MCImage::magredrawrect(MCContext *dest_context, const MCRectangle &drect)
 		// OVERHAUL - REVISIT: may be able to use scaling transform with nearest filter
 		// instead of manually scaling image
 
+		MCGImageRef t_line_img;
+		t_line_img = nil;
+		
+		/* UNCHECKED */ MCGImageCreateWithRasterNoCopy(MCImageBitmapGetMCGRaster(t_line, true), t_line_img);
+		
 		// Render the scanline into the destination context.
 		MCImageDescriptor t_image;
 		memset(&t_image, 0, sizeof(MCImageDescriptor));
-		t_image . bitmap = t_line;
+		t_image . image = t_line_img;
 
 		dest_context -> drawimage(t_image, 0, 0, linewidth, MCmagnification, 0, dy);
 		
 		dy += MCmagnification;
 		yoffset += t_magimage->stride;
+		
+		MCGImageRelease(t_line_img);
 	}
 
 	MCImageFreeBitmap(t_line);

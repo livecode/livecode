@@ -159,6 +159,11 @@ void MCStack::updatemodifiedmark(void)
 {
 }
 
+// MERG-2014-06-02: [[ IgnoreMouseEvents ]] Stub for ignoreMouseEvents.
+void MCStack::updateignoremouseevents(void)
+{
+}
+
 void MCStack::redrawicon(void)
 {
 }

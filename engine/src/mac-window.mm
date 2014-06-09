@@ -1815,6 +1815,11 @@ void MCMacPlatformWindow::DoSynchronize(void)
     if (m_changes . hides_on_suspend_changed)
         [m_window_handle setHidesOnDeactivate: m_hides_on_suspend];
     
+    // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Sync ignoreMouseEvents.
+    if (m_changes . ignore_mouse_events_changed)
+        [m_window_handle setIgnoresMouseEvents: m_ignore_mouse_events];
+    
+    
 	m_synchronizing = false;
 }
 
@@ -1902,6 +1907,8 @@ void MCMacPlatformWindow::DoHide(void)
 	
 		[m_window_handle orderOut: nil];
 	}
+	
+	MCMacPlatformHandleMouseAfterWindowHidden();
 }
 
 void MCMacPlatformWindow::DoFocus(void)

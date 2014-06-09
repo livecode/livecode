@@ -140,6 +140,9 @@ MCStack::MCStack()
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
 	
+	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
+	m_purge_fonts = false;
+
 	cursoroverride = false ;
 	old_rect.x = old_rect.y = old_rect.width = old_rect.height = 0 ;
 
@@ -328,6 +331,9 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	// MW-2014-03-12: [[ Bug 11914 ]] Stacks are not engine menus by default.
 	m_is_menu = false;
 	
+	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
+	m_purge_fonts = false;
+
 	view_copy(sref);
 
 	mode_copy(sref);
@@ -1579,6 +1585,10 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_DEFER_SCREEN_UPDATES:
 		ep . setboolean(effective ? m_defer_updates && view_getacceleratedrendering() : m_defer_updates);
 		break;
+    // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Get the ignoreMouseEvents property
+    case P_IGNORE_MOUSE_EVENTS:
+        ep.setboolean(getextendedstate(ECS_IGNORE_MOUSE_EVENTS));
+        break;
 #endif /* MCStack::getprop */
 	default:
 	{
@@ -1626,16 +1636,10 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 				if (t_bval)
 					old_rect = rect;
 				
-				// IM-2014-02-12: [[ Bug 11783 ]] We may also need to reset the fonts on Windows when
-				//   fullscreen is changed
-				bool t_ideal_layout;
-				t_ideal_layout = getuseideallayout();
+				// IM-2014-05-27: [[ Bug 12321 ]] Move font purging to reopenstack() to avoid multiple redraws.
 
 				setextendedstate(t_bval, ECS_FULLSCREEN);
 				view_setfullscreen(t_bval);
-
-				if ((t_ideal_layout != getuseideallayout()) && opened)
-					purgefonts();
 			}
 		}
 	break;
@@ -2640,7 +2644,21 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		m_defer_updates = (t_defer_updates == True);
 	}
 	break;
-#endif /* MCStack::setprop */	
+    
+    // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Set the ignoreMouseEvents property
+    case P_IGNORE_MOUSE_EVENTS:
+    {
+        if (!MCU_matchflags(data, f_extended_state, ECS_IGNORE_MOUSE_EVENTS, dirty))
+        {
+            MCeerror->add(EE_OBJECT_NAB, 0, 0, data);
+            return ES_ERROR;
+        }
+        if (dirty && opened)
+            updateignoremouseevents();
+    }
+    break;
+   
+#endif /* MCStack::setprop */
 	default:
 	{
 		Exec_stat t_stat;

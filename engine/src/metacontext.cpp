@@ -523,7 +523,7 @@ void MCMetaContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy
 	MCMark *t_mark;
 	bool t_need_group;
 
-	t_need_group = (MCImageBitmapHasTransparency(p_image . bitmap) || f_function != GXcopy || f_opacity != 255);
+	t_need_group = (!MCGImageIsOpaque(p_image.image) || f_function != GXcopy || f_opacity != 255);
 
 	MCRectangle t_old_clip;
 	t_old_clip = getclip();

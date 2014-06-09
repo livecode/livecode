@@ -1,0 +1,1 @@
+# ask dialog icon is a button with its autohilite set to true, should be false

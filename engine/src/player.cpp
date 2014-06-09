@@ -121,7 +121,7 @@ struct MCPlayerOffscreenBuffer
 {
 	HDC hdc;
 	HBITMAP hbitmap;
-	MCImageBitmap image_bitmap;
+	MCGRaster image_raster;
 };
 
 PixMapHandle GetPortPixMap(CGrafPtr port)
@@ -184,7 +184,7 @@ static inline MCRectangle RectToMCRectangle(Rect r)
 struct MCPlayerOffscreenBuffer
 {
 	CGrafPtr gworld;
-	MCImageBitmap image_bitmap;
+	MCGRaster image_raster;
 };
 
 static Boolean IsQTVRInstalled(void);
@@ -220,6 +220,10 @@ MCPlayer::MCPlayer()
 	loudness = 100;
 
 #ifdef FEATURE_PLATFORM_PLAYER
+    // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
+    m_callback_count = 0;
+    m_callbacks = NULL;
+    
 	m_platform_player = nil;
 #else
 	
@@ -264,8 +268,12 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	userCallbackStr = strclone(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
-	
+    
 #ifdef FEATURE_PLATFORM_PLAYER
+    // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
+    m_callback_count = 0;
+    m_callbacks = NULL;
+    
 	m_platform_player = nil;
 #else
 	
@@ -1732,9 +1740,18 @@ void MCPlayer::showcontroller(Boolean show)
 #ifdef FEATURE_PLATFORM_PLAYER
 	if (m_platform_player != nil)
 	{
+        // PM-2014-05-28: [[ Bug 12524 ]] Resize the rect height to avoid stretching of the movie when showing/hiding controller
+        MCRectangle drect;
+        drect = rect;
+        if (show )
+            drect . height += 16;
+        else
+            drect . height -= 16;
+        
 		bool t_show;
 		t_show = show;
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show);
+        layer_setrect(drect, true);
 	}
 #else
 #ifdef FEATURE_QUICKTIME
@@ -2608,10 +2625,17 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			MCImageDescriptor t_image;
 			MCMemoryClear(&t_image, sizeof(t_image));
 			t_image.filter = kMCGImageFilterNone;
-			MCPlatformLockPlayerBitmap(m_platform_player, t_image . bitmap);
-			if (t_image . bitmap != nil)
+			
+			// IM-2014-05-14: [[ ImageRepUpdate ]] Wrap locked bitmap in MCGImage
+			MCImageBitmap *t_bitmap = nil;
+			MCPlatformLockPlayerBitmap(m_platform_player, t_bitmap);
+			
+			MCGRaster t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
+			MCGImageCreateWithRasterNoCopy(t_raster, t_image.image);
+			if (t_image . image != nil)
 				dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
-			MCPlatformUnlockPlayerBitmap(m_platform_player, t_image . bitmap);
+			MCGImageRelease(t_image.image);
+			MCPlatformUnlockPlayerBitmap(m_platform_player, t_bitmap);
 		}
 	}
 #else
@@ -3059,11 +3083,11 @@ if (theMovie == NULL)
 
 	m_offscreen->hbitmap = t_new_bitmap;
 	m_offscreen->hdc = t_new_dc;
-	m_offscreen->image_bitmap.width = trect.width;
-	m_offscreen->image_bitmap.height = trect.height;
-	m_offscreen->image_bitmap.data = (uint32_t*)t_bits;
-	m_offscreen->image_bitmap.stride = trect.width * sizeof(uint32_t);
-	m_offscreen->image_bitmap.has_transparency = m_offscreen->image_bitmap.has_alpha = false;
+	m_offscreen->image_raster.width = trect.width;
+	m_offscreen->image_raster.height = trect.height;
+	m_offscreen->image_raster.pixels = t_bits;
+	m_offscreen->image_raster.stride = trect.width * sizeof(uint32_t);
+	m_offscreen->image_raster.format = kMCGRasterFormat_xRGB;
 
 	bufferGW = t_new_gworld;
 	SetGWorld((CGrafPtr)bufferGW, (GDHandle)NULL); // Port or graphics world to make current
@@ -3108,9 +3132,9 @@ if (theMovie == NULL)
 		return;
 	}
 	
-	m_offscreen->image_bitmap.width = trect.width;
-	m_offscreen->image_bitmap.height = trect.height;
-	m_offscreen->image_bitmap.has_transparency = m_offscreen->image_bitmap.has_alpha = false;
+	m_offscreen->image_raster.width = trect.width;
+	m_offscreen->image_raster.height = trect.height;
+	m_offscreen->image_raster.format = kMCGRasterFormat_xRGB;
 	
 	MCSetControllerPort((MovieController)theMC, m_offscreen->gworld);
 	MCRectangle r = trect;
@@ -3907,13 +3931,20 @@ void MCPlayer::qt_draw(MCDC *dc, const MCRectangle& dirty)
 
 	if (isbuffering())
 	{
+		MCGImageRef t_image_ref;
+		t_image_ref = nil;
+		
 		MCImageDescriptor t_image;
 		MCMemoryClear(&t_image, sizeof(t_image));
         // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 		t_image.filter = kMCGImageFilterNone;
-		t_image.bitmap = &m_offscreen->image_bitmap;
+
+		/* UNCHECKED */ MCGImageCreateWithRasterNoCopy(m_offscreen->image_raster, t_image_ref);
+		t_image.image = t_image_ref;
 
 		dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
+
+		MCGImageRelease(t_image_ref);
 	}
 	else
 	{
@@ -3931,17 +3962,23 @@ void MCPlayer::qt_draw(MCDC *dc, const MCRectangle& dirty)
 		t_pixmap = GetGWorldPixMap(m_offscreen->gworld);
 		LockPixels(t_pixmap);
 		
-		m_offscreen->image_bitmap.data = (uint32_t*)GetPixBaseAddr(t_pixmap);
-		m_offscreen->image_bitmap.stride = GetPixRowBytes(t_pixmap);
+		m_offscreen->image_raster.pixels = GetPixBaseAddr(t_pixmap);
+		m_offscreen->image_raster.stride = GetPixRowBytes(t_pixmap);
+		
+		MCGImageRef t_image_ref;
+		t_image_ref = nil;
+		
+		/* UNCHECKED */ MCGImageCreateWithRasterNoCopy(m_offscreen->image_raster, t_image_ref);
 		
 		MCImageDescriptor t_image;
 		MCMemoryClear(&t_image, sizeof(t_image));
         // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 		t_image.filter = kMCGImageFilterNone;
-		t_image.bitmap = &m_offscreen->image_bitmap;
+		t_image.image = t_image_ref;
 		
 		dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
 
+		MCGImageRelease(t_image_ref);
 		UnlockPixels(t_pixmap);
 	}
 	else

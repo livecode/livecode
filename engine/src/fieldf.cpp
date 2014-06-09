@@ -860,9 +860,9 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
 	//   pixmap tile in this case to ensure the offset falls within 32767.
 	if (MCU_abs(t_offset_y) > 32767 || MCU_abs(t_offset_x) > 32767)
 	{
-		uint2 t_width, t_height, t_depth;
-		t_width = MCGImageGetWidth(t_current_pixmap->image) / t_current_pixmap->scale;
-		t_height = MCGImageGetHeight(t_current_pixmap->image) / t_current_pixmap->scale;
+		// IM-2014-05-13: [[ HiResPatterns ]] Update to use pattern geometry function
+		uint32_t t_width, t_height;
+		/* UNCHECKED */ MCPatternGetGeometry(t_current_pixmap, t_width, t_height);
 
 		t_offset_x %= t_width;
 		if (t_offset_x < 0)
@@ -1069,7 +1069,9 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 				//   table mode, we are done.
 				// PM-2014-04-08: [[ Bug 12146 ]] Setting tabstops to 2 equal numbers and then
                 //  turning VGrid on, hangs LC, because this while loop ran forever
-                if (ct == nt - 1 && (nt < 2 || t[nt - 2] == t[nt - 1]))
+                // MW-2015-05-28: [[ Bug 12341 ]] Only stop rendering lines if in 'fixed width table'
+                //   mode - indicated by the last two tabstops being the same.
+                if (nt >= 2 && t[nt - 1] == t[nt - 2] && ct == nt - 1)
                     break;
 			}
 		}
@@ -2270,24 +2272,28 @@ void MCField::setupentry(MCButton *bptr, const MCString &s, Boolean isunicode)
 	settext(0, s, False, isunicode);
 }
 
+// MW-2014-05-21: [[ Bug 11878 ]] Operate on a c-string copy of newtext as the caller
+//   owns it.
 void MCField::typetext(const MCString &newtext)
 {
 	if (newtext . getlength() == 0)
 		return;
 
+    char *t_newtext_cstring;
+    t_newtext_cstring = newtext . clone();
+    
 	if (MCactivefield == this)
 		unselect(False, True);
 	if (newtext.getlength() < MAX_PASTE_MESSAGES)
 	{
 		char string[2];
 		string[1] = '\0';
-		char *sptr = (char *)newtext.getstring();
-		const char *eptr = sptr + newtext.getlength();
-		while (sptr < eptr)
+		char *sptr = t_newtext_cstring;
+		while (sptr[0] != '\0')
 		{
 			string[0] = *sptr;
 			if (message_with_args(MCM_key_down, string) == ES_NORMAL)
-				strcpy(sptr, sptr + 1);
+				memmove(sptr, sptr + 1, strlen(sptr));
 			else
 				sptr++;
 			message_with_args(MCM_key_up, string);
@@ -2296,10 +2302,10 @@ void MCField::typetext(const MCString &newtext)
 	uint2 oldfocused;
 	focusedparagraph->getselectionindex(oldfocused, oldfocused);
 	state |= CS_CHANGED;
-	if (newtext.getlength() && focusedparagraph->finsertnew(newtext, false))
+	if (t_newtext_cstring[0] != '\0' && focusedparagraph->finsertnew(t_newtext_cstring, false))
 	{
 		do_recompute(true);
-		int4 endindex = oldfocused + newtext.getlength();
+		int4 endindex = oldfocused + strlen(t_newtext_cstring);
 		int4 junk;
 		MCParagraph *newfocused = indextoparagraph(focusedparagraph, endindex, junk);
 		while (focusedparagraph != newfocused)
@@ -2313,7 +2319,7 @@ void MCField::typetext(const MCString &newtext)
 	}
 	else
 		updateparagraph(True, False);
-	delete (char *)newtext.getstring();
+	delete t_newtext_cstring;
 }
 
 void MCField::startcomposition()
