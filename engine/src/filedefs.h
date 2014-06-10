@@ -211,7 +211,7 @@ typedef struct _Streamnode
 #if defined(_WINDOWS_DESKTOP)
 	MCWinSysHandle phandle;  //process handle
 	MCWinSysHandle thandle;  //process handle
-#elif defined(_MAC_DESKTOP)
+#elif defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
 	MCMacProcessSerialNumber sn;
 #endif
     int4 retcode;

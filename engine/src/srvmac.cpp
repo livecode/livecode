@@ -64,73 +64,11 @@ extern "C" CFStringRef CFStringCreateWithBytesNoCopy(CFAllocatorRef alloc, const
 class MCStdioFileHandle: public MCSystemFileHandle
 {
 public:
-	static MCStdioFileHandle *OpenFile(MCStringRef p_path, intenum_t p_mode)
-	{
-		FILE *t_stream;
-        
-        switch(p_mode)
-        {
-            case kMCOpenFileModeRead:
-                t_stream = fopen(*t_path_utf, IO_READ_MODE);
-                break;
-            case kMCOpenFileModeUpdate:
-                t_stream = fopen(*t_path_utf, IO_UPDATE_MODE);
-                break;
-            case kMCOpenFileModeAppend:
-                t_stream = fopen(*t_path_utf, IO_APPEND_MODE);
-                break;
-            case kMCOpenFileModeWrite:
-                t_stream = fopen(*t_path_utf, IO_WRITE_MODE);
-                break;
-            default:
-                t_stream = NULL;
-        }
-        
-		if (t_stream == NULL)
-			return NULL;
-		
-		MCStdioFileHandle *t_handle;
-		t_handle = new MCStdioFileHandle;
-		t_handle -> m_stream = t_stream;
-		
-		return t_handle;
-	}
-	
-	static MCStdioFileHandle *OpenFd(uint32_t fd, intenum_t p_mode)
-	{
-		FILE *t_stream;
-        
-        switch (p_mode)
-        {
-            case kMCOpenFileModeAppend:
-                t_stream = fdopen(fd, IO_APPEND_MODE);
-                break;
-            case kMCOpenFileModeRead:
-                t_stream = fdopen(fd, IO_READ_MODE);
-                break;
-            case kMCOpenFileModeUpdate:
-                t_stream = fdopen(fd, IO_UPDATE_MODE);
-                break;
-            case kMCOpenFileModeWrite:
-                t_stream = fdopen(fd, IO_WRITE_MODE);
-                break;
-            default:
-                break;
-        }
-        
-		if (t_stream == NULL)
-			return NULL;
-		
-		// MW-2011-06-27: [[ SERVER ]] Turn off buffering for output stderr / stdout
-		if (fd == 1 || fd == 2)
-			setbuf(t_stream, NULL);
-		
-		MCStdioFileHandle *t_handle;
-		t_handle = new MCStdioFileHandle;
-		t_handle -> m_stream = t_stream;
-		
-		return t_handle;
-	}
+    
+    MCStdioFileHandle(FILE *p_fptr)
+    {
+        m_stream = p_fptr;
+    }
 	
 	virtual void Close(void)
 	{
@@ -211,6 +149,16 @@ public:
 	{
 		return m_stream;
 	}
+    
+    virtual bool TakeBuffer(void*& r_buffer, size_t& r_length)
+    {
+        return false;
+    }
+    
+    virtual bool IsExhausted(void)
+    {
+        return feof(m_stream) == 1;
+    }
 	
 private:
 	FILE *m_stream;
@@ -268,7 +216,7 @@ static CFStringEncoding lookup_encoding(uint1 p_charset)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+#ifdef LEGACY_SERVER
 struct MCMacSystem: public MCSystemInterface
 {
 	virtual real64_t GetCurrentTime(void)
@@ -1036,6 +984,7 @@ struct MCMacSystem: public MCSystemInterface
 	{
 	}
 };
+#endif /* LEGACY_SERVER */
 
 ////////////////////////////////////////////////////////////////////////////////
 

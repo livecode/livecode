@@ -75,8 +75,8 @@ extern MCSystemInterface *MCMobileCreateAndroidSystem(void);
 #ifdef _SERVER
 extern "C" char *__cxa_demangle(const char *, char *, size_t *, int*);
 
-#ifndef _LINUX_SERVER
-static char *strndup(const char *s, uint32_t n)
+#if !defined(_LINUX_SERVER) && !defined(_MAC_SERVER) 
+static char *strndup(const char *s, size_t n)
 {
 	char *r;
 	r = (char *)malloc(n + 1);

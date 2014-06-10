@@ -92,18 +92,6 @@ static iconv_t fetch_converter(const char *p_encoding)
 }
 #endif /* LEGACY_EXEC */
 
-#ifdef _DARWIN_SERVER
-#define ftello64(a) ftello(a)
-#define fseeko64(a, b, c) fseeko(a, b, c)
-#define fstat64(a, b) fstat(a, b)
-#define stat64 stat
-
-#define opendir64(a) opendir(a)
-#define readdir64(a) readdir(a)
-#define closedir64(a) closedir(a)
-#define DIR64 DIR
-#endif
-
 struct MCDateTime
 {
 	int4 year;
@@ -115,8 +103,8 @@ struct MCDateTime
 	int4 bias;
 };
 
-#ifndef _LINUX_SERVER
-static char *strndup(const char *s, uint32_t l)
+#if defined(_LINUX_SERVER) || defined(_MAC_SERVER)
+char *strndup(const char *s, size_t l)
 {
 	char *r;
 	r = new char[l + 1];

@@ -20,6 +20,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 #include "osspec.h"
 
+#if !defined(_LINUX_SERVER) && !defined(_LINUX)
+#include <sys/mman.h>
+#include <unistd.h>
+#endif
+
 enum
 {
     kMCSystemFileSeekSet = 1,
@@ -237,6 +242,30 @@ protected:
 	uint32_t m_pointer;
 	uint32_t m_length;
 	uint32_t m_capacity;
+};
+
+class MCMemoryMappedFileHandle: public MCMemoryFileHandle
+{
+public:
+    MCMemoryMappedFileHandle(int p_fd, void *p_buffer, uint32_t p_length)
+    : MCMemoryFileHandle(p_buffer, p_length)
+    {
+        m_fd = p_fd;
+        m_buffer = p_buffer;
+        m_length = p_length;
+    }
+    
+    void Close(void)
+    {
+        munmap((char *)m_buffer, m_length);
+        close(m_fd);
+        MCMemoryFileHandle::Close();
+    }
+    
+private:
+    int m_fd;
+    void *m_buffer;
+    uint32_t m_length;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

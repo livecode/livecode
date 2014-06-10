@@ -77,8 +77,8 @@ static MCStreamCache *s_cgi_stdin_cache;
 static bool cgi_send_cookies(void);
 static bool cgi_send_headers(void);
 
-#ifndef _LINUX_SERVER
-static char *strndup(const char *s, uint32_t n)
+#if !defined(_LINUX_SERVER) && !defined(_MAC_SERVER)
+static char *strndup(const char *s, size_t n)
 {
 	char *r;
 	r = (char *)malloc(n + 1);
@@ -1295,7 +1295,13 @@ bool cgi_initialize()
 	for(uint32_t i = 0; environ[i] != NULL; i++)
 	{
         MCAutoStringRef t_environ;
+#ifdef _LINUX_SERVER
         MCStringCreateWithSysString(environ[i], &t_environ);
+#elif defined (_DARWIN_SERVER) || defined(_MAC_SERVER)
+        MCStringCreateWithBytes((byte_t*)environ[i], strlen(environ[i]), kMCStringEncodingUTF8, false, &t_environ);
+#elif defined (_WINDOWS_SERVER)
+        MCStringCreateWithWString(environ[i], &t_environ);
+#endif
 		static const char *s_cgi_vars[] =
 		{
 			"GATEWAY_INTERFACE=",

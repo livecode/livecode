@@ -532,30 +532,6 @@ bool MCS_generate_uuid(char p_buffer[128])
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCMemoryMappedFileHandle: public MCMemoryFileHandle
-{
-public:
-    MCMemoryMappedFileHandle(int p_fd, void *p_buffer, uint32_t p_length)
-        : MCMemoryFileHandle(p_buffer, p_length)
-    {
-        m_fd = p_fd;
-        m_buffer = p_buffer;
-        m_length = p_length;
-    }
-
-    void Close(void)
-    {
-        munmap((char *)m_buffer, m_length);
-        close(m_fd);
-        MCMemoryFileHandle::Close();
-    }
-
-private:
-    int m_fd;
-    void *m_buffer;
-    uint32_t m_length;
-};
-
 class MCLinuxDesktop: public MCSystemInterface
 {
 public:

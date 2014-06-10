@@ -146,13 +146,13 @@ bool MCVariable::encode(void *&r_buffer, uindex_t r_size)
     else if (MCExecTypeIsNumber(value . type))
     {
         double t_value;
-        if (value . type == kMCExecTypeUInt)
+        if (value . type == kMCExecValueTypeUInt)
             t_value = (double)value . uint_value;
-        else if (value . type == kMCExecTypeInt)
+        else if (value . type == kMCExecValueTypeUInt)
             t_value = (double) value . int_value;
-        else if (value . type == kMCExecTypeFloat)
+        else if (value . type == kMCExecValueTypeUInt)
             t_value = (double) value . float_value;
-        else if (value . type == kMCExecTypeDouble)
+        else if (value . type == kMCExecValueTypeUInt)
             t_value = value . double_value;
 
         t_stat = IO_write_uint1((uint1)kMCEncodedValueTypeNumber, t_stream);
@@ -164,7 +164,7 @@ bool MCVariable::encode(void *&r_buffer, uindex_t r_size)
         t_stat = IO_ERROR;
 
     char *t_buffer;
-    uint32_t t_length;
+    size_t t_length;
     if (t_stat == IO_NORMAL)
     {
         t_stat = MCS_closetakingbuffer(t_stream, (void*&)t_buffer, t_length);
@@ -1992,6 +1992,7 @@ bool MCDeferredVariable::createwithname(MCNameRef p_name, MCDeferredVariableComp
 	self -> name = MCValueRetain(p_name);
 
 	self -> value . type = kMCExecValueTypeNone;
+    self -> value . valueref_value = nil;
 	self -> is_msg = false;
 	self -> is_env = false;
 	self -> is_global = false;

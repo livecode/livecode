@@ -29,6 +29,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/stat.h>
 #include <unistd.h>
 
+#ifdef _MAC_SERVER
+#define ftello64(a) ftello(a)
+#define fseeko64(a, b, c) fseeko(a, b, c)
+#define fstat64(a, b) fstat(a, b)
+#define stat64 stat
+
+#define opendir64(a) opendir(a)
+#define readdir64(a) readdir(a)
+#define closedir64(a) closedir(a)
+#define DIR64 DIR
+#endif
+
 class MCStdioFileHandle: public MCSystemFileHandle
 {
 public:

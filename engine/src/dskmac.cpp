@@ -194,6 +194,7 @@ static bool fetch_ae_as_fsref_list(char*& string, uint4& length);
 
 // MOVE TO MCScreenDC
 
+#ifndef _MAC_SERVER
 EventHandlerUPP MCS_weh;
 
 bool WindowIsInControlGroup(WindowRef p_window)
@@ -628,7 +629,6 @@ static pascal OSErr DoAppPreferences(const AppleEvent *theAppleEvent, AppleEvent
 	return noErr;
 }
 
-
 static pascal OSErr DoAppDied(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
 {
 	errno = errAEEventNotHandled;
@@ -706,6 +706,7 @@ static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long ref
 	}
 	return noErr;
 }
+#endif
 
 /// END HERE
 
@@ -4470,6 +4471,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         sigaction(SIGILL, &action, NULL);
         sigaction(SIGBUS, &action, NULL);
         
+#ifndef _MAC_SERVER
         // MW-2010-05-11: Make sure if stdin is not a tty, then we set non-blocking.
         //   Without this you can't poll read when a slave process.
         if (!IsInteractiveConsole(0))
@@ -4632,6 +4634,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             setlinebuf(stdout);
             setlinebuf(stderr);
         }
+#endif // _MAC_SERVER
     }
     
 	virtual void Finalize(void)
@@ -4658,6 +4661,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 
 	DisposeEventHandlerUPP(MCS_weh);
 #endif /* MCS_shutdown_dsk_mac */
+#ifndef _MAC_SERVER
         uint2 i;
         
         // Move To MCScreenDC
@@ -4680,6 +4684,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         // Move To MCScreenDC
         DisposeEventHandlerUPP(MCS_weh);
+#endif
         // End
     }
 	
@@ -4874,7 +4879,13 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 #endif /* MCS_getenv_dsk_mac */
         MCAutoStringRefAsUTF8String t_name;
         /* UNCHECKED */ t_name . Lock(p_name);
-        return MCStringCreateWithCString(getenv(*t_name), r_value); //always returns NULL under CodeWarrier env.
+        
+        const char* t_env;
+        t_env = getenv(*t_name);
+        
+        // We want to avoid returning something in case there was the environment variable
+        // doesn't exist
+        return t_env != nil && MCStringCreateWithCString(getenv(*t_name), r_value); //always returns NULL under CodeWarrier env.
     }
 	
 	virtual Boolean CreateFolder(MCStringRef p_path)
@@ -6688,6 +6699,34 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         MCAutoStringRefAsUTF8String t_path_utf;
         if (!t_path_utf.Lock(p_path))
             return NULL;
+        
+        //////////
+        // Copied from Linuxdesktop::OpenFile.
+        // Using a memory mapped file now also possible for Mac
+        if (p_map && MCmmap && p_mode == kMCOpenFileModeRead)
+        {
+            int t_fd = open(*t_path_utf, O_RDONLY);
+            struct stat64 t_buf;
+            if (t_fd != -1 && !fstat64(t_fd, &t_buf))
+            {
+                uint4 t_len = t_buf.st_size;
+                if (t_len != 0)
+                {
+                    char *t_buffer = (char *)mmap(NULL, t_len, PROT_READ, MAP_SHARED,
+                                                  t_fd, 0);
+                    // MW-2013-05-02: [[ x64 ]] Make sure we use the MAP_FAILED constant
+                    //   rather than '-1'.
+                    if (t_buffer != MAP_FAILED)
+                    {
+                        t_handle = new MCMemoryMappedFileHandle(t_fd, t_buffer, t_len);
+                        return t_handle;
+                    }
+                }
+                close(t_fd);
+            }
+        }
+        //
+        //////////
         
         fptr = fopen(*t_path_utf, IO_READ_MODE);
         
@@ -8993,7 +9032,6 @@ static void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mo
 		AEDisposeDesc(&ae);
 	}
 }
-
 
 static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Boolean elevated)
 {
