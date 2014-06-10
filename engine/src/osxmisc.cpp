@@ -848,6 +848,29 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
 	return t_success;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  REFACTORED FROM STACKLST.CPP
+//
+
+void MCStacklist::flushallwindows(void)
+{
+	if (stacks == NULL)
+		return;
+    
+	MCStacknode *tptr = stacks;
+	do
+	{
+		MCStack *sptr = tptr->getstack();
+		if (sptr -> getwindow() != nil && IsWindowVisible((WindowPtr)sptr -> getwindow() -> handle . window))
+            HIWindowFlush((WindowPtr)sptr -> getwindow() -> handle . window);
+            //QDFlushPortBuffer(GetWindowPort((WindowPtr)sptr -> getwindow() -> handle . window), nil);
+		tptr = tptr->next();
+	}
+	while (tptr != stacks);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  REFACTORED FROM GLOBALS.CPP
