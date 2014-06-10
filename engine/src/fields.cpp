@@ -2748,6 +2748,10 @@ void MCField::insertparagraph(MCParagraph *newtext)
 	uint4 oldflags = flags;
 	flags &= ~F_VISIBLE;
 	deleteselection(False);
+    // MW-2014-06-10: [[ Bug 12589 ]] Make sure the paragraph's selection is unset.
+    //   If we don't do this portions of the paragraph will still think they are
+    //   selected causing strange behavior.
+    focusedparagraph -> deleteselection();
 	textheight -= focusedparagraph->getheight(fixedheight);
 	focusedparagraph->split();
 	MCParagraph *oldend = focusedparagraph->next();
