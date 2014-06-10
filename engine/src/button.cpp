@@ -859,8 +859,11 @@ Boolean MCButton::mfocus(int2 x, int2 y)
 						menu->close();
 						menudepth--;
 						MCdispatcher->addmenu(bptr);
+                        // MW-2014-06-10: [[ Bug 12590 ]] Make sure we lock screen around the menu update message.
+                        MCRedrawLockScreen();
 						bptr->state |= CS_MFOCUSED;
 						bptr->message_with_args(MCM_mouse_down, menubutton);
+                        MCRedrawUnlockScreen();
 						bptr->findmenu();
 						bptr->openmenu(False);
 						return True;

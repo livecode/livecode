@@ -36,6 +36,7 @@
 #include "stack.h"
 #include "card.h"
 #include "graphics_util.h"
+#include "redraw.h"
 
 #include "platform.h"
 
@@ -892,9 +893,12 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
 	// from updates as we mustn't fiddle about with it too much in this case!
 	if (s_menubar_targets[t_parent_menu_index] -> Exists())
 	{
+        // MW-2014-06-10: [[ Bug 12590 ]] Make sure we lock screen around the menu update message.
+        MCRedrawLockScreen();
 		s_menubar_lock_count += 1;
 		s_menubar_targets[t_parent_menu_index] -> Get() -> message_with_args(MCM_mouse_down, "1");
 		s_menubar_lock_count -= 1;
+        MCRedrawUnlockScreen();
 	}
 	
 	// Now we've got the menu to update, process the new menu spec, but only if the
