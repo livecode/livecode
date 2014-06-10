@@ -1212,25 +1212,21 @@ static bool cgi_compute_cookie_var(void *p_context, MCVariable *p_var)
     bool t_success = true;
 	MCAutoStringRef t_cookie;
 	
-    t_success = MCS_getenv(MCSTR("HTTP_COOKIE"), &t_cookie);
-
-    if (t_success)
+    if (MCS_getenv(MCSTR("HTTP_COOKIE"), &t_cookie) && !MCStringIsEmpty(*t_cookie))
     {
-        if (MCStringIsEmpty(*t_cookie))
-            return true;
+        // Need to get the appropriate character pointer from the stringref
+        MCAutoDataRef t_query_data;
+        if (MCStringIsNative(*t_cookie))
+            t_success = MCDataCreateWithBytes((byte_t*)MCStringGetNativeCharPtr(*t_cookie), MCStringGetLength(*t_cookie), &t_query_data);
         else
-        {
-            // Need to get the appropriate character pointer from the stringref
-            MCAutoDataRef t_query_data;
-            if (MCStringIsNative(*t_cookie))
-                t_success = MCDataCreateWithBytes((byte_t*)MCStringGetNativeCharPtr(*t_cookie), MCStringGetLength(*t_cookie), &t_query_data);
-            else
-                t_success = MCDataCreateWithBytes((byte_t*)MCStringGetCharPtr(*t_cookie), 2 * MCStringGetLength(*t_cookie), &t_query_data);
+            t_success = MCDataCreateWithBytes((byte_t*)MCStringGetCharPtr(*t_cookie), 2 * MCStringGetLength(*t_cookie), &t_query_data);
 
-            if (t_success)
-                cgi_store_cookie_urlencoded(s_cgi_cookie, *t_query_data, true);
-        }
+        if (t_success)
+            cgi_store_cookie_urlencoded(s_cgi_cookie, *t_query_data, true);
     }
+    else
+        // returns true if nothing had to be computed
+        return true;
 
     return t_success;
 }
@@ -1671,7 +1667,7 @@ bool MCS_set_session_save_path(MCStringRef p_path)
 
 bool MCS_get_session_save_path(MCStringRef& r_path)
 {
-    if (MCStringIsEmpty(MCsessionsavepath))
+    if (!MCStringIsEmpty(MCsessionsavepath))
         return MCStringCopy(MCsessionsavepath, r_path);
 	
 	if (s_session_temp_dir != NULL)
@@ -1732,7 +1728,7 @@ bool MCS_get_session_id(MCStringRef& r_id)
 bool MCServerGetSessionIdFromCookie(MCExecContext &ctxt, MCStringRef &r_id)
 {
 	MCVariable *t_cookie_array;
-	t_cookie_array = MCVariable::lookupglobal_cstring("$_COOKIE");
+    t_cookie_array = MCVariable::lookupglobal(MCNAME("$_COOKIE"));
 	
 	if (t_cookie_array == NULL)
 	{
@@ -1741,7 +1737,7 @@ bool MCServerGetSessionIdFromCookie(MCExecContext &ctxt, MCStringRef &r_id)
 	}
 	
 	// ensure cookie array is evaluated
-	if (t_cookie_array->isdeferred() && ES_NORMAL != ((MCDeferredVariable*)t_cookie_array)->compute())
+    if (t_cookie_array->isdeferred() && !((MCDeferredVariable*)t_cookie_array)->compute())
 		return false;
 
 	MCAutoStringRef t_name;

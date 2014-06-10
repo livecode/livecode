@@ -300,11 +300,7 @@ void MCS_unsetenv(MCStringRef p_name_string)
 
 bool MCS_getenv(MCStringRef p_name_string, MCStringRef& r_result)
 {
-	MCsystem -> GetEnv(p_name_string, r_result);
-    if (r_result != nil)
-        return true;
-    return false;
-        
+    return MCsystem -> GetEnv(p_name_string, r_result);
 }
 
 real8 MCS_getfreediskspace(void)

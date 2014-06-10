@@ -33,7 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 typedef struct
 {
-	char *					save_path;
+    MCStringRef				save_path;
 	MCSystemFileHandle *	file;
 	
 	uint32_t				session_count;
@@ -73,8 +73,6 @@ bool MCSessionOpenIndex(MCSessionIndexRef &r_index)
 	bool t_success = true;
 	
 	MCSessionIndexRef t_index = nil;
-	
-	char *t_path = nil;
 
 	t_success = MCMemoryNew(t_index);
 	
@@ -83,11 +81,11 @@ bool MCSessionOpenIndex(MCSessionIndexRef &r_index)
 		t_success = MCS_get_session_save_path(&t_save_path);
 	
 	if (t_success)
-		t_success = MCCStringClone(MCStringGetCString(*t_save_path), t_index->save_path);
+        t_success = MCStringCopy(*t_save_path, t_index->save_path);
 	
 	MCAutoStringRef t_path_string;
 	if (t_success)
-		t_success = MCStringFormat(&t_path_string, "%s/lcsessions.idx", t_index->save_path);
+        t_success = MCStringFormat(&t_path_string, "%@/lcsessions.idx", t_index->save_path);
 	
 	// open file
 	if (t_success)
@@ -114,7 +112,7 @@ void MCSessionDisposeIndex(MCSessionIndexRef p_index)
 	if (p_index == NULL)
 		return;
 	
-	MCCStringFree(p_index->save_path);
+    MCValueRelease(p_index->save_path);
 	
 	if (p_index->session != NULL)
 	{
@@ -366,7 +364,7 @@ bool MCSessionOpenSession(MCSessionIndexRef p_index, MCSession *p_session)
 	bool t_success = true;
 	
 	MCAutoStringRef t_path_string;
-	t_success = MCStringFormat(&t_path_string, "%s/%s", p_index->save_path, p_session->filename);
+    t_success = MCStringFormat(&t_path_string, "%@/%s", p_index->save_path, p_session->filename);
 	
 	if (t_success)
 		t_success = NULL != (p_session->filehandle = MCsystem->OpenFile(*t_path_string, kMCOpenFileModeUpdate, false));
@@ -632,7 +630,7 @@ bool MCSessionCleanup(void)
 			// check file not locked
 			MCSystemFileHandle *t_file;
 			MCAutoStringRef t_full_path_string;
-			if (MCStringFormat(&t_full_path_string, "%s/%s", t_index->save_path, t_index->session[i]->filename)  && MCS_exists(*t_full_path_string, True))
+            if (MCStringFormat(&t_full_path_string, "%@/%s", t_index->save_path, t_index->session[i]->filename)  && MCS_exists(*t_full_path_string, True))
 			{
 				t_file = MCsystem->OpenFile(*t_full_path_string, kMCOpenFileModeRead, false);
 				if (t_file != NULL)

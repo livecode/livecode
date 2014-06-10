@@ -884,7 +884,12 @@ public:
 #endif /* MCS_getenv_dsk_lnx */
         MCAutoStringRefAsSysString t_name;
         /* UNCHECKED */ t_name.Lock(p_name);
-        return MCStringCreateWithSysString(getenv(*t_name), r_value);
+
+        char *t_env_value = getenv(*t_name);
+        // We need to know whethere we actually got an environment variable
+        // or if it defaulted to an empty stringref because the env variable
+        // was unset
+        return t_env_value != nil && MCStringCreateWithSysString(t_env_value, r_value);
     }
 
     virtual Boolean CreateFolder(MCStringRef p_path)
