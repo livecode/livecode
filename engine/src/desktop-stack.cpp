@@ -289,14 +289,19 @@ void MCStack::updateignoremouseevents(void)
 	MCPlatformSetWindowBoolProperty(window, kMCPlatformWindowPropertyIgnoreMouseEvents, getextendedstate(ECS_IGNORE_MOUSE_EVENTS) == True);
 }
 
-
 // MW-2011-09-11: [[ Redraw ]] Force an immediate update of the window within the given
 //   region. The actual rendering is done by deferring to the 'redrawwindow' method.
 void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 {
 	if (window == nil)
 		return;
-	
+    
+    if (!opened)
+        return;
+    
+    if (!isvisible())
+        return;
+    
 	MCPlatformInvalidateWindow(window, p_region);
 	MCPlatformUpdateWindow(window);
 }
