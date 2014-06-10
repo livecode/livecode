@@ -2636,8 +2636,10 @@ MCRectangle MCParagraph::getdirty(uint2 fixedheight)
 
 				dirty.y = y;
 				// MW-2012-01-08: [[ ParaStyles ]] If on the first line, adjust for spacing before.
+                // MW-2014-06-10: [[ Bug 11809 ]] Make sure we adjust the top of the dirty rect if on
+                //   the first line and there is space above.
 				if (lptr == lines)
-					dirty.y -= t_space_above;
+					t_dirty_top -= t_space_above;
 			}
 
 			int32_t t_new_dirty_left, t_new_dirty_right;
