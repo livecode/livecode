@@ -250,7 +250,7 @@ class MCMacPlatformSurface;
 - (void)draggedImage:(NSImage *)image beganAt:(NSPoint)point;
 - (void)draggedImage:(NSImage *)image movedTo:(NSPoint)point;
 - (void)draggedImage:(NSImage *)image endedAt:(NSPoint)point operation:(NSDragOperation)operation;
-- (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations;
+- (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations pasteboard:(NSPasteboard *)pboard;
 
 //////////
 
