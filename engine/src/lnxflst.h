@@ -26,8 +26,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <pango/pangoft2.h>
 
-class MCX11Context;
-
 class MCFontlist
 {
 public:

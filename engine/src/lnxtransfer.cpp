@@ -33,40 +33,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxdc.h"
 #include "lnxtransfer.h"
 
-Atom XdndAware;
-Atom XdndSelection;
-Atom XdndEnter;
-Atom XdndLeave;
-Atom XdndPosition;
-Atom XdndDrop;
-Atom XdndFinished;
-Atom XdndStatus;
-Atom XdndActionCopy;
-Atom XdndActionMove;
-Atom XdndActionLink;
-Atom XdndActionAsk;
-Atom XdndActionPrivate;
-Atom XdndTypeList;
-Atom XdndActionList;
-Atom XdndActionDescription;
 
-Atom XdndMyAtom ;
-Atom XdndRevolutionWindow ;
-
-Atom XA_TARGETS ;
-
-
-Atom WMname ;
-Atom text ;
-Atom html ;
-Atom rtf ;
-
- 
-Time LastEventTime ;
-Time LastPositionTime ;
-
-
-char * xdnd_get_window_title ( Window w ) ;
+guint32 LastEventTime ;
+guint32 LastPositionTime ;
 
 static XdndMimeTable XTransfer_lookup_table[XDND_TYPE_TABLE_SIZE] = 
 	{ 	
@@ -91,41 +60,41 @@ static XdndMimeTable XTransfer_lookup_table[XDND_TYPE_TABLE_SIZE] =
 // MCMIMEtype implementation
 
 
-MCMIMEtype::MCMIMEtype( Display * p_display, Atom p_atom )
+MCMIMEtype::MCMIMEtype(GdkDisplay * p_display, GdkAtom p_atom)
 {
-	m_display = p_display ;
-	m_atom = p_atom ;
-	m_atom_name = NULL ;
+	m_display = p_display;
+	m_atom = p_atom;
+	m_atom_name = NULL;
 }
 
 
-MCMIMEtype::MCMIMEtype ( Display * p_display, char * p_atom )
+MCMIMEtype::MCMIMEtype(GdkDisplay * p_display, const char * p_atom)
 {
-	m_display = p_display ;
-	m_atom = XInternAtom ( m_display, p_atom, false );
-	m_atom_name = NULL ;
+	m_display = p_display;
+	m_atom = gdk_atom_intern(p_atom, false);
+	m_atom_name = NULL;
 }
 
 MCMIMEtype::~MCMIMEtype(void)
 {
-	if ( m_atom_name != NULL)
-		XFree(m_atom_name);
+	if (m_atom_name != NULL)
+		g_free(m_atom_name);
 }
 
 
 char * MCMIMEtype::asString(void)
 {
-	if ( m_atom_name == NULL)
-		m_atom_name = XGetAtomName ( m_display, m_atom );
-	return (m_atom_name);
+	if (m_atom_name == NULL)
+		m_atom_name = gdk_atom_name(m_atom);
+	return m_atom_name;
 }
 
 MCTransferType MCMIMEtype::asRev ( void ) 
 {
-	for ( uint4 a = 0 ; a < XDND_TYPE_TABLE_SIZE ; a++)
-		if ( XInternAtom(m_display, XTransfer_lookup_table[a] . mime_type, false) == m_atom)
-			return XTransfer_lookup_table[a] . rev_type ;
-	return TRANSFER_TYPE_NULL ;
+	for (int a = 0; a < XDND_TYPE_TABLE_SIZE; a++)
+		if (gdk_atom_intern(XTransfer_lookup_table[a] . mime_type, false) == m_atom)
+			return XTransfer_lookup_table[a] . rev_type;
+	return TRANSFER_TYPE_NULL;
 }
 
  
@@ -136,251 +105,174 @@ MCTransferType MCMIMEtype::asRev ( void )
 
 =========================================================================================*/
 
-
-
-MCXTransferStore::MCXTransferStore ( Display *p_display ) 
+MCGdkTransferStore::MCGdkTransferStore(GdkDisplay *p_display)
+: m_entries(NULL), m_entry_count(0), m_types_list(NULL), m_types_count(0),
+    m_display(p_display)
 {
-	m_entries = NULL ;
-	m_entry_count = 0 ;
-	m_display = p_display ;
-	m_internal_dnd = false ; 
-	m_types_list = NULL ;
-	m_types_count = 0 ;
+    ;
 }
 
-
-MCXTransferStore::~MCXTransferStore(void)
+MCGdkTransferStore::~MCGdkTransferStore()
 {
-	cleartypes();
+    cleartypes();
 }
 
-void	MCXTransferStore::cleartypes ( void ) 
+void MCGdkTransferStore::cleartypes()
 {
-
-	if ( m_entries != NULL )
-	{
-		for ( uint4 a=0; a<m_entry_count; a++)
-		{
-			if (m_entries[a].data != nil)
-				MCValueRelease(m_entries[a].data);
-			//if ( m_entries[a].format != NULL)
-				delete m_entries[a].format ;
-		}
-	}
-
-	free(m_entries ) ;	
-	m_entries = NULL ;
-	m_entry_count = 0 ;
-	m_internal_dnd = false ;
-	
-	if ( m_types_list != NULL)
-	{
-		free(m_types_list);
-		m_types_list = NULL;
-		m_types_count = 0 ;
-	}
+    if (m_entries != NULL)
+    {
+        for (int32_t i = 0; i < m_entry_count; i++)
+        {
+            if (m_entries[i].m_data != nil)
+                MCValueRelease(m_entries[i].m_data);
+            delete m_entries[i].m_mime;
+        }
+    }
+    
+    delete[] m_entries;
+    m_entries = NULL;
+    m_entry_count = 0;
+    
+    delete[] m_types_list;
+    m_types_list = NULL;
+    m_types_count = 0;
 }
-
-
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
 // Functions to add data into the TransferStore
 
-
-
-// Adds an explicit MIME type to the type list
-void MCXTransferStore::addType ( MCMIMEtype * p_mime, MCTransferType p_type, MCDataRef p_data  ) 
+void MCGdkTransferStore::addType(MCMIMEtype* p_mime, MCTransferType p_type, MCDataRef p_data)
 {
-	MCTransferType t_type ;
-	
-	if ( p_mime == NULL ) 
-		return ;
-	
-	t_type = ( p_type == TRANSFER_TYPE_NULL ? p_mime->asRev() : p_type ) ;
-	
-	if ( t_type != TRANSFER_TYPE_NULL ) 
-	{
-		
-		m_entry_count ++ ;
-		
-		if ( m_entries == NULL ) 
-			m_entries = (Entry*)malloc(sizeof(Entry)) ;
-		else
-			m_entries = (Entry*)realloc(m_entries, (sizeof(Entry) * m_entry_count ) ) ;
-		
-		m_entries[m_entry_count-1] . format = p_mime ;
-		m_entries[m_entry_count-1] . type = t_type ;
-		m_entries[m_entry_count - 1 ] . data = p_data ;
-		
-		if ( p_data != nil)
-			MCValueRetain(p_data);
-	}
+    if (p_mime == NULL)
+        return;
+    
+    // Use the transfer type if specified; otherwise work it out based on MIME
+    MCTransferType t_type;
+    t_type = (p_type == TRANSFER_TYPE_NULL) ? p_mime->asRev() : p_type;
+    
+    if (t_type != TRANSFER_TYPE_NULL)
+    {
+        m_entry_count++;
+        
+        m_entries = (Entry*)realloc(m_entries, sizeof(Entry)*m_entry_count);
+        
+        m_entries[m_entry_count-1].m_mime = p_mime;
+        m_entries[m_entry_count-1].m_type = t_type;
+        m_entries[m_entry_count-1].m_data = (p_data != nil) ? MCValueRetain(p_data) : nil;
+    }
 }
 
-
-
-
-
-// Adds a Revolution DnD type -- the MIME types are then derived from this base type
-void 	MCXTransferStore::addRevType ( MCTransferType p_type, MCDataRef p_data  )
+void MCGdkTransferStore::addRevType(MCTransferType p_type, MCDataRef p_data)
 {
-		
-	switch ( p_type )
-	{
-		case TRANSFER_TYPE_TEXT: 
-			addType ( new MCMIMEtype(m_display, "text/plain"), p_type, p_data );
-			addType ( new MCMIMEtype( m_display, "STRING"), TRANSFER_TYPE_TEXT, p_data ) ;
-			addType ( new MCMIMEtype( m_display, "COMPOUND_TEXT"), TRANSFER_TYPE_TEXT, p_data ) ;
-		break ; 
-		 
-		case TRANSFER_TYPE_STYLED_TEXT:
-			addType ( new MCMIMEtype( m_display, "text/richtext"), TRANSFER_TYPE_STYLED_TEXT, p_data ) ;
-			addType ( new MCMIMEtype( m_display, "STRING"), TRANSFER_TYPE_STYLED_TEXT, p_data ) ;
-			addType ( new MCMIMEtype( m_display, "COMPOUND_TEXT"), TRANSFER_TYPE_STYLED_TEXT, p_data ) ;
-			addType ( new MCMIMEtype( m_display, "UTF8_STRING"), TRANSFER_TYPE_STYLED_TEXT, p_data );
-		break ; 
-			
-		case TRANSFER_TYPE_IMAGE:
-			if ( MCImageDataIsPNG ( p_data ) )
-				addType ( new MCMIMEtype( m_display, "image/png"), p_type, p_data );
-			if ( MCImageDataIsJPEG ( p_data ) )
-				addType ( new MCMIMEtype( m_display, "image/jpeg"), p_type, p_data );
-			if ( MCImageDataIsGIF ( p_data ) )
-				addType ( new MCMIMEtype( m_display, "image/gif"), p_type, p_data );
-		break ;
-			
-		case TRANSFER_TYPE_FILES:
-			addType(new MCMIMEtype( m_display, "text/uri-list"), p_type, p_data );
-		break;
-		
-		case TRANSFER_TYPE_OBJECTS:
-			addType(new MCMIMEtype( m_display, REV_MIME_STR), p_type, p_data );
-		break;
-	} 
-	
+    switch (p_type)
+    {
+        case TRANSFER_TYPE_TEXT:
+            addType(new MCMIMEtype(m_display, "text/plain"), p_type, p_data);
+            addType(new MCMIMEtype(m_display, "STRING"), p_type, p_data);
+            addType(new MCMIMEtype(m_display, "COMPOUND_TEXT"), p_type, p_data);
+            break;
+            
+        case TRANSFER_TYPE_STYLED_TEXT:
+            addType(new MCMIMEtype(m_display, "text/richtext"), p_type, p_data);
+            addType(new MCMIMEtype(m_display, "STRING"), p_type, p_data);
+            addType(new MCMIMEtype(m_display, "COMPOUND_TEXT"), p_type, p_data);
+            addType(new MCMIMEtype(m_display, "UTF8_STRING"), p_type, p_data);
+            break;
+            
+        case TRANSFER_TYPE_IMAGE:
+            if (MCImageDataIsPNG(p_data))
+                addType(new MCMIMEtype(m_display, "image/png"), p_type, p_data);
+            if (MCImageDataIsJPEG(p_data))
+                addType(new MCMIMEtype(m_display, "image/jpeg"), p_type, p_data);
+            if (MCImageDataIsGIF(p_data))
+                addType(new MCMIMEtype(m_display, "image/gif"), p_type, p_data);
+            break;
+            
+        case TRANSFER_TYPE_FILES:
+            addType(new MCMIMEtype(m_display, "text/uri-list"), p_type, p_data);
+            break;
+            
+        case TRANSFER_TYPE_OBJECTS:
+            addType(new MCMIMEtype(m_display, REV_MIME_STR), p_type, p_data);
+            break;
+    }
 }
 
-
-void MCXTransferStore::addAtom ( Atom p_atom )
+void MCGdkTransferStore::addAtom(GdkAtom p_atom)
 {
-	MCMIMEtype * t_mime ;
-	t_mime = new MCMIMEtype ( m_display, p_atom ) ;
-	addType ( t_mime, TRANSFER_TYPE_NULL, NULL ) ;
+    MCMIMEtype* t_mime = new MCMIMEtype(m_display, p_atom);
+    addType(t_mime, TRANSFER_TYPE_NULL, NULL);
 }
-
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
 // X11 Specific functions
 
-// Applies the whole typelist to a specified window
-void	MCXTransferStore::apply_to_window ( Window w ) 
+bool MCGdkTransferStore::GetSelection(GdkWindow *w, GdkAtom property, MCDataRef &r_data)
 {
-	Atom * typelist ;
-	
-    if ( m_entries != NULL ) 
-	{
-		typelist = (Atom*)malloc(sizeof(Atom) * m_entry_count ) ;
-		for (uint4 a = 0 ; a < m_entry_count; a++)
-			typelist[a] = m_entries[a] . format->asAtom() ;
-		XChangeProperty (m_display, w, XdndTypeList, XA_ATOM, 32, PropModeReplace, (unsigned char *) typelist, m_entry_count);
-		free ( typelist ) ;
-	}
-	
+    // TODO: could we use the gdk selection getter instead?
+    
+    MCAutoDataRef t_data;
+    if (!MCDataCreateMutable(0, &t_data))
+        return false;
+    
+    // Count of bytes read
+    uindex_t t_total_bytes = 0;
+    
+    unsigned long count, remaining;
+    
+    do
+    {
+        unsigned char *s = NULL;
+        x11::Atom actual;
+        int format;
+        
+        // The GDK equivalent of XGetWindowProperty (gdk_property_get) is to be
+        // avoided, according to the GDK documentation, in favour of just using
+        // XGetWindowProperty directly instead.
+        int t_result;
+        t_result = x11::XGetWindowProperty(x11::gdk_x11_display_get_xdisplay(m_display),
+                                           x11::gdk_x11_drawable_get_xid(w),
+                                           x11::gdk_x11_atom_to_xatom_for_display(m_display, property),
+                                           t_total_bytes / 4,
+                                           65536,
+                                           false,
+                                           AnyPropertyType,
+                                           &actual,
+                                           &format,
+                                           &count,
+                                           &remaining,
+                                           &s);
+        
+        // Given the format and count, how many bytes did we receive?
+        uindex_t t_bytes = count * (format / 8);
+        t_total_bytes += t_bytes;
+        
+        if (t_result != Success || !MCDataAppendBytes(*t_data, s, t_bytes))
+        {
+            x11::XFree(s);
+            return false;
+        }
+        
+        x11::XFree(s);
+    }
+    while (remaining > 0);
+    
+    return MCDataCopy(*t_data, r_data);
 }
-
-
-// Applies the first 3 types in the typelist to the xevent
-void	MCXTransferStore::apply_to_message ( XEvent *xevent ) 
-{
-	if ( xevent->type == ClientMessage  && m_entries != NULL )
-	{
-		if ( xevent->xclient.message_type == XdndEnter )
-			for ( uint4 a = 0 ; a < ( m_entry_count < 3 ? m_entry_count : 3 ) ; a ++ )
-				XDND_ENTER_TYPE( xevent, a ) = m_entries[a] . format->asAtom();
-	}
-	
-}
-
-
-char * buffer_append ( char * p_old, uint4 p_old_size, char * p_new, uint4 p_new_size )
-{
-	char * t_new;
-	t_new = (char*)malloc ( p_old_size + p_new_size );
-	memcpy(t_new, p_old, p_old_size);
-	memcpy(t_new+p_old_size, p_new, p_new_size);
-	return t_new ;
-}
-
 	
 
-char * MCXTransferStore::GetSelection ( Window w, Atom property, uint4& p_count )
-{
-    long read;
-    int error = 0;
-    unsigned long remaining;
-	unsigned long count;
-	char * t_ret = NULL ;
 
-	uint4 t_bytes = 0 ;
-	uint4 t_total_bytes = 0 ;
-	unsigned long t_count = 0;
-	
-	read = 0;
-	count = 0 ;
-    do 
-	{
-		unsigned char *s = NULL ;
-		Atom actual;
-		int format;
-		if (XGetWindowProperty (m_display, w, property, t_total_bytes / 4, 65536, false,
-					AnyPropertyType, &actual, &format,
-					&count, &remaining,
-					&s) != Success) {
-			XFree (s);
-			return NULL;
-			}
-		
-		
-		if ( s != NULL ) 
-		{
-			t_bytes = count * ( format / 8 );
-			t_count += count ;
-			
-			t_ret = buffer_append ( t_ret, t_total_bytes, (char*)s, t_bytes );
-			t_total_bytes += t_bytes ;
-
-#ifdef DEBUG_DND
-  	fprintf(stderr, "GetSelection() : Have got %d items of size %d = %d bytes\n", count, format, t_bytes ) ;
-	if ( format == 8 ) 
-		fprintf(stderr, "\tString(?) : %s\n", s);
-#endif
-	
-			XFree (s);
-		}
-    } 
-	while (remaining);
-	
-	p_count = t_count ;
-#ifdef DEBUG_DND
-	fprintf(stderr, "Returning %d items\n", t_count ) ;
-#endif
-
-	
-	return (t_ret) ;
-
-}
-
-
-
+/*
 void MCXTransferStore::GetExternalTypes ( Atom p_public_atom, Atom p_private_atom, Window w)
 {
-	XEvent xevent ;
+	gdk_selection_owner_set_for_display(m_display, w, p_private_atom, LastEventTime, TRUE);
+    gdk_selection_convert(w, p_public_atom, gdk_atom_intern_static_string("TARGETS"), LastEventTime);
+    
+    XEvent xevent ;
 	XSetSelectionOwner(m_display, p_private_atom, w, LastEventTime);
-	XConvertSelection (m_display, p_public_atom, XA_TARGETS, p_private_atom, w, LastEventTime ); 
+	XConvertSelection (m_display, p_public_atom, XA_TARGETS, p_private_atom, w, LastEventTime );
 	if ( WaitForEventCompletion(xevent) )
 	{
 		Atom * t_data ;
@@ -420,7 +312,7 @@ bool MCXTransferStore::WaitForEventCompletion(XEvent &p_xevent)
 	XEvent xevent ;
 	bool xdnd_target_done = false ;
 	
-	Time t_loop_time = LastEventTime ; 
+	guint32 t_loop_time = LastEventTime ;
 	
 	while (!xdnd_target_done )
 	{
@@ -911,7 +803,7 @@ bool MCXTransferStore::Convert_MIME_to_REV ( MCDataRef p_input, MCMIMEtype * p_M
 			r_output = MCValueRetain(p_input);
 			return true;
 		}
-}
+}*/
 
 // Convert from UTF8 to TRANSFER_TYPE_STYLED_TEXT
 bool ConvertUnicodeToStyled ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output ) 

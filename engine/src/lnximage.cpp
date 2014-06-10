@@ -27,27 +27,27 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxdc.h"
 #include "imagebitmap.h"
 
-bool MCImageBitmapCreateWithXImage(XImage *p_image, MCImageBitmap *&r_bitmap)
+bool MCImageBitmapCreateWithGdkPixbuf(GdkPixbuf *p_image, MCImageBitmap *&r_bitmap)
 {
-	MCImageBitmap *t_bitmap;
-	uindex_t t_width = p_image->width;
-	uindex_t t_height = p_image->height;
-	
-	if (!MCImageBitmapCreate(t_width, t_height, t_bitmap))
-		return false;
-
-	uint8_t *t_src_ptr = (uint8_t*)p_image->data;
-	uint8_t *t_dst_ptr = (uint8_t*)t_bitmap->data;
-	while (t_height--)
-	{
-		MCMemoryCopy(t_dst_ptr, t_src_ptr, t_width * 4);
-		t_src_ptr += p_image->bytes_per_line;
-		t_dst_ptr += t_bitmap->stride;
-	}
-	
-	MCImageBitmapSetAlphaValue(t_bitmap, 0xFF);
-	r_bitmap = t_bitmap;
-	return true;
+    MCImageBitmap *t_bitmap;
+    uindex_t t_width = gdk_pixbuf_get_width(p_image);
+    uindex_t t_height = gdk_pixbuf_get_height(p_image);
+    
+    if (!MCImageBitmapCreate(t_width, t_height, t_bitmap))
+        return false;
+    
+    uint8_t *t_src_ptr = (uint8_t*)gdk_pixbuf_get_pixels(p_image);
+    uint8_t *t_dst_ptr = (uint8_t*)t_bitmap->data;
+    while (t_height--)
+    {
+        MCMemoryCopy(t_dst_ptr, t_src_ptr, t_width * gdk_pixbuf_get_n_channels(p_image));
+        t_src_ptr += gdk_pixbuf_get_rowstride(p_image);
+        t_dst_ptr += t_bitmap->stride;
+    }
+    
+    MCImageBitmapSetAlphaValue(t_bitmap, 0xFF);
+    r_bitmap = t_bitmap;
+    return true;
 }
 
 void surface_extract_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);

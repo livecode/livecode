@@ -1420,8 +1420,8 @@ MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Bo
 #if defined(_LINUX_DESKTOP)
 	if (fonts == NULL)
 		fonts = MCFontlistCreateNew();
-	if (fonts == NULL)
-		fonts = MCFontlistCreateOld();
+    //	if (fonts == NULL)
+    //		fonts = MCFontlistCreateOld();
 #elif defined(_LINUX_SERVER)
 	// MM-2013-09-13: [[ RefactorGraphics ]] Server font support.
 	if (fonts == NULL)

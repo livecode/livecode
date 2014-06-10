@@ -270,7 +270,7 @@ char * get_filter_mask ( uint4 p_mask_id, char * p_masks )
 void make_front_widget ( GtkWidget *p_widget)
 {
 	Window t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == DNULL && MCtopstackptr != DNULL)
+	if (t_window == DNULL && MCtopstackptr != NULL)
 		t_window = MCtopstackptr -> getwindow();
 
 	gtk_widget_realize( GTK_WIDGET( p_widget )) ;
@@ -279,8 +279,8 @@ void make_front_widget ( GtkWidget *p_widget)
 	{
 		GdkWindow * gdk_window = NULL ;
 		gdk_window = GTK_WIDGET ( p_widget ) -> window ;
-		if ( gdk_window != NULL ) 
-			XSetTransientForHint ( ((MCScreenDC*)MCscreen) -> getDisplay(), GDK_WINDOW_XWINDOW (  ( gdk_window ) ),  t_window  ) ;
+		if ( gdk_window != NULL )
+            gdk_window_set_transient_for(gdk_window, t_window);
 		else 
 			gtk_window_set_keep_above ( GTK_WINDOW ( p_widget ) , True ) ;
 	}

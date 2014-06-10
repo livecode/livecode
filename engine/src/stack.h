@@ -133,10 +133,6 @@ class MCStack : public MCObject
 
 protected:
     
-#ifdef _LINUX_DESKTOP
-    GdkWindow *gdk_window;       // GDK window object
-#endif
-    
 	Window window;
 	MCCursorRef cursor;
 	MCStack *substacks;

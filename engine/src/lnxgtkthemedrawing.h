@@ -258,11 +258,6 @@ extern "C"
 	 */
 	gint moz_gtk_get_dropdown_arrow_size(gint* width, gint* height);
 
-
-	// handles an event for one of our internal widgets.
-	// returns false if not handled/found
-	bool moz_gtk_handle_event(const XEvent &ev);
-
 	void spinbutton_get_rects(GtkArrowType type, GdkRectangle *rect,
 	                          GdkRectangle &framerect, GdkRectangle &btnrect);
 

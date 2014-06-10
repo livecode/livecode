@@ -48,11 +48,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/mman.h>
 #include <sys/dir.h>
 #include <sys/wait.h>
+#include <sys/time.h>
 #include <dlfcn.h>
 #include <termios.h>
 //#include <langinfo.h>
 #include <locale.h>
 #include <pwd.h>
+#include <fcntl.h>
 
 #include <libgnome/gnome-url.h>
 #include <libgnome/gnome-program.h>
@@ -469,8 +471,8 @@ static void handle_signal(int sig)
                 // cleaner way of dealing with this situation.
                 if ( MClastvideowindow != DNULL )
                 {
-                    XUnmapWindow (MCdpy, MClastvideowindow);
-                    XDestroyWindow (MCdpy, MClastvideowindow);
+                    gdk_window_hide(MClastvideowindow);
+                    gdk_window_destroy(MClastvideowindow);
                     MClastvideowindow = DNULL ;
                 }
                 else
