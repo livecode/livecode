@@ -568,9 +568,14 @@ void MCStack::constrain(intptr_t lp)
 {
 	uint32_t wstyle, exstyle;
 	getstyle(wstyle, exstyle);
-	RECT wrect = getwrect(rect, wstyle, exstyle);
-	int4 dx = wrect.right - wrect.left - rect.width;
-	int4 dy = wrect.bottom - wrect.top - rect.height;
+
+	// IM-2014-05-27: [[ Bug 12462 ]] Convert stack rect to screen coords
+	MCRectangle t_rect;
+	t_rect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(rect);
+
+	RECT wrect = getwrect(t_rect, wstyle, exstyle);
+	int4 dx = wrect.right - wrect.left - t_rect.width;
+	int4 dy = wrect.bottom - wrect.top - t_rect.height;
 	LPMINMAXINFO mmptr = (LPMINMAXINFO)lp;
 	const MCDisplay *t_display;
 	t_display = MCscreen -> getnearestdisplay(rect);
@@ -586,6 +591,10 @@ void MCStack::constrain(intptr_t lp)
 
 		if (memcmp(&t_workarea, &t_display -> workarea, sizeof(MCRectangle)))
 			MCU_reduce_rect(t_workarea, -dx / 2);
+
+		// IM-2014-05-27: [[ Bug 12462 ]] Convert screen rects to screen coords
+		t_workarea = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(t_workarea);
+		t_viewport = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(t_viewport);
 
 		mmptr -> ptMaxSize . x = MCU_min(maxwidth + dx, t_workarea . width);
 		mmptr -> ptMaxSize . y = MCU_min(maxheight + dy, t_workarea . height);
