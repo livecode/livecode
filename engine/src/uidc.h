@@ -244,8 +244,9 @@ protected:
 	MCMessageList *messages;
 	MCMovingList *moving;
 	uint4 messageid;
-	uint2 nmessages;
-	uint2 maxmessages;
+    // MW-2014-05-28: [[ Bug 12463 ]] Change these to 32-bit to stop wrap-around of messages.
+	uint32_t nmessages;
+	uint32_t maxmessages;
 	MCColor *colors;
 	char **colornames;
 	int2 *allocs;
@@ -428,7 +429,6 @@ public:
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
 	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
 	virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
-	virtual void delaymessage(MCObject *optr, MCNameRef name, char *p1 = NULL, char *p2 = NULL);
 	
 	// Wait for at most 'duration' seconds. If 'dispatch' is true then event
 	// dispatch will occur. If 'anyevent' is true then the call will return
@@ -567,6 +567,14 @@ public:
 	void cancelmessageindex(uint2 i, Boolean dodelete);
 	void cancelmessageid(uint4 id);
 	void cancelmessageobject(MCObject *optr, MCNameRef name);
+	void delaymessage(MCObject *optr, MCNameRef name, char *p1 = NULL, char *p2 = NULL);
+    void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params);
+    int doshiftmessage(int index, real8 newtime);
+    
+    // MW-2014-05-28: [[ Bug 12463 ]] This is used by 'send in time' - separating user sent messages from
+    //   engine sent messages. The former are subject to a limit to stop pending message queue overflow.
+    bool addusermessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
+    
 	void listmessages(MCExecPoint &ep);
 	Boolean handlepending(real8 &curtime, real8 &eventtime, Boolean dispatch);
 	void addmove(MCObject *optr, MCPoint *pts, uint2 npts,

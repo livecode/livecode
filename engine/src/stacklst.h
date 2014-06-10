@@ -158,6 +158,13 @@ public:
 	void purgefonts(void);
 
 	void ensureinputfocus(Window window);
+
+#ifdef _MACOSX
+    void flushallwindows(void);
+#endif
+    
+   // MW-2014-04-10: [[ Bug 12175 ]] Moved from MCDispatcher - method for reopening all windows.
+    void reopenallstackwindows(void);
 };
 
 #endif

@@ -221,8 +221,10 @@ public:
 	//   MCField::gettextatts (to fetch partial parts of a paragraph)
 	//   MCField::settextatts (to insert partial parts of a paragraph)
 	//   MCField::insertparagraph
-	//   
-	void join();
+	//
+	// MW-2014-05-28: [[ Bug 12303 ]] If 'preserve' is true, then the paragraph styles
+    //   of 'this' paragraph are never changed (used when setting 'text' of a chunk).
+	void join(bool p_preserve_styles_if_zero_length = false);
 	void split();
 
 	// Delete the text from si to ei in the paragraph.
@@ -465,7 +467,8 @@ public:
 	// false and set lastline to the line that would be clipped.
 	// Called by:
 	//   MCField::getprop
-	Boolean pagerange(uint2 fixedheight, uint2 &theight, uint2 &tend, MCLine *&lastline);
+    // MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indicies.
+	Boolean pagerange(uint2 fixedheight, uint2 &theight, uint4 &tend, MCLine *&lastline);
 
 	// Returns true if any of the paragraph attributes are non-default.
 	bool hasattrs(void);
@@ -661,7 +664,7 @@ public:
 	// Called by:
 	//   MCField::finsert (for charset purposes)
 	//   MCField::gettextatts
-	Boolean getatts(uint2 si, uint2 ei, Font_textstyle spec_style, const char *&fname, uint2 &size,
+	Boolean getatts(uint2 si, uint2 ei, Properties which, Font_textstyle spec_style, const char *&fname, uint2 &size,
 	                uint2 &style, const MCColor *&color,
 	                const MCColor *&backcolor, int2 &shift, bool& specstyle, uint2 &mixed);
 

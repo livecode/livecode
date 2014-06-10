@@ -1268,45 +1268,6 @@ void MCDispatch::property(Window w, Atom atom)
 {
 }
 
-void MCDispatch::sync_stack_windows(void)
-{
-	if (stacks == nil)
-		return;
-	
-	MCStack *t_stack;
-	t_stack = stacks;
-	
-	do
-	{
-		if (t_stack->getopened() && t_stack->isvisible())
-		{
-			t_stack->view_sync_window_geometry();
-			t_stack->view_dirty_all();
-		}
-		
-		t_stack = (MCStack*)t_stack->next();
-	}
-	while (t_stack != stacks);
-}
-
-void MCDispatch::reopen_stack_windows(void)
-{
-	if (stacks == nil)
-		return;
-	
-	MCStack *t_stack;
-	t_stack = stacks;
-	
-	do
-	{
-		if (t_stack->getopened() && t_stack->getwindow() != nil)
-			t_stack->reopenwindow();
-		
-		t_stack = (MCStack*)t_stack->next();
-	}
-	while (t_stack != stacks);
-}
-
 void MCDispatch::configure(Window w)
 {
 	MCStack *target = findstackd(w);
@@ -1861,7 +1822,7 @@ void MCDispatch::dodrop(bool p_source)
 		t_field = static_cast<MCField *>(MCdragsource);
 
 		int4 t_from_start_index, t_from_end_index;
-		t_field -> selectedmark(False, t_from_start_index, t_from_end_index, False);
+		t_field -> selectedmark(False, t_from_start_index, t_from_end_index, False, False);
 
 		// We are dropping in the target selection - so just send the messages and do nothing
 		if (t_start_index >= t_from_start_index && t_start_index < t_from_end_index)
@@ -1920,7 +1881,7 @@ void MCDispatch::dodrop(bool p_source)
 	int4 t_src_start, t_src_end;
 	t_src_start = t_src_end = 0;
 	if (t_auto_source)
-		static_cast<MCField *>(MCdragsource) -> selectedmark(False, t_src_start, t_src_end, False);
+		static_cast<MCField *>(MCdragsource) -> selectedmark(False, t_src_start, t_src_end, False, False);
 
 	bool t_auto_drop;
 	t_auto_drop = MCdragdest != NULL && MCdragdest -> message(MCM_drag_drop) != ES_NORMAL;

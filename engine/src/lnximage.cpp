@@ -27,6 +27,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxdc.h"
 #include "imagebitmap.h"
 
+// Linux image conversion functions
+
 bool MCImageBitmapCreateWithXImage(XImage *p_image, MCImageBitmap *&r_bitmap)
 {
 	MCImageBitmap *t_bitmap;
@@ -48,6 +50,137 @@ bool MCImageBitmapCreateWithXImage(XImage *p_image, MCImageBitmap *&r_bitmap)
 	MCImageBitmapSetAlphaValue(t_bitmap, 0xFF);
 	r_bitmap = t_bitmap;
 	return true;
+}
+
+bool MCGImageToX11Bitmap(MCGImageRef p_image, MCBitmap *&r_bitmap)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCBitmap *t_bitmap;
+	t_bitmap = nil;
+	
+	MCGRaster t_raster;
+	
+	if (t_success)
+		t_success = MCGImageGetRaster(p_image, t_raster);
+		
+	if (t_success)
+		t_success = nil != (t_bitmap = ((MCScreenDC*)MCscreen)->createimage(32, t_raster.width, t_raster.height, False, 0, False, False));
+		
+	if (t_success)
+	{
+		const uint8_t *t_src_ptr;
+		t_src_ptr = (uint8_t*)t_raster.pixels;
+		uint8_t *t_dst_ptr;
+		t_dst_ptr = (uint8_t*)t_bitmap->data;
+		
+		for (uint32_t i = 0; i < t_raster.height; i++)
+		{
+			MCMemoryCopy(t_dst_ptr, t_src_ptr, t_raster.width * sizeof(uint32_t));
+			t_src_ptr += t_raster.stride;
+			t_dst_ptr += t_bitmap->bytes_per_line;
+		}
+		
+		r_bitmap = t_bitmap;
+	}
+	
+	return t_success;
+}
+
+bool MCX11BitmapToX11Pixmap(MCBitmap *p_bitmap, Pixmap &r_pixmap)
+{
+	bool t_success;
+	t_success = true;
+	
+	Pixmap t_pixmap;
+	t_pixmap = nil;
+	
+	if (t_success)
+		t_success = nil != (t_pixmap = ((MCScreenDC*)MCscreen)->createpixmap(p_bitmap->width, p_bitmap->height, p_bitmap->depth, False));
+		
+	if (t_success)
+	{
+		((MCScreenDC*)MCscreen)->putimage(t_pixmap, p_bitmap, 0, 0, 0, 0, p_bitmap->width, p_bitmap->height);
+		r_pixmap = t_pixmap;
+	}
+	
+	return t_success;
+}
+
+bool MCGImageToX11Pixmap(MCGImageRef p_image, Pixmap &r_pixmap)
+{
+	MCBitmap *t_bitmap;
+	t_bitmap = nil;
+	
+	bool t_success;
+	t_success = true;
+	
+	if (t_success)
+		t_success = MCGImageToX11Bitmap(p_image, t_bitmap) && MCX11BitmapToX11Pixmap(t_bitmap, r_pixmap);
+		
+	if (t_bitmap != nil)
+		((MCScreenDC*)MCscreen)->destroyimage(t_bitmap);
+	
+	return t_success;
+}
+
+// IM-2014-04-15: [[ Bug 11603 ]] Convert pattern ref to X11 Pixmap with scale transform applied
+bool MCPatternToX11Pixmap(MCPatternRef p_pattern, Pixmap &r_pixmap)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCGImageRef t_image;
+	t_image = p_pattern->image;
+	
+	MCGAffineTransform t_transform;
+	t_transform = MCGAffineTransformMakeScale(p_pattern->scale, p_pattern->scale);
+	
+	MCGRectangle t_src_rect;
+	t_src_rect = MCGRectangleMake(0, 0, MCGImageGetWidth(t_image), MCGImageGetHeight(t_image));
+	
+	MCGRectangle t_dst_rect;
+	t_dst_rect = MCGRectangleApplyAffineTransform(t_src_rect, t_transform);
+	
+	uint32_t t_width, t_height;
+	t_width = ceilf(t_dst_rect.size.width);
+	t_height = ceilf(t_dst_rect.size.height);
+	
+	MCBitmap *t_bitmap;
+	t_bitmap = nil;
+	
+	if (t_success)
+		t_success = nil != (t_bitmap = ((MCScreenDC*)MCscreen)->createimage(32, t_width, t_height, True, 0, False, False));
+
+	MCGContextRef t_context;
+	t_context = nil;
+	
+	if (t_success)
+		t_success = MCGContextCreateWithPixels(t_width, t_height, t_bitmap->bytes_per_line, t_bitmap->data, false, t_context);
+		
+	if (t_success)
+	{
+		// Fill background with black
+		MCGContextSetFillRGBAColor(t_context, 0.0, 0.0, 0.0, 1.0);
+		MCGContextAddRectangle(t_context, t_dst_rect);
+		MCGContextFill(t_context);
+		
+		// draw transformed pattern image
+		MCGContextConcatCTM(t_context, t_transform);
+		MCGContextDrawImage(t_context, t_image, t_src_rect, kMCGImageFilterHigh);
+	}
+	
+	if (t_context != nil)
+		MCGContextRelease(t_context);
+	
+	if (t_success)
+		t_success = MCX11BitmapToX11Pixmap(t_bitmap, r_pixmap);
+		
+	if (t_bitmap != nil)
+		((MCScreenDC*)MCscreen)->destroyimage(t_bitmap);
+	
+	return t_success;
 }
 
 void surface_extract_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);

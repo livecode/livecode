@@ -151,6 +151,8 @@ void MCScreenDC::resetcursors(void)
 
 MCCursorRef MCScreenDC::createcursor(MCImageBitmap *p_image, int2 p_hotspot_x, int2 p_hotspot_y)
 {
+    if (p_image == nil)
+        return nil;
 	CGImageRef t_cg_image;
 	/* UNCHECKED */ MCImageBitmapToCGImage(p_image, false, false, t_cg_image);
 	

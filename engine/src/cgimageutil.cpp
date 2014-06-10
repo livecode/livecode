@@ -183,6 +183,8 @@ bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, 
 
 bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image)
 {
+    if (p_bitmap == nil)
+        return false;
 	bool t_mask;
 	t_mask = MCImageBitmapHasTransparency(p_bitmap);
 	

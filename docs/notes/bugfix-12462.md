@@ -1,0 +1,1 @@
+# Maximize button in Windows title bar doesn't use full screen under high-dpi Windows

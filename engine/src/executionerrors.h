@@ -2452,6 +2452,14 @@ enum Exec_errors
 	// MM-2014-02-12: [[ SecureSocket ]]
 	// {EE-0805} secure: error in socket expression
 	EE_SECURE_BADNAME,
+    
+    // PM-2014-04-15: [[Bug 12105]]
+    // {EE-0806} paramCount: could not find handler
+    EE_PARAMCOUNT_NOHANDLER,
+    
+    // MW-2015-05-28: [[ Bug 12463 ]]
+    // {EE-807} send: too many pending messages
+    EE_SEND_TOOMANYPENDING,
 };
 
 extern const char *MCexecutionerrors;
