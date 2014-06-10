@@ -1,0 +1,1 @@
+# Buttons of menu type can't be inspected if first created object

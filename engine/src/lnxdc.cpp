@@ -72,6 +72,8 @@ MCScreenDC::MCScreenDC()
 	pendingevents = NULL;
 	backdrop = DNULL;
 	backdropcolor.pixel = 0;
+	m_backdrop_pixmap = nil;
+	
 	Xinerama_available = false ;
 	getdisplays_init = false ;
 	m_application_has_focus = true ; // The application start's up having focus, one assumes.

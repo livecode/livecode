@@ -1266,8 +1266,12 @@ Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 			ep.setint(0);
 		break;
 	case P_FORMATTED_WIDTH:
-        // FG-2014-05-23: [[ Bugfix 12241 ]] Don't take shortcuts when calculating formatted widths 
-        gettextatts(parid, which, ep, nil, effective, 0, -1, false);
+		if (opened)
+			ep.setint(textwidth + rect.width - getfwidth()
+			          + leftmargin + rightmargin
+			          + (flags & F_VSCROLLBAR ? (flags & F_DONT_WRAP ? 0 : -vscrollbar->getrect().width) : 0));
+		else
+			ep.setint(0);
 		break;
 	case P_LIST_BEHAVIOR:
 		ep.setboolean(getflag(F_LIST_BEHAVIOR));
@@ -1379,8 +1383,9 @@ Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
             MCParagraph *pgptr = paragraphs;
             uint2 height = getfheight();
             uint2 theight = height;
-            uint2 tstart = 1;
-            uint2 tend = 0;
+            // MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indicies.
+            uint4 tstart = 1;
+            uint4 tend = 0;
             MCLine *lastline = NULL;
             uint2 j = 0;
             while (True)

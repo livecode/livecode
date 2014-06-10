@@ -298,6 +298,11 @@ real8 MCS_time()
 	return starttime;
 }
 
+real8 MCS_starttime(void)
+{
+	return starttime;
+}
+
 void MCS_reset_time()
 {
 	if (!MClowrestimers)
