@@ -488,7 +488,8 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	m_input_method_event = nil;
 	
 	// Register for all dragging types (well ones that convert to 'data' anyway).
-	[self registerForDraggedTypes: [NSArray arrayWithObject: (NSString *)kUTTypeData]];
+	// MW-2014-06-10: [[ Bug 12388 ]] Make sure we respond to our private datatype.
+    [self registerForDraggedTypes: [NSArray arrayWithObjects: (NSString *)kUTTypeData, @"com.runrev.livecode.private", nil]];
 	
 	return self;
 }
@@ -1204,7 +1205,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 {
 }
 
-- (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations
+- (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations pasteboard:(NSPasteboard *)pboard
 {
 	NSEvent *t_mouse_event;
 	t_mouse_event = MCMacPlatformGetLastMouseEvent();
@@ -1224,7 +1225,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 				at: t_image_loc 
 				offset: NSZeroSize 
 				event: t_mouse_event
-				pasteboard: [NSPasteboard pasteboardWithName: NSDragPboard]
+				pasteboard: pboard
 				source: self
 				slideBack: YES];
 				

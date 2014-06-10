@@ -42,6 +42,7 @@ struct MCPlatformPasteboard
 ////////////////////////////////////////////////////////////////////////////////
 
 #define kMCMacPasteboardObjectsUTString @"com.runrev.livecode.objects-1"
+#define kMCMacPasteboardPrivateUTString @"com.runrev.livecode.private"
 
 bool MCMacPasteboardConvertIdentity(const MCString& in_data, MCString& r_out_data);
 bool MCMacPasteboardConvertTIFFToPNG(const MCString& in_data, MCString& r_out_data);
@@ -476,9 +477,31 @@ void MCPlatformDoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOpe
 	
 	MCMacPlatformSyncMouseBeforeDragging();
 	
+	// MW-2014-06-10: [[ Bug 12388 ]] If the main pboard is empty, then create a private
+    //   one and put the empty string as our private UTType. (we store the actual private
+    //   data locally elsewhere).
+    NSPasteboard *t_pboard;
+    bool t_is_private;
+    t_pboard = [NSPasteboard pasteboardWithName: NSDragPboard];
+    if ([[t_pboard pasteboardItems] count] == 0)
+    {
+        t_is_private = true;
+        t_pboard = [NSPasteboard pasteboardWithUniqueName];
+        
+        NSPasteboardItem *t_item;
+        t_item = [[[NSPasteboardItem alloc] init] autorelease];
+        [t_item setString: @"" forType: kMCMacPasteboardPrivateUTString];
+        
+        [t_pboard clearContents];
+        [t_pboard writeObjects: [NSArray arrayWithObject: t_item]];
+    }
+    
 	NSDragOperation t_op;
-	t_op = [((MCMacPlatformWindow *)p_window) -> GetView() dragImage: t_image offset: t_image_loc allowing: t_allowed_operations];
+	t_op = [((MCMacPlatformWindow *)p_window) -> GetView() dragImage: t_image offset: t_image_loc allowing: t_allowed_operations pasteboard: t_pboard];
 	
+    if (t_is_private)
+        [t_pboard releaseGlobally];
+    
 	[t_image release];
 	
 	//MCMacPlatformSyncMouseAfterTracking();
