@@ -682,30 +682,19 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
         
 		pgptr->deletestring(si, tei);
         
-        // If the end range is after the end of paragraph, then join with
-        // the next.
-        if (ei > tei && pgptr -> next() != toppgptr)
-        {
-            // Account for the CR.
-            tei += 1;
-            // Join the paragraphs.
-            pgptr -> join();
-            // We've affected more than one.
-            t_affect_many = true;
-        }
+        // End index is reduced by the amount we just deleted.
+        ei -= (tei - si);
         
-        // si / ei are relative to pgptr, so at this point 'si' maps to 0 in
-        // pgptr, so we must adjust ei.
-        ei -= tei;
-        
-		if (ei > 0)
+		if (ei > pgptr -> gettextsize())
 		{
+            // MW-2014-06-10: [[ Bug 11928 ]] Adjust for the CR that will be removed by the
+            //   final join in this consequent.
+            ei -= 1;
 			pgptr = pgptr->next();
 			while (ei >= pgptr->gettextsizecr())
 			{
 				ei -= pgptr->gettextsizecr();
-				MCParagraph *tpgptr = pgptr->remove
-				                      (pgptr);
+				MCParagraph *tpgptr = pgptr->remove(pgptr);
 				if (tpgptr == curparagraph)
 				{
 					curparagraph = saveparagraph;
