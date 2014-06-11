@@ -189,8 +189,7 @@ bool MCRegionOffset(MCRegionRef self, int32_t p_dx, int32_t p_dy)
 
 bool MCRegionUnion(MCRegionRef self, MCRegionRef x, MCRegionRef y)
 {
-    //TODO: Do not commit this
-	//UnionRgn((RgnHandle)x, (RgnHandle)y, (RgnHandle)self);
+    self -> rect = MCU_union_rect(x -> rect, y -> rect);
 	return true;
 }
 
