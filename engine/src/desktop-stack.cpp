@@ -89,6 +89,7 @@ void MCStack::realize(void)
 		loadwindowshape();
 		
 		// Compute the level of the window
+        // MW-2014-06-11: [[ Bug 12297 ]] Make sure 'popup' mode means PopUp window (i.e. no decorations!)
 		MCPlatformWindowStyle t_window_style;;
 		if (getflag(F_DECORATIONS) && (decorations & WD_UTILITY) != 0)
 			t_window_style = kMCPlatformWindowStyleUtility;
@@ -96,7 +97,7 @@ void MCStack::realize(void)
 			t_window_style = kMCPlatformWindowStylePalette;
 		else if (mode == WM_MODAL || mode == WM_SHEET)
 			t_window_style = kMCPlatformWindowStyleDialog;
-		else if (mode == WM_PULLDOWN || mode == WM_OPTION || mode == WM_COMBO)
+		else if (mode == WM_PULLDOWN || mode == WM_OPTION || mode == WM_COMBO || mode == WM_POPUP)
 			t_window_style = kMCPlatformWindowStylePopUp;
 		else if (mode == WM_CASCADE)
 			t_window_style = kMCPlatformWindowStylePopUp;
