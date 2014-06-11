@@ -211,6 +211,9 @@ void MCStack::realize(void)
         
         // MERG-2014-06-02: [[ IgnoreMouseEvents ]] update the window with the ignore mouse events property
         updateignoremouseevents();
+        
+        // MW-2014-06-11: [[ Bug 12467 ]] Make sure we reset the cursor property of the window.
+        resetcursor(True);
 	}
 	
 	start_externals();
