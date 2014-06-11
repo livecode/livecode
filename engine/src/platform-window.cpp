@@ -299,6 +299,8 @@ void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			m_content = *(MCRectangle *)p_value;
 			m_changes . content_changed = true;
 			break;
+        // MW-2014-06-11: [[ Bug 12593 ]] No need to be platform-specific as uses
+        //   virtual method to compute.
 		case kMCPlatformWindowPropertyFrameRect:
 			assert(p_type == kMCPlatformPropertyTypeRectangle);
 			DoMapFrameRectToContentRect(*(MCRectangle *)p_value, m_content);
@@ -397,6 +399,7 @@ void MCPlatformWindow::GetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			break;
 		case kMCPlatformWindowPropertyFrameRect:
 			assert(p_type == kMCPlatformPropertyTypeRectangle);
+            DoMapContentRectToFrameRect(m_content, *(MCRectangle *)r_value);
 			break;
 		case kMCPlatformWindowPropertyContentRect:
 			assert(p_type == kMCPlatformPropertyTypeRectangle);
