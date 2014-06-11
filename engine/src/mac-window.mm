@@ -29,6 +29,8 @@
 
 #include "mac-internal.h"
 
+#include <objc/objc-runtime.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static NSDragOperation s_drag_operation_result = NSDragOperationNone;
@@ -225,10 +227,17 @@ static bool s_lock_responder_change = false;
         CGRect t_rect;
         CGRectMakeWithDictionaryRepresentation((CFDictionaryRef)t_rect_dict, &t_rect);
         
+        // MW-2014-06-11: [[ Bug ]] Only temporarily update the frame fields otherwise it screws
+        //   up backingstore scale factor changes.
+        NSPoint t_origin;
+        t_origin = _frame . origin;
+        
         _frame . origin . x = t_rect . origin . x;
         _frame . origin . y = [[NSScreen mainScreen] frame] . size . height - t_rect . origin . y - t_rect . size . height;
         
         [tracker platformWindow] -> ProcessDidMove();
+    
+        _frame . origin = t_origin;
     }
     
     [t_info_array release];
@@ -455,6 +464,11 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 - (void)windowDidResignKey:(NSNotification *)notification
 {
 	m_window -> ProcessDidResignKey();
+}
+
+- (void)windowDidChangeBackingProperties:(NSNotification *)notification
+{
+    MCLog("didChangeBacking %lf", objc_msgSend_fpret(m_window -> GetHandle(), @selector(backingScaleFactor)));
 }
 
 - (void)didEndSheet: (NSWindow *)sheet returnCode: (NSInteger)returnCode contextInfo: (void *)info

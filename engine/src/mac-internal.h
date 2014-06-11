@@ -131,6 +131,8 @@ class MCMacPlatformSurface;
 - (void)windowDidBecomeKey:(NSNotification *)notification;
 - (void)windowDidResignKey:(NSNotification *)notification;
 
+- (void)windowDidChangeBackingProperties:(NSNotification *)notification;
+
 //////////
 
 - (void)viewFocusSwitched: (uint32_t)id;
