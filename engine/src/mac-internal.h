@@ -67,7 +67,11 @@ class MCMacPlatformSurface;
 @interface com_runrev_livecode_MCWindow: NSWindow
 {
 	bool m_can_become_key : 1;
+    id m_monitor;
 }
+
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)windowStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation;
+- (void)dealloc;
 
 - (void)setCanBecomeKeyWindow: (BOOL)value;
 
@@ -76,6 +80,8 @@ class MCMacPlatformSurface;
 
 // MW-2014-04-23: [[ Bug 12270 ]] Override so we can stop constraining.
 - (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen;
+
+- (void)popupAndMonitor;
 
 @end
 
