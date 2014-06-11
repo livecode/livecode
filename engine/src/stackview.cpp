@@ -189,15 +189,23 @@ void MCStack::view_setfullscreen(bool p_fullscreen)
 {
 	bool t_fullscreen = view_getfullscreen();
 	
+	// IM-2014-02-12: [[ Bug 11783 ]] We may also need to reset the fonts on Windows when
+	//   fullscreen is changed
+	bool t_ideal_layout;
+	t_ideal_layout = getuseideallayout();
+
 	m_view_fullscreen = p_fullscreen;
 	
 	// IM-2014-01-16: [[ StackScale ]] Reopen the window after changing fullscreen
 	if (t_fullscreen != view_getfullscreen())
 	{
+		// IM-2014-05-27: [[ Bug 12321 ]] Work out here whether or not we need to purge fonts
+		if ((t_ideal_layout != getuseideallayout()) && opened)
+			m_purge_fonts = true;
+
 		reopenwindow();
 		
-		// IM-2014-01-16: [[ StackScale ]] Update view transform after changing view property
-		view_update_transform();
+		// IM-2014-05-27: [[ Bug 12321 ]] Move view transform update to reopenwindow() to allow stack rect to be reset correctly before reopening
 	}
 }
 

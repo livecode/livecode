@@ -189,11 +189,7 @@ bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, CGColorSpaceRef p_colorspac
 	t_mask = MCImageBitmapHasTransparency(p_bitmap);
 	
 	MCGRaster t_raster;
-	t_raster.width = p_bitmap->width;
-	t_raster.height = p_bitmap->height;
-	t_raster.pixels = p_bitmap->data;
-	t_raster.stride = p_bitmap->stride;
-	t_raster.format = t_mask ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
+	t_raster = MCImageBitmapGetMCGRaster(p_bitmap, true);
 	
 	return MCGRasterToCGImage(t_raster, MCGRectangleMake(0, 0, p_bitmap->width, p_bitmap->height), p_colorspace, p_copy, p_invert, r_image);
 }

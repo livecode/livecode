@@ -250,7 +250,7 @@ class MCMacPlatformSurface;
 - (void)draggedImage:(NSImage *)image beganAt:(NSPoint)point;
 - (void)draggedImage:(NSImage *)image movedTo:(NSPoint)point;
 - (void)draggedImage:(NSImage *)image endedAt:(NSPoint)point operation:(NSDragOperation)operation;
-- (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations;
+- (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations pasteboard:(NSPasteboard *)pboard;
 
 //////////
 
@@ -478,6 +478,7 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_is_down);
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_location);
 void MCMacPlatformHandleMouseScroll(CGFloat dx, CGFloat dy);
 void MCMacPlatformHandleMouseSync(void);
+void MCMacPlatformHandleMouseAfterWindowHidden(void);
 
 void MCMacPlatformSyncMouseBeforeDragging(void);
 void MCMacPlatformSyncMouseAfterTracking(void);

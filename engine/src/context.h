@@ -79,8 +79,8 @@ struct MCImageDescriptor
 	// IM-2013-07-19: [[ ResIndependence ]] add scale factor field for scaled images
 	MCGFloat scale_factor;
 
-	// The image bitmap
-	MCImageBitmap *bitmap;
+	// IM-2014-06-12: [[ ImageRepUpdate ]] Update image to be an MCGImage
+	MCGImageRef image;
 
 	// The image source data
 	MCImageDataType data_type;

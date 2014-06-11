@@ -488,7 +488,8 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	m_input_method_event = nil;
 	
 	// Register for all dragging types (well ones that convert to 'data' anyway).
-	[self registerForDraggedTypes: [NSArray arrayWithObject: (NSString *)kUTTypeData]];
+	// MW-2014-06-10: [[ Bug 12388 ]] Make sure we respond to our private datatype.
+    [self registerForDraggedTypes: [NSArray arrayWithObjects: (NSString *)kUTTypeData, @"com.runrev.livecode.private", nil]];
 	
 	return self;
 }
@@ -1204,7 +1205,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 {
 }
 
-- (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations
+- (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations pasteboard:(NSPasteboard *)pboard
 {
 	NSEvent *t_mouse_event;
 	t_mouse_event = MCMacPlatformGetLastMouseEvent();
@@ -1224,7 +1225,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 				at: t_image_loc 
 				offset: NSZeroSize 
 				event: t_mouse_event
-				pasteboard: [NSPasteboard pasteboardWithName: NSDragPboard]
+				pasteboard: pboard
 				source: self
 				slideBack: YES];
 				
@@ -1815,6 +1816,11 @@ void MCMacPlatformWindow::DoSynchronize(void)
     if (m_changes . hides_on_suspend_changed)
         [m_window_handle setHidesOnDeactivate: m_hides_on_suspend];
     
+    // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Sync ignoreMouseEvents.
+    if (m_changes . ignore_mouse_events_changed)
+        [m_window_handle setIgnoresMouseEvents: m_ignore_mouse_events];
+    
+    
 	m_synchronizing = false;
 }
 
@@ -1833,15 +1839,6 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
             if (m_window_handle == nil)
                 RealizeAndNotify();
 			*(uint32_t *)r_value = m_window_handle != nil ? [m_window_handle windowNumber] : 0;
-			return true;
-			
-		// IM-2014-03-26: [[ Bug 12021 ]] Return NSWindow frame rect
-		case kMCPlatformWindowPropertyFrameRect:
-			assert(p_type == kMCPlatformPropertyTypeRectangle);
-            // MW-2014-04-30: [[ Bug 12328 ]] If we don't have a handle yet make sure we create one.
-            if (m_window_handle == nil)
-                RealizeAndNotify();
-			*(MCRectangle *)r_value = m_window_handle != nil ? MCRectangleFromNSRect([m_window_handle frame]) : MCRectangleMake(0, 0, 0, 0);
 			return true;
 	}
 	return false;
@@ -1902,6 +1899,8 @@ void MCMacPlatformWindow::DoHide(void)
 	
 		[m_window_handle orderOut: nil];
 	}
+	
+	MCMacPlatformHandleMouseAfterWindowHidden();
 }
 
 void MCMacPlatformWindow::DoFocus(void)

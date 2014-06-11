@@ -504,6 +504,20 @@ bool MCImageBitmapSplitHBITMAPWithMask(HDC p_dc, MCImageBitmap *p_bitmap, HBITMA
 	return false;
 }
 
+bool MCGImageSplitHBITMAPWithMask(HDC p_dc, MCGImageRef p_image, HBITMAP &r_bitmap, HBITMAP &r_mask)
+{
+	MCGRaster t_raster;
+	if (!MCGImageGetRaster(p_image, t_raster))
+		return false;
+
+	MCImageBitmap t_bitmap;
+	t_bitmap = MCImageBitmapFromMCGRaster(t_raster);
+
+	MCImageBitmapCheckTransparency(&t_bitmap);
+
+	return MCImageBitmapSplitHBITMAPWithMask(p_dc, &t_bitmap, r_bitmap, r_mask);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  REFACTORED FROM GLOBALS.CPP

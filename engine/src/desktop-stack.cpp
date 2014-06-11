@@ -81,7 +81,8 @@ void MCStack::realize(void)
 		
 		// IM-2013-08-01: [[ ResIndependence ]] scale stack rect to device coords
 		MCRectangle t_device_rect;
-		t_device_rect = rect;
+		// IM-2014-06-06: [[ Bug 12321 ]] Get the window rect from the view rather than the stack
+		t_device_rect = view_getrect();
 	
 		// Sort out name ?
 		
@@ -207,6 +208,12 @@ void MCStack::realize(void)
 		// Sort out drawers
 		
 		updatemodifiedmark();
+        
+        // MERG-2014-06-02: [[ IgnoreMouseEvents ]] update the window with the ignore mouse events property
+        updateignoremouseevents();
+        
+        // MW-2014-06-11: [[ Bug 12467 ]] Make sure we reset the cursor property of the window.
+        resetcursor(True);
 	}
 	
 	start_externals();
@@ -276,13 +283,28 @@ void MCStack::updatemodifiedmark(void)
 	MCPlatformSetWindowBoolProperty(window, kMCPlatformWindowPropertyHasModifiedMark, getextendedstate(ECS_MODIFIED_MARK) == True);
 }
 
+// MERG-2014-06-02: [[ IgnoreMouseEvents ]] update the window with the ignore mouse events property
+void MCStack::updateignoremouseevents(void)
+{
+	if (window == nil)
+		return;
+	
+	MCPlatformSetWindowBoolProperty(window, kMCPlatformWindowPropertyIgnoreMouseEvents, getextendedstate(ECS_IGNORE_MOUSE_EVENTS) == True);
+}
+
 // MW-2011-09-11: [[ Redraw ]] Force an immediate update of the window within the given
 //   region. The actual rendering is done by deferring to the 'redrawwindow' method.
 void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 {
 	if (window == nil)
 		return;
-	
+    
+    if (!opened)
+        return;
+    
+    if (!isvisible())
+        return;
+    
 	MCPlatformInvalidateWindow(window, p_region);
 	MCPlatformUpdateWindow(window);
 }
