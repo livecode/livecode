@@ -268,7 +268,7 @@ void MCPlatformCallbackSendModifiersChanged(MCPlatformModifiers modifiers);
 void MCPlatformCallbackSendMouseDown(MCPlatformWindowRef window, uint32_t button, uint32_t count);
 void MCPlatformCallbackSendMouseUp(MCPlatformWindowRef window, uint32_t button, uint32_t count);
 void MCPlatformCallbackSendMouseDrag(MCPlatformWindowRef window, uint32_t button);
-void MCPlatformCallbackSendMouseRelease(MCPlatformWindowRef window, uint32_t button);
+void MCPlatformCallbackSendMouseRelease(MCPlatformWindowRef window, uint32_t button, bool was_menu);
 void MCPlatformCallbackSendMouseEnter(MCPlatformWindowRef window);
 void MCPlatformCallbackSendMouseLeave(MCPlatformWindowRef window);
 void MCPlatformCallbackSendMouseMove(MCPlatformWindowRef window, MCPoint location);

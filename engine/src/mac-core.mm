@@ -1364,7 +1364,8 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
 			s_mouse_click_count = 0;
 			s_mouse_last_click_time = 0;
 			
-			MCPlatformCallbackSendMouseRelease(s_mouse_window, p_button);
+            // MW-2014-06-11: [[ Bug 12339 ]] Only send a mouseRelease message if this wasn't the result of a popup menu.
+			MCPlatformCallbackSendMouseRelease(s_mouse_window, p_button, false);
 		}
 	}
 }
@@ -1523,11 +1524,12 @@ void MCMacPlatformHandleMouseSync(void)
 			{
 				s_mouse_buttons &= ~(1 << i);
 				
+                // MW-2014-06-11: [[ Bug 12339 ]] Don't send a mouseRelease message in this case.
 				if (s_mouse_was_control_click &&
 					i == 0)
-					MCPlatformCallbackSendMouseRelease(s_mouse_window, 2);
+					MCPlatformCallbackSendMouseRelease(s_mouse_window, 2, true);
 				else
-					MCPlatformCallbackSendMouseRelease(s_mouse_window, i);
+					MCPlatformCallbackSendMouseRelease(s_mouse_window, i, true);
 			}
 	}
 	
@@ -1565,8 +1567,9 @@ void MCMacPlatformSyncMouseBeforeDragging(void)
 	
 	if (s_mouse_window != nil)
 	{
+        // MW-2014-06-11: [[ Bug 12339 ]] Ensure mouseRelease is sent if drag is starting.
 		if (t_button_to_release != 0xffffffff)
-			MCPlatformCallbackSendMouseRelease(s_mouse_window, t_button_to_release);
+			MCPlatformCallbackSendMouseRelease(s_mouse_window, t_button_to_release, false);
 		MCPlatformCallbackSendMouseLeave(s_mouse_window);
 		
 		MCPlatformReleaseWindow(s_mouse_window);

@@ -379,7 +379,7 @@ void MCPlatformHandleMouseDrag(MCPlatformWindowRef p_window, uint32_t p_button)
 	MCdispatcher -> wmdrag(p_window);
 }
 
-void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_button)
+void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_button, bool p_was_menu)
 {
 	if (((MCScreenDC *)MCscreen) -> isbackdrop(p_window))
 	{
@@ -419,7 +419,9 @@ void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_butto
 		
 		MCLog("MouseRelease(%p, %d)", t_target, p_button);
 		
-		t_target -> message_with_args(MCM_mouse_release, p_button + 1);
+        // MW-2014-06-11: [[ Bug 12339 ]] Only send a mouseRelease message if this wasn't the result of a popup menu.
+        if (!p_was_menu)
+            t_target -> message_with_args(MCM_mouse_release, p_button + 1);
 	}
 }
 
