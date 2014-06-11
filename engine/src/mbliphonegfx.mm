@@ -186,7 +186,7 @@ public:
 			r_raster.height = t_actual_area.size.height;
 			r_raster.stride = m_locked_stride;
 			r_raster.pixels = m_locked_bits;
-			r_raster.format = kMCGRasterFormat_ARGB;
+			r_raster.format = kMCGRasterFormat_xRGB;
 			return true;
 		}
 		
@@ -311,7 +311,7 @@ protected:
 		t_raster.height = m_locked_area.size.height;
 		t_raster.pixels = p_bits;
 		t_raster.stride = p_stride;
-		t_raster.format = kMCGRasterFormat_ARGB;
+		t_raster.format = kMCGRasterFormat_xRGB;
 		
 		if (MCGRasterToCGImage(t_raster, MCGRectangleMake(0, 0, m_locked_area.size.width, m_locked_area.size.height), t_colorspace, false, false, t_image))
 		{

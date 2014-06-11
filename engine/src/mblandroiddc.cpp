@@ -115,6 +115,7 @@ static int s_android_bitmap_stride = 0;
 static pthread_mutex_t s_android_bitmap_mutex;
 
 // The dirty region of the bitmap
+static MCGRegionRef s_android_bitmap_dirty_region = nil;
 static MCRectangle s_android_bitmap_dirty;
 
 // If non-nil, then we are in opengl mode.
@@ -218,6 +219,29 @@ void MCResPlatformHandleScaleChange(void)
 {
 	// IM-2014-01-31: [[ HiDPI ]] Update the main stack geometry
 	static_cast<MCScreenDC *>(MCscreen) -> do_fit_window(false, true);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCAndroidInvalidateBitmapRect(const MCGIntegerRectangle &p_rect)
+{
+	s_android_ui_env -> CallVoidMethod(s_android_view, s_invalidate_method,
+									   p_rect.origin.x, p_rect.origin.y,
+									   p_rect.origin.x + p_rect.size.width,
+									   p_rect.origin.y + p_rect.size.height);
+}
+
+bool MCAndroidInvalidateBitmapCallback(void *p_context, const MCGIntegerRectangle &p_rect)
+{
+	MCAndroidInvalidateBitmapRect(p_rect);
+
+	return true;
+}
+
+// IM-2014-06-11: [[ GraphicsPerformance ]] Call invalidate method on Java bitmap view
+void MCAndroidInvalidateBitmapRegion(MCGRegionRef p_region)
+{
+	MCGRegionIterate(p_region, MCAndroidInvalidateBitmapCallback, nil);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -676,7 +700,10 @@ public:
 		MCGContextRelease(m_locked_context);
 		m_locked_context = nil;
 		
-		UnlockPixels();
+		UnlockPixels(false);
+		
+		// IM-2014-06-11: [[ Graphics Performance ]] Mark the locked region for redraw
+		MCGRegionAddRegion(s_android_bitmap_dirty_region, m_region);
 	}
 
 	bool LockPixels(MCGIntegerRectangle p_area, MCGRaster &r_raster)
@@ -693,7 +720,7 @@ public:
 		r_raster.height = t_area.size.height;
 		r_raster.stride = s_android_bitmap_stride;
 		r_raster.pixels = (uint8_t*)m_pixels + t_area.origin.y * s_android_bitmap_stride + t_area.origin.x * sizeof(uint32_t);
-		r_raster.format = kMCGRasterFormat_ARGB;
+		r_raster.format = kMCGRasterFormat_xRGB;
 
 		m_locked = true;
 
@@ -711,7 +738,7 @@ public:
 			return;
 		
 		if (p_update)
-			s_android_bitmap_dirty = MCU_union_rect(s_android_bitmap_dirty, MCRectangleFromMCGIntegerRectangle(m_locked_area));
+			MCGRegionAddRect(s_android_bitmap_dirty_region, m_locked_area);
 		
 		m_locked = false;
 	}
@@ -833,7 +860,7 @@ public:
 		r_raster.height = s_android_bitmap_height;
 		r_raster.stride = m_buffer_stride;
 		r_raster.pixels = m_buffer_pixels;
-		r_raster.format = kMCGRasterFormat_ARGB;
+		r_raster.format = kMCGRasterFormat_xRGB;
 
 		m_locked = true;
 
@@ -1167,6 +1194,10 @@ static void *mobile_main(void *arg)
 	int i;
 	MCstackbottom = (char *)&i;
 
+	// IM-2014-06-11: [[ GraphicsPerformance ]] Create initially empty redraw region
+	s_android_bitmap_dirty_region = nil;
+	/* UNCHECKED */ MCGRegionCreate(s_android_bitmap_dirty_region);
+	
 	// Make sure when a 'SIGINT' is sent to this thread, it causes any system
 	// calls to be interrupted (this thread will spend much of its time in a
 	// 'select' loop).
@@ -1324,13 +1355,10 @@ static void co_yield_to_engine(void)
 	}
 
 	// If the screen needs updating, post an invalidate event.
-	if (!MCU_empty_rect(s_android_bitmap_dirty))
+	if (!MCGRegionIsEmpty(s_android_bitmap_dirty_region))
 	{
-		s_android_ui_env -> CallVoidMethod(s_android_view, s_invalidate_method,
-										   s_android_bitmap_dirty . x, s_android_bitmap_dirty . y,
-										   s_android_bitmap_dirty . x + s_android_bitmap_dirty . width,
-										   s_android_bitmap_dirty . y + s_android_bitmap_dirty . height);
-		MCU_set_rect(s_android_bitmap_dirty, 0, 0, 0, 0);
+		MCAndroidInvalidateBitmapRegion(s_android_bitmap_dirty_region);
+		MCGRegionSetEmpty(s_android_bitmap_dirty_region);
 	}
 }
 
