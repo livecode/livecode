@@ -48,6 +48,25 @@ static bool s_lock_responder_change = false;
 
 @implementation com_runrev_livecode_MCWindow
 
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)windowStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation
+{
+    self = [super initWithContentRect: contentRect styleMask: windowStyle backing: bufferingType defer: deferCreation];
+    if (self == nil)
+        return nil;
+    
+    m_can_become_key = false;
+    m_monitor = nil;
+    
+    return self;
+}
+
+- (void)dealloc
+{
+    if (m_monitor != nil)
+        [NSEvent removeMonitor: m_monitor];
+    [super dealloc];
+}
+
 - (void)setCanBecomeKeyWindow: (BOOL)p_value
 {
 	m_can_become_key = p_value;
@@ -101,6 +120,50 @@ static bool s_lock_responder_change = false;
         return [super constrainFrameRect: frameRect toScreen: screen];
     
     return frameRect;
+}
+
+// MW-2014-06-11: [[ Bug 12451 ]] When we 'popup' a window we install a monitor to catch
+//   other mouse events outside the host window. This allows us to close them and still
+//   continue to process the event as normal.
+
+- (void)popupWindowClosed: (NSNotification *)notification
+{
+    if (m_monitor != nil)
+    {
+        [NSEvent removeMonitor: m_monitor];
+        m_monitor = nil;
+    }
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowWillCloseNotification object:self];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:NSApplicationDidResignActiveNotification object:nil];
+}
+
+- (void)popupWindowShouldClose: (NSNotification *)notification
+{
+    [self close];
+}
+
+- (void)popupAndMonitor
+{
+    NSWindow *t_window;
+    t_window = self;
+    
+    [self makeKeyAndOrderFront: nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(popupWindowClosed:) name:NSWindowWillCloseNotification object:self];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(popupWindowShouldClose:) name:NSApplicationDidResignActiveNotification object:nil];
+    
+    m_monitor = [NSEvent addLocalMonitorForEventsMatchingMask: NSLeftMouseDownMask | NSRightMouseDownMask | NSOtherMouseDownMask
+                                                      handler:^(NSEvent *incomingEvent)
+                 {
+                     NSEvent *result = incomingEvent;
+                     NSWindow *targetWindowForEvent = [incomingEvent window];
+
+                     if (targetWindowForEvent !=  t_window)
+                         [[(MCWindowDelegate *)[self delegate] platformWindow] -> GetView() handleMousePress: incomingEvent isDown: YES];
+                     
+                     return result;
+                 }];
 }
 
 @end
@@ -1865,7 +1928,11 @@ void MCMacPlatformWindow::DoShow(void)
 {
 	if (m_style == kMCPlatformWindowStyleDialog)
 		MCMacPlatformBeginModalSession(this);
-	else
+	else if (m_style == kMCPlatformWindowStylePopUp)
+    {
+        [m_window_handle popupAndMonitor];
+    }
+    else
 	{
 		[m_view setNeedsDisplay: YES];
 		[m_window_handle makeKeyAndOrderFront: nil];
@@ -1908,6 +1975,11 @@ void MCMacPlatformWindow::DoHide(void)
 	{
 		MCMacPlatformEndModalSession(this);
 	}
+    else if (m_style == kMCPlatformWindowStylePopUp)
+    {
+        [m_window_handle popupWindowClosed: nil];
+        [m_window_handle orderOut: nil];
+    }
 	else
 	{
 		// Unset the parent window to make sure things don't propagate.
