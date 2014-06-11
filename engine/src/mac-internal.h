@@ -517,6 +517,10 @@ void MCMacPlatformSetGlobalVolume(double volume);
 // MW-2014-04-23: [[ CocoaBackdrop ]] Ensures the windows are stacked correctly.
 void MCMacPlatformSyncBackdrop(void);
 
+// MW-2014-06-11: [[ Bug 12436 ]] These are used to ensure that the cursor doesn't get clobbered whilst in an user area snapshot.
+void MCMacPlatformLockCursor(void);
+void MCMacPlatformUnlockCursor(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NSDragOperation MCMacPlatformMapDragOperationToNSDragOperation(MCPlatformDragOperation);
