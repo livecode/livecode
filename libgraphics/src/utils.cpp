@@ -786,4 +786,19 @@ MCGAffineTransform MCGAffineTransformInvert(const MCGAffineTransform& p_transfor
 	return t_result;
 }
 
+//////////
+
+MCGAffineTransform MCGAffineTransformFromRectangles(const MCGRectangle &p_a, const MCGRectangle &p_b)
+{
+	MCGFloat t_x_scale, t_y_scale;
+	t_x_scale = p_b.size.width / p_a.size.width;
+	t_y_scale = p_b.size.height / p_a.size.height;
+	
+	MCGFloat t_dx, t_dy;
+	t_dx = p_b.origin.x - (p_a.origin.x * t_x_scale);
+	t_dy = p_b.origin.y - (p_a.origin.y * t_y_scale);
+	
+	return MCGAffineTransformMake(t_x_scale, 0, 0, t_y_scale, t_dx, t_dy);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
