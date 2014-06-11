@@ -323,6 +323,15 @@ void MCStack::view_platform_updatewindowwithcallback(MCRegionRef p_region, MCSta
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2014-06-11: [[ Bug 12495 ]] Update windowshape by setting window property.
+void MCStack::updatewindowshape(MCWindowShape *p_shape)
+{
+    destroywindowshape();
+    m_window_shape = p_shape;
+    MCPlatformSetWindowProperty(window, kMCPlatformWindowPropertyMask, kMCPlatformPropertyTypeWindowMask, (MCPlatformWindowMaskRef *)&m_window_shape -> handle);
+    dirtyall();
+}
+
 void MCStack::destroywindowshape(void)
 {
 	if (m_window_shape == nil)
