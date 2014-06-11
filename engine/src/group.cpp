@@ -2556,18 +2556,8 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		MCControl *cptr = controls;
 		do
 		{
-			if (cptr -> getopened() != 0 && (MCshowinvisibles || cptr -> getflag(F_VISIBLE)))
-			{
-				MCRectangle trect = MCU_intersect_rect(drect, cptr -> geteffectiverect());
-				if (trect.width != 0 && trect.height != 0)
-				{
-					dc -> setopacity(255);
-					dc -> setfunction(GXcopy);
-					dc -> setclip(trect);
-					cptr -> draw(dc, trect, false, false);
-				}
-
-			}
+			// IM-2014-06-11: [[ Bug 12557 ]] Use common control redraw method
+			cptr->redraw(dc, drect);
 
 			cptr = cptr->next();
 		}
