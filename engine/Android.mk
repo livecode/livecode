@@ -118,7 +118,7 @@ LOCAL_C_INCLUDES := \
 
 LOCAL_CFLAGS := -DGL_GLEXT_PROTOTYPES=1
 
-LOCAL_STATIC_LIBRARIES := librevandroid-kernel libfoundation libgraphics libjpeg libpcre libpng libgif libskia libfreetype libexpat_static openssl
+LOCAL_STATIC_LIBRARIES := librevandroid-kernel libfoundation libgraphics libjpeg libpcre libpng libgif libskia libfreetype libharfbuzz libexpat_static openssl
 
 LOCAL_LDLIBS += -lz -lm -llog -ljnigraphics -lGLESv1_CM
 

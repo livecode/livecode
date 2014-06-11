@@ -72,7 +72,8 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		if (t_blend_mode != NULL)
 			t_blend_mode -> unref();
 		
-		FT_Face *t_typeface = (FT_face *)p_font . fid;
+        
+		FT_Face *t_typeface = (FT_Face *)p_font . fid;
         
         // draw the glyphs that are output from harfbuzz
         t_paint . setTextEncoding(SkPaint::kGlyphID_TextEncoding);
@@ -85,14 +86,29 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
         
         /* Layout the text */
         hb_buffer_add_utf16(buffer, p_text, p_length, 0, p_length);
-        hb_ot_shape(font, buffer, NULL, 0, 0);
+        hb_shape(font, buffer, NULL, 0);
         
         int glyph_count = hb_buffer_get_length(buffer);
         hb_glyph_info_t *glyph_info = hb_buffer_get_glyph_infos(buffer, 0);
-        hb_glyph_position_t *glyph_pos = hb_buffer_get_glyph_positions(buffer,
-                                                                       0);
+        hb_glyph_position_t *glyph_pos = hb_buffer_get_glyph_positions(buffer,0);
         
-		self -> layer -> canvas -> drawPosText(glyph_info, glyph_count, glyph_pos, t_paint);
+        uint16_t* glyph_indices;
+        MCMemoryAllocate(sizeof(uint16_t) * glyph_count, glyph_indices);
+        MCGPoint *glyph_positions;
+        MCMemoryAllocate(sizeof(MCGPoint) * glyph_count, glyph_positions);
+        
+        for (int i=0; i < glyph_count; ++i)
+        {
+            glyph_indices[i] = glyph_info[i] . codepoint;
+            glyph_positions[i] = MCGPointMake(glyph_pos[i].x_offset/64 + glyph_pos[i].x_advance/64, glyph_pos[i].y_offset/64 + glyph_pos[i].y_advance/64);
+        }
+        
+		self -> layer -> canvas -> drawPosText(glyph_indices, 2*glyph_count, MCGPointsToSkPoints(glyph_positions, glyph_count), t_paint);
+        
+        MCMemoryDeallocate(glyph_indices);
+        MCMemoryDeallocate(glyph_positions);
+        
+        hb_buffer_destroy(buffer);
 	}
 	
 	self -> is_valid = t_success;
