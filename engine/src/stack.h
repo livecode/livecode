@@ -495,7 +495,7 @@ public:
 	MCRectangle getcardrect() const;
 	// IM-2014-01-07: [[ StackScale ]] Update the rect of the current card to fit the stack
 	void updatecardsize();
-	
+    
 	//////////
 	
 	void setgeom();
@@ -759,7 +759,9 @@ public:
 	void sethints();
 	// IM-2013-10-08: [[ FullscreenMode ]] Separate out window sizing hints
 	void setsizehints();
+    
 	void destroywindowshape();
+    void updatewindowshape(MCWindowShape *shape);
 
 	// MW-2011-08-17: [[ Redraw ]] Mark the whole content area as needing redrawn.
 	void dirtyall(void);

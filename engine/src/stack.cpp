@@ -2493,14 +2493,10 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 						t_image -> open();
 						t_new_mask = t_image -> makewindowshape();
 						t_image -> close();
+                        // MW-2014-06-11: [[ Bug 12495 ]] Refactored action as different whether using platform API or not.
 						if (t_new_mask != NULL)
-						{
-							destroywindowshape();
-							m_window_shape = t_new_mask;
-							// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
-							dirtyall();
-							break;
-						}
+                            updatewindowshape(t_new_mask);
+                        break;
 					}
 				}
 #endif
@@ -3085,6 +3081,17 @@ bool MCStack::getuseideallayout(void)
 	return false;
 #endif
 }
+
+#ifndef _MAC_DESKTOP
+// MW-2014-06-11: [[ Bug 12495 ]] Non-platform API version of updating windowshape.
+void MCStack::updatewindowshape(MCWindowShape *p_shape)
+{
+    destroywindowshape();
+    m_window_shape = p_shape;
+    // MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
+    dirtyall();
+}
+#endif
 
 //////////
 

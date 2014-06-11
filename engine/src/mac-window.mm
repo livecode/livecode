@@ -1792,6 +1792,9 @@ void MCMacPlatformWindow::DoSynchronize(void)
 	if (m_changes . opacity_changed)
 		[m_window_handle setAlphaValue: m_opacity];
 	
+    if (m_changes . has_shadow_changed)
+        [m_window_handle setHasShadow: m_has_shadow];
+    
 	if (m_changes . mask_changed)
 	{
 		[m_window_handle setOpaque: m_mask == nil];
@@ -1931,7 +1934,7 @@ void MCMacPlatformWindow::DoUpdate(void)
 {	
 	// If the shadow has changed (due to the mask changing) we must disable
 	// screen updates otherwise we get a flicker.
-	if (m_shadow_changed)
+	if (m_shadow_changed && m_has_shadow)
 		NSDisableScreenUpdates();
 	
 	// Mark the bounding box of the dirty region for needing display.
@@ -1943,8 +1946,13 @@ void MCMacPlatformWindow::DoUpdate(void)
 	[m_view displayIfNeeded];
 	
 	// Re-enable screen updates if needed.
-	if (m_shadow_changed)
+	if (m_shadow_changed && m_has_shadow)
+    {
+        // MW-2014-06-11: [[ Bug 12495 ]] Turn the shadow off and on to force recaching.
+        [m_window_handle setHasShadow: NO];
+        [m_window_handle setHasShadow: YES];
 		NSEnableScreenUpdates();
+    }
 }
 
 void MCMacPlatformWindow::DoIconify(void)
