@@ -419,6 +419,7 @@ void MCPlatformWindow::GetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			break;
 		case kMCPlatformWindowPropertyHasSizeWidget:
 			assert(p_type == kMCPlatformPropertyTypeBool);
+            *(bool *)r_value = m_has_size_widget;
 			break;
 		case kMCPlatformWindowPropertyHasShadow:
 			assert(p_type == kMCPlatformPropertyTypeBool);
