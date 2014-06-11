@@ -15,6 +15,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <Cocoa/Cocoa.h>
+#include <CoreVideo/CVDisplayLink.h>
 
 #include "core.h"
 #include "globdefs.h"
@@ -263,6 +264,50 @@ static void MCMacPlatformCGImageToMCImageBitmap(CGImageRef p_image, MCPoint p_si
 		r_bitmap = nil;
 }
 
+//////////
+
+// MW-2014-06-11: [[ Bug 12436 ]] This code uses a displaylink to wait for screen update.
+
+static bool s_display_link_fired;
+
+static CVReturn MyDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeStamp* now, const CVTimeStamp* outputTime, CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* displayLinkContext)
+{
+    s_display_link_fired = true;
+    MCPlatformBreakWait();
+    return kCVReturnSuccess;
+}
+
+static void wait_for_refresh(void)
+{
+    CVDisplayLinkRef t_link;
+    // Create a display link capable of being used with all active displays
+    CVDisplayLinkCreateWithActiveCGDisplays(&t_link);
+    // Set the renderer output callback function
+    CVDisplayLinkSetOutputCallback(t_link, &MyDisplayLinkCallback, nil);
+    
+    CVDisplayLinkStart(t_link);
+    
+    // We wait for two display link firings as the first will likely be before the
+    // screen is updated, and the second will be after. i.e. The screen buffer is
+    // up to date at some point between the two firings.
+    
+    s_display_link_fired = false;
+    
+    while(!s_display_link_fired)
+		MCPlatformWaitForEvent(60.0, false);
+    
+    s_display_link_fired = false;
+    
+    while(!s_display_link_fired)
+		MCPlatformWaitForEvent(60.0, false);
+    
+    CVDisplayLinkStop(t_link);
+    
+    CVDisplayLinkRelease(t_link);
+}
+
+//////////
+
 void MCPlatformScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitmap)
 {
 	// Compute the rectangle to grab in screen co-ords.
@@ -273,6 +318,8 @@ void MCPlatformScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitma
 	t_window = [[MCSnapshotWindow alloc] init];
 	[t_window orderFront: nil];
 	
+    MCMacPlatformLockCursor();
+    
 	// Set the cursor to cross.
 	[[NSCursor crosshairCursor] push];
 	
@@ -287,11 +334,8 @@ void MCPlatformScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitma
 	
 	// Return the cursor to arrow.
 	[NSCursor pop];
-	
-    // MW-2014-03-19: [[ Bug 11654 ]] Wait enough time for the screen to update to a new
-    //   frame. Ideally there'd be an API to wait until the screen has been updated, but
-    //   this doesn't seem to be the case.
-    MCPlatformWaitForEvent(1.0/50.0, False);
+    
+    MCMacPlatformUnlockCursor();
     
 	// Compute the selected rectangle.
 	t_screen_rect = mcrect_from_points(s_snapshot_start_point, s_snapshot_end_point);
@@ -304,13 +348,16 @@ void MCPlatformScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitma
 		MCscreen -> getdisplays(t_displays, false);
 		
 		t_screen_rect = t_displays[0] . viewport;
-	}	
-
+	}
+    
 	MCPlatformScreenSnapshot(t_screen_rect, p_size, r_bitmap);
 }
 
 void MCMacPlatformScreenSnapshotOfWindowWithinBounds(uint32_t p_window_id, MCRectangle p_bounds, MCPoint *p_size, MCImageBitmap *&r_bitmap)
 {
+    // MW-2014-06-11: [[ Bug 12436 ]] Wait for the screen to be up to date.
+    wait_for_refresh();
+    
 	CGImageRef t_image;
 	t_image = CGWindowListCreateImage(carbon_rect_from_mcrect(p_bounds), kCGWindowListOptionIncludingWindow, p_window_id, kCGWindowImageBoundsIgnoreFraming);
 	
@@ -365,6 +412,9 @@ void MCPlatformScreenSnapshotOfWindowArea(uint32_t p_window_id, MCRectangle p_ar
 
 void MCPlatformScreenSnapshot(MCRectangle p_screen_rect, MCPoint *p_size, MCImageBitmap*& r_bitmap)
 {
+    // MW-2014-06-11: [[ Bug 12436 ]] Wait for the screen to be up to date.
+    wait_for_refresh();
+    
 	CGRect t_area;
 	t_area = CGRectMake(p_screen_rect . x, p_screen_rect . y, p_screen_rect . width, p_screen_rect . height);
 	

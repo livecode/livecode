@@ -1210,6 +1210,25 @@ extern uint2 MCdoubledelta;
 extern uint2 MCdoubletime;
 extern uint2 MCdragdelta;
 
+// MW-2014-06-11: [[ Bug 12436 ]] This is used to temporarily turn off cursor setting
+//   when doing an user-import snapshot.
+static bool s_mouse_cursor_locked = false;
+
+void MCMacPlatformLockCursor(void)
+{
+    s_mouse_cursor_locked = true;
+}
+
+void MCMacPlatformUnlockCursor(void)
+{
+    s_mouse_cursor_locked = false;
+    
+    if (s_mouse_window == nil)
+        MCMacPlatformResetCursor();
+    else
+        MCMacPlatformHandleMouseCursorChange(s_mouse_window);
+}
+
 void MCPlatformGrabPointer(MCPlatformWindowRef p_window)
 {
 	// If we are grabbing for the given window already, do nothing.
@@ -1357,6 +1376,10 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
     if (s_mouse_window != p_window)
         return;
     
+    // MW-2014-06-11: [[ Bug 12436 ]] If the cursor is locked, do nothing.
+    if (s_mouse_cursor_locked)
+        return;
+    
     // If we are on Lion+ then check to see if the mouse location is outside
     // of any of the system tracking rects (used for resizing etc.)
     extern uint4 MCmajorosversion;
@@ -1430,7 +1453,11 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 		
 		// If there is no mouse window, reset the cursor to default.
 		if (t_new_mouse_window == nil)
-			MCMacPlatformResetCursor();
+        {
+            // MW-2014-06-11: [[ Bug 12436 ]] If the cursor is locked, do nothing.
+            if (!s_mouse_cursor_locked)
+                MCMacPlatformResetCursor();
+        }
 			
 		if (s_mouse_window != nil)
 			MCPlatformReleaseWindow(s_mouse_window);
