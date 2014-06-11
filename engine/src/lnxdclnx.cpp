@@ -292,6 +292,12 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
         // What type of event are we dealing with?
         switch (t_event->type)
         {
+            case GDK_DELETE:
+            {
+                MCdispatcher->wclose(t_event->any.window);
+                break;
+            }
+            
             case GDK_EXPOSE:
             case GDK_DAMAGE:
             {
