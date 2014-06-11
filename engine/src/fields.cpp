@@ -667,35 +667,34 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 	
 	if (si != ei)
 	{
-		int4 tei;
-		if (ei >= pgptr->gettextsizecr())
-		{
-			tei = pgptr->gettextsize();
-			ei--;
-			if (ei == tei && pgptr->next() != toppgptr)
-			{
-				pgptr->join();
-				
-				// MW-2013-10-24: [[ FasterField ]] Join affects multiple paragraphs.
-				t_affect_many = true;
-			}
-		}
-		else
-			tei = ei;
-		ei -= tei;
+        
+        // MW-2014-05-28: [[ Bug 11928 ]] Reworked code here so that it is the same as
+        //   MCField::deleteselection (makes sure paragraph styles work the same way
+        //   when deleting a paragraph break).
 		MCParagraph *saveparagraph = pgptr;
 		int4 savey = 0;
 		if (opened && pgptr == paragraphs)
 			savey = paragraphtoy(saveparagraph);
+        
+        // First delete the portion of the first paragraph in the range.
+        int4 tei;
+        tei = MCMin(ei, pgptr -> gettextsize());
+        
 		pgptr->deletestring(si, tei);
-		if (ei > 0)
+        
+        // End index is reduced by the amount we just deleted.
+        ei -= (tei - si);
+        
+		if (ei > pgptr -> gettextsize())
 		{
+            // MW-2014-06-10: [[ Bug 11928 ]] Adjust for the CR that will be removed by the
+            //   final join in this consequent.
+            ei -= 1;
 			pgptr = pgptr->next();
 			while (ei >= pgptr->gettextsizecr())
 			{
 				ei -= pgptr->gettextsizecr();
-				MCParagraph *tpgptr = pgptr->remove
-				                      (pgptr);
+				MCParagraph *tpgptr = pgptr->remove(pgptr);
 				if (tpgptr == curparagraph)
 				{
 					curparagraph = saveparagraph;
@@ -1716,7 +1715,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		{
 			if (MCactivefield == this)
 			{
-				selectedmark(False, ssi, sei, False, False);
+				selectedmark(False, ssi, sei, False);
 				unselect(False, True);
 			}
 			curparagraph = focusedparagraph = paragraphs;
@@ -2222,7 +2221,7 @@ Boolean MCField::foundmark(Boolean wholeline, Boolean inc_cr, int4 &si, int4 &ei
 void MCField::selectedchunk(MCExecPoint &ep)
 {
 	int4 si, ei;
-	if (selectedmark(False, si, ei, False, False))
+	if (selectedmark(False, si, ei, False))
 		returnchunk(ep, si, ei);
 	else
 		ep.clear();
@@ -2231,7 +2230,7 @@ void MCField::selectedchunk(MCExecPoint &ep)
 void MCField::selectedline(MCExecPoint &ep)
 {
 	int4 si, ei;
-	if (selectedmark(False, si, ei, False, False))
+	if (selectedmark(False, si, ei, False))
 		returnline(ep, si, ei);
 	else
 		ep.clear();
@@ -2240,7 +2239,7 @@ void MCField::selectedline(MCExecPoint &ep)
 void MCField::selectedloc(MCExecPoint &ep)
 {
 	int4 si, ei;
-	if (selectedmark(False, si, ei, False, False))
+	if (selectedmark(False, si, ei, False))
 		returnloc(ep, si);
 	else
 		ep.clear();
@@ -2269,13 +2268,14 @@ void MCField::selectedtext(MCExecPoint &ep)
 	else
 	{
 		int4 si, ei;
-		if (selectedmark(False, si, ei, False, False))
+		if (selectedmark(False, si, ei, False))
 			returntext(ep, si, ei);
 	}
 }
 
-Boolean MCField::selectedmark(Boolean whole, int4 &si, int4 &ei,
-                              Boolean force, Boolean include_cr)
+// MW-2014-05-28: [[ Bug 11928 ]] The 'inc_cr' parameter is not necessary - this is determined
+//   by 'whole' - i.e. if 'whole' is true then select the whole paragraph inc CR.
+Boolean MCField::selectedmark(Boolean whole, int4 &si, int4 &ei, Boolean force)
 {
 	MCParagraph *pgptr = paragraphs;
 	si = ei = 0;
@@ -2358,8 +2358,6 @@ Boolean MCField::selectedmark(Boolean whole, int4 &si, int4 &ei,
 				ei += e;
 			}
 		}
-		if (include_cr && pgptr != NULL && e == pgptr->gettextsize() && pgptr->next() != paragraphs)
-			ei++;
 	}
 	return True;
 }
@@ -2636,7 +2634,7 @@ void MCField::pastetext(MCParagraph *newtext, Boolean dodel)
 		{
 			us = new Ustruct;
 			int4 si, ei;
-			selectedmark(False, si, ei, False, False);
+			selectedmark(False, si, ei, False);
 			us->ud.text.index = si;
 			us->ud.text.newline = False;
 			us->ud.text.data = NULL;
@@ -2673,7 +2671,7 @@ void MCField::movetext(MCParagraph *newtext, int4 p_to_index)
 	if ((flags & F_LOCK_TEXT) == 0 && !getstack()->islocked() && opened)
 	{
 		int4 si, ei;
-		selectedmark(False, si, ei, False, False);
+		selectedmark(False, si, ei, False);
 		if (si < p_to_index)
 			p_to_index -= ei - si;
 
@@ -2764,6 +2762,10 @@ void MCField::insertparagraph(MCParagraph *newtext)
 	uint4 oldflags = flags;
 	flags &= ~F_VISIBLE;
 	deleteselection(False);
+    // MW-2014-06-10: [[ Bug 12589 ]] Make sure the paragraph's selection is unset.
+    //   If we don't do this portions of the paragraph will still think they are
+    //   selected causing strange behavior.
+    focusedparagraph -> deleteselection();
 	textheight -= focusedparagraph->getheight(fixedheight);
 	focusedparagraph->split();
 	MCParagraph *oldend = focusedparagraph->next();
