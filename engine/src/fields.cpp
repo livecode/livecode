@@ -667,7 +667,6 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 	
 	if (si != ei)
 	{
-        
         // MW-2014-05-28: [[ Bug 11928 ]] Reworked code here so that it is the same as
         //   MCField::deleteselection (makes sure paragraph styles work the same way
         //   when deleting a paragraph break).
@@ -682,11 +681,11 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
         
 		pgptr->deletestring(si, tei);
         
-        // End index is reduced by the amount we just deleted.
-        ei -= (tei - si);
-        
 		if (ei > pgptr -> gettextsize())
 		{
+            // End index is reduced by the amount we just deleted.
+            ei -= tei;
+            
             // MW-2014-06-10: [[ Bug 11928 ]] Adjust for the CR that will be removed by the
             //   final join in this consequent.
             ei -= 1;
