@@ -168,12 +168,20 @@ void MCMacPlatformSurface::UnlockPixels(void)
 
 bool MCMacPlatformSurface::LockSystemContext(void*& r_context)
 {
+	// IM-2014-06-12: [[ Bug 12354 ]] Lock the surface context without scaling
+	CGFloat t_scale;
+	t_scale = 1.0 / GetBackingScaleFactor();
+	
+	CGContextSaveGState(m_cg_context);
+	CGContextScaleCTM(m_cg_context, t_scale, t_scale);
+	
 	r_context = m_cg_context;
 	return true;
 }
 
 void MCMacPlatformSurface::UnlockSystemContext(void)
 {
+	CGContextRestoreGState(m_cg_context);
 }
 
 bool MCMacPlatformSurface::Composite(MCGRectangle p_dst_rect, MCGImageRef p_src_image, MCGRectangle p_src_rect, MCGFloat p_opacity, MCGBlendMode p_blend_mode)
@@ -189,28 +197,33 @@ bool MCMacPlatformSurface::Composite(MCGRectangle p_dst_rect, MCGImageRef p_src_
 	
 	// COCOA-TODO: Getting the height to flip round is dependent on a friend.
 	int t_surface_height;
-	t_surface_height = m_window -> m_content . height;
+	// IM-2014-06-12: [[ Bug 12354 ]] Apply the backing scale to get the surface pixel height
+	t_surface_height = m_window -> m_content . height * GetBackingScaleFactor();
 	
 	// apply transformation to rect (0, 0, image width, image height)
 	MCGRectangle t_dst_rect, t_src_rect;
 	t_src_rect = MCGRectangleMake(0, 0, MCGImageGetWidth(p_src_image), MCGImageGetHeight(p_src_image));
 	t_dst_rect = MCGRectangleMake(t_dx, t_dy, t_src_rect.size.width * t_sx, t_src_rect.size.height * t_sy);
 	
-	CGContextSaveGState(m_cg_context);
+	CGContext *t_context;
+	t_context = nil;
+	
+	// IM-2014-06-12: [[ Bug 12354 ]] Use lock method to get the context for compositing
+	/* UNCHECKED */ LockSystemContext((void*&)t_context);
 	
 	// clip to dst rect
 	MCRectangle t_bounds;
 	t_bounds = MCGRectangleGetIntegerBounds(p_dst_rect);
 	CGRect t_dst_clip;
 	t_dst_clip = CGRectMake(t_bounds . x, t_surface_height - (t_bounds . y + t_bounds . height), t_bounds . width, t_bounds . height);
-	CGContextClipToRect(m_cg_context, t_dst_clip);
+	CGContextClipToRect(t_context, t_dst_clip);
 	
 	// render image to transformed rect
 	CGRect t_dst_cgrect;
 	t_dst_cgrect = CGRectMake(t_dst_rect . origin . x, t_surface_height - (t_dst_rect . origin . y + t_dst_rect . size . height), t_dst_rect . size . width, t_dst_rect . size . height);
-	MCMacRenderImageToCG(m_cg_context, t_dst_cgrect, p_src_image, t_src_rect, p_opacity, p_blend_mode);
+	MCMacRenderImageToCG(t_context, t_dst_cgrect, p_src_image, t_src_rect, p_opacity, p_blend_mode);
 	
-	CGContextRestoreGState(m_cg_context);
+	UnlockSystemContext();
 	
 	return true;
 }
