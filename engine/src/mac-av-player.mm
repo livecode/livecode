@@ -194,7 +194,8 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
 		CFRelease(m_current_frame);
     
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
-    [m_player removeTimeObserver:m_timeObserverToken];
+    // TODO: uncommenting this causes a crash
+    //[m_player removeTimeObserver:m_timeObserverToken];
     [m_observer release];
 	[m_view release];
 	[m_player release];
@@ -262,7 +263,10 @@ void MCAVFoundationPlayer::CurrentTimeChanged(void)
 
 void MCAVFoundationPlayer::CacheCurrentFrame(void)
 {
+    //TODO: Link currentItem with m_player
     AVPlayerItem *t_playerItem = [m_player currentItem];
+    if (t_playerItem == nil)
+        return;
     // AVPlayerItemOutput is available in OSX 10.8 and later
     AVPlayerItemOutput *t_playerItemOutput;
     
@@ -460,7 +464,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename, bool p_is_url)
                 }
             }
             
-            if (![t_urlAsset isPlayable] || [t_urlAsset hasProtectedContent])
+            if (![t_urlAsset isPlayable] )//|| [t_urlAsset hasProtectedContent])
             {
                 // We can't play this asset. Show the "Unplayable Asset" label.
                 return;
@@ -499,12 +503,13 @@ void MCAVFoundationPlayer::Load(const char *p_filename, bool p_is_url)
                 CurrentTimeChanged();
             }];
             
-            
+            /*
             extern NSString **QTMovieRateDidChangeNotification_ptr;
             [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(rateChanged:) name: *QTMovieRateDidChangeNotification_ptr object: [m_player currentItem]];
             
             extern NSString **QTMovieSelectionDidChangeNotification_ptr;
             [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(selectionChanged:) name: *QTMovieSelectionDidChangeNotification_ptr object: [m_player currentItem]];
+            */
             
         });
         
@@ -782,6 +787,7 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 			break;
         case kMCPlatformPlayerPropertyMovieRect:
 		{
+            // TODO: currentItem returns nil. To link it with m_player
 			AVAssetTrack *t_assetTrack;
             NSArray *t_tracks = [[[m_player currentItem] asset] tracks];
             t_assetTrack = [t_tracks objectAtIndex:0];
