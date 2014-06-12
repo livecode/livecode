@@ -2585,8 +2585,9 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		drawfocus(dc, p_dirty);
 
 #ifdef FEATURE_PLATFORM_PLAYER
-	/*if (!(state & CS_CLOSING))
+	if (!(state & CS_CLOSING))
 		prepare(MCnullstring);
+    /*
 	
 	if (m_platform_player != nil)
 	{

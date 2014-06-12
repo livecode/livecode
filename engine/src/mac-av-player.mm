@@ -49,8 +49,7 @@ class MCAVFoundationPlayer;
 
 @end
 
-// TODO: Remember to rename this to com_runrev_livecode_MCAVFoundationPlayerView
-@interface PlayerView : NSView
+@interface com_runrev_livecode_MCAVFoundationPlayerView : NSView
 
 - (AVPlayer*)player;
 - (void)setPlayer:(AVPlayer *)player;
@@ -100,10 +99,7 @@ private:
 	static void DoSwitch(void *context);
     
 	AVPlayer *m_player;
-    PlayerView *m_view;
-    // TODO: Style-wise, use m_player_item - i.e. lowercase, words separated by _ and prefix by m_ for 'member variable'.
-    AVPlayerItem *playerItem;
-    //AVPlayerLayer *m_player_layer;
+    com_runrev_livecode_MCAVFoundationPlayerView *m_view;
     CMTime m_selection_start, m_selection_finish;
     bool m_play_selection_only : 1;
     bool m_looping : 1;
@@ -112,8 +108,7 @@ private:
     
     com_runrev_livecode_MCAVFoundationPlayerObserver *m_observer;
     
-    // TODO: Again - use m_time_observer_token
-    id m_timeObserverToken;
+    id m_time_observer_token;
     
     uint32_t *m_markers;
     uindex_t m_marker_count;
@@ -173,7 +168,7 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////
 
-@implementation PlayerView
+@implementation com_runrev_livecode_MCAVFoundationPlayerView
 
 - (AVPlayer*)player
 {
@@ -204,7 +199,7 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     //   an AVPlayer until we load, so that starts off as nil and we create a PlayerView
     //   with zero frame.
     m_player = nil;
-    m_view = [[PlayerView alloc] initWithFrame: NSZeroRect];
+    m_view = [[com_runrev_livecode_MCAVFoundationPlayerView alloc] initWithFrame: NSZeroRect];
 	m_observer = [[com_runrev_livecode_MCAVFoundationPlayerObserver alloc] initWithPlayer: this];
     
 	m_current_frame = nil;
@@ -250,6 +245,7 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
 
 void MCAVFoundationPlayer::MovieFinished(void)
 {
+    [[m_player currentItem] seekToTime:kCMTimeZero];
     if (!m_looping)
     {
         m_playing = false;
@@ -257,7 +253,6 @@ void MCAVFoundationPlayer::MovieFinished(void)
     }
     else
     {
-        [[m_player currentItem] seekToTime:kCMTimeZero];
         [m_player play];
         m_playing = true;
         MCPlatformCallbackSendPlayerStarted(this);
@@ -266,10 +261,10 @@ void MCAVFoundationPlayer::MovieFinished(void)
 
 double MCAVFoundationPlayer::getDuration(void)
 {
-    AVPlayerItem *t_playerItem = [m_player currentItem];
+    AVPlayerItem *t_player_item = [m_player currentItem];
     
-    if ([t_playerItem status] == AVPlayerItemStatusReadyToPlay)
-        return CMTimeGetSeconds([[t_playerItem asset] duration]);
+    if ([t_player_item status] == AVPlayerItemStatusReadyToPlay)
+        return CMTimeGetSeconds([[t_player_item asset] duration]);
     else
         return 0.f;
 }
@@ -505,11 +500,21 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     // Now set the player of the view.
     [m_view setPlayer: m_player];
     
+    [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
+    
+    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(movieFinished:) name: AVPlayerItemDidPlayToEndTimeNotification object: [m_player currentItem]];
+    
+    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: AVPlayerItemTimeJumpedNotification object: [m_player currentItem]];
+    
+    m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 10) queue:dispatch_get_main_queue() usingBlock:^(CMTime time) {
+        CurrentTimeChanged();
+        }];
+    
 #if 0
 /*
     NSError *t_error;
 	t_error = nil;
-    
+ 
     id t_filename_or_url;
     
     t_filename_or_url = [NSURL URLWithString: [NSString stringWithCString: p_filename encoding: NSMacOSRomanStringEncoding]];
