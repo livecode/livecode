@@ -75,7 +75,7 @@ MCImage::MCImage()
 {
 	angle = 0;
 	flags &= ~(F_SHOW_BORDER | F_TRAVERSAL_ON);
-
+    
 	m_rep = nil;
 	m_resampled_rep = nil;
 	m_image_opened = false;
@@ -98,6 +98,8 @@ MCImage::MCImage()
 	currentframe = 0;
 	repeatcount = 0;
 	resizequality = INTERPOLATION_BOX;
+    
+    m_center_rect = MCRectangleMake(INT16_MIN, INT16_MIN, UINT16_MAX, UINT16_MAX);
 }
 
 MCImage::MCImage(const MCImage &iref) : MCControl(iref)
@@ -146,6 +148,8 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	currentframe = 0;
 	repeatcount = iref.repeatcount;
 	resizequality = iref.resizequality;
+    
+    m_center_rect = iref.m_center_rect;
 }
 
 MCImage::~MCImage()
@@ -1266,6 +1270,27 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			return t_stat;
 		}
 		break;
+    case P_CENTER_RECTANGLE:
+        {
+            if (data == MCnullmcstring)
+                m_center_rect = MCRectangleMake(INT16_MIN, INT16_MIN, UINT16_MAX, UINT16_MAX);
+            else
+            {
+                int2 i1, i2, i3, i4;
+                if (!MCU_stoi2x4(data, i1, i2, i3, i4))
+                {
+                    MCeerror->add(EE_OBJECT_NAR, 0, 0, data);
+                    return ES_ERROR;
+                }
+                m_center_rect . x = MCU_max(i1, 0);
+                m_center_rect . y = MCU_max(i2, 0);
+                m_center_rect . width = MCU_max(i3 - i1, 0);
+                m_center_rect . height = MCU_max(i4 - i2, 0);
+            }
+            
+            dirty = True;
+        }
+        break;
 #endif /* MCImage::setprop */
 	default:
 		return MCControl::setprop(parid, p, ep, effective);

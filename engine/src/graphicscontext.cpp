@@ -1197,7 +1197,10 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 		MCGContextTranslateCTM(m_gcontext, -t_dest.origin.x, -t_dest.origin.y);
 	}
 
-	MCGContextDrawImage(m_gcontext, p_image.image, t_dest, p_image.filter);
+    if (!p_image . has_center)
+        MCGContextDrawImage(m_gcontext, p_image.image, t_dest, p_image.filter);
+    else
+        MCGContextDrawImageWithCenter(m_gcontext, p_image . image, p_image . center, t_dest, p_image . filter);
 	MCGContextRestore(m_gcontext);
 }
 

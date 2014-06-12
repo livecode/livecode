@@ -72,9 +72,13 @@ enum MCImageDataType
 
 struct MCImageDescriptor
 {
-	bool has_transform;
+	bool has_transform : 1;
+    bool has_center : 1;
+    
 	MCGAffineTransform transform;
-	MCGImageFilter filter;
+	MCGRectangle center;
+    
+    MCGImageFilter filter;
 	
 	// IM-2013-07-19: [[ ResIndependence ]] add scale factor field for scaled images
 	MCGFloat scale_factor;
