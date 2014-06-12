@@ -20,10 +20,21 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 #include "osspec.h"
 
-#if !defined(_LINUX_SERVER) && !defined(_LINUX)
+#if !defined(_WINDOWS_SERVER) && !defined(_WINDOWS_DESKTOP)
 #include <sys/mman.h>
 #include <unistd.h>
+
+#if defined(_MAC_SERVER) || defined(_MAC_DESKTOP)
+#define ftello64(a) ftello(a)
+#define fseeko64(a, b, c) fseeko(a, b, c)
+
+#define opendir64(a) opendir(a)
+#define readdir64(a) readdir(a)
+#define closedir64(a) closedir(a)
+#define DIR64 DIR
 #endif
+
+#endif // Mac and Linux-specific includes for file mapping
 
 enum
 {
@@ -244,6 +255,9 @@ protected:
 	uint32_t m_capacity;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+#if !defined(_WINDOWS_SERVER) && !defined(_WINDOWS_DESKTOP)
 class MCMemoryMappedFileHandle: public MCMemoryFileHandle
 {
 public:
@@ -267,6 +281,7 @@ private:
     void *m_buffer;
     uint32_t m_length;
 };
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

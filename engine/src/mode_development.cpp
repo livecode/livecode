@@ -306,7 +306,7 @@ IO_stat MCDispatch::startup(void)
 	/* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
 	MCValueRelease(t_compressed);
     
-	IO_handle stream = MCS_fakeopen(MCDataGetOldString(t_decompressed));
+    IO_handle stream = MCS_fakeopen(MCDataGetBytePtr(t_decompressed), MCDataGetLength(t_decompressed));
 	if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)
 	{
 		MCS_close(stream);

@@ -103,16 +103,6 @@ struct MCDateTime
 	int4 bias;
 };
 
-#if defined(_LINUX_SERVER) || defined(_MAC_SERVER)
-char *strndup(const char *s, size_t l)
-{
-	char *r;
-	r = new char[l + 1];
-	strncpy(r, s, l);
-	return r;
-}
-#endif
-
 #ifdef LEGACY_EXEC
 class MCStdioFileHandle: public MCSystemFileHandle
 {
@@ -991,7 +981,8 @@ bool MCS_create_temporary_file(MCStringRef p_path, MCStringRef p_prefix, IO_hand
 
 bool MCSystemLockFile(IO_handle p_file, bool p_shared, bool p_wait)
 {
-	int t_fd = fileno(((MCStdioFileHandle*)p_file)->GetStream());
+    // FRAGILE? In case p_file is a MCMemoryMappedFile, getFilePointer returns a char*...
+	int t_fd = fileno((FILE*)p_file->GetFilePointer());
 	int32_t t_op = 0;
 	
 	if (p_shared)

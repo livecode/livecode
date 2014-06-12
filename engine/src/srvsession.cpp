@@ -664,19 +664,19 @@ bool MCSessionCleanup(void)
 static const char *s_hex_char = "0123456789ABCDEF";
 bool byte_to_hex(uint8_t *p_src, uint32_t p_len, MCStringRef &r_hex)
 {
-	if (!MCMemoryNewArray<MCStringRef>(p_len * 2 + 1, (MCStringRef *&) r_hex))
-		return false;
-	
-	char *t_dst = strdup(MCStringGetCString(r_hex));
+    char_t *t_dst, *t_ptr;
+    if (!MCMemoryAllocate(p_len * 2, t_dst))
+        return false;
+
+    t_ptr = t_dst;
+    
 	for (uint32_t i = 0; i < p_len; i++)
 	{
-		*t_dst++ = s_hex_char[(p_src[i] >> 4)];
-		*t_dst++ = s_hex_char[(p_src[i] & 0xF)];
-	}
-	// append terminating null
-	*t_dst = '\0';
-	
-	return true;
+        *t_ptr++ = s_hex_char[(p_src[i] >> 4)];
+        *t_ptr++ = s_hex_char[(p_src[i] & 0xF)];
+    }
+    
+    return MCStringCreateWithNativeCharsAndRelease(t_dst, p_len * 2, r_hex);
 }
 				 
 bool MCSessionGenerateID(MCStringRef &r_id)

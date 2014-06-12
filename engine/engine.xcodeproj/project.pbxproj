@@ -342,7 +342,6 @@
 		4DB846D5192B558A00771914 /* libpcre.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7999171348CD000BCF78 /* libpcre.a */; };
 		4DB846D6192B558A00771914 /* libpng.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7981171348A6000BCF78 /* libpng.a */; };
 		4DB846D7192B558A00771914 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7989171348B4000BCF78 /* libjpeg.a */; };
-		4DB846D8192B558A00771914 /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DBF58631801CA57009CAB2E /* libopenssl.a */; };
 		4DB846D9192B558A00771914 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 76F0CC9018CA28E500C01A67 /* libskia.a */; };
 		4DB846DA192B559700771914 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A67171D574F00E7E557 /* libcrypto.dylib */; };
 		4DB846DB192B559700771914 /* libcups.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A69171D574F00E7E557 /* libcups.dylib */; };
@@ -571,6 +570,7 @@
 		A71F80540F4F178C003012FD /* Standalone.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80530F4F178C003012FD /* Standalone.icns */; };
 		A71F80550F4F17C1003012FD /* LiveCode.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885610B80DEAC00200116 /* LiveCode.icns */; };
 		A71F80620F4F17F9003012FD /* StandaloneDoc.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80610F4F17F9003012FD /* StandaloneDoc.icns */; };
+		BE0986A3194874DD0065CEEA /* revsecurity.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BE0986A2194874DD0065CEEA /* revsecurity.dylib */; };
 		BEA6F33419472695000D6A37 /* osxflst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880160B80A4F800200116 /* osxflst.cpp */; };
 		BEF6186019470E1E00C42C57 /* exec-engine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE3B0F115888AB8008EB6B5 /* exec-engine.cpp */; };
 		BEF6186119470E6100C42C57 /* exec-strings-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */; };
@@ -968,6 +968,13 @@
 			remoteGlobalIDString = D2AAC046055464E500DB518D;
 			remoteInfo = libskia;
 		};
+		BE0986A0194872D20065CEEA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DBF57C01801A14C009CAB2E;
+			remoteInfo = revsecurity;
+		};
 		BE3F705D175CD3E700DBFB07 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D7FA7B61594E0FA00EEF440 /* libfoundation.xcodeproj */;
@@ -981,13 +988,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = foundation;
-		};
-		BEF618831947106500C42C57 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4DBF585D1801CA57009CAB2E /* libopenssl.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = D2AAC045055464E500DB518D;
-			remoteInfo = openssl;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -1725,6 +1725,7 @@
 		A04643F60BAAA63A0030A830 /* w32theme.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32theme.cpp; path = src/w32theme.cpp; sourceTree = "<group>"; };
 		A71F80530F4F178C003012FD /* Standalone.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = Standalone.icns; path = rsrc/Standalone.icns; sourceTree = "<group>"; };
 		A71F80610F4F17F9003012FD /* StandaloneDoc.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = StandaloneDoc.icns; path = rsrc/StandaloneDoc.icns; sourceTree = "<group>"; };
+		BE0986A2194874DD0065CEEA /* revsecurity.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = revsecurity.dylib; path = ../_build/mac/Debug/revsecurity.dylib; sourceTree = "<group>"; };
 		BE4D6171189A5495002DA467 /* AttachmentProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = AttachmentProvider.java; sourceTree = "<group>"; };
 		BEF2C0EF17BA493A00E96459 /* socket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = socket.h; path = src/socket.h; sourceTree = "<group>"; };
 		BEF3110417C217C30073D70F /* dskw32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskw32.cpp; path = src/dskw32.cpp; sourceTree = "<group>"; };
@@ -1872,6 +1873,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BE0986A3194874DD0065CEEA /* revsecurity.dylib in Frameworks */,
 				BEF618A119471D4000C42C57 /* Carbon.framework in Frameworks */,
 				BEF6189619471C9700C42C57 /* Security.framework in Frameworks */,
 				BEF6189519471C6A00C42C57 /* IOKit.framework in Frameworks */,
@@ -1891,7 +1893,6 @@
 				4DB846D5192B558A00771914 /* libpcre.a in Frameworks */,
 				4DB846D6192B558A00771914 /* libpng.a in Frameworks */,
 				4DB846D7192B558A00771914 /* libjpeg.a in Frameworks */,
-				4DB846D8192B558A00771914 /* libopenssl.a in Frameworks */,
 				4DB846D9192B558A00771914 /* libskia.a in Frameworks */,
 				4DB846DE192B55AF00771914 /* CoreFoundation.framework in Frameworks */,
 				4DB847B8192B55C100771914 /* Cocoa.framework in Frameworks */,
@@ -1968,6 +1969,7 @@
 		4D587D920B80944100200116 = {
 			isa = PBXGroup;
 			children = (
+				BE0986A2194874DD0065CEEA /* revsecurity.dylib */,
 				BEF6189419471C6000C42C57 /* IOKit.framework */,
 				721CAAC218351E7400858545 /* libicudata.a */,
 				721CAAC318351E7400858545 /* libicuio.a */,
@@ -3100,8 +3102,8 @@
 			buildRules = (
 			);
 			dependencies = (
-				BEF618841947106500C42C57 /* PBXTargetDependency */,
 				4D222016171D730B00E7E557 /* PBXTargetDependency */,
+				BE0986A1194872D20065CEEA /* PBXTargetDependency */,
 				4D8D3567171D4B83009D9D25 /* PBXTargetDependency */,
 				4D8D3569171D4B83009D9D25 /* PBXTargetDependency */,
 				4D8D356B171D4B83009D9D25 /* PBXTargetDependency */,
@@ -4320,6 +4322,11 @@
 			name = libgraphics;
 			targetProxy = 76EF3184181E708A00FAC195 /* PBXContainerItemProxy */;
 		};
+		BE0986A1194872D20065CEEA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = revsecurity;
+			targetProxy = BE0986A0194872D20065CEEA /* PBXContainerItemProxy */;
+		};
 		BE3F705E175CD3E700DBFB07 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = foundation;
@@ -4329,11 +4336,6 @@
 			isa = PBXTargetDependency;
 			name = foundation;
 			targetProxy = BE3F705F175CD40000DBFB07 /* PBXContainerItemProxy */;
-		};
-		BEF618841947106500C42C57 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = openssl;
-			targetProxy = BEF618831947106500C42C57 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -4511,6 +4513,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SOLUTION_DIR)/prebuilt/lib/mac",
+					"\"$(SRCROOT)/../_build/mac/Debug\"",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Server-Community";
@@ -4524,6 +4527,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SOLUTION_DIR)/prebuilt/lib/mac",
+					"\"$(SRCROOT)/../_build/mac/Debug\"",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "Server-Community";

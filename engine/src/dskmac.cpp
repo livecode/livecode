@@ -42,6 +42,10 @@
 #include "text.h"
 #include "socket.h"
 
+#ifdef _MAC_SERVER
+#include "sysposix.h"
+#endif
+
 #include "osxdc.h"
 
 #include <sys/stat.h>
@@ -4868,8 +4872,14 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 #endif /* MCS_unsetenv_dsk_mac */
         MCAutoStringRefAsUTF8String t_name, t_value;
         /* UNCHECKED */ t_name . Lock(p_name);
-        /* UNCHECKED */ t_value . Lock(p_value);
-        setenv(*t_name, *t_value, True);
+        
+        if (p_value == NULL)
+            unsetenv(*t_name);
+        else
+        {
+            /* UNCHECKED */ t_value . Lock(p_value);
+            setenv(*t_name, *t_value, True);
+        }
     }
     
 	virtual bool GetEnv(MCStringRef p_name, MCStringRef& r_value)
@@ -4885,7 +4895,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         // We want to avoid returning something in case there was the environment variable
         // doesn't exist
-        return t_env != nil && MCStringCreateWithCString(getenv(*t_name), r_value); //always returns NULL under CodeWarrier env.
+        return t_env != nil && MCStringCreateWithBytes((byte_t*)t_env, strlen(t_env), kMCStringEncodingUTF8, false, r_value); //always returns NULL under CodeWarrier env.
     }
 	
 	virtual Boolean CreateFolder(MCStringRef p_path)
