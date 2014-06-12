@@ -85,13 +85,7 @@ void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode 
 
 static bool MCExposeEventFilter(GdkEvent *e)
 {
-    return e->type == GDK_EXPOSE;
-}
-
-static GdkWindow *s_filter_window;
-static bool MCExposeEventFilterForWindow(GdkEvent *e)
-{
-    return e->type == GDK_EXPOSE && e->any.window == s_filter_window;
+    return e->type == GDK_EXPOSE || e->type == GDK_DAMAGE;
 }
 
 void MCScreenDC::expose()
@@ -106,17 +100,10 @@ void MCScreenDC::expose()
         {
             GdkEventExpose *eevent = (GdkEventExpose*)event;
             t_window = eevent->window;
-            s_filter_window = t_window;
             
-            MCRegionCreate(t_dirty);
+            t_dirty = (MCRegionRef)gdk_region_copy(eevent->region);
             
-            do
-            {
-                eevent = (GdkEventExpose*)event;
-                MCRegionIncludeRect(t_dirty, MCU_make_rect(eevent->area.x, eevent->area.y, eevent->area.width, eevent->area.height));
-                gdk_event_free(event);
-            }
-            while (GetFilteredEvent(&MCExposeEventFilterForWindow, event));
+            gdk_event_free(event);
         }
         else
             break;

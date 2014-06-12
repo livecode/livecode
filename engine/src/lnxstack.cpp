@@ -148,11 +148,7 @@ void MCStack::realize()
         gdkwa.wclass = GDK_INPUT_OUTPUT;
         gdkwa.window_type = GDK_WINDOW_TOPLEVEL;
         gdkwa.visual = gdk_visual_get_best();
-        gdkwa.event_mask = GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-            GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_POINTER_MOTION_MASK |
-            GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | GDK_VISIBILITY_NOTIFY_MASK |
-            GDK_FOCUS_CHANGE_MASK | GDK_STRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK |
-            GDK_EXPOSURE_MASK;
+        gdkwa.event_mask = GDK_ALL_EVENTS_MASK;
         
         window = gdk_window_new(screen->getroot(), &gdkwa, gdk_valid_wa);
         
@@ -165,6 +161,10 @@ void MCStack::realize()
 		loadwindowshape();
 		if (m_window_shape != nil && m_window_shape -> is_sharp)
             gdk_window_shape_combine_mask(window, (GdkPixmap*)m_window_shape->handle, 0, 0);
+        
+        // DEBUGGING
+        //gdk_window_set_debug_updates(TRUE);
+        //gdk_window_invalidate_rect(window, NULL, TRUE);
 
 		gdk_display_sync(MCdpy);
 	}
@@ -644,11 +644,7 @@ void MCStack::enablewindow(bool p_enable)
     
     if (p_enable)
     {
-        t_event_mask = GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK
-            | GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK
-            | GDK_POINTER_MOTION_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK
-            | GDK_FOCUS_CHANGE_MASK | GDK_STRUCTURE_MASK | GDK_PROPERTY_CHANGE_MASK
-            | GDK_EXPOSURE_MASK;
+        t_event_mask = GDK_ALL_EVENTS_MASK;
     }
     else
     {

@@ -238,6 +238,12 @@ gdk libgdk-x11-2.0.so.0
 	gdk_x11_grab_server: () -> ()
 	gdk_get_display: () -> (pointer)
 	gdk_event_copy: (pointer) -> (pointer)
+	gdk_window_process_all_updates: () -> ()
+	gdk_window_clear: (pointer) -> ()
+	gdk_window_invalidate_rect: (pointer, pointer, integer) -> ()
+	gdk_window_set_debug_updates: (integer) -> ()
+	gdk_event_handler_set: (pointer, pointer, pointer) -> ()
+	gdk_window_get_events: (pointer) -> (integer)
 
 gdk_pixbuf libgdk_pixbuf-2.0.so.0
 	gdk_pixbuf_get_pixels: (pointer) -> (pointer)
@@ -495,6 +501,9 @@ glib libglib-2.0.so.0
 	g_list_foreach: (pointer, pointer, pointer) -> ()
 	g_list_append: (pointer,pointer) -> (pointer)
 	g_list_free: (pointer) -> ()
+	g_main_context_iteration: (pointer, integer) -> ()
+	g_main_context_default: () -> (pointer)
+	g_main_context_pending: (pointer) -> (integer)
 
 esd libesd.so.0
 	esd_close: (integer) -> (integer)

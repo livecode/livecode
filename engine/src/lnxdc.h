@@ -343,5 +343,8 @@ public:
     
     // Utility function - maps an X drawing operation to the GDK equivalent
     static GdkFunction XOpToGdkOp(int op);
+    
+    // Queues an event as a pending event
+    void EnqueueEvent(GdkEvent *);
 };
 #endif
