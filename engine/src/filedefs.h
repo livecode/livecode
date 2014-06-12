@@ -208,7 +208,7 @@ typedef struct _Streamnode
 	IO_handle ihandle;
 	IO_handle ohandle;
 	int4 pid;
-#if defined(_WINDOWS_DESKTOP)
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 	MCWinSysHandle phandle;  //process handle
 	MCWinSysHandle thandle;  //process handle
 #elif defined(_MAC_DESKTOP) || defined(_MAC_SERVER)

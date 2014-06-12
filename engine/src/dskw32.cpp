@@ -69,6 +69,7 @@
 #include <signal.h>
 #include <io.h> 
 #include <strsafe.h>
+#include <Shlwapi.h>
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -181,9 +182,11 @@ Boolean wsainit()
 			
 			// OK-2009-02-24: [[Bug 7628]]
 			MCresult -> sets("");
+#ifdef _WINDOWS_DESKTOP
 			if (!MCnoui)
 				sockethwnd = CreateWindowA(MC_WIN_CLASS_NAME, "MCsocket", WS_POPUP, 0, 0,
 										   8, 8, NULL, NULL, MChInst, NULL);
+#endif
 		}
 	}
 	MCS_seterrno(0);
@@ -1887,6 +1890,14 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 		setlocale(LC_CTYPE, MCnullstring);
 		setlocale(LC_COLLATE, MCnullstring);
+
+#ifdef _WINDOWS_SERVER
+		WORD request = MAKEWORD(1, 1);
+		WSADATA t_data;
+		WSAStartup(request, &t_data);
+
+		return true;
+#endif // _WINDOWS_SERVER
 
 		// MW-2004-11-28: The ctype array seems to have changed in the latest version of VC++
 		((unsigned short *)_pctype)[160] &= ~_SPACE;

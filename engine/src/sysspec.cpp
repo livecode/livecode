@@ -40,6 +40,7 @@
 
 #include "foundation.h"
 
+#include <signal.h>
 #ifdef _WIN32
 #include <float.h> // _isnan()
 #endif 
@@ -75,8 +76,7 @@ extern MCSystemInterface *MCMobileCreateAndroidSystem(void);
 #ifdef _SERVER
 extern "C" char *__cxa_demangle(const char *, char *, size_t *, int*);
 
-#if !defined(_LINUX_SERVER) && !defined(_MAC_SERVER) 
-static char *strndup(const char *s, size_t n)
+char *strndup(const char *s, size_t n)
 {
 	char *r;
 	r = (char *)malloc(n + 1);
@@ -84,7 +84,6 @@ static char *strndup(const char *s, size_t n)
 	r[n] = '\0';
 	return r;
 }
-#endif
 
 #ifdef _LINUX_SERVER
 #include <execinfo.h>
@@ -150,6 +149,7 @@ static void handle_signal(int p_signal)
 			break;
 		case SIGINT:
 			// We received an interrupt so let the debugger (if present) handle it.
+			extern void MCServerDebugInterrupt();
 			MCServerDebugInterrupt();
 			break;
 		case SIGFPE:
@@ -233,7 +233,7 @@ void MCS_common_init(void)
 void MCS_init(void)
 {
 #if defined(_WINDOWS_SERVER)
-	MCsystem = MCServerCreateWindowsSystem();
+	MCsystem = MCDesktopCreateWindowsSystem();
 #elif defined(_MAC_SERVER)
 	MCsystem = MCDesktopCreateMacSystem();
 #elif defined(_LINUX_SERVER) /*|| defined(_DARWIN_SERVER)*/

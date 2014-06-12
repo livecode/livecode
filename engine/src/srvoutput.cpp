@@ -99,17 +99,17 @@ static inline bool MCServerOutputMapUnicodeCluster(const unichar_t *p_chars, uin
 	switch(MCserveroutputtextencoding)
 	{
 		case kMCSOutputTextEncodingWindows1252:
-			if (MCUnicodeMapToNative_Windows1252((const uint2 *)p_chars, p_char_count, r_char))
+			if (MCUnicodeMapToNative_Windows1252(p_chars, p_char_count, r_char))
 				return true;
 			break;
 			
 		case kMCSOutputTextEncodingMacRoman:
-			if (MCUnicodeMapToNative_MacRoman((const uint2 *)p_chars, p_char_count, r_char))
+			if (MCUnicodeMapToNative_MacRoman(p_chars, p_char_count, r_char))
 				return true;
 			break;
 			
 		case kMCSOutputTextEncodingISO8859_1:
-			if (!MCUnicodeMapToNative_ISO8859_1((const uint2 *)p_chars, p_char_count, r_char))
+			if (!MCUnicodeMapToNative_ISO8859_1(p_chars, p_char_count, r_char))
 				return true;
 			break;
 		default:
@@ -273,14 +273,14 @@ static void MCServerOutputNativeMarkup(const char *p_chars, uint32_t p_char_coun
 static void MCServerOutputAdvanceUnicodeCluster(const unichar_t *p_chars, uint32_t p_char_count, uint32_t& x_index)
 {
 	uint32_t t_codepoint;
-	t_codepoint = MCUnicodeCodepointAdvance((const uint2 *)p_chars, p_char_count, x_index);
+	t_codepoint = MCUnicodeCodepointAdvance(p_chars, p_char_count, x_index);
 	
 	while(x_index < p_char_count)
 	{
 		uint4 t_old_index;
 		t_old_index = x_index;
 		
-		t_codepoint = MCUnicodeCodepointAdvance((const uint2 *)p_chars, p_char_count, x_index);
+		t_codepoint = MCUnicodeCodepointAdvance(p_chars, p_char_count, x_index);
 		
 		if (MCUnicodeCodepointIsBase(t_codepoint))
 		{
@@ -316,7 +316,7 @@ static void MCServerOutputUnicodeChars(const unichar_t *p_chars, uint32_t p_char
 		else if (MCserveroutputtextencoding == kMCSOutputTextEncodingUTF8)
 		{
 			uint32_t t_codepoint;
-			t_codepoint = MCUnicodeCodepointAdvance((const uint2 *)p_chars, p_char_count, t_index);
+			t_codepoint = MCUnicodeCodepointAdvance(p_chars, p_char_count, t_index);
 			MCServerOutputUnicodeCharAsUTF8(t_codepoint, t_output, t_output_count);
 		}
 		else
@@ -366,7 +366,7 @@ static void MCServerOutputUnicodeMarkup(const unichar_t *p_chars, uint32_t p_cha
 		else if (MCserveroutputtextencoding == kMCSOutputTextEncodingUTF8)
 		{
 			uint32_t t_codepoint;
-			t_codepoint = MCUnicodeCodepointAdvance((const uint2 *)p_chars, p_char_count, t_index);
+			t_codepoint = MCUnicodeCodepointAdvance(p_chars, p_char_count, t_index);
 			MCServerOutputUnicodeCharAsUTF8(t_codepoint, t_output, t_output_count);
 		}
 		else

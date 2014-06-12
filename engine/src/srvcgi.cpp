@@ -708,18 +708,19 @@ static void cgi_fix_path_variables()
 	char *t_path, *t_path_end;
 
 	MCAutoStringRef env;
+	t_path = nil;
 	
 	if (MCS_getenv(MCSTR("PATH_TRANSLATED"), &env))
 	{
 		t_path = strdup(MCStringGetCString(*env));
 		t_path_end = t_path + strlen(t_path);
-	}
 
 #ifdef _WINDOWS_SERVER
-	for(uint32_t i = 0; t_path[i] != '\0'; i++)
-		if (t_path[i] == '\\')
-			t_path[i] = '/';
+		for(uint32_t i = 0; t_path[i] != '\0'; i++)
+			if (t_path[i] == '\\')
+				t_path[i] = '/';
 #endif
+	}
 
 	char t_sep;
 	t_sep = '\0';
@@ -1234,10 +1235,11 @@ static bool cgi_compute_cookie_var(void *p_context, MCVariable *p_var)
 ////////////////////////////////////////////////////////////////////////////////
 
 #if defined (_WINDOWS_SERVER)
-_CRTIMP extern char **_environ;
-#define environ _environ
+_CRTIMP extern wchar_t **_wenviron;
+#define environ_var _wenviron
 #else
 extern char **environ;
+#define environ_var environ
 #endif
 
 bool cgi_initialize()
@@ -1251,18 +1253,18 @@ bool cgi_initialize()
 	MCAutoStringRef t_env;
 
 	if (MCS_getenv(MCSTR("PATH_TRANSLATED"), &t_env))
-		MCsystem -> ResolvePath(*t_env, MCserverinitialscript);
+        MCsystem -> ResolvePath(*t_env, MCserverinitialscript);
+
 	
 	// Set the current folder to be that containing the CGI file.
 	char *t_server_script_folder;
-	t_server_script_folder = strdup(MCStringGetCString(MCserverinitialscript));
-#ifdef _WINDOWS_SERVER
-	strrchr(t_server_script_folder, '\\')[0] = '\0';
-#else
+    t_server_script_folder = strdup(MCStringGetCString(MCserverinitialscript));
+
+	// Windows paths have been fixed - no backslashes in the environment variables
 	strrchr(t_server_script_folder, '/')[0] = '\0';
-#endif
-	MCAutoStringRef t_server_script_folder_string;
-	/* UNCHECKED */ MCStringCreateWithCString(t_server_script_folder, &t_server_script_folder_string);
+
+    MCAutoStringRef t_server_script_folder_string;
+    /* UNCHECKED */ MCStringCreateWithCString(t_server_script_folder, &t_server_script_folder_string);
 
 	MCsystem -> SetCurrentFolder(*t_server_script_folder_string);
 	delete t_server_script_folder;
@@ -1271,7 +1273,7 @@ bool cgi_initialize()
 	MCservercgiheaders = NULL;
 	MCservercgiheaders_sent = false;
 	
-	// Get the document root
+    // Get the document root
     /* UNCHECKED */ MCStringCreateWithCString(getenv("DOCUMENT_ROOT"), MCservercgidocumentroot);
 	
 	// Initialize the input wrapper.  This creates a cache of the input stream
@@ -1291,16 +1293,16 @@ bool cgi_initialize()
 	MCglobals = s_cgi_server;
 	
 	MCAutoArrayRef t_vars;
-	/* UNCHECKED */ MCArrayCreateMutable(&t_vars);
-	for(uint32_t i = 0; environ[i] != NULL; i++)
+    /* UNCHECKED */ MCArrayCreateMutable(&t_vars);
+	for(uint32_t i = 0; environ_var[i] != NULL; i++)
 	{
         MCAutoStringRef t_environ;
 #ifdef _LINUX_SERVER
-        MCStringCreateWithSysString(environ[i], &t_environ);
+        MCStringCreateWithSysString(environ_var[i], &t_environ);
 #elif defined (_DARWIN_SERVER) || defined(_MAC_SERVER)
-        MCStringCreateWithBytes((byte_t*)environ[i], strlen(environ[i]), kMCStringEncodingUTF8, false, &t_environ);
+        MCStringCreateWithBytes((byte_t*)environ_var[i], strlen(environ_var[i]), kMCStringEncodingUTF8, false, &t_environ);
 #elif defined (_WINDOWS_SERVER)
-        MCStringCreateWithWString(environ[i], &t_environ);
+        MCStringCreateWithWString(environ_var[i], &t_environ);
 #endif
 		static const char *s_cgi_vars[] =
 		{
@@ -1738,7 +1740,7 @@ bool MCServerGetSessionIdFromCookie(MCExecContext &ctxt, MCStringRef &r_id)
 	
 	if (t_cookie_array == NULL)
 	{
-		r_id = nil;
+		r_id = MCValueRetain(kMCEmptyString);
 		return true;
 	}
 	
@@ -1768,7 +1770,7 @@ static bool MCConvertNativeFromWindows1252(const uint8_t *p_input, uint32_t p_in
 
 	for(uint32_t i = 0; i < p_input_length; i++)
 	{
-		uint2 t_input_char;
+		unichar_t t_input_char;
 		t_input_char = MCUnicodeMapFromNative_Windows1252(p_input[i]);
 		if (!MCUnicodeMapToNative(&t_input_char, 1, t_output[i]))
 			t_output[i] = '?';
@@ -1788,7 +1790,7 @@ static bool MCConvertNativeFromMacRoman(const uint8_t *p_input, uint32_t p_input
 
 	for(uint32_t i = 0; i < p_input_length; i++)
 	{
-		uint2 t_input_char;
+		unichar_t t_input_char;
 		t_input_char = MCUnicodeMapFromNative_MacRoman(p_input[i]);
 		if (!MCUnicodeMapToNative(&t_input_char, 1, t_output[i]))
 			t_output[i] = '?';
@@ -1808,7 +1810,7 @@ static bool MCConvertNativeFromISO8859_1(const uint8_t *p_input, uint32_t p_inpu
 
 	for(uint32_t i = 0; i < p_input_length; i++)
 	{
-		uint2 t_input_char;
+		unichar_t t_input_char;
 		t_input_char = MCUnicodeMapFromNative_MacRoman(p_input[i]);
 		if (!MCUnicodeMapToNative(&t_input_char, 1, t_output[i]))
 			t_output[i] = '?';
@@ -1843,14 +1845,14 @@ static bool MCConvertNativeFromUTF16(const uint16_t *p_chars, uint32_t p_char_co
 			t_start = t_index;
 			
 			uint32_t t_codepoint;
-			t_codepoint = MCUnicodeCodepointAdvance((const uint2 *)p_chars, p_char_count, t_index);
+			t_codepoint = MCUnicodeCodepointAdvance((const unichar_t *)p_chars, p_char_count, t_index);
 			
 			while(t_index < p_char_count)
 			{
 				uint4 t_old_index;
 				t_old_index = t_index;
 				
-				t_codepoint = MCUnicodeCodepointAdvance((const uint2 *)p_chars, p_char_count, t_index);
+				t_codepoint = MCUnicodeCodepointAdvance((const unichar_t *)p_chars, p_char_count, t_index);
 				
 				if (MCUnicodeCodepointIsBase(t_codepoint))
 				{
@@ -1860,7 +1862,7 @@ static bool MCConvertNativeFromUTF16(const uint16_t *p_chars, uint32_t p_char_co
 			}
 
 			uint8_t t_char;
-			if (!MCUnicodeMapToNative(p_chars + t_start, t_index - t_start, t_char))
+			if (!MCUnicodeMapToNative((const unichar_t*)p_chars + t_start, t_index - t_start, t_char))
 				t_char = '?';
 			
 			t_output[t_output_length++] = t_char;

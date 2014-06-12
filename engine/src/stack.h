@@ -861,8 +861,9 @@ public:
 	
 	MCWindowShape *getwindowshape(void) { return m_window_shape; }
 
-#if defined(_WINDOWS_DESKTOP)
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 	MCSysWindowHandle getrealwindow();
+#ifdef _WINDOWS_DESKTOP
 	MCSysWindowHandle getqtwindow(void);
 
 	// MW-2011-09-14: [[ Redraw ]] The 'onpaint()' method is called when a WM_PAINT
@@ -875,6 +876,7 @@ public:
 	
 	void getstyle(uint32_t &wstyle, uint32_t &exstyle);
 	void constrain(intptr_t lp);
+#endif // _WINDOWS_DESKTOP specific
 #elif defined(_MAC_DESKTOP)
 	MCSysWindowHandle getrealwindow()
 	{

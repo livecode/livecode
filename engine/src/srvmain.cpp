@@ -346,6 +346,19 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 
 	////
 
+#ifdef _WINDOWS_SERVER
+	// MW-2011-07-26: Make sure errno pointer is initialized - this won't be
+	//   if the engine is running through the plugin.
+	extern int *g_mainthread_errno;
+	if (g_mainthread_errno == nil)
+		g_mainthread_errno = _errno();
+
+	// Call to _wgetenv needed to initialise the WCHAR environment variables
+	wchar_t *t_dummy;
+	t_dummy = _wgetenv(L"PATH");
+#endif
+
+	////
 	MCS_init();
 
     ////
@@ -393,7 +406,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	}
 
 	// Check for CGI mode.
-	MCAutoStringRef t_env;
+    MCAutoStringRef t_env;
 	
 	if (MCS_getenv(MCSTR("GATEWAY_INTERFACE"), &t_env))
 		s_server_cgi = true;
@@ -406,7 +419,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
     if (s_server_cgi)
     {
         MCS_set_errormode(kMCSErrorModeInline);
-		
+
         if (!cgi_initialize())
             return False;
 
@@ -570,8 +583,8 @@ void X_main_loop(void)
 		}
 	}
 	
-//	if (s_server_cgi)
-//		cgi_finalize();
+	if (s_server_cgi)
+		cgi_finalize();
 #ifdef _IREVIAM
 	if (s_server_cgi)
 		MCServerDebugDisconnect();

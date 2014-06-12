@@ -16,7 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
 #include "w32prefix.h"
 #endif
 

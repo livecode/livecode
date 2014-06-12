@@ -38,6 +38,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)prebuilt\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -142,6 +143,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\foundation-bidi.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\foundation-core.cpp"
 				>
 			</File>
@@ -159,6 +164,10 @@
 			</File>
 			<File
 				RelativePath=".\src\foundation-list.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-locale.cpp"
 				>
 			</File>
 			<File
@@ -187,6 +196,14 @@
 			</File>
 			<File
 				RelativePath=".\src\foundation-string.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-text.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\foundation-unicode.cpp"
 				>
 			</File>
 			<File

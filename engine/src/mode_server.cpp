@@ -75,6 +75,7 @@ MCLicenseParameters MClicenseparameters =
 
 MCPropertyInfo MCObject::kModeProperties[] =
 {
+	{ P_UNDEFINED, false, kMCPropertyTypeAny, nil, nil, nil, false, false, kMCPropertyInfoChunkTypeNone}
 };
 
 MCObjectPropertyTable MCObject::kModePropertyTable =
@@ -86,6 +87,7 @@ MCObjectPropertyTable MCObject::kModePropertyTable =
 
 MCPropertyInfo MCStack::kModeProperties[] =
 {
+	{ P_UNDEFINED, false, kMCPropertyTypeAny, nil, nil, nil, false, false, kMCPropertyInfoChunkTypeNone}
 };
 
 MCObjectPropertyTable MCStack::kModePropertyTable =
@@ -97,6 +99,7 @@ MCObjectPropertyTable MCStack::kModePropertyTable =
 
 MCPropertyInfo MCProperty::kModeProperties[] =
 {
+	{ P_UNDEFINED, false, kMCPropertyTypeAny, nil, nil, nil, false, false, kMCPropertyInfoChunkTypeNone}
 };
 
 MCPropertyTable MCProperty::kModePropertyTable =
@@ -149,6 +152,13 @@ Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, 
 Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
+}
+#endif
+
+#ifdef _WINDOWS_SERVER
+MCSysWindowHandle MCStack::getrealwindow(void)
+{
+	return nil;
 }
 #endif
 

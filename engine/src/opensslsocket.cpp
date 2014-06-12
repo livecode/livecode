@@ -42,7 +42,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "socket.h"
 #include "system.h"
 
-#if defined(_WINDOWS_DESKTOP)
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 #include "w32prefix.h"
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -62,7 +62,7 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
 
 #ifdef MCSSL
 
-#ifndef _WINDOWS
+#if !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER)
 #include <sys/uio.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
@@ -111,7 +111,7 @@ static int verify_callback(int ok, X509_STORE_CTX *store);
 extern bool path2utf(MCStringRef p_path, MCStringRef& r_utf);
 #endif
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 extern Boolean wsainit(void);
 extern HWND sockethwnd;
 extern "C" char *strdup(const char *);
@@ -175,7 +175,7 @@ Boolean MCS_handle_sockets()
 }
 #endif
 
-#ifdef _WINDOWS
+#if defined(_WINDOW_DESKTOP) || defined(_WINDOWS_SERVER)
 typedef SOCKADDR_IN mc_sockaddr_in_t;
 
 bool MCS_init_sockets()
@@ -213,7 +213,7 @@ static int MCS_socket_ioctl(MCSocketHandle p_socket, long p_command, unsigned lo
 
 #endif
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 int inet_aton(const char *cp, struct in_addr *inp)
 {
 	unsigned long rv = inet_addr(cp);
@@ -483,7 +483,7 @@ bool MCS_connect_socket(MCSocket *p_socket, struct sockaddr_in *p_addr)
 		
 		p_socket->setselect();
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		if (connect(p_socket->fd, (struct sockaddr *)p_addr, sizeof(struct sockaddr_in)) == SOCKET_ERROR && errno != EINTR)
 		{
@@ -556,7 +556,7 @@ MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameR
 
 	if (!MCS_valid_socket(sock))
 	{
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 		MCS_seterrno(WSAGetLastError());
 #endif
 		MCresult->sets("can't create socket");
@@ -620,7 +620,7 @@ void MCS_close_socket(MCSocket *s)
 {
 	s->deletereads();
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 	if (s->wevents == NULL)
 #else
 	if (s->wevents == NULL || (s->secure && s->sslstate & SSLRETRYFLAGS))
@@ -660,7 +660,7 @@ void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char 
 		}
 		if (mptr != NULL)
 		{
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 			if (MCnoui)
 				s->doread = True;
 			else
@@ -826,7 +826,7 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 	MCSocketHandle sock = socket(AF_INET, datagram ? SOCK_DGRAM : SOCK_STREAM, 0);
 	if (!MCS_valid_socket(sock))
 	{
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 		MCS_seterrno(WSAGetLastError());
 #endif
 		MCresult->sets("can't create socket");
@@ -846,7 +846,7 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = MCSwapInt32HostToNetwork(INADDR_ANY);
 	addr.sin_port = MCSwapInt16HostToNetwork(port);
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 	if (bind(sock, (struct sockaddr *)&addr, sizeof(addr))
 	        || (!datagram && listen(sock, SOMAXCONN))
@@ -1193,7 +1193,7 @@ Boolean MCSocket::read_done()
 	return False;
 }
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 void MCSocket::acceptone()
 {
 	struct sockaddr_in addr;
@@ -1230,7 +1230,7 @@ void MCSocket::readsome()
 		l = t_available;
 
 		char *dbuffer = new char[l + 1]; // don't allocate 0
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		l++; // Not on MacOS/UNIX?
 		if ((l = recvfrom(fd, dbuffer, l, 0, (struct sockaddr *)&addr, &addrsize))
@@ -1294,7 +1294,7 @@ void MCSocket::readsome()
 	{
 		if (accepting)
 		{
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 			acceptone();
 			added = True;
 #else
@@ -1356,7 +1356,7 @@ void MCSocket::readsome()
 					rsize = newsize;
 				}
 				errno = 0;
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 				// MM-2014-02-12: [[ SecureSocket ]] If a scoket is secured, all data read should be assumed to be encrypted.
 				if ((l = read(rbuffer + nread, l, secure)) <= 0 || l == SOCKET_ERROR )
@@ -1388,7 +1388,7 @@ void MCSocket::readsome()
 				}
 				else
 				{
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 					if (l == 0)
 					{
 						doclose();
@@ -1443,7 +1443,7 @@ void MCSocket::processreadqueue()
 
 void MCSocket::writesome()
 {
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 	if (!connected && message != NULL)
 	{
 #else
@@ -1464,7 +1464,7 @@ void MCSocket::writesome()
 		// MM-2014-02-12: [[ SecureSocket ]] The write should only be encrypted if the write object has been flagged as secured.
 		//  (Was previously using the secure flag stored against the socket).
 		int4 nwritten = write( wevents->buffer + wevents->done, towrite, wevents->secure);
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		if (nwritten == SOCKET_ERROR)
 		{
@@ -1503,7 +1503,7 @@ void MCSocket::writesome()
 				break;
 		}
 	}
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 	if (closing && wevents == NULL)
 #else
 	if (closing && (wevents == NULL || errno == EPIPE))
@@ -1543,7 +1543,7 @@ void MCSocket::setselect()
 	uint2 bioselectstate = 0;
 	if (fd)
 	{
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 		if (connected && !closing && (!shared && revents != NULL || accepting || datagram))
 #else
 
@@ -1559,7 +1559,7 @@ void MCSocket::setselect()
 
 void MCSocket::setselect(uint2 sflags)
 {
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 	if (!MCnoui)
 	{
 		long event = FD_CLOSE;
@@ -1616,7 +1616,7 @@ void MCSocket::close()
 			rlref = NULL;
 		}
 #endif
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 		closesocket(fd);
 #else
 
@@ -1644,7 +1644,7 @@ int4 MCSocket::write(const char *buffer, uint4 towrite, Boolean securewrite)
 	if (securewrite)
 	{
 		sslstate &= ~SSTATE_RETRYWRITE;
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		if (sslstate & SSTATE_RETRYCONNECT ||
 		        sslstate & SSTATE_RETRYREAD)
@@ -1694,7 +1694,7 @@ int4 MCSocket::write(const char *buffer, uint4 towrite, Boolean securewrite)
 		return rc;
 	}
 	else
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		return send(fd, buffer, towrite, 0);
 #else
@@ -1710,7 +1710,7 @@ int4 MCSocket::read(char *buffer, uint4 toread, Boolean secureread)
 	if (secureread)
 	{
 		sslstate &= ~SSTATE_RETRYREAD;
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		if (sslstate & SSTATE_RETRYCONNECT || sslstate & SSTATE_RETRYWRITE)
 		{
@@ -1756,7 +1756,7 @@ int4 MCSocket::read(char *buffer, uint4 toread, Boolean secureread)
 		return rc;
 	}
 	else
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		return recv(fd, buffer, toread, 0);
 #else
@@ -2274,7 +2274,7 @@ Boolean MCSocket::sslconnect()
 		else if (errno == SSL_ERROR_WANT_READ)
 			setselect(BIONB_TESTWRITE);
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 
 		setselect(BIONB_TESTREAD | BIONB_TESTWRITE);
 #endif
