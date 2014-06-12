@@ -382,7 +382,7 @@ Boolean MCScreenDC::open()
 	
     // Temporarily create a window so we can get a GC for vis
     GdkWindowAttr gdkwa;
-    gdkwa.event_mask = 0;
+    gdkwa.event_mask = GDK_ALL_EVENTS_MASK & ~GDK_POINTER_MOTION_HINT_MASK;
     gdkwa.x = gdkwa.y = gdkwa.width = gdkwa.height = 8;
     gdkwa.visual = vis;
     gdkwa.colormap = cmap;
@@ -396,10 +396,6 @@ Boolean MCScreenDC::open()
     gdk_window_destroy(w);
     
     // Create the NULL window
-    gdkwa.event_mask = GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK
-        |GDK_ENTER_NOTIFY_MASK|GDK_LEAVE_NOTIFY_MASK|GDK_POINTER_MOTION_MASK
-        |GDK_KEY_PRESS_MASK|GDK_KEY_RELEASE_MASK|GDK_EXPOSURE_MASK
-        |GDK_FOCUS_CHANGE_MASK|GDK_STRUCTURE_MASK|GDK_PROPERTY_CHANGE_MASK;
     NULLWindow = gdk_window_new(gdk_screen_get_root_window(t_screen),
                                 &gdkwa,
                                 GDK_WA_X|GDK_WA_Y|GDK_WA_COLORMAP|GDK_WA_VISUAL);

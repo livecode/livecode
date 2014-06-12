@@ -148,7 +148,7 @@ void MCStack::realize()
         gdkwa.wclass = GDK_INPUT_OUTPUT;
         gdkwa.window_type = GDK_WINDOW_TOPLEVEL;
         gdkwa.visual = gdk_visual_get_best();
-        gdkwa.event_mask = GDK_ALL_EVENTS_MASK;
+        gdkwa.event_mask = GDK_ALL_EVENTS_MASK & ~GDK_POINTER_MOTION_HINT_MASK;
         
         window = gdk_window_new(screen->getroot(), &gdkwa, gdk_valid_wa);
         
@@ -644,7 +644,7 @@ void MCStack::enablewindow(bool p_enable)
     
     if (p_enable)
     {
-        t_event_mask = GDK_ALL_EVENTS_MASK;
+        t_event_mask = GDK_ALL_EVENTS_MASK & ~GDK_POINTER_MOTION_HINT_MASK;
     }
     else
     {
