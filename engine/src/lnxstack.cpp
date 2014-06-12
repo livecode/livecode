@@ -250,7 +250,7 @@ void MCStack::sethints()
             break;
             
         case WM_PALETTE:
-            t_type_hint = GDK_WINDOW_TYPE_HINT_TOOLBAR;
+            t_type_hint = GDK_WINDOW_TYPE_HINT_UTILITY;
             break;
             
         case WM_MODAL:
