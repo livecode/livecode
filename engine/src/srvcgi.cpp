@@ -1362,7 +1362,7 @@ bool cgi_initialize()
         {
             MCAutoStringRef t_value;
             MCAutoStringRef t_key;
-            MCNewAutoNameRef t_key_name;
+            MCNameRef t_key_name;
 
             if (!MCStringDivideAtChar(*t_environ, '=', kMCStringOptionCompareExact, &t_key, &t_value))
             {
@@ -1370,8 +1370,9 @@ bool cgi_initialize()
                 t_value = kMCEmptyString;
             }
 
-            /* UNCHECKED */ MCNameCreate(*t_key, &t_key_name);
-            /* UNCHECKED */ MCArrayStoreValue(*t_vars, false, *t_key_name, *t_value);
+            /* UNCHECKED */ MCNameCreate(*t_key, t_key_name);
+            /* UNCHECKED */ s_cgi_server->setvalueref(&t_key_name, 1, false, *t_value);
+            MCNameDelete(t_key_name);
 		}
 	}
 	

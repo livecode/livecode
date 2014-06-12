@@ -881,6 +881,9 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 
 	/* UNCHECKED */ MCVariable::ensureglobal(MCN_each, MCeach);
 
+    // SN-2014-06-12 [[ RefactorServer ]] We don't want to duplicate the environment variables
+    // on server, as they have been copied to $_SERVER
+#ifndef _SERVER
 	if (envp != nil)
 		for (uint32_t i = 0 ; envp[i] != nil ; i++)
 		{
@@ -915,6 +918,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 				tvar->setvalueref(*t_value);
 			}
 		}
+#endif // _SERVER
 
 	/* UNCHECKED */ MCStackSecurityCreateStack(MCtemplatestack);
 	MCtemplateaudio = new MCAudioClip;
