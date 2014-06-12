@@ -47,6 +47,19 @@ class MCAVFoundationPlayer;
 
 @end
 
+
+@interface PlayerView : NSView
+{
+    AVPlayer *player;
+}
+
++ (Class)layerClass;
+- (AVPlayer*)player;
+- (void)setPlayer:(AVPlayer *)player;
+@end
+
+
+
 class MCAVFoundationPlayer: public MCPlatformPlayer
 {
 public:
@@ -92,8 +105,10 @@ private:
     //static Boolean MovieActionFilter(MovieController mc, short action, void *params, long refcon);
     
 	AVPlayer *m_player;
-    NSView *m_view;
-    AVPlayerLayer *m_player_layer;
+    //NSView *m_view;
+    PlayerView *m_view;
+    AVPlayerItem *playerItem;
+    //AVPlayerLayer *m_player_layer;
     CMTime m_selection_start, m_selection_finish;
     bool m_play_selection_only : 1;
     bool m_looping : 1;
@@ -156,15 +171,45 @@ private:
 
 @end
 
+/////////////////////////////////////////////////////////////////////////////////
+
+@implementation PlayerView
++ (Class)layerClass
+{
+    return [AVPlayerLayer class];
+}
+- (id)initWithPlayer: (AVPlayer *)player
+{
+    self = [super init];
+    if (self == nil)
+        return nil;
+    
+    self.player = player;
+    
+    return self;
+}
+- (AVPlayer*)player
+{
+    return [(AVPlayerLayer *)[self layer] player];
+}
+- (void)setPlayer:(AVPlayer *)player
+{
+    [(AVPlayerLayer *)[self layer] setPlayer:player];
+}
+@end
 ////////////////////////////////////////////////////////
+
 
 MCAVFoundationPlayer::MCAVFoundationPlayer(void)
 {
-	m_player = [[NSClassFromString(@"AVPlayer") alloc] init];
-    m_player_layer = [AVPlayerLayer playerLayerWithPlayer : m_player];
+    m_player = nil;
+    m_view = [[PlayerView alloc] initWithPlayer:m_player];
+	//m_player = [[NSClassFromString(@"AVPlayer") alloc] init];
+    //m_view = [[PlayerView alloc] init];
+    //m_player_layer = [AVPlayerLayer playerLayerWithPlayer : m_player];
     
-	m_view = [[NSClassFromString(@"NSView") alloc] initWithFrame: NSZeroRect];
-    [m_view setLayer : m_player_layer];
+	//m_view = [[NSClassFromString(@"NSView") alloc] initWithFrame: NSZeroRect];
+    //[m_view setLayer : m_player_layer];
     
 	m_observer = [[com_runrev_livecode_MCAVFoundationPlayerObserver alloc] initWithPlayer: this];
     
@@ -433,9 +478,11 @@ Boolean MCAVFoundationPlayer::MovieActionFilter(MovieController mc, short action
 }
 */
 
-
+// Define this constant for the key-value observation context.
+static const NSString *ItemStatusContext;
 void MCAVFoundationPlayer::Load(const char *p_filename, bool p_is_url)
 {
+/*
     NSError *t_error;
 	t_error = nil;
     
@@ -480,7 +527,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename, bool p_is_url)
                 [t_newPlayerLayer setAutoresizingMask:kCALayerWidthSizable | kCALayerHeightSizable];
                 [t_newPlayerLayer setHidden:YES];
                 [[m_view layer] addSublayer:t_newPlayerLayer];
-                m_player_layer = t_newPlayerLayer;
+                //m_player_layer = t_newPlayerLayer;
                 
             }
             else
@@ -503,13 +550,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename, bool p_is_url)
                 CurrentTimeChanged();
             }];
             
-            /*
-            extern NSString **QTMovieRateDidChangeNotification_ptr;
-            [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(rateChanged:) name: *QTMovieRateDidChangeNotification_ptr object: [m_player currentItem]];
             
-            extern NSString **QTMovieSelectionDidChangeNotification_ptr;
-            [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(selectionChanged:) name: *QTMovieSelectionDidChangeNotification_ptr object: [m_player currentItem]];
-            */
             
         });
         
@@ -519,6 +560,55 @@ void MCAVFoundationPlayer::Load(const char *p_filename, bool p_is_url)
     m_last_marker = UINT32_MAX;
     
     //MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], MovieActionFilter, (long)this);
+    */
+    
+    NSError *t_error;
+	t_error = nil;
+    
+    id t_filename_or_url;
+    
+    t_filename_or_url = [NSURL URLWithString: [NSString stringWithCString: p_filename encoding: NSMacOSRomanStringEncoding]];
+    
+    AVURLAsset *asset = [AVURLAsset URLAssetWithURL:t_filename_or_url options:nil];
+    NSString *tracksKey = @"playable";
+    
+    [asset loadValuesAsynchronouslyForKeys:@[tracksKey] completionHandler:
+     ^{
+         // The completion block goes here.
+         dispatch_async(dispatch_get_main_queue(),
+                        ^{
+                            NSError *error;
+                            AVKeyValueStatus status = [asset statusOfValueForKey:tracksKey error:&error];
+                            
+                            if (status == AVKeyValueStatusLoaded) {
+                                playerItem = [AVPlayerItem playerItemWithAsset:asset];
+                                // ensure that this is done before the playerItem is associated with the player
+                                //[playerItem addObserver:m_player forKeyPath:@"status"
+                                                     //options:NSKeyValueObservingOptionInitial context:&ItemStatusContext];
+                                
+                                [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
+                                
+                                [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(movieFinished:) name: AVPlayerItemDidPlayToEndTimeNotification object: playerItem];
+                                
+                                [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: AVPlayerItemTimeJumpedNotification object: playerItem];
+                                
+                                m_player = [[AVPlayer alloc] initWithPlayerItem:playerItem];
+                                
+                                [m_view setPlayer: m_player];
+                                 NSLog(@"Ok!!!@", nil);
+                            }
+                            else
+                            {
+                                // You should deal with the error appropriately.
+                                NSLog(@"The asset's tracks were not loaded:\n%@", [error localizedDescription]);
+                            }
+                        });
+
+     }];
+    m_timeObserverToken = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 10) queue:dispatch_get_main_queue() usingBlock:^(CMTime time) {
+        CurrentTimeChanged();
+    }];
+
 }
 
 
