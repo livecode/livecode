@@ -45,20 +45,17 @@ class MCAVFoundationPlayer;
 - (void)rateChanged: (id)object;
 - (void)selectionChanged: (id)object;
 
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context;
+
 @end
 
-
+// TODO: Remember to rename this to com_runrev_livecode_MCAVFoundationPlayerView
 @interface PlayerView : NSView
-{
-    AVPlayer *player;
-}
 
-+ (Class)layerClass;
 - (AVPlayer*)player;
 - (void)setPlayer:(AVPlayer *)player;
+
 @end
-
-
 
 class MCAVFoundationPlayer: public MCPlatformPlayer
 {
@@ -101,12 +98,10 @@ private:
     void CacheCurrentFrame(void);
     
 	static void DoSwitch(void *context);
-	//static OSErr MovieDrawingComplete(Movie movie, long ref);
-    //static Boolean MovieActionFilter(MovieController mc, short action, void *params, long refcon);
     
 	AVPlayer *m_player;
-    //NSView *m_view;
     PlayerView *m_view;
+    // TODO: Style-wise, use m_player_item - i.e. lowercase, words separated by _ and prefix by m_ for 'member variable'.
     AVPlayerItem *playerItem;
     //AVPlayerLayer *m_player_layer;
     CMTime m_selection_start, m_selection_finish;
@@ -117,6 +112,7 @@ private:
     
     com_runrev_livecode_MCAVFoundationPlayerObserver *m_observer;
     
+    // TODO: Again - use m_time_observer_token
     id m_timeObserverToken;
     
     uint32_t *m_markers;
@@ -126,8 +122,6 @@ private:
 	MCRectangle m_rect;
 	bool m_visible : 1;
 	bool m_offscreen : 1;
-	//bool m_show_controller : 1;
-	//bool m_show_selection : 1;
 	bool m_pending_offscreen : 1;
 	bool m_switch_scheduled : 1;
     bool m_playing : 1;
@@ -169,48 +163,48 @@ private:
     m_av_player -> SelectionChanged();
 }
 
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    if ([keyPath isEqualToString: @"status"])
+        MCPlatformBreakWait();
+}
+
 @end
 
 /////////////////////////////////////////////////////////////////////////////////
 
 @implementation PlayerView
-+ (Class)layerClass
-{
-    return [AVPlayerLayer class];
-}
-- (id)initWithPlayer: (AVPlayer *)player
-{
-    self = [super init];
-    if (self == nil)
-        return nil;
-    
-    self.player = player;
-    
-    return self;
-}
+
 - (AVPlayer*)player
 {
-    return [(AVPlayerLayer *)[self layer] player];
+    if ([self layer] != nil)
+        return [(AVPlayerLayer *)[self layer] player];
+    return nil;
 }
+
 - (void)setPlayer:(AVPlayer *)player
 {
-    [(AVPlayerLayer *)[self layer] setPlayer:player];
+    if ([self layer] != nil)
+    {
+        [(AVPlayerLayer *)[self layer] setPlayer:player];
+        return;
+    }
+    
+    [self setLayer: [AVPlayerLayer playerLayerWithPlayer: player]];
+    [self setWantsLayer: YES];
 }
+
 @end
 ////////////////////////////////////////////////////////
 
 
 MCAVFoundationPlayer::MCAVFoundationPlayer(void)
 {
+    // COMMENT: We can follow the same pattern as QTKitPlayer here - however we won't have
+    //   an AVPlayer until we load, so that starts off as nil and we create a PlayerView
+    //   with zero frame.
     m_player = nil;
-    m_view = [[PlayerView alloc] initWithPlayer:m_player];
-	//m_player = [[NSClassFromString(@"AVPlayer") alloc] init];
-    //m_view = [[PlayerView alloc] init];
-    //m_player_layer = [AVPlayerLayer playerLayerWithPlayer : m_player];
-    
-	//m_view = [[NSClassFromString(@"NSView") alloc] initWithFrame: NSZeroRect];
-    //[m_view setLayer : m_player_layer];
-    
+    m_view = [[PlayerView alloc] initWithFrame: NSZeroRect];
 	m_observer = [[com_runrev_livecode_MCAVFoundationPlayerObserver alloc] initWithPlayer: this];
     
 	m_current_frame = nil;
@@ -238,12 +232,18 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
 	if (m_current_frame != nil)
 		CFRelease(m_current_frame);
     
-    [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
-    // TODO: uncommenting this causes a crash
-    //[m_player removeTimeObserver:m_timeObserverToken];
+    // First detach the observer from everything we've attached it to.
+    [m_player removeObserver: m_observer forKeyPath: @"status"];
+    // Now we can release it.
     [m_observer release];
-	[m_view release];
-	[m_player release];
+    
+    // Now detach the player from everything we've attached it to.
+    [m_view setPlayer: nil];
+    // No we can release it.
+    [m_view release];
+    
+    // Finally we can release the player.
+    [m_player release];
     
     MCMemoryDeleteArray(m_markers);
 }
@@ -308,6 +308,7 @@ void MCAVFoundationPlayer::CurrentTimeChanged(void)
 
 void MCAVFoundationPlayer::CacheCurrentFrame(void)
 {
+#if 0
     //TODO: Link currentItem with m_player
     AVPlayerItem *t_playerItem = [m_player currentItem];
     if (t_playerItem == nil)
@@ -326,20 +327,8 @@ void MCAVFoundationPlayer::CacheCurrentFrame(void)
 			CFRelease(m_current_frame);
 		m_current_frame = t_image;
 	}
+#endif
 }
-
-//TODO
-/*OSErr MCAVFoundationPlayer::MovieDrawingComplete(Movie p_movie, long p_ref)
-{
-	MCAVFoundationPlayer *t_self;
-	t_self = (MCAVFoundationPlayer *)p_ref;
-    
-    t_self -> CacheCurrentFrame();
-    
-	MCPlatformCallbackSendPlayerFrameChanged(t_self);
-    
-	return noErr;
-}*/
 
 void MCAVFoundationPlayer::Switch(bool p_new_offscreen)
 {
@@ -359,7 +348,6 @@ void MCAVFoundationPlayer::Switch(bool p_new_offscreen)
 	m_switch_scheduled = true;
 }
 
-//TODO
 void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 {
 	MCAVFoundationPlayer *t_player;
@@ -378,8 +366,6 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 		if (t_player -> m_view != nil)
 			t_player -> Unrealize();
         
-		//SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
-        
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
 	}
 	else
@@ -389,8 +375,7 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 			CFRelease(t_player -> m_current_frame);
 			t_player -> m_current_frame = nil;
 		}
-		//SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
-        
+		
 		// Switching to non-offscreen
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
 		t_player -> Realize();
@@ -480,8 +465,47 @@ Boolean MCAVFoundationPlayer::MovieActionFilter(MovieController mc, short action
 
 // Define this constant for the key-value observation context.
 static const NSString *ItemStatusContext;
-void MCAVFoundationPlayer::Load(const char *p_filename, bool p_is_url)
+void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
 {
+    id t_url;
+    if (!p_is_url)
+        t_url = [NSURL fileURLWithPath: [NSString stringWithCString: p_filename_or_url encoding: NSMacOSRomanStringEncoding]];
+    else
+        t_url = [NSURL URLWithString: [NSString stringWithCString: p_filename_or_url encoding: NSMacOSRomanStringEncoding]];
+    
+    AVPlayer *t_player;
+    t_player = [[AVPlayer alloc] initWithURL: t_url];
+    
+    // Observe the status property.
+    [t_player addObserver: m_observer forKeyPath: @"status" options: 0 context: nil];
+    
+    // Block-wait until the status becomes something.
+    while([t_player status] == AVPlayerStatusUnknown)
+        MCPlatformWaitForEvent(60.0, true);
+    
+    // If we've failed, leave things as they are (dealloc the new player).
+    if ([t_player status] == AVPlayerStatusFailed)
+    {
+        // error obtainable via [t_player error]
+        [t_player removeObserver: m_observer forKeyPath: @"status"];
+        [t_player release];
+        return;
+    }
+    
+    // We've succeeded so replace the current player with the new one and carry on.
+    
+    // Release the old player (if any).
+    [m_view setPlayer: nil];
+    [m_player removeObserver: m_observer forKeyPath: @"status"];
+    [m_player release];
+    
+    // We want this player.
+    m_player = t_player;
+    
+    // Now set the player of the view.
+    [m_view setPlayer: m_player];
+    
+#if 0
 /*
     NSError *t_error;
 	t_error = nil;
@@ -608,7 +632,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename, bool p_is_url)
     m_timeObserverToken = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 10) queue:dispatch_get_main_queue() usingBlock:^(CMTime time) {
         CurrentTimeChanged();
     }];
-
+#endif
 }
 
 
@@ -628,8 +652,6 @@ void MCAVFoundationPlayer::Synchronize(void)
 	[m_view setFrame: t_frame];
     
 	[m_view setHidden: !m_visible];
-    
-	//MCMovieChanged([m_movie quickTimeMovieController], [m_movie quickTimeMovie]);
     
     m_synchronizing = false;
 }
@@ -814,56 +836,17 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
             /* UNCHECKED */ MCMemoryResizeArray(t_markers -> count, m_markers, m_marker_count);
             MCMemoryCopy(m_markers, t_markers -> ptr, m_marker_count * sizeof(uint32_t));
         }
-            break;
+        break;
 	}
     
     m_synchronizing = false;
 }
-
-/*
- static Boolean IsQTVRMovie(Movie theMovie)
- {
- Boolean IsQTVR = False;
- OSType evaltype,targettype =  kQTVRUnknownType;
- UserData myUserData;
- if (theMovie == NULL)
- return False;
- myUserData = GetMovieUserData(theMovie);
- if (myUserData != NULL)
- {
- GetUserDataItem(myUserData, &targettype, sizeof(targettype),
- kUserDataMovieControllerType, 0);
- evaltype = EndianU32_BtoN(targettype);
- if (evaltype == kQTVRQTVRType || evaltype == kQTVROldPanoType
- || evaltype == kQTVROldObjectType)
- IsQTVR = true;
- }
- return(IsQTVR);
- }
- 
- static Boolean QTMovieHasType(Movie tmovie, OSType movtype)
- {
- switch (movtype)
- {
- case VisualMediaCharacteristic:
- case AudioMediaCharacteristic:
- return (GetMovieIndTrackType(tmovie, 1, movtype,
- movieTrackCharacteristic) != NULL);
- case kQTVRQTVRType:
- return IsQTVRMovie(tmovie);
- default:
- return (GetMovieIndTrackType(tmovie, 1, movtype,
- movieTrackMediaType) != NULL);
- }
- }
- */
 
 static Boolean AVAssetHasType(AVAsset *p_asset, NSString *p_type)
 {
     NSArray *t_tracks = [p_asset tracksWithMediaType:p_type];
     return [t_tracks count] != 0;
 }
-
 
 void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformPropertyType p_type, void *r_value)
 {
@@ -877,26 +860,13 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 			break;
         case kMCPlatformPlayerPropertyMovieRect:
 		{
-            // TODO: currentItem returns nil. To link it with m_player
-			AVAssetTrack *t_assetTrack;
-            NSArray *t_tracks = [[[m_player currentItem] asset] tracks];
-            t_assetTrack = [t_tracks objectAtIndex:0];
-            CGSize t_size = [t_assetTrack naturalSize];
+            // TODO: the 'naturalSize' method of AVAsset is deprecated, but we use for the moment.
+            CGSize t_size;
+            t_size = [[[m_player currentItem] asset] naturalSize];
             
 			*(MCRectangle *)r_value = MCRectangleMake(0, 0, t_size . width, t_size . height);
 		}
-            break;
-            /*
-             case kMCPlatformPlayerPropertyMovieRect:
-             {
-             NSValue *t_value;
-             extern NSString **QTMovieNaturalSizeAttribute_ptr;
-             //TODO
-             t_value = [m_movie attributeForKey: *QTMovieNaturalSizeAttribute_ptr];
-             *(MCRectangle *)r_value = MCRectangleMake(0, 0, [t_value sizeValue] . width, [t_value sizeValue] . height);
-             }
-             break;
-             */
+        break;
 		case kMCPlatformPlayerPropertyVisible:
 			*(bool *)r_value = m_visible;
 			break;
@@ -915,28 +885,7 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
             // TODO: Add more types??
             *(MCPlatformPlayerMediaTypes *)r_value = t_types;
 		}
-            break;
-            /*
-             case kMCPlatformPlayerPropertyMediaTypes:
-             {
-             MCPlatformPlayerMediaTypes t_types;
-             t_types = 0;
-             if (QTMovieHasType([m_movie quickTimeMovie], VisualMediaCharacteristic))
-             t_types |= kMCPlatformPlayerMediaTypeVideo;
-             if (QTMovieHasType([m_movie quickTimeMovie], AudioMediaCharacteristic))
-             t_types |= kMCPlatformPlayerMediaTypeAudio;
-             if (QTMovieHasType([m_movie quickTimeMovie], TextMediaType))
-             t_types |= kMCPlatformPlayerMediaTypeText;
-             if (QTMovieHasType([m_movie quickTimeMovie], kQTVRQTVRType))
-             t_types |= kMCPlatformPlayerMediaTypeQTVR;
-             if (QTMovieHasType([m_movie quickTimeMovie], SpriteMediaType))
-             t_types |= kMCPlatformPlayerMediaTypeSprite;
-             if (QTMovieHasType([m_movie quickTimeMovie], FlashMediaType))
-             t_types |= kMCPlatformPlayerMediaTypeFlash;
-             *(MCPlatformPlayerMediaTypes *)r_value = t_types;
-             }
-             break;
-             */
+        break;
 		case kMCPlatformPlayerPropertyDuration:
             *(uint32_t *)r_value = [m_player currentItem] . duration . value;
 			break;
