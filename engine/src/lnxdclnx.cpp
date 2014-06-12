@@ -254,6 +254,10 @@ void MCScreenDC::setmods(guint state, KeySym sym,
 	}
 }
 
+extern "C"
+{
+void gtk_main_do_event(GdkEvent*);
+}
 
 Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, Boolean& reset)
 {
@@ -263,8 +267,12 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
     // Loop until both the pending event queue and GDK event queue are empty
     abort = reset = False;
     bool t_handled = false;
-    while ((dispatch && pendingevents != NULL) || gdk_events_pending())
+    while (dispatch || g_main_context_pending(NULL) || gdk_events_pending())
     {
+        // Run the GLib event loop to exhaustion
+        while (g_main_context_iteration(NULL, FALSE))
+            ;
+        
         bool t_live;
         bool t_queue = false;
         if (dispatch && pendingevents != NULL)
@@ -277,10 +285,10 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
         }
         else
         {
-            // Get the next event from GDK
-            if (!gdk_events_pending())
-                break;
-            
+            // In theory, all events should have already been queued as pending
+            // through the GLib main loop. However, that only applies to those
+            // that the server has already sent - this function call prompts the
+            // server to send any events queued on its end.
             t_event = gdk_event_get();
             t_live = true;
         }
@@ -381,6 +389,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 
             case GDK_KEY_PRESS:
             case GDK_KEY_RELEASE:
+                break;
                 
             case GDK_ENTER_NOTIFY:
             case GDK_LEAVE_NOTIFY:
@@ -897,9 +906,6 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 break;
         }
         
-        // TODO: hand the event to GTK
-        // gtk_main_do_event
-        
         // Queue the message if required. Otherwise, dispose of it
         if (t_queue)
         {
@@ -961,6 +967,12 @@ bool MCScreenDC::GetFilteredEvent(bool (*p_filterfn)(GdkEvent*), GdkEvent* &r_ev
     }
     
     return false;
+}
+
+void MCScreenDC::EnqueueEvent(GdkEvent* p_event)
+{
+    MCEventnode *t_node = new MCEventnode(p_event);
+    t_node->appendto(pendingevents);
 }
 
 void init_xDnD()

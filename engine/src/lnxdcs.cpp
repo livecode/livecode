@@ -147,6 +147,21 @@ Drawable MCScreenDC::getdest()
 	return dest;
 }
 
+extern "C"
+{
+void gtk_main_do_event(GdkEvent*);
+}
+
+void gdk_event_fn(GdkEvent *p_event, gpointer dc)
+{
+    // Let GTK know about the event (needed so it can drive its Save As
+    // dialogues and the like)
+    gtk_main_do_event(p_event);
+    
+    //fprintf(stderr, "gdk_event_fn\n");
+    ((MCScreenDC*)dc)->EnqueueEvent(gdk_event_copy(p_event));
+}
+
 Boolean MCScreenDC::open()
 {
 	// We require GDK in order to do any windowing at all
@@ -181,6 +196,10 @@ Boolean MCScreenDC::open()
 		return False;
 	}
 
+    // The GLib event loop calls this function to respond to GDK events.
+    // Unfortunately, when GTK gets initied, it will try to steal this from us.
+    gdk_event_handler_set(&gdk_event_fn, gpointer(this), NULL);
+    
     x11::Display* XDisplay;
     XDisplay = x11::gdk_x11_display_get_xdisplay(dpy);
     
@@ -659,8 +678,6 @@ void MCScreenDC::setname(Window window, MCStringRef newname)
 	/* UNCHECKED */ t_newname_utf8 . Lock(newname);
 	
 	gdk_window_set_title(window, *t_newname_utf8);
-
-	//XChangeProperty(dpy, window, XInternAtom(dpy, "_NET_WM_NAME", false), XInternAtom(dpy, "UTF8_STRING", false), 8, PropModeReplace, (unsigned char *)*t_newname_utf8, strlen(*t_newname_utf8));
 }
 
 void MCScreenDC::setcmap(MCStack *sptr)
@@ -1278,7 +1295,7 @@ void MCScreenDC::createbackdrop_window(void)
 {
 	GdkWindowAttr gdkwa;
     gdkwa.event_mask = GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_FOCUS_CHANGE_MASK
-        | GDK_POINTER_MOTION_MASK | GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK;
+        | GDK_POINTER_MOTION_MASK | GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_EXPOSURE_MASK;
     gdkwa.x = gdkwa.y = 0;
     gdkwa.width = gdkwa.height = 0;
     gdkwa.wclass = GDK_INPUT_OUTPUT;

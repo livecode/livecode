@@ -90,6 +90,7 @@ void gtk_file_tidy_up ( void )
 	g_free ( G_last_saved_path ) ;
 }
 
+extern void gdk_event_fn(GdkEvent*, gpointer);
 
 // Initilize the GTK library, if we have not already done so.
 void gtk_init(void)
@@ -99,7 +100,9 @@ void gtk_init(void)
 	{
 		G_init = True ;
 		
-		gtk_init(NULL, NULL);
+		// If we're not careful, GTK will steal GDK events from us
+        gtk_init(NULL, NULL);
+        gdk_event_handler_set(&gdk_event_fn, MCscreen, NULL);
 		gdk_error_trap_push(); 		// Disable all x-error trapping ...
 		
 		
