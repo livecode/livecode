@@ -613,6 +613,9 @@ protected:
     
     bool modify(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting);
     bool modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting);
+    
+    // Modify the content of the variable - append or prepend (nested key). Target must already be data.
+    bool modify_data(MCExecContext& ctxt, MCDataRef p_data, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting);
 public:
 	
 	// Destructor

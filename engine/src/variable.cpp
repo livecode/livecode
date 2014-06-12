@@ -427,6 +427,48 @@ bool MCVariable::modify(MCExecContext& ctxt, MCValueRef p_value, MCVariableSetti
 	return modify(ctxt, p_value, nil, 0, p_setting);
 }
 
+bool MCVariable::modify_data(MCExecContext& ctxt, MCDataRef p_data, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting)
+{    
+	if (p_length == 0)
+	{
+        if (!converttomutabledata(ctxt))
+            return false;
+        
+        bool t_success = false;
+        // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
+        if (p_setting == kMCVariableSetAfter)
+            t_success = MCDataAppend(value . dataref_value, p_data);
+        else if (p_setting == kMCVariableSetBefore)
+            t_success = MCDataPrepend(value . dataref_value, p_data);
+        
+        if (!t_success)
+			return false;
+        
+        synchronize(ctxt, true);
+        
+		return true;
+	}
+    
+	MCValueRef t_current_value;
+	t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
+
+    MCDataRef t_value_as_data;
+    t_value_as_data = nil;
+    // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
+	if (MCDataMutableCopy((MCDataRef)t_current_value, t_value_as_data) &&
+		((p_setting == kMCVariableSetAfter && MCDataAppend(t_value_as_data, p_data)) ||
+         (p_setting == kMCVariableSetBefore && MCDataPrepend(t_value_as_data, p_data))) &&
+		setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_value_as_data))
+	{
+		MCValueRelease(t_value_as_data);
+        synchronize(ctxt, true);
+		return true;
+	}
+    
+	MCValueRelease(t_value_as_data);
+	return false;
+}
+
 bool MCVariable::modify(MCExecContext& ctxt, MCValueRef p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting)
 {    
     MCAutoStringRef t_value;
@@ -482,14 +524,27 @@ bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCVariabl
 
 bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef *p_path, uindex_t p_length, MCVariableSettingStyle p_setting)
 {
-    MCAutoStringRef t_value;
-    MCExecValue t_exec_value;
+    if (p_value . type == kMCExecValueTypeDataRef)
+    {
+        if (p_length == 0 && value . type == kMCExecValueTypeDataRef)
+            return modify_data(ctxt, p_value . dataref_value, p_path, p_length, p_setting);
+        
+        MCValueRef t_current_value;
+        t_current_value = getvalueref(p_path, p_length, ctxt . GetCaseSensitive());
+        
+        if (MCValueGetTypeCode(t_current_value) == kMCValueTypeCodeData)
+            return modify_data(ctxt, p_value . dataref_value, p_path, p_length, p_setting);
+    }
     
+    MCAutoStringRef t_value;
     MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeStringRef, &(&t_value));
     
     if (ctxt . HasError())
         return ctxt . IgnoreLastError(), false;
     
+    return modify(ctxt, *t_value, p_path, p_length, p_setting);
+    
+    /*
 	if (p_length == 0)
 	{
         if (!converttomutablestring(ctxt))
@@ -529,7 +584,7 @@ bool MCVariable::modify_ctxt(MCExecContext& ctxt, MCExecValue p_value, MCNameRef
 	}
     
 	MCValueRelease(t_current_value_as_string);
-	return false;
+	return false; */
 }
 
 bool MCVariable::replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range)
