@@ -77,6 +77,8 @@ MCScreenDC::MCScreenDC()
 	
 	backdrop_hard = false;
 	backdrop_active = false;
+    
+    m_im_context = NULL;
 
 	MCNotifyInitialize();
 }

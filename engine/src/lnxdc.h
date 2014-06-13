@@ -33,6 +33,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define fixmaskrop(a) (a)
 #define fixmaskcolor(a) (a)
 
+#include <gtk/gtk.h>
+
 
 class MCEventnode : public MCDLlist
 {
@@ -148,6 +150,9 @@ class MCScreenDC : public MCUIDC
 	class MCGdkTransferStore * m_DND_store ;
 	class MCGdkTransferStore * m_Clipboard_store ;
 	class MCGdkTransferStore * m_Selection_store ;
+    
+    // Input context for IME integration
+    GtkIMContext *m_im_context;
 
 public:
 	

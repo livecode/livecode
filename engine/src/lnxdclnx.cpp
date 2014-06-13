@@ -389,7 +389,60 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 
             case GDK_KEY_PRESS:
             case GDK_KEY_RELEASE:
+            {
+                // Let the IME have the key event first
+                bool t_ignore = false;
+                if (m_im_context != nil)
+                {
+                    t_ignore = gtk_im_context_filter_keypress(m_im_context, &t_event->key);
+                }
+                
+                // No further processing of the event if the IME ate it
+                if (t_ignore)
+                    break;
+                
+                // Convert the key event into a Unicode character
+                codepoint_t t_codepoint = gdk_keyval_to_unicode(t_event->key.keyval);
+                MCAutoStringRef t_text;
+                /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)&t_codepoint, sizeof(t_codepoint), kMCStringEncodingUTF32, false, &t_text);
+                
+                // We also want the key symbol for non-character keys etc
+                uint32_t t_keysym = translatekeysym(t_event->key.keyval, t_event->key.hardware_keycode);
+                
+                // Update the current modifier state
+                setmods(t_event->key.state, t_keysym, 0, False);
+                
+                // Check for the interrupt command
+                if (t_event->type == GDK_KEY_PRESS && MCmodifierstate & MS_CONTROL)
+                {
+                    if (t_keysym == XK_Break || t_keysym == '.')
+                    {
+                        if (MCallowinterrupts && !MCdefaultstackptr->cantabort())
+                            abort = True;
+                        else
+                            MCinterrupt = true;
+                    }
+                }
+                
+                if (dispatch)
+                {
+                    if (t_event->key.window != MCtracewindow)
+                    {
+                        MCeventtime = t_event->key.time;
+                        if (t_event->type == GDK_KEY_PRESS)
+                            MCdispatcher->wkdown(t_event->key.window, *t_text, t_keysym);
+                        else
+                            MCdispatcher->wkup(t_event->key.window, *t_text, t_keysym);
+                    }
+                }
+                else
+                {
+                    t_queue = true;
+                }
+                
+                t_handled = true;
                 break;
+            }
                 
             case GDK_ENTER_NOTIFY:
             case GDK_LEAVE_NOTIFY:

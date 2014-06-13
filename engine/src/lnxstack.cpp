@@ -164,7 +164,7 @@ void MCStack::realize()
         
         // DEBUGGING
         //gdk_window_set_debug_updates(TRUE);
-        //gdk_window_invalidate_rect(window, NULL, TRUE);
+        gdk_window_invalidate_rect(window, NULL, TRUE);
 
 		gdk_display_sync(MCdpy);
 	}

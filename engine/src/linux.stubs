@@ -245,6 +245,7 @@ gdk libgdk-x11-2.0.so.0
 	gdk_event_handler_set: (pointer, pointer, pointer) -> ()
 	gdk_window_get_events: (pointer) -> (integer)
 	gdk_event_request_motions: (pointer) -> ()
+	gdk_keyval_to_unicode: (integer) -> (integer)
 
 gdk_pixbuf libgdk_pixbuf-2.0.so.0
 	gdk_pixbuf_get_pixels: (pointer) -> (pointer)
@@ -388,6 +389,8 @@ gtk libgtk-x11-2.0.so.0
 	gtk_requisition_free: (pointer) -> ()
 	
 	#gtk_rc_get_style_by_paths: (pointer, pointer, pointer, integer) -> (pointer)
+
+	gtk_im_context_filter_keypress: (pointer, pointer) -> (integer)
 
 gtk_print_dialog libgtk-x11-2.0.so.0
 	gtk_print_unix_dialog_new: (pointer, pointer) -> (pointer)

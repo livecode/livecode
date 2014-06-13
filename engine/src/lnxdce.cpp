@@ -137,7 +137,7 @@ Boolean MCScreenDC::abortkey()
 			{
 				GdkEventKey *kpevent = (GdkEventKey*)tptr->event;
                 if (kpevent->state & GDK_CONTROL_MASK
-                    && kpevent->keyval == GDK_KEY_Break || kpevent->keyval ==  GDK_KEY_period)
+                    && kpevent->keyval == XK_Break || kpevent->keyval == 0x2e /*XK_period*/)
 				{
 					abort = True;
 					tptr->remove
