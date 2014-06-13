@@ -162,6 +162,68 @@ void gdk_event_fn(GdkEvent *p_event, gpointer dc)
     ((MCScreenDC*)dc)->EnqueueEvent(gdk_event_copy(p_event));
 }
 
+// Functions for re-directing GTK IM context signals
+static void on_commit(GtkIMContext *p_context, gchar *p_str, gpointer p_data)
+{
+    ((MCScreenDC*)p_data)->IME_OnCommit(p_context, p_str);
+}
+static gboolean on_delete_surrounding(GtkIMContext *p_context, gint p_offset, gint p_count, gpointer p_data)
+{
+    return ((MCScreenDC*)p_data)->IME_OnDeleteSurrounding(p_context, p_offset, p_count);
+}
+static void on_preedit_changed(GtkIMContext *p_context, gpointer p_data)
+{
+    ((MCScreenDC*)p_data)->IME_OnPreeditChanged(p_context);
+}
+static void on_preedit_end(GtkIMContext *p_context, gpointer p_data)
+{
+    ((MCScreenDC*)p_data)->IME_OnPreeditEnd(p_context);
+}
+static void on_preedit_start(GtkIMContext *p_context, gpointer p_data)
+{
+    ((MCScreenDC*)p_data)->IME_OnPreeditStart(p_context);
+}
+static void on_retrieve_surrounding(GtkIMContext *p_context, gpointer p_data)
+{
+    ((MCScreenDC*)p_data)->IME_OnRetrieveSurrounding(p_context);
+}
+
+void MCScreenDC::IME_OnCommit(GtkIMContext*, gchar *p_utf8_string)
+{
+    MCAutoStringRef t_text;
+    /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)p_utf8_string, strlen(p_utf8_string), kMCStringEncodingUTF8, false, &t_text);
+    
+    // TODO: do something with the text
+    
+    // Looks like we need to free the string
+    g_free(p_utf8_string);
+}
+
+bool MCScreenDC::IME_OnDeleteSurrounding(GtkIMContext*, gint p_offset, gint p_length)
+{
+    return false;
+}
+
+void MCScreenDC::IME_OnPreeditChanged(GtkIMContext*)
+{
+    ;
+}
+
+void MCScreenDC::IME_OnPreeditEnd(GtkIMContext*)
+{
+    ;
+}
+
+void MCScreenDC::IME_OnPreeditStart(GtkIMContext*)
+{
+    ;
+}
+
+void MCScreenDC::IME_OnRetrieveSurrounding(GtkIMContext*)
+{
+    ;
+}
+
 Boolean MCScreenDC::open()
 {
 	// We require GDK in order to do any windowing at all
@@ -457,7 +519,7 @@ Boolean MCScreenDC::open()
 	MCwbr.width = getwidth();
 	MCwbr.height = getheight();
 	
-	m_has_native_theme = initialise_weak_link_gtk() != 0;
+	m_has_native_theme = m_has_gtk = initialise_weak_link_gtk() != 0;
 	
 	if (m_has_native_theme)
 	{
@@ -466,6 +528,20 @@ Boolean MCScreenDC::open()
 		m_has_native_print_dialogs = initialise_weak_link_gtk_print_dialog() != 0;
 	}
 
+    // If we have GTK, we can make use of the GTK IME support
+    if (m_has_gtk)
+    {
+        m_im_context = gtk_im_multicontext_new();
+        
+        // Set up the signals for the IM context
+        g_signal_connect(m_im_context, "commit", G_CALLBACK(&on_commit), this);
+        g_signal_connect(m_im_context, "delete-surrounding", G_CALLBACK(&on_delete_surrounding), this);
+        g_signal_connect(m_im_context, "preedit-changed", G_CALLBACK(&on_preedit_changed), this);
+        g_signal_connect(m_im_context, "preedit-end", G_CALLBACK(&on_preedit_end), this);
+        g_signal_connect(m_im_context, "preedit-start", G_CALLBACK(&on_preedit_start), this);
+        g_signal_connect(m_im_context, "retrieve-surrounding", G_CALLBACK(&on_retrieve_surrounding), this);
+    }
+    
 	/*MCXVideo = false ;
 	if ( initialise_weak_link_libxv () != 0 ) 
 	{

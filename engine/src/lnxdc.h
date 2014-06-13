@@ -151,6 +151,9 @@ class MCScreenDC : public MCUIDC
 	class MCGdkTransferStore * m_Clipboard_store ;
 	class MCGdkTransferStore * m_Selection_store ;
     
+    // Set if GTK is available
+    bool m_has_gtk;
+    
     // Input context for IME integration
     GtkIMContext *m_im_context;
 
@@ -351,5 +354,13 @@ public:
     
     // Queues an event as a pending event
     void EnqueueEvent(GdkEvent *);
+    
+    // IME events
+    void IME_OnCommit(GtkIMContext*, gchar *p_utf8_string);
+    bool IME_OnDeleteSurrounding(GtkIMContext*, gint p_offset, gint p_count);
+    void IME_OnPreeditChanged(GtkIMContext*);
+    void IME_OnPreeditEnd(GtkIMContext*);
+    void IME_OnPreeditStart(GtkIMContext*);
+    void IME_OnRetrieveSurrounding(GtkIMContext*);
 };
 #endif
