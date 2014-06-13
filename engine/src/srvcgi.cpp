@@ -1351,11 +1351,11 @@ bool cgi_initialize()
 		bool t_found;
 		t_found = false;
 		
-        if (MCStringBeginsWithCString(*t_environ, (const char_t*)"HTTP_", kMCStringOptionCompareCaseless) == 0)
+        if (MCStringBeginsWithCString(*t_environ, (const char_t*)"HTTP_", kMCStringOptionCompareCaseless))
             t_found = true;
 		else
 			for(uint32_t j = 0; s_cgi_vars[j] != NULL && !t_found; j++)
-                if (MCStringBeginsWithCString(*t_environ, (const char_t*)s_cgi_vars[j], kMCStringOptionCompareCaseless) == 0)
+                if (MCStringBeginsWithCString(*t_environ, (const char_t*)s_cgi_vars[j], kMCStringOptionCompareCaseless))
 					t_found = true;
 
 		if (t_found)
