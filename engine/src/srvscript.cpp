@@ -134,7 +134,7 @@ MCServerScript::File *MCServerScript::FindFile(MCStringRef p_filename, bool p_ad
 	// Look through the file list...
 	File *t_file;
 	for(t_file = m_files; t_file != NULL; t_file = t_file -> next)
-        if (MCStringIsEqualTo(t_file -> filename, *t_resolved_filename, kMCStringOptionCompareExact) == 0)
+        if (MCStringIsEqualTo(t_file -> filename, *t_resolved_filename, kMCStringOptionCompareExact))
 			break;
 	
 	// If we are here the file doesn't exist (yet). If we aren't in

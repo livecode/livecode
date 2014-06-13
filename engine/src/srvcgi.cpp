@@ -1730,8 +1730,13 @@ bool MCS_get_session_id(MCStringRef& r_id)
 {
 	if (s_current_session != NULL)
 		return MCStringCreateWithCString(s_current_session->id, r_id);
-	
-    return MCStringCopy(MCsessionid, r_id);
+    // SN-2014-06-13 [[ RefactorServer ]]
+    // Having a nil pointer causes a silent crash on the server prior to 7.0
+    // but a more violent one with the StringRefs. Fixed
+    else if (MCsessionid != NULL)
+        return MCStringCopy(MCsessionid, r_id);
+    else
+        return MCStringCopy(kMCEmptyString, r_id);
 }
 
 bool MCServerGetSessionIdFromCookie(MCExecContext &ctxt, MCStringRef &r_id)
