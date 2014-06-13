@@ -453,6 +453,10 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 // IM-2013-10-09: [[ FullscreenMode ]] Update mouseloc with MCscreen getters & setters
                 MCscreen->setmouseloc(t_mousestack, t_mouseloc);
                 
+                // If this is a motion hint event, request the rest
+                if (t_event->motion.is_hint)
+                    gdk_event_request_motions(&t_event->motion);
+                
                 // Detect if we should start a drag
                 if (!dragclick && (MCU_abs(MCmousex - MCclicklocx) > 4 || MCU_abs(MCmousey - MCclicklocy) > 4) && MCbuttonstate != 0)
                 {

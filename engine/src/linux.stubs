@@ -244,6 +244,7 @@ gdk libgdk-x11-2.0.so.0
 	gdk_window_set_debug_updates: (integer) -> ()
 	gdk_event_handler_set: (pointer, pointer, pointer) -> ()
 	gdk_window_get_events: (pointer) -> (integer)
+	gdk_event_request_motions: (pointer) -> ()
 
 gdk_pixbuf libgdk_pixbuf-2.0.so.0
 	gdk_pixbuf_get_pixels: (pointer) -> (pointer)
