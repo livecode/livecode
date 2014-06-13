@@ -137,12 +137,12 @@ void MCPlatformStartPlayer(MCPlatformPlayerRef player)
 	player -> Start();
 }
 
+/*
 void MCPlatformFastPlayer(MCPlatformPlayerRef player, Boolean forward)
 {
 	player -> Fast(forward);
 }
 
-/*
 void MCPlatformFastForwardPlayer(MCPlatformPlayerRef player)
 {
 	player -> FastForward();

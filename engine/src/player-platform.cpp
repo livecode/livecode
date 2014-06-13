@@ -1150,9 +1150,9 @@ Boolean MCPlayer::prepare(const char *options)
 	if (!opened)
 		return False;
     
-    extern bool MCQTInit(void);
-    if (!MCQTInit())
-        return False;
+    //extern bool MCQTInit(void);
+    //if (!MCQTInit())
+        //return False;
     
 	if (m_platform_player == nil)
 		MCPlatformCreatePlayer(m_platform_player);
@@ -1260,6 +1260,7 @@ void MCPlayer::playstepforward()
 		MCPlatformStepPlayer(m_platform_player, 1);
 }
 
+/*
 void MCPlayer::playfast(Boolean forward)
 {
 	if (!getstate(CS_PREPARED))
@@ -1269,7 +1270,6 @@ void MCPlayer::playfast(Boolean forward)
 		MCPlatformFastPlayer(m_platform_player, forward);
 }
 
-/*
  void MCPlayer::playfastforward()
  {
  if (!getstate(CS_PREPARED))
@@ -1569,11 +1569,11 @@ void MCPlayer::selectionchanged(void)
     timer(MCM_selection_changed, nil);
 }
 
-void MCPlayer::currenttimechanged(void)
+void MCPlayer::currenttimechanged(MCParameter *p_param)
 {
     redrawcontroller();
     
-    timer(MCM_current_time_changed, nil);
+    timer(MCM_current_time_changed, p_param);
 }
 
 void MCPlayer::SynchronizeUserCallbacks(void)
@@ -1671,6 +1671,8 @@ Boolean MCPlayer::isbuffering(void)
 // MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p_sprite)
 {
+    if (m_platform_player == nil)
+        return;
 	MCRectangle dirty;
 	dirty = p_dirty;
     
@@ -1707,14 +1709,21 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		if (t_offscreen)
 		{
 			MCRectangle trect = MCU_reduce_rect(rect, flags & F_SHOW_BORDER ? borderwidth : 0);
-			
+            
 			MCImageDescriptor t_image;
 			MCMemoryClear(&t_image, sizeof(t_image));
 			t_image.filter = kMCGImageFilterNone;
-			MCPlatformLockPlayerBitmap(m_platform_player, t_image . bitmap);
-			if (t_image . bitmap != nil)
+            
+			// IM-2014-05-14: [[ ImageRepUpdate ]] Wrap locked bitmap in MCGImage
+			MCImageBitmap *t_bitmap = nil;
+			MCPlatformLockPlayerBitmap(m_platform_player, t_bitmap);
+            
+			MCGRaster t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
+			MCGImageCreateWithRasterNoCopy(t_raster, t_image.image);
+			if (t_image . image != nil)
 				dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
-			MCPlatformUnlockPlayerBitmap(m_platform_player, t_image . bitmap);
+			MCGImageRelease(t_image.image);
+			MCPlatformUnlockPlayerBitmap(m_platform_player, t_bitmap);
 		}
 	}
     
@@ -2456,8 +2465,9 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             int t_active_well_width;
             t_active_well_width = t_well_rect . width - CONTROLLER_HEIGHT / 2;
             
-            int t_thumb_left;
-            t_thumb_left = t_active_well_width * t_current_time / t_duration;
+            int t_thumb_left = 0;
+            if (t_duration != 0)
+                t_thumb_left = t_active_well_width * t_current_time / t_duration;
             
             return MCRectangleMake(t_well_rect . x + t_thumb_left, t_well_rect . y - t_well_rect . height / 2, CONTROLLER_HEIGHT / 2, 2 * t_well_rect . height);
         }
@@ -2485,8 +2495,9 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             int t_active_well_width;
             t_active_well_width = t_well_rect . width - t_thumb_rect . width;
             
-            int t_selection_start_left;
-            t_selection_start_left = t_active_well_width * t_start_time / t_duration;
+            int t_selection_start_left = 0;
+            if (t_duration != 0)
+                t_selection_start_left = t_active_well_width * t_start_time / t_duration;
             
             return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y - CONTROLLER_HEIGHT / 6, SELECTION_RECT_WIDTH, t_well_rect . height + CONTROLLER_HEIGHT / 3);
         }
@@ -2504,8 +2515,9 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             int t_active_well_width;
             t_active_well_width = t_well_rect . width - t_thumb_rect . width;;
             
-            int t_selection_finish_left;
-            t_selection_finish_left = t_active_well_width * t_finish_time / t_duration;
+            int t_selection_finish_left = t_active_well_width;
+            if (t_duration != 0)
+                t_selection_finish_left = t_active_well_width * t_finish_time / t_duration;
             
             return MCRectangleMake(t_well_rect . x + t_selection_finish_left + CONTROLLER_HEIGHT / 2 - SELECTION_RECT_WIDTH, t_well_rect . y - CONTROLLER_HEIGHT / 6, SELECTION_RECT_WIDTH, t_well_rect . height + CONTROLLER_HEIGHT / 3);
         }
@@ -2542,8 +2554,16 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             t_active_well_width = t_well_rect . width - t_thumb_rect . width;
             
             int t_selection_start_left, t_selection_finish_left;
-            t_selection_start_left = t_active_well_width * t_start_time / t_duration;
-            t_selection_finish_left = t_active_well_width * t_finish_time / t_duration;
+            if (t_duration == 0)
+            {
+                t_selection_start_left = 0;
+                t_selection_finish_left = t_active_well_width;
+            }
+            else
+            {
+                t_selection_start_left = t_active_well_width * t_start_time / t_duration;
+                t_selection_finish_left = t_active_well_width * t_finish_time / t_duration;
+            }
             
             return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, t_selection_finish_left - t_selection_start_left + t_thumb_rect . width, t_well_rect . height);
         }
@@ -2597,8 +2617,16 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             t_active_well_width = t_well_rect . width - t_thumb_rect . width;
             
             int t_selection_start_left, t_current_time_left;
-            t_selection_start_left = t_active_well_width * t_start_time / t_duration;
-            t_current_time_left = t_active_well_width * t_current_time / t_duration;
+            if (t_duration == 0)
+            {
+                t_selection_start_left = 0;
+                t_current_time_left = 0;
+            }
+            else
+            {
+                t_selection_start_left = t_active_well_width * t_start_time / t_duration;
+                t_current_time_left = t_active_well_width * t_current_time / t_duration;
+            }
             
             return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, t_current_time_left - t_selection_start_left + t_thumb_rect . width / 2, t_well_rect . height);
         }
@@ -2710,6 +2738,7 @@ void MCPlayer::handle_mdown(int p_which)
             MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
             
             t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+            //MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_new_time);
             setcurtime(t_new_time);
             
             layer_redrawall();

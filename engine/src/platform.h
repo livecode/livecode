@@ -1035,7 +1035,7 @@ bool MCPlatformPlayerIsPlaying(MCPlatformPlayerRef player);
 
 void MCPlatformStepPlayer(MCPlatformPlayerRef player, int amount);
 void MCPlatformStartPlayer(MCPlatformPlayerRef player);
-void MCPlatformFastPlayer(MCPlatformPlayerRef player, Boolean forward);
+//void MCPlatformFastPlayer(MCPlatformPlayerRef player, Boolean forward);
 //void MCPlatformFastForwardPlayer(MCPlatformPlayerRef player);
 //void MCPlatformFastBackPlayer(MCPlatformPlayerRef player);
 void MCPlatformStopPlayer(MCPlatformPlayerRef player);

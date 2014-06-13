@@ -154,7 +154,7 @@ public:
 	Boolean playstart(const char *options);
 	Boolean playpause(Boolean on);
 	void playstepforward();
-    void playfast(Boolean forward);
+    //void playfast(Boolean forward);
     //void playfastforward();
     //void playfastback();
 	void playstepback();
@@ -193,7 +193,7 @@ public:
     
     void markerchanged(uint32_t p_time);
     void selectionchanged(void);
-    void currenttimechanged(void);
+    void currenttimechanged(MCParameter *p_param);
 	
     MCRectangle getcontrollerrect(void);
     MCRectangle getcontrollerpartrect(const MCRectangle& total_rect, int part);
