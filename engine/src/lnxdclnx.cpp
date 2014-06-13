@@ -392,7 +392,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
             {
                 // Let the IME have the key event first
                 bool t_ignore = false;
-                if (m_im_context != nil)
+                if (dispatch && m_im_context != nil)
                 {
                     t_ignore = gtk_im_context_filter_keypress(m_im_context, &t_event->key);
                 }
