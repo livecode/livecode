@@ -942,6 +942,8 @@ enum Properties {
     P_PRIVATE_COLORS,
     P_IDLE_RATE,
     P_IDLE_TICKS,
+    // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Property tag for 'the ignoreMouseEvents' of stacks.
+    P_IGNORE_MOUSE_EVENTS,
     P_BLINK_RATE,
     P_RECURSION_LIMIT,
     P_REPEAT_RATE,

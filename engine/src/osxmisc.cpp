@@ -259,6 +259,7 @@ IO_stat MCHcstak::macreadresources(void)
 //  REFACTORED FROM ITRANSFORM.CPP 
 //
 
+#if 0
 void MCMacScaleImageBox(void *p_src_ptr, uint4 p_src_stride, void *p_dst_ptr, uint4 p_dst_stride, uint4 p_src_width, uint4 p_src_height, uint4 p_dst_width, uint4 p_dst_height)
 {
 	Rect t_src_rect;
@@ -295,7 +296,8 @@ void MCMacScaleImageBox(void *p_src_ptr, uint4 p_src_stride, void *p_dst_ptr, ui
 	
 	DisposeGWorld(t_dst_gworld);
 	DisposeGWorld(t_src_gworld);
-}	
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -304,6 +306,8 @@ void MCMacScaleImageBox(void *p_src_ptr, uint4 p_src_stride, void *p_dst_ptr, ui
 
 bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPatternRef &r_pattern)
 {
+    return false;
+#if 0
 	bool t_success = true;
 	
 	static MCPatternRef s_patterns[8] = {nil, nil, nil, nil, nil, nil, nil, nil};
@@ -410,19 +414,18 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
 	t_raster.stride = t_stride;
 	t_raster.format = kMCGRasterFormat_ARGB;
 	
-	t_success = MCGImageCreateWithRaster(t_raster, t_image);
-
+	// IM-2014-05-14: [[ HiResPatterns ]] MCPatternCreate refactored to work with MCGRaster
 	// IM-2013-08-14: [[ ResIndependence ]] create MCPattern wrapper
 	if (t_success)
-		t_success = MCPatternCreate(t_image, 1.0, r_pattern);
+		t_success = MCPatternCreate(t_raster, 1.0, kMCGImageFilterNone, r_pattern);
 
-	MCGImageRelease(t_image);
-	
 	if (t_success)
 		s_patterns[t_index] = r_pattern;
 	
 	DisposeGWorld(t_gworld);
 	
 	return t_success;
+#endif
 }
+
 

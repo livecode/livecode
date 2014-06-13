@@ -446,7 +446,6 @@ struct MCGFont
 	uint16_t	fixed_advance;
 	int32_t		ascent;
 	int32_t		descent;
-	uint8_t		style;
 	bool		ideal : 1;
 };
 
@@ -526,6 +525,7 @@ bool MCGImageCreateWithData(const void *bytes, uindex_t byte_count, MCGImageRef&
 bool MCGImageCreateWithFilename(const char *filename, MCGImageRef& r_image);
 
 bool MCGImageGetRaster(MCGImageRef image, MCGRaster &r_raster);
+bool MCGImageGetPixel(MCGImageRef image, uint32_t x, uint32_t y, uint32_t &r_pixel);
 
 MCGImageRef MCGImageRetain(MCGImageRef image);
 void MCGImageRelease(MCGImageRef image);
@@ -538,6 +538,7 @@ int32_t MCGImageGetHeight(MCGImageRef image);
 MCGSize MCImageGetSize(MCGImageRef image);
 
 bool MCGImageIsOpaque(MCGImageRef image);
+bool MCGImageHasPartialTransparency(MCGImageRef image);
 
 ////////////////////////////////////////////////////////////////////////////////
 

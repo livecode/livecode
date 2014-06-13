@@ -43,6 +43,7 @@
 #include "stacklst.h"
 
 #include "desktop-dc.h"
+#include "param.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1077,7 +1078,14 @@ void MCPlatformHandlePlayerCurrentTimeChanged(MCPlatformPlayerRef p_player)
     if (t_player == nil)
         return;
     
-    t_player -> currenttimechanged();
+    // PM-2014-05-26: [[Bug 12512]] Make sure we pass the param to the currenttimechanged message
+    MCParameter *t_param;
+    t_param = new MCParameter();
+    t_param -> setn_argument(t_player -> getmoviecurtime());
+    
+    // TODO: Replace the following line with t_player -> currenttimechanged(t_param) (and update currenttimechanged() signature)
+    t_player -> timer(MCM_current_time_changed, t_param);
+
 }
 
 void MCPlatformHandlePlayerSelectionChanged(MCPlatformPlayerRef p_player)

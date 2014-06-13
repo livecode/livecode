@@ -209,7 +209,7 @@ int gif_readFunc(GifFileType *p_gif, GifByteType *p_buffer, int p_byte_count)
 	return t_byte_count;
 }
 
-bool MCImageDecodeGIF(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_frame_count)
+bool MCImageDecodeGIF(IO_handle p_stream, MCBitmapFrame *&r_frames, uindex_t &r_frame_count)
 {
 	bool t_success = true;
 
@@ -224,7 +224,7 @@ bool MCImageDecodeGIF(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_f
 	MCRectangle t_disposal_region;
 
 	// The list of frames.
-	MCImageFrame *t_frames = nil;
+	MCBitmapFrame *t_frames = nil;
 
 	if (nil == (t_gif = DGifOpen(p_stream, gif_readFunc, &t_err)))
 		return false;

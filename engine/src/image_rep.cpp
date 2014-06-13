@@ -65,11 +65,13 @@ MCLoadableImageRep::MCLoadableImageRep()
 {
 	m_lock_count = 0;
 	m_have_geometry = false;
-	m_premultiplied = false;
 
 	m_frames = nil;
+	m_locked_frames = nil;
 	m_frame_count = 0;
 
+	m_frames_premultiplied = false;
+	
 	m_next = m_prev = nil;
 }
 
@@ -84,114 +86,268 @@ uindex_t MCLoadableImageRep::GetFrameCount()
 {
 	if (!m_have_geometry)
 	{
-		if (!EnsureImageFrames(m_premultiplied))
+		if (!EnsureMCGImageFrames())
 			return false;
 	}
 
 	return m_frame_count;
 }
 
-void MCLoadableImageRep::PremultiplyFrames()
+
+bool MCLoadableImageRep::ConvertToMCGFrames(MCBitmapFrame *&x_frames, uint32_t p_frame_count, bool p_premultiplied)
 {
-	if (m_premultiplied)
-		return;
+	bool t_success;
+	t_success = true;
+	
+	MCGImageFrame *t_frames;
+	t_frames = nil;
+	
+	if (t_success)
+		t_success = MCMemoryNewArray(p_frame_count, t_frames);
+	
+	for (uint32_t i = 0; t_success && i < p_frame_count; i++)
+	{
+		// IM-2014-05-14: [[ ImageRepUpdate ]] Fix density & duration not being copied from the bitmap frames
+		t_frames[i].density = x_frames[i].density;
+		t_frames[i].duration = x_frames[i].duration;
+		
+		t_success = MCImageBitmapCopyAsMCGImageAndRelease(x_frames[i].image, p_premultiplied, t_frames[i].image);
+	}
+	
+	if (t_success)
+	{
+		MCImageFreeFrames(x_frames, p_frame_count);
+		x_frames = nil;
 
-	for (uindex_t i = 0; i < m_frame_count; i++)
-		MCImageBitmapPremultiply(m_frames[i].image);
-
-	m_premultiplied = true;
+		m_frames = t_frames;
+		m_frame_count = p_frame_count;
+		m_frames_premultiplied = p_premultiplied;
+		
+		s_cache_size += GetFrameByteCount();
+		
+		if (s_cache_size > s_cache_limit)
+		{
+			// keep new frames in the cache while flushing
+			m_lock_count++;
+			FlushCacheToLimit();
+			m_lock_count--;
+		}
+	}
+	else
+		MCGImageFramesFree(t_frames, p_frame_count);
+	
+	return t_success;
 }
 
-void MCLoadableImageRep::UnpremultiplyFrames()
-{
-	if (!m_premultiplied)
-		return;
-	
-	for (uindex_t i = 0; i < m_frame_count; i++)
-		MCImageBitmapUnpremultiply(m_frames[i].image);
-	
-	m_premultiplied = false;
-}
-
-bool MCLoadableImageRep::EnsureImageFrames(bool p_premultiplied)
+bool MCLoadableImageRep::EnsureMCGImageFrames()
 {
 	// IM-2013-11-05: [[ RefactorGraphics ]] Rework to allow LoadImageFrames to return either
-	// premultiplied or non-premultiplied bitmaps 
+	// premultiplied or non-premultiplied bitmaps
 	if (m_frames != nil)
-	{
-		if (p_premultiplied == m_premultiplied)
-			return true;
-		
-		if (m_premultiplied == m_frames_premultiplied)
-		{
-			if (p_premultiplied)
-				PremultiplyFrames();
-			else
-				UnpremultiplyFrames();
-			
-			return true;
-		}
-
-		MCLog("<%p> discarding %s image frames", this, m_premultiplied ? "premultiplied" : "unpremultiplied");
-		ReleaseFrames();
-	}
+		return true;
 	
-	if (!LoadImageFrames(m_frames, m_frame_count, m_frames_premultiplied))
+	bool t_success;
+	t_success = true;
+	
+	MCBitmapFrame *t_frames;
+	t_frames = nil;
+	
+	uint32_t t_frame_count;
+	
+	bool t_premultiplied;
+	
+	if (t_success)
+		t_success = LoadImageFrames(t_frames, t_frame_count, t_premultiplied);
+	
+	if (t_success)
+		t_success = ConvertToMCGFrames(t_frames, t_frame_count, t_premultiplied);
+	
+	MCImageFreeFrames(t_frames, t_frame_count);
+	
+	return t_success;
+}
+
+bool MCImageBitmapCreateWithPixels(void *p_pixels, uint32_t p_stride, uint32_t p_width, uint32_t p_height, MCImageBitmap *&r_bitmap)
+{
+	if (!MCImageBitmapCreate(p_width, p_height, r_bitmap))
 		return false;
 	
-	m_premultiplied = m_frames_premultiplied;
-	
-	if (p_premultiplied)
-		PremultiplyFrames();
+	if (p_stride == r_bitmap->stride)
+		MCMemoryCopy(r_bitmap->data, p_pixels, p_stride * p_height);
 	else
-		UnpremultiplyFrames();
-	
-	s_cache_size += GetFrameByteCount();
-	
-	if (s_cache_size > s_cache_limit)
 	{
-		m_lock_count++;
-		FlushCacheToLimit();
-		m_lock_count--;
+		uint8_t *t_dst;
+		uint8_t *t_src;
+		t_dst = (uint8_t*)r_bitmap->data;
+		t_src = (uint8_t*)p_pixels;
+		
+		for (uint32_t i = 0; i < p_height; i++)
+		{
+			MCMemoryCopy(t_dst, t_src, p_width * sizeof(uint32_t));
+			t_dst += r_bitmap->stride;
+			t_src +=  p_stride;
+		}
 	}
+	return true;
+}
+
+bool convert_to_mcbitmapframes(MCGImageFrame *p_frames, uint32_t p_frame_count, MCBitmapFrame *&r_frames)
+{
+	if (p_frames == nil)
+		return false;
+	
+	bool t_success;
+	t_success = true;
+	
+	MCBitmapFrame *t_frames;
+	t_frames = nil;
+	
+	t_success = MCMemoryNewArray(p_frame_count, t_frames);
+	
+	for (uint32_t i = 0; t_success && i < p_frame_count; i++)
+	{
+		MCGRaster t_raster;
+		t_success = MCGImageGetRaster(p_frames[i].image, t_raster);
+		
+		if (t_success)
+			t_success = MCImageBitmapCreateWithPixels(t_raster.pixels, t_raster.stride, t_raster.width, t_raster.height, t_frames[i].image);
+		
+		if (t_success)
+		{
+			t_frames[i].image->has_alpha = t_frames[i].image->has_transparency = t_raster.format == kMCGRasterFormat_ARGB;
+
+			if (t_frames[i].image->has_transparency)
+				MCImageBitmapUnpremultiply(t_frames[i].image);
+		}
+	}
+	
+	if (t_success)
+		r_frames = t_frames;
+	else
+		MCImageFreeFrames(t_frames, p_frame_count);
+	
+	return t_success;
+}
+
+bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MCGImageFrame *&r_frame)
+{
+	// frame index check
+	if (m_frame_count != 0 && p_frame >= m_frame_count)
+		return false;
+	
+	if (!EnsureMCGImageFrames())
+		return false;
+	
+	if (p_frame >= m_frame_count)
+		return false;
+	
+	// prevent data being removed by cache flush
+	m_lock_count++;
+	
+	// prevent deletion due to ImageRep::Release()
+	Retain();
+	
+	r_frame = &m_frames[p_frame];
 	
 	return true;
 }
 
-bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame)
+bool MCLoadableImageRep::LockBitmapFrame(uindex_t p_frame, MCGFloat p_density, MCBitmapFrame *&r_frame)
 {
-	if (!EnsureImageFrames(p_premultiplied))
+	// frame index check
+	if (m_frame_count != 0 && p_frame >= m_frame_count)
 		return false;
+	
+	bool t_success;
+	t_success = true;
+	
+	MCBitmapFrame *t_frames;
+	t_frames = nil;
+	
+	uint32_t t_frame_count;
+	bool t_premultiplied;
 
-	if (p_frame < m_frame_count)
+	// we want unpremultiplied bitmaps here, so if the source is unpremultiplied then load it
+	if (m_frames == nil || !m_frames_premultiplied)
 	{
-		m_lock_count++;
-		//m_frame_locks[p_frame]++;
-		Retain();
+		t_success = LoadImageFrames(t_frames, t_frame_count, t_premultiplied);
 
-		r_frame = &m_frames[p_frame];
-
-		return true;
+		if (t_success && t_premultiplied)
+		{
+			// the source frames are premultiplied, so we'll use them to construct our MCGImageFrames then convert to unpremultiplied
+			t_success = ConvertToMCGFrames(t_frames, t_frame_count, t_premultiplied);
+		}
 	}
+	
+	// at this point, t_frames will either be filled or we will have m_frames to convert from
+	if (t_success && t_frames == nil)
+	{
+		t_premultiplied = false;
+		t_frame_count = m_frame_count;
+		t_success = convert_to_mcbitmapframes(m_frames, m_frame_count, t_frames);
+	}
+	
+	if (t_success)
+	{
+		if (p_frame < m_frame_count)
+		{
+			m_frame_count = t_frame_count;
+			m_locked_frames = t_frames;
+			t_frames = nil;
+			
+			Retain();
+			
+			r_frame = &m_locked_frames[p_frame];
+		}
+		else
+		{
+			// store frames in cache if not already loaded
+			if (m_frames == nil)
+				t_success = ConvertToMCGFrames(t_frames, t_frame_count, false);
+			t_success = false;
+		}
+	}
+	
+	MCImageFreeFrames(t_frames, t_frame_count);
 
-	return false;
+
+	return t_success;
 }
 
-void MCLoadableImageRep::UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame)
+void MCLoadableImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame)
 {
 	if (p_frame == nil || m_lock_count == 0)
+		return;
+	
+	if (p_index >= m_frame_count)
+		return;
+	
+	if (m_frames == nil || &m_frames[p_index] != p_frame)
+		return;
+	
+	m_lock_count--;
+	Release();
+	
+	MoveRepToHead(this);
+}
+
+void MCLoadableImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame)
+{
+	if (p_frame == nil)
 		return;
 
 	if (p_index >= m_frame_count)
 		return;
 
-	//if (m_frame_locks == nil || m_frame_locks[p_index] == 0)
-	//	return;
-	if (m_frames == nil || &m_frames[p_index] != p_frame)
+	if (m_locked_frames == nil || &m_locked_frames[p_index] != p_frame)
 		return;
 
-	m_lock_count--;
-	//m_frame_locks[p_index]--;
+	if (m_frames == nil)
+		ConvertToMCGFrames(m_locked_frames, m_frame_count, false);
+	
+	MCImageFreeFrames(m_locked_frames, m_lock_count);
+	m_locked_frames = nil;
+	
 	Release();
 
 	MoveRepToHead(this);
@@ -199,12 +355,32 @@ void MCLoadableImageRep::UnlockImageFrame(uindex_t p_index, MCImageFrame *p_fram
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCGImageFramesFree(MCGImageFrame *p_frames, uint32_t p_frame_count)
+{
+	if (p_frames == nil)
+		return;
+	
+	for (uint32_t i = 0; i < p_frame_count; i++)
+		MCGImageRelease(p_frames[i].image);
+	
+	MCMemoryDeleteArray(p_frames);
+}
+
+uint32_t MCGImageFrameGetByteCount(const MCGImageFrame &p_frame)
+{
+	MCGRaster t_raster;
+	if (!MCGImageGetRaster(p_frame.image, t_raster))
+		return 0;
+	
+	return t_raster.height * t_raster.stride + sizeof(MCGRaster) + sizeof(MCGImageFrame);
+}
+
 uint32_t MCLoadableImageRep::GetFrameByteCount()
 {
 	if (m_frames == nil || m_frame_count == 0)
 		return 0;
 
-	return (m_frames[0].image->height * m_frames[0].image->stride + sizeof(MCImageBitmap) + sizeof(MCImageFrame)) * m_frame_count;
+	return MCGImageFrameGetByteCount(m_frames[0]) * m_frame_count;
 }
 
 void MCLoadableImageRep::ReleaseFrames()
@@ -214,9 +390,8 @@ void MCLoadableImageRep::ReleaseFrames()
 
 	s_cache_size -= GetFrameByteCount();
 
-	MCImageFreeFrames(m_frames, m_frame_count);
+	MCGImageFramesFree(m_frames, m_frame_count);
 	m_frames = nil;
-	m_premultiplied = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

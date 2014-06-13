@@ -639,6 +639,9 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 	{
 		clearfound();
 		unselect(False, True);
+        // SN-2014-05-12 [[ Bug 12365 ]]
+        // There might be several paragraph to be inserted, the cursor must be removed
+        removecursor();
 		focusedparagraph->setselectionindex(MAXUINT2, MAXUINT2, False, False);
 	}
 	int4 oldsi = si;
@@ -734,8 +737,10 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 
 	// MM-2014-04-09: [[ Bug 12088 ]] Get the width of the paragraph before insertion and layout.
 	//  If as a result of the update the width of the field has changed, we need to recompute.
+    // MW-2014-06-06: [[ Bug 12385 ]] Don't do anything layout related if not open.
 	int2 t_initial_width;
-	t_initial_width = pgptr -> getwidth();
+    if (opened != 0)
+        t_initial_width = pgptr -> getwidth();
 	
 	// MW-2012-02-13: [[ Block Unicode ]] Use the new finsert method in native mode.
 	// MW-2012-02-23: [[ PutUnicode ]] Pass through the encoding to finsertnew.
@@ -765,7 +770,9 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 		{
 				do_recompute(false);
 				t_affect_many = true;
-		} else if (t_initial_width == textwidth && pgptr -> getwidth() != textwidth)
+		}
+        else if ((t_initial_width == textwidth && pgptr -> getwidth() != textwidth)
+                 || pgptr -> getwidth() > textwidth)
 			do_recompute(false);
 		
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
@@ -787,6 +794,10 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 		layer_redrawrect(drect);
 		
 		focusedy = paragraphtoy(focusedparagraph);
+        
+        // SN-2014-05-12 [[ Bug 12365 ]]
+        // Redraw the cursor after the update
+        replacecursor(True, True);
 	}
 
 	return ES_NORMAL;
@@ -1393,6 +1404,12 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		MCCdata *fptr = getcarddata(fdata, parid, True);
 		MCParagraph *oldparagraphs = fptr->getparagraphs();
 		fptr->setset(0);
+        
+        // MW-2014-05-28: [[ Bug 12303 ]] If we are setting 'text' then we don't want to touch the paragraph
+        //   styles of the first paragraph it is being put into. (In the other cases they are styled formats
+        //   so if the first paragraph is empty, we replace styles - this is what you'd expect).
+        bool t_preserve_zero_length_styles;
+        t_preserve_zero_length_styles = false;
 		switch (which)
 		{
 		case P_HTML_TEXT:
@@ -1406,9 +1423,10 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			setstyledtext(parid, ep);
 			break;
 		case P_UNICODE_TEXT:
-		case P_TEXT:
-			setpartialtext(parid, s, which == P_UNICODE_TEXT);
-			break;
+        case P_TEXT:
+            t_preserve_zero_length_styles = true;
+            setpartialtext(parid, s, which == P_UNICODE_TEXT);
+            break;
 		default:
 			break;
 		}
@@ -1420,12 +1438,16 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		pgptr->setselectionindex(si, si, False, False);
 		pgptr->split();
 		pgptr->append(newpgptr);
-		pgptr->join();
+		pgptr->join(t_preserve_zero_length_styles);
 		if (lastpgptr == NULL)
 			lastpgptr = pgptr;
 		else
 			pgptr->defrag();
-		lastpgptr->join();
+        // MW-2014-05-28: [[ Bug 10593 ]] When replacing a range of text with styles, paragraph styles from
+        //   the new content should replace paragraph styles for the old content whenever the range touches
+        //   the 0 index of a paragraph. Thus when joining the end of the range again, we want to preserve
+        //   the new contents styles even if it is an empty paragraph.
+		lastpgptr->join(true);
 		lastpgptr->defrag();
 		fptr->setparagraphs(oldparagraphs);
 		paragraphs = oldparagraphs;

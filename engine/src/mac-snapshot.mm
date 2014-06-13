@@ -18,6 +18,9 @@
 
 #include "core.h"
 #include "globdefs.h"
+#include "parsedef.h"
+#include "globals.h"
+#include "desktop-dc.h"
 
 #include "imagebitmap.h"
 
@@ -114,8 +117,11 @@ static Rect rect_from_points(CGPoint x, CGPoint y)
 	b = MCMax(x . y, y . y);
 	
 	Rect t_rect;
-	SetRect(&t_rect, l, t, r, b);
-	
+    t_rect . left = l;
+    t_rect . top = t;
+    t_rect . right = r;
+    t_rect . bottom = b;
+    
 	return t_rect;
 }
 
@@ -292,6 +298,16 @@ void MCPlatformScreenSnapshotOfUserArea(MCPoint *p_size, MCImageBitmap*& r_bitma
     
 	// Compute the selected rectangle.
 	t_screen_rect = mcrect_from_points(s_snapshot_start_point, s_snapshot_end_point);
+	
+	// AL-2014-05-23: [[ Bug 12443 ]] Import snapshot crashes when no rect is selected.
+	//  6.1 behaviour was to default to snapshot of the whole screen.
+	if (t_screen_rect . width == 0 || t_screen_rect . height == 0)
+	{
+		const MCDisplay *t_displays;
+		MCscreen -> getdisplays(t_displays, false);
+		
+		t_screen_rect = t_displays[0] . viewport;
+	}	
 
 	MCPlatformScreenSnapshot(t_screen_rect, p_size, r_bitmap);
 }

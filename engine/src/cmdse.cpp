@@ -1091,8 +1091,15 @@ Exec_stat MCMessage::exec(MCExecPoint &ep)
 	}
 	else
 	{
-		MCscreen->addmessage(optr, t_mptr_as_name, MCS_time() + delay, params);
 		delete mptr;
+        
+        // MW-2014-05-28: [[ Bug 12463 ]] If we cannot add the pending message, then throw an
+        //   error.
+		if (!MCscreen->addusermessage(optr, t_mptr_as_name, MCS_time() + delay, params))
+        {
+            MCeerror -> add(EE_SEND_TOOMANYPENDING, line, pos, t_mptr_as_name);
+            return ES_ERROR;
+        }
 	}
 	return ES_NORMAL;
 #endif /* MCMessage */

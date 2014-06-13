@@ -62,17 +62,18 @@ extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p
 
 ///////////////////////////////////////////////////////////////////////////////
 
+extern ATSUFontID coretext_font_to_atsufontid(void *p_font);
+
+///////////////////////////////////////////////////////////////////////////////
+
 CGAffineTransform MCGAffineTransformToCGAffineTransform(const MCGAffineTransform &p_transform)
 {
-	CGAffineTransform t_transform;
-	t_transform.a = p_transform.a;
-	t_transform.b = p_transform.b;
-	t_transform.c = p_transform.c;
-	t_transform.d = p_transform.d;
-	t_transform.tx = p_transform.tx;
-	t_transform.ty = p_transform.ty;
-	
-	return t_transform;
+	return CGAffineTransformMake(p_transform.a, p_transform.b, p_transform.c, p_transform.d, p_transform.tx, p_transform.ty);
+}
+
+MCGAffineTransform MCGAffineTransformFromCGAffineTransform(const CGAffineTransform &p_transform)
+{
+	return MCGAffineTransformMake(p_transform.a, p_transform.b, p_transform.c, p_transform.d, p_transform.tx, p_transform.ty);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1339,9 +1340,10 @@ struct RegionToRectsInfo
 	CGRect *rectangles;
 };
 
+// LION-SDK-TODO: Update to remove QD regions.
 static OSStatus RegionToRectsCallback(UInt16 p_message, RgnHandle p_region, const Rect *p_rect, void *p_context)
 {
-	RegionToRectsInfo *t_info;
+	/*RegionToRectsInfo *t_info;
 	t_info = (RegionToRectsInfo *)p_context;
 	
 	if (p_message == kQDRegionToRectsMsgParse)
@@ -1349,19 +1351,20 @@ static OSStatus RegionToRectsCallback(UInt16 p_message, RgnHandle p_region, cons
 		t_info -> count += 1;
 		t_info -> rectangles = (CGRect *)realloc(t_info -> rectangles, t_info -> count * sizeof(CGRect));
 		t_info -> rectangles[t_info -> count - 1] = CGRectMake(p_rect -> left, p_rect -> top, p_rect -> right - p_rect -> left, p_rect -> bottom - p_rect -> top);
-	}
+	}*/
 	
 	return noErr;
 }
 
+// LION-SDK-TODO: Update to remove QD regions.
 static void OSX_CGContextClipToRegion(CGContextRef p_context, RgnHandle p_region)
 {
-	RegionToRectsInfo t_info;
+	/* RegionToRectsInfo t_info;
 	t_info . count = 0;
 	t_info . rectangles = NULL;
 	QDRegionToRects(p_region, 0, (RegionToRectsUPP)RegionToRectsCallback, &t_info);
 	CGContextClipToRects(p_context, t_info . rectangles, t_info . count);
-	free(t_info . rectangles);
+	free(t_info . rectangles); */
 }
 
 // MW-2013-10-01: [[ ImprovedPrint ]] Create a CGImageRef from encoded image data. If
@@ -1529,27 +1532,35 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 				(CGPatternReleaseInfoCallback)CGImageRelease
 			};
 		
+			CGAffineTransform t_cg_transform;
+			t_cg_transform = CGContextGetCTM(m_context);
+			
+			MCGImageRef t_image;
+			t_image = nil;
+			MCGAffineTransform t_pattern_transform;
+			
+			// IM-2014-05-14: [[ HiResPatterns ]] Update pattern access to use lock function
+			/* UNCHECKED */ MCPatternLockForContextTransform(p_mark->fill->pattern, MCGAffineTransformFromCGAffineTransform(t_cg_transform), t_image, t_pattern_transform);
+			
 			CGImageRef t_tile_image;
-			/* UNCHECKED */ MCGImageToCGImage(p_mark -> fill -> pattern -> image, t_tile_image);
+			/* UNCHECKED */ MCGImageToCGImage(t_image, t_tile_image);
 			
 			// IM-2013-08-14: [[ ResIndependence ]] Append pattern image scale to pattern transform
-			MCGFloat t_scale;
-			t_scale = 1.0 / p_mark -> fill -> pattern -> scale;
 			
-			CGAffineTransform t_transform;
-			t_transform = CGContextGetCTM(m_context);
-			t_transform = CGAffineTransformConcat(CGAffineTransformMakeTranslation(p_mark -> fill -> origin . x, p_mark -> fill -> origin . y), t_transform);
-			t_transform = CGAffineTransformConcat(CGAffineTransformMakeScale(t_scale, t_scale), t_transform);
+			t_cg_transform = CGAffineTransformConcat(CGAffineTransformMakeTranslation(p_mark -> fill -> origin . x, p_mark -> fill -> origin . y), t_cg_transform);
+			t_cg_transform = CGAffineTransformConcat(MCGAffineTransformToCGAffineTransform(t_pattern_transform), t_cg_transform);
 			
 			CGPatternRef t_pattern;
 			t_pattern = CGPatternCreate(
 				t_tile_image,
 				CGRectMake(0, 0, CGImageGetWidth(t_tile_image), CGImageGetHeight(t_tile_image)),
-				t_transform,
+				t_cg_transform,
 				CGImageGetWidth(t_tile_image), CGImageGetHeight(t_tile_image),
 				kCGPatternTilingNoDistortion,
 				true,
 				&s_pattern_callbacks);
+			
+			MCPatternUnlock(p_mark->fill->pattern, t_image);
 			
 			CGColorSpaceRef t_pattern_space;
 			t_pattern_space = CGColorSpaceCreatePattern(NULL);
@@ -1721,9 +1732,11 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			
 			UniCharCount t_run = len / 2;
 			Rect t_bounds;
-			
-			FMFontStyle t_intrinsic_style;
-			t_err = ATSUFONDtoFontID((short)(intptr_t)f -> fid, f -> style, &t_font_id);
+			         
+            FMFontStyle t_intrinsic_style;
+            
+            // MM-2014-06-04: [[ CoreText ]] Fonts are now coretext font refs. Make sure we convert to ATSUFontIDs.
+            t_font_id = coretext_font_to_atsufontid(f -> fid);
 
 			t_font_size = f -> size << 16;
 			t_err = ATSUCreateStyle(&t_style);
@@ -1810,8 +1823,8 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			t_dst_y = p_mark->image.dy - p_mark->image.sy;
 			
 			// MW-2013-11-11: [[ Bug ]] Make sure we get the correct size of the image.
-			t_dst_width = p_mark -> image . descriptor . bitmap -> width;
-			t_dst_height = p_mark -> image . descriptor . bitmap -> height;
+			t_dst_width = MCGImageGetWidth(p_mark -> image . descriptor . image);
+			t_dst_height = MCGImageGetHeight(p_mark -> image . descriptor . image);
 
 			// MW-2013-10-01: [[ ImprovedPrint ]] First attempt to create a CGImage with the input data (PNG etc.)
 			CGImageRef t_image = nil;
@@ -1820,7 +1833,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			
 			// MW-2013-10-01: [[ ImprovedPrint ]] If we didn't manage to use the input data, use the bitmap instead.
 			if (t_image == nil)
-				/* UNCHECKED */ MCImageBitmapToCGImage(p_mark -> image .descriptor . bitmap, false, false, t_image);
+				/* UNCHECKED */ MCGImageToCGImage(p_mark->image.descriptor.image, MCGRectangleMake(0, 0, t_dst_width, t_dst_height), false, false, t_image);
 
 			CGContextClipToRect(m_context, CGRectMake(p_mark -> image . dx, p_mark -> image . dy, p_mark -> image . sw, p_mark -> image . sh));
 			

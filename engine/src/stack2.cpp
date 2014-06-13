@@ -1648,6 +1648,17 @@ void MCStack::reopenwindow()
 	if (getstyleint(flags) != 0)
 		mode = (Window_mode)(getstyleint(flags) + WM_TOP_LEVEL_LOCKED);
 
+	// IM-2014-05-27: [[ Bug 12321 ]] Updating the view transform here after changing the fullscreen
+	// allows the stack rect to be correctly restored in sync with the window reopening
+	view_update_transform();
+
+	// IM-2014-05-27: [[ Bug 12321 ]] Move font purging here to avoid second redraw after fullscreen change
+	if (m_purge_fonts)
+	{
+		purgefonts();
+		m_purge_fonts = false;
+	}
+
 	// MW-2011-08-18: [[ Redraw ]] Use global screen lock
 	MCRedrawLockScreen();
 	realize();

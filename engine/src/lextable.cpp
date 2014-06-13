@@ -952,6 +952,8 @@ LT factor_table[] =
         {"id", TT_PROPERTY, P_ID},
         {"idlerate", TT_PROPERTY, P_IDLE_RATE},
         {"idleticks", TT_PROPERTY, P_IDLE_TICKS},
+        // MERG-2014-06-02: [[ IgnoreMouseEvents ]] ignoreMouseEvents stack property
+        {"ignoremouseevents", TT_PROPERTY, P_IGNORE_MOUSE_EVENTS},
         {"image", TT_CHUNK, CT_IMAGE},
 		{"imagecachelimit", TT_PROPERTY, P_IMAGE_CACHE_LIMIT},
 		{"imagecacheusage", TT_PROPERTY, P_IMAGE_CACHE_USAGE},

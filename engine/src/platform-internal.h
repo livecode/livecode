@@ -202,6 +202,9 @@ protected:
         bool cursor_changed : 1;
         
         bool hides_on_suspend_changed : 1;
+        
+        // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Changed flag for ignore mouse events.
+        bool ignore_mouse_events_changed : 1;
 	} m_changes;
 	MCPlatformWindowStyle m_style;
 	char *m_title;
@@ -220,6 +223,8 @@ protected:
 		bool m_has_modified_mark : 1;
 		bool m_use_live_resizing : 1;
         bool m_hides_on_suspend : 1;
+        // MERG-2014-06-02: [[ IgnoreMouseEvents ]] ignoreMouseEvents property
+        bool m_ignore_mouse_events : 1;
 	};
 	
 	// Universal state.

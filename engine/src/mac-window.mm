@@ -1096,7 +1096,9 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 //////////
 
-#if 0
+// MW-2014-05-12: [[ Bug 12383 ]] We need these handlers to ensure things are
+//   not disabled in menus when they have a standard tag.
+
 - (void)undo:(id)sender
 {
 	[self handleAction: @selector(undo:) with: sender];
@@ -1131,7 +1133,6 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 {
 	[self handleAction: @selector(delete:) with: sender];
 }
-#endif
 
 //////////
 
@@ -1814,6 +1815,11 @@ void MCMacPlatformWindow::DoSynchronize(void)
     if (m_changes . hides_on_suspend_changed)
         [m_window_handle setHidesOnDeactivate: m_hides_on_suspend];
     
+    // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Sync ignoreMouseEvents.
+    if (m_changes . ignore_mouse_events_changed)
+        [m_window_handle setIgnoresMouseEvents: m_ignore_mouse_events];
+    
+    
 	m_synchronizing = false;
 }
 
@@ -1901,6 +1907,8 @@ void MCMacPlatformWindow::DoHide(void)
 	
 		[m_window_handle orderOut: nil];
 	}
+	
+	MCMacPlatformHandleMouseAfterWindowHidden();
 }
 
 void MCMacPlatformWindow::DoFocus(void)
