@@ -135,6 +135,10 @@ MCPlayer::MCPlayer()
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
     
+    // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
+    m_callback_count = 0;
+    m_callbacks = NULL;
+    
 	m_platform_player = nil;
     
     m_grabbed_part = kMCPlayerControllerPartUnknown;
@@ -160,6 +164,10 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	userCallbackStr = strclone(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
+    
+    // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
+    m_callback_count = 0;
+    m_callbacks = NULL;
 	
 	m_platform_player = nil;
     
@@ -860,7 +868,8 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 				t_visible = getflag(F_VISIBLE);
 				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
 			}
-            
+            // This fixes the issue of empty image when hiding and then showing the player
+            prepare(MCnullstring);
 			return stat;
 		}
             break;
@@ -1698,6 +1707,9 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
     
 	if (MClook == LF_MOTIF && state & CS_KFOCUSED && !(extraflags & EF_NO_FOCUS_BORDER))
 		drawfocus(dc, p_dirty);
+    
+    //if (!(state & CS_CLOSING))
+		//prepare(MCnullstring);
 	
 	if (m_platform_player != nil)
 	{
