@@ -726,7 +726,8 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 		}
 		else
 		{
-			twidth_float += MCFontMeasureTextFloat(m_font, &text[initial_i], i - initial_i, hasunicode());
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+			twidth_float += MCFontMeasureTextFloat(m_font, &text[initial_i], i - initial_i, hasunicode(), parent -> getparent() -> getstack() -> getdevicetransform());
 			twidth = (int32_t)floorf(twidth_float);
 		}
 
@@ -937,8 +938,9 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 			uint2 t_cell_right;
 			t_cell_right = t_tab_width - t_delta;
 
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 			uint2 t_width;
-			t_width = MCFontMeasureText(m_font, t_text + t_index, t_next_index - t_index, hasunicode());
+			t_width = MCFontMeasureText(m_font, t_text + t_index, t_next_index - t_index, hasunicode(), parent -> getparent() -> getstack() -> getdevicetransform());
 
 			// MW-2012-02-09: [[ ParaStyles ]] Compute the cell clip, taking into account padding.
 			t_cell_clip . x = x - 1;
@@ -1015,8 +1017,9 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 				if (size < l)
 					break;
 
+				// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 				uint2 twidth;
-				twidth = MCFontMeasureText(m_font, sptr, l, hasunicode());
+				twidth = MCFontMeasureText(m_font, sptr, l, hasunicode(), parent -> getparent() -> getstack() -> getdevicetransform());
 				twidth += gettabwidth(cx + twidth, tptr, eptr - tptr);
 
 				dc -> drawtext(x, y, sptr, l, m_font, image == True, hasunicode());
@@ -1704,10 +1707,12 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, uint2 i, uint2 l)
 				uint2 sl = eptr - sptr;
 				if (l < sl)
 					break;
+
+				// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 				if (dc == NULL)
-					twidth += MCFontMeasureText(m_font, sptr, sl, hasunicode());
+					twidth += MCFontMeasureText(m_font, sptr, sl, hasunicode(), parent -> getparent() -> getstack() -> getdevicetransform());
 				else
-					twidth += MCFontMeasureText(m_font, sptr, sl, hasunicode());
+					twidth += MCFontMeasureText(m_font, sptr, sl, hasunicode(), parent -> getparent() -> getstack() -> getdevicetransform());
 
 				twidth += gettabwidth(x + twidth, tptr, eptr - tptr);
 
@@ -1718,10 +1723,11 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, uint2 i, uint2 l)
 				l -= sl;
 			}
 		}
+		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 		if (dc == NULL)
-			return MCU_min(65535, twidth + MCFontMeasureText(m_font, sptr, l, hasunicode()));
+			return MCU_min(65535, twidth + MCFontMeasureText(m_font, sptr, l, hasunicode(), parent -> getparent() -> getstack() -> getdevicetransform()));
 		else
-			return MCU_min(65535, twidth + MCFontMeasureText(m_font, sptr, l, hasunicode()));
+			return MCU_min(65535, twidth + MCFontMeasureText(m_font, sptr, l, hasunicode(), parent -> getparent() -> getstack() -> getdevicetransform()));
 	}
 }
 

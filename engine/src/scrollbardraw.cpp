@@ -801,7 +801,8 @@ void MCScrollbar::drawvalue(MCDC *dc, MCRectangle &thumb)
 		char *data = NULL;
 		uint4 length = 0;
 		length = MCU_r8tos(data, length, thumbpos, nffw, nftrailing, nfforce);
-		uint2 tw = MCFontMeasureText(m_font, data, length, false);
+		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+		uint2 tw = MCFontMeasureText(m_font, data, length, false, getstack() -> getdevicetransform());
 		if (getstyleint(flags) == F_VERTICAL)
 		{
 			uint2 sx = thumb.x + thumb.width + ((rect.width - thumb.width - tw) >> 1);

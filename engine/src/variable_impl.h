@@ -165,11 +165,12 @@ inline bool MCVariableValue::is_undefined(void) const
 	return is_clear();
 }
 
+// MW-2014-04-10: [[ Bug 12170 ]] A 'both' var with empty string is empty.
 inline bool MCVariableValue::is_empty(void) const
 {
 	Value_format t_type;
 	t_type = get_type();
-	return t_type == VF_UNDEFINED || (t_type == VF_STRING && strnum . svalue . length == 0);
+	return t_type == VF_UNDEFINED || ((t_type == VF_STRING || t_type == VF_BOTH) && strnum . svalue . length == 0);
 }
 
 inline bool MCVariableValue::is_string(void) const

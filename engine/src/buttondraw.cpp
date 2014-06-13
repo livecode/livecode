@@ -316,11 +316,12 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		case F_ROUNDRECT:
 			if (borderwidth != 0)
 			{
-				MCRectangle trect = MCU_reduce_rect(shadowrect, borderwidth >> 1);
+				// MM-2014-04-08: [[ Bug 11662/11398 ]] Let the context take care of insetting the rectangle.
+				//  This solves 2 bugs. Round rect buttons are drawn at the wrong size (compared to square buttons) (11662)
+				//  and the corners of round rect buttons are inconsistent (11398).
 				dc->setlineatts(borderwidth - 1, LineSolid, CapButt, JoinBevel);
-
 				setforeground(dc, DI_FORE, False);
-				dc->drawroundrect(trect, DEFAULT_RADIUS);
+				dc->drawroundrect(shadowrect, DEFAULT_RADIUS, true);
 				dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
 			}
 			break;
@@ -420,7 +421,8 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			
 			for (i = 0 ; i < nlines ; i++)
 			{
-				twidth = MCFontMeasureText(m_font, lines[i].getstring(), lines[i].getlength(), isunicode);
+				// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+				twidth = MCFontMeasureText(m_font, lines[i].getstring(), lines[i].getlength(), isunicode, getstack() -> getdevicetransform());
 				switch (flags & F_ALIGNMENT)
 				{
 				case F_ALIGN_LEFT:
@@ -579,7 +581,8 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
     dc -> drawtext(sx, sy, s.getstring(), s.getlength(), m_font, false, isunicode);
 	if (acceltext != NULL)
 	{
-		uint2 awidth = MCFontMeasureText(m_font, acceltext, acceltextsize, isunicode);
+		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+		uint2 awidth = MCFontMeasureText(m_font, acceltext, acceltextsize, isunicode, getstack() -> getdevicetransform());
 		if (rightmargin == defaultmargin || menucontrol == MENUCONTROL_ITEM)
             dc -> drawtext(srect.x + srect.width - rightmargin - awidth, sy, acceltext, acceltextsize, m_font, false, false);
 		else
@@ -603,8 +606,9 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 		        mnemonic <= (uint1)(s.getstring() + s.getlength() - lptr))
 		{
 			uint2 moffset = mnemonic - (s.getstring() - lptr) - 1;
-			uint2 mstart = sx + MCFontMeasureText(m_font, s.getstring(), moffset, isunicode);
-			uint2 mwidth = MCFontMeasureText(m_font, s.getstring() + moffset, 1, isunicode);
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+			uint2 mstart = sx + MCFontMeasureText(m_font, s.getstring(), moffset, isunicode, getstack() -> getdevicetransform());
+			uint2 mwidth = MCFontMeasureText(m_font, s.getstring() + moffset, 1, isunicode, getstack() -> getdevicetransform());
 			sy += mnemonicoffset;
 			dc->drawline(mstart, sy, mstart + mwidth, sy);
 		}
@@ -1228,7 +1232,8 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 			length--;
 		}
 		uint2 textx; //x coord of the begining of the button text
-		uint2 twidth = MCFontMeasureText(m_font, sptr, length, hasunicode());
+		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+		uint2 twidth = MCFontMeasureText(m_font, sptr, length, hasunicode(), getstack() -> getdevicetransform());
 		if (MCcurtheme && MCcurtheme->iswidgetsupported(WTHEME_TYPE_TABPANE) &&
 		        MCcurtheme->iswidgetsupported(WTHEME_TYPE_TAB))
 		{
@@ -1285,8 +1290,11 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 
 			if (i==0)
 				tabwinfo.attributes |= WTHEME_ATT_FIRSTTAB;
-			else if (i == (ntabs-1))
+			
+            // MW-2014-04-25: [[ Bug 6400 ]] A tab can be both first and last :)
+            if (i == (ntabs-1))
 				tabwinfo.attributes |= WTHEME_ATT_LASTTAB;
+            
 			MCRectangle tabrect = MCU_compute_rect(curx, srect.y + yoffset, curx + twidth, srect.y + theight);
 			if (MCcurtheme->getthemeid() != LF_NATIVEGTK || (srect.x + srect.width > curx + twidth + 5 &&
 			        srect.y + srect.height > (srect.y + theight * 2)))

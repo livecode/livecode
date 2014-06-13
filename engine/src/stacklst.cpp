@@ -652,4 +652,24 @@ void MCStacklist::enableformodal(Window modalwindow, Boolean isenabled)
 	while(t_node != stacks);
 }
 
+void MCStacklist::reopenallstackwindows(void)
+{
+	if (stacks != NULL)
+	{
+        // MW-2014-05-15: [[ Bug 12414 ]] Go backwards through the list to stop infinite loopage.
+		MCStacknode *tptr = stacks -> prev();
+		do
+		{
+            MCStack *t_stack;
+            t_stack = tptr -> getstack();
+			
+            if (t_stack->getopened() && t_stack->getwindow() != nil)
+                t_stack->reopenwindow();
+            
+            tptr = tptr->prev();
+		}
+		while (tptr != stacks -> prev());
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
