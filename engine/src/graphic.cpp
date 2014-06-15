@@ -367,44 +367,10 @@ Boolean MCGraphic::doubleup(uint2 which)
 
 void MCGraphic::setrect(const MCRectangle &nrect)
 {
-	// MDW-2014-01-19: [[ feature_rect_points ]] set the points of rectangles and rounded rectangles
 	uint2 i;
 	if (getstyleint(flags) == F_G_RECTANGLE || getstyleint(flags) == F_ROUNDRECT)
 	{
-//		nrealpoints = 4;
-//		realpoints = new MCPoint[nrealpoints];
-//		realpoints[0].x = nrect.x;
-//		realpoints[0].y = nrect.y;
-//		realpoints[1].x = nrect.x + nrect.width;
-//		realpoints[1].y = nrect.y;
-//		realpoints[2].x = nrect.x + nrect.width;
-//		realpoints[2].y = nrect.y + nrect.height;
-//		realpoints[3].x = nrect.x;
-//		realpoints[3].y = nrect.y + nrect.height;
-//		if (oldpoints == NULL)
-//		{
-//			oldpoints = new MCPoint[nrealpoints];
-//			points = new MCPoint[nrealpoints];
-//			i = nrealpoints;
-//			while (i--)
-//			{
-//				oldpoints[i] = realpoints[i];
-//				points[i] = realpoints[i];
-//			}
-//		}
 	}
-//	else if (getstyleint(flags) == F_ROUNDRECT)
-//	{
-//		realpoints = NULL;
-//		nrealpoints = 0;
-//		MCU_roundrect(realpoints, nrealpoints, nrect, roundradius);
-//		points = new MCPoint[nrealpoints];
-//		i = nrealpoints;
-//		while (i--)
-//		{
-//			points[i] = realpoints[i];
-//		}
-//	}
 	else if (realpoints != NULL)
 	{
 		if (nrect.width != rect.width || nrect.height != rect.height)
@@ -432,7 +398,7 @@ void MCGraphic::setrect(const MCRectangle &nrect)
 					}
 				}
 			}
-			uint2 i;
+//			uint2 i;
 			for (i = 0 ; i < nrealpoints ; i++)
 				if (oldpoints[i].x == MININT2)
 					realpoints[i] = oldpoints[i];
@@ -584,7 +550,7 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 		ep.setint(nsides);
 		break;
 	case P_POINTS:
-		// MDW-2014-01-26: [[ rect_points ]] allow effective points as read-only
+		// MDW-2014-06-14: [[ rect_points ]] allow effective points as read-only
 		switch (getstyleint(flags))
 		{
 			case F_ROUNDRECT:
