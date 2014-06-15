@@ -180,7 +180,7 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 	        || flags & F_DISABLED && (getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if ((state & CS_SIZE || state & CS_MOVE) && points != NULL
-	        && getstyleint(flags) != F_G_RECTANGLE)
+	        && getstyleint(flags) != F_G_RECTANGLE && getstyleint(flags) != F_OVAL)
 	{
 		delete points;
 		points = NULL;
@@ -367,11 +367,7 @@ Boolean MCGraphic::doubleup(uint2 which)
 
 void MCGraphic::setrect(const MCRectangle &nrect)
 {
-	uint2 i;
-	if (getstyleint(flags) == F_G_RECTANGLE || getstyleint(flags) == F_ROUNDRECT)
-	{
-	}
-	else if (realpoints != NULL)
+	if (realpoints != NULL)
 	{
 		if (nrect.width != rect.width || nrect.height != rect.height)
 		{
@@ -398,7 +394,7 @@ void MCGraphic::setrect(const MCRectangle &nrect)
 					}
 				}
 			}
-//			uint2 i;
+			uint2 i;
 			for (i = 0 ; i < nrealpoints ; i++)
 				if (oldpoints[i].x == MININT2)
 					realpoints[i] = oldpoints[i];
