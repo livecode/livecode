@@ -368,26 +368,43 @@ Boolean MCGraphic::doubleup(uint2 which)
 void MCGraphic::setrect(const MCRectangle &nrect)
 {
 	// MDW-2014-01-19: [[ feature_rect_points ]] set the points of rectangles and rounded rectangles
+	uint2 i;
 	if (getstyleint(flags) == F_G_RECTANGLE || getstyleint(flags) == F_ROUNDRECT)
 	{
-		nrealpoints = 4;
-		realpoints = new MCPoint[nrealpoints];
-		realpoints[0].x = nrect.x;
-		realpoints[0].y = nrect.y;
-		realpoints[1].x = nrect.x + nrect.width;
-		realpoints[1].y = nrect.y;
-		realpoints[2].x = nrect.x + nrect.width;
-		realpoints[2].y = nrect.y + nrect.height;
-		realpoints[3].x = nrect.x;
-		realpoints[3].y = nrect.y + nrect.height;
-		if (oldpoints == NULL)
-		{
-			oldpoints = new MCPoint[nrealpoints];
-			uint2 i = nrealpoints;
-			while (i--)
-				oldpoints[i] = realpoints[i];
-		}
+//		nrealpoints = 4;
+//		realpoints = new MCPoint[nrealpoints];
+//		realpoints[0].x = nrect.x;
+//		realpoints[0].y = nrect.y;
+//		realpoints[1].x = nrect.x + nrect.width;
+//		realpoints[1].y = nrect.y;
+//		realpoints[2].x = nrect.x + nrect.width;
+//		realpoints[2].y = nrect.y + nrect.height;
+//		realpoints[3].x = nrect.x;
+//		realpoints[3].y = nrect.y + nrect.height;
+//		if (oldpoints == NULL)
+//		{
+//			oldpoints = new MCPoint[nrealpoints];
+//			points = new MCPoint[nrealpoints];
+//			i = nrealpoints;
+//			while (i--)
+//			{
+//				oldpoints[i] = realpoints[i];
+//				points[i] = realpoints[i];
+//			}
+//		}
 	}
+//	else if (getstyleint(flags) == F_ROUNDRECT)
+//	{
+//		realpoints = NULL;
+//		nrealpoints = 0;
+//		MCU_roundrect(realpoints, nrealpoints, nrect, roundradius);
+//		points = new MCPoint[nrealpoints];
+//		i = nrealpoints;
+//		while (i--)
+//		{
+//			points[i] = realpoints[i];
+//		}
+//	}
 	else if (realpoints != NULL)
 	{
 		if (nrect.width != rect.width || nrect.height != rect.height)
@@ -570,14 +587,54 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 		// MDW-2014-01-26: [[ rect_points ]] allow effective points as read-only
 		switch (getstyleint(flags))
 		{
-			case F_REGULAR:
-			case F_G_RECTANGLE:
 			case F_ROUNDRECT:
 				if (!effective)
 				{
 					ep.setstaticcstring("");
 					break;
 				}
+				else
+				{
+					realpoints = NULL;
+					nrealpoints = 0;
+					MCU_roundrect(realpoints, nrealpoints, geteffectiverect(), roundradius);
+					MCU_unparsepoints(realpoints, nrealpoints, ep);
+				}
+				break;
+			case F_G_RECTANGLE:
+				if (!effective)
+				{
+					ep.setstaticcstring("");
+					break;
+				}
+				else
+				{
+					MCRectangle nrect = geteffectiverect();
+					nrealpoints = 4;
+					realpoints = new MCPoint[nrealpoints];
+					realpoints[0].x = nrect.x;
+					realpoints[0].y = nrect.y;
+					realpoints[1].x = nrect.x + nrect.width;
+					realpoints[1].y = nrect.y;
+					realpoints[2].x = nrect.x + nrect.width;
+					realpoints[2].y = nrect.y + nrect.height;
+					realpoints[3].x = nrect.x;
+					realpoints[3].y = nrect.y + nrect.height;
+					if (oldpoints == NULL)
+					{
+						oldpoints = new MCPoint[nrealpoints];
+						points = new MCPoint[nrealpoints];
+						i = nrealpoints;
+						while (i--)
+						{
+							oldpoints[i] = realpoints[i];
+							points[i] = realpoints[i];
+						}
+					}
+					MCU_unparsepoints(realpoints, nrealpoints, ep);
+				}
+				break;
+			case F_REGULAR:
 			default:
 				MCU_unparsepoints(realpoints, nrealpoints, ep);
 		}
