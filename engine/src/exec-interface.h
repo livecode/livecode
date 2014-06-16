@@ -186,17 +186,28 @@ void MCInterfaceTriStateFree(MCExecContext& ctxt, MCInterfaceTriState& p_input);
 
 //////////
 
-struct MCInterfaceFlaggedRange
+struct MCInterfaceFieldRange
 {
     uint32_t start;
     uint32_t end;
 };
 
-struct MCInterfaceFlaggedRanges
+struct MCInterfaceFieldRanges
 {
-    MCInterfaceFlaggedRange *ranges;
+    MCInterfaceFieldRange *ranges;
     uindex_t count;
 };
+
+//////////
+
+struct MCInterfaceStackFileVersion
+{
+    uint4 version;
+};
+
+void MCInterfaceStackFileVersionParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceStackFileVersion& r_output);
+void MCInterfaceStackFileVersionFormat(MCExecContext& ctxt, const MCInterfaceStackFileVersion& p_input, MCStringRef& r_output);
+void MCInterfaceStackFileVersionFree(MCExecContext& ctxt, MCInterfaceStackFileVersion& p_input);
 
 #endif // EXEC_INTERFACE_H
 

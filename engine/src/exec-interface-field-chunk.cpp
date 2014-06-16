@@ -1531,7 +1531,8 @@ void MCField::GetEffectiveFormattedStyledTextOfCharChunk(MCExecContext& ctxt, ui
 
 //////////
 
-void MCField::GetCharIndexOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value)
+// AL-2014-05-27: [[ Bug 12511 ]] charIndex is a char chunk property
+void MCField::GetCharIndexOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value)
 {
     MCParagraph *t_paragraph;
     t_paragraph = resolveparagraphs(p_part_id);
@@ -1787,7 +1788,7 @@ void MCField::SetFlaggedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int
     SetCharPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, false, p_part_id, si, ei, &MCBlock::SetFlagged, value);
 }
 
-void MCField::GetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCInterfaceFlaggedRanges& r_value)
+void MCField::GetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCInterfaceFieldRanges& r_value)
 {
     integer_t t_index_offset;
     t_index_offset = -countchars(p_part_id, 0, si);
@@ -1795,11 +1796,11 @@ void MCField::GetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
     MCParagraph *pgptr = resolveparagraphs(p_part_id);
     MCParagraph *sptr = indextoparagraph(pgptr, si, ei, nil);
 
-    MCAutoArray<MCInterfaceFlaggedRange> t_ranges;
+    MCAutoArray<MCInterfaceFieldRange> t_ranges;
 
     do
     {
-        MCInterfaceFlaggedRanges t_paragraphRanges;
+        MCInterfaceFieldRanges t_paragraphRanges;
         sptr -> getflaggedranges(p_part_id, si, ei, t_index_offset, t_paragraphRanges);
 
         for (uindex_t i = 0; i < t_paragraphRanges . count; ++i)
@@ -1812,7 +1813,7 @@ void MCField::GetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
     t_ranges . Take(r_value . ranges, r_value . count);
 }
 
-void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceFlaggedRanges& value)
+void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceFieldRanges& value)
 {
     MCParagraph *pgptr = resolveparagraphs(p_part_id);
     MCParagraph *sptr;
@@ -1878,7 +1879,7 @@ void MCField::SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
 
     // Contains the remaining range to flag in case a range
     // covers more than one paragraph
-    MCInterfaceFlaggedRange t_next_range;
+    MCInterfaceFieldRange t_next_range;
     t_next_range = value . ranges[t_range_index];
     t_next_range . start += t_range_offset;
     t_next_range . end += t_range_offset;

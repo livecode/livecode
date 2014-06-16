@@ -121,12 +121,16 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_3D_HILITE, Bool, MCField, ThreeDHilite)
 	DEFINE_RO_OBJ_PART_ENUM_PROPERTY(P_ENCODING, InterfaceEncoding, MCField, Encoding)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_HILITED_LINES, ItemsOfUInt, MCField, HilitedLines)
-    DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_FLAGGED_RANGES, InterfaceFlaggedRanges, MCField, FlaggedRanges)
+    DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_FLAGGED_RANGES, InterfaceFieldRanges, MCField, FlaggedRanges)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_STOPS, ItemsOfUInt, MCField, TabStops)
     DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_TAB_ALIGN, InterfaceFieldTabAlignments, MCField, TabAlignments)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfUInt, MCField, TabWidths)
     DEFINE_RO_OBJ_LIST_PROPERTY(P_PAGE_HEIGHTS, LinesOfUInt, MCField, PageHeights)
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_PAGE_RANGES, InterfaceFieldRanges, MCField, PageRanges)
 
+    DEFINE_RW_OBJ_NON_EFFECTIVE_OPTIONAL_ENUM_PROPERTY(P_TEXT_ALIGN, InterfaceTextAlign, MCField, TextAlign)
+	DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_TEXT_ALIGN, InterfaceTextAlign, MCField, TextAlign)
+    
 	DEFINE_RW_OBJ_CHAR_CHUNK_PROPERTY(P_TEXT, String, MCField, Text)
 	DEFINE_RW_OBJ_CHAR_CHUNK_PROPERTY(P_UNICODE_TEXT, BinaryString, MCField, UnicodeText)
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_PLAIN_TEXT, String, MCField, PlainText)
@@ -141,7 +145,8 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RO_OBJ_CHAR_CHUNK_NON_EFFECTIVE_PROPERTY(P_FORMATTED_STYLED_TEXT, Array, MCField, FormattedStyledText)
 	DEFINE_RO_OBJ_CHAR_CHUNK_EFFECTIVE_PROPERTY(P_FORMATTED_STYLED_TEXT, Array, MCField, EffectiveFormattedStyledText)
 
-	DEFINE_RO_OBJ_LINE_CHUNK_PROPERTY(P_CHAR_INDEX, UInt32, MCField, CharIndex)
+    // AL-2014-05-27: [[ Bug 12511 ]] charIndex is a char chunk property
+	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_CHAR_INDEX, UInt32, MCField, CharIndex)
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_LINE_INDEX, UInt32, MCField, LineIndex)
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_FORMATTED_TOP, Int32, MCField, FormattedTop)
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_FORMATTED_LEFT, Int32, MCField, FormattedLeft)
@@ -155,7 +160,7 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RO_OBJ_CHAR_CHUNK_PROPERTY(P_VISITED, Bool, MCField, Visited)
 	DEFINE_RO_OBJ_CHAR_CHUNK_ENUM_PROPERTY(P_ENCODING, InterfaceEncoding, MCField, Encoding)
 	DEFINE_RW_OBJ_CHAR_CHUNK_MIXED_PROPERTY(P_FLAGGED, Bool, MCField, Flagged)
-	DEFINE_RW_OBJ_CHAR_CHUNK_CUSTOM_PROPERTY(P_FLAGGED_RANGES, InterfaceFlaggedRanges, MCField, FlaggedRanges)
+	DEFINE_RW_OBJ_CHAR_CHUNK_CUSTOM_PROPERTY(P_FLAGGED_RANGES, InterfaceFieldRanges, MCField, FlaggedRanges)
 	DEFINE_RW_OBJ_LINE_CHUNK_MIXED_ENUM_PROPERTY(P_LIST_STYLE, InterfaceListStyle, MCField, ListStyle)
 	DEFINE_RW_OBJ_LINE_CHUNK_MIXED_PROPERTY(P_LIST_DEPTH, OptionalUInt16, MCField, ListDepth)
 	DEFINE_RW_OBJ_LINE_CHUNK_MIXED_PROPERTY(P_LIST_INDENT, OptionalInt16, MCField, ListIndent)
@@ -561,8 +566,8 @@ void MCField::kfocus()
 		if (flags & F_LIST_BEHAVIOR)
 		{
 			if (!(flags & F_TOGGLE_HILITE))
-				if (!focusedparagraph->isselection()
-				        && !focusedparagraph->IsEmpty()
+                if (!focusedparagraph->isselection()
+                        && !focusedparagraph->IsEmpty()
 				        || focusedparagraph->next() != focusedparagraph)
 				{
 					focusedparagraph->sethilite(True);
@@ -825,7 +830,7 @@ Boolean MCField::mfocus(int2 x, int2 y)
 {
 	Tool tool = getstack()->gettool(this);
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
-	        || flags & F_DISABLED && tool == T_BROWSE || state & CS_NO_FILE)
+            || flags & F_DISABLED && tool == T_BROWSE || state & CS_NO_FILE)
 		return False;
 	if (sbfocus(x, y, hscrollbar, vscrollbar))
 	{
@@ -1021,7 +1026,7 @@ Boolean MCField::mdown(uint2 which)
 				}
 			}
 			if (flags & F_TRAVERSAL_ON ||
-				(flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL) && flags & F_LIST_BEHAVIOR)
+                (flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL) && flags & F_LIST_BEHAVIOR)
 			{
 				if (flags & F_TRAVERSAL_ON && !(state & CS_KFOCUSED)
 				        && !(flags & F_NO_AUTO_HILITE))
@@ -1147,7 +1152,7 @@ Boolean MCField::mup(uint2 which)
 			if (!(state & CS_DRAG_TEXT))
 				if ((flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL))
 					if (MCU_point_in_rect(rect, mx, my))
-						if (flags & F_LIST_BEHAVIOR
+                        if (flags & F_LIST_BEHAVIOR
                                 && (my - rect.y > (int4)(textheight + topmargin - texty)
                                     || paragraphs == paragraphs->next()
                                     && paragraphs->IsEmpty()))
@@ -1555,8 +1560,9 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
             MCParagraph *pgptr = paragraphs;
             uint2 height = getfheight();
             uint2 theight = height;
-            uint2 tstart = 1;
-            uint2 tend = 0;
+            // MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indicies.
+            uint4 tstart = 1;
+            uint4 tend = 0;
             MCLine *lastline = NULL;
             uint2 j = 0;
             while (True)
@@ -2894,6 +2900,8 @@ findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
         si = 0;
         /* UNCHECKED */ MCStringUnmapIndices(t_pg->GetInternalStringRef(), kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
         ++t_cu_range.length; // implicit paragraph break
+        // SN-2014-05-20 [[ Bug 12432 ]] Add the paragraph break to the number of chars
+        ++t_char_range.length; // implicit paragraph break
 
         t_count += t_char_range.length;
         

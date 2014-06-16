@@ -1191,6 +1191,9 @@ void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 			composite();
 		}
 	}
+
+	// IM-2014-03-27: [[ Bug 12010 ]] Free the created surface region once the update is done.
+	MCRegionDestroy(t_surface_region);
 }
 
 void MCStack::view_platform_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)

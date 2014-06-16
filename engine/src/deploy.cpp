@@ -934,7 +934,7 @@ void MCIdeExtract::exec_ctxt(MCExecContext& ctxt)
 	if (t_stat == ES_NORMAL)
 	{
         MCAutoStringRef t_string;
-        /* UNCHECKED */ MCStringCreateWithCString((char *)t_data, &t_string);
+        /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)t_data, t_data_size, &t_string);
         ctxt . SetItToValue(*t_string);
 	}
 	else

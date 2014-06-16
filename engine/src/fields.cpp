@@ -755,7 +755,12 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
 	pgptr->setparent(this);
 	pgptr->setselectionindex(si, si, False, False);
 
-    // MW-2012-02-13: [[ Block Unicode ]] Use the new finsert method in native mode.
+	// MM-2014-04-09: [[ Bug 12088 ]] Get the width of the paragraph before insertion and layout.
+	//  If as a result of the update the width of the field has changed, we need to recompute.
+	int2 t_initial_width;
+	t_initial_width = pgptr -> getwidth();
+	
+	// MW-2012-02-13: [[ Block Unicode ]] Use the new finsert method in native mode.
 	// MW-2012-02-23: [[ PutUnicode ]] Pass through the encoding to finsertnew.
 	if (!MCStringIsEmpty(p_text))
 	{
@@ -775,13 +780,16 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
 		
 		// If we haven't already affected many, then lay out the paragraph and see if the
 		// height has changed. If it has we must do a recompute and need to redraw below.
+		// MM-2014-04-09: [[ Bug 12088 ]] If the height hasn't changed, then check to see 
+		//  if the width has changed and a re-compute is needed.
 		if (!t_affect_many)
 			t_initial_pgptr -> layout(false);
 		if (t_affect_many || t_initial_pgptr -> getheight(fixedheight) != t_initial_height)
 		{
 				do_recompute(false);
 				t_affect_many = true;
-		}
+		} else if (t_initial_width == textwidth && pgptr -> getwidth() != textwidth)
+			do_recompute(false);
 		
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		// MW-2013-10-24: [[ FasterField ]] Tweak to minimize redraw.
@@ -1216,7 +1224,7 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 
 			// MW-2012-02-14: [[ FontRefs ]] Previously this process would open/close the
 			//   paragraph, but this is unnecessary as it doesn't rely on anything active.
-			if (sptr->getatts(si, ei, t_text_style, tname, tsize, tstyle, tcolor, tbcolor, tshift, tspecstyle, tmixed))
+			if (sptr->getatts(si, ei, which, t_text_style, tname, tsize, tstyle, tcolor, tbcolor, tshift, tspecstyle, tmixed))
 			{
 				tspecstyle = MCF_istextstyleset(tstyle, t_text_style);
 
@@ -1284,29 +1292,28 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 				ei = 0;
 		}
 		while (ei > 0);
+        
+        if (!has)
+        {
+            if (effective)
+            {
+                // MW-2011-11-23: [[ Array TextStyle ]] Make sure we call the correct
+                //   method for textStyle (its now an array property).
+                if (which != P_TEXT_STYLE)
+                    return getprop(parid, which, ep, effective);
+                else
+                    return getarrayprop(parid, which, ep, index, effective);
+            }
+            ep.clear();
+            return ES_NORMAL;
+        }
 
-        MCAutoStringRef t_fname;
-        /* UNCHECKED */ MCStringCreateWithCString(fname, &t_fname);
-		if (!has)
-		{
-			if (effective)
-			{
-				// MW-2011-11-23: [[ Array TextStyle ]] Make sure we call the correct
-				//   method for textStyle (its now an array property).
-				if (which != P_TEXT_STYLE)
-					return getprop(parid, which, ep, effective);
-				else
-					return getarrayprop(parid, which, ep, index, effective);
-			}
-			ep.clear();
-			return ES_NORMAL;
-		}
 		Exec_stat stat = ES_NORMAL;
 		switch (which)
 		{
 		case P_FORE_COLOR:
 			if (color == NULL)
-				ep.clear();
+                ep.clear();
 			else if (mixed & MIXED_COLORS)
 				ep.setstaticcstring(MCmixedstring);
 			else
@@ -2219,7 +2226,7 @@ bool MCField::selectedchunk(MCStringRef& r_string)
 {
 	findex_t si, ei;
 	if (selectedmark(False, si, ei, False, False, true))
-		return returnchunk(si, ei, r_string);
+		return returnchunk(si, ei, r_string, true);
 	r_string = MCValueRetain(kMCEmptyString);
 	return true;
 }
@@ -2420,7 +2427,7 @@ Boolean MCField::selectedmark(Boolean whole, findex_t &si, findex_t &ei,
 	return True;
 }
 
-bool MCField::returnchunk(findex_t p_si, findex_t p_ei, MCStringRef& r_chunk)
+bool MCField::returnchunk(findex_t p_si, findex_t p_ei, MCStringRef& r_chunk, bool p_char_indices)
 {
     MCExecContext ctxt(nil, nil, nil);
 	uinteger_t t_number;
@@ -2429,7 +2436,9 @@ bool MCField::returnchunk(findex_t p_si, findex_t p_ei, MCStringRef& r_chunk)
 	// MW-2012-02-23: [[ CharChunk ]] Map the internal field indices (si, ei) to
 	//   char indices.
     // SN-2014-02-11: [[ Unicodify ]] The functions calling returnchunk already have field indices.
-//	unresolvechars(0, p_si, p_ei);
+    // SN-2014-05-16 [[ Bug 12432 ]] Re-establish unresolving of the chars indices
+    if (!p_char_indices)
+        unresolvechars(0, p_si, p_ei);
 	
 	const char *sptr = parent->gettype() == CT_CARD && getstack()->hcaddress()
 										 ? "char %d to %d of card field %d" : "char %d to %d of field %d";

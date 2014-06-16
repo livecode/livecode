@@ -189,8 +189,8 @@ public:
 class MCHcfield : public MCDLlist
 {
 public:
-	char *name;
-	char *script;
+    char *name;
+    char *script;
 	MCRectangle rect;
 	uint2 id;
 	uint2 atts;
@@ -225,8 +225,8 @@ public:
 class MCHcbutton : public MCDLlist
 {
 public:
-	char *name;
-	char *script;
+    char *name;
+    char *script;
 	MCRectangle rect;
 	uint2 titlewidth;
 	uint2 icon;
@@ -266,11 +266,10 @@ public:
 	MCRectangle rect;
 	MCRectangle mrect;
 	Boolean visible;
-#ifdef LIBGRAPHICS_BROKEN
-	MCBitmap *mask;
-	MCBitmap *data;
-#endif
-	char *name;
+	// IM-2014-04-08: [[ Bug 12101 ]] Buffers to hold 1-bit bitmaps - dimensions stored in rect (data), mrect (mask)
+	uint8_t *mask;
+	uint8_t *data;
+    char *name;
 	uint2 xhot;
 	uint2 yhot;
 	MCHcbmap();

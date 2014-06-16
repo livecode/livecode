@@ -3024,6 +3024,8 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 
 		if (te->which == OM_BINARY || te->which == OM_TEXT)
         {
+            // AL-2014-05-27: [[ Bug 12493 ]] Make sure binary open is done as binary
+            textmode = te->which == OM_TEXT;
 			if (sp.next(type) != PS_NORMAL)
 			{
 				MCperror->add
@@ -3349,7 +3351,7 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
                 }        
             }
         }
-        else if (mode == OM_BINARY)
+        else if (!textmode)
             t_encoding = EN_BINARY;
         else
             t_encoding = EN_BOM_BASED;

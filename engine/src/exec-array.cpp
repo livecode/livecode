@@ -26,8 +26,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objectstream.h"
 #include "util.h"
 #include "variable.h"
+#include "mcio.h"
 
 #include "exec.h"
+#include "exec-interface.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -561,7 +563,7 @@ void MCArraysExecIntersectRecursive(MCExecContext& ctxt, MCArrayRef p_dst_array,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCDataRef& r_encoding)
+void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_version, MCDataRef& r_encoding)
 {
 	bool t_success;
 	t_success = true;
@@ -575,28 +577,53 @@ void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCDataRef&
 			t_success = false;
 	}
 
-	MCObjectOutputStream *t_stream;
-	t_stream = nil;
-	if (t_success)
-	{
-		t_stream = new MCObjectOutputStream(t_stream_handle);
-		if (t_stream == nil)
-			t_success = false;
-	}
-
-	if (t_success)
-		if (t_stream -> WriteU8(kMCEncodedValueTypeArray) != IO_NORMAL)
-			t_success = false;
+    // AL-2014-05-15: [[ Bug 12203 ]] Add version parameter to arrayEncode, to allow
+    //  version 7.0 variant to preserve unicode. 
+    MCInterfaceStackFileVersion t_version;
+    if (p_version != nil)
+        MCInterfaceStackFileVersionParse(ctxt, p_version, t_version);
+    
+    // AL-2014-05-22: [[ Bug 12203 ]] Make arrayEncode encode in legacy format by default.
+    bool t_legacy;
+    t_legacy = p_version == nil || t_version . version < 7000;
+    
+    if (t_legacy)
+    {
+        MCObjectOutputStream *t_stream;
+        t_stream = nil;
+        if (t_success)
+        {
+            t_stream = new MCObjectOutputStream(t_stream_handle);
+            if (t_stream == nil)
+                t_success = false;
+        }
+        
+        if (t_success)
+        {
+            if (t_stream -> WriteU8(kMCEncodedValueTypeLegacyArray) != IO_NORMAL)
+                t_success = false;
+        }
+        
+        if (t_success)
+            if (MCArraySaveToStreamLegacy(p_array, false, *t_stream) != IO_NORMAL)
+                t_success = false;
+        
+        if (t_success)
+            t_stream -> Flush(true);
+        
+        delete t_stream;
+    }
+    else
+    {
+        if (t_success)
+            if (IO_write_uint1(kMCEncodedValueTypeArray, t_stream_handle) != IO_NORMAL)
+                t_success = false;
+        
+        if (t_success)
+            if (IO_write_valueref_new(p_array, t_stream_handle) != IO_NORMAL)
+                t_success = false;
+    }
 	
-	if (t_success)
-		if (MCArraySaveToStreamLegacy(p_array, false, *t_stream) != IO_NORMAL)
-			t_success = false;
-
-	if (t_success)
-		t_stream -> Flush(true);
-
-	delete t_stream;
-
 	//////////
 
 	void *t_buffer;
@@ -631,20 +658,11 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
 			t_success = false;
 	}
 
-	MCObjectInputStream *t_stream;
-	t_stream = nil;
+    uint8_t t_type;
 	if (t_success)
-	{
-		t_stream = new MCObjectInputStream(t_stream_handle, MCDataGetLength(p_encoding), false);
-		if (t_stream == nil)
+		if (IO_read_uint1(&t_type, t_stream_handle) != IO_NORMAL)
 			t_success = false;
-	}
-
-	uint8_t t_type;
-	if (t_success)
-		if (t_stream -> ReadU8(t_type) != IO_NORMAL)
-			t_success = false;
-    
+        
     // AL-2014-05-01: [[ Bug 11989 ]] If the type is 'empty' then just return the empty array.
 	if (t_type == kMCEncodedValueTypeEmpty)
     {
@@ -652,16 +670,47 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
         return;
     }
     
+    // AL-2014-05-15: [[ Bug 12203 ]] Check initial byte for version 7.0 encoded array.
+    bool t_legacy;
+    t_legacy = t_type < kMCEncodedValueTypeArray;
+    
     MCArrayRef t_array;
 	t_array = nil;
 	if (t_success)
 		t_success = MCArrayCreateMutable(t_array);
 
-	if (t_success)
-		if (MCArrayLoadFromStreamLegacy(t_array, *t_stream) != IO_NORMAL)
-			t_success = false;
-
-	delete t_stream;
+	if (t_legacy)
+    {
+        if (t_success)
+            if (MCS_putback(t_type, t_stream_handle) != IO_NORMAL)
+                t_success = false;
+        
+        MCObjectInputStream *t_stream;
+        t_stream = nil;
+        if (t_success)
+        {
+            t_stream = new MCObjectInputStream(t_stream_handle, MCDataGetLength(p_encoding), false);
+            if (t_stream == nil)
+                t_success = false;
+        }
+        
+        if (t_success)
+            if (t_stream -> ReadU8(t_type) != IO_NORMAL)
+                t_success = false;
+        
+        if (t_success)
+            if (MCArrayLoadFromStreamLegacy(t_array, *t_stream) != IO_NORMAL)
+                t_success = false;
+        
+        delete t_stream;
+    }
+    else
+    {
+        if (t_success)
+            if (IO_read_valueref_new((MCValueRef &)t_array, t_stream_handle) != IO_NORMAL)
+                t_success = false;
+    }
+    
 	MCS_close(t_stream_handle);
 
 	if (t_success)

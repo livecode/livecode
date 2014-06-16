@@ -194,6 +194,7 @@ MCPropertyInfo MCPlayer::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_PLAY_SELECTION, Bool, MCPlayer, PlaySelection)
 	DEFINE_RW_OBJ_PROPERTY(P_SHOW_SELECTION, Bool, MCPlayer, ShowSelection)
 	DEFINE_RW_OBJ_PROPERTY(P_CALLBACKS, String, MCPlayer, Callbacks)
+    DEFINE_RW_OBJ_PROPERTY(P_MOVIE_CONTROLLER_ID, Int32, MCPlayer, MovieControllerId)
 	DEFINE_RO_OBJ_SET_PROPERTY(P_MEDIA_TYPES, InterfaceMediaTypes, MCPlayer, MediaTypes)
 	DEFINE_RW_OBJ_PROPERTY(P_CURRENT_NODE, UInt16, MCPlayer, CurrentNode)
 	DEFINE_RW_OBJ_PROPERTY(P_PAN, Double, MCPlayer, Pan)
@@ -1711,10 +1712,16 @@ Boolean MCPlayer::playstop()
 void MCPlayer::setfilename(MCStringRef vcname,
                            MCStringRef fname, Boolean istmp)
 {
+    
+     // AL-2014-05-27: [[ Bug 12517 ]] Incoming strings can be nil
     MCNewAutoNameRef t_vcname;
-    MCNameCreate(vcname, &t_vcname);
+    if (vcname != nil)
+        MCNameCreate(vcname, &t_vcname);
+    else
+        t_vcname = kMCEmptyName;
+    
 	setname(*t_vcname);
-	filename = MCValueRetain(fname);
+	filename = MCValueRetain(fname != nil ? fname : kMCEmptyString);
 	istmpfile = istmp;
 	disposable = True;
 }

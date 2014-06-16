@@ -589,7 +589,7 @@ public:
 #ifdef LEGACY_EXEC
 	void getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, findex_t si, findex_t ei, int32_t p_delta);
 #endif
-    void getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei, int32_t p_delta, MCInterfaceFlaggedRanges& r_ranges);
+    void getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei, int32_t p_delta, MCInterfaceFieldRanges& r_ranges);
     
 	// Return true if the paragraph completely fits in theight. Otherwise, return
 	// false and set lastline to the line that would be clipped.
@@ -602,7 +602,8 @@ public:
 	// false and set lastline to the line that would be clipped.
 	// Called by:
 	//   MCField::getprop
-	Boolean pagerange(uint2 fixedheight, uint2 &theight, uint2 &tend, MCLine *&lastline);
+    // MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indicies.
+    Boolean pagerange(uint2 fixedheight, uint2 &theight, uint4 &tend, MCLine *&lastline);
 
 	// Returns true if any of the paragraph attributes are non-default.
 	bool hasattrs(void);
@@ -801,7 +802,7 @@ public:
 	//   MCField::finsert (for charset purposes)
 	//   MCField::gettextatts
 #ifdef LEGACY_EXEC
-	Boolean getatts(findex_t si, findex_t ei, Font_textstyle spec_style, const char *&fname, uint2 &size,
+	Boolean getatts(uint2 si, uint2 ei, Properties which, Font_textstyle spec_style, const char *&fname, uint2 &size,
 	                uint2 &style, const MCColor *&color,
 	                const MCColor *&backcolor, int2 &shift, bool& specstyle, uint2 &mixed);
 #endif

@@ -239,7 +239,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_SERIAL_CONTROL_STRING, String, Files, SerialControlString)
 	DEFINE_RW_PROPERTY(P_HIDE_CONSOLE_WINDOWS, Bool, Files, HideConsoleWindows)
 
-	DEFINE_RW_PROPERTY(P_RANDOM_SEED, Int16, Math, RandomSeed)
+    // AL-2014-05-23: [[ Bug 12494 ]] Random seed is a 32-bit integer
+	DEFINE_RW_PROPERTY(P_RANDOM_SEED, Int32, Math, RandomSeed)
 
 	DEFINE_RW_PROPERTY(P_LOCK_CURSOR, Bool, Interface, LockCursor)
 	DEFINE_RW_PROPERTY(P_LOCK_ERRORS, Bool, Interface, LockErrors)
@@ -248,7 +249,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_LOCK_MOVES, Bool, Interface, LockMoves)
 	DEFINE_RW_PROPERTY(P_LOCK_RECENT, Bool, Interface, LockRecent)
 	DEFINE_RW_PROPERTY(P_DEFAULT_MENU_BAR, Name, Interface, DefaultMenubar)
-	DEFINE_RW_PROPERTY(P_STACK_FILE_VERSION, String, Interface, StackFileVersion)
+	DEFINE_RW_CUSTOM_PROPERTY(P_STACK_FILE_VERSION, InterfaceStackFileVersion, Interface, StackFileVersion)
 	DEFINE_RW_PROPERTY(P_DEFAULT_STACK, String, Interface, DefaultStack)
 	DEFINE_RW_PROPERTY(P_DEFAULT_CURSOR, UInt32, Interface, DefaultCursor)
 	DEFINE_RW_PROPERTY(P_CURSOR, UInt32, Interface, Cursor)
@@ -5066,10 +5067,31 @@ Exec_stat MCProperty::eval_object_property(MCExecPoint& ep)
 		//   MCChunk::setprop.
 		if (t_stat == ES_NORMAL)
 		{
-			if (t_index_name == nil)
-				t_stat = t_object -> getcustomprop(ep, t_object -> getdefaultpropsetname(), t_prop_name);
-			else
-				t_stat = t_object -> getcustomprop(ep, t_prop_name, t_index_name);
+			ep.clear();
+			Boolean added = False;
+			if (MCnexecutioncontexts < MAX_CONTEXTS)
+			{
+				ep.setline(line);
+				MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+				added = True;
+			}
+			for (i = 0 ; i < MCnexecutioncontexts ; i++)
+			{
+				MCExecPoint ep2(ep);
+				MCexecutioncontexts[i]->getobj()->getprop(0, P_LONG_ID, ep2, False);
+				ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i == 0);
+                // PM-2014-04-14: [[Bug 12125]] Do this check to avoid a crash in LC server
+                if (MCexecutioncontexts[i]->gethandler() != NULL)
+                    ep.concatnameref(MCexecutioncontexts[i]->gethandler()->getname(), EC_COMMA, false);
+				ep.concatuint(MCexecutioncontexts[i]->getline(), EC_COMMA, false);
+				if (MCexecutioncontexts[i] -> getparentscript() != NULL)
+				{
+					MCexecutioncontexts[i] -> getparentscript() -> GetParent() -> GetObject() -> getprop(0, P_LONG_ID, ep2, False);
+					ep.concatmcstring(ep2.getsvalue(), EC_COMMA, false);
+				}
+			}
+			if (added)
+				MCnexecutioncontexts--;
 		}
 	}
 	else

@@ -2583,7 +2583,7 @@ void MCObject::drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_str
     }*/
     
     bool t_is_rtl;
-    t_is_rtl = MCBidiFirstStrongIsolate(p_string, 0) == 1;
+    t_is_rtl = !MCStringResolvesLeftToRight(p_string);
     
     dc -> drawtext(sx, sy, p_string, font, false, kMCDrawTextNoBreak, t_is_rtl ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
 }
@@ -4742,8 +4742,9 @@ MCRectangle MCObject::measuretext(MCStringRef p_text, bool p_is_unicode)
     t_bounds . x = 0;
 	// MW-2013-08-23: [[ MeasureText ]] Shortcut if no text - useful for just
 	//   getting the font ascent/descent (as used in MCGroup methods).
+    // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 	if (MCStringGetLength(p_text) != 0)
-		t_bounds . width = MCFontMeasureText(m_font, p_text);
+        t_bounds . width = MCFontMeasureText(m_font, p_text, getstack() -> getdevicetransform());
 	else
 		t_bounds . width = 0;
     t_bounds . y = -MCFontGetAscent(m_font);

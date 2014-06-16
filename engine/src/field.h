@@ -170,8 +170,8 @@ struct MCFieldExportEventData
 //   a run. The callback should return 'false' if it wants to terminate.
 typedef bool (*MCFieldExportCallback)(void *context, MCFieldExportEventType event_type, const MCFieldExportEventData& event_data);
 
-struct MCInterfaceFlaggedRanges;
-struct MCInterfaceFlaggedRange;
+struct MCInterfaceFieldRanges;
+struct MCInterfaceFieldRange;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -471,7 +471,7 @@ public:
 	Boolean selectedmark(Boolean wholeline, findex_t &si, findex_t &ei,
 	                     Boolean force, Boolean inc_cr, bool p_char_indices = false);
 
-	bool returnchunk(findex_t si, findex_t ei, MCStringRef& r_string);
+	bool returnchunk(findex_t si, findex_t ei, MCStringRef& r_string, bool p_char_indices = false);
 	bool returnline(findex_t si, findex_t ei, MCStringRef& r_string);
 	bool returnloc(findex_t si, MCStringRef& r_string);
 #ifdef LEGACY_EXEC
@@ -723,10 +723,14 @@ public:
     void SetTextDirection(MCExecContext&, intenum_t);
     void GetTextDirection(MCExecContext&, intenum_t&);
     
+    void SetTextAlign(MCExecContext&, intenum_t*);
+    void GetTextAlign(MCExecContext&, intenum_t*&);
+    void GetEffectiveTextAlign(MCExecContext& ctxt, intenum_t& r_align);
+    
     void GetHilitedLines(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_lines);
     void SetHilitedLines(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_lines);
-    void GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterfaceFlaggedRanges& r_ranges);
-    void SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceFlaggedRanges& p_ranges); 
+    void GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterfaceFieldRanges& r_ranges);
+    void SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceFieldRanges& p_ranges); 
     void SetTabStops(MCExecContext& ctxt, uindex_t p_count, uinteger_t *p_tabs);
     void GetTabStops(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tabs);
     void SetTabWidths(MCExecContext& ctxt, uindex_t p_count, uinteger_t *p_tabs);
@@ -734,6 +738,7 @@ public:
     void SetTabAlignments(MCExecContext& ctxt, const MCInterfaceFieldTabAlignments &t_alignments);
     void GetTabAlignments(MCExecContext& ctxt, MCInterfaceFieldTabAlignments &r_alignments);
     void GetPageHeights(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_heights);
+    void GetPageRanges(MCExecContext& ctxt, MCInterfaceFieldRanges& r_ranges);
     
     virtual void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
     virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
@@ -780,7 +785,7 @@ public:
     void GetFormattedStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCArrayRef& r_value);
     void GetEffectiveFormattedStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t p_start, int32_t p_finish, MCArrayRef& r_value);
 	
-    void GetCharIndexOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value);
+    void GetCharIndexOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value);
     void GetLineIndexOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t& r_value);
     void GetFormattedTopOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t& r_value);
     void GetFormattedLeftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t& r_value);
@@ -800,8 +805,8 @@ public:
 	void GetEncodingOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, intenum_t& r_encoding);
     void GetFlaggedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value);
     void SetFlaggedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool value);
-    void GetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCInterfaceFlaggedRanges& r_value);
-    void SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceFlaggedRanges& value);
+    void GetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCInterfaceFieldRanges& r_value);
+    void SetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, const MCInterfaceFieldRanges& value);
 	void GetListStyleOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, intenum_t& r_value);
     void SetListStyleOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, intenum_t value);
 	void GetListDepthOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t*& r_value);

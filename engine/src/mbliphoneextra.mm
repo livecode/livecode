@@ -93,7 +93,8 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
         MCAutoValueRef t_value;
 		if (p_parameters != nil)
         {
-			t_success = p_parameters -> eval(ctxt, &t_value);
+            // AL-2014-05-28: [[ Bug 12477 ]] Use eval_argument here otherwise variable references do not get resolved
+			t_success = p_parameters -> eval_argument(ctxt, &t_value);
         }
 		else if (t_now_optional)
 			break;
@@ -408,18 +409,41 @@ bool MCSystemListFontFamilies(MCListRef& r_names)
 
 bool MCSystemListFontsForFamily(MCStringRef p_family, MCListRef& r_styles)
 {
+    // MM-2014-04-30: [[ Bug 12350 ]] Instead of listing the fonts withjing a family, list the styles. Brings things into line with the other platforms.
+    //  Currently assumes anything without a bold/italic suffix is a plain font.
 	MCAutoListRef t_list;
+    bool t_plain, t_bold, t_italic, t_bold_italic;
+    t_plain = t_bold = t_italic = t_bold_italic = false;
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 	for(NSString *t_font in [UIFont fontNamesForFamilyName: [NSString stringWithMCStringRef: p_family]])
     {
         MCAutoStringRef t_font_string;
-        if (!MCStringCreateWithCFString((CFStringRef)t_font, &t_font_string) ||
-            !MCListAppend(*t_list, *t_font_string))
+        if (!MCStringCreateWithCFString((CFStringRef)t_font, &t_font_string))
 			return false;
+
+        if (MCStringEndsWith(*t_font_string, MCSTR("-Bold"), kMCStringOptionCompareCaseless))
+            t_bold = true;
+        else if (MCStringEndsWith(*t_font_string, MCSTR("-italic"), kMCStringOptionCompareCaseless) ||
+                 MCStringEndsWith(*t_font_string, MCSTR("-oblique"), kMCStringOptionCompareCaseless))
+            t_italic = true;
+        else if (MCStringEndsWith(*t_font_string, MCSTR("-bolditalic"), kMCStringOptionCompareCaseless) ||
+                 MCStringEndsWith(*t_font_string, MCSTR("-boldoblique"), kMCStringOptionCompareCaseless))
+            t_bold_italic = true;
+        else
+            t_plain = true;
     }
 
-	return MCListCopy(*t_list, r_styles);
+    if (t_plain)
+        MCListAppend(*t_list, MCSTR("plain"));
+    if (t_bold)
+        MCListAppend(*t_list, MCSTR("bold"));
+    if (t_italic)
+        MCListAppend(*t_list, MCSTR("italic"));
+    if (t_bold_italic)
+        MCListAppend(*t_list, MCSTR("bold-italic"));
+
+    return MCListCopy(*t_list, r_styles);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

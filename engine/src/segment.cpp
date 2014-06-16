@@ -269,7 +269,7 @@ MCLine *MCSegment::Fit(int16_t p_max_width)
     {
         // A block was broken and therefore the segment possibly needs to be split
         MCSegment *t_split_segment;
-        if (t_need_break_block)
+        if (t_break_block != m_LastBlock)
         {
             // Split this segment
             t_split_segment = new MCSegment(this);
@@ -314,7 +314,7 @@ void MCSegment::Draw(MCDC *dc, int16_t p_line_origin_x, int16_t p_line_origin_y,
     int32_t t_flagged_sx, t_flagged_ex;
     t_flagged_sx = 0;
     t_flagged_ex = 0;
-    
+
     // Calculate the coordinates for drawing the contents of the segment
     int16_t x, y;
     if (m_HAlign == kMCSegmentTextHAlignLeft)
@@ -389,7 +389,7 @@ void MCSegment::Draw(MCDC *dc, int16_t p_line_origin_x, int16_t p_line_origin_y,
 		}
         
 		// Pass the computed flags to the block to draw.
-		bptr->draw(dc, x + bptr->getorigin(), bptr->getorigin(), y, si, ei, p_text, p_style, t_flags);
+		bptr->draw(dc, x + bptr->getorigin(), x + m_RightEdge, y, si, ei, p_text, p_style, t_flags);
 		
 		uint2 twidth;
 		twidth = bptr->getwidth(dc);

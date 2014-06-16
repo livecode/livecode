@@ -488,9 +488,9 @@ bool MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRe
 	
 	popupaskdialog_t ctxt;
 	ctxt . type = p_type;
-	ctxt . title = MCValueRetain(p_title);
-	ctxt . message = MCValueRetain(p_message);
-	ctxt . initial = MCValueRetain(p_initial);
+	ctxt . title = MCValueRetain(p_title != nil ? p_title : kMCEmptyString);
+	ctxt . message = MCValueRetain(p_message != nil ? p_message : kMCEmptyString);
+	ctxt . initial = MCValueRetain(p_initial != nil ? p_initial : kMCEmptyString);
 	ctxt . hint = p_hint;
  
 	MCIPhoneRunOnMainFiber(dopopupaskdialog_prewait, &ctxt);

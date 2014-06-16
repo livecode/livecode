@@ -889,7 +889,7 @@ void MCButton::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width)
 			if (MCStringIsEmpty(t_label))
 				fwidth = 0;
 			else 
-				fwidth = leftmargin + rightmargin + MCFontMeasureText(m_font, t_label);
+                fwidth = leftmargin + rightmargin + MCFontMeasureText(m_font, t_label, getstack() -> getdevicetransform());
 			
 			if (flags & F_SHOW_ICON && icons != NULL)
 			{

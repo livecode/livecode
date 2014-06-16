@@ -1434,47 +1434,45 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 	
 }
 
-
-
-void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge)
+bool MCPatternToX11Pixmap(MCPatternRef p_pattern, Pixmap &r_pixmap);
+void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge)
 {
-#ifdef LIBGRAPHICS_BROKEN
+	// IM-2014-04-15: [[ Bug 11603 ]] Convert pattern to Pixmap for use with XSetWindowAttributes structure
+	freepixmap(m_backdrop_pixmap);
+	
+	if (p_pattern != nil)
+		/* UNCHECKED */ MCPatternToX11Pixmap(p_pattern, m_backdrop_pixmap);
+		
 	if ( backdrop == DNULL ) 
 		createbackdrop_window();
-	
-	if (p_pattern == nil)
-	{
-		backdropcolor = p_color;
-		alloccolor(backdropcolor);
-	}
+
+    // MAYBE
+    if (m_backdrop_pixmap == nil)
+    {
+        backdropcolor = p_colour;
+        alloccolor(backdropcolor);
+    }
 	else
 		backdropcolor.pixel = 0;
 	
-
-	XSetWindowAttributes xswa;
-	unsigned long xswamask = CWBorderPixel | CWColormap;
-	xswa.border_pixel = 0;
-	xswa.colormap = cmap ;
-
-	if (p_pattern != DNULL)
+    if (backdrop == DNULL)
+        return;
+    
+	if (m_backdrop_pixmap != DNULL)
 	{
-		xswamask |= CWBackPixmap;
-		xswa.background_pixmap = p_pattern;
+		gdk_window_set_back_pixmap(backdrop, m_backdrop_pixmap, FALSE);
 	}
 	else
 	{
-		xswamask |= CWBackPixel;
-		xswa.background_pixel = backdropcolor.pixel;
+		GdkColor t_colour;
+        t_colour.red = p_colour.red;
+        t_colour.green = p_colour.green;
+        t_colour.blue = p_colour.blue;
+        gdk_rgb_find_color(gdk_drawable_get_colormap(backdrop), &t_colour);
+        gdk_window_set_background(backdrop, &t_colour);
 	}
 
-	if (backdrop != DNULL)
-	{
-		XChangeWindowAttributes(dpy, backdrop, xswamask, &xswa);
-		XClearWindow(dpy, backdrop);
-	}
-	
 	MCstacks -> refresh();
-#endif
 }
 
 
@@ -1487,56 +1485,42 @@ void MCScreenDC::assignbackdrop(Window_mode p_mode, Window p_window)
 
 
 
-void MCScreenDC::createbackdrop(const char *color)
+void MCScreenDC::createbackdrop(MCStringRef color)
 {
-#ifdef LIBGRAPHICS_BROKEN
-	char *cname = NULL;
-	if (MCbackdroppm == DNULL &&
-	        parsecolor(color, &backdropcolor, &cname))
-	{
-		delete cname;
-		alloccolor(backdropcolor);
-	}
+	if (m_backdrop_pixmap == DNULL &&
+            parsecolor(color, backdropcolor))
+        alloccolor(backdropcolor);
 	else
 		backdropcolor.pixel = 0;
 	
-	XSetWindowAttributes xswa;
-	unsigned long xswamask = 0;
-	if (MCbackdroppm != DNULL)
+    GdkWindowAttr t_wa;
+    t_wa.x = t_wa.y = 0;
+    t_wa.width = device_getwidth();
+    t_wa.height = device_getheight();
+    t_wa.wclass = GDK_INPUT_OUTPUT;
+    t_wa.visual = vis;
+    t_wa.window_type = GDK_WINDOW_TOPLEVEL;
+    t_wa.override_redirect = TRUE;
+    t_wa.event_mask = GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK|GDK_ENTER_NOTIFY_MASK
+        |GDK_LEAVE_NOTIFY_MASK|GDK_POINTER_MOTION_MASK|GDK_EXPOSURE_MASK;
+    
+    backdrop = gdk_window_new(NULL, &t_wa, GDK_WA_X|GDK_WA_Y|GDK_WA_VISUAL);
+    
+	if (m_backdrop_pixmap != DNULL)
 	{
-		xswamask |= CWBackPixmap;
-		xswa.background_pixmap = MCbackdroppm;
+		gdk_window_set_back_pixmap(backdrop, m_backdrop_pixmap, FALSE);
 	}
 	else
 	{
-		xswamask |= CWBackPixel;
-		xswa.background_pixel = backdropcolor.pixel;
+		GdkColor t_colour;
+        t_colour.red = backdropcolor.red;
+        t_colour.green = backdropcolor.green;
+        t_colour.blue = backdropcolor.blue;
+        gdk_rgb_find_color(gdk_drawable_get_colormap(backdrop), &t_colour);
+        gdk_window_set_background(backdrop, &t_colour);
 	}
-	
-	
-	if (backdrop != DNULL)
-	{
-		XChangeWindowAttributes(dpy, backdrop, xswamask, &xswa);
-		XClearWindow(dpy, backdrop);
-		return;
-	}
-	
-	
-	xswamask |= CWBorderPixel | CWColormap | CWOverrideRedirect ;
-	xswa.border_pixel = 0;
-	xswa.colormap = cmap;
-	xswa.override_redirect = True;
-	//DH
-	backdrop = XCreateWindow(dpy, RootWindow(dpy, vis->screen), 0, 0,
-	                         device_getwidth(), device_getheight(), 0, vis->depth,
-	                         InputOutput, vis->visual, xswamask, &xswa);
-	
-	XSelectInput(dpy, backdrop,  ButtonPressMask | ButtonReleaseMask
-	             | EnterWindowMask | LeaveWindowMask | PointerMotionMask);
-	
-	
-	XMapWindow(dpy, backdrop);
-#endif
+    
+    gdk_window_show_unraised(backdrop);
 }
 
 
@@ -1549,6 +1533,8 @@ void MCScreenDC::destroybackdrop()
 		backdrop = DNULL;
 		backdropcolor.pixel = 0;
 	}
+	
+	freepixmap(m_backdrop_pixmap);
 }
 
 

@@ -309,7 +309,8 @@ static MCExecEnumTypeElementInfo _kMCInterfaceStackFullscreenModeElementInfo[] =
 	{"letterbox", kMCStackFullscreenLetterbox},
 	{"noborder", kMCStackFullscreenNoBorder},
 	{"noscale", kMCStackFullscreenNoScale},
-    
+    // AL-2014-05-27: [[ Bug 12509 ]] showAll not added to refactored fullscreen modes
+    {"showAll", kMCStackFullscreenShowAll},
 	{"", kMCStackFullscreenModeNone, true},
 };
 

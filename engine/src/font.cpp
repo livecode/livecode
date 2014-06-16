@@ -122,8 +122,9 @@ bool MCFontCreate(MCNameRef p_name, MCFontStyle p_style, int32_t p_size, MCFontR
 		unichar_t t_char;
 		t_char = (unichar_t)((" ilmw")[i]);
 		
+		// MM-2014-04-16: [[ Bug 11964 ]] MCGContextMeasurePlatformText prototype updated to take scale. Pass identity.
 		MCGFloat t_this_width;
-		t_this_width = MCGContextMeasurePlatformText(nil, &t_char, 2, t_gfont);
+		t_this_width = MCGContextMeasurePlatformText(nil, &t_char, 2, t_gfont, MCGAffineTransformMakeIdentity());
 		if (t_this_width == 0.0 ||
 			(i != 0 && t_this_width != t_last_width))
 		{
@@ -342,7 +343,12 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
         
         p_callback(p_font, *t_temp, MCRangeMake(0, MCStringGetLength(*t_temp)), p_callback_data);
 #else
-        p_callback(p_font, p_text, t_range, p_callback_data);
+        // Another ugly hack - this time, to avoid incoming strings being coerced
+        // into Unicode strings needlessly (because the drawing code uses unichars).
+        // Do a mutable copy (to ensure an actual copy) before drawing.
+        MCAutoStringRef t_temp;
+        /* UNCHECKED */ MCStringMutableCopySubstring(p_text, t_range, &t_temp);
+        p_callback(p_font, *t_temp, MCRangeMake(0, t_range.length), p_callback_data);
 #endif
         
         // Explicitly show breaking points
@@ -358,6 +364,9 @@ struct font_measure_text_context
 {
 	// MW-2013-12-19: [[ Bug 11606 ]] Make sure we use a float to accumulate the width.
     MCGFloat m_width;
+
+	// MM-2014-04-16: [[ Bug 11964 ]] Store the transform that effects the measurement.
+	MCGAffineTransform m_transform;
 };
 
 static void MCFontMeasureTextCallback(MCFontRef p_font, MCStringRef p_string, MCRange p_range, font_measure_text_context *ctxt)
@@ -371,24 +380,25 @@ static void MCFontMeasureTextCallback(MCFontRef p_font, MCStringRef p_string, MC
 	// MW-2013-12-04: [[ Bug 11535 ]] Pass through the fixed advance.
 	t_font . fixed_advance = p_font -> fixed_advance;
 	
-    ctxt -> m_width += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_string) + p_range.offset, p_range.length*2, t_font);
+    ctxt -> m_width += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_string) + p_range.offset, p_range.length*2, t_font, ctxt -> m_transform);
 }
 
-int32_t MCFontMeasureTextSubstring(MCFontRef p_font, MCStringRef p_text, MCRange p_range)
+int32_t MCFontMeasureTextSubstring(MCFontRef p_font, MCStringRef p_text, MCRange p_range, const MCGAffineTransform &p_transform)
 {
-	return (int32_t)floorf(MCFontMeasureTextSubstringFloat(p_font, p_text, p_range));
+    return (int32_t)floorf(MCFontMeasureTextSubstringFloat(p_font, p_text, p_range, p_transform));
 }
 
-int32_t MCFontMeasureText(MCFontRef p_font, MCStringRef p_text)
+int32_t MCFontMeasureText(MCFontRef p_font, MCStringRef p_text, const MCGAffineTransform &p_transform)
 {
 	MCRange t_range = MCRangeMake(0, MCStringGetLength(p_text));
-	return MCFontMeasureTextSubstring(p_font, p_text, t_range);
+    return MCFontMeasureTextSubstring(p_font, p_text, t_range, p_transform);
 }
 
-MCGFloat MCFontMeasureTextSubstringFloat(MCFontRef p_font, MCStringRef p_string, MCRange p_range)
+MCGFloat MCFontMeasureTextSubstringFloat(MCFontRef p_font, MCStringRef p_string, MCRange p_range, const MCGAffineTransform &p_transform)
 {
     font_measure_text_context ctxt;
     ctxt.m_width = 0;
+    ctxt.m_transform = p_transform;
     
     MCFontBreakText(p_font, p_string, p_range, (MCFontBreakTextCallback)MCFontMeasureTextCallback, &ctxt, false);
     
@@ -416,7 +426,8 @@ static void MCFontDrawTextCallback(MCFontRef p_font, MCStringRef p_text, MCRange
 	MCGContextDrawPlatformText(ctxt->m_gcontext, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, MCGPointMake(ctxt->x, ctxt->y), t_font, ctxt->rtl);
 
     // The draw position needs to be advanced
-    ctxt -> x += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, t_font);
+    // MM-2014-04-16: [[ Bug 11964 ]] Pass through the scale of the context to make sure the measurment is correct.
+    ctxt -> x += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, t_font, MCGContextGetDeviceTransform(ctxt->m_gcontext));
 }
 
 void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCFontRef font, bool p_rtl, bool p_can_break)

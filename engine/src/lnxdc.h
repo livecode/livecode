@@ -139,6 +139,8 @@ class MCScreenDC : public MCUIDC
 	bool backdrop_hard;
 	Window backdrop;
 	MCColor backdropcolor;
+	// IM-2014-04-15: [[ Bug 11603 ]] Store converted backdrop pattern pixmap
+	Pixmap m_backdrop_pixmap;
 
 	Window last_window ; 	//XDND - Used for the moment to shunt the ID
 	
@@ -236,7 +238,7 @@ public:
 
 	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size);
 	
-    virtual void createbackdrop(const char *color);
+    virtual void createbackdrop(MCStringRef color);
 	virtual void destroybackdrop();
 	
 	void createbackdrop_window(void);
@@ -245,7 +247,7 @@ public:
 
 	virtual void enablebackdrop(bool p_hard = false);
 	virtual void disablebackdrop(bool p_hard = false);
-	virtual void configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge);
+	virtual void configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge);
 	virtual void assignbackdrop(Window_mode p_mode, Window p_window);
 
 	// IM-2014-01-29: [[ HiDPI ]] Update device_* methods to platform-specific logical coord based methods

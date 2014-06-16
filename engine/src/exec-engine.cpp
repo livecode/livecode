@@ -442,10 +442,11 @@ void MCEngineEvalParamCount(MCExecContext& ctxt, integer_t& r_count)
 {
 	// MW-2013-11-15: [[ Bug 11277 ]] If we don't have a handler then 'the param'
 	//   makes no sense so just return 0.
+    // PM-2014-04-14: [[Bug 12105]] Do this check to prevent crash in LC server
 	if (ctxt.GetHandler() != nil)
 		r_count = ctxt.GetHandler()->getnparams();
 	else
-		r_count = 0;
+        ctxt . LegacyThrow(EE_PARAMCOUNT_NOHANDLER);
 }
 
 void MCEngineEvalParams(MCExecContext& ctxt, MCStringRef& r_string)
@@ -1285,6 +1286,8 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
         {
             while (t_offset < t_length && MCStringGetCharAtIndex(p_script, ++t_offset) != '"')
                 ;
+            // AL-2014-05-28: [[ Bug 12544 ]] Increment offset past closing quotation mark
+            t_offset++;
         }
         else
             t_offset++;

@@ -1242,6 +1242,7 @@ public:
         m_nftrailing = 6;
         m_cutoff = 35;
         m_stat = ES_NORMAL;
+        m_numberexpected = False;
     }
 
     ~MCExecContext()
@@ -1387,6 +1388,11 @@ public:
 	{
         return m_nfforce;
 	}
+    
+    Boolean GetNumberExpected() const
+    {
+        return m_numberexpected;
+    }
 	
 	//////////
 
@@ -1450,6 +1456,11 @@ public:
 	void SetRowDelimiter(MCStringRef p_value)
 	{
         MCValueAssign(m_rowdel, p_value);
+    }
+    
+    void SetNumberExpected(Boolean p_value)
+    {
+        m_numberexpected = p_value;
     }
 
     //////////
@@ -1734,6 +1745,10 @@ private:
     Boolean m_usesystemdate;
     Boolean m_useunicode;
     Boolean m_deletearray;
+    // SN-2014-04-08 [[ NumberExpectation ]]
+    // New property allowing to specify, when evaluating a literal number,
+    // that we expect a number over a valueref
+    Boolean m_numberexpected;
     MCStringRef m_itemdel;
     MCStringRef m_columndel;
     MCStringRef m_linedel;
@@ -1819,7 +1834,7 @@ void MCArraysExecUnion(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p
 void MCArraysExecIntersect(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
 void MCArraysExecUnionRecursive(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
 void MCArraysExecIntersectRecursive(MCExecContext& ctxt, MCArrayRef x_dst_array, MCArrayRef p_src_array);
-void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCDataRef& r_encoding);
+void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef version, MCDataRef& r_encoding);
 void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayRef& r_array);
 void MCArraysEvalMatrixMultiply(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, MCArrayRef& r_result);
 void MCArraysEvalTransposeMatrix(MCExecContext& ctxt, MCArrayRef p_matrix, MCArrayRef& r_result);
@@ -2285,6 +2300,7 @@ struct MCInterfaceNamedColor;
 struct MCInterfaceImagePaletteSettings;
 struct MCInterfaceVisualEffect;
 struct MCInterfaceVisualEffectArgument;
+struct MCInterfaceStackFileVersion;
 
 extern MCExecCustomTypeInfo *kMCInterfaceNamedColorTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfacePaintCompressionTypeInfo;
@@ -2299,6 +2315,7 @@ extern MCExecCustomTypeInfo *kMCInterfaceVisualEffectTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceVisualEffectArgumentTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceButtonIconTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo;
+extern MCExecCustomTypeInfo *kMCInterfaceStackFileVersionTypeInfo;
 
 extern MCExecMethodInfo *kMCInterfaceMakeCustomImagePaletteSettingsMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceMakeOptimalImagePaletteSettingsMethodInfo;
@@ -3118,8 +3135,8 @@ void MCInterfaceGetDragDelta(MCExecContext& ctxt, uinteger_t& r_value);
 void MCInterfaceSetDragDelta(MCExecContext& ctxt, uinteger_t p_value);
 void MCInterfaceGetStackFileType(MCExecContext& ctxt, MCStringRef& r_value);
 void MCInterfaceSetStackFileType(MCExecContext& ctxt, MCStringRef p_value);
-void MCInterfaceGetStackFileVersion(MCExecContext& ctxt, MCStringRef& r_value);
-void MCInterfaceSetStackFileVersion(MCExecContext& ctxt, MCStringRef p_value);
+void MCInterfaceGetStackFileVersion(MCExecContext& ctxt, MCInterfaceStackFileVersion& r_value);
+void MCInterfaceSetStackFileVersion(MCExecContext& ctxt, const MCInterfaceStackFileVersion& p_value);
 
 void MCInterfaceGetIconMenu(MCExecContext& ctxt, MCStringRef& r_menu);
 void MCInterfaceSetIconMenu(MCExecContext& ctxt, MCStringRef menu);
@@ -3386,7 +3403,7 @@ struct MCInterfaceFieldTabAlignments
 };
 
 extern MCExecEnumTypeInfo *kMCInterfaceFieldStyleTypeInfo;
-extern MCExecCustomTypeInfo *kMCInterfaceFlaggedRangesTypeInfo;
+extern MCExecCustomTypeInfo *kMCInterfaceFieldRangesTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceFieldCursorMovementTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceTextDirectionTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceFieldTabAlignmentsTypeInfo;
@@ -5324,16 +5341,16 @@ template<> struct MCExecValueTraits<MCValueRef>
 {
     typedef MCValueRef in_type;
     typedef MCValueRef& out_type;
+	
+	static const MCExecValueType type_enum = kMCExecValueTypeValueRef;
 
     inline static void set(MCExecValue& self, MCValueRef p_value)
     {
         MCExecTypeSetValueRef(self, p_value);
     }
 
-    inline static void release(MCValueRef& self)
-    {
-        MCValueRelease(self);
-    }
+    inline static void release(MCValueRef& self) { MCValueRelease(self); }
+    inline static MCValueRef retain(MCValueRef& self) {	return MCValueRetain(self); }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCValueRef& r_value)
     {
@@ -5345,17 +5362,17 @@ template<> struct MCExecValueTraits<MCBooleanRef>
 {
     typedef MCBooleanRef in_type;
     typedef MCBooleanRef& out_type;
+	
+	static const MCExecValueType type_enum = kMCExecValueTypeBooleanRef;
 
     inline static void set(MCExecValue& self, MCBooleanRef p_value)
     {
-        self . type = kMCExecValueTypeBooleanRef;
+        self . type = type_enum;
         self . booleanref_value = p_value;
     }
 
-    inline static void release(MCBooleanRef& self)
-    {
-        MCValueRelease(self);
-    }
+    inline static void release(MCBooleanRef& self) { MCValueRelease(self); }
+    inline static MCBooleanRef retain(MCBooleanRef self) { return MCValueRetain(self); }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCBooleanRef& r_value)
     {
@@ -5367,17 +5384,17 @@ template<> struct MCExecValueTraits<MCNameRef>
 {
     typedef MCNameRef in_type;
     typedef MCNameRef& out_type;
+	
+	static const MCExecValueType type_enum = kMCExecValueTypeNameRef;
 
     inline static void set(MCExecValue& self, MCNameRef p_value)
     {
-        self . type = kMCExecValueTypeNameRef;
+        self . type = type_enum;
         self . nameref_value = p_value;
     }
 
-    inline static void release(MCNameRef& self)
-    {
-        MCNameDelete(self);
-    }
+    inline static void release(MCNameRef& self) { MCNameDelete(self); }
+    inline static MCNameRef retain(MCNameRef& self) { return MCValueRetain(self); } 
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCNameRef& r_value)
     {
@@ -5389,17 +5406,17 @@ template<> struct MCExecValueTraits<MCDataRef>
 {
     typedef MCDataRef in_type;
     typedef MCDataRef& out_type;
+	
+	static const MCExecValueType type_enum = kMCExecValueTypeDataRef;
 
     inline static void set(MCExecValue& self, MCDataRef p_value)
     {
-        self . type = kMCExecValueTypeDataRef;
+        self . type = type_enum;
         self . dataref_value = p_value;
     }
 
-    inline static void release(MCDataRef& self)
-    {
-        MCValueRelease(self);
-    }
+    inline static void release(MCDataRef& self) { MCValueRelease(self); }
+    inline static MCDataRef retain(MCDataRef& self) { return MCValueRetain(self); }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCDataRef& r_value)
     {
@@ -5412,16 +5429,16 @@ template<> struct MCExecValueTraits<MCArrayRef>
     typedef MCArrayRef in_type;
     typedef MCArrayRef& out_type;
 
+	static const MCExecValueType type_enum = kMCExecValueTypeArrayRef;
+
     inline static void set(MCExecValue& self, MCArrayRef p_value)
     {
-        self . type = kMCExecValueTypeArrayRef;
+        self . type = type_enum;
         self . arrayref_value = p_value;
     }
 
-    inline static void release(MCArrayRef& self)
-    {
-        MCValueRelease(self);
-    }
+    inline static void release(MCArrayRef& self) { MCValueRelease(self); }
+    inline static MCArrayRef retain(MCArrayRef& self) { return MCValueRetain(self); }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCArrayRef& r_value)
     {
@@ -5434,16 +5451,16 @@ template<> struct MCExecValueTraits<MCNumberRef>
     typedef MCNumberRef in_type;
     typedef MCNumberRef& out_type;
 
+	static const MCExecValueType type_enum = kMCExecValueTypeNumberRef;
+
     inline static void set(MCExecValue& self, MCNumberRef p_value)
     {
-        self . type = kMCExecValueTypeNumberRef;
+        self . type = type_enum;
         self . numberref_value = p_value;
     }
 
-    inline static void release(MCNumberRef& self)
-    {
-        MCValueRelease(self);
-    }
+    inline static void release(MCNumberRef& self) { MCValueRelease(self); }
+    inline static MCNumberRef retain(MCNumberRef& self) { return MCValueRetain(self); }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCNumberRef& r_value)
     {
@@ -5456,16 +5473,16 @@ template<> struct MCExecValueTraits<MCStringRef>
     typedef MCStringRef in_type;
     typedef MCStringRef& out_type;
 
-    inline static void set(MCExecValue& self, MCStringRef p_value)
+	static const MCExecValueType type_enum = kMCExecValueTypeStringRef;
+
+	inline static void set(MCExecValue& self, MCStringRef p_value)
     {
-        self . type = kMCExecValueTypeStringRef;
+        self . type = type_enum;
         self . stringref_value = p_value;
     }
 
-    inline static void release(MCStringRef& self)
-    {
-        MCValueRelease(self);
-    }
+    inline static void release(MCStringRef& self) { MCValueRelease(self); }
+    inline static MCStringRef retain(MCStringRef& self) { return MCValueRetain(self); }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCStringRef& r_value)
     {
@@ -5478,13 +5495,16 @@ template<> struct MCExecValueTraits<integer_t>
     typedef integer_t in_type;
     typedef integer_t& out_type;
 
+	static const MCExecValueType type_enum = kMCExecValueTypeInt;
+	
     inline static void set(MCExecValue& self, integer_t p_value)
     {
-        self . type = kMCExecValueTypeInt;
+        self . type = type_enum;
         self . int_value = p_value;
     }
 
     inline static void release(integer_t& self){}
+    inline static integer_t retain(integer_t& self) { return self; }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, integer_t& r_value)
     {
@@ -5497,13 +5517,16 @@ template<> struct MCExecValueTraits<uinteger_t>
     typedef uinteger_t in_type;
     typedef uinteger_t& out_type;
 
+	static const MCExecValueType type_enum = kMCExecValueTypeUInt;
+	
     inline static void set(MCExecValue& self, uinteger_t p_value)
     {
-        self . type = kMCExecValueTypeUInt;
+        self . type = type_enum;
         self . uint_value = p_value;
     }
 
     inline static void release(uinteger_t& self){}
+    inline static uinteger_t retain(uinteger_t& self) { return self; }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, uinteger_t& r_value)
     {
@@ -5516,13 +5539,16 @@ template<> struct MCExecValueTraits<bool>
     typedef bool in_type;
     typedef bool& out_type;
 
+	static const MCExecValueType type_enum = kMCExecValueTypeBool;
+	
     inline static void set(MCExecValue& self, bool p_value)
     {
-        self . type = kMCExecValueTypeBool;
+        self . type = type_enum;
         self . bool_value = p_value;
     }
 
     inline static void release(bool& self){}
+	inline static bool retain(bool& self) { return self; }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, bool& r_value)
     {
@@ -5535,14 +5561,17 @@ template<> struct MCExecValueTraits<double>
     typedef double in_type;
     typedef double& out_type;
 
-    inline static void set(MCExecValue& self, double p_value)
+	static const MCExecValueType type_enum = kMCExecValueTypeDouble;
+
+	inline static void set(MCExecValue& self, double p_value)
     {
-        self . type = kMCExecValueTypeDouble;
+        self . type = type_enum;
         self . double_value = p_value;
     }
 
     inline static void release(double& self){}
-
+    inline static double retain(double& self) { return self; }
+    
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, double& r_value)
     {
         return ctxt . EvalExprAsDouble(p_expr, p_error, r_value);
@@ -5554,13 +5583,16 @@ template<> struct MCExecValueTraits<char_t>
     typedef char_t in_type;
     typedef char_t& out_type;
 
-    inline static void set(MCExecValue& self, char_t p_value)
+	static const MCExecValueType type_enum = kMCExecValueTypeChar;
+
+	inline static void set(MCExecValue& self, char_t p_value)
     {
-        self . type = kMCExecValueTypeChar;
+        self . type = type_enum;
         self . char_value = p_value;
     }
 
     inline static void release(char_t& self){}
+	inline static char_t retain(char_t& self) { return self; }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, char_t& r_value)
     {
@@ -5573,13 +5605,16 @@ template<> struct MCExecValueTraits<MCPoint>
     typedef MCPoint in_type;
     typedef MCPoint& out_type;
 
-    inline static void set(MCExecValue& self, MCPoint p_value)
+	static const MCExecValueType type_enum = kMCExecValueTypePoint;
+
+	inline static void set(MCExecValue& self, MCPoint p_value)
     {
-        self . type = kMCExecValueTypePoint;
+        self . type = type_enum;
         self . point_value = p_value;
     }
 
     inline static void release(MCPoint& self){}
+    inline static MCPoint retain(MCPoint& self) { return self; }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCPoint& r_value)
     {
@@ -5592,13 +5627,17 @@ template<> struct MCExecValueTraits<MCColor>
     typedef MCColor in_type;
     typedef MCColor& out_type;
 
-    inline static void set(MCExecValue& self, MCColor p_value)
+	static const MCExecValueType type_enum = kMCExecValueTypeColor;
+
+	inline static void set(MCExecValue& self, MCColor p_value)
     {
-        self . type = kMCExecValueTypeColor;
+        self . type = type_enum;
         self . color_value = p_value;
     }
 
     inline static void release(MCColor& self){}
+	inline static MCColor retain(MCColor& self) { return self; }
+
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCColor& r_value)
     {
@@ -5611,13 +5650,16 @@ template<> struct MCExecValueTraits<MCRectangle>
     typedef MCRectangle in_type;
     typedef MCRectangle& out_type;
 
-    inline static void set(MCExecValue& self, MCRectangle p_value)
+	static const MCExecValueType type_enum = kMCExecValueTypeRectangle;
+
+	inline static void set(MCExecValue& self, MCRectangle p_value)
     {
-        self . type = kMCExecValueTypeRectangle;
+        self . type = type_enum;
         self . rectangle_value = p_value;
     }
 
     inline static void release(MCRectangle& self){}
+	inline static MCRectangle retain(MCRectangle& self) { return self; }
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, MCRectangle& r_value)
     {
@@ -5630,13 +5672,17 @@ template<> struct MCExecValueTraits<float>
     typedef float in_type;
     typedef float& out_type;
 
-    inline static void set(MCExecValue& self, float p_value)
+	static const MCExecValueType type_enum = kMCExecValueTypeFloat;
+
+	inline static void set(MCExecValue& self, float p_value)
     {
-        self . type = kMCExecValueTypeFloat;
+        self . type = type_enum;
         self . float_value = p_value;
     }
 
     inline static void release(float& self){}
+    inline static float retain(float& self) { return self; }
+
 
     inline static bool eval(MCExecContext &ctxt, MCExpression* p_expr, Exec_errors p_error, float& r_value)
     {
