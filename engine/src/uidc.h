@@ -243,6 +243,8 @@ class MCUIDC
 protected:
 	MCMessageList *messages;
 	MCMovingList *moving;
+	Boolean lockmoves;
+	real8 locktime;
 	uint4 messageid;
 	uint2 nmessages;
 	uint2 maxmessages;
@@ -572,6 +574,8 @@ public:
     
 	void listmessages(MCExecPoint &ep);
 	Boolean handlepending(real8 &curtime, real8 &eventtime, Boolean dispatch);
+	Boolean getlockmoves() const;
+	void setlockmoves(Boolean b);
 	void addmove(MCObject *optr, MCPoint *pts, uint2 npts,
 	             real8 &duration, Boolean waiting);
 	void listmoves(MCExecPoint &ep);
