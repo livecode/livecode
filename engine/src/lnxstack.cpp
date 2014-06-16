@@ -176,7 +176,8 @@ void MCStack::setmodalhints()
 {
 	if (mode == WM_MODAL || mode == WM_SHEET)
 	{
-		gdk_window_set_transient_for(window, (mode == WM_SHEET) ? parentwindow : NULL);
+		if (mode == WM_SHEET)
+            gdk_window_set_transient_for(window, (mode == WM_SHEET) ? parentwindow : NULL);
         gdk_window_set_modal_hint(window, TRUE);
 	}
 }
