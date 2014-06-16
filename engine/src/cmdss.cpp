@@ -184,11 +184,10 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 					        || sp.lookup(SP_COMMAND, te) != PS_NORMAL
 					        || te->type != TT_STATEMENT)
 					{
-						uint2 newmode;
                         MCAutoNumberRef t_mode;
 
                         if (!MCNumberParse(sp.gettoken_stringref(), &t_mode)
-						        || newmode < 1 || newmode >= WM_LAST)
+						        || MCNumberFetchAsInteger(*t_mode) < 1 || MCNumberFetchAsInteger(*t_mode) >= WM_LAST)
 						{
 							MCperror->add
 							(PE_GO_NOMODE, sp);
