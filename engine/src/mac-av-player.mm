@@ -185,7 +185,10 @@ private:
         return;
     }
     
-    [self setLayer: [AVPlayerLayer playerLayerWithPlayer: player]];
+    AVPlayerLayer *t_layer;
+    t_layer = [AVPlayerLayer playerLayerWithPlayer: player];
+    [t_layer setVideoGravity: AVLayerVideoGravityResize];
+    [self setLayer: t_layer];
     [self setWantsLayer: YES];
 }
 
@@ -670,11 +673,14 @@ bool MCAVFoundationPlayer::IsPlaying(void)
 
 void MCAVFoundationPlayer::Start(void)
 {
+    NSLog(@"m_selection_start = %d", m_selection_start);
+    NSLog(@"m_selection_finish = %d", m_selection_start);
+    
     if(m_play_selection_only)
     {
-        [[m_player currentItem] seekToTime:CMTimeMake(m_selection_start, 1) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+        [[m_player currentItem] seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeIndefinite toleranceAfter:kCMTimeIndefinite];
         [m_player play];
-        [m_player performSelector:@selector(pause) withObject:nil afterDelay:m_selection_finish - m_selection_start + 1];
+        [m_player performSelector:@selector(pause) withObject:nil afterDelay:((m_selection_finish - m_selection_start) / 1000.0)];
     }
     else
         [m_player play];
@@ -776,7 +782,7 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyCurrentTime:
-            [[m_player currentItem] seekToTime:CMTimeMake(*(uint32_t *)p_value, 1)];
+            [[m_player currentItem] seekToTime:CMTimeMake(*(uint32_t *)p_value, 1000)];
 			break;
 		case kMCPlatformPlayerPropertyStartTime:
 		{
@@ -878,13 +884,13 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 		}
         break;
 		case kMCPlatformPlayerPropertyDuration:
-            *(uint32_t *)r_value = CMTimeGetSeconds([m_player currentItem] . asset . duration);
+            *(uint32_t *)r_value = 1000 * CMTimeGetSeconds([m_player currentItem] . asset . duration);
 			break;
 		case kMCPlatformPlayerPropertyTimescale:
 			*(uint32_t *)r_value = [m_player currentItem] . currentTime . timescale;
 			break;
 		case kMCPlatformPlayerPropertyCurrentTime:
-			*(uint32_t *)r_value = CMTimeGetSeconds([m_player currentTime]);
+			*(uint32_t *)r_value = 1000 * CMTimeGetSeconds([m_player currentTime]);
 			break;
 		case kMCPlatformPlayerPropertyStartTime:
 			*(uint32_t *)r_value = m_selection_start;

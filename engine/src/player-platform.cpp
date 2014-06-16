@@ -1145,8 +1145,21 @@ void MCPlayer::showcontroller(Boolean show)
     // The showController property has changed, this means we must do two things - resize
     // the movie rect and then redraw ourselves to make sure we can see the controller.
     
-    setrect(rect);
-    layer_redrawall();
+    if (m_platform_player != nil)
+	{
+        // PM-2014-05-28: [[ Bug 12524 ]] Resize the rect height to avoid stretching of the movie when showing/hiding controller
+        MCRectangle drect;
+        drect = rect;
+        if (show )
+            drect . height += CONTROLLER_HEIGHT;
+        else
+            drect . height -= CONTROLLER_HEIGHT;
+        
+		bool t_show;
+		t_show = show;
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show);
+        layer_setrect(drect, true);
+	}
 }
 
 Boolean MCPlayer::prepare(const char *options)
@@ -2874,6 +2887,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
                 
                 t_new_finish_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+                
                 setendtime(t_new_finish_time);
                 MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_new_finish_time);
                 
