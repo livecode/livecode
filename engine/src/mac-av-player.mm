@@ -105,6 +105,7 @@ private:
     bool m_looping : 1;
     
 	CVImageBufferRef m_current_frame;
+    //CGImageRef m_current_frame;
     
     com_runrev_livecode_MCAVFoundationPlayerObserver *m_observer;
     
@@ -233,6 +234,7 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     // First detach the observer from everything we've attached it to.
     [m_player removeObserver: m_observer forKeyPath: @"status"];
     [m_player removeTimeObserver:m_time_observer_token];
+
     // Now we can release it.
     [m_observer release];
     
@@ -308,24 +310,42 @@ void MCAVFoundationPlayer::CurrentTimeChanged(void)
 void MCAVFoundationPlayer::CacheCurrentFrame(void)
 {
 #if 0
-    //TODO: Link currentItem with m_player
-    AVPlayerItem *t_playerItem = [m_player currentItem];
-    if (t_playerItem == nil)
+    AVPlayerItem *t_player_item = [m_player currentItem];
+    if (t_player_item == nil)
         return;
+    
     // AVPlayerItemOutput is available in OSX 10.8 and later
-    AVPlayerItemOutput *t_playerItemOutput;
+    AVPlayerItemVideoOutput *t_player_item_video_output;
     
-    [t_playerItem addOutput: t_playerItemOutput];
-    AVPlayerItemVideoOutput *t_playerItemVideoOutput;
+    t_player_item_video_output =[[AVPlayerItemVideoOutput alloc] initWithPixelBufferAttributes:
+                                 [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:kCVPixelFormatType_32RGBA], kCVPixelBufferPixelFormatTypeKey, nil]];
+    
+    [t_player_item addOutput: t_player_item_video_output];
+    
     CVImageBufferRef t_image;
-    t_image = [t_playerItemVideoOutput copyPixelBufferForItemTime:t_playerItem . currentTime itemTimeForDisplay:nil];
-    
+    t_image = [t_player_item_video_output copyPixelBufferForItemTime:t_player_item . currentTime itemTimeForDisplay:nil];
     if (t_image != nil)
+    {
+        if (m_current_frame != nil)
+            CFRelease(m_current_frame);
+        m_current_frame = t_image;
+    }
+    
+    
+    /*
+    AVAssetImageGenerator *generator = [[AVAssetImageGenerator alloc] initWithAsset:m_player . currentItem . asset];
+    CGImageRef t_cgimageref = [generator copyCGImageAtTime: m_player.currentTime  actualTime:nil error:nil];
+    
+    if (t_cgimageref != nil)
 	{
 		if (m_current_frame != nil)
 			CFRelease(m_current_frame);
-		m_current_frame = t_image;
+		m_current_frame = t_cgimageref;
 	}
+    */
+   
+    
+    
 #endif
 }
 
@@ -497,6 +517,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     [m_view setPlayer: nil];
     [m_player removeObserver: m_observer forKeyPath: @"status"];
     [m_player removeTimeObserver:m_time_observer_token];
+
     [m_player release];
     
     // We want this player.
@@ -511,7 +532,17 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: AVPlayerItemTimeJumpedNotification object: [m_player currentItem]];
     
-    m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 10) queue:dispatch_get_main_queue() usingBlock:^(CMTime time) {
+    m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 1000) queue:NULL/*dispatch_get_main_queue()*/ usingBlock:^(CMTime time) {
+        
+        NSLog(@"Value is %f and timescale is %f", (double)time.value , (double)time.timescale );
+        NSLog(@"Raw Time is %f ", (double)time.value / (double)time.timescale );
+        NSLog(@"Time is %d ", (int)(1000 * CMTimeGetSeconds(time)));
+        NSLog(@"End Time is %f ",  (double)m_selection_finish);
+        
+        //if (1000 * CMTimeGetSeconds(time) >= m_selection_finish)
+        if (CMTimeCompare(time, CMTimeMake(m_selection_finish, 1000)) >= 0)
+            [m_player pause];
+        
         CurrentTimeChanged();
         }];
     
@@ -676,6 +707,7 @@ void MCAVFoundationPlayer::Start(void)
     NSLog(@"m_selection_start = %d", m_selection_start);
     NSLog(@"m_selection_finish = %d", m_selection_start);
     
+    /*
     if(m_play_selection_only)
     {
         [[m_player currentItem] seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeIndefinite toleranceAfter:kCMTimeIndefinite];
@@ -683,6 +715,7 @@ void MCAVFoundationPlayer::Start(void)
         [m_player performSelector:@selector(pause) withObject:nil afterDelay:((m_selection_finish - m_selection_start) / 1000.0)];
     }
     else
+    */
         [m_player play];
 }
 
@@ -739,6 +772,7 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
         
 		CIImage *t_ci_image;
 		t_ci_image = [[CIImage alloc] initWithCVImageBuffer: m_current_frame];
+        //t_ci_image = [[CIImage alloc] initWithCGImage:m_current_frame];
         
 		[t_ci_context drawImage: t_ci_image inRect: CGRectMake(0, t_rect . size . height - t_movie_rect . size . height, t_movie_rect . size . width, t_movie_rect . size . height) fromRect: [t_ci_image extent]];
         
@@ -793,6 +827,8 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
                 m_selection_finish = m_selection_start;
             }
             
+            if(m_play_selection_only)
+                [[m_player currentItem] seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeIndefinite toleranceAfter:kCMTimeIndefinite];
             SelectionChanged();
         }
             break;

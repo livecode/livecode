@@ -21,7 +21,28 @@
 #define	PLAYER_PLATFORM_H
 
 #include "control.h"
+#include "platform.h"
 
+enum
+{
+    kMCPlayerControllerPartUnknown,
+    
+    kMCPlayerControllerPartVolume,
+    kMCPlayerControllerPartVolumeBar,
+    kMCPlayerControllerPartVolumeWell,
+    kMCPlayerControllerPartVolumeSelector,
+    kMCPlayerControllerPartPlay,
+    kMCPlayerControllerPartScrubBack,
+    kMCPlayerControllerPartScrubForward,
+    kMCPlayerControllerPartThumb,
+    kMCPlayerControllerPartWell,
+    kMCPlayerControllerPartSelectionStart,
+    kMCPlayerControllerPartSelectionFinish,
+    kMCPlayerControllerPartSelectedArea,
+    kMCPlayerControllerPartVolumeArea,
+    kMCPlayerControllerPartPlayedArea,
+    
+};
 
 struct MCPlayerCallback
 {
@@ -175,11 +196,27 @@ public:
 	}
 	void setstarttime(uint4 stime)
 	{
-		starttime = stime;
+        if (stime <= 0)
+            starttime = 0;
+        else if (stime > getduration())
+            starttime = getduration();
+        else
+            starttime = stime;
+        
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
+        layer_redrawrect(getcontrollerrect());
 	}
 	void setendtime(uint4 etime)
 	{
-		endtime = etime;
+        if (etime <= 0)
+            endtime = 0;
+        else if (etime > getduration())
+            endtime = getduration();
+        else
+            endtime = etime;
+        
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+        layer_redrawrect(getcontrollerrect());
 	}
 	void setlasttime(int4 ltime)
 	{

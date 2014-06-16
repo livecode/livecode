@@ -76,26 +76,6 @@ static const char *ppmediastrings[] =
 #define SOMEGRAY 3
 #define DARKGRAY 4
 
-enum
-{
-    kMCPlayerControllerPartUnknown,
-    
-    kMCPlayerControllerPartVolume,
-    kMCPlayerControllerPartVolumeBar,
-    kMCPlayerControllerPartVolumeWell,
-    kMCPlayerControllerPartVolumeSelector,
-    kMCPlayerControllerPartPlay,
-    kMCPlayerControllerPartScrubBack,
-    kMCPlayerControllerPartScrubForward,
-    kMCPlayerControllerPartThumb,
-    kMCPlayerControllerPartWell,
-    kMCPlayerControllerPartSelectionStart,
-    kMCPlayerControllerPartSelectionFinish,
-    kMCPlayerControllerPartSelectedArea,
-    kMCPlayerControllerPartVolumeArea,
-    kMCPlayerControllerPartPlayedArea,
-    
-};
 
 static MCColor controllercolors[] = {
     {0, 0x8000, 0x8000, 0x8000, 0, 0},         /* 50% gray */
@@ -2873,9 +2853,6 @@ void MCPlayer::handle_mfocus(int x, int y)
                 
                 t_new_start_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
                 setstarttime(t_new_start_time);
-                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &t_new_start_time);
-                
-                layer_redrawall();
             }
                 break;
                 
@@ -2888,11 +2865,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 
                 t_new_finish_time = (x - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
                 
-                setendtime(t_new_finish_time);
-                MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &t_new_finish_time);
-                
-                layer_redrawall();
-                
+                setendtime(t_new_finish_time);                
             }
                 break;
                 
