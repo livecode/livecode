@@ -195,6 +195,8 @@ MCUIDC::MCUIDC()
 	nmessages = maxmessages = 0;
 	messages = NULL;
 	moving = NULL;
+	lockmoves = False;
+	locktime = 0.0;
 	ncolors = 0;
 	colors = NULL;
 	allocs = NULL;
@@ -1175,6 +1177,33 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
     return t_handled;
 }
 
+
+Boolean MCUIDC::getlockmoves() const
+{
+	return lockmoves;
+}
+
+void MCUIDC::setlockmoves(Boolean b)
+{
+	lockmoves = b;
+
+	if (lockmoves) {
+		// then save the time the lock started
+		locktime = MCS_time(); 
+
+	} else {
+		// adjust the start time of each movement.
+		real8 offset = MCS_time() - locktime;
+		if (moving != NULL)	{
+			MCMovingList *mptr = moving;
+			do {
+				mptr->starttime += offset;
+				mptr = mptr->next();
+			} while (mptr != moving);
+		}
+	}
+}
+
 void MCUIDC::addmove(MCObject *optr, MCPoint *pts, uint2 npts,
                      real8 &duration, Boolean waiting)
 {
@@ -1222,7 +1251,11 @@ void MCUIDC::addmove(MCObject *optr, MCPoint *pts, uint2 npts,
 			optr -> setrect(newrect);
 	}
 
-	mptr->starttime = MCS_time();
+	if (lockmoves) {
+		mptr->starttime = locktime;
+	} else {
+		mptr->starttime = MCS_time();
+	}
 }
 
 void MCUIDC::listmoves(MCExecPoint &ep)
@@ -1282,21 +1315,14 @@ void MCUIDC::stopmove(MCObject *optr, Boolean finish)
 
 void MCUIDC::handlemoves(real8 &curtime, real8 &eventtime)
 {
-	static real8 lasttime;
+	if (lockmoves) 
+		return;
 	eventtime = curtime + (real8)MCsyncrate / 1000.0;
 	MCMovingList *mptr = moving;
 	Boolean moved = False;
 	Boolean done = False;
 	do
 	{
-		if (MClockmoves)
-		{
-			if (lasttime != 0.0)
-				mptr->starttime += curtime - lasttime;
-			mptr = mptr->next();
-		}
-		else
-		{
 			MCRectangle rect = mptr->object->getrect();
 			MCRectangle newrect = rect;
 			real8 dt = 0.0;
@@ -1363,13 +1389,8 @@ void MCUIDC::handlemoves(real8 &curtime, real8 &eventtime)
 			}
 			else
 				mptr = mptr->next();
-		}
 	}
 	while (mptr != NULL && mptr != moving);
-	if (MClockmoves)
-		lasttime = curtime;
-	else
-		lasttime = 0.0;
 		
 	// MW-2012-12-09: [[ Bug 9905 ]] Make sure we update the screen if something
 	//   moved (previously it only did so if there were still things to move also!).

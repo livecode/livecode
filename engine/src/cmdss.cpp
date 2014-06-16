@@ -1136,7 +1136,7 @@ Exec_stat MCLock::exec(MCExecPoint &ep)
 		MClockmessages = True;
 		break;
 	case LC_MOVES:
-		MClockmoves = True;
+		MCscreen->setlockmoves(True);
 		break;
 	case LC_RECENT:
 		MClockrecent = True;
@@ -2004,7 +2004,7 @@ Exec_stat MCUnlock::exec(MCExecPoint &ep)
 		MClockmessages = False;
 		break;
 	case LC_MOVES:
-		MClockmoves = False;
+		MCscreen->setlockmoves(False);
 		break;
 	case LC_RECENT:
 		MClockrecent = False;
