@@ -58,14 +58,14 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "/Users/sebastien/Workspace/test.lc"
+            argument = "/Users/sebastien/Workspace/www/button.lc"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "PATH_TRANSLATED"
-            value = "/Users/sebastien/Workspace/test.lc"
+            value = "/Users/sebastien/Workspace/www/button.lc"
             isEnabled = "NO">
          </EnvironmentVariable>
          <EnvironmentVariable
@@ -85,7 +85,7 @@
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "REQUEST_URI"
-            value = "/test.lc"
+            value = "/button.lc"
             isEnabled = "NO">
          </EnvironmentVariable>
       </EnvironmentVariables>

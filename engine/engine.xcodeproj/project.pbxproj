@@ -343,10 +343,8 @@
 		4DB846D6192B558A00771914 /* libpng.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7981171348A6000BCF78 /* libpng.a */; };
 		4DB846D7192B558A00771914 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7989171348B4000BCF78 /* libjpeg.a */; };
 		4DB846D9192B558A00771914 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 76F0CC9018CA28E500C01A67 /* libskia.a */; };
-		4DB846DA192B559700771914 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A67171D574F00E7E557 /* libcrypto.dylib */; };
 		4DB846DB192B559700771914 /* libcups.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A69171D574F00E7E557 /* libcups.dylib */; };
 		4DB846DC192B559700771914 /* libcurl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A6B171D574F00E7E557 /* libcurl.dylib */; };
-		4DB846DD192B559700771914 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D221A6D171D574F00E7E557 /* libssl.dylib */; };
 		4DB846DE192B55AF00771914 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DFD495A13BA2BC0008DB91F /* CoreFoundation.framework */; };
 		4DB847B8192B55C100771914 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8B47960BE7B3240046CD2F /* Cocoa.framework */; };
 		4DB847BB192B55D000771914 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D982B1813C1CDD20066119A /* ApplicationServices.framework */; };
@@ -570,7 +568,6 @@
 		A71F80540F4F178C003012FD /* Standalone.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80530F4F178C003012FD /* Standalone.icns */; };
 		A71F80550F4F17C1003012FD /* LiveCode.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885610B80DEAC00200116 /* LiveCode.icns */; };
 		A71F80620F4F17F9003012FD /* StandaloneDoc.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80610F4F17F9003012FD /* StandaloneDoc.icns */; };
-		BE0986A3194874DD0065CEEA /* revsecurity.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BE0986A2194874DD0065CEEA /* revsecurity.dylib */; };
 		BEA6F33419472695000D6A37 /* osxflst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880160B80A4F800200116 /* osxflst.cpp */; };
 		BEF6186019470E1E00C42C57 /* exec-engine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE3B0F115888AB8008EB6B5 /* exec-engine.cpp */; };
 		BEF6186119470E6100C42C57 /* exec-strings-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */; };
@@ -1873,7 +1870,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BE0986A3194874DD0065CEEA /* revsecurity.dylib in Frameworks */,
 				BEF618A119471D4000C42C57 /* Carbon.framework in Frameworks */,
 				BEF6189619471C9700C42C57 /* Security.framework in Frameworks */,
 				BEF6189519471C6A00C42C57 /* IOKit.framework in Frameworks */,
@@ -1897,10 +1893,8 @@
 				4DB846DE192B55AF00771914 /* CoreFoundation.framework in Frameworks */,
 				4DB847B8192B55C100771914 /* Cocoa.framework in Frameworks */,
 				4DB847BB192B55D000771914 /* ApplicationServices.framework in Frameworks */,
-				4DB846DA192B559700771914 /* libcrypto.dylib in Frameworks */,
 				4DB846DB192B559700771914 /* libcups.dylib in Frameworks */,
 				4DB846DC192B559700771914 /* libcurl.dylib in Frameworks */,
-				4DB846DD192B559700771914 /* libssl.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4515,7 +4509,11 @@
 					"$(SOLUTION_DIR)/prebuilt/lib/mac",
 					"\"$(SRCROOT)/../_build/mac/Debug\"",
 				);
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-lcustomssl",
+					"-lcustomcrypto",
+				);
 				PRODUCT_NAME = "Server-Community";
 			};
 			name = Debug;
@@ -4529,7 +4527,11 @@
 					"$(SOLUTION_DIR)/prebuilt/lib/mac",
 					"\"$(SRCROOT)/../_build/mac/Debug\"",
 				);
-				OTHER_LDFLAGS = "-ObjC";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-lcustomssl",
+					"-lcustomcrypto",
+				);
 				PRODUCT_NAME = "Server-Community";
 			};
 			name = Release;
