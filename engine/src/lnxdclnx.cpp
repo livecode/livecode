@@ -1032,6 +1032,40 @@ void MCScreenDC::EnqueueEvent(GdkEvent* p_event)
     t_node->appendto(pendingevents);
 }
 
+void MCScreenDC::IME_OnCommit(GtkIMContext*, gchar *p_utf8_string)
+{
+    MCAutoStringRef t_text;
+    /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)p_utf8_string, strlen(p_utf8_string), kMCStringEncodingUTF8, false, &t_text);
+    
+    // Insert the text from the IME into the active field
+    MCactivefield->finsertnew(FT_IMEINSERT, *t_text, LCH_UNICODE);
+}
+
+bool MCScreenDC::IME_OnDeleteSurrounding(GtkIMContext*, gint p_offset, gint p_length)
+{
+    return false;
+}
+
+void MCScreenDC::IME_OnPreeditChanged(GtkIMContext*)
+{
+    ;
+}
+
+void MCScreenDC::IME_OnPreeditEnd(GtkIMContext*)
+{
+    ;
+}
+
+void MCScreenDC::IME_OnPreeditStart(GtkIMContext*)
+{
+    ;
+}
+
+void MCScreenDC::IME_OnRetrieveSurrounding(GtkIMContext*)
+{
+    ;
+}
+
 void init_xDnD()
 {
     

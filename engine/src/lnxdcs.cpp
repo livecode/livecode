@@ -188,42 +188,6 @@ static void on_retrieve_surrounding(GtkIMContext *p_context, gpointer p_data)
     ((MCScreenDC*)p_data)->IME_OnRetrieveSurrounding(p_context);
 }
 
-void MCScreenDC::IME_OnCommit(GtkIMContext*, gchar *p_utf8_string)
-{
-    MCAutoStringRef t_text;
-    /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)p_utf8_string, strlen(p_utf8_string), kMCStringEncodingUTF8, false, &t_text);
-    
-    // TODO: do something with the text
-    
-    // Looks like we need to free the string
-    g_free(p_utf8_string);
-}
-
-bool MCScreenDC::IME_OnDeleteSurrounding(GtkIMContext*, gint p_offset, gint p_length)
-{
-    return false;
-}
-
-void MCScreenDC::IME_OnPreeditChanged(GtkIMContext*)
-{
-    ;
-}
-
-void MCScreenDC::IME_OnPreeditEnd(GtkIMContext*)
-{
-    ;
-}
-
-void MCScreenDC::IME_OnPreeditStart(GtkIMContext*)
-{
-    ;
-}
-
-void MCScreenDC::IME_OnRetrieveSurrounding(GtkIMContext*)
-{
-    ;
-}
-
 Boolean MCScreenDC::open()
 {
 	// We require GDK in order to do any windowing at all
