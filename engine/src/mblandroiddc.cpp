@@ -1146,10 +1146,10 @@ static void *mobile_main(void *arg)
 	// completely unaware that we exist. This is not good, since we will want
 	// to call into Dalvik via the JNI from this thread. So we need to bind
 	// our current thread to the VM.
-
-	MCLog("Attaching thread to VM %p", s_java_vm);
     
-    MCInitialize();
+    //MCInitialize();
+    
+	MCLog("Attaching thread to VM %p", s_java_vm);
 
 	// Attach ourselves to the JVM - if we fail, we just return.
 	if (s_java_vm -> AttachCurrentThread(&s_java_env, nil) < 0)
@@ -1765,6 +1765,8 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyboardHidde
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobject object, jobject activity, jobject container, jobject view)
 {
+    MCInitialize();
+    
 	MCLog("doCreate called", 0);
 
 	// Make sure the engine isn't running
