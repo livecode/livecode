@@ -1231,7 +1231,18 @@ bool MCS_isnan(double v)
 
 bool MCS_get_temporary_folder(MCStringRef &r_temp_folder)
 {
-	return MCsystem -> GetTemporaryFileName(r_temp_folder);
+	// MCS_get_temporay_folder is supposed to return an existing folder
+	// which is not the case with MCsystem -> GetTemporaryFilename
+//	  return MCsystem -> GetTemporaryFilename(r_temp_folder);
+	WCHAR t_tmpdir[MAX_PATH];
+	int32_t t_tmpdir_len = 0;
+	t_tmpdir_len = GetTempPathW(MAX_PATH, t_tmpdir);
+
+	MCAutoStringRef t_native_tmp, t_short_tmp;
+
+	return (MCStringCreateWithWString(t_tmpdir, &t_native_tmp)
+			&& MCsystem->PathFromNative(*t_native_tmp, &t_short_tmp)
+			&& MCS_longfilepath(*t_short_tmp, r_temp_folder));
 }
 
 bool MCS_create_temporary_file(MCStringRef p_path_string, MCStringRef p_prefix_string, IO_handle &r_file, MCStringRef &r_name_string)
@@ -1301,10 +1312,8 @@ bool MCS_create_temporary_file(MCStringRef p_path_string, MCStringRef p_prefix_s
 
 bool MCSystemLockFile(MCSystemFileHandle *p_file, bool p_shared, bool p_wait)
 {
-	// FRAGILE? In case p_file is a MCMemoryMappedFile, getFilePointer returns a char*...
-	int t_fd = fileno((FILE*)p_file->GetFilePointer());
-	
-	HANDLE t_fhandle = (HANDLE)_get_osfhandle(t_fd);
+	HANDLE t_fhandle;
+	t_fhandle = p_file->GetFilePointer();
 
 	bool t_success = true;
 

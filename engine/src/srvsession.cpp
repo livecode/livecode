@@ -386,6 +386,7 @@ bool MCSessionCreateSession(MCSessionIndexRef p_index, MCStringRef p_session_id,
 
 	MCAutoStringRef t_remote_addr_string;
 	char *t_remote_addr;
+	t_remote_addr = NULL;
 
 	if (MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr_string))
 		MCCStringClone(MCStringGetCString(*t_remote_addr_string), t_remote_addr);
@@ -685,6 +686,7 @@ bool MCSessionGenerateID(MCStringRef &r_id)
 
 	MCAutoStringRef t_remote_addr_string;
 	char *t_remote_addr;
+	t_remote_addr = NULL;
 
 	if (MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr_string))
 		MCCStringClone(MCStringGetCString(*t_remote_addr_string), t_remote_addr);

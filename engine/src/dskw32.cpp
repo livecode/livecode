@@ -1657,7 +1657,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		if (!SetEndOfFile(m_handle))
 			return false;
 
-		return false;
+		return true;
 	}
 
 	virtual bool Sync(void)
@@ -1696,7 +1696,11 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		return IO_ERROR;
 	return IO_NORMAL;
 #endif /* MCS_flush_dsk_w32 */ //flush output buffer
-		if (FlushFileBuffers(m_handle) != NO_ERROR)
+		// SN-2014-06-16 
+		// It seems that FlushFileBuffers can return a non-zero value
+		// with no error declared...
+		if (FlushFileBuffers(m_handle) != NO_ERROR 
+				&& GetLastError() != NO_ERROR)
 			return false;
 
 		return true;
