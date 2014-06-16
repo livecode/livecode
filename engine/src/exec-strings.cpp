@@ -1681,7 +1681,8 @@ void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p
 {
 	MCStringOptions t_options = ctxt.GetStringComparisonType();
     uindex_t t_offset;
-	if (!MCStringFirstIndexOf(p_string, p_chunk, p_start_offset, t_options, t_offset))
+    // AL-2014-05-27: [[ Bug 12517 ]] Offset should be 0 for an empty input string
+	if (MCStringIsEmpty(p_chunk) || !MCStringFirstIndexOf(p_string, p_chunk, p_start_offset, t_options, t_offset))
 		r_result = 0;
 	else
     {
@@ -1828,7 +1829,8 @@ static bool MCStringsWildcardMatchNative(const char *s, uindex_t s_length, const
 			--s;
 			--s_index;
 			c = *p;
-			while (*s)
+            // AL-2014-05-23: [[ Bug 12489 ]] Ensure source string does not overrun length
+			while (*s && s_index < s_length)
 				if ((casesensitive ? c != *s : MCS_tolower(c) != MCS_tolower(*s))
 				        && *p != '?' && *p != OPEN_BRACKET)
 				{
@@ -1868,8 +1870,9 @@ bool MCWildcardMatcher::match(MCRange p_source_range)
         const char *t_source = (const char *)MCStringGetNativeCharPtr(source);
         const char *t_pattern = (const char *)MCStringGetNativeCharPtr(pattern);
         
+        // AL-2014-05-23: [[ Bug 12489 ]] Pass through case sensitivity properly
         if (t_source != nil && t_pattern != nil)
-            return MCStringsWildcardMatchNative(t_source + p_source_range . offset, p_source_range . length, t_pattern, MCStringGetLength(pattern), (options == kMCStringOptionCompareExact || kMCStringOptionCompareNonliteral));
+            return MCStringsWildcardMatchNative(t_source + p_source_range . offset, p_source_range . length, t_pattern, MCStringGetLength(pattern), (options == kMCStringOptionCompareExact || options == kMCStringOptionCompareNonliteral));
     }
 
 	return MCStringWildcardMatch(source, p_source_range, pattern, options);

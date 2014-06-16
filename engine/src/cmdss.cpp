@@ -1058,7 +1058,8 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
     
     // SN-2014-05-13 [[ Bug 12423 ]]
     // Temporary fix: stopedit put back where it was before refactoring
-	sptr -> stopedit();
+    if (sptr != nil)
+        sptr -> stopedit();
 	
 	if (background != NULL && sptr != nil)
 	{

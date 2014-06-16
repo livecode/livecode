@@ -2226,7 +2226,7 @@ bool MCField::selectedchunk(MCStringRef& r_string)
 {
 	findex_t si, ei;
 	if (selectedmark(False, si, ei, False, False, true))
-		return returnchunk(si, ei, r_string);
+		return returnchunk(si, ei, r_string, true);
 	r_string = MCValueRetain(kMCEmptyString);
 	return true;
 }
@@ -2427,7 +2427,7 @@ Boolean MCField::selectedmark(Boolean whole, findex_t &si, findex_t &ei,
 	return True;
 }
 
-bool MCField::returnchunk(findex_t p_si, findex_t p_ei, MCStringRef& r_chunk)
+bool MCField::returnchunk(findex_t p_si, findex_t p_ei, MCStringRef& r_chunk, bool p_char_indices)
 {
     MCExecContext ctxt(nil, nil, nil);
 	uinteger_t t_number;
@@ -2436,7 +2436,9 @@ bool MCField::returnchunk(findex_t p_si, findex_t p_ei, MCStringRef& r_chunk)
 	// MW-2012-02-23: [[ CharChunk ]] Map the internal field indices (si, ei) to
 	//   char indices.
     // SN-2014-02-11: [[ Unicodify ]] The functions calling returnchunk already have field indices.
-//	unresolvechars(0, p_si, p_ei);
+    // SN-2014-05-16 [[ Bug 12432 ]] Re-establish unresolving of the chars indices
+    if (!p_char_indices)
+        unresolvechars(0, p_si, p_ei);
 	
 	const char *sptr = parent->gettype() == CT_CARD && getstack()->hcaddress()
 										 ? "char %d to %d of card field %d" : "char %d to %d of field %d";

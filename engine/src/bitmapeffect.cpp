@@ -954,7 +954,13 @@ bool MCBitmapEffectsSetProperty(MCExecContext& ctxt, MCBitmapEffectsRef& self, M
     bool t_is_array;
     t_is_array = MCNameIsEmpty(p_index);
 
-    if (t_is_array && p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
+    // AL-2014-05-21: [[ Bug 12459 ]] Ensure setting bitmap effect array to anything
+    //  that isn't an array does the same as setting it to 'empty'.
+    // AL_2014-05-23: [[ Bug 12483 ]] Only do this if we are setting all the properties at once.
+    if (t_is_array &&
+        (p_value . type == kMCExecValueTypeValueRef &&
+        (MCValueIsEmpty(p_value . valueref_value) ||
+         (MCValueGetTypeCode(p_value . valueref_value) != kMCValueTypeCodeArray))))
     {
         if (self == nil || (self -> mask & (1 << t_type)) == 0)
         {

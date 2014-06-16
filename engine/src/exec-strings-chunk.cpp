@@ -326,8 +326,19 @@ void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_ter
             while (p_count--)
             {
                 t_pg_offset = t_offset;
-                if (t_offset > t_end_index || (!(t_newline_found = MCStringFirstIndexOfChar(p_string, '\n', t_offset, kMCCompareExact, t_offset)) &&
-                                                !(t_pg_found = MCStringFirstIndexOfChar(p_string, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset))))
+                // AL-2014-05-26: [[ Bug 12527 ]] Make sure both newline and pg char are found if both present
+                if (t_offset <= t_end_index)
+                {
+                    t_newline_found = MCStringFirstIndexOfChar(p_string, '\n', t_offset, kMCCompareExact, t_offset);
+                    t_pg_found = MCStringFirstIndexOfChar(p_string, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);
+                }
+                else
+                {
+                    t_newline_found = false;
+                    t_pg_found = false;
+                }
+                
+                if (!t_newline_found && !t_pg_found)
                 {
                     r_end = t_length;
                     break;

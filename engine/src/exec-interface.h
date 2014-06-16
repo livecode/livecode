@@ -186,15 +186,15 @@ void MCInterfaceTriStateFree(MCExecContext& ctxt, MCInterfaceTriState& p_input);
 
 //////////
 
-struct MCInterfaceFlaggedRange
+struct MCInterfaceFieldRange
 {
     uint32_t start;
     uint32_t end;
 };
 
-struct MCInterfaceFlaggedRanges
+struct MCInterfaceFieldRanges
 {
-    MCInterfaceFlaggedRange *ranges;
+    MCInterfaceFieldRange *ranges;
     uindex_t count;
 };
 

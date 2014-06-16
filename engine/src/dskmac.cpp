@@ -1973,10 +1973,11 @@ class MCStdioFileHandle: public MCSystemFileHandle
 {
 public:
     
-    MCStdioFileHandle(FILE *p_fptr)
+    MCStdioFileHandle(FILE *p_fptr, bool p_is_serial_port = false)
     {
         m_stream = p_fptr;
         m_is_eof = false;
+        m_is_serial_port = p_is_serial_port;
     }
 	
 	virtual void Close(void)
@@ -2155,10 +2156,35 @@ public:
             return IO_ERROR;
         return IO_NORMAL;
 #endif /* MCS_write_dsk_mac */
-        if (fwrite(p_buffer, 1, p_length, m_stream) != p_length)            
-            return false;
+        bool t_success;
         
-        return true;
+        // SN-2014-05-21 [[ Bug 12246 ]]
+        // When writing to a serial port, we can hit EAGAIN error
+        if (m_is_serial_port)
+        {
+            integer_t t_last_writing;
+            integer_t t_length;
+            uint32_t t_offset;
+            
+            t_length = p_length;
+            t_offset = 0;
+            t_success = true;
+            
+            while (t_length && t_success)
+            {
+                t_last_writing = fwrite((char*)p_buffer + t_offset, 1, t_length, m_stream);
+                t_length -= t_last_writing;
+                t_offset += t_last_writing;
+                
+                // Avoid to get stuck in a loop in case writing failed
+                if (t_last_writing == 0 && t_length != 0 && errno != EAGAIN)
+                    t_success = false;
+            }
+        }
+        else
+            t_success = fwrite(p_buffer, 1, p_length, m_stream) == p_length;
+        
+        return t_success;
 	}
     
     virtual bool IsExhausted(void)
@@ -2333,6 +2359,7 @@ public:
 private:
 	FILE *m_stream;
     bool m_is_eof;
+    bool m_is_serial_port;
 };
 
 class MCSerialPortFileHandle: public MCSystemFileHandle
@@ -6774,7 +6801,25 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (!t_path_utf.Lock(p_path))
             return NULL;
         
-        fptr = fopen(*t_path_utf, IO_READ_MODE);
+        // SN-2014-05-02 [[ Bug 12246 ]] Enable an opening mode different from IO_READ...
+        switch (p_mode)
+        {
+            case kMCOpenFileModeAppend:
+                fptr = fopen(*t_path_utf, IO_APPEND_MODE);
+                break;
+            case kMCOpenFileModeRead:
+                fptr = fopen(*t_path_utf, IO_READ_MODE);
+                break;
+            case kMCOpenFileModeUpdate:
+                fptr = fopen(*t_path_utf, IO_UPDATE_MODE);
+                break;
+            case kMCOpenFileModeWrite:
+            case kMCOpenFileModeExecutableWrite:
+                fptr = fopen(*t_path_utf, IO_WRITE_MODE);
+                break;
+            default:
+                break;
+        }
         
 		if (fptr != NULL)
         {
@@ -6787,7 +6832,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             fcntl(t_serial_in, F_SETFL, val);
             configureSerialPort((short)t_serial_in);
             
-            t_handle = new MCSerialPortFileHandle(t_serial_in);
+            // SN-2014-05-02 [[ Bug 12246 ]] Serial I/O fails on write
+            // The serial port number is never used in the 6.X engine... and switching to an STDIO file
+            // is enough to have the serial devices working perfectly.
+            t_handle = new MCStdioFileHandle(fptr, true);
         }
         
         return t_handle;

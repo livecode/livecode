@@ -739,7 +739,11 @@ bool MCField::importparagraph(MCParagraph*& x_paragraphs, const MCFieldParagraph
     // SN-2014-04-25 [[ Bug 12177 ]] Importing HTML was creating parent-less paragraphs,
     // thus sometimes causing crashing when the parent was accessed - mainly when getfontattrs() was needed
     t_new_paragraph -> setparent(this);
-	
+    
+    // AL-2014-05-28: [[ Bug 12515 ]] If inittext() is not called, the new paragraph
+    //  can have nil blocks when it contains an image.
+    t_new_paragraph -> inittext();
+    
 	if (p_style != nil)
 		t_new_paragraph->importattrs(*p_style);
 

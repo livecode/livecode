@@ -953,7 +953,11 @@ bool MCGradientFillSetProperties(MCExecContext& ctxt, MCGradientFill*& x_gradien
     
 	uint4 tablesize = ELEMENTS(gradientprops);
 
-    if (p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
+    // AL-2014-05-21: [[ Bug 12459 ]] Ensure setting gradient property to anything
+    //  that isn't an array does the same as setting it to 'empty'.
+    if (p_value . type == kMCExecValueTypeValueRef &&
+        (MCValueIsEmpty(p_value . valueref_value) ||
+         (MCValueGetTypeCode(p_value . valueref_value) != kMCValueTypeCodeArray)))
     {
         delete t_gradient;
         t_gradient = nil;
