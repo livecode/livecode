@@ -50,9 +50,15 @@ class MCAVFoundationPlayer;
 @end
 
 @interface com_runrev_livecode_MCAVFoundationPlayerView : NSView
+{
+    AVPlayerItemVideoOutput* m_player_item_video_output;
+}
 
 - (AVPlayer*)player;
 - (void)setPlayer:(AVPlayer *)player;
+
+- (AVPlayerItemVideoOutput*)playerItemVideoOutput;
+- (void)setPlayerItemVideoOutput;
 
 @end
 
@@ -193,6 +199,22 @@ private:
     [self setWantsLayer: YES];
 }
 
+- (AVPlayerItemVideoOutput*)playerItemVideoOutput
+{
+    if ([self layer] != nil)
+        return m_player_item_video_output;
+}
+
+- (void)setPlayerItemVideoOutput:(AVPlayerItemVideoOutput *)playerItemVideoOutput
+{
+    if ([self layer] != nil)
+    {
+        m_player_item_video_output = playerItemVideoOutput;
+    }
+    return;
+}
+
+
 @end
 ////////////////////////////////////////////////////////
 
@@ -309,21 +331,14 @@ void MCAVFoundationPlayer::CurrentTimeChanged(void)
 
 void MCAVFoundationPlayer::CacheCurrentFrame(void)
 {
-#if 0
-    AVPlayerItem *t_player_item = [m_player currentItem];
-    if (t_player_item == nil)
-        return;
-    
-    // AVPlayerItemOutput is available in OSX 10.8 and later
-    AVPlayerItemVideoOutput *t_player_item_video_output;
-    
-    t_player_item_video_output =[[AVPlayerItemVideoOutput alloc] initWithPixelBufferAttributes:
-                                 [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:kCVPixelFormatType_32RGBA], kCVPixelBufferPixelFormatTypeKey, nil]];
-    
-    [t_player_item addOutput: t_player_item_video_output];
-    
     CVImageBufferRef t_image;
-    t_image = [t_player_item_video_output copyPixelBufferForItemTime:t_player_item . currentTime itemTimeForDisplay:nil];
+    CMTime t_output_time = [m_player currentItem] . currentTime;
+
+    if ([[m_view playerItemVideoOutput] hasNewPixelBufferForItemTime:t_output_time])
+    {
+        NSLog(@"hasNewPixelBufferForItemTime returned True", nil);
+    }
+    t_image = [[m_view playerItemVideoOutput] copyPixelBufferForItemTime:t_output_time itemTimeForDisplay:nil];
     if (t_image != nil)
     {
         if (m_current_frame != nil)
@@ -331,10 +346,13 @@ void MCAVFoundationPlayer::CacheCurrentFrame(void)
         m_current_frame = t_image;
     }
     
-    
+
     /*
-    AVAssetImageGenerator *generator = [[AVAssetImageGenerator alloc] initWithAsset:m_player . currentItem . asset];
-    CGImageRef t_cgimageref = [generator copyCGImageAtTime: m_player.currentTime  actualTime:nil error:nil];
+    NSError *t_error = nil;
+    AVAssetImageGenerator *generator = [[[AVAssetImageGenerator alloc] initWithAsset:m_player . currentItem . asset] autorelease];
+    CGImageRef t_cgimageref = [generator copyCGImageAtTime: m_player . currentItem . currentTime  actualTime:nil error:&t_error];
+    if (t_error != nil)
+        NSLog(@"couldn't generate thumbnail, error:%@", t_error);
     
     if (t_cgimageref != nil)
 	{
@@ -345,8 +363,6 @@ void MCAVFoundationPlayer::CacheCurrentFrame(void)
     */
    
     
-    
-#endif
 }
 
 void MCAVFoundationPlayer::Switch(bool p_new_offscreen)
@@ -482,8 +498,6 @@ Boolean MCAVFoundationPlayer::MovieActionFilter(MovieController mc, short action
 }
 */
 
-// Define this constant for the key-value observation context.
-static const NSString *ItemStatusContext;
 void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
 {
     id t_url;
@@ -511,7 +525,12 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
         return;
     }
     
-    // We've succeeded so replace the current player with the new one and carry on.
+    NSDictionary* t_settings = @{ (id)kCVPixelBufferPixelFormatTypeKey : [NSNumber numberWithInt:kCVPixelFormatType_32BGRA] };
+    // AVPlayerItemVideoOutput is available in OSX version >= 10.8
+    AVPlayerItemVideoOutput* t_output = [[[AVPlayerItemVideoOutput alloc] initWithPixelBufferAttributes:t_settings] autorelease];
+    AVPlayerItem* t_player_item = [t_player currentItem];
+    [t_player_item addOutput:t_output];
+    [t_player replaceCurrentItemWithPlayerItem:t_player_item];
     
     // Release the old player (if any).
     [m_view setPlayer: nil];
@@ -525,6 +544,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     
     // Now set the player of the view.
     [m_view setPlayer: m_player];
+    [m_view setPlayerItemVideoOutput: t_output];
     
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
     
@@ -532,148 +552,17 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: AVPlayerItemTimeJumpedNotification object: [m_player currentItem]];
     
-    m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 1000) queue:NULL/*dispatch_get_main_queue()*/ usingBlock:^(CMTime time) {
-        
+    m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 1000) queue:dispatch_get_main_queue() usingBlock:^(CMTime time) {
+        /*
         NSLog(@"Value is %f and timescale is %f", (double)time.value , (double)time.timescale );
-        NSLog(@"Raw Time is %f ", (double)time.value / (double)time.timescale );
         NSLog(@"Time is %d ", (int)(1000 * CMTimeGetSeconds(time)));
         NSLog(@"End Time is %f ",  (double)m_selection_finish);
-        
-        //if (1000 * CMTimeGetSeconds(time) >= m_selection_finish)
+        */
         if (CMTimeCompare(time, CMTimeMake(m_selection_finish, 1000)) >= 0)
             [m_player pause];
         
         CurrentTimeChanged();
         }];
-    
-#if 0
-/*
-    NSError *t_error;
-	t_error = nil;
- 
-    id t_filename_or_url;
-    
-    t_filename_or_url = [NSURL URLWithString: [NSString stringWithCString: p_filename encoding: NSMacOSRomanStringEncoding]];
-    
-	// Create an asset with our URL, asychronously load its tracks, its duration, and whether it's playable or protected.
-    // When that loading is complete, configure a player to play the asset.
-    AVURLAsset *t_urlAsset = [AVAsset assetWithURL:t_filename_or_url];
-    NSArray *assetKeysToLoadAndTest = [NSArray arrayWithObjects:@"playable", @"hasProtectedContent", @"tracks", @"duration", nil];
-    [t_urlAsset loadValuesAsynchronouslyForKeys:assetKeysToLoadAndTest completionHandler:^(void) {
-        
-        // The asset invokes its completion handler on an arbitrary queue when loading is complete.
-        // Because we want to access our AVPlayer in our ensuing set-up, we must dispatch our handler to the main queue.
-        dispatch_async(dispatch_get_main_queue(), ^(void) {
-            
-            // First test whether the values of each of the keys we need have been successfully loaded.
-            for (NSString *key in assetKeysToLoadAndTest)
-            {
-                NSError *error = nil;
-                
-                if ([t_urlAsset statusOfValueForKey:key error:&error] == AVKeyValueStatusFailed)
-                {
-                    return;
-                }
-            }
-            
-            if (![t_urlAsset isPlayable] )//|| [t_urlAsset hasProtectedContent])
-            {
-                // We can't play this asset. Show the "Unplayable Asset" label.
-                return;
-            }
-            
-            // We can play this asset.
-            // Set up an AVPlayerLayer according to whether the asset contains video.
-            if ([[t_urlAsset tracksWithMediaType:AVMediaTypeVideo] count] != 0)
-            {
-                // Create an AVPlayerLayer and add it to the player view if there is video, but hide it until it's ready for display
-                AVPlayerLayer *t_newPlayerLayer = [AVPlayerLayer playerLayerWithPlayer:m_player];
-                [t_newPlayerLayer setFrame:[[m_view layer] bounds]];
-                [t_newPlayerLayer setAutoresizingMask:kCALayerWidthSizable | kCALayerHeightSizable];
-                [t_newPlayerLayer setHidden:YES];
-                [[m_view layer] addSublayer:t_newPlayerLayer];
-                //m_player_layer = t_newPlayerLayer;
-                
-            }
-            else
-            {
-                // This asset has no video tracks. Show the "No Video" label.
-            }
-            
-            // Create a new AVPlayerItem and make it our player's current item.
-            AVPlayerItem *t_playerItem = [AVPlayerItem playerItemWithAsset:t_urlAsset];
-            [m_player replaceCurrentItemWithPlayerItem:t_playerItem];
-            
-            
-            [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
-            
-            [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(movieFinished:) name: AVPlayerItemDidPlayToEndTimeNotification object: [m_player currentItem]];
-            
-            [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: AVPlayerItemTimeJumpedNotification object: [m_player currentItem]];
-            
-            m_timeObserverToken = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 10) queue:dispatch_get_main_queue() usingBlock:^(CMTime time) {
-                CurrentTimeChanged();
-            }];
-            
-            
-            
-        });
-        
-    }];
-    
-    // Set the last marker to very large so that any marker will trigger.
-    m_last_marker = UINT32_MAX;
-    
-    //MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], MovieActionFilter, (long)this);
-    */
-    
-    NSError *t_error;
-	t_error = nil;
-    
-    id t_filename_or_url;
-    
-    t_filename_or_url = [NSURL URLWithString: [NSString stringWithCString: p_filename encoding: NSMacOSRomanStringEncoding]];
-    
-    AVURLAsset *asset = [AVURLAsset URLAssetWithURL:t_filename_or_url options:nil];
-    NSString *tracksKey = @"playable";
-    
-    [asset loadValuesAsynchronouslyForKeys:@[tracksKey] completionHandler:
-     ^{
-         // The completion block goes here.
-         dispatch_async(dispatch_get_main_queue(),
-                        ^{
-                            NSError *error;
-                            AVKeyValueStatus status = [asset statusOfValueForKey:tracksKey error:&error];
-                            
-                            if (status == AVKeyValueStatusLoaded) {
-                                playerItem = [AVPlayerItem playerItemWithAsset:asset];
-                                // ensure that this is done before the playerItem is associated with the player
-                                //[playerItem addObserver:m_player forKeyPath:@"status"
-                                                     //options:NSKeyValueObservingOptionInitial context:&ItemStatusContext];
-                                
-                                [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
-                                
-                                [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(movieFinished:) name: AVPlayerItemDidPlayToEndTimeNotification object: playerItem];
-                                
-                                [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: AVPlayerItemTimeJumpedNotification object: playerItem];
-                                
-                                m_player = [[AVPlayer alloc] initWithPlayerItem:playerItem];
-                                
-                                [m_view setPlayer: m_player];
-                                 NSLog(@"Ok!!!@", nil);
-                            }
-                            else
-                            {
-                                // You should deal with the error appropriately.
-                                NSLog(@"The asset's tracks were not loaded:\n%@", [error localizedDescription]);
-                            }
-                        });
-
-     }];
-    m_timeObserverToken = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 10) queue:dispatch_get_main_queue() usingBlock:^(CMTime time) {
-        CurrentTimeChanged();
-    }];
-#endif
 }
 
 
@@ -704,19 +593,7 @@ bool MCAVFoundationPlayer::IsPlaying(void)
 
 void MCAVFoundationPlayer::Start(void)
 {
-    NSLog(@"m_selection_start = %d", m_selection_start);
-    NSLog(@"m_selection_finish = %d", m_selection_start);
-    
-    /*
-    if(m_play_selection_only)
-    {
-        [[m_player currentItem] seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeIndefinite toleranceAfter:kCMTimeIndefinite];
-        [m_player play];
-        [m_player performSelector:@selector(pause) withObject:nil afterDelay:((m_selection_finish - m_selection_start) / 1000.0)];
-    }
-    else
-    */
-        [m_player play];
+    [m_player play];
 }
 
 void MCAVFoundationPlayer::Stop(void)
@@ -740,8 +617,6 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 	else
 		t_rect = [m_view frame];
     
-	NSRect t_movie_rect;
-	//t_movie_rect = [m_view movieBounds];
     
 	NSBitmapImageRep *t_rep;
 	t_rep = [m_view bitmapImageRepForCachingDisplayInRect: t_rect];
@@ -774,7 +649,7 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 		t_ci_image = [[CIImage alloc] initWithCVImageBuffer: m_current_frame];
         //t_ci_image = [[CIImage alloc] initWithCGImage:m_current_frame];
         
-		[t_ci_context drawImage: t_ci_image inRect: CGRectMake(0, t_rect . size . height - t_movie_rect . size . height, t_movie_rect . size . width, t_movie_rect . size . height) fromRect: [t_ci_image extent]];
+		[t_ci_context drawImage: t_ci_image inRect: CGRectMake(0, 0, t_rect . size . width, t_rect . size . height) fromRect: [t_ci_image extent]];
         
 		[t_ci_image release];
         

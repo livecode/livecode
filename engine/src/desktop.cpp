@@ -1083,7 +1083,6 @@ void MCPlatformHandlePlayerCurrentTimeChanged(MCPlatformPlayerRef p_player)
     t_param = new MCParameter();
     t_param -> setn_argument(t_player -> getmoviecurtime());
     
-    // TODO: Replace the following line with t_player -> currenttimechanged(t_param) (and update currenttimechanged() signature)
     t_player -> currenttimechanged(t_param);
 
 }
