@@ -1,0 +1,1 @@
+# Stack window does not respect stack minHeight value
