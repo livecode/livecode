@@ -1697,10 +1697,9 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 	return IO_NORMAL;
 #endif /* MCS_flush_dsk_w32 */ //flush output buffer
 		// SN-2014-06-16 
-		// It seems that FlushFileBuffers can return a non-zero value
-		// with no error declared...
-		if (FlushFileBuffers(m_handle) != NO_ERROR 
-				&& GetLastError() != NO_ERROR)
+		// FileFlushBuffer returns non-zero on success
+		// (which is the opposite of NO_ERROR
+		if (FlushFileBuffers(m_handle) == 0)
 			return false;
 
 		return true;
