@@ -944,7 +944,8 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	context = (dotextmark_callback_state *)p_context;
 	
 	MCAutoStringRef t_string;
-	/* UNCHECKED */ MCStringCreateWithCString((const char *)p_span -> chars, &t_string);
+    // SN-2014-06-17 [[ Bug 12595 ]] Not properly causing the bug, but it never hurts to get to use the right encoding
+    MCStringCreateWithBytes((byte_t*)p_span->chars, p_span->char_count * 2, kMCStringEncodingUTF16, false, &t_string);
 	byte_t *t_bytes;
 	uindex_t t_byte_count;
 	/* UNCHECKED */ MCStringConvertToBytes(*t_string, kMCStringEncodingUTF8, false, t_bytes, t_byte_count);
