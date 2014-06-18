@@ -1658,6 +1658,22 @@ enum Parse_errors
 	// MM-2014-02-12: [[ SecureSocket ]]	
 	// {PE-0541} secure: expected 'verification'
 	PE_SECURE_BADMESSAGE,
+	
+	// MM-2014-06-13: [[ Bug 12567 ]] New variant secure socket <socket> with verification for host <host>
+	// {PE-0542} secure: bad host name
+	PE_SECURE_BADHOST,
+
+	// MM-2014-06-13: [[ Bug 12567 ]] New variant secure socket <socket> with verification for host <host>
+	// {PE-0543} secure: expected 'host'
+	PE_SECURE_NOHOST,
+	
+	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
+	// {PE-0544} open: bad host name
+	PE_OPEN_BADHOST,
+	
+	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
+	// {PE-0545} open: expected 'host'
+	PE_OPEN_NOHOST,	
 };
 
 extern const char *MCparsingerrors;
