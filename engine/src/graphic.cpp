@@ -462,6 +462,7 @@ void MCGraphic::setgradientrect(MCGradientFill *p_gradient, const MCRectangle &n
 Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	uint2 i;
+	int p_flags;
 
 	switch (which)
 	{
@@ -547,66 +548,118 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 		break;
 	case P_POINTS:
 		// MDW-2014-06-14: [[ rect_points ]] allow effective points as read-only
-		switch (getstyleint(flags))
+		p_flags = getstyleint(flags);
+		if (p_flags == F_ROUNDRECT || p_flags == F_G_RECTANGLE)
+		{
+				if (!effective)
+				{
+					ep.setstaticcstring("");
+					break;
+				}
+		}
+		switch (p_flags)
 		{
 			case F_ROUNDRECT:
-				if (!effective)
-				{
-					ep.setstaticcstring("");
-					break;
-				}
-				else
-				{
-					realpoints = NULL;
-					nrealpoints = 0;
-					MCU_roundrect(realpoints, nrealpoints, geteffectiverect(), roundradius);
-					MCU_unparsepoints(realpoints, nrealpoints, ep);
-				}
+			{
+				realpoints = NULL;
+				nrealpoints = 0;
+				MCU_roundrect(realpoints, nrealpoints, geteffectiverect(), roundradius);
+				MCU_unparsepoints(realpoints, nrealpoints, ep);
 				break;
+			}
 			case F_G_RECTANGLE:
-				if (!effective)
+			{
+				MCRectangle nrect = geteffectiverect();
+				nrealpoints = 4;
+				realpoints = new MCPoint[nrealpoints];
+				realpoints[0].x = nrect.x;
+				realpoints[0].y = nrect.y;
+				realpoints[1].x = nrect.x + nrect.width;
+				realpoints[1].y = nrect.y;
+				realpoints[2].x = nrect.x + nrect.width;
+				realpoints[2].y = nrect.y + nrect.height;
+				realpoints[3].x = nrect.x;
+				realpoints[3].y = nrect.y + nrect.height;
+				if (oldpoints == NULL)
 				{
-					ep.setstaticcstring("");
-					break;
-				}
-				else
-				{
-					MCRectangle nrect = geteffectiverect();
-					nrealpoints = 4;
-					realpoints = new MCPoint[nrealpoints];
-					realpoints[0].x = nrect.x;
-					realpoints[0].y = nrect.y;
-					realpoints[1].x = nrect.x + nrect.width;
-					realpoints[1].y = nrect.y;
-					realpoints[2].x = nrect.x + nrect.width;
-					realpoints[2].y = nrect.y + nrect.height;
-					realpoints[3].x = nrect.x;
-					realpoints[3].y = nrect.y + nrect.height;
-					if (oldpoints == NULL)
+					oldpoints = new MCPoint[nrealpoints];
+					points = new MCPoint[nrealpoints];
+					i = nrealpoints;
+					while (i--)
 					{
-						oldpoints = new MCPoint[nrealpoints];
-						points = new MCPoint[nrealpoints];
-						i = nrealpoints;
-						while (i--)
-						{
-							oldpoints[i] = realpoints[i];
-							points[i] = realpoints[i];
-						}
+						oldpoints[i] = realpoints[i];
+						points[i] = realpoints[i];
 					}
-					MCU_unparsepoints(realpoints, nrealpoints, ep);
 				}
+				MCU_unparsepoints(realpoints, nrealpoints, ep);
 				break;
-			case F_REGULAR:
+			}
+//			case F_REGULAR:
 			default:
 				MCU_unparsepoints(realpoints, nrealpoints, ep);
 		}
 		break;
 	case P_RELATIVE_POINTS:
+		// MDW-2014-06-14: [[ rect_points ]] allow effective relative points as read-only
+		p_flags = getstyleint(flags);
+		if (p_flags == F_ROUNDRECT || p_flags == F_G_RECTANGLE)
 		{
-			MCRectangle trect = reduce_minrect(rect);
-			MCU_offset_points(realpoints, nrealpoints, -trect.x, -trect.y);
-			MCU_unparsepoints(realpoints, nrealpoints, ep);
-			MCU_offset_points(realpoints, nrealpoints, trect.x, trect.y);
+				if (!effective)
+				{
+					ep.setstaticcstring("");
+					break;
+				}
+		}
+		switch (p_flags)
+		{
+			case F_ROUNDRECT:
+			{
+				realpoints = NULL;
+				nrealpoints = 0;
+				MCRectangle trect = reduce_minrect(rect);
+				MCU_offset_points(realpoints, nrealpoints, -trect.x, -trect.y);
+				MCU_roundrect(realpoints, nrealpoints, geteffectiverect(), roundradius);
+				MCU_unparsepoints(realpoints, nrealpoints, ep);
+				MCU_offset_points(realpoints, nrealpoints, trect.x, trect.y);
+				break;
+			}
+			case F_G_RECTANGLE:
+			{
+				MCRectangle nrect = geteffectiverect();
+				nrealpoints = 4;
+				realpoints = new MCPoint[nrealpoints];
+				realpoints[0].x = nrect.x;
+				realpoints[0].y = nrect.y;
+				realpoints[1].x = nrect.x + nrect.width;
+				realpoints[1].y = nrect.y;
+				realpoints[2].x = nrect.x + nrect.width;
+				realpoints[2].y = nrect.y + nrect.height;
+				realpoints[3].x = nrect.x;
+				realpoints[3].y = nrect.y + nrect.height;
+				if (oldpoints == NULL)
+				{
+					oldpoints = new MCPoint[nrealpoints];
+					points = new MCPoint[nrealpoints];
+					i = nrealpoints;
+					while (i--)
+					{
+						oldpoints[i] = realpoints[i];
+						points[i] = realpoints[i];
+					}
+				}
+				MCRectangle trect = reduce_minrect(rect);
+				MCU_offset_points(realpoints, nrealpoints, -trect.x, -trect.y);
+				MCU_unparsepoints(realpoints, nrealpoints, ep);
+				MCU_offset_points(realpoints, nrealpoints, trect.x, trect.y);
+				break;
+			}
+			default:
+			{
+				MCRectangle trect = reduce_minrect(rect);
+				MCU_offset_points(realpoints, nrealpoints, -trect.x, -trect.y);
+				MCU_unparsepoints(realpoints, nrealpoints, ep);
+				MCU_offset_points(realpoints, nrealpoints, trect.x, trect.y);
+			}
 		}
 		break;
 	case P_ANGLE:
