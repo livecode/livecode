@@ -175,7 +175,7 @@ Boolean MCS_handle_sockets()
 }
 #endif
 
-#if defined(_WINDOW_DESKTOP) || defined(_WINDOWS_SERVER)
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 typedef SOCKADDR_IN mc_sockaddr_in_t;
 
 bool MCS_init_sockets()

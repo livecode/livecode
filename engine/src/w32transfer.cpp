@@ -1238,7 +1238,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 		uint32_t t_length = 0;
 
         if (t_success)
-            t_success = nil != (t_stream = MCS_fakeopen(MCDataGetOldString(*t_in_string)));
+			t_success = nil != (t_stream = MCS_fakeopen(MCDataGetBytePtr(*t_in_string), MCDataGetLength(*t_in_string)));
 
 		if (t_success)
 			t_success = MCImageDecodeBMPStruct(t_stream, t_byte_count, t_bitmap);
