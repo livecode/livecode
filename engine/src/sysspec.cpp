@@ -1230,7 +1230,8 @@ Boolean MCSocket::init(MCSocketHandle newfd)
 	return False;
 }
 
-MCSocket *MCS_open_socket(char *p_name, Boolean p_datagram, MCObject *p_object, MCNameRef p_message, Boolean p_secure, Boolean p_ssl_verify, char *p_ssl_cert_file)
+// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name.
+MCSocket *MCS_open_socket(char *p_name, Boolean p_datagram, MCObject *p_object, MCNameRef p_message, Boolean p_secure, Boolean p_ssl_verify, char *p_ssl_cert_file, char *p_host_name)
 {
 	return NULL;
 }
@@ -1253,7 +1254,8 @@ MCSocket *MCS_accept(uint2 p_port, MCObject* p_object, MCNameRef p_message, Bool
 }
 
 // MM-2014-02-12: [[ SecureSocket ]] New secure socket command
-void MCS_secure_socket(MCSocket *s, Boolean sslverify)
+// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name.
+void MCS_secure_socket(MCSocket *s, Boolean sslverify, char *hostname)
 {
 }
 
