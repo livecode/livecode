@@ -1234,15 +1234,17 @@ void MCGraphicsContext::drawlink(const char *link, const MCRectangle& region)
 }
 
 
-void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_is_unicode)
+void MCGraphicsContext::drawtext(coord_t x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_is_unicode)
 {
 	// MW-2013-10-29: [[ Bug 11338 ]] If 'image' is true, then render the background
 	//   rect.
 	if (image)
 	{
 		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the context to make sure we measure the width of scaled text correctly.
-		int32_t t_width;
-		t_width = MCFontMeasureText(p_font, s, length, p_is_unicode, MCGContextGetDeviceTransform(m_gcontext));
+		float t_widthf;
+		t_widthf = MCFontMeasureTextFloat(p_font, s, length, p_is_unicode, MCGContextGetDeviceTransform(m_gcontext));
+        
+        int32_t t_width = int32_t(ceilf(t_widthf));
 		
 		MCGContextSave(m_gcontext);
 		setforeground(m_background);

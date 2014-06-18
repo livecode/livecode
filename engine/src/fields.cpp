@@ -843,7 +843,10 @@ void MCField::getlinkdata(MCRectangle &lrect, MCBlock *&sb, MCBlock *&eb)
 	// MW-2012-01-25: [[ FieldMetrics ]] Compute the y-offset in card coords.
 	uint4 yoffset = getcontenty() + paragraphtoy(sptr);
 	lrect.height = sptr->getyextent(ei, fixedheight);
-	sptr->getxextents(si, ei, lrect.x, maxx);
+    coord_t minxf, maxxf;
+	sptr->getxextents(si, ei, minxf, maxxf);
+    lrect.x = minxf;
+    maxx = maxxf;
 	// MW-2012-01-25: [[ FieldMetrics ]] Make sure the linkrect is in card coords.
 	lrect.height -= lrect.y;
 	lrect.y += yoffset;
@@ -933,13 +936,13 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 		// MW-2005-07-16: [[Bug 2938]] We must check to see if the field is open, if not we cannot do this.
 		if (opened)
 		{
-			int2 minx, maxx;
+			coord_t minx, maxx;
 
 			// MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
 			//   This is because minx/maxx are uninitialized and it seems that they have to be for
 			//   calls to getxextents() to make sense.
-			minx = MAXINT2;
-			maxx = MININT2;
+			minx = INFINITY;
+			maxx = -INFINITY;
 
 			do
 			{
@@ -954,9 +957,9 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 				minx = maxx = 0;
 
 			if (which == P_FORMATTED_LEFT)
-				ep.setnvalue(getcontentx() + minx);
+				ep.setnvalue(int32_t(floorf(getcontentx() + minx)));
 			else
-				ep.setnvalue(maxx - minx);
+				ep.setnvalue(int32_t(ceilf(maxx - minx)));
 		}
 		else
 			ep . setnvalue(0);
@@ -988,7 +991,7 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 			sptr->indextoloc(si, fixedheight, x, y);
 			// MW-2012-01-25: [[ FieldMetrics ]] Compute the yoffset in card-coords.
 			int4 yoffset = getcontenty() + paragraphtoy(sptr);
-			int2 minx, maxx;
+			coord_t minx, maxx;
 			int4 maxy = y;
 			minx = INT16_MAX;
 			maxx = INT16_MIN;

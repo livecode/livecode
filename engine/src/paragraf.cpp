@@ -3074,9 +3074,9 @@ uint2 MCParagraph::getyextent(int4 tindex, uint2 fixedheight)
 	return y;
 }
 
-int2 MCParagraph::getx(uint2 tindex, MCLine *lptr)
+coord_t MCParagraph::getx(uint2 tindex, MCLine *lptr)
 {
-	int2 x = lptr->getcursorx(tindex);
+	coord_t x = lptr->getcursorx(tindex);
 
 	// MW-2012-01-08: [[ ParaStyles ]] Adjust the x start taking into account
 	//   indents, list indents and alignment. (Paragraph to Field so +ve)
@@ -3085,7 +3085,7 @@ int2 MCParagraph::getx(uint2 tindex, MCLine *lptr)
 	return x;
 }
 
-void MCParagraph::getxextents(int4 &si, int4 &ei, int2 &minx, int2 &maxx)
+void MCParagraph::getxextents(int4 &si, int4 &ei, coord_t &minx, coord_t &maxx)
 {
 	if (lines == NULL)
 	{
@@ -3100,7 +3100,7 @@ void MCParagraph::getxextents(int4 &si, int4 &ei, int2 &minx, int2 &maxx)
 	uint2 i, l;
 	do
 	{
-		int2 newx;
+		coord_t newx;
 		lptr->getindex(i, l);
 		if (i + l > si)
 		{
