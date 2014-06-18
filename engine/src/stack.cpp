@@ -3113,7 +3113,11 @@ void MCStack::constrain(MCPoint p_size, MCPoint& r_new_size)
 {
 	r_new_size . x = MCMax(minwidth, MCMin(maxwidth, p_size . x));
     // PM-2014-06-17: [[ Bug 12632 ]] minheight should be incremented by 22, which is the height of the title bar (currently 22 for Mac OSX)
+#ifdef _MAC_DESKTOP
 	r_new_size . y = MCMax(minheight + 22, MCMin(maxheight, p_size . y));
+#else
+    r_new_size . y = MCMax(minheight, MCMin(maxheight, p_size . y));
+#endif
 }
 
 //////////
