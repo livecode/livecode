@@ -64,7 +64,7 @@ protected:
 	uint4 flags;
 	Blockatts *atts;
 	uint2 index, size;
-	uint2 width;
+	coord_t width;
 	uint2 opened;
 
 	// MW-2012-02-14: [[ FontRefs ]] The concrete font to use for the block.
@@ -105,12 +105,12 @@ public:
 	                MCFontStruct *pfont, Boolean &broken);
 	bool fit(int2 x, uint2 width, uint2& r_break_index, bool& r_break_fits);
 	void split(uint2 p_index);
-	int2 gettabwidth(int2 x, const char *text, uint2 index);
-	void drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 length, Boolean image, uint32_t style);
+	coord_t gettabwidth(coord_t x, const char *text, uint2 index);
+	void drawstring(MCDC *dc, coord_t x, coord_t cx, int2 y, uint2 start, uint2 length, Boolean image, uint32_t style);
 	
 	// MW-2012-02-27: [[ Bug 2939 ]] The 'flags' parameter indicates whether the left and/or
 	//   right edge of any box or 3d-box should be rendered.
-	void draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const char *tptr, uint2 pstyle, uint32_t flags);
+	void draw(MCDC *dc, coord_t x, coord_t cx, int2 y, uint2 si, uint2 ei, const char *tptr, uint2 pstyle, uint32_t flags);
 
 	// MW-2012-02-17: [[ SplitTextAttrs ]] Returns the effective font attrs of the block.
 	//   If 'base_attrs' is non-nil, it uses that to derive the attrs.
@@ -160,10 +160,10 @@ public:
 	}
 	void setindex(const char *sptr, uint2 i, uint2 l);
 	void moveindex(const char *sptr, int2 ioffset, int2 loffset);
-	uint2 getcursorx(int2 x, uint2 fi);
-	uint2 getcursorindex(int2 x, int2 cx, Boolean chunk, Boolean last);
-	uint2 getsubwidth(MCDC *dc, int2 x, uint2 i, uint2 l);
-	uint2 getwidth(MCDC *dc, int2 x);
+	coord_t getcursorx(int2 x, uint2 fi);
+	uint2 getcursorindex(coord_t x, coord_t cx, Boolean chunk, Boolean last);
+	coord_t getsubwidth(MCDC *dc, coord_t x, uint2 i, uint2 l);
+	coord_t getwidth(MCDC *dc, coord_t x);
 	void reset();
 	void getindex(uint2 &i, uint2 &l);
 	uint2 getascent(void);
