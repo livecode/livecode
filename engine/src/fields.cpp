@@ -2846,7 +2846,7 @@ MCRectangle MCField::firstRectForCharacterRange(int32_t& si, int32_t& ei)
 	int4 yoffset = getcontenty() + paragraphtoy(sptr);
 	
 	// Get the extent of the range.
-	int2 minx, maxx;
+	coord_t minx, maxx;
 	sptr -> getxextents(t_si, t_ei, minx, maxx);
 	
 	MCRectangle t_rect;
