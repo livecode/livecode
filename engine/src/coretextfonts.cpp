@@ -34,7 +34,7 @@
 
 static void *coretext_font_create_with_name_and_size(const char *p_name, uint32_t p_size)
 {
-	CFStringRef t_name;
+	/*CFStringRef t_name;
 	t_name = CFStringCreateWithCString(NULL, p_name, kCFStringEncodingMacRoman);
 	
 	CTFontRef t_font;
@@ -46,7 +46,67 @@ static void *coretext_font_create_with_name_and_size(const char *p_name, uint32_
         CFRelease(t_name);
     }
     
-	return (void *)t_font;
+	return (void *)t_font;*/
+    
+    bool t_success;
+    t_success = true;
+    
+    CFStringRef t_name;
+    t_name = NULL;
+    if (t_success)
+    {
+        t_name = CFStringCreateWithCString(NULL, p_name, kCFStringEncodingMacRoman);
+        t_success = t_name != NULL;
+    }
+    
+    CFDictionaryRef t_attributes;
+    t_attributes = NULL;
+    if (t_success)
+    {
+        // Updated the font creation routine to use font descriptors. Though CTFontCreateWithName worked,
+        // it logged warnings (on 10.9) whenever it was passed a non-postscript font name. Hopefully using
+        // the display name first in the descriptor will remove the warnings but still keep the fall back behaviour.
+        CFStringRef t_keys[] =
+        {
+            kCTFontDisplayNameAttribute,
+            kCTFontNameAttribute,
+            kCTFontFamilyNameAttribute,
+        };
+        CFTypeRef t_values[] = {
+            t_name,
+            t_name,
+            t_name,
+        };
+        t_attributes = CFDictionaryCreate(NULL,
+                                          (const void **)&t_keys, (const void **)&t_values,
+                                          sizeof(t_keys) / sizeof(t_keys[0]),
+                                          &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+        t_success = t_attributes != NULL;
+    }
+    
+    CTFontDescriptorRef t_descriptor;
+    t_descriptor = NULL;
+    if (t_success)
+    {
+        t_descriptor = CTFontDescriptorCreateWithAttributes(t_attributes);
+        t_success = t_descriptor != NULL;
+    }
+    
+    CTFontRef t_font;
+    t_font = NULL;
+    if (t_success)
+        t_font = CTFontCreateWithFontDescriptor(t_descriptor, p_size, NULL);
+    
+    CFStringRef t_font_name = CTFontCopyFullName(t_font);
+    
+    if (t_descriptor != NULL)
+        CFRelease(t_descriptor);
+    if (t_attributes != NULL)
+        CFRelease(t_attributes);
+    if (t_name != NULL)
+        CFRelease(t_name);
+    
+    return (void *)t_font;
 }
 
 void *coretext_font_create_with_name_size_and_style(const char *p_name, uint32_t p_size, bool p_bold, bool p_italic)
@@ -236,6 +296,96 @@ void core_text_get_font_styles(const char *p_name, uint32_t p_size, MCExecPoint 
 	
     if (t_font_family != NULL)
         CFRelease(t_font_family);
+}
+
+bool coretext_font_load_from_path(const char *p_path, bool p_globally, void *&r_loaded_font)
+{
+    bool t_success;
+    t_success = true;
+    
+    CFStringRef t_path;
+    t_path = NULL;
+    if (t_success)
+    {
+        t_path = CFStringCreateWithCString(NULL, p_path, kCFStringEncodingUTF8);
+        t_success = t_path != NULL;
+    }
+    
+    CFURLRef t_font_url;
+    t_font_url = NULL;
+    if (t_success)
+    {
+        t_font_url = CFURLCreateWithFileSystemPath(NULL, t_path, kCFURLPOSIXPathStyle, false);
+        t_success = t_font_url != NULL;
+    }
+    
+    if (t_success)
+    {
+        CTFontManagerScope t_scope;
+        if (p_globally)
+            t_scope = kCTFontManagerScopeUser;
+        else
+            t_scope = kCTFontManagerScopeProcess;
+        
+        CFErrorRef t_err;
+        t_success = CTFontManagerRegisterFontsForURL(t_font_url, t_scope, &t_err);
+        if (t_err != NULL)
+            CFRelease(t_err);
+    }
+    
+    if (t_success)
+        r_loaded_font = NULL;
+    
+    if (t_font_url != NULL)
+        CFRelease(t_font_url);
+    if (t_path != NULL)
+        CFRelease(t_path);
+    
+    
+    return t_success;
+}
+
+bool coretext_font_unload(const char *p_path, bool p_globally, void *p_loaded_font)
+{
+    bool t_success;
+    t_success = true;
+    
+    CFStringRef t_path;
+    t_path = NULL;
+    if (t_success)
+    {
+        t_path = CFStringCreateWithCString(NULL, p_path, kCFStringEncodingUTF8);
+        t_success = t_path != NULL;
+    }
+    
+    CFURLRef t_font_url;
+    t_font_url = NULL;
+    if (t_success)
+    {
+        t_font_url = CFURLCreateWithFileSystemPath(NULL, t_path, kCFURLPOSIXPathStyle, false);
+        t_success = t_font_url != NULL;
+    }
+    
+    if (t_success)
+    {
+        CTFontManagerScope t_scope;
+        if (p_globally)
+            t_scope = kCTFontManagerScopeUser;
+        else
+            t_scope = kCTFontManagerScopeProcess;
+        
+        CFErrorRef t_err;
+        t_success = CTFontManagerUnregisterFontsForURL(t_font_url, t_scope, &t_err);
+        if (t_err != NULL)
+            CFRelease(t_err);
+    }
+    
+    if (t_font_url != NULL)
+        CFRelease(t_font_url);
+    if (t_path != NULL)
+        CFRelease(t_path);
+    
+    return t_success;
 }
 
 #ifdef _MACOSX
