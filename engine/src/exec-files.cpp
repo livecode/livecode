@@ -1275,7 +1275,9 @@ void MCFilesExecPerformWait(MCExecContext &ctxt, int4 p_index, real8 &x_duration
 
 // Reads from the stream a codeunit and put it back in the end of the mutable buffer x_buffer
 // For a UTF-8 character, it might read more than one codepoint, the number of codeunit read is returned
-uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_t p_encoding, real8 &x_duration, IO_handle p_stream, MCStringRef x_buffer, IO_stat &r_stat)
+// SN-2014-06-18 [[ Bug 12538 ]] Read from process until empty
+// Added p_empty_allowed, to allow a read to fail in case we read 'until empty'
+uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_t p_encoding, bool p_empty_allowed, real8 &x_duration, IO_handle p_stream, MCStringRef x_buffer, IO_stat &r_stat)
 {
     uint4 t_codeunit_added = 0;
 
@@ -1424,7 +1426,10 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 			r_stat = IO_ERROR;
 		}
 	}
-	while (!t_codeunit_added && r_stat == IO_NORMAL);
+    // SN-2014-06-18 [[ Bug 12538 ]] Read from process until empty
+    // We only read once in case the reading is allowed to return empty
+    // This avoid to get stuck in an infinite loop if the stream read always generates text
+	while (!t_codeunit_added && !p_empty_allowed && r_stat == IO_NORMAL);
 
     return t_codeunit_added;
 }
@@ -1437,12 +1442,14 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
  *      - on success, the end boundary of the last char loaded
  *      - on error, the one passed as parameter
  */
-bool MCFilesExecPerformReadChunk(MCExecContext &ctxt, int4 p_index, intenum_t p_encoding, intenum_t p_file_unit, uint4 p_last_boundary, real8 &x_duration, IO_handle x_stream, MCStringRef x_buffer, uint4 &r_new_boundary, IO_stat &r_stat)
+// SN-2014-06-18 [[ Bug 12538 ]] Read from process until empty
+// Added p_empty_allowed, to allow a read to fail in case we read 'until empty'
+bool MCFilesExecPerformReadChunk(MCExecContext &ctxt, int4 p_index, intenum_t p_encoding, bool p_empty_allowed, intenum_t p_file_unit, uint4 p_last_boundary, real8 &x_duration, IO_handle x_stream, MCStringRef x_buffer, uint4 &r_new_boundary, IO_stat &r_stat)
 {
     switch (p_file_unit)
     {
     case FU_CODEUNIT:
-        if (!MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, x_duration, x_stream, x_buffer, r_stat))
+        if (!MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, p_empty_allowed, x_duration, x_stream, x_buffer, r_stat))
             return false;
 
         r_new_boundary = MCStringGetLength(x_buffer);
@@ -1453,7 +1460,7 @@ bool MCFilesExecPerformReadChunk(MCExecContext &ctxt, int4 p_index, intenum_t p_
                 || MCStringIsEmpty(x_buffer))
         {
             // We are at the beginning of a char
-            if (!MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, x_duration, x_stream, x_buffer, r_stat))
+            if (!MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, p_empty_allowed, x_duration, x_stream, x_buffer, r_stat))
                 return false;
         }
         if (MCUnicodeCodepointIsHighSurrogate(MCStringGetCharAtIndex(x_buffer, p_last_boundary)))
@@ -1461,7 +1468,7 @@ bool MCFilesExecPerformReadChunk(MCExecContext &ctxt, int4 p_index, intenum_t p_
             if (MCStringGetLength(x_buffer) - p_last_boundary == 1)
             {
                 // Having a lead surrogate in the end, we need to read the next codeunit of the codepoint
-                if (MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, x_duration, x_stream, x_buffer, r_stat))
+                if (MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, p_empty_allowed, x_duration, x_stream, x_buffer, r_stat))
                     // We failed at reading, so we just add a single codeunit codepoint.
                     r_new_boundary = p_last_boundary + 1;
                 else
@@ -1481,7 +1488,7 @@ bool MCFilesExecPerformReadChunk(MCExecContext &ctxt, int4 p_index, intenum_t p_
         //  It does this by monitoring the length of the range [index, length(buffer)) for its length in characters
         while(true)
         {
-            uint4 t_codeunit_read = MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, x_duration, x_stream, x_buffer, r_stat);
+            uint4 t_codeunit_read = MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, p_empty_allowed, x_duration, x_stream, x_buffer, r_stat);
 
             if (!t_codeunit_read)
             {
@@ -1556,7 +1563,9 @@ void MCFilesExecPerformReadUnicodeFor(MCExecContext& ctxt, IO_handle p_stream, i
     while (t_progress < p_count)
     {
         uint4 t_new_boundary;
-        if (!MCFilesExecPerformReadChunk(ctxt, p_index, p_encoding, p_unit_type, t_last_char_boundary, t_duration, p_stream, *t_output, t_new_boundary,t_stat))
+        // SN-2014-06-18 [[ Bug 12538 ]] Read from process until empty
+        // We need to allow a reading to return nothing, without being stuck in a waiting loop for data
+        if (!MCFilesExecPerformReadChunk(ctxt, p_index, p_encoding, false, p_unit_type, t_last_char_boundary, t_duration, p_stream, *t_output, t_new_boundary,t_stat))
             // An error occurred during the reading
             break;
 
@@ -1605,11 +1614,16 @@ void MCFilesExecPerformReadTextUntil(MCExecContext& ctxt, IO_handle p_stream, in
     MCStringNormalizedCopyNFC(p_sentinel, &t_norm_sent);
 
     MCAutoArray<unichar_t> t_norm_buf;
+    
+    // SN-2014-06-18 [[ Bug 12538 ]] Read from process until empty
+    // We want to shortcut the waiting loop in case we accept that the reading returns empty
+    bool t_empty_allowed;
+    t_empty_allowed = MCStringIsEmpty(p_sentinel);
 
     while (p_count)
     {
         uint4 t_new_char_boundary;
-        if (!MCFilesExecPerformReadChunk(ctxt, p_index, p_encoding, FU_CODEPOINT, t_last_char_boundary, t_duration, p_stream, *t_output, t_new_char_boundary, t_stat))
+        if (!MCFilesExecPerformReadChunk(ctxt, p_index, p_encoding, t_empty_allowed, FU_CODEPOINT, t_last_char_boundary, t_duration, p_stream, *t_output, t_new_char_boundary, t_stat))
             // error occurred while reading a codepoint
             break;
 
