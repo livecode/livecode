@@ -1588,7 +1588,7 @@ void MCField::centerfound()
 	fstart = foundoffset;
 	MCParagraph *foundpgptr = indextoparagraph(paragraphs, fstart, fend);
 	fstart += (fend - fstart) >> 1;
-	int2 x, smally;
+	coord_t x, smally;
 	foundpgptr->indextoloc(fstart, fixedheight, x, smally);
 
 	// MW-2012-01-25: [[ FieldMetrics ]] Convert x and y to card co-ords.

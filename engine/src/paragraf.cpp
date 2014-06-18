@@ -3587,7 +3587,7 @@ void MCParagraph::reverseselection()
 		originalindex = startindex;
 }
 
-void MCParagraph::indextoloc(findex_t tindex, uint2 fixedheight, int2 &x, int2 &y)
+void MCParagraph::indextoloc(findex_t tindex, uint2 fixedheight, coord_t &x, coord_t &y)
 {
 	// MW-2012-01-08: [[ ParaStyles ]] Text starts after spacing above.
 	y = computetopmargin();
@@ -3637,9 +3637,9 @@ uint2 MCParagraph::getyextent(findex_t tindex, uint2 fixedheight)
 	return y;
 }
 
-int2 MCParagraph::getx(findex_t tindex, MCLine *lptr)
+coord_t MCParagraph::getx(findex_t tindex, MCLine *lptr)
 {
-	int2 x = lptr->GetCursorXPrimary(tindex, moving_forward);
+	coord_t x = lptr->GetCursorXPrimary(tindex, moving_forward);
 
 	// MW-2012-01-08: [[ ParaStyles ]] Adjust the x start taking into account
 	//   indents, list indents and alignment. (Paragraph to Field so +ve)
@@ -3648,7 +3648,7 @@ int2 MCParagraph::getx(findex_t tindex, MCLine *lptr)
 	return x;
 }
 
-void MCParagraph::getxextents(findex_t &si, findex_t &ei, int2 &minx, int2 &maxx)
+void MCParagraph::getxextents(findex_t &si, findex_t &ei, coord_t &minx, coord_t &maxx)
 {
 	if (lines == NULL)
 	{
@@ -3663,7 +3663,7 @@ void MCParagraph::getxextents(findex_t &si, findex_t &ei, int2 &minx, int2 &maxx
 	findex_t i, l;
 	do
 	{
-		int2 newx;
+		coord_t newx;
 		lptr->GetRange(i, l);
 		if (i + l > si)
 		{

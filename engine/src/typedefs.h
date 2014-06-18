@@ -98,4 +98,7 @@ typedef unsigned char Boolean;
 #define True 1
 #define Mixed 2
 
+// Coordinates
+typedef float32_t coord_t;
+
 #endif
