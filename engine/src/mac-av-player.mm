@@ -52,6 +52,7 @@ class MCAVFoundationPlayer;
 @interface com_runrev_livecode_MCAVFoundationPlayerView : NSView
 {
     AVPlayerItemVideoOutput* m_player_item_video_output;
+    CVDisplayLinkRef m_display_link;
 }
 
 - (AVPlayer*)player;
@@ -59,6 +60,9 @@ class MCAVFoundationPlayer;
 
 - (AVPlayerItemVideoOutput*)playerItemVideoOutput;
 - (void)setPlayerItemVideoOutput;
+//- (CVReturn)getFrameForTime:(const CVTimeStamp*)outputTime;
+- (CVDisplayLinkRef)getDisplayLink;
+- (void)displayPixelBuffer:(CVPixelBufferRef)pixelBuffer atTime:(CMTime)outputTime;
 
 @end
 
@@ -101,6 +105,12 @@ private:
 	void Switch(bool new_offscreen);
     
     void CacheCurrentFrame(void);
+    static CVReturn MyDisplayLinkCallback (CVDisplayLinkRef displayLink,
+                                                          const CVTimeStamp *inNow,
+                                                          const CVTimeStamp *inOutputTime,
+                                                          CVOptionFlags flagsIn,
+                                                          CVOptionFlags *flagsOut,
+                                    void *displayLinkContext);
     
 	static void DoSwitch(void *context);
     
@@ -214,6 +224,15 @@ private:
     return;
 }
 
+- (CVDisplayLinkRef)getDisplayLink
+{
+    return m_display_link;
+}
+
+- (void)displayPixelBuffer:(CVPixelBufferRef)pixelBuffer atTime:(CMTime)outputTime
+{
+    
+}
 
 @end
 ////////////////////////////////////////////////////////
@@ -383,6 +402,40 @@ void MCAVFoundationPlayer::Switch(bool p_new_offscreen)
 	m_switch_scheduled = true;
 }
 
+CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLink,
+                                const CVTimeStamp *inNow,
+                                const CVTimeStamp *inOutputTime,
+                                CVOptionFlags flagsIn,
+                                CVOptionFlags *flagsOut,
+                                void *displayLinkContext)
+{
+    com_runrev_livecode_MCAVFoundationPlayerView *t_view = (com_runrev_livecode_MCAVFoundationPlayerView *)displayLinkContext;
+    AVPlayerItemVideoOutput *t_player_item_video_output = t_view . playerItemVideoOutput;
+    
+    // The displayLink calls back at every vsync (screen refresh)
+    // Compute itemTime for the next vsync
+    CMTime t_output_item_time = [t_player_item_video_output itemTimeForCVTimeStamp:*inOutputTime];
+    
+    if ([t_player_item_video_output hasNewPixelBufferForItemTime:t_output_item_time])
+    {
+        //self->_lastHostTime = inOutputTime->hostTime;
+        
+        // Copy the pixel buffer to be displayed next and add it to AVSampleBufferDisplayLayer for display
+        
+        CVImageBufferRef t_image;
+        t_image = [t_player_item_video_output copyPixelBufferForItemTime:t_output_item_time itemTimeForDisplay:nil];
+        
+        //TODO fetch the new pixel buffer and schedule a redraw
+        
+        //TODO 
+        [t_view displayPixelBuffer:t_image atTime:t_output_item_time];
+        
+        return kCVReturnSuccess;
+
+    }
+    
+}
+
 void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 {
 	MCAVFoundationPlayer *t_player;
@@ -403,7 +456,7 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
         
         // TODO: Find an equivalent of SetMovieDrawingCompleteProc so as to play the player when alwaysBuffer = true
         // SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
-
+        CVDisplayLinkSetOutputCallback(t_player -> m_view . getDisplayLink, MCAVFoundationPlayer::MyDisplayLinkCallback, t_player);
         
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
 	}
