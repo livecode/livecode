@@ -24,31 +24,29 @@
 
 #include "mac-internal.h"
 
+bool coretext_font_load_from_path(const char *p_path, bool p_globally, void *&r_loaded_font);
+bool coretext_font_unload(const char *p_path, bool p_globally, void *p_loaded_font);
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // TD-2013-07-01 [[ DynamicFonts ]]
+// MM-2014-06-12: [[ CoreText ]] Updated to use core text routinees.
 bool MCPlatformLoadFont(const char *p_utf8_path, bool p_globally, MCPlatformLoadedFontRef& r_loaded_font)
 {
-	FSRef t_ref;	
-	if (FSPathMakeRef((const UInt8 *)p_utf8_path, &t_ref, NULL) != noErr)
-		return false;
-    
-    ATSFontContext t_context = kATSFontContextLocal;
-    if (p_globally)
-        t_context = kATSFontContextGlobal;
-    
-    ATSFontContainerRef t_container = NULL;
-    if (ATSFontActivateFromFileReference(&t_ref, t_context, kATSFontFormatUnspecified, NULL, kATSOptionFlagsDefault, &t_container) != noErr)
-		return false;
-    
-    r_loaded_font = (MCPlatformLoadedFontRef)t_container;
-    
-    return true;
+	void *t_loaded_font;
+    if (coretext_font_load_from_path(p_utf8_path, p_globally, t_loaded_font))
+    {
+        r_loaded_font = (MCPlatformLoadedFontRef)t_loaded_font;
+        return true;
+    } else
+        return false;
 }
 
+// MM-2014-06-12: [[ CoreText ]] Updated to use core text routinees.
 bool MCPlatformUnloadFont(const char *utf8path, bool globally, MCPlatformLoadedFontRef p_loaded_font)
 {
-	return ATSFontDeactivate((ATSFontContainerRef)p_loaded_font, NULL, kATSOptionFlagsDefault) == noErr;
+    return coretext_font_unload(utf8path, globally, (void *)p_loaded_font);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
