@@ -62,6 +62,8 @@ class MCAVFoundationPlayer;
 - (void)setPlayerItemVideoOutput;
 //- (CVReturn)getFrameForTime:(const CVTimeStamp*)outputTime;
 - (CVDisplayLinkRef)getDisplayLink;
+- (void)setDisplayLink:(CVDisplayLinkRef)ref;
+
 - (void)displayPixelBuffer:(CVPixelBufferRef)pixelBuffer atTime:(CMTime)outputTime;
 
 @end
@@ -227,6 +229,11 @@ private:
 - (CVDisplayLinkRef)getDisplayLink
 {
     return m_display_link;
+}
+
+- (void)setDisplayLink:(CVDisplayLinkRef)ref
+{
+    m_display_link = ref;
 }
 
 - (void)displayPixelBuffer:(CVPixelBufferRef)pixelBuffer atTime:(CMTime)outputTime
@@ -409,8 +416,10 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
                                 CVOptionFlags *flagsOut,
                                 void *displayLinkContext)
 {
-    com_runrev_livecode_MCAVFoundationPlayerView *t_view = (com_runrev_livecode_MCAVFoundationPlayerView *)displayLinkContext;
-    AVPlayerItemVideoOutput *t_player_item_video_output = t_view . playerItemVideoOutput;
+    /*
+    NSLog(@"We are here!");
+    MCAVFoundationPlayer *t_self = (MCAVFoundationPlayer *)displayLinkContext;
+    AVPlayerItemVideoOutput *t_player_item_video_output = t_self -> m_view . playerItemVideoOutput;
     
     // The displayLink calls back at every vsync (screen refresh)
     // Compute itemTime for the next vsync
@@ -425,22 +434,33 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
         CVImageBufferRef t_image;
         t_image = [t_player_item_video_output copyPixelBufferForItemTime:t_output_item_time itemTimeForDisplay:nil];
         
-        //TODO fetch the new pixel buffer and schedule a redraw
+        if (t_image != nil)
+        {
+            if (t_self -> m_current_frame != nil)
+                CFRelease(t_self -> m_current_frame);
+            t_self -> m_current_frame = t_image;
+        }
         
-        //TODO 
-        [t_view displayPixelBuffer:t_image atTime:t_output_item_time];
+        MCPlatformCallbackSendPlayerFrameChanged(t_self);
         
         return kCVReturnSuccess;
-
     }
+    */
     
+    
+    NSLog(@"We are here!");
+    MCAVFoundationPlayer *t_self = (MCAVFoundationPlayer *)displayLinkContext;
+    t_self -> CacheCurrentFrame();
+	
+	MCPlatformCallbackSendPlayerFrameChanged(t_self);
+    return kCVReturnSuccess;
 }
 
 void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 {
 	MCAVFoundationPlayer *t_player;
 	t_player = (MCAVFoundationPlayer *)ctxt;
-    
+    CVDisplayLinkRef t_ref = t_player -> m_view . getDisplayLink;
 	t_player -> m_switch_scheduled = false;
     
 	if (t_player -> m_pending_offscreen == t_player -> m_offscreen)
@@ -456,7 +476,9 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
         
         // TODO: Find an equivalent of SetMovieDrawingCompleteProc so as to play the player when alwaysBuffer = true
         // SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
-        CVDisplayLinkSetOutputCallback(t_player -> m_view . getDisplayLink, MCAVFoundationPlayer::MyDisplayLinkCallback, t_player);
+        
+        //CVDisplayLinkSetOutputCallback(t_player -> m_view . getDisplayLink, MCAVFoundationPlayer::MyDisplayLinkCallback, t_player);
+        CVDisplayLinkStart(t_ref);
         
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
 	}
@@ -470,8 +492,8 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 		
         // TODO: Find an equivalent of SetMovieDrawingCompleteProc so as to play the player when alwaysBuffer = true
         // SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
-
-        
+        CVDisplayLinkStop(t_ref);
+                
 		// Switching to non-offscreen
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
 		t_player -> Realize();
@@ -585,7 +607,11 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
         [t_player release];
         return;
     }
-    
+    CVDisplayLinkRef t_display_link_ref;
+    CVDisplayLinkCreateWithActiveCGDisplays(&t_display_link_ref);
+    [m_view setDisplayLink:t_display_link_ref];
+    CVDisplayLinkSetOutputCallback(t_display_link_ref, MCAVFoundationPlayer::MyDisplayLinkCallback, this);
+
     NSDictionary* t_settings = @{ (id)kCVPixelBufferPixelFormatTypeKey : [NSNumber numberWithInt:kCVPixelFormatType_32BGRA] };
     // AVPlayerItemVideoOutput is available in OSX version >= 10.8
     AVPlayerItemVideoOutput* t_output = [[[AVPlayerItemVideoOutput alloc] initWithPixelBufferAttributes:t_settings] autorelease];
