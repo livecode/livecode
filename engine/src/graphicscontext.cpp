@@ -124,6 +124,23 @@ static MCGPathRef MCGPathFromMCPath(MCPath *p_path)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCGFloatIsInteger(MCGFloat p_float)
+{
+	return floorf(p_float) == p_float;
+}
+
+bool MCGAffineTransformIsInteger(const MCGAffineTransform &p_transform)
+{
+	return MCGFloatIsInteger(p_transform.a) &&
+		MCGFloatIsInteger(p_transform.b) &&
+		MCGFloatIsInteger(p_transform.c) &&
+		MCGFloatIsInteger(p_transform.d) &&
+		MCGFloatIsInteger(p_transform.tx) &&
+		MCGFloatIsInteger(p_transform.ty);
+}
+
+//////////
+
 void MCGraphicsContext::init(MCGContextRef p_context)
 {
 	m_gcontext = MCGContextRetain(p_context);
@@ -142,6 +159,11 @@ void MCGraphicsContext::init(MCGContextRef p_context)
 	m_dash_lengths = nil;
 	m_dash_count = 0;
 	
+	// IM-2014-06-19: [[ Bug 12557 ]] Force antialiasing if the underlying context has a non-integer transform set
+	m_force_antialiasing = !MCGAffineTransformIsInteger(MCGContextGetDeviceTransform(p_context));
+	if (m_force_antialiasing)
+		MCGContextSetShouldAntialias(p_context, true);
+
 	MCGContextSetFlatness(p_context, 1 / 16.0f);
 }
 
@@ -317,7 +339,8 @@ void MCGraphicsContext::clearorigin(void)
 
 void MCGraphicsContext::setquality(uint1 p_quality)
 {
-	MCGContextSetShouldAntialias(m_gcontext, p_quality == QUALITY_SMOOTH);
+	if (!m_force_antialiasing)
+		MCGContextSetShouldAntialias(m_gcontext, p_quality == QUALITY_SMOOTH);
 }
 
 void MCGraphicsContext::setfunction(uint1 p_function)
