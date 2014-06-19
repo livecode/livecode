@@ -312,10 +312,28 @@ bool MCGraphicsContext::changeopaque(bool p_value)
 
 void MCGraphicsContext::setclip(const MCRectangle& p_clip)
 {
-	//m_clip = p_clip;
 	// IM-2013-09-03: [[ RefactorGraphics ]] use MCGContextSetClipToRect to replace current
 	// clipping rect with p_clip (consistent with old MCContext::setclip functionality)
-	MCGContextSetClipToRect(m_gcontext, MCRectangleToMCGRectangle(p_clip));
+    // MW-2014-06-19: [[ Bug 12557 ]] Round clip up to device pixel boundaries to stop compositing error accumulation on fringes.
+    MCGRectangle t_rect;
+    t_rect = MCRectangleToMCGRectangle(p_clip);
+    
+    MCGAffineTransform t_device_transform;
+    t_device_transform = MCGContextGetDeviceTransform(m_gcontext);
+    
+    MCGRectangle t_device_rect;
+    t_device_rect = MCGRectangleApplyAffineTransform(t_rect, t_device_transform);
+    
+    MCGRectangle t_pixel_device_rect;
+    t_pixel_device_rect . origin . x = floorf(t_device_rect . origin . x);
+    t_pixel_device_rect . origin . y = floorf(t_device_rect . origin . y);
+    t_pixel_device_rect . size . width = ceilf(t_device_rect . origin . x + t_device_rect . size . width) - t_pixel_device_rect . origin . x;
+    t_pixel_device_rect . size . height = ceilf(t_device_rect . origin . y + t_device_rect . size . height) - t_pixel_device_rect . origin . y;
+    
+    MCGRectangle t_pixel_rect;
+    t_pixel_rect = MCGRectangleApplyAffineTransform(t_pixel_device_rect, MCGAffineTransformInvert(t_device_transform));
+    
+	MCGContextSetClipToRect(m_gcontext, t_pixel_rect);
 }
 
 MCRectangle MCGraphicsContext::getclip(void) const
