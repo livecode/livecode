@@ -1033,7 +1033,7 @@ void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 		MCGContextRef t_context;
 		t_context = nil;
 		
-		if (gettype() > CT_GROUP && dc->gettype() != CONTEXT_TYPE_PRINTER)
+		if (0 && gettype() > CT_GROUP && dc->gettype() != CONTEXT_TYPE_PRINTER)
 		{
 			t_context = ((MCGraphicsContext*)dc)->getgcontextref();
 			

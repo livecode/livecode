@@ -47,6 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define IMAGE_EXTRA_CONTROLPIXMAPS_DEAD (1 << 1) // Due to a bug, this cannot be used.
 
 #define IMAGE_EXTRA_CONTROLCOLORS (1 << 2)
+#define IMAGE_EXTRA_CENTERRECT (1 << 3)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1591,6 +1592,12 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		t_length += sizeof(uint16_t);
 		t_length += s_control_pixmap_count * sizeof(uint4);
 	}
+    
+    if (m_center_rect . x != INT16_MIN)
+    {
+        t_flags |= IMAGE_EXTRA_CENTERRECT;
+        t_length += sizeof(MCRectangle);
+    }
 
 	if (t_stat == IO_NORMAL)
 		t_stat = p_stream . WriteTag(t_flags, t_length);
@@ -1614,6 +1621,17 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 				t_stat = p_stream . WriteU32(s_control_pixmapids[i] . id);
 	}
 
+    if (t_stat == IO_NORMAL && (t_flags & IMAGE_EXTRA_CENTERRECT) != 0)
+    {
+        t_stat = p_stream . WriteS16(m_center_rect . x);
+		if (t_stat == IO_NORMAL)
+            t_stat = p_stream . WriteS16(m_center_rect . y);
+		if (t_stat == IO_NORMAL)
+            t_stat = p_stream . WriteU16(m_center_rect . width);
+		if (t_stat == IO_NORMAL)
+            t_stat = p_stream . WriteU16(m_center_rect . height);
+    }
+    
 	if (t_stat == IO_NORMAL)
 		t_stat = MCObject::extendedsave(p_stream, p_part);
 
@@ -1671,6 +1689,17 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 			for(uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_pixmap_count; i++)
 				t_stat = p_stream . ReadU32(s_control_pixmapids[i] . id);
 		}
+        
+        if (t_stat == IO_NORMAL && (t_flags & IMAGE_EXTRA_CENTERRECT) != 0)
+        {
+            t_stat = p_stream . ReadS16(m_center_rect . x);
+            if (t_stat == IO_NORMAL)
+                t_stat = p_stream . ReadS16(m_center_rect . y);
+            if (t_stat == IO_NORMAL)
+                t_stat = p_stream . ReadU16(m_center_rect . width);
+            if (t_stat == IO_NORMAL)
+                t_stat = p_stream . ReadU16(m_center_rect . height);
+        }
 
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . Skip(t_length);
@@ -1763,7 +1792,9 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		t_has_extension = true;
 	if (s_have_control_colors)
 		t_has_extension = true;
-
+    if (m_center_rect . x != INT16_MIN)
+        t_has_extension = true;
+    
 	uint4 oldflags = flags;
 	if (flags & F_HAS_FILENAME)
 		flags &= ~(F_TRUE_COLOR | F_COMPRESSION | F_NEED_FIXING);

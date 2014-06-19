@@ -293,7 +293,25 @@ void MCGraphicsContext::setclip(const MCRectangle& p_clip)
 	//m_clip = p_clip;
 	// IM-2013-09-03: [[ RefactorGraphics ]] use MCGContextSetClipToRect to replace current
 	// clipping rect with p_clip (consistent with old MCContext::setclip functionality)
-	MCGContextSetClipToRect(m_gcontext, MCRectangleToMCGRectangle(p_clip));
+    MCGRectangle t_rect;
+    t_rect = MCRectangleToMCGRectangle(p_clip);
+    
+    MCGAffineTransform t_device_transform;
+    t_device_transform = MCGContextGetDeviceTransform(m_gcontext);
+    
+    MCGRectangle t_device_rect;
+    t_device_rect = MCGRectangleApplyAffineTransform(t_rect, t_device_transform);
+    
+    MCGRectangle t_pixel_device_rect;
+    t_pixel_device_rect . origin . x = floorf(t_device_rect . origin . x);
+    t_pixel_device_rect . origin . y = floorf(t_device_rect . origin . y);
+    t_pixel_device_rect . size . width = ceilf(t_device_rect . origin . x + t_device_rect . size . width) - t_pixel_device_rect . origin . x;
+    t_pixel_device_rect . size . height = ceilf(t_device_rect . origin . y + t_device_rect . size . height) - t_pixel_device_rect . origin . y;
+    
+    MCGRectangle t_pixel_rect;
+    t_pixel_rect = MCGRectangleApplyAffineTransform(t_pixel_device_rect, MCGAffineTransformInvert(t_device_transform));
+    
+	MCGContextSetClipToRect(m_gcontext, t_pixel_rect/*MCRectangleToMCGRectangle(p_clip)*/);
 }
 
 MCRectangle MCGraphicsContext::getclip(void) const
@@ -1162,6 +1180,23 @@ void MCGraphicsContext::draweps(real8 sx, real8 sy, int2 angle, real8 xscale, re
 {
 }
 
+// We have a matrix (a, b, c, d). This can be decomposed as:
+//    (cos t, -sin t, sin t, cos t) * (1, m, 0, 1) * (x, 0, 0, y)
+//
+// Which results in:
+//     t = atan(a / c)
+//     x = sqrt(a^2 + b^2)
+//     m = (cb-ad)/(ba-cd)
+//     y = d / (m.sin(t) - cos(t))
+
+static void decompose_matrix(float a, float b, float c, float d, float& t, float& m, float& x, float& y)
+{
+    t = atan2f(a, c);
+    x = sqrtf(a * a + b * b);
+    m = (c * b - a * d) / (b * a - c * d);
+    y = d / (m * sinf(t) - cosf(t));
+}
+
 void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy)
 {
 	MCGRectangle t_clip;
@@ -1177,30 +1212,51 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 	t_dest.size.height = MCGImageGetHeight(p_image.image);
 
 	MCGContextSave(m_gcontext);
+    
 	MCGContextClipToRect(m_gcontext, t_clip);
 	
-	// MM-2013-10-03: [[ Bug ]] Make sure we apply the images transform before taking into account it's scale factor.
-	if (p_image.has_transform)
-	{
-		MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-t_dest.origin.x, -t_dest.origin.y);
-		t_transform = MCGAffineTransformConcat(p_image.transform, t_transform);
-		t_transform = MCGAffineTransformTranslate(t_transform, t_dest.origin.x, t_dest.origin.y);
-		
-		MCGContextConcatCTM(m_gcontext, t_transform);
-	}	
+    if (!p_image . has_center || !p_image . has_transform || (p_image . transform . b != 0.0f || p_image . transform . c != 0.0f))
+    {
+        // MM-2013-10-03: [[ Bug ]] Make sure we apply the images transform before taking into account it's scale factor.
+        if (p_image.has_transform)
+        {
+            MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-t_dest.origin.x, -t_dest.origin.y);
+            t_transform = MCGAffineTransformConcat(p_image.transform, t_transform);
+            t_transform = MCGAffineTransformTranslate(t_transform, t_dest.origin.x, t_dest.origin.y);
+            
+            MCGContextConcatCTM(m_gcontext, t_transform);
+        }	
 
-	// IM-2013-07-19: [[ ResIndependence ]] if image has a scale factor then we need to scale the context before drawing
-	if (p_image.scale_factor != 0.0 && p_image.scale_factor != 1.0)
-	{
-		MCGContextTranslateCTM(m_gcontext, t_dest.origin.x, t_dest.origin.y);
-		MCGContextScaleCTM(m_gcontext, 1.0 / p_image.scale_factor, 1.0 / p_image.scale_factor);
-		MCGContextTranslateCTM(m_gcontext, -t_dest.origin.x, -t_dest.origin.y);
-	}
+        // IM-2013-07-19: [[ ResIndependence ]] if image has a scale factor then we need to scale the context before drawing
+        if (p_image.scale_factor != 0.0 && p_image.scale_factor != 1.0)
+        {
+            MCGContextTranslateCTM(m_gcontext, t_dest.origin.x, t_dest.origin.y);
+            MCGContextScaleCTM(m_gcontext, 1.0 / p_image.scale_factor, 1.0 / p_image.scale_factor);
+            MCGContextTranslateCTM(m_gcontext, -t_dest.origin.x, -t_dest.origin.y);
+        }
 
-    if (!p_image . has_center)
         MCGContextDrawImage(m_gcontext, p_image.image, t_dest, p_image.filter);
+    }
     else
-        MCGContextDrawImageWithCenter(m_gcontext, p_image . image, p_image . center, t_dest, p_image . filter);
+    {
+        // IM-2013-07-19: [[ ResIndependence ]] if image has a scale factor then we need to scale the context before drawing
+        if (p_image.scale_factor != 0.0 && p_image.scale_factor != 1.0)
+        {
+            MCGContextTranslateCTM(m_gcontext, t_dest.origin.x, t_dest.origin.y);
+            MCGContextScaleCTM(m_gcontext, 1.0 / p_image.scale_factor, 1.0 / p_image.scale_factor);
+            MCGContextTranslateCTM(m_gcontext, -t_dest.origin.x, -t_dest.origin.y);
+        }
+        
+        MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-t_dest.origin.x, -t_dest.origin.y);
+        t_transform = MCGAffineTransformConcat(p_image.transform, t_transform);
+        t_transform = MCGAffineTransformTranslate(t_transform, t_dest.origin.x, t_dest.origin.y);
+        
+        MCGRectangle t_transformed_dest;
+        t_transformed_dest = MCGRectangleApplyAffineTransform(t_dest, t_transform);
+        
+        MCGContextDrawImageWithCenter(m_gcontext, p_image . image, p_image . center, t_transformed_dest, p_image . filter);
+    }
+    
 	MCGContextRestore(m_gcontext);
 }
 
