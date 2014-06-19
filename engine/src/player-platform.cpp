@@ -1062,7 +1062,8 @@ void MCPlayer::setplayrate()
 	{
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &rate);
 		if (rate != 0.0f)
-			MCPlatformStartPlayer(m_platform_player);
+        // PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
+			MCPlatformStartPlayer(m_platform_player, rate);
 	}
     
 	if (rate != 0)
@@ -1241,7 +1242,7 @@ Boolean MCPlayer::playpause(Boolean on)
 	if (m_platform_player != nil)
 	{
 		if (!on)
-			MCPlatformStartPlayer(m_platform_player);
+			MCPlatformStartPlayer(m_platform_player, rate);
 		else
 			MCPlatformStopPlayer(m_platform_player);
 		ok = True;
@@ -2904,8 +2905,8 @@ void MCPlayer::handle_mstilldown(int p_which)
             double t_rate;
             if (m_inside)
             {
-                t_rate = m_initial_rate;
                 m_initial_rate += 0.5;
+                t_rate = m_initial_rate;
             }
             else
                 t_rate = 0.0;
@@ -2927,8 +2928,8 @@ void MCPlayer::handle_mstilldown(int p_which)
             double t_rate;
             if (m_inside)
             {
-                t_rate = m_initial_rate;
                 m_initial_rate -= 0.5;
+                t_rate = m_initial_rate;
             }
             else
                 t_rate = 0.0;

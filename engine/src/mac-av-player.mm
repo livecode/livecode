@@ -63,7 +63,7 @@ public:
 	virtual ~MCAVFoundationPlayer(void);
     
 	virtual bool IsPlaying(void);
-	virtual void Start(void);
+	virtual void Start(double rate);
 	virtual void Stop(void);
 	virtual void Step(int amount);
     
@@ -327,8 +327,14 @@ void MCAVFoundationPlayer::CacheCurrentFrame(void)
 
     if ([m_player_item_video_output hasNewPixelBufferForItemTime:t_output_time])
     {
-        NSLog(@"hasNewPixelBufferForItemTime returned True", nil);
+        //CVDisplayLinkStart(m_display_link);
     }
+    else
+    {
+        //CVDisplayLinkStop(m_display_link);
+    }
+    
+    
     t_image = [m_player_item_video_output copyPixelBufferForItemTime:t_output_time itemTimeForDisplay:nil];
     if (t_image != nil)
     {
@@ -336,6 +342,7 @@ void MCAVFoundationPlayer::CacheCurrentFrame(void)
             CFRelease(m_current_frame);
         m_current_frame = t_image;
     }
+    
     
 
     /*
@@ -381,48 +388,30 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
                                 CVOptionFlags *flagsOut,
                                 void *displayLinkContext)
 {
-    /*
-    NSLog(@"We are here!");
     MCAVFoundationPlayer *t_self = (MCAVFoundationPlayer *)displayLinkContext;
-    AVPlayerItemVideoOutput *t_player_item_video_output = t_self -> m_view . playerItemVideoOutput;
     
-    // The displayLink calls back at every vsync (screen refresh)
-    // Compute itemTime for the next vsync
-    CMTime t_output_item_time = [t_player_item_video_output itemTimeForCVTimeStamp:*inOutputTime];
-    
-    if ([t_player_item_video_output hasNewPixelBufferForItemTime:t_output_item_time])
+    CMTime t_output_item_time = [t_self -> m_player_item_video_output itemTimeForCVTimeStamp:*inOutputTime];
+    if ([t_self -> m_player_item_video_output hasNewPixelBufferForItemTime:t_output_item_time])
     {
-        //self->_lastHostTime = inOutputTime->hostTime;
-        
-        // Copy the pixel buffer to be displayed next and add it to AVSampleBufferDisplayLayer for display
-        
+        NSLog(@"We have a new frame!");
         CVImageBufferRef t_image;
-        t_image = [t_player_item_video_output copyPixelBufferForItemTime:t_output_item_time itemTimeForDisplay:nil];
-        
+        t_image = [t_self -> m_player_item_video_output copyPixelBufferForItemTime:t_output_item_time itemTimeForDisplay:nil];
         if (t_image != nil)
         {
             if (t_self -> m_current_frame != nil)
                 CFRelease(t_self -> m_current_frame);
             t_self -> m_current_frame = t_image;
         }
-        
-        MCPlatformCallbackSendPlayerFrameChanged(t_self);
-        
-        return kCVReturnSuccess;
     }
-    */
-    
-    
-    NSLog(@"We are here!");
-    MCAVFoundationPlayer *t_self = (MCAVFoundationPlayer *)displayLinkContext;
-    t_self -> CacheCurrentFrame();
 	
 	MCPlatformCallbackSendPlayerFrameChanged(t_self);
     return kCVReturnSuccess;
+    
 }
 
 void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 {
+    
 	MCAVFoundationPlayer *t_player;
 	t_player = (MCAVFoundationPlayer *)ctxt;
 	t_player -> m_switch_scheduled = false;
@@ -440,7 +429,6 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
         
         // TODO: Find an equivalent of SetMovieDrawingCompleteProc so as to play the player when alwaysBuffer = true
         // SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
-        
         CVDisplayLinkStart(t_player -> m_display_link);
         
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
@@ -455,13 +443,19 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 		
         // TODO: Find an equivalent of SetMovieDrawingCompleteProc so as to play the player when alwaysBuffer = true
         // SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
+        
         CVDisplayLinkStop(t_player -> m_display_link);
+
                 
 		// Switching to non-offscreen
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
 		t_player -> Realize();
-	}
+        
+        
+                
     
+	}
+    //CVDisplayLinkRelease(t_player -> m_display_link);
 	t_player -> Release();
 }
 
@@ -572,8 +566,9 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     }
     
     CVDisplayLinkSetOutputCallback(m_display_link, MCAVFoundationPlayer::MyDisplayLinkCallback, this);
+    CVDisplayLinkStop(m_display_link);
 
-    NSDictionary* t_settings = @{ (id)kCVPixelBufferPixelFormatTypeKey : [NSNumber numberWithInt:kCVPixelFormatType_32BGRA] };
+    NSDictionary* t_settings = @{ (id)kCVPixelBufferPixelFormatTypeKey : [NSNumber numberWithInt:kCVPixelFormatType_32ARGB] };
     // AVPlayerItemVideoOutput is available in OSX version >= 10.8
     AVPlayerItemVideoOutput* t_output = [[[AVPlayerItemVideoOutput alloc] initWithPixelBufferAttributes:t_settings] autorelease];
     m_player_item_video_output = t_output;
@@ -606,8 +601,12 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
         NSLog(@"Time is %d ", (int)(1000 * CMTimeGetSeconds(time)));
         NSLog(@"End Time is %f ",  (double)m_selection_finish);
         */
-        if (CMTimeCompare(time, CMTimeMake(m_selection_finish, 1000)) >= 0)
+        
+        if (m_play_selection_only && CMTimeCompare(time, CMTimeMake(m_selection_finish, 1000)) >= 0)
+        {
             [m_player pause];
+            [m_player seekToTime:CMTimeMake(m_selection_start, 1000)];
+        }
         
         CurrentTimeChanged();
         }];
@@ -639,9 +638,10 @@ bool MCAVFoundationPlayer::IsPlaying(void)
 	return [m_player rate] != 0;
 }
 
-void MCAVFoundationPlayer::Start(void)
+void MCAVFoundationPlayer::Start(double rate)
 {
-    [m_player play];
+    //[m_player play];
+    [m_player setRate:rate];
 }
 
 void MCAVFoundationPlayer::Stop(void)
@@ -769,7 +769,7 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
             break;
 		case kMCPlatformPlayerPropertyPlayRate:
             [m_player setRate: *(double *)p_value];
-            RateChanged();
+            //RateChanged();
 			break;
 		case kMCPlatformPlayerPropertyVolume:
             [m_player setVolume: *(uint16_t *)p_value / 100.0f];

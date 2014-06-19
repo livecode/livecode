@@ -54,7 +54,7 @@ public:
     virtual ~MCQTKitPlayer(void);
     
     virtual bool IsPlaying(void);
-    virtual void Start(void);
+    virtual void Start(double rate);
     virtual void Stop(void);
     virtual void Step(int amount);
     
@@ -479,9 +479,9 @@ bool MCQTKitPlayer::IsPlaying(void)
 	return [m_movie rate] != 0;
 }
 
-void MCQTKitPlayer::Start(void)
+void MCQTKitPlayer::Start(double rate)
 {
-	[m_movie setRate: 1.0];
+	[m_movie setRate: rate];
 }
 
 void MCQTKitPlayer::Stop(void)

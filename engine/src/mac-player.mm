@@ -132,9 +132,9 @@ void MCPlatformStepPlayer(MCPlatformPlayerRef player, int amount)
 	player -> Step(amount);
 }
 
-void MCPlatformStartPlayer(MCPlatformPlayerRef player)
+void MCPlatformStartPlayer(MCPlatformPlayerRef player, double rate)
 {
-	player -> Start();
+	player -> Start(rate);
 }
 
 /*

@@ -16,7 +16,7 @@ public:
 	void Detach(void);
     
 	virtual bool IsPlaying(void) = 0;
-	virtual void Start(void) = 0;
+	virtual void Start(double rate) = 0;
 	virtual void Stop(void) = 0;
 	virtual void Step(int amount) = 0;
     
