@@ -1025,61 +1025,12 @@ void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 	MCRectangle trect = MCU_intersect_rect(dirty, geteffectiverect());
 	if (trect.width != 0 && trect.height != 0)
 	{
-		// IM-2014-06-11: [[ Bug 12557 ]] If the context has a transform that results in a subpixel
-		// device rect then we need to adjust the transform to align the rect on pixel boundaries
-		bool t_transformed;
-		t_transformed = false;
-		
-		MCGContextRef t_context;
-		t_context = nil;
-		
-		if (gettype() > CT_GROUP && dc->gettype() != CONTEXT_TYPE_PRINTER)
-		{
-			t_context = ((MCGraphicsContext*)dc)->getgcontextref();
-			
-			MCRectangle t_rect;
-			t_rect = getrect();
-			
-			MCGAffineTransform t_device_transform;
-			t_device_transform = MCGContextGetDeviceTransform(t_context);
-			
-			if (!MCGAffineTransformIsIdentity(t_device_transform))
-			{
-				
-				MCGRectangle t_device_rect;
-				t_device_rect = MCGRectangleApplyAffineTransform(MCRectangleToMCGRectangle(t_rect), t_device_transform);
-				
-				MCGRectangle t_pixel_rect;
-				t_pixel_rect = MCRectangleToMCGRectangle(MCGRectangleGetPixelRect(t_device_rect));
-				
-				if (!MCGRectangleIsEqual(t_device_rect, t_pixel_rect))
-				{
-					MCGAffineTransform t_transform;
-					t_transform = MCGAffineTransformFromRectangles(t_device_rect, t_pixel_rect);
-					
-					// Compute transform equivalent to post-concatenation with t_transform
-					MCGAffineTransform t_new_device_transform;
-					t_new_device_transform = MCGAffineTransformInvert(t_device_transform);
-					t_new_device_transform = MCGAffineTransformConcat(t_new_device_transform, t_transform);
-					t_new_device_transform = MCGAffineTransformConcat(t_new_device_transform, t_device_transform);
-					
-					MCGContextSave(t_context);
-					MCGContextConcatCTM(t_context, t_new_device_transform);
-					
-					t_transformed = true;
-				}
-			}
-		}
-		
 		dc -> setopacity(255);
 		dc -> setfunction(GXcopy);
 		dc -> setclip(trect);
 		// MW-2011-09-06: [[ Redraw ] Make sure we draw the control normally (not
 		//   as a sprite).
 		draw(dc, trect, false, false);
-		
-		if (t_transformed)
-			MCGContextRestore(t_context);
 	}
 }
 
