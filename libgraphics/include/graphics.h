@@ -451,6 +451,18 @@ struct MCGFont
 
 ////////////////////////////////////////////////////////////////////////////////
 
+inline bool MCGPointIsEqual(const MCGPoint &p_a, const MCGPoint &p_b)
+{
+	return p_a.x == p_b.x && p_a.y == p_b.y;
+}
+
+inline bool MCGSizeIsEqual(const MCGSize &p_a, const MCGSize &p_b)
+{
+	return p_a.width == p_b.width && p_a.height == p_b.height;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 inline MCGRectangle MCGRectangleMake(MCGFloat p_x, MCGFloat p_y, MCGFloat p_width, MCGFloat p_height)
 {
 	MCGRectangle t_rect;
@@ -484,6 +496,11 @@ inline MCGRectangle MCGRectangleScale(MCGRectangle p_rect, MCGFloat p_scale)
 inline bool MCGRectangleIsEmpty(const MCGRectangle &p_rect)
 {
 	return p_rect.size.width == 0.0 || p_rect.size.height == 0.0;
+}
+
+inline bool MCGRectangleIsEqual(const MCGRectangle &p_a, const MCGRectangle &p_b)
+{
+	return MCGPointIsEqual(p_a.origin, p_b.origin) && MCGSizeIsEqual(p_a.size, p_b.size);
 }
 
 MCGRectangle MCGRectangleIntersection(const MCGRectangle &rect_1, const MCGRectangle &rect_2);
@@ -755,6 +772,9 @@ MCGAffineTransform MCGAffineTransformRotate(const MCGAffineTransform& transform,
 MCGAffineTransform MCGAffineTransformTranslate(const MCGAffineTransform& transform, MCGFloat xoffset, MCGFloat yoffset);
 MCGAffineTransform MCGAffineTransformScale(const MCGAffineTransform& transform, MCGFloat xscale, MCGFloat yscale);
 MCGAffineTransform MCGAffineTransformInvert(const MCGAffineTransform& transform);
+
+// IM-2014-06-11: [[ Bug 12557 ]] Returns transform that would convert rectangle a to rectangle b by scaling + translating
+MCGAffineTransform MCGAffineTransformFromRectangles(const MCGRectangle &p_a, const MCGRectangle &p_b);
 
 MCGPoint MCGPointApplyAffineTransform(const MCGPoint& p_point, const MCGAffineTransform& p_transform);
 MCGRectangle MCGRectangleApplyAffineTransform(const MCGRectangle& p_rect, const MCGAffineTransform& p_transform);
