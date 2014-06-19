@@ -116,6 +116,9 @@ private:
 	MCGFloat m_dash_phase;
 	MCGFloat *m_dash_lengths;
 	uint32_t m_dash_count;
+
+	// IM-2014-06-19: [[ Bug 12557 ]] Override for the antialias setting
+	bool m_force_antialiasing;
 };
 
 // MW-2014-01-07: [[ Bug 11632 ]] The player object distinguishes between 'screen' and 'offscreen' - in the
