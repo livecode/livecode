@@ -915,12 +915,28 @@ void MCMemoryDelete(void *p_record);
 
 //////////
 
+// SN-2014-06-19 [[ Bug 12651 ]] back key can not work, and it crush
+// The placement new is needed in MCMemorytNew
+// to properly allocate the classes in MCMessageEvent::create
+
+#ifdef _DEBUG
+#ifdef new
+#undef new
+#define redef_new
+#endif
+#endif
+
+inline void *operator new (size_t, void *p_block, bool)
+{
+	return p_block;
+}
+
 template<typename T> bool MCMemoryNew(T*& r_record)
 {
 	void *t_record;
 	if (MCMemoryNew(sizeof(T), t_record))
 	{
-		r_record = static_cast<T *>(t_record);
+        r_record = new(t_record, true) T;
 		return true;
 	}
 	return false;
