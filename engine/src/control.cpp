@@ -1082,8 +1082,10 @@ void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 		//   as a sprite).
 		draw(dc, trect, false, false);
 		
+#ifdef ALIGN_THROUGH_TRANSFORM
 		if (t_transformed)
 			MCGContextRestore(t_context);
+#endif
 	}
 }
 

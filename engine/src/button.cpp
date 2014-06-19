@@ -226,6 +226,25 @@ static ModKeyToken modifier_tokens[] =
 		{0, 0, NULL}
 	};
 
+// MW-2014-06-19: [[ IconGravity ]] Strings for the 'iconGravity' property.
+static const char *MCgravitystrings[] =
+{
+    "",
+    "left",
+    "top",
+    "right",
+    "bottom",
+    "topLeft",
+    "topRight",
+    "bottomLeft",
+    "bottomRight",
+    "center",
+    "resize",
+    "resizeAspect",
+    "resizeAspectFill",
+    nil,
+};
+
 MCButton::MCButton()
 {
 	flags |= F_STANDARD | F_TRAVERSAL_ON | F_HILITE_BORDER | F_HILITE_FILL
@@ -256,6 +275,9 @@ MCButton::MCButton()
 	mnemonic = 0;
 	family = 0;
 	ishovering = False;
+    
+    // MW-2014-06-19: [[ IconGravity ]] By default buttons use legacy behavior.
+    m_icon_gravity = kMCGravityNone;
 }
 
 MCButton::MCButton(const MCButton &bref) : MCControl(bref)
@@ -326,6 +348,9 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
 		while (bptr != bref.bdata);
 	}
 	family = bref.family;
+    
+    // MW-2014-06-19: [[ IconGravity ]] Copy the other buttons gravity
+    m_icon_gravity = kMCGravityNone;
 }
 
 MCButton::~MCButton()
@@ -1875,6 +1900,11 @@ Exec_stat MCButton::getprop(uint4 parid, Properties which, MCExecPoint& ep, Bool
 		// Map the menustring's encoding to the requested encoding.
 		ep.mapunicode(hasunicode(), which == P_UNICODE_TEXT);
 		break;
+            
+    // MW-2014-06-19: [[ IconGravity ]] Getter for iconGravity
+    case P_ICON_GRAVITY:
+        ep.setstaticcstring(MCgravitystrings[m_icon_gravity]);
+        break;
 #endif /* MCButton::getprop */ 
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
@@ -2530,6 +2560,15 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 		if (entry != NULL)
 			entry -> setprop(parid, p, ep, effective);
 		return MCControl::setprop(parid, p, ep, effective);
+        
+    // MW-2014-06-19: [[ IconGravity ]] Setter for iconGravity
+    case P_ICON_GRAVITY:
+            for(uindex_t i = 0; MCgravitystrings[i] != nil; i++)
+                if (data == MCgravitystrings[i])
+                    m_icon_gravity = (MCGravity)i;
+            dirty = True;
+        break;
+            
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
 #endif /* MCButton::setprop */

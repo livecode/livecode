@@ -947,6 +947,8 @@ LT factor_table[] =
         {"httpproxy", TT_PROPERTY, P_HTTP_PROXY},
 		{"httpproxyforurl", TT_FUNCTION, F_HTTP_PROXY_FOR_URL},
         {"icon", TT_PROPERTY, P_ICON},
+        // MW-2014-06-19: [[ IconGravity ]] Button 'iconGravity' property.
+        {"icongravity", TT_PROPERTY, P_ICON_GRAVITY},
         {"iconic", TT_PROPERTY, P_ICONIC},
 		{"iconmenu", TT_PROPERTY, P_ICON_MENU},
         {"id", TT_PROPERTY, P_ID},

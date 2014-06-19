@@ -1606,6 +1606,9 @@ enum Properties {
 	P_USE_PIXEL_SCALING,
 	P_SCREEN_PIXEL_SCALE,
 	P_SCREEN_PIXEL_SCALES,
+    
+    // MW-2014-06-19: [[ IconGravity ]] Tag for the button iconGravity property.
+    P_ICON_GRAVITY,
 	
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,

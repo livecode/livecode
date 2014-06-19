@@ -1177,7 +1177,10 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 	t_dest.size.height = MCGImageGetHeight(p_image.image);
 
 	MCGContextSave(m_gcontext);
-	MCGContextClipToRect(m_gcontext, t_clip);
+    
+    // MW-2014-06-19: [[ IconGravity ]] Only clip if we are drawing a partial image (we need to double-check, but I don't think sx/sy are ever non-zero).
+    if (sx != 0 || sy != 0)
+        MCGContextClipToRect(m_gcontext, t_clip);
 	
 	// MM-2013-10-03: [[ Bug ]] Make sure we apply the images transform before taking into account it's scale factor.
 	if (p_image.has_transform)

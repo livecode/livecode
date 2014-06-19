@@ -123,7 +123,8 @@ class MCButton : public MCControl
 	uint1 accelmods;
 	uint1 mnemonic;
 	uint1 menucontrol;
-	bool menuhasitemtags;
+    MCGravity m_icon_gravity : 4;
+	bool menuhasitemtags : 1;
 
 	Boolean ishovering;
 	static uint2 focusedtab;
