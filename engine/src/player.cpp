@@ -1624,7 +1624,8 @@ void MCPlayer::setplayrate()
 	{
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &rate);
 		if (rate != 0.0f)
-			MCPlatformStartPlayer(m_platform_player);
+            // PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
+            MCPlatformStartPlayer(m_platform_player, rate);
 	}
 #else
 #ifdef FEATURE_QUICKTIME //MAC or WIN
@@ -1902,7 +1903,7 @@ Boolean MCPlayer::playpause(Boolean on)
 	if (m_platform_player != nil)
 	{
 		if (!on)
-			MCPlatformStartPlayer(m_platform_player);
+			MCPlatformStartPlayer(m_platform_player, rate);
 		else
 			MCPlatformStopPlayer(m_platform_player);
 		ok = True;

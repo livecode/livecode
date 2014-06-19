@@ -1035,7 +1035,7 @@ void MCPlatformDetachPlayer(MCPlatformPlayerRef player);
 bool MCPlatformPlayerIsPlaying(MCPlatformPlayerRef player);
 
 void MCPlatformStepPlayer(MCPlatformPlayerRef player, int amount);
-void MCPlatformStartPlayer(MCPlatformPlayerRef player);
+void MCPlatformStartPlayer(MCPlatformPlayerRef player, double rate);
 void MCPlatformStopPlayer(MCPlatformPlayerRef player);
 
 void MCPlatformLockPlayerBitmap(MCPlatformPlayerRef player, MCImageBitmap*& r_bitmap);
