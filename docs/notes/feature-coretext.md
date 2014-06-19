@@ -6,4 +6,4 @@ It's worth noting that the previous OS X routines used synthesised font styles. 
 
 The is the case with the default font - Lucida Grande. By default, systems only come with the bold variant. Thus, if you have a field with the default font and italic style, it will be rendered in plain style.
 
-As part of LiveCodes progression toward unicode, the use of symbol fonts is no longer fully supported. Symbol fonts, such as Wingdings, are those which replace characters with symbols. For example, when the character 'a' is entered, it's rendered as a bullet point. The behavior of LiveCode now matches that of TextEdit: If you want to display symbols in the field, you should use the appropriate code point (either by setting it manually or using the character viewer) rather than a symbol font.
+As part of LiveCodes progression toward unicode, the use of older symbol fonts is no longer fully supported. In order to ensure symbol fonts are drawn correctly, the font must be unicode encoded. The fonts that come with the latest versions of OS X are all unicode encoded.
