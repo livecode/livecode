@@ -1025,6 +1025,9 @@ void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 	MCRectangle trect = MCU_intersect_rect(dirty, geteffectiverect());
 	if (trect.width != 0 && trect.height != 0)
 	{
+        // MW-2014-06-19: This was a nice idea, unfortunately it causes more problems than
+        //   it solves - so will disable.
+#ifdef ALIGN_THROUGH_TRANSFORM
 		// IM-2014-06-11: [[ Bug 12557 ]] If the context has a transform that results in a subpixel
 		// device rect then we need to adjust the transform to align the rect on pixel boundaries
 		bool t_transformed;
@@ -1070,6 +1073,7 @@ void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 				}
 			}
 		}
+#endif
 		
 		dc -> setopacity(255);
 		dc -> setfunction(GXcopy);
