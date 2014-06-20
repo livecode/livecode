@@ -1214,9 +1214,14 @@ void MCGraphicsContext::draweps(real8 sx, real8 sy, int2 angle, real8 xscale, re
 
 static void decompose_matrix(float a, float b, float c, float d, float& t, float& m, float& x, float& y)
 {
-    t = atan2f(a, c);
+    /*t = atan2f(a, c);
     x = sqrtf(a * a + b * b);
     m = (c * b - a * d) / (b * a - c * d);
+    y = d / (m * sinf(t) - cosf(t));*/
+    
+    t = atan2f(c, a);
+    x = sqrtf(a * a + b * b);
+    m = (a * b - c * d) / (b * c - a * d);
     y = d / (m * sinf(t) - cosf(t));
 }
 
@@ -1237,15 +1242,8 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 	MCGContextSave(m_gcontext);
     
 	MCGContextClipToRect(m_gcontext, t_clip);
-	
-    if ((p_image . transform . b != 0.0f || p_image . transform . c != 0.0f))
-    {
-        float t, m, x, y;
-        decompose_matrix(p_image . transform . a, p_image . transform . b, p_image . transform . c, p_image . transform . d, t, m, x, y);
-        MCLog("decomposed : t = %lf, m = %lf, x = %lf, y = %lf", t, m, x, y);
-    }
     
-    if (!p_image . has_center || !p_image . has_transform)
+    if (!p_image . has_center || !p_image . has_transform || (p_image . transform . b != 0.0f || p_image . transform . c != 0.0f))
     {
         // MM-2013-10-03: [[ Bug ]] Make sure we apply the images transform before taking into account it's scale factor.
         if (p_image.has_transform)
@@ -1269,7 +1267,6 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
     }
     else
     {
-        
         // IM-2013-07-19: [[ ResIndependence ]] if image has a scale factor then we need to scale the context before drawing
         if (p_image.scale_factor != 0.0 && p_image.scale_factor != 1.0)
         {
@@ -1279,8 +1276,25 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
         }
         
         MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-t_dest.origin.x, -t_dest.origin.y);
-        t_transform = MCGAffineTransformConcat(p_image.transform, t_transform);
         t_transform = MCGAffineTransformTranslate(t_transform, t_dest.origin.x, t_dest.origin.y);
+        t_transform = MCGAffineTransformConcat(p_image.transform, t_transform);
+        
+#if 0
+        if (p_image . transform . b != 0.0f || p_image . transform . c != 0.0f)
+        {
+            float t, m, x, y;
+            decompose_matrix(p_image . transform . a, p_image . transform . b, p_image . transform . c, p_image . transform . d, t, m, x, y);
+            MCLog("decomposed : t = %lf, m = %lf, x = %lf, y = %lf", t, m, x, y);
+            
+            MCGContextTranslateCTM(m_gcontext, t_dest.origin.x, t_dest.origin.y);
+            MCGContextRotateCTM(m_gcontext, t);
+            MCGContextConcatCTM(m_gcontext, MCGAffineTransformMake(1, m, 0, 0, 0, 0));
+            MCGContextTranslateCTM(m_gcontext, -t_dest.origin.x, -t_dest.origin.y);
+            
+            t_transform = MCGAffineTransformConcat(MCGAffineTransformMakeScale(x, y), t_transform);
+        }
+#endif
+        
         
         MCGRectangle t_transformed_dest;
         t_transformed_dest = MCGRectangleApplyAffineTransform(t_dest, t_transform);
