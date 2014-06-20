@@ -728,6 +728,7 @@ void MCGContextSimplify(MCGContextRef context);
 
 void MCGContextDrawPixels(MCGContextRef context, const MCGRaster& raster, MCGRectangle dst_rect, MCGImageFilter filter);
 void MCGContextDrawImage(MCGContextRef context, MCGImageRef image, MCGRectangle dst_rect, MCGImageFilter filter);
+void MCGContextDrawImageWithCenter(MCGContextRef context, MCGImageRef image, MCGRectangle image_center, MCGRectangle dst_rect, MCGImageFilter filter);
 void MCGContextDrawRectOfImage(MCGContextRef self, MCGImageRef p_image, MCGRectangle p_src, MCGRectangle p_dst, MCGImageFilter p_filter);
 void MCGContextDrawDeviceMask(MCGContextRef context, MCGMaskRef mask, int32_t tx, int32_t ty);
 

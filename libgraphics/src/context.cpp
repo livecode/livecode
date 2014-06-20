@@ -2369,7 +2369,7 @@ void MCGContextSimplify(MCGContextRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap, const MCGRectangle *p_src, const MCGRectangle &p_dst, MCGImageFilter p_filter)
+static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap, const MCGRectangle *p_center, const MCGRectangle *p_src, const MCGRectangle &p_dst, MCGImageFilter p_filter)
 {
 	bool t_success;
 	t_success = true;
@@ -2472,7 +2472,17 @@ static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap,
 			t_src_rect_ptr = &t_src_rect;
 		}
 
-		self -> layer -> canvas -> drawBitmapRectToRect(p_bitmap, t_src_rect_ptr, MCGRectangleToSkRect(p_dst), &t_paint);
+        if (p_src != nil || p_center == nil)
+            self -> layer -> canvas -> drawBitmapRectToRect(p_bitmap, t_src_rect_ptr, MCGRectangleToSkRect(p_dst), &t_paint);
+        else
+        {
+            SkIRect t_center;
+            t_center . fLeft = ceilf(p_center -> origin . x);
+            t_center . fTop = ceilf(p_center -> origin . y);
+            t_center . fRight = floorf(p_center -> origin . x + p_center -> size . width);
+            t_center . fBottom = floorf(p_center -> origin . y + p_center -> size . height);
+            self -> layer -> canvas -> drawBitmapNine(p_bitmap, t_center, MCGRectangleToSkRect(p_dst), &t_paint);
+        }
 	}
 	
 	return t_success;
@@ -2483,15 +2493,22 @@ void MCGContextDrawImage(MCGContextRef self, MCGImageRef p_image, MCGRectangle p
 	if (!MCGImageIsValid(p_image))
 		return;
 
-	self -> is_valid = MCGContextDrawSkBitmap(self, *p_image->bitmap, nil, p_dst, p_filter);
+	self -> is_valid = MCGContextDrawSkBitmap(self, *p_image->bitmap, nil, nil, p_dst, p_filter);
 }
 
+void MCGContextDrawImageWithCenter(MCGContextRef self, MCGImageRef p_image, MCGRectangle p_center, MCGRectangle p_dst, MCGImageFilter p_filter)
+{
+	if (!MCGImageIsValid(p_image))
+		return;
+    
+	self -> is_valid = MCGContextDrawSkBitmap(self, *p_image->bitmap, &p_center, nil, p_dst, p_filter);
+}
 void MCGContextDrawRectOfImage(MCGContextRef self, MCGImageRef p_image, MCGRectangle p_src, MCGRectangle p_dst, MCGImageFilter p_filter)
 {
 	if (!MCGImageIsValid(p_image))
 		return;
 
-	self -> is_valid = MCGContextDrawSkBitmap(self, *p_image->bitmap, &p_src, p_dst, p_filter);
+	self -> is_valid = MCGContextDrawSkBitmap(self, *p_image->bitmap, nil, &p_src, p_dst, p_filter);
 }
 
 void MCGContextDrawPixels(MCGContextRef self, const MCGRaster& p_raster, MCGRectangle p_dst, MCGImageFilter p_filter)
@@ -2507,7 +2524,7 @@ void MCGContextDrawPixels(MCGContextRef self, const MCGRaster& p_raster, MCGRect
 		t_success = MCGRasterToSkBitmap(p_raster, kMCGPixelOwnershipTypeBorrow, t_bitmap);
 
 	if (t_success)
-		t_success = MCGContextDrawSkBitmap(self, t_bitmap, nil, p_dst, p_filter);
+		t_success = MCGContextDrawSkBitmap(self, t_bitmap, nil, nil, p_dst, p_filter);
 	
 	self -> is_valid = t_success;
 }

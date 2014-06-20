@@ -175,6 +175,17 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 				else
 					t_image . data_type = kMCImageDataNone;
 
+                if (m_center_rect . x != INT16_MIN)
+                {
+                    t_image . has_center = true;
+                    t_image . center . origin . x = m_center_rect . x * t_image . scale_factor;
+                    t_image . center . origin . y = m_center_rect . y * t_image . scale_factor;
+                    t_image . center . size . width = m_center_rect . width * t_image . scale_factor;
+                    t_image . center . size . height = m_center_rect . height * t_image . scale_factor;
+                }
+                else
+                    t_image . has_center = false;
+                
 				dc -> drawimage(t_image, sx, sy, sw, sh, dx, dy);
 			}
 			else
