@@ -568,6 +568,7 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 				nfakepoints = 0;
 				get_points_for_roundrect(fakepoints, nfakepoints);
 				MCU_unparsepoints(fakepoints, nfakepoints, ep);
+				delete fakepoints;
 				break;
 			}
 			case F_G_RECTANGLE:
@@ -613,6 +614,7 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 				get_points_for_roundrect(fakepoints, nfakepoints);
 				MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
 				MCU_unparsepoints(fakepoints, nfakepoints, ep);
+				delete fakepoints;
 				break;
 			}
 			case F_G_RECTANGLE:
