@@ -1238,7 +1238,14 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
     
 	MCGContextClipToRect(m_gcontext, t_clip);
 	
-    if (!p_image . has_center || !p_image . has_transform || (p_image . transform . b != 0.0f || p_image . transform . c != 0.0f))
+    if ((p_image . transform . b != 0.0f || p_image . transform . c != 0.0f))
+    {
+        float t, m, x, y;
+        decompose_matrix(p_image . transform . a, p_image . transform . b, p_image . transform . c, p_image . transform . d, t, m, x, y);
+        MCLog("decomposed : t = %lf, m = %lf, x = %lf, y = %lf", t, m, x, y);
+    }
+    
+    if (!p_image . has_center || !p_image . has_transform)
     {
         // MM-2013-10-03: [[ Bug ]] Make sure we apply the images transform before taking into account it's scale factor.
         if (p_image.has_transform)
@@ -1262,6 +1269,7 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
     }
     else
     {
+        
         // IM-2013-07-19: [[ ResIndependence ]] if image has a scale factor then we need to scale the context before drawing
         if (p_image.scale_factor != 0.0 && p_image.scale_factor != 1.0)
         {
