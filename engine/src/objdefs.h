@@ -262,6 +262,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //   multiple cards, or is allowed to be placed on multiple cards.
 #define F_GROUP_SHARED			(1UL << 30)
 
+// MERG-2013-08-12: [[ ClipsToRect ]] This flag indicates that the group clips to the set
+//   rect rather than reseting to the bounds of it's children.
+#define F_CLIPS_TO_RECT         (1UL << 31)
+
 // MCStack attributes
 #define F_LINK_ATTS             (1UL << 5)
 #define F_S_CANT_DELETE         (1UL << 14)
