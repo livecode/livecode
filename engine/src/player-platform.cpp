@@ -69,7 +69,7 @@ static const char *ppmediastrings[] =
 	"flash"
 };
 
-#define CONTROLLER_HEIGHT 26
+#define CONTROLLER_HEIGHT 24
 #define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 4
 #define LIGHTGRAY 1
 #define PURPLE 2
@@ -2027,7 +2027,10 @@ void MCPlayer::drawControllerWellButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
-    MCRectangle t_well_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartWell);
+    MCRectangle t_drawn_well_rect_ = getcontrollerpartrect(t_rect, kMCPlayerControllerPartWell);
+    // Adjust to look prettier. The same settings for y and height should apply to kMCPlayerControllerPartSelectedArea and kMCPlayerControllerPartPlayedArea
+    t_drawn_well_rect_ . y = t_drawn_well_rect_ . y + CONTROLLER_HEIGHT / 3;
+    t_drawn_well_rect_ . height = CONTROLLER_HEIGHT / 3;
     
     MCGBitmapEffects t_effects;
 	t_effects . has_drop_shadow = false;
@@ -2043,7 +2046,7 @@ void MCPlayer::drawControllerWellButton(MCGContextRef p_gcontext)
     t_inner_shadow . spread = 0;
     
     MCGFloat t_x_offset, t_y_offset;
-    int t_distance = t_well_rect . height / 5;
+    int t_distance = t_drawn_well_rect_ . height / 5;
     // Make sure we always have an inner shadow
     if (t_distance == 0)
         t_distance = 1;
@@ -2058,7 +2061,7 @@ void MCPlayer::drawControllerWellButton(MCGContextRef p_gcontext)
     MCGContextSetShouldAntialias(p_gcontext, true);
     
     MCGContextSetFillRGBAColor(p_gcontext, 0.0f, 0.0f, 0.0f, 1.0f); // BLACK
-    MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_well_rect);
+    MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_drawn_well_rect_);
     
     MCGContextAddRoundedRectangle(p_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
     
@@ -2072,8 +2075,11 @@ void MCPlayer::drawControllerThumbButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
-    MCRectangle t_thumb_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb);
-    
+    MCRectangle t_drawn_thumb_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartThumb);
+    // Adjust to look prettier
+    t_drawn_thumb_rect . y = t_drawn_thumb_rect . y + CONTROLLER_HEIGHT / 4;
+    t_drawn_thumb_rect . height = CONTROLLER_HEIGHT / 2;
+       
     /*
      t_colors[0] = 4290230199;
      t_colors[1] = 4294967295;
@@ -2086,12 +2092,12 @@ void MCPlayer::drawControllerThumbButton(MCGContextRef p_gcontext)
     
     MCGAffineTransform t_transform;
     
-    float origin_x = t_thumb_rect.x + t_thumb_rect.width / 2.0;
-	float origin_y = t_thumb_rect.y + t_thumb_rect.height;
-	float primary_x = t_thumb_rect.x + t_thumb_rect.width / 2.0;
-	float primary_y = t_thumb_rect.y;
-	float secondary_x = t_thumb_rect.x - t_thumb_rect.width / 2.0;
-	float secondary_y = t_thumb_rect.y + t_thumb_rect.height;
+    float origin_x = t_drawn_thumb_rect.x + t_drawn_thumb_rect.width / 2.0;
+	float origin_y = t_drawn_thumb_rect.y + t_drawn_thumb_rect.height;
+	float primary_x = t_drawn_thumb_rect.x + t_drawn_thumb_rect.width / 2.0;
+	float primary_y = t_drawn_thumb_rect.y;
+	float secondary_x = t_drawn_thumb_rect.x - t_drawn_thumb_rect.width / 2.0;
+	float secondary_y = t_drawn_thumb_rect.y + t_drawn_thumb_rect.height;
     
     setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
     
@@ -2102,8 +2108,8 @@ void MCPlayer::drawControllerThumbButton(MCGContextRef p_gcontext)
     MCGContextSetFillGradient(p_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
     
     MCGContextSetShouldAntialias(p_gcontext, true);
-    MCGRectangle t_grect= MCRectangleToMCGRectangle(t_thumb_rect);
-    MCGContextAddRoundedRectangle(p_gcontext, t_grect, MCGSizeMake(10, 10));
+    MCGRectangle t_grect= MCRectangleToMCGRectangle(t_drawn_thumb_rect);
+    MCGContextAddRoundedRectangle(p_gcontext, t_grect, MCGSizeMake(10, 5));
         
     MCGContextFill(p_gcontext);
     
@@ -2115,7 +2121,11 @@ void MCPlayer::drawControllerSelectionStartButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
-    MCRectangle t_selection_start_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionStart);
+    MCRectangle t_drawn_selection_start_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionStart);
+    // Adjust to look prettier
+    t_drawn_selection_start_rect . y = t_drawn_selection_start_rect . y + CONTROLLER_HEIGHT / 6;
+    t_drawn_selection_start_rect . height = 4 * CONTROLLER_HEIGHT / 6;
+    
     
     MCGBitmapEffects t_effects;
 	t_effects . has_drop_shadow = false;
@@ -2128,7 +2138,7 @@ void MCPlayer::drawControllerSelectionStartButton(MCGContextRef p_gcontext)
     t_outer_glow . color = MCGColorMakeRGBA(0.0f, 0.0f, 0.0f, 1.0f);
     
     t_outer_glow . blend_mode = kMCGBlendModeClear;
-    t_outer_glow . size = t_selection_start_rect . width / 2;
+    t_outer_glow . size = t_drawn_selection_start_rect . width / 2;
     t_outer_glow . spread = 0;
     //t_outer_glow . inverted = false;
     
@@ -2140,19 +2150,19 @@ void MCPlayer::drawControllerSelectionStartButton(MCGContextRef p_gcontext)
     
     MCGAffineTransform t_transform;
     
-    float origin_x = t_selection_start_rect.x + t_selection_start_rect . width / 2.0;
-	float origin_y = t_selection_start_rect.y;
-	float primary_x = t_selection_start_rect.x + t_selection_start_rect.width / 2.0;
-	float primary_y = t_selection_start_rect.y + t_selection_start_rect . height;
-	float secondary_x = t_selection_start_rect.x - 2 * t_selection_start_rect.width;
-	float secondary_y = t_selection_start_rect.y;
+    float origin_x = t_drawn_selection_start_rect.x + t_drawn_selection_start_rect . width / 2.0;
+	float origin_y = t_drawn_selection_start_rect.y;
+	float primary_x = t_drawn_selection_start_rect.x + t_drawn_selection_start_rect.width / 2.0;
+	float primary_y = t_drawn_selection_start_rect.y + t_drawn_selection_start_rect . height;
+	float secondary_x = t_drawn_selection_start_rect.x - 2 * t_drawn_selection_start_rect.width;
+	float secondary_y = t_drawn_selection_start_rect.y;
     
     setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
         
     MCGContextSetFillGradient(p_gcontext, kMCGGradientFunctionLinear, t_stops, t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
     
     MCGContextSetShouldAntialias(p_gcontext, true);
-    MCGRectangle t_grect= MCRectangleToMCGRectangle(t_selection_start_rect);
+    MCGRectangle t_grect= MCRectangleToMCGRectangle(t_drawn_selection_start_rect);
     MCGContextAddRoundedRectangle(p_gcontext, t_grect, MCGSizeMake(10, 10));
     MCGContextBeginWithEffects(p_gcontext, t_grect, t_effects);
     
@@ -2166,8 +2176,10 @@ void MCPlayer::drawControllerSelectionFinishButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
-    MCRectangle t_selection_finish_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionFinish);
-    
+    MCRectangle t_drawn_selection_finish_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartSelectionFinish);
+    // Adjust to look prettier
+    t_drawn_selection_finish_rect . y = t_drawn_selection_finish_rect . y + CONTROLLER_HEIGHT / 6;
+    t_drawn_selection_finish_rect . height = 4 * CONTROLLER_HEIGHT / 6;
     
     MCGBitmapEffects t_effects;
 	t_effects . has_drop_shadow = false;
@@ -2180,7 +2192,7 @@ void MCPlayer::drawControllerSelectionFinishButton(MCGContextRef p_gcontext)
     t_outer_glow . color = MCGColorMakeRGBA(0.0f, 0.0f, 0.0f, 1.0f);
     
     t_outer_glow . blend_mode = kMCGBlendModeClear;
-    t_outer_glow . size = t_selection_finish_rect . width / 2;
+    t_outer_glow . size = t_drawn_selection_finish_rect . width / 2;
     t_outer_glow . spread = 0;
     //t_outer_glow . inverted = false;
     
@@ -2192,12 +2204,12 @@ void MCPlayer::drawControllerSelectionFinishButton(MCGContextRef p_gcontext)
     
     MCGAffineTransform t_transform;
     
-    float origin_x = t_selection_finish_rect.x + t_selection_finish_rect . width / 2.0;
-	float origin_y = t_selection_finish_rect.y;
-	float primary_x = t_selection_finish_rect.x + t_selection_finish_rect.width / 2.0;
-	float primary_y = t_selection_finish_rect.y + t_selection_finish_rect . height;
-	float secondary_x = t_selection_finish_rect.x - 2 * t_selection_finish_rect.width;
-	float secondary_y = t_selection_finish_rect.y;
+    float origin_x = t_drawn_selection_finish_rect.x + t_drawn_selection_finish_rect . width / 2.0;
+	float origin_y = t_drawn_selection_finish_rect.y;
+	float primary_x = t_drawn_selection_finish_rect.x + t_drawn_selection_finish_rect.width / 2.0;
+	float primary_y = t_drawn_selection_finish_rect.y + t_drawn_selection_finish_rect . height;
+	float secondary_x = t_drawn_selection_finish_rect.x - 2 * t_drawn_selection_finish_rect.width;
+	float secondary_y = t_drawn_selection_finish_rect.y;
     
     setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
         
@@ -2205,7 +2217,7 @@ void MCPlayer::drawControllerSelectionFinishButton(MCGContextRef p_gcontext)
     
     MCGContextSetShouldAntialias(p_gcontext, true);
     
-    MCGRectangle t_grect= MCRectangleToMCGRectangle(t_selection_finish_rect);
+    MCGRectangle t_grect= MCRectangleToMCGRectangle(t_drawn_selection_finish_rect);
     MCGContextAddRoundedRectangle(p_gcontext, t_grect, MCGSizeMake(10, 10));
     MCGContextBeginWithEffects(p_gcontext, t_grect, t_effects);
     MCGContextFill(p_gcontext);
@@ -2302,10 +2314,13 @@ void MCPlayer::drawControllerScrubBackButton(MCGContextRef p_gcontext)
 
 void MCPlayer::drawControllerSelectedAreaButton(MCGContextRef p_gcontext)
 {
-    MCRectangle t_selected_area;
-    t_selected_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartSelectedArea);
+    MCRectangle t_drawn_selected_area;
+    t_drawn_selected_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartSelectedArea);
+    // Adjust to look prettier. The same settings for y and height should apply to kMCPlayerControllerPartWell and kMCPlayerControllerPartPlayedArea
+    t_drawn_selected_area . y = t_drawn_selected_area . y + CONTROLLER_HEIGHT / 3;
+    t_drawn_selected_area . height = CONTROLLER_HEIGHT / 3;
     
-    MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_selected_area));
+    MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_drawn_selected_area));
     MCGContextSetFillRGBAColor(p_gcontext, 43 / 255.0, 43 / 255.0, 43 / 255.0, 1.0f); //SOMEGRAY
     MCGContextFill(p_gcontext);
 }
@@ -2325,12 +2340,16 @@ void MCPlayer::drawControllerVolumeAreaButton(MCGContextRef p_gcontext)
 
 void MCPlayer::drawControllerPlayedAreaButton(MCGContextRef p_gcontext)
 {
-    MCRectangle t_played_area;
-    t_played_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartPlayedArea);
+    MCRectangle t_drawn_played_area;
+    t_drawn_played_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartPlayedArea);
+    // Adjust to look prettier. The same settings for y and height should apply to kMCPlayerControllerPartWell and kMCPlayerControllerPartSelectedArea
+    t_drawn_played_area . y = t_drawn_played_area . y + CONTROLLER_HEIGHT / 3;
+    t_drawn_played_area . height = CONTROLLER_HEIGHT / 3;
+
     
     MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); //PURPLE
     
-    MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_played_area);
+    MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_drawn_played_area);
     
     MCGContextAddRoundedRectangle(p_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
     
@@ -2475,12 +2494,14 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             if (t_duration != 0)
                 t_thumb_left = t_active_well_width * t_current_time / t_duration;
             
-            return MCRectangleMake(t_well_rect . x + t_thumb_left, t_well_rect . y - t_well_rect . height / 2, CONTROLLER_HEIGHT / 2, 2 * t_well_rect . height);
+            //return MCRectangleMake(t_well_rect . x + t_thumb_left, t_well_rect . y - t_well_rect . height / 2, CONTROLLER_HEIGHT / 2, 2 * t_well_rect . height);
+            return MCRectangleMake(t_well_rect . x + t_thumb_left, t_well_rect . y, CONTROLLER_HEIGHT / 2, t_well_rect . height);
         }
             break;
             
         case kMCPlayerControllerPartWell:
-            return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT + SELECTION_RECT_WIDTH, p_rect . y + 2 * CONTROLLER_HEIGHT / 5, p_rect . width - 4 * CONTROLLER_HEIGHT - 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT / 5);
+            //return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT + SELECTION_RECT_WIDTH, p_rect . y + 2 * CONTROLLER_HEIGHT / 5, p_rect . width - 4 * CONTROLLER_HEIGHT - 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT / 5);
+            return MCRectangleMake(p_rect . x + 2 * CONTROLLER_HEIGHT + SELECTION_RECT_WIDTH, p_rect . y , p_rect . width - 4 * CONTROLLER_HEIGHT - 2 * SELECTION_RECT_WIDTH, CONTROLLER_HEIGHT );
             
         case kMCPlayerControllerPartScrubBack:
             return MCRectangleMake(p_rect . x + p_rect . width - 2 * CONTROLLER_HEIGHT, p_rect . y, CONTROLLER_HEIGHT, CONTROLLER_HEIGHT);
@@ -2505,7 +2526,8 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             if (t_duration != 0)
                 t_selection_start_left = t_active_well_width * t_start_time / t_duration;
             
-            return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y - CONTROLLER_HEIGHT / 6, SELECTION_RECT_WIDTH, t_well_rect . height + CONTROLLER_HEIGHT / 3);
+            //return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y - CONTROLLER_HEIGHT / 6, SELECTION_RECT_WIDTH, t_well_rect . height + CONTROLLER_HEIGHT / 3);
+            return MCRectangleMake(t_well_rect . x + t_selection_start_left, t_well_rect . y, SELECTION_RECT_WIDTH, t_well_rect . height);
         }
             
         case kMCPlayerControllerPartSelectionFinish:
@@ -2525,7 +2547,7 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             if (t_duration != 0)
                 t_selection_finish_left = t_active_well_width * t_finish_time / t_duration;
             
-            return MCRectangleMake(t_well_rect . x + t_selection_finish_left + CONTROLLER_HEIGHT / 2 - SELECTION_RECT_WIDTH, t_well_rect . y - CONTROLLER_HEIGHT / 6, SELECTION_RECT_WIDTH, t_well_rect . height + CONTROLLER_HEIGHT / 3);
+            return MCRectangleMake(t_well_rect . x + t_selection_finish_left + CONTROLLER_HEIGHT / 2 - SELECTION_RECT_WIDTH, t_well_rect . y , SELECTION_RECT_WIDTH, t_well_rect . height);
         }
             break;
             
