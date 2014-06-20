@@ -188,7 +188,6 @@
 		4D1F9DA1171C682E0091C6CB /* srvsession.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E86A04F6142A49EF005ECD82 /* srvsession.cpp */; };
 		4D1F9DA2171C682E0091C6CB /* redraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66701413A02000E5C84C /* redraw.cpp */; };
 		4D1F9DA3171C682E0091C6CB /* tilecache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB666D14139FF500E5C84C /* tilecache.cpp */; };
-		4D1F9DA4171C682E0091C6CB /* sysregion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66521413990400E5C84C /* sysregion.cpp */; };
 		4D1F9DA5171C682E0091C6CB /* tilecachesw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D432F1E141A2DFE001164F9 /* tilecachesw.cpp */; };
 		4D1F9DA6171C682E0091C6CB /* paragrafattr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1535614E7FB91009FA80E /* paragrafattr.cpp */; };
 		4D1F9DA7171C682E0091C6CB /* fieldstyledtext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */; };
@@ -370,7 +369,6 @@
 		4DCB65721653B2F700E438E6 /* stackcache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCB65711653B2F700E438E6 /* stackcache.cpp */; };
 		4DCFFD1C10CE8F5800FA2262 /* osxtextlayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCFFD1B10CE8F5800FA2262 /* osxtextlayout.cpp */; };
 		4DCFFD2E10CE927700FA2262 /* iquantize_new.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCFFD2D10CE927700FA2262 /* iquantize_new.cpp */; };
-		4DDB66591413993500E5C84C /* sysosxregion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66581413993500E5C84C /* sysosxregion.cpp */; };
 		4DDB666F14139FF500E5C84C /* tilecache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB666D14139FF500E5C84C /* tilecache.cpp */; };
 		4DDB66721413A02000E5C84C /* redraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66701413A02000E5C84C /* redraw.cpp */; };
 		4DDC26C9122692B10071CB31 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
@@ -530,6 +528,7 @@
 		E8252264174E2BF500055329 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AF4895174D5563000B2F9E /* libskia.a */; };
 		E85130F4180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85130F3180D9969004D1DB4 /* image_rep_densitymapped.cpp */; };
 		E85130F5180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85130F3180D9969004D1DB4 /* image_rep_densitymapped.cpp */; };
+		E87FAFEC1924F25000ED338B /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E87FAFEB1924F24300ED338B /* region.cpp */; };
 		E88869AC180D63FC0026BFDA /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8988A8917FDD5B700F640F4 /* stackview.cpp */; };
 		E8988A8A17FDD5B700F640F4 /* stackview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8988A8917FDD5B700F640F4 /* stackview.cpp */; };
 		E8A554B11785A70600DABC1A /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C10D82916BFADB800D25197 /* libgraphics.a */; };
@@ -546,6 +545,7 @@
 		E8D7F8471785A99900EC051A /* srvtheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8D7F8461785A99900EC051A /* srvtheme.cpp */; };
 		E8DDE5DF16C2B1A7007367E4 /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8DDE5DD16C2B1A7007367E4 /* image_rep_resampled.cpp */; };
 		E8DDE5E016C2B1A7007367E4 /* image_rep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8DDE5DE16C2B1A7007367E4 /* image_rep.cpp */; };
+		E8F8E10819544F7800E5164E /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E87FAFEB1924F24300ED338B /* region.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1428,7 +1428,6 @@
 		4DD54D68134F594E00981610 /* mblmain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblmain.cpp; path = src/mblmain.cpp; sourceTree = "<group>"; };
 		4DD54D69134F594E00981610 /* mblspec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblspec.cpp; path = src/mblspec.cpp; sourceTree = "<group>"; };
 		4DD54D6A134F594E00981610 /* mblstack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblstack.cpp; path = src/mblstack.cpp; sourceTree = "<group>"; };
-		4DDB66521413990400E5C84C /* sysregion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysregion.cpp; path = src/sysregion.cpp; sourceTree = "<group>"; };
 		4DDB66531413990400E5C84C /* sysunxdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxdate.cpp; path = src/sysunxdate.cpp; sourceTree = "<group>"; };
 		4DDB66541413990400E5C84C /* sysw32network.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysw32network.cpp; path = src/sysw32network.cpp; sourceTree = "<group>"; };
 		4DDB66551413990400E5C84C /* sysw32region.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysw32region.cpp; path = src/sysw32region.cpp; sourceTree = "<group>"; };
@@ -1532,6 +1531,7 @@
 		E86A04F7142A49EF005ECD82 /* srvsession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = srvsession.h; path = src/srvsession.h; sourceTree = "<group>"; };
 		E86D598F170AEE0000060AED /* deploysecurity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = deploysecurity.h; path = src/deploysecurity.h; sourceTree = "<group>"; };
 		E86D59AE170AF0E000060AED /* deploysecurity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = deploysecurity.cpp; path = src/deploysecurity.cpp; sourceTree = "<group>"; };
+		E87FAFEB1924F24300ED338B /* region.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = region.cpp; path = src/region.cpp; sourceTree = "<group>"; };
 		E8988A8917FDD5B700F640F4 /* stackview.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackview.cpp; path = src/stackview.cpp; sourceTree = "<group>"; };
 		E8A49103170F16D000769C7A /* name.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = name.h; path = src/name.h; sourceTree = "<group>"; };
 		E8A49104170F16D000769C7A /* rawarray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rawarray.h; path = src/rawarray.h; sourceTree = "<group>"; };
@@ -2435,7 +2435,6 @@
 		4DFD486413BA28BF008DB91F /* System */ = {
 			isa = PBXGroup;
 			children = (
-				4DDB66521413990400E5C84C /* sysregion.cpp */,
 				4DDB66581413993500E5C84C /* sysosxregion.cpp */,
 				4DB32230174BD08E00046FFE /* sysosxrandom.cpp */,
 				4DDB66531413990400E5C84C /* sysunxdate.cpp */,
@@ -2489,9 +2488,9 @@
 				4D592DEA14EED23600EADBB6 /* fonttable.cpp */,
 				4DB902510DAA5C980014A170 /* gradient.cpp */,
 				4DB902520DAA5C980014A170 /* gradient.h */,
+				4CC55320180D546000C10387 /* graphics_util.h */,
 				4C10D76D16BF9BFA00D25197 /* graphicscontext.cpp */,
 				4C10D76E16BF9BFA00D25197 /* graphicscontext.h */,
-				4CC55320180D546000C10387 /* graphics_util.h */,
 				E8B5BB1216DF77DF00CA02FB /* imagelist.cpp */,
 				E8B5BB1316DF77DF00CA02FB /* imagelist.h */,
 				4D587E370B8096FD00200116 /* mctheme.cpp */,
@@ -2509,6 +2508,7 @@
 				4D2192330C6386C90027A96D /* printer.h */,
 				4DDB66701413A02000E5C84C /* redraw.cpp */,
 				4DDB66711413A02000E5C84C /* redraw.h */,
+				E87FAFEB1924F24300ED338B /* region.cpp */,
 				E8A49106170F179000769C7A /* region.h */,
 				E82206E0184F810A00117D10 /* resolution.cpp */,
 				E8D7F8C21785D82F00EC051A /* resolution.h */,
@@ -3529,7 +3529,6 @@
 				4D1F9DA1171C682E0091C6CB /* srvsession.cpp in Sources */,
 				4D1F9DA2171C682E0091C6CB /* redraw.cpp in Sources */,
 				4D1F9DA3171C682E0091C6CB /* tilecache.cpp in Sources */,
-				4D1F9DA4171C682E0091C6CB /* sysregion.cpp in Sources */,
 				4D1F9DA5171C682E0091C6CB /* tilecachesw.cpp in Sources */,
 				4D1F9DA6171C682E0091C6CB /* paragrafattr.cpp in Sources */,
 				4D1F9DA7171C682E0091C6CB /* fieldstyledtext.cpp in Sources */,
@@ -3538,6 +3537,7 @@
 				4D1F9DAA171C682E0091C6CB /* fieldhtml.cpp in Sources */,
 				4D1F9DAC171C682E0091C6CB /* ibmp.cpp in Sources */,
 				4D1F9DAD171C682E0091C6CB /* image_rep.cpp in Sources */,
+				E8F8E10819544F7800E5164E /* region.cpp in Sources */,
 				4D1F9DAE171C682E0091C6CB /* image_rep_encoded.cpp in Sources */,
 				4D1F9DAF171C682E0091C6CB /* image_rep_mutable.cpp in Sources */,
 				4D1F9DB0171C682E0091C6CB /* image_rep_resampled.cpp in Sources */,
@@ -3762,7 +3762,6 @@
 				4DFFC7E713DD8AB9006233A4 /* objectpropsets.cpp in Sources */,
 				4DFFC7EF13DD8AFC006233A4 /* name.cpp in Sources */,
 				4D05B91013E06AB3001CD82A /* dskmain.cpp in Sources */,
-				4DDB66591413993500E5C84C /* sysosxregion.cpp in Sources */,
 				4DDB666F14139FF500E5C84C /* tilecache.cpp in Sources */,
 				4DDB66721413A02000E5C84C /* redraw.cpp in Sources */,
 				4D432F1F141A2DFE001164F9 /* tilecachesw.cpp in Sources */,
@@ -3816,6 +3815,7 @@
 				4DAF5C8718C0E76500B9713C /* mac-scripting.mm in Sources */,
 				4D87710018C8B30700A88AF9 /* quicktime.cpp in Sources */,
 				1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */,
+				E87FAFEC1924F25000ED338B /* region.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

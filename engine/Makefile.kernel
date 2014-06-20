@@ -26,6 +26,7 @@ SOURCES=\
 	object.cpp objptr.cpp operator.cpp paragraf.cpp param.cpp \
 	property.cpp pickle.cpp \
 	regex.cpp \
+	region.cpp \
 	resolution.cpp \
 	scriptpt.cpp \
 	scrolbar.cpp \

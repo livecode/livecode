@@ -851,6 +851,8 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 
 	MCRectangle t_clip;
 	t_clip = dc -> getclip();
+	
+	dc->save();
 
 	uint2 ascent, descent;
 	ascent = fixeda;
@@ -999,7 +1001,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	}
 	while (lptr != lines);
 
-	dc -> setclip(t_clip);
+	dc->restore();
 	
 	// MW-2012-01-08: [[ Paragraph Border ]] Render the paragraph's border (if
 	//   any).

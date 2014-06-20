@@ -19,36 +19,16 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline MCRectangle MCRectangleMake(int x, int y, int w, int h)
-{
-	MCRectangle r;
-	r . x = x;
-	r . y = y;
-	r . width = w;
-	r . height = h;
-	return r;
-}
-
-inline MCPoint MCPointMake(int x, int y)
-{
-	MCPoint p;
-	p . x = x;
-	p . y = y;
-	return p;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 class MCPlatformSurface
 {
 public:
 	MCPlatformSurface(void);
 	virtual ~MCPlatformSurface(void);
 	
-	virtual bool LockGraphics(MCRegionRef region, MCGContextRef& r_context) = 0;
+	virtual bool LockGraphics(MCGRegionRef region, MCGContextRef& r_context) = 0;
 	virtual void UnlockGraphics(void) = 0;
 	
-	virtual bool LockPixels(MCRegionRef region, MCGRaster& r_raster) = 0;
+	virtual bool LockPixels(MCGIntegerRectangle region, MCGRaster& r_raster) = 0;
 	virtual void UnlockPixels(void) = 0;
 	
 	virtual bool LockSystemContext(void*& r_context) = 0;
@@ -133,7 +113,7 @@ public:
 	
 	void HandleCloseRequest(void);
 	
-	void HandleRedraw(MCPlatformSurfaceRef surface, MCRegionRef update_rgn);
+	void HandleRedraw(MCPlatformSurfaceRef surface, MCGRegionRef update_rgn);
 	void HandleReshape(MCRectangle new_content);
 	void HandleIconify(void);
 	void HandleUniconify(void);
@@ -257,7 +237,7 @@ void MCPlatformCallbackSendWindowCloseRequest(MCPlatformWindowRef window);
 void MCPlatformCallbackSendWindowClose(MCPlatformWindowRef window);
 void MCPlatformCallbackSendWindowReshape(MCPlatformWindowRef window, MCRectangle new_content);
 void MCPlatformCallbackSendWindowConstrain(MCPlatformWindowRef window, MCPoint proposed_size, MCPoint& r_wanted_size);
-void MCPlatformCallbackSendWindowRedraw(MCPlatformWindowRef window, MCPlatformSurfaceRef surface, MCRegionRef dirty_rgn);
+void MCPlatformCallbackSendWindowRedraw(MCPlatformWindowRef window, MCPlatformSurfaceRef surface, MCGRegionRef dirty_rgn);
 void MCPlatformCallbackSendWindowIconify(MCPlatformWindowRef window);
 void MCPlatformCallbackSendWindowUniconify(MCPlatformWindowRef window);
 void MCPlatformCallbackSendWindowFocus(MCPlatformWindowRef window);

@@ -1111,10 +1111,13 @@ bool MCNativeTheme::drawmetalbackground(MCContext *p_context, const MCRectangle&
 
 	MCRectangle t_clip;
 	t_clip = p_context -> getclip();
-	p_context -> setclip(MCU_intersect_rect(p_rect, p_dirty));
+	
+	p_context->save();
+	p_context->cliprect(MCU_intersect_rect(p_rect, p_dirty));
 	p_context -> drawtheme(THEME_DRAW_TYPE_BACKGROUND, &p_info);
-	p_context -> setclip(t_clip);
 
+	p_context->restore();
+	
 	return true;
 }
 

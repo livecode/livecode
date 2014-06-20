@@ -142,6 +142,11 @@ public:
 	bool changeopaque(bool p_new_value);
 	void setprintmode(void);
 
+	void save();
+	void restore();
+	
+	void cliprect(const MCRectangle &p_rect);
+	
 	void setclip(const MCRectangle& rect);
 	MCRectangle getclip(void) const;
 	void clearclip(void);
@@ -240,6 +245,11 @@ private:
 	bool f_fill_background_used;
 	
 	MCMarkState *f_state_stack;
+	
+	// IM-2014-06-03: [[ GraphicsPerformance ]] Minimal implementation of save() & restore()
+	MCRectangle *m_clip_stack;
+	uint32_t m_clip_stack_size;
+	uint32_t m_clip_stack_index;
 	
 	heap_t f_heap;
 

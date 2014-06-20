@@ -572,24 +572,6 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCGRectangle MCGRectangleIntersection(const MCGRectangle &p_rect_1, const MCGRectangle &p_rect_2)
-{
-	MCGRectangle t_intersection;
-	t_intersection . origin . x = MCMax(p_rect_1 . origin . x, p_rect_2 . origin . x);
-	t_intersection . origin . y = MCMax(p_rect_1 . origin . y, p_rect_2 . origin . y);
-	
-	MCGFloat t_right, t_bottom;
-	t_right = MCMin(p_rect_1 . origin . x + p_rect_1 . size . width, p_rect_2 . origin . x + p_rect_2 . size . width);
-	t_bottom = MCMin(p_rect_1 . origin . y + p_rect_1 . size . height, p_rect_2 . origin . y + p_rect_2 . size . height);
-	
-	t_intersection . size . width = MCMax(0.0f, t_right - t_intersection . origin . x);
-	t_intersection . size . height = MCMax(0.0f, t_bottom - t_intersection . origin . y);
-	
-	return t_intersection;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 MCGPoint MCGPointApplyAffineTransform(const MCGPoint& p_point, const MCGAffineTransform& p_transform)
 {
 	MCGPoint t_transformed_pt;
@@ -658,6 +640,70 @@ MCGRectangle MCGRectangleApplyAffineTransform(const MCGRectangle& p_rect, const 
 	}
 	return t_transformed_rect;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCGRectangle MCGRectangleIntersection(const MCGRectangle &p_rect_1, const MCGRectangle &p_rect_2)
+{
+	MCGRectangle t_intersection;
+	t_intersection . origin . x = MCMax(p_rect_1 . origin . x, p_rect_2 . origin . x);
+	t_intersection . origin . y = MCMax(p_rect_1 . origin . y, p_rect_2 . origin . y);
+	
+	MCGFloat t_right, t_bottom;
+	t_right = MCMin(p_rect_1 . origin . x + p_rect_1 . size . width, p_rect_2 . origin . x + p_rect_2 . size . width);
+	t_bottom = MCMin(p_rect_1 . origin . y + p_rect_1 . size . height, p_rect_2 . origin . y + p_rect_2 . size . height);
+	
+	t_intersection . size . width = MCMax(0.0f, t_right - t_intersection . origin . x);
+	t_intersection . size . height = MCMax(0.0f, t_bottom - t_intersection . origin . y);
+	
+	return t_intersection;
+}
+
+MCGIntegerRectangle MCGIntegerRectangleIntersection(const MCGIntegerRectangle &p_rect_1, const MCGIntegerRectangle &p_rect_2)
+{
+	int32_t t_left, t_top;
+	t_left = MCMax(p_rect_1.origin.x, p_rect_2.origin.x);
+	t_top = MCMax(p_rect_1.origin.y, p_rect_2.origin.y);
+	
+	int32_t t_right, t_bottom;
+	t_right = MCMin(p_rect_1.origin.x + p_rect_1.size.width, p_rect_2.origin.x + p_rect_2.size.width);
+	t_bottom = MCMin(p_rect_1.origin.y + p_rect_1.size.height, p_rect_2.origin.y + p_rect_2.size.height);
+	
+	t_right = MCMax(t_left, t_right);
+	t_bottom = MCMax(t_top, t_bottom);
+	
+	return MCGIntegerRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
+}
+
+MCGIntegerRectangle MCGRectangleGetBounds(const MCGRectangle &p_rect)
+{
+	int32_t t_left, t_right, t_top, t_bottom;
+	t_left = floor(p_rect.origin.x);
+	t_top = floor(p_rect.origin.y);
+	t_right = ceil(p_rect.origin.x + p_rect.size.width);
+	t_bottom = ceil(p_rect.origin.y + p_rect.size.height);
+	
+	int32_t t_width, t_height;
+	t_width = t_right - t_left;
+	t_height = t_bottom - t_top;
+	
+	// [[ Bug 11349 ]] Out of bounds content displayed since getting integer
+	//   bounds of an empty rect is not empty.
+	if (p_rect . size . width == 0.0f || p_rect . size . height == 0.0f)
+	{
+		t_width = 0;
+		t_height = 0;
+	}
+	
+	return MCGIntegerRectangleMake(t_left, t_top, t_width, t_height);
+}
+
+MCGIntegerRectangle MCGIntegerRectangleGetTransformedBounds(const MCGIntegerRectangle &p_rect, const MCGAffineTransform &p_transform)
+{
+	return MCGRectangleGetBounds(MCGRectangleApplyAffineTransform(MCGIntegerRectangleToMCGRectangle(p_rect), p_transform));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCGAffineTransformToSkMatrix(const MCGAffineTransform &p_transform, SkMatrix &r_matrix)
 {

@@ -90,7 +90,7 @@ public:
 	IO_stat startup(void);
 	
 	void wreshape(Window w);
-	void wredraw(Window w, MCPlatformSurfaceRef surface, MCRegionRef region);
+	void wredraw(Window w, MCPlatformSurfaceRef surface, MCGRegionRef region);
 	void wiconify(Window w);
 	void wuniconify(Window w);
 	
