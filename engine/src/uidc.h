@@ -243,6 +243,8 @@ class MCUIDC
 protected:
 	MCMessageList *messages;
 	MCMovingList *moving;
+	Boolean lockmoves;
+	real8 locktime;
 	uint4 messageid;
     // MW-2014-05-28: [[ Bug 12463 ]] Change these to 32-bit to stop wrap-around of messages.
 	uint32_t nmessages;
@@ -577,6 +579,8 @@ public:
     
 	void listmessages(MCExecPoint &ep);
 	Boolean handlepending(real8 &curtime, real8 &eventtime, Boolean dispatch);
+	Boolean getlockmoves() const;
+	void setlockmoves(Boolean b);
 	void addmove(MCObject *optr, MCPoint *pts, uint2 npts,
 	             real8 &duration, Boolean waiting);
 	void listmoves(MCExecPoint &ep);
