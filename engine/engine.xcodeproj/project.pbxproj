@@ -186,7 +186,6 @@
 		4D1F9DA1171C682E0091C6CB /* srvsession.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E86A04F6142A49EF005ECD82 /* srvsession.cpp */; };
 		4D1F9DA2171C682E0091C6CB /* redraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66701413A02000E5C84C /* redraw.cpp */; };
 		4D1F9DA3171C682E0091C6CB /* tilecache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB666D14139FF500E5C84C /* tilecache.cpp */; };
-		4D1F9DA4171C682E0091C6CB /* sysregion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66521413990400E5C84C /* sysregion.cpp */; };
 		4D1F9DA5171C682E0091C6CB /* tilecachesw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D432F1E141A2DFE001164F9 /* tilecachesw.cpp */; };
 		4D1F9DA6171C682E0091C6CB /* paragrafattr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1535614E7FB91009FA80E /* paragrafattr.cpp */; };
 		4D1F9DA7171C682E0091C6CB /* fieldstyledtext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */; };
@@ -546,6 +545,7 @@
 		E8D7F8471785A99900EC051A /* srvtheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8D7F8461785A99900EC051A /* srvtheme.cpp */; };
 		E8DDE5DF16C2B1A7007367E4 /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8DDE5DD16C2B1A7007367E4 /* image_rep_resampled.cpp */; };
 		E8DDE5E016C2B1A7007367E4 /* image_rep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8DDE5DE16C2B1A7007367E4 /* image_rep.cpp */; };
+		E8F8E10819544F7800E5164E /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E87FAFEB1924F24300ED338B /* region.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1427,7 +1427,6 @@
 		4DD54D68134F594E00981610 /* mblmain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblmain.cpp; path = src/mblmain.cpp; sourceTree = "<group>"; };
 		4DD54D69134F594E00981610 /* mblspec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblspec.cpp; path = src/mblspec.cpp; sourceTree = "<group>"; };
 		4DD54D6A134F594E00981610 /* mblstack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblstack.cpp; path = src/mblstack.cpp; sourceTree = "<group>"; };
-		4DDB66521413990400E5C84C /* sysregion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysregion.cpp; path = src/sysregion.cpp; sourceTree = "<group>"; };
 		4DDB66531413990400E5C84C /* sysunxdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxdate.cpp; path = src/sysunxdate.cpp; sourceTree = "<group>"; };
 		4DDB66541413990400E5C84C /* sysw32network.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysw32network.cpp; path = src/sysw32network.cpp; sourceTree = "<group>"; };
 		4DDB66551413990400E5C84C /* sysw32region.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysw32region.cpp; path = src/sysw32region.cpp; sourceTree = "<group>"; };
@@ -2436,7 +2435,6 @@
 		4DFD486413BA28BF008DB91F /* System */ = {
 			isa = PBXGroup;
 			children = (
-				4DDB66521413990400E5C84C /* sysregion.cpp */,
 				4DDB66581413993500E5C84C /* sysosxregion.cpp */,
 				4DB32230174BD08E00046FFE /* sysosxrandom.cpp */,
 				4DDB66531413990400E5C84C /* sysunxdate.cpp */,
@@ -3531,7 +3529,6 @@
 				4D1F9DA1171C682E0091C6CB /* srvsession.cpp in Sources */,
 				4D1F9DA2171C682E0091C6CB /* redraw.cpp in Sources */,
 				4D1F9DA3171C682E0091C6CB /* tilecache.cpp in Sources */,
-				4D1F9DA4171C682E0091C6CB /* sysregion.cpp in Sources */,
 				4D1F9DA5171C682E0091C6CB /* tilecachesw.cpp in Sources */,
 				4D1F9DA6171C682E0091C6CB /* paragrafattr.cpp in Sources */,
 				4D1F9DA7171C682E0091C6CB /* fieldstyledtext.cpp in Sources */,
@@ -3540,6 +3537,7 @@
 				4D1F9DAA171C682E0091C6CB /* fieldhtml.cpp in Sources */,
 				4D1F9DAC171C682E0091C6CB /* ibmp.cpp in Sources */,
 				4D1F9DAD171C682E0091C6CB /* image_rep.cpp in Sources */,
+				E8F8E10819544F7800E5164E /* region.cpp in Sources */,
 				4D1F9DAE171C682E0091C6CB /* image_rep_encoded.cpp in Sources */,
 				4D1F9DAF171C682E0091C6CB /* image_rep_mutable.cpp in Sources */,
 				4D1F9DB0171C682E0091C6CB /* image_rep_resampled.cpp in Sources */,
