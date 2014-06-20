@@ -250,7 +250,7 @@ void MCLine::appendall(MCBlock *bptr, bool p_flow)
 {
 	firstblock = bptr;
 	lastblock = (MCBlock *)bptr->prev();
-	uint2 oldwidth = width;
+	coord_t oldwidth = width;
 	width = 0;
 	bptr = lastblock;
 	ascent = descent = 0;
@@ -276,7 +276,7 @@ void MCLine::appendsegments(MCSegment *first, MCSegment *last)
     
     ascent = descent = 0;
     
-    uint2 oldwidth = width;
+    coord_t oldwidth = width;
     width = 0;
     dirtywidth = MCU_max(width, oldwidth);
     
@@ -323,7 +323,7 @@ void MCLine::clean()
 
 void MCLine::makedirty()
 {
-	dirtywidth = MCU_max(width, 1);
+	dirtywidth = MCU_max(width, 1.0f);
 }
 
 void MCLine::GetRange(findex_t &i, findex_t &l)
@@ -334,7 +334,7 @@ void MCLine::GetRange(findex_t &i, findex_t &l)
 	l = j + l - i;
 }
 
-uint2 MCLine::GetCursorXHelper(findex_t fi, bool prefer_forward)
+coord_t MCLine::GetCursorXHelper(findex_t fi, bool prefer_forward)
 {
     MCBlock *bptr = firstblock;
     MCSegment *sgptr = firstsegment;
@@ -357,31 +357,18 @@ uint2 MCLine::GetCursorXHelper(findex_t fi, bool prefer_forward)
     return bptr->GetCursorX(fi) + sgptr->GetCursorOffset();
 }
 
-uint2 MCLine::GetCursorXPrimary(findex_t fi, bool moving_forward)
+coord_t MCLine::GetCursorXPrimary(findex_t fi, bool moving_forward)
 {
 	return GetCursorXHelper(fi, !moving_forward);
 }
 
-uint2 MCLine::GetCursorXSecondary(findex_t fi, bool moving_forward)
+coord_t MCLine::GetCursorXSecondary(findex_t fi, bool moving_forward)
 {
     return GetCursorXHelper(fi, moving_forward);
 }
 
-findex_t MCLine::GetCursorIndex(int2 cx, Boolean chunk, bool moving_left)
-{
-	/*uint2 x = 0;
-	MCBlock *bptr = firstblock;
-	int2 bwidth = bptr->getwidth(NULL, x);
-	while (cx > bwidth && bptr != lastblock)
-	{
-		cx -= bwidth;
-		x += bwidth;
-		bptr = (MCBlock *)bptr->next();
-		bwidth = bptr->getwidth(NULL, x);
-	}
-
-	return bptr->GetCursorIndex(x, cx, chunk, bptr == lastblock);*/
-    
+findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_left)
+{    
     // BIDIRECTIONAL SUPPORT -
     //  Blocks cannot be assumed to be in visual order
     

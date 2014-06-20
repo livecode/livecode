@@ -61,7 +61,7 @@ private:
     int16_t m_BottomEdge;
     
     // Width of the contents of this segment
-    uint16_t m_ContentWidth;
+    coord_t m_ContentWidth;
     
     // Horizontal and vertical alignment of the text within this segment
     uint8_t m_HAlign;
@@ -127,7 +127,7 @@ public:
     }
 
     // Returns the length of the contents (if rendered as a single line)
-    int16_t GetContentLength();
+    coord_t GetContentLength();
     
     // Returns the height of the contents (if rendered as a single line)
     int16_t GetContentHeight() const;
@@ -135,7 +135,7 @@ public:
     // Does block fitting within the segment; using the given width, as many
     // blocks as possible will be retained by the segment and those that do not
     // fit will be returned in a new line. If all fit, NULL is returned.
-    MCLine *Fit(int16_t p_available_width);
+    MCLine *Fit(coord_t p_available_width);
     
     // Horizontal and vertical alignment
     void SetHorizontalAlignment(uint8_t p_halign)
@@ -156,13 +156,13 @@ public:
     }
     
     // Draws the contents of the segment
-    void Draw(MCDC *dc, int16_t line_origin_x, int16_t line_origin_y, findex_t si, findex_t ei, MCStringRef p_text, uint16_t p_style);
+    void Draw(MCDC *dc, coord_t line_origin_x, int16_t line_origin_y, findex_t si, findex_t ei, MCStringRef p_text, uint16_t p_style);
     
     // Arranges the blocks of this segment into visual order for display
     void ResolveDisplayOrder();
     
     // Returns the offset used for cursor positioning within the segment
-    int16_t GetCursorOffset();
+    coord_t GetCursorOffset();
     
     // Linked list management
     MCSegment *next()

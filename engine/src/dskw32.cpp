@@ -3907,7 +3907,9 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         siStartInfo.hStdOutput = hChildStdoutWr;
         
 		MCStringRef t_cmd;
-		/* UNCHECKED */ MCStringFormat(t_cmd, "%@ /C %@", MCshellcmd, p_command);
+        // SN-2014-06-16 [[ Bug 12648 ]] Shell command does not accept spaces despite being quoted (Windows)
+        // Fix for 7
+		/* UNCHECKED */ MCStringFormat(t_cmd, "%@ /C \"%@\"", MCshellcmd, p_command);
 		MCAutoStringRefAsWString t_wcmd;
 		t_wcmd . Lock(t_cmd);
         MCU_realloc((char **)&MCprocesses, MCnprocesses,

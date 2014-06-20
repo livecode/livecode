@@ -436,7 +436,7 @@ void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef 
 	return MCFontDrawTextSubstring(p_gcontext, x, y, p_text, t_range, font, p_rtl, p_can_break);
 }
 
-void MCFontDrawTextSubstring(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef p_font, bool p_rtl, bool p_can_break)
+void MCFontDrawTextSubstring(MCGContextRef p_gcontext, coord_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef p_font, bool p_rtl, bool p_can_break)
 {
     font_draw_text_context ctxt;
     ctxt.x = x;

@@ -775,13 +775,13 @@ public:
 	//   MCField::gettextatts
 	//   MCField::returnloc
 	//   MCField::insertparagraph
-	void indextoloc(findex_t tindex, uint2 fixedheight, int2 &x, int2 &y);
+	void indextoloc(findex_t tindex, uint2 fixedheight, coord_t &x, coord_t &y);
 
 	// Compute the left and right hand side of the range of indices (si..ei)
 	// Called by:
 	//   MCField::getlinkdata
 	//   MCField::gettextatts
-	void getxextents(findex_t &si, findex_t &ei, int2 &minx, int2 &maxx);
+	void getxextents(findex_t &si, findex_t &ei, coord_t &minx, coord_t &maxx);
 
 	// Compute the indices of a click at (x, y).
 	// If x is outside the bounds of the line containing y then:
@@ -1007,7 +1007,7 @@ private:
 
 	MCLine *indextoline(findex_t tindex);
 
-	int2 getx(findex_t tindex, MCLine *lptr);
+	coord_t getx(findex_t tindex, MCLine *lptr);
 
 	// Mark all the lines in the given range as dirty
 	void marklines(findex_t si, findex_t ei);
