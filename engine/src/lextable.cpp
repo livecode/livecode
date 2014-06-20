@@ -647,6 +647,8 @@ LT factor_table[] =
         {"clickv", TT_FUNCTION, F_CLICK_V},
         {"clipboard", TT_FUNCTION, F_CLIPBOARD},
         {"clipboarddata", TT_PROPERTY, P_CLIPBOARD_DATA},
+        // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+        {"clipstorect", TT_PROPERTY, P_CLIPS_TO_RECT},
         {"closebox", TT_PROPERTY, P_CLOSE_BOX},
         {"cmdkey", TT_FUNCTION, F_COMMAND_KEY},
         {"collapsebox", TT_PROPERTY, P_COLLAPSE_BOX},
@@ -949,6 +951,8 @@ LT factor_table[] =
         {"httpproxy", TT_PROPERTY, P_HTTP_PROXY},
 		{"httpproxyforurl", TT_FUNCTION, F_HTTP_PROXY_FOR_URL},
         {"icon", TT_PROPERTY, P_ICON},
+        // MW-2014-06-19: [[ IconGravity ]] Button 'iconGravity' property.
+        {"icongravity", TT_PROPERTY, P_ICON_GRAVITY},
         {"iconic", TT_PROPERTY, P_ICONIC},
 		{"iconmenu", TT_PROPERTY, P_ICON_MENU},
         {"id", TT_PROPERTY, P_ID},
