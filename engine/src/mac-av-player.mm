@@ -84,6 +84,7 @@ public:
     void SelectionChanged(void);
     void CurrentTimeChanged(void);
     void RateChanged(void);
+    AVPlayer* getPlayer(void);
     
 protected:
 	virtual void Realize(void);
@@ -245,7 +246,7 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     // First detach the observer from everything we've attached it to.
     [m_player removeObserver: m_observer forKeyPath: @"status"];
     [m_player removeTimeObserver:m_time_observer_token];
-
+    
     // Now we can release it.
     [m_observer release];
     
@@ -276,6 +277,11 @@ void MCAVFoundationPlayer::MovieFinished(void)
         m_playing = true;
         MCPlatformCallbackSendPlayerStarted(this);
     }
+}
+
+AVPlayer* MCAVFoundationPlayer::getPlayer(void)
+{
+    return m_player;
 }
 
 double MCAVFoundationPlayer::getDuration(void)
@@ -595,7 +601,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: AVPlayerItemTimeJumpedNotification object: [m_player currentItem]];
     
-    m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 1000) queue:dispatch_get_main_queue() usingBlock:^(CMTime time) {
+    m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 1000) queue:nil usingBlock:^(CMTime time) {
         /*
         NSLog(@"Value is %f and timescale is %f", (double)time.value , (double)time.timescale );
         NSLog(@"Time is %d ", (int)(1000 * CMTimeGetSeconds(time)));
@@ -605,11 +611,12 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
         if (m_play_selection_only && CMTimeCompare(time, CMTimeMake(m_selection_finish, 1000)) >= 0)
         {
             [m_player pause];
-            [m_player seekToTime:CMTimeMake(m_selection_start, 1000)];
+            //[m_player seekToTime:CMTimeMake(m_selection_start, 1000)];
         }
         
         CurrentTimeChanged();
         }];
+    
 }
 
 
@@ -641,6 +648,10 @@ bool MCAVFoundationPlayer::IsPlaying(void)
 void MCAVFoundationPlayer::Start(double rate)
 {
     //[m_player play];
+    if (m_play_selection_only && CMTimeCompare(m_player . currentTime, CMTimeMake(m_selection_finish, 1000)) >= 0)
+    {
+        [m_player seekToTime:CMTimeMake(m_selection_start, 1000)];
+    }
     [m_player setRate:rate];
 }
 

@@ -681,6 +681,8 @@ LT factor_table[] =
 		{"controlatscreenloc", TT_FUNCTION, F_CONTROL_AT_SCREEN_LOC},
         {"controlids", TT_PROPERTY, P_CONTROL_IDS},
         {"controlkey", TT_FUNCTION, F_CONTROL_KEY},
+        // Color for played_area and background color when controller buttons are still_down
+        {"controllermaincolor", TT_PROPERTY, P_CONTROLLER_MAIN_COLOR},
         {"controlnames", TT_PROPERTY, P_CONTROL_NAMES},
         {"controls", TT_CLASS, CT_LAYER},
         {"convertoctals", TT_PROPERTY, P_CONVERT_OCTALS},

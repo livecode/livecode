@@ -110,6 +110,12 @@ MCPlayer::MCPlayer()
 	rate = 1.0;
 	lasttime = 0;
 	starttime = endtime = MAXUINT4;
+    
+    // Default controller played area color
+    controllermaincolor .red = 168 * 257;
+    controllermaincolor .green = 1 * 257;
+    controllermaincolor .blue = 255 * 257;
+    
 	disposable = istmpfile = False;
 	userCallbackStr = NULL;
 	formattedwidth = formattedheight = 0;
@@ -139,6 +145,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	rate = sref.rate;
 	lasttime = sref.lasttime;
 	starttime = sref.starttime;
+    controllermaincolor = sref.controllermaincolor;
 	endtime = sref.endtime;
 	disposable = istmpfile = False;
 	userCallbackStr = strclone(sref.userCallbackStr);
@@ -484,6 +491,9 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
         case P_PLAY_SELECTION:
             ep.setboolean(getflag(F_PLAY_SELECTION));
             break;
+        case P_CONTROLLER_MAIN_COLOR:
+            ep.setcolor(controllermaincolor);
+            break;
         case P_SHOW_SELECTION:
             ep.setboolean(getflag(F_SHOW_SELECTION));
             break;
@@ -740,6 +750,21 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
             }
             if (dirty)
                 playselection((flags & F_PLAY_SELECTION) != 0);
+            break;
+        case P_CONTROLLER_MAIN_COLOR:
+        {
+            MCColor t_color;
+			char *t_colorname = NULL;
+			if (!MCscreen->parsecolor(data, &t_color, &t_colorname))
+			{
+				MCeerror->add
+				(EE_COLOR_BADSELECTEDCOLOR, 0, 0, data);
+				return ES_ERROR;
+			}
+			if (t_colorname != NULL)
+				delete t_colorname;
+            controllermaincolor = t_color;
+        }
             break;
         case P_SHOW_SELECTION: //means make QT movie editable
             if (!MCU_matchflags(data, flags, F_SHOW_SELECTION, dirty))
@@ -1896,7 +1921,8 @@ void MCPlayer::drawControllerVolumeButton(MCGContextRef p_gcontext)
     if (m_show_volume)
     {
         MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_volume_rect));
-        MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); // PURPLE
+        MCGContextSetFillRGBAColor(p_gcontext, (controllermaincolor . red / 255.0) / 257.0, (controllermaincolor . green / 255.0) / 257.0, (controllermaincolor . blue / 255.0) / 257.0, 1.0f);
+        //MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); // PURPLE
         MCGContextFill(p_gcontext);
     }
     
@@ -2233,7 +2259,8 @@ void MCPlayer::drawControllerScrubForwardButton(MCGContextRef p_gcontext)
     if (m_scrub_forward_is_pressed)
     {
         MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_scrub_forward_rect));
-        MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); //PURPLE
+        MCGContextSetFillRGBAColor(p_gcontext, (controllermaincolor . red / 255.0) / 257.0, (controllermaincolor . green / 255.0) / 257.0, (controllermaincolor . blue / 255.0) / 257.0, 1.0f);
+        //MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); //PURPLE
         MCGContextFill(p_gcontext);
     }
     
@@ -2277,7 +2304,8 @@ void MCPlayer::drawControllerScrubBackButton(MCGContextRef p_gcontext)
     if (m_scrub_back_is_pressed)
     {
         MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_scrub_back_rect));
-        MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); //PURPLE
+        MCGContextSetFillRGBAColor(p_gcontext, (controllermaincolor . red / 255.0) / 257.0, (controllermaincolor . green / 255.0) / 257.0, (controllermaincolor . blue / 255.0) / 257.0, 1.0f);
+        //MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); //PURPLE
         MCGContextFill(p_gcontext);
     }
     
@@ -2330,7 +2358,8 @@ void MCPlayer::drawControllerVolumeAreaButton(MCGContextRef p_gcontext)
     MCRectangle t_volume_area;
     t_volume_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeArea);
     
-    MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); //PURPLE
+    //MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); //PURPLE
+    MCGContextSetFillRGBAColor(p_gcontext, (controllermaincolor . red / 255.0) / 257.0, (controllermaincolor . green / 255.0) / 257.0, (controllermaincolor . blue / 255.0) / 257.0, 1.0f);
     
     MCGRectangle t_grect = MCRectangleToMCGRectangle(t_volume_area);
     MCGContextAddRoundedRectangle(p_gcontext, t_grect, MCGSizeMake(30, 30));
@@ -2347,7 +2376,8 @@ void MCPlayer::drawControllerPlayedAreaButton(MCGContextRef p_gcontext)
     t_drawn_played_area . height = CONTROLLER_HEIGHT / 3;
 
     
-    MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); //PURPLE
+    MCGContextSetFillRGBAColor(p_gcontext, (controllermaincolor . red / 255.0) / 257.0, (controllermaincolor . green / 255.0) / 257.0, (controllermaincolor . blue / 255.0) / 257.0, 1.0f);
+    //MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); //PURPLE
     
     MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_drawn_played_area);
     
@@ -2459,6 +2489,7 @@ MCRectangle MCPlayer::getcontrollerrect(void)
     if (getflag(F_SHOW_BORDER))
         t_rect = MCU_reduce_rect(t_rect, borderwidth);
     
+    // TODO: controller appears one pixel below the place it should (and one pixel right as well) 
     t_rect . y = t_rect . y + t_rect . height - CONTROLLER_HEIGHT;
     t_rect . height = CONTROLLER_HEIGHT;
     
