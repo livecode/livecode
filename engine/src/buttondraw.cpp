@@ -386,7 +386,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			int2 sx = shadowrect.x + leftmargin + borderwidth - DEFAULT_BORDER;
 			int2 sy = centery - (nlines * fheight >> 1) + fascent + fdescent - 2;
 			uint2 theight = nlines == 1 ? fascent : nlines * fheight;
-			if (flags & F_SHOW_ICON && icons != NULL && icons->curicon != NULL)
+            
+            // MW-2014-06-19: [[ IconGravity ]] Use old method of calculating icon location if gravity is none.
+			if (flags & F_SHOW_ICON && icons != NULL && icons->curicon != NULL && m_icon_gravity == kMCGravityNone)
 			{
 				switch (flags & F_ALIGNMENT)
 				{
@@ -408,8 +410,29 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			}
 			if (flags & F_SHOW_ICON && icons != NULL && icons->curicon != NULL)
 			{
-				icons->curicon->drawcentered(dc, centerx + loff, centery + loff,
-				                             (state & CS_HILITED) != 0);
+                if (m_icon_gravity == kMCGravityNone)
+                    icons->curicon->drawcentered(dc, centerx + loff, centery + loff,
+                                                    (state & CS_HILITED) != 0);
+                else
+                {
+                    // MW-2014-06-19: [[ IconGravity ]] Use iconGravity to place the icon.
+                    int t_left, t_top, t_right, t_bottom;
+                    t_left = rect . x + leftmargin + borderwidth;
+                    t_top = rect . y + topmargin + borderwidth;
+                    t_right = rect . x + rect . width - rightmargin - borderwidth;
+                    t_bottom = rect . y + rect . height - bottommargin - borderwidth;
+                    
+                    MCRectangle t_rect;
+                    if (t_left < t_right)
+                        t_rect . x = t_left, t_rect . width = t_right - t_left;
+                    else
+                        t_rect . x = (t_left + t_right) / 2, t_rect . width = 0;
+                    if (t_top < t_bottom)
+                        t_rect . y = t_top, t_rect . height = t_bottom - t_top;
+                    else
+                        t_rect . y = (t_top + t_bottom) / 2, t_rect . height = 0;
+                    icons -> curicon -> drawwithgravity(dc, t_rect, m_icon_gravity);
+                }
 				icondrawed = True;
 			}
 

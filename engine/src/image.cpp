@@ -1536,7 +1536,7 @@ void MCImage::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		xorigin = trect.x - rect.x;
 		yorigin = trect.y - rect.y;
 	}
-	drawme(dc, xorigin, yorigin, trect.width, trect.height, trect.x, trect.y);
+	drawme(dc, xorigin, yorigin, trect.width, trect.height, trect.x, trect.y, trect.width, trect.height);
 
 	if (getflag(F_SHOW_BORDER))
 	{

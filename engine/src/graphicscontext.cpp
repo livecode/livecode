@@ -1236,7 +1236,9 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 
 	MCGContextSave(m_gcontext);
     
-	MCGContextClipToRect(m_gcontext, t_clip);
+    // MW-2014-06-19: [[ IconGravity ]] Only clip if we are drawing a partial image (we need to double-check, but I don't think sx/sy are ever non-zero).
+    if (sx != 0 || sy != 0)
+        MCGContextClipToRect(m_gcontext, t_clip);
 	
     if (!p_image . has_center || !p_image . has_transform || (p_image . transform . b != 0.0f || p_image . transform . c != 0.0f))
     {

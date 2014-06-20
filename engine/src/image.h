@@ -483,10 +483,12 @@ public:
 	void endsel();
 
 	// in idraw.cc
-	void drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy);
+	void drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint2 dw, uint2 dh);
 	void drawcentered(MCDC *dc, int2 x, int2 y, Boolean reverse);
-    void drawnodata(MCDC *dc, MCRectangle drect, uint2 sw, uint2 sh, int2 dx, int2 dy);
+    void drawnodata(MCDC *dc, MCRectangle drect, uint2 sw, uint2 sh, int2 dx, int2 dy, uint2 dw, uint2 dh);
 
+    void drawwithgravity(MCDC *dc, MCRectangle rect, MCGravity gravity);
+    
 	void canceldraw(void);
 	void startmag(int2 x, int2 y);
 	void endmag(Boolean close);
