@@ -888,6 +888,13 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 	case P_ANGLE:
 		ep.setint(angle);
 		break;
+        // MW-2014-06-20: [[ ImageCenterRect ]] Getter for centerRect property.
+        case P_CENTER_RECTANGLE:
+            if (m_center_rect . x != INT16_MIN)
+                ep . setrectangle(m_center_rect);
+            else
+                ep . clear();
+        break;
 #endif /* MCImage::getprop */
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
@@ -1304,6 +1311,8 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
                 m_center_rect . width = MCU_max(i3 - i1, 0);
                 m_center_rect . height = MCU_max(i4 - i2, 0);
             }
+            
+            notifyneeds(false);
             
             dirty = True;
         }
