@@ -209,7 +209,7 @@ void MCStack::setsizehints(void)
             t_geo.max_width = t_maxrect.width;
             t_geo.min_height = t_minrect.height;
             t_geo.max_height = t_maxrect.height;
-            flags |= GDK_HINT_MIN_SIZE|GDK_HINT_MAX_SIZE;
+            t_flags |= GDK_HINT_MIN_SIZE|GDK_HINT_MAX_SIZE;
 		}
 		else
 		{
@@ -219,11 +219,11 @@ void MCStack::setsizehints(void)
 			
 			t_geo.min_width = t_geo.max_width = t_device_rect.width;
             t_geo.min_height = t_geo.max_height = t_device_rect.height;
-            flags |= GDK_HINT_MIN_SIZE|GDK_HINT_MAX_SIZE;
+            t_flags |= GDK_HINT_MIN_SIZE|GDK_HINT_MAX_SIZE;
 		}
 		
         t_geo.win_gravity = GDK_GRAVITY_STATIC;
-        flags |= GDK_HINT_WIN_GRAVITY;
+        t_flags |= GDK_HINT_WIN_GRAVITY;
         
         gdk_window_set_geometry_hints(window, &t_geo, GdkWindowHints(t_flags));
 	}
