@@ -63,6 +63,7 @@ class MCPlayer : public MCControl
 	uint4 starttime;
 	uint4 endtime;
     MCColor controllermaincolor;
+    MCColor selectedareacolor;
 	char *userCallbackStr;  //string contains user movie callbacks
 	uint2 formattedwidth;
 	uint2 formattedheight;

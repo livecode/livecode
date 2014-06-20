@@ -111,10 +111,15 @@ MCPlayer::MCPlayer()
 	lasttime = 0;
 	starttime = endtime = MAXUINT4;
     
-    // Default controller played area color
-    controllermaincolor .red = 168 * 257;
-    controllermaincolor .green = 1 * 257;
-    controllermaincolor .blue = 255 * 257;
+    // Default controller played area color (purple)
+    controllermaincolor . red = 168 * 257;
+    controllermaincolor . green = 1 * 257;
+    controllermaincolor . blue = 255 * 257;
+    
+    // Default controller selected area color (some gray)
+    selectedareacolor . red = 43 * 257;
+    selectedareacolor . green = 43 * 257;
+    selectedareacolor . blue = 43 * 257;
     
 	disposable = istmpfile = False;
 	userCallbackStr = NULL;
@@ -146,6 +151,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	lasttime = sref.lasttime;
 	starttime = sref.starttime;
     controllermaincolor = sref.controllermaincolor;
+    selectedareacolor = sref.selectedareacolor;
 	endtime = sref.endtime;
 	disposable = istmpfile = False;
 	userCallbackStr = strclone(sref.userCallbackStr);
@@ -494,6 +500,9 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
         case P_CONTROLLER_MAIN_COLOR:
             ep.setcolor(controllermaincolor);
             break;
+        case P_SELECTED_AREA_COLOR:
+            ep.setcolor(selectedareacolor);
+            break;
         case P_SHOW_SELECTION:
             ep.setboolean(getflag(F_SHOW_SELECTION));
             break;
@@ -764,6 +773,22 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 			if (t_colorname != NULL)
 				delete t_colorname;
             controllermaincolor = t_color;
+        }
+            break;
+            
+        case P_SELECTED_AREA_COLOR:
+        {
+            MCColor t_color;
+			char *t_colorname = NULL;
+			if (!MCscreen->parsecolor(data, &t_color, &t_colorname))
+			{
+				MCeerror->add
+				(EE_COLOR_BADSELECTEDCOLOR, 0, 0, data);
+				return ES_ERROR;
+			}
+			if (t_colorname != NULL)
+				delete t_colorname;
+            selectedareacolor = t_color;
         }
             break;
         case P_SHOW_SELECTION: //means make QT movie editable
@@ -2349,7 +2374,8 @@ void MCPlayer::drawControllerSelectedAreaButton(MCGContextRef p_gcontext)
     t_drawn_selected_area . height = CONTROLLER_HEIGHT / 3;
     
     MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_drawn_selected_area));
-    MCGContextSetFillRGBAColor(p_gcontext, 43 / 255.0, 43 / 255.0, 43 / 255.0, 1.0f); //SOMEGRAY
+    MCGContextSetFillRGBAColor(p_gcontext, (selectedareacolor . red / 255.0) / 257.0, (selectedareacolor . green / 255.0) / 257.0, (selectedareacolor . blue / 255.0) / 257.0, 1.0f);
+    //MCGContextSetFillRGBAColor(p_gcontext, 43 / 255.0, 43 / 255.0, 43 / 255.0, 1.0f); //SOMEGRAY
     MCGContextFill(p_gcontext);
 }
 
