@@ -2396,10 +2396,46 @@ static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap,
 	{
 		// MM-2014-03-12: [[ Bug 11892 ]] If we are not transforming the image, there's no need to apply any filtering.
 		//  Was causing issues in Skia with non null blend modes.
-		SkMatrix::TypeMask t_transform_type;
-		t_transform_type = self -> layer -> canvas -> getTotalMatrix() . getType();
-		if ((t_transform_type == SkMatrix::kIdentity_Mask || t_transform_type == SkMatrix::kTranslate_Mask) &&
-			p_bitmap . width() == p_dst . size . width && p_bitmap . height() == p_dst . size . height)
+
+		// IM-2014-06-19: [[ Bug 12557 ]] More rigourous check to see if we need a filter - Skia will complain if a filter
+		// is used for translation-only transforms or scaling transforms close to the identity.
+		SkMatrix t_matrix;
+		t_matrix = self->layer->canvas->getTotalMatrix();
+
+		MCGRectangle t_tmp_src;
+		MCGFloat t_src_width, t_src_height;
+		if (p_src != nil)
+			t_tmp_src = *p_src;
+		else
+			t_tmp_src = MCGRectangleMake(0, 0, p_bitmap.width(), p_bitmap.height());
+
+		// preconcat the current transform with the transformation from source -> dest rect to obtain the total transformation.
+		SkMatrix t_rect_to_rect;
+		t_rect_to_rect.setRectToRect(MCGRectangleToSkRect(t_tmp_src), MCGRectangleToSkRect(p_dst), SkMatrix::kFill_ScaleToFit);
+
+		t_matrix.preConcat(t_rect_to_rect);
+
+		bool t_no_filter = false;
+
+		// Translation only - no filter
+		if ((t_matrix.getType() & ~SkMatrix::kTranslate_Mask) == 0)
+			t_no_filter = true;
+		else if ((t_matrix.getType() & ~(SkMatrix::kTranslate_Mask | SkMatrix::kScale_Mask)) == 0)
+		{
+			// Translate and scale - if the transformed & rounded destination is the same size as the source then don't filter
+			SkRect src, dst;
+			src.setXYWH(t_tmp_src.origin.x, t_tmp_src.origin.y, t_tmp_src.size.width, t_tmp_src.size.height);
+
+			t_matrix.mapPoints(SkTCast<SkPoint*>(&dst),
+				SkTCast<const SkPoint*>(&src),
+				2);
+
+			SkIRect idst;
+			dst.round(&idst);
+			t_no_filter = idst.width() == t_tmp_src.size.width && idst.height() == t_tmp_src.size.height;
+		}
+
+		if (t_no_filter)
 		{
 			t_paint . setAntiAlias(false);
 			t_paint . setFilterLevel(SkPaint::kNone_FilterLevel);

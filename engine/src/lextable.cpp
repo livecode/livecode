@@ -1967,6 +1967,9 @@ static LT sugar_table[] =
         {"file", TT_UNDEFINED, SG_FILE},
         {"font", TT_UNDEFINED, SG_FONT},
         {"globally", TT_UNDEFINED, SG_GLOBALLY},
+		
+        // MM-2014-06-13: [[ Bug 12567 ]] Added host. Used in 'with verification for host <host>'
+		{"host", TT_UNDEFINED, SG_HOST},		
 		{"initially", TT_UNDEFINED, SG_INITIALLY},
         {"keyword", TT_CHUNK, CT_UNDEFINED},
 		{"level", TT_UNDEFINED, SG_LEVEL},

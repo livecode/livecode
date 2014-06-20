@@ -1822,6 +1822,9 @@ enum Sugar_constants {
 	SG_FALSE,
 	SG_SUCCESS,
 	SG_FAILURE,
+	
+    // MM-2014-06-13: [[ Bug 12567 ]] Added host. Used in 'with verification for host <host>'
+	SG_HOST,
 };
 
 enum Statements {

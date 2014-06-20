@@ -31,7 +31,7 @@
 
 @class NSURLAuthenticationChallenge;
 
-@interface WebAuthenticationPanel : NSObject
+@interface com_runrev_livecode_WebAuthenticationPanel : NSObject
 {
     IBOutlet id mainLabel;
     IBOutlet id panel;

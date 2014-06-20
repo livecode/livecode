@@ -124,6 +124,23 @@ static MCGPathRef MCGPathFromMCPath(MCPath *p_path)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCGFloatIsInteger(MCGFloat p_float)
+{
+	return floorf(p_float) == p_float;
+}
+
+bool MCGAffineTransformIsInteger(const MCGAffineTransform &p_transform)
+{
+	return MCGFloatIsInteger(p_transform.a) &&
+		MCGFloatIsInteger(p_transform.b) &&
+		MCGFloatIsInteger(p_transform.c) &&
+		MCGFloatIsInteger(p_transform.d) &&
+		MCGFloatIsInteger(p_transform.tx) &&
+		MCGFloatIsInteger(p_transform.ty);
+}
+
+//////////
+
 void MCGraphicsContext::init(MCGContextRef p_context)
 {
 	m_gcontext = MCGContextRetain(p_context);
@@ -142,6 +159,11 @@ void MCGraphicsContext::init(MCGContextRef p_context)
 	m_dash_lengths = nil;
 	m_dash_count = 0;
 	
+	// IM-2014-06-19: [[ Bug 12557 ]] Force antialiasing if the underlying context has a non-integer transform set
+	m_force_antialiasing = !MCGAffineTransformIsInteger(MCGContextGetDeviceTransform(p_context));
+	if (m_force_antialiasing)
+		MCGContextSetShouldAntialias(p_context, true);
+
 	MCGContextSetFlatness(p_context, 1 / 16.0f);
 }
 
@@ -290,9 +312,9 @@ bool MCGraphicsContext::changeopaque(bool p_value)
 
 void MCGraphicsContext::setclip(const MCRectangle& p_clip)
 {
-	//m_clip = p_clip;
 	// IM-2013-09-03: [[ RefactorGraphics ]] use MCGContextSetClipToRect to replace current
 	// clipping rect with p_clip (consistent with old MCContext::setclip functionality)
+    // MW-2014-06-19: [[ Bug 12557 ]] Round clip up to device pixel boundaries to stop compositing error accumulation on fringes.
     MCGRectangle t_rect;
     t_rect = MCRectangleToMCGRectangle(p_clip);
     
@@ -311,7 +333,7 @@ void MCGraphicsContext::setclip(const MCRectangle& p_clip)
     MCGRectangle t_pixel_rect;
     t_pixel_rect = MCGRectangleApplyAffineTransform(t_pixel_device_rect, MCGAffineTransformInvert(t_device_transform));
     
-	MCGContextSetClipToRect(m_gcontext, t_pixel_rect/*MCRectangleToMCGRectangle(p_clip)*/);
+	MCGContextSetClipToRect(m_gcontext, t_pixel_rect);
 }
 
 MCRectangle MCGraphicsContext::getclip(void) const
@@ -335,7 +357,8 @@ void MCGraphicsContext::clearorigin(void)
 
 void MCGraphicsContext::setquality(uint1 p_quality)
 {
-	MCGContextSetShouldAntialias(m_gcontext, p_quality == QUALITY_SMOOTH);
+	if (!m_force_antialiasing)
+		MCGContextSetShouldAntialias(m_gcontext, p_quality == QUALITY_SMOOTH);
 }
 
 void MCGraphicsContext::setfunction(uint1 p_function)
@@ -1291,15 +1314,17 @@ void MCGraphicsContext::drawlink(const char *link, const MCRectangle& region)
 }
 
 
-void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_is_unicode)
+void MCGraphicsContext::drawtext(coord_t x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_is_unicode)
 {
 	// MW-2013-10-29: [[ Bug 11338 ]] If 'image' is true, then render the background
 	//   rect.
 	if (image)
 	{
 		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the context to make sure we measure the width of scaled text correctly.
-		int32_t t_width;
-		t_width = MCFontMeasureText(p_font, s, length, p_is_unicode, MCGContextGetDeviceTransform(m_gcontext));
+		float t_widthf;
+		t_widthf = MCFontMeasureTextFloat(p_font, s, length, p_is_unicode, MCGContextGetDeviceTransform(m_gcontext));
+        
+        int32_t t_width = int32_t(ceilf(t_widthf));
 		
 		MCGContextSave(m_gcontext);
 		setforeground(m_background);
