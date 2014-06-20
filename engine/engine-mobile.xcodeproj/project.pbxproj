@@ -234,7 +234,6 @@
 		4DABCE4B15ECD4B50085E214 /* styledtext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DF061040ADFC00CAC7EF /* styledtext.cpp */; };
 		4DABCE4C15ECD4B50085E214 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E18D1040BDF000CAC7EF /* surface.cpp */; };
 		4DABCE4D15ECD4B50085E214 /* syscfdate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC8F613DD90CE006233A4 /* syscfdate.cpp */; };
-		4DABCE4E15ECD4B50085E214 /* sysregion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6E59571408344300EE960D /* sysregion.cpp */; };
 		4DABCE4F15ECD4B50085E214 /* sysspec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE7ED6413B33CEA002634F5 /* sysspec.cpp */; };
 		4DABCE5015ECD4B50085E214 /* sysunxnetwork.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C6D0A371407D04D003B1BA3 /* sysunxnetwork.cpp */; };
 		4DABCE5115ECD4B50085E214 /* text.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DF091040ADFC00CAC7EF /* text.cpp */; };
@@ -550,7 +549,6 @@
 		4D6E58E21407E94200EE960D /* tilecache.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tilecache.cpp; path = src/tilecache.cpp; sourceTree = "<group>"; };
 		4D6E5951140833FA00EE960D /* redraw.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = redraw.h; path = src/redraw.h; sourceTree = "<group>"; };
 		4D6E5952140833FA00EE960D /* redraw.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = redraw.cpp; path = src/redraw.cpp; sourceTree = "<group>"; };
-		4D6E59571408344300EE960D /* sysregion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysregion.cpp; path = src/sysregion.cpp; sourceTree = "<group>"; };
 		4D6E5959140834BD00EE960D /* region.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = region.h; path = src/region.h; sourceTree = "<group>"; };
 		4D6F954B12AC157100026A72 /* mbliphonedialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonedialog.mm; path = src/mbliphonedialog.mm; sourceTree = "<group>"; };
 		4D7651611342243D0042EB2D /* mbliphonelocation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonelocation.mm; path = src/mbliphonelocation.mm; sourceTree = "<group>"; };
@@ -1644,7 +1642,6 @@
 				4DD3DEA31040AD9300CAC7EF /* osspec.h */,
 				4DFFC8F613DD90CE006233A4 /* syscfdate.cpp */,
 				4D01C36F13CE3C810041A281 /* sysdefs.h */,
-				4D6E59571408344300EE960D /* sysregion.cpp */,
 				4DE7ED6413B33CEA002634F5 /* sysspec.cpp */,
 				4DD3DF041040ADFC00CAC7EF /* System.h */,
 				4C6D0A371407D04D003B1BA3 /* sysunxnetwork.cpp */,
@@ -2253,7 +2250,6 @@
 				4DABCE4B15ECD4B50085E214 /* styledtext.cpp in Sources */,
 				4DABCE4C15ECD4B50085E214 /* surface.cpp in Sources */,
 				4DABCE4D15ECD4B50085E214 /* syscfdate.cpp in Sources */,
-				4DABCE4E15ECD4B50085E214 /* sysregion.cpp in Sources */,
 				4DABCE4F15ECD4B50085E214 /* sysspec.cpp in Sources */,
 				4DABCE5015ECD4B50085E214 /* sysunxnetwork.cpp in Sources */,
 				4DABCE5115ECD4B50085E214 /* text.cpp in Sources */,
