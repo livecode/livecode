@@ -73,6 +73,9 @@ MCGroup::MCGroup()
 	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
 	//   when created.
     m_updates_locked = false;
+    
+    // MW-2014-06-20: [[ ClipsToRect ]] Initialize to false.
+    m_clips_to_rect = false;
 }
 
 MCGroup::MCGroup(const MCGroup &gref) : MCControl(gref)
@@ -144,6 +147,9 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 	scrolly = gref.scrolly;
 	scrollbarwidth = gref.scrollbarwidth;
 	
+    // MW-2014-06-20: [[ ClipsToRect ]] Copy other group's value.
+    m_clips_to_rect = gref.m_clips_to_rect;
+    
 	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
 	//   when cloned.
     m_updates_locked = false;
@@ -980,7 +986,7 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		break;
     // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
     case P_CLIPS_TO_RECT:
-        ep.setboolean(getflag(F_CLIPS_TO_RECT));
+        ep.setboolean(m_clips_to_rect);
         break;
 #endif
 	default:
@@ -1353,9 +1359,9 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
         
         t_stat = ep.getboolean(t_clips_to_rect, 0, 0, EE_PROPERTY_NAB);
         if (t_stat == ES_NORMAL)
-            if (t_clips_to_rect != getflag(F_CLIPS_TO_RECT))
+            if (t_clips_to_rect != m_clips_to_rect)
             {
-                setflag(t_clips_to_rect, F_CLIPS_TO_RECT);
+                m_clips_to_rect = t_clips_to_rect;
                 computeminrect(True);
             }
         return t_stat;
@@ -2343,7 +2349,7 @@ Boolean MCGroup::computeminrect(Boolean scrolling)
 			minrect = MCU_reduce_rect(minrect, -borderwidth);
 	}
 	// MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
-    if (flags & (F_LOCK_LOCATION | F_CLIPS_TO_RECT))
+    if (getflag(F_LOCK_LOCATION) || m_clips_to_rect)
 	{
 		boundcontrols();
 		if (scrolling && flags & F_BOUNDING_RECT)
