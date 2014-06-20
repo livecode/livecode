@@ -2984,8 +2984,13 @@ void MCPlayer::handle_mstilldown(int p_which)
             double t_rate;
             if (m_inside)
             {
+                /*
                 m_initial_rate += 0.5;
+                if (m_initial_rate >= 2.0)
+                    m_initial_rate = 2.0;
                 t_rate = m_initial_rate;
+                */
+                t_rate = 2.0;
             }
             else
                 t_rate = 0.0;
@@ -3007,8 +3012,13 @@ void MCPlayer::handle_mstilldown(int p_which)
             double t_rate;
             if (m_inside)
             {
+                /*
                 m_initial_rate -= 0.5;
+                if (m_initial_rate <= -2.0)
+                    m_initial_rate = -2.0;
                 t_rate = m_initial_rate;
+                */
+                t_rate = -2.0;
             }
             else
                 t_rate = 0.0;
