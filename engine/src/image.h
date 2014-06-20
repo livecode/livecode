@@ -316,6 +316,8 @@ class MCImage : public MCControl
 	bool m_has_transform;
 	MCGAffineTransform m_transform;
 	
+    MCRectangle m_center_rect;
+    
 	// MW-2013-10-25: [[ Bug 11300 ]] These control whether a horz/vert flip is
 	//   applied to the transform on referenced images (set by the flip cmd).
 	bool m_flip_x : 1;

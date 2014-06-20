@@ -621,6 +621,8 @@ LT factor_table[] =
         {"cd", TT_CHUNK, CT_CARD},
         {"cds", TT_CLASS, CT_CARD},
         {"centered", TT_PROPERTY, P_CENTERED},
+        {"centerrect", TT_PROPERTY, P_CENTER_RECTANGLE},
+        {"centerrectangle", TT_PROPERTY, P_CENTER_RECTANGLE},
         {"centurycutoff", TT_PROPERTY, P_CENTURY_CUTOFF},
         {"char", TT_CHUNK, CT_CHARACTER},
         {"character", TT_CHUNK, CT_CHARACTER},

@@ -17,6 +17,7 @@
 		E832B1A618D9C27700083DF8 /* libcef_stubs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E832B19B18D9C20D00083DF8 /* libcef_stubs.a */; };
 		E832B1A918D9C27B00083DF8 /* libcef_stubs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E832B19B18D9C20D00083DF8 /* libcef_stubs.a */; };
 		E832B1B618D9C3C100083DF8 /* osxbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D03BBDB0BC2423D00026EA7 /* osxbrowser.cpp */; };
+		E855BB3D19543A7800503EA6 /* com_runrev_livecode_WebAuthenticationPanel.nib in Resources */ = {isa = PBXBuildFile; fileRef = E857DDAA19081FAA002714D6 /* com_runrev_livecode_WebAuthenticationPanel.nib */; };
 		E857DDAB19081FAA002714D6 /* WebAuthenticationPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = E857DDA919081FAA002714D6 /* WebAuthenticationPanel.m */; };
 		E8589ADA18C9F77800958234 /* cefbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8589AD818C9F77800958234 /* cefbrowser.cpp */; };
 		E8589AF018C9F82200958234 /* cefbrowser_osx.mm in Sources */ = {isa = PBXBuildFile; fileRef = E8589AEF18C9F82200958234 /* cefbrowser_osx.mm */; };
@@ -151,7 +152,7 @@
 		E832B19618D9C20D00083DF8 /* libcef.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libcef.xcodeproj; path = ../thirdparty/libcef/libcef.xcodeproj; sourceTree = SOURCE_ROOT; };
 		E857DDA819081FA9002714D6 /* WebAuthenticationPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WebAuthenticationPanel.h; path = src/WebAuthenticationPanel.h; sourceTree = "<group>"; };
 		E857DDA919081FAA002714D6 /* WebAuthenticationPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = WebAuthenticationPanel.m; path = src/WebAuthenticationPanel.m; sourceTree = "<group>"; };
-		E857DDAA19081FAA002714D6 /* WebAuthenticationPanel.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = WebAuthenticationPanel.nib; path = src/WebAuthenticationPanel.nib; sourceTree = "<group>"; };
+		E857DDAA19081FAA002714D6 /* com_runrev_livecode_WebAuthenticationPanel.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = com_runrev_livecode_WebAuthenticationPanel.nib; path = src/com_runrev_livecode_WebAuthenticationPanel.nib; sourceTree = "<group>"; };
 		E8589AD718C9F77800958234 /* cefbrowser_msg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cefbrowser_msg.h; path = src/cefbrowser_msg.h; sourceTree = "<group>"; };
 		E8589AD818C9F77800958234 /* cefbrowser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cefbrowser.cpp; path = src/cefbrowser.cpp; sourceTree = "<group>"; };
 		E8589AD918C9F77800958234 /* cefbrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cefbrowser.h; path = src/cefbrowser.h; sourceTree = "<group>"; };
@@ -309,7 +310,7 @@
 			children = (
 				E857DDA819081FA9002714D6 /* WebAuthenticationPanel.h */,
 				E857DDA919081FAA002714D6 /* WebAuthenticationPanel.m */,
-				E857DDAA19081FAA002714D6 /* WebAuthenticationPanel.nib */,
+				E857DDAA19081FAA002714D6 /* com_runrev_livecode_WebAuthenticationPanel.nib */,
 				E8D3736018CDDA5A005C1182 /* cefprocess.cpp */,
 				E8D3736918CDDBEE005C1182 /* cefprocess_osx.mm */,
 				E8589AF118C9F84000958234 /* cefprocess_w32.cpp */,
@@ -331,6 +332,7 @@
 			buildPhases = (
 				4DF42AA50B0488CE003F2D95 /* Sources */,
 				4DF42AA60B0488CE003F2D95 /* Frameworks */,
+				E855BB39195436D900503EA6 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -440,6 +442,14 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
+		E855BB39195436D900503EA6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E855BB3D19543A7800503EA6 /* com_runrev_livecode_WebAuthenticationPanel.nib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E8D3735318CDDA3F005C1182 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;

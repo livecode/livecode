@@ -298,7 +298,7 @@ void core_text_get_font_styles(const char *p_name, uint32_t p_size, MCExecPoint 
         CFRelease(t_font_family);
 }
 
-bool coretext_font_load_from_path(const char *p_path, bool p_globally, void *&r_loaded_font)
+bool coretext_font_load_from_path(const char *p_path, bool p_globally)
 {
     bool t_success;
     t_success = true;
@@ -326,26 +326,18 @@ bool coretext_font_load_from_path(const char *p_path, bool p_globally, void *&r_
             t_scope = kCTFontManagerScopeUser;
         else
             t_scope = kCTFontManagerScopeProcess;
-        
-        CFErrorRef t_err;
-        t_success = CTFontManagerRegisterFontsForURL(t_font_url, t_scope, &t_err);
-        if (t_err != NULL)
-            CFRelease(t_err);
+        t_success = CTFontManagerRegisterFontsForURL(t_font_url, t_scope, NULL);
     }
-    
-    if (t_success)
-        r_loaded_font = NULL;
     
     if (t_font_url != NULL)
         CFRelease(t_font_url);
     if (t_path != NULL)
         CFRelease(t_path);
     
-    
     return t_success;
 }
 
-bool coretext_font_unload(const char *p_path, bool p_globally, void *p_loaded_font)
+bool coretext_font_unload(const char *p_path, bool p_globally)
 {
     bool t_success;
     t_success = true;
@@ -373,11 +365,7 @@ bool coretext_font_unload(const char *p_path, bool p_globally, void *p_loaded_fo
             t_scope = kCTFontManagerScopeUser;
         else
             t_scope = kCTFontManagerScopeProcess;
-        
-        CFErrorRef t_err;
-        t_success = CTFontManagerUnregisterFontsForURL(t_font_url, t_scope, &t_err);
-        if (t_err != NULL)
-            CFRelease(t_err);
+        t_success = CTFontManagerUnregisterFontsForURL(t_font_url, t_scope, NULL);
     }
     
     if (t_font_url != NULL)
