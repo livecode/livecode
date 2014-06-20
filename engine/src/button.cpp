@@ -4333,6 +4333,8 @@ void MCButton::trytochangetonative(void)
 //  SAVING AND LOADING
 //
 
+#define BUTTON_EXTRA_ICONGRAVITY (1 << 0)
+
 IO_stat MCButton::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 {
 	// Extended data area for a button consists of:
@@ -4342,8 +4344,31 @@ IO_stat MCButton::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 
 	IO_stat t_stat;
 	t_stat = p_stream . WriteU32(icons == NULL ? 0 : icons -> iconids[CI_HOVER]);
+    
+    uint4 t_flags;
+    t_flags = 0;
+    
+    uint4 t_length;
+    t_length = 0;
+    
+    // MW-2014-06-20: [[ IconGravity ]] If we have a gravity then we need a gravity block.
+    //   Note: we save as a uint32_t even though it only needs 4-bits; this will allow
+    //         us to use the same field to save similar properties for label and such, the
+    //         defaults being 0 meaning 'legacy behavior'.
+    if (m_icon_gravity != kMCGravityNone)
+    {
+        t_flags |= BUTTON_EXTRA_ICONGRAVITY;
+        t_length += sizeof(uint32_t);
+    }
+    
+    if (t_stat == IO_NORMAL)
+        t_stat = p_stream . WriteTag(t_flags, t_length);
+    
+    if (t_stat == IO_NORMAL && (t_flags & BUTTON_EXTRA_ICONGRAVITY))
+        t_stat = p_stream . WriteU32(m_icon_gravity);
+    
 	if (t_stat == IO_NORMAL)
-		t_stat = defaultextendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part);
 
 	return t_stat;
 }
@@ -4364,11 +4389,36 @@ IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, const char *p_vers
 			icons -> iconids[CI_HOVER] = t_hover_icon_id;
 		}
 
-		p_remaining -= 4;
+        if (t_stat == IO_NORMAL)
+            p_remaining -= 4;
 	}
 
-	if (t_stat == IO_NORMAL && p_remaining > 0)
-		t_stat = defaultextendedload(p_stream, p_version, p_remaining);
+    if (p_remaining > 0)
+    {
+		uint4 t_flags, t_length, t_header_length;
+		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+        
+		if (t_stat == IO_NORMAL)
+			t_stat = p_stream . Mark();
+        
+        // MW-2014-06-20: [[ IconGravity ]] Read in the iconGravity property.
+        if (t_stat == IO_NORMAL && (t_flags & BUTTON_EXTRA_ICONGRAVITY) != 0)
+        {
+            uint32_t t_value;
+            t_stat = p_stream . ReadU32(t_value);
+            if (t_stat == IO_NORMAL)
+                m_icon_gravity = (MCGravity)t_value;
+        }
+        
+        if (t_stat == IO_NORMAL)
+            t_stat = p_stream . Skip(t_length);
+        
+        if (t_stat == IO_NORMAL)
+            p_remaining -= t_length + t_header_length;
+    }
+    
+	if (t_stat == IO_NORMAL)
+		t_stat = MCObject::extendedload(p_stream, p_version, p_remaining);
 
 	return t_stat;
 }
@@ -4393,6 +4443,11 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	bool t_has_extension;
 	t_has_extension = icons != NULL && icons -> iconids[CI_HOVER] != 0;
+    
+    // MW-2014-06-20: [[ IconGravity ]] Force an extension if non-legacy gravity.
+    if (m_icon_gravity != kMCGravityNone)
+        t_has_extension = true;
+    
 	if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext)) != IO_NORMAL)
 		return stat;
 
