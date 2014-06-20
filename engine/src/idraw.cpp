@@ -227,7 +227,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
     }
 }
 
-void MCImage::drawnodata(MCDC *dc, MCRectangle drect, uint2 sw, uint2 sh, int2 dx, int2 dy)
+void MCImage::drawnodata(MCDC *dc, MCRectangle drect, uint2 sw, uint2 sh, int2 dx, int2 dy, uint2 dw, uint2 dh)
 {
     MCU_set_rect(drect, dx, dy, dw, dh);
     setforeground(dc, DI_BACK, False);
