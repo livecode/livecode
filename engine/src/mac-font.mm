@@ -24,9 +24,8 @@
 
 #include "mac-internal.h"
 
-bool coretext_font_load_from_path(const char *p_path, bool p_globally, void *&r_loaded_font);
-bool coretext_font_unload(const char *p_path, bool p_globally, void *p_loaded_font);
-
+bool coretext_font_load_from_path(const char *p_path, bool p_globally);
+bool coretext_font_unload(const char *p_path, bool p_globally);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -34,10 +33,9 @@ bool coretext_font_unload(const char *p_path, bool p_globally, void *p_loaded_fo
 // MM-2014-06-12: [[ CoreText ]] Updated to use core text routinees.
 bool MCPlatformLoadFont(const char *p_utf8_path, bool p_globally, MCPlatformLoadedFontRef& r_loaded_font)
 {
-	void *t_loaded_font;
-    if (coretext_font_load_from_path(p_utf8_path, p_globally, t_loaded_font))
+    if (coretext_font_load_from_path(p_utf8_path, p_globally))
     {
-        r_loaded_font = (MCPlatformLoadedFontRef)t_loaded_font;
+        r_loaded_font = NULL;
         return true;
     } else
         return false;
@@ -46,7 +44,7 @@ bool MCPlatformLoadFont(const char *p_utf8_path, bool p_globally, MCPlatformLoad
 // MM-2014-06-12: [[ CoreText ]] Updated to use core text routinees.
 bool MCPlatformUnloadFont(const char *utf8path, bool globally, MCPlatformLoadedFontRef p_loaded_font)
 {
-    return coretext_font_unload(utf8path, globally, (void *)p_loaded_font);
+    return coretext_font_unload(utf8path, globally);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
