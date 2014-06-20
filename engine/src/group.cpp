@@ -45,7 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "font.h"
 #include "redraw.h"
-
+#include "objectstream.h"
 
 #include "mctheme.h"
 #include "globals.h"
@@ -2819,14 +2819,56 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 //  SAVING AND LOADING
 //
 
+#define GROUP_EXTRA_CLIPSTORECT (1 << 0UL)
+
 IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 {
-	return defaultextendedsave(p_stream, p_part);
+	uint32_t t_size, t_flags;
+	t_size = 0;
+	t_flags = 0;
+    
+    // MW-2014-06-20: [[ ClipsToRect ]] ClipsToRect doesn't require any storage
+    //   as if the flag is present its true, otherwise false.
+    if (m_clips_to_rect)
+        t_flags |= GROUP_EXTRA_CLIPSTORECT;
+    
+	IO_stat t_stat;
+	t_stat = p_stream . WriteTag(t_flags, t_size);
+	if (t_stat == IO_NORMAL)
+		t_stat = MCObject::extendedsave(p_stream, p_part);
+    
+	return t_stat;
 }
 
 IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
 {
-	return defaultextendedload(p_stream, p_version, p_remaining);
+	IO_stat t_stat;
+	t_stat = IO_NORMAL;
+
+	if (p_remaining > 0)
+	{
+		uint4 t_flags, t_length, t_header_length;
+		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+        
+		if (t_stat == IO_NORMAL)
+			t_stat = p_stream . Mark();
+        
+        // MW-2014-06-20: [[ ClipsToRect ]] ClipsToRect doesn't require any storage
+        //   as if the flag is present its true, otherwise false.
+		if (t_stat == IO_NORMAL && (t_flags & GROUP_EXTRA_CLIPSTORECT))
+            m_clips_to_rect = true;
+        
+		if (t_stat == IO_NORMAL)
+			t_stat = p_stream . Skip(t_length);
+        
+		if (t_stat == IO_NORMAL)
+			p_remaining -= t_length + t_header_length;
+	}
+    
+	if (t_stat == IO_NORMAL)
+		t_stat = MCObject::extendedload(p_stream, p_version, p_remaining);
+    
+	return t_stat;
 }
 
 IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
@@ -2835,7 +2877,15 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	if ((stat = IO_write_uint1(OT_GROUP, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = MCObject::save(stream, p_part, p_force_ext)) != IO_NORMAL)
+    
+    // MW-2014-06-20: [[ ClipsToRect ]] If clipsToRect is set, then force extensions so the
+    //   flag can be written.
+    bool t_has_extensions;
+    t_has_extensions = false;
+    if (m_clips_to_rect)
+        t_has_extensions = true;
+
+	if ((stat = MCObject::save(stream, p_part, t_has_extensions || p_force_ext)) != IO_NORMAL)
 		return stat;
 	if (flags & F_LABEL)
 		if ((stat = IO_write_string(label, labelsize, stream, hasunicode())) != IO_NORMAL)
