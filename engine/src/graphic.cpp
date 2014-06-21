@@ -44,7 +44,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define GRAPHIC_EXTRA_STROKEGRADIENT	(1UL << 2)
 #define GRAPHIC_EXTRA_MARGINS			(1UL << 3)
 
-bool is_effective_only(int graphic_type);
+bool effective_points_only(int graphic_type);
 
 MCGraphic::MCGraphic()
 {
@@ -554,8 +554,7 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 	case P_POINTS:
 		// MDW-2014-06-18: [[ rect_points ]] allow effective points as read-only
 		graphic_type = getstyleint(flags);
-		// if (graphic_type == F_ROUNDRECT || graphic_type == F_G_RECTANGLE || graphic_type == F_REGULAR || graphic_type == F_OVAL)
-		if (is_effective_only(graphic_type))
+		if (effective_points_only(graphic_type))
 		{
 				if (!effective)
 				{
@@ -592,6 +591,7 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 				delete fakepoints;
 				break;
 			}
+			// MDW-2014-06-21: [[ oval_points ]] allow effective points for ovals
 			case F_OVAL:
 			{
 				fakepoints = NULL;
@@ -608,8 +608,7 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 	case P_RELATIVE_POINTS:
 		// MDW-2014-06-18: [[ rect_points ]] allow effective relativepoints as read-only
 		graphic_type = getstyleint(flags);
-//		if (graphic_type == F_ROUNDRECT || graphic_type == F_G_RECTANGLE || graphic_type == F_REGULAR || graphic_type == F_OVAL)
-		if (is_effective_only(graphic_type))
+		if (effective_points_only(graphic_type))
 		{
 				if (!effective)
 				{
@@ -650,6 +649,7 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 				delete fakepoints;
 				break;
 			}
+			// MDW-2014-06-21: [[ oval_points ]] allow effective points for ovals
 			case F_OVAL:
 			{
 				fakepoints = NULL;
@@ -777,7 +777,8 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 	return ES_NORMAL;
 }
 
-bool is_effective_only(int graphic_type)
+// MDW-2014-06-21: [[ oval_points ]] refactoring
+bool effective_points_only(int graphic_type)
 {
 	bool effective_only = False;
 	
@@ -842,13 +843,19 @@ bool MCGraphic::get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_poin
 	return (true);
 }
 
+// MDW-2014-06-21: [[ oval_points ]] treat an oval like a rounded rect with radius = 1/2 max(width, height)
 bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uint2& r_point_count)
 {
 	MCRectangle trect;
+	int	tRadius;
 	
 	r_points = NULL;
 	r_point_count = 0;
-	MCU_roundrect(r_points, r_point_count, rect, rect.width / 2);
+	if (rect.width < rect.height)
+		tRadius = rect.height;
+	else
+		tRadius = rect.width;
+	MCU_roundrect(r_points, r_point_count, rect, tRadius / 2);
 	return (true);
 }
 
