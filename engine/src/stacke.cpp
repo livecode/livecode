@@ -284,7 +284,8 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 			// Render the final image.
 			MCGContextRef t_context = nil;
 			
-			/* UNCHECKED */ MCGContextCreate(t_device_rect.width, t_device_rect.height, true, t_context);
+			// IM-2014-05-20: [[ GraphicsPerformance ]] Create opaque context for snapshot
+			/* UNCHECKED */ MCGContextCreate(t_device_rect.width, t_device_rect.height, false, t_context);
 			
 			MCGContextTranslateCTM(t_context, -t_device_rect.x, -t_device_rect.y);
 			

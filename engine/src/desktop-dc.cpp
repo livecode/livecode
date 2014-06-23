@@ -555,7 +555,7 @@ bool MCScreenDC::isbackdrop(MCPlatformWindowRef p_window)
 	return backdrop_window == p_window;
 }
 
-void MCScreenDC::redrawbackdrop(MCPlatformSurfaceRef p_surface, MCRegionRef p_region)
+void MCScreenDC::redrawbackdrop(MCPlatformSurfaceRef p_surface, MCGRegionRef p_region)
 {
 	MCGContextRef t_context;
 	if (MCPlatformSurfaceLockGraphics(p_surface, p_region, t_context))
@@ -567,7 +567,7 @@ void MCScreenDC::redrawbackdrop(MCPlatformSurfaceRef p_surface, MCRegionRef p_re
 			t_gfxcontext -> setfillstyle(FillTiled, backdrop_pattern, 0, 0);
 		else
 			t_gfxcontext -> setfillstyle(FillSolid, NULL, 0, 0);
-		t_gfxcontext -> fillrect(MCRegionGetBoundingBox(p_region), false);
+		t_gfxcontext -> fillrect(MCRectangleFromMCGIntegerRectangle(MCGRegionGetBounds(p_region)), false);
 		delete t_gfxcontext;
 		
 		MCPlatformSurfaceUnlockGraphics(p_surface);

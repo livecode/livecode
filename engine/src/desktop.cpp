@@ -164,7 +164,7 @@ void MCPlatformHandleWindowConstrain(MCPlatformWindowRef p_window, MCPoint p_pro
 	t_stack -> constrain(p_proposed_size, r_wanted_size);
 }
 
-void MCPlatformHandleWindowRedraw(MCPlatformWindowRef p_window, MCPlatformSurfaceRef p_surface, MCRegionRef p_region)
+void MCPlatformHandleWindowRedraw(MCPlatformWindowRef p_window, MCPlatformSurfaceRef p_surface, MCGRegionRef p_region)
 {
 	if (((MCScreenDC *)MCscreen) -> isbackdrop(p_window))
 	{

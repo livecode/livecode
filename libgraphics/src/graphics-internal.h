@@ -431,14 +431,15 @@ inline SkBitmap::Config MCGRasterFormatToSkBitmapConfig(MCGRasterFormat p_format
 	}
 }
 
-inline MCGRasterFormat MCGRasterFormatFromSkBitmapConfig(SkBitmap::Config p_config)
+// IM-2014-05-20: [[ GraphicsPerformance ]] Use bitmap opaqueness when determining raster format
+inline MCGRasterFormat MCGRasterFormatFromSkBitmapConfig(SkBitmap::Config p_config, bool p_opaque)
 {
 	switch (p_config)
 	{
 	case SkBitmap::kA8_Config:
 		return kMCGRasterFormat_A;
 	case SkBitmap::kARGB_8888_Config:
-		return kMCGRasterFormat_ARGB;
+		return p_opaque ? kMCGRasterFormat_xRGB : kMCGRasterFormat_ARGB;
 	}
 }
 
@@ -551,6 +552,13 @@ protected:
 	
 private:    
     typedef SkShader INHERITED;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct __MCGRegion
+{
+	SkRegion region;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
