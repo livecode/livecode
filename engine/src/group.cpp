@@ -45,7 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "font.h"
 #include "redraw.h"
-
+#include "objectstream.h"
 
 #include "mctheme.h"
 #include "globals.h"
@@ -73,6 +73,9 @@ MCGroup::MCGroup()
 	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
 	//   when created.
     m_updates_locked = false;
+    
+    // MW-2014-06-20: [[ ClipsToRect ]] Initialize to false.
+    m_clips_to_rect = false;
 }
 
 MCGroup::MCGroup(const MCGroup &gref) : MCControl(gref)
@@ -144,6 +147,9 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 	scrolly = gref.scrolly;
 	scrollbarwidth = gref.scrollbarwidth;
 	
+    // MW-2014-06-20: [[ ClipsToRect ]] Copy other group's value.
+    m_clips_to_rect = gref.m_clips_to_rect;
+    
 	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
 	//   when cloned.
     m_updates_locked = false;
@@ -978,7 +984,11 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_LOCK_UPDATES:
 		ep.setboolean(m_updates_locked);
 		break;
-#endif /* MCGroup::getprop */
+    // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+    case P_CLIPS_TO_RECT:
+        ep.setboolean(m_clips_to_rect);
+        break;
+#endif
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}
@@ -1340,7 +1350,23 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			
 		return t_stat;
 	}
-	break;
+    break;
+    // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+    case P_CLIPS_TO_RECT:
+    {
+        Exec_stat t_stat;
+        Boolean t_clips_to_rect;
+        
+        t_stat = ep.getboolean(t_clips_to_rect, 0, 0, EE_PROPERTY_NAB);
+        if (t_stat == ES_NORMAL)
+            if (t_clips_to_rect != m_clips_to_rect)
+            {
+                m_clips_to_rect = t_clips_to_rect;
+                computeminrect(True);
+            }
+        return t_stat;
+    }
+    break;
 #endif /* MCGroup::setprop */
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
@@ -2322,7 +2348,8 @@ Boolean MCGroup::computeminrect(Boolean scrolling)
 		if (flags & F_SHOW_BORDER)
 			minrect = MCU_reduce_rect(minrect, -borderwidth);
 	}
-	if (flags & F_LOCK_LOCATION)
+	// MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+    if (getflag(F_LOCK_LOCATION) || m_clips_to_rect)
 	{
 		boundcontrols();
 		if (scrolling && flags & F_BOUNDING_RECT)
@@ -2782,14 +2809,56 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 //  SAVING AND LOADING
 //
 
+#define GROUP_EXTRA_CLIPSTORECT (1 << 0UL)
+
 IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 {
-	return defaultextendedsave(p_stream, p_part);
+	uint32_t t_size, t_flags;
+	t_size = 0;
+	t_flags = 0;
+    
+    // MW-2014-06-20: [[ ClipsToRect ]] ClipsToRect doesn't require any storage
+    //   as if the flag is present its true, otherwise false.
+    if (m_clips_to_rect)
+        t_flags |= GROUP_EXTRA_CLIPSTORECT;
+    
+	IO_stat t_stat;
+	t_stat = p_stream . WriteTag(t_flags, t_size);
+	if (t_stat == IO_NORMAL)
+		t_stat = MCObject::extendedsave(p_stream, p_part);
+    
+	return t_stat;
 }
 
 IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining)
 {
-	return defaultextendedload(p_stream, p_version, p_remaining);
+	IO_stat t_stat;
+	t_stat = IO_NORMAL;
+
+	if (p_remaining > 0)
+	{
+		uint4 t_flags, t_length, t_header_length;
+		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+        
+		if (t_stat == IO_NORMAL)
+			t_stat = p_stream . Mark();
+        
+        // MW-2014-06-20: [[ ClipsToRect ]] ClipsToRect doesn't require any storage
+        //   as if the flag is present its true, otherwise false.
+		if (t_stat == IO_NORMAL && (t_flags & GROUP_EXTRA_CLIPSTORECT))
+            m_clips_to_rect = true;
+        
+		if (t_stat == IO_NORMAL)
+			t_stat = p_stream . Skip(t_length);
+        
+		if (t_stat == IO_NORMAL)
+			p_remaining -= t_length + t_header_length;
+	}
+    
+	if (t_stat == IO_NORMAL)
+		t_stat = MCObject::extendedload(p_stream, p_version, p_remaining);
+    
+	return t_stat;
 }
 
 IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
@@ -2798,7 +2867,15 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	if ((stat = IO_write_uint1(OT_GROUP, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = MCObject::save(stream, p_part, p_force_ext)) != IO_NORMAL)
+    
+    // MW-2014-06-20: [[ ClipsToRect ]] If clipsToRect is set, then force extensions so the
+    //   flag can be written.
+    bool t_has_extensions;
+    t_has_extensions = false;
+    if (m_clips_to_rect)
+        t_has_extensions = true;
+
+	if ((stat = MCObject::save(stream, p_part, t_has_extensions || p_force_ext)) != IO_NORMAL)
 		return stat;
 	if (flags & F_LABEL)
 		if ((stat = IO_write_string(label, labelsize, stream, hasunicode())) != IO_NORMAL)

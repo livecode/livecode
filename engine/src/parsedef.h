@@ -1606,12 +1606,15 @@ enum Properties {
 	P_USE_PIXEL_SCALING,
 	P_SCREEN_PIXEL_SCALE,
 	P_SCREEN_PIXEL_SCALES,
-
+    
     // MW-2014-06-19: [[ ImageCenterRect ]] Tag for the centerRect property.
     P_CENTER_RECTANGLE,
     // MW-2014-06-19: [[ IconGravity ]] Tag for the button iconGravity property.
     P_ICON_GRAVITY,
-	
+    
+    // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+    P_CLIPS_TO_RECT,
+
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
     P_CUSTOM_KEYS = P_FIRST_ARRAY_PROP,
