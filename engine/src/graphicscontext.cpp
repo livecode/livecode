@@ -1323,7 +1323,7 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
     t_bottom = MCMax(0.0f, (t_src_rect . size . height - (t_src_center . origin . y + t_src_center . size . height)) / p_image . scale_factor);
     
     MCGRectangle t_dst_rect, t_dst_center;
-    t_dst_rect = MCGRectangleMake(dx, dy, MCGImageGetWidth(p_image . image) * t_scale_x / p_image . scale_factor, MCGImageGetHeight(p_image . image) * t_scale_y / p_image . scale_factor);
+    t_dst_rect = MCGRectangleMake(dx - sx, dy - sy, MCGImageGetWidth(p_image . image) * t_scale_x / p_image . scale_factor, MCGImageGetHeight(p_image . image) * t_scale_y / p_image . scale_factor);
     t_dst_center . origin . x = t_dst_rect . origin . x + t_left;
     t_dst_center . origin . y = t_dst_rect . origin . y + t_top;
     t_dst_center . size . width = t_dst_rect . size . width - t_left - t_right;
@@ -1370,8 +1370,6 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
                               MCGRectangleMakeLTRB(t_src_center . origin . x + t_src_center . size . width, t_src_center . origin . y + t_src_center . size . height, t_src_rect . origin . x + t_src_rect . size . width, t_src_rect . origin . y + t_src_rect . size . height),
                               MCGRectangleMakeLTRB(t_dst_center . origin . x + t_dst_center . size . width, t_dst_center . origin . y + t_dst_center . size . height, t_dst_rect . origin . x + t_dst_rect . size . width, t_dst_rect . origin . y + t_dst_rect . size . height),
                               p_image . filter);
-	
-    MCGContextRestore(m_gcontext);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
