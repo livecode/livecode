@@ -16,6 +16,7 @@
 
 #include <Cocoa/Cocoa.h>
 #include <AVFoundation/AVFoundation.h>
+#include <pthread.h>
 
 #include "core.h"
 #include "globdefs.h"
@@ -349,25 +350,7 @@ void MCAVFoundationPlayer::CacheCurrentFrame(void)
             CFRelease(m_current_frame);
         m_current_frame = t_image;
     }
-    
-    
 
-    /*
-    NSError *t_error = nil;
-    AVAssetImageGenerator *generator = [[[AVAssetImageGenerator alloc] initWithAsset:m_player . currentItem . asset] autorelease];
-    CGImageRef t_cgimageref = [generator copyCGImageAtTime: m_player . currentItem . currentTime  actualTime:nil error:&t_error];
-    if (t_error != nil)
-        NSLog(@"couldn't generate thumbnail, error:%@", t_error);
-    
-    if (t_cgimageref != nil)
-	{
-		if (m_current_frame != nil)
-			CFRelease(m_current_frame);
-		m_current_frame = t_cgimageref;
-	}
-    */
-   
-    
 }
 
 void MCAVFoundationPlayer::Switch(bool p_new_offscreen)
@@ -395,9 +378,11 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
                                 CVOptionFlags *flagsOut,
                                 void *displayLinkContext)
 {
+
     MCAVFoundationPlayer *t_self = (MCAVFoundationPlayer *)displayLinkContext;
     
     CMTime t_output_item_time = [t_self -> m_player_item_video_output itemTimeForCVTimeStamp:*inOutputTime];
+    
     if ([t_self -> m_player_item_video_output hasNewPixelBufferForItemTime:t_output_item_time])
     {
         NSLog(@"We have a new frame!");
@@ -410,7 +395,7 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
             t_self -> m_current_frame = t_image;
         }
     }
-	
+    	
 	MCPlatformCallbackSendPlayerFrameChanged(t_self);
     return kCVReturnSuccess;
     
@@ -436,7 +421,10 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
         // TODO: Find an equivalent of SetMovieDrawingCompleteProc so as to play the player when alwaysBuffer = true
         // SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
         if (!CVDisplayLinkIsRunning(t_player -> m_display_link))
+        {
+            CVDisplayLinkSetOutputCallback(t_player -> m_display_link, MCAVFoundationPlayer::MyDisplayLinkCallback, (void *) t_player);
             CVDisplayLinkStart(t_player -> m_display_link);
+        }
         
 
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
@@ -452,7 +440,10 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
         // TODO: Find an equivalent of SetMovieDrawingCompleteProc so as to play the player when alwaysBuffer = true
         // SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
         if (CVDisplayLinkIsRunning(t_player -> m_display_link))
+        {
             CVDisplayLinkStop(t_player -> m_display_link);
+            CVDisplayLinkSetOutputCallback(t_player -> m_display_link, nil, nil);
+        }
 
         
 		// Switching to non-offscreen
