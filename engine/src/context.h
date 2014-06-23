@@ -136,6 +136,14 @@ public:
 
 	virtual void setprintmode(void) = 0;
 
+	// IM-2014-06-03: [[ GraphicsPerformance ]] Save the current state of the graphics context
+	virtual void save() = 0;
+	// IM-2014-06-03: [[ GraphicsPerformance ]] Restore the previously saved graphics context state
+	virtual void restore() = 0;
+	
+	// IM-2014-06-03: [[ GraphicsPerformance ]] Reduce the clipping region by intersecting with the given rect
+	virtual void cliprect(const MCRectangle &p_rect) = 0;
+	
 	virtual void setclip(const MCRectangle& rect) = 0;
 	virtual MCRectangle getclip(void) const = 0;
 	virtual void clearclip(void) = 0;

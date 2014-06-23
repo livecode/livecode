@@ -20,6 +20,11 @@ public:
 	
 	bool changeopaque(bool p_value);
 	
+	void save();
+	void restore();
+	
+	void cliprect(const MCRectangle &p_rect);
+	
 	void setclip(const MCRectangle& rect);
 	MCRectangle getclip(void) const;
 	void clearclip(void);

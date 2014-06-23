@@ -1350,7 +1350,7 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			
 		return t_stat;
 	}
-    break;
+	break;
     // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
     case P_CLIPS_TO_RECT:
     {
@@ -2595,7 +2595,9 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		dc -> changeopaque(t_was_opaque);
 
 	drect = MCU_intersect_rect(dirty, rect);
-	dc->setclip(drect);
+	
+	dc->save();
+	dc->cliprect(drect);
 
 	if (flags & F_HSCROLLBAR)
 	{
@@ -2611,9 +2613,10 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 			vscrollbar->draw(dc, vrect, false, false);
 	}
 
+	dc->restore();
+	
 	dc -> setopacity(255);
 	dc -> setfunction(GXcopy);
-	dc -> setclip(dirty);
 	drawbord(dc, dirty);
 
 	if (!p_isolated)

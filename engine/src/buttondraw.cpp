@@ -442,7 +442,8 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			uint2 i;
 			uint2 twidth = 0;
 			
-			dc -> setclip(MCU_intersect_rect(dirty, t_content_rect));
+			dc->save();
+			dc->cliprect(t_content_rect);
 			
 			for (i = 0 ; i < nlines ; i++)
 			{
@@ -511,7 +512,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				sy += fheight;
 			}
 
-			dc -> setclip(dirty);
+			dc->restore();
 
 			delete lines;
 			if (labelwidth != 0 && !isunnamed())
