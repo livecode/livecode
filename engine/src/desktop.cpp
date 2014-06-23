@@ -234,12 +234,15 @@ void MCPlatformHandleMouseEnter(MCPlatformWindowRef p_window)
 		MCmousestackptr -> enter();
 	}
 	
-	MCObject *t_menu;
+	// MW-2014-06-23: [[ Bug 12670 ]] This shouldn't be necessary as mouseEnter
+	//   is followed immediately by a mouseMove after the mouseLoc has been
+	//   updated.
+	/*MCObject *t_menu;
 	t_menu = MCdispatcher -> getmenu();
 	if (t_menu == nil)
 		MCmousestackptr -> mfocus(MCmousex, MCmousey);
 	else
-		t_menu -> mfocus(MCmousex, MCmousey);
+		t_menu -> mfocus(MCmousex, MCmousey);*/
 }
 
 void MCPlatformHandleMouseLeave(MCPlatformWindowRef p_window)
