@@ -50,6 +50,8 @@
 		4DCDCA230B80890D0040D436 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DCDCA240B80890D0040D436 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DCDCA320B8089D00040D436 /* Global.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = SOURCE_ROOT; };
+		7664FBE71958224500627B28 /* hb-sk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "hb-sk.cpp"; path = "src/hb-sk.cpp"; sourceTree = "<group>"; };
+		7664FBE91958580300627B28 /* hb-sk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "hb-sk.h"; path = "src/hb-sk.h"; sourceTree = "<group>"; };
 		76EF31F7181ECF1700FAC195 /* spread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = spread.cpp; path = src/spread.cpp; sourceTree = "<group>"; };
 		D2AAC046055464E500DB518D /* libgraphics.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libgraphics.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -79,6 +81,8 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				7664FBE91958580300627B28 /* hb-sk.h */,
+				7664FBE71958224500627B28 /* hb-sk.cpp */,
 				76EF31F7181ECF1700FAC195 /* spread.cpp */,
 				4C4463D416C3ACBD00C5CE3C /* graphics-internal.h */,
 				4C4463D316C3ACBD00C5CE3C /* context.cpp */,

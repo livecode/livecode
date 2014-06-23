@@ -219,12 +219,12 @@ void MCAndroidCustomFontsLoad()
             
             t_old_offset = t_offset++;
             
-            if (!MCStringFirstIndexOfChar(*t_file_list, '\n', t_old_offset, kMCCompareExact, t_offset))
-                break;
+            if (!MCStringFirstIndexOfChar(*t_file_list, '\n', ++t_old_offset, kMCCompareExact, t_offset))
+                t_offset = t_length;
             
            t_success = MCStringCopySubstring(*t_file_list, MCRangeMake(t_old_offset, t_offset - t_old_offset), &t_is_folder_string);
         }
-        
+    
         if (t_success)
             t_success = MCU_stob(*t_is_folder_string, t_is_folder);
         
@@ -524,6 +524,7 @@ void *android_font_create(MCStringRef name, uint32_t size, bool bold, bool itali
     
 	if (MCMemoryNew(t_font))
 	{
+        t_font -> typeface = nil;
         // MM-2012-03-06: Check to see if we have a custom font of the given style and name available
         if (!create_font_face_from_custom_font_name_and_style(name, bold, italic, t_font->typeface))
         {
