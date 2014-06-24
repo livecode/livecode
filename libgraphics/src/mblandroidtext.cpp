@@ -254,7 +254,7 @@ void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, 
 
 void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font, bool p_rtl)
 {
-	// TODO: RTL
+    MCLog("%d chars of %s", p_length/2, p_rtl ? "rtl" : "ltr");
     
     if (!MCGContextIsValid(self))
 		return;	

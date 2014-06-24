@@ -85,11 +85,12 @@ static bool bidiDecrementISRIndex(uint8_t *classes, level_run*& x_run, uindex_t&
     if (x_run == nil || x_index == 0)
         return false;
     
-    if (--x_index <= x_run -> start)
+    // AL-2014-06-24: [[ Bug 12343 ]] Runs are 0-indexed.
+    if (--x_index < x_run -> start)
     {
         x_run = x_run -> prev_run;
         if (x_run != nil)
-            x_index = x_run -> start + x_run -> length;
+            x_index = x_run -> start + x_run -> length - 1;
     }
     
     if (x_run == nil)
