@@ -536,14 +536,19 @@ void MCQTKitPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 		CGContextRef t_cg_context;
 		t_cg_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap -> width, t_bitmap -> height, 8, t_bitmap -> stride, t_colorspace, MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true));
 		
+		CIImage *t_ci_image;
+		t_ci_image = [[CIImage alloc] initWithCVImageBuffer: m_current_frame];
+        
+        NSAutoreleasePool *t_pool;
+        t_pool = [[NSAutoreleasePool alloc] init];
+        
 		CIContext *t_ci_context;
 		t_ci_context = [CIContext contextWithCGContext: t_cg_context options: nil];
 		
-		CIImage *t_ci_image;
-		t_ci_image = [[CIImage alloc] initWithCVImageBuffer: m_current_frame];
-		
 		[t_ci_context drawImage: t_ci_image inRect: CGRectMake(0, t_rect . size . height - t_movie_rect . size . height, t_movie_rect . size . width, t_movie_rect . size . height) fromRect: [t_ci_image extent]];
 		
+        [t_pool release];
+        
 		[t_ci_image release];
 		
 		CGContextRelease(t_cg_context);

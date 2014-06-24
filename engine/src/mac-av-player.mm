@@ -22,6 +22,7 @@
 #include "globdefs.h"
 #include "imagebitmap.h"
 #include "region.h"
+#include "notify.h"
 
 #include "platform.h"
 #include "platform-internal.h"
@@ -108,6 +109,8 @@ private:
     
 	static void DoSwitch(void *context);
     static void DoUpdateCurrentFrame(void *ctxt);
+    
+    NSLock *m_lock;
     
 	AVPlayer *m_player;
     AVPlayerItemVideoOutput *m_player_item_video_output;
@@ -222,6 +225,8 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     m_view = [[com_runrev_livecode_MCAVFoundationPlayerView alloc] initWithFrame: NSZeroRect];
 	m_observer = [[com_runrev_livecode_MCAVFoundationPlayerObserver alloc] initWithPlayer: this];
     
+    m_lock = [[NSLock alloc] init];
+    
     m_player_item_video_output = nil;
     CVDisplayLinkCreateWithActiveCGDisplays(&m_display_link);
     
@@ -269,6 +274,8 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     [m_player release];
     
     MCMemoryDeleteArray(m_markers);
+    
+    [m_lock release];
 }
 
 void MCAVFoundationPlayer::SelectionFinished(void)
@@ -345,7 +352,6 @@ void MCAVFoundationPlayer::CurrentTimeChanged(void)
 
 void MCAVFoundationPlayer::CacheCurrentFrame(void)
 {
-//#if 0
     CVImageBufferRef t_image;
     CMTime t_output_time = [m_player currentItem] . currentTime;
     
@@ -356,7 +362,6 @@ void MCAVFoundationPlayer::CacheCurrentFrame(void)
             CFRelease(m_current_frame);
         m_current_frame = t_image;
     }
-//#endif
 }
 
 void MCAVFoundationPlayer::Switch(bool p_new_offscreen)
@@ -395,14 +400,19 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
         return kCVReturnSuccess;
     }
     
+    bool t_need_update;
+    
+    [t_self -> m_lock lock];
+    t_need_update = !t_self -> m_frame_changed_pending;
     t_self -> m_next_frame_time = t_output_item_time;
-    if (!t_self -> m_frame_changed_pending)
-    {
-        // TODO: Schedule this callback on the main thread
-        MCMacPlatformScheduleCallback(DoUpdateCurrentFrame, t_self);
-        t_self -> m_frame_changed_pending = true;        
-    }
-//#endif
+    t_self -> m_frame_changed_pending = true;
+    [t_self -> m_lock unlock];
+    
+    // Frame updates don't need to happen at 'safe points' (unlike currentTimeChanged events) so
+    // we pass false as the second argument to the notify.
+    if (t_need_update)
+        MCNotifyPush(DoUpdateCurrentFrame, t_self, false, false);
+    
     return kCVReturnSuccess;
     
 }
@@ -411,11 +421,15 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
 {
     MCAVFoundationPlayer *t_player;
 	t_player = (MCAVFoundationPlayer *)ctxt;
-    t_player -> m_frame_changed_pending = false;
     
     NSLog(@"We have a new frame!");
+    
     CVImageBufferRef t_image;
+    [t_player -> m_lock lock];
     t_image = [t_player -> m_player_item_video_output copyPixelBufferForItemTime:t_player -> m_next_frame_time itemTimeForDisplay:nil];
+    t_player -> m_frame_changed_pending = false;
+    [t_player -> m_lock unlock];
+    
     if (t_image != nil)
     {
         if (t_player -> m_current_frame != nil)
@@ -618,20 +632,11 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: AVPlayerItemTimeJumpedNotification object: [m_player currentItem]];
     
     m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 1000) queue:nil usingBlock:^(CMTime time) {
-        /*
-        NSLog(@"Value is %f and timescale is %f", (double)time.value , (double)time.timescale );
-        NSLog(@"Time is %d ", (int)(1000 * CMTimeGetSeconds(time)));
-        NSLog(@"End Time is %f ",  (double)m_selection_finish);
-        
-        if (m_play_selection_only && CMTimeCompare(time, CMTimeMake(m_selection_finish, 1000)) >= 0)
-        {
-            [m_player pause];
-            //[m_player seekToTime:CMTimeMake(m_selection_start, 1000)];
-        }
-        */
+    
         m_observed_time = time;
         SelectionFinished();
         CurrentTimeChanged();
+        
         }];
     
 }
@@ -687,24 +692,12 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 {
 	// First get the image from the view - this will have black where the movie
 	// should be.
-    
-	NSRect t_rect;
-	if (m_offscreen)
-		t_rect = NSMakeRect(0, 0, m_rect . width, m_rect . height);
-	else
-		t_rect = [m_view frame];
-    
-    
-	NSBitmapImageRep *t_rep;
-	t_rep = [m_view bitmapImageRepForCachingDisplayInRect: t_rect];
-	[m_view cacheDisplayInRect: t_rect toBitmapImageRep: t_rep];
-    
 	MCImageBitmap *t_bitmap;
 	t_bitmap = new MCImageBitmap;
-	t_bitmap -> width = [t_rep pixelsWide];
-	t_bitmap -> height = [t_rep pixelsHigh];
-	t_bitmap -> stride = [t_rep bytesPerRow];
-	t_bitmap -> data = (uint32_t *)[t_rep bitmapData];
+	t_bitmap -> width = m_rect . width;
+	t_bitmap -> height = m_rect . height;
+	t_bitmap -> stride = m_rect . width * sizeof(uint32_t);
+	t_bitmap -> data = (uint32_t *)malloc(t_bitmap -> stride * t_bitmap -> height);
 	t_bitmap -> has_alpha = t_bitmap -> has_transparency = true;
     
 	// Now if we have a current frame, then composite at the appropriate size into
@@ -719,14 +712,18 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 		CGContextRef t_cg_context;
 		t_cg_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap -> width, t_bitmap -> height, 8, t_bitmap -> stride, t_colorspace, MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true));
         
+		CIImage *t_ci_image;
+		t_ci_image = [[CIImage alloc] initWithCVImageBuffer: m_current_frame];
+        
+        NSAutoreleasePool *t_pool;
+        t_pool = [[NSAutoreleasePool alloc] init];
+        
 		CIContext *t_ci_context;
 		t_ci_context = [CIContext contextWithCGContext: t_cg_context options: nil];
         
-		CIImage *t_ci_image;
-		t_ci_image = [[CIImage alloc] initWithCVImageBuffer: m_current_frame];
-        //t_ci_image = [[CIImage alloc] initWithCGImage:m_current_frame];
+		[t_ci_context drawImage: t_ci_image inRect: CGRectMake(0, 0, m_rect . width, m_rect . height) fromRect: [t_ci_image extent]];
         
-		[t_ci_context drawImage: t_ci_image inRect: CGRectMake(0, 0, t_rect . size . width, t_rect . size . height) fromRect: [t_ci_image extent]];
+        [t_pool release];
         
 		[t_ci_image release];
         
@@ -739,6 +736,7 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 
 void MCAVFoundationPlayer::UnlockBitmap(MCImageBitmap *bitmap)
 {
+    free(bitmap -> data);
 	delete bitmap;
 }
 
