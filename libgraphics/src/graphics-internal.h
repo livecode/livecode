@@ -416,16 +416,6 @@ inline MCGFillRule MCGFillRuleToSkFillType(SkPath::FillType p_fill_type)
 	}
 }
 
-inline SkPoint* MCGPointsToSkPoints(MCGPoint *p_points, uindex_t p_count)
-{
-    SkPoint *points;
-    MCMemoryAllocate(sizeof(SkPoint)*p_count, points);
-    for (uindex_t i = 0; i < p_count; i++)
-        points[i] = MCGPointToSkPoint(p_points[i]);
-    
-    return points;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 inline SkBitmap::Config MCGRasterFormatToSkBitmapConfig(MCGRasterFormat p_format)
