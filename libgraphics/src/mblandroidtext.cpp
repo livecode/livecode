@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <SkTypeface.h>
 #include <SkTypeface_android.h>
 #include <SkPoint.h>
+#include <SkTypes.h>
 
 #include "foundation-unicode.h"
 #include <unicode/uscript.h>
@@ -40,6 +41,23 @@ extern void MCCStringFree(char *p_string);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void skia_get_replacement_glyph(uint16_t p_size, SkTypeface *p_typeface, uint16_t& glyph, uindex_t& advance)
+{
+    SkPaint paint;
+    paint . setTextEncoding(SkPaint::kUTF16_TextEncoding);
+    paint . setTextSize(p_size);
+    paint . setTypeface(p_typeface);
+    
+    codepoint_t t_replacement = 0xFFFD;
+    
+    SkScalar skWidth;
+    SkRect skBounds;
+    paint . textToGlyphs(&t_replacement, 2, &glyph);
+    paint . getTextWidths(&t_replacement, 2, &skWidth, &skBounds);
+    
+    advance = (uint16_t)skWidth;
+}
+
 struct MCGlyphRun
 {
     uindex_t count;
@@ -48,7 +66,7 @@ struct MCGlyphRun
     SkTypeface *typeface;
 };
 
-void MCGlyphRunMake(hb_glyph_info_t *p_infos, hb_glyph_position_t *p_positions, MCGPoint& x_location, uindex_t p_start, uindex_t p_end, const MCGFont &p_font, MCGlyphRun& r_run)
+void MCGlyphRunMake(hb_glyph_info_t *p_infos, hb_glyph_position_t *p_positions, MCGPoint* x_location, uindex_t p_start, uindex_t p_end, const MCGFont &p_font, MCGlyphRun& r_run)
 {
     uindex_t t_count = p_end - p_start;
     MCMemoryAllocate(sizeof(uint16_t) * t_count, r_run . glyphs);
@@ -61,19 +79,30 @@ void MCGlyphRunMake(hb_glyph_info_t *p_infos, hb_glyph_position_t *p_positions, 
     
     for (uindex_t i = p_start; i < p_end; i++)
     {
-        x_offset = x_location . x + p_positions[i] . x_offset / HB_SCALE_FACTOR + advance_x;
-        y_offset = x_location . y + p_positions[i] . y_offset / HB_SCALE_FACTOR + advance_y;
-            
-        r_run . glyphs[run_index] = p_infos[i] . codepoint;
+        x_offset = x_location -> x + p_positions[i] . x_offset / HB_SCALE_FACTOR + advance_x;
+        y_offset = x_location -> y + p_positions[i] . y_offset / HB_SCALE_FACTOR + advance_y;
         r_run . positions[run_index] = SkPoint::Make(x_offset, y_offset);
         
-        advance_x += p_positions[i] . x_advance / HB_SCALE_FACTOR;
-        advance_y += p_positions[i] . y_advance / HB_SCALE_FACTOR;
+        uint16_t t_glyph = p_infos[i] . codepoint;
+        if (t_glyph)
+        {
+            r_run . glyphs[run_index] = t_glyph;
+
+            advance_x += p_positions[i] . x_advance / HB_SCALE_FACTOR;
+            advance_y += p_positions[i] . y_advance / HB_SCALE_FACTOR;
+        }
+        else
+        {
+            uindex_t advance;
+            skia_get_replacement_glyph(p_font . size, (SkTypeface *)p_font . fid, r_run . glyphs[run_index], advance);
+            advance_x += advance;
+        }
+            
         run_index++;
     }
     
-    x_location . x = x_offset;
-    x_location . y = y_offset;
+    x_location -> x += advance_x;
+    x_location -> y += advance_y;
     
     r_run . typeface = (SkTypeface *)p_font . fid;
     r_run . typeface -> ref();
@@ -120,6 +149,8 @@ static hb_script_t HBScriptFromText(const unichar_t *p_text, uindex_t p_count)
     {
         UErrorCode t_error = U_ZERO_ERROR;
         t_script = uscript_getScript((uint32_t)(*p_text), &t_error);
+        
+        //MCLog("script: %s", uscript_getShortName(t_script));
     }
     
     return hb_icu_script_to_script(t_script);
@@ -140,6 +171,7 @@ void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, 
     hb_buffer_t *buffer = hb_buffer_create();
     hb_buffer_set_unicode_funcs(buffer, hb_icu_get_unicode_funcs());
     hb_buffer_set_direction(buffer, p_rtl ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
+    
     hb_buffer_set_script(buffer, HBScriptFromText(p_text, p_char_count));
     
     hb_buffer_add_utf16(buffer, p_text, p_char_count, 0, p_char_count);
@@ -169,9 +201,10 @@ void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, 
         
         if (t_start != t_end)
         {
-            MCGlyphRunMake(glyph_info, glyph_pos, p_location, t_start, t_end, p_font, t_run);
+            MCGlyphRunMake(glyph_info, glyph_pos, &p_location, t_start, t_end, p_font, t_run);
             t_runs . Push(t_run);
             t_start = t_cur_glyph;
+            t_end = t_cur_glyph;
         }
         
         // Deal with run of unsupported characters for this font.
@@ -183,26 +216,34 @@ void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, 
         
         if (t_start != t_end)
         {
-            MCLog("falling back", nil);
-            SkString family_name;
-            if (SkGetFallbackFamilyNameForChar(*(p_text + t_char_index), &family_name))
+            // Need to get a fallback font here.
+            SkTypeface *t_fallback = SkCreateFallbackTypefaceForChar(*(p_text + t_char_index), SkTypeface::kNormal);
+            if (t_fallback != nil)
             {
-                SkTypeface *t_fallback = SkTypeface::CreateFromName(family_name . c_str(), t_typeface -> style());
-                
                 MCGFont t_font = MCGFontMake(t_fallback, p_font . size, p_font . fixed_advance, p_font . ascent, p_font . descent, p_font . style, p_font . ideal);
                 
                 MCGlyphRun *t_fallback_runs;
                 uindex_t t_fallback_run_count;
-            
+
                 shape(p_text + t_char_index, t_end - t_start, p_location, p_rtl, t_font, t_fallback_runs, t_fallback_run_count);
             
                 for (uindex_t i = 0; i < t_fallback_run_count; i++)
                     t_runs . Push(t_fallback_runs[i]);
-            
-                t_start = t_cur_glyph;
-                t_char_index += (t_end - t_start);
+                
+                t_fallback -> unref();
             }
+            else
+            {
+                // For now, just fail to display the glyphs. Should display 'missing character' glyph.
+                MCGlyphRunMake(glyph_info, glyph_pos, &p_location, t_start, t_end, p_font, t_run);
+                t_runs . Push(t_run);
+            }
+            
+            t_start = t_cur_glyph;
+            t_end = t_cur_glyph;
         }
+
+        t_char_index += (t_end - t_start);
     }
     
     hb_buffer_destroy(buffer);
@@ -238,7 +279,6 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
     
     for (uindex_t i = 0; i < t_count; i++)
     {
-        //MCLog("glyph run count %d", t_glyph_runs[i] . count);
         t_paint . setTypeface(t_glyph_runs[i] . typeface);
         self -> layer -> canvas -> drawPosText(&(t_glyph_runs[i] . glyphs[0]), t_glyph_runs[i] . count * 2, &(t_glyph_runs[i] . positions[0]), t_paint);
         
