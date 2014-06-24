@@ -363,6 +363,17 @@ static void export_html_compute_tags(const MCFieldCharacterStyle& p_style, bool 
 	}
 }
 
+// IM-2013-11-21: [[ Bug 11475 ]] Ensure html hex colors contain only rgb hex values in the right order
+static const char *export_html_hexcolor(uint32_t p_pixel)
+{
+	static char s_color[8];
+	uint8_t r, g, b, a;
+	MCGPixelUnpackNative(p_pixel, r, g, b, a);
+	sprintf(s_color, "#%02.2X%02.2X%02.2X", r, g, b);
+	
+	return s_color;
+}
+
 static void export_html_add_tag(export_html_t& ctxt, export_html_tag_type_t p_tag, export_html_tag_t p_value)
 {
 	if (!p_value . present)
@@ -384,9 +395,9 @@ static void export_html_add_tag(export_html_t& ctxt, export_html_tag_type_t p_ta
 		if (p_value . font . size != 0)
 			ctxt . buffer . appendtextf(" size=\"%d\"", p_value . font . size);
 		if (p_value . font . has_color)
-			ctxt . buffer . appendtextf(" color=\"#%06X\"", p_value . font . color);
+			ctxt . buffer . appendtextf(" color=\"%s\"", export_html_hexcolor(p_value . font . color));
 		if (p_value . font . has_bg_color)
-			ctxt . buffer . appendtextf(" bgcolor=\"#%06X\"", p_value . font . bg_color);
+			ctxt . buffer . appendtextf(" bgcolor=\"%s\"", export_html_hexcolor(p_value . font . bg_color));
 		ctxt . buffer . appendcstring(">");
 		break;
 	case kExportHtmlTagItalic:
@@ -545,11 +556,11 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 				ctxt . buffer . appendcstring("\"");
 			}
 			if (t_style . has_background_color)
-				ctxt . buffer . appendtextf(" bgcolor=\"#%06X\"", t_style . background_color);
+				ctxt . buffer . appendtextf(" bgcolor=\"%s\"", export_html_hexcolor(t_style . background_color));
 			if (t_style . has_border_width || ctxt . effective)
 				ctxt . buffer . appendtextf(" borderwidth=\"%d\"", t_style . border_width);
 			if (t_style . has_border_color || ctxt . effective)
-				ctxt . buffer . appendtextf(" bordercolor=\"#%06X\"", t_style . border_color);
+				ctxt . buffer . appendtextf(" bordercolor=\"%s\"", export_html_hexcolor(t_style . border_color));
 			if (t_style . has_padding || ctxt . effective)
 				ctxt . buffer . appendtextf(" padding=\"%d\"", t_style . padding);
 			if (t_style . has_hgrid || ctxt . effective)
@@ -1175,10 +1186,12 @@ static bool import_html_parse_attr(const char*& x_ptr, const char *p_limit, impo
 	char *t_value;
 	if (*x_ptr == '=')
 	{
-		if (x_ptr + 1 >= p_limit)
-			return false;
-			
+		// MW-2014-03-11: [[ Bug 11888 ]] Ensure we consume as much as possible, else
+		//   the caller can get into an infinite loop with things like "<a href=".
 		x_ptr += 1;
+		
+		if (x_ptr >= p_limit)
+			return false;
 
 		const char *t_value_start_ptr, *t_value_end_ptr;
 		if (*x_ptr == '"' || *x_ptr == '\'')

@@ -90,7 +90,7 @@ bool MCSystemShowContact(int32_t p_contact_id, int32_t& r_result)
     MCAndroidEngineRemoteCall("showContact", "ii", &r_result, p_contact_id);
     s_contact_status = kMCAndroidContactWaiting;
     while (s_contact_status == kMCAndroidContactWaiting)
-        MCscreen->wait(60.0, False, True);
+       MCscreen->wait(60.0, False, True);
     r_result = s_contact_selected;
     return true;
 }

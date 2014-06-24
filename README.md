@@ -98,6 +98,9 @@ At the moment you need to use Visual C++ 2005 to build the engine on Windows alo
 *	Microsoft Windows Platform SDK 6.1:
 
   http://www.microsoft.com/en-us/download/details.aspx?id=24826
+* Follow these Windows SDK integration instructions for Visual C++ Express:
+
+  http://msdn.microsoft.com/en-us/library/ms235626(v=vs.80).aspx
 *	QuickTime SDK (requires Apple Developer account to download):
 
   https://developer.apple.com/downloads/index.action?=quicktime

@@ -212,6 +212,7 @@ static const char *android_device_rotation_to_string(MCAndroidDisplayFormat p_de
 	return s_orientation_names[android_device_orientation_from_rotation(p_device_format, p_rotation)];
 }
 
+#ifdef /* MCHandleOrientationAndroid */ LEGACY_EXEC
 Exec_stat MCHandleOrientation(void *context, MCParameter *p_parameters)
 {
 	int32_t t_rotation;
@@ -226,7 +227,9 @@ Exec_stat MCHandleOrientation(void *context, MCParameter *p_parameters)
 	MCresult->sets(MCString(android_display_rotation_to_string(t_format, t_rotation)));
 	return ES_NORMAL;
 }
+#endif /* MCHandleOrientationAndroid */
 
+#ifdef /* MCHandleDeviceOrientationAndroid */ LEGACY_EXEC
 Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters)
 {
 	int32_t t_dev_rotation;
@@ -241,7 +244,9 @@ Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters)
 	MCresult->sets(MCString(android_device_rotation_to_string(t_dev_format, t_dev_rotation)));
 	return ES_NORMAL;
 }
+#endif /* MCHandleDeviceOrientationAndroid */
 
+#ifdef /* MCHandleAllowedOrientationsAndroid */ LEGACY_EXEC
 Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters)
 {
 	MCExecPoint ep(nil, nil, nil);
@@ -253,7 +258,9 @@ Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters)
 	
 	return ES_NORMAL;
 }
+#endif /* MCHandleAllowedOrientationsAndroid */
 
+#ifdef /* MCHandleSetAllowedOrientationsAndroid */ LEGACY_EXEC
 Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameters)
 {
 	bool t_success;
@@ -289,26 +296,33 @@ Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameter
 	
 	return ES_NORMAL;
 }
+#endif /* MCHandleSetAllowedOrientationsAndroid */
 
 Exec_stat MCHandleLockOrientation(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleLockOrientation */ LEGACY_EXEC
 	if (s_orientation_lock < MAXUINT4)
 		s_orientation_lock++;
 	return ES_NORMAL;
+#endif /* MCHandleLockOrientation */
 }
 
 Exec_stat MCHandleUnlockOrientation(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleUnlockOrientation */ LEGACY_EXEC
 	if (s_orientation_lock > 0)
 		s_orientation_lock--;
 	return ES_NORMAL;
+#endif /* MCHandleUnlockOrientation */
 }
 
+#ifdef /* MCHandleOrientationLockedAndroid */ LEGACY_EXEC
 Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_parameters)
 {
 	MCresult->sets(MCU_btos(s_orientation_lock > 0));
 	return ES_NORMAL;
 }
+#endif /* MCHandleOrientationLockedAndroid */
 
 ////////////////////////////////////////////////////////////////////////////////
 

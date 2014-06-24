@@ -52,55 +52,63 @@ enum __rei_visualeffect_parameter_type_t
 };
 typedef enum __rei_visualeffect_parameter_type_t rei_visualeffect_parameter_type_t;
 
+typedef struct __rei_visualeffect_parameter_info_t rei_visualeffect_parameter_info_t;
+struct __rei_visualeffect_parameter_info_t
+{
+	rei_identifier_t name;
+	rei_visualeffect_parameter_type_t type;
+};
+
 typedef struct __rei_visualeffect_info_t rei_visualeffect_info_t;
 typedef rei_visualeffect_info_t *rei_visualeffect_info_ref_t;
+
 struct __rei_visualeffect_info_t
 {
 	rei_handle_t handle;
 	rei_uint32_t parameter_count;
-	struct
-	{
-		rei_identifier_t name;
-		rei_visualeffect_parameter_type_t type;
-	} parameters[0];
+	rei_visualeffect_parameter_info_t parameters[0];
 };
 
-typedef struct __rei_visualeffect_parameters_t rei_visualeffect_parameters_t;
-typedef rei_visualeffect_parameters_t *rei_visualeffect_parameters_ref_t;
-struct __rei_visualeffect_parameters_t
+typedef struct __rei_visualeffect_parameter_t rei_visualeffect_parameter_t;
+typedef rei_visualeffect_parameter_t *rei_visualeffect_parameter_ref_t;
+struct __rei_visualeffect_parameter_t
+{
+	rei_identifier_t name;
+	rei_visualeffect_parameter_type_t type;
+	union
+	{
+		rei_real64_t number;
+		const char *string;
+		struct
+		{
+			rei_uint32_t length;
+			rei_real64_t *coefficients;
+		} vector;
+		struct
+		{
+			rei_uint8_t red;
+			rei_uint8_t green;
+			rei_uint8_t blue;
+			rei_uint8_t alpha;
+		} colour;
+		rei_imagedata_t image;
+	} value;
+};
+
+typedef struct __rei_visualeffect_parameter_list_t rei_visualeffect_parameter_list_t;
+typedef rei_visualeffect_parameter_list_t *rei_visualeffect_parameter_list_ref_t;
+struct __rei_visualeffect_parameter_list_t
 {
 	rei_uint32_t length;
-	struct
-	{
-		rei_identifier_t name;
-		rei_visualeffect_parameter_type_t type;
-		union
-		{
-			rei_real64_t number;
-			const char *string;
-			struct
-			{
-				rei_uint32_t length;
-				rei_real64_t *coefficients;
-			} vector;
-			struct
-			{
-				rei_uint8_t red;
-				rei_uint8_t green;
-				rei_uint8_t blue;
-				rei_uint8_t alpha;
-			} colour;
-			rei_imagedata_t image;
-		} value;
-	} entries[0];
+	rei_visualeffect_parameter_t entries[0];
 };
 
-typedef rei_boolean_t (*rei_visualeffect_initialiser_t)(void);
-typedef rei_boolean_t (*rei_visualeffect_finaliser_t)(void);
-typedef rei_boolean_t (*rei_visualeffect_lookup_method_t)(const char *p_name, rei_visualeffect_info_ref_t *r_info);
-typedef rei_boolean_t (*rei_visualeffect_begin_method_t)(rei_handle_t p_handle, CGrafPtr p_target, CGrafPtr p_source_a, CGrafPtr p_source_b, rei_rectangle_ref_t p_area, rei_visualeffect_parameters_ref_t p_parameters);
-typedef rei_boolean_t (*rei_visualeffect_step_method_t)(float p_time);
-typedef rei_boolean_t (*rei_visualeffect_end_method_t)(void);
+//typedef rei_boolean_t (*rei_visualeffect_initialiser_t)(void);
+//typedef rei_boolean_t (*rei_visualeffect_finaliser_t)(void);
+//typedef rei_boolean_t (*rei_visualeffect_lookup_method_t)(const char *p_name, rei_visualeffect_info_ref_t *r_info);
+//typedef rei_boolean_t (*rei_visualeffect_begin_method_t)(rei_handle_t p_handle, CGrafPtr p_target, CGrafPtr p_source_a, CGrafPtr p_source_b, rei_rectangle_ref_t p_area, rei_visualeffect_parameters_ref_t p_parameters);
+//typedef rei_boolean_t (*rei_visualeffect_step_method_t)(float p_time);
+//typedef rei_boolean_t (*rei_visualeffect_end_method_t)(void);
 
 
 #endif

@@ -16,8 +16,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <pthread.h>
 #include <external.h>
-#include "iPhoneSimulatorRemoteClient.h"
+#include "DVTiPhoneSimulatorRemoteClient.h"
 #include <objc/objc-runtime.h>
+#include <CoreFoundation/CFPreferences.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -162,7 +163,7 @@ bool revIPhoneListSimulatorSDKs(MCVariableRef *argv, uint32_t argc, MCVariableRe
 }
 
 static bool fetch_named_simulator_root(const char *p_display_name, DTiPhoneSimulatorSystemRoot *&r_root)
-{
+{		
 	DTiPhoneSimulatorSystemRoot *t_root = nil;
 	NSArray *t_knownroots;
 	t_knownroots = [s_simulator_proxy getKnownRoots];
@@ -181,7 +182,7 @@ static bool fetch_named_simulator_root(const char *p_display_name, DTiPhoneSimul
 	{
 		r_root = t_root;
 		return true;
-	}
+	}	
 	return false;
 }
 
@@ -386,6 +387,9 @@ static MCError MCRunOnMainThread_Fix(MCThreadCallback callback, void *state, MCR
 	else
 		[self setParams: "stopped"];
 	MCRunOnMainThread_Fix(nil, self, kMCRunOnMainThreadLater);
+	
+	// MM-2014-03-18: [[ iOS 7.1 Support ]] Interrupt anything waiting for the session to end.
+	MCWaitBreak();
 }
 
 - (void) session: (DTiPhoneSimulatorSession *) p_session didStart: (BOOL) p_started withError: (NSError *) p_error
@@ -500,7 +504,7 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 		[t_session_config setSimulatedApplicationLaunchArgs: [NSArray array]];
 		[t_session_config setSimulatedApplicationLaunchEnvironment: [NSDictionary dictionary]];
 		[t_session_config setLocalizedClientName: @"LiveCode"];
-
+		
 		if ([t_session_config respondsToSelector: @selector(setSimulatedDeviceFamily:)])
 		{
 			int32_t t_family_int;
@@ -511,9 +515,47 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 			[t_session_config setSimulatedDeviceFamily: [NSNumber numberWithInt: t_family_int]];
 		}
 		
+		// MM-2014-03-18: [[ iOS 7.1 Support ]] Device name is required by the DVT framework.
+		if ([t_session_config respondsToSelector: @selector(setSimulatedDeviceInfoName:)])
+		{
+            // MW-2014-03-20: [[ Bug 11946 ]] Fetch the current device preference from the simulator
+            //   and if it matches the requested family, then use that string for the device. This
+            //   ensures the last set device in the simulator gets used rather than falling back to
+            //   just iPad or iPhone.
+            NSString *t_current;
+            t_current = (NSString *)CFPreferencesCopyAppValue((CFStringRef)@"SimulateDevice", (CFStringRef)@"com.apple.iphonesimulator");
+            
+			if (strcasecmp(t_family, "ipad") == 0)
+            {
+                if ([t_current hasPrefix: @"iPad"])
+                    [t_session_config setSimulatedDeviceInfoName: t_current];
+                else
+                    [t_session_config setSimulatedDeviceInfoName: @"iPad"];
+            }
+			else
+            {
+                if ([t_current hasPrefix: @"iPhone"])
+                    [t_session_config setSimulatedDeviceInfoName: t_current];
+                else
+                    [t_session_config setSimulatedDeviceInfoName: @"iPhone"];
+            }
+            [t_current release];
+		}		
+		
 		s_simulator_session = [s_simulator_proxy newSession];
 		[s_simulator_session setDelegate: t_delegate];
-		[s_simulator_session setSimulatedApplicationPID: [NSNumber numberWithInt: 35]];
+	
+		// MM-2014-03-18: [[ iOS 7.1 Support ]] For the DVT framework, the application PIS is an int rather than a NSNumber.
+		//  Check to see which type the session accepts.
+		if ([s_simulator_session respondsToSelector: @selector(setSimulatedApplicationPID:)])
+		{
+			const char *t_arg;
+			t_arg = [[s_simulator_session methodSignatureForSelector: @selector(setSimulatedApplicationPID:)] getArgumentTypeAtIndex: 2];
+			if (strcmp(t_arg, "i") == 0)
+				[s_simulator_session setSimulatedApplicationPID: 35];
+			else
+				[s_simulator_session setSimulatedApplicationPID: [NSNumber numberWithInt: 35]];
+		}
 		
 		// It seems that a session object that has been 'started' will auto-release itself on termination
 		// thus, on success we retain the object.
@@ -604,6 +646,11 @@ bool revIPhoneSetToolset(MCVariableRef *argv, uint32_t argc, MCVariableRef resul
 	{
 		[[s_simulator_session delegate] setQuiet: true];
 		[s_simulator_session requestEndWithTimeout: 30];
+		
+		// MM-2014-03-18: [[ iOS 7.1 Support ]] Wait until the simulator session has ended to pervent any overlap.
+		while(![[s_simulator_session delegate] didEnd])
+			MCWaitRun();
+		
 		[s_simulator_session release];
 		s_simulator_session = nil;
 	}
@@ -641,11 +688,12 @@ bool revIPhoneSetToolset(MCVariableRef *argv, uint32_t argc, MCVariableRef resul
 	t_path = nil;
 	if (t_success)
 	{
-		t_path = [NSString stringWithFormat:@"%s/Platforms/iPhoneSimulator.platform/Developer/Library/PrivateFrameworks/iPhoneSimulatorRemoteClient.framework", t_toolset_cstring];
+		// MM-2014-03-18: [[ iOS 7.1 Support ]] The proxy now chooses the appropriate simulator framework to use. Just pass the path to the dev tools
+		t_path = [NSString stringWithCString: t_toolset_cstring encoding: NSASCIIStringEncoding];
 		if (t_path == nil)
 			t_success = false;
 	}
-	
+		
 	NSTask *t_task;
 	NSString *t_id;
 	t_id = nil;

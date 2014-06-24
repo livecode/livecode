@@ -553,7 +553,15 @@ Boolean MCBlock::sameatts(MCBlock *bptr, bool p_persistent_only)
 
 static bool MCUnicodeCanBreakBetween(uint2 x, uint2 y)
 {
-	if (x < 256 && isspace(x))
+	// MW-2013-12-19: [[ Bug 11606 ]] We only check for breaks between chars and spaces
+	//   where the space follows the char. This is because a break will consume all space
+	//   chars after it thus we want to measure up to but not including the spaces.
+	bool t_x_isspace, t_y_isspace;
+	t_x_isspace = x < 256 && isspace(x);
+	t_y_isspace = y < 256 && isspace(y);
+	if (t_x_isspace && t_y_isspace)
+		return false;
+	if (t_y_isspace)
 		return true;
 
 	bool t_xid;
@@ -613,67 +621,23 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 	else
 		t_next_block_char = -1;
 
-	// If this is a text block and we fit inside maxwidth fully then check
-	// for a break point at the end.
-	if (getwidth(NULL, x) <= maxwidth)
-	{
-		uint2 t_last_char, t_break_index;
-		if (hasunicode() && (size & 1) == 0)
-			t_last_char = *(uint2 *)&text[index + size - 2], t_break_index = index + size - 2;
-		else
-			t_last_char = MCUnicodeMapFromNative(text[index + size - 1]), t_break_index = index + size - 1;
-
-		// If this is the last block, or we can break between this and the
-		// next block, return the end point.
-		if (t_next_block_char != -2)
-		{
-			if (t_next_block_char == -1 || MCUnicodeCanBreakBetween(t_last_char, t_next_block_char))
-			{
-				r_break_index = index + size;
-				r_break_fits = true;
-				return true;
-			}
-		}
-			
-		// Compute the last possible break position in the block by looping
-		// back over the characters;
-		if (t_break_index > index)
-		{
-			do
-			{
-				uint2 i;
-				i = t_break_index;
-				
-				uint2 t_prev_char;
-				if (hasunicode())
-				{
-					i -= 2;
-					t_prev_char = *(uint2 *)&text[i];
-				}
-				else
-				{
-					i -= 1;
-					t_prev_char = MCUnicodeMapFromNative(text[i]);
-				}
-				
-				if (MCUnicodeCanBreakBetween(t_prev_char, t_last_char))
-					break;
-				
-				t_break_index = i;
-				
-				t_last_char = t_prev_char;
-			}
-			while(t_break_index > index);
-		}
-		
-		r_break_index = t_break_index;
-		r_break_fits = true;
-		return true;
-	}
+    // FG-2013-10-21 [[ Field speedups ]]
+    // Previously, we used to calculate the length of the entire block here in order
+    // to determine if splitting was required. Unfortunately, this tends to bypass
+    // the text layout cache resulting in very slow laying out now that the "proper"
+    // Unicode text layout APIs are in use.
+    //
+    // Now, all text is laid out word-at-a-time.
 	
 	// We don't completely fit within maxwidth, so compute the last break point in
 	// the block by measuring
-	int4 twidth;
+	// MW-2013-12-19: [[ Bug 11606 ]] Track the width of the text within the block as a float
+	//   but use the integer width to break. This ensures measure(a & b) == measure(a) + measure(b)
+	//   (otherwise you get drift as the accumulated width the block calculates is different
+	//    from the width of the text that is drawn).
+	MCGFloat twidth_float;
+	twidth_float = 0;
+	int32_t twidth;
 	twidth = 0;
 
 	// MW-2009-04-23: [[ Bug ]] For printing, we measure complete runs of text otherwise we get
@@ -698,78 +662,89 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 	bool t_can_fit;
 	t_can_fit = false;
 	
+	// MW-2013-08-01: [[ Bug 10932 ]] Optimized loop only measuring between potential break
+	//   points, rather than char by char.
+    bool t_whole_block;
+    t_whole_block = false;
 	while(i < index + size)
 	{
-		uint2 t_this_char;
-		t_this_char = (uint2)t_next_char;
-
-		if (hasunicode())
-		{
-			if (i + 2 < index + size)
-				t_next_char = *(uint2 *)&text[i + 2];
-			else
-				t_next_char = t_next_block_char;
-		}
-		else
-		{
-			if (i + 1 < index + size)
-				t_next_char = (uint2)MCUnicodeMapFromNative(text[i + 1]);
-			else
-				t_next_char = t_next_block_char;
-		}
+		uint4 initial_i;
+		initial_i = i;
 		
 		bool t_can_break;
 		t_can_break = false;
+		
+		uint2 t_this_char;
+        bool t_end_of_block;
+        t_end_of_block = false;
+		while(i < index + size)
+		{
+			t_this_char = (uint2)t_next_char;
+			
+			i += indexincrement(i);
+			
+			if (hasunicode())
+			{
+				if (i < index + size)
+					t_next_char = *(uint2 *)&text[i];
+				else
+                {
+                    t_next_char = t_next_block_char;
+                    t_end_of_block = true;
+                }
+			}
+			else
+			{
+				if (i < index + size)
+					t_next_char = (uint2)MCUnicodeMapFromNative(text[i]);
+				else
+                {
+                    t_next_char = t_next_block_char;
+                    t_end_of_block = true;
+                }
+			}
+			
+			if (t_this_char == '\t' ||
+				t_next_char == -1 ||
+				MCUnicodeCanBreakBetween(t_this_char, t_next_char))
+			{
+				t_can_break = true;
+				break;
+			}
+		}
 
-		uint4 next_i;
-		next_i = i + indexincrement(i);
-
+		// MW-2013-11-07: [[ Bug 11393 ]] Previous per-platform implementations all fold into the optimized
+		//   case now (previously iOS / Windows printer were measuring break by break, which is what we do
+		//   generally now).
 		if (t_this_char == '\t')
 		{
-			twidth += gettabwidth(x + twidth, text, i);
-
-			t_last_break_width = twidth;
-			t_last_break_i = next_i;
+			twidth = twidth + gettabwidth(x + twidth, text, initial_i);
+			twidth_float = (MCGFloat)twidth;
 			
-			// We can always break after a tab
-			t_can_break = true;
+			t_last_break_width = twidth;
+			t_last_break_i = i;
 		}
 		else
 		{
-#ifdef _IOS_MOBILE
-			// MW-2012-02-01: [[ Bug 9982 ]] iOS uses sub-pixel positioning, so make sure we measure
-			//   complete runs.
-			twidth = t_last_break_width + MCFontMeasureText(m_font, &text[t_last_break_i], next_i - t_last_break_i, hasunicode());
-#else
-#ifdef TARGET_PLATFORM_WINDOWS
-			// MW-2009-04-23: [[ Bug ]] For printing, we measure complete runs of text otherwise we get
-			//   positioning issues.
-			if (MCFontHasPrinterMetrics(m_font))
-				twidth = t_last_break_width + MCFontMeasureText(m_font, &text[t_last_break_i], next_i - t_last_break_i, hasunicode());
-			else
-#endif
-				twidth += MCFontMeasureText(m_font, &text[i], next_i - i, hasunicode());
-#endif
-			
-			if (t_next_char == -1 || MCUnicodeCanBreakBetween(t_this_char, t_next_char))
-				t_can_break = true;
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+			twidth_float += MCFontMeasureTextFloat(m_font, &text[initial_i], i - initial_i, hasunicode(), parent -> getparent() -> getstack() -> getdevicetransform());
+			twidth = (int32_t)floorf(twidth_float);
 		}
-
-		i = next_i;
 
 		if (t_can_fit && twidth > maxwidth)
 			break;
 
 		if (t_can_break)
-		{
 			t_break_index = i;
 
-			if (twidth <= maxwidth)
-				t_can_fit = true;
+        if (twidth <= maxwidth)
+        {
+            t_can_fit = true;
+            t_whole_block = t_end_of_block;
+        }
 
-			if (twidth >= maxwidth)
-				break;
-		}
+		if (twidth >= maxwidth)
+			break;
 	}
 
 	// We now have a suitable break point in t_break_index. This could be index if
@@ -777,11 +752,12 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 	// any suitable run of spaces.
 	while(t_break_index < index + size && textisspace(&text[t_break_index]))
 		t_break_index += indexincrement(t_break_index);
-		
+    	
 	r_break_fits = t_can_fit;
 	r_break_index = t_break_index;
 	
-	return false;
+    // If we found a break, was it before the end of the block?
+    return t_whole_block;
 }
 
 void MCBlock::split(uint2 p_index)
@@ -962,8 +938,9 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 			uint2 t_cell_right;
 			t_cell_right = t_tab_width - t_delta;
 
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 			uint2 t_width;
-			t_width = MCFontMeasureText(m_font, t_text + t_index, t_next_index - t_index, hasunicode());
+			t_width = MCFontMeasureText(m_font, t_text + t_index, t_next_index - t_index, hasunicode(), parent -> getparent() -> getstack() -> getdevicetransform());
 
 			// MW-2012-02-09: [[ ParaStyles ]] Compute the cell clip, taking into account padding.
 			t_cell_clip . x = x - 1;
@@ -971,7 +948,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 
 			t_cell_clip = MCU_intersect_rect(t_cell_clip, t_old_clip);
 			dc -> setclip(t_cell_clip);
-			MCFontDrawText(m_font, t_text + t_index, t_next_index - t_index, hasunicode(), dc, x, y, image == True);
+            dc -> drawtext(x, y, t_text + t_index, t_next_index - t_index, m_font, image == True, hasunicode());
 
 			// Only draw the various boxes/lines if there is any content.
 			if (t_next_index - t_index > 0)
@@ -1040,11 +1017,12 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 				if (size < l)
 					break;
 
+				// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 				uint2 twidth;
-				twidth = MCFontMeasureText(m_font, sptr, l, hasunicode());
+				twidth = MCFontMeasureText(m_font, sptr, l, hasunicode(), parent -> getparent() -> getstack() -> getdevicetransform());
 				twidth += gettabwidth(cx + twidth, tptr, eptr - tptr);
 
-				MCFontDrawText(m_font, sptr, l, hasunicode(), dc, x, y, image == True);
+				dc -> drawtext(x, y, sptr, l, m_font, image == True, hasunicode());
 
 				cx += twidth;
 				x += twidth;
@@ -1056,7 +1034,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 				size -= l;
 			}
 		}
-		MCFontDrawText(m_font, sptr, size, hasunicode(), dc, x, y, image == True);
+        dc -> drawtext(x, y, sptr, size, m_font, image == True, hasunicode());
 
 		// Apply strike/underline.
 		if ((style & FA_UNDERLINE) != 0)
@@ -1116,10 +1094,12 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		ull = a->underline;
 	}
 
-	if (flags & F_HAS_COLOR && atts->color->pixel != MAXUINT4)
+	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+	if (flags & F_HAS_COLOR)
 		t_foreground_color = atts -> color;
 
-	if (flags & F_HAS_BACK_COLOR && atts->backcolor->pixel != MAXUINT4)
+	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+	if (flags & F_HAS_BACK_COLOR)
 		dc->setbackground(*atts->backcolor);
 
 	if (t_foreground_color != NULL)
@@ -1188,15 +1168,16 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		dc -> setclip(t_sel_clip);
 		
 		// Change the hilite color (if necessary).
-		if (!(flags & F_HAS_COLOR) || atts->color->pixel == MAXUINT4)
+		// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+		if (!(flags & F_HAS_COLOR))
 		{
 			if (IsMacLF() && !f->isautoarm())
 			{
-				Pixmap p;
+				MCPatternRef t_pattern;
 				int2 x, y;
 				MCColor fc, hc;
-				f->getforecolor(DI_FORE, False, True, fc, p, x, y, dc, f);
-				f->getforecolor(DI_HILITE, False, True, hc, p, x, y, dc, f);
+				f->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc, f);
+				f->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc, f);
 				if (hc.pixel == fc.pixel)
 					f->setforeground(dc, DI_BACK, False, True);
 			}
@@ -1207,10 +1188,11 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		// Draw the selected text.
 		drawstring(dc, x, cx, y, index, size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
 		
+		// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
 		// Revert to the previous clip and foreground color.
 		if (t_foreground_color != NULL)
 			dc->setforeground(*t_foreground_color);
-		else if (!(flags & F_HAS_COLOR) || atts->color->pixel == MAXUINT4)
+		else if (!(flags & F_HAS_COLOR))
 			f->setforeground(dc, DI_FORE, False, True);
 		dc-> setclip(t_old_clip);
 	}
@@ -1250,7 +1232,12 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 			f->setforeground(dc, DI_BORDER, False, True);
 			f->adjustpixmapoffset(dc, DI_BORDER);
 			MCRectangle trect = { x - 1, y - t_ascent, t_width + 2, t_ascent + t_descent };
-			dc->drawrect(trect);
+			
+			// MW-2014-03-11: [[ Bug 11882 ]] Ensure we use miter join for drawing the border.
+			dc->setlineatts(1, LineSolid, CapButt, JoinMiter);
+			dc->drawrect(trect, true);
+			dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
+			
 			f->setforeground(dc, DI_FORE, False, True);
 		}
 		else if (fontstyle & FA_3D_BOX)
@@ -1264,10 +1251,12 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		dc -> setclip(t_old_clip);
 	}
 	
-	if (flags & F_HAS_BACK_COLOR && atts->backcolor->pixel != MAXUINT4)
+	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+	if (flags & F_HAS_BACK_COLOR)
 		dc->setbackground(MCzerocolor);
 
-	if (flags & F_HAS_COLOR && atts->color->pixel != MAXUINT4 || fontstyle & FA_LINK)
+	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
+	if (flags & F_HAS_COLOR || fontstyle & FA_LINK)
 		f->setforeground(dc, DI_FORE, False, True);
 
 	// MW-2010-01-06: If there is link text, then draw a link
@@ -1655,9 +1644,11 @@ uint2 MCBlock::getcursorindex(int2 x, int2 cx, Boolean chunk, Boolean last)
 	uint2 tlen = 0;
 	uint2 twidth = 0;
 	uint2 toldwidth = 0;
-#ifdef _IOS_MOBILE
+
 	// MW-2012-02-01: [[ Bug 9982 ]] iOS uses sub-pixel positioning, so make sure we measure
 	//   complete runs.
+	// MW-2013-11-07: [[ Bug 11393 ]] We only want to measure complete runs now regardless of
+	//   platform.
 	int32_t t_last_width;
 	t_last_width = 0;
 	while(i < index + size)
@@ -1681,36 +1672,7 @@ uint2 MCBlock::getcursorindex(int2 x, int2 cx, Boolean chunk, Boolean last)
 		
 		i = t_new_i;
 	}
-#else
-	while (i < index + size)
-	{
-		if (textcomparechar(&text[i],'\t'))
-			cwidth = gettabwidth(x, text, i);
-		else
-#if defined(_MACOSX)
-			if (hasunicode())
-			{
-				tlen += indexincrement(i);
-				twidth = MCFontMeasureText(m_font, &text[index], tlen, hasunicode());
-				cwidth = twidth - toldwidth;
-				toldwidth = twidth;
-			}
-			else
-#endif
-				cwidth = MCFontMeasureText(m_font, &text[i], indexincrement(i), hasunicode());
-		if (chunk)
-		{
-			if (cx < cwidth)
-				break;
-		}
-		else
-			if (cx < cwidth >> 1)
-				break;
-		cx -= cwidth;
-		x += cwidth;
-		i +=  indexincrement(i);
-	}
-#endif
+
 	if (i == index + size && last && (index + size != parent->gettextsize()) && !hasunicode())
 		return i - indexdecrement(i);
 	else
@@ -1734,7 +1696,9 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, uint2 i, uint2 l)
 
 		// MW-2012-08-29: [[ Bug 10325 ]] Use 32-bit int to compute the width, then clamp
 		//   to 65535 - this means that we force wrapping when the line is too long.
-		uint4 twidth = 0;
+		// MW-2013-08-08: [[ Bug 10654 ]] Make sure we use a signed integer here, otherwise
+		//   we get incorrect clamping when converted to unsigned.
+		int4 twidth = 0;
 		if (flags & F_HAS_TAB)
 		{
 			const char *eptr;
@@ -1743,10 +1707,12 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, uint2 i, uint2 l)
 				uint2 sl = eptr - sptr;
 				if (l < sl)
 					break;
+
+				// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 				if (dc == NULL)
-					twidth += MCFontMeasureText(m_font, sptr, sl, hasunicode());
+					twidth += MCFontMeasureText(m_font, sptr, sl, hasunicode(), parent -> getparent() -> getstack() -> getdevicetransform());
 				else
-					twidth += MCFontMeasureText(m_font, sptr, sl, hasunicode());
+					twidth += MCFontMeasureText(m_font, sptr, sl, hasunicode(), parent -> getparent() -> getstack() -> getdevicetransform());
 
 				twidth += gettabwidth(x + twidth, tptr, eptr - tptr);
 
@@ -1757,10 +1723,11 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, uint2 i, uint2 l)
 				l -= sl;
 			}
 		}
+		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 		if (dc == NULL)
-			return MCU_min(65535U, twidth + MCFontMeasureText(m_font, sptr, l, hasunicode()));
+			return MCU_min(65535, twidth + MCFontMeasureText(m_font, sptr, l, hasunicode(), parent -> getparent() -> getstack() -> getdevicetransform()));
 		else
-			return MCU_min(65535U, twidth + MCFontMeasureText(m_font, sptr, l, hasunicode()));
+			return MCU_min(65535, twidth + MCFontMeasureText(m_font, sptr, l, hasunicode(), parent -> getparent() -> getstack() -> getdevicetransform()));
 	}
 }
 

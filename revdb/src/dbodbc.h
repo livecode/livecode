@@ -91,7 +91,7 @@ public:
 	void transCommit();
 	const char *getconnectionstring();
 	void transRollback();
-	char *getErrorMessage();
+	char *getErrorMessage(Bool p_last);
 	Bool IsError();
 	cursor_type_t getCursorType(void) { return m_cursor_type; }
 	int getVersion(void) { return 2; }

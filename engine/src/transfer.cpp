@@ -157,8 +157,10 @@ bool MCLocalPasteboard::Store(MCTransferType p_type, MCSharedString *p_data)
 		if (t_new_types == NULL)
 			return false;
 
+		// FG-2013-09-20 [[ Bugfix 11191 ]]
+		// Wrong type used in sizeof calculation (was MCTransferType)
 		MCSharedString **t_new_datas;
-		t_new_datas = (MCSharedString **)realloc(m_datas, sizeof(MCTransferType) * (m_count + 1));
+		t_new_datas = (MCSharedString **)realloc(m_datas, sizeof(MCSharedString*) * (m_count + 1));
 		if (t_new_datas == NULL)
 		{
 			m_types = t_new_types;

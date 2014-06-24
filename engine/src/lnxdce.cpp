@@ -44,15 +44,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "lnxdc.h"
 
+#include "resolution.h"
+
 #define WM_TITLE_HEIGHT 16
 
-void MCScreenDC::boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+{
+	device_boundrect(rect, title, m);
+}
+
+void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
 {
 	MCRectangle srect;
 	if (m >= WM_MODAL)
-		MCU_set_rect(srect, 0, 0, getwidth(), getheight());
+		MCU_set_rect(srect, 0, 0, device_getwidth(), device_getheight());
 	else
-		srect = MCwbr;
+	{
+		// IM-2014-01-29: [[ HiDPI ]] Convert logical to screen coords
+		srect = logicaltoscreenrect(MCwbr);
+	}
+	
+	
 	if (rect.x < srect.x)
 		rect.x = srect.x;
 	else
@@ -172,7 +185,13 @@ void MCScreenDC::waitfocus()
 		MCdispatcher->wkunfocus(foevent->window);
 }
 
-void MCScreenDC::querymouse(int2 &x, int2 &y)
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+void MCScreenDC::platform_querymouse(int16_t &x, int16_t &y)
+{
+	device_querymouse(x, y);
+}
+
+void MCScreenDC::device_querymouse(int2 &x, int2 &y)
 {
 	Window root, child;
 	int rx, ry, wx, wy;
@@ -209,7 +228,13 @@ uint2 MCScreenDC::querymods()
 	return t_rstate;
 }
 
-void MCScreenDC::setmouse(int2 x, int2 y)
+// IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
+void MCScreenDC::platform_setmouse(int16_t x, int16_t y)
+{
+	device_setmouse(x, y);
+}
+
+void MCScreenDC::device_setmouse(int2 x, int2 y)
 {
 	XWarpPointer(dpy, None, getroot(), 0, 0, 0, 0, x, y);
 }
@@ -264,9 +289,16 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 				        || bpevent->state >> 8 & 0x1F & ~(0x1L << button - 1))
 				{
 					setmods(bpevent->state, 0, bpevent->button, False);
-					MCclickstackptr = MCmousestackptr;
-					MCclicklocx = bpevent->x;
-					MCclicklocy = bpevent->y;
+					
+					MCPoint t_clickloc;
+					t_clickloc = MCPointMake(bpevent->x, bpevent->y);
+					
+					// IM-2014-01-29: [[ HiDPI ]] Convert screen to logical coords
+					t_clickloc = screentologicalpoint(t_clickloc);
+					
+					// IM-2013-10-09: [[ FullscreenMode ]] Update clickloc with MCscreen getters & setters
+					MCscreen->setclickloc(MCmousestackptr, t_clickloc);
+					
 					pressptr = tptr;
 					tptr = (MCEventnode *)tptr->next();
 					break;

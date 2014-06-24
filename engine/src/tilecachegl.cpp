@@ -199,13 +199,8 @@ static bool MCTileCacheOpenGLCompositorCreateTile(MCTileCacheOpenGLCompositorCon
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     
-    // MW-2011-10-07: iOS 5 doesn't like an inconsistency in input format between
-    //   TexImage2D and TexSubImage2D.
-#ifdef _IOS_MOBILE
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kSuperTileSize, kSuperTileSize, 0, GL_BGRA, GL_UNSIGNED_BYTE, nil);
-#else
+	// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kSuperTileSize, kSuperTileSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nil);
-#endif
     
 	// Fill in the free list - subtile 0 is the one we will allocate.
 	for(uint32_t i = 1; i < self -> super_tile_arity; i++)
@@ -358,11 +353,8 @@ bool MCTileCacheOpenGLCompositor_AllocateTile(void *p_context, int32_t p_size, c
 		t_y = t_sub_tile_index / (kSuperTileSize / self -> tile_size);
 		
 		// Fill the texture.
-#ifdef _IOS_MOBILE
-		glTexSubImage2D(GL_TEXTURE_2D, 0, t_x * self -> tile_size, t_y * self -> tile_size, self -> tile_size, self -> tile_size, GL_BGRA, GL_UNSIGNED_BYTE, t_data);
-#else
+		// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
 		glTexSubImage2D(GL_TEXTURE_2D, 0, t_x * self -> tile_size, t_y * self -> tile_size, self -> tile_size, self -> tile_size, GL_RGBA, GL_UNSIGNED_BYTE, t_data);
-#endif
 
 		// Set the tile id.
 		t_tile = (void *)t_tile_id;
@@ -473,7 +465,7 @@ bool MCTileCacheOpenGLCompositor_EndFrame(void *p_context, MCStackSurface *p_sur
 	return true;
 }
 
-bool MCTileCacheOpenGLCompositor_BeginSnapshot(void *p_context, MCRectangle p_area, Pixmap p_target)
+bool MCTileCacheOpenGLCompositor_BeginSnapshot(void *p_context, MCRectangle p_area, MCGRaster &p_target)
 {
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
@@ -513,15 +505,14 @@ bool MCTileCacheOpenGLCompositor_BeginSnapshot(void *p_context, MCRectangle p_ar
 	return true;
 }
 
-bool MCTileCacheOpenGLCompositor_EndSnapshot(void *p_context, MCRectangle p_area, Pixmap p_target)
+bool MCTileCacheOpenGLCompositor_EndSnapshot(void *p_context, MCRectangle p_area, MCGRaster &p_target)
 {
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
 	
-	MCMobileBitmap *t_bitmap;
-	t_bitmap = (MCMobileBitmap *)((Pixmap)p_target) -> handle . pixmap;
-	t_bitmap -> is_swapped = true;
-	glReadPixels(0, 0, p_area . width, p_area . height, GL_RGBA, GL_UNSIGNED_BYTE, t_bitmap -> data);
+	/* OVERHAUL - REVISIT: check byte order? */
+	// t_bitmap -> is_swapped = true;
+	glReadPixels(0, 0, p_area . width, p_area . height, GL_RGBA, GL_UNSIGNED_BYTE, p_target . pixels);
 	
 	glBindFramebufferOES(GL_FRAMEBUFFER_OES, self -> original_framebuffer);
 
@@ -595,8 +586,10 @@ bool MCTileCacheOpenGLCompositor_CompositeTile(void *p_context, int32_t p_x, int
 		glEnable(GL_TEXTURE_2D);
     }
     
+    // MW-2014-03-14: [[ Bug 11880 ]] The color field we store is premultiplied by the current
+    //   opacity.
 	uint32_t t_new_color;
-	t_new_color = ((self -> current_opacity << 24) | 0x00ffffff);
+	t_new_color = packed_scale_bounded(0xffffffff, self -> current_opacity);
     if (self -> current_color != t_new_color)
     {
         self -> current_color = t_new_color;
@@ -636,17 +629,20 @@ bool MCTileCacheOpenGLCompositor_CompositeRect(void *p_context, int32_t p_x, int
         self -> is_filling = true;
 		glDisable(GL_TEXTURE_2D);
     }
-		
-	uint32_t t_new_color;
-	t_new_color = (p_color & 0xffffff) | ((self -> current_opacity * ((p_color >> 24) & 0xff) / 255) << 24);
+    
+    // MW-2014-03-14: [[ Bug 11880 ]] The color field we store is premultiplied by the current
+    //   opacity.
+    uint32_t t_new_color;
+    t_new_color = packed_scale_bounded(p_color, self -> current_opacity);
 	if (self -> current_color != t_new_color)
 	{
 		self -> current_color = t_new_color;
 		
-		// MW-2012-08-30: [[ Bug 10341 ]] Premultiply the color value as that's how
-		//   our blending function is set up.
-		t_new_color = packed_scale_bounded((t_new_color & 0xffffff) | 0xff000000, t_new_color >> 24);
-		glvColor4ub(self -> opengl_version, (t_new_color >> 16) & 0xff, (t_new_color >> 8) & 0xff, (t_new_color >> 0) & 0xff, (t_new_color >> 24) & 0xff);
+		// IM-2013-08-23: [[ RefactorGraphics ]] Use MCGPixelUnpackNative to fix color swap issues
+		uint8_t a, r, g, b;
+		MCGPixelUnpackNative(t_new_color, r, g, b, a);
+		
+		glvColor4ub(self -> opengl_version, r, g, b, a);
 	}
 	
     GLshort *v;

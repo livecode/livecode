@@ -281,6 +281,10 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 						// must be the line.
 						if (t_last -> getindex() + t_last -> getsize() > t_first_offset)
 							break;
+							
+						// MW-2013-09-02: [[ Bug 11144 ]] Make sure we advance to the next line,
+						//   otherwise we just get an infinite loop.
+						t_line = t_line -> next();
 					}
 			}
 		}

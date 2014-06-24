@@ -29,76 +29,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void surface_extract_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
+extern void surface_extract_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
+extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-bool bitmap_data_to_cfdata(MCImageBitmap *p_bitmap, bool p_invert, CFDataRef &r_data)
-{
-	bool t_success = true;
-	CFDataRef t_data = nil;
-	
-	if (!p_invert)
-		t_success = nil != (t_data = CFDataCreate(kCFAllocatorDefault, (uint8_t*)p_bitmap->data, p_bitmap->stride * p_bitmap->height));
-	else
-	{
-		uint8_t* t_buffer = nil;
-		uindex_t t_buffer_size = p_bitmap->stride * p_bitmap->height;
-		t_success = MCMemoryAllocate(t_buffer_size, t_buffer);
-		if (t_success)
-		{
-			uint8_t* t_dst_ptr = t_buffer;
-			uint8_t* t_src_ptr = (uint8_t*)p_bitmap->data + p_bitmap->stride * (p_bitmap->height - 1);
-			for (uindex_t y = 0; y < p_bitmap->height; y++)
-			{
-				MCMemoryCopy(t_dst_ptr, t_src_ptr, p_bitmap->stride);
-				t_dst_ptr += p_bitmap->stride;
-				t_src_ptr -= p_bitmap->stride;
-			}
-			
-			t_success = nil != (t_data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, t_buffer, t_buffer_size, kCFAllocatorDefault));
-		}
-		
-		if (!t_success)
-			MCMemoryDeallocate(t_buffer);
-	}
-	
-	if (t_success)
-		r_data = t_data;
-	
-	return t_success;
-}
-
-bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_invert, CGImageRef &r_image)
-{
-	bool t_success = true;
-	
-	CGImageRef t_image = nil;
-	CGColorSpaceRef t_colorspace = nil;
-	CFDataRef t_data = nil;
-	CGDataProviderRef t_dp = nil;
-	
-	if (t_success)
-		t_success = bitmap_data_to_cfdata(p_bitmap, p_invert, t_data);
-	
-	if (t_success)
-		t_success = nil != (t_dp = CGDataProviderCreateWithCFData(t_data));
-	
-	if (t_success)
-		t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceRGB());
-	
-	if (t_success)
-		t_success = nil != (t_image = CGImageCreate(p_bitmap->width, p_bitmap->height, 8, 32, p_bitmap->stride, t_colorspace, kCGImageAlphaFirst | kCGBitmapByteOrder32Little, t_dp, nil, false, kCGRenderingIntentDefault));
-	
-	CGColorSpaceRelease(t_colorspace);
-	CGDataProviderRelease(t_dp);
-	CFRelease(t_data);
-	
-	if (t_success)
-		r_image = t_image;
-	
-	return t_success;
-}
 
 static bool MCAlphaToCGImage(uindex_t p_width, uindex_t p_height, uint8_t* p_data, uindex_t p_stride, CGImageRef &r_image)
 {
@@ -139,12 +73,12 @@ CGImageRef MCImage::makeicon(uint4 p_width, uint4 p_height)
 
 	MCImageBitmap *t_bitmap = nil;
 	
-	if (lockbitmap(t_bitmap))
+	if (lockbitmap(t_bitmap, false))
 	{
 		MCImageBitmap *t_scaled = nil;
 		if (p_width != t_bitmap->width || p_height != t_bitmap->height)
 			/* UNCHECKED */ MCImageScaleBitmap(t_bitmap, p_width, p_height, resizequality, t_scaled);
-		/* UNCHECKED */ MCImageBitmapToCGImage(t_scaled != nil ? t_scaled : t_bitmap, false, t_icon);
+		/* UNCHECKED */ MCImageBitmapToCGImage(t_scaled != nil ? t_scaled : t_bitmap, true, false, t_icon);
 		MCImageFreeBitmap(t_scaled);
 		unlockbitmap(t_bitmap);
 	}
@@ -164,7 +98,7 @@ MCWindowShape *MCImage::makewindowshape(void)
 	uindex_t t_alpha_stride = 0;
 	uindex_t t_width, t_height;
 	
-	t_success = lockbitmap(t_bitmap);
+	t_success = lockbitmap(t_bitmap, true);
 	
 	if (t_success)
 		t_success = MCImageBitmapHasTransparency(t_bitmap);
@@ -214,6 +148,7 @@ MCWindowShape *MCImage::makewindowshape(void)
 
 bool MCImageBitmapToPICT(MCImageBitmap *p_bitmap, MCMacSysPictHandle &r_pict)
 {
+#ifdef LIBGRAPHICS_BROKEN
 	bool t_success = true;
 	
 	Pixmap drawdata = nil, drawmask = nil;
@@ -358,6 +293,9 @@ bool MCImageBitmapToPICT(MCImageBitmap *p_bitmap, MCMacSysPictHandle &r_pict)
 		r_pict = (MCMacSysPictHandle)t_handle;
 	
 	return t_success;
+#else
+	return false;
+#endif
 }
 
 CGImageRef MCImage::converttodragimage(void)
@@ -365,8 +303,8 @@ CGImageRef MCImage::converttodragimage(void)
 	CGImageRef t_image = NULL;
 	MCImageBitmap *t_bitmap = nil;
 	
-	if (lockbitmap(t_bitmap))
-		/* UNCHECKED */ MCImageBitmapToCGImage(t_bitmap, false, t_image);
+	if (lockbitmap(t_bitmap, false))
+		/* UNCHECKED */ MCImageBitmapToCGImage(t_bitmap, true, false, t_image);
 	unlockbitmap(t_bitmap);
 	
 	return t_image;

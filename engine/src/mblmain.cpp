@@ -106,6 +106,14 @@ bool X_init(int argc, char *argv[], char *envp[])
 	// MW-2012-02-23: [[ FontRefs ]] Initialize the logical font table module.
 	MCLogicalFontTableInitialize();
 	
+    // MM-2014-02-10: [[ LipOpenSSL 1.0.1e ]] Attempt load revsecurity library on Java side.
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+	extern bool revandroid_loadExternalLibrary(const char *p_external, char*& r_filename);
+    char *t_filename;
+    revandroid_loadExternalLibrary("revsecurity", t_filename);
+    delete t_filename;
+#endif
+    
 	////
 	
 	MCcmd = MCsystem -> PathFromNative(argv[0]);

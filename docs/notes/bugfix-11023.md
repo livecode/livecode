@@ -1,0 +1,1 @@
+# About menu moved on mac to help menu.

@@ -708,6 +708,7 @@ bool MCConvertImageToWindowsV5Bitmap(MCSharedString *p_input, STGMEDIUM& r_stora
 //    call.
 //
 bool MCConvertImageToWindowsMetafile(MCSharedString *p_input, STGMEDIUM& r_storage);
+bool MCConvertImageToWindowsEnhancedMetafile(MCSharedString *p_input, STGMEDIUM &r_storage);
 
 ///////////////////////////////////////////////////////////////////////////////
 //

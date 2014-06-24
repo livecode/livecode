@@ -471,6 +471,7 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 
 	switch (which)
 	{
+#ifdef /* MCGraphic::getprop */ LEGACY_EXEC
 	case P_ANTI_ALIASED:
 		ep.setboolean(getflag(F_G_ANTI_ALIASED));
 		break;
@@ -771,6 +772,7 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 			ep.mapunicode(isunicode, (which == P_UNICODE_TEXT || which == P_UNICODE_LABEL));
 		}
 		break;
+#endif /* MCGraphic::getprop */
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}
@@ -862,6 +864,7 @@ bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uint2& r_point_count)
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCGraphic::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
+#ifdef /* MCGraphic::getarrayprop */ LEGACY_EXEC
 	switch(which)
 	{
 	case P_GRADIENT_FILL:
@@ -875,6 +878,7 @@ Exec_stat MCGraphic::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 		return MCControl::getarrayprop(parid, which, ep, key, effective);
 	}
 	return ES_NORMAL;
+#endif /* MCGraphic::getarrayprop */
 }
 
 Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
@@ -886,6 +890,7 @@ Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean
 
 	switch (p)
 	{
+#ifdef /* MCGraphic::setprop */ LEGACY_EXEC
 	case P_ANTI_ALIASED:
 		if (!MCU_matchflags(data, flags, F_G_ANTI_ALIASED, dirty))
 		{
@@ -1367,6 +1372,7 @@ Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean
 		else
 			dirty = False;
 		break;
+#endif /* MCGraphic::setprop */
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
 	}
@@ -1388,6 +1394,7 @@ Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
+#ifdef /* MCGraphic::setarrayprop */ LEGACY_EXEC
 	Boolean dirty;
 	dirty = False;
 	switch(which)
@@ -1425,6 +1432,7 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	}
 	
 	return ES_NORMAL;
+#endif /* MCGraphic::setarrayprop */
 }
 
 MCControl *MCGraphic::clone(Boolean attach, Object_pos p, bool invisible)
@@ -1601,20 +1609,12 @@ void MCGraphic::draw_lines(MCDC *dc, MCPoint *pts, uint2 npts)
 			if (count > 1)
 				dc->drawlines(&pts[i], count, pts[i].x == pts[i + count - 1].x && pts[i].y == pts[i + count - 1].y);
 			else
-			{
-				MCPoint t_dot[2];
-				t_dot[0] = pts[i];
-				t_dot[1] = pts[i];
-				dc -> drawlines(&t_dot[0], 2, false);
-			}
+				// MM-2013-11-21: [[ Bug 11395 ]] Pass single point to draw lines, indicating we want to draw a dot.
+				dc -> drawlines(&pts[i], 1, false);			
 		}
 		else if (getcapstyle() != CapButt)
-		{
-			MCPath *t_path;
-			t_path = MCPath::create_dot(pts[i] . x, pts[i] . y, true);
-			dc -> drawpath(t_path);
-			t_path -> release();
-		}
+			// MM-2013-11-21: [[ Bug 11395 ]] Pass single point to draw lines, indicating we want to draw a dot.
+			dc -> drawlines(&pts[i], 1, false);			
 			
 		i += count + 1;
 	}
@@ -1928,7 +1928,7 @@ void MCGraphic::getlabeltext(MCString &s, bool& isunicode)
 
 void MCGraphic::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, const MCString &s, bool isunicode, uint2 fstyle)
 {
-	MCFontDrawText(m_font, s.getstring(), s.getlength(), isunicode, dc, sx, sy, False);
+	dc -> drawtext(sx, sy, s.getstring(), s.getlength(), m_font, false, isunicode);
 	if (fstyle & FA_UNDERLINE)
 		dc->drawline(sx, sy + 1, sx + twidth, sy + 1);
 	if (fstyle & FA_STRIKEOUT)
@@ -1969,10 +1969,12 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		drawfocus(dc, p_dirty);
 	if (flags & F_SHOW_BORDER)
 		trect = MCU_reduce_rect(trect, borderwidth);
-	if (linesize != 0)
-		trect = MCU_reduce_rect(trect, linesize >> 1);
 	if (points == NULL && getstyleint(flags) == F_REGULAR)
 	{
+		// MM-2013-11-19: [[ Bug 11470 ]] For regular polygons, we need to inset the rect as before so we can calculate the points correctly.
+		if (linesize != 0)
+			trect = MCU_reduce_rect(trect, linesize >> 1);
+		
 		if (npoints <= nsides)
 		{
 			npoints = nsides + 1;
@@ -1995,10 +1997,26 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		switch (getstyleint(flags))
 		{
 		case F_G_RECTANGLE:
-			dc->fillrect(trect);
+			// MM-2013-11-14: [[ Bug 11426 ]] Make sure we take account border width when filling.
+			if (linesize != 0)
+			{
+				dc->setlineatts(linesize, LineSolid, CapButt, JoinBevel);
+				dc->fillrect(trect, true);
+				dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
+			}
+			else				
+				dc->fillrect(trect);
 			break;
 		case F_ROUNDRECT:
-			dc->fillroundrect(trect, roundradius);
+			// MM-2013-11-14: [[ Bug 11426 ]] Make sure we take account border width when filling.
+			if (linesize != 0)
+			{
+				dc->setlineatts(linesize, LineSolid, CapButt, JoinBevel);
+				dc->fillroundrect(trect, roundradius, true);
+				dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
+			}
+			else				
+				dc->fillroundrect(trect, roundradius);
 			break;
 		case F_REGULAR:
 			dc->fillpolygon(points, npoints);
@@ -2008,7 +2026,15 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 			fill_polygons(dc, realpoints, nrealpoints);
 			break;
 		case F_OVAL:
-			dc->fillarc(trect, startangle, arcangle);
+			// MM-2013-11-14: [[ Bug 11426 ]] Make sure we take account border width when filling.
+			if (linesize != 0)
+			{
+				dc->setlineatts(linesize, LineSolid, CapButt, JoinBevel);
+				dc->fillarc(trect, startangle, arcangle, true);
+				dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
+			}
+			else				
+				dc->fillarc(trect, startangle, arcangle);
 			break;
 		}
 		if (m_fill_gradient != NULL)
@@ -2034,11 +2060,13 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		case F_G_RECTANGLE:
 			dc->setlineatts(linesize, lstyle, CapButt, JoinMiter);
 			dc->setmiterlimit(10.0);
-			dc->drawrect(trect);
+			// MW-2013-09-06: [[ RefactorGraphics ]] Make sure we draw on the inside of the rect.
+			dc->drawrect(trect, true);
 			break;
 		case F_ROUNDRECT:
 			dc->setlineatts(linesize, lstyle, CapButt, JoinBevel);
-			dc->drawroundrect(trect, roundradius);
+			// MW-2013-09-06: [[ RefactorGraphics ]] Make sure we draw on the inside of the rect.
+			dc->drawroundrect(trect, roundradius, true);
 			break;
 		case F_REGULAR:
 			dc->setlineatts(linesize, lstyle, CapButt, JoinRound);
@@ -2073,10 +2101,11 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 			break;
 		case F_OVAL:
 			dc->setlineatts(linesize, lstyle, CapButt, JoinBevel);
+			// MW-2013-09-06: [[ RefactorGraphics ]] Make sure we draw on the inside of the rect.
 			if (getflag(F_OPAQUE) && arcangle != 360)
-				dc -> drawsegment(trect, startangle, arcangle);
+				dc -> drawsegment(trect, startangle, arcangle, true);
 			else
-				dc -> drawarc(trect, startangle, arcangle);
+				dc -> drawarc(trect, startangle, arcangle, true);
 			break;
 		}
 		if (m_stroke_gradient != NULL)
@@ -2150,7 +2179,8 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		uint2 twidth = 0;
 		for (i = 0 ; i < nlines ; i++)
 		{
-			twidth = MCFontMeasureText(m_font, lines[i].getstring(), lines[i].getlength(), isunicode);
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+			twidth = MCFontMeasureText(m_font, lines[i].getstring(), lines[i].getlength(), isunicode, getstack() -> getdevicetransform());
 			switch (flags & F_ALIGNMENT)
 			{
 			case F_ALIGN_LEFT:

@@ -165,9 +165,6 @@ public:
 	virtual void getfontreqs(MCFontStruct *f, const char*& r_name, uint2& r_size, uint2& r_style);
 
 	virtual int4 ctxt_textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override);
-	virtual void ctxt_drawtext(MCX11Context *context, int2 x, int2 y, const char *s, uint2 l, MCFontStruct *f, Boolean image, bool unicode_override);
-	virtual void ctxt_setfont(MCX11Context *context, const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font);
-
 	virtual bool ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct *p_font, MCTextLayoutCallback p_callback, void *p_context);
 };
 
@@ -388,67 +385,47 @@ MCOldFontnode::MCOldFontnode(const MCString &fname, uint2 &size, uint2 style)
 	
 	memset(&font, 0, sizeof(MCFontStruct));
 	
-	font.charset = 0;
 	if (MCnoui)
 		return;
 
-		Boolean t_is_unicode = False;
+	sprintf(fontname, "-*-%.*s-%s-%s-%s--%d-*-*-*-*-*-iso8859-%d",
+			strchr(reqname, ',') - reqname, reqname, MCF_getweightstring(style),
+			MCF_getslantshortstring(style),
+			MCF_getexpandstring(style), size, MCcharset);
+	
+	if ((fs = XLoadQueryFont(MCdpy, fontname)) == NULL)
+		fs = lookup(reqname, size, style);
 
-		// MW-2005-02-08: We aren't going to use XMBTEXT for now, instead we will
-		//   search for an appropriate ISO10646 font if in 'encoding mode'.
-		if (strchr(reqname, ',') != NULL)
+	if (fs == NULL)
+		if ((fs = XLoadQueryFont(MCdpy, reqname)) != NULL)
 		{
-			sprintf(fontname, "-*-%.*s-%s-%s-%s--%d-*-*-*-*-*-iso10646-*",
-			        strchr(reqname, ',') - reqname, reqname, MCF_getweightstring(style),
-			        MCF_getslantshortstring(style),
-			        MCF_getexpandstring(style), size);
-			t_is_unicode = True;
+			if (pixelsize == 0)
+				pixelsize = XInternAtom(MCdpy, "PIXEL_SIZE", True);
+			uint2 i = fs->n_properties;
+			while (i--)
+				if (fs->properties[i].name == pixelsize)
+				{
+					size = reqsize = fs->properties[i].card32;
+					break;
+				}
+			size = reqsize = fs->ascent + fs->descent - 2;
 		}
-		else
-			sprintf(fontname, "-*-%s-%s-%s-%s--%d-*-*-*-*-*-iso8859-%d",
-			        reqname, MCF_getweightstring(style),
-			        MCF_getslantshortstring(style),
-			        MCF_getexpandstring(style), size, MCcharset);
-		
-		if ((fs = XLoadQueryFont(MCdpy, fontname)) == NULL)
-			fs = lookup(reqname, size, style);
-		else
-			font.unicode = t_is_unicode;
 
-		if (fs == NULL)
-			if ((fs = XLoadQueryFont(MCdpy, reqname)) != NULL)
-			{
-				if (pixelsize == 0)
-					pixelsize = XInternAtom(MCdpy, "PIXEL_SIZE", True);
-				uint2 i = fs->n_properties;
-				while (i--)
-					if (fs->properties[i].name == pixelsize)
-					{
-						size = reqsize = fs->properties[i].card32;
-						break;
-					}
-				size = reqsize = fs->ascent + fs->descent - 2;
-			}
+	if (fs == NULL)
+		fs = lookup(DEFAULT_TEXT_FONT, size, style);
+	if (fs == NULL)
+		fs = XLoadQueryFont(MCdpy, "fixed");
 
-		if (fs == NULL)
-			fs = lookup(DEFAULT_TEXT_FONT, size, style);
-		if (fs == NULL)
-			fs = XLoadQueryFont(MCdpy, "fixed");
 
-	
-		font.reqname = strdup(reqname) ;
-		font.reqsize = reqsize ;
-		font.reqstyle = reqstyle ;
-	
-		font.fstruct = fs;
-		font.max_byte1 = fs -> max_byte1;
+	font.reqname = strdup(reqname) ;
+	font.reqsize = reqsize ;
+	font.reqstyle = reqstyle ;
 
-		font.ascent = fs -> ascent;
-		font.descent = fs -> descent;
+	font.fstruct = fs;
+	font.max_byte1 = fs -> max_byte1;
 
-		font.unicode = t_is_unicode;
-		if (t_is_unicode)
-			font.charset = LCH_UNICODE;
+	font.ascent = fs -> ascent;
+	font.descent = fs -> descent;
 }
 
 MCOldFontnode::MCOldFontnode()
@@ -687,7 +664,7 @@ int4 MCOldFontlist::ctxt_textwidth(MCFontStruct *of, const char *s, uint2 l, boo
 	MCOldFontStruct *f;
 	f = static_cast<MCOldFontStruct *>(of);
 
-	bool useUnicode = (f->max_byte1 > 0 || f->unicode) || p_unicode_override;
+	bool useUnicode = f->max_byte1 > 0 || p_unicode_override;
 
 	if ( useUnicode )
 	{
@@ -702,63 +679,6 @@ int4 MCOldFontlist::ctxt_textwidth(MCFontStruct *of, const char *s, uint2 l, boo
 	}
 	
 	return XTextWidth(f->fstruct, s, l);
-}
-
-void MCOldFontlist::ctxt_drawtext(MCX11Context *ctxt, int2 x, int2 y, const char *s, uint2 l, MCFontStruct *of, Boolean image, bool p_unicode_override)
-{
-	MCOldFontStruct *f;
-	f = static_cast<MCOldFontStruct *>(of);
-
-	bool useUnicode = (f->max_byte1 > 0 || f->unicode) || p_unicode_override;
-
-	if ( useUnicode ) 
-	{
-		uint2 x_l ;
-		XChar2b x_s[l / 2];
-
-		x_l = (l + 1) / 2;
-		for(int i = 0; i < x_l; ++i)
-			x_s[i] . byte1 = s[i * 2 + 1], x_s[i] . byte2 = s[i * 2];
-
-		if (image)
-		{
-			XDrawImageString16(ctxt -> m_display, ctxt -> m_layers -> surface, ctxt -> m_gc, x - ctxt -> m_layers -> origin . x , y - ctxt -> m_layers -> origin . y , (const XChar2b *)x_s,
-							   x_l);
-			XDrawImageString16(ctxt -> m_display,             ctxt -> m_mask, ctxt -> m_gc1, x - ctxt -> m_layers -> origin . x , y - ctxt -> m_layers -> origin . y , (const XChar2b *)x_s,
-							   x_l);
-		}
-		else
-		{
-			XDrawString16(ctxt -> m_display, ctxt -> m_layers -> surface, ctxt -> m_gc, x - ctxt -> m_layers -> origin . x , y - ctxt -> m_layers -> origin . y , (const XChar2b *)x_s,
-						  x_l);
-			XDrawString16(ctxt -> m_display,             ctxt -> m_mask, ctxt -> m_gc1, x - ctxt -> m_layers -> origin . x , y - ctxt -> m_layers -> origin . y , (const XChar2b *)x_s,
-						  x_l);
-		}
-	}
-	else 
-	{
-		if (image)
-		{
-			XDrawImageString(ctxt -> m_display, ctxt -> m_layers -> surface, ctxt -> m_gc, x - ctxt -> m_layers -> origin . x , y - ctxt -> m_layers -> origin . y , s, l);
-			XDrawImageString(ctxt -> m_display,              ctxt -> m_mask, ctxt -> m_gc1, x - ctxt -> m_layers -> origin . x , y - ctxt -> m_layers -> origin . y , s, l);
-		}
-		else
-		{
-			XDrawString(ctxt -> m_display, ctxt -> m_layers -> surface, ctxt -> m_gc, x - ctxt -> m_layers -> origin . x , y - ctxt -> m_layers -> origin . y , s, l);
-			XDrawString(ctxt -> m_display,              ctxt -> m_mask, ctxt -> m_gc1, x - ctxt -> m_layers -> origin . x , y - ctxt -> m_layers -> origin . y , s, l);
-		}
-	}
-
-	ctxt -> update_mask ( 0, 
-				  ( y - ctxt -> m_layers -> origin . y )  - f -> ascent, 
-				  ctxt -> m_layers -> clip . width,
-				  f -> ascent + f -> descent ) ;
-}
-
-void MCOldFontlist::ctxt_setfont(MCX11Context *ctxt, const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font)
-{
-	XSetFont(ctxt -> m_display, ctxt -> m_gc, static_cast<MCOldFontStruct *>(font)->fstruct->fid);
-	XSetFont(ctxt -> m_display, ctxt -> m_gc1, static_cast<MCOldFontStruct *>(font)->fstruct->fid);
 }
 
 bool MCOldFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct *p_font, MCTextLayoutCallback p_callback, void *p_context)

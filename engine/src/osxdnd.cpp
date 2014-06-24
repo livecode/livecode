@@ -418,9 +418,8 @@ pascal OSErr MCScreenDC::DragTrackingHandler(DragTrackingMessage p_message, Wind
 		GetDragMouse(p_drag, &t_point, NULL);
 		GlobalToLocal(&t_point);
 		
-		// MW-2011-09-12: [[ MacScroll ]] Adjust the y-coord by scroll position.
-		t_point . v += t_stack -> getscroll();
-		
+		// IM-2013-12-09: [[ Bug 11563 ]] Remove scroll adjustment as this is now taken care of in MCDispatch::wmdragmove
+
 		t_action = MCdispatcher -> wmdragmove(&_dw, t_point . h, t_point . v);
 		switch(t_action)
 		{
@@ -480,8 +479,7 @@ pascal OSErr MCScreenDC::DragReceiveHandler(WindowPtr p_window, void *p_context,
 	GetDragMouse(p_drag, &t_point, NULL);
 	GlobalToLocal(&t_point);
 	
-	// MW-2011-09-12: [[ MacScroll ]] Adjust the y-coord by scroll position.
-	t_point . v += t_stack -> getscroll();
+	// IM-2013-12-09: [[ Bug 11563 ]] Remove scroll adjustment as this is now taken care of in MCDispatch::wmdragmove
 
 	SetThemeCursor(kThemeArrowCursor);
 

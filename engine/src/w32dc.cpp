@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "dispatch.h"
+#include "osspec.h"
 #include "image.h"
 #include "stack.h"
 #include "util.h"
@@ -36,6 +37,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "w32context.h"
 
 #include "mctheme.h"
+
+#include "graphicscontext.h"
+#include "graphics_util.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline POINT MCPointToWin32POINT(const MCPoint &p_point)
+{
+	POINT t_point;
+	t_point.x = p_point.x;
+	t_point.y = p_point.y;
+
+	return t_point;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCScreenDC::MCScreenDC()
 {
@@ -123,80 +140,43 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 
 	return false;
 }
-
-MCContext *MCScreenDC::createcontext(Drawable p_drawable, MCBitmap *p_alpha)
+// TD-2013-07-01 [[ DynamicFonts ]]
+bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
 {
-	MCGDIContext *t_context;
-	t_context = MCGDIContext::create_with_bitmap((HBITMAP)p_drawable -> handle . pixmap, true);
-	t_context -> setexternalalpha(p_alpha);
-	return t_context;
+	bool t_success = true;
+    DWORD t_private = NULL;
+    
+    if (!p_globally)
+        t_private = FR_PRIVATE;
+    
+	if (t_success)
+		t_success = (MCS_exists(p_path, True) == True);
+	
+	if (t_success)
+		t_success = (AddFontResourceExA(p_path, t_private, 0) != 0);
+    
+	if (t_success && p_globally)
+		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+    
+	return t_success;
 }
 
-MCContext *MCScreenDC::createcontext(Drawable p_drawable, bool p_alpha, bool p_transient)
+
+bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
 {
-	MCContext *t_context;
-
-	if (p_drawable -> type == DC_WINDOW)
-		t_context = MCGDIContext::create_with_window((HWND)p_drawable -> handle . window);
-	else
-		t_context = MCGDIContext::create_with_bitmap((HBITMAP)p_drawable -> handle . pixmap, p_transient);
-
-	return t_context;
-}
-
-MCContext *MCScreenDC::creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient)
-{
-	return MCGDIContext::create_with_parameters(p_width, p_height, p_alpha, p_transient);
-}
-
-void MCScreenDC::freecontext(MCContext *p_context)
-{
-	delete p_context;
-}
-
-int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override)
-{
-	if (len == 0)
-		return 0;
-
-	// MW-2012-09-21: [[ Bug 3884 ]] If the font is wide, measure using OS routine.
-	if (f->printer || f->unicode || f->charset || f->wide || p_unicode_override)
-	{
-		HDC hdc;
-		if (f->printer)
-			hdc = static_cast<MCWindowsPrinter *>(MCsystemprinter) -> GetDC();
-		else
-			hdc = f_src_dc;
-		HFONT oldfont = (HFONT)SelectObject(hdc, (HFONT)f->fid);
-		SIZE tsize;
-
-		if (f->unicode || p_unicode_override)
-		{
-			if ((long)s & 1)
-			{ // odd byte boundary, must be realigned
-				char *b = new char[len];
-				memcpy(b, s, len);
-				GetTextExtentPoint32W(hdc, (LPCWSTR)b,
-				                      (int)len >> 1, &tsize);
-				delete b;
-			}
-			else
-				GetTextExtentPoint32W(hdc, (LPCWSTR)s,
-				                      (int)len >> 1, &tsize);
-		}
-		else
-			GetTextExtentPoint32A(hdc, (LPCSTR)s, (int)len, &tsize);
-
-		SelectObject(hdc, oldfont);
-		return tsize.cx;
-	}
-	else
-	{
-		int4 iwidth = 0;
-		while (len--)
-			iwidth += f->widths[(uint1)*s++];
-		return iwidth;
-	}
+    bool t_success = true;
+    DWORD t_private = NULL;
+    
+    if (p_globally)
+        t_private = FR_PRIVATE;
+    
+    if (t_success)
+		t_success = (RemoveFontResourceExA(p_path, t_private, 0) != 0);
+    
+	if (t_success && p_globally)
+		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+    
+	return t_success;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -274,11 +254,16 @@ void MCScreenDC::listprinters(MCExecPoint& ep)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCStack *MCScreenDC::getstackatpoint(int32_t x, int32_t y)
+MCStack *MCScreenDC::platform_getstackatpoint(int32_t x, int32_t y)
 {
+	MCPoint t_loc;
+	t_loc = MCPointMake(x, y);
+
+	// IM-2014-01-28: [[ HiDPI ]] Convert logical to screen coordinates
+	t_loc = logicaltoscreenpoint(t_loc);
+
 	POINT t_location;
-	t_location . x = x;
-	t_location . y = y;
+	t_location = MCPointToWin32POINT(t_loc);
 	
 	HWND t_window;
 	t_window = WindowFromPoint(t_location);
@@ -291,6 +276,227 @@ MCStack *MCScreenDC::getstackatpoint(int32_t x, int32_t y)
 	d . handle . window = (MCSysWindowHandle)t_window;
 		
 	return MCdispatcher -> findstackd(&d);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-28: [[ HiDPI ]] Weak-linked IsProcessDPIAware function
+typedef BOOL (WINAPI *IsProcessDPIAwarePtr)(VOID);
+bool MCWin32IsProcessDPIAware(bool &r_aware)
+{
+	static IsProcessDPIAwarePtr s_IsProcessDPIAware = NULL;
+	static bool s_init = true;
+
+	if (s_init)
+	{
+		s_IsProcessDPIAware = (IsProcessDPIAwarePtr)GetProcAddress(GetModuleHandleA("user32.dll"), "IsProcessDPIAware");
+		s_init = false;
+	}
+
+	if (s_IsProcessDPIAware == nil)
+		return false;
+
+	r_aware = s_IsProcessDPIAware();
+
+	return true;
+}
+
+//////////
+
+typedef enum __MCW32ProcessDPIAwareness
+{
+	kMCW32ProcessDPIUnaware,
+	kMCW32ProcessSystemDPIAware,
+	kMCW32ProcessPerMonitorDPIAware,
+} MCW32ProcessDPIAwareness;
+
+// IM-2014-01-28: [[ HiDPI ]] Weak-linked GetProcessDPIAwareness function
+typedef HRESULT (WINAPI *GetProcessDPIAwarenessPTR)(HANDLE hprocess, MCW32ProcessDPIAwareness *value);
+bool MCWin32GetProcessDPIAwareness(MCW32ProcessDPIAwareness &r_awareness)
+{
+	static GetProcessDPIAwarenessPTR s_GetProcessDPIAwareness = NULL;
+	static bool s_init = true;
+
+	if (s_init)
+	{
+		s_GetProcessDPIAwareness = (GetProcessDPIAwarenessPTR)GetProcAddress(GetModuleHandleA("shcore.dll"), "GetProcessDPIAwareness");
+		s_init = false;
+	}
+
+	if (s_GetProcessDPIAwareness == nil)
+		return false;
+
+	HRESULT t_result;
+	t_result = s_GetProcessDPIAwareness(NULL, &r_awareness);
+
+	return t_result == S_OK;
+}
+
+//////////
+
+typedef enum __MCW32MonitorDPIType
+{
+	kMCW32MDTEffectiveDPI,
+	kMCW32MDTAngularDPI,
+	kMCW32MDTRawDPI,
+	kMCW32MDTDefault = kMCW32MDTEffectiveDPI,
+} MCW32MonitorDPIType;
+
+// IM-2014-01-28: [[ HiDPI ]] Weak-linked GetDPIForMonitor function
+typedef HRESULT (WINAPI *GetDPIForMonitorPTR)(HMONITOR hmonitor, MCW32MonitorDPIType dpiType, UINT *dpiX, UINT *dpiY);
+bool MCWin32GetDPIForMonitor(HMONITOR p_monitor, uint32_t &r_xdpi, uint32_t &r_ydpi)
+{
+	static GetDPIForMonitorPTR s_GetDPIForMonitor = NULL;
+	static bool s_init = true;
+
+	if (s_init)
+	{
+		s_GetDPIForMonitor = (GetDPIForMonitorPTR)GetProcAddress(GetModuleHandleA("shcore.dll"), "GetDPIForMonitor");
+		s_init = false;
+	}
+
+	if (s_GetDPIForMonitor == nil)
+		return false;
+
+	HRESULT t_result;
+	UINT t_x, t_y;
+	t_result = s_GetDPIForMonitor(p_monitor, kMCW32MDTEffectiveDPI, &t_x, &t_y);
+
+	if (t_result != S_OK)
+		return false;
+
+	r_xdpi = t_x;
+	r_ydpi = t_y;
+
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-28: [[ HiDPI ]] Return the x & y dpi of the main screen
+bool MCWin32GetScreenDPI(uint32_t &r_xdpi, uint32_t &r_ydpi)
+{
+	HDC t_dc;
+	t_dc = GetDC(NULL);
+
+	if (t_dc == NULL)
+		return false;
+
+	r_xdpi = GetDeviceCaps(t_dc, LOGPIXELSX);
+	r_ydpi = GetDeviceCaps(t_dc, LOGPIXELSY);
+
+	ReleaseDC(NULL, t_dc);
+
+	return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+#define NORMAL_DENSITY (96.0)
+
+// IM-2014-01-28: [[ HiDPI ]] Return the DPI scale factor of the main screen.
+//   This gives us the pixelscale for system-DPI-aware applications.
+MCGFloat MCWin32GetLogicalToScreenScale(void)
+{
+	// TODO - determine the correct value on Win8.1 - this may depend on the display in question
+
+	uint32_t t_x, t_y;
+	/* UNCHECKED */ MCWin32GetScreenDPI(t_x, t_y);
+
+	return (MCGFloat) MCMax(t_x, t_y) / NORMAL_DENSITY;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-28: [[ HiDPI ]] Return the DPI scale factor of the given monitor.
+//   For system-DPI-aware applications this will be the global system DPI value.
+//   For Per-Monitor-DPI-aware applications, this will be the effective DPI scale of the given monitor
+bool MCWin32GetMonitorPixelScale(HMONITOR p_monitor, MCGFloat &r_pixel_scale)
+{
+	uint32_t t_xdpi, t_ydpi;
+
+	// try to get per-monitor DPI setting
+	if (!MCWin32GetDPIForMonitor(p_monitor, t_xdpi, t_ydpi) &&
+		// fallback to the global system DPI setting
+		!MCWin32GetScreenDPI(t_xdpi, t_ydpi))
+			return false;
+
+	r_pixel_scale = (MCGFloat)MCMax(t_xdpi, t_ydpi) / NORMAL_DENSITY;
+
+	return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-27: [[ HiDPI ]] Return whether the application is DPI-aware
+bool MCResPlatformSupportsPixelScaling(void)
+{
+	bool t_aware;
+	if (MCWin32IsProcessDPIAware(t_aware))
+		return t_aware;
+
+	return false;
+}
+
+// IM-2014-01-27: [[ HiDPI ]] On Windows, DPI-awareness can only be set at app startup or in the app manifest
+bool MCResPlatformCanChangePixelScaling(void)
+{
+	return false;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Pixel scale cannot be set on Windows
+bool MCResPlatformCanSetPixelScale(void)
+{
+	return false;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Pixel scale is 1.0 on Windows
+MCGFloat MCResPlatformGetDefaultPixelScale(void)
+{
+	return 1.0;
+}
+
+// IM-2014-03-14: [[ HiDPI ]] UI scale is 1.0 on Windows
+MCGFloat MCResPlatformGetUIDeviceScale(void)
+{
+	return 1.0;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] No-op as this cannot be modified at runtime on Windows
+void MCResPlatformHandleScaleChange(void)
+{
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+extern MCGFloat MCWin32GetLogicalToScreenScale(void);
+
+MCPoint MCScreenDC::logicaltoscreenpoint(const MCPoint &p_point)
+{
+	MCGFloat t_scale;
+	t_scale = MCWin32GetLogicalToScreenScale();
+	return MCPointTransform(p_point, MCGAffineTransformMakeScale(t_scale, t_scale));
+}
+
+MCPoint MCScreenDC::screentologicalpoint(const MCPoint &p_point)
+{
+	MCGFloat t_scale;
+	t_scale = 1 / MCWin32GetLogicalToScreenScale();
+	return MCPointTransform(p_point, MCGAffineTransformMakeScale(t_scale, t_scale));
+}
+
+MCRectangle MCScreenDC::logicaltoscreenrect(const MCRectangle &p_rect)
+{
+	// IM-2014-04-21: [[ Bug 12236 ]] Switch to scaled floor function which
+	// gives consistent width & height for different x, y values
+	return MCRectangleGetScaledFloorRect(p_rect, MCWin32GetLogicalToScreenScale());
+}
+
+MCRectangle MCScreenDC::screentologicalrect(const MCRectangle &p_rect)
+{
+	// IM-2014-04-21: [[ Bug 12236 ]] Switch to scaled ceiling function which
+	// gives consistent width & height for different x, y values
+	return MCRectangleGetScaledCeilingRect(p_rect, 1 / MCWin32GetLogicalToScreenScale());
 }
 
 ///////////////////////////////////////////////////////////////////////////////

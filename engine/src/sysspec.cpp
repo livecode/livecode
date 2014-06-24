@@ -56,9 +56,12 @@ static volatile int *s_mainthread_errno;
 static int *s_mainthread_errno;
 #endif
 
-
+// MW-2013-10-08: [[ Bug 11259 ]] We use our own tables on linux since
+//   we use a fixed locale which isn't available on all systems.
+#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP)
 uint1 *MClowercasingtable = NULL;
 uint1 *MCuppercasingtable = NULL;
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -74,6 +77,9 @@ void MCS_common_init(void)
 	
 	MCinfinity = HUGE_VAL;
 
+	// MW-2013-10-08: [[ Bug 11259 ]] We use our own tables on linux since
+	//   we use a fixed locale which isn't available on all systems.
+#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP)
 	MCuppercasingtable = new uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
@@ -81,6 +87,7 @@ void MCS_common_init(void)
 	MClowercasingtable = new uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MClowercasingtable[i] = (uint1)tolower((uint1)i);
+#endif
 	
 	MCStackSecurityInit();
 }
@@ -92,9 +99,13 @@ void MCS_shutdown(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// This is needed by opensslsocket.
+real8 curtime;
+
 real8 MCS_time(void)
 {
-	return MCsystem -> GetCurrentTime();
+	curtime = MCsystem -> GetCurrentTime();
+	return curtime;
 }
 
 void MCS_setenv(const char *p_name, const char *p_value)
@@ -1146,6 +1157,10 @@ IO_stat MCS_runcmd(MCExecPoint& ep)
 	}
 	ep . grabbuffer((char *)t_data, t_data_length);
 	
+	// MW-2013-08-07: [[ Bug 11089 ]] The MCSystem::Shell() call returns binary data,
+	//   so since uses of MCS_runcmd() expect text, we need to do EOL conversion.
+	ep . texttobinary();
+	
 	MCresult -> setnvalue(t_return_code);
 	
 	return IO_NORMAL;
@@ -1193,6 +1208,7 @@ bool MCSTextConvertToUnicode(MCTextEncoding p_encoding, const void *p_input, uin
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if !defined(TARGET_SUBPLATFORM_IPHONE)
 MCSocket::~MCSocket(void)
 {
 }
@@ -1234,6 +1250,11 @@ void MCS_write_socket(const MCString& p_data, MCSocket *p_socket, MCObject *p_ob
 MCSocket *MCS_accept(uint2 p_port, MCObject* p_object, MCNameRef p_message, Boolean p_datagram, Boolean p_secure, Boolean p_ssl_verify, char *p_ssl_cert_file)
 {
 	return NULL;
+}
+
+// MM-2014-02-12: [[ SecureSocket ]] New secure socket command
+void MCS_secure_socket(MCSocket *s, Boolean sslverify)
+{
 }
 
 void MCS_ha(MCExecPoint& ep, MCSocket *p_socket)
@@ -1299,10 +1320,6 @@ void MCS_ntoa(MCExecPoint& ep, MCExecPoint& ep2)
 	delete t_hostname;
 }
 
-void MCS_getDNSservers(MCExecPoint& ep)
-{
-}
-
 char *MCS_dnsresolve(const char *p_hostname)
 {
 	return NULL;
@@ -1311,6 +1328,12 @@ char *MCS_dnsresolve(const char *p_hostname)
 char *MCS_hostaddress(void)
 {
 	return NULL;
+}
+
+#endif
+
+void MCS_getDNSservers(MCExecPoint& ep)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////

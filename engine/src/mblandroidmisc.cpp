@@ -412,6 +412,7 @@ void MCAndroidSearchKey()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef /* MCHandleLibUrlDownloadToFileAndroid */ LEGACY_EXEC
 static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters)
 {
 	char *t_url, *t_filename;
@@ -439,9 +440,28 @@ static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_para
 	
 	return ES_NORMAL;
 }
+#endif /* MCHandleLibUrlDownloadToFileAndroid */
+
+// MW-2013-10-02: [[ MobileSSLVerify ]] Handle libUrlSetSSLVerification for Android.
+static Exec_stat MCHandleLibUrlSetSSLVerification(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+	
+	bool t_enabled;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "b", &t_enabled);
+	
+	extern void MCS_seturlsslverification(bool enabled);
+	if (t_success)
+		MCS_seturlsslverification(t_enabled);
+	
+	return ES_NORMAL;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef /* MCHandleCameraFeaturesAndroid */ LEGACY_EXEC
 static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
 {
 	char *t_camera_dir = nil;
@@ -496,6 +516,7 @@ static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters
 	MCCStringFree(t_camera_dir);
 	return ES_NORMAL;
 }
+#endif /* MCHandleCameraFeaturesAndroid */
 
 void MCMobileCreateImageFromData(const char *p_bytes, uint32_t p_length)
 {
@@ -513,7 +534,9 @@ void MCMobileCreateImageFromData(const char *p_bytes, uint32_t p_length)
 
 bool MCMobilePickPhoto(const char *p_source, int32_t p_max_width, int32_t p_max_height)
 {
+#ifdef /* MCMobilePickPhoto */ LEGACY_EXEC
 	MCAndroidEngineCall("showPhotoPicker", "vs", nil, p_source);
+#endif /* MCMobilePickPhoto */
 }
 
 static char *s_pick_photo_data = nil;
@@ -521,6 +544,7 @@ static uint32_t s_pick_photo_size = 0;
 static char *s_pick_photo_err = nil;
 static bool s_pick_photo_returned = false;
 
+#ifdef /* MCHandlePickPhotoAndroid */ LEGACY_EXEC
 static Exec_stat MCHandlePickPhoto(void *context, MCParameter *p_parameters)
 {
 	MCExecPoint ep(nil, nil, nil);
@@ -571,9 +595,11 @@ static Exec_stat MCHandlePickPhoto(void *context, MCParameter *p_parameters)
 
 	return ES_NORMAL;
 }
+#endif /* MCHandlePickPhotoAndroid */
 
 void MCAndroidPhotoPickDone(const char *p_data, uint32_t p_size)
 {
+#ifdef /* MCAndroidPhotoPickDone */ LEGACY_EXEC
 	if (s_pick_photo_data != nil)
 	{
 		MCMemoryDeallocate(s_pick_photo_data);
@@ -586,10 +612,12 @@ void MCAndroidPhotoPickDone(const char *p_data, uint32_t p_size)
 		s_pick_photo_size = p_size;
 	}
 	s_pick_photo_returned = true;
+#endif /* MCAndroidPhotoPickDone */
 }
 
 void MCAndroidPhotoPickError(const char *p_error)
 {
+#ifdef /* MCAndroidPhotoPickError */ LEGACY_EXEC
 	if (s_pick_photo_data != nil)
 	{
 		MCMemoryDeallocate(s_pick_photo_data);
@@ -599,15 +627,18 @@ void MCAndroidPhotoPickError(const char *p_error)
 		MCCStringFree(s_pick_photo_err);
 	MCCStringClone(p_error, s_pick_photo_err);
 	s_pick_photo_returned = true;
+#endif /* MCAndroidPhotoPickError */
 }
 
 void MCAndroidPhotoPickCanceled()
 {
+#ifdef /* MCAndroidPhotoPickCanceled */ LEGACY_EXEC
 	MCAndroidPhotoPickError("cancel");
+#endif /* MCAndroidPhotoPickCanceled */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+#ifdef /* MCHandleSetKeyboardTypeAndroid */ LEGACY_EXEC
 Exec_stat MCHandleSetKeyboardType(void *context, MCParameter *p_parameters)
 {
 	MCExecPoint ep(nil, nil, nil);
@@ -639,33 +670,41 @@ Exec_stat MCHandleSetKeyboardType(void *context, MCParameter *p_parameters)
 	
 	return ES_NORMAL;
 }
+#endif /* MCHandleSetKeyboardTypeAndroid */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef /* MCHandleSetStatusbarVisibility */ LEGACY_EXEC
 Exec_stat MCHandleSetStatusbarVisibility(void *context, MCParameter *parameters)
 {
+
 	bool t_visible;
 	t_visible = ((uint32_t)context) != 0;
 
 	MCAndroidEngineRemoteCall("setStatusbarVisibility", "vb", nil, t_visible);
 
 	return ES_NORMAL;
+
 }
+#endif /* MCHandleSetStatusbarVisibility */
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Exec_stat MCHandlePixelDensity(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePixelDensity */ LEGACY_EXEC
 	float t_density;
 	MCAndroidEngineRemoteCall("getPixelDensity", "f", &t_density);
 	MCresult -> setnvalue(t_density);
 	return ES_NORMAL;
+#endif /* MCHandlePixelDensity */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Exec_stat MCHandleBuildInfo(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleBuildInfo */ LEGACY_EXEC
 	MCExecPoint ep(nil, nil, nil);
 
 	if (p_parameters != nil)
@@ -688,6 +727,7 @@ Exec_stat MCHandleBuildInfo(void *context, MCParameter *p_parameters)
 	}
 
 	return ES_NORMAL;
+#endif /* MCHandleBuildInfo */
 }
 
 void MCS_getnetworkinterfaces(MCExecPoint& ep)
@@ -704,6 +744,7 @@ void MCS_getnetworkinterfaces(MCExecPoint& ep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef /* MCHandlePreferredLanguagesAndroid */ LEGACY_EXEC
 Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parameters)
 {
     char *r_preferred_languages = NULL;
@@ -711,7 +752,9 @@ Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parameters)
     MCresult -> sets(r_preferred_languages);
 	return ES_NORMAL;
 }
+#endif /* MCHandlePreferredLanguagesAndroid */
 
+#ifdef /* MCHandleCurrentLocaleAndroid */ LEGACY_EXEC
 Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
 {
     char *r_preferred_locale = NULL;
@@ -719,19 +762,25 @@ Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
    	MCresult -> sets(r_preferred_locale);
 	return ES_NORMAL;
 }
+#endif /* MCHandleCurrentLocaleAndroid */
 
+#ifdef /* MCHandleLockIdleTimerAndroid */ LEGACY_EXEC
 Exec_stat MCHandleLockIdleTimer(void *context, MCParameter *p_parameters)
 {
 	MCAndroidEngineCall("doLockIdleTimer", "v", nil);
 	return ES_NORMAL;
 }
+#endif /* MCHandleLockIdleTimerAndroid */
 
+#ifdef /* MCHandleUnlockIdleTimerAndroid */ LEGACY_EXEC
 Exec_stat MCHandleUnlockIdleTimer(void *context, MCParameter *p_parameters)
 {
 	MCAndroidEngineCall("doUnlockIdleTimer", "v", nil);
 	return ES_NORMAL;
 }
+#endif /* MCHandleUnlockIdleTimerAndroid */
 
+#ifdef /* MCHandleIdleTimerLockedAndroid */ LEGACY_EXEC
 Exec_stat MCHandleIdleTimerLocked(void *context, MCParameter *p_parameters)
 {
     bool r_idle_timer_locked = false;
@@ -739,6 +788,7 @@ Exec_stat MCHandleIdleTimerLocked(void *context, MCParameter *p_parameters)
     MCresult -> sets(MCU_btos(r_idle_timer_locked));
 	return ES_NORMAL;
 }
+#endif /* MCHandleIdleTimerLockedAndroid */
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -757,6 +807,7 @@ static bool is_jpeg_data(const MCString& p_data)
 	return p_data . getlength() > 2 && MCMemoryEqual(p_data . getstring(), "\xff\xd8", 2);
 }
 
+#ifdef /* MCHandleExportImageToAlbumAndroid */ LEGACY_EXEC
 Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 {
     char *r_save_result = NULL;
@@ -858,6 +909,7 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
     }       
 	return ES_NORMAL;
 }
+#endif /* MCHandleExportImageToAlbumAndroid */
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -873,6 +925,7 @@ static char *s_media_content = NULL;
 
 Exec_stat MCHandlePickMedia(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePickMedia */ LEGACY_EXEC
 	bool t_success;
     bool t_audio = false;
     bool t_video = false;
@@ -920,19 +973,24 @@ Exec_stat MCHandlePickMedia(void *context, MCParameter *p_parameters)
 //    MCLog("Media Types Returned: %s", s_media_content);
     
 	return ES_NORMAL;
+#endif /* MCHandlePickMedia */
 }
 
 void MCAndroidMediaDone(char *p_media_content)
 {
+#ifdef /* MCAndroidMediaDone */ LEGACY_EXEC
     s_media_content = p_media_content;
 //    MCLog("MCAndroidMediaDone() called %s", p_media_content);
 	s_media_status = kMCAndroidMediaDone;
+#endif /* MCAndroidMediaDone */
 }
 
 void MCAndroidMediaCanceled()
 {
+#ifdef /* MCAndroidMediaCanceled */ LEGACY_EXEC
 //    MCLog("MCAndroidMediaCanceled() called", nil);
 	s_media_status = kMCAndroidMediaCanceled;
+#endif /* MCAndroidMediaCanceled */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -949,30 +1007,11 @@ extern Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters);
-
-void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verify);
-static Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters)
-{
-    bool t_success = true;
-    
-    bool t_verified = true;
-    uint32_t t_id;
-    MCPurchase *t_purchase = nil;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "ub", &t_id, &t_verified);
-    
-    if (t_success)
-        t_success = MCPurchaseFindById(t_id, t_purchase);
-    
-    if (t_success)
-        MCPurchaseVerify(t_purchase, t_verified);
-    
-    return ES_NORMAL;
-}
+extern Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef /* MCHandleClearTouchesAndroid */ LEGACY_EXEC
 static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
 {
 	MCscreen -> wait(1/25.0, False, False);
@@ -980,6 +1019,7 @@ static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
 	MCEventQueueClearTouches();
 	return ES_NORMAL;
 }
+#endif /* MCHandleClearTouchesAndroid */
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1096,7 +1136,10 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {"mobileAdSetTopLeft", MCHandleAdSetTopLeft, nil},
     {"mobileAds", MCHandleAds, nil},
     
-	{"libUrlDownloadToFile", MCHandleLibUrlDownloadToFile, nil},    
+	{"libUrlDownloadToFile", MCHandleLibUrlDownloadToFile, nil},
+	
+	// MW-2013-10-02: [[ MobileSSLVerify ]] Added support for libUrlSetSSLVerification.
+	{"libUrlSetSSLVerification", MCHandleLibUrlSetSSLVerification, nil},
     
     {"mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
     {"mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
@@ -1238,3 +1281,11 @@ Exec_stat MCHandlePlatformMessage(Handler_type p_type, const MCString& p_message
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
+int MCSystemCompareInternational(const char *p_left, const char *p_right)
+{
+    int32_t t_compare;
+    MCAndroidEngineCall("compareInternational", "iss", &t_compare, p_left, p_right);
+    return t_compare;
+}

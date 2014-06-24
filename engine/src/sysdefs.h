@@ -22,6 +22,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  MODE AND FEATURE DEFINITIONS
 //
 
+#ifndef LEGACY_EXEC
+#define LEGACY_EXEC
+#endif
+
 #ifdef MODE_DEVELOPMENT
 #define FEATURE_PROPERTY_LISTENER
 #endif
@@ -82,12 +86,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #elif defined(_IOS_MOBILE)
 
+#define MCSSL
 #define __MACROMAN__
 #define __LF__
 #define PLATFORM_STRING "iphone"
 
 #elif defined(_ANDROID_MOBILE)
 
+#define MCSSL
 #define __ISO_8859_1__
 #define __LF__
 #define PLATFORM_STRING "android"
@@ -264,6 +270,7 @@ inline void *operator new(size_t, void *p)
 typedef struct __MCWinSysHandle *MCWinSysHandle;
 typedef struct __MCWinSysIconHandle *MCWinSysIconHandle;
 typedef struct __MCWinSysMetafileHandle *MCWinSysMetafileHandle;
+typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
 
 #if defined(_DEBUG)
 
@@ -293,13 +300,10 @@ extern void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize,
 struct MCFontStruct
 {
 	MCSysFontHandle fid;
+	uint16_t size;
 	int ascent;
 	int descent;
-	uint1 widths[256];
-	uint1 charset;
-	Boolean wide;
 	Boolean printer;
-	Boolean unicode;
 };
 
 #define SECONDS_MIN 0.0
@@ -362,10 +366,6 @@ struct MCFontStruct
 	uint2 style;
 	int ascent;
 	int descent;
-	Boolean wide;
-	uint1 charset;
-	Boolean unicode;
-	uint1 widths[256];
 };
 
 #define fixmaskrop(a) (a)
@@ -378,7 +378,6 @@ struct MCFontStruct
 
 #include <stdarg.h>
 #include <errno.h>
-#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -386,6 +385,9 @@ struct MCFontStruct
 #include <math.h>
 #include <signal.h>
 #include <assert.h>
+#define _CTYPE_H
+
+#define _CTYPE_H
 
 #define SIGBOGUS 100
 
@@ -396,24 +398,37 @@ inline void *operator new(size_t, void *p)
 	return p;
 }
 
-extern uint1 *MClowercasingtable;
+extern uint1 MClowercasingtable[];
 inline uint1 MCS_tolower(uint1 p_char)
 {
 	return MClowercasingtable[p_char];
 }
 
-extern uint1 *MCuppercasingtable;
+extern uint1 MCuppercasingtable[];
 inline uint1 MCS_toupper(uint1 p_char)
 {
 	return MCuppercasingtable[p_char];
 }
 
+extern uint2 MCctypetable[];
+#define _ctype(x, y) ((MCctypetable[(x)] & (1 << (y))) != 0)
+#define isalpha(x) (_ctype(x, 0))
+#define isupper(x) (_ctype(x, 1))
+#define islower(x) (_ctype(x, 2))
+#define isdigit(x) (_ctype(x, 3))
+#define isspace(x) (_ctype(x, 4))
+#define isxdigit(x) (_ctype(x, 5))
+#define ispunct(x) (_ctype(x, 6))
+#define isalnum(x) (_ctype(x, 7))
+#define isprint(x) (_ctype(x, 8))
+#define isgraph(x) (_ctype(x, 9))
+#define iscntrl(x) (_ctype(x, 10))
+
 struct MCFontStruct
 {
+	uint16_t size;
 	uint2 ascent;
 	uint2 descent;
-	uint1 charset;
-	Boolean unicode;
 };
 
 #define fixmaskrop(a) (a)
@@ -453,12 +468,14 @@ inline uint1 MCS_toupper(uint1 p_char)
 	return MCuppercasingtable[p_char];
 }
 
+// MM-2013-09-13: [[ RefactorGraphics ]] Updated for server font support.
 struct MCFontStruct
 {
+	MCSysFontHandle fid;
+	uint2 size;
+	uint2 style;
 	int ascent;
 	int descent;
-	Boolean unicode;
-	uint1 charset;
 };
 
 #define fixmaskrop(a) (a)
@@ -501,10 +518,9 @@ inline uint1 MCS_toupper(uint1 p_char)
 
 struct MCFontStruct
 {
+	uint16_t size;
 	int ascent;
 	int descent;
-	Boolean unicode;
-	uint1 charset;
 	MCSysFontHandle fid;
 };
 
@@ -1141,6 +1157,8 @@ typedef struct ssl_ctx_st SSL_CTX;
 
 class MCContext;
 typedef class MCContext MCDC;
+struct MCPattern;
+typedef MCPattern *MCPatternRef;
 
 class MCSharedString;
 struct MCPickleContext;
@@ -1169,7 +1187,6 @@ class MCField;
 class MCObject;
 class MCObjectList;
 class MCMagnify;
-class MCPixmaplist;
 class MCPrinter;
 class MCPrinterDevice;
 class MCPrinterSetupDialog;

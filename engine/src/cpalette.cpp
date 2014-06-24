@@ -178,12 +178,14 @@ Exec_stat MCColors::getprop(uint4 parid, Properties which, MCExecPoint& ep, Bool
 {
 	switch (which)
 	{
+#ifdef /* MCColors::getprop */ LEGACY_EXEC
 	case P_SELECTED_COLOR:
 		MCColor color;
 		color.pixel = selectedcolor;
 		MCscreen->querycolor(color);
 		ep.setcolor(color);
 		break;
+#endif /* MCColors::getprop */ 
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}
@@ -197,6 +199,7 @@ Exec_stat MCColors::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 
 	switch (p)
 	{
+#ifdef /* MCColors::setprop */ LEGACY_EXEC
 	case P_SELECTED_COLOR:
 		{
 			MCColor color;
@@ -213,6 +216,7 @@ Exec_stat MCColors::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 			selectedcolor = color.pixel;
 		}
 		break;
+#endif /* MCColors::setprop */
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
 	}
@@ -255,7 +259,7 @@ void MCColors::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_
 	MCColor c;
 
 	c = dc->getwhite();
-	dc->setfillstyle(FillSolid, DNULL, 0, 0);
+	dc->setfillstyle(FillSolid, nil, 0, 0);
 	for (i = 0 ; i < ycells ; i++)
 		for (j = 0 ; j < xcells ; j++)
 		{

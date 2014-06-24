@@ -266,8 +266,9 @@ public:
 	MCRectangle rect;
 	MCRectangle mrect;
 	Boolean visible;
-	MCBitmap *mask;
-	MCBitmap *data;
+	// IM-2014-04-08: [[ Bug 12101 ]] Buffers to hold 1-bit bitmaps - dimensions stored in rect (data), mrect (mask)
+	uint8_t *mask;
+	uint8_t *data;
 	char *name;
 	uint2 xhot;
 	uint2 yhot;

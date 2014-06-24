@@ -134,7 +134,7 @@ public:
 	void transBegin();
 	void transCommit();
 	void transRollback();
-	char *getErrorMessage();
+	char *getErrorMessage(Bool p_last);
 	Bool IsError();
 	void getTables(char *buffer, int *bufsize);
 	int getVersion(void) { return 2; }

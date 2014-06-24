@@ -42,27 +42,34 @@ bool MCSystemComposeTextMessage(const char *p_recipients, const char *p_body);
 
 void MCCanSendTextMessageExec(MCExecContext& ctxt, bool& r_can_send)
 {
+#ifdef /* MCCanSendTextMessageExec */ LEGACY_EXEC
     r_can_send = MCSystemCanSendTextMessage();
+#endif /* MCCanSendTextMessageExec */
 }
 
 void MCComposeTextMessageExec(MCExecContext& ctxt, const char *p_recipients, const char *p_body)
 {
+#ifdef /* MCComposeTextMessageExec */ LEGACY_EXEC
 	MCSystemComposeTextMessage(p_recipients, p_body);
+#endif /* MCComposeTextMessageExec */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Exec_stat MCHandleCanComposeTextMessage(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleCanComposeTextMessage */ LEGACY_EXEC
     if (MCSystemCanSendTextMessage())
-        MCresult -> sets(MCtruestring);
+       MCresult -> sets(MCtruestring);
 	else
         MCresult -> sets(MCfalsestring);
 	return ES_NORMAL;
+#endif /* MCHandleCanComposeTextMessage */
 }
 
 Exec_stat MCHandleComposeTextMessage(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleComposeTextMessage */ LEGACY_EXEC
     char *t_recipients, *t_body;
     bool t_success;
 	MCExecPoint ep(nil, nil, nil);
@@ -86,6 +93,7 @@ Exec_stat MCHandleComposeTextMessage(void *p_context, MCParameter *p_parameters)
 	MCComposeTextMessageExec(t_ctxt, t_recipients, t_body);
     
 	return ES_NORMAL;
+#endif /* MCHandleComposeTextMessage */
 }
 
 ////////////////////////////////////////////////////////////////////////////////

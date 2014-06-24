@@ -66,7 +66,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "undolst.h"
-#include "pxmaplst.h"
 #include "util.h"
 #include "date.h"
 #include "printer.h"
@@ -506,6 +505,11 @@ struct MCObjectListener
 
 static MCObjectListener *s_object_listeners = nil;
 
+// MW-2013-08-27: [[ Bug 11126 ]] Whilst processing, these statics hold the next
+//   listener / target to process, thus avoiding dangling pointers.
+static MCObjectListener *s_next_listener_to_process = nil;
+static MCObjectListenerTarget *s_next_listener_target_to_process = nil;
+
 static void remove_object_listener_from_list(MCObjectListener *&p_listener, MCObjectListener *p_prev_listener)
 {
 	MCObjectListenerTarget *t_target;
@@ -526,6 +530,10 @@ static void remove_object_listener_from_list(MCObjectListener *&p_listener, MCOb
 		p_prev_listener -> next = p_listener -> next;
 	else
 		s_object_listeners = p_listener -> next;
+	// MW-2013-08-27: [[ Bug 11126 ]] If this pointer is going away, make sure we fetch the next
+	//   listener into the static.
+	if (s_next_listener_to_process == p_listener)
+		s_next_listener_to_process = p_listener -> next;
 	MCMemoryDelete(p_listener);
 	p_listener = p_prev_listener;
 }
@@ -539,6 +547,10 @@ static void remove_object_listener_target_from_list(MCObjectListenerTarget *&p_t
 		p_listener -> targets = p_target -> next;
 	if (p_listener -> targets == nil)
 		remove_object_listener_from_list(p_listener, p_prev_listener);
+	// MW-2013-08-27: [[ Bug 11126 ]] If this pointer is going away, make sure we fetch the next
+	//   target into the static.
+	if (p_target == s_next_listener_target_to_process)
+		s_next_listener_target_to_process = p_target -> next;
 	MCMemoryDelete(p_target);
 	p_target = p_prev_target;
 }
@@ -556,6 +568,10 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 		t_listener = s_object_listeners;
 		while(t_listener != nil)
 		{
+			// MW-2013-08-27: [[ Bug 11126 ]] This static is updated by the remove_* functions
+			//   to ensure we don't get any dangling pointers.
+			s_next_listener_to_process = t_listener -> next;
+			
 			if (!t_listener -> object -> Exists())
 				remove_object_listener_from_list(t_listener, t_prev_listener);
 			else
@@ -580,6 +596,10 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 						t_target = t_listener->targets;
 						while (t_target != nil)
 						{
+							// MW-2013-08-27: [[ Bug 11126 ]] This static is updated by the remove_* functions
+							//   to ensure we don't get any dangling pointers.
+							s_next_listener_target_to_process = t_target -> next;
+							
 							if (!t_target -> target -> Exists())
 								remove_object_listener_target_from_list(t_target, t_prev_target, t_listener, t_prev_listener);
 							else
@@ -599,8 +619,7 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 								t_prev_target = t_target;					
 							}
 							
-							if (t_target != nil)
-								t_target = t_target->next;
+							t_target = s_next_listener_target_to_process;
 						}
 					}
 					else
@@ -609,11 +628,9 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 				
 				t_prev_listener = t_listener;
 			}
-				
-			if (t_listener != nil)
-				t_listener = t_listener -> next;
-			else
-				t_listener = s_object_listeners;
+			
+			// MW-2013-08-27: [[ Bug 11126 ]] Use the static as the next in the chain.
+			t_listener = s_next_listener_to_process;
 		}
 	}
 }
@@ -858,122 +875,6 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Feature:
-//   ide-resolve-image
-//
-// Contributor:
-//   Monte Goulding (2013-04-17)
-//
-// Syntax:
-//   _internal resolve image [id] <id or name> relative to <object reference>
-//
-// Action:
-//   This command resolves a short id or name of an image as would be used for
-//   an icon and sets it to the long ID of the image according to the documented
-//   rules for resolving icons.
-//
-//   it is set empty if the command fails to resolve the image which means it's
-//   not on any stack in memory.
-
-class MCInternalResolveImage : public MCStatement
-{
-public:
-    MCInternalResolveImage(void)
-    {
-        m_relative_object = nil;
-        m_id_or_name  = nil;
-        m_it = nil;
-    }
-	
-    ~MCInternalResolveImage(void)
-    {
-		delete m_relative_object;
-		delete m_id_or_name;
-		delete m_it;
-    }
-    
-    Parse_stat parse(MCScriptPoint &p_sp)
-    {
-        Parse_stat t_stat;
-        t_stat = PS_NORMAL;
-		
-		// Fetch a reference to 'it'
-        getit(p_sp, m_it);
-		
-        // Parse the optional 'id' token
-        m_is_id = (PS_NORMAL == p_sp . skip_token(SP_FACTOR, TT_PROPERTY, P_ID));
-		
-        // Parse the id_or_name expression
-        if (t_stat == PS_NORMAL)
-            t_stat = p_sp . parseexp(False, True, &m_id_or_name);
-		
-        // Parse the 'relative to' tokens
-        if (t_stat == PS_NORMAL)
-            t_stat = p_sp . skip_token(SP_FACTOR, TT_TO, PT_RELATIVE);
-        if (t_stat == PS_NORMAL)
-            t_stat = p_sp . skip_token(SP_FACTOR, TT_TO, PT_TO);
-		
-        // Parse the target object clause
-        if (t_stat == PS_NORMAL)
-        {
-            m_relative_object = new MCChunk(false);
-            t_stat = m_relative_object -> parse(p_sp, False);
-        }
-        return t_stat;
-    }
-    
-    Exec_stat exec(MCExecPoint &p_ep)
-    {
-        Exec_stat t_stat;
-        t_stat = ES_NORMAL;
-        
-        uint4 t_part_id;
-        MCObject *t_relative_object;
-        if (t_stat == ES_NORMAL)
-            t_stat = m_relative_object -> getobj(p_ep, t_relative_object, t_part_id, True);
-        
-        if (t_stat == ES_NORMAL)
-            t_stat = m_id_or_name -> eval(p_ep);
-        
-        MCImage *t_found_image;
-        t_found_image = nil;
-        if (t_stat == ES_NORMAL)
-        {
-            if (m_is_id)
-            {
-                if (p_ep . ton() == ES_ERROR)
-                {
-                    MCeerror -> add(EE_VARIABLE_NAN, line, pos);
-                    return ES_ERROR;
-                }
-                
-                t_found_image = t_relative_object -> resolveimageid(p_ep . getuint4());
-            }
-            else
-                t_found_image = t_relative_object -> resolveimagename(p_ep . getsvalue());
-            
-            if (t_found_image != nil)
-                t_stat = t_found_image -> getprop(0, P_LONG_ID, p_ep, False);
-            else
-                p_ep . clear();
-        }
-        
-        if (t_stat == ES_NORMAL)
-            t_stat = m_it -> set(p_ep);
-        
-        return t_stat;
-        
-    }
-
-private:
-    MCChunk *m_relative_object;
-    MCExpression *m_id_or_name;
-    MCVarref *m_it;
-    bool m_is_id : 1;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 template<class T> inline MCStatement *class_factory(void)
 {
 	return new T;
@@ -1004,7 +905,6 @@ MCInternalVerbInfo MCinternalverbs[] =
 	{ "cancel", nil, class_factory<MCInternalObjectUnListen> },
 #endif
 	{ "filter", "controls", class_factory<MCIdeFilterControls> },
-	{ "resolve", "image", class_factory<MCInternalResolveImage> },
 	{ nil, nil, nil }
 };
 

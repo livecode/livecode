@@ -97,11 +97,22 @@ bool MCSystemPlaySoundOnChannel(const char *p_channel, const char *p_file, MCSou
     bool t_success;
     t_success = true;    
     const char *t_apk_file = nil;;
+	
+	// IM-2013-11-13: [[ Bug 11428 ]] Resolve path to make sure asset paths are valid
+	char *t_resolved_path;
+	t_resolved_path = nil;
+	
+	if (t_success)
+		t_success = nil != (t_resolved_path = MCS_resolvepath(p_file));
+	
     if (t_success)
-        if (path_to_apk_path(p_file, t_apk_file))
+        if (path_to_apk_path(t_resolved_path, t_apk_file))
             MCAndroidEngineRemoteCall("playSoundOnChannel", "bsssibj", &t_success, p_channel, t_apk_file, p_file, (int32_t) p_type, true, (long) p_object);
         else
-            MCAndroidEngineRemoteCall("playSoundOnChannel", "bsssibj", &t_success, p_channel, p_file, p_file, (int32_t) p_type, false, (long) p_object);       
+            MCAndroidEngineRemoteCall("playSoundOnChannel", "bsssibj", &t_success, p_channel, t_resolved_path, p_file, (int32_t) p_type, false, (long) p_object);
+	
+	MCCStringFree(t_resolved_path);
+	
     return t_success;
 }
 

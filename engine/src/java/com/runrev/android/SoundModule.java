@@ -586,6 +586,8 @@ public class SoundModule
                     m_player.prepareAsync();
                 } catch (Exception e) {
                     Log.i("revandroid", e.toString());
+					// IM-2013-11-13: [[ Bug 11428 ]] Unset callback handle to prevent early release of callback object when resetting
+					m_callback_handle = -1;
                     reset();
                     return false;
                 }

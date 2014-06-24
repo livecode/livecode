@@ -232,5 +232,6 @@ MCSharedString *MCConvertMacTIFFToImage(MCSharedString *p_data);
 
 MCSharedString *MCConvertFilesToMacHFS(MCSharedString *p_data);
 MCSharedString *MCConvertMacHFSToFiles(MCSharedString *p_data);
+MCSharedString *MCConvertMacHTMLToStyledText(MCSharedString *p_data);
 
 #endif

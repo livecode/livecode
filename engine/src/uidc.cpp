@@ -22,7 +22,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "pxmaplst.h"
 #include "sellst.h"
 #include "undolst.h"
 #include "util.h"
@@ -41,6 +40,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "redraw.h"
 #include "notify.h"
+#include "dispatch.h"
+
+#include "graphicscontext.h"
+
+#include "resolution.h"
 
 class MCNullPrinter: public MCPrinter
 {
@@ -257,14 +261,6 @@ void MCUIDC::grabpointer(Window w)
 { }
 void MCUIDC::ungrabpointer()
 { }
-uint2 MCUIDC::getwidth()
-{
-	return 1;
-}
-uint2 MCUIDC::getheight()
-{
-	return 1;
-}
 uint2 MCUIDC::getwidthmm()
 {
 	return 1;
@@ -281,11 +277,152 @@ uint2 MCUIDC::getvclass()
 {
 	return 1;
 }
-uint4 MCUIDC::getdisplays(const MCDisplay*& p_rectangles, bool p_effective)
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCUIDC::setmouseloc(MCStack *p_target, MCPoint p_loc)
 {
-	return 0;
+	MCPoint t_mouseloc;
+	t_mouseloc = p_loc;
+
+	if (p_target != nil)
+		t_mouseloc = p_target->windowtostackloc(t_mouseloc);
+
+	MCmousestackptr = p_target;
+	MCmousex = t_mouseloc.x;
+	MCmousey = t_mouseloc.y;
 }
 
+void MCUIDC::getmouseloc(MCStack *&r_target, MCPoint &r_loc)
+{
+	r_target = MCmousestackptr;
+	r_loc = MCPointMake(MCmousex, MCmousey);
+
+	if (MCmousestackptr != nil)
+		r_loc = MCmousestackptr->stacktowindowloc(r_loc);
+}
+
+void MCUIDC::setclickloc(MCStack *p_target, MCPoint p_loc)
+{
+	MCPoint t_clickloc;
+	t_clickloc = p_loc;
+
+	if (p_target != nil)
+		t_clickloc = p_target->windowtostackloc(t_clickloc);
+
+	MCclickstackptr = p_target;
+	MCclicklocx = t_clickloc.x;
+	MCclicklocy = t_clickloc.y;
+}
+
+void MCUIDC::getclickloc(MCStack *&r_target, MCPoint &r_loc)
+{
+	r_target = MCclickstackptr;
+	r_loc = MCPointMake(MCclicklocx, MCclicklocy);
+
+	if (MCclickstackptr != nil)
+		r_loc = MCclickstackptr->stacktowindowloc(r_loc);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCUIDC::fullscreenwindows(void)
+{
+	return false;
+}
+
+MCRectangle MCUIDC::fullscreenrect(const MCDisplay *p_display)
+{
+	return p_display->viewport;
+}
+
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+uint2 MCUIDC::getwidth()
+{
+	return platform_getwidth();
+}
+
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+uint2 MCUIDC::getheight()
+{
+	return platform_getheight();
+}
+
+//////////
+
+uint16_t MCUIDC::platform_getwidth()
+{
+	return 1;
+}
+
+uint16_t MCUIDC::platform_getheight()
+{
+	return 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCDisplay *MCUIDC::s_displays = NULL;
+uint4 MCUIDC::s_display_count = 0;
+bool MCUIDC::s_display_info_effective = false;
+
+// IM-2014-01-24: [[ HiDPI ]] Refactor to implement caching of display info in MCUIDC instead of subclasses
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+uint4 MCUIDC::getdisplays(const MCDisplay *&r_displays, bool p_effective)
+{
+	if (p_effective != s_display_info_effective || !platform_displayinfocacheable())
+		cleardisplayinfocache();
+	
+	if (s_displays == nil)
+	{
+		/* UNCHECKED */ platform_getdisplays(p_effective, s_displays, s_display_count);
+		s_display_info_effective = p_effective;
+	}
+	
+	r_displays = s_displays;
+	return s_display_count;
+}
+
+void MCUIDC::updatedisplayinfo(bool &r_changed)
+{
+	MCDisplay *t_displays;
+	t_displays = nil;
+
+	uint32_t t_display_count;
+	t_display_count = 0;
+
+	/* UNCHECKED */ platform_getdisplays(s_display_info_effective, t_displays, t_display_count);
+
+	r_changed = t_display_count != s_display_count ||
+		(MCMemoryCompare(t_displays, s_displays, sizeof(MCDisplay) * s_display_count) != 0);
+
+	MCMemoryDeleteArray(s_displays);
+	s_displays = t_displays;
+	s_display_count = t_display_count;
+}
+
+void MCUIDC::cleardisplayinfocache(void)
+{
+	MCMemoryDeleteArray(s_displays);
+	s_displays = nil;
+	s_display_count = 0;
+}
+
+bool MCUIDC::platform_displayinfocacheable(void)
+{
+	return false;
+}
+
+//////////
+
+bool MCUIDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
+{
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
 const MCDisplay *MCUIDC::getnearestdisplay(const MCRectangle& p_rectangle)
 {
 	MCDisplay const *t_displays;
@@ -300,14 +437,17 @@ const MCDisplay *MCUIDC::getnearestdisplay(const MCRectangle& p_rectangle)
 	t_max_distance = MAXUINT4;
 	for(uint4 t_display = 0; t_display < t_display_count; ++t_display)
 	{
+		MCRectangle t_workarea;
+		t_workarea = t_displays[t_display] . workarea;
+		
 		MCRectangle t_intersection;
 		uint4 t_area, t_distance;
-		t_intersection = MCU_intersect_rect(p_rectangle, t_displays[t_display] . workarea);
+		t_intersection = MCU_intersect_rect(p_rectangle, t_workarea);
 		t_area = t_intersection . width * t_intersection . height;
 
 		uint4 t_dx, t_dy;
-		t_dx = (t_displays[t_display] . workarea . x + t_displays[t_display] . workarea . width / 2) - (p_rectangle . x + p_rectangle . width / 2);
-		t_dy = (t_displays[t_display] . workarea . y + t_displays[t_display] . workarea . height / 2) - (p_rectangle . y + p_rectangle . height / 2);
+		t_dx = (t_workarea . x + t_workarea . width / 2) - (p_rectangle . x + p_rectangle . width / 2);
+		t_dy = (t_workarea . y + t_workarea . height / 2) - (p_rectangle . y + p_rectangle . height / 2);
 		t_distance = t_dx * t_dx + t_dy * t_dy;
 
 		if (t_area > t_max_area)
@@ -330,6 +470,109 @@ const MCDisplay *MCUIDC::getnearestdisplay(const MCRectangle& p_rectangle)
 
 	return &t_displays[t_home];
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-24: [[ HiDPI ]] Return the maximum pixel scale of all displays in use
+bool MCUIDC::getmaxdisplayscale(MCGFloat &r_scale)
+{
+	const MCDisplay *t_displays;
+	t_displays = nil;
+	
+	uint32_t t_count;
+	t_count = 0;
+	
+	t_count = MCscreen->getdisplays(t_displays, false);
+	
+	MCGFloat t_scale;
+	if (t_count == 0)
+		t_scale = 1.0;
+	else
+		t_scale = t_displays[0].pixel_scale;
+	
+	for (uint32_t i = 1; i < t_count; i++)
+		if (t_displays[i].pixel_scale > t_scale)
+			t_scale = t_displays[i].pixel_scale;
+	
+	r_scale = t_scale;
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+Boolean MCUIDC::getwindowgeometry(Window p_window, MCRectangle &r_rect)
+{
+	if (!platform_getwindowgeometry(p_window, r_rect))
+		return False;
+	
+	return True;
+}
+
+//////////
+
+bool MCUIDC::platform_getwindowgeometry(Window p_window, MCRectangle &r_rect)
+{
+	r_rect = MCU_make_rect(0, 0, 32, 32);
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+void MCUIDC::boundrect(MCRectangle &x_rect, Boolean p_title, Window_mode p_mode)
+{
+	platform_boundrect(x_rect, p_title, p_mode);
+}
+
+//////////
+
+void MCUIDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+{ }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+void MCUIDC::querymouse(int2 &x, int2 &y)
+{
+	platform_querymouse(x, y);
+}
+
+//////////
+
+void MCUIDC::platform_querymouse(int2 &x, int2 &y)
+{ }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+void MCUIDC::setmouse(int2 x, int2 y)
+{
+	platform_setmouse(x, y);
+}
+
+//////////
+
+void MCUIDC::platform_setmouse(int2 x, int2 y)
+{ }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
+MCStack *MCUIDC::getstackatpoint(int32_t x, int32_t y)
+{
+	return platform_getstackatpoint(x, y);
+}
+
+//////////
+
+MCStack *MCUIDC::platform_getstackatpoint(int32_t x, int32_t y)
+{
+	return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCUIDC::openwindow(Window w, Boolean override)
 { }
@@ -357,27 +600,6 @@ void MCUIDC::beep()
 { }
 void MCUIDC::setinputfocus(Window window)
 { }
-MCContext *MCUIDC::createcontext(Drawable p_drawable, MCBitmap *p_bitmap)
-{
-	return NULL;
-}
-MCContext *MCUIDC::createcontext(Drawable p_drawable, bool p_alpha, bool p_transient)
-{
-	return NULL;
-}
-MCContext *MCUIDC::creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient)
-{
-	return NULL;
-}
-void MCUIDC::freecontext(MCContext *p_context)
-{ }
-void MCUIDC::freepixmap(Pixmap &pixmap)
-{ }
-
-int4 MCUIDC::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
-{
-	return 0;
-}
 
 uint2 MCUIDC::getrealdepth(void)
 {
@@ -389,135 +611,11 @@ uint2 MCUIDC::getdepth(void)
 	return 0;
 }
 
-Pixmap MCUIDC::createpixmap(uint2 width, uint2 height,
-                            uint2 depth, Boolean purge)
-{
-	return (Pixmap)1;
-}
-
-bool MCUIDC::lockpixmap(Pixmap p_pixmap, void*& r_data, uint4& r_stride)
-{
-	return false;
-}
-
-void MCUIDC::unlockpixmap(Pixmap p_pixmap, void *p_data, uint4 p_stride)
-{
-}
-
-Pixmap MCUIDC::createstipple(uint2 width, uint2 height, uint4 *bits)
-{
-	return (Pixmap)1;
-}
-
-Boolean MCUIDC::getwindowgeometry(Window w, MCRectangle &drect)
-{
-	drect.x = drect.y = 0;
-	drect.width = drect.height = 32;
-	return True;
-}
-
-Boolean MCUIDC::getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d)
-{
-	w = h = 32;
-	d = 8;
-	return True;
-}
-
 void MCUIDC::setgraphicsexposures(Boolean on, MCStack *sptr)
 { }
 void MCUIDC::copyarea(Drawable source, Drawable dest, int2 depth,
                       int2 sx, int2 sy, uint2 sw, uint2 sh,
                       int2 dx, int2 dy, uint4 rop)
-{ }
-void MCUIDC::copyplane(Drawable source, Drawable dest, int2 sx, int2 sy,
-                       uint2 sw, uint2 sh, int2 dx, int2 dy,
-                       uint4 rop, uint4 pixel)
-{ }
-
-MCBitmap *MCUIDC::createimage(uint2 depth, uint2 width, uint2 height,
-                              Boolean set
-	                              , uint1 value,
-	                              Boolean shm, Boolean forceZ)
-{
-	// MW-2012-10-04: [[ Bug 10421 ]] If depth is 0 then we actually mean 32-bit :)
-	if (depth == 0)
-		depth = 32;
-
-	MCBitmap *image = new MCBitmap;
-	image->width = width;
-	image->height = height;
-	image->format = ZPixmap;
-	image->bitmap_unit = 32;
-	image->byte_order = MSBFirst;
-	image->bitmap_pad = 32;
-	image->bitmap_bit_order = MSBFirst;
-	image->depth = (uint1)depth;
-	image->bytes_per_line = ((width * depth + 31) >> 3) & 0xFFFFFFFC;
-	image->bits_per_pixel = (uint1)depth;
-	uint4 bytes = image->bytes_per_line * image->height;
-	image->data = (char *)new uint1[bytes];
-	if (set
-	   )
-		memset(image->data, value, bytes);
-	return image;
-}
-
-void MCUIDC::destroyimage(MCBitmap *image)
-{
-	delete image->data;
-	delete image;
-}
-
-MCBitmap *MCUIDC::copyimage(MCBitmap *source, Boolean invert)
-{
-	MCBitmap *image = new MCBitmap;
-	image->width = source->width;
-	image->height = source->height;
-	image->bits_per_pixel = source->bits_per_pixel;
-	image->bytes_per_line = source->bytes_per_line;
-	image->format = source->format;
-	image->byte_order = MSBFirst;
-	image->bitmap_bit_order = MSBFirst;
-
-	uint4 bytes = image->bytes_per_line * image->height;
-	image->data = (char *)new uint1[bytes];
-	if (invert)
-	{
-		uint1 *sptr = (uint1 *)source->data;
-		uint1 *dptr = (uint1 *)image->data;
-		while (bytes--)
-			*dptr++ = ~*sptr++;
-	}
-	else
-		memcpy(image->data, source->data, bytes);
-	return image;
-}
-
-void MCUIDC::putimage(Drawable dest, MCBitmap *source, int2 sx, int2 sy,
-                      int2 dx, int2 dy, uint2 w, uint2 h)
-{ }
-
-MCBitmap *MCUIDC::getimage(Drawable pm, int2 x, int2 y,
-                           uint2 w, uint2 h, Boolean shm)
-{
-	MCBitmap *image = new MCBitmap;
-	image->width = w;
-	image->height = h;
-	image->format = ZPixmap;
-	image->bitmap_unit = 32;
-	image->byte_order = MSBFirst;
-	image->bitmap_pad = 32;
-	image->bitmap_bit_order = MSBFirst;
-	image->depth = 8;
-	image->bytes_per_line = ((w * image->depth + 31) >> 3) & 0xFFFFFFFC;
-	image->bits_per_pixel = image->depth;
-	uint4 bytes = image->bytes_per_line * image->height;
-	image->data = (char *)new uint1[bytes];
-	memset(image->data, 0, bytes);
-	return image;
-}
-
-void MCUIDC::flipimage(MCBitmap *image, int2 byte_order, int2 bit_order)
 { }
 
 MCColorTransformRef MCUIDC::createcolortransform(const MCColorSpaceInfo& info)
@@ -534,7 +632,7 @@ bool MCUIDC::transformimagecolors(MCColorTransformRef transform, MCImageBitmap *
 	return false;
 }
 
-MCCursorRef MCUIDC::createcursor(MCImageBuffer *p_image, int2 p_xhot, int2 p_yhot)
+MCCursorRef MCUIDC::createcursor(MCImageBitmap *p_image, int2 p_xhot, int2 p_yhot)
 {
 	return nil;
 }
@@ -547,12 +645,6 @@ uint4 MCUIDC::dtouint4(Drawable d)
 	return 1;
 }
 
-
-Boolean MCUIDC::uint4topixmap(uint4, Pixmap &p)
-{
-	p = (Pixmap)1;
-	return True;
-}
 
 Boolean MCUIDC::uint4towindow(uint4, Window &w)
 {
@@ -582,8 +674,8 @@ Window MCUIDC::getroot()
 	return (Window)1;
 }
 
-MCBitmap *MCUIDC::snapshot(MCRectangle &r, uint4 window,
-                           const char *displayname)
+MCImageBitmap *MCUIDC::snapshot(MCRectangle &r, uint4 window,
+                           const char *displayname, MCPoint *size)
 {
 	return NULL;
 }
@@ -596,7 +688,7 @@ void MCUIDC::disablebackdrop(bool p_hard)
 {
 }
 
-void MCUIDC::configurebackdrop(const MCColor&, Pixmap, MCImage *)
+void MCUIDC::configurebackdrop(const MCColor&, MCPatternRef p_pattern, MCImage *)
 {
 }
 
@@ -624,14 +716,20 @@ void MCUIDC::getpaletteentry(uint4 n, MCColor &c)
 
 void MCUIDC::alloccolor(MCColor &color)
 {
-	color.pixel = (color.blue >> 8) | (color.green & 0xFF00) | (color.red & 0xFF00) << 8;
+	color.pixel = MCGPixelPackNative(
+							   color.red >> 8,
+							   color.green >> 8,
+							   color.blue >> 8,
+							   255);
 }
 
 void MCUIDC::querycolor(MCColor &color)
 {
-	color.red = (color.pixel >> 16) & 0xFF;
-	color.green = (color.pixel >> 8) & 0xFF;
-	color.blue = color.pixel & 0xFF;
+	uint8_t t_r, t_g, t_b, t_a;
+	MCGPixelUnpackNative(color.pixel, t_r, t_g, t_b, t_a);
+	color.red = t_r;
+	color.green = t_g;
+	color.blue = t_b;
 	color.red |= color.red << 8;
 	color.green |= color.green << 8;
 	color.blue |= color.blue << 8;
@@ -642,8 +740,6 @@ MCColor *MCUIDC::getaccentcolors()
 	return NULL;
 }
 
-void MCUIDC::boundrect(MCRectangle &rect, Boolean title, Window_mode m)
-{ }
 void MCUIDC::expose()
 { }
 Boolean MCUIDC::abortkey()
@@ -657,14 +753,10 @@ void MCUIDC::waitreparent(Window w)
 { }
 void MCUIDC::waitfocus()
 { }
-void MCUIDC::querymouse(int2 &x, int2 &y)
-{ }
 uint2 MCUIDC::querymods()
 {
 	return 0;
 }
-void MCUIDC::setmouse(int2 x, int2 y)
-{ }
 Boolean MCUIDC::getmouse(uint2 button, Boolean& r_abort)
 {
 	r_abort = False;
@@ -674,49 +766,6 @@ Boolean MCUIDC::getmouseclick(uint2 button, Boolean& r_abort)
 {
 	r_abort = False;
 	return False;
-}
-
-void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, char *p1, char *p2)
-{
-	if (nmessages == maxmessages)
-	{
-		maxmessages++;
-		MCU_realloc((char **)&messages, nmessages, maxmessages, sizeof(MCMessageList));
-	}
-	messages[nmessages].object = optr;
-	/* UNCHECKED */ MCNameClone(mptr, messages[nmessages].message);
-	messages[nmessages].time = MCS_time();
-	messages[nmessages].id = ++messageid;
-	MCParameter *params = NULL;
-	if (p1 != NULL)
-	{
-		params = new MCParameter;
-		params->setbuffer(p1, strlen(p1));
-		if (p2 != NULL)
-		{
-			params->setnext(new MCParameter);
-			params->getnext()->setbuffer(p2, strlen(p2));
-		}
-	}
-	messages[nmessages++].params = params;
-}
-
-void MCUIDC::addmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter *params)
-{
-	if (nmessages == maxmessages)
-	{
-		maxmessages++;
-		MCU_realloc((char **)&messages, nmessages,
-		            maxmessages, sizeof(MCMessageList));
-	}
-	messages[nmessages].object = optr;
-	/* UNCHECKED */ MCNameClone(mptr, messages[nmessages].message);
-	messages[nmessages].time = time;
-	messages[nmessages].id = ++messageid;
-	char buffer[U4L];
-	sprintf(buffer, "%u", messages[nmessages].id);
-	MCresult->copysvalue(buffer);
-	messages[nmessages++].params = params;
 }
 
 Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
@@ -751,7 +800,6 @@ void MCUIDC::pingwait(void)
 	//   any running wait.
 	MCNotifyPing(false);
 #endif
-	
 }
 
 void MCUIDC::flushevents(uint2 e)
@@ -817,26 +865,102 @@ void MCUIDC::updatemenubar(Boolean force)
 	}
 };
 
-void MCUIDC::addtimer(MCObject *optr, MCNameRef mptr, uint4 delay)
+// MW-2014-04-16: [[ Bug 11690 ]] Pending message list is now sorted by time, all
+//   pending message generation functions use 'doaddmessage()' to insert the
+//   message in the right place.
+void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, MCParameter *params)
 {
-	uint2 i;
-	for (i = 0 ; i < nmessages ; i++)
-		if (messages[i].object == optr && MCNameIsEqualTo(messages[i].message, mptr, kMCCompareCaseless))
-		{
-			messages[i].time = MCS_time() + delay / 1000.0;
-			return;
-		}
+    // MW-2014-05-14: [[ Bug 12294 ]] Rejigged to correct flaws.
+    
+    // If we are at capacity, then extend the message list.
 	if (nmessages == maxmessages)
 	{
 		maxmessages++;
-		MCU_realloc((char **)&messages, nmessages,
-		            maxmessages, sizeof(MCMessageList));
+		MCU_realloc((char **)&messages, nmessages, maxmessages, sizeof(MCMessageList));
 	}
-	messages[nmessages].object = optr;
-	/* UNCHECKED */ MCNameClone(mptr, messages[nmessages].message);
-	messages[nmessages].time = MCS_time() + delay / 1000.0;
-	messages[nmessages].id = 0;
-	messages[nmessages++].params = NULL;
+    
+    // Find where in the list to insert the pending message.
+    int t_index;
+    for(t_index = 0; t_index < nmessages; t_index++)
+        if (messages[t_index] . time > time)
+            break;
+    
+    // Move all messages in the range [t_index, nmessages) up one.
+    MCMemoryMove(&messages[t_index + 1], &messages[t_index], (nmessages - t_index) * sizeof(MCMessageList));
+    
+	messages[t_index].object = optr;
+	/* UNCHECKED */ MCNameClone(mptr, messages[t_index].message);
+	messages[t_index].time = time;
+	messages[t_index].id = id;
+	messages[t_index].params = params;
+    
+    nmessages += 1;
+}
+
+// MW-2014-04-16: [[ Bug 11690 ]] Shift a message to a new time in the future.
+int MCUIDC::doshiftmessage(int index, real8 newtime)
+{
+    assert(index < nmessages);
+    
+    // MW-2014-05-14: [[ Bug 12294 ]] Rejigged to correct flaws.
+    
+    // Find the first message after the new time.
+    uindex_t t_index;
+    for(t_index = index; t_index < nmessages - 1; t_index++)
+        if (messages[t_index + 1] . time > newtime)
+            break;
+    
+    if (t_index == index)
+        return index;
+    
+    // Save the current message.
+    MCMessageList t_msg;
+    t_msg = messages[index];
+    
+    // Move all messages in the range [index + 1, t_index) down one.
+    MCMemoryMove(&messages[index], &messages[index + 1], (t_index - index) * sizeof(MCMessageList));
+    
+    // Move the target message to its new location.
+    messages[t_index] = t_msg;
+    messages[t_index] . time = newtime;
+    
+    return t_index;
+}
+
+void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, char *p1, char *p2)
+{
+	MCParameter *params = NULL;
+	if (p1 != NULL)
+	{
+		params = new MCParameter;
+		params->setbuffer(p1, strlen(p1));
+		if (p2 != NULL)
+		{
+			params->setnext(new MCParameter);
+			params->getnext()->setbuffer(p2, strlen(p2));
+		}
+	}
+    
+    doaddmessage(optr, mptr, MCS_time(), ++messageid, params);
+}
+
+void MCUIDC::addmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter *params)
+{
+    uint4 t_id;
+    t_id = ++messageid;
+    doaddmessage(optr, mptr, time, t_id, params);
+    
+	char buffer[U4L];
+	sprintf(buffer, "%u", t_id);
+	MCresult->copysvalue(buffer);
+}
+
+void MCUIDC::addtimer(MCObject *optr, MCNameRef mptr, uint4 delay)
+{
+    // Remove existing message from the queue.
+    cancelmessageobject(optr, mptr);
+    
+    doaddmessage(optr, mptr, MCS_time() + delay / 1000.0, 0, NULL);
 }
 
 void MCUIDC::cancelmessageindex(uint2 i, Boolean dodelete)
@@ -851,9 +975,11 @@ void MCUIDC::cancelmessageindex(uint2 i, Boolean dodelete)
 		}
 		MCNameDelete(messages[i] . message);
 	}
+    
+    // MW-2014-05-14: [[ Bug 12294 ]] Use a memmove here (more efficient as the MCMessageList struct can be moved).
+    MCMemoryMove(&messages[i], &messages[i + 1], (nmessages - (i + 1)) * sizeof(MCMessageList));
+    
 	nmessages--;
-	while (i++ < nmessages)
-		messages[i - 1] = messages[i];
 }
 
 void MCUIDC::cancelmessageid(uint4 id)
@@ -869,11 +995,11 @@ void MCUIDC::cancelmessageid(uint4 id)
 
 void MCUIDC::cancelmessageobject(MCObject *optr, MCNameRef mptr)
 {
-	uint2 i;
-	for (i = 0 ; i < nmessages ; i++)
-		if (messages[i].object == optr
-		        && (mptr == NULL || MCNameIsEqualTo(messages[i].message, mptr, kMCCompareCaseless)))
-			cancelmessageindex(i--, True);
+    // MW-2014-05-14: [[ Bug 12294 ]] Cancel list in reverse order to minimize movement.
+	for (uindex_t i = nmessages ; i > 0 ; i--)
+		if (messages[i - 1].object == optr
+		        && (mptr == NULL || MCNameIsEqualTo(messages[i - 1].message, mptr, kMCCompareCaseless)))
+			cancelmessageindex(i - 1, True);
 }
 
 void MCUIDC::listmessages(MCExecPoint &ep)
@@ -897,70 +1023,60 @@ void MCUIDC::listmessages(MCExecPoint &ep)
 	}
 }
 
-Boolean MCUIDC::handlepending(real8 &curtime, real8 &eventtime,
-                              Boolean dispatch)
+// MW-2014-04-16: [[ Bug 11690 ]] Rework pending message handling to take advantage
+//   of messages[] now being a sorted list.
+Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch)
 {
-	Boolean doneone = False;
-	uint2 mdone = 0;
-	while (nmessages > mdone)
-	{
-		int2 minindex = -1;
-		uint2 i;
-		for (i = 0 ; i < nmessages ; i++)
-			if ((dispatch || messages[i].id == 0)
-			        && (minindex == -1 || messages[i].time < messages[minindex].time))
-				minindex = i;
-		if (minindex == -1)
-			break;
-		if (curtime < messages[minindex].time)
-		{
-			if (eventtime > messages[minindex].time
-			        && (dispatch || messages[minindex].id == 0))
-				eventtime = messages[minindex].time;
-			break;
-		}
-		if (dispatch || messages[minindex].id == 0)
-		{
-			mdone++;
-			if (!dispatch && MCNameIsEqualTo(messages[minindex].message, MCM_idle, kMCCompareCaseless))
-				messages[minindex].time = curtime + ((real8)MCidleRate / 1000.0);
-			else
-			{
-				doneone = True;
-				MCParameter *p = messages[minindex].params;
-				MCNameRef m = messages[minindex].message;
-				MCObject *o = messages[minindex].object;
-				cancelmessageindex(minindex, False);
-				MCSaveprops sp;
-				MCU_saveprops(sp);
-				MCU_resetprops(False);
-				o->timer(m, p);
-				MCU_restoreprops(sp);
-				while (p != NULL)
-				{
-					MCParameter *tmp = p;
-					p = p->getnext();
-					delete tmp;
-				}
-				MCNameDelete(m);
-				curtime = MCS_time();
-			}
-		}
-	}
-	if (moving != NULL)
-		handlemoves(curtime, eventtime);
+    Boolean t_handled;
+    t_handled = False;
+    for(int i = 0; i < nmessages; i++)
+    {
+        // If the next message is later than curtime, we've not processed a message.
+        if (messages[i] . time > curtime)
+            break;
+        
+        if (!dispatch && messages[i] . id == 0 && MCNameIsEqualTo(messages[i] . message, MCM_idle, kMCCompareCaseless))
+        {
+            doshiftmessage(i, curtime + MCidleRate / 1000.0);
+            continue;
+        }
+        
+        if (dispatch || messages[i] . id == 0)
+        {
+            MCParameter *p = messages[i].params;
+            MCNameRef m = messages[i].message;
+            MCObject *o = messages[i].object;
+            cancelmessageindex(i, False);
+            MCSaveprops sp;
+            MCU_saveprops(sp);
+            MCU_resetprops(False);
+            o->timer(m, p);
+            MCU_restoreprops(sp);
+            while (p != NULL)
+            {
+                MCParameter *tmp = p;
+                p = p->getnext();
+                delete tmp;
+            }
+            MCNameDelete(m);
+            curtime = MCS_time();
+            
+            t_handled = True;
+            break;
+        }
+    }
+    
+    if (moving != NULL)
+        handlemoves(curtime, eventtime);
+    
 	real8 stime = IO_cleansockets(curtime);
-	if (stime < eventtime)
-		eventtime = stime;
-	// MW-2012-08-27: [[ Bug ]] Make sure the 'eventtime' is correct - it should be the
-	//   time of the next message to process in the queue.
-	if (doneone)
-	{
-		for(uint32_t i = 0; i < nmessages; i++)
-			if (eventtime > messages[i] . time)
-				eventtime = messages[i] . time;
-	}
-	return doneone;
+    if (stime < eventtime)
+        eventtime = stime;
+    
+    if (nmessages > 0 && messages[0] . time < eventtime)
+        eventtime = messages[0] . time;
+    
+    return t_handled;
 }
 
 void MCUIDC::addmove(MCObject *optr, MCPoint *pts, uint2 npts,
@@ -1278,18 +1394,29 @@ Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
 	return False;
 }
 
-void MCUIDC::dropper(Drawable d, int2 mx, int2 my, MCColor *cptr)
+void MCUIDC::dropper(Window w, int2 mx, int2 my, MCColor *cptr)
 {
 	MCColor newcolor;
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
 	// MW-2012-03-30: [[ Bug ]] On Mac, use the snapshot method to get the mouseColor
 	//   otherwise things fail on Lion.
 	MCRectangle t_rect;
 	MCU_set_rect(t_rect, mx, my, 1, 1);
-	MCBitmap *image = snapshot(t_rect, 0, nil);
-#else
-	MCBitmap *image = getimage(d, mx, my, 1, 1);
-#endif
+	
+	// IM-2013-07-30: [[ Bug 11018 ]] if the target is a window, then convert local coords to global
+	if (w != nil)
+	{
+		MCRectangle t_stack_rect;
+		MCStack *t_stack;
+		t_stack = MCdispatcher->findstackd(w);
+		if (t_stack != nil)
+		{
+			t_stack_rect = t_stack->getrect();
+			t_rect.x += t_stack_rect.x;
+			t_rect.y += t_stack_rect.y;
+		}
+	}
+	
+	MCImageBitmap *image = snapshot(t_rect, 0, nil, nil);
 
 	// If fetching the mouse pixel fails, then just return black.
 	if (image == NULL)
@@ -1298,8 +1425,8 @@ void MCUIDC::dropper(Drawable d, int2 mx, int2 my, MCColor *cptr)
 		return;
 	}
 
-	newcolor.pixel = getpixel(image, 0, 0);
-	destroyimage(image);
+	newcolor.pixel = MCImageBitmapGetPixel(image, 0, 0);
+	MCImageFreeBitmap(image);
 	querycolor(newcolor);
 	if (cptr != NULL)
 		*cptr = newcolor;
@@ -1308,14 +1435,15 @@ void MCUIDC::dropper(Drawable d, int2 mx, int2 my, MCColor *cptr)
 		alloccolor(newcolor);
 		if (MCmodifierstate & MS_CONTROL)
 		{
-			if (MCbrushpm != DNULL)
-				MCpatterns->freepat(MCbrushpm);
+			if (MCbrushpattern != nil)
+				MCpatternlist->freepat(MCbrushpattern);
+
 			MCbrushcolor = newcolor;
 		}
 		else
 		{
-			if (MCpenpm != DNULL)
-				MCpatterns->freepat(MCpenpm);
+			if (MCpenpattern != nil)
+				MCpatternlist->freepat(MCpenpattern);
 			MCpencolor = newcolor;
 		}
 	}
@@ -1444,493 +1572,6 @@ void MCUIDC::getcolornames(MCExecPoint &ep)
 		ep.concatcstring(color_table[i].token, EC_RETURN, i == 0);
 }
 
-uint4 MCUIDC::getpixel(MCBitmap *image, int2 x, int2 y)
-{
-	switch (image->bits_per_pixel)
-	{
-	case 1:
-		{
-			uint1 bit = 0x80 >> (x & 0x7);
-			uint4 offset = y * image->bytes_per_line + (x >> 3);
-			uint1 byte = image->data[offset] & bit ? 1 : 0;
-			uint4 planesize = image->bytes_per_line * image->height;
-			uint2 j = image->depth;
-			while (--j)
-			{
-				offset += planesize;
-				byte <<= 1;
-				byte |= image->data[offset] & bit ? 1 : 0;
-			}
-			return (uint4)byte;
-		}
-	case 2:
-		{
-			uint1 *qptr = (uint1 *)&image->data[y * image->bytes_per_line
-			                                    + (x >> 2)];
-			return (uint4)(*qptr >> 2 * (x & 3) & 0x03);
-		}
-	case 4:
-		{
-			uint1 *halfptr = (uint1 *)&image->data[y * image->bytes_per_line
-			                                       + (x >> 1)];
-			return (uint4)(*halfptr >> 4 * (x & 1) & 0x0F);
-		}
-	case 8:
-		{
-			uint1 *oneptr = (uint1 *)&image->data[y * image->bytes_per_line + x];
-			return *oneptr;
-		}
-	case 16:
-		{
-			uint2 *twoptr = (uint2 *)&image->data[y * image->bytes_per_line
-			                                      + (x << 1)];
-			return (uint4)*twoptr;
-		}
-	case 32:
-		{
-			uint4 *fourptr = (uint4 *)&image->data[y * image->bytes_per_line
-			                                       + (x << 2)];
-			return *fourptr;
-		}
-	default:
-		break;
-	}
-	fprintf(stderr, "MCImage: ERROR unsupported depth %d\n",
-	        image->bits_per_pixel);
-	return 0;
-}
-
-void MCUIDC::setpixel(MCBitmap *image, int2 x, int2 y, uint4 pixel)
-{
-	switch (image->bits_per_pixel)
-	{
-	case 1:
-		{
-			uint1 bit = 0x80 >> (x & 0x7);
-			uint4 offset = y * image->bytes_per_line + (x >> 3);
-			if(pixel)
-				image->data[offset] |= bit;
-			else
-				image->data[offset] &= ~bit;
-		}
-		break;
-	case 4:
-		break;
-	case 8:
-		{
-			uint1 *oneptr = (uint1 *)&image->data[y * image->bytes_per_line + x];
-			*oneptr = pixel;
-		}
-		break;
-	case 16:
-		{
-			uint2 *twoptr = (uint2 *)&image->data[y * image->bytes_per_line
-			                                      + (x << 1)];
-			*twoptr = pixel;
-		}
-		break;
-	case 32:
-		{
-			uint4 *fourptr = (uint4 *)&image->data[y * image->bytes_per_line
-			                                       + (x << 2)];
-			*fourptr = pixel;
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-void MCUIDC::getfixed(uint2 &rs, uint2 &gs, uint2 &bs,
-                      uint2 &rb, uint2 &gb, uint2 &bb)
-{
-	rs = redshift;
-	gs = greenshift;
-	bs = blueshift;
-	rb = redbits;
-	gb = greenbits;
-	bb = bluebits;
-}
-
-static int ReadInteger(const char *string, const char **NextString)
-{
-	int Result = 0;
-	int Sign = 1;
-	if (*string == '+')
-		string++;
-	else
-		if (*string == '-')
-		{
-			string++;
-			Sign = -1;
-		}
-	for (; (*string >= '0') && (*string <= '9'); string++)
-		Result = (Result * 10) + (*string - '0');
-	*NextString = string;
-	if (Sign >= 0)
-		return Result;
-	else
-		return -Result;
-}
-
-Boolean MCUIDC::position(const char *geom, MCRectangle &rect)
-{
-	unsigned int tempWidth, tempHeight;
-	int tempX, tempY;
-	const char *nextCharacter;
-
-	if (geom == NULL || *geom == '\0')
-		return False;
-	if (*geom == '=')
-		geom++;  /* ignore possible '=' at beg of geometry spec */
-
-	if (*geom != '+' && *geom != '-' && *geom != 'x')
-	{
-		tempWidth = ReadInteger(geom, &nextCharacter);
-		if (geom == nextCharacter)
-			return False;
-		geom = nextCharacter;
-		rect.width = tempWidth;
-	}
-	if (*geom == 'x' || *geom == 'X')
-	{
-		geom++;
-		tempHeight = ReadInteger(geom, &nextCharacter);
-		if (geom == nextCharacter)
-			return False;
-		geom = nextCharacter;
-		rect.height = tempHeight;
-	}
-	if (*geom == '+' || *geom == '-')
-	{
-		if (*geom == '-')
-		{
-			geom++;
-			tempX = -ReadInteger(geom, &nextCharacter);
-			if (geom == nextCharacter)
-				return False;
-			geom = nextCharacter;
-			rect.x = MCscreen->getwidth() - rect.width + tempX;
-		}
-		else
-		{
-			geom++;
-			tempX = ReadInteger(geom, &nextCharacter);
-			if (geom == nextCharacter)
-				return False;
-			geom = nextCharacter;
-			rect.x = tempX;
-		}
-		if (*geom == '+' || *geom == '-')
-		{
-			if (*geom == '-')
-			{
-				geom++;
-				tempY = -ReadInteger(geom, &nextCharacter);
-				if (geom == nextCharacter)
-					return False;
-				geom = nextCharacter;
-				rect.y = MCscreen->getheight() - rect.height + tempY;
-			}
-			else
-			{
-				geom++;
-				tempY = ReadInteger(geom, &nextCharacter);
-				if (geom == nextCharacter)
-					return False;
-				geom = nextCharacter;
-				rect.y = tempY;
-			}
-		}
-	}
-	if (*geom != '\0')
-		return False;
-	return True;
-}
-
-static void scaleline1(uint1 *s, uint1 *d, uint2 sw, uint2 dw)
-{
-	uint1 sbyte = *s++;
-	uint1 dbyte = 0;
-	uint1 sbit = 0x80;
-	uint1 dbit = 0x80;
-	if (sw > dw)
-	{
-		int2 xe2 = dw << 1;
-		int2 xe = xe2 - sw;
-		int2 xe1 = xe - sw;
-		while (sw--)
-		{
-			if (xe >= 0)
-			{
-				if (sbyte & sbit)
-					dbyte |= dbit;
-				dbit >>= 1;
-				if (!dbit)
-				{
-					dbit = 0x80;
-					*d++ = dbyte;
-					dbyte = 0;
-				}
-				xe += xe1;
-			}
-			else
-				xe += xe2;
-			sbit >>= 1;
-			if (!sbit)
-			{
-				sbit = 0x80;
-				sbyte = *s++;
-			}
-		}
-	}
-	else
-	{
-		int2 xe2 = (sw - 1) << 1;
-		int2 xe = xe2 - dw;
-		int2 xe1 = xe - dw;
-		while (dw--)
-		{
-			if (sbyte & sbit)
-				dbyte |= dbit;
-			dbit >>= 1;
-			if (!dbit)
-			{
-				dbit = 0x80;
-				*d++ = dbyte;
-				dbyte = 0;
-			}
-			if (xe >= 0)
-			{
-				sbit >>= 1;
-				if (!sbit)
-				{
-					sbit = 0x80;
-					sbyte = *s++;
-				}
-				xe += xe1;
-			}
-			else
-				xe += xe2;
-		}
-	}
-	if (dbit != 0x80)
-		*d = dbyte;
-}
-
-static void scaleline8(uint1 *s, uint1 *d, uint2 sw, uint2 dw)
-{
-	if (sw > dw)
-	{
-		int2 xe2 = dw << 1;
-		int2 xe = xe2 - sw;
-		int2 xe1 = xe - sw;
-		while (sw--)
-		{
-			if (xe >= 0)
-			{
-				*d++ = *s;
-				xe += xe1;
-			}
-			else
-				xe += xe2;
-			s++;
-		}
-	}
-	else
-	{
-		int2 xe2 = (sw - 1) << 1;
-		int2 xe = xe2 - dw;
-		int2 xe1 = xe - dw;
-		while (dw--)
-		{
-			*d++ = *s;
-			if (xe >= 0)
-			{
-				s++;
-				xe += xe1;
-			}
-			else
-				xe += xe2;
-		}
-	}
-}
-
-static void scaleline16(uint2 *s, uint2 *d, uint2 sw, uint2 dw)
-{
-	if (sw > dw)
-	{
-		int2 xe2 = dw << 1;
-		int2 xe = xe2 - sw;
-		int2 xe1 = xe - sw;
-		while (sw--)
-		{
-			if (xe >= 0)
-			{
-				*d++ = *s;
-				xe += xe1;
-			}
-			else
-				xe += xe2;
-			s++;
-		}
-	}
-	else
-	{
-		int2 xe2 = (sw - 1) << 1;
-		int2 xe = xe2 - dw;
-		int2 xe1 = xe - dw;
-		while (dw--)
-		{
-			*d++ = *s;
-			if (xe >= 0)
-			{
-				s++;
-				xe += xe1;
-			}
-			else
-				xe += xe2;
-		}
-	}
-}
-
-static void scaleline32(uint4 *s, uint4 *d, uint2 sw, uint2 dw)
-{
-	if (sw > dw)
-	{
-		int2 xe2 = dw << 1;
-		int2 xe = xe2 - sw;
-		int2 xe1 = xe - sw;
-		while (sw--)
-		{
-			if (xe >= 0)
-			{
-				*d++ = *s;
-				xe += xe1;
-			}
-			else
-				xe += xe2;
-			s++;
-		}
-	}
-	else
-	{
-		int2 xe2 = (sw - 1) << 1;
-		int2 xe = xe2 - dw;
-		int2 xe1 = xe - dw;
-		while (dw--)
-		{
-			*d++ = *s;
-			if (xe >= 0)
-			{
-				s++;
-				xe += xe1;
-			}
-			else
-				xe += xe2;
-		}
-	}
-}
-
-void MCUIDC::scaleimage(MCBitmap *source, MCBitmap *dest)
-{
-	uint1 *sptr = (uint1 *)source->data;
-	uint1 *dptr = (uint1 *)dest->data;
-	//return;
-	if (source->height >= dest->height)
-	{
-		int2 ye2 = dest->height << 1;
-		int2 ye = ye2 - source->height;
-		int2 ye1 = ye - source->height;
-		uint2 y = source->height;
-		while (y--)
-		{
-			if (ye >= 0)
-			{
-				switch (source->bits_per_pixel)
-				{
-				case 1:
-					scaleline1(sptr, dptr, source->width, dest->width);
-					break;
-				case 2:
-					scaleline8(sptr, dptr, source->width >> 2, dest->width >> 2);
-					break;
-				case 4:
-					scaleline8(sptr, dptr, source->width >> 1, dest->width >> 1);
-					break;
-				case 8:
-					scaleline8(sptr, dptr, source->width, dest->width);
-					break;
-				case 16:
-					scaleline16((uint2 *)sptr, (uint2 *)dptr, source->width, dest->width);
-					break;
-				case 32:
-					scaleline32((uint4 *)sptr, (uint4 *)dptr, source->width, dest->width);
-					break;
-				}
-				dptr += dest->bytes_per_line;
-				ye += ye1;
-			}
-			else
-				ye += ye2;
-			sptr += source->bytes_per_line;
-		}
-	}
-	else
-	{
-		int2 ye2 = source->height << 1;
-		int2 ye = ye2 - dest->height;
-		int2 ye1 = ye - dest->height;
-		uint2 y = dest->height;
-		Boolean first = True;
-		while (y--)
-		{
-			if (ye >= 0 || first)
-			{
-				switch (source->bits_per_pixel)
-				{
-				case 1:
-					scaleline1(sptr, dptr, source->width, dest->width);
-					break;
-				case 2:
-					scaleline8(sptr, dptr, source->width >> 2, dest->width >> 2);
-					break;
-				case 4:
-					scaleline8(sptr, dptr, source->width >> 1, dest->width >> 1);
-					break;
-				case 8:
-					scaleline8(sptr, dptr, source->width, dest->width);
-					break;
-				case 16:
-					scaleline16((uint2 *)sptr, (uint2 *)dptr,
-					            source->width, dest->width);
-					break;
-				case 32:
-					scaleline32((uint4 *)sptr, (uint4 *)dptr,
-					            source->width, dest->width);
-					break;
-				}
-				sptr += source->bytes_per_line;
-				if (first)
-				{
-					first = False;
-					dptr += dest->bytes_per_line;
-					ye += ye1;
-					continue;
-				}
-			}
-			if (ye >= 0)
-				ye += ye1;
-			else
-			{
-				memcpy(dptr, dptr - dest->bytes_per_line, dest->bytes_per_line);
-				ye += ye2;
-			}
-			dptr += dest->bytes_per_line;
-		}
-	}
-}
-
 void MCUIDC::seticon(uint4 p_icon)
 {
 }
@@ -2008,6 +1649,18 @@ bool MCUIDC::setclipboard(MCPasteboard *p_pasteboard)
 	return false;
 }
 
+
+// TD-2013-07-01: [[ DynamicFonts ]]
+bool MCUIDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
+{
+	return false;
+}
+
+bool MCUIDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
+{
+	return false;
+}
+
 //
 
 MCDragAction MCUIDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
@@ -2037,11 +1690,3 @@ char *MCUIDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p
 {
 	return nil;
 }
-
-//
-
-MCStack *MCUIDC::getstackatpoint(int32_t x, int32_t y)
-{
-	return nil;
-}
-

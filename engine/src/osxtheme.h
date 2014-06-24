@@ -23,22 +23,23 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 struct MCThemeDrawInfo
 {
+	MCRectangle dest;
 	union
 	{
 		struct
 		{
-			ThemeTrackDrawInfo info;
+			HIThemeTrackDrawInfo info;
 			ItemCount count;
 		} slider;
 		
 		struct
 		{
-			ThemeTrackDrawInfo info;
+			HIThemeTrackDrawInfo info;
 		} progress;
 		
 		struct
 		{
-			ThemeTrackDrawInfo info;
+			HIThemeTrackDrawInfo info;
 			Boolean horizontal;
 		} scrollbar;
 		

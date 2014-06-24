@@ -101,6 +101,9 @@ public:
 
 	// Returns true if this chunk is of text type and stops at line
 	bool islinechunk(void) const;
+	
+	// Returns true if this chunk is a var, or indexed var
+	bool isvarchunk(void) const;
 
 	// Returns the field, part and range of the text chunk
 	Exec_stat marktextchunk(MCExecPoint& ep, MCField*& r_field, uint4& r_part, uint4& r_start, uint4& r_end);

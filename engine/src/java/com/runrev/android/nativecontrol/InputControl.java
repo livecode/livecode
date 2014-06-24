@@ -125,7 +125,8 @@ class InputControl extends NativeControl
     
     public void setTextSize(int p_size)
     {
-        m_text_view.setTextSize(TypedValue.COMPLEX_UNIT_PT, p_size);
+        // AL-2013-08-02: [[ Bug 11080 ]] Android input field fontSize setting value in incorrect units
+        m_text_view.setTextSize(TypedValue.COMPLEX_UNIT_DIP, p_size);
     }
     
     public void setMultiLine(boolean p_multiline)

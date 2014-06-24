@@ -115,6 +115,9 @@ MCParagraph::MCParagraph()
 	opened = 0;
 	startindex = endindex = originalindex = MAXUINT2;
 	state = 0;
+	
+	// MP-2013-09-02: [[ FasterField ]] Paragraphs start off needing layout.
+	needs_layout = true;
 
 	// MW-2012-01-25: [[ ParaStyles ]] All attributes are unset to begin with.
 	attrs = nil;
@@ -155,6 +158,9 @@ MCParagraph::MCParagraph(const MCParagraph &pref) : MCDLlist(pref)
 	startindex = endindex = originalindex = MAXUINT2;
 	opened = 0;
 	state = 0;
+	
+	// MP-2013-09-02: [[ FasterField ]] Paragraphs start off needing layout.
+	needs_layout = true;
 }
 
 MCParagraph::~MCParagraph()
@@ -272,6 +278,9 @@ IO_stat MCParagraph::load(IO_handle stream, const char *version, bool is_ext)
 			return IO_NORMAL;
 		}
 	}
+	
+	// MP-2013-09-02: [[ FasterField ]] Once loaded, the paragraph will need layout.
+	needs_layout = true;
 
 	return IO_NORMAL;
 }
@@ -414,7 +423,11 @@ bool MCParagraph::recomputefonts(MCFontRef p_parent_font)
 		t_block = t_block -> next();
 	}
 	while(t_block != blocks);
-
+	
+	// MP-2013-09-02: [[ FasterField ]] If any of the blocks have changed, layout is required.
+	if (t_changed)
+		needs_layout = true;
+	
 	return t_changed;
 }
 
@@ -461,6 +474,9 @@ void MCParagraph::deletelines()
 		MCLine *lptr = lines->remove(lines);
 		delete lptr;
 	}
+	
+	// MP-2013-09-02: [[ FasterField ]] Deleting the lines means layout is needed.
+	needs_layout = true;
 }
 
 // **** mutate blocks
@@ -473,6 +489,9 @@ void MCParagraph::deleteblocks()
 	}
 
 	state |= PS_LINES_NOT_SYNCHED;
+	
+	// MP-2013-09-02: [[ FasterField ]] Deleting the blocks means layout is needed.
+	needs_layout = true;
 }
 
 //clear blocks with the same attributes
@@ -513,17 +532,29 @@ void MCParagraph::defrag()
 	if (t_blocks_changed)
 	{
 		state |= PS_LINES_NOT_SYNCHED;
+		
+		// MP-2013-09-02: [[ FasterField ]] If we've changed the blocks, the lines need recomputed.
+		needs_layout = true;
 	}
 }
 
 // MW-2012-01-25: [[ ParaStyles ]] This method causes a reflow of the paragraph depending
 //   on the setting of 'dontWrap'.
-void MCParagraph::layout()
+void MCParagraph::layout(bool p_force)
 {
+	// MP-2013-09-02: [[ FasterField ]] If we don't need layout, and layout isn't being forced,
+	//   do nothing.
+	if (!needs_layout && !p_force)
+		return;
+
 	if (getdontwrap())
 		noflow();
 	else
 		flow();
+	
+	// MP-2013-09-02: [[ FasterField ]] We've layed out the paragraph, so it doesn't need to
+	//   be again until mutated.
+	needs_layout = false;
 }
 
 //reflow paragraph with wrapping
@@ -601,13 +632,6 @@ void MCParagraph::noflow(void)
 			MCLine *lptr = lines->remove(lines);
 			delete lptr;
 		}
-	MCBlock *bptr = blocks;
-	do
-	{
-		bptr->reset();
-		bptr = bptr->next();
-	}
-	while (bptr != blocks);
 	lines->appendall(blocks);
 
 	// MW-2012-02-10: [[ FixedTable ]] If there is a non-zero table width then
@@ -946,18 +970,18 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 					//   list labels.
 					if (IsMacLF() && !parent->isautoarm())
 					{
-						Pixmap p;
+						MCPatternRef t_pattern;
 						int2 x, y;
 						MCColor fc, hc;
-						parent->getforecolor(DI_FORE, False, True, fc, p, x, y, dc, parent);
-						parent->getforecolor(DI_HILITE, False, True, hc, p, x, y, dc, parent);
+						parent->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc, parent);
+						parent->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc, parent);
 						if (hc.pixel == fc.pixel)
 							parent->setforeground(dc, DI_BACK, False, True);
 					}
 					else
 						parent->setforeground(dc, DI_BACK, False, True);
 				}
-				MCFontDrawText(parent -> getfontref(), t_string, t_string_length, t_is_unicode, dc, t_current_x - getlistlabelwidth(), t_current_y + ascent - 1, false);
+                dc -> drawtext(t_current_x - getlistlabelwidth(), t_current_y + ascent - 1, t_string, t_string_length, parent-> getfontref(), false, t_is_unicode);
 				if ((state & PS_FRONT) != 0 && this != parent -> getparagraphs())
 					parent -> setforeground(dc, DI_FORE, False, True);
 			}
@@ -1018,10 +1042,12 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 				//   sure we adjust the prev inner rect for padding.
 				// MW-2012-03-19: [[ Bug 10069 ]] Make sure the appropriate h/v padding is used to
 				//   adjust the rect.
-				t_prev_inner . x = t_inner_rect . x - prev() -> gethpadding();
-				t_prev_inner . width = t_inner_rect . width + 2 * prev() -> gethpadding();
-				t_prev_inner . y = t_inner_rect . y - prev() -> getvpadding();
-				t_prev_inner . height = t_inner_rect . height + 2 * prev() -> getvpadding();
+				// MW-2013-08-08: [[ Bug 10616 ]] Previously was making t_prev_inner equal to t_inner_rect
+				//   adjusted for padding, causing incorrect length of hline.
+				t_prev_inner . x = t_prev_inner . x - prev() -> gethpadding();
+				t_prev_inner . width = t_prev_inner . width + 2 * prev() -> gethpadding();
+				t_prev_inner . y = t_prev_inner . y - prev() -> getvpadding();
+				t_prev_inner . height = t_prev_inner . height + 2 * prev() -> getvpadding();
 				
 				// MW-2012-02-10: [[ FixedTable ]] Adjust the outer rect to take into account any
 				//   fixed width table mode.
@@ -1087,7 +1113,9 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 				//   table mode, we are done.
 				// MW-2013-05-20: [[ Bug 10878 ]] Tweaked conditions to work for min two tabStops
 				//   rather than 3.
-				if (ct >= nt - 2 && t[nt - 2] == t[nt - 1])
+                // MW-2015-05-28: [[ Bug 12341 ]] Only stop rendering lines if in 'fixed width table'
+                //   mode - indicated by the last two tabstops being the same.
+				if (nt >= 2 && t[nt - 1] == t[nt - 2] && ct == nt - 1)
 					break;
 			}
 		}
@@ -1096,15 +1124,22 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	}
 }
 
-Boolean MCParagraph::getatts(uint2 si, uint2 ei, Font_textstyle textstyle, const char *&fname,
+// PM-2014-04-10: [[Bug 11933]] Added a "Properties which" parameter. Previously this function was
+// returning True if any of the properties are set - rather than just the one that is being processed
+// (as specified by which). This had as a result that when the "effective" property of a chunk was queried,
+// empty was returned if the specified property was not set, instead of the nearest parent's property which has it set.
+Boolean MCParagraph::getatts(uint2 si, uint2 ei, Properties which, Font_textstyle textstyle, const char *&fname,
                              uint2 &size, uint2 &fstyle, const MCColor *&color,
                              const MCColor *&backcolor, int2 &shift, bool& specstyle,
                              uint2 &mixed)
-{
-	Boolean ahas = False;
-	Boolean chas = False;
-	Boolean bchas = False;
-	Boolean shas = False;
+{			    
+    Boolean has_font = False;
+    Boolean has_size = False;
+    Boolean has_style = False;
+	Boolean has_forecolor = False;
+	Boolean has_backcolor = False;
+	Boolean has_shift = False;
+    
 	const char *defname = fname;
 	uint2 defsize = size;
 	uint2 defstyle = fstyle;
@@ -1138,121 +1173,186 @@ Boolean MCParagraph::getatts(uint2 si, uint2 ei, Font_textstyle textstyle, const
 	
 	do
 	{
-		const char *tname;
-		uint2 tsize;
-		uint2 tstyle;
-		bool tspecstyle;
-
-		// MW-2012-02-17: [[ SplitTextAttrs ]] Get any font attrs the block has.
-		if (bptr -> gettextfont(tname))
-		{
-			if (bptr == startptr)
-				fname = tname;
-			ahas = True;
-		}
-		else
-			tname = defname;
-
-		if (bptr -> gettextsize(tsize))
-		{
-			if (bptr == startptr)
-				size = tsize;
-			ahas = True;
-		}
-		else
-			tsize = defsize;
-
-		if (bptr -> gettextstyle(tstyle))
-		{
-			tspecstyle = MCF_istextstyleset(tstyle, textstyle);
-			if (bptr == startptr)
-			{
-				fstyle = tstyle;
-				specstyle = tspecstyle;
-			}
-			ahas = True;
-		}
-		else
-			tstyle = defstyle, tspecstyle = defspecstyle;
-
-		if (ahas)
-		{
-			if (fname != tname)
-				mixed |= MIXED_NAMES;
-			if (tsize != size)
-				mixed |= MIXED_SIZES;
-			if (tstyle != fstyle)
-				mixed |= MIXED_STYLES;
-			if (tspecstyle != specstyle)
-				mixed |= MIXED_SPEC_STYLE;
-		}
-		const MCColor *tcolor = color;
-		if (bptr->getcolor(tcolor))
-			if (chas)
-			{
-				if (tcolor->red != color->red || tcolor->green != color->green
-				        || tcolor->blue != color->blue)
-					mixed |= MIXED_COLORS;
-			}
-			else
-			{
-				if (bptr != startptr)
-					mixed |= MIXED_COLORS;
-				chas = True;
-				color = tcolor;
-			}
-		else
-			if (chas)
-				mixed |= MIXED_COLORS;
-
-		const MCColor *btcolor = color;
-		if (bptr->getbackcolor(btcolor))
-			if (bchas)
-			{
-				if (btcolor->red != backcolor->red
-				        || btcolor->green != backcolor->green
-				        || btcolor->blue != backcolor->blue)
-					mixed |= MIXED_COLORS;
-			}
-			else
-			{
-				if (bptr != startptr)
-					mixed |= MIXED_COLORS;
-				bchas = True;
-				backcolor = btcolor;
-			}
-		else
-			if (bchas)
-				mixed |= MIXED_COLORS;
-		int2 tshift;
-		if (bptr->getshift(tshift))
-			if (shas)
-			{
-				if (tshift != shift)
-					mixed |= MIXED_SHIFT;
-			}
-			else
-			{
-				if (bptr != startptr)
-					mixed |= MIXED_SHIFT;
-				shas = True;
-				shift = tshift;
-			}
-		else
-			if (shas)
-				mixed |= MIXED_SHIFT;
+        switch (which)
+        {
+            case P_TEXT_FONT:
+                {
+                    const char *tname;
+                    if (bptr -> gettextfont(tname))
+                    {
+                        if (bptr == startptr)
+                            fname = tname;
+                        has_font = True;
+                    }
+                    else
+                        tname = defname;
+                    
+                    if (has_font)
+                        if (fname != tname)
+                            mixed |= MIXED_NAMES;
+                }
+                break;
+                
+            case P_TEXT_SIZE:
+                {
+                    uint2 tsize;
+                    if (bptr -> gettextsize(tsize))
+                    {
+                        if (bptr == startptr)
+                            size = tsize;
+                        has_size = True;
+                    }
+                    else
+                        tsize = defsize;
+                    
+                    if (has_size)
+                        if (tsize != size)
+                            mixed |= MIXED_SIZES;
+                }
+                break;
+            
+            case P_TEXT_STYLE:
+                {
+                    uint2 tstyle;
+                    bool tspecstyle;
+                    if (bptr -> gettextstyle(tstyle))
+                    {
+                        tspecstyle = MCF_istextstyleset(tstyle, textstyle);
+                        if (bptr == startptr)
+                        {
+                            fstyle = tstyle;
+                            specstyle = tspecstyle;
+                        }
+                        has_style = True;
+                    }
+                    else
+                        tstyle = defstyle, tspecstyle = defspecstyle;
+                    
+                    if (has_style)
+                    {
+                        if (tstyle != fstyle)
+                            mixed |= MIXED_STYLES;
+                        if (tspecstyle != specstyle)
+                            mixed |= MIXED_SPEC_STYLE;
+                    }
+                }
+                break;
+            
+            case P_FORE_COLOR:
+                {
+                    const MCColor *tcolor = color;
+                    if (bptr->getcolor(tcolor))
+                        if (has_forecolor)
+                        {
+                            if (tcolor->red != color->red || tcolor->green != color->green
+                                || tcolor->blue != color->blue)
+                                mixed |= MIXED_COLORS;
+                        }
+                        else
+                        {
+                            if (bptr != startptr)
+                                mixed |= MIXED_COLORS;
+                            has_forecolor = True;
+                            color = tcolor;
+                        }
+                        else
+                            if (has_forecolor)
+                                mixed |= MIXED_COLORS;
+                }
+                break;
+            
+            case P_BACK_COLOR:
+                {
+                    const MCColor *btcolor = color;
+                    if (bptr->getbackcolor(btcolor))
+                        if (has_backcolor)
+                        {
+                            if (btcolor->red != backcolor->red
+                                || btcolor->green != backcolor->green
+                                || btcolor->blue != backcolor->blue)
+                                mixed |= MIXED_COLORS;
+                        }
+                        else
+                        {
+                            if (bptr != startptr)
+                                mixed |= MIXED_COLORS;
+                            has_backcolor = True;
+                            backcolor = btcolor;
+                        }
+                        else
+                            if (has_backcolor)
+                                mixed |= MIXED_COLORS;
+                }
+                break;
+            
+            case P_TEXT_SHIFT:
+                {
+                    int2 tshift;
+                    if (bptr->getshift(tshift))
+                        if (has_shift)
+                        {
+                            if (tshift != shift)
+                                mixed |= MIXED_SHIFT;
+                        }
+                        else
+                        {
+                            if (bptr != startptr)
+                                mixed |= MIXED_SHIFT;
+                            has_shift = True;
+                            shift = tshift;
+                        }
+                        else
+                            if (has_shift)
+                                mixed |= MIXED_SHIFT;
+                }
+                break;
+            
+            default:
+                break;
+                
+            
+                
+        }
+		
 		bptr->getindex(i, l);
 		bptr = bptr->next();
-	}
+    }
 	while (i + l < ei);
 	
-	return ahas || chas || bchas || shas;
+	switch (which)
+    {
+        case P_TEXT_FONT:
+            return has_font;
+                    
+        case P_TEXT_SIZE:
+            return has_size;
+            
+        case P_TEXT_STYLE:
+            return has_style;
+            
+        case P_FORE_COLOR:
+            return has_forecolor;
+            
+        case P_BACK_COLOR:
+            return has_backcolor;
+            
+        case P_TEXT_SHIFT:
+            return has_shift;
+            
+        default:
+            return False;
+    }
+    
 }
 
 void MCParagraph::setatts(uint2 si, uint2 ei, Properties p, void *value, bool p_from_html)
 {
 	bool t_blocks_changed;
 	t_blocks_changed = false;
+	
+	// MP-2013-09-02: [[ FasterField ]] Keep track of changes.
+	bool t_needs_layout;
+	t_needs_layout = false;
 
 	defrag();
 	MCBlock *bptr = indextoblock(si, False);
@@ -1294,10 +1394,15 @@ void MCParagraph::setatts(uint2 si, uint2 ei, Properties p, void *value, bool p_
 			break;
 		case P_TEXT_SHIFT:
 			bptr->setshift((uint4)(intptr_t)value);
+			// MP-2013-09-02: [[ FasterField ]] Shifting requires layout change.
+			t_needs_layout = true;
 			break;
 		case P_IMAGE_SOURCE:
 			{
 				bptr->setatts(p, value);
+				
+				// MP-2013-09-02: [[ FasterField ]] Image source changes require layout change.
+				t_needs_layout = true;
 				
 				// MW-2008-04-03: [[ Bug ]] Only add an extra block if this is coming from
 				//   html parsing.
@@ -1317,6 +1422,9 @@ void MCParagraph::setatts(uint2 si, uint2 ei, Properties p, void *value, bool p_
 			break;
 		default:
 			bptr->setatts(p, value);
+				
+			// MP-2013-09-02: [[ FasterField ]] Block attribute changes need layout.
+			t_needs_layout = true;
 			break;
 		}
 		// MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
@@ -1330,6 +1438,13 @@ void MCParagraph::setatts(uint2 si, uint2 ei, Properties p, void *value, bool p_
 	if (t_blocks_changed)
 	{
 		state |= PS_LINES_NOT_SYNCHED;
+	}
+	
+	// MP-2013-09-02: [[ FasterField ]] If attributes on existing blocks needing layout changed,
+	//   or the blocks themselves changed, we need layout.
+	if (t_needs_layout || t_blocks_changed)
+	{
+		needs_layout = true;
 	}
 }
 
@@ -1491,7 +1606,9 @@ void MCParagraph::join()
 
 	if (gettextsizecr() + pgptr->textsize > buffersize)
 	{
-		buffersize += pgptr->gettextsizecr() + PG_PAD;
+		// FG-2013-09-20 [[ Bugfix 11191 ]]
+		// Buffer was being set to wrong size (didn't include size of existing text)
+		buffersize = textsize + pgptr->gettextsizecr() + PG_PAD;
 		buffersize &= PG_MASK;
 		text = new char[buffersize];
 		memcpy(text, oldtext, textsize);
@@ -1514,6 +1631,9 @@ void MCParagraph::join()
 	delete pgptr;
 	clearzeros();
 	deletelines();
+	
+	// MP-2013-09-02: [[ FasterField ]] Joining two paragraphs requires layout.
+	needs_layout = true;
 }
 
 void MCParagraph::split() //split paragraphs on return
@@ -1567,6 +1687,9 @@ void MCParagraph::split() //split paragraphs on return
 		pgptr->open(parent -> getfontref());
 	append(pgptr);
 	deletelines();
+	
+	// MP-2013-09-02: [[ FasterField ]] Splitting a paragraph requires layout.
+	needs_layout = true;
 }
 
 void MCParagraph::deletestring(uint2 si, uint2 ei)
@@ -1630,6 +1753,9 @@ void MCParagraph::deletestring(uint2 si, uint2 ei)
 	clearzeros();
 
 	state |= PS_LINES_NOT_SYNCHED;
+	
+	// MP-2013-09-02: [[ FasterField ]] Deleting a string requires layout.
+	needs_layout = true;
 }
 
 MCParagraph *MCParagraph::copystring(uint2 si, uint2 ei)
@@ -1791,6 +1917,9 @@ void MCParagraph::finsertnobreak(const MCString& p_text, bool p_is_unicode)
 	}
 
 	delete t_native_text;
+	
+	// MP-2013-09-02: [[ FasterField ]] Inserting text requires layout.
+	needs_layout = true;
 }
 
 // MW-2012-02-13: [[ Block Unicode ]] New implementation of finsert which understands unicodeness.
@@ -3316,7 +3445,7 @@ bool MCParagraph::getflagstate(uint32_t flag, uint2 si, uint2 ei, bool& r_state)
 // This method accumulates the ranges of the paragraph that have 'flagged' set
 // to true. The output is placed in ep as a return-delimited list, with indices
 // adjusted by the 'delta'.
-void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, uint2 si, uint2 ei, int32_t p_delta)
+void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, uint2 si, uint2 ei, int32_t p_paragraph_start)
 {
 	// If the paragraph is empty, there is nothing to do.
 	if (textsize == 0)
@@ -3365,10 +3494,10 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, uint2 si
 				
 				// MW-2012-02-24: [[ FieldChars ]] Map the field indices back to char indices.
 				int32_t t_start, t_end;
-				t_start = t_flagged_start;
-				t_end = t_flagged_end;
+				t_start = p_paragraph_start + t_flagged_start;
+				t_end = p_paragraph_start + t_flagged_end;
 				parent -> unresolvechars(p_part_id, t_start, t_end);
-				ep.appendstringf("%d,%d", t_start + p_delta + 1, t_end + p_delta);
+				ep.appendstringf("%d,%d", t_start + 1, t_end);
 
 				t_flagged_start = t_flagged_end = -1;
 			}
@@ -3419,8 +3548,9 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 }
 
 // JS-2013-05-15: [[ PageRanges ]] pagerange as variant of pageheight
+// MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indicies.
 Boolean MCParagraph::pagerange(uint2 fixedheight, uint2 &theight,
-                               uint2 &tend, MCLine *&lptr)
+                               uint4 &tend, MCLine *&lptr)
 {
 	if (lptr == NULL)
 		lptr = lines;

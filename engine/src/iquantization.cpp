@@ -260,25 +260,24 @@ bool MCImageQuantizeImageBitmap(MCImageBitmap *p_bitmap, MCColor *p_colors, uind
 	return t_success;
 }
 
-bool MCImageDitherAlpha(MCImageBitmap *p_alpha, MCImageBitmap *&r_mask)
+// IM-2013-11-11: [[ RefactorGraphics ]] Fix broken implementation and modify
+// to work on bitmap data in-place.
+bool MCImageDitherAlphaInPlace(MCImageBitmap *p_bitmap)
 {
-	if (!MCImageBitmapCreate(p_alpha->width, p_alpha->height, r_mask))
-		return false;
-
-	uint8_t *t_src_ptr = (uint8_t*)p_alpha->data;
-	uint8_t *t_dst_ptr = (uint8_t*)r_mask->data;
+	uint8_t *t_src_ptr = (uint8_t*)p_bitmap->data;
 
 	int32_t *t_error_buffer;
-	/* UNCHECKED */ MCMemoryNewArray<int32_t>(p_alpha->width * 2, t_error_buffer);
-	int32_t *t_current_errors = t_error_buffer;
-	int32_t *t_next_errors = t_error_buffer + p_alpha->width;
+	if (!MCMemoryNewArray<int32_t>(p_bitmap->width * 2, t_error_buffer))
+		return false;
 
-	for (uint32_t y = 0; y < p_alpha->height; y++)
+	int32_t *t_current_errors = t_error_buffer;
+	int32_t *t_next_errors = t_error_buffer + p_bitmap->width;
+
+	for (uint32_t y = 0; y < p_bitmap->height; y++)
 	{
 		uint32_t *t_src_row = (uint32_t*)t_src_ptr;
-		uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
 
-		uint32_t width = p_alpha->width;
+		uint32_t width = p_bitmap->width;
 		uint32_t t_error_index = 0;
 
 		bool reverse = false;
@@ -287,7 +286,6 @@ bool MCImageDitherAlpha(MCImageBitmap *p_alpha, MCImageBitmap *&r_mask)
 		if (y & 1)
 		{
 			t_src_row += width - 1;
-			t_dst_row += width - 1;
 
 			reverse = true;
 			t_direction = -1;
@@ -297,17 +295,17 @@ bool MCImageDitherAlpha(MCImageBitmap *p_alpha, MCImageBitmap *&r_mask)
 
 		while (width--)
 		{
-			int32_t t_alpha = (int32_t)(*t_src_row >> 24) + t_current_errors[t_error_index];
+			int32_t t_alpha = (int32_t)MCGPixelGetNativeAlpha(*t_src_row) + t_current_errors[t_error_index];
 			int32_t t_newalpha = t_alpha < 128 ? 0 : 255;
 
 			int32_t t_error = t_alpha - t_newalpha;
-			*t_dst_ptr = t_newalpha << 24;
+			*t_src_row = MCGPixelSetNativeAlpha(*t_src_row, t_newalpha);
 
 			if (width > 0)
 				t_current_errors[t_error_index + t_direction] += (7 * t_error + 8) / 16;
-			if (y + 1 < p_alpha->height)
+			if (y + 1 < p_bitmap->height)
 			{
-				if (width + 1 < p_alpha->width)
+				if (width + 1 < p_bitmap->width)
 					t_next_errors[t_error_index - t_direction] += (3 * t_error + 8) / 16;
 				t_next_errors[t_error_index] += (5 * t_error + 8) / 16;
 				if (width > 0)
@@ -315,15 +313,18 @@ bool MCImageDitherAlpha(MCImageBitmap *p_alpha, MCImageBitmap *&r_mask)
 			}
 
 			t_src_row += t_direction;
-			t_dst_row += t_direction;
 			t_error_index += t_direction;
 		}
 		int32_t *t_tmp_ptr;
 		t_tmp_ptr = t_next_errors; t_next_errors = t_current_errors; t_current_errors = t_tmp_ptr;
-		MCMemoryClear(t_next_errors, sizeof(int32_t) * p_alpha->width);
+		MCMemoryClear(t_next_errors, sizeof(int32_t) * p_bitmap->width);
+
+		t_src_ptr += p_bitmap->stride;
 	}
 
 	MCMemoryDeleteArray(t_error_buffer);
+
+	p_bitmap->has_alpha = false;
 
 	return true;
 }

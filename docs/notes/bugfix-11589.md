@@ -1,0 +1,1 @@
+# Default font in standalones causing PDF to render badly

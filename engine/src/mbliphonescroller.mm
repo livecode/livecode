@@ -16,6 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
+#include "core.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -30,6 +31,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <UIKit/UIKit.h>
 
 #include "mbliphonecontrol.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+#define DELAYS_TOUCHES_WORKAROUND_MIN 700
+#define DELAYS_TOUCHES_PROCESS_DELAY 0.3
 
 ////////////////////////////////////////////////////////////////////////////////
 	
@@ -48,7 +54,20 @@ class MCNativeScrollerControl;
 @interface MCNativeViewEventForwarder : UIView
 {
 	UIView *m_target;
+	
+	// MW-2013-11-05: [[ Bug 11242 ]] If true then use our own version of delayTouches.
+	bool m_delay_touches : 1;
+	
+	// MW-2013-11-05: [[ Bug 11242 ]] The set of touches currently delayed.
+	NSMutableSet *m_delayed_touches;
 }
+
+// MW-2013-11-05: [[ Bug 11242 ]] Getter for m_delay_touches.
+- (BOOL)delayTouches;
+
+// MW-2013-11-05: [[ Bug 11242 ]] Setter for m_delay_touches.
+- (void)setDelayTouches:(BOOL)value;
+
 @end
 
 class MCNativeScrollerControl : public MCiOSControl
@@ -104,18 +123,21 @@ MCNativeControlType MCNativeScrollerControl::GetType(void)
 	return kMCNativeControlTypeScroller;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCScrollViewGetContentOffset(UIScrollView *p_view, int32_t &r_x, int32_t &r_y)
 {
-	if (p_view == nil)
+    if (p_view == nil)
 		return false;
-	
-	float t_scale;
-	t_scale = MCIPhoneGetNativeControlScale();
 	
 	CGPoint t_offset;
 	t_offset = [p_view contentOffset];
-	r_x = t_offset.x * t_scale;
-	r_y = t_offset.y * t_scale;
+    
+    // MM-2013-11-26: [[ Bug 11485 ]] The content offset of the view will be in device pixels, so convert to user pixels before returning.
+    MCGPoint t_point;
+    t_point = MCNativeControlUserPointFromDevicePoint(MCGPointMake(t_offset . x, t_offset . y));
+    r_x = t_point . x;
+    r_y = t_point . y;
 	return true;
 }
 
@@ -124,17 +146,22 @@ Exec_stat scroller_set_property(UIScrollView *p_view, MCRectangle32 &x_content_r
 	Boolean t_bool;
 	real8 t_double;
 	
-	float t_scale;
-	t_scale = MCIPhoneGetNativeControlScale();
-
 	switch (p_property)
 	{
 		case kMCNativeControlPropertyContentRectangle:
-			if (!MCiOSControl::ParseRectangle32(ep, x_content_rect))
+        {
+            if (!MCiOSControl::ParseRectangle32(ep, x_content_rect))
 				return ES_ERROR;
-			if (p_view != nil)
-				[p_view setContentSize:CGSizeMake((float)x_content_rect.width / t_scale, (float)x_content_rect.height / t_scale)];
-			return ES_NORMAL;
+            
+            // MM-2013-11-26: [[ Bug 11485 ]] The user passes the properties of the scroller in user space, so must converted to device space before setting.
+            MCGRectangle t_rect;
+            t_rect = MCNativeControlUserRectToDeviceRect(MCGRectangleMake(x_content_rect . x, x_content_rect . y, x_content_rect . width, x_content_rect . height));
+            
+            if (p_view != nil)
+                [p_view setContentSize:CGSizeMake(t_rect . size . width, t_rect . size . height)];
+
+            return ES_NORMAL;
+        }
 			
 		case kMCNativeControlPropertyHScroll:
 		{
@@ -144,7 +171,12 @@ Exec_stat scroller_set_property(UIScrollView *p_view, MCRectangle32 &x_content_r
 			
 			int32_t t_x, t_y;
 			if (p_view != nil && MCScrollViewGetContentOffset(p_view, t_x, t_y))
-				[p_view setContentOffset: CGPointMake((float)(t_hscroll - x_content_rect.x) / t_scale, (float)t_y / t_scale)];
+            {
+                // MM-2013-11-26: [[ Bug 11485 ]] The user passes the properties of the scroller in user space, so must converted to device space before setting.
+                MCGPoint t_offset;
+                t_offset = MCNativeControlUserPointToDevicePoint(MCGPointMake((MCGFloat)t_hscroll - x_content_rect . x, (MCGFloat) t_y));
+				[p_view setContentOffset: CGPointMake(t_offset . x, t_offset . y)];
+            }
 		}
 		return ES_NORMAL;
 			
@@ -156,7 +188,12 @@ Exec_stat scroller_set_property(UIScrollView *p_view, MCRectangle32 &x_content_r
 			
 			int32_t t_x, t_y;
 			if (p_view != nil && MCScrollViewGetContentOffset(p_view, t_x, t_y))
-				[p_view setContentOffset: CGPointMake((float)t_x / t_scale, (float)(t_vscroll - x_content_rect.y) / t_scale)];
+            {
+                // MM-2013-11-26: [[ Bug 11485 ]] The user passes the properties of the scroller in user space, so must converted to device space before setting.
+                MCGPoint t_offset;
+                t_offset = MCNativeControlUserPointToDevicePoint(MCGPointMake((MCGFloat) t_x, (MCGFloat) t_vscroll - x_content_rect . y));
+				[p_view setContentOffset: CGPointMake(t_offset . x, t_offset . y)];
+            }
 		}
 		return ES_NORMAL;
 
@@ -190,7 +227,12 @@ Exec_stat scroller_set_property(UIScrollView *p_view, MCRectangle32 &x_content_r
 			if (MCU_stob(ep.getsvalue(), t_bool))
 			{
 				if (p_view)
+                {
 					[p_view setCanCancelContentTouches: t_bool];
+                    // SN-2014-01-14: [[ bugfix-11482 ]] DelayContentTouches must be set
+                    // to the opposite of CanCancelContentTouches to allow scrolling on iOS7
+                    [p_view setDelaysContentTouches: !t_bool];
+                }
 			}
 			else
 			{
@@ -203,7 +245,12 @@ Exec_stat scroller_set_property(UIScrollView *p_view, MCRectangle32 &x_content_r
 			if (MCU_stob(ep.getsvalue(), t_bool))
 			{
 				if (p_view)
+                {
 					[p_view setDelaysContentTouches: t_bool];
+                    // SN-2014-01-14: [[ bugfix-11482 ]] DelayContentTouches must be set
+                    // to the opposite of CanCancelContentTouches to allow scrolling on iOS7
+                    [p_view setCanCancelContentTouches: !t_bool];
+                }
 			}
 			else
 			{
@@ -277,8 +324,12 @@ Exec_stat scroller_set_property(UIScrollView *p_view, MCRectangle32 &x_content_r
 			int2 t_left, t_top, t_right, t_bottom;
 			if (MCU_stoi2x4(ep.getsvalue(), t_left, t_top, t_right, t_bottom))
 			{
+                // MM-2013-11-26: [[ Bug 11485 ]] The user passes the properties of the scroller in user space, so must converted to device space before setting.
+                MCGRectangle t_rect;
+                t_rect = MCNativeControlUserRectToDeviceRect(MCGRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top));
+                
 				if (p_view)
-					[p_view setScrollIndicatorInsets: UIEdgeInsetsMake((float)t_top / t_scale, (float)t_left / t_scale, (float)t_bottom / t_scale, (float)t_right / t_scale)];				
+					[p_view setScrollIndicatorInsets: UIEdgeInsetsMake(t_rect . origin . y, t_rect . origin . x, t_rect . origin . y + t_rect . size . height, t_rect . origin . x + t_rect . size . width)];
 			}
 			else
 			{
@@ -335,9 +386,6 @@ Exec_stat MCNativeScrollerControl::Set(MCNativeControlProperty p_property, MCExe
 	UIScrollView *t_view;
 	t_view = (UIScrollView*)GetView();
 
-	float t_scale;
-	t_scale = MCIPhoneGetNativeControlScale();
-
 	Exec_stat t_status;
 	
 	switch (p_property)
@@ -357,6 +405,27 @@ Exec_stat MCNativeScrollerControl::Set(MCNativeControlProperty p_property, MCExe
 			if (t_status == ES_NORMAL)
 				UpdateForwarderBounds();
 			return t_status;
+			
+		case kMCNativeControlPropertyDelayTouches:
+			// MW-2013-11-05: [[ Bug 11242 ]] If on iOS7+ override the UIScrollView delayTouches
+			//   property and use our own version.
+			if (MCmajorosversion >= DELAYS_TOUCHES_WORKAROUND_MIN)
+			{
+				Boolean t_bool;
+				if (MCU_stob(ep.getsvalue(), t_bool))
+				{
+					if (m_forwarder != nil)
+						[m_forwarder setDelayTouches: t_bool];
+				}
+				else
+				{
+					MCeerror->add(EE_OBJECT_NAB, 0, 0, ep.getsvalue());
+					return ES_ERROR;
+				}
+				
+				return ES_NORMAL;
+			}
+			break;
 	}
 	
 	Exec_stat t_state;
@@ -382,10 +451,12 @@ Exec_stat scroller_get_property(UIScrollView *p_view, const MCRectangle32 &p_con
 				ep.clear();
 			return ES_NORMAL;
 		case kMCNativeControlPropertyHScroll:
-			ep.setnvalue(p_view != nil ? p_content_rect.x + [p_view contentOffset].x * t_scale : 0);
+            // MM-2013-11-26: [[ Bug 11485 ]] The user expects the properties of the scroller in user space, so must converted to device space before returning.
+			ep.setnvalue(p_view != nil ? p_content_rect.x + MCNativeControlUserXLocFromDeviceXLoc([p_view contentOffset].x) : 0);
 			return ES_NORMAL;
 		case kMCNativeControlPropertyVScroll:
-			ep.setnvalue(p_view != nil ? p_content_rect.y + [p_view contentOffset].y * t_scale : 0);
+            // MM-2013-11-26: [[ Bug 11485 ]] The user expects the properties of the scroller in user space, so must converted to device space before returning.
+			ep.setnvalue(p_view != nil ? p_content_rect.y + MCNativeControlUserYLocFromDeviceYLoc([p_view contentOffset].y) : 0);
 			return ES_NORMAL;
 		case kMCNativeControlPropertyCanBounce:
 			ep.setsvalue(MCU_btos(p_view != nil ? [p_view bounces] == YES : NO));
@@ -427,7 +498,12 @@ Exec_stat scroller_get_property(UIScrollView *p_view, const MCRectangle32 &p_con
 			{
 				UIEdgeInsets t_insets;
 				t_insets = [p_view scrollIndicatorInsets];
-				sprintf(ep.getbuffer(I2L * 4 + 4), "%d,%d,%d,%d", (int16_t)(t_insets.left * t_scale), (int16_t)(t_insets.top * t_scale), (int16_t)(t_insets.right * t_scale), (int16_t)(t_insets.bottom * t_scale));
+                
+                // MM-2013-11-26: [[ Bug 11485 ]] The user expects the properties of the scroller in user space, so must converted to device space before returning.
+                MCGRectangle t_rect;
+                t_rect = MCNativeControlUserRectFromDeviceRect(MCGRectangleMake(t_insets . left, t_insets . top, t_insets . right - t_insets . left, t_insets . bottom - t_insets . top));
+                
+				sprintf(ep.getbuffer(I2L * 4 + 4), "%d,%d,%d,%d", (int16_t)(t_rect . origin . x), (int16_t)(t_rect . origin . y), (int16_t)(t_rect . origin . x + t_rect . size . width), (int16_t)(t_rect . origin . y + t_rect . size . height));
 				ep.setstrlen();
 			}
 			else
@@ -460,13 +536,26 @@ Exec_stat MCNativeScrollerControl::Get(MCNativeControlProperty p_property, MCExe
 {
 	UIScrollView *t_view;
 	t_view = (UIScrollView *)GetView();
-
+	
+	// MW-2013-11-05: [[ Bug 11242 ]] If on iOS7+ override the UIScrollView delayTouches
+	//   property and use our own version.
+	if (p_property == kMCNativeControlPropertyDelayTouches &&
+		MCmajorosversion >= DELAYS_TOUCHES_WORKAROUND_MIN)
+	{
+		if (m_forwarder != nil)
+			ep . setboolean([m_forwarder delayTouches]);
+		else
+			ep . setboolean(False);
+		
+		return ES_NORMAL;
+	}
+	
 	Exec_stat t_status;
 	t_status = scroller_get_property(t_view, m_content_rect, p_property, ep);
 	if (t_status == ES_NOT_HANDLED)
 		return MCiOSControl::Get(p_property, ep);
-	else
-		return t_status;
+
+	return t_status;
 }
 
 Exec_stat MCNativeScrollerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
@@ -543,6 +632,14 @@ UIView *MCNativeScrollerControl::CreateView(void)
 	[t_view setDelegate: m_delegate];
 	m_forwarder = [[MCNativeViewEventForwarder alloc] initWithFrame: CGRectMake(0,0,0,0)];
 	[t_view addSubview: m_forwarder];
+	
+	if (MCmajorosversion >= DELAYS_TOUCHES_WORKAROUND_MIN)
+    {
+		[t_view setDelaysContentTouches: NO];
+        // SN-2014-01-14: [[ bugfix-11482 ]] DelayContentTouches must be set
+        // to the opposite of CanCancelContentTouches to allow scrolling on iOS7
+        [t_view setCanCancelContentTouches: YES];
+    }
 	
 	return t_view;
 }
@@ -719,6 +816,7 @@ bool MCNativeScrollerControlCreate(MCNativeControl *&r_control)
 ////////////////////////////////////////////////////////////////////////////////
 
 @implementation MCNativeViewEventForwarder
+
 - (id) initWithFrame: (CGRect)withFrame
 {
 	self = [super initWithFrame: withFrame];
@@ -728,32 +826,140 @@ bool MCNativeScrollerControlCreate(MCNativeControl *&r_control)
 		//   'main' UIView anymore because it affects OpenGLness. Thus we now just
 		//   set target to be our main view.		
 		m_target = MCIPhoneGetView();
+		
+		// MW-2013-11-05: [[ Bug 11242 ]] The default value of delaysContentTouches in
+		//   the UIScrollView is true, so mimic that.
+		m_delay_touches = true;
+		
+		// MW-2013-11-05: [[ Bug 11242 ]] This set holds the currently delayed touches.
+		m_delayed_touches = [[NSMutableSet alloc] initWithCapacity: 0];
 	}
 	return self;
 }
 
+- (void) dealloc
+{
+	// MW-2013-11-05: [[ Bug 11242 ]] Make sure we have no outstanding requests on the
+	//   event loop.
+	[NSObject cancelPreviousPerformRequestsWithTarget: self];
+	
+	// MW-2013-11-05: [[ Bug 11242 ]] Dispose of the delayed touches set.
+	[m_delayed_touches release];
+	
+	[super dealloc];
+}
+
+- (void)setDelayTouches: (BOOL)value
+{
+	m_delay_touches = (value == YES);
+}
+
+- (BOOL)delayTouches
+{
+	return m_delay_touches;
+}
+
+// MW-2013-11-05: [[ Bug 11242 ]] Processes a touch after a short delay.
+- (void)processTouch: (UITouch *)touch
+{
+	// If the touch has already been cancelled, ignore.
+	if (![m_delayed_touches containsObject: touch])
+		return;
+	
+	// Remove the touch from the delayed set.
+	[m_delayed_touches removeObject: touch];
+	
+	if (m_target != nil)
+	{
+		NSSet *t_touch_set;
+		t_touch_set = [[NSSet alloc] initWithObjects: touch, nil];
+		
+		// Begin the touch.
+		[m_target touchesBegan: t_touch_set withEvent: nil];
+		
+		// If its already ended, then end it.
+		if ([touch phase] == UITouchPhaseEnded)
+			[m_target touchesEnded: t_touch_set withEvent: nil];
+		
+		[t_touch_set release];
+	}
+}
+
 - (void) touchesBegan: (NSSet*)touches withEvent: (UIEvent*)event
 {
+	// MW-2013-11-05: [[ Bug 11242 ]] If we are delaying touches, then defer processing.
+	if (m_delay_touches)
+	{
+		for(UITouch *t_touch in touches)
+		{
+			[m_delayed_touches addObject: t_touch];
+			[self performSelector: @selector(processTouch:) withObject: t_touch afterDelay: DELAYS_TOUCHES_PROCESS_DELAY];
+		}
+
+		return;
+	}
+	
 	if (m_target != nil)
 		[m_target touchesBegan: touches withEvent: event];
 }
 
 - (void)touchesCancelled: (NSSet*) touches withEvent: (UIEvent*)event
 {
+	// MW-2013-11-05: [[ Bug 11242 ]] If we are delaying touches, then remove all cancelled
+	//   touches from the delayed set, and process the rest.
+	if (m_delay_touches)
+	{
+		NSMutableSet *t_nondelayed_touches;
+		t_nondelayed_touches = [[NSMutableSet alloc] initWithSet: touches];
+		[t_nondelayed_touches minusSet: m_delayed_touches];
+		[m_delayed_touches minusSet: touches];
+		if (m_target != nil && [t_nondelayed_touches count] != 0)
+			[m_target touchesCancelled: t_nondelayed_touches withEvent: event];
+		[t_nondelayed_touches release];
+		return;
+	}
+	
 	if (m_target != nil)
 		[m_target touchesCancelled: touches withEvent: event];
 }
 
 - (void)touchesEnded: (NSSet*) touches withEvent: (UIEvent*)event
 {
+	// MW-2013-11-05: [[ Bug 11242 ]] If we are delaying touches, ignore any which
+	//   are in the delayed set.
+	if (m_delay_touches)
+	{
+		NSMutableSet *t_nondelayed_touches;
+		t_nondelayed_touches = [[NSMutableSet alloc] initWithSet: touches];
+		[t_nondelayed_touches minusSet: m_delayed_touches];
+		if (m_target != nil && [t_nondelayed_touches count] != 0)
+			[m_target touchesEnded: t_nondelayed_touches withEvent: event];
+		[t_nondelayed_touches release];
+		return;
+	}
+	
 	if (m_target != nil)
 		[m_target touchesEnded: touches withEvent: event];
 }
 
 - (void)touchesMoved: (NSSet*) touches withEvent: (UIEvent*)event
 {
+	// MW-2013-11-05: [[ Bug 11242 ]] If we are delaying touches, ignore any which
+	//   are in the delayed set.
+	if (m_delay_touches)
+	{
+		NSMutableSet *t_nondelayed_touches;
+		t_nondelayed_touches = [[NSMutableSet alloc] initWithSet: touches];
+		[t_nondelayed_touches minusSet: m_delayed_touches];
+		if (m_target != nil && [t_nondelayed_touches count] != 0)
+			[m_target touchesMoved: t_nondelayed_touches withEvent: event];
+		[t_nondelayed_touches release];
+		return;
+	}
+	
 	if (m_target != nil)
 		[m_target touchesMoved: touches withEvent: event];
 }
+
 @end
 

@@ -152,9 +152,15 @@ public:
 	
 	void enableformodal(Window modalwindow, Boolean isenabled);
 	
-	void reopenforprint();
+	// MW-2013-09-11: [[ DynamicFonts ]] Purge all references to fonts so they
+	//   can be re-referenced (needed after loading new fonts or formatForPrinting
+	//   change).
+	void purgefonts(void);
 
 	void ensureinputfocus(Window window);
+    
+   // MW-2014-04-10: [[ Bug 12175 ]] Moved from MCDispatcher - method for reopening all windows.
+    void reopenallstackwindows(void);
 };
 
 #endif

@@ -14,8 +14,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4DFD483D13BA2843008DB91F"
-               BuildableName = "server"
-               BlueprintName = "server"
+               BuildableName = "Server-Community"
+               BlueprintName = "Server-Community"
                ReferencedContainer = "container:engine.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,8 +32,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4DFD483D13BA2843008DB91F"
-            BuildableName = "server"
-            BlueprintName = "server"
+            BuildableName = "Server-Community"
+            BlueprintName = "Server-Community"
             ReferencedContainer = "container:engine.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -51,8 +51,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4DFD483D13BA2843008DB91F"
-            BuildableName = "server"
-            BlueprintName = "server"
+            BuildableName = "Server-Community"
+            BlueprintName = "Server-Community"
             ReferencedContainer = "container:engine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -69,8 +69,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4DFD483D13BA2843008DB91F"
-            BuildableName = "server"
-            BlueprintName = "server"
+            BuildableName = "Server-Community"
+            BlueprintName = "Server-Community"
             ReferencedContainer = "container:engine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

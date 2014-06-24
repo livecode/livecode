@@ -747,7 +747,10 @@ void REVDB_Connect(char *args[], int nargs, char **retstring, Bool *pass, Bool *
 	char *result = NULL;
 	*error = True;
 	*pass = False;
-	if (nargs >= 5) 
+	
+	// MW-2014-01-30: [[ Sqlite382 ]] Make this a little more flexible - only require at least
+	//   one argument.
+	if (nargs >= 1) 
 	{
 		*error = False;
 		char *dbtype = args[0];
@@ -997,7 +1000,8 @@ void REVDB_ConnectionErr(char *args[], int nargs, char **retstring, Bool *pass, 
 		DBConnection *theconnection = (DBConnection *)connectionlist.find(connectionid);
 
 		if (theconnection)
-			result = istrdup(theconnection->getErrorMessage());
+            // AL-2013-11-08 [[ Bug 11149 ]] Make sure most recent error string is available to revDatabaseConnectResult
+			result = istrdup(theconnection->getErrorMessage(True));
 		else
 		{
 			result = istrdup(errors[REVDBERR_BADCONNECTION]);

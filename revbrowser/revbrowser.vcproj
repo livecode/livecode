@@ -164,6 +164,10 @@
 			ReferencedProjectIdentifier="{4E727414-3B14-45B7-9B89-BFFFE396E1C9}"
 			RelativePathToProject=".\libexternal\libexternal.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{6899CD7E-BE16-44CE-A28B-27304F42E127}"
+			RelativePathToProject=".\libcore\libcore.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter

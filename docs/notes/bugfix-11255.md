@@ -1,0 +1,1 @@
+# Uninitialised parameter can cause crash in iPhonePickPhoto

@@ -42,16 +42,21 @@ bool MCSystemActivityIndicatorStop ();
 
 void MCActivityIndicatorExecStart (MCExecContext& ctxt, MCActivityIndicatorType p_indicator, MCLocation p_location)
 {
+#ifdef /* MCActivityIndicatorExecStart */ LEGACY_EXEC
     MCSystemActivityIndicatorStart (p_indicator, p_location);
+#endif /* MCActivityIndicatorExecStart */
 }
 
 void MCActivityIndicatorExecStop (MCExecContext& ctxt)
 {
+#ifdef /* MCActivityIndicatorExecStop */ LEGACY_EXEC
     MCSystemActivityIndicatorStop ();
+#endif /* MCActivityIndicatorExecStop */
 }
 
 static MCActivityIndicatorType MCActivityIndicatorTypeFromCString(const char *p_string)
 {
+#ifdef /* MCActivityIndicatorTypeFromCString */ LEGACY_EXEC
     if (MCCStringEqualCaseless(p_string, "white"))
         return kMCActivityIndicatorWhite;
     else if (MCCStringEqualCaseless(p_string, "large white"))
@@ -60,10 +65,12 @@ static MCActivityIndicatorType MCActivityIndicatorTypeFromCString(const char *p_
         return kMCActivityIndicatorGray;
     
     return kMCActivityIndicatorWhite;
+#endif /* MCActivityIndicatorTypeFromCString */
 }
 
 static bool MCActivityIndicatorTypeToCString(MCSensorType p_indicator, char *&r_string)
 {
+#ifdef /* MCActivityIndicatorTypeToCString */ LEGACY_EXEC
     switch (p_indicator)
     {
         case kMCActivityIndicatorWhite:
@@ -76,10 +83,12 @@ static bool MCActivityIndicatorTypeToCString(MCSensorType p_indicator, char *&r_
             return MCCStringClone("unknown", r_string);
     }
     return false;
+#endif /* MCActivityIndicatorTypeToCString */
 }
 
 Exec_stat MCHandleStartActivityIndicator(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleStartActivityIndicator */ LEGACY_EXEC
     MCActivityIndicatorType t_indicator_type;
     t_indicator_type = kMCActivityIndicatorWhite;
     
@@ -131,10 +140,12 @@ Exec_stat MCHandleStartActivityIndicator(void *p_context, MCParameter *p_paramet
 		t_indicator_type = MCActivityIndicatorTypeFromCString(t_style);
     MCActivityIndicatorExecStart(t_ctxt, t_indicator_type, t_location);
     return t_ctxt.GetStat();
+#endif /* MCHandleStartActivityIndicator */
 }
 
 Exec_stat MCHandleStopActivityIndicator(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleStopActivityIndicator */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
     
     MCExecContext t_ctxt(ep);
@@ -143,4 +154,5 @@ Exec_stat MCHandleStopActivityIndicator(void *p_context, MCParameter *p_paramete
     MCActivityIndicatorExecStop(t_ctxt);
     
     return t_ctxt.GetStat();
+#endif /* MCHandleStopActivityIndicator */
 }

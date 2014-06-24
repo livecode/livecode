@@ -1017,7 +1017,9 @@ void MCParagraph::copysingleattr(Properties which, MCParagraph *other)
 				attrs -> hidden = other -> attrs -> hidden;
 			else if (attrs != nil)
 				attrs -> hidden = false;
-			if (!attrs -> hidden)
+			// MW-2013-08-20: [[ Bug 11108 ]] If we don't have attributes, then don't tweak
+			//   the flags.
+			if (attrs != nil && !attrs -> hidden)
 				attrs -> flags &= ~PA_HAS_HIDDEN;
 		}
 		break;
@@ -1494,7 +1496,8 @@ int32_t MCParagraph::getlistindent(void) const
 	if (attrs != nil && (attrs -> flags & PA_HAS_LIST_INDENT) != 0)
 		return MCAbs(attrs -> first_indent);
 
-	return 8 * MCFontMeasureText(parent -> getfontref(), " ", 1, false);
+	// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+	return 8 * MCFontMeasureText(parent -> getfontref(), " ", 1, false, parent -> getstack() -> getdevicetransform());
 }
 
 void MCParagraph::gettabs(uint16_t*& r_tabs, uint16_t& r_tab_count, Boolean& r_fixed) const

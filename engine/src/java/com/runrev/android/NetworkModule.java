@@ -24,21 +24,30 @@ public class NetworkModule
 {
     protected Engine m_engine;
     protected int m_url_timeout;
+	
+	// MW-2013-10-02: [[ MobileSSLVerify ]] Determines whether SSL connections
+	//   should be verified.
+	protected boolean m_url_ssl_verify;
     
     public NetworkModule(Engine p_engine)
     {
         m_engine = p_engine;
         
         m_url_timeout = 10 * 1000;
+		
+		m_url_ssl_verify = true;
     }
-    
-    
     
     public void setURLTimeout(int p_timeout)
     {
         m_url_timeout = p_timeout * 1000;
     }
     
+	// MW-2013-10-02: [[ MobileSSLVerify ]] Enables or disables SSL verification.
+	public void setURLSSLVerification(boolean p_enabled)
+	{
+		m_url_ssl_verify = p_enabled;
+	}
     
     public boolean loadURL(int p_id, String p_url, String p_headers)
 	{
@@ -47,6 +56,8 @@ public class NetworkModule
 			URLLoader t_loader = createURLLoader(p_id, p_url);
 			t_loader.setHeaders(p_headers);
 			t_loader.setTimeout(m_url_timeout);
+			// MW-2013-10-02: [[ MobileSSLVerify ]] Configure the loaders ssl verification.
+			t_loader.setSSLVerification(m_url_ssl_verify);
 			
 			new Thread(t_loader).start();
 		}
@@ -76,6 +87,8 @@ public class NetworkModule
 			t_loader.setMethod("POST");
 			t_loader.setUploadData(p_post_data);
 			t_loader.setTimeout(m_url_timeout);
+			// MW-2013-10-02: [[ MobileSSLVerify ]] Configure the loaders ssl verification.
+			t_loader.setSSLVerification(m_url_ssl_verify);
 			
 			new Thread(t_loader).start();
 		}
@@ -104,6 +117,8 @@ public class NetworkModule
             t_loader.setMethod("PUT");
             t_loader.setUploadData(p_send_data);
             t_loader.setTimeout(m_url_timeout);
+			// MW-2013-10-02: [[ MobileSSLVerify ]] Configure the loaders ssl verification.
+			t_loader.setSSLVerification(m_url_ssl_verify);
             
             new Thread(t_loader).start();
         }

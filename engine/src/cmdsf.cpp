@@ -47,6 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "context.h"
 #include "osspec.h"
+#include "regex.h"
 
 #include "socket.h"
 #include "mcssl.h"
@@ -54,6 +55,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "iquantization.h"
 
 #include "core.h"
+
+#include "resolution.h"
 
 MCClose::~MCClose()
 {
@@ -110,6 +113,7 @@ Parse_stat MCClose::parse(MCScriptPoint &sp)
 
 Exec_stat MCClose::exec(MCExecPoint &ep)
 {
+#ifdef /* MCClose */ LEGACY_EXEC
 	char *name;
 	uint2 index;
 
@@ -194,6 +198,7 @@ Exec_stat MCClose::exec(MCExecPoint &ep)
 		sptr->checkdestroy();
 	}
 	return ES_NORMAL;
+#endif /* MCClose */
 }
 
 
@@ -366,6 +371,7 @@ Parse_stat MCEncryptionOp::parse(MCScriptPoint &sp)
 
 }
 
+#ifdef /* MCEncryptionOp::exec_rsa */ LEGACY_EXEC
 Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 {
 	Exec_stat t_status = ES_NORMAL;
@@ -450,9 +456,11 @@ Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 
 	return t_status;
 }
+#endif /* MCEncryptionOp::exec_rsa */
 
 Exec_stat MCEncryptionOp::exec(MCExecPoint &ep)
 {
+#ifdef /* MCEncryptionOp */ LEGACY_EXEC
 	MCresult->clear(False);
 
 	if (is_rsa)
@@ -563,6 +571,7 @@ Exec_stat MCEncryptionOp::exec(MCExecPoint &ep)
 	delete saltstr;
 	delete ivstr;
 	return ES_NORMAL;
+#endif /* MCEncryptionOp */
 }
 
 MCExport::~MCExport()
@@ -668,17 +677,17 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 						MCperror -> add(PE_IMPORT_BADFILENAME, sp);
 						return PS_ERROR;
 					}
-					
-					if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
-					{
-						if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
-							sp . parseexp(False, True, &size) != PS_NORMAL)
-						{
-							MCperror -> add(PE_IMPORT_BADFILENAME, sp);
-							return PS_ERROR;
-						}
-					}
 				}
+			}
+		}
+		
+		if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
+		{
+			if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
+				sp . parseexp(False, True, &size) != PS_NORMAL)
+			{
+				MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+				return PS_ERROR;
 			}
 		}
 	}
@@ -807,7 +816,8 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 
 Exec_stat MCExport::exec(MCExecPoint &ep)
 {
-	MCBitmap *t_img = nil;
+#ifdef /* MCExport */ LEGACY_EXEC
+	MCImageBitmap *t_bitmap = nil;
 	MCObject *optr = NULL;
 
 	Exec_stat t_status = ES_NORMAL;
@@ -829,9 +839,6 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 	//   indicates to do this processing later on in the method.
 	bool t_needs_unpremultiply;
 	t_needs_unpremultiply = false;
-	// IM-2013-06-21: [[ Bug 10967 ]] screen snapshot can return opaque image
-	// with "alpha" channel set to zero. 
-	bool t_has_alpha = false;
 	if (sformat == EX_SNAPSHOT)
 	{
 		char *srect = NULL;
@@ -919,12 +926,11 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 
 		if (optr != NULL)
 		{
-			/* UNCHECKED */ t_img = optr -> snapshot(exsrect == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, with_effects);
-			t_has_alpha = true;
+			/* UNCHECKED */ t_bitmap = optr -> snapshot(exsrect == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, 1.0, with_effects);
 			// OK-2007-04-24: Bug found in ticket 2006072410002591, when exporting a snapshot of an object
 			// while the object is being moved in the IDE, it is possible for the snapshot rect not to intersect with
 			// the rect of the object, causing optr -> snapshot() to return NULL, and a crash.
-			if (t_img == nil)
+			if (t_bitmap == nil)
 			{
 				delete sdisp;
 				MCeerror -> add(EE_EXPORT_EMPTYRECT, line, pos);
@@ -937,8 +943,8 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			t_img = MCscreen->snapshot(r, w, sdisp);
-			if (t_img == nil)
+			t_bitmap = MCscreen->snapshot(r, w, sdisp, size == NULL ? nil : &t_wanted_size);
+			if (t_bitmap == nil)
 			{
 				delete sdisp;
 				MCeerror->add(EE_EXPORT_NOSELECTED, line, pos);
@@ -1012,32 +1018,31 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		delete mfile;
 	}
 
-	MCImageBitmap *t_bitmap = nil;
 	bool t_dither = false;
 	bool t_image_locked = false;
-	if (t_img == nil)
+	if (t_bitmap == nil)
 	{
-		/* UNCHECKED */ static_cast<MCImage*>(optr)->lockbitmap(t_bitmap);
-		t_image_locked = true;
-		t_dither = !optr->getflag(F_DONT_DITHER);
-	}
-	else
-	{
-		/* UNCHECKED */ MCImageBitmapCreateWithOldBitmap(t_img, t_bitmap);
-		if (!t_has_alpha)
+		MCImage *t_img = static_cast<MCImage*>(optr);
+		
+		// IM-2013-07-26: [[ ResIndependence ]] the exported image needs to be unscaled,
+		// so if the image has a scale factor we need to get a 1:1 copy
+		if (t_img->getscalefactor() == 1.0)
 		{
-			// IM-2013-06-21: [[ Bug 10967 ]] Set alpha of opaque image to 255
-			MCImageBitmapSetAlphaValue(t_bitmap, 255);
+			/* UNCHECKED */ t_img->lockbitmap(t_bitmap, false);
+			t_image_locked = true;
 		}
 		else
 		{
-			// MW-2013-05-20: [[ Bug 10897 ]] Make sure we unpremultiply if needed.
-			if (t_needs_unpremultiply)
-				MCImageBitmapUnpremultiply(t_bitmap);
-			MCImageBitmapCheckTransparency(t_bitmap);
+			/* UNCHECKED */ t_img->copybitmap(1.0, false, t_bitmap);
 		}
-
-		MCscreen->destroyimage(t_img);
+		t_dither = !t_img->getflag(F_DONT_DITHER);
+	}
+	else
+	{
+		// MW-2013-05-20: [[ Bug 10897 ]] Make sure we unpremultiply if needed.
+		if (t_needs_unpremultiply)
+			MCImageBitmapUnpremultiply(t_bitmap);
+		MCImageBitmapCheckTransparency(t_bitmap);
 		t_dither = !MCtemplateimage->getflag(F_DONT_DITHER);
 	}
 
@@ -1133,33 +1138,62 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 			}
 		}
 	return t_status;
+#endif /* MCExport */
 }
 
-MCFilter::~MCFilter()
+////////////////////////////////////////////////////////////////////////////////
+
+// JS-2013-07-01: [[ EnhancedFilter ]] Implementation of pattern matching classes.
+
+MCPatternMatcher::~MCPatternMatcher()
 {
-	delete container;
 	delete pattern;
+}
+
+Exec_stat MCRegexMatcher::compile(uint2 line, uint2 pos)
+{
+	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
+	//   no reason not to use the cache.
+	compiled = MCR_compile(pattern, casesensitive);
+	if (compiled == NULL)
+	{
+		MCeerror->add
+		(EE_MATCH_BADPATTERN, line, pos, MCR_geterror());
+		return ES_ERROR;
+	}
+    return ES_NORMAL;
+}
+
+Boolean MCRegexMatcher::match(char *s)
+{
+	return MCR_exec(compiled, s, strlen(s));
+}
+
+Exec_stat MCWildcardMatcher::compile(uint2 line, uint2 pos)
+{
+    // wildcard patterns are not compiled
+    return ES_NORMAL;
 }
 
 #define OPEN_BRACKET '['
 #define CLOSE_BRACKET ']'
 
-Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
+/* static */ Boolean MCWildcardMatcher::match(char *s, char *p, Boolean casesensitive)
 {
 	uint1 scc, c;
-
+    
 	while (*s)
 	{
 		scc = *s++;
 		c = *p++;
 		switch (c)
 		{
-		case OPEN_BRACKET:
+            case OPEN_BRACKET:
 			{
 				Boolean ok = False;
 				int lc = -1;
 				int notflag = 0;
-
+                
 				if (*p == '!' )
 				{
 					notflag = 1;
@@ -1203,36 +1237,36 @@ Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
 						}
 				}
 			}
-			return False;
-		case '?':
-			break;
-		case '*':
-			while (*p == '*')
-				p++;
-			if (*p == 0)
-				return True;
-			--s;
-			c = *p;
-			while (*s)
-				if ((casesensitive ? c != *s : MCS_tolower(c) != MCS_tolower(*s))
+                return False;
+            case '?':
+                break;
+            case '*':
+                while (*p == '*')
+                    p++;
+                if (*p == 0)
+                    return True;
+                --s;
+                c = *p;
+                while (*s)
+                    if ((casesensitive ? c != *s : MCS_tolower(c) != MCS_tolower(*s))
 				        && *p != '?' && *p != OPEN_BRACKET)
-					s++;
-				else
-					if (match(s++, p, casesensitive))
-						return True;
-			return False;
-		case 0:
-			return scc == 0;
-		default:
-			if (casesensitive)
-			{
-				if (c != scc)
-					return False;
-			}
-			else
-				if (MCS_tolower(c) != MCS_tolower(scc))
-					return False;
-			break;
+                        s++;
+                    else
+                        if (match(s++, p, casesensitive))
+                            return True;
+                return False;
+            case 0:
+                return scc == 0;
+            default:
+                if (casesensitive)
+                {
+                    if (c != scc)
+                        return False;
+                }
+                else
+                    if (MCS_tolower(c) != MCS_tolower(scc))
+                        return False;
+                break;
 		}
 	}
 	while (*p == '*')
@@ -1240,15 +1274,37 @@ Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
 	return *p == 0;
 }
 
-// JS-2013-05-26: [[ Bug 10926 ]] filter should honour lineDelimiter
-//     pass linedelimiter as extra parameter to filterlines
-char *MCFilter::filterlines(char *sstring, char *pstring, char delimiter,
-                            Boolean casesensitive)
+Boolean MCWildcardMatcher::match(char *s)
 {
-	uint4 offset = 0;
-	char *dstring = new char[strlen(sstring) + 1];
-	char *line;
+	char *p = pattern;
+	return match(s, p, casesensitive);
+}
 
+MCFilter::~MCFilter()
+{
+	delete container;
+	delete target;
+	delete it;
+	delete source;
+	delete pattern;
+}
+
+// JS-2013-07-01: [[ EnhancedFilter ]] Replacement for filterlines which takes a delimiter and
+//   pattern matching class.
+char *MCFilter::filterdelimited(char *sstring, char delimiter, MCPatternMatcher *matcher)
+{
+	bool t_success;
+	t_success = true;
+	
+	uint32_t t_length;
+	t_length = MCCStringLength(sstring);
+	
+	uint4 offset = 0;
+	char *dstring;
+	dstring = nil;
+	if (t_success)
+		t_success = MCMemoryAllocate(t_length + 1, dstring);
+	
 	// OK-2010-01-11: Bug 7649 - Filter command was incorrectly removing empty lines.
 	// Now does:
 	// 1. Remove terminal delimiter from list
@@ -1257,16 +1313,26 @@ char *MCFilter::filterlines(char *sstring, char *pstring, char delimiter,
 
 	// Duplicate input string because the algorithm needs to change it.
 	char *t_string;
-	t_string = strdup(sstring);
+	t_string = nil;
+	
+	if (t_success)
+		t_success = MCCStringClone(sstring, t_string);
 
+	if (!t_success)
+	{
+		// IM-2013-07-26: [[ Bug 10774 ]] return nil if memory allocation fails
+		MCMemoryDeallocate(dstring);
+		MCCStringFree(t_string);
+		
+		return nil;
+	}
+	
 	// Keep a copy of the original pointer so it can be freed
 	char *t_original_string;
 	t_original_string = t_string;
 
 	// MW-2010-10-05: [[ Bug 9034 ]] If t_string is of zero length, then the next couple
 	//   of lines will cause problems so return empty in this case.
-	uint32_t t_length;
-	t_length = strlen(t_string);
 	if (t_length == 0)
 	{
 		free(t_original_string);
@@ -1289,15 +1355,16 @@ char *MCFilter::filterlines(char *sstring, char *pstring, char delimiter,
 		if (t_return != nil)
 			*t_return = '\0';
 
-		line = t_string;
-		if (match(line, pstring, casesensitive) != out)
+		char *chunk;
+		chunk = t_string;
+		if (matcher->match(chunk) != discardmatches)
 		{
 			if (offset)
 				dstring[offset++] = delimiter;
 
 			// MW-2010-10-18: [[ Bug 7864 ]] This should be a 32-bit integer - removing 65535 char limit.
-			uint32_t length = strlen(line);
-			memcpy(&dstring[offset], line, length);
+			uint32_t length = strlen(chunk);
+			memcpy(&dstring[offset], chunk, length);
 			offset += length;
 		}
 
@@ -1317,70 +1384,196 @@ char *MCFilter::filterlines(char *sstring, char *pstring, char delimiter,
 	return dstring;
 }
 
+// JS-2013-07-01: [[ EnhancedFilter ]] Rewritten to support new filter syntax.
 Parse_stat MCFilter::parse(MCScriptPoint &sp)
 {
+	// Syntax :
+	//   filter [ ( lines | items ) of ] <container_or_exp>
+	//          ( with | without | [ not ] matching )
+	//          [ { wildcard | regex } [ pattern ] ] <pattern>
+	//          [ into <container> ]
+	//
+	Parse_errors t_error;
+	t_error = PE_UNDEFINED;
+    
 	initpoint(sp);
-	container = new MCChunk(True);
-	if (container->parse(sp, False) != PS_NORMAL)
+
+	// Parse the chunk type (if present)
+	if (t_error == PE_UNDEFINED)
 	{
-		MCperror->add
-		(PE_FILTER_BADDEST, sp);
+		// First check for 'lines' or 'items'.
+		if (sp.skip_token(SP_FACTOR, TT_CLASS, CT_LINE) == PS_NORMAL)
+			chunktype = CT_LINE;
+		else if (sp.skip_token(SP_FACTOR, TT_CLASS, CT_ITEM) == PS_NORMAL)
+			chunktype = CT_ITEM;
+		// If we parsed a chunk then ensure there's an 'of'
+		if (chunktype != CT_UNDEFINED && sp.skip_token(SP_FACTOR, TT_OF) != PS_NORMAL)
+			t_error = PE_FILTER_BADDEST;
+	}
+
+	// If there was no error and no chunk type then default to line
+	if (t_error == PE_UNDEFINED && chunktype == CT_UNDEFINED)
+		chunktype = CT_LINE;
+
+	// Next parse the source container or expression
+	if (t_error == PE_UNDEFINED)
+	{
+		MCerrorlock++;
+		MCScriptPoint tsp(sp);
+		container = new MCChunk(True);
+		if (container->parse(sp, False) != PS_NORMAL)
+		{
+			sp = tsp;
+			MCerrorlock--;
+			delete container;
+			container = NULL;
+			if (sp.parseexp(True, True, &source) != PS_NORMAL)
+			{
+				t_error = PE_FILTER_BADDEST;
+			}
+		}
+		else
+			MCerrorlock--;
+	}
+
+	// Now look for the filter mode
+	if (t_error == PE_UNDEFINED)
+	{
+		if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+			discardmatches = False;
+		else if (sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
+			discardmatches = True;
+		else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_MATCHING) == PS_NORMAL)
+			discardmatches = False;
+		else if (sp.skip_token(SP_FACTOR, TT_UNOP, O_NOT) == PS_NORMAL
+				 && sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_MATCHING) == PS_NORMAL)
+			discardmatches = True;
+		else
+			t_error = PE_FILTER_NOWITH;
+	}
+
+	// Now look for the optional pattern match mode
+	if (t_error == PE_UNDEFINED)
+	{
+		if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_REGEX) == PS_NORMAL)
+			matchmode = MA_REGEX;
+		else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_WILDCARD) == PS_NORMAL)
+			matchmode = MA_WILDCARD;
+		// Skip the optional pattern keyword
+		sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_PATTERN);
+	}
+
+	// Now parse the pattern expression
+	if (t_error == PE_UNDEFINED && sp.parseexp(False, True, &pattern) != PS_NORMAL)
+		t_error = PE_FILTER_BADEXP;
+
+	// Finally check for the (optional) 'into' clause
+	if (t_error == PE_UNDEFINED)
+	{
+		if (sp.skip_token(SP_FACTOR, TT_PREP, PT_INTO) == PS_NORMAL)
+		{
+			target = new MCChunk(True);
+			if (target->parse(sp, False) != PS_NORMAL)
+				t_error = PE_FILTER_BADDEST;
+        }
+        else if (container == NULL)
+			getit(sp, it);
+	}
+
+	// If we encountered an error, add it to the parse error stack and fail.
+	if (t_error != PE_UNDEFINED)
+	{
+		MCperror->add(t_error, sp);
 		return PS_ERROR;
 	}
-	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_ERROR)
-	{
-		MCperror->add
-		(PE_FILTER_NOWITH, sp);
-		return PS_ERROR;
-	}
-	Parse_stat stat = sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT);
-	if (stat == PS_ERROR)
-	{
-		MCperror->add
-		(PE_FILTER_NOWITH, sp);
-		return PS_ERROR;
-	}
-	else
-		if (stat == PS_NORMAL)
-			out = True;
-	if (sp.parseexp(False, True, &pattern) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_FILTER_BADEXP, sp);
-		return PS_ERROR;
-	}
+
+	// Success!
 	return PS_NORMAL;
 }
 
+// JS-2013-07-01: [[ EnhancedFilter ]] Rewritten to support new syntax.
 Exec_stat MCFilter::exec(MCExecPoint &ep)
 {
-	if (container->eval(ep) != ES_NORMAL)
+#ifdef /* MCFilter */ LEGACY_EXEC
+	Exec_stat stat;
+
+	// Evaluate the container or source expression
+	if (container != NULL)
+		stat = container->eval(ep);
+	else
+		stat = source->eval(ep);
+	if (stat != ES_NORMAL)
 	{
 		MCeerror->add(EE_FILTER_CANTGET, line, pos);
 		return ES_ERROR;
 	}
 	char *sptr = ep.getsvalue().clone();
+
+	// Evaluate the pattern expression
 	if (pattern->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_FILTER_CANTGETPATTERN, line, pos);
 		delete sptr;
 		return ES_ERROR;
 	}
-	char *pptr = ep.getsvalue().clone();
-    // JS-2013-05-26: [[ Bug 10926 ]] filter should honour lineDelimiter
-    //     pass linedelimiter as extra parameter to filterlines
-	char *dptr = filterlines(sptr, pptr, ep.getlinedel(), ep.getcasesensitive());
+	
+	// MW-2013-07-01: [[ EnhancedFilter ]] Use the ep directly as the matcher
+	//   classes copy the pattern string.
+	// Create the pattern matcher
+	MCPatternMatcher *matcher;
+	if (matchmode == MA_REGEX)
+        matcher = new MCRegexMatcher(ep.getcstring(), ep.getcasesensitive());
+    else
+		matcher = new MCWildcardMatcher(ep.getcstring(), ep.getcasesensitive());
+	stat = matcher->compile(line, pos);
+	if (stat != ES_NORMAL)
+	{
+		delete sptr;
+		delete matcher;
+		return stat;
+	}
+
+	// Determine the delimiter
+	char delimiter;
+	if (chunktype == CT_LINE)
+		delimiter = ep.getlinedel();
+	else
+		delimiter = ep.getitemdel();
+
+	// Filter the data
+	char *dptr = filterdelimited(sptr, delimiter, matcher);
 	delete sptr;
-	delete pptr;
+	delete matcher;
+	
+	// IM-2013-07-26: [[ Bug 10774 ]] if filterlines returns nil throw a "no memory" error
+	if (dptr == nil)
+	{
+		MCeerror->add(EE_NO_MEMORY, line, pos);
+		return ES_ERROR;
+	}
+
 	ep.copysvalue(dptr, strlen(dptr));
 	delete dptr;
-	if (container->set(ep, PT_INTO) != ES_NORMAL)
+
+	// Now put the filtered data into the correct container
+	if (it != NULL)
+		stat = it->set(ep);
+	else if (target != NULL)
+		stat = target->set(ep, PT_INTO);
+	else
+		stat = container->set(ep, PT_INTO);
+	if (stat != ES_NORMAL)
 	{
 		MCeerror->add(EE_FILTER_CANTSET, line, pos);
 		return ES_ERROR;
 	}
+
+	// Success!
 	return ES_NORMAL;
+#endif /* MCFilter */
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCImport::~MCImport()
 {
@@ -1474,19 +1667,21 @@ Parse_stat MCImport::parse(MCScriptPoint &sp)
 						MCperror -> add(PE_IMPORT_BADFILENAME, sp);
 						return PS_ERROR;
 					}
-					
-					if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
-					{
-						if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
-							sp . parseexp(False, True, &size) != PS_NORMAL)
-						{
-							MCperror -> add(PE_IMPORT_BADFILENAME, sp);
-							return PS_ERROR;
-						}
-					}
 				}
 			}
 		}
+		
+		// MW-2014-02-20: [[ Bug 11811 ]] Add the 'at size' clause to screen snapshot.
+		if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
+		{
+			if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SIZE) != PS_NORMAL ||
+				sp . parseexp(False, True, &size) != PS_NORMAL)
+			{
+				MCperror -> add(PE_IMPORT_BADFILENAME, sp);
+				return PS_ERROR;
+			}
+		}
+		
 		return PS_NORMAL;
 	}
 	if (sp.skip_token(SP_FACTOR, TT_FROM) != PS_NORMAL)
@@ -1532,6 +1727,7 @@ Parse_stat MCImport::parse(MCScriptPoint &sp)
 
 Exec_stat MCImport::exec(MCExecPoint &ep)
 {
+#ifdef /* MCImport */ LEGACY_EXEC
 	if (format == EX_SNAPSHOT)
 	{
 		if ((container == NULL) && (MCsecuremode & MC_SECUREMODE_PRIVACY))
@@ -1575,6 +1771,12 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 		}
 		mfile = ep.getsvalue().clone();
 	}
+
+	// MW-2013-05-20: [[ Bug 10897 ]] Object snapshot returns a premultipled
+	//   bitmap, which needs to be processed before compression. This flag
+	//   indicates to do this processing later on in the method.
+	bool t_needs_unpremultiply;
+	t_needs_unpremultiply = false;
 	if (format == EX_SNAPSHOT)
 	{
 		char *disp = NULL;
@@ -1637,10 +1839,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 			}
 		}
 		
-		// IM-2013-06-21: [[ Bug 10967 ]] screen snapshot can return opaque image
-		// with "alpha" channel set to zero. 
-		bool t_has_alpha = false;
-		MCBitmap *t_bitmap = nil;
+		MCImageBitmap *t_bitmap = nil;
 		if (container != NULL)
 		{
 			MCObject *parent = NULL;
@@ -1651,8 +1850,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 				return ES_ERROR;
 			}
 		
-			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, with_effects);
-			t_has_alpha = true;
+			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, 1.0f, with_effects);
 			// OK-2007-04-24: If the import rect doesn't intersect with the object, MCobject::snapshot
 			// may return null. In this case, return an error.
 			if (t_bitmap == NULL)
@@ -1660,10 +1858,15 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 				MCeerror ->add(EE_IMPORT_EMPTYRECT, line, pos);
 				return ES_ERROR;
 			}
+			
+			// MW-2013-05-20: [[ Bug 10897 ]] The 'snapshot' command produces a premultiplied bitmap
+			//   so mark it to be unpremultiplied for later on.
+			t_needs_unpremultiply = true;
 		}
 		else
 		{
-			t_bitmap = MCscreen->snapshot(r, w, disp);
+			// MW-2014-02-20: [[ Bug 11811 ]] Pass the wanted size to the snapshot method.
+			t_bitmap = MCscreen->snapshot(r, w, disp, size != nil ? &t_wanted_size : nil);
 
 			delete disp;
 		}
@@ -1671,9 +1874,16 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 		MCImage *iptr = nil;
 		if (t_bitmap != nil)
 		{
+			// MW-2013-05-20: [[ Bug 10897 ]] Make sure we unpremultiply if needed.
+			if (t_needs_unpremultiply)
+				MCImageBitmapUnpremultiply(t_bitmap);
+			MCImageBitmapCheckTransparency(t_bitmap);
+
 			/* UNCHECKED */ iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
-			iptr -> compress(t_bitmap, true, t_has_alpha);
-			MCscreen->destroyimage(t_bitmap);
+			// IM-2013-08-01: [[ ResIndependence ]] pass image scale when setting bitmap
+			if (t_bitmap != nil)
+				iptr->setbitmap(t_bitmap, 1.0f, true);
+			MCImageFreeBitmap(t_bitmap);
 		}
 	
 		if (iptr != NULL)
@@ -1803,6 +2013,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 	MCU_unwatchcursor(ep.getobj()->getstack(), True);
 	
 	return stat;
+#endif /* MCImport */
 }
 
 typedef struct
@@ -1873,6 +2084,7 @@ Parse_stat MCKill::parse(MCScriptPoint &sp)
 
 Exec_stat MCKill::exec(MCExecPoint &ep)
 {
+#ifdef /* MCKill */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_PROCESS)
 	{
 		MCeerror->add
@@ -1936,6 +2148,7 @@ Exec_stat MCKill::exec(MCExecPoint &ep)
 	}
 	delete name;
 	return ES_NORMAL;
+#endif /* MCKill */
 }
 
 MCOpen::~MCOpen()
@@ -2090,6 +2303,7 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 
 Exec_stat MCOpen::exec(MCExecPoint &ep)
 {
+#ifdef /* MCOpen */ LEGACY_EXEC
 	if (go != NULL)
 		return go->exec(ep);
 
@@ -2268,6 +2482,7 @@ Exec_stat MCOpen::exec(MCExecPoint &ep)
 		break;
 	}
 	return ES_NORMAL;
+#endif /* MCOpen */
 }
 
 MCRead::~MCRead()
@@ -2370,7 +2585,7 @@ IO_stat MCRead::readfor(IO_handle stream, int4 pindex, File_unit unit,
 	switch (unit)
 	{
 	case FU_INT1:
-		{
+	{
 			int1 *i1ptr = (int1 *)dptr;
 			for (uint4 i = 0 ; i < count ; i++)
 				ep.concatint(i1ptr[i], EC_COMMA, i == 0);
@@ -2755,6 +2970,7 @@ Parse_stat MCRead::parse(MCScriptPoint &sp)
 
 Exec_stat MCRead::exec(MCExecPoint &ep)
 {
+#ifdef /* MCRead */ LEGACY_EXEC
 	IO_handle stream = NULL;
 	uint2 index;
 	int4 pindex = -1;
@@ -3037,6 +3253,7 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 #endif
 
 	return ES_NORMAL;
+#endif /* MCRead */
 }
 
 MCSeek::~MCSeek()
@@ -3101,6 +3318,7 @@ Parse_stat MCSeek::parse(MCScriptPoint &sp)
 
 Exec_stat MCSeek::exec(MCExecPoint &ep)
 {
+#ifdef /* MCSeek */ LEGACY_EXEC
 	if (fname->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -3146,6 +3364,7 @@ Exec_stat MCSeek::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCSeek */
 }
 
 MCWrite::~MCWrite()
@@ -3221,6 +3440,7 @@ Parse_stat MCWrite::parse(MCScriptPoint &sp)
 
 Exec_stat MCWrite::exec(MCExecPoint &ep)
 {
+#ifdef /* MCWrite */ LEGACY_EXEC
 	uint2 index;
 	IO_handle stream = NULL;
 	IO_stat stat = IO_NORMAL;
@@ -3449,4 +3669,111 @@ Exec_stat MCWrite::exec(MCExecPoint &ep)
 
 	MCresult->clear(False);
 	return ES_NORMAL;
+#endif /* MCWrite */
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// MM-2014-02-12: [[ SecureSocket ]] 
+//  New secure socket command, used to ensure all future communications over the given socket are encrypted.
+//
+//  After securing:
+//    All pending and future reads from the socket will assumed to be encrypted.
+//    All pending writes will continue unencrypted. All future writes will be encrypted.
+//
+//  Unless specified, the connection will be verified.
+//
+//  Syntax:
+//    secure socket <socket>
+//    secure socket <socket> with verification
+//    secure socket <socket> without verification
+//
+MCSecure::~MCSecure()
+{
+	delete m_sock_name;
+}
+
+Parse_stat MCSecure::parse(MCScriptPoint &sp)
+{	
+	initpoint(sp);
+	
+	Symbol_type type;
+	if (sp . next(type) != PS_NORMAL)
+	{
+		MCperror -> add(PE_SECURE_NOSOCKET, sp);
+		return PS_ERROR;
+	}
+	
+	const LT *te;
+	if (sp . lookup(SP_OPEN, te) != PS_NORMAL)
+	{
+		MCperror -> add(PE_SECURE_NOSOCKET, sp);
+		return PS_ERROR;
+	}
+	
+	Open_argument t_open_arg;
+	t_open_arg = (Open_argument) te -> which;
+	if (t_open_arg != OA_SOCKET)
+	{
+		MCperror -> add(PE_SECURE_NOSOCKET, sp);
+		return PS_ERROR;
+	}
+	
+	if (sp . parseexp(False, True, &m_sock_name) != PS_NORMAL)
+	{
+		MCperror -> add(PE_SECURE_BADNAME, sp);
+		return PS_ERROR;
+	}
+	
+	if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+	{
+		if (sp . skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) == PS_NORMAL)
+			secureverify = True;
+		else
+		{
+			MCperror -> add(PE_SECURE_BADMESSAGE, sp);
+			return PS_ERROR;
+		}
+	}
+	
+	if (sp . skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
+	{
+		if (sp . skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) == PS_NORMAL)
+			secureverify = False;
+		else
+		{
+			MCperror -> add(PE_SECURE_BADMESSAGE, sp);
+			return PS_ERROR;
+		}
+	}
+	
+	return PS_NORMAL;
+}
+
+Exec_stat MCSecure::exec(MCExecPoint &ep)
+{
+#ifdef /* MCSecure */ LEGACY_EXEC
+	
+	if (m_sock_name -> eval(ep) != ES_NORMAL)
+	{
+		MCeerror -> add(EE_SECURE_BADNAME, line, pos);
+		return ES_ERROR;
+	}
+	
+	char *t_sock_name;
+	t_sock_name = ep . getsvalue() . clone();
+	
+	uint2 t_index;
+	if (IO_findsocket(t_sock_name, t_index))
+	{
+		MCS_secure_socket(MCsockets[t_index], secureverify);
+		MCresult->clear(False);
+	}
+	else
+		MCresult->sets("socket is not open");
+	
+	MCCStringFree(t_sock_name);
+	
+	return ES_NORMAL;
+#endif /* MCSecure */
 }

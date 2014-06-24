@@ -39,4 +39,7 @@ void MCFiberMakeCurrent(MCFiberRef fiber);
 // Invoke the given routine on the given fiber and wait for return.
 void MCFiberCall(MCFiberRef fiber, void (*callback)(void *), void *context);
 
+// Returns true if the current fiber is currently running.
+bool MCFiberIsCurrentThread(MCFiberRef fiber);
+
 #endif

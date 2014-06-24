@@ -32,10 +32,8 @@ const char *MCsecuremode_strings[MC_SECUREMODE_MODECOUNT] = {
 	"disk",
 	"network",
 	"process",
-	"shell",
 	"registryRead",
 	"registryWrite",
-	"stack",
 	"printing",
 	"privacy", 
 	"applescript",
@@ -61,6 +59,13 @@ bool MCSecureModeCheckDisk(uint2 line, uint2 pos)
 bool MCSecureModeCanAccessPrinter(void)
 {
 	return ((MCsecuremode & MC_SECUREMODE_PRINT) == 0);
+}
+
+// MW-2013-08-07: [[ Bug 10865 ]] New check method for whether AppleScript is
+//   enabled.
+bool MCSecureModeCanAccessAppleScript(void)
+{
+	return ((MCsecuremode & MC_SECUREMODE_APPLESCRIPT) == 0);
 }
 
 bool MCSecureModeCheckPrinter(uint2 line, uint2 pos)

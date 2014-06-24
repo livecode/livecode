@@ -1,0 +1,1 @@
+# Menu Builder Disable Item problem. Unicode characters were not being handled correctly when disabling/enabling menu items.

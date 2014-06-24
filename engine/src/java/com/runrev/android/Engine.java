@@ -56,13 +56,14 @@ import java.nio.*;
 import java.nio.charset.*;
 import java.lang.reflect.*;
 import java.util.*;
+import java.text.Collator;
 
 // This is the main class that interacts with the engine. Although only one
 // instance of the engine is allowed, we still need an object on which we can
 // invoke methods from the native code so we wrap all this up into a single
 // view object.
 
-public class Engine extends View
+public class Engine extends View implements EngineApi
 {
 	public static final String TAG = "revandroid.Engine";
 
@@ -105,6 +106,9 @@ public class Engine extends View
     private NotificationModule m_notification_module;
 
     private PowerManager.WakeLock m_wake_lock;
+    
+    // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
+    private Collator m_collator;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -182,6 +186,14 @@ public class Engine extends View
 
 		// But we do have a bitmap view.
 		m_bitmap_view = new BitmapView(getContext());
+        
+        // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
+        m_collator = Collator.getInstance(Locale.getDefault());
+		
+		// MW-2013-10-09: [[ Bug 11266 ]] Turn off keep-alive connections to
+		//   work-around a general bug in android:
+		// https://code.google.com/p/google-http-java-client/issues/detail?id=116
+		System.setProperty("http.keepAlive", "false");
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -371,6 +383,13 @@ public class Engine extends View
 	{
 		if ((p_orientation == 1 || p_orientation == 2) && Build.VERSION.SDK_INT < 9) // Build.VERSION_CODES.GINGERBREAD
 			return;
+        
+        // MM-2014-03-25: [[ Bug 11708 ]] Moved call to update orientation (from onScreenOrientationChanged).
+        //  This way we only flag orientation changed if the we've set it in the activity (i.e. or app has actually rotated).
+        //  Prevents changes in device orientation during lock screen confusing things.
+        // IM-2013-11-15: [[ Bug 10485 ]] Record the change in orientation
+        updateOrientation(p_orientation);
+        
 		((LiveCodeActivity)getContext()).setRequestedOrientation(s_orientation_map[p_orientation]);
 	}
 
@@ -1031,20 +1050,104 @@ public class Engine extends View
 		return (WindowManager)getContext().getSystemService(Context.WINDOW_SERVICE);
 	}
 
-	public String getViewportAsString()
+	// IM-2013-11-15: [[ Bug 10485 ]] Refactor to return the viewport as Rect
+	public Rect getViewport()
 	{
 		DisplayMetrics t_metrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(t_metrics);
-		return rectToString(0, 0, t_metrics.widthPixels, t_metrics.heightPixels);
+		
+		return new Rect(0, 0, t_metrics.widthPixels, t_metrics.heightPixels);
+	}
+	
+	public String getViewportAsString()
+	{
+		return rectToString(getViewport());
 	}
 
-	private Rect getWorkarea()
+	// IM-2013-11-15: [[ Bug 10485 ]] Rename to "effective" as the returned value accounts
+	// for the keyboard if visible
+	private Rect getEffectiveWorkarea()
 	{
 		Rect t_workrect = new Rect();
 		getGlobalVisibleRect(t_workrect);
 		return t_workrect;
 	}
 
+	public String getEffectiveWorkareaAsString()
+	{
+		return rectToString(getEffectiveWorkarea());
+	}
+	
+	private boolean m_know_portrait_size = false;
+	private boolean m_know_landscape_size = false;
+	private boolean m_know_statusbar_size = false;
+	
+	private Rect m_portrait_rect;
+	private Rect m_landscape_rect;
+	private int m_statusbar_size;
+	
+	// IM-2013-11-15: [[ Bug 10485 ]] Return the known work area, updating with new values
+	// if requested.
+	private Rect getWorkarea(boolean p_update, int p_new_width, int p_new_height)
+	{
+		// If the keyboard is visible when the orientation changes, the reported size may be wrong
+		// so we either use the known size for the current orientation or make our best guess
+		// based on the total screen height being reduced by the same amount in either orientation.
+		Rect t_working_rect;
+		t_working_rect = null;
+		
+		Rect t_viewport;
+		t_viewport = getViewport();
+		
+		boolean t_portrait = t_viewport.height() > t_viewport.width();
+
+		// We have new values and the keyboard isn't showing so update any sizes we don't already know
+		if (p_update && !m_keyboard_visible)
+		{
+			t_working_rect = new Rect(0, 0, p_new_width, p_new_height);
+			
+			if (t_portrait && !m_know_portrait_size)
+			{
+				m_portrait_rect = t_working_rect;
+				m_know_portrait_size = true;
+			}
+			else if (!t_portrait && !m_know_landscape_size)
+			{
+				m_landscape_rect = t_working_rect;
+				m_know_landscape_size = true;
+			}
+			
+			if (!m_know_statusbar_size)
+			{
+				m_statusbar_size = t_viewport.height() - p_new_height;
+				m_know_statusbar_size = true;
+			}
+		}
+		else
+		{
+			if (t_portrait && m_know_portrait_size)
+				t_working_rect = m_portrait_rect;
+			else if (!t_portrait && m_know_landscape_size)
+				t_working_rect = m_landscape_rect;
+		}
+		
+		// If we don't have a known size for the current orientation, compute by subtracting
+		// the height of the screen furniture from the viewport rect.
+		if (t_working_rect == null)
+		{
+			t_working_rect = new Rect(t_viewport);
+			if (m_know_statusbar_size)
+				t_working_rect.bottom -= m_statusbar_size;
+		}
+		
+		return t_working_rect;
+	}
+	
+	public Rect getWorkarea()
+	{
+		return getWorkarea(false, 0, 0);
+	}
+	
 	public String getWorkareaAsString()
 	{
 		return rectToString(getWorkarea());
@@ -1132,24 +1235,61 @@ public class Engine extends View
 		return true;
 	}
 
+	private boolean m_keyboard_sizechange = false;
+	private boolean m_orientation_sizechange = false;
+	
+	private boolean m_keyboard_visible = false;
+	
+	void updateKeyboardVisible(boolean p_visible)
+	{
+		if (p_visible == m_keyboard_visible)
+			return;
+		
+		// Log.i(TAG, "updateKeyboardVisible(" + p_visible + ")");
+		
+		m_keyboard_visible = p_visible;
+		
+		// IM-2013-11-15: [[ Bug 10485 ]] Notify engine when keyboard visiblity changes
+		if (p_visible)
+			doKeyboardShown(0);
+		else
+			doKeyboardHidden();
+		
+		m_keyboard_sizechange = true;
+	}
+	
+	void updateOrientation(int p_orientation)
+	{
+		// Log.i(TAG, "updateOrientation(" + p_orientation + ")");
+		
+		m_orientation_sizechange = true;
+	}
+	
 	@Override
 	protected void onSizeChanged(int w, int h, int oldw, int oldh)
 	{
-		// If the height changes, we assume its a keyboard show event so don't
-		// resize but do send notifications.
-		if (w == oldw && h != oldh)
-		{
-			if (h > oldh)
-				doKeyboardHidden();
-			else
-				doKeyboardShown(oldh - h);
-			return;
-		}
+		// Log.i(TAG, "onSizeChanged({" + w + "x" + h + "}, {" + oldw + ", " + oldh + "})");
 		
-		m_bitmap_view . resizeBitmap(w, h);
-
-		doReconfigure(w, h, m_bitmap_view . getBitmap());
-
+		// IM-2013-11-15: [[ Bug 10485 ]] As we can't determine directly if the resize is due to the keyboard
+		// being made visible, we use a rule of thumb that anything larger than 100 pixels must be the keyboard.
+		int t_height_diff = getContainer().getRootView().getHeight() - getContainer().getHeight();
+		updateKeyboardVisible(t_height_diff > 100);
+		
+		Rect t_rect;
+		t_rect = null;
+		
+		if ((oldw == 0 && oldh == 0) || m_orientation_sizechange)
+			t_rect = getWorkarea(true, w, h);
+		
+		m_keyboard_sizechange = m_orientation_sizechange = false;
+		
+		if (t_rect == null)
+			return;
+		
+		m_bitmap_view . resizeBitmap(t_rect.width(), t_rect.height());
+		
+		doReconfigure(t_rect.width(), t_rect.height(), m_bitmap_view . getBitmap());
+		
 		// Make sure we trigger handling
 		if (m_wake_on_event)
 			doProcess(false);
@@ -1259,6 +1399,11 @@ public class Engine extends View
 	public void setURLTimeout(int p_timeout)
 	{
         m_network_module.setURLTimeout(p_timeout);
+	}
+	
+	public void setURLSSLVerification(boolean p_enabled)
+	{
+		m_network_module.setURLSSLVerification(p_enabled);
 	}
 
 	public boolean loadURL(int p_id, String p_url, String p_headers)
@@ -1687,17 +1832,21 @@ public class Engine extends View
 
 	public void prepareEmail(String address, String cc, String bcc, String subject, String message_body, boolean is_html)
 	{
-		m_email = new Email(address, cc, bcc, subject, message_body, is_html);
+        String t_provider_authority = getContext().getPackageName();
+        t_provider_authority += ".attachmentprovider";
+		m_email = new Email(address, cc, bcc, subject, message_body, t_provider_authority, is_html);
 	}
 
 	public void addAttachment(String path, String mime_type, String name)
 	{
-		m_email.addAttachment(path, mime_type, name);
+        // SN-2014-02-03: [[ bug 11069 ]] Pass the Activity to the Email addAttachment
+        m_email.addAttachment(getActivity(), path, mime_type, name);
 	}
 
 	public void addAttachment(byte[] data, String mime_type, String name)
 	{
-		m_email.addAttachment(data, mime_type, name);
+        // SN-2014-02-03: [[ bug 11069 ]] Pass the Activity to the Email addAttachment
+        m_email.addAttachment(getActivity(), data, mime_type, name);
 	}
 
 	public void sendEmail()
@@ -1707,7 +1856,7 @@ public class Engine extends View
 
 	private void onEmailResult(int resultCode, Intent data)
 	{
-		m_email.cleanupTempFiles();
+		m_email.cleanupAttachments(getActivity().getContentResolver());
 
 		if (resultCode == Activity.RESULT_CANCELED)
 		{
@@ -1741,6 +1890,10 @@ public class Engine extends View
     private static final int CREATE_CALENDAR_RESULT = 11;
     private static final int UPDATE_CALENDAR_RESULT = 12;
     private static final int SHOW_CALENDAR_RESULT = 13;
+	
+	// MW-2013-08-07: [[ ExternalsApiV5 ]] Activity result code for activities
+	//   launched through 'runActivity' API.
+	private static final int RUN_ACTIVITY_RESULT = 14;
 
 	public void onActivityResult (int requestCode, int resultCode, Intent data)
 	{
@@ -1774,14 +1927,18 @@ public class Engine extends View
 				onShowContactResult(resultCode, data);
 				break;
 			case CREATE_CALENDAR_RESULT:
-                Log.i("revandroid", "onActivityResult - CREATE_CALENDAR_RESULT request: " + requestCode + " result: "+ resultCode);
-				onCreateCalendarEventResult(resultCode, data);
+                onCreateCalendarEventResult(resultCode, data);
 				break;
 			case UPDATE_CALENDAR_RESULT:
 				onUpdateCalendarEventResult(resultCode, data);
 				break;
 			case SHOW_CALENDAR_RESULT:
 				onShowCalendarEventResult(resultCode, data);
+				break;
+			// MW-2013-08-07: [[ ExternalsApiV5 ]] Dispatch the activity result
+			//   to the 'runActivity' handler.
+			case RUN_ACTIVITY_RESULT:
+				onRunActivityResult(resultCode, data);
 				break;
 			default:
 				break;
@@ -2503,6 +2660,9 @@ public class Engine extends View
 	{
 		m_shake_listener.onResume();
 		m_orientation_listener.enable();
+        // PM-2014-04-07: [[Bug 12099]] On awakening Android Device from sleep, make sure we update the orientation
+        // so as no part of the screen is blacked out
+        updateOrientation(getDeviceRotation());
 
 		if (m_sensor_module != null)
             m_sensor_module.onResume();
@@ -2518,6 +2678,9 @@ public class Engine extends View
 		s_running = true;
 		if (m_text_editor_visible)
 			showKeyboard();
+		
+		// IM-2013-08-16: [[ Bugfix 11103 ]] dispatch any remote notifications received while paused
+		dispatchNotifications();
 	}
 
 	public void onDestroy()
@@ -2651,6 +2814,82 @@ public class Engine extends View
         }
 	}
 
+    // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
+    public int compareInternational(String left, String right)
+    {
+        Log.i("revandroid", "compareInternational"); 
+        return m_collator.compare(left, right);
+    }
+    
+    ////////////////////////////////////////////////////////////////////////////////
+
+	// EngineApi implementation
+	
+	// MW-2013-08-07: [[ ExternalsApiV5 ]] Implement the 'getActivity()' API method.
+	public Activity getActivity()
+	{
+		return (LiveCodeActivity)getContext();
+	}
+	
+	// MW-2013-08-07: [[ ExternalsApiV5 ]] Implement the 'getContainer()' API method.
+	public ViewGroup getContainer()
+	{
+		return (ViewGroup)getParent();
+	}
+	
+	// MW-2013-08-07: [[ ExternalsApiV5 ]] Implement the 'runActivity()' API method -
+	//   hooks into onActivityResult handler too.
+	private boolean m_pending_activity_running = false;
+	private int m_pending_activity_result_code = 0;
+	private Intent m_pending_activity_data = null;
+	public void runActivity(Intent p_intent, ActivityResultCallback p_callback)
+	{
+		// We aren't re-entrant, so just invoke the callback as 'cancelled' if one is
+		// already running.
+		if (m_pending_activity_running)
+		{
+			p_callback . handleActivityResult(Activity.RESULT_CANCELED, null);
+			return;
+		}
+		
+		// Mark an activity as running.
+		m_pending_activity_running = true;
+		
+		// Run the activity.
+		((LiveCodeActivity)getContext()) . startActivityForResult(p_intent, RUN_ACTIVITY_RESULT);
+		
+		// Wait until the activity returns.
+		while(m_pending_activity_running)
+			doWait(60.0, false, true);
+		
+		// Take local copies of the instance vars (to stop hanging data).
+		Intent t_data;
+		int t_result_code;
+		t_data = m_pending_activity_data;
+		t_result_code = m_pending_activity_result_code;
+		
+		// Reset the instance vars (to stop hanging data and so that the callback
+		// can start another activity if it wants).
+		m_pending_activity_data = null;
+		m_pending_activity_result_code = 0;
+		
+		p_callback . handleActivityResult(t_result_code, t_data);
+	}
+	
+	// MW-2013-08-07: [[ ExternalsApiV5 ]] Called when an activity invoked using
+	//   'runActivity()' API method returns data.
+	private void onRunActivityResult(int p_result_code, Intent p_data)
+	{
+		// Store the result details.
+		m_pending_activity_data = p_data;
+		m_pending_activity_result_code = p_result_code;
+		m_pending_activity_running = false;
+		
+		// Make sure we signal a switch back to the script thread.
+		if (m_wake_on_event)
+			doProcess(false);
+	}
+	
     ////////////////////////////////////////////////////////////////////////////////
 
     // url launch callback
@@ -2694,6 +2933,10 @@ public class Engine extends View
 
     public static native String doGetCustomPropertyValue(String set, String property);
 
+	// MW-2013-08-07: [[ ExternalsApiV5 ]] Native wrapper around MCScreenDC::wait
+	//   used by runActivity() API.
+	public static native void doWait(double time, boolean dispatch, boolean anyevent);
+	
     // sensor handlers
     public static native void doLocationChanged(double p_latitude, double p_longitude, double p_altitude, float p_timestamp, float p_accuracy, double p_speed, double p_course);
     public static native void doHeadingChanged(double p_heading, double p_magnetic_heading, double p_true_heading, float p_timestamp,

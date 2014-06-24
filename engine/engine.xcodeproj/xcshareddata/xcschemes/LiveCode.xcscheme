@@ -14,8 +14,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4D587DA10B80945B00200116"
-               BuildableName = "LiveCode.app"
-               BlueprintName = "LiveCode"
+               BuildableName = "LiveCode-Community.app"
+               BlueprintName = "LiveCode-Community"
                ReferencedContainer = "container:engine.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,8 +32,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4D587DA10B80945B00200116"
-            BuildableName = "LiveCode.app"
-            BlueprintName = "LiveCode"
+            BuildableName = "LiveCode-Community.app"
+            BlueprintName = "LiveCode-Community"
             ReferencedContainer = "container:engine.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -51,15 +51,15 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4D587DA10B80945B00200116"
-            BuildableName = "LiveCode.app"
-            BlueprintName = "LiveCode"
+            BuildableName = "LiveCode-Community.app"
+            BlueprintName = "LiveCode-Community"
             ReferencedContainer = "container:engine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "REV_TOOLS_PATH"
-            value = "/Users/ianmacphail/workspace/livecode/ide-6.0"
+            value = "$(SOLUTION_DIR)/ide"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
@@ -76,8 +76,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4D587DA10B80945B00200116"
-            BuildableName = "LiveCode.app"
-            BlueprintName = "LiveCode"
+            BuildableName = "LiveCode-Community.app"
+            BlueprintName = "LiveCode-Community"
             ReferencedContainer = "container:engine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

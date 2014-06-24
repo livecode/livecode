@@ -59,6 +59,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "license.h"
 #include "stacksecurity.h"
 
+#include "graphics_util.h"
+
 #define STACK_EXTRA_ORIGININFO (1U << 0)
 
 IO_stat MCStack::load_substacks(IO_handle stream, const char *version)
@@ -133,9 +135,15 @@ IO_stat MCStack::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 IO_stat MCStack::load(IO_handle stream, const char *version, uint1 type)
 {
 	IO_stat stat;
-
+	
+	// FG-2013-09-20 [[ Bugfix 10846 ]]
+	// Community edition cannot read encrypted stacks
 	if (type != OT_STACK)
+	{
+		if (MCresult->isclear() && type == OT_ENCRYPT_STACK)
+			MCresult->sets("Encrypted stacks cannot be opened in Community Edition");
 		return IO_ERROR;
+	}
 	
 	uint32_t t_reserved = 0;
 	
@@ -451,10 +459,18 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 			}
 			break;
 		default:
-			MCS_seek_cur(stream, -1);
-			return IO_NORMAL;
+            MCS_seek_cur(stream, -1);
+                
+            // IM-2013-09-30: [[ FullscreenMode ]] ensure old_rect is initialized for fullscreen stacks
+            old_rect = rect;
+			
+            return IO_NORMAL;
 		}
 	}
+	
+    // IM-2013-09-30: [[ FullscreenMode ]] ensure old_rect is initialized for fullscreen stacks
+	old_rect = rect;
+    
 	return IO_NORMAL;
 }
 
@@ -1048,7 +1064,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 			updatemenubar();
 		}
 		
-		curcard->resize(rect.width, rect.height + getscroll());
+		updatecardsize();
 
 		// MW-2008-10-31: [[ ParentScripts ]] Send preOpenControl appropriately
 		if (curcard -> openbackgrounds(true, oldcard) == ES_ERROR
@@ -1265,12 +1281,15 @@ MCStack *MCStack::findsubstackid(uint4 fid)
 void MCStack::translatecoords(MCStack *dest, int2 &x, int2 &y)
 {
 	// WEBREV
-	MCRectangle srect;
-	
-	srect = getrect();
+	// IM-2013-10-09: [[ FullscreenMode ]] Reimplement using MCStack::stacktogloballoc
+	MCPoint t_loc;
+	t_loc = MCPointMake(x, y);
 
-	x += srect.x - dest->rect.x;
-	y += srect.y - dest->rect.y - getscroll();
+	t_loc = stacktogloballoc(t_loc);
+	t_loc = dest->globaltostackloc(t_loc);
+
+	x = t_loc.x;
+	y = t_loc.y;
 }
 
 uint4 MCStack::newid()
@@ -1461,6 +1480,8 @@ MCObject *MCStack::getobjname(Chunk_term type, const MCString &s)
 
 void MCStack::createmenu(MCControl *nc, uint2 width, uint2 height)
 {
+	// MW-2014-03-12: [[ Bug 11914 ]] Mark the stack as an engine menu.
+	m_is_menu = true;
 
 	allowmessages(False);
 	flags &= ~F_RESIZABLE;
@@ -1505,7 +1526,7 @@ void MCStack::createmenu(MCControl *nc, uint2 width, uint2 height)
 	}
 
 
-	curcard->resize(rect.width, rect.height + getscroll());
+	updatecardsize();
 	cards->setparent(this);
 	MCControl *cptr = nc;
 	do
@@ -1535,38 +1556,43 @@ void MCStack::menuset(uint2 button, uint2 defy)
 
 void MCStack::menumup(uint2 which, MCString &s, uint2 &selline)
 {
-	MCControl *focused = curcard->getmfocused();
-	s.set(NULL, 0);
-	if (focused == NULL)
-		focused = curcard->getkfocused();
-	MCButton *bptr = (MCButton *)focused;
-	if (focused != NULL && (focused->gettype() == CT_FIELD
-	                        || focused->gettype() == CT_BUTTON
-	                        && bptr->getmenumode() != WM_CASCADE))
+	// MW-2014-03-12: [[ Bug 11914 ]] Only do internal menu actions if this is an
+	//   engine menu.
+	if (m_is_menu)
 	{
-		bool t_has_tags = bptr->getmenuhastags();
+		MCControl *focused = curcard->getmfocused();
+		s.set(NULL, 0);
+		if (focused == NULL)
+			focused = curcard->getkfocused();
+		MCButton *bptr = (MCButton *)focused;
+		if (focused != NULL && (focused->gettype() == CT_FIELD
+								|| focused->gettype() == CT_BUTTON
+								&& bptr->getmenumode() != WM_CASCADE))
+		{
+			bool t_has_tags = bptr->getmenuhastags();
 
-		MCExecPoint ep(this, NULL, NULL);
-		focused->getprop(0, P_LABEL, ep, True);
-		const char *t_label = ep.getsvalue().getstring();
-		uint4 t_label_len = ep.getsvalue().getlength();
-		const char *t_name = focused->getname_cstring();
-		if (t_name != NULL)
-		{
-			uint4 t_name_len = strlen(t_name);
-			//if name is set and differs from label, then use name as menu pick
-			if (t_has_tags && memcmp(t_label, t_name, MCU_max(t_label_len, t_name_len)) != 0)
-				ep.setsvalue(t_name);
+			MCExecPoint ep(this, NULL, NULL);
+			focused->getprop(0, P_LABEL, ep, True);
+			const char *t_label = ep.getsvalue().getstring();
+			uint4 t_label_len = ep.getsvalue().getlength();
+			const char *t_name = focused->getname_cstring();
+			if (t_name != NULL)
+			{
+				uint4 t_name_len = strlen(t_name);
+				//if name is set and differs from label, then use name as menu pick
+				if (t_has_tags && memcmp(t_label, t_name, MCU_max(t_label_len, t_name_len)) != 0)
+					ep.setsvalue(t_name);
+			}
+			s.set(ep.getsvalue().clone(),ep.getsvalue().getlength());
+				
+			if (focused->gettype() == CT_FIELD)
+			{
+				MCField *f = (MCField *)focused;
+				selline = f->hilitedline();
+			}
+			else
+				curcard->count(CT_LAYER, CT_UNDEFINED, focused, selline, True);
 		}
-		s.set(ep.getsvalue().clone(),ep.getsvalue().getlength());
-			
-		if (focused->gettype() == CT_FIELD)
-		{
-			MCField *f = (MCField *)focused;
-			selline = f->hilitedline();
-		}
-		else
-			curcard->count(CT_LAYER, CT_UNDEFINED, focused, selline, True);
 	}
 	curcard->mup(which);
 }
@@ -1574,30 +1600,37 @@ void MCStack::menumup(uint2 which, MCString &s, uint2 &selline)
 void MCStack::menukdown(const char *string, KeySym key,
                         MCString &s, uint2 &selline)
 {
-	MCControl *kfocused = curcard->getkfocused();
-	s.set(NULL,0);
-	if (kfocused != NULL)
+	// MW-2014-03-12: [[ Bug 11914 ]] Only do internal menu actions if this is an
+	//   engine menu.
+	if (m_is_menu)
 	{
-		MCString tlabel;
-		
-		// OK-2010-03-08: [[Bug 8650]] - Check its actually a button before casting, 
-		// with combo boxes on OS X this will be a field.
-		if (kfocused ->gettype() == CT_BUTTON && ((MCButton*)kfocused)->getmenuhastags())
+		MCControl *kfocused = curcard->getkfocused();
+		s.set(NULL,0);
+		if (kfocused != NULL)
 		{
-			const char *t_name = kfocused->getname_cstring();
-			uint4 t_namelen = strlen(t_name);
-			s.set(strclone(t_name, t_namelen), t_namelen);
+			MCString tlabel;
+			
+			// OK-2010-03-08: [[Bug 8650]] - Check its actually a button before casting, 
+			// with combo boxes on OS X this will be a field.
+			if (kfocused ->gettype() == CT_BUTTON && ((MCButton*)kfocused)->getmenuhastags())
+			{
+				const char *t_name = kfocused->getname_cstring();
+				uint4 t_namelen = strlen(t_name);
+				s.set(strclone(t_name, t_namelen), t_namelen);
+			}
+			else
+			{
+				MCExecPoint ep(this, NULL, NULL);
+				kfocused->getprop(0, P_LABEL, ep, True);
+				s.set(ep.getsvalue().clone(),ep.getsvalue().getlength());
+			}
+			curcard->count(CT_LAYER, CT_UNDEFINED, kfocused, selline, True);
 		}
-		else
-		{
-			MCExecPoint ep(this, NULL, NULL);
-			kfocused->getprop(0, P_LABEL, ep, True);
-			s.set(ep.getsvalue().clone(),ep.getsvalue().getlength());
-		}
-		curcard->count(CT_LAYER, CT_UNDEFINED, kfocused, selline, True);
+		curcard->kdown(string, key);
+		curcard->kunfocus();
 	}
-	curcard->kdown(string, key);
-	curcard->kunfocus();
+	else
+		curcard -> kdown(string, key);
 }
 
 void MCStack::findaccel(uint2 key, MCString &tpick, bool &r_disabled)

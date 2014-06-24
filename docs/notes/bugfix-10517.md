@@ -1,0 +1,1 @@
+# iPad retina landscape image size warning incorrect.

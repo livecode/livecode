@@ -534,8 +534,13 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCVariableVal
 		t_block -> flags |= F_HAS_TAB;
 	
 	// Set textsize
+    // AL-2013-11-26: [[ Bug 11458 ]] Ensure text size array element is converted to int4
 	if (p_style != nil && p_style -> fetch_element_if_exists(ep, "textSize", false))
-		t_block -> setatts(P_TEXT_SIZE, (void *)ep . getint4());
+    {
+        int4 t_size;
+        if (MCU_stoi4(ep . getsvalue(), t_size))
+            t_block -> setatts(P_TEXT_SIZE, (void *)t_size);
+    }
 	
 	// Set textstyle
 	if (p_style != nil && p_style -> fetch_element_if_exists(ep, "textStyle", false))

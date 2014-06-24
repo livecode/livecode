@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4D1FD8F913538F620027CA86 /* revandroid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D1FD8F813538F620027CA86 /* revandroid.cpp */; };
-		4D8F6B35113D231C0056ED41 /* libexternal.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8F6B32113D22FB0056ED41 /* libexternal.a */; };
+		4D8F6B35113D231C0056ED41 /* libexternalv1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8F6B32113D22FB0056ED41 /* libexternalv1.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,7 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4D8F6B35113D231C0056ED41 /* libexternal.a in Frameworks */,
+				4D8F6B35113D231C0056ED41 /* libexternalv1.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,7 +112,7 @@
 		4D8F6B2B113D22FB0056ED41 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4D8F6B32113D22FB0056ED41 /* libexternal.a */,
+				4D8F6B32113D22FB0056ED41 /* libexternalv1.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -179,10 +179,10 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		4D8F6B32113D22FB0056ED41 /* libexternal.a */ = {
+		4D8F6B32113D22FB0056ED41 /* libexternalv1.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
-			path = libexternal.a;
+			path = libexternalv1.a;
 			remoteRef = 4D8F6B31113D22FB0056ED41 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};

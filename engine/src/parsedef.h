@@ -20,14 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	PARSEDEFS_H
 #define	PARSEDEFS_H
 
-// for regex
-#define PATTERN_CACHE_SIZE 20
-extern char *MCregexpatterns[];
-
-#define NSUBEXP  50
-typedef struct _regexp regexp;
-extern regexp *MCregexcache[];
-
 typedef struct _constant
 {
 	MCString name;
@@ -221,7 +213,9 @@ enum Dest_type {
 	
 	// MW-2008-11-05: [[ Owner Reference ]] This desttype is used for chunks of the form:
 	//   ... of the owner of ...
-	DT_OWNER
+	DT_OWNER,
+	// MW-2013-08-05: [[ ThisMe ]] Access to the behavior object (this me).
+	DT_THIS_ME,
 };
 
 
@@ -300,6 +294,7 @@ enum Export_format {
 	EX_RAW_BGRA,
 	EX_RAW_RGB,
 	EX_RAW_BGR,
+	EX_RAW_BGRX,
 	EX_RAW_GRAY,
 	EX_RAW_INDEXED,
 	EX_BMP,
@@ -626,6 +621,10 @@ enum Functions {
 	
 	// MW-2013-05-08: [[ Uuid ]] New function for generating uuids.
 	F_UUID,
+    
+    // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+    F_MEASURE_TEXT,
+    F_MEASURE_UNICODE_TEXT,
 };
 
 enum Handler_type {
@@ -719,6 +718,13 @@ enum Mark_constants {
     MC_CARDS,
     MC_FINDING,
     MC_WHERE
+};
+
+// JS-2013-07-01: [[ EnhancedFilter ]] Tags for the type of pattern matcher to use.
+enum Match_mode {
+    MA_UNDEFINED,
+    MA_WILDCARD,
+    MA_REGEX
 };
 
 enum Move_mode {
@@ -866,7 +872,7 @@ enum Preposition_type {
 	PT_CONTENT,
 	PT_MARKUP,
 	PT_BINARY,
-	PT_COOKIE
+	PT_COOKIE,
 };
 
 enum Print_mode {
@@ -1116,6 +1122,9 @@ enum Properties {
     P_ADDRESS,
     P_STACKS_IN_USE,
 	P_NETWORK_INTERFACES,
+    
+  	// TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
+    P_FONTFILES_IN_USE,
 	
     // window properties
     P_NAME,
@@ -1213,6 +1222,10 @@ enum Properties {
 	P_REMOTEABLE, // RUNTIME only
 	P_STACK_URL, // RUNTIME only
 	P_FULLSCREEN, 
+	// IM-2013-09-23: [[ FullscreenMode ]] Property tag for the fullscreenMode
+	P_FULLSCREENMODE,
+	// IM-2014-01-07: [[ StackScale ]] Property tag for the scalefactor
+	P_SCALE_FACTOR,
     P_FILE_NAME,
     P_SAVE_COMPRESSED,
     P_USER_LEVEL,
@@ -1579,6 +1592,18 @@ enum Properties {
     P_CONTROL_NAMES,
 	P_CHILD_CONTROL_IDS,
     P_CHILD_CONTROL_NAMES,
+
+	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+	P_COLOR_DIALOG_COLORS,
+	
+	// IM-2013-12-04: [[ PixelScale ]] Tags for the pixelScale and systemPixelScale properties
+	P_PIXEL_SCALE,
+	P_SYSTEM_PIXEL_SCALE,
+	
+	// IM-2014-01-24: [[ HiDPI ]] Tags for the usePixelScaling, screenPixelScale, and screenPixelScales properties
+	P_USE_PIXEL_SCALING,
+	P_SCREEN_PIXEL_SCALE,
+	P_SCREEN_PIXEL_SCALES,
 	
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
@@ -1770,6 +1795,29 @@ enum Sugar_constants {
 	
 	// MERG-2013-06-24: [[ IsAnAsciiString ]] Tag for 'string'.
     SG_STRING,
+	
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'pattern'.
+    SG_PATTERN,
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'regex'.
+    SG_REGEX,
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'wildcard'.
+    SG_WILDCARD,
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'matching'.
+	SG_MATCHING,
+    
+    // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+    SG_RECURSIVELY,
+    
+    // TD-2013-06-14: [[ DynamicFonts ]] start using font theFont [globally]
+    SG_FONT,
+    SG_GLOBALLY,
+    SG_FILE,
+	
+	// MW-2013-11-14: [[ AssertCmd ]] Tags for sugar used in assert command.
+	SG_TRUE,
+	SG_FALSE,
+	SG_SUCCESS,
+	SG_FAILURE,
 };
 
 enum Statements {
@@ -1778,6 +1826,8 @@ enum Statements {
     S_ADD,
     S_ANSWER,
     S_ASK,
+	// MW-2013-11-14: [[ AssertCmd ]] 'assert' command tag.
+	S_ASSERT,
     S_BEEP,
     S_BREAK,
     S_BREAKPOINT,
@@ -1871,12 +1921,16 @@ enum Statements {
     S_REQUEST,
 	S_REQUIRE,
     S_RESET,
+    // MERG-2013-09-23: [[ ResolveImage ]] resolve image [id] relative to <object>
+	S_RESOLVE,
     S_RETURN,
     S_REVERT,
 	S_REV_RELICENSE, // DEVELOPMENT only
     S_ROTATE,
     S_SAVE,
     S_SCRIPT_ERROR,
+	// MM-2014-02-12: [[ SecureSocket ]] secure socket <socket> [with|without verification]
+	S_SECURE,
     S_SEEK,
     S_SELECT,
     S_SEND,

@@ -38,7 +38,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;REVXML_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;REVXML_EXPORTS;LIBXML_STATIC_FOR_DLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				UsePrecompiledHeader="0"
@@ -55,6 +55,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="wsock32.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -109,7 +110,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;REVXML_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;REVXML_EXPORTS;LIBXML_STATIC_FOR_DLL"
 				UsePrecompiledHeader="0"
 				DebugInformationFormat="3"
 			/>
@@ -124,6 +125,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="wsock32.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -164,7 +166,11 @@
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{8E776621-28FF-4FBF-A2F3-F4198EE9F7B7}"
-			RelativePathToProject=".\libxml\libxml.vcproj"
+			RelativePathToProject=".\thirdparty\libxml\libxml.vcproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{8E776621-28FF-4FBF-A2F3-F4598AEAF8B7}"
+			RelativePathToProject=".\thirdparty\libxslt\libxslt.vcproj"
 		/>
 	</References>
 	<Files>

@@ -266,7 +266,8 @@ void MCControl::munfocus()
 		if (state & CS_MFOCUSED)
 		{
 			mfocus(mx, my);
-			state &= ~CS_MFOCUSED;
+			// IM-2013-08-07: [[ Bug 10671 ]] Release grabbed controls when removing focus
+			state &= ~(CS_MFOCUSED | CS_GRAB);
 			message(MCM_mouse_release);
 		}
 		else
@@ -386,6 +387,7 @@ Exec_stat MCControl::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 {
 	switch (which)
 	{
+#ifdef /* MCControl::getprop */ LEGACY_EXEC
 	case P_MARGINS:
 		if (leftmargin == rightmargin && leftmargin == topmargin && leftmargin == bottommargin)
 			ep.setint(leftmargin);
@@ -447,7 +449,7 @@ Exec_stat MCControl::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 		ep.setstaticcstring(t_value);
 	}
 	break;
-
+#endif /* MCControl::getprop */ 
 	default:
 		return MCObject::getprop(parid, which, ep, effective);
 	}
@@ -459,6 +461,7 @@ Exec_stat MCControl::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 {
 	switch(which)
 	{
+#ifdef /* MCControl::getarrayprop */ LEGACY_EXEC
 	// MW-2009-06-09: [[ Bitmap Effects ]]
 	case P_BITMAP_EFFECT_DROP_SHADOW:
 	case P_BITMAP_EFFECT_INNER_SHADOW:
@@ -466,7 +469,7 @@ Exec_stat MCControl::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	case P_BITMAP_EFFECT_INNER_GLOW:
 	case P_BITMAP_EFFECT_COLOR_OVERLAY:
 		return MCBitmapEffectsGetProperties(m_bitmap_effects, which, ep, key);
-
+#endif /* MCControl::getarrayprop */
 	default:
 		return MCObject::getarrayprop(parid, which, ep, key, effective);
 	}
@@ -481,6 +484,7 @@ Exec_stat MCControl::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boo
 
 	switch (which)
 	{
+#ifdef /* MCControl::setprop */ LEGACY_EXEC
 	case P_MARGINS:
 		if (MCU_stoi2(data, i1))
 			leftmargin = rightmargin = topmargin = bottommargin = i1;
@@ -610,7 +614,7 @@ Exec_stat MCControl::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boo
 		// Mark the layer attrs for recompute.
 		m_layer_attr_changed = true;
 		return ES_NORMAL;
-
+#endif /* MCControl::setprop */
 	default:
 		return MCObject::setprop(parid, which, ep, effective);
 	}
@@ -629,6 +633,7 @@ Exec_stat MCControl::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	dirty = False;
 	switch(which)
 	{
+#ifdef /* MCControl::setarrayprop */ LEGACY_EXEC
 	case P_BITMAP_EFFECT_DROP_SHADOW:
 	case P_BITMAP_EFFECT_INNER_SHADOW:
 	case P_BITMAP_EFFECT_OUTER_GLOW:
@@ -650,7 +655,7 @@ Exec_stat MCControl::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 		}
 	}
 	return ES_NORMAL;
-
+#endif /* MCControl::setarrayprop */
 	default:
 		break;
 	}
@@ -1057,13 +1062,13 @@ void MCControl::drawselected(MCDC *dc)
 	MCRectangle rects[8];
 	sizerects(rects);
 	if (flags & F_LOCK_LOCATION)
-		dc->setfillstyle(FillStippled, DNULL, 0, 0);
+		dc->setfillstyle(FillStippled, nil, 0, 0);
 	else
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 	dc->setforeground(MCselectioncolor);
 	dc->fillrects(rects, 8);
 	if (flags & F_LOCK_LOCATION)
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 }
 
 void MCControl::drawarrow(MCDC *dc, int2 x, int2 y, uint2 size,
@@ -1562,7 +1567,8 @@ void MCControl::enter()
 	}
 	else
 		message(MCM_mouse_enter);
-	if (hashandlers & HH_MOUSE_WITHIN && !(hashandlers & HH_IDLE))
+    // AL-2013-01-14: [[ Bug 11343 ]] Add timer if the object handles mouseWithin in the behavior chain.
+	if (handlesmessage(MCM_mouse_within) && !(hashandlers & HH_IDLE))
 		MCscreen->addtimer(this, MCM_idle, MCidleRate);
 	if (getstack()->gettool(this) == T_BROWSE)
 		MCtooltip->settip(tooltip);
@@ -1574,9 +1580,11 @@ void MCControl::leave()
 	MCControl *oldfocused = focused;
 	if (MCdispatcher -> isdragtarget())
 	{
-		//fprintf(stderr, "In MCControl::leave() : this = %x\n", this);
+		// MW-2013-08-08: [[ Bug 10655 ]] If oldfocused is a field and has dragText set,
+		//   then make sure we unset it (otherwise the caret will continue moving around
+		//   on mouseMove).
 		if (oldfocused->gettype() == CT_FIELD
-		        && !(flags & F_LOCK_TEXT) && MCdragdata -> HasText())
+		        && oldfocused -> getstate(CS_DRAG_TEXT))
 		{
 			MCField *fptr = (MCField *)oldfocused;
 			fptr->removecursor();
@@ -1892,13 +1900,7 @@ void MCControl::drawfocus(MCDC *dc, const MCRectangle &dirty)
 		setforeground(dc, DI_FOCUS, False, True);
 		if (IsMacEmulatedLF() || IsMacLFAM() && !MCaqua)
 			trect = MCU_reduce_rect(trect, 1);
-		uint2 bwidth;
-		bwidth = MCfocuswidth;
-		while (bwidth--)
-		{
-			dc->drawrect(trect);
-			trect = MCU_reduce_rect(trect, 1);
-		}
+		drawborder(dc, trect, MCfocuswidth);
 	}
 }
 

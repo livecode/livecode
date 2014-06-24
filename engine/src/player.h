@@ -43,6 +43,8 @@ typedef struct
 QTEffect;
 #endif
 
+struct MCPlayerOffscreenBuffer;
+
 class MCPlayer : public MCControl
 {
 	MCPlayer *nextplayer;
@@ -92,16 +94,16 @@ class MCPlayer : public MCControl
 	void *interestingTimeCB;
 	void *bufferGW; //GWorld for the buffering draw for QT movie, in WIN & MAC
 
+	MCPlayerOffscreenBuffer *m_offscreen;
+
 #ifdef _MAC_DESKTOP
 	void *movie_view;
-	Drawable offscreenMovie;
 #elif defined _WINDOWS_DESKTOP
 	uint32_t deviceID;  //device id for opened AVI device.
 	uint32_t mciPlayFrom, mciPlayTo;
 	uint32_t mciPlayFlag;
 	MCSysWindowHandle hwndMovie; //a movie window is created for avi movie
 	bool m_has_port_association;
-	Drawable offscreenMovie;
 #endif
 
 #endif
@@ -255,10 +257,12 @@ public:
 	Boolean prepareQT();
 	void bufferDraw(bool p_resize); //direct movie controller to draw to Offscreen buffer
 	void unbufferDraw(); //direct movie controller to draw to Screen/Window
+
 	Boolean isbuffering()
 	{
-		return (offscreenMovie != NULL);
+		return (m_offscreen != NULL);
 	}
+	
 #ifdef _WINDOWS_DESKTOP
 	void changewindow(MCSysWindowHandle p_old_window);
 

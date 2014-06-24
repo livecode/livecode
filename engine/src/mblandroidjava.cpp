@@ -56,7 +56,7 @@ static bool init_string_class(JNIEnv *env)
 		s_string_class = env->FindClass("java/lang/String");
 	if (s_string_class == nil)
 		return false;
-	
+
 	return true;
 }
 
@@ -188,7 +188,7 @@ static bool native_to_unicode(const char *p_native, uint32_t p_length, unichar_t
         r_unicode = nil;
         return true;
     }
-    
+   
     bool t_success = true;
     
     unichar_t *t_unicode = nil;
@@ -481,7 +481,7 @@ bool MCJavaListAppendInt(JNIEnv *env, jobject p_list, jint p_int)
     if (t_integer != nil)
         env->DeleteLocalRef(t_integer);
     
-    return t_success;
+   return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1092,7 +1092,7 @@ bool MCJavaConvertParameters(JNIEnv *env, const char *p_signature, va_list p_arg
     }
     
     if (t_success)
-        t_success = MCCStringAppendFormat(t_params->signature, ")%s", t_return_type);
+       t_success = MCCStringAppendFormat(t_params->signature, ")%s", t_return_type);
     
     if (t_success)
     {

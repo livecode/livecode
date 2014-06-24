@@ -15,7 +15,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4D2A57991198634300135143"
                BuildableName = "Installer.app"
-               BlueprintName = "installer"
+               BlueprintName = "Installer"
                ReferencedContainer = "container:engine.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -33,7 +33,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4D2A57991198634300135143"
             BuildableName = "Installer.app"
-            BlueprintName = "installer"
+            BlueprintName = "Installer"
             ReferencedContainer = "container:engine.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -52,7 +52,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4D2A57991198634300135143"
             BuildableName = "Installer.app"
-            BlueprintName = "installer"
+            BlueprintName = "Installer"
             ReferencedContainer = "container:engine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -70,7 +70,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4D2A57991198634300135143"
             BuildableName = "Installer.app"
-            BlueprintName = "installer"
+            BlueprintName = "Installer"
             ReferencedContainer = "container:engine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

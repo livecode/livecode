@@ -1,0 +1,1 @@
+# Android input field fontSize setting value in incorrect units

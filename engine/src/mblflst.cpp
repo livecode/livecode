@@ -47,32 +47,15 @@ MCFontnode::MCFontnode(const MCString& p_name, uint2& p_size, uint2 p_style)
 
 #if defined(TARGET_SUBPLATFORM_IPHONE)
 	font = new MCFontStruct;
-	font -> charset = 0;
+	font -> size = p_size;
 	
 	char *t_comma;
 	t_comma = strchr(reqname, ',');
-
-	uint1 t_charset;
-	t_charset = LCH_ENGLISH;
 	if (t_comma != nil)
-		t_charset = MCU_languagetocharset(t_comma + 1);
-	
-	if (t_charset > LCH_ROMAN)
-	{
 		*t_comma = '\0';
-		font -> unicode = True;
-		font -> fid = (MCSysFontHandle)iphone_font_create(reqname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
-		*t_comma = ',';
-	}
-	else
-	{
-		font -> unicode = False;
-		font -> fid = (MCSysFontHandle)iphone_font_create(reqname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
-	}
 	
-	if (font -> unicode)
-		font -> charset = LCH_UNICODE;
-	
+	font -> fid = (MCSysFontHandle)iphone_font_create(reqname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
+
 	font -> ascent = p_size - 1;
 	font -> descent = p_size * 2 / 14 + 1;
 	
@@ -83,28 +66,14 @@ MCFontnode::MCFontnode(const MCString& p_name, uint2& p_size, uint2 p_style)
 	
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
 	font = new MCFontStruct;
-	font -> charset = 0;
+	font -> size = p_size;
 	
 	char *t_comma;
 	t_comma = strchr(reqname, ',');
-
-	uint1 t_charset;
-	t_charset = LCH_ENGLISH;
 	if (t_comma != nil)
-		t_charset = MCU_languagetocharset(t_comma + 1);
-	
-	if (t_charset > LCH_ROMAN)
-	{
 		*t_comma = '\0';
-		font -> unicode = True;
-		font -> fid = (MCSysFontHandle)android_font_create(reqname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
-		*t_comma = ',';
-	}
-	else
-	{
-		font -> unicode = False;
-		font -> fid = (MCSysFontHandle)android_font_create(reqname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
-	}
+
+	font -> fid = (MCSysFontHandle)android_font_create(reqname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 	
 	font -> ascent = p_size - 1;
 	font -> descent = p_size * 2 / 14 + 1;

@@ -50,9 +50,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <OpenGLES/ES1/glext.h>
 #import <MediaPlayer/MPMoviePlayerViewController.h>
 
-#include "mbliphonecontext.h"
 #include "mbliphoneapp.h"
 #include "mbliphoneview.h"
+
+#include "resolution.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,6 +65,8 @@ extern void send_startup_message(bool p_do_relaunch = true);
 extern void setup_simulator_hooks(void);
 
 @class com_runrev_livecode_MCIPhoneBreakWaitHelper;
+
+extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -77,8 +80,10 @@ static SystemSoundID s_system_sound = 0;
 static char *s_system_sound_name = nil;
 
 // These control the mapping of LiveCode pixel values to iOS pixels.
-static int32_t s_iphone_res_scale = 1;
-static int32_t s_iphone_control_res_scale = 1;
+static MCGFloat s_iphone_device_scale = 1;
+// IM-2014-01-30: [[ HiDPI ]] Controls scaling of LiveCode coords to iOS logical coords
+//   when dealing with native controls
+static bool s_iphone_scale_controls = true;
 
 // The main fiber on which all other code is executed.
 static MCFiberRef s_main_fiber = nil;
@@ -98,26 +103,67 @@ static float s_current_keyboard_height = 0.0f;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-01-30: [[ HiDPI ]] The default value for pixel scaling on iOS is the main display density
+MCGFloat MCResPlatformGetDefaultPixelScale()
+{
+	return s_iphone_device_scale;
+}
+
+// IM-2013-07-18: [[ ResIndependence ]] if using the device resolution
+// then stack size == screen size, otherwise scale
+float MCIPhoneGetResolutionScale(void)
+{
+	// IM-2014-01-30: [[ HiDPI ]] Use device resolution if pixel scaling is enabled
+	return MCResGetUsePixelScaling() ? s_iphone_device_scale : 1.0;
+}
+
+// IM-2013-07-18: [[ ResIndependence ]] return the device scale
+float MCIPhoneGetDeviceScale()
+{
+	return s_iphone_device_scale;
+}
+
+// IM-2014-03-14: [[ HiDPI ]] UI scale is resolution scale on iOS
+MCGFloat MCResPlatformGetUIDeviceScale(void)
+{
+	return MCIPhoneGetResolutionScale();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static bool MCIPhoneWait(double sleep);
 
 static float iphone_font_measure_text(void *p_font, const char *p_text, uint32_t p_text_length, bool p_is_unicode);
+static void iphone_font_draw_text(void *p_font, CGContextRef p_context, CGFloat x, CGFloat y, const char *p_text, uint32_t p_text_length, bool p_is_unicode);
 
-MCRectangle MCRectangleFromLogicalCGRect(const CGRect p_cg_rect)
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline MCRectangle MCRectangleFromCGRect(const CGRect &p_rect)
 {
-	return MCU_make_rect(
-				(int2)(p_cg_rect . origin . x * s_iphone_res_scale),
-				(int2)(p_cg_rect . origin . y * s_iphone_res_scale),
-				(uint2)(p_cg_rect . size . width * s_iphone_res_scale),
-				(uint2)(p_cg_rect . size . height * s_iphone_res_scale));
+	return MCRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
 }
 
-CGRect MCRectangleToLogicalCGRect(const MCRectangle p_rect)
+static inline MCGRectangle MCGRectangleFromCGRect(CGRect p_rect)
 {
-	return CGRectMake(
-				p_rect . x / (CGFloat)s_iphone_res_scale,
-				p_rect . y / (CGFloat)s_iphone_res_scale,
-				p_rect . width / (CGFloat)s_iphone_res_scale,
-				p_rect . height / (CGFloat)s_iphone_res_scale);
+	return MCGRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+}
+
+static inline CGRect MCGRectangleToCGRect(MCGRectangle p_rect)
+{
+	return CGRectMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+}
+
+// IM-2013-07-18: [[ ResIndependence ]] rename these functions to more accurately describe their new purpose
+MCRectangle MCDeviceRectFromLogicalCGRect(const CGRect p_cg_rect)
+{
+	return MCGRectangleGetIntegerBounds(MCGRectangleScale(MCGRectangleFromCGRect(p_cg_rect), s_iphone_device_scale));
+}
+
+CGRect MCUserRectToLogicalCGRect(const MCRectangle p_rect)
+{
+	// IM-2014-01-30: [[ HiDPI ]] Use logical->screen scale for conversion
+	return MCGRectangleToCGRect(MCGRectangleScale(MCRectangleToMCGRectangle(p_rect), MCScreenDC::logicaltoscreenscale()));
 }
 
 // MW-2012-08-06: [[ Fibers ]] Primitive calls for executing selectors on
@@ -172,6 +218,9 @@ Boolean MCScreenDC::open(void)
 {
 	common_open();
 	
+	// IM-2013-07-18: [[ ResIndependence ]] store the device scale in our new static variable
+	s_iphone_device_scale = [[UIScreen mainScreen] scale];
+	
 	return True;
 }
 
@@ -195,14 +244,14 @@ void MCScreenDC::getvendorstring(MCExecPoint &ep)
 	ep . setsvalue("iphone");
 }
 
-uint2 MCScreenDC::getwidth()
+uint2 MCScreenDC::device_getwidth()
 {
-	return 320 * s_iphone_res_scale;
+	return 320 * MCIPhoneGetResolutionScale();
 }
 
-uint2 MCScreenDC::getheight()
+uint2 MCScreenDC::device_getheight()
 {
-	return 480 * s_iphone_res_scale;
+	return 480 * MCIPhoneGetResolutionScale();
 }
 
 uint2 MCScreenDC::getwidthmm()
@@ -245,56 +294,60 @@ Window MCScreenDC::getroot()
 	return NULL;
 }
 
-uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
+// IM-2014-01-30: [[ HiDPI ]] Refactor to return in logical coordinates, with addition of screen pixel scale
+bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
 {
-	static MCDisplay s_display;
-
-	s_display . index = 0;
-	s_display . viewport = MCRectangleFromLogicalCGRect(MCIPhoneGetScreenBounds());
-	s_display . workarea = MCRectangleFromLogicalCGRect(MCIPhoneGetViewBounds());
-	if (p_effective)
-		s_display . workarea . height -= s_current_keyboard_height;
+	bool t_success;
+	t_success = true;
 	
-	p_displays = &s_display;
+	MCDisplay *t_displays;
+	t_displays = nil;
 	
-	return 1;
+	uint32_t t_display_count;
+	t_display_count = 0;
+	
+	t_success = MCMemoryNewArray(1, t_displays);
+	
+	if (t_success)
+	{
+		t_display_count = 1;
+		
+		t_displays[0].index = 0;
+		t_displays[0].pixel_scale = MCIPhoneGetDeviceScale();
+		
+		t_displays[0].viewport = MCRectangleFromCGRect(MCIPhoneGetScreenBounds());
+		t_displays[0].workarea = MCRectangleFromCGRect(MCIPhoneGetViewBounds());
+		
+		if (p_effective)
+			t_displays[0].workarea.height -= s_current_keyboard_height;
+		
+		t_displays[0].viewport = screentologicalrect(t_displays[0].viewport);
+		t_displays[0].workarea = screentologicalrect(t_displays[0].workarea);
+	}
+	
+	if (t_success)
+	{
+		r_displays = t_displays;
+		r_count = t_display_count;
+	}
+	else
+		MCMemoryDeleteArray(t_displays);
+	
+	return t_success;
 }
 
-Boolean MCScreenDC::getwindowgeometry(Window p_window, MCRectangle& r_rect)
+// IM-2014-01-29: [[ HiDPI ]] We receive notification of screen changes on iOS, so can safely cache display info
+bool MCScreenDC::platform_displayinfocacheable(void)
 {
-	r_rect = MCRectangleFromLogicalCGRect(MCIPhoneGetViewBounds());
-	return True;
+	return true;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-MCContext *MCScreenDC::createcontext(Drawable p_drawable, MCBitmap *p_mask)
+bool MCScreenDC::platform_getwindowgeometry(Window p_window, MCRectangle& r_rect)
 {
-	MCMobileBitmap *t_bitmap;
-	t_bitmap = (MCMobileBitmap *)p_drawable -> handle . pixmap;
-	return new MCIPhoneContext(t_bitmap, p_mask, true, true);
-}
-
-MCContext *MCScreenDC::createcontext(Drawable p_drawable, bool p_alpha, bool p_transient)
-{
-	MCMobileBitmap *t_bitmap;
-	t_bitmap = (MCMobileBitmap *)p_drawable -> handle . pixmap;
-	return new MCIPhoneContext(t_bitmap, nil, true, p_alpha);
-}
-
-MCContext *MCScreenDC::creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient)
-{
-	return new MCIPhoneContext(MCMobileBitmapCreate(p_width, p_height, false), nil, false, p_alpha);
-}
-
-void MCScreenDC::freecontext(MCContext *p_context)
-{
-	delete p_context;
-}
-
-int4 MCScreenDC::textwidth(MCFontStruct *f, const char *p_string, uint2 p_length, bool p_unicode_override)
-{
-	return ceil(iphone_font_measure_text(f -> fid, p_string, p_length, p_unicode_override || f -> unicode));
+	// IM-2014-01-30: [[ HiDPI ]] On iOS, the window rect will always be the bounds of the view
+	r_rect = screentologicalrect(MCRectangleFromCGRect(MCIPhoneGetViewBounds()));
+	
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -387,12 +440,14 @@ void MCScreenDC::setbeep(uint4 property, int4 beep)
 struct MCScreenDCDoSnapshotEnv
 {
 	MCRectangle r;
+	MCPoint size;
 	uint4 window;
 	const char *displayname;
-	MCBitmap *result;
+	MCImageBitmap *result;
 };
 
 // MW-2012-08-06: [[ Fibers ]] Main fiber callback for system calls.
+// MW-2014-02-20: [[ Bug 11811 ]] Updated to scale snapshot to requested size.
 static void MCScreenDCDoSnapshot(void *p_env)
 {
 	MCScreenDCDoSnapshotEnv *env;
@@ -401,7 +456,7 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	MCRectangle r;
 	uint4 window;
 	const char *displayname;
-	r = env -> r;
+	
 	window = env -> window;
 	displayname = env -> displayname;
 	
@@ -409,17 +464,19 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	
 	bool t_success = true;
 	
-	MCBitmap *t_bitmap = NULL;
+	MCImageBitmap *t_bitmap = NULL;
 	
 	// Use the screenRect to clip the input rect
 	MCRectangle t_screen_rect;
 	const MCDisplay *t_displays;
 	MCscreen -> getdisplays(t_displays, false);
 	t_screen_rect = t_displays[0] . viewport;
-	r = MCU_clip_rect(r, t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
+	r = MCU_clip_rect(env -> r, t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
 	
-	MCBitmap *t_newimage;
-	t_newimage = nil;
+	uint32_t t_bitmap_width, t_bitmap_height;
+	t_bitmap_width = env -> size . x;
+	t_bitmap_height = env -> size . y;
+	
 	if (r.width != 0 && r.height != 0)
 	{
 		CGContextRef t_img_context = nil;
@@ -433,23 +490,34 @@ static void MCScreenDCDoSnapshot(void *p_env)
 		}
 		
 		if (t_success)
-		{
-			t_bitmap = MCscreen->createimage(32, r.width, r.height, True, 0, False, False);
-			t_success = t_bitmap != nil;
-		}
+			t_success = MCImageBitmapCreate(t_bitmap_width, t_bitmap_height, t_bitmap);
 		
 		if (t_success)
 		{
-			t_img_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap->width, t_bitmap->height, 8, t_bitmap->bytes_per_line, t_colorspace, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
+			MCImageBitmapClear(t_bitmap);
+			// IM-2013-08-21: [[ RefactorGraphics ]] Refactor CGImage creation code to be pixel-format independent
+			CGBitmapInfo t_bm_info;
+			t_bm_info = MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, false);
+			t_img_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap->width, t_bitmap->height, 8, t_bitmap->stride, t_colorspace, t_bm_info);
 			t_success = t_img_context != nil;
 		}
 		
 		if (t_success)
 		{
-			int32_t t_scale = s_iphone_res_scale;
 			CGContextScaleCTM(t_img_context, 1.0, -1.0);
-			CGContextTranslateCTM(t_img_context, 0, -r . height);
-			CGContextTranslateCTM(t_img_context, -r.x, -r.y);
+			CGContextTranslateCTM(t_img_context, 0, -(CGFloat)t_bitmap_height);
+			
+            // MW-2014-04-22: [[ Bug 12008 ]] Translate before scale.
+			CGContextTranslateCTM(t_img_context, -(CGFloat)r.x, -(CGFloat)r.y);
+            
+            // MW-2014-04-22: [[ Bug 12008 ]] Make sure we take into account the logical to device screen
+            //   scale (and invert appropriately!).
+            float t_scale;
+            t_scale = ((MCScreenDC *)MCscreen) -> logicaltoscreenscale();
+			CGContextScaleCTM(t_img_context, 1.0 / t_scale, 1.0 / t_scale);
+            
+			CGContextScaleCTM(t_img_context, (MCGFloat)t_bitmap_width / r . width , (MCGFloat)t_bitmap_height / r . height);
+			
 			
 			bool t_is_rotated;
 			CGSize t_offset;
@@ -483,9 +551,8 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextTranslateCTM(t_img_context, t_screen_rect . width / 2, t_screen_rect . height / 2);
 			CGContextRotateCTM(t_img_context, t_angle);
 			CGContextTranslateCTM(t_img_context, -t_offset . width, -t_offset . height);
-			
-			CGContextScaleCTM(t_img_context, t_scale, t_scale);
-			
+            
+            
 #ifndef USE_UNDOCUMENTED_METHODS
 			NSArray *t_windows;
 			t_windows = [[[UIApplication sharedApplication] windows] retain];
@@ -543,13 +610,11 @@ static void MCScreenDCDoSnapshot(void *p_env)
 		if (t_img_context)
 			CGContextRelease(t_img_context);
 		
-		if (t_success)
-			t_newimage = t_bitmap;
-		else
+		if (!t_success)
 		{
 			if (t_bitmap != NULL)
 			{
-				MCscreen->destroyimage(t_bitmap);
+				MCImageFreeBitmap(t_bitmap);
 				t_bitmap = NULL;
 			}
 		}
@@ -558,12 +623,15 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	env -> result = t_bitmap;
 }
 
-MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size)
 {
 	MCScreenDCDoSnapshotEnv env;
 	env . r = r;
 	env . window = window;
 	env . displayname = displayname;
+    
+    // MW-2014-02-20: [[ Bug 11811 ]] Pass through the specified size, or the size of the rect.
+	env . size = size != nil ? *size : MCPointMake(r . width, r . height);
 
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	/* REMOTE */ MCFiberCall(s_main_fiber, MCScreenDCDoSnapshot, &env);
@@ -590,6 +658,10 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	
 	do
 	{
+		// MW-2013-08-18: [[ XPlatNotify ]] Handle any pending notifications
+		if (MCNotifyDispatch(dispatch == True) && anyevent)
+			break;
+		
 		real8 eventtime = exittime;
 		if (handlepending(curtime, eventtime, dispatch))
 		{
@@ -695,17 +767,30 @@ void MCScreenDC::do_fit_window(bool p_immediate_resize, bool p_post_message)
 		return;
 	
 	MCRectangle t_view_bounds;
-	t_view_bounds = MCRectangleFromLogicalCGRect(MCIPhoneGetViewBounds());
+	t_view_bounds = MCDeviceRectFromLogicalCGRect(MCIPhoneGetViewBounds());
 	
-	m_window_left = t_view_bounds . x;
-	m_window_top = t_view_bounds . y;
+	// IM-2014-03-03: [[ Bug 11836 ]] Store window topleft in logical coords
+	MCPoint t_topleft;
+	t_topleft = MCPointMake(t_view_bounds.x, t_view_bounds.y);
+
+	t_topleft = screentologicalpoint(t_topleft);
+
+	m_window_left = t_topleft . x;
+	m_window_top = t_topleft . y;
 	
 	if (p_post_message)
 	{
 		if (p_immediate_resize)
-			((MCStack *)m_current_window) -> configure(True);
+		{
+			// IM-2014-01-30: [[ HiDPI ]] Ensure stack backing scale is set
+			((MCStack *)m_current_window) -> view_setbackingscale(MCResGetPixelScale());
+			((MCStack *)m_current_window) -> view_configure(true);
+		}
 		else
-			MCEventQueuePostWindowReshape((MCStack *)m_current_window);
+		{
+			// IM-2014-02-14: [[ HiDPI ]] Post backing scale changes with window reshape message
+			MCEventQueuePostWindowReshape((MCStack *)m_current_window, MCResGetPixelScale());
+		}
 	}
 }
 
@@ -721,6 +806,12 @@ Window MCScreenDC::get_current_window(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static void strip_suffix(const char *p_suffix, char *x_font_name)
+{
+    if (MCCStringEndsWithCaseless(x_font_name, p_suffix))
+        x_font_name[MCCStringLength(x_font_name) - MCCStringLength(p_suffix)] = '\0';
+}
 
 struct do_iphone_font_create_env
 {
@@ -746,20 +837,25 @@ static void do_iphone_font_create(void *p_env)
 	p_bold = env -> bold;
 	p_italic = env -> italic;
 	
-	char t_font_name[256];
-	UIFont *t_font;
-	t_font = nil;
-	
     // MW-2012-03-22: [[ Bug ]] First see if we can find the font with the given name. We
     //   use this to get the correct 'family' name so styled names work correctly.
     UIFont *t_base_font;
     t_base_font = [ UIFont fontWithName: [ NSString stringWithCString: p_name encoding: NSMacOSRomanStringEncoding ] size: p_size ];
-    
+
     char t_base_name[256];
     if (t_base_font != nil)
         sprintf(t_base_name, "%s", [[t_base_font fontName] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
     else
         strcpy(t_base_name, p_name);
+    
+    // MM-2014-04-30: [[ Bug 12173 ]] Strip any unwanted suffixes from base font name. This was preventing certain styled fonts being found.
+    strip_suffix("-Roman", t_base_name);
+    strip_suffix("-Regular", t_base_name);
+    strip_suffix("-Reg", t_base_name);
+   
+    char t_font_name[256];
+	UIFont *t_font;
+	t_font = nil;
     
 	if (p_bold && p_italic)
 	{
@@ -917,7 +1013,7 @@ float iphone_font_measure_text(void *p_font, const char *p_text, uint32_t p_text
 
 	iphone_font_measure_text_context_t t_context;
 	t_context . font = p_font;
-	t_context . width = 0.0f;
+t_context . width = 0.0f;
 	for_each_word(p_text, p_text_length, p_is_unicode, iphone_font_do_measure_text, &t_context);
 
 	return t_context . width;
@@ -942,7 +1038,7 @@ static void iphone_font_do_draw_text(void *p_context, const void *p_text, uint32
 	t_font = (UIFont *)t_context -> font;
 	
 	CGSize t_size;
-	t_size = [ t_string drawAtPoint: CGPointMake(t_context -> x, t_context -> y - ceilf([ t_font ascender ])) withFont: t_font ];
+	t_size = [t_string drawAtPoint: CGPointMake(t_context -> x, t_context -> y - ceilf([ t_font ascender ])) withFont: t_font];
 	
 	t_context -> x += ceil(t_size . width);
 	
@@ -1093,11 +1189,12 @@ bool iphone_run_on_main_thread(void *p_callback, void *p_callback_state, int p_o
 		return true;
 	}
 
+	// MW-2013-06-18: [[ XPlatNotify ]] Make sure we check whether either fiber is the
+	//   current thread, rather than is the current fiber (otherwise calls from aux. threads
+	//   don't work!).
 	// If we aren't on one of the fibers, then post a selector to the main fiber's
 	// thread.
-	MCFiberRef t_current_fiber;
-	t_current_fiber = MCFiberGetCurrent();
-	if (t_current_fiber != s_script_fiber && t_current_fiber != s_main_fiber)
+	if (!MCFiberIsCurrentThread(s_script_fiber) && !MCFiberIsCurrentThread(s_main_fiber))
 	{
 		com_runrev_livecode_MCRunOnMainThreadHelper *t_helper;
 		t_helper = [[com_runrev_livecode_MCRunOnMainThreadHelper alloc] initWithCallback: p_callback state: p_callback_state options: p_options];
@@ -1176,7 +1273,8 @@ void MCIPhoneSyncDisplayClass(void)
 		s_is_opengl_display = true;
 		MCIPhoneRunBlockOnMainFiber(^(void) {
 			MCIPhoneSwitchViewToOpenGL();
-			MCIPhoneConfigureContentScale(s_iphone_res_scale);
+			// IM-2014-01-30: [[ HiDPI ]] GL backing surface should be at the current resolution scale
+			MCIPhoneConfigureContentScale(MCIPhoneGetResolutionScale());
 		});
 	}
 	else if (!s_ensure_opengl && s_is_opengl_display)
@@ -1191,37 +1289,33 @@ void MCIPhoneSyncDisplayClass(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-float MCIPhoneGetDeviceScale(void)
-{
-	return [[UIScreen mainScreen] scale];
-}
-
-float MCIPhoneGetResolutionScale(void)
-{
-	return (float)s_iphone_res_scale;
-}
-
 float MCIPhoneGetNativeControlScale(void)
 {
-	return s_iphone_control_res_scale;
+	// IM-2014-01-30: [[ HiDPI ]] Scale is from screen -> logical so return inverted if scaling
+	return s_iphone_scale_controls ? 1.0f / MCScreenDC::logicaltoscreenscale() : 1.0f;
 }
 
 // Only called from mobile extra calls so on main thread.
+// IM-2014-01-30: [[ HiDPI ]] Legacy function reimplemented to use MCResSetUsePixelScale
 void MCIPhoneUseDeviceResolution(bool p_use, bool p_controls_too)
 {
-	if (p_use)
-	{
-		s_iphone_res_scale = (int32_t)[[UIScreen mainScreen] scale];
-		if (p_controls_too)
-			s_iphone_control_res_scale = s_iphone_res_scale;
-	}
-	else
-	{
-		s_iphone_res_scale = 1;
-		s_iphone_control_res_scale = 1;
-	}
+	s_iphone_scale_controls = p_controls_too;
 	
-	MCIPhoneConfigureContentScale(s_iphone_res_scale);
+	MCResSetUsePixelScaling(p_use);
+	
+	// IM-2013-12-10: [[ Bug 11571 ]] Update the pixelScale to the new device scale.
+	MCResSetPixelScale(p_use ? 1 : MCIPhoneGetDeviceScale());
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Revise per-platform handling of changes to pixelscale settings
+void MCResPlatformHandleScaleChange(void)
+{
+	// GL backing surface should be at the current resolution scale
+	MCIPhoneConfigureContentScale(MCIPhoneGetResolutionScale());
+	
+	// Refresh display info after any change to the pixelscale
+	bool t_changed;
+	MCscreen->updatedisplayinfo(t_changed);
 	
 	// This doesn't do an immediate resize, so is fine for the main thread. (no
 	// script called).
@@ -1373,7 +1467,11 @@ static void MCIPhoneDoViewBoundsChanged(void *)
 	if (MCscreen == nil)
 		return;
 	
-	static_cast<MCScreenDC *>(MCscreen) -> do_fit_window(true, true);	
+	// IM-2014-01-30: [[ HiDPI ]] Update display info when view bounds change
+	bool t_changed;
+	MCscreen->updatedisplayinfo(t_changed);
+	
+	static_cast<MCScreenDC *>(MCscreen) -> do_fit_window(true, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1500,9 +1598,19 @@ void MCIPhoneHandleTouches(UIView *p_view, NSSet *p_touches, UITouchPhase p_phas
 	
 	for(UITouch *t_touch in t_sorted_touches)
 	{
+		MCGFloat t_scale;
+		t_scale = MCIPhoneGetDeviceScale();
+		
 		CGPoint t_location;
 		t_location = [ t_touch locationInView: p_view ];
-		static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, t_touch, [t_touch timestamp] * 1000, t_location . x * s_iphone_res_scale, t_location . y * s_iphone_res_scale);
+		
+		MCPoint t_loc;
+		t_loc = MCPointMake(t_location.x, t_location.y);
+		
+		// IM-2014-01-30: [[ HiDPI ]] Convert screen to logical coords
+		t_loc = MCScreenDC::screentologicalpoint(t_loc);
+		
+		static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, t_touch, [t_touch timestamp] * 1000, t_loc . x, t_loc . y);
 	}
 }
 
@@ -1643,10 +1751,15 @@ static void MCIPhoneDoBreakWait(void *)
 	if (s_wait_depth > 0)
 	{
 		NSArray *t_modes;
-		t_modes = [[NSArray alloc] initWithObject: NSRunLoopCommonModes];
+		t_modes = [[NSArray alloc] initWithObjects: NSRunLoopCommonModes, nil];
 		[s_break_wait_helper performSelector: @selector(breakWait) withObject: nil afterDelay: 0 inModes: t_modes];
 		[t_modes release];
 	}
+}
+
+static void MCIPhoneDoBreakWaitOnCorrectThread(void *context)
+{
+	MCFiberCall(s_main_fiber, MCIPhoneDoBreakWait, nil);
 }
 
 void MCIPhoneBreakWait(void)
@@ -1657,7 +1770,7 @@ void MCIPhoneBreakWait(void)
 	if (s_break_wait_helper == nil)
 		s_break_wait_helper = [[com_runrev_livecode_MCIPhoneBreakWaitHelper alloc] init];
 
-	MCFiberCall(s_main_fiber, MCIPhoneDoBreakWait, nil);
+	iphone_run_on_main_thread((void *)MCIPhoneDoBreakWaitOnCorrectThread, nil, kMCExternalRunOnMainThreadUnsafe | kMCExternalRunOnMainThreadImmediate);
 }
 
 static void MCIPhoneDoScheduleWait(void *p_ctxt)
@@ -1701,6 +1814,33 @@ static bool MCIPhoneWait(double p_sleep)
 	s_break_wait_pending = false;
 	
 	return t_broken;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2014-01-30: [[ HiDPI ]] Pixel scaling supported on iOS
+bool MCResPlatformSupportsPixelScaling(void)
+{
+	return true;
+}
+
+// IM-2014-01-30: [[ HiDPI  ]] Pixel scaling can be enabled / disable on iOS
+bool MCResPlatformCanChangePixelScaling(void)
+{
+	return true;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Pixel scale can be modified on iOS
+bool MCResPlatformCanSetPixelScale(void)
+{
+	return true;
+}
+
+// IM-2014-01-30: [[ HiDPI ]] Calculate logical to iOS screen coordinate scale
+MCGFloat MCScreenDC::logicaltoscreenscale(void)
+{
+	// (logical coordinate to device coordinate scale) * (device coordinate to iOS screen coordinate scale)
+	return MCResGetPixelScale() / MCIPhoneGetResolutionScale();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

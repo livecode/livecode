@@ -24,20 +24,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "stacklst.h"
 #include "stack.h"
-#include "contextscalewrapper.h"
 #include "text.h"
 
 #include "lnxdc.h"
-#include "lnxcontext.h"
 #include "lnxgtkthemedrawing.h"
 #include "lnximagecache.h"
 #include "lnxtheme.h"
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  REFACTORED FROM WIDGET.CPP
-//
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -89,37 +81,6 @@ void MCStacklist::hidepalettes(Boolean hide)
 void MCLinuxWindowSetTransientFor(Window p_window, Window p_transient_for)
 {
 	XSetTransientForHint(MCdpy, p_window, p_transient_for);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  REFACTORED FROM CONTEXTSCALEWRAPPER.CPP
-//
-
-void MCContextScaleWrapper::drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p_parameters)
-{
-	MCRectangle t_bounds = p_parameters->crect;
-	MCContext *t_context = MCscreen->creatememorycontext(t_bounds.width, t_bounds.height, true, true);
-	t_context->setorigin(t_bounds.x, t_bounds.y);
-	t_context->setclip(t_bounds);
-	t_context->drawtheme(p_type, p_parameters);
-
-	//drawtheme() under linux creates an argb image of the drawn ui element and pushes it into the imagecache
-	//so we fetch it back out, scale it up, then draw it into the appropriate place on the scaled context
-	
-	MCXImageCacheNode *cache_node = MCimagecache -> find_cached_image ( p_parameters->drect.width, p_parameters->drect.height, p_parameters->moztype, &p_parameters->state, p_parameters->flags ) ;
-	MCBitmap *t_argb_image = MCimagecache -> get_from_cache( cache_node ) ;
-	MCBitmap *t_dstimg = MCscreen->createimage(m_context->getdepth(), t_bounds.width * scale, t_bounds.height * scale, False, 0x0, False, False);
-	MCscreen->scaleimage(t_argb_image, t_dstimg);
-	((MCX11Context *)m_context)->drawalphaimage_direct (  t_dstimg,
-				0, 0,
-				p_parameters -> crect . width * scale,
-				p_parameters -> crect . height * scale,
-				p_parameters -> crect . x * scale,
-				p_parameters -> crect . y * scale);
-
-	MCscreen->destroyimage(t_dstimg);
-	MCscreen->freecontext(t_context);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -252,16 +213,6 @@ bool MCSTextConvertToUnicode(MCTextEncoding p_input_encoding, const void *p_inpu
 	r_used = p_output_length - t_out_bytes_left;
 
 	return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  MISC 
-//
-
-void MCLinuxApplyPatternToFillImage(MCContext *ctxt, const MCRectangle& rect)
-{
-	((MCX11Context *)ctxt) -> fillrect_with_native_function(rect, GXand);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

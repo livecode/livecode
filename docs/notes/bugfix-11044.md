@@ -1,0 +1,1 @@
+#  Divide by zero when calculating scrollbar thumbposition

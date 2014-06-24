@@ -29,7 +29,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "w32dc.h"
 
 void surface_extract_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
-void surface_extract_mask(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_width, uint4 p_height, uint1 p_threshold);
 
 MCWindowShape *MCImage::makewindowshape(void)
 {
@@ -46,7 +45,7 @@ MCWindowShape *MCImage::makewindowshape(void)
 
 	MCImageBitmap *t_bitmap = nil;
 	bool t_has_mask = false, t_has_alpha = false;
-	t_success = lockbitmap(t_bitmap);
+	t_success = lockbitmap(t_bitmap, true);
 	if (t_success)
 	{
 		t_has_mask = MCImageBitmapHasTransparency(t_bitmap, t_has_alpha);
@@ -74,17 +73,7 @@ MCWindowShape *MCImage::makewindowshape(void)
 			t_mask -> data = nil;
 
 			// Handle is region.
-			Pixmap t_drawdata = nil, t_drawmask = nil;
-			MCBitmap *t_maskimagealpha = nil;
-			t_success = MCImageSplitPixmaps(t_bitmap, t_drawdata, t_drawmask, t_maskimagealpha);
-
-			if (t_success)
-				t_success = nil != (t_mask -> handle = (MCRegionRef)((MCScreenDC *)MCscreen) -> PixmapToRegion(t_drawmask));
-
-			MCscreen->freepixmap(t_drawdata);
-			MCscreen->freepixmap(t_drawmask);
-			if (t_maskimagealpha != nil)
-				MCscreen->destroyimage(t_maskimagealpha);
+			t_success = nil != (t_mask -> handle = (MCRegionRef)((MCScreenDC *)MCscreen) -> BitmapToRegion(t_bitmap));
 		}
 		else
 			t_success = false;
@@ -100,10 +89,6 @@ MCWindowShape *MCImage::makewindowshape(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
-extern void surface_merge_with_mask(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_offset, uint4 p_width, uint4 p_height);
-extern void surface_merge_with_alpha(void *p_src, uint4 p_src_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
-extern void surface_merge(void *p_pixels, uint4 p_pixel_stride, uint4 p_width, uint4 p_height);
 
 static inline uint32_t packed_bilinear_bounded(uint32_t x, uint8_t a, uint32_t y, uint8_t b)
 {
@@ -214,10 +199,72 @@ bool MCImageBitmapToV5DIB(MCImageBitmap *p_bitmap, MCWinSysHandle &r_dib)
 	return true;
 }
 
-// This rountine assumes it can munge the bits of the unpacked
-// image. i.e. Don't call it for a non-temporary image object
-// otherwise bad things will happen!
-//
+extern bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
+bool MCImageBitmapToEnhancedMetafile(MCImageBitmap *p_bitmap, MCWinSysEnhMetafileHandle &r_enh_metafile)
+{
+	bool t_success = true;
+
+	HDC t_src_dc;
+	HDC t_dst_dc;
+
+	t_success = nil != (t_src_dc = CreateCompatibleDC(t_dst_dc));
+	if (t_success)
+		t_success = nil != (t_dst_dc = CreateEnhMetaFile(NULL, NULL, NULL, NULL));
+
+	HBITMAP t_hbitmap = nil;
+	void *t_bits = nil;
+
+	if (t_success)
+		t_success = create_temporary_dib(t_src_dc, p_bitmap->width, p_bitmap->height, t_hbitmap, t_bits);
+	if (t_success)
+		MCMemoryCopy(t_bits, p_bitmap->data, p_bitmap->stride * p_bitmap->height);
+
+	if (t_success)
+	{
+		SetWindowOrgEx(t_dst_dc, 0, 0, NULL);
+		SetWindowExtEx(t_dst_dc, p_bitmap->width , p_bitmap->height, NULL);
+		SaveDC(t_dst_dc);
+
+		BLENDFUNCTION t_blend;
+		t_blend.BlendOp = AC_SRC_OVER;
+		t_blend.BlendFlags = 0;
+		t_blend.SourceConstantAlpha = 255;
+		t_blend.AlphaFormat = AC_SRC_ALPHA;
+
+		HGDIOBJ t_old_obj;
+		t_old_obj = SelectObject(t_src_dc, t_hbitmap);
+		t_success = AlphaBlend(t_dst_dc, 0, 0, p_bitmap->width, p_bitmap->height, t_src_dc, 0, 0, p_bitmap->width, p_bitmap->height, t_blend);
+		if (!t_success)
+			t_success = StretchBlt(t_dst_dc, 0, 0, p_bitmap->width, p_bitmap->height, t_src_dc, 0, 0, p_bitmap->width, p_bitmap->height, SRCCOPY);
+		SelectObject(t_src_dc, t_old_obj);
+
+		RestoreDC(t_dst_dc, -1);
+	}
+
+	HENHMETAFILE t_emetafile = nil;
+	if (t_dst_dc != NULL)
+		t_emetafile = CloseEnhMetaFile(t_dst_dc);
+
+	if (t_success)
+		t_success = t_emetafile != nil;
+
+	if (t_hbitmap != nil)
+		DeleteObject(t_hbitmap);
+
+	if (t_src_dc != nil)
+		DeleteDC(t_src_dc);
+
+	if (t_success)
+		r_enh_metafile = (MCWinSysEnhMetafileHandle)t_emetafile;
+	else
+	{
+		if (t_emetafile != nil)
+			DeleteEnhMetaFile(t_emetafile);
+	}
+
+	return t_success;
+}
+
 // Note that this is pretty much the best we can do for MetaFile
 // conversion. Most apps don't seem to like it if you use the AlphaBlend
 // GDI call - and this is not supported on NT4.0 anyway.
@@ -254,97 +301,56 @@ bool MCImageBitmapToV5DIB(MCImageBitmap *p_bitmap, MCWinSysHandle &r_dib)
 //     0000
 //   RestoreDC
 //
+
+extern bool MCImageBitmapSplitHBITMAPWithMask(HDC p_dc, MCImageBitmap *p_bitmap, HBITMAP &r_bitmap, HBITMAP &r_mask);
 bool MCImageBitmapToMetafile(MCImageBitmap *p_bitmap, MCWinSysMetafileHandle &r_metafile)
 {
 	bool t_success = true;
-
-	Pixmap drawdata = nil, drawmask = nil;
-	MCBitmap *maskimagealpha = nil;
-
-	t_success = MCImageSplitPixmaps(p_bitmap, drawdata, drawmask, maskimagealpha);
-
-	if (!t_success)
-		return false;
 
 	HDC t_src_dc;
 	t_src_dc = ((MCScreenDC *)MCscreen) -> getsrchdc();
 
 	HDC t_dst_dc;
-	t_dst_dc = CreateMetaFileA(NULL);
+	t_success = nil != (t_dst_dc = CreateMetaFileA(NULL));
 
-	uint4 t_mf_width;
-	t_mf_width = p_bitmap->width;
+	HBITMAP t_hbitmap = nil;
+	HBITMAP t_hmask = nil;
 
-	uint4 t_mf_height;
-	t_mf_height = p_bitmap->height;
-
-	SetWindowOrgEx(t_dst_dc, 0, 0, NULL);
-	SetWindowExtEx(t_dst_dc, t_mf_width , t_mf_height, NULL);
-	SetBkMode(t_dst_dc, TRANSPARENT);
-	SetStretchBltMode(t_dst_dc, COLORONCOLOR);
-	SaveDC(t_dst_dc);
-
-	// If there's an alpha-channel we composite the color bits against a white
-	// backdrop as this gives a slightly more pleasant effect generally than
-	// black...
-	if (maskimagealpha != NULL)
-	{
-		void *t_bits;
-		uint4 t_stride;
-
-		t_success = MCscreen -> lockpixmap(drawdata, t_bits, t_stride);
-		
-		if (t_success)
-		{
-			void *t_alpha_bits;
-			uint4 t_alpha_stride;
-			t_alpha_bits = maskimagealpha -> data;
-			t_alpha_stride = maskimagealpha -> bytes_per_line;
-
-			for(uint4 y = 0; y < p_bitmap->height; ++y, t_bits = (uint1 *)t_bits + t_stride, t_alpha_bits = (uint1 *)t_alpha_bits + t_alpha_stride)
-				for(uint4 x = 0; x < p_bitmap->width; ++x)
-				{
-					if (((uint1 *)t_alpha_bits)[x] != 0)
-						((uint4 *)t_bits)[x] = packed_bilinear_bounded(((uint4 *)t_bits)[x], ((uint1 *)t_alpha_bits)[x], 0xFFFFFF, 255 - ((uint1 *)t_alpha_bits)[x]);
-					else
-						((uint4 *)t_bits)[x] = 0xFFFFFF;
-				}
-
-			MCscreen -> unlockpixmap(drawdata, t_bits, t_stride);
-		}
-	}
+	if (t_success)
+		t_success = MCImageBitmapSplitHBITMAPWithMask(t_src_dc, p_bitmap, t_hbitmap, t_hmask);
 
 	if (t_success)
 	{
-		if (drawmask != NULL)
-		{
-			HDC t_src_dc;
-			t_src_dc = ((MCScreenDC *)MCscreen) -> getsrchdc();
+		uint4 t_mf_width;
+		t_mf_width = p_bitmap->width;
 
+		uint4 t_mf_height;
+		t_mf_height = p_bitmap->height;
+
+		SetWindowOrgEx(t_dst_dc, 0, 0, NULL);
+		SetWindowExtEx(t_dst_dc, t_mf_width , t_mf_height, NULL);
+		SetBkMode(t_dst_dc, TRANSPARENT);
+		SetStretchBltMode(t_dst_dc, COLORONCOLOR);
+		SaveDC(t_dst_dc);
+
+		if (t_hmask != NULL)
+		{
 			HGDIOBJ t_old_object;
 
 			// First ensure all affected pixels are black in the destination
-			t_old_object = SelectObject(t_src_dc, drawmask -> handle . pixmap);
+			t_old_object = SelectObject(t_src_dc, t_hmask);
 			StretchBlt(t_dst_dc, 0, 0, t_mf_width, t_mf_height, t_src_dc, 0, 0, p_bitmap->width, p_bitmap->height, SRCAND);
-			SelectObject(t_src_dc, t_old_object);
 
 			// Now OR in the source color pixels
-			t_old_object = SelectObject(t_src_dc, drawdata -> handle . pixmap);
-			StretchBlt(t_dst_dc, 0, 0, t_mf_width, t_mf_height, t_src_dc, 0, 0, p_bitmap->width, p_bitmap->height, SRCINVERT);
-			SelectObject(t_src_dc, t_old_object);
+			SelectObject(t_src_dc, t_hbitmap);
+			StretchBlt(t_dst_dc, 0, 0, t_mf_width, t_mf_height, t_src_dc, 0, 0, p_bitmap->width, p_bitmap->height, SRCPAINT);
 			
-			// First ensure all affected pixels are black in the destination
-			t_old_object = SelectObject(t_src_dc, drawmask -> handle . pixmap);
-			StretchBlt(t_dst_dc, 0, 0, t_mf_width, t_mf_height, t_src_dc, 0, 0, p_bitmap->width, p_bitmap->height, SRCINVERT);
 			SelectObject(t_src_dc, t_old_object);
 		}
 		else
 		{
-			HDC t_src_dc;
-			t_src_dc = ((MCScreenDC *)MCscreen) -> getsrchdc();
-
 			HGDIOBJ t_old_object;
-			t_old_object = SelectObject(t_src_dc, drawdata -> handle . pixmap);
+			t_old_object = SelectObject(t_src_dc, t_hbitmap);
 
 			StretchBlt(t_dst_dc, 0, 0, p_bitmap->width, p_bitmap->height, t_src_dc, 0, 0, p_bitmap->width, p_bitmap->height, SRCCOPY);
 
@@ -354,17 +360,12 @@ bool MCImageBitmapToMetafile(MCImageBitmap *p_bitmap, MCWinSysMetafileHandle &r_
 		RestoreDC(t_dst_dc, -1);
 	}
 
-	MCscreen->freepixmap(drawdata);
-	MCscreen->freepixmap(drawmask);
-	if (maskimagealpha != nil)
-		MCscreen->destroyimage(maskimagealpha);
-
 	HMETAFILE t_metafile = nil;
-	if (t_success)
-	{
+	if (t_dst_dc != nil)
 		t_metafile = CloseMetaFile(t_dst_dc);
+
+	if (t_success)
 		t_success = t_metafile != nil;
-	}
 
 	HMETAFILEPICT t_pict = nil;
 	if (t_success)
@@ -382,9 +383,15 @@ bool MCImageBitmapToMetafile(MCImageBitmap *p_bitmap, MCWinSysMetafileHandle &r_
 		t_pict_ptr -> yExt = p_bitmap->height * 2540 / 96;
 		t_pict_ptr -> mm = MM_ANISOTROPIC;
 		GlobalUnlock(t_pict);
-
-		r_metafile = (MCWinSysMetafileHandle)t_pict;
 	}
+
+	if (t_hbitmap != nil)
+		DeleteObject(t_hbitmap);
+	if (t_hmask != nil)
+		DeleteObject(t_hmask);
+
+	if (t_success)
+		r_metafile = (MCWinSysMetafileHandle)t_pict;
 	else
 	{
 		if (t_metafile != nil)
@@ -439,7 +446,8 @@ bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCSharedString *&r_dragim
 					t_pixel = 0x010101;
 				else
 				{
-					t_pixel = packed_bilinear_bounded(t_pixel & 0xFFFFFF, t_alpha, 0xFFFFFF, 255 - t_alpha);
+					t_pixel = 0xFFFFFF & (t_pixel + (0x010101 * (255 - t_alpha)));
+					//t_pixel = packed_bilinear_bounded(t_pixel & 0xFFFFFF, t_alpha, 0xFFFFFF, 255 - t_alpha);
 					if (t_pixel == 0x010101)
 						t_pixel = 0x020202;
 				}
@@ -492,7 +500,7 @@ bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCSharedString *&r_dragim
 MCSharedString *MCImage::converttodragimage(void)
 {
 	MCImageBitmap *t_bitmap = nil;
-	if (!lockbitmap(t_bitmap))
+	if (!lockbitmap(t_bitmap, true))
 		return NULL;
 
 	MCSharedString *t_result = nil;

@@ -289,10 +289,6 @@ bool X_init(int argc, char *argv[], char *envp[])
 	}
 	create_var(nvars);
 
-	// If we have 'no ui' make sure we also have noxft
-	if (MCnoui)
-		MCuseXft = False;
-
 	if (!X_open(argc, argv, envp))
 		return false;
 

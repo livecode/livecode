@@ -174,7 +174,8 @@ void MCTooltip::opentip()
 		MCExecPoint ep;
 		ep . setsvalue(MCString(t_tooltip, t_next_line - t_tooltip));
 		ep . utf8toutf16();
-		rect.width = MCU_max(MCFontMeasureText(m_font, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), true) + 8, rect.width);
+		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+		rect.width = MCU_max(MCFontMeasureText(m_font, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), true, getstack() -> getdevicetransform()) + 8, rect.width);
 		rect.height += t_fheight + 3;
 
 		t_tooltip = t_next_line;
@@ -244,7 +245,7 @@ void MCTooltip::render(MCContext *dc, const MCRectangle &dirty)
 		MCExecPoint ep;
 		ep . setsvalue(MCString(t_tooltip, t_next_line - t_tooltip));
 		ep . utf8toutf16();
-		MCFontDrawText(m_font, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), true, dc, 4, t_y + t_fheight, False);
+        dc -> drawtext(4, t_y + t_fheight, ep.getsvalue().getstring(), ep.getsvalue().getlength(), m_font, false, true);
 
 		t_y += t_fheight + 3;
 

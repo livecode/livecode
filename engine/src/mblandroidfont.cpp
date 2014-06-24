@@ -14,6 +14,8 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "prefix.h"
+
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -21,30 +23,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 
 #include "execpt.h"
-#include "printer.h"
 #include "globals.h"
-#include "dispatch.h"
-#include "stack.h"
-#include "card.h"
-#include "field.h"
-#include "unicode.h"
-#include "notify.h"
-#include "statemnt.h"
-#include "funcs.h"
-#include "eventqueue.h"
-#include "core.h"
-#include "mode.h"
+#include "util.h"
 #include "osspec.h"
-#include "redraw.h"
-#include "region.h"
 
-#include "mbldc.h"
+#include "core.h"
+#include "system.h"
 
 #include "mblandroidutil.h"
-#include "mblandroidcontext.h"
-#include "mblandroidjava.h"
+#include "mblandroidtypeface.h"
 
-#include <SkStream.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <freetype/ftsnames.h>
@@ -328,7 +316,7 @@ static MCAndroidCustomFont* look_up_custom_font(const char *p_name, bool p_bold,
     // If we've still not found a matching font, look up based on the family and style.
     // This function will attempt to provide a closest match e.g. Arial Bold is requested but only Arial is installed.
     t_font = look_up_custom_font_by_family_and_style(p_name, p_bold, p_italic);
-    return t_font;
+   return t_font;
 }
 
 static MCAndroidCustomFont* look_up_custom_font_by_name(const char *p_name)
@@ -502,7 +490,7 @@ static bool create_custom_font_from_path(const char *p_path, FT_Library p_librar
     return t_success;
 }
 
-static bool create_skia_font_face_from_custom_font_name_and_style(const char *p_name, bool p_bold, bool p_italic, SkTypeface *&r_type_face)
+static bool create_font_face_from_custom_font_name_and_style(const char *p_name, bool p_bold, bool p_italic, MCAndroidTypefaceRef &r_typeface)
 {    
     bool t_success;
     t_success = true;
@@ -522,33 +510,16 @@ static bool create_skia_font_face_from_custom_font_name_and_style(const char *p_
     if (t_success)
         t_success = load_custom_font_file_into_buffer_from_path(t_font->path, t_buffer, t_file_size);
     
-    SkMemoryStream *t_stream;
-    t_stream = nil;
+	MCAndroidTypefaceRef t_typeface;
+    t_typeface = nil;
     if (t_success)
-    {
-        t_stream = new SkMemoryStream(t_buffer, t_file_size, false);
-        t_success = t_stream != nil;
-    }
-    
-    SkTypeface *t_type_face;
-    t_type_face = nil;
-    if (t_success)
-    {
-        t_type_face = SkTypeface::CreateFromStream(t_stream);
-        t_success = t_type_face != nil;
-    }
+		t_success = MCAndroidTypefaceCreateWithData(t_buffer, t_file_size, t_typeface);
     
     if (t_success)
-        r_type_face = t_type_face;
+        r_typeface = t_typeface;
     else
-    {
-        if (t_type_face != nil)
-            delete t_type_face;
-        if (t_stream != nil)
-            delete t_stream;
-        /*UNCHECKED */ MCMemoryDelete(t_buffer); 
-    }
-        
+        MCMemoryDelete(t_buffer);
+    
     return t_success;
 }
 
@@ -560,22 +531,11 @@ void *android_font_create(const char *name, uint32_t size, bool bold, bool itali
     
 	if (MCMemoryNew(t_font))
 	{
-		SkTypeface::Style t_style = SkTypeface::kNormal;
-		if (bold)
-		{
-			if (italic)
-				t_style = SkTypeface::kBoldItalic;
-			else
-				t_style = SkTypeface::kBold;
-		}
-		else if (italic)
-			t_style = SkTypeface::kItalic;
-        
         // MM-2012-03-06: Check to see if we have a custom font of the given style and name available
-        if (!create_skia_font_face_from_custom_font_name_and_style(name, bold, italic, t_font->sk_typeface))
-            t_font->sk_typeface = SkTypeface::CreateFromName(name, t_style);
+        if (!create_font_face_from_custom_font_name_and_style(name, bold, italic, t_font->typeface))
+			/* UNCHECKED */ MCAndroidTypefaceCreateWithName(name, bold, italic, t_font->typeface);
         
-		MCAssert(t_font->sk_typeface != NULL);
+		MCAssert(t_font->typeface != NULL);
 		t_font->size = size;
 	}
     
@@ -585,8 +545,8 @@ void *android_font_create(const char *name, uint32_t size, bool bold, bool itali
 void android_font_destroy(void *font)
 {
 	MCAndroidFont *t_font = (MCAndroidFont*)font;
-	if (t_font != nil && t_font->sk_typeface != nil)
-		t_font->sk_typeface->unref();
+	if (t_font != nil && t_font->typeface != nil)
+		MCAndroidTypefaceRelease(t_font->typeface);
 	MCMemoryDelete(font);
 }
 
@@ -594,30 +554,17 @@ void android_font_get_metrics(void *font, float& a, float& d)
 {
 	MCAndroidFont *t_font = (MCAndroidFont*)font;
     
-	SkPaint t_paint;
-	t_paint.setTypeface(t_font->sk_typeface);
-	t_paint.setTextSize(t_font->size);
-    
-	SkPaint::FontMetrics t_metrics;
-    
-	t_paint.getFontMetrics(&t_metrics);
-    
-	a = t_metrics.fAscent;
-	d = t_metrics.fDescent;
+	/* UNCHECKED */ MCAndroidTypefaceGetMetrics(t_font->typeface, t_font->size, a, d);
 }
 
 float android_font_measure_text(void *p_font, const char *p_text, uint32_t p_text_length, bool p_is_unicode)
 {
 	MCAndroidFont *t_font = (MCAndroidFont*)p_font;
     
-	SkPaint t_paint;
-	t_paint.setTypeface(t_font->sk_typeface);
-	t_paint.setTextSize(t_font->size);
-    
+	float t_length;
 	if (p_is_unicode)
 	{
-		t_paint.setTextEncoding(SkPaint::kUTF16_TextEncoding);
-		return t_paint.measureText(p_text, p_text_length);
+		/* UNCHECKED */ MCAndroidTypefaceMeasureText(t_font->typeface, t_font->size, p_text, p_text_length, true, t_length);
 	}
 	else
 	{
@@ -628,10 +575,10 @@ float android_font_measure_text(void *p_font, const char *p_text, uint32_t p_tex
         
 		const MCString &t_utf_string = ep.getsvalue();
         
-		t_paint.setTextEncoding(SkPaint::kUTF8_TextEncoding);
-        
-		return t_paint.measureText(t_utf_string.getstring(), t_utf_string.getlength());
+		/* UNCHECKED */ MCAndroidTypefaceMeasureText(t_font->typeface, t_font->size, t_utf_string.getstring(), t_utf_string.getlength(), false, t_length);
 	}
+	
+	return t_length;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

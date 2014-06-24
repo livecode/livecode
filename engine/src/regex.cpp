@@ -296,23 +296,68 @@ int regexec(regex_t *preg, const char *string, int len, size_t nmatch,
 
 static char regexperror[100];
 
+regexp *MCregexcache[PATTERN_CACHE_SIZE];
+
 const char *MCR_geterror()
 {
 	return regexperror;
 }
 
-regexp *MCR_compile(char *exp)
+// JS-2013-07-01: [[ EnhancedFilter ]] Updated to support case-sensitivity and caching.
+// MW-2013-07-01: [[ EnhancedFilter ]] Tweak to take 'const char *' and copy pattern as required.
+// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
+//   no reason not to use the cache.
+regexp *MCR_compile(const char *exp, Boolean casesensitive)
 {
-	regexp *re = new regexp;
-	int status;
+	Boolean found = False;
+	regexp *re = NULL;
 	int flags = REG_EXTENDED;
-	status = regcomp(&re->rexp, exp, flags);
-	if (status != REG_OKAY)
+    if (!casesensitive)
+        flags |= REG_ICASE;
+
+	// Search the cache.
+	uint2 i;
+	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
 	{
-		regerror(status, NULL, regexperror, sizeof(regexperror));
-		delete re;
-		return(NULL);
+		if (MCregexcache[i]
+			&& strequal(exp, MCregexcache[i]->pattern)
+			&& flags == MCregexcache[i]->flags)
+		{
+			found = True;
+			re = MCregexcache[i];
+			break;
+		}
 	}
+	
+	// If the pattern isn't found with the given flags, then create a new one.
+	if (re == NULL)
+	{
+		/* UNCHECKED */ re = new regexp;
+		/* UNCHECKED */ re->pattern = strdup(exp);
+		re->flags = flags;
+		int status;
+		status = regcomp(&re->rexp, exp, flags);
+		if (status != REG_OKAY)
+		{
+			regerror(status, NULL, regexperror, sizeof(regexperror));
+			delete re->pattern;
+			delete re;
+			return(NULL);
+		}
+	}
+	
+	// If the pattern is new, put it in the cache.
+	if (!found)
+	{
+		uint2 i;
+		MCR_free(MCregexcache[PATTERN_CACHE_SIZE - 1]);
+		for (i = PATTERN_CACHE_SIZE - 1 ; i ; i--)
+		{
+			MCregexcache[i] = MCregexcache[i - 1];
+		}
+		MCregexcache[0] = re;
+	}
+	
 	return re;
 }
 
@@ -338,6 +383,18 @@ void MCR_free(regexp *prog)
 	if (prog)
 	{
 		regfree(&prog->rexp);
+		// MW-2013-07-01: [[ EnhancedFilter ]] Delete the pattern.
+		delete prog->pattern;
 		delete prog;
+	}
+}
+
+// JS-2013-07-01: [[ EnhancedFilter ]] Clear out the cache.
+void MCR_clearcache()
+{
+	uint2 i;
+	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
+	{
+		MCR_free(MCregexcache[i]);
 	}
 }

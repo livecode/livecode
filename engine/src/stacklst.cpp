@@ -543,18 +543,17 @@ void MCStacklist::refresh(void)
 #if !defined(_MAC_DESKTOP)
 void MCStacklist::ensureinputfocus(Window window)
 {
-					}
+}
 #endif
 
-void MCStacklist::reopenforprint()
+void MCStacklist::purgefonts()
 {
 	if (stacks != NULL)
 	{
 		MCStacknode *tptr = stacks;
 		do
 		{
-			if (tptr->getstack()->getflag(F_FORMAT_FOR_PRINTING))
-				tptr->getstack()->purgefonts();
+			tptr->getstack()->purgefonts();
 			tptr = tptr->next();
 		}
 		while (tptr != stacks);
@@ -651,6 +650,26 @@ void MCStacklist::enableformodal(Window modalwindow, Boolean isenabled)
 		t_node = t_node -> next();
 	}
 	while(t_node != stacks);
+}
+
+void MCStacklist::reopenallstackwindows(void)
+{
+	if (stacks != NULL)
+	{
+        // MW-2014-05-15: [[ Bug 12414 ]] Go backwards through the list to stop infinite loopage.
+		MCStacknode *tptr = stacks -> prev();
+		do
+		{
+            MCStack *t_stack;
+            t_stack = tptr -> getstack();
+			
+            if (t_stack->getopened() && t_stack->getwindow() != nil)
+                t_stack->reopenwindow();
+            
+            tptr = tptr->prev();
+		}
+		while (tptr != stacks -> prev());
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

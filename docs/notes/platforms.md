@@ -2,12 +2,12 @@
 The engine supports a variety of operating systems and versions. This section describes the platforms that we ensure the engine runs on without issue (although in some cases with reduced functionality).
 ## Windows
 The engine supports the following Windows OSes:
-*Windows 2000 SP4
 *Windows XP SP2 and above
 *Windows Server 2003
 *Windows Vista SP1 and above (both 32-bit and 64-bit)
 *Windows 7 (both 32-bit and 64-bit)
 *Windows Server 2008
+*Windows 8.x (Desktop)
 * **Note:** On 64-bit platforms the engine still runs as a 32-bit application through the WoW layer.*
 ## Linux
 The linux engine requires the following:
@@ -24,9 +24,9 @@ The linux engine requires the following:
 * **Note:** LiveCode and standalones it builds may work on remote Xservers and in other bit-depths, however this mode of operation is not currently supported.*
 ## Mac
 The Mac engine supports:
-*10.4.11 (Tiger) on Intel and PowerPC
 *10.5.8 and later (Leopard) on Intel and PowerPC
 *10.6.x (Snow Leopard) on Intel
 *10.7.x (Lion) on Intel
 *10.8.x (Mountain Lion) on Intel
+*10.9.x (Mavericks) on Intel
 * **Note:** The engine runs as a 32-bit application regardless of the capabilities of the underlying processor.*

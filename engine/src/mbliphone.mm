@@ -936,7 +936,23 @@ MCSystemInterface *MCMobileCreateSystem(void)
 // MW-2013-05-21: [[ RandomBytes ]] System function for random bytes on iOS.
 bool MCS_random_bytes(size_t p_count, void* p_buffer)
 {
-	return SecRandomCopyBytes(kSecRandomDefault, p_count, (uint8_t *)p_buffer) != 0;
+	// IM-2014-04-16: [[ Bug 11860 ]] SecRandomCopyBytes returns 0 on success
+	return SecRandomCopyBytes(kSecRandomDefault, p_count, (uint8_t *)p_buffer) == 0;
 }
 
 //////////////////
+
+extern "C" void *IOS_LoadModule(const char *name);
+extern "C" void *IOS_ResolveSymbol(void *module, const char *name);
+
+// MW-2013-10-08: [[ LibOpenSSL101e ]] This functions are used by the stubs to load
+//   modules / resolve symbols.
+void *IOS_LoadModule(const char *name)
+{
+	return MCsystem -> LoadModule(name);
+}
+
+void *IOS_ResolveSymbol(void *module, const char *name)
+{
+	return MCsystem -> ResolveModuleSymbol(module, name);
+}
