@@ -53,6 +53,8 @@ class MCDispatch : public MCObject
 
 	MCExternalHandlerList *m_externals;
 
+    MCStack *m_transient_stacks;
+    
 	static MCImage *imagecache;
 
 public:
@@ -90,7 +92,7 @@ public:
 	IO_stat startup(void);
 	
 	void wreshape(Window w);
-	void wredraw(Window w, MCPlatformSurfaceRef surface, MCRegionRef region);
+	void wredraw(Window w, MCPlatformSurfaceRef surface, MCGRegionRef region);
 	void wiconify(Window w);
 	void wuniconify(Window w);
 	
@@ -175,6 +177,13 @@ public:
 	// environment.
 	bool isolatedsend(const char *p_stack_data, uint32_t p_stack_data_length, const char *p_message, MCParameter *p_parameters);
 
+    // MW-2014-06-24: [[ TransientStack ]] Transient stacks are a generalization of MCtooltip
+    //   allowing controls to create popup windows temporarily by deriving from MCStack and then
+    //   adding to MCdispatch for the time they are in use.
+    bool is_transient_stack(MCStack *stack);
+    void add_transient_stack(MCStack *stack);
+    void remove_transient_stack(MCStack *stack);
+    
 #ifdef _WINDOWS_DESKTOP
 	void freeprinterfonts();
 #endif

@@ -402,7 +402,6 @@ Boolean MClockcolormap;
 Boolean MClockerrors;
 Boolean MClockmenus;
 Boolean MClockmessages;
-Boolean MClockmoves;
 Boolean MClockrecent;
 Boolean MCtwelvetime = True;
 Boolean MCuseprivatecmap;
@@ -758,7 +757,6 @@ void X_clear_globals(void)
 	MClockerrors = False;
 	MClockmenus = False;
 	MClockmessages = False;
-	MClockmoves = False;
 	MClockrecent = False;
 	MCtwelvetime = True;
 	MCuseprivatecmap = False;
@@ -931,6 +929,7 @@ bool X_open(int argc, char *argv[], char *envp[])
 	MCserialcontrolsettings = strclone("baud=9600 parity=N data=8 stop=1");
 
 	MCdispatcher = new MCDispatch;
+    MCdispatcher -> add_transient_stack(MCtooltip);
 
 	if (MCnoui)
 		MCscreen = new MCUIDC;
@@ -1034,6 +1033,7 @@ int X_close(void)
 		delete optr;
 	}
 
+    MCdispatcher -> remove_transient_stack(MCtooltip);
 	delete MCtooltip;
 	MCtooltip = NULL;
 

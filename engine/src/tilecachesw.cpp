@@ -27,6 +27,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "region.h"
 #include "tilecache.h"
 
+#include "graphics_util.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef void (*surface_combiner_t)(void *p_dst, int32_t p_dst_stride, const void *p_src, uint4 p_src_stride, uint4 p_width, uint4 p_height, uint1 p_opacity);
@@ -81,13 +83,16 @@ void MCTileCacheSoftwareCompositor_DeallocateTile(void *p_context, void *p_tile)
 	MCMemoryDeallocate(p_tile);
 }
 
-bool MCTileCacheSoftwareCompositor_BeginFrame(void *p_context, MCStackSurface *p_surface, MCRegionRef p_dirty)
+bool MCTileCacheSoftwareCompositor_BeginFrame(void *p_context, MCStackSurface *p_surface, MCGRegionRef p_dirty)
 {
 	MCTileCacheSoftwareCompositorContext *self;
 	self = (MCTileCacheSoftwareCompositorContext *)p_context;
 	
+	MCGIntegerRectangle t_dirty;
+	t_dirty = MCGRegionGetBounds(p_dirty);
+	
 	MCGRaster t_raster;
-	if (!p_surface -> LockPixels(p_dirty, t_raster))
+	if (!p_surface -> LockPixels(t_dirty, t_raster))
 		return false;
 	
 	self -> bits = t_raster . pixels;
@@ -98,7 +103,7 @@ bool MCTileCacheSoftwareCompositor_BeginFrame(void *p_context, MCStackSurface *p
 	self -> tile_row_color = 0;
 	
 	self -> tile_size = MCTileCacheGetTileSize(self -> tilecache);
-	self -> dirty = MCRegionGetBoundingBox(p_dirty);
+	self -> dirty = MCRectangleFromMCGIntegerRectangle(t_dirty);
 	self -> clip = self -> dirty;
 	self -> combiner = s_surface_combiners_nda[GXcopy];
 	self -> opacity = 255;

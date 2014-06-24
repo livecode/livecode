@@ -644,7 +644,7 @@ public:
 	// Called by:
 	//   MCField::getlinkdata
 	//   MCField::gettextatts
-	void getxextents(int4 &si, int4 &ei, int2 &minx, int2 &maxx);
+	void getxextents(int4 &si, int4 &ei, coord_t &minx, coord_t &maxx);
 
 	// Compute the indices of a click at (x, y).
 	// If x is outside the bounds of the line containing y then:
@@ -764,7 +764,7 @@ private:
 	// and returning the block containing it.
 	MCBlock *extenddown(MCBlock *bptr, uint2 &ei);
 
-	int2 getx(uint2 tindex, MCLine *lptr);
+	coord_t getx(uint2 tindex, MCLine *lptr);
 
 	// Mark all the lines in the given range as dirty
 	void marklines(uint2 si, uint2 ei);

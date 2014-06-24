@@ -781,4 +781,21 @@ typedef struct _MCImagePaletteSettings
 	uint32_t ncolors;
 } MCImagePaletteSettings;
 
+enum MCGravity
+{
+    kMCGravityNone,
+    kMCGravityLeft,
+    kMCGravityTop,
+    kMCGravityRight,
+    kMCGravityBottom,
+    kMCGravityTopLeft,
+    kMCGravityTopRight,
+    kMCGravityBottomLeft,
+    kMCGravityBottomRight,
+    kMCGravityCenter,
+    kMCGravityResize,
+    kMCGravityResizeAspect,
+    kMCGravityResizeAspectFill,
+};
+
 #endif

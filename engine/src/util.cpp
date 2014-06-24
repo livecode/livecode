@@ -149,7 +149,8 @@ void MCU_resetprops(Boolean update)
 		}
 	}
 	MCerrorlock = 0;
-	MClockerrors = MClockmessages = MClockmoves = MClockrecent = False;
+	MClockerrors = MClockmessages = MClockrecent = False;
+	MCscreen->setlockmoves(False);
 	MCerrorlockptr = NULL;
 	MCinterrupt = False;
 	MCdragspeed = 0;
@@ -168,7 +169,7 @@ void MCU_saveprops(MCSaveprops &sp)
 	sp.errorlockptr = MCerrorlockptr;
 	sp.lockerrors = MClockerrors;
 	sp.lockmessages = MClockmessages;
-	sp.lockmoves = MClockmoves;
+	sp.lockmoves = MCscreen->getlockmoves();
 	sp.lockrecent = MClockrecent;
 	sp.interrupt = MCinterrupt;
 	sp.dragspeed = MCdragspeed;
@@ -190,7 +191,7 @@ void MCU_restoreprops(MCSaveprops &sp)
 	MCerrorlockptr = sp.errorlockptr;
 	MClockerrors = sp.lockerrors;
 	MClockmessages = sp.lockmessages;
-	MClockmoves = sp.lockmoves;
+	MCscreen->setlockmoves(sp.lockmoves);
 	MClockrecent = sp.lockrecent;
 	MCinterrupt = sp.interrupt;
 	MCdragspeed = sp.dragspeed;

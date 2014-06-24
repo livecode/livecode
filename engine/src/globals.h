@@ -315,7 +315,6 @@ extern Boolean MClockcolormap;
 extern Boolean MClockerrors;
 extern Boolean MClockmenus;
 extern Boolean MClockmessages;
-extern Boolean MClockmoves;
 extern Boolean MClockrecent;
 extern Boolean MCtwelvetime;
 extern Boolean MCuseprivatecmap;

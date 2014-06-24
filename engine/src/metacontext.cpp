@@ -57,6 +57,11 @@ MCMetaContext::MCMetaContext(const MCRectangle& p_page)
 	f_fill_foreground_used = false;
 	f_fill_background_used = false;
 	f_state_stack = NULL;
+	
+	m_clip_stack = nil;
+	m_clip_stack_size = 0;
+	m_clip_stack_index = 0;
+	
 	begin(true);
 }
 
@@ -76,6 +81,8 @@ MCMetaContext::~MCMetaContext(void)
 		MCPatternRelease(f_fill_background -> pattern);
 		f_fill_background = f_fill_background -> previous;
 	}
+	
+	MCMemoryDeleteArray(m_clip_stack);
 }
 
 
@@ -176,6 +183,24 @@ bool MCMetaContext::changeopaque(bool p_new_value)
 
 void MCMetaContext::setprintmode(void)
 {
+}
+
+void MCMetaContext::save()
+{
+	if (m_clip_stack_index + 1 > m_clip_stack_size)
+		/* UNCHECKED */ MCMemoryResizeArray(m_clip_stack_size + 1, m_clip_stack, m_clip_stack_size);
+	m_clip_stack[m_clip_stack_index++] = f_clip;
+}
+
+void MCMetaContext::restore()
+{
+	if (m_clip_stack_index > 0)
+		f_clip = m_clip_stack[--m_clip_stack_index];
+}
+
+void MCMetaContext::cliprect(const MCRectangle &p_rect)
+{
+	f_clip = MCU_intersect_rect(f_clip, p_rect);
 }
 
 void MCMetaContext::setclip(const MCRectangle& rect)
@@ -396,7 +421,7 @@ void MCMetaContext::drawsegments(MCSegment *segments, uint2 nsegs)
 		drawline(segments[t_segment] . x1, segments[t_segment] . y1, segments[t_segment] . x2, segments[t_segment] . y2);
 }
 
-void MCMetaContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override)
+void MCMetaContext::drawtext(coord_t x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override)
 {
 	// MW-2009-12-22: Make sure we don't generate 0 length text mark records
 	if (length == 0)

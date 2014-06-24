@@ -19,6 +19,8 @@
 
 #include "region.h"
 
+#include "graphics_util.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Platform Window Class Implementation
@@ -111,7 +113,7 @@ void MCPlatformWindow::Invalidate(MCRegionRef p_region)
     if (p_region == nil)
         MCRegionIncludeRect(m_dirty_region, m_content);
     else
-        MCRegionUnion(m_dirty_region, m_dirty_region, p_region);
+        MCRegionAddRegion(m_dirty_region, p_region);
 }
 
 void MCPlatformWindow::Show(void)
@@ -493,7 +495,7 @@ void MCPlatformWindow::HandleCloseRequest(void)
 	MCPlatformCallbackSendWindowCloseRequest(this);
 }
 
-void MCPlatformWindow::HandleRedraw(MCPlatformSurfaceRef p_surface, MCRegionRef p_region)
+void MCPlatformWindow::HandleRedraw(MCPlatformSurfaceRef p_surface, MCGRegionRef p_region)
 {
 	MCPlatformCallbackSendWindowRedraw(this, p_surface, p_region);
 }

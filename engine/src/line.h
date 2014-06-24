@@ -30,10 +30,10 @@ class MCLine : public MCDLlist
 	MCParagraph *parent;
 	MCBlock *firstblock;
 	MCBlock *lastblock;
-	uint2 width;
+	coord_t width;
 	uint2 ascent;
 	uint2 descent;
-	uint2 dirtywidth;
+	coord_t dirtywidth;
 public:
 	MCLine(MCParagraph *paragraph);
 	~MCLine();
@@ -46,8 +46,8 @@ public:
 	void makedirty();
 	void clean();
 	void getindex(uint2 &i, uint2 &l);
-	uint2 getcursorindex(int2 x, Boolean chunk);
-	uint2 getcursorx(uint2 i);
+	uint2 getcursorindex(coord_t x, Boolean chunk);
+	coord_t getcursorx(uint2 i);
 	uint2 getwidth();
 	uint2 getheight();
 	uint2 getascent();
