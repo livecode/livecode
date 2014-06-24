@@ -60,13 +60,6 @@ bool MCRegionIsComplex(MCRegionRef self)
 	return !MCRegionIsEmpty(self) && !MCRegionIsRect(self);
 }
 
-bool MCRegionTouchesRect(MCRegionRef self, const MCRectangle& rect)
-{
-	Rect t_rect;
-	SetRect(&t_rect, rect . x, rect . y, rect . x + rect . width, rect . y + rect . height);
-	return RectInRgn(&t_rect, (RgnHandle)self);
-}
-
 MCRectangle MCRegionGetBoundingBox(MCRegionRef self)
 {
 	Rect t_rect;
@@ -94,18 +87,6 @@ bool MCRegionIncludeRect(MCRegionRef self, const MCRectangle& rect)
 	t_rect_rgn = NewRgn();
 	RectRgn(t_rect_rgn, &t_rect);
 	UnionRgn((RgnHandle)self, t_rect_rgn, (RgnHandle)self);
-	DisposeRgn(t_rect_rgn);
-	return true;
-}
-
-bool MCRegionExcludeRect(MCRegionRef self, const MCRectangle& rect)
-{
-	Rect t_rect;
-	SetRect(&t_rect, rect . x, rect . y, rect . x + rect . width, rect . y + rect . height);
-	RgnHandle t_rect_rgn;
-	t_rect_rgn = NewRgn();
-	RectRgn(t_rect_rgn, &t_rect);
-	DiffRgn((RgnHandle)self, t_rect_rgn, (RgnHandle)self);
 	DisposeRgn(t_rect_rgn);
 	return true;
 }

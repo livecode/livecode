@@ -2482,7 +2482,7 @@ void MCStack::render(MCGContextRef p_context, const MCRectangle &p_rect)
 	delete t_old_context;
 }
 
-void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCRegionRef p_region)
+void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCGRegionRef p_region)
 {
 	MCTileCacheRef t_tilecache;
 	t_tilecache = view_gettilecache();
@@ -2494,6 +2494,9 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCRegionRef p
 		MCGContextRef t_context = nil;
 		if (p_surface -> LockGraphics(p_region, t_context))
 		{
+			MCRectangle t_bounds;
+			t_bounds = MCRectangleFromMCGIntegerRectangle(MCGRegionGetBounds(p_region));
+			
 #ifndef _MAC_DESKTOP
 			// IM-2014-01-24: [[ HiDPI ]] Use view backing scale to transform surface -> logical coords
 			MCGFloat t_backing_scale;
@@ -2501,14 +2504,14 @@ void MCStack::view_surface_redrawwindow(MCStackSurface *p_surface, MCRegionRef p
 			
 			// p_region is in surface coordinates, translate to user-space coords & ensure any fractional pixels are accounted for
 			MCRectangle t_rect;
-			t_rect = MCRectangleGetScaledBounds(MCRegionGetBoundingBox(p_region), 1 / t_backing_scale);
+			t_rect = MCRectangleGetScaledBounds(t_bounds, 1 / t_backing_scale);
 			
 			// scale user -> surface space
 			MCGContextScaleCTM(t_context, t_backing_scale, t_backing_scale);
 			
 			view_render(t_context, t_rect);
 #else
-			view_render(t_context, MCRegionGetBoundingBox(p_region));
+			view_render(t_context, t_bounds);
 #endif		
 			
 			p_surface -> UnlockGraphics();
@@ -2576,7 +2579,7 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 		t_user_rect = MCRectangleGetTransformedBounds(t_surface_rect, MCGAffineTransformInvert(t_transform));
 		
 		if (t_success)
-			t_success = MCGContextCreate(t_surface_rect.width, t_surface_rect.height, true, t_context);
+			t_success = MCGContextCreate(t_surface_rect.width, t_surface_rect.height, false, t_context);
 
 		if (t_success)
 		{

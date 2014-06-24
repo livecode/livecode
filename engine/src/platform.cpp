@@ -19,7 +19,7 @@ void MCPlatformHandleWindowUniconify(MCPlatformWindowRef window);
 void MCPlatformHandleWindowReshape(MCPlatformWindowRef window);
 void MCPlatformHandleWindowFocus(MCPlatformWindowRef window);
 void MCPlatformHandleWindowUnfocus(MCPlatformWindowRef window);
-void MCPlatformHandleWindowRedraw(MCPlatformWindowRef window, MCPlatformSurfaceRef surface, MCRegionRef dirty_rgn);
+void MCPlatformHandleWindowRedraw(MCPlatformWindowRef window, MCPlatformSurfaceRef surface, MCGRegionRef dirty_rgn);
 void MCPlatformHandleWindowConstrain(MCPlatformWindowRef window, MCPoint proposed_size, MCPoint& r_wanted_size);
 
 void MCPlatformHandleModifiersChanged(MCPlatformModifiers modifiers);
@@ -40,7 +40,7 @@ void MCPlatformHandleMouseLeave(MCPlatformWindowRef window);
 void MCPlatformHandleMouseDown(MCPlatformWindowRef window, uint32_t button, uint32_t count);
 void MCPlatformHandleMouseUp(MCPlatformWindowRef window, uint32_t button, uint32_t count);
 void MCPlatformHandleMouseDrag(MCPlatformWindowRef window, uint32_t button);
-void MCPlatformHandleMouseRelease(MCPlatformWindowRef window, uint32_t button);
+void MCPlatformHandleMouseRelease(MCPlatformWindowRef window, uint32_t button, bool was_menu);
 void MCPlatformHandleMouseMove(MCPlatformWindowRef window, MCPoint location);
 void MCPlatformHandleMouseScroll(MCPlatformWindowRef window, int dx, int dy);
 
@@ -137,7 +137,7 @@ void MCPlatformCallbackSendWindowConstrain(MCPlatformWindowRef p_window, MCPoint
 	MCPlatformHandleWindowConstrain(p_window, p_proposed_size, r_wanted_size);
 }
 
-void MCPlatformCallbackSendWindowRedraw(MCPlatformWindowRef p_window, MCPlatformSurfaceRef p_surface, MCRegionRef p_dirty_rgn)
+void MCPlatformCallbackSendWindowRedraw(MCPlatformWindowRef p_window, MCPlatformSurfaceRef p_surface, MCGRegionRef p_dirty_rgn)
 {
 	//MCLog("Window(%p) -> WindowRedraw(%p, %p)", p_window, p_surface);
 	MCPlatformWindowDeathGrip(p_window);
@@ -217,11 +217,11 @@ void MCPlatformCallbackSendMouseDrag(MCPlatformWindowRef p_window, uint32_t p_bu
 	MCPlatformHandleMouseDrag(p_window, p_button);
 }
 									 
-void MCPlatformCallbackSendMouseRelease(MCPlatformWindowRef p_window, uint32_t p_button)
+void MCPlatformCallbackSendMouseRelease(MCPlatformWindowRef p_window, uint32_t p_button, bool p_was_menu)
 {
-	MCLog("Window(%p) -> MouseRelease(%d)", p_window, p_button);
+	MCLog("Window(%p) -> MouseRelease(%d, %d)", p_window, p_button, p_was_menu);
 	MCPlatformWindowDeathGrip(p_window);
-	MCPlatformHandleMouseRelease(p_window, p_button);
+	MCPlatformHandleMouseRelease(p_window, p_button, p_was_menu);
 }
 
 void MCPlatformCallbackSendMouseMove(MCPlatformWindowRef p_window, MCPoint p_location)

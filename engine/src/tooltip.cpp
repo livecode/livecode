@@ -205,7 +205,10 @@ void MCTooltip::render(MCContext *dc, const MCRectangle &dirty)
 {
 	// IM-2012-05-31 [[ Malte ]] fix linux crashes that can occur when the tooltip text is NULL
 	// (probably shouldn't happen, but there you go)!
-	if (tooltip == nil)
+	// SJT-2014-05-29 Fix crash when m_font was NULL, seems we
+	// were being called on a closed window.  Probably caused by
+	// stale update events.
+	if (!opened)
 		return;
 	MCRectangle trect;
 	MCU_set_rect(trect, 0, 0, rect.width, rect.height);

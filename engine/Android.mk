@@ -32,6 +32,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	object.cpp objectpropsets.cpp objptr.cpp operator.cpp paragraf.cpp paragrafattr.cpp param.cpp \
 	property.cpp pickle.cpp \
 	regex.cpp \
+	region.cpp \
 	resolution.cpp \
 	scriptpt.cpp \
 	scrolbar.cpp scrollbardraw.cpp sellst.cpp \
@@ -53,7 +54,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp capsule.cpp \
 	externalv0.cpp externalv1.cpp \
 	mode_standalone.cpp lextable.cpp eventqueue.cpp sha1.cpp stacke.cpp \
-	name.cpp redraw.cpp tilecache.cpp tilecachesw.cpp tilecachegl.cpp sysregion.cpp \
+	name.cpp redraw.cpp tilecache.cpp tilecachesw.cpp tilecachegl.cpp \
 	sysunxdate.cpp sysunxrandom.cpp sysspec.cpp stackcache.cpp uuid.cpp \
 	quicktime.cpp \
 	mblad.cpp mblalert.cpp mblbusyindicator.cpp mblcalendar.cpp mblcontact.cpp mblcontrol.cpp \

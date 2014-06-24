@@ -2612,40 +2612,42 @@ void MCCard::drawcardborder(MCDC *dc, const MCRectangle &dirty)
 	            || dirty.x + dirty.width >= rect.width - bwidth
 	            || dirty.y + dirty.height >= rect.height - bwidth))
 	{
-		dc->setclip(dirty);
+		dc->save();
+		dc->cliprect(dirty);
+		
 		if (flags & F_3D)
 			draw3d(dc, rect, ETCH_RAISED, borderwidth);
+		else if (bwidth == 3)
+		{
+			rect.width--;
+			rect.height--;
+			drawborder(dc, rect, borderwidth);
+			rect.width++;
+			rect.height++;
+			MCPoint p[3];
+			p[0].x = p[1].x = 1;
+			p[2].x = rect.width - 3;
+			p[0].y = rect.height - 3;
+			p[1].y = p[2].y = 1;
+			dc->setforeground(dc->getwhite());
+			dc->drawlines(p, 3);
+			p[0].x = 2;
+			p[1].x = p[2].x = rect.width - 3;
+			p[0].y = p[1].y = rect.height - 3;
+			p[2].y = 2;
+			dc->setforeground(dc->getgray());
+			dc->drawlines(p, 3);
+			p[0].x = 2;
+			p[1].x = p[2].x = rect.width - 1;
+			p[0].y = p[1].y = rect.height - 1;
+			p[2].y = 2;
+			dc->setforeground(maccolors[MAC_SHADOW]);
+			dc->drawlines(p, 3);
+		}
 		else
-			if (bwidth == 3)
-			{
-				rect.width--;
-				rect.height--;
-				drawborder(dc, rect, borderwidth);
-				rect.width++;
-				rect.height++;
-				MCPoint p[3];
-				p[0].x = p[1].x = 1;
-				p[2].x = rect.width - 3;
-				p[0].y = rect.height - 3;
-				p[1].y = p[2].y = 1;
-				dc->setforeground(dc->getwhite());
-				dc->drawlines(p, 3);
-				p[0].x = 2;
-				p[1].x = p[2].x = rect.width - 3;
-				p[0].y = p[1].y = rect.height - 3;
-				p[2].y = 2;
-				dc->setforeground(dc->getgray());
-				dc->drawlines(p, 3);
-				p[0].x = 2;
-				p[1].x = p[2].x = rect.width - 1;
-				p[0].y = p[1].y = rect.height - 1;
-				p[2].y = 2;
-				dc->setforeground(maccolors[MAC_SHADOW]);
-				dc->drawlines(p, 3);
-			}
-			else
-				drawborder(dc, rect, borderwidth);
-		dc->clearclip();
+			drawborder(dc, rect, borderwidth);
+		
+		dc->restore();
 	}
 }
 
@@ -2749,7 +2751,6 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 
 	dc -> setopacity(255);
 	dc -> setfunction(GXcopy);
-	dc -> setclip(dirty);
 
 	if (t_draw_cardborder)
 		drawcardborder(dc, dirty);

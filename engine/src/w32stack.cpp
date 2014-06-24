@@ -61,7 +61,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // IM-2013-06-19: [[ RefactorGraphics]] replace update pixmap with callback
 static MCStackUpdateCallback s_update_callback = nil;
 static void *s_update_context = nil;
-static MCRectangle s_update_rect;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -69,6 +68,13 @@ extern bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMA
 extern void surface_merge_with_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
 
 extern MCGFloat MCWin32GetLogicalToScreenScale(void);
+
+extern void MCWin32RegionDestroy(HRGN p_region);
+extern bool MCWin32RegionOffset(HRGN p_region, int32_t p_dx, int32_t p_dy);
+
+extern bool MCWin32MCGRegionToHRGN(MCGRegionRef p_region, HRGN &r_region);
+extern bool MCWin32HRGNToMCGRegion(HRGN p_region, MCGRegionRef &r_region);
+extern bool MCRegionSetAsWindowShape(HRGN region, MCSysWindowHandle window);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -327,9 +333,9 @@ void MCStack::setopacity(uint1 p_level)
 		
 			if (m_window_shape != nil && m_window_shape -> is_sharp)
 			{
-				MCRegionRef t_region;
-				t_region = (MCRegionRef)m_window_shape -> handle;
-				MCRegionOffset(t_region, rect . x - t_rect . left, rect . y - t_rect . top);
+				HRGN t_region;
+				t_region = (HRGN)m_window_shape -> handle;
+				MCWin32RegionOffset(t_region, rect . x - t_rect . left, rect . y - t_rect . top);
 				MCRegionSetAsWindowShape(t_region, window->handle.window);
 
 				// The window now owns the region.
@@ -374,7 +380,7 @@ void MCStack::destroywindowshape()
 	// If the mask is sharp, delete the region; otherwise
 	// handle might be a pixmap.
 	if (m_window_shape -> is_sharp)
-		MCRegionDestroy((MCRegionRef)m_window_shape -> handle);
+		MCWin32RegionDestroy((HRGN)m_window_shape -> handle);
 	else
 	{
 		HBITMAP t_bitmap = (HBITMAP)m_window_shape->handle;
@@ -449,9 +455,9 @@ void MCStack::realize()
 
 		if (m_window_shape != nil && m_window_shape -> is_sharp)
 		{
-			MCRegionRef t_region;
-			t_region = (MCRegionRef)m_window_shape -> handle;
-			MCRegionOffset(t_region, t_rect . x - wrect . left, t_rect . y - wrect . top);
+			HRGN t_region;
+			t_region = (HRGN)m_window_shape -> handle;
+			MCWin32RegionOffset(t_region, t_rect . x - wrect . left, t_rect . y - wrect . top);
 			MCRegionSetAsWindowShape(t_region, window->handle.window);
 
 			// The window now owns the region.
@@ -571,9 +577,14 @@ void MCStack::constrain(intptr_t lp)
 {
 	uint32_t wstyle, exstyle;
 	getstyle(wstyle, exstyle);
-	RECT wrect = getwrect(rect, wstyle, exstyle);
-	int4 dx = wrect.right - wrect.left - rect.width;
-	int4 dy = wrect.bottom - wrect.top - rect.height;
+
+	// IM-2014-05-27: [[ Bug 12462 ]] Convert stack rect to screen coords
+	MCRectangle t_rect;
+	t_rect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(rect);
+
+	RECT wrect = getwrect(t_rect, wstyle, exstyle);
+	int4 dx = wrect.right - wrect.left - t_rect.width;
+	int4 dy = wrect.bottom - wrect.top - t_rect.height;
 	LPMINMAXINFO mmptr = (LPMINMAXINFO)lp;
 	const MCDisplay *t_display;
 	t_display = MCscreen -> getnearestdisplay(rect);
@@ -589,6 +600,10 @@ void MCStack::constrain(intptr_t lp)
 
 		if (memcmp(&t_workarea, &t_display -> workarea, sizeof(MCRectangle)))
 			MCU_reduce_rect(t_workarea, -dx / 2);
+
+		// IM-2014-05-27: [[ Bug 12462 ]] Convert screen rects to screen coords
+		t_workarea = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(t_workarea);
+		t_viewport = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(t_viewport);
 
 		mmptr -> ptMaxSize . x = MCU_min(maxwidth + dx, t_workarea . width);
 		mmptr -> ptMaxSize . y = MCU_min(maxheight + dy, t_workarea . height);
@@ -688,18 +703,18 @@ void MCStack::redrawicon(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool __MCApplyMaskCallback(void *p_context, const MCRectangle &p_rect)
+bool __MCApplyMaskCallback(void *p_context, const MCGIntegerRectangle &p_rect)
 {
 	MCGContextRef t_context = static_cast<MCGContextRef>(p_context);
 
-	MCGContextAddRectangle(t_context, MCRectangleToMCGRectangle(p_rect));
+	MCGContextAddRectangle(t_context, MCGIntegerRectangleToMCGRectangle(p_rect));
 	MCGContextFill(t_context);
 
 	return true;
 }
 
 // IM-2014-01-28: [[ HiDPI ]] Parameterize raster scale value instead of using global system value
-bool MCWin32ApplyMaskToRasterRegion(MCGRaster &p_raster, MCGFloat p_raster_scale, uint32_t p_x_origin, uint32_t p_y_origin, const MCGRaster &p_mask, MCRegionRef p_region)
+bool MCWin32ApplyMaskToRasterRegion(MCGRaster &p_raster, MCGFloat p_raster_scale, uint32_t p_x_origin, uint32_t p_y_origin, const MCGRaster &p_mask, MCGRegionRef p_region)
 {
 	// IM-2013-09-11: [[ ResIndependence ]] reduce mask params to single MCGRaster
 	bool t_success;
@@ -731,7 +746,7 @@ bool MCWin32ApplyMaskToRasterRegion(MCGRaster &p_raster, MCGFloat p_raster_scale
 		MCGContextTranslateCTM(t_gcontext, -(MCGFloat)p_x_origin, -(MCGFloat)p_y_origin);
 		MCGContextSetBlendMode(t_gcontext, kMCGBlendModeDestinationIn);
 
-		t_success = MCRegionForEachRect(p_region, __MCApplyMaskCallback, t_gcontext);
+		t_success = MCGRegionIterate(p_region, __MCApplyMaskCallback, t_gcontext);
 	}
 
 	MCGImageRelease(t_mask_image);
@@ -746,7 +761,7 @@ bool MCWin32ApplyMaskToRasterRegion(MCGRaster &p_raster, MCGFloat p_raster_scale
 class MCWindowsStackSurface: public MCStackSurface
 {
 	MCStack *m_stack;
-	MCRegionRef m_region;
+	MCGRegionRef m_region;
 	HDC m_dc;
 
 	MCGRaster *m_mask;
@@ -754,17 +769,17 @@ class MCWindowsStackSurface: public MCStackSurface
 	bool m_locked;
 	MCGContextRef m_locked_context;
 
-	MCRegionRef m_redraw_region;
-	MCRectangle m_area;
-	MCRectangle m_locked_area;
+	MCGRegionRef m_redraw_region;
+	MCGIntegerRectangle m_area;
+	MCGIntegerRectangle m_locked_area;
 	HBITMAP m_bitmap;
 	MCGRaster m_raster;
 	MCGFloat m_raster_scale;
 
 public:
-	MCWindowsStackSurface(MCGRaster *p_mask, MCGFloat p_mask_scale, HRGN p_region, HDC p_dc)
+	MCWindowsStackSurface(MCGRaster *p_mask, MCGFloat p_mask_scale, MCGRegionRef p_region, HDC p_dc)
 	{
-		m_region = (MCRegionRef)p_region;
+		m_region = p_region;
 		m_dc = p_dc;
 
 		m_mask = p_mask;
@@ -780,9 +795,9 @@ public:
 		if (m_bitmap != nil)
 			return false;
 
-		MCRectangle t_actual_area;
-		t_actual_area = MCRegionGetBoundingBox(m_region);
-		if (MCU_empty_rect(t_actual_area))
+		MCGIntegerRectangle t_actual_area;
+		t_actual_area = MCGRegionGetBounds(m_region);
+		if (MCGIntegerRectangleIsEmpty(t_actual_area))
 			return false;
 
 		bool t_success = true;
@@ -790,17 +805,17 @@ public:
 		void *t_bits = nil;
 
 		if (t_success)
-			t_success = MCRegionCreate(m_redraw_region);
+			t_success = MCGRegionCreate(m_redraw_region);
 
 		if (t_success)
-			t_success = create_temporary_dib(m_dc, t_actual_area . width, t_actual_area . height, m_bitmap, t_bits);
+			t_success = create_temporary_dib(m_dc, t_actual_area . size . width, t_actual_area . size . height, m_bitmap, t_bits);
 
 		if (t_success)
 		{
 			m_raster . format = kMCGRasterFormat_ARGB;
-			m_raster . width = t_actual_area . width;
-			m_raster . height = t_actual_area . height;
-			m_raster . stride = t_actual_area . width * sizeof(uint32_t);
+			m_raster . width = t_actual_area . size . width;
+			m_raster . height = t_actual_area . size . height;
+			m_raster . stride = t_actual_area . size . width * sizeof(uint32_t);
 			m_raster . pixels = t_bits;
 
 			m_area = t_actual_area;
@@ -808,7 +823,7 @@ public:
 			return true;
 		}
 
-		MCRegionDestroy(m_redraw_region);
+		MCGRegionDestroy(m_redraw_region);
 		m_redraw_region = nil;
 
 		if (m_bitmap != nil)
@@ -831,24 +846,27 @@ public:
 		if (p_update)
 		{
 			if (m_mask != nil)
-				MCWin32ApplyMaskToRasterRegion(m_raster, m_raster_scale, m_area.x, m_area.y, *m_mask, m_redraw_region);
+				MCWin32ApplyMaskToRasterRegion(m_raster, m_raster_scale, m_area.origin.x, m_area.origin.y, *m_mask, m_redraw_region);
 
 			HDC t_src_dc = ((MCScreenDC *)MCscreen) -> getsrchdc();
 
 			HGDIOBJ t_old_object;
-			HRGN t_old_clip;
+			HRGN t_old_clip, t_clip;
+
+			/* UNCHECKED */ MCWin32MCGRegionToHRGN(m_redraw_region, t_clip);
 
 			t_old_clip = CreateRectRgn(0, 0, 0, 0);
 			GetClipRgn(m_dc, t_old_clip);
 			t_old_object = SelectObject(t_src_dc, m_bitmap);
-			SelectClipRgn(m_dc, (HRGN)m_redraw_region);
+			SelectClipRgn(m_dc, t_clip);
 
-			BitBlt(m_dc, m_area . x, m_area . y, m_area . width, m_area . height, t_src_dc, 0, 0, SRCCOPY);
+			BitBlt(m_dc, m_area.origin.x, m_area.origin.y, m_area.size.width, m_area.size.height, t_src_dc, 0, 0, SRCCOPY);
 
 			SelectClipRgn(m_dc, t_old_clip);
 			SelectObject(t_src_dc, t_old_object);
 
 			DeleteObject(t_old_clip);
+			DeleteObject(t_clip);
 		}
 
 		DeleteObject(m_redraw_region);
@@ -856,17 +874,18 @@ public:
 		m_bitmap = nil;
 	}
 
-	bool LockGraphics(MCRegionRef p_area, MCGContextRef& r_context)
+	bool LockGraphics(MCGRegionRef p_area, MCGContextRef& r_context)
 	{
 		MCGRaster t_raster;
-		if (LockPixels(p_area, t_raster))
+		if (LockPixels(MCGRegionGetBounds(p_area), t_raster))
 		{
 			if (MCGContextCreateWithRaster(t_raster, m_locked_context))
 			{
 				// Set origin
-				MCGContextTranslateCTM(m_locked_context, -m_locked_area.x, -m_locked_area.y);
+				MCGContextTranslateCTM(m_locked_context, -m_locked_area.origin.x, -m_locked_area.origin.y);
 				// Set clipping rect
-				MCGContextClipToRect(m_locked_context, MCRectangleToMCGRectangle(m_locked_area));
+				MCGContextClipToRegion(m_locked_context, p_area);
+				MCGContextClipToRect(m_locked_context, MCGIntegerRectangleToMCGRectangle(m_locked_area));
 				
 				r_context = m_locked_context;
 				
@@ -890,26 +909,26 @@ public:
 		UnlockPixels();
 	}
 	
-	bool LockPixels(MCRegionRef p_area, MCGRaster& r_raster)
+	bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster)
 	{
 		if (m_bitmap == nil || m_locked)
 			return false;
 
-		MCRectangle t_bounds = MCRegionGetBoundingBox(m_region);
-		MCRectangle t_actual_area;
-		t_actual_area = MCU_intersect_rect(MCRegionGetBoundingBox(p_area), t_bounds);
-		if (MCU_empty_rect(t_actual_area))
+		MCGIntegerRectangle t_bounds = MCGRegionGetBounds(m_region);
+		MCGIntegerRectangle t_actual_area;
+		t_actual_area = MCGIntegerRectangleIntersection(p_area, t_bounds);
+		if (MCGIntegerRectangleIsEmpty(t_actual_area))
 			return false;
 
-		/* UNCHECKED */ MCRegionIncludeRect(m_redraw_region, t_actual_area);
+		/* UNCHECKED */ MCGRegionAddRect(m_redraw_region, t_actual_area);
 
-		uint8_t *t_bits = (uint8_t*)m_raster.pixels + (t_actual_area.y - t_bounds.y) * m_raster.stride + (t_actual_area.x - t_bounds.x) * sizeof(uint32_t);
+		uint8_t *t_bits = (uint8_t*)m_raster.pixels + (t_actual_area.origin.y - t_bounds.origin.y) * m_raster.stride + (t_actual_area.origin.x - t_bounds.origin.x) * sizeof(uint32_t);
 
 		m_locked_area = t_actual_area;
 
 		r_raster . format = kMCGRasterFormat_ARGB;
-		r_raster . width = t_actual_area . width;
-		r_raster . height = t_actual_area . height;
+		r_raster . width = t_actual_area.size.width;
+		r_raster . height = t_actual_area.size.height;
 		r_raster . stride = m_raster.stride;
 		r_raster . pixels = t_bits;
 
@@ -937,12 +956,12 @@ public:
 		bool t_success = true;
 
 		MCGContextRef t_context = nil;
-		MCRegionRef t_region = nil;
+		MCGRegionRef t_region = nil;
 
-		t_success = MCRegionCreate(t_region);
+		t_success = MCGRegionCreate(t_region);
 
 		if (t_success)
-			t_success = MCRegionSetRect(t_region, MCGRectangleGetIntegerBounds(p_dst_rect));
+			t_success = MCGRegionSetRect(t_region, MCGRectangleGetBounds(p_dst_rect));
 
 		if (t_success)
 			t_success = LockGraphics(t_region, t_context);
@@ -958,7 +977,7 @@ public:
 
 		UnlockGraphics();
 
-		MCRegionDestroy(t_region);
+		MCGRegionDestroy(t_region);
 
 		return t_success;
 	}
@@ -969,11 +988,11 @@ class MCWindowsLayeredStackSurface: public MCStackSurface
 	MCGRaster m_raster;
 	MCGFloat m_raster_scale;
 	MCGRaster *m_mask;
-	MCRegionRef m_redraw_region;
+	MCGRegionRef m_redraw_region;
 
 	bool m_locked;
 
-	MCRectangle m_locked_area;
+	MCGIntegerRectangle m_locked_area;
 	MCGContextRef m_locked_context;
 	void *m_locked_bits;
 	uint32_t m_locked_stride;
@@ -998,7 +1017,7 @@ public:
 		if (m_locked)
 			return false;
 
-		if (!MCRegionCreate(m_redraw_region))
+		if (!MCGRegionCreate(m_redraw_region))
 			return false;
 
 		m_locked = true;
@@ -1013,7 +1032,7 @@ public:
 
 		Unlock(true);
 
-		MCRegionDestroy(m_redraw_region);
+		MCGRegionDestroy(m_redraw_region);
 		m_redraw_region = nil;
 		m_locked = false;
 	}
@@ -1027,17 +1046,18 @@ public:
 		}
 	}
 
-	bool LockGraphics(MCRegionRef p_area, MCGContextRef& r_context)
+	bool LockGraphics(MCGRegionRef p_area, MCGContextRef& r_context)
 	{
 		MCGRaster t_raster;
-		if (LockPixels(p_area, t_raster))
+		if (LockPixels(MCGRegionGetBounds(p_area), t_raster))
 		{
 			if (MCGContextCreateWithRaster(t_raster, m_locked_context))
 			{
 				// Set origin
-				MCGContextTranslateCTM(m_locked_context, -m_locked_area.x, -m_locked_area.y);
+				MCGContextTranslateCTM(m_locked_context, -m_locked_area.origin.x, -m_locked_area.origin.y);
 				// Set clipping rect
-				MCGContextClipToRect(m_locked_context, MCRectangleToMCGRectangle(m_locked_area));
+				MCGContextClipToRegion(m_locked_context, p_area);
+				MCGContextClipToRect(m_locked_context, MCGIntegerRectangleToMCGRectangle(m_locked_area));
 				
 				r_context = m_locked_context;
 				
@@ -1061,20 +1081,19 @@ public:
 		UnlockPixels();
 	}
 	
-	bool LockPixels(MCRegionRef p_area, MCGRaster &r_raster)
+	bool LockPixels(MCGIntegerRectangle p_area, MCGRaster &r_raster)
 	{
 		m_locked_bits = m_raster.pixels;
 		m_locked_stride = m_raster.stride;
 
-		m_locked_area = MCRegionGetBoundingBox(p_area);
 		// restrict locked area to intersection with raster
-		m_locked_area = MCU_intersect_rect(m_locked_area, MCU_make_rect(0, 0, m_raster.width, m_raster.height));
+		m_locked_area = MCGIntegerRectangleIntersection(p_area, MCGIntegerRectangleMake(0, 0, m_raster.width, m_raster.height));
 
-		/* UNCHECKED */ MCRegionIncludeRect(m_redraw_region, m_locked_area);
+		/* UNCHECKED */ MCGRegionAddRect(m_redraw_region, m_locked_area);
 
-		r_raster.width = m_locked_area.width;
-		r_raster.height = m_locked_area.height;
-		r_raster.pixels = (uint8_t *)m_locked_bits + m_locked_area . y * m_locked_stride + m_locked_area . x * sizeof(uint32_t);
+		r_raster.width = m_locked_area.size.width;
+		r_raster.height = m_locked_area.size.height;
+		r_raster.pixels = (uint8_t *)m_locked_bits + m_locked_area.origin.y * m_locked_stride + m_locked_area.origin.x * sizeof(uint32_t);
 		r_raster.stride = m_locked_stride;
 		r_raster.format = m_raster.format;
 		return true;
@@ -1099,12 +1118,12 @@ public:
 		bool t_success = true;
 
 		MCGContextRef t_context = nil;
-		MCRegionRef t_region = nil;
+		MCGRegionRef t_region = nil;
 
-		t_success = MCRegionCreate(t_region);
+		t_success = MCGRegionCreate(t_region);
 
 		if (t_success)
-			t_success = MCRegionSetRect(t_region, MCGRectangleGetIntegerBounds(p_dst_rect));
+			t_success = MCGRegionSetRect(t_region, MCGRectangleGetBounds(p_dst_rect));
 
 		if (t_success)
 			t_success = LockGraphics(t_region, t_context);
@@ -1120,7 +1139,7 @@ public:
 
 		UnlockGraphics();
 
-		MCRegionDestroy(t_region);
+		MCGRegionDestroy(t_region);
 
 		return t_success;
 	}
@@ -1149,14 +1168,27 @@ void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 	MCGAffineTransform t_surface_transform;
 	t_surface_transform = MCGAffineTransformMakeScale(t_surface_scale, t_surface_scale);
 
-	MCRegionRef t_surface_region;
-	/* UNCHECKED */ MCRegionTransform(p_region, t_surface_transform, t_surface_region);
+	MCGRegionRef t_surface_region, t_scaled_region;
+	t_surface_region = t_scaled_region = nil;
+
+	if (MCGAffineTransformIsIdentity(t_surface_transform))
+		t_surface_region = (MCGRegionRef)p_region;
+	else
+	{
+		/* UNCHECKED */ MCGRegionCopyWithTransform((MCGRegionRef)p_region, t_surface_transform, t_scaled_region);
+		t_surface_region = t_scaled_region;
+	}
 
 	if (m_window_shape == nil || m_window_shape -> is_sharp)
 	{
+		HRGN t_hrgn;
+		/* UNCHECKED */ MCWin32MCGRegionToHRGN(t_surface_region, t_hrgn);
+
 		// TODO - Windows 8.1 per-monitor DPI-awareness may require the update region be in logical coords
-		InvalidateRgn((HWND)window -> handle . window, (HRGN)t_surface_region, FALSE);
+		InvalidateRgn((HWND)window -> handle . window, t_hrgn, FALSE);
 		UpdateWindow((HWND)window -> handle . window);
+
+		MCWin32RegionDestroy(t_hrgn);
 	}
 	else
 	{
@@ -1198,7 +1230,7 @@ void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 		if (t_surface.Lock())
 		{
 			if (s_update_callback == nil)
-				view_surface_redrawwindow(&t_surface, (MCRegionRef)t_surface_region);
+				view_surface_redrawwindow(&t_surface, t_surface_region);
 			else
 				s_update_callback(&t_surface, (MCRegionRef)t_surface_region, s_update_context);
 
@@ -1209,14 +1241,13 @@ void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 	}
 
 	// IM-2014-03-27: [[ Bug 12010 ]] Free the created surface region once the update is done.
-	MCRegionDestroy(t_surface_region);
+	MCGRegionDestroy(t_scaled_region);
 }
 
 void MCStack::view_platform_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
 {
 	s_update_callback = p_callback;
 	s_update_context = p_context;
-	s_update_rect = MCRegionGetBoundingBox(p_region);
 	view_platform_updatewindow(p_region);
 	s_update_callback = nil;
 	s_update_context = nil;
@@ -1224,9 +1255,15 @@ void MCStack::view_platform_updatewindowwithcallback(MCRegionRef p_region, MCSta
 
 void MCStack::onpaint(void)
 {
-	HRGN t_update_region;
-	t_update_region = CreateRectRgn(0, 0, 0, 0);
-	GetUpdateRgn((HWND)window -> handle . window, t_update_region, FALSE);
+	HRGN t_hrgn;
+	t_hrgn = CreateRectRgn(0, 0, 0, 0);
+	GetUpdateRgn((HWND)window -> handle . window, t_hrgn, FALSE);
+
+	MCGRegionRef t_update_region;
+	t_update_region = nil;
+
+	/* UNCHECKED */ MCWin32HRGNToMCGRegion(t_hrgn, t_update_region);
+	DeleteObject(t_hrgn);
 
 	PAINTSTRUCT t_paint;
 	BeginPaint((HWND)window -> handle . window, &t_paint);
@@ -1244,7 +1281,7 @@ void MCStack::onpaint(void)
 	if (t_surface.Lock())
 	{
 		if (s_update_callback == nil)
-			view_surface_redrawwindow(&t_surface, (MCRegionRef)t_update_region);
+			view_surface_redrawwindow(&t_surface, t_update_region);
 		else
 			s_update_callback(&t_surface, (MCRegionRef)t_update_region, s_update_context);
 
@@ -1253,7 +1290,7 @@ void MCStack::onpaint(void)
 
 	EndPaint((HWND)window -> handle . window, &t_paint);
 
-	DeleteObject(t_update_region);
+	MCGRegionDestroy(t_update_region);
 }
 
 void MCStack::composite(void)

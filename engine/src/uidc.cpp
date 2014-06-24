@@ -195,6 +195,8 @@ MCUIDC::MCUIDC()
 	nmessages = maxmessages = 0;
 	messages = NULL;
 	moving = NULL;
+	lockmoves = False;
+	locktime = 0.0;
 	ncolors = 0;
 	colors = NULL;
 	allocs = NULL;
@@ -1175,6 +1177,36 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
     return t_handled;
 }
 
+
+Boolean MCUIDC::getlockmoves() const
+{
+	return lockmoves;
+}
+
+void MCUIDC::setlockmoves(Boolean b)
+{
+	if (lockmoves == b)
+		return;
+
+	lockmoves = b;
+
+	if (lockmoves) {
+		// then save the time the lock started
+		locktime = MCS_time(); 
+
+	} else {
+		// adjust the start time of each movement.
+		real8 offset = MCS_time() - locktime;
+		if (moving != NULL)	{
+			MCMovingList *mptr = moving;
+			do {
+				mptr->starttime += offset;
+				mptr = mptr->next();
+			} while (mptr != moving);
+		}
+	}
+}
+
 void MCUIDC::addmove(MCObject *optr, MCPoint *pts, uint2 npts,
                      real8 &duration, Boolean waiting)
 {
@@ -1222,7 +1254,11 @@ void MCUIDC::addmove(MCObject *optr, MCPoint *pts, uint2 npts,
 			optr -> setrect(newrect);
 	}
 
-	mptr->starttime = MCS_time();
+	if (lockmoves) {
+		mptr->starttime = locktime;
+	} else {
+		mptr->starttime = MCS_time();
+	}
 }
 
 void MCUIDC::listmoves(MCExecPoint &ep)
@@ -1251,8 +1287,7 @@ void MCUIDC::stopmove(MCObject *optr, Boolean finish)
 		{
 			if (mptr->object == optr)
 			{
-				mptr->remove
-				(moving);
+				mptr->remove(moving);
 				if (finish)
 				{
 					MCRectangle rect = mptr->object->getrect();
@@ -1282,94 +1317,82 @@ void MCUIDC::stopmove(MCObject *optr, Boolean finish)
 
 void MCUIDC::handlemoves(real8 &curtime, real8 &eventtime)
 {
-	static real8 lasttime;
+	if (lockmoves) 
+		return;
 	eventtime = curtime + (real8)MCsyncrate / 1000.0;
 	MCMovingList *mptr = moving;
 	Boolean moved = False;
 	Boolean done = False;
 	do
 	{
-		if (MClockmoves)
+		MCRectangle rect = mptr->object->getrect();
+		MCRectangle newrect = rect;
+		real8 dt = 0.0;
+		if (curtime >= mptr->starttime + mptr->duration
+		        || rect.x == mptr->donex && rect.y == mptr->doney)
 		{
-			if (lasttime != 0.0)
-				mptr->starttime += curtime - lasttime;
-			mptr = mptr->next();
+			newrect.x = mptr->donex;
+			newrect.y = mptr->doney;
+			dt = curtime - (mptr->starttime + mptr->duration);
+			done = True;
 		}
 		else
 		{
-			MCRectangle rect = mptr->object->getrect();
-			MCRectangle newrect = rect;
-			real8 dt = 0.0;
-			if (curtime >= mptr->starttime + mptr->duration
-			        || rect.x == mptr->donex && rect.y == mptr->doney)
-			{
-				newrect.x = mptr->donex;
-				newrect.y = mptr->doney;
-				dt = curtime - (mptr->starttime + mptr->duration);
-				done = True;
-			}
-			else
-			{
-				newrect.x = mptr->pts[mptr->curpt].x - (rect.width >> 1)
-				            + (int2)(mptr->dx * (curtime - mptr->starttime) / mptr->duration);
-				newrect.y = mptr->pts[mptr->curpt].y - (rect.height >> 1)
-				            + (int2)(mptr->dy * (curtime - mptr->starttime) / mptr->duration);
-			}
-			if (newrect.x != rect.x || newrect.y != rect.y)
-			{
-				moved = True;
-			
-				// MW-2011-08-18: [[ Layers ]] Notify of position change.
-				if (mptr->object -> gettype() >= CT_GROUP)
-					static_cast<MCControl *>(mptr->object)->layer_setrect(newrect, false);
-				else
-					mptr->object->setrect(newrect);
-			}
-			if (done)
-			{
-				if (mptr->curpt < mptr->lastpt - 1)
-				{
-					do
-					{
-						mptr->curpt++;
-						mptr->dx = mptr->pts[mptr->curpt + 1].x - mptr->pts[mptr->curpt].x;
-						mptr->dy = mptr->pts[mptr->curpt + 1].y - mptr->pts[mptr->curpt].y;
-						mptr->duration = sqrt((double)(mptr->dx * mptr->dx + mptr->dy
-						                               * mptr->dy)) / mptr->speed;
-						dt -= mptr->duration;
-					}
-					while (dt > 0.0 && mptr->curpt < mptr->lastpt - 1);
-					mptr->duration = -dt;
-					mptr->starttime = curtime;
-					mptr->donex = mptr->pts[mptr->curpt + 1].x - (rect.width >> 1);
-					mptr->doney = mptr->pts[mptr->curpt + 1].y - (rect.height >> 1);
-				}
-				else
-				{
-					moving = mptr->prev();
-					mptr->remove(moving);
-					if (!mptr->waiting)
-						if (MClockmessages)
-							delaymessage(mptr->object, MCM_move_stopped);
-						else
-							mptr->object->message(MCM_move_stopped);
-					delete mptr;
-					if (moving == NULL)
-						mptr = NULL;
-					else
-						mptr = moving->next();
-				}
-				done = False;
-			}
-			else
-				mptr = mptr->next();
+			newrect.x = mptr->pts[mptr->curpt].x - (rect.width >> 1)
+			            + (int2)(mptr->dx * (curtime - mptr->starttime) / mptr->duration);
+			newrect.y = mptr->pts[mptr->curpt].y - (rect.height >> 1)
+			            + (int2)(mptr->dy * (curtime - mptr->starttime) / mptr->duration);
 		}
+		if (newrect.x != rect.x || newrect.y != rect.y)
+		{
+			moved = True;
+		
+			// MW-2011-08-18: [[ Layers ]] Notify of position change.
+			if (mptr->object -> gettype() >= CT_GROUP)
+				static_cast<MCControl *>(mptr->object)->layer_setrect(newrect, false);
+			else
+				mptr->object->setrect(newrect);
+		}
+		if (done)
+		{
+			if (mptr->curpt < mptr->lastpt - 1)
+			{
+				do
+				{
+					mptr->curpt++;
+					mptr->dx = mptr->pts[mptr->curpt + 1].x - mptr->pts[mptr->curpt].x;
+					mptr->dy = mptr->pts[mptr->curpt + 1].y - mptr->pts[mptr->curpt].y;
+					mptr->duration = sqrt((double)(mptr->dx * mptr->dx + mptr->dy
+					                               * mptr->dy)) / mptr->speed;
+					dt -= mptr->duration;
+				}
+				while (dt > 0.0 && mptr->curpt < mptr->lastpt - 1);
+				mptr->duration = -dt;
+				mptr->starttime = curtime;
+				mptr->donex = mptr->pts[mptr->curpt + 1].x - (rect.width >> 1);
+				mptr->doney = mptr->pts[mptr->curpt + 1].y - (rect.height >> 1);
+			}
+			else
+			{
+				moving = mptr->prev();
+				mptr->remove(moving);
+				if (!mptr->waiting)
+					if (MClockmessages)
+						delaymessage(mptr->object, MCM_move_stopped);
+					else
+						mptr->object->message(MCM_move_stopped);
+				delete mptr;
+				if (moving == NULL)
+					mptr = NULL;
+				else
+					mptr = moving->next();
+			}
+			done = False;
+		}
+		else
+			mptr = mptr->next();
 	}
 	while (mptr != NULL && mptr != moving);
-	if (MClockmoves)
-		lasttime = curtime;
-	else
-		lasttime = 0.0;
 		
 	// MW-2012-12-09: [[ Bug 9905 ]] Make sure we update the screen if something
 	//   moved (previously it only did so if there were still things to move also!).

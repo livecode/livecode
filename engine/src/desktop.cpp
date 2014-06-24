@@ -164,7 +164,7 @@ void MCPlatformHandleWindowConstrain(MCPlatformWindowRef p_window, MCPoint p_pro
 	t_stack -> constrain(p_proposed_size, r_wanted_size);
 }
 
-void MCPlatformHandleWindowRedraw(MCPlatformWindowRef p_window, MCPlatformSurfaceRef p_surface, MCRegionRef p_region)
+void MCPlatformHandleWindowRedraw(MCPlatformWindowRef p_window, MCPlatformSurfaceRef p_surface, MCGRegionRef p_region)
 {
 	if (((MCScreenDC *)MCscreen) -> isbackdrop(p_window))
 	{
@@ -234,12 +234,15 @@ void MCPlatformHandleMouseEnter(MCPlatformWindowRef p_window)
 		MCmousestackptr -> enter();
 	}
 	
-	MCObject *t_menu;
+	// MW-2014-06-23: [[ Bug 12670 ]] This shouldn't be necessary as mouseEnter
+	//   is followed immediately by a mouseMove after the mouseLoc has been
+	//   updated.
+	/*MCObject *t_menu;
 	t_menu = MCdispatcher -> getmenu();
 	if (t_menu == nil)
 		MCmousestackptr -> mfocus(MCmousex, MCmousey);
 	else
-		t_menu -> mfocus(MCmousex, MCmousey);
+		t_menu -> mfocus(MCmousex, MCmousey);*/
 }
 
 void MCPlatformHandleMouseLeave(MCPlatformWindowRef p_window)
@@ -379,7 +382,7 @@ void MCPlatformHandleMouseDrag(MCPlatformWindowRef p_window, uint32_t p_button)
 	MCdispatcher -> wmdrag(p_window);
 }
 
-void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_button)
+void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_button, bool p_was_menu)
 {
 	if (((MCScreenDC *)MCscreen) -> isbackdrop(p_window))
 	{
@@ -419,7 +422,9 @@ void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_butto
 		
 		MCLog("MouseRelease(%p, %d)", t_target, p_button);
 		
-		t_target -> message_with_args(MCM_mouse_release, p_button + 1);
+        // MW-2014-06-11: [[ Bug 12339 ]] Only send a mouseRelease message if this wasn't the result of a popup menu.
+        if (!p_was_menu)
+            t_target -> message_with_args(MCM_mouse_release, p_button + 1);
 	}
 }
 
@@ -597,7 +602,7 @@ void MCPlatformHandleTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRa
 	}
 	
 	int4 si, ei;
-	MCactivefield -> selectedmark(False, si, ei, False, False);
+	MCactivefield -> selectedmark(False, si, ei, False);
 	MCactivefield -> unresolvechars(0, si, ei);
 	r_selected_range = MCRangeMake(si, ei - si);
 	if (MCactivefield -> getcompositionrange(si, ei))
@@ -699,7 +704,7 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 			p_selection_range . length == 0)
 		{
 			int32_t t_s_si, t_s_ei;
-			MCactivefield -> selectedmark(False, t_s_si, t_s_ei, False, False);
+			MCactivefield -> selectedmark(False, t_s_si, t_s_ei, False);
 			if (t_s_si == t_r_si &&
 				t_s_ei == t_r_ei)
 			{

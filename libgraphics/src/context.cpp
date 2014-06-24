@@ -1376,6 +1376,43 @@ void MCGContextClipToRect(MCGContextRef self, MCGRectangle p_rect)
 	self -> layer -> canvas -> clipRect(MCGRectangleToSkRect(p_rect), SkRegion::kIntersect_Op, self -> state -> should_antialias);
 }
 
+void MCGContextSetClipToDeviceRegion(MCGContextRef self, MCGRegionRef p_region)
+{
+	if (!MCGContextIsValid(self) || p_region == nil)
+		return;
+	
+	self->layer->canvas->clipRegion(p_region->region, SkRegion::kReplace_Op);
+}
+
+void MCGContextClipToDeviceRegion(MCGContextRef self, MCGRegionRef p_region)
+{
+	if (!MCGContextIsValid(self) || p_region == nil)
+		return;
+	
+	self -> layer -> canvas -> clipRegion(p_region->region, SkRegion::kIntersect_Op);
+}
+
+void MCGContextClipToRegion(MCGContextRef self, MCGRegionRef p_region)
+{
+	MCGAffineTransform t_transform;
+	t_transform = MCGContextGetDeviceTransform(self);
+	
+	MCGRegionRef t_transformed;
+	t_transformed = nil;
+	
+	if (MCGAffineTransformIsIdentity(t_transform))
+	{
+		MCGContextClipToDeviceRegion(self, p_region);
+		return;
+	}
+	
+	/* UNCHECKED */ MCGRegionCopyWithTransform(p_region, MCGContextGetDeviceTransform(self), t_transformed);
+	
+	MCGContextClipToDeviceRegion(self, t_transformed);
+	
+	MCGRegionDestroy(t_transformed);
+}
+
 MCGRectangle MCGContextGetClipBounds(MCGContextRef self)
 {	
 	// MM-2013-11-25: [[ Bug 11496 ]] When using getClipBounds, Skia outsets the clip by 1 pixel to take account of antialiasing.
@@ -2378,7 +2415,7 @@ void MCGContextSimplify(MCGContextRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap, const MCGRectangle *p_src, const MCGRectangle &p_dst, MCGImageFilter p_filter)
+static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap, const MCGRectangle *p_center, const MCGRectangle *p_src, const MCGRectangle &p_dst, MCGImageFilter p_filter)
 {
 	bool t_success;
 	t_success = true;
@@ -2405,10 +2442,46 @@ static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap,
 	{
 		// MM-2014-03-12: [[ Bug 11892 ]] If we are not transforming the image, there's no need to apply any filtering.
 		//  Was causing issues in Skia with non null blend modes.
-		SkMatrix::TypeMask t_transform_type;
-		t_transform_type = self -> layer -> canvas -> getTotalMatrix() . getType();
-		if ((t_transform_type == SkMatrix::kIdentity_Mask || t_transform_type == SkMatrix::kTranslate_Mask) &&
-			p_bitmap . width() == p_dst . size . width && p_bitmap . height() == p_dst . size . height)
+
+		// IM-2014-06-19: [[ Bug 12557 ]] More rigourous check to see if we need a filter - Skia will complain if a filter
+		// is used for translation-only transforms or scaling transforms close to the identity.
+		SkMatrix t_matrix;
+		t_matrix = self->layer->canvas->getTotalMatrix();
+
+		MCGRectangle t_tmp_src;
+		MCGFloat t_src_width, t_src_height;
+		if (p_src != nil)
+			t_tmp_src = *p_src;
+		else
+			t_tmp_src = MCGRectangleMake(0, 0, p_bitmap.width(), p_bitmap.height());
+
+		// preconcat the current transform with the transformation from source -> dest rect to obtain the total transformation.
+		SkMatrix t_rect_to_rect;
+		t_rect_to_rect.setRectToRect(MCGRectangleToSkRect(t_tmp_src), MCGRectangleToSkRect(p_dst), SkMatrix::kFill_ScaleToFit);
+
+		t_matrix.preConcat(t_rect_to_rect);
+
+		bool t_no_filter = false;
+
+		// Translation only - no filter
+		if ((t_matrix.getType() & ~SkMatrix::kTranslate_Mask) == 0)
+			t_no_filter = true;
+		else if ((t_matrix.getType() & ~(SkMatrix::kTranslate_Mask | SkMatrix::kScale_Mask)) == 0)
+		{
+			// Translate and scale - if the transformed & rounded destination is the same size as the source then don't filter
+			SkRect src, dst;
+			src.setXYWH(t_tmp_src.origin.x, t_tmp_src.origin.y, t_tmp_src.size.width, t_tmp_src.size.height);
+
+			t_matrix.mapPoints(SkTCast<SkPoint*>(&dst),
+				SkTCast<const SkPoint*>(&src),
+				2);
+
+			SkIRect idst;
+			dst.round(&idst);
+			t_no_filter = idst.width() == t_tmp_src.size.width && idst.height() == t_tmp_src.size.height;
+		}
+
+		if (t_no_filter)
 		{
 			t_paint . setAntiAlias(false);
 			t_paint . setFilterLevel(SkPaint::kNone_FilterLevel);
@@ -2445,7 +2518,17 @@ static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap,
 			t_src_rect_ptr = &t_src_rect;
 		}
 
-		self -> layer -> canvas -> drawBitmapRectToRect(p_bitmap, t_src_rect_ptr, MCGRectangleToSkRect(p_dst), &t_paint);
+        if (p_src != nil || p_center == nil)
+            self -> layer -> canvas -> drawBitmapRectToRect(p_bitmap, t_src_rect_ptr, MCGRectangleToSkRect(p_dst), &t_paint);
+        else
+        {
+            SkIRect t_center;
+            t_center . fLeft = ceilf(p_center -> origin . x);
+            t_center . fTop = ceilf(p_center -> origin . y);
+            t_center . fRight = floorf(p_center -> origin . x + p_center -> size . width);
+            t_center . fBottom = floorf(p_center -> origin . y + p_center -> size . height);
+            self -> layer -> canvas -> drawBitmapNine(p_bitmap, t_center, MCGRectangleToSkRect(p_dst), &t_paint);
+        }
 	}
 	
 	return t_success;
@@ -2456,15 +2539,22 @@ void MCGContextDrawImage(MCGContextRef self, MCGImageRef p_image, MCGRectangle p
 	if (!MCGImageIsValid(p_image))
 		return;
 
-	self -> is_valid = MCGContextDrawSkBitmap(self, *p_image->bitmap, nil, p_dst, p_filter);
+	self -> is_valid = MCGContextDrawSkBitmap(self, *p_image->bitmap, nil, nil, p_dst, p_filter);
 }
 
+void MCGContextDrawImageWithCenter(MCGContextRef self, MCGImageRef p_image, MCGRectangle p_center, MCGRectangle p_dst, MCGImageFilter p_filter)
+{
+	if (!MCGImageIsValid(p_image))
+		return;
+    
+	self -> is_valid = MCGContextDrawSkBitmap(self, *p_image->bitmap, &p_center, nil, p_dst, p_filter);
+}
 void MCGContextDrawRectOfImage(MCGContextRef self, MCGImageRef p_image, MCGRectangle p_src, MCGRectangle p_dst, MCGImageFilter p_filter)
 {
 	if (!MCGImageIsValid(p_image))
 		return;
 
-	self -> is_valid = MCGContextDrawSkBitmap(self, *p_image->bitmap, &p_src, p_dst, p_filter);
+	self -> is_valid = MCGContextDrawSkBitmap(self, *p_image->bitmap, nil, &p_src, p_dst, p_filter);
 }
 
 void MCGContextDrawPixels(MCGContextRef self, const MCGRaster& p_raster, MCGRectangle p_dst, MCGImageFilter p_filter)
@@ -2480,7 +2570,7 @@ void MCGContextDrawPixels(MCGContextRef self, const MCGRaster& p_raster, MCGRect
 		t_success = MCGRasterToSkBitmap(p_raster, kMCGPixelOwnershipTypeBorrow, t_bitmap);
 
 	if (t_success)
-		t_success = MCGContextDrawSkBitmap(self, t_bitmap, nil, p_dst, p_filter);
+		t_success = MCGContextDrawSkBitmap(self, t_bitmap, nil, nil, p_dst, p_filter);
 	
 	self -> is_valid = t_success;
 }

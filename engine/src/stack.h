@@ -93,13 +93,13 @@ class MCStackSurface
 {
 public:
 	// Lock the surface for access with an MCGContextRef
-	virtual bool LockGraphics(MCRegionRef area, MCGContextRef& r_context) = 0;
+	virtual bool LockGraphics(MCGRegionRef area, MCGContextRef& r_context) = 0;
 	// Unlock the surface.
 	virtual void UnlockGraphics(void) = 0;
 	
 	// Lock the pixels within the given region. The bits are returned relative
 	// to the top-left of the region.
-	virtual bool LockPixels(MCRegionRef area, MCGRaster& r_raster) = 0;
+	virtual bool LockPixels(MCGIntegerRectangle area, MCGRaster& r_raster) = 0;
 	// Unlock the surface.
 	virtual void UnlockPixels(void) = 0;
 	
@@ -321,7 +321,7 @@ public:
 	
 	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given surface.
 	// IM-2014-01-24: [[ HiDPI ]] Update region is given in surface coordinates.
-	void view_surface_redrawwindow(MCStackSurface *surface, MCRegionRef region);
+	void view_surface_redrawwindow(MCStackSurface *surface, MCGRegionRef region);
 	
 	//////////
 
@@ -495,7 +495,7 @@ public:
 	MCRectangle getcardrect() const;
 	// IM-2014-01-07: [[ StackScale ]] Update the rect of the current card to fit the stack
 	void updatecardsize();
-	
+    
 	//////////
 	
 	void setgeom();
@@ -759,7 +759,9 @@ public:
 	void sethints();
 	// IM-2013-10-08: [[ FullscreenMode ]] Separate out window sizing hints
 	void setsizehints();
+    
 	void destroywindowshape();
+    void updatewindowshape(MCWindowShape *shape);
 
 	// MW-2011-08-17: [[ Redraw ]] Mark the whole content area as needing redrawn.
 	void dirtyall(void);

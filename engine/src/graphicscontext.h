@@ -20,6 +20,11 @@ public:
 	
 	bool changeopaque(bool p_value);
 	
+	void save();
+	void restore();
+	
+	void cliprect(const MCRectangle &p_rect);
+	
 	void setclip(const MCRectangle& rect);
 	MCRectangle getclip(void) const;
 	void clearclip(void);
@@ -46,7 +51,7 @@ public:
 	void drawline(int2 x1, int2 y1, int2 x2, int2 y2);
 	void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false);
 	void drawsegments(MCSegment *segments, uint2 nsegs);
-	void drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override = false);
+	void drawtext(coord_t x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override = false);
 	void drawrect(const MCRectangle& rect, bool inside);
 	void fillrect(const MCRectangle& rect, bool inside);
 	void fillrects(MCRectangle *rects, uint2 nrects);
@@ -116,6 +121,9 @@ private:
 	MCGFloat m_dash_phase;
 	MCGFloat *m_dash_lengths;
 	uint32_t m_dash_count;
+
+	// IM-2014-06-19: [[ Bug 12557 ]] Override for the antialias setting
+	bool m_force_antialiasing;
 };
 
 // MW-2014-01-07: [[ Bug 11632 ]] The player object distinguishes between 'screen' and 'offscreen' - in the

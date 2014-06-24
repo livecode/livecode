@@ -316,6 +316,8 @@ class MCImage : public MCControl
 	bool m_has_transform;
 	MCGAffineTransform m_transform;
 	
+    MCRectangle m_center_rect;
+    
 	// MW-2013-10-25: [[ Bug 11300 ]] These control whether a horz/vert flip is
 	//   applied to the transform on referenced images (set by the flip cmd).
 	bool m_flip_x : 1;
@@ -481,10 +483,12 @@ public:
 	void endsel();
 
 	// in idraw.cc
-	void drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy);
+	void drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint2 dw, uint2 dh);
 	void drawcentered(MCDC *dc, int2 x, int2 y, Boolean reverse);
-    void drawnodata(MCDC *dc, MCRectangle drect, uint2 sw, uint2 sh, int2 dx, int2 dy);
+    void drawnodata(MCDC *dc, MCRectangle drect, uint2 sw, uint2 sh, int2 dx, int2 dy, uint2 dw, uint2 dh);
 
+    void drawwithgravity(MCDC *dc, MCRectangle rect, MCGravity gravity);
+    
 	void canceldraw(void);
 	void startmag(int2 x, int2 y);
 	void endmag(Boolean close);

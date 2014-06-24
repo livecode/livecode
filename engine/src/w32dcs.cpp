@@ -1417,7 +1417,7 @@ void MCScreenDC::redrawbackdrop(void)
 			{
 				MCRectangle t_rect;
 				t_rect = backdrop_badge -> getrect();
-				backdrop_badge -> drawme(t_gfxcontext, 0, 0, t_rect . width, t_rect . height, 32, m_backdrop_rect.height - 32 - t_rect . height);
+				backdrop_badge -> drawme(t_gfxcontext, 0, 0, t_rect . width, t_rect . height, 32, m_backdrop_rect.height - 32 - t_rect . height, t_rect . width, t_rect . height);
 			}
 
 			delete t_gfxcontext;

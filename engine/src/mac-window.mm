@@ -29,6 +29,10 @@
 
 #include "mac-internal.h"
 
+#include <objc/objc-runtime.h>
+
+#include "graphics_util.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static NSDragOperation s_drag_operation_result = NSDragOperationNone;
@@ -45,6 +49,25 @@ static MCRectangle MCRectangleFromNSRect(const NSRect &p_rect)
 static bool s_lock_responder_change = false;
 
 @implementation com_runrev_livecode_MCWindow
+
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)windowStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation
+{
+    self = [super initWithContentRect: contentRect styleMask: windowStyle backing: bufferingType defer: deferCreation];
+    if (self == nil)
+        return nil;
+    
+    m_can_become_key = false;
+    m_monitor = nil;
+    
+    return self;
+}
+
+- (void)dealloc
+{
+    if (m_monitor != nil)
+        [NSEvent removeMonitor: m_monitor];
+    [super dealloc];
+}
 
 - (void)setCanBecomeKeyWindow: (BOOL)p_value
 {
@@ -99,6 +122,50 @@ static bool s_lock_responder_change = false;
         return [super constrainFrameRect: frameRect toScreen: screen];
     
     return frameRect;
+}
+
+// MW-2014-06-11: [[ Bug 12451 ]] When we 'popup' a window we install a monitor to catch
+//   other mouse events outside the host window. This allows us to close them and still
+//   continue to process the event as normal.
+
+- (void)popupWindowClosed: (NSNotification *)notification
+{
+    if (m_monitor != nil)
+    {
+        [NSEvent removeMonitor: m_monitor];
+        m_monitor = nil;
+    }
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowWillCloseNotification object:self];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:NSApplicationDidResignActiveNotification object:nil];
+}
+
+- (void)popupWindowShouldClose: (NSNotification *)notification
+{
+    [self close];
+}
+
+- (void)popupAndMonitor
+{
+    NSWindow *t_window;
+    t_window = self;
+    
+    [self makeKeyAndOrderFront: nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(popupWindowClosed:) name:NSWindowWillCloseNotification object:self];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(popupWindowShouldClose:) name:NSApplicationDidResignActiveNotification object:nil];
+    
+    m_monitor = [NSEvent addLocalMonitorForEventsMatchingMask: NSLeftMouseDownMask | NSRightMouseDownMask | NSOtherMouseDownMask
+                                                      handler:^(NSEvent *incomingEvent)
+                 {
+                     NSEvent *result = incomingEvent;
+                     NSWindow *targetWindowForEvent = [incomingEvent window];
+
+                     if (targetWindowForEvent !=  t_window)
+                         [[(MCWindowDelegate *)[self delegate] platformWindow] -> GetView() handleMousePress: incomingEvent isDown: YES];
+                     
+                     return result;
+                 }];
 }
 
 @end
@@ -225,10 +292,17 @@ static bool s_lock_responder_change = false;
         CGRect t_rect;
         CGRectMakeWithDictionaryRepresentation((CFDictionaryRef)t_rect_dict, &t_rect);
         
+        // MW-2014-06-11: [[ Bug ]] Only temporarily update the frame fields otherwise it screws
+        //   up backingstore scale factor changes.
+        NSPoint t_origin;
+        t_origin = _frame . origin;
+        
         _frame . origin . x = t_rect . origin . x;
         _frame . origin . y = [[NSScreen mainScreen] frame] . size . height - t_rect . origin . y - t_rect . size . height;
         
         [tracker platformWindow] -> ProcessDidMove();
+    
+        _frame . origin = t_origin;
     }
     
     [t_info_array release];
@@ -457,6 +531,11 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	m_window -> ProcessDidResignKey();
 }
 
+- (void)windowDidChangeBackingProperties:(NSNotification *)notification
+{
+    MCLog("didChangeBacking %lf", objc_msgSend_fpret(m_window -> GetHandle(), @selector(backingScaleFactor)));
+}
+
 - (void)didEndSheet: (NSWindow *)sheet returnCode: (NSInteger)returnCode contextInfo: (void *)info
 {
 }
@@ -488,7 +567,8 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	m_input_method_event = nil;
 	
 	// Register for all dragging types (well ones that convert to 'data' anyway).
-	[self registerForDraggedTypes: [NSArray arrayWithObject: (NSString *)kUTTypeData]];
+	// MW-2014-06-10: [[ Bug 12388 ]] Make sure we respond to our private datatype.
+    [self registerForDraggedTypes: [NSArray arrayWithObjects: (NSString *)kUTTypeData, @"com.runrev.livecode.private", nil]];
 	
 	return self;
 }
@@ -1204,7 +1284,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 {
 }
 
-- (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations
+- (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations pasteboard:(NSPasteboard *)pboard
 {
 	NSEvent *t_mouse_event;
 	t_mouse_event = MCMacPlatformGetLastMouseEvent();
@@ -1224,7 +1304,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 				at: t_image_loc 
 				offset: NSZeroSize 
 				event: t_mouse_event
-				pasteboard: [NSPasteboard pasteboardWithName: NSDragPboard]
+				pasteboard: pboard
 				source: self
 				slideBack: YES];
 				
@@ -1457,10 +1537,14 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	NSInteger t_update_rect_count;
 	[self getRectsBeingDrawn: &t_update_rects count: &t_update_rect_count];
 	
-	MCRegionRef t_update_rgn;
-	/* UNCHECKED */ MCRegionCreate(t_update_rgn);
+	MCGRegionRef t_update_region;
+	t_update_region = nil;
+	
+	/* UNCHECKED */ MCGRegionCreate(t_update_region);
 	for(NSInteger i = 0; i < t_update_rect_count; i++)
-		/* UNCHECKED */ MCRegionIncludeRect(t_update_rgn, [self mapNSRectToMCRectangle: t_update_rects[i]]);
+		/* UNCHECKED */ MCGRegionAddRect(t_update_region, MCRectangleToMCGIntegerRectangle([self mapNSRectToMCRectangle: t_update_rects[i]]));
+	
+	MCLog("update rect count: %d", t_update_rect_count);
 
 	//////////
 	
@@ -1468,8 +1552,8 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	CGContextSaveGState(t_graphics);
 	
 	{
-		MCMacPlatformSurface t_surface(t_window, t_graphics, t_update_rgn);
-		t_window -> HandleRedraw(&t_surface, t_update_rgn);
+		MCMacPlatformSurface t_surface(t_window, t_graphics, t_update_region);
+		t_window -> HandleRedraw(&t_surface, t_update_region);
 	}
 	
 	// Restore the context state
@@ -1477,7 +1561,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	
 	//////////
 	
-	MCRegionDestroy(t_update_rgn);
+	MCGRegionDestroy(t_update_region);
 }
 
 //////////
@@ -1777,6 +1861,9 @@ void MCMacPlatformWindow::DoSynchronize(void)
 	if (m_changes . opacity_changed)
 		[m_window_handle setAlphaValue: m_opacity];
 	
+    if (m_changes . has_shadow_changed)
+        [m_window_handle setHasShadow: m_has_shadow];
+    
 	if (m_changes . mask_changed)
 	{
 		[m_window_handle setOpaque: m_mask == nil];
@@ -1839,15 +1926,6 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
                 RealizeAndNotify();
 			*(uint32_t *)r_value = m_window_handle != nil ? [m_window_handle windowNumber] : 0;
 			return true;
-			
-		// IM-2014-03-26: [[ Bug 12021 ]] Return NSWindow frame rect
-		case kMCPlatformWindowPropertyFrameRect:
-			assert(p_type == kMCPlatformPropertyTypeRectangle);
-            // MW-2014-04-30: [[ Bug 12328 ]] If we don't have a handle yet make sure we create one.
-            if (m_window_handle == nil)
-                RealizeAndNotify();
-			*(MCRectangle *)r_value = m_window_handle != nil ? MCRectangleFromNSRect([m_window_handle frame]) : MCRectangleMake(0, 0, 0, 0);
-			return true;
 	}
 	return false;
 }
@@ -1856,6 +1934,10 @@ void MCMacPlatformWindow::DoShow(void)
 {
 	if (m_style == kMCPlatformWindowStyleDialog)
 		MCMacPlatformBeginModalSession(this);
+	else if (m_style == kMCPlatformWindowStylePopUp)
+    {
+        [m_window_handle popupAndMonitor];
+    }
 	else
 	{
 		[m_view setNeedsDisplay: YES];
@@ -1899,6 +1981,11 @@ void MCMacPlatformWindow::DoHide(void)
 	{
 		MCMacPlatformEndModalSession(this);
 	}
+    else if (m_style == kMCPlatformWindowStylePopUp)
+    {
+        [m_window_handle popupWindowClosed: nil];
+        [m_window_handle orderOut: nil];
+    }
 	else
 	{
 		// Unset the parent window to make sure things don't propagate.
@@ -1921,24 +2008,38 @@ void MCMacPlatformWindow::DoRaise(void)
 	[m_window_handle orderFront: nil];
 }
 
+static uint32_t s_rect_count = 0;
+bool MCMacDoUpdateRegionCallback(void *p_context, const MCRectangle &p_rect)
+{
+	MCWindowView *t_view = static_cast<MCWindowView*>(p_context);
+	[t_view setNeedsDisplayInRect: [t_view mapMCRectangleToNSRect: p_rect]];
+	
+	return true;
+}
 void MCMacPlatformWindow::DoUpdate(void)
 {	
 	// If the shadow has changed (due to the mask changing) we must disable
 	// screen updates otherwise we get a flicker.
-	if (m_shadow_changed)
+	if (m_shadow_changed && m_has_shadow)
 		NSDisableScreenUpdates();
 	
 	// Mark the bounding box of the dirty region for needing display.
 	// COCOA-TODO: Make display update more specific.
-	[m_view setNeedsDisplayInRect: [m_view mapMCRectangleToNSRect: MCRegionGetBoundingBox(m_dirty_region)]];
+	s_rect_count = 0;
+	MCRegionForEachRect(m_dirty_region, MCMacDoUpdateRegionCallback, m_view);
 	
 	// Force a re-display, this will cause drawRect to be invoked on our view
 	// which in term will result in a redraw window callback being sent.
 	[m_view displayIfNeeded];
 	
 	// Re-enable screen updates if needed.
-	if (m_shadow_changed)
+	if (m_shadow_changed && m_has_shadow)
+    {
+        // MW-2014-06-11: [[ Bug 12495 ]] Turn the shadow off and on to force recaching.
+        [m_window_handle setHasShadow: NO];
+        [m_window_handle setHasShadow: YES];
 		NSEnableScreenUpdates();
+    }
 }
 
 void MCMacPlatformWindow::DoIconify(void)

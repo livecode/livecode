@@ -23,8 +23,7 @@
 #include "platform-internal.h"
 
 #include "mac-internal.h"
-#define FAST_RATE 10
-
+#include "graphics_util.h"
 #include "mac-player.h"
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -31,10 +31,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline bool MCU_empty_rect(const MCRectangle& a)
-{
-	return a . width == 0 || a . height == 0;
-}
 
 // COCOA-TODO: Clean up external linkage for surface.
 extern MCRectangle MCU_intersect_rect(const MCRectangle&, const MCRectangle&);
@@ -45,11 +41,26 @@ extern MCGFloat MCResGetDeviceScale(void);
 ////////////////////////////////////////////////////////////////////////////////
 
 static void MCMacRenderBitsToCG(CGContextRef p_target, CGRect p_area, int32_t p_width, int32_t p_height, const void *p_bits, uint32_t p_stride, bool p_has_alpha);
+static void MCMacRenderRasterToCG(CGContextRef p_target, CGRect p_area, const MCGRaster &p_raster);
 static void MCMacRenderImageToCG(CGContextRef p_target, CGRect p_dst_rect, MCGImageRef &p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend);
+
+static void MCMacClipCGContextToRegion(CGContextRef p_context, MCGRegionRef p_region, uint32_t p_surface_height);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCMacPlatformSurface::MCMacPlatformSurface(MCMacPlatformWindow *p_window, CGContextRef p_cg_context, MCRegionRef p_update_rgn)
+CGRect MCGIntegerRectangleToCGRect(const MCGIntegerRectangle &p_rect)
+{
+	return CGRectMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+}
+
+CGRect MCMacFlipCGRect(const CGRect &p_rect, uint32_t p_surface_height)
+{
+	return CGRectMake(p_rect.origin.x, p_surface_height - (p_rect.origin.y + p_rect.size.height), p_rect.size.width, p_rect.size.height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCMacPlatformSurface::MCMacPlatformSurface(MCMacPlatformWindow *p_window, CGContextRef p_cg_context, MCGRegionRef p_update_rgn)
 {
 	// Retain the window to ensure it doesn't vanish whilst the surface is alive.
 	m_window = p_window;
@@ -62,7 +73,6 @@ MCMacPlatformSurface::MCMacPlatformSurface(MCMacPlatformWindow *p_window, CGCont
 	// Initialize state.
 	m_locked_context = nil;
 	m_locked_bits = nil;
-	m_locked_stride = 0;
 	
 	// Setup everything so that its ready for use.
 	Lock();
@@ -76,10 +86,10 @@ MCMacPlatformSurface::~MCMacPlatformSurface(void)
 	m_window -> Release();
 }
 
-bool MCMacPlatformSurface::LockGraphics(MCRegionRef p_region, MCGContextRef& r_context)
+bool MCMacPlatformSurface::LockGraphics(MCGRegionRef p_region, MCGContextRef& r_context)
 {
 	MCGRaster t_raster;
-	if (LockPixels(p_region, t_raster))
+	if (LockPixels(MCGRegionGetBounds(p_region), t_raster))
 	{
 		if (MCGContextCreateWithRaster(t_raster, m_locked_context))
 		{
@@ -90,10 +100,10 @@ bool MCMacPlatformSurface::LockGraphics(MCRegionRef p_region, MCGContextRef& r_c
 			MCGContextScaleCTM(m_locked_context, t_scale, t_scale);
 			
 			// Set origin
-			MCGContextTranslateCTM(m_locked_context, -m_locked_area . x, -m_locked_area . y);
+			MCGContextTranslateCTM(m_locked_context, -m_locked_area . origin . x, -m_locked_area . origin . y);
 			
 			// Set clipping rect
-			MCGContextClipToRect(m_locked_context, MCRectangleToMCGRectangle(m_locked_area));
+			MCGContextClipToRegion(m_locked_context, p_region);
 			
 			r_context = m_locked_context;
 			
@@ -113,32 +123,28 @@ void MCMacPlatformSurface::UnlockGraphics(void)
 	UnlockPixels();
 }
 
-bool MCMacPlatformSurface::LockPixels(MCRegionRef p_region, MCGRaster& r_raster)
+bool MCMacPlatformSurface::LockPixels(MCGIntegerRectangle p_region, MCGRaster& r_raster)
 {
-	MCRectangle t_actual_area;
-	t_actual_area = MCU_intersect_rect(MCRegionGetBoundingBox(p_region), MCRegionGetBoundingBox(m_update_rgn));
+	MCGIntegerRectangle t_actual_area;
+	t_actual_area = MCGIntegerRectangleIntersection(p_region, MCGRegionGetBounds(m_update_rgn));
 	
-	if (MCU_empty_rect(t_actual_area))
+	if (MCGIntegerRectangleIsEmpty(t_actual_area))
 		return false;
 	
 	MCGFloat t_scale;
 	t_scale = GetBackingScaleFactor();
 	
-	int32_t t_scaled_width, t_scaled_height;
-	t_scaled_width = t_actual_area . width * t_scale;
-	t_scaled_height = t_actual_area . height * t_scale;
-	
-	m_locked_stride = t_scaled_width * sizeof(uint32_t);
-	m_locked_bits = malloc(t_scaled_height * m_locked_stride);
+	m_locked_raster.width = t_actual_area . size . width * t_scale;
+	m_locked_raster.height = t_actual_area . size . height * t_scale;
+	m_locked_raster.stride = m_locked_raster.width * sizeof(uint32_t);
+	m_locked_raster.format = kMCGRasterFormat_xRGB;
+
+	m_locked_bits = malloc(m_locked_raster.height * m_locked_raster.stride);
 	if (m_locked_bits != nil)
 	{
 		m_locked_area = t_actual_area;
-		
-		r_raster . width = t_scaled_width;
-		r_raster . height = t_scaled_height;
-		r_raster . stride = m_locked_stride;
-		r_raster . pixels = m_locked_bits;
-		r_raster . format = kMCGRasterFormat_ARGB;
+		m_locked_raster.pixels = m_locked_bits;
+		r_raster = m_locked_raster;
 		return true;
 	}
 	
@@ -158,9 +164,10 @@ void MCMacPlatformSurface::UnlockPixels(void)
 	t_scale = GetBackingScaleFactor();
 	
 	CGRect t_dst_rect;
-	t_dst_rect = CGRectMake(m_locked_area . x, t_surface_height - (m_locked_area . y + m_locked_area . height), m_locked_area . width, m_locked_area . height);
+	t_dst_rect = MCMacFlipCGRect(MCGIntegerRectangleToCGRect(m_locked_area), t_surface_height);
 	
-	MCMacRenderBitsToCG(m_cg_context, t_dst_rect, m_locked_area . width * t_scale, m_locked_area . height * t_scale, m_locked_bits, m_locked_stride, false);
+	MCMacClipCGContextToRegion(m_cg_context, m_update_rgn, t_surface_height);
+	MCMacRenderRasterToCG(m_cg_context, t_dst_rect, m_locked_raster);
 	
 	free(m_locked_bits);
 	m_locked_bits = nil;
@@ -228,9 +235,9 @@ void MCMacPlatformSurface::Lock(void)
 		int t_surface_height;
 		t_surface_height = m_window -> m_content . height;
 		
-		MCRectangle t_rect;
-		t_rect = MCRegionGetBoundingBox(m_update_rgn);
-		CGContextClearRect(m_cg_context, CGRectMake(t_rect . x, t_surface_height - (t_rect . y + t_rect . height), t_rect . width, t_rect . height));
+		MCGIntegerRectangle t_rect;
+		t_rect = MCGRegionGetBounds(m_update_rgn);
+		CGContextClearRect(m_cg_context, MCMacFlipCGRect(MCGIntegerRectangleToCGRect(t_rect), t_surface_height));
 		
 		MCGFloat t_mask_height, t_mask_width;
 		t_mask_width = CGImageGetWidth(t_mask);
@@ -348,23 +355,16 @@ static void MCMacRenderImageToCG(CGContextRef p_target, CGRect p_dst_rect, MCGIm
 	}
 }
 
-static void MCMacRenderBitsToCG(CGContextRef p_target, CGRect p_area, int32_t p_width, int32_t p_height, const void *p_bits, uint32_t p_stride, bool p_has_alpha)
+static void MCMacRenderRasterToCG(CGContextRef p_target, CGRect p_area, const MCGRaster &p_raster)
 {
 	CGColorSpaceRef t_colorspace;
 	t_colorspace = CGColorSpaceCreateDeviceRGB();
 	if (t_colorspace != nil)
 	{
-		MCGRaster t_raster;
-		t_raster.width = p_width;
-		t_raster.height = p_height;
-		t_raster.pixels = const_cast<void*>(p_bits);
-		t_raster.stride = p_stride;
-		t_raster.format = p_has_alpha ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
-		
 		CGImageRef t_image;
 		t_image = nil;
 		
-		if (MCGRasterToCGImage(t_raster, MCGRectangleMake(0, 0, t_raster.width, t_raster.height), t_colorspace, false, false, t_image))
+		if (MCGRasterToCGImage(p_raster, MCGRectangleMake(0, 0, p_raster.width, p_raster.height), t_colorspace, false, false, t_image))
 		{
 			CGContextClipToRect((CGContextRef)p_target, p_area);
 			CGContextDrawImage((CGContextRef)p_target, p_area, t_image);
@@ -373,6 +373,74 @@ static void MCMacRenderBitsToCG(CGContextRef p_target, CGRect p_area, int32_t p_
 		
 		CGColorSpaceRelease(t_colorspace);
 	}
+}
+
+static void MCMacRenderBitsToCG(CGContextRef p_target, CGRect p_area, int32_t p_width, int32_t p_height, const void *p_bits, uint32_t p_stride, bool p_has_alpha)
+{
+	MCGRaster t_raster;
+	t_raster.width = p_width;
+	t_raster.height = p_height;
+	t_raster.pixels = const_cast<void*>(p_bits);
+	t_raster.stride = p_stride;
+	t_raster.format = p_has_alpha ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
+	
+	MCMacRenderRasterToCG(p_target, p_area, t_raster);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct MCGRegionConvertToCGRectsState
+{
+	CGRect *rects;
+	uint32_t count;
+};
+
+static bool MCGRegionConvertToCGRectsCallback(void *p_state, const MCGIntegerRectangle &p_rect)
+{
+	MCGRegionConvertToCGRectsState *state;
+	state = static_cast<MCGRegionConvertToCGRectsState*>(p_state);
+	
+	if (!MCMemoryResizeArray(state -> count + 1, state -> rects, state -> count))
+		return false;
+	
+	state -> rects[state -> count - 1] = MCGIntegerRectangleToCGRect(p_rect);
+	
+	return true;
+}
+
+bool MCGRegionConvertToCGRects(MCGRegionRef self, CGRect *&r_cgrects, uint32_t& r_cgrect_count)
+{
+	MCGRegionConvertToCGRectsState t_state;
+	t_state . rects = nil;
+	t_state . count = 0;
+	
+	if (!MCGRegionIterate(self, MCGRegionConvertToCGRectsCallback, &t_state))
+	{
+		MCMemoryDeleteArray(t_state . rects);
+		return false;
+	}
+	
+	r_cgrects = t_state . rects;
+	r_cgrect_count = t_state . count;
+	
+	return true;
+}
+
+static void MCMacClipCGContextToRegion(CGContextRef p_context, MCGRegionRef p_region, uint32_t p_surface_height)
+{
+	CGRect *t_rects;
+	t_rects = nil;
+	
+	uint32_t t_count;
+	
+	if (!MCGRegionConvertToCGRects(p_region, t_rects, t_count))
+		return;
+	
+	for (uint32_t i = 0; i < t_count; i++)
+		t_rects[i] = MCMacFlipCGRect(t_rects[i], p_surface_height);
+	
+	CGContextClipToRects(p_context, t_rects, t_count);
+	MCMemoryDeleteArray(t_rects);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

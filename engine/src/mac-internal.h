@@ -67,7 +67,11 @@ class MCMacPlatformSurface;
 @interface com_runrev_livecode_MCWindow: NSWindow
 {
 	bool m_can_become_key : 1;
+    id m_monitor;
 }
+
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)windowStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation;
+- (void)dealloc;
 
 - (void)setCanBecomeKeyWindow: (BOOL)value;
 
@@ -76,6 +80,8 @@ class MCMacPlatformSurface;
 
 // MW-2014-04-23: [[ Bug 12270 ]] Override so we can stop constraining.
 - (NSRect)constrainFrameRect: (NSRect)frameRect toScreen: (NSScreen *)screen;
+
+- (void)popupAndMonitor;
 
 @end
 
@@ -130,6 +136,8 @@ class MCMacPlatformSurface;
 
 - (void)windowDidBecomeKey:(NSNotification *)notification;
 - (void)windowDidResignKey:(NSNotification *)notification;
+
+- (void)windowDidChangeBackingProperties:(NSNotification *)notification;
 
 //////////
 
@@ -250,7 +258,7 @@ class MCMacPlatformSurface;
 - (void)draggedImage:(NSImage *)image beganAt:(NSPoint)point;
 - (void)draggedImage:(NSImage *)image movedTo:(NSPoint)point;
 - (void)draggedImage:(NSImage *)image endedAt:(NSPoint)point operation:(NSDragOperation)operation;
-- (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations;
+- (NSDragOperation)dragImage:(NSImage *)image offset:(NSSize)offset allowing:(NSDragOperation)operations pasteboard:(NSPasteboard *)pboard;
 
 //////////
 
@@ -333,13 +341,13 @@ class MCMacPlatformSurface;
 class MCMacPlatformSurface: public MCPlatformSurface
 {
 public:
-	MCMacPlatformSurface(MCMacPlatformWindow *window, CGContextRef cg_context, MCRegionRef update_rgn);
+	MCMacPlatformSurface(MCMacPlatformWindow *window, CGContextRef cg_context, MCGRegionRef update_rgn);
 	~MCMacPlatformSurface(void);
 	
-	virtual bool LockGraphics(MCRegionRef region, MCGContextRef& r_context);
+	virtual bool LockGraphics(MCGRegionRef region, MCGContextRef& r_context);
 	virtual void UnlockGraphics(void);
 	
-	virtual bool LockPixels(MCRegionRef region, MCGRaster& r_raster);
+	virtual bool LockPixels(MCGIntegerRectangle region, MCGRaster& r_raster);
 	virtual void UnlockPixels(void);
 	
 	virtual bool LockSystemContext(void*& r_context);
@@ -356,12 +364,12 @@ private:
 private:
 	MCMacPlatformWindow *m_window;
 	CGContextRef m_cg_context;
-	MCRegionRef m_update_rgn;
+	MCGRegionRef m_update_rgn;
 	
-	MCRectangle m_locked_area;
+	MCGIntegerRectangle m_locked_area;
 	MCGContextRef m_locked_context;
+	MCGRaster m_locked_raster;
 	void *m_locked_bits;
-	int32_t m_locked_stride;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -516,6 +524,10 @@ void MCMacPlatformSetGlobalVolume(double volume);
 
 // MW-2014-04-23: [[ CocoaBackdrop ]] Ensures the windows are stacked correctly.
 void MCMacPlatformSyncBackdrop(void);
+
+// MW-2014-06-11: [[ Bug 12436 ]] These are used to ensure that the cursor doesn't get clobbered whilst in an user area snapshot.
+void MCMacPlatformLockCursor(void);
+void MCMacPlatformUnlockCursor(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 

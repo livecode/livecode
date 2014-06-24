@@ -89,6 +89,7 @@ void MCStack::realize(void)
 		loadwindowshape();
 		
 		// Compute the level of the window
+        // MW-2014-06-11: [[ Bug 12297 ]] Make sure 'popup' mode means PopUp window (i.e. no decorations!)
 		MCPlatformWindowStyle t_window_style;;
 		if (getflag(F_DECORATIONS) && (decorations & WD_UTILITY) != 0)
 			t_window_style = kMCPlatformWindowStyleUtility;
@@ -96,7 +97,7 @@ void MCStack::realize(void)
 			t_window_style = kMCPlatformWindowStylePalette;
 		else if (mode == WM_MODAL || mode == WM_SHEET)
 			t_window_style = kMCPlatformWindowStyleDialog;
-		else if (mode == WM_PULLDOWN || mode == WM_OPTION || mode == WM_COMBO)
+		else if (mode == WM_PULLDOWN || mode == WM_OPTION || mode == WM_COMBO || mode == WM_POPUP)
 			t_window_style = kMCPlatformWindowStylePopUp;
 		else if (mode == WM_CASCADE)
 			t_window_style = kMCPlatformWindowStylePopUp;
@@ -211,6 +212,9 @@ void MCStack::realize(void)
         
         // MERG-2014-06-02: [[ IgnoreMouseEvents ]] update the window with the ignore mouse events property
         updateignoremouseevents();
+        
+        // MW-2014-06-11: [[ Bug 12467 ]] Make sure we reset the cursor property of the window.
+        resetcursor(True);
 	}
 	
 	start_externals();
@@ -289,14 +293,19 @@ void MCStack::updateignoremouseevents(void)
 	MCPlatformSetWindowBoolProperty(window, kMCPlatformWindowPropertyIgnoreMouseEvents, getextendedstate(ECS_IGNORE_MOUSE_EVENTS) == True);
 }
 
-
 // MW-2011-09-11: [[ Redraw ]] Force an immediate update of the window within the given
 //   region. The actual rendering is done by deferring to the 'redrawwindow' method.
 void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 {
 	if (window == nil)
 		return;
-	
+    
+    if (!opened)
+        return;
+    
+    if (!isvisible())
+        return;
+    
 	MCPlatformInvalidateWindow(window, p_region);
 	MCPlatformUpdateWindow(window);
 }
@@ -314,6 +323,15 @@ void MCStack::view_platform_updatewindowwithcallback(MCRegionRef p_region, MCSta
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// MW-2014-06-11: [[ Bug 12495 ]] Update windowshape by setting window property.
+void MCStack::updatewindowshape(MCWindowShape *p_shape)
+{
+    destroywindowshape();
+    m_window_shape = p_shape;
+    MCPlatformSetWindowProperty(window, kMCPlatformWindowPropertyMask, kMCPlatformPropertyTypeWindowMask, (MCPlatformWindowMaskRef *)&m_window_shape -> handle);
+    dirtyall();
+}
 
 void MCStack::destroywindowshape(void)
 {
@@ -351,7 +369,7 @@ public:
 	{
 	}
 	
-	bool LockGraphics(MCRegionRef p_area, MCGContextRef& r_context)
+	bool LockGraphics(MCGRegionRef p_area, MCGContextRef& r_context)
 	{
 		return MCPlatformSurfaceLockGraphics(m_surface, p_area, r_context);
 	}
@@ -361,7 +379,7 @@ public:
 		MCPlatformSurfaceUnlockGraphics(m_surface);
 	}
 	
-	bool LockPixels(MCRegionRef p_area, MCGRaster& r_raster)
+	bool LockPixels(MCGIntegerRectangle p_area, MCGRaster& r_raster)
 	{
 		return MCPlatformSurfaceLockPixels(m_surface, p_area, r_raster);
 	}
@@ -390,7 +408,7 @@ public:
 
 // This method is not an MCStack method, however it is related to the file locals
 // in here to do with update. At some point it should be refactored appropriately.
-void MCDispatch::wredraw(Window p_window, MCPlatformSurfaceRef p_surface, MCRegionRef p_update_rgn)
+void MCDispatch::wredraw(Window p_window, MCPlatformSurfaceRef p_surface, MCGRegionRef p_update_rgn)
 {
 	MCStack *t_stack;
 	t_stack = findstackd(p_window);
@@ -404,7 +422,7 @@ void MCDispatch::wredraw(Window p_window, MCPlatformSurfaceRef p_surface, MCRegi
 	
 	// If we don't have an update pixmap, then use redrawwindow.
 	if (s_update_callback == nil)
-		t_stack -> view_surface_redrawwindow(&t_stack_surface, (MCRegionRef)p_update_rgn);
+		t_stack -> view_surface_redrawwindow(&t_stack_surface, p_update_rgn);
 	else
 		s_update_callback(&t_stack_surface, (MCRegionRef)p_update_rgn, s_update_context);
 }

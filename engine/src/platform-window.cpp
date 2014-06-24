@@ -19,6 +19,8 @@
 
 #include "region.h"
 
+#include "graphics_util.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Platform Window Class Implementation
@@ -111,7 +113,7 @@ void MCPlatformWindow::Invalidate(MCRegionRef p_region)
     if (p_region == nil)
         MCRegionIncludeRect(m_dirty_region, m_content);
     else
-        MCRegionUnion(m_dirty_region, m_dirty_region, p_region);
+        MCRegionAddRegion(m_dirty_region, p_region);
 }
 
 void MCPlatformWindow::Show(void)
@@ -299,6 +301,8 @@ void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			m_content = *(MCRectangle *)p_value;
 			m_changes . content_changed = true;
 			break;
+        // MW-2014-06-11: [[ Bug 12593 ]] No need to be platform-specific as uses
+        //   virtual method to compute.
 		case kMCPlatformWindowPropertyFrameRect:
 			assert(p_type == kMCPlatformPropertyTypeRectangle);
 			DoMapFrameRectToContentRect(*(MCRectangle *)p_value, m_content);
@@ -397,6 +401,7 @@ void MCPlatformWindow::GetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			break;
 		case kMCPlatformWindowPropertyFrameRect:
 			assert(p_type == kMCPlatformPropertyTypeRectangle);
+            DoMapContentRectToFrameRect(m_content, *(MCRectangle *)r_value);
 			break;
 		case kMCPlatformWindowPropertyContentRect:
 			assert(p_type == kMCPlatformPropertyTypeRectangle);
@@ -416,6 +421,7 @@ void MCPlatformWindow::GetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			break;
 		case kMCPlatformWindowPropertyHasSizeWidget:
 			assert(p_type == kMCPlatformPropertyTypeBool);
+            *(bool *)r_value = m_has_size_widget;
 			break;
 		case kMCPlatformWindowPropertyHasShadow:
 			assert(p_type == kMCPlatformPropertyTypeBool);
@@ -489,7 +495,7 @@ void MCPlatformWindow::HandleCloseRequest(void)
 	MCPlatformCallbackSendWindowCloseRequest(this);
 }
 
-void MCPlatformWindow::HandleRedraw(MCPlatformSurfaceRef p_surface, MCRegionRef p_region)
+void MCPlatformWindow::HandleRedraw(MCPlatformSurfaceRef p_surface, MCGRegionRef p_region)
 {
 	MCPlatformCallbackSendWindowRedraw(this, p_surface, p_region);
 }

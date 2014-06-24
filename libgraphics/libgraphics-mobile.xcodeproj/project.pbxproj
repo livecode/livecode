@@ -19,6 +19,7 @@
 		E8C22BCC177AEC9A003785D3 /* image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22BC8177AEC9A003785D3 /* image.cpp */; };
 		E8C22BCD177AEC9A003785D3 /* path.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22BC9177AEC9A003785D3 /* path.cpp */; };
 		E8C22BCE177AEC9A003785D3 /* utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22BCA177AEC9A003785D3 /* utils.cpp */; };
+		E8F7443C193F6FC800DCCE28 /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8F7443B193F6FC800DCCE28 /* region.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,6 +41,7 @@
 		E8C22BC8177AEC9A003785D3 /* image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image.cpp; path = src/image.cpp; sourceTree = "<group>"; };
 		E8C22BC9177AEC9A003785D3 /* path.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = path.cpp; path = src/path.cpp; sourceTree = "<group>"; };
 		E8C22BCA177AEC9A003785D3 /* utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = utils.cpp; path = src/utils.cpp; sourceTree = "<group>"; };
+		E8F7443B193F6FC800DCCE28 /* region.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = region.cpp; path = src/region.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,6 +87,7 @@
 				4C077911187DA31E001E297E /* mblandroidtext.cpp */,
 				4C053DCF17C4C9B30036E151 /* mbliphonetext.mm */,
 				E8C22BC9177AEC9A003785D3 /* path.cpp */,
+				E8F7443B193F6FC800DCCE28 /* region.cpp */,
 				4D1B898018166DFB00313340 /* spread.cpp */,
 				E8C22BCA177AEC9A003785D3 /* utils.cpp */,
 			);
@@ -183,6 +186,7 @@
 				4C977243193C971F00DB2F4A /* coretext.cpp in Sources */,
 				4C92703317D63F3000F97382 /* legacyblendmodes.cpp in Sources */,
 				4C313BDA180C545D004232E1 /* legacygradients.cpp in Sources */,
+				E8F7443C193F6FC800DCCE28 /* region.cpp in Sources */,
 				4D1B898118166DFB00313340 /* spread.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

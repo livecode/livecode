@@ -24,6 +24,8 @@
 
 #include "mac-internal.h"
 
+#include "graphics_util.h"
+
 #include <objc/objc-runtime.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -799,9 +801,18 @@ void MCPlatformGetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window)
 	NSWindow *t_window;
 	t_window = [NSApp windowWithWindowNumber: t_number];
 	
+    // MW-2014-05-28: [[ Bug 12437 ]] Seems the window at point uses inclusive co-ords
+    //   in the in-rect calculation - so adjust the rect appropriately.
+    NSRect t_content_rect;
+    t_content_rect = [t_window contentRectForFrameRect: [t_window frame]];
+    
+    bool t_is_in_frame;
+    t_content_rect . size . width += 1, t_content_rect . size . height += 1;
+    t_is_in_frame = NSPointInRect(t_loc_cocoa, t_content_rect);
+    
 	if (t_window != nil &&
 		[[t_window delegate] isKindOfClass: [MCWindowDelegate class]] &&
-		NSPointInRect(t_loc_cocoa, [t_window contentRectForFrameRect: [t_window frame]]))
+		t_is_in_frame)
 		r_window = [(MCWindowDelegate *)[t_window delegate] platformWindow];
 	else
 		r_window = nil;
@@ -1202,6 +1213,25 @@ extern uint2 MCdoubledelta;
 extern uint2 MCdoubletime;
 extern uint2 MCdragdelta;
 
+// MW-2014-06-11: [[ Bug 12436 ]] This is used to temporarily turn off cursor setting
+//   when doing an user-import snapshot.
+static bool s_mouse_cursor_locked = false;
+
+void MCMacPlatformLockCursor(void)
+{
+    s_mouse_cursor_locked = true;
+}
+
+void MCMacPlatformUnlockCursor(void)
+{
+    s_mouse_cursor_locked = false;
+    
+    if (s_mouse_window == nil)
+        MCMacPlatformResetCursor();
+    else
+        MCMacPlatformHandleMouseCursorChange(s_mouse_window);
+}
+
 void MCPlatformGrabPointer(MCPlatformWindowRef p_window)
 {
 	// If we are grabbing for the given window already, do nothing.
@@ -1337,7 +1367,8 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_new_state)
 			s_mouse_click_count = 0;
 			s_mouse_last_click_time = 0;
 			
-			MCPlatformCallbackSendMouseRelease(s_mouse_window, p_button);
+            // MW-2014-06-11: [[ Bug 12339 ]] Only send a mouseRelease message if this wasn't the result of a popup menu.
+			MCPlatformCallbackSendMouseRelease(s_mouse_window, p_button, false);
 		}
 	}
 }
@@ -1349,6 +1380,10 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
     if (s_mouse_window != p_window)
         return;
     
+    // MW-2014-06-11: [[ Bug 12436 ]] If the cursor is locked, do nothing.
+    if (s_mouse_cursor_locked)
+        return;
+    
     // If we are on Lion+ then check to see if the mouse location is outside
     // of any of the system tracking rects (used for resizing etc.)
     extern uint4 MCmajorosversion;
@@ -1356,16 +1391,24 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
     {
         MCMacPlatformWindow *t_window;
         t_window = (MCMacPlatformWindow *)p_window;
+     
+        // MW-2014-06-11: [[ Bug 12437 ]] Make sure we only check tracking rectangles if we have
+        //   a resizable frame.
+        bool t_is_resizable;
+        MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertyHasSizeWidget, kMCPlatformPropertyTypeBool, &t_is_resizable);
         
-        NSArray *t_tracking_areas;
-        t_tracking_areas = [[t_window -> GetContainerView() superview] trackingAreas];
-        
-        NSPoint t_mouse_loc;
-        t_mouse_loc = [t_window -> GetView() mapMCPointToNSPoint: s_mouse_position];
-        for(uindex_t i = 0; i < [t_tracking_areas count]; i++)
+        if (t_is_resizable)
         {
-            if (NSPointInRect(t_mouse_loc, [(NSTrackingArea *)[t_tracking_areas objectAtIndex: i] rect]))
-                return;
+            NSArray *t_tracking_areas;
+            t_tracking_areas = [[t_window -> GetContainerView() superview] trackingAreas];
+            
+            NSPoint t_mouse_loc;
+            t_mouse_loc = [t_window -> GetView() mapMCPointToNSPoint: s_mouse_position];
+            for(uindex_t i = 0; i < [t_tracking_areas count]; i++)
+            {
+                if (NSPointInRect(t_mouse_loc, [(NSTrackingArea *)[t_tracking_areas objectAtIndex: i] rect]))
+                    return;
+            }
         }
     }
     
@@ -1414,7 +1457,11 @@ void MCMacPlatformHandleMouseMove(MCPoint p_screen_loc)
 		
 		// If there is no mouse window, reset the cursor to default.
 		if (t_new_mouse_window == nil)
-			MCMacPlatformResetCursor();
+        {
+            // MW-2014-06-11: [[ Bug 12436 ]] If the cursor is locked, do nothing.
+            if (!s_mouse_cursor_locked)
+                MCMacPlatformResetCursor();
+        }
 			
 		if (s_mouse_window != nil)
 			MCPlatformReleaseWindow(s_mouse_window);
@@ -1480,11 +1527,12 @@ void MCMacPlatformHandleMouseSync(void)
 			{
 				s_mouse_buttons &= ~(1 << i);
 				
+                // MW-2014-06-11: [[ Bug 12339 ]] Don't send a mouseRelease message in this case.
 				if (s_mouse_was_control_click &&
 					i == 0)
-					MCPlatformCallbackSendMouseRelease(s_mouse_window, 2);
+					MCPlatformCallbackSendMouseRelease(s_mouse_window, 2, true);
 				else
-					MCPlatformCallbackSendMouseRelease(s_mouse_window, i);
+					MCPlatformCallbackSendMouseRelease(s_mouse_window, i, true);
 			}
 	}
 	
@@ -1522,8 +1570,9 @@ void MCMacPlatformSyncMouseBeforeDragging(void)
 	
 	if (s_mouse_window != nil)
 	{
+        // MW-2014-06-11: [[ Bug 12339 ]] Ensure mouseRelease is sent if drag is starting.
 		if (t_button_to_release != 0xffffffff)
-			MCPlatformCallbackSendMouseRelease(s_mouse_window, t_button_to_release);
+			MCPlatformCallbackSendMouseRelease(s_mouse_window, t_button_to_release, false);
 		MCPlatformCallbackSendMouseLeave(s_mouse_window);
 		
 		MCPlatformReleaseWindow(s_mouse_window);

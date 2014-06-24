@@ -30,11 +30,15 @@
 
 static CGColorSpaceRef s_colour_space = NULL;
 static CGColorRef s_text_colour = NULL;
+static CGContextRef s_measure_context;
+static void *s_measure_data = NULL;
 
 void MCGPlatformInitialize(void)
 {
     s_colour_space = NULL;
-    s_text_colour = NULL;    
+    s_text_colour = NULL;
+    s_measure_context = NULL;
+    s_measure_data = NULL;
     const float t_colour_components[] = {1.0, 1.0};
 #ifdef TARGET_SUBPLATFORM_IPHONE
     // iOS doesn't support device-independent or generic color spaces
@@ -43,6 +47,9 @@ void MCGPlatformInitialize(void)
     s_colour_space = CGColorSpaceCreateWithName(kCGColorSpaceGenericGray);
 #endif
     s_text_colour = CGColorCreate(s_colour_space, t_colour_components);
+    
+    /* UNCHECKED */ MCMemoryAllocate(1, s_measure_data);
+    s_measure_context =  CGBitmapContextCreate(s_measure_data, 1, 1, 8, 1, NULL, kCGImageAlphaOnly);
 }
 
 void MCGPlatformFinalize(void)
@@ -51,8 +58,13 @@ void MCGPlatformFinalize(void)
         CGColorRelease(s_text_colour);
     if (s_colour_space != NULL)
         CGColorSpaceRelease(s_colour_space);
+    if (s_measure_context != NULL)
+        CGContextRelease(s_measure_context);
+    MCMemoryDelete(s_measure_data);
     s_colour_space = NULL;
     s_text_colour = NULL;
+    s_measure_context = NULL;
+    s_measure_data = NULL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -143,11 +155,25 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
         
         CGRect t_font_bounds;
         t_font_bounds = CTFontGetBoundingBox((CTFontRef)p_font . fid);
-		
+        
+        MCGFloat t_width;
+        t_width = MCGContextMeasurePlatformText(self, p_text, p_length, p_font, t_transform); // CTLineGetTypographicBounds(t_line, NULL, NULL, NULL);
+        
+        // Italic text appears to be getting clipped on the right hand side, so we increase the width.
+        // Using purley the image bounds still results in clipping so for the moment have added the width of the font to make sure we don't clip.
+        CGFloat t_slant;
+        t_slant = CTFontGetSlantAngle((CTFontRef)p_font . fid);
+        if (t_slant != 0.0f)
+        {
+            CGRect t_image_bounds;
+            t_image_bounds = CTLineGetImageBounds(t_line, s_measure_context);
+            t_width = MCMax(t_width, t_image_bounds . size . width) + t_font_bounds . size . width;
+        }
+        
 		MCGRectangle t_float_text_bounds;
 		t_float_text_bounds . origin . x = 0;
         t_float_text_bounds . origin . y = MCMin(-t_ascent, t_font_bounds . origin . y);
-		t_float_text_bounds . size . width = MCGContextMeasurePlatformText(self, p_text, p_length, p_font, t_transform); // CTLineGetTypographicBounds(t_line, NULL, NULL, NULL);
+		t_float_text_bounds . size . width = t_width;
         t_float_text_bounds . size . height = MCMax(t_font_bounds . size . height, t_ascent + t_descent);
 		
 		t_transform = MCGContextGetDeviceTransform(self);

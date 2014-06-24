@@ -169,7 +169,7 @@ public:
 	//////////
 	
 	bool isbackdrop(MCPlatformWindowRef window);
-	void redrawbackdrop(MCPlatformSurfaceRef p_surface, MCRegionRef p_region);
+	void redrawbackdrop(MCPlatformSurfaceRef p_surface, MCGRegionRef p_region);
 	void mousedowninbackdrop(uint32_t button, uint32_t count);
 	void mouseupinbackdrop(uint32_t button, uint32_t count);
 	void mousereleaseinbackdrop(uint32_t button);

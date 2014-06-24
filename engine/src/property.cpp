@@ -2001,7 +2001,14 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	case P_LOCK_MESSAGES:
 		return ep.getboolean(MClockmessages, line, pos, EE_PROPERTY_NAB);
 	case P_LOCK_MOVES:
-		return ep.getboolean(MClockmoves, line, pos, EE_PROPERTY_NAB);
+		{
+			Boolean t_new_value;
+			Exec_stat t_stat = ep.getboolean(t_new_value, line, pos, EE_PROPERTY_NAB);
+			if (t_stat == ES_NORMAL) {
+				MCscreen->setlockmoves(t_new_value);
+			}
+			return t_stat;
+		}
 	case P_LOCK_RECENT:
 		return ep.getboolean(MClockrecent, line, pos, EE_PROPERTY_NAB);
 	case P_PRIVATE_COLORS:
@@ -3433,7 +3440,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 		ep.setboolean(MClockmessages);
 		break;
 	case P_LOCK_MOVES:
-		ep.setboolean(MClockmoves);
+		ep.setboolean(MCscreen->getlockmoves());
 		break;
 	case P_LOCK_RECENT:
 		ep.setboolean(MClockrecent);
