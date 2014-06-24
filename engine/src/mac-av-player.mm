@@ -83,6 +83,7 @@ public:
     virtual double getCurrentTime(void);
     
     void MovieFinished(void);
+    void SelectionFinished(void);
     void SelectionChanged(void);
     void CurrentTimeChanged(void);
     void RateChanged(void);
@@ -119,6 +120,7 @@ private:
 	CVImageBufferRef m_current_frame;
     //CGImageRef m_current_frame;
     CMTime m_next_frame_time;
+    CMTime m_observed_time;
     
     com_runrev_livecode_MCAVFoundationPlayerObserver *m_observer;
     
@@ -269,6 +271,15 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     MCMemoryDeleteArray(m_markers);
 }
 
+void MCAVFoundationPlayer::SelectionFinished(void)
+{
+    if (m_play_selection_only && CMTimeCompare(m_observed_time, CMTimeMake(m_selection_finish, 1000)) >= 0)
+    {
+        [m_player pause];
+        //[m_player seekToTime:CMTimeMake(m_selection_start, 1000)];
+    }
+}
+
 void MCAVFoundationPlayer::MovieFinished(void)
 {
     [[m_player currentItem] seekToTime:kCMTimeZero];
@@ -334,6 +345,7 @@ void MCAVFoundationPlayer::CurrentTimeChanged(void)
 
 void MCAVFoundationPlayer::CacheCurrentFrame(void)
 {
+//#if 0
     CVImageBufferRef t_image;
     CMTime t_output_time = [m_player currentItem] . currentTime;
     
@@ -344,6 +356,7 @@ void MCAVFoundationPlayer::CacheCurrentFrame(void)
             CFRelease(m_current_frame);
         m_current_frame = t_image;
     }
+//#endif
 }
 
 void MCAVFoundationPlayer::Switch(bool p_new_offscreen)
@@ -371,7 +384,7 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
                                 CVOptionFlags *flagsOut,
                                 void *displayLinkContext)
 {
-
+//#if 0
     MCAVFoundationPlayer *t_self = (MCAVFoundationPlayer *)displayLinkContext;
     
     CMTime t_output_item_time = [t_self -> m_player_item_video_output itemTimeForCVTimeStamp:*inOutputTime];
@@ -389,7 +402,7 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
         MCMacPlatformScheduleCallback(DoUpdateCurrentFrame, t_self);
         t_self -> m_frame_changed_pending = true;        
     }
-    
+//#endif
     return kCVReturnSuccess;
     
 }
@@ -411,8 +424,6 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
     }
     
 	MCPlatformCallbackSendPlayerFrameChanged(t_player);
-    t_player -> Release();
-    
 }
 
 
@@ -611,14 +622,15 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
         NSLog(@"Value is %f and timescale is %f", (double)time.value , (double)time.timescale );
         NSLog(@"Time is %d ", (int)(1000 * CMTimeGetSeconds(time)));
         NSLog(@"End Time is %f ",  (double)m_selection_finish);
-        */
         
         if (m_play_selection_only && CMTimeCompare(time, CMTimeMake(m_selection_finish, 1000)) >= 0)
         {
             [m_player pause];
             //[m_player seekToTime:CMTimeMake(m_selection_start, 1000)];
         }
-        
+        */
+        m_observed_time = time;
+        SelectionFinished();
         CurrentTimeChanged();
         }];
     
