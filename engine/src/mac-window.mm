@@ -143,6 +143,7 @@ static bool s_lock_responder_change = false;
 - (void)popupWindowShouldClose: (NSNotification *)notification
 {
     [self close];
+    MCPlatformCallbackSendWindowCancel([(MCWindowDelegate *)[self delegate] platformWindow]);
 }
 
 - (void)popupAndMonitor
@@ -161,8 +162,8 @@ static bool s_lock_responder_change = false;
                      NSEvent *result = incomingEvent;
                      NSWindow *targetWindowForEvent = [incomingEvent window];
 
-                     if (targetWindowForEvent !=  t_window)
-                         [[(MCWindowDelegate *)[self delegate] platformWindow] -> GetView() handleMousePress: incomingEvent isDown: YES];
+                     if (targetWindowForEvent != t_window)
+                         [self popupWindowShouldClose: nil];
                      
                      return result;
                  }];

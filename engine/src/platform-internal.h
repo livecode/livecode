@@ -235,6 +235,7 @@ void MCPlatformCallbackSendScreenParametersChanged(void);
 
 void MCPlatformCallbackSendWindowCloseRequest(MCPlatformWindowRef window);
 void MCPlatformCallbackSendWindowClose(MCPlatformWindowRef window);
+void MCPlatformCallbackSendWindowCancel(MCPlatformWindowRef window);
 void MCPlatformCallbackSendWindowReshape(MCPlatformWindowRef window, MCRectangle new_content);
 void MCPlatformCallbackSendWindowConstrain(MCPlatformWindowRef window, MCPoint proposed_size, MCPoint& r_wanted_size);
 void MCPlatformCallbackSendWindowRedraw(MCPlatformWindowRef window, MCPlatformSurfaceRef surface, MCGRegionRef dirty_rgn);

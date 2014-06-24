@@ -140,10 +140,32 @@ void MCPlatformHandleWindowClose(MCPlatformWindowRef p_window)
 	t_stack = MCdispatcher -> findstackd(p_window);
 	if (t_stack == nil)
 		return;
-	
-	t_stack -> kunfocus();
-	t_stack -> close();
-	t_stack -> checkdestroy();
+    
+    else
+    {
+        t_stack -> kunfocus();
+        t_stack -> close();
+        t_stack -> checkdestroy();
+    }
+}
+
+void MCPlatformHandleWindowCancel(MCPlatformWindowRef p_window)
+{
+	MCStack *t_stack;
+	t_stack = MCdispatcher -> findstackd(p_window);
+	if (t_stack == nil)
+		return;
+    
+    // Handle any cancelled popup menus.
+    MCdispatcher -> closemenus();
+
+    // Now make sure the stack is indeed closed, it might be a transient.
+    if (t_stack -> getopened() != 0)
+    {
+        t_stack -> kunfocus();
+        t_stack -> close();
+        t_stack -> checkdestroy();
+    }
 }
 
 void MCPlatformHandleWindowReshape(MCPlatformWindowRef p_window)
