@@ -86,7 +86,7 @@ public:
     void SelectionChanged(void);
     void CurrentTimeChanged(void);
     void RateChanged(void);
-    AVPlayer* getPlayer(void);
+    AVPlayer *getPlayer(void);
     
 protected:
 	virtual void Realize(void);
@@ -106,9 +106,10 @@ private:
                                     void *displayLinkContext);
     
 	static void DoSwitch(void *context);
+    static void DoUpdateCurrentFrame(void *ctxt);
     
 	AVPlayer *m_player;
-    AVPlayerItemVideoOutput* m_player_item_video_output;
+    AVPlayerItemVideoOutput *m_player_item_video_output;
     CVDisplayLinkRef m_display_link;
     com_runrev_livecode_MCAVFoundationPlayerView *m_view;
     uint32_t m_selection_start, m_selection_finish;
@@ -117,6 +118,7 @@ private:
     
 	CVImageBufferRef m_current_frame;
     //CGImageRef m_current_frame;
+    CMTime m_next_frame_time;
     
     com_runrev_livecode_MCAVFoundationPlayerObserver *m_observer;
     
@@ -133,6 +135,7 @@ private:
 	bool m_switch_scheduled : 1;
     bool m_playing : 1;
     bool m_synchronizing : 1;
+    bool m_frame_changed_pending : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -238,6 +241,7 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     m_playing = false;
     
     m_synchronizing = false;
+    m_frame_changed_pending = false;
 }
 
 MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
@@ -332,17 +336,6 @@ void MCAVFoundationPlayer::CacheCurrentFrame(void)
 {
     CVImageBufferRef t_image;
     CMTime t_output_time = [m_player currentItem] . currentTime;
-
-    /*
-    if ([m_player_item_video_output hasNewPixelBufferForItemTime:t_output_time])
-    {
-        CVDisplayLinkStart(m_display_link);
-    }
-    else
-    {
-        CVDisplayLinkStop(m_display_link);
-    }
-    */
     
     t_image = [m_player_item_video_output copyPixelBufferForItemTime:t_output_time itemTimeForDisplay:nil];
     if (t_image != nil)
@@ -351,7 +344,6 @@ void MCAVFoundationPlayer::CacheCurrentFrame(void)
             CFRelease(m_current_frame);
         m_current_frame = t_image;
     }
-
 }
 
 void MCAVFoundationPlayer::Switch(bool p_new_offscreen)
@@ -384,23 +376,45 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
     
     CMTime t_output_item_time = [t_self -> m_player_item_video_output itemTimeForCVTimeStamp:*inOutputTime];
     
-    if ([t_self -> m_player_item_video_output hasNewPixelBufferForItemTime:t_output_item_time])
+    if (![t_self -> m_player_item_video_output hasNewPixelBufferForItemTime:t_output_item_time])
     {
-        NSLog(@"We have a new frame!");
-        CVImageBufferRef t_image;
-        t_image = [t_self -> m_player_item_video_output copyPixelBufferForItemTime:t_output_item_time itemTimeForDisplay:nil];
-        if (t_image != nil)
-        {
-            if (t_self -> m_current_frame != nil)
-                CFRelease(t_self -> m_current_frame);
-            t_self -> m_current_frame = t_image;
-        }
+        //NSLog(@"We do NOT have a new frame!");
+        return kCVReturnSuccess;
     }
-    	
-	MCPlatformCallbackSendPlayerFrameChanged(t_self);
+    
+    t_self -> m_next_frame_time = t_output_item_time;
+    if (!t_self -> m_frame_changed_pending)
+    {
+        // TODO: Schedule this callback on the main thread
+        MCMacPlatformScheduleCallback(DoUpdateCurrentFrame, t_self);
+        t_self -> m_frame_changed_pending = true;        
+    }
+    
     return kCVReturnSuccess;
     
 }
+
+void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
+{
+    MCAVFoundationPlayer *t_player;
+	t_player = (MCAVFoundationPlayer *)ctxt;
+    t_player -> m_frame_changed_pending = false;
+    
+    NSLog(@"We have a new frame!");
+    CVImageBufferRef t_image;
+    t_image = [t_player -> m_player_item_video_output copyPixelBufferForItemTime:t_player -> m_next_frame_time itemTimeForDisplay:nil];
+    if (t_image != nil)
+    {
+        if (t_player -> m_current_frame != nil)
+            CFRelease(t_player -> m_current_frame);
+        t_player -> m_current_frame = t_image;
+    }
+    
+	MCPlatformCallbackSendPlayerFrameChanged(t_player);
+    t_player -> Release();
+    
+}
+
 
 void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 {
@@ -563,7 +577,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     }
     
     CVDisplayLinkSetOutputCallback(m_display_link, MCAVFoundationPlayer::MyDisplayLinkCallback, this);
-    //CVDisplayLinkStop(m_display_link);
+    CVDisplayLinkStop(m_display_link);
 
     NSDictionary* t_settings = @{ (id)kCVPixelBufferPixelFormatTypeKey : [NSNumber numberWithInt:kCVPixelFormatType_32ARGB] };
     // AVPlayerItemVideoOutput is available in OSX version >= 10.8
