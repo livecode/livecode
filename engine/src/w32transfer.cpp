@@ -1523,7 +1523,7 @@ bool MCConvertImageToWindowsBitmap(MCDataRef p_input, STGMEDIUM& r_storage)
 	bool t_success = true;
 
 	MCWinSysHandle t_handle = nil;
-	MCImageFrame *t_frames = nil;
+	MCBitmapFrame *t_frames = nil;
 	uindex_t t_frame_count = 0;
 
 	t_success = MCImageDecode(t_data, t_length, t_frames, t_frame_count) &&
@@ -1548,7 +1548,7 @@ bool MCConvertImageToWindowsV5Bitmap(MCDataRef p_input, STGMEDIUM& r_storage)
 	bool t_success = true;
 
 	MCWinSysHandle t_handle = nil;
-	MCImageFrame *t_frames = nil;
+	MCBitmapFrame *t_frames = nil;
 	uindex_t t_frame_count = 0;
 
 	t_success = MCImageDecode(t_data, t_length, t_frames, t_frame_count) &&
@@ -1573,7 +1573,7 @@ bool MCConvertImageToWindowsEnhancedMetafile(MCDataRef p_input, STGMEDIUM& r_sto
 	bool t_success = true;
 
 	MCWinSysEnhMetafileHandle t_handle = nil;
-	MCImageFrame *t_frames = nil;
+	MCBitmapFrame *t_frames = nil;
 	uindex_t t_frame_count = 0;
 
 	t_success = MCImageDecode(t_data, t_length, t_frames, t_frame_count) &&
@@ -1598,7 +1598,7 @@ bool MCConvertImageToWindowsMetafile(MCDataRef p_input, STGMEDIUM& r_storage)
 	bool t_success = true;
 
 	MCWinSysMetafileHandle t_handle = nil;
-	MCImageFrame *t_frames = nil;
+	MCBitmapFrame *t_frames = nil;
 	uindex_t t_frame_count = 0;
 
 	t_success = MCImageDecode(t_data, t_length, t_frames, t_frame_count) &&

@@ -270,6 +270,35 @@ void MCParseMenuString(MCStringRef p_string, IParseMenuCallback *p_callback, uin
 		ParseMenuItemString(t_line, t_new_line, &t_menuitem);
 		MCValueRelease(t_new_line);
 		
+<<<<<<< HEAD
+=======
+		// MW-2013-12-18: [[ Bug 11605 ]] If the tag is empty, and the label can convert
+		//   to native then take that to be the tag.
+		if (t_menuitem . tag . getlength() == 0)
+		{
+			ep . setsvalue(t_menuitem . label);
+			ep . utf8toutf16();
+			if (ep . trytoconvertutf16tonative())
+			{
+				delete t_menuitem . tag . getstring();
+				t_menuitem . tag = ep . getsvalue() . clone();
+			}
+		}
+		
+		if (p_is_unicode)
+		{
+			ep.setsvalue(t_menuitem.label);
+			ep.utf8toutf16();
+			t_menuitem.label.set(ep.getsvalue().clone(), ep.getsvalue().getlength());
+			
+			// MW-2014-01-06: [[ Bug 11605 ]] If there is no tag, and the label can
+			//   be converted to native non-lossily, then use that as the tag.
+			if (t_menuitem . tag == nil &&
+				ep . trytoconvertutf16tonative())
+				t_menuitem.tag.set(ep.getsvalue().clone(), ep.getsvalue().getlength());
+		}
+				
+>>>>>>> develop
 		p_callback->ProcessItem(&t_menuitem);
 
 		if (!MCStringIsEmpty(t_menuitem.tag))

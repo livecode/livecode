@@ -856,3 +856,52 @@ bool MCImageDataIsGIF(MCDataRef p_input)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCGRaster MCImageBitmapGetMCGRaster(MCImageBitmap *p_bitmap, bool p_is_premultiplied)
+{
+	MCGRaster t_raster;
+	t_raster.width = p_bitmap->width;
+	t_raster.height = p_bitmap->height;
+	t_raster.stride = p_bitmap->stride;
+	t_raster.pixels = p_bitmap->data;
+	t_raster.format = MCImageBitmapHasTransparency(p_bitmap) ? (p_is_premultiplied ? kMCGRasterFormat_ARGB : kMCGRasterFormat_U_ARGB) : kMCGRasterFormat_xRGB;
+	
+	return t_raster;
+}
+
+MCImageBitmap MCImageBitmapFromMCGRaster(const MCGRaster &p_raster)
+{
+	MCImageBitmap t_bitmap;
+	t_bitmap.width = p_raster.width;
+	t_bitmap.height = p_raster.height;
+	t_bitmap.stride = p_raster.stride;
+	t_bitmap.data = (uint32_t*)p_raster.pixels;
+	t_bitmap.has_alpha = t_bitmap.has_transparency = p_raster.format != kMCGRasterFormat_xRGB;
+	
+	return t_bitmap;
+}
+
+bool MCImageBitmapCopyAsMCGImage(MCImageBitmap *p_bitmap, bool p_is_premultiplied, MCGImageRef &r_image)
+{
+	return MCGImageCreateWithRaster(MCImageBitmapGetMCGRaster(p_bitmap, p_is_premultiplied), r_image);
+}
+
+bool MCImageBitmapCopyAsMCGImageAndRelease(MCImageBitmap *&x_bitmap, bool p_is_premultiplied, MCGImageRef &r_image)
+{
+	MCGRaster t_raster;
+	t_raster = MCImageBitmapGetMCGRaster(x_bitmap, p_is_premultiplied);
+
+	bool t_success;
+	t_success = MCGImageCreateWithRasterAndRelease(t_raster, r_image);
+
+	if (t_success)
+	{
+		x_bitmap->data = nil;
+		MCImageFreeBitmap(x_bitmap);
+		x_bitmap = nil;
+	}
+
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+

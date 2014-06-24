@@ -323,6 +323,7 @@ IO_stat MCDispatch::startup(void)
         extern IO_handle android_get_mainstack_stream();
         t_stream = android_get_mainstack_stream();
 #else
+<<<<<<< HEAD
         MCAutoStringRef t_path;
         uindex_t t_last_slash;
         /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_last_slash);
@@ -332,6 +333,12 @@ IO_stat MCDispatch::startup(void)
         /* UNCHECKED */ MCStringFormat(&t_path, "%@/iphone_test.livecode", *t_dir);
 
         t_stream = MCS_open(*t_path, kMCOpenFileModeRead, False, False, 0);
+=======
+		char *t_path;
+		MCCStringFormat(t_path, "%.*s/TRiPiLiTE.livecode", strrchr(MCcmd, '/') - MCcmd, MCcmd);
+		t_stream = MCS_open(t_path, IO_READ_MODE, False, False, 0);
+		MCCStringFree(t_path);
+>>>>>>> develop
 #endif
 		
 		if (t_stream == NULL)
@@ -489,6 +496,7 @@ IO_stat MCDispatch::startup(void)
 		return IO_NORMAL;
 	}
 #endif
+<<<<<<< HEAD
 
 	// The info structure that will be filled in while parsing the capsule.
 	MCStandaloneCapsuleInfo t_info;
@@ -514,9 +522,73 @@ IO_stat MCDispatch::startup(void)
         }
         else
             return IO_ERROR;
-	}
-	else
+=======
+	
+	// MW-2013-11-07: [[ CmdLineStack ]] If there is a capsule, load the mainstack
+	//   from that. Otherwise, if there is at least one argument, load that as the
+	//   stack. Otherwise it's an error.
+	MCStack *t_mainstack;
+	t_mainstack = nil;
+	if (MCcapsule . size != 0)
 	{
+		// The info structure that will be filled in while parsing the capsule.
+		MCStandaloneCapsuleInfo t_info;
+		memset(&t_info, 0, sizeof(MCStandaloneCapsuleInfo));
+
+		// Create a capsule and fill with the standalone data
+		MCCapsuleRef t_capsule;
+		t_capsule = nil;
+		if (!MCCapsuleOpen(MCStandaloneCapsuleCallback, &t_info, t_capsule))
+			return IO_ERROR;
+
+		if (((MCcapsule . size) & (1U << 31)) == 0)
+		{
+			// Capsule is not spilled - just use the project section.
+			// MW-2010-05-08: Capsule size includes 'size' field, so need to adjust
+			if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&MCcapsule . data, MCcapsule . size - sizeof(uint32_t), true))
+			{
+				MCCapsuleClose(t_capsule);
+				return IO_ERROR;
+			}
+		}
+		else
+		{
+			// Capsule is spilled fill from:
+			//   0..2044 from project section
+			//   spill file
+			//   rest from project section
+			char *t_spill;
+			t_spill = (char *)malloc(strlen(openpath) + 5);
+			sprintf(t_spill, "%s.dat", openpath);
+			if (!MCCapsuleFillFromFile(t_capsule, t_spill, 0, true))
+			{
+				free(t_spill);
+				MCCapsuleClose(t_capsule);
+				return IO_ERROR;
+			}
+			free(t_spill);
+		}
+
+		// Process the capsule
+		if (!MCCapsuleProcess(t_capsule))
+		{
+			// Capsule is not spilled - just use the project section.
+			// MW-2010-05-08: Capsule size includes 'size' field, so need to adjust
+			if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&MCcapsule . data, MCcapsule . size - sizeof(uint32_t), true))
+			{
+				MCCapsuleClose(t_capsule);
+				return IO_ERROR;
+			}
+		}
+		
+		MCCapsuleClose(t_capsule);
+		
+		t_mainstack = t_info . stack;
+>>>>>>> develop
+	}
+	else if (MCnstacks > 1 && MClicenseparameters . license_class == kMCLicenseClassCommunity)
+	{
+<<<<<<< HEAD
 		// Capsule is spilled fill from:
 		//   0..2044 from project section
 		//   spill file
@@ -528,17 +600,33 @@ IO_stat MCDispatch::startup(void)
 			MCCapsuleClose(t_capsule);
 			return IO_ERROR;
 		}
+=======
+		MCStack *sptr;
+		if (MCdispatcher -> loadfile(MCstacknames[1], sptr) != IO_NORMAL)
+		{
+			MCresult -> sets("failed to read stackfile");
+			return IO_ERROR;
+		}
+		
+		t_mainstack = sptr;
+		
+		MCMemoryMove(MCstacknames, MCstacknames + 1, sizeof(MCStack *) * (MCnstacks - 1));
+		MCnstacks -= 1;
+>>>>>>> develop
 	}
-
-	// Process the capsule
-	if (!MCCapsuleProcess(t_capsule))
+	else
 	{
-		MCCapsuleClose(t_capsule);
+		MCresult -> sets("no stackfile to run");
 		return IO_ERROR;
 	}
 
+<<<<<<< HEAD
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_info . stack;
 	MCCapsuleClose(t_capsule);
+=======
+	MCdefaultstackptr = MCstaticdefaultstackptr = t_mainstack;
+	MCcmd = openpath;
+>>>>>>> develop
 
 	// Initialization required.
 	MCModeResetCursors();
@@ -548,10 +636,10 @@ IO_stat MCDispatch::startup(void)
 	MCallowinterrupts = False;
 
 	// Now open the main stack.
-	t_info . stack -> extraopen(false);
+	t_mainstack-> extraopen(false);
 	send_startup_message();
 	if (!MCquit)
-		t_info . stack -> open();
+		t_mainstack -> open();
 
 	return IO_NORMAL;
 }
@@ -635,11 +723,6 @@ void MCStack::mode_closeasmenu(void)
 {
 }
 
-bool MCStack::mode_haswindow(void)
-{
-	return window != DNULL;
-}
-
 void MCStack::mode_constrain(MCRectangle& rect)
 {
 }
@@ -653,13 +736,6 @@ MCSysWindowHandle MCStack::getrealwindow(void)
 MCSysWindowHandle MCStack::getqtwindow(void)
 {
 	return window->handle.window;
-}
-#endif
-
-#ifdef _MACOSX
-MCSysWindowHandle MCStack::getqtwindow(void)
-{
-	return window -> handle . window;
 }
 #endif
 
@@ -836,7 +912,7 @@ Window MCModeGetParentWindow(void)
 {
 	Window t_window;
 	t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == DNULL && MCtopstackptr != NULL)
+	if (t_window == NULL && MCtopstackptr != NULL)
 		t_window = MCtopstackptr -> getwindow();
 	return t_window;
 }

@@ -3291,7 +3291,7 @@ void MCInterfaceExecLockMenus(MCExecContext& ctxt)
 
 void MCInterfaceExecLockMoves(MCExecContext& ctxt)
 {
-	MClockmoves = True;
+	MCscreen->setlockmoves(True);
 }
 
 void MCInterfaceExecLockRecent(MCExecContext& ctxt)
@@ -3337,7 +3337,7 @@ void MCInterfaceExecUnlockMenus(MCExecContext& ctxt)
 
 void MCInterfaceExecUnlockMoves(MCExecContext& ctxt)
 {
-	MClockmoves = False;
+	MCscreen->setlockmoves(False);
 }
 
 void MCInterfaceExecUnlockRecent(MCExecContext& ctxt)

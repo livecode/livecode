@@ -137,7 +137,15 @@ public:
 	char *error;
 	real8 timeout;
 	MCSocketHandle fd;
+<<<<<<< HEAD
 	MCSocket(MCNameRef n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock, Boolean a, Boolean s, Boolean issecure);
+=======
+	
+	// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
+	char *endhostname;
+	
+	MCSocket(char *n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock, Boolean a, Boolean s, Boolean issecure);
+>>>>>>> develop
 	void setselect();
 	void setselect(uint2 sflags);
 
@@ -190,6 +198,31 @@ protected:
 #endif
 };
 
+<<<<<<< HEAD
+=======
+
+
+extern bool MCS_init_sockets();
+extern bool MCS_compare_host_domain(const char *p_host_a, const char *p_host_b);
+// MM-2014-06-13: [[ Bug 12567 ]] Added passing through the host name to verify against.
+extern MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef m, Boolean secure, Boolean sslverify, char *sslcertfile, char* hostname);
+extern void MCS_close_socket(MCSocket *s);
+extern void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, char *until, MCNameRef m);
+extern void MCS_write_socket(const MCString &d, MCSocket *s, MCObject *optr, MCNameRef m);
+// MM-2014-02-12: [[ SecureSocket ]] New secure socket command.
+// MM-2014-06-13: [[ Bug 12567 ]] Added host name to verify against.
+void MCS_secure_socket(MCSocket *s, Boolean sslverify, char *hostname);
+extern MCSocket *MCS_accept(uint2 p, MCObject *o, MCNameRef m, Boolean datagram,Boolean secure,Boolean sslverify,char *sslcertfile);
+extern void MCS_ha(MCExecPoint &ep, MCSocket *s);
+extern void MCS_hn(MCExecPoint &ep);
+extern void MCS_aton(MCExecPoint &ep);
+extern void MCS_ntoa(MCExecPoint &ep, MCExecPoint &ep2);
+extern void MCS_pa(MCExecPoint &ep, MCSocket *s);
+
+
+
+
+>>>>>>> develop
 typedef bool (*MCHostNameResolveCallback)(void *p_context, bool p_resolved, bool p_final, struct sockaddr *p_addr, int p_addrlen);
 typedef void (*MCSockAddrToStringCallback)(void *p_context, bool p_resolved, const char *p_hostname);
 

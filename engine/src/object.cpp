@@ -1925,7 +1925,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 		stat = MCU_dofrontscripts(HT_MESSAGE, mess, paramptr);
 		Window mywindow = mystack->getw();
 		if ((stat == ES_NOT_HANDLED || stat == ES_PASS)
-		        && (MCtracewindow == DNULL
+		        && (MCtracewindow == NULL
 		            || memcmp(&mywindow, &MCtracewindow, sizeof(Window))))
 		{
 			// PASS STATE FIX
@@ -4742,9 +4742,15 @@ MCRectangle MCObject::measuretext(MCStringRef p_text, bool p_is_unicode)
     t_bounds . x = 0;
 	// MW-2013-08-23: [[ MeasureText ]] Shortcut if no text - useful for just
 	//   getting the font ascent/descent (as used in MCGroup methods).
+<<<<<<< HEAD
     // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
 	if (MCStringGetLength(p_text) != 0)
         t_bounds . width = MCFontMeasureText(m_font, p_text, getstack() -> getdevicetransform());
+=======
+	// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+	if (p_text . getlength() != 0)
+		t_bounds . width = MCFontMeasureText(m_font, p_text . getstring(), p_text . getlength(), p_is_unicode, getstack() -> getdevicetransform());
+>>>>>>> develop
 	else
 		t_bounds . width = 0;
     t_bounds . y = -MCFontGetAscent(m_font);

@@ -57,11 +57,6 @@ bool MCRegionIsComplex(MCRegionRef region)
 	return false;
 }
 
-bool MCRegionTouchesRect(MCRegionRef region, const MCRectangle& rect)
-{
-	return false;
-}
-
 MCRectangle MCRegionGetBoundingBox(MCRegionRef self)
 {
 	return self -> rect;
@@ -82,11 +77,6 @@ bool MCRegionSetRect(MCRegionRef self, const MCRectangle& p_rect)
 bool MCRegionIncludeRect(MCRegionRef self, const MCRectangle& p_rect)
 {
 	self -> rect = MCU_union_rect(self -> rect, p_rect);
-	return true;
-}
-
-bool MCRegionExcludeRect(MCRegionRef self, const MCRectangle& p_rect)
-{
 	return true;
 }
 

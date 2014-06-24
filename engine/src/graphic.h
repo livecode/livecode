@@ -144,6 +144,7 @@ public:
 	uint2 getfillrule();
 	void setfillrule(uint2 p_rule);
 
+<<<<<<< HEAD
 	////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(MCRectangle drect);
@@ -230,5 +231,10 @@ public:
 	virtual void SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
     virtual void SetForePattern(MCExecContext& ctxt, uinteger_t* pattern);
     virtual void SetBackPattern(MCExecContext& ctxt, uinteger_t* pattern);
+=======
+	bool get_points_for_rect(MCPoint*& r_points, uint2& r_point_count);
+	bool get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_count);
+	bool get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_point_count);
+>>>>>>> develop
 };
 #endif

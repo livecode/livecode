@@ -266,6 +266,7 @@ void MCLine::appendall(MCBlock *bptr, bool p_flow)
     dirtywidth = MCU_max(width, oldwidth);
 }
 
+<<<<<<< HEAD
 void MCLine::appendsegments(MCSegment *first, MCSegment *last)
 {
     firstblock = first->GetFirstBlock();
@@ -299,6 +300,111 @@ void MCLine::draw(MCDC *dc, int2 x, int2 y, findex_t si, findex_t ei, MCStringRe
         sgptr = sgptr->next();
     }
     while (sgptr->prev() != lastsegment);
+=======
+void MCLine::draw(MCDC *dc, int2 p_x, int2 y, uint2 si, uint2 ei, const char *tptr, uint2 pstyle)
+{
+	coord_t x = p_x;
+    coord_t cx = 0;
+	MCBlock *bptr = (MCBlock *)firstblock->prev();
+	
+	uint32_t t_flags;
+	t_flags = 0;
+	
+	bool t_is_flagged;
+	t_is_flagged = false;
+	coord_t t_flagged_sx, t_flagged_ex;
+	t_flagged_sx = 0;
+	t_flagged_ex = 0;
+	do
+	{
+		bptr = (MCBlock *)bptr->next();
+		
+		// MW-2012-02-27: [[ Bug 2939 ]] We need to compute whether to render the left/right
+		//   edge of the box style. This is determined by whether the previous block has such
+		//   a style or not.
+		
+		// Fetch the style of this block.
+		uint2 t_this_style;
+		if (!bptr -> gettextstyle(t_this_style))
+			t_this_style = pstyle;
+		
+		// Start off with 0 flags.
+		t_flags = 0;
+		
+		// If this block has a box style then we have something to do.
+		if ((t_this_style & (FA_BOX | FA_3D_BOX)) != 0)
+		{
+			// If we are not the first block, check the text style of the previous one.
+			// Otherwise we must render the left edge.
+			if (bptr != firstblock)
+			{
+				uint2 t_prev_style;
+				if (!bptr -> prev() -> gettextstyle(t_prev_style))
+					t_prev_style = pstyle;
+				if ((t_this_style & FA_BOX) != 0 && (t_prev_style & FA_BOX) == 0)
+					t_flags |= DBF_DRAW_LEFT_EDGE;
+				else if ((t_this_style & FA_3D_BOX) != 0 && (t_prev_style & FA_3D_BOX) == 0)
+					t_flags |= DBF_DRAW_LEFT_EDGE;
+			}
+			else
+				t_flags |= DBF_DRAW_LEFT_EDGE;
+			
+			// If we are not the last block, check the text style of the next one.
+			// Otherwise we must render the right edge.
+			if (bptr != lastblock)
+			{
+				uint2 t_next_style;
+				if (!bptr -> next() -> gettextstyle(t_next_style))
+					t_next_style = pstyle;
+				if ((t_this_style & FA_BOX) != 0 && (t_next_style & FA_BOX) == 0)
+					t_flags |= DBF_DRAW_RIGHT_EDGE;
+				else if ((t_this_style & FA_3D_BOX) != 0 && (t_next_style & FA_3D_BOX) == 0)
+					t_flags |= DBF_DRAW_RIGHT_EDGE;
+			}
+			else
+				t_flags |= DBF_DRAW_RIGHT_EDGE;
+		}
+		
+		// Pass the computed flags to the block to draw.
+		bptr->draw(dc, x, cx, y, si, ei, tptr, pstyle, t_flags);
+		
+		coord_t twidth;
+		twidth = bptr->getwidth(dc, cx);
+		
+		if (bptr -> getflagged())
+		{
+			if (!t_is_flagged)
+			{
+				t_is_flagged = true;
+				t_flagged_sx = x;
+			}
+			t_flagged_ex = x + twidth;
+		}
+		
+		if (t_is_flagged && (!bptr -> getflagged() || bptr == lastblock))
+		{
+			static uint1 s_dashes[2] = {3, 2};
+			MCColor t_color;
+			t_color . red = 255 << 8;
+			t_color . green = 0 << 8;
+			t_color . blue = 0 << 8;
+			MCscreen -> alloccolor(t_color);
+			dc -> setforeground(t_color);
+			dc -> setquality(QUALITY_SMOOTH);
+			dc -> setlineatts(2, LineOnOffDash, CapButt, JoinRound);
+			dc -> setdashes(0, s_dashes, 2);
+			dc -> drawline(t_flagged_sx, y + 1, t_flagged_ex, y + 1);
+			dc -> setlineatts(0, LineSolid, CapButt, JoinBevel);
+			dc -> setquality(QUALITY_DEFAULT);
+			t_is_flagged = false;
+			parent->getparent()->setforeground(dc, DI_FORE, False, True);
+		}
+		
+		x += twidth;
+		cx += twidth;
+	}
+	while (bptr != lastblock);
+>>>>>>> develop
 }
 
 void MCLine::setscents(MCBlock *bptr)
@@ -334,6 +440,7 @@ void MCLine::GetRange(findex_t &i, findex_t &l)
 	l = j + l - i;
 }
 
+<<<<<<< HEAD
 coord_t MCLine::GetCursorXHelper(findex_t fi, bool prefer_forward)
 {
     MCBlock *bptr = firstblock;
@@ -428,6 +535,36 @@ findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_left)
     while (sgptr->prev() != lastsegment);
     
     return bptr->GetCursorIndex(cx - sgptr->GetCursorOffset(), chunk, bptr == lastblock);
+=======
+coord_t MCLine::getcursorx(uint2 fi)
+{
+	coord_t x = 0;
+	MCBlock *bptr = (MCBlock *)firstblock;
+	uint2 i, l;
+	bptr->getindex(i, l);
+	while (fi > i + l && bptr != lastblock)
+	{
+		x += bptr->getwidth(NULL, x);
+		bptr = (MCBlock *)bptr->next();
+		bptr->getindex(i, l);
+	}
+	return x + bptr->getcursorx(x, fi);
+}
+
+uint2 MCLine::getcursorindex(coord_t cx, Boolean chunk)
+{
+	coord_t x = 0;
+	MCBlock *bptr = firstblock;
+	coord_t bwidth = bptr->getwidth(NULL, x);
+	while (cx > bwidth && bptr != lastblock)
+	{
+		cx -= bwidth;
+		x += bwidth;
+		bptr = (MCBlock *)bptr->next();
+		bwidth = bptr->getwidth(NULL, x);
+	}
+	return bptr->getcursorindex(x, cx, chunk, bptr == lastblock);
+>>>>>>> develop
 }
 
 uint2 MCLine::getwidth()

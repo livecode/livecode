@@ -469,8 +469,12 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
 // block. If the block has no non-default styles then the style key is not
 // present.
 //
+<<<<<<< HEAD
 #ifdef LEGACY_EXEC
 void MCField::exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective)
+=======
+void MCField::exportasstyledtext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective)
+>>>>>>> develop
 {
 	MCAutoArrayRef t_array;
 
@@ -489,6 +493,7 @@ bool MCField::exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int3
 	t_context . paragraph_index = 0;
 	t_context . run_index = 0;
 	t_context . runs_array = nil;
+<<<<<<< HEAD
 	if (MCArrayCreateMutable(t_context . paragraphs_array))
 	{
 		// Compute the flags we need - in particular flattening styles if effective
@@ -508,6 +513,28 @@ bool MCField::exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int3
 	return false;
 
 }
+=======
+	t_context . paragraphs_array = new MCVariableValue;
+
+	// Compute the flags we need - in particular flattening styles if effective
+	// is true.
+	uint32_t t_flags;
+	t_flags = kMCFieldExportRuns | kMCFieldExportParagraphs | kMCFieldExportCharacterStyles | kMCFieldExportParagraphStyles;
+	if (p_effective)
+		t_flags |= kMCFieldExportFlattenStyles;
+	if (p_formatted)
+		t_flags |= kMCFieldExportLines;
+	doexport(t_flags, p_paragraphs, p_start_index, p_finish_index, export_styled_text, &t_context);
+
+	ep . setarray(t_context . paragraphs_array, True);
+}
+
+void MCField::exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective)
+{
+	exportasstyledtext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_formatted, p_effective);
+}
+
+>>>>>>> develop
 ////////////////////////////////////////////////////////////////////////////////
 
 // This method converts a general styledText array to paragraphs objects. The

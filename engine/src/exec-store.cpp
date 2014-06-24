@@ -44,6 +44,8 @@ MC_EXEC_DEFINE_EXEC_METHOD(Store, SendPurchaseRequest, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Store, ConfirmPurchaseDelivery, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Store, RequestProductDetails, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Store, PurchaseVerify, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Store, MakePurchase, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Store, ConfirmPurchase, 1)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -233,6 +235,38 @@ void MCStoreExecSendPurchaseRequest(MCExecContext& ctxt, uint32_t p_id)
     else
         ctxt.Throw();
 }
+
+void MCStoreExecMakePurchase(MCExecContext& ctxt, MCStringRef p_product_id, MCStringRef p_quantity, MCStringRef p_payload)
+{
+    MCPurchase *t_purchase = nil;
+    bool t_success;
+    
+    if (t_success)
+        t_success = MCPurchaseCreate(p_product_id, nil, t_purchase);
+    
+    if (t_success)
+        t_success = MCPurchaseSet(t_purchase, kMCPurchasePropertyQuantity, p_quantity);
+    
+    if (t_success)
+        t_success = MCPurchaseMakePurchase(t_purchase);
+    
+    if (!t_success)
+        ctxt . Throw();
+}
+
+void MCStoreExecConfirmPurchase(MCExecContext& ctxt, MCStringRef p_product_id)
+{
+    bool t_success;
+    
+    t_success = MCPurchaseFindByProdId(*t_prod_id, t_purchase);
+    
+    if (t_success)
+        t_success = MCPurchaseConfirmDelivery(t_purchase);
+    
+    if (!t_success)
+        ctxt . Throw();
+}
+
 
 void MCStoreExecConfirmPurchaseDelivery(MCExecContext& ctxt, uint32_t p_id)
 {

@@ -16,8 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 package com.runrev.android;
 
-import com.runrev.android.billing.BillingReceiver;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -29,8 +27,7 @@ public class EngineReceiver extends BroadcastReceiver
     
     public void onReceive(Context context, Intent intent)
     {
-        if (!BillingReceiver.onReceive(context, intent) &&
-            !NotificationModule.onReceive(context, intent))
+        if (!NotificationModule.onReceive(context, intent))
         {
             Log.i(TAG, "unhandled intent: " + intent);
         }

@@ -812,7 +812,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 	MCStack *oldstack = NULL;
 	if (window != NULL || thisstack)
 	{
-		Window w = DNULL;
+		Window w = NULL;
 		if (thisstack)
 		{
 			oldstack = MCdefaultstackptr;
@@ -1679,7 +1679,7 @@ void MCLock::exec_ctxt(MCExecContext &ctxt)
 		MClockmessages = True;
 		break;
 	case LC_MOVES:
-		MClockmoves = True;
+		MCscreen->setlockmoves(True);
 		break;
 	case LC_RECENT:
 		MClockrecent = True;
@@ -3076,7 +3076,7 @@ void MCUnlock::exec_ctxt(MCExecContext &ctxt)
 		MClockmessages = False;
 		break;
 	case LC_MOVES:
-		MClockmoves = False;
+		MCscreen->setlockmoves(False);
 		break;
 	case LC_RECENT:
 		MClockrecent = False;

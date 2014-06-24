@@ -167,6 +167,30 @@ void MCImage::notifyneeds(bool p_deleting)
 
 //////////
 
+MCGImageFilter MCImage::resizequalitytoimagefilter(uint8_t p_quality)
+{
+    // MM-2014-05-29: [[ Bug 12382 ]] Temporarily reverted the box filter back to none to improve perfromace on non-Mac platforms.
+	switch (p_quality)
+	{
+        case INTERPOLATION_NEAREST:
+            return kMCGImageFilterNone;
+
+        case INTERPOLATION_BOX:
+            return kMCGImageFilterNone;
+
+		case INTERPOLATION_BILINEAR:
+            return kMCGImageFilterMedium;
+
+		case INTERPOLATION_BICUBIC:
+            return kMCGImageFilterHigh;
+
+		default:
+			return kMCGImageFilterNone;
+	}
+}
+
+//////////
+
 // composite image against black, opaque = alpha > 0
 void MCImageBitmapFlattenAlpha(MCImageBitmap *p_bitmap, bool p_preserve_mask)
 {
@@ -774,8 +798,6 @@ bool MCImage::createpattern(MCPatternRef &r_image)
 	MCImageBitmap *t_bitmap = nil;
 	MCImageBitmap *t_blank = nil;
 
-	MCGImageRef t_image = nil;
-	
 	MCPatternRef t_pattern;
 	t_pattern = nil;
 
@@ -789,35 +811,26 @@ bool MCImage::createpattern(MCPatternRef &r_image)
 		{
 			MCImageBitmapClear(t_blank);
 			t_bitmap = t_blank;
+
+			MCGRaster t_raster;
+			t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
+			
+			// IM-2013-08-14: [[ ResIndependence ]] Wrap image in MCPattern with scale factor
+			t_success = MCPatternCreate(t_raster, 1.0, getimagefilter(), t_pattern);
 		}
 	}
 	else
-		t_success = lockbitmap(t_bitmap, true);
-
-	if (t_success)
 	{
-		MCGRaster t_raster;
-		t_raster.width = t_bitmap->width;
-		t_raster.height = t_bitmap->height;
-		t_raster.pixels = t_bitmap->data;
-		t_raster.stride = t_bitmap->stride;
-		t_raster.format = t_bitmap->has_transparency ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
-	
-		t_success = MCGImageCreateWithRaster(t_raster, t_image);
+		// IM-2014-05-13: [[ HiResPatterns ]] Rather than create a pattern with a static bitmap image,
+		// we can now supply the source rep and the image transform to enable density-mapped patterns
+		apply_transform();
+		t_success = MCPatternCreate(m_rep, m_has_transform ? m_transform : MCGAffineTransformMakeIdentity(), getimagefilter(), t_pattern);
 	}
 
-	// IM-2013-08-14: [[ ResIndependence ]] Wrap image in MCPattern with scale factor
-	if (t_success)
-		t_success = MCPatternCreate(t_image, getscalefactor(), t_pattern);
-		
 	if (t_blank != nil)
 		MCImageFreeBitmap(t_blank);
-	else
-		unlockbitmap(t_bitmap);
 
 	closeimage();
-	
-	MCGImageRelease(t_image);
 	
 	if (t_success)
 		r_image = t_pattern;
@@ -1094,7 +1107,7 @@ void MCImage::resetimage()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCImageFreeFrames(MCImageFrame *p_frames, uindex_t p_count)
+void MCImageFreeFrames(MCBitmapFrame *p_frames, uindex_t p_count)
 {
 	if (p_frames != nil)
 	{

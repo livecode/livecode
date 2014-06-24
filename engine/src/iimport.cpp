@@ -147,12 +147,9 @@ bool MCImageBitmapApplyMask(MCImageBitmap *p_bitmap, MCImageBitmap *p_mask)
 }
 
 // decode image data to a series of frames, ignoring all the other bits & pieces
-bool MCImageDecode(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_frame_count)
+bool MCImageDecode(IO_handle p_stream, MCBitmapFrame *&r_frames, uindex_t &r_frame_count)
 {
 	bool t_success = true;
-
-	MCImageFrame *t_frames = nil;
-	uindex_t t_frame_count = 0;
 
 	MCImageBitmap *t_bitmap = nil;
 	MCImageCompressedBitmap *t_compressed = nil;
@@ -186,7 +183,7 @@ bool MCImageDecode(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_fram
 	return t_success;
 }
 
-bool MCImageDecode(const uint8_t *p_data, uindex_t p_size, MCImageFrame *&r_frames, uindex_t &r_frame_count)
+bool MCImageDecode(const uint8_t *p_data, uindex_t p_size, MCBitmapFrame *&r_frames, uindex_t &r_frame_count)
 {
 	bool t_success = true;
     MCAutoDataRef t_data;

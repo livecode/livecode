@@ -339,9 +339,15 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 
 ////////////////////////////////////////////////////////////////////////////////
 
+<<<<<<< HEAD
 static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font, bool p_rtl)
 {
     if (!MCGContextIsValid(self))
+=======
+static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
+{
+	if (!MCGContextIsValid(self))
+>>>>>>> develop
 		return;	
 	
 	bool t_success;
@@ -437,7 +443,11 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 	}
 
 	if (t_success)
+<<<<<<< HEAD
         t_success = w32_draw_text_using_mask_to_context_at_device_location(self, p_text, p_length, t_device_location, t_clipped_bounds, s_draw_dc, p_rtl);
+=======
+		t_success = w32_draw_text_using_mask_to_context_at_device_location(self, p_text, p_length, t_device_location, t_clipped_bounds, s_draw_dc);
+>>>>>>> develop
 
 	self -> is_valid = t_success;
 }

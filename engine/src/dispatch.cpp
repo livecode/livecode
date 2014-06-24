@@ -1171,6 +1171,10 @@ void MCDispatch::wmdrag(Window w)
 		
 		MCdragsource = MCdragtargetptr;
 
+		// PLATFORM-TODO: This is needed at the moment to make sure that we don't
+		//   get the selection 'going away' when we start dragging. At the moment
+		//   MouseRelease is mapped to mup without messages, which isn't quite
+		//   correct from the point of view of the field.
 		if (MCdragtargetptr->gettype() > CT_CARD)
 		{
 			MCControl *cptr = (MCControl *)MCdragtargetptr;
@@ -1179,8 +1183,8 @@ void MCDispatch::wmdrag(Window w)
 		}
 		MCdragtargetptr->getstack()->resetcursor(True);
 		MCdragtargetptr -> getstack() -> munfocus();
-
-		MCdragaction = MCscreen -> dodragdrop(t_pasteboard, MCallowabledragactions, t_image, t_image != NULL ? &MCdragimageoffset : NULL);
+		
+		MCdragaction = MCscreen -> dodragdrop(w, t_pasteboard, MCallowabledragactions, t_image, t_image != NULL ? &MCdragimageoffset : NULL);
 
 		dodrop(true);
 		MCdragdata -> ResetSource();
@@ -1279,7 +1283,6 @@ void MCDispatch::kfocusset(Window w)
 
 void MCDispatch::wmdragenter(Window w, MCPasteboard *p_data)
 {
-	
 	MCStack *target = findstackd(w);
 	
 	m_drag_target = true;
@@ -1494,7 +1497,7 @@ MCStack *MCDispatch::findchildstackd(Window w,uint2 cindex)
 
 MCStack *MCDispatch::findstackd(Window w)
 {
-	if (w == DNULL)
+	if (w == NULL)
 		return NULL;
 	
 	if (stacks != NULL)
@@ -1944,7 +1947,7 @@ void MCDispatch::dodrop(bool p_source)
 		t_field = static_cast<MCField *>(MCdragsource);
 
 		findex_t t_from_start_index, t_from_end_index;
-		t_field -> selectedmark(False, t_from_start_index, t_from_end_index, False, False);
+		t_field -> selectedmark(False, t_from_start_index, t_from_end_index, False);
 
 		// We are dropping in the target selection - so just send the messages and do nothing
 		if (t_start_index >= t_from_start_index && t_start_index < t_from_end_index)
@@ -2003,7 +2006,7 @@ void MCDispatch::dodrop(bool p_source)
 	findex_t t_src_start, t_src_end;
 	t_src_start = t_src_end = 0;
 	if (t_auto_source)
-		static_cast<MCField *>(MCdragsource) -> selectedmark(False, t_src_start, t_src_end, False, False);
+		static_cast<MCField *>(MCdragsource) -> selectedmark(False, t_src_start, t_src_end, False);
 
 	bool t_auto_drop;
 	t_auto_drop = MCdragdest != NULL && MCdragdest -> message(MCM_drag_drop) != ES_NORMAL;

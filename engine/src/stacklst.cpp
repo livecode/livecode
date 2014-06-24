@@ -30,7 +30,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "util.h"
+<<<<<<< HEAD
 #include <wctype.h>
+=======
+#include "redraw.h"
+>>>>>>> develop
 
 #include "globals.h"
 #include "exec.h"
@@ -327,6 +331,9 @@ Boolean MCStacklist::doaccelerator(KeySym p_key)
 
 	if (t_menubar != NULL)
 	{
+        // MW-2014-06-10: [[ Bug 12590 ]] Make sure we lock screen around the menu update message.
+        MCRedrawLockScreen();
+        
 		// OK-2008-03-20 : Bug 6153. Don't send a mouse button number if the mouseDown is due to
 		// a menu accelerator.
 		// MW-2008-08-27: [[ Bug 6995 ]] Slowdown caused by repeated invocation of mouseDown even if
@@ -344,7 +351,12 @@ Boolean MCStacklist::doaccelerator(KeySym p_key)
 					if (t_lowersym == accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
 					{
 						MCmodifierstate &= t_mod_mask;
+<<<<<<< HEAD
 						accelerators[i] . button -> activate(True, t_lowersym);
+=======
+						accelerators[i] . button -> activate(True, (uint2)key);
+                        MCRedrawUnlockScreen();
+>>>>>>> develop
 						return True;
 					}
 				}
@@ -354,6 +366,8 @@ Boolean MCStacklist::doaccelerator(KeySym p_key)
 				break;
 			}
 		}
+        
+        MCRedrawUnlockScreen();
 	}
 
 	// IM-2008-09-05: Reorganize loop to be more efficient - only loop through stacks once we've
@@ -522,7 +536,7 @@ Window MCStacklist::restack(MCStack *sptr)
 		if (bottompalette != NULL)
 			return bottompalette->getstack()->getwindow();
 	}
-	return DNULL;
+	return NULL;
 }
 
 void MCStacklist::restartidle()
@@ -559,11 +573,9 @@ void MCStacklist::refresh(void)
 	while(t_node != stacks);
 }
 
-#if !defined(_MAC_DESKTOP)
 void MCStacklist::ensureinputfocus(Window window)
 {
 }
-#endif
 
 void MCStacklist::purgefonts()
 {
@@ -675,7 +687,12 @@ void MCStacklist::reopenallstackwindows(void)
 {
 	if (stacks != NULL)
 	{
+<<<<<<< HEAD
 		MCStacknode *tptr = stacks;
+=======
+        // MW-2014-05-15: [[ Bug 12414 ]] Go backwards through the list to stop infinite loopage.
+		MCStacknode *tptr = stacks -> prev();
+>>>>>>> develop
 		do
 		{
             MCStack *t_stack;
@@ -684,9 +701,15 @@ void MCStacklist::reopenallstackwindows(void)
             if (t_stack->getopened() && t_stack->getwindow() != nil)
                 t_stack->reopenwindow();
             
+<<<<<<< HEAD
             tptr = tptr->next();
 		}
 		while (tptr != stacks);
+=======
+            tptr = tptr->prev();
+		}
+		while (tptr != stacks -> prev());
+>>>>>>> develop
 	}
 }
 

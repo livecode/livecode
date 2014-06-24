@@ -32,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblandroidjava.h"
 #include "mblstore.h"
 
+#include "param.h"
 #include <jni.h>
 
 typedef enum
@@ -47,9 +48,12 @@ typedef enum
 
 typedef enum
 {
-    PURCHASED,
-    CANCELED,
+    PURCHASED, //SUCCESSFUL for Amazon
+    CANCELED,  //FAILED for Amazon
+    INVALID_SKU,
+    ALREADY_ENTITLED,
     REFUNDED,
+    RESTORED,
 } MCAndroidPurchaseState;
 
 typedef struct
@@ -144,6 +148,123 @@ bool MCStoreRestorePurchases()
     
     return t_result;
 }
+
+bool MCStoreProductSetType(const char *p_product_id, const char *p_product_type)
+{
+    
+    bool t_result;
+    
+    MCAndroidEngineRemoteCall("storeProductSetType", "bss", &t_result, p_product_id, p_product_type);
+    
+    return t_result;
+    
+}
+
+bool MCStoreSetPurchaseProperty(const char *p_product_id, const char *p_property_name, const char *p_property_value)
+{
+    
+    bool t_result;
+    
+    MCAndroidEngineRemoteCall("storeSetPurchaseProperty", "bsss", &t_result, p_product_id, p_property_name, p_property_value);
+    
+    return t_result;
+    
+}
+
+char* MCStoreGetPurchaseProperty(const char *p_product_id, const char *p_property_name)
+{
+    char* t_result;
+    
+    MCAndroidEngineRemoteCall("storeGetPurchaseProperty", "sss", &t_result, p_product_id, p_property_name);
+    
+    return t_result;
+    
+}
+
+char* MCStoreGetPurchaseList()
+{
+    char* t_result;
+    
+    MCAndroidEngineRemoteCall("storeGetPurchaseList", "s", &t_result);
+    
+    return t_result;
+    
+}
+
+bool MCStoreConsumePurchase(const char *p_purchase_id)
+{
+    
+    bool t_result;
+    
+    MCAndroidEngineRemoteCall("storeConsumePurchase", "bs", &t_result, p_purchase_id);
+    
+    return t_result;
+    
+}
+ 
+bool MCStoreMakePurchase(const char *p_prod_id, const char *p_quantity, const char *p_payload)
+{
+    
+    bool t_result;
+    
+    MCAndroidEngineRemoteCall("storeMakePurchase", "bsss", &t_result, p_prod_id, p_quantity, p_payload);
+    
+    return t_result;
+  
+}
+  
+/*
+bool MCStoreMakePurchase(MCPurchase *p_purchase)
+{
+    if (p_purchase->state != kMCPurchaseStateInitialized)
+        return false;
+    
+    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
+    
+    bool t_success = false;
+    
+    MCAndroidEngineRemoteCall("storeMakePurchase", "bsss", &t_success, p_purchase->prod_id, "1", t_android_data->developer_payload);
+    
+    return t_success;
+}
+
+
+char* MCStoreAndroidRequestProductDetails(const char *p_purchase_id)
+{
+    
+    char* t_result;
+    
+    MCAndroidEngineRemoteCall("storeRequestProductDetails", "ss", &t_result, p_purchase_id);
+    
+    return t_result;
+    
+}
+*/
+
+
+// REMOVE THIS METHOD
+bool MCStoreRequestForProductDetails(const char *p_purchase_id)
+{
+    
+    bool t_result;
+    
+    MCAndroidEngineRemoteCall("storeRequestProductDetails", "bs", &t_result, p_purchase_id);
+    
+    return t_result;
+    
+}
+
+char* MCStoreReceiveProductDetails(const char *p_purchase_id)
+{
+    
+    char* t_result;
+    
+    MCAndroidEngineRemoteCall("storeReceiveProductDetails", "ss", &t_result, p_purchase_id);
+    
+    return t_result;
+    
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -446,9 +567,24 @@ void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified)
                     purchase_confirm(p_purchase);
                     break;
                 }
+                
+                case ALREADY_ENTITLED:
+                {
+                    MCLog("found ALREADY_ENTITLED purchase", nil);
+                    p_purchase->state = kMCPurchaseStateAlreadyEntitled;
+                    break;
+                }
+                case INVALID_SKU:
+                    p_purchase->state = kMCPurchaseStateInvalidSKU;
+                    break;
+                    
                 case REFUNDED:
                     //MCLog("verified refunded purchase", nil);
                     p_purchase->state = kMCPurchaseStateRefunded;
+                    break;
+                    
+                case RESTORED:
+                    p_purchase->state = kMCPurchaseStateRestored;
                     break;
                     
                 default:
@@ -472,12 +608,19 @@ void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified)
 
 void update_purchase_state(MCPurchase *p_purchase, int32_t p_state, bool p_verified)
 {
+    MCLog("State is " + p_state, nil);
     if (!p_verified)
         p_purchase->state = kMCPurchaseStateUnverified;
     else if (p_state == PURCHASED)
         p_purchase->state = kMCPurchaseStatePaymentReceived;
+    else if (p_state == ALREADY_ENTITLED)
+        p_purchase->state = kMCPurchaseStateAlreadyEntitled;
+    else if (p_state == INVALID_SKU)
+        p_purchase->state = kMCPurchaseStateInvalidSKU;
     else if (p_state == REFUNDED)
         p_purchase->state = kMCPurchaseStateRefunded;
+    else if (p_state == RESTORED)
+        p_purchase->state = kMCPurchaseStateRestored;
     else
         p_purchase->state = kMCPurchaseStateCancelled;
 }
@@ -581,7 +724,16 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPurchaseStateChanged(JNI
 
         if (t_purchase != NULL)
         {
+<<<<<<< HEAD
             MCLog("found purchase for %@", *t_product_id);
+=======
+            
+            MCLog("found purchase for %s", t_product_id);
+            
+            // THIS WAS ADDED 
+            t_purchase->prod_id = t_product_id;
+            
+>>>>>>> develop
             MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)t_purchase->platform_data;
             
 			t_android_data->product_id = MCValueRetain(*t_product_id);
@@ -595,6 +747,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPurchaseStateChanged(JNI
             t_android_data->purchase_state = purchaseState;
             
             update_purchase_state(t_purchase, purchaseState, verified);
+            MCLog("ProductID is %s", t_purchase->prod_id);
             MCPurchaseNotifyUpdate(t_purchase);
             
             // now, if the purchase is cancelled, confirm the notification
@@ -685,6 +838,33 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRequestPurchaseResponse(
     }
 }
 
+bool MCStorePostProductRequestResponse(const char *p_product_id);
+bool MCStorePostProductRequestError(const char *p_product, const char *p_error);
+
+
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProductDetailsResponse(JNIEnv *env, jobject object, jstring productId) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProductDetailsResponse(JNIEnv *env, jobject object, jstring productId)
+{
+    bool t_success = true;
+
+    char *t_product_id = nil;
+    t_success = MCCStringFromJava(env, productId, t_product_id);
+    if (t_success)
+        t_success = MCStorePostProductRequestResponse(t_product_id);
+}
+
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProductDetailsError(JNIEnv *env, jobject object, jstring productId, jstring error) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProductDetailsError(JNIEnv *env, jobject object, jstring productId, jstring error)
+{
+    bool t_success = true;
+    
+    char *t_product_id = nil;
+    char *t_error = nil;
+    t_success = MCCStringFromJava(env, productId, t_product_id) && MCCStringFromJava(env, error, t_error);
+    if (t_success)
+        t_success = MCStorePostProductRequestError(t_product_id, t_error);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCStoreRequestProductDetails(MCStringRef p_product_id)
@@ -692,3 +872,224 @@ bool MCStoreRequestProductDetails(MCStringRef p_product_id)
     // Not implemented
     return false;
 }
+
+///////////////////////////////////////////////////////////////
+
+class MCStoreProductRequestResponseEvent : public MCCustomEvent
+{
+public:
+    MCStoreProductRequestResponseEvent(const char *p_product_id);
+    
+    void Dispatch();
+    void Destroy();
+    
+private:
+    char *m_product_id;
+};
+
+MCStoreProductRequestResponseEvent::MCStoreProductRequestResponseEvent(const char *p_product_id)
+{
+    m_product_id = nil;
+    MCCStringClone(p_product_id, m_product_id);
+}
+
+void MCStoreProductRequestResponseEvent::Destroy()
+{
+    MCCStringFree(m_product_id);
+    
+    delete this;
+}
+
+
+
+void MCStoreProductRequestResponseEvent::Dispatch()
+{
+    bool t_success = true;
+    
+    const char *t_product_id = nil;
+    const char *t_description = nil;
+    const char *t_title = nil;
+    const char *t_itemType = nil;
+    const char *t_price = nil;
+    const char *t_itemImageUrl = nil;
+    const char *t_itemDownloadUrl = nil;
+    const char *t_subscriptionDurationUnit = nil;
+    const char *t_subscriptionDurationMultiplier= nil;
+    
+    //t_product_id = m_product_id;
+    t_product_id = MCStoreGetPurchaseProperty(m_product_id, "productId");
+    t_description = MCStoreGetPurchaseProperty(m_product_id, "description");
+    t_title = MCStoreGetPurchaseProperty(m_product_id, "title");
+    t_itemType = MCStoreGetPurchaseProperty(m_product_id, "itemType");
+    t_price = MCStoreGetPurchaseProperty(m_product_id, "price");
+    t_itemImageUrl = MCStoreGetPurchaseProperty(m_product_id, "itemImageUrl");
+    t_itemDownloadUrl = MCStoreGetPurchaseProperty(m_product_id, "itemDownloadUrl");
+    t_subscriptionDurationUnit = MCStoreGetPurchaseProperty(m_product_id, "subscriptionDurationUnit");
+    t_subscriptionDurationMultiplier = MCStoreGetPurchaseProperty(m_product_id, "subscriptionDurationMultiplier");
+    
+    if (t_success)
+    {
+        MCExecPoint ep(nil, nil, nil);
+        
+        MCVariableValue *t_response = nil;
+        t_response = new MCVariableValue();
+        
+        MCVariableValue *t_element = nil;
+        
+        if (t_product_id != nil)
+        {
+            t_response->lookup_element(ep, "productId", t_element);
+            t_element->assign_string(MCString(t_product_id));
+        }
+      
+        if (t_price != nil)
+        {
+            t_response->lookup_element(ep, "price", t_element);
+            t_element->assign_string(MCString(t_price));
+        }
+        
+        if (t_description != nil)
+        {
+            t_response->lookup_element(ep, "description", t_element);
+            t_element->assign_string(MCString(t_description));
+        }
+        
+        if (t_title != nil)
+        {
+            t_response->lookup_element(ep, "title", t_element);
+            t_element->assign_string(MCString(t_title));
+        }
+        
+        if (t_itemType != nil)
+        {
+            t_response->lookup_element(ep, "itemType", t_element);
+            t_element->assign_string(MCString(t_itemType));
+        }
+        
+        if (t_itemImageUrl != nil)
+        {
+            t_response->lookup_element(ep, "itemImageUrl", t_element);
+            t_element->assign_string(MCString(t_itemImageUrl));
+        }
+        
+        if (t_itemDownloadUrl != nil)
+        {
+            t_response->lookup_element(ep, "itemDownloadUrl", t_element);
+            t_element->assign_string(MCString(t_itemDownloadUrl));
+        }
+        
+        if (t_subscriptionDurationUnit != nil)
+        {
+            t_response->lookup_element(ep, "subscriptionDurationUnit", t_element);
+            t_element->assign_string(MCString(t_subscriptionDurationUnit));
+        }
+        
+        if (t_subscriptionDurationMultiplier != nil)
+        {
+            t_response->lookup_element(ep, "subscriptionDurationMultiplier", t_element);
+            t_element->assign_string(MCString(t_subscriptionDurationMultiplier));
+        }
+        
+        ep.setarray(t_response, True);
+        
+        MCParameter p1, p2;
+        p1.sets_argument(MCString(t_product_id));
+        p1.setnext(&p2);
+        p2.set_argument(ep);
+        
+        MCdefaultstackptr->getcurcard()->message(MCM_product_details_received, &p1);
+    }
+    
+}
+
+bool MCStorePostProductRequestResponse(const char *p_product_id)
+{
+    bool t_success;
+    MCCustomEvent *t_event = nil;
+    t_event = new MCStoreProductRequestResponseEvent(p_product_id);
+    t_success = t_event != nil;
+    
+    if (t_success)
+        MCEventQueuePostCustom(t_event);
+    
+    return t_success;
+}
+
+////////
+
+class MCStoreProductRequestErrorEvent : public MCCustomEvent
+{
+public:
+    MCStoreProductRequestErrorEvent(const char *p_product, const char *p_error);
+    
+    void Destroy();
+    void Dispatch();
+    
+private:
+    char *m_product;
+    char *m_error;
+};
+
+MCStoreProductRequestErrorEvent::MCStoreProductRequestErrorEvent(const char *p_product, const char *p_error)
+{
+    m_product = m_error = nil;
+    
+    MCCStringClone(p_product, m_product);
+    MCCStringClone(p_error, m_error);
+}
+
+void MCStoreProductRequestErrorEvent::Destroy()
+{
+    MCCStringFree(m_product);
+    MCCStringFree(m_error);
+    
+    delete this;
+}
+
+void MCStoreProductRequestErrorEvent::Dispatch()
+{
+    MCdefaultstackptr->getcurcard()->message_with_args(MCM_product_request_error, m_product, m_error);
+}
+
+bool MCStorePostProductRequestError(const char *p_product, const char *p_error)
+{
+    bool t_success;
+    MCCustomEvent *t_event = nil;
+    t_event = new MCStoreProductRequestErrorEvent(p_product, p_error);
+    t_success = t_event != nil;
+    
+    if (t_success)
+        MCEventQueuePostCustom(t_event);
+    
+    return t_success;
+}
+
+////////
+
+
+Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
+{
+    bool t_success = true;
+    char *t_product_id = nil;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
+    if (t_success)
+        t_success = MCStoreRequestProductDetails(t_product_id);
+    
+    MCCStringFree(t_product_id);
+    
+    return ES_NORMAL;
+}
+
+bool MCStoreRequestProductDetails(const char *p_product_id)
+{
+    
+    bool t_result;
+    
+    MCAndroidEngineRemoteCall("storeRequestProductDetails", "bs", &t_result, p_product_id);
+    
+    return t_result;
+    
+}
+

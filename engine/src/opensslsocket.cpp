@@ -159,7 +159,7 @@ static void socketCallback (CFSocketRef cfsockref, CFSocketCallBackType type, CF
 			break;
 		}
 	}
-	//MCS_poll(0.0,0);//quick poll of other sockets
+	MCS_poll(0.0,0);//quick poll of other sockets
 }
 #endif
 
@@ -540,7 +540,12 @@ bool open_socket_resolve_callback(void *p_context, bool p_resolved, bool p_final
 	return false;
 }
 
+<<<<<<< HEAD
 MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef mess, Boolean secure, Boolean sslverify, MCStringRef sslcertfile)
+=======
+// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
+MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef mess, Boolean secure, Boolean sslverify, char *sslcertfile, char* hostname)
+>>>>>>> develop
 {
 	if (!MCS_init_sockets())
 		return NULL;
@@ -581,6 +586,10 @@ MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameR
 		}
 
 		s->sslverify = sslverify;
+		
+		// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
+		if (s -> sslverify)
+			s -> endhostname = hostname;
 
 		if (mess == NULL)
 		{
@@ -880,13 +889,17 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 }
 
 // MM-2014-02-12: [[ SecureSocket ]] New secure socket command. If socket is not already secure, flag as secure to ensure future communications are encrypted.
-void MCS_secure_socket(MCSocket *s, Boolean sslverify)
+// MM-2014-06-13: [[ Bug 12567 ]] Added support for passing in host name to verify against.
+void MCS_secure_socket(MCSocket *s, Boolean sslverify, char *hostname)
 {
 	if (!s -> secure)
 	{
 		s -> secure = True;
 		s -> sslverify = sslverify;
 		s -> sslstate |= SSTATE_RETRYCONNECT;
+		
+		if (s -> sslverify)
+			s -> endhostname = hostname;
 	}
 }
 
@@ -1095,6 +1108,9 @@ MCSocket::MCSocket(MCNameRef n, MCObject *o, MCNameRef m, Boolean d, MCSocketHan
 	secure = issecure;
 	resolve_state = kMCSocketStateNew;
 	init(fd);
+	
+	// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
+	endhostname = NULL;
 }
 
 MCSocket::~MCSocket()
@@ -1105,6 +1121,9 @@ MCSocket::~MCSocket()
 	deletewrites();
 
 	delete rbuffer;
+	
+	// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
+	delete endhostname;
 }
 
 void MCSocket::deletereads()
@@ -1592,7 +1611,7 @@ Boolean MCSocket::init(MCSocketHandle newfd)
 	if (cfsockref)
 	{
 		rlref = CFSocketCreateRunLoopSource(kCFAllocatorDefault, cfsockref, 0);
-		CFRunLoopAddSource((CFRunLoopRef)GetCFRunLoopFromEventLoop(GetMainEventLoop()), rlref, kCFRunLoopDefaultMode);
+		CFRunLoopAddSource((CFRunLoopRef)CFRunLoopGetCurrent(), rlref, kCFRunLoopDefaultMode);
 		CFOptionFlags socketOptions = 0 ;
 		CFSocketSetSocketFlags( cfsockref, socketOptions );
 	}
@@ -2232,6 +2251,7 @@ Boolean MCSocket::sslconnect()
 	{
 		if (sslverify)
 		{
+<<<<<<< HEAD
 			MCAutoStringRef t_hostname;
             /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(name), &t_hostname);
             uindex_t t_pos;
@@ -2244,6 +2264,23 @@ Boolean MCSocket::sslconnect()
             /* UNCHECKED */ MCStringConvertToCString(*t_hostname, &t_host);
 			
             rc = post_connection_check(_ssl_conn, *t_host);
+=======
+			// MM-2014-06-13: [[ Bug 12567 ]] If an end host has been specified, verify against that.
+			//   Otherwise, use the socket name as before.
+			char *t_hostname;
+			if (endhostname != NULL)
+				t_hostname = strdup(endhostname);
+			else
+				t_hostname = strdup(name);
+			if (strchr(t_hostname, ':') != NULL)
+				strchr(t_hostname, ':')[0] = '\0';
+			else if (strchr(t_hostname, '|') != NULL)
+				strchr(t_hostname, '|')[0] = '\0';
+
+			rc = post_connection_check(_ssl_conn, t_hostname);
+
+			free(t_hostname);
+>>>>>>> develop
 
 			if (rc != X509_V_OK)
 			{

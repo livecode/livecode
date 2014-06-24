@@ -620,6 +620,10 @@ void MCPlayer::GetConstraints(MCExecContext& ctxt, MCMultimediaQTVRConstraints& 
 
 void MCPlayer::GetNodes(MCExecContext& ctxt, MCStringRef& r_nodes)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	// COCOA-TODO: MCPlayer::getnodes();
+    r_nodes = MCValueRetain(kMCEmptyString);
+#else
 #ifdef FEATURE_QUICKTIME
 	uint2 nodecount = getnodecount();
 	MCAutoArray<MCMultimediaQTVRNode> t_node_array;
@@ -641,6 +645,10 @@ void MCPlayer::GetNodes(MCExecContext& ctxt, MCStringRef& r_nodes)
 	
 void MCPlayer::GetHotSpots(MCExecContext& ctxt, MCStringRef& r_spots)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	// COCOA-TODO: MCPlayer::gethotspots();
+    r_spots = MCValueRetain(kMCEmptyString);
+#else
 #ifdef FEATURE_QUICKTIME
 	uint2 hotspotcount = gethotspotcount();
 	MCAutoArray<MCMultimediaQTVRHotSpot> t_spot_array;

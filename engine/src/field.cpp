@@ -745,8 +745,10 @@ Boolean MCField::kdown(MCStringRef p_string, KeySym key)
 		{
 			if (MCStringIsEmpty(p_string))
 				return False;
-
-			getstack()->hidecursor();
+            
+            // MW-2014-04-25: [[ Bug 5545 ]] This method will do the appropriate behavior
+            //   based on platform.
+            MCscreen -> hidecursoruntilmousemoves();
 
 			finsertnew(function, p_string, key);
 		}
@@ -2297,7 +2299,7 @@ void MCField::undo(Ustruct *us)
 			if (us->ud.text.data != NULL)
 			{
 				insertparagraph(us->ud.text.data);
-				selectedmark(False, si, ei, False, False);
+				selectedmark(False, si, ei, False);
 				seltext(us->ud.text.index, si, True);
 				us->type = UT_REPLACE_TEXT;
 			}
@@ -3074,7 +3076,9 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 	}
 
 	MCRectangle frect = getfrect();
-	dc->setclip(dirty);
+	
+	dc->save();
+	dc->cliprect(dirty);
 	
 	MCRectangle trect = frect;
 	if (flags & F_SHOW_BORDER && borderwidth)
@@ -3103,7 +3107,8 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		else
 			drawborder(dc, trect, borderwidth);
 	}
-	dc->clearclip();
+	
+	dc->restore();
 
 	// MW-2009-06-14: If the field is opaque, then render the contents with that
 	//   marked.
@@ -3115,7 +3120,6 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		dc -> changeopaque(t_was_opaque);
 
 	frect = getfrect();
-	dc->setclip(dirty);
 	if (flags & F_SHADOW)
 	{
 		MCRectangle trect = rect;

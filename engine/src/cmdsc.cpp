@@ -2794,7 +2794,9 @@ void MCRecord::exec_ctxt(MCExecContext &ctxt)
 		return ES_ERROR;
 	}
 	char *soundfile = MCS_get_canonical_path(ep.getcstring());
-    MCtemplateplayer->recordsound(soundfile);
+	
+	extern void MCQTRecordSound(char *soundfile);
+	MCQTRecordSound(soundfile);
 	return ES_NORMAL;
 #endif /* MCRecord */
 

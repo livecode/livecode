@@ -1460,7 +1460,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 		bool t_error;
 		t_error = false;
 
-		MCRange *t_ranges;
+		MCInterval *t_ranges;
 		int t_range_count;
 		t_ranges = NULL;
 
@@ -1746,13 +1746,24 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 				MCeerror -> add(EE_PROPERTY_BADEXPRESSION, line, pos);
 				return ES_ERROR;
 			}
+
 			t_type = MCTransferData::StringToType(ep2 . getsvalue());
 		}
 
 		if (t_type != TRANSFER_TYPE_NULL)
 		{
 			MCSharedString *t_data;
-			t_data = MCSharedString::Create(ep . getsvalue());
+			
+			// MW-2014-03-12: [[ ClipboardStyledText ]] If styledText is being requested, then
+			//   convert the array to a styles pickle and store that.
+			if (t_type == TRANSFER_TYPE_STYLED_TEXT_ARRAY)
+			{
+				t_type =  TRANSFER_TYPE_STYLED_TEXT;
+				t_data = MCConvertStyledTextArrayToStyledText(ep . getarray());
+			}
+			else
+				t_data = MCSharedString::Create(ep . getsvalue());
+			
 			if (t_data != NULL)
 			{
 				bool t_success;
@@ -2405,7 +2416,14 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 	case P_LOCK_MESSAGES:
 		return ep.getboolean(MClockmessages, line, pos, EE_PROPERTY_NAB);
 	case P_LOCK_MOVES:
-		return ep.getboolean(MClockmoves, line, pos, EE_PROPERTY_NAB);
+		{
+			Boolean t_new_value;
+			Exec_stat t_stat = ep.getboolean(t_new_value, line, pos, EE_PROPERTY_NAB);
+			if (t_stat == ES_NORMAL) {
+				MCscreen->setlockmoves(t_new_value);
+			}
+			return t_stat;
+		}
 	case P_LOCK_RECENT:
 		return ep.getboolean(MClockrecent, line, pos, EE_PROPERTY_NAB);
 	case P_PRIVATE_COLORS:
@@ -2499,7 +2517,12 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 	case P_ACTIVATE_PALETTES:
 		return ep.getboolean(MCactivatepalettes, line, pos, EE_PROPERTY_NAB);
 	case P_HIDE_PALETTES:
-		return ep.getboolean(MChidepalettes, line, pos, EE_PROPERTY_NAB);
+		stat = ep.getboolean(MChidepalettes, line, pos, EE_PROPERTY_NAB);
+#ifdef _MACOSX
+        // MW-2014-04-23: [[ Bug 12080 ]] Make sure we update the hidesOnSuspend of all palettes.
+        MCstacks -> hidepaletteschanged();
+#endif
+        return stat;
 	case P_RAISE_PALETTES:
 		// MW-2004-11-17: On Linux, effect a restack if 'raisepalettes' is changed
 		// MW-2004-11-24: Altered MCStacklst::restack to find right stack if passed NULL
@@ -2631,7 +2654,10 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 			if (ep.getboolean(trecording, line, pos, EE_PROPERTY_NAB) != ES_NORMAL)
 				return ES_ERROR;
 			if (!trecording)
-				MCtemplateplayer->stoprecording();
+			{
+				extern void MCQTStopRecording(void);
+				MCQTStopRecording();
+			}
 		}
 		break;
 	case P_LZW_KEY:
@@ -4789,10 +4815,15 @@ Exec_stat MCProperty::eval_function(MCExecPoint& ep)
 	{
 		case F_DATE:
 		{
+<<<<<<< HEAD
 			MCExecContext ctxt(ep);
 			MCAutoStringRef t_date;
 
 			MCDateTimeGetDate(ctxt, which, &t_date);
+=======
+			const MCInterval *t_ranges;
+			t_ranges = MCprinter -> GetJobRanges();
+>>>>>>> develop
 
 			if (!ctxt . HasError())
 			{
@@ -4869,6 +4900,7 @@ Exec_stat MCProperty::eval_function(MCExecPoint& ep)
 				return ES_NORMAL;
 			}
 
+<<<<<<< HEAD
 			return ctxt . Catch(line, pos);
 		}
 		case F_FILES:
@@ -4882,6 +4914,23 @@ Exec_stat MCProperty::eval_function(MCExecPoint& ep)
 				MCFilesGetFiles(ctxt, &t_files);
 
 			if (!ctxt . HasError())
+=======
+			// MW-2014-03-12: [[ ClipboardStyledText ]] If styledText is being requested, then
+			//   convert the styles data to an array and return that.
+			if (t_type == TRANSFER_TYPE_STYLED_TEXT_ARRAY &&
+				t_pasteboard -> Contains(TRANSFER_TYPE_STYLED_TEXT, true))
+			{
+				MCSharedString *t_data;
+				t_data = t_pasteboard -> Fetch(TRANSFER_TYPE_STYLED_TEXT);
+				if (t_data != NULL)
+				{
+					ep . setarray(MCConvertStyledTextToStyledTextArray(t_data), True);
+					t_data -> Release();
+					t_query_success = true;
+				}
+			}
+			else if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
+>>>>>>> develop
 			{
 				ep . setvalueref(*t_files);
 				return ES_NORMAL;
@@ -4985,11 +5034,960 @@ Exec_stat MCProperty::eval_function(MCExecPoint& ep)
 		}
 		default:
 			break;
+<<<<<<< HEAD
 	}
 	
 	fprintf(stderr, "MCProperty: ERROR bad function in eval\n");
 	return ES_ERROR;
 }
+=======
+		case 4:
+			ep.setuint(16);
+			break;
+		case 8:
+			ep.setuint(256);
+			break;
+		case 16:
+			ep.setstaticcstring("thousands");
+			break;
+		default:
+			ep.setstaticcstring("millions");
+			break;
+		}
+		break;
+	case P_BUFFER_IMAGES:
+		ep.setboolean(MCbufferimages);
+		break;
+	case P_BACK_DROP:
+		if (MCbackdropcolor == NULL)
+			ep.setstaticcstring("none");
+		else
+			ep.setsvalue(MCbackdropcolor);
+		break;
+	case P_MULTI_EFFECT:
+		ep.setboolean(false);
+		break;
+	case P_ALLOW_INTERRUPTS:
+		ep.setboolean(MCallowinterrupts);
+		break;
+	case P_EXPLICIT_VARIABLES:
+		ep.setboolean(MCexplicitvariables);
+		break;
+	case P_PRESERVE_VARIABLES:
+		ep.setboolean(MCpreservevariables);
+		break;
+	case P_SYSTEM_FS:
+		ep.setboolean(MCsystemFS);
+		break;
+	case P_SYSTEM_CS:
+		ep.setboolean(MCsystemCS);
+		break;
+	case P_SYSTEM_PS:
+		ep.setboolean(MCsystemPS);
+		break;
+	case P_FILE_TYPE:
+		ep.setsvalue(MCfiletype);
+		break;
+	case P_STACK_FILE_TYPE:
+		ep.setsvalue(MCstackfiletype);
+		break;
+	case P_STACK_FILE_VERSION:
+	{
+		char t_version[6];
+		t_version[0] = '0' + MCstackfileversion / 1000;
+		t_version[1] = '.';
+		t_version[2] = '0' + (MCstackfileversion % 1000) / 100;
+		if (MCstackfileversion % 100 == 0)
+			t_version[3] = '\0';
+		else
+		{
+			t_version[3] = '.';
+			t_version[4] = '0' + (MCstackfileversion % 100) / 10;
+			t_version[5] = '\0';
+		}
+		ep . copysvalue(t_version, strlen(t_version));
+	}
+	break;
+	case P_SECURE_MODE:
+		ep.setboolean(MCsecuremode == MC_SECUREMODE_ALL);
+		break;
+	case P_SECURITY_CATEGORIES:
+	case P_SECURITY_PERMISSIONS:
+	{
+		int t_count;
+		t_count = 0;
+
+		ep . clear();
+		for (int i=0; i<MC_SECUREMODE_MODECOUNT; i++)
+		{
+			if ((which == P_SECURITY_CATEGORIES) || ((MCsecuremode & (1 << i)) == 0))
+			{
+				ep.concatcstring(MCsecuremode_strings[i], EC_COMMA, t_count == 0);
+				t_count += 1;
+			}
+		}
+	}
+	break;
+	case P_SERIAL_CONTROL_STRING:
+		ep.setsvalue(MCserialcontrolsettings);
+		break;
+	case P_COLOR_WORLD:
+		ep.setboolean(MCscreen->getdepth() > 1);
+		break;
+	case P_ALLOW_KEY_IN_FIELD:
+	case P_REMAP_COLOR:
+	case P_EDIT_SCRIPTS:
+		ep.setboolean(True);
+		break;
+	case P_ALLOW_FIELD_REDRAW:
+		ep.setboolean(False);
+		break;
+	case P_HIDE_CONSOLE_WINDOWS:
+		ep.setboolean(MChidewindows);
+		break;
+	case P_FTP_PROXY:
+		if (MCftpproxyhost == NULL)
+			ep.clear();
+		else
+			ep.setstringf("%s:%d", MCftpproxyhost, MCftpproxyport);
+		break;
+	case P_HTTP_HEADERS:
+		if (MChttpheaders == NULL)
+			ep.clear();
+		else
+			ep.setsvalue(MChttpheaders);
+		break;
+	case P_HTTP_PROXY:
+		if (MChttpproxy == NULL)
+			ep . clear();
+		else
+			ep . copysvalue(MChttpproxy);
+		break;
+	case P_SHOW_INVISIBLES:
+		ep.setboolean(MCshowinvisibles);
+		break;
+	case P_SOCKET_TIMEOUT:
+		ep.setnvalue(MCsockettimeout * 1000.0);
+		break;
+	case P_RANDOM_SEED:
+		ep.setnvalue(MCrandomseed);
+		break;
+	case P_DEFAULT_STACK:
+		MCdefaultstackptr->getprop(0, P_NAME, ep, effective);
+		break;
+	case P_DEFAULT_MENU_BAR:
+		if (MCdefaultmenubar == NULL)
+			ep.clear();
+		else
+			MCdefaultmenubar->getprop(0, P_LONG_NAME, ep, effective);
+		break;
+	case P_DRAG_SPEED:
+		ep.setint(MCdragspeed);
+		break;
+	case P_MOVE_SPEED:
+		ep.setint(MCmovespeed);
+		break;
+	case P_LOCK_COLORMAP:
+		ep.setboolean(MClockcolormap);
+		break;
+	case P_LOCK_CURSOR:
+		ep.setboolean(MClockcursor);
+		break;
+	case P_LOCK_ERRORS:
+		ep.setboolean(MClockerrors);
+		break;
+	case P_LOCK_MENUS:
+		ep.setboolean(MClockmenus);
+		break;
+	case P_LOCK_MESSAGES:
+		ep.setboolean(MClockmessages);
+		break;
+	case P_LOCK_MOVES:
+		ep.setboolean(MCscreen->getlockmoves());
+		break;
+	case P_LOCK_RECENT:
+		ep.setboolean(MClockrecent);
+		break;
+	case P_USER_LEVEL:
+		ep.setint(MCuserlevel);
+		break;
+	case P_USER_MODIFY:
+		ep.setboolean(True);
+		break;
+	case P_CURSOR:
+		if (MCcursor != None)
+			ep.setint(MCcursorid);
+		else
+			ep.clear();
+		break;
+	case P_DEFAULT_CURSOR:
+		if (MCdefaultcursor != None)
+			ep.setint(MCdefaultcursorid);
+		else
+			ep.clear();
+		break;
+	case P_TRACE_ABORT:
+		ep.setboolean(MCtraceabort);
+		break;
+	case P_TRACE_DELAY:
+		ep.setint(MCtracedelay);
+		break;
+	case P_TRACE_RETURN:
+		ep.setboolean(MCtracereturn);
+		break;
+	case P_TRACE_STACK:
+		if (MCtracestackptr == NULL)
+			ep.clear();
+		else
+			MCtracestackptr->getprop(0, P_NAME, ep, effective);
+		break;
+	case P_TRACE_UNTIL:
+		ep.setuint(MCtraceuntil);
+		break;
+	case P_DIRECTORY:
+		{
+			if (!MCSecureModeCheckDisk(line, pos))
+				return ES_ERROR;
+
+			char *dir = MCS_getcurdir();
+			ep.copysvalue(dir, strlen(dir));
+			delete dir;
+		}
+		break;
+	case P_SSL_CERTIFICATES:
+		ep.setsvalue(MCsslcertificates);
+		break;
+	case P_DEFAULT_NETWORK_INTERFACE:
+		ep.setsvalue(MCdefaultnetworkinterface);
+		break;
+	case P_NETWORK_INTERFACES:
+		MCS_getnetworkinterfaces(ep);
+		break;
+	case P_ERROR_MODE:
+	{
+		MCSErrorMode t_mode;
+		t_mode = MCS_get_errormode();
+		switch (t_mode)
+		{
+		case kMCSErrorModeNone:
+			ep.clear();
+			break;
+		case kMCSErrorModeQuiet:
+			ep.setstaticcstring("quiet");
+			break;
+		case kMCSErrorModeStderr:
+			ep.setstaticcstring("stderr");
+			break;
+		case kMCSErrorModeInline:
+			ep.setstaticcstring("inline");
+			break;
+		case kMCSErrorModeDebugger:
+			ep.setstaticcstring("debugger");
+			break;
+		default:
+			break;
+		}
+	}
+	break;
+	case P_OUTPUT_TEXT_ENCODING:
+	{
+		const char *t_encoding;
+		switch(MCS_get_outputtextencoding())
+		{
+			case kMCSOutputTextEncodingWindows1252:
+				t_encoding = "windows-1252";
+				break;
+			case kMCSOutputTextEncodingMacRoman:
+				t_encoding = "macintosh";
+				break;
+			case kMCSOutputTextEncodingISO8859_1:
+				t_encoding = "iso-8859-1";
+				break;
+			case kMCSOutputTextEncodingUTF8:
+				t_encoding = "utf-8";
+				break;
+			default:
+				t_encoding = "";
+				break;
+		}
+		ep.setstaticcstring(t_encoding);
+	}
+	break;
+	case P_OUTPUT_LINE_ENDINGS:
+	{
+		const char *t_ending;
+		switch(MCS_get_outputlineendings())
+		{
+			case kMCSOutputLineEndingsLF:
+				t_ending = "lf";
+				break;
+			case kMCSOutputLineEndingsCR:
+				t_ending = "cr";
+				break;
+			case kMCSOutputLineEndingsCRLF:
+				t_ending = "crlf";
+				break;
+			default:
+				t_ending = "";
+				break;
+		}
+		ep . setstaticcstring(t_ending);
+	}
+	break;
+	case P_SESSION_SAVE_PATH:
+		ep.setcstring(MCS_get_session_save_path());
+		break;
+	case P_SESSION_LIFETIME:
+		ep.setuint(MCS_get_session_lifetime());
+		break;
+	case P_SESSION_COOKIE_NAME:
+		ep.setcstring(MCS_get_session_name());
+		break;
+	case P_SESSION_ID:
+		ep.setcstring(MCS_get_session_id());
+		break;
+
+	case P_SCRIPT_EXECUTION_ERRORS:
+		ep . setstaticcstring(MCexecutionerrors);
+		break;
+	case P_SCRIPT_PARSING_ERRORS:
+		ep . setstaticcstring(MCparsingerrors);
+		break;
+	case P_REV_RUNTIME_BEHAVIOUR:
+		ep.setint(MCruntimebehaviour);
+	break;
+	case P_PRIVATE_COLORS:
+		ep.setboolean(MCuseprivatecmap);
+		break;
+	case P_TWELVE_TIME:
+		ep.setboolean(MCtwelvetime);
+		break;
+	case P_IDLE_RATE:
+		ep.setint(MCidleRate);
+		break;
+	case P_QT_IDLE_RATE:
+		ep.setint(MCqtidlerate);
+		break;
+	case P_IDLE_TICKS:
+		ep.setint(MCidleRate * 60 / 1000);
+		break;
+	case P_BLINK_RATE:
+		ep.setint(MCblinkrate);
+		break;
+	case P_RECURSION_LIMIT:
+		ep.setuint(MCrecursionlimit);
+		break;
+	case P_REPEAT_RATE:
+		ep.setint(MCrepeatrate);
+		break;
+	case P_REPEAT_DELAY:
+		ep.setint(MCrepeatdelay);
+		break;
+	case P_TYPE_RATE:
+		ep.setint(MCtyperate);
+		break;
+	case P_SYNC_RATE:
+		ep.setint(MCsyncrate);
+		break;
+	case P_EFFECT_RATE:
+		ep.setint(MCeffectrate);
+		break;
+	case P_DOUBLE_DELTA:
+		ep.setint(MCdoubledelta);
+		break;
+	case P_DRAG_DELTA:
+		ep.setint(MCdragdelta);
+		break;
+	case P_DOUBLE_TIME:
+		ep.setint(MCdoubletime);
+		break;
+	case P_TOOL_TIP_DELAY:
+		ep.setint(MCtooltipdelay);
+		break;
+	case P_LONG_WINDOW_TITLES:
+		ep.setboolean(MClongwindowtitles);
+		break;
+	case P_BLIND_TYPING:
+		ep.setboolean(MCblindtyping);
+		break;
+	case P_POWER_KEYS:
+		ep.setboolean(MCpowerkeys);
+		break;
+	case P_NAVIGATION_ARROWS:
+		ep.setboolean(MCnavigationarrows);
+		break;
+	case P_TEXT_ARROWS:
+		ep.setboolean(MCtextarrows);
+		break;
+	case P_EXTEND_KEY:
+		ep.setint(MCextendkey);
+		break;
+	case P_COLORMAP:
+		MCscreen->getcolors(ep);
+		break;
+	case P_NO_PIXMAPS:
+		ep.setboolean(MCnopixmaps);
+		break;
+	case P_LOW_RESOLUTION_TIMERS:
+		ep.setboolean(MClowrestimers);
+		break;
+	case P_POINTER_FOCUS:
+		ep.setboolean(MCpointerfocus);
+		break;
+	case P_EMACS_KEY_BINDINGS:
+		ep.setboolean(MCemacskeys);
+		break;
+	case P_RAISE_MENUS:
+		ep.setboolean(MCraisemenus);
+		break;
+	case P_ACTIVATE_PALETTES:
+		ep.setboolean(MCactivatepalettes);
+		break;
+	case P_HIDE_PALETTES:
+		ep.setboolean(MChidepalettes);
+		break;
+	case P_RAISE_PALETTES:
+		ep.setboolean(MCraisepalettes);
+		break;
+	case P_RAISE_WINDOWS:
+		ep.setboolean(MCraisewindows);
+		break;
+	case P_DONT_USE_NS:
+		ep.setboolean(MCdontuseNS);
+		break;
+	case P_HIDE_BACKDROP:
+		ep.setboolean(MChidebackdrop);
+		break;
+	case P_DONT_USE_QT:
+		ep.setboolean(MCdontuseQT);
+		break;
+	case P_DONT_USE_QT_EFFECTS:
+		ep.setboolean(MCdontuseQTeffects);
+		break;
+	case P_PROPORTIONAL_THUMBS:
+		ep.setboolean(MCproportionalthumbs);
+		break;
+	case P_SHARED_MEMORY:
+		ep.setboolean(MCshm);
+		break;
+	case P_VC_SHARED_MEMORY:
+		ep.setboolean(MCvcshm);
+		break;
+	case P_VC_PLAYER:
+		ep.setsvalue(MCvcplayer);
+		break;
+	case P_SCREEN_GAMMA:
+		ep.setr8(MCgamma, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
+		break;
+
+	// IM-2013-12-04: [[ PixelScale ]] Global property pixelScale returns the current pixel scale
+	case P_PIXEL_SCALE:
+		ep.setnvalue(MCResGetPixelScale());
+		break;
+	// IM-2013-12-04: [[ PixelScale ]] Global property systemPixelScale returns the pixel scale as determined by the OS
+	case P_SYSTEM_PIXEL_SCALE:
+		// IM-2014-01-24: [[ HiDPI ]] systemPixelScale now returns the maximum scale on all displays
+		MCGFloat t_scale;
+		t_scale = 1.0;
+		/* UNCHECKED */ MCscreen->getmaxdisplayscale(t_scale);
+		ep.setnvalue(t_scale);
+		break;
+
+	// IM-2014-01-24: [[ HiDPI ]] Global property usePixelScaling returns its configured value (default: true)
+	case P_USE_PIXEL_SCALING:
+		ep.setboolean(MCResGetUsePixelScaling());
+		break;
+
+	// IM-2014-01-27: [[ HiDPI ]] Global property screenPixelScale returns the pixel scale of the main screen
+	case P_SCREEN_PIXEL_SCALE:
+	// IM-2014-01-27: [[ HiDPI ]] Global property screenPixelScales returns a return-delimited
+	// list of the pixel scales of all connected screens
+	case P_SCREEN_PIXEL_SCALES:
+	{
+		MCResListScreenPixelScales(ep, which == P_SCREEN_PIXEL_SCALES);
+		break;
+	}
+
+	case P_SHELL_COMMAND:
+		ep.setsvalue(MCshellcmd);
+		break;
+	case P_SOUND_CHANNEL:
+		ep.setint(MCsoundchannel);
+		break;
+	case P_ADDRESS:
+		ep.setsvalue(MCS_getaddress());
+		break;
+	case P_STACKS_IN_USE:
+		ep.clear();
+		i = MCnusing;
+		while (i--)
+		{
+			MCusing[i]->getprop(0, P_SHORT_NAME, ep2, effective);
+			ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i == MCnusing - 1);
+		}
+        break;
+            
+    // TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
+    case P_FONTFILES_IN_USE:
+        // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontListLoaded
+        return MCFontListLoaded(ep);
+        break;
+    case P_RELAYER_GROUPED_CONTROLS:
+		ep.setboolean(MCrelayergrouped);
+		break;
+	case P_SELECTION_MODE:
+		if (MCselectintersect)
+			ep.setstaticcstring(MCintersectstring);
+		else
+			ep.setstaticcstring(MCsurroundstring);
+		break;
+	case P_SELECTION_HANDLE_COLOR:
+		ep.setcolor(MCselectioncolor, MCselectioncolorname);
+		break;
+	case P_WINDOW_BOUNDING_RECT:
+		ep.setrectangle(MCwbr);
+		break;
+	case P_JPEG_QUALITY:
+		ep.setint(MCjpegquality);
+		break;
+	case P_RECORDING:
+		ep.setboolean(MCrecording);
+		break;
+	case P_BRUSH:
+		if (MCbrush < PI_PATTERNS)
+			ep.setint(MCbrush - PI_BRUSHES);
+		else
+			ep.setint(MCbrush);
+		break;
+	case P_CENTERED:
+		ep.setboolean(MCcentered);
+		break;
+	case P_ERASER:
+		if (MCeraser < PI_PATTERNS)
+			ep.setint(MCeraser - PI_BRUSHES);
+		else
+			ep.setint(MCeraser);
+		break;
+	case P_GRID:
+		ep.setboolean(MCgrid);
+		break;
+	case P_GRID_SIZE:
+		ep.setint(MCgridsize);
+		break;
+	case P_MULTIPLE:
+		ep.setboolean(MCmultiple);
+		break;
+	case P_MULTI_SPACE:
+		ep.setint(MCmultispace);
+		break;
+	case P_SLICES:
+		ep.setint(MCslices);
+		break;
+	case P_SPRAY:
+		if (MCspray < PI_PATTERNS)
+			ep.setint(MCspray - PI_BRUSHES);
+		else
+			ep.setint(MCspray);
+		break;
+	case P_BEEP_LOUDNESS:
+	case P_BEEP_PITCH:
+	case P_BEEP_DURATION:
+		MCscreen->getbeep(which, ep);
+		break;
+	case P_BEEP_SOUND:
+		ep.setsvalue(MCscreen->getbeepsound());
+		break;
+	case P_TOOL:
+		ep.setstringf("%s tool", MCtoolnames[MCcurtool]);
+		break;
+	case P_LZW_KEY:
+		ep.clear();
+		break;
+	case P_RECORD_FORMAT:
+		switch (MCrecordformat)
+		{
+		case EX_AIFF:
+			ep.setstaticcstring("aiff");
+			break;
+		case EX_WAVE:
+			ep.setstaticcstring("wave");
+			break;
+		case EX_ULAW:
+			ep.setstaticcstring("ulaw");
+			break;
+		default:
+			ep.setstaticcstring("movie");
+			break;
+		}
+		break;
+	case P_RECORD_COMPRESSION:
+		ep.copysvalue(MCrecordcompression, 4);
+		break;
+	case P_RECORD_INPUT:
+		ep.copysvalue(MCrecordinput, 4);
+		break;
+	case P_RECORD_CHANNELS:
+		ep.setnvalue(MCrecordchannels);
+		break;
+	case P_RECORD_RATE:
+		ep.setnvalue(MCrecordrate);
+		break;
+	case P_RECORD_SAMPLESIZE:
+		ep.setnvalue(MCrecordsamplesize);
+		break;
+	case P_BREAK_POINTS:
+		MCB_unparsebreaks(ep);
+		break;
+	case P_DEBUG_CONTEXT:
+		{
+			ep.clear();
+			if (MCdebugcontext != MAXUINT2)
+			{
+				MCexecutioncontexts[MCdebugcontext]->getobj()->getprop(0, P_LONG_ID, ep, False);
+				ep.concatnameref(MCexecutioncontexts[MCdebugcontext]->gethandler()->getname(), EC_COMMA, false);
+				ep.concatuint(MCexecutioncontexts[MCdebugcontext]->getline(), EC_COMMA, false);
+			}
+		}
+		break;
+	case P_EXECUTION_CONTEXTS:
+		{
+			ep.clear();
+			Boolean added = False;
+			if (MCnexecutioncontexts < MAX_CONTEXTS)
+			{
+				ep.setline(line);
+				MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+				added = True;
+			}
+			for (i = 0 ; i < MCnexecutioncontexts ; i++)
+			{
+				MCExecPoint ep2(ep);
+				MCexecutioncontexts[i]->getobj()->getprop(0, P_LONG_ID, ep2, False);
+				ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i == 0);
+                // PM-2014-04-14: [[Bug 12125]] Do this check to avoid a crash in LC server
+                if (MCexecutioncontexts[i]->gethandler() != NULL)
+                    ep.concatnameref(MCexecutioncontexts[i]->gethandler()->getname(), EC_COMMA, false);
+				ep.concatuint(MCexecutioncontexts[i]->getline(), EC_COMMA, false);
+				if (MCexecutioncontexts[i] -> getparentscript() != NULL)
+				{
+					MCexecutioncontexts[i] -> getparentscript() -> GetParent() -> GetObject() -> getprop(0, P_LONG_ID, ep2, False);
+					ep.concatmcstring(ep2.getsvalue(), EC_COMMA, false);
+				}
+			}
+			if (added)
+				MCnexecutioncontexts--;
+		}
+		break;
+	case P_MESSAGE_MESSAGES:
+		ep.setboolean(MCmessagemessages);
+		break;
+	case P_WATCHED_VARIABLES:
+		MCB_unparsewatches(ep);
+		break;
+	case P_ALLOW_INLINE_INPUT:
+		ep.setboolean(MCinlineinput);
+		break;
+	case P_ACCEPT_DROP:
+		ep.setboolean(MCdragaction != DRAG_ACTION_NONE);
+		break;
+	case P_ALLOWABLE_DRAG_ACTIONS:
+	{
+		int t_count;
+		t_count = 0;
+
+		ep . clear();
+		if ((MCallowabledragactions & DRAG_ACTION_COPY) != 0)
+			ep . concatcstring("copy", EC_COMMA, t_count++ == 0);
+		else if ((MCallowabledragactions & DRAG_ACTION_MOVE) != 0)
+			ep . concatcstring("move", EC_COMMA, t_count++ == 0);
+		else if ((MCallowabledragactions & DRAG_ACTION_LINK) != 0)
+			ep . concatcstring("link", EC_COMMA, t_count++ == 0);
+	}
+	break;
+	case P_DRAG_ACTION:
+		switch(MCdragaction)
+		{
+		case DRAG_ACTION_NONE:
+			ep . setstaticcstring("none");
+		break;
+		case DRAG_ACTION_COPY:
+			ep . setstaticcstring("copy");
+		break;
+		case DRAG_ACTION_MOVE:
+			ep . setstaticcstring("move");
+		break;
+		case DRAG_ACTION_LINK:
+			ep . setstaticcstring("link");
+		break;
+		}
+	break;
+	case P_DRAG_IMAGE:
+		if (MCdragimageid != 0)
+			ep . setint(MCdragimageid);
+		else
+			ep . setint(0);
+	break;
+	case P_DRAG_IMAGE_OFFSET:
+		if (MCdragimageid != 0)
+			ep.setpoint(MCdragimageoffset . x, MCdragimageoffset . y);
+		else
+			ep . clear();
+	break;
+	
+	// MW-2008-08-12: Add access to the MCurlresult internal global variable
+	//   this is set by libURL after doing DELETE, POST, PUT or GET type queries.
+	case P_URL_RESPONSE:
+		MCurlresult -> fetch(ep);
+	break;
+
+	// MW-2011-11-24: [[ Nice Folders ]] Handle fetching of the special folder types.
+	case P_ENGINE_FOLDER:
+		ep . setstaticcstring("engine");
+		MCS_getspecialfolder(ep);
+		break;
+	case P_HOME_FOLDER:
+		ep . setstaticcstring("home");
+		MCS_getspecialfolder(ep);
+		break;
+	case P_DOCUMENTS_FOLDER:
+		ep . setstaticcstring("documents");
+		MCS_getspecialfolder(ep);
+		break;
+	case P_DESKTOP_FOLDER:
+		ep . setstaticcstring("desktop");
+		MCS_getspecialfolder(ep);
+		break;
+	case P_TEMPORARY_FOLDER:
+		ep . setstaticcstring("temporary");
+		MCS_getspecialfolder(ep);
+		break;
+
+	case P_IMAGE_CACHE_LIMIT:
+		ep.setuint(MCCachedImageRep::GetCacheLimit());
+		break;
+			
+	case P_IMAGE_CACHE_USAGE:
+		ep.setuint(MCCachedImageRep::GetCacheUsage());
+		break;
+			
+	case P_BRUSH_BACK_COLOR:
+	case P_PEN_BACK_COLOR:
+	case P_BRUSH_COLOR:
+	case P_BRUSH_PATTERN:
+	case P_PEN_COLOR:
+	case P_PEN_PATTERN:
+	case P_RECENT_CARDS:
+	case P_RECENT_NAMES:
+	case P_TEXT_ALIGN:
+	case P_TEXT_FONT:
+	case P_TEXT_HEIGHT:
+	case P_TEXT_SIZE:
+	case P_TEXT_STYLE:
+	case P_EDIT_BACKGROUND:
+	case P_ROUND_ENDS:
+	case P_DASHES:
+	case P_FILLED:
+
+	case P_POLY_SIDES:
+	case P_LINE_SIZE:
+	case P_PEN_WIDTH:
+	case P_PEN_HEIGHT:
+	case P_ROUND_RADIUS:
+	case P_START_ANGLE:
+	case P_ARC_ANGLE:
+	case P_NUMBER_FORMAT:
+	case P_PLAY_DESTINATION:
+	case P_PLAY_LOUDNESS:
+	case P_LOCK_SCREEN:
+	case P_STACK_FILES:
+	case P_MENU_BAR:
+	case P_EDIT_MENUS:
+	case P_ACCENT_COLOR:
+	case P_HILITE_COLOR:
+	case P_PAINT_COMPRESSION:
+	case P_LINK_COLOR:
+	case P_LINK_HILITE_COLOR:
+	case P_LINK_VISITED_COLOR:
+	case P_UNDERLINE_LINKS:
+	case P_SELECT_GROUPED_CONTROLS:
+	case P_ICON:
+	case P_ICON_MENU:
+	case P_STATUS_ICON:
+	case P_STATUS_ICON_MENU:
+	case P_STATUS_ICON_TOOLTIP:
+	case P_PROCESS_TYPE:
+	case P_STACK_LIMIT:
+	case P_ALLOW_DATAGRAM_BROADCASTS:
+	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+	case P_COLOR_DIALOG_COLORS:
+
+		if (target == NULL)
+		{
+			switch (which)
+			{
+			case P_BRUSH_BACK_COLOR:
+			case P_PEN_BACK_COLOR:
+				ep.clear();
+				break;
+			case P_BRUSH_COLOR:
+				ep.setcolor(MCbrushcolor, MCbrushcolorname);
+				break;
+			case P_BRUSH_PATTERN:
+				if (MCbrushpmid < PI_END && MCbrushpmid > PI_PATTERNS)
+					ep.setint(MCbrushpmid - PI_PATTERNS);
+				else
+
+					ep.setint(MCbrushpmid);
+				break;
+			case P_PEN_COLOR:
+				ep.setcolor(MCpencolor, MCpencolorname);
+				break;
+			case P_PEN_PATTERN:
+				if (MCpenpmid < PI_END && MCpenpmid > PI_PATTERNS)
+					ep.setint(MCpenpmid - PI_PATTERNS);
+				else
+					ep.setint(MCpenpmid);
+				break;
+			case P_RECENT_CARDS:
+				MCrecent->getlongids(NULL, ep);
+				break;
+			case P_RECENT_NAMES:
+				MCrecent->getnames(NULL, ep);
+				break;
+			case P_TEXT_ALIGN:
+			case P_TEXT_FONT:
+			case P_TEXT_HEIGHT:
+			case P_TEXT_SIZE:
+			case P_TEXT_STYLE:
+				ep.clear();
+				break;
+			case P_EDIT_BACKGROUND:
+				return MCdefaultstackptr->getprop(0, which, ep, False);
+			case P_ROUND_ENDS:
+				ep.setboolean(MCroundends);
+				break;
+			case P_DASHES:
+				ep.clear();
+				for (i = 0 ; i < MCndashes ; i++)
+					ep.concatuint(MCdashes[i], EC_COMMA, i == 0);
+				break;
+			case P_FILLED:
+				ep.setboolean(MCfilled);
+				break;
+			case P_POLY_SIDES:
+				ep.setint(MCpolysides);
+				break;
+			case P_LINE_SIZE:
+			case P_PEN_WIDTH:
+			case P_PEN_HEIGHT:
+				ep.setint(MClinesize);
+				break;
+			case P_ROUND_RADIUS:
+				ep.setint(MCroundradius);
+				break;
+			case P_START_ANGLE:
+				ep.setint(MCstartangle);
+				break;
+			case P_ARC_ANGLE:
+				ep.setint(MCarcangle);
+				break;
+			case P_NUMBER_FORMAT:
+				MCU_getnumberformat(ep, ep.getnffw(),
+				                    ep.getnftrailing(), ep.getnfforce());
+				break;
+			case P_PLAY_DESTINATION:
+			case P_PLAY_LOUDNESS:
+				return MCtemplateaudio->getprop(0, which, ep, False);
+			case P_LOCK_SCREEN:
+				// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
+				ep.setboolean(MCRedrawIsScreenLocked());
+				break;
+			case P_STACK_FILES:
+				ep.clear();
+				break;
+			case P_MENU_BAR:
+				if (MCmenubar == NULL)
+					ep.clear();
+				else
+					MCmenubar->getprop(0, P_LONG_NAME, ep, effective);
+				break;
+			case P_EDIT_MENUS:
+				ep.setboolean(True);
+				break;
+			case P_ACCENT_COLOR:
+				ep.setcolor(MCaccentcolor, MCaccentcolorname);
+				break;
+			case P_HILITE_COLOR:
+				ep.setcolor(MChilitecolor, MChilitecolorname);
+				break;
+			case P_PAINT_COMPRESSION:
+				switch (MCpaintcompression)
+				{
+				case EX_PNG:
+					ep.setstaticcstring("png");
+					break;
+				case EX_JPEG:
+					ep.setstaticcstring("jpeg");
+					break;
+				case EX_GIF:
+					ep.setstaticcstring("gif");
+					break;
+				default:
+					ep.setstaticcstring("rle");
+					break;
+				}
+				break;
+			case P_LINK_COLOR:
+				MCU_get_color(ep, MClinkatts.colorname, MClinkatts.color);
+				break;
+			case P_LINK_HILITE_COLOR:
+				MCU_get_color(ep, MClinkatts.hilitecolorname, MClinkatts.hilitecolor);
+				break;
+			case P_LINK_VISITED_COLOR:
+				MCU_get_color(ep, MClinkatts.visitedcolorname, MClinkatts.visitedcolor);
+				break;
+			case P_UNDERLINE_LINKS:
+				ep.setboolean(MClinkatts.underline);
+				break;
+			case P_SELECT_GROUPED_CONTROLS:
+				ep.setboolean(MCselectgrouped);
+				break;
+			case P_ICON:
+				ep.setint(MCiconid);
+			break;
+			case P_ICON_MENU:
+				ep.setsvalue(MCiconmenu);
+			break;
+			case P_STATUS_ICON:
+				ep.setint(MCstatusiconid);
+				break;
+			case P_STATUS_ICON_MENU:
+				ep.setsvalue(MCstatusiconmenu);
+				break;
+			case P_PROCESS_TYPE:
+				ep.setstaticcstring(MCS_processtypeisforeground() ? "foreground" : "background");
+			break;
+			case P_STACK_LIMIT:
+				ep.setuint(effective ? MCstacklimit : MCpendingstacklimit);
+				break;
+			case P_ALLOW_DATAGRAM_BROADCASTS:
+				ep . setboolean(MCallowdatagrambroadcasts);
+				break;
+				// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+			case P_COLOR_DIALOG_COLORS:
+				MCA_getcolordialogcolors(ep);
+				break;
+			default:
+				break;
+			}
+			break;
+		}
+	default:
+		if (target == NULL)
+		{
+			Exec_stat t_stat;
+			t_stat = ES_NORMAL;
+>>>>>>> develop
 
 Exec_stat MCProperty::eval_global_property(MCExecPoint& ep)
 {

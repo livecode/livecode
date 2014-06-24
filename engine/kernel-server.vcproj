@@ -276,6 +276,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\region.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\region.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\resolution.cpp"
 				>
 			</File>
@@ -1396,11 +1404,11 @@
 			Name="System"
 			>
 			<File
-				RelativePath=".\src\sysdefs.h"
+				RelativePath=".\src\quicktime.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\sysregion.cpp"
+				RelativePath=".\src\sysdefs.h"
 				>
 			</File>
 			<File

@@ -348,6 +348,7 @@ public:
 	//   MCField::gettextatts (to fetch partial parts of a paragraph)
 	//   MCField::settextatts (to insert partial parts of a paragraph)
 	//   MCField::insertparagraph
+<<<<<<< HEAD
 	//   
 	void join();
     void split();
@@ -360,6 +361,13 @@ public:
     //   MCField::SetHtmlTextOfCharChunk
     //   MCField::SetStyledTextOfCharChunk
     void replacetextwithparagraphs(findex_t p_start, findex_t p_finish, MCParagraph *p_pglist);
+=======
+	//
+	// MW-2014-05-28: [[ Bug 12303 ]] If 'preserve' is true, then the paragraph styles
+    //   of 'this' paragraph are never changed (used when setting 'text' of a chunk).
+	void join(bool p_preserve_styles_if_zero_length = false);
+	void split();
+>>>>>>> develop
 
 	// Delete the text from si to ei in the paragraph.
 	// Called by:
@@ -603,7 +611,11 @@ public:
 	// Called by:
 	//   MCField::getprop
     // MW-2014-04-11: [[ Bug 12182 ]] Make sure we use uint4 for field indicies.
+<<<<<<< HEAD
     Boolean pagerange(uint2 fixedheight, uint2 &theight, uint4 &tend, MCLine *&lastline);
+=======
+	Boolean pagerange(uint2 fixedheight, uint2 &theight, uint4 &tend, MCLine *&lastline);
+>>>>>>> develop
 
 	// Returns true if any of the paragraph attributes are non-default.
 	bool hasattrs(void);
@@ -781,7 +793,11 @@ public:
 	// Called by:
 	//   MCField::getlinkdata
 	//   MCField::gettextatts
+<<<<<<< HEAD
 	void getxextents(findex_t &si, findex_t &ei, coord_t &minx, coord_t &maxx);
+=======
+	void getxextents(int4 &si, int4 &ei, coord_t &minx, coord_t &maxx);
+>>>>>>> develop
 
 	// Compute the indices of a click at (x, y).
 	// If x is outside the bounds of the line containing y then:
@@ -801,7 +817,10 @@ public:
 	// Called by:
 	//   MCField::finsert (for charset purposes)
 	//   MCField::gettextatts
+<<<<<<< HEAD
 #ifdef LEGACY_EXEC
+=======
+>>>>>>> develop
 	Boolean getatts(uint2 si, uint2 ei, Properties which, Font_textstyle spec_style, const char *&fname, uint2 &size,
 	                uint2 &style, const MCColor *&color,
 	                const MCColor *&backcolor, int2 &shift, bool& specstyle, uint2 &mixed);
@@ -818,6 +837,9 @@ public:
 	void setatts(findex_t si, findex_t ei, Properties which, void *value, bool from_html = false);
 #endif
 
+	void restricttoline(int32_t& si, int32_t& ei);
+	int32_t heightoflinewithindex(int32_t si, uint2 fixedheight);
+	
 	uint2 getopened()
 	{
 		return opened;
@@ -1007,7 +1029,11 @@ private:
 
 	MCLine *indextoline(findex_t tindex);
 
+<<<<<<< HEAD
 	coord_t getx(findex_t tindex, MCLine *lptr);
+=======
+	coord_t getx(uint2 tindex, MCLine *lptr);
+>>>>>>> develop
 
 	// Mark all the lines in the given range as dirty
 	void marklines(findex_t si, findex_t ei);

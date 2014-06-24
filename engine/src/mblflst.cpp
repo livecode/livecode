@@ -161,10 +161,17 @@ bool MCFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 	return MCListCopy(*t_list, r_sizes);
 }
 
+<<<<<<< HEAD
 extern bool MCSystemListFontsForFamily(MCStringRef p_family, MCListRef& r_styles);
 bool MCFontlist::getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_styles)
 {
 	return MCSystemListFontsForFamily(p_fname, r_styles);
+=======
+extern void MCSystemListFontsForFamily(MCExecPoint& ep, const char *fname, uint2 fsize);
+void MCFontlist::getfontstyles(const char *fname, uint2 fsize, MCExecPoint &ep)
+{
+	MCSystemListFontsForFamily(ep, fname, fsize);
+>>>>>>> develop
 }
 
 bool MCFontlist::getfontstructinfo(MCNameRef&r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)

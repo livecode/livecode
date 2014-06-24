@@ -31,94 +31,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "mode.h"
 
-#include "osxdc.h"
 #include "osxtheme.h"
 
 #include "resolution.h"
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  REFACTORED FROM STACKLST.CPP
-//
-
-extern void dohilitewindow(WindowRef p_window, Boolean p_hilite);
-
-extern bool WindowIsInControlGroup(WindowRef p_window);
-
-void MCStacklist::ensureinputfocus(Window window)
-{
-	MCStacknode *t_node = stacks;
-	if (t_node == NULL)
-		return;
-	
-	bool t_browsers_found;
-	t_browsers_found = false;
-	
-	do
-	{
-		Window t_handle;
-		t_handle = t_node -> getstack() -> getwindow();
-		if (t_handle != NULL)
-		{
-			if (WindowIsInControlGroup((WindowPtr)t_handle -> handle . window))
-			{
-				ItemCount t_count;
-				t_count = CountWindowGroupContents(GetWindowGroup((WindowPtr)t_handle -> handle . window), kWindowGroupContentsReturnWindows);
-				WindowRef *t_windows;
-				t_windows = new WindowRef[t_count];
-				
-				ItemCount t_actual_count;
-				t_actual_count = 0;
-				GetWindowGroupContents(GetWindowGroup((WindowPtr)t_handle -> handle . window), kWindowGroupContentsReturnWindows, t_count, &t_actual_count, (void **)t_windows);
-				for(int t_index = 0; t_index < t_actual_count; ++t_index)
-					if (t_windows[t_index] != (WindowPtr)t_handle -> handle . window)
-					{
-						ClearKeyboardFocus(t_windows[t_index]);
-						t_browsers_found = true;
-					}
-				
-				delete t_windows;
-			}
-		}
-		t_node = t_node -> next();
-	}
-	while(t_node != stacks);
-	
-	if (t_browsers_found && window != NULL)
-		SetUserFocusWindow((WindowPtr)window -> handle . window);
-}
-
-void MCStacklist::hidepalettes(Boolean hide)
-{
-	active = !hide;
-	if (stacks == NULL)
-		return;
-	MCStacknode *tptr = stacks;
-
-	restart = False;
-	tptr = stacks;
-	do
-	{
-		MCStack *sptr = tptr->getstack();
-		if (sptr->getrealmode() == WM_PALETTE && sptr->getflag(F_VISIBLE))
-			if (MChidepalettes)
-			{
-				WindowClass wclass;
-				GetWindowClass((WindowPtr)sptr->getw()->handle.window, &wclass );
-				if (wclass != kUtilityWindowClass)
-				{
-                    // MM-2012-04-02: Use new MC*Window wrapper function - fixes bugs where a cocoa NSWindow has been
-                    //  created from the carbon WindowRef.
-					extern void MCShowHideWindow(void *, bool);
-					MCShowHideWindow(sptr->getw()->handle.window, !hide);
-					if (!hide)
-						dohilitewindow((WindowPtr)sptr->getw()->handle.window, True);
-				}
-			}
-		tptr = tptr->next();
-	}
-	while (tptr != stacks);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -252,6 +167,7 @@ void MCMacEnableScreenUpdates(void)
 	EnableScreenUpdates();
 }
 
+<<<<<<< HEAD
 bool MCMacIsWindowVisible(Window window)
 {
 	return IsWindowVisible((WindowPtr)window -> handle . window);
@@ -556,6 +472,8 @@ void MCButton::getmacmenuitemtextfromaccelerator(short menuid, KeySym key, uint1
 	::getmacmenuitemtextfromaccelerator(GetMenu(menuid), key, mods, r_string, issubmenu);
 }
 
+=======
+>>>>>>> develop
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  REFACTORED FROM CMDS.CPP 
@@ -804,14 +722,11 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
 	t_raster.stride = t_stride;
 	t_raster.format = kMCGRasterFormat_ARGB;
 	
-	t_success = MCGImageCreateWithRaster(t_raster, t_image);
-
+	// IM-2014-05-14: [[ HiResPatterns ]] MCPatternCreate refactored to work with MCGRaster
 	// IM-2013-08-14: [[ ResIndependence ]] create MCPattern wrapper
 	if (t_success)
-		t_success = MCPatternCreate(t_image, 1.0, r_pattern);
+		t_success = MCPatternCreate(t_raster, 1.0, kMCGImageFilterNone, r_pattern);
 
-	MCGImageRelease(t_image);
-	
 	if (t_success)
 		s_patterns[t_index] = r_pattern;
 	
@@ -820,12 +735,3 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
 	return t_success;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//  REFACTORED FROM GLOBALS.CPP
-//
-
-MCUIDC *MCCreateScreenDC(void)
-{
-	return new MCScreenDC;
-}

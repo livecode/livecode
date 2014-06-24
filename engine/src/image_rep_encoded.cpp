@@ -37,7 +37,7 @@ MCEncodedImageRep::~MCEncodedImageRep()
 {
 }
 
-bool MCEncodedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)
+bool MCEncodedImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)
 {
 	bool t_success = true;
 
@@ -59,7 +59,7 @@ bool MCEncodedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_fra
 	if (t_stream != nil)
 		MCS_close(t_stream);
 
-	MCImageFrame *t_frames;
+	MCBitmapFrame *t_frames;
 	t_frames = nil;
 	
 	uindex_t t_frame_count;
@@ -108,12 +108,12 @@ bool MCEncodedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_fra
 
 bool MCEncodedImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
 {
-	MCImageFrame *t_frame = nil;
-	if (!LockImageFrame(0, m_premultiplied, 1.0, t_frame))
+	MCGImageFrame *t_frame = nil;
+	if (!LockImageFrame(0, 1.0, t_frame))
 		return false;
 
-	r_width = t_frame->image->width;
-	r_height = t_frame->image->height;
+	r_width = MCGImageGetWidth(t_frame->image);
+	r_height = MCGImageGetHeight(t_frame->image);
 
 	UnlockImageFrame(0, t_frame);
 
@@ -128,8 +128,8 @@ uint32_t MCEncodedImageRep::GetDataCompression()
 	if (m_have_geometry)
 		return m_compression;
 
-	MCImageFrame *t_frame = nil;
-	if (LockImageFrame(0, m_premultiplied, 1.0, t_frame))
+	MCGImageFrame *t_frame = nil;
+	if (LockImageFrame(0, 1.0, t_frame))
 		UnlockImageFrame(0, t_frame);
 
 	return m_compression;
@@ -225,7 +225,7 @@ bool MCVectorImageRep::Render(MCDC *p_context, bool p_embed, MCRectangle &p_imag
 	return true;
 }
 
-bool MCVectorImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)
+bool MCVectorImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)
 {
 	/* OVERHAUL - REVISIT - should be able to render into an image context
 	but we need to know the size of image required first */
@@ -269,11 +269,11 @@ MCCompressedImageRep::~MCCompressedImageRep()
 	MCImageFreeCompressedBitmap(m_compressed);
 }
 
-bool MCCompressedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)
+bool MCCompressedImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)
 {
 	bool t_success = true;
 
-	MCImageFrame *t_frame = nil;
+	MCBitmapFrame *t_frame = nil;
 	t_success = MCMemoryNewArray(1, t_frame);
 	if (t_success)
 		t_success = MCImageDecompressRLE(m_compressed, t_frame->image);

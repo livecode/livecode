@@ -513,6 +513,10 @@ void MCGraphic::setgradientrect(MCGradientFill *p_gradient, const MCRectangle &n
 Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	uint2 i;
+	int graphic_type;
+	uint2 nfakepoints;
+	MCPoint *fakepoints;
+	MCRectangle trect;
 
 	switch (which)
 	{
@@ -598,14 +602,99 @@ Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 		ep.setint(nsides);
 		break;
 	case P_POINTS:
-		MCU_unparsepoints(realpoints, nrealpoints, ep);
+		// MDW-2014-06-18: [[ rect_points ]] allow effective points as read-only
+		graphic_type = getstyleint(flags);
+		if (graphic_type == F_ROUNDRECT || graphic_type == F_G_RECTANGLE || graphic_type == F_REGULAR)
+		{
+				if (!effective)
+				{
+					ep.setstaticcstring("");
+					break;
+				}
+		}
+		switch (graphic_type)
+		{
+			case F_ROUNDRECT:
+			{
+				fakepoints = NULL;
+				nfakepoints = 0;
+				get_points_for_roundrect(fakepoints, nfakepoints);
+				MCU_unparsepoints(fakepoints, nfakepoints, ep);
+				delete fakepoints;
+				break;
+			}
+			case F_G_RECTANGLE:
+			{
+				nfakepoints = 4;
+				fakepoints = new MCPoint[nfakepoints];
+				get_points_for_rect(fakepoints, nfakepoints);
+				MCU_unparsepoints(fakepoints, nfakepoints, ep);
+				delete fakepoints;
+				break;
+			}
+			case F_REGULAR:
+			{
+				nfakepoints = nsides;
+				fakepoints = new MCPoint[nsides];
+				get_points_for_regular_polygon(fakepoints, nfakepoints);
+				MCU_unparsepoints(fakepoints, nfakepoints, ep);
+				delete fakepoints;
+				break;
+			}
+			default:
+				MCU_unparsepoints(realpoints, nrealpoints, ep);
+		}
 		break;
 	case P_RELATIVE_POINTS:
+		// MDW-2014-06-18: [[ rect_points ]] allow effective relativepoints as read-only
+		graphic_type = getstyleint(flags);
+		if (graphic_type == F_ROUNDRECT || graphic_type == F_G_RECTANGLE || graphic_type == F_REGULAR)
 		{
-			MCRectangle trect = reduce_minrect(rect);
-			MCU_offset_points(realpoints, nrealpoints, -trect.x, -trect.y);
-			MCU_unparsepoints(realpoints, nrealpoints, ep);
-			MCU_offset_points(realpoints, nrealpoints, trect.x, trect.y);
+				if (!effective)
+				{
+					ep.setstaticcstring("");
+					break;
+				}
+		}
+		trect = reduce_minrect(rect);
+		switch (graphic_type)
+		{
+			case F_ROUNDRECT:
+			{
+				fakepoints = NULL;
+				nfakepoints = 0;
+				get_points_for_roundrect(fakepoints, nfakepoints);
+				MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
+				MCU_unparsepoints(fakepoints, nfakepoints, ep);
+				delete fakepoints;
+				break;
+			}
+			case F_G_RECTANGLE:
+			{
+				nfakepoints = 4;
+				fakepoints = new MCPoint[nfakepoints];
+				get_points_for_rect(fakepoints, nfakepoints);
+				MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
+				MCU_unparsepoints(fakepoints, nfakepoints, ep);
+				delete fakepoints;
+				break;
+			}
+			case F_REGULAR:
+			{
+				nfakepoints = nsides;
+				fakepoints = new MCPoint[nsides];
+				get_points_for_regular_polygon(fakepoints, nfakepoints);
+				MCU_offset_points(fakepoints, nfakepoints, -trect.x, -trect.y);
+				MCU_unparsepoints(fakepoints, nfakepoints, ep);
+				delete fakepoints;
+				break;
+			}
+			default:
+			{
+				MCU_offset_points(realpoints, nrealpoints, -trect.x, -trect.y);
+				MCU_unparsepoints(realpoints, nrealpoints, ep);
+				MCU_offset_points(realpoints, nrealpoints, trect.x, trect.y);
+			}
 		}
 		break;
 	case P_ANGLE:
@@ -720,7 +809,60 @@ Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 #endif 
 
 
+<<<<<<< HEAD
 #ifdef LEGACY_EXEC
+=======
+// MDW-2014-06-18: [[ rect_points ]] refactoring: return points for rectangles, round rects, and regular polygons
+bool MCGraphic::get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_count)
+{
+	MCRectangle trect;
+	
+	r_points = NULL;
+	r_point_count = 0;
+	MCU_roundrect(r_points, r_point_count, rect, roundradius);
+	return (true);
+}
+
+bool MCGraphic::get_points_for_rect(MCPoint*& r_points, uint2& r_point_count)
+{
+	MCRectangle trect;
+	
+	r_points[0].x = rect.x;
+	r_points[0].y = rect.y;
+	r_points[1].x = rect.x + rect.width;
+	r_points[1].y = rect.y;
+	r_points[2].x = rect.x + rect.width;
+	r_points[2].y = rect.y + rect.height;
+	r_points[3].x = rect.x;
+	r_points[3].y = rect.y + rect.height;
+	return (true);
+}
+
+bool MCGraphic::get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_point_count)
+{
+	MCPoint fakepoint;
+	
+	real8 dx = (real8)((rect.width >> 1) - 1);
+	real8 dy = (real8)((rect.height >> 1) - 1);
+	real8 rangle = (real8)angle * 2.0 * M_PI / 360.0;
+	int2 cx = rect.x + (rect.width >> 1);
+	int2 cy = rect.y + (rect.height >> 1);
+	real8 factor = 2.0 * M_PI / (real8)nsides;
+	uint2 i;
+
+	for (i = 0 ; i < nsides ; i++)
+	{
+		real8 iangle = rangle + (real8)i * factor;
+		fakepoint.x = cx + (int2)(cos(iangle) * dx);
+		fakepoint.y = cy + (int2)(sin(iangle) * dy);
+		r_points[i] = fakepoint;
+	}
+	r_points[nsides] = fakepoint;
+	r_point_count = nsides;
+	return (true);
+}
+
+>>>>>>> develop
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCGraphic::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
@@ -849,6 +991,7 @@ Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, 
 	case P_BACK_COLOR:
 	case P_BACK_PATTERN:
 		if (data.getlength() != 0 && m_fill_gradient != NULL)
+
 		{
 			MCGradientFillFree(m_fill_gradient);
 			m_fill_gradient = NULL;
@@ -1840,20 +1983,8 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 				delete points;
 			points = new MCPoint[npoints];
 		}
-		real8 dx = (real8)((trect.width >> 1) - 1);
-		real8 dy = (real8)((trect.height >> 1) - 1);
-		real8 rangle = (real8)angle * 2.0 * M_PI / 360.0;
-		int2 cx = trect.x + (trect.width >> 1);
-		int2 cy = trect.y + (trect.height >> 1);
-		real8 factor = 2.0 * M_PI / (real8)nsides;
-		uint2 i;
-		for (i = 0 ; i < nsides ; i++)
-		{
-			real8 iangle = rangle + (real8)i * factor;
-			points[i].x = cx + (int2)(cos(iangle) * dx);
-			points[i].y = cy + (int2)(sin(iangle) * dy);
-		}
-		points[nsides] = points[0];
+		// MDW-2014-06-18: [[ rect_points ]] refactored
+		get_points_for_regular_polygon(points, npoints);
 	}
 	if (flags & F_OPAQUE)
 	{
@@ -2044,6 +2175,7 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		uint2 twidth = 0;
 		for (i = 0 ; i < nlines ; i++)
 		{
+<<<<<<< HEAD
             // Note: 'lines' is an array of strings
 			MCValueRef lineval = nil;
 			/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, lineval);
@@ -2051,6 +2183,10 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
             // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
             twidth = MCFontMeasureText(m_font, line, getstack() -> getdevicetransform());
 			
+=======
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+			twidth = MCFontMeasureText(m_font, lines[i].getstring(), lines[i].getlength(), isunicode, getstack() -> getdevicetransform());
+>>>>>>> develop
 			switch (flags & F_ALIGNMENT)
 			{
 			case F_ALIGN_LEFT:
@@ -2643,6 +2779,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 	//   legacy unicode output.
 	if (flags & F_G_LABEL)
 	{
+<<<<<<< HEAD
 		if (version < 7000)
 		{
 			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
@@ -2656,4 +2793,12 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
     }
 	
     return loadpropsets(stream, version);
+=======
+		uint4 tlabelsize;
+		if ((stat = IO_read_string(label, tlabelsize, stream, hasunicode())) != IO_NORMAL)
+			return stat;
+		labelsize = tlabelsize;
+	}
+	return loadpropsets(stream);
+>>>>>>> develop
 }

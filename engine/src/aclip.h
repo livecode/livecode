@@ -100,6 +100,7 @@ public:
 	void convert_slin8toslin16();
 	void convert_slintoulin();
 	void convert_ulintoslin();
+    void convert_tocontainer(void*& r_data, size_t& r_data_size);
 	Boolean isdisposable();
 	Boolean issupported();
 	void setdisposable();

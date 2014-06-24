@@ -155,6 +155,7 @@ static uint1 h2[256] =
 
 static uint1 patbytes[8] = {0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55};
 
+<<<<<<< HEAD
 void hcstat_append(const char *msg, ...)
 {
 	// Build the new message string (msg is printf format string)
@@ -187,6 +188,17 @@ static uint32_t MCHCBitmapStride(uint32_t p_width)
 // IM-2014-04-08: [[ Bug 12101 ]] Modify to return decoded bitmap data directly 
 static bool convert_hcbitmap_data(uint1 *sptr, uint2 width, uint2 height, uint8_t *&r_bitmapdata)
 {
+=======
+static uint32_t MCHCBitmapStride(uint32_t p_width)
+{
+	// rows are padded to a multiple of 4 bytes
+	return ((p_width + 31) & ~0x1F ) / 8;
+}
+
+// IM-2014-04-08: [[ Bug 12101 ]] Modify to return decoded bitmap data directly 
+static bool convert_hcbitmap_data(uint1 *sptr, uint2 width, uint2 height, uint8_t *&r_bitmapdata)
+{
+>>>>>>> develop
 	uint8_t *t_data;
 	uint32_t t_stride;
 
@@ -311,7 +323,11 @@ static bool convert_hcbitmap_data(uint1 *sptr, uint2 width, uint2 height, uint8_
 
 				hcstat_append("Unknown BMAP opcode %x at offset %d, line %d",
 				        opcode, (int)(sptr - startptr), line);
+<<<<<<< HEAD
 
+=======
+				MCU_addline(MChcstat, hcbuffer, False);
+>>>>>>> develop
 				return true;
 			}
 			repcount = 1;
@@ -319,7 +335,11 @@ static bool convert_hcbitmap_data(uint1 *sptr, uint2 width, uint2 height, uint8_
 		case 0x90:
 			hcstat_append("Unknown BMAP opcode %x at offset %d, line %d",
 			        opcode, (int)(sptr - startptr), line);
+<<<<<<< HEAD
 
+=======
+			MCU_addline(MChcstat, hcbuffer, False);
+>>>>>>> develop
 			return true;
 		case 0xA0:
 		case 0xB0:
@@ -1261,7 +1281,11 @@ MCControl *MCHcbmap::build()
 	{
 		// IM-2014-04-08: [[ Bug 12101 ]] Use data bitmap as mask if not given
 		/* UNCHECKED */ MCMemoryAllocateCopy(data, rect.height * MCHCBitmapStride(rect.width), mask);
+<<<<<<< HEAD
         mrect = rect;
+=======
+		mrect = rect;
+>>>>>>> develop
 	}
 	else
 	{

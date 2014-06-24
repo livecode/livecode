@@ -25,6 +25,7 @@ SOURCES=\
 	object.cpp objptr.cpp operator.cpp paragraf.cpp param.cpp \
 	property.cpp pickle.cpp \
 	regex.cpp \
+	region.cpp \
 	resolution.cpp \
 	scriptpt.cpp \
 	scrolbar.cpp \
@@ -52,9 +53,9 @@ SOURCES=\
 	sysspec.cpp mode_server.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
 	srvmain.cpp srvspec.cpp srvsession.cpp srvstack.cpp srvposix.cpp srvdebug.cpp \
 	srvscript.cpp srvcgi.cpp srvoutput.cpp srvmultipart.cpp srvtheme.cpp \
-	eventqueue.cpp encodederrors.cpp name.cpp redraw.cpp sysregion.cpp tilecache.cpp tilecachesw.cpp \
+	eventqueue.cpp encodederrors.cpp name.cpp redraw.cpp tilecache.cpp tilecachesw.cpp \
 	fonttable.cpp fieldrtf.cpp fieldhtml.cpp fieldstyledtext.cpp paragrafattr.cpp \
-	graphicscontext.cpp lnxflst.cpp lnxflstold.cpp
+	graphicscontext.cpp lnxflst.cpp lnxflstold.cpp quicktime.cpp
 	
 SOURCE_DIRS=
 

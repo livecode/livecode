@@ -33,12 +33,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "region.h"
 
-#include "osxdc.h"
 #include "osxprinter.h"
 #include "osspec.h"
 
 #include "graphicscontext.h"
 #include "debug.h"
+
+#include "platform.h"
 
 #include <cups/ppd.h>
 #include <pwd.h>
@@ -82,22 +83,18 @@ extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCMacOSXPrinter::c_sheet_pending = false;
-bool MCMacOSXPrinter::c_sheet_accepted = false;
+extern ATSUFontID coretext_font_to_atsufontid(void *p_font);
 
 ///////////////////////////////////////////////////////////////////////////////
 
 CGAffineTransform MCGAffineTransformToCGAffineTransform(const MCGAffineTransform &p_transform)
 {
-	CGAffineTransform t_transform;
-	t_transform.a = p_transform.a;
-	t_transform.b = p_transform.b;
-	t_transform.c = p_transform.c;
-	t_transform.d = p_transform.d;
-	t_transform.tx = p_transform.tx;
-	t_transform.ty = p_transform.ty;
-	
-	return t_transform;
+	return CGAffineTransformMake(p_transform.a, p_transform.b, p_transform.c, p_transform.d, p_transform.tx, p_transform.ty);
+}
+
+MCGAffineTransform MCGAffineTransformFromCGAffineTransform(const CGAffineTransform &p_transform)
+{
+	return MCGAffineTransformMake(p_transform.a, p_transform.b, p_transform.c, p_transform.d, p_transform.tx, p_transform.ty);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1005,6 +1002,7 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
 	
 	ResetSession();
 
+<<<<<<< HEAD
 	PMSheetDoneUPP t_sheet_done_callback;
 	t_sheet_done_callback = NULL;
 
@@ -1062,38 +1060,45 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
 		ShowCursor();
 		
 		PDEBUG(stderr, "DoDialog: Showing dialog\n");
+=======
+	bool t_use_sheets;
+	t_use_sheets = false;
+	if (p_window_modal && p_owner != NULL)
+		t_use_sheets = true;
+>>>>>>> develop
 		
-		if (p_is_settings)
-			t_err = PMSessionPrintDialog(m_session, m_settings, m_page_format, &t_accepted);
-		else
-			t_err = PMSessionPageSetupDialog(m_session, m_page_format, &t_accepted);
+	PDEBUG(stderr, "DoDialog: Showing dialog\n");
+	
+	MCPlatformPrintDialogResult t_result;
+	if (p_is_settings)
+		MCPlatformBeginPrintSettingsDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format);
+	else
+		MCPlatformBeginPageSetupDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format);
 
-		PDEBUG(stderr, "DoDialog: Dialog shown\n");
+	PDEBUG(stderr, "DoDialog: Dialog shown\n");
+	
+	for(;;)
+	{
+		t_result = MCPlatformEndPrintDialog();
+		if (t_result != kMCPlatformPrintDialogResultContinue)
+			break;
+		
+		MCscreen -> wait(REFRESH_INTERVAL, True, True);
 	}
 
-	if (t_err == noErr && c_sheet_pending)
+	if (t_use_sheets)
 	{
-		while(c_sheet_pending)
-			MCscreen -> wait(REFRESH_INTERVAL, True, True);
-				
-		t_accepted = c_sheet_accepted;
-	}
-
-	if (t_sheet_done_callback != NULL)
-	{
-		DisposePMSheetDoneUPP(t_sheet_done_callback);
-
 		// MW-2009-01-22: [[ Bug 3509 ]] Make sure we force an update to the menubar, just in case
 		//   the dialog has messed with our menu item enabled state!
 		MCscreen -> updatemenubar(True);
 	}
 
-	if (t_err != noErr)
+	if (t_result == kMCPlatformPrintDialogResultError)
 	{
 		PDEBUG(stderr, "DoDialog: Error occured\n");
 		return PRINTER_DIALOG_RESULT_ERROR;
 	}
-	else if (t_accepted)
+	else if (t_result == kMCPlatformPrintDialogResultSuccess)
 	{
 		PDEBUG(stderr, "DoDialog: SetProperties\n");
 		SetProperties(p_is_settings);
@@ -1105,12 +1110,6 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
 		PDEBUG(stderr, "DoDialog: Returning Cancel\n");
 		return PRINTER_DIALOG_RESULT_CANCEL;
 	}
-}
-
-void MCMacOSXPrinter::SheetDoneCallback(PMPrintSession p_session, WindowRef p_window, Boolean p_accepted)
-{
-	c_sheet_pending = false;
-	c_sheet_accepted = p_accepted;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1609,27 +1608,35 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 				(CGPatternReleaseInfoCallback)CGImageRelease
 			};
 		
+			CGAffineTransform t_cg_transform;
+			t_cg_transform = CGContextGetCTM(m_context);
+			
+			MCGImageRef t_image;
+			t_image = nil;
+			MCGAffineTransform t_pattern_transform;
+			
+			// IM-2014-05-14: [[ HiResPatterns ]] Update pattern access to use lock function
+			/* UNCHECKED */ MCPatternLockForContextTransform(p_mark->fill->pattern, MCGAffineTransformFromCGAffineTransform(t_cg_transform), t_image, t_pattern_transform);
+			
 			CGImageRef t_tile_image;
-			/* UNCHECKED */ MCGImageToCGImage(p_mark -> fill -> pattern -> image, t_tile_image);
+			/* UNCHECKED */ MCGImageToCGImage(t_image, t_tile_image);
 			
 			// IM-2013-08-14: [[ ResIndependence ]] Append pattern image scale to pattern transform
-			MCGFloat t_scale;
-			t_scale = 1.0 / p_mark -> fill -> pattern -> scale;
 			
-			CGAffineTransform t_transform;
-			t_transform = CGContextGetCTM(m_context);
-			t_transform = CGAffineTransformConcat(CGAffineTransformMakeTranslation(p_mark -> fill -> origin . x, p_mark -> fill -> origin . y), t_transform);
-			t_transform = CGAffineTransformConcat(CGAffineTransformMakeScale(t_scale, t_scale), t_transform);
+			t_cg_transform = CGAffineTransformConcat(CGAffineTransformMakeTranslation(p_mark -> fill -> origin . x, p_mark -> fill -> origin . y), t_cg_transform);
+			t_cg_transform = CGAffineTransformConcat(MCGAffineTransformToCGAffineTransform(t_pattern_transform), t_cg_transform);
 			
 			CGPatternRef t_pattern;
 			t_pattern = CGPatternCreate(
 				t_tile_image,
 				CGRectMake(0, 0, CGImageGetWidth(t_tile_image), CGImageGetHeight(t_tile_image)),
-				t_transform,
+				t_cg_transform,
 				CGImageGetWidth(t_tile_image), CGImageGetHeight(t_tile_image),
 				kCGPatternTilingNoDistortion,
 				true,
 				&s_pattern_callbacks);
+			
+			MCPatternUnlock(p_mark->fill->pattern, t_image);
 			
 			CGColorSpaceRef t_pattern_space;
 			t_pattern_space = CGColorSpaceCreatePattern(NULL);
@@ -1738,7 +1745,12 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 				// MM-2014-04-16: [[ Bug 11964 ]] Prototype for MCFontMeasureText now takes transform param. Pass through identity.
 				CGContextFillRect(m_context,
 					CGRectMake(x, y - f -> ascent,
+<<<<<<< HEAD
                                MCFontMeasureText(p_mark -> text . font, *t_text, MCGAffineTransformMakeIdentity()), f -> ascent + f -> descent));
+=======
+                               MCFontMeasureText(p_mark -> text . font, (const char *)s, len, false, MCGAffineTransformMakeIdentity()), f -> ascent + f -> descent));
+
+>>>>>>> develop
 				CGContextRestoreGState(m_context);
 			}
 			
@@ -1791,9 +1803,11 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			
 			UniCharCount t_run = MCStringGetLength(*t_text);
 			Rect t_bounds;
-			
-			FMFontStyle t_intrinsic_style;
-			t_err = ATSUFONDtoFontID((short)(intptr_t)f -> fid, f -> style, &t_font_id);
+			         
+            FMFontStyle t_intrinsic_style;
+            
+            // MM-2014-06-04: [[ CoreText ]] Fonts are now coretext font refs. Make sure we convert to ATSUFontIDs.
+            t_font_id = coretext_font_to_atsufontid(f -> fid);
 
 			t_font_size = f -> size << 16;
 			t_err = ATSUCreateStyle(&t_style);
@@ -1882,8 +1896,8 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			t_dst_y = p_mark->image.dy - p_mark->image.sy;
 			
 			// MW-2013-11-11: [[ Bug ]] Make sure we get the correct size of the image.
-			t_dst_width = p_mark -> image . descriptor . bitmap -> width;
-			t_dst_height = p_mark -> image . descriptor . bitmap -> height;
+			t_dst_width = MCGImageGetWidth(p_mark -> image . descriptor . image);
+			t_dst_height = MCGImageGetHeight(p_mark -> image . descriptor . image);
 
 			// MW-2013-10-01: [[ ImprovedPrint ]] First attempt to create a CGImage with the input data (PNG etc.)
 			CGImageRef t_image = nil;
@@ -1892,7 +1906,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			
 			// MW-2013-10-01: [[ ImprovedPrint ]] If we didn't manage to use the input data, use the bitmap instead.
 			if (t_image == nil)
-				/* UNCHECKED */ MCImageBitmapToCGImage(p_mark -> image .descriptor . bitmap, false, false, t_image);
+				/* UNCHECKED */ MCGImageToCGImage(p_mark->image.descriptor.image, MCGRectangleMake(0, 0, t_dst_width, t_dst_height), false, false, t_image);
 
 			CGContextClipToRect(m_context, CGRectMake(p_mark -> image . dx, p_mark -> image . dy, p_mark -> image . sw, p_mark -> image . sh));
 			
@@ -2190,6 +2204,7 @@ MCPrinterResult MCMacOSXPrinterDevice::HandleError(OSErr p_error, const char *p_
 
 ///////////////////////////////////////////////////////////////////////////////
 
+<<<<<<< HEAD
 typedef OSStatus (*PMPrintSettingsCreateDataRepresentationProcPtr)(PMPrintSettings settings, CFDataRef* r_data, uint32_t format);
 typedef OSStatus (*PMPageFormatCreateDataRepresentationProcPtr)(PMPageFormat settings, CFDataRef* r_data, uint32_t format);
 typedef OSStatus (*PMPrintSettingsCreateWithDataRepresentationProcPtr)(CFDataRef data, PMPrintSettings *settings);
@@ -2539,3 +2554,30 @@ static bool deserialize_printer_settings(const char *p_stream, uint32_t p_stream
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+=======
+void MCListSystemPrinters(MCExecPoint& ep)
+{
+	ep . clear();
+
+	CFArrayRef t_printers;
+	if (PMServerCreatePrinterList(kPMServerLocal, &t_printers) != noErr)
+		return;
+
+	for(CFIndex i = 0; i < CFArrayGetCount(t_printers); ++i)
+	{
+		char *t_name;
+		t_name = osx_cfstring_to_cstring(PMPrinterGetName((PMPrinter)CFArrayGetValueAtIndex(t_printers, i)), false);
+		ep . concatcstring(t_name, EC_RETURN, i == 0);
+		free(t_name);
+	}
+
+	CFRelease(t_printers);
+}
+
+MCPrinter *MCCreateSystemPrinter(void)
+{
+	return new MCMacOSXPrinter;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+>>>>>>> develop

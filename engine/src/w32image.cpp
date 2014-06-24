@@ -72,7 +72,7 @@ MCWindowShape *MCImage::makewindowshape(void)
 			t_mask -> data = nil;
 
 			// Handle is region.
-			t_success = nil != (t_mask -> handle = (MCRegionRef)((MCScreenDC *)MCscreen) -> BitmapToRegion(t_bitmap));
+			t_success = nil != (t_mask -> handle = ((MCScreenDC *)MCscreen) -> BitmapToRegion(t_bitmap));
 		}
 		else
 			t_success = false;

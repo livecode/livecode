@@ -940,7 +940,7 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
             // Same as this?
             if (MCactivefield == p_field)
             {
-                p_field -> selectedmark(False, ssi, sei, False, False);
+                p_field -> selectedmark(False, ssi, sei, False);
                 p_field -> unselect(False, True);
             }
             p_field -> curparagraph = p_field -> focusedparagraph = p_field -> paragraphs;
@@ -1111,7 +1111,7 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
             // Same as this?
             if (MCactivefield == p_field)
             {
-                p_field -> selectedmark(False, ssi, sei, False, False);
+                p_field -> selectedmark(False, ssi, sei, False);
                 p_field -> unselect(False, True);
             }
             p_field -> curparagraph = p_field -> focusedparagraph = p_field -> paragraphs;

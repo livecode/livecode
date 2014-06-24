@@ -140,6 +140,9 @@ MCChunk::MCChunk(Boolean isforset)
 	function = F_UNDEFINED;
 	marked = False;
 	next = NULL;
+    
+    // MW-2014-05-28: [[ Bug 11928 ]] We assume (at first) we are not a transient text chunk (i.e. one that is evaluated from a var).
+    m_transient_text_chunk = false;
 }
 
 MCChunk::~MCChunk()
@@ -771,6 +774,10 @@ void MCChunk::take_components(MCChunk *tchunk)
 		cline = tchunk->cline;
 		tchunk->cline = NULL;
     }
+    
+    // MW-2014-05-28: [[ Bug 11928 ]] As soon as we take components from a chunk then
+    //   mark us as transient text, so that we don't use the same components next time.
+    m_transient_text_chunk = true;
 }
 
 bool MCChunk::getobj(MCExecContext& ctxt, MCObjectPtr& r_object, Boolean p_recurse)
@@ -3713,7 +3720,9 @@ Exec_stat MCChunk::fmark(MCField *fptr, int4 &start, int4 &end, Boolean wholechu
 	case F_SELECTED_TEXT:
 		wholeline = False;
 	case F_SELECTED_LINE:
-		if (!fptr->selectedmark(wholeline, start, end, False, wholechunk))
+        // MW-2014-05-28: [[ Bug 11928 ]] 'wholeline' is sufficient to determine whether the
+            //  CR should be included.
+		if (!fptr->selectedmark(wholeline, start, end, False))
 			start = end = 0;
 		break;
 	case F_MOUSE_CHAR_CHUNK:
@@ -4622,9 +4631,12 @@ Exec_stat MCChunk::marktextchunk(MCExecPoint& ep, MCField*& r_field, uint4& r_pa
 Exec_stat MCChunk::del(MCExecPoint &ep)
 {
 	int4 start, end;
+    // MW-2014-05-28: [[ Bug 11928 ]] If we are a transient text chunk then the fact that
+    //   (one of) the char chunk refs are non-nil is a red-herring, we must re-evaluate
+    //   destvar as a chunk.
 	if (destvar != NULL
-	        && (cline != NULL || item != NULL || token != NULL
-	            || word != NULL || character != NULL))
+	        && !m_transient_text_chunk &&
+                (cline != NULL || item != NULL || token != NULL || word != NULL || character != NULL))
 	{
 		if (destvar->eval(ep) != ES_NORMAL)
 		{

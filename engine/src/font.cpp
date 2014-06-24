@@ -380,6 +380,7 @@ static void MCFontMeasureTextCallback(MCFontRef p_font, MCStringRef p_string, MC
 	// MW-2013-12-04: [[ Bug 11535 ]] Pass through the fixed advance.
 	t_font . fixed_advance = p_font -> fixed_advance;
 	
+<<<<<<< HEAD
     ctxt -> m_width += MCGContextMeasurePlatformText(NULL, MCStringGetCharPtr(p_string) + p_range.offset, p_range.length*2, t_font, ctxt -> m_transform);
 }
 
@@ -403,6 +404,36 @@ MCGFloat MCFontMeasureTextSubstringFloat(MCFontRef p_font, MCStringRef p_string,
     MCFontBreakText(p_font, p_string, p_range, (MCFontBreakTextCallback)MCFontMeasureTextCallback, &ctxt, false);
     
     return ctxt . m_width;
+=======
+	// MW-2013-12-04: [[ Bug 11549 ]] Make sure unicode text is short-aligned.
+	MCExecPoint ep;
+	ep . setsvalue(MCString(p_text, p_length));
+	if (!p_is_unicode)
+		ep . nativetoutf16();
+	else if ((((uintptr_t)ep . getsvalue() . getstring()) & 1) != 0)
+		ep . grabsvalue();
+	
+	// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform.
+    ctxt -> m_width += MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font, ctxt -> m_transform);
+}
+
+// MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
+MCGFloat MCFontMeasureTextFloat(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, const MCGAffineTransform &p_transform)
+{
+    font_measure_text_context ctxt;
+    ctxt.m_width = 0;
+	ctxt.m_transform = p_transform;
+    
+    MCFontBreakText(p_font, p_text, p_length, p_is_unicode, (MCFontBreakTextCallback)MCFontMeasureTextCallback, &ctxt);
+	
+	return ctxt . m_width;
+}
+
+// MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
+int32_t MCFontMeasureText(MCFontRef p_font, const char *p_text, uint32_t p_length, bool p_is_unicode, const MCGAffineTransform &p_transform)
+{
+    return (int32_t)floorf(MCFontMeasureTextFloat(p_font, p_text, p_length, p_is_unicode, p_transform));
+>>>>>>> develop
 }
 
 struct font_draw_text_context
@@ -422,6 +453,7 @@ static void MCFontDrawTextCallback(MCFontRef p_font, MCStringRef p_text, MCRange
     // MW-2013-12-04: [[ Bug 11535 ]] Pass through the fixed advance.
 	t_font . fixed_advance = p_font -> fixed_advance;
     
+<<<<<<< HEAD
 	// The drawing is done on the UTF-16 form of the text
 	MCGContextDrawPlatformText(ctxt->m_gcontext, MCStringGetCharPtr(p_text) + p_range.offset, p_range.length*2, MCGPointMake(ctxt->x, ctxt->y), t_font, ctxt->rtl);
 
@@ -437,6 +469,14 @@ void MCFontDrawText(MCGContextRef p_gcontext, int32_t x, int32_t y, MCStringRef 
 }
 
 void MCFontDrawTextSubstring(MCGContextRef p_gcontext, coord_t x, int32_t y, MCStringRef p_text, MCRange p_range, MCFontRef p_font, bool p_rtl, bool p_can_break)
+=======
+    // The draw position needs to be advanced. Can this be done more efficiently?
+	// MM-2014-04-16: [[ Bug 11964 ]] Pass through the scale of the context to make sure the measurment is correct.
+    ctxt -> x += MCGContextMeasurePlatformText(NULL, (unichar_t*)ep.getsvalue().getstring(), ep.getsvalue().getlength(), t_font, MCGContextGetDeviceTransform(ctxt->m_gcontext));
+}
+
+void MCFontDrawText(MCGContextRef p_gcontext, coord_t x, int32_t y, const char *p_text, uint32_t p_length, MCFontRef p_font, bool p_is_unicode)
+>>>>>>> develop
 {
     font_draw_text_context ctxt;
     ctxt.x = x;

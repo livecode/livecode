@@ -140,7 +140,8 @@ static void handle_signal(int sig)
 	case SIGSEGV:
 		fprintf(stderr, "%s exiting on signal %d\n", MCcmd, sig);
 		MCS_killall();
-		exit(-1);
+		// abort() instead of exit(-1) so that we get core dumps.
+		abort();
 	case SIGHUP:
 	case SIGINT:
 	case SIGQUIT:

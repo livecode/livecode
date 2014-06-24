@@ -390,6 +390,7 @@ public:
 	void stopcomposition(Boolean del, Boolean force);
 	void setcompositioncursoroffset(findex_t coffset);
 	void setcompositionconvertingrange(findex_t si, findex_t ei);
+    bool getcompositionrange(findex_t& si, findex_t& ei);
 	void deletecomposition();
 	Boolean getcompositionrect(MCRectangle &r, findex_t offset);
 	void syncfonttokeyboard();
@@ -416,8 +417,8 @@ public:
 	//   the specified 'parid'.
 	MCParagraph *resolveparagraphs(uint4 parid);
 
-    void setparagraphs(MCParagraph *newpgptr, uint4 parid);
-    void setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start, findex_t p_end);
+    void setparagraphs(MCParagraph *newpgptr, uint4 parid, bool p_preserv_zero_length_styles = false);
+    void setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start, findex_t p_end, bool p_preserv_zero_length_styles = false);
     // SN-2014-01-17: [[ Unicodification ]] Suppressed old string version of settext and settextindex
     Exec_stat settext(uint4 parid, MCStringRef p_text, Boolean p_formatted);
 	Exec_stat settextindex(uint4 parid, findex_t si, findex_t ei, MCStringRef s, Boolean undoing);
@@ -453,6 +454,7 @@ public:
 	bool locline(Boolean click, MCStringRef& r_string);
 	bool loctext(Boolean click, MCStringRef& r_string);
 	Boolean locmark(Boolean wholeline, Boolean wholeword,
+<<<<<<< HEAD
 	                Boolean click, Boolean chunk, Boolean inc_cr, findex_t &si, findex_t &ei);
 
 	bool foundchunk(MCStringRef& r_string);
@@ -478,6 +480,29 @@ public:
 	void returntext(MCExecPoint &ep, findex_t si, findex_t ei);
 #endif
 	bool returntext(findex_t si, findex_t ei, MCStringRef& r_string);
+=======
+	                Boolean click, Boolean chunk, Boolean inc_cr, int4 &si, int4 &ei);
+	Boolean locmarkpoint(MCPoint p, Boolean wholeline, Boolean wholeword, Boolean chunk, Boolean inc_cr, int4 &si, int4 &ei);
+
+	void foundchunk(MCExecPoint &ep);
+	void foundline(MCExecPoint &ep);
+	void foundloc(MCExecPoint &ep);
+	void foundtext(MCExecPoint &ep);
+	Boolean foundmark(Boolean wholeline, Boolean inc_cr, int4 &si, int4 &ei);
+
+	void selectedchunk(MCExecPoint &ep);
+	void selectedline(MCExecPoint &ep);
+	void selectedloc(MCExecPoint &ep);
+	void selectedtext(MCExecPoint &ep);
+    // MW-2014-05-28: [[ Bug 11928 ]] The 'inc_cr' parameter is unnecessary - it is determined
+    //   by 'wholeline'.
+	Boolean selectedmark(Boolean wholeline, int4 &si, int4 &ei, Boolean force);
+
+	void returnchunk(MCExecPoint &ep, int4 si, int4 ei);
+	void returnline(MCExecPoint &ep, int4 si, int4 ei);
+	void returnloc(MCExecPoint &ep, int4 si);
+	void returntext(MCExecPoint &ep, int4 si, int4 ei);
+>>>>>>> develop
 
 	void charstoparagraphs(findex_t si, findex_t ei, MCParagraph*& sp, MCParagraph*& ep, uint4& sl, uint4& el);
 	void linestoparagraphs(findex_t si, findex_t ei, MCParagraph*& sp, MCParagraph*& ep);
@@ -587,10 +612,15 @@ public:
 	bool exportashtmltext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCDataRef& r_text);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to styled text arrays.
+<<<<<<< HEAD
 #ifdef LEGACY_EXEC
     void exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool p_formatted, bool p_effective);
 #endif
 	bool exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array);
+=======
+	void exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool p_formatted, bool p_effective);
+	void exportasstyledtext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index, bool p_formatted, bool p_effective);
+>>>>>>> develop
 
 	// MW-2012-03-07: [[ FieldImport ]] Conver the htmlText string to a list of paragraphs.
     MCParagraph *importhtmltext(MCValueRef p_data);
@@ -627,6 +657,7 @@ public:
 	void adjustpixmapoffset(MCDC *dc, uint2 index, int4 dy = 0);
 
 	bool imagechanged(MCImage *p_image, bool p_deleting);
+<<<<<<< HEAD
 
     ////////// BIDIRECTIONAL SUPPORT
     
@@ -897,5 +928,9 @@ public:
     void GetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool*& r_value);
     void GetEffectiveTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value);
     void SetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool *p_value);
+=======
+	
+	MCRectangle firstRectForCharacterRange(int32_t& si, int32_t& ei);
+>>>>>>> develop
 };
 #endif

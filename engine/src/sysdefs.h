@@ -34,6 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define FEATURE_TASKBAR_ICON
 #define FEATURE_RELAUNCH_SUPPORT
 #define FEATURE_QUICKTIME
+#define FEATURE_QUICKTIME_EFFECTS
 
 #elif defined(_MAC_DESKTOP)
 
@@ -41,7 +42,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MCSSL
 #define FEATURE_TASKBAR_ICON
-#define FEATURE_QUICKTIME
+#define FEATURE_QUICKTIME_EFFECTS
+#define FEATURE_PLATFORM_PLAYER
+#define FEATURE_PLATFORM_AUDIO
 
 #elif defined(_LINUX_DESKTOP)
 
@@ -155,8 +158,20 @@ typedef struct __MCSysWindowHandle *MCSysWindowHandle;
 typedef struct __MCSysFontHandle *MCSysFontHandle;
 typedef struct __MCSysContextHandle *MCSysContextHandle;
 
+typedef class MCPlatformWindow *MCPlatformWindowRef;
+typedef class MCPlatformSurface *MCPlatformSurfaceRef;
+typedef class MCPlatformCursor *MCPlatformCursorRef;
+typedef class MCPlatformPasteboard *MCPlatformPasteboardRef;
+typedef class MCPlatformMenu *MCPlatformMenuRef;
+typedef class MCPlatformPlayer *MCPlatformPlayerRef;
+
 typedef void *MCColorTransformRef;
+
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
+typedef MCPlatformCursorRef MCCursorRef;
+#else
 typedef struct MCCursor *MCCursorRef;
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -529,6 +544,20 @@ struct MCFontStruct
 #define BAD_NUMERIC DBL_MAX
 #define MC_EPSILON  (DBL_EPSILON * 10.0)
 
+struct MCRange
+{
+	uindex_t offset;
+	uindex_t length;
+};
+
+inline MCRange MCRangeMake(uindex_t offset, uindex_t length)
+{
+	MCRange r;
+	r . offset = offset;
+	r . length = length;
+	return r;
+}
+
 //////////////////////////////////////////////////////////////////////
 
 #define DoRed                0x1
@@ -649,7 +678,38 @@ struct MCBitmap
 
 ////////////////////////////////////////
 
-#if !defined(_LINUX_DESKTOP) && !defined(_LINUX_SERVER)
+#if defined(_MAC_DESKTOP) || defined(_MAC_SERVER)
+
+typedef MCPlatformWindowRef Window;
+typedef MCSysWindowHandle Drawable;
+
+#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+
+// MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
+#ifndef __LP64__
+#   if !defined(Window)
+        typedef unsigned long Window;
+#   endif
+#   if !defined(Pixmap)
+        typedef unsigned long Pixmap;
+#   endif
+#   if !defined(Drawable)
+        typedef unsigned long Drawable;
+#   endif
+#else
+#   if !defined(Window)
+        typedef unsigned long int Window;
+#   endif
+#   if !defined(Pixmap)
+        typedef unsigned long int Pixmap;
+#   endif
+#   if !defined(Drawable)
+        typedef unsigned long int Drawable;
+#   endif
+#endif
+
+#else
+
 enum
 {
     DC_WINDOW,
@@ -676,30 +736,6 @@ struct _ExtendedDrawable: public _Drawable
 typedef  _Drawable *        Window;
 typedef  _Drawable *        Pixmap;
 typedef  _Drawable *        Drawable;
-#else
-
-// MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
-#ifndef __LP64__
-	#if !defined(Window)
-		typedef unsigned long Window;
-	#endif
-	#if !defined(Pixmap)
-		typedef unsigned long Pixmap;
-	#endif
-	#if !defined(Drawable)
-		typedef unsigned long Drawable;
-	#endif
-#else
-	#if !defined(Window)
-		typedef unsigned long int Window;
-	#endif
-	#if !defined(Pixmap)
-		typedef unsigned long int Pixmap;
-	#endif
-	#if !defined(Drawable)
-		typedef unsigned long int Drawable;
-	#endif
-#endif
 
 #endif
 
@@ -1052,11 +1088,70 @@ typedef unsigned long       Atom;
 #define XK_WheelLeft	0xFF1E
 #define XK_WheelRight	0xFF1F
 
+<<<<<<< HEAD
 #define XK_Class_mask		0xFF000000		/* Key classes */
 #define XK_Class_compat		0x00000000		/* Ordinary (X11) keycodes */
 #define XK_Class_codepoint	0x01000000		/* The low 21 bits contain a Unicode codepoint */
 #define XK_Class_vendor		0x10000000		/* OS vendor specific */
 #define XK_Codepoint_mask	0x001FFFFF		/* Mask for extracting codepoint from XK_Class_codepoint */
+=======
+//////////////////////////////////////////////////////////////////////
+//
+//  UTILITY CLASSES
+//
+
+template<typename T> class MCAutoPointer
+{
+public:
+	MCAutoPointer(void)
+	{
+		m_ptr = nil;
+	}
+
+	~MCAutoPointer(void)
+	{
+		delete m_ptr;
+	}
+
+	T* operator = (T* value)
+	{
+		delete m_ptr;
+		m_ptr = value;
+		return value;
+	}
+
+	T*& operator & (void)
+	{
+		assert(m_ptr == nil);
+		return m_ptr;
+	}
+
+	T* operator -> (void)
+	{
+		MCAssert(m_ptr != nil);
+		return m_ptr;
+	}
+
+	T *operator * (void) const
+	{
+		return m_ptr;
+	}
+
+	void Take(T*&r_ptr)
+	{
+		r_ptr = m_ptr;
+		m_ptr = nil;
+	}
+
+	T*& PtrRef(void)
+	{
+		return m_ptr;
+	}
+	
+private:
+	T *m_ptr;
+};
+>>>>>>> develop
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -1097,6 +1192,7 @@ class MCPlayer;
 class MCImage;
 class MCField;
 class MCObject;
+class MCObjectHandle;
 class MCObjectList;
 class MCMagnify;
 class MCPrinter;

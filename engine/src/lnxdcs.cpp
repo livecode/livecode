@@ -1282,6 +1282,7 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 		
 	if ( backdrop == DNULL ) 
 		createbackdrop_window();
+<<<<<<< HEAD
 
     // MAYBE
     if (m_backdrop_pixmap == nil)
@@ -1289,6 +1290,16 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
         backdropcolor = p_colour;
         alloccolor(backdropcolor);
     }
+=======
+	
+	char *cname = NULL;
+	if (m_backdrop_pixmap == nil &&
+	        parsecolor(MCbackdropcolor, &backdropcolor, &cname))
+	{
+		delete cname;
+		alloccolor(backdropcolor);
+	}
+>>>>>>> develop
 	else
 		backdropcolor.pixel = 0;
 	
@@ -1330,9 +1341,19 @@ void MCScreenDC::assignbackdrop(Window_mode p_mode, Window p_window)
 
 void MCScreenDC::createbackdrop(MCStringRef color)
 {
+<<<<<<< HEAD
 	if (m_backdrop_pixmap == DNULL &&
             parsecolor(color, backdropcolor))
         alloccolor(backdropcolor);
+=======
+	char *cname = NULL;
+	if (m_backdrop_pixmap == DNULL &&
+	        parsecolor(color, &backdropcolor, &cname))
+	{
+		delete cname;
+		alloccolor(backdropcolor);
+	}
+>>>>>>> develop
 	else
 		backdropcolor.pixel = 0;
 	

@@ -56,6 +56,9 @@ extern MCExecContext *MCECptr;
 #define xresNotImp 2
 #define xresAbort 3
 
+// IM-2014-03-06: [[ revBrowserCEF ]] Add revision number to v0 external interface
+#define EXTERNAL_INTERFACE_VERSION 1
+
 typedef struct _Xternal
 {
 	char *name;
@@ -123,6 +126,9 @@ typedef void (*GETXTABLE)(XCB *, DELETER, const char **, Xternal **, DELETER *);
 typedef void (*CONFIGURESECURITY)(SECURITYHANDLER *handlers);
 typedef void (*SHUTDOWNXTABLE)(void);
 
+// IM-2014-03-06: [[ revBrowserCEF ]] define setVersion function signature
+typedef void (*SETEXTERNALINTERFACEVERSION)(unsigned int version);
+
 extern XCB MCcbs[];
 extern SECURITYHANDLER MCsecuritycbs[];
 
@@ -173,7 +179,13 @@ static void deleter(void *d)
 
 bool MCExternalV0::Prepare(void)
 {
-	// Get the info from the main external entry point (we now this symbol exists
+	// IM-2014-03-06: [[ revBrowserCEF ]] call the setExternalInterfaceVersion() function if present
+	SETEXTERNALINTERFACEVERSION t_set_version;
+	t_set_version = (SETEXTERNALINTERFACEVERSION)MCS_resolvemodulesymbol(m_module, "setExternalInterfaceVersion");
+	if (t_set_version != nil)
+		t_set_version(EXTERNAL_INTERFACE_VERSION);
+	
+	// Get the info from the main external entry point (we know this symbol exists
 	// as it is used to determine if its a V0 external!).
 
 	GETXTABLE t_getter;
@@ -876,8 +888,58 @@ static char *set_array(const char *arg1, const char *arg2,
 	return NULL;
 }
 
+// IM-2014-03-06: [[ revBrowserCEF ]] Extend the externals interface to allow externals to hook into the wait loop
+
+// Add callback function (arg1) to the wait loop
+static char *add_runloop_action(const char *arg1, const char *arg2,
+								const char *arg3, int *retval)
+{
+	MCRunloopActionCallback t_callback;
+	t_callback = (MCRunloopActionCallback)arg1;
+
+	void *t_context;
+	t_context = (void*)arg2;
+
+	MCRunloopActionRef *r_action;
+	r_action = (MCRunloopActionRef*)arg3;
+
+	if (!MCscreen->AddRunloopAction(t_callback, t_context, *r_action))
+	{
+		*retval = xresFail;
+		return NULL;
+	}
+
+	*retval = xresSucc;
+
+	return NULL;
+}
+
+// Remove callback function from the wait loop
+static char *remove_runloop_action(const char *arg1, const char *arg2,
+								const char *arg3, int *retval)
+{
+	MCRunloopActionRef t_action;
+	t_action = (MCRunloopActionRef)arg1;
+	
+	MCscreen->RemoveRunloopAction(t_action);
+
+	*retval = xresSucc;
+	return NULL;
+}
+
+// Run the waitloop
+static char *runloop_wait(const char *arg1, const char *arg2,
+						  const char *arg3, int *retval)
+{
+	MCscreen->wait(60.0, True, True);
+	*retval = xresSucc;
+	return NULL;
+}
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Add externals extension to the callback list
 XCB MCcbs[] =
 {
+	// Externals interface V0 functions
 	set_idle_func,
 	NULL,
 	set_idle_rate,
@@ -900,7 +962,14 @@ XCB MCcbs[] =
 	get_variable_ex,
 	set_variable_ex,
 	get_array,
-	set_array
+	set_array,
+
+	// Externals interface V1 functions
+	add_runloop_action,
+	remove_runloop_action,
+	runloop_wait,
+
+	NULL
 };
 
 ////////////////////////////////////////////////////////////////////////////////

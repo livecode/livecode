@@ -233,7 +233,8 @@ private:
 	void calcextents(void);
 
 	// Get the extent of the given dimension
-	uint2 getextent(uint1 tdimension) const;
+    // MW-2014-05-28: [[ Bug 12479 ]] Make sure extents use 32-bit ints.
+	uint32_t getextent(uint1 tdimension) const;
 
 	// Return True if the extents and number of keys do not match up
 	Boolean ismissingelement(void) const;

@@ -2897,6 +2897,7 @@ MCOpen::~MCOpen()
     delete encoding;
 	MCValueRelease(destination);
 	delete certificate;
+	delete verifyhostname;
 }
 
 Parse_stat MCOpen::parse(MCScriptPoint &sp)
@@ -3054,11 +3055,28 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 		}
 	}
 	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+	{
 		if (sp.skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) != PS_NORMAL)
 		{
 			MCperror->add
 			(PE_OPEN_BADMESSAGE, sp);
 		}
+		
+		// MM-2014-06-13: [[ Bug 12567 ]] Added new "with verification for <host>" variant.
+		if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_FOR) == PS_NORMAL)
+		{
+			if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_HOST) != PS_NORMAL)
+			{
+				MCperror -> add(PE_OPEN_NOHOST, sp);
+				return PS_ERROR;
+			}			
+			if (sp . parseexp(False, True, &verifyhostname) != PS_NORMAL)
+			{
+				MCperror -> add(PE_OPEN_BADHOST, sp);
+				return PS_ERROR;
+			}
+		}	
+	}
 
 	if (sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
 		if (sp.skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) == PS_NORMAL)
@@ -3234,9 +3252,24 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
 				}
 				/* UNCHECKED */ ep . copyasnameref(t_message_name);
 			}
+			
+			// MM-2014-06-13: [[ Bug 12567 ]] Added passing through the host name to verify against.
+			char *t_verify_host_name;
+			t_verify_host_name = NULL;
+			if (verifyhostname != NULL)
+			{
+				if (verifyhostname -> eval(ep) != ES_NORMAL)
+				{
+					MCeerror -> add(EE_OPEN_BADHOST, line, pos);
+					return ES_ERROR;
+				}
+				
+				t_verify_host_name = ep . getsvalue() . clone();
+			}		
+			
 			// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
 			MCresult -> clear(True);
-			MCSocket *s = MCS_open_socket(name, datagram, ep.getobj(), t_message_name, secure, secureverify, NULL);
+			MCSocket *s = MCS_open_socket(name, datagram, ep.getobj(), t_message_name, secure, secureverify, NULL, t_verify_host_name);
 			if (s != NULL)
 			{
 				MCU_realloc((char **)&MCsockets, MCnsockets, MCnsockets + 1, sizeof(MCSocket *));
@@ -3371,15 +3404,21 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
                 MCFilesExecOpenProcess(ctxt, *t_name, mode, t_encoding);
 			break;
 		case OA_SOCKET:
+        {                
             if (!ctxt . EvalOptionalExprAsNullableNameRef(message, EE_OPEN_BADMESSAGE, &t_message_name))
+                return;
+            
+            // MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
+            MCNewAutoNameRef t_end_hostname;
+            if (!ctxt . EvalOptionalExprAsNullableNameRef(verifyhostname, EE_OPEN_BADHOST, &t_end_hostname))
                 return;
 
 			if (datagram)
-				MCNetworkExecOpenDatagramSocket(ctxt, *t_name, *t_message_name);
+				MCNetworkExecOpenDatagramSocket(ctxt, *t_name, *t_message_name, *t_end_hostname);
 			else if (secure)
-				MCNetworkExecOpenSecureSocket(ctxt, *t_name, *t_message_name, secureverify);
+				MCNetworkExecOpenSecureSocket(ctxt, *t_name, *t_message_name, *t_end_hostname, secureverify);
 			else
-				MCNetworkExecOpenSocket(ctxt, *t_name, *t_message_name);
+				MCNetworkExecOpenSocket(ctxt, *t_name, *t_message_name, *t_end_hostname);
 			break;
 		default:
 			break;
@@ -5166,7 +5205,8 @@ void MCWrite::compile(MCSyntaxFactoryRef ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MM-2014-02-12: [[ SecureSocket ]] 
+// MM-2014-02-12: [[ SecureSocket ]]
+// MM-2014-06-13: [[ Bug 12567 ]] Added new "with verification for <host>" variant.
 //  New secure socket command, used to ensure all future communications over the given socket are encrypted.
 //
 //  After securing:
@@ -5179,10 +5219,12 @@ void MCWrite::compile(MCSyntaxFactoryRef ctxt)
 //    secure socket <socket>
 //    secure socket <socket> with verification
 //    secure socket <socket> without verification
+//    secure socket <socket> with verification for host <host>
 //
 MCSecure::~MCSecure()
 {
 	delete m_sock_name;
+	delete m_verify_host_name;
 }
 
 Parse_stat MCSecure::parse(MCScriptPoint &sp)
@@ -5219,13 +5261,28 @@ Parse_stat MCSecure::parse(MCScriptPoint &sp)
 	
 	if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 	{
-		if (sp . skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) == PS_NORMAL)
-			secureverify = True;
-		else
+		if (sp . skip_token(SP_SSL, TT_UNDEFINED, SSL_VERIFICATION) != PS_NORMAL)
 		{
 			MCperror -> add(PE_SECURE_BADMESSAGE, sp);
 			return PS_ERROR;
 		}
+		
+		secureverify = True;
+			
+		// MM-2014-06-13: [[ Bug 12567 ]] Added new "with verification for <host>" variant.
+		if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_FOR) == PS_NORMAL)
+		{
+			if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_HOST) != PS_NORMAL)
+			{
+				MCperror -> add(PE_SECURE_NOHOST, sp);
+				return PS_ERROR;
+			}			
+			if (sp . parseexp(False, True, &m_verify_host_name) != PS_NORMAL)
+			{
+				MCperror -> add(PE_SECURE_BADHOST, sp);
+				return PS_ERROR;
+			}
+		}	
 	}
 	
 	if (sp . skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
@@ -5255,10 +5312,24 @@ void MCSecure::exec_ctxt(MCExecContext& ctxt)
 	char *t_sock_name;
 	t_sock_name = ep . getsvalue() . clone();
 	
+	// MM-2014-06-13: [[ Bug 12567 ]] Added passing through the host name to verify against.
+	char *t_host_name;
+	t_host_name = NULL;
+	if (m_verify_host_name != NULL)
+	{
+		if (m_verify_host_name -> eval(ep) != ES_NORMAL)
+		{
+			MCeerror -> add(EE_SECURE_BADHOST, line, pos);
+			return ES_ERROR;
+		}
+		
+		t_host_name = ep . getsvalue() . clone();
+	}
+	
 	uint2 t_index;
 	if (IO_findsocket(t_sock_name, t_index))
 	{
-		MCS_secure_socket(MCsockets[t_index], secureverify);
+		MCS_secure_socket(MCsockets[t_index], secureverify, t_host_name);
 		MCresult->clear(False);
 	}
 	else

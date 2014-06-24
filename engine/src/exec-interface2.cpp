@@ -3424,7 +3424,7 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
         case F_SELECTED_TEXT:
             wholeline = False;
         case F_SELECTED_LINE:
-            if (!t_field->selectedmark(wholeline, start, end, False, p_whole_chunk))
+            if (!t_field->selectedmark(wholeline, start, end, False))
                 start = end = 0;
             break;
         case F_MOUSE_CHAR_CHUNK:

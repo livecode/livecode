@@ -65,15 +65,15 @@ uindex_t MCDensityMappedImageRep::GetFrameCount()
 	return m_sources[t_match]->GetFrameCount();
 }
 
-bool MCDensityMappedImageRep::LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame)
+bool MCDensityMappedImageRep::LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame *&r_frame)
 {
 	uindex_t t_match;
 	if (!GetBestMatch(p_density, t_match))
 		return false;
 	
 	m_last_density = p_density;
-
-	m_locked = m_sources[t_match]->LockImageFrame(p_index, p_premultiplied, p_density, r_frame);
+	
+	m_locked = m_sources[t_match]->LockImageFrame(p_index, p_density, r_frame);
 	m_locked_source = t_match;
 	
 	if (m_locked)
@@ -82,12 +82,39 @@ bool MCDensityMappedImageRep::LockImageFrame(uindex_t p_index, bool p_premultipl
 	return m_locked;
 }
 
-void MCDensityMappedImageRep::UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame)
+void MCDensityMappedImageRep::UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame)
 {
 	if (!m_locked)
 		return;
 	
 	m_sources[m_locked_source]->UnlockImageFrame(p_index, p_frame);
+	
+	m_locked = false;
+}
+
+bool MCDensityMappedImageRep::LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame)
+{
+	uindex_t t_match;
+	if (!GetBestMatch(p_density, t_match))
+		return false;
+	
+	m_last_density = p_density;
+
+	m_locked = m_sources[t_match]->LockBitmapFrame(p_index, p_density, r_frame);
+	m_locked_source = t_match;
+	
+	if (m_locked)
+		r_frame->density = m_source_densities[t_match];
+	
+	return m_locked;
+}
+
+void MCDensityMappedImageRep::UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame)
+{
+	if (!m_locked)
+		return;
+	
+	m_sources[m_locked_source]->UnlockBitmapFrame(p_index, p_frame);
 	
 	m_locked = false;
 }
@@ -117,6 +144,15 @@ uint32_t MCDensityMappedImageRep::GetDataCompression()
 		return F_RLE;
 	
 	return m_sources[t_match]->GetDataCompression();
+}
+
+MCGFloat MCDensityMappedImageRep::GetBestDensityMatch(MCGFloat p_target_density)
+{
+	uindex_t t_match;
+	if (!GetBestMatch(p_target_density, t_match))
+		return 1.0;
+	
+	return m_sources[t_match]->GetBestDensityMatch(p_target_density);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

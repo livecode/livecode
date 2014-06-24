@@ -31,6 +31,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	object.cpp objectpropsets.cpp objptr.cpp operator.cpp paragraf.cpp paragrafattr.cpp param.cpp \
 	property.cpp pickle.cpp \
 	regex.cpp \
+	region.cpp \
 	resolution.cpp \
 	scriptpt.cpp \
 	scrolbar.cpp scrollbardraw.cpp segment.cpp sellst.cpp \
@@ -56,6 +57,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	redraw.cpp tilecache.cpp tilecachesw.cpp tilecachegl.cpp sysregion.cpp \
 	sysunxdate.cpp sysunxrandom.cpp sysspec.cpp stackcache.cpp uuid.cpp \
 	mblad.cpp mblcalendar.cpp mblcamera.cpp mblcontact.cpp \
+	quicktime.cpp \
 	mblcontrol.cpp mbldc.cpp mbldialog.cpp mblflst.cpp mblhandlers.cpp mblmain.cpp mblnotification.cpp \
 	mblsensor.cpp mblspec.cpp mblsound.cpp mblstack.cpp mblstore.cpp mbltheme.cpp \
 	mblandroid.cpp mblandroidbrowser.cpp  mblandroidbusyindicator.cpp \

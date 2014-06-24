@@ -35,10 +35,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 
 #include "globals.h"
-
 #include "exec.h"
 
-#if defined _WINDOWS_DESKTOP
+#if defined FEATURE_PLATFORM_AUDIO
+#include "platform.h"
+static MCPlatformSoundRef s_current_sound = nil;
+#elif defined _WINDOWS_DESKTOP
 #include "w32prefix.h"
 static HWAVEOUT hwaveout;  //handle to audio device opened
 static WAVEHDR wh;         //wave header structure
@@ -171,7 +173,12 @@ const char *MCAudioClip::gettypestring()
 void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
 {
 	if (play())
+    {
+#ifndef FEATURE_PLATFORM_AUDIO
 		MCscreen->addtimer(this, MCM_internal, looping ? LOOP_RATE: PLAY_RATE);
+#else
+#endif
+    }
 	else
 	{
 		MCacptr = NULL;
@@ -213,7 +220,11 @@ Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint
 				loudness = 0;
 			else
 			{
-#if defined _WINDOWS
+#if defined FEATURE_PLATFORM_AUDIO
+                double t_volume;
+                MCPlatformGetSystemProperty(kMCPlatformSystemPropertyVolume, kMCPlatformPropertyTypeDouble, &t_volume);
+                loudness = t_volume * 100.0;
+#elif defined _WINDOWS
 				if (hwaveout == NULL)
 				{
 					WAVEFORMATEX pwfx;
@@ -310,7 +321,11 @@ Exec_stat MCAudioClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep
 					tptr = tptr->getnextplayer();
 				}
 			}
-#if defined _WINDOWS
+#if defined FEATURE_PLATFORM_AUDIO
+            double t_volume;
+            t_volume = loudness / 100.0;
+            MCPlatformSetSystemProperty(kMCPlatformSystemPropertyVolume, kMCPlatformPropertyTypeDouble, &t_volume);
+#elif defined _WINDOWS
 			WORD v = loudness * MAXUINT2 / 100;
 			if (hwaveout != NULL)
 				waveOutSetVolume(hwaveout, v | (v << 16));
@@ -364,7 +379,9 @@ void MCAudioClip::paste(void)
 
 void MCAudioClip::init()
 {
-#if defined _WINDOWS
+#if defined FEATURE_PLATFORM_AUDIO
+    supported = True;
+#elif defined _WINDOWS
 	supported = True;
 #elif defined _MACOSX
 	supported = True;
@@ -624,7 +641,83 @@ Boolean MCAudioClip::import(MCStringRef fname, IO_handle stream)
     return True;
 }
 
-#if defined _WINDOWS
+#if defined FEATURE_PLATFORM_AUDIO
+
+struct au_file_header_t
+{
+    uint32_t magic;
+    uint32_t offset;
+    uint32_t size;
+    uint32_t encoding;
+    uint32_t sample_rate;
+    uint32_t channels;
+};
+
+void MCAudioClip::convert_tocontainer(void*& r_data, size_t& r_data_size)
+{
+    au_file_header_t t_header;
+    t_header . magic = 0x2e736e64;
+    t_header . offset = sizeof(au_file_header_t);
+    t_header . size = size;
+    if (format == AF_MULAW)
+        t_header . encoding = 1;
+    else if (format == AF_SLINEAR)
+        t_header . encoding = (swidth == 1 ? 2 : (swidth == 2 ? 3 : 4));
+    else if (format == AF_ULINEAR)
+    {
+        convert_ulintoslin();
+        t_header . encoding = (swidth == 1 ? 2 : (swidth == 2 ? 3 : 4));
+    }
+    t_header . sample_rate = rate;
+    t_header . channels = nchannels;
+    
+    swap_uint4(&t_header . magic);
+    swap_uint4(&t_header . offset);
+    swap_uint4(&t_header . size);
+    swap_uint4(&t_header . encoding);
+    swap_uint4(&t_header . sample_rate);
+    swap_uint4(&t_header . channels);
+    
+    r_data = malloc(sizeof(au_file_header_t) + size);
+    r_data_size = sizeof(au_file_header_t) + size;
+    
+    memcpy(r_data, &t_header, sizeof(au_file_header_t));
+    memcpy(((au_file_header_t *)r_data) + 1, samples, size);
+}
+
+Boolean MCAudioClip::open_audio(void)
+{
+    if (s_current_sound != nil)
+        return True;
+    
+    void *t_data;
+    size_t t_data_size;
+    convert_tocontainer(t_data, t_data_size);
+    
+    MCPlatformSoundCreateWithData(t_data, t_data_size, s_current_sound);
+    
+    free(t_data);
+    
+    if (s_current_sound == nil)
+        return False;
+    
+    double t_volume;
+    t_volume = loudness / 100.0;
+    MCPlatformSoundSetProperty(s_current_sound, kMCPlatformSoundPropertyVolume, kMCPlatformPropertyTypeDouble, &t_volume);
+    
+    bool t_looping;
+    t_looping = looping == True;
+    MCPlatformSoundSetProperty(s_current_sound, kMCPlatformSoundPropertyLooping, kMCPlatformPropertyTypeBool, &t_looping);
+    
+    MCPlatformSoundPlay(s_current_sound);
+    
+    // PM-2014-05-28: [[Bug 12529]] Make sure we release s_current_sound after it is played
+    MCPlatformSoundRelease(s_current_sound);
+    s_current_sound = nil;
+    
+    return True;
+}
+#elif defined _WINDOWS
 Boolean MCAudioClip::open_audio()
 {
 	if (hwaveout == NULL)
@@ -765,7 +858,10 @@ Boolean MCAudioClip::play()
 		if (mstack == NULL)
 			mstack = MCdefaultstackptr;
 #endif
-#ifdef _WINDOWS
+    
+#if defined FEATURE_PLATFORM_AUDIO
+    return MCPlatformSoundIsPlaying(s_current_sound);
+#elif defined _WINDOWS
 	if (wh.dwFlags & WHDR_DONE)
 	{
 		stop(False);//check to see if it is done, call stop();
@@ -863,7 +959,14 @@ Boolean MCAudioClip::play()
 void MCAudioClip::stop(Boolean abort)
 {
 	MCscreen->cancelmessageobject(this, NULL);
-#if defined _WINDOWS
+   
+#if defined FEATURE_PLATFORM_AUDIO
+    if (s_current_sound != nil)
+    {
+        MCPlatformSoundRelease(s_current_sound);
+        s_current_sound = nil;
+    }
+#elif defined _WINDOWS
 	if (hwaveout != NULL)
 	{
 		waveOutReset(hwaveout);

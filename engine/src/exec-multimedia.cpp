@@ -113,24 +113,27 @@ void MCMultimediaEvalQTVersion(MCExecContext& ctxt, MCStringRef& r_string)
         ctxt.Throw();
 }
 
+// MERG-2014-06-20: Refactoring functions from quicktime.cpp
 void MCMultimediaEvalQTEffects(MCExecContext& ctxt, MCStringRef& r_result)
 {
-	if (!MCtemplateplayer->geteffectlist(r_result))
-		ctxt.Throw();
+    extern void MCQTGetRecordCompressionList(MCExecContext& ctxt, MCStringRef &r_string);
+    MCQTGetRecordCompressionList(ctxt, r_string);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MERG-2014-06-20: Now calling the function from quicktime.cpp
 void MCMultimediaEvalRecordCompressionTypes(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (!MCtemplateplayer->getrecordcompressionlist(r_string))
-		ctxt.Throw();
+    extern void MCQTGetRecordCompressionList(MCExecContext& ctxt, MCStringRef &r_string);
+    MCQTGetRecordCompressionList(ctxt, r_string);
 }
 
+// MERG-2014-06-20: Now calling the function from quicktime.cpp
 void MCMultimediaEvalRecordLoudness(MCExecContext& ctxt, integer_t& r_loudness)
 {
-	if (!MCtemplateplayer->getrecordloudness(r_loudness))
-		ctxt.Throw();
+	extern void MCQTGetRecordLoudness(MCExecContext& ctxt, r_loudness);
+    MCQTGetRecordLoudness(ctxt, r_loudness);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -268,6 +271,7 @@ void MCMultimediaExecStopRecording(MCExecContext& ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MERG-2014-06-20: Now calling the function from quicktime.cpp
 void MCMultimediaExecRecord(MCExecContext& ctxt, MCStringRef p_filename)
 {
 	if (!ctxt . EnsurePrivacyIsAllowed())
@@ -275,41 +279,33 @@ void MCMultimediaExecRecord(MCExecContext& ctxt, MCStringRef p_filename)
 
 	MCAutoStringRef soundfile;
     MCS_resolvepath(p_filename, &soundfile);
-	MCtemplateplayer->recordsound(*soundfile);
+    
+	extern void MCQTRecordSound(MCStringRef soundfile);
+	MCQTRecordSound(soundfile);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MERG-2014-06-20: Now calling the function from quicktime.cpp
 void MCMultimediaExecAnswerEffect(MCExecContext &ctxt)
 {
-	MCAutoStringRef t_value, t_result;
+    MCresult -> clear(False);
+    extern void MCQTEffectsDialog(MCExecContext &ctxt, MCStringRef &r_data);
+    
+    MCAutoStringRef t_value;
+    MCQTEffectsDialog(ctxt, &t_value);
 
-	if (MCtemplateplayer->stdeffectdlg(&t_value, &t_result))
-	{
-		if (*t_result == nil || MCStringGetLength(*t_result) == 0)
-			ctxt.SetItToValue(*t_value);
-		else
-			ctxt.SetTheResultToValue(*t_result);
-		return;
-	}
-
-	ctxt.Throw();
+    if (!ctxt . HasError())
+        ctxt.SetItToValue(*t_value);
 }
 
+// MERG-2014-06-20: Now calling the function from quicktime.cpp
 void MCMultimediaExecAnswerRecord(MCExecContext &ctxt)
 {
-	MCAutoStringRef t_result;
+    MCresult -> clear(False);
+    extern void MCQTEffectsDialog(MCExecContext &ctxt);
 
-	if (MCtemplateplayer->stdrecorddlg(&t_result))
-	{
-		if (*t_result == nil || MCStringGetLength(*t_result) == 0)
-			ctxt.SetTheResultToEmpty();
-		else
-			ctxt.SetTheResultToValue(*t_result);
-		return;
-	}
-
-	ctxt.Throw();
+    MCQTEffectsDialog(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -698,21 +694,25 @@ void MCMultimediaSetRecordRate(MCExecContext& ctxt, double p_value)
 void MCMultimediaGetPlayDestination(MCExecContext& ctxt, MCStringRef& r_dest)
 {
 	MCtemplateaudio -> getstringprop(ctxt, 0, P_PLAY_DESTINATION, False, r_dest);
+    //TODO-UPDATE
 }
 
 void MCMultimediaSetPlayDestination(MCExecContext& ctxt, MCStringRef p_dest)
 {
 	MCtemplateaudio -> setstringprop(ctxt, 0, P_PLAY_DESTINATION, False, p_dest);
+    //TODO-UPDATE
 }
 
 void MCMultimediaGetPlayLoudness(MCExecContext& ctxt, uinteger_t& r_loudness)
 {
 	MCtemplateaudio -> getuintprop(ctxt, 0, P_PLAY_LOUDNESS, False, r_loudness);
+    //TODO-UPDATE
 }
 
 void MCMultimediaSetPlayLoudness(MCExecContext& ctxt, uinteger_t p_loudness)
 {
 	MCtemplateaudio -> setuintprop(ctxt, 0, P_PLAY_LOUDNESS, False, p_loudness);
+    //TODO-UPDATE
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -754,8 +754,12 @@ void MCMultimediaGetRecording(MCExecContext& ctxt, bool& r_value)
 	r_value = MCrecording == True;
 }
 
+// MERG-2014-06-20: Refactoring functions from quicktime.cpp
 void MCMultimediaSetRecording(MCExecContext& ctxt, bool p_value)
 {
 	if (!p_value)
-		MCtemplateplayer->stoprecording();
+    {
+        extern void MCQTStopRecording(void);
+        MCQTStopRecording(ctxt);
+    }
 }

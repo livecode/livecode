@@ -1447,11 +1447,6 @@ void MCStack::mode_closeasmenu(void)
 {
 }
 
-bool MCStack::mode_haswindow(void)
-{
-	return window != DNULL;
-}
-
 void MCStack::mode_constrain(MCRectangle& rect)
 {
 }
@@ -1469,6 +1464,7 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 
 #endif
 
+<<<<<<< HEAD
 #ifdef _MACOSX
 MCSysWindowHandle MCStack::getqtwindow(void)
 {
@@ -1477,6 +1473,8 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 #endif
 
 #ifdef LEGACY_EXEC
+=======
+>>>>>>> develop
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCObject::mode_get/setprop for STANDALONE mode.
@@ -1645,7 +1643,7 @@ Window MCModeGetParentWindow(void)
 {
 	Window t_window;
 	t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == DNULL && MCtopstackptr != NULL)
+	if (t_window == NULL && MCtopstackptr != NULL)
 		t_window = MCtopstackptr -> getwindow();
 	return t_window;
 }

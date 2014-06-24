@@ -131,6 +131,7 @@ bool MCPatternToX11Pixmap(MCPatternRef p_pattern, Pixmap &r_pixmap)
 	bool t_success;
 	t_success = true;
 	
+<<<<<<< HEAD
 	MCGImageRef t_image;
 	t_image = p_pattern->image;
 	
@@ -146,6 +147,11 @@ bool MCPatternToX11Pixmap(MCPatternRef p_pattern, Pixmap &r_pixmap)
 	uint32_t t_width, t_height;
 	t_width = ceilf(t_dst_rect.size.width);
 	t_height = ceilf(t_dst_rect.size.height);
+=======
+	uint32_t t_width, t_height;
+	t_success = MCPatternGetGeometry(p_pattern, t_width, t_height);
+	
+>>>>>>> develop
 	
 	MCBitmap *t_bitmap;
 	t_bitmap = nil;
@@ -159,16 +165,42 @@ bool MCPatternToX11Pixmap(MCPatternRef p_pattern, Pixmap &r_pixmap)
 	if (t_success)
 		t_success = MCGContextCreateWithPixels(t_width, t_height, t_bitmap->bytes_per_line, t_bitmap->data, false, t_context);
 		
+<<<<<<< HEAD
+=======
+	MCGImageRef t_image;
+	t_image = nil;
+
+	MCGAffineTransform t_transform;
+	
+	// IM-2014-05-13: [[ HiResPatterns ]] Update pattern access to use lock function
+	if (t_success)
+		t_success = MCPatternLockForContextTransform(p_pattern, MCGAffineTransformMakeIdentity(), t_image, t_transform);
+
+>>>>>>> develop
 	if (t_success)
 	{
 		// Fill background with black
 		MCGContextSetFillRGBAColor(t_context, 0.0, 0.0, 0.0, 1.0);
+<<<<<<< HEAD
 		MCGContextAddRectangle(t_context, t_dst_rect);
 		MCGContextFill(t_context);
 		
 		// draw transformed pattern image
 		MCGContextConcatCTM(t_context, t_transform);
 		MCGContextDrawImage(t_context, t_image, t_src_rect, kMCGImageFilterHigh);
+=======
+		MCGContextAddRectangle(t_context, MCGRectangleMake(0.0, 0.0, t_width, t_height));
+		MCGContextFill(t_context);
+		
+		MCGRectangle t_src_rect;
+		t_src_rect = MCGRectangleMake(0, 0, MCGImageGetWidth(t_image), MCGImageGetHeight(t_image));
+		
+		// draw transformed pattern image
+		MCGContextConcatCTM(t_context, t_transform);
+		MCGContextDrawImage(t_context, t_image, t_src_rect, kMCGImageFilterHigh);
+		
+		MCPatternUnlock(p_pattern, t_image);
+>>>>>>> develop
 	}
 	
 	if (t_context != nil)

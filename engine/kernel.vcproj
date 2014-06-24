@@ -1008,6 +1008,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\region.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\region.h"
 				>
 			</File>
@@ -1510,6 +1514,10 @@
 						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\quicktime.cpp"
+				>
 			</File>
 			<Filter
 				Name="Platform - Linux"
@@ -7739,6 +7747,7 @@
 				<File
 					RelativePath=".\exec-tests\datetime\EvalSeconds.test"
 					>
+<<<<<<< HEAD
 				</File>
 				<File
 					RelativePath=".\exec-tests\datetime\EvalTicks.test"
@@ -7763,6 +7772,15 @@
 			</Filter>
 			<Filter
 				Name="logic"
+=======
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\sysspec.cpp"
+>>>>>>> develop
 				>
 				<File
 					RelativePath=".\exec-tests\logic\EvalAnd.test"

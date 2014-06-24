@@ -31,8 +31,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "osspec.h"
 
-#include "osxdc.h"
+#include "osspec.h"
 #include "osxflst.h"
+
+extern void *coretext_font_create_with_name_size_and_style(const char *p_name, uint32_t p_size, bool p_bold, bool p_italic);
+extern void coretext_font_destroy(void *p_font);
+extern void coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent);
+extern void coretext_get_font_names(MCExecPoint &ep);
+extern void core_text_get_font_styles(const char *p_name, uint32_t p_size, MCExecPoint &ep);
 
 #define MAX_XFONT2MACFONT    11
 
@@ -57,6 +63,7 @@ static X2MacFontTable XMfonts[MAX_XFONT2MACFONT] = { // X to Mac font table
             { "terminal", "Courier" }
         };
 
+<<<<<<< HEAD
 MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 {
 	reqname = fname;
@@ -65,10 +72,18 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 	char *tmpname;
 	char *temp;
 	font = new MCFontStruct; //create MCFont structure
+=======
+MCFontnode::MCFontnode(const MCString& fname, uint2& size, uint2 style)
+{
+	reqname = fname . clone();
+	reqsize = size;
+	reqstyle = style;
+>>>>>>> develop
 	
-	// MW-2005-05-10: Update this to FM type
-	FMFontFamily ffamilyid;		    //font family ID
+	font = new MCFontStruct;
+	font -> size = size;
 	
+<<<<<<< HEAD
 	/* UNCHECKED */ MCStringConvertToCString(MCNameGetString(fname), temp);
 	tmpname = strclone(temp);//make a copy of the font name
 
@@ -97,54 +112,46 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 				// MW-2005-05-10: Update this call to FM rountines
 				ffamilyid = FMGetFontFamilyFromName(reqnamePascal);
 				delete tmpname;
+=======
+	char *t_comma;
+	t_comma = strchr(reqname, ',');
+	if (t_comma != nil)
+		*t_comma = '\0';
+	
+    // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
+    font -> fid = (MCSysFontHandle)coretext_font_create_with_name_size_and_style(reqname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
+	
+    // if font does not exist then find MAC equivalent of X font name
+    if (font -> fid == NULL)
+	{
+		for (uint2 i = 0 ; i < MAX_XFONT2MACFONT ; i++)
+			if (fname == XMfonts[i] . Xfontname)
+			{
+                // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
+                font -> fid = (MCSysFontHandle)coretext_font_create_with_name_size_and_style(XMfonts[i] . Macfontname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
+>>>>>>> develop
 				break;
 			}
 	}
-
-	CGrafPtr oldport;
-	GDHandle olddevice;
-	GetGWorld(&oldport, &olddevice);
-	MCScreenDC *pms = (MCScreenDC *)MCscreen;
-	SetGWorld(GetWindowPort(pms->getinvisiblewin()), GetMainDevice());
-	TextFont(ffamilyid);
-
-	Style tstyle = 0;
-	if ((style & FA_ITALIC) || (style & FA_OBLIQUE))
-		tstyle |= italic;
-	if ((style & FA_WEIGHT) > 0x05)
-		tstyle |= bold;
-	if ((style & FA_EXPAND) > 0x50)
-		tstyle |= extend;
-	if ((style & FA_EXPAND) < 0x50)
-		tstyle |= condense;
-
-	TextFace(tstyle);
-	TextSize(size);  //set text size
-
-	font->fid = (MCSysFontHandle)ffamilyid;
-	font->size = size;
-	font->style = tstyle;
+    
+	font -> ascent = size - 1;
+	font -> descent = size * 2 / 14 + 1;
 	
-	font->ascent = size - 1;
-	font->descent = size * 2 / 14 + 1;
-
-	// potentially some problem here:
-	// finding 16-bit fonts may cause problems with 8/16 string drawing
-	uint2 i;
-	char t[256];
-	FillParseTable(t, smCurrentScript);
-	
-	FontInfo finfo;
-	GetFontInfo(&finfo);     //get font info
-	
-	if (finfo.ascent + finfo.descent > size)
-		font->ascent++;
-
-	SetGWorld(oldport, olddevice);
+    // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
+	float ascent, descent;
+	coretext_font_get_metrics(font -> fid,  ascent, descent);
+	if (ceilf(ascent) + ceilf(descent) > size)
+		font -> ascent++;
 }
 
 MCFontnode::~MCFontnode()
 {
+<<<<<<< HEAD
+=======
+    // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
+	coretext_font_destroy(font -> fid);
+	delete reqname;
+>>>>>>> develop
 	delete font;
 }
 
@@ -191,6 +198,7 @@ MCFontStruct *MCFontlist::getfont(MCNameRef fname, uint2 &size, uint2 style, Boo
 	return tmp->getfont(fname, size, style);
 }
 
+<<<<<<< HEAD
 bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 { //get a list of all the available font in the system
 	MCAutoListRef t_list;
@@ -238,10 +246,17 @@ bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 	if (t_success)
 		t_success = MCListCopy(*t_list, r_names);
 	return t_success;
+=======
+void MCFontlist::getfontnames(MCExecPoint &ep, char *type)
+{
+    // MM-2014-06-02: [[ CoreText ]] Updated to use core text routines.
+    coretext_get_font_names(ep);
+>>>>>>> develop
 }
 
 bool MCFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 {
+<<<<<<< HEAD
 	FMFontFamily ffamilyID;
     char *t_fname;
     /* UNCHECKED */ MCStringConvertToCString(p_fname, t_fname);
@@ -286,10 +301,16 @@ bool MCFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 	if (t_success)
 		t_success = MCListCopy(*t_list, r_sizes);
 	return t_success;
+=======
+    // MM-2014-06-02: [[ CoreText ]] Assume all core text fonts are scaleable.
+	ep . clear();
+	ep . concatuint(0, EC_RETURN, true);
+>>>>>>> develop
 }
 
 bool MCFontlist::getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_styles)
 {
+<<<<<<< HEAD
 	MCAutoListRef t_list;
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
@@ -300,6 +321,10 @@ bool MCFontlist::getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_st
 		MCListAppend(*t_list, MCN_italic) &&
 		MCListAppend(*t_list, MCN_bold_italic);
 	return t_success && MCListCopy(*t_list, r_styles);
+=======
+    // MM-2014-06-02: [[ CoreText ]] Updated to use core text routines.
+    core_text_get_font_styles(fname, fsize, ep);
+>>>>>>> develop
 }
 
 bool MCFontlist::getfontstructinfo(MCNameRef& r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
@@ -318,4 +343,3 @@ bool MCFontlist::getfontstructinfo(MCNameRef& r_name, uint2 &r_size, uint2 &r_st
 	}
 	return false;
 }
-

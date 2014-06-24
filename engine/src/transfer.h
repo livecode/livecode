@@ -125,6 +125,7 @@ enum MCTransferType
 	TRANSFER_TYPE_TEXT__FIRST = TRANSFER_TYPE_TEXT,
 	TRANSFER_TYPE_UNICODE_TEXT,
 	TRANSFER_TYPE_STYLED_TEXT,
+	TRANSFER_TYPE_STYLED_TEXT_ARRAY,
 	TRANSFER_TYPE_RTF_TEXT,
 	TRANSFER_TYPE_HTML_TEXT,
 	TRANSFER_TYPE_TEXT__LAST = TRANSFER_TYPE_HTML_TEXT,
@@ -574,6 +575,10 @@ bool MCConvertTextToStyledText(MCDataRef p_input, MCDataRef& r_output);
 bool MCConvertUnicodeToStyledText(MCDataRef p_input, MCDataRef& r_output);
 bool MCConvertRTFToStyledText(MCDataRef p_input, MCDataRef& r_output);
 bool MCConvertHTMLToStyledText(MCDataRef p_input, MCDataRef& r_output);
+
+// MW-2014-03-12: [[ ClipboardStyledText ]] Converters to and from styledText arrays.
+MCVariableValue *MCConvertStyledTextToStyledTextArray(MCSharedString *p_string);
+MCSharedString *MCConvertStyledTextArrayToStyledText(MCVariableValue *p_value);
 
 ///////////////////////////////////////////////////////////////////////////////
 

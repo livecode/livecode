@@ -94,7 +94,12 @@ public:
 	void cleanup(IO_handle stream, MCStringRef lname, MCStringRef bname);
 	IO_stat savestack(MCStack *sptr, const MCStringRef);
 	IO_stat startup(void);
-
+	
+	void wreshape(Window w);
+	void wredraw(Window w, MCPlatformSurfaceRef surface, MCGRegionRef region);
+	void wiconify(Window w);
+	void wuniconify(Window w);
+	
 	void wclose(Window w);
 	void wkfocus(Window w);
 	void wkunfocus(Window w);

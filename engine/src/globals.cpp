@@ -375,6 +375,7 @@ Boolean MCexitall;
 int4 MCretcode;
 Boolean MCrecording;
 
+<<<<<<< HEAD
 Boolean MCantialiasedtextworkaround = False;
 
 // AL-2014-18-02: [[ UnicodeFileFormat ]] Make stackfile version 7.0 the default.
@@ -383,6 +384,27 @@ uint2 MClook;
 MCStringRef MCttbgcolor;
 MCStringRef MCttfont;
 uint2 MCttsize;
+=======
+// MW-2012-03-08: [[ StackFile5500 ]] Make stackfile version 5.5 the default.
+uint4 MCstackfileversion = 5500;
+
+#if defined(_WINDOWS)
+uint2 MClook = LF_WIN95;
+const char *MCttbgcolor = "255,255,231";
+const char *MCttfont = "MS Sans Serif";
+uint2 MCttsize = 12;
+#elif defined(_MACOSX)
+uint2 MClook = LF_MAC;
+const char *MCttbgcolor = "255,255,207";
+const char *MCttfont = "Lucida Grande";
+uint2 MCttsize = 11;
+#else
+uint2 MClook = LF_MOTIF;
+const char *MCttbgcolor = "255,255,207";
+const char *MCttfont = "Helvetica";
+uint2 MCttsize = 12;
+#endif
+>>>>>>> develop
 uint2 MCtrylock;
 uint2 MCerrorlock;
 Boolean MCwatchcursor;
@@ -397,7 +419,6 @@ Boolean MClockcolormap;
 Boolean MClockerrors;
 Boolean MClockmenus;
 Boolean MClockmessages;
-Boolean MClockmoves;
 Boolean MClockrecent;
 Boolean MCtwelvetime = True;
 Boolean MCuseprivatecmap;
@@ -736,6 +757,7 @@ void X_clear_globals(void)
 	MCexitall = False;
 	MCretcode = 0;
 	MCrecording = False;
+<<<<<<< HEAD
 	MCantialiasedtextworkaround = False;
 	// AL-2014-18-02: [[ UnicodeFileFormat ]] Make 7.0 stackfile version the default.
 	MCstackfileversion = 7000;
@@ -756,6 +778,14 @@ void X_clear_globals(void)
     MCttsize = 12;
 #endif
     MCttsize = 12;
+=======
+	// MW-2012-03-08: [[ StackFile5500 ]] Make 5.5 stackfile version the default.
+	MCstackfileversion = 5500;
+	MClook = LF_MOTIF;
+	MCttbgcolor = "255,255,207";
+	MCttfont = "Helvetica";
+	MCttsize = 12;
+>>>>>>> develop
 	MCtrylock = 0;
 	MCerrorlock = 0;
 	MCwatchcursor = False;
@@ -769,7 +799,6 @@ void X_clear_globals(void)
 	MClockerrors = False;
 	MClockmenus = False;
 	MClockmessages = False;
-	MClockmoves = False;
 	MClockrecent = False;
 	MCtwelvetime = True;
 	MCuseprivatecmap = False;
@@ -1058,7 +1087,10 @@ int X_close(void)
 
 	MCU_play_stop();
 	if (MCrecording)
-		MCtemplateplayer->stoprecording();
+	{
+		extern void MCQTStopRecording(void);
+		MCQTStopRecording();
+	}
 	MClockmessages = True;
 	MCS_killall();
 
