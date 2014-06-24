@@ -940,8 +940,8 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 			// MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
 			//   This is because minx/maxx are uninitialized and it seems that they have to be for
 			//   calls to getxextents() to make sense.
-			minx = INFINITY;
-			maxx = -INFINITY;
+			minx = MCinfinity;
+			maxx = -MCinfinity;
 
 			do
 			{
