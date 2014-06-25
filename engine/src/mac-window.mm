@@ -699,11 +699,19 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 - (void)rightMouseDown: (NSEvent *)event
 {
+    // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
+    if ([[self window] attachedSheet] != nil)
+        return;
+    
 	[self handleMousePress: event isDown: YES];
 }
 
 - (void)rightMouseUp: (NSEvent *)event
 {
+    // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
+    if ([[self window] attachedSheet] != nil)
+        return;
+    
 	[self handleMousePress: event isDown: NO];
 }
 
@@ -719,11 +727,19 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 - (void)otherMouseDown: (NSEvent *)event
 {
+    // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
+    if ([[self window] attachedSheet] != nil)
+        return;
+    
 	[self handleMousePress: event isDown: YES];
 }
 
 - (void)otherMouseUp: (NSEvent *)event
 {
+    // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
+    if ([[self window] attachedSheet] != nil)
+        return;
+    
 	[self handleMousePress: event isDown: NO];
 }
 
