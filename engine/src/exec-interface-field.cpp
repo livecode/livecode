@@ -1145,13 +1145,17 @@ void MCField::DoSetTabStops(MCExecContext& ctxt, bool is_relative, uindex_t p_co
             return;
         }
 
-        if (is_relative)
+        // AL-2014-06-25: [[ Bug 12697]] If a tabStop is smaller than the preceding one,
+        //  then calculate as relative distance.
+        if (is_relative || p_tabs[i] < t_previous_tab_stop)
         {
             t_new_tabs . Push(p_tabs[i] + t_previous_tab_stop);
             t_previous_tab_stop = t_new_tabs[i];
         }
         else
             t_new_tabs . Push(p_tabs[i]);
+        
+        t_previous_tab_stop = p_tabs[i];
     }
     
     t_new_tabs . Take(t_new, t_new_count);
