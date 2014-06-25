@@ -1403,14 +1403,14 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
     if (s_mouse_cursor_locked)
         return;
     
+    MCMacPlatformWindow *t_window;
+    t_window = (MCMacPlatformWindow *)p_window;
+    
     // If we are on Lion+ then check to see if the mouse location is outside
     // of any of the system tracking rects (used for resizing etc.)
     extern uint4 MCmajorosversion;
     if (MCmajorosversion >= 0x1070)
     {
-        MCMacPlatformWindow *t_window;
-        t_window = (MCMacPlatformWindow *)p_window;
-     
         // MW-2014-06-11: [[ Bug 12437 ]] Make sure we only check tracking rectangles if we have
         //   a resizable frame.
         bool t_is_resizable;
@@ -1431,15 +1431,20 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
         }
     }
     
-    // Show the cursor attached to the window.
-    MCPlatformCursorRef t_cursor;
-    MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
-    
-    // PM-2014-04-02: [[ Bug 12082 ]] IDE no longer crashes when changing an applied pattern
-    if (t_cursor != nil)
-        MCPlatformShowCursor(t_cursor);
-    else
-        MCPlatformHideCursor();
+    // MW-2014-06-25: [[ Bug 12634 ]] Make sure we only change the cursor if we are not
+    //   within a native view.
+    if ([t_window -> GetContainerView() hitTest: [t_window -> GetView() mapMCPointToNSPoint: s_mouse_position]] == t_window -> GetView())
+    {
+        // Show the cursor attached to the window.
+        MCPlatformCursorRef t_cursor;
+        MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
+        
+        // PM-2014-04-02: [[ Bug 12082 ]] IDE no longer crashes when changing an applied pattern
+        if (t_cursor != nil)
+            MCPlatformShowCursor(t_cursor);
+        else
+            MCPlatformHideCursor();
+    }
 }
 
 void MCMacPlatformHandleMouseAfterWindowHidden(void)

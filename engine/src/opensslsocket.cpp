@@ -50,6 +50,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <iphlpapi.h>
 #elif defined(_MAC_DESKTOP)
 #include "osxprefix.h"
+#include "platform.h"
 #include <SystemConfiguration/SCDynamicStore.h>
 #include <SystemConfiguration/SCDynamicStoreKey.h>
 #include <SystemConfiguration/SCSchemaDefinitions.h>
@@ -156,6 +157,7 @@ static void socketCallback (CFSocketRef cfsockref, CFSocketCallBackType type, CF
 			MCsockets[i]->readsome();
 			break;
 		}
+        MCPlatformBreakWait();
 	}
 	MCS_poll(0.0,0);//quick poll of other sockets
 }
@@ -1556,7 +1558,7 @@ Boolean MCSocket::init(MCSocketHandle newfd)
 	if (cfsockref)
 	{
 		rlref = CFSocketCreateRunLoopSource(kCFAllocatorDefault, cfsockref, 0);
-		CFRunLoopAddSource((CFRunLoopRef)CFRunLoopGetCurrent(), rlref, kCFRunLoopDefaultMode);
+		CFRunLoopAddSource((CFRunLoopRef)CFRunLoopGetCurrent(), rlref, kCFRunLoopCommonModes);
 		CFOptionFlags socketOptions = 0 ;
 		CFSocketSetSocketFlags( cfsockref, socketOptions );
 	}
