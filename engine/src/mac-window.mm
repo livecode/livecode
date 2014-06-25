@@ -446,16 +446,30 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	return NO;
 }
 
+// MW-2014-06-25: [[ Bug 12632 ]] Make sure we map frame to content rects and back
+//   again (engine WindowConstrain expects content sizes, whereas Cocoa expects
+//   frame sizes).
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize
 {
+    MCRectangle t_frame;
+    t_frame = MCRectangleMake(0, 0, frameSize . width, frameSize . height);
+    
+    MCRectangle t_content;
+    m_window -> DoMapFrameRectToContentRect(t_frame, t_content);
+    
 	MCPoint t_size;
-	t_size . x = frameSize . width;
-	t_size . y = frameSize . height;
+	t_size . x = t_content . width;
+    t_size . y = t_content . height;
 	
 	MCPoint t_new_size;
 	MCPlatformCallbackSendWindowConstrain(m_window, t_size, t_new_size);
+    
+    t_content . width = t_new_size . x;
+    t_content . height = t_new_size . y;
+    
+    m_window -> DoMapContentRectToFrameRect(t_content, t_frame);
 	
-	return NSMakeSize(t_new_size . x, t_new_size . y);
+	return NSMakeSize(t_frame . width, t_frame . height);
 }
 
 - (void)windowWillMove:(NSNotification *)notification
