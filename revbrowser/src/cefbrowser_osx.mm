@@ -98,6 +98,7 @@ public:
 	
 private:
 	CefWindowHandle m_parent_window;
+	int32_t m_left, m_top, m_right, m_bottom;
 };
 
 const char *MCCefPlatformGetSubProcessName(void)
@@ -190,8 +191,11 @@ bool MCCefPlatformCreateBrowser(int p_window_id, MCCefBrowserBase *&r_browser)
 
 void MCCefBrowserOSX::PlatformConfigureWindow(CefWindowInfo &r_info)
 {
-	r_info.SetAsChild(m_parent_window, 0,0,1,1);
-    
+	NSRect t_win_rect;
+	t_win_rect = [m_parent_window frame];
+	
+	// IM-2014-06-13: [[ Bug 12631 ]] Set initial window rect to the topleft of the window
+	r_info.SetAsChild(m_parent_window, 0,t_win_rect.size.height,0,0);
     
 	NSView *t_handle;
 	if (!GetWindowHandle(t_handle))
@@ -213,6 +217,8 @@ void MCCefPlatformCloseBrowserWindow(CefRefPtr<CefBrowser> p_browser)
 MCCefBrowserOSX::MCCefBrowserOSX(CefWindowHandle p_parent_window) : MCCefBrowserBase()
 {
 	m_parent_window = p_parent_window;
+	
+	m_left = m_top = m_right = m_bottom = 0;
 }
 
 MCCefBrowserOSX::~MCCefBrowserOSX(void)
@@ -254,20 +260,11 @@ bool MCCefBrowserOSX::GetWindowHandle(CefWindowHandle &r_hwnd)
 
 bool MCCefBrowserOSX::PlatformGetRect(int32_t &r_left, int32_t &r_top, int32_t &r_right, int32_t &r_bottom)
 {
-	NSView *t_handle;
-	if (!GetWindowHandle(t_handle))
-		return false;
-	
-	NSRect t_rect;
-	t_rect = [t_handle frame];
-	
-	NSRect t_win_rect;
-	t_win_rect = [[[t_handle window] contentView] frame];
-	
-	r_left = t_rect.origin.x;
-	r_top = t_win_rect.size.height - t_rect.origin.y;
-	r_right = r_left + t_rect.size.width;
-	r_bottom = r_top + t_rect.size.height;
+	// IM-2014-06-13: [[ Bug 12631 ]] Return the last rect set
+	r_left = m_left;
+	r_top = m_top;
+	r_right = m_right;
+	r_bottom = m_bottom;
 	
 	return true;
 }
@@ -285,6 +282,12 @@ bool MCCefBrowserOSX::PlatformSetRect(int32_t p_left, int32_t p_top, int32_t p_r
 	t_rect = NSMakeRect(p_left, t_win_rect.size.height - p_bottom, p_right - p_left, p_bottom - p_top);
 	
 	[t_handle setFrame:t_rect];
+	
+	// IM-2014-06-13: [[ Bug 12631 ]] Store the rect values
+	m_left = p_left;
+	m_top = p_top;
+	m_right = p_right;
+	m_bottom = p_bottom;
 	
 	return true;
 }
