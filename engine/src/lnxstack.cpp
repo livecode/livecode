@@ -850,7 +850,6 @@ public:
 			MCLinuxRegionDestroy(t_region);
 		}
 
-        MCRegionDestroy(m_redraw_region);
 		((MCScreenDC*)MCscreen)->destroyimage(m_bitmap);
 		m_bitmap = nil;
 	}

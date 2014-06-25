@@ -1080,7 +1080,7 @@ void MCQTEffectsList(MCStringRef &r_effect_list)
 	r_effect_list = MCValueRetain(kMCEmptyString);
 }
 
-Boolean MCQTEffectsDialog(MCStrinRef &r_value)
+Boolean MCQTEffectsDialog(MCStringRef &r_value)
 {
     r_value = MCValueRetain(kMCEmptyString);
 	return True;
@@ -1094,10 +1094,10 @@ void MCQTRecordSound(MCStringRef file)
 void MCQTGetRecordLoudness(integer_t &r_loudness)
 {
 	MCresult -> sets("not supported");
-    r_loundess = 0;
+    r_loudness = 0;
 }
 
-void MCQTGetRecordCompressionList(MCStringRef r_compression_list)
+void MCQTGetRecordCompressionList(MCStringRef &r_compression_list)
 {
 	MCresult -> sets("not supported");
     r_compression_list = MCValueRetain(kMCEmptyString);

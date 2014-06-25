@@ -917,7 +917,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
                         XChangeProperty(dpy, srevent -> requestor, srevent -> property,
                                     srevent -> target, 8, PropModeReplace,
                                     (const unsigned char *)MCDataGetBytePtr(*t_data),
-                                    MCDataGetLength(*t_data);
+                                    MCDataGetLength(*t_data));
                         
                         if (srevent->property != None)
                             sendevent.property = srevent->property;

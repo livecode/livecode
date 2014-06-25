@@ -1283,9 +1283,11 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 	if ( backdrop == DNULL ) 
 		createbackdrop_window();
 	
-	if (m_backdrop_pixmap == nil &&
-	        parsecolor(MCbackdropcolor, &backdropcolor))
+    if (m_backdrop_pixmap == nil)
+    {
+        backdropcolor = p_colour;
 		alloccolor(backdropcolor);
+    }
 	else
 		backdropcolor.pixel = 0;
 	
