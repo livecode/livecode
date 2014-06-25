@@ -1116,6 +1116,10 @@ public:
 	void GetPassword(MCExecContext& ctxt, MCDataRef& r_value);
     void GetKey(MCExecContext& ctxt, bool& r_value);
     
+    // MERG-2014-06-25: [[ IgnoreMouseEvents ]] Setter and getter added
+    void SetIgnoreMouseEvents(MCExecContext &ctxt, bool p_ignore);
+    void GetIgnoreMouseEvents(MCExecContext &ctxt, bool &r_ignored);
+    
     virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetHilitePixel(MCExecContext& ctxt, uinteger_t* pixel);

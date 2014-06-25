@@ -1772,7 +1772,7 @@ void MCInterfaceExecPushCard(MCExecContext& ctxt, MCCard *p_target)
 void MCInterfaceExecClickCmd(MCExecContext& ctxt, uint2 p_button, MCPoint p_location, uint2 p_modifiers)
 {
 	if (!MCdefaultstackptr->getopened()
-	        || !MCdefaultstackptr->mode_haswindow())
+	        || !MCdefaultstackptr->haswindow())
 	{
 		ctxt . LegacyThrow(EE_CLICK_STACKNOTOPEN);
 		return;

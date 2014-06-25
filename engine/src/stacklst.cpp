@@ -30,11 +30,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "util.h"
-<<<<<<< HEAD
 #include <wctype.h>
-=======
 #include "redraw.h"
->>>>>>> develop
 
 #include "globals.h"
 #include "exec.h"
@@ -351,12 +348,8 @@ Boolean MCStacklist::doaccelerator(KeySym p_key)
 					if (t_lowersym == accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
 					{
 						MCmodifierstate &= t_mod_mask;
-<<<<<<< HEAD
 						accelerators[i] . button -> activate(True, t_lowersym);
-=======
-						accelerators[i] . button -> activate(True, (uint2)key);
                         MCRedrawUnlockScreen();
->>>>>>> develop
 						return True;
 					}
 				}
@@ -687,12 +680,8 @@ void MCStacklist::reopenallstackwindows(void)
 {
 	if (stacks != NULL)
 	{
-<<<<<<< HEAD
-		MCStacknode *tptr = stacks;
-=======
         // MW-2014-05-15: [[ Bug 12414 ]] Go backwards through the list to stop infinite loopage.
 		MCStacknode *tptr = stacks -> prev();
->>>>>>> develop
 		do
 		{
             MCStack *t_stack;
@@ -701,15 +690,9 @@ void MCStacklist::reopenallstackwindows(void)
             if (t_stack->getopened() && t_stack->getwindow() != nil)
                 t_stack->reopenwindow();
             
-<<<<<<< HEAD
-            tptr = tptr->next();
-		}
-		while (tptr != stacks);
-=======
             tptr = tptr->prev();
 		}
 		while (tptr != stacks -> prev());
->>>>>>> develop
 	}
 }
 

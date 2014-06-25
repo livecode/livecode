@@ -599,7 +599,7 @@ void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu);
 void MCPlatformRetainMenu(MCPlatformMenuRef menu);
 void MCPlatformReleaseMenu(MCPlatformMenuRef menu);
 
-void MCPlatformSetMenuTitle(MCPlatformMenuRef menu, const char *title);
+void MCPlatformSetMenuTitle(MCPlatformMenuRef menu, MCStringRef title);
 
 void MCPlatformCountMenuItems(MCPlatformMenuRef menu, uindex_t& r_count);
 
@@ -942,13 +942,14 @@ enum MCPlatformFileDialogKind
 	kMCPlatformFileDialogKindOpenMultiple,
 };
 
-void MCPlatformBeginFolderDialog(MCPlatformWindowRef owner, const char *p_title, const char *p_message, const char *p_initial);
-MCPlatformDialogResult MCPlatformEndFolderDialog(char*& r_selected_folder);
+void MCPlatformBeginFolderDialog(MCPlatformWindowRef owner, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial);
+MCPlatformDialogResult MCPlatformEndFolderDialog(MCStringRef & r_selected_folder);
 
-void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, const char *p_title, const char *p_prompt,  char * const p_types[], uint4 p_type_count, const char *p_initial);
-MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, char*& r_paths, char*& r_type);
 
-void MCPlatformBeginColorDialog(const char *p_title, const MCColor& p_color);
+void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindowRef p_owner, MCStringRef p_title, MCStringRef p_prompt,  MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial);
+MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, MCStringRef& r_paths, MCStringRef& r_type);
+
+void MCPlatformBeginColorDialog(MCStringRef p_title, const MCColor& p_color);
 MCPlatformDialogResult MCPlatformEndColorDialog(MCColor& r_new_color);
 
 ////////////////////////////////////////////////////////////////////////////////

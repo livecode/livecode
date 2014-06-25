@@ -447,15 +447,9 @@ public:
 	virtual void waitfocus();
 	virtual uint2 querymods();
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
-<<<<<<< HEAD
     virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
     virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
     virtual void delaymessage(MCObject *optr, MCNameRef name, MCStringRef p1 = nil, MCStringRef p2 = nil);
-
-=======
-	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
-	virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
->>>>>>> develop
 	
 	// Wait for at most 'duration' seconds. If 'dispatch' is true then event
 	// dispatch will occur. If 'anyevent' is true then the call will return
@@ -467,9 +461,6 @@ public:
 	// and such to be processed. If the wait was called with 'anyevent' True
 	// then it will cause termination of the wait.
 	virtual void pingwait(void);
-<<<<<<< HEAD
-	
-=======
 
 	// IM-2014-03-06: [[ revBrowserCEF ]] Add action to runloop
 	bool AddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action);
@@ -478,7 +469,6 @@ public:
 	// IM-2014-03-06: [[ revBrowserCEF ]] Perform runloop actions
 	void DoRunloopActions(void);
 
->>>>>>> develop
 	virtual void flushevents(uint2 e);
 	virtual void updatemenubar(Boolean force);
 	virtual Boolean istripleclick();
@@ -616,12 +606,7 @@ public:
 	void cancelmessageindex(uint2 i, Boolean dodelete);
 	void cancelmessageid(uint4 id);
 	void cancelmessageobject(MCObject *optr, MCNameRef name);
-<<<<<<< HEAD
     bool listmessages(MCExecContext& ctxt, MCListRef& r_list);
-    void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params);
-    int doshiftmessage(int index, real8 newtime);
-=======
-	void delaymessage(MCObject *optr, MCNameRef name, char *p1 = NULL, char *p2 = NULL);
     void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params);
     int doshiftmessage(int index, real8 newtime);
     
@@ -629,8 +614,6 @@ public:
     //   engine sent messages. The former are subject to a limit to stop pending message queue overflow.
     bool addusermessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
     
-	void listmessages(MCExecPoint &ep);
->>>>>>> develop
 	Boolean handlepending(real8 &curtime, real8 &eventtime, Boolean dispatch);
 	Boolean getlockmoves() const;
 	void setlockmoves(Boolean b);

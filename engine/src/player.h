@@ -36,7 +36,6 @@ enum QTVRstate {
 };
 #endif
 
-<<<<<<< HEAD
 struct MCMultimediaTrackList;
 struct MCMultimediaQTVRConstraints;
 struct MCMultimediaQTVRNode;
@@ -72,9 +71,7 @@ enum
 	PLAYER_MEDIA_TYPE_FLASH = 1 << PLAYER_MEDIA_TYPE_FLASH_BIT,
 };
 
-=======
 #ifndef FEATURE_PLATFORM_PLAYER
->>>>>>> develop
 struct MCPlayerOffscreenBuffer;
 #endif
 
@@ -239,7 +236,6 @@ public:
 #ifdef LEGACY_EXEC
 	void getnodes(MCExecPoint &ep);
 	void gethotspots(MCExecPoint &ep);
-<<<<<<< HEAD
 #endif
 	bool geteffectlist(MCStringRef& r_string);
 	void recordsound(MCStringRef fname);
@@ -272,24 +268,19 @@ public:
 	// MW-2005-05-15: Augment call with extra title field for consistency
 	bool stdrecorddlg(MCStringRef &r_result);
 	void stoprecording();
-=======
->>>>>>> develop
 
 	// MW-2011-09-23: Ensures the buffering state is consistent with current flags
 	//   and such.
 	void syncbuffering(MCContext *dc);
 
-<<<<<<< HEAD
 	bool stdeffectdlg(MCStringRef &r_value, MCStringRef &r_result);
 
-=======
 #ifdef FEATURE_PLATFORM_PLAYER
 	MCRectangle resize(MCRectangle rect);
 	void SynchronizeUserCallbacks(void);
 	Boolean isbuffering(void);
 #endif
 	
->>>>>>> develop
 #ifdef _LINUX_DESKTOP
 	const char *getcommand()
 	{
@@ -407,7 +398,6 @@ public:
 		lasttime = ltime;
 	}
 
-<<<<<<< HEAD
 	////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(void);
@@ -479,7 +469,6 @@ public:
 
     void GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks);
     
-=======
 #ifdef FEATURE_PLATFORM_PLAYER
 	MCPlatformPlayerRef getplatformplayer(void)
 	{
@@ -491,7 +480,6 @@ public:
 #endif
 	
 #ifndef FEATURE_PLATFORM_PLAYER
->>>>>>> develop
 #ifdef FEATURE_QUICKTIME
 	Boolean qt_prepare(void);
 	Boolean qt_playpause(Boolean on);

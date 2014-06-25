@@ -441,8 +441,9 @@ public:
     void GetDisabledIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
     void SetIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
     void GetIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
-    void GetIconGravity(MCExecContext, MCStringRef &r_gravity);
-    void SetIconGravity(MCExecContext &ctxt, MCStringRef p_gravity);
+    // MERG-2014-06-25 [[ IconGravity ]]
+    void GetIconGravity(MCExecContext &ctxt, intenum_t &r_gravity);
+    void SetIconGravity(MCExecContext &ctxt, intenum_t p_gravity);
     void SetHiliteIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
     void GetHiliteIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
     void SetVisitedIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);

@@ -286,7 +286,7 @@ void MCImage::SetRepeatCount(MCExecContext& ctxt, integer_t p_count)
 	{
 		setframe(currentframe == m_rep->GetFrameCount() - 1 ? 0 : currentframe + 1);
 		MCImageFrame *t_frame = nil;
-		if (m_rep->LockImageFrame(currentframe, true, getdevicescale(), t_frame))
+		if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
 		{
 			MCscreen->addtimer(this, MCM_internal, t_frame->duration);
 			m_rep->UnlockImageFrame(currentframe, t_frame);
@@ -671,6 +671,35 @@ void MCImage::SetAngle(MCExecContext& ctxt, integer_t p_angle)
 	}
 }
 
+
+void MCImage::SetCenterRectangle(MCExecContext& ctxt, MCRectangle *p_rectangle)
+{
+    if (p_rectangle == nil)
+        m_center_rect = MCRectangleMake(INT16_MIN, INT16_MIN, UINT16_MAX, UINT16_MAX);
+    else
+    {
+        m_center_rect . x = MCU_max(p_rectangle -> x, 0);
+        m_center_rect . y = MCU_max(p_rectangle -> y, 0);
+        m_center_rect . width = MCU_max(p_rectangle -> width, 0);
+        m_center_rect . height = MCU_max(p_rectangle -> height, 0);
+    }
+    
+    notifyneeds(false);
+    
+    dirty = True;
+}
+
+void MCImage::GetCentreRectangle(MCExecContext& ctxt, MCRectangle *&r_rectangle)
+{
+    if (m_center_rect . x != INT16_MIN)
+    {
+        r_rectangle = new MCRectangle;
+        *r_rectangle = m_center_rect;
+    }
+    else
+        r_rectangle = NULL;
+}
+
 void MCImage::SetBlendLevel(MCExecContext& ctxt, uinteger_t level)
 {
     MCObject::SetBlendLevel(ctxt, level);
@@ -698,7 +727,7 @@ void MCImage::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, 
     if (isvisible() && !wasvisible && m_rep != nil && m_rep->GetFrameCount() > 1)
     {
         MCImageFrame *t_frame = nil;
-        if (m_rep->LockImageFrame(currentframe, true, getdevicescale(), t_frame))
+        if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
         {
             MCscreen->addtimer(this, MCM_internal, t_frame->duration);
             m_rep->UnlockImageFrame(currentframe, t_frame);

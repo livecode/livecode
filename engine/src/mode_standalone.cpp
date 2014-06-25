@@ -323,7 +323,6 @@ IO_stat MCDispatch::startup(void)
         extern IO_handle android_get_mainstack_stream();
         t_stream = android_get_mainstack_stream();
 #else
-<<<<<<< HEAD
         MCAutoStringRef t_path;
         uindex_t t_last_slash;
         /* UNCHECKED */ MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCCompareExact, t_last_slash);
@@ -333,12 +332,6 @@ IO_stat MCDispatch::startup(void)
         /* UNCHECKED */ MCStringFormat(&t_path, "%@/iphone_test.livecode", *t_dir);
 
         t_stream = MCS_open(*t_path, kMCOpenFileModeRead, False, False, 0);
-=======
-		char *t_path;
-		MCCStringFormat(t_path, "%.*s/TRiPiLiTE.livecode", strrchr(MCcmd, '/') - MCcmd, MCcmd);
-		t_stream = MCS_open(t_path, IO_READ_MODE, False, False, 0);
-		MCCStringFree(t_path);
->>>>>>> develop
 #endif
 		
 		if (t_stream == NULL)
@@ -496,7 +489,7 @@ IO_stat MCDispatch::startup(void)
 		return IO_NORMAL;
 	}
 #endif
-<<<<<<< HEAD
+#ifdef 0 // <<<<<< HEAD
 
 	// The info structure that will be filled in while parsing the capsule.
 	MCStandaloneCapsuleInfo t_info;
@@ -522,7 +515,7 @@ IO_stat MCDispatch::startup(void)
         }
         else
             return IO_ERROR;
-=======
+#else
 	
 	// MW-2013-11-07: [[ CmdLineStack ]] If there is a capsule, load the mainstack
 	//   from that. Otherwise, if there is at least one argument, load that as the
@@ -584,11 +577,11 @@ IO_stat MCDispatch::startup(void)
 		MCCapsuleClose(t_capsule);
 		
 		t_mainstack = t_info . stack;
->>>>>>> develop
+#endif // >>>>>>> develop
 	}
 	else if (MCnstacks > 1 && MClicenseparameters . license_class == kMCLicenseClassCommunity)
 	{
-<<<<<<< HEAD
+#ifdef 0 // <<<<<<< HEAD
 		// Capsule is spilled fill from:
 		//   0..2044 from project section
 		//   spill file
@@ -600,7 +593,7 @@ IO_stat MCDispatch::startup(void)
 			MCCapsuleClose(t_capsule);
 			return IO_ERROR;
 		}
-=======
+#else
 		MCStack *sptr;
 		if (MCdispatcher -> loadfile(MCstacknames[1], sptr) != IO_NORMAL)
 		{
@@ -612,7 +605,7 @@ IO_stat MCDispatch::startup(void)
 		
 		MCMemoryMove(MCstacknames, MCstacknames + 1, sizeof(MCStack *) * (MCnstacks - 1));
 		MCnstacks -= 1;
->>>>>>> develop
+#endif // >>>>>>> develop
 	}
 	else
 	{
@@ -620,13 +613,13 @@ IO_stat MCDispatch::startup(void)
 		return IO_ERROR;
 	}
 
-<<<<<<< HEAD
+#ifdef 0 // <<<<<<< HEAD
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_info . stack;
 	MCCapsuleClose(t_capsule);
-=======
+#else // =======
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_mainstack;
 	MCcmd = openpath;
->>>>>>> develop
+#endif // >>>>>>> develop
 
 	// Initialization required.
 	MCModeResetCursors();

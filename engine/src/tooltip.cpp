@@ -175,7 +175,6 @@ void MCTooltip::opentip()
 	uindex_t nlines = MCArrayGetCount(*lines);
 	for (uindex_t i = 0; i < nlines; i++)
 	{
-<<<<<<< HEAD
 		MCStringRef t_line = nil;
 		MCValueRef t_lineval = nil;
 		/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, t_lineval);
@@ -183,25 +182,6 @@ void MCTooltip::opentip()
         // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
         rect.width = MCU_max(MCFontMeasureText(m_font, t_line, getstack() -> getdevicetransform()) + 8, rect.width);
 		rect.height += t_fheight +3;
-=======
-		const char *t_next_line;
-		t_next_line = strchr(t_tooltip, 10);
-
-		if (t_next_line == NULL)
-			t_next_line = t_tooltip + strlen(t_tooltip);
-
-		// MW-2012-03-13: [[ UnicodeToolTip ]] Convert the UTF-8 to UTF-16 and measure.
-		MCExecPoint ep;
-		ep . setsvalue(MCString(t_tooltip, t_next_line - t_tooltip));
-		ep . utf8toutf16();
-		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-		rect.width = MCU_max(MCFontMeasureText(m_font, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), true, getstack() -> getdevicetransform()) + 8, rect.width);
-		rect.height += t_fheight + 3;
-
-		t_tooltip = t_next_line;
-		if (*t_tooltip == 10)
-			t_tooltip += 1;
->>>>>>> develop
 	}
 
 	openrect(trect, WM_TOOLTIP, NULL, WP_DEFAULT,OP_NONE);
@@ -223,8 +203,6 @@ void MCTooltip::closetip()
 
 void MCTooltip::render(MCContext *dc, const MCRectangle &dirty)
 {
-<<<<<<< HEAD
-=======
 	// IM-2012-05-31 [[ Malte ]] fix linux crashes that can occur when the tooltip text is NULL
 	// (probably shouldn't happen, but there you go)!
 	// SJT-2014-05-29 Fix crash when m_font was NULL, seems we
@@ -232,7 +210,7 @@ void MCTooltip::render(MCContext *dc, const MCRectangle &dirty)
 	// stale update events.
 	if (!opened)
 		return;
->>>>>>> develop
+
 	MCRectangle trect;
 	MCU_set_rect(trect, 0, 0, rect.width, rect.height);
 

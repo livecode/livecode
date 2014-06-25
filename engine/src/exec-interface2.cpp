@@ -1586,12 +1586,12 @@ void MCInterfaceSetLockMessages(MCExecContext& ctxt, bool p_value)
 
 void MCInterfaceGetLockMoves(MCExecContext& ctxt, bool& r_value)
 {
-	r_value = MClockmoves == True;
+	r_value = MCscreen->getlockmoves() == True;
 }
 
 void MCInterfaceSetLockMoves(MCExecContext& ctxt, bool p_value)
 {
-	MClockmoves = p_value ? True : False;
+	MCscreen -> setlockmoves(p_value ? True : False);
 }
 
 void MCInterfaceGetLockRecent(MCExecContext& ctxt, bool& r_value)

@@ -1464,17 +1464,6 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 
 #endif
 
-<<<<<<< HEAD
-#ifdef _MACOSX
-MCSysWindowHandle MCStack::getqtwindow(void)
-{
-	return window -> handle . window;
-}
-#endif
-
-#ifdef LEGACY_EXEC
-=======
->>>>>>> develop
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCObject::mode_get/setprop for STANDALONE mode.

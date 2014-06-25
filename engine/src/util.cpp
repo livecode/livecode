@@ -1994,6 +1994,11 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 		MCstacks->restartidle();
 	if (MCtopstackptr != NULL)
 		MCtopstackptr->updatemenubar();
+    
+    // MW-2014-04-24: [[ Bug 12249 ]] Prod each player to make sure its buffered correctly for the new tool.
+    for(MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
+        t_player -> syncbuffering(nil);
+    
 	ctxt . GetObject()->message_with_valueref_args(MCM_new_tool, *t_tool_name);
 }
 
@@ -2050,16 +2055,12 @@ Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
 		MCstacks->restartidle();
 	if (MCtopstackptr != NULL)
 		MCtopstackptr->updatemenubar();
-<<<<<<< HEAD
-	ep.getobj()->message_with_valueref_args(MCM_new_tool, ep.getvalueref());
-=======
     
     // MW-2014-04-24: [[ Bug 12249 ]] Prod each player to make sure its buffered correctly for the new tool.
     for(MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
         t_player -> syncbuffering(nil);
     
-	ep.getobj()->message_with_args(MCM_new_tool, ep.getsvalue());
->>>>>>> develop
+	ep.getobj()->message_with_valueref_args(MCM_new_tool, ep.getvalueref());
 	return ES_NORMAL;
 }
 #endif

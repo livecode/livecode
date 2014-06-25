@@ -1624,7 +1624,6 @@ bool MCSystemDisableRemoteControl()
     return false;
 }
 
-<<<<<<< HEAD
 bool MCSystemGetRemoteControlEnabled(bool& r_enabled)
 {
     // not applicable on android

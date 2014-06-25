@@ -32,16 +32,12 @@ class MCLine : public MCDLlist
 	MCParagraph *parent;
 	MCBlock *firstblock;
 	MCBlock *lastblock;
-<<<<<<< HEAD
     MCSegment *firstsegment;
     MCSegment *lastsegment;
-=======
->>>>>>> develop
 	coord_t width;
 	uint2 ascent;
 	uint2 descent;
 	coord_t dirtywidth;
-<<<<<<< HEAD
     
     // Offset at which to start drawing segments (for whole-line alignment)
     int16_t m_offset;
@@ -49,8 +45,6 @@ class MCLine : public MCDLlist
     // Dirty hack
     friend class MCSegment;
 
-=======
->>>>>>> develop
 public:
 	MCLine(MCParagraph *paragraph);
 	~MCLine();
@@ -63,13 +57,7 @@ public:
 	uint2 getdirtywidth();
 	void makedirty();
 	void clean();
-<<<<<<< HEAD
-
-=======
 	void getindex(uint2 &i, uint2 &l);
-	uint2 getcursorindex(coord_t x, Boolean chunk);
-	coord_t getcursorx(uint2 i);
->>>>>>> develop
 	uint2 getwidth();
 	uint2 getheight();
 	uint2 getascent();

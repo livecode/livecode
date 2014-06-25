@@ -91,6 +91,9 @@ MCPropertyInfo MCGraphic::kProperties[] =
     DEFINE_RW_OBJ_LIST_PROPERTY(P_DASHES, ItemsOfUInt, MCGraphic, Dashes)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
     DEFINE_RW_OBJ_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
+    // MERG-2014-06-24: [[ rect_point ]] allow effective [relative] points as read-only
+    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
+    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
 };
 
 MCObjectPropertyTable MCGraphic::kPropertyTable =
@@ -809,9 +812,6 @@ Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 #endif 
 
 
-<<<<<<< HEAD
-#ifdef LEGACY_EXEC
-=======
 // MDW-2014-06-18: [[ rect_points ]] refactoring: return points for rectangles, round rects, and regular polygons
 bool MCGraphic::get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_count)
 {
@@ -862,7 +862,7 @@ bool MCGraphic::get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_poin
 	return (true);
 }
 
->>>>>>> develop
+#ifdef LEGACY_EXEC
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCGraphic::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
@@ -2175,7 +2175,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		uint2 twidth = 0;
 		for (i = 0 ; i < nlines ; i++)
 		{
-<<<<<<< HEAD
             // Note: 'lines' is an array of strings
 			MCValueRef lineval = nil;
 			/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, lineval);
@@ -2183,10 +2182,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
             // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
             twidth = MCFontMeasureText(m_font, line, getstack() -> getdevicetransform());
 			
-=======
-			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-			twidth = MCFontMeasureText(m_font, lines[i].getstring(), lines[i].getlength(), isunicode, getstack() -> getdevicetransform());
->>>>>>> develop
 			switch (flags & F_ALIGNMENT)
 			{
 			case F_ALIGN_LEFT:
@@ -2779,7 +2774,6 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 	//   legacy unicode output.
 	if (flags & F_G_LABEL)
 	{
-<<<<<<< HEAD
 		if (version < 7000)
 		{
 			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
@@ -2793,12 +2787,4 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
     }
 	
     return loadpropsets(stream, version);
-=======
-		uint4 tlabelsize;
-		if ((stat = IO_read_string(label, tlabelsize, stream, hasunicode())) != IO_NORMAL)
-			return stat;
-		labelsize = tlabelsize;
-	}
-	return loadpropsets(stream);
->>>>>>> develop
 }

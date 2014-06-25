@@ -91,14 +91,11 @@ bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase)
 	return false;
 }
 
-<<<<<<< HEAD
-bool MCPurchaseLookupProperty(MCStringRef p_property, Properties &r_property)
-=======
-bool MCPurchaseFindByProdId(const char *p_prod_id, MCPurchase *&r_purchase)
+bool MCPurchaseFindByProdId(MCStringRef p_prod_id, MCPurchase *&r_purchase)
 {
 	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
 	{
-        if (MCCStringEqual(t_purchase->prod_id, p_prod_id))
+        if (MCStringIsEqualTo(t_purchase->prod_id, p_prod_id, kMCStringOptionCompareCaseless))
 		{
             r_purchase = t_purchase;
 			return true;
@@ -107,8 +104,7 @@ bool MCPurchaseFindByProdId(const char *p_prod_id, MCPurchase *&r_purchase)
 	return false;
 }
 
-bool MCPurchaseLookupProperty(const char *p_property, MCPurchaseProperty &r_property)
->>>>>>> develop
+bool MCPurchaseLookupProperty(MCStringRef p_property, Properties &r_property)
 {
 	for (uint32_t i = 0; s_purchase_properties[i].name != nil; i++)
 	{
@@ -156,12 +152,8 @@ bool MCPurchaseCreate(MCStringRef p_product_id, void *p_context, MCPurchase *&r_
 	
 	if (t_success)
 	{
-        // use MCCStringFormat instead of "=" to fix encoding problems on iphone
-        char *temp;
-        MCCStringFormat(temp, "%s", p_product_id);
-        MCLog("MCPurchaseCreate :temp is : %s", temp);
-        t_purchase->prod_id = temp;
-        MCLog("MCPurchaseCreate :purchase->prod_id is : %s", t_purchase->prod_id);
+        t_purchase->prod_id = MCValueRetain(p_product_id);
+        MCLog("MCPurchaseCreate :purchase->prod_id is : %@", t_purchase->prod_id);
 		t_purchase->id = s_last_purchase_id++;
 		t_purchase->ref_count = 1;
         MCLog("MCPurchaseCreate : reference count : %d", t_purchase->ref_count);
@@ -178,7 +170,9 @@ bool MCPurchaseCreate(MCStringRef p_product_id, void *p_context, MCPurchase *&r_
 		r_purchase = t_purchase;
 	}
 	else
-		MCMemoryDelete(t_purchase);
+    {
+        MCPurchaseDelete(t_purchase);
+    }
 	
 	return t_success;
 }
@@ -206,6 +200,7 @@ void MCPurchaseDelete(MCPurchase *p_purchase)
 	
 	//MCLog("finalizing...", nil);
 	MCPurchaseFinalize(p_purchase);
+    MCValueRelease(p_purchase -> prod_id);
 	//MCLog("freeing memory...", nil);
 	MCMemoryDelete(p_purchase);
 	//MCLog("...done", nil);
@@ -301,14 +296,8 @@ void MCPurchaseUpdateEvent::Dispatch()
 
 	MCLog("dispatching purchase (%p) event", m_purchase);
 
-<<<<<<< HEAD
-	MCAutoStringRef t_id, t_state;
+	MCAutoStringRef t_id, t_state, t_prod_id;
 	const char *t_state_str = NULL;
-=======
-	char *t_id = NULL;
-    char *t_prod_id = NULL;
-	const char *t_state = NULL;
->>>>>>> develop
 	
 	t_success = MCPurchaseStateToString(m_purchase->state, t_state_str);
     
@@ -316,28 +305,19 @@ void MCPurchaseUpdateEvent::Dispatch()
         t_success = MCStringCreateWithCString(t_state_str, &t_state);
 	
 	if (t_success)
-<<<<<<< HEAD
         t_success = MCStringFormat(&t_id, "%d", m_purchase->id);
-	
-	if (t_success)
-		MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_purchase_updated, *t_id, *t_state);
-=======
-		t_success = MCCStringFormat(t_id, "%d", m_purchase->id);
     
     if (t_success)
-		t_success = MCCStringFormat(t_prod_id, "%s", m_purchase->prod_id);
+        t_success = MCStringFormat(&t_prod_id, "%s", m_purchase->prod_id);
     
     //if (m_purchase->prod_id == NULL)
         //t_prod_id = "Null prod_id";
        // MCLog("m_purchase->prod_id is null",nil);
     
 	if (t_success)
-		MCdefaultstackptr->getcurcard()->message_with_args(MCM_purchase_updated, t_id, t_prod_id, t_state);
+		MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_purchase_updated, *t_id, *t_prod_id, *t_state);
 	
-    MCLog("MCPurchaseUpdateEvent::Dispatch() : m_purchase->prod_id is :  %s",t_prod_id);
-	MCCStringFree(t_id);
-    MCCStringFree(t_prod_id);
->>>>>>> develop
+    MCLog("MCPurchaseUpdateEvent::Dispatch() : m_purchase->prod_id is :  %@",*t_prod_id);
 }
 
 bool MCPurchaseUpdateEvent::EventPendingForPurchase(MCPurchase *p_purchase)
@@ -366,178 +346,7 @@ void MCPurchaseNotifyUpdate(MCPurchase *p_purchase)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-<<<<<<< HEAD
 #ifdef LEGACY_EXEC
-=======
-
-#include "param.h"
-
-bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
-
-
-Exec_stat MCHandleCanMakePurchase(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleCanMakePurchase */ LEGACY_EXEC
-	MCresult -> sets(MCU_btos( MCStoreCanMakePurchase() ));
-	return ES_NORMAL;
-#endif /* MCHandleCanMakePurchase */
-}
-
-Exec_stat MCHandleEnablePurchaseUpdates(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleEnablePurchaseUpdates */ LEGACY_EXEC
-	MCStoreEnablePurchaseUpdates();
-	return ES_NORMAL;
-#endif /* MCHandleEnablePurchaseUpdates */
-}
-
-Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleDisablePurchaseUpdates */ LEGACY_EXEC
-	MCStoreDisablePurchaseUpdates();
-	return ES_NORMAL;
-#endif /* MCHandleDisablePurchaseUpdates */
-}
-
-Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameters)
-{
-    bool t_success = true;
-    char *t_product_id = nil;
-    char *t_product_type;
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "ss", &t_product_id, &t_product_type);
-    if (t_success)
-        t_success = MCStoreProductSetType(t_product_id, t_product_type);
-    
-    MCCStringFree(t_product_id);
-    MCCStringFree(t_product_type);
-
-    return ES_NORMAL;
-}
-
-Exec_stat MCHandleGetPurchases(void *context, MCParameter *p_parameters)
-{
-    char *t_purchases;
-    t_purchases = MCStoreGetPurchaseList();
-    
-    MCresult -> sets(t_purchases);
-    return ES_NORMAL;
-}
-
-Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_parameters)
-{
-    bool t_success = true;
-	
-	char *t_product_id = nil;
-    char *t_prop_name = nil;
-    const char *t_prop_value = nil;
-    
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "ss", &t_product_id, &t_prop_name);
-	if (t_success)
-        t_prop_value = MCStoreGetPurchaseProperty(t_product_id, t_prop_name);
-        
-    MCCStringFree(t_product_id);
-    MCCStringFree(t_prop_name);
-    
-    MCresult -> sets(t_prop_value);
-    return ES_NORMAL;
-}
-
-Exec_stat MCHandleSetPurchaseProperty(void *context, MCParameter *p_parameters)
-{
-    bool t_success = true;
-    char *t_product_id = nil;
-    char *t_prop_name = nil;
-    char *t_prop_value = nil;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "sss", &t_product_id, &t_prop_name, &t_prop_value);
-    if (t_success)
-        t_success = MCStoreSetPurchaseProperty(t_product_id, t_prop_name, t_prop_value);
-    
-    MCCStringFree(t_product_id);
-    MCCStringFree(t_prop_name);
-    MCCStringFree(t_prop_value);
-    
-    return ES_NORMAL;
-}
-
-//REMOVE THIS
-/*
-Exec_stat MCHandleRequestForProductDetails(void *context, MCParameter *p_parameters)
-{
-    bool t_success = true;
-    char *t_product_id = nil;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
-    if (t_success)
-        t_success = MCStoreRequestForProductDetails(t_product_id);
-    
-    MCCStringFree(t_product_id);
-
-    return ES_NORMAL;
-}
-*/
-
-// MOVE THIS to mblandroidstore.cpp
-/*
-Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
-{
-    bool t_success = true;
-    char *t_product_id = nil;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
-    if (t_success)
-        t_success = MCStoreRequestProductDetails(t_product_id);
-    
-    MCCStringFree(t_product_id);
-    
-    return ES_NORMAL;
-}
-*/
-
-Exec_stat MCHandleReceiveProductDetails(void *context, MCParameter *p_parameters)
-{
-    bool t_success = true;
-    char *t_product_id = nil;
-    const char* t_product_details;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
-    if (t_success)
-        t_product_details = MCStoreReceiveProductDetails(t_product_id);
-    
-    MCCStringFree(t_product_id);
-    MCresult -> sets(t_product_details);
-    
-    return ES_NORMAL;
-}
-
-Exec_stat MCHandleConsumePurchase(void *context, MCParameter *p_parameters)
-{
-    bool t_success = true;
-    char *t_product_id = nil;
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
-    if (t_success)
-        t_success = MCStoreConsumePurchase(t_product_id);
-    
-    MCCStringFree(t_product_id);
-    return ES_NORMAL;
-}
-
-Exec_stat MCHandleRestorePurchases(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleRestorePurchases */ LEGACY_EXEC
-	MCStoreRestorePurchases();
-	return ES_NORMAL;
-#endif /* MCHandleRestorePurchases */
-}
-
->>>>>>> develop
 static bool list_purchases(void *context, MCPurchase* p_purchase)
 {
 	MCExecPoint *ep;
@@ -547,246 +356,4 @@ static bool list_purchases(void *context, MCPurchase* p_purchase)
 	
 	return true;
 }
-<<<<<<< HEAD
 #endif
-=======
-
-Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandlePurchaseList */ LEGACY_EXEC
-	MCExecPoint ep(nil, nil, nil);
-	MCPurchaseList(list_purchases, &ep);
-	MCresult -> store(ep, False);
-	return ES_NORMAL;
-#endif /* MCHandlePurchaseList */
-}
-
-Exec_stat MCHandlePurchaseCreate(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandlePurchaseCreate */ LEGACY_EXEC
-	bool t_success = true;
-	char *t_product_id = nil;
-	MCPurchase *t_purchase = nil;
-	
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "s", &t_product_id);
-	
-	if (t_success)
-		MCPurchaseCreate(t_product_id, nil, t_purchase);
-	
-	if (t_success)
-		MCresult->setnvalue(t_purchase->id);
-	
-	MCCStringFree(t_product_id);
-    
-	return ES_NORMAL;
-#endif /* MCHandlePurchaseCreate */
-}
-
-Exec_stat MCHandlePurchaseState(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandlePurchaseState */ LEGACY_EXEC
-	bool t_success = true;
-	
-	uint32_t t_id;
-	const char *t_state = nil;
-	MCPurchase *t_purchase = nil;
-	
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "u", &t_id);
-	if (t_success)
-		t_success = MCPurchaseFindById(t_id, t_purchase);
-	
-	if (t_success)
-		t_success = MCPurchaseStateToString(t_purchase->state, t_state);
-	
-	if (t_success)
-		MCresult -> sets(t_state);
-	
-	return ES_NORMAL;
-#endif /* MCHandlePurchaseState */
-}
-
-Exec_stat MCHandlePurchaseError(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandlePurchaseError */ LEGACY_EXEC
-	bool t_success = true;
-	
-	uint32_t t_id;
-	char *t_error = nil;
-	MCPurchase *t_purchase = nil;
-	
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "u", &t_id);
-	
-	if (t_success)
-		t_success = MCPurchaseFindById(t_id, t_purchase);
-	
-	if (t_success)
-		t_success = MCPurchaseGetError(t_purchase, t_error);
-	
-	if (t_success)
-		MCresult->grab(t_error, MCCStringLength(t_error));
-	else
-		MCCStringFree(t_error);
-	
-	return ES_NORMAL;
-#endif /* MCHandlePurchaseError */
-}
-
-Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandlePurchaseSet */ LEGACY_EXEC
-	bool t_success = true;
-	
-	uint32_t t_id;
-	char *t_prop_name = nil;
-	
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "us", &t_id, &t_prop_name);
-	
-	MCPurchase *t_purchase = nil;
-	MCPurchaseProperty t_property;
-	
-	if (t_success)
-		t_success =
-		MCPurchaseFindById(t_id, t_purchase) &&
-		MCPurchaseLookupProperty(t_prop_name, t_property);
-	
-	MCExecPoint ep(nil, nil, nil);
-	if (t_success && p_parameters != nil)
-		t_success = p_parameters -> eval(ep) == ES_NORMAL;
-	
-	if (t_success)
-		t_success = MCPurchaseSet(t_purchase, t_property, ep) == ES_NORMAL;
-	
-	MCCStringFree(t_prop_name);
-	
-	return ES_NORMAL;
-#endif /* MCHandlePurchaseSet */
-}
-
-Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandlePurchaseGet */ LEGACY_EXEC
-	bool t_success = true;
-	
-	uint32_t t_id;
-	char *t_prop_name = nil;
-	
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "us", &t_id, &t_prop_name);
-	
-	MCPurchase *t_purchase = nil;
-	MCPurchaseProperty t_property;
-	
-	if (t_success)
-		t_success =
-		MCPurchaseFindById(t_id, t_purchase) &&
-		MCPurchaseLookupProperty(t_prop_name, t_property);
-	
-	MCExecPoint ep(nil, nil, nil);
-	if (t_success)
-		t_success = MCPurchaseGet(t_purchase, t_property, ep) == ES_NORMAL;
-	
-	if (t_success)
-		MCresult->store(ep, True);
-	else
-		MCresult->clear();
-	
-	MCCStringFree(t_prop_name);
-	
-	return ES_NORMAL;
-#endif /* MCHandlePurchaseGet */
-}
-
-Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandlePurchaseSendRequest */ LEGACY_EXEC
-	bool t_success = true;
-	
-	uint32_t t_id;
-	MCPurchase *t_purchase = nil;
-	
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "u", &t_id);
-    
-	if (t_success)
-		t_success = MCPurchaseFindById(t_id, t_purchase);
-	
-	if (t_success)
-		t_success = MCPurchaseSendRequest(t_purchase);
-	
-	return ES_NORMAL;
-#endif /* MCHandlePurchaseSendRequest */
-}
-
-
-Exec_stat MCHandleMakePurchase(void *context, MCParameter *p_parameters)
-{
-	bool t_success = true;
-	
-	char  *t_prod_id;
-    char  *t_quantity;
-    char  *t_payload;
-	MCPurchase *t_purchase = nil;
-	
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "sss", &t_prod_id, &t_quantity, &t_payload);
-    
-    
-    if (t_success)
-        t_success = MCPurchaseCreate(t_prod_id, nil, t_purchase);
-
-	//if (t_success)
-		//t_success = MCStoreMakePurchase(t_purchase);
-	if (t_success)
-		t_success = MCStoreMakePurchase(t_purchase->prod_id, t_quantity, t_payload);
-    
-    MCCStringFree(t_prod_id);
-    MCCStringFree(t_quantity);
-    MCCStringFree(t_payload);
-	
-	return ES_NORMAL;
-}
-
-Exec_stat MCHandleConfirmPurchase(void *context, MCParameter *p_parameters)
-{
-	bool t_success = true;
-	
-	char *t_prod_id;
-	MCPurchase *t_purchase = nil;
-	
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "s", &t_prod_id);
-	
-	if (t_success)
-		t_success = MCPurchaseFindByProdId(t_prod_id, t_purchase);
-	
-	if (t_success)
-		t_success = MCPurchaseConfirmDelivery(t_purchase);
-	
-	return ES_NORMAL;
-}
-
-Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandlePurchaseConfirmDelivery */ LEGACY_EXEC
-	bool t_success = true;
-	
-	uint32_t t_id;
-	MCPurchase *t_purchase = nil;
-	
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "u", &t_id);
-	
-	if (t_success)
-		t_success = MCPurchaseFindById(t_id, t_purchase);
-	
-	if (t_success)
-		t_success = MCPurchaseConfirmDelivery(t_purchase);
-	
-	return ES_NORMAL;
-#endif /* MCHandlePurchaseConfirmDelivery */
-}
->>>>>>> develop

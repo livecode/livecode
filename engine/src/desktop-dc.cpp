@@ -16,7 +16,6 @@
 
 #include "platform.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "osspec.h"
@@ -24,7 +23,8 @@
 #include "parsedef.h"
 #include "objdefs.h"
 
-#include "execpt.h"
+//#include "execpt.h"
+#include "exec.h"
 #include "scriptpt.h"
 #include "mcerror.h"
 #include "globals.h"
@@ -183,9 +183,9 @@ uint2 MCScreenDC::getdepth(void)
 	return 32;
 }
 
-void MCScreenDC::getvendorstring(MCExecPoint &ep)
+MCNameRef MCScreenDC::getvendorname(void);
 {
-	ep.setstaticcstring("Mac OS");
+	return MCNAME("Mac OS");
 }
 
 uint2 MCScreenDC::getpad()
@@ -445,7 +445,7 @@ void MCScreenDC::uniconifywindow(Window window)
 	MCPlatformUniconifyWindow(window);
 }
 
-void MCScreenDC::setname(Window window, const char *newname)
+void MCScreenDC::setname(Window window, MCStringRef newname)
 {
 	MCPlatformSetWindowProperty(window, kMCPlatformWindowPropertyTitle, kMCPlatformPropertyTypeUTF8CString, &newname);
 }
@@ -480,7 +480,7 @@ void MCScreenDC::seticon(uint4 p_icon)
 {
 }
 
-void MCScreenDC::configurestatusicon(uint32_t icon_id, const char *menu, const char *tooltip)
+void MCScreenDC::configurestatusicon(uint32_t icon_id, MCStringRef menu, MCStringRef tooltip)
 {
 }
 
@@ -920,7 +920,7 @@ MCPrinter *MCScreenDC::createprinter(void)
 static uindex_t s_clipboard_generation = 0;
 static MCPasteboard *s_local_clipboard = nil;
 
-MCSharedString *MCConvertStyledTextToUTF8(MCSharedString *p_in)
+bool MCConvertStyledTextToUTF8(MCDataRef p_in, MCDataRef& r_out)
 {
 	MCObject *t_object;
 	t_object = MCObject::unpickle(p_in, MCtemplatefield -> getstack());
@@ -928,46 +928,43 @@ MCSharedString *MCConvertStyledTextToUTF8(MCSharedString *p_in)
 	{
 		MCParagraph *t_paragraphs;
 		t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
-
-		MCExecPoint ep(NULL, NULL, NULL);
+        bool t_success;
 
 		// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
 		if (t_paragraphs != NULL)
 		{
-			MCtemplatefield -> exportasplaintext(ep, t_paragraphs, 0, INT32_MAX, true);
-			ep . utf16toutf8();
+			t_success = MCtemplatefield -> exportasplaintext(t_paragraphs, 0, INT32_MAX, true)
+                            && MCStringEncode(*t_text, kMCStringEncodingUTF8, false, r_out);
 		}
 
 		delete t_object;
-
-		return MCSharedString::Create(ep . getsvalue());
+        return t_success;
 	}
-	return NULL;
+    
+	return false;
 }
 
-MCSharedString *MCConvertUnicodeTextToUTF8(MCSharedString* p_in)
+bool MCConvertUnicodeTextToUTF8(MCDataRef p_in, MCDataRef &r_out)
 {
-	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setsvalue(p_in -> Get());
-	ep . utf16toutf8();
-	return MCSharedString::Create(ep . getsvalue());
+    MCAutoStringRef t_pivot;
+    return MCStringDecode(p_in, kMCStringEncodingUTF16, false, &t_pivot)
+                && MCStringEncode(*t_pivot, kMCStringEncodingUTF8, false, r_out);
 }
 
-MCSharedString *MCConvertTextToUTF8(MCSharedString *p_in)
+bool MCConvertTextToUTF8(MCDataRef p_in, MCDataRef &r_out)
 {
-	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setsvalue(p_in -> Get());
-	ep . nativetoutf8();
-	return MCSharedString::Create(ep . getsvalue());
+    MCAutoStringRef t_pivot;
+    return MCStringDecode(p_in, kMCStringEncodingNative, false, &t_pivot)
+                    && MCStringEncode(*t_pivot, kMCStringEncodingUTF8, false, r_out);
 }
 
-MCSharedString *MCConvertIdentity(MCSharedString *p_in)
+bool MCConvertIdentity(MCDataRef p_in, MCDataRef &r_out)
 {
-	p_in -> Retain();
-	return p_in;
+    r_out = MCValueRetain(p_in);
+    return true;
 }
 
-static struct { MCTransferType type; MCPlatformPasteboardFlavor flavor; MCSharedString* (*convert)(MCSharedString* in); } s_pasteboard_fetchers[] =
+static struct { MCTransferType type; MCPlatformPasteboardFlavor flavor; bool (*convert)(MCDataRef p_in, MCDataRef &r_out); } s_pasteboard_fetchers[] =
 {
 	{ TRANSFER_TYPE_STYLED_TEXT, kMCPlatformPasteboardFlavorRTF, MCConvertStyledTextToRTF },
 	{ TRANSFER_TYPE_STYLED_TEXT, kMCPlatformPasteboardFlavorUTF8, MCConvertStyledTextToUTF8 },
@@ -991,26 +988,22 @@ static bool fetch_pasteboard(MCPasteboard *p_pasteboard, MCPlatformPasteboardFla
 		for(uindex_t j = 0; j < t_type_count; j++)
 			if (s_pasteboard_fetchers[i] . type == t_types[j] && s_pasteboard_fetchers[i] . flavor == p_flavor)
 			{
-				MCSharedString *t_data;
-				if (!p_pasteboard -> Fetch(t_types[j], t_data))
+				MCAutoDataRef t_data;
+				if (!p_pasteboard -> Fetch(t_types[j], &t_data))
 					return false;
 				
 				bool t_success;
 				t_success = false;
 				
-				MCSharedString *t_new_data;
-				t_new_data = s_pasteboard_fetchers[i] . convert(t_data);
-				if (t_new_data != nil)
+				MCAutoDataRef t_new_data;
+				if (s_pasteboard_fetchers[i] . convert(*t_data, &t_new_data))
 				{
-					if (MCMemoryAllocateCopy(t_new_data -> GetBuffer(), t_new_data -> GetLength(), r_data))
+					if (MCMemoryAllocateCopy(MCDataGetBytePtr(*t_new_data), MCDataGetLength(*t_new_data), r_data))
 					{
-						r_data_size = t_new_data -> GetLength();
+						r_data_size = MCDataGetLength(*t_new_data);
 						t_success = true;
 					}
-					t_new_data -> Release();
 				}
-				
-				t_data -> Release();
 				
 				return t_success;
 			}
@@ -1086,14 +1079,14 @@ bool MCScreenDC::setclipboard(MCPasteboard *p_pasteboard)
 		break;
 		case TRANSFER_TYPE_IMAGE:
 		{
-			MCSharedString *t_data;
-			if (p_pasteboard -> Fetch(TRANSFER_TYPE_IMAGE, t_data))
+			MCDataRef t_data;
+			if (p_pasteboard -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
 			{
-				if (MCFormatImageIsPNG(t_data))
+				if (MCImageDataIsPNG(*t_data))
 					t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorPNG;
-				if (MCFormatImageIsGIF(t_data))
+				if (MCImageDataIsGIF(*t_data))
 					t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorGIF;
-				if (MCFormatImageIsJPEG(t_data))
+				if (MCImageDataIsJPEG(*t_data))
 					t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorJPEG;
 			}
 		}
@@ -1133,15 +1126,12 @@ MCPasteboard *MCScreenDC::getclipboard(void)
 ////////////////////////////////////////////////////////////////////////////////
 
 // TD-2013-07-01: [[ DynamicFonts ]]
-bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
+bool MCScreenDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle)
 {
-	MCExecPoint ep;
-	ep . setsvalue(p_path);
-	ep . nativetoutf8();
 	return MCPlatformLoadFont(ep . getcstring(), p_globally, (MCPlatformLoadedFontRef&)r_loaded_font_handle);
 }
 
-bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *p_loaded_font_handle)
+bool MCScreenDC::unloadfont(MCStringRef p_path, bool p_globally, void *p_loaded_font_handle)
 {
 	MCExecPoint ep;
 	ep . setsvalue(p_path);

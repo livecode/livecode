@@ -269,11 +269,7 @@ public:
 	// IM-2014-04-08: [[ Bug 12101 ]] Buffers to hold 1-bit bitmaps - dimensions stored in rect (data), mrect (mask)
 	uint8_t *mask;
 	uint8_t *data;
-<<<<<<< HEAD
     char *name;
-=======
-	char *name;
->>>>>>> develop
 	uint2 xhot;
 	uint2 yhot;
 	MCHcbmap();

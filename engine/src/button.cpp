@@ -268,7 +268,8 @@ MCPropertyInfo MCButton::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_DEFAULT, Bool, MCButton, Default)
 	DEFINE_RW_OBJ_PROPERTY(P_TEXT, String, MCButton, Text)
 	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TEXT, BinaryString, MCButton, UnicodeText)
-    DEFINE_RW_OBJ_PROPERTY(P_ICON_GRAVITY, String, MCButton, IconGravity)
+    // MERG-2014-06-25 [[ IconGravity ]]
+    DEFINE_RW_OBJ_ENUM_PROPERTY(P_ICON_GRAVITY, InterfaceButtonIconGravity, MCButton, IconGravity)
 	
 	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_ICON, InterfaceButtonIcon, MCButton, Icon)
 	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_ARMED_ICON, InterfaceButtonIcon, MCButton, ArmedIcon)
@@ -282,8 +283,7 @@ MCPropertyInfo MCButton::kProperties[] =
     
     DEFINE_WO_OBJ_CHAR_CHUNK_PROPERTY(P_HILITE, Bool, MCButton, Hilite)
     DEFINE_WO_OBJ_CHAR_CHUNK_PROPERTY(P_DISABLED, Bool, MCButton, Disabled)
-    DEFINE_WO_OBJ_CHAR_CHUNK_PROPERTY(P_ENABLED, Bool, MCButton, Enabled)
-    
+    DEFINE_WO_OBJ_CHAR_CHUNK_PROPERTY(P_ENABLED, Bool, MCButton, Enabled)    
 };
 
 MCObjectPropertyTable MCButton::kPropertyTable =
@@ -294,25 +294,6 @@ MCObjectPropertyTable MCButton::kPropertyTable =
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// MW-2014-06-19: [[ IconGravity ]] Strings for the 'iconGravity' property.
-static const char *MCgravitystrings[] =
-{
-    "",
-    "left",
-    "top",
-    "right",
-    "bottom",
-    "topLeft",
-    "topRight",
-    "bottomLeft",
-    "bottomRight",
-    "center",
-    "resize",
-    "resizeAspect",
-    "resizeAspectFill",
-    nil,
-};
 
 MCButton::MCButton()
 {

@@ -201,7 +201,7 @@ bool MCStoreConsumePurchase(const char *p_purchase_id)
     return t_result;
     
 }
- 
+/*
 bool MCStoreMakePurchase(const char *p_prod_id, const char *p_quantity, const char *p_payload)
 {
     
@@ -212,8 +212,9 @@ bool MCStoreMakePurchase(const char *p_prod_id, const char *p_quantity, const ch
     return t_result;
   
 }
+*/
   
-/*
+
 bool MCStoreMakePurchase(MCPurchase *p_purchase)
 {
     if (p_purchase->state != kMCPurchaseStateInitialized)
@@ -228,7 +229,7 @@ bool MCStoreMakePurchase(MCPurchase *p_purchase)
     return t_success;
 }
 
-
+/*
 char* MCStoreAndroidRequestProductDetails(const char *p_purchase_id)
 {
     
@@ -724,16 +725,11 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPurchaseStateChanged(JNI
 
         if (t_purchase != NULL)
         {
-<<<<<<< HEAD
             MCLog("found purchase for %@", *t_product_id);
-=======
             
-            MCLog("found purchase for %s", t_product_id);
+            // THIS WAS ADDED
+            t_purchase->prod_id = MCValueRetain(*t_product_id);
             
-            // THIS WAS ADDED 
-            t_purchase->prod_id = t_product_id;
-            
->>>>>>> develop
             MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)t_purchase->platform_data;
             
 			t_android_data->product_id = MCValueRetain(*t_product_id);
@@ -747,7 +743,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPurchaseStateChanged(JNI
             t_android_data->purchase_state = purchaseState;
             
             update_purchase_state(t_purchase, purchaseState, verified);
-            MCLog("ProductID is %s", t_purchase->prod_id);
+            MCLog("ProductID is %@", t_purchase->prod_id);
             MCPurchaseNotifyUpdate(t_purchase);
             
             // now, if the purchase is cancelled, confirm the notification

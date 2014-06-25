@@ -157,9 +157,7 @@ void MCPurchaseFinalize(MCPurchase *p_purchase)
 	MCMemoryDelete(t_ios_data);
 }
 
-<<<<<<< HEAD
-#ifdef /* MCPurchaseGet */ LEGACY_EXEC
-=======
+#ifdef /* MCPurchaseSet */ LEGACY_EXEC
 Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
@@ -184,7 +182,9 @@ Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 	
 	return ES_NOT_HANDLED;
 }
+#endif /* MCPurchaseSet */
 
+#ifdef /* MCStoreGetPurchaseProperty */ LEGACY_EXEC
 char* MCStoreGetPurchaseProperty(const char *p_product_id, const char*  p_prop_name)
 {
     bool t_success = true;
@@ -220,9 +220,10 @@ char* MCStoreGetPurchaseProperty(const char *p_product_id, const char*  p_prop_n
     return temp;
 	
 }
+#endif
 
 
->>>>>>> develop
+#ifdef /* MCPurchaseGet */ LEGACY_EXEC
 Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
@@ -528,15 +529,9 @@ bool MCPurchaseSendRequest(MCPurchase *p_purchase)
 	return true;
 }
 
-bool MCStoreMakePurchase(const char *p_product_id, const char *p_quantity, const char *p_payload)
+bool MCPurchaseMakePurchase(MCPurchase* p_purchase)
 {
-    MCPurchase *t_purchase = nil;
-    MCPurchaseFindByProdId(p_product_id, t_purchase);
-    MCExecPoint ep(nil,nil,nil);
-    ep.setcstring(p_quantity);
-    MCPurchaseSet(t_purchase, kMCPurchasePropertyQuantity, ep);
-
-	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)t_purchase->platform_data;
+    MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
 	
 	if (t_ios_data->payment == nil)
 		return false;

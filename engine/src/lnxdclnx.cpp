@@ -877,76 +877,22 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
             else
                 t_store = nil;
 			
-<<<<<<< HEAD
-			if ( srevent -> target == XA_TARGETS )
-			{
-					
-				uint4 t_count ;
-				Atom *t_atoms ;
-				t_atoms = m_Clipboard_store -> QueryAtoms ( t_count );
-				
-				if ( t_atoms != NULL)
-				{
-#ifdef DEBUG_DND
-					fprintf(stderr, "Responding with : \n");
-					for ( uint4 a = 0; a < t_count; a++)
-						fprintf(stderr, "\t%s\n", XGetAtomName (dpy, t_atoms[a]));
-#endif
-					
-					
-					XChangeProperty(dpy, srevent -> requestor, srevent -> property,
-					                srevent->target, 32, PropModeReplace,
-					                (const unsigned char *)t_atoms,
-					                t_count);
 
-					XSendEvent(dpy, srevent -> requestor, False, 0, (XEvent *)&sendevent);
-					
-					free(t_atoms) ;
-
-				}
-			}
-			else 
-			{
-				
-				sendevent.property = None ;
-				// If I don't own the clipboard at this point, then something has gone wrong	
-				if ( ownsclipboard() ) 
-				{
-					MCAutoDataRef t_data; 
-					if (m_Clipboard_store -> Fetch(  new MCMIMEtype(dpy, srevent -> target), &t_data, None, None, DNULL, DNULL, MCeventtime ))
-					{
-						XChangeProperty(dpy, srevent -> requestor, srevent -> property,
-					                srevent -> target, 8, PropModeReplace,
-					                (const unsigned char *)MCDataGetBytePtr(*t_data),
-					                MCDataGetLength(*t_data));
-						
-						if (srevent->property != None)
-							sendevent.property = srevent->property;
-						else
-							sendevent.property = srevent -> target;
-
-					}
-				}
-
-				XSendEvent (dpy, sendevent.requestor, False, 0, (XEvent *)&sendevent );
-			}
-=======
             if (t_store != nil)
             {
                 if ( srevent -> target == XA_TARGETS )
-                {
-                        
+                {   
                     uint4 t_count ;
                     Atom *t_atoms ;
                     t_atoms = t_store -> QueryAtoms ( t_count );
                     
                     if ( t_atoms != NULL)
                     {
-    #ifdef DEBUG_DND
+#ifdef DEBUG_DND
                         fprintf(stderr, "Responding with : \n");
                         for ( uint4 a = 0; a < t_count; a++)
                             fprintf(stderr, "\t%s\n", XGetAtomName (dpy, t_atoms[a]));
-    #endif
+#endif
                         
                         
                         XChangeProperty(dpy, srevent -> requestor, srevent -> property,
@@ -965,13 +911,13 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
                     
                     sendevent.property = None ;
                     // If I don't own the clipboard at this point, then something has gone wrong
-                    MCSharedString * t_data;
-                    if (t_store -> Fetch(  new MCMIMEtype(dpy, srevent -> target), t_data, None, None, DNULL, DNULL, MCeventtime ))
+                    MCAutoDataRef t_data;
+                    if (t_store -> Fetch(  new MCMIMEtype(dpy, srevent -> target), &t_data, None, None, DNULL, DNULL, MCeventtime ))
                     {
                         XChangeProperty(dpy, srevent -> requestor, srevent -> property,
                                     srevent -> target, 8, PropModeReplace,
-                                    (const unsigned char *)t_data -> Get() . getstring(),
-                                    t_data -> Get() . getlength());
+                                    (const unsigned char *)MCDataGetBytePtr(*t_data),
+                                    MCDataGetLength(*t_data);
                         
                         if (srevent->property != None)
                             sendevent.property = srevent->property;
@@ -983,7 +929,6 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
                     XSendEvent (dpy, sendevent.requestor, False, 0, (XEvent *)&sendevent );
                 }
             }
->>>>>>> develop
 			break;
 		case MappingNotify:
 			if (mnevent->request == MappingKeyboard)

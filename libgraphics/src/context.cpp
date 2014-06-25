@@ -2685,12 +2685,8 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 	uint32_t t_key_length;
 	if (t_success)
 	{
-<<<<<<< HEAD
-		t_key_length = p_length + sizeof(p_length) + sizeof(p_font . fid) + sizeof(p_font . size) + sizeof(p_font . style) + 2 * sizeof(p_transform . a);
-=======
         // MM-2014-06-02: [[ CoreText ]] We no no longer need to store the style - was only needed by Mac/ATSUI.
 		t_key_length = p_length + sizeof(p_length) + sizeof(p_font . fid) + sizeof(p_font . size) + sizeof(p_transform . a) + sizeof(p_transform . d);
->>>>>>> develop
 		t_success = MCMemoryNew(t_key_length, t_key);
 	}
 	
@@ -2723,12 +2719,6 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 		MCMemoryCopy(t_key_ptr, &t_size, sizeof(p_font . size));
 		t_key_ptr += sizeof(p_font . size);
 
-<<<<<<< HEAD
-		MCMemoryCopy(t_key_ptr, &p_font . style, sizeof(p_font . style));
-		t_key_ptr += sizeof(p_font . style);
-
-=======
->>>>>>> develop
 		// MM-2014-04-16: [[ Bug 11964 ]] Store the scale of the transform in the key.
 		//  We only need to store the (x?) scale of the transform as that is all that will effect the text measurment.
 		//  (We are ignoring rotation for the time being).

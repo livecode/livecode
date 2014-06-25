@@ -46,11 +46,6 @@
 			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = external;
 		};
-<<<<<<< HEAD
-		72CC354E18AA38F600BEC655 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 72CC354A18AA38F600BEC655 /* libcore.xcodeproj */;
-=======
 		E832B19A18D9C20D00083DF8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E832B19618D9C20D00083DF8 /* libcef.xcodeproj */;
@@ -89,26 +84,17 @@
 		E8D371D018CDD2D7005C1182 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E8D371CC18CDD2D7005C1182 /* libcore.xcodeproj */;
->>>>>>> develop
 			proxyType = 2;
 			remoteGlobalIDString = 4DF42A430B048617003F2D95;
 			remoteInfo = core;
 		};
-<<<<<<< HEAD
-		72CC355018AA38FB00BEC655 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 72CC354A18AA38F600BEC655 /* libcore.xcodeproj */;
-=======
 		E8D371D618CDD2F3005C1182 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E8D371CC18CDD2D7005C1182 /* libcore.xcodeproj */;
->>>>>>> develop
 			proxyType = 1;
 			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = core;
 		};
-<<<<<<< HEAD
-=======
 		E8D373B918CDE841005C1182 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E8AA049B18C9E6DD00AE8663 /* libcef_dll_wrapper.xcodeproj */;
@@ -130,7 +116,6 @@
 			remoteGlobalIDString = E8D3735618CDDA3F005C1182;
 			remoteInfo = "revbrowser-cefprocess";
 		};
->>>>>>> develop
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -273,13 +258,9 @@
 		4DF42AD90B04899A003F2D95 /* References */ = {
 			isa = PBXGroup;
 			children = (
-<<<<<<< HEAD
-				72CC354A18AA38F600BEC655 /* libcore.xcodeproj */,
-=======
 				E832B19618D9C20D00083DF8 /* libcef.xcodeproj */,
 				E8D371CC18CDD2D7005C1182 /* libcore.xcodeproj */,
 				E8AA049B18C9E6DD00AE8663 /* libcef_dll_wrapper.xcodeproj */,
->>>>>>> develop
 				4DF42AE40B0489A5003F2D95 /* libexternal.xcodeproj */,
 			);
 			name = References;
@@ -293,23 +274,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-<<<<<<< HEAD
-		72CC354B18AA38F600BEC655 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				72CC354F18AA38F600BEC655 /* libcore.a */,
-=======
 		E832B19718D9C20D00083DF8 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				E832B19B18D9C20D00083DF8 /* libcef_stubs.a */,
->>>>>>> develop
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-<<<<<<< HEAD
-=======
 		E8589F2418CA22D200958234 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -352,7 +324,6 @@
 			name = CEF;
 			sourceTree = "<group>";
 		};
->>>>>>> develop
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -417,10 +388,6 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-<<<<<<< HEAD
-					ProductGroup = 72CC354B18AA38F600BEC655 /* Products */;
-					ProjectRef = 72CC354A18AA38F600BEC655 /* libcore.xcodeproj */;
-=======
 					ProductGroup = E832B19718D9C20D00083DF8 /* Products */;
 					ProjectRef = E832B19618D9C20D00083DF8 /* libcef.xcodeproj */;
 				},
@@ -431,7 +398,6 @@
 				{
 					ProductGroup = E8D371CD18CDD2D7005C1182 /* Products */;
 					ProjectRef = E8D371CC18CDD2D7005C1182 /* libcore.xcodeproj */;
->>>>>>> develop
 				},
 				{
 					ProductGroup = 4DF42AE50B0489A5003F2D95 /* Products */;
@@ -454,13 +420,6 @@
 			remoteRef = 4DF42AEB0B0489A5003F2D95 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-<<<<<<< HEAD
-		72CC354F18AA38F600BEC655 /* libcore.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libcore.a;
-			remoteRef = 72CC354E18AA38F600BEC655 /* PBXContainerItemProxy */;
-=======
 		E832B19B18D9C20D00083DF8 /* libcef_stubs.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -480,7 +439,6 @@
 			fileType = archive.ar;
 			path = libcore.a;
 			remoteRef = E8D371D018CDD2D7005C1182 /* PBXContainerItemProxy */;
->>>>>>> develop
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -533,12 +491,6 @@
 			name = external;
 			targetProxy = 4DF42AEE0B0489B4003F2D95 /* PBXContainerItemProxy */;
 		};
-<<<<<<< HEAD
-		72CC355118AA38FB00BEC655 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = core;
-			targetProxy = 72CC355018AA38FB00BEC655 /* PBXContainerItemProxy */;
-=======
 		E832B19F18D9C22300083DF8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = cef_stubs;
@@ -573,7 +525,6 @@
 			isa = PBXTargetDependency;
 			target = E8D3735618CDDA3F005C1182 /* revbrowser-cefprocess */;
 			targetProxy = E8D3786018CF4450005C1182 /* PBXContainerItemProxy */;
->>>>>>> develop
 		};
 /* End PBXTargetDependency section */
 
@@ -583,7 +534,6 @@
 			baseConfigurationReference = 4DF42ABE0B0488ED003F2D95 /* Debug.xcconfig */;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
-<<<<<<< HEAD
 					"\"$(SOLUTION_DIR)/engine/include\"",
 					"\"$(SOLUTION_DIR)/libfoundation/include\"",
 					"\"$(SOLUTION_DIR)/libexternal/include\"",
@@ -605,11 +555,7 @@
 					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
 					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
 					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
-					"$(SOLUTION_DIR)/libcore/include",
-=======
-					"$(HEADER_SEARCH_PATHS)",
-					"$(SOLUTION_DIR)/thirdparty/libcef",
->>>>>>> develop
+					"\"$(SOLUTION_DIR)/thirdparty/libcef\",
 				);
 			};
 			name = Debug;
@@ -619,7 +565,6 @@
 			baseConfigurationReference = 4DF42AC20B0488ED003F2D95 /* Release.xcconfig */;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
-<<<<<<< HEAD
 					"\"$(SOLUTION_DIR)/engine/include\"",
 					"\"$(SOLUTION_DIR)/libfoundation/include\"",
 					"\"$(SOLUTION_DIR)/libexternal/include\"",
@@ -641,11 +586,7 @@
 					"\"$(SOLUTION_DIR)/thirdparty/libxml/include\"",
 					"\"$(SOLUTION_DIR)/thirdparty/libxslt/include\"",
 					"\"$(SOLUTION_DIR)/thirdparty/libzip/include\"",
-					"$(SOLUTION_DIR)/libcore/include",
-=======
-					"$(HEADER_SEARCH_PATHS)",
-					"$(SOLUTION_DIR)/thirdparty/libcef",
->>>>>>> develop
+					"\"$(SOLUTION_DIR)/thirdparty/libcef\"",
 				);
 			};
 			name = Release;

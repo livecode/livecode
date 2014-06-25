@@ -1552,62 +1552,7 @@ bool MCSTextConvertToUnicode(MCTextEncoding p_encoding, const void *p_input, uin
 
 ////////////////////////////////////////////////////////////////////////////////
 
-<<<<<<< HEAD
 bool MCS_getDNSservers(MCListRef& r_list)
-=======
-#if !defined(TARGET_SUBPLATFORM_IPHONE)
-MCSocket::~MCSocket(void)
-{
-}
-
-MCSocket::MCSocket(char *n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock,Boolean a, Boolean s, Boolean issecure)
-{
-}
-
-void MCSocket::close(void)
-{
-}
-
-void MCSocket::doclose(void)
-{
-}
-
-Boolean MCSocket::init(MCSocketHandle newfd)
-{
-	return False;
-}
-
-// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name.
-MCSocket *MCS_open_socket(char *p_name, Boolean p_datagram, MCObject *p_object, MCNameRef p_message, Boolean p_secure, Boolean p_ssl_verify, char *p_ssl_cert_file, char *p_host_name)
-{
-	return NULL;
-}
-
-void MCS_close_socket(MCSocket *p_socket)
-{
-}
-
-void MCS_read_socket(MCSocket *p_socket, MCExecPoint& ep, uint4 p_length, char *p_until, MCNameRef p_message)
-{
-}
-
-void MCS_write_socket(const MCString& p_data, MCSocket *p_socket, MCObject *p_object, MCNameRef p_message)
-{
-}
-
-MCSocket *MCS_accept(uint2 p_port, MCObject* p_object, MCNameRef p_message, Boolean p_datagram, Boolean p_secure, Boolean p_ssl_verify, char *p_ssl_cert_file)
-{
-	return NULL;
-}
-
-// MM-2014-02-12: [[ SecureSocket ]] New secure socket command
-// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name.
-void MCS_secure_socket(MCSocket *s, Boolean sslverify, char *hostname)
-{
-}
-
-void MCS_ha(MCExecPoint& ep, MCSocket *p_socket)
->>>>>>> develop
 {
     return MCsystem -> GetDNSservers(r_list);
 }

@@ -137,11 +137,7 @@ PixMapHandle GetPortPixMap(CGrafPtr port)
 #define LoWord LOWORD
 #endif
 
-<<<<<<< HEAD
 static OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
-=======
-OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec);
->>>>>>> develop
 #endif
 
 #define QTMFORMATS 6
@@ -236,6 +232,7 @@ MCPropertyInfo MCPlayer::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_TILT, Double, MCPlayer, Tilt)
 	DEFINE_RW_OBJ_PROPERTY(P_ZOOM, Double, MCPlayer, Zoom)
 	DEFINE_RO_OBJ_PROPERTY(P_TRACKS, String, MCPlayer, Tracks)
+    DEFINE_RO_OBJ_PROPERTY(P_TRACK_COUNT, UInt32, MCPlayer, TrackCount)
 	DEFINE_RO_OBJ_PROPERTY(P_NODES, String, MCPlayer, Nodes)
 	DEFINE_RO_OBJ_PROPERTY(P_HOT_SPOTS, String, MCPlayer, HotSpots)
 	DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_CONSTRAINTS, MultimediaQTVRConstraints, MCPlayer, Constraints)
@@ -422,15 +419,11 @@ void MCPlayer::open()
 {
 	MCControl::open();
 #ifdef FEATURE_PLATFORM_PLAYER
-	prepare(MCnullstring);
+	prepare(kMCEmptyString);
 #else
 	if (flags & F_ALWAYS_BUFFER && !isbuffering())
-<<<<<<< HEAD
 		prepare(kMCEmptyString);
-=======
-		prepare(MCnullstring);
 #endif
->>>>>>> develop
 }
 
 void MCPlayer::close()
@@ -519,12 +512,8 @@ Boolean MCPlayer::mdown(uint2 which)
 			if (qtstate == QT_INITTED)
 				qt_click(true, 1);
 #endif
-<<<<<<< HEAD
 			if (message_with_valueref_args(MCM_mouse_down, MCSTR("1")) == ES_NORMAL)
-=======
 #endif
-			if (message_with_args(MCM_mouse_down, "1") == ES_NORMAL)
->>>>>>> develop
 				return True;
 			break;
 		case T_POINTER:
@@ -544,12 +533,8 @@ Boolean MCPlayer::mdown(uint2 which)
 		if (qtstate == QT_INITTED)
 			qt_click(true, 2);
 #endif
-<<<<<<< HEAD
-		if (message_with_valueref_args(MCM_mouse_down, MCSTR("2")) == ES_NORMAL)
-=======
 #endif
-		if (message_with_args(MCM_mouse_down, "2") == ES_NORMAL)
->>>>>>> develop
+		if (message_with_valueref_args(MCM_mouse_down, MCSTR("2")) == ES_NORMAL)
 			return True;
 		break;
 		case Button3:
@@ -558,12 +543,8 @@ Boolean MCPlayer::mdown(uint2 which)
 		if (qtstate == QT_INITTED)
 			qt_click(true, 3);
 #endif
-<<<<<<< HEAD
-		message_with_valueref_args(MCM_mouse_down, MCSTR("3"));
-=======
 #endif
-		message_with_args(MCM_mouse_down, "3");
->>>>>>> develop
+		message_with_valueref_args(MCM_mouse_down, MCSTR("3"));
 		break;
 	}
 	return True;
@@ -1495,8 +1476,8 @@ void MCPlayer::syncbuffering(MCContext *p_dc)
 bool MCPlayer::getversion(MCStringRef& r_string)
 {
 #ifdef FEATURE_PLATFORM_PLAYER
-    extern void MCQTGetVersion(MCExecPoint& ep);
-    MCQTGetVersion(ep);
+    extern void MCQTGetVersion(MCStringRef &r_version);
+    MCQTGetVersion(r_string);
 #else
 #if defined(X11)
     
@@ -1881,7 +1862,11 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	if (m_platform_player == nil)
 		MCPlatformCreatePlayer(m_platform_player);
 
-	if (strnequal(filename, "https:", 6) || strnequal(filename, "http:", 5) || strnequal(filename, "ftp:", 4) || strnequal(filename, "file:", 5) || strnequal(filename, "rtsp:", 5))
+	if (MCStringBeginsWithCString(filename, (const char_t*)"https:", kMCStringOptionCompareCaseless)
+            || MCStringBeginsWithCString(filename, (const char_t*)"https", kMCStringOptionCompareCaseless)
+            || MCStringBeginsWithCString(filename, (const char_t*)"ftp:", kMCStringOptionCompareCaseless)
+            || MCStringBeginsWithCString(filename, (const char_t*)"file:", kMCStringOptionCompareCaseless)
+            || MCStringBeginsWithCString(filename, (const char_t*)"rtsp:", kMCStringOptionCompareCaseless))
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyURL, kMCPlatformPropertyTypeNativeCString, &filename);
 	else
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &filename);
@@ -2338,31 +2323,37 @@ Boolean MCPlayer::setenabledtracks(MCStringRef s)
 				t_enabled = false;
 				MCPlatformSetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
 			}
-			char *data = s.clone();
-			char *sptr = data;
-			while (*sptr)
-			{
-				char *tptr;
-				if ((tptr = strchr(sptr, '\n')) != NULL)
-					*tptr++ = '\0';
-				else
-					tptr = &sptr[strlen(sptr)];
-				if (strlen(sptr) != 0)
+            
+            uindex_t t_si, t_ei;
+            t_si = t_ei = 0;
+
+            while (t_ei < MCStringGetLength(s))
+            {
+                MCAutoStringRef t_track;
+
+                if (!MCStringFirstIndexOfChar(s, '\n', t_si, kMCStringOptionCompareExact, t_ei))
+                    t_ei = MCStringGetLength(s);
+
+                /* UNCHECKED */ MCStringCopySubstring(s, MCRangeMake(t_si, t_ei - t_si), &t_track);
+				
+                if (!MCStringIsEmpty(*t_track))
 				{
 					uindex_t t_index;
-					if (!MCPlatformFindPlayerTrackWithId(m_platform_player, strtol(sptr, NULL, 10), t_index))
-					{
-						delete data;
+                    MCAutoNumberRef t_id;
+
+                    if (!MCNumberParse(*t_track, &t_id) ||
+                            !MCPlatformFindPlayerTrackWithId(m_platform_player, MCNumberFetchAsUnsignedInteger(*t_id), t_index))
 						return False;
-					}
 					
 					bool t_enabled;
 					t_enabled = true;
 					MCPlatformSetPlayerTrackProperty(m_platform_player, t_index, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
 				}
-				sptr = tptr;
-			}
-			delete data;
+                
+				t_ei++;
+				t_si = t_ei;
+            }
+            
 			MCRectangle t_movie_rect;
 			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_movie_rect);
 			MCRectangle trect = resize(t_movie_rect);
@@ -2541,7 +2532,7 @@ void MCPlayer::selectionchanged(void)
 
 void MCPlayer::SynchronizeUserCallbacks(void)
 {
-    if (userCallbackStr == nil)
+    if (MCStringIsEmpty(userCallbackStr))
         return;
     
     if (m_platform_player == nil)
@@ -2558,51 +2549,69 @@ void MCPlayer::SynchronizeUserCallbacks(void)
     m_callback_count = 0;
     
     // Now reparse the callback string and build the table.
-    char *cblist = strclone(userCallbackStr);
-	char *str;
-	str = cblist;
-	while (*str)
+    MCAutoStringRef t_callback;
+    t_callback = userCallbackStr;
+    
+    uindex_t t_start_index, t_length;
+    
+    t_length = MCStringGetlength(*t_callback);
+    t_start_index = 0;
+    
+	while (t_start_index < t_length)
 	{
-		char *ptr, *data1, *data2;
-		if ((data1 = strchr(str, ',')) == NULL)
+        uindex_t t_comma_index, t_callback_index, t_end_index;
+		if (!MCStringFirstIndexOfChar(*t_callback, ',', t_start_index, kMCStringOptionCompareExact, t_comma_index))
 		{
             //search ',' as separator
-			delete cblist;
 			return;
 		}
-		*data1 = '\0';
-		data1 ++;
-		if ((data2 = strchr(data1, '\n')) != NULL)// more than one callback
-			*data2++ = '\0';
-		else
-			data2 = data1 + strlen(data1);
+        
+        uindex_t t_callback2_index;        
+        if (MCStringFirstIndexOfChar(*t_callback, ',', t_comma_index + 1, kMCStringOptionCompareExact, t_end_index))
+            t_end_index = MCStringLength(*t_callback);
         
         /* UNCHECKED */ MCMemoryResizeArray(m_callback_count + 1, m_callbacks, m_callback_count);
-        m_callbacks[m_callback_count - 1] . time = strtol(str, NULL, 10);
+        // Converts the first part to a number.
+        MCAutoNumberref t_time;
+        MCNumberParseOffset(*t_callback, t_start_index, t_comma_index - t_start_index, &t_time);
+        m_callbacks[m_callback_count - 1] . time = MCNumberFetchAsInteger(*t_time);
         
-        while (isspace(*data1))//strip off preceding and trailing blanks
-            data1++;
-        ptr = data1;
-        while (*ptr)
+        t_callback_index = t_comma_index;
+        while (isspace(MCStringGetCharAtIndex(*t_callback, t_callback_index))) //strip off preceding and trailing blanks
+            ++t_callback_index;
+        
+        // See whether we can find a parameter for this callback
+        uindex_t t_space_index;
+        t_space_index = t_callback_index;
+        
+        while (t_space_index < t_end_index)
         {
-            if (isspace(*ptr))
+            if (isspace(MCStringGetCharAtIndex(*t_callback, t_space_index)))
             {
-                *ptr++ = '\0';
-                /* UNCHECKED */ MCNameCreateWithCString(ptr, m_callbacks[m_callback_count - 1] . parameter);
+                ++t_space_index;
+                MCAutoStringRef t_param;
+                /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_space_index, t_end_index - t_space_index), &t_param);
+                /* UNCHECKED */ MCNameCreate(*t_param, m_callbacks[m_callback_count - 1] . parameter);
                 break;
             }
-            ptr++;
+            ++t_space_index;
         }
 
-        /* UNCHECKED */ MCNameCreateWithCString(data1, m_callbacks[m_callback_count - 1] . message);
+        MCAutoStringRef t_message;
+        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_callback_index, t_space_index - t_callback_index), &t_message);
+        /* UNCHECKED */ MCNameCreateWithCString(*t_message, m_callbacks[m_callback_count - 1] . message);
         
         // If no parameter is specified, use the time.
         if (m_callbacks[m_callback_count - 1] . parameter == nil)
-            /* UNCHECKED */ MCNameCreateWithCString(str, m_callbacks[m_callback_count - 1] . parameter);
+        {
+            MCAutoStringRef t_param;
+            /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_start_index, t_comma_index - t_start_index), &t_param);
+            /* UNCHECKED */ MCNameCreateWithCString(*t_param, m_callbacks[m_callback_count - 1] . parameter);
+        }
 		
-        str = data2;
+        // Skip the last comma if any
+        t_start_index = t_end_index + 1;
 	}
-	delete cblist;
     
     // Now set the markers in the player so that we get notified.
     array_t<uint32_t> t_markers;
@@ -4628,10 +4637,6 @@ Boolean MCPlayer::AVIseek(uint4 to)
 
 #endif
 
-//
-// AVI Player Implementation
-//-----------------------------------------------------------------------------
-
 
 //-----------------------------------------------------------------------------
 // QuickTime Specific Utility Functions
@@ -5014,12 +5019,6 @@ Boolean MCPlayer::installUserCallbacks(void)
 	return True;
 }
 #endif
-
-//
-// QuickTime Specific Implementation
-<<<<<<< HEAD
-//-----------------------------------------------------------------------------
-
 
 //-----------------------------------------------------------------------------
 // QuickTime Visual Effects Implementation
@@ -5616,6 +5615,15 @@ bool MCPlayer::getrecordcompressionlist(MCStringRef& r_string)
 MCPlayerMediaTypeSet MCPlayer::getmediatypes()
 {
 	MCPlayerMediaTypeSet types = 0;
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+		{
+			MCPlatformPlayerMediaTypes t_types;
+			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMediaTypes, kMCPlatformPropertyTypePlayerMediaTypes, &t_types);
+            types = t_types;
+		}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED && state & CS_PREPARED)
 	{
@@ -5624,21 +5632,36 @@ MCPlayerMediaTypeSet MCPlayer::getmediatypes()
 				types |= 1 << i;
 	}
 #endif
+#endif
 	return types;
 }
 
 uint2 MCPlayer::getcurrentnode()
 {
 	uint2 i = 0;
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRNode, kMCPlatformPropertyTypeUInt16, &i);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtvrinstance != NULL)
 		i = (uint2)QTVRGetCurrentNodeID((QTVRInstance)qtvrinstance);
+#endif
 #endif
 	return i;
 }
 
 bool MCPlayer::changecurrentnode(uint2 nodeid)
 {
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+    {
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRNode, kMCPlatformPropertyTypeUInt16, &nodeid);
+        return true;
+    }
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtvrinstance != NULL)
 	{
@@ -5647,70 +5670,99 @@ bool MCPlayer::changecurrentnode(uint2 nodeid)
 			return true;
 	}
 #endif
+#endif
 	return false;
 }
 
 real8 MCPlayer::getpan()
 {
 	real8 pan = 0.0;
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRPan, kMCPlatformPropertyTypeDouble, &pan);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtvrinstance != NULL)
 		pan = QTVRGetPanAngle((QTVRInstance)qtvrinstance);
+#endif
 #endif
 	return pan;
 }
 
 bool MCPlayer::changepan(real8 pan)
 {
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+        if (m_platform_player != nil)
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRPan, kMCPlatformPropertyTypeDouble, &pan);
+#else
 #ifdef FEATURE_QUICKTIME
-	if (qtvrinstance != NULL)
-		QTVRSetPanAngle((QTVRInstance)qtvrinstance, (float)pan);
-	if (isbuffering())
-		return true;
+        if (qtvrinstance != NULL)
+            QTVRSetPanAngle((QTVRInstance)qtvrinstance, (float)pan);
 #endif
-	return false;
+#endif
+	return isbuffering();
 }
 
 real8 MCPlayer::gettilt()
 {
-	real8 tilt = 0.0;
+    real8 tilt = 0.0;
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRTilt, kMCPlatformPropertyTypeDouble, &tilt);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtvrinstance != NULL)
 		tilt = QTVRGetTiltAngle((QTVRInstance)qtvrinstance);
+#endif
 #endif
 	return tilt;
 }
 
 bool MCPlayer::changetilt(real8 tilt)
 {
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+        if (m_platform_player != nil)
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRTilt, kMCPlatformPropertyTypeDouble, &tilt);
+#else
 #ifdef FEATURE_QUICKTIME
-	if (qtvrinstance != NULL)
-		QTVRSetTiltAngle((QTVRInstance)qtvrinstance, (float)tilt);
-	if (isbuffering())
-		return true;
+        if (qtvrinstance != NULL)
+            QTVRSetTiltAngle((QTVRInstance)qtvrinstance, (float)tilt);
 #endif
-	return false;
+#endif
+    return isbuffering();
 }
 
 real8 MCPlayer::getzoom()
 {
 	real8 zoom = 0.0;
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRZoom, kMCPlatformPropertyTypeDouble, &zoom);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtvrinstance != NULL)
 		zoom = QTVRGetFieldOfView((QTVRInstance)qtvrinstance);
+#endif
 #endif
 	return zoom;
 }
 
 bool MCPlayer::changezoom(real8 zoom)
 {
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRZoom, kMCPlatformPropertyTypeDouble, &zoom);
+#else
 #ifdef FEATURE_QUICKTIME
-	if (qtvrinstance != NULL)
-		QTVRSetFieldOfView((QTVRInstance)qtvrinstance, (float)zoom);
-	if (isbuffering())
-		return true;
+    if (qtvrinstance != NULL)
+        QTVRSetFieldOfView((QTVRInstance)qtvrinstance, (float)zoom);
 #endif
-	return false;
+#endif
+	return isbuffering();
 }
 
 bool MCPlayer::gettrack(uindex_t index, uint4& id, MCStringRef& r_name, uint4& offset, uint4& duration)
@@ -5850,89 +5902,37 @@ bool MCPlayer::gethotspot(uindex_t index, uint2 &id, MCMultimediaQTVRHotSpotType
 
 void MCPlayer::setmoviecontrollerid(int4 p_id)
 {
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	playstop();
 	theMC = (void *)p_id;
 	theMovie = MCGetMovie((MovieController)theMC);
 #endif
+#endif
 }
 
 uint2 MCPlayer::gettrackcount()
 {
-	uint2 tcount = 0;
+	uint2 i = 0;
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+    {
+        uindex_t t_count;
+        MCPlatformCountPlayerTracks(m_platform_player, t_count);
+        i = t_count;
+    }
+#else
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED && state & CS_PREPARED)
-		tcount = (uint2)GetMovieTrackCount((Movie)theMovie);
+    if (qtstate == QT_INITTED && state & CS_PREPARED)
+        i = (uint2)GetMovieTrackCount((Movie)theMovie);
 #endif
-	return tcount;
+#endif
+	return i;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-
-
-// MW-2005-05-15: For consistency, added title field
-bool MCPlayer::stdrecorddlg(MCStringRef &r_result)
-{
-	bool t_success = true;
-
-#ifdef FEATURE_QUICKTIME
-	if (qtstate != QT_INITTED)
-		initqt();
-	if (qtstate != QT_INITTED)
-		return MCStringCreateWithCString("could not initialize quicktime", r_result);
-
-	ComponentInstance ci = OpenDefaultComponent(StandardCompressionType,
-	                       StandardCompressionSubTypeSound);
-	if (ci == NULL)
-		return MCStringCreateWithCString("can't open dialog", r_result);
-
-	//short denominator = (short)(MAXINT2 / MCrecordrate);
-	//short numerator = (short)(MCrecordrate * denominator);
-	//UnsignedFixed sampleRate = FixRatio(numerator, denominator) * 1000;
-	UnsignedFixed sampleRate = MCrecordrate * (1 << 16) * 1000;
-	short sampleSize = MCrecordsamplesize;
-	short numChannels = MCrecordchannels;
-	OSType compressionType;
-	memcpy(&compressionType, MCrecordcompression, 4);
-	compressionType = EndianU32_NtoB(compressionType);
-	SCSetInfo(ci, scSoundSampleRateType, &sampleRate);
-	SCSetInfo(ci, scSoundSampleSizeType, &sampleSize);
-	SCSetInfo(ci, scSoundChannelCountType, &numChannels);
-	SCSetInfo(ci, scSoundCompressionType, &compressionType);
-	errno = SCRequestImageSettings(ci);
-	if (errno == noErr)
-	{
-		SCGetInfo(ci, scSoundSampleRateType, &sampleRate);
-		SCGetInfo(ci, scSoundSampleSizeType, &sampleSize);
-		SCGetInfo(ci, scSoundChannelCountType, &numChannels);
-		SCGetInfo(ci, scSoundCompressionType, &compressionType);
-		//MCrecordrate = (HiWord(sampleRate) + LoWord(sampleRate)
-		//                / (real8)MAXINT2) / 1000.0;
-		MCrecordrate = sampleRate / (real8)(1000 << 16);
-		compressionType = EndianU32_BtoN(compressionType);
-		memcpy(MCrecordcompression, &compressionType, 4);
-		MCrecordsamplesize = sampleSize;
-		MCrecordchannels = numChannels;
-	}
-	else
-	{
-		if (errno == userCanceledErr)
-			t_success = MCStringCreateWithCString(MCcancelstring, r_result);
-		else
-			t_success = MCStringFormat(r_result, "error %d opening dialog", errno);
-	}
-	CloseComponent(ci);
-#endif
-
-	return t_success;
-}
-
-//
-// Sound Recording Implementation
-//-----------------------------------------------------------------------------
-=======
-//----------------------------------------------------------------------------
->>>>>>> develop
 
 //-----------------------------------------------------------------------------
 // X11 (using mplayer) Player Implementation
@@ -6068,371 +6068,4 @@ void MCPlayer::shutdown(void)
 //
 // X11 (using mplayer) Player Implementation
 //-----------------------------------------------------------------------------
-<<<<<<< HEAD
 
-//-----------------------------------------------------------------------------
-// QTEffect implementation
-
-#ifdef FEATURE_QUICKTIME
-
-void MCQTEffectEnd(void);
-
-static CGrafPtr s_qt_target_port = nil;
-
-static MCGImageRef s_qt_start_image = nil;
-static CGrafPtr s_qt_start_port = NULL;
-
-static MCGImageRef s_qt_end_image = nil;
-static CGrafPtr s_qt_end_port = NULL;
-
-static QTAtomContainer s_qt_effect_desc = NULL;
-
-static ImageDescriptionHandle s_qt_sample_desc = NULL;
-static ImageDescriptionHandle s_qt_start_desc = NULL;
-static ImageDescriptionHandle s_qt_end_desc = NULL;
-static TimeBase s_qt_timebase = NULL;
-static ImageSequence s_qt_effect_seq = NULL;
-
-static Boolean s_qt_reverse = False;
-
-void QTEffectAddParameters(QTAtomContainer effectdescription,OSType theEffectType, Visual_effects dir,Boolean &reverse)
-{
-	OSType paramtype;
-	reverse = False;
-	long param = 0;
-	switch (theEffectType)
-	{
-	case 'push'://push [right] [left] [top] [bottom]
-		{
-			switch (dir)
-			{
-			case VE_BOTTOM:
-				param = 1;
-				break;
-			case VE_LEFT:
-				param = 2;
-				break;
-			case VE_UP:
-				param = 3;
-				break;
-			case VE_RIGHT:
-				param = 4;
-			default:
-				break;
-			}
-			paramtype = 'from';
-		}
-		break;
-	case 'smpt'://wipe [right] [left] [top] [bottom]
-		{
-			switch (dir)
-			{
-			case VE_LEFT:
-				reverse = True;
-			case VE_RIGHT:
-				param = 1;
-				break;
-			case VE_UP:
-				reverse = True;
-			case VE_DOWN:
-				param = 2;
-			default:
-				break;
-			}
-		}
-	case 'smp2'://iris [open] [close]
-		{
-			switch (dir)
-			{
-			case VE_CLOSE:
-				reverse = True;
-			case VE_OPEN:
-				param = 101;
-			default:
-				break;
-			}
-		}
-	case 'smp3':
-	case 'smp4':
-		paramtype = 'wpID';
-		break;
-	default:
-		paramtype = 0;
-	}
-	
-	if (paramtype != 0 && param != 0)
-	{
-		param = EndianU32_NtoB(param);
-		QTInsertChild(effectdescription, kParentAtomIsContainer, paramtype, 1, 0, sizeof(param), &param, NULL);
-	}
-	if (reverse)
-	{
-		QTAtom source1 = QTFindChildByIndex(effectdescription, kParentAtomIsContainer, kEffectSourceName, 1, NULL );
-		QTAtom source2 = QTFindChildByIndex(effectdescription, kParentAtomIsContainer, kEffectSourceName, 2, NULL );
-		if (source2)
-			QTSwapAtoms(effectdescription,source1,source2);
-	}
-}
-
-bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p_direction, MCGImageRef p_start, MCGImageRef p_end, const MCRectangle& p_area)
-{
-	if (MCdontuseQTeffects || !MCtemplateplayer -> isQTinitted())
-		return false;
-
-	OSType qteffect;
-	qteffect = 0;
-	
-	switch (p_type)
-	{
-		case VE_DISSOLVE:
-			qteffect = 'dslv';
-		break;
-		
-		case VE_IRIS:
-			qteffect = 'smp2';
-			return false;
-		break;
-		
-		case VE_PUSH:
-			qteffect = 'push';
-			return false;
-		break;
-		
-		case VE_WIPE:
-			qteffect = 'smpt';
-			return false;
-		break;
-		
-		case VE_UNDEFINED:
-		{
-			uint2 i;
-			QTEffect *teffects = MCtemplateplayer->geteffects();
-			uint2 tsize = MCtemplateplayer->getneffects();
-			
-			MCAutoStringRef t_effectname;
-            /* UNCHECKED */ MCStringCreateWithCString(p_name, &t_effectname);
-			for (i = 0 ; i < tsize; i++)
-			{
-				if (MCStringIsEqualToCString(*t_effectname, teffects[i].token, kMCCompareExact))
-				{
-					qteffect = teffects[i].type;
-					break;
-				}
-			}
-			if (!qteffect && MCStringGetLength(*t_effectname) == 4)
-			{
-				memcpy(&qteffect, p_name, sizeof(OSType));
-				qteffect = EndianU32_NtoB(qteffect);
-			}
-			else
-			{
-				MCAutoDataRef t_data;
-                MCU_base64decode(*t_effectname, &t_data);
-                if (MCDataGetLength(*t_data) > 8)
-				{
-					const char *dataptr = (const char*)MCDataGetBytePtr(*t_data);
-					long *aLong = (long *)dataptr;
-					long datasize = EndianU32_BtoN(aLong[0]) - (sizeof(long)*2);
-					OSType ostype = EndianU32_BtoN(aLong[1]);
-					if (ostype == 'qtfx')
-					{
-						s_qt_effect_desc = NewHandle(datasize);
-						HLock(s_qt_effect_desc);
-						memcpy(*s_qt_effect_desc, (char *)(dataptr + (sizeof(long) * 2)), datasize);
-						HUnlock(s_qt_effect_desc);
-						QTAtom whatAtom = QTFindChildByID(s_qt_effect_desc, kParentAtomIsContainer, kParameterWhatName, kParameterWhatID, NULL);
-						if (whatAtom)
-						{
-							QTCopyAtomDataToPtr(s_qt_effect_desc, whatAtom, true, sizeof(qteffect), &qteffect, NULL);
-							qteffect = EndianU32_BtoN(qteffect);
-						}
-					}
-				}
-			}
-		}
-		break;
-	default:
-		break;
-	}
-	
-	Rect t_src_rect, t_dst_rect;
-	MacSetRect(&t_src_rect, 0, 0, p_area . width, p_area . height);
-	MacSetRect(&t_dst_rect, 0, 0, p_area . width, p_area . height);
-
-	if (qteffect != 0)
-	{
-		MCGRaster t_start_raster, t_end_raster;
-		/* UNCHECKED */ MCGImageGetRaster(p_start, t_start_raster);
-		QTNewGWorldFromPtr(&s_qt_start_port, PIXEL_FORMAT_32, &t_src_rect, nil, nil, 0, t_start_raster.pixels, t_start_raster.stride);
-
-		/* UNCHECKED */ MCGImageGetRaster(p_end, t_end_raster);
-		QTNewGWorldFromPtr(&s_qt_end_port, PIXEL_FORMAT_32, &t_src_rect, nil, nil, 0, t_end_raster.pixels, t_end_raster.stride);
-		
-		QTNewGWorld(&s_qt_target_port, PIXEL_FORMAT_32, &t_src_rect, nil, nil, 0);
-	}
-
-	if (s_qt_target_port != nil && s_qt_start_port != NULL && s_qt_end_port != NULL)
-	{
-		OSType effecttype;
-		if (s_qt_effect_desc == NULL)
-		{
-			QTNewAtomContainer(&s_qt_effect_desc);
-			effecttype = EndianU32_NtoB(qteffect);
-			QTInsertChild(s_qt_effect_desc, kParentAtomIsContainer, kParameterWhatName, kParameterWhatID, 0, sizeof(effecttype), &effecttype, NULL);
-		}
-		
-		effecttype = EndianU32_NtoB('srcA'); //source 1
-		QTInsertChild(s_qt_effect_desc, kParentAtomIsContainer, kEffectSourceName, 1, 0, sizeof(effecttype), &effecttype, NULL);
-		
-		effecttype = EndianU32_NtoB('srcB'); //source 2
-		QTInsertChild(s_qt_effect_desc, kParentAtomIsContainer, kEffectSourceName, 2, 0, sizeof(effecttype), &effecttype, NULL);
-	}
-	
-	if (s_qt_effect_desc != NULL)
-		MakeImageDescriptionForEffect(qteffect, &s_qt_sample_desc);
-		
-	if (s_qt_sample_desc != NULL)
-	{				
-		(**s_qt_sample_desc).vendor = kAppleManufacturer;
-		(**s_qt_sample_desc).temporalQuality = codecNormalQuality;
-		(**s_qt_sample_desc).spatialQuality = codecNormalQuality;
-		(**s_qt_sample_desc).width = p_area . width;
-		(**s_qt_sample_desc).height = p_area . height;
-		QTEffectAddParameters(s_qt_effect_desc, qteffect, p_direction,	s_qt_reverse);
-		
-		MatrixRecord t_matrix;
-		RectMatrix(&t_matrix, &t_src_rect, &t_dst_rect);
-		
-		HLock((Handle)s_qt_effect_desc);
-		DecompressSequenceBeginS(&s_qt_effect_seq, s_qt_sample_desc,
-														 *s_qt_effect_desc, GetHandleSize(s_qt_effect_desc),
-														 s_qt_target_port, nil,
-														 nil, &t_matrix, ditherCopy, nil,
-														 0, codecNormalQuality, nil);
-		HUnlock((Handle)s_qt_effect_desc);
-	}
-	
-	if (s_qt_effect_seq != 0)
-	{
-		ImageSequenceDataSource t_src_sequence;
-		
-		t_src_sequence = 0;
-		PixMapHandle t_src_pixmap = GetGWorldPixMap(s_qt_start_port);
-		MakeImageDescriptionForPixMap(t_src_pixmap, &s_qt_start_desc);
-		CDSequenceNewDataSource(s_qt_effect_seq, &t_src_sequence, 'srcA', 1, (Handle)s_qt_start_desc, nil, 0);
-		CDSequenceSetSourceData(t_src_sequence, GetPixBaseAddr(t_src_pixmap), (**s_qt_start_desc) . dataSize);
-	}
-	
-	if (s_qt_start_desc != NULL)
-	{
-		ImageSequenceDataSource t_src_sequence;
-		
-		t_src_sequence = 0;
-		PixMapHandle t_end_pixmap = GetGWorldPixMap(s_qt_end_port);
-		MakeImageDescriptionForPixMap(t_end_pixmap, &s_qt_end_desc);
-		CDSequenceNewDataSource(s_qt_effect_seq, &t_src_sequence, 'srcB', 1, (Handle)s_qt_end_desc, nil, 0);
-		CDSequenceSetSourceData(t_src_sequence, GetPixBaseAddr(t_end_pixmap), (**s_qt_end_desc) . dataSize);
-	}
-	
-	if (s_qt_end_desc != NULL)
-	{
-		s_qt_timebase = NewTimeBase();
-		SetTimeBaseRate(s_qt_timebase, 0);
-		CDSequenceSetTimeBase(s_qt_effect_seq, s_qt_timebase);
-	}
-	
-	if (s_qt_timebase == NULL)
-	{
-		MCQTEffectEnd();
-		return false;
-	}
-	
-	return true;
-}
-
-bool MCQTEffectStep(const MCRectangle &drect, MCStackSurface *p_target, uint4 p_delta, uint4 p_duration)
-{
-	ICMFrameTimeRecord t_frame_time;
-	memset((char *)&t_frame_time, 0, sizeof(ICMFrameTimeRecord));
-	SetTimeBaseValue(s_qt_timebase, p_delta, p_duration);
-	
-	if (s_qt_reverse)
-		p_delta = p_duration - p_delta;
-	else if (p_delta == 0)
-		p_delta = 1;
-	
-	t_frame_time . recordSize = sizeof(ICMFrameTimeRecord);
-	t_frame_time . flags = icmFrameTimeHasVirtualStartTimeAndDuration;
-	t_frame_time . frameNumber = 1;
-	t_frame_time . value . lo = p_delta;
-	t_frame_time . scale = t_frame_time . duration = t_frame_time . virtualDuration = p_duration;
-	HLock((Handle)s_qt_effect_desc);
-	DecompressSequenceFrameWhen(s_qt_effect_seq, *(Handle)s_qt_effect_desc, GetHandleSize((Handle)s_qt_effect_desc), 0, 0, nil, &t_frame_time);
-	HUnlock((Handle)s_qt_effect_desc);
-	
-	PixMapHandle t_pixmap = GetGWorldPixMap(s_qt_target_port);
-	LockPixels(t_pixmap);
-	void *t_bits = GetPixBaseAddr(t_pixmap);
-	uint32_t t_stride = QTGetPixMapHandleRowBytes(t_pixmap);
-
-	MCGRaster t_raster;
-	t_raster.width = drect.width;
-	t_raster.height = drect.height;
-	t_raster.pixels = t_bits;
-	t_raster.stride = t_stride;
-	t_raster.format = kMCGRasterFormat_xRGB;
-	
-	MCGImageRef t_image = nil;
-	/* UNCHECKED */ MCGImageCreateWithRasterNoCopy(t_raster, t_image);
-	
-	MCGRectangle t_src_rect, t_dst_rect;
-	t_src_rect = MCGRectangleMake(0, 0, drect.width, drect.height);
-	t_dst_rect = MCGRectangleTranslate(t_src_rect, drect.x, drect.y);
-	
-	p_target->Composite(t_dst_rect, t_image, t_src_rect, 1.0, kMCGBlendModeCopy);
-	MCGImageRelease(t_image);
-	
-	UnlockPixels(t_pixmap);
-	
-	return true;
-}
-
-void MCQTEffectEnd(void)
-{
-	if (s_qt_effect_seq != 0)
-		CDSequenceEnd(s_qt_effect_seq), s_qt_effect_seq = NULL;
-
-	if (s_qt_timebase != NULL)
-		DisposeTimeBase(s_qt_timebase), s_qt_timebase = NULL;
-
-	if (s_qt_end_desc != NULL)
-		DisposeHandle((Handle)s_qt_end_desc), s_qt_end_desc = NULL;
-	
-	if (s_qt_start_desc != NULL)
-		DisposeHandle((Handle)s_qt_start_desc), s_qt_start_desc = NULL;
-		
-	if (s_qt_sample_desc != NULL)
-		DisposeHandle((Handle)s_qt_sample_desc), s_qt_sample_desc = NULL;
-	
-	if (s_qt_target_port != NULL)
-		DisposeGWorld(s_qt_target_port), s_qt_target_port = NULL;
-	
-	if (s_qt_end_port != NULL)
-		DisposeGWorld(s_qt_end_port), s_qt_end_port = NULL;
-	
-	if (s_qt_start_port != NULL)
-		DisposeGWorld(s_qt_start_port), s_qt_start_port = NULL;
-	
-	if (s_qt_effect_desc != NULL)
-	{
-		QTDisposeAtomContainer(s_qt_effect_desc);
-		s_qt_effect_desc = NULL;
-	}
-}
-
-#endif
-
-// 
-//-----------------------------------------------------------------------------
-=======
->>>>>>> develop

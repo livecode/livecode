@@ -608,7 +608,7 @@ void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
         {
             MCAutoDataRef t_data;
             if (t_pasteboard -> Fetch(TRANSFER_TYPE_STYLED_TEXT, &t_data))
-                t_success = MCConvertStyledTextToStyledTextArray(*t_data, r_data);
+                t_success = MCConvertStyledTextToStyledTextArray(*t_data, (MCArrayRef&)r_data);
             else
                 t_success = false;
         }
@@ -673,14 +673,14 @@ void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
         if (t_type == TRANSFER_TYPE_STYLED_TEXT_ARRAY)
         {
             t_type =  TRANSFER_TYPE_STYLED_TEXT;
-            t_success = MCConvertStyledTextArrayToStyledText((MCArrayRef)p_data, (MCDataRef&)t_data));
+            t_success = MCConvertStyledTextArrayToStyledText((MCArrayRef)p_data, (MCDataRef&)&(t_data));
         }
         else
-            t_data = MCValueRetain(p_data);
+            t_data = p_data;
         
         if (t_success)
         {
-            if (t_pasteboard -> Store(t_type, p_data))
+            if (t_pasteboard -> Store(t_type, *t_data))
                 return;
         }
 	}

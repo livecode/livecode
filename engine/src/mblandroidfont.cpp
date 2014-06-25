@@ -98,11 +98,7 @@ bool MCSystemListFontFamilies(MCListRef& r_names)
 	return MCListCopy(*t_list, r_names);
 }
 
-<<<<<<< HEAD
 bool MCSystemListFontsForFamily(MCStringRef p_family, MCListRef& r_styles)
-=======
-void MCSystemListFontsForFamily(MCExecPoint& ep, const char *p_family, uint2 p_size)
->>>>>>> develop
 {
     uint32_t t_styles;
     t_styles = 0;

@@ -658,6 +658,9 @@ public:
 	void GetPaintCompression(MCExecContext& ctxt, intenum_t& r_compression);
 	void GetAngle(MCExecContext& ctxt, integer_t& r_angle);
 	void SetAngle(MCExecContext& ctxt, integer_t p_angle);
+    // MERG-2014-06-23: [[ IconGravity ]] Getters and setters added
+    void SetCenterRectangle(MCExecContext& ctxt, MCRectangle *p_rectangle);
+    void GetCenterRectangle(MCExecContext& ctxt, MCRectangle *&r_rectangle);
     
     virtual void SetBlendLevel(MCExecContext& ctxt, uinteger_t level);
 	virtual void SetInk(MCExecContext& ctxt, intenum_t ink);

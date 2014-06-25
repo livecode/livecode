@@ -1564,13 +1564,10 @@ enum Properties {
 	P_USE_PIXEL_SCALING,
 	P_SCREEN_PIXEL_SCALE,
 	P_SCREEN_PIXEL_SCALES,
-<<<<<<< HEAD
 	
     // RTL/Bidirectional properties
     P_CURSORMOVEMENT,
     P_TEXTDIRECTION,
-    
-=======
     
     // MW-2014-06-19: [[ ImageCenterRect ]] Tag for the centerRect property.
     P_CENTER_RECTANGLE,
@@ -1580,7 +1577,6 @@ enum Properties {
     // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
     P_CLIPS_TO_RECT,
 
->>>>>>> develop
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
     P_CUSTOM_KEYS = P_FIRST_ARRAY_PROP,

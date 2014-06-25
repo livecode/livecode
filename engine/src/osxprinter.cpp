@@ -1002,10 +1002,6 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
 	
 	ResetSession();
 
-<<<<<<< HEAD
-	PMSheetDoneUPP t_sheet_done_callback;
-	t_sheet_done_callback = NULL;
-
 	Boolean t_accepted;
 	t_accepted = false;
 	OSErr t_err;
@@ -1046,70 +1042,55 @@ MCPrinterDialogResult MCMacOSXPrinter::DoDialog(bool p_window_modal, Window p_ow
 	}
 	else
 	{
-		if (p_window_modal && p_owner != NULL)
-		{
-			t_sheet_done_callback = NewPMSheetDoneUPP(SheetDoneCallback);
-			PMSessionUseSheets(m_session, (WindowPtr)p_owner -> handle . window, t_sheet_done_callback);
-			
-			c_sheet_pending = true;
-			c_sheet_accepted = false;
-		}
-
-		Cursor t_cursor;
-		SetCursor(GetQDGlobalsArrow(&t_cursor)); // bug in OS X doesn't reset this
-		ShowCursor();
+        bool t_use_sheets;
+        t_use_sheets = false;
+        if (p_window_modal && p_owner != NULL)
+            t_use_sheets = true;
 		
-		PDEBUG(stderr, "DoDialog: Showing dialog\n");
-=======
-	bool t_use_sheets;
-	t_use_sheets = false;
-	if (p_window_modal && p_owner != NULL)
-		t_use_sheets = true;
->>>>>>> develop
-		
-	PDEBUG(stderr, "DoDialog: Showing dialog\n");
-	
-	MCPlatformPrintDialogResult t_result;
-	if (p_is_settings)
-		MCPlatformBeginPrintSettingsDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format);
-	else
-		MCPlatformBeginPageSetupDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format);
-
-	PDEBUG(stderr, "DoDialog: Dialog shown\n");
-	
-	for(;;)
-	{
-		t_result = MCPlatformEndPrintDialog();
-		if (t_result != kMCPlatformPrintDialogResultContinue)
-			break;
-		
-		MCscreen -> wait(REFRESH_INTERVAL, True, True);
-	}
-
-	if (t_use_sheets)
-	{
-		// MW-2009-01-22: [[ Bug 3509 ]] Make sure we force an update to the menubar, just in case
-		//   the dialog has messed with our menu item enabled state!
-		MCscreen -> updatemenubar(True);
-	}
-
-	if (t_result == kMCPlatformPrintDialogResultError)
-	{
-		PDEBUG(stderr, "DoDialog: Error occured\n");
-		return PRINTER_DIALOG_RESULT_ERROR;
-	}
-	else if (t_result == kMCPlatformPrintDialogResultSuccess)
-	{
-		PDEBUG(stderr, "DoDialog: SetProperties\n");
-		SetProperties(p_is_settings);
-		PDEBUG(stderr, "DoDialog: Returning OKAY\n");
-		return PRINTER_DIALOG_RESULT_OKAY;
-	}
-	else
-	{
-		PDEBUG(stderr, "DoDialog: Returning Cancel\n");
-		return PRINTER_DIALOG_RESULT_CANCEL;
-	}
+        PDEBUG(stderr, "DoDialog: Showing dialog\n");
+        
+        MCPlatformPrintDialogResult t_result;
+        if (p_is_settings)
+            MCPlatformBeginPrintSettingsDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format);
+        else
+            MCPlatformBeginPageSetupDialog(t_use_sheets ? p_owner : nil, m_session, m_settings, m_page_format);
+        
+        PDEBUG(stderr, "DoDialog: Dialog shown\n");
+        
+        for(;;)
+        {
+            t_result = MCPlatformEndPrintDialog();
+            if (t_result != kMCPlatformPrintDialogResultContinue)
+                break;
+            
+            MCscreen -> wait(REFRESH_INTERVAL, True, True);
+        }
+        
+        if (t_use_sheets)
+        {
+            // MW-2009-01-22: [[ Bug 3509 ]] Make sure we force an update to the menubar, just in case
+            //   the dialog has messed with our menu item enabled state!
+            MCscreen -> updatemenubar(True);
+        }
+        
+        if (t_result == kMCPlatformPrintDialogResultError)
+        {
+            PDEBUG(stderr, "DoDialog: Error occured\n");
+            return PRINTER_DIALOG_RESULT_ERROR;
+        }
+        else if (t_result == kMCPlatformPrintDialogResultSuccess)
+        {
+            PDEBUG(stderr, "DoDialog: SetProperties\n");
+            SetProperties(p_is_settings);
+            PDEBUG(stderr, "DoDialog: Returning OKAY\n");
+            return PRINTER_DIALOG_RESULT_OKAY;
+        }
+        else
+        {
+            PDEBUG(stderr, "DoDialog: Returning Cancel\n");
+            return PRINTER_DIALOG_RESULT_CANCEL;
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1745,12 +1726,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 				// MM-2014-04-16: [[ Bug 11964 ]] Prototype for MCFontMeasureText now takes transform param. Pass through identity.
 				CGContextFillRect(m_context,
 					CGRectMake(x, y - f -> ascent,
-<<<<<<< HEAD
                                MCFontMeasureText(p_mark -> text . font, *t_text, MCGAffineTransformMakeIdentity()), f -> ascent + f -> descent));
-=======
-                               MCFontMeasureText(p_mark -> text . font, (const char *)s, len, false, MCGAffineTransformMakeIdentity()), f -> ascent + f -> descent));
-
->>>>>>> develop
 				CGContextRestoreGState(m_context);
 			}
 			
@@ -2204,7 +2180,6 @@ MCPrinterResult MCMacOSXPrinterDevice::HandleError(OSErr p_error, const char *p_
 
 ///////////////////////////////////////////////////////////////////////////////
 
-<<<<<<< HEAD
 typedef OSStatus (*PMPrintSettingsCreateDataRepresentationProcPtr)(PMPrintSettings settings, CFDataRef* r_data, uint32_t format);
 typedef OSStatus (*PMPageFormatCreateDataRepresentationProcPtr)(PMPageFormat settings, CFDataRef* r_data, uint32_t format);
 typedef OSStatus (*PMPrintSettingsCreateWithDataRepresentationProcPtr)(CFDataRef data, PMPrintSettings *settings);
@@ -2554,24 +2529,29 @@ static bool deserialize_printer_settings(const char *p_stream, uint32_t p_stream
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-=======
-void MCListSystemPrinters(MCExecPoint& ep)
+bool MCListSystemPrinters(MCStringRef &r_names)
 {
-	ep . clear();
-
+    bool t_success;
 	CFArrayRef t_printers;
 	if (PMServerCreatePrinterList(kPMServerLocal, &t_printers) != noErr)
-		return;
+		return false;
+    
+    MCAutoListRef t_names;
+    t_success = MCListCreateMutable('\n', &t_names);
 
-	for(CFIndex i = 0; i < CFArrayGetCount(t_printers); ++i)
+    for(CFIndex i = 0; i < CFArrayGetCount(t_printers) && t_success; ++i)
 	{
-		char *t_name;
-		t_name = osx_cfstring_to_cstring(PMPrinterGetName((PMPrinter)CFArrayGetValueAtIndex(t_printers, i)), false);
-		ep . concatcstring(t_name, EC_RETURN, i == 0);
-		free(t_name);
+        MCAutoStringRef t_name;
+        t_success = MCStringCreateWithCFString(PMPrinterGetName((PMPrinter)CFArrayGetValueAtIndex(t_printers, i)), &t_name)
+                        && MCListAppend(*t_names, *t_name);
 	}
 
 	CFRelease(t_printers);
+    
+    if (t_success)
+        t_success = MCListCopyAsString(*t_names, r_names);
+    
+    return t_success;
 }
 
 MCPrinter *MCCreateSystemPrinter(void)
@@ -2580,4 +2560,3 @@ MCPrinter *MCCreateSystemPrinter(void)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
->>>>>>> develop

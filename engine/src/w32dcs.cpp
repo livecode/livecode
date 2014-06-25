@@ -837,13 +837,10 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
 	for(uint4 t_index = 1; t_index < t_display_count; ++t_index)
 		t_virtual_viewport = MCU_union_rect(t_virtual_viewport, t_displays[t_index] . viewport);
 
-<<<<<<< HEAD
-=======
 	// IM-2014-04-02: [[ Bug 12109 ]] Convert screenrect to screen coords
 	MCRectangle t_device_viewport;
 	t_device_viewport = logicaltoscreenrect(t_virtual_viewport);
 
->>>>>>> develop
 	HWND hwndsnap = CreateWindowExA(WS_EX_TRANSPARENT | WS_EX_TOPMOST,
 	                               MC_SNAPSHOT_WIN_CLASS_NAME,"", WS_POPUP, t_device_viewport . x, t_device_viewport . y,
 	                               t_device_viewport . width, t_device_viewport . height, invisiblehwnd,
@@ -1392,17 +1389,6 @@ void MCScreenDC::redrawbackdrop(void)
 
 		// MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 		// MM-2014-04-08: [[ Bug 12058 ]] Update back_pattern to be a MCPatternRef.
-<<<<<<< HEAD
-		if (backdrop_pattern != nil && backdrop_pattern -> image != nil)
-		{
-			MCGImageRef t_image;
-			t_image = backdrop_pattern->image;
-
-			MCGAffineTransform t_pattern_transform;
-			t_pattern_transform = MCGAffineTransformMakeScale(1.0 / backdrop_pattern->scale, 1.0 / backdrop_pattern->scale);
-
-			MCGContextSetFillPattern(t_context, t_image, t_pattern_transform, kMCGImageFilterNone);
-=======
 		if (backdrop_pattern != nil)
 		{
 			MCGImageRef t_image;
@@ -1413,7 +1399,6 @@ void MCScreenDC::redrawbackdrop(void)
 				MCGContextSetFillPattern(t_context, t_image, t_pattern_transform, kMCGImageFilterNone);
 				MCPatternUnlock(backdrop_pattern, t_image);
 			}
->>>>>>> develop
 		}
 		else
 			MCGContextSetFillRGBAColor(t_context, backdrop_colour.red / 65535.0, backdrop_colour.green / 65535.0, backdrop_colour.blue / 65535.0, 1.0);
@@ -1429,11 +1414,7 @@ void MCScreenDC::redrawbackdrop(void)
 			{
 				MCRectangle t_rect;
 				t_rect = backdrop_badge -> getrect();
-<<<<<<< HEAD
-				backdrop_badge -> drawme(t_gfxcontext, 0, 0, t_rect . width, t_rect . height, 32, m_backdrop_rect.height - 32 - t_rect . height);
-=======
 				backdrop_badge -> drawme(t_gfxcontext, 0, 0, t_rect . width, t_rect . height, 32, m_backdrop_rect.height - 32 - t_rect . height, t_rect . width, t_rect . height);
->>>>>>> develop
 			}
 
 			delete t_gfxcontext;

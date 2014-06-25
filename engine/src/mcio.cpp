@@ -226,16 +226,10 @@ IO_stat IO_read_to_eof(IO_handle stream, MCDataRef& r_data)
     // With some of them - like mouse pointer - no error is triggered, but writing on it moves the file pointer
     // without increasing the size; that results in nread being 0 - MCS_tell, so a really large unsigned number
 	nread = MCMin((uint4)MCS_fsize(stream), (uint4)MCS_fsize(stream) - (uint4)MCS_tell(stream));
-<<<<<<< HEAD
 	void *t_stream;
 	/* UNCHECKED */ MCMemoryAllocate(nread, t_stream);
 	/* UNCHECKED */ MCS_readall(t_stream, nread, stream, nread);
 	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t*)t_stream, nread, r_data);
-=======
-	char *dptr = ep.getbuffer(nread);
-	MCS_read(dptr, 1, nread, stream);
-	ep.setlength(nread);
->>>>>>> develop
 	return IO_NORMAL;
 }
 

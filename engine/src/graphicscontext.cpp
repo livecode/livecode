@@ -1423,24 +1423,15 @@ void MCGraphicsContext::drawtext(coord_t x, int2 y, MCStringRef p_string, MCFont
     drawtext_substring(x, y, p_string, t_range, p_font, image, p_breaking, p_direction);
 }	
 
-<<<<<<< HEAD
 void MCGraphicsContext::drawtext_substring(coord_t x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean p_image, MCDrawTextBreaking p_break, MCDrawTextDirection p_direction)
-=======
-void MCGraphicsContext::drawtext(coord_t x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_is_unicode)
->>>>>>> develop
 {
     // MW-2013-10-29: [[ Bug 11338 ]] If 'image' is true, then render the background
 	//   rect.
 	if (p_image)
 	{
 		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the context to make sure we measure the width of scaled text correctly.
-<<<<<<< HEAD
 		coord_t t_widthf;
         t_widthf = MCFontMeasureTextSubstring(p_font, p_string, p_range, MCGContextGetDeviceTransform(m_gcontext));
-=======
-		float t_widthf;
-		t_widthf = MCFontMeasureTextFloat(p_font, s, length, p_is_unicode, MCGContextGetDeviceTransform(m_gcontext));
->>>>>>> develop
         
         int32_t t_width = int32_t(ceilf(t_widthf));
 		

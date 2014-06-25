@@ -19,7 +19,7 @@ public:
 	virtual void Release(void);	
 	
 	virtual bool Query(MCTransferType*& r_types, unsigned int& r_type_count);
-	virtual bool Fetch(MCTransferType p_type, MCSharedString*& r_data);
+	virtual bool Fetch(MCTransferType p_type, MCDataRef& r_data);
 	
 private:
 	bool IsValid(void);
@@ -30,7 +30,7 @@ private:
 	{
 		MCTransferType type;
 		MCPlatformPasteboardFlavor flavor;
-		MCSharedString *data;
+		MCDataRef data;
 	};
 	
 	uint32_t m_references;
@@ -68,11 +68,11 @@ public:
 	virtual Boolean open();
 	virtual Boolean close(Boolean force);
 
-	virtual const char *getdisplayname();
+	virtual MCNameRef getdisplayname();
 	virtual uint2 getmaxpoints(void);
 	virtual uint2 getvclass(void);
 	virtual uint2 getdepth(void);
-	virtual void getvendorstring(MCExecPoint &ep);
+	virtual MCNameRef getvendorname(void);
 	virtual uint2 getpad();
 	
 	virtual MCColor *getaccentcolors();
@@ -94,7 +94,7 @@ public:
 	virtual void raisewindow(Window window);
 	virtual void iconifywindow(Window window);
 	virtual void uniconifywindow(Window window);
-	virtual void setname(Window window, const char *newname);
+	virtual void setname(Window window, MCStringRef newname);
 	virtual void setinputfocus(Window window);
 	virtual uint4 dtouint4(Drawable d);
 	virtual Boolean uint4towindow(uint4, Window &w);
@@ -136,8 +136,8 @@ public:
 	virtual void closeIME();
 	
 	virtual void seticon(uint4 p_icon);
-	virtual void seticonmenu(const char *p_menu);
-	virtual void configurestatusicon(uint32_t icon_id, const char *menu, const char *tooltip);
+	virtual void seticonmenu(MCStringRef p_menu);
+	virtual void configurestatusicon(uint32_t icon_id, MCStringRef menu, MCStringRef tooltip);
 	virtual void enactraisewindows(void);
 	
 	virtual void listprinters(MCExecPoint& ep);
@@ -148,8 +148,8 @@ public:
 	virtual bool setclipboard(MCPasteboard *p_pasteboard);
 	virtual MCPasteboard *getclipboard(void);
 	
-    virtual bool loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle);
-    virtual bool unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle);
+	virtual bool loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle);
+    virtual bool unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle);
 	
 	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname, MCPoint *size);
 	

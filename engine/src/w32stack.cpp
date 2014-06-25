@@ -1239,11 +1239,7 @@ void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 	}
 
 	// IM-2014-03-27: [[ Bug 12010 ]] Free the created surface region once the update is done.
-<<<<<<< HEAD
-	MCRegionDestroy(t_surface_region);
-=======
 	MCGRegionDestroy(t_scaled_region);
->>>>>>> develop
 }
 
 void MCStack::view_platform_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)

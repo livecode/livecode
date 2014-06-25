@@ -1261,7 +1261,6 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 	char *text = new char[l + 1];
 	memcpy(text, p_mark -> text . data , l);
 	
-<<<<<<< HEAD
 	bool t_is_unicode;
 	t_is_unicode = p_mark -> text . unicode_override;
     
@@ -1270,10 +1269,6 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 
     // MM-2014-04-16: [[ Bug 11964 ]] Prototype for MCFontMeasureText now takes transform param. Pass through identity.
     uint2 w = MCFontMeasureText(p_mark -> text . font, *t_text_string, MCGAffineTransformMakeIdentity());
-=======
-	// MM-2014-04-16: [[ Bug 11964 ]] Prototype for MCFontMeasureText now takes transform param. Pass through identity.
-    uint2 w = MCFontMeasureText(p_mark -> text . font, text, l, false, MCGAffineTransformMakeIdentity());
->>>>>>> develop
 	
 	text[l] = '\0';
 	const char *sptr = text;

@@ -16,7 +16,6 @@
 
 #include <Cocoa/Cocoa.h>
 
-#include "core.h"
 #include "globdefs.h"
 #include "region.h"
 #include "graphics.h"
@@ -427,9 +426,10 @@ void MCPlatformReleaseMenu(MCPlatformMenuRef p_menu)
 	MCMemoryDelete(p_menu);
 }
 
-void MCPlatformSetMenuTitle(MCPlatformMenuRef p_menu, const char *p_title)
+void MCPlatformSetMenuTitle(MCPlatformMenuRef p_menu, MCStringRef p_title)
 {
-	[p_menu -> menu setTitle: [NSString stringWithCString: p_title encoding: NSUTF8StringEncoding]];
+    MCAutoStringRefAsCFString t_cf_string;
+	[p_menu -> menu setTitle: (NSString*)*t_cf_string];
 }
 
 void MCPlatformCountMenuItems(MCPlatformMenuRef p_menu, uindex_t& r_count)
@@ -502,14 +502,14 @@ void MCPlatformGetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 	
 	NSMenuItem *t_item;
 	t_item = [p_menu -> menu itemAtIndex: p_index];
-	
+    
 	switch(p_property)
 	{
 		case kMCPlatformMenuItemPropertyTitle:
-			*(char **)r_value = strdup([[t_item title] cStringUsingEncoding: NSUTF8StringEncoding]);
+			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[t_item title], *(MCStringRef*)r_value);
 			break;
 		case kMCPlatformMenuItemPropertyTag:
-			*(char **)r_value = strdup([(NSString *)[t_item representedObject] cStringUsingEncoding: NSUTF8StringEncoding]);
+			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[t_item representedObject], *(MCStringRef*)r_value);
 			break;
 		default:
 			assert(false);
@@ -523,14 +523,18 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 	
 	NSMenuItem *t_item;
 	t_item = [p_menu -> menu itemAtIndex: p_index];
+    
+    MCAutoStringRefAsCFString t_cf_string;
 	
 	switch(p_property)
 	{
 		case kMCPlatformMenuItemPropertyTitle:
-			[t_item setTitle: [NSString stringWithCString: *(const char **)p_value encoding: NSUTF8StringEncoding]];
+            /* UNCHECKED */ t_cf_string . Lock(*(MCStringRef*)p_value);
+			[t_item setTitle: (NSString*)*t_cf_string];
 			break;	
 		case kMCPlatformMenuItemPropertyTag:
-			[t_item setRepresentedObject: [NSString stringWithCString: *(const char **)p_value encoding: NSUTF8StringEncoding]];
+            /* UNCHECKED */ t_cf_string . Lock(*(MCStringRef*)p_value);
+			[t_item setRepresentedObject: (NSString*)*t_cf_string];
 			break;
 		case kMCPlatformMenuItemPropertyAction:
 		{

@@ -669,22 +669,14 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 	else if (p_event_type == kMCFieldExportEventEndParagraph)
 	{
 		// Make sure any nested styles are finished.
-<<<<<<< HEAD
-		if (ctxt . styles[ctxt . style_index] . link_text != nil)
-			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
-		while(ctxt . style_index > 0)
-		{
-			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
-=======
 		while(ctxt . style_index > 0)
 		{
             // MW-2014-06-11: [[ Bug 12556 ]] Make sure the metadata field is synced.
             if (ctxt . styles[ctxt . style_index] . metadata != nil)
-                ctxt . buffer . appendcstring("}");
+                /* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
             if (ctxt . styles[ctxt . style_index] . link_text != nil)
-                ctxt . buffer . appendcstring("}");
-			ctxt . buffer . appendcstring("}");
->>>>>>> develop
+                /* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
 			ctxt . style_index -= 1;
 		}
 		
@@ -707,11 +699,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		{
             // MW-2014-06-11: [[ Bug 12556 ]] Make sure the link_text field is synced.
 			if (ctxt . styles[ctxt . style_index] . link_text != nil)
-<<<<<<< HEAD
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
-=======
-				ctxt . buffer . appendcstring("}}");
->>>>>>> develop
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}}");
 
 			while(ctxt . style_index > 0)
 			{
@@ -721,19 +709,13 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 
 			if (t_new_style . link_text != nil)
 			{
-<<<<<<< HEAD
 				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text,
 													 "{\\field{\\*\\fldinst %s \"%@\"}{\\fldrslt ",
 													 t_new_style . link_on ? "HYPERLINK" : "LCANCHOR",
 													 t_new_style . link_text);
 				ctxt . styles[ctxt . style_index] = ctxt . styles[ctxt . style_index];
-				ctxt . style_index += 1;
-=======
-				ctxt . buffer . appendtextf("{\\field{\\*\\fldinst %s \"%s\"}{\\fldrslt ", t_new_style . link_on ? "HYPERLINK" : "LCANCHOR", MCNameGetCString(t_new_style . link_text));
-				ctxt . styles[ctxt . style_index + 1] = ctxt . styles[ctxt . style_index];
                 ctxt . styles[ctxt . style_index + 1] . link_text = t_new_style . link_text;
-                ctxt . style_index += 1;
->>>>>>> develop
+				ctxt . style_index += 1;
 			}
 		}
 
@@ -742,11 +724,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		{
             // MW-2014-06-11: [[ Bug 12556 ]] Make sure the metadata field is synced.
 			if (ctxt . styles[ctxt . style_index] . metadata != nil)
-<<<<<<< HEAD
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
-=======
-				ctxt . buffer . appendcstring("}}");
->>>>>>> develop
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}}");
 
 			while(ctxt . style_index > 0 && ctxt . styles[ctxt . style_index] . link_text == nil)
 			{

@@ -455,14 +455,25 @@ void MCPlayer::GetCallbacks(MCExecContext& ctxt, MCStringRef& r_callbacks)
 
 void MCPlayer::SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks)
 {
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
-	deleteUserCallbacks(); //delete all callbacks for this player
+    deleteUserCallbacks(); //delete all callbacks for this player
 #endif
-		MCValueAssign(userCallbackStr, p_callbacks);
+#endif
+    MCValueAssign(userCallbackStr, p_callbacks);
+    
+    if (!MCStringIsEmpty(userCallbackStr))
+    {
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
-		installUserCallbacks(); //install all callbacks for this player
+        installUserCallbacks(); //install all callbacks for this player
 #endif
-	
+#endif
+    }
+#ifdef FEATURE_PLATFORM_PLAYER
+    SynchronizeUserCallbacks();
+#endif	
 }
 
 void MCPlayer::GetTimeScale(MCExecContext& ctxt, uinteger_t& r_scale)
@@ -485,15 +496,16 @@ void MCPlayer::GetMovieControllerId(MCExecContext& ctxt, integer_t& r_id)
 #ifndef FEATURE_QUICKTIME
 	r_id = (int)NULL;
 #else
+#ifndef FEATURE_PLATFORM_PLAYER
+    // COCOA-TODO
 	r_id = (int4)theMC;
+#endif
 #endif
 }
 
 void MCPlayer::SetMovieControllerId(MCExecContext& ctxt, integer_t p_id)
 {
-#ifdef FEATURE_QUICKTIME
 	setmoviecontrollerid(p_id);
-#endif
 }
 
 void MCPlayer::GetPlayLoudness(MCExecContext& ctxt, uinteger_t& r_loudness)
@@ -595,6 +607,32 @@ void MCPlayer::GetX11Tracks(MCExecContext& ctxt,  MCStringRef& r_tracks)
 void MCPlayer::GetTracks(MCExecContext& ctxt, MCStringRef& r_tracks)
 {
 	if (getstate(CS_PREPARED))
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+	{
+		uindex_t t_track_count;
+		MCPlatformCountPlayerTracks(m_platform_player, t_track_count);
+        MCAutoListRef t_tracks_list;
+        /* UNCHECKED */ MCListCreateMutable('\n', &t_tracks_list);
+            
+			for(uindex_t i = 0; i < t_track_count; i++)
+			{
+				MCAutoStringRef t_track;
+                MCAutoStringRef t_name;
+                
+				uint32_t t_id;
+				uint32_t t_offset, t_duration;
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyMediaTypeName, kMCPlatformPropertyTypeNativeCString, &(&t_name));
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyOffset, kMCPlatformPropertyTypeUInt32, &t_offset);
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_offset);
+                /* UNCHECKED */ MCStringFormat(&t_track, "%u,%@,%u,%u", t_id, *t_name, t_offset, t_duration);
+                /* UNCHECKED */ MCListAppend(*t_tracks_list, *t_track);
+			}
+            /* UNCHECKED */ MCListCopyAsString(*t_tracks_list, r_tracks);
+		}
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			GetQTTracks(ctxt, r_tracks);
@@ -607,22 +645,30 @@ void MCPlayer::GetTracks(MCExecContext& ctxt, MCStringRef& r_tracks)
 #else
 	0 == 0;
 #endif
+#endif
 }
 
 void MCPlayer::GetConstraints(MCExecContext& ctxt, MCMultimediaQTVRConstraints& r_constraints)
 {
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRConstraints, kMCPlatformPropertyTypePlayerQTVRConstraints, (MCPlatformPlayerQTVRConstraints*)r_constraints);
+#else
 #ifdef FEATURE_QUICKTIME
 		getqtvrconstraints(1, r_constraints . minpan, r_constraints . maxpan);
 		getqtvrconstraints(2, r_constraints . mintilt, r_constraints . maxtilt);
 		getqtvrconstraints(3, r_constraints . minzoom, r_constraints . maxzoom);
 #endif
+#endif
 }
 
 void MCPlayer::GetNodes(MCExecContext& ctxt, MCStringRef& r_nodes)
 {
+    MCStringRef t_nodes;
+    t_nodes = MCValueRetain(kMCEmptyString);
 #ifdef FEATURE_PLATFORM_PLAYER
 	// COCOA-TODO: MCPlayer::getnodes();
-    r_nodes = MCValueRetain(kMCEmptyString);
 #else
 #ifdef FEATURE_QUICKTIME
 	uint2 nodecount = getnodecount();
@@ -636,18 +682,22 @@ void MCPlayer::GetNodes(MCExecContext& ctxt, MCStringRef& r_nodes)
 		t_node_array . Push(t_node);
 	}
 
-	copy_custom_list_as_string(ctxt, kMCMultimediaQTVRNodeTypeInfo, t_node_array . Ptr(), t_node_array . Size(), '\n', r_nodes);
+    MCValueRelease(t_nodes);
+	copy_custom_list_as_string(ctxt, kMCMultimediaQTVRNodeTypeInfo, t_node_array . Ptr(), t_node_array . Size(), '\n', t_nodes);
 
 	for (uindex_t i = 0; i < t_node_array . Size(); i++)
 		MCMultimediaQTVRNodeFree(ctxt, t_node_array[i]);
 #endif
+#endif
+    r_nodes = t_nodes;
 }
 	
 void MCPlayer::GetHotSpots(MCExecContext& ctxt, MCStringRef& r_spots)
 {
+    MCStringRef t_spots;
+    t_spots = MCValueRetain(kMCEmptyString);
 #ifdef FEATURE_PLATFORM_PLAYER
 	// COCOA-TODO: MCPlayer::gethotspots();
-    r_spots = MCValueRetain(kMCEmptyString);
 #else
 #ifdef FEATURE_QUICKTIME
 	uint2 hotspotcount = gethotspotcount();
@@ -661,11 +711,14 @@ void MCPlayer::GetHotSpots(MCExecContext& ctxt, MCStringRef& r_spots)
 		t_spot_array . Push(t_spot);
 	}
 
-	copy_custom_list_as_string(ctxt, kMCMultimediaQTVRHotSpotTypeInfo, t_spot_array . Ptr(), t_spot_array . Size(), '\n', r_spots);
+    MCValueRelease(t_spots);
+	copy_custom_list_as_string(ctxt, kMCMultimediaQTVRHotSpotTypeInfo, t_spot_array . Ptr(), t_spot_array . Size(), '\n', t_spots);
 
 	for (uindex_t i = 0; i < t_spot_array . Size(); i++)
 		MCMultimediaQTVRHotSpotFree(ctxt, t_spot_array[i]);
 #endif
+#endif
+    r_spots = t_spots;
 }
 
 void MCPlayer::SetShowBorder(MCExecContext& ctxt, bool setting)
@@ -688,6 +741,15 @@ void MCPlayer::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting,
     MCObject::SetVisibility(ctxt, part, setting, visible);
     if (flags != oldflags && !(flags & F_VISIBLE))
         playstop();
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+    {
+        bool t_visible;
+        t_visible = getflag(F_VISIBLE);
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
+    }
+#else
 #ifdef FEATURE_QUICKTIME
     if (theMC != NULL)
         qt_setcontrollervisible();
@@ -707,15 +769,48 @@ void MCPlayer::SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting)
 void MCPlayer::SetTraversalOn(MCExecContext& ctxt, bool setting)
 {
     MCObject::SetTraversalOn(ctxt, setting);
+    
+    if (!ctxt . HasError())
+    {
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
     if (qtstate == QT_INITTED && getstate(CS_PREPARED))
         qt_enablekeys((flags & F_TRAVERSAL_ON) != 0);
 #endif
+#endif
+    }
 }
 
 void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks)
 {
 	if (getstate(CS_PREPARED))
+        // MERG-2014-06-25 [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+		{
+			uindex_t t_track_count;
+			MCPlatformCountPlayerTracks(m_platform_player, t_track_count);
+            uinteger_t *t_tracks;
+            uindex_t t_count;
+            t_count = 0;
+            
+			for(uindex_t i = 0; i < t_track_count; i++)
+			{
+				uint32_t t_id;
+				uint32_t t_enabled;
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
+				if (t_enabled)
+                {
+                    MCMemoryReallocate(t_tracks, ++t_count * sizeof(uinteger_t), t_tracks);
+                    t_track_id_list[t_count - 1] == t_id;
+                }
+			}
+            
+            r_count = t_count;
+            r_tracks = t_tracks;
+		}
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			qt_getenabledtracks(r_count, r_tracks);
@@ -727,5 +822,6 @@ void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger
     x11_getenabledtracks(r_count, r_tracks);
 #else
     r_count = 0;
+#endif
 #endif
 }

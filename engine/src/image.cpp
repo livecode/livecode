@@ -100,6 +100,7 @@ MCPropertyInfo MCImage::kProperties[] =
 	DEFINE_RW_OBJ_ENUM_PROPERTY(P_RESIZE_QUALITY, InterfaceImageResizeQuality, MCImage, ResizeQuality)
 	DEFINE_RO_OBJ_ENUM_PROPERTY(P_PAINT_COMPRESSION, InterfaceImagePaintCompression, MCImage, PaintCompression)
 	DEFINE_RW_OBJ_PROPERTY(P_ANGLE, Int16, MCImage, Angle)
+    DEFINE_RW_OBJ_PROPERTY(P_CENTER_RECTANGLE, OptionalRectangle, MCImage, CenterRectangle)
 
 };
 

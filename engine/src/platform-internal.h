@@ -187,7 +187,7 @@ protected:
         bool ignore_mouse_events_changed : 1;
 	} m_changes;
 	MCPlatformWindowStyle m_style;
-	char *m_title;
+	MCStringRef m_title;
 	MCPlatformWindowMaskRef m_mask;
 	float m_opacity;
 	MCRectangle m_content;

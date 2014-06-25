@@ -922,16 +922,9 @@ void MCScrollbar::compute_barsize()
 			if (MCStringIsEmpty(endstring))
 				barsize = MCU_max(barsize, 5);
 			else
-<<<<<<< HEAD
                 barsize = MCU_max((uindex_t)barsize, MCStringGetLength(endstring));
             // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
             barsize *= MCFontMeasureText(m_font, MCSTR("0"), getstack() -> getdevicetransform());
-=======
-				if ((uint2)strlen(endstring) > barsize)
-					barsize = strlen(endstring);
-			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-			barsize *= MCFontMeasureText(m_font, "0", 1, false, getstack() -> getdevicetransform());
->>>>>>> develop
 			barsize = twidth - (barsize + barsize * (twidth - barsize) / twidth);
 		}
 		else

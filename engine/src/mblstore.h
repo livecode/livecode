@@ -50,39 +50,6 @@ enum MCPurchaseProperty
 	kMCPurchasePropertyUnknown,
 };
 
-<<<<<<< HEAD
-=======
-enum MCPurchaseState
-{
-	kMCPurchaseStateInitialized,
-	kMCPurchaseStateSendingRequest,
-	kMCPurchaseStatePaymentReceived,
-	kMCPurchaseStateComplete,
-	kMCPurchaseStateRestored,
-	kMCPurchaseStateCancelled,
-    //Amazon
-    kMCPurchaseStateInvalidSKU,
-    kMCPurchaseStateAlreadyEntitled,
-	kMCPurchaseStateRefunded,
-	kMCPurchaseStateError,
-    kMCPurchaseStateUnverified,
-	
-	kMCPurchaseStateUnknown,
-};
-
-typedef struct _mcpurchase_t
-{
-    const char *              prod_id;
-	uint32_t			id;
-	MCPurchaseState		state;
-	uint32_t			ref_count;
-	
-	void *				platform_data;
-	
-	struct _mcpurchase_t *	next;
-} MCPurchase;
-
->>>>>>> develop
 typedef bool (*MCPurchaseListCallback)(void *context, MCPurchase *purchase);
 
 struct MCPurchasePropertyTable
@@ -168,13 +135,8 @@ void MCStoreExecSet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 
 bool MCPurchaseLookupProperty(MCStringRef p_property, Properties &r_property);
 
-bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase);
-<<<<<<< HEAD
 bool MCPurchaseList(MCStringRef& r_string);
-=======
-bool MCPurchaseFindByProdId(const char *p_prod_id, MCPurchase *&r_purchase);
-bool MCPurchaseList(MCPurchaseListCallback p_callback, void *p_context);
->>>>>>> develop
+bool MCPurchaseFindByProdId(MCStringRef p_prod_id, MCPurchase *&r_purchase);
 
 bool MCPurchaseCreate(MCStringRef p_product_id, void *p_context, MCPurchase *&r_purchase);
 

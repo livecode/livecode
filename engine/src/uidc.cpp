@@ -16,8 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -788,35 +786,6 @@ Boolean MCUIDC::getmouseclick(uint2 button, Boolean& r_abort)
 	return False;
 }
 
-<<<<<<< HEAD
-void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, MCStringRef p1, MCStringRef p2)
-{
-	MCParameter *params = NULL;
-	if (p1 != NULL)
-	{
-		params = new MCParameter;
-		params->setvalueref_argument(p1);
-		if (p2 != NULL)
-		{
-			params->setnext(new MCParameter);
-			params->getnext()->setvalueref_argument(p2);
-		}
-    }
-
-    doaddmessage(optr, mptr, MCS_time(), ++messageid, params);
-}
-
-void MCUIDC::addmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter *params)
-{
-    doaddmessage(optr, mptr, time, ++messageid, params);
-
-	char buffer[U4L];
-	sprintf(buffer, "%u", messages[nmessages].id);
-    MCresult->copysvalue(buffer);
-}
-
-=======
->>>>>>> develop
 Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
 	real8 curtime = MCS_time();
@@ -991,56 +960,6 @@ void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, 
 	{
 		maxmessages++;
 		MCU_realloc((char **)&messages, nmessages, maxmessages, sizeof(MCMessageList));
-<<<<<<< HEAD
-	}
-    
-    // Find where in the list to insert the pending message.
-    int t_index;
-    for(t_index = 0; t_index < nmessages; t_index++)
-        if (messages[t_index] . time > time)
-            break;
-    
-    // Move all messages in the range [t_index, nmessages) up one.
-    MCMemoryMove(&messages[t_index + 1], &messages[t_index], (nmessages - t_index) * sizeof(MCMessageList));
-    
-	messages[t_index].object = optr;
-	/* UNCHECKED */ MCNameClone(mptr, messages[t_index].message);
-	messages[t_index].time = time;
-	messages[t_index].id = id;
-	messages[t_index].params = params;
-    
-    nmessages += 1;
-}
-
-// MW-2014-04-16: [[ Bug 11690 ]] Shift a message to a new time in the future.
-int MCUIDC::doshiftmessage(int index, real8 newtime)
-{
-    assert(index < nmessages);
-    
-    // MW-2014-05-14: [[ Bug 12294 ]] Rejigged to correct flaws.
-    
-    // Find the first message after the new time.
-    uindex_t t_index;
-    for(t_index = index; t_index < nmessages - 1; t_index++)
-        if (messages[t_index + 1] . time > newtime)
-            break;
-    
-    if (t_index == index)
-        return index;
-    
-    // Save the current message.
-    MCMessageList t_msg;
-    t_msg = messages[index];
-    
-    // Move all messages in the range [index + 1, t_index) down one.
-    MCMemoryMove(&messages[index], &messages[index + 1], (t_index - index) * sizeof(MCMessageList));
-    
-    // Move the target message to its new location.
-    messages[t_index] = t_msg;
-    messages[t_index] . time = newtime;
-    
-    return t_index;
-=======
 	}
     
     // Find where in the list to insert the pending message.
@@ -1091,17 +1010,17 @@ int MCUIDC::doshiftmessage(int index, real8 newtime)
     return t_index;
 }
 
-void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, char *p1, char *p2)
+void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, MCStringRef p1, MCStringRef p2)
 {
 	MCParameter *params = NULL;
 	if (p1 != NULL)
 	{
 		params = new MCParameter;
-		params->setbuffer(p1, strlen(p1));
+		params->setvalueref_argument(p1);
 		if (p2 != NULL)
 		{
 			params->setnext(new MCParameter);
-			params->getnext()->setbuffer(p2, strlen(p2));
+			params->getnext()->setvalueref_argument(p2);
 		}
 	}
     
@@ -1116,7 +1035,6 @@ void MCUIDC::addmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter 
     
     // MW-2014-05-28: [[ Bug 12463 ]] Previously the result would have been set here which is
     //   incorrect as engine pending messages should not set the result.
->>>>>>> develop
 }
 
 void MCUIDC::addtimer(MCObject *optr, MCNameRef mptr, uint4 delay)
@@ -1167,19 +1085,11 @@ void MCUIDC::cancelmessageobject(MCObject *optr, MCNameRef mptr)
 
 bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 {
-<<<<<<< HEAD
 	MCAutoListRef t_list;
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 
 	for (uinteger_t i = 0 ; i < nmessages ; i++)
-=======
-	MCExecPoint ep1(ep);
-	bool first;
-	first = true;
-	ep.clear();
-	for (uindex_t i = 0 ; i < nmessages ; i++)
->>>>>>> develop
 	{
 		if (messages[i].id != 0)
 		{
@@ -1212,15 +1122,6 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 	return MCListCopy(*t_list, r_list);
 }
 
-<<<<<<< HEAD
-// MW-2014-04-16: [[ Bug 11690 ]] Rework pending message handling to take advantage
-//   of messages[] now being a sorted list.
-Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch)
-{
-    Boolean t_handled;
-    t_handled = False;
-    for(int i = 0; i < nmessages; i++)
-=======
 // MW-2014-05-28: [[ Bug 12463 ]] This is called by 'send in time' to queue a user defined message.
 //   It puts a limit on the number of script sent messages of 64k which should be enough for any
 //   reasonable app. Note that the engine's internal / sent messages are still allowed beyond this
@@ -1247,7 +1148,6 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
     Boolean t_handled;
     t_handled = False;
     for(uindex_t i = 0; i < nmessages; i++)
->>>>>>> develop
     {
         // If the next message is later than curtime, we've not processed a message.
         if (messages[i] . time > curtime)
@@ -1295,8 +1195,6 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
         eventtime = messages[0] . time;
     
     return t_handled;
-<<<<<<< HEAD
-=======
 }
 
 
@@ -1327,7 +1225,6 @@ void MCUIDC::setlockmoves(Boolean b)
 			} while (mptr != moving);
 		}
 	}
->>>>>>> develop
 }
 
 void MCUIDC::addmove(MCObject *optr, MCPoint *pts, uint2 npts,

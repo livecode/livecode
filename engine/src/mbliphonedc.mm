@@ -812,17 +812,9 @@ Window MCScreenDC::get_current_window(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-<<<<<<< HEAD
-static void strip_suffix(const char *p_suffix, char *x_font_name)
-{
-    if (MCCStringEndsWithCaseless(x_font_name, p_suffix))
-        x_font_name[MCCStringLength(x_font_name) - MCCStringLength(p_suffix)] = '\0';
-}
-=======
-extern void *coretext_font_create_with_name_size_and_style(const char *p_name, uint32_t p_size, bool p_bold, bool p_italic);
+extern void *coretext_font_create_with_name_size_and_style(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic);
 extern void coretext_font_destroy(void *p_font);
 extern void coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent);
->>>>>>> develop
 
 struct do_iphone_font_create_env
 {
@@ -838,81 +830,6 @@ static void do_iphone_font_create(void *p_env)
 {
 	do_iphone_font_create_env *env;
 	env = (do_iphone_font_create_env *)p_env;
-<<<<<<< HEAD
-	
-	MCAutoStringRef p_name;
-	uint32_t p_size;
-	bool p_bold;
-	bool p_italic;
-	p_name = env -> name;
-	p_size = env -> size;
-	p_bold = env -> bold;
-	p_italic = env -> italic;
-	
-    // MW-2012-03-22: [[ Bug ]] First see if we can find the font with the given name. We
-    //   use this to get the correct 'family' name so styled names work correctly.
-    UIFont *t_base_font;
-    t_base_font = [ UIFont fontWithName: [ NSString stringWithMCStringRef: *p_name  ] size: p_size ];
-    
-    char t_base_name[256];
-    if (t_base_font != nil)
-        sprintf(t_base_name, "%s", [[t_base_font fontName] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-    else
-    {
-        MCAutoPointer<char> t_name;
-        /* UNCHECKED */ MCStringConvertToCString(*p_name, &t_name);
-        strcpy(t_base_name, *t_name);
-    }
-    
-    // MM-2014-04-30: [[ Bug 12173 ]] Strip any unwanted suffixes from base font name. This was preventing certain styled fonts being found.
-    strip_suffix("-Roman", t_base_name);
-    strip_suffix("-Regular", t_base_name);
-    strip_suffix("-Reg", t_base_name);
-   
-    char t_font_name[256];
-	UIFont *t_font;
-	t_font = nil;
-    
-	if (p_bold && p_italic)
-	{
-		sprintf(t_font_name, "%s-BoldItalic", t_base_name);
-		t_font = [ UIFont fontWithName: [ NSString stringWithCString: t_font_name encoding: NSMacOSRomanStringEncoding ] size: p_size ];
-		if (t_font == nil)
-		{
-			sprintf(t_font_name, "%s-BoldOblique", t_base_name);
-			t_font = [ UIFont fontWithName: [ NSString stringWithCString: t_font_name encoding: NSMacOSRomanStringEncoding ] size: p_size ];
-		}
-	}
-	
-	if (t_font == nil && p_bold)
-	{
-		sprintf(t_font_name, "%s-Bold", t_base_name);
-		t_font = [ UIFont fontWithName: [ NSString stringWithCString: t_font_name encoding: NSMacOSRomanStringEncoding ] size: p_size ];
-	}
-	
-	if (t_font == nil && p_italic)
-	{
-		sprintf(t_font_name, "%s-Italic", t_base_name);
-		t_font = [ UIFont fontWithName: [ NSString stringWithCString: t_font_name encoding: NSMacOSRomanStringEncoding ] size: p_size ];
-		if (t_font == nil)
-		{
-			sprintf(t_font_name, "%s-Oblique", t_base_name);
-			t_font = [ UIFont fontWithName: [ NSString stringWithCString: t_font_name encoding: NSMacOSRomanStringEncoding ] size: p_size ];
-		}
-	}
-	
-    // MW-2012-03-22: If the font is nil here either there was no styling, or no styled
-    //   variants were found so use the base font.
-	if (t_font == nil)
-		t_font = t_base_font;
-
-	if (t_font == nil)
-		t_font = [ UIFont systemFontOfSize: p_size ];
-	
-	[ t_font retain ];
-	
-	env -> result = t_font;
-=======
     
     // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
 	env -> result = coretext_font_create_with_name_size_and_style(env -> name, env -> size, env -> bold, env -> italic);
@@ -921,7 +838,6 @@ static void do_iphone_font_create(void *p_env)
 static void do_iphone_font_destroy(void *p_font)
 {
     coretext_font_destroy(p_font);
->>>>>>> develop
 }
 
 void *iphone_font_create(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic)

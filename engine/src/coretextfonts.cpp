@@ -272,7 +272,7 @@ void core_text_get_font_styles(MCStringRef p_name, uint32_t p_size, MCListRef &r
     t_font_family = (CTFontRef)coretext_font_create_with_name_and_size(p_name, p_size);
     
     MCAutoListRef t_styles;
-    /* UNCHECKED */ MCListCreateMutable('\n', t_styles);
+    /* UNCHECKED */ MCListCreateMutable('\n', &t_styles);
 	
 	if (t_font_family != NULL)
 	{

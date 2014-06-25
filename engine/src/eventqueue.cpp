@@ -102,7 +102,8 @@ struct MCEvent
 			{
 				struct
 				{
-					char *string;
+                    // MERG-2014-06-23: pick updated to StringRef
+					MCStringRef string;
 				} pick;
 			};
 		} menu;
@@ -292,7 +293,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		MCObject *t_target;
 		t_target = t_event -> menu . target -> Get();
 		if (t_target != nil)
-			t_target->message_with_args(MCM_mouse_down, "");
+			t_target->message_with_valueref_args(MCM_mouse_down, kMCEmptyString);
 	}
 	break;
 
@@ -301,7 +302,8 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		MCObject *t_target;
 		t_target = t_event -> menu . target -> Get();
 		if (t_target != nil)
-			t_target->message_with_args(MCM_menu_pick, t_event -> menu . pick . string);
+            // MERG-2014-06-23: pick updated to StringRef
+			t_target->message_with_valueref_args(MCM_menu_pick, t_event -> menu . pick . string);
 	}
 	break;
 			
@@ -605,7 +607,8 @@ static void MCEventQueueDestroyEvent(MCEvent *p_event)
 	else if (p_event -> type == kMCEventTypeMenuPick)
 	{
 		p_event -> menu . target -> Release();
-		delete p_event -> menu . pick . string;
+        // MERG-2014-06-23: pick updated to StringRef
+		MCValueRelease(p_event -> menu . pick . string);
 	}
 #ifdef _MOBILE
 	else if (p_event -> type == kMCEventTypeCustom)
@@ -1057,15 +1060,15 @@ bool MCEventQueuePostUpdateMenu(MCObjectHandle *p_target)
 	return true;
 }
 
-bool MCEventQueuePostMenuPick(MCObjectHandle *p_target, const char *p_string)
+bool MCEventQueuePostMenuPick(MCObjectHandle *p_target, MCStringRef p_string)
 {
 	MCEvent *t_event;
 	if (!MCEventQueuePost(kMCEventTypeMenuPick, t_event))
 		return false;
 	p_target -> Retain();
 	t_event -> menu . target = p_target;
-	t_event -> menu . pick . string = strdup(p_string);
-	return true;
+    // MERG-2014-06-23: pick updated to StringRef
+	return MCStringCopy(p_string, t_event -> menu . pick . string);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

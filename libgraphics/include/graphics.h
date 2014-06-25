@@ -786,11 +786,7 @@ bool MCGContextCopyImage(MCGContextRef context, MCGImageRef &r_image);
 
 void MCGContextDrawText(MCGContextRef context, const char* text, uindex_t length, MCGPoint location, uint32_t font_size, void *typeface);
 MCGFloat MCGContextMeasureText(MCGContextRef context, const char *text, uindex_t length, uint32_t font_size, void *typeface);
-<<<<<<< HEAD
-void MCGContextDrawPlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, MCGPoint location, const MCGFont &font, bool p_rtl);
-=======
 void MCGContextDrawPlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, MCGPoint location, const MCGFont &font);
->>>>>>> develop
 // MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
 MCGFloat MCGContextMeasurePlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font, const MCGAffineTransform &p_transform);
 

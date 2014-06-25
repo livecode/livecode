@@ -271,12 +271,6 @@ Global
 		{8E776621-28FF-4FBF-A2F3-F4598AEAF8B7}.Debug|Win32.Build.0 = Debug|Win32
 		{8E776621-28FF-4FBF-A2F3-F4598AEAF8B7}.Release|Win32.ActiveCfg = Release|Win32
 		{8E776621-28FF-4FBF-A2F3-F4598AEAF8B7}.Release|Win32.Build.0 = Release|Win32
-<<<<<<< HEAD
-=======
-		{0491E47C-B096-4DBF-8D26-C28364DF6176}.Debug|Win32.ActiveCfg = Debug|Win32
-		{0491E47C-B096-4DBF-8D26-C28364DF6176}.Debug|Win32.Build.0 = Debug|Win32
-		{0491E47C-B096-4DBF-8D26-C28364DF6176}.Release|Win32.ActiveCfg = Release|Win32
-		{0491E47C-B096-4DBF-8D26-C28364DF6176}.Release|Win32.Build.0 = Release|Win32
 		{A9D6DC71-C0DC-4549-AEA0-3B15B44E86A9}.Debug|Win32.ActiveCfg = Debug|Win32
 		{A9D6DC71-C0DC-4549-AEA0-3B15B44E86A9}.Debug|Win32.Build.0 = Debug|Win32
 		{A9D6DC71-C0DC-4549-AEA0-3B15B44E86A9}.Release|Win32.ActiveCfg = Release|Win32
@@ -289,7 +283,6 @@ Global
 		{58314BC9-A2EE-49F0-8B40-7BA12517A60C}.Debug|Win32.Build.0 = Debug|Win32
 		{58314BC9-A2EE-49F0-8B40-7BA12517A60C}.Release|Win32.ActiveCfg = Release|Win32
 		{58314BC9-A2EE-49F0-8B40-7BA12517A60C}.Release|Win32.Build.0 = Release|Win32
->>>>>>> develop
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

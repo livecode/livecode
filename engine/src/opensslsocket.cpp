@@ -540,12 +540,8 @@ bool open_socket_resolve_callback(void *p_context, bool p_resolved, bool p_final
 	return false;
 }
 
-<<<<<<< HEAD
-MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef mess, Boolean secure, Boolean sslverify, MCStringRef sslcertfile)
-=======
 // MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
-MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef mess, Boolean secure, Boolean sslverify, char *sslcertfile, char* hostname)
->>>>>>> develop
+MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef mess, Boolean secure, Boolean sslverify, MCStringRef sslcertfile, MCNameRef hostname)
 {
 	if (!MCS_init_sockets())
 		return NULL;
@@ -589,7 +585,7 @@ MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef m
 		
 		// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
 		if (s -> sslverify)
-			s -> endhostname = hostname;
+			s -> endhostname = MCValueRetain(hostname);
 
 		if (mess == NULL)
 		{
@@ -890,7 +886,7 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 
 // MM-2014-02-12: [[ SecureSocket ]] New secure socket command. If socket is not already secure, flag as secure to ensure future communications are encrypted.
 // MM-2014-06-13: [[ Bug 12567 ]] Added support for passing in host name to verify against.
-void MCS_secure_socket(MCSocket *s, Boolean sslverify, char *hostname)
+void MCS_secure_socket(MCSocket *s, Boolean sslverify, MCNameRef hostname)
 {
 	if (!s -> secure)
 	{
@@ -899,7 +895,7 @@ void MCS_secure_socket(MCSocket *s, Boolean sslverify, char *hostname)
 		s -> sslstate |= SSTATE_RETRYCONNECT;
 		
 		if (s -> sslverify)
-			s -> endhostname = hostname;
+			s -> endhostname = MCValueRetain(hostname);
 	}
 }
 
@@ -1123,7 +1119,7 @@ MCSocket::~MCSocket()
 	delete rbuffer;
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
-	delete endhostname;
+	MCValueRelease(endhostname);
 }
 
 void MCSocket::deletereads()
@@ -2251,9 +2247,14 @@ Boolean MCSocket::sslconnect()
 	{
 		if (sslverify)
 		{
-<<<<<<< HEAD
 			MCAutoStringRef t_hostname;
-            /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(name), &t_hostname);
+			// MM-2014-06-13: [[ Bug 12567 ]] If an end host has been specified, verify against that.
+			//   Otherwise, use the socket name as before.
+            if (endhostname != NULL)
+                /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(endhostname), &t_hostname);
+            else
+                /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(name), &t_hostname);
+            
             uindex_t t_pos;
             if (MCStringFirstIndexOfChar(*t_hostname, ':', 0, kMCCompareExact, t_pos))
             /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
@@ -2264,24 +2265,7 @@ Boolean MCSocket::sslconnect()
             /* UNCHECKED */ MCStringConvertToCString(*t_hostname, &t_host);
 			
             rc = post_connection_check(_ssl_conn, *t_host);
-=======
-			// MM-2014-06-13: [[ Bug 12567 ]] If an end host has been specified, verify against that.
-			//   Otherwise, use the socket name as before.
-			char *t_hostname;
-			if (endhostname != NULL)
-				t_hostname = strdup(endhostname);
-			else
-				t_hostname = strdup(name);
-			if (strchr(t_hostname, ':') != NULL)
-				strchr(t_hostname, ':')[0] = '\0';
-			else if (strchr(t_hostname, '|') != NULL)
-				strchr(t_hostname, '|')[0] = '\0';
-
-			rc = post_connection_check(_ssl_conn, t_hostname);
-
-			free(t_hostname);
->>>>>>> develop
-
+            
 			if (rc != X509_V_OK)
 			{
 				MCAutoStringRef t_message;

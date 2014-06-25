@@ -544,20 +544,6 @@ struct MCFontStruct
 #define BAD_NUMERIC DBL_MAX
 #define MC_EPSILON  (DBL_EPSILON * 10.0)
 
-struct MCRange
-{
-	uindex_t offset;
-	uindex_t length;
-};
-
-inline MCRange MCRangeMake(uindex_t offset, uindex_t length)
-{
-	MCRange r;
-	r . offset = offset;
-	r . length = length;
-	return r;
-}
-
 //////////////////////////////////////////////////////////////////////
 
 #define DoRed                0x1
@@ -1088,70 +1074,11 @@ typedef unsigned long       Atom;
 #define XK_WheelLeft	0xFF1E
 #define XK_WheelRight	0xFF1F
 
-<<<<<<< HEAD
 #define XK_Class_mask		0xFF000000		/* Key classes */
 #define XK_Class_compat		0x00000000		/* Ordinary (X11) keycodes */
 #define XK_Class_codepoint	0x01000000		/* The low 21 bits contain a Unicode codepoint */
 #define XK_Class_vendor		0x10000000		/* OS vendor specific */
 #define XK_Codepoint_mask	0x001FFFFF		/* Mask for extracting codepoint from XK_Class_codepoint */
-=======
-//////////////////////////////////////////////////////////////////////
-//
-//  UTILITY CLASSES
-//
-
-template<typename T> class MCAutoPointer
-{
-public:
-	MCAutoPointer(void)
-	{
-		m_ptr = nil;
-	}
-
-	~MCAutoPointer(void)
-	{
-		delete m_ptr;
-	}
-
-	T* operator = (T* value)
-	{
-		delete m_ptr;
-		m_ptr = value;
-		return value;
-	}
-
-	T*& operator & (void)
-	{
-		assert(m_ptr == nil);
-		return m_ptr;
-	}
-
-	T* operator -> (void)
-	{
-		MCAssert(m_ptr != nil);
-		return m_ptr;
-	}
-
-	T *operator * (void) const
-	{
-		return m_ptr;
-	}
-
-	void Take(T*&r_ptr)
-	{
-		r_ptr = m_ptr;
-		m_ptr = nil;
-	}
-
-	T*& PtrRef(void)
-	{
-		return m_ptr;
-	}
-	
-private:
-	T *m_ptr;
-};
->>>>>>> develop
 
 //////////////////////////////////////////////////////////////////////
 //

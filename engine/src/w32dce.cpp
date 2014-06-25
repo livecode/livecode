@@ -509,12 +509,9 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	Boolean done = False;
 	do
 	{
-<<<<<<< HEAD
-=======
 		// IM-2014-03-06: [[ revBrowserCEF ]] Call additional runloop callbacks
 		DoRunloopActions();
 
->>>>>>> develop
 		// Always handle notifications first.
 
 		// MW-2009-08-26: Handle any pending notifications

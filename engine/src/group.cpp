@@ -2908,15 +2908,9 @@ void MCGroup::drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawfra
 			if (!MCStringIsEmpty(label))
 				t_label = label;
 			else
-<<<<<<< HEAD
 				t_label = MCNameGetString(getname());
             // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
             textrect.width = MCFontMeasureText(m_font, t_label, getstack() -> getdevicetransform()) + 4;
-=======
-				slabel = getname_oldstring(), isunicode = false;
-			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-			textrect.width = MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), isunicode, getstack() -> getdevicetransform()) + 4;
->>>>>>> develop
 			//exclude text area from widget drawing region for those themes that draw text on top of frame.
 			winfo.datatype = WTHEME_DATA_RECT;
 			winfo.data = &textrect;
@@ -2966,15 +2960,9 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 			if (!MCStringIsEmpty(label))
 				t_label = label;
 			else
-<<<<<<< HEAD
 				t_label = MCNameGetString(getname());
             // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
             textrect.width = MCFontMeasureText(m_font, t_label, getstack() -> getdevicetransform()) + 4;
-=======
-				slabel = getname_oldstring(), isunicode = false;
-			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
-			textrect.width = MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), isunicode, getstack() -> getdevicetransform()) + 4;
->>>>>>> develop
 
 			if (flags & F_SHOW_BORDER)
 			{

@@ -29,12 +29,7 @@ struct MCMenuItem
 	MCStringRef accelerator_name;
 	uint1 modifiers;
 	uint4 mnemonic;
-<<<<<<< HEAD
 	MCStringRef tag;
-=======
-	MCString tag;
-    bool has_tag;
->>>>>>> develop
 	uint1 menumode;
 	
 	MCMenuItem()

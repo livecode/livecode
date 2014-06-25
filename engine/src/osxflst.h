@@ -24,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCFontnode : public MCDLlist
 {
-	MCNewAutoNameRef reqname;
+	MCNameRef reqname;
 	uint2 reqsize;
 	uint2 reqstyle;
 	MCFontStruct *font;
@@ -38,7 +38,7 @@ public:
 	}
 	MCNameRef getname()
 	{
-		return *reqname;
+		return reqname;
 	}
 	uint2 getsize()
 	{

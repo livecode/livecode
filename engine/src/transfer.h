@@ -577,8 +577,8 @@ bool MCConvertRTFToStyledText(MCDataRef p_input, MCDataRef& r_output);
 bool MCConvertHTMLToStyledText(MCDataRef p_input, MCDataRef& r_output);
 
 // MW-2014-03-12: [[ ClipboardStyledText ]] Converters to and from styledText arrays.
-MCVariableValue *MCConvertStyledTextToStyledTextArray(MCSharedString *p_string);
-MCSharedString *MCConvertStyledTextArrayToStyledText(MCVariableValue *p_value);
+bool MCConvertStyledTextToStyledTextArray(MCDataRef p_string, MCArrayRef &r_array);
+bool MCConvertStyledTextArrayToStyledText(MCArrayRef p_array, MCDataRef &r_output);
 
 ///////////////////////////////////////////////////////////////////////////////
 

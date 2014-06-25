@@ -172,6 +172,8 @@ MCPropertyInfo MCStack::kProperties[] =
 	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_DEFER_SCREEN_UPDATES, Bool, MCStack, DeferScreenUpdates)
 	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_DEFER_SCREEN_UPDATES, Bool, MCStack, DeferScreenUpdates)
     
+    DEFINE_RW_OBJ_PROPERTY(P_IGNORE_MOUSE_EVENTS, Bool, MCStack, IgnoreMouseEvents)
+    
     DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_DECORATIONS, InterfaceDecoration, MCStack, Decorations)
 
 	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_SHOW_BORDER)
@@ -2780,7 +2782,6 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		m_defer_updates = (t_defer_updates == True);
 	}
 	break;
-<<<<<<< HEAD
             
     case P_FORE_PIXEL:
     case P_BACK_PIXEL:
@@ -2817,7 +2818,6 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
         //   of this stack - but for now do the whole screen.
         MCRedrawDirtyScreen();
         return ES_NORMAL;
-=======
     
     // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Set the ignoreMouseEvents property
     case P_IGNORE_MOUSE_EVENTS:
@@ -2832,7 +2832,6 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
     }
     break;
    
->>>>>>> develop
 #endif /* MCStack::setprop */
 	default:
 	{

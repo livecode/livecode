@@ -442,9 +442,9 @@ void MCNetworkExecPerformOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNam
 
 	// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
 	MCresult -> clear();
-
+    
     // MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
-    MCSocket *s = MCS_open_socket(p_name, p_datagram, ctxt . GetObject(), p_message, p_secure, p_ssl, p_end_hostname, kMCEmptyString);
+	MCSocket *s = MCS_open_socket(p_name, p_datagram, ctxt . GetObject(), p_message, p_secure, p_ssl, kMCEmptyString, p_end_hostname);
 	if (s != NULL)
 	{
 		MCU_realloc((char **)&MCsockets, MCnsockets, MCnsockets + 1, sizeof(MCSocket *));
@@ -459,12 +459,12 @@ void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_
 
 void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname, bool p_with_verification)
 {
-    MCNetworkExecPerformOpenSocket(ctxt, p_name, p_message, false, true, p_with_verification, p_end_hostname);
+	MCNetworkExecPerformOpenSocket(ctxt, p_name, p_message, false, true, p_with_verification, p_end_hostname);
 }
 
 void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname)
 {
-    MCNetworkExecPerformOpenSocket(ctxt, p_name, p_message, true, false, false, p_end_hostname);
+	MCNetworkExecPerformOpenSocket(ctxt, p_name, p_message, true, false, false, p_end_hostname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

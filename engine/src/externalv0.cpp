@@ -181,7 +181,7 @@ bool MCExternalV0::Prepare(void)
 {
 	// IM-2014-03-06: [[ revBrowserCEF ]] call the setExternalInterfaceVersion() function if present
 	SETEXTERNALINTERFACEVERSION t_set_version;
-	t_set_version = (SETEXTERNALINTERFACEVERSION)MCS_resolvemodulesymbol(m_module, "setExternalInterfaceVersion");
+	t_set_version = (SETEXTERNALINTERFACEVERSION)MCS_resolvemodulesymbol(m_module, MCSTR("setExternalInterfaceVersion"));
 	if (t_set_version != nil)
 		t_set_version(EXTERNAL_INTERFACE_VERSION);
 	

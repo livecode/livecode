@@ -392,74 +392,19 @@ bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data
 
 ////////////////////////////////////////////////////////////////////////////////
 
-<<<<<<< HEAD
-bool MCSystemListFontFamilies(MCListRef& r_names)
-{
-	MCAutoListRef t_list;
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
-	for(NSString *t_family in [UIFont familyNames])
-    {
-        MCAutoStringRef t_family_string;
-        if (!MCStringCreateWithCFString((CFStringRef)t_family, &t_family_string) ||
-            !MCListAppend(*t_list, *t_family_string))
-			return false;
-    }
-	return MCListCopy(*t_list, r_names);
-}
+extern void coretext_get_font_names(MCListRef &r_names);
+extern void core_text_get_font_styles(MCStringRef p_name, uint32_t p_size, MCListRef &r_styles);
 
-bool MCSystemListFontsForFamily(MCStringRef p_family, MCListRef& r_styles)
-{
-    // MM-2014-04-30: [[ Bug 12350 ]] Instead of listing the fonts withjing a family, list the styles. Brings things into line with the other platforms.
-    //  Currently assumes anything without a bold/italic suffix is a plain font.
-	MCAutoListRef t_list;
-    bool t_plain, t_bold, t_italic, t_bold_italic;
-    t_plain = t_bold = t_italic = t_bold_italic = false;
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
-	for(NSString *t_font in [UIFont fontNamesForFamilyName: [NSString stringWithMCStringRef: p_family]])
-    {
-        MCAutoStringRef t_font_string;
-        if (!MCStringCreateWithCFString((CFStringRef)t_font, &t_font_string))
-			return false;
-
-        if (MCStringEndsWith(*t_font_string, MCSTR("-Bold"), kMCStringOptionCompareCaseless))
-            t_bold = true;
-        else if (MCStringEndsWith(*t_font_string, MCSTR("-italic"), kMCStringOptionCompareCaseless) ||
-                 MCStringEndsWith(*t_font_string, MCSTR("-oblique"), kMCStringOptionCompareCaseless))
-            t_italic = true;
-        else if (MCStringEndsWith(*t_font_string, MCSTR("-bolditalic"), kMCStringOptionCompareCaseless) ||
-                 MCStringEndsWith(*t_font_string, MCSTR("-boldoblique"), kMCStringOptionCompareCaseless))
-            t_bold_italic = true;
-        else
-            t_plain = true;
-    }
-
-    if (t_plain)
-        MCListAppend(*t_list, MCSTR("plain"));
-    if (t_bold)
-        MCListAppend(*t_list, MCSTR("bold"));
-    if (t_italic)
-        MCListAppend(*t_list, MCSTR("italic"));
-    if (t_bold_italic)
-        MCListAppend(*t_list, MCSTR("bold-italic"));
-
-    return MCListCopy(*t_list, r_styles);
-=======
-extern void coretext_get_font_names(MCExecPoint &ep);
-extern void core_text_get_font_styles(const char *p_name, uint32_t p_size, MCExecPoint &ep);
-
-void MCSystemListFontFamilies(MCExecPoint& ep)
+void MCSystemListFontFamilies(MCListRef &r_names)
 {
     // MM-2014-06-02: [[ CoreText ]] Updated to use core text routines.
-    coretext_get_font_names(ep);
+    coretext_get_font_names(r_names);
 }
 
-void MCSystemListFontsForFamily(MCExecPoint& ep, const char *p_family, uint2 p_size)
+void MCSystemListFontsForFamily(MCStringRef p_family, uint2 p_size, MCListRef &r_styles)
 {
     // MM-2014-06-02: [[ CoreText ]] Updated to use core text routines.
-    core_text_get_font_styles(p_family, p_size, ep);
->>>>>>> develop
+    core_text_get_font_styles(p_family, p_size, r_styles);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1718,140 +1663,7 @@ static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
 }
 #endif /* MCHandleClearTouchesIphone */
 
-<<<<<<< HEAD
 ////////////////////////////////////////////////////////////////////////////////
-=======
-extern Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleCanMakePurchase(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleEnablePurchaseUpdates(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleRestorePurchases(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseCreate(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseState(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseError(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleMakePurchase(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleConfirmPurchase(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleGetPurchaseProperty(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleConsumePurchase(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleGetPurchases(void *context, MCParameter *p_parameters);
-
-
-extern Exec_stat MCHandleComposeTextMessage(void *, MCParameter *);
-extern Exec_stat MCHandleCanComposeTextMessage(void *, MCParameter *);
-
-extern Exec_stat MCHandleRevMail(void *, MCParameter *);
-extern Exec_stat MCHandleCanSendMail(void *, MCParameter *);
-extern Exec_stat MCHandleComposePlainMail(void *, MCParameter *);
-extern Exec_stat MCHandleComposeUnicodeMail(void *, MCParameter *);
-extern Exec_stat MCHandleComposeHtmlMail(void *, MCParameter *);
-
-extern Exec_stat MCHandlePickPhoto(void *context, MCParameter *parameters);
-
-extern Exec_stat MCHandleStartTrackingSensor(void *, MCParameter *);
-extern Exec_stat MCHandleStopTrackingSensor(void *, MCParameter *);
-extern Exec_stat MCHandleSensorReading(void *, MCParameter *);
-extern Exec_stat MCHandleSensorAvailable(void *, MCParameter *);
-
-// MM-2012-02-11: Added support old style senseor syntax (iPhoneEnableAcceleromter etc)
-extern Exec_stat MCHandleCurrentLocation(void *, MCParameter *);
-extern Exec_stat MCHandleCurrentHeading(void *, MCParameter *);
-extern Exec_stat MCHandleAccelerometerEnablement(void *, MCParameter *);
-extern Exec_stat MCHandleCanTrackLocation(void *, MCParameter *);
-extern Exec_stat MCHandleCanTrackHeading(void *, MCParameter *);
-extern Exec_stat MCHandleLocationTrackingState(void *, MCParameter *);
-extern Exec_stat MCHandleHeadingTrackingState(void *, MCParameter *);
-extern Exec_stat MCHandleSetHeadingCalibrationTimeout(void *, MCParameter *);
-extern Exec_stat MCHandleHeadingCalibrationTimeout(void *, MCParameter *);
-
-extern Exec_stat MCHandleStartActivityIndicator(void *, MCParameter *);
-extern Exec_stat MCHandleStopActivityIndicator(void *, MCParameter *);
-extern Exec_stat MCHandleStartBusyIndicator(void *, MCParameter *);
-extern Exec_stat MCHandleStopBusyIndicator(void *, MCParameter *);
-
-extern Exec_stat MCHandlePickDate(void *, MCParameter *);
-extern Exec_stat MCHandlePickTime(void *, MCParameter *);
-extern Exec_stat MCHandlePickDateAndTime(void *, MCParameter *);
-
-extern Exec_stat MCHandlePick(void *, MCParameter *);
-extern Exec_stat MCHandleIPhonePickMedia(void *, MCParameter *);
-
-extern Exec_stat MCHandleBeep(void *, MCParameter *);
-extern Exec_stat MCHandleVibrate(void *, MCParameter *);
-
-extern Exec_stat MCHandleCreateLocalNotification(void *, MCParameter *); 
-extern Exec_stat MCHandleGetRegisteredNotifications(void *, MCParameter *); 
-extern Exec_stat MCHandleGetNotificationDetails(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleCancelLocalNotification(void *, MCParameter *); 
-extern Exec_stat MCHandleCancelAllLocalNotifications(void *, MCParameter *); 
-extern Exec_stat MCHandleGetNotificationBadgeValue(void *, MCParameter *); 
-extern Exec_stat MCHandleSetNotificationBadgeValue(void *, MCParameter *); 
-extern Exec_stat MCHandleGetDeviceToken(void *, MCParameter *);
-extern Exec_stat MCHandleGetLaunchUrl(void *, MCParameter *);
-
-extern Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlDelete(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlSet(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters);
-
-// MM-2012-09-02: Refactor multi channel sound into new soound channel module. 
-extern Exec_stat MCHandlePlaySoundOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePausePlayingOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleResumePlayingOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleStopPlayingOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleDeleteSoundChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSetSoundChannelVolume(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSoundChannelVolume(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSoundOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleNextSoundOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters);
-
-// MM-2012-02-22: Added support for ad management
-extern Exec_stat MCHandleAdRegister(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdDelete(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdSetVisible(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAds(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandlePickContact(void *context, MCParameter *p_parameters);    // ABPeoplePickerNavigationController
-extern Exec_stat MCHandleShowContact(void *context, MCParameter *p_parameters);    // ABPersonViewController
-extern Exec_stat MCHandleGetContactData(void *context, MCParameter *p_parameters); // ABNewPersonViewController
-extern Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters);  // ABUnknownPersonViewController
-extern Exec_stat MCHandleCreateContact(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleRemoveContact(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleFileSetDoNotBackup(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleFileGetDoNotBackup(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleFileSetDataProtection(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleFileGetDataProtection(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleShowEvent(void *context, MCParameter *p_parameters);           // ???                      // UI
-extern Exec_stat MCHandleGetEventData(void *context, MCParameter *p_parameters);        // get calendar data for
-extern Exec_stat MCHandleCreateEvent(void *context, MCParameter *p_parameters);         // create event in calendar // UI
-extern Exec_stat MCHandleUpdateEvent(void *context, MCParameter *p_parameters);         // edit calendar event      // UI
-extern Exec_stat MCHandleAddEvent(void *context, MCParameter *p_parameters);            // create calendar entry
-extern Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_parameters);   // get the names of the calendars
-extern Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters);           // get calendar entry
-extern Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters);
-
-// MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
-extern Exec_stat MCHandleSetAudioCategory(void *context, MCParameter *p_parameters);
->>>>>>> develop
 
 bool MCSystemSetRedrawInterval(int32_t p_interval)
 {

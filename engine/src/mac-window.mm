@@ -18,7 +18,6 @@
 
 #include <Carbon/Carbon.h>
 
-#include "core.h"
 #include "globdefs.h"
 #include "region.h"
 #include "graphics.h"
@@ -1885,7 +1884,7 @@ void MCMacPlatformWindow::DoSynchronize(void)
 	}
 	
 	if (m_changes . title_changed)
-		[m_window_handle setTitle: m_title != nil ? [NSString stringWithCString: m_title encoding: NSUTF8StringEncoding] : @""];
+		[m_window_handle setTitle: m_title != nil ? [NSString stringWithMCStringRef: m_title] : @""];
 	
 	if (m_changes . has_modified_mark_changed)
 		[m_window_handle setDocumentEdited: m_has_modified_mark];

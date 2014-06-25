@@ -1139,6 +1139,7 @@ template<typename C, void (C::*Method)(MCExecContext&)> inline void MCExecNative
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
 enum MCPurchaseState
 {
 	kMCPurchaseStateInitialized,
@@ -1147,6 +1148,9 @@ enum MCPurchaseState
 	kMCPurchaseStateComplete,
 	kMCPurchaseStateRestored,
 	kMCPurchaseStateCancelled,
+    //Amazon
+    kMCPurchaseStateInvalidSKU,
+    kMCPurchaseStateAlreadyEntitled,
 	kMCPurchaseStateRefunded,
 	kMCPurchaseStateError,
     kMCPurchaseStateUnverified,
@@ -1156,6 +1160,7 @@ enum MCPurchaseState
 
 typedef struct _mcpurchase_t
 {
+    MCStringRef         prod_id;
 	uint32_t			id;
 	MCPurchaseState		state;
 	uint32_t			ref_count;
@@ -3392,6 +3397,7 @@ extern MCExecEnumTypeInfo *kMCInterfaceBitmapEffectFilterTypeInfo;
 
 extern MCExecEnumTypeInfo *kMCInterfaceButtonStyleTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceButtonMenuModeTypeInfo;
+extern MCExecEnumTypeInfo *kMCInterfaceButtonIconGravityTypeInfo;
 extern MCExecSetTypeInfo *kMCInterfaceButtonAcceleratorModifiersTypeInfo;
 
 ///////////

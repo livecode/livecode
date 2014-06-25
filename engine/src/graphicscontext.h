@@ -50,14 +50,9 @@ public:
 	
 	void drawline(int2 x1, int2 y1, int2 x2, int2 y2);
 	void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false);
-<<<<<<< HEAD
 	void drawsegments(MCLineSegment *segments, uint2 nsegs);
 	void drawtext(coord_t x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image, MCDrawTextBreaking = kMCDrawTextBreak, MCDrawTextDirection = kMCDrawTextDirectionLTR);
     void drawtext_substring(coord_t x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean image, MCDrawTextBreaking = kMCDrawTextBreak, MCDrawTextDirection = kMCDrawTextDirectionLTR);
-=======
-	void drawsegments(MCSegment *segments, uint2 nsegs);
-	void drawtext(coord_t x, int2 y, const char *s, uint2 length, MCFontRef p_font, Boolean image, bool p_unicode_override = false);
->>>>>>> develop
 	void drawrect(const MCRectangle& rect, bool inside);
 	void fillrect(const MCRectangle& rect, bool inside);
 	void fillrects(MCRectangle *rects, uint2 nrects);

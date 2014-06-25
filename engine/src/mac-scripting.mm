@@ -17,30 +17,12 @@
 #include <Cocoa/Cocoa.h>
 
 #include "globdefs.h"
-<<<<<<< HEAD:engine/src/osxscript.cpp
-#include "parsedef.h"
-#include "filedefs.h"
-#include "objdefs.h"
-
-//#include "execpt.h"
-#include "mcerror.h"
-#include "ans.h"
-#include "stack.h"
-#include "stacklst.h"
-#include "dispatch.h"
-#include "globals.h"
-#include "util.h"
-#include "scriptenvironment.h"
-
-#include "osxdc.h"
-=======
 #include "uidc.h"
 
 #include "platform.h"
 #include "platform-internal.h"
 
 #include "mac-internal.h"
->>>>>>> develop:engine/src/mac-scripting.mm
 
 #include <mach-o/dyld.h>
 
@@ -187,18 +169,6 @@ static JSObjectCallAsFunctionPtr JSObjectCallAsFunction;
 class MCPlatformScriptEnvironment
 {
 public:
-<<<<<<< HEAD:engine/src/osxscript.cpp
-	MCMacOSXNewJavaScriptEnvironment(void);
-	~MCMacOSXNewJavaScriptEnvironment(void);
-
-	void Retain(void);
-	void Release(void);
-
-	bool Define(const char *p_function, MCScriptEnvironmentCallback p_callback);
-
-	void Run(MCStringRef p_script, MCStringRef& r_out);
-
-=======
 	MCPlatformScriptEnvironment(void);
 	~MCPlatformScriptEnvironment(void);
 	
@@ -207,9 +177,7 @@ public:
 	
 	bool Define(const char *p_function, MCPlatformScriptEnvironmentCallback p_callback);
 	
-	char *Run(const char *p_script);
-	
->>>>>>> develop:engine/src/mac-scripting.mm
+	void Run(MCStringRef p_script, MCStringRef &r_out);
 	char *Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count);
 
 private:
@@ -230,7 +198,6 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 
 #define GET_JSC_SYMBOL(sym) \
-<<<<<<< HEAD:engine/src/osxscript.cpp
 	sym = (sym##Ptr)NSAddressOfSymbol(NSLookupSymbolInImage((const mach_header *)JavaScriptCoreLibrary, "_"#sym, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND));
 
 MCScriptEnvironment *MCScreenDC::createscriptenvironment(MCStringRef p_language)
@@ -267,9 +234,6 @@ MCScriptEnvironment *MCScreenDC::createscriptenvironment(MCStringRef p_language)
 	
 	return MCMacOSXCreateOldJavaScriptEnvironment();
 }
-=======
-sym = (sym##Ptr)NSAddressOfSymbol(NSLookupSymbolInImage((const mach_header *)JavaScriptCoreLibrary, "_"#sym, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND));
->>>>>>> develop:engine/src/mac-scripting.mm
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -347,15 +311,9 @@ static bool ConvertJSValueToCString(JSContextRef p_context, JSValueRef p_value, 
 
 static JSValueRef InvokeHostFunction(JSContextRef p_context, JSObjectRef p_function, JSObjectRef p_this, size_t p_argument_count, const JSValueRef p_arguments[], JSValueRef *p_exception)
 {
-<<<<<<< HEAD:engine/src/osxscript.cpp
-	MCScriptEnvironmentCallback t_callback;
-	t_callback = (MCScriptEnvironmentCallback)JSObjectGetPrivate(p_function);
-
-=======
 	MCPlatformScriptEnvironmentCallback t_callback;
 	t_callback = (MCPlatformScriptEnvironmentCallback)JSObjectGetPrivate(p_function);
 	
->>>>>>> develop:engine/src/mac-scripting.mm
 	bool t_success;
 	t_success = true;
 
@@ -380,11 +338,6 @@ static JSValueRef InvokeHostFunction(JSContextRef p_context, JSObjectRef p_funct
 				ConvertJSStringToCString(t_string_arg, t_arguments[i]);
 				JSStringRelease(t_string_arg);
 			}
-<<<<<<< HEAD:engine/src/osxscript.cpp
-				
-=======
-			
->>>>>>> develop:engine/src/mac-scripting.mm
 			if (t_arguments[i] == NULL)
 				t_success = false;
 		}
@@ -466,11 +419,7 @@ bool MCPlatformScriptEnvironment::Define(const char *p_name, MCPlatformScriptEnv
 	return true;
 }
 
-<<<<<<< HEAD:engine/src/osxscript.cpp
-void MCMacOSXNewJavaScriptEnvironment::Run(MCStringRef p_script, MCStringRef& r_out)
-=======
-char *MCPlatformScriptEnvironment::Run(const char *p_script)
->>>>>>> develop:engine/src/mac-scripting.mm
+void MCPlatformScriptEnvironment::Run(MCStringRef p_script, MCStringRef &r_out)
 {
 	bool t_success;
 	t_success = true;
@@ -581,11 +530,6 @@ char *MCPlatformScriptEnvironment::Call(const char *p_method, const char **p_arg
 	t_js_method_name = NULL;
 	if (t_success)
 		t_success = ConvertCStringToJSString(p_method, t_js_method_name);
-<<<<<<< HEAD:engine/src/osxscript.cpp
-
-=======
-	
->>>>>>> develop:engine/src/mac-scripting.mm
 	
 	JSObjectRef t_js_global;
 	t_js_global = NULL;
@@ -630,11 +574,6 @@ char *MCPlatformScriptEnvironment::Call(const char *p_method, const char **p_arg
 	t_result = NULL;
 	if (t_success)
 		t_success = ConvertJSValueToCString(m_runtime, t_js_result, t_result);
-<<<<<<< HEAD:engine/src/osxscript.cpp
-
-=======
-	
->>>>>>> develop:engine/src/mac-scripting.mm
 	if (t_arguments != nil)
 		{
 		for(uindex_t i = 0; i < p_argument_count; i++)

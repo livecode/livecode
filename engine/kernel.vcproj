@@ -7747,7 +7747,6 @@
 				<File
 					RelativePath=".\exec-tests\datetime\EvalSeconds.test"
 					>
-<<<<<<< HEAD
 				</File>
 				<File
 					RelativePath=".\exec-tests\datetime\EvalTicks.test"
@@ -7772,15 +7771,6 @@
 			</Filter>
 			<Filter
 				Name="logic"
-=======
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\src\sysspec.cpp"
->>>>>>> develop
 				>
 				<File
 					RelativePath=".\exec-tests\logic\EvalAnd.test"
