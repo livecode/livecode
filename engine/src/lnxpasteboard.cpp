@@ -63,11 +63,11 @@ bool MCGdkPasteboard::Query(MCTransferType* &r_types, unsigned int &r_type_count
 
 bool MCGdkPasteboard::Fetch_MIME(MCMIMEtype *p_type, MCDataRef &r_data)
 {
-    return m_transfer_store->Fetch(p_type, r_data, m_atom, m_source_window, m_target_window);
+    return m_transfer_store->Fetch(p_type, r_data, m_atom, m_source_window, m_target_window, m_lock_time);
 }
 
 bool MCGdkPasteboard::Fetch(MCTransferType p_type, MCDataRef &r_data)
 {
-    return m_transfer_store->Fetch(p_type, r_data, m_atom, m_source_window, m_target_window);
+    return m_transfer_store->Fetch(p_type, r_data, m_atom, m_source_window, m_target_window, m_lock_time);
 }
 

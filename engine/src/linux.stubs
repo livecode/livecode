@@ -251,6 +251,12 @@ gdk libgdk-x11-2.0.so.0
 	gdk_window_set_background: (pointer, pointer, integer) -> ()
 	gdk_notify_startup_complete: () -> ()
 	gdk_window_ensure_native: (pointer) -> (integer)
+	gdk_selection_owner_get: (pointer) -> (pointer)
+	gdk_selection_convert: (pointer, pointer, pointer, integer) -> ()
+	gdk_selection_property_get: (pointer, pointer, pointer, pointer) -> (integer)
+	gdk_drag_begin: (pointer, pointer) -> (pointer)
+	gdk_selection_owner_get_for_display: (pointer, pointer) -> (pointer)
+	gdk_selection_owner_set_for_display: (pointer, pointer, pointer, integer, integer) -> (integer)
 
 gdk_pixbuf libgdk_pixbuf-2.0.so.0
 	gdk_pixbuf_get_pixels: (pointer) -> (pointer)

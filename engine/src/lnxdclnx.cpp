@@ -259,6 +259,8 @@ extern "C"
 void gtk_main_do_event(GdkEvent*);
 }
 
+void DnDClientEvent(GdkEvent* p_event);
+
 Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, Boolean& reset)
 {
     // Event object. Note that GDK requires these to be disposed of after handling
@@ -390,22 +392,6 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
             case GDK_KEY_PRESS:
             case GDK_KEY_RELEASE:
             {
-                // Let the IME have the key event first
-                bool t_ignore = false;
-                if (dispatch && m_im_context != nil)
-                {
-                    t_ignore = gtk_im_context_filter_keypress(m_im_context, &t_event->key);
-                }
-                
-                // No further processing of the event if the IME ate it
-                if (t_ignore)
-                    break;
-                
-                // Convert the key event into a Unicode character
-                codepoint_t t_codepoint = gdk_keyval_to_unicode(t_event->key.keyval);
-                MCAutoStringRef t_text;
-                /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)&t_codepoint, sizeof(t_codepoint), kMCStringEncodingUTF32, false, &t_text);
-                
                 // We also want the key symbol for non-character keys etc
                 uint32_t t_keysym = translatekeysym(t_event->key.keyval, t_event->key.hardware_keycode);
                 
@@ -428,6 +414,25 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 {
                     if (t_event->key.window != MCtracewindow)
                     {
+                        // Let the IME have the key event first
+                        bool t_ignore = false;
+                        if (dispatch && MCactivefield != NULL && m_im_context != nil)
+                        {
+                            t_ignore = gtk_im_context_filter_keypress(m_im_context, &t_event->key);
+                        }
+                        
+                        // No further processing of the event if the IME ate it
+                        if (t_ignore)
+                            break;
+                        
+                        // Convert the key event into a Unicode character
+                        codepoint_t t_codepoint = gdk_keyval_to_unicode(t_event->key.keyval);
+                        MCAutoStringRef t_text;
+                        if (t_codepoint != 0)
+                            /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)&t_codepoint, sizeof(t_codepoint), kMCStringEncodingUTF32, false, &t_text);
+                        else
+                            t_text = MCValueRetain(kMCEmptyString);
+                        
                         MCeventtime = t_event->key.time;
                         if (t_event->type == GDK_KEY_PRESS)
                             MCdispatcher->wkdown(t_event->key.window, *t_text, t_keysym);
@@ -513,6 +518,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 // Detect if we should start a drag
                 if (!dragclick && (MCU_abs(MCmousex - MCclicklocx) > 4 || MCU_abs(MCmousey - MCclicklocy) > 4) && MCbuttonstate != 0)
                 {
+                    fprintf(stderr, "Drag detected %u %u %f %f\n", MCmousex, MCmousey, t_event->motion.x, t_event->motion.y);
                     last_window = t_event->motion.window;
                     dragclick = true;
                     MCdispatcher->wmdrag(last_window);
@@ -745,6 +751,8 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
             }
                 
             case GDK_SELECTION_NOTIFY:
+                // TODO
+                break;
                 
             case GDK_SELECTION_REQUEST:
             {
@@ -823,7 +831,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                     {
                         // Get the data in the requested form
                         MCAutoDataRef t_data;
-                        if (t_store->Fetch(new MCMIMEtype(dpy, t_event->selection.target), &t_data, 0, NULL, NULL))
+                        if (t_store->Fetch(new MCMIMEtype(dpy, t_event->selection.target), &t_data, 0, NULL, NULL, t_event->selection.time))
                         {
                             // Transfer the data to the requestor via the
                             // property that it specified
@@ -859,105 +867,14 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
             }
             
             case GDK_DRAG_ENTER:
-            {
-                // Get the selection atom for this drag event
-                GdkAtom t_selection;
-                t_selection = gdk_drag_get_selection(t_event->dnd.context);
-                
-                // Source window for the D&D operation
-                GdkWindow *t_source;
-                t_source = gdk_drag_context_get_source_window(t_event->dnd.context);
-                
-                // Convert the selection into a pasteboard
-                MCGdkPasteboard *t_pasteboard;
-                t_pasteboard = new MCGdkPasteboard(t_selection, MCtransferstore);
-                t_pasteboard->SetWindows(t_source, t_event->dnd.window);
-                
-                // Get the list of targets supported by the source
-                MCtransferstore->cleartypes();
-                GList *t_targets;
-                t_targets = gdk_drag_context_list_targets(t_event->dnd.context);
-                for (GList *t_elem; t_elem != NULL; t_elem = t_elem->next)
-                    MCtransferstore->addAtom((GdkAtom)t_elem->data);
-                
-                // Temporarily set the modifier state to the asynchronous state
-                uint16_t t_old_modstate = MCmodifierstate;
-                MCmodifierstate = MCscreen->querymods();
-                
-                // Handle the event
-                MCdispatcher->wmdragenter(t_event->dnd.window, t_pasteboard);
-                
-                // Clean up
-                MCmodifierstate = t_old_modstate;
-                t_pasteboard->Release();
-                
-                break;
-            }
-   
-            case GDK_DRAG_LEAVE:
-            {
-                // The drag is no longer relevant to us
-                MCdispatcher->wmdragleave(t_event->dnd.window);
-                MCtransferstore->cleartypes();
-                break;
-            }
-                
-            case GDK_DRAG_MOTION:
-            {
-                // Translate the position from root to relative coordinates
-                uint32_t wx, wy;
-                // !!!!!!!!!!! TODO !!!!!!!!!!
-                
-                // Temporarily adopt the asynchronous modifier state
-                uint16_t t_old_modstate = MCmodifierstate;
-                MCmodifierstate = MCscreen->querymods();
-                
-                // Handle the event
-                MCDragActionSet t_action;
-                t_action = MCdispatcher->wmdragmove(t_event->dnd.window, wx, wy);
-                
-                // Restore modifier state
-                MCmodifierstate = t_old_modstate;
-                
-                // Convert the selected drag action to the corresponding GDK value
-                GdkDragAction t_gdk_action = GdkDragAction(0);
-                if (t_action == DRAG_ACTION_COPY)
-                    t_gdk_action = GDK_ACTION_COPY;
-                else if (t_action == DRAG_ACTION_MOVE)
-                    t_gdk_action = GDK_ACTION_MOVE;
-                else if (t_action == DRAG_ACTION_LINK)
-                    t_gdk_action = GDK_ACTION_LINK;
-                
-                // Reply to the motion event
-                gdk_drag_status(t_event->dnd.context, t_gdk_action, t_event->dnd.time);
-                break;
-            }
-                
+            case GDK_DRAG_LEAVE:   
+            case GDK_DRAG_MOTION:  
             case GDK_DRAG_STATUS:
-                // Only sent while we are in a D&D loop so shouldn't happen
-                break;
-                
             case GDK_DROP_START:
-            {
-                // Temporarily adopt the asynchronous modifier state
-                uint16_t t_old_modstate = MCmodifierstate;
-                MCmodifierstate = MCscreen->querymods();
-                
-                // Something was dropped on us
-                MCdispatcher->wmdragdrop(t_event->dnd.window);
-                
-                // Restore the modifier state
-                MCmodifierstate = t_old_modstate;
-                
-                // Tell the source that we are now finished with it
-                gdk_drop_finish(t_event->dnd.context, TRUE, t_event->dnd.time);
-                break;
-            }
-                
             case GDK_DROP_FINISHED:
-                // Only sent while we are in a D&D loop so shouldn't happen
+                DnDClientEvent(t_event);
                 break;
-                
+
             default:
                 // Any other event types are ignored
                 break;
@@ -1071,32 +988,115 @@ void init_xDnD()
     
 }
 
-GdkAtom* MCGdkTransferStore::QueryAtoms(unsigned int&)
+void DnDClientEvent(GdkEvent* p_event)
 {
-    return NULL;
-}
-
-bool MCGdkTransferStore::Query(MCTransferType*&, unsigned int&)
-{
-    return false;
-}
-
-bool MCGdkTransferStore::Fetch(MCMIMEtype*, MCDataRef&, GdkAtom, GdkWindow*, GdkWindow*)
-{
-    return false;
-}
-
-bool MCGdkTransferStore::Fetch(MCTransferType, MCDataRef&, GdkAtom, GdkWindow*, GdkWindow*)
-{
-    return false;
-}
-
-void DnDClientEvent(GdkEvent*)
-{
-    
-}
-
-GdkDragContext* MCGdkTransferStore::CreateDragContext(GdkWindow*)
-{
-    return NULL;
+    switch (p_event->type)
+    {
+        case GDK_DRAG_ENTER:
+        {
+            fprintf(stderr, "DND: drag enter\n");
+            // Get the selection atom for this drag event
+            GdkAtom t_selection;
+            t_selection = gdk_drag_get_selection(p_event->dnd.context);
+            
+            // Source window for the D&D operation
+            GdkWindow *t_source;
+            t_source = gdk_drag_context_get_source_window(p_event->dnd.context);
+            
+            // Convert the selection into a pasteboard
+            MCGdkPasteboard *t_pasteboard;
+            t_pasteboard = new MCGdkPasteboard(t_selection, MCtransferstore);
+            t_pasteboard->SetWindows(t_source, p_event->dnd.window);
+            
+            // Get the list of targets supported by the source
+            MCtransferstore->cleartypes();
+            GList *t_targets;
+            t_targets = gdk_drag_context_list_targets(p_event->dnd.context);
+            for (GList *t_elem = t_targets; t_elem != NULL; t_elem = t_elem->next)
+                MCtransferstore->addAtom((GdkAtom)t_elem->data);
+            
+            // Temporarily set the modifier state to the asynchronous state
+            uint16_t t_old_modstate = MCmodifierstate;
+            MCmodifierstate = MCscreen->querymods();
+            
+            // Handle the event
+            MCdispatcher->wmdragenter(p_event->dnd.window, t_pasteboard);
+            
+            // Clean up
+            MCmodifierstate = t_old_modstate;
+            t_pasteboard->Release();
+            
+            break;
+        }
+            
+        case GDK_DRAG_LEAVE:
+        {
+            fprintf(stderr, "DND: drag leave\n");
+            // The drag is no longer relevant to us
+            MCdispatcher->wmdragleave(p_event->dnd.window);
+            MCtransferstore->cleartypes();
+            break;
+        }
+            
+        case GDK_DRAG_MOTION:
+        {
+            fprintf(stderr, "DND: drag motion\n");
+            // Translate the position from root to relative coordinates
+            uint32_t wx, wy;    // Window-relative coordinates
+            gint ox, oy;        // Window origin in root coordinates
+            gdk_window_get_origin(p_event->dnd.window, &ox, &oy);
+            wx = p_event->dnd.x_root - ox;
+            wy = p_event->dnd.y_root - oy;
+            
+            // Temporarily adopt the asynchronous modifier state
+            uint16_t t_old_modstate = MCmodifierstate;
+            MCmodifierstate = MCscreen->querymods();
+            
+            // Handle the event
+            MCDragActionSet t_action;
+            t_action = MCdispatcher->wmdragmove(p_event->dnd.window, wx, wy);
+            
+            // Restore modifier state
+            MCmodifierstate = t_old_modstate;
+            
+            // Convert the selected drag action to the corresponding GDK value
+            GdkDragAction t_gdk_action = GdkDragAction(0);
+            if (t_action == DRAG_ACTION_COPY)
+                t_gdk_action = GDK_ACTION_COPY;
+            else if (t_action == DRAG_ACTION_MOVE)
+                t_gdk_action = GDK_ACTION_MOVE;
+            else if (t_action == DRAG_ACTION_LINK)
+                t_gdk_action = GDK_ACTION_LINK;
+            
+            // Reply to the motion event
+            gdk_drag_status(p_event->dnd.context, t_gdk_action, p_event->dnd.time);
+            break;
+        }
+            
+        case GDK_DRAG_STATUS:
+            // Only sent while we are in a D&D loop so shouldn't happen
+            break;
+            
+        case GDK_DROP_START:
+        {
+            fprintf(stderr, "DND: drop start\n");
+            // Temporarily adopt the asynchronous modifier state
+            uint16_t t_old_modstate = MCmodifierstate;
+            MCmodifierstate = MCscreen->querymods();
+            
+            // Something was dropped on us
+            MCdispatcher->wmdragdrop(p_event->dnd.window);
+            
+            // Restore the modifier state
+            MCmodifierstate = t_old_modstate;
+            
+            // Tell the source that we are now finished with it
+            gdk_drop_finish(p_event->dnd.context, TRUE, p_event->dnd.time);
+            break;
+        }
+            
+        case GDK_DROP_FINISHED:
+            // Only sent while we are in a D&D loop so shouldn't happen
+            break;
+    }
 }

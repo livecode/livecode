@@ -292,14 +292,14 @@ public:
 
 	
 	// Clipboard and selection interface
-	//virtual bool ownsselection(void);
-	//virtual bool setselection(MCPasteboard *p_pasteboard);
-	//virtual MCPasteboard *getselection(void);
+	virtual bool ownsselection(void);
+	virtual bool setselection(MCPasteboard *p_pasteboard);
+	virtual MCPasteboard *getselection(void);
 	
-	//virtual bool ownsclipboard(void);
-	//virtual bool setclipboard(MCPasteboard *p_pasteboard);
-	//virtual MCPasteboard *getclipboard(void);
-	//virtual void flushclipboard(void);
+	virtual bool ownsclipboard(void);
+	virtual bool setclipboard(MCPasteboard *p_pasteboard);
+	virtual MCPasteboard *getclipboard(void);
+	virtual void flushclipboard(void);
 
 	void setupcolors();
 	GdkScreen* getscreen();
@@ -364,5 +364,9 @@ public:
     void IME_OnPreeditEnd(GtkIMContext*);
     void IME_OnPreeditStart(GtkIMContext*);
     void IME_OnRetrieveSurrounding(GtkIMContext*);
+    
+    //virtual void clearIME(Window w);
+	//virtual void activateIME(Boolean activate);
+	//virtual void closeIME();
 };
 #endif

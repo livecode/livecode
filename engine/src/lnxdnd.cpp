@@ -201,7 +201,7 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet 
                     
                     // Send the requested data, if at all possible
                     MCAutoDataRef t_data;
-                    if (MCtransferstore->Fetch(t_mime_type, &t_data, t_event->selection.property, t_event->selection.window, t_requestor))
+                    if (MCtransferstore->Fetch(t_mime_type, &t_data, t_event->selection.property, t_event->selection.window, t_requestor, t_event->selection.time))
                     {
                         // Send the data to the requestor window
                         gdk_property_change(t_requestor,

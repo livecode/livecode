@@ -107,7 +107,7 @@ MCTransferType MCMIMEtype::asRev ( void )
 
 MCGdkTransferStore::MCGdkTransferStore(GdkDisplay *p_display)
 : m_entries(NULL), m_entry_count(0), m_types_list(NULL), m_types_count(0),
-    m_display(p_display)
+    m_targets(NULL), m_display(p_display)
 {
     ;
 }
@@ -136,6 +136,10 @@ void MCGdkTransferStore::cleartypes()
     delete[] m_types_list;
     m_types_list = NULL;
     m_types_count = 0;
+    
+    if (m_targets != NULL)
+        g_list_free(m_targets);
+    m_targets = NULL;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -209,6 +213,7 @@ void MCGdkTransferStore::addAtom(GdkAtom p_atom)
 //
 // X11 Specific functions
 
+/*
 bool MCGdkTransferStore::GetSelection(GdkWindow *w, GdkAtom property, MCDataRef &r_data)
 {
     // TODO: could we use the gdk selection getter instead?
@@ -261,8 +266,30 @@ bool MCGdkTransferStore::GetSelection(GdkWindow *w, GdkAtom property, MCDataRef 
     
     return MCDataCopy(*t_data, r_data);
 }
-	
+*/
 
+void MCGdkTransferStore::GetExternalTypes(GdkAtom p_selection, GdkWindow *p_target)
+{
+    // Get the list of targets (types) supported by the external selection
+    guchar *t_bytes;
+    gint t_byte_len;
+    GdkAtom t_property_type;
+    gint t_property_format;
+    gdk_selection_convert(p_target, p_selection, gdk_atom_intern_static_string("TARGETS"), LastEventTime);
+    t_byte_len = gdk_selection_property_get(p_target, &t_bytes, &t_property_type, &t_property_format);
+    
+    // The target list should be a list of 32-bit atoms
+    cleartypes();
+    if (t_property_type != GDK_SELECTION_TYPE_ATOM || t_property_format != 32)
+        return;
+    
+    for (gint i = 0; i < t_byte_len/4; i++)
+    {
+        addAtom(((GdkAtom*)t_bytes)[i]);
+    }
+    
+    g_free(t_bytes);
+}
 
 /*
 void MCXTransferStore::GetExternalTypes ( Atom p_public_atom, Atom p_private_atom, Window w)
@@ -346,8 +373,43 @@ bool MCXTransferStore::WaitForEventCompletion(XEvent &p_xevent)
 		
 	}
 }
-	
+*/
 
+bool MCGdkTransferStore::GetExternalData(MCTransferType p_type, GdkAtom p_atom, GdkWindow *p_source, GdkWindow *p_target, MCDataRef &r_data, guint32 p_event_time)
+{
+    // Check that the selection atom is still the source
+    if (gdk_selection_owner_get(p_atom) == p_source)
+    {
+        // Find the MIME type corresponding to the transfer type we desire
+        MCMIMEtype *t_mime_type;
+        int32_t t_index;
+        t_index = find_entry_with_rev_type(p_type);
+        if (t_index > -1)
+        {
+            t_mime_type = m_entries[t_index].m_mime;
+            
+            // Request the source to convert the data into this type
+            gdk_selection_convert(p_target, p_atom, t_mime_type->asAtom(), p_event_time);
+            
+            // Now the data has been converted, fetch it
+            guchar *t_bytes;
+            gint t_byte_len;
+            GdkAtom t_property_type;
+            gint t_property_format;
+            t_byte_len = gdk_selection_property_get(p_target, &t_bytes, &t_property_type, &t_property_format);
+            
+            MCAutoDataRef t_data;
+            bool t_success;
+            t_success = MCDataCreateWithBytes(t_bytes, t_byte_len, &t_data);
+            
+            g_free(t_bytes);
+            
+            return t_success && Convert_MIME_to_REV(*t_data, t_mime_type, r_data);
+        }
+    }
+}
+
+/*
 bool MCXTransferStore::GetExternalData ( MCTransferType p_type, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time, MCDataRef& r_data)  
 {
 	XEvent xevent ;
@@ -411,55 +473,59 @@ Atom   MCXTransferStore::asAtom  ( uint4 p_idx )
 	return 0 ;
 	
 }
+*/
 
-
-
-int4 	MCXTransferStore::find_type ( MCMIMEtype * p_type )
+int32_t MCGdkTransferStore::find_type(MCMIMEtype* p_type)
 {
-	for ( uint4 a = 0 ; a < m_entry_count ; a++)
-		if ( strcmp ( ( const char*)p_type->asString(), asString( a ) ) == 0 )
-			return a ;
-	return -1;
+	for (uint32_t i = 0; i < m_entry_count; i++)
+    {
+        if (strcmp(p_type->asString(), m_entries[i].m_mime->asString()) == 0)
+            return i;
+    }
+    return -1;
+}
+ 
+int32_t MCGdkTransferStore::find_entry_with_rev_type(MCTransferType p_type) 
+{
+	for (uint32_t i = 0; i < m_entry_count; i++)
+    {
+        if (m_entries[i].m_type == p_type)
+            return i;
+    }
+    return -1;
 }
 
-
-
-
-int4  MCXTransferStore::find_entry_with_rev_type ( MCTransferType p_type ) 
+int32_t MCGdkTransferStore::find_table_entry_with_rev_type(MCTransferType p_type) 
 {
-	for ( uint4 a = 0 ; a < m_entry_count ; a++)
-		if ( m_entries[a] . type == p_type )
-			return a;
-	
-	return -1 ;
+	for (uint32_t i = 0; i < XDND_TYPE_TABLE_SIZE; i++)
+    {
+        if (XTransfer_lookup_table[i].rev_type == p_type)
+            return i;
+    }
+    return -1;
 }
 
-int4  MCXTransferStore::find_table_entry_with_rev_type ( MCTransferType p_type ) 
+int32_t MCGdkTransferStore::find_table_entry_with_MIME_type(MCMIMEtype* p_MIME) 
 {
-	for ( uint4 a = 0 ; a < XDND_TYPE_TABLE_SIZE ; a++)
-		if ( XTransfer_lookup_table [a] . rev_type == p_type )
-			return a;
-	
-	return -1 ;
+	for (uint32_t i = 0; i < XDND_TYPE_TABLE_SIZE; i++)
+    {
+        if (strcmp(p_MIME->asString(), XTransfer_lookup_table[i].mime_type) == 0)
+            return i;
+    }
+    return -1;
 }
 
-int4  MCXTransferStore::find_table_entry_with_MIME_type ( MCMIMEtype * p_MIME ) 
+int32_t MCGdkTransferStore::find_table_entry_with_full_types(MCTransferType p_type, MCMIMEtype* p_MIME)
 {
-	for ( uint4 a = 0 ; a < XDND_TYPE_TABLE_SIZE ; a++)
-		if ( strcmp ( ( const char*)p_MIME->asString(), (char*)XTransfer_lookup_table [a] . mime_type ) == 0 )
+	for (uint32_t i = 0; i < XDND_TYPE_TABLE_SIZE; i++)
+    {
+        if (strcmp(p_MIME->asString(), XTransfer_lookup_table[i].mime_type) == 0
+            && p_type == XTransfer_lookup_table[i].rev_type)
+        {
+            return i;
+        }
+    }
 
-			return a;
-	
-	return -1 ;
-} 
-
-int4  MCXTransferStore::find_table_entry_with_full_types ( MCTransferType p_type, MCMIMEtype * p_MIME ) 
-{
-	for ( uint4 a = 0 ; a < XDND_TYPE_TABLE_SIZE ; a++)
-		if (( strcmp ( p_MIME->asString(), (char*)XTransfer_lookup_table [a] . mime_type ) == 0 ) &&
-		   ( p_type == XTransfer_lookup_table[a] . rev_type ))
-			return a;
-	
 	return -1 ;
 } 
 
@@ -469,14 +535,14 @@ int4  MCXTransferStore::find_table_entry_with_full_types ( MCTransferType p_type
 // Functions that convert between the REV and System type descriptors
 
 
-MCMIMEtype * MCXTransferStore::rev_to_MIME_stored ( MCTransferType p_type )
+MCMIMEtype * MCGdkTransferStore::rev_to_MIME_stored(MCTransferType p_type)
 {
-	int4 idx ;
-	idx = find_entry_with_rev_type ( p_type ) ;
-	if ( idx > -1 )
-		return ( m_entries[idx].format ) ;
+	int32_t idx;
+	idx = find_entry_with_rev_type(p_type);
+	if (idx > -1)
+		return (m_entries[idx].m_mime);
 	else 
-		return None ;
+		return NULL;
 }
 
 
@@ -486,6 +552,40 @@ MCMIMEtype * MCXTransferStore::rev_to_MIME_stored ( MCTransferType p_type )
 // Interface with the Clipboard
 
 
+GdkAtom *MCGdkTransferStore::QueryAtoms(size_t &r_count)
+{
+    uint32_t t_top = 0;
+    uint32_t t_index;
+    uint32_t t_count = 0;
+    
+    if (m_entries != NULL)
+    {
+        // Find the highest-priority type
+        for (uint32_t i = 0; i < m_entry_count; i++)
+        {
+            t_index = find_table_entry_with_full_types(m_entries[i].m_type, m_entries[i].m_mime);
+            if (XTransfer_lookup_table[t_index].priority > t_top)
+                t_top = XTransfer_lookup_table[t_index].priority;
+        }
+        
+        MCAutoArray<GdkAtom> t_ret;
+        for (uint32_t i = 0; i < m_entry_count; i++)
+        {
+            t_index = find_table_entry_with_full_types(m_entries[i].m_type, m_entries[i].m_mime);
+            t_ret.Extend(++t_count);
+            t_ret[t_count-1] = m_entries[i].m_mime->asAtom();
+        }
+        
+        GdkAtom* t_ptr;
+        t_ret.Take(t_ptr, r_count);
+        return t_ptr;
+    }
+    
+    r_count = 0;
+    return NULL;
+}
+
+/*
 Atom * MCXTransferStore::QueryAtoms (uint4 & r_count)
 {
 	
@@ -532,7 +632,7 @@ Atom * MCXTransferStore::QueryAtoms (uint4 & r_count)
 	}
 	return t_ret ;
 }
-
+*/
 	
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -562,8 +662,48 @@ bool should_include ( MCTransferType * p_list, uint4 p_count, MCTransferType p_t
 }
 
 
+bool MCGdkTransferStore::Query(MCTransferType* &r_types, size_t &r_type_count)
+{
+    MCAutoArray<MCTransferType> t_list;
+    uint32_t t_top = 0;
+    uint32_t t_index;
+    uint32_t t_count = 0;
+    
+    if (m_entries != NULL)
+    {
+        if (m_types_list != NULL)
+        {
+            // Find the highest-priority type
+            for (uint32_t i = 0; i < m_entry_count; i++)
+            {
+                t_index = find_table_entry_with_full_types(m_entries[i].m_type, m_entries[i].m_mime);
+                if (XTransfer_lookup_table[t_index].priority > t_top)
+                    t_top = XTransfer_lookup_table[t_index].priority;
+            }
+            
+            for (uint32_t i = 0; i < m_entry_count; i++)
+            {
+                t_index = find_table_entry_with_full_types(m_entries[i].m_type, m_entries[i].m_mime);
+                if ((XTransfer_lookup_table[t_index].priority == t_top) && should_include(t_list.Ptr(), t_count, m_entries[i].m_type))
+                {
+                    t_list.Extend(++t_count);
+                    t_list[t_count-1] = m_entries[i].m_type;
+                }
+            }
+            
+            t_list.Take(m_types_list, m_types_count);
+        }
+        
+        r_type_count = m_types_count;
+        r_types = m_types_list;
+        return true;
+    }
+    
+    return false;
+}
 
-bool MCXTransferStore::Query(MCTransferType*& r_types, unsigned int& r_type_count) 
+
+/*bool MCXTransferStore::Query(MCTransferType*& r_types, unsigned int& r_type_count)
 {
 
 	
@@ -621,7 +761,45 @@ bool MCXTransferStore::Query(MCTransferType*& r_types, unsigned int& r_type_coun
 	}
 	return false ;
 }
+*/
 
+bool MCGdkTransferStore::Fetch(MCMIMEtype *p_mime_type, MCDataRef& r_data, GdkAtom p_atom, GdkWindow *p_source, GdkWindow *p_target, guint32 p_event_time)
+{
+    if (m_entries != NULL)
+    {
+        int32_t t_index = find_type(p_mime_type);
+        if (t_index > -1)
+        {
+            if (m_entries[t_index].m_data == NULL)
+            {
+                // We have no data for this type so fetch it from the source
+                GetExternalData(m_entries[t_index].m_type, p_atom, p_source, p_target, r_data, p_event_time);
+                if (r_data != NULL)
+                    m_entries[t_index].m_data = MCValueRetain(r_data);
+            }
+            else
+            {
+                // If this is an internal DnD operation, skip the conversion.
+                // (We can tell that it is internal if we recognise the source
+                // and destination windows as being our stacks).
+                if (MCdispatcher->findstackd(p_source) && MCdispatcher->findstackd(p_target))
+                    r_data = MCValueRetain(m_entries[t_index].m_data);
+                else
+                    Convert_REV_to_MIME(m_entries[t_index].m_data, m_entries[t_index].m_type, m_entries[t_index].m_mime, r_data);
+            }
+            
+            // This may happen if the selection owner has changed
+            if (r_data == NULL)
+                return false;
+            
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+/*
 bool MCXTransferStore::Fetch(MCMIMEtype * p_mime_type, MCDataRef& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time) 
 {
 #ifdef DEBUG_DND
@@ -655,9 +833,15 @@ bool MCXTransferStore::Fetch(MCMIMEtype * p_mime_type, MCDataRef& r_data, Atom p
 	}
 	return false ;
 }
+*/
 
+bool MCGdkTransferStore::Fetch(MCTransferType p_type, MCDataRef& r_data, GdkAtom p_atom, GdkWindow *p_source, GdkWindow *p_target, guint32 p_event_time)
+{
+    return Fetch(rev_to_MIME_stored(p_type), r_data, p_atom, p_source, p_target, p_event_time);
+}
 
-bool MCXTransferStore::Fetch(MCTransferType p_type, MCDataRef& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time) 
+/*
+bool MCXTransferStore::Fetch(MCTransferType p_type, MCDataRef& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time)
 {
 #ifdef DEBUG_DND
 	fprintf(stderr, "Fecth() : Asked for REV type %s\n", RevTypeToString (p_type));
@@ -749,7 +933,29 @@ const char *RevTypeToString(MCTransferType p_type)
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Format conversion routines
+*/
 
+bool MCGdkTransferStore::Convert_REV_to_MIME(MCDataRef p_input, MCTransferType p_type, MCMIMEtype *p_mime, MCDataRef &r_output)
+{
+    int32_t t_index;
+    t_index = find_table_entry_with_full_types(p_type, p_mime);
+    if (t_index > -1)
+    {
+        if (XTransfer_lookup_table[t_index].f_converter_to_mime != NULL)
+        {
+            return XTransfer_lookup_table[t_index].f_converter_to_mime(p_input, p_mime->asRev(), r_output);
+        }
+        else
+        {
+            r_output = MCValueRetain(p_input);
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+/*
 bool MCXTransferStore::Convert_REV_to_MIME ( MCDataRef p_input, MCTransferType p_type,  MCMIMEtype * p_mime, MCDataRef& r_output ) 
 {
 #ifdef DEBUG_DND
@@ -776,9 +982,29 @@ bool MCXTransferStore::Convert_REV_to_MIME ( MCDataRef p_input, MCTransferType p
 			return true;
 		}
 }
+*/
 
+bool MCGdkTransferStore::Convert_MIME_to_REV(MCDataRef p_input, MCMIMEtype *p_mime, MCDataRef &r_output)
+{
+    int32_t t_index;
+    t_index = find_table_entry_with_MIME_type(p_mime);
+    if (t_index > -1)
+    {
+        if (XTransfer_lookup_table[t_index].f_converter_to_rev != NULL)
+        {
+            return XTransfer_lookup_table[t_index].f_converter_to_rev(p_input, p_mime, r_output);
+        }
+        else
+        {
+            r_output = MCValueRetain(p_input);
+            return true;
+        }
+    }
+    
+    return false;
+}
 
-
+/*
 bool MCXTransferStore::Convert_MIME_to_REV ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef& r_output ) 
 {
 #ifdef DEBUG_DND
@@ -940,4 +1166,22 @@ bool ConvertFile_MIME_to_rev ( MCDataRef p_input, MCMIMEtype * p_MIME, MCDataRef
 	/* UNCHECKED */ MCStringEncodeAndRelease(t_output_files_string, kMCStringEncodingNative, false, r_output);
 
 	return true;
+}
+
+GdkDragContext* MCGdkTransferStore::CreateDragContext(GdkWindow *p_source)
+{
+    return gdk_drag_begin(p_source, ListTargets());
+}
+
+GList* MCGdkTransferStore::ListTargets()
+{
+    if (m_targets == NULL)
+    {
+        for (uint32_t i = 0; i < m_entry_count; i++)
+        {
+            m_targets = g_list_append(m_targets, gpointer(m_entries[i].m_mime->asAtom()));
+        }
+    }
+    
+    return m_targets;
 }

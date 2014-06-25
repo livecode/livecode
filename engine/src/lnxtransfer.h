@@ -70,10 +70,13 @@ public:
     void addAtom(GdkAtom p_atom);
     void cleartypes();
     
+    // Gets the types from an external selection
+    void GetExternalTypes(GdkAtom p_selection, GdkWindow *p_source);
+    
     // Interface with MCGdkPasteboard
     bool Query(MCTransferType* &r_types, unsigned int &r_type_count);
-    bool Fetch(MCTransferType p_type, MCDataRef &r_data, GdkAtom p_atom, GdkWindow *p_source, GdkWindow *p_target);
-    bool Fetch(MCMIMEtype* p_mime_type, MCDataRef &r_data, GdkAtom p_atom, GdkWindow *p_source, GdkWindow *p_target);
+    bool Fetch(MCTransferType p_type, MCDataRef &r_data, GdkAtom p_atom, GdkWindow *p_source, GdkWindow *p_target, guint32 p_event_time);
+    bool Fetch(MCMIMEtype* p_mime_type, MCDataRef &r_data, GdkAtom p_atom, GdkWindow *p_source, GdkWindow *p_target, guint32 p_event_time);
     
     // Sets the list of supported selection targets for a window
     void SetTypesOnWindow(GdkWindow* p_window);
@@ -95,16 +98,18 @@ private:
     // Methods to search the XTransfer_lookup_table
     int32_t find_entry_with_rev_type(MCTransferType);
     int32_t find_table_entry_with_rev_type(MCTransferType);
-    int32_t find_table_entry_with_MIME_types(MCMIMEtype*);
-    int32_t find_table_entry_with_full_types(MCTransferType, MCMIMEtype);
+    int32_t find_table_entry_with_MIME_type(MCMIMEtype*);
+    int32_t find_table_entry_with_full_types(MCTransferType, MCMIMEtype*);
     
     // Conversion of the data between different types
     bool Convert_MIME_to_REV(MCDataRef p_input, MCMIMEtype* p_mime, MCDataRef &r_output);
     bool Convert_REV_to_MIME(MCDataRef p_input, MCTransferType p_type, MCMIMEtype* p_mime, MCDataRef &r_output);
+    MCMIMEtype* rev_to_MIME_stored(MCTransferType p_type);
     
     // Interface with the GDK selection mechanism
-    bool WaitForEventCompletion(GdkEvent *p_event);
-    bool GetSelection(GdkWindow *window, GdkAtom property, MCDataRef &r_data);
+    //bool WaitForEventCompletion(GdkEvent *p_event);
+    //bool GetSelection(GdkWindow *window, GdkAtom property, MCDataRef &r_data);
+    bool GetExternalData(MCTransferType p_type, GdkAtom p_atom, GdkWindow *p_source, GdkWindow *p_target, MCDataRef &r_data, guint32 p_event_time);
     
     int32_t find_type(MCMIMEtype* p_type);
     
@@ -120,6 +125,7 @@ private:
     uint32_t m_entry_count;
     MCTransferType *m_types_list;
     uint32_t m_types_count;
+    GList *m_targets;
     
     GdkDisplay *m_display;
     
