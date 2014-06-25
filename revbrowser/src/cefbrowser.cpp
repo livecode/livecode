@@ -1120,6 +1120,11 @@ char *MCCefBrowserBase::GetSource(void)
 
 void MCCefBrowserBase::SetSource(const char *p_source)
 {
+	// IM-2014-06-25: [[ Bug 12701 ]] CEF will crash if given an empty source string,
+	// so replace here with the source of an empty page :)
+	if (p_source == nil || MCCStringLength(p_source) == 0)
+		p_source = "<html><head></head><body></body></html>";
+	
 	CefString t_source;
 	/* UNCHECKED */ MCCefStringFromCString(p_source, t_source);
 
