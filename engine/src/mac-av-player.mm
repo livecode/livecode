@@ -698,6 +698,7 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 	t_bitmap -> height = m_rect . height;
 	t_bitmap -> stride = m_rect . width * sizeof(uint32_t);
 	t_bitmap -> data = (uint32_t *)malloc(t_bitmap -> stride * t_bitmap -> height);
+    memset(t_bitmap -> data, 0,t_bitmap -> stride * t_bitmap -> height);
 	t_bitmap -> has_alpha = t_bitmap -> has_transparency = true;
     
 	// Now if we have a current frame, then composite at the appropriate size into
