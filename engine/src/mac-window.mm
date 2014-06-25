@@ -755,18 +755,52 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 }
 
+// MW-2014-06-25: [[ Bug 12370 ]] Factor out key mapping code so it can be used by both
+//   IME and direct key events.
+static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoint_t& r_mapped, codepoint_t& r_unmapped)
+{
+	MCMacPlatformMapKeyCode([event keyCode], [event modifierFlags], r_key_code);
+	
+    if (r_key_code > 0xff00 && r_key_code <= 0xffff)
+    {
+        r_mapped = r_unmapped = 0xffffffffU;
+        return;
+    }
+    
+	if (!MCMacMapNSStringToCodepoint([event characters], r_mapped))
+		r_mapped = 0xffffffffU;
+	
+	if (!MCMacMapNSStringToCodepoint([event charactersIgnoringModifiers], r_unmapped))
+		r_unmapped = 0xffffffffU;
+    
+	// The unicode range 0xF700 - 0xF8FF is reserved by the system to indicate
+	// keys which have no printable value, but represent an action (such as F11,
+	// PageUp etc.). We don't want this mapping as we do it ourselves from the
+	// keycode, so if the mapped codepoint is in this range we reset it.
+	if (r_mapped >= 0xf700 && r_mapped < 0xf8ff)
+		r_mapped = r_unmapped = 0xffffffffU;
+	
+	// Now, if we have an unmapped codepoint, but no mapped codepoint then we
+	// propagate the unmapped codepoint as the mapped codepoint. This is so that
+	// dead-keys (when input methods are turned off) propagate an appropriate
+	// char (e.g. alt-e generates no mapped codepoint, but we want an e).
+	if (r_mapped == 0xffffffffU)
+		r_mapped = r_unmapped;
+}
+
 - (void)keyDown: (NSEvent *)event
 {
 	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 	
-    // Make the event key code to a platform keycode.
+    // Make the event key code to a platform keycode and codepoints.
     MCPlatformKeyCode t_key_code;
-    MCMacPlatformMapKeyCode([event keyCode], [event modifierFlags], t_key_code);
+    codepoint_t t_mapped_codepoint, t_unmapped_codepoint;
+    map_key_event(event, t_key_code, t_mapped_codepoint, t_unmapped_codepoint);
     
     // Notify the host that a keyDown event has been received - this is to work around the
     // issue with IME not playing nice with rawKey messages. Eventually this should work
     // by completely separating rawKey messages from text input messages.
-    MCPlatformCallbackSendRawKeyDown([self platformWindow], t_key_code);
+    MCPlatformCallbackSendRawKeyDown([self platformWindow], t_key_code, t_mapped_codepoint, t_unmapped_codepoint);
     
 	if ([self useTextInput])
 	{
@@ -1450,32 +1484,12 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 }
 					 
 - (void)handleKeyPress: (NSEvent *)event isDown: (BOOL)pressed
-{	
+{
 	MCPlatformKeyCode t_key_code;
-	MCMacPlatformMapKeyCode([event keyCode], [event modifierFlags], t_key_code);
-	
 	codepoint_t t_mapped_codepoint;
-	if (!MCMacMapNSStringToCodepoint([event characters], t_mapped_codepoint))
-		t_mapped_codepoint = 0xffffffffU;
-	
 	codepoint_t t_unmapped_codepoint;
-	if (!MCMacMapNSStringToCodepoint([event charactersIgnoringModifiers], t_unmapped_codepoint))
-		t_unmapped_codepoint = 0xffffffffU;
-
-	// The unicode range 0xF700 - 0xF8FF is reserved by the system to indicate
-	// keys which have no printable value, but represent an action (such as F11,
-	// PageUp etc.). We don't want this mapping as we do it ourselves from the
-	// keycode, so if the mapped codepoint is in this range we reset it.
-	if (t_mapped_codepoint >= 0xf700 && t_mapped_codepoint < 0xf8ff)
-		t_mapped_codepoint = t_unmapped_codepoint = 0xffffffffU;
-	
-	// Now, if we have an unmapped codepoint, but no mapped codepoint then we
-	// propagate the unmapped codepoint as the mapped codepoint. This is so that
-	// dead-keys (when input methods are turned off) propagate an appropriate
-	// char (e.g. alt-e generates no mapped codepoint, but we want an e).
-	if (t_mapped_codepoint == 0xffffffffU)
-		t_mapped_codepoint = t_unmapped_codepoint;
-	
+    map_key_event(event, t_key_code, t_mapped_codepoint, t_unmapped_codepoint);
+    
 	// Finally we process.
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
