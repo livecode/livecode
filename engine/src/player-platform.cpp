@@ -69,6 +69,10 @@ static const char *ppmediastrings[] =
 	"flash"
 };
 
+/*
+    For symmetry, CONTROLLER_HEIGHT should be a multiple of 12, since in drawing its 
+    components we use CONTROLLER_HEIGHT/6, /4, /3, /2
+*/
 #define CONTROLLER_HEIGHT 24
 #define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 4
 #define LIGHTGRAY 1
@@ -1882,6 +1886,12 @@ void MCPlayer::drawnicecontroller(MCDC *dc)
 {
     MCRectangle t_rect;
     t_rect = getcontrollerrect();
+    
+    // Adjust to cover empty pixels
+    t_rect . x --;
+    t_rect . y --;
+    t_rect . width ++;
+    t_rect . height ++;
     
     dc -> setforeground(controllercolors[DARKGRAY]);
     dc -> fillrect(t_rect, true);

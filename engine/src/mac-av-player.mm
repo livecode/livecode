@@ -16,7 +16,6 @@
 
 #include <Cocoa/Cocoa.h>
 #include <AVFoundation/AVFoundation.h>
-#include <pthread.h>
 
 #include "core.h"
 #include "globdefs.h"
@@ -458,11 +457,8 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 		if (t_player -> m_view != nil)
 			t_player -> Unrealize();
         
-        // TODO: Find an equivalent of SetMovieDrawingCompleteProc so as to play the player when alwaysBuffer = true
-        // SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, MCQTKitPlayer::MovieDrawingComplete, (long int)t_player);
         if (!CVDisplayLinkIsRunning(t_player -> m_display_link))
         {
-            CVDisplayLinkSetOutputCallback(t_player -> m_display_link, MCAVFoundationPlayer::MyDisplayLinkCallback, (void *) t_player);
             CVDisplayLinkStart(t_player -> m_display_link);
         }
         
@@ -477,12 +473,9 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 			t_player -> m_current_frame = nil;
 		}
 		
-        // TODO: Find an equivalent of SetMovieDrawingCompleteProc so as to play the player when alwaysBuffer = true
-        // SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallWhenChanged, nil, nil);
         if (CVDisplayLinkIsRunning(t_player -> m_display_link))
         {
             CVDisplayLinkStop(t_player -> m_display_link);
-            CVDisplayLinkSetOutputCallback(t_player -> m_display_link, nil, nil);
         }
 
         
@@ -491,8 +484,7 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 		t_player -> Realize();
     
 	}
-    //CVDisplayLinkRelease(t_player -> m_display_link);
-	t_player -> Release();
+    t_player -> Release();
 }
 
 void MCAVFoundationPlayer::Realize(void)
