@@ -830,6 +830,10 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		}
 #endif
 		
+		// IM-2014-06-25: [[ Bug 12671 ]] If there are runloop actions then set a timeout instead of waiting for the next event
+		if (HasRunloopActions())
+			t_sleep = MCMin(0.01, t_sleep);
+		
 		// Wait for t_sleep seconds and collect at most one event. If an event
 		// is collected and anyevent is True, then we are done.
 		if (MCPlatformWaitForEvent(t_sleep, dispatch == False) && anyevent)
