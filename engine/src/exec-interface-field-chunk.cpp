@@ -1561,7 +1561,7 @@ void MCField::GetFormattedTopOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id
 {
     if (opened)
     {
-        int2 x, y;
+        coord_t x, y;
         MCParagraph *pgptr = resolveparagraphs(p_part_id);
         MCParagraph *sptr = indextoparagraph(pgptr, si, ei, nil);
         sptr -> indextoloc(si, fixedheight, x, y);
@@ -1578,14 +1578,14 @@ void MCField::GetFormattedLeftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
     {
         MCParagraph *pgptr = resolveparagraphs(p_part_id);
         MCParagraph *sptr = indextoparagraph(pgptr, si, ei, nil);
-        int2 minx, maxx;
+        coord_t minx, maxx;
         findex_t t_si, t_ei; // needed to call MCParagraph::getextents
 
         // MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
         //   This is because minx/maxx are uninitialized and it seems that they have to be for
         //   calls to getxextents() to make sense.
-        minx = MAXINT2;
-        maxx = MININT2;
+        minx = INFINITY;
+        maxx = -INFINITY;
 
         do
         {
@@ -1611,13 +1611,13 @@ void MCField::GetFormattedWidthOfCharChunk(MCExecContext& ctxt, uint32_t p_part_
     {
         MCParagraph *pgptr = resolveparagraphs(p_part_id);
         MCParagraph *sptr = indextoparagraph(pgptr, si, ei, nil);
-        int2 minx, maxx;
+        coord_t minx, maxx;
 
         // MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
         //   This is because minx/maxx are uninitialized and it seems that they have to be for
         //   calls to getxextents() to make sense.
-        minx = MAXINT2;
-        maxx = MININT2;
+        minx = INFINITY;
+        maxx = -INFINITY;
 
         do
         {
@@ -1642,7 +1642,7 @@ void MCField::GetFormattedHeightOfCharChunk(MCExecContext& ctxt, uint32_t p_part
     // MW-2005-07-16: [[Bug 2938]] We must check to see if the field is open, if not we cannot do this.
     if (opened)
     {
-        int2 x, y;
+        coord_t x, y;
         MCParagraph *pgptr = resolveparagraphs(p_part_id);
         MCParagraph *sptr = indextoparagraph(resolveparagraphs(p_part_id), si, ei, nil);
         sptr->indextoloc(si, fixedheight, x, y);
@@ -1668,16 +1668,16 @@ void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
     // MW-2005-07-16: [[Bug 2938]] We must check to see if the field is open, if not we cannot do this.
     if (opened)
     {
-        int2 x, y;
+        coord_t x, y;
         MCParagraph *pgptr = resolveparagraphs(p_part_id);
         MCParagraph *sptr = indextoparagraph(resolveparagraphs(p_part_id), si, ei, nil);
         sptr->indextoloc(si, fixedheight, x, y);
         // MW-2012-01-25: [[ FieldMetrics ]] Compute the yoffset in card-coords.
-        int4 yoffset = getcontenty() + paragraphtoy(sptr);
-        int2 minx, maxx;
-        int4 maxy = y;
-        minx = INT16_MAX;
-        maxx = INT16_MIN;
+        coord_t yoffset = getcontenty() + paragraphtoy(sptr);
+        coord_t minx, maxx;
+        coord_t maxy = y;
+        minx = INFINITY;
+        maxx = -INFINITY;
         do
         {
             // MW-2012-01-25: [[ FieldMetrics ]] Increment the y-extent by the height of the

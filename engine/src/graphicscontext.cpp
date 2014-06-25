@@ -1232,23 +1232,24 @@ void MCGraphicsContext::drawlink(MCStringRef link, const MCRectangle& region)
 {
 }
 
-
-void MCGraphicsContext::drawtext(int2 x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image, MCDrawTextBreaking p_breaking, MCDrawTextDirection p_direction)
+void MCGraphicsContext::drawtext(coord_t x, int2 y, MCStringRef p_string, MCFontRef p_font, Boolean image, MCDrawTextBreaking p_breaking, MCDrawTextDirection p_direction)
 {
     MCRange t_range;
     t_range = MCRangeMake(0, MCStringGetLength(p_string));
     drawtext_substring(x, y, p_string, t_range, p_font, image, p_breaking, p_direction);
 }	
 
-void MCGraphicsContext::drawtext_substring(int2 x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean p_image, MCDrawTextBreaking p_break, MCDrawTextDirection p_direction)
+void MCGraphicsContext::drawtext_substring(coord_t x, int2 y, MCStringRef p_string, MCRange p_range, MCFontRef p_font, Boolean p_image, MCDrawTextBreaking p_break, MCDrawTextDirection p_direction)
 {
     // MW-2013-10-29: [[ Bug 11338 ]] If 'image' is true, then render the background
 	//   rect.
 	if (p_image)
 	{
 		// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the context to make sure we measure the width of scaled text correctly.
-		int32_t t_width;
-        t_width = MCFontMeasureTextSubstring(p_font, p_string, p_range, MCGContextGetDeviceTransform(m_gcontext));
+		coord_t t_widthf;
+        t_widthf = MCFontMeasureTextSubstring(p_font, p_string, p_range, MCGContextGetDeviceTransform(m_gcontext));
+        
+        int32_t t_width = int32_t(ceilf(t_widthf));
 		
 		MCGContextSave(m_gcontext);
 		setforeground(m_background);

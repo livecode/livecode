@@ -66,7 +66,7 @@ void MCSegment::AddBlockRange(MCBlock *first, MCBlock *last)
     m_LastBlock = last;
 }
 
-int16_t MCSegment::GetContentLength()
+coord_t MCSegment::GetContentLength()
 {
     if (m_ContentWidth != 0)
         return m_ContentWidth;
@@ -88,12 +88,12 @@ int16_t MCSegment::GetContentHeight() const
     return 0;
 }
 
-MCLine *MCSegment::Fit(int16_t p_max_width)
+MCLine *MCSegment::Fit(coord_t p_max_width)
 {
     MCBlock *t_block;
     t_block = m_FirstBlock;
     
-    uint32_t t_frontier_width;
+    coord_t t_frontier_width;
     t_frontier_width = 0;
     
     MCBlock *t_break_block;
@@ -302,7 +302,7 @@ MCLine *MCSegment::Fit(int16_t p_max_width)
     return t_newline;
 }
 
-void MCSegment::Draw(MCDC *dc, int16_t p_line_origin_x, int16_t p_line_origin_y, findex_t si, findex_t ei, MCStringRef p_text, uint16_t p_style)
+void MCSegment::Draw(MCDC *dc, coord_t p_line_origin_x, int16_t p_line_origin_y, findex_t si, findex_t ei, MCStringRef p_text, uint16_t p_style)
 {
     MCBlock *bptr = m_FirstBlock;
     
@@ -316,7 +316,7 @@ void MCSegment::Draw(MCDC *dc, int16_t p_line_origin_x, int16_t p_line_origin_y,
     t_flagged_ex = 0;
 
     // Calculate the coordinates for drawing the contents of the segment
-    int16_t x, y;
+    coord_t x, y;
     if (m_HAlign == kMCSegmentTextHAlignLeft)
     {
         // Left-hand edge of the cell
@@ -325,7 +325,7 @@ void MCSegment::Draw(MCDC *dc, int16_t p_line_origin_x, int16_t p_line_origin_y,
     else if (m_HAlign == kMCSegmentTextHAlignCenter)
     {
         // Centre of the cell minus half the length of the content
-        x = p_line_origin_x + m_LeftEdge + ((m_RightEdge - m_LeftEdge) >> 1) - (GetContentLength() >> 1);
+        x = p_line_origin_x + m_LeftEdge + ((m_RightEdge - m_LeftEdge) / 2) - (GetContentLength() / 2);
     }
     else if (m_HAlign == kMCSegmentTextHAlignRight)
     {
@@ -391,7 +391,7 @@ void MCSegment::Draw(MCDC *dc, int16_t p_line_origin_x, int16_t p_line_origin_y,
 		// Pass the computed flags to the block to draw.
 		bptr->draw(dc, x + bptr->getorigin(), x + m_RightEdge, y, si, ei, p_text, p_style, t_flags);
 		
-		uint2 twidth;
+		coord_t twidth;
 		twidth = bptr->getwidth(dc);
 		
 		if (bptr -> getflagged())
@@ -399,9 +399,9 @@ void MCSegment::Draw(MCDC *dc, int16_t p_line_origin_x, int16_t p_line_origin_y,
 			if (!t_is_flagged)
 			{
 				t_is_flagged = true;
-				t_flagged_sx = x;
+				t_flagged_sx = floorf(x);
 			}
-			t_flagged_ex = x + twidth;
+			t_flagged_ex = ceilf(x + twidth);
 		}
 		
 		if (t_is_flagged && (!bptr -> getflagged() || bptr == m_LastBlock))
@@ -523,7 +523,7 @@ void MCSegment::ResolveDisplayOrder()
     // The blocks are now in visual order. Calculate their positions (and also
     // the width of this line). A second pass will be needed to resolve the
     // offsets to be used when calculating tabstops.
-    uint16_t t_width = 0;
+    coord_t t_width = 0;
     for (uindex_t i = 0; i < t_block_count; i++)
     {
         bptr = t_visual_order[i];
@@ -534,7 +534,7 @@ void MCSegment::ResolveDisplayOrder()
     }
 }
 
-int16_t MCSegment::GetCursorOffset()
+coord_t MCSegment::GetCursorOffset()
 {
     // The offset depends on the alignment of the segment
     switch (m_HAlign)
@@ -544,7 +544,7 @@ int16_t MCSegment::GetCursorOffset()
             return m_LeftEdge;
             
         case kMCSegmentTextHAlignCenter:
-            return m_LeftEdge + ((m_RightEdge - m_LeftEdge) >> 1) - (GetContentLength() >> 1);
+            return m_LeftEdge + ((m_RightEdge - m_LeftEdge) / 2) - (GetContentLength() / 2);
             
         case kMCSegmentTextHAlignRight:
             return m_RightEdge - GetContentLength();
