@@ -886,7 +886,7 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 
 // MM-2014-02-12: [[ SecureSocket ]] New secure socket command. If socket is not already secure, flag as secure to ensure future communications are encrypted.
 // MM-2014-06-13: [[ Bug 12567 ]] Added support for passing in host name to verify against.
-void MCS_secure_socket(MCSocket *s, Boolean sslverify, MCNameRef hostname)
+void MCS_secure_socket(MCSocket *s, Boolean sslverify, MCNameRef end_hostname)
 {
 	if (!s -> secure)
 	{
@@ -895,7 +895,7 @@ void MCS_secure_socket(MCSocket *s, Boolean sslverify, MCNameRef hostname)
 		s -> sslstate |= SSTATE_RETRYCONNECT;
 		
 		if (s -> sslverify)
-			s -> endhostname = MCValueRetain(hostname);
+			s -> endhostname = MCValueRetain(end_hostname);
 	}
 }
 

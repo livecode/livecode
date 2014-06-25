@@ -34,6 +34,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "exec-interface.h"
 
+// MERG-2014-06-25 [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+#include "platform.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static void MCMultimediaQTVRConstraintsParse(MCExecContext& ctxt, MCStringRef p_input, MCMultimediaTrackList& r_output)
@@ -653,7 +658,7 @@ void MCPlayer::GetConstraints(MCExecContext& ctxt, MCMultimediaQTVRConstraints& 
     // MERG-2014-06-25: [[ PlatformPlayer ]]
 #ifdef FEATURE_PLATFORM_PLAYER
     if (m_platform_player != nil)
-        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRConstraints, kMCPlatformPropertyTypePlayerQTVRConstraints, (MCPlatformPlayerQTVRConstraints*)r_constraints);
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRConstraints, kMCPlatformPropertyTypePlayerQTVRConstraints, (MCPlatformPlayerQTVRConstraints*)&(r_constraints));
 #else
 #ifdef FEATURE_QUICKTIME
 		getqtvrconstraints(1, r_constraints . minpan, r_constraints . maxpan);
@@ -754,6 +759,7 @@ void MCPlayer::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting,
     if (theMC != NULL)
         qt_setcontrollervisible();
 #endif
+#endif
 }
 
 void MCPlayer::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
@@ -783,36 +789,36 @@ void MCPlayer::SetTraversalOn(MCExecContext& ctxt, bool setting)
 
 void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks)
 {
-	if (getstate(CS_PREPARED))
-        // MERG-2014-06-25 [[ PlatformPlayer ]]
+    // MERG-2014-06-25 [[ PlatformPlayer ]]
 #ifdef FEATURE_PLATFORM_PLAYER
-		if (m_platform_player != nil)
-		{
-			uindex_t t_track_count;
-			MCPlatformCountPlayerTracks(m_platform_player, t_track_count);
-            uinteger_t *t_tracks;
-            uindex_t t_count;
-            t_count = 0;
-            
-			for(uindex_t i = 0; i < t_track_count; i++)
-			{
-				uint32_t t_id;
-				uint32_t t_enabled;
-				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
-				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
-				if (t_enabled)
-                {
-                    MCMemoryReallocate(t_tracks, ++t_count * sizeof(uinteger_t), t_tracks);
-                    t_track_id_list[t_count - 1] == t_id;
-                }
-			}
-            
-            r_count = t_count;
-            r_tracks = t_tracks;
-		}
+    if (m_platform_player != nil)
+    {
+        uindex_t t_track_count;
+        MCPlatformCountPlayerTracks(m_platform_player, t_track_count);
+        uinteger_t *t_track_ids;
+        uindex_t t_count;
+        t_count = 0;
+        
+        for(uindex_t i = 0; i < t_track_count; i++)
+        {
+            uint32_t t_id;
+            uint32_t t_enabled;
+            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
+            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
+            if (t_enabled)
+            {
+                MCMemoryReallocate(t_track_ids, ++t_count * sizeof(uinteger_t), t_track_ids);
+                t_track_ids[t_count - 1] = t_id;
+            }
+        }
+        
+        r_count = t_count;
+        r_tracks = t_track_ids;
+    }
 #else
 #ifdef FEATURE_QUICKTIME
-		if (qtstate == QT_INITTED)
+	if (getstate(CS_PREPARED))
+        if (qtstate == QT_INITTED)
 			qt_getenabledtracks(r_count, r_tracks);
 #ifdef TARGET_PLATFORM_WINDOWS
 		else

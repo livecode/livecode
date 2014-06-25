@@ -4374,7 +4374,7 @@ void MCSecurityExecBlockDecryptWithKey(MCExecContext& ctxt, MCStringRef p_data, 
 void MCSecurityGetSslCertificates(MCExecContext& ctxt, MCStringRef& r_value);
 void MCSecuritySetSslCertificates(MCExecContext& ctxt, MCStringRef p_value);
 
-void MCSecurityExecSecureSocket(MCExecContext& ctxt, MCNameRef p_socket, bool p_secure_verify);
+void MCSecurityExecSecureSocket(MCExecContext& ctxt, MCNameRef p_socket, bool p_secure_verify, MCNameRef p_end_hostname);
 
 ///////////
 

@@ -1100,7 +1100,7 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 			if (!MCListCreateMutable(',', &t_msg_info))
 				return false;
 
-			if (!MCListAppendInteger(*t_msg_info, messages[i].id))
+			if (!MCListAppendUnsignedInteger(*t_msg_info, messages[i].id))
 				return false;
 
 			if (!ctxt.FormatReal(messages[i].time, &t_time_string)

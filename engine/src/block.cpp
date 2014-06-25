@@ -956,8 +956,9 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_right, int2 y, find
 		int32_t t_padding;
 		t_padding = parent -> gethpadding();
 
-		MCRectangle t_cell_clip;
+		MCRectangle t_cell_clip, t_old_clip;
 		t_cell_clip = dc->getclip();
+        t_old_clip = t_cell_clip;
 
 		findex_t t_index;
 		t_index = start;

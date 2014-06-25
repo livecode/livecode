@@ -116,8 +116,8 @@ void MCMultimediaEvalQTVersion(MCExecContext& ctxt, MCStringRef& r_string)
 // MERG-2014-06-25: [[ PlatformPlayer ]] Refactoring functions from quicktime.cpp
 void MCMultimediaEvalQTEffects(MCExecContext& ctxt, MCStringRef& r_result)
 {
-    extern void MCQTEffectsList(MCExecContext& ctxt, MCStringRef &r_string);
-    MCQTEffectsList(ctxt, r_result);
+    extern void MCQTEffectsList(MCStringRef &r_string);
+    MCQTEffectsList(r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,15 +125,15 @@ void MCMultimediaEvalQTEffects(MCExecContext& ctxt, MCStringRef& r_result)
 // MERG-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
 void MCMultimediaEvalRecordCompressionTypes(MCExecContext& ctxt, MCStringRef& r_string)
 {
-    extern void MCQTGetRecordCompressionList(MCExecContext& ctxt, MCStringRef &r_string);
-    MCQTGetRecordCompressionList(ctxt, r_string);
+    extern void MCQTGetRecordCompressionList(MCStringRef &r_string);
+    MCQTGetRecordCompressionList(r_string);
 }
 
 // MERG-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
 void MCMultimediaEvalRecordLoudness(MCExecContext& ctxt, integer_t& r_loudness)
 {
-	extern void MCQTGetRecordLoudness(MCExecContext& ctxt, integer_t &r_loudness);
-    MCQTGetRecordLoudness(ctxt, r_loudness);
+	extern void MCQTGetRecordLoudness(integer_t &r_loudness);
+    MCQTGetRecordLoudness(r_loudness);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,9 +264,12 @@ void MCMultimediaExecStopPlayingObject(MCExecContext& ctxt, MCObject *p_object)
 	else
 		MCU_play_stop();
 }
+
+// MERG-2014-06-25 [[ PlatformPlayer ]]
 void MCMultimediaExecStopRecording(MCExecContext& ctxt)
 {
-	MCtemplateplayer->stoprecording();
+    extern void MCQTStopRecording(void);
+    MCQTStopRecording();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -290,22 +293,20 @@ void MCMultimediaExecRecord(MCExecContext& ctxt, MCStringRef p_filename)
 void MCMultimediaExecAnswerEffect(MCExecContext &ctxt)
 {
     MCresult -> clear(False);
-    extern void MCQTEffectsDialog(MCExecContext &ctxt, MCStringRef &r_data);
+    extern Boolean MCQTEffectsDialog(MCStringRef &r_data);
     
-    MCAutoStringRef t_value;
-    MCQTEffectsDialog(ctxt, &t_value);
-
-    if (!ctxt . HasError())
-        ctxt.SetItToValue(*t_value);
+    MCAutoStringRef t_value;    
+    if (MCQTEffectsDialog(&t_value))
+        ctxt . SetItToValue(*t_value);
 }
 
 // MERG-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
 void MCMultimediaExecAnswerRecord(MCExecContext &ctxt)
 {
     MCresult -> clear(False);
-    extern void MCQTEffectsDialog(MCExecContext &ctxt);
+    extern void MCQTRecordDialog();
 
-    MCQTEffectsDialog(ctxt);
+    MCQTRecordDialog();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

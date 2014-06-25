@@ -39,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphic.h"
 
 #include "exec-interface.h"
+#include "graphics_util.h"
 
 //////////
 
@@ -285,7 +286,7 @@ void MCImage::SetRepeatCount(MCExecContext& ctxt, integer_t p_count)
 	if (opened && m_rep != nil && m_rep->GetFrameCount() > 1 && repeatcount != 0)
 	{
 		setframe(currentframe == m_rep->GetFrameCount() - 1 ? 0 : currentframe + 1);
-		MCImageFrame *t_frame = nil;
+		MCGImageFrame *t_frame = nil;
 		if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
 		{
 			MCscreen->addtimer(this, MCM_internal, t_frame->duration);
@@ -671,7 +672,8 @@ void MCImage::SetAngle(MCExecContext& ctxt, integer_t p_angle)
 	}
 }
 
-
+// MERG-2014-06-25
+// MW-2014-06-20: [[ ImageCenterRect ]] Setter for centerRect property.
 void MCImage::SetCenterRectangle(MCExecContext& ctxt, MCRectangle *p_rectangle)
 {
     if (p_rectangle == nil)
@@ -686,10 +688,13 @@ void MCImage::SetCenterRectangle(MCExecContext& ctxt, MCRectangle *p_rectangle)
     
     notifyneeds(false);
     
-    dirty = True;
+    if (opened)
+        layer_redrawall();
 }
 
-void MCImage::GetCentreRectangle(MCExecContext& ctxt, MCRectangle *&r_rectangle)
+// MERG-2014-06-25
+// MW-2014-06-20: [[ ImageCenterRect ]] Getter for centerRect property.
+void MCImage::GetCenterRectangle(MCExecContext& ctxt, MCRectangle *&r_rectangle)
 {
     if (m_center_rect . x != INT16_MIN)
     {
@@ -726,7 +731,7 @@ void MCImage::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, 
     }
     if (isvisible() && !wasvisible && m_rep != nil && m_rep->GetFrameCount() > 1)
     {
-        MCImageFrame *t_frame = nil;
+        MCGImageFrame *t_frame = nil;
         if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
         {
             MCscreen->addtimer(this, MCM_internal, t_frame->duration);

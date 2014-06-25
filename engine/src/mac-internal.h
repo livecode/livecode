@@ -11,8 +11,8 @@ class MCMacPlatformSurface;
 @interface com_runrev_livecode_MCApplicationDelegate: NSObject<NSApplicationDelegate>
 {
 	int m_argc;
-	char **m_argv;
-	char **m_envp;
+	MCStringRef *m_argv;
+	MCStringRef *m_envp;
     
     bool m_explicit_quit : 1;
 }

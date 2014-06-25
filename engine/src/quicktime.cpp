@@ -1080,8 +1080,9 @@ void MCQTEffectsList(MCStringRef &r_effect_list)
 	r_effect_list = MCValueRetain(kMCEmptyString);
 }
 
-Boolean MCQTEffectsDialog()
+Boolean MCQTEffectsDialog(MCStrinRef &r_value)
 {
+    r_value = MCValueRetain(kMCEmptyString);
 	return True;
 }
 

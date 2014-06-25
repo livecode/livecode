@@ -136,7 +136,7 @@ bool MCPurchaseList(MCStringRef& r_string)
 	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
-		MCListAppendInteger(*t_list, t_purchase -> id);
+		MCListAppendUnsignedInteger(*t_list, t_purchase -> id);
 	
 	return MCListCopyAsString(*t_list, r_string);	
 }

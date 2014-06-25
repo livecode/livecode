@@ -532,8 +532,8 @@ void MCPlatformScreenSnapshotOfWindowArea(uint32_t window_id, MCRectangle p_area
 
 typedef class MCPlatformLoadedFont *MCPlatformLoadedFontRef;
 
-bool MCPlatformLoadFont(const char *utf8path, bool globally, MCPlatformLoadedFontRef& r_loaded_font);
-bool MCPlatformUnloadFont(const char *utf8path, bool globally, MCPlatformLoadedFontRef loaded_font);
+bool MCPlatformLoadFont(MCStringRef p_path, bool globally, MCPlatformLoadedFontRef& r_loaded_font);
+bool MCPlatformUnloadFont(MCStringRef p_path, bool globally, MCPlatformLoadedFontRef loaded_font);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1018,6 +1018,8 @@ enum MCPlatformPlayerHotSpotProperty
 {
 };
 
+// MERG-2014-06-25 [[ PlatformPlayer ]]
+// MCPlatformPlayerQTVRConstraints must follow the definition of MCMultimediaQTVRConstraints
 struct MCPlatformPlayerQTVRConstraints
 {
 	double x_min, x_max;
@@ -1070,7 +1072,7 @@ void MCPlatformScriptEnvironmentCreate(const char *language, MCPlatformScriptEnv
 void MCPlatformScriptEnvironmentRetain(MCPlatformScriptEnvironmentRef env);
 void MCPlatformScriptEnvironmentRelease(MCPlatformScriptEnvironmentRef env);
 bool MCPlatformScriptEnvironmentDefine(MCPlatformScriptEnvironmentRef env, const char *function, MCPlatformScriptEnvironmentCallback callback);
-void MCPlatformScriptEnvironmentRun(MCPlatformScriptEnvironmentRef env, const char *script, char*& r_result);
+void MCPlatformScriptEnvironmentRun(MCPlatformScriptEnvironmentRef env, MCStringRef script, MCStringRef& r_result);
 void MCPlatformScriptEnvironmentCall(MCPlatformScriptEnvironmentRef env, const char *method, const char **arguments, uindex_t argument_count, char*& r_result);
 
 ////////////////////////////////////////////////////////////////////////////////

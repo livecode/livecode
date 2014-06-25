@@ -1807,6 +1807,13 @@ bool MCListAppendInteger(MCListRef self, integer_t p_value)
 	return MCListAppendNativeChars(self, t_buffer, strlen((char *)t_buffer));
 }
 
+bool MCListAppendUnsignedInteger(MCListRef self, uinteger_t p_value)
+{
+	char_t t_buffer[16];
+	sprintf((char *)t_buffer, "%u", p_value);
+	return MCListAppendNativeChars(self, t_buffer, strlen((char *)t_buffer));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool serialize_bytes(char *&r_stream, uint32_t &r_stream_size, uint32_t &r_offset, const void *p_data, uint32_t p_data_size)

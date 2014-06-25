@@ -153,7 +153,7 @@ Boolean MCScreenDC::close(Boolean force)
 		for (i = 0 ; i < ncolors ; i++)
 		{
 			if (colornames[i] != NULL)
-				delete colornames[i];
+				MCValueRelease(colornames[i]);
 		}
 		delete colors;
 		delete colornames;
@@ -163,9 +163,9 @@ Boolean MCScreenDC::close(Boolean force)
 	return True;
 }
 
-const char *MCScreenDC::getdisplayname()
+MCNameRef MCScreenDC::getdisplayname()
 {
-	return "local Mac";
+	return MCNAME("local Mac");
 }
 
 uint2 MCScreenDC::getmaxpoints(void)
@@ -183,7 +183,7 @@ uint2 MCScreenDC::getdepth(void)
 	return 32;
 }
 
-MCNameRef MCScreenDC::getvendorname(void);
+MCNameRef MCScreenDC::getvendorname(void)
 {
 	return MCNAME("Mac OS");
 }
@@ -652,19 +652,19 @@ void MCScreenDC::beep()
     MCPlatformBeep();
 }
 
-void MCScreenDC::getbeep(uint4 which, MCExecPoint &ep)
+void MCScreenDC::getbeep(uint4 which, int4& r_value)
 {
 	long v;
 	switch (which)
 	{
 		case P_BEEP_LOUDNESS:
-			ep.setint(100);
+			r_value = 100;
 			break;
 		case P_BEEP_PITCH:
-			ep.setint(1440);
+			r_value = 1440;
 			break;
 		case P_BEEP_DURATION:
-			ep.setint(500);
+			r_value = 500;
 			break;
 	}
 }
@@ -718,19 +718,25 @@ uint2 MCScreenDC::querymods()
 	return state;
 }
 
-void MCScreenDC::getkeysdown(MCExecPoint &ep)
-{
-	ep . clear();
-	
+bool MCScreenDC::getkeysdown(MCListRef &r_list)
+{	
 	MCPlatformKeyCode *t_codes;
 	uindex_t t_code_count;
 	if (!MCPlatformGetKeyState(t_codes, t_code_count))
-		return;
+		return false;
 	
-	for(uindex_t i = 0; i < t_code_count; i++)
-		ep . concatuint(t_codes[i], EC_COMMA, i == 0);
+    bool t_success;
+    MCAutoListRef t_list;
+    t_success = MCListCreateMutable(',', &t_list);
+    
+	for(uindex_t i = 0; t_success && i < t_code_count; i++)
+		t_success = MCListAppendUnsignedInteger(*t_list, t_codes[i]);
 	
 	free(t_codes);
+    if (t_success)
+        t_success = MCListCopy(*t_list, r_list);
+    
+    return t_success;
 }
 
 Boolean MCScreenDC::istripleclick()
@@ -902,12 +908,12 @@ void MCScreenDC::closeIME()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern void MCListSystemPrinters(MCExecPoint& ep);
+extern bool MCListSystemPrinters(MCStringRef &);
 extern MCPrinter *MCCreateSystemPrinter(void);
 
-void MCScreenDC::listprinters(MCExecPoint& ep)
+bool MCScreenDC::listprinters(MCStringRef& r_printers)
 {
-	MCListSystemPrinters(ep);
+	return MCListSystemPrinters(r_printers);
 }
 
 MCPrinter *MCScreenDC::createprinter(void)
@@ -927,14 +933,15 @@ bool MCConvertStyledTextToUTF8(MCDataRef p_in, MCDataRef& r_out)
 	if (t_object != NULL)
 	{
 		MCParagraph *t_paragraphs;
+        MCAutoStringRef t_exported;
 		t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
         bool t_success;
 
 		// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
 		if (t_paragraphs != NULL)
 		{
-			t_success = MCtemplatefield -> exportasplaintext(t_paragraphs, 0, INT32_MAX, true)
-                            && MCStringEncode(*t_text, kMCStringEncodingUTF8, false, r_out);
+			t_success = MCtemplatefield -> exportasplaintext(t_paragraphs, 0, INT32_MAX, &t_exported)
+                            && MCStringEncode(*t_exported, kMCStringEncodingUTF8, false, r_out);
 		}
 
 		delete t_object;
@@ -1079,7 +1086,7 @@ bool MCScreenDC::setclipboard(MCPasteboard *p_pasteboard)
 		break;
 		case TRANSFER_TYPE_IMAGE:
 		{
-			MCDataRef t_data;
+			MCAutoDataRef t_data;
 			if (p_pasteboard -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
 			{
 				if (MCImageDataIsPNG(*t_data))
@@ -1128,15 +1135,12 @@ MCPasteboard *MCScreenDC::getclipboard(void)
 // TD-2013-07-01: [[ DynamicFonts ]]
 bool MCScreenDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle)
 {
-	return MCPlatformLoadFont(ep . getcstring(), p_globally, (MCPlatformLoadedFontRef&)r_loaded_font_handle);
+	return MCPlatformLoadFont(p_path, p_globally, (MCPlatformLoadedFontRef&)r_loaded_font_handle);
 }
 
 bool MCScreenDC::unloadfont(MCStringRef p_path, bool p_globally, void *p_loaded_font_handle)
 {
-	MCExecPoint ep;
-	ep . setsvalue(p_path);
-	ep . nativetoutf8();
-	return MCPlatformUnloadFont(ep . getcstring(), p_globally, (MCPlatformLoadedFontRef)p_loaded_font_handle);
+	return MCPlatformUnloadFont(p_path, p_globally, (MCPlatformLoadedFontRef)p_loaded_font_handle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1172,12 +1176,9 @@ public:
 		return MCPlatformScriptEnvironmentDefine(m_env, p_name, (MCPlatformScriptEnvironmentCallback)p_callback);
 	}
 	
-	char *Run(const char *p_script)
+	void Run(MCStringRef p_script, MCStringRef &r_result)
 	{
-		char *t_result;
-		t_result = nil;
-		MCPlatformScriptEnvironmentRun(m_env, p_script, t_result);
-		return t_result;
+		MCPlatformScriptEnvironmentRun(m_env, p_script, r_result);
 	}
 	
 	char *Call(const char *p_method, const char **p_arguments, uindex_t p_argument_count)
@@ -1249,14 +1250,14 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
 				break;
 			case TRANSFER_TYPE_IMAGE:
 			{
-				MCSharedString *t_data;
-				if (p_pasteboard -> Fetch(TRANSFER_TYPE_IMAGE, t_data))
+				MCAutoDataRef t_data;
+				if (p_pasteboard -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
 				{
-					if (MCFormatImageIsPNG(t_data))
+					if (MCImageDataIsPNG(*t_data))
 						t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorPNG;
-					if (MCFormatImageIsGIF(t_data))
+					if (MCImageDataIsGIF(*t_data))
 						t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorGIF;
-					if (MCFormatImageIsJPEG(t_data))
+					if (MCImageDataIsJPEG(*t_data))
 						t_flavors[t_flavor_count++] = kMCPlatformPasteboardFlavorJPEG;
 				}
 			}

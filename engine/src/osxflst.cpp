@@ -65,6 +65,7 @@ static X2MacFontTable XMfonts[MAX_XFONT2MACFONT] = { // X to Mac font table
 
 MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 {
+    reqname = MCValueRetain(fname);
 	reqsize = size;
 	reqstyle = style;
     
@@ -77,8 +78,6 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
         MCStringCopySubstring(MCNameGetString(fname), MCRangeMake(0, t_comma_index), &t_reqname);
     else
         MCStringCopy(MCNameGetString(fname), &t_reqname);
-    
-    reqname = MCValueRetain(*t_reqname);
 	
     // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
     font -> fid = (MCSysFontHandle)coretext_font_create_with_name_size_and_style(*t_reqname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);

@@ -4028,7 +4028,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 	MCStack *oldstack = NULL;
 	if (p_window != nil || p_this_stack)
 	{
-		Window w = DNULL;
+		Window w = NULL;
 		if (p_this_stack)
 		{
 			oldstack = MCdefaultstackptr;

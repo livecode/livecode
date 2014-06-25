@@ -153,6 +153,8 @@ struct MCMultimediaTrackList
 
 //////////
 
+// MERG-2014-06-25: [[ PlatformPlayer ]]
+// MCMultimediaQTVRConstraints must follow the definitions of MCPlatformPlayerQTVRConstraints
 struct MCMultimediaQTVRConstraints
 {
 	real4 minpan, maxpan;

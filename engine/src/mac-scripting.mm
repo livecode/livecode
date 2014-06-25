@@ -98,7 +98,7 @@ typedef struct {
 typedef struct {
     int                                 version; // current (and only) version is 0
     JSClassAttributes                   attributes;
-
+	
     const char*                         className;
     JSClassRef                          parentClass;
 	
@@ -177,20 +177,21 @@ public:
 	
 	bool Define(const char *p_function, MCPlatformScriptEnvironmentCallback p_callback);
 	
-	void Run(MCStringRef p_script, MCStringRef &r_out);
+	void Run(MCStringRef p_script, MCStringRef &r_result);
+	
 	char *Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count);
-
+	
 private:
 	struct Function
 	{
 		char *name;
 		MCPlatformScriptEnvironmentCallback callback;
 	};
-
+	
 	unsigned int m_references;
-
+	
 	JSGlobalContextRef m_runtime;
-
+	
 	Function *m_functions;
 	uint4 m_function_count;
 };
@@ -198,46 +199,28 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 
 #define GET_JSC_SYMBOL(sym) \
-	sym = (sym##Ptr)NSAddressOfSymbol(NSLookupSymbolInImage((const mach_header *)JavaScriptCoreLibrary, "_"#sym, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND));
-
-MCScriptEnvironment *MCScreenDC::createscriptenvironment(MCStringRef p_language)
-{
-	MCScriptEnvironment *t_environment;
-	if (MCmajorosversion >= 0x1050)
-	{
-		if (JavaScriptCoreLibrary == NULL)
-		{
-			JavaScriptCoreLibrary = (void *)NSAddImage(kJavaScriptCoreLibraryPath, NSADDIMAGE_OPTION_WITH_SEARCHING | NSADDIMAGE_OPTION_MATCH_FILENAME_BY_INSTALLNAME);
-			GET_JSC_SYMBOL(JSGlobalContextCreate);
-			GET_JSC_SYMBOL(JSGlobalContextRelease);
-			GET_JSC_SYMBOL(JSContextGetGlobalObject);
-			GET_JSC_SYMBOL(JSEvaluateScript);
-			GET_JSC_SYMBOL(JSCheckScriptSyntax);
-			GET_JSC_SYMBOL(JSStringCreateWithCFString);
-			GET_JSC_SYMBOL(JSStringCopyCFString);
-			GET_JSC_SYMBOL(JSValueMakeString);
-			GET_JSC_SYMBOL(JSValueToStringCopy);
-			GET_JSC_SYMBOL(JSValueToObject);
-			GET_JSC_SYMBOL(JSValueProtect);
-			GET_JSC_SYMBOL(JSValueUnprotect);
-			GET_JSC_SYMBOL(JSStringRelease);
-			GET_JSC_SYMBOL(JSClassCreate);
-			GET_JSC_SYMBOL(JSClassRelease);
-			GET_JSC_SYMBOL(JSObjectMake);
-			GET_JSC_SYMBOL(JSObjectGetPrivate);
-			GET_JSC_SYMBOL(JSObjectGetProperty);
-			GET_JSC_SYMBOL(JSObjectSetProperty);
-			GET_JSC_SYMBOL(JSObjectCallAsFunction);
-		}
-		return new MCMacOSXNewJavaScriptEnvironment();
-	}
-	
-	return MCMacOSXCreateOldJavaScriptEnvironment();
-}
+sym = (sym##Ptr)NSAddressOfSymbol(NSLookupSymbolInImage((const mach_header *)JavaScriptCoreLibrary, "_"#sym, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND));
 
 ///////////////////////////////////////////////////////////////////////////////
 
 extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
+
+static bool ConvertMCStringToJSString(MCStringRef p_string, JSStringRef &r_js_string)
+{
+    MCAutoStringRefAsCFString t_cf_string;
+    
+    if (!t_cf_string . Lock(p_string))
+        return false;
+    
+	JSStringRef t_js_string;
+	t_js_string = JSStringCreateWithCFString(*t_cf_string);
+	
+	if (t_js_string == NULL)
+		return false;
+	
+	r_js_string = t_js_string;
+	return true;    
+}
 
 static bool ConvertCStringToJSString(const char *p_cstring, JSStringRef& r_js_string)
 {
@@ -316,7 +299,7 @@ static JSValueRef InvokeHostFunction(JSContextRef p_context, JSObjectRef p_funct
 	
 	bool t_success;
 	t_success = true;
-
+	
 	char **t_arguments;
 	t_arguments = NULL;
 	if (t_success)
@@ -327,7 +310,7 @@ static JSValueRef InvokeHostFunction(JSContextRef p_context, JSObjectRef p_funct
 		else
 			t_success = false;
 	}
-
+	
 	if (t_success)
 		for(uindex_t i = 0; i < p_argument_count; i++)
 		{
@@ -338,10 +321,11 @@ static JSValueRef InvokeHostFunction(JSContextRef p_context, JSObjectRef p_funct
 				ConvertJSStringToCString(t_string_arg, t_arguments[i]);
 				JSStringRelease(t_string_arg);
 			}
+			
 			if (t_arguments[i] == NULL)
 				t_success = false;
 		}
-
+	
 	JSValueRef t_result;
 	t_result = NULL;
 	if (t_success)
@@ -357,16 +341,16 @@ static JSValueRef InvokeHostFunction(JSContextRef p_context, JSObjectRef p_funct
 				JSStringRelease(t_js_string);
 			}
 		}
-			delete t_str_result;
-		}
-
+		delete t_str_result;
+	}
+	
 	if (t_arguments != NULL)
 	{
 		for(uint4 i = 0; i < p_argument_count; ++i)
 			delete t_arguments[i];
 		delete t_arguments;
 	}
-
+	
 	return t_result;
 }
 
@@ -384,9 +368,9 @@ MCPlatformScriptEnvironment::~MCPlatformScriptEnvironment(void)
 {
 	for(uint4 i = 0; i < m_function_count; ++i)
 		delete m_functions[i] . name;
-
+	
 	delete m_functions;
-
+	
 	if (m_runtime != NULL)
 		JSGlobalContextRelease(m_runtime);
 }
@@ -409,41 +393,39 @@ bool MCPlatformScriptEnvironment::Define(const char *p_name, MCPlatformScriptEnv
 	t_new_functions = (Function *)realloc(m_functions, sizeof(Function) * (m_function_count + 1));
 	if (t_new_functions == NULL)
 		return false;
-
+	
 	t_new_functions[m_function_count] . name = strdup(p_name);
 	t_new_functions[m_function_count] . callback = p_callback;
-
+	
 	m_functions = t_new_functions;
 	m_function_count += 1;
-
+	
 	return true;
 }
 
-void MCPlatformScriptEnvironment::Run(MCStringRef p_script, MCStringRef &r_out)
+void MCPlatformScriptEnvironment::Run(MCStringRef p_script, MCStringRef &r_result)
 {
 	bool t_success;
 	t_success = true;
-
+	
 	JSStringRef t_js_script;
 	t_js_script = NULL;
-	char *temp;
-	if (t_success && MCStringConvertToCString(p_script, temp))
-		t_success = ConvertCStringToJSString(temp, t_js_script);
-	delete temp;
-
+	if (t_success)
+		t_success = ConvertMCStringToJSString(p_script, t_js_script);
+	
 	JSGlobalContextRef t_runtime;
 	t_runtime = NULL;
 	if (t_success)
 	{
 		t_runtime = JSGlobalContextCreate(NULL);
-
+		
 		if (t_runtime == NULL)
 			t_success = false;
 	}
-
+	
 	if (t_success)
 		t_success = JSCheckScriptSyntax(t_runtime, t_js_script, NULL, 0, NULL);
-
+	
 	JSObjectRef t_global;
 	t_global = NULL;
 	if (t_success)
@@ -452,7 +434,7 @@ void MCPlatformScriptEnvironment::Run(MCStringRef p_script, MCStringRef &r_out)
 		if (t_global == NULL)
 			t_success = false;
 	}
-
+	
 	JSClassRef t_function_class;
 	t_function_class = NULL;
 	if (t_success)
@@ -462,19 +444,19 @@ void MCPlatformScriptEnvironment::Run(MCStringRef p_script, MCStringRef &r_out)
 			0, 0, "__livecode_script_environment_function__", NULL, NULL, NULL,
 			NULL, NULL, NULL, NULL, NULL, NULL, NULL, InvokeHostFunction, NULL, NULL, NULL
 		};
-
+		
 		t_function_class = JSClassCreate(&s_function_class);
 		if (t_function_class == NULL)
 			t_success = false;
 	}
-
+	
 	if (t_success)
 	{
 		for(uint4 i = 0; i < m_function_count && t_success; ++i)
 		{
 			JSStringRef t_js_function_name;
 			t_success = ConvertCStringToJSString(m_functions[i] . name, t_js_function_name);
-
+			
 			JSObjectRef t_function;
 			t_function = NULL;
 			if (t_success)
@@ -483,53 +465,55 @@ void MCPlatformScriptEnvironment::Run(MCStringRef p_script, MCStringRef &r_out)
 				if (t_function == NULL)
 					t_success = false;
 			}
-
+			
 			if (t_success)
 				JSObjectSetProperty(t_runtime, t_global, t_js_function_name, t_function, 0, NULL);
-
+			
 			if (t_js_function_name != NULL)
 				JSStringRelease(t_js_function_name);
 		}
 	}
-
+	
 	if (t_function_class != NULL)
 		JSClassRelease(t_function_class);
-
+	
 	if (t_success)
 	{
 		JSValueRef t_eval;
 		t_eval = JSEvaluateScript(t_runtime, t_js_script, NULL, NULL, 0, NULL);
 	}
-
+	
 	if (t_js_script != NULL)
 		JSStringRelease(t_js_script);
 	
+	char *t_result;
 	if (t_success)
 	{
 		m_runtime = t_runtime;
-		r_out = MCValueRetain(kMCEmptyString);
+		t_result = strdup("");
 	}
 	else
 	{
 		JSGlobalContextRelease(t_runtime);
-		r_out = nil;
+		t_result = NULL;
 	}
-
-	return;
+	
+	return t_result;
 }
 
 char *MCPlatformScriptEnvironment::Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count)
 {
 	if (m_runtime == NULL)
 		return NULL;
-
+	
 	bool t_success;
 	t_success = true;
-
+	
 	JSStringRef t_js_method_name;
 	t_js_method_name = NULL;
 	if (t_success)
 		t_success = ConvertCStringToJSString(p_method, t_js_method_name);
+	
 	
 	JSObjectRef t_js_global;
 	t_js_global = NULL;
@@ -539,7 +523,7 @@ char *MCPlatformScriptEnvironment::Call(const char *p_method, const char **p_arg
 		if (t_js_global == NULL)
 			t_success = false;
 	}
-
+	
 	JSObjectRef t_js_method;
 	t_js_method = NULL;
 	if (t_success)
@@ -551,16 +535,16 @@ char *MCPlatformScriptEnvironment::Call(const char *p_method, const char **p_arg
 		if (t_js_method == NULL)
 			t_success = false;
 	}
-
+	
 	JSValueRef *t_arguments;
 	t_arguments = NULL;
 	if (t_success)
 		t_success = MCMemoryNewArray(p_argument_count, t_arguments);
-
+	
 	if (t_success)
 		for(uint4 i = 0; i < p_argument_count && t_success; ++i)
 			t_success = ConvertCStringToJSValue(m_runtime, p_arguments[i], t_arguments[i]);
-
+	
 	JSValueRef t_js_result;
 	t_js_result = NULL;
 	if (t_success)
@@ -569,18 +553,19 @@ char *MCPlatformScriptEnvironment::Call(const char *p_method, const char **p_arg
 		if (t_js_result == NULL)
 			t_success = false;
 	}
-
+	
 	char *t_result;
 	t_result = NULL;
 	if (t_success)
 		t_success = ConvertJSValueToCString(m_runtime, t_js_result, t_result);
+	
 	if (t_arguments != nil)
-		{
+	{
 		for(uindex_t i = 0; i < p_argument_count; i++)
 			JSValueUnprotect(m_runtime, t_arguments[i]);
 		MCMemoryDeleteArray(t_arguments);
-			}
-
+	}
+	
 	return t_result;
 }
 
@@ -631,9 +616,9 @@ bool MCPlatformScriptEnvironmentDefine(MCPlatformScriptEnvironmentRef env, const
 	return env -> Define(function, callback);
 }
 
-void MCPlatformScriptEnvironmentRun(MCPlatformScriptEnvironmentRef env, const char *script, char*& r_result)
+void MCPlatformScriptEnvironmentRun(MCPlatformScriptEnvironmentRef env, MCStringRef script, MCStringRef& r_result)
 {
-	r_result = env -> Run(script);
+    env -> Run(script, r_result);
 }
 
 void MCPlatformScriptEnvironmentCall(MCPlatformScriptEnvironmentRef env, const char *method, const char **arguments, uindex_t argument_count, char*& r_result)

@@ -4230,14 +4230,14 @@ bool MCParagraph::imagechanged(MCImage *p_image, bool p_deleting)
 	return t_used;
 }
 
-void MCParagraph::restricttoline(int32_t& si, int32_t& ei)
+void MCParagraph::restricttoline(findex_t& si, findex_t& ei)
 {
 	MCLine *t_line;
 	t_line = lines;
 	do
 	{
-		uint2 i, l;
-		t_line -> getindex(i, l);
+		findex_t i, l;
+		t_line -> GetRange(i, l);
 		if (i >= si && si < (i + l))
 		{
 			si = i;
@@ -4251,14 +4251,14 @@ void MCParagraph::restricttoline(int32_t& si, int32_t& ei)
 	si = ei = 0;
 }
 
-int32_t MCParagraph::heightoflinewithindex(int32_t si, uint2 fixedheight)
+findex_t MCParagraph::heightoflinewithindex(findex_t si, uint2 fixedheight)
 {
 	MCLine *t_line;
 	t_line = lines;
 	do
 	{
-		uint2 i, l;
-		t_line -> getindex(i, l);
+		findex_t i, l;
+		t_line -> GetRange(i, l);
 		if (i >= si && si < (i + l))
 			return fixedheight == 0 ? t_line -> getheight() : fixedheight;
 		t_line = t_line -> next();

@@ -297,7 +297,7 @@ void core_text_get_font_styles(MCStringRef p_name, uint32_t p_size, MCListRef &r
     /* UNCHECKED */ MCListCopy(*t_styles, r_styles);
 }
 
-bool coretext_font_load_from_path(MCStringRef p_path, bool p_globally, void *&r_loaded_font)
+bool coretext_font_load_from_path(MCStringRef p_path, bool p_globally)
 {
     bool t_success;
     t_success = true;
@@ -323,17 +323,13 @@ bool coretext_font_load_from_path(MCStringRef p_path, bool p_globally, void *&r_
         t_success = CTFontManagerRegisterFontsForURL(t_font_url, t_scope, NULL);
     }
     
-    if (!t_success)
-        r_loaded_font = NULL;
     if (t_font_url != NULL)
         CFRelease(t_font_url);
-    if (t_path != NULL)
-        CFRelease(t_path);
     
     return t_success;
 }
 
-bool coretext_font_unload(MCStringRef p_path, bool p_globally, void *p_loaded_font)
+bool coretext_font_unload(MCStringRef p_path, bool p_globally)
 {
     bool t_success;
     t_success = true;
@@ -361,8 +357,6 @@ bool coretext_font_unload(MCStringRef p_path, bool p_globally, void *p_loaded_fo
     
     if (t_font_url != NULL)
         CFRelease(t_font_url);
-    if (t_path != NULL)
-        CFRelease(t_path);
     
     return t_success;
 }

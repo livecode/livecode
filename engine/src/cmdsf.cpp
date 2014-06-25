@@ -3420,6 +3420,7 @@ void MCOpen::exec_ctxt(MCExecContext &ctxt)
 			else
 				MCNetworkExecOpenSocket(ctxt, *t_name, *t_message_name, *t_end_hostname);
 			break;
+        }
 		default:
 			break;
 		}
@@ -5343,8 +5344,13 @@ void MCSecure::exec_ctxt(MCExecContext& ctxt)
     MCNewAutoNameRef t_name;
     if (!ctxt . EvalExprAsNameRef(m_sock_name, EE_SECURE_BADNAME, &t_name))
         return;
+	
+	// MM-2014-06-13: [[ Bug 12567 ]] Added passing through the host name to verify against.
+	MCNewAutoNameRef t_host_name;
+    if (!ctxt . EvalOptionalExprAsNullableNameRef(m_verify_host_name, EE_SECURE_BADHOST, &t_host_name))
+        return;
 
-    MCSecurityExecSecureSocket(ctxt, *t_name, secureverify == True);
+    MCSecurityExecSecureSocket(ctxt, *t_name, secureverify == True, *t_host_name);
 }
 
 void MCSecure::compile(MCSyntaxFactoryRef ctxt)

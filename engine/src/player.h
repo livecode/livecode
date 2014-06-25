@@ -265,15 +265,11 @@ public:
 
 	//////////////////////////////
 
-	// MW-2005-05-15: Augment call with extra title field for consistency
-	bool stdrecorddlg(MCStringRef &r_result);
 	void stoprecording();
 
 	// MW-2011-09-23: Ensures the buffering state is consistent with current flags
 	//   and such.
 	void syncbuffering(MCContext *dc);
-
-	bool stdeffectdlg(MCStringRef &r_value, MCStringRef &r_result);
 
 #ifdef FEATURE_PLATFORM_PLAYER
 	MCRectangle resize(MCRectangle rect);

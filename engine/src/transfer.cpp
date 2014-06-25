@@ -588,6 +588,8 @@ const char *MCTransferData::TypeToString(MCTransferType p_type)
 		return "unicode";
 	case TRANSFER_TYPE_STYLED_TEXT:
 		return "styles";
+    case TRANSFER_TYPE_STYLED_TEXT_ARRAY:
+        return "styledText";
 	case TRANSFER_TYPE_RTF_TEXT:
 		return "rtf";
 	case TRANSFER_TYPE_HTML_TEXT:

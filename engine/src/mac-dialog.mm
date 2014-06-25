@@ -26,8 +26,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern bool MCS_exists(MCStringRef, Boolean);
-extern bool MCS_resolvepath(MCStringRef p_path, MCStringRef r_folderpath);
+extern bool MCS_exists(MCStringRef p_path, bool p_is_file);
+extern bool MCS_resolvepath(MCStringRef p_path, MCStringRef &r_folderpath);
 
 ////////////////////////////////////////////////////////////////////////////////
 

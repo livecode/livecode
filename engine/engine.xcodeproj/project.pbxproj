@@ -329,7 +329,6 @@
 		4DCB65721653B2F700E438E6 /* stackcache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCB65711653B2F700E438E6 /* stackcache.cpp */; };
 		4DCFFD1C10CE8F5800FA2262 /* osxtextlayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCFFD1B10CE8F5800FA2262 /* osxtextlayout.cpp */; };
 		4DCFFD2E10CE927700FA2262 /* iquantize_new.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCFFD2D10CE927700FA2262 /* iquantize_new.cpp */; };
-		4DDB66591413993500E5C84C /* sysosxregion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66581413993500E5C84C /* sysosxregion.cpp */; };
 		4DDB666F14139FF500E5C84C /* tilecache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB666D14139FF500E5C84C /* tilecache.cpp */; };
 		4DDB66721413A02000E5C84C /* redraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66701413A02000E5C84C /* redraw.cpp */; };
 		4DDC26C9122692B10071CB31 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
@@ -534,6 +533,11 @@
 		A71F80550F4F17C1003012FD /* LiveCode.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885610B80DEAC00200116 /* LiveCode.icns */; };
 		A71F80620F4F17F9003012FD /* StandaloneDoc.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80610F4F17F9003012FD /* StandaloneDoc.icns */; };
 		BE168E6E19598EAD00B957D0 /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE168E6D19598EAD00B957D0 /* region.cpp */; };
+		BE20AE01195B245B00850531 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE20AE00195B244800850531 /* AudioToolbox.framework */; };
+		BE20AE02195B245C00850531 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE20AE00195B244800850531 /* AudioToolbox.framework */; };
+		BE20AE03195B245D00850531 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE20AE00195B244800850531 /* AudioToolbox.framework */; };
+		BE20AE04195B24B300850531 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369216195881B700386D30 /* quicktimestubs.mac.cpp */; };
+		BE20AE05195B24B300850531 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369216195881B700386D30 /* quicktimestubs.mac.cpp */; };
 		BE369208195880F300386D30 /* desktop-ans.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369200195880E600386D30 /* desktop-ans.cpp */; };
 		BE369209195880F300386D30 /* desktop-dc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369201195880E600386D30 /* desktop-dc.cpp */; };
 		BE36920A195880F300386D30 /* desktop-image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369203195880E700386D30 /* desktop-image.cpp */; };
@@ -1596,6 +1600,7 @@
 		A71F80530F4F178C003012FD /* Standalone.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = Standalone.icns; path = rsrc/Standalone.icns; sourceTree = "<group>"; };
 		A71F80610F4F17F9003012FD /* StandaloneDoc.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = StandaloneDoc.icns; path = rsrc/StandaloneDoc.icns; sourceTree = "<group>"; };
 		BE168E6D19598EAD00B957D0 /* region.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = region.cpp; path = src/region.cpp; sourceTree = "<group>"; };
+		BE20AE00195B244800850531 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = ../../../../../System/Library/Frameworks/AudioToolbox.framework; sourceTree = "<group>"; };
 		BE2424351953536F00982E53 /* IInAppBillingService.aidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = IInAppBillingService.aidl; path = android/vending/billing/IInAppBillingService.aidl; sourceTree = "<group>"; };
 		BE2424361953536F00982E53 /* IMarketBillingService.aidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = IMarketBillingService.aidl; path = android/vending/billing/IMarketBillingService.aidl; sourceTree = "<group>"; };
 		BE2424371953536F00982E53 /* IMarketBillingService.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = IMarketBillingService.java; path = android/vending/billing/IMarketBillingService.java; sourceTree = "<group>"; };
@@ -1759,6 +1764,7 @@
 				4D221FDD171D65AA00E7E557 /* libcups.dylib in Frameworks */,
 				4D221FDE171D65AA00E7E557 /* libcurl.dylib in Frameworks */,
 				4D221FDF171D65AA00E7E557 /* libssl.dylib in Frameworks */,
+				BE20AE03195B245D00850531 /* AudioToolbox.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1797,6 +1803,7 @@
 				4D221A74171D577E00E7E557 /* libcups.dylib in Frameworks */,
 				4D221A75171D577E00E7E557 /* libcurl.dylib in Frameworks */,
 				4D221A76171D577E00E7E557 /* libssl.dylib in Frameworks */,
+				BE20AE01195B245B00850531 /* AudioToolbox.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1835,6 +1842,7 @@
 				4D221A70171D577400E7E557 /* libcups.dylib in Frameworks */,
 				4D221A71171D577400E7E557 /* libcurl.dylib in Frameworks */,
 				4D221A72171D577400E7E557 /* libssl.dylib in Frameworks */,
+				BE20AE02195B245C00850531 /* AudioToolbox.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1956,6 +1964,7 @@
 		4D5880AA0B80BDFE00200116 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				BE20AE00195B244800850531 /* AudioToolbox.framework */,
 				72D6038418477E5C0022379C /* QuartzCore.framework */,
 				72D6038218477E560022379C /* QuartzCore.framework */,
 				4D982B1813C1CDD20066119A /* ApplicationServices.framework */,
@@ -3842,6 +3851,7 @@
 				763FF4E918522CBE00B45FBA /* image_rep_resampled.cpp in Sources */,
 				E82206E2184F810A00117D10 /* resolution.cpp in Sources */,
 				BEBC51F61953513A00215C85 /* quicktime.cpp in Sources */,
+				BE20AE04195B24B300850531 /* quicktimestubs.mac.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4042,7 +4052,6 @@
 				4DFFC7E713DD8AB9006233A4 /* objectpropsets.cpp in Sources */,
 				4D05B91013E06AB3001CD82A /* dskmain.cpp in Sources */,
 				4D05B91113E06AB4001CD82A /* dskosxmain.mm in Sources */,
-				4DDB66591413993500E5C84C /* sysosxregion.cpp in Sources */,
 				4DDB666F14139FF500E5C84C /* tilecache.cpp in Sources */,
 				4DDB66721413A02000E5C84C /* redraw.cpp in Sources */,
 				4D432F1F141A2DFE001164F9 /* tilecachesw.cpp in Sources */,
@@ -4144,6 +4153,7 @@
 				BE36920D195880F300386D30 /* desktop-stack.cpp in Sources */,
 				BE36920E195880F300386D30 /* desktop.cpp in Sources */,
 				BE168E6E19598EAD00B957D0 /* region.cpp in Sources */,
+				BE20AE05195B24B300850531 /* quicktimestubs.mac.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

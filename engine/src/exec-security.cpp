@@ -186,12 +186,12 @@ void MCSecuritySetSslCertificates(MCExecContext& ctxt, MCStringRef p_value)
 	MCsslcertificates = t_value;
 }
 
-void MCSecurityExecSecureSocket(MCExecContext& ctxt, MCNameRef p_socket, bool p_secure_verify)
+void MCSecurityExecSecureSocket(MCExecContext& ctxt, MCNameRef p_socket, bool p_secure_verify, MCNameRef p_end_hostname)
 {
     uindex_t t_index;
 	if (IO_findsocket(p_socket, t_index))
 	{
-		MCS_secure_socket(MCsockets[t_index], p_secure_verify);
+		MCS_secure_socket(MCsockets[t_index], p_secure_verify, p_end_hostname);
 		ctxt . SetTheResultToEmpty();
         return;
 	}

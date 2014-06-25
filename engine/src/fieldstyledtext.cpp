@@ -487,6 +487,7 @@ bool MCField::exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int3
 }
 
 bool MCField::exportasstyledtext(MCParagraph* p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array)
+{
 	export_styled_text_t t_context;
 	t_context . effective = p_effective;
 	t_context . formatted = p_formatted;
@@ -510,7 +511,6 @@ bool MCField::exportasstyledtext(MCParagraph* p_paragraphs, int32_t p_start_inde
 	}
 
 	return false;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

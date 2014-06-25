@@ -1412,7 +1412,7 @@ void MCStack::SetWmPlace(MCExecContext& ctxt, bool setting)
 
 void MCStack::GetWindowId(MCExecContext& ctxt, uinteger_t& r_id)
 {
-	r_id = MCscreen -> dtouint4(window);
+	r_id = MCscreen -> dtouint4((Drawable)window);
 }
 
 void MCStack::GetPixmapId(MCExecContext& ctxt, uinteger_t& r_id)
@@ -1915,7 +1915,7 @@ void MCStack::SetDecorations(MCExecContext& ctxt, const MCInterfaceDecoration& p
             reopenwindow();
         else
         {
-            if (window != DNULL)
+            if (window != NULL)
             {
                 stop_externals();
                 MCscreen->destroywindow(window);

@@ -46,7 +46,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool X_init(int argc, char *argv[], char *envp[]);
+bool X_init(int argc, MCStringRef argv[], MCStringRef envp[]);
 void X_main_loop_iteration();
 int X_close();
 
@@ -58,7 +58,7 @@ void X_main_loop(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformHandleApplicationStartup(int p_argc, char **p_argv, char **p_envp, int& r_error_code, char*& r_error_message)
+void MCPlatformHandleApplicationStartup(int p_argc, MCStringRef *p_argv, MCStringRef *p_envp, int& r_error_code, MCStringRef & r_error_message)
 {
 	if (X_init(p_argc, p_argv, p_envp))
 	{
@@ -68,7 +68,8 @@ void MCPlatformHandleApplicationStartup(int p_argc, char **p_argv, char **p_envp
 	}
 	
 	r_error_code = -1;
-	r_error_message = MCresult -> getvalue() . get_string() . clone();
+    if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+        r_error_message = (MCStringRef)MCValueRetain(MCresult->getvalueref());
 }
 
 void MCPlatformHandleApplicationShutdown(int& r_exit_code)
@@ -206,9 +207,10 @@ void MCPlatformHandleViewFocusSwitched(MCPlatformWindowRef p_window, uint32_t p_
 	else
 	{
 		MCControl *t_control;
-		char t_id[U4L];
-		sprintf(t_id, "%d", p_view_id);
-		t_control = t_stack -> getcard() -> getchild(CT_ID, t_id, CT_LAYER, CT_UNDEFINED);
+        MCAutoStringRef t_id;
+        /* UNCHECKED */ MCStringFormat(&t_id, "%d", p_view_id);
+        
+		t_control = t_stack -> getcard() -> getchild(CT_ID, *t_id, CT_LAYER, CT_UNDEFINED);
 		if (t_control != nil)
 			t_stack -> kfocusset(t_control);
 		else
@@ -446,7 +448,7 @@ void MCPlatformHandleMouseScroll(MCPlatformWindowRef p_window, int p_dx, int p_d
 		mfocused = MCmousestackptr;
 	
 	if (p_dy != 0)
-		mfocused -> kdown("", p_dy < 0 ? XK_WheelUp : XK_WheelDown);
+		mfocused -> kdown(kMCEmptyString, p_dy < 0 ? XK_WheelUp : XK_WheelDown);
 	
 	mfocused = MCmousestackptr->getcard()->getmfocused();
 	if (mfocused == NULL)
@@ -455,7 +457,7 @@ void MCPlatformHandleMouseScroll(MCPlatformWindowRef p_window, int p_dx, int p_d
 		mfocused = MCmousestackptr;
 	
 	if (p_dx != 0)
-		mfocused -> kdown("", p_dx < 0 ? XK_WheelLeft : XK_WheelRight);
+		mfocused -> kdown(kMCEmptyString, p_dx < 0 ? XK_WheelLeft : XK_WheelRight);
 }
 
 //////////
@@ -541,7 +543,7 @@ void MCPlatformHandleKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_k
 {	
 	if (p_mapped_codepoint == 0xffffffffU)
 	{
-		MCdispatcher -> wkdown(p_window, MCnullstring, p_key_code);
+		MCdispatcher -> wkdown(p_window, kMCEmptyString, p_key_code);
 		return;
 	}
 	
@@ -550,16 +552,17 @@ void MCPlatformHandleKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_k
 		uint16_t t_unicode_char;
 		t_unicode_char = p_mapped_codepoint & 0xffff;
 		
-		uint8_t t_native_char[2];
-		if (MCUnicodeMapToNative(&t_unicode_char, 1, t_native_char[0]))
+		char_t t_native_char;
+		if (MCUnicodeMapToNative(&t_unicode_char, 1, t_native_char))
 		{
-			t_native_char[1] = '\0';
-			MCdispatcher -> wkdown(p_window, (const char *)t_native_char, p_key_code);
+            MCAutoStringRef t_key;
+            /* UNCHECKED */ MCStringCreateWithNativeChars(&t_native_char, 1, &t_key);
+			MCdispatcher -> wkdown(p_window, *t_key, p_key_code);
 			return;
 		}
 	}
 	
-	if (!MCdispatcher -> wkdown(p_window, MCnullstring, p_key_code))
+	if (!MCdispatcher -> wkdown(p_window, kMCEmptyString, p_key_code))
 		if (MCactivefield != nil)
 		{
 			// Handle unicode
@@ -570,7 +573,7 @@ void MCPlatformHandleKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key
 {	
 	if (p_mapped_codepoint == 0xffffffffU)
 	{
-		MCdispatcher -> wkup(p_window, MCnullstring, p_key_code);
+		MCdispatcher -> wkup(p_window, kMCEmptyString, p_key_code);
 		return;
 	}
 	
@@ -579,16 +582,17 @@ void MCPlatformHandleKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key
 		uint16_t t_unicode_char;
 		t_unicode_char = p_mapped_codepoint & 0xffff;
 		
-		uint8_t t_native_char[2];
-		if (MCUnicodeMapToNative(&t_unicode_char, 1, t_native_char[0]))
+		char_t t_native_char;
+		if (MCUnicodeMapToNative(&t_unicode_char, 1, t_native_char))
 		{
-			t_native_char[1] = '\0';
-			MCdispatcher -> wkup(p_window, (const char *)t_native_char, p_key_code);
+            MCAutoStringRef t_key;
+            /* UNCHECKED */ MCStringCreateWithNativeChars(&t_native_char, 1, &t_key);
+			MCdispatcher -> wkup(p_window, *t_key, p_key_code);
 			return;
 		}
 	}
 	
-	MCdispatcher -> wkup(p_window, MCnullstring, p_key_code);
+	MCdispatcher -> wkup(p_window, kMCEmptyString, p_key_code);
 }
 
 void MCPlatformHandleTextInputQueryTextRanges(MCPlatformWindowRef p_window, MCRange& r_marked_range, MCRange& r_selected_range)
@@ -696,9 +700,9 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 		// If the char count is 1 and the replacement range matches the current selection,
 		// the char is native and the requested selection is after the char, then synthesis a
 		// keydown/up pair.
-		uint8_t t_char[2];
+		char_t t_char;
 		if (p_char_count == 1 &&
-			MCUnicodeMapToNative(p_chars, 1, t_char[0]) &&
+			MCUnicodeMapToNative(p_chars, 1, t_char) &&
 			p_selection_range . offset == p_replace_range . offset + 1 &&
 			p_selection_range . length == 0)
 		{
@@ -707,12 +711,12 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 			if (t_s_si == t_r_si &&
 				t_s_ei == t_r_ei)
 			{
-				t_char[1] = '\0';
-				
+				MCAutoStringRef t_key;
+                /* UNCHECKED */ MCStringCreateWithNativeChars(&t_char, 1, &t_key);
                 // MW-2014-04-15: [[ Bug 12086 ]] Pass the keycode from the last event that was
                 //   passed to the IME.
-                MCdispatcher -> wkdown(p_window, (const char *)t_char, s_last_key_code);
-				MCdispatcher -> wkup(p_window, (const char *)t_char, s_last_key_code);
+                MCdispatcher -> wkdown(p_window, *t_key, s_last_key_code);
+				MCdispatcher -> wkup(p_window, *t_key, s_last_key_code);
 				return;
 			}
 		}
@@ -742,7 +746,9 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 	if (p_mark)
 		MCactivefield -> startcomposition();
 	
-	MCactivefield -> finsertnew(FT_IMEINSERT, MCString((char *)p_chars, p_char_count * 2), True, true);
+    MCAutoStringRef t_string;
+    MCStringCreateWithChars(p_chars, p_char_count, &t_string);
+	MCactivefield -> finsertnew(FT_IMEINSERT, *t_string, True);
 	
 	// And update the selection range.
 	int32_t t_s_si, t_s_ei;
@@ -757,11 +763,10 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 
 static void synthesize_key_press(MCPlatformWindowRef p_window, char p_char, KeySym p_sym)
 {
-	char t_string[2];
-	t_string[0] = p_char;
-	t_string[1] = '\0';
-	MCdispatcher -> wkdown(p_window, t_string, p_sym);
-	MCdispatcher -> wkup(p_window, t_string, p_sym);
+    MCAutoStringRef t_key;
+    /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)&p_char, 1, &t_key);
+	MCdispatcher -> wkdown(p_window, *t_key, p_sym);
+	MCdispatcher -> wkup(p_window, *t_key, p_sym);
 }
 
 static void synthesize_move_with_shift(MCField *p_field, Field_translations p_action)

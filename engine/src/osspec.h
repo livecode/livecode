@@ -202,7 +202,7 @@ extern bool MCS_hn(MCStringRef& r_string);
 extern bool MCS_aton(MCStringRef p_address, MCStringRef& r_name);
 extern bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, MCListRef& r_addr);
 extern bool MCS_pa(MCSocket *s, MCStringRef& r_string);
-extern void MCS_secure_socket(MCSocket *s, Boolean sslverify);
+extern void MCS_secure_socket(MCSocket *s, Boolean sslverify, MCNameRef end_hostname);
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -2465,9 +2465,9 @@ void MCPlayer::gethotspots(MCExecPoint &ep)
 #endif
 #endif
 }
+#endif
 
 #ifdef FEATURE_PLATFORM_PLAYER
-
 MCRectangle MCPlayer::resize(MCRectangle movieRect)
 {
 	int2 x, y;
@@ -2520,7 +2520,7 @@ void MCPlayer::markerchanged(uint32_t p_time)
     // Search for the first marker with the given time, and dispatch the message.
     for(uindex_t i = 0; i < m_callback_count; i++)
         if (p_time == m_callbacks[i] . time)
-            message_with_args(m_callbacks[i] . message, m_callbacks[i] . parameter);
+            message_with_valueref_args(m_callbacks[i] . message, m_callbacks[i] . parameter);
 }
 
 void MCPlayer::selectionchanged(void)
@@ -2554,7 +2554,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
     
     uindex_t t_start_index, t_length;
     
-    t_length = MCStringGetlength(*t_callback);
+    t_length = MCStringGetLength(*t_callback);
     t_start_index = 0;
     
 	while (t_start_index < t_length)
@@ -2568,11 +2568,11 @@ void MCPlayer::SynchronizeUserCallbacks(void)
         
         uindex_t t_callback2_index;        
         if (MCStringFirstIndexOfChar(*t_callback, ',', t_comma_index + 1, kMCStringOptionCompareExact, t_end_index))
-            t_end_index = MCStringLength(*t_callback);
+            t_end_index = MCStringGetLength(*t_callback);
         
         /* UNCHECKED */ MCMemoryResizeArray(m_callback_count + 1, m_callbacks, m_callback_count);
         // Converts the first part to a number.
-        MCAutoNumberref t_time;
+        MCAutoNumberRef t_time;
         MCNumberParseOffset(*t_callback, t_start_index, t_comma_index - t_start_index, &t_time);
         m_callbacks[m_callback_count - 1] . time = MCNumberFetchAsInteger(*t_time);
         
@@ -2599,14 +2599,14 @@ void MCPlayer::SynchronizeUserCallbacks(void)
 
         MCAutoStringRef t_message;
         /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_callback_index, t_space_index - t_callback_index), &t_message);
-        /* UNCHECKED */ MCNameCreateWithCString(*t_message, m_callbacks[m_callback_count - 1] . message);
+        /* UNCHECKED */ MCNameCreate(*t_message, m_callbacks[m_callback_count - 1] . message);
         
         // If no parameter is specified, use the time.
         if (m_callbacks[m_callback_count - 1] . parameter == nil)
         {
             MCAutoStringRef t_param;
             /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_start_index, t_comma_index - t_start_index), &t_param);
-            /* UNCHECKED */ MCNameCreateWithCString(*t_param, m_callbacks[m_callback_count - 1] . parameter);
+            /* UNCHECKED */ MCNameCreate(*t_param, m_callbacks[m_callback_count - 1] . parameter);
         }
 		
         // Skip the last comma if any
@@ -2622,7 +2622,6 @@ void MCPlayer::SynchronizeUserCallbacks(void)
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMarkers, kMCPlatformPropertyTypeUInt32Array, &t_markers);
     MCMemoryDeleteArray(t_markers . ptr);
 }
-#endif
 
 Boolean MCPlayer::isbuffering(void)
 {
@@ -2634,7 +2633,6 @@ Boolean MCPlayer::isbuffering(void)
 	
 	return t_buffering;
 }
-
 #endif
 
 #ifdef _WINDOWS
@@ -5028,84 +5026,6 @@ Boolean MCPlayer::installUserCallbacks(void)
 QTEffect *MCPlayer::qteffects = NULL;
 uint2 MCPlayer::neffects = 0;
 #endif
-
-bool MCPlayer::stdeffectdlg(MCStringRef &r_value, MCStringRef &r_result)
-{
-#ifdef FEATURE_QUICKTIME
-	if (qtstate != QT_INITTED)
-		initqt();
-	if (qtstate != QT_INITTED)
-		return false;
-	QTAtomContainer effectlist = NULL;
-	queryeffects((void **)&effectlist);
-	if (effectlist == NULL)
-		return MCStringCreateWithCString("can't get effect list", r_result);
-
-	OSErr result;
-	QTAtomContainer effectdesc = NULL;
-	QTParameterDialog createdDialogID;
-	if (QTNewAtomContainer(&effectdesc) != noErr)
-		return false;
-	result = QTCreateStandardParameterDialog(effectlist, effectdesc,
-	         0, &createdDialogID);
-	while (result == noErr)
-	{
-		EventRecord theEvent;
-		WaitNextEvent(everyEvent, &theEvent, 0, nil);
-		result = QTIsStandardParameterDialogEvent(&theEvent, createdDialogID);
-		switch (result)
-		{
-		case featureUnsupported:
-
-			{
-				result = noErr;
-				switch (theEvent.what)
-				{
-				case updateEvt:
-					BeginUpdate((WindowPtr)theEvent.message);
-					EndUpdate((WindowPtr)theEvent.message);
-					break;
-				}
-				break;
-			}
-		case codecParameterDialogConfirm:
-		case userCanceledErr:
-			QTDismissStandardParameterDialog(createdDialogID);
-			createdDialogID =nil;
-			break;
-		}
-	}
-	if (result == userCanceledErr)
-	{
-		QTDisposeAtomContainer(effectlist);
-		return MCStringCreateWithCString(MCcancelstring, r_result);
-	}
-	HLock((Handle)effectdesc);
-	uint4 datasize = GetHandleSize(effectdesc) + sizeof(long) * 2;
-
-	MCAutoByteArray t_buffer;
-	if (!t_buffer.New(datasize))
-		return false;
-
-	long *aLong = (long *)t_buffer.Bytes();
-	HLock((Handle)effectdesc);
-	aLong[0] = EndianU32_NtoB(datasize);
-	aLong[1] = EndianU32_NtoB('qtfx');
-	memcpy((char *)(aLong + 2),
-	       *effectdesc ,GetHandleSize(effectdesc));
-	HUnlock((Handle)effectdesc);
-	QTDisposeAtomContainer(effectdesc);
-	QTDisposeAtomContainer(effectlist);
-
-	MCAutoDataRef t_data;
-	return t_buffer.CreateDataAndRelease(&t_data) &&
-		MCFiltersBase64Encode(*t_data, r_value);
-#endif
-
-	r_value = MCValueRetain(kMCEmptyString);
-	return true;
-}
-
 
 #ifdef FEATURE_QUICKTIME
 static int compare_qteffect(const void *a, const void *b)

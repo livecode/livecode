@@ -113,7 +113,7 @@ public:
 	virtual bool transformimagecolors(MCColorTransformRef transform, MCImageBitmap *image);
 	
 	virtual void beep();
-	virtual void getbeep(uint4 which, MCExecPoint &ep);
+	virtual void getbeep(uint4 which, int4 &r_beep);
 	virtual void setbeep(uint4 which, int4 beep);
 	
 	virtual MCStack *platform_getstackatpoint(int32_t x, int32_t y);
@@ -124,7 +124,7 @@ public:
 	virtual Boolean istripleclick();
 	virtual Boolean abortkey();
 	virtual uint2 querymods();
-	virtual void getkeysdown(MCExecPoint &ep);
+	virtual bool getkeysdown(MCListRef& r_list);
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
 	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
 	virtual Boolean wait(real8 duration, Boolean dispatch, Boolean anyevent);
@@ -140,7 +140,7 @@ public:
 	virtual void configurestatusicon(uint32_t icon_id, MCStringRef menu, MCStringRef tooltip);
 	virtual void enactraisewindows(void);
 	
-	virtual void listprinters(MCExecPoint& ep);
+	virtual bool listprinters(MCStringRef& r_printers);
 	virtual MCPrinter *createprinter(void);
 	
 	virtual void flushclipboard(void);

@@ -819,8 +819,8 @@ public:
 	void setatts(findex_t si, findex_t ei, Properties which, void *value, bool from_html = false);
 #endif
 
-	void restricttoline(int32_t& si, int32_t& ei);
-	int32_t heightoflinewithindex(int32_t si, uint2 fixedheight);
+	void restricttoline(findex_t& si, findex_t& ei);
+	findex_t heightoflinewithindex(findex_t si, uint2 fixedheight);
 	
 	uint2 getopened()
 	{

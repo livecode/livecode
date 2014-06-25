@@ -109,7 +109,6 @@ public:
 	Boolean open_audio();
 	Boolean play();
 	void stop(Boolean abort);
-	void getloudness(uint2& loudness);
 	void setloudness(uint2 p_loudness);
 
 	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);

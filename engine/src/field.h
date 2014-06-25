@@ -398,7 +398,6 @@ public:
 	
 	MCParagraph *verifyindices(MCParagraph *top, findex_t& si, findex_t& ei);
 	
-	void indextorect(MCParagraph *top, findex_t si, findex_t ei, MCRectangle &r);
 	void insertparagraph(MCParagraph *newtext);
 	// MCField selection functions in fields.cc
 	Boolean find(MCExecContext &ctxt, uint4 cardid,
