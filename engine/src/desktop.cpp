@@ -683,10 +683,27 @@ void MCPlatformHandleTextInputQueryTextRect(MCPlatformWindowRef p_window, MCRang
 
 void MCPlatformHandleTextInputQueryText(MCPlatformWindowRef p_window, MCRange p_range, unichar_t*& r_chars, uindex_t& r_char_count, MCRange& r_actual_range)
 {
-	// COCOA-TODO: Implement QueryText
-	r_chars = nil;
-	r_char_count = 0;
-	r_actual_range = p_range;
+    if (MCactivefield == nil)
+    {
+        r_chars = nil;
+        r_char_count = 0;
+        r_actual_range = MCRangeMake(p_range . offset, 0);
+        return;
+    }
+    
+	int32_t t_si, t_ei;
+	t_si = 0;
+	t_ei = INT32_MAX;
+	MCactivefield -> resolvechars(0, t_si, t_ei, p_range . offset, p_range . length);
+    
+    MCExecPoint ep;
+    MCactivefield -> exportastext(0, ep, t_si, t_ei, true);
+    
+	MCactivefield -> unresolvechars(0, t_si, t_ei);
+    
+    r_chars = (unichar_t *)ep . getsvalue() . clone();
+    r_char_count = ep . getsvalue() . getlength() / 2;
+    r_actual_range = MCRangeMake(t_si, t_ei - t_si);
 }
 
 void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t *p_chars, uindex_t p_char_count, MCRange p_replace_range, MCRange p_selection_range, bool p_mark)
