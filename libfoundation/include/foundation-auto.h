@@ -304,7 +304,8 @@ private:
 class MCAutoStringRefAsCFString
 {
 public:
-    MCAutoStringRefAsCFString(void)
+    MCAutoStringRefAsCFString(void) :
+        m_cfstring(nil)
     {}
     
     ~MCAutoStringRefAsCFString(void)
@@ -319,7 +320,8 @@ public:
     
     void Unlock(void)
     {
-        CFRelease(m_cfstring);
+        if (m_cfstring != nil)
+            CFRelease(m_cfstring);
         m_cfstring = nil;
     }
     

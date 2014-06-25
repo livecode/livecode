@@ -173,7 +173,6 @@
 		4D1F9DA1171C682E0091C6CB /* srvsession.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E86A04F6142A49EF005ECD82 /* srvsession.cpp */; };
 		4D1F9DA2171C682E0091C6CB /* redraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66701413A02000E5C84C /* redraw.cpp */; };
 		4D1F9DA3171C682E0091C6CB /* tilecache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB666D14139FF500E5C84C /* tilecache.cpp */; };
-		4D1F9DA4171C682E0091C6CB /* sysregion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66521413990400E5C84C /* sysregion.cpp */; };
 		4D1F9DA5171C682E0091C6CB /* tilecachesw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D432F1E141A2DFE001164F9 /* tilecachesw.cpp */; };
 		4D1F9DA6171C682E0091C6CB /* paragrafattr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1535614E7FB91009FA80E /* paragrafattr.cpp */; };
 		4D1F9DA7171C682E0091C6CB /* fieldstyledtext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */; };
@@ -538,6 +537,7 @@
 		BE20AE03195B245D00850531 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE20AE00195B244800850531 /* AudioToolbox.framework */; };
 		BE20AE04195B24B300850531 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369216195881B700386D30 /* quicktimestubs.mac.cpp */; };
 		BE20AE05195B24B300850531 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369216195881B700386D30 /* quicktimestubs.mac.cpp */; };
+		BE20AE42195B44B800850531 /* sysregion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66521413990400E5C84C /* sysregion.cpp */; };
 		BE369208195880F300386D30 /* desktop-ans.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369200195880E600386D30 /* desktop-ans.cpp */; };
 		BE369209195880F300386D30 /* desktop-dc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369201195880E600386D30 /* desktop-dc.cpp */; };
 		BE36920A195880F300386D30 /* desktop-image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369203195880E700386D30 /* desktop-image.cpp */; };
@@ -3828,7 +3828,6 @@
 				4D1F9DA1171C682E0091C6CB /* srvsession.cpp in Sources */,
 				4D1F9DA2171C682E0091C6CB /* redraw.cpp in Sources */,
 				4D1F9DA3171C682E0091C6CB /* tilecache.cpp in Sources */,
-				4D1F9DA4171C682E0091C6CB /* sysregion.cpp in Sources */,
 				4D1F9DA5171C682E0091C6CB /* tilecachesw.cpp in Sources */,
 				4D1F9DA6171C682E0091C6CB /* paragrafattr.cpp in Sources */,
 				4D1F9DA7171C682E0091C6CB /* fieldstyledtext.cpp in Sources */,
@@ -3852,6 +3851,7 @@
 				E82206E2184F810A00117D10 /* resolution.cpp in Sources */,
 				BEBC51F61953513A00215C85 /* quicktime.cpp in Sources */,
 				BE20AE04195B24B300850531 /* quicktimestubs.mac.cpp in Sources */,
+				BE20AE42195B44B800850531 /* sysregion.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
