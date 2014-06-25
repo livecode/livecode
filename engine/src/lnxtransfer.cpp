@@ -268,6 +268,24 @@ bool MCGdkTransferStore::GetSelection(GdkWindow *w, GdkAtom property, MCDataRef 
 }
 */
 
+static bool selection_notify(GdkEvent *t_event)
+{
+    return (t_event->type == GDK_SELECTION_NOTIFY);
+}
+
+static bool WaitForEventCompletion()
+{
+    // Loop until a selection notify event is received
+    MCScreenDC *dc = (MCScreenDC*)MCscreen;
+    GdkEvent *t_notify;
+    while (!dc->GetFilteredEvent(selection_notify, t_notify))
+    {
+        // TODO: timeout
+    }
+    
+    return true;
+}
+
 void MCGdkTransferStore::GetExternalTypes(GdkAtom p_selection, GdkWindow *p_target)
 {
     // Get the list of targets (types) supported by the external selection
@@ -276,6 +294,11 @@ void MCGdkTransferStore::GetExternalTypes(GdkAtom p_selection, GdkWindow *p_targ
     GdkAtom t_property_type;
     gint t_property_format;
     gdk_selection_convert(p_target, p_selection, gdk_atom_intern_static_string("TARGETS"), LastEventTime);
+    
+    // Wait until the selection to be done
+    if (!WaitForEventCompletion())
+        return;
+    
     t_byte_len = gdk_selection_property_get(p_target, &t_bytes, &t_property_type, &t_property_format);
     
     // The target list should be a list of 32-bit atoms
@@ -378,7 +401,9 @@ bool MCXTransferStore::WaitForEventCompletion(XEvent &p_xevent)
 bool MCGdkTransferStore::GetExternalData(MCTransferType p_type, GdkAtom p_atom, GdkWindow *p_source, GdkWindow *p_target, MCDataRef &r_data, guint32 p_event_time)
 {
     // Check that the selection atom is still the source
-    if (gdk_selection_owner_get(p_atom) == p_source)
+    // Check dummied out because GDK won't create a window object for foreign
+    // windows, making this check pretty much useless.
+    //if (gdk_selection_owner_get(p_atom) == p_source)
     {
         // Find the MIME type corresponding to the transfer type we desire
         MCMIMEtype *t_mime_type;
@@ -390,6 +415,10 @@ bool MCGdkTransferStore::GetExternalData(MCTransferType p_type, GdkAtom p_atom, 
             
             // Request the source to convert the data into this type
             gdk_selection_convert(p_target, p_atom, t_mime_type->asAtom(), p_event_time);
+            
+            // We need to wait for an event notifying us of the conversion
+            if (!WaitForEventCompletion())
+                return false;
             
             // Now the data has been converted, fetch it
             guchar *t_bytes;
@@ -671,7 +700,7 @@ bool MCGdkTransferStore::Query(MCTransferType* &r_types, size_t &r_type_count)
     
     if (m_entries != NULL)
     {
-        if (m_types_list != NULL)
+        if (m_types_list == NULL)
         {
             // Find the highest-priority type
             for (uint32_t i = 0; i < m_entry_count; i++)
@@ -779,7 +808,7 @@ bool MCGdkTransferStore::Fetch(MCMIMEtype *p_mime_type, MCDataRef& r_data, GdkAt
             }
             else
             {
-                // If this is an internal DnD operation, skip the conversion.
+                // If this is an internal copy operation, skip the conversion.
                 // (We can tell that it is internal if we recognise the source
                 // and destination windows as being our stacks).
                 if (MCdispatcher->findstackd(p_source) && MCdispatcher->findstackd(p_target))

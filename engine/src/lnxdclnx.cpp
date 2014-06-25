@@ -751,7 +751,8 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
             }
                 
             case GDK_SELECTION_NOTIFY:
-                // TODO
+                // Handled as a drag-and-drop event
+                DnDClientEvent(t_event);
                 break;
                 
             case GDK_SELECTION_REQUEST:
@@ -985,7 +986,9 @@ void MCScreenDC::IME_OnRetrieveSurrounding(GtkIMContext*)
 
 void init_xDnD()
 {
-    
+    // Need to ensure we have a transfer store
+    if (MCtransferstore == NULL)
+        MCtransferstore = new MCGdkTransferStore(((MCScreenDC*)MCscreen)->dpy);
 }
 
 void DnDClientEvent(GdkEvent* p_event)

@@ -275,7 +275,7 @@ bool MCScreenDC::ownsclipboard(void)
 {
 	GdkWindow *w;
 	w = gdk_selection_owner_get_for_display(dpy, GDK_SELECTION_CLIPBOARD);
-	return w == NULLWindow || MCdispatcher -> findstackd(w) != NULL;
+	return w == NULLWindow || (w != NULL && MCdispatcher -> findstackd(w) != NULL);
 }
 
 MCPasteboard *MCScreenDC::getclipboard(void)
