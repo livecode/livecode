@@ -884,6 +884,11 @@ void MCUIDC::DoRunloopActions(void)
 	}
 }
 
+bool MCUIDC::HasRunloopActions()
+{
+	return m_runloop_actions != nil;
+}
+
 void MCUIDC::flushevents(uint2 e)
 { }
 ;
