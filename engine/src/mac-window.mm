@@ -873,7 +873,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)insertText:(id)aString replacementRange:(NSRange)replacementRange
 {
-	// NSLog(@"insertText('%@', (%d, %d))", aString, replacementRange . location, replacementRange . length);
+	NSLog(@"insertText('%@', (%d, %d))", aString, replacementRange . location, replacementRange . length);
 	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
@@ -920,47 +920,6 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	// not mark text, so now we just need to tell the input context.
 	[[self inputContext] discardMarkedText];
 	[[self inputContext] invalidateCharacterCoordinates];
-	
-	/*if (replacementRange . location == NSNotFound)
-	{
-		NSRange t_marked_range;
-		t_marked_range = [self markedRange];
-		if (t_marked_range . location != NSNotFound)
-			replacementRange = t_marked_range;
-		else
-			replacementRange = [self selectedRange];
-	}
-	
-	int32_t si, ei;
-	si = 0;
-	ei = INT32_MAX;
-	MCactivefield -> resolvechars(0, si, ei, replacementRange . location, replacementRange . length);
-	
-	NSString *t_string;
-	if ([aString isKindOfClass: [NSAttributedString class]])
-		t_string = [aString string];
-	else
-		t_string = aString;
-	
-	NSUInteger t_length;
-	t_length = [t_string length];
-	
-	unichar *t_chars;
-	t_chars = new unichar[t_length];
-	
-	[t_string getCharacters: t_chars range: NSMakeRange(0, t_length)];
-	
-	MCactivefield -> settextindex(0,
-								  si,
-								  ei,
-								  MCString((char *)t_chars, t_length * 2),
-								  True,
-								  true);
-    
-	delete t_chars;
-	
-	[self unmarkText];
-	[[self inputContext] invalidateCharacterCoordinates];*/
 }
 
 - (void)doCommandBySelector:(SEL)aSelector
@@ -994,7 +953,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 - (void)setMarkedText:(id)aString selectedRange:(NSRange)newSelection replacementRange:(NSRange)replacementRange
 {
-	// NSLog(@"setMarkedText('%@', (%d, %d), (%d, %d)", aString, newSelection . location, newSelection . length, replacementRange . location, replacementRange . length);
+	NSLog(@"setMarkedText('%@', (%d, %d), (%d, %d)", aString, newSelection . location, newSelection . length, replacementRange . location, replacementRange . length);
 	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
@@ -1042,50 +1001,6 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	
 	// We've inserted something, so tell the context to invalidate its caches.
 	[[self inputContext] invalidateCharacterCoordinates];
-	
-	/*if (replacementRange . location == NSNotFound)
-	 {
-	 NSRange t_marked_range;
-	 t_marked_range = [self markedRange];
-	 if (t_marked_range . location != NSNotFound)
-	 replacementRange = t_marked_range;
-	 else
-	 replacementRange = [self selectedRange];
-	 }
-	 
-	 int32_t si, ei;
-	 si = ei = 0;
-	 MCactivefield -> resolvechars(0, si, ei, replacementRange . location, replacementRange . length);
-	 
-	 NSString *t_string;
-	 if ([aString isKindOfClass: [NSAttributedString class]])
-	 t_string = [aString string];
-	 else
-	 t_string = aString;
-	 
-	 NSUInteger t_length;
-	 t_length = [t_string length];
-	 
-	 unichar *t_chars;
-	 t_chars = new unichar[t_length];
-	 
-	 [t_string getCharacters: t_chars range: NSMakeRange(0, t_length)];
-	 
-	 MCactivefield -> stopcomposition(True, False);
-	 
-	 if ([t_string length] == 0)
-	 [self unmarkText];
-	 else
-	 {
-	 MCactivefield -> startcomposition();
-	 MCactivefield -> finsertnew(FT_IMEINSERT, MCString((char *)t_chars, t_length * 2), 0, true);
-	 }
-	 
-	 MCactivefield -> seltext(replacementRange . location + newSelection . location,
-	 replacementRange . location + newSelection . location + newSelection . length,
-	 False);
-	 
-	 [[self inputContext] invalidateCharacterCoordinates];*/
 }
 
 - (void)unmarkText
@@ -1106,9 +1021,6 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	MCPlatformCallbackSendTextInputInsertText(t_window, nil, 0, MCRangeMake(0, 0), t_selected_range, false);
 	
 	[[self inputContext] discardMarkedText];
-	
-/*	MCactivefield -> stopcomposition(False, False);
-	[[self inputContext] discardMarkedText];*/
 }
 
 - (NSRange)selectedRange
@@ -1122,14 +1034,6 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
 	MCLog("selectedRange() = (%d, %d)", t_selected_range . offset, t_selected_range . length);
 	return NSMakeRange(t_selected_range . offset, t_selected_range . length);
-	
-/*	if (MCactivefield == nil)
-		return NSMakeRange(NSNotFound, 0);
-	
-	int4 si, ei;
-	MCactivefield -> selectedmark(False, si, ei, False, False);
-	MCLog("selectedRange() = (%d, %d)", si, ei - si);
- //	return NSMakeRange(si, ei - si);*/
 }
 
 - (NSRange)markedRange
@@ -1182,13 +1086,13 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	if (actualRange != nil)
 		*actualRange = NSMakeRange(t_actual_range . offset, t_actual_range . length);
 	
-	// NSLog(@"attributedSubstringForProposedRange(%d, %d -> %d, %d) = '%@'", aRange . location, aRange . length, t_actual_range . offset, t_actual_range . length, t_attr_string);
+	NSLog(@"attributedSubstringForProposedRange(%d, %d -> %d, %d) = '%@'", aRange . location, aRange . length, t_actual_range . offset, t_actual_range . length, t_attr_string);
 	return t_attr_string;
 }
 
 - (NSArray*)validAttributesForMarkedText
 {
-	// MCLog("validAttributesForMarkedText() = []", nil);
+	MCLog("validAttributesForMarkedText() = []", nil);
 	return [NSArray array];
 }
 
@@ -1588,8 +1492,6 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	/* UNCHECKED */ MCGRegionCreate(t_update_region);
 	for(NSInteger i = 0; i < t_update_rect_count; i++)
 		/* UNCHECKED */ MCGRegionAddRect(t_update_region, MCRectangleToMCGIntegerRectangle([self mapNSRectToMCRectangle: t_update_rects[i]]));
-	
-	MCLog("update rect count: %d", t_update_rect_count);
 
 	//////////
 	
