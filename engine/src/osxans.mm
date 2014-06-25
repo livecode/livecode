@@ -509,11 +509,20 @@ static int display_modal_dialog(MCExecPoint &ep, NSSavePanel *p_panel, const cha
 	if (p_initial_file != nil)
 		t_initial_file = [NSString stringWithCString: p_initial_file encoding: NSMacOSRomanStringEncoding];			
 	
+    // MW-2014-06-25: [[ Bug 12686 ]] Make sure we attempt to use the defaultStack to sheet
+    //   against, before falling back to the topStack and then non-sheet mode.
+    MCSysWindowHandle t_parent_window;
+    t_parent_window = MCdefaultstackptr -> getwindow() -> handle . window;
+    if (t_parent_window == NULL || !IsWindowVisible((WindowRef)t_parent_window))
+        t_parent_window = MCtopstackptr -> getwindow() -> handle . window;
+    
+    p_as_sheet = t_parent_window != nil && IsWindowVisible((WindowRef)t_parent_window);
+    
 	if (p_as_sheet)
 	{
         // MM-2012-04-02: [[ Bug 10136 ]] Cocoa/carbon window incompatibility.
 		NSWindow *t_window;
-		t_window = (NSWindow *) MCCreateNSWindow(MCtopstackptr->getwindow()->handle.window);
+		t_window = (NSWindow *) MCCreateNSWindow(t_parent_window);
 		
 		DialogDelegate *t_delegate;
 		t_delegate = [[DialogDelegate alloc] init];
