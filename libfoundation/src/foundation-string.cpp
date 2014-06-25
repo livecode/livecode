@@ -4823,7 +4823,8 @@ bool MCStringSetNumericValue(MCStringRef self, double p_value)
     {
         if (MCMemoryReallocate(self -> chars, ((self -> char_count * 2 + 7) & ~7) + 8, self -> chars))
         {
-            *(double*)(&(self -> chars[(self -> char_count + 3) & ~3])) = p_value;
+            // AL-2014-06-25: [[ Bug 12676 ]] Put number value at correct memory address
+            *(double*)(&(self -> chars[(self -> char_count + 7) & ~7])) = p_value;
             t_success = true;
         }
     }
