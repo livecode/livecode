@@ -798,8 +798,6 @@ bool effective_points_only(int graphic_type)
 // MDW-2014-06-18: [[ rect_points ]] refactoring: return points for rectangles, round rects, and regular polygons
 bool MCGraphic::get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_count)
 {
-	MCRectangle trect;
-	
 	r_points = NULL;
 	r_point_count = 0;
 	MCU_roundrect(r_points, r_point_count, rect, roundradius);
@@ -808,8 +806,6 @@ bool MCGraphic::get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_coun
 
 bool MCGraphic::get_points_for_rect(MCPoint*& r_points, uint2& r_point_count)
 {
-	MCRectangle trect;
-	
 	r_points[0].x = rect.x;
 	r_points[0].y = rect.y;
 	r_points[1].x = rect.x + rect.width;
