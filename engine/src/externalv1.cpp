@@ -53,6 +53,7 @@ typedef void (*MCExternalThreadOptionalCallback)(void *state);
 typedef void (*MCExternalThreadRequiredCallback)(void *state, int flags);
 
 // MW-2013-06-14: [[ ExternalsApiV5 ]] Update the interface version.
+// MW-2014-06-26: [[ ExternalsApiV6 ]] Update the interface version for unicode changes.
 #define kMCExternalInterfaceVersion 5
 
 enum
@@ -92,9 +93,29 @@ enum
 	kMCExternalValueOptionAsInteger = 2,
 	kMCExternalValueOptionAsCardinal = 3,
 	kMCExternalValueOptionAsReal = 4,
+    
+    // This fetches the value as a native string with length
 	kMCExternalValueOptionAsString = 5,
+    // This fetchs the value as a native string with NUL terminator
 	kMCExternalValueOptionAsCString = 6,
-
+    
+    // V6-ADDITIONS-START
+    kMCExternalValueOptionAsUTF8String = 7,
+    kMCExternalValueOptionAsUTF8CString = 8,
+    kMCExternalValueOptionAsUTF16Ctring = 9,
+    kMCExternalValueOptionAsUTF16CString = 10,
+    kMCExternalValueOptionAsCFNumber = 17,
+    kMCExternalValueOptionAsNSNumber = kMCExternalValueOptionAsCFNumber,
+    kMCExternalValueOptionAsCFString = 18,
+    kMCExternalValueOptionAsNSString = kMCExternalValueOptionAsCFString,
+    kMCExternalValueOptionAsCFData = 19,
+    kMCExternalValueOptionAsNSData = kMCExternalValueOptionAsCFData,
+    kMCExternalValueOptionAsCFArray = 20,
+    kMCExternalValueOptionAsNSArray = kMCExternalValueOptionAsCFArray,
+    kMCExternalValueOptionAsCFDictionary = 21,
+    kMCExternalValueOptionAsNSDictionary = kMCExternalValueOptionAsCFDictionary,
+    // V6-ADDITIONS-END
+    
 	kMCExternalValueOptionCaseSensitiveMask = 3 << 30,
 	kMCExternalValueOptionDefaultCaseSensitive = 0 << 30,
 	kMCExternalValueOptionCaseSensitive = 1 << 30,
@@ -171,6 +192,7 @@ enum MCExternalContextQueryTag
 	kMCExternalContextQueryConvertOctals,
 	kMCExternalContextQueryNumberFormat,
 	
+    // V6-TODO: Make sure these return the same as they did in previous versions - i.e. native char
 	kMCExternalContextQueryItemDelimiter,
 	kMCExternalContextQueryLineDelimiter,
 	kMCExternalContextQueryColumnDelimiter,
@@ -181,6 +203,12 @@ enum MCExternalContextQueryTag
 	
 	// MW-2013-06-14: [[ ExternalsApiV5 ]] Accessor to fetch 'the wholeMatches'.
 	kMCExternalContextQueryWholeMatches,
+    
+    // V6-TODO: These should return a UTF16CString
+	kMCExternalContextQueryUnicodeItemDelimiter,
+	kMCExternalContextQueryUnicodeLineDelimiter,
+	kMCExternalContextQueryUnicodeColumnDelimiter,
+	kMCExternalContextQueryUnicodeRowDelimiter,
 };
 
 enum MCExternalVariableQueryTag
@@ -290,8 +318,13 @@ struct MCExternalInterface
 	MCExternalError (*variable_append)(MCExternalVariableRef var, MCExternalValueOptions options, void *value);
 	MCExternalError (*variable_prepend)(MCExternalVariableRef var, MCExternalValueOptions options, void *value);
 
+    // V6-TODO: This method was never exposed / used so is now unimplemented.
 	MCExternalError (*variable_edit)(MCExternalVariableRef var, MCExternalValueOptions options, uint32_t reserve_length, void **r_buffer, uint32_t *r_length);
 
+    // V6-TODO: These methods are not valid for V6, the array interface needs rethinking at a later
+    //   date. The only use for them at the moment is in the lcidl support layer for converting between
+    //   obj-c and LiveCode arrays / dictionaries. If we move this ability into the variable_fetch/store
+    //   methods we don't have to give external access to arrays right now.
 	MCExternalError (*variable_count_keys)(MCExternalVariableRef var, uint32_t* r_count);
 	MCExternalError (*variable_iterate_keys)(MCExternalVariableRef var, MCExternalVariableIteratorRef *iterator, MCExternalValueOptions options, void *key, MCExternalVariableRef *r_value);
 	MCExternalError (*variable_remove_key)(MCExternalVariableRef var, MCExternalValueOptions options, void *key);
@@ -1364,138 +1397,6 @@ MCExternal *MCExternalCreateV1(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef OLD_EXEC
-static MCExternalError fetch_as_string(MCExternalVariableRef p_var, MCExternalValueOptions p_options, void *r_value)
-{
-	MCString t_string;
-	
-	// Get the valueref.
-	MCValueRef t_value;
-	t_value = p_var -> GetValueRef();
-	
-	MCString t_string_value;
-	switch(MCValueGetTypeCode(t_value))
-	{
-		case kMCValueTypeCodeNull:
-			t_string_value = MCnullmcstring;
-		break;
-		case kMCValueTypeCodeBoolean:
-			t_string_value = (t_value == kMCTrue ? MCtruemcstring : MCfalsemcstring);
-		break;
-		case kMCValueTypeCodeNumber:
-		{
-			// Use the externalv1 method to convert.
-			double t_number;
-			t_number = MCNumberFetchAsReal((MCNumberRef)t_value);
-			
-			char t_buffer[R8L];
-			number_to_string(t_number, p_options, t_buffer);
-			
-			char *t_dup_buffer;
-			t_dup_buffer = strdup(t_buffer);
-			if (t_dup_buffer == nil)
-				return kMCExternalErrorOutOfMemory;
-			
-			// Duplicate the string and store in the externalvar.
-			t_string_value . set(t_dup_buffer, strlen(t_buffer));
-			p_var -> SetStringConversion(t_string_value);
-		}
-		break;
-		case kMCValueTypeCodeName:
-		{
-			// For a name we convert its stringref to a (native) mcstring.
-			MCExternalError t_error;
-			t_error = convert_stringref_to_mcstring(MCNameGetString((MCNameRef)t_value), t_string_value);
-			if (t_error != kMCExternalErrorNone)
-				return t_error;
-			
-			// Store the string as the converted value in the externalvar (so
-			// it doesn't get lost).
-			p_var -> SetStringConversion(t_string_value);
-		}
-		break;
-		case kMCValueTypeCodeString:
-		{
-			// For a string we convert the stringref to a (native) mcstring.
-			MCExternalError t_error;
-			t_error = convert_stringref_to_mcstring((MCStringRef)t_value, t_string_value);
-			if (t_error != kMCExternalErrorNone)
-				return t_error;
-			
-			// Store the string as the converted value in the externalvar (so
-			// it doesn't get lost).
-			p_var -> SetStringConversion(t_string_value);
-		}
-		break;
-		case kMCValueTypeCodeData:
-		{
-			// For data we can use the bytes as (when a string) we view them as native.
-			t_string_value . set((const char *)MCDataGetBytePtr((MCDataRef)t_value), MCDataGetLength((MCDataRef)t_value));
-		}
-		break;
-		case kMCValueTypeCodeArray:
-			// An array is never a string (from the point of view of the externals API).
-			return kMCExternalErrorNotAString;
-		break;
-		default:
-			assert(false);
-	}
-	
-	// Finally process whether it should be a c-string or not.
-	if ((p_options & 0xf) == kMCExternalValueOptionAsString)
-		*(MCString *)r_value = t_string_value;
-	else
-	{
-		if (memchr(t_string_value . getstring(), '\0', t_string_value . getlength()) != nil)
-			return kMCExternalErrorNotACString;
-		
-		*(const char **)r_value = t_string_value . getstring();
-	}
-	
-	return kMCExternalErrorNone;
-	
-#ifdef OLD_EXEC
-	if (p_var -> is_number())
-	{
-		double t_number;
-		t_number = p_var -> get_real();
-
-		char t_buffer[R8L];
-		number_to_string(t_number, p_options, t_buffer);
-
-		if (!p_var -> assign_custom_both(t_buffer, t_number))
-			return kMCExternalErrorOutOfMemory;
-
-		if ((p_options & 0xf) == kMCExternalValueOptionAsString)
-			*(MCString *)r_value = p_var -> get_custom_string();
-		else
-			*(const char **)r_value = p_var -> get_custom_string() . getstring();
-	}
-	else if (p_var -> is_string())
-	{
-		if ((p_options & 0xf) == kMCExternalValueOptionAsString)
-			*(MCString *)r_value = p_var -> get_string();
-		else
-		{
-			if (memchr(p_var -> get_string() . getstring(), '\0', p_var -> get_string() . getlength()) != NULL)
-				return kMCExternalErrorNotACString;
-
-			if (!p_var -> ensure_cstring())
-				return kMCExternalErrorOutOfMemory;
-
-			*(const char **)r_value = p_var -> get_string() . getstring();
-		}
-	}
-	else
-		return kMCExternalErrorNotAString;
-
-	return kMCExternalErrorNone;
-#endif
-}
-#endif
-
-////////////////////////////////////////////////////////////////////////////////
-
 #if defined(TARGET_SUBPLATFORM_IPHONE)
 extern bool iphone_run_on_main_thread(void *p_callback, void *p_callback_state, int p_options);
 static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p_callback_state, MCExternalRunOnMainThreadOptions p_options)
@@ -1575,20 +1476,16 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, void
 	case kMCExternalContextQueryWholeMatches:
 		*(bool *)result = MCECptr -> GetWholeMatches();
 		break;
-	// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of 'the wholeMatches' query.
-	case kMCExternalContextQueryWholeMatches:
-		*(bool *)result = MCEPptr -> getwholematches() == True;
-		break;
-	case kMCExternalContextQueryItemDelimiter:
+	case kMCExternalContextQueryItemDelimiter: // V6-TODO: These need to be reverted to return a native char as in pre-7.0
 		*(MCStringRef *)result = MCECptr -> GetItemDelimiter();
 		break;
-	case kMCExternalContextQueryLineDelimiter:
+	case kMCExternalContextQueryLineDelimiter: // V6-TODO: These need to be reverted to return a native char as in pre-7.0
 		*(MCStringRef *)result = MCECptr -> GetLineDelimiter();
 		break;
-	case kMCExternalContextQueryColumnDelimiter:
+	case kMCExternalContextQueryColumnDelimiter: // V6-TODO: These need to be reverted to return a native char as in pre-7.0
 		*(MCStringRef *)result = MCECptr -> GetColumnDelimiter();
 		break;
-	case kMCExternalContextQueryRowDelimiter:
+	case kMCExternalContextQueryRowDelimiter: // V6-TODO: These need to be reverted to return a native char as in pre-7.0
 		*(MCStringRef *)result = MCECptr -> GetRowDelimiter();
 		break;
 	case kMCExternalContextQueryDefaultStack:
@@ -1730,17 +1627,7 @@ static MCExternalError MCExternalVariableQuery(MCExternalVariableRef var, MCExte
 	case kMCExternalVariableQueryIsASequence:
 			*(bool *)r_result = MCValueIsEmpty(var -> GetValueRef()) || (MCValueIsArray(var -> GetValueRef()) && MCArrayIsSequence((MCArrayRef)var -> GetValueRef()));
 		break;
-            
-	// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of IsEmpty variable query.
-	case kMCExternalVariableQueryIsEmpty:
-		*(bool *)r_result = var -> is_empty();
-		break;
-			
-	// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of IsASequence variable query.
-	case kMCExternalVariableQueryIsASequence:
-		*(bool *)r_result = var -> is_array() && var -> get_array() -> issequence();
-		break;
-	
+
 	default:
 		return kMCExternalErrorInvalidVariableQuery;
 	}
@@ -1835,29 +1722,6 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
 	return kMCExternalErrorNone;
 }
 
-#ifdef OLD_EXEC
-static MCExternalError coerce_to_string(MCExternalVariableRef var, MCExternalValueOptions p_options)
-{
-	if (var -> get_format() == VF_ARRAY)
-		return kMCExternalErrorDstNotAString;
-
-	if (var -> get_format() != VF_STRING)
-	{
-		if (var -> is_number())
-		{
-			char t_buffer[R8L];
-			number_to_string(var -> get_real(), p_options, t_buffer);
-			if (!var -> assign_string(t_buffer))
-				return kMCExternalErrorOutOfMemory;
-		}
-		else
-			var -> assign_constant_string(MCnullmcstring);
-	}
-
-	return kMCExternalErrorNone;
-}
-#endif
-
 static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExternalValueOptions p_options, void *p_value)
 {
 	if (var == nil)
@@ -1900,39 +1764,6 @@ static MCExternalError MCExternalVariablePrepend(MCExternalVariableRef var, MCEx
 static MCExternalError MCExternalVariableEdit(MCExternalVariableRef var, MCExternalValueOptions p_options, uint32_t p_required_length, void **r_buffer, uint32_t *r_length)
 {
 	return kMCExternalErrorNotImplemented;
-
-#if OLD_EXEC
-	if (var == nil)
-		return kMCExternalErrorNoVariable;
-
-	// Its a commit operation
-
-	if (r_buffer == nil && r_length == nil)
-	{
-		if (!var -> is_string())
-			return kMCExternalErrorDstNotAString;
-
-		if (!var -> commit(p_required_length))
-			return kMCExternalErrorInvalidEdit;
-
-		return kMCExternalErrorNone;
-	}
-
-	// Its a reserve operation
-
-	if (r_buffer == nil || r_length == nil)
-		return kMCExternalErrorNoBuffer;
-
-	MCExternalError t_error;
-	t_error = coerce_to_string(var, p_options);
-	if (t_error != kMCExternalErrorNone)
-		return t_error;
-
-	if (!var -> reserve(p_required_length, *r_buffer, *r_length))
-		return kMCExternalErrorOutOfMemory;
-
-	return kMCExternalErrorNone;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1940,231 +1771,21 @@ static MCExternalError MCExternalVariableEdit(MCExternalVariableRef var, MCExter
 static MCExternalError MCExternalVariableCountKeys(MCExternalVariableRef var, uint32_t* r_count)
 {
 	return kMCExternalErrorNotImplemented;
-	
-#ifdef OLD_EXEC
-	if (var == nil)
-		return kMCExternalErrorNoVariable;
-	
-	MCValueRef t_value;
-	t_value = var -> GetValueRef();
-	
-	if (MCValueIsArray(t_value))
-		*r_count = MCArrayGetCount((MCArrayRef)t_value);
-	else if (MCValueIsEmpty(t_value))
-		*r_count = 0;
-	else
-		return kMCExternalErrorNotAnArray;
-	
-	return kMCExternalErrorNone;
-#endif
 }
 
 static MCExternalError MCExternalVariableIterateKeys(MCExternalVariableRef var, MCExternalVariableIteratorRef *p_iterator, MCExternalValueOptions p_options, void *p_key, MCExternalVariableRef *r_value)
 {
 	return kMCExternalErrorNotImplemented;
-	
-#ifdef OLD_EXEC
-	if (var == nil)
-		return kMCExternalErrorNoVariable;
-
-	if (p_iterator == nil)
-		return kMCExternalErrorNoIterator;
-	
-	MCValueRef t_value;
-	t_value = var -> GetValueRef();
-	
-	// If the var is not an array, we set the iterator to nil to indicate
-	// there are no elements.
-	if (!var -> is_array())
-	{
-		*p_iterator = nil;
-		return var -> is_empty() ? kMCExternalErrorNone : kMCExternalErrorNotAnArray;
-	}
-
-	// If both key and value are nil, then the iteration is being cleaned up.
-	if (p_key == nil && r_value == nil)
-	{
-		// We don't have anything to clean up at the moment...
-		return kMCExternalErrorNone;
-	}
-
-	MCHashentry *t_entry;
-	t_entry = var -> get_array() -> getnextkey(static_cast<MCHashentry *>(*p_iterator));
-
-	// Update the iterator pointer. Note that we do this here to allow iteration
-	// to continue after a value conversion error.
-	*p_iterator = t_entry;
-
-	// If we have an entry, then extract the key in the form that was requested
-	// and return it's value.
-	if (t_entry != nil)
-	{
-		*r_value = &t_entry -> value;
-		switch(p_options & 0xf)
-		{
-		case kMCExternalValueOptionAsVariable:
-			if (!((MCExternalVariableRef)p_key) -> assign_string(t_entry -> string))
-				return kMCExternalErrorOutOfMemory;
-			break;
-		case kMCExternalValueOptionAsBoolean:
-			return string_to_boolean(t_entry -> string, p_options, p_key);
-		case kMCExternalValueOptionAsInteger:
-		case kMCExternalValueOptionAsCardinal:
-			return string_to_integer(t_entry -> string, p_options, p_key);
-		case kMCExternalValueOptionAsReal:
-			return string_to_real(t_entry -> string, p_options, p_key);
-		case kMCExternalValueOptionAsString:
-			*(MCString *)p_key = t_entry -> string;
-			return kMCExternalErrorNone;
-		case kMCExternalValueOptionAsCString:
-			*(char **)p_key = t_entry -> string;
-			return kMCExternalErrorNone;
-		default:
-			return kMCExternalErrorInvalidValueType;
-		}
-	}
-
-	return kMCExternalErrorNone;
-#endif
 }
-
-#ifdef OLD_EXEC
-static MCExternalError fetch_hash_entry(MCExternalVariableRef var, MCExternalValueOptions p_options, void *p_key, bool p_ensure, MCHashentry*& r_entry)
-{
-	if (var == nil)
-		return kMCExternalErrorNoVariable;
-	
-	if (p_key == nil)
-		return kMCExternalErrorNoValue;
-	
-	Boolean t_case_sensitive;
-	switch(p_options & kMCExternalValueOptionCaseSensitiveMask)
-	{
-		case kMCExternalValueOptionDefaultCaseSensitive:
-			t_case_sensitive = MCEPptr -> getcasesensitive();
-			break;
-		case kMCExternalValueOptionCaseSensitive:
-			t_case_sensitive = true;
-			break;
-		case kMCExternalValueOptionNotCaseSensitive:
-			t_case_sensitive = false;
-			break;
-		default:
-			return kMCExternalErrorInvalidCaseSensitiveOption;
-	}			
-			
-	if (var -> is_array())
-		;
-	else if (var -> is_empty())
-	{
-		if (!p_ensure)
-		{
-			r_entry = nil;
-			return kMCExternalErrorNone;
-		}
-		else
-			var -> assign_new_array(TABLE_SIZE);
-	}
-	else
-		return kMCExternalErrorNotAnArray;
-	
-	MCHashentry *t_entry;
-	t_entry = nil;
-	switch(p_options & 0xf)
-	{
-		case kMCExternalValueOptionAsVariable:
-		{
-			MCExternalVariableRef t_value_var;
-			t_value_var = (MCExternalVariableRef)p_key;
-			
-			if (t_value_var -> is_number())
-			{
-				double t_number;
-				t_number = t_value_var -> get_real();
-				
-				char t_buffer[R8L];
-				number_to_string(t_number, p_options, t_buffer);
-				
-				t_entry = var -> get_array() -> lookuphash(t_buffer, t_case_sensitive, p_ensure);
-			}
-			else
-				t_entry = var -> get_array() -> lookuphash(var -> is_string() ? var -> get_string() : MCnullmcstring, t_case_sensitive, p_ensure);
-		}
-		break;
-		case kMCExternalValueOptionAsBoolean:
-			t_entry = var -> get_array() -> lookuphash(*(bool *)p_key ? MCtruemcstring : MCfalsemcstring, t_case_sensitive, p_ensure);
-		break;
-		case kMCExternalValueOptionAsInteger:
-		{
-			char t_key_str[I4L];
-			sprintf(t_key_str, "%d", *(int32_t *)p_key);
-			t_entry = var -> get_array() -> lookuphash(t_key_str, t_case_sensitive, p_ensure);
-		}
-		break;
-		case kMCExternalValueOptionAsCardinal:
-		{
-			char t_key_str[I4L];
-			sprintf(t_key_str, "%u", *(uint32_t *)p_key);
-			t_entry = var -> get_array() -> lookuphash(t_key_str, t_case_sensitive, p_ensure);
-		}
-		break;
-		case kMCExternalValueOptionAsReal:
-		{
-			char t_key_str[R8L];
-			number_to_string(*(double *)p_key, p_options, t_key_str);
-			t_entry = var -> get_array() -> lookuphash(t_key_str, t_case_sensitive, p_ensure);
-		}
-		break;
-		case kMCExternalValueOptionAsString:
-			t_entry = var -> get_array() -> lookuphash(*(MCString *)p_key, t_case_sensitive, p_ensure);
-		break;
-		case kMCExternalValueOptionAsCString:
-			t_entry = var -> get_array() -> lookuphash(*(const char **)p_key, t_case_sensitive, p_ensure);
-		break;
-		default:
-			return kMCExternalErrorInvalidValueType;
-	}
-	
-	if (p_ensure && t_entry == nil)
-		return kMCExternalErrorOutOfMemory;
-	
-	r_entry = t_entry;
-
-	return kMCExternalErrorNone;
-				
-}
-#endif
 
 static MCExternalError MCExternalVariableRemoveKey(MCExternalVariableRef var, MCExternalValueOptions p_options, void *p_key)
 {	
 	return kMCExternalErrorNotImplemented;
-	
-#ifdef OLD_EXEC
-	MCExternalError t_error;
-
-	MCHashentry *t_entry;
-	t_error = fetch_hash_entry(var, p_options, p_key, false, t_entry);
-	if (t_error == kMCExternalErrorNone && t_entry != nil)
-		var -> remove_hash(t_entry);
-	
-	return t_error;
-#endif
 }
 
 static MCExternalError MCExternalVariableLookupKey(MCExternalVariableRef var, MCExternalValueOptions p_options, void *p_key, bool p_ensure, MCExternalVariableRef *r_var)
 {
 	return kMCExternalErrorNotImplemented;
-	
-#ifdef OLD_EXEC
-	MCExternalError t_error;
-	
-	MCHashentry *t_entry;
-	t_error = fetch_hash_entry(var, p_options, p_key, p_ensure, t_entry);
-	if (t_error == kMCExternalErrorNone)
-		*r_var = t_entry != nil ? &t_entry -> value : nil;
-		
-	return t_error;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
