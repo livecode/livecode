@@ -1476,6 +1476,7 @@ bool MCPlayer::getversion(MCStringRef& r_string)
 #ifdef FEATURE_PLATFORM_PLAYER
     extern void MCQTGetVersion(MCStringRef &r_version);
     MCQTGetVersion(r_string);
+    return true;
 #else
 #if defined(X11)
     

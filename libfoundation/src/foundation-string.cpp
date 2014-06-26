@@ -4992,18 +4992,26 @@ static bool __MCStringCopyMutable(__MCString *self, __MCString*& r_new_string)
     __MCString *t_string;
 	t_string = nil;
 	
-    if (!__MCValueCreate(kMCValueTypeCodeString, t_string))
-        return false;
-    
-    t_string -> char_count = self -> char_count;
-    if (MCStringIsNative(self))
-        t_string -> native_chars = self -> native_chars;
+    if (self -> char_count == 0)
+    {
+        t_string = MCValueRetain(kMCEmptyString);
+        MCMemoryDeleteArray(self -> native_chars);
+    }
     else
     {
-        t_string -> chars = self -> chars;
-        t_string -> flags |= kMCStringFlagIsNotNative;
+        if (!__MCValueCreate(kMCValueTypeCodeString, t_string))
+            return false;
+        
+        t_string -> char_count = self -> char_count;
+        if (MCStringIsNative(self))
+            t_string -> native_chars = self -> native_chars;
+        else
+        {
+            t_string -> chars = self -> chars;
+            t_string -> flags |= kMCStringFlagIsNotNative;
+        }
+        t_string -> capacity = 0;
     }
-    t_string -> capacity = 0;
     
     self -> char_count = 0;
     self -> chars = nil;

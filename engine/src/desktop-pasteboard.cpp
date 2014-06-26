@@ -250,7 +250,6 @@ bool MCSystemPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t*)t_in_data_bytes, t_in_data_byte_count, &t_in_data);
 	
 	MCAutoDataRef t_out_data;
-	t_out_data = nil;
 	switch(m_entries[t_entry] . flavor)
 	{
 		case kMCPlatformPasteboardFlavorUTF8:

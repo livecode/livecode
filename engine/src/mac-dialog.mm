@@ -612,7 +612,7 @@ MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, 
 		{
             /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[s_dialog_nesting -> panel filename], r_paths);
 			if (t_accessory != nil && [t_accessory currentType] != nil)
-				/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[t_accessory currentType], r_type);
+				r_type = MCValueRetain([t_accessory currentType]);
 			else
 				r_type = nil;
 		}
@@ -633,7 +633,7 @@ MCPlatformDialogResult MCPlatformEndFileDialog(MCPlatformFileDialogKind p_kind, 
 				[t_alias release];
 			}
 			if (t_accessory != nil && [t_accessory currentType] != nil)
-				/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[t_accessory currentType], r_type);
+				r_type = MCValueRetain([t_accessory currentType]);
 			else
 				r_type = nil;
 		}
