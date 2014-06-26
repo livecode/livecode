@@ -153,6 +153,7 @@ public:
 	uint2 getloudness();
     void updateloudness(int2 newloudness);
     MCColor getcontrollermaincolor();
+    MCColor getcontrollerbackcolor();
 	void setloudness();
 	void gettracks(MCExecPoint &ep);
 	void getenabledtracks(MCExecPoint &ep);

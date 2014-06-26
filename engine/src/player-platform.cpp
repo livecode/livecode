@@ -198,7 +198,8 @@ public:
         dc -> lockgcontext(t_gcontext);
         MCRectangle t_volume_bar_rect = dirty;
         MCGContextAddRectangle(t_gcontext, MCRectangleToMCGRectangle(t_volume_bar_rect));
-        MCGContextSetFillRGBAColor(t_gcontext, 34 / 255.0, 34 / 255.0, 34 / 255.0, 1.0f); // DARKGRAY
+        MCGContextSetFillRGBAColor(t_gcontext, (m_player -> getcontrollerbackcolor() . red / 255.0) / 257.0, (m_player -> getcontrollerbackcolor() . green / 255.0) / 257.0, (m_player -> getcontrollerbackcolor() . blue / 255.0) / 257.0, 1.0f);
+        //MCGContextSetFillRGBAColor(t_gcontext, 34 / 255.0, 34 / 255.0, 34 / 255.0, 1.0f); // DARKGRAY
         MCGContextFill(t_gcontext);
         dc -> unlockgcontext(t_gcontext);
     }
@@ -1860,6 +1861,11 @@ uint2 MCPlayer::getloudness()
 		if (m_platform_player != nil)
 			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVolume, kMCPlatformPropertyTypeUInt16, &loudness);
 	return loudness;
+}
+
+MCColor MCPlayer::getcontrollerbackcolor()
+{
+    return controllerbackcolor;
 }
 
 MCColor MCPlayer::getcontrollermaincolor()
