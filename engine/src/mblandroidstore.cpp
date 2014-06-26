@@ -150,12 +150,7 @@ bool MCStoreRestorePurchases()
 }
 
 bool MCStoreMakePurchase(MCStringRef p_product_id, MCStringRef p_quantity, MCStringRef p_payload)
-{
-    if (p_purchase->state != kMCPurchaseStateInitialized)
-        return false;
-    
-    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
-    
+{    
     bool t_success = false;
     
     MCAndroidEngineRemoteCall("storeMakePurchase", "bxxx", &t_success, p_product_id, p_quantity, p_payload);
@@ -176,12 +171,12 @@ bool MCStoreConsumePurchase(MCStringRef p_product_id)
 {
     bool t_result;
     
-    MCAndroidEngineRemoteCall("storeConsumePurchase", "bx", &t_result, p_purchase_id);
+    MCAndroidEngineRemoteCall("storeConsumePurchase", "bx", &t_result, p_product_id);
                               
     return t_result;
 }
 
-bool MCStoreSetProductType(MCPurchase *p_purchase, MCStringRef p_type)
+bool MCStoreProductSetType(MCStringRef p_product_id, MCStringRef p_product_type)
 {
     bool t_result;
     
@@ -758,8 +753,8 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRequestPurchaseResponse(
     }
 }
 
-bool MCStorePostProductRequestResponse(const char *p_product_id);
-bool MCStorePostProductRequestError(const char *p_product, const char *p_error);
+bool MCStorePostProductRequestResponse(MCStringRef p_product_id);
+bool MCStorePostProductRequestError(MCStringRef p_product, MCStringRef p_error);
 
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProductDetailsResponse(JNIEnv *env, jobject object, jstring productId) __attribute__((visibility("default")));
@@ -767,10 +762,11 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProductDetailsResponse(J
 {
     bool t_success = true;
 
-    char *t_product_id = nil;
-    t_success = MCCStringFromJava(env, productId, t_product_id);
+    MCAutoStringRef t_product_id;
+    
+    t_success = MCJavaStringToStringRef(env, productId, &t_product_id);
     if (t_success)
-        t_success = MCStorePostProductRequestResponse(t_product_id);
+        t_success = MCStorePostProductRequestResponse(*t_product_id);
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProductDetailsError(JNIEnv *env, jobject object, jstring productId, jstring error) __attribute__((visibility("default")));
@@ -778,11 +774,12 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProductDetailsError(JNIE
 {
     bool t_success = true;
     
-    char *t_product_id = nil;
-    char *t_error = nil;
-    t_success = MCCStringFromJava(env, productId, t_product_id) && MCCStringFromJava(env, error, t_error);
+    MCAutoStringRef t_product_id;
+    MCAutoStringRef t_error;
+    
+    t_success = MCJavaStringToStringRef(env, productId, &t_product_id) && MCJavaStringToStringRef(env, error, &t_error);
     if (t_success)
-        t_success = MCStorePostProductRequestError(t_product_id, t_error);
+        t_success = MCStorePostProductRequestError(*t_product_id, *t_error);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -792,13 +789,6 @@ bool MCStoreRequestProductDetails(MCStringRef p_product_id)
     // Not implemented
     return false;
 }
-
-
-char* t_result;
-
-MCAndroidEngineRemoteCall("storeReceiveProductDetails", "ss", &t_result, p_purchase_id);
-
-return t_result;
 
 ///////////////////////////////////////////////////////////////
 
@@ -826,54 +816,47 @@ void MCStoreProductRequestResponseEvent::Destroy()
 }
 
 
-
 void MCStoreProductRequestResponseEvent::Dispatch()
-{    //t_product_id = m_product_id;
-    t_product_id = MCStoreLookUpProperty(m_product_id, "productId");
-    t_description = MCStoreGetPurchaseProperty(m_product_id, "description");
-    t_title = MCStoreGetPurchaseProperty(m_product_id, "title");
-    t_itemType = MCStoreGetPurchaseProperty(m_product_id, "itemType");
-    t_price = MCStoreGetPurchaseProperty(m_product_id, "price");
-    t_itemImageUrl = MCStoreGetPurchaseProperty(m_product_id, "itemImageUrl");
-    t_itemDownloadUrl = MCStoreGetPurchaseProperty(m_product_id, "itemDownloadUrl");
-    t_subscriptionDurationUnit = MCStoreGetPurchaseProperty(m_product_id, "subscriptionDurationUnit");
-    t_subscriptionDurationMultiplier = MCStoreGetPurchaseProperty(m_product_id, "subscriptionDurationMultiplier");
-
+{
     bool t_success = true;
 
 	MCPurchase *t_purchase;
     
-    if (MCPurchaseFindById(m_purchase_id, t_purchase))
-    {
+    if (MCPurchaseFindByProdId(m_product_id, t_purchase))
+    {        
         MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)t_purchase->platform_data;
-
-    
-    if (t_success)
-    {
+        
 		MCAutoArrayRef t_array;
 		MCArrayCreateMutable(&t_array);
+        
+        // MERG-2014-06-26 [[ MobileRefactor ]]
+        // We directly fetch the values from the android data
+        // The former code was only retrieving the productId since
+        // the other entries don't exist in the s_purchase_property table
+#ifdef LEGACY_EXEC
+        t_product_id = MCStoreGetPurchaseProperty(m_product_id, "productId");
+        t_description = MCStoreGetPurchaseProperty(m_product_id, "description");
+        t_title = MCStoreGetPurchaseProperty(m_product_id, "title");
+        t_itemType = MCStoreGetPurchaseProperty(m_product_id, "itemType");
+        t_price = MCStoreGetPurchaseProperty(m_product_id, "price");
+        t_itemImageUrl = MCStoreGetPurchaseProperty(m_product_id, "itemImageUrl");
+        t_itemDownloadUrl = MCStoreGetPurchaseProperty(m_product_id, "itemDownloadUrl");
+        t_subscriptionDurationUnit = MCStoreGetPurchaseProperty(m_product_id, "subscriptionDurationUnit");
+        t_subscriptionDurationMultiplier = MCStoreGetPurchaseProperty(m_product_id, "subscriptionDurationMultiplier");
+#endif
 
 		MCArrayStoreValue(*t_array, false, MCNAME("productId"), t_android_data->product_id);
-		MCArrayStoreValue(*t_array, false, MCNAME("price"), t_android_data->price);
-		MCArrayStoreValue(*t_array, false, MCNAME("price"), t_android_data->description);
-		MCArrayStoreValue(*t_array, false, MCNAME("title"), t_android_data->title);
-		MCArrayStoreValue(*t_array, false, MCNAME("itemType"), t_android_data->itemType);
-		MCArrayStoreValue(*t_array, false, MCNAME("itemImageUrl"), t_android_data->title);
-		MCArrayStoreValue(*t_array, false, MCNAME("itemDownloadUrl"), t_android_data->title);
-		MCArrayStoreValue(*t_array, false, MCNAME("subscriptionDurationUnit"), t_android_data->title;
-		MCArrayStoreValue(*t_array, false, MCNAME("subscriptionDurationMultiplier"), t_android_data->title;
         
         MCParameter p1, p2;
-        p1.sets_argument(MCString(t_product_id));
+        p1.setvalueref_argument(m_product_id);
         p1.setnext(&p2);
-        p2.set_argument(ep);
+        p2.setvalueref_argument(*t_array);
         
         MCdefaultstackptr->getcurcard()->message(MCM_product_details_received, &p1);
-    }
-    
+    }    
 }
 
-bool MCStorePostProductRequestResponse(const char *p_product_id)
+bool MCStorePostProductRequestResponse(MCStringRef p_product_id)
 {
     bool t_success;
     MCCustomEvent *t_event = nil;
@@ -891,38 +874,36 @@ bool MCStorePostProductRequestResponse(const char *p_product_id)
 class MCStoreProductRequestErrorEvent : public MCCustomEvent
 {
 public:
-    MCStoreProductRequestErrorEvent(const char *p_product, const char *p_error);
+    MCStoreProductRequestErrorEvent(MCStringRef p_product, MCStringRef p_error);
     
     void Destroy();
     void Dispatch();
     
 private:
-    char *m_product;
-    char *m_error;
+    MCStringRef m_product;
+    MCStringRef m_error;
 };
 
-MCStoreProductRequestErrorEvent::MCStoreProductRequestErrorEvent(const char *p_product, const char *p_error)
+MCStoreProductRequestErrorEvent::MCStoreProductRequestErrorEvent(MCStringRef p_product_id, MCStringRef p_error)
 {
     m_product = m_error = nil;
-    
-    MCCStringClone(p_product, m_product);
-    MCCStringClone(p_error, m_error);
+    m_product = MCValueRetain(p_product_id);
+    m_error = MCValueRetain(p_error);
 }
 
 void MCStoreProductRequestErrorEvent::Destroy()
 {
-    MCCStringFree(m_product);
-    MCCStringFree(m_error);
-    
+    MCValueRelease(m_product);
+    MCValueRelease(m_error);
     delete this;
 }
 
 void MCStoreProductRequestErrorEvent::Dispatch()
 {
-    MCdefaultstackptr->getcurcard()->message_with_args(MCM_product_request_error, m_product, m_error);
+    MCdefaultstackptr->getcurcard()->message_with_valueref_args(MCM_product_request_error, m_product, m_error);
 }
 
-bool MCStorePostProductRequestError(const char *p_product, const char *p_error)
+bool MCStorePostProductRequestError(MCStringRef p_product, MCStringRef p_error)
 {
     bool t_success;
     MCCustomEvent *t_event = nil;
@@ -933,34 +914,5 @@ bool MCStorePostProductRequestError(const char *p_product, const char *p_error)
         MCEventQueuePostCustom(t_event);
     
     return t_success;
-}
-
-////////
-
-
-Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
-{
-    bool t_success = true;
-    char *t_product_id = nil;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
-    if (t_success)
-        t_success = MCStoreRequestProductDetails(t_product_id);
-    
-    MCCStringFree(t_product_id);
-    
-    return ES_NORMAL;
-}
-
-bool MCStoreRequestProductDetails(const char *p_product_id)
-{
-    
-    bool t_result;
-    
-    MCAndroidEngineRemoteCall("storeRequestProductDetails", "bs", &t_result, p_product_id);
-    
-    return t_result;
-    
 }
 

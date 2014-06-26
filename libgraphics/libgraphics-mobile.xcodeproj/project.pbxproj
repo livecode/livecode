@@ -83,15 +83,6 @@
 				E8C22BC7177AEC9A003785D3 /* context.cpp */,
 				4C977242193C971F00DB2F4A /* coretext.cpp */,
 				E8C22BC8177AEC9A003785D3 /* image.cpp */,
-<<<<<<< HEAD
-				E8C22BC9177AEC9A003785D3 /* path.cpp */,
-				E8C22BCA177AEC9A003785D3 /* utils.cpp */,
-				4C077911187DA31E001E297E /* mblandroidtext.cpp */,
-				4C053DCF17C4C9B30036E151 /* mbliphonetext.mm */,
-				76EF329418217FD800FAC195 /* mblandroidtext.cpp */,
-				4CD56BFA17D5E3CD00B718F2 /* cachetable.cpp */,
-=======
->>>>>>> develop
 				4C92703217D63F3000F97382 /* legacyblendmodes.cpp */,
 				4C313BD9180C545D004232E1 /* legacygradients.cpp */,
 				4C077911187DA31E001E297E /* mblandroidtext.cpp */,

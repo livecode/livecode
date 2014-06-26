@@ -130,7 +130,7 @@ void MCAudioClip::SetPlayProp(MCExecContext& ctxt, uint2 p_loudness)
         extern bool MCSystemSetPlayLoudness(uint2 loudness);
 #ifdef _MOBILE
         if (MCSystemSetPlayLoudness(loudness))
-            return ES_NORMAL;
+            return;
 #endif
         if (MCplayers != NULL)
         {

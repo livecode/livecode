@@ -54,7 +54,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp capsule.cpp \
 	externalv0.cpp externalv1.cpp \
 	mode_standalone.cpp lextable.cpp eventqueue.cpp sha1.cpp stacke.cpp \
-	redraw.cpp tilecache.cpp tilecachesw.cpp tilecachegl.cpp sysregion.cpp \
+	redraw.cpp tilecache.cpp tilecachesw.cpp tilecachegl.cpp \
 	sysunxdate.cpp sysunxrandom.cpp sysspec.cpp stackcache.cpp uuid.cpp \
 	mblad.cpp mblcalendar.cpp mblcamera.cpp mblcontact.cpp \
 	quicktime.cpp \
