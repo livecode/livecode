@@ -149,73 +149,7 @@ bool MCStoreRestorePurchases()
     return t_result;
 }
 
-bool MCStoreProductSetType(const char *p_product_id, const char *p_product_type)
-{
-    
-    bool t_result;
-    
-    MCAndroidEngineRemoteCall("storeProductSetType", "bss", &t_result, p_product_id, p_product_type);
-    
-    return t_result;
-    
-}
-
-bool MCStoreSetPurchaseProperty(const char *p_product_id, const char *p_property_name, const char *p_property_value)
-{
-    
-    bool t_result;
-    
-    MCAndroidEngineRemoteCall("storeSetPurchaseProperty", "bsss", &t_result, p_product_id, p_property_name, p_property_value);
-    
-    return t_result;
-    
-}
-
-char* MCStoreGetPurchaseProperty(const char *p_product_id, const char *p_property_name)
-{
-    char* t_result;
-    
-    MCAndroidEngineRemoteCall("storeGetPurchaseProperty", "sss", &t_result, p_product_id, p_property_name);
-    
-    return t_result;
-    
-}
-
-char* MCStoreGetPurchaseList()
-{
-    char* t_result;
-    
-    MCAndroidEngineRemoteCall("storeGetPurchaseList", "s", &t_result);
-    
-    return t_result;
-    
-}
-
-bool MCStoreConsumePurchase(const char *p_purchase_id)
-{
-    
-    bool t_result;
-    
-    MCAndroidEngineRemoteCall("storeConsumePurchase", "bs", &t_result, p_purchase_id);
-    
-    return t_result;
-    
-}
-/*
-bool MCStoreMakePurchase(const char *p_prod_id, const char *p_quantity, const char *p_payload)
-{
-    
-    bool t_result;
-    
-    MCAndroidEngineRemoteCall("storeMakePurchase", "bsss", &t_result, p_prod_id, p_quantity, p_payload);
-    
-    return t_result;
-  
-}
-*/
-  
-
-bool MCStoreMakePurchase(MCPurchase *p_purchase)
+bool MCStoreMakePurchase(MCStringRef p_product_id, MCStringRef p_quantity, MCStringRef p_payload)
 {
     if (p_purchase->state != kMCPurchaseStateInitialized)
         return false;
@@ -224,46 +158,18 @@ bool MCStoreMakePurchase(MCPurchase *p_purchase)
     
     bool t_success = false;
     
-    MCAndroidEngineRemoteCall("storeMakePurchase", "bsss", &t_success, p_purchase->prod_id, "1", t_android_data->developer_payload);
+    MCAndroidEngineRemoteCall("storeMakePurchase", "bxxx", &t_success, p_product_id, p_quantity, p_payload);
     
     return t_success;
 }
 
-/*
-char* MCStoreAndroidRequestProductDetails(const char *p_purchase_id)
-{
+bool MCStoreReceiveProductDetails(MCStringRef p_purchase_id, MCStringRef r_result)
+{    
+    MCAutoStringRef t_result;
     
-    char* t_result;
+    MCAndroidEngineRemoteCall("storeReceiveProductDetails", "xx", &(&t_result), p_purchase_id);
     
-    MCAndroidEngineRemoteCall("storeRequestProductDetails", "ss", &t_result, p_purchase_id);
-    
-    return t_result;
-    
-}
-*/
-
-
-// REMOVE THIS METHOD
-bool MCStoreRequestForProductDetails(const char *p_purchase_id)
-{
-    
-    bool t_result;
-    
-    MCAndroidEngineRemoteCall("storeRequestProductDetails", "bs", &t_result, p_purchase_id);
-    
-    return t_result;
-    
-}
-
-char* MCStoreReceiveProductDetails(const char *p_purchase_id)
-{
-    
-    char* t_result;
-    
-    MCAndroidEngineRemoteCall("storeReceiveProductDetails", "ss", &t_result, p_purchase_id);
-    
-    return t_result;
-    
+    return MCStringCopy(*t_result, r_result);    
 }
 
 
@@ -874,46 +780,31 @@ bool MCStoreRequestProductDetails(MCStringRef p_product_id)
 class MCStoreProductRequestResponseEvent : public MCCustomEvent
 {
 public:
-    MCStoreProductRequestResponseEvent(const char *p_product_id);
+    MCStoreProductRequestResponseEvent(MCStringRef p_product_id);
     
     void Dispatch();
     void Destroy();
     
 private:
-    char *m_product_id;
+    MCStringRef m_product_id;
 };
 
-MCStoreProductRequestResponseEvent::MCStoreProductRequestResponseEvent(const char *p_product_id)
+MCStoreProductRequestResponseEvent::MCStoreProductRequestResponseEvent(MCStringRef p_product_id)
 {
-    m_product_id = nil;
-    MCCStringClone(p_product_id, m_product_id);
+	MCValueAssign(m_product_id, p_product_id);
 }
 
 void MCStoreProductRequestResponseEvent::Destroy()
 {
-    MCCStringFree(m_product_id);
-    
+    MCValueRelease(m_product_id);    
     delete this;
 }
 
 
 
 void MCStoreProductRequestResponseEvent::Dispatch()
-{
-    bool t_success = true;
-    
-    const char *t_product_id = nil;
-    const char *t_description = nil;
-    const char *t_title = nil;
-    const char *t_itemType = nil;
-    const char *t_price = nil;
-    const char *t_itemImageUrl = nil;
-    const char *t_itemDownloadUrl = nil;
-    const char *t_subscriptionDurationUnit = nil;
-    const char *t_subscriptionDurationMultiplier= nil;
-    
-    //t_product_id = m_product_id;
-    t_product_id = MCStoreGetPurchaseProperty(m_product_id, "productId");
+{    //t_product_id = m_product_id;
+    t_product_id = MCStoreLookUpProperty(m_product_id, "productId");
     t_description = MCStoreGetPurchaseProperty(m_product_id, "description");
     t_title = MCStoreGetPurchaseProperty(m_product_id, "title");
     t_itemType = MCStoreGetPurchaseProperty(m_product_id, "itemType");
@@ -922,71 +813,30 @@ void MCStoreProductRequestResponseEvent::Dispatch()
     t_itemDownloadUrl = MCStoreGetPurchaseProperty(m_product_id, "itemDownloadUrl");
     t_subscriptionDurationUnit = MCStoreGetPurchaseProperty(m_product_id, "subscriptionDurationUnit");
     t_subscriptionDurationMultiplier = MCStoreGetPurchaseProperty(m_product_id, "subscriptionDurationMultiplier");
+
+    bool t_success = true;
+
+	MCPurchase *t_purchase;
+    
+    if (MCPurchaseFindById(m_purchase_id, t_purchase))
+    {
+        MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)t_purchase->platform_data;
+
     
     if (t_success)
     {
-        MCExecPoint ep(nil, nil, nil);
-        
-        MCVariableValue *t_response = nil;
-        t_response = new MCVariableValue();
-        
-        MCVariableValue *t_element = nil;
-        
-        if (t_product_id != nil)
-        {
-            t_response->lookup_element(ep, "productId", t_element);
-            t_element->assign_string(MCString(t_product_id));
-        }
-      
-        if (t_price != nil)
-        {
-            t_response->lookup_element(ep, "price", t_element);
-            t_element->assign_string(MCString(t_price));
-        }
-        
-        if (t_description != nil)
-        {
-            t_response->lookup_element(ep, "description", t_element);
-            t_element->assign_string(MCString(t_description));
-        }
-        
-        if (t_title != nil)
-        {
-            t_response->lookup_element(ep, "title", t_element);
-            t_element->assign_string(MCString(t_title));
-        }
-        
-        if (t_itemType != nil)
-        {
-            t_response->lookup_element(ep, "itemType", t_element);
-            t_element->assign_string(MCString(t_itemType));
-        }
-        
-        if (t_itemImageUrl != nil)
-        {
-            t_response->lookup_element(ep, "itemImageUrl", t_element);
-            t_element->assign_string(MCString(t_itemImageUrl));
-        }
-        
-        if (t_itemDownloadUrl != nil)
-        {
-            t_response->lookup_element(ep, "itemDownloadUrl", t_element);
-            t_element->assign_string(MCString(t_itemDownloadUrl));
-        }
-        
-        if (t_subscriptionDurationUnit != nil)
-        {
-            t_response->lookup_element(ep, "subscriptionDurationUnit", t_element);
-            t_element->assign_string(MCString(t_subscriptionDurationUnit));
-        }
-        
-        if (t_subscriptionDurationMultiplier != nil)
-        {
-            t_response->lookup_element(ep, "subscriptionDurationMultiplier", t_element);
-            t_element->assign_string(MCString(t_subscriptionDurationMultiplier));
-        }
-        
-        ep.setarray(t_response, True);
+		MCAutoArrayRef t_array;
+		MCArrayCreateMutable(&t_array);
+
+		MCArrayStoreValue(*t_array, false, MCNAME("productId"), t_android_data->product_id);
+		MCArrayStoreValue(*t_array, false, MCNAME("price"), t_android_data->price);
+		MCArrayStoreValue(*t_array, false, MCNAME("price"), t_android_data->description);
+		MCArrayStoreValue(*t_array, false, MCNAME("title"), t_android_data->title);
+		MCArrayStoreValue(*t_array, false, MCNAME("itemType"), t_android_data->itemType);
+		MCArrayStoreValue(*t_array, false, MCNAME("itemImageUrl"), t_android_data->title);
+		MCArrayStoreValue(*t_array, false, MCNAME("itemDownloadUrl"), t_android_data->title);
+		MCArrayStoreValue(*t_array, false, MCNAME("subscriptionDurationUnit"), t_android_data->title;
+		MCArrayStoreValue(*t_array, false, MCNAME("subscriptionDurationMultiplier"), t_android_data->title;
         
         MCParameter p1, p2;
         p1.sets_argument(MCString(t_product_id));

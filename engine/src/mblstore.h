@@ -137,6 +137,7 @@ bool MCPurchaseLookupProperty(MCStringRef p_property, Properties &r_property);
 
 bool MCPurchaseList(MCStringRef& r_string);
 bool MCPurchaseFindByProdId(MCStringRef p_prod_id, MCPurchase *&r_purchase);
+bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase);
 
 bool MCPurchaseCreate(MCStringRef p_product_id, void *p_context, MCPurchase *&r_purchase);
 
@@ -152,20 +153,10 @@ bool MCStoreCanMakePurchase();
 
 bool MCStoreEnablePurchaseUpdates();
 bool MCStoreDisablePurchaseUpdates();
-bool MCStoreProductSetType(const char *p_purchase_id, const char *p_product_type);
-bool MCStoreSetPurchaseProperty(const char *p_purchase_id, const char *p_property_name, const char *p_property_value);
-char* MCStoreGetPurchaseProperty(const char *p_purchase_id, const char *p_property_name);
-char* MCStoreGetPurchaseList();
-bool MCStoreConsumePurchase(const char *p_product_id);
-bool MCStoreMakePurchase(const char *p_product_id, const char *p_quantity, const char *p_payload);
-//bool MCStoreMakePurchase(MCPurchase *p);
-bool MCStoreRequestProductDetails(const char *p_product_id);
-bool MCStoreRequestForProductDetails(const char *p_product_id);
-char* MCStoreReceiveProductDetails(const char *p_product_id);
-//char* MCStoreAndroidRequestProductDetails(const char *p_product_id);
-
 
 bool MCStoreRestorePurchases();
+bool MCStoreMakePurchase(MCStringRef p_product_id, MCStringRef p_quantity, MCStringRef p_payload);
+bool MCStoreReceiveProductDetails(MCStringRef p_purchase_id, MCStringRef r_result);
 
 MCPurchase *MCStoreGetPurchases();
 

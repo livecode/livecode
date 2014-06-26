@@ -40,6 +40,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #ifdef FEATURE_PLATFORM_AUDIO
 #include "platform.h"
+#elif defined(_WINDOWS_DESKTOP)
+// MERG-2014-06-26 [[ PlatformPlayer ]]
+// These 2 definitions must be accessible from exec-interface-aclip
+#include "w32prefix.h"
+extern HWAVEOUT hwaveout;  //handle to audio device opened
+extern WAVEHDR wh;         //wave header structure
 #endif
 
 //////////

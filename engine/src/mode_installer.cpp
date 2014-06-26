@@ -1464,6 +1464,8 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 
 #endif
 
+
+#ifdef LEGACY_EXEC
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCObject::mode_get/setprop for STANDALONE mode.

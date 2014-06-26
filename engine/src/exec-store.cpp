@@ -240,15 +240,10 @@ void MCStoreExecMakePurchase(MCExecContext& ctxt, MCStringRef p_product_id, MCSt
 {
     MCPurchase *t_purchase = nil;
     bool t_success;
+	t_success = true;
     
     if (t_success)
-        t_success = MCPurchaseCreate(p_product_id, nil, t_purchase);
-    
-    if (t_success)
-        t_success = MCPurchaseSet(t_purchase, kMCPurchasePropertyQuantity, p_quantity);
-    
-    if (t_success)
-        t_success = MCPurchaseMakePurchase(t_purchase);
+		t_success = MCStoreMakePurchase(p_product_id, p_quantity, p_payload);
     
     if (!t_success)
         ctxt . Throw();
@@ -257,8 +252,9 @@ void MCStoreExecMakePurchase(MCExecContext& ctxt, MCStringRef p_product_id, MCSt
 void MCStoreExecConfirmPurchase(MCExecContext& ctxt, MCStringRef p_product_id)
 {
     bool t_success;
+	MCPurchase *t_purchase;
     
-    t_success = MCPurchaseFindByProdId(*t_prod_id, t_purchase);
+    t_success = MCPurchaseFindByProdId(p_product_id, t_purchase);
     
     if (t_success)
         t_success = MCPurchaseConfirmDelivery(t_purchase);

@@ -511,6 +511,31 @@ Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters)
     return ES_ERROR;
 }
 
+Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleRequestProductDetails */ LEGACY_EXEC
+    bool t_success = true;
+    char *t_product_id = nil;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
+    if (t_success)
+        t_success = MCStoreRequestProductDetails(t_product_id);
+    
+    MCCStringFree(t_product_id);
+    
+    return ES_NORMAL;
+#endif /* MCHandleRequestProductDetails */
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "uxu", &t_id, &(&t_prop_name), &t_quantity);
+		
+	MCExecContext ctxt(nil, nil, nil);
+    
+	if (t_success)
+        t_success = MCNumberCreateWithInteger(t_quantity, &t_quantity_ref);
+
+	MC
+}
 
 
 Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters)
@@ -6633,7 +6658,8 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobileStoreRequestProductDetails", MCHandleRequestProductDetails, nil},
     {false, "mobileStoreConsumePurchase", MCHandleConsumePurchase, nil},
     {false, "mobileStorePurchasedProducts", MCHandleGetPurchases, nil},
-    {false, "mobileStorePurchaseError", MCHandlePurchaseError, nil},
+    {false, "mobileStorePurchaseError", MCHandlePurchaseError, nil},	
+    {false, "mobileStoreVerifyPurchase", MCHandlePurchaseVerify, nil},
 	
 	{false, "iphoneControlCreate", MCHandleControlCreate, nil},
 	{false, "iphoneControlDelete", MCHandleControlDelete, nil},

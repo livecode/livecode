@@ -46,7 +46,7 @@
 
 #define PIXEL_FORMAT_32 k32BGRAPixelFormat
 
-OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec);
+OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
 
 #elif defined(_MAC_DESKTOP)
 #include "osxprefix.h"
@@ -186,16 +186,16 @@ static SampleDescriptionHandle scanSoundTracks(Movie tmovie)
 static bool path_to_dataref(MCStringRef p_path, DataReferenceRecord& r_rec)
 {
 	bool t_success = true;
-    MCAutoStringRefAsCFString t_cf_path;
-    
-    t_success = t_cf_path . Lock(p_path);
-    
+	CFStringRef t_cf_path = NULL;
+	t_cf_path = CFStringCreateWithCString(NULL, MCStringGetCString(p_path), kCFStringEncodingWindowsLatin1);
+	t_success = (t_cf_path != NULL);
 	if (t_success)
 	{
 		OSErr t_error;
-		t_error = QTNewDataReferenceFromFullPathCFString(*t_cf_path, kQTNativeDefaultPathStyle, 0, &r_rec . dataRef, &r_rec . dataRefType);
+		t_error = QTNewDataReferenceFromFullPathCFString(t_cf_path, kQTNativeDefaultPathStyle, 0, &r_rec . dataRef, &r_rec . dataRefType);
 		t_success = noErr == t_error;
 	}
+	CFRelease(t_cf_path);
 	return t_success;
 }
 
@@ -337,8 +337,9 @@ void MCQTRecordSound(MCStringRef fname)
 	if (!MCQTInit())
 	{
 		MCresult->sets("could not initialize quicktime");
-		return true;
+		return;
 	}
+
 	MCQTStopRecording();//just in case
 	FSSpec fspec;
     
@@ -652,7 +653,7 @@ static int compare_qteffect(const void *a, const void *b)
 void MCQTEffectsList(MCStringRef &r_string)
 {	
 	if (!MCQTInit())
-		return false;
+		return;
 	
 	QTEffectsQuery(NULL);
     
