@@ -413,7 +413,8 @@ Exec_stat MCVariableArray::transpose(MCVariableArray& v)
 	if (v.extents == NULL || v.dimensions != 2 || v.ismissingelement() == True)
 		return ES_ERROR;
 	presethash(v.nfilled);
-	uint2 i, j;
+    // MW-2014-05-28: [[ Bug 12479 ]] Make sure extents use 32-bit ints.
+	uint32_t i, j;
 	char tbuf[(U4L * 2) + 1];
 	for (i = v.extents[COL_DIM].min; i <= v.extents[COL_DIM].max; i++)
 		for (j = v.extents[ROW_DIM].min; j <= v.extents[ROW_DIM].max; j++)
@@ -677,19 +678,21 @@ void MCVariableArray::calcextents(void)
 		}
 }
 
-uint2 MCVariableArray::getextent(uint1 tdimension) const
+// MW-2014-05-28: [[ Bug 12479 ]] Make sure extents use 32-bit ints.
+uint32_t MCVariableArray::getextent(uint1 tdimension) const
 {
 	if (extents == NULL || tdimension > dimensions)
 		return 0;
 	return extents[tdimension].max - extents[tdimension].min + 1;
 }
 
+// MW-2014-05-28: [[ Bug 12479 ]] Make sure extents use 32-bit ints.
 Boolean MCVariableArray::ismissingelement(void) const
 {
 	if (extents == NULL)
 		return True;
-	uint2 telements = getextent(0);
-	uint2 i;
+	uint32_t telements = getextent(0);
+	uint32_t i;
 	for (i = 1; i < dimensions; i++)
 		telements *= getextent((uint1)i);
 	return !(telements == nfilled);
@@ -706,7 +709,9 @@ Exec_stat MCVariableArray::matrixmultiply(MCExecPoint& ep, MCVariableArray &va, 
 	        !(!va.ismissingelement() && !vb.ismissingelement()))
 		return ES_ERROR; //columns does not equal rows
 	presethash(va.getextent(ROW_DIM) * vb.getextent(COL_DIM));
-	uint2 i,j,k;
+    
+    // MW-2014-05-28: [[ Bug 12479 ]] Make sure extents use 32-bit ints.
+	uint32_t i,j,k;
 	char tbuf[(U4L * 2) + 1];
 	MCHashentry *vaptr,*vbptr,*vcptr;
 	for (i = va.extents[ROW_DIM].min; i <= va.extents[ROW_DIM].max; i++)

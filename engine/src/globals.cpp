@@ -369,8 +369,6 @@ Boolean MCexitall;
 int4 MCretcode;
 Boolean MCrecording;
 
-Boolean MCantialiasedtextworkaround = False;
-
 // MW-2012-03-08: [[ StackFile5500 ]] Make stackfile version 5.5 the default.
 uint4 MCstackfileversion = 5500;
 
@@ -404,7 +402,6 @@ Boolean MClockcolormap;
 Boolean MClockerrors;
 Boolean MClockmenus;
 Boolean MClockmessages;
-Boolean MClockmoves;
 Boolean MClockrecent;
 Boolean MCtwelvetime = True;
 Boolean MCuseprivatecmap;
@@ -741,7 +738,6 @@ void X_clear_globals(void)
 	MCexitall = False;
 	MCretcode = 0;
 	MCrecording = False;
-	MCantialiasedtextworkaround = False;
 	// MW-2012-03-08: [[ StackFile5500 ]] Make 5.5 stackfile version the default.
 	MCstackfileversion = 5500;
 	MClook = LF_MOTIF;
@@ -761,7 +757,6 @@ void X_clear_globals(void)
 	MClockerrors = False;
 	MClockmenus = False;
 	MClockmessages = False;
-	MClockmoves = False;
 	MClockrecent = False;
 	MCtwelvetime = True;
 	MCuseprivatecmap = False;
@@ -934,6 +929,7 @@ bool X_open(int argc, char *argv[], char *envp[])
 	MCserialcontrolsettings = strclone("baud=9600 parity=N data=8 stop=1");
 
 	MCdispatcher = new MCDispatch;
+    MCdispatcher -> add_transient_stack(MCtooltip);
 
 	if (MCnoui)
 		MCscreen = new MCUIDC;
@@ -1022,7 +1018,10 @@ int X_close(void)
 
 	MCU_play_stop();
 	if (MCrecording)
-		MCtemplateplayer->stoprecording();
+	{
+		extern void MCQTStopRecording(void);
+		MCQTStopRecording();
+	}
 	MClockmessages = True;
 	MCS_killall();
 
@@ -1034,6 +1033,7 @@ int X_close(void)
 		delete optr;
 	}
 
+    MCdispatcher -> remove_transient_stack(MCtooltip);
 	delete MCtooltip;
 	MCtooltip = NULL;
 

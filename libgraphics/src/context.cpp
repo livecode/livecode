@@ -755,6 +755,13 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 
 	t_layer_clip = MCGIRectangleIntersect(t_layer_clip, t_device_shape);
 
+	// IM-2014-06-24: [[ GraphicsPerformance ]] If the clip is empty then don't try to create a new layer
+	if ((t_layer_clip.left >= t_layer_clip.right) || (t_layer_clip.top >= t_layer_clip.bottom))
+	{
+		self -> layer -> nesting += 1;
+		return;
+	}
+	
 	// Create a suitable bitmap.
 	SkBitmap t_new_bitmap;
 	t_new_bitmap . setConfig(SkBitmap::kARGB_8888_Config, t_layer_clip . right - t_layer_clip . left, t_layer_clip . bottom - t_layer_clip . top);
@@ -1374,6 +1381,43 @@ void MCGContextClipToRect(MCGContextRef self, MCGRectangle p_rect)
 	// we use skia to manage the clip entirely rather than storing in state
 	// this means any transforms to the clip are handled by skia allowing for more complex clips (rather than just a rect)
 	self -> layer -> canvas -> clipRect(MCGRectangleToSkRect(p_rect), SkRegion::kIntersect_Op, self -> state -> should_antialias);
+}
+
+void MCGContextSetClipToDeviceRegion(MCGContextRef self, MCGRegionRef p_region)
+{
+	if (!MCGContextIsValid(self) || p_region == nil)
+		return;
+	
+	self->layer->canvas->clipRegion(p_region->region, SkRegion::kReplace_Op);
+}
+
+void MCGContextClipToDeviceRegion(MCGContextRef self, MCGRegionRef p_region)
+{
+	if (!MCGContextIsValid(self) || p_region == nil)
+		return;
+	
+	self -> layer -> canvas -> clipRegion(p_region->region, SkRegion::kIntersect_Op);
+}
+
+void MCGContextClipToRegion(MCGContextRef self, MCGRegionRef p_region)
+{
+	MCGAffineTransform t_transform;
+	t_transform = MCGContextGetDeviceTransform(self);
+	
+	MCGRegionRef t_transformed;
+	t_transformed = nil;
+	
+	if (MCGAffineTransformIsIdentity(t_transform))
+	{
+		MCGContextClipToDeviceRegion(self, p_region);
+		return;
+	}
+	
+	/* UNCHECKED */ MCGRegionCopyWithTransform(p_region, MCGContextGetDeviceTransform(self), t_transformed);
+	
+	MCGContextClipToDeviceRegion(self, t_transformed);
+	
+	MCGRegionDestroy(t_transformed);
 }
 
 MCGRectangle MCGContextGetClipBounds(MCGContextRef self)
@@ -2027,10 +2071,20 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
 		}
 		else if (p_pattern != NULL)
 		{
+			// IM-2014-05-13: [[ HiResPatterns ]] Need to check the combined context & pattern transform
+			// to prevent assertion failure when rendering with hi-dpi patterns
+			SkMatrix t_matrix;
+			t_matrix = self->layer->canvas->getTotalMatrix();
+
+			SkMatrix t_pattern_matrix;
+			MCGAffineTransformToSkMatrix(p_pattern->transform, t_pattern_matrix);
+
+			t_matrix.postConcat(t_pattern_matrix);
+
 			// MM-2014-03-12: [[ Bug 11892 ]] If we are not transforming the pattern, there's no need to apply any filtering.
 			//  Was causing issues in Skia with non null blend modes.
 			SkMatrix::TypeMask t_transform_type;
-			t_transform_type = self -> layer -> canvas -> getTotalMatrix() . getType();
+			t_transform_type = t_matrix . getType();
 			if (t_transform_type != SkMatrix::kIdentity_Mask && t_transform_type != SkMatrix::kTranslate_Mask)
 				t_filter = p_pattern -> filter;
 			t_success = MCGPatternToSkShader(p_pattern, t_shader);
@@ -2202,6 +2256,9 @@ void MCGContextFill(MCGContextRef self)
 	if (!MCGContextIsValid(self))
 		return;
 	
+    if (self -> path == nil)
+        return;
+    
 	bool t_success;
 	t_success = true;
 	
@@ -2224,9 +2281,12 @@ void MCGContextStroke(MCGContextRef self)
 	if (!MCGContextIsValid(self))
 		return;
 	
+    if (self -> path == nil)
+        return;
+    
 	bool t_success;
 	t_success = true;
-	
+    
 	if (t_success)
 		t_success = MCGContextStrokePath(self, self -> path);
 	
@@ -2247,6 +2307,9 @@ void MCGContextFillAndStroke(MCGContextRef self)
 	if (!MCGContextIsValid(self))
 		return;
 	
+    if (self -> path == nil)
+        return;
+    
 	bool t_success;
 	t_success = true;
 	
@@ -2359,7 +2422,7 @@ void MCGContextSimplify(MCGContextRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap, const MCGRectangle *p_src, const MCGRectangle &p_dst, MCGImageFilter p_filter)
+static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap, const MCGRectangle *p_center, const MCGRectangle *p_src, const MCGRectangle &p_dst, MCGImageFilter p_filter)
 {
 	bool t_success;
 	t_success = true;
@@ -2386,10 +2449,46 @@ static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap,
 	{
 		// MM-2014-03-12: [[ Bug 11892 ]] If we are not transforming the image, there's no need to apply any filtering.
 		//  Was causing issues in Skia with non null blend modes.
-		SkMatrix::TypeMask t_transform_type;
-		t_transform_type = self -> layer -> canvas -> getTotalMatrix() . getType();
-		if ((t_transform_type == SkMatrix::kIdentity_Mask || t_transform_type == SkMatrix::kTranslate_Mask) &&
-			p_bitmap . width() == p_dst . size . width && p_bitmap . height() == p_dst . size . height)
+
+		// IM-2014-06-19: [[ Bug 12557 ]] More rigourous check to see if we need a filter - Skia will complain if a filter
+		// is used for translation-only transforms or scaling transforms close to the identity.
+		SkMatrix t_matrix;
+		t_matrix = self->layer->canvas->getTotalMatrix();
+
+		MCGRectangle t_tmp_src;
+		MCGFloat t_src_width, t_src_height;
+		if (p_src != nil)
+			t_tmp_src = *p_src;
+		else
+			t_tmp_src = MCGRectangleMake(0, 0, p_bitmap.width(), p_bitmap.height());
+
+		// preconcat the current transform with the transformation from source -> dest rect to obtain the total transformation.
+		SkMatrix t_rect_to_rect;
+		t_rect_to_rect.setRectToRect(MCGRectangleToSkRect(t_tmp_src), MCGRectangleToSkRect(p_dst), SkMatrix::kFill_ScaleToFit);
+
+		t_matrix.preConcat(t_rect_to_rect);
+
+		bool t_no_filter = false;
+
+		// Translation only - no filter
+		if ((t_matrix.getType() & ~SkMatrix::kTranslate_Mask) == 0)
+			t_no_filter = true;
+		else if ((t_matrix.getType() & ~(SkMatrix::kTranslate_Mask | SkMatrix::kScale_Mask)) == 0)
+		{
+			// Translate and scale - if the transformed & rounded destination is the same size as the source then don't filter
+			SkRect src, dst;
+			src.setXYWH(t_tmp_src.origin.x, t_tmp_src.origin.y, t_tmp_src.size.width, t_tmp_src.size.height);
+
+			t_matrix.mapPoints(SkTCast<SkPoint*>(&dst),
+				SkTCast<const SkPoint*>(&src),
+				2);
+
+			SkIRect idst;
+			dst.round(&idst);
+			t_no_filter = idst.width() == t_tmp_src.size.width && idst.height() == t_tmp_src.size.height;
+		}
+
+		if (t_no_filter)
 		{
 			t_paint . setAntiAlias(false);
 			t_paint . setFilterLevel(SkPaint::kNone_FilterLevel);
@@ -2426,7 +2525,17 @@ static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap,
 			t_src_rect_ptr = &t_src_rect;
 		}
 
-		self -> layer -> canvas -> drawBitmapRectToRect(p_bitmap, t_src_rect_ptr, MCGRectangleToSkRect(p_dst), &t_paint);
+        if (p_src != nil || p_center == nil)
+            self -> layer -> canvas -> drawBitmapRectToRect(p_bitmap, t_src_rect_ptr, MCGRectangleToSkRect(p_dst), &t_paint);
+        else
+        {
+            SkIRect t_center;
+            t_center . fLeft = ceilf(p_center -> origin . x);
+            t_center . fTop = ceilf(p_center -> origin . y);
+            t_center . fRight = floorf(p_center -> origin . x + p_center -> size . width);
+            t_center . fBottom = floorf(p_center -> origin . y + p_center -> size . height);
+            self -> layer -> canvas -> drawBitmapNine(p_bitmap, t_center, MCGRectangleToSkRect(p_dst), &t_paint);
+        }
 	}
 	
 	return t_success;
@@ -2437,15 +2546,22 @@ void MCGContextDrawImage(MCGContextRef self, MCGImageRef p_image, MCGRectangle p
 	if (!MCGImageIsValid(p_image))
 		return;
 
-	self -> is_valid = MCGContextDrawSkBitmap(self, *p_image->bitmap, nil, p_dst, p_filter);
+	self -> is_valid = MCGContextDrawSkBitmap(self, *p_image->bitmap, nil, nil, p_dst, p_filter);
 }
 
+void MCGContextDrawImageWithCenter(MCGContextRef self, MCGImageRef p_image, MCGRectangle p_center, MCGRectangle p_dst, MCGImageFilter p_filter)
+{
+	if (!MCGImageIsValid(p_image))
+		return;
+    
+	self -> is_valid = MCGContextDrawSkBitmap(self, *p_image->bitmap, &p_center, nil, p_dst, p_filter);
+}
 void MCGContextDrawRectOfImage(MCGContextRef self, MCGImageRef p_image, MCGRectangle p_src, MCGRectangle p_dst, MCGImageFilter p_filter)
 {
 	if (!MCGImageIsValid(p_image))
 		return;
 
-	self -> is_valid = MCGContextDrawSkBitmap(self, *p_image->bitmap, &p_src, p_dst, p_filter);
+	self -> is_valid = MCGContextDrawSkBitmap(self, *p_image->bitmap, nil, &p_src, p_dst, p_filter);
 }
 
 void MCGContextDrawPixels(MCGContextRef self, const MCGRaster& p_raster, MCGRectangle p_dst, MCGImageFilter p_filter)
@@ -2461,7 +2577,7 @@ void MCGContextDrawPixels(MCGContextRef self, const MCGRaster& p_raster, MCGRect
 		t_success = MCGRasterToSkBitmap(p_raster, kMCGPixelOwnershipTypeBorrow, t_bitmap);
 
 	if (t_success)
-		t_success = MCGContextDrawSkBitmap(self, t_bitmap, nil, p_dst, p_filter);
+		t_success = MCGContextDrawSkBitmap(self, t_bitmap, nil, nil, p_dst, p_filter);
 	
 	self -> is_valid = t_success;
 }
@@ -2585,7 +2701,8 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 	uint32_t t_key_length;
 	if (t_success)
 	{
-		t_key_length = p_length + sizeof(p_length) + sizeof(p_font . fid) + sizeof(p_font . size) + sizeof(p_font . style) + 2 * sizeof(p_transform . a);
+        // MM-2014-06-02: [[ CoreText ]] We no no longer need to store the style - was only needed by Mac/ATSUI.
+		t_key_length = p_length + sizeof(p_length) + sizeof(p_font . fid) + sizeof(p_font . size) + sizeof(p_transform . a) + sizeof(p_transform . d);
 		t_success = MCMemoryNew(t_key_length, t_key);
 	}
 	
@@ -2617,9 +2734,6 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 			t_size |= 1 << 14;
 		MCMemoryCopy(t_key_ptr, &t_size, sizeof(p_font . size));
 		t_key_ptr += sizeof(p_font . size);
-
-		MCMemoryCopy(t_key_ptr, &p_font . style, sizeof(p_font . style));
-		t_key_ptr += sizeof(p_font . style);
 
 		// MM-2014-04-16: [[ Bug 11964 ]] Store the scale of the transform in the key.
 		//  We only need to store the (x?) scale of the transform as that is all that will effect the text measurment.

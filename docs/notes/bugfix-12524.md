@@ -1,0 +1,1 @@
+# Hiding player controller stretches movie image vertically

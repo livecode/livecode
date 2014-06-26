@@ -351,6 +351,7 @@ public:
 	void stopcomposition(Boolean del, Boolean force);
 	void setcompositioncursoroffset(uint2 coffset);
 	void setcompositionconvertingrange(uint1 si,uint1 ei);
+	bool getcompositionrange(int32_t& si, int32_t& ei);
 	void deletecomposition();
 	Boolean getcompositionrect(MCRectangle &r, int2 offset);
 	void syncfonttokeyboard();
@@ -409,6 +410,7 @@ public:
 	void loctext(MCExecPoint &ep, Boolean click);
 	Boolean locmark(Boolean wholeline, Boolean wholeword,
 	                Boolean click, Boolean chunk, Boolean inc_cr, int4 &si, int4 &ei);
+	Boolean locmarkpoint(MCPoint p, Boolean wholeline, Boolean wholeword, Boolean chunk, Boolean inc_cr, int4 &si, int4 &ei);
 
 	void foundchunk(MCExecPoint &ep);
 	void foundline(MCExecPoint &ep);
@@ -420,8 +422,9 @@ public:
 	void selectedline(MCExecPoint &ep);
 	void selectedloc(MCExecPoint &ep);
 	void selectedtext(MCExecPoint &ep);
-	Boolean selectedmark(Boolean wholeline, int4 &si, int4 &ei,
-	                     Boolean force, Boolean inc_cr);
+    // MW-2014-05-28: [[ Bug 11928 ]] The 'inc_cr' parameter is unnecessary - it is determined
+    //   by 'wholeline'.
+	Boolean selectedmark(Boolean wholeline, int4 &si, int4 &ei, Boolean force);
 
 	void returnchunk(MCExecPoint &ep, int4 si, int4 ei);
 	void returnline(MCExecPoint &ep, int4 si, int4 ei);
@@ -504,6 +507,7 @@ public:
 	void exportashtmltext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index, bool p_effective);
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to styled text arrays.
 	void exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool p_formatted, bool p_effective);
+	void exportasstyledtext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index, bool p_formatted, bool p_effective);
 
 	// MW-2012-03-07: [[ FieldImport ]] Conver the htmlText string to a list of paragraphs.
 	MCParagraph *importhtmltext(const MCString& p_data);
@@ -540,6 +544,7 @@ public:
 	void adjustpixmapoffset(MCDC *dc, uint2 index, int4 dy = 0);
 
 	bool imagechanged(MCImage *p_image, bool p_deleting);
-
+	
+	MCRectangle firstRectForCharacterRange(int32_t& si, int32_t& ei);
 };
 #endif

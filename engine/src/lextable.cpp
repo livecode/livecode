@@ -621,6 +621,8 @@ LT factor_table[] =
         {"cd", TT_CHUNK, CT_CARD},
         {"cds", TT_CLASS, CT_CARD},
         {"centered", TT_PROPERTY, P_CENTERED},
+        {"centerrect", TT_PROPERTY, P_CENTER_RECTANGLE},
+        {"centerrectangle", TT_PROPERTY, P_CENTER_RECTANGLE},
         {"centurycutoff", TT_PROPERTY, P_CENTURY_CUTOFF},
         {"char", TT_CHUNK, CT_CHARACTER},
         {"character", TT_CHUNK, CT_CHARACTER},
@@ -645,6 +647,8 @@ LT factor_table[] =
         {"clickv", TT_FUNCTION, F_CLICK_V},
         {"clipboard", TT_FUNCTION, F_CLIPBOARD},
         {"clipboarddata", TT_PROPERTY, P_CLIPBOARD_DATA},
+        // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+        {"clipstorect", TT_PROPERTY, P_CLIPS_TO_RECT},
         {"closebox", TT_PROPERTY, P_CLOSE_BOX},
         {"cmdkey", TT_FUNCTION, F_COMMAND_KEY},
         {"collapsebox", TT_PROPERTY, P_COLLAPSE_BOX},
@@ -681,6 +685,9 @@ LT factor_table[] =
 		{"controlatscreenloc", TT_FUNCTION, F_CONTROL_AT_SCREEN_LOC},
         {"controlids", TT_PROPERTY, P_CONTROL_IDS},
         {"controlkey", TT_FUNCTION, F_CONTROL_KEY},
+        {"controllerbackcolor", TT_PROPERTY, P_CONTROLLER_BACK_COLOR},
+        // Color for played_area and background color when controller buttons are still_down
+        {"controllermaincolor", TT_PROPERTY, P_CONTROLLER_MAIN_COLOR},
         {"controlnames", TT_PROPERTY, P_CONTROL_NAMES},
         {"controls", TT_CLASS, CT_LAYER},
         {"convertoctals", TT_PROPERTY, P_CONVERT_OCTALS},
@@ -947,11 +954,15 @@ LT factor_table[] =
         {"httpproxy", TT_PROPERTY, P_HTTP_PROXY},
 		{"httpproxyforurl", TT_FUNCTION, F_HTTP_PROXY_FOR_URL},
         {"icon", TT_PROPERTY, P_ICON},
+        // MW-2014-06-19: [[ IconGravity ]] Button 'iconGravity' property.
+        {"icongravity", TT_PROPERTY, P_ICON_GRAVITY},
         {"iconic", TT_PROPERTY, P_ICONIC},
 		{"iconmenu", TT_PROPERTY, P_ICON_MENU},
         {"id", TT_PROPERTY, P_ID},
         {"idlerate", TT_PROPERTY, P_IDLE_RATE},
         {"idleticks", TT_PROPERTY, P_IDLE_TICKS},
+        // MERG-2014-06-02: [[ IgnoreMouseEvents ]] ignoreMouseEvents stack property
+        {"ignoremouseevents", TT_PROPERTY, P_IGNORE_MOUSE_EVENTS},
         {"image", TT_CHUNK, CT_IMAGE},
 		{"imagecachelimit", TT_PROPERTY, P_IMAGE_CACHE_LIMIT},
 		{"imagecacheusage", TT_PROPERTY, P_IMAGE_CACHE_USAGE},
@@ -1415,6 +1426,7 @@ LT factor_table[] =
 		{"securitycategories", TT_PROPERTY, P_SECURITY_CATEGORIES},
 		{"securitypermissions", TT_PROPERTY, P_SECURITY_PERMISSIONS},
         {"selected", TT_PROPERTY, P_SELECTED},
+        {"selectedareacolor", TT_PROPERTY, P_SELECTED_AREA_COLOR},
         {"selectedbutton", TT_FUNCTION, F_SELECTED_BUTTON},
         {"selectedchunk", TT_FUNCTION, F_SELECTED_CHUNK},
         {"selectedcolor", TT_PROPERTY, P_SELECTED_COLOR},
@@ -1963,6 +1975,9 @@ static LT sugar_table[] =
         {"file", TT_UNDEFINED, SG_FILE},
         {"font", TT_UNDEFINED, SG_FONT},
         {"globally", TT_UNDEFINED, SG_GLOBALLY},
+		
+        // MM-2014-06-13: [[ Bug 12567 ]] Added host. Used in 'with verification for host <host>'
+		{"host", TT_UNDEFINED, SG_HOST},		
 		{"initially", TT_UNDEFINED, SG_INITIALLY},
         {"keyword", TT_CHUNK, CT_UNDEFINED},
 		{"level", TT_UNDEFINED, SG_LEVEL},

@@ -65,10 +65,6 @@ int2 MCCard::startx;
 int2 MCCard::starty;
 MCObjptr *MCCard::removedcontrol;
 
-#ifdef _MAC_DESKTOP
-extern bool MCosxmenupoppedup;
-#endif
-
 MCCard::MCCard()
 {
 	objptrs = NULL;
@@ -237,6 +233,7 @@ void MCCard::kfocus()
 	{
 		kfocused = oldkfocused;
 		kfocused->getref()->kfocus();
+		MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
 	}
 	if (kfocused == NULL)
 		kfocusnext(True);
@@ -273,6 +270,7 @@ Boolean MCCard::kfocusnext(Boolean top)
 					        && !MCactivefield->getflag(F_LIST_BEHAVIOR))
 						MCactivefield->unselect(False, True);
 					oldkfocused->getref()->kunfocus();
+					MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
 					if (oldkfocused == NULL)
 						return False;
 				}
@@ -280,6 +278,7 @@ Boolean MCCard::kfocusnext(Boolean top)
 					kfocused = tptr;
 			}
 			kfocused->getref()->kfocus();
+			MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
 			done = True;
 			break;
 		}
@@ -326,6 +325,7 @@ Boolean MCCard::kfocusprev(Boolean bottom)
 					        && !MCactivefield->getflag(F_LIST_BEHAVIOR))
 						MCactivefield->unselect(False, True);
 					oldkfocused->getref()->kunfocus();
+					MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
 					if (oldkfocused == NULL)
 						return False;
 				}
@@ -333,6 +333,7 @@ Boolean MCCard::kfocusprev(Boolean bottom)
 					kfocused = tptr;
 			}
 			kfocused->getref()->kfocus();
+			MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
 			done = True;
 			break;
 		}
@@ -353,6 +354,9 @@ void MCCard::kunfocus()
 		oldkfocused = kfocused;
 		kfocused = NULL;
 		oldkfocused->getref()->kunfocus();
+        // PM-2014-04-03: [[Bug 12056]] Make sure oldkfocused is not NULL, or else IDE crashes
+        if (oldkfocused != NULL)
+            MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
 	}
 	else
 	{
@@ -589,17 +593,10 @@ Boolean MCCard::mdown(uint2 which)
         // AL-2013-01-14: [[ Bug 11343 ]] Add timer if the object handles mouseStillDown in the behavior chain.
         if (oldfocused -> handlesmessage(MCM_mouse_still_down))
             MCscreen->addtimer(oldfocused, MCM_idle, MCidleRate);
-        
-		// MW-2007-12-11: [[ Bug 5670 ]] Reset our notification var so we can check it after
-#ifdef _MACOSX
-		MCosxmenupoppedup = false;
-#endif
+
 		if (!mfocused->getref()->mdown(which)
 		        && getstack()->gettool(this) == T_BROWSE)
 		{
-#ifdef _MACOSX
-			if (!MCosxmenupoppedup)
-#endif
 				message_with_args(MCM_mouse_down, "1");
 		}
 		if (!(MCbuttonstate & (0x1L << (which - 1))))
@@ -1384,6 +1381,7 @@ void MCCard::kfocusset(MCControl *target)
 		{
 			kfocused = NULL;
 			tkfocused->getref()->kunfocus();
+			MCscreen -> controllostfocus(getstack(), tkfocused -> getid());
 		}
 		if (kfocused != NULL)
 			return;
@@ -1394,6 +1392,7 @@ void MCCard::kfocusset(MCControl *target)
 			if (kfocused->getref()->kfocusset(target))
 			{
 				kfocused->getref()->kfocus();
+				MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
 
 				// OK-2009-04-29: [[Bug 8013]] - Its possible that kfocus() can set kfocused to NULL if the 
 				// user handles the message and does something to unfocus the object (e.g. select empty)
@@ -2613,40 +2612,42 @@ void MCCard::drawcardborder(MCDC *dc, const MCRectangle &dirty)
 	            || dirty.x + dirty.width >= rect.width - bwidth
 	            || dirty.y + dirty.height >= rect.height - bwidth))
 	{
-		dc->setclip(dirty);
+		dc->save();
+		dc->cliprect(dirty);
+		
 		if (flags & F_3D)
 			draw3d(dc, rect, ETCH_RAISED, borderwidth);
+		else if (bwidth == 3)
+		{
+			rect.width--;
+			rect.height--;
+			drawborder(dc, rect, borderwidth);
+			rect.width++;
+			rect.height++;
+			MCPoint p[3];
+			p[0].x = p[1].x = 1;
+			p[2].x = rect.width - 3;
+			p[0].y = rect.height - 3;
+			p[1].y = p[2].y = 1;
+			dc->setforeground(dc->getwhite());
+			dc->drawlines(p, 3);
+			p[0].x = 2;
+			p[1].x = p[2].x = rect.width - 3;
+			p[0].y = p[1].y = rect.height - 3;
+			p[2].y = 2;
+			dc->setforeground(dc->getgray());
+			dc->drawlines(p, 3);
+			p[0].x = 2;
+			p[1].x = p[2].x = rect.width - 1;
+			p[0].y = p[1].y = rect.height - 1;
+			p[2].y = 2;
+			dc->setforeground(maccolors[MAC_SHADOW]);
+			dc->drawlines(p, 3);
+		}
 		else
-			if (bwidth == 3)
-			{
-				rect.width--;
-				rect.height--;
-				drawborder(dc, rect, borderwidth);
-				rect.width++;
-				rect.height++;
-				MCPoint p[3];
-				p[0].x = p[1].x = 1;
-				p[2].x = rect.width - 3;
-				p[0].y = rect.height - 3;
-				p[1].y = p[2].y = 1;
-				dc->setforeground(dc->getwhite());
-				dc->drawlines(p, 3);
-				p[0].x = 2;
-				p[1].x = p[2].x = rect.width - 3;
-				p[0].y = p[1].y = rect.height - 3;
-				p[2].y = 2;
-				dc->setforeground(dc->getgray());
-				dc->drawlines(p, 3);
-				p[0].x = 2;
-				p[1].x = p[2].x = rect.width - 1;
-				p[0].y = p[1].y = rect.height - 1;
-				p[2].y = 2;
-				dc->setforeground(maccolors[MAC_SHADOW]);
-				dc->drawlines(p, 3);
-			}
-			else
-				drawborder(dc, rect, borderwidth);
-		dc->clearclip();
+			drawborder(dc, rect, borderwidth);
+		
+		dc->restore();
 	}
 }
 
@@ -2750,7 +2751,6 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 
 	dc -> setopacity(255);
 	dc -> setfunction(GXcopy);
-	dc -> setclip(dirty);
 
 	if (t_draw_cardborder)
 		drawcardborder(dc, dirty);

@@ -235,7 +235,7 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 	struct stat buf;
 	if (fptr == NULL || fstat(fileno(fptr), (struct stat *)&buf))
 		MCresult->sets("can't open file");
-	else
+	else if (buf.st_size > 0)
 	{
 		char *buffer = ep.getbuffer(buf.st_size);
 		if (buffer == NULL)
@@ -258,9 +258,16 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 					ep.texttobinary();
 				MCresult->clear(False);
 			}
-			fclose(fptr);
 		}
 	}
+    else
+    {
+        MCresult -> clear(False);
+    }
+    // MW-2014-06-20: [[ Bug 12668 ]] Always close the filehandle if it
+    //   was successfully opened.
+    if (fptr != nil)
+        fclose(fptr);
 }
 
 void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
@@ -374,7 +381,8 @@ IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
 			nread = size * n;
 			if (nread > stream->len - (stream->ioptr - stream->buffer))
 			{
-				n = stream->len - (stream->ioptr - stream->buffer) / size;
+				// IM-2014-05-21: [[ Bug 12458 ]] Fix incorrect calculation of remaining blocks
+				n = (stream->len - (stream->ioptr - stream->buffer)) / size;
 				nread = size * n;
 				stat = IO_EOF;
 			}

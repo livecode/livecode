@@ -667,35 +667,34 @@ Exec_stat MCField::settextindex(uint4 parid, int4 si, int4 ei, const MCString &s
 	
 	if (si != ei)
 	{
-		int4 tei;
-		if (ei >= pgptr->gettextsizecr())
-		{
-			tei = pgptr->gettextsize();
-			ei--;
-			if (ei == tei && pgptr->next() != toppgptr)
-			{
-				pgptr->join();
-				
-				// MW-2013-10-24: [[ FasterField ]] Join affects multiple paragraphs.
-				t_affect_many = true;
-			}
-		}
-		else
-			tei = ei;
-		ei -= tei;
+        // MW-2014-05-28: [[ Bug 11928 ]] Reworked code here so that it is the same as
+        //   MCField::deleteselection (makes sure paragraph styles work the same way
+        //   when deleting a paragraph break).
 		MCParagraph *saveparagraph = pgptr;
 		int4 savey = 0;
 		if (opened && pgptr == paragraphs)
 			savey = paragraphtoy(saveparagraph);
+        
+        // First delete the portion of the first paragraph in the range.
+        int4 tei;
+        tei = MCMin(ei, pgptr -> gettextsize());
+        
 		pgptr->deletestring(si, tei);
-		if (ei > 0)
+        ei -= (tei - si);
+        
+		if (ei > pgptr -> gettextsize())
 		{
+            // End index is reduced by the amount we just deleted.
+            ei -= si;
+            
+            // MW-2014-06-10: [[ Bug 11928 ]] Adjust for the CR that will be removed by the
+            //   final join in this consequent.
+            ei -= 1;
 			pgptr = pgptr->next();
 			while (ei >= pgptr->gettextsizecr())
 			{
 				ei -= pgptr->gettextsizecr();
-				MCParagraph *tpgptr = pgptr->remove
-				                      (pgptr);
+				MCParagraph *tpgptr = pgptr->remove(pgptr);
 				if (tpgptr == curparagraph)
 				{
 					curparagraph = saveparagraph;
@@ -843,7 +842,10 @@ void MCField::getlinkdata(MCRectangle &lrect, MCBlock *&sb, MCBlock *&eb)
 	// MW-2012-01-25: [[ FieldMetrics ]] Compute the y-offset in card coords.
 	uint4 yoffset = getcontenty() + paragraphtoy(sptr);
 	lrect.height = sptr->getyextent(ei, fixedheight);
-	sptr->getxextents(si, ei, lrect.x, maxx);
+    coord_t minxf, maxxf;
+	sptr->getxextents(si, ei, minxf, maxxf);
+    lrect.x = minxf;
+    maxx = maxxf;
 	// MW-2012-01-25: [[ FieldMetrics ]] Make sure the linkrect is in card coords.
 	lrect.height -= lrect.y;
 	lrect.y += yoffset;
@@ -933,13 +935,13 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 		// MW-2005-07-16: [[Bug 2938]] We must check to see if the field is open, if not we cannot do this.
 		if (opened)
 		{
-			int2 minx, maxx;
+			coord_t minx, maxx;
 
 			// MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
 			//   This is because minx/maxx are uninitialized and it seems that they have to be for
 			//   calls to getxextents() to make sense.
-			minx = MAXINT2;
-			maxx = MININT2;
+			minx = MCinfinity;
+			maxx = -MCinfinity;
 
 			do
 			{
@@ -954,9 +956,9 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 				minx = maxx = 0;
 
 			if (which == P_FORMATTED_LEFT)
-				ep.setnvalue(getcontentx() + minx);
+				ep.setnvalue(int32_t(floorf(getcontentx() + minx)));
 			else
-				ep.setnvalue(maxx - minx);
+				ep.setnvalue(int32_t(ceilf(maxx - minx)));
 		}
 		else
 			ep . setnvalue(0);
@@ -988,7 +990,7 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 			sptr->indextoloc(si, fixedheight, x, y);
 			// MW-2012-01-25: [[ FieldMetrics ]] Compute the yoffset in card-coords.
 			int4 yoffset = getcontenty() + paragraphtoy(sptr);
-			int2 minx, maxx;
+			coord_t minx, maxx;
 			int4 maxy = y;
 			minx = INT16_MAX;
 			maxx = INT16_MIN;
@@ -1404,6 +1406,12 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		MCCdata *fptr = getcarddata(fdata, parid, True);
 		MCParagraph *oldparagraphs = fptr->getparagraphs();
 		fptr->setset(0);
+        
+        // MW-2014-05-28: [[ Bug 12303 ]] If we are setting 'text' then we don't want to touch the paragraph
+        //   styles of the first paragraph it is being put into. (In the other cases they are styled formats
+        //   so if the first paragraph is empty, we replace styles - this is what you'd expect).
+        bool t_preserve_zero_length_styles;
+        t_preserve_zero_length_styles = false;
 		switch (which)
 		{
 		case P_HTML_TEXT:
@@ -1417,9 +1425,10 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			setstyledtext(parid, ep);
 			break;
 		case P_UNICODE_TEXT:
-		case P_TEXT:
-			setpartialtext(parid, s, which == P_UNICODE_TEXT);
-			break;
+        case P_TEXT:
+            t_preserve_zero_length_styles = true;
+            setpartialtext(parid, s, which == P_UNICODE_TEXT);
+            break;
 		default:
 			break;
 		}
@@ -1431,12 +1440,16 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		pgptr->setselectionindex(si, si, False, False);
 		pgptr->split();
 		pgptr->append(newpgptr);
-		pgptr->join();
+		pgptr->join(t_preserve_zero_length_styles);
 		if (lastpgptr == NULL)
 			lastpgptr = pgptr;
 		else
 			pgptr->defrag();
-		lastpgptr->join();
+        // MW-2014-05-28: [[ Bug 10593 ]] When replacing a range of text with styles, paragraph styles from
+        //   the new content should replace paragraph styles for the old content whenever the range touches
+        //   the 0 index of a paragraph. Thus when joining the end of the range again, we want to preserve
+        //   the new contents styles even if it is an empty paragraph.
+		lastpgptr->join(true);
 		lastpgptr->defrag();
 		fptr->setparagraphs(oldparagraphs);
 		paragraphs = oldparagraphs;
@@ -1705,7 +1718,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		{
 			if (MCactivefield == this)
 			{
-				selectedmark(False, ssi, sei, False, False);
+				selectedmark(False, ssi, sei, False);
 				unselect(False, True);
 			}
 			curparagraph = focusedparagraph = paragraphs;
@@ -2072,13 +2085,12 @@ void MCField::loctext(MCExecPoint &ep, Boolean click)
 	else
 		ep.clear();
 }
-
+				 
 Boolean MCField::locmark(Boolean wholeline, Boolean wholeword,
                          Boolean click, Boolean chunk, Boolean inc_cr, int4 &si, int4 &ei)
 {
-	MCRectangle frect = getfrect();
 	int4 cx, cy;
-
+	
 	// MW-2012-01-25: [[ FieldMetrics ]] Fetch which co-ords should be used.
 	if (click)
 	{
@@ -2091,10 +2103,25 @@ Boolean MCField::locmark(Boolean wholeline, Boolean wholeword,
 		cy = MCmousey;
 	}
 
+	MCPoint p;
+	p . x = cx;
+	p . y = cy;
+	
+	return locmarkpoint(p, wholeline, wholeword, chunk, inc_cr, si, ei);
+}
+
+Boolean MCField::locmarkpoint(MCPoint p, Boolean wholeline, Boolean wholeword, Boolean chunk, Boolean inc_cr, int4 &si, int4 &ei)
+{
+	MCRectangle frect = getfrect();
+	int4 cx, cy;
+	
+	cx = p . x;
+	cy = p . y;
+	
 	// MW-2012-01-25: [[ FieldMetrics ]] Convert them to field coords.
 	cx -= getcontentx();
 	cy -= getcontenty() + cury;
-
+	
 	MCParagraph *pgptr = paragraphs;
 	si = 0;
 	while (pgptr != curparagraph)
@@ -2197,7 +2224,7 @@ Boolean MCField::foundmark(Boolean wholeline, Boolean inc_cr, int4 &si, int4 &ei
 void MCField::selectedchunk(MCExecPoint &ep)
 {
 	int4 si, ei;
-	if (selectedmark(False, si, ei, False, False))
+	if (selectedmark(False, si, ei, False))
 		returnchunk(ep, si, ei);
 	else
 		ep.clear();
@@ -2206,7 +2233,7 @@ void MCField::selectedchunk(MCExecPoint &ep)
 void MCField::selectedline(MCExecPoint &ep)
 {
 	int4 si, ei;
-	if (selectedmark(False, si, ei, False, False))
+	if (selectedmark(False, si, ei, False))
 		returnline(ep, si, ei);
 	else
 		ep.clear();
@@ -2215,7 +2242,7 @@ void MCField::selectedline(MCExecPoint &ep)
 void MCField::selectedloc(MCExecPoint &ep)
 {
 	int4 si, ei;
-	if (selectedmark(False, si, ei, False, False))
+	if (selectedmark(False, si, ei, False))
 		returnloc(ep, si);
 	else
 		ep.clear();
@@ -2244,13 +2271,14 @@ void MCField::selectedtext(MCExecPoint &ep)
 	else
 	{
 		int4 si, ei;
-		if (selectedmark(False, si, ei, False, False))
+		if (selectedmark(False, si, ei, False))
 			returntext(ep, si, ei);
 	}
 }
 
-Boolean MCField::selectedmark(Boolean whole, int4 &si, int4 &ei,
-                              Boolean force, Boolean include_cr)
+// MW-2014-05-28: [[ Bug 11928 ]] The 'inc_cr' parameter is not necessary - this is determined
+//   by 'whole' - i.e. if 'whole' is true then select the whole paragraph inc CR.
+Boolean MCField::selectedmark(Boolean whole, int4 &si, int4 &ei, Boolean force)
 {
 	MCParagraph *pgptr = paragraphs;
 	si = ei = 0;
@@ -2333,8 +2361,6 @@ Boolean MCField::selectedmark(Boolean whole, int4 &si, int4 &ei,
 				ei += e;
 			}
 		}
-		if (include_cr && pgptr != NULL && e == pgptr->gettextsize() && pgptr->next() != paragraphs)
-			ei++;
 	}
 	return True;
 }
@@ -2611,7 +2637,7 @@ void MCField::pastetext(MCParagraph *newtext, Boolean dodel)
 		{
 			us = new Ustruct;
 			int4 si, ei;
-			selectedmark(False, si, ei, False, False);
+			selectedmark(False, si, ei, False);
 			us->ud.text.index = si;
 			us->ud.text.newline = False;
 			us->ud.text.data = NULL;
@@ -2648,7 +2674,7 @@ void MCField::movetext(MCParagraph *newtext, int4 p_to_index)
 	if ((flags & F_LOCK_TEXT) == 0 && !getstack()->islocked() && opened)
 	{
 		int4 si, ei;
-		selectedmark(False, si, ei, False, False);
+		selectedmark(False, si, ei, False);
 		if (si < p_to_index)
 			p_to_index -= ei - si;
 
@@ -2739,6 +2765,10 @@ void MCField::insertparagraph(MCParagraph *newtext)
 	uint4 oldflags = flags;
 	flags &= ~F_VISIBLE;
 	deleteselection(False);
+    // MW-2014-06-10: [[ Bug 12589 ]] Make sure the paragraph's selection is unset.
+    //   If we don't do this portions of the paragraph will still think they are
+    //   selected causing strange behavior.
+    focusedparagraph -> deleteselection();
 	textheight -= focusedparagraph->getheight(fixedheight);
 	focusedparagraph->split();
 	MCParagraph *oldend = focusedparagraph->next();
@@ -2783,6 +2813,49 @@ void MCField::insertparagraph(MCParagraph *newtext)
 	firstparagraph = lastparagraph = NULL;
 	setfocus(x, y);
 	state |= CS_CHANGED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCRectangle MCField::firstRectForCharacterRange(int32_t& si, int32_t& ei)
+{
+	MCParagraph *pgptr = resolveparagraphs(0);
+	
+	// These will be paragraph relative (after indextoparagraph).
+	int32_t t_si, t_ei;
+	t_si = si;
+	t_ei = ei;
+	
+	// Fetch the paragraph and indicies within it.
+	int4 t_line_index;
+	MCParagraph *sptr;
+	sptr = indextoparagraph(pgptr, t_si, t_ei, &t_line_index);
+	
+	// Restrict the range to the line t_si starts on.
+	sptr -> restricttoline(t_si, t_ei);
+	
+	// Now update the output range (the indices get munged in what follows)
+	si = si + t_si;
+	ei = si + t_ei;
+	
+	// Get the x, y of the initial index.
+	int2 x, y;
+	sptr->indextoloc(t_si, fixedheight, x, y);
+	
+	// Get the offset for computing card coords.
+	int4 yoffset = getcontenty() + paragraphtoy(sptr);
+	
+	// Get the extent of the range.
+	coord_t minx, maxx;
+	sptr -> getxextents(t_si, t_ei, minx, maxx);
+	
+	MCRectangle t_rect;
+	t_rect . x = minx + getcontentx();
+	t_rect . y = y + yoffset;
+	t_rect . width = maxx - minx;
+	t_rect . height = sptr -> heightoflinewithindex(t_si, fixedheight);
+	
+	return t_rect;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

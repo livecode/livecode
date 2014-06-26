@@ -328,7 +328,7 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
 // block. If the block has no non-default styles then the style key is not
 // present.
 //
-void MCField::exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective)
+void MCField::exportasstyledtext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective)
 {
 	export_styled_text_t t_context;
 	t_context . effective = p_effective;
@@ -346,9 +346,14 @@ void MCField::exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_
 		t_flags |= kMCFieldExportFlattenStyles;
 	if (p_formatted)
 		t_flags |= kMCFieldExportLines;
-	doexport(t_flags, p_part_id, p_start_index, p_finish_index, export_styled_text, &t_context);
+	doexport(t_flags, p_paragraphs, p_start_index, p_finish_index, export_styled_text, &t_context);
 
 	ep . setarray(t_context . paragraphs_array, True);
+}
+
+void MCField::exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective)
+{
+	exportasstyledtext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_formatted, p_effective);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

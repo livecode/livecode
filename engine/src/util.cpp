@@ -37,6 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "redraw.h"
 #include "mcssl.h"
+#include "player.h"
 
 #include "globals.h"
 
@@ -148,7 +149,8 @@ void MCU_resetprops(Boolean update)
 		}
 	}
 	MCerrorlock = 0;
-	MClockerrors = MClockmessages = MClockmoves = MClockrecent = False;
+	MClockerrors = MClockmessages = MClockrecent = False;
+	MCscreen->setlockmoves(False);
 	MCerrorlockptr = NULL;
 	MCinterrupt = False;
 	MCdragspeed = 0;
@@ -167,7 +169,7 @@ void MCU_saveprops(MCSaveprops &sp)
 	sp.errorlockptr = MCerrorlockptr;
 	sp.lockerrors = MClockerrors;
 	sp.lockmessages = MClockmessages;
-	sp.lockmoves = MClockmoves;
+	sp.lockmoves = MCscreen->getlockmoves();
 	sp.lockrecent = MClockrecent;
 	sp.interrupt = MCinterrupt;
 	sp.dragspeed = MCdragspeed;
@@ -189,7 +191,7 @@ void MCU_restoreprops(MCSaveprops &sp)
 	MCerrorlockptr = sp.errorlockptr;
 	MClockerrors = sp.lockerrors;
 	MClockmessages = sp.lockmessages;
-	MClockmoves = sp.lockmoves;
+	MCscreen->setlockmoves(sp.lockmoves);
 	MClockrecent = sp.lockrecent;
 	MCinterrupt = sp.interrupt;
 	MCdragspeed = sp.dragspeed;
@@ -1817,6 +1819,11 @@ Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
 		MCstacks->restartidle();
 	if (MCtopstackptr != NULL)
 		MCtopstackptr->updatemenubar();
+    
+    // MW-2014-04-24: [[ Bug 12249 ]] Prod each player to make sure its buffered correctly for the new tool.
+    for(MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
+        t_player -> syncbuffering(nil);
+    
 	ep.getobj()->message_with_args(MCM_new_tool, ep.getsvalue());
 	return ES_NORMAL;
 }
@@ -2549,10 +2556,10 @@ void MCU_unicodetomultibyte(const char *p_ucstring, uint4 p_uclength,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCU_disjointrangeinclude(MCRange*& x_ranges, int& x_count, int p_from, int p_to)
+bool MCU_disjointrangeinclude(MCInterval*& x_ranges, int& x_count, int p_from, int p_to)
 {
-	MCRange *t_new_ranges;
-	t_new_ranges = (MCRange *)malloc(sizeof(MCRange) * (x_count + 1));
+	MCInterval *t_new_ranges;
+	t_new_ranges = (MCInterval *)malloc(sizeof(MCInterval) * (x_count + 1));
 	if (t_new_ranges == NULL)
 		return false;
 	
@@ -2593,7 +2600,7 @@ bool MCU_disjointrangeinclude(MCRange*& x_ranges, int& x_count, int p_from, int 
 	return true;
 }
 
-bool MCU_disjointrangecontains(MCRange* p_ranges, int p_count, int p_element)
+bool MCU_disjointrangecontains(MCInterval* p_ranges, int p_count, int p_element)
 {
 	if (p_count == 0)
 		return false;

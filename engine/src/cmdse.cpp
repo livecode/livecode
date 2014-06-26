@@ -295,7 +295,7 @@ Exec_stat MCClickCmd::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	if (!MCdefaultstackptr->getopened()
-	        || !MCdefaultstackptr->mode_haswindow())
+	        || !MCdefaultstackptr->haswindow())
 	{
 		MCeerror->add(EE_CLICK_STACKNOTOPEN, line, pos, ep.getsvalue());
 		return ES_ERROR;
@@ -1091,8 +1091,15 @@ Exec_stat MCMessage::exec(MCExecPoint &ep)
 	}
 	else
 	{
-		MCscreen->addmessage(optr, t_mptr_as_name, MCS_time() + delay, params);
 		delete mptr;
+        
+        // MW-2014-05-28: [[ Bug 12463 ]] If we cannot add the pending message, then throw an
+        //   error.
+		if (!MCscreen->addusermessage(optr, t_mptr_as_name, MCS_time() + delay, params))
+        {
+            MCeerror -> add(EE_SEND_TOOMANYPENDING, line, pos, t_mptr_as_name);
+            return ES_ERROR;
+        }
 	}
 	return ES_NORMAL;
 #endif /* MCMessage */
@@ -1739,8 +1746,10 @@ Exec_stat MCMM::exec(MCExecPoint &ep)
 		}
 		MCacptr->setlooping(looping);
 		MCU_play();
+#ifndef FEATURE_PLATFORM_AUDIO
 		if (MCacptr != NULL)
 			MCscreen->addtimer(MCacptr, MCM_internal, looping ? LOOP_RATE : PLAY_RATE);
+#endif
 	}
 	return ES_NORMAL;
 #endif /* MCMM */
@@ -2256,7 +2265,8 @@ Exec_stat MCStop::exec(MCExecPoint &ep)
 				MCU_play_stop();
 		break;
 	case SC_RECORDING:
-		MCtemplateplayer->stoprecording();
+		extern void MCQTStopRecording(void);	
+		MCQTStopRecording();
 		break;
 	case SC_USING:
 		{

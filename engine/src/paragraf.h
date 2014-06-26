@@ -221,8 +221,10 @@ public:
 	//   MCField::gettextatts (to fetch partial parts of a paragraph)
 	//   MCField::settextatts (to insert partial parts of a paragraph)
 	//   MCField::insertparagraph
-	//   
-	void join();
+	//
+	// MW-2014-05-28: [[ Bug 12303 ]] If 'preserve' is true, then the paragraph styles
+    //   of 'this' paragraph are never changed (used when setting 'text' of a chunk).
+	void join(bool p_preserve_styles_if_zero_length = false);
 	void split();
 
 	// Delete the text from si to ei in the paragraph.
@@ -642,7 +644,7 @@ public:
 	// Called by:
 	//   MCField::getlinkdata
 	//   MCField::gettextatts
-	void getxextents(int4 &si, int4 &ei, int2 &minx, int2 &maxx);
+	void getxextents(int4 &si, int4 &ei, coord_t &minx, coord_t &maxx);
 
 	// Compute the indices of a click at (x, y).
 	// If x is outside the bounds of the line containing y then:
@@ -675,6 +677,9 @@ public:
 	//   MCHcfield::buildf
 	void setatts(uint2 si, uint2 ei, Properties which, void *value, bool from_html = false);
 
+	void restricttoline(int32_t& si, int32_t& ei);
+	int32_t heightoflinewithindex(int32_t si, uint2 fixedheight);
+	
 	uint2 getopened()
 	{
 		return opened;
@@ -759,7 +764,7 @@ private:
 	// and returning the block containing it.
 	MCBlock *extenddown(MCBlock *bptr, uint2 &ei);
 
-	int2 getx(uint2 tindex, MCLine *lptr);
+	coord_t getx(uint2 tindex, MCLine *lptr);
 
 	// Mark all the lines in the given range as dirty
 	void marklines(uint2 si, uint2 ei);

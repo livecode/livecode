@@ -19,6 +19,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "unicode.h"
 #include "textlayout.h"
 
+extern ATSUFontID coretext_font_to_atsufontid(void *p_font);
+
 bool MCTextLayoutInitialize(void)
 {
 	return true;
@@ -198,9 +200,11 @@ bool MCTextLayout(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct 
 	
 	UniCharCount t_run = p_char_count;
 	Rect t_bounds;
-	
+	   
 	FMFontStyle t_intrinsic_style;
-	t_err = ATSUFONDtoFontID((short)(intptr_t)p_font -> fid, p_font -> style, &t_font_id);
+    
+    // MM-2014-06-04: [[ CoreText ]] Fonts are now coretext font refs. Make sure we convert to ATSUFontIDs.
+    t_font_id = coretext_font_to_atsufontid(p_font -> fid);
 	
 	t_font_size = p_font -> size << 16;
 	t_err = ATSUCreateStyle(&t_style);

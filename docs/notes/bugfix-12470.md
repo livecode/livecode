@@ -1,0 +1,1 @@
+# Terminal window appears when accessing User Samples on Windows

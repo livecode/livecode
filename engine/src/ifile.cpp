@@ -103,12 +103,12 @@ void MCImage::recompress()
 	flags &= ~F_NEED_FIXING;
 }
 
-bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCImageFrame *&r_frames, uindex_t &r_frame_count)
+bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCBitmapFrame *&r_frames, uindex_t &r_frame_count)
 {
 	bool t_success = true;
 
 	IO_handle t_stream = nil;
-	MCImageFrame *t_frames = nil;
+	MCBitmapFrame *t_frames = nil;
 	uindex_t t_frame_count = 1;
 
 	// create single frame for non-animated formats
@@ -171,24 +171,15 @@ bool MCImage::decompressbrush(MCGImageRef &r_brush)
 
 	bool t_success = true;
 
-	MCImageFrame *t_frame = nil;
+	MCGImageFrame *t_frame = nil;
 
 	// IM-2013-10-30: [[ FullscreenMode ]] REVISIT: We try here to acquire the brush
 	// bitmap at 1.0 scale, but currently ignore the set density value of the returned frame.
 	// We may have to add support for hi-res brushes OR scale the resulting bitmap appropriately.
-	t_success = m_rep->LockImageFrame(0, true, 1.0, t_frame);
+	t_success = m_rep->LockImageFrame(0, 1.0, t_frame);
 
 	if (t_success)
-	{
-		MCGRaster t_raster;
-		t_raster.width = t_frame->image->width;
-		t_raster.height = t_frame->image->height;
-		t_raster.stride = t_frame->image->stride;
-		t_raster.format = MCImageBitmapHasTransparency(t_frame->image) ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
-		t_raster.pixels = t_frame->image->data;
-
-		t_success = MCGImageCreateWithRaster(t_raster, r_brush);
-	}
+		r_brush = MCGImageRetain(t_frame->image);
 
 	m_rep->UnlockImageFrame(0, t_frame);
 
@@ -202,8 +193,8 @@ void MCImagePrepareRepForDisplayAtDensity(MCImageRep *p_rep, MCGFloat p_density)
 		/* OVERHAUL - REVISIT: for the moment, prepared images are premultiplied
 		 * as we expect them to be rendered, but if not then this is actually
 		 * causing more work to be done than needed */
-		MCImageFrame *t_frame = nil;
-		p_rep->LockImageFrame(0, true, p_density, t_frame);
+		MCGImageFrame *t_frame = nil;
+		p_rep->LockImageFrame(0, p_density, t_frame);
 		p_rep->UnlockImageFrame(0, t_frame);
 	}
 }

@@ -24,7 +24,6 @@ The linux engine requires the following:
 * **Note:** LiveCode and standalones it builds may work on remote Xservers and in other bit-depths, however this mode of operation is not currently supported.*
 ## Mac
 The Mac engine supports:
-*10.5.8 and later (Leopard) on Intel and PowerPC
 *10.6.x (Snow Leopard) on Intel
 *10.7.x (Lion) on Intel
 *10.8.x (Mountain Lion) on Intel

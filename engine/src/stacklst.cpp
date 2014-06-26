@@ -31,6 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "util.h"
+#include "redraw.h"
 
 #include "globals.h"
 
@@ -257,7 +258,7 @@ MCStack *MCStacklist::getstack(uint2 n)
 		tptr = tptr->next();
 	}
 	if (tptr->getstack()->getparent()->gettype() == CT_BUTTON
-	        || tptr->getstack() == (MCStack *)MCtooltip)
+	        || MCdispatcher -> is_transient_stack(tptr -> getstack()))
 		return NULL;
 	return tptr->getstack();
 }
@@ -274,7 +275,7 @@ void MCStacklist::stackprops(MCExecPoint &ep, Properties p)
 	{
 		MCStack *stackptr = tptr->getstack();
 
-		if (stackptr->getparent()->gettype() != CT_BUTTON && stackptr != (MCStack *)MCtooltip)
+		if (stackptr->getparent()->gettype() != CT_BUTTON && !MCdispatcher -> is_transient_stack(stackptr))
 		{
 			stackptr->getprop(0, p, ep2, True);
 			ep.concatmcstring(ep2.getsvalue(), EC_RETURN, tptr == stacks);
@@ -308,6 +309,9 @@ Boolean MCStacklist::doaccelerator(KeySym key)
 
 	if (t_menubar != NULL)
 	{
+        // MW-2014-06-10: [[ Bug 12590 ]] Make sure we lock screen around the menu update message.
+        MCRedrawLockScreen();
+        
 		// OK-2008-03-20 : Bug 6153. Don't send a mouse button number if the mouseDown is due to
 		// a menu accelerator.
 		// MW-2008-08-27: [[ Bug 6995 ]] Slowdown caused by repeated invocation of mouseDown even if
@@ -326,6 +330,7 @@ Boolean MCStacklist::doaccelerator(KeySym key)
 					{
 						MCmodifierstate &= t_mod_mask;
 						accelerators[i] . button -> activate(True, (uint2)key);
+                        MCRedrawUnlockScreen();
 						return True;
 					}
 				}
@@ -335,6 +340,8 @@ Boolean MCStacklist::doaccelerator(KeySym key)
 				break;
 			}
 		}
+        
+        MCRedrawUnlockScreen();
 	}
 
 	// IM-2008-09-05: Reorganize loop to be more efficient - only loop through stacks once we've
@@ -503,7 +510,7 @@ Window MCStacklist::restack(MCStack *sptr)
 		if (bottompalette != NULL)
 			return bottompalette->getstack()->getwindow();
 	}
-	return DNULL;
+	return NULL;
 }
 
 void MCStacklist::restartidle()
@@ -540,11 +547,9 @@ void MCStacklist::refresh(void)
 	while(t_node != stacks);
 }
 
-#if !defined(_MAC_DESKTOP)
 void MCStacklist::ensureinputfocus(Window window)
 {
 }
-#endif
 
 void MCStacklist::purgefonts()
 {

@@ -298,8 +298,9 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 			}
 		}
 	}
-	if (MCrecording)
-		MCtemplateplayer->handlerecord();
+	
+	extern void MCQTHandleRecord(void);
+	MCQTHandleRecord();
 
 	abort = curinfo->abort;
 	reset = curinfo->reset;
