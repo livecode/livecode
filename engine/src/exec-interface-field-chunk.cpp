@@ -1584,8 +1584,8 @@ void MCField::GetFormattedLeftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
         // MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
         //   This is because minx/maxx are uninitialized and it seems that they have to be for
         //   calls to getxextents() to make sense.
-        minx = INFINITY;
-        maxx = -INFINITY;
+        minx = MCinfinity;
+        maxx = -MCinfinity;
 
         do
         {
@@ -1616,8 +1616,8 @@ void MCField::GetFormattedWidthOfCharChunk(MCExecContext& ctxt, uint32_t p_part_
         // MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
         //   This is because minx/maxx are uninitialized and it seems that they have to be for
         //   calls to getxextents() to make sense.
-        minx = INFINITY;
-        maxx = -INFINITY;
+        minx = MCinfinity;
+        maxx = -MCinfinity;
 
         do
         {
@@ -1676,8 +1676,8 @@ void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
         coord_t yoffset = getcontenty() + paragraphtoy(sptr);
         coord_t minx, maxx;
         coord_t maxy = y;
-        minx = INFINITY;
-        maxx = -INFINITY;
+        minx = MCinfinity;
+        maxx = -MCinfinity;
         do
         {
             // MW-2012-01-25: [[ FieldMetrics ]] Increment the y-extent by the height of the

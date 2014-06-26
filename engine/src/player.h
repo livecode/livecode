@@ -118,8 +118,6 @@ class MCPlayer : public MCControl
 	static QTstate qtstate;
 	static long qtversion;
 	static void *sgSoundComp;
-	static MCStringRef recordtempfile;
-	static MCStringRef recordexportfile;
 	static long sgSndDriver;
 	static MCPlayer *s_ephemeral_player;
 

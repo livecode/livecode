@@ -45,8 +45,9 @@
 #include <ImageCodec.h>
 
 #define PIXEL_FORMAT_32 k32BGRAPixelFormat
-
-OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
+// MERG-2014-06-26 [[ PlatformPlayer ]]
+// Function used in both quicktime.cpp and player.cpp
+extern OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
 
 #elif defined(_MAC_DESKTOP)
 #include "osxprefix.h"
@@ -343,8 +344,8 @@ void MCQTRecordSound(MCStringRef fname)
 	MCQTStopRecording();//just in case
 	FSSpec fspec;
     
-    /* UNCHECKED */ MCS_tmpnam(recordexportfile);
-	recordexportfile = fname;
+    /* UNCHECKED */ MCS_tmpnam(recordtempfile);
+	recordexportfile = MCValueRetain(fname);
 	MCS_path2FSSpec(recordtempfile, &fspec);
 	OSType compressionType, inputSource;
 	memcpy(&compressionType, MCrecordcompression, 4);

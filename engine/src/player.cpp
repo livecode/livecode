@@ -60,6 +60,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define PIXEL_FORMAT_32 k32BGRAPixelFormat
 
+OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
+
 #elif defined(_MAC_DESKTOP)
 #include "osxprefix.h"
 
@@ -136,8 +138,6 @@ PixMapHandle GetPortPixMap(CGrafPtr port)
 #ifndef LoWord
 #define LoWord LOWORD
 #endif
-
-static OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
 #endif
 
 #define QTMFORMATS 6
@@ -386,8 +386,6 @@ MCPlayer::~MCPlayer()
 		s_ephemeral_player = NULL;
 		qtstate = QT_NOT_INITTED;
 	}
-    
-    MCValueRelease(recordtempfile);
 #endif
 
 #ifdef FEATURE_MPLAYER
