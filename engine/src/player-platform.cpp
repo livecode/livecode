@@ -3035,6 +3035,9 @@ void MCPlayer::redrawcontroller(void)
 
 void MCPlayer::handle_mdown(int p_which)
 {
+    if (!getflag(F_SHOW_CONTROLLER))
+        return;
+    
     m_inside = true;
     
     int t_part;
