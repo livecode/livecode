@@ -132,6 +132,8 @@
 /* Begin PBXProject section */
 		4DF42A350B04860B003F2D95 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4DF42A360B04860B003F2D95 /* Build configuration list for PBXProject "libcore" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -186,8 +188,11 @@
 		4DF42A460B048617003F2D95 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_VERSION = "";
 				PRODUCT_NAME = core;
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -196,6 +201,7 @@
 			buildSettings = {
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				PRODUCT_NAME = core;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};
