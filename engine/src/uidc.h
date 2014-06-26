@@ -53,6 +53,7 @@ enum Window_position
 { //Will use in the future for allowing scripter to specify position
     //of window when opening
     WP_DEFAULT,
+    WP_ASRECT,
     WP_CENTERMAINSCREEN,
     WP_CENTERPARENT,
     WP_CENTERPARENTSCREEN,
@@ -463,6 +464,9 @@ public:
 	void RemoveRunloopAction(MCRunloopActionRef p_action);
 	// IM-2014-03-06: [[ revBrowserCEF ]] Perform runloop actions
 	void DoRunloopActions(void);
+	
+	// IM-2014-06-25: [[ Bug 12671 ]] Return if any runloop actions are registered.
+	bool HasRunloopActions(void);
 
 	virtual void flushevents(uint2 e);
 	virtual void updatemenubar(Boolean force);

@@ -42,8 +42,11 @@
 #include "osspec.h"
 #include "redraw.h"
 #include "gradient.h"
+#include "dispatch.h"
 
 #include "graphics_util.h"
+
+//////////////////////////////////////////////////////////////////////
 
 //// PLATFORM PLAYER
 
@@ -96,6 +99,104 @@ static MCColor controllercolors[] = {
     
     
 };
+
+//////////////////////////////////////////////////////////////////////
+
+class MCPlayerVolumePopup: public MCStack
+{
+public:
+    MCPlayerVolumePopup(void)
+    {
+        setname_cstring("Player Volume");
+        state |= CS_NO_MESSAGES;
+        
+        cards = NULL;
+        cards = MCtemplatecard->clone(False, False);
+        cards->setparent(this);
+        cards->setstate(True, CS_NO_MESSAGES);
+        
+        parent = nil;
+        
+        m_font = nil;
+        
+        m_player = nil;
+    }
+    
+    ~MCPlayerVolumePopup(void)
+    {
+    }
+    
+    // This will be called when the stack is closed, either directly
+    // or indirectly if the popup is cancelled by clicking outside
+    // or pressing escape.
+    void close(void)
+    {
+        MCStack::close();
+        MCdispatcher -> removemenu();
+        if (m_player != nil)
+            m_player -> popup_closed();
+    }
+    
+    // This is called to render the stack.
+    void render(MCContext *dc, const MCRectangle& dirty)
+    {
+        // draw the volume control content here.
+    }
+    
+    // Mouse handling methods are similar to the control ones.
+    
+    Boolean mdown(uint2 which)
+    {
+        return True;
+    }
+    
+    Boolean mup(uint2 which)
+    {
+        return True;
+    }
+    
+    Boolean mfocus(int2 x, int2 y)
+    {
+        return True;
+    }
+    
+    Boolean kdown(const char *string, KeySym key)
+    {
+        if (key == XK_Escape)
+        {
+            close();
+            return True;
+        }
+        return False;
+    }
+    
+    //////////
+    
+    void openpopup(MCPlayer *p_player)
+    {
+        MCRectangle t_player_rect;
+        t_player_rect = p_player -> getrect();
+        
+        // Compute the rect in screen coords.
+        MCRectangle t_rect;
+        MCU_set_rect(t_rect, t_player_rect . x - 20 + getborderwidth(), t_player_rect . y + t_player_rect . height - CONTROLLER_HEIGHT, 20, 60);
+        t_rect = MCU_recttoroot(p_player -> getstack(), t_rect);
+        
+        m_player = p_player;
+        
+        MCdispatcher -> addmenu(this);
+        
+        openrect(t_rect, WM_POPUP, NULL, WP_ASRECT, OP_NONE);
+    }
+    
+private:
+    MCPlayer *m_player;
+};
+
+static MCPlayerVolumePopup *s_volume_popup = nil;
+
+//////////////////////////////////////////////////////////////////////
+
 //-----------------------------------------------------------------------------
 // Control Implementation
 //
@@ -228,6 +329,9 @@ void MCPlayer::close()
 		playstop();
 		state &= ~CS_CLOSING;
 	}
+    
+    if (s_volume_popup != nil)
+        s_volume_popup -> close();
 }
 
 Boolean MCPlayer::kdown(const char *string, KeySym key)
@@ -2800,6 +2904,19 @@ void MCPlayer::handle_mdown(int p_which)
                 m_show_volume = true;
             else
                 m_show_volume = false;
+            
+            if (m_show_volume)
+            {
+                if (s_volume_popup == nil)
+                {
+                    s_volume_popup = new MCPlayerVolumePopup;
+                    s_volume_popup -> setparent(MCdispatcher);
+                    MCdispatcher -> add_transient_stack(s_volume_popup);
+                }
+                
+                s_volume_popup -> openpopup(this);
+            }
+            
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeBar));
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolume));
             layer_redrawall();
@@ -3081,4 +3198,13 @@ void MCPlayer::handle_mup(int p_which)
     
     m_grabbed_part = kMCPlayerControllerPartUnknown;
     m_initial_rate = 0.0;
+}
+
+void MCPlayer::popup_closed(void)
+{
+    if (!m_show_volume)
+        return;
+    
+    m_show_volume = false;
+    layer_redrawall();
 }

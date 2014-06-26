@@ -929,6 +929,7 @@ bool X_open(int argc, char *argv[], char *envp[])
 	MCserialcontrolsettings = strclone("baud=9600 parity=N data=8 stop=1");
 
 	MCdispatcher = new MCDispatch;
+    MCdispatcher -> add_transient_stack(MCtooltip);
 
 	if (MCnoui)
 		MCscreen = new MCUIDC;
@@ -1032,6 +1033,7 @@ int X_close(void)
 		delete optr;
 	}
 
+    MCdispatcher -> remove_transient_stack(MCtooltip);
 	delete MCtooltip;
 	MCtooltip = NULL;
 

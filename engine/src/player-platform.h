@@ -264,6 +264,8 @@ public:
     void handle_mstilldown(int which);
     void handle_mup(int which);
     void handle_mfocus(int x, int y);
+    
+    void popup_closed(void);
 };
 
 #endif

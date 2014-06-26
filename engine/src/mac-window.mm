@@ -143,6 +143,7 @@ static bool s_lock_responder_change = false;
 - (void)popupWindowShouldClose: (NSNotification *)notification
 {
     [self close];
+    MCPlatformCallbackSendWindowCancel([(MCWindowDelegate *)[self delegate] platformWindow]);
 }
 
 - (void)popupAndMonitor
@@ -161,8 +162,8 @@ static bool s_lock_responder_change = false;
                      NSEvent *result = incomingEvent;
                      NSWindow *targetWindowForEvent = [incomingEvent window];
 
-                     if (targetWindowForEvent !=  t_window)
-                         [[(MCWindowDelegate *)[self delegate] platformWindow] -> GetView() handleMousePress: incomingEvent isDown: YES];
+                     if (targetWindowForEvent != t_window)
+                         [self popupWindowShouldClose: nil];
                      
                      return result;
                  }];
@@ -445,16 +446,30 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	return NO;
 }
 
+// MW-2014-06-25: [[ Bug 12632 ]] Make sure we map frame to content rects and back
+//   again (engine WindowConstrain expects content sizes, whereas Cocoa expects
+//   frame sizes).
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize
 {
+    MCRectangle t_frame;
+    t_frame = MCRectangleMake(0, 0, frameSize . width, frameSize . height);
+    
+    MCRectangle t_content;
+    m_window -> DoMapFrameRectToContentRect(t_frame, t_content);
+    
 	MCPoint t_size;
-	t_size . x = frameSize . width;
-	t_size . y = frameSize . height;
+	t_size . x = t_content . width;
+    t_size . y = t_content . height;
 	
 	MCPoint t_new_size;
 	MCPlatformCallbackSendWindowConstrain(m_window, t_size, t_new_size);
+    
+    t_content . width = t_new_size . x;
+    t_content . height = t_new_size . y;
+    
+    m_window -> DoMapContentRectToFrameRect(t_content, t_frame);
 	
-	return NSMakeSize(t_new_size . x, t_new_size . y);
+	return NSMakeSize(t_frame . width, t_frame . height);
 }
 
 - (void)windowWillMove:(NSNotification *)notification
@@ -698,11 +713,19 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 - (void)rightMouseDown: (NSEvent *)event
 {
+    // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
+    if ([[self window] attachedSheet] != nil)
+        return;
+    
 	[self handleMousePress: event isDown: YES];
 }
 
 - (void)rightMouseUp: (NSEvent *)event
 {
+    // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
+    if ([[self window] attachedSheet] != nil)
+        return;
+    
 	[self handleMousePress: event isDown: NO];
 }
 
@@ -718,11 +741,19 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 - (void)otherMouseDown: (NSEvent *)event
 {
+    // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
+    if ([[self window] attachedSheet] != nil)
+        return;
+    
 	[self handleMousePress: event isDown: YES];
 }
 
 - (void)otherMouseUp: (NSEvent *)event
 {
+    // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
+    if ([[self window] attachedSheet] != nil)
+        return;
+    
 	[self handleMousePress: event isDown: NO];
 }
 
@@ -754,18 +785,52 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 }
 
+// MW-2014-06-25: [[ Bug 12370 ]] Factor out key mapping code so it can be used by both
+//   IME and direct key events.
+static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoint_t& r_mapped, codepoint_t& r_unmapped)
+{
+	MCMacPlatformMapKeyCode([event keyCode], [event modifierFlags], r_key_code);
+	
+    if (r_key_code > 0xff00 && r_key_code <= 0xffff)
+    {
+        r_mapped = r_unmapped = 0xffffffffU;
+        return;
+    }
+    
+	if (!MCMacMapNSStringToCodepoint([event characters], r_mapped))
+		r_mapped = 0xffffffffU;
+	
+	if (!MCMacMapNSStringToCodepoint([event charactersIgnoringModifiers], r_unmapped))
+		r_unmapped = 0xffffffffU;
+    
+	// The unicode range 0xF700 - 0xF8FF is reserved by the system to indicate
+	// keys which have no printable value, but represent an action (such as F11,
+	// PageUp etc.). We don't want this mapping as we do it ourselves from the
+	// keycode, so if the mapped codepoint is in this range we reset it.
+	if (r_mapped >= 0xf700 && r_mapped < 0xf8ff)
+		r_mapped = r_unmapped = 0xffffffffU;
+	
+	// Now, if we have an unmapped codepoint, but no mapped codepoint then we
+	// propagate the unmapped codepoint as the mapped codepoint. This is so that
+	// dead-keys (when input methods are turned off) propagate an appropriate
+	// char (e.g. alt-e generates no mapped codepoint, but we want an e).
+	if (r_mapped == 0xffffffffU)
+		r_mapped = r_unmapped;
+}
+
 - (void)keyDown: (NSEvent *)event
 {
 	MCMacPlatformHandleModifiersChanged(MCMacPlatformMapNSModifiersToModifiers([event modifierFlags]));
 	
-    // Make the event key code to a platform keycode.
+    // Make the event key code to a platform keycode and codepoints.
     MCPlatformKeyCode t_key_code;
-    MCMacPlatformMapKeyCode([event keyCode], [event modifierFlags], t_key_code);
+    codepoint_t t_mapped_codepoint, t_unmapped_codepoint;
+    map_key_event(event, t_key_code, t_mapped_codepoint, t_unmapped_codepoint);
     
     // Notify the host that a keyDown event has been received - this is to work around the
     // issue with IME not playing nice with rawKey messages. Eventually this should work
     // by completely separating rawKey messages from text input messages.
-    MCPlatformCallbackSendRawKeyDown([self platformWindow], t_key_code);
+    MCPlatformCallbackSendRawKeyDown([self platformWindow], t_key_code, t_mapped_codepoint, t_unmapped_codepoint);
     
 	if ([self useTextInput])
 	{
@@ -808,7 +873,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 - (void)insertText:(id)aString replacementRange:(NSRange)replacementRange
 {
-	// NSLog(@"insertText('%@', (%d, %d))", aString, replacementRange . location, replacementRange . length);
+	NSLog(@"insertText('%@', (%d, %d))", aString, replacementRange . location, replacementRange . length);
 	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
@@ -855,47 +920,6 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	// not mark text, so now we just need to tell the input context.
 	[[self inputContext] discardMarkedText];
 	[[self inputContext] invalidateCharacterCoordinates];
-	
-	/*if (replacementRange . location == NSNotFound)
-	{
-		NSRange t_marked_range;
-		t_marked_range = [self markedRange];
-		if (t_marked_range . location != NSNotFound)
-			replacementRange = t_marked_range;
-		else
-			replacementRange = [self selectedRange];
-	}
-	
-	int32_t si, ei;
-	si = 0;
-	ei = INT32_MAX;
-	MCactivefield -> resolvechars(0, si, ei, replacementRange . location, replacementRange . length);
-	
-	NSString *t_string;
-	if ([aString isKindOfClass: [NSAttributedString class]])
-		t_string = [aString string];
-	else
-		t_string = aString;
-	
-	NSUInteger t_length;
-	t_length = [t_string length];
-	
-	unichar *t_chars;
-	t_chars = new unichar[t_length];
-	
-	[t_string getCharacters: t_chars range: NSMakeRange(0, t_length)];
-	
-	MCactivefield -> settextindex(0,
-								  si,
-								  ei,
-								  MCString((char *)t_chars, t_length * 2),
-								  True,
-								  true);
-    
-	delete t_chars;
-	
-	[self unmarkText];
-	[[self inputContext] invalidateCharacterCoordinates];*/
 }
 
 - (void)doCommandBySelector:(SEL)aSelector
@@ -929,7 +953,7 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 
 - (void)setMarkedText:(id)aString selectedRange:(NSRange)newSelection replacementRange:(NSRange)replacementRange
 {
-	// NSLog(@"setMarkedText('%@', (%d, %d), (%d, %d)", aString, newSelection . location, newSelection . length, replacementRange . location, replacementRange . length);
+	NSLog(@"setMarkedText('%@', (%d, %d), (%d, %d)", aString, newSelection . location, newSelection . length, replacementRange . location, replacementRange . length);
 	
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
@@ -977,50 +1001,6 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	
 	// We've inserted something, so tell the context to invalidate its caches.
 	[[self inputContext] invalidateCharacterCoordinates];
-	
-	/*if (replacementRange . location == NSNotFound)
-	 {
-	 NSRange t_marked_range;
-	 t_marked_range = [self markedRange];
-	 if (t_marked_range . location != NSNotFound)
-	 replacementRange = t_marked_range;
-	 else
-	 replacementRange = [self selectedRange];
-	 }
-	 
-	 int32_t si, ei;
-	 si = ei = 0;
-	 MCactivefield -> resolvechars(0, si, ei, replacementRange . location, replacementRange . length);
-	 
-	 NSString *t_string;
-	 if ([aString isKindOfClass: [NSAttributedString class]])
-	 t_string = [aString string];
-	 else
-	 t_string = aString;
-	 
-	 NSUInteger t_length;
-	 t_length = [t_string length];
-	 
-	 unichar *t_chars;
-	 t_chars = new unichar[t_length];
-	 
-	 [t_string getCharacters: t_chars range: NSMakeRange(0, t_length)];
-	 
-	 MCactivefield -> stopcomposition(True, False);
-	 
-	 if ([t_string length] == 0)
-	 [self unmarkText];
-	 else
-	 {
-	 MCactivefield -> startcomposition();
-	 MCactivefield -> finsertnew(FT_IMEINSERT, MCString((char *)t_chars, t_length * 2), 0, true);
-	 }
-	 
-	 MCactivefield -> seltext(replacementRange . location + newSelection . location,
-	 replacementRange . location + newSelection . location + newSelection . length,
-	 False);
-	 
-	 [[self inputContext] invalidateCharacterCoordinates];*/
 }
 
 - (void)unmarkText
@@ -1041,9 +1021,6 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	MCPlatformCallbackSendTextInputInsertText(t_window, nil, 0, MCRangeMake(0, 0), t_selected_range, false);
 	
 	[[self inputContext] discardMarkedText];
-	
-/*	MCactivefield -> stopcomposition(False, False);
-	[[self inputContext] discardMarkedText];*/
 }
 
 - (NSRange)selectedRange
@@ -1057,14 +1034,6 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	MCPlatformCallbackSendTextInputQueryTextRanges(t_window, t_marked_range, t_selected_range);
 	MCLog("selectedRange() = (%d, %d)", t_selected_range . offset, t_selected_range . length);
 	return NSMakeRange(t_selected_range . offset, t_selected_range . length);
-	
-/*	if (MCactivefield == nil)
-		return NSMakeRange(NSNotFound, 0);
-	
-	int4 si, ei;
-	MCactivefield -> selectedmark(False, si, ei, False, False);
-	MCLog("selectedRange() = (%d, %d)", si, ei - si);
- //	return NSMakeRange(si, ei - si);*/
 }
 
 - (NSRange)markedRange
@@ -1117,13 +1086,13 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	if (actualRange != nil)
 		*actualRange = NSMakeRange(t_actual_range . offset, t_actual_range . length);
 	
-	// NSLog(@"attributedSubstringForProposedRange(%d, %d -> %d, %d) = '%@'", aRange . location, aRange . length, t_actual_range . offset, t_actual_range . length, t_attr_string);
+	NSLog(@"attributedSubstringForProposedRange(%d, %d -> %d, %d) = '%@'", aRange . location, aRange . length, t_actual_range . offset, t_actual_range . length, t_attr_string);
 	return t_attr_string;
 }
 
 - (NSArray*)validAttributesForMarkedText
 {
-	// MCLog("validAttributesForMarkedText() = []", nil);
+	MCLog("validAttributesForMarkedText() = []", nil);
 	return [NSArray array];
 }
 
@@ -1449,32 +1418,12 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 }
 					 
 - (void)handleKeyPress: (NSEvent *)event isDown: (BOOL)pressed
-{	
+{
 	MCPlatformKeyCode t_key_code;
-	MCMacPlatformMapKeyCode([event keyCode], [event modifierFlags], t_key_code);
-	
 	codepoint_t t_mapped_codepoint;
-	if (!MCMacMapNSStringToCodepoint([event characters], t_mapped_codepoint))
-		t_mapped_codepoint = 0xffffffffU;
-	
 	codepoint_t t_unmapped_codepoint;
-	if (!MCMacMapNSStringToCodepoint([event charactersIgnoringModifiers], t_unmapped_codepoint))
-		t_unmapped_codepoint = 0xffffffffU;
-
-	// The unicode range 0xF700 - 0xF8FF is reserved by the system to indicate
-	// keys which have no printable value, but represent an action (such as F11,
-	// PageUp etc.). We don't want this mapping as we do it ourselves from the
-	// keycode, so if the mapped codepoint is in this range we reset it.
-	if (t_mapped_codepoint >= 0xf700 && t_mapped_codepoint < 0xf8ff)
-		t_mapped_codepoint = t_unmapped_codepoint = 0xffffffffU;
-	
-	// Now, if we have an unmapped codepoint, but no mapped codepoint then we
-	// propagate the unmapped codepoint as the mapped codepoint. This is so that
-	// dead-keys (when input methods are turned off) propagate an appropriate
-	// char (e.g. alt-e generates no mapped codepoint, but we want an e).
-	if (t_mapped_codepoint == 0xffffffffU)
-		t_mapped_codepoint = t_unmapped_codepoint;
-	
+    map_key_event(event, t_key_code, t_mapped_codepoint, t_unmapped_codepoint);
+    
 	// Finally we process.
 	MCMacPlatformWindow *t_window;
 	t_window = [self platformWindow];
@@ -1543,8 +1492,6 @@ static CGEventRef mouse_event_callback(CGEventTapProxy p_proxy, CGEventType p_ty
 	/* UNCHECKED */ MCGRegionCreate(t_update_region);
 	for(NSInteger i = 0; i < t_update_rect_count; i++)
 		/* UNCHECKED */ MCGRegionAddRect(t_update_region, MCRectangleToMCGIntegerRectangle([self mapNSRectToMCRectangle: t_update_rects[i]]));
-	
-	MCLog("update rect count: %d", t_update_rect_count);
 
 	//////////
 	
