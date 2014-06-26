@@ -48,7 +48,6 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
 	MCAutoStringRef t_folder;
 	for(;;)
 	{
-        MCValueRelease(*t_folder);
 		t_result = MCPlatformEndFolderDialog(&t_folder);
 		if (t_result != kMCPlatformDialogResultContinue)
 			break;
@@ -57,9 +56,7 @@ int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial,
 	}
 	
 	if (t_result == kMCPlatformDialogResultSuccess)
-		r_result = MCValueRetain(*t_folder);
-	else
-		r_result = MCValueRetain(kMCEmptyString);
+		r_value = MCValueRetain(*t_folder);
 	
 	return 0;
 }
