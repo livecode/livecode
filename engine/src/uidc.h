@@ -53,6 +53,7 @@ enum Window_position
 { //Will use in the future for allowing scripter to specify position
     //of window when opening
     WP_DEFAULT,
+    WP_ASRECT,
     WP_CENTERMAINSCREEN,
     WP_CENTERPARENT,
     WP_CENTERPARENTSCREEN,

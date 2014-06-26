@@ -114,7 +114,7 @@ void MCStack::checkdestroy()
 				MCtodestroy->add(this);
 			}
 	}
-	else
+	else if (!MCdispatcher -> is_transient_stack(this))
 	{
 		MCStack *sptr = (MCStack *)parent;
 		sptr->checkdestroy();
@@ -1887,20 +1887,27 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	}
 	break;
 	case WM_POPUP:
-		if (MCmousestackptr == NULL)
-			MCscreen->querymouse(trect.x, trect.y);
-		else
-		{
-			//WEBREV
-			// IM-2013-10-09: [[ FullscreenMode ]] Reimplement using MCStack::stacktogloballoc
-			MCPoint t_globalloc;
-			t_globalloc = MCmousestackptr->stacktogloballoc(MCPointMake(MCmousex, MCmousey));
+        if (wpos == WP_ASRECT)
+        {
+            rect = rel;
+        }
+        else
+        {
+            if (MCmousestackptr == NULL)
+                MCscreen->querymouse(trect.x, trect.y);
+            else
+            {
+                //WEBREV
+                // IM-2013-10-09: [[ FullscreenMode ]] Reimplement using MCStack::stacktogloballoc
+                MCPoint t_globalloc;
+                t_globalloc = MCmousestackptr->stacktogloballoc(MCPointMake(MCmousex, MCmousey));
 
-			trect.x = t_globalloc.x;
-			trect.y = t_globalloc.y;
-		}
-		trect.width = trect.height = 1;
-		positionrel(trect, OP_ALIGN_LEFT, OP_ALIGN_TOP);
+                trect.x = t_globalloc.x;
+                trect.y = t_globalloc.y;
+            }
+            trect.width = trect.height = 1;
+            positionrel(trect, OP_ALIGN_LEFT, OP_ALIGN_TOP);
+        }
 		break;
 	case WM_CASCADE:
 		trect = rel;
