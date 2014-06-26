@@ -14,6 +14,7 @@ void MCPlatformHandleScreenParametersChanged(void);
 
 void MCPlatformHandleWindowCloseRequest(MCPlatformWindowRef window);
 void MCPlatformHandleWindowClose(MCPlatformWindowRef window);
+void MCPlatformHandleWindowCancel(MCPlatformWindowRef window);
 void MCPlatformHandleWindowIconify(MCPlatformWindowRef window);
 void MCPlatformHandleWindowUniconify(MCPlatformWindowRef window);
 void MCPlatformHandleWindowReshape(MCPlatformWindowRef window);
@@ -24,7 +25,7 @@ void MCPlatformHandleWindowConstrain(MCPlatformWindowRef window, MCPoint propose
 
 void MCPlatformHandleModifiersChanged(MCPlatformModifiers modifiers);
 
-void MCPlatformHandleRawKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code);
+void MCPlatformHandleRawKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 void MCPlatformHandleKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 void MCPlatformHandleKeyUp(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 
@@ -122,6 +123,13 @@ void MCPlatformCallbackSendWindowClose(MCPlatformWindowRef p_window)
 	MCLog("Window(%p) -> Close()", p_window);
 	MCPlatformWindowDeathGrip(p_window);
 	MCPlatformHandleWindowClose(p_window);
+}
+
+void MCPlatformCallbackSendWindowCancel(MCPlatformWindowRef p_window)
+{
+	MCLog("Window(%p) -> Cancel()", p_window);
+	MCPlatformWindowDeathGrip(p_window);
+	MCPlatformHandleWindowCancel(p_window);
 }
 
 void MCPlatformCallbackSendWindowReshape(MCPlatformWindowRef p_window, MCRectangle p_new_content)
@@ -270,11 +278,11 @@ void MCPlatformCallbackSendDragDrop(MCPlatformWindowRef p_window, bool& r_accept
 
 //////////
 
-void MCPlatformCallbackSendRawKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code)
+void MCPlatformCallbackSendRawKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
 {
     MCLog("Window(%p) -> RawKeyDown(%d)", p_window, p_key_code);
     MCPlatformWindowDeathGrip(p_window);
-    MCPlatformHandleRawKeyDown(p_window, p_key_code);
+    MCPlatformHandleRawKeyDown(p_window, p_key_code, p_mapped_codepoint, p_unmapped_codepoint);
 }
 
 void MCPlatformCallbackSendKeyDown(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)

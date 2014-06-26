@@ -33,14 +33,32 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2014-06-25: [[ Bug 12686 ]] Make sure we first try the defaultStack, then
+//   the topStack.
+static MCPlatformWindowRef compute_sheet_owner(unsigned int p_options)
+{
+    if ((p_options & MCA_OPTION_SHEET) == 0)
+        return nil;
+    
+    MCPlatformWindowRef t_window;
+    t_window = MCdefaultstackptr -> getwindow();
+    if (t_window != nil && MCPlatformIsWindowVisible(t_window))
+        return t_window;
+    
+    t_window = MCtopstackptr -> getwindow();
+    if (t_window != nil && MCPlatformIsWindowVisible(t_window))
+        return t_window;
+    
+    return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // MM-2012-02-13: Updated to use Cocoa APIs.  Code mostly cribbed from plugin dialog stuff
 int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	MCPlatformWindowRef t_owner;
-	if ((p_options & MCA_OPTION_SHEET) != 0)
-		t_owner = MCtopstackptr -> getwindow();
-	else
-		t_owner = nil;
+    t_owner = compute_sheet_owner(p_options);
 	
 	MCPlatformBeginFolderDialog(t_owner, p_title, p_prompt, p_initial);
 	
@@ -132,10 +150,7 @@ int MCA_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MC
     filter_to_type_list(p_filter, t_types.PtrRef(), t_types.CountRef());
 	
 	MCPlatformWindowRef t_owner;
-	if ((p_options & MCA_OPTION_SHEET) != 0)
-		t_owner = MCtopstackptr -> getwindow();
-	else
-		t_owner = nil;
+    t_owner = compute_sheet_owner(p_options);
 	
 	MCPlatformFileDialogKind t_kind;
 	if ((p_options & MCA_OPTION_PLURAL) != 0)
@@ -168,10 +183,7 @@ int MCA_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter, MC
 int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	MCPlatformWindowRef t_owner;
-	if ((p_options & MCA_OPTION_SHEET) != 0)
-		t_owner = MCtopstackptr -> getwindow();
-	else
-		t_owner = nil;
+    t_owner = compute_sheet_owner(p_options);
 	
 	MCPlatformFileDialogKind t_kind;
 	if ((p_options & MCA_OPTION_PLURAL) != 0)
@@ -213,10 +225,7 @@ int MCA_ask_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter
     filter_to_type_list(p_filter, t_types.PtrRef(), t_types.CountRef());
 	
 	MCPlatformWindowRef t_owner;
-	if ((p_options & MCA_OPTION_SHEET) != 0)
-		t_owner = MCtopstackptr -> getwindow();
-	else
-		t_owner = nil;
+    t_owner = compute_sheet_owner(p_options);
 	
 	MCPlatformBeginFileDialog(kMCPlatformFileDialogKindSave, t_owner, p_title, p_prompt, *t_types, t_types . Count(), p_initial);
 	
@@ -243,10 +252,7 @@ int MCA_ask_file(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_filter
 int MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint4 p_type_count, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
 	MCPlatformWindowRef t_owner;
-	if ((p_options & MCA_OPTION_SHEET) != 0)
-		t_owner = MCtopstackptr -> getwindow();
-	else
-		t_owner = nil;
+    t_owner = compute_sheet_owner(p_options);
 	
 	MCPlatformBeginFileDialog(kMCPlatformFileDialogKindSave, t_owner, p_title, p_prompt, p_types, p_type_count, p_initial);
 	

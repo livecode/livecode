@@ -272,18 +272,16 @@ void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mod
 	uint2 sr, sw, sb, sh;
 	
 	// COCOA-TODO: This is Mac specific
-	Rect screenRect;
-	SetRect(&screenRect, srect . x, srect . y, srect . x + srect . width, srect . y + srect . height);
 	
 	if (title && mode <= WM_SHEET && mode != WM_DRAWER)
 	{
 		// COCOA-TODO: These values should be queryable (once we figure out what
 		//   'title' is meant to do...)
 		if (mode == WM_PALETTE)
-			screenRect.top += 13;
+			srect.y += 13;
 		else
 		{
-			screenRect.top += 22;
+			srect.y += 22;
 		}
 		sr = sb = 10;
 		sw = 20;
@@ -292,22 +290,22 @@ void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mod
 	else
 		sr = sw = sb = sh = 0;
 	
-	if (rect.x < screenRect.left)
-		rect.x = screenRect.left;
-	if (rect.x + rect.width > screenRect.right - sr)
+	if (rect.x < srect . x)
+		rect.x = srect . x;
+	if (rect.x + rect.width > srect.x + srect . width - sr)
 	{
-		if (rect.width > screenRect.right - screenRect.left - sw)
-			rect.width = screenRect.right - screenRect.left - sw;
-		rect.x = screenRect.right - rect.width - sr;
+		if (rect.width > srect . width - sw)
+			rect.width = srect . width - sw;
+		rect.x = srect . x + srect . width - rect.width - sr;
 	}
 	
-	if (rect.y < screenRect.top)
-		rect.y = screenRect.top;
-	if (rect.y + rect.height > screenRect.bottom - sb)
+	if (rect.y < srect.y)
+		rect.y = srect.y;
+	if (rect.y + rect.height > srect . y + srect . height - sb)
 	{
-		if (rect.height > screenRect.bottom - screenRect.top - sh)
-			rect.height = screenRect.bottom - screenRect.top - sh;
-		rect.y = screenRect.bottom - rect.height - sb;
+		if (rect.height > srect . height - sh)
+			rect.height = srect . height - sh;
+		rect.y = srect . y + srect . height - rect.height - sb;
 	}
 }
 
@@ -835,6 +833,10 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 			t_sleep = MCMin(0.1, t_sleep);
 		}
 #endif
+		
+		// IM-2014-06-25: [[ Bug 12671 ]] If there are runloop actions then set a timeout instead of waiting for the next event
+		if (HasRunloopActions())
+			t_sleep = MCMin(0.01, t_sleep);
 		
 		// Wait for t_sleep seconds and collect at most one event. If an event
 		// is collected and anyevent is True, then we are done.

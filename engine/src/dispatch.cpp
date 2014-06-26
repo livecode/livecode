@@ -148,6 +148,8 @@ MCDispatch::MCDispatch()
 	m_drag_end_sent = false;
 
 	m_externals = nil;
+
+    m_transient_stacks = nil;
 }
 
 MCDispatch::~MCDispatch()
@@ -1525,11 +1527,20 @@ MCStack *MCDispatch::findstackd(Window w)
 		while (tstk != panels);
 	}
 
-	// MW-2006-04-24: [[ Purify ]] It is possible to get here after MCtooltip has been
-	//   deleted. So MCtooltip is now NULL in this situation and we test for it here.
-	if (MCtooltip != NULL && MCtooltip->findstackd(w))
-		return MCtooltip;
-	return NULL;
+	if (m_transient_stacks != nil)
+    {
+        MCStack *tstk = m_transient_stacks;
+        do
+        {
+            MCStack *foundstk;
+            if ((foundstk = tstk -> findstackd(w)) != NULL)
+                return foundstk;
+			tstk = (MCStack *)tstk->next();
+        }
+        while(tstk != m_transient_stacks);
+    }
+    
+    return NULL;
 }
 
 MCObject *MCDispatch::getobjid(Chunk_term type, uint4 inid)
@@ -1688,6 +1699,33 @@ void MCDispatch::appendpanel(MCStack *sptr)
 void MCDispatch::removepanel(MCStack *sptr)
 {
 	sptr->remove(panels);
+}
+
+bool MCDispatch::is_transient_stack(MCStack *sptr)
+{
+	if (m_transient_stacks != NULL)
+	{
+		MCStack *tstk = m_transient_stacks;
+		do
+		{
+			if (tstk == sptr)
+				return true;
+			tstk = (MCStack *)tstk->next();
+		}
+		while (tstk != m_transient_stacks);
+	}
+	return false;
+}
+
+void MCDispatch::add_transient_stack(MCStack *sptr)
+{
+	sptr->appendto(m_transient_stacks);
+}
+
+void MCDispatch::remove_transient_stack(MCStack *sptr)
+{
+    
+	sptr->remove(m_transient_stacks);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

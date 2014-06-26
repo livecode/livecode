@@ -428,6 +428,7 @@ protected:
 	virtual void DoConfigureTextInput(void);
 	virtual void DoResetTextInput(void);
 	
+public:
 	virtual void DoMapContentRectToFrameRect(MCRectangle content, MCRectangle& r_frame);
 	virtual void DoMapFrameRectToContentRect(MCRectangle frame, MCRectangle& r_content);
 	

@@ -549,6 +549,7 @@ void MCQTRecordDialog()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if 0
 static CGrafPtr s_qt_target_port = nil;
 
 static MCGImageRef s_qt_start_image = nil;
@@ -901,8 +902,8 @@ bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p
 	}
 	
 	Rect t_src_rect, t_dst_rect;
-	MacSetRect(&t_src_rect, 0, 0, p_area . width, p_area . height);
-	MacSetRect(&t_dst_rect, 0, 0, p_area . width, p_area . height);
+	SetRect(&t_src_rect, 0, 0, p_area . width, p_area . height);
+	SetRect(&t_dst_rect, 0, 0, p_area . width, p_area . height);
 	
 	if (qteffect != 0)
 	{
@@ -965,7 +966,7 @@ bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p
 		PixMapHandle t_src_pixmap = GetGWorldPixMap(s_qt_start_port);
 		MakeImageDescriptionForPixMap(t_src_pixmap, &s_qt_start_desc);
 		CDSequenceNewDataSource(s_qt_effect_seq, &t_src_sequence, 'srcA', 1, (Handle)s_qt_start_desc, nil, 0);
-		CDSequenceSetSourceData(t_src_sequence, GetPixBaseAddr(t_src_pixmap), (**s_qt_start_desc) . dataSize);
+		CDSequenceSetSourceData(t_src_sequence, QTGetPixBaseAddr(t_src_pixmap), (**s_qt_start_desc) . dataSize);
 	}
 	
 	if (s_qt_start_desc != NULL)
@@ -1080,6 +1081,36 @@ void MCQTEffectEnd(void)
 void MCQTEffectsList(MCStringRef &r_effect_list)
 {
 	r_effect_list = MCValueRetain(kMCEmptyString);
+}
+
+Boolean MCQTEffectsDialog(MCStringRef &r_value)
+{
+    r_value = MCValueRetain(kMCEmptyString);
+	return True;
+}
+
+
+bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p_direction, MCGImageRef p_start, MCGImageRef p_end, const MCRectangle& p_area)
+{
+    return false;
+}
+
+bool MCQTEffectStep(const MCRectangle &drect, MCStackSurface *p_target, uint4 p_delta, uint4 p_duration)
+{
+    return false;
+}
+
+void MCQTEffectEnd(void)
+{
+}
+
+#endif
+
+#else
+
+void MCQTEffectsList(MCStringRef &r_list)
+{
+	r_list = MCValueRetain(kMCEmptyString);
 }
 
 Boolean MCQTEffectsDialog(MCStringRef &r_value)

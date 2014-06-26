@@ -372,11 +372,11 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 			
 		case kMCPlatformSystemPropertyHiliteColor:
 		{
-			RGBColor hiliteRGB;
-			LMGetHiliteRGB(&hiliteRGB);
-			((MCColor *)r_value) -> red = hiliteRGB.red;
-			((MCColor *)r_value) -> green = hiliteRGB.green;
-			((MCColor *)r_value) -> blue = hiliteRGB.blue;
+            NSColor *t_color;
+            t_color = [[NSColor selectedTextBackgroundColor] colorUsingColorSpaceName: NSCalibratedRGBColorSpace];
+			((MCColor *)r_value) -> red = [t_color redComponent] * 65535;
+			((MCColor *)r_value) -> green = [t_color greenComponent] * 65535;
+			((MCColor *)r_value) -> blue = [t_color blueComponent] * 65535;
 		}
 		break;
 			
@@ -967,7 +967,7 @@ static uint4 keysyms[] = {
 	0x69, 0x70, 0xFF0D, 0x6C, 0x6A, 0x27, 0x6B, 0x3B, 0x5C, 0x2C, 0x2F,
 	0x6E, 0x6D, 0x2E, 0xFF09, 0x20, 0x60, 0xFF08, 0xFF8D, 0xFF1B, 0, 0,
 	0xFFE1, 0xFFE5, 0, 0xFFE3, 0, 0, 0, 0, 0, 0xFF9F, 0, 0xFFAA, 0,
-	0xFFAB, 0, 0xFF7F, 0, 0, 0, 0xFFAF, 0xFF8D, 0, 0xFFAD, 0, 0, 0xFFD5,
+	0xFFAB, 0, 0xFF7F, 0, 0, 0, 0xFFAF, 0xFF8D, 0, 0xFFAD, 0, 0, 0xFFBD,
 	0xFF9E, 0xFF9C, 0xFF99, 0xFF9B, 0xFF96, 0xFF9D, 0xFF98, 0xFF95, 0,
 	0xFF97, 0xFF9A, 0, 0, 0, 0xFFC2, 0xFFC3, 0xFFC4, 0xFFC0, 0xFFC5,
 	0xFFC6, 0, 0xFFC8, 0, 0xFFCA, 0xFFCD, 0xFF14, 0, 0xFFC7, 0, 0xFFC9, 0,
@@ -986,7 +986,7 @@ static uint4 shift_keysyms[] = {
 	0x49, 0x50, 0xFF0D, 0x4C, 0x4A, 0x22, 0x4B, 0x3A, 0x7C, 0x3C, 0x3F,
 	0x4E, 0x4D, 0x3E, 0xFF09, 0x20, 0x7E, 0xFF08, 0xFF8D, 0xFF1B, 0, 0,
 	0xFFE1, 0xFFE5, 0, 0xFFE3, 0, 0, 0, 0, 0, 0xFFAE, 0, 0xFFAA, 0,
-	0xFFAB, 0, 0xFF7F, 0, 0, 0, 0xFFAF, 0xFF8D, 0, 0xFFAD, 0, 0, 0xFFD5,
+	0xFFAB, 0, 0xFF7F, 0, 0, 0, 0xFFAF, 0xFF8D, 0, 0xFFAD, 0, 0, 0xFFBD,
 	0xFFB0, 0xFFB1, 0xFFB2, 0xFFB3, 0xFFB4, 0xFFB5, 0xFFB6, 0xFFB7, 0,
 	0xFFB8, 0xFFB9, 0, 0, 0, 0xFFC2, 0xFFC3, 0xFFC4, 0xFFC0, 0xFFC5,
 	0xFFC6, 0, 0xFFC8, 0, 0xFF62, 0, 0xFF20, 0, 0xFFC7, 0, 0xFFC9, 0,
@@ -1383,14 +1383,14 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
     if (s_mouse_cursor_locked)
         return;
     
+    MCMacPlatformWindow *t_window;
+    t_window = (MCMacPlatformWindow *)p_window;
+    
     // If we are on Lion+ then check to see if the mouse location is outside
     // of any of the system tracking rects (used for resizing etc.)
     extern uint4 MCmajorosversion;
     if (MCmajorosversion >= 0x1070)
     {
-        MCMacPlatformWindow *t_window;
-        t_window = (MCMacPlatformWindow *)p_window;
-     
         // MW-2014-06-11: [[ Bug 12437 ]] Make sure we only check tracking rectangles if we have
         //   a resizable frame.
         bool t_is_resizable;
@@ -1411,15 +1411,20 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
         }
     }
     
-    // Show the cursor attached to the window.
-    MCPlatformCursorRef t_cursor;
-    MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
-    
-    // PM-2014-04-02: [[ Bug 12082 ]] IDE no longer crashes when changing an applied pattern
-    if (t_cursor != nil)
-        MCPlatformShowCursor(t_cursor);
-    else
-        MCPlatformHideCursor();
+    // MW-2014-06-25: [[ Bug 12634 ]] Make sure we only change the cursor if we are not
+    //   within a native view.
+    if ([t_window -> GetContainerView() hitTest: [t_window -> GetView() mapMCPointToNSPoint: s_mouse_position]] == t_window -> GetView())
+    {
+        // Show the cursor attached to the window.
+        MCPlatformCursorRef t_cursor;
+        MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertyCursor, kMCPlatformPropertyTypeCursorRef, &t_cursor);
+        
+        // PM-2014-04-02: [[ Bug 12082 ]] IDE no longer crashes when changing an applied pattern
+        if (t_cursor != nil)
+            MCPlatformShowCursor(t_cursor);
+        else
+            MCPlatformHideCursor();
+    }
 }
 
 void MCMacPlatformHandleMouseAfterWindowHidden(void)

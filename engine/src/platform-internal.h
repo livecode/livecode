@@ -235,6 +235,7 @@ void MCPlatformCallbackSendScreenParametersChanged(void);
 
 void MCPlatformCallbackSendWindowCloseRequest(MCPlatformWindowRef window);
 void MCPlatformCallbackSendWindowClose(MCPlatformWindowRef window);
+void MCPlatformCallbackSendWindowCancel(MCPlatformWindowRef window);
 void MCPlatformCallbackSendWindowReshape(MCPlatformWindowRef window, MCRectangle new_content);
 void MCPlatformCallbackSendWindowConstrain(MCPlatformWindowRef window, MCPoint proposed_size, MCPoint& r_wanted_size);
 void MCPlatformCallbackSendWindowRedraw(MCPlatformWindowRef window, MCPlatformSurfaceRef surface, MCGRegionRef dirty_rgn);
@@ -259,7 +260,7 @@ void MCPlatformCallbackSendDragLeave(MCPlatformWindowRef window);
 void MCPlatformCallbackSendDragMove(MCPlatformWindowRef window, MCPoint location, MCPlatformDragOperation& r_operation);
 void MCPlatformCallbackSendDragDrop(MCPlatformWindowRef window, bool& r_accepted);
 
-void MCPlatformCallbackSendRawKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code);
+void MCPlatformCallbackSendRawKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 
 void MCPlatformCallbackSendKeyDown(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 void MCPlatformCallbackSendKeyUp(MCPlatformWindowRef window, MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);

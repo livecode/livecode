@@ -156,6 +156,12 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
         CGRect t_font_bounds;
         t_font_bounds = CTFontGetBoundingBox((CTFontRef)p_font . fid);
         
+        // MW-2014-06-25: [[ Bug 12690 ]] Looks like the font bounds rect is in bottom-left coord
+        //   system, so calculate bottom and top bounds.
+        CGFloat t_font_bounds_bottom, t_font_bounds_top;
+        t_font_bounds_bottom = t_font_bounds . origin . y;
+        t_font_bounds_top = t_font_bounds . origin . y + t_font_bounds . size . height;
+        
         MCGFloat t_width;
         t_width = MCGContextMeasurePlatformText(self, p_text, p_length, p_font, t_transform); // CTLineGetTypographicBounds(t_line, NULL, NULL, NULL);
         
@@ -170,11 +176,13 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
             t_width = MCMax(t_width, t_image_bounds . size . width) + t_font_bounds . size . width;
         }
         
+        // MW-2014-06-25: [[ Bug 12690 ]] I suspect ascent/descent will always be less than font
+        //   bounds calcs, but let's just err on the side of caution.
 		MCGRectangle t_float_text_bounds;
 		t_float_text_bounds . origin . x = 0;
-        t_float_text_bounds . origin . y = MCMin(-t_ascent, t_font_bounds . origin . y);
+        t_float_text_bounds . origin . y = MCMin(-t_font_bounds_top, -t_ascent);
 		t_float_text_bounds . size . width = t_width;
-        t_float_text_bounds . size . height = MCMax(t_font_bounds . size . height, t_ascent + t_descent);
+        t_float_text_bounds . size . height = MCMax(t_font_bounds_top - t_font_bounds_bottom, t_ascent + t_descent);
 		
 		t_transform = MCGContextGetDeviceTransform(self);
 		t_device_location = MCGPointApplyAffineTransform(p_location, t_transform);		

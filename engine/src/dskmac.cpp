@@ -4333,20 +4333,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         MCaqua = True; // Move to MCScreenDC
         
         init_utf8_converters();
-        
-        // Move to MCScreenDC
-        CFBundleRef theBundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices")); // Move to MCScreenDC
-        if (theBundle != NULL)
-        {
-            if (CFBundleLoadExecutable(theBundle))
-            {
-                SwapQDTextFlagsPtr stfptr = (SwapQDTextFlagsPtr)CFBundleGetFunctionPointerForName(theBundle, CFSTR("SwapQDTextFlags"));
-                if (stfptr != NULL)
-                    stfptr(kQDSupportedFlags);
-                CFBundleUnloadExecutable(theBundle);
-            }
-            CFRelease(theBundle);
-        }
         //
         
         MCAutoStringRef dptr; // Check to see if this can ever happen anymore - if not, remove
@@ -4364,10 +4350,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             /* UNCHECKED */ MCStringFormat(&t_new_path, "%@%s", *t_path, "/../../../");
             /* UNCHECKED */ SetCurrentFolder(*t_new_path);
         }
-        
-        // MW-2007-12-10: [[ Bug 5667 ]] Small font sizes have the wrong metrics
-        //   Make sure we always use outlines - then everything looks pretty :o)
-        SetOutlinePreferred(TRUE); // Move to MCScreenDC
         
         MCS_reset_time();
         //do toolbox checking

@@ -259,7 +259,7 @@ MCStack *MCStacklist::getstack(uint2 n)
 		tptr = tptr->next();
 	}
 	if (tptr->getstack()->getparent()->gettype() == CT_BUTTON
-	        || tptr->getstack() == (MCStack *)MCtooltip)
+	        || MCdispatcher -> is_transient_stack(tptr -> getstack()))
 		return NULL;
 	return tptr->getstack();
 }
@@ -276,7 +276,7 @@ bool MCStacklist::stackprops(MCExecContext& ctxt, Properties p_property, MCListR
 	{
 		MCStack *stackptr = tptr->getstack();
 
-		if (stackptr->getparent()->gettype() != CT_BUTTON && stackptr != (MCStack *)MCtooltip)
+		if (stackptr->getparent()->gettype() != CT_BUTTON && !MCdispatcher -> is_transient_stack(stackptr))
 		{
 			MCAutoStringRef t_string;
 			stackptr->getstringprop(ctxt, 0, p_property, True, &t_string);

@@ -53,6 +53,8 @@ class MCDispatch : public MCObject
 
 	MCExternalHandlerList *m_externals;
 
+    MCStack *m_transient_stacks;
+    
 	static MCImage *imagecache;
 
     static MCPropertyInfo kProperties[];
@@ -177,6 +179,17 @@ public:
 	// This method installs the given stack as the new home stack
 	void changehome(MCStack *stack);
 
+	// This method executes the given message in the given encoded stack in an isolated
+	// environment.
+	bool isolatedsend(const char *p_stack_data, uint32_t p_stack_data_length, MCStringRef p_message, MCParameter *p_parameters);
+
+    // MW-2014-06-24: [[ TransientStack ]] Transient stacks are a generalization of MCtooltip
+    //   allowing controls to create popup windows temporarily by deriving from MCStack and then
+    //   adding to MCdispatch for the time they are in use.
+    bool is_transient_stack(MCStack *stack);
+    void add_transient_stack(MCStack *stack);
+    void remove_transient_stack(MCStack *stack);
+    
 #ifdef _WINDOWS_DESKTOP
 	void freeprinterfonts();
 #endif
