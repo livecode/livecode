@@ -102,6 +102,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcore", "libcore\libcore.vcproj", "{6899CD7E-BE16-44CE-A28B-27304F42E127}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libxslt", "thirdparty\libxslt\libxslt.vcproj", "{8E776621-28FF-4FBF-A2F3-F4598AEAF8B7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lcidlc", "lcidlc\lcidlc.vcproj", "{7321A225-FAC4-45D6-BAE4-B0E943102B7E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "revtestexternal", "revtestexternal\revtestexternal.vcproj", "{2C0F855E-2EA0-4F46-9660-3C47D673B8B8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -265,6 +268,14 @@ Global
 		{8E776621-28FF-4FBF-A2F3-F4598AEAF8B7}.Debug|Win32.Build.0 = Debug|Win32
 		{8E776621-28FF-4FBF-A2F3-F4598AEAF8B7}.Release|Win32.ActiveCfg = Release|Win32
 		{8E776621-28FF-4FBF-A2F3-F4598AEAF8B7}.Release|Win32.Build.0 = Release|Win32
+		{7321A225-FAC4-45D6-BAE4-B0E943102B7E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7321A225-FAC4-45D6-BAE4-B0E943102B7E}.Debug|Win32.Build.0 = Debug|Win32
+		{7321A225-FAC4-45D6-BAE4-B0E943102B7E}.Release|Win32.ActiveCfg = Release|Win32
+		{7321A225-FAC4-45D6-BAE4-B0E943102B7E}.Release|Win32.Build.0 = Release|Win32
+		{2C0F855E-2EA0-4F46-9660-3C47D673B8B8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2C0F855E-2EA0-4F46-9660-3C47D673B8B8}.Debug|Win32.Build.0 = Debug|Win32
+		{2C0F855E-2EA0-4F46-9660-3C47D673B8B8}.Release|Win32.ActiveCfg = Release|Win32
+		{2C0F855E-2EA0-4F46-9660-3C47D673B8B8}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

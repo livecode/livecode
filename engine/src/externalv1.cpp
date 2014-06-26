@@ -1575,6 +1575,10 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, void
 	case kMCExternalContextQueryWholeMatches:
 		*(bool *)result = MCECptr -> GetWholeMatches();
 		break;
+	// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of 'the wholeMatches' query.
+	case kMCExternalContextQueryWholeMatches:
+		*(bool *)result = MCEPptr -> getwholematches() == True;
+		break;
 	case kMCExternalContextQueryItemDelimiter:
 		*(MCStringRef *)result = MCECptr -> GetItemDelimiter();
 		break;
@@ -1619,8 +1623,7 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, void
 
 // MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of context_evaluate method.
 MCExternalError MCExternalContextEvaluate(const char *p_expression, unsigned int p_options, MCExternalVariableRef *p_binds, unsigned int p_bind_count, MCExternalVariableRef p_result)
-{
-	MCAutoStringRef t_expr;
+{	MCAutoStringRef t_expr;
 	if (!MCStringCreateWithCString(p_expression, &t_expr))
 		return kMCExternalErrorOutOfMemory;
 	
@@ -1726,6 +1729,16 @@ static MCExternalError MCExternalVariableQuery(MCExternalVariableRef var, MCExte
 	// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of IsASequence variable query.
 	case kMCExternalVariableQueryIsASequence:
 			*(bool *)r_result = MCValueIsEmpty(var -> GetValueRef()) || (MCValueIsArray(var -> GetValueRef()) && MCArrayIsSequence((MCArrayRef)var -> GetValueRef()));
+		break;
+            
+	// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of IsEmpty variable query.
+	case kMCExternalVariableQueryIsEmpty:
+		*(bool *)r_result = var -> is_empty();
+		break;
+			
+	// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of IsASequence variable query.
+	case kMCExternalVariableQueryIsASequence:
+		*(bool *)r_result = var -> is_array() && var -> get_array() -> issequence();
 		break;
 	
 	default:
@@ -2586,7 +2599,7 @@ static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, 
 			*(void **)r_value = MCAndroidGetEngine();
 			break;
 #endif
-			
+
 		default:
 			return kMCExternalErrorInvalidInterfaceQuery;
 	}

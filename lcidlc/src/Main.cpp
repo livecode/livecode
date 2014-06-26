@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 
 	if (argc != 3)
 	{
-		fprintf(stderr, "Syntax: lcidlc <input file> <output file>\n");
+		fprintf(stderr, "Syntax: lcidlc <input file> <output file/folder>\n");
 		return 1;
 	}
 	

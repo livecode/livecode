@@ -1784,6 +1784,11 @@ static void MCIPhoneDoBreakWaitOnCorrectThread(void *context)
 	MCFiberCall(s_main_fiber, MCIPhoneDoBreakWait, nil);
 }
 
+static void MCIPhoneDoBreakWaitOnCorrectThread(void *context)
+{
+	MCFiberCall(s_main_fiber, MCIPhoneDoBreakWait, nil);
+}
+
 void MCIPhoneBreakWait(void)
 {
 	if (s_break_wait_pending)

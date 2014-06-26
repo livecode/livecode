@@ -38,6 +38,7 @@ enum TokenType
 	kTokenTypeIdentifier,
 	kTokenTypeNumber,
 	kTokenTypeString,
+	kTokenTypeComma,
 	
 	kTokenTypeError,
 	kTokenTypeInvalidCharError,
