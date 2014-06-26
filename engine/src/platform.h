@@ -357,7 +357,6 @@ enum
 	kMCPlatformKeyCodeKeypadEnter	= 0xff8D,
 	kMCPlatformKeyCodeKeypadF1		= 0xff91,
 	kMCPlatformKeyCodeKeypadF2		= 0xff92,
-	kMCPlatformKeyCodeKeypadEqual	= 0xFFBD,
 	kMCPlatformKeyCodeKeypadMultiply	= 0xFFAA,
 	kMCPlatformKeyCodeKeypadAdd		= 0xFFAB,
 	kMCPlatformKeyCodeKeypadSeparator	= 0xFFAC,
@@ -374,6 +373,7 @@ enum
 	kMCPlatformKeyCodeKeypad7		= 0xFFB7,
 	kMCPlatformKeyCodeKeypad8		= 0xFFB8,
 	kMCPlatformKeyCodeKeypad9		= 0xFFB9,
+	kMCPlatformKeyCodeKeypadEqual	= 0xFFBD,
 	
 	kMCPlatformKeyCodeF1			= 0xFFBE,
 	kMCPlatformKeyCodeF2			= 0xFFBF,

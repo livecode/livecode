@@ -256,51 +256,6 @@ IO_stat MCHcstak::macreadresources(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  REFACTORED FROM ITRANSFORM.CPP 
-//
-
-#if 0
-void MCMacScaleImageBox(void *p_src_ptr, uint4 p_src_stride, void *p_dst_ptr, uint4 p_dst_stride, uint4 p_src_width, uint4 p_src_height, uint4 p_dst_width, uint4 p_dst_height)
-{
-	Rect t_src_rect;
-	SetRect(&t_src_rect, 0, 0, p_src_width, p_src_height);
-	
-	GWorldPtr t_src_gworld;
-	NewGWorldFromPtr(&t_src_gworld, 32, &t_src_rect, NULL, NULL, MCmajorosversion >= 0x1040 ? kNativeEndianPixMap : 0, (Ptr)p_src_ptr, p_src_stride);
-	
-	PixMapHandle t_src_pixmap;
-	t_src_pixmap = GetGWorldPixMap(t_src_gworld);
-	
-	Rect t_dst_rect;
-	SetRect(&t_dst_rect, 0, 0, p_dst_width, p_dst_height);
-	
-	GWorldPtr t_dst_gworld;
-	NewGWorldFromPtr(&t_dst_gworld, 32, &t_dst_rect, NULL, NULL, MCmajorosversion >= 0x1040 ? kNativeEndianPixMap : 0, (Ptr)p_dst_ptr, p_dst_stride);
-	
-	PixMapHandle t_dst_pixmap;
-	t_dst_pixmap = GetGWorldPixMap(t_dst_gworld);
-	
-	GWorldPtr t_old_gworld;
-	GDHandle t_old_device;
-	GetGWorld(&t_old_gworld, &t_old_device);
-	SetGWorld(t_dst_gworld, NULL);
-	ForeColor(blackColor);
-	BackColor(whiteColor);
-	LockPixels(t_src_pixmap);
-	LockPixels(t_dst_pixmap);
-	CopyBits(GetPortBitMapForCopyBits(t_src_gworld), GetPortBitMapForCopyBits(t_dst_gworld), &t_src_rect, &t_dst_rect, srcCopy, NULL);
-	UnlockPixels(t_dst_pixmap);
-	UnlockPixels(t_src_pixmap);
-	
-	SetGWorld(t_old_gworld, t_old_device);
-	
-	DisposeGWorld(t_dst_gworld);
-	DisposeGWorld(t_src_gworld);
-}
-#endif
-
-////////////////////////////////////////////////////////////////////////////////
-//
 //  MISC 
 //
 
@@ -375,43 +330,26 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
 		r_pattern = s_patterns[t_index];
 		return true;
 	}
+    
+    extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
+    
+    CGColorSpaceRef t_colorspace;
+    t_colorspace = CGColorSpaceCreateDeviceRGB();
+    
+    CGContextRef t_context;
+    t_context = CGBitmapContextCreate(NULL, 64, 64, 8, 64 * 4, t_colorspace, MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true));
+    
+    HIThemeSetFill(t_themebrush, NULL, t_context, kHIThemeOrientationInverted);
 	
-	CGrafPtr t_gworld = nil;
-	PixMapHandle t_pixmap = nil;
-	
-	Rect t_bounds;
-	SetRect(&t_bounds, 0, 0, 64, 64);
-	
-	NewGWorld(&t_gworld, 32, &t_bounds, nil, nil, MCmajorosversion >= 0x1040 ? kNativeEndianPixMap : 0);
-
-	CGrafPtr t_oldport;
-	GDHandle t_olddevice;
-	GetGWorld(&t_oldport, &t_olddevice);
-	
-	SetGWorld(t_gworld, NULL);
-	t_pixmap = GetGWorldPixMap(t_gworld);
-	LockPixels(t_pixmap);
-	
-	SetThemeBackground(t_themebrush, 32, True);
-	EraseRect(&t_bounds);
-	UnlockPixels(t_pixmap);
-	
-	SetGWorld(t_oldport, t_olddevice);
-	
-	void *t_bits = nil;
-	uint32_t t_stride = 0;
-	
-	t_bits = GetPixBaseAddr(t_pixmap);
-	t_stride = GetPixRowBytes(t_pixmap);
-	
-	MCGImageRef t_image;
-	t_image = nil;
-	
+    CGContextFillRect(t_context, CGRectMake(0, 0, 64, 64));
+    
+    CGContextFlush(t_context);
+    
 	MCGRaster t_raster;
-	t_raster.width = t_bounds.right - t_bounds.left;
-	t_raster.height = t_bounds.bottom - t_bounds.top;
-	t_raster.pixels = t_bits;
-	t_raster.stride = t_stride;
+	t_raster.width = CGBitmapContextGetWidth(t_context);
+	t_raster.height = CGBitmapContextGetHeight(t_context);
+	t_raster.pixels = CGBitmapContextGetData(t_context);
+	t_raster.stride = CGBitmapContextGetBytesPerRow(t_context);
 	t_raster.format = kMCGRasterFormat_ARGB;
 	
 	// IM-2014-05-14: [[ HiResPatterns ]] MCPatternCreate refactored to work with MCGRaster
@@ -422,7 +360,8 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
 	if (t_success)
 		s_patterns[t_index] = r_pattern;
 	
-	DisposeGWorld(t_gworld);
+    CGContextRelease(t_context);
+    CGColorSpaceRelease(t_colorspace);
 	
 	return t_success;
 #endif

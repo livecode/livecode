@@ -111,23 +111,6 @@ static MCRectangle mcrect_from_points(CGPoint x, CGPoint y)
 	return MCRectangleMake(l, t, r - l, b - t);
 }
 
-static Rect rect_from_points(CGPoint x, CGPoint y)
-{
-	CGFloat l, t, r, b;
-	l = MCMin(x . x, y . x);
-	r = MCMax(x . x, y . x);
-	t = MCMin(x . y, y . y);
-	b = MCMax(x . y, y . y);
-	
-	Rect t_rect;
-    t_rect . left = l;
-    t_rect . top = t;
-    t_rect . right = r;
-    t_rect . bottom = b;
-    
-	return t_rect;
-}
-
 @interface MCSnapshotWindow : NSWindow
 {
 	NSBox *m_region;

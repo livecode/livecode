@@ -1435,8 +1435,10 @@ void MCPlayer::syncbuffering(MCContext *p_dc)
 //   currently in use.
 void MCPlayer::getversion(MCExecPoint &ep)
 {
+#if 0
     extern void MCQTGetVersion(MCExecPoint& ep);
     MCQTGetVersion(ep);
+#endif
 }
 
 void MCPlayer::freetmp()

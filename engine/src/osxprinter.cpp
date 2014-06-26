@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "graphicscontext.h"
 #include "debug.h"
+#include "region.h"
 
 #include "platform.h"
 
@@ -1340,31 +1341,28 @@ struct RegionToRectsInfo
 	CGRect *rectangles;
 };
 
-// LION-SDK-TODO: Update to remove QD regions.
-static OSStatus RegionToRectsCallback(UInt16 p_message, RgnHandle p_region, const Rect *p_rect, void *p_context)
+
+static bool RegionToRectsCallback(void *p_context, const MCRectangle& p_rect)
 {
-	/*RegionToRectsInfo *t_info;
+	RegionToRectsInfo *t_info;
 	t_info = (RegionToRectsInfo *)p_context;
-	
-	if (p_message == kQDRegionToRectsMsgParse)
-	{
-		t_info -> count += 1;
-		t_info -> rectangles = (CGRect *)realloc(t_info -> rectangles, t_info -> count * sizeof(CGRect));
-		t_info -> rectangles[t_info -> count - 1] = CGRectMake(p_rect -> left, p_rect -> top, p_rect -> right - p_rect -> left, p_rect -> bottom - p_rect -> top);
-	}*/
+
+    t_info -> count += 1;
+    t_info -> rectangles = (CGRect *)realloc(t_info -> rectangles, t_info -> count * sizeof(CGRect));
+    t_info -> rectangles[t_info -> count - 1] = CGRectMake(p_rect . x, p_rect . y, p_rect . width, p_rect . height);
 	
 	return noErr;
 }
 
-// LION-SDK-TODO: Update to remove QD regions.
-static void OSX_CGContextClipToRegion(CGContextRef p_context, RgnHandle p_region)
+
+static void OSX_CGContextClipToRegion(CGContextRef p_context, MCRegionRef p_region)
 {
-	/* RegionToRectsInfo t_info;
+    RegionToRectsInfo t_info;
 	t_info . count = 0;
 	t_info . rectangles = NULL;
-	QDRegionToRects(p_region, 0, (RegionToRectsUPP)RegionToRectsCallback, &t_info);
+	MCRegionForEachRect(p_region, RegionToRectsCallback, &t_info);
 	CGContextClipToRects(p_context, t_info . rectangles, t_info . count);
-	free(t_info . rectangles); */
+	free(t_info . rectangles);
 }
 
 // MW-2013-10-01: [[ ImprovedPrint ]] Create a CGImageRef from encoded image data. If
@@ -1922,7 +1920,7 @@ bool MCQuartzMetaContext::begincomposite(const MCRectangle &p_region, MCGContext
 
 void MCQuartzMetaContext::endcomposite(MCRegionRef p_clip_region)
 {
-	OSX_CGContextClipToRegion(m_context, (RgnHandle)p_clip_region);
+	OSX_CGContextClipToRegion(m_context, p_clip_region);
 	
 	MCGImageRef t_image;
 	t_image = nil;
