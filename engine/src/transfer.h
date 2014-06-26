@@ -344,7 +344,7 @@ public:
 	// Return data of the given type, converting as necessary.
 	// The returned string has copy semantics, i.e. the caller must
 	// release it when done with it.
-    bool Fetch(MCTransferType p_type, MCDataRef &r_data);
+    bool Fetch(MCTransferType p_type, MCValueRef &r_data);
 	
 	// Unlock the object.
 	void Unlock(void);

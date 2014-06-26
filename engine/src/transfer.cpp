@@ -267,12 +267,12 @@ MCParagraph *MCTransferData::FetchParagraphs(MCField *p_field)
 
 	if (Contains(TRANSFER_TYPE_STYLED_TEXT, false))
 	{
-		MCAutoDataRef t_data;
+		MCAutoValueRef t_data;
 		Fetch(TRANSFER_TYPE_STYLED_TEXT, &t_data);
 		if (*t_data != nil)
 		{
 			MCObject *t_object;
-			t_object = MCObject::unpickle(*t_data, MCactivefield -> getstack());
+			t_object = MCObject::unpickle((MCDataRef)*t_data, MCactivefield -> getstack());
 			if (t_object != NULL)
 			{
 				// TODO: Do a proper type check
@@ -283,15 +283,19 @@ MCParagraph *MCTransferData::FetchParagraphs(MCField *p_field)
 	}
 	else if (Contains(TRANSFER_TYPE_UNICODE_TEXT, false))
 	{
-		MCAutoDataRef t_data;
+		MCAutoValueRef t_data;
 		if (Fetch(TRANSFER_TYPE_UNICODE_TEXT, &t_data))
-			t_paragraphs = p_field -> texttoparagraphs(MCDataGetOldString(*t_data), true);
+			t_paragraphs = p_field -> texttoparagraphs(MCDataGetOldString((MCDataRef)*t_data), true);
 	}
 	else if (Contains(TRANSFER_TYPE_TEXT, true))
 	{
-		MCAutoDataRef t_data;
-		if (Fetch(TRANSFER_TYPE_TEXT, &t_data))
-			t_paragraphs = p_field -> texttoparagraphs(MCDataGetOldString(*t_data), false);
+		MCAutoValueRef t_string;
+		if (Fetch(TRANSFER_TYPE_TEXT, &t_string))
+        {
+            MCAutoDataRef t_data;
+            /* UNCHECKED */ MCStringEncode((MCStringRef)*t_string, kMCStringEncodingUTF16, false, &t_data);
+			t_paragraphs = p_field -> texttoparagraphs(MCDataGetOldString(*t_data), true);
+        }
 	}
 
 	Unlock();
@@ -370,7 +374,7 @@ bool MCTransferData::Contains(MCTransferType p_type, bool p_with_conversion)
 	return t_contains;
 }
 
-bool MCTransferData::Fetch(MCTransferType p_type, MCDataRef &r_data)
+bool MCTransferData::Fetch(MCTransferType p_type, MCValueRef &r_data)
 {
 	if (!Lock())
 		return false;
@@ -403,9 +407,15 @@ bool MCTransferData::Fetch(MCTransferType p_type, MCDataRef &r_data)
 	Unlock();
 
 	if (p_type == t_current_type)
+    {
+        r_data = MCValueRetain(*t_current_data);
+        return true;
+    }
+    
+    // AL-2014-06-26: [[ Bug 12540 ]] If text is requested, return a (not necessarily native) string
+    if (p_type == TRANSFER_TYPE_TEXT && t_current_type == TRANSFER_TYPE_UNICODE_TEXT)
 	{
-		r_data = MCValueRetain(*t_current_data);
-		return true;
+		return MCStringDecode(*t_current_data, kMCStringEncodingUTF16, false, (MCStringRef&)r_data);
 	}
 
 	if (p_type == TRANSFER_TYPE_TEXT && t_current_type == TRANSFER_TYPE_FILES)
@@ -413,21 +423,12 @@ bool MCTransferData::Fetch(MCTransferType p_type, MCDataRef &r_data)
 		r_data = MCValueRetain(*t_current_data);
 		return true;
 	}
-
-	if (p_type == TRANSFER_TYPE_TEXT && t_current_type == TRANSFER_TYPE_UNICODE_TEXT)
-	{
-		MCAutoStringRef t_text;
-		if (!MCStringDecode(*t_current_data, kMCStringEncodingUTF16, false, &t_text) ||
-			!MCStringEncode(*t_text, kMCStringEncodingNative, false, r_data))
-			return false;
-		return true;
-	}
 	
 	if (p_type == TRANSFER_TYPE_UNICODE_TEXT && (t_current_type == TRANSFER_TYPE_TEXT || t_current_type == TRANSFER_TYPE_FILES))
 	{
 		MCAutoStringRef t_text;
 		if (!MCStringDecode(*t_current_data, kMCStringEncodingNative, false, &t_text) ||
-			!MCStringEncode(*t_text, kMCStringEncodingUTF16, false, r_data))
+			!MCStringEncode(*t_text, kMCStringEncodingUTF16, false, (MCDataRef &)r_data))
 			return false;
 		return true;
 	}
@@ -471,19 +472,24 @@ bool MCTransferData::Fetch(MCTransferType p_type, MCDataRef &r_data)
 			switch(p_type)
 			{
 			case TRANSFER_TYPE_TEXT:
-				t_success = MCConvertStyledTextToText(*t_styled_text, r_data);
+            {
+                // AL-2014-06-26: [[ Bug 12540 ]] If text is requested, return a (not necessarily native) string
+                MCAutoDataRef t_data;
+				t_success = (MCConvertStyledTextToUnicode(*t_styled_text, &t_data) &&
+                             MCStringDecode(*t_data, kMCStringEncodingUTF16, false, (MCStringRef &)r_data));
+            }
 			break;
 
 			case TRANSFER_TYPE_UNICODE_TEXT:
-				t_success = MCConvertStyledTextToUnicode(*t_styled_text, r_data);
+				t_success = MCConvertStyledTextToUnicode(*t_styled_text, (MCDataRef &)r_data);
 			break;
 
 			case TRANSFER_TYPE_RTF_TEXT:
-				t_success = MCConvertStyledTextToRTF(*t_styled_text, r_data);
+				t_success = MCConvertStyledTextToRTF(*t_styled_text, (MCDataRef &)r_data);
 			break;
 
 			case TRANSFER_TYPE_HTML_TEXT:
-				t_success = MCConvertStyledTextToHTML(*t_styled_text, r_data);
+				t_success = MCConvertStyledTextToHTML(*t_styled_text, (MCDataRef &)r_data);
 			break;
 
 			case TRANSFER_TYPE_STYLED_TEXT:

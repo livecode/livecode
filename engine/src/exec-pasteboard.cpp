@@ -593,33 +593,12 @@ void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCNameRef p_index, 
 	{
 		MCTransferType t_type;
 		if (p_index == nil)
-            t_type = TRANSFER_TYPE_UNICODE_TEXT;
+            t_type = TRANSFER_TYPE_TEXT;
 		else
 			t_type = MCTransferData::StringToType(MCNameGetString(p_index));
 
-        // Make sure we are getting unicode input.
-        if (t_type == TRANSFER_TYPE_TEXT)
-            t_type = TRANSFER_TYPE_UNICODE_TEXT;
-
 		if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
-		{
-            MCAutoDataRef t_data;
-            if (t_pasteboard -> Fetch(t_type, &t_data))
-            {
-                if (t_type == TRANSFER_TYPE_UNICODE_TEXT)
-                {
-                    // When the text fetched is in unicode, the data must
-                    // be converted to a stringRef to allow the unicode understanding
-                    MCAutoStringRef t_string;
-                    /* UNCHECKED */ MCStringCreateWithChars((const unichar_t*)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data) / 2, &t_string);
-                    r_data = (MCValueRef)MCValueRetain(*t_string);
-                }
-                else
-                    r_data = MCValueRetain(*t_data);
-            }
-            else
-				t_success = false;
-		}
+            t_success = t_pasteboard -> Fetch(t_type, r_data);
 		else
 		{
 			r_data = MCValueRetain(kMCEmptyData);

@@ -1803,7 +1803,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 	
 	if (MCactiveimage != NULL && MCclipboarddata -> HasImage())
 	{
-		MCAutoDataRef t_data;
+		MCAutoValueRef t_data;
 		if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
         {
             MCExecContext ctxt(nil, nil, nil);
@@ -1812,7 +1812,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 			t_image = new MCImage;
 			t_image -> open();
 			t_image -> openimage();
-			t_image -> SetText(ctxt, *t_data);
+			t_image -> SetText(ctxt, (MCDataRef)*t_data);
 			MCactiveimage -> pasteimage(t_image);
 			t_image -> closeimage();
 			t_image -> close();
@@ -1833,20 +1833,20 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 			return false;
 		if (MCclipboarddata -> HasObjects())
 		{
-			MCAutoDataRef t_data;
+			MCAutoValueRef t_data;
 			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_OBJECTS, &t_data))
-				t_objects = MCObject::unpickle(*t_data, MCdefaultstackptr);
+				t_objects = MCObject::unpickle((MCDataRef)*t_data, MCdefaultstackptr);
 		}
 		else if (MCclipboarddata -> HasImage())
 		{
-			MCAutoDataRef t_data;
+			MCAutoValueRef t_data;
 			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
             {
                 MCExecContext ctxt(nil, nil, nil);
 				
 				t_objects = new MCImage(*MCtemplateimage);
 				t_objects -> open();
-				static_cast<MCImage *>(t_objects) -> SetText(ctxt, *t_data);
+				static_cast<MCImage *>(t_objects) -> SetText(ctxt, (MCDataRef)*t_data);
 				t_objects -> close();
 			}
 		}
