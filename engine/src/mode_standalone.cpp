@@ -488,6 +488,7 @@ IO_stat MCDispatch::startup(void)
 
 		return IO_NORMAL;
 	}
+#endif
 
 	// The info structure that will be filled in while parsing the capsule.
 	MCStandaloneCapsuleInfo t_info;

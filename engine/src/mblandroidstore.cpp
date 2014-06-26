@@ -163,13 +163,31 @@ bool MCStoreMakePurchase(MCStringRef p_product_id, MCStringRef p_quantity, MCStr
     return t_success;
 }
 
-bool MCStoreReceiveProductDetails(MCStringRef p_purchase_id, MCStringRef r_result)
+bool MCStoreReceiveProductDetails(MCStringRef p_purchase_id, MCStringRef &r_result)
 {    
     MCAutoStringRef t_result;
     
     MCAndroidEngineRemoteCall("storeReceiveProductDetails", "xx", &(&t_result), p_purchase_id);
     
     return MCStringCopy(*t_result, r_result);    
+}
+
+bool MCStoreConsumePurchase(MCStringRef p_product_id)
+{
+    bool t_result;
+    
+    MCAndroidEngineRemoteCall("storeConsumePurchase", "bx", &t_result, p_purchase_id);
+                              
+    return t_result;
+}
+
+bool MCStoreSetProductType(MCPurchase *p_purchase, MCStringRef p_type)
+{
+    bool t_result;
+    
+    MCAndroidEngineRemoteCall("storeProductSetType", "bxx", &t_result, p_product_id, p_product_type);
+    
+    return t_result;
 }
 
 
@@ -774,6 +792,13 @@ bool MCStoreRequestProductDetails(MCStringRef p_product_id)
     // Not implemented
     return false;
 }
+
+
+char* t_result;
+
+MCAndroidEngineRemoteCall("storeReceiveProductDetails", "ss", &t_result, p_purchase_id);
+
+return t_result;
 
 ///////////////////////////////////////////////////////////////
 

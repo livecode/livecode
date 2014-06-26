@@ -276,7 +276,7 @@ void MCSecuritySetSslCertificates(MCExecContext& ctxt, MCStringRef p_value)
 	ctxt . Unimplemented();
 }
 
-void MCSecurityExecSecureSocket(MCExecContext& ctxt, MCNameRef p_socket, bool p_secure_verify)
+void MCSecurityExecSecureSocket(MCExecContext& ctxt, MCNameRef p_socket, bool p_secure_verify, MCNameRef p_end_hostname)
 {
     ctxt . Unimplemented();
 }

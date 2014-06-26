@@ -511,33 +511,6 @@ Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters)
     return ES_ERROR;
 }
 
-Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleRequestProductDetails */ LEGACY_EXEC
-    bool t_success = true;
-    char *t_product_id = nil;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
-    if (t_success)
-        t_success = MCStoreRequestProductDetails(t_product_id);
-    
-    MCCStringFree(t_product_id);
-    
-    return ES_NORMAL;
-#endif /* MCHandleRequestProductDetails */
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "uxu", &t_id, &(&t_prop_name), &t_quantity);
-		
-	MCExecContext ctxt(nil, nil, nil);
-    
-	if (t_success)
-        t_success = MCNumberCreateWithInteger(t_quantity, &t_quantity_ref);
-
-	MC
-}
-
-
 Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters)
 {
 #ifdef /* MCHandlePurchaseSendRequest */ LEGACY_EXEC
@@ -617,7 +590,7 @@ Exec_stat MCHandleMakePurchase(void *context, MCParameter *p_parameters)
     //if (t_success)
     //t_success = MCStoreMakePurchase(t_purchase);
     if (t_success)
-        t_success = MCStoreExecMakePurchase(ctxt, *t_prod_id, *t_quantity, *t_payload);
+        MCStoreExecMakePurchase(ctxt, *t_prod_id, *t_quantity, *t_payload);
     
     if (!ctxt. HasError())
         return ES_NORMAL;
@@ -654,7 +627,40 @@ Exec_stat MCHandleConfirmPurchase(void *context, MCParameter *p_parameters)
     
     MCExecContext ctxt(nil, nil, nil);
     
-    MCStoreExecConfirmPurchase(ctxt, *t_prod_id);
+    if (t_success)
+        MCStoreExecConfirmPurchase(ctxt, *t_prod_id);
+    
+    if (!ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleProductSetType(void *context, MCParameter *p_parameter)
+{
+#ifdef /* MCHandleProductSetType */ LEGACY_EXEC
+    bool t_success = true;
+    char *t_product_id = nil;
+    char *t_product_type;
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "ss", &t_product_id, &t_product_type);
+    if (t_success)
+        t_success = MCStoreProductSetType(t_product_id, t_product_type);
+    
+    MCCStringFree(t_product_id);
+    MCCStringFree(t_product_type);
+    
+    return ES_NORMAL;
+#endif /* MCHandleProductSetType */
+    MCExecContext ctxt(nil, nil, nil);
+    
+    MCAutoStringRef t_product_id, t_product_type;
+    bool t_success;
+    
+    t_success = MCParseParameters(p_parameter, "xx", &(&t_product_id), &(&t_product_type));
+    
+    if (t_success)
+        MCStoreExecProductSetType(ctxt, *t_product_id, *t_product_type);
     
     if (!ctxt . HasError())
         return ES_NORMAL;
@@ -730,6 +736,95 @@ Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters
     if (!ctxt.HasError())
         return ES_NORMAL;
     
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleReceiveProductDetails(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleReceiveProductDetails */ LEGACY_EXEC
+    bool t_success = true;
+    char *t_product_id = nil;
+    const char* t_product_details;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
+    if (t_success)
+        t_product_details = MCStoreReceiveProductDetails(t_product_id);
+    
+    MCCStringFree(t_product_id);
+    MCresult -> sets(t_product_details);
+    
+    return ES_NORMAL;
+#endif /* MCHandleReceiveProductDetails */
+    MCAutoStringRef t_product;
+    bool t_success = true;
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "x", &(&t_product));
+    
+    MCExecContext ctxt(nil, nil, nil);
+    MCAutoStringRef t_result;
+    
+    if (t_success)
+        MCStoreExecReceiveProductDetails(ctxt, *t_product, &t_result);
+    
+    ctxt . SetTheResultToValue(*t_result);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleConsumePurchase(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleConsumePurchase */ LEGACY_EXEC
+    bool t_success = true;
+    char *t_product_id = nil;
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "s", &t_product_id);
+    if (t_success)
+        t_success = MCStoreConsumePurchase(t_product_id);
+    
+    MCCStringFree(t_product_id);
+    return ES_NORMAL;
+#endif /* MCHandleConsumePurchase */
+    MCAutoStringRef t_product;
+    bool t_success = true;
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "x", &(&t_product));
+    
+    MCExecContext ctxt(nil, nil, nil);
+    
+    if (t_success)
+        MCStoreExecConsumePurchase(ctxt, *t_product);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleGetPurchases(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleGetPurchases */ LEGACY_EXEC
+    char *t_purchases;
+    t_purchases = MCStoreGetPurchaseList();
+    
+    MCresult -> sets(t_purchases);
+    return ES_NORMAL;
+#endif /* MCHandleGetPurchases */
+    MCExecContext ctxt(nil, nil, nil);
+    
+    MCAutoStringRef t_purchases;
+    MCStoreGetPurchaseList(ctxt, &t_purchases);
+    
+    if (!ctxt . HasError())
+    {
+        ctxt . SetTheResultToValue(*t_purchases);
+        return ES_NORMAL;
+    }
+    
+    ctxt . SetTheResultToEmpty();
     return ES_ERROR;
 }
 
@@ -6653,7 +6748,7 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobileStoreRestorePurchases", MCHandleRestorePurchases, nil},
     {false, "mobileStoreMakePurchase", MCHandleMakePurchase, nil},
     {false, "mobileStoreConfirmPurchase", MCHandleConfirmPurchase, nil},
-    {false, "mobileStoreProductProperty", MCHandleGetPurchaseProperty, nil},
+//    {false, "mobileStoreProductProperty", MCHandleGetPurchaseProperty, nil},
     {false, "mobileStoreSetProductType", MCHandleProductSetType, nil},
     {false, "mobileStoreRequestProductDetails", MCHandleRequestProductDetails, nil},
     {false, "mobileStoreConsumePurchase", MCHandleConsumePurchase, nil},

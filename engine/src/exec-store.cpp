@@ -43,9 +43,12 @@ MC_EXEC_DEFINE_SET_METHOD(Store, PurchaseProperty, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Store, SendPurchaseRequest, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Store, ConfirmPurchaseDelivery, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Store, RequestProductDetails, 1)
+MC_EXEC_DEFINE_EXEC_METHOD(Store, ReceiveProductDetails, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Store, ConsumePurchase, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Store, PurchaseVerify, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Store, MakePurchase, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Store, ConfirmPurchase, 1)
+MC_EXEC_DEFINE_EXEC_METHOD(Store, ProductSetType, 1)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -263,6 +266,12 @@ void MCStoreExecConfirmPurchase(MCExecContext& ctxt, MCStringRef p_product_id)
         ctxt . Throw();
 }
 
+void MCStoreExecProductSetType(MCExecContext &ctxt, MCStringRef p_product_id, MCStringRef p_product_type)
+{
+    if (!MCStoreProductSetType(p_product_id, p_product_type))
+        ctxt . Throw();
+}
+
 
 void MCStoreExecConfirmPurchaseDelivery(MCExecContext& ctxt, uint32_t p_id)
 {
@@ -306,3 +315,24 @@ void MCStoreExecPurchaseVerify(MCExecContext& ctxt, uint32_t p_id, bool p_verifi
     
     ctxt.Throw();
 }
+
+void MCStoreExecReceiveProductDetails(MCExecContext &ctxt, MCStringRef p_product_id, MCStringRef &r_result)
+{
+    MCAutoStringRef t_result;
+    if (MCStoreReceiveProductDetails(p_product_id, &t_result))
+    {
+        r_result = MCValueRetain(*t_result);
+        return;
+    }
+    
+    ctxt.Throw();
+}
+
+void MCStoreExecConsumePurchase(MCExecContext &ctxt, MCStringRef p_product_id)
+{
+    if (MCStoreConsumePurchase(p_product_id))
+        return;
+    
+    ctxt.Throw();
+}
+

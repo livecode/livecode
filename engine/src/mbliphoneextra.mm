@@ -401,7 +401,7 @@ void MCSystemListFontFamilies(MCListRef &r_names)
     coretext_get_font_names(r_names);
 }
 
-void MCSystemListFontsForFamily(MCStringRef p_family, uint2 p_size, MCListRef &r_styles)
+void MCSystemListFontsForFamily(MCStringRef p_family, uint32_t p_size, MCListRef &r_styles)
 {
     // MM-2014-06-02: [[ CoreText ]] Updated to use core text routines.
     core_text_get_font_styles(p_family, p_size, r_styles);
