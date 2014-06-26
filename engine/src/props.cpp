@@ -573,6 +573,7 @@ static PropList playerprops[] =
         {"callbacks", P_CALLBACKS},
         {"cantSelect", P_CANT_SELECT},
         {"colorOverlay", P_BITMAP_EFFECT_COLOR_OVERLAY},
+        {"controllerbackcolor", P_CONTROLLER_BACK_COLOR},
         {"controllermaincolor", P_CONTROLLER_MAIN_COLOR},
         {"disabled", P_DISABLED},
         {"dropShadow", P_BITMAP_EFFECT_DROP_SHADOW},

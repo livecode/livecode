@@ -115,6 +115,11 @@ MCPlayer::MCPlayer()
 	lasttime = 0;
 	starttime = endtime = MAXUINT4;
     
+    // Default controller back area color (darkgray)
+    controllerbackcolor . red = 34 * 257;
+    controllerbackcolor . green = 34 * 257;
+    controllerbackcolor . blue = 34 * 257;
+    
     // Default controller played area color (purple)
     controllermaincolor . red = 168 * 257;
     controllermaincolor . green = 1 * 257;
@@ -154,6 +159,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	rate = sref.rate;
 	lasttime = sref.lasttime;
 	starttime = sref.starttime;
+    controllerbackcolor = sref.controllerbackcolor;
     controllermaincolor = sref.controllermaincolor;
     selectedareacolor = sref.selectedareacolor;
 	endtime = sref.endtime;
@@ -504,6 +510,9 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
         case P_CONTROLLER_MAIN_COLOR:
             ep.setcolor(controllermaincolor);
             break;
+        case P_CONTROLLER_BACK_COLOR:
+            ep.setcolor(controllerbackcolor);
+            break;
         case P_SELECTED_AREA_COLOR:
             ep.setcolor(selectedareacolor);
             break;
@@ -763,6 +772,21 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
             }
             if (dirty)
                 playselection((flags & F_PLAY_SELECTION) != 0);
+            break;
+        case P_CONTROLLER_BACK_COLOR:
+        {
+            MCColor t_color;
+			char *t_colorname = NULL;
+			if (!MCscreen->parsecolor(data, &t_color, &t_colorname))
+			{
+				MCeerror->add
+				(EE_COLOR_BADSELECTEDCOLOR, 0, 0, data);
+				return ES_ERROR;
+			}
+			if (t_colorname != NULL)
+				delete t_colorname;
+            controllerbackcolor = t_color;
+        }
             break;
         case P_CONTROLLER_MAIN_COLOR:
         {
@@ -1893,7 +1917,8 @@ void MCPlayer::drawnicecontroller(MCDC *dc)
     t_rect . width ++;
     t_rect . height ++;
     
-    dc -> setforeground(controllercolors[DARKGRAY]);
+    //dc -> setforeground(controllercolors[DARKGRAY]);
+    dc -> setforeground(controllerbackcolor);  // DARKGRAY
     dc -> fillrect(t_rect, true);
     
     MCGContextRef t_gcontext = nil;

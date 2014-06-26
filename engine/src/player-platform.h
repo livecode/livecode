@@ -62,6 +62,7 @@ class MCPlayer : public MCControl
 	real8 rate;
 	uint4 starttime;
 	uint4 endtime;
+    MCColor controllerbackcolor;
     MCColor controllermaincolor;
     MCColor selectedareacolor;
 	char *userCallbackStr;  //string contains user movie callbacks
