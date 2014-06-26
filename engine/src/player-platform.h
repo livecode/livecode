@@ -151,6 +151,8 @@ public:
     
 	MCRectangle getpreferredrect();
 	uint2 getloudness();
+    void updateloudness(int2 newloudness);
+    MCColor getcontrollermaincolor();
 	void setloudness();
 	void gettracks(MCExecPoint &ep);
 	void getenabledtracks(MCExecPoint &ep);
@@ -241,8 +243,6 @@ public:
     void drawcontroller(MCDC *dc);
     void drawnicecontroller(MCDC *dc);
     void drawControllerVolumeButton(MCGContextRef p_gcontext);
-    void drawControllerVolumeBarButton(MCGContextRef p_gcontext);
-    void drawControllerVolumeSelectorButton(MCGContextRef p_gcontext);
     void drawControllerPlayPauseButton(MCGContextRef p_gcontext);
     void drawControllerWellButton(MCGContextRef p_gcontext);
     void drawControllerThumbButton(MCGContextRef p_gcontext);
@@ -251,9 +251,7 @@ public:
     void drawControllerSelectionStartButton(MCGContextRef p_gcontext);
     void drawControllerSelectionFinishButton(MCGContextRef p_gcontext);
     void drawControllerSelectedAreaButton(MCGContextRef p_gcontext);
-    void drawControllerVolumeAreaButton(MCGContextRef p_gcontext);
     void drawControllerPlayedAreaButton(MCGContextRef p_gcontext);
-    void drawControllerVolumeWellButton(MCGContextRef p_gcontext);
     
     void drawcontrollerbutton(MCDC *dc, const MCRectangle& rect);
     void redrawcontroller(void);

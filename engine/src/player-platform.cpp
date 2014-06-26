@@ -100,6 +100,50 @@ static MCColor controllercolors[] = {
     
 };
 
+inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha)
+{
+	return ((uint8_t)(p_red * 255) << 16) | ((uint8_t)(p_green * 255) << 8) | ((uint8_t)(p_blue * 255) << 0) | ((uint8_t)(p_alpha * 255) << 24);
+}
+
+inline void MCGraphicsContextAngleAndDistanceToXYOffset(int p_angle, int p_distance, MCGFloat &r_x_offset, MCGFloat &r_y_offset)
+{
+	r_x_offset = floor(0.5f + p_distance * cos(p_angle * M_PI / 180.0));
+	r_y_offset = floor(0.5f + p_distance * sin(p_angle * M_PI / 180.0));
+}
+
+inline void setRamp(MCGColor *&r_colors, MCGFloat *&r_stops)
+{
+    if (r_colors == nil)
+    /* UNCHECKED */ MCMemoryNewArray(3, r_colors);
+    r_colors[0] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
+    r_colors[1] = MCGColorMakeRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+    r_colors[2] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
+    
+    if (r_stops == nil)
+    /* UNCHECKED */ MCMemoryNewArray(3, r_stops);
+    r_stops[0] = (MCGFloat)0.00000;
+    r_stops[1] = (MCGFloat)0.50000;
+    r_stops[2] = (MCGFloat)1.00000;
+}
+
+inline void setTransform(MCGAffineTransform &r_transform, MCGFloat origin_x, MCGFloat origin_y, MCGFloat primary_x, MCGFloat primary_y, MCGFloat secondary_x, MCGFloat secondary_y)
+{
+    MCGAffineTransform t_transform;
+    t_transform . a = primary_x - origin_x;
+    t_transform . b = primary_y - origin_y;
+    t_transform . c = secondary_x - origin_x;
+    t_transform . d = secondary_y - origin_y;
+    
+    t_transform . tx = origin_x;
+    t_transform . ty = origin_y;
+    r_transform = t_transform;
+}
+
+inline MCGPoint MCRectangleScalePoints(MCRectangle p_rect, MCGFloat p_x, MCGFloat p_y)
+{
+    return MCGPointMake(p_rect . x + p_x * p_rect . width, p_rect . y + p_y * p_rect . height);
+}
+
 //////////////////////////////////////////////////////////////////////
 
 class MCPlayerVolumePopup: public MCStack
@@ -141,22 +185,262 @@ public:
     void render(MCContext *dc, const MCRectangle& dirty)
     {
         // draw the volume control content here.
+        
+        drawControllerVolumeBarButton(dc, dirty);
+        drawControllerVolumeWellButton(dc, dirty);
+        drawControllerVolumeAreaButton(dc, dirty);
+        drawControllerVolumeSelectorButton(dc, dirty);
+        
+    }
+    void drawControllerVolumeBarButton(MCContext *dc, const MCRectangle& dirty)
+    {
+        MCGContextRef t_gcontext = nil;
+        dc -> lockgcontext(t_gcontext);
+        MCRectangle t_volume_bar_rect = dirty;
+        MCGContextAddRectangle(t_gcontext, MCRectangleToMCGRectangle(t_volume_bar_rect));
+        MCGContextSetFillRGBAColor(t_gcontext, 34 / 255.0, 34 / 255.0, 34 / 255.0, 1.0f); // DARKGRAY
+        MCGContextFill(t_gcontext);
+        dc -> unlockgcontext(t_gcontext);
     }
     
+    void drawControllerVolumeWellButton(MCContext *dc, const MCRectangle& dirty)
+    {
+        MCGContextRef t_gcontext = nil;
+        dc -> lockgcontext(t_gcontext);
+        MCRectangle t_volume_bar_rect = dirty;
+        MCRectangle t_volume_well;
+        t_volume_well = getVolumeBarPartRect(dirty, kMCPlayerControllerPartVolumeWell);
+        
+        MCGBitmapEffects t_effects;
+        t_effects . has_drop_shadow = false;
+        t_effects . has_outer_glow = false;
+        t_effects . has_inner_glow = false;
+        t_effects . has_inner_shadow = true;
+        t_effects . has_color_overlay = false;
+        
+        MCGShadowEffect t_inner_shadow;
+        t_inner_shadow . color = MCGColorMakeRGBA(0.0f, 0.0f, 0.0f, 56.0 / 255.0);
+        t_inner_shadow . blend_mode = kMCGBlendModeClear;
+        t_inner_shadow . size = 0;
+        t_inner_shadow . spread = 0;
+        
+        MCGFloat t_x_offset, t_y_offset;
+        int t_distance = t_volume_well . width / 5;
+        // Make sure we always have an inner shadow
+        if (t_distance == 0)
+            t_distance = 1;
+        
+        MCGraphicsContextAngleAndDistanceToXYOffset(235, t_distance, t_x_offset, t_y_offset);
+        t_inner_shadow . x_offset = t_x_offset;
+        t_inner_shadow . y_offset = t_y_offset;
+        t_inner_shadow . knockout = false;
+        
+        t_effects . inner_shadow = t_inner_shadow;
+        
+        MCGContextSetFillRGBAColor(t_gcontext, 0.0f, 0.0f, 0.0f, 1.0f);
+        MCGContextSetShouldAntialias(t_gcontext, true);
+        
+        MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_volume_well);
+        
+        MCGContextAddRoundedRectangle(t_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
+        MCGContextBeginWithEffects(t_gcontext, t_rounded_rect, t_effects);
+        MCGContextFill(t_gcontext);
+        MCGContextEnd(t_gcontext);
+
+        dc -> unlockgcontext(t_gcontext);
+    }
+    
+    void drawControllerVolumeAreaButton(MCContext *dc, const MCRectangle& dirty)
+    {
+        MCGContextRef t_gcontext = nil;
+        dc -> lockgcontext(t_gcontext);
+        MCRectangle t_volume_area;
+        t_volume_area = getVolumeBarPartRect(dirty, kMCPlayerControllerPartVolumeArea);
+        
+        //MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); //PURPLE
+        MCGContextSetFillRGBAColor(t_gcontext, (m_player -> getcontrollermaincolor() . red / 255.0) / 257.0, (m_player -> getcontrollermaincolor() . green / 255.0) / 257.0, (m_player -> getcontrollermaincolor() . blue / 255.0) / 257.0, 1.0f);
+        
+        MCGRectangle t_grect = MCRectangleToMCGRectangle(t_volume_area);
+        MCGContextAddRoundedRectangle(t_gcontext, t_grect, MCGSizeMake(30, 30));
+        MCGContextFill(t_gcontext);
+        dc -> unlockgcontext(t_gcontext);
+    }
+    
+    void drawControllerVolumeSelectorButton(MCContext *dc, const MCRectangle& dirty)
+    {
+        MCRectangle t_volume_selector_rect = getVolumeBarPartRect(dirty, kMCPlayerControllerPartVolumeSelector);
+        
+        MCAutoPointer<MCGColor> t_colors;
+        MCAutoPointer<MCGFloat> t_stops;
+        setRamp(&t_colors, &t_stops);
+        
+        MCGAffineTransform t_transform;
+        float origin_x = t_volume_selector_rect.x + t_volume_selector_rect.width / 2.0;
+        float origin_y = t_volume_selector_rect.y + t_volume_selector_rect.height;
+        float primary_x = t_volume_selector_rect.x + t_volume_selector_rect.width / 2.0;
+        float primary_y = t_volume_selector_rect.y;
+        float secondary_x = t_volume_selector_rect.x - t_volume_selector_rect.width / 2.0;
+        float secondary_y = t_volume_selector_rect.y + t_volume_selector_rect.height;
+        
+        setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
+        
+        MCGContextRef t_gcontext = nil;
+        dc -> lockgcontext(t_gcontext);
+        
+        MCGContextSetFillGradient(t_gcontext, kMCGGradientFunctionLinear, *t_stops, *t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
+        
+        MCGContextSetShouldAntialias(t_gcontext, true);
+        MCGContextAddArc(t_gcontext, MCRectangleScalePoints(t_volume_selector_rect, 0.5, 0.5), MCGSizeMake(0.8 * t_volume_selector_rect . width, 0.8 * t_volume_selector_rect . height), 0, 0, 360);
+        
+        MCGContextFill(t_gcontext);
+        dc -> unlockgcontext(t_gcontext);
+    }
+    
+    
+    MCRectangle getVolumeBarPartRect(const MCRectangle& p_volume_bar_rect, int p_part)
+    {
+        switch (p_part)
+        {
+                
+            case kMCPlayerControllerPartVolumeWell:
+            {
+                int32_t t_width = CONTROLLER_HEIGHT / 4;
+                
+                int32_t t_x_offset = (p_volume_bar_rect . width - t_width) / 2;
+                
+                return MCRectangleMake(p_volume_bar_rect . x + t_x_offset, p_volume_bar_rect . y + t_x_offset, t_width, p_volume_bar_rect . height - 2 * t_x_offset);
+            }
+                break;
+            case kMCPlayerControllerPartVolumeArea:
+            {
+                MCRectangle t_volume_well_rect = getVolumeBarPartRect(p_volume_bar_rect, kMCPlayerControllerPartVolumeWell);
+                MCRectangle t_volume_selector_rect = getVolumeBarPartRect(p_volume_bar_rect, kMCPlayerControllerPartVolumeSelector);
+                int32_t t_bar_height = t_volume_well_rect . height;
+                int32_t t_bar_width = t_volume_well_rect . width;
+                
+                // Adjust y by 2 pixels
+                return MCRectangleMake(t_volume_well_rect. x , t_volume_selector_rect . y + 2 , t_bar_width, t_volume_well_rect . y + t_volume_well_rect . height - t_volume_selector_rect . y );
+            }
+                break;
+                
+            case kMCPlayerControllerPartVolumeSelector:
+            {
+                MCRectangle t_volume_well_rect = getVolumeBarPartRect(p_volume_bar_rect, kMCPlayerControllerPartVolumeWell);
+                MCRectangle t_volume_bar_rect = getVolumeBarPartRect(p_volume_bar_rect, kMCPlayerControllerPartVolumeBar);
+                
+                // The width and height of the volumeselector are p_volume_bar_rect . width / 2
+                int32_t t_actual_height = t_volume_well_rect . height - p_volume_bar_rect . width / 2;
+                
+                int32_t t_x_offset = p_volume_bar_rect . width / 4;
+                
+                return MCRectangleMake(p_volume_bar_rect . x + t_x_offset , t_volume_well_rect . y + t_volume_well_rect . height - t_actual_height * m_player -> getloudness() / 100 - p_volume_bar_rect . width / 2, p_volume_bar_rect . width / 2, p_volume_bar_rect . width / 2 );
+            }
+                break;
+        }
+        
+        return MCRectangleMake(0, 0, 0, 0);
+    }
+    
+    int getvolumerectpart(int x, int y)
+    {
+    
+        if (MCU_point_in_rect(getVolumeBarPartRect(m_volume_rect, kMCPlayerControllerPartVolumeSelector), x, y))
+            return kMCPlayerControllerPartVolumeSelector;
+        
+        else if (MCU_point_in_rect(getVolumeBarPartRect(m_volume_rect, kMCPlayerControllerPartVolumeWell), x, y))
+            return kMCPlayerControllerPartVolumeWell;
+        
+        else if (MCU_point_in_rect(m_volume_rect, x, y))
+            return kMCPlayerControllerPartVolumeBar;
+        
+        else
+            return kMCPlayerControllerPartUnknown;
+    }
+
     // Mouse handling methods are similar to the control ones.
     
     Boolean mdown(uint2 which)
     {
+        int t_part;
+        t_part = getvolumerectpart(MCmousex, MCmousey);
+        
+        switch(t_part)
+        {
+            case kMCPlayerControllerPartVolumeSelector:
+            {
+                m_grabbed_part = t_part;
+            }
+                break;
+                
+            case kMCPlayerControllerPartVolumeWell:
+            case kMCPlayerControllerPartVolumeBar:
+            {
+                MCRectangle t_part_volume_selector_rect = getVolumeBarPartRect(m_volume_rect, kMCPlayerControllerPartVolumeSelector);
+                MCRectangle t_volume_well;
+                t_volume_well = getVolumeBarPartRect(m_volume_rect, kMCPlayerControllerPartVolumeWell);
+                int32_t t_new_volume, t_height;
+                
+                t_height = t_volume_well . height;
+                t_new_volume = (t_volume_well . y + t_volume_well . height - MCmousey) * 100 / (t_height);
+                
+                if (t_new_volume < 0)
+                    t_new_volume = 0;
+                if (t_new_volume > 100)
+                    t_new_volume = 100;
+                
+                m_player -> updateloudness(t_new_volume);
+                m_player -> setloudness();
+                m_player -> layer_redrawall();
+                dirtyall();
+            }
+                break;
+                
+            default:
+                break;
+        }
         return True;
     }
     
     Boolean mup(uint2 which)
     {
+        m_grabbed_part = kMCPlayerControllerPartUnknown;
         return True;
     }
     
     Boolean mfocus(int2 x, int2 y)
     {
+        MCmousex = x;
+        MCmousey = y;
+        switch(m_grabbed_part)
+        {
+            case kMCPlayerControllerPartVolumeSelector:
+            {
+                MCRectangle t_part_volume_selector_rect = getVolumeBarPartRect(m_volume_rect, kMCPlayerControllerPartVolumeSelector);
+                MCRectangle t_volume_well;
+                t_volume_well = getVolumeBarPartRect(m_volume_rect, kMCPlayerControllerPartVolumeWell);
+                
+                int32_t t_new_volume, t_height;
+                
+                t_new_volume = (t_volume_well. y + t_volume_well . height - MCmousey ) * 100 / (t_volume_well . height);
+                
+                if (t_new_volume < 0)
+                    t_new_volume = 0;
+                if (t_new_volume > 100)
+                    t_new_volume = 100;
+                
+                m_player -> updateloudness(t_new_volume);
+                
+                m_player -> setloudness();
+                m_player -> layer_redrawall();
+                dirtyall();
+            }
+                break;
+                            
+            default:
+                break;
+        }
+        
+        
         return True;
     }
     
@@ -183,6 +467,8 @@ public:
         t_rect = MCU_recttoroot(p_player -> getstack(), t_rect);
         
         m_player = p_player;
+        m_volume_rect = t_rect;
+        m_volume_rect . x = m_volume_rect . y = 0;
         
         MCdispatcher -> addmenu(this);
         
@@ -191,6 +477,8 @@ public:
     
 private:
     MCPlayer *m_player;
+    MCRectangle m_volume_rect;
+    int m_grabbed_part;
 };
 
 static MCPlayerVolumePopup *s_volume_popup = nil;
@@ -1574,6 +1862,16 @@ uint2 MCPlayer::getloudness()
 	return loudness;
 }
 
+MCColor MCPlayer::getcontrollermaincolor()
+{
+    return controllermaincolor;
+}
+
+void MCPlayer::updateloudness(int2 newloudness)
+{
+    loudness = newloudness;
+}
+
 void MCPlayer::setloudness()
 {
 	if (state & CS_PREPARED)
@@ -1938,49 +2236,6 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		dc -> end();
 }
 
-inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha)
-{
-	return ((uint8_t)(p_red * 255) << 16) | ((uint8_t)(p_green * 255) << 8) | ((uint8_t)(p_blue * 255) << 0) | ((uint8_t)(p_alpha * 255) << 24);
-}
-
-inline void setRamp(MCGColor *&r_colors, MCGFloat *&r_stops)
-{
-    if (r_colors == nil)
-    /* UNCHECKED */ MCMemoryNewArray(3, r_colors);
-    r_colors[0] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
-    r_colors[1] = MCGColorMakeRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-    r_colors[2] = MCGColorMakeRGBA(183 / 255.0, 183 / 255.0, 183 / 255.0, 1.0f);
-    
-    if (r_stops == nil)
-    /* UNCHECKED */ MCMemoryNewArray(3, r_stops);
-    r_stops[0] = (MCGFloat)0.00000;
-    r_stops[1] = (MCGFloat)0.50000;
-    r_stops[2] = (MCGFloat)1.00000;
-}
-
-inline void setTransform(MCGAffineTransform &r_transform, MCGFloat origin_x, MCGFloat origin_y, MCGFloat primary_x, MCGFloat primary_y, MCGFloat secondary_x, MCGFloat secondary_y)
-{
-    MCGAffineTransform t_transform;
-    t_transform . a = primary_x - origin_x;
-    t_transform . b = primary_y - origin_y;
-    t_transform . c = secondary_x - origin_x;
-    t_transform . d = secondary_y - origin_y;
-    
-    t_transform . tx = origin_x;
-    t_transform . ty = origin_y;
-    r_transform = t_transform;
-}
-
-inline MCGPoint MCRectangleScalePoints(MCRectangle p_rect, MCGFloat p_x, MCGFloat p_y)
-{
-    return MCGPointMake(p_rect . x + p_x * p_rect . width, p_rect . y + p_y * p_rect . height);
-}
-
-inline void MCGraphicsContextAngleAndDistanceToXYOffset(int p_angle, int p_distance, MCGFloat &r_x_offset, MCGFloat &r_y_offset)
-{
-	r_x_offset = floor(0.5f + p_distance * cos(p_angle * M_PI / 180.0));
-	r_y_offset = floor(0.5f + p_distance * sin(p_angle * M_PI / 180.0));
-}
 
 void MCPlayer::drawcontroller(MCDC *dc)
 {
@@ -2051,13 +2306,6 @@ void MCPlayer::drawnicecontroller(MCDC *dc)
         drawControllerSelectionFinishButton(t_gcontext);
     }
     
-    if (m_show_volume)
-    {
-        drawControllerVolumeBarButton(t_gcontext);
-        drawControllerVolumeWellButton(t_gcontext);
-        drawControllerVolumeAreaButton(t_gcontext);
-        drawControllerVolumeSelectorButton(t_gcontext);
-    }
     dc -> unlockgcontext(t_gcontext);
 }
 
@@ -2122,45 +2370,6 @@ void MCPlayer::drawControllerVolumeButton(MCGContextRef p_gcontext)
     
     MCGContextSetStrokeWidth(p_gcontext, t_volume_rect . width / 20.0 );
     MCGContextStroke(p_gcontext);
-}
-
-void MCPlayer::drawControllerVolumeBarButton(MCGContextRef p_gcontext)
-{
-    MCRectangle t_rect;
-    t_rect = getcontrollerrect();
-    MCRectangle t_volume_bar_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolumeBar);
-    
-    MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_volume_bar_rect));
-    MCGContextSetFillRGBAColor(p_gcontext, 34 / 255.0, 34 / 255.0, 34 / 255.0, 1.0f); // DARKGRAY
-    MCGContextFill(p_gcontext);
-}
-
-void MCPlayer::drawControllerVolumeSelectorButton(MCGContextRef p_gcontext)
-{
-    MCRectangle t_rect;
-    t_rect = getcontrollerrect();
-    MCRectangle t_volume_selector_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartVolumeSelector);
-    
-    MCAutoPointer<MCGColor> t_colors;
-    MCAutoPointer<MCGFloat> t_stops;
-    setRamp(&t_colors, &t_stops);
-    
-    MCGAffineTransform t_transform;
-    float origin_x = t_volume_selector_rect.x + t_volume_selector_rect.width / 2.0;
-	float origin_y = t_volume_selector_rect.y + t_volume_selector_rect.height;
-	float primary_x = t_volume_selector_rect.x + t_volume_selector_rect.width / 2.0;
-	float primary_y = t_volume_selector_rect.y;
-	float secondary_x = t_volume_selector_rect.x - t_volume_selector_rect.width / 2.0;
-	float secondary_y = t_volume_selector_rect.y + t_volume_selector_rect.height;
-    
-    setTransform(t_transform, origin_x, origin_y, primary_x, primary_y, secondary_x, secondary_y);
-    
-    MCGContextSetFillGradient(p_gcontext, kMCGGradientFunctionLinear, *t_stops, *t_colors, 3, false, false, 1, t_transform, kMCGImageFilterNone);
-    
-    MCGContextSetShouldAntialias(p_gcontext, true);
-    MCGContextAddArc(p_gcontext, MCRectangleScalePoints(t_volume_selector_rect, 0.5, 0.5), MCGSizeMake(0.8 * t_volume_selector_rect . width, 0.8 * t_volume_selector_rect . height), 0, 0, 360);
-    
-    MCGContextFill(p_gcontext);
 }
 
 void MCPlayer::drawControllerPlayPauseButton(MCGContextRef p_gcontext)
@@ -2510,20 +2719,6 @@ void MCPlayer::drawControllerSelectedAreaButton(MCGContextRef p_gcontext)
     MCGContextFill(p_gcontext);
 }
 
-void MCPlayer::drawControllerVolumeAreaButton(MCGContextRef p_gcontext)
-{
-    MCRectangle t_volume_area;
-    t_volume_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeArea);
-    
-    //MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); //PURPLE
-    MCGContextSetFillRGBAColor(p_gcontext, (controllermaincolor . red / 255.0) / 257.0, (controllermaincolor . green / 255.0) / 257.0, (controllermaincolor . blue / 255.0) / 257.0, 1.0f);
-    
-    MCGRectangle t_grect = MCRectangleToMCGRectangle(t_volume_area);
-    MCGContextAddRoundedRectangle(p_gcontext, t_grect, MCGSizeMake(30, 30));
-    MCGContextFill(p_gcontext);
-    
-}
-
 void MCPlayer::drawControllerPlayedAreaButton(MCGContextRef p_gcontext)
 {
     MCRectangle t_drawn_played_area;
@@ -2541,48 +2736,6 @@ void MCPlayer::drawControllerPlayedAreaButton(MCGContextRef p_gcontext)
     MCGContextAddRoundedRectangle(p_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
     
     MCGContextFill(p_gcontext);
-}
-
-void MCPlayer::drawControllerVolumeWellButton(MCGContextRef p_gcontext)
-{
-    MCRectangle t_volume_well;
-    t_volume_well = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartVolumeWell);
-    
-    MCGBitmapEffects t_effects;
-	t_effects . has_drop_shadow = false;
-	t_effects . has_outer_glow = false;
-	t_effects . has_inner_glow = false;
-	t_effects . has_inner_shadow = true;
-    t_effects . has_color_overlay = false;
-    
-    MCGShadowEffect t_inner_shadow;
-    t_inner_shadow . color = MCGColorMakeRGBA(0.0f, 0.0f, 0.0f, 56.0 / 255.0);
-    t_inner_shadow . blend_mode = kMCGBlendModeClear;
-    t_inner_shadow . size = 0;
-    t_inner_shadow . spread = 0;
-    
-    MCGFloat t_x_offset, t_y_offset;
-    int t_distance = t_volume_well . width / 5;
-    // Make sure we always have an inner shadow
-    if (t_distance == 0)
-        t_distance = 1;
-    
-    MCGraphicsContextAngleAndDistanceToXYOffset(235, t_distance, t_x_offset, t_y_offset);
-    t_inner_shadow . x_offset = t_x_offset;
-    t_inner_shadow . y_offset = t_y_offset;
-    t_inner_shadow . knockout = false;
-    
-    t_effects . inner_shadow = t_inner_shadow;
-    
-    MCGContextSetFillRGBAColor(p_gcontext, 0.0f, 0.0f, 0.0f, 1.0f);
-    MCGContextSetShouldAntialias(p_gcontext, true);
-    
-    MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_volume_well);
-    
-    MCGContextAddRoundedRectangle(p_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
-    MCGContextBeginWithEffects(p_gcontext, t_rounded_rect, t_effects);
-    MCGContextFill(p_gcontext);
-    MCGContextEnd(p_gcontext);
 }
 
 int MCPlayer::hittestcontroller(int x, int y)
