@@ -372,11 +372,11 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 			
 		case kMCPlatformSystemPropertyHiliteColor:
 		{
-			RGBColor hiliteRGB;
-			LMGetHiliteRGB(&hiliteRGB);
-			((MCColor *)r_value) -> red = hiliteRGB.red;
-			((MCColor *)r_value) -> green = hiliteRGB.green;
-			((MCColor *)r_value) -> blue = hiliteRGB.blue;
+            NSColor *t_color;
+            t_color = [[NSColor selectedTextBackgroundColor] colorUsingColorSpaceName: NSCalibratedRGBColorSpace];
+			((MCColor *)r_value) -> red = [t_color redComponent] * 65535;
+			((MCColor *)r_value) -> green = [t_color greenComponent] * 65535;
+			((MCColor *)r_value) -> blue = [t_color blueComponent] * 65535;
 		}
 		break;
 			

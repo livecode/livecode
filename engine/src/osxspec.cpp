@@ -687,19 +687,6 @@ void MCS_init()
 	MCaqua = True;
 	
 	init_utf8_converters();
-
-	CFBundleRef theBundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices"));
-	if (theBundle != NULL)
-	{
-		if (CFBundleLoadExecutable(theBundle))
-		{
-			SwapQDTextFlagsPtr stfptr = (SwapQDTextFlagsPtr)CFBundleGetFunctionPointerForName(theBundle, CFSTR("SwapQDTextFlags"));
-			if (stfptr != NULL)
-				stfptr(kQDSupportedFlags);
-			CFBundleUnloadExecutable(theBundle);
-		}
-		CFRelease(theBundle);
-	}
 	
 	char *dptr = MCS_getcurdir();
 	if (strlen(dptr) <= 1)
@@ -718,10 +705,6 @@ void MCS_init()
 		delete newpath;
 	}
 	delete dptr;
-
-	// MW-2007-12-10: [[ Bug 5667 ]] Small font sizes have the wrong metrics
-	//   Make sure we always use outlines - then everything looks pretty :o)
-	SetOutlinePreferred(TRUE);
 
 	MCS_reset_time();
 	//do toolbox checking
