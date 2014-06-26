@@ -1739,16 +1739,19 @@ int main(int argc, char *argv[], char *envp[])
 	com_runrev_livecode_MCApplicationDelegate *t_delegate;
 	t_delegate = [[com_runrev_livecode_MCApplicationDelegate alloc] initWithArgc: argc argv: t_new_argv envp: t_new_envp];
 	
-	for (i = 0; i < argc; i++)
-		MCValueRelease(t_new_argv[i]);
-	for (i = 0; i < t_envp_count; i++)
-		MCValueRelease(t_new_envp[i]);
-	
 	// Assign our delegate
 	[t_application setDelegate: t_delegate];
 	
 	// Run the application - this never returns!
-	[t_application run];
+	[t_application run];    
+	
+	for (i = 0; i < argc; i++)
+		MCValueRelease(t_new_argv[i]);
+	for (i = 0; i < t_envp_count; i++)
+		MCValueRelease(t_new_envp[i]);    
+	
+	MCMemoryDeleteArray(t_new_argv);
+	MCMemoryDeleteArray(t_new_envp);
 	
 	// Drain the autorelease pool.
 	[t_pool release];

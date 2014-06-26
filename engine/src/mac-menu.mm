@@ -429,6 +429,7 @@ void MCPlatformReleaseMenu(MCPlatformMenuRef p_menu)
 void MCPlatformSetMenuTitle(MCPlatformMenuRef p_menu, MCStringRef p_title)
 {
     MCAutoStringRefAsCFString t_cf_string;
+    /* UNCHECKED */ t_cf_string . Lock(p_title);
 	[p_menu -> menu setTitle: (NSString*)*t_cf_string];
 }
 
