@@ -57,7 +57,7 @@ bool MCMultiPartCreateTempFile(MCStringRef p_temp_folder, IO_handle &r_file_hand
 void MCMultiPartRemoveTempFiles();
 
 
-const char *MCMultiPartGetErrorMessage(MCMultiPartFileStatus p_status);
+bool MCMultiPartGetErrorMessage(MCMultiPartFileStatus p_status, MCStringRef &r_message);
 
 
 #endif // __MC_SERVER_MULTIPART__

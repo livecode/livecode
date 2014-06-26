@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
+#include "sysposix.h"
 
 #include "osspec.h"
 
@@ -48,6 +49,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <iconv.h>
 #include "text.h"
 
+#ifdef LEGACY_EXEC
 struct ConverterRecord
 {
 	ConverterRecord *next;
@@ -88,18 +90,7 @@ static iconv_t fetch_converter(const char *p_encoding)
 	
 	return s_records -> converter;
 }
-
-#ifdef _DARWIN_SERVER
-#define ftello64(a) ftello(a)
-#define fseeko64(a, b, c) fseeko(a, b, c)
-#define fstat64(a, b) fstat(a, b)
-#define stat64 stat
-
-#define opendir64(a) opendir(a)
-#define readdir64(a) readdir(a)
-#define closedir64(a) closedir(a)
-#define DIR64 DIR
-#endif
+#endif /* LEGACY_EXEC */
 
 struct MCDateTime
 {
@@ -112,16 +103,7 @@ struct MCDateTime
 	int4 bias;
 };
 
-#ifndef _LINUX_SERVER
-static char *strndup(const char *s, uint32_t l)
-{
-	char *r;
-	r = new char[l + 1];
-	strncpy(r, s, l);
-	return r;
-}
-#endif
-
+#ifdef LEGACY_EXEC
 class MCStdioFileHandle: public MCSystemFileHandle
 {
 public:
@@ -133,7 +115,7 @@ public:
 			return NULL;
 		
 		MCStdioFileHandle *t_handle;
-		t_handle = new MCStdioFileHandle;
+        t_handle = new MCStdioFileHandle;
 		t_handle -> m_stream = t_stream;
 		
 		return t_handle;
@@ -945,7 +927,7 @@ struct MCPosixSystem: public MCSystemInterface
 
 MCSystemInterface *MCServerCreatePosixSystem(void)
 {
-	return new MCPosixSystem;
+    return new MCLinuxDesktop;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -954,6 +936,7 @@ bool MCS_isnan(double v)
 {
 	return isnan(v) != 0;
 }
+#endif /* LEGACY_EXEC */
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -961,57 +944,45 @@ bool MCS_get_temporary_folder(MCStringRef &r_temp_folder)
 {
 	bool t_success = true;
 
-	const char *t_tmpdir = NULL;
-	int32_t t_tmpdir_len = 0;
 	MCAutoStringRef t_tmpdir_string;
-	MCS_getenv(MCSTR("TMPDIR"), &t_tmpdir_string);
+    if (!MCS_getenv(MCSTR("TMPDIR"), &t_tmpdir_string))
+        t_tmpdir_string = MCSTR("/tmp");
 
-	/* UNCHECKED */ MCStringCreateWithCString(t_tmpdir, &t_tmpdir_string);
-
-	if (t_tmpdir == NULL)
-		t_tmpdir = "/tmp";
-
-	if (t_success)
-	{
-		t_tmpdir_len = MCCStringLength(t_tmpdir);
-		t_success = t_tmpdir_len > 0;
-	}
-
-	if (t_success)
-	{
-        char *t_temp_folder = strdup(MCStringGetCString(r_temp_folder));
-		if (t_tmpdir[t_tmpdir_len - 1] == '/')
-			t_success = MCCStringCloneSubstring(t_tmpdir, t_tmpdir_len - 1, t_temp_folder);
+    if (!MCStringIsEmpty(*t_tmpdir_string))
+    {
+        if (MCStringGetNativeCharAtIndex(*t_tmpdir_string, MCStringGetLength(*t_tmpdir_string) - 1) == '/')
+            t_success = MCStringCopySubstring(*t_tmpdir_string, MCRangeMake(0, MCStringGetLength(*t_tmpdir_string) - 1), r_temp_folder);
 		else
-			t_success = MCCStringClone(t_tmpdir, t_temp_folder);
+            t_success = MCStringCopy(*t_tmpdir_string, r_temp_folder);
 	}
 
 	return t_success;
 }
 
-bool MCS_create_temporary_file(const char *p_path, const char *p_prefix, IO_handle &r_file, char *&r_name)
+class MCStdioFileHandle;
+
+bool MCS_create_temporary_file(MCStringRef p_path, MCStringRef p_prefix, IO_handle &r_file, MCStringRef &r_name)
 {
-	char *t_temp_file = NULL;
-	if (!MCCStringFormat(t_temp_file, "%s/%sXXXXXXXX", p_path, p_prefix))
+    char* t_temp_file;
+    if (!MCCStringFormat(t_temp_file, "%s/%sXXXXXXXX", MCStringGetCString(p_path), MCStringGetCString(p_prefix)))
 		return false;
 	
 	int t_fd;
-	t_fd = mkstemp(t_temp_file);
-	if (t_fd == -1)
-	{
-		MCCStringFree(t_temp_file);
-		return false;
-	}
+    t_fd = mkstemp(t_temp_file);
+    if (t_fd == -1)
+        return false;
 	
-	r_name = t_temp_file;
-	r_file = new IO_header(MCStdioFileHandle :: OpenFd(t_fd, "w+"), 0);
-	
+    if (!MCStringCreateWithCString(t_temp_file, r_name))
+        return false;
+
+    r_file = MCsystem->OpenFd(t_fd, kMCOpenFileModeWrite);
 	return true;
 }
 
-bool MCSystemLockFile(MCSystemFileHandle *p_file, bool p_shared, bool p_wait)
+bool MCSystemLockFile(IO_handle p_file, bool p_shared, bool p_wait)
 {
-	int t_fd = fileno(((MCStdioFileHandle*)p_file)->GetStream());
+    // FRAGILE? In case p_file is a MCMemoryMappedFile, getFilePointer returns a char*...
+	int t_fd = fileno((FILE*)p_file->GetFilePointer());
 	int32_t t_op = 0;
 	
 	if (p_shared)

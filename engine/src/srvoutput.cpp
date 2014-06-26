@@ -99,17 +99,17 @@ static inline bool MCServerOutputMapUnicodeCluster(const unichar_t *p_chars, uin
 	switch(MCserveroutputtextencoding)
 	{
 		case kMCSOutputTextEncodingWindows1252:
-			if (MCUnicodeMapToNative_Windows1252((const uint2 *)p_chars, p_char_count, r_char))
+			if (MCUnicodeMapToNative_Windows1252(p_chars, p_char_count, r_char))
 				return true;
 			break;
 			
 		case kMCSOutputTextEncodingMacRoman:
-			if (MCUnicodeMapToNative_MacRoman((const uint2 *)p_chars, p_char_count, r_char))
+			if (MCUnicodeMapToNative_MacRoman(p_chars, p_char_count, r_char))
 				return true;
 			break;
 			
 		case kMCSOutputTextEncodingISO8859_1:
-			if (!MCUnicodeMapToNative_ISO8859_1((const uint2 *)p_chars, p_char_count, r_char))
+			if (!MCUnicodeMapToNative_ISO8859_1(p_chars, p_char_count, r_char))
 				return true;
 			break;
 		default:
@@ -273,14 +273,14 @@ static void MCServerOutputNativeMarkup(const char *p_chars, uint32_t p_char_coun
 static void MCServerOutputAdvanceUnicodeCluster(const unichar_t *p_chars, uint32_t p_char_count, uint32_t& x_index)
 {
 	uint32_t t_codepoint;
-	t_codepoint = MCUnicodeCodepointAdvance((const uint2 *)p_chars, p_char_count, x_index);
+	t_codepoint = MCUnicodeCodepointAdvance(p_chars, p_char_count, x_index);
 	
 	while(x_index < p_char_count)
 	{
 		uint4 t_old_index;
 		t_old_index = x_index;
 		
-		t_codepoint = MCUnicodeCodepointAdvance((const uint2 *)p_chars, p_char_count, x_index);
+		t_codepoint = MCUnicodeCodepointAdvance(p_chars, p_char_count, x_index);
 		
 		if (MCUnicodeCodepointIsBase(t_codepoint))
 		{
@@ -316,7 +316,7 @@ static void MCServerOutputUnicodeChars(const unichar_t *p_chars, uint32_t p_char
 		else if (MCserveroutputtextencoding == kMCSOutputTextEncodingUTF8)
 		{
 			uint32_t t_codepoint;
-			t_codepoint = MCUnicodeCodepointAdvance((const uint2 *)p_chars, p_char_count, t_index);
+			t_codepoint = MCUnicodeCodepointAdvance(p_chars, p_char_count, t_index);
 			MCServerOutputUnicodeCharAsUTF8(t_codepoint, t_output, t_output_count);
 		}
 		else
@@ -366,7 +366,7 @@ static void MCServerOutputUnicodeMarkup(const unichar_t *p_chars, uint32_t p_cha
 		else if (MCserveroutputtextencoding == kMCSOutputTextEncodingUTF8)
 		{
 			uint32_t t_codepoint;
-			t_codepoint = MCUnicodeCodepointAdvance((const uint2 *)p_chars, p_char_count, t_index);
+			t_codepoint = MCUnicodeCodepointAdvance(p_chars, p_char_count, t_index);
 			MCServerOutputUnicodeCharAsUTF8(t_codepoint, t_output, t_output_count);
 		}
 		else
@@ -472,7 +472,7 @@ void MCServerPutMarkup(MCStringRef s)
 
 void MCServerPutUnicodeMarkup(MCDataRef p_data)
 {
-	MCServerOutputUnicodeMarkup((const unichar_t *)MCDataGetBytePtr(p_data), MCDataGetLength(s) / 2, false);
+	MCServerOutputUnicodeMarkup((const unichar_t *)MCDataGetBytePtr(p_data), MCDataGetLength(p_data) / 2, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -495,8 +495,8 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 		for (; t_index < MCservercgicookiecount; t_index++)
 		{
 			if (MCStringIsEqualToCString(p_name, MCservercgicookies[t_index].name, kMCCompareExact) &&
-				MCStringIsEqualToCString(p_path, MCservercgicookies[t_index].path, kMCCompareExact) &&
-				MCStringIsEqualToCString(p_domain, MCservercgicookies[t_index].domain, kMCCompareExact))
+                (!MCStringIsEmpty(p_path) && MCStringIsEqualToCString(p_path, MCservercgicookies[t_index].path, kMCCompareExact)) &&
+                !(MCStringIsEmpty(p_domain) && MCStringIsEqualToCString(p_domain, MCservercgicookies[t_index].domain, kMCCompareExact)))
 				break;
 		}
 		if (t_index == MCservercgicookiecount)
@@ -505,10 +505,10 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 	
 	if (t_success)
 	{
-		MCservercgicookies[t_index].name = strdup(MCStringGetCString(p_name));
+        MCservercgicookies[t_index].name = MCStringIsEmpty(p_name) ? strdup("") : strdup(MCStringGetCString(p_name));
 		MCservercgicookies[t_index].value = strdup(MCStringGetCString(*t_encoded));
-		MCservercgicookies[t_index].path = strdup(MCStringGetCString(p_path));
-		MCservercgicookies[t_index].domain = strdup(MCStringGetCString(p_domain));
+        MCservercgicookies[t_index].path = MCStringIsEmpty(p_domain) ? strdup("") : strdup(MCStringGetCString(p_path));
+        MCservercgicookies[t_index].domain = MCStringIsEmpty(p_domain) ? strdup("") : strdup(MCStringGetCString(p_domain));
 
 		MCservercgicookies[t_index].expires = p_expires;
 		MCservercgicookies[t_index].secure = p_secure;

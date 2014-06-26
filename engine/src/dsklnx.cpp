@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 #include "system.h"
 #include "foundation.h"
+#include "sysposix.h"
 
 #include "object.h"
 #include "stack.h"
@@ -438,6 +439,7 @@ static void handle_signal(int sig)
         break;
     case SIGCHLD:
         {
+#if defined(_LINUX_DESKTOP)
             MCPlayer *tptr = MCplayers;
             // If we have some players waiting then deal with these first
             waitedpid = -1;
@@ -478,6 +480,7 @@ static void handle_signal(int sig)
                     MCS_checkprocesses();
                 }
             }
+#endif /* LINUX_DESKTOP */
         }
         break;
     case SIGALRM:
@@ -529,30 +532,6 @@ bool MCS_generate_uuid(char p_buffer[128])
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCMemoryMappedFileHandle: public MCMemoryFileHandle
-{
-public:
-    MCMemoryMappedFileHandle(int p_fd, void *p_buffer, uint32_t p_length)
-        : MCMemoryFileHandle(p_buffer, p_length)
-    {
-        m_fd = p_fd;
-        m_buffer = p_buffer;
-        m_length = p_length;
-    }
-
-    void Close(void)
-    {
-        munmap((char *)m_buffer, m_length);
-        close(m_fd);
-        MCMemoryFileHandle::Close();
-    }
-
-private:
-    int m_fd;
-    void *m_buffer;
-    uint32_t m_length;
-};
-
 class MCStdioFileHandle: public MCSystemFileHandle
 {
 public:
@@ -561,7 +540,7 @@ public:
         m_fptr = p_fptr;
         m_is_eof = false;
     }
-
+    
     virtual void Close(void)
     {
 #ifdef /* MCS_close_dsk_lnx */ LEGACY_SYSTEM
@@ -589,32 +568,32 @@ public:
 #endif /* MCS_close_dsk_lnx */
         if (m_fptr != NULL)
             fclose(m_fptr);
-
+        
         delete this;
     }
-
+    
     // Returns true if an attempt has been made to read past the end of the
     // stream.
     virtual bool IsExhausted(void)
     {
         return feof(m_fptr);
     }
-
+    
     virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
     {
 #ifdef /* MCS_read_dsk_lnx */ LEGACY_SYSTEM
         if (MCabortscript || ptr == NULL)
             return IO_ERROR;
-
+        
         if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
             return IO_ERROR;
-
+        
         // MW-2009-06-25: If this is a custom stream, call the appropriate callback.
         // MW-2009-06-30: Refactored to common (platform-independent) implementation
         //   in mcio.cpp
         if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
             return MCS_fake_read(ptr, size, n, stream);
-
+        
         IO_stat stat = IO_NORMAL;
         if (stream->fptr == NULL)
         {
@@ -650,10 +629,10 @@ public:
                 if (ferror(stream->fptr))
                 {
                     clearerr(stream->fptr);
-
+                    
                     if (errno == EAGAIN)
                         return IO_NORMAL;
-
+                    
                     if (errno == EINTR)
                     {
                         toread -= nread;
@@ -673,7 +652,7 @@ public:
 #endif /* MCS_read_dsk_lnx */
         if (MCabortscript || p_buffer == NULL)
             return false;
-
+        
         char *sptr = (char *)p_buffer;
         uint4 nread;
         uint4 toread = p_length;
@@ -686,40 +665,40 @@ public:
             if (ferror(m_fptr))
             {
                 clearerr(m_fptr);
-
+                
                 if (errno == EAGAIN)
                     return true;
-
+                
                 if (errno == EINTR)
                 {
                     toread -= nread;
                     continue;
                 }
             }
-
+            
             return false;
         }
-
+        
         r_read = offset + nread;
         return true;
     }
-
+    
     virtual bool Write(const void *p_buffer, uint32_t p_length)
     {
 #ifdef /* MCS_write_dsk_lnx */ LEGACY_SYSTEM
         if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
             return MCU_dofakewrite(stream -> buffer, stream -> len, ptr, size, n);
-
+        
         if (fwrite(ptr, size, n, stream->fptr) != n)
             return IO_ERROR;
         return IO_NORMAL;
 #endif /* MCS_write_dsk_lnx */
         if (fwrite(p_buffer, 1, p_length, m_fptr) != p_length)
             return false;
-
+        
         return true;
     }
-
+    
     virtual bool Seek(int64_t p_offset, int p_dir)
     {
 #ifdef /* MCS_seek_cur_dsk_lnx */ LEGACY_SYSTEM
@@ -727,7 +706,7 @@ public:
         // MW-2009-06-30: Refactored to common implementation in mcio.cpp.
         if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
             return MCS_fake_seek_cur(stream, offset);
-
+        
         if (stream->fptr == NULL)
             IO_set_stream(stream, stream->ioptr + offset);
         else
@@ -739,7 +718,7 @@ public:
         // MW-2009-06-30: If this is a custom stream, call the appropriate callback.
         if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
             return MCS_fake_seek_set(stream, offset);
-
+        
         if (stream->fptr == NULL)
             IO_set_stream(stream, stream->buffer + offset);
         else
@@ -757,7 +736,7 @@ public:
 #endif /* MCS_seek_end_dsk_lnx */
         return fseeko64(m_fptr, p_offset, p_dir > 0 ? SEEK_SET : (p_dir < 0 ? SEEK_END : SEEK_CUR)) == 0;
     }
-
+    
     virtual bool Truncate(void)
     {
 #ifdef /* MCS_trunc_dsk_lnx */ LEGACY_SYSTEM
@@ -767,7 +746,7 @@ public:
 #endif /* MCS_trunc_dsk_lnx */
         return ftruncate(fileno(m_fptr), ftell(m_fptr)) == 0;
     }
-
+    
     virtual bool Sync(void)
     {
 #ifdef /* MCS_sync_dsk_lnx */ LEGACY_SYSTEM
@@ -787,46 +766,46 @@ public:
         }
         return true;
     }
-
+    
     virtual bool Flush(void)
     {
 #ifdef /* MCS_flush_dsk_lnx */ LEGACY_SYSTEM
         if (stream->fptr != NULL)
             if (fflush(stream->fptr))
                 return IO_ERROR;
-
+        
         return IO_NORMAL;
 #endif /* MCS_flush_dsk_lnx */
         if (fflush(m_fptr))
             return false;
-
+        
         return true;
     }
-
+    
     virtual bool PutBack(char p_char)
     {
 #ifdef /* MCS_putback_dsk_lnx */ LEGACY_SYSTEM
         if (stream -> fptr == NULL)
             return MCS_seek_cur(stream, -1);
-
+        
         if (ungetc(c, stream -> fptr) != c)
             return IO_ERROR;
-
+        
         return IO_NORMAL;
 #endif /* MCS_putback_dsk_lnx */
         if (ungetc(p_char, m_fptr) != p_char)
             return false;
-
+        
         return true;
     }
-
+    
     virtual int64_t Tell(void)
     {
 #ifdef /* MCS_tell_dsk_lnx */ LEGACY_SYSTEM
         // MW-2009-06-30: If this is a custom stream, call the appropriate callback.
         if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
             return MCS_fake_tell(stream);
-
+        
         if (stream->fptr != NULL)
             return ftello64(stream->fptr);
         else
@@ -834,47 +813,54 @@ public:
 #endif /* MCS_tell_dsk_lnx */
         return ftello64(m_fptr);
     }
-
+    
     virtual void *GetFilePointer(void)
     {
         return (void*)m_fptr;
     }
-
+    
     virtual int64_t GetFileSize(void)
     {
 #ifdef /* MCS_fsize_dsk_lnx */ LEGACY_SYSTEM
         if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
             return MCS_fake_fsize(stream);
-
+        
         struct stat64 buf;
         if (stream->fptr == NULL)
             return stream->len;
-
+        
         int fd = fileno(stream->fptr);
-
+        
         if (fstat64(fd, &buf))
             return 0;
         return buf.st_size;
 #endif /* MCS_fsize_dsk_lnx */
         struct stat64 buf;
-
+        
         int fd = fileno(m_fptr);
-
+        
         if (fstat64(fd, &buf))
             return 0;
-
+        
         return buf.st_size;
     }
-
+    
     virtual bool TakeBuffer(void*& r_buffer, size_t& r_length)
     {
         return false;
     }
-
+    
+    virtual FILE* GetStream(void)
+    {
+        return m_fptr;
+    }
+    
 private:
     FILE *m_fptr;
     bool m_is_eof;
 };
+
+////////////////////////////////////////////////////////////////////////////////
 
 class MCLinuxDesktop: public MCSystemInterface
 {
@@ -926,22 +912,22 @@ public:
 
         if (!MCS_isatty(0))
             MCS_nodelay(0);
-        
+
         // MW-2013-10-01: [[ Bug 11160 ]] At the moment NBSP is not considered a space.
         MCctypetable[160] &= ~(1 << 4);
-        
+
         MCshellcmd = strclone("/bin/sh");
 #endif /* MCS_init_dsk_lnx */
         IO_stdin = MCsystem -> OpenFd(0, kMCOpenFileModeRead);
         IO_stdout = MCsystem -> OpenFd(1, kMCOpenFileModeWrite);
         IO_stderr = MCsystem -> OpenFd(2, kMCOpenFileModeWrite);
-		
-		// Internally, LiveCode assumes sorting orders etc are those of en_US.
-		// Additionally, the "native" string encoding for Linux is ISO-8859-1
-		// (even if the Linux system is using something different).
-		const char *t_internal_locale = "en_US.ISO-8859-1";
-		setlocale(LC_CTYPE, t_internal_locale);
-		setlocale(LC_COLLATE, t_internal_locale);
+
+        // Internally, LiveCode assumes sorting orders etc are those of en_US.
+        // Additionally, the "native" string encoding for Linux is ISO-8859-1
+        // (even if the Linux system is using something different).
+        const char *t_internal_locale = "en_US.ISO-8859-1";
+        setlocale(LC_CTYPE, t_internal_locale);
+        setlocale(LC_COLLATE, t_internal_locale);
 
         MCinfinity = HUGE_VAL;
 
@@ -967,7 +953,7 @@ public:
         sigaction(SIGTERM, &action, NULL);
         sigaction(SIGUSR1, &action, NULL);
         sigaction(SIGUSR2, &action, NULL);
-    #ifndef LINUX
+    #ifndef _LINUX
         sigaction(SIGSYS, &action, NULL);
     #endif
     #endif
@@ -975,7 +961,7 @@ public:
 
         if (!IsInteractiveConsole(0))
             MCS_lnx_nodelay(0);
-        
+
         // MW-2013-10-01: [[ Bug 11160 ]] At the moment NBSP is not considered a space.
         MCctypetable[160] &= ~(1 << 4);
 
@@ -1192,8 +1178,13 @@ public:
 #else
         MCAutoStringRefAsSysString t_name, t_value;
         /* UNCHECKED */ t_name.Lock(p_name);
-        /* UNCHECKED */ t_value.Lock(p_value);
-        setenv(*t_name, *t_value, True);
+        if (p_value == nil)
+            unsetenv(*t_name);
+        else
+        {
+            /* UNCHECKED */ t_value.Lock(p_value);
+            setenv(*t_name, *t_value, True);
+        }
 #endif
     }
 
@@ -1204,7 +1195,12 @@ public:
 #endif /* MCS_getenv_dsk_lnx */
         MCAutoStringRefAsSysString t_name;
         /* UNCHECKED */ t_name.Lock(p_name);
-        return MCStringCreateWithSysString(getenv(*t_name), r_value);
+
+        char *t_env_value = getenv(*t_name);
+        // We need to know whethere we actually got an environment variable
+        // or if it defaulted to an empty stringref because the env variable
+        // was unset
+        return t_env_value != nil && MCStringCreateWithSysString(t_env_value, r_value);
     }
 
     virtual Boolean CreateFolder(MCStringRef p_path)
@@ -1267,7 +1263,7 @@ public:
         char *oldpath = MCS_resolvepath(oname);
         char *newpath = MCS_resolvepath(nname);
 #ifndef NORENAME
-        
+
         Boolean done = rename(oldpath, newpath) == 0;
 #else
         // doesn't work on directories
@@ -1325,7 +1321,7 @@ public:
     virtual Boolean UnbackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
     {
 #ifdef /* MCS_unbackup_dsk_lnx */ LEGACY_SYSTEM
-	return MCS_rename(oname, nname);
+    return MCS_rename(oname, nname);
 #endif /* MCS_unbackup_dsk_lnx */
         return MCS_rename(p_old_name, p_new_name);
     }
@@ -1403,7 +1399,7 @@ public:
     {
 #ifdef /* MCS_getspecialfolder_dsk_lnx */ LEGACY_SYSTEM
         char *c_dir = MCS_resolvepath("~/");
-        
+
         if ( ep.getsvalue() == "desktop" )
         {
             ep.clear();
@@ -1419,7 +1415,7 @@ public:
             MCresult->sets("not supported");
             ep.clear();
         }
-        
+
         delete c_dir ;
 #endif /* MCS_getspecialfolder_dsk_lnx */
         MCAutoStringRef t_home, t_tilde;
@@ -1472,7 +1468,7 @@ public:
         // MM-2011-08-24: [[ Bug 9691 ]] Updated to use stat64 so no longer fails on files larger than 2GB
         char *newpath = MCS_resolvepath(path);
         struct stat64 buf;
-        
+
         Boolean found = stat64(newpath, &buf) == 0;
         if (found)
             if (file)
@@ -1585,29 +1581,29 @@ public:
     {
         if (p_mode != kMCOpenFileModeCreate)
             return OpenFile(p_path, p_mode, False);
-        
+
         FILE *fptr;
         IO_handle t_handle;
         t_handle = NULL;
-        
+
         MCAutoStringRefAsUTF8String t_path_utf;
         if (!t_path_utf.Lock(p_path))
             return NULL;
-        
+
         fptr = fopen(*t_path_utf, "wb+");
-        
+
         if (fptr != nil)
             t_handle = new MCStdioFileHandle(fptr);
-        
+
         return t_handle;
     }
-    
+
     virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map)
     {
 #ifdef /* MCS_open_dsk_lnx */ LEGACY_SYSTEM
         char *newpath = MCS_resolvepath(path);
         IO_handle handle = NULL;
-        
+
 #ifndef NOMMAP
         if (map && MCmmap && !driver && strequal(mode, IO_READ_MODE))
         {
@@ -1620,7 +1616,7 @@ public:
                 {
                     char *buffer = (char *)mmap(NULL, len, PROT_READ, MAP_SHARED,
                                                 fd, offset);
-                    
+
                     // MW-2013-05-02: [[ x64 ]] Make sure we use the MAP_FAILED constant
                     //   rather than '-1'.
                     if (buffer != MAP_FAILED)
@@ -1774,7 +1770,7 @@ public:
     virtual bool GetTemporaryFileName(MCStringRef& r_tmp_name)
     {
 #ifdef /* MCS_tmpnam_dsk_lnx */ LEGACY_SYSTEM
-	return tmpnam(NULL);
+    return tmpnam(NULL);
 #endif /* MCS_tmpnam_dsk_lnx */
         return MCStringCreateWithSysString(tmpnam(NULL), r_tmp_name);
     }
@@ -1837,15 +1833,15 @@ public:
 #ifdef /* MCS_getentries_dsk_lnx */ LEGACY_SYSTEM
         uint4 flag = files ? S_IFREG : S_IFDIR;
         DIR *dirptr;
-        
+
         if ((dirptr = opendir(".")) == NULL)
         {
             *dptr = MCU_empty();
             return;
         }
-        
+
         struct dirent64 *direntp;
-        
+
         char *tptr = new char[ENTRIES_CHUNK];
         tptr[0] = '\0';
         uint4 nchunks = 1;
@@ -1963,7 +1959,7 @@ public:
             }
             else
                 *tptr++ = '\0';
-            
+
             struct passwd *pw;
             if (*(tpath + 1) == '\0')
                 pw = getpwuid(getuid());
@@ -1982,7 +1978,7 @@ public:
         }
         else
             tildepath = strclone(path);
-        
+
         struct stat64 buf;
         if (lstat64(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
             return tildepath;
@@ -2148,7 +2144,7 @@ public:
                 {
                     if (MCprocesses[index].pid > 0)
                         MCS_kill(MCprocesses[index].pid, SIGKILL);
-                    
+
                     MCprocesses[index].pid = 0;
                     MCeerror->add
                     (EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
@@ -2400,22 +2396,22 @@ public:
 
     virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4& p_output_length, uint4& r_used)
     {
-#ifdef /* MCSTextConvertToUnicode_dsk_lnx */ LEGACY_SYSTEM        
+#ifdef /* MCSTextConvertToUnicode_dsk_lnx */ LEGACY_SYSTEM
         if (p_input_length == 0)
         {
             r_used = 0;
             return true;
         }
-        
+
         if (p_output_length == 0)
         {
             r_used = p_input_length * 4;
             return false;
         }
-        
+
         const char *t_encoding;
         t_encoding = NULL;
-        
+
         if (p_input_encoding >= kMCTextEncodingWindowsNative)
         {
             struct { uint4 codepage; const char *encoding; } s_codepage_map[] =
@@ -2439,47 +2435,47 @@ public:
                 {1252, "WINDOWS-1252" },
                 {10000, "MACINTOSH" }
             };
-            
+
             for(uint4 i = 0; i < sizeof(s_codepage_map) / sizeof(s_codepage_map[0]); ++i)
                 if (s_codepage_map[i] . codepage == p_input_encoding - kMCTextEncodingWindowsNative)
                 {
                     t_encoding = s_codepage_map[i] . encoding;
                     break;
                 }
-            
+
         }
         else if (p_input_encoding >= kMCTextEncodingMacNative)
             t_encoding = "MACINTOSH";
-        
+
         iconv_t t_converter;
         t_converter = fetch_converter(t_encoding);
-        
+
         if (t_converter == NULL)
         {
             r_used = 0;
             return true;
         }
-        
+
         char *t_in_bytes;
         char *t_out_bytes;
         size_t t_in_bytes_left;
         size_t t_out_bytes_left;
-        
+
         t_in_bytes = (char *)p_input;
         t_in_bytes_left = p_input_length;
         t_out_bytes = (char *)p_output;
         t_out_bytes_left = p_output_length;
-        
+
         iconv(t_converter, NULL, NULL, &t_out_bytes, &t_out_bytes_left);
-        
+
         if (iconv(t_converter, &t_in_bytes, &t_in_bytes_left, &t_out_bytes, &t_out_bytes_left) == (size_t)-1)
         {
             r_used = 4 * p_input_length;
             return false;
         }
-        
+
         r_used = p_output_length - t_out_bytes_left;
-        
+
         return true;
 #endif /* MCSTextConvertToUnicode_dsk_lnx */
         if (p_input_length == 0)
@@ -2629,7 +2625,7 @@ public:
         MCprocesses[MCnprocesses].mode = mode;
         MCprocesses[MCnprocesses].ihandle = NULL;
         MCprocesses[MCnprocesses].ohandle = NULL;
-        
+
         if (!elevated)
         {
             int tochild[2];
@@ -2740,12 +2736,12 @@ public:
                 }
                 else
                     close(t_input_fd);
-                
+
                 if (writing)
                     MCprocesses[index] . ohandle = MCS_dopen(t_output_fd, IO_WRITE_MODE);
                 else
                     close(t_output_fd);
-                
+
                 noerror = True;
             }
             else
@@ -2956,14 +2952,14 @@ public:
         struct sigaction action;
         memset((char *)&action, 0, sizeof(action));
         action.sa_handler = (void (*)(int))SIG_IGN;
-        
+
         sigaction(SIGCHLD, &action, NULL);
         while (MCnprocesses--)
         {
             delete MCprocesses[MCnprocesses].name;
             if (MCprocesses[MCnprocesses].pid != 0
-		        && (MCprocesses[MCnprocesses].ihandle != NULL
-		            || MCprocesses[MCnprocesses].ohandle != NULL))
+                && (MCprocesses[MCnprocesses].ihandle != NULL
+                    || MCprocesses[MCnprocesses].ohandle != NULL))
             {
                 kill(MCprocesses[MCnprocesses].pid, SIGKILL);
                 waitpid(MCprocesses[MCnprocesses].pid, NULL, 0);
@@ -3111,6 +3107,11 @@ public:
             MCS_alarm(CHECK_INTERVAL);
         return True;
 #endif /* MCS_poll_dsk_lnx */
+
+#ifdef _LINUX_SERVER
+        Sleep(p_delay);
+        return False;
+#else
         Boolean readinput = False;
         int4 n;
         uint2 i;
@@ -3232,6 +3233,7 @@ public:
         if (wasalarm)
             Alarm(CHECK_INTERVAL);
         return True;
+#endif
     }
 
     virtual Boolean IsInteractiveConsole(int p_fd)
@@ -3265,7 +3267,7 @@ public:
         const char * p_command ;
         GList * p_args = NULL;
         GnomeVFSMimeApplication * p_gvfs ;
-        
+
         if ( MCuselibgnome)
         {
             if ( gnome_vfs_initialized() )
@@ -3277,19 +3279,23 @@ public:
                     p_args = g_list_append ( p_args, p_document );
                     gnome_vfs_mime_application_launch( p_gvfs, p_args);
                     g_list_free ( p_args ) ;
-                    
+
                 }
             }
-            else 
+            else
                 MCresult -> sets("not supported");
             delete p_document;
         }
-        else 
+        else
         {
             // p_document will be deleted by MCS_launch_url ()
             MCS_launch_url (p_document);
         }
 #endif /* MCS_launch_document_dsk_lnx */
+
+#ifdef _LINUX_SERVER
+        MCresult -> sets("not supported");
+#else
         const char * p_mime_type;
         GList * p_args = NULL;
         GnomeVFSMimeApplication * p_gvfs ;
@@ -3317,6 +3323,7 @@ public:
         {
             LaunchUrl(p_document);
         }
+#endif
     }
 
     virtual void LaunchUrl(MCStringRef p_document)
@@ -3337,10 +3344,15 @@ public:
             MCresult->fetch(ep);
             MCCStringFree(t_handler);
         }
-        
+
         // MW-2007-12-13: <p_document> is owned by the callee
         delete p_document;
 #endif /* MCS_launch_url_dsk_lnx */
+
+#ifdef _LINUX_SERVER
+        MCresult->setvalueref(MCSTR("no association"));
+        return;
+#else
         GError *err = NULL;
         if (MCuselibgnome)
         {
@@ -3355,6 +3367,7 @@ public:
             /* UNCHECKED */ MCStringFormat(&t_handler, LAUNCH_URL_SCRIPT, p_document);
             MCdefaultstackptr->domess(*t_handler);
         }
+#endif
     }
 
     virtual void DoAlternateLanguage(MCStringRef p_script, MCStringRef p_language)

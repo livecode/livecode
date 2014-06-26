@@ -156,7 +156,7 @@ public:
 	Boolean sslverify;
 	void doclose();
 
-#if defined _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 	void acceptone();
 #endif
 

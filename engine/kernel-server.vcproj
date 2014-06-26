@@ -404,14 +404,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\execpt.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\execpt.h"
-				>
-			</File>
-			<File
 				RelativePath=".\src\express.cpp"
 				>
 			</File>
@@ -722,22 +714,6 @@
 			<File
 				RelativePath=".\src\opensslsocket.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\osspec.h"
@@ -870,22 +846,6 @@
 			<File
 				RelativePath=".\src\socket_resolve.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\text.cpp"
@@ -1405,6 +1365,14 @@
 			>
 			<File
 				RelativePath=".\src\quicktime.cpp"
+                                >
+                        </File>
+                        <File
+				RelativePath=".\src\dskw32.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\sysdefs.h"
 				>
 			</File>
 			<File
@@ -1740,6 +1708,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\exec-interface-field-chunk.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\exec-interface-field.cpp"
 				>
 			</File>
@@ -1785,6 +1757,10 @@
 			</File>
 			<File
 				RelativePath=".\src\exec-interface2.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-keywords.cpp"
 				>
 			</File>
 			<File
@@ -1944,6 +1920,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\exec-strings-chunk.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\exec-strings.cpp"
 				>
 			</File>
@@ -1992,6 +1972,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\segment.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\syntax.cpp"
 				>
 			</File>
@@ -2009,7 +1993,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Encoding error strings"
-					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)encode_errors.rev&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;&#x0D;&#x0A;"
+					CommandLine="&quot;perl&quot; &quot;$(SolutionDir)\util\encode_errors.pl&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(InputDir)src\executionerrors.h;$(InputDir)src\parseerrors.h"
 					Outputs="$(InputDir)src\encodederrors.cpp"
 				/>
@@ -2020,7 +2004,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Encoding error strings"
-					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)encode_errors.rev&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;&#x0D;&#x0A;"
+					CommandLine="&quot;perl&quot; &quot;$(SolutionDir)\util\encode_errors.pl&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(InputDir)src\executionerrors.h;$(InputDir)src\parseerrors.h"
 					Outputs="$(InputDir)src\encodederrors.cpp"
 				/>

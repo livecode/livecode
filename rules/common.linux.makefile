@@ -40,7 +40,7 @@ GLOBAL_INCLUDES=\
 	
 GLOBAL_LIBS=\
 	$(PREBUILT_LIB_DIR) \
-	$(SOLUTION_DIR)/prebuilt/lib/linux/$(ARCH)
+	$(SOLUTION_DIR)/prebuilt/lib/linux-$(ARCH)
 
 ifeq ($(MODE),debug)
 	DEFINES+=_DEBUG

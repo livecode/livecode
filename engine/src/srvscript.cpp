@@ -58,11 +58,16 @@ MCServerScript::~MCServerScript(void)
 		File *t_file;
 		t_file = m_files;
 		m_files = m_files -> next;
-		
-		if (t_file -> handle != NULL)
-			t_file -> handle -> Close();
-		delete t_file -> filename;
-		delete t_file -> script;
+
+        // Closing a MCMemoryMappedFileHandle calls unmap()
+        // and thus deallocates the memory mapped - which is what's stored in t_file -> script
+        if (t_file -> handle != NULL)
+            t_file -> handle -> Close();
+        else
+            delete t_file -> script;
+
+        MCValueRelease(filename);
+
 		delete t_file;
 	}
 	
@@ -93,7 +98,7 @@ uint4 MCServerScript::GetFileIndexForContext(MCExecContext &ctxt)
 	return t_file_index;
 }
 
-const char *MCServerScript::GetFileForContext(MCExecContext &ctxt)
+bool MCServerScript::GetFileForContext(MCExecContext &ctxt, MCStringRef &r_file)
 {
 	uint32_t t_file_index;
 	if (ctxt.GetHandler() != NULL)
@@ -103,9 +108,9 @@ const char *MCServerScript::GetFileForContext(MCExecContext &ctxt)
 	
 	for(File *t_file = m_files; t_file != NULL; t_file = t_file -> next)
 		if (t_file -> index == t_file_index)
-			return t_file -> filename;
+            return MCStringCopy(t_file -> filename, r_file);
 	
-	return NULL;
+    return false;
 }
 
 uint4 MCServerScript::FindFileIndex(MCStringRef p_filename, bool p_add)
@@ -129,7 +134,7 @@ MCServerScript::File *MCServerScript::FindFile(MCStringRef p_filename, bool p_ad
 	// Look through the file list...
 	File *t_file;
 	for(t_file = m_files; t_file != NULL; t_file = t_file -> next)
-		if (strcmp(t_file -> filename, MCStringGetCString(*t_resolved_filename)) == 0)
+        if (MCStringIsEqualTo(t_file -> filename, *t_resolved_filename, kMCStringOptionCompareExact))
 			break;
 	
 	// If we are here the file doesn't exist (yet). If we aren't in
@@ -142,7 +147,7 @@ MCServerScript::File *MCServerScript::FindFile(MCStringRef p_filename, bool p_ad
 	// Create a new entry.
 	t_file = new File;
 	t_file -> next = m_files;
-	t_file -> filename = (char*) MCStringGetCString(*t_resolved_filename);
+    t_file -> filename = MCValueRetain(*t_resolved_filename);
 	t_file -> index = m_files == NULL ? 1 : m_files -> index + 1;
 	t_file -> script = NULL;
 	t_file -> handle = NULL;
@@ -322,10 +327,11 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 	if (hlist == NULL)
 	{
 		hlist = new MCHandlerlist;
+	}
 	
 	if (m_ctxt == NULL)
 	{
-		m_ctxt = new MCExecContext(*new MCExecPoint(this, hlist, NULL));
+		m_ctxt = new MCExecContext(this, hlist, NULL);
 		// MW-2013-11-08: [[ RefactorIt ]] Make sure we have an 'it' var in global context.
 		/* UNCHECKED */ hlist -> newvar(MCN_it, nil, &m_it, False);
 	}
@@ -335,13 +341,10 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 	MCsystem->GetCurrentFolder(&t_old_folder);
 
 	if (m_current_file != nil)
-	{
-		MCAutoStringRef t_current_filename;
-		/* UNCHECKED */ MCStringCreateWithCString(m_current_file -> filename, &t_current_filename);
-		
+    {
 		// Set the default folder to the folder containing the current script
 		MCAutoStringRef t_full_path;
-		/* UNCHECKED */ MCsystem->LongFilePath(*t_current_filename, &t_full_path);
+        /* UNCHECKED */ MCsystem->LongFilePath(m_current_file -> filename, &t_full_path);
 		
 		uindex_t t_last_separator;
 		if (MCStringLastIndexOfChar(*t_full_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_separator))
@@ -367,11 +370,9 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 	if (t_file -> script == NULL)
 	{
 		// Attempt to open the file
-		MCSystemFileHandle *t_handle;
-		MCAutoStringRef t_filename_string;
-		/* UNCHECKED */ MCStringCreateWithCString(t_file -> filename, &t_filename_string);
+        MCSystemFileHandle *t_handle;
+        t_handle = MCsystem -> OpenFile(t_file -> filename, kMCOpenFileModeRead, true);
 
-		t_handle = MCsystem -> OpenFile(p_filename, kMCOpenFileModeRead | kMCOpenFileModeNulTerminate, true);
 		if (t_handle == NULL)
 		{
 			MCeerror -> add(EE_INCLUDE_FILENOTFOUND, 0, 0, t_file -> filename);
@@ -473,22 +474,29 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 		while(t_stat == PS_NORMAL && !MCexitall && t_statement != nil)
 		{
 			if (MCtrace || MCnbreakpoints)
-				MCB_trace(m_ctxt->GetEP(), t_statement -> getline(), t_statement -> getpos());
+				MCB_trace(*m_ctxt, t_statement -> getline(), t_statement -> getpos());
 			
 			if (!MCexitall)
 			{
+				m_ctxt -> SetLineAndPos(t_statement -> getline(), t_statement -> getpos());
+				
 				Exec_stat t_exec_stat;
-				t_exec_stat = t_statement -> exec(m_ctxt->GetEP());
+				t_statement -> exec_ctxt(*m_ctxt);
+				t_exec_stat = m_ctxt -> GetExecStat();
+				m_ctxt -> IgnoreLastError();
+				
 				if (t_exec_stat != ES_NORMAL)
 				{
 					// Throw an error in the debugger
 					if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
 						do
 						{
-							if (!MCB_error(m_ctxt, t_statement->getline(), t_statement->getpos(), EE_HANDLER_BADSTATEMENT))
+							if (!MCB_error(*m_ctxt, t_statement->getline(), t_statement->getpos(), EE_HANDLER_BADSTATEMENT))
 								break;
+							m_ctxt -> IgnoreLastError();
+							t_statement -> exec_ctxt(*m_ctxt);
 						}
-						while (MCtrace && (t_exec_stat = t_statement->exec(m_ctxt->GetEP())) != ES_NORMAL);
+						while (MCtrace && (t_exec_stat = m_ctxt -> GetExecStat()) != ES_NORMAL);
 
 					// Flag an error.
 					t_stat = PS_ERROR;
@@ -520,7 +528,7 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 		
 		// Throw an error in the debugger
 		if ((MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-			MCB_error(m_ctxt->GetEP(), 0, 0, EE_SCRIPT_SYNTAXERROR);
+			MCB_error(*m_ctxt, 0, 0, EE_SCRIPT_SYNTAXERROR);
 	}
 	else
 	{

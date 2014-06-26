@@ -494,7 +494,7 @@ void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p
 				return;
 			}
             /* UNCHECKED */ ctxt . ConvertToData(*t_url, &t_data);
-			stream = MCS_fakeopen(MCDataGetOldString(*t_data));
+            stream = MCS_fakeopen(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data));
 		}
 		MCacptr = new MCAudioClip;
 		MCacptr->setdisposable();
