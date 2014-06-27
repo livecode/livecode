@@ -653,7 +653,7 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
 	t_stream_handle = nil;
     if (t_success)
     {
-		t_stream_handle = MCS_fakeopen(MCDataGetOldString(p_encoding));
+        t_stream_handle = MCS_fakeopen(MCDataGetBytePtr(p_encoding), MCDataGetLength(p_encoding));
 		if (t_stream_handle == nil)
 			t_success = false;
 	}

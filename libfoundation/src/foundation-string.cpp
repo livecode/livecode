@@ -814,6 +814,10 @@ bool MCStringCopySubstring(MCStringRef self, MCRange p_range, MCStringRef& r_sub
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
+    // Avoid copying in case the substring is actually the whole string
+    if (p_range . offset == 0 && self -> char_count < p_range . length)
+        return MCStringCopy(self, r_substring);
+
 	__MCStringClampRange(self, p_range);
 	
     if (MCStringIsNative(self))
@@ -4634,6 +4638,7 @@ bool MCStringCreateWithSysString(const char *p_system_string, MCStringRef &r_str
         return true;
     }
 
+
     // What is the system character encoding?
     //
     // Doing this here is unpleasant but the MCString*SysString functions are
@@ -4685,12 +4690,23 @@ bool MCStringCreateWithSysString(const char *p_system_string, MCStringRef &r_str
 bool MCStringConvertToSysString(MCStringRef p_string, const char * &r_system_string)
 {
     // Create the pseudo-FD that iconv uses for character conversion. For
-	// efficiency, convert straight from the internal format.
+    // efficiency, convert straight from the internal format.
 	iconv_t t_fd;
 	const char *t_mc_string;
 	size_t t_mc_len;
+
+    // What is the system character encoding?
+    //
+    // Doing this here is unpleasant but the MCString*SysString functions are
+    // needed before the libfoundation initialise call is made
+    if (__MCSysCharset == nil)
+    {
+        setlocale(LC_CTYPE, "");
+        __MCSysCharset = nl_langinfo(CODESET);
+    }
+
 	if (MCStringIsNative(p_string) && MCStringGetNativeCharPtr(p_string) != nil)
-	{
+    {
         t_fd = iconv_open(__MCSysCharset, "ISO-8859-1");
 		t_mc_string = (const char *)MCStringGetNativeCharPtr(p_string);
 		t_mc_len = MCStringGetLength(p_string);

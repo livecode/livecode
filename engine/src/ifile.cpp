@@ -117,7 +117,7 @@ bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCBitmapFrame *&r_
 
 	// create stream for non-rle compressed images
 	if (t_success && p_compressed->compression != F_RLE)
-		t_success = nil != (t_stream = MCS_fakeopen(MCString((const char *)p_compressed -> data, p_compressed -> size)));
+        t_success = nil != (t_stream = MCS_fakeopen((const char *)p_compressed -> data, p_compressed -> size));
 
 	if (t_success)
 	{

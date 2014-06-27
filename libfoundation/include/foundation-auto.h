@@ -264,6 +264,7 @@ class MCAutoStringRefAsUTF8String
 public:
     MCAutoStringRefAsUTF8String(void)
     {
+        m_utf8string = nil;
     }
     
     ~MCAutoStringRefAsUTF8String(void)

@@ -132,12 +132,12 @@ void MCServerExecDeleteSession(MCExecContext& ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCServerStartSession();
+bool MCServerStartSession(MCExecContext &ctxt);
 
 void MCServerExecStartSession(MCExecContext& ctxt)
 {
 #ifdef _SERVER
-	if (!MCServerStartSession())
+    if (!MCServerStartSession(ctxt))
 		ctxt . LegacyThrow(EE_UNDEFINED);
 #endif
 }
@@ -180,7 +180,7 @@ void MCServerExecInclude(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_
 
 void MCServerExecEcho(MCExecContext& ctxt, MCStringRef p_data)
 {
-	if (!MCS_put(ctxt, kMCSPutBinaryOutput, p_data))
+    if (!MCS_put(ctxt, kMCSPutOutput, p_data))
 		MCexitall = True;
 }
 

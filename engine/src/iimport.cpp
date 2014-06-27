@@ -191,7 +191,7 @@ bool MCImageDecode(const uint8_t *p_data, uindex_t p_size, MCBitmapFrame *&r_fra
 	IO_handle t_stream = nil;
 
     if (t_success)
-        t_success = nil != (t_stream = MCS_fakeopen(MCString((const char *)p_data, p_size)));
+        t_success = nil != (t_stream = MCS_fakeopen((const char *)p_data, p_size));
 
 	if (t_success)
 		t_success = MCImageDecode(t_stream, r_frames, r_frame_count);

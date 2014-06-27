@@ -423,6 +423,12 @@ struct MCFontStruct
 #include <math.h>
 #include <assert.h>
 
+struct MCMacProcessSerialNumber
+{
+	uint32_t highLongOfPSN;
+	uint32_t lowLongOfPSN;
+};
+
 typedef int MCSocketHandle;
 
 inline void *operator new(size_t, void *p)

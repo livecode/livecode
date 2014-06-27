@@ -173,7 +173,7 @@ Window MCModeGetParentWindow(void);
 // while security limitations are in effect
 bool MCModeCanAccessDomain(MCStringRef p_name);
 
-#ifdef _LINUX
+#if defined(_LINUX) || defined (_LINUX_SERVER)
 void MCModePreSelectHook(int& maxfd, fd_set& rfds, fd_set& wfds, fd_set& efds);
 void MCModePostSelectHook(fd_set& rfds, fd_set& wfds, fd_set& efds);
 #endif

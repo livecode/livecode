@@ -64,7 +64,7 @@ static uint32_t s_current_context = 0;
 
 extern MCSErrorMode g_server_error_mode;
 extern MCServerScript *MCserverscript;
-extern char *MCservercgidocumentroot;
+extern MCStringRef MCservercgidocumentroot;
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -116,15 +116,18 @@ static uint4 BreakpointsSearch(uint4 p_file, uint4 p_row)
 //  UTILITIES
 //
 
-static const char *GetFileForContext(MCExecContext &ctxt)
+static bool GetFileForContext(MCExecContext &ctxt, MCStringRef &r_file)
 {
-	const char *t_file;
-	t_file = MCserverscript -> GetFileForContext(ctxt);
+    MCAutoStringRef t_file;
+    if (MCserverscript -> GetFileForContext(ctxt, &t_file))
+    {
+        if (!MCStringBeginsWith(*t_file, MCservercgidocumentroot, kMCStringOptionCompareExact))
+            return MCStringCopy(*t_file, r_file);
 	
-	if (strncmp(t_file, MCservercgidocumentroot, strlen(MCservercgidocumentroot)) != 0)
-		return t_file;
-	
-	return t_file + strlen(MCservercgidocumentroot);
+        return MCStringCopySubstring(*t_file, MCRangeMake(MCStringGetLength(MCservercgidocumentroot), UINDEX_MAX), r_file);
+    }
+
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -384,10 +387,10 @@ void MCServerDebugBreakpoint(MCStringRef p_action, MCStringRef p_file, uint32_t 
 	// Construct the absolute file path.
 	MCAutoStringRef t_filename;
     
-	if (p_file[0] != '/')
-        /* UNCHECKED */ MCStringFormat(&t_filename, "%s/%s", MCservercgidocumentroot, p_file);
+	if (MCStringGetNativeCharAtIndex(p_file, 0) != '/')
+        /* UNCHECKED */ MCStringFormat(&t_filename, "%@/%@", MCservercgidocumentroot, p_file);
     else
-        /* UNCHECKED */ MCStringCreateWithCString(p_file, &t_filename);
+        /* UNCHECKED */ t_filename = p_file;
 		
 	// Lookup the file's index - creating an entry if we are 'adding' a breakpoint.
 	uint4 t_file;

@@ -88,16 +88,16 @@ struct mcservercookie_t *MCservercgicookies = NULL;
 uint32_t MCservercgicookiecount = 0;
 
 // The current document root of the CGI execution.
-char *MCservercgidocumentroot = NULL;
+MCStringRef MCservercgidocumentroot = NULL;
 
 // The session data save path
-char *MCsessionsavepath = NULL;
+MCStringRef MCsessionsavepath = NULL;
 
 // The session cookie name
-char *MCsessionname = NULL;
+MCStringRef MCsessionname = NULL;
 
 // The session ID of the current session
-char *MCsessionid = NULL;
+MCStringRef MCsessionid = NULL;
 
 // The lifetime of session data in seconds.  default = 24mins
 uint32_t MCsessionlifetime = 60 * 24;
@@ -325,13 +325,14 @@ static Boolean byte_swapped()
 ////////////////////////////////////////////////////////////////////////////////
 
 bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
+extern void X_clear_globals(void);
 int X_close();
 
 extern bool cgi_initialize();
 extern void cgi_finalize(void);
 extern void MCU_initialize_names();
 
-bool X_init(int argc, char *argv[], char *envp[])
+bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 {
 	int i;
 	MCstackbottom = (char *)&i;
@@ -345,7 +346,24 @@ bool X_init(int argc, char *argv[], char *envp[])
 
 	////
 
+#ifdef _WINDOWS_SERVER
+	// MW-2011-07-26: Make sure errno pointer is initialized - this won't be
+	//   if the engine is running through the plugin.
+	extern int *g_mainthread_errno;
+	if (g_mainthread_errno == nil)
+		g_mainthread_errno = _errno();
+
+	// Call to _wgetenv needed to initialise the WCHAR environment variables
+	wchar_t *t_dummy;
+	t_dummy = _wgetenv(L"PATH");
+#endif
+
+	////
 	MCS_init();
+
+    ////
+
+    X_clear_globals();
 
 	////
 	
@@ -358,13 +376,8 @@ bool X_init(int argc, char *argv[], char *envp[])
 	
 	////
 
-	// Store the engine path in MCcmd.
-	MCAutoStringRef t_argv0_string, t_argv1_string;
-	/* UNCHECKED */ MCStringCreateWithCString(argv[0], &t_argv0_string);
-	/* UNCHECKED */ MCStringCreateWithCString(argv[1], &t_argv1_string);
-
 	MCAutoStringRef t_native_command_string;
-	MCsystem -> ResolveNativePath(*t_argv0_string, &t_native_command_string);
+	MCsystem -> ResolvePath(argv[0], &t_native_command_string);
 	MCsystem -> PathFromNative(*t_native_command_string, MCcmd);
 	
 	// Fetch the home folder (for resources and such) - this is either that which
@@ -375,10 +388,10 @@ bool X_init(int argc, char *argv[], char *envp[])
 	if (MCS_getenv(MCSTR(HOME_ENV_VAR), &t_native_home))
 	{
 		MCAutoStringRef t_resolved_home;
-		MCsystem -> ResolveNativePath(*t_native_home, &t_resolved_home);
+		MCsystem -> ResolvePath(*t_native_home, &t_resolved_home);
 		MCsystem -> PathFromNative(*t_resolved_home, s_server_home);
 	}
-	else if (MCsystem -> FolderExists(HOME_FOLDER))
+	else if (MCsystem -> FolderExists(MCSTR(HOME_FOLDER)))
 		s_server_home = MCSTR(HOME_FOLDER);
 	else
 	{
@@ -393,7 +406,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 	}
 
 	// Check for CGI mode.
-	MCAutoStringRef t_env;
+    MCAutoStringRef t_env;
 	
 	if (MCS_getenv(MCSTR("GATEWAY_INTERFACE"), &t_env))
 		s_server_cgi = true;
@@ -403,24 +416,24 @@ bool X_init(int argc, char *argv[], char *envp[])
 	if (!X_open(argc, argv, envp))
 		return False;
 
-	if (s_server_cgi)
-	{
-		MCS_set_errormode(kMCSErrorModeInline);
-		
-		if (!cgi_initialize())
-			return False;
+    if (s_server_cgi)
+    {
+        MCS_set_errormode(kMCSErrorModeInline);
 
-		// MW-2011-08-02: If we initialize as cgi we *don't* want env vars to
-		//   be created.
-		envp = nil;
-	}
-	else
+        if (!cgi_initialize())
+            return False;
+
+        // MW-2011-08-02: If we initialize as cgi we *don't* want env vars to
+        //   be created.
+        envp = nil;
+    }
+    else
 	{
 		MCS_set_errormode(kMCSErrorModeStderr);
 		
 		// If there isn't at least one argument, we haven't got anything to run.
 		if (argc > 1)
-			MCsystem -> ResolveNativePath(*t_argv1_string, MCserverinitialscript);
+			MCsystem -> ResolvePath(argv[1], MCserverinitialscript);
 		else
 			MCserverinitialscript = nil;
 		
@@ -429,7 +442,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 			if (argv[i] != nil)
 			create_var(argv[i]);
 		create_var(nvars);
-	}
+    }
 	
 	return True;
 }
@@ -452,13 +465,11 @@ static bool load_extension_callback(void *p_context, const MCSystemFolderEntry *
 	if (p_entry -> is_folder)
 		return true;
 	
-	char *t_filename;
-	if (!MCCStringFormat(t_filename, "%s/externals/%s", s_server_home, p_entry -> name))
+	MCAutoStringRef t_filename;
+    if (!MCStringFormat(&t_filename, "%@/externals/%@", s_server_home, p_entry -> name))
 		return false;
 
-	MCdispatcher -> loadexternal(t_filename);
-	
-	MCCStringFree(t_filename);
+	MCdispatcher -> loadexternal(*t_filename);
 
 	return true;
 }
@@ -531,8 +542,7 @@ void X_main_loop(void)
 		return;
 #endif
 	
-	MCExecPoint ep;
-	MCExecContext ctxt(ep);
+	MCExecContext ctxt;
 	if (!MCserverscript -> Include(ctxt, MCserverinitialscript, false) &&
 		MCS_get_errormode() != kMCSErrorModeDebugger)
 	{
@@ -588,7 +598,37 @@ int main(int argc, char *argv[], char *envp[])
 	if (!MCInitialize())
 		exit(-1);
 
-	if (!X_init(argc, argv, envp))
+// THIS IS MAC SPECIFIC AT THE MOMENT BUT SHOULD WORK ON LINUX
+
+	// On OSX, argv and envp are encoded as UTF8
+	MCStringRef *t_new_argv;
+	/* UNCHECKED */ MCMemoryNewArray(argc, t_new_argv);
+	
+	for (int i = 0; i < argc; i++)
+	{
+		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)argv[i], strlen(argv[i]), kMCStringEncodingUTF8, false, t_new_argv[i]);
+	}
+	
+	MCStringRef *t_new_envp;
+	/* UNCHECKED */ MCMemoryNewArray(1, t_new_envp);
+	
+	int i = 0;
+	uindex_t t_envp_count = 0;
+	
+	while (envp[i] != NULL)
+	{
+		t_envp_count++;
+		uindex_t t_count = i;
+		/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_count);
+		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)envp[i], strlen(envp[i]), kMCStringEncodingUTF8, false, t_new_envp[i]);
+		i++;
+	}
+	
+	/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_envp_count);
+	t_new_envp[i] = nil;
+// END MAC SPECIFIC	
+
+	if (!X_init(argc, t_new_argv, t_new_envp))
 		exit(-1);
 	
 	X_main_loop();

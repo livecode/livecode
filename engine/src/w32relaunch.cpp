@@ -70,7 +70,7 @@ extern MCStringRef MCcmdline;
 
 static char *s_previous_folder = NULL;
 
-char *strndup(const char *p_string, unsigned int p_length)
+char *strndup(const char *p_string, size_t p_length)
 {
 	char *t_result;
 	t_result = (char *)malloc(p_length + 1);
