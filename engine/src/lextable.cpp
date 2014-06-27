@@ -685,9 +685,6 @@ LT factor_table[] =
 		{"controlatscreenloc", TT_FUNCTION, F_CONTROL_AT_SCREEN_LOC},
         {"controlids", TT_PROPERTY, P_CONTROL_IDS},
         {"controlkey", TT_FUNCTION, F_CONTROL_KEY},
-        {"controllerbackcolor", TT_PROPERTY, P_CONTROLLER_BACK_COLOR},
-        // Color for played_area and background color when controller buttons are still_down
-        {"controllermaincolor", TT_PROPERTY, P_CONTROLLER_MAIN_COLOR},
         {"controlnames", TT_PROPERTY, P_CONTROL_NAMES},
         {"controls", TT_CLASS, CT_LAYER},
         {"convertoctals", TT_PROPERTY, P_CONVERT_OCTALS},
@@ -1426,7 +1423,7 @@ LT factor_table[] =
 		{"securitycategories", TT_PROPERTY, P_SECURITY_CATEGORIES},
 		{"securitypermissions", TT_PROPERTY, P_SECURITY_PERMISSIONS},
         {"selected", TT_PROPERTY, P_SELECTED},
-        {"selectedareacolor", TT_PROPERTY, P_SELECTED_AREA_COLOR},
+        //{"selectedareacolor", TT_PROPERTY, P_SELECTED_AREA_COLOR},
         {"selectedbutton", TT_FUNCTION, F_SELECTED_BUTTON},
         {"selectedchunk", TT_FUNCTION, F_SELECTED_CHUNK},
         {"selectedcolor", TT_PROPERTY, P_SELECTED_COLOR},
