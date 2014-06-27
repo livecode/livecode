@@ -268,6 +268,9 @@ public:
         dc -> lockgcontext(t_gcontext);
         MCRectangle t_volume_area;
         t_volume_area = getVolumeBarPartRect(dirty, kMCPlayerControllerPartVolumeArea);
+        // Adjust to look prettier
+        t_volume_area . x ++;
+        t_volume_area . width -= 2;
         
         //MCGContextSetFillRGBAColor(p_gcontext, 168 / 255.0, 1 / 255.0, 255 / 255.0, 1.0f); //PURPLE
         MCGContextSetFillRGBAColor(t_gcontext, (m_player -> getcontrollermaincolor() . red / 255.0) / 257.0, (m_player -> getcontrollermaincolor() . green / 255.0) / 257.0, (m_player -> getcontrollermaincolor() . blue / 255.0) / 257.0, 1.0f);
@@ -2564,6 +2567,7 @@ void MCPlayer::drawControllerSelectionStartButton(MCGContextRef p_gcontext)
     // Adjust to look prettier
     t_drawn_selection_start_rect . y = t_drawn_selection_start_rect . y + CONTROLLER_HEIGHT / 4;
     t_drawn_selection_start_rect . height = CONTROLLER_HEIGHT / 2;
+    t_drawn_selection_start_rect . width --;
     
     MCGBitmapEffects t_effects;
 	t_effects . has_drop_shadow = false;
@@ -2616,6 +2620,7 @@ void MCPlayer::drawControllerSelectionFinishButton(MCGContextRef p_gcontext)
     // Adjust to look prettier
     t_drawn_selection_finish_rect . y = t_drawn_selection_finish_rect . y + CONTROLLER_HEIGHT / 4;
     t_drawn_selection_finish_rect . height = CONTROLLER_HEIGHT / 2;
+    t_drawn_selection_finish_rect . width --;
     
     MCGBitmapEffects t_effects;
 	t_effects . has_drop_shadow = false;
@@ -2755,8 +2760,8 @@ void MCPlayer::drawControllerSelectedAreaButton(MCGContextRef p_gcontext)
     MCRectangle t_drawn_selected_area;
     t_drawn_selected_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartSelectedArea);
     // Adjust to look prettier. The same settings for y and height should apply to kMCPlayerControllerPartWell and kMCPlayerControllerPartPlayedArea
-    t_drawn_selected_area . y = t_drawn_selected_area . y + 2 * CONTROLLER_HEIGHT / 5;
-    t_drawn_selected_area . height = CONTROLLER_HEIGHT / 5;
+    t_drawn_selected_area . y = t_drawn_selected_area . y + 3 * CONTROLLER_HEIGHT / 7;
+    t_drawn_selected_area . height = CONTROLLER_HEIGHT / 7;
     
     MCGContextAddRectangle(p_gcontext, MCRectangleToMCGRectangle(t_drawn_selected_area));
     MCGContextSetFillRGBAColor(p_gcontext, (selectedareacolor . red / 255.0) / 257.0, (selectedareacolor . green / 255.0) / 257.0, (selectedareacolor . blue / 255.0) / 257.0, 1.0f);
@@ -2769,8 +2774,8 @@ void MCPlayer::drawControllerPlayedAreaButton(MCGContextRef p_gcontext)
     MCRectangle t_drawn_played_area;
     t_drawn_played_area = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartPlayedArea);
     // Adjust to look prettier. The same settings for y and height should apply to kMCPlayerControllerPartWell and kMCPlayerControllerPartSelectedArea
-    t_drawn_played_area . y = t_drawn_played_area . y + 2 * CONTROLLER_HEIGHT / 5;
-    t_drawn_played_area . height = CONTROLLER_HEIGHT / 5;
+    t_drawn_played_area . y = t_drawn_played_area . y + 3 * CONTROLLER_HEIGHT / 7;
+    t_drawn_played_area . height = CONTROLLER_HEIGHT / 7;
 
     
     MCGContextSetFillRGBAColor(p_gcontext, (controllermaincolor . red / 255.0) / 257.0, (controllermaincolor . green / 255.0) / 257.0, (controllermaincolor . blue / 255.0) / 257.0, 1.0f);
