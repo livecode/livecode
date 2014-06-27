@@ -500,12 +500,12 @@ Boolean MCPlayer::mdown(uint2 which)
 	return True;
 }
 
-Boolean MCPlayer::mup(uint2 which) //mouse up
+Boolean MCPlayer::mup(uint2 which, bool p_release) //mouse up
 {
 	if (!(state & CS_MFOCUSED))
 		return False;
 	if (state & CS_MENU_ATTACHED)
-		return MCObject::mup(which);
+		return MCObject::mup(which, p_release);
 	state &= ~CS_MFOCUSED;
 	if (state & CS_GRAB)
 	{
@@ -535,7 +535,7 @@ Boolean MCPlayer::mup(uint2 which) //mouse up
 #endif
 #endif
 
-			if (MCU_point_in_rect(rect, mx, my))
+			if (!p_release && MCU_point_in_rect(rect, mx, my))
 				message_with_args(MCM_mouse_up, "1");
 			else
 				message_with_args(MCM_mouse_release, "1");
@@ -543,7 +543,7 @@ Boolean MCPlayer::mup(uint2 which) //mouse up
 			break;
 		case T_PLAYER:
 		case T_POINTER:
-			end();       //stop dragging or moving the movie object, will change controller size
+			end(true, p_release);       //stop dragging or moving the movie object, will change controller size
 			break;
 		case T_HELP:
 			help();
@@ -560,7 +560,7 @@ Boolean MCPlayer::mup(uint2 which) //mouse up
 			qt_click(false, which == Button2 ? 2 : 3);
 #endif
 #endif
-		if (MCU_point_in_rect(rect, mx, my))
+		if (!p_release && MCU_point_in_rect(rect, mx, my))
 			message_with_args(MCM_mouse_up, which);
 		else
 			message_with_args(MCM_mouse_release, which);

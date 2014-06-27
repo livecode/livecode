@@ -384,13 +384,13 @@ Boolean MCImage::mdown(uint2 which)
 	return True;
 }
 
-Boolean MCImage::mup(uint2 which)
+Boolean MCImage::mup(uint2 which, bool p_release)
 {
 	if (!(state & CS_MFOCUSED))
 		return False;
 
 	if (state & CS_MENU_ATTACHED)
-		return MCObject::mup(which);
+		return MCObject::mup(which, p_release);
 		
 	state &= ~CS_MFOCUSED;
 	if (state & CS_GRAB)
@@ -414,7 +414,7 @@ Boolean MCImage::mup(uint2 which)
 	case T_BROWSE:
 		MCRectangle srect;
 		MCU_set_rect(srect, mx, my, 1, 1);
-		if (maskrect(srect))
+		if (!p_release && maskrect(srect))
 			message_with_args(MCM_mouse_up, which);
 		else
 			message_with_args(MCM_mouse_release, which);
@@ -424,7 +424,10 @@ Boolean MCImage::mup(uint2 which)
 		{
 			if (which != Button1)
 			{
-				message_with_args(MCM_mouse_up, which);
+                if (p_release)
+                    message_with_args(MCM_mouse_release, which);
+                else
+                    message_with_args(MCM_mouse_up, which);
 				break;
 			}
 			uint32_t t_pixwidth, t_pixheight;
@@ -438,11 +441,13 @@ Boolean MCImage::mup(uint2 which)
 			// MM-2014-04-09: [[ Bug 11689 ]] Let end take care of unsetting the CS_SIZE flag.
 			//  Doing so here prevents resize control being sent.
 			state &= ~CS_EDITED;
-			end(false);
+			end(false, p_release);
 			if (state & CS_MAGNIFY)
 				magredrawdest(rect);
-			if (maskrect(srect))
+			if (!p_release && maskrect(srect))
 				message_with_args(MCM_mouse_up, which);
+            else
+                message_with_args(MCM_mouse_release, which);
 		}
 		break;
 	case T_HELP:

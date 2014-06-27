@@ -691,7 +691,7 @@ Boolean MCObject::mdown(uint2 which)
 }
 
 extern bool MCmenupoppedup;
-Boolean MCObject::mup(uint2 which)
+Boolean MCObject::mup(uint2 which, bool p_release)
 {
 	if (state & CS_MENU_ATTACHED)
 	{
@@ -703,7 +703,7 @@ Boolean MCObject::mup(uint2 which)
 		if (focused != NULL && focused->gettype() == CT_BUTTON
 		        && focused->getmenumode() == WM_CASCADE)
 		{
-			focused->mup(which); // send mup directly to cascade button
+			focused->mup(which, p_release); // send mup directly to cascade button
 			closemenu(True, True);
 		}
 		else

@@ -1242,10 +1242,10 @@ Boolean MCButton::mdown(uint2 which)
 	return True;
 }
 
-Boolean MCButton::mup(uint2 which)
+Boolean MCButton::mup(uint2 which, bool p_release)
 {
 	if (state & CS_MENU_ATTACHED)
-		return MCObject::mup(which);
+		return MCObject::mup(which, p_release);
 	MCString pick;
 	if (state & CS_SUBMENU
 	        && (which == 0 || menubutton == 0 || (uint1)which == menubutton))
@@ -1266,14 +1266,14 @@ Boolean MCButton::mup(uint2 which)
 		{
 			state &= ~CS_FIELD_GRAB;
 			if (state & CS_SUBMENU)
-				menu->mup(which);
+				menu->mup(which, p_release);
 			else
-				entry->mup(which);
+				entry->mup(which, p_release);
 			return True;
 		}
 		if (menudepth > mymenudepth)
 		{
-			menu->mup(which);
+			menu->mup(which, p_release);
 			if (menudepth > mymenudepth)
 				return True;
 		}
@@ -1399,7 +1399,7 @@ Boolean MCButton::mup(uint2 which)
 			if (state & CS_FIELD_GRAB)
 			{
 				state &= ~CS_FIELD_GRAB;
-				entry->mup(which);
+				entry->mup(which, p_release);
 			}
 			else
 			{
@@ -1465,7 +1465,7 @@ Boolean MCButton::mup(uint2 which)
 					if (state & CS_HILITED)
 						radio();
 				}
-				if (MCU_point_in_rect(rect, mx, my))
+				if (!p_release && MCU_point_in_rect(rect, mx, my))
 				{
 					state |= CS_VISITED;
 					message_with_args(MCM_mouse_up, "1");
@@ -1476,7 +1476,7 @@ Boolean MCButton::mup(uint2 which)
 			break;
 		case T_BUTTON:
 		case T_POINTER:
-			end();
+			end(true, p_release);
 			break;
 		case T_HELP:
 			help();
@@ -1488,7 +1488,7 @@ Boolean MCButton::mup(uint2 which)
 	}
 	else
 	{
-		if (MCU_point_in_rect(rect, mx, my))
+		if (!p_release && MCU_point_in_rect(rect, mx, my))
 		{
 			state |= CS_VISITED;
 			message_with_args(MCM_mouse_up, which);

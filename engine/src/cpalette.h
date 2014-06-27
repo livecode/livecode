@@ -34,7 +34,7 @@ public:
 	virtual const char *gettypestring();
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual Boolean mdown(uint2 which);
-	virtual Boolean mup(uint2 which);
+	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Boolean count(Chunk_term type, MCObject *stop, uint2 &num);

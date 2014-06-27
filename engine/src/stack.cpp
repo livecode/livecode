@@ -948,11 +948,11 @@ Boolean MCStack::mdown(uint2 which)
 	return curcard->mdown(which);
 }
 
-Boolean MCStack::mup(uint2 which)
+Boolean MCStack::mup(uint2 which, bool p_release)
 {
 	if (!opened || state & CS_IGNORE_CLOSE)
 		return False;
-	Boolean handled = curcard->mup(which);
+	Boolean handled = curcard->mup(which, p_release);
 	// MW-2010-07-06: [[ Bug ]] We should probably only mfocus the card if this
 	//   stack is still the mouse stack.
 	if (opened && mode < WM_PULLDOWN && MCmousestackptr == this)

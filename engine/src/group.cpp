@@ -647,16 +647,16 @@ Boolean MCGroup::mdown(uint2 which)
 	return t_handled;
 }
 
-Boolean MCGroup::mup(uint2 which)
+Boolean MCGroup::mup(uint2 which, bool p_release)
 {
 	if (state & CS_MENU_ATTACHED)
-		return MCObject::mup(which);
+		return MCObject::mup(which, p_release);
 	if (state & CS_GRAB)
 	{
 		state &= ~(CS_GRAB | CS_MFOCUSED);
 		mgrabbed = False;
 		mfocused->mfocus(mx, my);
-		return mfocused->mup(which);
+		return mfocused->mup(which, p_release);
 	}
 	if (sbup(which, hscrollbar, vscrollbar))
 		return True;
@@ -668,10 +668,13 @@ Boolean MCGroup::mup(uint2 which)
 			if (!(state & CS_MFOCUSED))
 				return False;
 			state &= ~CS_MFOCUSED;
-			end();
+			end(true, p_release);
 		}
 		else
-			message_with_args(MCM_mouse_up, which);
+            if (p_release)
+                message_with_args(MCM_mouse_release, which);
+            else
+                message_with_args(MCM_mouse_up, which);
 		return True;
 	}
 	state &= ~CS_MFOCUSED;
@@ -681,7 +684,7 @@ Boolean MCGroup::mup(uint2 which)
 	if (tool != T_POINTER)
 		radio(0, oldfocused);
 	mgrabbed = False;
-	if (mfocused == NULL || mfocused->mup(which))
+	if (mfocused == NULL || mfocused->mup(which, p_release))
 	{
 		newkfocused = NULL;
 		// MH-2007-03-20: [[ Bug 705 ]] Selecting a radio button using pointer tool unhilites other radio buttons in the group with radiobehavior set.

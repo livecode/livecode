@@ -465,12 +465,12 @@ Boolean MCScrollbar::mdown(uint2 which)
 	return True;
 }
 
-Boolean MCScrollbar::mup(uint2 which)
+Boolean MCScrollbar::mup(uint2 which, bool p_release)
 {
 	if (!(state & CS_MFOCUSED))
 		return False;
 	if (state & CS_MENU_ATTACHED)
-		return MCObject::mup(which);
+		return MCObject::mup(which, p_release);
 	state &= ~CS_MFOCUSED;
 	if (state & CS_GRAB)
 	{
@@ -507,14 +507,14 @@ Boolean MCScrollbar::mup(uint2 which)
 				else if (oldmode == SM_LINEDEC || oldmode == SM_LINEINC)
 					redrawarrow(oldmode);
 			}
-			if (MCU_point_in_rect(rect, mx, my))
+			if (!p_release && MCU_point_in_rect(rect, mx, my))
 				message_with_args(MCM_mouse_up, "1");
 			else
 				message_with_args(MCM_mouse_release, "1");
 			break;
 		case T_SCROLLBAR:
 		case T_POINTER:
-			end();
+			end(true, p_release);
 			break;
 		case T_HELP:
 			help();
@@ -531,7 +531,7 @@ Boolean MCScrollbar::mup(uint2 which)
 			redrawall();
 		}
 	case Button3:
-		if (MCU_point_in_rect(rect, mx, my))
+		if (!p_release && MCU_point_in_rect(rect, mx, my))
 			message_with_args(MCM_mouse_up, which);
 		else
 			message_with_args(MCM_mouse_release, which);
@@ -550,7 +550,7 @@ Boolean MCScrollbar::doubledown(uint2 which)
 Boolean MCScrollbar::doubleup(uint2 which)
 {
 	if (which == Button1 && getstack()->gettool(this) == T_BROWSE)
-		return mup(which);
+		return mup(which, false);
 	return MCControl::doubleup(which);
 }
 
@@ -580,7 +580,7 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
         // MCscreen->wait(MCsyncrate / 1000.0, True, False); // dispatch mup
 		if (state & CS_MFOCUSED && !MCbuttonstate)
 		{
-			mup(Button1);
+			mup(Button1, false);
 			return;
 		}
 

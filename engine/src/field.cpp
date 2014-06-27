@@ -927,12 +927,12 @@ Boolean MCField::mdown(uint2 which)
 	return True;
 }
 
-Boolean MCField::mup(uint2 which)
+Boolean MCField::mup(uint2 which, bool p_release)
 {
 	if (!(state & (CS_MFOCUSED | CS_DRAG_TEXT)))
 		return False;
 	if (state & CS_MENU_ATTACHED)
-		return MCObject::mup(which);
+		return MCObject::mup(which, p_release);
 	state &= ~(CS_MFOCUSED | CS_MOUSEDOWN);
 	if (state & CS_GRAB)
 	{
@@ -981,7 +981,7 @@ Boolean MCField::mup(uint2 which)
 			}
 			if (!(state & CS_DRAG_TEXT))
 				if ((flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL))
-					if (MCU_point_in_rect(rect, mx, my))
+					if (!p_release && MCU_point_in_rect(rect, mx, my))
 						if (flags & F_LIST_BEHAVIOR
 						        && (my - rect.y > (int4)(textheight + topmargin - texty)
 						            || paragraphs == paragraphs->next()
@@ -1020,7 +1020,7 @@ Boolean MCField::mup(uint2 which)
 			break;
 		case T_FIELD:
 		case T_POINTER:
-			end();
+			end(true, p_release);
 			break;
 		case T_HELP:
 			help();
@@ -1032,7 +1032,7 @@ Boolean MCField::mup(uint2 which)
 	case Button2:
 		if (flags & F_LOCK_TEXT || getstack()->gettool(this) != T_BROWSE)
 		{
-			if (MCU_point_in_rect(rect, mx, my))
+			if (!p_release && MCU_point_in_rect(rect, mx, my))
 				message_with_args(MCM_mouse_up, "2");
 			else
 				message_with_args(MCM_mouse_release, "2");
@@ -1051,7 +1051,7 @@ Boolean MCField::mup(uint2 which)
 		}
 		break;
 	case Button3:
-		if (MCU_point_in_rect(rect, mx, my))
+		if (!p_release && MCU_point_in_rect(rect, mx, my))
 			message_with_args(MCM_mouse_up, "3");
 		else
 			message_with_args(MCM_mouse_release, "3");
@@ -1110,7 +1110,7 @@ Boolean MCField::doubleup(uint2 which)
 		if (sbdoubleup(which, hscrollbar, vscrollbar))
 			return True;
 		if (flags & F_LIST_BEHAVIOR && (flags & F_TOGGLE_HILITE))
-			mup(which);
+			mup(which, false);
 	}
 	return MCControl::doubleup(which);
 }

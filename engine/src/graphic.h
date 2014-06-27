@@ -83,7 +83,7 @@ public:
 	virtual const char *gettypestring();
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual Boolean mdown(uint2 which);
-	virtual Boolean mup(uint2 which);
+	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	virtual void setrect(const MCRectangle &nrect);

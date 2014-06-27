@@ -323,7 +323,7 @@ Boolean MCControl::doubleup(uint2 which)
 		case T_GRAPHIC:
 		case T_POINTER:
 			// MW-2010-10-15: [[ Bug 9055 ]] Pass false here to prevent 'mouseUp' being sent.
-			end(false);
+			end(false, false);
 		case T_BROWSE:
 			message_with_args(MCM_mouse_double_up, "1");
 			break;
@@ -1503,7 +1503,7 @@ void MCControl::start(Boolean canclone)
 
 // MW-2010-10-15: [[ Bug 9055 ]] 'end' is invoked in cases where we don't want to send
 //   mouseUp, the new parameter controls this (default 'true').
-void MCControl::end(bool p_send_mouse_up)
+void MCControl::end(bool p_send_mouse_up, bool p_release)
 {
 	uint4 oldstate = state;
 	state &= ~(CS_MOVE | CS_SIZE | CS_CREATE);
@@ -1521,7 +1521,10 @@ void MCControl::end(bool p_send_mouse_up)
 	layer_redrawall();
 	
 	if (p_send_mouse_up)
-		message_with_args(MCM_mouse_up, "1");
+		if (p_release)
+            message_with_args(MCM_mouse_release, "1");
+        else
+            message_with_args(MCM_mouse_up, "1");
 	
 	// MM-2012-11-06: [[ Property Listener ]]
 	if (oldstate & CS_SIZE)
@@ -1701,7 +1704,7 @@ Boolean MCControl::sbup(uint2 which, MCScrollbar *hsb, MCScrollbar *vsb)
 	{
 		state &= ~CS_HSCROLL;
 		if (hsb != NULL)
-			hsb->mup(which);
+			hsb->mup(which, false);
 		readscrollbars();
 		return True;
 	}
@@ -1709,7 +1712,7 @@ Boolean MCControl::sbup(uint2 which, MCScrollbar *hsb, MCScrollbar *vsb)
 	{
 		state &= ~CS_VSCROLL;
 		if (vsb != NULL)
-			vsb->mup(which);
+			vsb->mup(which, false);
 		readscrollbars();
 		return True;
 	}

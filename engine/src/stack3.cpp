@@ -1594,7 +1594,7 @@ void MCStack::menumup(uint2 which, MCString &s, uint2 &selline)
 				curcard->count(CT_LAYER, CT_UNDEFINED, focused, selline, True);
 		}
 	}
-	curcard->mup(which);
+	curcard->mup(which, false);
 }
 
 void MCStack::menukdown(const char *string, KeySym key,

@@ -1756,7 +1756,7 @@ Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 		if (bptr->findmenu())
 		{
 			if (MCbuttonstate)
-				MCtargetptr -> mup(0);
+				MCtargetptr -> mup(0, false);
 			bptr->openmenu(True);
 		}
 		return ES_NORMAL;

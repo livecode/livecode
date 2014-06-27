@@ -603,8 +603,8 @@ Boolean MCCard::mdown(uint2 which)
 		{
 			Boolean oldstate = MClockmessages;
 			MClockmessages = True;
-			if (!mup(which))
-				oldfocused->mup(which);
+			if (!mup(which, false))
+				oldfocused->mup(which, false);
 			MClockmessages = oldstate;
 		}
 		return True;
@@ -636,7 +636,7 @@ Boolean MCCard::mdown(uint2 which)
 				{
 					Boolean oldstate = MClockmessages;
 					MClockmessages = True;
-					mup(which);
+					mup(which, false);
 					MClockmessages = oldstate;
 				}
 				break;
@@ -732,14 +732,14 @@ Boolean MCCard::mdown(uint2 which)
 	return True;
 }
 
-Boolean MCCard::mup(uint2 which)
+Boolean MCCard::mup(uint2 which, bool p_release)
 {
 	if (state & CS_MENU_ATTACHED)
-		return MCObject::mup(which);
+		return MCObject::mup(which, p_release);
 	if (mfocused != NULL)
 	{
 		mgrabbed = False;
-		return mfocused->getref()->mup(which);
+		return mfocused->getref()->mup(which, p_release);
 	}
 	else
 	{
@@ -766,7 +766,10 @@ Boolean MCCard::mup(uint2 which)
 				case T_POINTER:
 				case T_BROWSE:
 					// MW-2010-10-15: [[ Bug 9055 ]] Mouse message consistency improvement
-					message_with_args(MCM_mouse_up, "1");
+                    if (p_release)
+                        message_with_args(MCM_mouse_release, "1");
+                    else
+                        message_with_args(MCM_mouse_up, "1");
 					break;
 				case T_HELP:
 					help();
@@ -777,7 +780,10 @@ Boolean MCCard::mup(uint2 which)
 				break;
 			case Button2:
 			case Button3:
-				message_with_args(MCM_mouse_up, which);
+                if (p_release)
+                    message_with_args(MCM_mouse_release, "1");
+                else
+                    message_with_args(MCM_mouse_up, "1");
 				break;
 			}
 			mgrabbed = False;
