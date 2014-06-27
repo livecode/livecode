@@ -246,6 +246,7 @@ public:
     void drawControllerVolumeButton(MCGContextRef p_gcontext);
     void drawControllerPlayPauseButton(MCGContextRef p_gcontext);
     void drawControllerWellButton(MCGContextRef p_gcontext);
+    void drawControllerWellShadow(MCGContextRef p_gcontext);
     void drawControllerThumbButton(MCGContextRef p_gcontext);
     void drawControllerScrubForwardButton(MCGContextRef p_gcontext);
     void drawControllerScrubBackButton(MCGContextRef p_gcontext);

@@ -242,6 +242,21 @@ public:
         MCGContextAddRoundedRectangle(t_gcontext, t_rounded_rect, MCGSizeMake(30, 30));
         MCGContextBeginWithEffects(t_gcontext, t_rounded_rect, t_effects);
         MCGContextFill(t_gcontext);
+        
+        /////////////////////////////////////////
+        /* TODO: Update this ugly way of adding the inner shadow 'manually' */
+        MCRectangle t_shadow = MCRectangleMake(t_volume_well . x + t_volume_well . width - 2, t_volume_well . y + 1, 2, t_volume_well . height - 2);
+        
+        MCGContextSetShouldAntialias(t_gcontext, true);
+        
+        MCGContextSetFillRGBAColor(t_gcontext, 56.0 / 255.0, 56.0 / 255.0, 56.0 / 255.0, 1.0f); // GRAY
+        MCGRectangle t_shadow_rect = MCRectangleToMCGRectangle(t_shadow);
+        
+        MCGContextAddRoundedRectangle(t_gcontext, t_shadow_rect, MCGSizeMake(10, 10));
+        
+        MCGContextFill(t_gcontext);
+        ////////////////////////////////////////
+        
         MCGContextEnd(t_gcontext);
 
         dc -> unlockgcontext(t_gcontext);
@@ -2277,6 +2292,7 @@ void MCPlayer::drawnicecontroller(MCDC *dc)
     
     drawControllerPlayPauseButton(t_gcontext);
     drawControllerWellButton(t_gcontext);
+   // drawControllerWellShadow(t_gcontext);
     
     
     if (getflag(F_SHOW_SELECTION))
@@ -2458,7 +2474,42 @@ void MCPlayer::drawControllerWellButton(MCGContextRef p_gcontext)
     MCGContextBeginWithEffects(p_gcontext, t_rounded_rect, t_effects);
     
     MCGContextFill(p_gcontext);
+
+    /////////////////////////////////////////
+    /* TODO: Update this ugly way of adding the inner shadow 'manually' */
+    MCRectangle t_shadow = MCRectangleMake(t_drawn_well_rect . x + 1, t_drawn_well_rect . y + t_drawn_well_rect . height - 2, t_drawn_well_rect . width - 2, 2);
+    
+    MCGContextSetShouldAntialias(p_gcontext, true);
+    
+    MCGContextSetFillRGBAColor(p_gcontext, 56.0 / 255.0, 56.0 / 255.0, 56.0 / 255.0, 1.0f); // GRAY
+    MCGRectangle t_shadow_rect = MCRectangleToMCGRectangle(t_shadow);
+    
+    MCGContextAddRoundedRectangle(p_gcontext, t_shadow_rect, MCGSizeMake(10, 10));
+    
+    MCGContextFill(p_gcontext);
+    ////////////////////////////////////////
+    
     MCGContextEnd(p_gcontext);
+}
+
+void MCPlayer::drawControllerWellShadow(MCGContextRef p_gcontext)
+{
+    MCRectangle t_rect;
+    t_rect = getcontrollerrect();
+    MCRectangle t_drawn_well_rect = getcontrollerpartrect(t_rect, kMCPlayerControllerPartWell);
+    // Adjust to look prettier. The same settings for y and height should apply to drawControllerWellButton
+    t_drawn_well_rect . y = t_drawn_well_rect . y + 2 * CONTROLLER_HEIGHT / 5;
+    t_drawn_well_rect . height = CONTROLLER_HEIGHT / 5;
+    MCRectangle t_shadow = MCRectangleMake(t_drawn_well_rect . x, t_drawn_well_rect . y + t_drawn_well_rect . height - 1, t_drawn_well_rect . width, 1);
+    
+    MCGContextSetShouldAntialias(p_gcontext, true);
+    
+    MCGContextSetFillRGBAColor(p_gcontext, 56.0 / 255.0, 56.0 / 255.0, 56.0 / 255.0, 1.0f); // GRAY
+    MCGRectangle t_rounded_rect = MCRectangleToMCGRectangle(t_shadow);
+    
+    MCGContextAddRoundedRectangle(p_gcontext, t_rounded_rect, MCGSizeMake(10, 10));
+    
+    MCGContextFill(p_gcontext);
 }
 
 void MCPlayer::drawControllerThumbButton(MCGContextRef p_gcontext)

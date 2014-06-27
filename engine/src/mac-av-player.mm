@@ -770,8 +770,6 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
                 m_selection_finish = m_selection_start;
             }
             
-            if(m_play_selection_only)
-                [[m_player currentItem] seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeIndefinite toleranceAfter:kCMTimeIndefinite];
             SelectionChanged();
         }
             break;
