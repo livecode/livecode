@@ -41,6 +41,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxdc.h"
 #include "lnximagecache.h"
 
+#include "license.h"
+#include "revbuild.h"
+
 #include <langinfo.h>
 #include <fcntl.h>
 #include <sys/shm.h>
@@ -222,6 +225,21 @@ Boolean MCScreenDC::open()
 		return False;
 	}
 
+    // Build the class name
+    MCAutoStringRef t_class_name;
+    MCAutoStringRefAsUTF8String t_class_name_utf8;
+    bool t_community;
+    t_community = MClicenseparameters.license_class == kMCLicenseClassCommunity;
+    
+    /* UNCHECKED */ MCStringCreateMutable(0, &t_class_name);
+    /* UNCHECKED */ MCStringAppendFormat(*t_class_name, "%s%s_%s", MCapplicationstring, t_community ? "community" : "", MC_BUILD_ENGINE_SHORT_VERSION);
+    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_class_name, '.', '_', kMCStringOptionCompareExact);
+    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_class_name, '-', '_', kMCStringOptionCompareExact);
+    /* UNCHECKED */ t_class_name_utf8.Lock(*t_class_name);
+    
+    // Used to load the icon and other desktop properties
+    gdk_set_program_class(*t_class_name_utf8);
+    
     // The GLib event loop calls this function to respond to GDK events.
     // Unfortunately, when GTK gets initied, it will try to steal this from us.
     gdk_event_handler_set(&gdk_event_fn, gpointer(this), NULL);

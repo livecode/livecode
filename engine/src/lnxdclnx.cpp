@@ -518,7 +518,6 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 // Detect if we should start a drag
                 if (!dragclick && (MCU_abs(MCmousex - MCclicklocx) > 4 || MCU_abs(MCmousey - MCclicklocy) > 4) && MCbuttonstate != 0)
                 {
-                    fprintf(stderr, "Drag detected %u %u %f %f\n", MCmousex, MCmousey, t_event->motion.x, t_event->motion.y);
                     last_window = t_event->motion.window;
                     dragclick = true;
                     MCdispatcher->wmdrag(last_window);
@@ -909,12 +908,19 @@ GdkAtom MCclientlistatom;
 
 void MCScreenDC::EnqueueGdkEvents()
 {
-    GdkEvent *t_event = gdk_event_get();
-    while (t_event != NULL)
+    while (true)
     {
+        // Run the GLib main loop
+        while (g_main_context_iteration(NULL, FALSE))
+            ;
+        
+        // Enqueue any further GDK events
+        GdkEvent *t_event = gdk_event_get();
+        if (t_event == NULL)
+            break;
+        
         MCEventnode *t_eventnode = new MCEventnode(t_event);
         t_eventnode->appendto(pendingevents);
-        t_event = gdk_event_get();
     }
 }
 

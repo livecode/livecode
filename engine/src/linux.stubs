@@ -257,6 +257,9 @@ gdk libgdk-x11-2.0.so.0
 	gdk_drag_begin: (pointer, pointer) -> (pointer)
 	gdk_selection_owner_get_for_display: (pointer, pointer) -> (pointer)
 	gdk_selection_owner_set_for_display: (pointer, pointer, pointer, integer, integer) -> (integer)
+	gdk_drag_context_get_selected_action: (pointer) -> (integer)
+	gdk_set_program_class: (pointer) -> ()
+	gdk_pointer_is_grabbed: () -> (integer)
 
 gdk_pixbuf libgdk_pixbuf-2.0.so.0
 	gdk_pixbuf_get_pixels: (pointer) -> (pointer)

@@ -36,7 +36,6 @@ bool g_dnd_init = false;
 GdkCursor *g_dnd_cursor_drop_okay = NULL;
 GdkCursor *g_dnd_cursor_drop_fail = NULL;
 MCGdkTransferStore *MCtransferstore = NULL;
-GdkWindow *g_last_drag_window;
 
 // Do all the setup of the xDnD protocol
 void init_dnd()
@@ -77,9 +76,10 @@ void DnDClientEvent(GdkEvent*);
 
 MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
 {
+    //fprintf(stderr, "DND: dodragdrop\n");
     // The source window for the drag and drop operation
     GdkWindow *t_source;
-    t_source = g_last_drag_window;
+    t_source = last_window;
     
     // Preserve the modifier state
     uint16_t t_old_modstate = MCmodifierstate;
@@ -127,9 +127,9 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet 
     // Take ownership of the mouse so that nothing interferes with the drag
     GdkScreen *t_screen;
     t_screen = gdk_display_get_default_screen(dpy);
-    gdk_pointer_grab(gdk_screen_get_root_window(t_screen), FALSE,
+    gdk_pointer_grab(gdk_screen_get_root_window(t_screen), TRUE,
                      GdkEventMask(GDK_POINTER_MOTION_MASK|GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK),
-                     NULL, NULL, GDK_CURRENT_TIME);
+                     NULL, NULL, MCeventtime);
     
     // We need to know what action was selected so we know whether to delete
     // the data afterwards (as done for move actions)
@@ -142,14 +142,40 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet 
     bool t_dnd_done = false;
     while (!t_dnd_done)
     {
-        // Get the next event (remember to free it at the end!)
-        GdkEvent *t_event = gdk_event_get();
+        // Run the GLib event loop to exhaustion
+        while (g_main_context_iteration(NULL, FALSE))
+            ;
+        
+        GdkEvent *t_event;
+        if (pendingevents != NULL)
+        {
+            // Get the next event from the queue
+            t_event = gdk_event_copy(pendingevents->event);
+            MCEventnode *tptr = (MCEventnode *)pendingevents->remove(pendingevents);
+            delete tptr;
+        }
+        else
+        {
+            // In theory, all events should have already been queued as pending
+            // through the GLib main loop. However, that only applies to those
+            // that the server has already sent - this function call prompts the
+            // server to send any events queued on its end.
+            t_event = gdk_event_get();
+        }
+        
+        // If there is still no event, actively wait for one
+        if (t_event == NULL)
+        {
+            g_main_context_iteration(NULL, TRUE);
+            continue;
+        }
         
         switch (t_event->type)
         {
             case GDK_KEY_PRESS:
             case GDK_KEY_RELEASE:
             {
+                //fprintf(stderr, "DND: key event\n");
                 // Update the modifier state with the asynchronous state
                 MCmodifierstate = MCscreen->querymods();
                 break;
@@ -157,6 +183,11 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet 
                 
             case GDK_MOTION_NOTIFY:
             {
+                //fprintf(stderr, "DND: motion notify\n");
+                
+                // Take ownership of the drag-and-drop selection
+                gdk_selection_owner_set_for_display(dpy, t_source, gdk_drag_get_selection(t_context), t_event->motion.time, TRUE);
+                
                 // Find the window that the motion has moved us into
                 GdkWindow *t_dest_window;
                 GdkDragProtocol t_protocol;
@@ -181,14 +212,16 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet 
             case GDK_BUTTON_RELEASE:
             {
                 // Drop the item that was being dragged
-                gdk_drag_drop(t_event->dnd.context, t_event->button.time);
+                //fprintf(stderr, "DND: button release\n");
+                gdk_drag_drop(t_context, t_event->button.time);
                 break;
             }
                 
             case GDK_SELECTION_REQUEST:
             {
+                //fprintf(stderr, "DND: selection request\n");
                 // The data from the drag-and-drop selection has been requested
-                if (t_event->selection.selection == gdk_drag_get_selection(t_context))
+                //if (t_event->selection.selection == gdk_drag_get_selection(t_context))
                 {
                     // What transfer type ended up being requested?
                     MCTransferType t_type;
@@ -199,25 +232,49 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet 
                     GdkWindow *t_requestor;
                     t_requestor = x11::gdk_x11_window_foreign_new_for_display(dpy, t_event->selection.requestor);
                     
+                    // There is a backwards-compatibility issue with the way the
+                    // ICCCM deals with selections: older clients can request a
+                    // selection but not supply a property name. In that case,
+                    // the property set should be equal to the target name.
+                    //
+                    // The GDK manual does not say whether it works around this
+                    // wrinkle so we might as well check ourselves.
+                    GdkAtom t_property;
+                    if (t_event->selection.property != GDK_NONE)
+                        t_property = t_event->selection.property;
+                    else
+                        t_property = t_event->selection.target;
+                    
                     // Send the requested data, if at all possible
                     MCAutoDataRef t_data;
-                    if (MCtransferstore->Fetch(t_mime_type, &t_data, t_event->selection.property, t_event->selection.window, t_requestor, t_event->selection.time))
+                    //fprintf(stderr, "DND:     selection target=%s property=%s\n", gdk_atom_name(t_event->selection.target), gdk_atom_name(t_event->selection.property));
+                    if (MCtransferstore->Fetch(t_mime_type, &t_data, 0, NULL, NULL, t_event->selection.time))
                     {
                         // Send the data to the requestor window
                         gdk_property_change(t_requestor,
-                                            t_event->selection.property,
+                                            t_property,
                                             t_event->selection.target,
                                             8, GDK_PROP_MODE_REPLACE,
                                             MCDataGetBytePtr(*t_data),
                                             MCDataGetLength(*t_data));
-                        
+                        //fprintf(stderr, "DND: data = %s\n", MCDataGetBytePtr(*t_data));
                         // Tell the requestor that the data is ready
                         gdk_selection_send_notify(t_event->selection.requestor,
                                                   t_event->selection.selection,
                                                   t_event->selection.target,
-                                                  t_event->selection.property,
+                                                  t_property,
                                                   t_event->selection.time);
                         
+                    }
+                    else
+                    {
+                        // The selection request could not be fulfilled.
+                        //fprintf(stderr, "DND: selection request failed\n");
+                        gdk_selection_send_notify(t_event->selection.requestor,
+                                                  t_event->selection.selection,
+                                                  t_event->selection.target,
+                                                  GDK_NONE,
+                                                  t_event->selection.time);
                     }
                     
                     g_object_unref(t_requestor);
@@ -242,9 +299,10 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet 
                 
             case GDK_DRAG_STATUS:
             {
+                //fprintf(stderr, "DND: drag status\n");
                 // Which action did the destination request?
                 GdkDragAction t_gdk_action;
-                t_gdk_action = gdk_drag_context_get_actions(t_event->dnd.context);
+                t_gdk_action = gdk_drag_context_get_selected_action(t_context);
                 
                 // Convert to the engine's drag actions
                 if (t_gdk_action == GDK_ACTION_LINK)
@@ -266,9 +324,10 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet 
                 
             case GDK_DROP_FINISHED:
             {
+                //fprintf(stderr, "DND: drop finished\n");
                 // Did the drop succeed?
                 bool t_success;
-                t_success = gdk_drag_drop_succeeded(t_event->dnd.context);
+                t_success = gdk_drag_drop_succeeded(t_context);
                 
                 // If we failed, there was no action
                 if (!t_success)
@@ -284,8 +343,14 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet 
     }
     
     // Other people can now use the pointer
+    g_object_unref(t_context);
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
     
+    // FG-2014-06-27: [[ LinuxGDK ]] I really hate this but GDK seems to refuse
+    // to actually ungrab the pointer so we have to force the issue and call
+    // X11 directly to get it done.
+    x11::XUngrabPointer(x11::gdk_x11_display_get_xdisplay(dpy), 0);
+
     // Clean up allocated memory
     //if (t_pasteboard != NULL)
     //    t_pasteboard->Release();
