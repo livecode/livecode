@@ -323,6 +323,8 @@ public:
                     /* UNCHECKED */ MCStringCreateWithCString("Quit", t_tag);
                 else if (t_action == kMCPlatformMenuItemActionPreferences)
                     /* UNCHECKED */ MCStringCreateWithCString("Preferences", t_tag);
+                else
+                    t_tag = MCValueRetain(kMCEmptyString);
             }
             else
                 t_tag = MCValueRetain(p_menuitem -> tag);

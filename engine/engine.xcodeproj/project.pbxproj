@@ -3453,7 +3453,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4DEE2A000FDE421A0009423C /* Build configuration list for PBXNativeTarget "kernel" */;
 			buildPhases = (
-				BE24245E195356D500982E53 /* Buld QuickTime Stubs */,
+				BE24245E195356D500982E53 /* Build QuickTime Stubs */,
 				4DEE29F30FDE41BE0009423C /* Sources */,
 				4DEE29F40FDE41BE0009423C /* Frameworks */,
 			);
@@ -3835,7 +3835,7 @@
 			shellScript = "#\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_version.rev\" \"$SRCROOT\"\n\"$SOLUTION_DIR/util/encode_version.pl\" \"$SRCROOT\"";
 			showEnvVarsInLog = 0;
 		};
-		BE24245E195356D500982E53 /* Buld QuickTime Stubs */ = {
+		BE24245E195356D500982E53 /* Build QuickTime Stubs */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -3843,7 +3843,7 @@
 			inputPaths = (
 				"$(SRCROOT)/src/quicktime.stubs",
 			);
-			name = "Buld QuickTime Stubs";
+			name = "Build QuickTime Stubs";
 			outputPaths = (
 				"$(SRCROOT)/src/quicktimestubs.mac.cpp",
 			);
