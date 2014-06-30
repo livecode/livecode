@@ -76,7 +76,6 @@ class MCPlayer : public MCControl
     uindex_t m_callback_count;
     
     int m_grabbed_part;
-    double m_initial_rate;
     bool m_was_paused : 1;
     bool m_inside : 1;
     bool m_show_volume : 1;
@@ -242,11 +241,9 @@ public:
     MCRectangle getcontrollerpartrect(const MCRectangle& total_rect, int part);
 
     void drawcontroller(MCDC *dc);
-    void drawnicecontroller(MCDC *dc);
     void drawControllerVolumeButton(MCGContextRef p_gcontext);
     void drawControllerPlayPauseButton(MCGContextRef p_gcontext);
     void drawControllerWellButton(MCGContextRef p_gcontext);
-    void drawControllerWellShadow(MCGContextRef p_gcontext);
     void drawControllerThumbButton(MCGContextRef p_gcontext);
     void drawControllerScrubForwardButton(MCGContextRef p_gcontext);
     void drawControllerScrubBackButton(MCGContextRef p_gcontext);
