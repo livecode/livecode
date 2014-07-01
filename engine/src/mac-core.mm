@@ -33,6 +33,8 @@
 static bool s_have_primary_screen_height = false;
 static CGFloat s_primary_screen_height = 0.0f;
 
+static NSLock *s_callback_lock = nil;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum
@@ -447,11 +449,15 @@ static uindex_t s_callback_count;
 
 void MCPlatformBreakWait(void)
 {
+    [s_callback_lock lock];
 	if (s_wait_broken)
-		return;
-	
-	s_wait_broken = true;
-	
+    {
+        [s_callback_lock unlock];
+        return;
+    }
+    s_wait_broken = true;
+	[s_callback_lock unlock];
+    
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
 	
@@ -481,11 +487,21 @@ static void runloop_observer(CFRunLoopObserverRef observer, CFRunLoopActivity ac
 bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 {
 	// Handle all the pending callbacks.
-	for(uindex_t i = 0; i < s_callback_count; i++)
-		s_callbacks[i] . method(s_callbacks[i] . context);
-	MCMemoryDeleteArray(s_callbacks);
-	s_callbacks = nil;
-	s_callback_count = 0;
+    MCCallback *t_callbacks;
+    uindex_t t_callback_count;
+    [s_callback_lock lock];
+	s_wait_broken = false;
+    t_callbacks = s_callbacks;
+    t_callback_count = s_callback_count;
+    s_callbacks = nil;
+    s_callback_count = 0;
+    [s_callback_lock unlock];
+    
+	for(uindex_t i = 0; i < t_callback_count; i++)
+		t_callbacks[i] . method(t_callbacks[i] . context);
+	MCMemoryDeleteArray(t_callbacks);
+	t_callbacks = nil;
+	t_callback_count = 0;
 	
 	// Make sure we have our observer and install it. This is used when we are
 	// blocking and should break the event loop whenever a new event is added
@@ -497,7 +513,6 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	}
 	
 	s_in_blocking_wait = true;
-	s_wait_broken = false;
 	
 	bool t_modal;
 	t_modal = s_modal_session_count > 0;
@@ -580,9 +595,13 @@ void MCMacPlatformEndModalSession(MCMacPlatformWindow *p_window)
 
 void MCMacPlatformScheduleCallback(void (*p_callback)(void *), void *p_context)
 {
+    [s_callback_lock lock];
 	/* UNCHECKED */ MCMemoryResizeArray(s_callback_count + 1, s_callbacks, s_callback_count);
 	s_callbacks[s_callback_count - 1] . method = p_callback;
 	s_callbacks[s_callback_count - 1] . context = p_context;
+    [s_callback_lock unlock];
+    
+    MCPlatformBreakWait();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1702,6 +1721,8 @@ int main(int argc, char *argv[], char *envp[])
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
 	
+    s_callback_lock = [[NSLock alloc] init];
+    
 	// Create the normal NSApplication object.
 	NSApplication *t_application;
 	t_application = [com_runrev_livecode_MCApplication sharedApplication];

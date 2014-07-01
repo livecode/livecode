@@ -1137,8 +1137,9 @@ void MCPlatformHandlePlayerCurrentTimeChanged(MCPlatformPlayerRef p_player)
     MCParameter *t_param;
     t_param = new MCParameter();
     t_param -> setn_argument(t_player -> getmoviecurtime());
+    
+    t_player -> currenttimechanged(t_param);
 
-    t_player -> timer(MCM_current_time_changed, t_param);
 }
 
 void MCPlatformHandlePlayerSelectionChanged(MCPlatformPlayerRef p_player)
