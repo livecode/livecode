@@ -279,7 +279,7 @@ void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			m_changes . style_changed = true;
 			break;
 		case kMCPlatformWindowPropertyTitle:
-			assert(p_type == kMCPlatformPropertyTypeUTF8CString);
+			assert(p_type == kMCPlatformPropertyTypeMCString);
             // MERG-2014-06-23: Title updated to StringRef
             MCValueAssign(m_title, *(MCStringRef*)p_value);
 			m_changes . title_changed = true;
@@ -388,7 +388,7 @@ void MCPlatformWindow::GetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 	switch(p_property)
 	{
 		case kMCPlatformWindowPropertyTitle:
-			assert(p_type == kMCPlatformPropertyTypeUTF8CString);
+			assert(p_type == kMCPlatformPropertyTypeMCString);
             // MERG-2014-06-23: Title updated to StringRef
             *(MCStringRef*)r_value = MCValueRetain(m_title);
 			break;

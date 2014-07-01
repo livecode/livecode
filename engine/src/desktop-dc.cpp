@@ -445,7 +445,7 @@ void MCScreenDC::uniconifywindow(Window window)
 
 void MCScreenDC::setname(Window window, MCStringRef newname)
 {
-	MCPlatformSetWindowProperty(window, kMCPlatformWindowPropertyTitle, kMCPlatformPropertyTypeUTF8CString, &newname);
+	MCPlatformSetWindowProperty(window, kMCPlatformWindowPropertyTitle, kMCPlatformPropertyTypeMCString, &newname);
 }
 
 void MCScreenDC::setinputfocus(Window window)

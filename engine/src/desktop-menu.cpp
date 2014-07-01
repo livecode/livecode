@@ -329,8 +329,8 @@ public:
             else
                 t_tag = MCValueRetain(p_menuitem -> tag);
 			
-			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeUTF8CString, &(p_menuitem -> label));
-			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeUTF8CString, &t_tag);
+			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeMCString, &(p_menuitem -> label));
+			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeMCString, &t_tag);
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyAction, kMCPlatformPropertyTypeMenuItemAction, &t_action);
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyAccelerator, kMCPlatformPropertyTypeAccelerator, &t_item_accelerator);
 			MCPlatformSetMenuItemProperty(TopMenu(), t_item_index, kMCPlatformMenuItemPropertyEnabled, kMCPlatformPropertyTypeBool, &t_item_enabled);
@@ -403,7 +403,7 @@ void MCButton::macopenmenu(void)
 				setmenuhistoryprop(s_popup_menuitem + 1);
 				
 				MCAutoStringRef t_label;
-				MCPlatformGetMenuItemProperty(m_system_menu, s_popup_menuitem, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeUTF8CString, &(&t_label));
+				MCPlatformGetMenuItemProperty(m_system_menu, s_popup_menuitem, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeMCString, &(&t_label));
                 
 				/* UNCHECKED */ MCStringCopy(*t_label, label);
 				flags |= F_LABEL;
@@ -514,7 +514,7 @@ static void populate_menubar_menu_from_button(MCPlatformMenuRef p_menubar, uinde
 	// Create the menu.
 	MCPlatformSetMenuTitle(p_menu, t_menu_title);
 	
-	MCPlatformSetMenuItemProperty(p_menubar, p_menubar_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeUTF8CString, &t_menu_title);
+	MCPlatformSetMenuItemProperty(p_menubar, p_menubar_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeMCString, &t_menu_title);
 	MCPlatformSetMenuItemProperty(p_menubar, p_menubar_index, kMCPlatformMenuItemPropertyEnabled, kMCPlatformPropertyTypeBool, &t_menu_enabled);
 	
 	// Now build the menu from the spec string.
@@ -716,13 +716,13 @@ static MCPlatformMenuRef create_menu(MCPlatformMenuRef p_menu, MenuItemDescripto
 			if (t_item -> tag_length != 0)
 				MCStringCreateWithBytes((byte_t*)t_item -> tag, t_item -> tag_length, kMCStringEncodingNative, false, t_tag);
 			else
-				t_tag = MCValueRetain(kMCEmptyString);
+				t_tag = MCValueRetain(t_title);
 			
 			bool t_enabled;
 			t_enabled = !t_item -> disabled;
 			
-			MCPlatformSetMenuItemProperty(t_menu, t_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeUTF8CString, &t_title);
-			MCPlatformSetMenuItemProperty(t_menu, t_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeUTF8CString, &t_tag);
+			MCPlatformSetMenuItemProperty(t_menu, t_index, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeMCString, &t_title);
+			MCPlatformSetMenuItemProperty(t_menu, t_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeMCString, &t_tag);
 			MCPlatformSetMenuItemProperty(t_menu, t_index, kMCPlatformMenuItemPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
 			
 			if (t_item -> submenu != nil)
@@ -833,6 +833,7 @@ void MCScreenDC::seticonmenu(MCStringRef p_menu)
 	MCPlatformRemoveAllMenuItems(icon_menu);
 		
 	create_menu(icon_menu, t_items);
+    free((void*)t_menu);
 	
 	free_menu(t_items);
 }
@@ -914,7 +915,7 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 		
 		// Fetch the tag of menu item.
 		MCAutoStringRef t_item_tag;
-		MCPlatformGetMenuItemProperty(t_current_menu, t_current_menu_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeUTF8CString, &(&t_item_tag));
+		MCPlatformGetMenuItemProperty(t_current_menu, t_current_menu_index, kMCPlatformMenuItemPropertyTag, kMCPlatformPropertyTypeMCString, &(&t_item_tag));
 		
 		// If the ep is not empty, then prepend "|"
 		if (!MCStringIsEmpty(*t_result))

@@ -106,7 +106,7 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeColor,
 	
 	kMCPlatformPropertyTypeNativeCString,
-	kMCPlatformPropertyTypeUTF8CString,
+	kMCPlatformPropertyTypeMCString,
 	
 	kMCPlatformPropertyTypeWindowStyle,
 	kMCPlatformPropertyTypeWindowMask,
