@@ -343,6 +343,17 @@ enum
 	kLCValueOptionAsCData = 5,
 	// The 'value' parameter is a pointer to a char * variable (native encoding)
 	kLCValueOptionAsCString = 6,
+    
+    
+    // SN-2014-07-01: [[ ExternalsApiV6 ]] Unicode strings
+    // The 'value' parameter is a point to an LCBytes storing a UTF-8-encoded string
+    kLCValueOptionAsUTF8String = 7,
+    // The 'value' parameter is a point to a char * variable (UTF-8 encoding)
+    kLCValueOptionAsUTF8CString = 8,
+    // The 'value' parameter is a point to an LCBytes storing a UTF-16-encoded string
+    kLCValueOptionAsUTF16String = 9,
+    // The 'value' parameter is a point to a uint16_t * variable (UTF-16 encoding)
+    kLCValueOptionAsUTF16CString = 10,
 
 	// The 'value' parameter is a pointer to an LCArrayRef variable.
 	kLCValueOptionAsLCArray = 16,

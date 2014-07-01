@@ -122,6 +122,20 @@ enum
 	kMCOptionAsReal = 4,
 	kMCOptionAsString = 5,
 	kMCOptionAsCString = 6,
+    
+    // SN-2014-07-01: [[ ExternalsApiV6 ]] New encoding for the strings
+    // and addition of the possibility to handle Obj-C parameter
+    kMCOptionAsUTF8String = 7,
+    kMCOptionAsUTF8CString = 8,
+    kMCOptionAsUTF16String = 9,
+    kMCOptionAsUTF16CString = 10,
+    
+	kMCOptionAsObjcNumber = 17,
+	kMCOptionAsObjcString = 18,
+	kMCOptionAsObjcData = 19,
+	kMCOptionAsObjcArray = 20,
+	kMCOptionAsObjcDictionary = 21,
+    
 	kMCOptionNumberFormatDefault = 0 << 26,
 	kMCOptionNumberFormatDecimal = 1 << 26,
 	kMCOptionNumberFormatScientific = 2 << 26,
@@ -339,6 +353,10 @@ BEGIN_EXTERN_C
 static LCError LCValueFetch(MCVariableRef var, unsigned int options, void *r_value);
 static LCError LCValueStore(MCVariableRef var, unsigned int options, void *r_value);
 
+
+// SN-2014-07-01: [[ ExternalsApiV6 ]] The Obj-C parameter can be passed straight to
+// the externals
+#ifdef __EXTERNALS_V5__
 #ifdef __OBJC__
 
 // MW-2013-06-14: [[ ExternalsApiV5 ]] New methods to convert to/from objc-arrays
@@ -619,6 +637,7 @@ static LCError LCValueArrayFromObjcDictionary(MCVariableRef var, NSDictionary *p
 }
 
 #endif
+#endif // defined(__EXTERNALS_V5__)
 
 static unsigned int LCValueOptionsGetCaseSensitive(unsigned int p_options)
 {
@@ -691,32 +710,58 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 				t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
 				t_value_to_use = &t_cdata_value;
 				break;
-				
 			case kLCValueOptionAsLCArray:
 				t_options_to_use = kMCOptionAsVariable;
 				t_value_to_use = &t_array_value;
 				break;
+                
+            // SN-2014-07-01: [[ ExternalsApiV6 ]] Handling unicode types                
+            case kLCValueOptionAsUTF8String:
+                t_options_to_use = kMCOptionAsUTF8String;
+                t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
+                t_value_to_use = &t_cdata_value;
+                break;
+            case kLCValueOptionAsUTF8CString:
+                t_options_to_use = kMCOptionAsUTF8CString;
+                t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
+                t_value_to_use = &t_cstring_value;
+                break;
+            case kLCValueOptionAsUTF16String:
+                t_options_to_use = kMCOptionAsUTF16String;
+                t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
+                t_value_to_use = &t_cdata_value;
+                break;
+            case kLCValueOptionAsUTF16CString:
+                t_options_to_use = kMCOptionAsUTF16CString;
+                t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
+                t_value_to_use = &t_cstring_value;
+                break;
 				
-#ifdef __OBJC__
+#ifdef __OBJC__                
+            // SN-2014-07-01: [[ ExternalsApiV6 ]] Obj-C types can now be returned when asked so
+            // so no further conversion is required
 			case kLCValueOptionAsObjcNumber:
-				t_options_to_use = kMCOptionAsReal;
+				t_options_to_use = kMCOptionAsObjcNumber;
 				t_options_to_use |= LCValueOptionsGetConvertOctals(p_options);
-				t_value_to_use = &t_number_value;
+				t_value_to_use = r_value;
 				break;
 			case kLCValueOptionAsObjcString:
-				t_options_to_use = kMCOptionAsCString;
+				t_options_to_use = kMCOptionAsObjcString;
 				t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
-				t_value_to_use = &t_cstring_value;
+				t_value_to_use = r_value;
 				break;
 			case kLCValueOptionAsObjcData:
-				t_options_to_use = kMCOptionAsString;
+				t_options_to_use = kMCOptionAsObjcData;
 				t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
-				t_value_to_use = &t_cdata_value;
+				t_value_to_use = r_value;
 				break;
 			case kLCValueOptionAsObjcArray:
+                t_options_to_use = kMCOptionAsObjcArray;
+                t_value_to_use = r_value;
+                break;
 			case kLCValueOptionAsObjcDictionary:
-				t_options_to_use = kMCOptionAsVariable;
-				t_value_to_use = &t_array_value;
+				t_options_to_use = kMCOptionAsObjcDictionary;
+				t_value_to_use = r_value;
 				break;
 #endif
 				
@@ -736,6 +781,8 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 	{
 		switch(p_options & kLCValueOptionMaskAs)
 		{
+            // SN-2014-07-01: [[ ExternalsApiV6 ]] UTF-8 is the same as a CString
+            case kLCValueOptionAsUTF8CString:
 			case kLCValueOptionAsCString:
 				t_cstring_value = strdup(t_cstring_value);
 				if (t_cstring_value != nil)
@@ -743,6 +790,10 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 				else
 					t_error = kLCErrorOutOfMemory;
 				break;
+            // SN-2014-07-01: [[ ExternalsApiV6 ]] The length stored is the length in bytes
+            // so UTF16 or UTF8 do not differ from native encoding
+            case kLCValueOptionAsUTF16String:
+            case kLCValueOptionAsUTF8String:
 			case kLCValueOptionAsCData:
 			{
 				void *t_buffer;
@@ -765,6 +816,27 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 					t_error = kLCErrorNotAChar;
 			}
 			break;
+                
+            // SN-2014-07-01: [[ ExternalsApiV6 ]] Specific case for UTF-16 strings
+            case kLCValueOptionAsUTF16CString:
+            {
+                uint32_t t_char_count;
+                uint16_t *t_chars;
+                t_chars = (uint16_t *)t_cstring_value;
+                
+                for (t_char_count = 0; *t_chars != 0; ++t_char_count)
+                    ++t_chars;
+                
+                t_chars = nil;
+                t_chars = (uint16_t*) malloc(t_char_count * 2 + 2);
+                if (t_chars != nil)
+                {
+                    memcpy(t_chars, t_cstring_value, t_char_count * 2);
+                    *(uint16_t**)r_value = t_chars;
+                }
+                else
+                    t_error = kLCErrorOutOfMemory;
+            }
 			
 			case kLCValueOptionAsLCArray:
 			{
@@ -793,7 +865,9 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 				}
 			}
 			break;
-				
+
+            // SN-2014-07-01: [[ ExternalsApiV6 ]] Obj-C types now passed straight to the externals
+#if 0
 #ifdef __OBJC__
 			case kLCValueOptionAsObjcNumber:
 				*(NSNumber **)r_value = [NSNumber numberWithDouble: t_number_value];
@@ -814,6 +888,7 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 				if (t_error == kLCErrorNone)
 					[*(NSDictionary **)r_value autorelease];
 				break;
+#endif
 #endif
 		}
 	}
@@ -842,6 +917,19 @@ static LCError LCValueStore(MCVariableRef p_var, unsigned int p_options, void *p
 		case kLCValueOptionAsReal:
 		case kLCValueOptionAsCString:
 		case kLCValueOptionAsCData:
+        // SN-2014-07-01: [[ ExternalsApiV6 ]] Obj-C types can now be passed as parameter to the externals
+        // and unicode-encoded string/data exist as well
+        case kLCValueOptionAsUTF8String:
+        case kLCValueOptionAsUTF8CString:
+        case kLCValueOptionAsUTF16String:
+        case kLCValueOptionAsUTF16CString:
+#ifdef __OBJC__
+		case kLCValueOptionAsObjcNumber:
+		case kLCValueOptionAsObjcString:
+		case kLCValueOptionAsObjcData:
+		case kLCValueOptionAsObjcArray:
+		case kLCValueOptionAsObjcDictionary:
+#endif
 			t_options_to_use = p_options & kLCValueOptionMaskAs;
 			t_value_to_use = p_value;
 			break;
@@ -855,60 +943,6 @@ static LCError LCValueStore(MCVariableRef p_var, unsigned int p_options, void *p
 			t_options_to_use = kMCOptionAsVariable;
 			t_value_to_use = *(void **)p_value;
 			break;
-			
-#ifdef __OBJC__
-		case kLCValueOptionAsObjcNumber:
-			t_options_to_use = kMCOptionAsReal;
-			t_number_value = [*(NSNumber **)p_value doubleValue];
-			t_value_to_use = &t_number_value;
-			break;
-		case kLCValueOptionAsObjcString:
-			t_options_to_use = kMCOptionAsCString;
-			t_cstring_value = [*(NSString **)p_value cStringUsingEncoding: NSMacOSRomanStringEncoding];
-			if (t_cstring_value != nil)
-				t_value_to_use = &t_cstring_value;
-			else
-				t_error = kLCErrorCannotEncodeCString;
-			break;
-		case kLCValueOptionAsObjcData:
-			t_options_to_use = kMCOptionAsString;
-			t_cdata_value . buffer = (char *)[*(NSData **)p_value bytes];
-			t_cdata_value . length = [*(NSData **)p_value length];
-			t_value_to_use = &t_cdata_value;
-			break;
-		case kLCValueOptionAsObjcArray:
-		{
-			// For efficiency, we use 'exchange' - this prevents copying a temporary array.
-			MCVariableRef t_tmp_array;
-			t_tmp_array = nil;
-			if (t_error == kLCErrorNone)
-				t_error = (LCError)MCVariableCreate(&t_tmp_array);
-			if (t_error == kLCErrorNone)
-				t_error = LCValueArrayFromObjcArray(t_tmp_array, *(NSArray **)p_value);
-			if (t_error == kLCErrorNone)
-				t_error = (LCError)s_interface -> variable_exchange(p_var, t_tmp_array);
-			if (t_tmp_array != nil)
-				MCVariableRelease(t_tmp_array);
-			return t_error;
-		}
-		//  break;
-		case kLCValueOptionAsObjcDictionary:
-		{
-			// For efficiency, we use 'exchange' - this prevents copying a temporary array.
-			MCVariableRef t_tmp_array;
-			t_tmp_array = nil;
-			if (t_error == kLCErrorNone)
-				t_error = (LCError)MCVariableCreate(&t_tmp_array);
-			if (t_error == kLCErrorNone)
-				t_error = LCValueArrayFromObjcDictionary(t_tmp_array, *(NSDictionary **)p_value);
-			if (t_error == kLCErrorNone)
-				t_error = (LCError)s_interface -> variable_exchange(p_var, t_tmp_array);
-			if (t_tmp_array != nil)
-				MCVariableRelease(t_tmp_array);
-			return t_error;
-		}
-		//  break;
-#endif
 		default:
 			t_error = kLCErrorBadValueOptions;
 			break;
@@ -1159,10 +1193,14 @@ LCError LCArrayLookupKeyOnPath(LCArrayRef p_array, unsigned int p_options, const
 			*(char *)r_value = '\0';
 			break;
 		case kLCValueOptionAsCData:
+        case kLCValueOptionAsUTF8String:
+        case kLCValueOptionAsUTF16String:
 			((LCBytes *)r_value) -> length = 0;
 			((LCBytes *)r_value) -> buffer = nil;
 			break;
 		case kLCValueOptionAsCString:
+        case kLCValueOptionAsUTF8CString:
+        case kLCValueOptionAsUTF16CString:
 		case kLCValueOptionAsLCArray:
 		case kLCValueOptionAsObjcNumber:
 		case kLCValueOptionAsObjcString:

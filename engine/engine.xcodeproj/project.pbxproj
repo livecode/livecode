@@ -952,7 +952,7 @@
 		4D140F9115A5A82300191B5E /* TextMessaging.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = TextMessaging.java; sourceTree = "<group>"; };
 		4D140F9215A5A82300191B5E /* Utils.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = Utils.java; sourceTree = "<group>"; };
 		4D17F4351042877000C49A3B /* externalv0.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = externalv0.cpp; path = src/externalv0.cpp; sourceTree = "<group>"; };
-		4D17F4361042877000C49A3B /* externalv1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = externalv1.cpp; path = src/externalv1.cpp; sourceTree = "<group>"; };
+		4D17F4361042877000C49A3B /* externalv1.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = externalv1.cpp; path = src/externalv1.cpp; sourceTree = "<group>"; };
 		4D1B954810A2CA8B0039C679 /* eventqueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = eventqueue.h; path = src/eventqueue.h; sourceTree = "<group>"; };
 		4D1F9C2E171C64320091C6CB /* libsecurity-community.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libsecurity-community.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D1F9D17171C67B00091C6CB /* libkernel-server.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libkernel-server.a"; sourceTree = BUILT_PRODUCTS_DIR; };
