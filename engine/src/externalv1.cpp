@@ -2715,7 +2715,7 @@ static MCExternalError LCValueArrayToObjcArray(MCExternalVariableRef src, NSArra
 	uint32_t t_count;
 	t_count = 0;
 	if (t_error == kMCExternalErrorNone)
-		t_error = MCExternalVariableCountKeys(src, &t_count);
+		t_error = g_external_interface . variable_count_keys(src, &t_count);
 	
 	id *t_objects;
 	t_objects = nil;
@@ -2734,7 +2734,7 @@ static MCExternalError LCValueArrayToObjcArray(MCExternalVariableRef src, NSArra
 		const char *t_key;
 		MCExternalVariableRef t_value;
 		if (t_error == kMCExternalErrorNone)
-			t_error = MCExternalVariableIterateKeys(src, &t_iterator, kMCExternalValueOptionAsCString, &t_key, &t_value);
+			t_error = g_external_interface . variable_iterate_keys(src, &t_iterator, kMCExternalValueOptionAsCString, &t_key, &t_value);
 		
 		// Now convert the value - remembering that LC sequences are 1 based, and
 		// Objc arrays are 0 based. Note that we don't have to validate the key as
@@ -2777,7 +2777,7 @@ static MCExternalError MCExternalValueArrayFromObjcArray(MCExternalVariableRef v
 		
 		MCExternalVariableRef t_value;
 		if (t_error == kMCExternalErrorNone)
-			t_error = (MCExternalError)MCExternalVariableLookupKey(var, kMCExternalValueOptionAsCString, t_key, true, &t_value);
+			t_error = (MCExternalError)g_external_interface . variable_lookup_key(var, kMCExternalValueOptionAsCString, t_key, true, &t_value);
 		
 		if (t_error == kMCExternalErrorNone)
 			t_error = MCExternalValueArrayValueFromObjcValue(t_value, [src objectAtIndex: t_index]);
@@ -2794,7 +2794,7 @@ static MCExternalError MCExternalValueArrayToObjcDictionary(MCExternalVariableRe
 	uint32_t t_count;
 	t_count = 0;
 	if (t_error == kMCExternalErrorNone)
-		t_count = MCExternalVariableCountKeys(src, &t_count);
+		t_count = g_external_interface . variable_count_keys(src, &t_count);
 	
 	id *t_keys, *t_values;
 	t_keys = t_values = nil;
@@ -2814,7 +2814,7 @@ static MCExternalError MCExternalValueArrayToObjcDictionary(MCExternalVariableRe
 		MCAutoStringRef t_key;
 		MCExternalVariableRef t_value;
 		if (t_error == kMCExternalErrorNone)
-			t_error = MCExternalVariableIterateKeys(src, &t_iterator, kMCExternalValueOptionAsString, &t_key, &t_value);
+			t_error = g_external_interface . variable_iterate_keys(src, &t_iterator, kMCExternalValueOptionAsString, &t_key, &t_value);
 		
 		// Convert the key.
 		if (t_error == kMCExternalErrorNone)
@@ -2883,7 +2883,7 @@ static MCExternalError MCExternalValueArrayFromObjcDictionary(MCExternalVariable
         
         MCExternalVariableRef t_value;
         if (t_error == kMCExternalErrorNone)
-            t_error = MCExternalVariableLookupKey(var, kMCExternalValueOptionAsString, (void *)*t_key_stringref, true, &t_value);
+            t_error = g_external_interface . variable_lookup_key(var, kMCExternalValueOptionAsString, (void *)*t_key_stringref, true, &t_value);
         
         if (t_error == kMCExternalErrorNone)
             t_error = MCExternalValueArrayValueFromObjcValue(t_value, [p_src objectForKey: t_key]);
