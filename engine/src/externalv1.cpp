@@ -2088,7 +2088,15 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
 	case kMCExternalValueOptionAsReal:
 		return var -> AppendReal(p_options, *(real64_t *)p_value);
 	case kMCExternalValueOptionAsString:
-		return var -> AppendCString(p_options, ((MCString *)p_value)->getstring());
+        {
+            MCAutoStringRef t_stringref;
+            MCString* t_string;
+            t_string = (MCString*)p_value;
+            if (!MCStringCreateWithBytes((byte_t*)t_string->getstring(), t_string->getlength(), kMCStringEncodingNative, false, &t_stringref))
+                return kMCExternalErrorOutOfMemory;
+            
+            return var -> AppendString(p_options, *t_stringref);
+        }
 	case kMCExternalValueOptionAsCString:
         return var -> AppendCString(p_options, *(const char **)p_value);
 
