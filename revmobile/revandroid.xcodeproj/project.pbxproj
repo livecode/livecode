@@ -274,7 +274,7 @@
 				INFOPLIST_FILE = "revandroid-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				PRODUCT_NAME = revandroid;
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx10.8;
 				WRAPPER_EXTENSION = bundle;
 			};
 			name = Release;

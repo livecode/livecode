@@ -23,16 +23,17 @@
 /* Begin PBXBuildFile section */
 		1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DC1249418FC422300C2FEF3 /* quicktimestubs.mac.cpp */; };
 		1DC1249618FC423200C2FEF3 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DC1249418FC422300C2FEF3 /* quicktimestubs.mac.cpp */; };
-
-		1DED772C19129F27000FFFE3 /* button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E3F0B8096FD00200116 /* button.cpp */; };
-		1DED772D1912A03B000FFFE3 /* player-platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED771E19126451000FFFE3 /* player-platform.cpp */; };
-		1DED772E1912A03C000FFFE3 /* player-platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED771E19126451000FFFE3 /* player-platform.cpp */; };
-
 		1DDE08D11945DD32000E3705 /* mac-qt-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D01945DD31000E3705 /* mac-qt-player.mm */; };
 		1DDE08D31945DD43000E3705 /* mac-av-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D21945DD43000E3705 /* mac-av-player.mm */; };
 		1DDE08E71945F036000E3705 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; };
 		1DDE08E91945F0DE000E3705 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E81945F0DE000E3705 /* CoreMedia.framework */; };
-
+		1DE9AF8D19631919008529DC /* player-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED771C19124F24000FFFE3 /* player-legacy.cpp */; };
+		1DE9AF8E1963197C008529DC /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E81945F0DE000E3705 /* CoreMedia.framework */; };
+		1DE9AF8F19631984008529DC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; };
+		1DE9AF901963199B008529DC /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E81945F0DE000E3705 /* CoreMedia.framework */; };
+		1DE9AF91196319A2008529DC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; };
+		1DED772C19129F27000FFFE3 /* button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E3F0B8096FD00200116 /* button.cpp */; };
+		1DED772D1912A03B000FFFE3 /* player-platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED771E19126451000FFFE3 /* player-platform.cpp */; };
 		3C03ED921134205A009DE406 /* socket_resolve.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C03ED911134205A009DE406 /* socket_resolve.cpp */; };
 		3C0A3CC410BAF6120074D630 /* iquantization.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C0A3CC310BAF6120074D630 /* iquantization.cpp */; };
 		4C10D82C16BFADDB00D25197 /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C10D82916BFADB800D25197 /* libgraphics.a */; };
@@ -944,6 +945,12 @@
 		1D86C5EE189A9AD6002A8945 /* BillingProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = BillingProvider.java; sourceTree = "<group>"; };
 		1D86C5EF189A9CFD002A8945 /* BillingModule.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = BillingModule.java; sourceTree = "<group>"; };
 		1DC1249418FC422300C2FEF3 /* quicktimestubs.mac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = quicktimestubs.mac.cpp; path = src/quicktimestubs.mac.cpp; sourceTree = "<group>"; };
+		1DDE08CF1945DCFD000E3705 /* mac-player.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "mac-player.h"; path = "src/mac-player.h"; sourceTree = "<group>"; };
+		1DDE08D01945DD31000E3705 /* mac-qt-player.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-qt-player.mm"; path = "src/mac-qt-player.mm"; sourceTree = "<group>"; };
+		1DDE08D21945DD43000E3705 /* mac-av-player.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-av-player.mm"; path = "src/mac-av-player.mm"; sourceTree = "<group>"; };
+		1DDE08E61945F036000E3705 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		1DDE08E81945F0DE000E3705 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		1DDE08EA1945F10A000E3705 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
 		1DED771A19124D75000FFFE3 /* player-platform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "player-platform.cpp"; sourceTree = "<group>"; };
 		1DED771B19124D75000FFFE3 /* player-platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "player-platform.h"; sourceTree = "<group>"; };
 		1DED771C19124F24000FFFE3 /* player-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "player-legacy.cpp"; path = "src/player-legacy.cpp"; sourceTree = "<group>"; };
@@ -952,14 +959,6 @@
 		1DED771F19126451000FFFE3 /* player-platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "player-platform.h"; path = "src/player-platform.h"; sourceTree = "<group>"; };
 		1DED77201912652B000FFFE3 /* player.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = player.cpp; path = src/player.cpp; sourceTree = "<group>"; };
 		1DED77211912652B000FFFE3 /* player.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = player.h; path = src/player.h; sourceTree = "<group>"; };
-
-		1DDE08CF1945DCFD000E3705 /* mac-player.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "mac-player.h"; path = "src/mac-player.h"; sourceTree = "<group>"; };
-		1DDE08D01945DD31000E3705 /* mac-qt-player.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-qt-player.mm"; path = "src/mac-qt-player.mm"; sourceTree = "<group>"; };
-		1DDE08D21945DD43000E3705 /* mac-av-player.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-av-player.mm"; path = "src/mac-av-player.mm"; sourceTree = "<group>"; };
-		1DDE08E61945F036000E3705 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		1DDE08E81945F0DE000E3705 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
-		1DDE08EA1945F10A000E3705 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
-
 		3C03ED911134205A009DE406 /* socket_resolve.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = socket_resolve.cpp; path = src/socket_resolve.cpp; sourceTree = "<group>"; };
 		3C0A3CC310BAF6120074D630 /* iquantization.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = iquantization.cpp; path = src/iquantization.cpp; sourceTree = "<group>"; };
 		3C0A3CC510BAF63B0074D630 /* iquantization.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = iquantization.h; path = src/iquantization.h; sourceTree = "<group>"; };
@@ -1607,6 +1606,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1DE9AF91196319A2008529DC /* AVFoundation.framework in Frameworks */,
+				1DE9AF901963199B008529DC /* CoreMedia.framework in Frameworks */,
 				4D2A57C41198634300135143 /* libkernel.a in Frameworks */,
 				4D1F9C53171C662D0091C6CB /* libsecurity-community.a in Frameworks */,
 				4D2A57C51198634300135143 /* libcore.a in Frameworks */,
@@ -1668,6 +1669,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1DE9AF8F19631984008529DC /* AVFoundation.framework in Frameworks */,
+				1DE9AF8E1963197C008529DC /* CoreMedia.framework in Frameworks */,
 				4DEE2CA20FDE53620009423C /* libkernel.a in Frameworks */,
 				4D221B00171D5F5F00E7E557 /* libkernel-standalone.a in Frameworks */,
 				4D1F9E51171C69940091C6CB /* libsecurity-community.a in Frameworks */,
@@ -3274,7 +3277,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		1D061CBA18FC412A00BD8BDF /* Build QuickTime Stubs */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 12;
 			files = (
 			);
 			inputPaths = (
@@ -3475,6 +3478,7 @@
 				4D1F9D43171C682E0091C6CB /* external.cpp in Sources */,
 				4D1F9D44171C682E0091C6CB /* externalv0.cpp in Sources */,
 				4D1F9D45171C682E0091C6CB /* externalv1.cpp in Sources */,
+				1DE9AF8D19631919008529DC /* player-legacy.cpp in Sources */,
 				4D1F9D46171C682E0091C6CB /* field.cpp in Sources */,
 				4D1F9D47171C682E0091C6CB /* fieldf.cpp in Sources */,
 				4D1F9D48171C682E0091C6CB /* fieldh.cpp in Sources */,
@@ -3595,7 +3599,6 @@
 				E85130F5180D9969004D1DB4 /* image_rep_densitymapped.cpp in Sources */,
 				E82206E2184F810A00117D10 /* resolution.cpp in Sources */,
 				1DC1249618FC423200C2FEF3 /* quicktimestubs.mac.cpp in Sources */,
-				1DED772E1912A03C000FFFE3 /* player-platform.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3851,14 +3854,11 @@
 				E82206E1184F810A00117D10 /* resolution.cpp in Sources */,
 				4DAF5C8718C0E76500B9713C /* mac-scripting.mm in Sources */,
 				4D87710018C8B30700A88AF9 /* quicktime.cpp in Sources */,
-                
-                1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */,
+				1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */,
 				1DED772C19129F27000FFFE3 /* button.cpp in Sources */,
 				1DED772D1912A03B000FFFE3 /* player-platform.cpp in Sources */,
-
 				1DDE08D11945DD32000E3705 /* mac-qt-player.mm in Sources */,
 				1DDE08D31945DD43000E3705 /* mac-av-player.mm in Sources */,
-
 				E87FAFEC1924F25000ED338B /* region.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

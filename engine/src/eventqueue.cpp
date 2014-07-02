@@ -375,7 +375,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			else if (t_event -> mouse . press . state == kMCMousePressStateUp)
 			{
 				if (s_click_count != 1)
-					t_target -> mup(t_event -> mouse . press . button + 1);
+					t_target -> mup(t_event -> mouse . press . button + 1, false);
 				else
 					t_target -> doubleup(t_event -> mouse . press . button + 1);
 			}
@@ -398,7 +398,7 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
                 
                 bool old_lock = MClockmessages;
                 MClockmessages = true;
-                t_target -> mup(t_event -> mouse . press . button + 1);
+                t_target -> mup(t_event -> mouse . press . button + 1, false);
                 MClockmessages = old_lock;
 				
 				t_target -> message_with_args(MCM_mouse_release, t_event -> mouse . press . button + 1);

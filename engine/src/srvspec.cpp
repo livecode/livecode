@@ -57,7 +57,7 @@ extern MCSystemInterface *MCServerCreateWindowsSystem(void);
 
 extern "C" char *__cxa_demangle(const char *, char *, size_t *, int*);
 
-#ifndef _LINUX_SERVER
+#ifdef _WINDOWS_SERVER
 static char *strndup(const char *s, uint32_t n)
 {
 	char *r;
