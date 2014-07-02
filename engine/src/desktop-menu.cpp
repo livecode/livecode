@@ -762,9 +762,11 @@ void MCScreenDC::seticonmenu(MCStringRef p_menu)
 	uint4 t_id;
 	
 	const char *t_menu;
+    const char *t_menu_ptr;
     MCAutoStringRefAsUTF8String temp;
     /* UNCHECKED */ temp . Lock(p_menu);
 	t_menu = strclone(*temp);
+    t_menu_ptr = t_menu;
     
 	t_items = NULL;
 	t_current_item = NULL;
@@ -833,7 +835,7 @@ void MCScreenDC::seticonmenu(MCStringRef p_menu)
 	MCPlatformRemoveAllMenuItems(icon_menu);
 		
 	create_menu(icon_menu, t_items);
-    free((void*)t_menu);
+    delete[] t_menu_ptr;
 	
 	free_menu(t_items);
 }
