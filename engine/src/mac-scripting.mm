@@ -486,19 +486,16 @@ void MCPlatformScriptEnvironment::Run(MCStringRef p_script, MCStringRef &r_resul
 	if (t_js_script != NULL)
 		JSStringRelease(t_js_script);
 	
-	char *t_result;
 	if (t_success)
 	{
 		m_runtime = t_runtime;
-		t_result = strdup("");
+		r_result = MCValueRetain(kMCEmptyString);
 	}
 	else
 	{
 		JSGlobalContextRelease(t_runtime);
-		t_result = NULL;
+		r_result = NULL;
 	}
-	
-	return t_result;
 }
 
 char *MCPlatformScriptEnvironment::Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count)

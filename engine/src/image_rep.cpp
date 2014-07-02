@@ -152,6 +152,7 @@ bool MCLoadableImageRep::EnsureMCGImageFrames()
 	t_frames = nil;
 	
 	uint32_t t_frame_count;
+    t_frame_count = 0;
 	
 	bool t_premultiplied;
 	

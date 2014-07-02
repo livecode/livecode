@@ -183,7 +183,7 @@ MCGraphicsContext::MCGraphicsContext(uint32_t p_width, uint32_t p_height, bool p
 MCGraphicsContext::MCGraphicsContext(uint32_t p_width, uint32_t p_height, uint32_t p_stride, void *p_pixels, bool p_alpha)
 {
 	MCGContextRef t_context;
-	/* UNCHECKED */ MCGContextCreateWithPixels(p_width, p_height, p_stride, p_pixels, p_alpha, m_gcontext);
+	/* UNCHECKED */ MCGContextCreateWithPixels(p_width, p_height, p_stride, p_pixels, p_alpha, t_context);
 
 	init(t_context);
 	MCGContextRelease(t_context);

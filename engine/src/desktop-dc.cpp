@@ -938,6 +938,7 @@ bool MCConvertStyledTextToUTF8(MCDataRef p_in, MCDataRef& r_out)
         MCAutoStringRef t_exported;
 		t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
         bool t_success;
+        t_success = true;
 
 		// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
 		if (t_paragraphs != NULL)
@@ -945,6 +946,8 @@ bool MCConvertStyledTextToUTF8(MCDataRef p_in, MCDataRef& r_out)
 			t_success = MCtemplatefield -> exportasplaintext(t_paragraphs, 0, INT32_MAX, &t_exported)
                             && MCStringEncode(*t_exported, kMCStringEncodingUTF8, false, r_out);
 		}
+        else
+            r_out = MCValueRetain(kMCEmptyData);
 
 		delete t_object;
         return t_success;

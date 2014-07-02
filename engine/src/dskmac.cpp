@@ -1470,7 +1470,8 @@ static void MCS_openresourcefork_with_fsref(FSRef *p_ref, SInt8 p_permission, bo
         }
 	}
 	
-	*r_fork_ref = t_fork_ref;
+    if (t_success)
+        *r_fork_ref = t_fork_ref;
 }
 
 static void MCS_mac_openresourcefork_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16*r_fork_ref, MCStringRef& r_error)
@@ -5249,6 +5250,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         ResFileRefNum t_res_file;
         bool t_res_file_opened;
+        t_res_file_opened = false;
         if (!t_error)
         {
             OSErr t_os_error;
@@ -6657,6 +6659,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 fptr = fopen(*t_path_utf, IO_WRITE_MODE);
                 break;
             default:
+                fptr = NULL;
                 break;
         }
         
@@ -6666,7 +6669,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             int t_serial_in;
             
             t_serial_in = fileno(fptr);
-            val = fcntl(t_serial_in, F_GETFL, val);
+            val = fcntl(t_serial_in, F_GETFL);
             val |= O_NONBLOCK |  O_NOCTTY;
             fcntl(t_serial_in, F_SETFL, val);
             configureSerialPort((short)t_serial_in);
@@ -6853,6 +6856,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	}
 #endif /* MCS_unicodetomultibyte_dsk_mac */
         uint32_t t_return_size;
+        t_return_size = 0;
         if (p_from_charset == LCH_UNICODE) // Unicode to multibyte
         {
 //            TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset)

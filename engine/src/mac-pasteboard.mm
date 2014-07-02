@@ -481,6 +481,7 @@ void MCPlatformDoDragDrop(MCPlatformWindowRef p_window, MCPlatformAllowedDragOpe
     //   data locally elsewhere).
     NSPasteboard *t_pboard;
     bool t_is_private;
+    t_is_private = false;
     t_pboard = [NSPasteboard pasteboardWithName: NSDragPboard];
     if ([[t_pboard pasteboardItems] count] == 0)
     {

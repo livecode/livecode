@@ -4812,6 +4812,8 @@
 		4DEE29F70FDE41C00009423C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				PRODUCT_NAME = kernel;
 			};
 			name = Debug;
@@ -4819,6 +4821,8 @@
 		4DEE29F90FDE41C00009423C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				PRODUCT_NAME = kernel;
 			};
 			name = Release;
