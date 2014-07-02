@@ -17,9 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __VALUE__
 #define __VALUE__
 
-#ifndef __MC_CORE__
-#include <core.h>
-#endif
+#include "foundation.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

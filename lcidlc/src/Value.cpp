@@ -17,6 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <stdlib.h>
 
 #include "Value.h"
+#include "CString.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

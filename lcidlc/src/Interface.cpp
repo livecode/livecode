@@ -20,6 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "Interface.h"
 #include "InterfacePrivate.h"
 #include "NativeType.h"
+#include "CString.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

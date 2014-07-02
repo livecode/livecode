@@ -8,8 +8,7 @@
  */
 
 #include <stdio.h>
-
-#include "Core.h"
+#include "foundation.h"
 #include "Coder.h"
 
 struct Coder

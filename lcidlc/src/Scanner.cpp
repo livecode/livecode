@@ -15,8 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <stdio.h>
-
-#include "Core.h"
+#include "foundation.h"
 #include "Error.h"
 #include "Scanner.h"
 
