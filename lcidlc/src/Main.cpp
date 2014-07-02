@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "Scanner.h"
 #include "Parser.h"
 #include "Interface.h"
+#include "foundation-locale.h"
 
 #define canvas_idl "/Users/mark/Workspace/revolution/externals/rrecanvas/rrecanvas.lcidl.txt"
 #define error_idl "/Users/mark/Workspace/revolution/trunk/lcidlc/interface_error_test.txt"
@@ -28,6 +29,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 // Improve XCode error output.
 const char *g_input_filename = nil;
+
+// SN-20140-07-02: [[ ExternalsApiV6 ]] Added needed extern variable in libfoundation...
+MCLocaleRef kMCBasicLocale;
 
 int main(int argc, char *argv[])
 {
@@ -42,6 +46,11 @@ int main(int argc, char *argv[])
 	
 	// Improve XCode error output.
 	g_input_filename = argv[1];
+    
+    
+    // Create the basic locale and the system locale
+    if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
+        return false;
 	
 	ScannerRef t_scanner;
 	t_scanner = nil;
