@@ -1763,7 +1763,7 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 		// IM-2014-07-02: [[ GraphicsPerformance ]] Clip context to only the tiles we need.
 		MCGContextClipToRegion(t_context, t_tile_region);
 	}
-
+	
 	// Now we use the original render list in reverse to determine what layers
 	// to render, siphoning off tiles as we reach them in the sorted render
 	// list.
@@ -1849,6 +1849,9 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 
 	// Get rid of the active tiles array
 	MCMemoryDeleteArray(t_active_tiles);
+
+	// Get rid of the tile region
+	MCGRegionDestroy(t_tile_region);
 
 	// Finally, update the tile cache list.
 	if (self -> valid)
