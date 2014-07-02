@@ -1229,7 +1229,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 
 //////////
 
-- shouldDelayWindowOrderingForEvent: (NSEvent *)event
+- (BOOL)shouldDelayWindowOrderingForEvent: (NSEvent *)event
 {
 	return NO;
 }

@@ -354,7 +354,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCStringRef s_popup_menupick = nil;
-static uindex_t s_popup_menuitem = 0;
+static int2 s_popup_menuitem = 0;
 
 void MCButton::macopenmenu(void)
 {
@@ -411,7 +411,7 @@ void MCButton::macopenmenu(void)
 				Exec_stat es = message_with_valueref_args(MCM_menu_pick, s_popup_menupick);
 				
 				MCValueRelease(s_popup_menupick);
-                s_popup_menuitem = NULL;
+                s_popup_menupick = nil;
 				
 				if (es == ES_NOT_HANDLED || es == ES_PASS)
 					message_with_args(MCM_mouse_up, menubutton);
@@ -431,7 +431,7 @@ void MCButton::macopenmenu(void)
 				Exec_stat es = message_with_valueref_args(MCM_menu_pick, s_popup_menupick);
 				
 				MCValueRelease(s_popup_menupick);
-                s_popup_menuitem = NULL;
+                s_popup_menupick = NULL;
 				
 				if (es == ES_NOT_HANDLED || es == ES_PASS)
 					message_with_args(MCM_mouse_up, menubutton);

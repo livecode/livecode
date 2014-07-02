@@ -676,7 +676,7 @@ void X_clear_globals(void)
 	MCscriptfont = MCValueRetain(kMCEmptyString);
 	MCscriptsize = 0;
 	MCscrollbarwidth = DEFAULT_SB_WIDTH;
-	uint2 MCfocuswidth = 2;
+	MCfocuswidth = 2;
 	MCsizewidth = 8;
 	MCminsize = 8;
 	MCcloneoffset = 32;

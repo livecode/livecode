@@ -3787,7 +3787,7 @@ void MCSelect::compile(MCSyntaxFactoryRef ctxt)
 		uindex_t t_count;
 		t_count = 0;
 
-		for (MCChunk *chunkptr = targets; chunkptr != nil; chunkptr -> next)
+		for (MCChunk *chunkptr = targets; chunkptr != nil; chunkptr = chunkptr -> next)
 		{
 			chunkptr -> compile_object_ptr(ctxt);
 			t_count++;

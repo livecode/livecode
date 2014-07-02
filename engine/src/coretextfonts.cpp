@@ -217,19 +217,23 @@ void *coretext_font_create_with_name_size_and_style(MCStringRef p_name, uint32_t
 	return (void *)t_font;
 }
 
-void coretext_font_destroy(void *p_font)
+bool coretext_font_destroy(void *p_font)
 {
     if (p_font != NULL)
         CFRelease((CTFontRef) p_font);
+    
+    return true;
 }
 
-void coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent)
+bool coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent)
 {
 	r_ascent = CTFontGetAscent((CTFontRef) p_font);
 	r_descent = CTFontGetDescent((CTFontRef) p_font);
+    
+    return true;
 }
 
-void coretext_get_font_names(MCListRef &r_names)
+bool coretext_get_font_names(MCListRef &r_names)
 {
     CTFontCollectionRef t_fonts;
     t_fonts = CTFontCollectionCreateFromAvailableFonts(NULL);
@@ -241,8 +245,10 @@ void coretext_get_font_names(MCListRef &r_names)
     MCListCreateMutable('\n', &t_names);
     
     char t_cstring_font_name[256];
+    bool t_success;
+    t_success = true;
     
-    for(CFIndex i = 0; i < CFArrayGetCount(t_descriptors); i++)
+    for(CFIndex i = 0; t_success && i < CFArrayGetCount(t_descriptors); i++)
     {
         CTFontDescriptorRef t_font;
 		t_font = (CTFontDescriptorRef)CFArrayGetValueAtIndex(t_descriptors, i);
@@ -252,7 +258,7 @@ void coretext_get_font_names(MCListRef &r_names)
         
 		if (t_font_name != NULL && CFStringGetCString(t_font_name, t_cstring_font_name, 256, kCFStringEncodingMacRoman) &&
                 t_cstring_font_name[0] != '%' && t_cstring_font_name[0] != '.')
-			/* UNCHECKED */ MCListAppendCString(*t_names, t_cstring_font_name);
+			t_success = MCListAppendCString(*t_names, t_cstring_font_name);
         
         if (t_font_name != NULL)
             CFRelease(t_font_name);
@@ -263,38 +269,46 @@ void coretext_get_font_names(MCListRef &r_names)
     if (t_fonts != NULL)
         CFRelease(t_fonts);
     
-    /* UNCHECKED */ MCListCopy(*t_names, r_names);
+    if (t_success)
+        t_success = MCListCopy(*t_names, r_names);
+    return t_success;
 }
 
-void core_text_get_font_styles(MCStringRef p_name, uint32_t p_size, MCListRef &r_styles)
+bool core_text_get_font_styles(MCStringRef p_name, uint32_t p_size, MCListRef &r_styles)
 {    
     CTFontRef t_font_family;
     t_font_family = (CTFontRef)coretext_font_create_with_name_and_size(p_name, p_size);
     
     MCAutoListRef t_styles;
     /* UNCHECKED */ MCListCreateMutable('\n', &t_styles);
+    
+    bool t_success;
+    t_success = true;
 	
 	if (t_font_family != NULL)
 	{
 		CTFontSymbolicTraits t_traits;
 		t_traits = CTFontGetSymbolicTraits(t_font_family);
 		
-		/* UNCHECKED */ MCListAppendCString(*t_styles, "plain");
+		t_success = MCListAppendCString(*t_styles, "plain");
         
-		if (t_traits & kCTFontBoldTrait)
-			/* UNCHECKED */ MCListAppendCString(*t_styles, "bold");
+		if (t_success && t_traits & kCTFontBoldTrait)
+			t_success = MCListAppendCString(*t_styles, "bold");
 		
-		if (t_traits & kCTFontItalicTrait)
-			/* UNCHECKED */ MCListAppendCString(*t_styles, "italic");
+		if (t_success && t_traits & kCTFontItalicTrait)
+			t_success = MCListAppendCString(*t_styles, "italic");
         
-		if (t_traits & kCTFontBoldTrait && t_traits & kCTFontItalicTrait)
-			/* UNCHECKED */ MCListAppendCString(*t_styles, "bold-italic");
+		if (t_success && t_traits & kCTFontBoldTrait && t_traits & kCTFontItalicTrait)
+			t_success = MCListAppendCString(*t_styles, "bold-italic");
 	}
 	
     if (t_font_family != NULL)
         CFRelease(t_font_family);
     
-    /* UNCHECKED */ MCListCopy(*t_styles, r_styles);
+    if (t_success)
+        t_success = MCListCopy(*t_styles, r_styles);
+    
+    return t_success;
 }
 
 bool coretext_font_load_from_path(MCStringRef p_path, bool p_globally)

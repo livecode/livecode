@@ -392,8 +392,8 @@ bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern void coretext_get_font_names(MCListRef &r_names);
-extern void core_text_get_font_styles(MCStringRef p_name, uint32_t p_size, MCListRef &r_styles);
+extern bool coretext_get_font_names(MCListRef &r_names);
+extern bool core_text_get_font_styles(MCStringRef p_name, uint32_t p_size, MCListRef &r_styles);
 
 void MCSystemListFontFamilies(MCListRef &r_names)
 {

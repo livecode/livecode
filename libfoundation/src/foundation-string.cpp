@@ -5011,10 +5011,7 @@ static bool __MCStringCopyMutable(__MCString *self, __MCString*& r_new_string)
     if (self -> char_count == 0)
     {
         t_string = MCValueRetain(kMCEmptyString);
-        if (MCStringIsNative(self))
-            MCMemoryDeleteArray(self -> native_chars);
-        else
-            MCMemoryDeleteArray(self -> chars);
+        MCMemoryDeleteArray(self -> native_chars);
     }
     else
     {

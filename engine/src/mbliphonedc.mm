@@ -813,8 +813,8 @@ Window MCScreenDC::get_current_window(void)
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void *coretext_font_create_with_name_size_and_style(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic);
-extern void coretext_font_destroy(void *p_font);
-extern void coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent);
+extern bool coretext_font_destroy(void *p_font);
+extern bool coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent);
 
 struct do_iphone_font_create_env
 {

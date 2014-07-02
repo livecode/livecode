@@ -35,10 +35,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxflst.h"
 
 extern void *coretext_font_create_with_name_size_and_style(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic);
-extern void coretext_font_destroy(void *p_font);
-extern void coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent);
-extern void coretext_get_font_names(MCListRef &r_names);
-extern void core_text_get_font_styles(MCStringRef p_name, uint32_t p_size, MCListRef &r_styles);
+extern bool coretext_font_destroy(void *p_font);
+extern bool coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent);
+extern bool coretext_get_font_names(MCListRef &r_names);
+extern bool core_text_get_font_styles(MCStringRef p_name, uint32_t p_size, MCListRef &r_styles);
 
 #define MAX_XFONT2MACFONT    11
 
@@ -158,7 +158,7 @@ MCFontStruct *MCFontlist::getfont(MCNameRef fname, uint2 &size, uint2 style, Boo
 bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 { 
     // MM-2014-06-02: [[ CoreText ]] Updated to use core text routines.
-    coretext_get_font_names(r_names);
+    return coretext_get_font_names(r_names);
 }
 
 bool MCFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)

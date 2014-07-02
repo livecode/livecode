@@ -2812,7 +2812,7 @@ void MCButton::resetfontindex(MCStack *oldstack)
 		bdata = tptr;
 		while (bptr != NULL)
 		{
-			MCCdata *tptr = (MCCdata *)bptr->remove(bptr);
+			tptr = (MCCdata *)bptr->remove(bptr);
 			delete tptr;
 		}
 	}
@@ -3588,9 +3588,9 @@ void MCButton::openmenu(Boolean grab)
 		return;
 	}
 #endif
-	MCStack *sptr = menumode == WM_CASCADE ? getstack() : MCmousestackptr;
+	MCStack *cascade_sptr = menumode == WM_CASCADE ? getstack() : MCmousestackptr;
 	if (flags & F_TRAVERSAL_ON && !(state & CS_KFOCUSED)
-	        && sptr->getmode() < WM_PULLDOWN)
+	        && cascade_sptr->getmode() < WM_PULLDOWN)
 	{
 		MCmousestackptr->kfocusset(this);
 		if (menu == NULL && !findmenu())

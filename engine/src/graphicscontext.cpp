@@ -42,9 +42,9 @@ static inline MCGBlendMode MCBitmapEffectBlendModeToMCGBlendMode(MCBitmapEffectB
 		case kMCBitmapEffectBlendModeColorDodge:
 			return kMCGBlendModeColorDodge;
 		case kMCBitmapEffectBlendModeColorBurn:
-			kMCGBlendModeColorBurn;
+			return kMCGBlendModeColorBurn;
 		case kMCBitmapEffectBlendModeHardLight:
-			kMCGBlendModeHardLight;
+			return kMCGBlendModeHardLight;
 		case kMCBitmapEffectBlendModeSoftLight:
 			return kMCGBlendModeSoftLight;
 		case kMCBitmapEffectBlendModeDifference:

@@ -2293,7 +2293,7 @@ void MCField::undo(Ustruct *us)
 		ei = si;
 		if (us->type == UT_DELETE_TEXT)
 		{
-			MCParagraph *pgptr = indextoparagraph(paragraphs, si, ei);
+			pgptr = indextoparagraph(paragraphs, si, ei);
 			pgptr->setselectionindex(si, si, False, False);
 			focusedparagraph = pgptr;
 			if (us->ud.text.data != NULL)
@@ -2321,7 +2321,7 @@ void MCField::undo(Ustruct *us)
 		}
 		else
 		{
-			MCParagraph *pgptr = us->ud.text.data;
+			pgptr = us->ud.text.data;
 			do
 			{
 				ei += pgptr->gettextlengthcr();
@@ -2510,7 +2510,7 @@ void MCField::resetfontindex(MCStack *oldstack)
 		fdata = tptr;
 		while (fptr != NULL)
 		{
-			MCCdata *tptr = fptr->remove(fptr);
+			tptr = fptr->remove(fptr);
 			delete tptr;
 		}
 	}
@@ -3122,8 +3122,7 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 	frect = getfrect();
 	if (flags & F_SHADOW)
 	{
-		MCRectangle trect = rect;
-		drawshadow(dc, trect, shadowoffset);
+		drawshadow(dc, rect, shadowoffset);
 	}
 
 	if (state & CS_KFOCUSED && borderwidth != 0

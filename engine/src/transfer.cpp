@@ -263,7 +263,7 @@ MCParagraph *MCTransferData::FetchParagraphs(MCField *p_field)
 	t_paragraphs = NULL;
 
 	if (!Lock())
-		return false;
+		return NULL;
 
 	if (Contains(TRANSFER_TYPE_STYLED_TEXT, false))
 	{

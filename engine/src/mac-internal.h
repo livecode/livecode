@@ -252,7 +252,7 @@ class MCMacPlatformSurface;
 
 //////////
 
-- shouldDelayWindowOrderingForEvent: (NSEvent *)event;
+- (BOOL)shouldDelayWindowOrderingForEvent: (NSEvent *)event;
 - (NSDragOperation)draggingSourceOperationMaskForLocal: (BOOL)isLocal;
 - (BOOL)ignoreModifierKeysWhileDragging;
 - (void)draggedImage:(NSImage *)image beganAt:(NSPoint)point;

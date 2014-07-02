@@ -896,7 +896,7 @@ template<typename T> void SetCharPropOfCharChunkOfParagraph(MCExecContext& ctxt,
     if (t_blocks_changed)
         p_paragraph -> setDirty();
 
-    if (T::need_layout || t_blocks_changed)
+    if (T::need_layout() || t_blocks_changed)
         p_paragraph -> layoutchanged();
 }
 
@@ -1019,7 +1019,7 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                        && t_block_index + t_block_length < t_ei);
 
                 // avoid relayout for certain block attributes
-                t_need_layout = T::need_layout;
+                t_need_layout = T::need_layout();
                 
                 // MP-2013-09-02: [[ FasterField ]] If attributes on existing blocks needing layout changed,
                 //   or the blocks themselves changed, we need layout.
@@ -1190,7 +1190,7 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
                        && t_block_index + t_block_length < t_ei);
                 
                 // avoid relayout for certain block attributes
-                t_need_layout = T::need_layout;
+                t_need_layout = T::need_layout();
                 
                 // MP-2013-09-02: [[ FasterField ]] If attributes on existing blocks needing layout changed,
                 //   or the blocks themselves changed, we need layout.

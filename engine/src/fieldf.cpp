@@ -450,21 +450,21 @@ void MCField::gettabaligns(intenum_t *&a, uint16_t &n)
 
 void MCField::getlisttabs(int32_t& r_first, int32_t& r_second)
 {
-	uint2 *tabs;
-	uint2 ntabs;
+	uint2 *t_tabs;
+	uint2 t_ntabs;
 	Boolean fixed;
-	gettabs(tabs, ntabs, fixed);
+	gettabs(t_tabs, t_ntabs, fixed);
 	
 	int32_t t_first_tab, t_second_tab;
-	if (ntabs == 1)
+	if (t_ntabs == 1)
 	{
-		t_first_tab = tabs[0];
-		t_second_tab = tabs[0] * 2;
+		t_first_tab = t_tabs[0];
+		t_second_tab = t_tabs[0] * 2;
 	}
 	else
 	{
-		t_first_tab = tabs[0];
-		t_second_tab = tabs[1];
+		t_first_tab = t_tabs[0];
+		t_second_tab = t_tabs[1];
 	}
 	
 	r_first = t_first_tab;
@@ -1079,22 +1079,22 @@ void MCField::drawrect(MCDC *dc, const MCRectangle &dirty)
 			t_delta = getcontentx() - 1;
 			
 			uint2 ct = 0;
-			int4 x;
-			x = t_delta + t[0];
+			int4 t_x;
+			t_x = t_delta + t[0];
             
-			while (x <= grect.x + grect.width)
+			while (t_x <= grect.x + grect.width)
 			{
 				// MW-2012-05-03: [[ Bug 10200 ]] If set at the field level, the vGrid should start
 				//   just inside the border for backwards compatibility.
-				if (x >= grect.x)
-					dc->drawline(x, grect.y, x, grect.y + grect.height);
+				if (t_x >= grect.x)
+					dc->drawline(t_x, grect.y, t_x, grect.y + grect.height);
 
 				if (ct < nt - 1)
-					x = t_delta + t[++ct];
+					t_x = t_delta + t[++ct];
 				else if (nt == 1)
-					x += t[0];
+					t_x += t[0];
 				else
-					x += t[nt - 1] - t[nt - 2];
+					t_x += t[nt - 1] - t[nt - 2];
 				
 				// MW-2012-03-19: [[ FixedTable ]] If we have reached the final tab in fixed
 				//   table mode, we are done.

@@ -551,7 +551,6 @@ Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean formatted)
 			if (formatted)
                 while (t_pos < t_text_length)
 				{
-                    uindex_t t_pos;
                     if (MCStringFirstIndexOfChar(p_text, '\n', t_pos, kMCStringOptionCompareExact, t_pos))
                     {
                         if (MCStringGetCharAtIndex(p_text, t_pos + 1) == '\n')
