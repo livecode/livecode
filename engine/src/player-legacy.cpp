@@ -3909,13 +3909,19 @@ void MCPlayer::qt_draw(MCDC *dc, const MCRectangle& dirty)
 
 	if (isbuffering())
 	{
+		MCGImageRef t_g_img;
+		t_g_img = nil;
+		/* UNCHECKED */ MCGImageCreateWithRasterNoCopy(MCImageBitmapGetMCGRaster(&m_offscreen->image_bitmap, false), t_g_img);
+
 		MCImageDescriptor t_image;
 		MCMemoryClear(&t_image, sizeof(t_image));
         // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 		t_image.filter = kMCGImageFilterNone;
-		t_image.bitmap = &m_offscreen->image_bitmap;
+		t_image.image = t_g_img;
 
 		dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
+
+		MCGImageRelease(t_g_img);
 	}
 	else
 	{

@@ -1050,6 +1050,7 @@ void MCQTEffectEnd(void)
 
 #else
 
+#ifndef PLAYER_LEGACY_H
 bool MCQTInit(void)
 {
     return false;
@@ -1059,11 +1060,13 @@ void MCQTGetVersion(MCExecPoint& ep)
 {
     ep . clear();
 }
+#endif
 
 void MCQTEffectsList(MCExecPoint& ep)
 {
 	ep . clear();
 }
+
 
 Boolean MCQTEffectsDialog(MCExecPoint& ep, const char *p_title, Boolean p_sheet)
 {

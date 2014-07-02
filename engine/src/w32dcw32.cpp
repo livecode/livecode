@@ -955,7 +955,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				if (sptr != NULL)
 				{
 					if (lastdown != 0)
-						sptr->mup(lastdown);
+						sptr->mup(lastdown, false);
 					buffer[0] = 0x1B; // escape
 					buffer[1] = '\0';
 					Boolean oldlock = MClockmessages;
