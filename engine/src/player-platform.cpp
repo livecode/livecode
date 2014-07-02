@@ -402,7 +402,7 @@ public:
         return True;
     }
     
-    Boolean mup(uint2 which)
+    Boolean mup(uint2 which, bool release)
     {
         m_grabbed_part = kMCPlayerControllerPartUnknown;
         return True;
@@ -1582,9 +1582,15 @@ Boolean MCPlayer::prepare(const char *options)
 {
 	Boolean ok = False;
     
-	if (state & CS_PREPARED || filename == NULL)
+	if (state & CS_PREPARED)
 		return True;
-	
+    
+	if (filename == NULL)
+    {
+        if (m_platform_player != nil)
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &filename);
+        return True;
+    }
 	if (!opened)
 		return False;
     

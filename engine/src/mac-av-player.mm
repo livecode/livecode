@@ -388,7 +388,6 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
                                 CVOptionFlags *flagsOut,
                                 void *displayLinkContext)
 {
-//#if 0
     MCAVFoundationPlayer *t_self = (MCAVFoundationPlayer *)displayLinkContext;
     
     CMTime t_output_item_time = [t_self -> m_player_item_video_output itemTimeForCVTimeStamp:*inOutputTime];
@@ -444,6 +443,11 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 {
 	MCAVFoundationPlayer *t_player;
 	t_player = (MCAVFoundationPlayer *)ctxt;
+    
+    // Player should stop playing when switching from run to edit mode
+    if (t_player -> IsPlaying())
+        t_player -> Stop();
+    
 	t_player -> m_switch_scheduled = false;
     
 	if (t_player -> m_pending_offscreen == t_player -> m_offscreen)
@@ -568,6 +572,15 @@ Boolean MCAVFoundationPlayer::MovieActionFilter(MovieController mc, short action
 
 void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
 {
+    // Ensure that removing the video source from the property inspector results immediately in empty player with the controller thumb in the beginning  
+    if (p_filename_or_url == nil)
+    {
+        m_player_item_video_output = nil;
+        uint4 t_zero_time = 0;
+        SetProperty(kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_zero_time);
+        return;
+    }
+    
     id t_url;
     if (!p_is_url)
         t_url = [NSURL fileURLWithPath: [NSString stringWithCString: p_filename_or_url encoding: NSMacOSRomanStringEncoding]];
@@ -594,7 +607,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     }
     
     CVDisplayLinkSetOutputCallback(m_display_link, MCAVFoundationPlayer::MyDisplayLinkCallback, this);
-    CVDisplayLinkStop(m_display_link);
+    //CVDisplayLinkStop(m_display_link);
 
     NSDictionary* t_settings = @{ (id)kCVPixelBufferPixelFormatTypeKey : [NSNumber numberWithInt:kCVPixelFormatType_32ARGB] };
     // AVPlayerItemVideoOutput is available in OSX version >= 10.8
@@ -693,6 +706,15 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
     memset(t_bitmap -> data, 0,t_bitmap -> stride * t_bitmap -> height);
 	t_bitmap -> has_alpha = t_bitmap -> has_transparency = true;
     
+    
+    // If we remove the video source from the property inspector
+    if (m_player_item_video_output == nil)
+    {
+        r_bitmap = t_bitmap;
+        return;
+    }
+    
+    
 	// Now if we have a current frame, then composite at the appropriate size into
 	// the movie portion of the buffer.
 	if (m_current_frame != nil)
@@ -759,7 +781,8 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyCurrentTime:
-            [[m_player currentItem] seekToTime:CMTimeMake(*(uint32_t *)p_value, 1000)];
+            // Add toleranceBefore/toleranceAfter for accurate scrubbing
+            [[m_player currentItem] seekToTime:CMTimeMake(*(uint32_t *)p_value, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
 			break;
 		case kMCPlatformPlayerPropertyStartTime:
 		{
