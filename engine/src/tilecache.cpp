@@ -1692,6 +1692,14 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 		stdc_qsort(t_render_list, t_render_list_length, sizeof(uint16_t), MCTileCacheSortRenderListByIncreasingTo, self);
 	}
 
+	// IM-2014-07-02: [[ GraphicsPerformance ]] MCGRegion used to collect required tile rects.
+	MCGRegionRef t_tile_region;
+	t_tile_region = nil;
+	
+	if (self->valid)
+		if (!MCGRegionCreate(t_tile_region))
+			MCTileCacheInvalidate(self);
+	
 	// Work out the bounds of the update.
 	MCTileCacheRectangle t_required_tiles;
 	t_required_tiles . left = t_required_tiles . top = INT32_MAX;
@@ -1702,6 +1710,9 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 		MCTileCacheTile *t_tile;
 		t_tile = &self -> tiles[t_render_list[i]];
 
+		// IM-2014-07-02: [[ GraphicsPerformance ]] Add tile rect to redraw region
+		MCGRegionAddRect(t_tile_region, MCGIntegerRectangleMake(t_tile -> x * self -> tile_size, t_tile -> y * self -> tile_size, self -> tile_size, self -> tile_size));
+		
 		// Extend the required tiles rect.
 		if (t_tile -> x < t_required_tiles . left)
 			t_required_tiles . left = t_tile -> x;
@@ -1720,11 +1731,8 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 
 	// Compute the rect of the tiles
 	MCRectangle32 t_required_rect;
-	MCRectangle32Set(t_required_rect,
-					t_required_tiles . left * self -> tile_size,
-					t_required_tiles . top * self -> tile_size,
-					t_required_width * self -> tile_size,
-					t_required_height * self -> tile_size);
+	// IM-2014-07-02: [[ GraphicsPerformance ]] Required rect is the bounds of all required tile rects
+	t_required_rect = MCRectangle32FromMCGIntegerRectangle(MCGRegionGetBounds(t_tile_region));
 
 	// While rendering, we need to keep track of the 'active' tiles so we know
 	// when to erase.
@@ -1750,7 +1758,11 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 
 	// Configure the context.
 	if (self -> valid)
-	MCGContextTranslateCTM(t_context, -t_required_rect . x, -t_required_rect . y);
+	{
+		MCGContextTranslateCTM(t_context, -t_required_rect.x, -t_required_rect.y);
+		// IM-2014-07-02: [[ GraphicsPerformance ]] Clip context to only the tiles we need.
+		MCGContextClipToRegion(t_context, t_tile_region);
+	}
 
 	// Now we use the original render list in reverse to determine what layers
 	// to render, siphoning off tiles as we reach them in the sorted render

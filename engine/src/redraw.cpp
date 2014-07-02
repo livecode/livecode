@@ -998,24 +998,9 @@ static bool testtilecache_scenery_renderer(void *p_context, MCContext *p_target,
 	MCControl *t_control;
 	t_control = (MCControl *)p_context;
 
-	// Don't render anything if the control is invisible.
-	if (!t_control -> getflag(F_VISIBLE) && !MCshowinvisibles)
-		return true;
-	
-	MCRectangle t_control_rect;
-	t_control_rect = t_control -> geteffectiverect();
-
-	MCRectangle t_dirty_rect;
-	t_dirty_rect = MCU_intersect_rect(t_control_rect, p_rectangle);
-	
-	if (MCU_empty_rect(t_dirty_rect))
-		return true;
-
-	p_target -> setclip(t_dirty_rect);
-	p_target -> setfunction(GXcopy);
-	p_target -> setopacity(255);
-
-	t_control -> draw(p_target, t_dirty_rect, false, false);
+	// IM-2014-07-02: [[ GraphicsPerformance ]] Use the redraw() method instead of 
+	// reproducing the visibility tests and context clipping here.
+	t_control->redraw(p_target, p_rectangle);
 
 	return true;
 }
@@ -1030,7 +1015,8 @@ bool MCCard::tilecache_render_foreground(void *p_context, MCContext *p_target, c
 	MCCard *t_card;
 	t_card = (MCCard *)p_context;
 
-	p_target -> setclip(p_dirty);
+	// IM-2014-07-02: [[ GraphicsPerformance ]] Remove unnecessary setclip call - p_dirty is already the bounds of the clip.
+	
 	p_target -> setfunction(GXcopy);
 	p_target -> setopacity(255);
 
@@ -1055,7 +1041,8 @@ bool MCCard::tilecache_render_background(void *p_context, MCContext *p_target, c
 	MCRectangle t_visible_rect;
 	t_visible_rect = t_card->getstack()->getvisiblerect();
 	
-	p_target -> setclip(MCU_intersect_rect(t_visible_rect, p_dirty));
+	// IM-2014-07-02: [[ GraphicsPerformance ]] Use cliprect() to reduce the clipping region.
+	p_target -> cliprect(t_visible_rect);
 	p_target -> setfunction(GXcopy);
 	p_target -> setopacity(255);
 
