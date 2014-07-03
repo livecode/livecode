@@ -140,6 +140,7 @@ private:
     bool m_playing : 1;
     bool m_synchronizing : 1;
     bool m_frame_changed_pending : 1;
+    bool m_finished : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -248,6 +249,7 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     
     m_synchronizing = false;
     m_frame_changed_pending = false;
+    m_finished = false;
 }
 
 MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
@@ -281,14 +283,17 @@ void MCAVFoundationPlayer::SelectionFinished(void)
 {
     if (m_play_selection_only && CMTimeCompare(m_observed_time, CMTimeMake(m_selection_finish, 1000)) >= 0)
     {
-        [m_player pause];
-        //[m_player seekToTime:CMTimeMake(m_selection_start, 1000)];
+        if (m_player.rate != 0.0)
+        {
+            [m_player setRate:0.0];
+            [m_player seekToTime:CMTimeMake(m_selection_finish, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+        }
     }
 }
 
 void MCAVFoundationPlayer::MovieFinished(void)
 {
-    [[m_player currentItem] seekToTime:kCMTimeZero];
+    m_finished = true;
     if (!m_looping)
     {
         m_playing = false;
@@ -296,8 +301,10 @@ void MCAVFoundationPlayer::MovieFinished(void)
     }
     else
     {
+        [[m_player currentItem] seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         [m_player play];
         m_playing = true;
+        m_finished = false;
         MCPlatformCallbackSendPlayerStarted(this);
     }
 }
@@ -417,6 +424,7 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
 
 void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
 {
+
     MCAVFoundationPlayer *t_player;
 	t_player = (MCAVFoundationPlayer *)ctxt;
     
@@ -436,6 +444,7 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
     }
     
 	MCPlatformCallbackSendPlayerFrameChanged(t_player);
+    
 }
 
 
@@ -634,13 +643,18 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(movieFinished:) name: AVPlayerItemDidPlayToEndTimeNotification object: [m_player currentItem]];
     
-    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: AVPlayerItemTimeJumpedNotification object: [m_player currentItem]];
+    //[[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: AVPlayerItemTimeJumpedNotification object: [m_player currentItem]];
     
     m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 1000) queue:nil usingBlock:^(CMTime time) {
     
         m_observed_time = time;
-        SelectionFinished();
-        CurrentTimeChanged();
+
+        // This fixes the issue of pause not being instant
+        if (IsPlaying())
+        {
+            SelectionFinished();
+            CurrentTimeChanged();
+        }
         
         }];
     
@@ -674,11 +688,17 @@ bool MCAVFoundationPlayer::IsPlaying(void)
 
 void MCAVFoundationPlayer::Start(double rate)
 {
-    //[m_player play];
     // put the thumb in the beginning of the selected area, if it is outside
     if (m_play_selection_only && (CMTimeCompare(m_player . currentTime, CMTimeMake(m_selection_finish, 1000)) >= 0 || CMTimeCompare(m_player . currentTime, CMTimeMake(m_selection_start, 1000)) <= 0))
     {
-        [m_player seekToTime:CMTimeMake(m_selection_start, 1000)];
+        [m_player seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+    }
+    
+    if (m_finished)
+    {
+        [m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+        m_playing = true;
+        m_finished = false;
     }
     [m_player setRate:rate];
 }
@@ -686,6 +706,7 @@ void MCAVFoundationPlayer::Start(double rate)
 void MCAVFoundationPlayer::Stop(void)
 {
 	[m_player pause];
+    MCPlatformCallbackSendPlayerPaused(this);
 }
 
 void MCAVFoundationPlayer::Step(int amount)

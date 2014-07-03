@@ -1414,10 +1414,8 @@ void MCPlayer::syncbuffering(MCContext *p_dc)
 //   currently in use.
 void MCPlayer::getversion(MCExecPoint &ep)
 {
-#if 0
     extern void MCQTGetVersion(MCExecPoint& ep);
     MCQTGetVersion(ep);
-#endif
 }
 
 void MCPlayer::freetmp()
@@ -2313,6 +2311,7 @@ void MCPlayer::drawControllerWellButton(MCGContextRef p_gcontext)
     // Adjust to look prettier. The same settings for y and height should apply to kMCPlayerControllerPartSelectedArea and kMCPlayerControllerPartPlayedArea
     t_drawn_well_rect . y = t_drawn_well_rect . y + 2 * CONTROLLER_HEIGHT / 5;
     t_drawn_well_rect . height = CONTROLLER_HEIGHT / 5;
+    t_drawn_well_rect . width -= 4;
     
     MCGBitmapEffects t_effects;
 	t_effects . has_drop_shadow = false;
@@ -2684,6 +2683,9 @@ MCRectangle MCPlayer::getcontrollerpartrect(const MCRectangle& p_rect, int p_par
             MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_current_time);
             MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
             
+            if (t_current_time >= t_duration)
+                t_current_time = t_duration;
+            
             MCRectangle t_well_rect;
             t_well_rect = getcontrollerpartrect(p_rect, kMCPlayerControllerPartWell);
             
@@ -2902,6 +2904,7 @@ void MCPlayer::handle_mdown(int p_which)
             else
                 playstart(nil);
             layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartPlay));
+    
             
             break;
         case kMCPlayerControllerPartVolume:
