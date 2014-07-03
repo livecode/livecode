@@ -167,6 +167,18 @@ bool MCGRegionIntersectRegion(MCGRegionRef p_region, MCGRegionRef p_other)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCGRegionTranslate(MCGRegionRef p_region, int32_t p_dx, int32_t p_dy)
+{
+	if (p_region == nil)
+		return false;
+	
+	p_region->region.translate(p_dx, p_dy);
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCGRegionIterate(MCGRegionRef p_region, MCGRegionIterateCallback p_callback, void *p_context)
 {
 	if (p_region == nil)

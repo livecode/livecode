@@ -978,8 +978,9 @@ static bool testtilecache_sprite_renderer(void *p_context, MCContext *p_target, 
 	if (MCU_empty_rect(t_dirty_rect))
 		return true;
 	
-	p_target -> setorigin(t_control_rect . x + p_rectangle . x, t_control_rect . y + p_rectangle . y);
-	p_target -> setclip(t_dirty_rect);
+	// IM-2014-07-03: [[ GraphicsPerformance ]] Context origin is the topleft of the sprite so adjust to card coords.
+	p_target -> setorigin(t_control_rect . x, t_control_rect . y);
+	p_target -> cliprect(t_dirty_rect);
 	p_target -> setfunction(GXcopy);
 	p_target -> setopacity(255);
 
