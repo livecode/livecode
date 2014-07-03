@@ -13,6 +13,7 @@
 			buildPhases = (
 			);
 			dependencies = (
+				7249F9F7196571C300D4D0DC /* PBXTargetDependency */,
 				E8DAE479171428B100B96A87 /* PBXTargetDependency */,
 				E8DAE47B171428B100B96A87 /* PBXTargetDependency */,
 				E8DAE47D171428B100B96A87 /* PBXTargetDependency */,
@@ -232,6 +233,20 @@
 			proxyType = 2;
 			remoteGlobalIDString = 4D9BF4FE171447CB00B32D29;
 			remoteInfo = "server-dbodbc";
+		};
+		7249F9F6196571C300D4D0DC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DB846B3192B53E800771914;
+			remoteInfo = "Server-Community";
+		};
+		7249F9FF196571C400D4D0DC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DB846B4192B53E800771914;
+			remoteInfo = "Server-Community";
 		};
 		E8D3735D18CDDA40005C1182 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -503,6 +518,7 @@
 				E8DAE3EB1714271D00B96A87 /* LiveCode-Community.app */,
 				E8DAE3ED1714271D00B96A87 /* Standalone-Community.app */,
 				E8DAE3EF1714271D00B96A87 /* Installer.app */,
+				7249FA00196571C400D4D0DC /* Server-Community */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -769,6 +785,13 @@
 			remoteRef = 4D9BF505171447E900B32D29 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		7249FA00196571C400D4D0DC /* Server-Community */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "Server-Community";
+			remoteRef = 7249F9FF196571C400D4D0DC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		E8D3735E18CDDA40005C1182 /* revbrowser-cefprocess.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
@@ -943,6 +966,11 @@
 			isa = PBXTargetDependency;
 			name = "server-revxml";
 			targetProxy = 4D9BF4BF1714474E00B32D29 /* PBXContainerItemProxy */;
+		};
+		7249F9F7196571C300D4D0DC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "Server-Community";
+			targetProxy = 7249F9F6196571C300D4D0DC /* PBXContainerItemProxy */;
 		};
 		E8DAE479171428B100B96A87 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
