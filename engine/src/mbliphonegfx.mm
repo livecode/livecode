@@ -240,6 +240,70 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+CGRect MCGIntegerRectangleToCGRect(const MCGIntegerRectangle &p_rect)
+{
+	return CGRectMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+}
+
+CGRect MCMacFlipCGRect(const CGRect &p_rect, uint32_t p_surface_height)
+{
+	return CGRectMake(p_rect.origin.x, p_surface_height - (p_rect.origin.y + p_rect.size.height), p_rect.size.width, p_rect.size.height);
+}
+
+struct MCGRegionConvertToCGRectsState
+{
+	CGRect *rects;
+	uint32_t count;
+};
+
+static bool MCGRegionConvertToCGRectsCallback(void *p_state, const MCGIntegerRectangle &p_rect)
+{
+	MCGRegionConvertToCGRectsState *state;
+	state = static_cast<MCGRegionConvertToCGRectsState*>(p_state);
+	
+	if (!MCMemoryResizeArray(state -> count + 1, state -> rects, state -> count))
+		return false;
+	
+	state -> rects[state -> count - 1] = MCGIntegerRectangleToCGRect(p_rect);
+	
+	return true;
+}
+
+bool MCGRegionConvertToCGRects(MCGRegionRef self, CGRect *&r_cgrects, uint32_t& r_cgrect_count)
+{
+	MCGRegionConvertToCGRectsState t_state;
+	t_state . rects = nil;
+	t_state . count = 0;
+	
+	if (!MCGRegionIterate(self, MCGRegionConvertToCGRectsCallback, &t_state))
+	{
+		MCMemoryDeleteArray(t_state . rects);
+		return false;
+	}
+	
+	r_cgrects = t_state . rects;
+	r_cgrect_count = t_state . count;
+	
+	return true;
+}
+
+static void MCMacClipCGContextToRegion(CGContextRef p_context, MCGRegionRef p_region, uint32_t p_surface_height)
+{
+	CGRect *t_rects;
+	t_rects = nil;
+	
+	uint32_t t_count;
+	
+	if (!MCGRegionConvertToCGRects(p_region, t_rects, t_count))
+		return;
+	
+	for (uint32_t i = 0; i < t_count; i++)
+		t_rects[i] = MCMacFlipCGRect(t_rects[i], p_surface_height);
+	
+	CGContextClipToRects(p_context, t_rects, t_count);
+	MCMemoryDeleteArray(t_rects);
+}
+
 class MCUIKitStackSurface: public MCIPhoneStackSurface
 {
 	CGContextRef m_context;
@@ -296,6 +360,9 @@ protected:
 		if (!LockTarget(kMCStackSurfaceTargetCoreGraphics, t_target))
 			return;
 		
+		CGContextRef t_context;
+		t_context = (CGContextRef)t_target;
+		
 		// IM-2013-07-18: [[ RefactorGraphics ]] remove previous image flip transformation as now entire
 		// CGContext will be flipped. Instead, we draw the image at an offset from the bottom
 		
@@ -312,9 +379,12 @@ protected:
 		t_raster.stride = p_stride;
 		t_raster.format = kMCGRasterFormat_xRGB;
 		
+		// IM-2014-07-01: [[ GraphicsPerformance ]] Clip the output context to only those areas we've had to redraw
+		MCMacClipCGContextToRegion(t_context, m_region, m_height);
+		
 		if (MCGRasterToCGImage(t_raster, MCGRectangleMake(0, 0, m_locked_area.size.width, m_locked_area.size.height), t_colorspace, false, false, t_image))
 		{
-			CGContextDrawImage((CGContextRef)t_target, CGRectMake((float)m_locked_area.origin.x, (float)(m_height - (m_locked_area.origin.y + m_locked_area.size.height)), (float)m_locked_area.size.width, (float)m_locked_area.size.height), t_image);
+			CGContextDrawImage(t_context, CGRectMake((float)m_locked_area.origin.x, (float)(m_height - (m_locked_area.origin.y + m_locked_area.size.height)), (float)m_locked_area.size.width, (float)m_locked_area.size.height), t_image);
 			CGImageRelease(t_image);
 		}
 		

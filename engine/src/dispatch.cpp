@@ -1238,11 +1238,11 @@ void MCDispatch::wmdown(Window w, uint2 which)
 void MCDispatch::wmup_stack(MCStack *target, uint2 which)
 {
 	if (menu != NULL)
-		menu->mup(which);
+		menu->mup(which, false);
 	else
 	{
 		if (target != NULL)
-			target->mup(which);
+			target->mup(which, false);
 	}
 }
 

@@ -2618,7 +2618,7 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 		if (bptr->findmenu())
 		{
 			if (MCbuttonstate)
-				MCtargetptr -> mup(0);
+				MCtargetptr -> mup(0, false);
 			bptr->openmenu(True);
 		}
 		return ES_NORMAL;

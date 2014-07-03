@@ -580,7 +580,7 @@ void MCDrag::exec_ctxt(MCExecContext& ctxt)
 		MCmousex = ex;
 		MCmousey = ey;
 		MCdefaultstackptr->mfocus(ex, ey);
-		MCdefaultstackptr->mup(which);
+		MCdefaultstackptr->mup(which, false);
 		MCscreen->setlockmods(False);
 		MCmodifierstate = oldmstate;
 		MCbuttonstate = oldbstate;
@@ -628,7 +628,7 @@ void MCDrag::exec_ctxt(MCExecContext& ctxt)
 		if (x != oldx || y != oldy)
 			MCdefaultstackptr->mfocus(x, y);
 	}
-	MCdefaultstackptr->mup(which);
+	MCdefaultstackptr->mup(which, false);
 	MCmodifierstate = oldmstate;
 	MCbuttonstate = oldbstate;
 	MCmousex = oldx;

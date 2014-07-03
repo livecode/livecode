@@ -1612,7 +1612,7 @@ void MCInterfaceExecDrag(MCExecContext& ctxt, uint2 p_which, MCPoint p_start, MC
 		MCmousex = p_end . x;
 		MCmousey = p_end . y;
 		MCdefaultstackptr->mfocus(p_end . x, p_end . y);
-		MCdefaultstackptr->mup(p_which);
+		MCdefaultstackptr->mup(p_which, false);
 		MCscreen->setlockmods(False);
 		MCmodifierstate = oldmstate;
 		MCbuttonstate = oldbstate;
@@ -1660,7 +1660,7 @@ void MCInterfaceExecDrag(MCExecContext& ctxt, uint2 p_which, MCPoint p_start, MC
 		if (x != oldx || y != oldy)
 			MCdefaultstackptr->mfocus(x, y);
 	}
-	MCdefaultstackptr->mup(p_which);
+	MCdefaultstackptr->mup(p_which, false);
 	MCmodifierstate = oldmstate;
 	MCbuttonstate = oldbstate;
 	MCmousex = oldx;
@@ -2734,7 +2734,7 @@ void MCInterfaceExecPopupButton(MCExecContext& ctxt, MCButton *p_target, MCPoint
 	if (p_target->findmenu())
 	{
 		if (MCbuttonstate)
-			MCtargetptr -> mup(0);
+			MCtargetptr -> mup(0, false);
 		p_target->openmenu(True);
 	}
 }

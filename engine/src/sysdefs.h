@@ -42,7 +42,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MCSSL
 #define FEATURE_TASKBAR_ICON
-#define FEATURE_QUICKTIME_EFFECTS
+//#define FEATURE_QUICKTIME_EFFECTS
 #define FEATURE_PLATFORM_PLAYER
 #define FEATURE_PLATFORM_AUDIO
 

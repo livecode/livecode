@@ -1400,6 +1400,7 @@ struct RegionToRectsInfo
 	CGRect *rectangles;
 };
 
+
 static bool RegionToRectsCallback(void *p_context, const MCRectangle& p_rect)
 {
 	RegionToRectsInfo *t_info;
@@ -1412,9 +1413,10 @@ static bool RegionToRectsCallback(void *p_context, const MCRectangle& p_rect)
 	return noErr;
 }
 
+
 static void OSX_CGContextClipToRegion(CGContextRef p_context, MCRegionRef p_region)
 {
-	RegionToRectsInfo t_info;
+    RegionToRectsInfo t_info;
 	t_info . count = 0;
 	t_info . rectangles = NULL;
 	MCRegionForEachRect(p_region, RegionToRectsCallback, &t_info);
