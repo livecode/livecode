@@ -152,6 +152,8 @@
 /* Begin PBXProject section */
 		4D8F6A0C113D13140056ED41 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = 4D8F6A0F113D13140056ED41 /* Build configuration list for PBXProject "revandroid" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -272,6 +274,7 @@
 				INFOPLIST_FILE = "revandroid-Info.plist";
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				PRODUCT_NAME = revandroid;
+				SDKROOT = macosx10.8;
 				WRAPPER_EXTENSION = bundle;
 			};
 			name = Release;

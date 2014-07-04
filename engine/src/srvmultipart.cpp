@@ -963,21 +963,22 @@ void MCMultiPartRemoveTempFiles()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const char *MCMultiPartGetErrorMessage(MCMultiPartFileStatus p_status)
+bool MCMultiPartGetErrorMessage(MCMultiPartFileStatus p_status, MCStringRef &r_message)
 {
 	switch (p_status)
 	{
-		case kMCFileStatusOK:
-			return "";
-		case kMCFileStatusStopped:
-			return "upload stopped";
-		case kMCFileStatusFailed:
-			return "upload failed";
-		case kMCFileStatusNoUploadFolder:
-			return "no upload folder";
-		case kMCFileStatusIOError:
-			return "i/o error";
+    case kMCFileStatusOK:
+        r_message = MCValueRetain(kMCEmptyString);
+        return true;
+    case kMCFileStatusStopped:
+        return MCStringCreateWithCString("upload stopped", r_message);
+    case kMCFileStatusFailed:
+        return MCStringCreateWithCString("upload failed", r_message);
+    case kMCFileStatusNoUploadFolder:
+        return MCStringCreateWithCString("no upload folder", r_message);
+    case kMCFileStatusIOError:
+        return MCStringCreateWithCString("i/o error", r_message);
 	}
 	
-	return NULL;
+    return false;
 }

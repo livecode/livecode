@@ -298,8 +298,9 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 			}
 		}
 	}
-	if (MCrecording)
-		MCtemplateplayer->handlerecord();
+	
+	extern void MCQTHandleRecord(void);
+	MCQTHandleRecord();
 
 	abort = curinfo->abort;
 	reset = curinfo->reset;
@@ -981,7 +982,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				if (sptr != NULL)
 				{
 					if (lastdown != 0)
-						sptr->mup(lastdown);
+						sptr->mup(lastdown, false);
 					buffer[0] = 0x1B; // escape
 					buffer[1] = '\0';
 					Boolean oldlock = MClockmessages;

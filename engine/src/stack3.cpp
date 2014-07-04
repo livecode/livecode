@@ -1058,7 +1058,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 
 	if (editing != NULL && card != curcard)
 		stopedit();
-	if (!opened || !mode_haswindow())
+	if (!opened || !haswindow())
 	{
 		if (opened)
 		{
@@ -1705,7 +1705,7 @@ void MCStack::menumup(uint2 which, MCStringRef &r_string, uint2 &selline)
 				curcard->count(CT_LAYER, CT_UNDEFINED, focused, selline, True);
 		}
 	}
-	curcard->mup(which);
+	curcard->mup(which, false);
 }
 
 

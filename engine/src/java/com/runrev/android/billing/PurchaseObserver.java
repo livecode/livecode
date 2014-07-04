@@ -16,13 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 package com.runrev.android.billing;
 
-import com.runrev.android.billing.C.ResponseCode;
-import com.runrev.android.billing.PurchaseUpdate.Purchase;
-import com.runrev.android.billing.BillingService.RequestPurchase;
-import com.runrev.android.billing.BillingService.ConfirmNotification;
-import com.runrev.android.billing.BillingService.GetPurchaseInformation;
-import com.runrev.android.billing.BillingService.RestoreTransactions;
-
 import android.app.*;
 import android.content.*;
 import android.content.IntentSender.SendIntentException;
@@ -37,14 +30,15 @@ public abstract class PurchaseObserver
 		mActivity = activity;
 	}
 	
-	public abstract void onBillingSupported(boolean supported);
-	public abstract void onPurchaseStateChanged(Purchase p, boolean verified, String signedData, String signature);
-	
-	public abstract void onRequestPurchaseResponse(RequestPurchase request, ResponseCode responseCode);
-	public abstract void onConfirmNotificationResponse(ConfirmNotification request, ResponseCode responseCode);
-	public abstract void onRestoreTransactionsResponse(RestoreTransactions request, ResponseCode responseCode);
-	
-//	public abstract void onGetPurchaseInformationResponse(GetPurchaseInformation request, ResponseCode responseCode);
+    
+    // Sent to the observer to indicate a change in the purchase state
+    public abstract void onPurchaseStateChanged(String productId, int state);
+    
+	// Sent to the observer once product details have been successfully received
+    public abstract void onProductDetailsReceived(String productId);
+    
+    // Sent to the observer once product details have NOT been successfully received
+    public abstract void onProductDetailsError(String productId, String error);
 
 	void startBuyPageActivity(PendingIntent pendingIntent, Intent intent)
 	{

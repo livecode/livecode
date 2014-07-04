@@ -210,6 +210,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define F_LOOPING               (1UL << 19)
 #define F_PLAY_SELECTION        (1UL << 20)
 #define F_SHOW_SELECTION        (1UL << 21)
+#define F_SHOW_VOLUME           (1UL << 22)
 // MCVideoClip attributes, scale is for backward compatibility
 #define F_SCALE_FACTOR          (1UL << 15)
 // MCEPS attributes
@@ -500,6 +501,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // If this is set then this stack needs parentScripts resolve
 #define ECS_USES_PARENTSCRIPTS	(1UL << 18)
 
+// MERG-2014-06-02: [[ IgnoreMouseEvents ]] If this is set then the stack is transparent to mouse events
+#define ECS_IGNORE_MOUSE_EVENTS (1UL << 17)
+
 // Has handlers
 #define HH_IDLE                 (1UL << 0)
 #define HH_MOUSE_WITHIN         (1UL << 1)
@@ -775,5 +779,22 @@ typedef struct _MCImagePaletteSettings
 	MCColor *colors;
 	uint32_t ncolors;
 } MCImagePaletteSettings;
+
+enum MCGravity
+{
+    kMCGravityNone,
+    kMCGravityLeft,
+    kMCGravityTop,
+    kMCGravityRight,
+    kMCGravityBottom,
+    kMCGravityTopLeft,
+    kMCGravityTopRight,
+    kMCGravityBottomLeft,
+    kMCGravityBottomRight,
+    kMCGravityCenter,
+    kMCGravityResize,
+    kMCGravityResizeAspect,
+    kMCGravityResizeAspectFill,
+};
 
 #endif

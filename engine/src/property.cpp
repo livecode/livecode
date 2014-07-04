@@ -1460,7 +1460,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 		bool t_error;
 		t_error = false;
 
-		MCRange *t_ranges;
+		MCInterval *t_ranges;
 		int t_range_count;
 		t_ranges = NULL;
 
@@ -1746,13 +1746,24 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 				MCeerror -> add(EE_PROPERTY_BADEXPRESSION, line, pos);
 				return ES_ERROR;
 			}
+
 			t_type = MCTransferData::StringToType(ep2 . getsvalue());
 		}
 
 		if (t_type != TRANSFER_TYPE_NULL)
 		{
 			MCSharedString *t_data;
-			t_data = MCSharedString::Create(ep . getsvalue());
+			
+			// MW-2014-03-12: [[ ClipboardStyledText ]] If styledText is being requested, then
+			//   convert the array to a styles pickle and store that.
+			if (t_type == TRANSFER_TYPE_STYLED_TEXT_ARRAY)
+			{
+				t_type =  TRANSFER_TYPE_STYLED_TEXT;
+				t_data = MCConvertStyledTextArrayToStyledText(ep . getarray());
+			}
+			else
+				t_data = MCSharedString::Create(ep . getsvalue());
+			
 			if (t_data != NULL)
 			{
 				bool t_success;
@@ -2405,7 +2416,14 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 	case P_LOCK_MESSAGES:
 		return ep.getboolean(MClockmessages, line, pos, EE_PROPERTY_NAB);
 	case P_LOCK_MOVES:
-		return ep.getboolean(MClockmoves, line, pos, EE_PROPERTY_NAB);
+		{
+			Boolean t_new_value;
+			Exec_stat t_stat = ep.getboolean(t_new_value, line, pos, EE_PROPERTY_NAB);
+			if (t_stat == ES_NORMAL) {
+				MCscreen->setlockmoves(t_new_value);
+			}
+			return t_stat;
+		}
 	case P_LOCK_RECENT:
 		return ep.getboolean(MClockrecent, line, pos, EE_PROPERTY_NAB);
 	case P_PRIVATE_COLORS:
@@ -2499,7 +2517,12 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 	case P_ACTIVATE_PALETTES:
 		return ep.getboolean(MCactivatepalettes, line, pos, EE_PROPERTY_NAB);
 	case P_HIDE_PALETTES:
-		return ep.getboolean(MChidepalettes, line, pos, EE_PROPERTY_NAB);
+		stat = ep.getboolean(MChidepalettes, line, pos, EE_PROPERTY_NAB);
+#ifdef _MACOSX
+        // MW-2014-04-23: [[ Bug 12080 ]] Make sure we update the hidesOnSuspend of all palettes.
+        MCstacks -> hidepaletteschanged();
+#endif
+        return stat;
 	case P_RAISE_PALETTES:
 		// MW-2004-11-17: On Linux, effect a restack if 'raisepalettes' is changed
 		// MW-2004-11-24: Altered MCStacklst::restack to find right stack if passed NULL
@@ -2631,7 +2654,10 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 			if (ep.getboolean(trecording, line, pos, EE_PROPERTY_NAB) != ES_NORMAL)
 				return ES_ERROR;
 			if (!trecording)
-				MCtemplateplayer->stoprecording();
+			{
+				extern void MCQTStopRecording(void);
+				MCQTStopRecording();
+			}
 		}
 		break;
 	case P_LZW_KEY:
@@ -3678,7 +3704,21 @@ Exec_stat MCProperty::set_object_property(MCExecPoint& ep)
                     t_type = MCTransferData::StringToType(ep . getsvalue());
                 }
                 
-                if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
+                // MW-2014-03-12: [[ ClipboardStyledText ]] If styledText is being requested, then
+                //   convert the styles data to an array and return that.
+                if (t_type == TRANSFER_TYPE_STYLED_TEXT_ARRAY &&
+                    t_pasteboard -> Contains(TRANSFER_TYPE_STYLED_TEXT, true))
+                {
+                    MCSharedString *t_data;
+                    t_data = t_pasteboard -> Fetch(TRANSFER_TYPE_STYLED_TEXT);
+                    if (t_data != NULL)
+                    {
+                        ep . setarray(MCConvertStyledTextToStyledTextArray(t_data), True);
+                        t_data -> Release();
+                        t_query_success = true;
+                    }
+                }
+                else if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
                 {
                     MCSharedString *t_data;
                     t_data = t_pasteboard -> Fetch(t_type);

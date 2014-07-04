@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "region.h"
 #include "uidc.h"
 
+/*
 bool MCRegionCreate(MCRegionRef& r_region)
 {
 	RgnHandle t_region;
@@ -56,13 +57,6 @@ bool MCRegionIsRect(MCRegionRef self)
 bool MCRegionIsComplex(MCRegionRef self)
 {
 	return !MCRegionIsEmpty(self) && !MCRegionIsRect(self);
-}
-
-bool MCRegionTouchesRect(MCRegionRef self, const MCRectangle& rect)
-{
-	Rect t_rect;
-	SetRect(&t_rect, rect . x, rect . y, rect . x + rect . width, rect . y + rect . height);
-	return RectInRgn(&t_rect, (RgnHandle)self);
 }
 
 MCRectangle MCRegionGetBoundingBox(MCRegionRef self)
@@ -96,21 +90,86 @@ bool MCRegionIncludeRect(MCRegionRef self, const MCRectangle& rect)
 	return true;
 }
 
-bool MCRegionExcludeRect(MCRegionRef self, const MCRectangle& rect)
+bool MCRegionOffset(MCRegionRef self, int32_t p_dx, int32_t p_dy)
 {
-	Rect t_rect;
-	SetRect(&t_rect, rect . x, rect . y, rect . x + rect . width, rect . y + rect . height);
-	RgnHandle t_rect_rgn;
-	t_rect_rgn = NewRgn();
-	RectRgn(t_rect_rgn, &t_rect);
-	DiffRgn((RgnHandle)self, t_rect_rgn, (RgnHandle)self);
-	DisposeRgn(t_rect_rgn);
+	OffsetRgn((RgnHandle)self, p_dx, p_dy);
+	return true;
+}
+*/
+
+struct __MCRegion
+{
+	MCRectangle rect;
+};
+
+bool MCRegionCreate(MCRegionRef& r_region)
+{
+	return MCMemoryNew(r_region);
+}
+
+void MCRegionDestroy(MCRegionRef self)
+{
+	MCMemoryDelete(self);
+}
+
+bool MCRegionIsEmpty(MCRegionRef self)
+{
+	return MCU_empty_rect(self -> rect);
+}
+
+bool MCRegionIsRect(MCRegionRef region)
+{
+	return true;
+}
+
+bool MCRegionIsComplex(MCRegionRef region)
+{
+	return false;
+}
+
+bool MCRegionTouchesRect(MCRegionRef region, const MCRectangle& rect)
+{
+	return false;
+}
+
+MCRectangle MCRegionGetBoundingBox(MCRegionRef self)
+{
+	return self -> rect;
+}
+
+bool MCRegionSetEmpty(MCRegionRef self)
+{
+	MCU_set_rect(self -> rect, 0, 0, 0, 0);
+	return true;
+}
+
+bool MCRegionSetRect(MCRegionRef self, const MCRectangle& p_rect)
+{
+	self -> rect = p_rect;
+	return true;
+}
+
+bool MCRegionIncludeRect(MCRegionRef self, const MCRectangle& p_rect)
+{
+	self -> rect = MCU_union_rect(self -> rect, p_rect);
+	return true;
+}
+
+bool MCRegionExcludeRect(MCRegionRef self, const MCRectangle& p_rect)
+{
 	return true;
 }
 
 bool MCRegionOffset(MCRegionRef self, int32_t p_dx, int32_t p_dy)
 {
-	OffsetRgn((RgnHandle)self, p_dx, p_dy);
+	self -> rect = MCU_offset_rect(self -> rect, p_dx, p_dy);
+	return true;
+}
+
+
+bool MCRegionUnion(MCRegionRef self, MCRegionRef x, MCRegionRef y)
+{
+    self -> rect = MCU_union_rect(x -> rect, y -> rect);
 	return true;
 }
 
@@ -214,6 +273,7 @@ static inline MCRectangle MCMacRectToMCRect(const Rect &p_rect)
 	return t_rect;
 }
 
+/*
 static OSStatus MCRegionForEachRectQDCallback(UInt16 p_message, RgnHandle p_region, const Rect *p_rect, void *p_state)
 {
 	if (p_message != kQDRegionToRectsMsgParse)
@@ -238,6 +298,16 @@ bool MCRegionForEachRect(MCRegionRef region, MCRegionForEachRectCallback callbac
 	t_context.context = context;
 	
 	return noErr == QDRegionToRects((RgnHandle)region, kQDParseRegionFromTopLeft, MCRegionForEachRectQDCallback, &t_context);
+}
+*/
+
+typedef bool (*MCRegionForEachRectCallback)(void *context, const MCRectangle& rect);
+bool MCRegionForEachRect(MCRegionRef region, MCRegionForEachRectCallback callback, void *context)
+{
+	// IM-2013-09-30: [[ FullscreenMode ]] Implement for mobile
+	
+	// region is just a single rect
+	return callback(context, region->rect);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

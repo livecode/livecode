@@ -57,9 +57,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib imm32.lib ws2_32.lib rpcrt4.lib uuid.lib iphlpapi.lib msimg32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Usp10.lib mscms.lib crypt32.lib libcurl_a.lib libeay32.lib ssleay32.lib"
+				AdditionalDependencies="winmm.lib imm32.lib ws2_32.lib rpcrt4.lib uuid.lib msimg32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Usp10.lib mscms.lib crypt32.lib libcurl_a.lib libeay32.lib ssleay32.lib iphlpapi.lib Shlwapi.lib sicudt.lib sicuin.lib sicuio.lib sicule.lib siculx.lib sicuuc.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)prebuilt\lib\win32\i386&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 			/>
@@ -131,11 +131,89 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib imm32.lib ws2_32.lib rpcrt4.lib uuid.lib msimg32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Usp10.lib mscms.lib crypt32.lib libcurl_a.lib libeay32.lib ssleay32.lib iphlpapi.lib"
+				AdditionalDependencies="winmm.lib imm32.lib ws2_32.lib rpcrt4.lib uuid.lib msimg32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Usp10.lib mscms.lib crypt32.lib libcurl_a.lib libeay32.lib ssleay32.lib iphlpapi.lib Shlwapi.lib sicudt.lib sicuin.lib sicuio.lib sicule.lib siculx.lib sicuuc.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)prebuilt\lib\win32\i386&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+				AdditionalManifestFiles="$(InputDir)src\engine.manifest"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug - CGI mode|Win32"
+			OutputDirectory="$(SolutionDir)_build\windows\$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)_cache\windows\$(ProjectName)\$(ConfigurationName)"
+			ConfigurationType="1"
+			InheritedPropertySheets="..\rules\Global Server.vsprops;..\rules\Debug Server.vsprops"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories=""
+				PreprocessorDefinitions="MODE_SERVER"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				UsePrecompiledHeader="0"
+				PrecompiledHeaderThrough=""
+				DebugInformationFormat="4"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="winmm.lib imm32.lib ws2_32.lib rpcrt4.lib uuid.lib msimg32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Usp10.lib mscms.lib crypt32.lib libcurl_a.lib libeay32.lib ssleay32.lib iphlpapi.lib Shlwapi.lib sicudt.lib sicuin.lib sicuio.lib sicule.lib siculx.lib sicuuc.lib"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)prebuilt\lib\win32\i386&quot;"
+				GenerateDebugInformation="true"
+				SubSystem="1"
 			/>
 			<Tool
 				Name="VCALinkTool"

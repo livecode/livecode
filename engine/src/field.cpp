@@ -745,8 +745,10 @@ Boolean MCField::kdown(MCStringRef p_string, KeySym key)
 		{
 			if (MCStringIsEmpty(p_string))
 				return False;
-
-			getstack()->hidecursor();
+            
+            // MW-2014-04-25: [[ Bug 5545 ]] This method will do the appropriate behavior
+            //   based on platform.
+            MCscreen -> hidecursoruntilmousemoves();
 
 			finsertnew(function, p_string, key);
 		}
@@ -1097,12 +1099,12 @@ Boolean MCField::mdown(uint2 which)
 	return True;
 }
 
-Boolean MCField::mup(uint2 which)
+Boolean MCField::mup(uint2 which, bool p_release)
 {
 	if (!(state & (CS_MFOCUSED | CS_DRAG_TEXT)))
 		return False;
 	if (state & CS_MENU_ATTACHED)
-		return MCObject::mup(which);
+		return MCObject::mup(which, p_release);
 	state &= ~(CS_MFOCUSED | CS_MOUSEDOWN);
 	if (state & CS_GRAB)
 	{
@@ -1151,7 +1153,9 @@ Boolean MCField::mup(uint2 which)
 			}
 			if (!(state & CS_DRAG_TEXT))
 				if ((flags & F_LOCK_TEXT || MCmodifierstate & MS_CONTROL))
-					if (MCU_point_in_rect(rect, mx, my))
+                {
+					if (!p_release && MCU_point_in_rect(rect, mx, my))
+                    {
                         if (flags & F_LIST_BEHAVIOR
                                 && (my - rect.y > (int4)(textheight + topmargin - texty)
                                     || paragraphs == paragraphs->next()
@@ -1160,6 +1164,7 @@ Boolean MCField::mup(uint2 which)
 						else
 						{
 							if (linkstart != NULL)
+                            {
 								if (linkstart->gethilite())
 								{
 									MCBlock *bptr = linkstart;
@@ -1186,14 +1191,18 @@ Boolean MCField::mup(uint2 which)
 								}
 								else
 									linkstart = linkend = NULL;
-							message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
+                            }
+							
+                            message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 						}
+                    }
 					else
 						message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
+                }
 			break;
 		case T_FIELD:
 		case T_POINTER:
-			end();
+			end(true, p_release);
 			break;
 		case T_HELP:
 			help();
@@ -1205,7 +1214,7 @@ Boolean MCField::mup(uint2 which)
 	case Button2:
 		if (flags & F_LOCK_TEXT || getstack()->gettool(this) != T_BROWSE)
 		{
-			if (MCU_point_in_rect(rect, mx, my))
+			if (!p_release && MCU_point_in_rect(rect, mx, my))
 				message_with_valueref_args(MCM_mouse_up, MCSTR("2"));
 			else
 				message_with_valueref_args(MCM_mouse_release, MCSTR("2"));
@@ -1225,7 +1234,7 @@ Boolean MCField::mup(uint2 which)
 		}
 		break;
 	case Button3:
-		if (MCU_point_in_rect(rect, mx, my))
+		if (!p_release && MCU_point_in_rect(rect, mx, my))
 			message_with_valueref_args(MCM_mouse_up, MCSTR("3"));
 		else
 			message_with_valueref_args(MCM_mouse_release, MCSTR("3"));
@@ -1284,7 +1293,7 @@ Boolean MCField::doubleup(uint2 which)
 		if (sbdoubleup(which, hscrollbar, vscrollbar))
 			return True;
 		if (flags & F_LIST_BEHAVIOR && (flags & F_TOGGLE_HILITE))
-			mup(which);
+			mup(which, false);
 	}
 	return MCControl::doubleup(which);
 }
@@ -2291,13 +2300,13 @@ void MCField::undo(Ustruct *us)
 		ei = si;
 		if (us->type == UT_DELETE_TEXT)
 		{
-			MCParagraph *pgptr = indextoparagraph(paragraphs, si, ei);
+			pgptr = indextoparagraph(paragraphs, si, ei);
 			pgptr->setselectionindex(si, si, False, False);
 			focusedparagraph = pgptr;
 			if (us->ud.text.data != NULL)
 			{
 				insertparagraph(us->ud.text.data);
-				selectedmark(False, si, ei, False, False);
+				selectedmark(False, si, ei, False);
 				seltext(us->ud.text.index, si, True);
 				us->type = UT_REPLACE_TEXT;
 			}
@@ -2319,7 +2328,7 @@ void MCField::undo(Ustruct *us)
 		}
 		else
 		{
-			MCParagraph *pgptr = us->ud.text.data;
+			pgptr = us->ud.text.data;
 			do
 			{
 				ei += pgptr->gettextlengthcr();
@@ -2508,7 +2517,7 @@ void MCField::resetfontindex(MCStack *oldstack)
 		fdata = tptr;
 		while (fptr != NULL)
 		{
-			MCCdata *tptr = fptr->remove(fptr);
+			tptr = fptr->remove(fptr);
 			delete tptr;
 		}
 	}
@@ -3074,7 +3083,9 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 	}
 
 	MCRectangle frect = getfrect();
-	dc->setclip(dirty);
+	
+	dc->save();
+	dc->cliprect(dirty);
 	
 	MCRectangle trect = frect;
 	if (flags & F_SHOW_BORDER && borderwidth)
@@ -3103,7 +3114,8 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		else
 			drawborder(dc, trect, borderwidth);
 	}
-	dc->clearclip();
+	
+	dc->restore();
 
 	// MW-2009-06-14: If the field is opaque, then render the contents with that
 	//   marked.
@@ -3115,11 +3127,9 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 		dc -> changeopaque(t_was_opaque);
 
 	frect = getfrect();
-	dc->setclip(dirty);
 	if (flags & F_SHADOW)
 	{
-		MCRectangle trect = rect;
-		drawshadow(dc, trect, shadowoffset);
+		drawshadow(dc, rect, shadowoffset);
 	}
 
 	if (state & CS_KFOCUSED && borderwidth != 0

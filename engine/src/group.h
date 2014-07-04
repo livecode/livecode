@@ -47,6 +47,9 @@ class MCGroup : public MCControl
 	//   parents locked.
     bool m_updates_locked : 1;
 
+    // MW-2014-06-20: [[ ClipsToRect ]] If true, group acts like lockLocation set, but can be resized.
+    bool m_clips_to_rect : 1;
+    
 	static uint2 labeloffset;
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
@@ -75,7 +78,7 @@ public:
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual void munfocus();
 	virtual Boolean mdown(uint2 which);
-	virtual Boolean mup(uint2 which);
+	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	virtual void setrect(const MCRectangle &nrect);

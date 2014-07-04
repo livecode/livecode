@@ -1368,6 +1368,8 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 					t_to_read = 4;
 				else if (t_byte < 0xFE) // 6-byte long
 					t_to_read = 5;
+                else
+                    break; // invalid 1111111x pattern
 
 				// We need to read more bytes
 				if (t_to_read)

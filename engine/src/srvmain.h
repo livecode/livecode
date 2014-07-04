@@ -29,9 +29,9 @@ extern MCSErrorMode MCservererrormode;
 extern MCSOutputTextEncoding MCserveroutputtextencoding;
 extern MCSOutputLineEndings MCserveroutputlineendings;
 
-extern char *MCsessionsavepath;
-extern char *MCsessionname;
-extern char *MCsessionid;
+extern MCStringRef MCsessionsavepath;
+extern MCStringRef MCsessionname;
+extern MCStringRef MCsessionid;
 extern uint32_t MCsessionlifetime;
 
 extern char **MCservercgiheaders;
@@ -51,6 +51,6 @@ typedef struct mcservercookie_t
 extern MCServerCookie *MCservercgicookies;
 extern uint32_t MCservercgicookiecount;
 
-extern char *MCservercgidocumentroot;
+extern MCStringRef MCservercgidocumentroot;
 
 #endif

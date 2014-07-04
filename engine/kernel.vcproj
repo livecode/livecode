@@ -1008,6 +1008,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\region.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\region.h"
 				>
 			</File>
@@ -1510,6 +1514,10 @@
 						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\quicktime.cpp"
+				>
 			</File>
 			<Filter
 				Name="Platform - Linux"

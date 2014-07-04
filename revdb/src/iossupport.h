@@ -78,4 +78,4 @@ char *MCS_resolvepath(const char *path);
 #endif
 #include  <unistd.h>
 #include <fcntl.h>
-#include <//usr/include/sys/stat.h>
+#include <sys/stat.h>

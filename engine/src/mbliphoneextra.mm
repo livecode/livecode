@@ -392,58 +392,19 @@ bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemListFontFamilies(MCListRef& r_names)
+extern bool coretext_get_font_names(MCListRef &r_names);
+extern bool core_text_get_font_styles(MCStringRef p_name, uint32_t p_size, MCListRef &r_styles);
+
+void MCSystemListFontFamilies(MCListRef &r_names)
 {
-	MCAutoListRef t_list;
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
-	for(NSString *t_family in [UIFont familyNames])
-    {
-        MCAutoStringRef t_family_string;
-        if (!MCStringCreateWithCFString((CFStringRef)t_family, &t_family_string) ||
-            !MCListAppend(*t_list, *t_family_string))
-			return false;
-    }
-	return MCListCopy(*t_list, r_names);
+    // MM-2014-06-02: [[ CoreText ]] Updated to use core text routines.
+    coretext_get_font_names(r_names);
 }
 
-bool MCSystemListFontsForFamily(MCStringRef p_family, MCListRef& r_styles)
+void MCSystemListFontsForFamily(MCStringRef p_family, uint32_t p_size, MCListRef &r_styles)
 {
-    // MM-2014-04-30: [[ Bug 12350 ]] Instead of listing the fonts withjing a family, list the styles. Brings things into line with the other platforms.
-    //  Currently assumes anything without a bold/italic suffix is a plain font.
-	MCAutoListRef t_list;
-    bool t_plain, t_bold, t_italic, t_bold_italic;
-    t_plain = t_bold = t_italic = t_bold_italic = false;
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
-	for(NSString *t_font in [UIFont fontNamesForFamilyName: [NSString stringWithMCStringRef: p_family]])
-    {
-        MCAutoStringRef t_font_string;
-        if (!MCStringCreateWithCFString((CFStringRef)t_font, &t_font_string))
-			return false;
-
-        if (MCStringEndsWith(*t_font_string, MCSTR("-Bold"), kMCStringOptionCompareCaseless))
-            t_bold = true;
-        else if (MCStringEndsWith(*t_font_string, MCSTR("-italic"), kMCStringOptionCompareCaseless) ||
-                 MCStringEndsWith(*t_font_string, MCSTR("-oblique"), kMCStringOptionCompareCaseless))
-            t_italic = true;
-        else if (MCStringEndsWith(*t_font_string, MCSTR("-bolditalic"), kMCStringOptionCompareCaseless) ||
-                 MCStringEndsWith(*t_font_string, MCSTR("-boldoblique"), kMCStringOptionCompareCaseless))
-            t_bold_italic = true;
-        else
-            t_plain = true;
-    }
-
-    if (t_plain)
-        MCListAppend(*t_list, MCSTR("plain"));
-    if (t_bold)
-        MCListAppend(*t_list, MCSTR("bold"));
-    if (t_italic)
-        MCListAppend(*t_list, MCSTR("italic"));
-    if (t_bold_italic)
-        MCListAppend(*t_list, MCSTR("bold-italic"));
-
-    return MCListCopy(*t_list, r_styles);
+    // MM-2014-06-02: [[ CoreText ]] Updated to use core text routines.
+    core_text_get_font_styles(p_family, p_size, r_styles);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1963,6 +1924,20 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobilePurchaseSendRequest", MCHandlePurchaseSendRequest, nil},
     {false, "mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},
     
+    {false, "mobileStoreCanMakePurchase", MCHandleCanMakePurchase, nil},
+    {false, "mobileStoreEnablePurchaseUpdates", MCHandleEnablePurchaseUpdates, nil},
+	{false, "mobileStoreDisablePurchaseUpdates", MCHandleDisablePurchaseUpdates, nil},
+    {false, "mobileStoreRestorePurchases", MCHandleRestorePurchases, nil},
+    {false, "mobileStoreMakePurchase", MCHandleMakePurchase, nil},
+    {false, "mobileStoreConfirmPurchase", MCHandleConfirmPurchase, nil},
+    {false, "mobileStoreProductProperty", MCHandleGetPurchaseProperty, nil},
+    {false, "mobileStoreSetProductType", MCHandleProductSetType, nil},
+    {false, "mobileStoreRequestProductDetails", MCHandleRequestProductDetails, nil},
+    {false, "mobileStoreConsumePurchase", MCHandleConsumePurchase, nil},
+    {false, "mobileStorePurchasedProducts", MCHandleGetPurchases, nil},
+    {false, "mobileStorePurchaseError", MCHandlePurchaseError, nil},
+    //{false, "mobileGetPurchases", MCHandlePurchaseList, nil},
+
     {false, "iphoneRequestProductDetails", MCHandleRequestProductDetails, nil},
     
     {true, "mobilePickContact", MCHandlePickContact, nil},       // ABPeoplePickerNavigationController

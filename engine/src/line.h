@@ -57,7 +57,7 @@ public:
 	uint2 getdirtywidth();
 	void makedirty();
 	void clean();
-
+	void getindex(uint2 &i, uint2 &l);
 	uint2 getwidth();
 	uint2 getheight();
 	uint2 getascent();

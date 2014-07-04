@@ -87,7 +87,7 @@ public:
 
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual Boolean mdown(uint2 which);
-	virtual Boolean mup(uint2 which);
+	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	virtual void setrect(const MCRectangle &nrect);
@@ -143,6 +143,12 @@ public:
 	void setcapstyle(uint2 p_style);
 	uint2 getfillrule();
 	void setfillrule(uint2 p_rule);
+    
+    ///////////////
+    
+	bool get_points_for_rect(MCPoint*& r_points, uint2& r_point_count);
+	bool get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_count);
+	bool get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_point_count);
 
 	////////// PROPERTY SUPPORT METHODS
 
@@ -225,6 +231,9 @@ public:
     void SetPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points);
     void GetRelativePoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points);
     void SetRelativePoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points);
+    // MERG-2014-06-24: [[ rect_points ]] allow effective [relative] points as read-only
+    void GetEffectivePoints(MCExecContext& ctxt, uindex_t &p_count, MCPoint*& r_points);
+    void GetEffectiveRelativePoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points);
     
     virtual void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
 	virtual void SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);

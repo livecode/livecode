@@ -396,7 +396,7 @@ void MCClickCmd::exec_ctxt(MCExecContext& ctxt)
 		return ES_ERROR;
 	}
 	if (!MCdefaultstackptr->getopened()
-	        || !MCdefaultstackptr->mode_haswindow())
+	        || !MCdefaultstackptr->haswindow())
 	{
 		MCeerror->add(EE_CLICK_STACKNOTOPEN, line, pos, ep.getsvalue());
 		return ES_ERROR;
@@ -580,7 +580,7 @@ void MCDrag::exec_ctxt(MCExecContext& ctxt)
 		MCmousex = ex;
 		MCmousey = ey;
 		MCdefaultstackptr->mfocus(ex, ey);
-		MCdefaultstackptr->mup(which);
+		MCdefaultstackptr->mup(which, false);
 		MCscreen->setlockmods(False);
 		MCmodifierstate = oldmstate;
 		MCbuttonstate = oldbstate;
@@ -628,7 +628,7 @@ void MCDrag::exec_ctxt(MCExecContext& ctxt)
 		if (x != oldx || y != oldy)
 			MCdefaultstackptr->mfocus(x, y);
 	}
-	MCdefaultstackptr->mup(which);
+	MCdefaultstackptr->mup(which, false);
 	MCmodifierstate = oldmstate;
 	MCbuttonstate = oldbstate;
 	MCmousex = oldx;
@@ -1370,8 +1370,15 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
 	}
 	else
 	{
-		MCscreen->addmessage(optr, t_mptr_as_name, MCS_time() + delay, params);
 		delete mptr;
+        
+        // MW-2014-05-28: [[ Bug 12463 ]] If we cannot add the pending message, then throw an
+        //   error.
+		if (!MCscreen->addusermessage(optr, t_mptr_as_name, MCS_time() + delay, params))
+        {
+            MCeerror -> add(EE_SEND_TOOMANYPENDING, line, pos, t_mptr_as_name);
+            return ES_ERROR;
+        }
 	}
 	return ES_NORMAL;
 #endif /* MCMessage */
@@ -2203,8 +2210,10 @@ void MCMM::exec_ctxt(MCExecContext &ctxt)
 		}
 		MCacptr->setlooping(looping);
 		MCU_play();
+#ifndef FEATURE_PLATFORM_AUDIO
 		if (MCacptr != NULL)
 			MCscreen->addtimer(MCacptr, MCM_internal, looping ? LOOP_RATE : PLAY_RATE);
+#endif
 	}
 	return ES_NORMAL;
 #endif /* MCMM */
@@ -3143,7 +3152,8 @@ void MCStop::exec_ctxt(MCExecContext &ctxt)
 				MCU_play_stop();
 		break;
 	case SC_RECORDING:
-		MCtemplateplayer->stoprecording();
+		extern void MCQTStopRecording(void);	
+		MCQTStopRecording();
 		break;
 	case SC_USING:
 		{

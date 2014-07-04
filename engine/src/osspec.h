@@ -192,7 +192,7 @@ bool MCS_random_bytes(size_t p_count, MCDataRef& r_buffer);
 extern Boolean MCS_handle_sockets(void);
 extern bool MCS_init_sockets();
 extern bool MCS_compare_host_domain(MCStringRef p_host_a, MCStringRef p_host_b);
-extern MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef m, Boolean secure, Boolean sslverify, MCStringRef sslcertfile);
+extern MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef m, Boolean secure, Boolean sslverify, MCStringRef sslcertfile, MCNameRef p_end_hostname);
 extern void MCS_close_socket(MCSocket *s);
 extern void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef m, MCDataRef& r_data);
 extern void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRef m);
@@ -202,7 +202,7 @@ extern bool MCS_hn(MCStringRef& r_string);
 extern bool MCS_aton(MCStringRef p_address, MCStringRef& r_name);
 extern bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, MCListRef& r_addr);
 extern bool MCS_pa(MCSocket *s, MCStringRef& r_string);
-extern void MCS_secure_socket(MCSocket *s, Boolean sslverify);
+extern void MCS_secure_socket(MCSocket *s, Boolean sslverify, MCNameRef end_hostname);
 
 ///////////////////////////////////////////////////////////////////////////////
 

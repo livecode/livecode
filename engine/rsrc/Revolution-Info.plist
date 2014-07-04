@@ -64,6 +64,21 @@
 				<string>public.data</string>
 			</array>
 			<key>UTTypeDescription</key>
+			<string>LiveCode Object</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.runrev.livecode.objects-1</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>com.apple.ostype</key>
+				<string>RSTK</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
 			<string>LiveCode Stack</string>
 			<key>UTTypeIdentifier</key>
 			<string>com.runrev.revolution.stack</string>
@@ -99,5 +114,7 @@
 	</array>
 	<key>NSHighResolutionCapable</key>
 	<true/>
+	<key>NSPrincipalClass</key>
+	<string>com_runrev_livecode_MCApplication</string>
 </dict>
 </plist>

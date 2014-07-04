@@ -892,17 +892,25 @@ char *XML_ManipulateElement(int p_source_tree, char *p_source_node, int p_destin
 	CXMLElement t_destination_element;
 	if (!t_destination_doc -> GetElementByPath(&t_destination_element, p_destination_node))
 		return istrdup(xmlerrors[XMLERR_BADELEMENT]);
+    
+    // If we are copying, then we first duplicate the node before moving it
+    if (p_copy)
+        t_source_element . CopyElement(&t_source_element, true);
+    
+    if (p_source_tree == p_destination_tree)
+    {
+        // Now move the source element to the new location, returning an error if fails
+        if (!t_destination_element . MoveElement(&t_source_element, p_sibling, p_before))
+            return istrdup(xmlerrors[XMLERR_BADCOPY]);
+    }
+    else
+    {
+        if (!t_destination_element . MoveRemoteElement(&t_source_element, p_sibling, p_before))
+            return istrdup(xmlerrors[XMLERR_BADCOPY]);
+    }
 
-	// If we are copying, then we first duplicate the node before moving it
-	if (p_copy)
-		t_source_element . CopyElement(&t_source_element, true);
-
-	// Now move the source element to the new location, returning an error if fails
-	if (!t_destination_element . MoveElement(&t_source_element, p_sibling, p_before))
-		return istrdup(xmlerrors[XMLERR_BADCOPY]);
-
-	// If succeeded, we return the new path of the moved element.
-	return t_source_element . GetPath();
+    // If succeeded, we return the new path of the moved element.
+    return t_source_element . GetPath();
 }
 
 
@@ -1136,31 +1144,39 @@ void XML_AddXML(char *args[], int nargs, char **retstring,
 	*pass = False;
 	*error = False;
 	char *result = NULL;
-	if (nargs != 3){
+	if (nargs != 3)
+    {
 		*error = True;
 		result = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
 	}
-	else{
+	else
+    {
 		int docid = atoi(args[0]);
 		CXMLDocument *tdoc = doclist.find(docid);
 		CXMLElement telement;
 		if (!tdoc)
-
 			result = istrdup(xmlerrors[XMLERR_BADDOCID]);
-		else {
+		else
+        {
 			if (!tdoc->GetElementByPath(&telement,args[1]))
 				result = istrdup(xmlerrors[XMLERR_BADELEMENT]);
-			else {
-				CXMLElement newelement;
-				CXMLDocument tdoc;
-				if (!tdoc.Read(args[2],strlen(args[2]),False)){
+			else
+            {
+				CXMLDocument tnewdoc;
+				if (!tnewdoc.Read(args[2],strlen(args[2]),False))
+                {
 					result = (char *)malloc(1024);
-					sprintf(result,"%s\n%s",xmlerrors[XMLERR_BADXML],tdoc.GetError());
+					sprintf(result,"%s\n%s",xmlerrors[XMLERR_BADXML],tnewdoc.GetError());
 				}
-				else {
-					tdoc.GetRootElement(&newelement);
-					telement.AddElement(&newelement);
-					result = newelement.GetPath();
+				else
+                {
+                    // MW-2014-06-12: [[ Bug 12628 ]] Use Remote operation to copy the root out of the new document.
+                    CXMLElement newelement;
+					tnewdoc.GetRootElement(&newelement);
+                    if (!telement.MoveRemoteElement(&newelement, false, false))
+                        result = istrdup(xmlerrors[XMLERR_BADCOPY]);
+                    else
+                        result = newelement.GetPath();
 				}
 			}
 		}

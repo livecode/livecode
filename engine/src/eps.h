@@ -49,7 +49,7 @@ public:
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
 	virtual Boolean mdown(uint2 which);
-	virtual Boolean mup(uint2 which);
+	virtual Boolean mup(uint2 which, bool p_release);
 	virtual void setrect(const MCRectangle &nrect);
 #ifdef LEGACY_EXEC
     virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);

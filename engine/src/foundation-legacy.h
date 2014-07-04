@@ -141,6 +141,7 @@ IO_stat MCArraySaveToStreamLegacy(MCArrayRef array, bool nested_only, MCObjectOu
 bool MCListAppendCString(MCListRef list, const char *cstring);
 bool MCListAppendOldString(MCListRef list, const MCString& oldstring);
 bool MCListAppendInteger(MCListRef list, integer_t value);
+bool MCListAppendUnsignedInteger(MCListRef self, uinteger_t p_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 

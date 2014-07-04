@@ -33,7 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 typedef struct
 {
-	char *					save_path;
+    MCStringRef				save_path;
 	MCSystemFileHandle *	file;
 	
 	uint32_t				session_count;
@@ -42,7 +42,7 @@ typedef struct
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemLockFile(MCSystemFileHandle *p_file, bool p_shared, bool p_wait);
+extern bool MCSystemLockFile(IO_handle p_file, bool p_shared, bool p_wait);
 bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expires, MCStringRef p_path, MCStringRef p_domain, bool p_secure, bool p_http_only);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,8 +73,6 @@ bool MCSessionOpenIndex(MCSessionIndexRef &r_index)
 	bool t_success = true;
 	
 	MCSessionIndexRef t_index = nil;
-	
-	char *t_path = nil;
 
 	t_success = MCMemoryNew(t_index);
 	
@@ -83,11 +81,11 @@ bool MCSessionOpenIndex(MCSessionIndexRef &r_index)
 		t_success = MCS_get_session_save_path(&t_save_path);
 	
 	if (t_success)
-		t_success = MCCStringClone(MCStringGetCString(*t_save_path), t_index->save_path);
+        t_success = MCStringCopy(*t_save_path, t_index->save_path);
 	
 	MCAutoStringRef t_path_string;
 	if (t_success)
-		t_success = MCStringFormat(&t_path_string, "%s/lcsessions.idx", t_index->save_path);
+        t_success = MCStringFormat(&t_path_string, "%@/lcsessions.idx", t_index->save_path);
 	
 	// open file
 	if (t_success)
@@ -114,7 +112,7 @@ void MCSessionDisposeIndex(MCSessionIndexRef p_index)
 	if (p_index == NULL)
 		return;
 	
-	MCCStringFree(p_index->save_path);
+    MCValueRelease(p_index->save_path);
 	
 	if (p_index->session != NULL)
 	{
@@ -185,35 +183,29 @@ bool MCSessionIndexRemoveSession(MCSessionIndexRef p_index, MCSession *p_session
 
 bool write_uint32(MCSystemFileHandle *p_file, uint32_t p_val)
 {
-	uint32_t t_written;
-	return p_file->Write(&p_val, sizeof(p_val), t_written) && t_written == sizeof(p_val);
+	return p_file->Write(&p_val, sizeof(p_val));
 }
 
 bool write_real64(MCSystemFileHandle *p_file, real64_t p_val)
 {
-	uint32_t t_written;
-	return p_file->Write(&p_val, sizeof(p_val), t_written) && t_written == sizeof(p_val);
+	return p_file->Write(&p_val, sizeof(p_val));
 }
 
 bool write_cstring(MCSystemFileHandle *p_file, const char *p_string)
 {
-	uint32_t t_written;
-	
 	uint32_t t_strlen = MCCStringLength(p_string);
 	if (!write_uint32(p_file, t_strlen))
 		return false;
 
-	return p_file->Write(p_string, t_strlen, t_written) && t_written == t_strlen;
+	return p_file->Write(p_string, t_strlen);
 }
 
 bool write_binary(MCSystemFileHandle *p_file, void *p_data, uint32_t p_length)
-{
-	uint32_t t_written;
-	
+{	
 	if (!write_uint32(p_file, p_length))
 		return false;
 	
-	return p_file->Write(p_data, p_length, t_written) && t_written == p_length;
+	return p_file->Write(p_data, p_length);
 }
 
 bool read_uint32(MCSystemFileHandle *p_file, uint32_t &r_val)
@@ -372,7 +364,7 @@ bool MCSessionOpenSession(MCSessionIndexRef p_index, MCSession *p_session)
 	bool t_success = true;
 	
 	MCAutoStringRef t_path_string;
-	t_success = MCStringFormat(&t_path_string, "%s/%s", p_index->save_path, p_session->filename);
+    t_success = MCStringFormat(&t_path_string, "%@/%s", p_index->save_path, p_session->filename);
 	
 	if (t_success)
 		t_success = NULL != (p_session->filehandle = MCsystem->OpenFile(*t_path_string, kMCOpenFileModeUpdate, false));
@@ -394,6 +386,7 @@ bool MCSessionCreateSession(MCSessionIndexRef p_index, MCStringRef p_session_id,
 
 	MCAutoStringRef t_remote_addr_string;
 	char *t_remote_addr;
+	t_remote_addr = NULL;
 
 	if (MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr_string))
 		MCCStringClone(MCStringGetCString(*t_remote_addr_string), t_remote_addr);
@@ -638,7 +631,7 @@ bool MCSessionCleanup(void)
 			// check file not locked
 			MCSystemFileHandle *t_file;
 			MCAutoStringRef t_full_path_string;
-			if (MCStringFormat(&t_full_path_string, "%s/%s", t_index->save_path, t_index->session[i]->filename)  && MCS_exists(*t_full_path_string, True))
+            if (MCStringFormat(&t_full_path_string, "%@/%s", t_index->save_path, t_index->session[i]->filename)  && MCS_exists(*t_full_path_string, True))
 			{
 				t_file = MCsystem->OpenFile(*t_full_path_string, kMCOpenFileModeRead, false);
 				if (t_file != NULL)
@@ -672,19 +665,19 @@ bool MCSessionCleanup(void)
 static const char *s_hex_char = "0123456789ABCDEF";
 bool byte_to_hex(uint8_t *p_src, uint32_t p_len, MCStringRef &r_hex)
 {
-	if (!MCMemoryNewArray<MCStringRef>(p_len * 2 + 1, (MCStringRef *&) r_hex))
-		return false;
-	
-	char *t_dst = strdup(MCStringGetCString(r_hex));
+    char_t *t_dst, *t_ptr;
+    if (!MCMemoryAllocate(p_len * 2, t_dst))
+        return false;
+
+    t_ptr = t_dst;
+    
 	for (uint32_t i = 0; i < p_len; i++)
 	{
-		*t_dst++ = s_hex_char[(p_src[i] >> 4)];
-		*t_dst++ = s_hex_char[(p_src[i] & 0xF)];
-	}
-	// append terminating null
-	*t_dst = '\0';
-	
-	return true;
+        *t_ptr++ = s_hex_char[(p_src[i] >> 4)];
+        *t_ptr++ = s_hex_char[(p_src[i] & 0xF)];
+    }
+    
+    return MCStringCreateWithNativeCharsAndRelease(t_dst, p_len * 2, r_hex);
 }
 				 
 bool MCSessionGenerateID(MCStringRef &r_id)
@@ -693,6 +686,7 @@ bool MCSessionGenerateID(MCStringRef &r_id)
 
 	MCAutoStringRef t_remote_addr_string;
 	char *t_remote_addr;
+	t_remote_addr = NULL;
 
 	if (MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr_string))
 		MCCStringClone(MCStringGetCString(*t_remote_addr_string), t_remote_addr);

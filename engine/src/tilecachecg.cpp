@@ -116,7 +116,7 @@ void MCTileCacheCoreGraphicsCompositor_DeallocateTile(void *p_context, void *p_t
 	CGImageRelease((CGImageRef)p_tile);
 }
 
-bool MCTileCacheCoreGraphicsCompositor_BeginFrame(void *p_context, MCStackSurface *p_surface, MCRegionRef p_dirty)
+bool MCTileCacheCoreGraphicsCompositor_BeginFrame(void *p_context, MCStackSurface *p_surface, MCGRegionRef p_dirty)
 {
 	MCTileCacheCoreGraphicsCompositorContext *self;
 	self = (MCTileCacheCoreGraphicsCompositorContext *)p_context;

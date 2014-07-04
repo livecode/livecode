@@ -69,6 +69,7 @@
 #include <signal.h>
 #include <io.h> 
 #include <strsafe.h>
+#include <Shlwapi.h>
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -181,9 +182,11 @@ Boolean wsainit()
 			
 			// OK-2009-02-24: [[Bug 7628]]
 			MCresult -> sets("");
+#ifdef _WINDOWS_DESKTOP
 			if (!MCnoui)
 				sockethwnd = CreateWindowA(MC_WIN_CLASS_NAME, "MCsocket", WS_POPUP, 0, 0,
 										   8, 8, NULL, NULL, MChInst, NULL);
+#endif
 		}
 	}
 	MCS_seterrno(0);
@@ -1654,7 +1657,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		if (!SetEndOfFile(m_handle))
 			return false;
 
-		return false;
+		return true;
 	}
 
 	virtual bool Sync(void)
@@ -1693,7 +1696,10 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		return IO_ERROR;
 	return IO_NORMAL;
 #endif /* MCS_flush_dsk_w32 */ //flush output buffer
-		if (FlushFileBuffers(m_handle) != NO_ERROR)
+		// SN-2014-06-16 
+		// FileFlushBuffer returns non-zero on success
+		// (which is the opposite of NO_ERROR
+		if (FlushFileBuffers(m_handle) == 0)
 			return false;
 
 		return true;
@@ -1887,6 +1893,14 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 		setlocale(LC_CTYPE, MCnullstring);
 		setlocale(LC_COLLATE, MCnullstring);
+
+#ifdef _WINDOWS_SERVER
+		WORD request = MAKEWORD(1, 1);
+		WSADATA t_data;
+		WSAStartup(request, &t_data);
+
+		return true;
+#endif // _WINDOWS_SERVER
 
 		// MW-2004-11-28: The ctype array seems to have changed in the latest version of VC++
 		((unsigned short *)_pctype)[160] &= ~_SPACE;

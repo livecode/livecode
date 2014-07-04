@@ -313,7 +313,6 @@ extern Boolean MClockcolormap;
 extern Boolean MClockerrors;
 extern Boolean MClockmenus;
 extern Boolean MClockmessages;
-extern Boolean MClockmoves;
 extern Boolean MClockrecent;
 extern Boolean MCtwelvetime;
 extern Boolean MCuseprivatecmap;
@@ -358,7 +357,6 @@ extern char *MCsslcertificates;
 extern char *MCdefaultnetworkinterface;
 extern uint4 MCstackfileversion;
 extern uint4 MCmajorosversion;
-extern Boolean MCantialiasedtextworkaround;
 extern uint4 MCqtidlerate;
 
 #ifdef _LINUX_DESKTOP

@@ -26,6 +26,7 @@ SOURCES=\
 	object.cpp objptr.cpp operator.cpp paragraf.cpp param.cpp \
 	property.cpp pickle.cpp \
 	regex.cpp \
+	region.cpp \
 	resolution.cpp \
 	scriptpt.cpp \
 	scrolbar.cpp \
@@ -46,7 +47,7 @@ SOURCES=\
 	combiners.cpp path.cpp metacontext.cpp \
 	printer.cpp rtf.cpp rtfsupport.cpp text.cpp pathgray.cpp \
 	pathprocess.cpp \
-    objectstream.cpp \
+	objectstream.cpp \
 	menuparse.cpp parentscript.cpp securemode.cpp \
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp sha1.cpp capsule.cpp \
 	externalv0.cpp externalv1.cpp uuid.cpp \
@@ -61,7 +62,7 @@ SOURCES=\
 	linuxstubs.cpp notify.cpp eventqueue.cpp \
 	objectprops.cpp objectpropsets.cpp internal.cpp mcutility.cpp \
 	redraw.cpp tilecache.cpp tilecachesw.cpp syslnxregion.cpp fieldstyledtext.cpp paragrafattr.cpp \
-	fonttable.cpp fieldrtf.cpp fieldhtml.cpp syslnxfs.cpp stackcache.cpp \
+	fonttable.cpp fieldrtf.cpp fieldhtml.cpp syslnxfs.cpp stackcache.cpp  quicktime.cpp \
 	exec-array.cpp exec-datetime.cpp exec-engine.cpp exec-files.cpp exec-filters.cpp exec-interface.cpp \
 	exec-logic exec-math.cpp exec-multimedia.cpp exec-network.cpp exec-pasteboard.cpp exec-scripting \
 	exec-strings.cpp exec-strings-chunk.cpp exec-text.cpp exec-graphics.cpp exec-security.cpp exec-printing.cpp exec-debugging.cpp \

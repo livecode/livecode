@@ -635,11 +635,6 @@ void MCStack::mode_closeasmenu(void)
 {
 }
 
-bool MCStack::mode_haswindow(void)
-{
-	return window != DNULL;
-}
-
 void MCStack::mode_constrain(MCRectangle& rect)
 {
 }
@@ -653,13 +648,6 @@ MCSysWindowHandle MCStack::getrealwindow(void)
 MCSysWindowHandle MCStack::getqtwindow(void)
 {
 	return window->handle.window;
-}
-#endif
-
-#ifdef _MACOSX
-MCSysWindowHandle MCStack::getqtwindow(void)
-{
-	return window -> handle . window;
 }
 #endif
 
@@ -836,7 +824,7 @@ Window MCModeGetParentWindow(void)
 {
 	Window t_window;
 	t_window = MCdefaultstackptr -> getwindow();
-	if (t_window == DNULL && MCtopstackptr != NULL)
+	if (t_window == NULL && MCtopstackptr != NULL)
 		t_window = MCtopstackptr -> getwindow();
 	return t_window;
 }

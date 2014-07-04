@@ -956,11 +956,9 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_right, int2 y, find
 		int32_t t_padding;
 		t_padding = parent -> gethpadding();
 
-		MCRectangle t_old_clip;
-		t_old_clip = dc -> getclip();
-
-		MCRectangle t_cell_clip;
-		t_cell_clip = t_old_clip;
+		MCRectangle t_cell_clip, t_old_clip;
+		t_cell_clip = dc->getclip();
+        t_old_clip = t_cell_clip;
 
 		findex_t t_index;
 		t_index = start;
@@ -1032,9 +1030,9 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_right, int2 y, find
 			}
 
 			t_index = t_next_index;
-		}
 
-		dc -> setclip(t_old_clip);
+			dc->restore();
+		}
 	}
 	else
 	{
@@ -1283,7 +1281,8 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_
 			dc->setforeground(*t_foreground_color);
 		else if (!(flags & F_HAS_COLOR))
 			f->setforeground(dc, DI_FORE, False, True);
-		dc-> setclip(t_old_clip);
+		
+		dc->restore();
 	}
 	
 	// MW-2012-01-25: [[ ParaStyles ]] Use the owning paragraph to test for vGrid-ness.
@@ -1313,7 +1312,8 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_
 			t_clip . width = x + t_width - t_clip . x;
 		
 		// Set the clip temporarily.
-		dc -> setclip(t_clip);
+		dc->save();
+		dc->cliprect(t_clip);
 		
 		if (fontstyle & FA_BOX)
 		{
@@ -1337,7 +1337,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_
 		}
 		
 		// Revert the clip back to the previous setting.
-		dc -> setclip(t_old_clip);
+		dc->restore();
 	}
 	
 	// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.

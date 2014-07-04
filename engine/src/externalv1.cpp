@@ -2459,6 +2459,7 @@ static MCExternalError MCExternalObjectSet(MCExternalObjectRef p_object, unsigne
 	t_value . valueref_value = p_value -> GetValueRef();
 	
 	Exec_stat t_stat;
+    t_stat = ES_NORMAL;
 	if (t_prop == P_CUSTOM)
 	{
 		MCNewAutoNameRef t_propset_name, t_propset_key;
@@ -2528,6 +2529,7 @@ static MCExternalError MCExternalObjectGet(MCExternalObjectRef p_object, unsigne
 	MCExecValue t_value;
 	
 	Exec_stat t_stat;
+    t_stat = ES_NORMAL;
 	if (t_prop == P_CUSTOM)
 	{
 		MCNewAutoNameRef t_propset_name, t_propset_key;

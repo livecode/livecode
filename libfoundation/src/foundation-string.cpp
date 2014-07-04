@@ -814,6 +814,10 @@ bool MCStringCopySubstring(MCStringRef self, MCRange p_range, MCStringRef& r_sub
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
+    // Avoid copying in case the substring is actually the whole string
+    if (p_range . offset == 0 && self -> char_count < p_range . length)
+        return MCStringCopy(self, r_substring);
+
 	__MCStringClampRange(self, p_range);
 	
     if (MCStringIsNative(self))
@@ -4634,6 +4638,7 @@ bool MCStringCreateWithSysString(const char *p_system_string, MCStringRef &r_str
         return true;
     }
 
+
     // What is the system character encoding?
     //
     // Doing this here is unpleasant but the MCString*SysString functions are
@@ -4685,12 +4690,23 @@ bool MCStringCreateWithSysString(const char *p_system_string, MCStringRef &r_str
 bool MCStringConvertToSysString(MCStringRef p_string, const char * &r_system_string)
 {
     // Create the pseudo-FD that iconv uses for character conversion. For
-	// efficiency, convert straight from the internal format.
+    // efficiency, convert straight from the internal format.
 	iconv_t t_fd;
 	const char *t_mc_string;
 	size_t t_mc_len;
+
+    // What is the system character encoding?
+    //
+    // Doing this here is unpleasant but the MCString*SysString functions are
+    // needed before the libfoundation initialise call is made
+    if (__MCSysCharset == nil)
+    {
+        setlocale(LC_CTYPE, "");
+        __MCSysCharset = nl_langinfo(CODESET);
+    }
+
 	if (MCStringIsNative(p_string) && MCStringGetNativeCharPtr(p_string) != nil)
-	{
+    {
         t_fd = iconv_open(__MCSysCharset, "ISO-8859-1");
 		t_mc_string = (const char *)MCStringGetNativeCharPtr(p_string);
 		t_mc_len = MCStringGetLength(p_string);
@@ -4992,18 +5008,26 @@ static bool __MCStringCopyMutable(__MCString *self, __MCString*& r_new_string)
     __MCString *t_string;
 	t_string = nil;
 	
-    if (!__MCValueCreate(kMCValueTypeCodeString, t_string))
-        return false;
-    
-    t_string -> char_count = self -> char_count;
-    if (MCStringIsNative(self))
-        t_string -> native_chars = self -> native_chars;
+    if (self -> char_count == 0)
+    {
+        t_string = MCValueRetain(kMCEmptyString);
+        MCMemoryDeleteArray(self -> native_chars);
+    }
     else
     {
-        t_string -> chars = self -> chars;
-        t_string -> flags |= kMCStringFlagIsNotNative;
+        if (!__MCValueCreate(kMCValueTypeCodeString, t_string))
+            return false;
+        
+        t_string -> char_count = self -> char_count;
+        if (MCStringIsNative(self))
+            t_string -> native_chars = self -> native_chars;
+        else
+        {
+            t_string -> chars = self -> chars;
+            t_string -> flags |= kMCStringFlagIsNotNative;
+        }
+        t_string -> capacity = 0;
     }
-    t_string -> capacity = 0;
     
     self -> char_count = 0;
     self -> chars = nil;

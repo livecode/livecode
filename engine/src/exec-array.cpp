@@ -653,7 +653,7 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
 	t_stream_handle = nil;
     if (t_success)
     {
-		t_stream_handle = MCS_fakeopen(MCDataGetOldString(p_encoding));
+        t_stream_handle = MCS_fakeopen(MCDataGetBytePtr(p_encoding), MCDataGetLength(p_encoding));
 		if (t_stream_handle == nil)
 			t_success = false;
 	}
@@ -664,7 +664,7 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
 			t_success = false;
         
     // AL-2014-05-01: [[ Bug 11989 ]] If the type is 'empty' then just return the empty array.
-	if (t_type == kMCEncodedValueTypeEmpty)
+	if (t_success && t_type == kMCEncodedValueTypeEmpty)
     {
         r_array = MCValueRetain(kMCEmptyArray);
         return;
