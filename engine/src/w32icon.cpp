@@ -82,10 +82,7 @@ bool MCImageCreateIcon(MCImageBitmap *p_bitmap, uint32_t p_width, uint32_t p_hei
 	{
 		// draw image onto dib at the given size
 		MCGRaster t_raster;
-		t_raster.width = p_bitmap->width;
-		t_raster.height = p_bitmap->height;
-		t_raster.stride = p_bitmap->stride;
-		t_raster.pixels = p_bitmap->data;
+		t_raster = MCImageBitmapGetMCGRaster(p_bitmap, true);
 		t_raster.format = kMCGRasterFormat_ARGB;
 
 		MCGRectangle t_dst = MCGRectangleMake(0, 0, p_width, p_height);

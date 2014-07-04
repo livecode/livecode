@@ -1772,7 +1772,7 @@ void MCInterfaceExecPushCard(MCExecContext& ctxt, MCCard *p_target)
 void MCInterfaceExecClickCmd(MCExecContext& ctxt, uint2 p_button, MCPoint p_location, uint2 p_modifiers)
 {
 	if (!MCdefaultstackptr->getopened()
-	        || !MCdefaultstackptr->mode_haswindow())
+	        || !MCdefaultstackptr->haswindow())
 	{
 		ctxt . LegacyThrow(EE_CLICK_STACKNOTOPEN);
 		return;
@@ -3291,7 +3291,7 @@ void MCInterfaceExecLockMenus(MCExecContext& ctxt)
 
 void MCInterfaceExecLockMoves(MCExecContext& ctxt)
 {
-	MClockmoves = True;
+	MCscreen->setlockmoves(True);
 }
 
 void MCInterfaceExecLockRecent(MCExecContext& ctxt)
@@ -3337,7 +3337,7 @@ void MCInterfaceExecUnlockMenus(MCExecContext& ctxt)
 
 void MCInterfaceExecUnlockMoves(MCExecContext& ctxt)
 {
-	MClockmoves = False;
+	MCscreen->setlockmoves(False);
 }
 
 void MCInterfaceExecUnlockRecent(MCExecContext& ctxt)
@@ -4028,7 +4028,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 	MCStack *oldstack = NULL;
 	if (p_window != nil || p_this_stack)
 	{
-		Window w = DNULL;
+		Window w = NULL;
 		if (p_this_stack)
 		{
 			oldstack = MCdefaultstackptr;

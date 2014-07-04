@@ -136,8 +136,12 @@ public:
 	uint4 nread;
 	char *error;
 	real8 timeout;
-	MCSocketHandle fd;
+	MCSocketHandle fd;	
+	// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
+	MCNameRef endhostname;
+    
 	MCSocket(MCNameRef n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock, Boolean a, Boolean s, Boolean issecure);
+
 	void setselect();
 	void setselect(uint2 sflags);
 
@@ -152,7 +156,7 @@ public:
 	Boolean sslverify;
 	void doclose();
 
-#if defined _WINDOWS
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 	void acceptone();
 #endif
 

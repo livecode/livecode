@@ -1586,12 +1586,12 @@ void MCInterfaceSetLockMessages(MCExecContext& ctxt, bool p_value)
 
 void MCInterfaceGetLockMoves(MCExecContext& ctxt, bool& r_value)
 {
-	r_value = MClockmoves == True;
+	r_value = MCscreen->getlockmoves() == True;
 }
 
 void MCInterfaceSetLockMoves(MCExecContext& ctxt, bool p_value)
 {
-	MClockmoves = p_value ? True : False;
+	MCscreen -> setlockmoves(p_value ? True : False);
 }
 
 void MCInterfaceGetLockRecent(MCExecContext& ctxt, bool& r_value)
@@ -2300,7 +2300,10 @@ static MCStack *MCInterfaceTryToEvalBinaryStack(MCStringRef p_data, bool& r_bina
     
     if (MCStringFirstIndexOf(p_data, MCSTR(SIGNATURE), 0, kMCCompareExact, offset) && (MCStringGetLength(p_data) > 8 && MCStringBeginsWithCString(p_data, (const char_t *)"REVO", kMCCompareExact)))
     {
-        IO_handle stream = MCS_fakeopen(MCStringGetOldString(p_data));
+        char_t* t_string;
+        uindex_t t_length;
+        /* UNCHECKED */ MCStringConvertToNative(p_data, t_string, t_length);
+        IO_handle stream = MCS_fakeopen(t_string, t_length);
         /* UNCHECKED */ MCdispatcher->readfile(NULL, NULL, stream, t_stack);
         MCS_close(stream);
         t_binary_fail = t_stack == nil;
@@ -3424,7 +3427,7 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
         case F_SELECTED_TEXT:
             wholeline = False;
         case F_SELECTED_LINE:
-            if (!t_field->selectedmark(wholeline, start, end, False, p_whole_chunk))
+            if (!t_field->selectedmark(wholeline, start, end, False))
                 start = end = 0;
             break;
         case F_MOUSE_CHAR_CHUNK:

@@ -64,7 +64,7 @@ bool MCResampledImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_heigh
 	return true;
 }
 
-bool MCResampledImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)
+bool MCResampledImageRep::LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied)
 {
 	uindex_t t_target_width, t_target_height;
 	if (!GetGeometry(t_target_width, t_target_height))
@@ -72,7 +72,7 @@ bool MCResampledImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_f
 	
 	bool t_success = true;
 	
-	MCImageFrame *t_frames = nil;
+	MCBitmapFrame *t_frames = nil;
 	uindex_t t_frame_count = 0;
 	
 	t_frame_count = m_source->GetFrameCount();
@@ -88,9 +88,9 @@ bool MCResampledImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_f
 	
 	for (uindex_t i = 0; t_success && i < t_frame_count; i++)
 	{
-		MCImageFrame *t_src_frame = nil;
+		MCBitmapFrame *t_src_frame = nil;
 		
-		t_success = m_source->LockImageFrame(i, false, t_scale, t_src_frame);
+		t_success = m_source->LockBitmapFrame(i, t_scale, t_src_frame);
 		if (t_success)
 		{
 			t_frames[i].duration = t_src_frame->duration;
@@ -99,7 +99,7 @@ bool MCResampledImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_f
 			if (t_success)
 				MCImageFlipBitmapInPlace(t_frames[i].image, m_h_flip, m_v_flip);
 		}
-		m_source->UnlockImageFrame(i, t_src_frame);
+		m_source->UnlockBitmapFrame(i, t_src_frame);
 	}
 	
 	if (t_success)

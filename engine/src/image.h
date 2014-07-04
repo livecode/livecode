@@ -59,7 +59,7 @@ void MCImageFlipBitmapInPlace(MCImageBitmap *p_bitmap, bool p_horizontal, bool p
 // Image format encode / decode function
 bool MCImageEncodeGIF(MCImageBitmap *p_image, IO_handle p_stream, bool p_dither, uindex_t &r_bytes_written);
 bool MCImageEncodeGIF(MCImageIndexedBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_bytes_written);
-bool MCImageDecodeGIF(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_frame_count);
+bool MCImageDecodeGIF(IO_handle p_stream, MCBitmapFrame *&r_frames, uindex_t &r_frame_count);
 
 bool MCImageEncodeJPEG(MCImageBitmap *p_image, IO_handle p_stream, uindex_t &r_bytes_written);
 bool MCImageDecodeJPEG(IO_handle p_stream, MCImageBitmap *&r_image);
@@ -115,14 +115,14 @@ bool MCImageCompressRLE(MCImageIndexedBitmap *p_indexed, MCImageCompressedBitmap
 bool MCImageDecompressRLE(MCImageCompressedBitmap *p_compressed, MCImageBitmap *&r_bitmap);
 
 bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBitmap *&r_compressed);
-bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCImageFrame *&r_frames, uindex_t &r_frame_count);
+bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCBitmapFrame *&r_frames, uindex_t &r_frame_count);
 
 bool MCImageGetMetafileGeometry(IO_handle p_stream, uindex_t &r_width, uindex_t &r_height);
 bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotspot, MCStringRef &r_name, MCImageCompressedBitmap *&r_compressed, MCImageBitmap *&r_bitmap);
 bool MCImageExport(MCImageBitmap *p_bitmap, Export_format p_format, MCImagePaletteSettings *p_palette_settings, bool p_dither, IO_handle p_stream, IO_handle p_mask_stream);
 
-bool MCImageDecode(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_frame_count);
-bool MCImageDecode(const uint8_t *p_data, uindex_t p_size, MCImageFrame *&r_frames, uindex_t &r_frame_count);
+bool MCImageDecode(IO_handle p_stream, MCBitmapFrame *&r_frames, uindex_t &r_frame_count);
+bool MCImageDecode(const uint8_t *p_data, uindex_t p_size, MCBitmapFrame *&r_frames, uindex_t &r_frame_count);
 
 bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCDataRef &r_data);
 
@@ -154,8 +154,13 @@ public:
 	// Image Rep interface
 	MCImageRepType GetType() { return kMCImageRepMutable; }
 	uindex_t GetFrameCount();
-	bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame);
-	void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame);
+	
+	bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
+	void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
+	
+	bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame *&r_frame);
+	void UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame);
+	
 	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 	
 	uint32_t GetDataCompression();
@@ -244,7 +249,8 @@ public:
 
 private:
 	MCImage *m_owner;
-	MCImageFrame m_frame;
+	MCGImageFrame m_gframe;
+	MCBitmapFrame m_frame;
 
 	MCImageBitmap *m_bitmap;
 	MCImageBitmap *m_unpre_bitmap;
@@ -298,14 +304,20 @@ class MCImage : public MCControl
 	// IM-2013-11-05: [[ RefactorGraphics ]] Resampled image rep used to store cached
 	// best-quality scaled image
 	MCResampledImageRep *m_resampled_rep;
+
+	// IM-2014-05-12: [[ ImageRepUpdate ]] The possible sources of the currently locked bitmap
 	MCImageRep *m_locked_rep;
-	MCImageFrame *m_locked_frame;
-	MCImageBitmap *m_transformed_bitmap;
+	MCBitmapFrame *m_locked_bitmap_frame;
+	MCGImageRef m_locked_image;
+	MCImageBitmap *m_locked_bitmap;
+
 	uint32_t m_image_opened;
 
 	bool m_has_transform;
 	MCGAffineTransform m_transform;
 	
+    MCRectangle m_center_rect;
+    
 	// MW-2013-10-25: [[ Bug 11300 ]] These control whether a horz/vert flip is
 	//   applied to the transform on referenced images (set by the flip cmd).
 	bool m_flip_x : 1;
@@ -353,6 +365,9 @@ public:
 	static MCPatternInfo *s_control_pixmapids;
 	static uint16_t s_control_color_flags;
 	
+	// IM-2014-05-21: [[ HiResPatterns ]] Convert image resize quality to MCGImageFilter
+	static MCGImageFilter resizequalitytoimagefilter(uint8_t p_quality);
+
 private:
 	void setrep(MCImageRep *p_rep);
 	
@@ -439,10 +454,20 @@ public:
 		return resizequality;
 	}
 
+	// IM-2014-05-21: [[ HiResPatterns ]] Return the image filter used when transforming this image
+	MCGImageFilter getimagefilter()
+	{
+		return resizequalitytoimagefilter(resizequality);
+	}
+
 	void setframe(int32_t p_newframe);
 	void advanceframe();
 
 	uint32_t getcompression();
+
+	// IM-2014-05-12: [[ ImageRepUpdate ]] Returns a bitmap version of the image at the requested scale.
+	// Release the bitmap with unlockbitmap() once done with it.
+	bool lockbitmap(bool p_premultiplied, bool p_update_transform, MCGFloat p_scale, MCImageBitmap *&r_bitmap);
 
 	// get the current (transformed) image data
 	bool lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_update_transform = true);
@@ -468,10 +493,12 @@ public:
 	void endsel();
 
 	// in idraw.cc
-	void drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy);
+	void drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint2 dw, uint2 dh);
 	void drawcentered(MCDC *dc, int2 x, int2 y, Boolean reverse);
-    void drawnodata(MCDC *dc, MCRectangle drect, uint2 sw, uint2 sh, int2 dx, int2 dy);
+    void drawnodata(MCDC *dc, MCRectangle drect, uint2 sw, uint2 sh, int2 dx, int2 dy, uint2 dw, uint2 dh);
 
+    void drawwithgravity(MCDC *dc, MCRectangle rect, MCGravity gravity);
+    
 	void canceldraw(void);
 	void startmag(int2 x, int2 y);
 	void endmag(Boolean close);
@@ -631,6 +658,9 @@ public:
 	void GetPaintCompression(MCExecContext& ctxt, intenum_t& r_compression);
 	void GetAngle(MCExecContext& ctxt, integer_t& r_angle);
 	void SetAngle(MCExecContext& ctxt, integer_t p_angle);
+    // MERG-2014-06-23: [[ IconGravity ]] Getters and setters added
+    void SetCenterRectangle(MCExecContext& ctxt, MCRectangle *p_rectangle);
+    void GetCenterRectangle(MCExecContext& ctxt, MCRectangle *&r_rectangle);
     
     virtual void SetBlendLevel(MCExecContext& ctxt, uinteger_t level);
 	virtual void SetInk(MCExecContext& ctxt, intenum_t ink);

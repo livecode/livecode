@@ -427,7 +427,7 @@ static void MCTileCacheOpenGLCompositor_PrepareFrame(MCTileCacheOpenGLCompositor
 	glTexCoordPointer(2, GL_SHORT, 8, self -> vertex_data + 2);
 }
 
-bool MCTileCacheOpenGLCompositor_BeginFrame(void *p_context, MCStackSurface *p_surface, MCRegionRef p_dirty)
+bool MCTileCacheOpenGLCompositor_BeginFrame(void *p_context, MCStackSurface *p_surface, MCGRegionRef p_dirty)
 {
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;

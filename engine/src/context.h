@@ -72,15 +72,19 @@ enum MCImageDataType
 
 struct MCImageDescriptor
 {
-	bool has_transform;
+	bool has_transform : 1;
+    bool has_center : 1;
+    
 	MCGAffineTransform transform;
-	MCGImageFilter filter;
+	MCGRectangle center;
+    
+    MCGImageFilter filter;
 	
 	// IM-2013-07-19: [[ ResIndependence ]] add scale factor field for scaled images
 	MCGFloat scale_factor;
 
-	// The image bitmap
-	MCImageBitmap *bitmap;
+	// IM-2014-06-12: [[ ImageRepUpdate ]] Update image to be an MCGImage
+	MCGImageRef image;
 
 	// The image source data
 	MCImageDataType data_type;
@@ -144,6 +148,14 @@ public:
 
 	virtual void setprintmode(void) = 0;
 
+	// IM-2014-06-03: [[ GraphicsPerformance ]] Save the current state of the graphics context
+	virtual void save() = 0;
+	// IM-2014-06-03: [[ GraphicsPerformance ]] Restore the previously saved graphics context state
+	virtual void restore() = 0;
+	
+	// IM-2014-06-03: [[ GraphicsPerformance ]] Reduce the clipping region by intersecting with the given rect
+	virtual void cliprect(const MCRectangle &p_rect) = 0;
+	
 	virtual void setclip(const MCRectangle& rect) = 0;
 	virtual MCRectangle getclip(void) const = 0;
 	virtual void clearclip(void) = 0;
@@ -197,7 +209,9 @@ public:
 	virtual void applywindowshape(MCWindowShape *p_mask, uint4 p_u_width, uint4 p_u_height) = 0;
 
 	virtual void drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p_parameters) = 0;
-
+	
+	virtual bool lockgcontext(MCGContextRef& r_ctxt) = 0;
+	virtual void unlockgcontext(MCGContextRef ctxt) = 0;
 	
 	virtual MCRegionRef computemaskregion(void) = 0;
 	virtual void clear(const MCRectangle* rect) = 0;

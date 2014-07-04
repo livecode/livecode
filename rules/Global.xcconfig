@@ -1,6 +1,6 @@
 #include "../version"
 
-SDKROOT = macosx10.6
+SDKROOT = macosx10.8
 
 OWNER = .
 SOLUTION_DIR = $(PROJECT_DIR)/../$(OWNER)

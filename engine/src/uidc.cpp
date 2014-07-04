@@ -205,6 +205,8 @@ MCUIDC::MCUIDC()
 	nmessages = maxmessages = 0;
 	messages = NULL;
 	moving = NULL;
+	lockmoves = False;
+	locktime = 0.0;
 	ncolors = 0;
 	colors = NULL;
 	allocs = NULL;
@@ -212,6 +214,9 @@ MCUIDC::MCUIDC()
 	lockmods = False;
 
 	m_sound_internal = NULL ;
+
+	// IM-2014-03-06: [[ revBrowserCEF ]] List of callback functions to call during wait()
+	m_runloop_actions = nil;
 }
 
 MCUIDC::~MCUIDC()
@@ -781,32 +786,6 @@ Boolean MCUIDC::getmouseclick(uint2 button, Boolean& r_abort)
 	return False;
 }
 
-void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, MCStringRef p1, MCStringRef p2)
-{
-	MCParameter *params = NULL;
-	if (p1 != NULL)
-	{
-		params = new MCParameter;
-		params->setvalueref_argument(p1);
-		if (p2 != NULL)
-		{
-			params->setnext(new MCParameter);
-			params->getnext()->setvalueref_argument(p2);
-		}
-    }
-
-    doaddmessage(optr, mptr, MCS_time(), ++messageid, params);
-}
-
-void MCUIDC::addmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter *params)
-{
-    doaddmessage(optr, mptr, time, ++messageid, params);
-
-	char buffer[U4L];
-	sprintf(buffer, "%u", messages[nmessages].id);
-    MCresult->copysvalue(buffer);
-}
-
 Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
 	real8 curtime = MCS_time();
@@ -817,6 +796,9 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	Boolean donepending = False;
 	do
 	{
+		// IM-2014-03-06: [[ revBrowserCEF ]] call additional runloop callbacks
+		DoRunloopActions();
+
 		real8 eventtime = exittime;
 		donepending = handlepending(curtime, eventtime, dispatch);
 		siguser();
@@ -839,6 +821,83 @@ void MCUIDC::pingwait(void)
 	//   any running wait.
 	MCNotifyPing(false);
 #endif
+}
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Add callback & context to runloop action list
+bool MCUIDC::AddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action)
+{
+	MCRunloopAction *t_action;
+	t_action = nil;
+
+	if (!MCMemoryNew(t_action))
+		return false;
+
+	t_action->callback = p_callback;
+	t_action->context = p_context;
+
+	t_action->next = m_runloop_actions;
+	m_runloop_actions = t_action;
+
+	r_action = t_action;
+
+	return true;
+}
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Remove action from runloop action list
+void MCUIDC::RemoveRunloopAction(MCRunloopActionRef p_action)
+{
+	if (p_action == nil)
+		return;
+
+	MCRunloopAction *t_remove_action;
+	t_remove_action = nil;
+
+	if (p_action == m_runloop_actions)
+	{
+		t_remove_action = m_runloop_actions;
+		m_runloop_actions = p_action->next;
+	}
+	else
+	{
+		MCRunloopAction *t_action;
+		t_action = m_runloop_actions;
+
+		while (t_action != nil && t_remove_action == nil)
+		{
+			if (t_action->next == p_action)
+			{
+				t_remove_action = p_action;
+				t_action->next = p_action->next;
+			}
+
+			t_action = t_action->next;
+		}
+	}
+
+	if (t_remove_action != nil)
+		MCMemoryDelete(t_remove_action);
+}
+
+// IM-2014-03-06: [[ revBrowserCEF ]] Call runloop action callbacks
+void MCUIDC::DoRunloopActions(void)
+{
+	MCRunloopAction *t_action;
+	t_action = m_runloop_actions;
+
+	while (t_action != nil)
+	{
+		// IM-2014-05-06: [[ Bug 12364 ]] Guard against runloop action deletion within callback
+		MCRunloopAction *t_next;
+		t_next = t_action->next;
+
+		t_action->callback(t_action->context);
+		t_action = t_next;
+	}
+}
+
+bool MCUIDC::HasRunloopActions()
+{
+	return m_runloop_actions != nil;
 }
 
 void MCUIDC::flushevents(uint2 e)
@@ -909,7 +968,7 @@ void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, 
 	}
     
     // Find where in the list to insert the pending message.
-    int t_index;
+    uint32_t t_index;
     for(t_index = 0; t_index < nmessages; t_index++)
         if (messages[t_index] . time > time)
             break;
@@ -956,6 +1015,33 @@ int MCUIDC::doshiftmessage(int index, real8 newtime)
     return t_index;
 }
 
+void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, MCStringRef p1, MCStringRef p2)
+{
+	MCParameter *params = NULL;
+	if (p1 != NULL)
+	{
+		params = new MCParameter;
+		params->setvalueref_argument(p1);
+		if (p2 != NULL)
+		{
+			params->setnext(new MCParameter);
+			params->getnext()->setvalueref_argument(p2);
+		}
+	}
+    
+    doaddmessage(optr, mptr, MCS_time(), ++messageid, params);
+}
+
+void MCUIDC::addmessage(MCObject *optr, MCNameRef mptr, real8 time, MCParameter *params)
+{
+    uint4 t_id;
+    t_id = ++messageid;
+    doaddmessage(optr, mptr, time, t_id, params);
+    
+    // MW-2014-05-28: [[ Bug 12463 ]] Previously the result would have been set here which is
+    //   incorrect as engine pending messages should not set the result.
+}
+
 void MCUIDC::addtimer(MCObject *optr, MCNameRef mptr, uint4 delay)
 {
     // Remove existing message from the queue.
@@ -985,8 +1071,7 @@ void MCUIDC::cancelmessageindex(uint2 i, Boolean dodelete)
 
 void MCUIDC::cancelmessageid(uint4 id)
 {
-	uint2 i;
-	for (i = 0 ; i < nmessages ; i++)
+	for(uindex_t i = 0 ; i < nmessages ; i++)
 		if (messages[i].id == id)
 		{
 			cancelmessageindex(i, True);
@@ -1020,7 +1105,7 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 			if (!MCListCreateMutable(',', &t_msg_info))
 				return false;
 
-			if (!MCListAppendInteger(*t_msg_info, messages[i].id))
+			if (!MCListAppendUnsignedInteger(*t_msg_info, messages[i].id))
 				return false;
 
 			if (!ctxt.FormatReal(messages[i].time, &t_time_string)
@@ -1042,13 +1127,32 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 	return MCListCopy(*t_list, r_list);
 }
 
+// MW-2014-05-28: [[ Bug 12463 ]] This is called by 'send in time' to queue a user defined message.
+//   It puts a limit on the number of script sent messages of 64k which should be enough for any
+//   reasonable app. Note that the engine's internal / sent messages are still allowed beyond this
+//   limit as they definitely do not have a double-propagation problem that could cause engine lock-up.
+bool MCUIDC::addusermessage(MCObject* optr, MCNameRef name, real8 time, MCParameter *params)
+{
+    if (nmessages >= 65536)
+        return false;
+    
+    addmessage(optr, name, time, params);
+    
+    // MW-2014-05-28: [[ Bug 12463 ]] Set the result to the pending message id.
+	char buffer[U4L];
+	sprintf(buffer, "%u", messageid);
+	MCresult->copysvalue(buffer);
+    
+    return true;
+}
+
 // MW-2014-04-16: [[ Bug 11690 ]] Rework pending message handling to take advantage
 //   of messages[] now being a sorted list.
 Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch)
 {
     Boolean t_handled;
     t_handled = False;
-    for(int i = 0; i < nmessages; i++)
+    for(uindex_t i = 0; i < nmessages; i++)
     {
         // If the next message is later than curtime, we've not processed a message.
         if (messages[i] . time > curtime)
@@ -1098,6 +1202,36 @@ Boolean MCUIDC::handlepending(real8& curtime, real8& eventtime, Boolean dispatch
     return t_handled;
 }
 
+
+Boolean MCUIDC::getlockmoves() const
+{
+	return lockmoves;
+}
+
+void MCUIDC::setlockmoves(Boolean b)
+{
+	if (lockmoves == b)
+		return;
+
+	lockmoves = b;
+
+	if (lockmoves) {
+		// then save the time the lock started
+		locktime = MCS_time(); 
+
+	} else {
+		// adjust the start time of each movement.
+		real8 offset = MCS_time() - locktime;
+		if (moving != NULL)	{
+			MCMovingList *mptr = moving;
+			do {
+				mptr->starttime += offset;
+				mptr = mptr->next();
+			} while (mptr != moving);
+		}
+	}
+}
+
 void MCUIDC::addmove(MCObject *optr, MCPoint *pts, uint2 npts,
                      real8 &duration, Boolean waiting)
 {
@@ -1145,7 +1279,11 @@ void MCUIDC::addmove(MCObject *optr, MCPoint *pts, uint2 npts,
 			optr -> setrect(newrect);
 	}
 
-	mptr->starttime = MCS_time();
+	if (lockmoves) {
+		mptr->starttime = locktime;
+	} else {
+		mptr->starttime = MCS_time();
+	}
 }
 
 bool MCUIDC::listmoves(MCExecContext& ctxt, MCListRef& r_list)
@@ -1180,8 +1318,7 @@ void MCUIDC::stopmove(MCObject *optr, Boolean finish)
 		{
 			if (mptr->object == optr)
 			{
-				mptr->remove
-				(moving);
+				mptr->remove(moving);
 				if (finish)
 				{
 					MCRectangle rect = mptr->object->getrect();
@@ -1211,94 +1348,82 @@ void MCUIDC::stopmove(MCObject *optr, Boolean finish)
 
 void MCUIDC::handlemoves(real8 &curtime, real8 &eventtime)
 {
-	static real8 lasttime;
+	if (lockmoves) 
+		return;
 	eventtime = curtime + (real8)MCsyncrate / 1000.0;
 	MCMovingList *mptr = moving;
 	Boolean moved = False;
 	Boolean done = False;
 	do
 	{
-		if (MClockmoves)
+		MCRectangle rect = mptr->object->getrect();
+		MCRectangle newrect = rect;
+		real8 dt = 0.0;
+		if (curtime >= mptr->starttime + mptr->duration
+		        || rect.x == mptr->donex && rect.y == mptr->doney)
 		{
-			if (lasttime != 0.0)
-				mptr->starttime += curtime - lasttime;
-			mptr = mptr->next();
+			newrect.x = mptr->donex;
+			newrect.y = mptr->doney;
+			dt = curtime - (mptr->starttime + mptr->duration);
+			done = True;
 		}
 		else
 		{
-			MCRectangle rect = mptr->object->getrect();
-			MCRectangle newrect = rect;
-			real8 dt = 0.0;
-			if (curtime >= mptr->starttime + mptr->duration
-			        || rect.x == mptr->donex && rect.y == mptr->doney)
-			{
-				newrect.x = mptr->donex;
-				newrect.y = mptr->doney;
-				dt = curtime - (mptr->starttime + mptr->duration);
-				done = True;
-			}
-			else
-			{
-				newrect.x = mptr->pts[mptr->curpt].x - (rect.width >> 1)
-				            + (int2)(mptr->dx * (curtime - mptr->starttime) / mptr->duration);
-				newrect.y = mptr->pts[mptr->curpt].y - (rect.height >> 1)
-				            + (int2)(mptr->dy * (curtime - mptr->starttime) / mptr->duration);
-			}
-			if (newrect.x != rect.x || newrect.y != rect.y)
-			{
-				moved = True;
-			
-				// MW-2011-08-18: [[ Layers ]] Notify of position change.
-				if (mptr->object -> gettype() >= CT_GROUP)
-					static_cast<MCControl *>(mptr->object)->layer_setrect(newrect, false);
-				else
-					mptr->object->setrect(newrect);
-			}
-			if (done)
-			{
-				if (mptr->curpt < mptr->lastpt - 1)
-				{
-					do
-					{
-						mptr->curpt++;
-						mptr->dx = mptr->pts[mptr->curpt + 1].x - mptr->pts[mptr->curpt].x;
-						mptr->dy = mptr->pts[mptr->curpt + 1].y - mptr->pts[mptr->curpt].y;
-						mptr->duration = sqrt((double)(mptr->dx * mptr->dx + mptr->dy
-						                               * mptr->dy)) / mptr->speed;
-						dt -= mptr->duration;
-					}
-					while (dt > 0.0 && mptr->curpt < mptr->lastpt - 1);
-					mptr->duration = -dt;
-					mptr->starttime = curtime;
-					mptr->donex = mptr->pts[mptr->curpt + 1].x - (rect.width >> 1);
-					mptr->doney = mptr->pts[mptr->curpt + 1].y - (rect.height >> 1);
-				}
-				else
-				{
-					moving = mptr->prev();
-					mptr->remove(moving);
-					if (!mptr->waiting)
-						if (MClockmessages)
-							delaymessage(mptr->object, MCM_move_stopped);
-						else
-							mptr->object->message(MCM_move_stopped);
-					delete mptr;
-					if (moving == NULL)
-						mptr = NULL;
-					else
-						mptr = moving->next();
-				}
-				done = False;
-			}
-			else
-				mptr = mptr->next();
+			newrect.x = mptr->pts[mptr->curpt].x - (rect.width >> 1)
+			            + (int2)(mptr->dx * (curtime - mptr->starttime) / mptr->duration);
+			newrect.y = mptr->pts[mptr->curpt].y - (rect.height >> 1)
+			            + (int2)(mptr->dy * (curtime - mptr->starttime) / mptr->duration);
 		}
+		if (newrect.x != rect.x || newrect.y != rect.y)
+		{
+			moved = True;
+		
+			// MW-2011-08-18: [[ Layers ]] Notify of position change.
+			if (mptr->object -> gettype() >= CT_GROUP)
+				static_cast<MCControl *>(mptr->object)->layer_setrect(newrect, false);
+			else
+				mptr->object->setrect(newrect);
+		}
+		if (done)
+		{
+			if (mptr->curpt < mptr->lastpt - 1)
+			{
+				do
+				{
+					mptr->curpt++;
+					mptr->dx = mptr->pts[mptr->curpt + 1].x - mptr->pts[mptr->curpt].x;
+					mptr->dy = mptr->pts[mptr->curpt + 1].y - mptr->pts[mptr->curpt].y;
+					mptr->duration = sqrt((double)(mptr->dx * mptr->dx + mptr->dy
+					                               * mptr->dy)) / mptr->speed;
+					dt -= mptr->duration;
+				}
+				while (dt > 0.0 && mptr->curpt < mptr->lastpt - 1);
+				mptr->duration = -dt;
+				mptr->starttime = curtime;
+				mptr->donex = mptr->pts[mptr->curpt + 1].x - (rect.width >> 1);
+				mptr->doney = mptr->pts[mptr->curpt + 1].y - (rect.height >> 1);
+			}
+			else
+			{
+				moving = mptr->prev();
+				mptr->remove(moving);
+				if (!mptr->waiting)
+					if (MClockmessages)
+						delaymessage(mptr->object, MCM_move_stopped);
+					else
+						mptr->object->message(MCM_move_stopped);
+				delete mptr;
+				if (moving == NULL)
+					mptr = NULL;
+				else
+					mptr = moving->next();
+			}
+			done = False;
+		}
+		else
+			mptr = mptr->next();
 	}
 	while (mptr != NULL && mptr != moving);
-	if (MClockmoves)
-		lasttime = curtime;
-	else
-		lasttime = 0.0;
 		
 	// MW-2012-12-09: [[ Bug 9905 ]] Make sure we update the screen if something
 	//   moved (previously it only did so if there were still things to move also!).
@@ -1704,7 +1829,7 @@ bool MCUIDC::unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font
 
 //
 
-MCDragAction MCUIDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
+MCDragAction MCUIDC::dodragdrop(Window w, MCPasteboard* p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
 {
 	return DRAG_ACTION_NONE;
 }
@@ -1730,4 +1855,22 @@ int32_t MCUIDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_coun
 bool MCUIDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result)
 {
 	return false;
+}
+
+//
+
+void MCUIDC::controlgainedfocus(MCStack *s, uint32_t id)
+{
+}
+
+void MCUIDC::controllostfocus(MCStack *s, uint32_t id)
+{
+}
+
+//
+
+void MCUIDC::hidecursoruntilmousemoves(void)
+{
+    // Default action is to do nothing - Mac overrides and performs the
+    // appropriate function.
 }

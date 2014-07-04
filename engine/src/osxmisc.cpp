@@ -31,94 +31,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "mode.h"
 
-#include "osxdc.h"
 #include "osxtheme.h"
 
 #include "resolution.h"
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  REFACTORED FROM STACKLST.CPP
-//
-
-extern void dohilitewindow(WindowRef p_window, Boolean p_hilite);
-
-extern bool WindowIsInControlGroup(WindowRef p_window);
-
-void MCStacklist::ensureinputfocus(Window window)
-{
-	MCStacknode *t_node = stacks;
-	if (t_node == NULL)
-		return;
-	
-	bool t_browsers_found;
-	t_browsers_found = false;
-	
-	do
-	{
-		Window t_handle;
-		t_handle = t_node -> getstack() -> getwindow();
-		if (t_handle != NULL)
-		{
-			if (WindowIsInControlGroup((WindowPtr)t_handle -> handle . window))
-			{
-				ItemCount t_count;
-				t_count = CountWindowGroupContents(GetWindowGroup((WindowPtr)t_handle -> handle . window), kWindowGroupContentsReturnWindows);
-				WindowRef *t_windows;
-				t_windows = new WindowRef[t_count];
-				
-				ItemCount t_actual_count;
-				t_actual_count = 0;
-				GetWindowGroupContents(GetWindowGroup((WindowPtr)t_handle -> handle . window), kWindowGroupContentsReturnWindows, t_count, &t_actual_count, (void **)t_windows);
-				for(int t_index = 0; t_index < t_actual_count; ++t_index)
-					if (t_windows[t_index] != (WindowPtr)t_handle -> handle . window)
-					{
-						ClearKeyboardFocus(t_windows[t_index]);
-						t_browsers_found = true;
-					}
-				
-				delete t_windows;
-			}
-		}
-		t_node = t_node -> next();
-	}
-	while(t_node != stacks);
-	
-	if (t_browsers_found && window != NULL)
-		SetUserFocusWindow((WindowPtr)window -> handle . window);
-}
-
-void MCStacklist::hidepalettes(Boolean hide)
-{
-	active = !hide;
-	if (stacks == NULL)
-		return;
-	MCStacknode *tptr = stacks;
-
-	restart = False;
-	tptr = stacks;
-	do
-	{
-		MCStack *sptr = tptr->getstack();
-		if (sptr->getrealmode() == WM_PALETTE && sptr->getflag(F_VISIBLE))
-			if (MChidepalettes)
-			{
-				WindowClass wclass;
-				GetWindowClass((WindowPtr)sptr->getw()->handle.window, &wclass );
-				if (wclass != kUtilityWindowClass)
-				{
-                    // MM-2012-04-02: Use new MC*Window wrapper function - fixes bugs where a cocoa NSWindow has been
-                    //  created from the carbon WindowRef.
-					extern void MCShowHideWindow(void *, bool);
-					MCShowHideWindow(sptr->getw()->handle.window, !hide);
-					if (!hide)
-						dohilitewindow((WindowPtr)sptr->getw()->handle.window, True);
-				}
-			}
-		tptr = tptr->next();
-	}
-	while (tptr != stacks);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -252,310 +167,6 @@ void MCMacEnableScreenUpdates(void)
 	EnableScreenUpdates();
 }
 
-bool MCMacIsWindowVisible(Window window)
-{
-	return IsWindowVisible((WindowPtr)window -> handle . window);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  REFACTORED FROM BUTTON.CPP
-//
-
-bool MCMacGetMenuItemTag(MenuHandle mh, uint2 mitem, MCStringRef &r_string)
-{
-	UInt32 t_propsize;
-	OSStatus t_result = GetMenuItemPropertySize(mh, mitem, 'RRev', 'MTag', &t_propsize);
-	if (t_result == noErr)
-	{
-		char *t_tag = new char[t_propsize + 1];
-		t_result = GetMenuItemProperty(mh, mitem, 'RRev', 'MTag', t_propsize, NULL, t_tag);
-		t_tag[t_propsize] = '\0';
-		if (MCStringCreateWithCStringAndRelease((char_t*)t_tag, r_string))
-			return true;
-		
-		delete[] t_tag;
-		return false;
-	}
-	else
-		return false;
-}
-
-static void getmacmenuitemtext(MenuHandle mh, uint2 mitem, MCStringRef &r_string, Boolean issubmenu)
-{
-	//find menu root, to get tags property
-	bool t_menuhastags;
-	
-	MenuID t_menu = GetMenuID(mh);
-	if (issubmenu)
-		// Get main menu id of submenu, stored as a property of the menu
-		GetMenuItemProperty(mh, 0, 'RRev', 'MMID', sizeof(t_menu), NULL, &t_menu);
-	GetMenuItemProperty(GetMenuHandle(t_menu), 0, 'RRev', 'Tags', sizeof(t_menuhastags), NULL, &t_menuhastags);
-	
-	//isunicode &= !t_menuhastags;
-	char *newmenu = NULL;
-
-	MCAutoStringRef t_menuitem;
-	if (!MCMacGetMenuItemTag(mh, mitem, &t_menuitem))
-	{
-		CFStringRef cfmenuitemstr;
-		CopyMenuItemTextAsCFString(mh, mitem, &cfmenuitemstr);
-		/* UNCHECKED */ MCStringCreateWithCFString(cfmenuitemstr, &t_menuitem);
-		CFRelease(cfmenuitemstr);
-	}
-	
-	if (issubmenu)
-	{
-		CFStringRef cftitlestr;
-		MCAutoStringRef t_titlestr;
-		CopyMenuTitleAsCFString(mh, &cftitlestr);
-		/* UNCHECKED */ MCStringCreateWithCFString(cftitlestr, &t_titlestr);
-		CFRelease(cftitlestr);
-		
-		/* UNCHECKED */ MCStringFormat(r_string, "%@%@", *t_titlestr, *t_menuitem);
-	}
-	else
-		r_string = MCValueRetain(*t_menuitem);
-}
-
-static void getmacmenuitemtextfromaccelerator(MenuHandle menu, KeySym p_key, uint1 mods, MCStringRef &r_string, bool issubmenu)
-{
-	uint2 itemcount = CountMenuItems(menu);
-	for (uint2 i = 1; i <= itemcount; i++)
-	{
-		MenuRef submenu;
-		GetMenuItemHierarchicalMenu(menu, i, &submenu);
-		if (submenu != NULL)
-		{
-			getmacmenuitemtextfromaccelerator(submenu, p_key, mods, r_string, true);
-			if (!MCStringIsEmpty(r_string))
-				return;
-		}
-		else
-		{
-			uint2 t_key = 0;
-			GetMenuItemCommandKey(menu, i, false, &t_key);
-			int2 t_glyph;
-			GetMenuItemKeyGlyph(menu, i, &t_glyph);
-			if (t_glyph != kMenuNullGlyph)
-				t_key = MCMacGlyphToKeysym(t_glyph);
-			if (t_key == p_key)
-			{
-				uint1 t_macmods = 0;
-				GetMenuItemModifiers(menu, i, &t_macmods);
-				uint1 t_mods = 0;
-				if (t_macmods & kMenuShiftModifier)
-					t_mods |= MS_SHIFT;
-				if (t_macmods & kMenuOptionModifier)
-					t_mods |= MS_ALT;
-				if (t_macmods & kMenuControlModifier)
-					t_mods |= MS_MAC_CONTROL;
-				if (!(t_macmods & kMenuNoCommandModifier))
-					t_mods |= MS_CONTROL;
-				
-				if (t_mods == mods)
-				{
-					getmacmenuitemtext(menu, i, r_string, issubmenu);
-					return;
-				}
-			}
-		}
-	}
-}
-
-
-Bool MCButton::macfindmenu(bool p_just_for_accel)
-{
-	// MW-2011-02-08: [[ Bug 9384 ]] Only create the menu if we are using it next. 'findmenu'
-	//   is often called just to keep accelerators in sync.
-	if (bMenuID == 0 && !p_just_for_accel)
-	{
-		MCScreenDC *pms = (MCScreenDC *)MCscreen;
-		//call MCScreenDC class routine to get an available
-		//menu id.  Only the Application's Main menus do not
-		//need to get usable id from this routine Any button
-		//based menus, such as pop-up, options menus are
-		//restricted to the available id to avoid duplication
-		//of the meun ids.
-		int2 newMenuID = pms->allocateSubMenuID(False);
-		if (newMenuID == 0)
-			return False;
-		
-		MCStringRef t_menu_name = getlabeltext();
-		
-		// MW-2012-02-17: Update to use CreateNewMenu / CFStringCreateWithBytes since
-		//   we don't have a valid charset of font any more.
-		MenuHandle mh;
-		mh = nil;
-		CreateNewMenu(newMenuID, 0, &mh);
-		if (mh != nil)
-		{
-			CFStringRef t_menu_title;
-			/* UNCHECKED */ MCStringConvertToCFStringRef(t_menu_name, t_menu_title);
-			SetMenuTitleWithCFString(mh, t_menu_title);
-			
-			if (pms->addMenuItemsAndSubMenu(newMenuID, mh, this, menumode))
-			{
-				bMenuID = newMenuID;
-				InsertMenu(mh, -1); //-1 = insert sub-menu or popup
-			}
-		}
-		else
-		{ // delete the id only, since we can't create a menu.
-			pms->freeMenuAndID(newMenuID);
-			return False;
-		}
-	}
-	
-	return True;
-}
-
-void MCButton::macopenmenu(void)
-{
-	MenuHandle mh = GetMenuHandle(bMenuID);
-	if (mh == NULL)
-		return;   //can't find the menu to display, bail out
-	MCRectangle trect;
-	long result;
-	MCScreenDC *pms = (MCScreenDC *)MCscreen;
-	
-	int4 tmenux,tmenuy;
-	tmenux = tmenuy = 0;
-	switch (menumode)
-	{
-		case WM_COMBO:
-		case WM_OPTION:
-			trect = MCU_recttoroot(MCmousestackptr, rect);
-			tmenux = trect.x;
-			tmenuy = trect.y;
-			break;
-		case WM_PULLDOWN:
-			trect = MCU_recttoroot(MCmousestackptr, rect);
-			tmenux = trect.x;
-			tmenuy = trect.y+trect.height + 1;
-			break;
-		case WM_CASCADE:
-			trect = MCU_recttoroot(MCmousestackptr, rect);
-			tmenux = trect.x + trect.width + 1;
-			tmenuy = trect.y;
-			break;
-		case WM_POPUP:
-		default:
-			trect.x = MCmousex + 1;
-			trect.y = MCmousey + 1;
-			trect = MCU_recttoroot(MCmousestackptr, trect);
-			tmenux = trect.x;
-			tmenuy = trect.y;
-			break;
-	}
-	
-	// IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
-	/* CODE REMOVED */
-
-	// MW-2007-12-11: [[ Bug 5670 ]] Make sure we notify things higher up in the call chain
-	//   that the mdown actually did result in a menu being popped up!
-	extern bool MCosxmenupoppedup;
-	MCosxmenupoppedup = true;
-	
-	switch (menumode)
-	{
-		case WM_COMBO:
-		case WM_OPTION:
-			//= MAC's pop-up menu, displayed at the control/button location
-			layer_redrawall();
-			if (MCModeMakeLocalWindows())
-				result = PopUpMenuSelect(mh, tmenuy, tmenux, menuhistory);
-			else
-				result = MCModePopUpMenu((MCMacSysMenuHandle)mh, tmenux - trect . x + rect . x, tmenuy - trect . y + rect . y, menuhistory, MCmousestackptr);
-			allowmessages(False);
-			pms->clearmdown(menubutton);
-			allowmessages(True);
-			if (result > 0)
-			{
-				setmenuhistoryprop(LoWord(result));
-				//low word of result from PopUpMenuSelect() is the item selected
-				//high word contains the menu id
-
-				MCAutoStringRef t_label;
-				getmacmenuitemtext(mh, menuhistory, &t_label, False);
-                // MW-2014-02-04: [[ Bug 11751 ]] Make sure the label is in-sync with the menuhistory.
-				resetlabel();
-				Exec_stat es = message_with_valueref_args(MCM_menu_pick, label);
-
-				if (es == ES_NOT_HANDLED || es == ES_PASS)
-					message_with_args(MCM_mouse_up, menubutton);
-			}
-			else
-				message_with_args(MCM_mouse_release, menubutton);
-			state &= ~(CS_MFOCUSED | CS_ARMED | CS_HILITED);
-			layer_redrawall();
-			break;
-		case WM_PULLDOWN:
-		case WM_CASCADE:
-		case WM_POPUP: //= MAC's context menu, Menu displyed at the mouse loc
-			if (MCModeMakeLocalWindows())
-				result = PopUpMenuSelect(mh, tmenuy, tmenux, 0);
-			else
-			{
-				int32_t x, y;
-				if (menumode == WM_POPUP)
-				{
-					x = MCmousex + 1;
-					y = MCmousey + 1;
-				}
-				else
-				{
-					x = tmenux - trect . x + rect . x;
-					y = tmenuy - trect . y + rect . y;
-				}
-				
-				result = MCModePopUpMenu((MCMacSysMenuHandle)mh, x, y, 0, MCmousestackptr);
-			}
-			allowmessages(False);
-			pms->clearmdown(menubutton);
-			allowmessages(True);
-			if (result > 0)
-			{ //user selected something
-				MenuHandle mhandle = GetMenuHandle(HiWord(result));
-				setmenuhistoryprop(LoWord(result));
-				MCAutoStringRef t_menu_string;
-				getmacmenuitemtext(mhandle, menuhistory, &t_menu_string, mhandle != mh);
-				Exec_stat es = message_with_valueref_args(MCM_menu_pick, *t_menu_string);
-				if (es == ES_NOT_HANDLED || es == ES_PASS)
-					message_with_args(MCM_mouse_up, menubutton);
-			}
-			state &= ~(CS_MFOCUSED | CS_ARMED | CS_HILITED);
-			break;
-		default:
-			break;
-	}
-	
-	// MW-2011-02-08: [[ Bug 9384 ]] Free the Mac menu after use since we don't need
-	//   it lingering around.
-	if (bMenuID != 0)
-	{
-		MCScreenDC *pms = (MCScreenDC *)MCscreen;
-		pms->freeMenuAndID(bMenuID, this);
-		bMenuID = 0;
-	}
-}
-
-void MCButton::macfreemenu(void)
-{
-	if (bMenuID != 0)
-	{
-		//free button's menu and its id
-		MCScreenDC *pms = (MCScreenDC *)MCscreen;
-		pms->freeMenuAndID(bMenuID, this);
-		bMenuID = 0;
-	}
-}
-
-void MCButton::getmacmenuitemtextfromaccelerator(short menuid, KeySym key, uint1 mods, MCStringRef &r_string, bool issubmenu)
-{
-	::getmacmenuitemtextfromaccelerator(GetMenu(menuid), key, mods, r_string, issubmenu);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  REFACTORED FROM CMDS.CPP 
@@ -650,49 +261,6 @@ IO_stat MCHcstak::macreadresources(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  REFACTORED FROM ITRANSFORM.CPP 
-//
-
-void MCMacScaleImageBox(void *p_src_ptr, uint4 p_src_stride, void *p_dst_ptr, uint4 p_dst_stride, uint4 p_src_width, uint4 p_src_height, uint4 p_dst_width, uint4 p_dst_height)
-{
-	Rect t_src_rect;
-	SetRect(&t_src_rect, 0, 0, p_src_width, p_src_height);
-	
-	GWorldPtr t_src_gworld;
-	NewGWorldFromPtr(&t_src_gworld, 32, &t_src_rect, NULL, NULL, MCmajorosversion >= 0x1040 ? kNativeEndianPixMap : 0, (Ptr)p_src_ptr, p_src_stride);
-	
-	PixMapHandle t_src_pixmap;
-	t_src_pixmap = GetGWorldPixMap(t_src_gworld);
-	
-	Rect t_dst_rect;
-	SetRect(&t_dst_rect, 0, 0, p_dst_width, p_dst_height);
-	
-	GWorldPtr t_dst_gworld;
-	NewGWorldFromPtr(&t_dst_gworld, 32, &t_dst_rect, NULL, NULL, MCmajorosversion >= 0x1040 ? kNativeEndianPixMap : 0, (Ptr)p_dst_ptr, p_dst_stride);
-	
-	PixMapHandle t_dst_pixmap;
-	t_dst_pixmap = GetGWorldPixMap(t_dst_gworld);
-	
-	GWorldPtr t_old_gworld;
-	GDHandle t_old_device;
-	GetGWorld(&t_old_gworld, &t_old_device);
-	SetGWorld(t_dst_gworld, NULL);
-	ForeColor(blackColor);
-	BackColor(whiteColor);
-	LockPixels(t_src_pixmap);
-	LockPixels(t_dst_pixmap);
-	CopyBits(GetPortBitMapForCopyBits(t_src_gworld), GetPortBitMapForCopyBits(t_dst_gworld), &t_src_rect, &t_dst_rect, srcCopy, NULL);
-	UnlockPixels(t_dst_pixmap);
-	UnlockPixels(t_src_pixmap);
-	
-	SetGWorld(t_old_gworld, t_old_device);
-	
-	DisposeGWorld(t_dst_gworld);
-	DisposeGWorld(t_src_gworld);
-}	
-
-////////////////////////////////////////////////////////////////////////////////
-//
 //  MISC 
 //
 
@@ -765,67 +333,39 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
 		r_pattern = s_patterns[t_index];
 		return true;
 	}
+    
+    extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
+    
+    CGColorSpaceRef t_colorspace;
+    t_colorspace = CGColorSpaceCreateDeviceRGB();
+    
+    CGContextRef t_context;
+    t_context = CGBitmapContextCreate(NULL, 64, 64, 8, 64 * 4, t_colorspace, MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true));
+    
+    HIThemeSetFill(t_themebrush, NULL, t_context, kHIThemeOrientationInverted);
 	
-	CGrafPtr t_gworld = nil;
-	PixMapHandle t_pixmap = nil;
-	
-	Rect t_bounds;
-	SetRect(&t_bounds, 0, 0, 64, 64);
-	
-	NewGWorld(&t_gworld, 32, &t_bounds, nil, nil, MCmajorosversion >= 0x1040 ? kNativeEndianPixMap : 0);
-
-	CGrafPtr t_oldport;
-	GDHandle t_olddevice;
-	GetGWorld(&t_oldport, &t_olddevice);
-	
-	SetGWorld(t_gworld, NULL);
-	t_pixmap = GetGWorldPixMap(t_gworld);
-	LockPixels(t_pixmap);
-	
-	SetThemeBackground(t_themebrush, 32, True);
-	EraseRect(&t_bounds);
-	UnlockPixels(t_pixmap);
-	
-	SetGWorld(t_oldport, t_olddevice);
-	
-	void *t_bits = nil;
-	uint32_t t_stride = 0;
-	
-	t_bits = GetPixBaseAddr(t_pixmap);
-	t_stride = GetPixRowBytes(t_pixmap);
-	
-	MCGImageRef t_image;
-	t_image = nil;
-	
+    CGContextFillRect(t_context, CGRectMake(0, 0, 64, 64));
+    
+    CGContextFlush(t_context);
+    
 	MCGRaster t_raster;
-	t_raster.width = t_bounds.right - t_bounds.left;
-	t_raster.height = t_bounds.bottom - t_bounds.top;
-	t_raster.pixels = t_bits;
-	t_raster.stride = t_stride;
+	t_raster.width = CGBitmapContextGetWidth(t_context);
+	t_raster.height = CGBitmapContextGetHeight(t_context);
+	t_raster.pixels = CGBitmapContextGetData(t_context);
+	t_raster.stride = CGBitmapContextGetBytesPerRow(t_context);
 	t_raster.format = kMCGRasterFormat_ARGB;
 	
-	t_success = MCGImageCreateWithRaster(t_raster, t_image);
-
+	// IM-2014-05-14: [[ HiResPatterns ]] MCPatternCreate refactored to work with MCGRaster
 	// IM-2013-08-14: [[ ResIndependence ]] create MCPattern wrapper
 	if (t_success)
-		t_success = MCPatternCreate(t_image, 1.0, r_pattern);
+		t_success = MCPatternCreate(t_raster, 1.0, kMCGImageFilterNone, r_pattern);
 
-	MCGImageRelease(t_image);
-	
 	if (t_success)
 		s_patterns[t_index] = r_pattern;
 	
-	DisposeGWorld(t_gworld);
+    CGContextRelease(t_context);
+    CGColorSpaceRelease(t_colorspace);
 	
 	return t_success;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//  REFACTORED FROM GLOBALS.CPP
-//
-
-MCUIDC *MCCreateScreenDC(void)
-{
-	return new MCScreenDC;
-}

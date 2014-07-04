@@ -2592,6 +2592,18 @@ enum Exec_errors
     
     // {EE-0838} open: unsupported encoding
     EE_OPEN_UNSUPPORTED_ENCODING,
+    
+    // MW-2015-05-28: [[ Bug 12463 ]]
+    // {EE-0839} send: too many pending messages
+    EE_SEND_TOOMANYPENDING,
+	
+	// MM-2014-06-13: [[ Bug 12567 ]] New variant secure socket <socket> with verification for host <host>
+	// {EE-0840} secure: error in host name expression
+	EE_SECURE_BADHOST,
+	
+	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
+	// {EE-0841} open: error in host name expression
+	EE_OPEN_BADHOST,	
 };
 
 extern const char *MCexecutionerrors;

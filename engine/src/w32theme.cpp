@@ -1922,10 +1922,7 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	if (t_success)
 	{
 		MCGRaster t_raster;
-		t_raster.width = t_bitmap->width;
-		t_raster.height = t_bitmap->height;
-		t_raster.stride = t_bitmap->stride;
-		t_raster.pixels = t_bitmap->data;
+		t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
 		t_raster.format = kMCGRasterFormat_ARGB;
 
 		

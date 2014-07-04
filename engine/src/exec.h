@@ -1139,6 +1139,7 @@ template<typename C, void (C::*Method)(MCExecContext&)> inline void MCExecNative
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
 enum MCPurchaseState
 {
 	kMCPurchaseStateInitialized,
@@ -1147,6 +1148,9 @@ enum MCPurchaseState
 	kMCPurchaseStateComplete,
 	kMCPurchaseStateRestored,
 	kMCPurchaseStateCancelled,
+    //Amazon
+    kMCPurchaseStateInvalidSKU,
+    kMCPurchaseStateAlreadyEntitled,
 	kMCPurchaseStateRefunded,
 	kMCPurchaseStateError,
     kMCPurchaseStateUnverified,
@@ -1156,6 +1160,7 @@ enum MCPurchaseState
 
 typedef struct _mcpurchase_t
 {
+    MCStringRef         prod_id;
 	uint32_t			id;
 	MCPurchaseState		state;
 	uint32_t			ref_count;
@@ -3392,6 +3397,7 @@ extern MCExecEnumTypeInfo *kMCInterfaceBitmapEffectFilterTypeInfo;
 
 extern MCExecEnumTypeInfo *kMCInterfaceButtonStyleTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceButtonMenuModeTypeInfo;
+extern MCExecEnumTypeInfo *kMCInterfaceButtonIconGravityTypeInfo;
 extern MCExecSetTypeInfo *kMCInterfaceButtonAcceleratorModifiersTypeInfo;
 
 ///////////
@@ -4216,9 +4222,9 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target);
 void MCNetworkExecLoadUrl(MCExecContext& ctxt, MCStringRef p_url, MCNameRef p_message);
 void MCNetworkExecUnloadUrl(MCExecContext& ctxt, MCStringRef p_url);
 
-void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message);
-void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, bool p_with_verification);
-void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message);
+void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname);
+void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname, bool p_with_verification);
+void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, MCNameRef p_end_hostname);
 
 void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCDataRef p_data, MCStringRef p_url);
 
@@ -4368,7 +4374,7 @@ void MCSecurityExecBlockDecryptWithKey(MCExecContext& ctxt, MCStringRef p_data, 
 void MCSecurityGetSslCertificates(MCExecContext& ctxt, MCStringRef& r_value);
 void MCSecuritySetSslCertificates(MCExecContext& ctxt, MCStringRef p_value);
 
-void MCSecurityExecSecureSocket(MCExecContext& ctxt, MCNameRef p_socket, bool p_secure_verify);
+void MCSecurityExecSecureSocket(MCExecContext& ctxt, MCNameRef p_socket, bool p_secure_verify, MCNameRef p_end_hostname);
 
 ///////////
 
@@ -4973,6 +4979,12 @@ void MCStoreExecSendPurchaseRequest(MCExecContext& ctxt, uint32_t p_id);
 void MCStoreExecConfirmPurchaseDelivery(MCExecContext& ctxt, uint32_t p_id);
 void MCStoreExecRequestProductDetails(MCExecContext& ctxt, MCStringRef p_product_id);
 void MCStoreExecPurchaseVerify(MCExecContext& ctxt, uint32_t p_id, bool p_verified);
+void MCStoreExecConfirmPurchase(MCExecContext& ctxt, MCStringRef p_product_id);
+void MCStoreExecMakePurchase(MCExecContext& ctxt, MCStringRef p_product_id, MCStringRef p_quantity, MCStringRef p_payload);
+void MCStoreExecReceiveProductDetails(MCExecContext &ctxt, MCStringRef p_product_id, MCStringRef &r_details);
+void MCStoreExecConsumePurchase(MCExecContext &ctxt, MCStringRef p_product_id);
+void MCStoreExecProductSetType(MCExecContext &ctxt, MCStringRef p_product_id, MCStringRef p_product_type);
+
 
 ///////////
 

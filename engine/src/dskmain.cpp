@@ -37,6 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "redraw.h"
 #include "font.h"
+#include "stacksecurity.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

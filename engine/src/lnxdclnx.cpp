@@ -893,9 +893,11 @@ void MCScreenDC::waitmessage(GdkWindow* w, int event_type)
 	// Does nothing
 }
 
+
 GdkAtom MCworkareaatom;
 GdkAtom MCstrutpartialatom;
 GdkAtom MCclientlistatom;
+
 
 void MCScreenDC::EnqueueGdkEvents()
 {

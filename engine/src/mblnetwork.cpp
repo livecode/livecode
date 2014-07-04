@@ -120,7 +120,7 @@ Boolean MCSocket::init(MCSocketHandle newfd)
 	return False;
 }
 
-MCSocket *MCS_open_socket(MCNameRef p_name, Boolean p_datagram, MCObject *p_object, MCNameRef p_message, Boolean p_secure, Boolean p_ssl_verify, MCStringRef p_ssl_cert_file)
+MCSocket *MCS_open_socket(MCNameRef p_name, Boolean p_datagram, MCObject *p_object, MCNameRef p_message, Boolean p_secure, Boolean p_ssl_verify, MCStringRef p_ssl_cert_file, MCNameRef p_end_hostname)
 {
 	return NULL;
 }

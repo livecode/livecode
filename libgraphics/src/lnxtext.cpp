@@ -79,12 +79,13 @@ static bool lnx_pango_initialize(void)
 
 static void lnx_pango_finalize(void)
 {
-	if (s_layout != NULL)
-		g_object_unref(s_layout);
-	if (s_pango != NULL)
-		g_object_unref(s_pango);
-	if (s_font_map != NULL)
-		g_object_unref(s_font_map);
+    if (s_layout != NULL)
+        g_object_unref(s_layout);
+    if (s_pango != NULL)
+        g_object_unref(s_pango);
+    // Causes a SIGSERV on linux server
+//    if (s_font_map != NULL)
+//        g_object_unref(s_font_map);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

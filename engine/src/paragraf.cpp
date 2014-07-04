@@ -1311,6 +1311,8 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 
 	MCRectangle t_clip;
 	t_clip = dc -> getclip();
+	
+	dc->save();
 
 	uint2 ascent, descent;
 	ascent = fixeda;
@@ -1467,7 +1469,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	}
 	while (lptr != lines);
 
-	dc -> setclip(t_clip);
+	dc->restore();
 	
 	// MW-2012-01-08: [[ Paragraph Border ]] Render the paragraph's border (if
 	//   any).
@@ -1581,7 +1583,9 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 				//   table mode, we are done.
 				// MW-2013-05-20: [[ Bug 10878 ]] Tweaked conditions to work for min two tabStops
 				//   rather than 3.
-				if (ct >= nt - 2 && t[nt - 2] == t[nt - 1])
+                // MW-2015-05-28: [[ Bug 12341 ]] Only stop rendering lines if in 'fixed width table'
+                //   mode - indicated by the last two tabstops being the same.
+				if (nt >= 2 && t[nt - 1] == t[nt - 2] && ct == nt - 1)
 					break;
 			}
 		}
@@ -1639,7 +1643,8 @@ Boolean MCParagraph::getatts(uint2 si, uint2 ei, Properties which, Font_textstyl
 	}
 	
 	do
-    {
+	{
+
         switch (which)
         {
             case P_TEXT_FONT:
@@ -2050,7 +2055,11 @@ MCLine *MCParagraph::indextoline(findex_t tindex)
 	return lines->prev();
 }
 
-void MCParagraph::join()
+// MW-2014-05-28: [[ Bug 12303 ]] Special-case added for when setting 'text' of field chunks. If
+//   'preserve_if_zero' is true, then 'this' paragraph's styles are preserved even if it has no
+//   text. This is used in the case of 'set the text of <chunk>' to ensure that paragraph properties
+//   of the first paragraph the text is set in do not get clobbered.
+void MCParagraph::join(bool p_preserve_zero_length_styles_if_zero)
 {
 	if (blocks == NULL)
 		inittext();
@@ -2061,7 +2070,9 @@ void MCParagraph::join()
 	//   the next paragraphs attrs.
 	// MW-2012-08-31: [[ Bug 10344 ]] If the textsize is 0 then always take the next
 	//   paragraphs attrs.
-	if (gettextlength() == 0)
+	if (!p_preserve_zero_length_styles_if_zero && gettextlength() == 0)
+	// MW-2014-05-28: [[ Bug 12303 ]] If the textsize is 0 and we don't want to preserve the style
+    //   changes, then copy the next paragraph's.
 		copyattrs(*pgptr);
 
 	// MW-2006-04-13: If the total new text size is greater than 65536 - 34 we just delete the next paragraph
@@ -3176,8 +3187,10 @@ MCRectangle MCParagraph::getdirty(uint2 fixedheight)
 
 				dirty.y = y;
 				// MW-2012-01-08: [[ ParaStyles ]] If on the first line, adjust for spacing before.
+                // MW-2014-06-10: [[ Bug 11809 ]] Make sure we adjust the top of the dirty rect if on
+                //   the first line and there is space above.
 				if (lptr == lines)
-					dirty.y -= t_space_above;
+					t_dirty_top -= t_space_above;
 			}
 
 			int32_t t_new_dirty_left, t_new_dirty_right;
@@ -4215,4 +4228,41 @@ bool MCParagraph::imagechanged(MCImage *p_image, bool p_deleting)
 	while (t_block != blocks);
 
 	return t_used;
+}
+
+void MCParagraph::restricttoline(findex_t& si, findex_t& ei)
+{
+	MCLine *t_line;
+	t_line = lines;
+	do
+	{
+		findex_t i, l;
+		t_line -> GetRange(i, l);
+		if (i >= si && si < (i + l))
+		{
+			si = i;
+			ei = i + l;
+			return;
+		}
+		t_line = t_line -> next();
+	}
+	while(t_line != lines);
+
+	si = ei = 0;
+}
+
+findex_t MCParagraph::heightoflinewithindex(findex_t si, uint2 fixedheight)
+{
+	MCLine *t_line;
+	t_line = lines;
+	do
+	{
+		findex_t i, l;
+		t_line -> GetRange(i, l);
+		if (i >= si && si < (i + l))
+			return fixedheight == 0 ? t_line -> getheight() : fixedheight;
+		t_line = t_line -> next();
+	}
+	while(t_line != lines);
+	return 0;
 }

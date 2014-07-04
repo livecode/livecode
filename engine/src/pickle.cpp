@@ -519,7 +519,7 @@ MCObject *MCObject::unpickle(MCDataRef p_data, MCStack *p_stack)
         
 		if (t_success)
 		{
-			t_stream = MCS_fakeopen(MCString((const char *)t_buffer, t_chunk_length));
+            t_stream = MCS_fakeopen((const char *)t_buffer, t_chunk_length);
 			if (t_stream == NULL)
 				t_success = false;
 		}

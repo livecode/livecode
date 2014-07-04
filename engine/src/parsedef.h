@@ -900,6 +900,8 @@ enum Properties {
     P_PRIVATE_COLORS,
     P_IDLE_RATE,
     P_IDLE_TICKS,
+    // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Property tag for 'the ignoreMouseEvents' of stacks.
+    P_IGNORE_MOUSE_EVENTS,
     P_BLINK_RATE,
     P_RECURSION_LIMIT,
     P_REPEAT_RATE,
@@ -1567,6 +1569,14 @@ enum Properties {
     P_CURSORMOVEMENT,
     P_TEXTDIRECTION,
     
+    // MW-2014-06-19: [[ ImageCenterRect ]] Tag for the centerRect property.
+    P_CENTER_RECTANGLE,
+    // MW-2014-06-19: [[ IconGravity ]] Tag for the button iconGravity property.
+    P_ICON_GRAVITY,
+    
+    // MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
+    P_CLIPS_TO_RECT,
+
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
     P_CUSTOM_KEYS = P_FIRST_ARRAY_PROP,
@@ -1863,6 +1873,9 @@ enum Sugar_constants {
 	SG_FALSE,
 	SG_SUCCESS,
 	SG_FAILURE,
+	
+    // MM-2014-06-13: [[ Bug 12567 ]] Added host. Used in 'with verification for host <host>'
+	SG_HOST,
 };
 
 enum Statements {

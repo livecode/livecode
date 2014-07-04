@@ -75,6 +75,7 @@ MCLicenseParameters MClicenseparameters =
 
 MCPropertyInfo MCObject::kModeProperties[] =
 {
+	{ P_UNDEFINED, false, kMCPropertyTypeAny, nil, nil, nil, false, false, kMCPropertyInfoChunkTypeNone}
 };
 
 MCObjectPropertyTable MCObject::kModePropertyTable =
@@ -86,6 +87,7 @@ MCObjectPropertyTable MCObject::kModePropertyTable =
 
 MCPropertyInfo MCStack::kModeProperties[] =
 {
+	{ P_UNDEFINED, false, kMCPropertyTypeAny, nil, nil, nil, false, false, kMCPropertyInfoChunkTypeNone}
 };
 
 MCObjectPropertyTable MCStack::kModePropertyTable =
@@ -97,6 +99,7 @@ MCObjectPropertyTable MCStack::kModePropertyTable =
 
 MCPropertyInfo MCProperty::kModeProperties[] =
 {
+	{ P_UNDEFINED, false, kMCPropertyTypeAny, nil, nil, nil, false, false, kMCPropertyInfoChunkTypeNone}
 };
 
 MCPropertyTable MCProperty::kModePropertyTable =
@@ -140,6 +143,7 @@ void MCStack::mode_destroy(void)
 {
 }
 
+#ifdef LEGACY_EXEC
 Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
 {
 	return ES_NOT_HANDLED;
@@ -149,6 +153,14 @@ Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, 
 {
 	return ES_NOT_HANDLED;
 }
+#endif
+
+#ifdef _WINDOWS_SERVER
+MCSysWindowHandle MCStack::getrealwindow(void)
+{
+	return nil;
+}
+#endif
 
 void MCStack::mode_load(void)
 {
@@ -197,15 +209,11 @@ void MCStack::mode_closeasmenu(void)
 {
 }
 
-bool MCStack::mode_haswindow(void)
-{
-	return window != DNULL;
-}
-
 void MCStack::mode_constrain(MCRectangle& rect)
 {
 }
 
+#ifdef LEGACY_EXEC
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of MCObject::mode_get/setprop for SERVER mode.
@@ -230,6 +238,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 {
 	return ES_NOT_HANDLED;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -433,3 +442,17 @@ void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, u
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//
+// Implementation of Linux-specific mode hooks for SERVER mode.
+//
+
+#ifdef _LINUX_SERVER
+void MCModePreSelectHook(int& maxfd, fd_set& rfds, fd_set& wfds, fd_set& efds)
+{
+}
+
+void MCModePostSelectHook(fd_set& rfds, fd_set& wfds, fd_set& efds)
+{
+}
+
+#endif

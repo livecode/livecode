@@ -16,6 +16,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 		cachetable.cpp \
 		legacyblendmodes.cpp \
 		legacygradients.cpp \
+		region.cpp \
 	)
 
 LOCAL_C_INCLUDES := \

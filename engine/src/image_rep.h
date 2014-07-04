@@ -30,6 +30,18 @@ typedef enum
 	kMCImageRepResampled,
 } MCImageRepType;
 
+struct MCGImageFrame
+{
+	MCGImageRef image;
+	
+	uint32_t duration;
+	
+	// IM-2013-10-30: [[ FullscreenMode ]] add density value to image frames
+	MCGFloat density;
+};
+
+void MCGImageFramesFree(MCGImageFrame *p_frames, uindex_t p_count);
+
 ////////////////////////////////////////////////////////////////////////////////
 // Image representation interface
 
@@ -43,11 +55,16 @@ public:
 	virtual uint32_t GetDataCompression() = 0;
 	
 	virtual uindex_t GetFrameCount() = 0;
-	virtual bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame) = 0;
-	virtual void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame) = 0;
+	virtual bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame) = 0;
+	virtual void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame) = 0;
+
+	virtual bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame *&r_frame) = 0;
+	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame) = 0;
+
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
 
 	virtual MCGFloat GetDensity() { return 1.0; };
+	virtual MCGFloat GetBestDensityMatch(MCGFloat p_target_density) { return GetDensity(); };
 	
 	//////////
 
@@ -110,8 +127,11 @@ public:
 	virtual ~MCLoadableImageRep();
 
 	virtual uindex_t GetFrameCount();
-	virtual bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame);
-	virtual void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame);
+	virtual bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
+	virtual void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
+	
+	virtual bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame *&r_frame);
+	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame);
 
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 
@@ -124,21 +144,20 @@ protected:
 	virtual bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
 	// IM-2013-11-05: [[ RefactorGraphics ]] Add return parameter to indicate whether or not
 	// returned frames are premultiplied
-	virtual bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied) = 0;
+	virtual bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied) = 0;
 
 	bool m_have_geometry;
 	uindex_t m_width, m_height;
 
-	bool m_premultiplied;
 
 private:
-	bool EnsureImageFrames(bool p_premultiplied);
-	void PremultiplyFrames();
-	void UnpremultiplyFrames();
+	bool ConvertToMCGFrames(MCBitmapFrame *&x_frames, uint32_t p_frame_count, bool p_premultiplied);
+	bool EnsureMCGImageFrames();
 	
 	uindex_t m_lock_count;
 
-	MCImageFrame *m_frames;
+	MCBitmapFrame *m_locked_frames;
+	MCGImageFrame *m_frames;
 	uindex_t m_frame_count;
 	bool m_frames_premultiplied;
 };
@@ -160,7 +179,7 @@ public:
 
 protected:
 	// returns the image frames as decoded from the input stream
-	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
+	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
 
 	//////////
@@ -257,7 +276,7 @@ public:
 	bool Render(MCDC *p_context, bool p_embed, MCRectangle &p_image_rect, MCRectangle &p_clip_rect);
 
 protected:
-	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
+	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
 
 	//////////
@@ -287,7 +306,7 @@ public:
 	}
 
 protected:
-	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
+	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
 
 	//////////
@@ -314,7 +333,7 @@ public:
 	bool Matches(MCGFloat p_h_scale, MCGFloat p_v_scale, const MCImageRep *p_source);
 	
 protected:
-	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
+	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
 	
 	//////////
@@ -337,11 +356,16 @@ public:
 	uint32_t GetDataCompression();
 	
 	uindex_t GetFrameCount();
-	bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCGFloat p_density, MCImageFrame *&r_frame);
-	void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame);
+	bool LockBitmapFrame(uindex_t p_index, MCGFloat p_density, MCBitmapFrame *&r_frame);
+	void UnlockBitmapFrame(uindex_t p_index, MCBitmapFrame *p_frame);
+	
+	bool LockImageFrame(uindex_t p_index, MCGFloat p_density, MCGImageFrame *&r_frame);
+	void UnlockImageFrame(uindex_t p_index, MCGImageFrame *p_frame);
+	
 	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 	
 	MCGFloat GetDensity();
+	MCGFloat GetBestDensityMatch(MCGFloat p_target_density);
 	
 	//////////
 

@@ -20,6 +20,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcio.h"
 #include "osspec.h"
 
+#if !defined(_WINDOWS_SERVER) && !defined(_WINDOWS_DESKTOP)
+#include <sys/mman.h>
+#include <unistd.h>
+
+#if defined(_MAC_SERVER) || defined(_MAC_DESKTOP)
+#define ftello64(a) ftello(a)
+#define fseeko64(a, b, c) fseeko(a, b, c)
+
+#define opendir64(a) opendir(a)
+#define readdir64(a) readdir(a)
+#define closedir64(a) closedir(a)
+#define DIR64 DIR
+#endif
+
+#endif // Mac and Linux-specific includes for file mapping
+
 enum
 {
     kMCSystemFileSeekSet = 1,
@@ -238,6 +254,34 @@ protected:
 	uint32_t m_length;
 	uint32_t m_capacity;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if !defined(_WINDOWS_SERVER) && !defined(_WINDOWS_DESKTOP)
+class MCMemoryMappedFileHandle: public MCMemoryFileHandle
+{
+public:
+    MCMemoryMappedFileHandle(int p_fd, void *p_buffer, uint32_t p_length)
+    : MCMemoryFileHandle(p_buffer, p_length)
+    {
+        m_fd = p_fd;
+        m_buffer = p_buffer;
+        m_length = p_length;
+    }
+    
+    void Close(void)
+    {
+        munmap((char *)m_buffer, m_length);
+        close(m_fd);
+        MCMemoryFileHandle::Close();
+    }
+    
+private:
+    int m_fd;
+    void *m_buffer;
+    uint32_t m_length;
+};
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

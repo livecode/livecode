@@ -348,8 +348,9 @@ public:
 	//   MCField::gettextatts (to fetch partial parts of a paragraph)
 	//   MCField::settextatts (to insert partial parts of a paragraph)
 	//   MCField::insertparagraph
-	//   
-	void join();
+	// MW-2014-05-28: [[ Bug 12303 ]] If 'preserve' is true, then the paragraph styles
+    //   of 'this' paragraph are never changed (used when setting 'text' of a chunk).
+	void join(bool p_preserve_styles_if_zero_length = false);
     void split();
     void split(findex_t p_position);
 
@@ -818,6 +819,9 @@ public:
 	void setatts(findex_t si, findex_t ei, Properties which, void *value, bool from_html = false);
 #endif
 
+	void restricttoline(findex_t& si, findex_t& ei);
+	findex_t heightoflinewithindex(findex_t si, uint2 fixedheight);
+	
 	uint2 getopened()
 	{
 		return opened;

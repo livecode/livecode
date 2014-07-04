@@ -26,7 +26,7 @@ else
 	STATIC_LIBS+=stdc++
 endif
 
-LDFLAGS=$(CUSTOM_LDFLAGS) $(addprefix -L,$(GLOBAL_LIBS)) -Xlinker -no-undefined $(addprefix -Xlinker --exclude-libs -Xlinker ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS))))
+LDFLAGS=$(CUSTOM_LDFLAGS) $(addprefix -L,$(GLOBAL_LIBS)) $(addprefix -L,$(CUSTOM_INCLUDES)) -Xlinker -no-undefined $(addprefix -Xlinker --exclude-libs -Xlinker ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS))))
 
 TARGET_PATH=$(BUILD_DIR)/$(NAME)
 

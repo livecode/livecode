@@ -39,7 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 // MW-2010-08-24: Make sure we include 'wspiapi' making it think we are
 //   targetting Win2K to ensure that it 'makes' getaddrinfo.
-#if defined(_WINDOWS_DESKTOP)
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 #include "w32prefix.h"
 #include <ws2tcpip.h>
 #include <wspiapi.h>
@@ -150,7 +150,7 @@ bool platform_launch_thread(_thread_function p_thread, void *p_context)
 
 	return t_success;
 }
-#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID) || defined(_LINUX_SERVER) || defined(_MAC_SERVER)
 void * pthread_thread(void *p_context)
 {
 	_thread_info *t_info = (_thread_info*)p_context;

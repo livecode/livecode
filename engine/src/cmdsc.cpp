@@ -2794,7 +2794,9 @@ void MCRecord::exec_ctxt(MCExecContext &ctxt)
 		return ES_ERROR;
 	}
 	char *soundfile = MCS_get_canonical_path(ep.getcstring());
-    MCtemplateplayer->recordsound(soundfile);
+	
+	extern void MCQTRecordSound(char *soundfile);
+	MCQTRecordSound(soundfile);
 	return ES_NORMAL;
 #endif /* MCRecord */
 
@@ -3785,7 +3787,7 @@ void MCSelect::compile(MCSyntaxFactoryRef ctxt)
 		uindex_t t_count;
 		t_count = 0;
 
-		for (MCChunk *chunkptr = targets; chunkptr != nil; chunkptr -> next)
+		for (MCChunk *chunkptr = targets; chunkptr != nil; chunkptr = chunkptr -> next)
 		{
 			chunkptr -> compile_object_ptr(ctxt);
 			t_count++;

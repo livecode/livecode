@@ -263,7 +263,7 @@ MCParagraph *MCTransferData::FetchParagraphs(MCField *p_field)
 	t_paragraphs = NULL;
 
 	if (!Lock())
-		return false;
+		return NULL;
 
 	if (Contains(TRANSFER_TYPE_STYLED_TEXT, false))
 	{
@@ -550,7 +550,10 @@ MCTransferType MCTransferData::StringToType(MCStringRef p_string)
 
 	if (MCStringIsEqualToCString(p_string, "unicode", kMCCompareCaseless))
 		return TRANSFER_TYPE_UNICODE_TEXT;
-
+    
+	if (MCStringIsEqualToCString(p_string, "styledText", kMCCompareCaseless))
+        return TRANSFER_TYPE_STYLED_TEXT_ARRAY;
+        
 	if (MCStringIsEqualToCString(p_string, "styles", kMCCompareCaseless))
 		return TRANSFER_TYPE_STYLED_TEXT;
 
@@ -585,6 +588,8 @@ const char *MCTransferData::TypeToString(MCTransferType p_type)
 		return "unicode";
 	case TRANSFER_TYPE_STYLED_TEXT:
 		return "styles";
+    case TRANSFER_TYPE_STYLED_TEXT_ARRAY:
+        return "styledText";
 	case TRANSFER_TYPE_RTF_TEXT:
 		return "rtf";
 	case TRANSFER_TYPE_HTML_TEXT:
@@ -926,8 +931,43 @@ bool MCConvertStyledTextToRTF(MCDataRef p_input, MCDataRef& r_output)
 	
 	if (t_success)
 		t_success = MCStringEncode(*t_text, kMCStringEncodingNative, false, r_output);
-
+    
 	delete t_object;
 	
 	return t_success;
+}
+
+// MW-2014-03-12: [[ ClipboardStyledText ]] Convert data stored as a 'styles' pickle to a styledText array.
+bool MCConvertStyledTextToStyledTextArray(MCDataRef p_string, MCArrayRef &r_array)
+{
+	MCObject *t_object;
+	t_object = MCObject::unpickle(p_string, MCtemplatefield -> getstack());
+	if (t_object != NULL)
+	{
+		MCParagraph *t_paragraphs;
+        MCAutoArrayRef t_array;
+		t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
+		
+		if (t_paragraphs != NULL)
+			MCtemplatefield -> exportasstyledtext(t_paragraphs, 0, INT32_MAX, false, false, &t_array);
+		
+		delete t_object;
+        return true;
+	}
+    
+	return false;
+}
+
+// MW-2014-03-12: [[ ClipboardStyledText ]] Convert a styledText array to a 'styles' pickle.
+bool MCConvertStyledTextArrayToStyledText(MCArrayRef p_array, MCDataRef &r_output)
+{	
+	MCParagraph *t_paragraphs;
+	t_paragraphs = MCtemplatefield -> styledtexttoparagraphs(p_array);
+    
+	MCStyledText t_styled_text;
+	t_styled_text . setparent(MCdefaultstackptr);
+	t_styled_text . setparagraphs(t_paragraphs);
+	/* UNCHECKED */ MCObject::pickle(&t_styled_text, 0, r_output);
+    
+    return true;
 }

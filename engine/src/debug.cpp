@@ -92,7 +92,7 @@ void MCB_break(MCExecContext &ctxt, uint2 line, uint2 pos)
 	MCServerDebugBreak(ctxt, line, pos);
 }
 
-void MCB_error(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id)
+bool MCB_error(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id)
 {
 	MCServerDebugError(ctxt, line, pos, id);
 	
@@ -103,7 +103,7 @@ void MCB_error(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id)
 	return true;
 }
 
-void MCB_done(MCExecPoint &ep)
+void MCB_done(MCExecContext &ctxt)
 {
 }
 
@@ -116,15 +116,15 @@ void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name)
 
 void MCB_setvalue(MCExecContext &ctxt, MCExecValue p_value, MCNameRef name)
 {
-    if (!MCExecTypeIsValueRef(p_value))
+    if (!MCExecTypeIsValueRef(p_value . type))
     {
         MCAutoValueRef t_value;
         MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeValueRef, &(&t_value));
-        MCB_setvar(ctxt, *t_value);
+        MCB_setvar(ctxt, *t_value, name);
     }
     else
     {
-        MCB_setvar(p_value . valueref_value);
+        MCB_setvar(ctxt, p_value . valueref_value, name);
     }
 }
 

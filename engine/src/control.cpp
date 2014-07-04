@@ -42,6 +42,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "context.h"
 #include "bitmapeffect.h"
+#include "graphicscontext.h"
+#include "graphics_util.h"
 
 #include "exec.h"
 
@@ -1035,6 +1037,17 @@ void MCControl::attach(Object_pos p, bool invisible)
 	newmessage();
 }
 
+inline MCRectangle MCGRectangleGetPixelRect(const MCGRectangle &p_rect)
+{
+	int32_t t_left, t_right, t_top, t_bottom;
+	t_left = floorf(p_rect.origin.x);
+	t_top = floorf(p_rect.origin.y);
+	t_right = floorf(p_rect.origin.x + p_rect.size.width);
+	t_bottom = floorf(p_rect.origin.y + p_rect.size.height);
+	
+	return MCRectangleMake(t_left, t_top, t_right - t_left, t_bottom - t_top);
+}
+
 void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 {
 	if (!opened || !(isvisible() || MCshowinvisibles))
@@ -1045,12 +1058,17 @@ void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 	MCRectangle trect = MCU_intersect_rect(dirty, geteffectiverect());
 	if (trect.width != 0 && trect.height != 0)
 	{
+		dc->save();
+		
 		dc -> setopacity(255);
 		dc -> setfunction(GXcopy);
-		dc -> setclip(trect);
+		dc->cliprect(trect);
+        
 		// MW-2011-09-06: [[ Redraw ] Make sure we draw the control normally (not
 		//   as a sprite).
 		draw(dc, trect, false, false);
+		
+		dc->restore();
 	}
 }
 
@@ -1468,7 +1486,7 @@ void MCControl::start(Boolean canclone)
 	MCexitall = False;
 	getstack()->kfocusset(NULL);
 	kunfocus();
-
+	
 	state |= sizehandles();
 	if (!(state & CS_SELECTED))
 	{

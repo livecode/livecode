@@ -1391,9 +1391,6 @@ Boolean MCNativeTheme::drawwidget(MCDC *dc, const MCWidgetInfo & winfo,
 		GtkWidgetState t_old_state;
 		t_old_state = state;
 
-		MCRectangle t_old_clip;
-		t_old_clip = dc -> getclip();
-
 		// crect is the target rectangle for the whole control
 		// cliprect and rect are essentially the same
 		
@@ -1412,13 +1409,24 @@ Boolean MCNativeTheme::drawwidget(MCDC *dc, const MCWidgetInfo & winfo,
 		MCU_set_rect(t_dst_bounds, crect . x, crect . y, crect . width, 8);
 		MCU_set_rect(t_clip, crect . x, crect . y, crect . width, B_WIDTH);
 		make_theme_info(di, moztype, gtkpix, &t_bounds, &t_bounds, state, flags, t_dst_bounds);
-		dc -> setclip(t_clip);
+		
+		dc->save();
+		dc->cliprect(t_clip);
+
 		dc -> drawtheme(THEME_DRAW_TYPE_GTK, &di);
+		
+		dc->restore();
+		
 		MCU_set_rect(t_dst_bounds, crect . x, crect . y + crect . height - 8, crect . width, 8);
 		MCU_set_rect(t_clip, crect . x, crect . y + crect . height - B_WIDTH, crect . width, B_WIDTH);
 		make_theme_info(di, moztype, gtkpix, &t_bounds, &t_bounds, state, flags, t_dst_bounds);
-		dc -> setclip(t_clip);
+		
+		dc->save();
+		dc->cliprect(t_clip);
+		
 		dc -> drawtheme(THEME_DRAW_TYPE_GTK, &di);
+		
+		dc->restore();
 		
 		// Now render the left and right borders. We render a control 8 pixels
 		// wide, but clipped to the border width
@@ -1431,15 +1439,24 @@ Boolean MCNativeTheme::drawwidget(MCDC *dc, const MCWidgetInfo & winfo,
 		MCU_set_rect(t_dst_bounds, crect . x, crect . y, 8, crect . height);
 		MCU_set_rect(t_clip, crect . x, crect . y + B_WIDTH, B_WIDTH, crect . height - 2 * B_WIDTH);
 		make_theme_info(di, moztype, gtkpix, &t_bounds, &t_bounds, state, flags, t_dst_bounds);
-		dc -> setclip(t_clip);
+		
+		dc->save();
+		dc->cliprect(t_clip);
+
 		dc -> drawtheme(THEME_DRAW_TYPE_GTK, &di);
+		
+		dc->restore();
+		
 		MCU_set_rect(t_dst_bounds, crect . x + crect . width - 8, crect . y, 8, crect . height);
 		MCU_set_rect(t_clip, crect . x + crect . width - B_WIDTH, crect . y + B_WIDTH, B_WIDTH, crect . height - 2 * B_WIDTH);
 		make_theme_info(di, moztype, gtkpix, &t_bounds, &t_bounds, state, flags, t_dst_bounds);
-		dc -> setclip(t_clip);
+		
+		dc->save();
+		dc->cliprect(t_clip);
+		
 		dc -> drawtheme(THEME_DRAW_TYPE_GTK, &di);
 
-		dc -> setclip(t_old_clip);
+		dc->restore();
 	}
 	break ;
 

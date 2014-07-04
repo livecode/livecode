@@ -60,6 +60,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define PIXEL_FORMAT_32 k32BGRAPixelFormat
 
+OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
+
 #elif defined(_MAC_DESKTOP)
 #include "osxprefix.h"
 
@@ -73,10 +75,40 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxmplayer.h"
 #endif
 
+//// X11
+
 #undef X11
 #ifdef TARGET_PLATFORM_LINUX
 #define X11 
 #endif
+
+//// PLATFORM PLAYER
+
+#ifdef FEATURE_PLATFORM_PLAYER
+#include "platform.h"
+
+static MCPlatformPlayerMediaType ppmediatypes[] =
+{
+	kMCPlatformPlayerMediaTypeVideo,
+	kMCPlatformPlayerMediaTypeAudio,
+	kMCPlatformPlayerMediaTypeText,
+	kMCPlatformPlayerMediaTypeQTVR,
+	kMCPlatformPlayerMediaTypeSprite,
+	kMCPlatformPlayerMediaTypeFlash,
+};
+
+static const char *ppmediastrings[] =
+{
+	"video",
+	"audio",
+	"text",
+	"qtvr",
+	"sprite",
+	"flash"
+};
+#endif
+
+//// QUICKTIME PLAYER
 
 #ifdef FEATURE_QUICKTIME
 #ifndef _MACOSX
@@ -91,7 +123,7 @@ struct MCPlayerOffscreenBuffer
 {
 	HDC hdc;
 	HBITMAP hbitmap;
-	MCImageBitmap image_bitmap;
+	MCGRaster image_raster;
 };
 
 PixMapHandle GetPortPixMap(CGrafPtr port)
@@ -106,8 +138,6 @@ PixMapHandle GetPortPixMap(CGrafPtr port)
 #ifndef LoWord
 #define LoWord LOWORD
 #endif
-
-static OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
 #endif
 
 #define QTMFORMATS 6
@@ -149,16 +179,17 @@ static inline MCRectangle RectToMCRectangle(Rect r)
 	return mcr;
 }
 
-#endif
 
 #ifdef _MACOSX
 struct MCPlayerOffscreenBuffer
 {
 	CGrafPtr gworld;
-	MCImageBitmap image_bitmap;
+	MCGRaster image_raster;
 };
 
 static Boolean IsQTVRInstalled(void);
+#endif
+
 #endif
 
 #ifdef _WINDOWS
@@ -201,6 +232,7 @@ MCPropertyInfo MCPlayer::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_TILT, Double, MCPlayer, Tilt)
 	DEFINE_RW_OBJ_PROPERTY(P_ZOOM, Double, MCPlayer, Zoom)
 	DEFINE_RO_OBJ_PROPERTY(P_TRACKS, String, MCPlayer, Tracks)
+    DEFINE_RO_OBJ_PROPERTY(P_TRACK_COUNT, UInt32, MCPlayer, TrackCount)
 	DEFINE_RO_OBJ_PROPERTY(P_NODES, String, MCPlayer, Nodes)
 	DEFINE_RO_OBJ_PROPERTY(P_HOT_SPOTS, String, MCPlayer, HotSpots)
 	DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_CONSTRAINTS, MultimediaQTVRConstraints, MCPlayer, Constraints)
@@ -235,6 +267,14 @@ MCPlayer::MCPlayer()
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
 
+#ifdef FEATURE_PLATFORM_PLAYER
+    // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
+    m_callback_count = 0;
+    m_callbacks = NULL;
+    
+	m_platform_player = nil;
+#else
+	
 #ifdef FEATURE_MPLAYER
 	command = NULL;
 	m_player = NULL ;
@@ -258,6 +298,8 @@ MCPlayer::MCPlayer()
 	bufferGW = NULL;//gworld for buffering draw - for QT only
 	m_has_port_association = false;
 #endif
+	
+#endif
 }
 
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
@@ -274,7 +316,15 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	userCallbackStr = MCValueRetain(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
-
+    
+#ifdef FEATURE_PLATFORM_PLAYER
+    // PM-2014-05-29: [[ Bugfix 12501 ]] Initialize m_callbacks/m_callback_count to prevent a crash when setting callbacks
+    m_callback_count = 0;
+    m_callbacks = NULL;
+    
+	m_platform_player = nil;
+#else
+	
 #ifdef FEATURE_MPLAYER
 	command = NULL;
 	m_player = NULL ;
@@ -298,6 +348,8 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	m_offscreen = nil;
 	m_has_port_association = false;
 #endif
+	
+#endif
 }
 
 MCPlayer::~MCPlayer()
@@ -308,10 +360,16 @@ MCPlayer::~MCPlayer()
 	
 	playstop();
 
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+		MCPlatformPlayerRelease(m_platform_player);
+#else
+	
 #ifdef FEATURE_QUICKTIME
 	if (this == MCtemplateplayer && qtstate == QT_INITTED && MCplayers == NULL)
 	{
-		stoprecording();
+		extern void MCQTStopRecording(void);
+		MCQTStopRecording();
 		if (qtvrstate == QTVR_INITTED)
 		{
 #ifdef _WINDOWS
@@ -324,27 +382,16 @@ MCPlayer::~MCPlayer()
 		ExitMovies(); //or ExitToShell() according to QT Developer Q&A
 #endif
 
-		if (qteffects != NULL)
-		{
-			uint2 i;
-			for (i=0;i < neffects; i++)
-				delete qteffects[i].token;
-			delete qteffects;
-			qteffects = NULL;
-			neffects = 0;
-		}
-
 		delete s_ephemeral_player;
 		s_ephemeral_player = NULL;
 		qtstate = QT_NOT_INITTED;
 	}
-    
-    MCValueRelease(recordtempfile);
 #endif
 
 #ifdef FEATURE_MPLAYER
 	if ( m_player != NULL )
 		delete m_player ;
+#endif
 #endif
 
 	MCValueRelease(filename);
@@ -369,8 +416,12 @@ MCRectangle MCPlayer::getactiverect(void)
 void MCPlayer::open()
 {
 	MCControl::open();
+#ifdef FEATURE_PLATFORM_PLAYER
+	prepare(kMCEmptyString);
+#else
 	if (flags & F_ALWAYS_BUFFER && !isbuffering())
 		prepare(kMCEmptyString);
+#endif
 }
 
 void MCPlayer::close()
@@ -390,6 +441,7 @@ Boolean MCPlayer::kdown(MCStringRef p_string, KeySym key)
 		if (MCObject::kdown(p_string, key))
 			return True;
 
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED && state & CS_PREPARED)
 	{
@@ -397,17 +449,20 @@ Boolean MCPlayer::kdown(MCStringRef p_string, KeySym key)
 		qt_key(true, key);
 	}
 #endif
+#endif
 
 	return False;
 }
 
 Boolean MCPlayer::kup(MCStringRef p_string, KeySym key)
 {
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 	{
 		qt_key(false, key);
 	}
+#endif
 #endif
 
 	return False;
@@ -419,9 +474,11 @@ Boolean MCPlayer::mfocus(int2 x, int2 y)
 	        || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
 		
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		qt_move(x, y);
+#endif
 #endif
 
 	return MCControl::mfocus(x, y);
@@ -448,11 +505,13 @@ Boolean MCPlayer::mdown(uint2 which)
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 			if (qtstate == QT_INITTED)
 				qt_click(true, 1);
 #endif
 			if (message_with_valueref_args(MCM_mouse_down, MCSTR("1")) == ES_NORMAL)
+#endif
 				return True;
 			break;
 		case T_POINTER:
@@ -466,18 +525,22 @@ Boolean MCPlayer::mdown(uint2 which)
 			return False;
 		}
 		break;
-	case Button2:
+		case Button2:
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			qt_click(true, 2);
 #endif
+#endif
 		if (message_with_valueref_args(MCM_mouse_down, MCSTR("2")) == ES_NORMAL)
 			return True;
 		break;
-	case Button3:
+		case Button3:
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			qt_click(true, 3);
+#endif
 #endif
 		message_with_valueref_args(MCM_mouse_down, MCSTR("3"));
 		break;
@@ -503,6 +566,7 @@ Boolean MCPlayer::mup(uint2 which) //mouse up
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 			//if PLAYER's flag is show badge and controller is NOT visible
 			if ((flags & F_SHOW_BADGE) && !(flags & F_SHOW_CONTROLLER))
@@ -516,6 +580,7 @@ Boolean MCPlayer::mup(uint2 which) //mouse up
 #ifdef FEATURE_QUICKTIME
 			if (qtstate == QT_INITTED)
 				qt_click(false, 1);
+#endif
 #endif
 
 			if (MCU_point_in_rect(rect, mx, my))
@@ -537,9 +602,11 @@ Boolean MCPlayer::mup(uint2 which) //mouse up
 		break;
 	case Button2:
 	case Button3:
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			qt_click(false, which == Button2 ? 2 : 3);
+#endif
 #endif
 		if (MCU_point_in_rect(rect, mx, my))
 			message_with_args(MCM_mouse_up, which);
@@ -562,6 +629,19 @@ Boolean MCPlayer::doubleup(uint2 which)
 
 void MCPlayer::setrect(const MCRectangle &nrect)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	rect = nrect;
+	
+	if (m_platform_player != nil)
+	{ 
+		MCRectangle trect = MCU_reduce_rect(rect, getflag(F_SHOW_BORDER) ? borderwidth : 0);
+        
+        // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
+        //   (backscale factor handled in platform layer).
+		trect = MCRectangleGetTransformedBounds(trect, getstack()->getviewtransform());
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
+	}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		qt_setrect(nrect);
@@ -572,10 +652,12 @@ void MCPlayer::setrect(const MCRectangle &nrect)
 #elif defined(X11)
 	x11_setrect(nrect);
 #endif
+#endif
 }
 
 void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 {
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	if (this == s_ephemeral_player && qtstate == QT_INITTED && MCplayers != NULL && MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
 	{
@@ -625,42 +707,50 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 		return;
 	}
 #endif
-
-	if (MCrecording && this == MCtemplateplayer && MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
-	{
-		MCscreen->addtimer(this, MCM_internal, PLAY_RATE);
-		return;
-	}
-
+#endif
+	
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (MCNameIsEqualTo(mptr, MCM_play_started, kMCCompareCaseless))
+    {
+        state &= ~CS_PAUSED;
+    }
+    else
+#endif
 	if (MCNameIsEqualTo(mptr, MCM_play_stopped, kMCCompareCaseless))
 	{
 		state |= CS_PAUSED;
+#ifndef FEATURE_PLATFORM_PLAYER
 		if (isbuffering()) //so the last frame gets to be drawn
 		{
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();
 		}
+#endif
 		if (disposable)
 		{
 			playstop();
 			return; //obj is already deleted, do not pass msg up.
 		}
 	}
-#ifdef FEATURE_QUICKTIME
 	else if (MCNameIsEqualTo(mptr, MCM_play_paused, kMCCompareCaseless))
 		{
 			state |= CS_PAUSED;
+#ifndef FEATURE_PLATFORM_PLAYER
 			if (isbuffering()) //so the last frame gets to be drawn
 			{
 				// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 				layer_redrawall();
 			}
+#endif
 		}
+#ifndef FEATURE_PLATFORM_PLAYER
+#ifdef FEATURE_QUICKTIME
 	else if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless) && qtstate == QT_INITTED && state & CS_PREPARED)
 			{
 				checktimes();
 				return;
 			}
+#endif
 #endif
 	MCControl::timer(mptr, params);
 }
@@ -733,22 +823,33 @@ Exec_stat MCPlayer::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 		ep.setint(getpreferredrect().height);
 		break;
 	case P_FORMATTED_WIDTH:
-		ep.setint(getpreferredrect().width);
+        ep.setint(getpreferredrect().width);
 		break;
 	case P_MOVIE_CONTROLLER_ID:
 #ifndef FEATURE_QUICKTIME
 		ep.setint((int)NULL);
 #else
+#ifndef FEATURE_PLATFORM_PLAYER
 		ep.setint((int4)theMC);
+#endif
 #endif
 		break;
 	case P_PLAY_LOUDNESS:
 		ep.setint(getloudness());
 		break;
 	case P_TRACK_COUNT:
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+		{
+			uindex_t t_count;
+			MCPlatformCountPlayerTracks(m_platform_player, t_count);
+			i = t_count;
+		}
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED && state & CS_PREPARED)
 			i = (uint2)GetMovieTrackCount((Movie)theMovie);
+#endif
 #endif
 		ep.setint(i);
 		break;
@@ -760,6 +861,20 @@ Exec_stat MCPlayer::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 		break;
 	case P_MEDIA_TYPES:
 		ep.clear();
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+		{
+			MCPlatformPlayerMediaTypes t_types;
+			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMediaTypes, kMCPlatformPropertyTypePlayerMediaTypes, &t_types);
+			bool first = true;
+			for (i = 0 ; i < sizeof(ppmediatypes) / sizeof(ppmediatypes[0]) ; i++)
+				if ((t_types & (1 << ppmediatypes[i])) != 0)
+				{
+					ep.concatcstring(ppmediastrings[i], EC_COMMA, first);
+					first = false;
+				}
+		}
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED && state & CS_PREPARED)
 		{
@@ -773,20 +888,31 @@ Exec_stat MCPlayer::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 				}
 		}
 #endif
+#endif
 		break;
 	case P_CURRENT_NODE:
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+				MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRNode, kMCPlatformPropertyTypeUInt16, &i);
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtvrinstance != NULL)
 			i = (uint2)QTVRGetCurrentNodeID((QTVRInstance)qtvrinstance);
+#endif
 #endif
 		ep.setint(i);
 		break;
 	case P_PAN:
 		{
 			real8 pan = 0.0;
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+				MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRPan, kMCPlatformPropertyTypeDouble, &pan);
+#else
 #ifdef FEATURE_QUICKTIME
 			if (qtvrinstance != NULL)
 				pan = QTVRGetPanAngle((QTVRInstance)qtvrinstance);
+#endif
 #endif
 			ep.setr8(pan, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
 		}
@@ -794,9 +920,14 @@ Exec_stat MCPlayer::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	case P_TILT:
 		{
 			real8 tilt = 0.0;
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+				MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRTilt, kMCPlatformPropertyTypeDouble, &tilt);
+#else
 #ifdef FEATURE_QUICKTIME
 			if (qtvrinstance != NULL)
 				tilt = QTVRGetTiltAngle((QTVRInstance)qtvrinstance);
+#endif
 #endif
 			ep.setr8(tilt, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
 		}
@@ -804,15 +935,30 @@ Exec_stat MCPlayer::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	case P_ZOOM:
 		{
 			real8 zoom = 0.0;
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+				MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRZoom, kMCPlatformPropertyTypeDouble, &zoom);
+#else
 #ifdef FEATURE_QUICKTIME
 			if (qtvrinstance != NULL)
 				zoom = QTVRGetFieldOfView((QTVRInstance)qtvrinstance);
+#endif
 #endif
 			ep.setr8(zoom, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
 		}
 		break;
 	case P_CONSTRAINTS:
-		ep.clear();
+			ep.clear();
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+			{
+				MCPlatformPlayerQTVRConstraints t_constraints;
+				MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRConstraints, kMCPlatformPropertyTypePlayerQTVRConstraints, &t_constraints);
+				ep.appendstringf("%lf,%lf\n", t_constraints . x_min, t_constraints . x_max);
+				ep.appendstringf("%lf,%lf\n", t_constraints . y_min, t_constraints . y_max);
+				ep.appendstringf("%lf,%lf", t_constraints . z_min, t_constraints . z_max);
+			}
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtvrinstance != NULL)
 		{
@@ -827,6 +973,7 @@ Exec_stat MCPlayer::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 				ep.concatcstring(buffer, EC_RETURN, i == 0);
 			}
 		}
+#endif
 #endif
 		break;
 	case P_NODES:
@@ -891,8 +1038,10 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 			dirty = True;
 		break;
 	case P_CALLBACKS:
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 		deleteUserCallbacks(); //delete all callbacks for this player
+#endif
 #endif
 		delete userCallbackStr;
 		if (data.getlength() == 0)
@@ -900,10 +1049,15 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 		else
 		{
 			userCallbackStr = data.clone();
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 			installUserCallbacks(); //install all callbacks for this player
 #endif
+#endif
 		}
+#ifdef FEATURE_PLATFORM_PLAYER
+			SynchronizeUserCallbacks();
+#endif
 		break;
 	case P_CURRENT_TIME:
 		if (!MCU_stoui4(data, ctime))
@@ -978,9 +1132,11 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 	case P_TRAVERSAL_ON:
 		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED && getstate(CS_PREPARED))
 			MCDoAction((MovieController)theMC, mcActionSetKeysEnabled, (void*)((flags & F_TRAVERSAL_ON) != 0));
+#endif
 #endif
 		break;
 	case P_SHOW_BADGE: //if in the buffering mode we do not want to show/hide the badge
@@ -1036,6 +1192,7 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 		dirty = True;
 		break;
 	case P_MOVIE_CONTROLLER_ID:
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 		{
 			uint4 l = data.getlength();
@@ -1048,6 +1205,7 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 			}
 			theMovie = MCGetMovie((MovieController)theMC);
 		}
+#endif
 #endif
 		break;
 	case P_PLAY_LOUDNESS:
@@ -1069,7 +1227,6 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 		dirty = wholecard = True;
 		break;
 	case P_CURRENT_NODE:
-#ifdef FEATURE_QUICKTIME
 		{
 			uint2 nodeid;
 			if (!MCU_stoui2(data,nodeid))
@@ -1077,6 +1234,11 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
 				return ES_ERROR;
 			}
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRNode, kMCPlatformPropertyTypeUInt16, &nodeid);
+#else
+#ifdef FEATURE_QUICKTIME
 			if (qtvrinstance != NULL)
 			{
 				if (QTVRGoToNodeID((QTVRInstance)qtvrinstance,nodeid) != noErr)
@@ -1084,14 +1246,12 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 					MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
 					return ES_ERROR;
 				}
-				if (isbuffering())
-					dirty = True;
 			}
-		}
 #endif
+#endif
+		}
 		break;
 	case P_PAN:
-#ifdef FEATURE_QUICKTIME
 		{
 			real8 pan;
 			if (!MCU_stor8(data, pan))
@@ -1099,15 +1259,20 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
 				return ES_ERROR;
 			}
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRPan, kMCPlatformPropertyTypeDouble, &pan);
+#else
+#ifdef FEATURE_QUICKTIME
 			if (qtvrinstance != NULL)
 				QTVRSetPanAngle((QTVRInstance)qtvrinstance, (float)pan);
+#endif
+#endif
 			if (isbuffering())
 				dirty = True;
 		}
-#endif
 		break;
 	case P_TILT:
-#ifdef FEATURE_QUICKTIME
 		{
 			real8 tilt;
 			if (!MCU_stor8(data, tilt))
@@ -1115,15 +1280,20 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
 				return ES_ERROR;
 			}
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRTilt, kMCPlatformPropertyTypeDouble, &tilt);
+#else
+#ifdef FEATURE_QUICKTIME
 			if (qtvrinstance != NULL)
 				QTVRSetTiltAngle((QTVRInstance)qtvrinstance, (float)tilt);
+#endif
+#endif
 			if (isbuffering())
 				dirty = True;
 		}
-#endif
 		break;
 	case P_ZOOM:
-#ifdef FEATURE_QUICKTIME
 		{
 			real8 zoom;
 			if (!MCU_stor8(data, zoom))
@@ -1131,12 +1301,18 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
 				return ES_ERROR;
 			}
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRZoom, kMCPlatformPropertyTypeDouble, &zoom);
+#else
+#ifdef FEATURE_QUICKTIME
 			if (qtvrinstance != NULL)
 				QTVRSetFieldOfView((QTVRInstance)qtvrinstance, (float)zoom);
+#endif
+#endif
 			if (isbuffering())
 				dirty = True;
 		}
-#endif
 		break;
 	case P_VISIBLE:
 	case P_INVISIBLE:
@@ -1145,9 +1321,18 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 			Exec_stat stat = MCControl::setprop(parid, p, ep, effective);
 			if (flags != oldflags && !(flags & F_VISIBLE))
 				playstop();
+#ifdef FEATURE_PLATFORM_PLAYER
+			if (m_platform_player != nil)
+			{
+				bool t_visible;
+				t_visible = getflag(F_VISIBLE);
+				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
+			}
+#else
 #ifdef FEATURE_QUICKTIME
 			if (theMC != NULL)
 				MCSetVisible((MovieController)theMC, getflag(F_VISIBLE) && getflag(F_SHOW_CONTROLLER));
+#endif
 #endif
 			
 			return stat;
@@ -1260,19 +1445,27 @@ IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
 //   and state.
 void MCPlayer::syncbuffering(MCContext *p_dc)
 {
+	bool t_should_buffer;
+	
+	// MW-2011-09-13: [[ Layers ]] If the layer is dynamic then the player must be buffered.
+	t_should_buffer = getstate(CS_SELECTED) || getflag(F_ALWAYS_BUFFER) || getstack() -> getstate(CS_EFFECT) || (p_dc != nil && p_dc -> gettype() != CONTEXT_TYPE_SCREEN) || !MCModeMakeLocalWindows() || layer_issprite();
+    
+    // MW-2014-04-24: [[ Bug 12249 ]] If we are not in browse mode for this object, then it should be buffered.
+    t_should_buffer = t_should_buffer || getstack() -> gettool(this) != T_BROWSE;
+	
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_should_buffer);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate != QT_INITTED)
 		return;
-
-	bool t_should_buffer;
-
-	// MW-2011-09-13: [[ Layers ]] If the layer is dynamic then the player must be buffered.
-	t_should_buffer = getstate(CS_SELECTED) || getflag(F_ALWAYS_BUFFER) || getstack() -> getstate(CS_EFFECT) || (p_dc != nil && p_dc -> gettype() != CONTEXT_TYPE_SCREEN) || !MCModeMakeLocalWindows() || layer_issprite();
 
 	if (t_should_buffer && !isbuffering())
 		bufferDraw(false);
 	else if (!t_should_buffer && isbuffering())
 		unbufferDraw();
+#endif
 #endif
 }
 
@@ -1280,6 +1473,11 @@ void MCPlayer::syncbuffering(MCContext *p_dc)
 //   currently in use.
 bool MCPlayer::getversion(MCStringRef& r_string)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+    extern void MCQTGetVersion(MCStringRef &r_version);
+    MCQTGetVersion(r_string);
+    return true;
+#else
 #if defined(X11)
     
     return MCStringCreateWithNativeChars((const char_t*)"2.0", 3, r_string);
@@ -1335,6 +1533,7 @@ bool MCPlayer::getversion(MCStringRef& r_string)
     r_string = MCValueRetain(kMCEmptyString);
     return true;
 #endif
+#endif
 }
 
 void MCPlayer::freetmp()
@@ -1348,6 +1547,14 @@ void MCPlayer::freetmp()
 
 uint4 MCPlayer::getduration() //get movie duration/length
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	uint4 duration;
+	if (m_platform_player != nil)
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &duration);
+	else
+		duration = 0;
+	return duration;
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		return qt_getduration();
@@ -1360,10 +1567,19 @@ uint4 MCPlayer::getduration() //get movie duration/length
 #else
 	return 0;
 #endif
+#endif
 }
 
 uint4 MCPlayer::gettimescale() //get moive time scale
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	uint4 timescale;
+	if (m_platform_player != nil)
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyTimescale, kMCPlatformPropertyTypeUInt32, &timescale);
+	else
+		timescale = 0;
+	return timescale;
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		return qt_gettimescale();
@@ -1376,10 +1592,19 @@ uint4 MCPlayer::gettimescale() //get moive time scale
 #else
 	return 0;
 #endif
+#endif
 }
 
 uint4 MCPlayer::getmoviecurtime()
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	uint4 curtime;
+	if (m_platform_player != nil)
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &curtime);
+	else
+		curtime = 0;
+	return curtime;
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		return qt_getmoviecurtime();
@@ -1392,11 +1617,16 @@ uint4 MCPlayer::getmoviecurtime()
 #else
 	return 0;
 #endif
+#endif
 }
 
 void MCPlayer::setcurtime(uint4 newtime)
 {
 	lasttime = newtime;
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &newtime);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		qt_setcurtime(newtime);
@@ -1407,10 +1637,26 @@ void MCPlayer::setcurtime(uint4 newtime)
 #elif defined(X11)
 	x11_setcurtime(newtime);
 #endif
+#endif
 }
 
 void MCPlayer::setselection()
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		uint4 st, et;
+		if (starttime == MAXUINT4 || endtime == MAXUINT4)
+			st = et = 0;
+		else
+		{
+			st = starttime;
+			et = endtime;
+		}
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+	}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		qt_setselection();
@@ -1421,10 +1667,19 @@ void MCPlayer::setselection()
 #elif defined(X11)
 	x11_setselection();
 #endif
+#endif
 }
 
 void MCPlayer::setlooping(Boolean loop)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		bool t_loop;
+		t_loop = loop;
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_loop);
+	}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED) // loop or unloop QT movie
 		qt_setlooping(loop);
@@ -1435,10 +1690,19 @@ void MCPlayer::setlooping(Boolean loop)
 #elif defined(X11)
 	x11_setlooping(loop);
 #endif
+#endif
 }
 
 void MCPlayer::setplayrate()
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &rate);
+		if (rate != 0.0f)
+			MCPlatformStartPlayer(m_platform_player);
+	}
+#else
 #ifdef FEATURE_QUICKTIME //MAC or WIN
 	if (qtstate == QT_INITTED)
 		qt_setplayrate();
@@ -1449,6 +1713,7 @@ void MCPlayer::setplayrate()
 #elif defined(X11)
 	x11_setplayrate();
 #endif
+#endif
 
 	if (rate != 0)
 		state = state & ~CS_PAUSED;
@@ -1458,6 +1723,14 @@ void MCPlayer::setplayrate()
 
 void MCPlayer::showbadge(Boolean show)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		bool t_show;
+		t_show = show;
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowBadge, kMCPlatformPropertyTypeBool, &t_show);
+	}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)// set QT movie's play rate, for QT movie only
 		qt_showbadge(show);
@@ -1468,10 +1741,19 @@ void MCPlayer::showbadge(Boolean show)
 #elif defined(X11)
 	x11_showbadge(show);
 #endif
+#endif
 }
 
 void MCPlayer::editmovie(Boolean edit)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		bool t_edit;
+		t_edit = edit;
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_edit);
+	}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)//on & off the ability to set selection
 		qt_editmovie(edit);
@@ -1482,10 +1764,19 @@ void MCPlayer::editmovie(Boolean edit)
 #elif defined(X11)
 	x11_editmovie(edit);
 #endif
+#endif
 }
 
 void MCPlayer::playselection(Boolean play)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		bool t_play;
+		t_play = play;
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play);
+	}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		qt_playselection(play);
@@ -1496,10 +1787,15 @@ void MCPlayer::playselection(Boolean play)
 #elif defined(X11)
 	x11_playselection(play);
 #endif
+#endif
 }
 
 Boolean MCPlayer::ispaused()
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+		return !MCPlatformPlayerIsPlaying(m_platform_player);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		return qt_ispaused();
@@ -1512,10 +1808,28 @@ Boolean MCPlayer::ispaused()
 #else
 	return True;
 #endif
+#endif
 }
 
 void MCPlayer::showcontroller(Boolean show)
 {
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+        // PM-2014-05-28: [[ Bug 12524 ]] Resize the rect height to avoid stretching of the movie when showing/hiding controller
+        MCRectangle drect;
+        drect = rect;
+        if (show )
+            drect . height += 16;
+        else
+            drect . height -= 16;
+        
+		bool t_show;
+		t_show = show;
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show);
+        layer_setrect(drect, true);
+	}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		qt_showcontroller(show);
@@ -1525,6 +1839,7 @@ void MCPlayer::showcontroller(Boolean show)
 #endif
 #elif defined(X11)
 	x11_showcontroller(show);
+#endif
 #endif
 }
 
@@ -1538,6 +1853,70 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	if (!opened)
 		return False;
 
+#ifdef FEATURE_PLATFORM_PLAYER
+    extern bool MCQTInit(void);
+    if (!MCQTInit())
+        return False;
+
+	if (m_platform_player == nil)
+		MCPlatformCreatePlayer(m_platform_player);
+
+	if (MCStringBeginsWithCString(filename, (const char_t*)"https:", kMCStringOptionCompareCaseless)
+            || MCStringBeginsWithCString(filename, (const char_t*)"https", kMCStringOptionCompareCaseless)
+            || MCStringBeginsWithCString(filename, (const char_t*)"ftp:", kMCStringOptionCompareCaseless)
+            || MCStringBeginsWithCString(filename, (const char_t*)"file:", kMCStringOptionCompareCaseless)
+            || MCStringBeginsWithCString(filename, (const char_t*)"rtsp:", kMCStringOptionCompareCaseless))
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyURL, kMCPlatformPropertyTypeNativeCString, &filename);
+	else
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &filename);
+	
+	MCRectangle t_movie_rect;
+	MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_movie_rect);
+	
+	MCRectangle trect = resize(t_movie_rect);
+	
+	// IM-2011-11-12: [[ Bug 11320 ]] Transform player rect to device coords
+    // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
+    //   (backscale factor handled in platform layer).
+	trect = MCRectangleGetTransformedBounds(trect, getstack()->getviewtransform());
+	
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
+	
+	bool t_show_controller, t_show_badge, t_looping, t_show_selection, t_play_selection;
+	t_show_controller = getflag(F_SHOW_CONTROLLER);
+	t_show_badge = getflag(F_SHOW_BADGE);
+	t_looping = getflag(F_LOOPING);
+	t_show_selection = getflag(F_SHOW_SELECTION);
+	t_play_selection = getflag(F_PLAY_SELECTION);
+	
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &lasttime);
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show_controller);
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowBadge, kMCPlatformPropertyTypeBool, &t_show_badge);
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
+	setselection();
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
+	SynchronizeUserCallbacks();
+	
+	bool t_offscreen;
+	t_offscreen = getflag(F_ALWAYS_BUFFER);
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_offscreen);
+	
+	bool t_visible;
+	t_visible = getflag(F_VISIBLE);
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
+	
+	MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+	
+	layer_redrawall();
+	
+	setloudness();
+	
+	MCresult -> clear(False);
+	
+	ok = True;
+	
+#else
 #ifdef X11
 	ok = x11_prepare();
 #elif defined FEATURE_QUICKTIME
@@ -1549,11 +1928,13 @@ Boolean MCPlayer::prepare(MCStringRef options)
 		ok = avi_prepare();
 #endif
 #endif
+#endif
 
 	if (ok)
 	{
 		state |= CS_PREPARED | CS_PAUSED;
 
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 		// MW-2007-07-06: [[ Bug 3848 ]] We shouldn't set up this timer if we
 		//   aren't using QT (s_ephemeral_player == NULL).
@@ -1570,6 +1951,7 @@ Boolean MCPlayer::prepare(MCStringRef options)
 		{
 		}
 		else
+#endif
 #endif
 		{
 			nextplayer = MCplayers;
@@ -1592,7 +1974,20 @@ Boolean MCPlayer::playpause(Boolean on)
 {
 	if (!(state & CS_PREPARED))
 		return False;
-
+	
+	Boolean ok;
+	ok = False;
+	
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		if (!on)
+			MCPlatformStartPlayer(m_platform_player);
+		else
+			MCPlatformStopPlayer(m_platform_player);
+		ok = True;
+	}
+#else
 #ifdef TARGET_PLATFORM_WINDOWS
 	if (qtstate != QT_INITTED)
 		setstate(avi_ispaused(), CS_PAUSED);
@@ -1602,8 +1997,6 @@ Boolean MCPlayer::playpause(Boolean on)
 		return True;
 #endif
 
-	Boolean ok;
-	ok = False;
 
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
@@ -1614,6 +2007,7 @@ Boolean MCPlayer::playpause(Boolean on)
 #endif
 #elif defined(X11)
 	ok = x11_playpause(on);
+#endif
 #endif
 	
 	if (ok)
@@ -1627,6 +2021,10 @@ void MCPlayer::playstepforward()
 	if (!getstate(CS_PREPARED))
 		return;
 
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+		MCPlatformStepPlayer(m_platform_player, 1);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		qt_playstepforward();
@@ -1637,13 +2035,18 @@ void MCPlayer::playstepforward()
 #elif defined(X11)
 	x11_playstepforward();
 #endif
+#endif
 }
 
 void MCPlayer::playstepback()
 {
 	if (!getstate(CS_PREPARED))
 		return;
-
+	
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+		MCPlatformStepPlayer(m_platform_player, -1);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		qt_playstepback();
@@ -1653,6 +2056,7 @@ void MCPlayer::playstepback()
 #endif
 #elif defined(X11)
 	x11_playstepback();
+#endif
 #endif
 }
 
@@ -1666,7 +2070,18 @@ Boolean MCPlayer::playstop()
 	
 	state &= ~(CS_PREPARED | CS_PAUSED);
 	lasttime = 0;
-
+	
+#ifdef FEATURE_PLATFORM_PLAYER
+	if (m_platform_player != nil)
+	{
+		MCPlatformStopPlayer(m_platform_player);
+		
+		needmessage = getduration() > getmoviecurtime();
+		
+		MCPlatformDetachPlayer(m_platform_player);
+	}
+#else
+	
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		needmessage = qt_playstop();
@@ -1676,6 +2091,7 @@ Boolean MCPlayer::playstop()
 #endif
 #elif defined(X11)
 	needmessage = x11_playstop();
+#endif
 #endif
 
 	freetmp();
@@ -1739,6 +2155,16 @@ MCRectangle MCPlayer::getpreferredrect()
 		return t_bounds;
 	}
 
+#ifdef FEATURE_PLATFORM_PLAYER
+	MCRectangle t_bounds;
+	MCU_set_rect(t_bounds, 0, 0, 0, 0);
+	if (m_platform_player != nil)
+    {
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_bounds);
+        // PM-2014-04-28: [[Bug 12299]] Make sure the correct MCRectangle is returned
+        return t_bounds;
+    }
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED)
 		return qt_getpreferredrect();
@@ -1753,11 +2179,16 @@ MCRectangle MCPlayer::getpreferredrect()
 	MCU_set_rect(t_bounds, 0, 0, 0, 0);
 	return t_bounds;
 #endif
+#endif
 }
 
 uint2 MCPlayer::getloudness()
 {
 	if (getstate(CS_PREPARED))
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVolume, kMCPlatformPropertyTypeUInt16, &loudness);
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			loudness = qt_getloudness();
@@ -1770,12 +2201,17 @@ uint2 MCPlayer::getloudness()
 #else
 		loudness = loudness;
 #endif
+#endif
 	return loudness;
 }
 
 void MCPlayer::setloudness()
 {
 	if (state & CS_PREPARED)
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+			MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVolume, kMCPlatformPropertyTypeUInt16, &loudness);
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			qt_setloudness(loudness);
@@ -1788,6 +2224,7 @@ void MCPlayer::setloudness()
 #else
 	loudness = loudness;
 #endif
+#endif
 }
 
 #ifdef LEGACY_EXEC
@@ -1796,6 +2233,27 @@ void MCPlayer::gettracks(MCExecPoint &ep)
 	ep . clear();
 
 	if (getstate(CS_PREPARED))
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+		{
+			uindex_t t_track_count;
+			MCPlatformCountPlayerTracks(m_platform_player, t_track_count);
+			for(uindex_t i = 0; i < t_track_count; i++)
+			{
+				uint32_t t_id;
+				MCAutoPointer<char> t_name;
+				uint32_t t_offset, t_duration;
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyMediaTypeName, kMCPlatformPropertyTypeNativeCString, &(&t_name));
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyOffset, kMCPlatformPropertyTypeUInt32, &t_offset);
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_offset);
+				ep . concatuint(t_id, EC_RETURN, i == 1);
+				ep . concatcstring(*t_name, EC_COMMA, false);
+				ep . concatuint(t_offset, EC_COMMA, false);
+				ep . concatuint(t_duration, EC_COMMA, false);
+			}
+		}
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			qt_gettracks(ep);
@@ -1808,6 +2266,7 @@ void MCPlayer::gettracks(MCExecPoint &ep)
 #else
 	0 == 0;
 #endif
+#endif
 }
 #endif
 
@@ -1817,6 +2276,22 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 	ep.clear();
 
 	if (getstate(CS_PREPARED))
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+		{
+			uindex_t t_track_count;
+			MCPlatformCountPlayerTracks(m_platform_player, t_track_count);
+			for(uindex_t i = 0; i < t_track_count; i++)
+			{
+				uint32_t t_id;
+				uint32_t t_enabled;
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
+				if (t_enabled)
+					ep . concatuint(t_id, EC_RETURN, i == 1);
+			}
+		}
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			qt_getenabledtracks(ep);
@@ -1829,12 +2304,63 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 #else
 		0 == 0;
 #endif
+#endif
 }
 #endif
 
 Boolean MCPlayer::setenabledtracks(MCStringRef s)
 {
 	if (getstate(CS_PREPARED))
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+		{
+			uindex_t t_track_count;
+			MCPlatformCountPlayerTracks(m_platform_player, t_track_count);
+			for(uindex_t i = 0; i < t_track_count; i++)
+			{
+				bool t_enabled;
+				t_enabled = false;
+				MCPlatformSetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
+			}
+            
+            uindex_t t_si, t_ei;
+            t_si = t_ei = 0;
+
+            while (t_ei < MCStringGetLength(s))
+            {
+                MCAutoStringRef t_track;
+
+                if (!MCStringFirstIndexOfChar(s, '\n', t_si, kMCStringOptionCompareExact, t_ei))
+                    t_ei = MCStringGetLength(s);
+
+                /* UNCHECKED */ MCStringCopySubstring(s, MCRangeMake(t_si, t_ei - t_si), &t_track);
+				
+                if (!MCStringIsEmpty(*t_track))
+				{
+					uindex_t t_index;
+                    MCAutoNumberRef t_id;
+
+                    if (!MCNumberParse(*t_track, &t_id) ||
+                            !MCPlatformFindPlayerTrackWithId(m_platform_player, MCNumberFetchAsUnsignedInteger(*t_id), t_index))
+						return False;
+					
+					bool t_enabled;
+					t_enabled = true;
+					MCPlatformSetPlayerTrackProperty(m_platform_player, t_index, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
+				}
+                
+				t_ei++;
+				t_si = t_ei;
+            }
+            
+			MCRectangle t_movie_rect;
+			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_movie_rect);
+			MCRectangle trect = resize(t_movie_rect);
+			if (flags & F_SHOW_BORDER)
+				trect = MCU_reduce_rect(trect, -borderwidth);
+			setrect(trect);
+		}
+#else
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
 			return qt_setenabledtracks(s);
@@ -1847,6 +2373,7 @@ Boolean MCPlayer::setenabledtracks(MCStringRef s)
 #else
 		0 == 0;
 #endif
+#endif
 
 	return True;
 }
@@ -1855,6 +2382,9 @@ Boolean MCPlayer::setenabledtracks(MCStringRef s)
 void MCPlayer::getnodes(MCExecPoint &ep)
 {
 	ep.clear();
+#ifdef FEATURE_PLATFORM_PLAYER
+	// COCOA-TODO: MCPlayer::getnodes();
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtvrinstance != NULL)
 	{
@@ -1881,6 +2411,7 @@ void MCPlayer::getnodes(MCExecPoint &ep)
 		QTDisposeAtomContainer(qtatomcontainer);
 	}
 #endif
+#endif
 }
 #endif
 
@@ -1888,6 +2419,9 @@ void MCPlayer::getnodes(MCExecPoint &ep)
 void MCPlayer::gethotspots(MCExecPoint &ep)
 {
 	ep.clear();
+#ifdef FEATURE_PLATFORM_PLAYER
+	// COCOA-TODO: MCPlayer::gethotspots();
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtvrinstance != NULL)
 	{
@@ -1928,6 +2462,175 @@ void MCPlayer::gethotspots(MCExecPoint &ep)
 		QTDisposeAtomContainer(qtatomcontainer);
 	}
 #endif
+#endif
+}
+#endif
+
+#ifdef FEATURE_PLATFORM_PLAYER
+MCRectangle MCPlayer::resize(MCRectangle movieRect)
+{
+	int2 x, y;
+	MCRectangle trect = rect;
+	
+	// MW-2011-10-24: [[ Bug 9800 ]] Store the current rect for layer notification.
+	MCRectangle t_old_rect;
+	t_old_rect = rect;
+	
+	// MW-2011-10-01: [[ Bug 9762 ]] These got inverted sometime.
+	formattedheight = movieRect.height;
+	formattedwidth = movieRect.width;
+	
+	if (!(flags & F_LOCK_LOCATION))
+	{
+		if (formattedheight == 0)
+		{ // audio clip
+			trect.height = 16;
+			rect = trect;
+		}
+		else
+		{
+			x = trect.x + (trect.width >> 1);
+			y = trect.y + (trect.height >> 1);
+			trect.width = (uint2)(formattedwidth * scale);
+			trect.height = (uint2)(formattedheight * scale);
+			if (flags & F_SHOW_CONTROLLER)
+				trect.height += 16;
+			trect.x = x - (trect.width >> 1);
+			trect.y = y - (trect.height >> 1);
+			if (flags & F_SHOW_BORDER)
+				rect = MCU_reduce_rect(trect, -borderwidth);
+			else
+				rect = trect;
+		}
+	}
+	else
+		if (flags & F_SHOW_BORDER)
+			trect = MCU_reduce_rect(trect, borderwidth);
+	
+	// MW-2011-10-24: [[ Bug 9800 ]] If the rect has changed, notify the layer.
+	if (!MCU_equal_rect(rect, t_old_rect))
+		layer_rectchanged(t_old_rect, true);
+	
+	return trect;
+}
+
+void MCPlayer::markerchanged(uint32_t p_time)
+{
+    // Search for the first marker with the given time, and dispatch the message.
+    for(uindex_t i = 0; i < m_callback_count; i++)
+        if (p_time == m_callbacks[i] . time)
+            message_with_valueref_args(m_callbacks[i] . message, m_callbacks[i] . parameter);
+}
+
+void MCPlayer::selectionchanged(void)
+{
+    MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
+    MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+    timer(MCM_selection_changed, nil);
+}
+
+void MCPlayer::SynchronizeUserCallbacks(void)
+{
+    if (MCStringIsEmpty(userCallbackStr))
+        return;
+    
+    if (m_platform_player == nil)
+        return;
+    
+    // Free the existing callback table.
+    for(uindex_t i = 0; i < m_callback_count; i++)
+    {
+        MCNameDelete(m_callbacks[i] . message);
+        MCNameDelete(m_callbacks[i] . parameter);
+    }
+    MCMemoryDeleteArray(m_callbacks);
+    m_callbacks = nil;
+    m_callback_count = 0;
+    
+    // Now reparse the callback string and build the table.
+    MCAutoStringRef t_callback;
+    t_callback = userCallbackStr;
+    
+    uindex_t t_start_index, t_length;
+    
+    t_length = MCStringGetLength(*t_callback);
+    t_start_index = 0;
+    
+	while (t_start_index < t_length)
+	{
+        uindex_t t_comma_index, t_callback_index, t_end_index;
+		if (!MCStringFirstIndexOfChar(*t_callback, ',', t_start_index, kMCStringOptionCompareExact, t_comma_index))
+		{
+            //search ',' as separator
+			return;
+		}
+        
+        uindex_t t_callback2_index;        
+        if (MCStringFirstIndexOfChar(*t_callback, ',', t_comma_index + 1, kMCStringOptionCompareExact, t_end_index))
+            t_end_index = MCStringGetLength(*t_callback);
+        
+        /* UNCHECKED */ MCMemoryResizeArray(m_callback_count + 1, m_callbacks, m_callback_count);
+        // Converts the first part to a number.
+        MCAutoNumberRef t_time;
+        MCNumberParseOffset(*t_callback, t_start_index, t_comma_index - t_start_index, &t_time);
+        m_callbacks[m_callback_count - 1] . time = MCNumberFetchAsInteger(*t_time);
+        
+        t_callback_index = t_comma_index;
+        while (isspace(MCStringGetCharAtIndex(*t_callback, t_callback_index))) //strip off preceding and trailing blanks
+            ++t_callback_index;
+        
+        // See whether we can find a parameter for this callback
+        uindex_t t_space_index;
+        t_space_index = t_callback_index;
+        
+        while (t_space_index < t_end_index)
+        {
+            if (isspace(MCStringGetCharAtIndex(*t_callback, t_space_index)))
+            {
+                ++t_space_index;
+                MCAutoStringRef t_param;
+                /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_space_index, t_end_index - t_space_index), &t_param);
+                /* UNCHECKED */ MCNameCreate(*t_param, m_callbacks[m_callback_count - 1] . parameter);
+                break;
+            }
+            ++t_space_index;
+        }
+
+        MCAutoStringRef t_message;
+        /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_callback_index, t_space_index - t_callback_index), &t_message);
+        /* UNCHECKED */ MCNameCreate(*t_message, m_callbacks[m_callback_count - 1] . message);
+        
+        // If no parameter is specified, use the time.
+        if (m_callbacks[m_callback_count - 1] . parameter == nil)
+        {
+            MCAutoStringRef t_param;
+            /* UNCHECKED */ MCStringCopySubstring(*t_callback, MCRangeMake(t_start_index, t_comma_index - t_start_index), &t_param);
+            /* UNCHECKED */ MCNameCreate(*t_param, m_callbacks[m_callback_count - 1] . parameter);
+        }
+		
+        // Skip the last comma if any
+        t_start_index = t_end_index + 1;
+	}
+    
+    // Now set the markers in the player so that we get notified.
+    array_t<uint32_t> t_markers;
+    /* UNCHECKED */ MCMemoryNewArray(m_callback_count, t_markers . ptr);
+    for(uindex_t i = 0; i < m_callback_count; i++)
+        t_markers . ptr[i] = m_callbacks[i] . time;
+    t_markers . count = m_callback_count;
+    MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMarkers, kMCPlatformPropertyTypeUInt32Array, &t_markers);
+    MCMemoryDeleteArray(t_markers . ptr);
+}
+
+Boolean MCPlayer::isbuffering(void)
+{
+	if (m_platform_player == nil)
+		return false;
+	
+	bool t_buffering;
+	MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_buffering);
+	
+	return t_buffering;
 }
 #endif
 
@@ -1999,6 +2702,61 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	if (MClook == LF_MOTIF && state & CS_KFOCUSED && !(extraflags & EF_NO_FOCUS_BORDER))
 		drawfocus(dc, p_dirty);
 
+#ifdef FEATURE_PLATFORM_PLAYER
+	/*if (!(state & CS_CLOSING))
+		prepare(MCnullstring);
+	
+	if (m_platform_player != nil)
+	{
+		bool t_visible;
+		t_visible = getflag(F_VISIBLE);
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
+		
+		MCRectangle trect = MCU_reduce_rect(rect, flags & F_SHOW_BORDER ? borderwidth : 0);
+		
+		// MW-2011-09-23: Sync the buffering state.
+		syncbuffering(dc);
+		
+		if (isbuffering())
+		{
+			MCImageDescriptor t_image;
+			MCMemoryClear(&t_image, sizeof(t_image));
+			t_image.filter = kMCGImageFilterNone;
+			MCPlatformLockPlayerBitmap(m_platform_player, t_image . bitmap);
+			if (t_image . bitmap != nil)
+				dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
+			MCPlatformUnlockPlayerBitmap(m_platform_player, t_image . bitmap);
+		}
+	}*/
+	
+	if (m_platform_player != nil)
+	{
+		syncbuffering(dc);
+		
+		bool t_offscreen;
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_offscreen);
+		
+		if (t_offscreen)
+		{
+			MCRectangle trect = MCU_reduce_rect(rect, flags & F_SHOW_BORDER ? borderwidth : 0);
+			
+			MCImageDescriptor t_image;
+			MCMemoryClear(&t_image, sizeof(t_image));
+			t_image.filter = kMCGImageFilterNone;
+			
+			// IM-2014-05-14: [[ ImageRepUpdate ]] Wrap locked bitmap in MCGImage
+			MCImageBitmap *t_bitmap = nil;
+			MCPlatformLockPlayerBitmap(m_platform_player, t_bitmap);
+			
+			MCGRaster t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
+			MCGImageCreateWithRasterNoCopy(t_raster, t_image.image);
+			if (t_image . image != nil)
+				dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
+			MCGImageRelease(t_image.image);
+			MCPlatformUnlockPlayerBitmap(m_platform_player, t_bitmap);
+		}
+	}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (!(state & CS_CLOSING))
 		prepare(kMCEmptyString);
@@ -2016,6 +2774,7 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	dc->fillrect(rect);
 	dc->setbackground(MCzerocolor);
 	dc->setfillstyle(FillSolid, nil, 0, 0);
+#endif
 #endif
 
 	if (getflag(F_SHOW_BORDER))
@@ -2442,11 +3201,11 @@ if (theMovie == NULL)
 
 	m_offscreen->hbitmap = t_new_bitmap;
 	m_offscreen->hdc = t_new_dc;
-	m_offscreen->image_bitmap.width = trect.width;
-	m_offscreen->image_bitmap.height = trect.height;
-	m_offscreen->image_bitmap.data = (uint32_t*)t_bits;
-	m_offscreen->image_bitmap.stride = trect.width * sizeof(uint32_t);
-	m_offscreen->image_bitmap.has_transparency = m_offscreen->image_bitmap.has_alpha = false;
+	m_offscreen->image_raster.width = trect.width;
+	m_offscreen->image_raster.height = trect.height;
+	m_offscreen->image_raster.pixels = t_bits;
+	m_offscreen->image_raster.stride = trect.width * sizeof(uint32_t);
+	m_offscreen->image_raster.format = kMCGRasterFormat_xRGB;
 
 	bufferGW = t_new_gworld;
 	SetGWorld((CGrafPtr)bufferGW, (GDHandle)NULL); // Port or graphics world to make current
@@ -2491,9 +3250,9 @@ if (theMovie == NULL)
 		return;
 	}
 	
-	m_offscreen->image_bitmap.width = trect.width;
-	m_offscreen->image_bitmap.height = trect.height;
-	m_offscreen->image_bitmap.has_transparency = m_offscreen->image_bitmap.has_alpha = false;
+	m_offscreen->image_raster.width = trect.width;
+	m_offscreen->image_raster.height = trect.height;
+	m_offscreen->image_raster.format = kMCGRasterFormat_xRGB;
 	
 	MCSetControllerPort((MovieController)theMC, m_offscreen->gworld);
 	MCRectangle r = trect;
@@ -2566,7 +3325,7 @@ void MCPlayer::unbufferDraw()
 #endif
 }
 
-static MCRegionRef PicToRegion(PicHandle thePicture)
+static RgnHandle PicToRegion(PicHandle thePicture)
 {
 	Rect					myRect;
 	GWorldPtr				myGWorld = NULL;
@@ -2623,7 +3382,7 @@ bail:
 		DisposeGWorld(myGWorld);
 	// restore the original graphics port and device
 	SetGWorld(mySavedPort, mySavedDevice);
-	return (MCRegionRef)myRegion;
+	return myRegion;
 }
 
 MCRegionRef MCPlayer::makewindowregion()
@@ -3321,13 +4080,20 @@ void MCPlayer::qt_draw(MCDC *dc, const MCRectangle& dirty)
 
 	if (isbuffering())
 	{
+		MCGImageRef t_image_ref;
+		t_image_ref = nil;
+		
 		MCImageDescriptor t_image;
 		MCMemoryClear(&t_image, sizeof(t_image));
         // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 		t_image.filter = kMCGImageFilterNone;
-		t_image.bitmap = &m_offscreen->image_bitmap;
+
+		/* UNCHECKED */ MCGImageCreateWithRasterNoCopy(m_offscreen->image_raster, t_image_ref);
+		t_image.image = t_image_ref;
 
 		dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
+
+		MCGImageRelease(t_image_ref);
 	}
 	else
 	{
@@ -3345,17 +4111,23 @@ void MCPlayer::qt_draw(MCDC *dc, const MCRectangle& dirty)
 		t_pixmap = GetGWorldPixMap(m_offscreen->gworld);
 		LockPixels(t_pixmap);
 		
-		m_offscreen->image_bitmap.data = (uint32_t*)GetPixBaseAddr(t_pixmap);
-		m_offscreen->image_bitmap.stride = GetPixRowBytes(t_pixmap);
+		m_offscreen->image_raster.pixels = GetPixBaseAddr(t_pixmap);
+		m_offscreen->image_raster.stride = GetPixRowBytes(t_pixmap);
+		
+		MCGImageRef t_image_ref;
+		t_image_ref = nil;
+		
+		/* UNCHECKED */ MCGImageCreateWithRasterNoCopy(m_offscreen->image_raster, t_image_ref);
 		
 		MCImageDescriptor t_image;
 		MCMemoryClear(&t_image, sizeof(t_image));
         // MM-2014-01-27: [[ UpdateImageFilters ]] Updated to use new libgraphics image filter types (was nearest).
 		t_image.filter = kMCGImageFilterNone;
-		t_image.bitmap = &m_offscreen->image_bitmap;
+		t_image.image = t_image_ref;
 		
 		dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
 
+		MCGImageRelease(t_image_ref);
 		UnlockPixels(t_pixmap);
 	}
 	else
@@ -3862,10 +4634,6 @@ Boolean MCPlayer::AVIseek(uint4 to)
 
 #endif
 
-//
-// AVI Player Implementation
-//-----------------------------------------------------------------------------
-
 
 //-----------------------------------------------------------------------------
 // QuickTime Specific Utility Functions
@@ -4249,606 +5017,21 @@ Boolean MCPlayer::installUserCallbacks(void)
 }
 #endif
 
-//
-// QuickTime Specific Implementation
-//-----------------------------------------------------------------------------
-
-
-//-----------------------------------------------------------------------------
-// QuickTime Visual Effects Implementation
-//
-
-#ifdef FEATURE_QUICKTIME
-QTEffect *MCPlayer::qteffects = NULL;
-uint2 MCPlayer::neffects = 0;
-#endif
-
-bool MCPlayer::stdeffectdlg(MCStringRef &r_value, MCStringRef &r_result)
-{
-#ifdef FEATURE_QUICKTIME
-	if (qtstate != QT_INITTED)
-		initqt();
-	if (qtstate != QT_INITTED)
-		return false;
-	QTAtomContainer effectlist = NULL;
-	queryeffects((void **)&effectlist);
-	if (effectlist == NULL)
-		return MCStringCreateWithCString("can't get effect list", r_result);
-
-	OSErr result;
-	QTAtomContainer effectdesc = NULL;
-	QTParameterDialog createdDialogID;
-	if (QTNewAtomContainer(&effectdesc) != noErr)
-		return false;
-	result = QTCreateStandardParameterDialog(effectlist, effectdesc,
-	         0, &createdDialogID);
-	while (result == noErr)
-	{
-		EventRecord theEvent;
-		WaitNextEvent(everyEvent, &theEvent, 0, nil);
-		result = QTIsStandardParameterDialogEvent(&theEvent, createdDialogID);
-		switch (result)
-		{
-		case featureUnsupported:
-
-			{
-				result = noErr;
-				switch (theEvent.what)
-				{
-				case updateEvt:
-					BeginUpdate((WindowPtr)theEvent.message);
-					EndUpdate((WindowPtr)theEvent.message);
-					break;
-				}
-				break;
-			}
-		case codecParameterDialogConfirm:
-		case userCanceledErr:
-			QTDismissStandardParameterDialog(createdDialogID);
-			createdDialogID =nil;
-			break;
-		}
-	}
-	if (result == userCanceledErr)
-	{
-		QTDisposeAtomContainer(effectlist);
-		return MCStringCreateWithCString(MCcancelstring, r_result);
-	}
-	HLock((Handle)effectdesc);
-	uint4 datasize = GetHandleSize(effectdesc) + sizeof(long) * 2;
-
-	MCAutoByteArray t_buffer;
-	if (!t_buffer.New(datasize))
-		return false;
-
-	long *aLong = (long *)t_buffer.Bytes();
-	HLock((Handle)effectdesc);
-	aLong[0] = EndianU32_NtoB(datasize);
-	aLong[1] = EndianU32_NtoB('qtfx');
-	memcpy((char *)(aLong + 2),
-	       *effectdesc ,GetHandleSize(effectdesc));
-	HUnlock((Handle)effectdesc);
-	QTDisposeAtomContainer(effectdesc);
-	QTDisposeAtomContainer(effectlist);
-
-	MCAutoDataRef t_data;
-	return t_buffer.CreateDataAndRelease(&t_data) &&
-		MCFiltersBase64Encode(*t_data, r_value);
-#endif
-
-	r_value = MCValueRetain(kMCEmptyString);
-	return true;
-}
-
-
-#ifdef FEATURE_QUICKTIME
-static int compare_qteffect(const void *a, const void *b)
-{
-	const QTEffect *qa;
-	const QTEffect *qb;
-	qa = (QTEffect *)a;
-	qb = (QTEffect *)b;
-	return strcmp(qa -> token, qb -> token);
-}
-#endif
-
-#ifdef FEATURE_QUICKTIME
-bool MCPlayer::geteffectlist(MCStringRef& r_string)
-{
-	if (qtstate != QT_INITTED)
-		initqt();
-	if (qtstate != QT_INITTED)
-	{
-		r_string = MCValueRetain(kMCEmptyString);
-		return true;
-	}
-
-	queryeffects(NULL);
-
-	// MW-2008-01-08: [[ Bug 5700 ]] Make sure the effect list is sorted alphabetically
-	qsort(qteffects, neffects, sizeof(QTEffect), compare_qteffect);
-
-	MCAutoListRef t_list;
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
-
-	uint2 i;
-	for (i = 0; i < neffects; i++)
-		if (!MCListAppendCString(*t_list, qteffects[i].token))
-			return false;
-
-	return MCListCopyAsString(*t_list, r_string);
-}
-#else
-bool MCPlayer::geteffectlist(MCStringRef& r_string)
-{
-	r_string = MCValueRetain(kMCEmptyString);
-	return true;
-}
-#endif
-
-#ifdef FEATURE_QUICKTIME
-void MCPlayer::queryeffects(void **effectatomptr)
-{
-	if (qteffects != NULL && effectatomptr == NULL)
-		return;
-	QTAtomContainer effectatom = NULL;
-	uint2 numeffects;
-	// get a list of the available effects
-	if  (QTNewAtomContainer(&effectatom) != noErr
-	        || QTGetEffectsList(&effectatom, 2, -1, 0L) != noErr)
-	{
-		if (effectatom != NULL)
-			QTDisposeAtomContainer(effectatom);
-		return;
-	}
-	if (effectatomptr != NULL)
-		*effectatomptr = effectatom;
-	if (qteffects != NULL)
-		return;
-	
-#if defined(_MACOSX) && defined(__LITTLE_ENDIAN__)
-	// MW-2007-12-17: [[ Bug 3851 ]] For some reason the dissolve effect doesn't appear in the
-	//   effects dialog on Mac Intel. So we just add it oursleves!
-
-	OSType t_type;
-	t_type = kCrossFadeTransitionType;
-	QTInsertChild(effectatom, kParentAtomIsContainer, kEffectTypeAtom, 0, 0, sizeof(OSType), &t_type, NULL);
-	QTInsertChild(effectatom, kParentAtomIsContainer, kEffectNameAtom, 0, 0, 10, (void *)"Cross Fade", NULL);
-	t_type = kAppleManufacturer;
-	QTInsertChild(effectatom, kParentAtomIsContainer, kEffectManufacturerAtom, 0, 0, sizeof(OSType), &t_type, NULL);
-#endif
-		
-	// the returned effects list contains (at least) two atoms for each available effect component,
-	// a name atom and a type atom; happily, this list is already sorted alphabetically by effect name
-	numeffects = QTCountChildrenOfType(effectatom, kParentAtomIsContainer,
-	                                   kEffectNameAtom);
-	neffects = 0;
-	qteffects = new QTEffect[numeffects];
-	uint2 i;
-	for (i = 1; i <= numeffects; i++)
-	{
-		QTAtom				nameatom = 0L;
-		QTAtom				typeatom = 0L;
-		nameatom = QTFindChildByIndex(effectatom, kParentAtomIsContainer,
-		                              kEffectNameAtom, i, NULL);
-		typeatom = QTFindChildByIndex(effectatom, kParentAtomIsContainer,
-		                              kEffectTypeAtom, i, NULL);
-
-		if (nameatom != 0L && typeatom != 0L)
-		{
-			long datasize;
-			char *sptr;
-			QTCopyAtomDataToPtr(effectatom, typeatom, false, sizeof(OSType),
-			                    &qteffects[neffects].type, NULL);
-			QTLockContainer(effectatom);
-			QTGetAtomDataPtr(effectatom, nameatom, &datasize, (Ptr *)&sptr);
-			qteffects[neffects].token = new char[datasize+1];
-			memcpy(qteffects[neffects].token,sptr,datasize);
-			qteffects[neffects].token[datasize] = '\0';
-			QTUnlockContainer(effectatom);
-			neffects++;
-		}
-	}
-
-	if (effectatomptr == NULL)
-		QTDisposeAtomContainer(effectatom);
-}
-
-//
-// QuickTime Visual Effects Implementation
-//-----------------------------------------------------------------------------
-
-
-//-----------------------------------------------------------------------------
-// Sound Recording Implementation
-//
-
-// Related class variables
-void *MCPlayer::sgSoundComp = NULL;
-long MCPlayer::sgSndDriver = 0;
-MCStringRef MCPlayer::recordtempfile = nil;
-MCStringRef MCPlayer::recordexportfile = nil;
-
-// Utility functions
-static SampleDescriptionHandle scanSoundTracks(Movie tmovie)
-{
-	short trackCount, index;
-	SampleDescriptionHandle aDesc = NULL;
-	trackCount = (short)GetMovieTrackCount(tmovie);
-	for (index = 1 ; index <= trackCount ; index++)
-	{
-		OSType aTrackType;
-		Track aTrack = NULL;
-		Media aMedia = NULL;
-		aTrack = GetMovieIndTrack(tmovie, index);
-		aMedia = GetTrackMedia(aTrack);
-		GetMediaHandlerDescription(aMedia, &aTrackType, 0, 0);
-		if (aTrackType == SoundMediaType)
-		{
-			aDesc = (SampleDescriptionHandle)NewHandle(sizeof(SoundDescription));
-			GetMediaSampleDescription(aMedia, 1, aDesc);
-			if (GetMoviesError() != noErr)
-			{
-				DisposeHandle((Handle)aDesc);
-				aDesc = NULL;
-				continue;
-			}
-		}
-	}
-	return aDesc;
-}
-
-static bool path_to_dataref(MCStringRef p_path, DataReferenceRecord& r_rec)
-{
-    bool t_success = true;
-    CFStringRef t_cf_path = NULL;
-
-	char* t_cstring;
-	MCStringConvertToCString(p_path, t_cstring);
-	t_cf_path = CFStringCreateWithCStringNoCopy(NULL, t_cstring, kCFStringEncodingWindowsLatin1, kCFAllocatorNull);
-
-    t_success = (t_cf_path != NULL);
-	if (t_success)
-	{
-		OSErr t_error;
-		t_error = QTNewDataReferenceFromFullPathCFString(t_cf_path, kQTNativeDefaultPathStyle, 0, &r_rec . dataRef, &r_rec . dataRefType);
-		t_success = noErr == t_error;
-	}
-	CFRelease(t_cf_path);
-	return t_success;
-}
-
-static void exportToSoundFile(const char *sourcefile, const char *destfile)
-{
-	bool t_success = true;
-	SoundDescriptionHandle myDesc = NULL;
-	ComponentResult result = 0;
-	Movie tmovie = nil;
-
-    MCAutoStringRef t_src_resolved_str, t_dst_resolved_str;
-    MCAutoStringRef t_sourcefile, t_destfile;
-    /* UNCHECKED */ MCStringCreateWithCString(sourcefile, &t_sourcefile);
-    /* UNCHECKED */ MCStringCreateWithCString(destfile, &t_destfile);
-	MCS_resolvepath(*t_sourcefile, &t_src_resolved_str);
-	MCS_resolvepath(*t_destfile, &t_dst_resolved_str);
-	t_success = (MCS_resolvepath(*t_sourcefile, &t_src_resolved_str) && MCS_resolvepath(*t_destfile, &t_dst_resolved_str));
-
-	DataReferenceRecord t_src_rec, t_dst_rec;
-	t_src_rec.dataRef = NULL;
-	t_dst_rec.dataRef = NULL;
-	
-	if (t_success)
-	{
-        t_success = path_to_dataref(*t_src_resolved_str, t_src_rec) && path_to_dataref(*t_dst_resolved_str, t_dst_rec);
-	}
-
-	Boolean isActive = true;
-	QTVisualContextRef aVisualContext = NULL;
-	QTNewMoviePropertyElement aMovieProperties[] = {
-		{kQTPropertyClass_DataLocation, kQTDataLocationPropertyID_DataReference, sizeof(t_src_rec), &t_src_rec, 0},
-		{kQTPropertyClass_NewMovieProperty, kQTNewMoviePropertyID_Active, sizeof(isActive), &isActive, 0},
-		{kQTPropertyClass_Context, kQTContextPropertyID_VisualContext, sizeof(aVisualContext), &aVisualContext, 0},
-		};
-
-	if (t_success)
-		t_success = noErr == NewMovieFromProperties(3, aMovieProperties, 0, NULL, &tmovie);
-
-	if (t_success)
-		myDesc = (SoundDescriptionHandle)scanSoundTracks(tmovie);
-
-	if (myDesc)
-	{
-		//open movie export component
-		MovieExportComponent exporter;
-		Component c;
-		ComponentDescription cd;
-		cd.componentType = MovieExportType;
-		switch (MCrecordformat)
-		{
-		case EX_WAVE:
-			cd.componentSubType = kQTFileTypeWave;
-			break;
-		case EX_ULAW:
-			cd.componentSubType = kQTFileTypeMuLaw;
-			break;
-		case EX_AIFF:
-			cd.componentSubType = kQTFileTypeAIFF;
-			break;
-		default:
-			cd.componentSubType = kQTFileTypeMovie;
-			break;
-		}
-		cd.componentManufacturer = SoundMediaType;
-		cd.componentFlags = canMovieExportFiles;
-		cd.componentFlagsMask = canMovieExportFiles;
-		c = FindNextComponent(nil, &cd);
-		(**myDesc).numChannels = MCrecordchannels;
-		(**myDesc).sampleSize = MCrecordsamplesize;
-		(**myDesc).sampleRate = (uint32_t)(MCrecordrate * 1000 * 65536);
-		exporter = nil;
-		exporter = OpenComponent(c);
-		result = MovieExportSetSampleDescription(exporter, (SampleDescriptionHandle)myDesc,
-		         SoundMediaType);
-		errno = ConvertMovieToDataRef(tmovie, 0, t_dst_rec . dataRef, t_dst_rec . dataRefType, cd.componentSubType,
-		                           0, 0, exporter);
-		// try showUserSettingsDialog | movieToFileOnlyExport | movieFileSpecValid
-		DisposeHandle((Handle) myDesc);
-		if (exporter)
-			CloseComponent(exporter);
-		if (errno != noErr)
-		{
-			char buffer[26 + U4L];
-			sprintf(buffer, "error %d exporting recording", errno);
-			MCresult->copysvalue(buffer);
-		}
-	}
-
-	if (t_src_rec.dataRef != NULL)
-		DisposeHandle(t_src_rec.dataRef);
-	if (t_dst_rec.dataRef != NULL)
-		DisposeHandle(t_dst_rec.dataRef);
-
-	DisposeMovie(tmovie);
-}
-
-void MCPlayer::handlerecord()
-{
-	if (MCrecording)
-		SGIdle((SeqGrabComponent)sgSoundComp);
-}
-
-#endif
-
-void MCPlayer::stoprecording()
-{
-#ifdef FEATURE_QUICKTIME
-	if (MCrecording)
-	{
-		MCresult->clear();
-		MCrecording = False;
-		SGStop((SeqGrabComponent)sgSoundComp);
-		if (sgSoundComp != NULL)
-		{
-			CloseComponent((SeqGrabComponent)sgSoundComp);
-			sgSoundComp = NULL;
-		}
-#ifdef _WINDOWS
-		if (MCrecordformat == EX_MOVIE)
-        {
-            MCAutoStringRefAsWString t_recordtempfile, t_recordexportfile;
-            /* UNCHECKED */ t_recordtempfile . Lock(recordtempfile);
-            /* UNCHECKED */ t_recordexportfile . Lock(recordexportfile);
-			CopyFileW(*t_recordtempfile, *t_recordexportfile, False);
-        }
-		else
-#endif
-		{
-			MCS_unlink(recordexportfile);
-            MCAutoStringRefAsUTF8String t_recordtempfile, t_recordexportfile;
-            /* UNCHECKED */ t_recordtempfile . Lock(recordtempfile);
-            /* UNCHECKED */ t_recordexportfile . Lock(recordexportfile);
-			exportToSoundFile(*t_recordtempfile, *t_recordexportfile);
-			MCS_unlink(recordtempfile);
-		}
-		MCValueRelease(recordexportfile);
-        recordexportfile = NULL;
-	}
-#endif
-}
-
-void MCPlayer::recordsound(MCStringRef fname)
-{
-#ifdef FEATURE_QUICKTIME
-	if (qtstate != QT_INITTED)
-		initqt();
-	if (qtstate != QT_INITTED)
-	{
-		MCresult->sets("could not initialize quicktime");
-		return;
-	}
-	stoprecording();//just in case
-	FSSpec fspec;
-    
-    MCAutoStringRef t_name;
-    if (MCS_tmpnam(&t_name)) 
-        MCValueAssign(recordtempfile, *t_name);
-    
-	recordexportfile = MCValueRetain(fname);
-	MCS_path2FSSpec(recordtempfile, &fspec);
-	OSType compressionType, inputSource;
-	memcpy(&compressionType, MCrecordcompression, 4);
-	compressionType = EndianU32_NtoB(compressionType);
-	if (strequal(MCrecordinput, "dflt"))
-		inputSource = 0; // fake "default" entry
-	else
-	{
-		memcpy(&inputSource, MCrecordinput, 4);
-		inputSource = EndianU32_NtoB(inputSource);
-	}
-	// bug in component can't sample at anything except 44.1KHz
-
-	UnsignedFixed sampleRate = 44100 << 16;
-#ifdef _WINDOWS
-
-	if (MCrecordformat == EX_MOVIE)
-	{
-		short denominator = (short)(MAXINT2 / MCrecordrate);
-		short numerator = (short)(MCrecordrate * denominator);
-		sampleRate = FixRatio(numerator, denominator) * 1000;
-	}
-#endif
-
-	short sampleSize = MCrecordsamplesize;
-	short numChannels = MCrecordchannels;
-
-	int t_flags;
-	if ((qtversion >> 24) >= 7)
-	{
-		// MW-2008-03-15: [[ Bug 6076 ]] Make sure we create the file before we start recording to it
-		//   otherwise no recording happens.
-		FILE *t_file;
-        MCAutoStringRefAsUTF8String t_recordtempfile_utf8;
-        t_recordtempfile_utf8 . Lock(recordtempfile);
-		t_file = fopen(*t_recordtempfile_utf8, "w");
-		if (t_file != NULL)
-			fclose(t_file);
-
-		t_flags = seqGrabDontPreAllocateFileSize | seqGrabAppendToFile;
-	}
-	else
-		t_flags = 0;
-
-	sgSoundComp = OpenDefaultComponent(SeqGrabComponentType, 0);
-	errno = SGInitialize((SeqGrabComponent)sgSoundComp);
-	if (errno == noErr)
-	{
-		SGChannel sgSoundChan;
-		if ((errno = SGNewChannel((SeqGrabComponent)sgSoundComp, SoundMediaType, &sgSoundChan)) == noErr
-		        && (errno = SGSetChannelUsage(sgSoundChan, seqGrabRecord)) == noErr
-		        && (errno = SGSetSoundInputRate(sgSoundChan, sampleRate)) == noErr
-		        && (errno = SGSetSoundInputParameters(sgSoundChan, sampleSize,
-		                                              numChannels, compressionType)) == noErr
-		        && (errno = SGSetDataOutput((SeqGrabComponent)sgSoundComp, &fspec, seqGrabToDisk | t_flags)) == noErr
-		        && (!inputSource
-		            || (errno = SPBSetDeviceInfo(SGGetSoundInputDriver(sgSoundChan),
-		                                         siOSTypeInputSource, &inputSource)) == noErr)
-		        && (errno = SGSoundInputDriverChanged(sgSoundChan)) == noErr)
-		{
-			sgSndDriver = SGGetSoundInputDriver(sgSoundChan);
-			//turn on sound input metering
-			uint2 meterState = 1;
-			if ((errno = SPBSetDeviceInfo(sgSndDriver, siLevelMeterOnOff,
-			                              (char *)&meterState)) == noErr)
-
-				errno = SGStartRecord((SeqGrabComponent)sgSoundComp);
-		}
-	}
-
-	if (errno == noErr)
-	{
-		MCrecording = True;
-		MCscreen->addtimer(MCtemplateplayer, MCM_internal, PLAY_RATE);
-		MCresult->clear(False);
-	}
-	else
-	{
-        MCAutoStringRef t_error;
-        MCStringFormat(&t_error, "error %d starting recording", errno);
-        MCresult -> setvalueref(*t_error);
-		if (sgSoundComp != NULL)
-		{
-			CloseComponent((SeqGrabComponent)sgSoundComp);
-			sgSoundComp = NULL;
-		}
-	}
-#else
-	MCresult->sets("not supported");
-#endif
-}
-
-bool MCPlayer::getrecordloudness(integer_t& r_loudness)
-{
-	r_loudness = 0;
-#ifdef FEATURE_QUICKTIME
-	if (MCrecording)
-	{
-		uint2 meterState[2];
-		SPBGetDeviceInfo(sgSndDriver, siLevelMeterOnOff, (char *)&meterState);
-		r_loudness = (uint2)((meterState[1] * 100) / 255);
-	}
-#else
-
-	MCresult->sets("not supported");
-#endif
-	return true;
-}
-
-#ifdef FEATURE_QUICKTIME
-bool MCPlayer::getrecordcompressionlist(MCStringRef& r_string)
-{
-	if (qtstate != QT_INITTED)
-		initqt();
-	if (qtstate != QT_INITTED)
-	{
-		MCresult->sets("could not initialize quicktime");
-		r_string = MCValueRetain(kMCEmptyString);
-		return true;
-	}
-
-	bool t_success = true;
-	MCAutoListRef t_list;
-	t_success = MCListCreateMutable('\n', &t_list);
-
-	Component component = 0;
-	ComponentDescription desc, info;
-	Handle name = NewHandle(0);
-	desc.componentType = kSoundCompressor;
-	desc.componentSubType = 0;
-	desc.componentManufacturer = 0;
-	desc.componentFlags = 0;
-	desc.componentFlagsMask = 0;
-
-	if (t_success)
-		t_success = MCListAppendCString(*t_list, "No compression,raw ");
-
-	while (t_success && (component = FindNextComponent(component, &desc)) != NULL)
-	{
-		GetComponentInfo(component, &info, name, 0, 0);
-		if (GetHandleSize(name))
-		{
-			HLock(name);
-			char ssubtype[] = "????";
-			long compType;
-			compType = EndianU32_BtoN(info.componentSubType);
-			memcpy(ssubtype, (char *)&compType, sizeof(OSType));
-			MCAutoStringRef t_type;
-			t_success = MCStringFormat(&t_type, "%s,%s", (char*)*name, ssubtype);
-			if (t_success)
-				t_success = MCListAppend(*t_list, *t_type);
-			HUnlock(name);
-		}
-	}
-	DisposeHandle(name);
-
-	if (t_success)
-		t_success = MCListCopyAsString(*t_list, r_string);
-	return t_success;
-}
-#else
-bool MCPlayer::getrecordcompressionlist(MCStringRef& r_string)
-{
-	r_string = MCValueRetain(kMCEmptyString);
-	return true;
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////
 // QUICKTIME ACCESSORS
 
 MCPlayerMediaTypeSet MCPlayer::getmediatypes()
 {
 	MCPlayerMediaTypeSet types = 0;
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+		if (m_platform_player != nil)
+		{
+			MCPlatformPlayerMediaTypes t_types;
+			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMediaTypes, kMCPlatformPropertyTypePlayerMediaTypes, &t_types);
+            types = t_types;
+		}
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtstate == QT_INITTED && state & CS_PREPARED)
 	{
@@ -4857,21 +5040,36 @@ MCPlayerMediaTypeSet MCPlayer::getmediatypes()
 				types |= 1 << i;
 	}
 #endif
+#endif
 	return types;
 }
 
 uint2 MCPlayer::getcurrentnode()
 {
 	uint2 i = 0;
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRNode, kMCPlatformPropertyTypeUInt16, &i);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtvrinstance != NULL)
 		i = (uint2)QTVRGetCurrentNodeID((QTVRInstance)qtvrinstance);
+#endif
 #endif
 	return i;
 }
 
 bool MCPlayer::changecurrentnode(uint2 nodeid)
 {
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+    {
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRNode, kMCPlatformPropertyTypeUInt16, &nodeid);
+        return true;
+    }
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtvrinstance != NULL)
 	{
@@ -4880,70 +5078,99 @@ bool MCPlayer::changecurrentnode(uint2 nodeid)
 			return true;
 	}
 #endif
+#endif
 	return false;
 }
 
 real8 MCPlayer::getpan()
 {
 	real8 pan = 0.0;
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRPan, kMCPlatformPropertyTypeDouble, &pan);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtvrinstance != NULL)
 		pan = QTVRGetPanAngle((QTVRInstance)qtvrinstance);
+#endif
 #endif
 	return pan;
 }
 
 bool MCPlayer::changepan(real8 pan)
 {
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+        if (m_platform_player != nil)
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRPan, kMCPlatformPropertyTypeDouble, &pan);
+#else
 #ifdef FEATURE_QUICKTIME
-	if (qtvrinstance != NULL)
-		QTVRSetPanAngle((QTVRInstance)qtvrinstance, (float)pan);
-	if (isbuffering())
-		return true;
+        if (qtvrinstance != NULL)
+            QTVRSetPanAngle((QTVRInstance)qtvrinstance, (float)pan);
 #endif
-	return false;
+#endif
+	return isbuffering();
 }
 
 real8 MCPlayer::gettilt()
 {
-	real8 tilt = 0.0;
+    real8 tilt = 0.0;
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRTilt, kMCPlatformPropertyTypeDouble, &tilt);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtvrinstance != NULL)
 		tilt = QTVRGetTiltAngle((QTVRInstance)qtvrinstance);
+#endif
 #endif
 	return tilt;
 }
 
 bool MCPlayer::changetilt(real8 tilt)
 {
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+        if (m_platform_player != nil)
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRTilt, kMCPlatformPropertyTypeDouble, &tilt);
+#else
 #ifdef FEATURE_QUICKTIME
-	if (qtvrinstance != NULL)
-		QTVRSetTiltAngle((QTVRInstance)qtvrinstance, (float)tilt);
-	if (isbuffering())
-		return true;
+        if (qtvrinstance != NULL)
+            QTVRSetTiltAngle((QTVRInstance)qtvrinstance, (float)tilt);
 #endif
-	return false;
+#endif
+    return isbuffering();
 }
 
 real8 MCPlayer::getzoom()
 {
 	real8 zoom = 0.0;
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRZoom, kMCPlatformPropertyTypeDouble, &zoom);
+#else
 #ifdef FEATURE_QUICKTIME
 	if (qtvrinstance != NULL)
 		zoom = QTVRGetFieldOfView((QTVRInstance)qtvrinstance);
+#endif
 #endif
 	return zoom;
 }
 
 bool MCPlayer::changezoom(real8 zoom)
 {
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyQTVRZoom, kMCPlatformPropertyTypeDouble, &zoom);
+#else
 #ifdef FEATURE_QUICKTIME
-	if (qtvrinstance != NULL)
-		QTVRSetFieldOfView((QTVRInstance)qtvrinstance, (float)zoom);
-	if (isbuffering())
-		return true;
+    if (qtvrinstance != NULL)
+        QTVRSetFieldOfView((QTVRInstance)qtvrinstance, (float)zoom);
 #endif
-	return false;
+#endif
+	return isbuffering();
 }
 
 bool MCPlayer::gettrack(uindex_t index, uint4& id, MCStringRef& r_name, uint4& offset, uint4& duration)
@@ -5083,86 +5310,37 @@ bool MCPlayer::gethotspot(uindex_t index, uint2 &id, MCMultimediaQTVRHotSpotType
 
 void MCPlayer::setmoviecontrollerid(int4 p_id)
 {
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef FEATURE_QUICKTIME
 	playstop();
 	theMC = (void *)p_id;
 	theMovie = MCGetMovie((MovieController)theMC);
 #endif
+#endif
 }
 
 uint2 MCPlayer::gettrackcount()
 {
-	uint2 tcount = 0;
+	uint2 i = 0;
+    // MERG-2014-06-25: [[ PlatformPlayer ]]
+#ifdef FEATURE_PLATFORM_PLAYER
+    if (m_platform_player != nil)
+    {
+        uindex_t t_count;
+        MCPlatformCountPlayerTracks(m_platform_player, t_count);
+        i = t_count;
+    }
+#else
 #ifdef FEATURE_QUICKTIME
-	if (qtstate == QT_INITTED && state & CS_PREPARED)
-		tcount = (uint2)GetMovieTrackCount((Movie)theMovie);
+    if (qtstate == QT_INITTED && state & CS_PREPARED)
+        i = (uint2)GetMovieTrackCount((Movie)theMovie);
 #endif
-	return tcount;
+#endif
+	return i;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-
-
-// MW-2005-05-15: For consistency, added title field
-bool MCPlayer::stdrecorddlg(MCStringRef &r_result)
-{
-	bool t_success = true;
-
-#ifdef FEATURE_QUICKTIME
-	if (qtstate != QT_INITTED)
-		initqt();
-	if (qtstate != QT_INITTED)
-		return MCStringCreateWithCString("could not initialize quicktime", r_result);
-
-	ComponentInstance ci = OpenDefaultComponent(StandardCompressionType,
-	                       StandardCompressionSubTypeSound);
-	if (ci == NULL)
-		return MCStringCreateWithCString("can't open dialog", r_result);
-
-	//short denominator = (short)(MAXINT2 / MCrecordrate);
-	//short numerator = (short)(MCrecordrate * denominator);
-	//UnsignedFixed sampleRate = FixRatio(numerator, denominator) * 1000;
-	UnsignedFixed sampleRate = MCrecordrate * (1 << 16) * 1000;
-	short sampleSize = MCrecordsamplesize;
-	short numChannels = MCrecordchannels;
-	OSType compressionType;
-	memcpy(&compressionType, MCrecordcompression, 4);
-	compressionType = EndianU32_NtoB(compressionType);
-	SCSetInfo(ci, scSoundSampleRateType, &sampleRate);
-	SCSetInfo(ci, scSoundSampleSizeType, &sampleSize);
-	SCSetInfo(ci, scSoundChannelCountType, &numChannels);
-	SCSetInfo(ci, scSoundCompressionType, &compressionType);
-	errno = SCRequestImageSettings(ci);
-	if (errno == noErr)
-	{
-		SCGetInfo(ci, scSoundSampleRateType, &sampleRate);
-		SCGetInfo(ci, scSoundSampleSizeType, &sampleSize);
-		SCGetInfo(ci, scSoundChannelCountType, &numChannels);
-		SCGetInfo(ci, scSoundCompressionType, &compressionType);
-		//MCrecordrate = (HiWord(sampleRate) + LoWord(sampleRate)
-		//                / (real8)MAXINT2) / 1000.0;
-		MCrecordrate = sampleRate / (real8)(1000 << 16);
-		compressionType = EndianU32_BtoN(compressionType);
-		memcpy(MCrecordcompression, &compressionType, 4);
-		MCrecordsamplesize = sampleSize;
-		MCrecordchannels = numChannels;
-	}
-	else
-	{
-		if (errno == userCanceledErr)
-			t_success = MCStringCreateWithCString(MCcancelstring, r_result);
-		else
-			t_success = MCStringFormat(r_result, "error %d opening dialog", errno);
-	}
-	CloseComponent(ci);
-#endif
-
-	return t_success;
-}
-
-//
-// Sound Recording Implementation
-//-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // X11 (using mplayer) Player Implementation
@@ -5170,7 +5348,7 @@ bool MCPlayer::stdrecorddlg(MCStringRef &r_result)
 // The MPlayer object (mplayer.cpp) fully encapulates and manages the mplayer process and provides
 // a nice, easy to use interface for controlling it.
 
-
+#ifndef FEATURE_PLATFORM_PLAYER
 #ifdef X11
 Boolean MCPlayer::x11_prepare(void)
 {
@@ -5294,371 +5472,8 @@ void MCPlayer::shutdown(void)
 }
 
 #endif
+#endif
 //
 // X11 (using mplayer) Player Implementation
 //-----------------------------------------------------------------------------
 
-//-----------------------------------------------------------------------------
-// QTEffect implementation
-
-#ifdef FEATURE_QUICKTIME
-
-void MCQTEffectEnd(void);
-
-static CGrafPtr s_qt_target_port = nil;
-
-static MCGImageRef s_qt_start_image = nil;
-static CGrafPtr s_qt_start_port = NULL;
-
-static MCGImageRef s_qt_end_image = nil;
-static CGrafPtr s_qt_end_port = NULL;
-
-static QTAtomContainer s_qt_effect_desc = NULL;
-
-static ImageDescriptionHandle s_qt_sample_desc = NULL;
-static ImageDescriptionHandle s_qt_start_desc = NULL;
-static ImageDescriptionHandle s_qt_end_desc = NULL;
-static TimeBase s_qt_timebase = NULL;
-static ImageSequence s_qt_effect_seq = NULL;
-
-static Boolean s_qt_reverse = False;
-
-void QTEffectAddParameters(QTAtomContainer effectdescription,OSType theEffectType, Visual_effects dir,Boolean &reverse)
-{
-	OSType paramtype;
-	reverse = False;
-	long param = 0;
-	switch (theEffectType)
-	{
-	case 'push'://push [right] [left] [top] [bottom]
-		{
-			switch (dir)
-			{
-			case VE_BOTTOM:
-				param = 1;
-				break;
-			case VE_LEFT:
-				param = 2;
-				break;
-			case VE_UP:
-				param = 3;
-				break;
-			case VE_RIGHT:
-				param = 4;
-			default:
-				break;
-			}
-			paramtype = 'from';
-		}
-		break;
-	case 'smpt'://wipe [right] [left] [top] [bottom]
-		{
-			switch (dir)
-			{
-			case VE_LEFT:
-				reverse = True;
-			case VE_RIGHT:
-				param = 1;
-				break;
-			case VE_UP:
-				reverse = True;
-			case VE_DOWN:
-				param = 2;
-			default:
-				break;
-			}
-		}
-	case 'smp2'://iris [open] [close]
-		{
-			switch (dir)
-			{
-			case VE_CLOSE:
-				reverse = True;
-			case VE_OPEN:
-				param = 101;
-			default:
-				break;
-			}
-		}
-	case 'smp3':
-	case 'smp4':
-		paramtype = 'wpID';
-		break;
-	default:
-		paramtype = 0;
-	}
-	
-	if (paramtype != 0 && param != 0)
-	{
-		param = EndianU32_NtoB(param);
-		QTInsertChild(effectdescription, kParentAtomIsContainer, paramtype, 1, 0, sizeof(param), &param, NULL);
-	}
-	if (reverse)
-	{
-		QTAtom source1 = QTFindChildByIndex(effectdescription, kParentAtomIsContainer, kEffectSourceName, 1, NULL );
-		QTAtom source2 = QTFindChildByIndex(effectdescription, kParentAtomIsContainer, kEffectSourceName, 2, NULL );
-		if (source2)
-			QTSwapAtoms(effectdescription,source1,source2);
-	}
-}
-
-bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p_direction, MCGImageRef p_start, MCGImageRef p_end, const MCRectangle& p_area)
-{
-	if (MCdontuseQTeffects || !MCtemplateplayer -> isQTinitted())
-		return false;
-
-	OSType qteffect;
-	qteffect = 0;
-	
-	switch (p_type)
-	{
-		case VE_DISSOLVE:
-			qteffect = 'dslv';
-		break;
-		
-		case VE_IRIS:
-			qteffect = 'smp2';
-			return false;
-		break;
-		
-		case VE_PUSH:
-			qteffect = 'push';
-			return false;
-		break;
-		
-		case VE_WIPE:
-			qteffect = 'smpt';
-			return false;
-		break;
-		
-		case VE_UNDEFINED:
-		{
-			uint2 i;
-			QTEffect *teffects = MCtemplateplayer->geteffects();
-			uint2 tsize = MCtemplateplayer->getneffects();
-			
-			MCAutoStringRef t_effectname;
-            /* UNCHECKED */ MCStringCreateWithCString(p_name, &t_effectname);
-			for (i = 0 ; i < tsize; i++)
-			{
-				if (MCStringIsEqualToCString(*t_effectname, teffects[i].token, kMCCompareExact))
-				{
-					qteffect = teffects[i].type;
-					break;
-				}
-			}
-			if (!qteffect && MCStringGetLength(*t_effectname) == 4)
-			{
-				memcpy(&qteffect, p_name, sizeof(OSType));
-				qteffect = EndianU32_NtoB(qteffect);
-			}
-			else
-			{
-				MCAutoDataRef t_data;
-                MCU_base64decode(*t_effectname, &t_data);
-                if (MCDataGetLength(*t_data) > 8)
-				{
-					const char *dataptr = (const char*)MCDataGetBytePtr(*t_data);
-					long *aLong = (long *)dataptr;
-					long datasize = EndianU32_BtoN(aLong[0]) - (sizeof(long)*2);
-					OSType ostype = EndianU32_BtoN(aLong[1]);
-					if (ostype == 'qtfx')
-					{
-						s_qt_effect_desc = NewHandle(datasize);
-						HLock(s_qt_effect_desc);
-						memcpy(*s_qt_effect_desc, (char *)(dataptr + (sizeof(long) * 2)), datasize);
-						HUnlock(s_qt_effect_desc);
-						QTAtom whatAtom = QTFindChildByID(s_qt_effect_desc, kParentAtomIsContainer, kParameterWhatName, kParameterWhatID, NULL);
-						if (whatAtom)
-						{
-							QTCopyAtomDataToPtr(s_qt_effect_desc, whatAtom, true, sizeof(qteffect), &qteffect, NULL);
-							qteffect = EndianU32_BtoN(qteffect);
-						}
-					}
-				}
-			}
-		}
-		break;
-	default:
-		break;
-	}
-	
-	Rect t_src_rect, t_dst_rect;
-	MacSetRect(&t_src_rect, 0, 0, p_area . width, p_area . height);
-	MacSetRect(&t_dst_rect, 0, 0, p_area . width, p_area . height);
-
-	if (qteffect != 0)
-	{
-		MCGRaster t_start_raster, t_end_raster;
-		/* UNCHECKED */ MCGImageGetRaster(p_start, t_start_raster);
-		QTNewGWorldFromPtr(&s_qt_start_port, PIXEL_FORMAT_32, &t_src_rect, nil, nil, 0, t_start_raster.pixels, t_start_raster.stride);
-
-		/* UNCHECKED */ MCGImageGetRaster(p_end, t_end_raster);
-		QTNewGWorldFromPtr(&s_qt_end_port, PIXEL_FORMAT_32, &t_src_rect, nil, nil, 0, t_end_raster.pixels, t_end_raster.stride);
-		
-		QTNewGWorld(&s_qt_target_port, PIXEL_FORMAT_32, &t_src_rect, nil, nil, 0);
-	}
-
-	if (s_qt_target_port != nil && s_qt_start_port != NULL && s_qt_end_port != NULL)
-	{
-		OSType effecttype;
-		if (s_qt_effect_desc == NULL)
-		{
-			QTNewAtomContainer(&s_qt_effect_desc);
-			effecttype = EndianU32_NtoB(qteffect);
-			QTInsertChild(s_qt_effect_desc, kParentAtomIsContainer, kParameterWhatName, kParameterWhatID, 0, sizeof(effecttype), &effecttype, NULL);
-		}
-		
-		effecttype = EndianU32_NtoB('srcA'); //source 1
-		QTInsertChild(s_qt_effect_desc, kParentAtomIsContainer, kEffectSourceName, 1, 0, sizeof(effecttype), &effecttype, NULL);
-		
-		effecttype = EndianU32_NtoB('srcB'); //source 2
-		QTInsertChild(s_qt_effect_desc, kParentAtomIsContainer, kEffectSourceName, 2, 0, sizeof(effecttype), &effecttype, NULL);
-	}
-	
-	if (s_qt_effect_desc != NULL)
-		MakeImageDescriptionForEffect(qteffect, &s_qt_sample_desc);
-		
-	if (s_qt_sample_desc != NULL)
-	{				
-		(**s_qt_sample_desc).vendor = kAppleManufacturer;
-		(**s_qt_sample_desc).temporalQuality = codecNormalQuality;
-		(**s_qt_sample_desc).spatialQuality = codecNormalQuality;
-		(**s_qt_sample_desc).width = p_area . width;
-		(**s_qt_sample_desc).height = p_area . height;
-		QTEffectAddParameters(s_qt_effect_desc, qteffect, p_direction,	s_qt_reverse);
-		
-		MatrixRecord t_matrix;
-		RectMatrix(&t_matrix, &t_src_rect, &t_dst_rect);
-		
-		HLock((Handle)s_qt_effect_desc);
-		DecompressSequenceBeginS(&s_qt_effect_seq, s_qt_sample_desc,
-														 *s_qt_effect_desc, GetHandleSize(s_qt_effect_desc),
-														 s_qt_target_port, nil,
-														 nil, &t_matrix, ditherCopy, nil,
-														 0, codecNormalQuality, nil);
-		HUnlock((Handle)s_qt_effect_desc);
-	}
-	
-	if (s_qt_effect_seq != 0)
-	{
-		ImageSequenceDataSource t_src_sequence;
-		
-		t_src_sequence = 0;
-		PixMapHandle t_src_pixmap = GetGWorldPixMap(s_qt_start_port);
-		MakeImageDescriptionForPixMap(t_src_pixmap, &s_qt_start_desc);
-		CDSequenceNewDataSource(s_qt_effect_seq, &t_src_sequence, 'srcA', 1, (Handle)s_qt_start_desc, nil, 0);
-		CDSequenceSetSourceData(t_src_sequence, GetPixBaseAddr(t_src_pixmap), (**s_qt_start_desc) . dataSize);
-	}
-	
-	if (s_qt_start_desc != NULL)
-	{
-		ImageSequenceDataSource t_src_sequence;
-		
-		t_src_sequence = 0;
-		PixMapHandle t_end_pixmap = GetGWorldPixMap(s_qt_end_port);
-		MakeImageDescriptionForPixMap(t_end_pixmap, &s_qt_end_desc);
-		CDSequenceNewDataSource(s_qt_effect_seq, &t_src_sequence, 'srcB', 1, (Handle)s_qt_end_desc, nil, 0);
-		CDSequenceSetSourceData(t_src_sequence, GetPixBaseAddr(t_end_pixmap), (**s_qt_end_desc) . dataSize);
-	}
-	
-	if (s_qt_end_desc != NULL)
-	{
-		s_qt_timebase = NewTimeBase();
-		SetTimeBaseRate(s_qt_timebase, 0);
-		CDSequenceSetTimeBase(s_qt_effect_seq, s_qt_timebase);
-	}
-	
-	if (s_qt_timebase == NULL)
-	{
-		MCQTEffectEnd();
-		return false;
-	}
-	
-	return true;
-}
-
-bool MCQTEffectStep(const MCRectangle &drect, MCStackSurface *p_target, uint4 p_delta, uint4 p_duration)
-{
-	ICMFrameTimeRecord t_frame_time;
-	memset((char *)&t_frame_time, 0, sizeof(ICMFrameTimeRecord));
-	SetTimeBaseValue(s_qt_timebase, p_delta, p_duration);
-	
-	if (s_qt_reverse)
-		p_delta = p_duration - p_delta;
-	else if (p_delta == 0)
-		p_delta = 1;
-	
-	t_frame_time . recordSize = sizeof(ICMFrameTimeRecord);
-	t_frame_time . flags = icmFrameTimeHasVirtualStartTimeAndDuration;
-	t_frame_time . frameNumber = 1;
-	t_frame_time . value . lo = p_delta;
-	t_frame_time . scale = t_frame_time . duration = t_frame_time . virtualDuration = p_duration;
-	HLock((Handle)s_qt_effect_desc);
-	DecompressSequenceFrameWhen(s_qt_effect_seq, *(Handle)s_qt_effect_desc, GetHandleSize((Handle)s_qt_effect_desc), 0, 0, nil, &t_frame_time);
-	HUnlock((Handle)s_qt_effect_desc);
-	
-	PixMapHandle t_pixmap = GetGWorldPixMap(s_qt_target_port);
-	LockPixels(t_pixmap);
-	void *t_bits = GetPixBaseAddr(t_pixmap);
-	uint32_t t_stride = QTGetPixMapHandleRowBytes(t_pixmap);
-
-	MCGRaster t_raster;
-	t_raster.width = drect.width;
-	t_raster.height = drect.height;
-	t_raster.pixels = t_bits;
-	t_raster.stride = t_stride;
-	t_raster.format = kMCGRasterFormat_xRGB;
-	
-	MCGImageRef t_image = nil;
-	/* UNCHECKED */ MCGImageCreateWithRasterNoCopy(t_raster, t_image);
-	
-	MCGRectangle t_src_rect, t_dst_rect;
-	t_src_rect = MCGRectangleMake(0, 0, drect.width, drect.height);
-	t_dst_rect = MCGRectangleTranslate(t_src_rect, drect.x, drect.y);
-	
-	p_target->Composite(t_dst_rect, t_image, t_src_rect, 1.0, kMCGBlendModeCopy);
-	MCGImageRelease(t_image);
-	
-	UnlockPixels(t_pixmap);
-	
-	return true;
-}
-
-void MCQTEffectEnd(void)
-{
-	if (s_qt_effect_seq != 0)
-		CDSequenceEnd(s_qt_effect_seq), s_qt_effect_seq = NULL;
-
-	if (s_qt_timebase != NULL)
-		DisposeTimeBase(s_qt_timebase), s_qt_timebase = NULL;
-
-	if (s_qt_end_desc != NULL)
-		DisposeHandle((Handle)s_qt_end_desc), s_qt_end_desc = NULL;
-	
-	if (s_qt_start_desc != NULL)
-		DisposeHandle((Handle)s_qt_start_desc), s_qt_start_desc = NULL;
-		
-	if (s_qt_sample_desc != NULL)
-		DisposeHandle((Handle)s_qt_sample_desc), s_qt_sample_desc = NULL;
-	
-	if (s_qt_target_port != NULL)
-		DisposeGWorld(s_qt_target_port), s_qt_target_port = NULL;
-	
-	if (s_qt_end_port != NULL)
-		DisposeGWorld(s_qt_end_port), s_qt_end_port = NULL;
-	
-	if (s_qt_start_port != NULL)
-		DisposeGWorld(s_qt_start_port), s_qt_start_port = NULL;
-	
-	if (s_qt_effect_desc != NULL)
-	{
-		QTDisposeAtomContainer(s_qt_effect_desc);
-		s_qt_effect_desc = NULL;
-	}
-}
-
-#endif
-
-// 
-//-----------------------------------------------------------------------------

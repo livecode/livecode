@@ -896,7 +896,7 @@ template<typename T> void SetCharPropOfCharChunkOfParagraph(MCExecContext& ctxt,
     if (t_blocks_changed)
         p_paragraph -> setDirty();
 
-    if (T::need_layout || t_blocks_changed)
+    if (T::need_layout() || t_blocks_changed)
         p_paragraph -> layoutchanged();
 }
 
@@ -940,7 +940,7 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
             // Same as this?
             if (MCactivefield == p_field)
             {
-                p_field -> selectedmark(False, ssi, sei, False, False);
+                p_field -> selectedmark(False, ssi, sei, False);
                 p_field -> unselect(False, True);
             }
             p_field -> curparagraph = p_field -> focusedparagraph = p_field -> paragraphs;
@@ -1019,7 +1019,7 @@ template<typename T> void SetCharPropOfCharChunk(MCExecContext& ctxt, MCField *p
                        && t_block_index + t_block_length < t_ei);
 
                 // avoid relayout for certain block attributes
-                t_need_layout = T::need_layout;
+                t_need_layout = T::need_layout();
                 
                 // MP-2013-09-02: [[ FasterField ]] If attributes on existing blocks needing layout changed,
                 //   or the blocks themselves changed, we need layout.
@@ -1111,7 +1111,7 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
             // Same as this?
             if (MCactivefield == p_field)
             {
-                p_field -> selectedmark(False, ssi, sei, False, False);
+                p_field -> selectedmark(False, ssi, sei, False);
                 p_field -> unselect(False, True);
             }
             p_field -> curparagraph = p_field -> focusedparagraph = p_field -> paragraphs;
@@ -1190,7 +1190,7 @@ template<typename T> void SetArrayCharPropOfCharChunk(MCExecContext& ctxt, MCFie
                        && t_block_index + t_block_length < t_ei);
                 
                 // avoid relayout for certain block attributes
-                t_need_layout = T::need_layout;
+                t_need_layout = T::need_layout();
                 
                 // MP-2013-09-02: [[ FasterField ]] If attributes on existing blocks needing layout changed,
                 //   or the blocks themselves changed, we need layout.
@@ -1584,8 +1584,8 @@ void MCField::GetFormattedLeftOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
         // MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
         //   This is because minx/maxx are uninitialized and it seems that they have to be for
         //   calls to getxextents() to make sense.
-        minx = INFINITY;
-        maxx = -INFINITY;
+        minx = MCinfinity;
+        maxx = -MCinfinity;
 
         do
         {
@@ -1616,8 +1616,8 @@ void MCField::GetFormattedWidthOfCharChunk(MCExecContext& ctxt, uint32_t p_part_
         // MW-2008-07-08: [[ Bug 6331 ]] the formattedWidth can return gibberish for empty lines.
         //   This is because minx/maxx are uninitialized and it seems that they have to be for
         //   calls to getxextents() to make sense.
-        minx = INFINITY;
-        maxx = -INFINITY;
+        minx = MCinfinity;
+        maxx = -MCinfinity;
 
         do
         {
@@ -1676,8 +1676,8 @@ void MCField::GetFormattedRectOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
         coord_t yoffset = getcontenty() + paragraphtoy(sptr);
         coord_t minx, maxx;
         coord_t maxy = y;
-        minx = INFINITY;
-        maxx = -INFINITY;
+        minx = MCinfinity;
+        maxx = -MCinfinity;
         do
         {
             // MW-2012-01-25: [[ FieldMetrics ]] Increment the y-extent by the height of the

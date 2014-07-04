@@ -14,6 +14,8 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "core.h"
+
 #include "w32browser.h"
 #include <activscp.h>
 #include <revolution/support.h>
@@ -185,10 +187,6 @@ CWebBrowser::CWebBrowser(HWND hparent,  BOOL isvisible)
 
 	next = s_browsers;
 	s_browsers = this;
-}
-
-CWebBrowserBase::~CWebBrowserBase(void)
-{
 }
 
 CWebBrowser::~CWebBrowser()
@@ -1378,6 +1376,16 @@ void CWebBrowser::SetUserAgent(const char *p_user_agent)
 {
 }
 
+//////////
+
+void CWebBrowser::AddJavaScriptHandler(const char *p_handler)
+{
+}
+
+void CWebBrowser::RemoveJavaScriptHandler(const char *p_handler)
+{
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  EVENT HANDLING
@@ -2006,6 +2014,11 @@ class CWebBrowserModule: public CAtlDllModuleT<CWebBrowserModule>
 CWebBrowserModule _AtlModule;
 
 HINSTANCE theInstance;
+
+HINSTANCE MCWin32BrowserGetHINSTANCE()
+{
+	return theInstance;
+}
 
 // DLL Entry Point
 extern "C" BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
