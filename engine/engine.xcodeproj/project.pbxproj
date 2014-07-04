@@ -558,9 +558,8 @@
 		BE168E6E19598EAD00B957D0 /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE168E6D19598EAD00B957D0 /* region.cpp */; };
 		BE174F95195D76BC0026EEAF /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE168E6D19598EAD00B957D0 /* region.cpp */; };
 		BE174F96195D76E00026EEAF /* coretextfonts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEBC51D81953505400215C85 /* coretextfonts.cpp */; };
-		BE20AE01195B245B00850531 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE20AE00195B244800850531 /* AudioToolbox.framework */; };
-		BE20AE02195B245C00850531 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE20AE00195B244800850531 /* AudioToolbox.framework */; };
-		BE20AE03195B245D00850531 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE20AE00195B244800850531 /* AudioToolbox.framework */; };
+		BE1AFD801966BEBC001A4090 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE1AFD7F1966BEBC001A4090 /* IOKit.framework */; };
+		BE1AFD821966BF5C001A4090 /* player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED77201912652B000FFFE3 /* player.cpp */; };
 		BE20AE05195B24B300850531 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369216195881B700386D30 /* quicktimestubs.mac.cpp */; };
 		BE369208195880F300386D30 /* desktop-ans.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369200195880E600386D30 /* desktop-ans.cpp */; };
 		BE369209195880F300386D30 /* desktop-dc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369201195880E600386D30 /* desktop-dc.cpp */; };
@@ -1729,6 +1728,7 @@
 		A71F80610F4F17F9003012FD /* StandaloneDoc.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = StandaloneDoc.icns; path = rsrc/StandaloneDoc.icns; sourceTree = "<group>"; };
 		BE0986A2194874DD0065CEEA /* revsecurity.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = revsecurity.dylib; path = ../_build/mac/Debug/revsecurity.dylib; sourceTree = "<group>"; };
 		BE168E6D19598EAD00B957D0 /* region.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = region.cpp; path = src/region.cpp; sourceTree = "<group>"; };
+		BE1AFD7F1966BEBC001A4090 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		BE2424351953536F00982E53 /* IInAppBillingService.aidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = IInAppBillingService.aidl; path = android/vending/billing/IInAppBillingService.aidl; sourceTree = "<group>"; };
 		BE2424361953536F00982E53 /* IMarketBillingService.aidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = IMarketBillingService.aidl; path = android/vending/billing/IMarketBillingService.aidl; sourceTree = "<group>"; };
 		BE2424371953536F00982E53 /* IMarketBillingService.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = IMarketBillingService.java; path = android/vending/billing/IMarketBillingService.java; sourceTree = "<group>"; };
@@ -1944,6 +1944,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BE1AFD801966BEBC001A4090 /* IOKit.framework in Frameworks */,
 				BE64444A1965B8D200C2092C /* AudioToolbox.framework in Frameworks */,
 				BEF618A119471D4000C42C57 /* Carbon.framework in Frameworks */,
 				BEF6189619471C9700C42C57 /* Security.framework in Frameworks */,
@@ -2037,6 +2038,7 @@
 		4D587D920B80944100200116 = {
 			isa = PBXGroup;
 			children = (
+				BE1AFD7F1966BEBC001A4090 /* IOKit.framework */,
 				BE0986A2194874DD0065CEEA /* revsecurity.dylib */,
 				721CAAC218351E7400858545 /* libicudata.a */,
 				721CAAC318351E7400858545 /* libicuio.a */,
@@ -3890,6 +3892,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BE1AFD821966BF5C001A4090 /* player.cpp in Sources */,
 				BE174F96195D76E00026EEAF /* coretextfonts.cpp in Sources */,
 				BE174F95195D76BC0026EEAF /* region.cpp in Sources */,
 				4D1F9DAB171C682E0091C6CB /* encodederrors.cpp in Sources */,
