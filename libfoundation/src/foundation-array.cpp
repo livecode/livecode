@@ -794,8 +794,8 @@ static bool __MCArrayFindKeyValueSlot(__MCArray *self, bool p_case_sensitive, MC
 		}
 		else
 		{
-			if (!p_case_sensitive &&
-				MCNameIsEqualTo(t_entry -> key, p_key) ||
+			if ((!p_case_sensitive &&
+				MCNameIsEqualTo(t_entry -> key, p_key)) ||
 				t_entry -> key == p_key)
 			{
 				r_slot = t_probe;

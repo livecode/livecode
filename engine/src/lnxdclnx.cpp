@@ -269,13 +269,11 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
     // Loop until both the pending event queue and GDK event queue are empty
     abort = reset = False;
     bool t_handled = false;
-    while (dispatch || g_main_context_pending(NULL) || gdk_events_pending())
+    while (true || dispatch || g_main_context_pending(NULL) || gdk_events_pending())
     {
-        // Run the GLib event loop to exhaustion
-        while (g_main_context_iteration(NULL, FALSE))
-            ;
+        // Place all events onto the pending event queue
+        EnqueueGdkEvents();
         
-        bool t_live;
         bool t_queue = false;
         if (dispatch && pendingevents != NULL)
         {
@@ -283,21 +281,12 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
             t_event = gdk_event_copy(pendingevents->event);
             MCEventnode *tptr = (MCEventnode *)pendingevents->remove(pendingevents);
             delete tptr;
-            t_live = false;
-        }
-        else
-        {
-            // In theory, all events should have already been queued as pending
-            // through the GLib main loop. However, that only applies to those
-            // that the server has already sent - this function call prompts the
-            // server to send any events queued on its end.
-            t_event = gdk_event_get();
-            t_live = true;
         }
         
-        // Make sure we have an event
         if (t_event == NULL)
+        {
             break;
+        }
         
         // What type of event are we dealing with?
         switch (t_event->type)
@@ -312,7 +301,9 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
             case GDK_DAMAGE:
             {
                 // Handled separately
-                gdk_display_put_event(dpy, t_event);
+                //fprintf(stderr, "GDK_EXPOSE (window %p)\n", t_event->expose.window);
+                MCEventnode *t_node = new MCEventnode(gdk_event_copy(t_event));
+                t_node->appendto(pendingevents);
                 expose();
                 break;
             }
@@ -911,8 +902,10 @@ void MCScreenDC::EnqueueGdkEvents()
     while (true)
     {
         // Run the GLib main loop
+        gdk_threads_leave();
         while (g_main_context_iteration(NULL, FALSE))
             ;
+        gdk_threads_enter();
         
         // Enqueue any further GDK events
         GdkEvent *t_event = gdk_event_get();
@@ -1003,7 +996,7 @@ void DnDClientEvent(GdkEvent* p_event)
     {
         case GDK_DRAG_ENTER:
         {
-            fprintf(stderr, "DND: drag enter\n");
+            //fprintf(stderr, "DND: drag enter\n");
             // Get the selection atom for this drag event
             GdkAtom t_selection;
             t_selection = gdk_drag_get_selection(p_event->dnd.context);
@@ -1040,7 +1033,7 @@ void DnDClientEvent(GdkEvent* p_event)
             
         case GDK_DRAG_LEAVE:
         {
-            fprintf(stderr, "DND: drag leave\n");
+            //fprintf(stderr, "DND: drag leave\n");
             // The drag is no longer relevant to us
             MCdispatcher->wmdragleave(p_event->dnd.window);
             MCtransferstore->cleartypes();
@@ -1049,7 +1042,7 @@ void DnDClientEvent(GdkEvent* p_event)
             
         case GDK_DRAG_MOTION:
         {
-            fprintf(stderr, "DND: drag motion\n");
+            //fprintf(stderr, "DND: drag motion\n");
             // Translate the position from root to relative coordinates
             uint32_t wx, wy;    // Window-relative coordinates
             gint ox, oy;        // Window origin in root coordinates
@@ -1088,7 +1081,7 @@ void DnDClientEvent(GdkEvent* p_event)
             
         case GDK_DROP_START:
         {
-            fprintf(stderr, "DND: drop start\n");
+            //fprintf(stderr, "DND: drop start\n");
             // Temporarily adopt the asynchronous modifier state
             uint16_t t_old_modstate = MCmodifierstate;
             MCmodifierstate = MCscreen->querymods();

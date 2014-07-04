@@ -436,6 +436,8 @@ bool MCGdkTransferStore::GetExternalData(MCTransferType p_type, GdkAtom p_atom, 
             return t_success && Convert_MIME_to_REV(*t_data, t_mime_type, r_data);
         }
     }
+    
+    return false;
 }
 
 /*

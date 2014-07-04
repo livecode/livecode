@@ -152,6 +152,8 @@ void MCStack::realize()
         
         window = gdk_window_new(screen->getroot(), &gdkwa, gdk_valid_wa);
         
+        //fprintf(stderr, "Window %p - \"%s\"\n", window, MCNameGetCString(_name));
+        
 		// This is necessary to be able to receive drag-and-drop events
         gdk_window_register_dnd(window);
         
@@ -162,9 +164,13 @@ void MCStack::realize()
 		if (m_window_shape != nil && m_window_shape -> is_sharp)
             gdk_window_shape_combine_mask(window, (GdkPixmap*)m_window_shape->handle, 0, 0);
         
+        // At least one window has been created so startup is complete
+        gdk_notify_startup_complete();
+        
         // DEBUGGING
         //gdk_window_set_debug_updates(TRUE);
-        gdk_window_invalidate_rect(window, NULL, TRUE);
+        //gdk_window_invalidate_rect(window, NULL, TRUE);
+        //gdk_window_process_all_updates();
 
 		gdk_display_sync(MCdpy);
 	}
@@ -321,7 +327,6 @@ void MCStack::sethints()
     
 	chints.res_class = (char*)*t_class_name_cstr;
     x11::XSetClassHint(x11::gdk_x11_display_get_xdisplay(MCdpy), x11::gdk_x11_drawable_get_xid(window), &chints);
-    MCMemoryDelete(chints.res_name);
 
     // TODO: is this just another way of ensuring on-top-ness?
 	//if (mode >= WM_PALETTE)
@@ -628,7 +633,10 @@ void MCStack::setopacity(unsigned char p_level)
 	gdouble t_opacity;
 	t_opacity = gdouble(p_level) / 255.0;
 
-    gdk_window_set_opacity(window, t_opacity);
+    if (p_level == 255)
+        gdk_window_set_opacity(window, 1.0);
+    else
+        gdk_window_set_opacity(window, t_opacity);
 }
 
 void MCStack::updatemodifiedmark(void)
@@ -721,6 +729,8 @@ public:
 		if (MCU_empty_rect(t_actual_area))
 			return false;
 
+        //fprintf(stderr, "MCLinuxStackSurface::lock(): %d,%d,%d,%d\n", t_actual_area.x, t_actual_area.y, t_actual_area.width, t_actual_area.height);
+        
 		bool t_success = true;
 
 		if (t_success)
@@ -734,7 +744,7 @@ public:
 			m_raster . format = kMCGRasterFormat_ARGB;
 			m_raster . width = t_actual_area . width;
 			m_raster . height = t_actual_area . height;
-			m_raster . stride = t_actual_area . width * sizeof(uint32_t);
+			m_raster . stride = gdk_pixbuf_get_rowstride(m_bitmap);
 			m_raster . pixels = gdk_pixbuf_get_pixels(m_bitmap);
 
 			m_area = t_actual_area;

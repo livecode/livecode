@@ -199,13 +199,14 @@ Boolean MCScreenDC::open()
         && initialise_weak_link_gdk() != 0
         && initialise_weak_link_gdk_pixbuf() != 0;
     
-    gdk_init(0, NULL);
-    
     if (!t_has_gdk)
     {
         // TODO: implement
         exit(1);
     }
+    
+    gdk_init(0, NULL);
+    gdk_threads_init();
     
     // Check to see if we are in a UTF8 locale
 	// TS : Changed 2008-01-08 as a more relaible way of testing for UTF-8
@@ -716,7 +717,6 @@ void MCScreenDC::raisewindow(Window window)
 }
 
 void MCScreenDC::iconifywindow(Window window)
-
 {
 	gdk_window_iconify(window);
 }

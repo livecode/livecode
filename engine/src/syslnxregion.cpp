@@ -63,6 +63,7 @@ MCRectangle MCRegionGetBoundingBox(MCRegionRef p_region)
 bool MCRegionSetEmpty(MCRegionRef p_region)
 {
     gdk_region_subtract((GdkRegion*)p_region, (GdkRegion*)p_region);
+    return true;
 }
 
 bool MCRegionSetRect(MCRegionRef p_region, const MCRectangle& p_rect)
