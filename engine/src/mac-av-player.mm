@@ -108,6 +108,7 @@ private:
     
 	static void DoSwitch(void *context);
     static void DoUpdateCurrentFrame(void *ctxt);
+    static void DoUpdateCurrentTime(void *ctxt);
     
     NSLock *m_lock;
     
@@ -140,6 +141,7 @@ private:
     bool m_playing : 1;
     bool m_synchronizing : 1;
     bool m_frame_changed_pending : 1;
+    bool m_finished : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -248,6 +250,7 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     
     m_synchronizing = false;
     m_frame_changed_pending = false;
+    m_finished = false;
 }
 
 MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
@@ -281,14 +284,17 @@ void MCAVFoundationPlayer::SelectionFinished(void)
 {
     if (m_play_selection_only && CMTimeCompare(m_observed_time, CMTimeMake(m_selection_finish, 1000)) >= 0)
     {
-        [m_player pause];
-        //[m_player seekToTime:CMTimeMake(m_selection_start, 1000)];
+        if (m_player.rate != 0.0)
+        {
+            [m_player setRate:0.0];
+            [m_player seekToTime:CMTimeMake(m_selection_finish, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+        }
     }
 }
 
 void MCAVFoundationPlayer::MovieFinished(void)
 {
-    [[m_player currentItem] seekToTime:kCMTimeZero];
+    m_finished = true;
     if (!m_looping)
     {
         m_playing = false;
@@ -296,8 +302,10 @@ void MCAVFoundationPlayer::MovieFinished(void)
     }
     else
     {
+        [[m_player currentItem] seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         [m_player play];
         m_playing = true;
+        m_finished = false;
         MCPlatformCallbackSendPlayerStarted(this);
     }
 }
@@ -388,7 +396,6 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
                                 CVOptionFlags *flagsOut,
                                 void *displayLinkContext)
 {
-//#if 0
     MCAVFoundationPlayer *t_self = (MCAVFoundationPlayer *)displayLinkContext;
     
     CMTime t_output_item_time = [t_self -> m_player_item_video_output itemTimeForCVTimeStamp:*inOutputTime];
@@ -412,14 +419,29 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
     if (t_need_update)
         MCNotifyPush(DoUpdateCurrentFrame, t_self, false, false);
     
+    if (t_self -> IsPlaying())
+        MCNotifyPush(DoUpdateCurrentTime, t_self, true, false);
+    
     return kCVReturnSuccess;
     
+}
+
+void MCAVFoundationPlayer::DoUpdateCurrentTime(void *ctxt)
+{
+    MCAVFoundationPlayer *t_player;
+	t_player = (MCAVFoundationPlayer *)ctxt;
+    
+    t_player -> CurrentTimeChanged();
 }
 
 void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
 {
     MCAVFoundationPlayer *t_player;
 	t_player = (MCAVFoundationPlayer *)ctxt;
+    
+    // Do this to make pause pause respond instantly when alwaysBuffer = true
+    if (!t_player -> IsPlaying())
+        return;
     
     NSLog(@"We have a new frame!");
     
@@ -435,15 +457,16 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
             CFRelease(t_player -> m_current_frame);
         t_player -> m_current_frame = t_image;
     }
-    
-	MCPlatformCallbackSendPlayerFrameChanged(t_player);
-}
 
+	MCPlatformCallbackSendPlayerFrameChanged(t_player);
+    
+}
 
 void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 {
 	MCAVFoundationPlayer *t_player;
 	t_player = (MCAVFoundationPlayer *)ctxt;
+    
 	t_player -> m_switch_scheduled = false;
     
 	if (t_player -> m_pending_offscreen == t_player -> m_offscreen)
@@ -452,6 +475,10 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 	}
 	else if (t_player -> m_pending_offscreen)
 	{
+        // Player should stop playing when switching from run to edit mode
+        if (t_player -> IsPlaying())
+            t_player -> Stop();
+
         t_player -> CacheCurrentFrame();
         
 		if (t_player -> m_view != nil)
@@ -522,52 +549,17 @@ void MCAVFoundationPlayer::Unrealize(void)
 	}
 }
 
-/*
-Boolean MCAVFoundationPlayer::MovieActionFilter(MovieController mc, short action, void *params, long refcon)
-{
-    switch(action)
-    {
-        case mcActionIdle:
-        {
-            MCAVFoundationPlayer *self;
-            self = (MCAVFoundationPlayer *)refcon;
-            
-            if (self -> m_marker_count > 0)
-            {
-                CMTime t_current_time;
-                t_current_time = [self -> m_player currentTime];
-                
-                // We search for the marker time immediately before the
-                // current time and if last marker is not that time,
-                // dispatch it.
-                uindex_t t_index;
-                for(t_index = 0; t_index < self -> m_marker_count; t_index++)
-                    if (self -> m_markers[t_index] > t_current_time . value)
-                        break;
-                
-                // t_index is now the first marker greater than the current time.
-                if (t_index > 0)
-                {
-                    if (self -> m_markers[t_index - 1] != self -> m_last_marker)
-                    {
-                        self -> m_last_marker = self -> m_markers[t_index - 1];
-                        MCPlatformCallbackSendPlayerMarkerChanged(self, self -> m_last_marker);
-                    }
-                }
-            }
-        }
-            break;
-            
-        default:
-            break;
-    }
-    
-    return False;
-}
-*/
-
 void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
 {
+    // Ensure that removing the video source from the property inspector results immediately in empty player with the controller thumb in the beginning  
+    if (p_filename_or_url == nil)
+    {
+        m_player_item_video_output = nil;
+        uint4 t_zero_time = 0;
+        SetProperty(kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_zero_time);
+        return;
+    }
+    
     id t_url;
     if (!p_is_url)
         t_url = [NSURL fileURLWithPath: [NSString stringWithCString: p_filename_or_url encoding: NSMacOSRomanStringEncoding]];
@@ -594,7 +586,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     }
     
     CVDisplayLinkSetOutputCallback(m_display_link, MCAVFoundationPlayer::MyDisplayLinkCallback, this);
-    CVDisplayLinkStop(m_display_link);
+    //CVDisplayLinkStop(m_display_link);
 
     NSDictionary* t_settings = @{ (id)kCVPixelBufferPixelFormatTypeKey : [NSNumber numberWithInt:kCVPixelFormatType_32ARGB] };
     // AVPlayerItemVideoOutput is available in OSX version >= 10.8
@@ -621,18 +613,22 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     
     [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(movieFinished:) name: AVPlayerItemDidPlayToEndTimeNotification object: [m_player currentItem]];
     
-    [[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: AVPlayerItemTimeJumpedNotification object: [m_player currentItem]];
+    //[[NSNotificationCenter defaultCenter] addObserver: m_observer selector:@selector(currentTimeChanged:) name: AVPlayerItemTimeJumpedNotification object: [m_player currentItem]];
     
     m_time_observer_token = [m_player addPeriodicTimeObserverForInterval:CMTimeMake(1, 1000) queue:nil usingBlock:^(CMTime time) {
     
         m_observed_time = time;
-        SelectionFinished();
-        CurrentTimeChanged();
+
+        // This fixes the issue of pause not being instant when alwaysBuffer = false
+        if (IsPlaying() && !m_offscreen)
+        {
+            SelectionFinished();
+            CurrentTimeChanged();
+        }
         
         }];
     
 }
-
 
 void MCAVFoundationPlayer::Synchronize(void)
 {
@@ -661,18 +657,30 @@ bool MCAVFoundationPlayer::IsPlaying(void)
 
 void MCAVFoundationPlayer::Start(double rate)
 {
-    //[m_player play];
+    if (m_finished && !m_play_selection_only)
+    {
+        [m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+        m_playing = true;
+        m_finished = false;
+    }
+
     // put the thumb in the beginning of the selected area, if it is outside
     if (m_play_selection_only && (CMTimeCompare(m_player . currentTime, CMTimeMake(m_selection_finish, 1000)) >= 0 || CMTimeCompare(m_player . currentTime, CMTimeMake(m_selection_start, 1000)) <= 0))
     {
-        [m_player seekToTime:CMTimeMake(m_selection_start, 1000)];
+        [m_player seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+        
+        // This fixes flickering issue when alwaysBuffer and playselection are true 
+        if (m_offscreen)
+            [[m_player currentItem] setForwardPlaybackEndTime:CMTimeMake(m_selection_finish, 1000)];
     }
+    
     [m_player setRate:rate];
 }
 
 void MCAVFoundationPlayer::Stop(void)
 {
 	[m_player pause];
+    MCPlatformCallbackSendPlayerPaused(this);    
 }
 
 void MCAVFoundationPlayer::Step(int amount)
@@ -692,6 +700,15 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 	t_bitmap -> data = (uint32_t *)malloc(t_bitmap -> stride * t_bitmap -> height);
     memset(t_bitmap -> data, 0,t_bitmap -> stride * t_bitmap -> height);
 	t_bitmap -> has_alpha = t_bitmap -> has_transparency = true;
+    
+    
+    // If we remove the video source from the property inspector
+    if (m_player_item_video_output == nil)
+    {
+        r_bitmap = t_bitmap;
+        return;
+    }
+    
     
 	// Now if we have a current frame, then composite at the appropriate size into
 	// the movie portion of the buffer.
@@ -759,7 +776,8 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyCurrentTime:
-            [[m_player currentItem] seekToTime:CMTimeMake(*(uint32_t *)p_value, 1000)];
+            // Add toleranceBefore/toleranceAfter for accurate scrubbing
+            [[m_player currentItem] seekToTime:CMTimeMake(*(uint32_t *)p_value, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
 			break;
 		case kMCPlatformPlayerPropertyStartTime:
 		{
