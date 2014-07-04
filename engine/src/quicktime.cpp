@@ -1128,11 +1128,7 @@ void MCQTRecordDialog(MCExecPoint& ep, const char *p_title, Boolean sheet)
 
 void MCQTGetVersion(MCExecPoint& ep)
 {
-    long attrs;
-    if (Gestalt(gestaltQuickTimeVersion, &attrs) == noErr)
-        ep.setstringf("%ld.%ld.%ld", attrs >> 24, (attrs >> 20) & 0xF, (attrs >> 16) & 0xF);
-    else
-        ep.setstaticcstring("0.0");  //indicates that no QT installed
+	ep.setstaticcstring("0.0");  //indicates that no QT installed
 }
 #endif
 
