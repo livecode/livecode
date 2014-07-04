@@ -558,7 +558,9 @@
 		BE168E6E19598EAD00B957D0 /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE168E6D19598EAD00B957D0 /* region.cpp */; };
 		BE174F95195D76BC0026EEAF /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE168E6D19598EAD00B957D0 /* region.cpp */; };
 		BE174F96195D76E00026EEAF /* coretextfonts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEBC51D81953505400215C85 /* coretextfonts.cpp */; };
-		BE20AE04195B24B300850531 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369216195881B700386D30 /* quicktimestubs.mac.cpp */; };
+		BE20AE01195B245B00850531 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE20AE00195B244800850531 /* AudioToolbox.framework */; };
+		BE20AE02195B245C00850531 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE20AE00195B244800850531 /* AudioToolbox.framework */; };
+		BE20AE03195B245D00850531 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE20AE00195B244800850531 /* AudioToolbox.framework */; };
 		BE20AE05195B24B300850531 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369216195881B700386D30 /* quicktimestubs.mac.cpp */; };
 		BE369208195880F300386D30 /* desktop-ans.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369200195880E600386D30 /* desktop-ans.cpp */; };
 		BE369209195880F300386D30 /* desktop-dc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369201195880E600386D30 /* desktop-dc.cpp */; };
@@ -4042,7 +4044,6 @@
 				763FF4E918522CBE00B45FBA /* image_rep_resampled.cpp in Sources */,
 				E82206E2184F810A00117D10 /* resolution.cpp in Sources */,
 				BEBC51F61953513A00215C85 /* quicktime.cpp in Sources */,
-				BE20AE04195B24B300850531 /* quicktimestubs.mac.cpp in Sources */,
 				BEF6186019470E1E00C42C57 /* exec-engine.cpp in Sources */,
 				BEF6186119470E6100C42C57 /* exec-strings-chunk.cpp in Sources */,
 				BEF6186219470EA700C42C57 /* exec-array.cpp in Sources */,
