@@ -1181,6 +1181,7 @@ void MCPlatformHandlePlayerStopped(MCPlatformPlayerRef p_player)
     if (t_player == nil)
         return;
     
+    t_player -> layer_redrawall();
     t_player -> timer(MCM_play_stopped, nil);
 }
 

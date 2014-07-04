@@ -108,6 +108,7 @@ private:
     
 	static void DoSwitch(void *context);
     static void DoUpdateCurrentFrame(void *ctxt);
+    static void DoUpdateCurrentTime(void *ctxt);
     
     NSLock *m_lock;
     
@@ -418,15 +419,29 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
     if (t_need_update)
         MCNotifyPush(DoUpdateCurrentFrame, t_self, false, false);
     
+    if (t_self -> IsPlaying())
+        MCNotifyPush(DoUpdateCurrentTime, t_self, true, false);
+    
     return kCVReturnSuccess;
     
 }
 
-void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
+void MCAVFoundationPlayer::DoUpdateCurrentTime(void *ctxt)
 {
-
     MCAVFoundationPlayer *t_player;
 	t_player = (MCAVFoundationPlayer *)ctxt;
+    
+    t_player -> CurrentTimeChanged();
+}
+
+void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
+{
+    MCAVFoundationPlayer *t_player;
+	t_player = (MCAVFoundationPlayer *)ctxt;
+    
+    // Do this to make pause pause respond instantly when alwaysBuffer = true
+    if (!t_player -> IsPlaying())
+        return;
     
     NSLog(@"We have a new frame!");
     
@@ -442,20 +457,15 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
             CFRelease(t_player -> m_current_frame);
         t_player -> m_current_frame = t_image;
     }
-    
+
 	MCPlatformCallbackSendPlayerFrameChanged(t_player);
     
 }
-
 
 void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 {
 	MCAVFoundationPlayer *t_player;
 	t_player = (MCAVFoundationPlayer *)ctxt;
-    
-    // Player should stop playing when switching from run to edit mode
-    if (t_player -> IsPlaying())
-        t_player -> Stop();
     
 	t_player -> m_switch_scheduled = false;
     
@@ -465,6 +475,10 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 	}
 	else if (t_player -> m_pending_offscreen)
 	{
+        // Player should stop playing when switching from run to edit mode
+        if (t_player -> IsPlaying())
+            t_player -> Stop();
+
         t_player -> CacheCurrentFrame();
         
 		if (t_player -> m_view != nil)
@@ -534,50 +548,6 @@ void MCAVFoundationPlayer::Unrealize(void)
 		[m_view removeFromSuperview];
 	}
 }
-
-/*
-Boolean MCAVFoundationPlayer::MovieActionFilter(MovieController mc, short action, void *params, long refcon)
-{
-    switch(action)
-    {
-        case mcActionIdle:
-        {
-            MCAVFoundationPlayer *self;
-            self = (MCAVFoundationPlayer *)refcon;
-            
-            if (self -> m_marker_count > 0)
-            {
-                CMTime t_current_time;
-                t_current_time = [self -> m_player currentTime];
-                
-                // We search for the marker time immediately before the
-                // current time and if last marker is not that time,
-                // dispatch it.
-                uindex_t t_index;
-                for(t_index = 0; t_index < self -> m_marker_count; t_index++)
-                    if (self -> m_markers[t_index] > t_current_time . value)
-                        break;
-                
-                // t_index is now the first marker greater than the current time.
-                if (t_index > 0)
-                {
-                    if (self -> m_markers[t_index - 1] != self -> m_last_marker)
-                    {
-                        self -> m_last_marker = self -> m_markers[t_index - 1];
-                        MCPlatformCallbackSendPlayerMarkerChanged(self, self -> m_last_marker);
-                    }
-                }
-            }
-        }
-            break;
-            
-        default:
-            break;
-    }
-    
-    return False;
-}
-*/
 
 void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
 {
@@ -649,8 +619,8 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     
         m_observed_time = time;
 
-        // This fixes the issue of pause not being instant
-        if (IsPlaying())
+        // This fixes the issue of pause not being instant when alwaysBuffer = false
+        if (IsPlaying() && !m_offscreen)
         {
             SelectionFinished();
             CurrentTimeChanged();
@@ -659,7 +629,6 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
         }];
     
 }
-
 
 void MCAVFoundationPlayer::Synchronize(void)
 {
@@ -688,25 +657,30 @@ bool MCAVFoundationPlayer::IsPlaying(void)
 
 void MCAVFoundationPlayer::Start(double rate)
 {
-    // put the thumb in the beginning of the selected area, if it is outside
-    if (m_play_selection_only && (CMTimeCompare(m_player . currentTime, CMTimeMake(m_selection_finish, 1000)) >= 0 || CMTimeCompare(m_player . currentTime, CMTimeMake(m_selection_start, 1000)) <= 0))
-    {
-        [m_player seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
-    }
-    
-    if (m_finished)
+    if (m_finished && !m_play_selection_only)
     {
         [m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         m_playing = true;
         m_finished = false;
     }
+
+    // put the thumb in the beginning of the selected area, if it is outside
+    if (m_play_selection_only && (CMTimeCompare(m_player . currentTime, CMTimeMake(m_selection_finish, 1000)) >= 0 || CMTimeCompare(m_player . currentTime, CMTimeMake(m_selection_start, 1000)) <= 0))
+    {
+        [m_player seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+        
+        // This fixes flickering issue when alwaysBuffer and playselection are true 
+        if (m_offscreen)
+            [[m_player currentItem] setForwardPlaybackEndTime:CMTimeMake(m_selection_finish, 1000)];
+    }
+    
     [m_player setRate:rate];
 }
 
 void MCAVFoundationPlayer::Stop(void)
 {
 	[m_player pause];
-    MCPlatformCallbackSendPlayerPaused(this);
+    MCPlatformCallbackSendPlayerPaused(this);    
 }
 
 void MCAVFoundationPlayer::Step(int amount)
