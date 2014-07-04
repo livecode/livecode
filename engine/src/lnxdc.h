@@ -348,8 +348,8 @@ public:
     void EnqueueGdkEvents();
     
     // Searches the event queue for an event that passes the given filter
-    typedef bool (*event_filter)(GdkEvent*);
-    bool GetFilteredEvent(event_filter, GdkEvent* &r_event);
+    typedef bool (*event_filter)(GdkEvent*, void *);
+    bool GetFilteredEvent(event_filter, GdkEvent* &r_event, void *);
     
     // Utility function - maps an X drawing operation to the GDK equivalent
     static GdkFunction XOpToGdkOp(int op);

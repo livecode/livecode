@@ -918,9 +918,9 @@ void MCStack::view_platform_updatewindow(MCRegionRef p_region)
 	view_device_updatewindow(p_region);
 }
 
-static bool filter_expose(GdkEvent *p_event)
+static bool filter_expose(GdkEvent *p_event, void *p_window)
 {
-    return p_event->type == GDK_EXPOSE;
+    return p_event->any.window == p_window && (p_event->type == GDK_EXPOSE || p_event->type == GDK_DAMAGE);
 }
 
 void MCStack::view_device_updatewindow(MCRegionRef p_region)
@@ -929,7 +929,7 @@ void MCStack::view_device_updatewindow(MCRegionRef p_region)
 	t_update_region = nil;
 
     GdkEvent *t_event;
-    while (((MCScreenDC*)MCscreen)->GetFilteredEvent(filter_expose, t_event))
+    while (((MCScreenDC*)MCscreen)->GetFilteredEvent(filter_expose, t_event, window))
     {
         if (t_update_region == nil)
             MCRegionCreate(t_update_region);

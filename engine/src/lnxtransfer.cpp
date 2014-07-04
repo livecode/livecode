@@ -268,7 +268,7 @@ bool MCGdkTransferStore::GetSelection(GdkWindow *w, GdkAtom property, MCDataRef 
 }
 */
 
-static bool selection_notify(GdkEvent *t_event)
+static bool selection_notify(GdkEvent *t_event, void *)
 {
     return (t_event->type == GDK_SELECTION_NOTIFY);
 }
@@ -278,7 +278,7 @@ static bool WaitForEventCompletion()
     // Loop until a selection notify event is received
     MCScreenDC *dc = (MCScreenDC*)MCscreen;
     GdkEvent *t_notify;
-    while (!dc->GetFilteredEvent(selection_notify, t_notify))
+    while (!dc->GetFilteredEvent(selection_notify, t_notify, NULL))
     {
         // TODO: timeout
     }
@@ -608,7 +608,9 @@ GdkAtom *MCGdkTransferStore::QueryAtoms(size_t &r_count)
         }
         
         GdkAtom* t_ptr;
-        t_ret.Take(t_ptr, r_count);
+        uindex_t t_count;
+        t_ret.Take(t_ptr, t_count);
+        r_count = t_count;
         return t_ptr;
     }
     

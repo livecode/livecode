@@ -917,7 +917,7 @@ void MCScreenDC::EnqueueGdkEvents()
     }
 }
 
-bool MCScreenDC::GetFilteredEvent(bool (*p_filterfn)(GdkEvent*), GdkEvent* &r_event)
+bool MCScreenDC::GetFilteredEvent(bool (*p_filterfn)(GdkEvent*, void*), GdkEvent* &r_event, void *p_context)
 {
     // Gather all events into the pending events queue
     EnqueueGdkEvents();
@@ -925,7 +925,7 @@ bool MCScreenDC::GetFilteredEvent(bool (*p_filterfn)(GdkEvent*), GdkEvent* &r_ev
     MCEventnode *t_eventnode = pendingevents;
     while (t_eventnode != NULL)
     {
-        if (p_filterfn(t_eventnode->event))
+        if (p_filterfn(t_eventnode->event, p_context))
         {
             r_event = gdk_event_copy(t_eventnode->event);
             t_eventnode = t_eventnode->remove(pendingevents);

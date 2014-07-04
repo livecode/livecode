@@ -83,7 +83,7 @@ void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode 
 			rect.y = srect.y + srect.height - rect.height;
 }
 
-static bool MCExposeEventFilter(GdkEvent *e)
+static bool MCExposeEventFilter(GdkEvent *e, void *)
 {
     return e->type == GDK_EXPOSE || e->type == GDK_DAMAGE;
 }
@@ -91,12 +91,12 @@ static bool MCExposeEventFilter(GdkEvent *e)
 void MCScreenDC::expose()
 {
 	GdkEvent *event;
-    
+
     while (true)
     {
         MCRegionRef t_dirty;
         Window t_window;
-        if (GetFilteredEvent(&MCExposeEventFilter, event))
+        if (GetFilteredEvent(&MCExposeEventFilter, event, NULL))
         {
             GdkEventExpose *eevent = (GdkEventExpose*)event;
             t_window = eevent->window;
@@ -172,7 +172,7 @@ void MCScreenDC::waitreparent(Window w)
 	waitmessage(w, ReparentNotify);
 }
 
-static bool MCFocusOutFilter(GdkEvent *e)
+static bool MCFocusOutFilter(GdkEvent *e, void *)
 {
     if (e->type != GDK_FOCUS_CHANGE)
         return false;
@@ -187,7 +187,7 @@ void MCScreenDC::waitfocus()
 {
 	GdkEvent *e;
     gdk_display_sync(dpy);
-    if (GetFilteredEvent(&MCFocusOutFilter, e))
+    if (GetFilteredEvent(&MCFocusOutFilter, e, NULL))
     {
         MCdispatcher->wkunfocus(((GdkEventFocus*)e)->window);
         gdk_event_free(e);
