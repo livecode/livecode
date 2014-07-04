@@ -56,7 +56,7 @@ void MCGdkPasteboard::Release()
         delete this;
 }
 
-bool MCGdkPasteboard::Query(MCTransferType* &r_types, unsigned int &r_type_count)
+bool MCGdkPasteboard::Query(MCTransferType* &r_types, size_t &r_type_count)
 {
     return m_transfer_store->Query(r_types, r_type_count);
 }

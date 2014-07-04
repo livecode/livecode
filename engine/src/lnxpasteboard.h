@@ -27,7 +27,7 @@ public:
     
     void Retain();
     void Release();
-    bool Query(MCTransferType* &r_types, unsigned int &r_type_count);
+    bool Query(MCTransferType* &r_types, size_t &r_type_count);
     bool Fetch(MCTransferType p_type, MCDataRef &r_data);
     bool Fetch_MIME(MCMIMEtype *p_type, MCDataRef &r_data);
     

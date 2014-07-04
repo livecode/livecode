@@ -410,6 +410,12 @@ typedef unsigned long size_t;
 
 #else
 
+typedef int32_t integer_t;
+typedef uint32_t uinteger_t;
+
+typedef int32_t intenum_t;
+typedef uint32_t intset_t;
+
 // MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
 #ifndef _UINTPTR_T
 #define _UINTPTR_T
@@ -434,6 +440,11 @@ typedef int32_t intptr_t;
 #define UINTPTR_MIN UINT64_MIN
 #define UINTPTR_MAX UINT64_MAX
 
+#define INTEGER_MIN INT32_MIN
+#define INTEGER_MAX INT32_MAX
+#define UINTEGER_MIN UINT32_MIN
+#define UINTEGER_MAX UINT32_MAX
+
 #endif
 
 #if defined(__SMALL__) || defined(__MEDIUM__)
@@ -450,15 +461,15 @@ typedef int32_t compare_t;
 
 #else
 
-typedef uint64_t uindex_t;
-typedef int64_t index_t;
+typedef uint32_t uindex_t;
+typedef int32_t index_t;
 typedef uint64_t hash_t;
 typedef int64_t compare_t;
 
-#define UINDEX_MIN UINT64_MIN
-#define UINDEX_MAX UINT64_MAX
-#define INDEX_MIN INT64_MIN
-#define INDEX_MAX INT64_MAX
+#define UINDEX_MIN UINT32_MIN
+#define UINDEX_MAX UINT32_MAX
+#define INDEX_MIN INT32_MIN
+#define INDEX_MAX INT32_MAX
 
 #endif
 
@@ -560,24 +571,26 @@ typedef struct __MCLocale* MCLocaleRef;
 //  MINIMUM FUNCTIONS
 //
 
-inline uint32_t MCMin(uint32_t a, uint32_t b) { return a < b ? a : b; }
-inline int32_t MCMin(int32_t a, int32_t b) { return a < b ? a : b; }
-inline uint64_t MCMin(uint64_t a, uint64_t b) { return a < b ? a : b; }
-inline int64_t MCMin(int64_t a, int64_t b) { return a < b ? a : b; }
-inline double MCMin(double a, double b) { return a < b ? a : b; }
-inline float MCMin(float a, float b) { return a < b ? a : b; }
+//inline uint32_t MCMin(uint32_t a, uint32_t b) { return a < b ? a : b; }
+//inline int32_t MCMin(int32_t a, int32_t b) { return a < b ? a : b; }
+//inline uint64_t MCMin(uint64_t a, uint64_t b) { return a < b ? a : b; }
+//inline int64_t MCMin(int64_t a, int64_t b) { return a < b ? a : b; }
+//inline double MCMin(double a, double b) { return a < b ? a : b; }
+//inline float MCMin(float a, float b) { return a < b ? a : b; }
+template <class T, class U> inline T MCMin(T a, U b) { return a < b ? a : b; }
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  MAXIMUM FUNCTIONS
 //
 
-inline uint32_t MCMax(uint32_t a, uint32_t b) { return a > b ? a : b; }
-inline int32_t MCMax(int32_t a, int32_t b) { return a > b ? a : b; }
-inline uint64_t MCMax(uint64_t a, uint64_t b) { return a > b ? a : b; }
-inline int64_t MCMax(int64_t a, int64_t b) { return a > b ? a : b; }
-inline double MCMax(double a, double b) { return a > b ? a : b; }
-inline float MCMax(float a, float b) { return a > b ? a : b; }
+//inline uint32_t MCMax(uint32_t a, uint32_t b) { return a > b ? a : b; }
+//inline int32_t MCMax(int32_t a, int32_t b) { return a > b ? a : b; }
+//inline uint64_t MCMax(uint64_t a, uint64_t b) { return a > b ? a : b; }
+//inline int64_t MCMax(int64_t a, int64_t b) { return a > b ? a : b; }
+//inline double MCMax(double a, double b) { return a > b ? a : b; }
+//inline float MCMax(float a, float b) { return a > b ? a : b; }
+template <class T, class U> inline T MCMax(T a, U b) { return a > b ? a : b; }
 
 ////////////////////////////////////////////////////////////////////////////////
 //

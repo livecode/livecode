@@ -115,7 +115,7 @@ bool MCLocalPasteboard::Normalize(MCTransferType p_type, MCValueRef p_data, MCTr
 	}
 }
 
-bool MCLocalPasteboard::Query(MCTransferType*& r_types, unsigned int& r_type_count)
+bool MCLocalPasteboard::Query(MCTransferType*& r_types, size_t& r_type_count)
 {
 	r_types = m_types;
 	r_type_count = m_count;
@@ -333,7 +333,7 @@ void MCTransferData::Unlock(void)
 	}
 }
 
-bool MCTransferData::Query(MCTransferType*& r_types, uint4& r_type_count)
+bool MCTransferData::Query(MCTransferType*& r_types, size_t& r_type_count)
 {
 	if (m_lock_count == 0)
 		return false;
@@ -347,7 +347,7 @@ bool MCTransferData::Contains(MCTransferType p_type, bool p_with_conversion)
 		return false;
 
 	MCTransferType *t_types;
-	uint4 t_type_count;
+	size_t t_type_count;
 	if (!m_pasteboard -> Query(t_types, t_type_count))
 	{
 		Unlock();
@@ -376,7 +376,7 @@ bool MCTransferData::Fetch(MCTransferType p_type, MCDataRef &r_data)
 		return false;
 
 	MCTransferType *t_types;
-	uint4 t_type_count;
+	size_t t_type_count;
 	if (!m_pasteboard -> Query(t_types, t_type_count))
 	{
 		Unlock();

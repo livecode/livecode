@@ -788,7 +788,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                     if (t_event->selection.target == s_targets)
                     {
                         // Get the list of types we can convert to
-                        uint32_t t_count;
+                        size_t t_count;
                         GdkAtom *t_atoms;
                         t_atoms = t_store->QueryAtoms(t_count);
                         
