@@ -584,8 +584,8 @@ MCPlayer::~MCPlayer()
 	if (m_platform_player != nil)
 		MCPlatformPlayerRelease(m_platform_player);
     
-	delete filename;
-	delete userCallbackStr;
+	MCValueRelease(filename);
+	MCValueRelease(userCallbackStr);
 }
 
 Chunk_term MCPlayer::gettype() const
@@ -1430,6 +1430,9 @@ bool MCPlayer::getversion(MCStringRef& r_string)
 #if 0
     extern void MCQTGetVersion(MCStringRef &r_version);
     MCQTGetVersion(r_string);
+    return true;
+#else
+    r_string = MCValueRetain(kMCEmptyString);
     return true;
 #endif
 }

@@ -1994,7 +1994,7 @@ void MCPlayer::getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id)
 #elif defined(X11)
         x11_getenabledtracks(t_count, t_tracks_id);
 #else
-    0 == 0;
+        0 == 0;
 #endif
     
     r_count = t_count;
@@ -2014,8 +2014,10 @@ void MCPlayer::gettracks(MCStringRef &r_tracks)
 #elif defined(X11)
         x11_gettracks(r_tracks);
 #else
-    0 == 0;
+        r_tracks = MCValueRetain(kMCEmptyString);
 #endif
+    else
+        r_tracks = MCValueRetain(kMCEmptyString);
 }
 
 void MCPlayer::getconstraints(MCMultimediaQTVRConstraints &r_constraints)
