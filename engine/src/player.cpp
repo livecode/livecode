@@ -71,6 +71,6 @@ MCObjectPropertyTable MCPlayer::kPropertyTable =
 #ifdef FEATURE_PLATFORM_PLAYER
 #include "player-platform.cpp"
 #else
-#include "player-legacy.h"
+#include "player-legacy.cpp"
 #endif
 

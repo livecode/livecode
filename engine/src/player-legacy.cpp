@@ -27,7 +27,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
-#include "core.h"
 
 #include "execpt.h"
 #include "util.h"
@@ -409,7 +408,7 @@ Boolean MCPlayer::mdown(uint2 which)
                 if (qtstate == QT_INITTED)
                     qt_click(true, 1);
 #endif
-                if (message_with_valuref_args(MCM_mouse_down, MCSTR("1")) == ES_NORMAL)
+                if (message_with_valueref_args(MCM_mouse_down, MCSTR("1")) == ES_NORMAL)
                     return True;
                 break;
             case T_POINTER:
@@ -1990,27 +1989,27 @@ void MCPlayer::getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id)
             avi_getenabledtracks(t_count, t_tracks_id);
 #endif
 #elif defined(X11)
-    x11_getenabledtracks(t_count, t_tracks_id);
+        x11_getenabledtracks(t_count, t_tracks_id);
 #else
     0 == 0;
 #endif
     
     r_count = t_count;
-    r_tracks_id = t_track_id;
+    r_tracks_id = t_tracks_id;
 }
 
-bool MCPlayer::gettracks(MCStringRef &r_tracks)
+void MCPlayer::gettracks(MCStringRef &r_tracks)
 {
     if (getstate(CS_PREPARED))
 #ifdef FEATURE_QUICKTIME
         if (qtstate == QT_INITTED)
-            getqttracks(ctxt, r_tracks);
+            qt_gettracks(r_tracks);
 #ifdef TARGET_PLATFORM_WINDOWS
         else
-            avi_gettracks(ctxt, r_tracks);
+            avi_gettracks(r_tracks);
 #endif
 #elif defined(X11)
-        x11_gettracks(ctxt, r_tracks);
+        x11_gettracks(r_tracks);
 #else
     0 == 0;
 #endif
@@ -2073,7 +2072,7 @@ void MCPlayer::gethotspots(MCStringRef &r_hotspots)
     for (uindex_t i = 0; i < t_spot_array . Size(); i++)
         MCMultimediaQTVRHotSpotFree(ctxt, t_spot_array[i]);
 #endif
-    r_spots = t_spots;
+    r_hotspots = t_spots;
 }
 
 void MCPlayer::updatevisibility()
@@ -2913,7 +2912,6 @@ MCRegionRef MCPlayer::makewindowregion()
 	return NULL;
 }
 #endif
-
 #endif
 
 //--
@@ -3434,6 +3432,36 @@ void MCPlayer::qt_gettracks(MCExecPoint& ep)
 	}
 }
 #endif
+
+void MCPlayer::gettracks(MCStringRef &r_tracks)
+{
+    uint2 trackcount = (uint2)GetMovieTrackCount((Movie)theMovie);
+    char buffer[256];
+    uint2 i;
+
+    MCAutoListRef t_list;
+    MCListCreateMutable('\n', &t_list);
+
+    for (i = 1 ; i <= trackcount ; i++)
+    {
+        MCAutoStringRef t_track;
+
+        Track trak = GetMovieIndTrack((Movie)theMovie,i);
+        if (trak == NULL)
+            break;
+
+        Media media = GetTrackMedia(trak);
+        MediaHandler mediahandler = GetMediaHandler(media);
+        MediaGetName(mediahandler, (unsigned char *)buffer, 0, NULL);
+        p2cstr((unsigned char*)buffer);
+
+        // Format: id,type,start,end
+        /* UNCHECKED */ MCStringFormat(&t_track, "%u,%s,%u,%u", GetTrackID(trak), buffer, (uint4)GetTrackOffset(trak), (uint4)GetTrackDuration(trak)));
+        /* UNCHECKED */ MCListAppend(*t_list, *t_track);
+    }
+
+    /* UNCHECKED */ MCListCopyAsString(&r_tracks);
+}
 
 #ifdef LEGACY_EXEC
 void MCPlayer::qt_getenabledtracks(MCExecPoint& ep)
@@ -4477,46 +4505,6 @@ Boolean MCPlayer::installUserCallbacks(void)
 ////////////////////////////////////////////////////////////////////
 // QUICKTIME ACCESSORS
 
-bool MCPlayer::gettrack(uindex_t index, uint4& id, MCStringRef& r_name, uint4& offset, uint4& duration)
-{
-#ifdef FEATURE_QUICKTIME
-    Track trak = GetMovieIndTrack((Movie)theMovie,index);
-    if (trak == NULL)
-        return false;
-    id = (uint4)GetTrackID(trak);
-    char buffer[256];
-    Media media = GetTrackMedia(trak);
-    MediaHandler mediahandler = GetMediaHandler(media);
-    MediaGetName(mediahandler, (unsigned char *)buffer, 0, NULL);
-    p2cstr((unsigned char*)buffer);	
-    offset = (uint4)GetTrackOffset(trak);//start
-    duration = (uint4)GetTrackDuration(trak);//end
-    return MCStringCreateWithCString(buffer, r_name);
-#endif
-    return false;
-}
-
-void MCPlayer::getqttracks(MCStringRef &r_tracks)
-{
-#ifdef FEATURE_QUICKTIME
-    uint2 trackcount = gettrackcount();
-    MCAutoArray<MCMultimediaTrack> t_track_array;
-    
-    for (uindex_t i = 1 ; i <= trackcount ; i++)
-    {
-        MCMultimediaTrack t_track;
-        if (!gettrack(i, t_track . id, t_track . name, t_track . offset, t_track . duration))
-            break;
-        t_track_array . Push(t_track);
-    }
-    
-    copy_custom_list_as_string(ctxt, kMCMultimediaTrackTypeInfo, t_track_array . Ptr(), t_track_array . Size(), '\n', r_tracks);
-    
-    for (uindex_t i = 0; i < t_track_array . Size(); i++)
-        MCMultimediaTrackFree(ctxt, t_track_array[i]);
-#endif
-}
-
 void MCPlayer::getqtvrconstraints(uint1 index, real4& minrange, real4& maxrange)
 {
 #ifdef FEATURE_QUICKTIME
@@ -4653,11 +4641,10 @@ Boolean MCPlayer::x11_prepare(void)
     getstack() -> resolve_filename(filename, &t_filename);
     
     Boolean t_success;
-    MCAutoPointer<char> t_filename_cstring;
-    /* UNCHECKED */ MCStringConvertToCString(*t_filename, &t_filename_cstring);
+    MCAutoStringRefAsCString t_filename_cstring;
+    /* UNCHECKED */ t_filename_cstring . Lock(*t_filename);
     t_success = (m_player -> init(*t_filename_cstring, getstack(), rect));
     
-    delete t_filename;
     return t_success;
 }
 

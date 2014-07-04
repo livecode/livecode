@@ -155,9 +155,7 @@ public:
     virtual void updateloudness(int2 newloudness);
 	virtual void setloudness();
     
-	virtual Boolean setenabledtracks(MCStringRef s);
-    
-	virtual MCRectangle resize(MCRectangle rect);
+    virtual Boolean setenabledtracks(MCStringRef s);
 
     virtual Boolean prepare(MCStringRef options);
     virtual Boolean playstart(MCStringRef options);
@@ -311,6 +309,7 @@ public:
     virtual void GetHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
         
     ////////////////////////////////////////////////////////////////////////////////
+    // MCPlayer specific implementation for the platform player
     
 	void SynchronizeUserCallbacks(void);
 	
@@ -324,7 +323,8 @@ public:
 	{
 		return m_platform_player;
 	}
-    
+
+    MCRectangle resize(MCRectangle rect);
     void markerchanged(uint32_t p_time);
     void selectionchanged(void);
     void currenttimechanged(MCParameter *p_param);

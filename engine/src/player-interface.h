@@ -120,9 +120,7 @@ public:
 	void getnodes(MCExecPoint &ep);
 	void gethotspots(MCExecPoint &ep);
 #endif
-    
-	virtual MCRectangle resize(MCRectangle rect) = 0;
-    
+
     Boolean isdisposable()
     {
         return disposable;

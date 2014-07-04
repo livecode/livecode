@@ -155,13 +155,11 @@ public:
 	virtual Boolean ispaused();
     
 	virtual MCRectangle getpreferredrect();
-	virtual uint2 getloudness();
-    virtual void updateloudness(int2 newloudness);
+    virtual uint2 getloudness();
 	virtual void setloudness();
     
 	virtual Boolean setenabledtracks(MCStringRef s);
-    
-	virtual MCRectangle resize(MCRectangle rect);
+
 	virtual Boolean prepare(MCStringRef options);
 	virtual Boolean playstart(MCStringRef options);
 	virtual Boolean playpause(Boolean on);
@@ -221,7 +219,7 @@ public:
     
 	//////////////////////////////
 	// QT ACCESSORS
-    
+
 	void getqtvrconstraints(uint1 index, real4& minrange, real4& maxrange);
 	uint2 getnodecount();
 	virtual bool getnode(uindex_t index, uint2 &id, MCMultimediaQTVRNodeType &type);
@@ -317,9 +315,13 @@ public:
 	MCRectangle qt_getpreferredrect(void);
 	uint2 qt_getloudness(void);
 	void qt_setloudness(uint2 loudn);
+#ifdef LEGACY_EXEC
 	void qt_gettracks(MCExecPoint& ep);
 	void qt_getenabledtracks(MCExecPoint& ep);
-	Boolean qt_setenabledtracks(const MCString& s);
+#endif
+    void qt_gettracks(MCStringRef &r_tracks);
+    void qt_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
+    Boolean qt_setenabledtracks(MCStringRef s);
 	void qt_draw(MCDC *dc, const MCRectangle& dirty);
 	void qt_move(int2 x, int2 y);
 	void qt_click(bool p_state, uint4 p_button);
@@ -347,12 +349,17 @@ public:
 	MCRectangle avi_getpreferredrect(void);
 	uint2 avi_getloudness(void);
 	void avi_setloudness(uint2 loudn);
+#ifdef LEGACY_EXEC
 	void avi_gettracks(MCExecPoint& ep);
 	void avi_getenabledtracks(MCExecPoint& ep);
-	Boolean avi_setenabledtracks(const MCString& s);
+#endif
+    void avi_gettracks(MCStringRef &r_tracks);
+    void avi_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
+    Boolean avi_setenabledtracks(MCStringRef s);
 	void avi_draw(MCDC *dc, const MCRectangle& dirty);
 
 	bool mode_avi_closewindowonplaystop();
+#endif
 #endif
 
 #if defined(_LINUX_DESKTOP)
@@ -378,15 +385,18 @@ public:
 	void x11_editmovie(Boolean edit) {}
 	void x11_playselection(Boolean play) {}
 	void x11_showcontroller(Boolean show) {}
-	MCRectangle x11_getpreferredrect(void) {MCRectangle t_rect; t_rect.x = 0;t_rect.y = 0;t_rect.width=0;t_rect.height=0; return t_rect;}
+    MCRectangle x11_getpreferredrect(void) { MCRectangle t_rect; t_rect.x = 0;t_rect.y = 0;t_rect.width=0;t_rect.height=0; return t_rect;}
+#ifdef LEGACY_EXEC
 	void x11_gettracks(MCExecPoint& ep) {}
 	void x11_getenabledtracks(MCExecPoint& ep) {}
-	Boolean x11_setenabledtracks(const MCString& s) {return False;}
+#endif
+    void x11_gettracks(MCStringRef &r_tracks) { r_tracks = MCValueRetain(kMCEmptyString); }
+    void x11_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id) { r_count = 0; }
+    Boolean x11_setenabledtracks(MCStringRef & s) { return False;}
 	void x11_draw(MCDC *dc, const MCRectangle& dirty) {}
 	
 	pid_t getpid(void);
 	void  shutdown(void);
-#endif
 #endif
     
 	////////// PROPERTY SUPPORT METHODS
@@ -462,6 +472,6 @@ public:
     virtual void SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
     virtual void GetHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
 };
-#endif
+#endif // FEATURE_PLATFORM_PLAYER
 
-#endif
+#endif // PLAYER_LEGACY_H
