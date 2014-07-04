@@ -48,23 +48,6 @@ enum QTVRstate {
 };
 #endif
 
-struct MCMultimediaTrackList;
-struct MCMultimediaQTVRNode;
-struct MCMultimediaQTVRHotSpot;
-
-enum MCMultimediaQTVRHotSpotType
-{
-	kMCQTVRHotSpotLinkType,
-	kMCQTVRHotSpotURLType,
-	kMCQTVRHotSpotUndefinedType,
-};
-
-enum MCMultimediaQTVRNodeType
-{
-	kMCQTVRNodePanoramaType,
-	kMCQTVRNodeObjectType,
-};
-
 // MERG-2014-07-03: [[ PlatformPlayer ]] Player constraints must be the same for
 // new platform or old player
 struct MCMultimediaQTVRConstraints;

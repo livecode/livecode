@@ -28,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "execpt.h"
+//#include "execpt.h"
 #include "util.h"
 #include "font.h"
 #include "sellst.h"
@@ -118,7 +118,7 @@ PixMapHandle GetPortPixMap(CGrafPtr port)
 #define LoWord LOWORD
 #endif
 
-OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec);
+OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
 #endif
 
 #define QTMFORMATS 6
@@ -177,7 +177,10 @@ static Boolean IsQTVRInstalled(void);
 extern bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
 #endif
 
+//////////
+
 extern bool MCFiltersBase64Encode(MCDataRef p_src, MCStringRef& r_dst);
+extern void copy_custom_list_as_string_and_release(MCExecContext& ctxt, MCExecCustomTypeInfo *p_type, void *p_elements, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string);
 
 //-----------------------------------------------------------------------------
 // Control Implementation
@@ -1930,7 +1933,7 @@ bool MCPlayer::changepan(real8 pan)
         QTVRSetPanAngle((QTVRInstance)qtvrinstance, (float)pan);
 #endif
     
-    return isbuffering();
+    return isbuffering() == True;
 }
 
 real8 MCPlayer::gettilt()
@@ -1949,7 +1952,7 @@ bool MCPlayer::changetilt(real8 tilt)
     if (qtvrinstance != NULL)
         QTVRSetTiltAngle((QTVRInstance)qtvrinstance, (float)tilt);
 #endif
-    return isbuffering();
+    return isbuffering() == True;
 }
 
 real8 MCPlayer::getzoom()
@@ -1968,7 +1971,7 @@ bool MCPlayer::changezoom(real8 zoom)
     if (qtvrinstance != NULL)
         QTVRSetFieldOfView((QTVRInstance)qtvrinstance, (float)zoom);
 #endif
-    return isbuffering();
+    return isbuffering() == True;
 }
 
 
@@ -2041,10 +2044,11 @@ void MCPlayer::getnodes(MCStringRef &r_nodes)
     }
     
     MCValueRelease(t_nodes);
-    copy_custom_list_as_string(ctxt, kMCMultimediaQTVRNodeTypeInfo, t_node_array . Ptr(), t_node_array . Size(), '\n', t_nodes);
+	MCExecContext ctxt(nil, nil, nil);
+    copy_custom_list_as_string_and_release(ctxt, kMCMultimediaQTVRNodeTypeInfo, t_node_array . Ptr(), t_node_array . Size(), '\n', t_nodes);
     
-    for (uindex_t i = 0; i < t_node_array . Size(); i++)
-        MCMultimediaQTVRNodeFree(ctxt, t_node_array[i]);
+	if (ctxt . HasError())
+		t_nodes = MCValueRetain(kMCEmptyString);
 #endif
     r_nodes = t_nodes;
 }
@@ -2067,10 +2071,11 @@ void MCPlayer::gethotspots(MCStringRef &r_hotspots)
     }
     
     MCValueRelease(t_spots);
-    copy_custom_list_as_string(ctxt, kMCMultimediaQTVRHotSpotTypeInfo, t_spot_array . Ptr(), t_spot_array . Size(), '\n', t_spots);
+	MCExecContext ctxt(nil, nil, nil);
+    copy_custom_list_as_string_and_release(ctxt, kMCMultimediaQTVRHotSpotTypeInfo, t_spot_array . Ptr(), t_spot_array . Size(), '\n', t_spots);
     
-    for (uindex_t i = 0; i < t_spot_array . Size(); i++)
-        MCMultimediaQTVRHotSpotFree(ctxt, t_spot_array[i]);
+	if (ctxt . HasError())
+		t_spots = MCValueRetain(kMCEmptyString);
 #endif
     r_hotspots = t_spots;
 }
@@ -3433,7 +3438,7 @@ void MCPlayer::qt_gettracks(MCExecPoint& ep)
 }
 #endif
 
-void MCPlayer::gettracks(MCStringRef &r_tracks)
+void MCPlayer::qt_gettracks(MCStringRef &r_tracks)
 {
     uint2 trackcount = (uint2)GetMovieTrackCount((Movie)theMovie);
     char buffer[256];
@@ -3456,11 +3461,11 @@ void MCPlayer::gettracks(MCStringRef &r_tracks)
         p2cstr((unsigned char*)buffer);
 
         // Format: id,type,start,end
-        /* UNCHECKED */ MCStringFormat(&t_track, "%u,%s,%u,%u", GetTrackID(trak), buffer, (uint4)GetTrackOffset(trak), (uint4)GetTrackDuration(trak)));
+        /* UNCHECKED */ MCStringFormat(&t_track, "%u,%s,%u,%u", GetTrackID(trak), buffer, (uint4)GetTrackOffset(trak), (uint4)GetTrackDuration(trak));
         /* UNCHECKED */ MCListAppend(*t_list, *t_track);
     }
 
-    /* UNCHECKED */ MCListCopyAsString(&r_tracks);
+    /* UNCHECKED */ MCListCopyAsString(*t_list, r_tracks);
 }
 
 #ifdef LEGACY_EXEC
@@ -3541,7 +3546,6 @@ Boolean MCPlayer::qt_setenabledtracks(MCStringRef s)
 		if (++offset >= trackcount)
 			break;
 	}
-	delete data;
 	MCMovieChanged((MovieController)theMC, (Movie)theMovie);
 	Rect movieRect;
 	GetMovieBox((Movie)theMovie, &movieRect);
@@ -4053,8 +4057,9 @@ void MCPlayer::avi_setloudness(uint2 loudn)
                     (DWORD)(LPMCI_GENERIC_PARMS)&sap);
 }
 
-void MCPlayer::avi_gettracks(MCExecPoint& ep)
+void MCPlayer::avi_gettracks(MCStringRef &r_tracks)
 {
+	r_tracks = MCValueRetain(kMCEmptyString);
 }
 
 void MCPlayer::avi_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks)
@@ -4432,7 +4437,7 @@ Boolean MCPlayer::installUserCallbacks(void)
     // if movie is prepared,
     if (MCStringIsEmpty(userCallbackStr))
         return True;
-    char *t_userCallback;
+    char *t_userCallbackStr;
     /* UNCHECKED */ MCStringConvertToCString(userCallbackStr, t_userCallbackStr);
     char *cblist = t_userCallbackStr;
     char *str;

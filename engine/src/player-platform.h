@@ -27,8 +27,6 @@
 #include "platform.h"
 #include "player-interface.h"
 
-struct MCPlayerOffscreenBuffer;
-
 enum
 {
     kMCPlayerControllerPartUnknown,

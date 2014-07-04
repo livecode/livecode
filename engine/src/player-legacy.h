@@ -27,6 +27,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player-interface.h"
 #include "exec-interface.h"
 
+#ifdef FEATURE_QUICKTIME
+// Forward declaration
+struct MCPlayerOffscreenBuffer;
+#endif
+
 class MCPlayer : public MCPlayerInterface, public MCControl
 {	
 #ifdef FEATURE_MPLAYER
@@ -326,6 +331,8 @@ public:
 	void qt_move(int2 x, int2 y);
 	void qt_click(bool p_state, uint4 p_button);
 	void qt_key(bool p_state, uint4 p_key);
+	void qt_enablekeys(Boolean enable);
+	void qt_setcontrollervisible();
 
 #ifdef _WINDOWS_DESKTOP
 	Boolean avi_prepare(void);

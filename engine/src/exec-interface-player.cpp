@@ -95,12 +95,6 @@ static MCExecCustomTypeInfo _kMCMultimediaTrackTypeInfo =
 
 //////////
 
-struct MCMultimediaQTVRNode
-{
-	uint2 id;
-	MCMultimediaQTVRNodeType type;
-};
-
 static void MCMultimediaQTVRNodeFormat(MCExecContext& ctxt, const MCMultimediaQTVRNode& p_input, MCStringRef& r_output)
 {
 	if (MCStringFormat(r_output, "%d,%s", p_input . id, p_input . type == kMCQTVRNodePanoramaType ? "panorama" : "object"))
@@ -127,12 +121,6 @@ static MCExecCustomTypeInfo _kMCMultimediaQTVRNodeTypeInfo =
 };
 
 //////////
-
-struct MCMultimediaQTVRHotSpot
-{
-	uint2 id;
-	MCMultimediaQTVRHotSpotType type;
-};
 
 static void MCMultimediaQTVRHotSpotFormat(MCExecContext& ctxt, const MCMultimediaQTVRHotSpot& p_input, MCStringRef& r_output)
 {
@@ -199,7 +187,7 @@ MCExecCustomTypeInfo *kMCMultimediaQTVRConstraintsTypeInfo = &_kMCMultimediaQTVR
 MCExecCustomTypeInfo *kMCMultimediaQTVRNodeTypeInfo = &_kMCMultimediaQTVRNodeTypeInfo;
 MCExecCustomTypeInfo *kMCMultimediaQTVRHotSpotTypeInfo = &_kMCMultimediaQTVRHotSpotTypeInfo;
 
-static void copy_custom_list_as_string(MCExecContext& ctxt, MCExecCustomTypeInfo *p_type, void *p_elements, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
+void copy_custom_list_as_string_and_release(MCExecContext& ctxt, MCExecCustomTypeInfo *p_type, void *p_elements, uindex_t p_count, char_t p_delimiter, MCStringRef& r_string)
 {
 	MCAutoListRef t_list;
 	if (!MCListCreateMutable(p_delimiter, &t_list))
@@ -214,6 +202,11 @@ static void copy_custom_list_as_string(MCExecContext& ctxt, MCExecCustomTypeInfo
 
 		if (!MCListAppend(*t_list, *t_element_as_string))
 			goto throw_error;
+
+		((void(*)(MCExecContext&, void *))p_type -> free)(ctxt,(byte_t*)p_elements + p_type -> size * i);
+
+		if (ctxt . HasError())
+			return;
 	}
 
 	if (!MCListCopyAsString(*t_list, r_string))

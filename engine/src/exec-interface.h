@@ -151,6 +151,31 @@ struct MCMultimediaTrackList
 	MCMultimediaTrackList *next;
 };
 
+enum MCMultimediaQTVRHotSpotType
+{
+	kMCQTVRHotSpotLinkType,
+	kMCQTVRHotSpotURLType,
+	kMCQTVRHotSpotUndefinedType,
+};
+
+enum MCMultimediaQTVRNodeType
+{
+	kMCQTVRNodePanoramaType,
+	kMCQTVRNodeObjectType,
+};
+
+struct MCMultimediaQTVRNode
+{
+	uint2 id;
+	MCMultimediaQTVRNodeType type;
+};
+
+struct MCMultimediaQTVRHotSpot
+{
+	uint2 id;
+	MCMultimediaQTVRHotSpotType type;
+};
+
 //////////
 
 // MERG-2014-06-25: [[ PlatformPlayer ]]
