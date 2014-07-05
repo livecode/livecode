@@ -109,6 +109,8 @@ extern Boolean MCU_matchname(const MCString &, Chunk_term type, MCNameRef name);
 extern void MCU_snap(int2 &p);
 extern void MCU_roundrect(MCPoint *&, uint2 &npoints,
 	                          const MCRectangle &, uint2 radius);
+extern void MCU_oval(MCPoint *&points, uint2 &npoints,
+                   const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle);
 extern void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &);
 extern Boolean MCU_parsepoints(MCPoint *&oldpoints, uint2 &n, const MCString &);
 extern Boolean MCU_parsepoint(MCPoint &r_point, const MCString &);
