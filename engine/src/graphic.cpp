@@ -800,7 +800,7 @@ bool MCGraphic::get_points_for_roundrect(MCPoint*& r_points, uint2& r_point_coun
 {
 	r_points = NULL;
 	r_point_count = 0;
-	MCU_roundrect(r_points, r_point_count, rect, roundradius);
+	MCU_roundrect(r_points, r_point_count, rect, roundradius, 0, 0);
 	return (true);
 }
 
@@ -841,7 +841,7 @@ bool MCGraphic::get_points_for_regular_polygon(MCPoint*& r_points, uint2& r_poin
 	return (true);
 }
 
-// MDW-2014-06-21: [[ oval_points ]] treat an oval like a rounded rect with radius = 1/2 max(width, height)
+// MDW-2014-07-06: [[ oval_points ]] treat an oval like a rounded rect with radius = 1/2 max(width, height)
 bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uint2& r_point_count)
 {
 	MCRectangle trect;
@@ -853,8 +853,7 @@ bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uint2& r_point_count)
 		tRadius = rect.height;
 	else
 		tRadius = rect.width;
-	MCU_oval(r_points, r_point_count, rect, tRadius / 2, startangle, arcangle);
-//	MCU_roundrect(r_points, r_point_count, rect, tRadius / 2);
+	MCU_roundrect(r_points, r_point_count, rect, tRadius / 2, startangle, arcangle);
 	return (true);
 }
 

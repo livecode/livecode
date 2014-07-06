@@ -44,11 +44,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <openssl/rand.h>
 #endif
 
-#define QA_NPOINTS 10
-#define OVAL_NPOINTS 90
+// MDW-2014-07-06: [[ oval_points ]]
+#define QA_NPOINTS 90
 
 static MCPoint qa_points[QA_NPOINTS];
-static MCPoint oval_points[OVAL_NPOINTS];
 
 void MCU_oval_init();
 
@@ -96,23 +95,8 @@ void MCU_init()
 		qa_points[i].y = MAXINT2 - (short)(cos(angle) * (real8)MAXINT2);
 		angle += increment;
 	}
-	MCU_oval_init();
 	MCrandomseed = (int4)(intptr_t)&MCdispatcher + MCS_getpid() + (int4)time(NULL);
 	MCU_srand();
-}
-
-void MCU_oval_init()
-{
-	int2 i;
-	real8 increment = (M_PI / 2.0) / (real8)OVAL_NPOINTS;
-	real8 angle = 0.0;
-
-	for (i = 0 ; i < OVAL_NPOINTS ; i++)
-	{
-		oval_points[i].x = (short)(sin(angle) * (real8)MAXINT2);
-		oval_points[i].y = MAXINT2 - (short)(cos(angle) * (real8)MAXINT2);
-		angle += increment;
-	}
 }
 
 void MCU_watchcursor(MCStack *sptr, Boolean force)
@@ -1240,17 +1224,15 @@ void MCU_snap(int2 &p)
 	p = (p + (MCgridsize >> 1)) / MCgridsize * MCgridsize;
 }
 
+// MDW-2014-07-06: [[ oval_points ]] need to factor in startAngle and arcAngle
 void MCU_roundrect(MCPoint *&points, uint2 &npoints,
-                   const MCRectangle &rect, uint2 radius)
+                   const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle)
 {
-	uint2 i, j;
+	uint2 i, j, k;
 
-	if (points == NULL || npoints != 4 * QA_NPOINTS + 1)
-	{
-		delete points;
-		points = new MCPoint[4 * QA_NPOINTS + 1];
-		npoints = 4 * QA_NPOINTS + 1;
-	}
+	delete points;
+	points = new MCPoint[4 * QA_NPOINTS + 1];
+	npoints = 4 * QA_NPOINTS + 1;
 
 	MCRectangle tr = rect;
 	tr.width--;
@@ -1265,161 +1247,93 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 		rr_height = radius;
 	else
 		rr_height = tr.height >> 1;
-
-	i = 0;
-	for (j = 0 ; j < QA_NPOINTS ; j++)
-	{
-		points[i].x = tr.x + tr.width - rr_width
-		              + (qa_points[j].x * rr_width / MAXINT2);
-		points[i].y = tr.y + (qa_points[j].y * rr_height / MAXINT2);
-		i++;
-	}
-	j = QA_NPOINTS;
-	do
-	{
-		j--;
-		points[i].x = tr.x + tr.width - rr_width
-		              + (qa_points[j].x * rr_width / MAXINT2);
-		points[i].y = tr.y + tr.height
-		              - (qa_points[j].y * rr_height / MAXINT2);
-		i++;
-	}
-	while (j);
-	for (j = 0 ; j < QA_NPOINTS ; j++)
-	{
-		points[i].x = tr.x + rr_width - (qa_points[j].x * rr_width / MAXINT2);
-		points[i].y = tr.y + tr.height
-		              -(qa_points[j].y * rr_height / MAXINT2);
-		i++;
-	}
-	j = QA_NPOINTS;
-	do
-	{
-		j--;
-		points[i].x = tr.x + rr_width
-		              - (qa_points[j].x * rr_width / MAXINT2);
-		points[i].y = tr.y + (qa_points[j].y * rr_height / MAXINT2);
-		i++;
-	}
-	while (j);
-	points[i] = points[0];
-}
-
-// MDW-2014-07-04: [[ oval_points ]] need to factor in startAngle and arcAngle
-void MCU_oval(MCPoint *&points, uint2 &npoints,
-                   const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle)
-{
-	uint2 i, j;
-
-	if (points == NULL || npoints != 4 * QA_NPOINTS + 1)
-	{
-		delete points;
-		points = new MCPoint[4 * OVAL_NPOINTS + 1];
-		npoints = 4 * OVAL_NPOINTS + 1;
-	}
-
-	MCRectangle tr = rect;
-	tr.width--;
-	tr.height--;
-
-	uint2 rr_width, rr_height;
-	rr_width = tr.width >> 1;
-	rr_height = tr.height >> 1;
 	
 	// pre-compute for speed
-	uint2 rr_half_width, rr_half_height;
 	uint2 origin_horiz, origin_vert;
-	uint2 rotAngle, endAngle;
-	rr_half_width = rr_width / MAXINT2;
-	rr_half_height = rr_height / MAXINT2;
+	uint2 arc;
+	uint2 quadrant1Angle, quadrant2Angle, quadrant3Angle, quadrant4Angle;
+	uint2 quadrant1Arc, quadrant2Arc, quadrant3Arc, quadrant4Arc;
 	origin_horiz = tr.x + rr_width;
 	origin_vert = tr.y + rr_height;
 
+	arc = 360 - arcAngle;
+	quadrant1Angle = 90 - startAngle;
+	quadrant1Arc = quadrant1Angle + arc;
+	
+	quadrant2Angle = 180 - startAngle;
+	quadrant2Arc = quadrant2Angle + arc;
+	
+	quadrant3Angle = 270 - startAngle;
+	quadrant3Arc = quadrant3Angle + arc;
+
+	quadrant4Angle = 360 - startAngle;
+	quadrant4Arc = quadrant4Angle + arc;
+	
+	i = QA_NPOINTS * 4;
+	j = QA_NPOINTS;
+	k = 0;
 	// each time through a quadrant loop
 	// check for startAngle/arcAngle interaction
-	i = 0;
-	rotAngle = 90 - startAngle;
-	endAngle = rotAngle + 360 - arcAngle;
-	for (j = 0 ; j < OVAL_NPOINTS ; j++)
+	for (i = QA_NPOINTS; i > 0; i--)
 	{
-		if (i > rotAngle && i < endAngle)
+		if (i > quadrant1Angle && i < (quadrant1Angle + arc))
 		{
-			points[i].x = origin_horiz;
-			points[i].y = origin_vert;
+			points[i + (QA_NPOINTS*3)].x = origin_horiz;
+			points[i + (QA_NPOINTS*3)].y = origin_vert;
 		}
 		else
 		{
-			points[i].x = tr.x + tr.width - rr_width
-					      + (oval_points[j].x * rr_width / MAXINT2);
-			points[i].y = tr.y + (oval_points[j].y * rr_height / MAXINT2);
+			points[i + (QA_NPOINTS*3)].x = tr.x + tr.width - rr_width
+						  + (qa_points[j].x * rr_width / MAXINT2);
+			points[i + (QA_NPOINTS*3)].y = tr.y + (qa_points[j].y * rr_height / MAXINT2);
 		}
-		i++;
-	}
-	
-	j = OVAL_NPOINTS;
-	rotAngle = 180 - startAngle;
-	endAngle = rotAngle + 360 - arcAngle;
-	do
-	{
-		j--;
-		if (i > (rotAngle - 90) && i < (endAngle - 90))
-		{
-			points[i].x = origin_horiz;
-			points[i].y = origin_vert;
-		}
-		else
-		{
-			points[i].x = tr.x + tr.width - rr_width
-				          + (oval_points[j].x * rr_width / MAXINT2);
-			points[i].y = tr.y + tr.height
-				          - (oval_points[j].y * rr_height / MAXINT2);
-		}
-		i++;
-	}
-	while (j);
 
-	// pre-compute for speed
-	origin_horiz = tr.x + rr_width;
-//	rotAngle = 270 - startAngle;
-//	endAngle = rotAngle + 360 - arcAngle;
-	
-	for (j = 0 ; j < OVAL_NPOINTS ; j++)
-	{
-		if (j > (rotAngle - 180) && j < (endAngle - 180))
+		if (i > quadrant2Angle && i < (quadrant2Angle + arc))
+		{
+			points[i + (QA_NPOINTS*2)].x = origin_horiz;
+			points[i + (QA_NPOINTS*2)].y = origin_vert;
+		}
+		else
+		{
+			points[i + (QA_NPOINTS*2)].x = tr.x + rr_width
+					      - (qa_points[k].x * rr_width / MAXINT2);
+			points[i + (QA_NPOINTS*2)].y = tr.y + (qa_points[k].y * rr_height / MAXINT2);
+		}
+
+		if (i > quadrant3Angle && i < (quadrant3Angle + arc))
+		{
+			points[i + QA_NPOINTS].x = origin_horiz;
+			points[i + QA_NPOINTS].y = origin_vert;
+		}
+		else
+		{
+			points[i + QA_NPOINTS].x = tr.x + rr_width - (qa_points[j].x * rr_width / MAXINT2);
+			points[i + QA_NPOINTS].y = tr.y + tr.height
+					      -(qa_points[j].y * rr_height / MAXINT2);
+		}
+
+		if (i > quadrant4Angle && i < (quadrant4Angle + arc))
 		{
 			points[i].x = origin_horiz;
 			points[i].y = origin_vert;
 		}
 		else
 		{
-			points[i].x = tr.x + rr_width - (oval_points[j].x * rr_width / MAXINT2);
+			points[i].x = tr.x + tr.width - rr_width
+					      + (qa_points[k].x * rr_width / MAXINT2);
 			points[i].y = tr.y + tr.height
-				          -(oval_points[j].y * rr_height / MAXINT2);
+					      - (qa_points[k].y * rr_height / MAXINT2);
 		}
-		i++;
+
+		j--;
+		k++;
 	}
 	
-	j = OVAL_NPOINTS;
-//	rotAngle = 360 - startAngle;
-//	endAngle = rotAngle + 360 - arcAngle;
-	do
-	{
-		j--;
-		if (j > (rotAngle - 270) && j < (endAngle - 270))
-		{
-			points[i].x = origin_horiz;
-			points[i].y = origin_vert;
-		}
-		else
-		{
-			points[i].x = tr.x + rr_width
-				          - (oval_points[j].x * rr_width / MAXINT2);
-			points[i].y = tr.y + (oval_points[j].y * rr_height / MAXINT2);
-		}
-		i++;
-	}
-	while (j);
-	points[i] = points[0];
+	points[0] = points[(QA_NPOINTS * 4) - 1];
+	points[QA_NPOINTS] = points[QA_NPOINTS - 1];
+	points[QA_NPOINTS * 2] = points[(QA_NPOINTS * 2) - 1];
+	points[QA_NPOINTS * 3] = points[(QA_NPOINTS * 3) - 1];
+	points[QA_NPOINTS * 4] = points[(QA_NPOINTS * 4) - 1];
 }
 
 void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &ep)

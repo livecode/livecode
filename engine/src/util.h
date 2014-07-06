@@ -107,9 +107,8 @@ extern const char *MCU_ktos(Boolean condition);
 extern Boolean MCU_matchflags(const MCString &, uint4 &, uint4, Boolean &);
 extern Boolean MCU_matchname(const MCString &, Chunk_term type, MCNameRef name);
 extern void MCU_snap(int2 &p);
-extern void MCU_roundrect(MCPoint *&, uint2 &npoints,
-	                          const MCRectangle &, uint2 radius);
-extern void MCU_oval(MCPoint *&points, uint2 &npoints,
+// MDW-2014-07-06: [[ oval_points ]]
+extern void MCU_roundrect(MCPoint *&points, uint2 &npoints,
                    const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle);
 extern void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &);
 extern Boolean MCU_parsepoints(MCPoint *&oldpoints, uint2 &n, const MCString &);
