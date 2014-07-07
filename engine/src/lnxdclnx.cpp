@@ -639,6 +639,8 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                                 }
                                 else
                                 {
+                                    doubleclick = tripleclick = false;
+                                    MCdispatcher->wmfocus(t_event->button.window, t_clickloc.x, t_clickloc.y);
                                     MCdispatcher->wmdown(t_event->button.window, t_event->button.button);
                                 }
                             }
