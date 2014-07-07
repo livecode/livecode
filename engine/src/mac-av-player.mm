@@ -142,6 +142,7 @@ private:
     bool m_synchronizing : 1;
     bool m_frame_changed_pending : 1;
     bool m_finished : 1;
+    bool m_loaded : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -251,6 +252,7 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     m_synchronizing = false;
     m_frame_changed_pending = false;
     m_finished = false;
+    m_loaded = false;
 }
 
 MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
@@ -282,6 +284,7 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
 
 void MCAVFoundationPlayer::SelectionFinished(void)
 {
+/*
     if (m_play_selection_only && CMTimeCompare(m_observed_time, CMTimeMake(m_selection_finish, 1000)) >= 0)
     {
         if (m_player.rate != 0.0)
@@ -290,6 +293,7 @@ void MCAVFoundationPlayer::SelectionFinished(void)
             [m_player seekToTime:CMTimeMake(m_selection_finish, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         }
     }
+    */
 }
 
 void MCAVFoundationPlayer::MovieFinished(void)
@@ -346,6 +350,12 @@ void MCAVFoundationPlayer::RateChanged(void)
 
 void MCAVFoundationPlayer::SelectionChanged(void)
 {
+    if (m_play_selection_only)
+        [[m_player currentItem] setForwardPlaybackEndTime:CMTimeMake(m_selection_finish, 1000)];
+    else
+        [[m_player currentItem] setForwardPlaybackEndTime:kCMTimeInvalid];
+    
+    NSLog(@"Selection changed");
     if (!m_synchronizing)
         MCPlatformCallbackSendPlayerSelectionChanged(this);
 }
@@ -397,7 +407,7 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
                                 void *displayLinkContext)
 {
     MCAVFoundationPlayer *t_self = (MCAVFoundationPlayer *)displayLinkContext;
-    
+        
     CMTime t_output_item_time = [t_self -> m_player_item_video_output itemTimeForCVTimeStamp:*inOutputTime];
     
     if (![t_self -> m_player_item_video_output hasNewPixelBufferForItemTime:t_output_item_time])
@@ -439,8 +449,9 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
     MCAVFoundationPlayer *t_player;
 	t_player = (MCAVFoundationPlayer *)ctxt;
     
-    // Do this to make pause pause respond instantly when alwaysBuffer = true
-    if (!t_player -> IsPlaying())
+    // IsPlaying() check is to make pause respond instantly when alwaysBuffer = true
+    // PM-2014-07-07: [[Bug 12746]] If the video file is not loaded, load the first frame (i.e do not return)
+    if (t_player -> m_loaded && !t_player -> IsPlaying())
         return;
     
     NSLog(@"We have a new frame!");
@@ -458,6 +469,8 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
         t_player -> m_current_frame = t_image;
     }
 
+    // Now video is loaded
+    t_player -> m_loaded = true;
 	MCPlatformCallbackSendPlayerFrameChanged(t_player);
     
 }
@@ -585,6 +598,18 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
         return;
     }
     
+    /*
+        PM-2014-07-07: [[Bugs 12758 and 12760]] When the filename is set to a URL or to a local file 
+        that is not a video, or does not exist, then currentItem is nil. Do this chack to prevent a crash
+    */
+    if ([t_player currentItem] == nil)
+    {
+        NSLog(@"Invalid filename or URL!");
+        [t_player removeObserver: m_observer forKeyPath: @"status"];
+        [t_player release];
+        return;
+    }
+    
     CVDisplayLinkSetOutputCallback(m_display_link, MCAVFoundationPlayer::MyDisplayLinkCallback, this);
     //CVDisplayLinkStop(m_display_link);
 
@@ -622,7 +647,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
         // This fixes the issue of pause not being instant when alwaysBuffer = false
         if (IsPlaying() && !m_offscreen)
         {
-            SelectionFinished();
+            //SelectionFinished();
             CurrentTimeChanged();
         }
         
@@ -670,8 +695,8 @@ void MCAVFoundationPlayer::Start(double rate)
         [m_player seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         
         // This fixes flickering issue when alwaysBuffer and playselection are true 
-        if (m_offscreen)
-            [[m_player currentItem] setForwardPlaybackEndTime:CMTimeMake(m_selection_finish, 1000)];
+        //if (m_offscreen)
+            //[[m_player currentItem] setForwardPlaybackEndTime:CMTimeMake(m_selection_finish, 1000)];
     }
     
     [m_player setRate:rate];
@@ -812,6 +837,7 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 			break;
         case kMCPlatformPlayerPropertyOnlyPlaySelection:
 			m_play_selection_only = *(bool *)p_value;
+            SelectionChanged();
 			break;
 		case kMCPlatformPlayerPropertyLoop:
 			m_looping = *(bool *)p_value;
