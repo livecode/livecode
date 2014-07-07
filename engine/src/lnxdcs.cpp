@@ -165,6 +165,11 @@ void gdk_event_fn(GdkEvent *p_event, gpointer dc)
     ((MCScreenDC*)dc)->EnqueueEvent(gdk_event_copy(p_event));
 }
 
+void gdk_event_fn_lost(void*)
+{
+    ;
+}
+
 // Functions for re-directing GTK IM context signals
 static void on_commit(GtkIMContext *p_context, gchar *p_str, gpointer p_data)
 {
@@ -243,7 +248,7 @@ Boolean MCScreenDC::open()
     
     // The GLib event loop calls this function to respond to GDK events.
     // Unfortunately, when GTK gets initied, it will try to steal this from us.
-    gdk_event_handler_set(&gdk_event_fn, gpointer(this), NULL);
+    gdk_event_handler_set(&gdk_event_fn, gpointer(this), &gdk_event_fn_lost);
     
     x11::Display* XDisplay;
     XDisplay = x11::gdk_x11_display_get_xdisplay(dpy);

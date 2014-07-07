@@ -287,7 +287,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
         {
             break;
         }
-        
+
         // What type of event are we dealing with?
         switch (t_event->type)
         {
@@ -907,15 +907,18 @@ void MCScreenDC::EnqueueGdkEvents()
     while (true)
     {
         // Run the GLib main loop
-        gdk_threads_leave();
+        //gdk_threads_leave();
         while (g_main_context_iteration(NULL, FALSE))
             ;
-        gdk_threads_enter();
+        //gdk_threads_enter();
         
         // Enqueue any further GDK events
         GdkEvent *t_event = gdk_event_get();
         if (t_event == NULL)
             break;
+        
+        // GTK hasn't had a chance at this event yet
+        //gtk_main_do_event(t_event);
         
         MCEventnode *t_eventnode = new MCEventnode(t_event);
         t_eventnode->appendto(pendingevents);
