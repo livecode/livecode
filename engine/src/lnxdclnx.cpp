@@ -196,7 +196,7 @@ void MCScreenDC::setmods(guint state, KeySym sym,
 {
 	if (lockmods)
 		return;
-    
+
     // Set the button state
     uint2 t_buttons = 0;
     if (state & GDK_BUTTON1_MASK)
@@ -221,7 +221,7 @@ void MCScreenDC::setmods(guint state, KeySym sym,
 	else
     {
 		// Update all the buttons
-        MCbuttonstate = state >> 8 & 0x1F;
+        MCbuttonstate = t_buttons;
     }
     
     // Assumption: GDK keysyms and X11 keysyms have the same values

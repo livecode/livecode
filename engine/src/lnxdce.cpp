@@ -264,23 +264,23 @@ Boolean MCScreenDC::getmouse(uint2 button, Boolean& r_abort)
     
     GdkModifierType state;
     gdk_display_get_pointer(dpy, NULL, NULL, NULL, &state);
-    
+
     switch (button)
     {
         case 0:
-            return state & GDK_BUTTON1_MASK;
+            return !!(state & GDK_BUTTON1_MASK);
             
         case 1:
-            return state & GDK_BUTTON2_MASK;
+            return !!(state & GDK_BUTTON2_MASK);
             
         case 2:
-            return state & GDK_BUTTON3_MASK;
+            return !!(state & GDK_BUTTON3_MASK);
             
         case 3:
-            return state & GDK_BUTTON4_MASK;
+            return !!(state & GDK_BUTTON4_MASK);
             
         case 4:
-            return state & GDK_BUTTON5_MASK;
+            return !!(state & GDK_BUTTON5_MASK);
             
         default:
             return false;
