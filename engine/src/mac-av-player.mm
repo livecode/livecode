@@ -299,6 +299,10 @@ void MCAVFoundationPlayer::SelectionFinished(void)
 void MCAVFoundationPlayer::MovieFinished(void)
 {
     m_finished = true;
+    
+    if (m_offscreen)
+        CVDisplayLinkStop(m_display_link);
+    
     if (!m_looping)
     {
         m_playing = false;
@@ -307,6 +311,10 @@ void MCAVFoundationPlayer::MovieFinished(void)
     else
     {
         [[m_player currentItem] seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+        
+        if (m_offscreen)
+            CVDisplayLinkStart(m_display_link);
+        
         [m_player play];
         m_playing = true;
         m_finished = false;
@@ -451,8 +459,8 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
     
     // IsPlaying() check is to make pause respond instantly when alwaysBuffer = true
     // PM-2014-07-07: [[Bug 12746]] If the video file is not loaded, load the first frame (i.e do not return)
-    if (t_player -> m_loaded && !t_player -> IsPlaying())
-        return;
+    //if (t_player -> m_loaded && !t_player -> IsPlaying())
+        //return;
     
     NSLog(@"We have a new frame!");
     
@@ -610,6 +618,9 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
         return;
     }
     
+    // Reset this to false when loading a new movie, so as the first frame of the new movie to be displayed
+    m_loaded = false;
+    
     CVDisplayLinkSetOutputCallback(m_display_link, MCAVFoundationPlayer::MyDisplayLinkCallback, this);
     //CVDisplayLinkStop(m_display_link);
 
@@ -682,6 +693,9 @@ bool MCAVFoundationPlayer::IsPlaying(void)
 
 void MCAVFoundationPlayer::Start(double rate)
 {
+    if (m_offscreen)
+        CVDisplayLinkStart(m_display_link);
+    
     if (m_finished && !m_play_selection_only)
     {
         [m_player seekToTime:kCMTimeZero toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
@@ -694,9 +708,6 @@ void MCAVFoundationPlayer::Start(double rate)
     {
         [m_player seekToTime:CMTimeMake(m_selection_start, 1000) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
         
-        // This fixes flickering issue when alwaysBuffer and playselection are true 
-        //if (m_offscreen)
-            //[[m_player currentItem] setForwardPlaybackEndTime:CMTimeMake(m_selection_finish, 1000)];
     }
     
     [m_player setRate:rate];
@@ -704,7 +715,10 @@ void MCAVFoundationPlayer::Start(double rate)
 
 void MCAVFoundationPlayer::Stop(void)
 {
-	[m_player pause];
+    if (m_offscreen)
+        CVDisplayLinkStop(m_display_link);
+    
+    [m_player pause];
     MCPlatformCallbackSendPlayerPaused(this);    
 }
 
@@ -810,10 +824,10 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
             
 			if (m_selection_start > m_selection_finish)
             {
-                m_selection_finish = m_selection_start;
+                m_selection_start = m_selection_finish;
             }
             
-            SelectionChanged();
+            //SelectionChanged();
         }
             break;
 		case kMCPlatformPlayerPropertyFinishTime:
@@ -825,7 +839,7 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
                 m_selection_finish = m_selection_start;
             }
             
-            SelectionChanged();
+            //SelectionChanged();
         }
             break;
 		case kMCPlatformPlayerPropertyPlayRate:
@@ -964,9 +978,11 @@ void MCAVFoundationPlayer::SetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
     NSArray *t_tracks;
     t_tracks = [[[m_player currentItem] asset] tracks];
     
+    // TODO: Fix error LiveCode-Community[20563:303] -[AVAssetTrack setEnabled:]: unrecognized selector sent to instance 0xb281f50
     AVPlayerItemTrack *t_playerItemTrack;
     t_playerItemTrack = [t_tracks objectAtIndex:p_index];
     [t_playerItemTrack setEnabled:*(bool *)p_value];
+   
     
 }
 
@@ -975,10 +991,14 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
     NSArray *t_tracks;
     t_tracks = [[[m_player currentItem] asset] tracks];
     
+    /*
     AVPlayerItemTrack *t_playerItemTrack;
     t_playerItemTrack = [t_tracks objectAtIndex:p_index];
     
-    AVAssetTrack *t_assetTrack = [t_playerItemTrack assetTrack];
+    // TODO: Fix error "LiveCode-Community[18526:303] -[AVAssetTrack assetTrack]: unrecognized selector sent to instance 0xa9d5aa0"
+    AVAssetTrack *t_assetTrack = t_playerItemTrack.assetTrack;
+    */
+    AVAssetTrack *t_assetTrack = [t_tracks objectAtIndex:p_index];
     
 	switch(p_property)
 	{
@@ -989,7 +1009,7 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
 		{
             NSString *t_mediaType;
             t_mediaType = [t_assetTrack mediaType];
-            *(char **)r_value = (char *)[t_mediaType cStringUsingEncoding: NSMacOSRomanStringEncoding];
+            *(char **)r_value = strdup([t_mediaType cStringUsingEncoding: NSMacOSRomanStringEncoding]);
 		}
             break;
 		case kMCPlatformPlayerTrackPropertyOffset:
@@ -1005,7 +1025,7 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
         }
 			break;
 		case kMCPlatformPlayerTrackPropertyEnabled:
-			*(bool *)r_value = [t_playerItemTrack isEnabled];
+			*(bool *)r_value = [t_assetTrack isEnabled];
 			break;
 	}
 }
