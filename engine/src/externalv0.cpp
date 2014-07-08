@@ -57,7 +57,8 @@ extern MCExecContext *MCECptr;
 #define xresAbort 3
 
 // IM-2014-03-06: [[ revBrowserCEF ]] Add revision number to v0 external interface
-#define EXTERNAL_INTERFACE_VERSION 1
+// SN-2014-07-08: [[ UnicodeExternalsV0 ]] Bump revision number after unicode update
+#define EXTERNAL_INTERFACE_VERSION 2
 
 typedef struct _Xternal
 {
@@ -1565,7 +1566,7 @@ static char *set_array_utf8_binary(const char *arg1, const char *arg2,
 
 ////////////////////////////////////////////////////////////////////////////////
 // IM-2014-03-06: [[ revBrowserCEF ]] Add externals extension to the callback list
-// SN-2014-07-07: [[ UnicodeExternalsV0 ]] Add externals extension to handle UTF8-encoded parameters
+// SN-2014-07-08: [[ UnicodeExternalsV0 ]] Add externals extension to handle UTF8-encoded parameters
 XCB MCcbs[] =
 {
 	// Externals interface V0 functions
