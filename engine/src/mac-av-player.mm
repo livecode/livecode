@@ -457,8 +457,7 @@ void MCAVFoundationPlayer::DoUpdateCurrentFrame(void *ctxt)
     MCAVFoundationPlayer *t_player;
 	t_player = (MCAVFoundationPlayer *)ctxt;
     
-    // IsPlaying() check is to make pause respond instantly when alwaysBuffer = true
-    // PM-2014-07-07: [[Bug 12746]] If the video file is not loaded, load the first frame (i.e do not return)
+    // PM-2014-07-07: [[Bug 12746]] Removed code to make player display the first frame when a new movie is loaded
     //if (t_player -> m_loaded && !t_player -> IsPlaying())
         //return;
     
@@ -496,7 +495,7 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 	}
 	else if (t_player -> m_pending_offscreen)
 	{
-        // Player should stop playing when switching from run to edit mode
+        // PM-2014-07-08: [[ Bug 12722 ]] Player should stop playing when switching from run to edit mode
         if (t_player -> IsPlaying())
             t_player -> Stop();
 
@@ -693,7 +692,7 @@ bool MCAVFoundationPlayer::IsPlaying(void)
 
 void MCAVFoundationPlayer::Start(double rate)
 {
-    if (m_offscreen)
+    if (m_offscreen && !CVDisplayLinkIsRunning(m_display_link))
         CVDisplayLinkStart(m_display_link);
     
     if (m_finished && !m_play_selection_only)
@@ -715,8 +714,7 @@ void MCAVFoundationPlayer::Start(double rate)
 
 void MCAVFoundationPlayer::Stop(void)
 {
-    if (m_offscreen)
-        CVDisplayLinkStop(m_display_link);
+    // Calling CVDisplayLinkStop here will cause problems, since Stop() is called when switching from run to edit mode and the player IsPlaying()
     
     [m_player pause];
     MCPlatformCallbackSendPlayerPaused(this);    
@@ -747,7 +745,6 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
         r_bitmap = t_bitmap;
         return;
     }
-    
     
 	// Now if we have a current frame, then composite at the appropriate size into
 	// the movie portion of the buffer.
@@ -827,7 +824,6 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
                 m_selection_start = m_selection_finish;
             }
             
-            //SelectionChanged();
         }
             break;
 		case kMCPlatformPlayerPropertyFinishTime:
@@ -839,7 +835,6 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
                 m_selection_finish = m_selection_start;
             }
             
-            //SelectionChanged();
         }
             break;
 		case kMCPlatformPlayerPropertyPlayRate:

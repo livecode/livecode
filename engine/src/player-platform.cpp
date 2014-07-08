@@ -3019,6 +3019,7 @@ void MCPlayer::handle_mdown(int p_which)
                 playpause(!ispaused());
             }
             m_grabbed_part = t_part;
+            layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartScrubBack));
             break;
             
         case kMCPlayerControllerPartScrubForward:
@@ -3035,6 +3036,7 @@ void MCPlayer::handle_mdown(int p_which)
                 playpause(!ispaused());
             }
             m_grabbed_part = t_part;
+            layer_redrawrect(getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartScrubForward));
             break;
             
         case kMCPlayerControllerPartSelectionStart:
