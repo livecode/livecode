@@ -140,14 +140,15 @@ void MCStack::realize()
 		
         GdkWindowAttr gdkwa;
         guint gdk_valid_wa;
-        gdk_valid_wa = GDK_WA_X|GDK_WA_Y;
+        gdk_valid_wa = GDK_WA_X|GDK_WA_Y|GDK_WA_VISUAL|GDK_WA_COLORMAP;
         gdkwa.x = t_rect.x;
         gdkwa.y = t_rect.y;
         gdkwa.width = t_rect.width;
         gdkwa.height = t_rect.height;
         gdkwa.wclass = GDK_INPUT_OUTPUT;
         gdkwa.window_type = GDK_WINDOW_TOPLEVEL;
-        gdkwa.visual = gdk_visual_get_best();
+        gdkwa.visual = screen->getvisual();
+        gdkwa.colormap = screen->getcmap();
         gdkwa.event_mask = GDK_ALL_EVENTS_MASK & ~GDK_POINTER_MOTION_HINT_MASK;
         
         window = gdk_window_new(screen->getroot(), &gdkwa, gdk_valid_wa);

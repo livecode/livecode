@@ -261,6 +261,11 @@ void gtk_main_do_event(GdkEvent*);
 
 void DnDClientEvent(GdkEvent* p_event);
 
+static bool motion_event_filter_fn(GdkEvent *p_event, void*)
+{
+    return p_event->type == GDK_MOTION_NOTIFY;
+}
+
 Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, Boolean& reset)
 {
     // Event object. Note that GDK requires these to be disposed of after handling
@@ -486,6 +491,14 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 
             case GDK_MOTION_NOTIFY:
             {
+                // Get the most up-to-date motion event
+                GdkEvent *t_new_event;
+                while (GetFilteredEvent(&motion_event_filter_fn, t_new_event, NULL))
+                {
+                    gdk_event_free(t_event);
+                    t_event = t_new_event;
+                }
+                
                 // Update the modifier keys flags
                 setmods(t_event->motion.state, 0, 0, False);
                 
