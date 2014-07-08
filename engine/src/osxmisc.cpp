@@ -266,6 +266,8 @@ IO_stat MCHcstak::macreadresources(void)
 
 bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPatternRef &r_pattern)
 {
+    return false;
+#if 0
 	bool t_success = true;
 	
 	static MCPatternRef s_patterns[8] = {nil, nil, nil, nil, nil, nil, nil, nil};
@@ -367,5 +369,7 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPattern
     CGColorSpaceRelease(t_colorspace);
 	
 	return t_success;
+#endif
 }
+
 

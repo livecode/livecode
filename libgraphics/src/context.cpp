@@ -2256,6 +2256,9 @@ void MCGContextFill(MCGContextRef self)
 	if (!MCGContextIsValid(self))
 		return;
 	
+    if (self -> path == nil)
+        return;
+    
 	bool t_success;
 	t_success = true;
 	
@@ -2278,9 +2281,12 @@ void MCGContextStroke(MCGContextRef self)
 	if (!MCGContextIsValid(self))
 		return;
 	
+    if (self -> path == nil)
+        return;
+    
 	bool t_success;
 	t_success = true;
-	
+    
 	if (t_success)
 		t_success = MCGContextStrokePath(self, self -> path);
 	
@@ -2301,6 +2307,9 @@ void MCGContextFillAndStroke(MCGContextRef self)
 	if (!MCGContextIsValid(self))
 		return;
 	
+    if (self -> path == nil)
+        return;
+    
 	bool t_success;
 	t_success = true;
 	

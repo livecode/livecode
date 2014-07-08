@@ -316,7 +316,7 @@ Boolean MCGraphic::mdown(uint2 which)
 		{
 			MCscreen->ungrabpointer();
 			state &= ~CS_CREATE_POINTS;
-			end();
+			end(true, false);
 		}
 		else
 			nrealpoints++;
@@ -355,14 +355,14 @@ Boolean MCGraphic::mdown(uint2 which)
 	return True;
 }
 
-Boolean MCGraphic::mup(uint2 which)
+Boolean MCGraphic::mup(uint2 which, bool p_release)
 {
 	if (state & CS_CREATE_POINTS && getstyleint(flags) == F_POLYGON)
 		return True;
 	if (!(state & CS_MFOCUSED))
 		return False;
 	if (state & CS_MENU_ATTACHED)
-		return MCObject::mup(which);
+		return MCObject::mup(which, p_release);
 	state &= ~(CS_MFOCUSED | CS_CREATE_POINTS);
 	if (state & CS_GRAB)
 	{
@@ -375,7 +375,7 @@ Boolean MCGraphic::mup(uint2 which)
 		case T_BROWSE:
 			if (m_edit_tool != NULL)
 				m_edit_tool->mup(mx, my, which);
-			if (MCU_point_in_rect(rect, mx, my))
+			if (!p_release && MCU_point_in_rect(rect, mx, my))
 				message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
 			else
 				message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
@@ -384,7 +384,7 @@ Boolean MCGraphic::mup(uint2 which)
 		case T_POINTER:
 			if (m_edit_tool != NULL)
 				m_edit_tool->mup(mx, my, which);
-			end();
+			end(true, p_release);
 			break;
 		case T_HELP:
 			help();
@@ -393,7 +393,7 @@ Boolean MCGraphic::mup(uint2 which)
 			return False;
 		}
 	else
-		if (MCU_point_in_rect(rect, mx, my))
+		if (!p_release && MCU_point_in_rect(rect, mx, my))
 			message_with_args(MCM_mouse_up, which);
 		else
 			message_with_args(MCM_mouse_release, which);
@@ -412,7 +412,7 @@ Boolean MCGraphic::doubleup(uint2 which)
 		MCscreen->ungrabpointer();
 		nrealpoints--;
 		state &= ~(CS_CREATE_POINTS | CS_MFOCUSED);
-		end(false);
+		end(false, false);
 		return True;
 	}
 	return MCControl::doubleup(which);

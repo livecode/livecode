@@ -34,7 +34,7 @@ public:
 	virtual const char *gettypestring();
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual Boolean mdown(uint2 which);
-	virtual Boolean mup(uint2 which);
+	virtual Boolean mup(uint2 which, bool p_release);
 #ifdef LEGACY_EXEC
 	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);

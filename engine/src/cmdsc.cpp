@@ -994,7 +994,7 @@ MCControl *MCCreate::getobject(MCObject *&parent)
 	case CT_SCROLLBAR:
 		return MCtemplatescrollbar;
 	case CT_PLAYER:
-		return MCtemplateplayer;
+		return (MCControl*)MCtemplateplayer;
 	case CT_IMAGE:
 		return MCtemplateimage;
 	case CT_GRAPHIC:

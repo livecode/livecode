@@ -975,10 +975,9 @@ enum MCPlatformPlayerProperty
 	kMCPlatformPlayerPropertyPlayRate,
 	kMCPlatformPlayerPropertyVolume,
     kMCPlatformPlayerPropertyMarkers,
-	
-	kMCPlatformPlayerPropertyShowBadge,
-	kMCPlatformPlayerPropertyShowController,
-	kMCPlatformPlayerPropertyShowSelection,
+    
+    kMCPlatformPlayerPropertyShowController,
+
 	kMCPlatformPlayerPropertyOnlyPlaySelection,
 	
 	kMCPlatformPlayerPropertyLoop,
@@ -1038,7 +1037,10 @@ void MCPlatformDetachPlayer(MCPlatformPlayerRef player);
 bool MCPlatformPlayerIsPlaying(MCPlatformPlayerRef player);
 
 void MCPlatformStepPlayer(MCPlatformPlayerRef player, int amount);
-void MCPlatformStartPlayer(MCPlatformPlayerRef player);
+void MCPlatformStartPlayer(MCPlatformPlayerRef player, double rate);
+//void MCPlatformFastPlayer(MCPlatformPlayerRef player, Boolean forward);
+//void MCPlatformFastForwardPlayer(MCPlatformPlayerRef player);
+//void MCPlatformFastBackPlayer(MCPlatformPlayerRef player);
 void MCPlatformStopPlayer(MCPlatformPlayerRef player);
 
 void MCPlatformLockPlayerBitmap(MCPlatformPlayerRef player, MCImageBitmap*& r_bitmap);

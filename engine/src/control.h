@@ -171,7 +171,7 @@ public:
 	void continuesize(int2 x, int2 y);
 	uint2 sizehandles();
 	void start(Boolean canclone);
-	void end(bool p_send_mouse_up = true);
+	void end(bool p_send_mouse_up, bool p_release);
 	void create(int2 x, int2 y);
 	Boolean moveable();
 	void newmessage();

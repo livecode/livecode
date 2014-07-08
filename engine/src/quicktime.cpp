@@ -1078,6 +1078,18 @@ void MCQTEffectEnd(void)
 
 #else
 
+#ifndef PLAYER_LEGACY_H
+bool MCQTInit(void)
+{
+    return false;
+}
+
+void MCQTGetVersion(MCStringRef& r_version)
+{
+    r_version = MCValueRetain(kMCEmptyString);
+}
+#endif
+
 void MCQTEffectsList(MCStringRef &r_effect_list)
 {
 	r_effect_list = MCValueRetain(kMCEmptyString);
@@ -1144,5 +1156,9 @@ void MCQTRecordDialog()
 {
 }
 
+void MCQTGetVersion(MCStringRef& r_version)
+{
+	r_version = MCValueRetain(MCSTR("0.0"));  //indicates that no QT installed
+}
 #endif
 

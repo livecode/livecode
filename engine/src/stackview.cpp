@@ -940,9 +940,12 @@ void MCStack::view_setbackingscale(MCGFloat p_scale)
 	
 	m_view_backing_scale = p_scale;
 
-	// reset tilecache if the backing scale has changed
+	// IM-2014-06-30: [[ Bug 12715 ]] backing scale changes occur when redrawing the whole stack,
+	// so we need to update the tilecache here before continuing to draw.
+	
+	view_flushtilecache();
 	view_updatetilecacheviewport();
-	view_dirty_all();
+	view_updatetilecache();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

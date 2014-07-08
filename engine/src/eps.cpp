@@ -144,7 +144,7 @@ Boolean MCEPS::mdown(uint2 which)
 	return True;
 }
 
-Boolean MCEPS::mup(uint2 which)
+Boolean MCEPS::mup(uint2 which, bool p_release)
 {
 	if (!(state & CS_MFOCUSED))
 		return False;
@@ -155,11 +155,13 @@ Boolean MCEPS::mup(uint2 which)
 		switch (getstack()->gettool(this))
 		{
 		case T_BROWSE:
-			if (MCU_point_in_rect(rect, mx, my))
-				message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
+			if (!p_release && MCU_point_in_rect(rect, mx, my))
+                message_with_valueref_args(MCM_mouse_up, MCSTR("1"));
+            else
+                message_with_valueref_args(MCM_mouse_release, MCSTR("1"));
 			break;
 		case T_POINTER:
-			end();
+			end(true, p_release);
 			break;
 		case T_HELP:
 			help();
@@ -170,8 +172,10 @@ Boolean MCEPS::mup(uint2 which)
 		break;
 	case Button2:
 	case Button3:
-		if (MCU_point_in_rect(rect, mx, my))
+		if (!p_release && MCU_point_in_rect(rect, mx, my))
 			message_with_args(MCM_mouse_up, which);
+        else
+            message_with_args(MCM_mouse_release, which);
 		break;
 	}
 	return True;

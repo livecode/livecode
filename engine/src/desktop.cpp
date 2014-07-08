@@ -394,7 +394,7 @@ void MCPlatformHandleMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, ui
 		MCLog("MouseUp(%p, %d, %d)", t_target, p_button, p_count);
 		
 		if (p_count != 1)
-			t_target -> mup(p_button + 1);
+			t_target -> mup(p_button + 1, false);
 		else
 			t_target -> doubleup(p_button + 1);
 	}
@@ -432,22 +432,30 @@ void MCPlatformHandleMouseRelease(MCPlatformWindowRef p_window, uint32_t p_butto
 		
 		// FG-2013-10-09 [[ Bugfix 11208 ]]
 		// CS_NO_MESSAGES only applies to the target and not the controls it contains
-		// so the mouse up message (on mouseUp) sets sent when it isn't desired
+		// so the mouse up message (on mouseUp) gets sent when it isn't desired
 		// Hopefully nobody depends on the old behaviour...
+        
+        // FG-2014-06-27 [[ Bugfix 12705 ]]
+        // Turns out that sending a release message directly to the stack won't
+        // work because it will never get delivered to the control with mouse
+        // focus. Instead, the mup handler has been changed to accept a second
+        // parameter that, when true, indicates that this is a release event.
 		
 		MCObject *t_target;
 		t_target = t_menu != nil ? t_menu : MCclickstackptr;
 		
-		bool old_lock = MClockmessages;
-		MClockmessages = true;
-		t_target -> mup(p_button + 1);
-		MClockmessages = old_lock;
-		
-		MCLog("MouseRelease(%p, %d)", t_target, p_button);
-		
         // MW-2014-06-11: [[ Bug 12339 ]] Only send a mouseRelease message if this wasn't the result of a popup menu.
         if (!p_was_menu)
-            t_target -> message_with_args(MCM_mouse_release, p_button + 1);
+            t_target -> mup(p_button + 1, true);
+        else
+        {
+            bool old_lock = MClockmessages;
+            MClockmessages = true;
+            t_target -> mup(p_button + 1, true);
+            MClockmessages = old_lock;
+        }
+        
+		MCLog("MouseRelease(%p, %d)", t_target, p_button);
 	}
 }
 
@@ -1131,8 +1139,9 @@ void MCPlatformHandlePlayerCurrentTimeChanged(MCPlatformPlayerRef p_player)
     MCParameter *t_param;
     t_param = new MCParameter();
     t_param -> setn_argument(t_player -> getmoviecurtime());
+    
+    t_player -> currenttimechanged(t_param);
 
-    t_player -> timer(MCM_current_time_changed, t_param);
 }
 
 void MCPlatformHandlePlayerSelectionChanged(MCPlatformPlayerRef p_player)
@@ -1174,6 +1183,7 @@ void MCPlatformHandlePlayerStopped(MCPlatformPlayerRef p_player)
     if (t_player == nil)
         return;
     
+    t_player -> layer_redrawall();
     t_player -> timer(MCM_play_stopped, nil);
 }
 

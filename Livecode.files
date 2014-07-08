@@ -545,6 +545,10 @@ engine/src/pathprocess.cpp
 engine/src/pickle.cpp
 engine/src/player.cpp
 engine/src/player.h
+engine/src/player-legacy.cpp
+engine/src/player-legacy.h
+engine/src/player-platform.cpp
+engine/src/player-platform.h
 engine/src/ports.cpp
 engine/src/prefix.cpp
 engine/src/prefix.h

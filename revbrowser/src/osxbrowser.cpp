@@ -425,7 +425,13 @@ TAltBrowser::TAltBrowser()
 	
 	m_lock_update = false;
 	
-	::SetRect(&m_bounds, 0, 0, 0, 0);
+    // MM-2014-07-01: SetRect no longer part of 10.8 SDK
+	//::SetRect(&m_bounds, 0, 0, 0, 0);
+    m_bounds . left = 0;
+    m_bounds . top = 0;
+    m_bounds . right = 0;
+    m_bounds . bottom = 0;
+
 }
 
 TAltBrowser::~TAltBrowser()
@@ -966,7 +972,13 @@ void TAltBrowser::GetRect(int& r_left, int& r_top, int& r_right, int& r_bottom)
 
 void TAltBrowser::SetRect(int p_left, int p_top, int p_right, int p_bottom)
 {
-	::SetRect(&m_bounds, p_left, p_top, p_right, p_bottom);
+    // MM-2014-07-01: SetRect no longer part of 10.8 SDK
+	//::SetRect(&m_bounds, p_left, p_top, p_right, p_bottom);
+    m_bounds . left = p_left;
+    m_bounds . top = p_top;
+    m_bounds . right = p_right;
+    m_bounds . bottom = p_bottom;
+
 	[m_web_browser setFrame: RectToNSRect([m_web_browser window], m_bounds)];
 }
 

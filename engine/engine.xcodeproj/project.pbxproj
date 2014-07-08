@@ -21,6 +21,16 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DC1249418FC422300C2FEF3 /* quicktimestubs.mac.cpp */; };
+		1DDE08D11945DD32000E3705 /* mac-qt-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D01945DD31000E3705 /* mac-qt-player.mm */; };
+		1DDE08D31945DD43000E3705 /* mac-av-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D21945DD43000E3705 /* mac-av-player.mm */; };
+		1DDE08E71945F036000E3705 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; };
+		1DDE08E91945F0DE000E3705 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E81945F0DE000E3705 /* CoreMedia.framework */; };
+		1DE9AF8E1963197C008529DC /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E81945F0DE000E3705 /* CoreMedia.framework */; };
+		1DE9AF8F19631984008529DC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; };
+		1DE9AF901963199B008529DC /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E81945F0DE000E3705 /* CoreMedia.framework */; };
+		1DE9AF91196319A2008529DC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; };
+		1DED772C19129F27000FFFE3 /* button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E3F0B8096FD00200116 /* button.cpp */; };
 		3C03ED921134205A009DE406 /* socket_resolve.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C03ED911134205A009DE406 /* socket_resolve.cpp */; };
 		3C0A3CC410BAF6120074D630 /* iquantization.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C0A3CC310BAF6120074D630 /* iquantization.cpp */; };
 		4C13880F18A12E6600EFF7B6 /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DBF58631801CA57009CAB2E /* libopenssl.a */; };
@@ -133,7 +143,6 @@
 		4D1F9D76171C682E0091C6CB /* pathgray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD27A820D5B36CE0000CC15 /* pathgray.cpp */; };
 		4D1F9D77171C682E0091C6CB /* pathprocess.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD27A840D5B36CE0000CC15 /* pathprocess.cpp */; };
 		4D1F9D78171C682E0091C6CB /* pickle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BD9B0CCF74C800D74FDB /* pickle.cpp */; };
-		4D1F9D79171C682E0091C6CB /* player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E5A0B8096FD00200116 /* player.cpp */; };
 		4D1F9D7A171C682E0091C6CB /* printer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D28FDA80C8C9CDA00B7A342 /* printer.cpp */; };
 		4D1F9D7B171C682E0091C6CB /* property.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E630B8096FD00200116 /* property.cpp */; };
 		4D1F9D7D171C682E0091C6CB /* regex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E720B8096FD00200116 /* regex.cpp */; };
@@ -387,7 +396,6 @@
 		4DEE2A8E0FDE42710009423C /* answer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E730B8096FD00200116 /* answer.cpp */; };
 		4DEE2A8F0FDE42710009423C /* ask.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E5C0B8096FD00200116 /* ask.cpp */; };
 		4DEE2A900FDE42710009423C /* block.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E6B0B8096FD00200116 /* block.cpp */; };
-		4DEE2A910FDE42710009423C /* button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E3F0B8096FD00200116 /* button.cpp */; };
 		4DEE2A920FDE42710009423C /* buttondraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E520B8096FD00200116 /* buttondraw.cpp */; };
 		4DEE2A930FDE42710009423C /* card.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E7B0B8096FD00200116 /* card.cpp */; };
 		4DEE2A940FDE42710009423C /* cardlst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E7F0B8096FD00200116 /* cardlst.cpp */; };
@@ -465,7 +473,6 @@
 		4DEE2AF00FDE42710009423C /* pathgray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD27A820D5B36CE0000CC15 /* pathgray.cpp */; };
 		4DEE2AF10FDE42710009423C /* pathprocess.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD27A840D5B36CE0000CC15 /* pathprocess.cpp */; };
 		4DEE2AF20FDE42710009423C /* pickle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BD9B0CCF74C800D74FDB /* pickle.cpp */; };
-		4DEE2AF30FDE42710009423C /* player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E5A0B8096FD00200116 /* player.cpp */; };
 		4DEE2AF40FDE42710009423C /* printer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D28FDA80C8C9CDA00B7A342 /* printer.cpp */; };
 		4DEE2AF50FDE42710009423C /* property.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E630B8096FD00200116 /* property.cpp */; };
 		4DEE2AF70FDE42710009423C /* regex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E720B8096FD00200116 /* regex.cpp */; };
@@ -523,9 +530,6 @@
 		72D6032818476FC90022379C /* libiculx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC518351E7400858545 /* libiculx.a */; };
 		72D6032918476FC90022379C /* libicutu.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC618351E7400858545 /* libicutu.a */; };
 		72D6032A18476FC90022379C /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 721CAAC718351E7400858545 /* libicuuc.a */; };
-		72D6038318477E560022379C /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 72D6038218477E560022379C /* QuartzCore.framework */; };
-		72D6038518477E5D0022379C /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 72D6038418477E5C0022379C /* QuartzCore.framework */; };
-		72D6038618477E640022379C /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 72D6038418477E5C0022379C /* QuartzCore.framework */; };
 		7635171D182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
 		7635171E182A8D3D00C31FA2 /* image_rep_densitymapped.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */; };
 		763FF4E918522CBE00B45FBA /* image_rep_resampled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 763FF4E718522CB200B45FBA /* image_rep_resampled.cpp */; };
@@ -554,9 +558,8 @@
 		BE168E6E19598EAD00B957D0 /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE168E6D19598EAD00B957D0 /* region.cpp */; };
 		BE174F95195D76BC0026EEAF /* region.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE168E6D19598EAD00B957D0 /* region.cpp */; };
 		BE174F96195D76E00026EEAF /* coretextfonts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEBC51D81953505400215C85 /* coretextfonts.cpp */; };
-		BE20AE01195B245B00850531 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE20AE00195B244800850531 /* AudioToolbox.framework */; };
-		BE20AE02195B245C00850531 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE20AE00195B244800850531 /* AudioToolbox.framework */; };
-		BE20AE03195B245D00850531 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE20AE00195B244800850531 /* AudioToolbox.framework */; };
+		BE1AFD801966BEBC001A4090 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE1AFD7F1966BEBC001A4090 /* IOKit.framework */; };
+		BE1AFD821966BF5C001A4090 /* player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED77201912652B000FFFE3 /* player.cpp */; };
 		BE20AE05195B24B300850531 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369216195881B700386D30 /* quicktimestubs.mac.cpp */; };
 		BE369208195880F300386D30 /* desktop-ans.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369200195880E600386D30 /* desktop-ans.cpp */; };
 		BE369209195880F300386D30 /* desktop-dc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369201195880E600386D30 /* desktop-dc.cpp */; };
@@ -565,6 +568,11 @@
 		BE36920C195880F300386D30 /* desktop-pasteboard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369205195880E700386D30 /* desktop-pasteboard.cpp */; };
 		BE36920D195880F300386D30 /* desktop-stack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369206195880E800386D30 /* desktop-stack.cpp */; };
 		BE36920E195880F300386D30 /* desktop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE369207195880E800386D30 /* desktop.cpp */; };
+		BE64444119656F7300C2092C /* player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED77201912652B000FFFE3 /* player.cpp */; };
+		BE6444471965B8A700C2092C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE6444461965B8A700C2092C /* AudioToolbox.framework */; };
+		BE6444481965B8BE00C2092C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE6444461965B8A700C2092C /* AudioToolbox.framework */; };
+		BE6444491965B8CB00C2092C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE6444461965B8A700C2092C /* AudioToolbox.framework */; };
+		BE64444A1965B8D200C2092C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE6444461965B8A700C2092C /* AudioToolbox.framework */; };
 		BEA6F33419472695000D6A37 /* osxflst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880160B80A4F800200116 /* osxflst.cpp */; };
 		BEBC51DA195350C300215C85 /* coretextfonts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEBC51D81953505400215C85 /* coretextfonts.cpp */; };
 		BEBC51DB195350C300215C85 /* mac-abort.mm in Sources */ = {isa = PBXBuildFile; fileRef = BEDE3F9119534E290050F19B /* mac-abort.mm */; };
@@ -587,6 +595,8 @@
 		BEBC51F21953510200215C85 /* platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEBC51EE195350F700215C85 /* platform.cpp */; };
 		BEBC51F51953513A00215C85 /* quicktime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEBC51F31953513A00215C85 /* quicktime.cpp */; };
 		BEBC51F61953513A00215C85 /* quicktime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEBC51F31953513A00215C85 /* quicktime.cpp */; };
+		BEEC4C67196C0DF3000DA7F5 /* mac-av-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = BEEC4C64196C0DF3000DA7F5 /* mac-av-player.mm */; };
+		BEEC4C68196C0DF3000DA7F5 /* mac-qt-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = BEEC4C66196C0DF3000DA7F5 /* mac-qt-player.mm */; };
 		BEF6186019470E1E00C42C57 /* exec-engine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE3B0F115888AB8008EB6B5 /* exec-engine.cpp */; };
 		BEF6186119470E6100C42C57 /* exec-strings-chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76FA930917FC72FB003DB770 /* exec-strings-chunk.cpp */; };
 		BEF6186219470EA700C42C57 /* exec-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE3B0EF15888AB8008EB6B5 /* exec-array.cpp */; };
@@ -634,7 +644,6 @@
 		BEF61891194718A400C42C57 /* exec-interface-stack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E875FD8C17293B4F005A69F4 /* exec-interface-stack.cpp */; };
 		BEF61892194718A400C42C57 /* exec-interface-vclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E875FD8D17293B4F005A69F4 /* exec-interface-vclip.cpp */; };
 		BEF61893194718C400C42C57 /* opensslsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E3B0B8096FD00200116 /* opensslsocket.cpp */; };
-		BEF6189519471C6A00C42C57 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BEF6189419471C6000C42C57 /* IOKit.framework */; };
 		BEF6189619471C9700C42C57 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8BED0111B959F500DED42A /* Security.framework */; };
 		BEF618A119471D4000C42C57 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DB3856E1714422200D3F102 /* Carbon.framework */; };
 		BEF618A219471D6500C42C57 /* sysosxrandom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 76EF31A9181E801800FAC195 /* sysosxrandom.cpp */; };
@@ -1028,6 +1037,18 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1DC1249418FC422300C2FEF3 /* quicktimestubs.mac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = quicktimestubs.mac.cpp; path = src/quicktimestubs.mac.cpp; sourceTree = "<group>"; };
+		1DDE08D01945DD31000E3705 /* mac-qt-player.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-qt-player.mm"; path = "src/mac-qt-player.mm"; sourceTree = "<group>"; };
+		1DDE08D21945DD43000E3705 /* mac-av-player.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-av-player.mm"; path = "src/mac-av-player.mm"; sourceTree = "<group>"; };
+		1DDE08E61945F036000E3705 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		1DDE08E81945F0DE000E3705 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		1DDE08EA1945F10A000E3705 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
+		1DED771C19124F24000FFFE3 /* player-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "player-legacy.cpp"; path = "src/player-legacy.cpp"; sourceTree = "<group>"; };
+		1DED771D19124F24000FFFE3 /* player-legacy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "player-legacy.h"; path = "src/player-legacy.h"; sourceTree = "<group>"; };
+		1DED771E19126451000FFFE3 /* player-platform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "player-platform.cpp"; path = "src/player-platform.cpp"; sourceTree = "<group>"; };
+		1DED771F19126451000FFFE3 /* player-platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "player-platform.h"; path = "src/player-platform.h"; sourceTree = "<group>"; };
+		1DED77201912652B000FFFE3 /* player.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = player.cpp; path = src/player.cpp; sourceTree = "<group>"; };
+		1DED77211912652B000FFFE3 /* player.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = player.h; path = src/player.h; sourceTree = "<group>"; };
 		3C03ED911134205A009DE406 /* socket_resolve.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = socket_resolve.cpp; path = src/socket_resolve.cpp; sourceTree = "<group>"; };
 		3C0A3CC310BAF6120074D630 /* iquantization.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = iquantization.cpp; path = src/iquantization.cpp; sourceTree = "<group>"; };
 		3C0A3CC510BAF63B0074D630 /* iquantization.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = iquantization.h; path = src/iquantization.h; sourceTree = "<group>"; };
@@ -1136,7 +1157,6 @@
 		4D587DEF0B8096E600200116 /* control.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = control.h; path = src/control.h; sourceTree = "<group>"; };
 		4D587DF00B8096E600200116 /* font.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = font.h; path = src/font.h; sourceTree = "<group>"; };
 		4D587DF10B8096E600200116 /* keywords.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = keywords.h; path = src/keywords.h; sourceTree = "<group>"; };
-		4D587DF20B8096E600200116 /* player.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = player.h; path = src/player.h; sourceTree = "<group>"; };
 		4D587DF30B8096E600200116 /* path.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = path.h; path = src/path.h; sourceTree = "<group>"; };
 		4D587DF40B8096E600200116 /* param.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = param.h; path = src/param.h; sourceTree = "<group>"; };
 		4D587DF50B8096E600200116 /* ide.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ide.h; path = src/ide.h; sourceTree = "<group>"; };
@@ -1224,7 +1244,6 @@
 		4D587E560B8096FD00200116 /* ijpg.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ijpg.cpp; path = src/ijpg.cpp; sourceTree = "<group>"; };
 		4D587E570B8096FD00200116 /* iimport.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = iimport.cpp; path = src/iimport.cpp; sourceTree = "<group>"; };
 		4D587E580B8096FD00200116 /* ipng.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ipng.cpp; path = src/ipng.cpp; sourceTree = "<group>"; };
-		4D587E5A0B8096FD00200116 /* player.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = player.cpp; path = src/player.cpp; sourceTree = "<group>"; };
 		4D587E5B0B8096FD00200116 /* param.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = param.cpp; path = src/param.cpp; sourceTree = "<group>"; };
 		4D587E5C0B8096FD00200116 /* ask.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ask.cpp; path = src/ask.cpp; sourceTree = "<group>"; };
 		4D587E5D0B8096FD00200116 /* ide.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ide.cpp; path = src/ide.cpp; sourceTree = "<group>"; };
@@ -1611,8 +1630,6 @@
 		72C22E991945E48E00B18E8D /* sysw32random.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysw32random.cpp; path = src/sysw32random.cpp; sourceTree = "<group>"; };
 		72C28AF819112FDE007F2AA0 /* segment.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = segment.h; path = src/segment.h; sourceTree = "<group>"; };
 		72C28AF91911300D007F2AA0 /* segment.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = segment.cpp; path = src/segment.cpp; sourceTree = "<group>"; };
-		72D6038218477E560022379C /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/QuartzCore.framework; sourceTree = DEVELOPER_DIR; };
-		72D6038418477E5C0022379C /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		7635171B182A8D1F00C31FA2 /* image_rep_densitymapped.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_densitymapped.cpp; path = src/image_rep_densitymapped.cpp; sourceTree = "<group>"; };
 		763FF4E718522CB200B45FBA /* image_rep_resampled.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_resampled.cpp; path = src/image_rep_resampled.cpp; sourceTree = "<group>"; };
 		766E3292180EE4E000CF7FCF /* graphics_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = graphics_util.h; path = src/graphics_util.h; sourceTree = "<group>"; };
@@ -1718,7 +1735,7 @@
 		A71F80610F4F17F9003012FD /* StandaloneDoc.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = StandaloneDoc.icns; path = rsrc/StandaloneDoc.icns; sourceTree = "<group>"; };
 		BE0986A2194874DD0065CEEA /* revsecurity.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = revsecurity.dylib; path = ../_build/mac/Debug/revsecurity.dylib; sourceTree = "<group>"; };
 		BE168E6D19598EAD00B957D0 /* region.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = region.cpp; path = src/region.cpp; sourceTree = "<group>"; };
-		BE20AE00195B244800850531 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = ../../../../../System/Library/Frameworks/AudioToolbox.framework; sourceTree = "<group>"; };
+		BE1AFD7F1966BEBC001A4090 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		BE2424351953536F00982E53 /* IInAppBillingService.aidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = IInAppBillingService.aidl; path = android/vending/billing/IInAppBillingService.aidl; sourceTree = "<group>"; };
 		BE2424361953536F00982E53 /* IMarketBillingService.aidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = IMarketBillingService.aidl; path = android/vending/billing/IMarketBillingService.aidl; sourceTree = "<group>"; };
 		BE2424371953536F00982E53 /* IMarketBillingService.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = IMarketBillingService.java; path = android/vending/billing/IMarketBillingService.java; sourceTree = "<group>"; };
@@ -1760,6 +1777,8 @@
 		BE369207195880E800386D30 /* desktop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = desktop.cpp; path = src/desktop.cpp; sourceTree = "<group>"; };
 		BE369216195881B700386D30 /* quicktimestubs.mac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = quicktimestubs.mac.cpp; path = src/quicktimestubs.mac.cpp; sourceTree = "<group>"; };
 		BE4D6171189A5495002DA467 /* AttachmentProvider.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = AttachmentProvider.java; sourceTree = "<group>"; };
+		BE6444421965AE7100C2092C /* player-interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "player-interface.h"; path = "src/player-interface.h"; sourceTree = "<group>"; };
+		BE6444461965B8A700C2092C /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		BEBC51D81953505400215C85 /* coretextfonts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = coretextfonts.cpp; path = src/coretextfonts.cpp; sourceTree = "<group>"; };
 		BEBC51EB195350F700215C85 /* platform-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "platform-internal.h"; path = "src/platform-internal.h"; sourceTree = "<group>"; };
 		BEBC51EC195350F700215C85 /* platform-surface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "platform-surface.cpp"; path = "src/platform-surface.cpp"; sourceTree = "<group>"; };
@@ -1784,9 +1803,11 @@
 		BEDE3F9E19534E290050F19B /* mac-sound.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-sound.mm"; path = "src/mac-sound.mm"; sourceTree = "<group>"; };
 		BEDE3F9F19534E290050F19B /* mac-surface.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-surface.mm"; path = "src/mac-surface.mm"; sourceTree = "<group>"; };
 		BEDE3FA019534E290050F19B /* mac-window.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-window.mm"; path = "src/mac-window.mm"; sourceTree = "<group>"; };
+		BEEC4C64196C0DF3000DA7F5 /* mac-av-player.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-av-player.mm"; path = "src/mac-av-player.mm"; sourceTree = "<group>"; };
+		BEEC4C65196C0DF3000DA7F5 /* mac-player.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "mac-player.h"; path = "src/mac-player.h"; sourceTree = "<group>"; };
+		BEEC4C66196C0DF3000DA7F5 /* mac-qt-player.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "mac-qt-player.mm"; path = "src/mac-qt-player.mm"; sourceTree = "<group>"; };
 		BEF2C0EF17BA493A00E96459 /* socket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = socket.h; path = src/socket.h; sourceTree = "<group>"; };
 		BEF3110417C217C30073D70F /* dskw32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskw32.cpp; path = src/dskw32.cpp; sourceTree = "<group>"; };
-		BEF6189419471C6000C42C57 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		BEF618A71947205D00C42C57 /* srvtheme.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvtheme.cpp; path = src/srvtheme.cpp; sourceTree = "<group>"; };
 		BEFE81D317B2B32800C9D14F /* dskmac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskmac.cpp; path = src/dskmac.cpp; sourceTree = "<group>"; };
 		E8189EB515D17E8000194F25 /* exec-logic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-logic.cpp"; path = "src/exec-logic.cpp"; sourceTree = "<group>"; };
@@ -1854,8 +1875,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BE6444491965B8CB00C2092C /* AudioToolbox.framework in Frameworks */,
 				72876DE718CF32D700C20405 /* libskia.a in Frameworks */,
-				72D6038618477E640022379C /* QuartzCore.framework in Frameworks */,
 				72D6032418476FC90022379C /* libicudata.a in Frameworks */,
 				72D6032518476FC90022379C /* libicui18n.a in Frameworks */,
 				72D6032618476FC90022379C /* libicuio.a in Frameworks */,
@@ -1865,6 +1886,8 @@
 				72D6032A18476FC90022379C /* libicuuc.a in Frameworks */,
 				76EF3165181E6BF700FAC195 /* libgraphics.a in Frameworks */,
 				4D56632017D9CD1E00C4A0B1 /* libfoundation.a in Frameworks */,
+				1DE9AF91196319A2008529DC /* AVFoundation.framework in Frameworks */,
+				1DE9AF901963199B008529DC /* CoreMedia.framework in Frameworks */,
 				4D2A57C41198634300135143 /* libkernel.a in Frameworks */,
 				4D1F9C53171C662D0091C6CB /* libsecurity-community.a in Frameworks */,
 				4DB384BE1714420A00D3F102 /* libz.a in Frameworks */,
@@ -1884,7 +1907,6 @@
 				4D221FDD171D65AA00E7E557 /* libcups.dylib in Frameworks */,
 				4D221FDE171D65AA00E7E557 /* libcurl.dylib in Frameworks */,
 				4D221FDF171D65AA00E7E557 /* libssl.dylib in Frameworks */,
-				BE20AE03195B245D00850531 /* AudioToolbox.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1892,7 +1914,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				72D6038318477E560022379C /* QuartzCore.framework in Frameworks */,
+				BE6444481965B8BE00C2092C /* AudioToolbox.framework in Frameworks */,
 				721CAAC818351E7400858545 /* libicudata.a in Frameworks */,
 				721CAAC918351E7400858545 /* libicuio.a in Frameworks */,
 				721CAACA18351E7400858545 /* libicule.a in Frameworks */,
@@ -1901,6 +1923,8 @@
 				721CAACD18351E7400858545 /* libicuuc.a in Frameworks */,
 				721CAAC118351E1800858545 /* libicui18n.a in Frameworks */,
 				4D7FA7BF1594E10500EEF440 /* libfoundation.a in Frameworks */,
+				1DDE08E91945F0DE000E3705 /* CoreMedia.framework in Frameworks */,
+				1DDE08E71945F036000E3705 /* AVFoundation.framework in Frameworks */,
 				4DEE2C7A0FDE52770009423C /* libkernel.a in Frameworks */,
 				4D221ACB171D59ED00E7E557 /* libkernel-development.a in Frameworks */,
 				4D1F9C4E171C65CE0091C6CB /* libsecurity-community.a in Frameworks */,
@@ -1923,7 +1947,6 @@
 				4D221A74171D577E00E7E557 /* libcups.dylib in Frameworks */,
 				4D221A75171D577E00E7E557 /* libcurl.dylib in Frameworks */,
 				4D221A76171D577E00E7E557 /* libssl.dylib in Frameworks */,
-				BE20AE01195B245B00850531 /* AudioToolbox.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1931,9 +1954,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BE1AFD801966BEBC001A4090 /* IOKit.framework in Frameworks */,
+				BE64444A1965B8D200C2092C /* AudioToolbox.framework in Frameworks */,
 				BEF618A119471D4000C42C57 /* Carbon.framework in Frameworks */,
 				BEF6189619471C9700C42C57 /* Security.framework in Frameworks */,
-				BEF6189519471C6A00C42C57 /* IOKit.framework in Frameworks */,
 				4DB846CA192B558100771914 /* libicudata.a in Frameworks */,
 				4DB846CB192B558100771914 /* libicuio.a in Frameworks */,
 				4DB846CC192B558100771914 /* libicule.a in Frameworks */,
@@ -1963,8 +1987,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BE6444471965B8A700C2092C /* AudioToolbox.framework in Frameworks */,
 				72876DE618CF32C400C20405 /* libskia.a in Frameworks */,
-				72D6038518477E5D0022379C /* QuartzCore.framework in Frameworks */,
 				7278F63A1843A2B100E35A65 /* libicudata.a in Frameworks */,
 				7278F63B1843A2B100E35A65 /* libicui18n.a in Frameworks */,
 				7278F63C1843A2B100E35A65 /* libicuio.a in Frameworks */,
@@ -1974,6 +1998,8 @@
 				7278F6401843A2B100E35A65 /* libicuuc.a in Frameworks */,
 				76EF3163181E6BD900FAC195 /* libgraphics.a in Frameworks */,
 				4D6C28B61647DC4F007C96B7 /* libfoundation.a in Frameworks */,
+				1DE9AF8F19631984008529DC /* AVFoundation.framework in Frameworks */,
+				1DE9AF8E1963197C008529DC /* CoreMedia.framework in Frameworks */,
 				4DEE2CA20FDE53620009423C /* libkernel.a in Frameworks */,
 				4D221B00171D5F5F00E7E557 /* libkernel-standalone.a in Frameworks */,
 				4D1F9E51171C69940091C6CB /* libsecurity-community.a in Frameworks */,
@@ -1994,7 +2020,6 @@
 				4D221A70171D577400E7E557 /* libcups.dylib in Frameworks */,
 				4D221A71171D577400E7E557 /* libcurl.dylib in Frameworks */,
 				4D221A72171D577400E7E557 /* libssl.dylib in Frameworks */,
-				BE20AE02195B245C00850531 /* AudioToolbox.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2023,8 +2048,8 @@
 		4D587D920B80944100200116 = {
 			isa = PBXGroup;
 			children = (
+				BE1AFD7F1966BEBC001A4090 /* IOKit.framework */,
 				BE0986A2194874DD0065CEEA /* revsecurity.dylib */,
-				BEF6189419471C6000C42C57 /* IOKit.framework */,
 				721CAAC218351E7400858545 /* libicudata.a */,
 				721CAAC318351E7400858545 /* libicuio.a */,
 				721CAAC418351E7400858545 /* libicule.a */,
@@ -2119,9 +2144,10 @@
 		4D5880AA0B80BDFE00200116 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				BE20AE00195B244800850531 /* AudioToolbox.framework */,
-				72D6038418477E5C0022379C /* QuartzCore.framework */,
-				72D6038218477E560022379C /* QuartzCore.framework */,
+				BE6444461965B8A700C2092C /* AudioToolbox.framework */,
+				1DDE08EA1945F10A000E3705 /* QTKit.framework */,
+				1DDE08E81945F0DE000E3705 /* CoreMedia.framework */,
+				1DDE08E61945F036000E3705 /* AVFoundation.framework */,
 				4D982B1813C1CDD20066119A /* ApplicationServices.framework */,
 				4D8B47960BE7B3240046CD2F /* Cocoa.framework */,
 				4DFD495A13BA2BC0008DB91F /* CoreFoundation.framework */,
@@ -2237,6 +2263,9 @@
 		4D6F92ED12AA5C7800026A72 /* Desktop - Mac */ = {
 			isa = PBXGroup;
 			children = (
+				BEEC4C64196C0DF3000DA7F5 /* mac-av-player.mm */,
+				BEEC4C65196C0DF3000DA7F5 /* mac-player.h */,
+				BEEC4C66196C0DF3000DA7F5 /* mac-qt-player.mm */,
 				BEBC51D81953505400215C85 /* coretextfonts.cpp */,
 				BEDE3F9119534E290050F19B /* mac-abort.mm */,
 				BEDE3F9219534E290050F19B /* mac-color.mm */,
@@ -3090,12 +3119,19 @@
 		E8A49109170F192000769C7A /* Core - Objects */ = {
 			isa = PBXGroup;
 			children = (
+				1DED771E19126451000FFFE3 /* player-platform.cpp */,
+				1DED771F19126451000FFFE3 /* player-platform.h */,
+				1DED771C19124F24000FFFE3 /* player-legacy.cpp */,
+				1DED771D19124F24000FFFE3 /* player-legacy.h */,
 				4D587E870B8096FD00200116 /* aclip.cpp */,
 				4D587DDB0B8096E600200116 /* aclip.h */,
 				4D587E6B0B8096FD00200116 /* block.cpp */,
 				4D587E3F0B8096FD00200116 /* button.cpp */,
 				4D587E160B8096E600200116 /* button.h */,
 				4D587E520B8096FD00200116 /* buttondraw.cpp */,
+				1DED77201912652B000FFFE3 /* player.cpp */,
+				1DED77211912652B000FFFE3 /* player.h */,
+				BE6444421965AE7100C2092C /* player-interface.h */,
 				4D587E7B0B8096FD00200116 /* card.cpp */,
 				4D587DFB0B8096E600200116 /* card.h */,
 				4D587E7F0B8096FD00200116 /* cardlst.cpp */,
@@ -3171,8 +3207,6 @@
 				4DCA5E6D0EB879AD005197A1 /* parentscript.cpp */,
 				4DFECF0213CEE55B00288995 /* parentscript.h */,
 				4D61BD9B0CCF74C800D74FDB /* pickle.cpp */,
-				4D587E5A0B8096FD00200116 /* player.cpp */,
-				4D587DF20B8096E600200116 /* player.h */,
 				4D587E790B8096FD00200116 /* props.cpp */,
 				4DC999C00D3BBA29003942CC /* rtf.cpp */,
 				4D587E010B8096E600200116 /* rtf.h */,
@@ -3876,6 +3910,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BE1AFD821966BF5C001A4090 /* player.cpp in Sources */,
 				BE174F96195D76E00026EEAF /* coretextfonts.cpp in Sources */,
 				BE174F95195D76BC0026EEAF /* region.cpp in Sources */,
 				4D1F9DAB171C682E0091C6CB /* encodederrors.cpp in Sources */,
@@ -3972,7 +4007,6 @@
 				4D1F9D76171C682E0091C6CB /* pathgray.cpp in Sources */,
 				4D1F9D77171C682E0091C6CB /* pathprocess.cpp in Sources */,
 				4D1F9D78171C682E0091C6CB /* pickle.cpp in Sources */,
-				4D1F9D79171C682E0091C6CB /* player.cpp in Sources */,
 				4D1F9D7A171C682E0091C6CB /* printer.cpp in Sources */,
 				4D1F9D7B171C682E0091C6CB /* property.cpp in Sources */,
 				4D1F9D7D171C682E0091C6CB /* regex.cpp in Sources */,
@@ -4163,7 +4197,6 @@
 				4DEE2A8E0FDE42710009423C /* answer.cpp in Sources */,
 				4DEE2A8F0FDE42710009423C /* ask.cpp in Sources */,
 				4DEE2A900FDE42710009423C /* block.cpp in Sources */,
-				4DEE2A910FDE42710009423C /* button.cpp in Sources */,
 				4DEE2A920FDE42710009423C /* buttondraw.cpp in Sources */,
 				4DEE2A930FDE42710009423C /* card.cpp in Sources */,
 				4DEE2A940FDE42710009423C /* cardlst.cpp in Sources */,
@@ -4241,7 +4274,6 @@
 				4DEE2AF00FDE42710009423C /* pathgray.cpp in Sources */,
 				4DEE2AF10FDE42710009423C /* pathprocess.cpp in Sources */,
 				4DEE2AF20FDE42710009423C /* pickle.cpp in Sources */,
-				4DEE2AF30FDE42710009423C /* player.cpp in Sources */,
 				4DEE2AF40FDE42710009423C /* printer.cpp in Sources */,
 				4DEE2AF50FDE42710009423C /* property.cpp in Sources */,
 				4DEE2AF70FDE42710009423C /* regex.cpp in Sources */,
@@ -4395,6 +4427,13 @@
 				BE36920E195880F300386D30 /* desktop.cpp in Sources */,
 				BE168E6E19598EAD00B957D0 /* region.cpp in Sources */,
 				BE20AE05195B24B300850531 /* quicktimestubs.mac.cpp in Sources */,
+				1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */,
+				1DED772C19129F27000FFFE3 /* button.cpp in Sources */,
+				1DDE08D11945DD32000E3705 /* mac-qt-player.mm in Sources */,
+				1DDE08D31945DD43000E3705 /* mac-av-player.mm in Sources */,
+				BE64444119656F7300C2092C /* player.cpp in Sources */,
+				BEEC4C67196C0DF3000DA7F5 /* mac-av-player.mm in Sources */,
+				BEEC4C68196C0DF3000DA7F5 /* mac-qt-player.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

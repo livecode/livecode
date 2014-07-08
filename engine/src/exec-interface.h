@@ -151,10 +151,37 @@ struct MCMultimediaTrackList
 	MCMultimediaTrackList *next;
 };
 
+enum MCMultimediaQTVRHotSpotType
+{
+	kMCQTVRHotSpotLinkType,
+	kMCQTVRHotSpotURLType,
+	kMCQTVRHotSpotUndefinedType,
+};
+
+enum MCMultimediaQTVRNodeType
+{
+	kMCQTVRNodePanoramaType,
+	kMCQTVRNodeObjectType,
+};
+
+struct MCMultimediaQTVRNode
+{
+	uint2 id;
+	MCMultimediaQTVRNodeType type;
+};
+
+struct MCMultimediaQTVRHotSpot
+{
+	uint2 id;
+	MCMultimediaQTVRHotSpotType type;
+};
+
 //////////
 
 // MERG-2014-06-25: [[ PlatformPlayer ]]
 // MCMultimediaQTVRConstraints must follow the definitions of MCPlatformPlayerQTVRConstraints
+// MERG-2014-07-03: [[ PlatformPlayer ]]
+// Now having a common interface, both former and new players must have the same constraints struct
 struct MCMultimediaQTVRConstraints
 {
 	real4 minpan, maxpan;
