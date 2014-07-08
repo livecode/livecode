@@ -57,6 +57,8 @@ typedef struct _ExternalArray
 //   will be EXTERNAL_FAILURE.
 //
 extern void SendCardMessage(const char *p_message, int *r_success);
+// SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to SendCardMessage, but with UTF8-encoded parameters
+extern void SendCardMessageUTF8(const char *p_message, int *r_success);
 
 // Function:
 //   EvalExpr
@@ -77,6 +79,8 @@ extern void SendCardMessage(const char *p_message, int *r_success);
 //   will be EXTERNAL_FAILURE.
 //
 extern char *EvalExpr(const char *p_expression, int *r_success);
+// SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to EvalExpr, but with UTF8-encoded parameters
+extern char *EvalExprUTF8(const char *p_expression, int *r_success);
 
 // Function:
 //   GetGlobal
@@ -99,6 +103,8 @@ extern char *EvalExpr(const char *p_expression, int *r_success);
 //   will be EXTERNAL_FAILURE.
 //
 extern char *GetGlobal(const char *p_name, int *r_success);
+// SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to GetGlobal, but with UTF8-encoded parameters
+extern char *GetGlobalUTF8(const char *p_name, int *r_success);
 
 // Function:
 //   SetGlobal
@@ -121,7 +127,9 @@ extern char *GetGlobal(const char *p_name, int *r_success);
 //   will be EXTERNAL_FAILURE.
 //   
 extern void SetGlobal(const char *p_name, const char *p_value, int *r_success);
-
+// SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to SetGlobal, but with UTF8-encoded parameters
+extern void SetGlobal(const char *p_name, const char *p_value, int *r_success);
+    
 // Function:
 //   GetVariable
 // Parameters:
@@ -144,6 +152,8 @@ extern void SetGlobal(const char *p_name, const char *p_value, int *r_success);
 //   will be EXTERNAL_FAILURE.
 //
 extern char *GetVariable(const char *p_name, int *r_success);
+// SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to GetVariable, but with UTF8-encoded parameters
+extern char *GetVariableUTF8(const char *p_name, int *r_success);
 
 // Function:
 //   SetVariable
@@ -166,6 +176,8 @@ extern char *GetVariable(const char *p_name, int *r_success);
 //   will be EXTERNAL_FAILURE.
 //
 extern void SetVariable(const char *p_name, const char *p_value, int *r_success);
+// SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to SetVariable, but with UTF8-encoded parameters
+extern void SetVariableUTF8(const char *p_name, const char *p_value, int *r_success);
 
 // Function:
 //   GetVariableEx
@@ -199,6 +211,11 @@ extern void SetVariable(const char *p_name, const char *p_value, int *r_success)
 //   will be EXTERNAL_FAILURE.
 //
 extern void GetVariableEx(const char *p_name, const char *p_key, ExternalString *r_value, int *r_success);
+// SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to GetVariableEx, but with UTF8-encoded parameters
+// p_want_utf8 allows to choose how r_value is encoded.
+//      with p_want_utf8 set to true, the returned value is UTF8-encoded
+//      with p_want_utf8 set to false, the value is returned as it is got - native chars / binary data.
+extern void GetVariableExUTF8(const char *p_name, const char *p_key, const ExternalString *r_value, Bool p_want_utf8, int *r_success);
 
 // Function:
 //   SetVariableEx
@@ -232,6 +249,11 @@ extern void GetVariableEx(const char *p_name, const char *p_key, ExternalString 
 //   will be EXTERNAL_FAILURE.
 //
 extern void SetVariableEx(const char *p_name, const char *p_key, const ExternalString *p_value, int *r_success);
+// SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to SetVariableEx, but with UTF8-encoded parameters
+// p_want_utf8 allows to choose how p_value is encoded.
+//      with p_want_utf8 set to true, p_value is UTF8-encoded
+//      with p_want_utf8 set to false, p_value is left as it is - native chars / binary data.
+extern void SetVariableExUTF8(const char *p_name, const char *p_key, const ExternalString *p_value, Bool p_want_utf8, int *r_success);
 
 // Function:
 //   GetArray
@@ -273,6 +295,11 @@ extern void SetVariableEx(const char *p_name, const char *p_key, const ExternalS
 //   will be EXTERNAL_FAILURE.
 //
 extern void GetArray(const char *p_name, int *r_element_count, ExternalString *r_values, char **r_keys, int *r_success);
+// SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to GetArray, but with UTF8-encoded parameters
+// p_want_utf8 allows to choose how r_values are encoded.
+//      with p_want_utf8 set to true, r_values are UTF8-encoded
+//      with p_want_utf8 set to false, r_value are returned as they are got - native chars / binary data.
+extern void GetArrayUTF8(const char *p_name, int *r_element_count, ExternalString *r_values, char **r_keys, Bool p_want_utf8, int *r_success);
 
 // Function:
 //   SetArray
@@ -311,6 +338,11 @@ extern void GetArray(const char *p_name, int *r_element_count, ExternalString *r
 //   will be EXTERNAL_FAILURE.
 //
 extern void SetArray(const char *p_name, int p_element_count, ExternalString *p_values, char **p_keys, int *r_success);
+// SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to SetArray, but with UTF8-encoded parameters
+// p_want_utf8 allows to choose how p_values are encoded.
+//      with p_want_utf8 set to true, p_values are UTF8-encoded
+//      with p_want_utf8 set to false, p_values are left as they are - native chars / binary data.
+extern void SetArrayUTF8(const char *p_name, int p_element_count, ExternalString *p_values, char **p_keys, Bool p_want_utf8, int *r_success);
 
 // Function:
 //   GetFieldBy*
@@ -352,6 +384,10 @@ extern void SetArray(const char *p_name, int p_element_count, ExternalString *p_
 extern char *GetFieldByName(const char *p_group, const char *p_name, int *r_success);
 extern char *GetFieldByNum(const char *p_group, int p_index, int *r_success);
 extern char *GetFieldById(const char *p_group, unsigned long p_id, int *r_success);
+// SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to GetFieldByName/Num, but with UTF8-encoded char* parameters
+extern char *GetFieldByNameUTF8(const char *p_group, const char *p_name, int *r_success);
+extern char *GetFieldByNumUTF8(const char *p_group, int p_index, int *r_success);
+extern char *GetFieldByIdUTF8(const char *p_group, unsigned long p_id, int *r_success);
 
 // Function:
 //   SetFieldBy*
@@ -391,6 +427,10 @@ extern char *GetFieldById(const char *p_group, unsigned long p_id, int *r_succes
 extern void SetFieldByName(const char *p_group, const char *p_name, const char *p_value, int *r_success);
 extern void SetFieldByNum(const char *p_group, int p_index, const char *p_value, int *r_success);
 extern void SetFieldById(const char *p_group, unsigned long p_id, const char *p_value, int *r_success);
+// SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to SetFieldByName/Num, but with UTF8-encoded char* parameters
+extern void SetFieldByNameUTF8(const char *p_group, const char *p_name, const char *p_value, int *r_success);
+extern void SetFieldByNumUTF8(const char *p_group, int p_index, const char *p_value, int *r_success);
+extern void SetFieldByIdUTF8(const char *p_group, unsigned long p_id, const char *p_value, int *r_success);
 
 // Function:
 //   ShowImageBy*
@@ -424,6 +464,12 @@ extern void ShowImageByName(const char *p_group, const char *p_name, int *r_succ
 extern void ShowImageByNum(const char *p_group, int p_index, int *r_success);
 extern void ShowImageById(const char *p_group, unsigned long p_id, int *r_success);
 extern void ShowImageByLongId(const char *p_long_id, int *r_success);
+// SN-2014-07-04: [[ UnicodeExternalsV0 ]] Equivalent to ShowImageByName/Num, but with UTF8-encoded char* parameters
+extern void ShowImageByNameUTF8(const char *p_group, const char *p_name, int *r_success);
+extern void ShowImageByNumUTF8(const char *p_group, int p_index, int *r_success);
+extern void ShowImageByIdUTF8(const char *p_group, unsigned long p_id, int *r_success);
+extern void ShowImageByLongIdUTF8(const char *p_long_id, int *r_success);
+    
 
 // IM-2014-03-06: [[ revBrowserCEF ]] Definition of runloop action callback & action ref
 typedef void (*MCRunloopActionCallback)(void *context);
@@ -441,6 +487,11 @@ extern void RunloopWait(int *r_success);
 extern Bool SecurityCanAccessFile(const char *p_file);
 extern Bool SecurityCanAccessHost(const char *p_host);	
 extern Bool SecurityCanAccessLibrary(const char *p_library);
+    
+// SN-2014-07-04: [[ UnicodeExternalsV0 ]] Same as SecurityCanAccess*, but with UTF8-encoded parameters
+extern Bool SecurityCanAccessFileUTF8(const char *p_file);
+extern Bool SecurityCanAccessHostUTF8(const char *p_host);
+extern Bool SecurityCanAccessLibraryUTF8(const char *p_library);
 	
 #ifdef __cplusplus
 };

@@ -41,13 +41,43 @@ enum
 	OPERATION_ADD_RUNLOOP_ACTION,
 	OPERATION_REMOVE_RUNLOOP_ACTION,
 	OPERATION_RUNLOOP_WAIT,
+    
+    // SN-2014-07-04: [[ UnicodeExternalsV0 ]] Add externals extensions to allow utf8-encoded arguments    
+	OPERATION_SEND_CARD_MESSAGE_UTF8,
+	OPERATION_EVAL_EXP_UTF8,
+	OPERATION_GET_GLOBAL_UTF8,
+	OPERATION_SET_GLOBAL_UTF8,
+	OPERATION_GET_FIELD_BY_NAME_UTF8,
+	OPERATION_GET_FIELD_BY_NUM_UTF8,
+	OPERATION_GET_FIELD_BY_ID_UTF8,
+	OPERATION_SET_FIELD_BY_NAME_UTF8,
+	OPERATION_SET_FIELD_BY_NUM_UTF8,
+	OPERATION_SET_FIELD_BY_ID_UTF8,
+	OPERATION_SHOW_IMAGE_BY_NAME_UTF8,
+	OPERATION_SHOW_IMAGE_BY_NUM_UTF8,
+	OPERATION_SHOW_IMAGE_BY_ID_UTF8,
+	OPERATION_GET_VARIABLE_UTF8,
+	OPERATION_SET_VARIABLE_UTF8,
+	OPERATION_GET_VARIABLE_EX_UTF8_TEXT,
+	OPERATION_GET_VARIABLE_EX_UTF8_BINARY,
+	OPERATION_SET_VARIABLE_EX_UTF8_TEXT,
+	OPERATION_SET_VARIABLE_EX_UTF8_BINARY,
+	OPERATION_GET_ARRAY_UTF8_TEXT,
+	OPERATION_GET_ARRAY_UTF8_BINARY,
+	OPERATION_SET_ARRAY_UTF8_TEXT,
+	OPERATION_SET_ARRAY_UTF8_BINARY
 };
 
 enum
 {
 	SECURITY_CHECK_FILE,
 	SECURITY_CHECK_HOST,
-	SECURITY_CHECK_LIBRARY
+	SECURITY_CHECK_LIBRARY,
+    
+    // SN-2014-07-04: [[ UnicodeExternalsV0 ]] Add security checks with unicode parameters
+	SECURITY_CHECK_FILE_UTF8,
+	SECURITY_CHECK_HOST_UTF8,
+	SECURITY_CHECK_LIBRARY_UTF8    
 };
 
 typedef char *(*ExternalOperationCallback)(const char *p_arg_1, const char *p_arg_2, const char *p_arg_3, int *r_success);
@@ -367,6 +397,241 @@ void RunloopWait(int *r_success)
 	t_result = (s_operations[OPERATION_RUNLOOP_WAIT])(NULL, NULL, NULL, &r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// 
+// SN-2014-07-04: [[ UnicodeExternalsV0 ]] Add externals functions with utf8-encoded parameters
+//
+
+void SendCardMessageUTF8(const char *p_message, int *r_success)
+{
+	char *t_result;
+	t_result = (s_operations[OPERATION_SEND_CARD_MESSAGE_UTF8])(p_message, NULL, NULL, r_success);
+	if (t_result != NULL)
+		(s_delete)(t_result);
+}
+
+
+char *EvalExprUTF8(const char *p_expression, int *r_success)
+{
+	char *t_result;
+	t_result = (s_operations[OPERATION_EVAL_EXP_UTF8])(p_expression, NULL, NULL, r_success);
+	return retstr(t_result);
+}
+
+char *GetGlobalUTF8(const char *p_name, int *r_success)
+{
+	char *t_result;
+	t_result = (s_operations[OPERATION_GET_GLOBAL_UTF8])(p_name, NULL, NULL, r_success);
+	return retstr(t_result);
+    
+}
+
+void SetGlobalUTF8(const char *p_name, const char *p_value, int *r_success)
+{
+	char *t_result;
+	t_result = (s_operations[OPERATION_SET_GLOBAL_UTF8])(p_name, p_value, NULL, r_success);
+	if (t_result != NULL)
+		(s_delete)(t_result);
+}
+
+char *GetFieldByNameUTF8(const char *p_group, const char *p_name, int *r_success)
+{
+	char *t_result;
+	// MDW-2013-05-08 : fix for bug 7913
+	t_result = (s_operations[OPERATION_GET_FIELD_BY_NAME_UTF8])(p_name, p_group, NULL, r_success);
+	return retstr(t_result);
+}
+
+char *GetFieldByNumUTF8(const char *p_group, int p_index, int *r_success)
+{
+	char t_index_str[16];
+	char *t_result;
+	
+	sprintf(t_index_str, "%d", p_index);
+	t_result = (s_operations[OPERATION_GET_FIELD_BY_NUM_UTF8])(t_index_str, p_group, NULL, r_success);
+    
+	return retstr(t_result);
+}
+
+char *GetFieldByIdUTF8(const char *p_group, unsigned long p_id, int *r_success)
+{
+	char t_index_str[16];
+	char *t_result;
+    
+	sprintf(t_index_str, "%ld", p_id);
+	t_result = (s_operations[OPERATION_GET_FIELD_BY_ID])(t_index_str, p_group, NULL, r_success);
+    
+	return retstr(t_result);
+}
+
+void SetFieldByNameUTF8(const char *p_group, const char *p_name, const char *p_value, int *r_success)
+{
+	char *t_result;
+	// MDW-2013-05-08 : fix for bug 7913
+	t_result = (s_operations[OPERATION_SET_FIELD_BY_NAME_UTF8])(p_name, p_group, p_value, r_success);
+	if (t_result != NULL)
+		(s_delete)(t_result);
+}
+
+void SetFieldByNumUTF8(const char *p_group, int p_index, const char *p_value, int *r_success)
+{
+	char t_index_str[16];
+	char *t_result;
+    
+	sprintf(t_index_str, "%d", p_index);
+	t_result = (s_operations[OPERATION_SET_FIELD_BY_NUM_UTF8])(t_index_str, p_group, p_value, r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
+}
+
+void SetFieldByIdUTF8(const char *p_group, unsigned long p_id, const char *p_value, int *r_success)
+{
+	char t_index_str[16];
+	char *t_result;
+	sprintf(t_index_str, "%ld", p_id);
+    
+	t_result = (s_operations[OPERATION_SET_FIELD_BY_ID])(t_index_str, p_group, p_value, r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
+}
+
+void ShowImageByNameUTF8(const char *p_group, const char *p_name, int *r_success)
+{
+	char *t_result;
+	// MDW-2013-05-08 : fix for bug 7913
+	t_result = (s_operations[OPERATION_SHOW_IMAGE_BY_NAME_UTF8])(p_name, p_group, NULL, r_success);
+	if (t_result != NULL)
+		(s_delete)(t_result);
+}
+
+void ShowImageByNumUTF8(const char *p_group, int p_index, int *r_success)
+{
+	char t_index_str[16];
+	char *t_result;
+    
+	sprintf(t_index_str, "%d", p_index);
+	t_result = (s_operations[OPERATION_SHOW_IMAGE_BY_NUM_UTF8])(t_index_str, p_group, NULL, r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
+}
+
+void ShowImageByIdUTF8(const char *p_group, unsigned long p_id, int *r_success)
+{
+	char t_index_str[16];
+	char *t_result;
+    
+	sprintf(t_index_str, "%ld", p_id);
+	t_result = (s_operations[OPERATION_SHOW_IMAGE_BY_ID])(t_index_str, p_group, NULL, r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
+}
+
+char *GetVariableUTF8(const char *p_name, int *r_success)
+{
+	char *t_result;
+	t_result = (s_operations[OPERATION_GET_VARIABLE_UTF8])(p_name, NULL, NULL, r_success);
+    return retstr(t_result);
+}
+
+void SetVariableUTF8(const char *p_name, const char *p_value, int *r_success)
+{
+	char *t_result;
+	t_result = (s_operations[OPERATION_SET_VARIABLE_UTF8])(p_name, p_value, NULL, r_success);
+    if (t_result != NULL)
+		s_delete(t_result);
+}
+
+void GetVariableExUTF8(const char *p_name, const char *p_key, const ExternalString *r_value, Bool p_want_utf8, int *r_success)
+{
+	char *t_result;
+    int t_operation;
+    if (p_want_utf8)
+        t_operation = OPERATION_GET_VARIABLE_EX_UTF8_TEXT;
+    else
+        t_operation = OPERATION_GET_VARIABLE_EX_UTF8_BINARY;
+    
+	t_result = (s_operations[t_operation])(p_name, p_key, (char *)r_value, r_success);
+    if (t_result != NULL)
+		s_delete(t_result);
+}
+
+void SetVariableExUTF8(const char *p_name, const char *p_key, const ExternalString *p_value, Bool p_want_utf8, int *r_success)
+{
+	char *t_result;
+    
+    int t_operation;
+    if (p_want_utf8)
+        t_operation = OPERATION_SET_VARIABLE_EX_UTF8_TEXT;
+    else
+        t_operation = OPERATION_SET_VARIABLE_EX_UTF8_BINARY;
+    
+	t_result = (s_operations[t_operation])(p_name, p_key, (char *)p_value, r_success);
+    if (t_result != NULL)
+		s_delete(t_result);
+}
+
+void GetArrayUTF8(const char *p_name, int *r_element_count, ExternalString *r_values, char **r_keys, Bool p_want_utf8, int *r_success)
+{
+	ExternalArray t_array;
+	char *t_result;
+    
+    int t_operation;
+    if (p_want_utf8)
+        t_operation = OPERATION_GET_ARRAY_UTF8_TEXT;
+    else
+        t_operation = OPERATION_GET_ARRAY_UTF8_BINARY;
+    
+	t_array . nelements = *r_element_count;
+	t_array . strings = r_values;
+	t_array . keys = r_keys;
+	t_result = (s_operations[t_operation])(p_name, NULL, (char *)&t_array, r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
+    
+	if (*r_success == EXTERNAL_SUCCESS)
+		*r_element_count = t_array . nelements;
+}
+
+void SetArrayUTF8(const char *p_name, int p_element_count, ExternalString *p_values, char **p_keys, Bool p_want_utf8, int *r_success)
+{
+	ExternalArray t_array;
+	char *t_result;
+    
+    int t_operation;
+    if (p_want_utf8)
+        t_operation = OPERATION_SET_ARRAY_UTF8_TEXT;
+    else
+        t_operation = OPERATION_SET_ARRAY_UTF8_BINARY;
+    
+	t_array . nelements = p_element_count;
+	t_array . strings = p_values;
+	t_array . keys = p_keys;
+	t_result = (s_operations[t_operation])(p_name, NULL, (char *)&t_array, r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
+}
+
+Bool SecurityCanAccessFileUTF8(const char *p_file)
+{
+	if (s_security_handlers != NULL)
+		return s_security_handlers[SECURITY_CHECK_FILE_UTF8](p_file);
+	return True;
+}
+
+Bool SecurityCanAccessHostUTF8(const char *p_host)
+{
+	if (s_security_handlers != NULL)
+		return s_security_handlers[SECURITY_CHECK_HOST_UTF8](p_host);
+	return True;
+}
+
+Bool SecurityCanAccessLibraryUTF8(const char *p_library)
+{
+	if (s_security_handlers != NULL)
+		return s_security_handlers[SECURITY_CHECK_LIBRARY_UTF8](p_library);
+	return True;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
