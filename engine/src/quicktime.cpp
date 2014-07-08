@@ -1156,5 +1156,9 @@ void MCQTRecordDialog()
 {
 }
 
+void MCQTGetVersion(MCExecPoint& ep)
+{
+	ep.setstaticcstring("0.0");  //indicates that no QT installed
+}
 #endif
 

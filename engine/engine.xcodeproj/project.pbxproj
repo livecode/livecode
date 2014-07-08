@@ -3218,6 +3218,8 @@
 				4D587E150B8096E600200116 /* undolst.h */,
 				4D587E620B8096FD00200116 /* vclip.cpp */,
 				4D587DF80B8096E600200116 /* vclip.h */,
+				1DED771A19124D75000FFFE3 /* player-platform.cpp */,
+				1DED771B19124D75000FFFE3 /* player-platform.h */,
 			);
 			name = "Core - Objects";
 			sourceTree = "<group>";
@@ -3938,6 +3940,7 @@
 				4D1F9D43171C682E0091C6CB /* external.cpp in Sources */,
 				4D1F9D44171C682E0091C6CB /* externalv0.cpp in Sources */,
 				4D1F9D45171C682E0091C6CB /* externalv1.cpp in Sources */,
+				1DE9AF8D19631919008529DC /* player-legacy.cpp in Sources */,
 				4D1F9D46171C682E0091C6CB /* field.cpp in Sources */,
 				4D1F9D47171C682E0091C6CB /* fieldf.cpp in Sources */,
 				4D1F9D48171C682E0091C6CB /* fieldh.cpp in Sources */,

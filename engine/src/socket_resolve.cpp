@@ -537,6 +537,7 @@ bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_looku
 	if (!p_lookup_hostname)
 	{
 		char *t_string;
+        t_string = NULL;
 		t_success = sockaddr_to_string(p_addr, p_addrlen, false, t_string);
 		p_callback(p_context, t_success, t_string);
 		MCCStringFree(t_string);
