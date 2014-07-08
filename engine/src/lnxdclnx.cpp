@@ -149,7 +149,6 @@ bool MCScreenDC::getkeysdown(MCListRef& r_list)
     
     // GDK does not provide a wrapper for XQueryKeymap so we have to use it
     // directly if we want to get the key state from X11.
-	char kstring[U4L];
 	char km[32];
 	MCmodifierstate = querymods();
     x11::XQueryKeymap(x11::gdk_x11_display_get_xdisplay(dpy), km);
@@ -188,10 +187,7 @@ bool MCScreenDC::getkeysdown(MCListRef& r_list)
                 break;
 		}
 	}
-    
-    // Clean up the keymap
-    g_object_unref(t_keymap);
-    
+
 	return t_success && MCListCopy(*t_list, r_list);
 }
 
@@ -419,7 +415,10 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                         
                         // No further processing of the event if the IME ate it
                         if (t_ignore)
+                        {
+                            t_handled = true;
                             break;
+                        }
                         
                         // Convert the key event into a Unicode character
                         codepoint_t t_codepoint = gdk_keyval_to_unicode(t_event->key.keyval);
@@ -975,8 +974,18 @@ void MCScreenDC::IME_OnCommit(GtkIMContext*, gchar *p_utf8_string)
     MCAutoStringRef t_text;
     /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)p_utf8_string, strlen(p_utf8_string), kMCStringEncodingUTF8, false, &t_text);
     
-    // Insert the text from the IME into the active field
-    MCactivefield->finsertnew(FT_IMEINSERT, *t_text, LCH_UNICODE);
+    if (MCStringGetLength(*t_text) == 1)
+    {
+        if (MCStringIsNative(*t_text))
+            MCdispatcher->wkdown(MCactivefield->getstack()->getwindow(), *t_text, MCStringGetCodepointAtIndex(*t_text, 0));
+        else
+            MCdispatcher->wkdown(MCactivefield->getstack()->getwindow(), *t_text, MCStringGetCodepointAtIndex(*t_text, 0)|XK_Class_codepoint);
+    }
+    else
+    {
+        // Insert the text from the IME into the active field
+        MCactivefield->finsertnew(FT_IMEINSERT, *t_text, LCH_UNICODE);
+    }
 }
 
 bool MCScreenDC::IME_OnDeleteSurrounding(GtkIMContext*, gint p_offset, gint p_length)
