@@ -49,8 +49,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 static MCPoint qa_points[QA_NPOINTS];
 
-void MCU_oval_init();
-
 extern int UTF8ToUnicode(const char * lpSrcStr, int cchSrc, uint16_t * lpDestStr, int cchDest);
 extern int UnicodeToUTF8(const uint16_t *lpSrcStr, int cchSrc, char *lpDestStr, int cchDest);
 
@@ -1248,27 +1246,17 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 	else
 		rr_height = tr.height >> 1;
 	
-	// pre-compute for speed
 	uint2 origin_horiz, origin_vert;
-	uint2 arc;
-	uint2 quadrant1Angle, quadrant2Angle, quadrant3Angle, quadrant4Angle;
-	uint2 quadrant1Arc, quadrant2Arc, quadrant3Arc, quadrant4Arc;
+	uint2 angle, arc;
+	uint2 quadrant1Angle, quadrant4Angle;
 	origin_horiz = tr.x + rr_width;
 	origin_vert = tr.y + rr_height;
 
-	arc = 360 - arcAngle;
+	// pre-compute for speed
+	arc = 360 - arcAngle;	// length of arc in degrees
 	quadrant1Angle = 90 - startAngle;
-	quadrant1Arc = quadrant1Angle + arc;
-	
-	quadrant2Angle = 180 - startAngle;
-	quadrant2Arc = quadrant2Angle + arc;
-	
-	quadrant3Angle = 270 - startAngle;
-	quadrant3Arc = quadrant3Angle + arc;
-
-	quadrant4Angle = 360 - startAngle;
-	quadrant4Arc = quadrant4Angle + arc;
-	
+	quadrant4Angle = 270 - startAngle;
+		
 	i = QA_NPOINTS * 4;
 	j = QA_NPOINTS;
 	k = 0;
@@ -1276,6 +1264,7 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 	// check for startAngle/arcAngle interaction
 	for (i = QA_NPOINTS; i > 0; i--)
 	{
+		// upper right quadrant
 		if (i > quadrant1Angle && i < (quadrant1Angle + arc))
 		{
 			points[i + (QA_NPOINTS*3)].x = origin_horiz;
@@ -1288,7 +1277,8 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 			points[i + (QA_NPOINTS*3)].y = tr.y + (qa_points[j].y * rr_height / MAXINT2);
 		}
 
-		if (i > quadrant2Angle && i < (quadrant2Angle + arc))
+		// upper left quadrant
+		if (i > 180-startAngle && i < (180-startAngle + arc))
 		{
 			points[i + (QA_NPOINTS*2)].x = origin_horiz;
 			points[i + (QA_NPOINTS*2)].y = origin_vert;
@@ -1300,7 +1290,8 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 			points[i + (QA_NPOINTS*2)].y = tr.y + (qa_points[k].y * rr_height / MAXINT2);
 		}
 
-		if (i > quadrant3Angle && i < (quadrant3Angle + arc))
+		// lower left quadrant
+		if (270-i < startAngle && 270-i > (startAngle - arc))
 		{
 			points[i + QA_NPOINTS].x = origin_horiz;
 			points[i + QA_NPOINTS].y = origin_vert;
@@ -1312,7 +1303,8 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 					      -(qa_points[j].y * rr_height / MAXINT2);
 		}
 
-		if (i > quadrant4Angle && i < (quadrant4Angle + arc))
+		// lower right quadrant
+		if (i > 360-startAngle && i < (360-startAngle + arc))
 		{
 			points[i].x = origin_horiz;
 			points[i].y = origin_vert;
