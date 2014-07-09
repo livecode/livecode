@@ -1299,7 +1299,7 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 				t_visible = getflag(F_VISIBLE);
 				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
                 
-                // PM-2014-09-07: [[ Bug 12731 ]] Hiding and showing resized player preserves its size (and the position of the controller thumb, if it is paused)
+                // PM-2014-07-09: [[ Bug 12731 ]] Hiding and showing resized player preserves its size (and the position of the controller thumb, if it is paused)
                 if (t_visible)
                 {
                     MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
@@ -3009,6 +3009,10 @@ void MCPlayer::handle_mdown(int p_which)
             MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
             
             t_new_time = (mx - t_part_well_rect . x) * t_duration / t_part_well_rect . width;
+            
+            // PM-2014-07-09: [[ Bug 12753 ]] If video is playing and we click before the starttime, don't allow video to be played outside the selection
+            if (!ispaused() && t_new_time < starttime && getflag(F_PLAY_SELECTION))
+                t_new_time = starttime;
             
             setcurtime(t_new_time);
             

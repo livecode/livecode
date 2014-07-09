@@ -821,7 +821,7 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
             
 			if (m_selection_start > m_selection_finish)
             {
-                // PM-2014-09-07: [[ Bug 12761 ]] Make sure dragging the selection_start marker does not move the selection_finish marker
+                // PM-2014-07-09: [[ Bug 12761 ]] Make sure dragging the selection_start marker does not move the selection_finish marker
                 m_selection_start = m_selection_finish;
             }
             
