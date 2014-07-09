@@ -774,6 +774,9 @@ static char *stack_to_window_rect(const char *arg1, const char *arg2,
 
 	*t_rect = MCRectangle32GetTransformedBounds(*t_rect, t_stack->getviewtransform());
 
+	// IM-2014-07-09: [[ Bug 12602 ]] Convert window -> screen coords
+	*t_rect = MCRectangle32FromMCRectangle(MCscreen->logicaltoscreenrect(MCRectangle32ToMCRectangle(*t_rect)));
+
 	*retval = xresSucc;
 	return nil;
 }
@@ -796,6 +799,9 @@ static char *window_to_stack_rect(const char *arg1, const char *arg2,
 
 	MCRectangle32 *t_rect;
 	t_rect = (MCRectangle32*)arg2;
+
+	// IM-2014-07-09: [[ Bug 12602 ]] Convert screen -> window coords
+	*t_rect = MCRectangle32FromMCRectangle(MCscreen->screentologicalrect(MCRectangle32ToMCRectangle(*t_rect)));
 
 	*t_rect = MCRectangle32GetTransformedBounds(*t_rect, MCGAffineTransformInvert(t_stack->getviewtransform()));
 
