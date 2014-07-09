@@ -41,6 +41,10 @@ enum
 	OPERATION_ADD_RUNLOOP_ACTION,
 	OPERATION_REMOVE_RUNLOOP_ACTION,
 	OPERATION_RUNLOOP_WAIT,
+
+	// IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
+	OPERATION_STACK_TO_WINDOW_RECT,
+	OPERATION_WINDOW_TO_STACK_RECT,
 };
 
 enum
@@ -365,6 +369,38 @@ void RunloopWait(int *r_success)
 	}
 
 	t_result = (s_operations[OPERATION_RUNLOOP_WAIT])(NULL, NULL, NULL, &r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
+void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success)
+{
+	char *t_result;
+
+	if (s_external_interface_version < 1)
+	{
+		*r_success = EXTERNAL_FAILURE;
+		return;
+	}
+
+	t_result = (s_operations[OPERATION_STACK_TO_WINDOW_RECT])(p_win_id, x_rect, NULL, &r_success);
+	if (t_result != NULL)
+		s_delete(t_result);
+}
+
+void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success)
+{
+	char *t_result;
+
+	if (s_external_interface_version < 1)
+	{
+		*r_success = EXTERNAL_FAILURE;
+		return;
+	}
+
+	t_result = (s_operations[OPERATION_WINDOW_TO_STACK_RECT])(p_win_id, x_rect, NULL, &r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
 }
