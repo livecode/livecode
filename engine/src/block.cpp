@@ -956,9 +956,9 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_right, int2 y, find
 		int32_t t_padding;
 		t_padding = parent -> gethpadding();
 
-		MCRectangle t_cell_clip, t_old_clip;
-		t_cell_clip = dc->getclip();
-        t_old_clip = t_cell_clip;
+        MCRectangle t_cell_clip;
+        t_cell_clip = dc->getclip();
+        dc -> save();
 
 		findex_t t_index;
 		t_index = start;
@@ -993,8 +993,7 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_right, int2 y, find
 			t_cell_clip . x = x - 1;
 			t_cell_clip . width = MCU_max(p_cell_right - x - t_padding * 2, 0.0f);
 
-			t_cell_clip = MCU_intersect_rect(t_cell_clip, t_old_clip);
-			dc -> setclip(t_cell_clip);
+            dc -> cliprect(t_cell_clip);
             dc -> drawtext_substring(x, y, parent->GetInternalStringRef(), t_range, m_font, image == True, kMCDrawTextBreak, is_rtl() ? kMCDrawTextDirectionRTL : kMCDrawTextDirectionLTR);
 
 			// Only draw the various boxes/lines if there is any content.
@@ -1029,10 +1028,10 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_right, int2 y, find
 				t_next_index = parent->IncrementIndex(t_next_index);
 			}
 
-			t_index = t_next_index;
-
-			dc->restore();
+            t_index = t_next_index;
 		}
+
+        dc -> restore();
 	}
 	else
 	{
@@ -1184,13 +1183,14 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_
 		drawstring(dc, x, cx, y, m_index, m_size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
 	else
 	{
-		// Save the current clip.
-		MCRectangle t_old_clip;
-		t_old_clip = dc -> getclip();
-		
-		// This will hold the clip for the selection.
-		MCRectangle t_sel_clip;
-		t_sel_clip = t_old_clip;
+        // Save the current clip.
+        // SN-2014-07-09: [[ MERGE-6.7 ]] Update to the new clipping methods
+        dc->save();
+
+        // This will hold the clip for the selection.
+        MCRectangle t_sel_clip, t_old_clip;
+        t_sel_clip = dc->getclip();
+        t_old_clip = t_sel_clip;
 		
 		// If there is some unselected text at the start of the block, then render it.
 		if (si > m_index)
@@ -1200,7 +1200,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_
 			
             MCRectangle t_unsel_clip;
             t_unsel_clip = t_old_clip;
-            
+
             if (is_rtl())
             {
                 t_unsel_clip . x = x + width - t_start_dx;
@@ -1216,10 +1216,14 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_
                 t_sel_clip . width = width - t_start_dx;
             }
 
-            t_unsel_clip = MCU_intersect_rect(t_unsel_clip, t_old_clip);
-			dc -> setclip(t_unsel_clip);
+            // SN-2014-07-09: [[ MERGE-6.7 ]] Update to the new clipping methods
+            dc -> cliprect(t_unsel_clip);
 			drawstring(dc, x, cx, y, m_index, m_size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
-		}
+        }
+
+        // SN-2014-07-09: [[ MERGE-6.7 ]] Switch back to the initial clip
+        dc -> restore();
+        dc -> save();
 
 		// If there is some unselected text at the end of the block, then render it.
 		if (ei < m_index + m_size)
@@ -1228,7 +1232,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_
 			t_end_dx = getsubwidth(dc, cx, m_index, ei - m_index);
 			
             MCRectangle t_unsel_clip;
-            t_unsel_clip = t_old_clip;
+            t_unsel_clip = dc -> getclip();
             
             if (is_rtl())
             {
@@ -1245,14 +1249,16 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_
                 t_sel_clip . width = x + t_end_dx - t_sel_clip . x;
             }
 
-			t_unsel_clip = MCU_intersect_rect(t_unsel_clip, t_old_clip);
-			dc -> setclip(t_unsel_clip);
+            dc -> cliprect(t_unsel_clip);
 			drawstring(dc, x, cx, y, m_index, m_size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
-		}
-		
-		// Now use the clip rect we've computed for the selected portion.
-        t_sel_clip = MCU_intersect_rect(t_sel_clip, t_old_clip);
-		dc -> setclip(t_sel_clip);
+        }
+
+        // SN-2014-07-09: [[ MERGE-6.7 ]] Switch back to the initial clip
+        dc -> restore();
+        dc -> save();
+
+        // Now use the clip rect we've computed for the selected portion.
+        dc -> cliprect(t_sel_clip);
 		
 		// Change the hilite color (if necessary).
 		// MM-2013-11-05: [[ Bug 11547 ]] We now pack alpha values into pixels meaning we shouldn't check against MAXUNIT4. Not sure why this check was here previously.
@@ -1293,7 +1299,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_
 		
 		// Save the current clip setting.
 		MCRectangle t_old_clip;
-		t_old_clip = dc -> getclip();
+        t_old_clip = dc -> getclip();
 		
 		// Compute the width of the block.
 		coord_t t_width;
@@ -1301,7 +1307,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_
 		
 		// Start off with the clip being that which it was previously.
 		MCRectangle t_clip;
-		t_clip = t_old_clip;
+        t_clip = t_old_clip;
 		
 		// If we aren't drawing the left edge, move it inwards.
 		if ((p_border_flags & DBF_DRAW_LEFT_EDGE) == 0)
@@ -1313,7 +1319,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t cx, int2 y, findex_t si, findex_
 		
 		// Set the clip temporarily.
 		dc->save();
-		dc->cliprect(t_clip);
+        dc->setclip(t_clip);
 		
 		if (fontstyle & FA_BOX)
 		{
