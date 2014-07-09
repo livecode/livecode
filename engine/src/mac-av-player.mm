@@ -975,11 +975,9 @@ void MCAVFoundationPlayer::SetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
     t_tracks = [[[m_player currentItem] asset] tracks];
     
     // TODO: Fix error LiveCode-Community[20563:303] -[AVAssetTrack setEnabled:]: unrecognized selector sent to instance 0xb281f50
-    AVPlayerItemTrack *t_playerItemTrack;
+    /*AVPlayerItemTrack *t_playerItemTrack;
     t_playerItemTrack = [t_tracks objectAtIndex:p_index];
-    [t_playerItemTrack setEnabled:*(bool *)p_value];
-   
-    
+    [t_playerItemTrack setEnabled:*(bool *)p_value];*/
 }
 
 void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTrackProperty p_property, MCPlatformPropertyType p_type, void *r_value)
@@ -994,7 +992,7 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
     // TODO: Fix error "LiveCode-Community[18526:303] -[AVAssetTrack assetTrack]: unrecognized selector sent to instance 0xa9d5aa0"
     AVAssetTrack *t_assetTrack = t_playerItemTrack.assetTrack;
     */
-    AVAssetTrack *t_assetTrack = [t_tracks objectAtIndex:p_index];
+    AVAssetTrack *t_assetTrack = (AVAssetTrack *)[t_tracks objectAtIndex:p_index];
     
 	switch(p_property)
 	{
