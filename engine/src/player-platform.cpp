@@ -1298,9 +1298,20 @@ Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 				bool t_visible;
 				t_visible = getflag(F_VISIBLE);
 				MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
+                
+                // PM-2014-09-07: [[ Bug 12731 ]] Hiding and showing resized player preserves its size (and the position of the controller thumb, if it is paused)
+                if (t_visible)
+                {
+                    MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
+                    layer_redrawall();
+                    state |= CS_PREPARED | CS_PAUSED;
+                    {
+                        nextplayer = MCplayers;
+                        MCplayers = this;
+                    }
+                }
 			}
-            // This fixes the issue of empty image when hiding and then showing the player
-            prepare(MCnullstring);
+            
 			return stat;
 		}
             break;
