@@ -231,7 +231,7 @@ public:
     void SetPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points);
     void GetRelativePoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points);
     void SetRelativePoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_points);
-    // MERG-2014-06-24: [[ rect_points ]] allow effective [relative] points as read-only
+    // SN-2014-06-24: [[ rect_points ]] allow effective [relative] points as read-only
     void GetEffectivePoints(MCExecContext& ctxt, uindex_t &p_count, MCPoint*& r_points);
     void GetEffectiveRelativePoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points);
     

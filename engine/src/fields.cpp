@@ -386,13 +386,13 @@ findex_t MCField::getpgsize(MCParagraph *pgptr)
 	return length;
 }
 
-// MERG-2014-06-23: [[ Bug 12303 ]] Refactoring of the bugfix: new param added
+// SN-2014-06-23: [[ Bug 12303 ]] Refactoring of the bugfix: new param added
 void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, bool p_preserve_zero_length_styles)
 {
     setparagraphs(newpgptr, parid, INTEGER_MIN, INTEGER_MIN, p_preserve_zero_length_styles);
 }
 
-// MERG-2014-20-06: [[ Bug 12303 ]] Refactoring of the bugfix: new param added
+// SN-2014-06-23: [[ Bug 12303 ]] Refactoring of the bugfix: new param added
 void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start, findex_t p_end, bool p_preserve_zero_length_styles)
 {
 	if (flags & F_SHARED_TEXT)
@@ -468,7 +468,7 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start
         t_insert_paragraph->setselectionindex(p_start, p_start, False, False);
         t_insert_paragraph->split();
         t_insert_paragraph->append(newpgptr);
-        // MERG-2014-20-06: [[ Bug 12303 ]] Refactoring of the bugfix
+        // SN-2014-20-06: [[ Bug 12303 ]] Refactoring of the bugfix
         t_insert_paragraph->join(p_preserve_zero_length_styles);
         if (t_lastpgptr == NULL)
             t_lastpgptr = t_insert_paragraph;

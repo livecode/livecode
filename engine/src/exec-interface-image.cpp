@@ -672,7 +672,7 @@ void MCImage::SetAngle(MCExecContext& ctxt, integer_t p_angle)
 	}
 }
 
-// MERG-2014-06-25
+// SN-2014-06-25: [[ MERGE-6.7 ]] P_CENTER_RECT property's getter added
 // MW-2014-06-20: [[ ImageCenterRect ]] Setter for centerRect property.
 void MCImage::SetCenterRectangle(MCExecContext& ctxt, MCRectangle *p_rectangle)
 {
@@ -692,7 +692,7 @@ void MCImage::SetCenterRectangle(MCExecContext& ctxt, MCRectangle *p_rectangle)
         layer_redrawall();
 }
 
-// MERG-2014-06-25
+// SN-2014-06-25: [[ MERGE-6.7 ]] P_CENTER_RECT property's setter added
 // MW-2014-06-20: [[ ImageCenterRect ]] Getter for centerRect property.
 void MCImage::GetCenterRectangle(MCExecContext& ctxt, MCRectangle *&r_rectangle)
 {

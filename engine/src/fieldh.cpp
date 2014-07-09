@@ -829,7 +829,7 @@ Exec_stat MCField::setpartialtext(uint4 parid, const MCString &data, bool p_unic
 {
 	state |= CS_NO_FILE; // prevent interactions while downloading images
 	MCParagraph *htmlpgptr = texttoparagraphs(data, p_unicode);
-    // MERG-2014-06-23: [[ Bug 12303 ]] Parameter added to preserve the 0-length styles
+    // SN-2014-06-23: [[ Bug 12303 ]] Parameter added to preserve the 0-length styles
 	setparagraphs(htmlpgptr, parid, true);
 	state &= ~CS_NO_FILE;
 	return ES_NORMAL;

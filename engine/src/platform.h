@@ -1017,7 +1017,7 @@ enum MCPlatformPlayerHotSpotProperty
 {
 };
 
-// MERG-2014-06-25 [[ PlatformPlayer ]]
+// SN-2014-06-25 [[ PlatformPlayer ]]
 // MCPlatformPlayerQTVRConstraints must follow the definition of MCMultimediaQTVRConstraints
 struct MCPlatformPlayerQTVRConstraints
 {

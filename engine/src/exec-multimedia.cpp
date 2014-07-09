@@ -113,7 +113,7 @@ void MCMultimediaEvalQTVersion(MCExecContext& ctxt, MCStringRef& r_string)
         ctxt.Throw();
 }
 
-// MERG-2014-06-25: [[ PlatformPlayer ]] Refactoring functions from quicktime.cpp
+// SN-2014-06-25: [[ PlatformPlayer ]] Refactoring functions from quicktime.cpp
 void MCMultimediaEvalQTEffects(MCExecContext& ctxt, MCStringRef& r_result)
 {
     extern void MCQTEffectsList(MCStringRef &r_string);
@@ -122,14 +122,14 @@ void MCMultimediaEvalQTEffects(MCExecContext& ctxt, MCStringRef& r_result)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MERG-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
+// SN-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
 void MCMultimediaEvalRecordCompressionTypes(MCExecContext& ctxt, MCStringRef& r_string)
 {
     extern void MCQTGetRecordCompressionList(MCStringRef &r_string);
     MCQTGetRecordCompressionList(r_string);
 }
 
-// MERG-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
+// SN-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
 void MCMultimediaEvalRecordLoudness(MCExecContext& ctxt, integer_t& r_loudness)
 {
 	extern void MCQTGetRecordLoudness(integer_t &r_loudness);
@@ -265,7 +265,7 @@ void MCMultimediaExecStopPlayingObject(MCExecContext& ctxt, MCObject *p_object)
 		MCU_play_stop();
 }
 
-// MERG-2014-06-25 [[ PlatformPlayer ]]
+// SN-2014-06-25 [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
 void MCMultimediaExecStopRecording(MCExecContext& ctxt)
 {
     extern void MCQTStopRecording(void);
@@ -274,7 +274,7 @@ void MCMultimediaExecStopRecording(MCExecContext& ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MERG-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
+// SN-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
 void MCMultimediaExecRecord(MCExecContext& ctxt, MCStringRef p_filename)
 {
 	if (!ctxt . EnsurePrivacyIsAllowed())
@@ -289,7 +289,7 @@ void MCMultimediaExecRecord(MCExecContext& ctxt, MCStringRef p_filename)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MERG-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
+// SN-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
 void MCMultimediaExecAnswerEffect(MCExecContext &ctxt)
 {
     MCresult -> clear(False);
@@ -300,7 +300,7 @@ void MCMultimediaExecAnswerEffect(MCExecContext &ctxt)
         ctxt . SetItToValue(*t_value);
 }
 
-// MERG-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
+// SN-2014-06-25: [[ PlatformPlayer ]] Now calling the function from quicktime.cpp
 void MCMultimediaExecAnswerRecord(MCExecContext &ctxt)
 {
     MCresult -> clear(False);
@@ -755,7 +755,7 @@ void MCMultimediaGetRecording(MCExecContext& ctxt, bool& r_value)
 	r_value = MCrecording == True;
 }
 
-// MERG-2014-06-25: [[ PlatformPlayer ]] Refactoring functions from quicktime.cpp
+// SN-2014-06-25: [[ PlatformPlayer ]] Refactoring functions from quicktime.cpp
 void MCMultimediaSetRecording(MCExecContext& ctxt, bool p_value)
 {
 	if (!p_value)

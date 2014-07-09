@@ -86,7 +86,7 @@ public:
 	void eval(MCExecContext& ctxt, T& r_value)
 	{
 		eval_typed(ctxt, MCExecValueTraits<T>::type_enum, &r_value);
-	};
+    }
 	
 	// This method evaluates the the MCExpression as the specified type. The
 	// value ptr should be a pointer to the appropriate native value to store

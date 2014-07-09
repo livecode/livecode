@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 
-// MERG-2014-07-03: [[ PlatformPlayer ]]
+// SN-2014-07-03: [[ PlatformPlayer ]]
 // We do not want to compile this in case the PlatformPlayer
 // is the one targeted
 #ifndef FEATURE_PLATFORM_PLAYER
