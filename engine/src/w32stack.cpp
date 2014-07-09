@@ -398,7 +398,7 @@ void MCStack::realize()
 		t_rect = view_getrect();
 
 		// IM-2014-01-28: [[ HiDPI ]] Convert logical to screen coords
-		t_rect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(t_rect);
+		t_rect = MCscreen->logicaltoscreenrect(t_rect);
 
 		wrect = getwrect(t_rect, wstyle, exstyle);
 		LONG x = wrect.left;
@@ -484,7 +484,7 @@ MCRectangle MCStack::view_platform_getwindowrect() const
 	t_rect = MCRectangleFromWin32RECT(wrect);
 
 	// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
-	t_rect = ((MCScreenDC*)MCscreen)->screentologicalrect(t_rect);
+	t_rect = MCscreen->screentologicalrect(t_rect);
 
 	return t_rect;
 }
@@ -496,7 +496,7 @@ MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 	t_new_rect = p_rect;
 
 	// IM-2014-01-28: [[ HiDPI ]] Convert logical to screen coords
-	t_new_rect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(t_new_rect);
+	t_new_rect = MCscreen->logicaltoscreenrect(t_new_rect);
 
 	uint32_t wstyle, exstyle;
 	getstyle(wstyle, exstyle);
@@ -508,7 +508,7 @@ MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 	t_old_rect = MCRectangleFromWin32RECT(wrect);
 
 	// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
-	t_old_rect = ((MCScreenDC*)MCscreen)->screentologicalrect(t_old_rect);
+	t_old_rect = MCscreen->screentologicalrect(t_old_rect);
 
 	LONG t_width = newrect.right - newrect.left;
 	LONG t_height = newrect.bottom - newrect.top;
@@ -563,7 +563,7 @@ void MCStack::constrain(intptr_t lp)
 
 	// IM-2014-05-27: [[ Bug 12462 ]] Convert stack rect to screen coords
 	MCRectangle t_rect;
-	t_rect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(rect);
+	t_rect = MCscreen->logicaltoscreenrect(rect);
 
 	RECT wrect = getwrect(t_rect, wstyle, exstyle);
 	int4 dx = wrect.right - wrect.left - t_rect.width;
@@ -585,8 +585,8 @@ void MCStack::constrain(intptr_t lp)
 			MCU_reduce_rect(t_workarea, -dx / 2);
 
 		// IM-2014-05-27: [[ Bug 12462 ]] Convert screen rects to screen coords
-		t_workarea = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(t_workarea);
-		t_viewport = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(t_viewport);
+		t_workarea = MCscreen->logicaltoscreenrect(t_workarea);
+		t_viewport = MCscreen->logicaltoscreenrect(t_viewport);
 
 		mmptr -> ptMaxSize . x = MCU_min(maxwidth + dx, t_workarea . width);
 		mmptr -> ptMaxSize . y = MCU_min(maxheight + dy, t_workarea . height);
@@ -1295,13 +1295,13 @@ void MCStack::composite(void)
 
 	MCRectangle t_device_stack_rect;
 	// IM-2014-01-28: [[ HiDPI ]] Convert logical to screen coords
-	t_device_stack_rect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(rect);
+	t_device_stack_rect = MCscreen->logicaltoscreenrect(rect);
 
 	MCRectangle t_device_shape_rect;
 	t_device_shape_rect = MCRectangleMake(0, 0, m_window_shape->width, m_window_shape->height);
 
 	// IM-2014-01-28: [[ HiDPI ]] Convert logical to screen coords
-	t_device_shape_rect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(t_device_shape_rect);
+	t_device_shape_rect = MCscreen->logicaltoscreenrect(t_device_shape_rect);
 
 	t_offset . x = 0;
 	t_offset . y = 0;

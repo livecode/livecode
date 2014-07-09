@@ -470,7 +470,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 	t_mouseloc = MCPointMake(LOWORD(lParam), HIWORD(lParam));
 
 	// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
-	t_mouseloc = ((MCScreenDC*)MCscreen)->screentologicalpoint(t_mouseloc);
+	t_mouseloc = MCscreen->screentologicalpoint(t_mouseloc);
 
 	// MW-2005-02-20: Seed the SSL random number generator
 #ifdef MCSSL

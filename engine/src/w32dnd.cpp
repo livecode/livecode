@@ -335,7 +335,7 @@ STDMETHODIMP CDropTarget::DragOver(DWORD grfKeyState, POINTL pt,
 
 	// IM-2014-05-06: [[ Bug 12319 ]] Convert screen to logical coords
 	MCPoint t_mouseloc;
-	t_mouseloc = ((MCScreenDC*)MCscreen)->screentologicalpoint(MCPointFromWin32POINT(pt));
+	t_mouseloc = MCscreen->screentologicalpoint(MCPointFromWin32POINT(pt));
 
 	MCDragAction t_action;
 	t_action = MCdispatcher -> wmdragmove(dropstack -> getw(), t_mouseloc . x, t_mouseloc . y);
@@ -386,7 +386,7 @@ STDMETHODIMP CDropTarget::Drop(LPDATAOBJECT pDataObj, DWORD grfKeyState,
 
 	// IM-2014-05-06: [[ Bug 12319 ]] Convert screen to logical coords
 	MCPoint t_mouseloc;
-	t_mouseloc = ((MCScreenDC*)MCscreen)->screentologicalpoint(MCPointFromWin32POINT(pt));
+	t_mouseloc = MCscreen->screentologicalpoint(MCPointFromWin32POINT(pt));
 
 	uint4 t_old_modifierstate;
 	t_old_modifierstate = MCmodifierstate;
