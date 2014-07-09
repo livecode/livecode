@@ -295,6 +295,8 @@ public:
     void GetChildControlIds(MCExecContext& ctxt, MCStringRef& r_ids);
     void GetLockUpdates(MCExecContext& ctxt, bool& r_locked);
     void SetLockUpdates(MCExecContext& ctxt, bool p_locked);
+    void SetClipsToRect(MCExecContext& ctxt, bool p_clips_to_rect);
+    void GetClipsToRect(MCExecContext& ctxt, bool &r_clips_to_rect);
     
 	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
 	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);

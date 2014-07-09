@@ -474,8 +474,12 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start
             t_lastpgptr = t_insert_paragraph;
         else
             t_insert_paragraph->defrag();
-
-        t_lastpgptr->join();
+        
+        // MW-2014-05-28: [[ Bug 10593 ]] When replacing a range of text with styles, paragraph styles from
+        //   the new content should replace paragraph styles for the old content whenever the range touches
+        //   the 0 index of a paragraph. Thus when joining the end of the range again, we want to preserve
+        //   the new contents styles even if it is an empty paragraph.
+        t_lastpgptr->join(true);
         t_lastpgptr->defrag();
 
         fptr->setparagraphs(paragraphs);
