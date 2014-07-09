@@ -87,26 +87,9 @@ static inline MCRectangle MCRectangleFromWin32RECT(const RECT &p_rect)
 
 MCStack *MCStack::findstackd(Window w)
 {
-	if (w == NULL)
-		return NULL;
-	if ((window != DNULL) && (w->handle.window == window->handle.window))
-		return this;
-	if (substacks != NULL)
-	{
-		MCStack *tptr = substacks;
-		do
-		{
-			if ((tptr->window != DNULL) &&
-			        (w->handle.window == tptr->window->handle.window))
-				return tptr;
-			tptr = (MCStack *)tptr->next();
-		}
-		while (tptr != substacks);
-	}
-	return NULL;
+	// IM-2014-07-09: [[ Bug 12225 ]] Use window ID to find stack
+	return findstackwindowid(MCscreen->dtouint4((Drawable)w));
 }
-
-
 
 MCStack *MCStack::findchildstackd(Window w,uint2 &ccount,uint2 cindex)
 {

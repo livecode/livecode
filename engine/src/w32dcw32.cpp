@@ -278,11 +278,7 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 				                 PeekMessageA(&tmsg, NULL, WM_SYSCHAR, WM_SYSCHAR, PM_REMOVE);
 				if (t_char_found)
 				{
-					_Drawable _dw;
-					Drawable dw = &_dw;
-					dw->type = DC_WINDOW;
-					dw->handle.window = (MCSysWindowHandle)msg.hwnd;
-					if (MCdispatcher->findstackd(dw) == NULL)
+					if (MCdispatcher->findstackwindowid((uint32_t)msg.hwnd) == NULL)
 					{
 						if ((MCruntimebehaviour & RTB_ACCURATE_UNICODE_INPUT) != 0)
 							DispatchMessageW(&msg);
@@ -330,12 +326,9 @@ void MCScreenDC::restackwindows(HWND p_window, UINT p_message, WPARAM p_wparam, 
 {
 	WINDOWPOS *t_info;
 	MCStack *t_stack;
-	_Drawable t_drawable;
-	t_drawable . handle . window = (MCSysWindowHandle)p_window;
-	t_drawable . type = DC_WINDOW;
 
 	t_info = (WINDOWPOS *)p_lparam;
-	t_stack = MCdispatcher -> findstackd(&t_drawable);
+	t_stack = MCdispatcher -> findstackwindowid((uint32_t)p_window);
 
 	if (t_stack != NULL && t_stack -> getflag(F_DECORATIONS) && (t_stack -> getdecorations() & WD_UTILITY) != 0)
 		return;
