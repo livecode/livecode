@@ -1315,7 +1315,7 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 	// IM-2014-07-10: [[ Bug 12794 ]] Transform the context if the image has a scale factor so we don't need to account for it later
 	if (p_image.scale_factor != 0.0 && p_image.scale_factor != 1.0)
 	{
-		uint32_t t_dx, t_dy;
+		int32_t t_dx, t_dy;
 		t_dx = dx - sx;
 		t_dy = dy - sy;
 		
