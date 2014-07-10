@@ -140,7 +140,7 @@ void MCStack::realize()
 		
         GdkWindowAttr gdkwa;
         guint gdk_valid_wa;
-        gdk_valid_wa = GDK_WA_X|GDK_WA_Y|GDK_WA_VISUAL|GDK_WA_COLORMAP;
+        gdk_valid_wa = GDK_WA_X|GDK_WA_Y|GDK_WA_VISUAL;
         gdkwa.x = t_rect.x;
         gdkwa.y = t_rect.y;
         gdkwa.width = t_rect.width;
@@ -160,7 +160,7 @@ void MCStack::realize()
         
 		if (screen -> get_backdrop() != DNULL)
             gdk_window_set_transient_for(window, screen->get_backdrop());
-
+        
 		loadwindowshape();
 		if (m_window_shape != nil && m_window_shape -> is_sharp)
             gdk_window_shape_combine_mask(window, (GdkPixmap*)m_window_shape->handle, 0, 0);
@@ -708,9 +708,16 @@ void MCX11PutImage(GdkDisplay *p_dpy, GdkDrawable* d, GdkRegion* p_clip_region, 
 
 	t_gc = gdk_gc_new(d);
 
-    gdk_gc_set_clip_region(t_gc, p_clip_region);
-    gdk_draw_pixbuf(d, t_gc, source, sx, sy, dx, dy, w, h, GDK_RGB_DITHER_MAX, 0, 0);
-    g_object_unref(t_gc);
+    // If we use gdk_draw_pixbuf, the pixbuf gets blended with the existing
+    // contents of the window - something that we definitely do not want. We
+    // need to use Cairo directly to do the drawing to the window surface.
+    cairo_t *t_cr = gdk_cairo_create(d);
+    cairo_set_operator(t_cr, CAIRO_OPERATOR_SOURCE);
+    gdk_cairo_region(t_cr, p_clip_region);
+    cairo_clip(t_cr);
+    gdk_cairo_set_source_pixbuf(t_cr, source, dx-sx, dy-sy);
+    cairo_paint(t_cr);
+    cairo_destroy(t_cr);
 }
 
 bool MCLinuxMCGRegionToRegion(MCGRegionRef p_region, GdkRegion* &r_region);

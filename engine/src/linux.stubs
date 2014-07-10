@@ -268,6 +268,9 @@ gdk libgdk-x11-2.0.so.0
 	gdk_gc_set_clip_region: (pointer, pointer) -> ()
 	gdk_screen_get_rgba_colormap: (pointer) -> (pointer)
 	gdk_window_set_composited: (pointer, pointer) -> ()
+	gdk_cairo_create: (pointer) -> (pointer)
+	gdk_cairo_region: (pointer, pointer) -> ()
+	gdk_cairo_set_source_pixbuf: (pointer, pointer, double, double) -> ()
 
 gdk_pixbuf libgdk_pixbuf-2.0.so.0
 	gdk_pixbuf_get_pixels: (pointer) -> (pointer)
@@ -278,6 +281,15 @@ gdk_pixbuf libgdk_pixbuf-2.0.so.0
 	gdk_pixbuf_new: (integer, integer, integer, integer, integer) -> (pointer)
 	gdk_pixbuf_get_byte_length: (pointer) -> (integer)
 	gdk_pixbuf_new_from_data: (pointer, integer, integer, integer, integer, integer, pointer, pointer) -> (pointer)
+
+cairo libcairo.so.2
+	cairo_set_operator: (pointer, integer) -> ()
+	cairo_destroy: (pointer) -> ()
+	cairo_set_source_rgba: (pointer, integer, integer, integer) -> ()
+	cairo_clip: (pointer) -> ()
+	cairo_paint: (pointer) -> ()
+	cairo_rectangle: (pointer, integer, integer, integer, integer) -> ()
+	cairo_fill: (pointer) -> ()
 
 gtk libgtk-x11-2.0.so.0
 	#@ gtk_major_version

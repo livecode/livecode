@@ -88,6 +88,7 @@ extern "C" int initialise_weak_link_libgnome ( void ) ;
 extern "C" int initialise_weak_link_libgnome ( void ) ;
 extern "C" int initialise_weak_link_libxv ( void ) ;
 extern "C" int initialise_weak_link_gdk_pixbuf();
+extern "C" int initialise_weak_link_cairo();
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -202,7 +203,8 @@ Boolean MCScreenDC::open()
     bool t_has_gdk;
     t_has_gdk = initialise_weak_link_gobject() != 0
         && initialise_weak_link_gdk() != 0
-        && initialise_weak_link_gdk_pixbuf() != 0;
+        && initialise_weak_link_gdk_pixbuf() != 0
+        && initialise_weak_link_cairo() != 0;
     
     if (!t_has_gdk)
     {
@@ -407,8 +409,8 @@ Boolean MCScreenDC::open()
         }
         
         // Create a 32-bit visual for internal use
-        vis32 = gdk_visual_get_best_with_depth(32);
-        cmap32 = gdk_colormap_new(vis32, FALSE);
+        //vis32 = gdk_visual_get_best_with_depth(32);
+        //cmap32 = gdk_colormap_new(vis32, FALSE);
         
 		if (gdk_visual_get_visual_type(vis) == GDK_VISUAL_TRUE_COLOR)
 		{
@@ -441,14 +443,14 @@ Boolean MCScreenDC::open()
     
     GdkWindow *w = gdk_window_new(gdk_screen_get_root_window(t_screen),
                                   &gdkwa,
-                                  GDK_WA_X|GDK_WA_Y|GDK_WA_COLORMAP|GDK_WA_VISUAL);
+                                  GDK_WA_X|GDK_WA_Y|GDK_WA_VISUAL);
     gc = gdk_gc_new(w);
     gdk_window_destroy(w);
     
     // Create the NULL window
     NULLWindow = gdk_window_new(gdk_screen_get_root_window(t_screen),
                                 &gdkwa,
-                                GDK_WA_X|GDK_WA_Y|GDK_WA_COLORMAP|GDK_WA_VISUAL);
+                                GDK_WA_X|GDK_WA_Y|GDK_WA_VISUAL);
 
     GdkColor t_color;
     t_color.pixel = 0;
@@ -576,6 +578,7 @@ Boolean MCScreenDC::close(Boolean force)
 	// TODO - We may need to do clipboard persistance here
 	
 	destroybackdrop();
+    gdk_window_destroy(NULLWindow);
     
     gdk_display_flush(dpy);
     g_object_unref(gc);
@@ -741,7 +744,7 @@ void MCScreenDC::setname(Window window, MCStringRef newname)
 
 void MCScreenDC::setcmap(MCStack *sptr)
 {
-	gdk_drawable_set_colormap(sptr->getw(), getcmap());
+	//gdk_drawable_set_colormap(sptr->getw(), getcmap());
 }
 
 void MCScreenDC::sync(Window w)
@@ -938,11 +941,16 @@ void MCScreenDC::putimage(Drawable d, MCBitmap *source, int2 sx, int2 sy,
 	if (d == nil)
 		return;
 
-    // Temporary GC for drawing
-    GdkGC *t_gc = gdk_gc_new(d);
-    
-    gdk_draw_pixbuf(d, t_gc, (GdkPixbuf*)source, sx, sy, dx, dy, w, h, GDK_RGB_DITHER_MAX, 0, 0);
-    g_object_unref(t_gc);
+    // If we use gdk_draw_pixbuf, the pixbuf gets blended with the existing
+    // contents of the window - something that we definitely do not want. We
+    // need to use Cairo directly to do the drawing to the window surface.
+    cairo_t *t_cr = gdk_cairo_create(d);
+    cairo_set_operator(t_cr, CAIRO_OPERATOR_SOURCE);
+    cairo_rectangle(t_cr, dx, dy, w, h);
+    cairo_clip(t_cr);
+    gdk_cairo_set_source_pixbuf(t_cr, source, dx-sx, dy-sy);
+    cairo_paint(t_cr);
+    cairo_destroy(t_cr);
 }
 
 MCBitmap *MCScreenDC::getimage(Drawable d, int2 x, int2 y, uint2 w, uint2 h)
@@ -1362,7 +1370,7 @@ void MCScreenDC::createbackdrop_window(void)
     gdkwa.colormap = getcmap();
     gdkwa.window_type = GDK_WINDOW_TOPLEVEL;
     
-    backdrop = gdk_window_new(NULL, &gdkwa, GDK_WA_COLORMAP|GDK_WA_VISUAL);
+    backdrop = gdk_window_new(NULL, &gdkwa, GDK_WA_VISUAL);
 }
 
 
