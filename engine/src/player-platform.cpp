@@ -799,8 +799,12 @@ void MCPlayer::setrect(const MCRectangle &nrect)
 	{
 		MCRectangle trect = MCU_reduce_rect(rect, getflag(F_SHOW_BORDER) ? borderwidth : 0);
         
-        if (getflag(F_SHOW_CONTROLLER))
-            trect . height -= CONTROLLER_HEIGHT;
+        // PM-2014-07-10: [[ Bug 12737 ]] For Mac OSX 10.7, use the old QTKit player
+        if (MCmajorosversion >= 0x1080)
+        {
+            if (getflag(F_SHOW_CONTROLLER))
+                trect . height -= CONTROLLER_HEIGHT;
+        }
         
         // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
         //   (backscale factor handled in platform layer).
@@ -1536,14 +1540,14 @@ void MCPlayer::showbadge(Boolean show)
 
 void MCPlayer::editmovie(Boolean edit)
 {
-#if 0
+
 	if (m_platform_player != nil)
 	{
 		bool t_edit;
 		t_edit = edit;
 		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_edit);
 	}
-#endif
+
 }
 
 void MCPlayer::playselection(Boolean play)
@@ -1564,15 +1568,6 @@ Boolean MCPlayer::ispaused()
 
 void MCPlayer::showcontroller(Boolean show)
 {
-#if 0
-	if (m_platform_player != nil)
-	{
-		bool t_show;
-		t_show = show;
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show);
-	}
-#endif
-    
     // The showController property has changed, this means we must do two things - resize
     // the movie rect and then redraw ourselves to make sure we can see the controller.
     
@@ -1581,10 +1576,16 @@ void MCPlayer::showcontroller(Boolean show)
         // PM-2014-05-28: [[ Bug 12524 ]] Resize the rect height to avoid stretching of the movie when showing/hiding controller
         MCRectangle drect;
         drect = rect;
+        
+        // PM-2014-07-10: [[ Bug 12737 ]] For Mac OSX >= 10.8, we use AVFoundation with our custom controller
+        int t_height;
+        // 16 is the height of the default QTKit controller
+        t_height = (MCmajorosversion >= 0x1080 ? CONTROLLER_HEIGHT : 16);
+                
         if (show )
-            drect . height += CONTROLLER_HEIGHT;
+            drect . height += t_height;  // This is the height of the default QTKit controller
         else
-            drect . height -= CONTROLLER_HEIGHT;
+            drect . height -= t_height;
         
 		bool t_show;
 		t_show = show;
@@ -1622,9 +1623,13 @@ Boolean MCPlayer::prepare(const char *options)
 	
 	MCRectangle trect = resize(t_movie_rect);
     
-    // Adjust so that the controller isn't included in the movie rect.
-    if (getflag(F_SHOW_CONTROLLER))
-        trect . height -= CONTROLLER_HEIGHT;
+    // PM-2014-07-10: [[ Bug 12737 ]] For Mac OSX 10.7 we use QTKit player with its native controller
+    if (MCmajorosversion >= 0x1080)
+    {
+        // Adjust so that the controller isn't included in the movie rect.
+        if (getflag(F_SHOW_CONTROLLER))
+            trect . height -= CONTROLLER_HEIGHT;
+    }
 	
 	// IM-2011-11-12: [[ Bug 11320 ]] Transform player rect to device coords
     // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
@@ -1633,13 +1638,17 @@ Boolean MCPlayer::prepare(const char *options)
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
 	
-	bool t_looping, t_play_selection;
+	bool t_looping, t_play_selection, t_show_controller, t_show_selection;
 	
 	t_looping = getflag(F_LOOPING);
-	t_play_selection = getflag(F_PLAY_SELECTION);
+	t_show_selection = getflag(F_SHOW_SELECTION);
+    t_show_controller = getflag(F_SHOW_CONTROLLER);
+    t_play_selection = getflag(F_PLAY_SELECTION);
 	
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &lasttime);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
+    MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowController, kMCPlatformPropertyTypeBool, &t_show_controller);
+    MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
     
 	setselection();
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOnlyPlaySelection, kMCPlatformPropertyTypeBool, &t_play_selection);
@@ -1973,8 +1982,13 @@ MCRectangle MCPlayer::resize(MCRectangle movieRect)
 			y = trect.y + (trect.height >> 1);
 			trect.width = (uint2)(formattedwidth * scale);
 			trect.height = (uint2)(formattedheight * scale);
-			if (flags & F_SHOW_CONTROLLER)
-				trect.height += CONTROLLER_HEIGHT;
+            
+            // PM-2014-07-10: [[ Bug 12737 ]] For Mac OSX 10.7 we use QTKit player with its native controller
+            if (MCmajorosversion >= 0x1080)
+            {
+                if (flags & F_SHOW_CONTROLLER)
+                    trect.height += CONTROLLER_HEIGHT;
+            }
 			trect.x = x - (trect.width >> 1);
 			trect.y = y - (trect.height >> 1);
 			if (flags & F_SHOW_BORDER)
@@ -2173,11 +2187,15 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			MCPlatformUnlockPlayerBitmap(m_platform_player, t_bitmap);
 		}
 	}
-    
-    // Draw our controller
-    if (getflag(F_SHOW_CONTROLLER))
+ 
+    // PM-2014-07-10: [[ Bug 12737 ]] We use AVFoundation player with our custom controller only if OSX version >= 10.8
+    if (MCmajorosversion >= 0x1080)
     {
-        drawcontroller(dc);
+        // Draw our controller
+        if (getflag(F_SHOW_CONTROLLER))
+        {
+            drawcontroller(dc);
+        }
     }
     
 	if (getflag(F_SHOW_BORDER))
