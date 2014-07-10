@@ -3678,16 +3678,8 @@ void MCChunk::count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, u
         if (MCValueGetTypeCode(*t_value) == kMCValueTypeCodeArray)
             r_count = MCArrayGetCount((MCArrayRef)*t_value);
         else
-        {
-            MCAutoStringRef t_string;
-            if (!ctxt . ConvertToString(*t_value, &t_string))
-            {
-                ctxt.LegacyThrow(EE_CHUNK_BADEXPRESSION);
-                return;
-            }
-            
-            MCStringsCountChunks(ctxt, tocount, *t_string, r_count);
-        }
+            // AL-2014-07-10: [[ Bug 12795 ]] Don't call MCStringsCountChunks with a non-string chunk expression.
+            r_count = 0;
     }
 }
 
