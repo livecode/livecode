@@ -644,7 +644,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                                     {
                                         // This is a double-click event
                                         doubleclick = True;
-                                        MCdispatcher->wmdown(t_event->button.window, t_event->button.button);
+                                        MCdispatcher->wdoubledown(t_event->button.window, t_event->button.button);
                                     }
                                     
                                     reset = True;
