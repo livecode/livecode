@@ -116,7 +116,7 @@ void MCPlatformWindow::Invalidate(MCRegionRef p_region)
         MCRegionAddRegion(m_dirty_region, p_region);
 }
 
-void MCPlatformWindow::Show(void)
+void MCPlatformWindow::Show()
 {
 	// If the window is already visible, do nothing.
 	if (m_is_visible)
@@ -129,7 +129,25 @@ void MCPlatformWindow::Show(void)
 	m_is_visible = true;
 	
 	// Show the window.
-	DoShow();
+    DoShow();
+}
+
+// SN-2014-07-11: [[ Bug 12708 ]] Pulldown menu submenus don't trigger menuPick
+//  p_combo added to create an appropriate popup for the Combo Boxes
+void MCPlatformWindow::ShowAsCombo()
+{
+	// If the window is already visible, do nothing.
+	if (m_is_visible)
+		return;
+	
+	// Make sure the window has been created.
+	RealizeAndNotify();
+	
+	// Update the state.
+	m_is_visible = true;
+	
+	// Show the window.
+    DoShowAsCombo();
 }
 
 void MCPlatformWindow::ShowAsSheet(MCPlatformWindowRef p_parent)
@@ -611,6 +629,13 @@ void MCPlatformInvalidateWindow(MCPlatformWindowRef p_window, MCRegionRef p_regi
 void MCPlatformShowWindow(MCPlatformWindowRef p_window)
 {
 	p_window -> Show();
+}
+
+// SN-2014-07-11: [[ Bug 12708 ]] Pulldown menu submenus don't trigger menuPick
+//  Combo-specific window creation
+void MCPlatformShowWindowAsCombo(MCPlatformWindowRef p_window)
+{
+    p_window -> ShowAsCombo();
 }
 
 void MCPlatformShowWindowAsSheet(MCPlatformWindowRef p_window, MCPlatformWindowRef p_parent_window)
