@@ -237,7 +237,7 @@ substring, so we have to get and release working store instead of just using
 the POSIX structures as was done in earlier releases when PCRE needed only 2
 ints. */
 
-int regexec(regex_t *preg, MCStringRef string, int len, size_t nmatch,
+int regexec(regex_t *preg, const unichar_t *string, int len, size_t nmatch,
             regmatch_t pmatch[], int eflags)
 {
 	int rc;
@@ -258,7 +258,7 @@ int regexec(regex_t *preg, MCStringRef string, int len, size_t nmatch,
 	}
 
     // [[ libprce update ]] SN-2014-01-14: now handles unicode-encoded input
-    rc = pcre16_exec((const pcre16 *)preg->re_pcre, NULL, (PCRE_SPTR16)MCStringGetCharPtr(string), len, 0, options,
+    rc = pcre16_exec((const pcre16 *)preg->re_pcre, NULL, (PCRE_SPTR16)string, len, 0, options,
 	               ovector, nmatch * 3);
 
 	if (rc == 0)
@@ -372,11 +372,26 @@ regexp *MCR_compile(MCStringRef exp, bool casesensitive)
 	return re;
 }
 
-int MCR_exec(regexp *prog, MCStringRef string)
+int MCR_exec(regexp *prog, MCStringRef string, MCRange p_range)
 {
-	int status;
+    // AL-2014-06-25: [[ Bug 12676 ]] Ensure string is not unnativized by MCR_exec
+    int status;
 	int flags = 0;
-	status = regexec(&prog->rexp, string, MCStringGetLength(string), NSUBEXP, prog->matchinfo, flags);
+    
+    if (MCStringIsNative(string))
+    {
+        uindex_t t_length;
+        unichar_t *t_string_chars;
+        t_string_chars = nil;
+        
+        MCMemoryAllocate(MCStringGetLength(string) * sizeof(unichar_t), t_string_chars);
+        t_length = MCStringGetChars(string, p_range, t_string_chars);
+        status = regexec(&prog->rexp, t_string_chars, t_length, NSUBEXP, prog->matchinfo, flags);
+        MCMemoryDeallocate(t_string_chars);
+    }
+    else
+        status = regexec(&prog->rexp, MCStringGetCharPtr(string) + p_range . offset, p_range . length, NSUBEXP, prog->matchinfo, flags);
+
 	if (status != REG_OKAY)
 	{
 		if (status == REG_NOMATCH)

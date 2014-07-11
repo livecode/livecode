@@ -64,7 +64,7 @@ regexp;
 // JS-2013-07-01: [[ EnhancedFilter ]] Updated to manage case and allow case-insensitive matching.
 // MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's no reason not to use the cache.
 regexp *MCR_compile(MCStringRef exp, bool casesensitive);
-int MCR_exec(regexp *prog, MCStringRef string);
+int MCR_exec(regexp *prog, MCStringRef string, MCRange p_range);
 void MCR_copyerror(MCStringRef &r_error);
 void MCR_free(regexp *prog);
 

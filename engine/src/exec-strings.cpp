@@ -804,7 +804,7 @@ void MCStringsEvalMatchText(MCExecContext& ctxt, MCStringRef p_string, MCStringR
     }
     
     bool t_success = true;
-    r_match = 0 != MCR_exec(t_compiled, p_string);
+    r_match = 0 != MCR_exec(t_compiled, p_string, MCRangeMake(0, MCStringGetLength(p_string)));
     uindex_t t_match_index = 1;
     
     for (uindex_t i = 0; t_success && i < p_result_count; i++)
@@ -843,7 +843,7 @@ void MCStringsEvalMatchChunk(MCExecContext& ctxt, MCStringRef p_string, MCString
     }
 
     bool t_success = true;
-    r_match = 0 != MCR_exec(t_compiled, p_string);
+    r_match = 0 != MCR_exec(t_compiled, p_string, MCRangeMake(0, MCStringGetLength(p_string)));
     uindex_t t_match_index = 1;
     
     for (uindex_t i = 0; t_success && i + 1 < p_result_count; i += 2)
@@ -899,7 +899,7 @@ void MCStringsEvalReplaceText(MCExecContext& ctxt, MCStringRef p_string, MCStrin
 	MCStringRef t_substring;
 	t_substring = nil;
     
-    while (t_success && t_source_offset < t_source_length && MCStringCopySubstring(p_string, MCRangeMake(t_source_offset, MCStringGetLength(p_string) - (t_source_offset)), t_substring) && MCR_exec(t_compiled, t_substring))
+    while (t_success && t_source_offset < t_source_length && MCR_exec(t_compiled, p_string, MCRangeMake(t_source_offset, MCStringGetLength(p_string) - (t_source_offset))))
     {
         uindex_t t_start = t_compiled->matchinfo[0].rm_so;
         uindex_t t_end = t_compiled->matchinfo[0].rm_eo;
@@ -1741,21 +1741,19 @@ bool MCRegexMatcher::compile(MCStringRef& r_error)
 }
 
 bool MCRegexMatcher::match(MCRange p_range)
-{
-    MCStringRef t_string;
-    MCStringCopySubstring(source, p_range, t_string);
-    
+{    
     // if appropriate, normalize the source string.
     // AL-2014-07-11: [[ Bug 12797 ]] Compare options correctly and normalize the source, not the pattern
     if (options == kMCStringOptionCompareNonliteral || options == kMCStringOptionCompareCaseless)
     {
-        MCAutoStringRef normalized_source;
-        MCStringNormalizedCopyNFC(t_string, &normalized_source);
-        MCValueAssign(t_string, *normalized_source);
+        MCAutoStringRef t_string, normalized_source;
+        MCStringCopySubstring(source, p_range, &t_string);
+        MCStringNormalizedCopyNFC(*t_string, &normalized_source);
+        return MCR_exec(compiled, *normalized_source, MCRangeMake(0, MCStringGetLength(*normalized_source)));
     }
     
-	return MCR_exec(compiled, t_string);
-    MCValueRelease(t_string);
+	return MCR_exec(compiled, source, p_range);
+
 }
 
 bool MCWildcardMatcher::compile(MCStringRef& r_error)
