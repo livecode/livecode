@@ -1413,6 +1413,22 @@ void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringR
 	ctxt.Throw();
 }
 
+bool MCDataConcatenate(MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result)
+{
+	MCAutoDataRef t_string;
+	return MCDataMutableCopy(p_left, &t_string) &&
+    MCDataAppend(*t_string, p_right) &&
+    MCDataCopy(*t_string, r_result);
+}
+
+void MCStringsEvalConcatenate(MCExecContext& ctxt, MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result)
+{
+	if (MCDataConcatenate(p_left, p_right, r_result))
+		return;
+    
+	ctxt.Throw();
+}
+
 void MCStringsEvalConcatenateWithSpace(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result)
 {
 	if (MCStringsConcatenateWithChar(p_left, p_right, ' ', r_result))

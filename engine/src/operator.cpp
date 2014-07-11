@@ -282,6 +282,8 @@ void MCNot::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 //  String operators
 //
 
+void MCConcat::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+{
 #ifdef /* MCConcat */ LEGACY_EXEC
 	MCExecPoint ep2(ep1);
 	if (left->eval(ep1) != ES_NORMAL)
@@ -298,6 +300,52 @@ void MCNot::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	ep1.appendmcstring(ep2 . getsvalue());
 	return ES_NORMAL;
 #endif /* MCConcat */
+    
+    MCAutoValueRef t_left, t_right;
+    if (!ctxt . EvalExprAsValueRef(left, EE_CONCAT_BADLEFT, &t_left))
+        return;
+    
+    if (!ctxt . EvalExprAsValueRef(right, EE_CONCAT_BADRIGHT, &t_right))
+        return;
+    
+    // AL-2014-09-11: [[ Bug 12195 ]] Data ought to be concatenated without conversion to text
+    if (MCValueGetTypeCode(*t_left) == kMCValueTypeCodeData &&
+        MCValueGetTypeCode(*t_right) == kMCValueTypeCodeData)
+    {
+        MCDataRef t_result;
+        MCStringsEvalConcatenate(ctxt, (MCDataRef)*t_left, (MCDataRef)*t_right, t_result);
+        
+        if (!ctxt . HasError())
+            MCExecValueTraits<MCDataRef>::set(r_value, t_result);
+        return;
+    }
+    
+    MCAutoStringRef t_left_string, t_right_string;
+    if (!ctxt . ConvertToString(*t_left, &t_left_string))
+        return;
+    
+    if (!ctxt . ConvertToString(*t_right, &t_right_string))
+        return;
+    
+    MCStringRef t_result;
+    MCStringsEvalConcatenate(ctxt, *t_left_string, *t_right_string, t_result);
+    
+    if (!ctxt . HasError())
+        MCExecValueTraits<MCStringRef>::set(r_value, t_result);
+}
+
+void MCConcat::compile(MCSyntaxFactoryRef ctxt)
+{
+    MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+    
+    left -> compile(ctxt);
+    
+    right -> compile(ctxt);
+    
+    MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalConcatenateMethodInfo);
+    
+    MCSyntaxFactoryEndExpression(ctxt);
+}
 
 #ifdef /* MCConcatSpace */ LEGACY_EXEC
 	MCExecPoint ep2(ep1);

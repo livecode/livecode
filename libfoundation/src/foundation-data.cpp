@@ -100,12 +100,10 @@ byte_t MCDataGetByteAtIndex(MCDataRef p_data, uindex_t p_index)
 hash_t MCDataHash(MCDataRef p_data);
 bool MCDataIsEqualTo(MCDataRef p_left, MCDataRef p_right)
 {
-    bool t_success = true;
+    if (p_left -> byte_count != p_right -> byte_count)
+        return false;
     
-    for (uindex_t i = 0 ; i < p_left->byte_count && i < p_right->byte_count && t_success ; ++i)
-        t_success = p_left->bytes[i] == p_right->bytes[i];
-    
-    return t_success;
+    return MCMemoryCompare(p_left -> bytes, p_right -> bytes, p_left -> byte_count);
 }
 
 compare_t MCDataCompareTo(MCDataRef p_left, MCDataRef p_right);
@@ -478,7 +476,7 @@ static bool __MCDataExpandAt(MCDataRef r_data, uindex_t p_at, uindex_t p_count)
 		return false;
     
 	// Shift up the bytes above
-	MCMemoryMove(r_data->bytes + p_at + p_count, r_data->bytes + p_at, r_data->byte_count + 1 - p_at);
+	MCMemoryMove(r_data->bytes + p_at + p_count, r_data->bytes + p_at, r_data->byte_count - p_at);
     
 	// Increase the byte_count.
 	r_data->byte_count += p_count;
