@@ -1412,7 +1412,7 @@ void MCIPhoneHandleTouches(UIView *p_view, NSSet *p_touches, UITouchPhase p_phas
 		t_loc = MCPointMake(t_location.x, t_location.y);
 		
 		// IM-2014-01-30: [[ HiDPI ]] Convert screen to logical coords
-		t_loc = MCScreenDC::screentologicalpoint(t_loc);
+		t_loc = MCscreen -> screentologicalpoint(t_loc);
 		
 		static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, t_touch, [t_touch timestamp] * 1000, t_loc . x, t_loc . y);
 	}
