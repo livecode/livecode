@@ -152,19 +152,18 @@ bool apk_list_folder_entries(MCSystemListFolderEntriesCallback p_callback, void 
 	t_entry . group_id = t_stat . st_gid;
 	t_entry . permissions = t_stat . st_mode & 0444;
 
-    uindex_t t_length;
     char* t_next_entry;
     MCAutoStringRefAsUTF8String t_utf8_files;
     
     t_success = t_utf8_files . Lock(*t_list);
     
     if (t_success)
-    {
         t_next_entry = *t_utf8_files;
-        t_length = t_utf8_files . Size();
-    }
     
-	while (t_success && t_length != 0)
+    bool t_more_entries;
+    t_more_entries = true;
+    
+	while (t_success && t_more_entries)
 	{
 		uint32_t t_next_index = 0;
 		uint32_t t_size_index = 0;
@@ -193,7 +192,11 @@ bool apk_list_folder_entries(MCSystemListFolderEntriesCallback p_callback, void 
 				*t_next_entry++ = '\0';
 			}
 			else
+            {
 				t_next_entry = t_ffolder + MCCStringLength(t_ffolder);
+                // AL-2014-06-25: [[ Bug 12659 ]] If there are no more lines, this is the last entry.
+                t_more_entries = false;
+            }
 
 			t_success = MCU_stoi4(t_fsize, t_size) && MCU_stob(t_ffolder, t_is_folder);
 		}
