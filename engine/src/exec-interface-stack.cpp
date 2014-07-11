@@ -2164,7 +2164,7 @@ void MCStack::GetKey(MCExecContext& ctxt, bool& r_value)
     r_value = iskeyed();
 }
 
-// MERG-2014-06-25: [[ IgnoreMouseEvents ]] Setter and getter for the IgnoreMouseEvents property
+// SN-2014-06-25: [[ IgnoreMouseEvents ]] Setter and getter for the P_IGNORE_MOUSE_EVENTS property
 void MCStack::SetIgnoreMouseEvents(MCExecContext &ctxt, bool p_ignore)
 {
     if (changeextendedstate(p_ignore, ECS_IGNORE_MOUSE_EVENTS) && opened)

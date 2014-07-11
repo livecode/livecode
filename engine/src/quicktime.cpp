@@ -45,7 +45,7 @@
 #include <ImageCodec.h>
 
 #define PIXEL_FORMAT_32 k32BGRAPixelFormat
-// MERG-2014-06-26 [[ PlatformPlayer ]]
+// SN-2014-06-26 [[ PlatformPlayer ]]
 // Function used in both quicktime.cpp and player.cpp
 extern OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
 

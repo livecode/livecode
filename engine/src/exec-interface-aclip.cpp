@@ -41,7 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifdef FEATURE_PLATFORM_AUDIO
 #include "platform.h"
 #elif defined(_WINDOWS_DESKTOP)
-// MERG-2014-06-26 [[ PlatformPlayer ]]
+// SN-2014-06-26 [[ PlatformPlayer ]]
 // These 2 definitions must be accessible from exec-interface-aclip
 #include "w32prefix.h"
 extern HWAVEOUT hwaveout;  //handle to audio device opened
@@ -71,7 +71,7 @@ MCExecEnumTypeInfo *kMCInterfacePlayDestinationTypeInfo = &_kMCInterfacePlayDest
 
 void MCAudioClip::GetPlayProp(MCExecContext& ctxt, integer_t& r_loudness)
 {
-    // MERG-2014-06-25 [[ PlatformAudio ]]
+    // SN-2014-06-25 [[ PlatformAudio ]]
     if (this == MCtemplateaudio)
     {
         extern bool MCSystemGetPlayLoudness(uint2& r_loudness);

@@ -326,6 +326,8 @@ void MCField::resetparagraphs()
 		//   B) clear current hilites line, useless now, but may actually do something
 		//      in the future
 		if (flags & F_LIST_BEHAVIOR)
+            hilitedlines(t_lines);
+        
 		selectedmark(False, si, ei, True);
 		if (flags & F_LIST_BEHAVIOR)
 			sethilitedlines(NULL, 0);

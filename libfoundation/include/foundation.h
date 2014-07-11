@@ -478,7 +478,7 @@ typedef float float32_t;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// MERG-2014-06-25 [[ FieldCoordinates ]] typedef moved here
+//  SN-2014-06-25 [[ FieldCoordinates ]] typedef moved here
 //
 //  COORDINATES
 //

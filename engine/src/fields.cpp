@@ -386,13 +386,13 @@ findex_t MCField::getpgsize(MCParagraph *pgptr)
 	return length;
 }
 
-// MERG-2014-06-23: [[ Bug 12303 ]] Refactoring of the bugfix: new param added
+// SN-2014-06-23: [[ Bug 12303 ]] Refactoring of the bugfix: new param added
 void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, bool p_preserve_zero_length_styles)
 {
     setparagraphs(newpgptr, parid, INTEGER_MIN, INTEGER_MIN, p_preserve_zero_length_styles);
 }
 
-// MERG-2014-20-06: [[ Bug 12303 ]] Refactoring of the bugfix: new param added
+// SN-2014-06-23: [[ Bug 12303 ]] Refactoring of the bugfix: new param added
 void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start, findex_t p_end, bool p_preserve_zero_length_styles)
 {
 	if (flags & F_SHARED_TEXT)
@@ -468,14 +468,18 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start
         t_insert_paragraph->setselectionindex(p_start, p_start, False, False);
         t_insert_paragraph->split();
         t_insert_paragraph->append(newpgptr);
-        // MERG-2014-20-06: [[ Bug 12303 ]] Refactoring of the bugfix
+        // SN-2014-20-06: [[ Bug 12303 ]] Refactoring of the bugfix
         t_insert_paragraph->join(p_preserve_zero_length_styles);
         if (t_lastpgptr == NULL)
             t_lastpgptr = t_insert_paragraph;
         else
             t_insert_paragraph->defrag();
-
-        t_lastpgptr->join();
+        
+        // MW-2014-05-28: [[ Bug 10593 ]] When replacing a range of text with styles, paragraph styles from
+        //   the new content should replace paragraph styles for the old content whenever the range touches
+        //   the 0 index of a paragraph. Thus when joining the end of the range again, we want to preserve
+        //   the new contents styles even if it is an empty paragraph.
+        t_lastpgptr->join(true);
         t_lastpgptr->defrag();
 
         fptr->setparagraphs(paragraphs);

@@ -216,7 +216,7 @@ static MCExecCustomTypeInfo _kMCInterfaceButtonIconTypeInfo =
 
 //////////
 
-// MERG-2014-06-25
+// SN-2014-06-25: [[ MERGE-6.7 ]] Definition of the iconGravity relocated
 // MW-2014-06-19: [[ IconGravity ]] Strings for the 'iconGravity' property.
 static MCExecEnumTypeElementInfo _kMCInterfaceButtonIconGravityElementInfo[] =
 {
