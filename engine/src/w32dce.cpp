@@ -111,8 +111,8 @@ static BOOL CALLBACK DescribeMonitorsCallback(HMONITOR p_monitor, HDC p_monitor_
 			t_workarea = MCRectangleFromWin32RECT(t_info.rcWork);
 
 			// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
-			t_context->displays[t_index].viewport = ((MCScreenDC*)MCscreen)->screentologicalrect(t_viewport);
-			t_context->displays[t_index].workarea = ((MCScreenDC*)MCscreen)->screentologicalrect(t_workarea);
+			t_context->displays[t_index].viewport = MCscreen->screentologicalrect(t_viewport);
+			t_context->displays[t_index].workarea = MCscreen->screentologicalrect(t_workarea);
 		}
 	}
 
@@ -461,7 +461,7 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 				t_clickloc = MCPointMake(LOWORD(tptr->lParam), HIWORD(tptr->lParam));
 
 				// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
-				t_clickloc = ((MCScreenDC*)MCscreen)->screentologicalpoint(t_clickloc);
+				t_clickloc = MCscreen->screentologicalpoint(t_clickloc);
 
 				MCscreen->setclickloc(MCmousestackptr, t_clickloc);
 				releaseptr = tptr;

@@ -271,11 +271,7 @@ MCStack *MCScreenDC::platform_getstackatpoint(int32_t x, int32_t y)
 	if (t_window == nil)
 		return nil;
 		
-	_Drawable d;
-	d . type = DC_WINDOW;
-	d . handle . window = (MCSysWindowHandle)t_window;
-		
-	return MCdispatcher -> findstackd(&d);
+	return MCdispatcher->findstackwindowid((uint32_t)t_window);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
