@@ -287,6 +287,32 @@ uint2 MCUIDC::getvclass()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-07-09: [[ Bug 12602 ]] Standard DC does not scale
+MCPoint MCUIDC::logicaltoscreenpoint(const MCPoint &p_point)
+{
+	return p_point;
+}
+
+// IM-2014-07-09: [[ Bug 12602 ]] Standard DC does not scale
+MCPoint MCUIDC::screentologicalpoint(const MCPoint &p_point)
+{
+	return p_point;
+}
+
+// IM-2014-07-09: [[ Bug 12602 ]] Standard DC does not scale
+MCRectangle MCUIDC::logicaltoscreenrect(const MCRectangle &p_rect)
+{
+	return p_rect;
+}
+
+// IM-2014-07-09: [[ Bug 12602 ]] Standard DC does not scale
+MCRectangle MCUIDC::screentologicalrect(const MCRectangle &p_rect)
+{
+	return p_rect;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCUIDC::setmouseloc(MCStack *p_target, MCPoint p_loc)
 {
 	MCPoint t_mouseloc;

@@ -1424,8 +1424,19 @@ void revBrowserGetProp(CWebBrowserBase *p_instance, char *args[], int nargs, cha
 	{
 		int t_left, t_top, t_right, t_bottom;
 		t_browser -> GetRect(t_left, t_top, t_right, t_bottom);
+
+		// IM-2014-07-09: [[ Bug 12225 ]] Convert browser rect to stack coords
+		MCRectangle32 t_rect;
+		t_rect.x = t_left;
+		t_rect.y = t_top;
+		t_rect.width = t_right - t_left;
+		t_rect.height = t_bottom - t_top;
+
+		int t_success;
+		/* UNCHECKED */ WindowToStackRect(t_browser->GetWindowId(), &t_rect, &t_success);
+
         // AL-2013-11-01 [[ Bug 11289 ]] Use libcore methods to prevent potential buffer overflows in revbrowser
-        MCCStringFormat(result,"%d,%d,%d,%d", t_left, t_top, t_right, t_bottom);
+        MCCStringFormat(result,"%d,%d,%d,%d", t_rect.x, t_rect.y, t_rect.x + t_rect.width, t_rect.y + t_rect.height);
 	}
 	break;
 	
@@ -1433,8 +1444,19 @@ void revBrowserGetProp(CWebBrowserBase *p_instance, char *args[], int nargs, cha
 	{
 		int t_left, t_top, t_right, t_bottom;
 		t_browser -> GetFormattedRect(t_left, t_top, t_right, t_bottom);
+
+		// IM-2014-07-09: [[ Bug 12225 ]] Convert browser rect to stack coords
+		MCRectangle32 t_rect;
+		t_rect.x = t_left;
+		t_rect.y = t_top;
+		t_rect.width = t_right - t_left;
+		t_rect.height = t_bottom - t_top;
+
+		int t_success;
+		/* UNCHECKED */ WindowToStackRect(t_browser->GetWindowId(), &t_rect, &t_success);
+
         // AL-2013-11-01 [[ Bug 11289 ]] Use libcore methods to prevent potential buffer overflows in revbrowser
-		 MCCStringFormat(result,"%d,%d,%d,%d", t_left, t_top, t_right, t_bottom);
+        MCCStringFormat(result,"%d,%d,%d,%d", t_rect.x, t_rect.y, t_rect.x + t_rect.width, t_rect.y + t_rect.height);
 	}
 	break;
 
@@ -1630,7 +1652,17 @@ void revBrowserSetProp(CWebBrowserBase *p_instance, char *args[], int nargs, cha
 
 			if (sscanf(args[1], "%lf,%lf,%lf,%lf", &t_left, &t_top, &t_right, &t_bottom) == 4)
 			{
-				t_browser -> SetRect((int)(t_left + 0.00000001), (int)(t_top + 0.00000001), (int)(t_right + 0.00000001), (int)(t_bottom + 0.00000001));
+				// IM-2014-07-09: [[ Bug 12225 ]] Convert stack rect to window coords
+				MCRectangle32 t_rect;
+				t_rect.x = (int)(t_left + 0.00000001);
+				t_rect.y = (int)(t_top + 0.00000001);
+				t_rect.width = ((int)(t_right + 0.00000001)) - t_rect.x;
+				t_rect.height = ((int)(t_bottom + 0.00000001)) - t_rect.y;
+
+				int t_success;
+				/* UNCHECKED */ StackToWindowRect(t_browser->GetWindowId(), &t_rect, &t_success);
+
+				t_browser -> SetRect(t_rect.x, t_rect.y, t_rect.x + t_rect.width, t_rect.y + t_rect.height);
 			}
 			else
 			{

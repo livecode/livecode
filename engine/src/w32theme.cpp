@@ -1561,7 +1561,7 @@ bool MCNativeTheme::applythemetotooltipwindow(Window p_window, const MCRectangle
 
 	// IM-2014-04-21: [[ Bug 12235 ]] Scale themed tooltip rect to screen coords
 	MCRectangle t_screen_rect;
-	t_screen_rect = ((MCScreenDC*)MCscreen)->logicaltoscreenrect(p_rect);
+	t_screen_rect = MCscreen->logicaltoscreenrect(p_rect);
 
 	RECT t_win_rect;
 	SetRect(&t_win_rect, 0, 0, t_screen_rect . width, t_screen_rect . height);
