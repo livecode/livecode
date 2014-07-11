@@ -575,6 +575,7 @@ void MCAVFoundationPlayer::Load(const char *p_filename_or_url, bool p_is_url)
     if (p_filename_or_url == nil)
     {
         m_player_item_video_output = nil;
+        [m_view setPlayer: nil];
         uint4 t_zero_time = 0;
         SetProperty(kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_zero_time);
         return;
@@ -890,8 +891,14 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 		{
             // TODO: the 'naturalSize' method of AVAsset is deprecated, but we use for the moment.
             CGSize t_size;
-            t_size = [[[m_player currentItem] asset] naturalSize];
-            
+            if (m_player != nil)
+                t_size = [[[m_player currentItem] asset] naturalSize];
+            else
+            {
+                // This is in case a player is created by script, where the filename is nil (thus m_player is nil as well)
+                t_size . width = 306;
+                t_size . height = 244;
+            }
 			*(MCRectangle *)r_value = MCRectangleMake(0, 0, t_size . width, t_size . height);
 		}
         break;

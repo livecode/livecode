@@ -1076,5 +1076,48 @@ void MCQTEffectEnd(void)
 
 #endif
 
+#else    // if not FEATURE_QUICKTIME_EFFECTS
+
+void MCQTEffectsList(MCExecPoint& ep)
+{
+    ep.clear();
+}
+
+Boolean MCQTEffectsDialog(MCExecPoint& ep, const char *p_title, Boolean p_sheet)
+{
+    return True;
+}
+
+void MCQTRecordSound(char *file)
+{
+    delete file;
+    MCresult -> sets("not supported");
+}
+
+void MCQTGetRecordLoudness(MCExecPoint& ep)
+{
+    uint2 rloudness = 0;
+    ep.setint(rloudness);
+}
+
+void MCQTGetRecordCompressionList(MCExecPoint& ep)
+{
+    MCresult -> sets("not supported");
+}
+
+void MCQTStopRecording(void)
+{
+}
+
+void MCQTRecordDialog(MCExecPoint& ep, const char *p_title, Boolean sheet)
+{
+}
+
+void MCQTGetVersion(MCExecPoint& ep)
+{
+    ep.setstaticcstring("0.0");  //indicates that no QT installed
+}
+
+
 #endif
 

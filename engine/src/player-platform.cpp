@@ -1596,17 +1596,27 @@ void MCPlayer::showcontroller(Boolean show)
 
 Boolean MCPlayer::prepare(const char *options)
 {
+    if (MCmajorosversion <= 0x1080)
+    {
+        extern bool MCQTInit(void);
+        if (!MCQTInit())
+            return False;
+    }
+
 	Boolean ok = False;
     
 	if (state & CS_PREPARED)
 		return True;
     
-	if (filename == NULL)
+    // Fixes the issue of invisible player being created by script
+	if (filename == NULL && state & CS_PREPARED)
     {
         if (m_platform_player != nil)
             MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &filename);
         return True;
     }
+    
+    
 	if (!opened)
 		return False;
     
