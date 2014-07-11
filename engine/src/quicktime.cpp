@@ -1048,25 +1048,12 @@ void MCQTEffectEnd(void)
 	}
 }
 
-#else
-
-#ifndef PLAYER_LEGACY_H
-bool MCQTInit(void)
-{
-    return false;
-}
-
-void MCQTGetVersion(MCExecPoint& ep)
-{
-    ep . clear();
-}
-#endif
+#else    // here #if 0 stops
 
 void MCQTEffectsList(MCExecPoint& ep)
 {
 	ep . clear();
 }
-
 
 Boolean MCQTEffectsDialog(MCExecPoint& ep, const char *p_title, Boolean p_sheet)
 {
@@ -1089,22 +1076,22 @@ void MCQTEffectEnd(void)
 
 #endif
 
-#else
+#else    // if not FEATURE_QUICKTIME_EFFECTS
 
 void MCQTEffectsList(MCExecPoint& ep)
 {
-	ep.clear();
+    ep.clear();
 }
 
 Boolean MCQTEffectsDialog(MCExecPoint& ep, const char *p_title, Boolean p_sheet)
 {
-	return True;
+    return True;
 }
 
 void MCQTRecordSound(char *file)
 {
-	delete file;
-	MCresult -> sets("not supported");
+    delete file;
+    MCresult -> sets("not supported");
 }
 
 void MCQTGetRecordLoudness(MCExecPoint& ep)
@@ -1115,7 +1102,7 @@ void MCQTGetRecordLoudness(MCExecPoint& ep)
 
 void MCQTGetRecordCompressionList(MCExecPoint& ep)
 {
-	MCresult -> sets("not supported");
+    MCresult -> sets("not supported");
 }
 
 void MCQTStopRecording(void)
@@ -1128,7 +1115,9 @@ void MCQTRecordDialog(MCExecPoint& ep, const char *p_title, Boolean sheet)
 
 void MCQTGetVersion(MCExecPoint& ep)
 {
-	ep.setstaticcstring("0.0");  //indicates that no QT installed
+    ep.setstaticcstring("0.0");  //indicates that no QT installed
 }
+
+
 #endif
 

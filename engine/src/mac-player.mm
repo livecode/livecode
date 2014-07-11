@@ -95,10 +95,19 @@ class MCQTKitPlayer;
 
 extern MCAVFoundationPlayer *MCAVFoundationPlayerCreate(void);
 extern MCQTKitPlayer *MCQTKitPlayerCreate(void);
+extern uint4 MCmajorosversion;
 
 void MCPlatformCreatePlayer(MCPlatformPlayerRef& r_player)
 {
-	r_player = (MCPlatformPlayerRef)MCAVFoundationPlayerCreate();
+    // PM-2014-07-10: [[ Bug 12737 ]] For Mac OSX 10.7, use the old QTKit player
+    if (MCmajorosversion >= 0x1080)
+    {
+        r_player = (MCPlatformPlayerRef)MCAVFoundationPlayerCreate();
+    }
+    else
+    {
+        r_player = (MCPlatformPlayerRef)MCQTKitPlayerCreate();
+    }
 }
 
 void MCPlatformPlayerRetain(MCPlatformPlayerRef player)
