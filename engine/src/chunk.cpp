@@ -3604,7 +3604,12 @@ void MCChunk::count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, u
         if (optr == nil)
         {
             if (stack != NULL)
+            {
+                // AL-2014-06-09: [[ Bug 12596 ]] Throw error when the chunk expression
+                //  does not resolve to an object on the specified stack.
+                ctxt . Throw();
                 return;
+            }
             optr = MCdefaultstackptr;
         }
         if (tocount == CT_MARKED)
@@ -3678,16 +3683,8 @@ void MCChunk::count(MCExecContext &ctxt, Chunk_term tocount, Chunk_term ptype, u
         if (MCValueGetTypeCode(*t_value) == kMCValueTypeCodeArray)
             r_count = MCArrayGetCount((MCArrayRef)*t_value);
         else
-        {
-            MCAutoStringRef t_string;
-            if (!ctxt . ConvertToString(*t_value, &t_string))
-            {
-                ctxt.LegacyThrow(EE_CHUNK_BADEXPRESSION);
-                return;
-            }
-            
-            MCStringsCountChunks(ctxt, tocount, *t_string, r_count);
-        }
+            // AL-2014-07-10: [[ Bug 12795 ]] Don't call MCStringsCountChunks with a non-string chunk expression.
+            r_count = 0;
     }
 }
 
@@ -4178,8 +4175,10 @@ bool MCChunk::getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         return t_success;
     }
     else
-	{        
-		if (t_obj_chunk . object->gettype() != CT_FIELD)
+	{
+        // AL-2014-07-09: [[ Bug 12733 ]] Buttons are also valid containers wrt text chunk properties.
+		if (t_obj_chunk . object -> gettype() != CT_FIELD &&
+            t_obj_chunk . object -> gettype() != CT_BUTTON)
 		{
 			MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
             MCValueRelease(t_obj_chunk . mark . text);
@@ -4238,7 +4237,9 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
     }
     else
     {
-        if (t_obj_chunk . object -> gettype() != CT_FIELD)
+        // AL-2014-07-09: [[ Bug 12733 ]] Buttons are also valid containers wrt text chunk properties.
+        if (t_obj_chunk . object -> gettype() != CT_FIELD &&
+            t_obj_chunk . object -> gettype() != CT_BUTTON)
         {
             MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
             MCValueRelease(t_obj_chunk . mark . text);
@@ -4254,7 +4255,7 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
         if (islinechunk() && t_info == nil)
             t_info = lookup_object_property(t_obj_chunk . object -> getpropertytable(), which, effective == True, t_is_array_prop, kMCPropertyInfoChunkTypeChar);
         
-        if (t_info == nil || t_info -> getter == nil)
+        if (t_info == nil || t_info -> setter == nil)
         {
             MCeerror -> add(EE_OBJECT_SETNOPROP, line, pos);
             MCValueRelease(t_obj_chunk . mark . text);

@@ -141,6 +141,22 @@ static bool MCLogicIsEqualTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef 
         return true;
     }
     
+    // AL-2014-06-12: [[ Bug 12195 ]] If one is empty and the other not,
+    //  by the time we're here, then we don't have equality.
+    if (t_left_is_empty != t_right_is_empty)
+    {
+        r_result = false;
+        return true;
+    }
+    
+    // AL-2014-06-12: [[ Bug 12195 ]] If left and right are data, compare as data
+    if (MCValueGetTypeCode(p_left) == kMCValueTypeCodeData &&
+        MCValueGetTypeCode(p_right) == kMCValueTypeCodeData)
+    {
+        r_result = MCDataIsEqualTo((MCDataRef)p_left, (MCDataRef)p_right);
+        return true;
+    }
+    
 	// Otherwise, convert both to strings and compare.
 	MCAutoStringRef t_left_str, t_right_str;
 	if (ctxt . ForceToString(p_left, &t_left_str) &&

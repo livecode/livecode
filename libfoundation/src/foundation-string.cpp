@@ -4769,13 +4769,10 @@ bool MCStringNormalizedCopyNFC(MCStringRef self, MCStringRef &r_string)
 
 bool MCStringNormalizedCopyNFD(MCStringRef self, MCStringRef &r_string)
 {
-    if (MCStringIsNative(self))
-        return MCStringCopy(self, r_string);
-    
-    // Normalise
+    // AL-2014-06-24: [[ Bug 12656 ]] Native strings can be decomposed into non-native ones.
     unichar_t *t_norm = nil;
     uindex_t t_norm_length;
-    if (MCUnicodeNormaliseNFD(self -> chars, self -> char_count, t_norm, t_norm_length)
+    if (MCUnicodeNormaliseNFD(MCStringGetCharPtr(self), self -> char_count, t_norm, t_norm_length)
         && MCStringCreateWithCharsAndRelease(t_norm, t_norm_length, r_string))
         return true;
     MCMemoryDelete(t_norm);
@@ -4784,6 +4781,7 @@ bool MCStringNormalizedCopyNFD(MCStringRef self, MCStringRef &r_string)
 
 bool MCStringNormalizedCopyNFKC(MCStringRef self, MCStringRef &r_string)
 {
+    // Native strings are already normalized
     if (MCStringIsNative(self))
         return MCStringCopy(self, r_string);
     
@@ -4799,13 +4797,11 @@ bool MCStringNormalizedCopyNFKC(MCStringRef self, MCStringRef &r_string)
 
 bool MCStringNormalizedCopyNFKD(MCStringRef self, MCStringRef &r_string)
 {
-    if (MCStringIsNative(self))
-        return MCStringCopy(self, r_string);
-    
+    // AL-2014-06-24: [[ Bug 12656 ]] Native strings can be decomposed into non-native ones.
     // Normalise
     unichar_t *t_norm = nil;
     uindex_t t_norm_length;
-    if (MCUnicodeNormaliseNFKD(self -> chars, self -> char_count, t_norm, t_norm_length)
+    if (MCUnicodeNormaliseNFKD(MCStringGetCharPtr(self), self -> char_count, t_norm, t_norm_length)
         && MCStringCreateWithCharsAndRelease(t_norm, t_norm_length, r_string))
         return true;
     MCMemoryDelete(t_norm);
