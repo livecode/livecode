@@ -400,8 +400,10 @@ public:
 	void ProcessMousePress(NSInteger button, bool is_down);
 	void ProcessMouseScroll(CGFloat dx, CGFloat dy);
 	
-	void ProcessKeyDown(MCPlatformKeyCode key_code, codepoint_t unmapped_char, codepoint_t mapped_char);
-	void ProcessKeyUp(MCPlatformKeyCode key_code, codepoint_t unmapped_char, codepoint_t mapped_char);
+    // SN-2014-07-11: [[ Bug 12747 ]] Shortcuts: the uncomment script shortcut cmd _ does not work
+    // Changed parameters order to follow *KeyDown functions consistency
+	void ProcessKeyDown(MCPlatformKeyCode key_code, codepoint_t mapped_char, codepoint_t unmapped_char);
+	void ProcessKeyUp(MCPlatformKeyCode key_code, codepoint_t mapped_char, codepoint_t unmapped_char);
 	
 	void MapMCPointToNSPoint(MCPoint location, NSPoint& r_ns_location);
 	void MapNSPointToMCPoint(NSPoint location, MCPoint& r_mc_location);

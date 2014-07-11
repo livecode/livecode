@@ -1700,14 +1700,16 @@ void MCMacPlatformWindow::ProcessMouseScroll(CGFloat dx, CGFloat dy)
 	MCMacPlatformHandleMouseScroll(dx, dy);
 }
 
-void MCMacPlatformWindow::ProcessKeyDown(MCPlatformKeyCode p_key_code, codepoint_t p_unmapped_char, codepoint_t p_mapped_char)
+// SN-2014-07-11: [[ Bug 12747 ]] Shortcuts: the uncomment script shortcut cmd _ does not work
+// Changed parameters order to follow *KeyDown functions consistency
+void MCMacPlatformWindow::ProcessKeyDown(MCPlatformKeyCode p_key_code, codepoint_t p_mapped_char, codepoint_t p_unmapped_char)
 {
-	HandleKeyDown(p_key_code, p_unmapped_char, p_mapped_char);
+	HandleKeyDown(p_key_code, p_mapped_char, p_unmapped_char);
 }
 
-void MCMacPlatformWindow::ProcessKeyUp(MCPlatformKeyCode p_key_code, codepoint_t p_unmapped_char, codepoint_t p_mapped_char)
+void MCMacPlatformWindow::ProcessKeyUp(MCPlatformKeyCode p_key_code, codepoint_t p_mapped_char, codepoint_t p_unmapped_char)
 {
-	HandleKeyUp(p_key_code, p_unmapped_char, p_mapped_char);
+	HandleKeyUp(p_key_code, p_mapped_char, p_unmapped_char);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
