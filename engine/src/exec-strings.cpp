@@ -1714,7 +1714,8 @@ bool MCRegexMatcher::compile(MCStringRef& r_error)
 {
 	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
 	//   no reason not to use the cache.
-	compiled = MCR_compile(pattern, (options == kMCStringOptionCompareExact || kMCStringOptionCompareNonliteral));
+    // AL-2014-07-11: [[ Bug 12797 ]] Compare options correctly
+	compiled = MCR_compile(pattern, (options == kMCStringOptionCompareExact || options == kMCStringOptionCompareNonliteral));
 	if (compiled == nil)
 	{
         MCR_copyerror(r_error);
@@ -1729,10 +1730,11 @@ bool MCRegexMatcher::match(MCRange p_range)
     MCStringCopySubstring(source, p_range, t_string);
     
     // if appropriate, normalize the source string.
-    if (options == kMCStringOptionCompareNonliteral || kMCStringOptionCompareCaseless)
+    // AL-2014-07-11: [[ Bug 12797 ]] Compare options correctly and normalize the source, not the pattern
+    if (options == kMCStringOptionCompareNonliteral || options == kMCStringOptionCompareCaseless)
     {
         MCAutoStringRef normalized_source;
-        MCStringNormalizedCopyNFC(pattern, &normalized_source);
+        MCStringNormalizedCopyNFC(t_string, &normalized_source);
         MCValueAssign(t_string, *normalized_source);
     }
     
