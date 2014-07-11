@@ -81,11 +81,11 @@ public:
 	
 	// IM-2014-01-28: [[ HiDPI ]] Convenience methods to convert logical to screen coords and back
 	
-	static MCGFloat logicaltoscreenscale(void);
-	static MCPoint logicaltoscreenpoint(const MCPoint &p_point);
-	static MCPoint screentologicalpoint(const MCPoint &p_point);
-	static MCRectangle logicaltoscreenrect(const MCRectangle &p_rect);
-	static MCRectangle screentologicalrect(const MCRectangle &p_rect);
+    static MCGFloat logicaltoscreenscale(void);
+    MCPoint logicaltoscreenpoint(const MCPoint &p_point);
+    MCPoint screentologicalpoint(const MCPoint &p_point);
+    MCRectangle logicaltoscreenrect(const MCRectangle &p_rect);
+    MCRectangle screentologicalrect(const MCRectangle &p_rect);
 	
 	uint16_t device_getwidth();
 	uint16_t device_getheight();
