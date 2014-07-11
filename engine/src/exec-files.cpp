@@ -1040,6 +1040,8 @@ void MCFilesExecPerformReadFixedFor(MCExecContext& ctxt, IO_handle p_stream, int
     case FU_CHARACTER:
     case FU_CODEPOINT:
     case FU_CODEUNIT:
+    // AL-2014-25-06: [[ Bug 12650 ]] Unit type can be FU_BYTE
+    case FU_BYTE:
         size = p_count;
         break;
     default:
