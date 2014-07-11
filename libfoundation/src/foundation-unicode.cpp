@@ -2329,12 +2329,11 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
                     // if this is a candidate for a match, recurse.
                     if (t_source_cp == t_pattern_cp)
                     {
-                        t_source_filter -> AdvanceCursor();
-                        t_source_filter -> GetNextCodepoint();
-                        t_source_filter -> MarkText();
+                        // AL-2014-06-24: [[ Bug 12644 ]] Can't advance the cursors here because then
+                        //  we're eating the pattern codepoint for free resulting in false positives.
+                        //  Just have to re-match in the recursive call.
                         
-                        t_pattern_filter -> AdvanceCursor();
-                        t_pattern_filter -> GetNextCodepoint();
+                        t_source_filter -> MarkText();
                         t_pattern_filter -> MarkText();
                         
                         t_sindex = t_source_filter -> GetMarkedLength() - 1;
