@@ -515,6 +515,8 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 			bool t_mask, t_alpha;
 			t_mask = !MCGImageIsOpaque(p_mark->image.descriptor.image);
 			t_alpha = t_mask && MCGImageHasPartialTransparency(p_mark->image.descriptor.image);
+			// IM-2014-06-26: [[ Bug 12699 ]] Set image type appropriately.
+			t_image . type = t_alpha ? kMCCustomPrinterImageRawARGB : (t_mask ? kMCCustomPrinterImageRawMRGB : kMCCustomPrinterImageRawXRGB);
 			t_image . id = (uint32_t)(intptr_t)p_mark->image.descriptor.image;
 			t_image . data = t_raster.pixels;
 			t_image . data_size = t_raster.stride * t_img_height;
@@ -531,9 +533,10 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 
 		// Compute the transform that is needed - this transform goes from image
 		// space to page space.
+		// IM-2014-06-26: [[ Bug 12699 ]] Rework to ensure transforms are applied in the correct order - page transform -> image offset -> image transform
 		MCGAffineTransform t_transform;
-		t_transform = MCGAffineTransformMakeScale(m_scale_x, m_scale_y);
-		t_transform = MCGAffineTransformTranslate(t_transform, m_translate_x + p_mark -> image . dx - p_mark -> image . sx, m_translate_y + p_mark -> image . dy - p_mark -> image . sy);
+		t_transform = MCGAffineTransformMake(m_scale_x, 0, 0, m_scale_y, m_translate_x, m_translate_y);
+		t_transform = MCGAffineTransformConcat(t_transform, MCGAffineTransformMakeTranslation(p_mark -> image . dx - p_mark -> image . sx, p_mark -> image . dy - p_mark -> image . sy));
 		if (p_mark -> image . descriptor . has_transform)
 			t_transform = MCGAffineTransformConcat(t_transform, p_mark -> image . descriptor . transform);
 
