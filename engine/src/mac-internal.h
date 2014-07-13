@@ -357,9 +357,10 @@ public:
 	
 	virtual MCGFloat GetBackingScaleFactor(void);
 	
-private:
 	void Lock(void);
 	void Unlock(void);
+    
+    void setDeferUnlock(bool p_value);
 	
 private:
 	MCMacPlatformWindow *m_window;
@@ -370,6 +371,8 @@ private:
 	MCGContextRef m_locked_context;
 	MCGRaster m_locked_raster;
 	void *m_locked_bits;
+    
+    bool m_defer_unlock;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

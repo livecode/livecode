@@ -14,6 +14,8 @@
 
 #include "graphics_util.h"
 
+#include "systhreads.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // IM-2013-08-14: [[ ResIndependence ]] MCPattern struct which associates an image with a scale
@@ -213,8 +215,10 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 		MCGFloat t_scale;
 		t_scale = MCGAffineTransformGetEffectiveScale(t_combined);
 		
+        MCThreadMainThreadMutexLock();
 		t_success = p_pattern->source->LockImageFrame(0, t_scale, t_frame);
-		
+		MCThreadMainThreadMutexUnlock();
+        
 		if (t_success)
 		{
 			t_transform = MCGAffineTransformMakeScale(1.0 / t_frame->density, 1.0 / t_frame->density);
@@ -263,7 +267,9 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 				
 				t_image = MCGImageRetain(t_frame->image);
 			}
+            MCThreadMainThreadMutexLock();
 			p_pattern->source->UnlockImageFrame(0, t_frame);
+            MCThreadMainThreadMutexUnlock();
 		}
 		
 		if (!t_success)

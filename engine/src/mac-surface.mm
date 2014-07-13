@@ -74,6 +74,8 @@ MCMacPlatformSurface::MCMacPlatformSurface(MCMacPlatformWindow *p_window, CGCont
 	m_locked_context = nil;
 	m_locked_bits = nil;
 	
+    m_defer_unlock = false;
+    
 	// Setup everything so that its ready for use.
 	Lock();
 }
@@ -117,6 +119,9 @@ void MCMacPlatformSurface::UnlockGraphics(void)
 	if (m_locked_context == nil)
 		return;
 	
+    if (m_defer_unlock)
+        return;
+    
 	MCGContextRelease(m_locked_context);
 	m_locked_context = nil;
 	
@@ -277,6 +282,11 @@ MCGFloat MCMacPlatformSurface::GetBackingScaleFactor(void)
 	if ([m_window -> GetHandle() respondsToSelector: @selector(backingScaleFactor)])
 		return objc_msgSend_fpret(m_window -> GetHandle(), @selector(backingScaleFactor));
 	return 1.0f;
+}
+
+void MCMacPlatformSurface::setDeferUnlock(bool p_value)
+{ 
+    m_defer_unlock = p_value; 
 }
 
 ////////////////////////////////////////////////////////////////////////////////

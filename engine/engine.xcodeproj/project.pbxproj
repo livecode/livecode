@@ -24,16 +24,12 @@
 		1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DC1249418FC422300C2FEF3 /* quicktimestubs.mac.cpp */; };
 		1DC1249618FC423200C2FEF3 /* quicktimestubs.mac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DC1249418FC422300C2FEF3 /* quicktimestubs.mac.cpp */; };
 		1DDE08D11945DD32000E3705 /* mac-qt-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D01945DD31000E3705 /* mac-qt-player.mm */; };
-		1DDE08D31945DD43000E3705 /* mac-av-player.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DDE08D21945DD43000E3705 /* mac-av-player.mm */; };
-		1DDE08E71945F036000E3705 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		1DDE08E91945F0DE000E3705 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E81945F0DE000E3705 /* CoreMedia.framework */; };
 		1DE9AF8D19631919008529DC /* player-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED771C19124F24000FFFE3 /* player-legacy.cpp */; };
 		1DE9AF8E1963197C008529DC /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E81945F0DE000E3705 /* CoreMedia.framework */; };
 		1DE9AF8F19631984008529DC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		1DE9AF901963199B008529DC /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E81945F0DE000E3705 /* CoreMedia.framework */; };
 		1DE9AF91196319A2008529DC /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DDE08E61945F036000E3705 /* AVFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		1DED772C19129F27000FFFE3 /* button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E3F0B8096FD00200116 /* button.cpp */; };
-		1DED772D1912A03B000FFFE3 /* player-platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED771E19126451000FFFE3 /* player-platform.cpp */; };
 		3C03ED921134205A009DE406 /* socket_resolve.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C03ED911134205A009DE406 /* socket_resolve.cpp */; };
 		3C0A3CC410BAF6120074D630 /* iquantization.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3C0A3CC310BAF6120074D630 /* iquantization.cpp */; };
 		4C10D82C16BFADDB00D25197 /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C10D82916BFADB800D25197 /* libgraphics.a */; };
@@ -44,7 +40,10 @@
 		4C4D3DF417E355B50012FB12 /* osxflst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880160B80A4F800200116 /* osxflst.cpp */; };
 		4C4D3E0117E358230012FB12 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DB3856E1714422200D3F102 /* Carbon.framework */; };
 		4C885A0F1940C6D40040DF0B /* coretextfonts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C977250193CAF5000DB2F4A /* coretextfonts.cpp */; };
+		4C8B5BBA1972B7300014058F /* sysunxthreads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C8B5BB91972A6B90014058F /* sysunxthreads.cpp */; };
+		4C8B5BBC19733AB10014058F /* stacktile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C8B5BBB19733AB10014058F /* stacktile.cpp */; };
 		4C977251193CAF5D00DB2F4A /* coretextfonts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C977250193CAF5000DB2F4A /* coretextfonts.cpp */; };
+		4CC092021971AB23008C146E /* player-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED771C19124F24000FFFE3 /* player-legacy.cpp */; };
 		4CC1535714E7FB91009FA80E /* paragrafattr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1535614E7FB91009FA80E /* paragrafattr.cpp */; };
 		4CC1536214E7FE1D009FA80E /* fieldstyledtext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */; };
 		4D00C6290CE1F27300341AD3 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D00C6280CE1F27300341AD3 /* SystemConfiguration.framework */; };
@@ -948,8 +947,6 @@
 		1DDE08E61945F036000E3705 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		1DDE08E81945F0DE000E3705 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		1DDE08EA1945F10A000E3705 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = System/Library/Frameworks/QTKit.framework; sourceTree = SDKROOT; };
-		1DED771A19124D75000FFFE3 /* player-platform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "player-platform.cpp"; sourceTree = "<group>"; };
-		1DED771B19124D75000FFFE3 /* player-platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "player-platform.h"; sourceTree = "<group>"; };
 		1DED771C19124F24000FFFE3 /* player-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "player-legacy.cpp"; path = "src/player-legacy.cpp"; sourceTree = "<group>"; };
 		1DED771D19124F24000FFFE3 /* player-legacy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "player-legacy.h"; path = "src/player-legacy.h"; sourceTree = "<group>"; };
 		1DED771E19126451000FFFE3 /* player-platform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "player-platform.cpp"; path = "src/player-platform.cpp"; sourceTree = "<group>"; };
@@ -965,6 +962,10 @@
 		4C10D76D16BF9BFA00D25197 /* graphicscontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = graphicscontext.cpp; path = src/graphicscontext.cpp; sourceTree = "<group>"; };
 		4C10D76E16BF9BFA00D25197 /* graphicscontext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graphicscontext.h; path = src/graphicscontext.h; sourceTree = "<group>"; };
 		4C10D82416BFADB800D25197 /* libgraphics.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libgraphics.xcodeproj; path = ../libgraphics/libgraphics.xcodeproj; sourceTree = SOURCE_ROOT; };
+		4C8B5BB81972A4000014058F /* systhreads.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = systhreads.h; path = src/systhreads.h; sourceTree = "<group>"; };
+		4C8B5BB91972A6B90014058F /* sysunxthreads.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxthreads.cpp; path = src/sysunxthreads.cpp; sourceTree = "<group>"; };
+		4C8B5BBB19733AB10014058F /* stacktile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stacktile.cpp; path = src/stacktile.cpp; sourceTree = "<group>"; };
+		4C8B5BBD19733D230014058F /* stacktile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = stacktile.h; path = src/stacktile.h; sourceTree = "<group>"; };
 		4C977250193CAF5000DB2F4A /* coretextfonts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = coretextfonts.cpp; path = src/coretextfonts.cpp; sourceTree = "<group>"; };
 		4CC1535614E7FB91009FA80E /* paragrafattr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = paragrafattr.cpp; path = src/paragrafattr.cpp; sourceTree = "<group>"; };
 		4CC1536114E7FE1D009FA80E /* fieldstyledtext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fieldstyledtext.cpp; path = src/fieldstyledtext.cpp; sourceTree = "<group>"; };
@@ -1633,8 +1634,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1DDE08E91945F0DE000E3705 /* CoreMedia.framework in Frameworks */,
-				1DDE08E71945F036000E3705 /* AVFoundation.framework in Frameworks */,
 				4DEE2C7A0FDE52770009423C /* libkernel.a in Frameworks */,
 				4D221ACB171D59ED00E7E557 /* libkernel-development.a in Frameworks */,
 				4D1F9C4E171C65CE0091C6CB /* libsecurity-community.a in Frameworks */,
@@ -2477,6 +2476,8 @@
 				4D4F9DE313CDE10A00B9B15D /* sysdefs.h */,
 				4DFD486613BA28DA008DB91F /* sysspec.cpp */,
 				4DFD486713BA28DA008DB91F /* system.h */,
+				4C8B5BB81972A4000014058F /* systhreads.h */,
+				4C8B5BB91972A6B90014058F /* sysunxthreads.cpp */,
 			);
 			name = System;
 			sourceTree = "<group>";
@@ -2740,8 +2741,8 @@
 				4D587E150B8096E600200116 /* undolst.h */,
 				4D587E620B8096FD00200116 /* vclip.cpp */,
 				4D587DF80B8096E600200116 /* vclip.h */,
-				1DED771A19124D75000FFFE3 /* player-platform.cpp */,
-				1DED771B19124D75000FFFE3 /* player-platform.h */,
+				4C8B5BBB19733AB10014058F /* stacktile.cpp */,
+				4C8B5BBD19733D230014058F /* stacktile.h */,
 			);
 			name = "Core - Objects";
 			sourceTree = "<group>";
@@ -3850,10 +3851,11 @@
 				4D87710018C8B30700A88AF9 /* quicktime.cpp in Sources */,
 				1DC1249518FC422B00C2FEF3 /* quicktimestubs.mac.cpp in Sources */,
 				1DED772C19129F27000FFFE3 /* button.cpp in Sources */,
-				1DED772D1912A03B000FFFE3 /* player-platform.cpp in Sources */,
 				1DDE08D11945DD32000E3705 /* mac-qt-player.mm in Sources */,
-				1DDE08D31945DD43000E3705 /* mac-av-player.mm in Sources */,
 				E87FAFEC1924F25000ED338B /* region.cpp in Sources */,
+				4CC092021971AB23008C146E /* player-legacy.cpp in Sources */,
+				4C8B5BBA1972B7300014058F /* sysunxthreads.cpp in Sources */,
+				4C8B5BBC19733AB10014058F /* stacktile.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

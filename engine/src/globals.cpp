@@ -69,6 +69,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 #include "resolution.h"
 
+#include "systhreads.h"
+
 #define HOLD_SIZE1 65535
 #define HOLD_SIZE2 16384
 
@@ -848,6 +850,8 @@ bool X_open(int argc, char *argv[], char *envp[])
 	
 	// MM-2014-02-14: [[ LibOpenSSL 1.0.1e ]] Initialise the openlSSL module.
 	InitialiseSSL();
+    
+    MCThreadPoolInitialize();
     
     ////
     

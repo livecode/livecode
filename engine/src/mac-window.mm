@@ -35,6 +35,51 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "stacktile.h"
+
+class MCMacPlatformStackTile : public MCPlatformStackTile
+{
+public:
+    MCMacPlatformStackTile(MCMacPlatformWindow *p_window, MCGRegionRef p_region, CGContextRef p_graphics, MCGIntegerRectangle p_tile)
+    {
+        MCGRegionCopy(p_region, m_region);
+        MCGRegionIntersectRect(m_region, p_tile);
+        m_surface = new MCMacPlatformSurface(p_window, p_graphics, m_region);
+        m_window = p_window;
+    }
+    
+    ~MCMacPlatformStackTile()
+    {
+        MCGRegionDestroy(m_region);
+        delete m_surface;
+    }
+    
+    bool Lock(void)
+    {
+        m_surface -> setDeferUnlock(true);
+        m_surface -> Lock();
+    }
+    
+    void Unlock(void)
+    {
+        m_surface -> setDeferUnlock(true);
+        m_surface -> UnlockPixels();
+        m_surface -> Unlock();
+    }
+    
+    void Render()
+    {
+        m_window -> HandleRedraw(m_surface, m_region);
+    }
+    
+private:
+    MCMacPlatformWindow *m_window;
+    MCMacPlatformSurface *m_surface;
+    MCGRegionRef m_region;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1502,10 +1547,26 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	// Save the context state
 	CGContextSaveGState(t_graphics);
 	
-	{
-		MCMacPlatformSurface t_surface(t_window, t_graphics, t_update_region);
-		t_window -> HandleRedraw(&t_surface, t_update_region);
-	}
+    MCGIntegerRectangle t_rect;
+    t_rect = MCGRegionGetBounds(t_update_region);
+    if (t_rect . size . width > 32 && t_rect . size . height > 32)
+    {        
+        MCStackTilePush(new MCMacPlatformStackTile(t_window, t_update_region, t_graphics,
+                             MCGIntegerRectangleMake(t_rect . origin . x, t_rect . origin . y, t_rect . size . width / 2, t_rect . size .height / 2)));
+        MCStackTilePush(new MCMacPlatformStackTile(t_window, t_update_region, t_graphics,
+                             MCGIntegerRectangleMake(t_rect . origin . x + t_rect . size . width / 2, t_rect . origin . y, t_rect . size .width - t_rect . size . width / 2, t_rect . size . height / 2)));
+        MCStackTilePush(new MCMacPlatformStackTile(t_window, t_update_region, t_graphics,
+                             MCGIntegerRectangleMake(t_rect . origin . x, t_rect . origin . y + t_rect . size . height / 2, t_rect . size . width / 2, t_rect . size . height - t_rect . size . height / 2)));
+        MCStackTilePush(new MCMacPlatformStackTile(t_window, t_update_region, t_graphics,
+                             MCGIntegerRectangleMake(t_rect . origin . x + t_rect . size . width / 2, t_rect . origin . y + t_rect . size . height / 2, t_rect . size . width - t_rect . size . width / 2, t_rect . size . height - t_rect . size . height / 2)));
+        MCStackTileCollectAll();
+
+    }
+    else
+    {
+        MCMacPlatformSurface t_surface(t_window, t_graphics, t_update_region);
+        t_window -> HandleRedraw(&t_surface, t_update_region);
+    }
 	
 	// Restore the context state
 	CGContextRestoreGState(t_graphics);

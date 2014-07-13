@@ -35,6 +35,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphicscontext.h"
 #include "graphics_util.h"
 
+#include "systhreads.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCImage::get_rep_and_transform(MCImageRep *&r_rep, bool &r_has_transform, MCGAffineTransform &r_transform)
 {
 	// IM-2013-11-05: [[ RefactorGraphics ]] Use resampled image rep for best-quality scaling
@@ -149,7 +153,9 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			
 			// IM-2014-01-31: [[ HiDPI ]] Get the appropriate image for the combined
 			//   context device & image transforms
+            MCThreadMainThreadMutexLock();
 			t_success = t_rep->LockImageFrame(currentframe, t_device_scale, t_frame);
+            MCThreadMainThreadMutexUnlock();
 			if (t_success)
 			{
 				MCImageDescriptor t_image;
@@ -203,11 +209,14 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
                 drawnodata(dc, drect, sw, sh, dx, dy, dw, dh);
 			}
 
+            MCThreadMainThreadMutexLock();
 			t_rep->UnlockImageFrame(currentframe, t_frame);
+            MCThreadMainThreadMutexUnlock();
 		}
 
 		if (state & CS_DO_START)
 		{
+            MCThreadMainThreadMutexLock();
 			MCGImageFrame *t_frame = nil;
 			if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
 			{
@@ -216,6 +225,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 
 				state &= ~CS_DO_START;
 			}
+            MCThreadMainThreadMutexUnlock();
 		}
 	}
     else if (filename != nil)

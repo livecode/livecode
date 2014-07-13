@@ -1747,3 +1747,18 @@ int main(int argc, char *argv[], char *envp[])
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void *MCMacPlatfromCreateAutoReleasePool()
+{
+    NSAutoreleasePool *t_pool;
+    t_pool = [[NSAutoreleasePool alloc] init];
+    return (void *) t_pool;
+}
+
+void MCMacPlatformReleaseAutoReleasePool(void *p_pool)
+{
+    NSAutoreleasePool *t_pool;
+    t_pool = (NSAutoreleasePool *) p_pool;
+    [t_pool release];
+}
+////////////////////////////////////////////////////////////////////////////////
