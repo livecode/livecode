@@ -883,6 +883,7 @@ public:
     void setDirty() { state |= PS_LINES_NOT_SYNCHED; }
 
     void layoutchanged() { needs_layout = true; }
+    bool getneedslayout() { return needs_layout; }
     
     //////////
 
