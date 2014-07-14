@@ -1,1 +1,1 @@
-# [[Player]] controller buttons are not updated when interacting via keyboard
+# [[Player]] controller icons not updated when keyboard shortcuts used to control playback
