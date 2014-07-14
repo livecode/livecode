@@ -660,6 +660,8 @@ Boolean MCPlayer::kdown(const char *string, KeySym key)
             default:
                 break;
         }
+        // PM-2014-07-14: [[ Bug 12810 ]] Make sure we redraw the controller after interacting with keyboard
+        layer_redrawrect(getcontrollerrect());
     }
 	if (!(state & CS_NO_MESSAGES))
 		if (MCObject::kdown(string, key))
