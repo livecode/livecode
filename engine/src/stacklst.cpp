@@ -199,10 +199,7 @@ void MCStacklist::top(MCStack *sptr)
 			tptr = tptr->next();
 		}
 		while (tptr != stacks);
-		// This is only necessary on MWM...
-#ifdef X11
-		restack(sptr);
-#endif
+        // AL-2014-07-14: [[ Bug 12790 ]] Removed call to restack which was only necessary for MWM.
 #endif
 	}
 
