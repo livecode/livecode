@@ -20,8 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "foundation-private.h"
 
-#define ARRAY_DENSITY_MAX 0.8
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // Creates an indirect mutable array with contents.
@@ -52,9 +50,7 @@ static uindex_t __MCArrayGetTableSize(__MCArray *self);
 // found 'true' is returned; otherwise 'false'. On return 'slot' will be the
 // slot in which the key is found, could be placed, or UINDEX_MAX if there is
 // no more room (and the key isn't there).
-// Parameter p_setting used if we are altering the array, to check if it is full
-// enough to require rehashing.
-static bool __MCArrayFindKeyValueSlot(__MCArray *self, bool case_sensitive, MCNameRef key, uindex_t& r_slot, bool p_setting = false);
+static bool __MCArrayFindKeyValueSlot(__MCArray *self, bool case_sensitive, MCNameRef key, uindex_t& r_slot);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -340,7 +336,7 @@ bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 	// Lookup the slot for the first element in the path.
 	bool t_found;
 	uindex_t t_slot;
-	t_found = __MCArrayFindKeyValueSlot(self, p_case_sensitive, p_path[0], t_slot, true);
+	t_found = __MCArrayFindKeyValueSlot(self, p_case_sensitive, p_path[0], t_slot);
 	if (t_found)
 	{
 		// Get the value.
@@ -380,7 +376,7 @@ bool MCArrayStoreValueOnPath(MCArrayRef self, bool p_case_sensitive, const MCNam
 			if (!__MCArrayRehash(self, 1))
 				return false;
 
-			__MCArrayFindKeyValueSlot(self, p_case_sensitive, p_path[0], t_slot, true);
+			__MCArrayFindKeyValueSlot(self, p_case_sensitive, p_path[0], t_slot);
 		}
 
 		if (p_path_length == 1)
@@ -744,7 +740,7 @@ static bool __MCArrayResolveIndirect(__MCArray *self)
 	return true;
 }
 
-static bool __MCArrayFindKeyValueSlot(__MCArray *self, bool p_case_sensitive, MCNameRef p_key, uindex_t& r_slot, bool p_setting)
+static bool __MCArrayFindKeyValueSlot(__MCArray *self, bool p_case_sensitive, MCNameRef p_key, uindex_t& r_slot)
 {
 	// Get the table size.
 	uindex_t t_size;
@@ -755,13 +751,6 @@ static bool __MCArrayFindKeyValueSlot(__MCArray *self, bool p_case_sensitive, MC
 		return false;
 	}
 
-    // AL-2014-06-25: [[ Bug 12532 ]] Force re-hash if array is too full to prevent primary clustering
-    if (p_setting && self -> key_value_count > 3 && self -> key_value_count > t_size * ARRAY_DENSITY_MAX)
-    {
-  		r_slot = UINDEX_MAX;
-		return false;
-    }
-    
 	// Get the hash.
 	uindex_t t_hash;
 	t_hash = MCValueHash(p_key);
@@ -805,8 +794,8 @@ static bool __MCArrayFindKeyValueSlot(__MCArray *self, bool p_case_sensitive, MC
 		}
 		else
 		{
-			if ((!p_case_sensitive &&
-				MCNameIsEqualTo(t_entry -> key, p_key)) ||
+			if (!p_case_sensitive &&
+				MCNameIsEqualTo(t_entry -> key, p_key) ||
 				t_entry -> key == p_key)
 			{
 				r_slot = t_probe;
@@ -828,14 +817,17 @@ static bool __MCArrayRehash(__MCArray *self, index_t p_by)
 {
 	uindex_t t_new_capacity_idx;
 	t_new_capacity_idx = __MCArrayGetTableSizeIndex(self);
-    
-    uindex_t t_new_capacity_req;
-    t_new_capacity_req = self -> key_value_count + p_by;
-  
-    // AL-2014-06-25: [[ Bug 12532 ]] Increase capacity of hash table if array is too full.
-    for(t_new_capacity_idx = 0; t_new_capacity_idx < 64; t_new_capacity_idx++)
-        if (t_new_capacity_req <= __kMCValueHashTableCapacities[t_new_capacity_idx] * ARRAY_DENSITY_MAX)
-            break;
+	if (p_by != 0)
+	{
+		if (p_by < 0)
+			p_by = 0;
+
+		uindex_t t_new_capacity_req;
+		t_new_capacity_req = self -> key_value_count + p_by;
+		for(t_new_capacity_idx = 0; t_new_capacity_idx < 64; t_new_capacity_idx++)
+			if (t_new_capacity_req <= __kMCValueHashTableCapacities[t_new_capacity_idx])
+				break;
+	}
 
 	uindex_t t_old_capacity;
 	__MCArrayKeyValue *t_old_key_values;
