@@ -999,7 +999,7 @@ void MCScreenDC::setfunction(uint4 rop)
 uint4 MCScreenDC::dtouint4(Drawable d)
 {
 	// Return the XID
-    return x11::gdk_x11_drawable_get_xid(d);
+    return d != DNULL ? x11::gdk_x11_drawable_get_xid(d) : 0;
 }
 
 Boolean MCScreenDC::uint4towindow(uint4 id, Window &w)
