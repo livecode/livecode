@@ -35,7 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphicscontext.h"
 #include "graphics_util.h"
 
-#include "systhreads.h"
+#include "stacktile.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -153,9 +153,9 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			
 			// IM-2014-01-31: [[ HiDPI ]] Get the appropriate image for the combined
 			//   context device & image transforms
-            MCThreadMainThreadMutexLock();
+            MCStackTileMainThreadLock();
 			t_success = t_rep->LockImageFrame(currentframe, t_device_scale, t_frame);
-            MCThreadMainThreadMutexUnlock();
+            MCStackTileMainThreadUnlock();
 			if (t_success)
 			{
 				MCImageDescriptor t_image;
@@ -209,14 +209,14 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
                 drawnodata(dc, drect, sw, sh, dx, dy, dw, dh);
 			}
 
-            MCThreadMainThreadMutexLock();
+            MCStackTileMainThreadLock();
 			t_rep->UnlockImageFrame(currentframe, t_frame);
-            MCThreadMainThreadMutexUnlock();
+            MCStackTileMainThreadUnlock();
 		}
 
 		if (state & CS_DO_START)
 		{
-            MCThreadMainThreadMutexLock();
+            MCStackTileMainThreadLock();
 			MCGImageFrame *t_frame = nil;
 			if (m_rep->LockImageFrame(currentframe, getdevicescale(), t_frame))
 			{
@@ -225,7 +225,7 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 
 				state &= ~CS_DO_START;
 			}
-            MCThreadMainThreadMutexUnlock();
+            MCStackTileMainThreadUnlock();
 		}
 	}
     else if (filename != nil)

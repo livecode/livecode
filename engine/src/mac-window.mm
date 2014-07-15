@@ -32,10 +32,9 @@
 #include <objc/objc-runtime.h>
 
 #include "graphics_util.h"
+#include "stacktile.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-
-#include "stacktile.h"
 
 class MCMacPlatformStackTile : public MCPlatformStackTile
 {
@@ -56,13 +55,14 @@ public:
     
     bool Lock(void)
     {
-        m_surface -> setDeferUnlock(true);
+        m_surface -> SetDeferUnlock(true);
         m_surface -> Lock();
+        return true;
     }
     
     void Unlock(void)
     {
-        m_surface -> setDeferUnlock(true);
+        m_surface -> SetDeferUnlock(false);
         m_surface -> UnlockPixels();
         m_surface -> Unlock();
     }
@@ -1552,13 +1552,25 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
     if (t_rect . size . width > 32 && t_rect . size . height > 32)
     {        
         MCStackTilePush(new MCMacPlatformStackTile(t_window, t_update_region, t_graphics,
-                             MCGIntegerRectangleMake(t_rect . origin . x, t_rect . origin . y, t_rect . size . width / 2, t_rect . size .height / 2)));
+                                                   MCGIntegerRectangleMake(t_rect . origin . x,
+                                                                           t_rect . origin .y,
+                                                                           t_rect . size . width / 2,
+                                                                           t_rect . size . height / 2)));
         MCStackTilePush(new MCMacPlatformStackTile(t_window, t_update_region, t_graphics,
-                             MCGIntegerRectangleMake(t_rect . origin . x + t_rect . size . width / 2, t_rect . origin . y, t_rect . size .width - t_rect . size . width / 2, t_rect . size . height / 2)));
+                                                   MCGIntegerRectangleMake(t_rect . origin .x + t_rect . size . width / 2,
+                                                                           t_rect . origin .y,
+                                                                           t_rect . size . width - t_rect . size . width / 2,
+                                                                           t_rect . size . height / 2)));
         MCStackTilePush(new MCMacPlatformStackTile(t_window, t_update_region, t_graphics,
-                             MCGIntegerRectangleMake(t_rect . origin . x, t_rect . origin . y + t_rect . size . height / 2, t_rect . size . width / 2, t_rect . size . height - t_rect . size . height / 2)));
+                                                   MCGIntegerRectangleMake(t_rect . origin .x,
+                                                                           t_rect . origin .y + t_rect . size . height / 2,
+                                                                           t_rect . size . width / 2,
+                                                                           t_rect . size . height - t_rect . size . height / 2)));
         MCStackTilePush(new MCMacPlatformStackTile(t_window, t_update_region, t_graphics,
-                             MCGIntegerRectangleMake(t_rect . origin . x + t_rect . size . width / 2, t_rect . origin . y + t_rect . size . height / 2, t_rect . size . width - t_rect . size . width / 2, t_rect . size . height - t_rect . size . height / 2)));
+                                                   MCGIntegerRectangleMake(t_rect . origin .x + t_rect . size . width / 2,
+                                                                           t_rect . origin .y + t_rect . size . height / 2,
+                                                                           t_rect . size . width - t_rect . size . width / 2,
+                                                                           t_rect . size . height - t_rect . size . height / 2)));
         MCStackTileCollectAll();
 
     }

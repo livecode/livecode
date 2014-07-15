@@ -23,7 +23,7 @@ typedef struct __MCThreadCondition *MCThreadConditionRef;
 typedef struct __MCThreadMutex *MCThreadMutexRef;
 
 bool MCThreadPoolInitialize();
-bool MCThreadPoolFinalize();
+void MCThreadPoolFinalize();
 bool MCThreadPoolPushTask(void (*task)(void*), void* context);
 
 bool MCThreadMutexCreate(MCThreadMutexRef &r_mutex);
@@ -38,9 +38,8 @@ void MCThreadConditionRelese(MCThreadConditionRef condition);
 void MCThreadConditionWait(MCThreadConditionRef condition, MCThreadMutexRef mutex);
 void MCThreadConditionSignal(MCThreadConditionRef condition);
 
-void MCThreadMainThreadMutexLock();
-void MCThreadMainThreadMutexUnlock();
-void MCThreadMainThreadConditionSignal();
-void MCThreadMainThreadConditionWait();
+void MCThreadGlobalMutexLock();
+void MCThreadGlobalMutexUnlock();
+MCThreadMutexRef MCThreadGlobalMutexFetch();
 
 #endif

@@ -118,10 +118,7 @@ void MCMacPlatformSurface::UnlockGraphics(void)
 {
 	if (m_locked_context == nil)
 		return;
-	
-    if (m_defer_unlock)
-        return;
-    
+	   
 	MCGContextRelease(m_locked_context);
 	m_locked_context = nil;
 	
@@ -161,6 +158,9 @@ void MCMacPlatformSurface::UnlockPixels(void)
 	if (m_locked_bits == nil)
 		return;
 	
+    if (m_defer_unlock)
+        return;
+    
 	// COCOA-TODO: Getting the height to flip round is dependent on a friend.
 	int t_surface_height;
 	t_surface_height = m_window -> m_content . height;
@@ -284,9 +284,9 @@ MCGFloat MCMacPlatformSurface::GetBackingScaleFactor(void)
 	return 1.0f;
 }
 
-void MCMacPlatformSurface::setDeferUnlock(bool p_value)
+void MCMacPlatformSurface::SetDeferUnlock(bool p_defer_unlock)
 { 
-    m_defer_unlock = p_value; 
+    m_defer_unlock = p_defer_unlock; 
 }
 
 ////////////////////////////////////////////////////////////////////////////////

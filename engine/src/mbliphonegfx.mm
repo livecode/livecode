@@ -42,6 +42,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 #include "graphics_util.h"
+#include "stacktile.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -104,6 +105,8 @@ protected:
 	MCGContextRef m_locked_context;
 	void *m_locked_bits;
 	uint32_t m_locked_stride;
+    
+    bool m_defer_unlock : 1;
 	
 	virtual void FlushBits(void *p_bits, uint32_t p_stride) = 0;
 
@@ -115,6 +118,8 @@ public:
 		
 		m_locked_context = nil;
 		m_locked_bits = nil;
+        
+        m_defer_unlock = false;
 	}
 	
 	MCIPhoneStackSurface(const MCGIntegerRectangle &p_rect)
@@ -202,7 +207,10 @@ public:
 	{
 		if (m_locked_bits == nil)
 			return;
-		
+        
+        if (m_defer_unlock)
+            return;
+        
 		if (p_update)
 			FlushBits(m_locked_bits, m_locked_stride);
 		
@@ -237,6 +245,11 @@ public:
 		
 		return t_success;
 	}
+    
+    void SetDeferUnlock(bool p_defer_unlock)
+    {
+        m_defer_unlock = p_defer_unlock;
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -395,6 +408,57 @@ protected:
 	}
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+class MCUIKitPlatformStackTile : public MCPlatformStackTile
+{
+public:
+    MCUIKitPlatformStackTile(MCStack *p_stack, MCGRegionRef p_region, int32_t p_height, CGContextRef p_context, MCGIntegerRectangle p_tile)
+    {
+        MCGRegionCopy(p_region, m_region);
+        MCGRegionIntersectRect(m_region, p_tile);
+        m_surface = new MCUIKitStackSurface(m_region, p_height, p_context);
+        m_stack = p_stack;
+    }
+    
+    MCUIKitPlatformStackTile()
+    {
+        MCGRegionDestroy(m_region);
+        delete m_surface;
+    }
+    
+    bool Lock(void)
+    {
+        /*m_surface -> SetDeferUnlock(true);
+        return m_surface -> Lock();*/
+        return true;
+    }
+    
+    void Unlock(void)
+    {
+        /*m_surface -> SetDeferUnlock(false);
+         m_surface -> UnlockPixels();
+         m_surface -> Unlock();*/
+    }
+    
+    void Render()
+    {
+        /*m_stack -> view_surface_redrawwindow(m_surface, m_region);*/
+        if (m_surface -> Lock())
+        {
+            m_stack -> view_surface_redrawwindow(m_surface, m_region);
+            m_surface -> Unlock();
+        }
+    }
+    
+private:
+    MCStack *m_stack;
+    MCUIKitStackSurface *m_surface;
+    MCGRegionRef m_region;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 @implementation MCIPhoneUIKitDisplayView
 
 - (id)initWithFrame:(CGRect)p_frame
@@ -456,13 +520,39 @@ static MCGRegionRef s_redraw_region = nil;
 	MCRectangle t_device_rect;
 	t_device_rect = MCRectangleGetTransformedBounds(t_stack->getrect(), t_stack->getdevicetransform());
 	
-	MCUIKitStackSurface t_surface(t_region, t_device_rect.height, t_cgcontext);
-	
-	if (t_surface . Lock())
-	{
-		t_stack -> view_surface_redrawwindow(&t_surface, t_region);
-		t_surface . Unlock();
-	}
+    if (t_device_rect . width > 32 && t_device_rect . height > 32)
+    {
+        MCStackTilePush(new MCUIKitPlatformStackTile(t_stack, t_region, t_device_rect . height, t_cgcontext,
+                                                   MCGIntegerRectangleMake(t_device_rect . x,
+                                                                           t_device_rect . y,
+                                                                           t_device_rect . width / 2,
+                                                                           t_device_rect . height / 2)));
+        MCStackTilePush(new MCUIKitPlatformStackTile(t_stack, t_region, t_device_rect . height, t_cgcontext,
+                                                   MCGIntegerRectangleMake(t_device_rect . x + t_device_rect . width / 2,
+                                                                           t_device_rect . y,
+                                                                           t_device_rect . width - t_device_rect . width / 2,
+                                                                           t_device_rect . height / 2)));
+        MCStackTilePush(new MCUIKitPlatformStackTile(t_stack, t_region, t_device_rect . height, t_cgcontext,
+                                                   MCGIntegerRectangleMake(t_device_rect . x,
+                                                                           t_device_rect . y + t_device_rect . height / 2,
+                                                                           t_device_rect . width / 2,
+                                                                           t_device_rect . height - t_device_rect . height / 2)));
+        MCStackTilePush(new MCUIKitPlatformStackTile(t_stack, t_region, t_device_rect . height, t_cgcontext,
+                                                   MCGIntegerRectangleMake(t_device_rect . x + t_device_rect . width / 2,
+                                                                           t_device_rect . y + t_device_rect . height / 2,
+                                                                           t_device_rect . width - t_device_rect . width / 2,
+                                                                           t_device_rect . height - t_device_rect . height / 2)));
+        MCStackTileCollectAll();
+    }
+    else
+    {
+        MCUIKitStackSurface t_surface(t_region, t_device_rect.height, t_cgcontext);
+        if (t_surface . Lock())
+        {
+            t_stack -> view_surface_redrawwindow(&t_surface, t_region);
+            t_surface . Unlock();
+        }
+    }
 	
 	MCGRegionDestroy(t_region);
 }
@@ -691,12 +781,12 @@ protected:
 	glLoadIdentity();
 	
 	MCOpenGLStackSurface t_surface([self layer], m_backing_width, m_backing_height);
-	
+	   
 	MCGRegionRef t_dirty_rgn;
 	MCGRegionCreate(t_dirty_rgn);
 	MCGRegionSetRect(t_dirty_rgn, MCGIntegerRectangleMake(0, 0, m_backing_width, m_backing_height));
-	
-	if (t_surface . Lock())
+
+    if (t_surface . Lock())
 	{
 		t_stack -> view_surface_redrawwindow(&t_surface, t_dirty_rgn);
 		t_surface . Unlock();

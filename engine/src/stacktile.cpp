@@ -14,10 +14,6 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-////////////////////////////////////////////////////////////////////////////////
-
-#include "stacktile.h"
-
 #include "prefix.h"
 
 #include "core.h"
@@ -26,15 +22,11 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
+#include "stacktile.h"
 #include "systhreads.h"
 #include "region.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-
-
-// A tile thread sits and waits on a condition variable. When the variable is signalled,
-// it wakes up and starts processing the request. When the tile thread has done its work
-// it notifies the main thread's condition variable.
 
 struct MCStackTile
 {
@@ -45,30 +37,79 @@ struct MCStackTile
 static MCStackTile *s_inactive_tiles = NULL;
 static MCStackTile *s_waiting_tiles = NULL;
 static uindex_t s_active_tile_count = 0;
+static MCThreadMutexRef s_main_thread_mutex = NULL;
+static MCThreadConditionRef s_main_thread_condition = NULL;
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCStackTileMainThreadLock()
+{
+    MCThreadMutexLock(s_main_thread_mutex);
+}
+
+void MCStackTileMainThreadUnlock()
+{
+    MCThreadMutexUnlock(s_main_thread_mutex);
+}
+
+bool MCStackTileInitialize()
+{
+    s_inactive_tiles = NULL;
+    s_waiting_tiles = NULL;
+    s_active_tile_count = 0;
+    s_main_thread_mutex = NULL;
+    s_main_thread_condition = NULL;
+    
+    bool t_success;
+    t_success = true;
+    
+    if (t_success)
+        t_success = MCThreadMutexCreate(s_main_thread_mutex);
+    
+    if (t_success)
+        t_success = MCThreadConditionCreate(s_main_thread_condition);
+
+    return t_success;
+}
+
+void MCStackTileFinalize()
+{
+    MCThreadMutexRelese(s_main_thread_mutex);
+    MCThreadConditionRelese(s_main_thread_condition);
+    
+    s_inactive_tiles = NULL;
+    s_waiting_tiles = NULL;
+    s_active_tile_count = 0;
+    s_main_thread_mutex = NULL;
+    s_main_thread_condition = NULL;
+}
 
 void MCStackTileRender(void *p_ctxt)
 {
-    //NSAutoreleasePool *t_pool;
-    //t_pool = [[NSAutoreleasePool alloc] init];
-    
     MCStackTile *t_tile;
 	t_tile = (MCStackTile *)p_ctxt;
     t_tile -> tile -> Render();
     
-    MCThreadMainThreadMutexLock();
+    MCThreadMutexLock(s_main_thread_mutex);
     t_tile -> next = s_waiting_tiles;
     s_waiting_tiles = t_tile;
-    MCThreadMainThreadConditionSignal();
-    MCThreadMainThreadMutexUnlock();
+    MCThreadConditionSignal(s_main_thread_condition);
+    MCThreadMutexUnlock(s_main_thread_mutex);
 }
 
 void MCStackTilePush(MCPlatformStackTile *p_tile)
 {
+    if (!p_tile -> Lock())
+    {
+        delete p_tile;
+        return;
+    }
+    
     // Make sure we have at least one inactive tile.
     if (s_inactive_tiles == nil)
     {
         MCStackTile *t_new_tile;
-        t_new_tile = new MCStackTile;
+        /* UNCHECKED */ MCMemoryNew(t_new_tile);
         t_new_tile -> next = s_inactive_tiles;
         t_new_tile -> tile = NULL;
         s_inactive_tiles = t_new_tile;
@@ -81,24 +122,23 @@ void MCStackTilePush(MCPlatformStackTile *p_tile)
     s_active_tile_count++;
     
     t_tile -> tile = p_tile;
-    t_tile -> tile -> Lock();
     MCThreadPoolPushTask(MCStackTileRender, (void *) t_tile);
 }
 
 void MCStackTileCollectAll(void)
 {
-    MCThreadMainThreadMutexLock();
+    MCThreadMutexLock(s_main_thread_mutex);
     while(s_active_tile_count > 0)
     {
         if (s_waiting_tiles == nil)
-            MCThreadMainThreadConditionWait();
+            MCThreadConditionWait(s_main_thread_condition, s_main_thread_mutex);
         while (s_waiting_tiles != nil)
         {
             MCStackTile *t_tile;
             t_tile = s_waiting_tiles;
             s_waiting_tiles = s_waiting_tiles -> next;
             s_active_tile_count -= 1;
-            MCThreadMainThreadMutexUnlock();
+            MCThreadMutexUnlock(s_main_thread_mutex);
             
             t_tile -> tile -> Unlock();
             delete t_tile -> tile;
@@ -108,10 +148,10 @@ void MCStackTileCollectAll(void)
             t_tile -> next = s_inactive_tiles;
             s_inactive_tiles = t_tile;
             
-            MCThreadMainThreadMutexLock();
+            MCThreadMutexLock(s_main_thread_mutex);
         }
     }
-    MCThreadMainThreadMutexUnlock();
+    MCThreadMutexUnlock(s_main_thread_mutex);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -116,6 +116,8 @@ public:
 	virtual bool Lock(void) = 0;
 	// Atomically update target surface with drawn image - do not call from within drawing code
 	virtual void Unlock(void) = 0;
+    
+    virtual void SetDeferUnlock(bool p_defer_unlock) = 0;
 };
 
 typedef bool (*MCStackUpdateCallback)(MCStackSurface *p_surface, MCRegionRef p_region, void *p_context);

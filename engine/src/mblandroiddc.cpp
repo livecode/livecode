@@ -53,6 +53,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <GLES/gl.h>
 #include <unistd.h>
 
+#include "stacktile.cpp"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Various globals depended on by other parts of the engine.
@@ -634,6 +636,8 @@ class MCAndroidStackSurface: public MCStackSurface
 	MCGContextRef m_locked_context;
 	MCGIntegerRectangle m_locked_area;
 	bool m_locked;
+    
+    bool m_defer_unlock : 1;
 
 public:
 	MCAndroidStackSurface(MCGRegionRef p_region)
@@ -643,6 +647,8 @@ public:
 		
 		m_locked_context = nil;
 		m_locked = false;
+        
+        m_defer_unlock = false;
 	}
 
 	bool Lock(void)
@@ -696,6 +702,9 @@ public:
 	{
 		if (m_locked_context == nil)
 			return;
+        
+        if (m_defer_unlock)
+            return;
 
 		MCGContextRelease(m_locked_context);
 		m_locked_context = nil;
@@ -781,6 +790,11 @@ public:
 		
 		return t_success;
 	}
+    
+    void SetDeferUnlock(bool p_defer_unlock)
+    {
+        m_defer_unlock = p_defer_unlock;
+    }
 };
 
 class MCOpenGLStackSurface: public MCStackSurface
@@ -925,6 +939,8 @@ public:
 		return t_success;
 	}
 	
+    void SetDeferUnlock(bool p_defer_unlock) { }
+    
 protected:
 	static void FlushBits(void *p_bits, uint32_t p_stride)
 	{
@@ -990,6 +1006,57 @@ protected:
 	}
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+class MCAndroidPlatformStackTile : public MCPlatformStackTile
+{
+public:
+    MCAndroidPlatformStackTile(MCStack *p_stack, MCGRegionRef p_region, MCGIntegerRectangle p_tile)
+    {
+        MCGRegionCopy(p_region, m_region);
+        MCGRegionIntersectRect(m_region, p_tile);
+        m_surface = new MCAndroidStackSurface(m_region);
+        m_stack = p_stack;
+    }
+    
+    MCAndroidPlatformStackTile()
+    {
+        MCGRegionDestroy(m_region);
+        delete m_surface;
+    }
+    
+    bool Lock(void)
+    {
+        /*m_surface -> SetDeferUnlock(true);
+         return m_surface -> Lock();*/
+        return true;
+    }
+    
+    void Unlock(void)
+    {
+        /*m_surface -> SetDeferUnlock(false);
+         m_surface -> UnlockGraphics();
+         m_surface -> Unlock();*/
+    }
+    
+    void Render()
+    {
+        /*m_stack -> view_surface_redrawwindow(m_surface, m_region);*/
+        if (m_surface -> Lock())
+        {
+            m_stack -> view_surface_redrawwindow(m_surface, m_region);
+            m_surface -> Unlock();
+        }
+    }
+    
+private:
+    MCStack *m_stack;
+    MCAndroidStackSurface *m_surface;
+    MCGRegionRef m_region;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCStack::view_device_updatewindow(MCRegionRef p_region)
 {
 	// IM-2014-01-31: [[ HiDPI ]] If using a callback, render to the Android bitmap view
@@ -1004,18 +1071,47 @@ void MCStack::view_device_updatewindow(MCRegionRef p_region)
 		
 		MCGRegionIntersectRect(t_region, MCGIntegerRectangleMake(0, 0, s_android_bitmap_width, s_android_bitmap_height));
 
-		MCAndroidStackSurface t_surface(t_region);
-		if (t_surface.Lock())
-		{
-			// IM-2014-01-31: [[ HiDPI ]] If a callback is given then use it to render to the surface
-			if (s_updatewindow_callback != nil)
-				s_updatewindow_callback(&t_surface, (MCRegionRef)t_region, s_updatewindow_context);
-			else
-				view_surface_redrawwindow(&t_surface, t_region);
-			
-			t_surface.Unlock();
-		}
-
+        MCGIntegerRectangle t_rect;
+        t_rect = MCGRegionGetBounds(t_region);
+        if (s_updatewindow_callback == nil && t_rect . size . width > 32 && t_rect . size . height > 32)
+        {
+            MCStackTilePush(new MCAndroidPlatformStackTile(this, t_region,
+                                                         MCGIntegerRectangleMake(t_rect . origin . x,
+                                                                                 t_rect . origin .y,
+                                                                                 t_rect . size . width / 2,
+                                                                                 t_rect . size . height / 2)));
+            MCStackTilePush(new MCAndroidPlatformStackTile(this, t_region,
+                                                         MCGIntegerRectangleMake(t_rect . origin .x + t_rect . size . width / 2,
+                                                                                 t_rect . origin .y,
+                                                                                 t_rect . size . width - t_rect . size . width / 2,
+                                                                                 t_rect . size . height / 2)));
+            MCStackTilePush(new MCAndroidPlatformStackTile(this, t_region,
+                                                         MCGIntegerRectangleMake(t_rect . origin .x,
+                                                                                 t_rect . origin .y + t_rect . size . height / 2,
+                                                                                 t_rect . size . width / 2,
+                                                                                 t_rect . size . height - t_rect . size . height / 2)));
+            MCStackTilePush(new MCAndroidPlatformStackTile(this, t_region,
+                                                         MCGIntegerRectangleMake(t_rect . origin .x + t_rect . size . width / 2,
+                                                                                 t_rect . origin .y + t_rect . size . height / 2,
+                                                                                 t_rect . size . width - t_rect . size . width / 2,
+                                                                                 t_rect . size . height - t_rect . size . height / 2)));
+            MCStackTileCollectAll();
+        }
+        else
+        {
+            MCAndroidStackSurface t_surface(t_region);
+            if (t_surface.Lock())
+            {
+                // IM-2014-01-31: [[ HiDPI ]] If a callback is given then use it to render to the surface
+                if (s_updatewindow_callback != nil)
+                    s_updatewindow_callback(&t_surface, (MCRegionRef)t_region, s_updatewindow_context);
+                else
+                    view_surface_redrawwindow(&t_surface, t_region);
+                
+                t_surface.Unlock();
+            }
+        }
+        
 		// MW-2012-09-04: [[ Bug 10333 ]] Make sure we cause a screen flush.
 		co_yield_to_android_and_wait(0.0, true);
 	}

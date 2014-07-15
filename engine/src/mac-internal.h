@@ -360,7 +360,7 @@ public:
 	void Lock(void);
 	void Unlock(void);
     
-    void setDeferUnlock(bool p_value);
+    void SetDeferUnlock(bool p_defer_unlock);
 	
 private:
 	MCMacPlatformWindow *m_window;
@@ -372,7 +372,7 @@ private:
 	MCGRaster m_locked_raster;
 	void *m_locked_bits;
     
-    bool m_defer_unlock;
+    bool m_defer_unlock : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

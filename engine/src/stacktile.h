@@ -17,6 +17,9 @@
 #ifndef __STACK_TILE__
 #define __STACK_TILE__
 
+bool MCStackTileInitialize();
+void MCStackTileFinalize();
+
 class MCPlatformStackTile
 {
 public:
@@ -24,6 +27,9 @@ public:
 	virtual void Unlock(void) = 0;
     virtual void Render() = 0;
 };
+
+void MCStackTileMainThreadLock(void);
+void MCStackTileMainThreadUnlock(void);
 
 void MCStackTilePush(MCPlatformStackTile *tile);
 void MCStackTileCollectAll(void);

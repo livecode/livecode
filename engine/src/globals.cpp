@@ -70,6 +70,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "resolution.h"
 
 #include "systhreads.h"
+#include "stacktile.h"
 
 #define HOLD_SIZE1 65535
 #define HOLD_SIZE2 16384
@@ -852,6 +853,7 @@ bool X_open(int argc, char *argv[], char *envp[])
 	InitialiseSSL();
     
     MCThreadPoolInitialize();
+    MCStackTileInitialize();
     
     ////
     
@@ -1200,6 +1202,9 @@ int X_close(void)
 	
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsFinalize();
+    
+    MCThreadPoolFinalize();
+    MCStackTileFinalize();
     
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions
