@@ -1141,7 +1141,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 					if (MCresult->isclear())
 						MCresult->setvalueref(MCSTR("No such a card"));
 
-					return ES_NORMAL;
+					return;
 				}
 				cptr = (MCCard *)sptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
             }
