@@ -489,6 +489,7 @@ public:
 //	virtual char *charsettofontname(uint1 charset, const char *oldfontname);
 	
 	virtual void clearIME(Window w);
+    virtual void configureIME(int32_t x, int32_t y);
 	virtual void openIME();
 	virtual void activateIME(Boolean activate);
 	virtual void closeIME();

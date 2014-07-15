@@ -364,8 +364,9 @@ public:
     void IME_OnPreeditStart(GtkIMContext*);
     void IME_OnRetrieveSurrounding(GtkIMContext*);
     
-    //virtual void clearIME(Window w);
-	//virtual void activateIME(Boolean activate);
+    virtual void clearIME(Window w);
+    virtual void configureIME(int32_t x, int32_t y);
+	virtual void activateIME(Boolean activate);
 	//virtual void closeIME();
 };
 #endif
